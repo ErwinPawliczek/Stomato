@@ -1,0 +1,40 @@
+tolerance_rel: 0.0001
+method: v=Q/A; Re=rho*v*D/mu; Colebrook 1/sqrt(f) = -2 log10(eps/(3.7D) + 2.51/(Re
+  sqrt(f))); dP = f*(L/D)*rho*v^2/2
+cases:
+- inputs:
+    Q_m3_s: 0.05
+    D_m: 0.1541
+    rho: 700
+    mu: 0.0005
+    roughness_m: 4.57e-05
+    L_m: 100
+  expected:
+    velocity_m_s: 2.680864
+    Re: 578369.68
+    darcy_f: 0.01609053
+    dP_Pa: 26265.491
+- inputs:
+    Q_m3_s: 0.5
+    D_m: 0.3048
+    rho: 50
+    mu: 1.2e-05
+    roughness_m: 4.57e-05
+    L_m: 100
+  expected:
+    velocity_m_s: 6.852518
+    Re: 8702698.11
+    darcy_f: 0.01311444
+    dP_Pa: 5050.975
+- inputs:
+    Q_m3_s: 0.01
+    D_m: 0.0525
+    rho: 1000
+    mu: 0.001
+    roughness_m: 4.57e-05
+    L_m: 100
+  expected:
+    velocity_m_s: 4.619463
+    Re: 242521.82
+    darcy_f: 0.02027447
+    dP_Pa: 412043.702

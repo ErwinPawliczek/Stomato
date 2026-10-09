@@ -1,0 +1,70 @@
+tolerance_rel: 0.0001
+method: 'ASME B31.3 304.1.2: t = P*D/(2*(S*E*W + P*Y)) with P and S in the same units
+  (MPa) and D = OD; nominal = (t + CA)/(1 - mill_tol); select thinnest schedule from
+  [10,20,30,40,STD,60,XS,80,100,120,140,160,XXS] with wall >= nominal (tie -> earlier
+  in list).'
+cases:
+- inputs:
+    nps_in: 6
+    design_pressure_gauge_Pa: 5000000.0
+    pipe_class: B1
+    allowable_stress_MPa: 137.9
+    E: 1.0
+    W: 1.0
+    Y: 0.4
+    corrosion_allowance_mm: 3.0
+    mill_tolerance: 0.125
+  expected:
+    od_mm: 168.3
+    t_pressure_mm: 3.0075
+    t_required_nominal_mm: 6.8657
+    selected_wall_mm: 7.11
+    selected_schedule: '40'
+- inputs:
+    nps_in: 4
+    design_pressure_gauge_Pa: 10000000.0
+    pipe_class: D1
+    allowable_stress_MPa: 137.9
+    E: 1.0
+    W: 1.0
+    Y: 0.4
+    corrosion_allowance_mm: 3.0
+    mill_tolerance: 0.125
+  expected:
+    od_mm: 114.3
+    t_pressure_mm: 4.0275
+    t_required_nominal_mm: 8.0314
+    selected_wall_mm: 8.56
+    selected_schedule: XS
+- inputs:
+    nps_in: 2
+    design_pressure_gauge_Pa: 2000000.0
+    pipe_class: A1
+    allowable_stress_MPa: 137.9
+    E: 1.0
+    W: 1.0
+    Y: 0.4
+    corrosion_allowance_mm: 3.0
+    mill_tolerance: 0.125
+  expected:
+    od_mm: 60.3
+    t_pressure_mm: 0.4348
+    t_required_nominal_mm: 3.9254
+    selected_wall_mm: 5.54
+    selected_schedule: XS
+- inputs:
+    nps_in: 12
+    design_pressure_gauge_Pa: 7000000.0
+    pipe_class: D1
+    allowable_stress_MPa: 137.9
+    E: 1.0
+    W: 1.0
+    Y: 0.4
+    corrosion_allowance_mm: 3.0
+    mill_tolerance: 0.125
+  expected:
+    od_mm: 323.8
+    t_pressure_mm: 8.0547
+    t_required_nominal_mm: 12.634
+    selected_wall_mm: 12.7
+    selected_schedule: XS

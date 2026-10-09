@@ -1,0 +1,19 @@
+tolerance_rel: 0.0001
+method: v_e[ft/s] = C/sqrt(rho_m[lb/ft3]); 1 kg/m3 = 0.0624279606 lb/ft3; 1 ft = 0.3048
+  m
+cases:
+- inputs:
+    rho_mix_kg_m3: 50
+    C: 100
+  expected:
+    v_erosional_m_s: 17.25204
+- inputs:
+    rho_mix_kg_m3: 200
+    C: 100
+  expected:
+    v_erosional_m_s: 8.62602
+- inputs:
+    rho_mix_kg_m3: 500
+    C: 125
+  expected:
+    v_erosional_m_s: 6.81947

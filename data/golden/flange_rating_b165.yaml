@@ -1,0 +1,35 @@
+tolerance_rel: 1.0e-09
+method: ASME B16.5 P-T rating from ngdesign.data.flange_ratings(); linear interpolation
+  in temperature; at or below 100 F use the 100 F value (table covers -20..100 F);
+  above table range -> raise ValueError.
+cases:
+- inputs:
+    material_group: '1.1'
+    flange_class: 300
+    temp_F: 250.0
+  expected:
+    max_pressure_psig: 667.5
+- inputs:
+    material_group: '1.1'
+    flange_class: 150
+    temp_F: 100.0
+  expected:
+    max_pressure_psig: 285.0
+- inputs:
+    material_group: '1.1'
+    flange_class: 150
+    temp_F: -20.0
+  expected:
+    max_pressure_psig: 285.0
+- inputs:
+    material_group: '1.1'
+    flange_class: 600
+    temp_F: 550.0
+  expected:
+    max_pressure_psig: 1170.0
+- inputs:
+    material_group: '2.2'
+    flange_class: 300
+    temp_F: 150.0
+  expected:
+    max_pressure_psig: 670.0

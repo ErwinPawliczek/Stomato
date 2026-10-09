@@ -1,0 +1,30 @@
+tolerance_rel: 1.0e-05
+method: 'API 520 Pt I critical gas flow (USC): C = 520*sqrt(k*(2/(k+1))^((k+1)/(k-1)));
+  A = W/(C*Kd*P1*Kb*Kc)*sqrt(T*Z/M); P1 = relieving pressure psia'
+cases:
+- inputs:
+    W_lb_h: 50000
+    T_R: 560
+    Z: 0.9
+    M: 19.0
+    k: 1.27
+    P1_psia: 1100
+    Kd: 0.975
+    Kb: 1.0
+    Kc: 1.0
+  expected:
+    C: 344.12712
+    area_in2: 0.697738
+- inputs:
+    W_lb_h: 20000
+    T_R: 600
+    Z: 0.95
+    M: 17.4
+    k: 1.3
+    P1_psia: 500
+    Kd: 0.975
+    Kb: 1.0
+    Kc: 1.0
+  expected:
+    C: 346.97642
+    area_in2: 0.676734

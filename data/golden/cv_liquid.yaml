@@ -1,0 +1,15 @@
+tolerance_rel: 1.0e-06
+method: Cv = Q[gpm]*sqrt(SG/dP[psi]) (non-choked)
+cases:
+- inputs:
+    Q_gpm: 100
+    SG: 0.7
+    dP_psi: 25
+  expected:
+    Cv: 16.733201
+- inputs:
+    Q_gpm: 400
+    SG: 1.0
+    dP_psi: 10
+  expected:
+    Cv: 126.491106

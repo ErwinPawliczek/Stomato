@@ -1,0 +1,27 @@
+tolerance_rel: 1.0e-06
+method: N = ln[((y_in - m*x_top)/(y_out - m*x_top))*(1-1/A) + 1/A] / ln(A), A != 1
+cases:
+- inputs:
+    A: 1.5
+    y_in: 2000
+    y_out: 150
+    m: 100
+    x_top: 0.5
+  expected:
+    N_stages: 4.857238
+- inputs:
+    A: 2.0
+    y_in: 1500
+    y_out: 50
+    m: 100
+    x_top: 0.0
+  expected:
+    N_stages: 3.954196
+- inputs:
+    A: 1.2
+    y_in: 1000
+    y_out: 200
+    m: 100
+    x_top: 0.2
+  expected:
+    N_stages: 3.040292

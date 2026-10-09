@@ -1,0 +1,47 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    # Agents may not edit oracles or contracts. A human adds the `contract-change` label to override.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Locked paths untouched
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'contract-change') }}
+        run: |
+          changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
+          locked=$(echo "$changed" | grep -E '^(src/ngdesign/contracts/|src/ngdesign/registry\.py|src/ngdesign/data\.py|src/ngdesign/flowsheets/(slice|samples)\.py|data/|tests/conftest\.py|tests/contracts/|tests/golden/test_|tests/property/|\.github/|AGENTS\.md|pyproject\.toml)' || true)
+          if [ -n "$locked" ]; then
+            echo "::error::PR edits locked files (needs human 'contract-change' label):"
+            echo "$locked"
+            exit 1
+          fi
+
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-groups
+      - name: lint
+        run: uv run ruff check . && uv run ruff format --check .
+      - name: types
+        run: uv run mypy
+      - name: tests
+        run: uv run pytest -rs

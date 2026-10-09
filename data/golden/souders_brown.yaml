@@ -1,0 +1,28 @@
+tolerance_rel: 1.0e-05
+method: v_max = K*sqrt((rhoL-rhoG)/rhoG); D_min = sqrt(4*Q/(pi*v_max)) (vertical,
+  full area for gas)
+cases:
+- inputs:
+    K_m_s: 0.107
+    rho_liquid: 650
+    rho_gas: 50
+    gas_flow_m3_s: 2.0
+  expected:
+    v_max_m_s: 0.370659
+    min_diameter_m: 2.621096
+- inputs:
+    K_m_s: 0.07
+    rho_liquid: 800
+    rho_gas: 30
+    gas_flow_m3_s: 1.0
+  expected:
+    v_max_m_s: 0.354636
+    min_diameter_m: 1.894801
+- inputs:
+    K_m_s: 0.12
+    rho_liquid: 600
+    rho_gas: 80
+    gas_flow_m3_s: 5.0
+  expected:
+    v_max_m_s: 0.305941
+    min_diameter_m: 4.561641

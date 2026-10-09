@@ -1,0 +1,46 @@
+# Backlog
+
+| Spec | Title | Wave | Depends on |
+|---|---|---|---|
+| S-01 | Peng-Robinson thermo package | 0 | none |
+| S-02 | B31.3 pipe wall thickness and schedule selection | 0 | none |
+| S-03 | Souders-Brown gas capacity | 0 | none |
+| S-04 | Counter-current LMTD | 0 | none |
+| S-05 | Kremser absorber stage count | 0 | none |
+| S-06 | Darcy-Weisbach line pressure drop | 0 | none |
+| S-07 | API RP 14E erosional velocity | 0 | none |
+| S-08 | Pump hydraulic and shaft power | 0 | none |
+| S-09 | API 520 gas relief area (critical flow) | 0 | none |
+| S-10 | Control valve Cv (liquid, non-choked) | 0 | none |
+| S-11 | B16.5 flange pressure-temperature rating | 0 | none |
+| S-12 | P&ID rule: isolation valve at every process nozzle | 0 | none |
+| S-13 | P&ID rule: check valve on pump and compressor discharge | 0 | none |
+| S-14 | P&ID rule: PSV on every pressure vessel | 0 | none |
+| S-15 | P&ID rule: vessel instrumentation | 0 | none |
+| S-16 | P&ID rule: pump instrumentation | 0 | none |
+| S-17 | P&ID rule: drains at low points, vents at high points | 0 | none |
+| S-18 | P&ID SVG renderer | 0 | none |
+| S-19 | Isometric SVG renderer | 0 | none |
+| S-20 | Line sizing by service velocity limits | 0 | none |
+| S-21 | Orthogonal pipe router | 0 | none |
+| S-22 | PFD SVG renderer | 0 | none (reuses S-18 symbols if merged, else draws its own) |
+| S-23 | Isometric DXF export | 1 | S-19 |
+| S-24 | Unit: three-phase separator | 1 | S-01 |
+| S-25 | Unit: compressor (isentropic efficiency) | 1 | S-01 |
+| S-26 | Units: heater, cooler, air cooler, shell-and-tube (spec outlet T) | 1 | S-01 |
+| S-27 | Unit: centrifugal pump | 1 | S-01 |
+| S-28 | Units: JT valve, mixer, splitter | 1 | S-01 |
+| S-29 | Unit: TEG contactor (spec-based) | 1 | S-01, S-05 |
+| S-30 | Sequential-modular flowsheet solver | 1 | S-01 |
+| S-31 | Sizer: separators and vessels | 2 | S-03, S-30 |
+| S-32 | Sizers: pump, compressor, exchangers | 2 | S-04, S-08, S-30 |
+| S-33 | P&ID builder from solved flowsheet | 2 | S-20, S-30, S-31, S-32 |
+| S-34 | Relief load and PSV sizing on the P&ID | 2 | S-09, S-14, S-33 |
+| S-35 | Slice end to end + CLI | 3 | all slice specs |
+| S-40 | Native Peng-Robinson cross-check | stretch | S-01 |
+| S-41 | Phase envelope plot | stretch | S-01 |
+| S-42 | Absorber stage-stepping diagram | stretch | S-05 |
+| S-43 | Deethanizer shortcut (Fenske-Underwood-Gilliland) | stretch | S-01 |
+| S-44 | Ergun pressure drop (mol sieve beds) | stretch | none |
+
+Dispatch order: all wave 0 at 11:00 (S-01 first), wave 1 as soon as S-01 merges, wave 2 after the solver, S-35 last. Stretch specs fill any idle agents.

@@ -1,0 +1,101 @@
+_note: 'Generated from the `chemicals` library (Caleb Bell). SI units: Tc K, Pc Pa,
+  MW g/mol. C6+ is represented by n-hexane in v1.'
+components:
+  N2:
+    name: nitrogen
+    cas: 7727-37-9
+    mw: 28.0134
+    tc_K: 126.192
+    pc_Pa: 3395800.0
+    omega: 0.0372
+  CO2:
+    name: carbon dioxide
+    cas: 124-38-9
+    mw: 44.0095
+    tc_K: 304.128
+    pc_Pa: 7377300.0
+    omega: 0.2239
+  H2S:
+    name: hydrogen sulfide
+    cas: 7783-06-4
+    mw: 34.0809
+    tc_K: 373.1
+    pc_Pa: 9000000.0
+    omega: 0.1005
+  C1:
+    name: methane
+    cas: 74-82-8
+    mw: 16.0425
+    tc_K: 190.564
+    pc_Pa: 4599200.0
+    omega: 0.0114
+  C2:
+    name: ethane
+    cas: 74-84-0
+    mw: 30.069
+    tc_K: 305.322
+    pc_Pa: 4872200.0
+    omega: 0.0995
+  C3:
+    name: propane
+    cas: 74-98-6
+    mw: 44.0956
+    tc_K: 369.89
+    pc_Pa: 4251200.0
+    omega: 0.1521
+  iC4:
+    name: isobutane
+    cas: 75-28-5
+    mw: 58.1222
+    tc_K: 407.81
+    pc_Pa: 3629000.0
+    omega: 0.184
+  nC4:
+    name: butane
+    cas: 106-97-8
+    mw: 58.1222
+    tc_K: 425.125
+    pc_Pa: 3796000.0
+    omega: 0.201
+  iC5:
+    name: isopentane
+    cas: 78-78-4
+    mw: 72.1488
+    tc_K: 460.35
+    pc_Pa: 3378000.0
+    omega: 0.2274
+  nC5:
+    name: pentane
+    cas: 109-66-0
+    mw: 72.1488
+    tc_K: 469.7
+    pc_Pa: 3367500.0
+    omega: 0.251
+  C6+:
+    name: hexane
+    cas: 110-54-3
+    mw: 86.1754
+    tc_K: 507.82
+    pc_Pa: 3044100.0
+    omega: 0.3
+  H2O:
+    name: water
+    cas: 7732-18-5
+    mw: 18.0153
+    tc_K: 647.096
+    pc_Pa: 22064000.0
+    omega: 0.3443
+  TEG:
+    name: triethylene glycol
+    cas: 112-27-6
+    mw: 150.173
+    tc_K: 780.0
+    pc_Pa: 3300000.0
+    omega: 0.5842
+  MDEA:
+    name: methyldiethanolamine
+    cas: 105-59-9
+    mw: 119.1622
+    tc_K: 742.0
+    pc_Pa: 4160000.0
+    omega: 1.165

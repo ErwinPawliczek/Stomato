@@ -1,0 +1,79 @@
+# Pipe class definitions. Human-owned: agents must not edit.
+# VERIFY allowable stresses against ASME B31.3 Table A-1 before relying on them.
+# Units: stress MPa, CA mm, temperature degC.
+classes:
+  A1:
+    material: CS ASTM A106 Gr B (seamless)
+    flange_class: 150
+    flange_material_group: "1.1"
+    allowable_stress_MPa: 137.9   # 20.0 ksi, valid to ~204 C
+    weld_joint_E: 1.0
+    weld_strength_W: 1.0
+    Y: 0.4
+    corrosion_allowance_mm: 3.0
+    min_schedule_small_bore: "80"  # NPS 1.5 and below
+    min_temp_C: -29
+    max_temp_C: 204
+    services: [utility, low-pressure hydrocarbon, drains]
+    default_isolation_valve: ball
+    gasket: spiral wound 316/graphite
+  B1:
+    material: CS ASTM A106 Gr B (seamless)
+    flange_class: 300
+    flange_material_group: "1.1"
+    allowable_stress_MPa: 137.9
+    weld_joint_E: 1.0
+    weld_strength_W: 1.0
+    Y: 0.4
+    corrosion_allowance_mm: 3.0
+    min_schedule_small_bore: "80"
+    min_temp_C: -29
+    max_temp_C: 204
+    services: [process gas, process liquid]
+    default_isolation_valve: ball
+    gasket: spiral wound 316/graphite
+  D1:
+    material: CS ASTM A106 Gr B (seamless)
+    flange_class: 600
+    flange_material_group: "1.1"
+    allowable_stress_MPa: 137.9
+    weld_joint_E: 1.0
+    weld_strength_W: 1.0
+    Y: 0.4
+    corrosion_allowance_mm: 3.0
+    min_schedule_small_bore: "160"
+    min_temp_C: -29
+    max_temp_C: 204
+    services: [high-pressure gas, compressor discharge]
+    default_isolation_valve: ball
+    gasket: ring type joint (RTJ)
+  L1:
+    material: LTCS ASTM A333 Gr 6
+    flange_class: 300
+    flange_material_group: "1.1"
+    allowable_stress_MPa: 137.9
+    weld_joint_E: 1.0
+    weld_strength_W: 1.0
+    Y: 0.4
+    corrosion_allowance_mm: 3.0
+    min_schedule_small_bore: "80"
+    min_temp_C: -46
+    max_temp_C: 204
+    services: [cold service below -29 C, JT outlet, NGL]
+    default_isolation_valve: ball
+    gasket: spiral wound 316/graphite
+  S1:
+    material: SS ASTM A312 TP316L
+    flange_class: 300
+    flange_material_group: "2.2"
+    allowable_stress_MPa: 115.1   # 16.7 ksi at ambient
+    weld_joint_E: 1.0
+    weld_strength_W: 1.0
+    Y: 0.4
+    corrosion_allowance_mm: 0.0
+    min_schedule_small_bore: "40S"
+    min_temp_C: -46
+    max_temp_C: 204
+    services: [amine, wet acid gas]
+    default_isolation_valve: ball
+    gasket: spiral wound 316/graphite
