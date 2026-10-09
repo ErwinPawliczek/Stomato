@@ -1,0 +1,911 @@
+{
+  "components": {
+    "schemas": {
+      "Datasheet": {
+        "additionalProperties": false,
+        "description": "Sizing output for one piece of equipment.",
+        "properties": {
+          "design_pressure_Pa": {
+            "title": "Design Pressure Pa",
+            "type": "number"
+          },
+          "design_temperature_K": {
+            "title": "Design Temperature K",
+            "type": "number"
+          },
+          "dimensions": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Dimensions",
+            "type": "object"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "notes": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "nozzles": {
+            "items": {
+              "$ref": "#/components/schemas/Nozzle"
+            },
+            "title": "Nozzles",
+            "type": "array"
+          },
+          "tag": {
+            "title": "Tag",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tag",
+          "kind",
+          "design_pressure_Pa",
+          "design_temperature_K",
+          "dimensions",
+          "nozzles"
+        ],
+        "title": "Datasheet",
+        "type": "object"
+      },
+      "Direction": {
+        "enum": [
+          "E",
+          "W",
+          "N",
+          "S",
+          "UP",
+          "DOWN"
+        ],
+        "title": "Direction",
+        "type": "string"
+      },
+      "FeedSpec": {
+        "additionalProperties": false,
+        "description": "Boundary feed conditions; the solver flashes this into a StreamState.",
+        "properties": {
+          "P": {
+            "title": "P",
+            "type": "number"
+          },
+          "T": {
+            "title": "T",
+            "type": "number"
+          },
+          "composition": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Composition",
+            "type": "object"
+          },
+          "molar_flow": {
+            "title": "Molar Flow",
+            "type": "number"
+          }
+        },
+        "required": [
+          "T",
+          "P",
+          "molar_flow",
+          "composition"
+        ],
+        "title": "FeedSpec",
+        "type": "object"
+      },
+      "Flowsheet": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "streams": {
+            "items": {
+              "$ref": "#/components/schemas/StreamSpec"
+            },
+            "title": "Streams",
+            "type": "array"
+          },
+          "units": {
+            "items": {
+              "$ref": "#/components/schemas/UnitSpec"
+            },
+            "title": "Units",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "units",
+          "streams"
+        ],
+        "title": "Flowsheet",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Layout": {
+        "additionalProperties": false,
+        "description": "User placements per view, keyed by tag. A missing tag means: auto-layout decides.",
+        "properties": {
+          "pfd": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/XY"
+            },
+            "default": {},
+            "title": "Pfd",
+            "type": "object"
+          },
+          "pid": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/XY"
+            },
+            "default": {},
+            "title": "Pid",
+            "type": "object"
+          },
+          "plot": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Vec3"
+            },
+            "default": {},
+            "title": "Plot",
+            "type": "object"
+          }
+        },
+        "title": "Layout",
+        "type": "object"
+      },
+      "Nozzle": {
+        "additionalProperties": false,
+        "description": "A connection point on equipment. Position is relative to the equipment origin (mm).",
+        "properties": {
+          "facing": {
+            "$ref": "#/components/schemas/Direction"
+          },
+          "flange_class": {
+            "title": "Flange Class",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "nps_in": {
+            "title": "Nps In",
+            "type": "number"
+          },
+          "port": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Port"
+          },
+          "position_mm": {
+            "$ref": "#/components/schemas/Vec3"
+          },
+          "service": {
+            "title": "Service",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "service",
+          "nps_in",
+          "flange_class",
+          "position_mm",
+          "facing"
+        ],
+        "title": "Nozzle",
+        "type": "object"
+      },
+      "Phase": {
+        "additionalProperties": false,
+        "properties": {
+          "composition": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Composition",
+            "type": "object"
+          },
+          "density": {
+            "title": "Density",
+            "type": "number"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PhaseKind"
+          },
+          "mole_fraction": {
+            "title": "Mole Fraction",
+            "type": "number"
+          },
+          "molecular_weight": {
+            "title": "Molecular Weight",
+            "type": "number"
+          },
+          "viscosity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Viscosity"
+          },
+          "z_factor": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Z Factor"
+          }
+        },
+        "required": [
+          "kind",
+          "mole_fraction",
+          "composition",
+          "density",
+          "molecular_weight"
+        ],
+        "title": "Phase",
+        "type": "object"
+      },
+      "PhaseKind": {
+        "enum": [
+          "vapor",
+          "hc_liquid",
+          "aqueous"
+        ],
+        "title": "PhaseKind",
+        "type": "string"
+      },
+      "PortRef": {
+        "additionalProperties": false,
+        "properties": {
+          "port": {
+            "title": "Port",
+            "type": "string"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "unit",
+          "port"
+        ],
+        "title": "PortRef",
+        "type": "object"
+      },
+      "Project": {
+        "additionalProperties": false,
+        "properties": {
+          "flowsheet": {
+            "$ref": "#/components/schemas/Flowsheet"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/Layout",
+            "default": {
+              "pfd": {},
+              "pid": {},
+              "plot": {}
+            }
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "flowsheet"
+        ],
+        "title": "Project",
+        "type": "object"
+      },
+      "SolvedFlowsheet": {
+        "additionalProperties": false,
+        "properties": {
+          "converged": {
+            "title": "Converged",
+            "type": "boolean"
+          },
+          "datasheets": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/Datasheet"
+            },
+            "default": {},
+            "title": "Datasheets",
+            "type": "object"
+          },
+          "flowsheet": {
+            "$ref": "#/components/schemas/Flowsheet"
+          },
+          "iterations": {
+            "default": 0,
+            "title": "Iterations",
+            "type": "integer"
+          },
+          "streams": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/StreamState"
+            },
+            "title": "Streams",
+            "type": "object"
+          },
+          "units": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/UnitResult"
+            },
+            "title": "Units",
+            "type": "object"
+          }
+        },
+        "required": [
+          "flowsheet",
+          "streams",
+          "units",
+          "converged"
+        ],
+        "title": "SolvedFlowsheet",
+        "type": "object"
+      },
+      "StreamSpec": {
+        "additionalProperties": false,
+        "description": "A stream between two ports. source=None means a feed; target=None means a product.",
+        "properties": {
+          "feed": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FeedSpec"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "service": {
+            "default": "process",
+            "title": "Service",
+            "type": "string"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PortRef"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "StreamSpec",
+        "type": "object"
+      },
+      "StreamState": {
+        "additionalProperties": false,
+        "description": "Fully specified thermodynamic state of a stream.",
+        "properties": {
+          "P": {
+            "title": "P",
+            "type": "number"
+          },
+          "T": {
+            "title": "T",
+            "type": "number"
+          },
+          "composition": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Composition",
+            "type": "object"
+          },
+          "enthalpy": {
+            "title": "Enthalpy",
+            "type": "number"
+          },
+          "entropy": {
+            "title": "Entropy",
+            "type": "number"
+          },
+          "molar_flow": {
+            "title": "Molar Flow",
+            "type": "number"
+          },
+          "phases": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Phase"
+            },
+            "title": "Phases",
+            "type": "array"
+          },
+          "vapor_fraction": {
+            "title": "Vapor Fraction",
+            "type": "number"
+          }
+        },
+        "required": [
+          "T",
+          "P",
+          "molar_flow",
+          "composition",
+          "vapor_fraction",
+          "enthalpy",
+          "entropy"
+        ],
+        "title": "StreamState",
+        "type": "object"
+      },
+      "UnitResult": {
+        "additionalProperties": false,
+        "description": "What a unit plugin returns from solve().",
+        "properties": {
+          "duty_W": {
+            "default": 0.0,
+            "title": "Duty W",
+            "type": "number"
+          },
+          "info": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "default": {},
+            "title": "Info",
+            "type": "object"
+          },
+          "outlets": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/StreamState"
+            },
+            "title": "Outlets",
+            "type": "object"
+          },
+          "power_W": {
+            "default": 0.0,
+            "title": "Power W",
+            "type": "number"
+          }
+        },
+        "required": [
+          "outlets"
+        ],
+        "title": "UnitResult",
+        "type": "object"
+      },
+      "UnitSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": true,
+            "default": {},
+            "title": "Params",
+            "type": "object"
+          },
+          "tag": {
+            "title": "Tag",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tag",
+          "kind"
+        ],
+        "title": "UnitSpec",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "Vec3": {
+        "additionalProperties": false,
+        "description": "3D vector / point. Piping geometry uses millimetres.",
+        "properties": {
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          },
+          "z": {
+            "title": "Z",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "title": "Vec3",
+        "type": "object"
+      },
+      "XY": {
+        "additionalProperties": false,
+        "properties": {
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ],
+        "title": "XY",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "ngdesign",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "health_api_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health Api Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    },
+    "/api/project": {
+      "get": {
+        "operationId": "get_project_api_project_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Project"
+      },
+      "put": {
+        "operationId": "put_project_api_project_put",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Project"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Project"
+      }
+    },
+    "/api/project/layout/plot/{tag}": {
+      "put": {
+        "operationId": "place_plot_api_project_layout_plot__tag__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tag",
+            "required": true,
+            "schema": {
+              "title": "Tag",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Vec3"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Layout"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Place Plot"
+      }
+    },
+    "/api/project/layout/{view}/{tag}": {
+      "put": {
+        "operationId": "place_api_project_layout__view___tag__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "view",
+            "required": true,
+            "schema": {
+              "enum": [
+                "pfd",
+                "pid"
+              ],
+              "title": "View",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "tag",
+            "required": true,
+            "schema": {
+              "title": "Tag",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/XY"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Layout"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Place"
+      }
+    },
+    "/api/project/reset": {
+      "post": {
+        "operationId": "reset_project_api_project_reset_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Reset Project"
+      }
+    },
+    "/api/solve": {
+      "post": {
+        "description": "Implemented by spec B-02 once thermo + solver exist.",
+        "operationId": "solve_api_solve_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolvedFlowsheet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Solve"
+      }
+    },
+    "/api/views/{view}.svg": {
+      "get": {
+        "description": "Implemented by specs B-03/B-04/B-05. Returns SVG text with data-tag attributes on elements.",
+        "operationId": "view_svg_api_views__view__svg_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "view",
+            "required": true,
+            "schema": {
+              "enum": [
+                "pfd",
+                "pid",
+                "plot"
+              ],
+              "title": "View",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/svg+xml": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "View Svg"
+      }
+    }
+  }
+}

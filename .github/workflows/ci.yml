@@ -10,8 +10,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.f.outputs.backend }}
+      frontend: ${{ steps.f.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: f
+        with:
+          filters: |
+            backend:
+              - 'src/**'
+              - 'tests/**'
+              - 'data/**'
+              - 'scripts/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
+              - 'openapi.json'
+            frontend:
+              - 'frontend/**'
+              - 'openapi.json'
+
   guard:
-    # Agents may not edit oracles or contracts. A human adds the `contract-change` label to override.
+    # Agents may not edit oracles/contracts, and one PR may not mix frontend and backend.
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
@@ -22,14 +45,23 @@ jobs:
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'contract-change') }}
         run: |
           changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
-          locked=$(echo "$changed" | grep -E '^(src/ngdesign/contracts/|src/ngdesign/registry\.py|src/ngdesign/data\.py|src/ngdesign/flowsheets/(slice|samples)\.py|data/|tests/conftest\.py|tests/contracts/|tests/golden/test_|tests/property/|\.github/|AGENTS\.md|pyproject\.toml)' || true)
+          locked=$(echo "$changed" | grep -E '^(src/ngdesign/contracts/|src/ngdesign/registry\.py|src/ngdesign/data\.py|src/ngdesign/flowsheets/(slice|samples)\.py|data/|tests/conftest\.py|tests/contracts/|tests/golden/test_|tests/property/|\.github/|AGENTS\.md|frontend/AGENTS\.md|CLAUDE\.md|pyproject\.toml|openapi\.json|frontend/src/api/schema\.d\.ts|frontend/package\.json)' || true)
           if [ -n "$locked" ]; then
-            echo "::error::PR edits locked files (needs human 'contract-change' label):"
-            echo "$locked"
-            exit 1
+            echo "::error::PR edits locked files (needs human 'contract-change' label):"; echo "$locked"; exit 1
+          fi
+      - name: Frontend and backend not mixed
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'contract-change') }}
+        run: |
+          changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -v '^specs/' || true)
+          fe=$(echo "$changed" | grep -c '^frontend/' || true)
+          be=$(echo "$changed" | grep -vc '^frontend/' || true)
+          if [ "$fe" -gt 0 ] && [ "$be" -gt 0 ] && [ -n "$changed" ]; then
+            echo "::error::PR touches both frontend/ and backend files. Split it."; echo "$changed"; exit 1
           fi
 
-  check:
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -39,9 +71,40 @@ jobs:
           enable-cache: true
       - run: uv python install 3.12
       - run: uv sync --all-groups
-      - name: lint
-        run: uv run ruff check . && uv run ruff format --check .
-      - name: types
-        run: uv run mypy
-      - name: tests
-        run: uv run pytest -rs
+      - run: uv run ruff check . && uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest -rs
+      - name: openapi.json up to date
+        run: uv run python scripts/export_openapi.py && git diff --exit-code openapi.json
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - name: API types match openapi.json
+        run: npm run check:api
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  # Required status check for branch protection: passes when every job that ran passed.
+  ci-ok:
+    if: always()
+    needs: [guard, backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then exit 1; fi

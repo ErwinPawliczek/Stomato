@@ -1,0 +1,209 @@
+{
+  "name": "slice",
+  "flowsheet": {
+    "name": "slice",
+    "units": [
+      {
+        "tag": "V-101",
+        "kind": "separator_3phase",
+        "params": {}
+      },
+      {
+        "tag": "K-101",
+        "kind": "compressor",
+        "params": {
+          "P_out": 7000000.0,
+          "eta_isentropic": 0.75
+        }
+      },
+      {
+        "tag": "E-101",
+        "kind": "air_cooler",
+        "params": {
+          "T_out": 322.15,
+          "dP": 35000.0
+        }
+      },
+      {
+        "tag": "T-101",
+        "kind": "teg_contactor",
+        "params": {
+          "water_out_lb_per_mmscf": 7.0
+        }
+      },
+      {
+        "tag": "P-101",
+        "kind": "pump",
+        "params": {
+          "P_out": 1500000.0,
+          "eta": 0.65
+        }
+      },
+      {
+        "tag": "E-102",
+        "kind": "shell_tube",
+        "params": {
+          "T_out": 333.15,
+          "dP": 50000.0
+        }
+      }
+    ],
+    "streams": [
+      {
+        "id": "S-001",
+        "source": null,
+        "target": {
+          "unit": "V-101",
+          "port": "inlet"
+        },
+        "feed": {
+          "T": 293.15,
+          "P": 3447000.0,
+          "molar_flow": 691.7061964498163,
+          "composition": {
+            "N2": 0.005,
+            "CO2": 0.015,
+            "C1": 0.848,
+            "C2": 0.062,
+            "C3": 0.032,
+            "iC4": 0.007,
+            "nC4": 0.01,
+            "iC5": 0.004,
+            "nC5": 0.004,
+            "C6+": 0.01,
+            "H2O": 0.003
+          }
+        },
+        "service": "PG"
+      },
+      {
+        "id": "S-002",
+        "source": {
+          "unit": "V-101",
+          "port": "gas_out"
+        },
+        "target": {
+          "unit": "K-101",
+          "port": "inlet"
+        },
+        "feed": null,
+        "service": "PG"
+      },
+      {
+        "id": "S-003",
+        "source": {
+          "unit": "K-101",
+          "port": "outlet"
+        },
+        "target": {
+          "unit": "E-101",
+          "port": "inlet"
+        },
+        "feed": null,
+        "service": "PG"
+      },
+      {
+        "id": "S-004",
+        "source": {
+          "unit": "E-101",
+          "port": "outlet"
+        },
+        "target": {
+          "unit": "T-101",
+          "port": "gas_in"
+        },
+        "feed": null,
+        "service": "PG"
+      },
+      {
+        "id": "S-005",
+        "source": {
+          "unit": "T-101",
+          "port": "gas_out"
+        },
+        "target": null,
+        "feed": null,
+        "service": "PG"
+      },
+      {
+        "id": "S-006",
+        "source": null,
+        "target": {
+          "unit": "T-101",
+          "port": "lean_teg_in"
+        },
+        "feed": {
+          "T": 325.15,
+          "P": 7100000.0,
+          "molar_flow": 3.2,
+          "composition": {
+            "TEG": 0.9011,
+            "H2O": 0.0989
+          }
+        },
+        "service": "GL"
+      },
+      {
+        "id": "S-007",
+        "source": {
+          "unit": "T-101",
+          "port": "rich_teg_out"
+        },
+        "target": null,
+        "feed": null,
+        "service": "GL"
+      },
+      {
+        "id": "S-008",
+        "source": {
+          "unit": "V-101",
+          "port": "hc_out"
+        },
+        "target": {
+          "unit": "P-101",
+          "port": "inlet"
+        },
+        "feed": null,
+        "service": "PL"
+      },
+      {
+        "id": "S-009",
+        "source": {
+          "unit": "P-101",
+          "port": "outlet"
+        },
+        "target": {
+          "unit": "E-102",
+          "port": "inlet"
+        },
+        "feed": null,
+        "service": "PL"
+      },
+      {
+        "id": "S-010",
+        "source": {
+          "unit": "E-102",
+          "port": "outlet"
+        },
+        "target": null,
+        "feed": null,
+        "service": "PL"
+      },
+      {
+        "id": "S-011",
+        "source": {
+          "unit": "V-101",
+          "port": "water_out"
+        },
+        "target": null,
+        "feed": null,
+        "service": "W"
+      }
+    ]
+  },
+  "layout": {
+    "pfd": {},
+    "pid": {},
+    "plot": {}
+  }
+}

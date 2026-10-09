@@ -26,6 +26,7 @@ from .pid import (
     ValveType,
 )
 from .piping import Component, ComponentKind, EndType, EquipmentEnvelope, PipingNetwork, RoutedLine, Weld
+from .project import XY, Layout, Project
 from .stream import COMPONENTS, Phase, PhaseKind, StreamState
 
 __all__ = [
@@ -46,6 +47,7 @@ __all__ = [
     "Instrument",
     "IsoSheet",
     "Isometric",
+    "Layout",
     "LineEnd",
     "Model",
     "Nozzle",
@@ -56,6 +58,7 @@ __all__ = [
     "PidLine",
     "PipingNetwork",
     "PortRef",
+    "Project",
     "RoutedLine",
     "RuleViolation",
     "SolvedFlowsheet",
@@ -68,4 +71,5 @@ __all__ = [
     "ValveType",
     "Vec3",
     "Weld",
+    "XY",
 ]

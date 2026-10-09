@@ -3,6 +3,9 @@
 Natural gas processing design suite. One validated model produces simulation results, PFD, P&ID,
 3D piping and isometric drawings. You are one of many agents working in parallel.
 
+**This file covers the backend (Python).** Frontend work lives in `frontend/` and follows
+`frontend/AGENTS.md`. Never change both in one PR (CI rejects it).
+
 ## Commands
 ```
 uv sync --all-groups          # install
@@ -14,7 +17,9 @@ uv run mypy
 CI runs exactly these. A PR merges only when CI is green.
 
 ## How work is organised
-- Every task is a spec in `specs/backlog/S-XX-*.md`. Do exactly that spec.
+- Every task is a spec in `specs/backend/` (or a GitHub issue). Do exactly that spec.
+- HTTP routes live in `src/ngdesign/api/app.py`. Changing a route changes `openapi.json` (run
+  `uv run python scripts/export_openapi.py`) and is a contract change: needs the `contract-change` label.
 - **One spec = new files only.** Create the files the spec lists. Do not edit files other specs own.
 - Plugins self-register with a decorator; discovery is automatic. Never add imports to any `__init__.py`.
   ```python

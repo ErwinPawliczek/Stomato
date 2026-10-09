@@ -1,0 +1,14 @@
+# Only locked paths need a human review (enable "Require review from Code Owners").
+# Everything else auto-merges on green CI.
+/src/ngdesign/contracts/   @OWNER
+/src/ngdesign/registry.py  @OWNER
+/src/ngdesign/data.py      @OWNER
+/data/                     @OWNER
+/tests/contracts/          @OWNER
+/tests/golden/             @OWNER
+/tests/property/           @OWNER
+/.github/                  @OWNER
+/AGENTS.md                 @OWNER
+/openapi.json              @OWNER
+/frontend/AGENTS.md        @OWNER @FRIEND
+/frontend/package.json     @OWNER @FRIEND

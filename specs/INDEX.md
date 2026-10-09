@@ -44,3 +44,18 @@
 | S-44 | Ergun pressure drop (mol sieve beds) | stretch | none |
 
 Dispatch order: all wave 0 at 11:00 (S-01 first), wave 1 as soon as S-01 merges, wave 2 after the solver, S-35 last. Stretch specs fill any idle agents.
+
+## Layers (frontend + backend move together)
+
+| Layer | Backend | Frontend | Done when |
+|---|---|---|---|
+| L1 | Project API (done) | F-01 | edit, save, reload round-trips |
+| L2 | S-01, S-24..S-30, B-02 | F-02 | slice solves in the UI |
+| L3 | S-22, B-03 | F-03 | dragged PFD unit stays put |
+| L4 | S-12..S-18, S-33, B-04 | F-04 | every tag in both PFD and P&ID |
+| L5 | S-21, B-05 | F-05 | moving equipment re-routes |
+| L6 | S-19, B-06 | F-06 | iso BOM/lengths match |
+| L7 | B-07 | F-07 | sheet formulas match API |
+| L8 | B-08 | F-08 | scripted agent session |
+
+Rule: do not start L(n+1) UI before L(n) passes end to end.

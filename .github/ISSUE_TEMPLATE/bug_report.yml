@@ -1,0 +1,32 @@
+name: Bug (agent fixes it)
+description: Report a bug. Keep the @claude line to have an agent fix it with a regression test.
+labels: [bug, agent]
+body:
+  - type: dropdown
+    id: side
+    attributes:
+      label: Where
+      options: [frontend, backend, not sure]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open the P&ID tab\n2. Drag V-101\n3. Refresh"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      placeholder: "Expected: ...\nActual: ..."
+    validations:
+      required: true
+  - type: textarea
+    id: dispatch
+    attributes:
+      label: Agent
+      description: Paste a screenshot above if you have one. Delete the @claude line to only file it.
+      value: |
+        @claude Reproduce this bug, add a failing test that captures it, then make the smallest fix. Follow AGENTS.md (backend) or frontend/AGENTS.md (frontend). Do not touch both sides in one PR. Open a PR titled "Fix: <short title>" that links this issue.
