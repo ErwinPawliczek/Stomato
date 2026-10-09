@@ -1,0 +1,21 @@
+branches:
+  defaultBase: main
+pr:
+  merge:
+    method: squash
+reviews:
+  automated:
+    enabled: true
+  routing:
+    rules:
+      - name: Contracts and oracles
+        match: ["src/ngdesign/contracts/**", "src/ngdesign/registry.py", "src/ngdesign/data.py", "data/**", "tests/golden/**", "tests/property/**", "tests/contracts/**", "openapi.json"]
+        mode: specialized
+        reviewers:
+          - type: general
+      - name: Specs and docs
+        match: ["specs/**", "**/*.md"]
+        mode: none
+      - name: Everything else
+        match: ["**"]
+        mode: single
