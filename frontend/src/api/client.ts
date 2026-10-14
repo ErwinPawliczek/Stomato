@@ -4,6 +4,7 @@ import type { components } from "./schema";
 import mockProject from "../../mocks/project.json";
 import mockSolved from "../../mocks/solved.json";
 import { mockPfdSvg } from "../../mocks/pfdSvg";
+import { mockPidSvg } from "../../mocks/pidSvg";
 
 export type Project = components["schemas"]["Project"];
 export type XY = components["schemas"]["XY"];
@@ -47,6 +48,12 @@ export const api = {
     // unit box's centre (spec B-03), so saved placements survive re-fetch.
     if (MOCK) return mockPfdSvg(mockState.layout?.pfd ?? {});
     return httpText("/api/views/pfd.svg");
+  },
+  async pidSvg(): Promise<string> {
+    // Mock honours the backend contract: a stored layout.pid position is the
+    // equipment box's top-left corner (spec B-04), so saved placements survive.
+    if (MOCK) return mockPidSvg(mockState.layout?.pid ?? {});
+    return httpText("/api/views/pid.svg");
   },
   async place(view: "pfd" | "pid", tag: string, pos: XY): Promise<Layout> {
     if (MOCK) {
