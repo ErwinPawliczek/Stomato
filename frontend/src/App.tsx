@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, type Project } from "./api/client";
 import { FlowsheetView } from "./views/FlowsheetView";
+import { ResultsView } from "./views/ResultsView";
 import { Placeholder } from "./views/Placeholder";
 
 // One tab per view. Add a view by adding an entry here plus a file in src/views/.
@@ -42,7 +43,10 @@ export default function App() {
         {error && <p role="alert">Backend error: {error}</p>}
         {!project && !error && <p>Loading…</p>}
         {project && tab === "flowsheet" && <FlowsheetView project={project} />}
-        {project && tab !== "flowsheet" && <Placeholder layer={current.layer} what={current.label} />}
+        {project && tab === "results" && <ResultsView />}
+        {project && tab !== "flowsheet" && tab !== "results" && (
+          <Placeholder layer={current.layer} what={current.label} />
+        )}
       </main>
     </div>
   );
