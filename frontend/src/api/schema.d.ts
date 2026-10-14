@@ -90,6 +90,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Route
+         * @description Route the current project's P&ID through the layout.plot placements.
+         */
+        post: operations["route_api_route_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/solve": {
         parameters: {
             query?: never;
@@ -150,7 +170,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/views/{view}.svg": {
+    "/api/views/plot.svg": {
         parameters: {
             query?: never;
             header?: never;
@@ -158,10 +178,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * View Svg
-         * @description Implemented by specs B-04/B-05. B-03 serves pfd.svg via routes_views.
+         * Plot Svg
+         * @description Top view of the current project's routed piping, plan north up.
          */
-        get: operations["view_svg_api_views__view__svg_get"];
+        get: operations["plot_svg_api_views_plot_svg_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -174,6 +194,53 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * Component
+         * @description One physical item. start->end is the centerline in flow direction.
+         *
+         *     For elbows, `center` is the intersection point of the two legs.
+         *     For tees, `branch_end` is the branch connection point.
+         */
+        Component: {
+            branch_end?: components["schemas"]["Vec3"] | null;
+            center?: components["schemas"]["Vec3"] | null;
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            end: components["schemas"]["Vec3"];
+            /**
+             * End Types
+             * @default [
+             *       "bw",
+             *       "bw"
+             *     ]
+             */
+            end_types: [
+                components["schemas"]["EndType"],
+                components["schemas"]["EndType"]
+            ];
+            /** Id */
+            id: string;
+            kind: components["schemas"]["ComponentKind"];
+            /** Nps In */
+            nps_in: number;
+            /** Nps Out */
+            nps_out?: number | null;
+            /** Pipe Class */
+            pipe_class: string;
+            /** Ref */
+            ref?: string | null;
+            /** Schedule */
+            schedule?: string | null;
+            start: components["schemas"]["Vec3"];
+        };
+        /**
+         * ComponentKind
+         * @enum {string}
+         */
+        ComponentKind: "pipe" | "elbow_90_lr" | "elbow_90_sr" | "elbow_45_lr" | "tee_equal" | "tee_reducing" | "reducer_concentric" | "reducer_eccentric" | "cap" | "flange_weld_neck" | "flange_blind" | "gasket" | "valve" | "olet" | "strainer";
         /**
          * Datasheet
          * @description Sizing output for one piece of equipment.
@@ -204,6 +271,21 @@ export interface components {
          * @enum {string}
          */
         Direction: "E" | "W" | "N" | "S" | "UP" | "DOWN";
+        /**
+         * EndType
+         * @enum {string}
+         */
+        EndType: "bw" | "sw" | "fl" | "thd";
+        /**
+         * EquipmentEnvelope
+         * @description Axis-aligned box for collision checks (mm).
+         */
+        EquipmentEnvelope: {
+            max: components["schemas"]["Vec3"];
+            min: components["schemas"]["Vec3"];
+            /** Tag */
+            tag: string;
+        };
         /**
          * FeedSpec
          * @description Boundary feed conditions; the solver flashes this into a StreamState.
@@ -302,6 +384,21 @@ export interface components {
          * @enum {string}
          */
         PhaseKind: "vapor" | "hc_liquid" | "aqueous";
+        /** PipingNetwork */
+        PipingNetwork: {
+            /**
+             * Equipment
+             * @default []
+             */
+            equipment: components["schemas"]["EquipmentEnvelope"][];
+            /** Lines */
+            lines: components["schemas"]["RoutedLine"][];
+            /**
+             * Rack Elevation Mm
+             * @default 6000
+             */
+            rack_elevation_mm: number;
+        };
         /** PortRef */
         PortRef: {
             /** Port */
@@ -320,6 +417,23 @@ export interface components {
             layout: components["schemas"]["Layout"];
             /** Name */
             name: string;
+        };
+        /** RoutedLine */
+        RoutedLine: {
+            /** Components */
+            components: components["schemas"]["Component"][];
+            /** Line Number */
+            line_number: string;
+            /**
+             * Spool Breaks
+             * @default []
+             */
+            spool_breaks: string[];
+            /**
+             * Welds
+             * @default []
+             */
+            welds: components["schemas"]["Weld"][];
         };
         /** SolvedFlowsheet */
         SolvedFlowsheet: {
@@ -455,6 +569,22 @@ export interface components {
             y: number;
             /** Z */
             z: number;
+        };
+        /** Weld */
+        Weld: {
+            at: components["schemas"]["Vec3"];
+            /** Between */
+            between: [
+                string,
+                string
+            ];
+            /** Id */
+            id: string;
+            /**
+             * Shop
+             * @default true
+             */
+            shop: boolean;
         };
         /** XY */
         XY: {
@@ -638,6 +768,26 @@ export interface operations {
             };
         };
     };
+    route_api_route_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipingNetwork"];
+                };
+            };
+        };
+    };
     solve_api_solve_post: {
         parameters: {
             query?: never;
@@ -698,13 +848,11 @@ export interface operations {
             };
         };
     };
-    view_svg_api_views__view__svg_get: {
+    plot_svg_api_views_plot_svg_get: {
         parameters: {
             query?: never;
             header?: never;
-            path: {
-                view: "pid" | "plot";
-            };
+            path?: never;
             cookie?: never;
         };
         requestBody?: never;
@@ -716,15 +864,6 @@ export interface operations {
                 };
                 content: {
                     "image/svg+xml": unknown;
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

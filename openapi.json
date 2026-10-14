@@ -1,6 +1,140 @@
 {
   "components": {
     "schemas": {
+      "Component": {
+        "additionalProperties": false,
+        "description": "One physical item. start->end is the centerline in flow direction.\n\nFor elbows, `center` is the intersection point of the two legs.\nFor tees, `branch_end` is the branch connection point.",
+        "properties": {
+          "branch_end": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Vec3"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "center": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Vec3"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "default": "",
+            "title": "Description",
+            "type": "string"
+          },
+          "end": {
+            "$ref": "#/components/schemas/Vec3"
+          },
+          "end_types": {
+            "default": [
+              "bw",
+              "bw"
+            ],
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "$ref": "#/components/schemas/EndType"
+              },
+              {
+                "$ref": "#/components/schemas/EndType"
+              }
+            ],
+            "title": "End Types",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/ComponentKind"
+          },
+          "nps_in": {
+            "title": "Nps In",
+            "type": "number"
+          },
+          "nps_out": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nps Out"
+          },
+          "pipe_class": {
+            "title": "Pipe Class",
+            "type": "string"
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ref"
+          },
+          "schedule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule"
+          },
+          "start": {
+            "$ref": "#/components/schemas/Vec3"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "nps_in",
+          "pipe_class",
+          "start",
+          "end"
+        ],
+        "title": "Component",
+        "type": "object"
+      },
+      "ComponentKind": {
+        "enum": [
+          "pipe",
+          "elbow_90_lr",
+          "elbow_90_sr",
+          "elbow_45_lr",
+          "tee_equal",
+          "tee_reducing",
+          "reducer_concentric",
+          "reducer_eccentric",
+          "cap",
+          "flange_weld_neck",
+          "flange_blind",
+          "gasket",
+          "valve",
+          "olet",
+          "strainer"
+        ],
+        "title": "ComponentKind",
+        "type": "string"
+      },
       "Datasheet": {
         "additionalProperties": false,
         "description": "Sizing output for one piece of equipment.",
@@ -66,6 +200,39 @@
         ],
         "title": "Direction",
         "type": "string"
+      },
+      "EndType": {
+        "enum": [
+          "bw",
+          "sw",
+          "fl",
+          "thd"
+        ],
+        "title": "EndType",
+        "type": "string"
+      },
+      "EquipmentEnvelope": {
+        "additionalProperties": false,
+        "description": "Axis-aligned box for collision checks (mm).",
+        "properties": {
+          "max": {
+            "$ref": "#/components/schemas/Vec3"
+          },
+          "min": {
+            "$ref": "#/components/schemas/Vec3"
+          },
+          "tag": {
+            "title": "Tag",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tag",
+          "min",
+          "max"
+        ],
+        "title": "EquipmentEnvelope",
+        "type": "object"
       },
       "FeedSpec": {
         "additionalProperties": false,
@@ -291,6 +458,36 @@
         "title": "PhaseKind",
         "type": "string"
       },
+      "PipingNetwork": {
+        "additionalProperties": false,
+        "properties": {
+          "equipment": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/EquipmentEnvelope"
+            },
+            "title": "Equipment",
+            "type": "array"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/RoutedLine"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "rack_elevation_mm": {
+            "default": 6000.0,
+            "title": "Rack Elevation Mm",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lines"
+        ],
+        "title": "PipingNetwork",
+        "type": "object"
+      },
       "PortRef": {
         "additionalProperties": false,
         "properties": {
@@ -334,6 +531,44 @@
           "flowsheet"
         ],
         "title": "Project",
+        "type": "object"
+      },
+      "RoutedLine": {
+        "additionalProperties": false,
+        "properties": {
+          "components": {
+            "items": {
+              "$ref": "#/components/schemas/Component"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "line_number": {
+            "title": "Line Number",
+            "type": "string"
+          },
+          "spool_breaks": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Spool Breaks",
+            "type": "array"
+          },
+          "welds": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Weld"
+            },
+            "title": "Welds",
+            "type": "array"
+          }
+        },
+        "required": [
+          "line_number",
+          "components"
+        ],
+        "title": "RoutedLine",
         "type": "object"
       },
       "SolvedFlowsheet": {
@@ -615,6 +850,44 @@
         "title": "Vec3",
         "type": "object"
       },
+      "Weld": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "$ref": "#/components/schemas/Vec3"
+          },
+          "between": {
+            "maxItems": 2,
+            "minItems": 2,
+            "prefixItems": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Between",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "shop": {
+            "default": true,
+            "title": "Shop",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "between"
+        ],
+        "title": "Weld",
+        "type": "object"
+      },
       "XY": {
         "additionalProperties": false,
         "properties": {
@@ -847,6 +1120,25 @@
         "summary": "Reset Project"
       }
     },
+    "/api/route": {
+      "post": {
+        "description": "Route the current project's P&ID through the layout.plot placements.",
+        "operationId": "route_api_route_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipingNetwork"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Route"
+      }
+    },
     "/api/solve": {
       "post": {
         "description": "Solve the current project; 501 naming the kind when a unit is missing.",
@@ -896,44 +1188,19 @@
         "summary": "Pid Svg"
       }
     },
-    "/api/views/{view}.svg": {
+    "/api/views/plot.svg": {
       "get": {
-        "description": "Implemented by specs B-04/B-05. B-03 serves pfd.svg via routes_views.",
-        "operationId": "view_svg_api_views__view__svg_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "view",
-            "required": true,
-            "schema": {
-              "enum": [
-                "pid",
-                "plot"
-              ],
-              "title": "View",
-              "type": "string"
-            }
-          }
-        ],
+        "description": "Top view of the current project's routed piping, plan north up.",
+        "operationId": "plot_svg_api_views_plot_svg_get",
         "responses": {
           "200": {
             "content": {
               "image/svg+xml": {}
             },
             "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
           }
         },
-        "summary": "View Svg"
+        "summary": "Plot Svg"
       }
     }
   }
