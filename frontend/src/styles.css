@@ -24,3 +24,16 @@ th, td { border:1px solid var(--line); padding:4px 8px; text-align:left; }
 .pfd g[data-tag]:active { cursor:grabbing; }
 .pfd g[data-tag]:focus-visible { outline:2px solid var(--acc); }
 .pfd g[data-tag]:hover rect, .pfd g[data-tag]:hover circle, .pfd g[data-tag]:hover polygon { stroke:var(--acc); }
+
+/* L4: P&ID shown next to the PFD for cross-checking tags. */
+.pid-panels { display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); }
+.pid-panels h2 { font-size:14px; margin:8px 0 4px; }
+.pid-readonly g[data-tag] { cursor:default; }
+.tag-hit, .tag-hit * { stroke:#d97706; filter:drop-shadow(0 0 2px #d97706); }
+.tag-inventory { list-style:none; margin:4px 0; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
+.tag-inventory li { display:flex; align-items:center; gap:4px; }
+.tag-inventory button { background:none; border:1px solid var(--line); border-radius:6px; padding:2px 8px; cursor:pointer; color:var(--fg); }
+.tag-inventory li.hit button { border-color:#d97706; color:#d97706; }
+.badge { font-size:11px; padding:1px 6px; border-radius:8px; border:1px solid var(--line); color:var(--muted); }
+.badge.on { color:#137333; border-color:#137333; }
+.badge.off { color:#d64545; border-color:#d64545; }
