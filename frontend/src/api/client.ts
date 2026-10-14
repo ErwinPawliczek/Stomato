@@ -2,10 +2,23 @@
 // generated from ../openapi.json (`npm run gen:api`). Never hand-edit schema.d.ts.
 import type { components } from "./schema";
 import mockProject from "../../mocks/project.json";
+import mockSolved from "../../mocks/solved.json";
 
 export type Project = components["schemas"]["Project"];
 export type XY = components["schemas"]["XY"];
 export type Layout = components["schemas"]["Layout"];
+export type SolvedFlowsheet = components["schemas"]["SolvedFlowsheet"];
+
+/** HTTP failure with its status, so callers can react to codes like 501. */
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
 
 const MOCK = import.meta.env.VITE_MOCK === "1" || import.meta.env.MODE === "test";
 
@@ -13,7 +26,7 @@ let mockState: Project = structuredClone(mockProject) as Project;
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
-  if (!r.ok) throw new Error(`${init?.method ?? "GET"} ${path}: ${r.status} ${await r.text()}`);
+  if (!r.ok) throw new ApiError(`${init?.method ?? "GET"} ${path}: ${r.status} ${await r.text()}`, r.status);
   return r.json() as Promise<T>;
 }
 
@@ -31,6 +44,10 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(pos),
     });
+  },
+  async solve(): Promise<SolvedFlowsheet> {
+    if (MOCK) return structuredClone(mockSolved) as SolvedFlowsheet;
+    return http<SolvedFlowsheet>("/api/solve", { method: "POST" });
   },
   _resetMock() {
     mockState = structuredClone(mockProject) as Project;
