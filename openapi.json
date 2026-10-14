@@ -849,7 +849,7 @@
     },
     "/api/solve": {
       "post": {
-        "description": "Implemented by spec B-02 once thermo + solver exist.",
+        "description": "Solve the current project; 501 naming the kind when a unit is missing.",
         "operationId": "solve_api_solve_post",
         "responses": {
           "200": {

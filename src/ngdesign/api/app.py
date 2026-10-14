@@ -12,11 +12,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
-from ngdesign.contracts import XY, Layout, Project, SolvedFlowsheet, Vec3
+from ngdesign.api.routes_solve import router as solve_router
+from ngdesign.contracts import XY, Layout, Project, Vec3
 from ngdesign.flowsheets import slice as slice_fs
 
 app = FastAPI(title="ngdesign", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+app.include_router(solve_router)
 
 _state: dict[str, Project] = {}
 
@@ -61,12 +64,6 @@ def place_plot(tag: str, pos: Vec3) -> Layout:
     p = _project()
     p.layout.plot[tag] = pos
     return p.layout
-
-
-@app.post("/api/solve")
-def solve() -> SolvedFlowsheet:
-    """Implemented by spec B-02 once thermo + solver exist."""
-    raise HTTPException(status_code=501, detail="solver not implemented yet")
 
 
 _SVG: dict[int | str, dict[str, Any]] = {200: {"content": {"image/svg+xml": {}}}}
