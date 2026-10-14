@@ -9,10 +9,10 @@ Equipment comes from datasheets: the registered ``sizer`` plugin for the unit
 kind runs when the solved flowsheet carries no datasheet yet; a unit with no
 sizer gets default nozzles (one per sim port, west face for inlets, east for
 outlets) and design conditions equal to the max operating P/T over its
-connected streams.  Pressure vessels always leave this builder with a ``psv``
-nozzle: the S-14 rule requires one but cannot create it.  Rotating-machine
-nozzles carry the conventional ``suction``/``discharge`` service labels the
-S-13/S-16 rules look for; line ends attach by ``port``.
+connected streams.  ``psv`` nozzles on pressure vessels come from the sizer
+datasheets (S-14's rule checks for them; it does not create them).
+Rotating-machine nozzles carry the conventional ``suction``/``discharge``
+service labels the S-13/S-16 rules look for; line ends attach by ``port``.
 
 Lines follow the spec's method: NPS from the S-20 correlation on the stream's
 actual volumetric flow, fluid code from ``StreamSpec.service``, pipe class in
@@ -45,7 +45,6 @@ from ngdesign.contracts import (
 )
 from ngdesign.contracts.plugins import Sizer
 from ngdesign.data import pipe_classes
-from ngdesign.pid_rules.vessel_psv import _PRESSURE_VESSEL_KINDS
 from ngdesign.registry import register
 from ngdesign.sizing.line_size import line_size
 
@@ -70,11 +69,6 @@ _NOZZLE_ID_RE = re.compile(r"^N(\d+)$")
 _INLET_X_MM = 0.0
 _OUTLET_X_MM = 2000.0
 _PORT_PITCH_MM = 600.0
-_PSV_X_MM = 1000.0
-_PSV_Z_MM = 2000.0
-#: Provisional relief-nozzle size; the S-34 relief sizing owns the final
-#: value.  Matches the human-owned sample in flowsheets.samples.
-_PSV_NPS_IN = 3.0
 #: Stand-in size for a declared port no stream connects to (nothing flows).
 _UNCONNECTED_NPS_IN = 1.0
 
@@ -263,20 +257,6 @@ def _default_nozzle(
     )
 
 
-def _psv_nozzle(nozzles: list[Nozzle], flange_class: int) -> Nozzle:
-    """A stand-in relief nozzle: the S-14 rule requires one on every pressure
-    vessel and cannot create it; S-34 owns the final size."""
-    return Nozzle(
-        id=_next_nozzle_id(nozzles),
-        service="psv",
-        port=None,
-        nps_in=_PSV_NPS_IN,
-        flange_class=flange_class,
-        position_mm=Vec3(x=_PSV_X_MM, y=0.0, z=_PSV_Z_MM),
-        facing=Direction.UP,
-    )
-
-
 def _flange_class_of(pipe_class: str) -> int:
     return int(pipe_classes()[pipe_class]["flange_class"])
 
@@ -336,11 +316,12 @@ def _build_equipment(
     port_lines: dict[str, tuple[float, int]],
     conditions: tuple[float, float],
 ) -> PidEquipment:
-    """One PidEquipment: datasheet nozzles when a sizer ran, default nozzles
-    where no sizer (or an incomplete datasheet) leaves a sim port uncovered,
-    and a psv nozzle on every pressure vessel.  Adopted portless datasheet
-    nozzles get their ``port`` filled and the conventional service label, so
-    line ends and pid_rule lookups find them."""
+    """One PidEquipment: datasheet nozzles when a sizer ran (the vessels'
+    psv nozzles come from their datasheets; the sizers own them), default
+    nozzles where no sizer (or an incomplete datasheet) leaves a sim port
+    uncovered.  Adopted portless datasheet nozzles get their ``port`` filled
+    and the conventional service label, so line ends and pid_rule lookups
+    find them."""
     streams = [s for s, _ in connections]
     states = [state for _, state in connections]
     inlets, outlets = _unit_ports(spec.kind, streams)
@@ -359,11 +340,6 @@ def _build_equipment(
         ensure_port(port, inlet=True, index=i)
     for i, port in enumerate(outlets):
         ensure_port(port, inlet=False, index=i)
-
-    if spec.kind in _PRESSURE_VESSEL_KINDS and not any(noz.service == "psv" for noz in nozzles):
-        composition = _first_composition([state for _, state in connections])
-        own_class = _pipe_class_for(conditions[0], conditions[1], composition)
-        nozzles.append(_psv_nozzle(nozzles, _flange_class_of(own_class)))
 
     return PidEquipment(
         tag=spec.tag,

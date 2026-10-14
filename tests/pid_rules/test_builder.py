@@ -34,11 +34,13 @@ from ngdesign.contracts import (
     Vec3,
 )
 from ngdesign.contracts.pid import LINE_NO_RE
+from ngdesign.contracts.plugins import PidRule
 from ngdesign.data import components
 from ngdesign.flowsheets.slice import INLET_COMPOSITION, LEAN_TEG_COMPOSITION, MMSCFD_TO_MOL_S
 from ngdesign.flowsheets.slice import build as build_slice
 from ngdesign.pid_rules import builder
 from ngdesign.pid_rules.builder import DefaultPidBuilder
+from ngdesign.pid_rules.psv_sizing import PsvSizing, relief_basis
 
 #: Mol/s of the slice's 50 MMSCFD feed (slice.py basis).
 N_FEED = 50.0 * MMSCFD_TO_MOL_S
@@ -50,6 +52,29 @@ _DENSITY = {PhaseKind.VAPOR: 20.0, PhaseKind.HC_LIQUID: 600.0, PhaseKind.AQUEOUS
 _GAS_Z = {c: x for c, x in INLET_COMPOSITION.items() if c != "H2O"} | {"H2O": 0.001}
 _HC_Z = {"C3": 0.05, "iC4": 0.04, "nC4": 0.06, "iC5": 0.04, "nC5": 0.05, "C6+": 0.76}
 _RICH_TEG_Z = {"TEG": 0.75, "H2O": 0.25}
+
+
+_REAL_SIZER_LOOKUP = builder._sizer_for
+
+
+@pytest.fixture(autouse=True)
+def _no_registered_sizers(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pin tests to the builder's default (no-sizer) path.
+
+    Sibling sizer plugins (S-31/S-32) register on main and would otherwise
+    take precedence over the deterministic fixture expectations here; tests
+    that need the real plugins (or their own fake) override this stub."""
+    monkeypatch.setattr(builder, "_sizer_for", lambda kind: None)
+
+
+@pytest.fixture()
+def _real_sizers(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Opt a test back into the sizer plugins registered on the tree.
+
+    The composition tests are integration tests: the vessels' psv nozzles are
+    owned by their sizer datasheets (S-14) and psv_sizing sizes the relief
+    from them, so the rules cannot reach a clean check on the no-sizer path."""
+    monkeypatch.setattr(builder, "_sizer_for", _REAL_SIZER_LOOKUP)
 
 
 def _renorm(z: dict[str, float]) -> dict[str, float]:
@@ -70,6 +95,8 @@ def _phase(kind: PhaseKind, mole_fraction: float, z: dict[str, float], density: 
         composition=z,
         density=density,
         molecular_weight=_mw(z),
+        # PR gas Z at these conditions (hand value): relief_basis (S-34) needs it.
+        z_factor=0.9 if kind == PhaseKind.VAPOR else None,
     )
 
 
@@ -124,12 +151,51 @@ def _slice_states() -> dict[str, StreamState]:
     }
 
 
+def _slice_units() -> dict[str, UnitResult]:
+    """Unit results as the S-30 solver would report them for the states above:
+    same info keys the S-30 unit plugins write, positive shaft power/duty,
+    because the S-31/S-32 sizers read them back and reject zero-power solves."""
+    n_hc = 0.011 * N_FEED
+    q_pump = n_hc * _mw(_HC_Z) / 1000.0 / 700.0  # HC liquid volumetric flow, m3/s
+    d_pump = 3.4e6 - 1.5e6  # P-101 head rise, Pa
+    return {
+        "V-101": UnitResult(outlets={}),
+        "K-101": UnitResult(
+            outlets={},
+            power_W=1.5e6,
+            info={
+                "T_out_isentropic": 337.9,
+                "pressure_ratio": 7.0e6 / 3.44e6,
+                "polytropic_head_J_kg": 1676.0,
+            },
+        ),
+        "E-101": UnitResult(outlets={}, duty_W=-2.6e6),
+        "T-101": UnitResult(outlets={}),
+        "P-101": UnitResult(
+            outlets={},
+            power_W=q_pump * d_pump / 0.65,
+            info={"head_m": d_pump / (700.0 * 9.81), "Q_m3_s": q_pump},
+        ),
+        "E-102": UnitResult(outlets={}, duty_W=5.3e4),
+    }
+
+
 def _solved_slice() -> SolvedFlowsheet:
     fs = build_slice()
+    # The locked slice carries no utility temperatures for E-102 (a design
+    # decision, not a simulation result); the test supplies them the way the
+    # end-to-end flow must when the shell_tube sizer runs for real.
+    units = [
+        u.model_copy(update={"params": {**u.params, "utility_T_in": 422.0, "utility_T_out": 415.0}})
+        if u.tag == "E-102"
+        else u
+        for u in fs.units
+    ]
+    fs = fs.model_copy(update={"units": units})
     return SolvedFlowsheet(
         flowsheet=fs,
         streams=_slice_states(),
-        units={u.tag: UnitResult(outlets={}) for u in fs.units},
+        units=_slice_units(),
         converged=True,
         iterations=1,
     )
@@ -210,8 +276,9 @@ def test_line_ends_hit_port_nozzles_or_boundaries() -> None:
 def test_design_conditions_max_of_equipment_ends() -> None:
     pid = _built()
     conds = {e.tag: (e.design_pressure_Pa, e.design_temperature_K) for e in pid.equipment}
-    # No sizers merged yet: equipment design conditions are the max operating
-    # P/T over connected streams (the fixture states above).
+    # Pinned to the no-sizer path (autouse fixture): equipment design
+    # conditions are the max operating P/T over connected streams (the
+    # fixture states above).
     assert conds["K-101"] == (pytest.approx(7.0e6), pytest.approx(423.15))
     assert conds["V-101"][0] == pytest.approx(3.447e6)
     by_stream = {ln.stream_id: ln for ln in pid.lines}
@@ -255,12 +322,12 @@ def test_default_nozzles_cover_every_declared_port() -> None:
             assert len(nozzles) == 1, (spec.tag, port)
 
 
-def test_pressure_vessels_get_one_psv_nozzle() -> None:
+def test_pressure_vessel_psv_nozzles_come_from_datasheets(_real_sizers: None) -> None:
     pid = _built()
     for eq in pid.equipment:
         psv = [n for n in eq.nozzles if n.service == "psv"]
         if eq.kind in ("separator_3phase", "teg_contactor"):
-            assert len(psv) == 1, eq.tag
+            assert len(psv) == 1, eq.tag  # the sizers own the psv nozzles (S-14)
         else:
             assert psv == [], eq.tag
 
@@ -381,7 +448,9 @@ def test_prepopulated_datasheet_wins(monkeypatch: pytest.MonkeyPatch) -> None:
     assert v101.design_pressure_Pa == pytest.approx(4.2e6)
     # An empty datasheet nozzle table falls back to default nozzles per port.
     assert {n.port for n in v101.nozzles if n.port is not None} == {"inlet", "gas_out", "hc_out", "water_out"}
-    assert any(n.service == "psv" for n in v101.nozzles)
+    # No synthetic psv nozzle: the sizers own those (S-14) and this unit's
+    # datasheet is empty here.
+    assert not any(n.service == "psv" for n in v101.nozzles)
 
 
 def test_unsolved_stream_is_an_error() -> None:
@@ -406,25 +475,38 @@ def test_non_fluid_code_service_is_an_error() -> None:
         DefaultPidBuilder().build(solved)
 
 
-def test_every_registered_rule_applies_clean() -> None:
+_K_GAS = 1.24  # ideal-gas Cp/Cv of the relieving vapor; S-34 assigns k to the caller
+
+
+def _rules() -> list[tuple[str, PidRule]]:
+    """The production rule set for the solved slice: every registered rule,
+    with psv_sizing carrying the relief basis built from the solved fixture
+    (the registry default knows only the S-34 sample's V-101)."""
+    basis = relief_basis(_solved_slice(), k_gas=_K_GAS)
+    return [
+        (name, PsvSizing(basis=basis) if name == "psv_sizing" else registry.create("pid_rule", name))
+        for name in registry.available("pid_rule")
+    ]
+
+
+def test_every_registered_rule_applies_clean(_real_sizers: None) -> None:
     pid = _built()
-    for name in registry.available("pid_rule"):
-        rule = registry.create("pid_rule", name)
+    for name, rule in _rules():
         assert rule.check(rule.apply(pid)) == [], name
 
 
-def test_rules_compose_to_a_clean_fixed_point() -> None:
+def test_rules_compose_to_a_clean_fixed_point(_real_sizers: None) -> None:
     pid = _built()
     for _ in range(5):
         before = pid.model_dump()
-        for name in registry.available("pid_rule"):
-            pid = registry.create("pid_rule", name).apply(pid)
+        for _name, rule in _rules():
+            pid = rule.apply(pid)
         if pid.model_dump() == before:
             break
     else:
         pytest.fail("rules did not reach a fixed point in 5 passes")
-    for name in registry.available("pid_rule"):
-        assert registry.create("pid_rule", name).check(pid) == [], name
+    for name, rule in _rules():
+        assert rule.check(pid) == [], name
 
 
 def test_renderer_consumes_builder_output() -> None:
