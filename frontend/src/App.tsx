@@ -4,6 +4,7 @@ import { FlowsheetView } from "./views/FlowsheetView";
 import { ResultsView } from "./views/ResultsView";
 import { PfdView } from "./views/PfdView";
 import { PidView } from "./views/PidView";
+import { PlotView } from "./views/PlotView";
 import { Placeholder } from "./views/Placeholder";
 
 // One tab per view. Add a view by adding an entry here plus a file in src/views/.
@@ -48,9 +49,13 @@ export default function App() {
         {project && tab === "results" && <ResultsView />}
         {project && tab === "pfd" && <PfdView project={project} />}
         {project && tab === "pid" && <PidView project={project} />}
-        {project && tab !== "flowsheet" && tab !== "results" && tab !== "pfd" && tab !== "pid" && (
-          <Placeholder layer={current.layer} what={current.label} />
-        )}
+        {project && tab === "plot" && <PlotView project={project} />}
+        {project &&
+          tab !== "flowsheet" &&
+          tab !== "results" &&
+          tab !== "pfd" &&
+          tab !== "pid" &&
+          tab !== "plot" && <Placeholder layer={current.layer} what={current.label} />}
       </main>
     </div>
   );
