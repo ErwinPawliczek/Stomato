@@ -11,6 +11,7 @@ from ngdesign import registry
 from ngdesign.contracts import StreamState
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import components
+from ngdesign.units.teg_contactor import TEGContactor
 from tests.conftest import flash_feed
 
 #: Standard conditions volume basis, scf/lbmol (spec S-29).
@@ -97,3 +98,30 @@ def test_stages_and_circulation_reported(thermo: Thermo) -> None:
     res, _ = _solved(thermo)
     assert res.info["N_stages"] > 0.0
     assert res.info["teg_circulation_L_per_kg_water"] > 0.0
+
+
+def test_spec_below_equilibrium_floor_raises(thermo: Thermo) -> None:
+    # The lean TEG (99.82 wt% in the example case) cannot dehydrate below its
+    # water-activity floor (~0.24 lb/MMscf at 303 K): a spec under it raises.
+    res, _ = _solved(thermo)
+    floor = res.info["equilibrium_floor_lb_per_mmscf"]
+    with pytest.raises(ValueError, match="equilibrium floor"):
+        _solved(thermo, {"water_out_lb_per_mmscf": floor / 2.0})
+
+
+def test_activity_depression_lowers_floor_below_ideal(thermo: Thermo) -> None:
+    # The Parrish et al. gamma_w < 1 puts the floor strictly below the v1
+    # ideal-solution floor (x_w * Psat / P) at the same conditions.
+    from chemicals.vapor_pressure import Psat_IAPWS
+
+    res, _ = _solved(thermo)
+    lean = TEGContactor.example_case()[0]["lean_teg_in"]
+    x_w = lean["composition"]["H2O"]
+    ideal_floor = _water_content_lb_per_mmscf(Psat_IAPWS(lean["T"]) / lean["P"] * x_w)
+    assert res.info["equilibrium_floor_lb_per_mmscf"] < ideal_floor
+
+
+def test_water_activity_reported_below_one(thermo: Thermo) -> None:
+    res, _ = _solved(thermo)
+    activity = res.info["lean_teg_water_activity"]
+    assert 0.0 < activity < 1.0
