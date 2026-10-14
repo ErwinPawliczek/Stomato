@@ -101,7 +101,7 @@ export interface paths {
         put?: never;
         /**
          * Solve
-         * @description Implemented by spec B-02 once thermo + solver exist.
+         * @description Solve the current project; 501 naming the kind when a unit is missing.
          */
         post: operations["solve_api_solve_post"];
         delete?: never;
