@@ -8,7 +8,9 @@ equipment duty/power summary below. Pure function of the input —
 deterministic output, no I/O, built with ``xml.etree`` only.
 
 Equipment and stream symbols come from the shared library in
-``ngdesign.render.symbols`` (specs S-18, S-22).
+``ngdesign.render.symbols`` (specs S-18, S-22). Every drawn unit and
+stream is wrapped in a ``<g data-tag=...>`` group (spec B-03) so clients
+and tests can locate an element by tag.
 """
 
 from __future__ import annotations
@@ -18,6 +20,7 @@ from typing import Any
 from xml.etree import ElementTree as ET
 
 from ngdesign.contracts import (
+    XY,
     Flowsheet,
     SolvedFlowsheet,
     StreamState,
@@ -90,7 +93,7 @@ def _unit_size(kind: str) -> tuple[float, float]:
     return 70.0, 70.0  # exchangers and anything else
 
 
-def _layout(flowsheet: Flowsheet) -> dict[str, _Placement]:
+def _layout(flowsheet: Flowsheet, overrides: dict[str, XY] | None = None) -> dict[str, _Placement]:
     layers = _topological_layers(flowsheet.units, flowsheet)
     sizes = {u.tag: _unit_size(u.kind) for u in flowsheet.units}
     cell_w = max(sizes.values(), key=lambda s: s[0])[0] + H_GAP
@@ -111,6 +114,13 @@ def _layout(flowsheet: Flowsheet) -> dict[str, _Placement]:
                 w=w,
                 h=h,
             )
+    # Placement overrides (spec B-03): a stored position wins; the XY is the
+    # unit box's centre, size still comes from the kind. Stale tags (unit no
+    # longer in the flowsheet) are ignored — a missing tag means auto-layout.
+    for tag, xy in (overrides or {}).items():
+        if tag in placements:
+            w, h = sizes[tag]
+            placements[tag] = _Placement(tag=tag, cx=xy.x, cy=xy.y, w=w, h=h)
     return placements
 
 
@@ -278,10 +288,14 @@ def _draw_table(
 # --------------------------------------------------------------------------
 
 
-def render_pfd_svg(solved: SolvedFlowsheet) -> str:
-    """Render a SolvedFlowsheet to a complete SVG document string."""
+def render_pfd_svg(solved: SolvedFlowsheet, overrides: dict[str, XY] | None = None) -> str:
+    """Render a SolvedFlowsheet to a complete SVG document string.
+
+    ``overrides`` maps a unit tag to a stored centre position (the project's
+    ``layout.pfd``, spec B-03); unplaced tags auto-layout.
+    """
     flowsheet = solved.flowsheet
-    placements = _layout(flowsheet)
+    placements = _layout(flowsheet, overrides)
 
     max_x = max((p.cx + p.w / 2 for p in placements.values()), default=0.0)
     max_y = max((p.cy + p.h / 2 for p in placements.values()), default=0.0)
@@ -326,12 +340,14 @@ def render_pfd_svg(solved: SolvedFlowsheet) -> str:
             points = _route_stream((src.cx + src.w / 2, src.cy), (diagram_w - 2.0, src.cy))
         else:
             continue
-        _draw_stream(stream_layer, s.id, points)
+        g = ET.SubElement(stream_layer, "g", {"data-tag": s.id})
+        _draw_stream(g, s.id, points)
 
     for u in flowsheet.units:
         p = placements[u.tag]
-        _draw_unit(unit_layer, u.kind, p)
-        sym.add_text(unit_layer, p.cx, p.cy - p.h / 2 - 5, u.tag, size=9.0)
+        g = ET.SubElement(unit_layer, "g", {"data-tag": u.tag})
+        _draw_unit(g, u.kind, p)
+        sym.add_text(g, p.cx, p.cy - p.h / 2 - 5, u.tag, size=9.0)
 
     after_streams = _draw_table(
         table_layer, MARGIN, table_y, headers, [(sid, cells) for sid, cells in stream_rows], "Stream"

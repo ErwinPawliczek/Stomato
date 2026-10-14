@@ -866,9 +866,24 @@
         "summary": "Solve"
       }
     },
+    "/api/views/pfd.svg": {
+      "get": {
+        "description": "Render the current project's PFD with layout.pfd placement overrides.",
+        "operationId": "pfd_svg_api_views_pfd_svg_get",
+        "responses": {
+          "200": {
+            "content": {
+              "image/svg+xml": {}
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Pfd Svg"
+      }
+    },
     "/api/views/{view}.svg": {
       "get": {
-        "description": "Implemented by specs B-03/B-04/B-05. Returns SVG text with data-tag attributes on elements.",
+        "description": "Implemented by specs B-04/B-05. B-03 serves pfd.svg via routes_views.",
         "operationId": "view_svg_api_views__view__svg_get",
         "parameters": [
           {
@@ -877,7 +892,6 @@
             "required": true,
             "schema": {
               "enum": [
-                "pfd",
                 "pid",
                 "plot"
               ],

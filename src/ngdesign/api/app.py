@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
 from ngdesign.api.routes_solve import router as solve_router
+from ngdesign.api.routes_views import router as views_router
 from ngdesign.contracts import XY, Layout, Project, Vec3
 from ngdesign.flowsheets import slice as slice_fs
 
@@ -20,6 +21,7 @@ app = FastAPI(title="ngdesign", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 app.include_router(solve_router)
+app.include_router(views_router)
 
 _state: dict[str, Project] = {}
 
@@ -70,6 +72,6 @@ _SVG: dict[int | str, dict[str, Any]] = {200: {"content": {"image/svg+xml": {}}}
 
 
 @app.get("/api/views/{view}.svg", response_class=Response, responses=_SVG)
-def view_svg(view: Literal["pfd", "pid", "plot"]) -> Response:
-    """Implemented by specs B-03/B-04/B-05. Returns SVG text with data-tag attributes on elements."""
+def view_svg(view: Literal["pid", "plot"]) -> Response:
+    """Implemented by specs B-04/B-05. B-03 serves pfd.svg via routes_views."""
     raise HTTPException(status_code=501, detail=f"{view} renderer not wired yet")
