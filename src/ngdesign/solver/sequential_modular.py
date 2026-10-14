@@ -1,0 +1,450 @@
+"""Sequential-modular flowsheet solver (spec S-30). Plugin kind "solver", name "sequential_modular".
+
+Solves a Flowsheet by flashing boundary feeds with flash_pt, running unit models in
+dependency order, and converging recycles by stream tearing + bounded Wegstein
+acceleration (Wegstein, J.H., "Accelerating Convergence of Iterative Processes",
+Comm. ACM 1(6), 1958; bounded-q form as in Westerberg et al., "Process Flowsheeting",
+Cambridge University Press, 1979).
+
+Method:
+1. Flash every feed stream (source=None) once; feeds are fixed boundary conditions.
+2. Build the unit digraph and find strongly connected components (Kosaraju). The
+   condensation is processed in topological order.
+3. An acyclic component runs once. A cyclic component is torn: a small set of internal
+   streams is picked by greedy cycle-breaking (repeatedly find a cycle and tear its
+   edge whose source unit has the highest remaining out-degree, ties by stream id -
+   one tear for a simple loop, a small heuristic set for nested ones), then the torn
+   vectors (component flows, T, P) are iterated:
+
+       x_k  injected guess, y_k  value calculated by the units
+       s_k = (y_k - y_{k-1}) / (x_k - x_{k-1})          per-variable secant
+       q_k = s_k / (s_k - 1), clamped to [-5, 0]
+       x_{k+1} = q_k * x_k + (1 - q_k) * y_k
+
+   q = 0 is direct substitution, q = -5 the strongest acceleration allowed. The first
+   pass and any degenerate secant fall back to direct substitution.
+4. Converged when every torn variable satisfies |y - x| <= RTOL * max(|x|, 1.0):
+   1e-6 relative per the spec, with a near-zero absolute floor of 1e-6 in the
+   variable's own units (mol/s, K, Pa). MAX_ITERATIONS passes are allowed; past that
+   the solver returns converged=False - it never raises for non-convergence.
+
+Injection of a torn stream flashes the guessed (T, P, flows) through the thermo
+package, so downstream units always see a consistent StreamState. Wegstein iterates
+that leave the physical range (negative flows, T or P <= 0) are clamped for injection
+only; raw values stay in the secant history. A unit model that raises is a plugin bug
+and propagates: only the iteration budget yields converged=False. Tear initialization
+is the molar-flow-weighted mean of the boundary feeds (simple, deterministic;
+feed-free sheets start from 1 mol/s nitrogen at ambient conditions).
+"""
+
+from __future__ import annotations
+
+import heapq
+from dataclasses import dataclass
+from typing import NamedTuple
+
+from ngdesign import registry
+from ngdesign.contracts import (
+    COMPONENTS,
+    FeedSpec,
+    Flowsheet,
+    SolvedFlowsheet,
+    StreamSpec,
+    StreamState,
+    UnitResult,
+)
+from ngdesign.contracts.plugins import Thermo, UnitModel
+from ngdesign.registry import register
+
+#: Relative convergence tolerance for torn variables (spec S-30).
+RTOL = 1e-6
+
+#: Hard cap on passes over a cyclic component (spec S-30).
+MAX_ITERATIONS = 100
+
+#: Strongest Wegstein acceleration allowed (spec S-30: q in [-5, 0]).
+WEGSTEIN_Q_MIN = -5.0
+
+#: Index of T and P inside a tear vector, after the component flows.
+_T_IDX = len(COMPONENTS)
+_P_IDX = len(COMPONENTS) + 1
+
+
+class _Edge(NamedTuple):
+    """One directed unit-to-unit connection, carrying the stream that realizes it."""
+
+    stream_id: str
+    src: str
+    dst: str
+
+
+@dataclass
+class _Tear:
+    """Bookkeeping for one torn stream: guess, calculated values, secant history."""
+
+    stream_id: str
+    x: list[float]
+    x_prev: list[float] | None = None
+    y_prev: list[float] | None = None
+
+
+@dataclass
+class _Context:
+    """Mutable working state threaded through the solver's helpers."""
+
+    fs: Flowsheet
+    units: dict[str, UnitModel]
+    thermo: Thermo
+    states: dict[str, StreamState]
+    results: dict[str, UnitResult]
+
+
+def _stream_edges(fs: Flowsheet) -> list[_Edge]:
+    """Directed edges between units: one per stream with both ends on units."""
+    edges = []
+    for s in fs.streams:
+        if s.source is not None and s.target is not None:
+            edges.append(_Edge(s.id, s.source.unit, s.target.unit))
+    return edges
+
+
+def _topo_order[K: (str, int)](nodes: list[K], edges: list[tuple[K, K]]) -> list[K]:
+    """Kahn topological order of a DAG; deterministic (smallest node first).
+
+    Raises RuntimeError on a cycle - callers must have removed one first (tears).
+    """
+    successor: dict[K, list[K]] = {n: [] for n in nodes}
+    indegree: dict[K, int] = {n: 0 for n in nodes}
+    for u, v in edges:
+        successor[u].append(v)
+        indegree[v] += 1
+    for lst in successor.values():
+        lst.sort()
+    ready = [n for n in nodes if indegree[n] == 0]
+    heapq.heapify(ready)
+    order: list[K] = []
+    while ready:
+        node = heapq.heappop(ready)
+        order.append(node)
+        for nxt in successor[node]:
+            indegree[nxt] -= 1
+            if indegree[nxt] == 0:
+                heapq.heappush(ready, nxt)
+    if len(order) != len(nodes):
+        raise RuntimeError("cycle where the solver expected a DAG - tear selection failed")
+    return order
+
+
+def _strongly_connected(nodes: list[str], edges: list[_Edge]) -> list[list[str]]:
+    """Kosaraju SCCs; deterministic (nodes sorted, components returned member-sorted)."""
+    adjacency: dict[str, list[str]] = {n: [] for n in nodes}
+    transpose: dict[str, list[str]] = {n: [] for n in nodes}
+    for e in edges:
+        adjacency[e.src].append(e.dst)
+        transpose[e.dst].append(e.src)
+    for table in (adjacency, transpose):
+        for lst in table.values():
+            lst.sort()
+    visited: set[str] = set()
+    finished: list[str] = []
+    for start in nodes:
+        if start in visited:
+            continue
+        visited.add(start)
+        stack: list[tuple[str, int]] = [(start, 0)]
+        while stack:
+            node, idx = stack[-1]
+            if idx < len(adjacency[node]):
+                stack[-1] = (node, idx + 1)
+                nxt = adjacency[node][idx]
+                if nxt not in visited:
+                    visited.add(nxt)
+                    stack.append((nxt, 0))
+            else:
+                finished.append(node)
+                stack.pop()
+    seen: set[str] = set()
+    components: list[list[str]] = []
+    for start in reversed(finished):
+        if start in seen:
+            continue
+        seen.add(start)
+        component: list[str] = []
+        remaining: list[str] = [start]
+        while remaining:
+            node = remaining.pop()
+            component.append(node)
+            for nxt in transpose[node]:
+                if nxt not in seen:
+                    seen.add(nxt)
+                    remaining.append(nxt)
+        components.append(sorted(component))
+    return components
+
+
+def _condensation_topo(tags: list[str], edges: list[_Edge]) -> list[list[str]]:
+    """Strongly connected components of the unit graph, in execution order."""
+    components = _strongly_connected(tags, edges)
+    index_of = {tag: i for i, component in enumerate(components) for tag in component}
+    cross: list[tuple[int, int]] = sorted(
+        {(index_of[e.src], index_of[e.dst]) for e in edges if index_of[e.src] != index_of[e.dst]}
+    )
+    if not cross:
+        return components
+    order = _topo_order(list(range(len(components))), cross)
+    return [components[i] for i in order]
+
+
+def _find_cycle(nodes: list[str], edges: list[_Edge]) -> list[_Edge] | None:
+    """One cycle as an ordered list of its edges (DFS back edge); None if acyclic."""
+    adjacency: dict[str, list[_Edge]] = {n: [] for n in nodes}
+    for e in edges:
+        adjacency[e.src].append(e)
+    for lst in adjacency.values():
+        lst.sort(key=lambda e: e.stream_id)
+    white, gray, black = 0, 1, 2
+    color = dict.fromkeys(nodes, white)
+    parent_edge: dict[str, _Edge] = {}
+    for start in nodes:
+        if color[start] != white:
+            continue
+        color[start] = gray
+        stack: list[tuple[str, int]] = [(start, 0)]
+        while stack:
+            node, idx = stack[-1]
+            if idx < len(adjacency[node]):
+                stack[-1] = (node, idx + 1)
+                edge = adjacency[node][idx]
+                nxt = edge.dst
+                if color[nxt] == gray:
+                    cycle = [edge]
+                    walk = node
+                    while walk != nxt:
+                        step = parent_edge[walk]
+                        cycle.append(step)
+                        walk = step.src
+                    cycle.reverse()
+                    return cycle
+                if color[nxt] == white:
+                    color[nxt] = gray
+                    parent_edge[nxt] = edge
+                    stack.append((nxt, 0))
+            else:
+                color[node] = black
+                stack.pop()
+    return None
+
+
+def _pick_tears(fs: Flowsheet, block: set[str]) -> list[str]:
+    """Streams to tear so the block runs acyclically: greedy cycle-breaking.
+
+    Repeatedly finds a cycle and tears the edge whose source unit has the most
+    remaining out-degree (ties by stream id): the minimum set for a simple loop,
+    a small heuristic set for nested ones (minimum feedback arc set is NP-hard;
+    the spec asks for a simple heuristic).
+    """
+    edges = [e for e in _stream_edges(fs) if e.src in block and e.dst in block]
+    nodes = sorted(block)
+    torn: list[str] = []
+    remaining = list(edges)
+    while (cycle := _find_cycle(nodes, remaining)) is not None:
+        out_degree = {n: 0 for n in nodes}
+        for e in remaining:
+            out_degree[e.src] += 1
+        best = min(cycle, key=lambda e: (-out_degree[e.src], e.stream_id))
+        remaining.remove(best)
+        torn.append(best.stream_id)
+    return sorted(torn)
+
+
+def _block_order(fs: Flowsheet, block: set[str], torn: set[str]) -> list[str]:
+    """Execution order for the units of one block; the tears break its cycles."""
+    tags = sorted(block)
+    edges = [
+        (e.src, e.dst)
+        for e in _stream_edges(fs)
+        if e.src in block and e.dst in block and e.stream_id not in torn
+    ]
+    return _topo_order(tags, edges)
+
+
+def _check_ports(fs: Flowsheet, units: dict[str, UnitModel]) -> None:
+    """Every stream end must name a port the unit plugin actually declares.
+
+    Without this, a typo'd port name would silently drop or invent material.
+    """
+    for s in fs.streams:
+        if s.source is not None and s.source.port not in units[s.source.unit].outlet_ports:
+            raise ValueError(f"stream {s.id}: unit {s.source.unit} has no outlet port {s.source.port!r}")
+        if s.target is not None and s.target.port not in units[s.target.unit].inlet_ports:
+            raise ValueError(f"stream {s.id}: unit {s.target.unit} has no inlet port {s.target.port!r}")
+
+
+def _flash_feed(spec: StreamSpec, thermo: Thermo) -> StreamState:
+    """Flash one boundary feed at its specified (T, P)."""
+    feed = spec.feed
+    if feed is None:  # unreachable: Flowsheet validation requires a feed when source is None
+        raise ValueError(f"feed stream {spec.id} has no feed spec")
+    return thermo.flash_pt(feed.composition, feed.T, feed.P, feed.molar_flow)
+
+
+def _tear_vector(state: StreamState) -> list[float]:
+    """The torn variables of a stream: component flows (mol/s), then T (K), P (Pa)."""
+    flows = state.component_flows()
+    return [flows.get(c, 0.0) for c in COMPONENTS] + [state.T, state.P]
+
+
+def _inject_tear(vector: list[float], fallback_composition: dict[str, float], thermo: Thermo) -> StreamState:
+    """Build the StreamState a tear guess is injected as, by flashing it.
+
+    Values outside the physical range (negative flows, T or P <= 0) are clamped for
+    injection only - raw values stay in the secant history. A zero-flow guess cannot
+    be flashed; it becomes a degenerate stream at the fallback composition.
+    """
+    flows = {c: max(vector[i], 0.0) for i, c in enumerate(COMPONENTS)}
+    total = sum(flows.values())
+    t = max(vector[_T_IDX], 1.0)
+    p = max(vector[_P_IDX], 1.0)
+    if total <= 0.0:
+        return StreamState(
+            T=t,
+            P=p,
+            molar_flow=0.0,
+            composition=dict(fallback_composition),
+            vapor_fraction=1.0,
+            enthalpy=0.0,
+            entropy=0.0,
+            phases=[],
+        )
+    composition = {c: n / total for c, n in flows.items() if n > 0.0}
+    return thermo.flash_pt(composition, t, p, total)
+
+
+def _init_guess(fs: Flowsheet) -> tuple[list[float], dict[str, float]]:
+    """Initial tear guess: the molar-flow-weighted mean of the boundary feeds.
+
+    Feed-free sheets start from 1 mol/s nitrogen at ambient conditions - any
+    positive, normalized guess converges for a well-posed loop.
+    """
+    feeds: list[FeedSpec] = []
+    for s in fs.streams:
+        if s.source is None and s.feed is not None:
+            feeds.append(s.feed)
+    total = sum(f.molar_flow for f in feeds)
+    if not feeds or total <= 0.0:
+        composition: dict[str, float] = {"N2": 1.0}
+        t, p, flow = 298.15, 101325.0, 1.0
+    else:
+        t = sum(f.T * f.molar_flow for f in feeds) / total
+        p = sum(f.P * f.molar_flow for f in feeds) / total
+        flow = total
+        moles: dict[str, float] = {}
+        for f in feeds:
+            for c, z in f.composition.items():
+                moles[c] = moles.get(c, 0.0) + z * f.molar_flow
+        composition = {c: n / flow for c, n in sorted(moles.items())}
+    vector = [flow * composition.get(c, 0.0) for c in COMPONENTS] + [t, p]
+    return vector, composition
+
+
+def _wegstein_next(x: list[float], y: list[float], x_prev: list[float], y_prev: list[float]) -> list[float]:
+    """One bounded-Wegstein step, per variable:
+
+        s = (y - y_prev) / (x - x_prev); q = s / (s - 1), clamped to [-5, 0]
+        x_next = q * x + (1 - q) * y
+
+    Direct substitution (q = 0) when the secant is degenerate.
+    """
+    out: list[float] = []
+    for xc, yc, xp, yp in zip(x, y, x_prev, y_prev, strict=True):
+        dx = xc - xp
+        if abs(dx) <= 1e-12 * max(abs(xc), 1.0):
+            out.append(yc)
+            continue
+        slope = (yc - yp) / dx
+        q = min(max(slope / (slope - 1.0), WEGSTEIN_Q_MIN), 0.0)
+        out.append(q * xc + (1.0 - q) * yc)
+    return out
+
+
+def _converged(x: list[float], y: list[float]) -> bool:
+    """Every torn variable stable to RTOL relative (with a near-zero absolute floor)."""
+    return all(abs(yc - xc) <= RTOL * max(abs(xc), 1.0) for xc, yc in zip(x, y, strict=True))
+
+
+def _run_units(ctx: _Context, order: list[str]) -> None:
+    """Run the units of one block in order, writing stream states and unit results."""
+    for tag in order:
+        spec = ctx.fs.unit(tag)
+        unit = ctx.units[tag]
+        inlets: dict[str, StreamState] = {}
+        for port in unit.inlet_ports:
+            incoming = [s for s in ctx.fs.inlets(tag) if s.target is not None and s.target.port == port]
+            if not incoming:
+                raise ValueError(f"unit {tag}: inlet port {port!r} has no connected stream")
+            inlets[port] = ctx.states[incoming[0].id]
+        result = unit.solve(inlets, spec.params, ctx.thermo)
+        ctx.results[tag] = result
+        for stream in ctx.fs.outlets(tag):
+            source = stream.source
+            if source is None or source.port not in result.outlets:
+                raise ValueError(
+                    f"unit {tag} returned no state for outlet port "
+                    f"{source.port if source else '?'!r} (stream {stream.id})"
+                )
+            ctx.states[stream.id] = result.outlets[source.port]
+
+
+def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[bool, int]:
+    """Iterate one cyclic block to a converged tear solution, or give up at the cap."""
+    guess, fallback_composition = _init_guess(ctx.fs)
+    torn = [_Tear(stream_id=sid, x=list(guess)) for sid in tears]
+    for iteration in range(1, MAX_ITERATIONS + 1):
+        for t in torn:
+            ctx.states[t.stream_id] = _inject_tear(t.x, fallback_composition, ctx.thermo)
+        _run_units(ctx, order)
+        if all(_converged(t.x, _tear_vector(ctx.states[t.stream_id])) for t in torn):
+            return True, iteration
+        for t in torn:
+            calculated = _tear_vector(ctx.states[t.stream_id])
+            injected = t.x
+            if t.y_prev is None or t.x_prev is None:
+                t.x = list(calculated)  # first pass: direct substitution
+            else:
+                t.x = _wegstein_next(injected, calculated, t.x_prev, t.y_prev)
+            t.x_prev, t.y_prev = injected, calculated
+    return False, MAX_ITERATIONS
+
+
+@register("solver", "sequential_modular")
+class SequentialModular:
+    """Solver plugin: sequential-modular execution with tearing + Wegstein."""
+
+    def solve(self, fs: Flowsheet, thermo: Thermo) -> SolvedFlowsheet:
+        units: dict[str, UnitModel] = {u.tag: registry.create("unit", u.kind) for u in fs.units}
+        _check_ports(fs, units)
+        ctx = _Context(fs=fs, units=units, thermo=thermo, states={}, results={})
+        for s in fs.streams:
+            if s.source is None:
+                ctx.states[s.id] = _flash_feed(s, thermo)
+        tags = sorted(u.tag for u in fs.units)
+        converged = True
+        iterations = 0
+        for block in _condensation_topo(tags, _stream_edges(fs)):
+            block_set = set(block)
+            tears = _pick_tears(fs, block_set)
+            order = _block_order(fs, block_set, set(tears))
+            if tears:
+                ok, block_iterations = _converge_block(ctx, order, tears)
+                converged = converged and ok
+            else:
+                _run_units(ctx, order)
+                block_iterations = 1
+            iterations = max(iterations, block_iterations)
+        return SolvedFlowsheet(
+            flowsheet=fs,
+            streams=ctx.states,
+            units=ctx.results,
+            converged=converged,
+            iterations=iterations,
+        )
