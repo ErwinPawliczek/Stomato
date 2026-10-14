@@ -19,6 +19,7 @@ from collections.abc import Callable
 from ngdesign import registry
 from ngdesign.contracts.plugins import Solver, Thermo
 from ngdesign.contracts.stream import StreamState
+from ngdesign.flowsheets import recycle_bench
 from ngdesign.flowsheets import slice as slice_fs
 
 # Compositions and conditions lifted from the oracle tests they mirror.
@@ -64,4 +65,6 @@ def default_cases() -> dict[str, Callable[[], object]]:
         ),
         # End-to-end slice solve (tests/e2e/test_slice.py, ngdesign.cli slice).
         "solver.slice_sequential_modular": lambda: solver.solve(flowsheet, thermo),
+        # End-to-end recycle-heavy solve (tests/e2e/test_recycle_bench.py, OQ-3).
+        "solver.recycle_bench_sequential_modular": lambda: solver.solve(recycle_bench.build(), thermo),
     }
