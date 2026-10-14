@@ -110,6 +110,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/views/pfd.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pfd Svg
+         * @description Render the current project's PFD with layout.pfd placement overrides.
+         */
+        get: operations["pfd_svg_api_views_pfd_svg_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/views/{view}.svg": {
         parameters: {
             query?: never;
@@ -119,7 +139,7 @@ export interface paths {
         };
         /**
          * View Svg
-         * @description Implemented by specs B-03/B-04/B-05. Returns SVG text with data-tag attributes on elements.
+         * @description Implemented by specs B-04/B-05. B-03 serves pfd.svg via routes_views.
          */
         get: operations["view_svg_api_views__view__svg_get"];
         put?: never;
@@ -618,12 +638,32 @@ export interface operations {
             };
         };
     };
+    pfd_svg_api_views_pfd_svg_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": unknown;
+                };
+            };
+        };
+    };
     view_svg_api_views__view__svg_get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                view: "pfd" | "pid" | "plot";
+                view: "pid" | "plot";
             };
             cookie?: never;
         };
