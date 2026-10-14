@@ -3,8 +3,17 @@ import { ApiError, api, type Layout, type Project, type Vec3 } from "../api/clie
 import mockProject from "../../mocks/project.json";
 import { PLOT_GRID_MM, PlotView, defaultPlotOrigins, plotAfterDrag, snapToGrid } from "./PlotView";
 
-// jsdom has no PointerEvent; the view's drag delegation needs one.
+// jsdom has no PointerEvent and no SVG geometry; the view's coordinate
+// hit-test needs both.
 beforeAll(() => {
+  // Every element reports the V-101 box (45,70)-(155,130): the hit-test at a
+  // point inside it finds the FIRST unit-tagged group in document order.
+  Object.defineProperty(Element.prototype, "getBoundingClientRect", {
+    configurable: true,
+    value() {
+      return { x: 45, y: 70, left: 45, top: 70, right: 155, bottom: 130, width: 110, height: 60 };
+    },
+  });
   if (!("PointerEvent" in window)) {
     (window as unknown as { PointerEvent?: unknown }).PointerEvent = MouseEvent;
   }
@@ -106,6 +115,20 @@ test("dropping a drag PUTs the snapped position and re-renders the re-routed pla
   expect(container.querySelector("g")?.getAttribute("transform")).toBeNull();
 });
 
+test("a drag starting on a routed line still moves the equipment underneath", async () => {
+  // Regression: routed lines draw OVER the footprints, so pointer events land
+  // on a line polyline; the hit-test must find the equipment below it anyway.
+  vi.spyOn(api, "plotSvg").mockResolvedValue(SVG_BEFORE);
+  const placePlot = vi.spyOn(api, "placePlot").mockResolvedValue(layout);
+  const { container } = render(<PlotView project={project} />);
+  await findGroup(container, "V-101");
+  const plotPane = container.querySelector(".plot") as HTMLElement;
+  fireEvent.pointerDown(plotPane, { clientX: 100, clientY: 100, pointerId: 1, button: 0 });
+  fireEvent.pointerMove(plotPane, { clientX: 100, clientY: 100, pointerId: 1 });
+  fireEvent.pointerUp(plotPane, { clientX: 100, clientY: 100, pointerId: 1 });
+  await waitFor(() => expect(placePlot).toHaveBeenCalledWith("V-101", V(1_000, 2_000, 0)));
+});
+
 test("a dragged line group never saves a placement", async () => {
   vi.spyOn(api, "plotSvg").mockResolvedValue(SVG_BEFORE);
   const placePlot = vi.spyOn(api, "placePlot").mockResolvedValue(layout);
@@ -160,9 +183,9 @@ test("a first drag of never-placed equipment anchors on the mirrored default ori
   const group = (await findGroup(container, "V-101")) as SVGGElement;
   // V-101 is the first unplaced unit: default origin 12 000. Drag 500 west —
   // one grid cell; a sub-grid drag would snap back to 12 000.
-  fireEvent.pointerDown(group, { clientX: 600, clientY: 100, pointerId: 1, button: 0 });
-  fireEvent.pointerMove(group, { clientX: 100, clientY: 100, pointerId: 1 });
-  fireEvent.pointerUp(group, { clientX: 100, clientY: 100, pointerId: 1 });
+  fireEvent.pointerDown(group, { clientX: 100, clientY: 100, pointerId: 1, button: 0 });
+  fireEvent.pointerMove(group, { clientX: -400, clientY: 100, pointerId: 1 });
+  fireEvent.pointerUp(group, { clientX: -400, clientY: 100, pointerId: 1 });
   await waitFor(() => expect(placePlot).toHaveBeenCalledWith("V-101", V(11_500, 0, 0)));
 });
 

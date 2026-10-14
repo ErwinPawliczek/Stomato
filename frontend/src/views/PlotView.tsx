@@ -67,6 +67,32 @@ function viewBoxWidth(svg: Element | null | undefined): number {
   return Number.isFinite(vb[2]) ? vb[2] : 0;
 }
 
+/** Pure: the placeable equipment element under a client point, if any — the
+ *  smallest unit-tagged element containing the point wins. Routed lines are
+ *  drawn OVER the footprints, so the element a pointer lands on is often a
+ *  line polyline whose tagged group is not equipment; finding equipment needs
+ *  coordinates, not the target (same pattern as the P&ID view). */
+export function placeableTagAt(
+  root: Element | null | undefined,
+  unitTags: Set<string>,
+  x: number,
+  y: number,
+): Element | null {
+  let best: Element | null = null;
+  let bestArea = Infinity;
+  for (const el of root?.querySelectorAll<Element>("g[data-tag]") ?? []) {
+    if (!unitTags.has(el.getAttribute("data-tag") ?? "")) continue;
+    const r = el.getBoundingClientRect();
+    if (x < r.left || x > r.right || y < r.top || y > r.bottom) continue;
+    const area = r.width * r.height;
+    if (area < bestArea) {
+      best = el;
+      bestArea = area;
+    }
+  }
+  return best;
+}
+
 /** Layer 5: the plot plan (top view). Drag an equipment footprint (or nudge
  *  with arrow keys) to move it; the drop PUTs the grid-snapped position and
  *  re-fetches the view — GET /api/views/plot.svg re-routes on every fetch
@@ -151,9 +177,11 @@ export function PlotView({ project }: { project: Project }) {
   // backend, which applies layout.plot to equipment only.
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>): void {
     if (saving || routing || e.button > 0) return;
-    const group = (e.target as Element | null)?.closest("g[data-tag]") as SVGGElement | null;
+    // Hit-test coordinates: routed lines draw over the footprints, so the
+    // event target is often a line polyline, not the equipment underneath.
+    const group = placeableTagAt(containerRef.current, unitTags, e.clientX, e.clientY) as SVGGElement | null;
     const tag = group?.getAttribute("data-tag") ?? "";
-    if (!group || !tag || !unitTags.has(tag)) return;
+    if (!group || !tag) return;
     setSelected(tag);
     const svgEl = containerRef.current?.querySelector("svg");
     dragRef.current = {
