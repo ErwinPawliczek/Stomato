@@ -12,6 +12,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 
+from ngdesign.api.routes_pid import router as pid_router
 from ngdesign.api.routes_solve import router as solve_router
 from ngdesign.api.routes_views import router as views_router
 from ngdesign.contracts import XY, Layout, Project, Vec3
@@ -20,6 +21,7 @@ from ngdesign.flowsheets import slice as slice_fs
 app = FastAPI(title="ngdesign", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+app.include_router(pid_router)
 app.include_router(solve_router)
 app.include_router(views_router)
 

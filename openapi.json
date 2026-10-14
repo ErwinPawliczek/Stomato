@@ -881,6 +881,21 @@
         "summary": "Pfd Svg"
       }
     },
+    "/api/views/pid.svg": {
+      "get": {
+        "description": "P&ID of the current project: builder + all rules at a fixed point.",
+        "operationId": "pid_svg_api_views_pid_svg_get",
+        "responses": {
+          "200": {
+            "content": {
+              "image/svg+xml": {}
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Pid Svg"
+      }
+    },
     "/api/views/{view}.svg": {
       "get": {
         "description": "Implemented by specs B-04/B-05. B-03 serves pfd.svg via routes_views.",

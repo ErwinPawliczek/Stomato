@@ -130,6 +130,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/views/pid.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pid Svg
+         * @description P&ID of the current project: builder + all rules at a fixed point.
+         */
+        get: operations["pid_svg_api_views_pid_svg_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/views/{view}.svg": {
         parameters: {
             query?: never;
@@ -639,6 +659,26 @@ export interface operations {
         };
     };
     pfd_svg_api_views_pfd_svg_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": unknown;
+                };
+            };
+        };
+    };
+    pid_svg_api_views_pid_svg_get: {
         parameters: {
             query?: never;
             header?: never;
