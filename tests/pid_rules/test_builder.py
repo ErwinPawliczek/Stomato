@@ -335,7 +335,9 @@ def test_pressure_vessel_psv_nozzles_come_from_datasheets(_real_sizers: None) ->
 def test_machine_nozzles_use_conventional_services() -> None:
     pid = _built()
     by_tag = {e.tag: e for e in pid.equipment}
-    for tag in ("P-101", "K-101"):
+    # K-101 is the sample's only machine: the authorized data correction
+    # turned P-101 into a jt_valve (inlet/outlet ports, no sizer).
+    for tag in ("K-101",):
         services = {n.service: n.port for n in by_tag[tag].nozzles}
         assert services == {"suction": "inlet", "discharge": "outlet"}
 
