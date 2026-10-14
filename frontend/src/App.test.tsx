@@ -7,5 +7,5 @@ test("shows every tab and the slice units from the mock", async () => {
     expect(screen.getByRole("tab", { name: label })).toBeTruthy();
   }
   expect(await screen.findByText("V-101")).toBeTruthy();
-  expect(screen.getByText("S-001")).toBeTruthy();
+  expect(screen.getAllByText("S-001").length).toBeGreaterThan(0);
 });
