@@ -54,6 +54,8 @@ DEFAULT_ENVELOPE_HALF_MM = 1_000.0  # 2 m cube around each origin
 LEG_EXTENSION_MM = 1_000.0  # clearance retry step
 LEG_EXTENSION_TRIES = 20
 MIN_RUN_MM = 0.5  # same as the contract continuity tolerance
+#: Same 100 mm workmanship margin the nozzle-leg length formula uses.
+WORKMANSHIP_MARGIN_MM = 100.0
 ATMOSPHERE_PA = 101_325.0
 SCHEDULE_FALLBACK = "40"
 
@@ -182,10 +184,74 @@ def _layout(pid: PID, layout: dict[str, Any]) -> tuple[dict[str, Vec3], list[Equ
     return origins, envelopes
 
 
-def _boundaries(origins: dict[str, Vec3]) -> tuple[Vec3, Vec3]:
-    """Boundary ends 3 000 mm beyond the first/last equipment, at grade."""
-    xs = [o.x for o in origins.values()]
-    return _pt(min(xs) - BOUNDARY_SETBACK_MM, 0.0, 0.0), _pt(max(xs) + BOUNDARY_SETBACK_MM, 0.0, 0.0)
+def _boundaries(pid: PID, origins: dict[str, Vec3]) -> tuple[Vec3, Vec3]:
+    """Boundary ends beyond the first/last equipment, at grade.
+
+    The setback is BOUNDARY_SETBACK_MM unless a boundary line's nozzle
+    geometry demands more: the rack run between the boundary column and the
+    nozzle-leg corner must host the line's two elbows, so the boundary also
+    clears the nozzle's reach toward it plus one leg-extension step of
+    slack. (The fixed 3 000 mm setback left the locked e2e slice's feed
+    line a 470 mm rack run that cannot host two 8 in elbows - surfaced by
+    the S-35 end-to-end oracle.)
+    """
+    x0 = min(o.x for o in origins.values())
+    x1 = max(o.x for o in origins.values())
+    need_w, need_e = BOUNDARY_SETBACK_MM, BOUNDARY_SETBACK_MM
+    for pl in pid.lines:
+        if pl.start.boundary and not pl.end.boundary:
+            need_w = max(need_w, _boundary_setback(pl, pl.end, pid, origins, x0, west=True))
+        if pl.end.boundary and not pl.start.boundary:
+            need_e = max(need_e, _boundary_setback(pl, pl.start, pid, origins, x1, west=False))
+    return _pt(x0 - need_w, 0.0, 0.0), _pt(x1 + need_e, 0.0, 0.0)
+
+
+def _boundary_setback(
+    pl: PidLine,
+    end: LineEnd,
+    pid: PID,
+    origins: dict[str, Vec3],
+    edge_x: float,
+    *,
+    west: bool,
+) -> float:
+    """Setback so the rack run past this nozzle hosts the line's elbows."""
+    cte = elbow_90_lr_cte_mm(pl.nps_in)
+    leg = max(NOZZLE_LEG_MM, WN_FLANGE_LENGTH_MM + cte + 100.0)
+    corner = _corner_x(pl, end, pid, origins, leg)
+    if corner is None:
+        return BOUNDARY_SETBACK_MM
+    slack = 2.0 * cte + MIN_RUN_MM + WORKMANSHIP_MARGIN_MM
+    gap = edge_x - corner if west else corner - edge_x
+    return max(BOUNDARY_SETBACK_MM, gap + slack)
+
+
+def _corner_x(
+    pl: PidLine,
+    end: LineEnd,
+    pid: PID,
+    origins: dict[str, Vec3],
+    leg_len: float,
+) -> float | None:
+    """World x where the rack run meets this nozzle leg, or None.
+
+    Mirrors _chain: a W-facing nozzle's corner sits leg_len west of the
+    nozzle, an E-facing one leg_len east, a vertical one directly above it.
+    Returns None for ends the router's own resolution will reject with the
+    informative error, so this helper never raises first.
+    """
+    eq = next((e for e in pid.equipment if e.tag == end.equipment), None) if end.equipment else None
+    if eq is None or end.nozzle is None:
+        return None
+    noz = next((n for n in eq.nozzles if n.id == end.nozzle), None)
+    if noz is None:
+        return None
+    px = origins[eq.tag].x + noz.position_mm.x
+    if noz.facing is Direction.W:
+        return px - leg_len
+    if noz.facing is Direction.E:
+        return px + leg_len
+    return px
 
 
 def _resolve_end(end: LineEnd, pid: PID, origins: dict[str, Vec3], boundary: Vec3, which: str) -> _End:
@@ -231,7 +297,22 @@ def _collapse(points: list[Vec3]) -> list[Vec3]:
     return pts
 
 
-def _chain(start: _End, end: _End, rack: float, leg_len: float, flange_len: float) -> list[Vec3]:
+def _y_reach(leg_len: float, axis: tuple[float, float, float], cte: float) -> float:
+    """Corner offset along a nozzle axis.
+
+    A north/south offset shifts the rack run in y, which inserts a y-leg
+    between the x-run and the drop - an interior leg hosting elbows at both
+    ends, so it must clear two centre-to-ends, not the nozzle-leg minimum
+    (the S-35 slice's E-101 -> T-101 8 in line proved 504.8 mm too short for
+    609.6 mm of elbows). East/west or vertical offsets keep the nozzle-leg
+    length: their legs host a single elbow.
+    """
+    if axis[1]:
+        return max(leg_len, 2.0 * cte + WORKMANSHIP_MARGIN_MM)
+    return leg_len
+
+
+def _chain(start: _End, end: _End, rack: float, leg_len: float, flange_len: float, cte: float) -> list[Vec3]:
     """Raw waypoint chain of the canonical profile, before collapsing."""
     pts: list[Vec3] = []
     if start.facing is None:
@@ -239,7 +320,7 @@ def _chain(start: _End, end: _End, rack: float, leg_len: float, flange_len: floa
     else:
         u = _AXES[start.facing]
         pts.append(_step(start.point, u, flange_len))  # start flange face
-        pts.append(_step(start.point, u, leg_len))  # corner above the start leg
+        pts.append(_step(start.point, u, _y_reach(leg_len, u, cte)))  # corner above the start leg
     last = pts[-1]
     pts.append(_pt(last.x, last.y, rack))  # rise/drop to the rack
     if end.facing is None:
@@ -247,7 +328,7 @@ def _chain(start: _End, end: _End, rack: float, leg_len: float, flange_len: floa
         e_face = end.point
     else:
         u = _AXES[end.facing]
-        e_corner = _step(end.point, u, leg_len)
+        e_corner = _step(end.point, u, _y_reach(leg_len, u, cte))
         e_face = _step(end.point, u, flange_len)
     last = pts[-1]
     pts.append(_pt(e_corner.x, last.y, rack))  # run along x
@@ -391,7 +472,7 @@ class OrthogonalRouter:
     def route(self, pid: PID, layout: dict[str, Any]) -> PipingNetwork:
         rack = float(layout.get("rack_elevation_mm", DEFAULT_RACK_ELEVATION_MM))
         origins, envelopes = _layout(pid, layout)
-        boundary_start, boundary_end = _boundaries(origins)
+        boundary_start, boundary_end = _boundaries(pid, origins)
         lines = [
             self._route_line(pl, pid, origins, envelopes, rack, boundary_start, boundary_end)
             for pl in pid.lines
@@ -414,7 +495,7 @@ class OrthogonalRouter:
         leg_len = max(NOZZLE_LEG_MM, WN_FLANGE_LENGTH_MM + cte + 100.0)
         schedule = _select_schedule(pl.nps_in, pl.design_pressure_Pa - ATMOSPHERE_PA, pl.pipe_class)
         for _ in range(LEG_EXTENSION_TRIES):
-            chain = _chain(start, end, rack, leg_len, WN_FLANGE_LENGTH_MM)
+            chain = _chain(start, end, rack, leg_len, WN_FLANGE_LENGTH_MM, cte)
             components = _Builder(pl, schedule).build(chain, start, end)
             exempt = {t for t in (pl.start.equipment, pl.end.equipment) if t}
             clash = _envelope_clash(components, envelopes, exempt)
