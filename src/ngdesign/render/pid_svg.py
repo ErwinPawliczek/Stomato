@@ -8,12 +8,13 @@ line. Pure functions of the PID — deterministic output, no I/O.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 from xml.etree import ElementTree as ET
 
 from ngdesign.contracts import (
     PID,
+    XY,
     Direction,
     InlineKind,
     PidEquipment,
@@ -88,7 +89,7 @@ def _equipment_bbox_mm(eq: PidEquipment) -> tuple[float, float, float, float]:
     return min(xs) - pad, max(xs) + pad, min(zs) - pad, max(zs) + pad
 
 
-def _layout(pid: PID) -> dict[str, _Placement]:
+def _layout(pid: PID, placed: dict[str, XY] | None = None) -> dict[str, _Placement]:
     tags = sorted(e.tag for e in pid.equipment)
     by_tag = {e.tag: e for e in pid.equipment}
     edges = [
@@ -121,6 +122,16 @@ def _layout(pid: PID) -> dict[str, _Placement]:
                 bbox_h=heights[t],
                 origin_x=bx - min_x * SCALE,
                 origin_y=by + max_z * SCALE,
+            )
+
+    # User placements (view px, bbox top-left) win over the auto layout; the
+    # equipment origin shifts by the same delta so nozzle geometry follows.
+    for tag, pos in (placed or {}).items():
+        p = placements.get(tag)
+        if p is not None:
+            dx, dy = pos.x - p.bbox_x, pos.y - p.bbox_y
+            placements[tag] = replace(
+                p, bbox_x=pos.x, bbox_y=pos.y, origin_x=p.origin_x + dx, origin_y=p.origin_y + dy
             )
     return placements
 
@@ -205,9 +216,11 @@ def _point_at_fraction(points: list[_Point], fraction: float) -> tuple[float, fl
 # --------------------------------------------------------------------------
 
 
-def _draw_valve(parent: ET.Element, valve: Valve, x: float, y: float, angle: float) -> None:
-    sym.valve_symbol(parent, str(valve.type), x, y, angle)
-    sym.add_text(parent, x, y - sym.VALVE_SIZE / 2 - 4, valve.tag, size=7.0)
+def _draw_valve(parent: ET.Element, valve: Valve, x: float, y: float, angle: float = 0.0) -> None:
+    g = sym.group(parent)
+    g.set("data-tag", valve.tag)
+    sym.valve_symbol(g, str(valve.type), x, y, angle)
+    sym.add_text(g, x, y - sym.VALVE_SIZE / 2 - 4, valve.tag, size=7.0)
 
 
 def _draw_inline_item(parent: ET.Element, item_kind: InlineKind, x: float, y: float, angle: float) -> None:
@@ -277,7 +290,9 @@ def _draw_line(
     """Draw one line's run, arrow head, labels; returns its polyline points."""
     geom = _line_geometry(line, pid, placements)
     points = geom.points
-    sym.add_polyline(parent, points)
+    g = sym.group(parent)
+    g.set("data-tag", line.number)
+    sym.add_polyline(g, points)
 
     # Arrow head at the flow end.
     (ax, ay), (bx, by) = points[-2], points[-1]
@@ -288,16 +303,16 @@ def _draw_line(
     else:  # vertical final segment
         sign = 1.0 if by >= ay else -1.0
         tip = [(bx - head / 2, by - head * sign), (bx + head / 2, by - head * sign), (bx, by)]
-    sym.add_polygon(parent, tip)
+    sym.add_polygon(g, tip)
 
     if geom.start_label:
-        sym.add_text(parent, points[0][0] - 14, points[0][1] - 6, geom.start_label, size=7.0)
+        sym.add_text(g, points[0][0] - 14, points[0][1] - 6, geom.start_label, size=7.0)
     if geom.end_label:
-        sym.add_text(parent, points[-1][0] + 14, points[-1][1] - 6, geom.end_label, size=7.0)
+        sym.add_text(g, points[-1][0] + 14, points[-1][1] - 6, geom.end_label, size=7.0)
 
     # Line number along the run.
     lx, ly, _ = _point_at_fraction(points, 0.35)
-    sym.add_text(parent, lx, ly - 5, line.number, size=7.0)
+    sym.add_text(g, lx, ly - 5, line.number, size=7.0)
     return points
 
 
@@ -320,8 +335,7 @@ def _draw_loose_valves(parent: ET.Element, pid: PID, y: float) -> float:
     loose = sorted((v for v in pid.valves if v.tag not in referenced), key=lambda v: v.tag)
     for i, v in enumerate(loose):
         x = MARGIN + i * 60.0
-        sym.valve_symbol(parent, str(v.type), x, y)
-        sym.add_text(parent, x, y - sym.VALVE_SIZE / 2 - 4, v.tag, size=7.0)
+        _draw_valve(parent, v, x, y)
     return y + (24.0 if loose else 0.0)
 
 
@@ -360,8 +374,10 @@ def _draw_instruments(
             attach = (mid[0], mid[1])
         else:
             continue
-        sym.instrument_bubble(parent, cx, cy, inst.function, inst.loop, inst.tag)
-        sym.add_line(parent, cx, cy + 13, attach[0], attach[1])
+        g = sym.group(parent)
+        g.set("data-tag", inst.tag)
+        sym.instrument_bubble(g, cx, cy, inst.function, inst.loop, inst.tag)
+        sym.add_line(g, cx, cy + 13, attach[0], attach[1])
 
 
 # --------------------------------------------------------------------------
@@ -369,9 +385,13 @@ def _draw_instruments(
 # --------------------------------------------------------------------------
 
 
-def render_pid_svg(pid: PID) -> str:
-    """Render a PID to a complete SVG document string."""
-    placements = _layout(pid)
+def render_pid_svg(pid: PID, placed: dict[str, XY] | None = None) -> str:
+    """Render a PID to a complete SVG document string.
+
+    ``placed`` maps equipment tag to a bbox top-left in view px (layout.pid
+    overrides); unlisted tags keep the auto layout.
+    """
+    placements = _layout(pid, placed)
 
     # Canvas: equipment cells plus head-room for instrument bubbles and tags.
     width = max((p.bbox_x + p.bbox_w for p in placements.values()), default=0.0) + MARGIN + 100.0
