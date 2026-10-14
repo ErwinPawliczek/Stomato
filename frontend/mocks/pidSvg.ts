@@ -86,12 +86,16 @@ export function mockPidSvg(placed: Record<string, Pos>): string {
     );
   });
   // Equipment: placed[tag] is the bbox top-left (spec B-04), so a saved
-  // placement survives re-fetch exactly like on the real renderer.
+  // placement survives re-fetch exactly like on the real renderer. Mirror
+  // the real renderer's structure — a plain group holding an invisible
+  // .equipment-bbox rect tagged at the stored top-left, a symbol outline,
+  // and the label — so the mock exercises the same DOM the view must handle.
   for (const [tag, ax, ay, w, h] of EQUIPMENT) {
     const x = placed[tag]?.x ?? ax;
     const y = placed[tag]?.y ?? ay;
     parts.push(
-      `<g data-tag="${tag}"><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="black"/>` +
+      `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" class="equipment-bbox" data-tag="${tag}" fill="none" stroke="none"/>` +
+        `<rect x="${x + 10}" y="${y + 10}" width="${w - 20}" height="${h - 20}" fill="none" stroke="black"/>` +
         `<text x="${x + w / 2}" y="${y - 5}" text-anchor="middle" font-size="9">${tag}</text></g>`,
     );
   }

@@ -22,8 +22,10 @@ th, td { border:1px solid var(--line); padding:4px 8px; text-align:left; }
 .pfd svg { display:block; max-width:100%; height:auto; }
 .pfd g[data-tag] { cursor:grab; }
 .pfd g[data-tag]:active { cursor:grabbing; }
-.pfd g[data-tag]:focus-visible { outline:2px solid var(--acc); }
+.pfd [data-tag]:focus-visible { outline:2px solid var(--acc); }
 .pfd g[data-tag]:hover rect, .pfd g[data-tag]:hover circle, .pfd g[data-tag]:hover polygon { stroke:var(--acc); }
+.pid .equipment-bbox { cursor:grab; pointer-events:all; }
+.pid .equipment-bbox:hover { stroke:var(--acc); }
 
 /* L4: P&ID shown next to the PFD for cross-checking tags. */
 .pid-panels { display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); }

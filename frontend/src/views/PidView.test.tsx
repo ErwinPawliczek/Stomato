@@ -5,15 +5,14 @@ import { mockPfdSvg } from "../../mocks/pfdSvg";
 import { mockPidSvg } from "../../mocks/pidSvg";
 import { PidView, extractTags, placedTopLeft, tagParity } from "./PidView";
 
-// jsdom has no SVG geometry and no PointerEvent; the view needs both.
+// jsdom has no PointerEvent and reports no element geometry; the view needs
+// both. The geometry stub models V-101's .equipment-bbox rect in the P&ID
+// panel: top-left (45, 70), 110×60 — matching the SVG below.
 beforeAll(() => {
-  // getBBox: jsdom parses <g> into plain elements and defines no SVGGElement,
-  // so the polyfill goes on Element.prototype. V-101's box: top-left (45, 70).
-  const proto = typeof SVGGElement !== "undefined" ? SVGGElement.prototype : Element.prototype;
-  Object.defineProperty(proto, "getBBox", {
+  Object.defineProperty(Element.prototype, "getBoundingClientRect", {
     configurable: true,
     value() {
-      return { x: 45, y: 70, width: 110, height: 60 };
+      return { x: 45, y: 70, left: 45, top: 70, right: 155, bottom: 130, width: 110, height: 60 };
     },
   });
   if (!("PointerEvent" in window)) {
@@ -24,7 +23,10 @@ beforeAll(() => {
 const SVG_PID_BEFORE =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 120" width="300" height="120">' +
   '<g data-tag="8&quot;-PG-1001-B1"><polyline points="0,0 10,10"/></g>' +
-  '<g data-tag="V-101"><rect x="45" y="70" width="110" height="60"/></g>' +
+  // Equipment mirrors the real P&ID renderer: an invisible .equipment-bbox
+  // rect tagged at the stored top-left inside a plain, untagged group.
+  '<g><rect x="45" y="70" width="110" height="60" class="equipment-bbox" data-tag="V-101" fill="none" stroke="none"/>' +
+  '<text x="100" y="65" font-size="9">V-101</text></g>' +
   '<g data-tag="PSV-1001"><circle cx="20" cy="20" r="8"/></g>' +
   '<g data-tag="PSV-1002"><circle cx="60" cy="20" r="8"/></g></svg>';
 const SVG_PID_AFTER = SVG_PID_BEFORE.replace("</svg>", "<!--placed--></svg>");
@@ -39,13 +41,14 @@ const layout: Layout = { pfd: {}, pid: { "V-101": { x: 75, y: 90 } }, plot: {} }
 
 /** waitFor polls only while the callback throws; querySelector returns null
  *  before the mocked fetch resolves, so poll on that condition explicitly.
- *  CSS attribute selectors see the DECODED attribute value (jsdom decoded
- *  &quot; when parsing the SVG), so escape embedded quotes for the selector. */
-async function findGroup(container: HTMLElement, tag: string): Promise<Element> {
+ *  Matches ANY tagged element — the P&ID's bbox rects and the PFD's tagged
+ *  groups alike. CSS attribute selectors see the DECODED attribute value
+ *  (jsdom decoded &quot; when parsing the SVG), so escape embedded quotes. */
+async function findTagged(container: HTMLElement, tag: string): Promise<Element> {
   return waitFor(() => {
-    const g = container.querySelector(`g[data-tag="${tag.replace(/"/g, '\\"')}"]`);
-    if (!g) throw new Error(`no <g data-tag="${tag}"> rendered yet`);
-    return g;
+    const el = container.querySelector(`[data-tag="${tag.replace(/"/g, '\\"')}"]`);
+    if (!el) throw new Error(`no [data-tag="${tag}"] rendered yet`);
+    return el;
   });
 }
 
@@ -84,14 +87,14 @@ test("renders the P&ID and PFD side by side with the shared tag inventory", asyn
   vi.spyOn(api, "pidSvg").mockResolvedValue(SVG_PID_BEFORE);
   vi.spyOn(api, "pfdSvg").mockResolvedValue(SVG_PFD);
   const { container } = render(<PidView project={project} />);
-  await findGroup(container, "V-101");
-  await findGroup(container, "PSV-1001");
+  await findTagged(container, "V-101");
+  await findTagged(container, "PSV-1001");
   // Equipment is keyboard-reachable; valves and line numbers are not placeable.
   await waitFor(() =>
-    expect(container.querySelector('g[data-tag="V-101"]')?.getAttribute("role")).toBe("button"),
+    expect(container.querySelector('[data-tag="V-101"]')?.getAttribute("role")).toBe("button"),
   );
-  expect(container.querySelector('g[data-tag="PSV-1001"]')?.getAttribute("role")).toBeNull();
-  await findGroup(container, '8"-PG-1001-B1'); // decoded line number matches
+  expect(container.querySelector('[data-tag="PSV-1001"]')?.getAttribute("role")).toBeNull();
+  await findTagged(container, '8"-PG-1001-B1'); // decoded line number matches
   // The inventory unites both drawings' tags with per-diagram presence.
   expect(screen.getByRole("button", { name: "Find tag PSV-1001" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Find tag S-001" })).toBeTruthy();
@@ -101,13 +104,13 @@ test("searching 'PSV' highlights the matching elements in both diagrams", async 
   vi.spyOn(api, "pidSvg").mockResolvedValue(SVG_PID_BEFORE);
   vi.spyOn(api, "pfdSvg").mockResolvedValue(SVG_PFD);
   const { container } = render(<PidView project={project} />);
-  await findGroup(container, "PSV-1001");
+  await findTagged(container, "PSV-1001");
   fireEvent.change(screen.getByLabelText("Search tags"), { target: { value: "PSV" } });
   await waitFor(() =>
-    expect(container.querySelector('g[data-tag="PSV-1001"]')?.classList.contains("tag-hit")).toBe(true),
+    expect(container.querySelector('[data-tag="PSV-1001"]')?.classList.contains("tag-hit")).toBe(true),
   );
-  expect(container.querySelector('g[data-tag="PSV-1002"]')?.classList.contains("tag-hit")).toBe(true);
-  expect(container.querySelector('g[data-tag="V-101"]')?.classList.contains("tag-hit")).toBe(false);
+  expect(container.querySelector('[data-tag="PSV-1002"]')?.classList.contains("tag-hit")).toBe(true);
+  expect(container.querySelector('[data-tag="V-101"]')?.classList.contains("tag-hit")).toBe(false);
 });
 
 test("dragging equipment saves its new top-left corner and re-renders from the re-fetched SVG", async () => {
@@ -115,13 +118,17 @@ test("dragging equipment saves its new top-left corner and re-renders from the r
   vi.spyOn(api, "pfdSvg").mockResolvedValue(SVG_PFD);
   const place = vi.spyOn(api, "place").mockResolvedValue(layout);
   const { container } = render(<PidView project={project} />);
-  const group = await findGroup(container, "V-101");
+  const box = await findTagged(container, "V-101");
+  // The pointer lands on the untagged equipment group (as on the real
+  // renderer, where the bbox rect is an invisible sibling); the hit-test
+  // must still resolve it to V-101 by coordinates.
+  const equipGroup = box.parentElement as Element;
 
   // Drag by (30, 20) client px; jsdom reports no rendered width, so 1 px = 1 unit.
-  fireEvent.pointerDown(group, { clientX: 100, clientY: 100, pointerId: 1, button: 0 });
-  fireEvent.pointerMove(group, { clientX: 130, clientY: 120, pointerId: 1 });
-  expect(group.getAttribute("transform")).toBe("translate(30 20)");
-  fireEvent.pointerUp(group, { clientX: 130, clientY: 120, pointerId: 1 });
+  fireEvent.pointerDown(equipGroup, { clientX: 100, clientY: 100, pointerId: 1, button: 0 });
+  fireEvent.pointerMove(equipGroup, { clientX: 130, clientY: 120, pointerId: 1 });
+  expect(equipGroup.getAttribute("transform")).toBe("translate(30 20)");
+  fireEvent.pointerUp(equipGroup, { clientX: 130, clientY: 120, pointerId: 1 });
 
   // New top-left = old bbox top-left (45, 70) + delta (30, 20).
   await waitFor(() => expect(place).toHaveBeenCalledWith("pid", "V-101", { x: 75, y: 90 }));
@@ -136,11 +143,11 @@ test("valve and line groups are not draggable", async () => {
   vi.spyOn(api, "pfdSvg").mockResolvedValue(SVG_PFD);
   const place = vi.spyOn(api, "place").mockResolvedValue(layout);
   const { container } = render(<PidView project={project} />);
-  const valve = await findGroup(container, "PSV-1001");
+  const valve = await findTagged(container, "PSV-1001");
   fireEvent.pointerDown(valve, { clientX: 0, clientY: 0, pointerId: 1, button: 0 });
   fireEvent.pointerMove(valve, { clientX: 50, clientY: 50, pointerId: 1 });
   fireEvent.pointerUp(valve, { clientX: 50, clientY: 50, pointerId: 1 });
-  const line = await findGroup(container, '8"-PG-1001-B1');
+  const line = await findTagged(container, '8"-PG-1001-B1');
   fireEvent.pointerDown(line, { clientX: 0, clientY: 0, pointerId: 1, button: 0 });
   fireEvent.pointerMove(line, { clientX: 50, clientY: 50, pointerId: 1 });
   fireEvent.pointerUp(line, { clientX: 50, clientY: 50, pointerId: 1 });
@@ -159,13 +166,14 @@ test("a failed save shows an alert and rolls the unit back to its rendered spot"
   vi.spyOn(api, "pfdSvg").mockResolvedValue(SVG_PFD);
   vi.spyOn(api, "place").mockRejectedValue(new ApiError("PUT /api/project/layout/pid/V-101: 500", 500));
   const { container } = render(<PidView project={project} />);
-  const group = await findGroup(container, "V-101");
-  fireEvent.pointerDown(group, { clientX: 100, clientY: 100, pointerId: 1, button: 0 });
-  fireEvent.pointerMove(group, { clientX: 140, clientY: 110, pointerId: 1 });
-  fireEvent.pointerUp(group, { clientX: 140, clientY: 110, pointerId: 1 });
+  const box = await findTagged(container, "V-101");
+  const equipGroup = box.parentElement as Element;
+  fireEvent.pointerDown(equipGroup, { clientX: 100, clientY: 100, pointerId: 1, button: 0 });
+  fireEvent.pointerMove(equipGroup, { clientX: 140, clientY: 110, pointerId: 1 });
+  fireEvent.pointerUp(equipGroup, { clientX: 140, clientY: 110, pointerId: 1 });
   const alert = await screen.findByRole("alert");
   expect(alert.textContent).toContain("P&ID failed:");
-  await waitFor(() => expect(group.hasAttribute("transform")).toBe(false));
+  await waitFor(() => expect(equipGroup.hasAttribute("transform")).toBe(false));
 });
 
 test("arrow keys nudge a focused equipment item and save the moved position", async () => {
@@ -173,7 +181,7 @@ test("arrow keys nudge a focused equipment item and save the moved position", as
   vi.spyOn(api, "pfdSvg").mockResolvedValue(SVG_PFD);
   const place = vi.spyOn(api, "place").mockResolvedValue(layout);
   const { container } = render(<PidView project={project} />);
-  const group = await findGroup(container, "V-101");
-  fireEvent.keyDown(group, { key: "ArrowRight" });
+  const box = await findTagged(container, "V-101");
+  fireEvent.keyDown(box, { key: "ArrowRight" });
   await waitFor(() => expect(place).toHaveBeenCalledWith("pid", "V-101", { x: 55, y: 70 }));
 });

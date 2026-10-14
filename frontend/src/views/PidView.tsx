@@ -56,7 +56,8 @@ const NUDGE = 10; // keyboard nudge step, SVG user units
 
 type Drag = {
   tag: string;
-  group: SVGGElement;
+  el: Element; // the placeable element carrying data-tag
+  transformEl: Element; // the group a visual drag transform applies to
   startX: number;
   startY: number;
   topLeft: XY; // bbox top-left before the drag (the SVG-space position the backend stores)
@@ -64,11 +65,6 @@ type Drag = {
   dx: number;
   dy: number;
 };
-
-function bboxTopLeft(g: SVGGElement): XY {
-  const b = g.getBBox();
-  return { x: b.x, y: b.y };
-}
 
 function viewBoxWidth(svg: Element | null | undefined): number {
   const vb = (svg?.getAttribute("viewBox") ?? "").split(/\s+/).map(Number);
@@ -78,6 +74,52 @@ function viewBoxWidth(svg: Element | null | undefined): number {
 /** Client pixels → SVG user units; 1:1 when the drawing is not CSS-scaled. */
 export function userUnitsPerClientPx(viewBoxWidth: number, renderedWidth: number): number {
   return viewBoxWidth > 0 && renderedWidth > 0 ? viewBoxWidth / renderedWidth : 1;
+}
+
+/** Pure: the placeable equipment element under a client point, if any — the
+ *  smallest tagged box containing the point wins. The P&ID renderer tags
+ *  equipment as an invisible .equipment-bbox rect that is a SIBLING of the
+ *  symbol shapes inside a plain group, so no ancestor of the hit element
+ *  carries the tag; finding equipment needs coordinates, not the target. */
+export function placeableTagAt(
+  root: Element | null | undefined,
+  unitTags: Set<string>,
+  x: number,
+  y: number,
+): Element | null {
+  let best: Element | null = null;
+  let bestArea = Infinity;
+  for (const el of root?.querySelectorAll<Element>("[data-tag]") ?? []) {
+    if (!unitTags.has(el.getAttribute("data-tag") ?? "")) continue;
+    const r = el.getBoundingClientRect();
+    if (x < r.left || x > r.right || y < r.top || y > r.bottom) continue;
+    const area = r.width * r.height;
+    if (area < bestArea) {
+      best = el;
+      bestArea = area;
+    }
+  }
+  return best;
+}
+
+/** The position the backend stores for a placeable element: the bbox rect
+ *  carries the top-left as absolute x/y attributes; a tagged group fallback
+ *  (the PFD's structure) reports its own user-space bbox. */
+export function storedTopLeft(el: Element): XY {
+  if (el.classList.contains("equipment-bbox")) {
+    return { x: Number(el.getAttribute("x") ?? 0), y: Number(el.getAttribute("y") ?? 0) };
+  }
+  const g = el as SVGGElement;
+  if (typeof g.getBBox !== "function") return { x: 0, y: 0 };
+  const b = g.getBBox();
+  return { x: b.x, y: b.y };
+}
+
+/** The element a drag transform applies to: the bbox rect's parent group
+ *  carries the symbol shapes and label, so shifting the group moves the
+ *  whole equipment item; a tagged group transforms itself. */
+function transformTarget(el: Element): Element {
+  return el.classList.contains("equipment-bbox") ? (el.parentElement ?? el) : el;
 }
 
 /** Layer 4: the P&ID, shown alongside the PFD so every tag is findable in
@@ -148,24 +190,26 @@ export function PidView({ project }: { project: Project }) {
   }, []);
 
   // Drag is pointer-event delegation on the injected SVG: visual feedback via a
-  // transform on the dragged <g data-tag>, persistence on release. Only
+  // transform on the dragged equipment's group, persistence on release. Only
   // equipment is placeable; lines, valves and instruments are tagged too but
   // stay put — mirroring the backend, which applies layout.pid to equipment.
+  // The placeable element is found by hit-testing coordinates because the
+  // P&ID renderer tags equipment with an invisible bbox rect sibling, not on
+  // the symbol shapes a pointer lands on.
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>): void {
     if (saving || e.button > 0) return;
-    const group = (e.target as Element | null)?.closest("g[data-tag]") as SVGGElement | null;
-    const tag = group?.getAttribute("data-tag") ?? "";
-    if (!group || !tag || !unitTags.has(tag)) return;
-    // getBBox is missing outside real browsers; tests polyfill it. Without a
-    // bbox we cannot compute the stored position, so don't drag at all.
-    if (typeof group.getBBox !== "function") return;
+    const el = placeableTagAt(pidRef.current, unitTags, e.clientX, e.clientY);
+    const tag = el?.getAttribute("data-tag") ?? "";
+    if (!el || !tag) return;
+    const transformEl = transformTarget(el);
     const svgEl = pidRef.current?.querySelector("svg");
     dragRef.current = {
       tag,
-      group,
+      el,
+      transformEl,
       startX: e.clientX,
       startY: e.clientY,
-      topLeft: bboxTopLeft(group),
+      topLeft: storedTopLeft(el),
       scale: userUnitsPerClientPx(viewBoxWidth(svgEl), svgEl?.clientWidth ?? 0),
       dx: 0,
       dy: 0,
@@ -177,7 +221,7 @@ export function PidView({ project }: { project: Project }) {
     if (!d) return;
     d.dx = (e.clientX - d.startX) * d.scale;
     d.dy = (e.clientY - d.startY) * d.scale;
-    d.group.setAttribute("transform", `translate(${d.dx} ${d.dy})`);
+    d.transformEl.setAttribute("transform", `translate(${d.dx} ${d.dy})`);
   }
 
   async function onPointerUp(): Promise<void> {
@@ -188,7 +232,7 @@ export function PidView({ project }: { project: Project }) {
     const ok = await savePlacement(d.tag, topLeft);
     // The visual position holds until the re-fetch replaces the DOM; roll it
     // back only when the save failed and no fresh SVG is coming.
-    if (!ok) d.group.removeAttribute("transform");
+    if (!ok) d.transformEl.removeAttribute("transform");
   }
 
   // Keyboard access: equipment is focusable and arrow keys nudge it, saving
@@ -196,15 +240,15 @@ export function PidView({ project }: { project: Project }) {
   useEffect(() => {
     const root = pidRef.current;
     if (!root || !pidSvg) return;
-    const groups = Array.from(root.querySelectorAll<SVGGElement>("g[data-tag]")).filter((g) =>
-      unitTags.has(g.getAttribute("data-tag") ?? ""),
+    const placeables = Array.from(root.querySelectorAll<Element>("[data-tag]")).filter((el) =>
+      unitTags.has(el.getAttribute("data-tag") ?? ""),
     );
     const cleanups: Array<() => void> = [];
-    for (const g of groups) {
-      const tag = g.getAttribute("data-tag") ?? "";
-      g.setAttribute("tabindex", "0");
-      g.setAttribute("role", "button");
-      g.setAttribute("aria-label", `Equipment ${tag}: move with arrow keys, position is saved`);
+    for (const el of placeables) {
+      const tag = el.getAttribute("data-tag") ?? "";
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("role", "button");
+      el.setAttribute("aria-label", `Equipment ${tag}: move with arrow keys, position is saved`);
       const onKey = (ev: Event): void => {
         const ke = ev as KeyboardEvent;
         const step: XY | null =
@@ -219,23 +263,24 @@ export function PidView({ project }: { project: Project }) {
                   : null;
         if (!step) return;
         ev.preventDefault();
-        void savePlacement(tag, placedTopLeft(bboxTopLeft(g), step));
+        void savePlacement(tag, placedTopLeft(storedTopLeft(el), step));
       };
-      g.addEventListener("keydown", onKey);
-      cleanups.push(() => g.removeEventListener("keydown", onKey));
+      el.addEventListener("keydown", onKey);
+      cleanups.push(() => el.removeEventListener("keydown", onKey));
     }
     return () => cleanups.forEach((fn) => fn());
   }, [pidSvg, unitTags, savePlacement]);
 
   // Search highlighting: every element whose tag matches the query (in EITHER
   // drawing) gets .tag-hit. getAttribute already decodes entities, matching
-  // the decoded inventory tags.
+  // the decoded inventory tags. Both tagging styles are covered: the PFD's
+  // tagged groups and the P&ID's bbox rects.
   useEffect(() => {
     for (const ref of [pidRef, pfdRef]) {
       const root = ref.current;
       if (!root) continue;
-      for (const g of root.querySelectorAll<SVGGElement>("g[data-tag]")) {
-        g.classList.toggle("tag-hit", matched.has(g.getAttribute("data-tag") ?? ""));
+      for (const el of root.querySelectorAll<Element>("[data-tag]")) {
+        el.classList.toggle("tag-hit", matched.has(el.getAttribute("data-tag") ?? ""));
       }
     }
   }, [matched, pidSvg, pfdSvg]);
@@ -277,7 +322,7 @@ export function PidView({ project }: { project: Project }) {
           <div
             ref={pidRef}
             className="pfd pid"
-            // SVG comes from our own backend renderer; data-tag groups drive drag.
+            // SVG comes from our own backend renderer; data-tag bbox rects drive drag.
             dangerouslySetInnerHTML={pidSvg ? { __html: pidSvg } : undefined}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
