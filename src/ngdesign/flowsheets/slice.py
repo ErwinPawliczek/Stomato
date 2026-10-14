@@ -39,8 +39,12 @@ def build() -> Flowsheet:
         UnitSpec(tag="K-101", kind="compressor", params={"P_out": 7.0e6, "eta_isentropic": 0.75}),
         UnitSpec(tag="E-101", kind="air_cooler", params={"T_out": 322.15, "dP": 35e3}),
         UnitSpec(tag="T-101", kind="teg_contactor", params={"water_out_lb_per_mmscf": 7.0}),
-        UnitSpec(tag="P-101", kind="pump", params={"P_out": 1.5e6, "eta": 0.65}),
-        UnitSpec(tag="E-102", kind="shell_tube", params={"T_out": 333.15, "dP": 50e3}),
+        UnitSpec(tag="P-101", kind="jt_valve", params={"P_out": 1.5e6}),
+        UnitSpec(
+            tag="E-102",
+            kind="shell_tube",
+            params={"T_out": 333.15, "dP": 50e3, "utility_T_in": 422.0, "utility_T_out": 415.0},
+        ),
     ]
     streams = [
         StreamSpec(
