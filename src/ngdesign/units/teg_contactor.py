@@ -17,17 +17,26 @@ lb/MMscf converts to a per-dry-gas mole ratio
 
 and a wet-gas mole fraction follows as ``y = r / (1 + r)``.
 
-Equilibrium assumption (documented per spec): the stage count uses the
-Kremser correlation (S-05) with a linear equilibrium line ``y* = m * x``
-whose slope is the GPSA-style ideal-solution linearization
+Equilibrium model (S-29 delta): the stage count uses the Kremser correlation
+(S-05) with a linear equilibrium line ``y* = m * x`` whose slope is the
+GPSA-recommended Parrish-Won-Baltatu TEG water-activity model
+(``ngdesign.units.teg_activity``; Parrish, Won & Baltatu, Proc. 65th GPA
+Convention, 1986, as parameterized in Filep, Todinca & Dumitrel, Chem. Biochem.
+Eng. Q. 36(1) 25-38, 2022, eqs. 12-17):
 
-    m = Psat,H2O(T_gas) / P_gas
+    m = gamma_w(T_gas, x_w,lean) * Psat,H2O(T_gas) / P_gas
 
 with water saturation pressure from the IAPWS correlation shipped in
-``chemicals`` and ``x`` the water mole fraction in the TEG phase. This is
-the v1 approximation pending rigorous TEG/water VLE (spec: out of scope);
-it ignores the water-activity depression of real TEG solutions, so the
-reported stage count is indicative, not a design basis.
+``chemicals``, ``gamma_w`` the water activity coefficient of the TEG solution,
+and ``x`` the water mole fraction in the TEG phase. The gamma_w < 1 activity
+depression of real TEG solutions lowers the reachable water content below the
+ideal-solution value (most strongly at high TEG purity); the correlation is
+fitted to the Herskowitz & Gottlieb (1984) and Parrish et al. (1986) data and
+is used here over the natural-gas absorption window (~280-340 K, lean TEG
+90-99.9 wt%). The linear line is evaluated at the lean (top) end, where the
+outlet-spec pinch forms; stage counts remain indicative pending rigorous
+TEG/water VLE (spec: out of scope). A spec below the lean-end equilibrium
+floor ``a_w * Psat / P`` raises -- the lean solvent cannot dehydrate past it.
 
 Duty is the enthalpy difference across the unit; the heat of
 absorption/mixing is reported through it, not modelled separately.
@@ -37,13 +46,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from chemicals.vapor_pressure import Psat_IAPWS
-
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import components
 from ngdesign.registry import register
 from ngdesign.sizing.kremser import kremser
+from ngdesign.units.teg_activity import activity_equilibrium_slope, water_activity
 
 __all__ = ["TEGContactor"]
 
@@ -120,6 +128,19 @@ class TEGContactor:
                 f"{water_in_content:.4g} lb/MMscf"
             )
 
+        # Equilibrium floor at the lean (top) end: y* = a_w * Psat / P is the
+        # lowest water content the lean TEG can impose on the gas (Parrish et
+        # al. activity model; see module docstring).
+        x_water_lean = lean_teg_in.composition.get("H2O", 0.0)
+        y_star_top = activity_equilibrium_slope(gas_in.T, gas_in.P, x_water_lean) * x_water_lean
+        equilibrium_floor = _water_content_lb_per_mmscf(y_star_top)
+        if water_out_spec < equilibrium_floor:
+            raise ValueError(
+                f"infeasible spec: requested outlet water content "
+                f"{water_out_spec} lb/MMscf is below the lean-TEG equilibrium "
+                f"floor {equilibrium_floor:.4g} lb/MMscf (water-activity model)"
+            )
+
         # Water removal on the dry-gas basis (GPSA conversion, spec S-29).
         dry_flow = gas_in.molar_flow * (1.0 - y_in)
         r_in = _fraction_to_ratio(y_in)
@@ -150,7 +171,16 @@ class TEGContactor:
         return UnitResult(
             outlets={"gas_out": gas_out, "rich_teg_out": rich_teg_out},
             duty_W=duty_W,
-            info=self._info(gas_in, gas_out, lean_teg_in, dry_flow, water_removed, params),
+            info=self._info(
+                gas_in,
+                gas_out,
+                lean_teg_in,
+                dry_flow,
+                water_removed,
+                params,
+                x_water_lean=x_water_lean,
+                equilibrium_floor=equilibrium_floor,
+            ),
         )
 
     def _info(
@@ -161,6 +191,8 @@ class TEGContactor:
         dry_flow: float,
         water_removed: float,
         params: dict[str, Any],
+        x_water_lean: float,
+        equilibrium_floor: float,
     ) -> dict[str, float]:
         """Reported scalars: removed water, circulation ratio, Kremser stages."""
         mw_h2o = _water_mw()
@@ -175,16 +207,16 @@ class TEGContactor:
         water_kg_s = water_removed * mw_h2o / 1000.0
         circulation = teg_volume_L_s / water_kg_s
 
-        # Kremser stage count (S-05) on the GPSA-style linearized equilibrium
-        # line documented in the module docstring.
-        m = Psat_IAPWS(gas_in.T) / gas_in.P
+        # Kremser stage count (S-05) on the Parrish et al. activity-depressed
+        # equilibrium line documented in the module docstring.
+        m = activity_equilibrium_slope(gas_in.T, gas_in.P, x_water_lean)
         A = lean_teg_in.molar_flow / (m * dry_flow)
         stages = kremser(
             A=A,
             y_in=gas_in.composition["H2O"],
             y_out=gas_out.composition["H2O"],
             m=m,
-            x_top=lean_teg_in.composition.get("H2O", 0.0),
+            x_top=x_water_lean,
         )["N_stages"]
 
         return {
@@ -195,6 +227,8 @@ class TEGContactor:
             "outlet_water_lb_per_mmscf": float(
                 params.get("water_out_lb_per_mmscf", DEFAULT_WATER_OUT_LB_PER_MMSCF)
             ),
+            "lean_teg_water_activity": water_activity(gas_in.T, x_water_lean),
+            "equilibrium_floor_lb_per_mmscf": equilibrium_floor,
         }
 
     @classmethod
