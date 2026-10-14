@@ -45,6 +45,16 @@ export const api = {
       body: JSON.stringify(pos),
     });
   },
+  async putProject(project: Project): Promise<Project> {
+    if (MOCK) {
+      mockState = structuredClone(project);
+      return structuredClone(mockState);
+    }
+    return http<Project>("/api/project", {
+      method: "PUT",
+      body: JSON.stringify(project),
+    });
+  },
   async solve(): Promise<SolvedFlowsheet> {
     if (MOCK) return structuredClone(mockSolved) as SolvedFlowsheet;
     return http<SolvedFlowsheet>("/api/solve", { method: "POST" });
