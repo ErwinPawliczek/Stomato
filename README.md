@@ -1,3 +1,7 @@
+<p align="center"><img src="docs/assets/stomato-mark.png" alt="Stomato brand mark" width="240"></p>
+
+Stomato — a natural-gas process simulation engine, inspired by the stomatopod.
+
 # ngdesign
 
 Natural gas processing design: simulation → PFD → P&ID → 3D piping → isometrics, all generated from one validated model.
