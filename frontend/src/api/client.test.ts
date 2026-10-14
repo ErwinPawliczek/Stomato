@@ -7,3 +7,13 @@ test("placement round-trips through the client", async () => {
   const p = await api.getProject();
   expect(p.layout?.pfd?.["V-101"]).toEqual({ x: 10, y: 20 });
 });
+
+test("mock pfd.svg honours saved placement, as GET /api/views/pfd.svg does", async () => {
+  api._resetMock();
+  const before = await api.pfdSvg();
+  expect(before).toContain('<g data-tag="V-101"');
+  await api.place("pfd", "V-101", { x: 300, y: 200 });
+  const after = await api.pfdSvg();
+  // The stored centre wins: the box is re-centred on (300, 200).
+  expect(after).toContain('x="245" y="155"');
+});

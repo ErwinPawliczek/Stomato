@@ -3,6 +3,7 @@
 import type { components } from "./schema";
 import mockProject from "../../mocks/project.json";
 import mockSolved from "../../mocks/solved.json";
+import { mockPfdSvg } from "../../mocks/pfdSvg";
 
 export type Project = components["schemas"]["Project"];
 export type XY = components["schemas"]["XY"];
@@ -30,9 +31,22 @@ async function http<T>(path: string, init?: RequestInit): Promise<T> {
   return r.json() as Promise<T>;
 }
 
+/** Like http(), for text endpoints (SVG views) instead of JSON. */
+async function httpText(path: string): Promise<string> {
+  const r = await fetch(path);
+  if (!r.ok) throw new ApiError(`GET ${path}: ${r.status} ${await r.text()}`, r.status);
+  return r.text();
+}
+
 export const api = {
   async getProject(): Promise<Project> {
     return MOCK ? structuredClone(mockState) : http<Project>("/api/project");
+  },
+  async pfdSvg(): Promise<string> {
+    // Mock honours the backend contract: a stored layout.pfd position is the
+    // unit box's centre (spec B-03), so saved placements survive re-fetch.
+    if (MOCK) return mockPfdSvg(mockState.layout?.pfd ?? {});
+    return httpText("/api/views/pfd.svg");
   },
   async place(view: "pfd" | "pid", tag: string, pos: XY): Promise<Layout> {
     if (MOCK) {
