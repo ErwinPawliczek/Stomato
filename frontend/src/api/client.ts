@@ -5,11 +5,14 @@ import mockProject from "../../mocks/project.json";
 import mockSolved from "../../mocks/solved.json";
 import { mockPfdSvg } from "../../mocks/pfdSvg";
 import { mockPidSvg } from "../../mocks/pidSvg";
+import { mockPlotSvg } from "../../mocks/plotSvg";
 
 export type Project = components["schemas"]["Project"];
 export type XY = components["schemas"]["XY"];
 export type Layout = components["schemas"]["Layout"];
 export type SolvedFlowsheet = components["schemas"]["SolvedFlowsheet"];
+export type Vec3 = components["schemas"]["Vec3"];
+export type PipingNetwork = components["schemas"]["PipingNetwork"];
 
 /** HTTP failure with its status, so callers can react to codes like 501. */
 export class ApiError extends Error {
@@ -54,6 +57,34 @@ export const api = {
     // equipment box's top-left corner (spec B-04), so saved placements survive.
     if (MOCK) return mockPidSvg(mockState.layout?.pid ?? {});
     return httpText("/api/views/pid.svg");
+  },
+  async plotSvg(): Promise<string> {
+    // Mock honours the backend contract: a stored layout.plot position is the
+    // equipment envelope's centre in model mm (spec B-05), and every fetch
+    // re-routes through the stored placements — so the plot view re-renders
+    // the fresh routing after each placement save.
+    if (MOCK) return mockPlotSvg(mockState.layout?.plot ?? {});
+    return httpText("/api/views/plot.svg");
+  },
+  async placePlot(tag: string, pos: Vec3): Promise<Layout> {
+    // The plot plan has its own PUT taking a full Vec3 (x, y in mm on the
+    // plan, z the elevation) — routes_plot.py's shadowed-route 422 is gone.
+    if (MOCK) {
+      const layout = (mockState.layout ??= { pfd: {}, pid: {}, plot: {} });
+      (layout.plot ??= {})[tag] = pos;
+      return structuredClone(layout);
+    }
+    return http<Layout>(`/api/project/layout/plot/${encodeURIComponent(tag)}`, {
+      method: "PUT",
+      body: JSON.stringify(pos),
+    });
+  },
+  async route(): Promise<PipingNetwork> {
+    // Explicit re-route (POST /api/route). The SVG views route implicitly on
+    // every fetch; the JSON call surfaces routing problems as a 501/422
+    // before the view re-renders.
+    if (MOCK) return { equipment: [], lines: [], rack_elevation_mm: 6000 };
+    return http<PipingNetwork>("/api/route", { method: "POST" });
   },
   async place(view: "pfd" | "pid", tag: string, pos: XY): Promise<Layout> {
     if (MOCK) {
