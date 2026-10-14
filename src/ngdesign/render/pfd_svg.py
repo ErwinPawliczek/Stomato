@@ -7,9 +7,8 @@ from the left, products leaving to the right, a stream table and an
 equipment duty/power summary below. Pure function of the input —
 deterministic output, no I/O, built with ``xml.etree`` only.
 
-The P&ID renderer (spec S-18) owns the shared symbol library; until that
-PR merges this module draws its own simple equipment shapes, per the
-spec's "else draws its own" clause.
+Equipment and stream symbols come from the shared library in
+``ngdesign.render.symbols`` (specs S-18, S-22).
 """
 
 from __future__ import annotations
@@ -26,12 +25,7 @@ from ngdesign.contracts import (
     UnitSpec,
 )
 from ngdesign.registry import register
-
-SVG_NS = "http://www.w3.org/2000/svg"
-STROKE = "#1a1a1a"
-
-# Serialize with the SVG namespace as the default (no ns0: prefixes).
-ET.register_namespace("", SVG_NS)
+from ngdesign.render import symbols as sym
 
 MARGIN = 40.0
 H_GAP = 80.0
@@ -40,60 +34,6 @@ ROW_H = 18.0  # stream-table row height
 CHAR_W = 5.2  # rough average glyph width for sizing table columns
 
 _Point = tuple[float, float]
-
-# Local SVG primitives — S-22 draws its own symbols (S-18's shared library is
-# a separate PR), so this module is self-contained by design.
-
-
-def stroke_attrs(attrs: dict[str, str]) -> dict[str, str]:
-    return {**attrs, "fill": "none", "stroke": STROKE, "stroke-width": "1.2"}
-
-
-def new_svg(width: float, height: float) -> ET.Element:
-    root = ET.Element(f"{{{SVG_NS}}}svg", {"viewBox": f"0 0 {_fmt(width)} {_fmt(height)}"})
-    ET.SubElement(
-        root,
-        "rect",
-        {
-            "x": "0",
-            "y": "0",
-            "width": _fmt(width),
-            "height": _fmt(height),
-            "fill": "#ffffff",
-            "stroke": "none",
-        },
-    )
-    return root
-
-
-def group(parent: ET.Element) -> ET.Element:
-    return ET.SubElement(parent, "g")
-
-
-def _fmt(v: float) -> str:
-    return f"{v:.2f}".rstrip("0").rstrip(".")
-
-
-def _text(
-    parent: ET.Element, x: float, y: float, s: str, size: float = 8.0, anchor: str = "middle"
-) -> ET.Element:
-    el = ET.SubElement(
-        parent,
-        "text",
-        {"x": _fmt(x), "y": _fmt(y), "font-size": _fmt(size), "text-anchor": anchor, "fill": "#1a1a1a"},
-    )
-    el.text = s
-    return el
-
-
-def _polyline(parent: ET.Element, points: list[_Point]) -> None:
-    pts = " ".join(f"{_fmt(x)},{_fmt(y)}" for x, y in points)
-    ET.SubElement(parent, "polyline", stroke_attrs({"points": pts}))
-
-
-def _polygon(parent: ET.Element, points: list[_Point]) -> None:
-    pts = " ".join(f"{_fmt(x)},{_fmt(y)}" for x, y in points)
-    ET.SubElement(parent, "polygon", stroke_attrs({"points": pts}))
 
 
 # --------------------------------------------------------------------------
@@ -184,9 +124,9 @@ def _draw_unit(parent: ET.Element, kind: str, p: _Placement) -> None:
     cx, cy, w, h = p.cx, p.cy, p.w, p.h
     k = kind.lower()
     if "pump" in k:
-        _polygon(parent, [(cx - w / 2, cy - h / 4), (cx - w / 2, cy + h / 4), (cx + w / 2, cy)])
+        sym.add_polygon(parent, [(cx - w / 2, cy - h / 4), (cx - w / 2, cy + h / 4), (cx + w / 2, cy)])
     elif "compressor" in k:
-        _polygon(
+        sym.add_polygon(
             parent,
             [
                 (cx - w / 2, cy - h / 2),
@@ -199,32 +139,39 @@ def _draw_unit(parent: ET.Element, kind: str, p: _Placement) -> None:
         ET.SubElement(
             parent,
             "rect",
-            stroke_attrs({"x": _fmt(cx - w / 2), "y": _fmt(cy - h / 2), "width": _fmt(w), "height": _fmt(h)}),
+            sym.stroke_attrs(
+                {
+                    "x": sym._fmt(cx - w / 2),
+                    "y": sym._fmt(cy - h / 2),
+                    "width": sym._fmt(w),
+                    "height": sym._fmt(h),
+                }
+            ),
         )
     elif "separator" in k or "drum" in k or "vessel" in k:
         ET.SubElement(
             parent,
             "rect",
-            stroke_attrs(
+            sym.stroke_attrs(
                 {
-                    "x": _fmt(cx - w / 2),
-                    "y": _fmt(cy - h / 2),
-                    "width": _fmt(w),
-                    "height": _fmt(h),
-                    "rx": _fmt(h / 4),
+                    "x": sym._fmt(cx - w / 2),
+                    "y": sym._fmt(cy - h / 2),
+                    "width": sym._fmt(w),
+                    "height": sym._fmt(h),
+                    "rx": sym._fmt(h / 4),
                 }
             ),
         )
     else:  # exchangers: circle with a zigzag
         r = min(w, h) / 2
-        ET.SubElement(parent, "circle", stroke_attrs({"cx": _fmt(cx), "cy": _fmt(cy), "r": _fmt(r)}))
+        sym.add_circle(parent, cx, cy, r)
         span = w * 0.6
         step = span / 4
         pts: list[_Point] = [(cx - span / 2, cy)]
         for i in range(4):
             pts.append((cx - span / 2 + step * (i + 0.5), cy - r / 2.5 if i % 2 == 0 else cy + r / 2.5))
         pts.append((cx + span / 2, cy))
-        _polyline(parent, pts)
+        sym.add_polyline(parent, pts)
 
 
 def _route_stream(source_pt: _Point, target_pt: _Point) -> list[_Point]:
@@ -243,18 +190,22 @@ def _arrow_head(parent: ET.Element, tail: _Point, tip: _Point) -> None:
     head = 7.0
     if tx != ax:
         sign = 1.0 if tx >= ax else -1.0
-        _polygon(parent, [(tx - head * sign, ty - head / 2), (tx - head * sign, ty + head / 2), (tx, ty)])
+        sym.add_polygon(
+            parent, [(tx - head * sign, ty - head / 2), (tx - head * sign, ty + head / 2), (tx, ty)]
+        )
     else:
         sign = 1.0 if ty >= ay else -1.0
-        _polygon(parent, [(tx - head / 2, ty - head * sign), (tx + head / 2, ty - head * sign), (tx, ty)])
+        sym.add_polygon(
+            parent, [(tx - head / 2, ty - head * sign), (tx + head / 2, ty - head * sign), (tx, ty)]
+        )
 
 
 def _diamond(parent: ET.Element, cx: float, cy: float, s: float) -> None:
-    _polygon(parent, [(cx, cy - s / 2), (cx + s / 2, cy), (cx, cy + s / 2), (cx - s / 2, cy)])
+    sym.add_polygon(parent, [(cx, cy - s / 2), (cx + s / 2, cy), (cx, cy + s / 2), (cx - s / 2, cy)])
 
 
 def _draw_stream(parent: ET.Element, stream_id: str, points: list[_Point]) -> None:
-    _polyline(parent, points)
+    sym.add_polyline(parent, points)
     _arrow_head(parent, points[-2], points[-1])
     # Stream-number diamond at the middle of the run, id text just above it.
     total = sum(
@@ -272,7 +223,7 @@ def _draw_stream(parent: ET.Element, stream_id: str, points: list[_Point]) -> No
             break
         remaining -= seg
     _diamond(parent, x, y, 12.0)
-    _text(parent, x, y - 10, stream_id, size=7.0)
+    sym.add_text(parent, x, y - 10, stream_id, size=7.0)
 
 
 # --------------------------------------------------------------------------
@@ -306,25 +257,19 @@ def _draw_table(
 ) -> float:
     """Simple gridded table; returns the y below the last row."""
     col_w = max(60.0, max(len(h) for h in headers) * CHAR_W + 12.0)
-    _text(parent, x, y, first_col, size=9.0)
+    sym.add_text(parent, x, y, first_col, size=9.0)
     y += 6.0
     header_row = [first_col, *headers]
     xs = [x + i * col_w for i in range(len(header_row))]
     for i, htxt in enumerate(header_row):
-        _text(parent, xs[i] + col_w / 2, y + 10, htxt, size=7.5)
-    ET.SubElement(
-        parent,
-        "line",
-        stroke_attrs(
-            {"x1": _fmt(x), "y1": _fmt(y + 14), "x2": _fmt(x + len(header_row) * col_w), "y2": _fmt(y + 14)}
-        ),
-    )
+        sym.add_text(parent, xs[i] + col_w / 2, y + 10, htxt, size=7.5)
+    sym.add_line(parent, x, y + 14, x + len(header_row) * col_w, y + 14)
     yy = y + 14
     for row in rows:
         g = ET.SubElement(parent, "g", {"class": "table-row", "data-row": row[0]})
         yy += ROW_H
         for c_i, cell in enumerate([row[0], *row[1]]):
-            _text(g, xs[c_i] + col_w / 2, yy - 4, cell, size=7.5)
+            sym.add_text(g, xs[c_i] + col_w / 2, yy - 4, cell, size=7.5)
     return yy
 
 
@@ -362,10 +307,10 @@ def render_pfd_svg(solved: SolvedFlowsheet) -> str:
     n_rows = len(stream_rows) + len(unit_rows) + 6
     height = table_y + n_rows * ROW_H + 60.0
 
-    root = new_svg(diagram_w, height)
-    stream_layer = group(root)
-    unit_layer = group(root)
-    table_layer = group(root)
+    root = sym.new_svg(diagram_w, height)
+    stream_layer = sym.group(root)
+    unit_layer = sym.group(root)
+    table_layer = sym.group(root)
 
     # Streams first; equipment draws on top.
     for s in flowsheet.streams:
@@ -386,7 +331,7 @@ def render_pfd_svg(solved: SolvedFlowsheet) -> str:
     for u in flowsheet.units:
         p = placements[u.tag]
         _draw_unit(unit_layer, u.kind, p)
-        _text(unit_layer, p.cx, p.cy - p.h / 2 - 5, u.tag, size=9.0)
+        sym.add_text(unit_layer, p.cx, p.cy - p.h / 2 - 5, u.tag, size=9.0)
 
     after_streams = _draw_table(
         table_layer, MARGIN, table_y, headers, [(sid, cells) for sid, cells in stream_rows], "Stream"
