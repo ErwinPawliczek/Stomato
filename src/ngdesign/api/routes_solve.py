@@ -49,5 +49,12 @@ def solve() -> SolvedFlowsheet:
     key = project_hash(project)
     if key not in _cache:
         thermo = registry.create("thermo", "pr")
-        _cache[key] = registry.create("solver", "sequential_modular").solve(project.flowsheet, thermo)
+        try:
+            _cache[key] = registry.create("solver", "sequential_modular").solve(project.flowsheet, thermo)
+        except ValueError as exc:
+            # Semantically invalid project the PUT-time contracts cannot reject:
+            # declared ports and feed specs are only known to the plugins at
+            # solve time (e.g. a stream naming a port the unit does not have).
+            # That is client error (422), never a 500.
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
     return _cache[key]
