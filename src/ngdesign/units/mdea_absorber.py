@@ -42,16 +42,15 @@ from __future__ import annotations
 
 from typing import Any
 
+from ngdesign.amine.equilibrium import (
+    equilibrium_loadings,
+    equilibrium_partial_pressures,
+)
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import components
 from ngdesign.registry import register
-from ngdesign.units.mdea_equilibrium import (
-    AMINES,
-    amine_molarity,
-    equilibrium_loadings,
-    equilibrium_partial_pressures,
-)
+from ngdesign.units.mdea_equilibrium import AMINES, amine_molarity
 
 __all__ = ["MdeaAbsorber", "MeaAbsorber", "DeaAbsorber"]
 
@@ -244,7 +243,7 @@ class MdeaAbsorber:
 
         # Top (lean) floor: lowest outlet content the lean amine can impose.
         p_co2_floor, p_h2s_floor = equilibrium_partial_pressures(
-            T, c_amine, lean_co2_loading, lean_h2s_loading, amine=amine
+            params, T, c_amine, lean_co2_loading, lean_h2s_loading, amine=amine
         )
         floor_co2 = p_co2_floor / P
         floor_h2s = p_h2s_floor / P
@@ -265,7 +264,7 @@ class MdeaAbsorber:
 
         # Bottom (rich) ceiling: loadings the inlet gas partial pressures support.
         max_co2_loading, max_h2s_loading = equilibrium_loadings(
-            T, c_amine, y_co2_in * P, y_h2s_in * P, amine=amine
+            params, T, c_amine, y_co2_in * P, y_h2s_in * P, amine=amine
         )
         rich_co2_loading = lean_co2_loading + removed_co2 / n_amine
         rich_h2s_loading = lean_h2s_loading + removed_h2s / n_amine
