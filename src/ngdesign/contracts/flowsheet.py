@@ -62,6 +62,9 @@ class Flowsheet(Model):
     name: str
     units: list[UnitSpec]
     streams: list[StreamSpec]
+    # Registered "thermo" plugin name (expansion spec): resolved against the
+    # registry at solve entry; an unknown name fails the solve there.
+    thermo: str = "pr"
 
     @model_validator(mode="after")
     def _topology(self) -> Flowsheet:

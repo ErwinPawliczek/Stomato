@@ -100,3 +100,28 @@ def test_solve_missing_unit_kind_names_it() -> None:
     r = c.post("/api/solve")
     assert r.status_code == 501
     assert "no_such_unit" in r.json()["detail"]
+
+
+def test_solve_unknown_thermo_lists_registered() -> None:
+    """An unknown thermo selection answers 501 listing every registered name."""
+    _reset()
+    p = c.get("/api/project").json()
+    p["flowsheet"]["thermo"] = "no_such_thermo"
+    assert c.put("/api/project", json=p).status_code == 200
+    r = c.post("/api/solve")
+    assert r.status_code == 501
+    detail = r.json()["detail"]
+    assert "no_such_thermo" in detail
+    for name in registry.available("thermo"):
+        assert name in detail
+
+
+def test_solve_explicit_pr_matches_default() -> None:
+    """An explicit 'pr' selection solves identically to the untouched default."""
+    _reset()
+    p = c.get("/api/project").json()
+    p["flowsheet"]["thermo"] = "pr"
+    assert c.put("/api/project", json=p).status_code == 200
+    r = c.post("/api/solve")
+    assert r.status_code == 200
+    assert r.json() == _solve_slice().model_dump(mode="json")

@@ -23,6 +23,8 @@ COMPONENTS: tuple[str, ...] = (
     "H2O",
     "TEG",
     "MDEA",
+    "MeOH",
+    "MEG",
 )  # keys of data/components.yaml
 
 COMP_TOL = 1e-6

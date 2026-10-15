@@ -434,6 +434,11 @@ export interface components {
             name: string;
             /** Streams */
             streams: components["schemas"]["StreamSpec"][];
+            /**
+             * Thermo
+             * @default pr
+             */
+            thermo: string;
             /** Units */
             units: components["schemas"]["UnitSpec"][];
         };

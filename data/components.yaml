@@ -99,3 +99,17 @@ components:
     tc_K: 742.0
     pc_Pa: 4160000.0
     omega: 1.165
+  MeOH:
+    name: methanol
+    cas: 67-56-1
+    mw: 32.0419
+    tc_K: 513.38
+    pc_Pa: 8215850.0
+    omega: 0.5625
+  MEG:
+    name: ethylene glycol
+    cas: 107-21-1
+    mw: 62.0678
+    tc_K: 719.0
+    pc_Pa: 10508700.0
+    omega: 0.619
