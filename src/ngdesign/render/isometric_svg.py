@@ -193,12 +193,17 @@ def _weld_joints(line: RoutedLine) -> list[Vec3]:
     ]
 
 
-def _weld_dots(f: _Frame, line: RoutedLine) -> str:
-    parts = []
-    for j in _weld_joints(line):
-        x, y = f.xy(j)
-        parts.append(f'<circle cx="{_fmt(x)}" cy="{_fmt(y)}" r="{WELD_RADIUS}" fill="{LINE_STROKE}" />')
-    return "".join(parts)
+def _weld_dots_by_description(f: _Frame, line: RoutedLine) -> dict[str, list[str]]:
+    """Weld dot fragments keyed by the preceding component's BOM description."""
+    dots: dict[str, list[str]] = {}
+    for a, _b in zip(line.components, line.components[1:], strict=False):
+        if _is_flange_joint(a, _b):
+            continue
+        x, y = f.xy(a.end)
+        dots.setdefault(a.description, []).append(
+            f'<circle cx="{_fmt(x)}" cy="{_fmt(y)}" r="{WELD_RADIUS}" fill="{LINE_STROKE}" />'
+        )
+    return dots
 
 
 def _first_pipe(line: RoutedLine) -> Component | None:
@@ -347,7 +352,35 @@ def _cut_list(line: RoutedLine) -> list[CutPiece]:
     ]
 
 
-def _svg(line: RoutedLine, title: TitleBlock, bom: list[BomItem]) -> str:
+def _attr(tag: str) -> str:
+    """Escape a data-tag value for use inside a double-quoted attribute."""
+    return escape(tag, {'"': "&quot;"})
+
+
+def _group(
+    tag: str,
+    frags: list[str],
+    placements: dict[str, tuple[float, float]],
+) -> str:
+    """Wrap fragments in a data-tag group, shifted by its placement when stored.
+
+    Placements are 2D screen-space shifts applied after projection (B-06
+    option (a)): a stored (dx, dy) translates the whole group.
+    """
+    attrs = f' data-tag="{_attr(tag)}"'
+    shift = placements.get(tag)
+    if shift is not None:
+        attrs += f' transform="translate({_fmt(shift[0])} {_fmt(shift[1])})"'
+    return f"<g{attrs}>" + "".join(frags) + "</g>"
+
+
+def _svg(
+    line: RoutedLine,
+    title: TitleBlock,
+    bom: list[BomItem],
+    placements: dict[str, tuple[float, float]] | None = None,
+) -> str:
+    shifts = placements if placements is not None else {}
     points: list[Vec3] = []
     for c in line.components:
         points.extend((c.start, c.end))
@@ -355,18 +388,23 @@ def _svg(line: RoutedLine, title: TitleBlock, bom: list[BomItem]) -> str:
             points.append(c.center)
     f = _Frame(points)
     parts: list[str] = [f'<rect x="0" y="0" width="{_fmt(f.w)}" height="{_fmt(f.h)}" fill="white" />']
+    # Components grouped by BOM description (B-06): each weld dot and the flow
+    # arrow join the description group of the component it decorates, so a
+    # placement override moves a component together with its marks.
+    groups = _weld_dots_by_description(f, line)
     for c in line.components:
-        parts.append(_draw_component(f, c))
-    parts.append(_weld_dots(f, line))
+        groups.setdefault(c.description, []).append(_draw_component(f, c))
     first = _first_pipe(line)
     if first is not None:
-        parts.append(_flow_arrow(f, first))
+        groups.setdefault(first.description, []).append(_flow_arrow(f, first))
+    for desc, frags in groups.items():
+        parts.append(_group(desc, frags, shifts))
     for c in line.components:
         if c.kind == ComponentKind.PIPE:
-            parts.append(_dimension(f, c))
+            parts.append(_group(f"dim-{c.id}", [_dimension(f, c)], shifts))
     parts.append(_north_arrow(f))
-    parts.append(_title_block(f, title))
-    parts.append(_bom_table(f, bom))
+    parts.append(_group("title-block", [_title_block(f, title)], shifts))
+    parts.append(_group("bom", [_bom_table(f, bom)], shifts))
     body = "".join(parts)
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {_fmt(f.w)} {_fmt(f.h)}" '
@@ -378,12 +416,23 @@ def _svg(line: RoutedLine, title: TitleBlock, bom: list[BomItem]) -> str:
 class SvgIsoRenderer:
     """Fabrication isometric for one RoutedLine (spec S-19)."""
 
-    def render(self, line: RoutedLine, pid: PID) -> IsoSheet:
+    def render(
+        self,
+        line: RoutedLine,
+        pid: PID,
+        placements: dict[str, tuple[float, float]] | None = None,
+    ) -> IsoSheet:
+        """Fabrication isometric for one RoutedLine (spec S-19).
+
+        ``placements`` (B-06) maps a data-tag group to a 2D screen-space
+        shift applied after projection; ``None`` renders exactly the default
+        auto-framed layout.
+        """
         title = _title(line, pid)
         bom = _bom(line, _material(title.pipe_class))
         return IsoSheet(
             title=title,
-            svg=_svg(line, title, bom),
+            svg=_svg(line, title, bom, placements),
             bom=bom,
             cut_list=_cut_list(line),
             weld_count=len(_weld_joints(line)),

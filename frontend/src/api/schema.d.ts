@@ -59,6 +59,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/project/layout/iso/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Place Iso
+         * @description Store a layout.iso placement; the iso views apply it on the next render.
+         */
+        put: operations["place_iso_api_project_layout_iso__key__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/project/layout/plot/{tag}": {
         parameters: {
             query?: never;
@@ -150,6 +170,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/views/iso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Iso Lines
+         * @description Routed line numbers available for isometric views (empty when none).
+         */
+        get: operations["iso_lines_api_views_iso_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/views/iso/{line_number}.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Iso Sheet
+         * @description IsoSheet for one routed line: title block, BOM, cut list, totals.
+         */
+        get: operations["iso_sheet_api_views_iso__line_number__json_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/views/iso/{line_number}.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Iso Svg
+         * @description Fabrication isometric for one routed line, layout.iso applied.
+         */
+        get: operations["iso_svg_api_views_iso__line_number__svg_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/views/pfd.svg": {
         parameters: {
             query?: never;
@@ -214,6 +294,21 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** BomItem */
+        BomItem: {
+            /** Description */
+            description: string;
+            /** Item */
+            item: number;
+            /** Material */
+            material: string;
+            /** Nps In */
+            nps_in: number;
+            /** Qty */
+            qty: number;
+            /** Unit */
+            unit: string;
+        };
         /**
          * Component
          * @description One physical item. start->end is the centerline in flow direction.
@@ -261,6 +356,17 @@ export interface components {
          * @enum {string}
          */
         ComponentKind: "pipe" | "elbow_90_lr" | "elbow_90_sr" | "elbow_45_lr" | "tee_equal" | "tee_reducing" | "reducer_concentric" | "reducer_eccentric" | "cap" | "flange_weld_neck" | "flange_blind" | "gasket" | "valve" | "olet" | "strainer";
+        /** CutPiece */
+        CutPiece: {
+            /** Length Mm */
+            length_mm: number;
+            /** Nps In */
+            nps_in: number;
+            /** Piece */
+            piece: number;
+            /** Spool */
+            spool: string;
+        };
         /**
          * Datasheet
          * @description Sizing output for one piece of equipment.
@@ -335,6 +441,20 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** IsoSheet */
+        IsoSheet: {
+            /** Bom */
+            bom: components["schemas"]["BomItem"][];
+            /** Cut List */
+            cut_list: components["schemas"]["CutPiece"][];
+            /** Svg */
+            svg: string;
+            title: components["schemas"]["TitleBlock"];
+            /** Total Pipe Length Mm */
+            total_pipe_length_mm: number;
+            /** Weld Count */
+            weld_count: number;
         };
         /**
          * Layout
@@ -523,6 +643,29 @@ export interface components {
             phases: components["schemas"]["Phase"][];
             /** Vapor Fraction */
             vapor_fraction: number;
+        };
+        /** TitleBlock */
+        TitleBlock: {
+            /** Design Pressure Kpag */
+            design_pressure_kPag: number;
+            /** Design Temperature C */
+            design_temperature_C: number;
+            /**
+             * Insulation
+             * @default none
+             */
+            insulation: string;
+            /** Line Number */
+            line_number: string;
+            /** Pipe Class */
+            pipe_class: string;
+            /**
+             * Sheet
+             * @default 1 of 1
+             */
+            sheet: string;
+            /** Test Pressure Kpag */
+            test_pressure_kPag: number;
         };
         /**
          * UnitResult
@@ -729,6 +872,43 @@ export interface operations {
             };
         };
     };
+    place_iso_api_project_layout_iso__key__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["XY"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["XY"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     place_plot_api_project_layout_plot__tag__put: {
         parameters: {
             query?: never;
@@ -856,6 +1036,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SolvedFlowsheet"];
+                };
+            };
+        };
+    };
+    iso_lines_api_views_iso_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+        };
+    };
+    iso_sheet_api_views_iso__line_number__json_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                line_number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IsoSheet"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    iso_svg_api_views_iso__line_number__svg_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                line_number: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
