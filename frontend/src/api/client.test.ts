@@ -17,3 +17,19 @@ test("mock pfd.svg honours saved placement, as GET /api/views/pfd.svg does", asy
   // The stored centre wins: the box is re-centred on (300, 200).
   expect(after).toContain('x="245" y="155"');
 });
+
+
+test("getMeta mirrors GET /api/meta's registry inventory", async () => {
+  const meta = await api.getMeta();
+  expect(meta.thermo).toEqual(expect.arrayContaining(["pr", "nrtl", "srk", "pr78"]));
+  expect(meta.unit).toEqual(
+    expect.arrayContaining([
+      "compressor",
+      "expander",
+      "compression_train",
+      "mdea_absorber",
+      "mdea_regenerator",
+      "teg_contactor",
+    ]),
+  );
+});

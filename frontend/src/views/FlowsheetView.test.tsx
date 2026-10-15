@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { api, type Project } from "../api/client";
+import { ApiError, api, type Project } from "../api/client";
 import mockProject from "../../mocks/project.json";
 import { FlowsheetView } from "./FlowsheetView";
 
@@ -87,3 +87,82 @@ test("edited feed T, P and flow are saved in SI units", async () => {
     expect(feed?.molar_flow).toBeCloseTo(1000, 9);
   });
 });
+
+test("thermo selector lists registry models and persists a change through Save", async () => {
+  api._resetMock();
+  const initial = await api.getProject();
+  render(<FlowsheetView project={initial} />);
+
+  const select = screen.getByRole("combobox", { name: "Thermo model" }) as HTMLSelectElement;
+  expect(select.value).toBe("pr");
+  // Options come from GET /api/meta (the mock mirrors the registered thermo plugins).
+  await waitFor(() =>
+    expect([...select.options].map((o) => o.value)).toEqual(
+      expect.arrayContaining(["nrtl", "pr", "pr78", "srk"]),
+    ),
+  );
+
+  fireEvent.change(select, { target: { value: "nrtl" } });
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(async () => {
+    const p = await api.getProject(); // mock branch is synchronous
+    expect(p.flowsheet.thermo).toBe("nrtl");
+  });
+});
+
+test("add-unit palette inserts a UnitSpec with example_case-shaped params; Save persists it", async () => {
+  api._resetMock();
+  const initial = await api.getProject();
+  render(<FlowsheetView project={initial} />);
+
+  // The palette renders once /api/meta resolves.
+  fireEvent.change(await screen.findByRole("combobox", { name: "New unit kind" }), {
+    target: { value: "expander" },
+  });
+  fireEvent.change(screen.getByRole("textbox", { name: "New unit tag" }), {
+    target: { value: "X-201" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Add unit" }));
+
+  // Row appears immediately with the registry kind and the plugin's
+  // example_case() defaults (X-201 P_out editable at the expander's 2.0 MPa).
+  const row = screen.getAllByRole("row").find((r) => r.getAttribute("data-tag") === "X-201");
+  expect(row?.textContent).toContain("expander");
+  expect((screen.getByRole("textbox", { name: "X-201 P_out" }) as HTMLInputElement).value).toBe(
+    "2000000",
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(async () => {
+    const p = await api.getProject();
+    const unit = p.flowsheet.units.find((u) => u.tag === "X-201");
+    expect(unit?.kind).toBe("expander");
+    expect(unit?.params).toEqual({ P_out: 2000000, eta_isentropic: 0.8 });
+  });
+});
+
+test("add-unit palette rejects a duplicate tag without adding a unit", async () => {
+  api._resetMock();
+  render(<FlowsheetView project={structuredClone(mockProject) as Project} />);
+  fireEvent.change(await screen.findByRole("combobox", { name: "New unit kind" }), {
+    target: { value: "pump" },
+  });
+  fireEvent.change(screen.getByRole("textbox", { name: "New unit tag" }), {
+    target: { value: "K-101" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Add unit" }));
+  expect(screen.getByRole("alert").textContent).toContain("already exists");
+  expect(
+    screen.getAllByRole("row").filter((r) => r.getAttribute("data-tag") === "K-101"),
+  ).toHaveLength(1);
+});
+
+test("a failed /api/meta fetch shows a registry alert instead of breaking the view", async () => {
+  api._resetMock();
+  const spy = vi.spyOn(api, "getMeta").mockRejectedValueOnce(new ApiError("GET /api/meta: 503", 503));
+  render(<FlowsheetView project={structuredClone(mockProject) as Project} />);
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toContain("Registry unavailable");
+  spy.mockRestore();
+});
+

@@ -4,7 +4,7 @@
 // the pipe line number (HTML-escaped, e.g. 8&quot;-PG-1001-B1), and a stored
 // layout.pid position is the equipment box's TOP-LEFT corner in view px —
 // unplaced equipment keeps its fixed sample position. Tags mirror the real
-// sample: 6 equipment, 13 line numbers, 15 valves (incl. 2 PSVs), 7 instruments.
+// sample: 8 equipment, 13 line numbers, 15 valves (incl. 2 PSVs), 7 instruments.
 
 type Pos = { x: number; y: number };
 
@@ -16,6 +16,9 @@ const EQUIPMENT: Array<[string, number, number, number, number]> = [
   ["T-101", 510, 60, 90, 140],
   ["P-101", 670, 60, 60, 60],
   ["E-102", 790, 60, 80, 70],
+  // Wave-1 amine loop on its own row below the line band.
+  ["A-101", 40, 330, 110, 80],
+  ["R-101", 210, 330, 90, 80],
 ];
 
 // Pipe line numbers, size-prefixed and HTML-escaped like the backend's output.
@@ -46,7 +49,7 @@ const INSTRUMENTS = ["LG-1001", "LIT-1002", "LSHH-1001", "LSLL-1001", "LT-1001",
 
 export function mockPidSvg(placed: Record<string, Pos>): string {
   const parts: string[] = [
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 360" width="920" height="360">',
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 440" width="920" height="440">',
   ];
   // Lines: horizontal runs in a band below the equipment row; valve i sits on
   // line i's midpoint, like the real renderer draws inline valves.

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, type Project } from "../api/client";
+import { api, type Meta, type Project } from "../api/client";
+import { defaultParamsFor } from "../unitDefaults";
 import {
   celsiusToKelvin,
   formatNumber,
@@ -66,7 +67,9 @@ function feedFields(project: Project): Field[] {
   return fields;
 }
 
-/** Apply the parsed drafts to the project. Pure: returns a new Project. */
+/** Apply the parsed drafts to the project. Pure: returns a new Project.
+ * The thermo selector is a string field outside the numeric Field machinery;
+ * its draft rides the same record under `flowsheet:thermo` and is applied as-is. */
 export function applyDrafts(project: Project, fields: Field[], drafts: Drafts): Project {
   const parsed = new Map<string, number>();
   for (const f of fields) {
@@ -75,10 +78,12 @@ export function applyDrafts(project: Project, fields: Field[], drafts: Drafts): 
     const n = parseFiniteNumber(text);
     if (n !== null) parsed.set(f.key, f.toSi(n));
   }
+  const thermo = drafts["flowsheet:thermo"];
   return {
     ...project,
     flowsheet: {
       ...project.flowsheet,
+      ...(thermo !== undefined && thermo !== "" && thermo !== project.flowsheet.thermo && { thermo }),
       units: project.flowsheet.units.map((u) => {
         const edits = Object.keys(u.params ?? {})
           .filter((name) => parsed.has(`unit:${u.tag}:${name}`))
@@ -113,6 +118,35 @@ export function FlowsheetView({ project }: { project: Project }) {
   const [drafts, setDrafts] = useState<Drafts>({});
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [meta, setMeta] = useState<Meta | null>(null);
+  const [metaError, setMetaError] = useState<string | null>(null);
+  const [newKind, setNewKind] = useState("");
+  const [newTag, setNewTag] = useState("");
+  const [addError, setAddError] = useState<string | null>(null);
+
+  // Registry inventory for the thermo selector and the add-unit palette.
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .getMeta()
+      .then((m) => {
+        if (!cancelled) setMeta(m);
+      })
+      .catch((e: Error) => {
+        if (!cancelled) setMetaError(e.message);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const unitKinds = useMemo(() => [...(meta?.unit ?? [])].sort(), [meta]);
+  // Always include the flowsheet's current model so the select can never show a
+  // value it does not offer (e.g. while /api/meta is loading or mid-refresh).
+  const thermoOptions = useMemo(
+    () => [...new Set([...(meta?.thermo ?? []), current.flowsheet.thermo])].sort(),
+    [meta, current.flowsheet.thermo],
+  );
 
   const fields = useMemo(() => [...unitFields(current), ...feedFields(current)], [current]);
   const fieldByKey = useMemo(
@@ -136,6 +170,34 @@ export function FlowsheetView({ project }: { project: Project }) {
 
   function edit(key: string, text: string): void {
     setDrafts((d) => ({ ...d, [key]: text }));
+  }
+
+  /** Palette insert: append a UnitSpec with the registry kind and
+   * example_case()-shaped default params. Persisted by the existing Save
+   * button — one PUT path, like every other edit in this view. */
+  function addUnit(): void {
+    const tag = newTag.trim();
+    if (tag === "") {
+      setAddError("Enter a tag for the new unit.");
+      return;
+    }
+    if (current.flowsheet.units.some((u) => u.tag === tag)) {
+      setAddError(`Tag ${tag} already exists in the flowsheet.`);
+      return;
+    }
+    if (newKind === "") {
+      setAddError("Pick a unit kind first.");
+      return;
+    }
+    setCurrent({
+      ...current,
+      flowsheet: {
+        ...current.flowsheet,
+        units: [...current.flowsheet.units, { tag, kind: newKind, params: defaultParamsFor(newKind) }],
+      },
+    });
+    setNewTag("");
+    setAddError(null);
   }
 
   async function save(): Promise<void> {
@@ -200,6 +262,20 @@ export function FlowsheetView({ project }: { project: Project }) {
           {saving ? "Saving…" : "Save"}
         </button>
         {saveError && <span role="alert">Save failed: {saveError}</span>}
+        <label className="field">
+          <span>Thermo model</span>
+          <select
+            aria-label="Thermo model"
+            value={drafts["flowsheet:thermo"] ?? current.flowsheet.thermo}
+            onChange={(e) => edit("flowsheet:thermo", e.target.value)}
+          >
+            {thermoOptions.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
       <section>
         <h2>Units</h2>
@@ -231,6 +307,51 @@ export function FlowsheetView({ project }: { project: Project }) {
             ))}
           </tbody>
         </table>
+      </section>
+      <section>
+        <h2>Add unit</h2>
+        {metaError && <p role="alert">Registry unavailable: {metaError}</p>}
+        {meta && (
+          <div className="toolbar">
+            <label className="field">
+              <span>Kind</span>
+              <select
+                aria-label="New unit kind"
+                value={newKind}
+                onChange={(e) => {
+                  setNewKind(e.target.value);
+                  setAddError(null);
+                }}
+              >
+                <option value="" disabled>
+                  Pick a kind…
+                </option>
+                {unitKinds.map((k) => (
+                  <option key={k} value={k}>
+                    {k}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>Tag</span>
+              <input
+                type="text"
+                aria-label="New unit tag"
+                value={newTag}
+                onChange={(e) => {
+                  setNewTag(e.target.value);
+                  setAddError(null);
+                }}
+              />
+            </label>
+            <button type="button" disabled={newKind === ""} onClick={addUnit}>
+              Add unit
+            </button>
+            {addError && <span role="alert">{addError}</span>}
+            <span className="muted">Inserted with example params (SI); Save persists it.</span>
+          </div>
+        )}
       </section>
       <section>
         <h2>Feed conditions</h2>

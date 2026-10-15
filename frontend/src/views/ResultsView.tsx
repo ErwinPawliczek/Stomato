@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ApiError, api, type SolvedFlowsheet } from "../api/client";
-import { toDegC, toKPaG, toKmolH, toKw, toVaporFraction } from "../units";
+import { formatNumber, toDegC, toKPaG, toKmolH, toKw, toVaporFraction } from "../units";
 
 /** Layer 2: solve the slice and show stream states plus unit duty/power. */
 export function ResultsView() {
@@ -82,6 +82,7 @@ export function ResultsView() {
                   <th>Tag</th>
                   <th>Duty (kW)</th>
                   <th>Power (kW)</th>
+                  <th>Info</th>
                 </tr>
               </thead>
               <tbody>
@@ -90,6 +91,19 @@ export function ResultsView() {
                     <td>{tag}</td>
                     <td>{toKw(ur.duty_W)}</td>
                     <td>{toKw(ur.power_W)}</td>
+                    <td>
+                      {/* Plugin-authored readouts (hydrate margins, MDEA loadings,
+                          per-stage pressures) rendered generically: key=value. */}
+                      {Object.entries(ur.info).length === 0 ? (
+                        <span className="muted">—</span>
+                      ) : (
+                        Object.entries(ur.info).map(([k, v]) => (
+                          <span key={k} className="muted" data-info-key={k}>
+                            {k}={formatNumber(v)}{" "}
+                          </span>
+                        ))
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

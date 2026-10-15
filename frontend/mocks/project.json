@@ -46,6 +46,16 @@
           "T_out": 333.15,
           "dP": 50000.0
         }
+      },
+      {
+        "tag": "A-101",
+        "kind": "mdea_absorber",
+        "params": {}
+      },
+      {
+        "tag": "R-101",
+        "kind": "mdea_regenerator",
+        "params": {}
       }
     ],
     "streams": [

@@ -35,3 +35,14 @@ test("a 501 from the backend shows 'Solver not available yet' instead of crashin
   expect(screen.queryByText(/Solve failed/)).toBeNull();
   spy.mockRestore();
 });
+
+
+test("unit info keys render generically as key=value readouts", async () => {
+  render(<ResultsView />);
+  fireEvent.click(screen.getByRole("button", { name: "Solve" }));
+  await screen.findByText("K-101");
+  // Real solver info from mocks/solved.json — whatever keys the plugins emit,
+  // each renders as key=value (pressure_ratio on K-101, water removal on T-101).
+  expect(screen.getByText(/pressure_ratio=2\.030751/)).toBeTruthy();
+  expect(screen.getByText(/water_removed_kg_h=33\.94117/)).toBeTruthy();
+});
