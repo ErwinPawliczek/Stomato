@@ -25,7 +25,8 @@ def _reset() -> None:
 def _get_project() -> dict[str, Any]:
     r = c.get("/api/project")
     assert r.status_code == 200
-    return r.json()
+    payload: dict[str, Any] = r.json()
+    return payload
 
 
 def _rejects(body: dict[str, Any] | str) -> None:

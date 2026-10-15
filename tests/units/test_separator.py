@@ -6,29 +6,31 @@ import pytest
 
 from ngdesign import registry
 from ngdesign.contracts import PhaseKind, StreamState
+from ngdesign.contracts.plugins import Thermo
 from tests.conftest import flash_feed
 
 
 @pytest.fixture(name="solved")
-def _solved(thermo) -> dict[str, StreamState]:
+def _solved(thermo: Thermo) -> dict[str, StreamState]:
     unit = registry.create("unit", "separator_3phase")
     feeds, params = unit.example_case()
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
-    return unit.solve(inlets, params, thermo).outlets
+    outlets: dict[str, StreamState] = unit.solve(inlets, params, thermo).outlets
+    return outlets
 
 
-def test_slice_inlet_gives_all_three_outlets(solved) -> None:
+def test_slice_inlet_gives_all_three_outlets(solved: dict[str, StreamState]) -> None:
     for port in ("gas_out", "hc_out", "water_out"):
         assert solved[port].molar_flow > 0, f"{port} flow must be non-zero"
 
 
-def test_gas_outlet_is_single_phase_vapor(solved) -> None:
+def test_gas_outlet_is_single_phase_vapor(solved: dict[str, StreamState]) -> None:
     gas = solved["gas_out"]
     assert gas.vapor_fraction == pytest.approx(1.0)
     assert all(p.kind is PhaseKind.VAPOR for p in gas.phases)
 
 
-def test_duty_is_near_zero_for_zero_dp(thermo) -> None:
+def test_duty_is_near_zero_for_zero_dp(thermo: Thermo) -> None:
     unit = registry.create("unit", "separator_3phase")
     feeds, params = unit.example_case()
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
@@ -37,7 +39,7 @@ def test_duty_is_near_zero_for_zero_dp(thermo) -> None:
     assert abs(result.duty_W) < 1e-6 * scale
 
 
-def test_scrubber_combines_liquids(thermo) -> None:
+def test_scrubber_combines_liquids(thermo: Thermo) -> None:
     unit = registry.create("unit", "scrubber")
     feeds, params = unit.example_case()
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
@@ -47,7 +49,7 @@ def test_scrubber_combines_liquids(thermo) -> None:
     assert outlets["liquid_out"].molar_flow > 0
 
 
-def test_dp_lowers_outlet_pressure(thermo) -> None:
+def test_dp_lowers_outlet_pressure(thermo: Thermo) -> None:
     unit = registry.create("unit", "separator_3phase")
     feeds, _params = unit.example_case()
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}

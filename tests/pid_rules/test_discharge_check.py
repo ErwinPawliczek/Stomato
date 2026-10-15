@@ -3,18 +3,20 @@
 from __future__ import annotations
 
 from ngdesign import registry
-from ngdesign.contracts import InlineItem, InlineKind, Valve, ValveType
+from ngdesign.contracts import PID, InlineItem, InlineKind, PidLine, Valve, ValveType
+from ngdesign.contracts.plugins import PidRule
 from ngdesign.flowsheets.samples import sample_pid
 
 RULE = "discharge_check_valve"
 
 
-def _rule() -> object:
-    return registry.create("pid_rule", RULE)
+def _rule() -> PidRule:
+    rule: PidRule = registry.create("pid_rule", RULE)
+    return rule
 
 
-def _line(pid: object, number: str) -> object:
-    return next(ln for ln in pid.lines if ln.number == number)  # type: ignore[attr-defined]
+def _line(pid: PID, number: str) -> PidLine:
+    return next(ln for ln in pid.lines if ln.number == number)
 
 
 def test_finds_violations_on_bare_sample() -> None:

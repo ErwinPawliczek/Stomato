@@ -6,6 +6,7 @@ for the sample slice."""
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 from xml.etree import ElementTree as ET
 
 from fastapi.testclient import TestClient
@@ -24,17 +25,18 @@ def _reset() -> None:
     assert c.post("/api/project/reset").status_code == 200
 
 
-def _project() -> dict:
+def _project() -> dict[str, Any]:
     r = c.get("/api/project")
     assert r.status_code == 200
-    return r.json()
+    payload: dict[str, Any] = r.json()
+    return payload
 
 
-def _unit_tags(project: dict) -> list[str]:
+def _unit_tags(project: dict[str, Any]) -> list[str]:
     return [u["tag"] for u in project["flowsheet"]["units"]]
 
 
-def _stream_ids(project: dict) -> list[str]:
+def _stream_ids(project: dict[str, Any]) -> list[str]:
     return [s["id"] for s in project["flowsheet"]["streams"]]
 
 

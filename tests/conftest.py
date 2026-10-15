@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from ngdesign import registry
@@ -15,9 +17,10 @@ def thermo() -> Thermo:
     names = registry.available("thermo")
     if not names:
         pytest.skip("no thermo plugin registered yet (spec S-01)")
-    return registry.create("thermo", "pr" if "pr" in names else names[0])
+    impl: Thermo = registry.create("thermo", "pr" if "pr" in names else names[0])
+    return impl
 
 
-def flash_feed(thermo: Thermo, feed: dict | FeedSpec) -> StreamState:
+def flash_feed(thermo: Thermo, feed: dict[str, Any] | FeedSpec) -> StreamState:
     f = feed if isinstance(feed, FeedSpec) else FeedSpec(**feed)
     return thermo.flash_pt(f.composition, f.T, f.P, f.molar_flow)

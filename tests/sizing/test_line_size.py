@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import pytest
 
@@ -89,7 +90,7 @@ def test_uses_candidate_nps_list() -> None:
         {"service": "PG", "flow_m3_s": 0.1, "rho_kg_m3": 28.0, "C": -100.0},  # bad C
     ],
 )
-def test_invalid_inputs_raise(kwargs: dict) -> None:
+def test_invalid_inputs_raise(kwargs: dict[str, Any]) -> None:
     with pytest.raises(ValueError):
         line_size(**kwargs)
 

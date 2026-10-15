@@ -63,7 +63,7 @@ def test_solve_is_cached_by_project_hash(monkeypatch: Any) -> None:
     _reset()
     assert c.post("/api/solve").status_code == 200
 
-    cls = registry.get("solver", "sequential_modular")
+    cls: Any = registry.get("solver", "sequential_modular")
     original = cls.solve
     calls: list[int] = []
 

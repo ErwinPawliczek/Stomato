@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -26,10 +26,10 @@ CASE_1: dict[str, Any] = {
 def test_hand_checked_nps6_5mpa() -> None:
     """Hand check: t = 5*168.3/(2*(137.9 + 5*0.4)) = 3.0075 mm; nominal 6.8657 -> SCH 40."""
     got = wall_thickness_b313(**CASE_1)
-    assert math.isclose(got["od_mm"], 168.3, rel_tol=1e-12)
-    assert math.isclose(got["t_pressure_mm"], 3.0075, rel_tol=1e-4)
-    assert math.isclose(got["t_required_nominal_mm"], 6.8657, rel_tol=1e-4)
-    assert math.isclose(got["selected_wall_mm"], 7.11, rel_tol=1e-12)
+    assert math.isclose(cast(float, got["od_mm"]), 168.3, rel_tol=1e-12)
+    assert math.isclose(cast(float, got["t_pressure_mm"]), 3.0075, rel_tol=1e-4)
+    assert math.isclose(cast(float, got["t_required_nominal_mm"]), 6.8657, rel_tol=1e-4)
+    assert math.isclose(cast(float, got["selected_wall_mm"]), 7.11, rel_tol=1e-12)
     assert got["selected_schedule"] == "40"
 
 

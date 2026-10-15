@@ -7,7 +7,7 @@ ISA/IEC 60534 sizing (Cv = Kv/0.865; fluids returns metric Kv in (m^3/h)/bar^0.5
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from fluids.control_valve import size_control_valve_l
 
@@ -24,7 +24,7 @@ def cv_liquid(Q_gpm: float, SG: float, dP_psi: float) -> float:
         raise ValueError(f"SG must be > 0, got {SG!r}")
     if dP_psi <= 0:
         raise ValueError(f"dP_psi must be > 0, got {dP_psi!r}")
-    return Q_gpm * (SG / dP_psi) ** 0.5
+    return cast(float, Q_gpm * (SG / dP_psi) ** 0.5)
 
 
 def cv_liquid_isa(

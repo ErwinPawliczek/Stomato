@@ -5,13 +5,14 @@ import math
 import pytest
 
 from ngdesign import registry
+from ngdesign.contracts.plugins import Thermo
 from tests.conftest import flash_feed
 
 UNITS = registry.available("unit")
 
 
 @pytest.mark.parametrize("name", UNITS or ["<none>"])
-def test_balances(thermo, name):
+def test_balances(thermo: Thermo, name: str) -> None:
     if name == "<none>":
         pytest.skip("no unit plugins yet")
     unit = registry.create("unit", name)
@@ -21,11 +22,11 @@ def test_balances(thermo, name):
     res = unit.solve(inlets, params, thermo)
     assert set(res.outlets) == set(unit.outlet_ports)
 
-    fin = {}
+    fin: dict[str, float] = {}
     for s in inlets.values():
         for c, n in s.component_flows().items():
             fin[c] = fin.get(c, 0.0) + n
-    fout = {}
+    fout: dict[str, float] = {}
     for s in res.outlets.values():
         for c, n in s.component_flows().items():
             fout[c] = fout.get(c, 0.0) + n

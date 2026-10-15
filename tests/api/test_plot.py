@@ -43,14 +43,16 @@ def _slice_pid() -> PID:
 def _route_json() -> dict[str, Any]:
     r = c.post("/api/route")
     assert r.status_code == 200
-    return r.json()
+    payload: dict[str, Any] = r.json()
+    return payload
 
 
 def _plot_svg() -> str:
     r = c.get("/api/views/plot.svg")
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("image/svg+xml")
-    return r.text
+    svg: str = r.text
+    return svg
 
 
 def _lengths(net_json: dict[str, Any]) -> dict[str, float]:
@@ -67,7 +69,7 @@ def _lengths(net_json: dict[str, Any]) -> dict[str, float]:
 
 def _tagged_groups(svg: str) -> set[str]:
     root = ET.fromstring(svg)
-    return {g.get("data-tag") for g in root.iter(f"{{{SVG_NS}}}g") if g.get("data-tag")}
+    return {tag for g in root.iter(f"{{{SVG_NS}}}g") if (tag := g.get("data-tag"))}
 
 
 def _group_polylines(svg: str, tag: str) -> list[str]:

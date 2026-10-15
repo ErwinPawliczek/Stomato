@@ -11,7 +11,7 @@ When the slice solves for real, the e2e test exercises this same builder.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -256,7 +256,7 @@ def test_line_numbers_run_from_1001_in_stream_order() -> None:
         assert int(parts[-2]) == 1001 + i
         assert parts[-1] == ln.pipe_class
         assert parts[0] == f'{ln.nps_in:g}"'
-        assert parts[1] == services[ln.stream_id]  # fluid code from StreamSpec.service
+        assert parts[1] == services[cast(str, ln.stream_id)]  # fluid code from StreamSpec.service
 
 
 def test_line_ends_hit_port_nozzles_or_boundaries() -> None:
@@ -279,7 +279,8 @@ def test_design_conditions_max_of_equipment_ends() -> None:
     # Pinned to the no-sizer path (autouse fixture): equipment design
     # conditions are the max operating P/T over connected streams (the
     # fixture states above).
-    assert conds["K-101"] == (pytest.approx(7.0e6), pytest.approx(423.15))
+    approx_conds = (pytest.approx(7.0e6), pytest.approx(423.15))
+    assert conds["K-101"] == approx_conds  # type: ignore[comparison-overlap]
     assert conds["V-101"][0] == pytest.approx(3.447e6)
     by_stream = {ln.stream_id: ln for ln in pid.lines}
     # S-003 (K-101 -> E-101): both ends at 7.0 MPa, 423 K -> class-600 D1.
@@ -316,7 +317,7 @@ def test_default_nozzles_cover_every_declared_port() -> None:
     pid = _built()
     by_tag = {e.tag: e for e in pid.equipment}
     for spec in _solved_slice().flowsheet.units:
-        cls = registry.get("unit", spec.kind)
+        cls: Any = registry.get("unit", spec.kind)
         for port in (*cls.inlet_ports, *cls.outlet_ports):
             nozzles = [n for n in by_tag[spec.tag].nozzles if n.port == port]
             assert len(nozzles) == 1, (spec.tag, port)
