@@ -36,9 +36,10 @@ RELIEF_K_GAS = 1.24
 
 
 def _solve_slice() -> SolvedFlowsheet:
-    """PR thermo -> sequential-modular solve of the locked sample slice."""
-    thermo = registry.create("thermo", "pr")
-    solved: SolvedFlowsheet = registry.create("solver", "sequential_modular").solve(slice_fs.build(), thermo)
+    """Thermo selected by the slice (default pr) -> sequential-modular solve."""
+    fs = slice_fs.build()
+    thermo = registry.create("thermo", fs.thermo)
+    solved: SolvedFlowsheet = registry.create("solver", "sequential_modular").solve(fs, thermo)
     if not solved.converged:
         raise RuntimeError("sample slice did not converge; nothing to draw")
     return solved

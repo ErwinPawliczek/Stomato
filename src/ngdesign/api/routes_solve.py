@@ -1,9 +1,10 @@
 """POST /api/solve (spec B-02).
 
-Solves the current project with the ``pr`` thermo package and the
-``sequential_modular`` solver through the registry seam — the same engine path
-as the S-35 CLI slice demo. Results are cached by project hash so repeated
-solves of an unchanged project return instantly.
+Solves the current project through the registry seam — the thermo package comes
+from the project's ``thermo`` selection (default ``pr``) and the solver is
+``sequential_modular``; the same engine path as the S-35 CLI slice demo. Results
+are cached by project hash so repeated solves of an unchanged project return
+instantly.
 """
 
 from __future__ import annotations
@@ -46,9 +47,16 @@ def solve() -> SolvedFlowsheet:
     missing = first_missing_unit_kind(project)
     if missing is not None:
         raise HTTPException(status_code=501, detail=f"unit kind {missing!r} has no registered plugin")
+    thermo_name = project.flowsheet.thermo
+    known_thermo = registry.available("thermo")
+    if thermo_name not in known_thermo:
+        raise HTTPException(
+            status_code=501,
+            detail=f"thermo model {thermo_name!r} has no registered plugin; have {known_thermo}",
+        )
     key = project_hash(project)
     if key not in _cache:
-        thermo = registry.create("thermo", "pr")
+        thermo = registry.create("thermo", thermo_name)
         try:
             _cache[key] = registry.create("solver", "sequential_modular").solve(project.flowsheet, thermo)
         except ValueError as exc:
