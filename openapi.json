@@ -1,6 +1,45 @@
 {
   "components": {
     "schemas": {
+      "BomItem": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "item": {
+            "title": "Item",
+            "type": "integer"
+          },
+          "material": {
+            "title": "Material",
+            "type": "string"
+          },
+          "nps_in": {
+            "title": "Nps In",
+            "type": "number"
+          },
+          "qty": {
+            "title": "Qty",
+            "type": "number"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item",
+          "qty",
+          "unit",
+          "nps_in",
+          "description",
+          "material"
+        ],
+        "title": "BomItem",
+        "type": "object"
+      },
       "Component": {
         "additionalProperties": false,
         "description": "One physical item. start->end is the centerline in flow direction.\n\nFor elbows, `center` is the intersection point of the two legs.\nFor tees, `branch_end` is the branch connection point.",
@@ -134,6 +173,35 @@
         ],
         "title": "ComponentKind",
         "type": "string"
+      },
+      "CutPiece": {
+        "additionalProperties": false,
+        "properties": {
+          "length_mm": {
+            "title": "Length Mm",
+            "type": "number"
+          },
+          "nps_in": {
+            "title": "Nps In",
+            "type": "number"
+          },
+          "piece": {
+            "title": "Piece",
+            "type": "integer"
+          },
+          "spool": {
+            "title": "Spool",
+            "type": "string"
+          }
+        },
+        "required": [
+          "piece",
+          "spool",
+          "nps_in",
+          "length_mm"
+        ],
+        "title": "CutPiece",
+        "type": "object"
       },
       "Datasheet": {
         "additionalProperties": false,
@@ -308,6 +376,50 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "IsoSheet": {
+        "additionalProperties": false,
+        "properties": {
+          "bom": {
+            "items": {
+              "$ref": "#/components/schemas/BomItem"
+            },
+            "title": "Bom",
+            "type": "array"
+          },
+          "cut_list": {
+            "items": {
+              "$ref": "#/components/schemas/CutPiece"
+            },
+            "title": "Cut List",
+            "type": "array"
+          },
+          "svg": {
+            "title": "Svg",
+            "type": "string"
+          },
+          "title": {
+            "$ref": "#/components/schemas/TitleBlock"
+          },
+          "total_pipe_length_mm": {
+            "title": "Total Pipe Length Mm",
+            "type": "number"
+          },
+          "weld_count": {
+            "title": "Weld Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "svg",
+          "bom",
+          "cut_list",
+          "weld_count",
+          "total_pipe_length_mm"
+        ],
+        "title": "IsoSheet",
         "type": "object"
       },
       "Layout": {
@@ -724,6 +836,50 @@
         "title": "StreamState",
         "type": "object"
       },
+      "TitleBlock": {
+        "additionalProperties": false,
+        "properties": {
+          "design_pressure_kPag": {
+            "title": "Design Pressure Kpag",
+            "type": "number"
+          },
+          "design_temperature_C": {
+            "title": "Design Temperature C",
+            "type": "number"
+          },
+          "insulation": {
+            "default": "none",
+            "title": "Insulation",
+            "type": "string"
+          },
+          "line_number": {
+            "title": "Line Number",
+            "type": "string"
+          },
+          "pipe_class": {
+            "title": "Pipe Class",
+            "type": "string"
+          },
+          "sheet": {
+            "default": "1 of 1",
+            "title": "Sheet",
+            "type": "string"
+          },
+          "test_pressure_kPag": {
+            "title": "Test Pressure Kpag",
+            "type": "number"
+          }
+        },
+        "required": [
+          "line_number",
+          "pipe_class",
+          "design_pressure_kPag",
+          "design_temperature_C",
+          "test_pressure_kPag"
+        ],
+        "title": "TitleBlock",
+        "type": "object"
+      },
       "UnitResult": {
         "additionalProperties": false,
         "description": "What a unit plugin returns from solve().",
@@ -1039,6 +1195,60 @@
         "summary": "Put Project"
       }
     },
+    "/api/project/layout/iso/{key}": {
+      "put": {
+        "description": "Store a layout.iso placement; the iso views apply it on the next render.",
+        "operationId": "place_iso_api_project_layout_iso__key__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/XY"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/XY"
+                  },
+                  "title": "Response Place Iso Api Project Layout Iso  Key  Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Place Iso"
+      }
+    },
     "/api/project/layout/plot/{tag}": {
       "put": {
         "operationId": "place_plot_api_project_layout_plot__tag__put",
@@ -1204,6 +1414,105 @@
           }
         },
         "summary": "Solve"
+      }
+    },
+    "/api/views/iso": {
+      "get": {
+        "description": "Routed line numbers available for isometric views (empty when none).",
+        "operationId": "iso_lines_api_views_iso_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Iso Lines Api Views Iso Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Iso Lines"
+      }
+    },
+    "/api/views/iso/{line_number}.json": {
+      "get": {
+        "description": "IsoSheet for one routed line: title block, BOM, cut list, totals.",
+        "operationId": "iso_sheet_api_views_iso__line_number__json_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "line_number",
+            "required": true,
+            "schema": {
+              "title": "Line Number",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IsoSheet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Iso Sheet"
+      }
+    },
+    "/api/views/iso/{line_number}.svg": {
+      "get": {
+        "description": "Fabrication isometric for one routed line, layout.iso applied.",
+        "operationId": "iso_svg_api_views_iso__line_number__svg_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "line_number",
+            "required": true,
+            "schema": {
+              "title": "Line Number",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/svg+xml": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Iso Svg"
       }
     },
     "/api/views/pfd.svg": {

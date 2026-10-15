@@ -12,6 +12,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from ngdesign.api.routes_export import router as export_router
+from ngdesign.api.routes_iso import router as iso_router
 from ngdesign.api.routes_pid import router as pid_router
 from ngdesign.api.routes_plot import router as plot_router
 from ngdesign.api.routes_solve import router as solve_router
@@ -24,6 +25,9 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 app.include_router(plot_router)
 app.include_router(pid_router)
+# Registered with the other routers (before app.py's own layout catch-all) so
+# the iso placement PUT matches /api/project/layout/iso/{key} first.
+app.include_router(iso_router)
 app.include_router(solve_router)
 app.include_router(views_router)
 app.include_router(export_router)
