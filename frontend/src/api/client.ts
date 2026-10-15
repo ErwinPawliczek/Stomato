@@ -10,9 +10,67 @@ import { mockPlotSvg } from "../../mocks/plotSvg";
 export type Project = components["schemas"]["Project"];
 export type XY = components["schemas"]["XY"];
 export type Layout = components["schemas"]["Layout"];
+export type Meta = {
+  [kind: string]: string[];
+};
 export type SolvedFlowsheet = components["schemas"]["SolvedFlowsheet"];
 export type Vec3 = components["schemas"]["Vec3"];
 export type PipingNetwork = components["schemas"]["PipingNetwork"];
+
+// Mirror of GET /api/meta (routes_meta.py): every @register(kind, name) in
+// src/ngdesign, read from source at the current commit. Lets the thermo
+// selector and add-unit palette demo without a backend.
+const MOCK_META: Meta = {
+  correlation: [
+    "cv_liquid",
+    "darcy_colebrook",
+    "erosional_api14e",
+    "flange_rating_b165",
+    "hammerschmidt_formation",
+    "kremser",
+    "line_size",
+    "lmtd_counter",
+    "nielsen_bucklin_suppression",
+    "psv_api520_gas",
+    "pump_power",
+    "souders_brown",
+    "wall_thickness_b313",
+  ],
+  diagram: ["pfd", "pid"],
+  iso_renderer: ["svg"],
+  pid_builder: ["default"],
+  pid_rule: [
+    "discharge_check",
+    "drains_vents",
+    "nozzle_isolation",
+    "psv_sizing",
+    "pump_instruments",
+    "vessel_instruments",
+    "vessel_psv",
+  ],
+  router: ["orthogonal"],
+  sizer: ["air_cooler", "compressor", "pump", "scrubber", "separator_3phase", "shell_tube", "teg_contactor"],
+  solver: ["sequential_modular"],
+  thermo: ["nrtl", "pr", "pr78", "srk"],
+  unit: [
+    "air_cooler",
+    "compression_train",
+    "compressor",
+    "cooler",
+    "expander",
+    "heater",
+    "jt_valve",
+    "mdea_absorber",
+    "mdea_regenerator",
+    "mixer",
+    "pump",
+    "scrubber",
+    "separator_3phase",
+    "shell_tube",
+    "splitter",
+    "teg_contactor",
+  ],
+};
 
 /** HTTP failure with its status, so callers can react to codes like 501. */
 export class ApiError extends Error {
@@ -43,6 +101,12 @@ async function httpText(path: string): Promise<string> {
 }
 
 export const api = {
+  /** Registered plugin names per registry kind — feeds the thermo selector and
+   * the add-unit palette. The backend validates any choice at solve time. */
+  async getMeta(): Promise<Meta> {
+    if (MOCK) return structuredClone(MOCK_META);
+    return http<Meta>("/api/meta");
+  },
   async getProject(): Promise<Project> {
     return MOCK ? structuredClone(mockState) : http<Project>("/api/project");
   },

@@ -15,6 +15,9 @@ const UNITS: Array<[string, number, number, number, number]> = [
   ["T-101", 640, 100, 60, 140],
   ["P-101", 300, 240, 60, 60],
   ["E-102", 470, 240, 80, 70],
+  // Wave-1 amine loop, drawn as its own train beside the gas line.
+  ["A-101", 130, 240, 110, 90],
+  ["R-101", 650, 240, 90, 110],
 ];
 
 const STREAMS: Array<[string, number, number, number, number]> = [
