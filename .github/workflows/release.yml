@@ -1,0 +1,53 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  # One release at a time; tagging a new version cancels a stale build of an old tag.
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag matches pyproject version
+        run: |
+          VER=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          if [ "v${VER}" != "${{ github.ref_name }}" ]; then
+            echo "::error::Tag ${{ github.ref_name }} != pyproject.toml version ${VER}. Delete the tag, fix, re-tag."
+            exit 1
+          fi
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv python install 3.12
+
+      - name: Build sdist and wheel
+        run: uv build          # -> dist/*.tar.gz and dist/*.whl
+
+      - name: Wheel installs in a clean venv and the CLI runs
+        run: |
+          uv venv /tmp/relvenv
+          /tmp/relvenv/bin/pip install dist/*.whl
+          /tmp/relvenv/bin/ngdesign --help
+
+      - name: Create GitHub Release with artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "ngdesign ${{ github.ref_name }}" \
+            --generate-notes \
+            dist/*
