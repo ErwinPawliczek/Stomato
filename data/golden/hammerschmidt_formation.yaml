@@ -1,0 +1,19 @@
+tolerance_rel: 1.0e-06
+method: T_hyd[degF]=8.9*P_psia^0.285/(SG^0.249-0.28), converted to K. Hammerschmidt
+  (1934); P_Pa inputs are exact psi*6894.757293168.
+cases:
+- inputs:
+    P_Pa: 6894757.293168
+    gas_specific_gravity: 0.65
+  expected:
+    T_hydrate_K: 312.64218940412263
+- inputs:
+    P_Pa: 3447378.646584
+    gas_specific_gravity: 0.72
+  expected:
+    T_hydrate_K: 300.6781859041881
+- inputs:
+    P_Pa: 10342135.939752
+    gas_specific_gravity: 0.6
+  expected:
+    T_hydrate_K: 321.5551643525129

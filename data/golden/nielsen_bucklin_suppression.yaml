@@ -1,0 +1,23 @@
+tolerance_rel: 1.0e-06
+method: x_M=(w/M_i)/((w/M_i)+(1-w)/18.015); dT[degC]=-72*ln(1-x_M), converted to K.
+  Nielsen-Bucklin (1983) via Nyvlt "Solid-Liquid Phase Equilibria" p.229; MeOH M=32.04,
+  MEG M=62.068 g/mol. Inputs are exact decimal mass fractions.
+cases:
+- inputs:
+    inhibitor_mass_fraction: 0.3077809798270893
+    inhibitor_molar_mass: 32.04
+  expected:
+    x_M: 0.19999999999999998
+    dT_suppression_K: 16.0663356946231
+- inputs:
+    inhibitor_mass_fraction: 0.2
+    inhibitor_molar_mass: 32.04
+  expected:
+    x_M: 0.12324268855823499
+    dT_suppression_K: 9.469803653401323
+- inputs:
+    inhibitor_mass_fraction: 0.35
+    inhibitor_molar_mass: 62.068
+  expected:
+    x_M: 0.13516236525832567
+    dT_suppression_K: 10.455371652246816
