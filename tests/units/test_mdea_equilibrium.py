@@ -91,8 +91,8 @@ def test_zero_and_negative_inputs_raise() -> None:
         equilibrium_loadings(T_40C, C_JOU, -1.0, 0.0)
 
 
-def test_no_mdea_raises() -> None:
-    with pytest.raises(ValueError, match="no MDEA"):
+def test_no_amine_raises() -> None:
+    with pytest.raises(ValueError, match="no amine"):
         amine_molarity(0.0, 18.0, 1000.0)
 
 

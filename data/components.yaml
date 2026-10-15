@@ -99,6 +99,20 @@ components:
     tc_K: 742.0
     pc_Pa: 4160000.0
     omega: 1.165
+  MEA:
+    name: monoethanolamine
+    cas: 141-43-5
+    mw: 61.0831
+    tc_K: 671.4
+    pc_Pa: 8125000.0
+    omega: 0.573
+  DEA:
+    name: diethanolamine
+    cas: 111-42-2
+    mw: 105.1356
+    tc_K: 736.5
+    pc_Pa: 4950750.0
+    omega: 1.013
   MeOH:
     name: methanol
     cas: 67-56-1

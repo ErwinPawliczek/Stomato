@@ -23,6 +23,8 @@ COMPONENTS: tuple[str, ...] = (
     "H2O",
     "TEG",
     "MDEA",
+    "MEA",
+    "DEA",
     "MeOH",
     "MEG",
 )  # keys of data/components.yaml
