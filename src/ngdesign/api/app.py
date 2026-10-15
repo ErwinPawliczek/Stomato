@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from ngdesign.api.routes_export import router as export_router
 from ngdesign.api.routes_iso import router as iso_router
+from ngdesign.api.routes_meta import router as meta_router
 from ngdesign.api.routes_pid import router as pid_router
 from ngdesign.api.routes_plot import router as plot_router
 from ngdesign.api.routes_solve import router as solve_router
@@ -31,6 +32,7 @@ app.include_router(iso_router)
 app.include_router(solve_router)
 app.include_router(views_router)
 app.include_router(export_router)
+app.include_router(meta_router)
 
 _state: dict[str, Project] = {}
 

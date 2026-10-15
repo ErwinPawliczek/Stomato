@@ -1,8 +1,36 @@
 from fastapi.testclient import TestClient
 
+from ngdesign import registry
 from ngdesign.api.app import app
 
 c = TestClient(app)
+
+
+def test_meta_lists_registered_plugins() -> None:
+    m = c.get("/api/meta").json()
+    assert sorted(set(m)) == sorted(map(str, registry.KINDS))
+    # Live-registered thermo plugins: the names POST /api/solve honors.
+    assert ["nrtl", "pr", "pr78", "srk"] == sorted(m["thermo"])
+    # Every registered unit kind is visible to the frontend. Superset, not
+    # equality: newly merged plugins must not break this contract test.
+    assert {
+        "air_cooler",
+        "cooler",
+        "compressor",
+        "heater",
+        "jt_valve",
+        "mdea_absorber",
+        "mdea_regenerator",
+        "mixer",
+        "pump",
+        "scrubber",
+        "separator_3phase",
+        "shell_tube",
+        "splitter",
+        "teg_contactor",
+    } <= set(m["unit"])
+    for names in m.values():
+        assert isinstance(names, list) and names and names == sorted(names)
 
 
 def test_health() -> None:
