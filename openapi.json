@@ -1146,6 +1146,32 @@
         "summary": "Health"
       }
     },
+    "/api/meta": {
+      "get": {
+        "description": "List registered plugin names for every registry kind.",
+        "operationId": "meta_api_meta_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "title": "Response Meta Api Meta Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Meta"
+      }
+    },
     "/api/project": {
       "get": {
         "operationId": "get_project_api_project_get",
