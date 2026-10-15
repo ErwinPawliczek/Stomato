@@ -11,12 +11,14 @@ it.
 from __future__ import annotations
 
 import math
+from typing import Any, cast
 
 import pytest
 
 from ngdesign import registry
 from ngdesign.contracts import Flowsheet, PortRef, StreamSpec, UnitSpec
 from ngdesign.contracts.flowsheet import Datasheet, SolvedFlowsheet
+from ngdesign.contracts.plugins import Sizer, Thermo
 from ngdesign.sizing.machines import (
     G_STD,
     compressor_stages,
@@ -53,7 +55,9 @@ DRY_GAS = {  # dry slice gas (no free water), renormalized
 }
 
 
-def _solve_one(thermo, tag: str, kind: str, params: dict, feed: dict, service: str = "PG") -> SolvedFlowsheet:
+def _solve_one(
+    thermo: Thermo, tag: str, kind: str, params: dict[str, Any], feed: dict[str, Any], service: str = "PG"
+) -> SolvedFlowsheet:
     fs = Flowsheet(
         name=f"{tag}-alone",
         units=[UnitSpec(tag=tag, kind=kind, params=params)],
@@ -62,14 +66,17 @@ def _solve_one(thermo, tag: str, kind: str, params: dict, feed: dict, service: s
             StreamSpec(id=f"{tag}-OUT", source=PortRef(unit=tag, port="outlet"), service=service),
         ],
     )
-    solved = registry.create("solver", "sequential_modular").solve(fs, thermo)
+    solved: SolvedFlowsheet = registry.create("solver", "sequential_modular").solve(fs, thermo)
     assert solved.converged
     return solved
 
 
-def _size(thermo, sizer_name: str, solved: SolvedFlowsheet, tag: str, params: dict) -> Datasheet:
+def _size(
+    thermo: Thermo, sizer_name: str, solved: SolvedFlowsheet, tag: str, params: dict[str, Any]
+) -> Datasheet:
     sizer = registry.get("sizer", sizer_name)()
-    return sizer.size(tag, solved, params)
+    sheet: Datasheet = sizer.size(tag, solved, params)
+    return sheet
 
 
 class TestPumpPowerHandChecked:
@@ -119,7 +126,7 @@ class TestPumpPowerHandChecked:
 
 
 class TestPumpSizer:
-    def test_case_with_hand_checked_numbers(self, thermo) -> None:
+    def test_case_with_hand_checked_numbers(self, thermo: Thermo) -> None:
         solved = _solve_one(thermo, "P-101", "pump", {"P_out": 1.5e6, "eta": 0.65}, PUMP_FEED, service="PL")
         result = solved.units["P-101"]
         inlet = solved.streams["P-101-IN"]
@@ -140,7 +147,7 @@ class TestPumpSizer:
             npsh_available(inlet.P, 0.0, rho, 2.0, 0.5), rel=1e-9
         )
 
-    def test_nozzles_cover_every_sim_port(self, thermo) -> None:
+    def test_nozzles_cover_every_sim_port(self, thermo: Thermo) -> None:
         solved = _solve_one(thermo, "P-101", "pump", {"P_out": 1.5e6, "eta": 0.65}, PUMP_FEED, service="PL")
         sheet = _size(thermo, "pump", solved, "P-101", {})
         assert sorted(n.port for n in sheet.nozzles if n.port) == ["inlet", "outlet"]
@@ -149,7 +156,7 @@ class TestPumpSizer:
         # a sizing pass with role="suction", and discharge uses the line role.
         assert all(n.id.startswith("N") for n in sheet.nozzles)
 
-    def test_design_conditions(self, thermo) -> None:
+    def test_design_conditions(self, thermo: Thermo) -> None:
         solved = _solve_one(thermo, "P-101", "pump", {"P_out": 1.5e6, "eta": 0.65}, PUMP_FEED, service="PL")
         sheet = _size(thermo, "pump", solved, "P-101", {})
         # P_d = max(1.1 P, P + 170 kPa): at 1.5 MPa the +170 kPa rule wins.
@@ -158,7 +165,7 @@ class TestPumpSizer:
 
 
 class TestCompressorSizer:
-    def test_case_with_hand_checked_numbers(self, thermo) -> None:
+    def test_case_with_hand_checked_numbers(self, thermo: Thermo) -> None:
         # Slice K-101 basis: dry gas 3.447 -> 7.0 MPa, eta 0.75. Ratio 2.031:
         # a single stage (below the 3.5 per-stage limit).
         feed = {
@@ -181,7 +188,7 @@ class TestCompressorSizer:
         assert sheet.dimensions["discharge_T_K"] == pytest.approx(outlet.T, rel=1e-12)
         assert outlet.T > inlet.T
 
-    def test_nozzles_cover_every_sim_port(self, thermo) -> None:
+    def test_nozzles_cover_every_sim_port(self, thermo: Thermo) -> None:
         feed = {"T": 322.15, "P": 3.447e6, "molar_flow": 50 * 6.098034, "composition": DRY_GAS}
         solved = _solve_one(thermo, "K-101", "compressor", {"P_out": 7.0e6, "eta_isentropic": 0.75}, feed)
         sheet = _size(thermo, "compressor", solved, "K-101", {})
@@ -189,7 +196,7 @@ class TestCompressorSizer:
 
 
 class TestAirCoolerSizer:
-    def test_case_with_hand_checked_numbers(self, thermo) -> None:
+    def test_case_with_hand_checked_numbers(self, thermo: Thermo) -> None:
         # Gas cooled 400 -> 350 K against air 308.15 -> 323.15 K, U = 300 (PG).
         # dT1 = 76.85, dT2 = 41.85, LMTD = 35/ln(76.85/41.85) ~ 57.60 K.
         feed = {"T": 400.0, "P": 7.0e6, "molar_flow": 100.0, "composition": DRY_GAS}
@@ -204,7 +211,7 @@ class TestAirCoolerSizer:
         assert sheet.dimensions["area_m2"] == pytest.approx(duty / (300.0 * lmtd_expected), rel=1e-3)
         assert duty > 0
 
-    def test_nozzles_cover_every_sim_port_plus_vent_drain(self, thermo) -> None:
+    def test_nozzles_cover_every_sim_port_plus_vent_drain(self, thermo: Thermo) -> None:
         feed = {"T": 400.0, "P": 7.0e6, "molar_flow": 100.0, "composition": DRY_GAS}
         solved = _solve_one(thermo, "E-101", "air_cooler", {"T_out": 350.0, "dP": 35e3}, feed)
         sheet = _size(thermo, "air_cooler", solved, "E-101", {})
@@ -212,7 +219,7 @@ class TestAirCoolerSizer:
         services = [n.service for n in sheet.nozzles]
         assert "vent" in services and "drain" in services
 
-    def test_cooling_below_air_outlet_raises(self, thermo) -> None:
+    def test_cooling_below_air_outlet_raises(self, thermo: Thermo) -> None:
         # The unit example basis (322.15 -> 313.15 K) crosses the fixed air
         # utility (air out 323.15 K above process in 322.15): not sizeable.
         feed = {"T": 322.15, "P": 7.0e6, "molar_flow": 100.0, "composition": DRY_GAS}
@@ -222,7 +229,7 @@ class TestAirCoolerSizer:
 
 
 class TestShellTubeSizer:
-    def test_case_with_hand_checked_numbers(self, thermo) -> None:
+    def test_case_with_hand_checked_numbers(self, thermo: Thermo) -> None:
         # Condensate heated 322.15 -> 333.15 K with 425 -> 424 K utility,
         # U = 600 (PL): dT1 = 91.85, dT2 = 101.85, LMTD ~ 96.76 K.
         feed = dict(PUMP_FEED, T=322.15, P=1.5e6)
@@ -237,7 +244,7 @@ class TestShellTubeSizer:
         assert sheet.dimensions["area_m2"] == pytest.approx(duty / (600.0 * lmtd_expected), rel=1e-3)
         assert duty > 0
 
-    def test_nozzles_cover_every_sim_port_plus_vent_drain(self, thermo) -> None:
+    def test_nozzles_cover_every_sim_port_plus_vent_drain(self, thermo: Thermo) -> None:
         feed = dict(PUMP_FEED, T=322.15, P=1.5e6)
         solved = _solve_one(thermo, "E-102", "shell_tube", {"T_out": 333.15, "dP": 50e3}, feed, service="PL")
         sheet = _size(thermo, "shell_tube", solved, "E-102", {"utility_T_in": 425.0, "utility_T_out": 424.0})
@@ -245,7 +252,7 @@ class TestShellTubeSizer:
         services = [n.service for n in sheet.nozzles]
         assert "vent" in services and "drain" in services
 
-    def test_missing_utility_params_raise(self, thermo) -> None:
+    def test_missing_utility_params_raise(self, thermo: Thermo) -> None:
         feed = dict(PUMP_FEED, T=322.15, P=1.5e6)
         solved = _solve_one(thermo, "E-102", "shell_tube", {"T_out": 333.15, "dP": 50e3}, feed, service="PL")
         with pytest.raises(ValueError, match="utility_T_in"):
@@ -255,9 +262,9 @@ class TestShellTubeSizer:
 class TestRegistry:
     def test_sizer_names_and_kinds(self) -> None:
         for name in ("pump", "compressor", "air_cooler", "shell_tube"):
-            assert registry.get("sizer", name).unit_kind == name
+            assert cast(Sizer, registry.get("sizer", name)).unit_kind == name
 
-    def test_wrong_kind_rejected(self, thermo) -> None:
+    def test_wrong_kind_rejected(self, thermo: Thermo) -> None:
         solved = _solve_one(thermo, "P-101", "pump", {"P_out": 1.5e6, "eta": 0.65}, PUMP_FEED, service="PL")
         with pytest.raises(ValueError, match="kind"):
             _size(thermo, "compressor", solved, "P-101", {})

@@ -22,7 +22,7 @@ from __future__ import annotations
 import csv
 import html
 from io import StringIO
-from typing import Literal, cast
+from typing import Literal
 
 from ngdesign.cli import _cell, _port
 from ngdesign.contracts import SolvedFlowsheet
@@ -67,7 +67,7 @@ def coerce_scope(scope: str) -> Scope:
     """Validate a raw scope string against SCOPES; raises ValueError with the allowed values."""
     if scope not in SCOPES:
         raise ValueError(f"scope must be one of: {', '.join(SCOPES)}")
-    return cast(Scope, scope)
+    return scope
 
 
 def _clean(cell: str) -> str:

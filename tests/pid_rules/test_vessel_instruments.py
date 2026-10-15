@@ -5,13 +5,15 @@ from __future__ import annotations
 from ngdesign import registry
 from ngdesign.contracts import Direction, Nozzle, PidEquipment, Vec3
 from ngdesign.contracts.pid import INSTR_TAG_RE
+from ngdesign.contracts.plugins import PidRule
 from ngdesign.flowsheets.samples import sample_pid
 
 RULE = "vessel_instruments"
 
 
-def _rule() -> object:
-    return registry.create("pid_rule", RULE)
+def _rule() -> PidRule:
+    rule: PidRule = registry.create("pid_rule", RULE)
+    return rule
 
 
 def test_finds_violations_on_bare_sample() -> None:

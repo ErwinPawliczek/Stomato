@@ -10,12 +10,14 @@ taken from the locked slice module -- with the real thermo and solver plugins.
 from __future__ import annotations
 
 import math
+from typing import Any, cast
 
 import pytest
 
 from ngdesign import registry
 from ngdesign.contracts import Flowsheet, PortRef, StreamSpec, UnitSpec
-from ngdesign.contracts.flowsheet import Datasheet, SolvedFlowsheet
+from ngdesign.contracts.flowsheet import Datasheet, FeedSpec, SolvedFlowsheet
+from ngdesign.contracts.plugins import Sizer, Thermo
 from ngdesign.flowsheets import slice as slice_fs
 from ngdesign.sizing.line_size import line_size
 from ngdesign.sizing.vessels import (
@@ -30,11 +32,12 @@ from ngdesign.sizing.vessels import (
 PORTS = ("inlet", "gas_out", "hc_out", "water_out")
 
 
-def _slice_feed() -> dict:
-    return slice_fs.build().streams[0].feed.model_dump()
+def _slice_feed() -> dict[str, Any]:
+    dump: dict[str, Any] = cast(FeedSpec, slice_fs.build().streams[0].feed).model_dump()
+    return dump
 
 
-def _solve_v101(thermo) -> SolvedFlowsheet:
+def _solve_v101(thermo: Thermo) -> SolvedFlowsheet:
     """V-101 alone, on the locked slice basis (same feed, same services)."""
     fs = Flowsheet(
         name="v101",
@@ -51,16 +54,17 @@ def _solve_v101(thermo) -> SolvedFlowsheet:
             StreamSpec(id="S-011", source=PortRef(unit="V-101", port="water_out"), service="W"),
         ],
     )
-    solved = registry.create("solver", "sequential_modular").solve(fs, thermo)
+    solved: SolvedFlowsheet = registry.create("solver", "sequential_modular").solve(fs, thermo)
     assert solved.converged
     return solved
 
 
 @pytest.fixture()
-def v101_datasheet(thermo) -> Datasheet:
+def v101_datasheet(thermo: Thermo) -> Datasheet:
     solved = _solve_v101(thermo)
     sizer = registry.get("sizer", "separator_3phase")()
-    return sizer.size("V-101", solved, {})
+    sheet: Datasheet = sizer.size("V-101", solved, {})
+    return sheet
 
 
 class TestHorizontalHandChecked:
@@ -124,7 +128,7 @@ class TestHorizontalHandChecked:
             {"K_m_s": 0.0},
         ],
     )
-    def test_invalid_inputs_raise(self, kwargs: dict) -> None:
+    def test_invalid_inputs_raise(self, kwargs: dict[str, Any]) -> None:
         base = dict(
             gas_flow_m3_s=1.0,
             hc_flow_m3_s=0.001,
@@ -180,7 +184,7 @@ class TestV101Acceptance:
         assert v101_datasheet.design_pressure_Pa >= 1.1 * feed["P"]
         assert v101_datasheet.design_temperature_K >= feed["T"] + 25.0
 
-    def test_nozzle_nps_matches_line_sizing(self, thermo, v101_datasheet: Datasheet) -> None:
+    def test_nozzle_nps_matches_line_sizing(self, thermo: Thermo, v101_datasheet: Datasheet) -> None:
         solved = _solve_v101(thermo)
         by_port = {n.port: n for n in v101_datasheet.nozzles if n.port is not None}
         inlet = solved.streams["S-001"]
@@ -218,10 +222,10 @@ class TestVerticalSizers:
 
     def test_registry_names(self) -> None:
         for name in ("separator_3phase", "scrubber", "teg_contactor"):
-            plugin = registry.get("sizer", name)
+            plugin = cast(Sizer, registry.get("sizer", name))
             assert plugin.unit_kind == name
 
-    def test_scrubber_sizer_on_solved_unit(self, thermo) -> None:
+    def test_scrubber_sizer_on_solved_unit(self, thermo: Thermo) -> None:
         """A standalone scrubber sizes with the same convention as V-101."""
         fs = Flowsheet(
             name="scrub",
@@ -237,7 +241,7 @@ class TestVerticalSizers:
                 StreamSpec(id="S-103", source=PortRef(unit="V-201", port="liquid_out"), service="PL"),
             ],
         )
-        solved = registry.create("solver", "sequential_modular").solve(fs, thermo)
+        solved: SolvedFlowsheet = registry.create("solver", "sequential_modular").solve(fs, thermo)
         assert solved.converged
         sizer = registry.get("sizer", "scrubber")()
         sheet = sizer.size("V-201", solved, {})

@@ -7,18 +7,20 @@ import pytest
 
 from ngdesign import registry
 from ngdesign.contracts import ComponentKind
+from ngdesign.contracts.plugins import IsoRenderer
 from ngdesign.flowsheets.samples import sample_pid, sample_routed_line
 
 
 @pytest.fixture
-def renderer():
+def renderer() -> IsoRenderer:
     names = registry.available("iso_renderer")
     if not names:
         pytest.skip("no iso renderer yet")
-    return registry.create("iso_renderer", names[0])
+    impl: IsoRenderer = registry.create("iso_renderer", names[0])
+    return impl
 
 
-def test_iso_invariants(renderer):
+def test_iso_invariants(renderer: IsoRenderer) -> None:
     line = sample_routed_line()
     sheet = renderer.render(line, sample_pid())
     ET.fromstring(sheet.svg)  # well-formed SVG

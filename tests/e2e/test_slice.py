@@ -9,7 +9,7 @@ from ngdesign.flowsheets import slice as slice_fs
 
 
 @pytest.mark.slice
-def test_slice_end_to_end():
+def test_slice_end_to_end() -> None:
     thermo = registry.create("thermo", "pr")
     solved = registry.create("solver", "sequential_modular").solve(slice_fs.build(), thermo)
     assert solved.converged

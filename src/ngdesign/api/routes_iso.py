@@ -82,7 +82,8 @@ def iso_svg(line_number: str) -> Response:
 def iso_sheet(line_number: str) -> IsoSheet:
     """IsoSheet for one routed line: title block, BOM, cut list, totals."""
     pid, net = _routed()
-    return registry.create("iso_renderer", "svg").render(_find_line(net, line_number), pid)
+    sheet: IsoSheet = registry.create("iso_renderer", "svg").render(_find_line(net, line_number), pid)
+    return sheet
 
 
 @router.put("/api/project/layout/iso/{key}")

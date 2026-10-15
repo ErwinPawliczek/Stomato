@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import pytest
 
@@ -51,7 +52,7 @@ def test_more_stages_for_leaner_solvent() -> None:
         {"A": 1.5, "y_in": 100, "y_out": 150, "m": 100, "x_top": 0.5},
     ],
 )
-def test_invalid_inputs_raise(kwargs: dict) -> None:
+def test_invalid_inputs_raise(kwargs: dict[str, Any]) -> None:
     with pytest.raises(ValueError):
         kremser(**kwargs)
 

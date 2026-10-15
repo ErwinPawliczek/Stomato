@@ -42,7 +42,8 @@ def _get_svg() -> str:
     r = c.get("/api/views/pid.svg")
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("image/svg+xml")
-    return r.text
+    svg: str = r.text
+    return svg
 
 
 def test_pid_svg_matches_cli_slice(tmp_path: Path) -> None:

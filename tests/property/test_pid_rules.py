@@ -9,7 +9,7 @@ RULES = registry.available("pid_rule")
 
 
 @pytest.mark.parametrize("name", RULES or ["<none>"])
-def test_rule_apply_then_check_clean(name):
+def test_rule_apply_then_check_clean(name: str) -> None:
     if name == "<none>":
         pytest.skip("no pid rules yet")
     rule = registry.create("pid_rule", name)
@@ -20,7 +20,7 @@ def test_rule_apply_then_check_clean(name):
     assert rule.apply(fixed).model_dump() == fixed.model_dump(), f"{name}: apply is not idempotent"
 
 
-def test_all_rules_compose():
+def test_all_rules_compose() -> None:
     """Rules can create work for each other (a new PSV line needs isolation), so apply to a fixed point."""
     if not RULES:
         pytest.skip("no pid rules yet")

@@ -12,6 +12,7 @@ from ngdesign.contracts import (
     Component,
     ComponentKind,
     EndType,
+    IsoSheet,
     RoutedLine,
     Vec3,
 )
@@ -21,19 +22,20 @@ ATM_PA = 101_325.0
 
 
 @pytest.fixture(name="sheet")
-def _sheet():
+def _sheet() -> IsoSheet:
     renderer = registry.create("iso_renderer", "svg")
-    return renderer.render(sample_routed_line(), sample_pid())
+    sheet: IsoSheet = renderer.render(sample_routed_line(), sample_pid())
+    return sheet
 
 
-def test_every_pipe_run_dimension_appears(sheet) -> None:
+def test_every_pipe_run_dimension_appears(sheet: IsoSheet) -> None:
     """Acceptance: each straight run's centre-to-centre length is dimensioned."""
     for c in sample_routed_line().components:
         if c.kind == ComponentKind.PIPE:
             assert f"{c.length_mm:.1f}" in sheet.svg
 
 
-def test_svg_is_well_formed_with_expected_marks(sheet) -> None:
+def test_svg_is_well_formed_with_expected_marks(sheet: IsoSheet) -> None:
     root = ET.fromstring(sheet.svg)
     assert root.tag.endswith("svg")
     assert sheet.svg.count("<circle") == 6  # weld dots: 7 components -> 6 joints
@@ -42,7 +44,7 @@ def test_svg_is_well_formed_with_expected_marks(sheet) -> None:
     assert '6"-PG-1003-D1' in sheet.svg  # title block line number
 
 
-def test_title_block_uses_matching_pid_line(sheet) -> None:
+def test_title_block_uses_matching_pid_line(sheet: IsoSheet) -> None:
     pid_line = next(ln for ln in sample_pid().lines if ln.number == '6"-PG-1003-D1')
     design_kpag = (pid_line.design_pressure_Pa - ATM_PA) / 1000.0
     assert sheet.title.line_number == pid_line.number
@@ -52,7 +54,7 @@ def test_title_block_uses_matching_pid_line(sheet) -> None:
     assert sheet.title.test_pressure_kPag == pytest.approx(1.5 * design_kpag)
 
 
-def test_bom_groups_identical_descriptions(sheet) -> None:
+def test_bom_groups_identical_descriptions(sheet: IsoSheet) -> None:
     assert [b.item for b in sheet.bom] == [1, 2, 3]
     flanges, pipes, elbows = sheet.bom
     assert flanges.description == '6" WN flange cl600 RTJ'
@@ -66,7 +68,7 @@ def test_bom_groups_identical_descriptions(sheet) -> None:
     assert all(b.material == material for b in sheet.bom)
 
 
-def test_cut_list_one_piece_per_pipe(sheet) -> None:
+def test_cut_list_one_piece_per_pipe(sheet: IsoSheet) -> None:
     pipes = [c for c in sample_routed_line().components if c.kind == ComponentKind.PIPE]
     assert [p.piece for p in sheet.cut_list] == [1, 2, 3]
     assert all(p.spool == "SP-1" for p in sheet.cut_list)
@@ -74,7 +76,7 @@ def test_cut_list_one_piece_per_pipe(sheet) -> None:
     assert all(p.nps_in == 6.0 for p in sheet.cut_list)
 
 
-def test_totals_match_3d_model(sheet) -> None:
+def test_totals_match_3d_model(sheet: IsoSheet) -> None:
     line = sample_routed_line()
     pipe_len = sum(c.length_mm for c in line.components if c.kind == ComponentKind.PIPE)
     assert math.isclose(sheet.total_pipe_length_mm, pipe_len, rel_tol=1e-9)

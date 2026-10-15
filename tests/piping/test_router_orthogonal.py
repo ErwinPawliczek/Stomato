@@ -19,6 +19,7 @@ from ngdesign.contracts import (
     Nozzle,
     PidEquipment,
     PidLine,
+    PipingNetwork,
     RoutedLine,
     Vec3,
 )
@@ -40,9 +41,10 @@ def _close(p: Vec3, x: float, y: float, z: float) -> None:
 
 
 @pytest.fixture(name="network")
-def _network():
+def _network() -> PipingNetwork:
     router = registry.create("router", "orthogonal")
-    return router.route(sample_pid(), {})
+    net: PipingNetwork = router.route(sample_pid(), {})
+    return net
 
 
 def _foreign_envelopes(line: PidLine, envelopes: list[EquipmentEnvelope]) -> list[EquipmentEnvelope]:
@@ -51,7 +53,7 @@ def _foreign_envelopes(line: PidLine, envelopes: list[EquipmentEnvelope]) -> lis
     return [e for e in envelopes if e.tag not in own]
 
 
-def _assert_clash_free(pid: PID, network) -> None:
+def _assert_clash_free(pid: PID, network: PipingNetwork) -> None:
     for pl in pid.lines:
         routed = next(rl for rl in network.lines if rl.line_number == pl.number)
         for c in routed.components:
@@ -65,14 +67,14 @@ def test_router_registered() -> None:
     assert registry.available("router") == ["orthogonal"]
 
 
-def test_sample_routes_every_line(network) -> None:
+def test_sample_routes_every_line(network: PipingNetwork) -> None:
     assert [rl.line_number for rl in network.lines] == [pl.number for pl in sample_pid().lines]
     for rl in network.lines:
         assert isinstance(rl, RoutedLine)
         assert len(rl.components) >= 2
 
 
-def test_network_defaults(network) -> None:
+def test_network_defaults(network: PipingNetwork) -> None:
     assert network.rack_elevation_mm == RACK
     assert [e.tag for e in network.equipment] == ["V-101", "P-101", "K-101"]
     v101 = network.equipment[0]
@@ -81,14 +83,14 @@ def test_network_defaults(network) -> None:
     _close(v101.max, DEFAULT_EQUIPMENT_SPACING_MM + h, h, h)
 
 
-def test_boundaries_beyond_extreme_equipment_at_grade(network) -> None:
+def test_boundaries_beyond_extreme_equipment_at_grade(network: PipingNetwork) -> None:
     first = network.lines[0].components[0]
     last = network.lines[2].components[-1]
     _close(first.start, DEFAULT_EQUIPMENT_SPACING_MM - BOUNDARY_SETBACK_MM, 0.0, 0.0)
     _close(last.end, 3 * DEFAULT_EQUIPMENT_SPACING_MM + BOUNDARY_SETBACK_MM, 0.0, 0.0)
 
 
-def test_line1_chain_components_and_geometry(network) -> None:
+def test_line1_chain_components_and_geometry(network: PipingNetwork) -> None:
     """Boundary-to-nozzle line: 4 legs, 3 elbows, end flange at the nozzle."""
     comps = network.lines[0].components
     assert [c.kind for c in comps] == [
@@ -107,7 +109,7 @@ def test_line1_chain_components_and_geometry(network) -> None:
     assert comps[-1].end_types == (EndType.BUTT_WELD, EndType.FLANGED)
 
 
-def test_elbows_orthogonal_with_correct_centre_to_end(network) -> None:
+def test_elbows_orthogonal_with_correct_centre_to_end(network: PipingNetwork) -> None:
     for rl, pl in zip(network.lines, sample_pid().lines, strict=False):
         cte = elbow_90_lr_cte_mm(pl.nps_in)
         elbows = [c for c in rl.components if c.kind == ComponentKind.ELBOW_90_LR]
@@ -122,11 +124,11 @@ def test_elbows_orthogonal_with_correct_centre_to_end(network) -> None:
             assert abs(dot) < 1e-9, f"{pl.number} {e.id} is not a 90 deg change"
 
 
-def test_no_pipe_through_foreign_envelope(network) -> None:
+def test_no_pipe_through_foreign_envelope(network: PipingNetwork) -> None:
     _assert_clash_free(sample_pid(), network)
 
 
-def test_flanges_only_at_nozzle_ends(network) -> None:
+def test_flanges_only_at_nozzle_ends(network: PipingNetwork) -> None:
     origins = {
         "V-101": Vec3(x=12000, y=0, z=0),
         "P-101": Vec3(x=24000, y=0, z=0),
@@ -171,7 +173,7 @@ def test_schedule_matches_b313_module() -> None:
             assert c.schedule == expected, f"{rl.line_number} {c.id}"
 
 
-def test_schedule_fallback_40_when_module_absent(monkeypatch) -> None:
+def test_schedule_fallback_40_when_module_absent(monkeypatch: pytest.MonkeyPatch) -> None:
     """None in sys.modules makes the lazy import fail -> fallback "40"."""
     monkeypatch.setitem(sys.modules, "ngdesign.sizing.wall_thickness", None)
     router = registry.create("router", "orthogonal")
@@ -181,7 +183,7 @@ def test_schedule_fallback_40_when_module_absent(monkeypatch) -> None:
             assert c.schedule == "40", f"{rl.line_number} {c.id}"
 
 
-def test_schedule_from_sizing_module_when_present(monkeypatch) -> None:
+def test_schedule_from_sizing_module_when_present(monkeypatch: pytest.MonkeyPatch) -> None:
     calls: list[tuple[float, float, str]] = []
 
     def fake_select_schedule(
@@ -197,7 +199,7 @@ def test_schedule_from_sizing_module_when_present(monkeypatch) -> None:
         }
 
     fake = types.ModuleType("ngdesign.sizing.wall_thickness")
-    fake.select_schedule = fake_select_schedule
+    fake.select_schedule = fake_select_schedule  # type: ignore[attr-defined]
     monkeypatch.setitem(sys.modules, "ngdesign.sizing.wall_thickness", fake)
 
     router = registry.create("router", "orthogonal")
@@ -350,7 +352,7 @@ def test_unroutable_envelope_clash_raises() -> None:
         router.route(pid, layout)
 
 
-def test_iso_renderer_accepts_routed_network(network) -> None:
+def test_iso_renderer_accepts_routed_network(network: PipingNetwork) -> None:
     if "svg" not in registry.available("iso_renderer"):
         pytest.skip("no iso_renderer registered")
     renderer = registry.create("iso_renderer", "svg")

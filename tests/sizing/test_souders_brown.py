@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import pytest
 
@@ -43,7 +44,7 @@ def test_zero_flow_gives_zero_diameter() -> None:
         {"K_m_s": 0.1, "rho_liquid": 700, "rho_gas": 30, "gas_flow_m3_s": -1.0},
     ],
 )
-def test_invalid_inputs_raise(kwargs: dict) -> None:
+def test_invalid_inputs_raise(kwargs: dict[str, Any]) -> None:
     with pytest.raises(ValueError):
         souders_brown(**kwargs)
 

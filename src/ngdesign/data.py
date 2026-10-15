@@ -17,12 +17,16 @@ DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 @cache
 def components() -> dict[str, dict[str, Any]]:
     """Component constants keyed by COMPONENTS ids (SI)."""
-    return yaml.safe_load((DATA_DIR / "components.yaml").read_text())["components"]
+    raw = yaml.safe_load((DATA_DIR / "components.yaml").read_text())
+    table: dict[str, dict[str, Any]] = raw["components"]
+    return table
 
 
 @cache
 def pipe_classes() -> dict[str, dict[str, Any]]:
-    return yaml.safe_load((DATA_DIR / "pipe_classes.yaml").read_text())["classes"]
+    raw = yaml.safe_load((DATA_DIR / "pipe_classes.yaml").read_text())
+    table: dict[str, dict[str, Any]] = raw["classes"]
+    return table
 
 
 @cache
@@ -65,4 +69,6 @@ def flange_ratings() -> list[dict[str, Any]]:
 
 def golden(name: str) -> list[dict[str, Any]]:
     """Golden test cases from data/golden/<name>.yaml."""
-    return yaml.safe_load((DATA_DIR / "golden" / f"{name}.yaml").read_text())["cases"]
+    raw = yaml.safe_load((DATA_DIR / "golden" / f"{name}.yaml").read_text())
+    cases: list[dict[str, Any]] = raw["cases"]
+    return cases

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import pytest
 from thermo import ChemicalConstantsPackage
 
 from ngdesign import registry
 from ngdesign.contracts import (
+    PID,
     Direction,
     Flowsheet,
     Nozzle,
@@ -40,13 +43,13 @@ RULE = "psv_sizing"
 BLOCKED_AREA_IN2 = 2.6632501123105823
 
 
-def _rule(**kwargs) -> PsvSizing:
-    return registry.create("pid_rule", RULE, **kwargs)
+def _rule(**kwargs: Any) -> PsvSizing:
+    return cast(PsvSizing, registry.create("pid_rule", RULE, **kwargs))
 
 
-def _sized_note(pid: object) -> str:
+def _sized_note(pid: PID) -> str:
     """The note on the inline item referencing the first PSV valve."""
-    for ln in pid.lines:  # type: ignore[attr-defined]
+    for ln in pid.lines:
         for item in ln.items:
             if item.ref is not None and item.ref.startswith("PSV-"):
                 return item.note
@@ -205,7 +208,7 @@ def _ideal_gas_k(composition: dict[str, float], T_K: float) -> float:
     cas = [str(components()[c]["cas"]) for c in ids]
     _, corrs = ChemicalConstantsPackage.from_IDs(cas)
     cp = sum(z * corrs.HeatCapacityGases[ids.index(c)].T_dependent_property(T_K) for c, z in comp.items())
-    return cp / (cp - 8.31446261815324)
+    return cast(float, cp / (cp - 8.31446261815324))
 
 
 def test_basis_from_solved_slice_v101() -> None:

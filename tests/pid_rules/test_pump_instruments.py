@@ -2,20 +2,24 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from ngdesign import registry
-from ngdesign.contracts import InlineKind, Instrument
+from ngdesign.contracts import PID, InlineKind, Instrument, PidLine
 from ngdesign.contracts.pid import INSTR_TAG_RE
+from ngdesign.contracts.plugins import PidRule
 from ngdesign.flowsheets.samples import sample_pid
 
 RULE = "pump_instruments"
 
 
-def _rule() -> object:
-    return registry.create("pid_rule", RULE)
+def _rule() -> PidRule:
+    rule: PidRule = registry.create("pid_rule", RULE)
+    return rule
 
 
-def _line(pid: object, number: str) -> object:
-    return next(ln for ln in pid.lines if ln.number == number)  # type: ignore[attr-defined]
+def _line(pid: PID, number: str) -> PidLine:
+    return next(ln for ln in pid.lines if ln.number == number)
 
 
 def test_finds_violations_on_bare_sample() -> None:
@@ -45,7 +49,7 @@ def test_pis_connected_to_line_numbers_with_taps() -> None:
         assert taps[0].ref == pi.tag
     # Discharge tap sits at the pump end (index 0); suction tap at the pump end
     # (last item).
-    assert [it.ref for it in _line(fixed, '2"-PL-1005-B1').items][0].startswith("PI-")
+    assert cast(str, [it.ref for it in _line(fixed, '2"-PL-1005-B1').items][0]).startswith("PI-")
 
 
 def test_loops_allocated_above_max_existing() -> None:

@@ -1,6 +1,7 @@
 """Tests for the S-09 API 520 gas relief area (critical flow)."""
 
 import math
+from typing import Any
 
 import pytest
 
@@ -60,7 +61,7 @@ def test_api526_orifice_rejects_invalid_and_oversized() -> None:
         {"Kc": 0.0},
     ],
 )
-def test_invalid_inputs_raise(overrides: dict) -> None:
+def test_invalid_inputs_raise(overrides: dict[str, Any]) -> None:
     kwargs = {**GOLDEN_CASE_1, **overrides}
     with pytest.raises(ValueError):
         psv_api520_gas(**kwargs)

@@ -103,7 +103,7 @@ def step_create(transport: Transport) -> dict[str, Any]:
     _expect(step, transport.request("POST", "/api/project/reset"), 200)
     result = transport.request("GET", "/api/project")
     _expect(step, result, 200)
-    project = result.json()
+    project: dict[str, Any] = result.json()
     tags = sorted(unit["tag"] for unit in project["flowsheet"]["units"])
     _require(step, "V-101" in tags, f"sample slice did not load: no V-101 in {tags}")
     _require(step, all(s["service"] for s in project["flowsheet"]["streams"]), "a stream has no service")
@@ -119,7 +119,7 @@ def step_edit_layout(transport: Transport, project: dict[str, Any]) -> dict[str,
     project["layout"]["pfd"][tag] = moved
     result = transport.request("PUT", "/api/project", json_body=project)
     _expect(step, result, 200)
-    edited = result.json()
+    edited: dict[str, Any] = result.json()
     _require(step, edited["layout"]["pfd"][tag] == moved, f"PUT response did not echo the {tag} placement")
     return edited
 
@@ -129,7 +129,7 @@ def step_solve(transport: Transport) -> dict[str, Any]:
     step = "solve"
     result = transport.request("POST", "/api/solve")
     _expect(step, result, 200)
-    solved = result.json()
+    solved: dict[str, Any] = result.json()
     _require(step, solved["converged"] is True, "sample slice did not converge; nothing to draw")
     missing = {s["id"] for s in solved["flowsheet"]["streams"]} - set(solved["streams"])
     _require(step, not missing, f"no stream state for {sorted(missing)}")
@@ -161,7 +161,7 @@ def step_route(transport: Transport) -> dict[str, Any]:
     step = "route"
     result = transport.request("POST", "/api/route")
     _expect(step, result, 200)
-    net = result.json()
+    net: dict[str, Any] = result.json()
     _require(step, bool(net["lines"]), "routing produced no lines")
     for line in net["lines"]:
         _require(
@@ -195,7 +195,7 @@ def step_roundtrip(transport: Transport, expected_layout: dict[str, Any]) -> dic
     step = "roundtrip"
     result = transport.request("GET", "/api/project")
     _expect(step, result, 200)
-    project = result.json()
+    project: dict[str, Any] = result.json()
     _require(step, project["layout"] == expected_layout, "reloaded project lost the placements")
     return project
 

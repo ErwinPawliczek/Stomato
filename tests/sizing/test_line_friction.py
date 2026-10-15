@@ -1,6 +1,7 @@
 """Tests for the S-06 Darcy-Weisbach / Colebrook correlation."""
 
 import math
+from typing import Any
 
 import pytest
 
@@ -53,7 +54,7 @@ def test_laminar_uses_64_over_re() -> None:
         {"L_m": -10.0},
     ],
 )
-def test_invalid_inputs_raise(kwargs: dict) -> None:
+def test_invalid_inputs_raise(kwargs: dict[str, Any]) -> None:
     full = {"Q_m3_s": 0.05, "D_m": 0.1541, "rho": 700.0, "mu": 0.0005, "roughness_m": 0.0, "L_m": 100.0}
     with pytest.raises(ValueError):
         darcy_colebrook(**{**full, **kwargs})

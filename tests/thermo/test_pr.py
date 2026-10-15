@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import time
+from typing import cast
 
 import pytest
 from CoolProp.CoolProp import PropsSI
@@ -19,7 +20,8 @@ from ngdesign.thermo.pr import PengRobinsonThermo
 def thermo() -> Thermo:
     """The plugin, resolved through the registry (validates self-registration)."""
     assert "pr" in registry.available("thermo"), "pr thermo plugin not discovered"
-    return registry.create("thermo", "pr")
+    impl: Thermo = registry.create("thermo", "pr")
+    return impl
 
 
 def test_plugin_satisfies_thermo_protocol() -> None:
@@ -33,7 +35,7 @@ def test_single_component_methane_vapor(thermo: Thermo) -> None:
     assert [p.kind for p in s.phases] == ["vapor"]
     ref = PropsSI("D", "T", 300.0, "P", 1.0e6, "Methane")
     assert s.phases[0].density == pytest.approx(ref, rel=0.05)
-    assert 0.9 < s.phases[0].z_factor < 1.1  # methane at 300 K / 1 MPa is near-ideal
+    assert 0.9 < cast(float, s.phases[0].z_factor) < 1.1  # methane at 300 K / 1 MPa is near-ideal
     assert s.phases[0].molecular_weight == pytest.approx(16.0425, abs=1e-3)
     assert s.phases[0].composition == {"C1": 1.0}
     assert s.phases[0].viscosity is not None

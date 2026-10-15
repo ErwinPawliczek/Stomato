@@ -5,11 +5,11 @@ from ngdesign.api.app import app
 c = TestClient(app)
 
 
-def test_health():
+def test_health() -> None:
     assert c.get("/api/health").json() == {"status": "ok"}
 
 
-def test_project_roundtrip_and_placement():
+def test_project_roundtrip_and_placement() -> None:
     c.post("/api/project/reset")
     p = c.get("/api/project").json()
     assert p["name"] == "slice"

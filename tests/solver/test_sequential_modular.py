@@ -14,6 +14,7 @@ fixture-timed registration never reaches it.
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from typing import Any
 
 import pytest
@@ -163,7 +164,7 @@ FAKES: dict[str, type] = {
 
 
 @pytest.fixture(autouse=True)
-def _fake_units():
+def _fake_units() -> Iterator[None]:
     """Register the fakes for the duration of each test and remove them afterwards.
 
     Unregistration reaches into the private registry store because there is no

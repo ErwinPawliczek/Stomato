@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import pytest
 
@@ -38,7 +39,7 @@ def test_scales_as_inverse_sqrt_density() -> None:
         {"rho_mix_kg_m3": 50, "C": -100},
     ],
 )
-def test_invalid_inputs_raise(kwargs: dict) -> None:
+def test_invalid_inputs_raise(kwargs: dict[str, Any]) -> None:
     with pytest.raises(ValueError):
         erosional_api14e(**kwargs)
 

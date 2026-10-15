@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import Any, cast
 from urllib.parse import quote
 
 import pytest
@@ -17,6 +18,7 @@ from ngdesign import cli, registry
 from ngdesign.api.app import app
 from ngdesign.api.routes_iso import _iso_placements
 from ngdesign.cli import _apply_rules, _iso_stem, _rule_set, _run_sizers, _solve_slice
+from ngdesign.contracts import PID, PipingNetwork, RoutedLine
 from ngdesign.flowsheets.samples import sample_pid, sample_routed_line
 
 c = TestClient(app)
@@ -34,7 +36,7 @@ def _u(part: str) -> str:
     return quote(part, safe="")
 
 
-def _routed_locally() -> tuple[object, object]:
+def _routed_locally() -> tuple[PID, PipingNetwork]:
     """The exact chain the endpoints serve, computed locally as the oracle."""
     solved = _run_sizers(_solve_slice())
     pid = registry.create("pid_builder", "default").build(solved)
@@ -48,22 +50,23 @@ def _local(tag: str) -> str:
 
 
 def _tagged(root: ET.Element) -> set[str]:
-    return {g.get("data-tag") for g in root.iter(f"{{{SVG_NS}}}g") if g.get("data-tag")}
+    return {tag for g in root.iter(f"{{{SVG_NS}}}g") if (tag := g.get("data-tag"))}
 
 
 def _get_svg(line_number: str) -> str:
     r = c.get(f"/api/views/iso/{_u(line_number)}.svg")
     assert r.status_code == 200
     assert r.headers["content-type"].startswith("image/svg+xml")
-    return r.text
+    svg: str = r.text
+    return svg
 
 
-def _sheet_and_routed(line_number: str) -> tuple[dict, dict]:
+def _sheet_and_routed(line_number: str) -> tuple[dict[str, Any], RoutedLine]:
     """The IsoSheet JSON and the matching locally-routed line (the oracle)."""
     r = c.get(f"/api/views/iso/{_u(line_number)}.json")
     assert r.status_code == 200
     _, net = _routed_locally()
-    routed = next(ln for ln in net.lines if ln.line_number == line_number)  # type: ignore[attr-defined]
+    routed = next(ln for ln in net.lines if ln.line_number == line_number)
     return r.json(), routed
 
 
@@ -138,12 +141,12 @@ def test_iso_json_bom_and_length_invariants() -> None:
         # Per-run dimensions drawn in the SVG match the stored run lengths.
         root = ET.fromstring(sheet["svg"])
         dims = {
-            g.get("data-tag"): g.find(f"{{{SVG_NS}}}text").text
+            g.get("data-tag"): cast("ET.Element[str]", g.find(f"{{{SVG_NS}}}text")).text
             for g in root.iter(f"{{{SVG_NS}}}g")
             if g.get("data-tag", "").startswith("dim-")
         }
         for comp in pipes:
-            assert float(dims[f"dim-{comp.id}"]) == pytest.approx(comp.length_mm, abs=0.05)
+            assert float(cast(str, dims[f"dim-{comp.id}"])) == pytest.approx(comp.length_mm, abs=0.05)
 
 
 def test_iso_cut_list_matches_components() -> None:

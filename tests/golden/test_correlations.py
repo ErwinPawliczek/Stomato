@@ -6,6 +6,7 @@ Unimplemented correlations are SKIPPED, not failed. Implementing one = un-skippi
 """
 
 import math
+from typing import Any
 
 import pytest
 import yaml
@@ -22,7 +23,7 @@ CASES = [
 
 
 @pytest.mark.parametrize(("name", "idx", "case", "tol"), CASES, ids=[f"{c[0]}-{c[1]}" for c in CASES])
-def test_golden(name: str, idx: int, case: dict, tol: float) -> None:
+def test_golden(name: str, idx: int, case: dict[str, Any], tol: float) -> None:
     if name not in registry.available("correlation"):
         pytest.skip(f"correlation {name!r} not implemented yet")
     fn = registry.create("correlation", name)

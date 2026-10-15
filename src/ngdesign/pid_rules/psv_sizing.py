@@ -310,7 +310,7 @@ class PsvSizing:
 
     def apply(self, pid: PID) -> PID:
         """Add missing PSVs (via vessel_psv) and record the governing orifice for each PSV."""
-        fixed = registry.create("pid_rule", "vessel_psv").apply(pid)
+        fixed: PID = registry.create("pid_rule", "vessel_psv").apply(pid)
         basis_map = self._basis_map()
         for eq in fixed.equipment:
             if eq.kind not in _PRESSURE_VESSEL_KINDS:
