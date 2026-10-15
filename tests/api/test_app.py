@@ -13,9 +13,20 @@ def test_meta_lists_registered_plugins() -> None:
     assert ["nrtl", "pr", "pr78", "srk"] == sorted(m["thermo"])
     # Every registered unit kind is visible to the frontend.
     assert {
-        "air_cooler", "cooler", "compressor", "heater", "jt_valve", "mdea_absorber",
-        "mdea_regenerator", "mixer", "pump", "scrubber", "separator_3phase", "shell_tube",
-        "splitter", "teg_contactor",
+        "air_cooler",
+        "cooler",
+        "compressor",
+        "heater",
+        "jt_valve",
+        "mdea_absorber",
+        "mdea_regenerator",
+        "mixer",
+        "pump",
+        "scrubber",
+        "separator_3phase",
+        "shell_tube",
+        "splitter",
+        "teg_contactor",
     } == set(m["unit"])
     for names in m.values():
         assert isinstance(names, list) and names and names == sorted(names)
