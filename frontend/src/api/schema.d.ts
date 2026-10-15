@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/export/sheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Sheet
+         * @description Export the solved flowsheet's sheet; 422 naming the allowed values on a bad format/scope.
+         */
+        get: operations["export_sheet_api_export_sheet_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -602,6 +622,38 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    export_sheet_api_export_sheet_get: {
+        parameters: {
+            query: {
+                format: string;
+                scope?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     health_api_health_get: {
         parameters: {
             query?: never;
