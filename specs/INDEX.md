@@ -59,3 +59,5 @@ Dispatch order: all wave 0 at 11:00 (S-01 first), wave 1 as soon as S-01 merges,
 | L8 | B-08 | F-08 | scripted agent session |
 
 Rule: do not start L(n+1) UI before L(n) passes end to end.
+
+All frontend work follows the UI theme in `specs/frontend/F-09-octagon-ui-theme.md` (reference designs in `specs/frontend/design/`).
