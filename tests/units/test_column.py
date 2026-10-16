@@ -227,10 +227,14 @@ def test_infeasible_spec_raises_typed_error_fast(thermo: Thermo) -> None:
         },
     )
 
-    def solve() -> UnitResult:
-        return _solve(params, FEED, thermo)
+    # The timed window must measure the solve-raise path, not cold thermo
+    # setup: building the flasher (and its first flash for this basis) costs
+    # enough to overshoot the bound under xdist parallel load. Pre-warm both
+    # outside the timed window with the exact feed the solve consumes.
+    flashed = flash_feed(thermo, FEED)
+    unit = registry.create("unit", "column")
 
     start = time.perf_counter()
     with pytest.raises((ColumnSpecError, ColumnConvergenceError)):
-        solve()
+        unit.solve({"feed": flashed}, params, thermo)
     assert time.perf_counter() - start < 100.0
