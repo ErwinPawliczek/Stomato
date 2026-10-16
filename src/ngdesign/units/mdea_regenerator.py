@@ -47,15 +47,12 @@ from typing import Any
 
 from thermo import Chemical
 
+from ngdesign.amine.equilibrium import equilibrium_partial_pressures
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import components
 from ngdesign.registry import register
-from ngdesign.units.mdea_equilibrium import (
-    AMINES,
-    amine_molarity,
-    equilibrium_partial_pressures,
-)
+from ngdesign.units.mdea_equilibrium import AMINES, amine_molarity
 
 __all__ = ["MdeaRegenerator", "MeaRegenerator", "DeaRegenerator"]
 
@@ -183,7 +180,7 @@ class MdeaRegenerator:
         # reboiler temperature must fit under the regenerator pressure alongside
         # the water vapor pressure (Raoult over the water-rich solvent).
         p_co2_eq, p_h2s_eq = equilibrium_partial_pressures(
-            T_reb, c_amine, lean_co2_target, lean_h2s_target, amine=amine
+            params, T_reb, c_amine, lean_co2_target, lean_h2s_target, amine=amine
         )
         p_h2o = z_rich.get("H2O", 0.0) * p_sat_water
         p_acid_eq = p_co2_eq + p_h2s_eq
@@ -301,3 +298,6 @@ class DeaRegenerator(MdeaRegenerator):
 
     AMINE = "DEA"
     SOLVENT_MASS_FRACTION = 0.30
+
+
+CTION = 0.30
