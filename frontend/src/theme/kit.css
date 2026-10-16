@@ -1,0 +1,120 @@
+/* Stomato octagon kit. Every box is an octagon: a corner cut --c, a border layer (::before)
+   and a fill layer (::after) inset by --bw. Colours come from the palette tokens set on <html>
+   by theme/palettes.ts. */
+:root {
+  --f-display: "Chakra Petch", system-ui, sans-serif;
+  --f-body: "Chakra Petch", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, monospace;
+  --bw: 2px; --py: 8px; --px: 16px; --fs: 14.5px; --seam: 3px;
+}
+* { box-sizing: border-box }
+body, body *, body *::before, body *::after {
+  --ci: max(0px, calc(var(--c) - var(--bw) * 0.414));
+  --oct: polygon(var(--c) 0, calc(100% - var(--c)) 0, 100% var(--c), 100% calc(100% - var(--c)), calc(100% - var(--c)) 100%, var(--c) 100%, 0 calc(100% - var(--c)), 0 var(--c));
+  --octIn: polygon(var(--ci) 0, calc(100% - var(--ci)) 0, 100% var(--ci), 100% calc(100% - var(--ci)), calc(100% - var(--ci)) 100%, var(--ci) 100%, 0 calc(100% - var(--ci)), 0 var(--ci));
+}
+body { --c: 10px; margin: 0; background: var(--bg); color: var(--ink); font: 400 var(--fs)/1.5 var(--f-body); transition: background-color .25s, color .25s }
+button, input, select, textarea { font: inherit; color: inherit }
+[hidden] { display: none !important }
+
+.ob { --obLine: var(--line); --obFill: var(--surface); position: relative; isolation: isolate; border: 0; background: none }
+.ob::before, .ob::after { content: ""; position: absolute; z-index: -1; transition: background .15s }
+.ob::before { inset: 0; background: var(--obLine); clip-path: var(--oct) }
+.ob::after { inset: var(--bw); background: var(--obFill); clip-path: var(--octIn) }
+
+/* logo: two masked halves recoloured from the palette */
+.mark { position: relative; display: inline-block; width: var(--mw, 40px); aspect-ratio: 325 / 240; flex: none }
+.mark i { position: absolute; inset: 0; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat }
+.mark .a { background: var(--logoA) }
+.mark .b { background: var(--logoB) }
+
+h1, h2, h3 { font-family: var(--f-display); font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; margin: 0 }
+.num, code { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
+.muted { color: var(--muted) }
+.small { font-size: .86em }
+:focus-visible { outline: 2px dashed var(--focus); outline-offset: 3px }
+.ob:focus-visible { outline: none; --obLine: var(--focus) }
+
+/* buttons: octagon with a press-in shadow */
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center }
+.btn { cursor: pointer; font-weight: 600; padding: var(--py) var(--px); white-space: nowrap; transition: transform .08s, filter .08s; text-decoration: none; display: inline-block }
+.btn.ob { --c: 7px; --obLine: var(--btnLine); --obFill: var(--surface); filter: drop-shadow(3px 3px 0 var(--shadowInk)) }
+.btn.ob:hover { --obFill: var(--surface2); transform: translate(-1px, -1px); filter: drop-shadow(4px 4px 0 var(--shadowInk)) }
+.btn.ob:active { transform: translate(2px, 2px); filter: drop-shadow(1px 1px 0 var(--shadowInk)); transition-duration: .03s }
+.btn.primary { --obFill: var(--primaryBg); color: var(--onAccent) }
+.btn.primary:hover { --obFill: var(--primaryBg) }
+.btn:disabled { cursor: not-allowed; opacity: .55; transform: none; filter: none }
+
+/* text boxes */
+.inp { --c: 7px; --obLine: var(--inLine); --obFill: var(--surface); display: flex; align-items: stretch; min-width: 0 }
+.inp:focus-within { --obLine: var(--focus) }
+.inp input, .inp textarea, .inp select { flex: 1; min-width: 0; background: none; border: 0; outline: none; padding: var(--py) 12px; color: var(--ink) }
+.inp input::placeholder, .inp textarea::placeholder { color: var(--muted); opacity: .8 }
+.inp textarea { resize: none; min-height: 74px; line-height: 1.45 }
+.chev { width: 12px; height: 8px; background: currentColor; flex: none; transition: transform .2s;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='black' stroke-width='2'/%3E%3C/svg%3E") center / contain no-repeat }
+
+/* chips */
+.chips { display: flex; flex-wrap: wrap; gap: 6px }
+.chip { --c: 5px; display: inline-flex; align-items: center; gap: 6px; font-size: .84em; font-weight: 600; padding: 3px 12px; clip-path: var(--oct); white-space: nowrap; background: var(--surface2) }
+.chip .dot { --c: 2px; width: 7px; height: 7px; background: currentColor; clip-path: var(--oct) }
+.chip.ok { background: color-mix(in srgb, var(--ok) 18%, var(--surface)); color: color-mix(in srgb, var(--ok) 70%, var(--ink)) }
+.chip.warn { background: color-mix(in srgb, var(--warn) 22%, var(--surface)); color: color-mix(in srgb, var(--warn) 60%, var(--ink)) }
+.chip.bad { background: color-mix(in srgb, var(--bad) 18%, var(--surface)); color: color-mix(in srgb, var(--bad) 70%, var(--ink)) }
+
+/* octagon puzzle dropdown: pieces stack with diamond fillers where four corners meet */
+.dd { display: grid; position: relative }
+.dd-trigger { --c: 7px; --obLine: var(--inLine); display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; text-align: left; cursor: pointer; padding: 7px 12px }
+.dd[data-open] { z-index: 50 }
+.dd[data-open] .dd-trigger { --obLine: var(--focus) }
+.dd[data-open] .dd-trigger .chev { transform: rotate(180deg) }
+.dd-menu { list-style: none; margin: 0; padding: 0 0 var(--seam); display: grid; position: absolute; top: calc(100% + 6px); left: 0; min-width: 100%; width: max-content; max-width: 340px; z-index: 50;
+  filter: drop-shadow(0 6px 10px color-mix(in srgb, var(--ink) 14%, transparent)) }
+.opt { --c: 8px; position: relative; margin-top: var(--seam); cursor: pointer; outline: none }
+.opt .pc { display: grid; grid-template-columns: 16px 1fr auto; gap: 8px; align-items: center; padding: var(--py) 16px; background: var(--pieceBg); clip-path: var(--oct); transition: background .12s, translate .2s cubic-bezier(.3, 1.6, .5, 1) }
+.opt::before, .opt::after { content: ""; position: absolute; top: calc(var(--seam) / -2); left: 0; width: calc((var(--c) - var(--seam) / 2) * 1.414); aspect-ratio: 1; background: var(--accent3); transform: translate(-50%, -50%) rotate(45deg) }
+.opt:first-child::before, .opt:first-child::after { display: none }
+.opt::after { left: 100% }
+.opt .ok-mark { visibility: hidden; color: var(--onAccent); font-weight: 700 }
+.opt .m { font-family: var(--f-mono); font-size: .78em; color: var(--muted) }
+.opt:hover:not([aria-disabled="true"]) .pc, .opt:focus-visible .pc { background: color-mix(in srgb, var(--accent2) 22%, var(--surface)); translate: 5px 0 }
+.opt[aria-selected="true"] .pc { background: var(--primaryBg); color: var(--onAccent) }
+.opt[aria-selected="true"] .ok-mark { visibility: visible }
+.opt[aria-selected="true"] .m { color: color-mix(in srgb, var(--onAccent) 72%, transparent) }
+.opt[aria-disabled="true"] { cursor: not-allowed }
+.opt[aria-disabled="true"] .pc { color: var(--muted); background: color-mix(in srgb, var(--pieceBg) 60%, var(--surface2)) }
+@keyframes dd-left { 0% { opacity: 0; transform: translateX(-48px) rotate(-3deg) } 65% { opacity: 1; transform: translateX(5px) rotate(.5deg) } 100% { transform: none } }
+@keyframes dd-right { 0% { opacity: 0; transform: translateX(48px) rotate(3deg) } 65% { opacity: 1; transform: translateX(-5px) rotate(-.5deg) } 100% { transform: none } }
+@keyframes dd-pop { 0% { transform: translate(-50%, -50%) rotate(-135deg) scale(0) } 70% { transform: translate(-50%, -50%) rotate(55deg) scale(1.35) } 100% { transform: translate(-50%, -50%) rotate(45deg) scale(1) } }
+.dd[data-open] .opt:nth-child(odd) { animation: dd-left .46s cubic-bezier(.2, .9, .3, 1) both; animation-delay: calc(var(--i) * 70ms) }
+.dd[data-open] .opt:nth-child(even) { animation: dd-right .46s cubic-bezier(.2, .9, .3, 1) both; animation-delay: calc(var(--i) * 70ms) }
+.dd[data-open] .opt::before, .dd[data-open] .opt::after { animation: dd-pop .36s cubic-bezier(.2, .9, .3, 1) both; animation-delay: calc(var(--i) * 70ms + 260ms) }
+
+/* octagon scroll box with its own octagon scroll bars (components/OctScroll.tsx) */
+.scrollbox { --c: 10px; --boxc: var(--c); --obLine: var(--inLine); --obFill: var(--surface); min-width: 0 }
+.scroll { --gut: 24px; position: relative; overflow: auto; max-height: var(--sh, 420px); margin: var(--bw) calc(var(--bw) + var(--gut)) calc(var(--bw) + var(--gut)) var(--bw); clip-path: var(--octIn); scrollbar-width: none; outline: none }
+.scrollbox[data-nov] .scroll { margin-right: var(--bw) }
+.scrollbox[data-noh] .scroll { margin-bottom: var(--bw) }
+.scroll::-webkit-scrollbar { display: none }
+.scrollbox:focus-within { --obLine: var(--focus) }
+.vbar, .hbar { position: absolute; background: none; z-index: 1 }
+.vbar { right: calc(var(--bw) + 5px); top: calc(var(--boxc) + 2px); bottom: calc(var(--boxc) + 2px); width: 16px }
+.scrollbox:not([data-noh]) .vbar { bottom: calc(var(--bw) + 26px) }
+.hbar { bottom: calc(var(--bw) + 5px); left: calc(var(--boxc) + 2px); right: calc(var(--boxc) + 2px); height: 16px }
+.scrollbox:not([data-nov]) .hbar { right: calc(var(--bw) + 26px) }
+/* the thumb is 12px across; a 3.5px cut leaves a 5px flat end, so all eight sides show */
+.vbar i, .hbar i { position: absolute; --c: 3.5px; clip-path: var(--oct); background: var(--thumb); cursor: grab; touch-action: none; transition: background .12s }
+.vbar i { left: 2px; right: 2px; top: 0 }
+.hbar i { top: 2px; bottom: 2px; left: 0 }
+.vbar i:hover, .hbar i:hover, .scrollbox[data-drag] i { background: var(--thumbHot) }
+.scrollbox[data-drag] i { cursor: grabbing }
+
+/* tables */
+table { border-collapse: collapse; width: 100%; font-size: .9em; color: var(--ink) }
+th, td { padding: 6px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent) }
+thead th { position: sticky; top: 0; background: var(--surface2); color: var(--muted); font-weight: 600; font-size: .86em; z-index: 1 }
+td { font-variant-numeric: tabular-nums }
+tbody tr:hover td { background: color-mix(in srgb, var(--accent2) 10%, var(--surface)) }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
