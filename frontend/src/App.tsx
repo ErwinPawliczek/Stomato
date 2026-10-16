@@ -1,61 +1,96 @@
 import { useEffect, useState } from "react";
 import { api, type Project } from "./api/client";
+import { Rail, type GlobalPage } from "./components/Rail";
+import { applyPalette, loadPalette, savePalette, type PaletteId } from "./theme/palettes";
+import { AgentView } from "./views/AgentView";
+import { DrawingsView } from "./views/DrawingsView";
+import { EquipmentView } from "./views/EquipmentView";
 import { FlowsheetView } from "./views/FlowsheetView";
+import { HomeView } from "./views/HomeView";
 import { ResultsView } from "./views/ResultsView";
-import { PfdView } from "./views/PfdView";
-import { PidView } from "./views/PidView";
-import { PlotView } from "./views/PlotView";
-import { Placeholder } from "./views/Placeholder";
+import { SheetView } from "./views/SheetView";
 
-// One tab per view. Add a view by adding an entry here plus a file in src/views/.
+// Project tabs, shown once a project is open. Add a view by adding an entry here plus a
+// file in src/views/. Drawings (PFD, P&ID, plot plan, isometrics) are sub-tabs, see
+// DrawingsView.tsx. Equipment, Sheet and Agent are global pages on the left rail.
 const TABS = [
   { id: "flowsheet", label: "Flowsheet", layer: "L1" },
   { id: "results", label: "Results", layer: "L2" },
-  { id: "pfd", label: "PFD", layer: "L3" },
-  { id: "pid", label: "P&ID", layer: "L4" },
-  { id: "plot", label: "Plot plan", layer: "L5" },
-  { id: "iso", label: "Isometrics", layer: "L6" },
-  { id: "sheet", label: "Sheet", layer: "L7" },
-  { id: "agent", label: "Agent", layer: "L8" },
+  { id: "drawings", label: "Drawings", layer: "L3" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
+type Page = GlobalPage | "project";
 
 export default function App() {
+  const [page, setPage] = useState<Page>("home");
   const [tab, setTab] = useState<TabId>("flowsheet");
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [palette, setPalette] = useState<PaletteId>(loadPalette);
 
   useEffect(() => {
     api.getProject().then(setProject).catch((e: Error) => setError(e.message));
   }, []);
 
-  const current = TABS.find((t) => t.id === tab)!;
+  useEffect(() => applyPalette(palette), [palette]);
+
+  const choosePalette = (id: PaletteId) => {
+    setPalette(id);
+    savePalette(id);
+  };
+  const importProject = async (p: Project) => {
+    setProject(await api.putProject(p));
+  };
+
   return (
-    <div className="app">
-      <header>
-        <strong>ngdesign</strong> <span className="muted">{project?.name ?? ""}</span>
-        <nav role="tablist">
-          {TABS.map((t) => (
-            <button key={t.id} role="tab" aria-selected={t.id === tab} onClick={() => setTab(t.id)}>
-              {t.label}
-            </button>
-          ))}
-        </nav>
-      </header>
-      <main>
-        {error && <p role="alert">Backend error: {error}</p>}
-        {!project && !error && <p>Loading…</p>}
-        {project && tab === "flowsheet" && <FlowsheetView project={project} />}
-        {project && tab === "results" && <ResultsView />}
-        {project && tab === "pfd" && <PfdView project={project} />}
-        {project && tab === "pid" && <PidView project={project} />}
-        {project && tab === "plot" && <PlotView project={project} />}
-        {project &&
-          tab !== "flowsheet" &&
-          tab !== "results" &&
-          tab !== "pfd" &&
-          tab !== "pid" &&
-          tab !== "plot" && <Placeholder layer={current.layer} what={current.label} />}
+    <div className="shell">
+      <Rail current={page === "project" ? "home" : page} onNavigate={setPage} palette={palette} onPalette={choosePalette} />
+      <main className="main">
+        {error && (
+          <p role="alert" className="chip bad">
+            Backend error: {error}
+          </p>
+        )}
+        {page === "home" && <HomeView project={project} onOpen={() => setPage("project")} onImport={importProject} />}
+        {page === "equipment" && <EquipmentView />}
+        {page === "sheet" && <SheetView />}
+        {page === "agent" && <AgentView />}
+        {page === "project" && project && (
+          <>
+            <header className="topbar ob">
+              <div className="tb-row">
+                <div className="crumb">
+                  <strong>{project.name}</strong>
+                  <small>
+                    {project.flowsheet.units.length} units · {project.flowsheet.streams.length} streams
+                  </small>
+                </div>
+                <span className="grow" />
+                <button type="button" className="btn ob" onClick={() => setPage("home")}>
+                  Close
+                </button>
+              </div>
+              <nav className="ptabs" role="tablist" aria-label="Project">
+                {TABS.map((t) => (
+                  <button key={t.id} type="button" role="tab" className="stab ob" aria-selected={t.id === tab} onClick={() => setTab(t.id)}>
+                    {t.label}
+                  </button>
+                ))}
+              </nav>
+            </header>
+            {tab === "flowsheet" && (
+              <section className="page panel ob">
+                <FlowsheetView project={project} />
+              </section>
+            )}
+            {tab === "results" && (
+              <section className="page panel ob">
+                <ResultsView />
+              </section>
+            )}
+            {tab === "drawings" && <DrawingsView project={project} />}
+          </>
+        )}
       </main>
     </div>
   );

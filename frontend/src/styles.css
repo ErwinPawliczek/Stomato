@@ -1,41 +1,172 @@
-:root { --bg:#fff; --fg:#1a1d21; --muted:#5b636d; --line:#d9dde2; --acc:#0b5fff; color-scheme: light dark; }
-@media (prefers-color-scheme: dark) { :root { --bg:#14171a; --fg:#e6e9ec; --muted:#9aa3ad; --line:#2c3238; --acc:#6ea1ff; } }
-body { margin:0; background:var(--bg); color:var(--fg); font:14px/1.45 system-ui, sans-serif; }
-header { display:flex; gap:16px; align-items:center; padding:10px 16px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
-nav { display:flex; gap:4px; flex-wrap:wrap; }
-nav button { background:none; border:1px solid var(--line); color:var(--fg); padding:4px 10px; border-radius:6px; cursor:pointer; }
-nav button[aria-selected="true"] { border-color:var(--acc); color:var(--acc); }
-main { padding:16px; }
-.grid { display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); }
-table { border-collapse:collapse; width:100%; }
-th, td { border:1px solid var(--line); padding:4px 8px; text-align:left; }
-.muted, .placeholder { color:var(--muted); }
+/* App layout on top of theme/kit.css: an octagon rail on the left, then one page at a time.
+   Inside a project a top bar carries the project name and its tabs. */
+.shell { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; min-height: 100vh;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) 24px max(16px, env(safe-area-inset-left, 0px)) }
+.main { display: grid; gap: 16px; align-content: start; min-width: 0 }
 
-.toolbar { display:flex; gap:12px; align-items:center; margin-bottom:8px; }
-.toolbar button { background:none; border:1px solid var(--acc); color:var(--acc); padding:4px 14px; border-radius:6px; cursor:pointer; }
-.toolbar button:disabled { border-color:var(--line); color:var(--muted); opacity:0.6; cursor:not-allowed; }
-.field { display:inline-flex; align-items:center; gap:6px; margin-right:12px; }
-.field input { width:110px; padding:2px 6px; border:1px solid var(--line); border-radius:4px; background:var(--bg); color:var(--fg); }
-.field input[aria-invalid="true"] { border-color:#d64545; outline-color:#d64545; }
+/* rail */
+.rail { --c: 18px; position: sticky; top: 16px; height: calc(100dvh - 32px); display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 8px; overflow-y: auto; scrollbar-width: none }
+.brandlink { display: grid; justify-items: center; gap: 2px; margin-bottom: 10px; background: none; border: 0; padding: 0; cursor: pointer; color: var(--ink) }
+.brandword { font-family: var(--f-display); font-weight: 700; font-size: 13px; letter-spacing: .04em }
+.navb { display: grid; justify-items: center; gap: 3px; width: 78px; padding: 6px 2px; background: none; border: 0; cursor: pointer; color: var(--muted); font-size: 11.5px; font-weight: 600 }
+.navb .ic { --c: 10px; width: 42px; height: 42px; display: grid; place-items: center; clip-path: var(--oct); transition: background .15s, color .15s }
+.navb .ic svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linejoin: round }
+.navb:hover { color: var(--ink) }
+.navb:hover .ic { background: var(--surface2) }
+.navb[aria-current="page"] { color: var(--ink) }
+.navb[aria-current="page"] .ic { background: var(--primaryBg); color: var(--onAccent) }
+.rail .spacer { flex: 1 }
+.pal { display: grid; gap: 7px; justify-items: center }
+.pal .lbl { font-size: 10.5px; color: var(--muted); font-weight: 600 }
+.palb { --c: 7px; --obLine: transparent; width: 28px; height: 28px; cursor: pointer; padding: 0 }
+.palb[aria-pressed="true"] { --obLine: var(--ink) }
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr) }
+  .rail { position: static; height: auto; flex-direction: row; overflow-x: auto; padding: 10px 14px; --c: 14px }
+  .brandlink { margin: 0 6px 0 0 }
+  .rail .spacer { display: none }
+  .pal { grid-auto-flow: column; margin-left: 8px }
+}
 
-.pfd { border:1px solid var(--line); border-radius:6px; overflow:auto; background:var(--bg); user-select:none; touch-action:none; }
-.pfd svg { display:block; max-width:100%; height:auto; }
-.pfd g[data-tag] { cursor:grab; }
-.pfd g[data-tag]:active { cursor:grabbing; }
-.pfd [data-tag]:focus-visible { outline:2px solid var(--acc); }
-.pfd g[data-tag]:hover rect, .pfd g[data-tag]:hover circle, .pfd g[data-tag]:hover polygon { stroke:var(--acc); }
-.pid .equipment-bbox { cursor:grab; pointer-events:all; }
-.pid .equipment-bbox:hover { stroke:var(--acc); }
+/* project top bar and tabs */
+.topbar { --c: 14px; display: grid; gap: 10px; padding: 12px 22px }
+.tb-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 18px }
+.tb-row .grow { flex: 1 }
+.crumb { display: grid; line-height: 1.25; min-width: 0 }
+.crumb strong { font-family: var(--f-display); font-weight: 700; font-size: 17px }
+.crumb small { color: var(--muted); font-size: .8em }
+.ptabs, .seg { display: flex; flex-wrap: wrap; gap: 6px }
+.stab { --c: 7px; --obLine: var(--line); padding: 6px 14px; cursor: pointer; font-weight: 600; color: var(--muted) }
+.stab:hover { color: var(--ink) }
+.stab[aria-selected="true"] { --obFill: var(--primaryBg); --obLine: var(--btnLine); color: var(--onAccent) }
 
-/* L4: P&ID shown next to the PFD for cross-checking tags. */
-.pid-panels { display:grid; gap:24px; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); }
-.pid-panels h2 { font-size:14px; margin:8px 0 4px; }
-.pid-readonly g[data-tag] { cursor:default; }
-.tag-hit, .tag-hit * { stroke:#d97706; filter:drop-shadow(0 0 2px #d97706); }
-.tag-inventory { list-style:none; margin:4px 0; padding:0; display:flex; flex-wrap:wrap; gap:6px; }
-.tag-inventory li { display:flex; align-items:center; gap:4px; }
-.tag-inventory button { background:none; border:1px solid var(--line); border-radius:6px; padding:2px 8px; cursor:pointer; color:var(--fg); }
-.tag-inventory li.hit button { border-color:#d97706; color:#d97706; }
-.badge { font-size:11px; padding:1px 6px; border-radius:8px; border:1px solid var(--line); color:var(--muted); }
-.badge.on { color:#137333; border-color:#137333; }
-.badge.off { color:#d64545; border-color:#d64545; }
+/* pages */
+.page { display: grid; gap: 16px; align-content: start; min-width: 0 }
+.pagehead { display: flex; justify-content: space-between; align-items: end; gap: 12px 20px; flex-wrap: wrap }
+.pagehead h1 { font-size: 30px; line-height: 1.05 }
+.pagehead p { margin: 4px 0 0; color: var(--muted); max-width: 70ch }
+.panel { --c: 14px; padding: 18px 20px; display: grid; gap: 12px; align-content: start; min-width: 0 }
+.panel h2 { font-size: 18px }
+.g3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap: 16px }
+
+/* home */
+.search { max-width: 520px }
+.proj { --c: 16px; padding: 18px 20px; display: grid; gap: 10px; align-content: start; text-align: left; cursor: pointer; color: inherit; min-height: 220px }
+.proj:hover:not(:disabled) { --obLine: var(--accent2) }
+.proj:disabled { cursor: not-allowed }
+.proj .thumb { --c: 10px; clip-path: var(--oct); background: var(--surface2); display: block; padding: 10px }
+.proj .thumb svg { display: block; width: 100%; height: auto; fill: var(--eqFill); stroke: var(--svgInk); stroke-width: 1.6 }
+.proj .thumb path { fill: none }
+.proj.new { place-content: center; justify-items: center; text-align: center }
+.proj.new .plus { --c: 12px; width: 54px; height: 54px; clip-path: var(--oct); background: var(--surface2); display: grid; place-items: center; font-size: 28px; color: var(--accentText) }
+.stats { display: flex; flex-wrap: wrap; gap: 6px }
+.stat { --c: 5px; clip-path: var(--oct); background: var(--surface2); padding: 2px 10px; font-size: .8em; color: var(--muted) }
+.stat b { color: var(--ink); font-weight: 600 }
+.importdd .dd-menu { left: auto; right: 0 }
+
+/* equipment: diagonally stacked octagons (layout in EquipmentView.tsx) */
+.octwrap { min-width: 0 }
+.octgrid { position: relative; margin-bottom: 8px }
+.otile { --oc: 29.29%; --tile-oct: polygon(var(--oc) 0, calc(100% - var(--oc)) 0, 100% var(--oc), 100% calc(100% - var(--oc)), calc(100% - var(--oc)) 100%, var(--oc) 100%, 0 calc(100% - var(--oc)), 0 var(--oc));
+  --obLine: var(--line); --obFill: var(--surface); position: absolute; isolation: isolate;
+  transition: left .38s cubic-bezier(.2, .9, .25, 1.06), top .38s cubic-bezier(.2, .9, .25, 1.06), width .42s cubic-bezier(.2, .9, .25, 1.06), height .42s cubic-bezier(.2, .9, .25, 1.06), scale .25s cubic-bezier(.3, 1.5, .5, 1), opacity .25s }
+.otile::before, .otile::after { content: ""; position: absolute; z-index: -1; clip-path: var(--tile-oct); transition: background .15s }
+.otile::before { inset: 0; background: var(--obLine) }
+.otile::after { inset: 1.5px; background: var(--obFill) }
+.otile.ghost { --obLine: color-mix(in srgb, var(--line) 55%, transparent); --obFill: color-mix(in srgb, var(--surface) 40%, transparent); pointer-events: none }
+.otile.open { --obLine: var(--accent2); z-index: 2 }
+.otile.open::after { inset: 2px }
+.octgrid:has(.osum:hover) .otile:not(.ghost):not(.open):not(:has(.osum:hover)) { scale: .93; opacity: .78 }
+.otile:has(.osum:hover), .otile:has(.osum:focus-visible) { scale: 1.16; --obLine: var(--accent2); z-index: 3 }
+.osum { position: absolute; inset: 0; display: grid; grid-template-rows: 1fr auto; justify-items: center; align-items: center; padding: 16% 12% 18%; gap: 2px;
+  background: none; border: 0; cursor: pointer; color: var(--ink); text-align: center; clip-path: var(--tile-oct) }
+.osum:focus-visible { outline: none }
+.tsym { width: 78%; height: auto; stroke: var(--svgInk); stroke-width: 3; stroke-linejoin: round; overflow: visible }
+.tsym :is(rect, circle, polygon) { fill: var(--eqFill) }
+.tsym path { fill: none }
+.oname { font-size: clamp(12px, calc(var(--w) * .068), 16px); line-height: 1.15; font-weight: 600 }
+.odet { position: absolute; inset: 0; overflow: auto; scrollbar-width: none; display: grid; align-content: center; gap: 9px; font-size: 13px;
+  padding: 9.2% 8.4% 12.4%; animation: odet-in .26s .22s both }
+@keyframes odet-in { from { opacity: 0 } }
+.odet::-webkit-scrollbar { display: none }
+.odet > p { margin: 0 }
+.ohead { display: grid; grid-template-columns: minmax(90px, 34%) minmax(0, 1fr); gap: 14px; align-items: center }
+.eqart { --c: 14px; clip-path: var(--oct); background: var(--surface2); padding: 10px; display: grid; place-items: center }
+.eqart svg { width: 100%; height: auto; stroke: var(--svgInk); stroke-width: 2; stroke-linejoin: round; overflow: visible }
+.eqart svg :is(rect, circle, polygon) { fill: var(--eqFill) }
+.eqart svg path { fill: none }
+.ohead h2 { font-size: 21px; margin: 2px 0 4px }
+.tg { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted) }
+.kindchip { --c: 4px; clip-path: var(--oct); background: var(--surface2); padding: 1px 8px; font-size: .82em }
+.ocols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 4px 18px; align-items: start }
+.kv { margin: 0 }
+.kv dt { font-size: .82em; color: var(--muted); margin-top: 4px }
+.kv dd { margin: 0; line-height: 1.35 }
+.oin { display: block }
+.oin code { font-size: .9em }
+.odet .chips .chip { font-size: .78em }
+.tclose { --c: 6px; position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 34px; height: 34px; clip-path: var(--oct); border: 0; background: var(--surface2); cursor: pointer; font-size: 18px; color: var(--ink) }
+.tclose:hover { background: color-mix(in srgb, var(--accent2) 22%, var(--surface2)) }
+
+/* sheet: plain spreadsheet grid */
+.namebox { --c: 6px; display: inline-grid; place-items: center; min-width: 72px; padding: 8px 12px; font-size: 13px }
+.xgrid { border-collapse: separate; border-spacing: 0; font-size: 13px; width: max-content }
+.xgrid th { position: sticky; top: 0; z-index: 2; background: var(--surface2); color: var(--muted); font-family: var(--f-mono); font-weight: 500; font-size: 12px;
+  padding: 5px 0; text-align: center; min-width: 104px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line) }
+.xgrid tbody th { left: 0; z-index: 1; min-width: 44px; width: 44px }
+.xgrid th.corner { left: 0; z-index: 3; min-width: 44px }
+.xgrid td { padding: 0; border-right: 1px solid color-mix(in srgb, var(--line) 60%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent) }
+.xgrid tbody tr:hover td { background: none }
+.xgrid input { all: unset; box-sizing: border-box; display: block; width: 104px; height: 28px; padding: 0 8px; font-family: var(--f-mono); font-size: 13px; color: var(--ink); text-align: left; cursor: cell }
+.xgrid input:focus { outline: 2px solid var(--accent2); outline-offset: -2px; background: color-mix(in srgb, var(--accent2) 8%, transparent); cursor: text }
+.xgrid tr:has(input:focus) th { color: var(--ink); background: color-mix(in srgb, var(--accent2) 18%, var(--surface2)) }
+
+/* agent: wide chat, big composer */
+.chat { --c: 16px; min-height: calc(100dvh - 190px); display: flex; flex-direction: column; gap: 14px; padding: 22px 26px; min-width: 0 }
+.msg { --c: 10px; clip-path: var(--oct); padding: 12px 16px; max-width: min(78%, 860px); display: grid; gap: 8px }
+.msg.user { align-self: flex-end; background: var(--primaryBg); color: var(--onAccent) }
+.msg.bot { align-self: flex-start; background: var(--surface2) }
+.msg .who { font-size: .76em; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; opacity: .7 }
+.calls { display: grid; gap: 4px }
+.call { --c: 5px; clip-path: var(--oct); background: var(--surface); display: flex; justify-content: space-between; gap: 12px; padding: 4px 10px; font-family: var(--f-mono); font-size: 12px }
+.call .okc { color: var(--ok) }
+.mini-t { font-size: 12px }
+.mini-t td, .mini-t th { padding: 3px 12px 3px 0; border: 0; background: none; position: static; font-family: var(--f-mono) }
+.mini-t tbody tr:hover td { background: none }
+.composer { margin-top: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end }
+.composer textarea { min-height: 128px; font-size: 15px; line-height: 1.5 }
+.composer .btn { min-height: 52px; padding-inline: 28px }
+.chat .note { margin: 0 }
+
+/* existing views (flowsheet editor, results, drawings) in the octagon theme */
+.grid { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); align-items: start }
+.grid > * { min-width: 0; overflow-x: auto }
+.panel table { min-width: 0 }
+.placeholder { color: var(--muted) }
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px }
+.toolbar button, .tag-inventory button, .page.panel button:not(.btn):not(.stab) { --c: 7px; clip-path: var(--oct); background: var(--primaryBg); color: var(--onAccent); border: 0; padding: 6px 16px; font-weight: 600; cursor: pointer }
+.toolbar button:disabled, .page.panel button:disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed }
+.field { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; color: var(--muted); font-size: .92em }
+.field input, .field select { --c: 5px; clip-path: var(--oct); width: 110px; padding: 4px 8px; border: 0; background: var(--surface2); color: var(--ink); font-family: var(--f-mono); outline: none }
+.field select { width: auto; font-family: var(--f-body) }
+.field input:focus, .field select:focus { background: color-mix(in srgb, var(--accent2) 16%, var(--surface2)) }
+.field input[aria-invalid="true"] { background: color-mix(in srgb, var(--bad) 20%, var(--surface)) }
+.pfd { --c: 10px; clip-path: var(--oct); overflow: auto; background: var(--paper); user-select: none; touch-action: none }
+.pfd svg { display: block; max-width: 100%; height: auto }
+.pfd g[data-tag] { cursor: grab }
+.pfd g[data-tag]:active { cursor: grabbing }
+.pfd [data-tag]:focus-visible { outline: 2px solid var(--focus) }
+.pfd g[data-tag]:hover rect, .pfd g[data-tag]:hover circle, .pfd g[data-tag]:hover polygon { stroke: var(--accent) }
+.pid .equipment-bbox { cursor: grab; pointer-events: all }
+.pid .equipment-bbox:hover { stroke: var(--accent) }
+.pid-panels { display: grid; gap: 24px; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)) }
+.pid-panels h2 { font-size: 14px; margin: 8px 0 4px }
+.pid-readonly g[data-tag] { cursor: default }
+.tag-hit, .tag-hit * { stroke: var(--warn); filter: drop-shadow(0 0 2px var(--warn)) }
+.tag-inventory { list-style: none; margin: 4px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px }
+.tag-inventory li { display: flex; align-items: center; gap: 4px }
+.tag-inventory button { background: var(--surface2); color: var(--ink); padding: 2px 10px; font-family: var(--f-mono); font-weight: 500 }
+.tag-inventory li.hit button { background: color-mix(in srgb, var(--warn) 30%, var(--surface)) }
+.badge { --c: 4px; clip-path: var(--oct); font-size: 11px; padding: 1px 6px; background: var(--surface2); color: var(--muted) }
+.badge.on { background: color-mix(in srgb, var(--ok) 20%, var(--surface)); color: color-mix(in srgb, var(--ok) 70%, var(--ink)) }
+.badge.off { background: color-mix(in srgb, var(--bad) 18%, var(--surface)); color: color-mix(in srgb, var(--bad) 70%, var(--ink)) }
