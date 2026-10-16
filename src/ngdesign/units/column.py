@@ -1737,6 +1737,106 @@ def _initial_tears(col: _Column, params: _Params) -> tuple[float, float]:
     return 0.5 * col.f_total, 0.8 * col.f_total
 
 
+def _fenske_alpha(col: _Column, tb: _ThermoBox, cid: str, product: str) -> float | None:
+    """Mean relative volatility of cid against its limiting reference component.
+
+    The Fenske total-reflux bound needs the mean stage relative volatility.
+    K is evaluated from real two-phase flashes just inside the feed's bubble
+    and dew points at the mid column pressure - the ends of the true stage
+    temperature window - and combined GEOMETRICALLY (alpha varies roughly
+    exponentially with temperature along the profile). Single-phase flashes
+    are useless here: the seed band ends sit OUTSIDE the two-phase envelope,
+    where only the temperature-insensitive Clausius-Clapeyron Raoult estimate
+    is available (measured: it returned alpha=2.49 at both ends on the C3/iC4
+    case and masked an unreachable spec; the two-phase end flashes give 1.83).
+
+    Returns None when either window end yields no two-phase flash K, or when
+    the component is not the key for its product side (alpha <= 1: the Fenske
+    enrichment bound does not apply to an anti-enrichment purity spec).
+    """
+    if cid not in col.feed_comp:
+        return None
+    p_mid = 0.5 * (col.pressures[0] + col.pressures[-1])
+    t_bub = bisect_feed_phase(col, tb, p_mid, want_vapor=False)
+    t_dew = bisect_feed_phase(col, tb, p_mid, want_vapor=True)
+    alphas: list[float] = []
+    for t in (t_bub + 2.0, t_dew - 2.0):
+        if t <= t_bub + 1.0:
+            continue  # two-phase window too narrow to sample twice
+        k = tb.k_values([_flash_ready(col.feed_comp, col.feed_comp)], t, p_mid)
+        if k is None or cid not in k or len(k) < 2:
+            continue
+        others = [v for name, v in k.items() if name != cid]
+        if min(others) <= 0.0 or k[cid] <= 0.0:
+            continue
+        ref = min(others) if product == "distillate" else max(others)
+        alpha = k[cid] / ref if product == "distillate" else ref / k[cid]
+        if alpha > 1.0:
+            alphas.append(alpha)
+    if not alphas:
+        return None
+    return math.prod(alphas) ** (1.0 / len(alphas))
+
+
+def _check_spec_feasibility(col: _Column, tb: _ThermoBox, params: _Params) -> None:
+    """Reject provably unreachable specs BEFORE the secant/spec walk.
+
+    An infeasible spec used to surface only after the secant had wandered into
+    degenerate tear corners (measured 162 s on the 0.999-purity case). Each
+    check here rejects only what is unreachable even at total reflux - the
+    maximum-separation limit of any finite column - and is deliberately
+    permissive near its own boundary:
+
+    - distillate/bottoms rates: the [0, available-feed] window is enforced in
+      ``_parse_params`` (the draw-room check); nothing left to add here.
+    - product purity: Fenske at total reflux (Fenske, Ind. Eng. Chem. 24:482,
+      1932). The most favorable split (vanishing opposite product) needs
+      separation factor S = p/(1-p) * (1-z)/z for a distillate purity p of a
+      component at feed fraction z, and S = p/(1-p) * z/(1-z) for a bottoms
+      purity. A column with N stages delivers at most S_max = alpha^N; if
+      S_max < S the target is unreachable even at total reflux.
+    - component recovery: r <= alpha^N / (1 + alpha^N) at total reflux, from
+      the Fenske pair relation d_i/b_i = alpha^N with the limiting reference
+      component overwhelmingly reporting to the other product (same permissive
+      bias as the purity bound).
+    - reflux/boilup ratios: positivity is enforced in ``_parse_params``; the
+      meaningful lower bound (R > R_min) has no cheap closed form and is the
+      secant bracket abort's job (see ``_solve_specs``).
+    """
+    for key, target_d in params.specs.items():
+        if key not in ("product_purity", "component_recovery"):
+            continue
+        comp = str(target_d["component"])
+        product = str(target_d.get("product", "distillate"))
+        value = float(target_d["value"])
+        alpha = _fenske_alpha(col, tb, comp, product)
+        if alpha is None:
+            continue
+        s_max = alpha**col.n
+        if key == "component_recovery":
+            r_max = s_max / (1.0 + s_max)
+            if value > r_max:
+                raise ColumnSpecError(
+                    f"specs.{key} {value} exceeds the total-reflux recovery limit {r_max:.4g} "
+                    f"(alpha={alpha:.3g} over {col.n} stages); the specification is infeasible"
+                )
+            continue
+        z = col.feed_comp.get(comp, 0.0)
+        if not 0.0 < z < 1.0:
+            continue
+        if product == "distillate":
+            s_need = (value / (1.0 - value)) * ((1.0 - z) / z)
+        else:
+            s_need = (value / (1.0 - value)) * (z / (1.0 - z))
+        if s_max < s_need:
+            n_min = math.ceil(math.log(s_need) / math.log(alpha))
+            raise ColumnSpecError(
+                f"specs.{key} {value} of {comp!r} in the {product} needs at least {n_min} "
+                f"equilibrium stages at TOTAL reflux (alpha={alpha:.3g}); this column has "
+                f"{col.n}, so the specification is infeasible"
+            )
+
+
 def _spec_g(col: _Column, params: _Params, prof: _Profile, skip: set[str]) -> tuple[list[float], list[float]]:
     """Raw spec residuals and their scales; the secant drives rel = g / scale to zero."""
     g: list[float] = []
@@ -1788,6 +1888,7 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
     residual is satisfied by construction and dropped. A spec that pins a tear
     directly (distillate_rate on a partial condenser) is applied as a constant.
     """
+    _check_spec_feasibility(col, tb, params)
     t_top, t_bot = _initial_tears(col, params)
     specs = params.specs
     d_spec = specs.get("distillate_rate")
@@ -1873,10 +1974,16 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         return top, bot
 
     x: list[float] = []
+    # Separation direction per free tear slot: more reflux (total-condenser top
+    # tear) and more boilup mean MORE separation; a partial-condenser distillate
+    # tear is inverted (a bigger distillate draw means less refluxing).
+    tear_dir: list[float] = []
     if free_top and t_top is not None:
         x.append(float(t_top))
+        tear_dir.append(1.0 if col.condenser == "total" else -1.0)
     if free_bot and t_bot is not None:
         x.append(float(t_bot))
+        tear_dir.append(1.0)
     if not x:
         # Everything pinned algebraically: the tears already encode both targets.
         prof = mesh_at(t_top, t_bot)
@@ -1891,6 +1998,17 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
 
     flow_cap = 50.0 * col.f_total
     best_res = float("inf")
+    # Monotone-bracket abort state: purity/recovery residuals are monotone in
+    # the separation level, so if every still-unmet separation residual sits on
+    # the wrong side of its target and the secant keeps stepping FURTHER from
+    # the maximum-separation corner without any of them improving, both bracket
+    # ends (worst and best separation explored) are on the wrong side - the
+    # target is unreachable. Raise immediately instead of wandering into
+    # degenerate tears (measured 162 s on the 0.999-purity case before this).
+    keys = [k for k in params.specs if k not in skip]
+    sep_idx = [k for k, key in enumerate(keys) if key in ("product_purity", "component_recovery")]
+    best_wrong = [float("inf")] * len(sep_idx)
+    flee = 0
     stale = 0
     rel: list[float] = []
     for _ in range(_SPEC_MAX):
@@ -1954,6 +2072,33 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                 f"column specs are unsatisfiable (secant Jacobian singular); "
                 f"residuals {[round(r, 6) for r in rel]}"
             )
+        if sep_idx:
+            sep_step = sum(tear_dir[i] * step[i] for i in range(nf))
+            improved = False
+            wrong = False
+            for k, j in zip(sep_idx, range(len(sep_idx)), strict=True):
+                if abs(rel[k]) < _SPEC_TOL:
+                    best_wrong[j] = 0.0
+                    continue
+                wrong = True
+                if abs(rel[k]) < best_wrong[j] - 1e-12:
+                    best_wrong[j] = abs(rel[k])
+                    improved = True
+            if wrong and not improved:
+                away = all((rel[k] < 0.0) == (sep_step < 0.0) for k in sep_idx if abs(rel[k]) >= _SPEC_TOL)
+                if away:
+                    flee += 1
+                    if flee >= 2:
+                        raise ColumnSpecError(
+                            f"column specs are unreachable: the separation bracket shows the "
+                            f"target on the far side of the maximum-separation corner "
+                            f"(separation residuals {[round(r, 6) for r in rel]}); the "
+                            f"specification is infeasible for this column"
+                        )
+                else:
+                    flee = 0
+            else:
+                flee = 0
         x = [min(max(x[i] + step[i], _FLOW_FLOOR), flow_cap) for i in range(nf)]
     raise ColumnSpecError(
         f"column specs could not be satisfied within {_SPEC_MAX} secant iterations "
