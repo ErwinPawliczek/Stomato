@@ -2,7 +2,7 @@
 
 - **Phase:** 0
 - **Depends on:** none
-- **Packages you may edit:** `ngdesign.pipeline` (fill the placeholder), `ngdesign.cli`, `ngdesign.export`, `ngdesign.api`, `.importlinter` (delete lines only), `tests/api/`, `tests/e2e/`, `tests/test_pipeline.py`
+- **Packages you may edit:** `ngdesign.pipeline` (fill the placeholder), `ngdesign.cli`, `ngdesign.export`, `ngdesign.api`, `.importlinter` (delete lines only), `tests/api/`, `tests/e2e/`, `tests/test_pipeline.py`, `tests/test_export.py`, `tests/pid_rules/test_builder.py` (they reference the renamed helpers)
 - **Contract change:** no
 - **Benchmark delta expected:** none
 
