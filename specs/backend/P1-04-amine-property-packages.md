@@ -59,6 +59,16 @@ columns are consistent. Ions never leave the package: the stream `z` stays molec
     cubic-only solve by an amount equal to flow × ΔH_abs within 5 % (that *is* the fix).
   - Existing amine unit tests PASS unchanged (plain-cubic path).
 
+## What P1-01 actually landed (read before starting)
+`thermo/cubic.py` `ThermoSurfaceMixin` gives any package the full v2 surface from two factories
+(`_build_flasher`, `_build_flasher_vl`) over `thermo`-library flashers; that route is for
+non-reactive packages. `AmineReactivePackage` has its own phase model, so implement the protocol
+directly (it may *use* the carrier `CubicEOS` instance for vapour and physical-liquid properties
+and may reuse `_state.phase_props` / `_state.cache_key` helpers). `Phase` and `StreamState` are
+frozen pydantic models — build new objects, never mutate. `Phase.ln_phi` must be populated for
+every component (acid gases from `p_eq`, others from the carrier). `pure_psat` delegates to the
+carrier. Saturation errors use `contracts.thermo.SaturationError`.
+
 ## Method
 All equations with sources in docstrings. Henry constants and amine Psat from the databank
 with provenance. The speciation models are not modified (P0-02 moved them; this spec wraps

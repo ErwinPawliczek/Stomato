@@ -2,7 +2,7 @@
 
 - **Phase:** 1
 - **Depends on:** P1-01, P0-06
-- **Packages you may edit:** `ngdesign.units` (`column.py` → `column/` package), `tests/units/`, `bench/baseline.json` (update with `--update`, state the delta in the PR)
+- **Packages you may edit:** `ngdesign.units` (`column.py` → `column/` package), `tests/units/`, `bench/baseline.json` (update with `--update`, state the delta in the PR), `scripts/bench_baseline.py` + `tests/bench/` **only to make `CountingThermo` count the v2 methods** (see Method)
 - **Contract change:** no
 - **Benchmark delta expected:** column case: flashes −85 % or better; slice/recycle: none
 
@@ -33,7 +33,33 @@ are single calls. Target: same converged answers, ≤ 15 % of today's flash coun
   P0-06 `CountingThermo` proxy and assert flashes ≤ 0.15 × the pre-change number recorded in
   `bench/baseline.json` (read the number from the baseline, do not hard-code).
 
+## What P1-01 actually landed (read before starting)
+- `contracts/thermo.py`: `PhaseProps`, `SaturationPoint`, `PropertyDerivatives`, `SaturationError`.
+  `Phase` carries `enthalpy`, `entropy`, `cp`, `ln_phi`; `Phase` and `StreamState` are **frozen**
+  (the package caches and shares them — never mutate, use `model_copy(update=...)`).
+- `thermo/cubic.py` `ThermoSurfaceMixin` implements the surface for every package; `flash_pt` and
+  `phase_props` are LRU-cached per package instance (key: composition 1e-10, T 1e-6, P 1e-3).
+  `k_values`, `bubble_point`, `dew_point`, `flash_tvf/pvf` are **not** cached and each costs one or
+  more PT flashes internally (`bubble_point` ≈ 10–40). `derivatives` is one single-phase build.
+- Saturation is a bracketed secant on the PT flash's vapour fraction (`thermo/_state.py`); the
+  bracket comes from Wilson bounds. Supercritical feeds raise `SaturationError` — the column must
+  catch it where it seeds temperatures and fall back to the Clausius–Clapeyron estimate.
+
 ## Method
+**Counting.** `CountingThermo` (P0-06) counts only `flash_pt/ph/ps`; `k_values` and
+`bubble_point` call the flash *inside* the package, below the proxy, so a column that simply
+switches to `thermo.k_values` would show zero flashes without doing less work. Extend
+`CountingThermo` to count every protocol method separately (`k_values`, `bubble_point`,
+`dew_point`, `flash_tvf`, `flash_pvf`, `phase_props`, `derivatives`, `pure_psat`) and define the
+benchmark's `flashes` as `flash_pt + flash_ph + flash_ps + k_values + bubble_point + dew_point +
+flash_tvf + flash_pvf` (flash-equivalent calls; `phase_props` / `derivatives` / `pure_psat` are
+reported in a separate `props` counter and are not budgeted). Existing baseline numbers are
+unchanged by this definition because no existing case calls the v2 methods. The −85 % gate and
+`test_flash_budget.py` apply to the flash-equivalent count. Prefer `k_values` over your own PT
+flash only where the column needs K alone; where it needs K **and** phase enthalpies at the same
+state, one `flash_pt` (cached) plus reading `Phase.enthalpy` / `.cp` / `.ln_phi` is cheaper than
+`k_values` + two `phase_props`.
+
 Behaviour: converged stage profiles for every existing column test within the tests' existing
 tolerances; no tolerance changes. If a test only passes because of the old approximate
 enthalpy model, that is a finding — report it in the PR with both numbers, do not loosen.
