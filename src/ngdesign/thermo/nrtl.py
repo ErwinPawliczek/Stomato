@@ -31,13 +31,13 @@ from __future__ import annotations
 from functools import cache
 from typing import Any
 
-from thermo import PRMIX, CEOSGas, ChemicalConstantsPackage, FlashVLN, GibbsExcessLiquid
+from thermo import PRMIX, CEOSGas, ChemicalConstantsPackage, FlashVL, FlashVLN, GibbsExcessLiquid
 from thermo.interaction_parameters import IPDB
 from thermo.nrtl import NRTL
 
-from ngdesign.contracts import StreamState
 from ngdesign.registry import register
 from ngdesign.thermo import _state
+from ngdesign.thermo.cubic import ThermoSurfaceMixin
 
 _CHEMSEP_NRTL_TABLE = "ChemSep NRTL"
 _CHEMSEP_PR_TABLE = "ChemSep PR"
@@ -70,8 +70,24 @@ def _flasher_for(ids: tuple[str, ...]) -> Any:
 
     Zero-fraction components are dropped by the caller before this is reached, so
     the cache key is the reduced, sorted support of the feed composition. The
-    provenance check runs here - at flasher construction, before any flash exists -
-    so a support with a databank-missing pair cannot produce a silently ideal result.
+    provenance check runs at flasher construction, before any flash exists, so a
+    support with a databank-missing pair cannot produce a silently ideal result.
+    """
+    return _build_flasher_inner(ids, three_phase=True)
+
+
+@cache
+def _flasher_vl_for(ids: tuple[str, ...]) -> Any:
+    """Build (and cache) the two-phase FlashVL saturation fast path (spec P1-01)."""
+    return _build_flasher_inner(ids, three_phase=False)
+
+
+def _build_flasher_inner(ids: tuple[str, ...], three_phase: bool) -> Any:
+    """Build an NRTL/PR flasher over exactly this sorted component set.
+
+    The provenance check runs at flasher construction, before any flash exists,
+    so a support with a databank-missing pair cannot produce a silently ideal
+    result - whichever flasher the caller asks for.
     """
     cas_list = _state._cas_list(ids)
     constants, correlations = ChemicalConstantsPackage.from_IDs(cas_list)
@@ -91,8 +107,8 @@ def _flasher_for(ids: tuple[str, ...]) -> Any:
     def ge_liquid() -> Any:
         """One NRTL liquid phase.
 
-        Each of the two liquid phases gets its own NRTL instance: the model
-        object carries (T, xs) state that two evolving phases would alias.
+        Each liquid phase gets its own NRTL instance: the model object carries
+        (T, xs) state that two evolving phases would alias.
         """
         model = NRTL(xs=[1.0 / len(ids)] * len(ids), T=298.15, tau_bs=tau_bs, alpha_cs=alpha_cs)
         return GibbsExcessLiquid(
@@ -105,11 +121,13 @@ def _flasher_for(ids: tuple[str, ...]) -> Any:
         )
 
     gas = CEOSGas(PRMIX, eos_kwargs, HeatCapacityGases=heat_caps)
-    return FlashVLN(constants, correlations, gas=gas, liquids=[ge_liquid(), ge_liquid()])
+    if three_phase:
+        return FlashVLN(constants, correlations, gas=gas, liquids=[ge_liquid(), ge_liquid()])
+    return FlashVL(constants, correlations, gas=gas, liquid=ge_liquid())
 
 
 @register("thermo", "nrtl")
-class NrtlThermo:
+class NrtlThermo(ThermoSurfaceMixin):
     """NRTL liquid + Peng-Robinson vapour package over the `thermo` library."""
 
     def __init__(self, components: tuple[str, ...] | None = None) -> None:
@@ -121,23 +139,12 @@ class NrtlThermo:
         pair missing from the ChemSep NRTL databank raises before any state is
         returned - never silently as ideal.
         """
+        super().__init__()
         if components:
             _flasher_for(tuple(sorted(components)))
 
-    def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
-        """PT flash: full phase split at temperature T (K) and pressure P (Pa abs)."""
-        return self._flash(z, molar_flow, T=T, P=P)
+    def _build_flasher(self, ids: tuple[str, ...]) -> Any:
+        return _flasher_for(ids)
 
-    def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:
-        """PH flash: solve T from pressure P (Pa abs) and enthalpy H (J/mol)."""
-        return self._flash(z, molar_flow, P=P, H=H)
-
-    def flash_ps(self, z: dict[str, float], P: float, S: float, molar_flow: float) -> StreamState:
-        """PS flash: solve T from pressure P (Pa abs) and entropy S (J/(mol.K))."""
-        return self._flash(z, molar_flow, P=P, S=S)
-
-    def _flash(self, z: dict[str, float], molar_flow: float, **spec: float) -> StreamState:
-        ids = tuple(sorted(cid for cid, x in z.items() if x > 0.0))
-        if not ids:
-            raise ValueError("composition has no positive mole fractions")
-        return _state.run_flash(_flasher_for(ids), z, molar_flow, **spec)
+    def _build_flasher_vl(self, ids: tuple[str, ...]) -> Any:
+        return _flasher_vl_for(ids)

@@ -20,12 +20,21 @@ reference-data note). SI units throughout: K, Pa, kg/m3, Pa.s, J/mol, J/(mol K).
 
 from __future__ import annotations
 
-from typing import Any
+import math
+from collections.abc import Callable
+from functools import cache
+from typing import Any, Literal
 
-from thermo import CEOSGas, CEOSLiquid, ChemicalConstantsPackage, FlashVLN
+from thermo import CEOSGas, CEOSLiquid, ChemicalConstantsPackage, FlashVL, FlashVLN
 from thermo.interaction_parameters import IPDB
 
 from ngdesign.contracts import Phase, PhaseKind, StreamState
+from ngdesign.contracts.thermo import (
+    PhaseProps,
+    PropertyDerivatives,
+    SaturationError,
+    SaturationPoint,
+)
 from ngdesign.data import components
 
 #: CODATA 2018 molar gas constant, J/(mol.K).
@@ -187,6 +196,11 @@ def _build_stream_state(
                 viscosity=_viscosity(phase_obj),
                 z_factor=z_factor,
                 molecular_weight=mw,
+                enthalpy=float(phase_obj.H()),  # J/mol (spec P1-01)
+                entropy=float(phase_obj.S()),  # J/(mol K) (spec P1-01)
+                cp=float(phase_obj.Cp()),  # J/(mol K) (spec P1-01)
+                ln_phi={cid: 0.0 for cid in full_keys}
+                | dict(zip(ids, (float(v) for v in phase_obj.lnphis()), strict=True)),  # spec P1-01
             )
         )
 
@@ -230,3 +244,585 @@ def run_flash(flasher: Any, z: dict[str, float], molar_flow: float, **spec: floa
             phase_pairs, enthalpy, entropy = verified, h2, s2
 
     return _build_stream_state(z, molar_flow, T, P, ids, phase_pairs, enthalpy, entropy)
+
+
+# ------------------------------------------------------------------ contract v2 (spec P1-01)
+
+#: Component id of water; its presence is what makes a second liquid phase possible.
+WATER_ID = "H2O"
+
+#: Property-cache size (PT flashes and phase_props, per package instance), spec P1-01.
+PROPERTY_CACHE_SIZE = 4096
+
+#: Saturation solver limits: 1e-8 relative on the unknown, 60 iterations (spec P1-01).
+SATURATION_REL_TOL = 1e-8
+SATURATION_MAX_ITER = 60
+
+#: Bracket-refinement loop cap (expansions/shrinks) before declaring no two-phase region.
+_BRACKET_REFINEMENTS = 40
+
+#: Widths of the initial Psat-based brackets (pressure solve) and Psat-inversion brackets.
+_P_LO, _P_HI = 0.5, 3.0
+_T_LO, _T_HI = 0.9, 1.15
+
+#: Plateau membership tolerance: vf approaches the bubble/dew target tangentially
+#: (and PR flashes can turn away from the plateau again above the bubble point),
+#: so bracket ends are matched within this tolerance instead of by equality.
+_PLATEAU_EPS = 1e-6
+
+#: Geometric scan factor for plateau search and bracket refinement.
+_SCAN_FACTOR = 1.3
+
+#: Saturation targets within this distance of 0 / 1 are solved as bubble / dew points.
+_VF_EDGE = 1e-9
+
+#: Interior-target residual at which the secant stops: |vf - target| tolerance.
+_VF_TARGET_TOL = 1e-9
+
+
+def support_ids(z: dict[str, float]) -> tuple[str, ...]:
+    """Sorted ids of the components with positive mole fraction (the flash support)."""
+    ids = tuple(sorted(cid for cid, x in z.items() if x > 0.0))
+    if not ids:
+        raise ValueError("composition has no positive mole fractions")
+    return ids
+
+
+def cache_key(z: dict[str, float], T: float, P: float) -> tuple[Any, ...]:
+    """Property-cache key: composition rounded to 1e-10, T to 1e-6, P to 1e-3."""
+    return (tuple(sorted((cid, round(x, 10)) for cid, x in z.items())), round(T, 6), round(P, 3))
+
+
+def build_flasher_vl(ids: tuple[str, ...], eos: Any, kij_table: str) -> Any:
+    """Build a two-phase FlashVL flasher over exactly this sorted component set.
+
+    The saturation fast path (spec P1-01): when the feed cannot form a second
+    liquid (no water), a VLE-only FlashVL over the same EOS objects reaches the
+    same equilibrium without liquid-liquid stability work.
+    """
+    cas_list = _cas_list(ids)
+    constants, correlations = ChemicalConstantsPackage.from_IDs(cas_list)
+    kijs = IPDB.get_ip_symmetric_matrix(name=kij_table, CASs=cas_list, ip="kij")
+    eos_kwargs: dict[str, Any] = {
+        "Tcs": constants.Tcs,
+        "Pcs": constants.Pcs,
+        "omegas": constants.omegas,
+        "kijs": kijs,
+    }
+    heat_caps = correlations.HeatCapacityGases
+    gas = CEOSGas(eos, eos_kwargs, HeatCapacityGases=heat_caps)
+    liquid = CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps)
+    flasher = FlashVL(constants, correlations, gas=gas, liquid=liquid)
+    if len(ids) == 1:
+        # thermo's FlashVL is unusable at N=1: stability guessing divides by N-1
+        # and the PT flash can report a vapour for a compressed liquid. The tag
+        # routes _stability_resolved to the databank Psat curve instead.
+        flasher._pure_cid = ids[0]
+    return flasher
+
+
+def _pt_phase_pairs(flasher: Any, zs: list[float], T: float, P: float) -> list[PhasePair]:
+    """(phase, beta) pairs at (T, P) — the run_flash flow without StreamState mapping.
+
+    Single-phase results are re-verified by the stability test exactly as
+    run_flash does, so the vapour fraction the saturation solver sees has the
+    same semantics as StreamState.vapor_fraction.
+    """
+    state = flasher.flash(zs=zs, T=T, P=P)
+    phase_pairs: list[PhasePair] = [(p, float(p.beta)) for p in state.phases]
+    if sum(1 for _, beta in phase_pairs if beta > 0.0) == 1:
+        verified, _h, _s = _stability_resolved(flasher, zs, T, P)
+        if verified:
+            phase_pairs = verified
+    return phase_pairs
+
+
+def _vapor_fraction(pairs: list[PhasePair]) -> float:
+    """Molar vapour fraction of (phase, beta) pairs — non-vapor phases count as liquid."""
+    return sum(beta for phase, beta in pairs if isinstance(phase, CEOSGas))
+
+
+def _thermal_conductivity(phase: Any) -> float | None:
+    """Thermal conductivity in W/(m K), None where thermo has no correlation."""
+    try:
+        return float(phase.k())
+    except Exception:
+        return None
+
+
+# ------------------------------------------------------------------ pure Psat
+
+
+@cache
+def _psat_data(cid: str) -> tuple[Any, float, float, float]:
+    """(vapor-pressure correlation, Tc, Pc, omega) for one component id, cached."""
+    cas = str(components()[cid]["cas"])
+    constants, correlations = ChemicalConstantsPackage.from_IDs([cas])
+    return (
+        correlations.VaporPressures[0],
+        float(constants.Tcs[0]),
+        float(constants.Pcs[0]),
+        float(constants.omegas[0]),
+    )
+
+
+def pure_psat(cid: str, T: float) -> float | None:
+    """Pure-component vapour pressure (Pa) at T (K); None at or above Tc."""
+    vp, tc, _pc, _omega = _psat_data(cid)
+    if T >= tc:
+        return None
+    value = vp.T_dependent_property(T)
+    if value is None:
+        raise ValueError(f"no vapour-pressure correlation for {cid} at T={T} K")
+    return float(value)
+
+
+def _wilson_psat(cid: str, T: float) -> float:
+    """Wilson-correlation vapour-pressure estimate (Pa) at T.
+
+    Deliberately rough but defined past Tc — used only to bound saturation
+    brackets, where supercritical components still push the mixture bubble
+    pressure up (methane raises a C1/H2O feed's bubble pressure at 300 K far
+    above any subcritical component's real Psat).
+    """
+    _vp, tc, pc, omega = _psat_data(cid)
+    return pc * math.exp(5.373 * (1.0 + omega) * (1.0 - tc / T))
+
+
+def _wilson_T(cid: str, P: float) -> float:
+    """Wilson-correlation saturation-temperature estimate (K) at P, same caveat as _wilson_psat."""
+    _vp, tc, pc, omega = _psat_data(cid)
+    denom = 1.0 - math.log(P / pc) / (5.373 * (1.0 + omega))
+    if denom <= 0.05:  # far above the component's Psat ceiling: no usable T bound
+        raise ValueError(f"{cid} has no Wilson T bound at P={P} Pa")
+    return tc / denom
+
+
+def _wilson_T_safe(cid: str, P: float) -> float | None:
+    """_wilson_T with unusable bounds (denominator collapse) mapped to None."""
+    try:
+        return _wilson_T(cid, P)
+    except ValueError:
+        return None
+
+
+def _scan_to_plateau(
+    pairs_at: Callable[[float], list[PhasePair]],
+    start: float,
+    other: float,
+    target: float,
+    label: str,
+) -> tuple[float, float]:
+    """Move one bracket end onto the first vf == target plateau.
+
+    Scans first between ``start`` and ``other`` — a spurious PR two-phase split
+    above a bubble point can push the initial end past the plateau — then
+    outward from ``start``. Raises SaturationError when no plateau is in reach.
+    """
+    downward = start > other
+    x = start
+    for _ in range(_BRACKET_REFINEMENTS):
+        xn = x / _SCAN_FACTOR if downward else x * _SCAN_FACTOR
+        if (xn <= other) if downward else (xn >= other):
+            break
+        vn = _vapor_fraction(pairs_at(xn))
+        if abs(vn - target) <= _PLATEAU_EPS:
+            return xn, vn
+        x = xn
+    x = start
+    for _ in range(_BRACKET_REFINEMENTS):
+        x = x * _SCAN_FACTOR if downward else x / _SCAN_FACTOR
+        v = _vapor_fraction(pairs_at(x))
+        if abs(v - target) <= _PLATEAU_EPS:
+            return x, v
+    raise SaturationError(f"no two-phase bracket found at {label}")
+
+
+def _psat_T(cid: str, P: float) -> float | None:
+    """Saturation temperature (K) of one component at P (Pa); None when P >= Pc.
+
+    Wilson initial guess (ln Pr = 5.373 (1 + omega) (1 - 1/Tr)) refined by
+    secant iteration on the databank vapour-pressure correlation.
+    """
+    vp, tc, pc, omega = _psat_data(cid)
+    if P >= pc:
+        return None
+    tr = 1.0 / (1.0 - math.log(P / pc) / (5.373 * (1.0 + omega)))
+    t = min(max(tr * tc, 0.35 * tc), 0.9999 * tc)
+
+    def f(temp: float) -> float:
+        value = vp.T_dependent_property(temp)
+        return float(value) - P if value is not None else math.inf
+
+    t0, t1 = t * 0.99, t * 1.01
+    f0, f1 = f(t0), f(t1)
+    for _ in range(30):
+        if abs(f1) <= 1e-10 * P:
+            break
+        denom = f1 - f0
+        if denom == 0.0:
+            break
+        t2 = t1 - f1 * (t1 - t0) / denom
+        t2 = min(max(t2, 0.3 * tc), 0.9999 * tc)
+        t0, f0, t1 = t1, f1, t2
+        f1 = f(t1)
+    return t1
+
+
+# ------------------------------------------------------------------ saturation solver
+
+
+def _saturation(
+    flasher: Any,
+    z: dict[str, float],
+    kind: Literal["bubble", "dew"],
+    *,
+    T: float | None = None,
+    P: float | None = None,
+) -> SaturationPoint:
+    """Bubble or dew point via a bracketed secant on the PT flash's vapour fraction.
+
+    FlashVLN.flash(VF=...) is unreliable on the slice feed (IndexError /
+    UnboundLocalError, verified 2026-10-20), so the unknown (P at fixed T, T at
+    fixed P) is solved on the PT flash's vapour fraction instead: brackets from
+    pure-component vapour-pressure bounds, secant iterations safeguarded by
+    bisection inside the bracket, 1e-8 relative tolerance on the unknown, 60
+    iteration cap. Michelsen & Mollerup, Thermodynamic Models: Fundamentals and
+    Computational Aspects, ch. 10 (saturation).
+
+    The vapour fraction is continuous inside the two-phase envelope but plateaus
+    at 1 below the dew point and at 0 above the bubble point, so ``flat`` names
+    the plateau end for each problem orientation and a g == 0 evaluation moves
+    that end of the bracket.
+    """
+    if (T is None) == (P is None):
+        raise ValueError("specify exactly one of T and P")
+    ids = support_ids(z)
+    zs = [float(z[cid]) for cid in ids]
+    full_keys = tuple(z.keys())
+    target = 0.0 if kind == "bubble" else 1.0
+
+    if len(ids) == 1:
+        # Pure feed: bubble and dew coincide with the databank vapour-pressure
+        # curve, and the N=1 reduced FlashVL is unusable (thermo's stability
+        # guessing divides by N-1 and misclassifies the single phase), so both
+        # solvers short-circuit to Psat / its inverse.
+        cid = ids[0]
+        if T is not None:
+            p_sat = pure_psat(cid, T)
+            if p_sat is None:
+                raise SaturationError(f"{cid} is supercritical at T={T} K: no saturation point")
+            return SaturationPoint(T=T, P=p_sat, kind=kind, incipient_composition={cid: 1.0})
+        assert P is not None
+        t_sat = _psat_T(cid, P)
+        if t_sat is None:
+            raise SaturationError(f"{cid} is supercritical at P={P} Pa: no saturation point")
+        return SaturationPoint(T=t_sat, P=P, kind=kind, incipient_composition={cid: 1.0})
+
+    if T is not None:
+        psats = [p for cid in ids if (p := pure_psat(cid, T)) is not None]
+        if not psats:
+            raise SaturationError(
+                f"no two-phase region at T={T} K: every component of {sorted(z)} is supercritical"
+            )
+        bounds = [_wilson_psat(cid, T) for cid in ids]
+        lo, hi = _P_LO * min(bounds), _P_HI * max(bounds)
+
+        def pairs_at(x: float) -> list[PhasePair]:
+            return _pt_phase_pairs(flasher, zs, T, x)
+
+        def expand(x: float) -> float:
+            return x * 2.0
+
+        def shrink(x: float) -> float:
+            return x / 2.0
+
+        # bubble: vf == 0 plateau at high P; dew: vf == 1 plateau at low P
+        flat: Literal["lo", "hi", "none"] = "hi" if kind == "bubble" else "lo"
+        label = f"T={T} K"
+    else:
+        ts = [t for cid in ids if (t := _psat_T(cid, P)) is not None]  # type: ignore[arg-type]
+        if not ts:
+            raise SaturationError(
+                f"no two-phase region at P={P} Pa: every component of {sorted(z)} is supercritical"
+            )
+        assert P is not None
+        p_given: float = P
+        bounds_t = [t for cid in ids if (t := _wilson_T_safe(cid, P)) is not None]
+        lo, hi = _T_LO * min(bounds_t), _T_HI * max(bounds_t)
+
+        def pairs_at(x: float) -> list[PhasePair]:
+            return _pt_phase_pairs(flasher, zs, x, p_given)
+
+        # bubble: vf == target plateau at low T; dew: plateau at high T
+        flat = "lo" if kind == "bubble" else "hi"
+        label = f"P={P} Pa"
+
+    lo_vf = _vapor_fraction(pairs_at(lo))
+    hi_vf = _vapor_fraction(pairs_at(hi))
+    if flat == "hi" and abs(hi_vf - target) > _PLATEAU_EPS:
+        hi, hi_vf = _scan_to_plateau(pairs_at, hi, lo, target, label)
+    if flat == "lo" and abs(lo_vf - target) > _PLATEAU_EPS:
+        lo, lo_vf = _scan_to_plateau(pairs_at, lo, hi, target, label)
+
+    # tighten the non-plateau end away from the target so the secant sees a slope
+    for _ in range(_BRACKET_REFINEMENTS):
+        if flat == "hi":
+            if abs(lo_vf - target) > _PLATEAU_EPS:
+                break
+            lo, lo_vf = lo / _SCAN_FACTOR, _vapor_fraction(pairs_at(lo / _SCAN_FACTOR))
+        else:
+            if abs(hi_vf - target) > _PLATEAU_EPS:
+                break
+            hi, hi_vf = hi * _SCAN_FACTOR, _vapor_fraction(pairs_at(hi * _SCAN_FACTOR))
+    else:
+        raise SaturationError(f"no two-phase bracket found for the {kind} point of {sorted(z)} at {label}")
+
+    g_lo = lo_vf - target
+    g_hi = hi_vf - target
+    if g_lo >= 0.0 and g_hi <= 0.0:
+        x_pos, g_pos, x_neg, g_neg = lo, g_lo, hi, g_hi
+    elif g_hi >= 0.0 and g_lo <= 0.0:
+        x_pos, g_pos, x_neg, g_neg = hi, g_hi, lo, g_lo
+    else:
+        raise SaturationError(f"bracket does not straddle the {kind} point of {sorted(z)} at {label}")
+
+    interior: list[PhasePair] | None = None
+    for _ in range(SATURATION_MAX_ITER):
+        width = abs(x_pos - x_neg)
+        if width <= SATURATION_REL_TOL * min(abs(x_pos), abs(x_neg)):
+            break
+        if g_pos != 0.0 and g_neg != 0.0:
+            x = x_pos - g_pos * (x_neg - x_pos) / (g_neg - g_pos)
+            if not min(x_pos, x_neg) < x < max(x_pos, x_neg):
+                x = 0.5 * (x_pos + x_neg)
+        else:
+            x = 0.5 * (x_pos + x_neg)
+        pairs = pairs_at(x)
+        v = _vapor_fraction(pairs)
+        g = v - target
+        if 0.0 < v < 1.0:
+            interior = pairs
+        if g > 0.0:
+            x_pos, g_pos = x, g
+        elif g < 0.0:
+            x_neg, g_neg = x, g
+        elif g_pos == 0.0:
+            x_pos, g_pos = x, 0.0
+        elif g_neg == 0.0:
+            x_neg, g_neg = x, 0.0
+        elif flat == "lo":
+            x_pos, g_pos = x, 0.0  # plateau sits at the g >= 0 end (lo)
+        else:
+            x_neg, g_neg = x, 0.0  # plateau sits at the g <= 0 end (hi)
+    x_star = 0.5 * (x_pos + x_neg)
+
+    incipient = dict(z)
+    if interior is not None:
+        want_gas = kind == "bubble"
+        for phase, beta in interior:
+            if beta > 0.0 and isinstance(phase, CEOSGas) == want_gas:
+                incipient = _composition([float(v) for v in phase.zs], ids, full_keys)
+                break
+
+    return SaturationPoint(
+        T=T if T is not None else x_star,
+        P=P if P is not None else x_star,
+        kind=kind,
+        incipient_composition=incipient,
+    )
+
+
+def bubble_point(
+    flasher: Any, z: dict[str, float], *, T: float | None = None, P: float | None = None
+) -> SaturationPoint:
+    """Bubble point of the feed: exactly one of T (K) and P (Pa) given."""
+    return _saturation(flasher, z, "bubble", T=T, P=P)
+
+
+def dew_point(
+    flasher: Any, z: dict[str, float], *, T: float | None = None, P: float | None = None
+) -> SaturationPoint:
+    """Dew point of the feed: exactly one of T (K) and P (Pa) given."""
+    return _saturation(flasher, z, "dew", T=T, P=P)
+
+
+def flash_tvf(pkg: Any, z: dict[str, float], T: float, vf: float, molar_flow: float) -> StreamState:
+    """TVF flash: secant on P through the PT flash, bracketed by the dew and bubble pressures."""
+    if not 0.0 <= vf <= 1.0:
+        raise ValueError(f"vapour fraction {vf} outside [0, 1]")
+    ids = support_ids(z)
+    flasher = pkg._sat_flasher(ids)
+    if vf <= _VF_EDGE:
+        P = _saturation(flasher, z, "bubble", T=T).P
+    elif vf >= 1.0 - _VF_EDGE:
+        P = _saturation(flasher, z, "dew", T=T).P
+    else:
+        p_dew = _saturation(flasher, z, "dew", T=T).P
+        p_bub = _saturation(flasher, z, "bubble", T=T).P
+        zs = [float(z[cid]) for cid in ids]
+
+        def pairs_at(x: float) -> list[PhasePair]:
+            return _pt_phase_pairs(flasher, zs, T, x)
+
+        P, _ = _secant_solve(pairs_at, vf, p_dew, p_bub)
+    # Map the state with the same flasher the solver used: the full-surface
+    # FlashVLN can split phases slightly differently than the reduced FlashVL
+    # (no water, but different stability machinery), which would break the
+    # requested vapour fraction the secant just converged to.
+    return run_flash(flasher, z, molar_flow, T=T, P=P)
+
+
+def flash_pvf(pkg: Any, z: dict[str, float], P: float, vf: float, molar_flow: float) -> StreamState:
+    """PVF flash: secant on T through the PT flash, bracketed by the bubble and dew temperatures."""
+    if not 0.0 <= vf <= 1.0:
+        raise ValueError(f"vapour fraction {vf} outside [0, 1]")
+    ids = support_ids(z)
+    flasher = pkg._sat_flasher(ids)
+    if vf <= _VF_EDGE:
+        T = _saturation(flasher, z, "bubble", P=P).T
+    elif vf >= 1.0 - _VF_EDGE:
+        T = _saturation(flasher, z, "dew", P=P).T
+    else:
+        t_bub = _saturation(flasher, z, "bubble", P=P).T
+        t_dew = _saturation(flasher, z, "dew", P=P).T
+        zs = [float(z[cid]) for cid in ids]
+
+        def pairs_at(x: float) -> list[PhasePair]:
+            return _pt_phase_pairs(flasher, zs, x, P)
+
+        T, _ = _secant_solve(pairs_at, vf, t_bub, t_dew)
+    # Same flasher as the solver, per the note in flash_tvf.
+    return run_flash(flasher, z, molar_flow, T=T, P=P)
+
+
+def _secant_solve(
+    pairs_at: Callable[[float], list[PhasePair]],
+    target: float,
+    lo: float,
+    hi: float,
+) -> tuple[float, list[PhasePair] | None]:
+    """Bracketed secant for an interior vapour-fraction target between lo and hi.
+
+    Orientation-agnostic: after normalization ``lo`` is the end with g >= 0,
+    ``hi`` the end with g <= 0, so callers may pass the bracket in either order.
+    """
+    lo_pairs = pairs_at(lo)
+    hi_pairs = pairs_at(hi)
+    g_lo = _vapor_fraction(lo_pairs) - target
+    g_hi = _vapor_fraction(hi_pairs) - target
+    if g_lo < 0.0 <= g_hi:
+        lo, hi = hi, lo
+        lo_pairs, hi_pairs = hi_pairs, lo_pairs
+        g_lo, g_hi = g_hi, g_lo
+    interior: list[PhasePair] | None = None
+    if 0.0 < _vapor_fraction(lo_pairs) < 1.0:
+        interior = lo_pairs
+    for _ in range(SATURATION_MAX_ITER):
+        if abs(hi - lo) <= SATURATION_REL_TOL * min(abs(lo), abs(hi)):
+            break
+        if g_lo != 0.0 and g_hi != 0.0:
+            x = lo - g_lo * (hi - lo) / (g_hi - g_lo)
+            if not min(lo, hi) < x < max(lo, hi):
+                x = 0.5 * (lo + hi)
+        else:
+            x = 0.5 * (lo + hi)
+        pairs = pairs_at(x)
+        v = _vapor_fraction(pairs)
+        if 0.0 < v < 1.0:
+            interior = pairs
+        g = v - target
+        if abs(g) <= _VF_TARGET_TOL:
+            return x, interior
+        if g > 0.0:
+            lo, g_lo = x, g
+        elif g < 0.0:
+            hi, g_hi = x, g
+        else:
+            return x, interior
+    # One-sided secant convergence (vf curves are typically convex through the
+    # target) can leave the far end parked at the bracket bound while the near
+    # end sits on the root: return the end with the smaller residual rather
+    # than a misleading midpoint.
+    if abs(g_lo) <= abs(g_hi):
+        return lo, interior
+    return hi, interior
+
+
+# ------------------------------------------------------------------ K-values, phase props, derivatives
+
+
+def k_values(flasher: Any, z: dict[str, float], T: float, P: float) -> dict[str, float] | None:
+    """K_i = y_i/x_i from a PT flash; None when single-phase.
+
+    Same semantics the column uses today (units/column.py _ThermoBox.k_values):
+    the first non-vapour phase is the reference liquid, and a state whose vapour
+    fraction sits within 1e-6 of 0 or 1 counts as single-phase.
+    """
+    state = run_flash(flasher, z, 1.0, T=T, P=P)
+    if not 1e-6 < state.vapor_fraction < 1.0 - 1e-6:
+        return None
+    vapor = next(p for p in state.phases if p.kind == PhaseKind.VAPOR)
+    liquid = next(p for p in state.phases if p.kind != PhaseKind.VAPOR)
+    out: dict[str, float] = {}
+    for cid, xl in liquid.composition.items():
+        yl = max(vapor.composition.get(cid, 0.0), 0.0)
+        out[cid] = yl / xl if xl > 0.0 else 0.0
+    return out
+
+
+def _single_phase_object(
+    flasher: Any, z: dict[str, float], T: float, P: float, kind: PhaseKind
+) -> tuple[Any, tuple[str, ...], list[float], tuple[str, ...]]:
+    """One phase object of the requested kind at (composition, T, P) — no flash."""
+    ids = support_ids(z)
+    zs = [float(z[cid]) for cid in ids]
+    base = flasher.gas if kind == PhaseKind.VAPOR else flasher.liquids[0]
+    phase = base.to(T=T, P=P, zs=zs)
+    if getattr(base, "constants", None) is not None and not hasattr(phase, "constants"):
+        # ``Phase.to`` copies HeatCapacityGases but not the component constants,
+        # which MW() needs; flash-built phases always carry them.
+        phase.constants = base.constants
+    return phase, ids, zs, tuple(z.keys())
+
+
+def phase_props(flasher: Any, z: dict[str, float], T: float, P: float, kind: PhaseKind) -> PhaseProps:
+    """Properties of one phase at (composition, T, P), built without flashing."""
+    phase, ids, zs, full_keys = _single_phase_object(flasher, z, T, P, kind)
+    density = float(phase.rho_mass())
+    mw = float(phase.MW())
+    v_molar = (mw / 1000.0) / density  # m3/mol
+    ln_phi = {cid: 0.0 for cid in full_keys}
+    ln_phi.update(zip(ids, (float(v) for v in phase.lnphis()), strict=True))
+    return PhaseProps(
+        kind=kind,
+        mole_fraction=1.0,
+        composition=_composition(zs, ids, full_keys),
+        molecular_weight=mw,
+        density=density,
+        enthalpy=float(phase.H()),
+        entropy=float(phase.S()),
+        cp=float(phase.Cp()),
+        gibbs=float(phase.G()),
+        z_factor=P * v_molar / (R_IDEAL * T),
+        viscosity=_viscosity(phase),
+        thermal_conductivity=_thermal_conductivity(phase),
+        ln_phi=ln_phi,
+    )
+
+
+def derivatives(
+    flasher: Any, z: dict[str, float], T: float, P: float, kind: PhaseKind
+) -> PropertyDerivatives:
+    """d ln phi / dT and d ln phi / dP per component, for one phase at (composition, T, P)."""
+    phase, ids, _zs, full_keys = _single_phase_object(flasher, z, T, P, kind)
+    dT = {cid: 0.0 for cid in full_keys}
+    dP = {cid: 0.0 for cid in full_keys}
+    dT.update(zip(ids, (float(v) for v in phase.dlnphis_dT()), strict=True))
+    dP.update(zip(ids, (float(v) for v in phase.dlnphis_dP()), strict=True))
+    return PropertyDerivatives(dlnphi_dT=dT, dlnphi_dP=dP)
+    dT = {cid: 0.0 for cid in full_keys}
+    dP = {cid: 0.0 for cid in full_keys}
+    dT.update(zip(ids, (float(v) for v in phase.dlnphis_dT()), strict=True))
+    dP.update(zip(ids, (float(v) for v in phase.dlnphis_dP()), strict=True))
+    return PropertyDerivatives(dlnphi_dT=dT, dlnphi_dP=dP)

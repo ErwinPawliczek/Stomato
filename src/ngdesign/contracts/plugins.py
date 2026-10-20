@@ -10,16 +10,36 @@ from .flowsheet import Datasheet, Flowsheet, SolvedFlowsheet, UnitResult
 from .isometric import IsoSheet
 from .pid import PID, RuleViolation
 from .piping import PipingNetwork, RoutedLine
-from .stream import StreamState
+from .stream import PhaseKind, StreamState
+from .thermo import PhaseProps, PropertyDerivatives, SaturationPoint
 
 
 @runtime_checkable
 class Thermo(Protocol):
-    """Kind "thermo". Peng-Robinson package. All SI."""
+    """Kind "thermo". A property package: flashes, saturation points, K-values,
+    single-phase properties and fugacity derivatives — not tied to any one model
+    (cubic EOS, activity coefficient, ...). All SI: K, Pa abs, J/mol, J/(mol K).
+    """
 
     def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState: ...
     def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState: ...
     def flash_ps(self, z: dict[str, float], P: float, S: float, molar_flow: float) -> StreamState: ...
+    def flash_tvf(self, z: dict[str, float], T: float, vf: float, molar_flow: float) -> StreamState: ...
+    def flash_pvf(self, z: dict[str, float], P: float, vf: float, molar_flow: float) -> StreamState: ...
+    def bubble_point(
+        self, z: dict[str, float], *, T: float | None = None, P: float | None = None
+    ) -> SaturationPoint: ...
+    def dew_point(
+        self, z: dict[str, float], *, T: float | None = None, P: float | None = None
+    ) -> SaturationPoint: ...
+    def k_values(self, z: dict[str, float], T: float, P: float) -> dict[str, float] | None: ...
+    def phase_props(
+        self, composition: dict[str, float], T: float, P: float, kind: PhaseKind
+    ) -> PhaseProps: ...
+    def derivatives(
+        self, composition: dict[str, float], T: float, P: float, kind: PhaseKind
+    ) -> PropertyDerivatives: ...
+    def pure_psat(self, cid: str, T: float) -> float | None: ...
 
 
 @runtime_checkable

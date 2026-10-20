@@ -6,6 +6,8 @@ from enum import StrEnum
 
 from pydantic import field_validator, model_validator
 
+from ngdesign.data import components
+
 from .common import Model
 
 COMPONENTS: tuple[str, ...] = (
@@ -58,6 +60,10 @@ class Phase(Model):
     viscosity: float | None = None  # Pa.s
     z_factor: float | None = None
     molecular_weight: float  # g/mol
+    enthalpy: float = 0.0  # J/mol (spec P1-01)
+    entropy: float = 0.0  # J/(mol K) (spec P1-01)
+    cp: float = 0.0  # J/(mol K) (spec P1-01)
+    ln_phi: dict[str, float] = {}  # ln fugacity coefficient per component (spec P1-01)
 
     @field_validator("composition")
     @classmethod
@@ -96,10 +102,12 @@ class StreamState(Model):
 
     @property
     def mass_flow(self) -> float:
-        """kg/s, from phase MWs if present, else requires the thermo layer."""
-        if not self.phases:
-            raise ValueError("mass_flow needs phases (call thermo first)")
-        mw = sum(p.mole_fraction * p.molecular_weight for p in self.phases)
+        """kg/s, from phase MWs if present, else from the component database (P1-01)."""
+        if self.phases:
+            mw = sum(p.mole_fraction * p.molecular_weight for p in self.phases)
+        else:
+            db = components()
+            mw = sum(x * float(db[cid]["mw"]) for cid, x in self.composition.items())
         return self.molar_flow * mw / 1000.0
 
     def component_flows(self) -> dict[str, float]:
