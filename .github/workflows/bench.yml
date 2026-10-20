@@ -1,0 +1,43 @@
+# Benchmark baseline check (spec P0-06): flash count + wall time per benchmark
+# flowsheet, compared against the committed bench/baseline.json. New file only;
+# ci.yml is untouched. Runs on backend-changing PRs only.
+name: bench
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'data/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/bench.yml'
+
+concurrency:
+  group: bench-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-groups
+      - name: Benchmark baseline check
+        # Fails only on the flash-count rule (>2%); wall time (>50%) is noisy
+        # on shared runners and only warns.
+        run: |
+          set -o pipefail
+          uv run python scripts/bench_baseline.py --check --fail-on=flashes | tee bench_delta.md
+      - name: Post per-case delta table to step summary
+        if: always()
+        run: |
+          if [ -f bench_delta.md ]; then
+            cat bench_delta.md >> "$GITHUB_STEP_SUMMARY"
+          fi
