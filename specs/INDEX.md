@@ -70,10 +70,10 @@ All frontend work follows the UI theme in `specs/frontend/F-09-octagon-ui-theme.
 | P0-02 | Amine package owns its equilibrium code (break amine → units) | none | merged #83 |
 | P0-03 | One deliverables pipeline module (nothing imports cli) | none | merged #84 |
 | P0-04 | One cubic-EOS base; PR/SRK/PR78 become registrations | none | merged #86 |
-| P0-05 | Engineering layer de-duplication | none | open |
+| P0-05 | Engineering layer de-duplication | none | merged #87 |
 | P0-06 | Benchmark baseline (flash count + wall time) in CI | none | merged #85 |
 
-All six are independent and dispatched in parallel. Merge order does not matter; each deletes
+Phase 0 complete 2026-10-20 (six specs, six parallel agents, zero numeric drift). All six were independent; each deleted
 its own `.importlinter` ignore lines. The orchestrator updates **Status** here on merge.
 
 ## Phase 1 — contracts v2: the fundamental fix (docs/PLAN.md §3)
