@@ -2,7 +2,7 @@
 
 - **Phase:** 1
 - **Depends on:** P0-04 (one `CubicEOS` base), P0-06 (benchmark baseline)
-- **Packages you may edit:** `ngdesign.contracts` (`plugins.py`, `stream.py`, new `thermo.py`), `ngdesign.thermo`, `tests/contracts/`, `tests/thermo/`, `tests/golden/test_thermo.py` **only to add cases** (orchestrator applies the `contract-change` label)
+- **Packages you may edit:** `ngdesign.contracts` (`plugins.py`, `stream.py`, new `thermo.py`), `ngdesign.thermo`, `tests/contracts/`, `tests/thermo/`, `tests/golden/test_thermo.py` **only to add cases**, `scripts/bench_baseline.py` + `tests/bench/` **only to extend `CountingThermo`** with transparent delegates for the new protocol methods (its `flash_pt/ph/ps` counters stay as they are, so `bench/baseline.json` is unchanged) (orchestrator applies the `contract-change` label)
 - **Contract change:** yes — `Thermo` protocol, `Phase`, `StreamState`
 - **Benchmark delta expected:** none in this spec (column still uses PT flashes; P1-03 migrates it)
 
