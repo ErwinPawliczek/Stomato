@@ -83,7 +83,8 @@ its own `.importlinter` ignore lines. The orchestrator updates **Status** here o
 | P1-01 | Thermo contract v2 — properties, K-values, saturation, derivatives | P0-04, P0-06 | drafted |
 | P1-02 | Open component registry — databank species, pseudo-components, per-flowsheet slate | P0-01, P1-01 | drafted |
 | P1-03 | Column consumes contract v2; split the god-file | P1-01, P0-06 | drafted |
-| P1-04 | Amine chemistry as property packages; absorber/regenerator via column | P0-02, P1-01, P1-03 | to write |
+| P1-04 | Amine chemistry as property packages (apparent-component reactive VLE) | P0-02, P1-01 | drafted |
+| P1-06 | Staged amine absorber/regenerator via column + amine package | P1-03, P1-04 | to write |
 | P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | drafted |
 
 Dispatch order: P1-01 as soon as P0-04 and P0-06 merge; P1-03 right after P1-01; P1-02 after
