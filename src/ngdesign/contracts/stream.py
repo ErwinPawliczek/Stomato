@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-from pydantic import field_validator, model_validator
+from pydantic import ConfigDict, field_validator, model_validator
 
 from ngdesign.data import components
 
@@ -53,6 +53,9 @@ class PhaseKind(StrEnum):
 
 
 class Phase(Model):
+    #: Frozen (spec P1-01): property packages cache and share these objects.
+    model_config = ConfigDict(frozen=True)
+
     kind: PhaseKind
     mole_fraction: float  # of the total stream
     composition: dict[str, float]
@@ -73,6 +76,9 @@ class Phase(Model):
 
 class StreamState(Model):
     """Fully specified thermodynamic state of a stream."""
+
+    #: Frozen (spec P1-01): property packages cache and share these objects.
+    model_config = ConfigDict(frozen=True)
 
     T: float  # K
     P: float  # Pa absolute

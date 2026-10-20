@@ -41,7 +41,8 @@ class ThermoSurfaceMixin:
     The cache is a per-instance LRU of PROPERTY_CACHE_SIZE entries keyed on
     (tag, composition rounded to 1e-10, T to 1e-6, P to 1e-3) for PT flashes and
     phase_props; molar_flow is part of the PT-flash key because StreamState
-    carries it. Returned objects are treated as immutable by every consumer.
+    carries it. StreamState and Phase are frozen models, so a cached object
+    can be handed to every caller without copying.
     """
 
     def __init__(self) -> None:

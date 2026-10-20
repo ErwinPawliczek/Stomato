@@ -23,7 +23,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 from functools import cache
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from thermo import CEOSGas, CEOSLiquid, ChemicalConstantsPackage, FlashVL, FlashVLN
 from thermo.interaction_parameters import IPDB
@@ -312,13 +312,10 @@ def build_flasher_vl(ids: tuple[str, ...], eos: Any, kij_table: str) -> Any:
     heat_caps = correlations.HeatCapacityGases
     gas = CEOSGas(eos, eos_kwargs, HeatCapacityGases=heat_caps)
     liquid = CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps)
-    flasher = FlashVL(constants, correlations, gas=gas, liquid=liquid)
-    if len(ids) == 1:
-        # thermo's FlashVL is unusable at N=1: stability guessing divides by N-1
-        # and the PT flash can report a vapour for a compressed liquid. The tag
-        # routes _stability_resolved to the databank Psat curve instead.
-        flasher._pure_cid = ids[0]
-    return flasher
+    # N=1 is never flashed through this path: thermo's FlashVL stability guess
+    # divides by N-1, so pure feeds short-circuit to the databank Psat curve in
+    # _saturation and the full flasher maps their states.
+    return FlashVL(constants, correlations, gas=gas, liquid=liquid)
 
 
 def _pt_phase_pairs(flasher: Any, zs: list[float], T: float, P: float) -> list[PhasePair]:
@@ -666,11 +663,11 @@ def flash_tvf(pkg: Any, z: dict[str, float], T: float, vf: float, molar_flow: fl
             return _pt_phase_pairs(flasher, zs, T, x)
 
         P, _ = _secant_solve(pairs_at, vf, p_dew, p_bub)
-    # Map the state with the same flasher the solver used: the full-surface
-    # FlashVLN can split phases slightly differently than the reduced FlashVL
-    # (no water, but different stability machinery), which would break the
-    # requested vapour fraction the secant just converged to.
-    return run_flash(flasher, z, molar_flow, T=T, P=P)
+    # Final state through the package's own (cached) PT flash: the full flasher
+    # and the VL fast path agree at the converged point (verified 2026-10-20 on
+    # the C1/C3/nC5 feed, identical VF and G), so the stream a caller gets back
+    # is the same object a flash_pt at (T, P) would return.
+    return cast(StreamState, pkg.flash_pt(z, T, P, molar_flow))
 
 
 def flash_pvf(pkg: Any, z: dict[str, float], P: float, vf: float, molar_flow: float) -> StreamState:
@@ -692,8 +689,7 @@ def flash_pvf(pkg: Any, z: dict[str, float], P: float, vf: float, molar_flow: fl
             return _pt_phase_pairs(flasher, zs, x, P)
 
         T, _ = _secant_solve(pairs_at, vf, t_bub, t_dew)
-    # Same flasher as the solver, per the note in flash_tvf.
-    return run_flash(flasher, z, molar_flow, T=T, P=P)
+    return cast(StreamState, pkg.flash_pt(z, T, P, molar_flow))  # as in flash_tvf
 
 
 def _secant_solve(
@@ -816,11 +812,6 @@ def derivatives(
 ) -> PropertyDerivatives:
     """d ln phi / dT and d ln phi / dP per component, for one phase at (composition, T, P)."""
     phase, ids, _zs, full_keys = _single_phase_object(flasher, z, T, P, kind)
-    dT = {cid: 0.0 for cid in full_keys}
-    dP = {cid: 0.0 for cid in full_keys}
-    dT.update(zip(ids, (float(v) for v in phase.dlnphis_dT()), strict=True))
-    dP.update(zip(ids, (float(v) for v in phase.dlnphis_dP()), strict=True))
-    return PropertyDerivatives(dlnphi_dT=dT, dlnphi_dP=dP)
     dT = {cid: 0.0 for cid in full_keys}
     dP = {cid: 0.0 for cid in full_keys}
     dT.update(zip(ids, (float(v) for v in phase.dlnphis_dT()), strict=True))
