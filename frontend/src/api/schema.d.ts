@@ -532,9 +532,31 @@ export interface components {
             composition: {
                 [key: string]: number;
             };
+            /**
+             * Cp
+             * @default 0
+             */
+            cp: number;
             /** Density */
             density: number;
+            /**
+             * Enthalpy
+             * @default 0
+             */
+            enthalpy: number;
+            /**
+             * Entropy
+             * @default 0
+             */
+            entropy: number;
             kind: components["schemas"]["PhaseKind"];
+            /**
+             * Ln Phi
+             * @default {}
+             */
+            ln_phi: {
+                [key: string]: number;
+            };
             /** Mole Fraction */
             mole_fraction: number;
             /** Molecular Weight */
