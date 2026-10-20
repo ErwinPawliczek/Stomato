@@ -11,9 +11,9 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from ngdesign import registry
+from ngdesign import pipeline, registry
 from ngdesign.api.app import app
-from ngdesign.cli import _apply_rules, _rule_set, _run_sizers, _solve_slice, _violations
+from ngdesign.cli import _solve_slice, _violations
 from ngdesign.contracts import PID
 
 c = TestClient(app)
@@ -25,10 +25,10 @@ def _reset() -> None:
 
 def _slice_pid() -> PID:
     """The exact chain the endpoint serves, for tag-set expectations."""
-    solved = _run_sizers(_solve_slice())
+    solved = pipeline.run_sizers(_solve_slice())
     pid = registry.create("pid_builder", "default").build(solved)
-    rules = _rule_set(solved)
-    pid = _apply_rules(pid, rules)
+    rules = pipeline.rule_set(solved, k_gas=pipeline.DEFAULT_K_GAS)
+    pid = pipeline.apply_rules(pid, rules)
     assert _violations(pid, rules) == []  # parity anchor: the slice is violation-free
     return pid
 

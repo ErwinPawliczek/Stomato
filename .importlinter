@@ -19,12 +19,6 @@ layers =
     ngdesign.amine
     ngdesign.thermo
     ngdesign.contracts | ngdesign.registry | ngdesign.data
-ignore_imports =
-    # P0-03: pipeline lifted out of cli
-    ngdesign.export -> ngdesign.cli
-    ngdesign.api.routes_plot -> ngdesign.cli
-    ngdesign.api.routes_iso -> ngdesign.cli
-    ngdesign.api.routes_pid -> ngdesign.cli
 
 [importlinter:contract:engineering-independent]
 name = Engineering deliverables never import the simulation engine
@@ -53,10 +47,4 @@ source_modules =
     ngdesign.pid_rules
 forbidden_modules =
     ngdesign.cli
-ignore_imports =
-    # P0-03
-    ngdesign.export -> ngdesign.cli
-    ngdesign.api.routes_plot -> ngdesign.cli
-    ngdesign.api.routes_iso -> ngdesign.cli
-    ngdesign.api.routes_pid -> ngdesign.cli
 

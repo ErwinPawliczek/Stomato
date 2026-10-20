@@ -13,9 +13,9 @@ from typing import Any
 
 from fastapi.testclient import TestClient
 
-from ngdesign import registry
+from ngdesign import pipeline, registry
 from ngdesign.api.app import app
-from ngdesign.cli import _apply_rules, _rule_set, _run_sizers, _solve_slice, _violations
+from ngdesign.cli import _solve_slice, _violations
 
 c = TestClient(app)
 
@@ -49,11 +49,11 @@ def test_cli_slice_parity_numbers() -> None:
     solved = _solve_slice()
     assert solved.converged is True
     assert solved.iterations == 1
-    solved = _run_sizers(solved)
+    solved = pipeline.run_sizers(solved)
     assert sorted(solved.datasheets) == ["E-101", "E-102", "K-101", "T-101", "V-101"]
     pid = registry.create("pid_builder", "default").build(solved)
-    rules = _rule_set(solved)
-    pid = _apply_rules(pid, rules)
+    rules = pipeline.rule_set(solved, k_gas=pipeline.DEFAULT_K_GAS)
+    pid = pipeline.apply_rules(pid, rules)
     assert len(pid.lines) == 13
     assert len(pid.equipment) == 6
     assert _violations(pid, rules) == []

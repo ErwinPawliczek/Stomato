@@ -127,9 +127,13 @@ def _connections(solved: SolvedFlowsheet) -> dict[str, list[tuple[StreamSpec, St
     return connected
 
 
-def _sizer_for(unit_kind: str) -> Sizer | None:
+def sizer_for(unit_kind: str) -> Sizer | None:
     """First registered ``sizer`` whose ``unit_kind`` matches, if any
-    (``registry.available`` is sorted, so the choice is deterministic)."""
+    (``registry.available`` is sorted, so the choice is deterministic).
+
+    Public (P0-03): the deliverables pipeline in ``ngdesign.pipeline`` calls
+    this instead of keeping a second copy of the selection.
+    """
     for name in registry.available("sizer"):
         cls = registry.get("sizer", name)
         if getattr(cls, "unit_kind", None) == unit_kind:
@@ -144,7 +148,7 @@ def _datasheet_for(solved: SolvedFlowsheet, spec: UnitSpec) -> Datasheet | None:
     sheet = solved.datasheets.get(spec.tag)
     if sheet is not None:
         return sheet
-    sizer = _sizer_for(spec.kind)
+    sizer = sizer_for(spec.kind)
     return None if sizer is None else sizer.size(spec.tag, solved, spec.params)
 
 

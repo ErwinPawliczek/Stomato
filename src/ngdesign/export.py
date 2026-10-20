@@ -1,11 +1,12 @@
 """Sheet export (B-07 addendum): the engineering sheet as CSV or HTML.
 
-Stream-table cells come from the CLI demo's own formatter (``cli._cell`` and
-``cli._port``, imported — not re-implemented) so unit conversion lives in
-exactly one place and the export can never drift from ``index.html``. The only
-value-level deviation is deliberate: CSV has no markup, so the CLI's
-``&mdash;`` missing-value placeholder becomes an empty cell — the B-07
-addendum's parity rule is value parity, and ``&mdash;`` is markup.
+Stream-table cell formatting (``_cell`` and ``_port``) lives here (P0-03
+moved it out of the CLI demo) so unit conversion lives in exactly one place
+and the export can never drift from ``index.html`` — the CLI imports the same
+two helpers from this module. The only value-level deviation is deliberate:
+CSV has no markup, so the ``&mdash;`` missing-value placeholder becomes an
+empty cell — the B-07 addendum's parity rule is value parity, and ``&mdash;``
+is markup.
 
 The B-07 sheet engine (``ngdesign.variables``, addressed formula cells) has
 not merged; the export degrades gracefully to streams + datasheets. When the
@@ -22,10 +23,9 @@ from __future__ import annotations
 import csv
 import html
 from io import StringIO
-from typing import Literal
+from typing import Any, Literal
 
-from ngdesign.cli import _cell, _port
-from ngdesign.contracts import SolvedFlowsheet
+from ngdesign.contracts import PortRef, SolvedFlowsheet
 
 #: Sections the export can include, and the ``scope`` query values that pick them.
 Scope = Literal["streams", "datasheets", "all"]
@@ -56,11 +56,33 @@ DATASHEET_HEADERS: list[str] = [
     "notes",
 ]
 
-#: The CLI formatter's missing-value placeholder (an HTML entity — markup).
+#: The stream-table formatter's missing-value placeholder (an HTML entity — markup).
 _MDASH = "&mdash;"
 
 #: Separator for joined multi-value cells (dimensions, notes).
 _JOIN = "; "
+
+
+def _port(ref: PortRef | None) -> str:
+    return "battery limit" if ref is None else f"{ref.unit}.{ref.port}"
+
+
+def _cell(state: Any, column: str) -> str:
+    """Stream-table cell in the PFD renderer's units (degC, barg, kmol/h, kg/h)."""
+    if state is None:
+        return "&mdash;"
+    if column == "T":
+        return f"{state.T - 273.15:.1f}"
+    if column == "P":
+        return f"{state.P / 1000.0 - 101.325:.1f}"
+    if column == "F":
+        return f"{state.molar_flow * 3600.0 / 1000.0:.2f}"
+    if column == "W":
+        try:
+            return f"{state.mass_flow * 3600.0:.0f}"
+        except ValueError:
+            return "&mdash;"  # mass flow needs the thermo layer
+    return f"{state.vapor_fraction:.2f}"
 
 
 def coerce_scope(scope: str) -> Scope:
@@ -81,7 +103,7 @@ def _num(value: float) -> str:
 
 
 def stream_rows(solved: SolvedFlowsheet) -> list[list[str]]:
-    """One row per stream spec, in flowsheet order, cells byte-equal to ``cli._cell``."""
+    """One row per stream spec, in flowsheet order, cells byte-equal to ``_cell``."""
     rows: list[list[str]] = []
     for spec in solved.flowsheet.streams:
         state = solved.streams.get(spec.id)

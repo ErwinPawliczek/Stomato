@@ -8,10 +8,13 @@ router -> one isometric SVG per routed line (plus DXF when a DXF iso
 renderer is registered) -> index.html linking every drawing with the
 stream table.
 
-Design decisions the sample data does not carry live here, following the
-S-33 composition-test pattern: shell-and-tube utility temperatures come
-from the flowsheet params, and PSV sizing is given a full relief basis
-with k_gas = 1.24 - S-34 assigns the heat-capacity ratio to the caller.
+The chain itself lives in :mod:`ngdesign.pipeline` (P0-03): this module is
+the wiring that runs it once and writes the drawings. Design decisions the
+sample data does not carry live here, following the S-33 composition-test
+pattern: shell-and-tube utility temperatures come from the flowsheet params,
+and PSV sizing is given a full relief basis with k_gas = 1.24
+(``pipeline.DEFAULT_K_GAS``; S-34 assigns the heat-capacity ratio to the
+caller).
 """
 
 from __future__ import annotations
@@ -21,18 +24,11 @@ import html
 from pathlib import Path
 from typing import Any
 
-from ngdesign import registry
-from ngdesign.contracts import PID, PortRef, SolvedFlowsheet
+from ngdesign import pipeline, registry
+from ngdesign.contracts import PID, SolvedFlowsheet
+from ngdesign.export import _cell, _port
 from ngdesign.flowsheets import slice as slice_fs
-from ngdesign.pid_rules.psv_sizing import relief_basis
-
-#: Rule fixed-point cap; matches the S-35 spec and the locked e2e oracle.
-MAX_RULE_PASSES = 5
-
-#: Heat-capacity ratio of the relieving vapour. The StreamState contract
-#: does not carry it, so S-34 assigns it to the caller; same value the S-33
-#: composition tests use.
-RELIEF_K_GAS = 1.24
+from ngdesign.pipeline import DEFAULT_K_GAS
 
 
 def _solve_slice() -> SolvedFlowsheet:
@@ -43,59 +39,6 @@ def _solve_slice() -> SolvedFlowsheet:
     if not solved.converged:
         raise RuntimeError("sample slice did not converge; nothing to draw")
     return solved
-
-
-def _sizer_for(unit_kind: str) -> Any | None:
-    """First registered ``sizer`` whose ``unit_kind`` matches, if any.
-
-    Mirrors the P&ID builder's own selection over the sorted registry; kept
-    local so the CLI stays a wiring module and the builder's file its own.
-    """
-    for name in registry.available("sizer"):
-        cls = registry.get("sizer", name)
-        if getattr(cls, "unit_kind", None) == unit_kind:
-            return cls()
-    return None
-
-
-def _run_sizers(solved: SolvedFlowsheet) -> SolvedFlowsheet:
-    """Run the registered sizer per unit kind and attach the datasheets.
-
-    The builder adopts attached datasheets verbatim and falls back to its
-    internal sizing when none is attached; running them here makes the
-    sizing step an observable CLI stage. Units without a sizer (the sample's
-    jt_valve) are skipped and get the builder's default nozzles. Sizer
-    errors propagate: the demo stops rather than drawing unsized equipment.
-    """
-    for spec in solved.flowsheet.units:
-        if spec.tag in solved.datasheets:
-            continue
-        sizer = _sizer_for(spec.kind)
-        if sizer is not None:
-            solved.datasheets[spec.tag] = sizer.size(spec.tag, solved, spec.params)
-    return solved
-
-
-def _rule_set(solved: SolvedFlowsheet) -> list[Any]:
-    """Every registered P&ID rule, psv_sizing given the full relief basis."""
-    rules: list[Any] = []
-    for name in registry.available("pid_rule"):
-        if name == "psv_sizing":
-            rules.append(registry.create("pid_rule", name, basis=relief_basis(solved, k_gas=RELIEF_K_GAS)))
-        else:
-            rules.append(registry.create("pid_rule", name))
-    return rules
-
-
-def _apply_rules(pid: PID, rules: list[Any]) -> PID:
-    """Apply every rule repeatedly to a fixed point, capped at MAX_RULE_PASSES."""
-    for _ in range(MAX_RULE_PASSES):
-        before = pid.model_dump()
-        for rule in rules:
-            pid = rule.apply(pid)
-        if pid.model_dump() == before:
-            break
-    return pid
 
 
 def _violations(pid: PID, rules: list[Any]) -> list[str]:
@@ -117,28 +60,6 @@ def _write(out: Path, name: str, text: str) -> Path:
     path = out / name
     path.write_text(text, encoding="utf-8")
     return path
-
-
-def _port(ref: PortRef | None) -> str:
-    return "battery limit" if ref is None else f"{ref.unit}.{ref.port}"
-
-
-def _cell(state: Any, column: str) -> str:
-    """Stream-table cell in the PFD renderer's units (degC, barg, kmol/h, kg/h)."""
-    if state is None:
-        return "&mdash;"
-    if column == "T":
-        return f"{state.T - 273.15:.1f}"
-    if column == "P":
-        return f"{state.P / 1000.0 - 101.325:.1f}"
-    if column == "F":
-        return f"{state.molar_flow * 3600.0 / 1000.0:.2f}"
-    if column == "W":
-        try:
-            return f"{state.mass_flow * 3600.0:.0f}"
-        except ValueError:
-            return "&mdash;"  # mass flow needs the thermo layer
-    return f"{state.vapor_fraction:.2f}"
 
 
 def _index_html(
@@ -234,17 +155,16 @@ def main(argv: list[str] | None = None) -> int:
 
     solved = _solve_slice()
     print(f"solver: converged in {solved.iterations} pass(es)")
-    solved = _run_sizers(solved)
+    solved = pipeline.run_sizers(solved)
     print(f"sizers: {len(solved.datasheets)} datasheet(s): {', '.join(sorted(solved.datasheets))}")
-    pid = registry.create("pid_builder", "default").build(solved)
-    rules = _rule_set(solved)
-    pid = _apply_rules(pid, rules)
+    rules = pipeline.rule_set(solved, k_gas=DEFAULT_K_GAS)
+    pid = pipeline.apply_rules(registry.create("pid_builder", "default").build(solved), rules)
     violations = _violations(pid, rules)
     print(
         f"p&id: {len(pid.lines)} line(s) over {len(pid.equipment)} equipment, "
         f"{len(violations)} violation(s) remaining"
     )
-    net = registry.create("router", "orthogonal").route(pid, layout={})
+    net = pipeline.route(pid, layout={})
     for path in _write_all(out, solved, pid, net, rules):
         print(f"wrote {path}")
     return 0
