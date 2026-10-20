@@ -29,8 +29,8 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.flowsheets.slice import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 from ngdesign.registry import register
+from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 
 #: Max pressure ratio per stage, per the sizing/machines.py convention.
 DEFAULT_MAX_RATIO_PER_STAGE = 3.5

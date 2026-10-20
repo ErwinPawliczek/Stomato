@@ -15,8 +15,8 @@ from typing import Any
 
 from ngdesign.contracts import Phase, PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.flowsheets.slice import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 from ngdesign.registry import register
+from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 
 
 def _combined_liquid(phases: list[Phase]) -> Phase | None:
