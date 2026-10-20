@@ -1,0 +1,72 @@
+[importlinter]
+root_package = ngdesign
+
+# Dependency direction (Phase 0 ratchet). Lower layers never import higher ones.
+# engineering layers (sizing, pid_rules, piping, render, export) must not import the
+# simulation engine (thermo, units, solver) — they consume SolvedFlowsheet/PID only.
+[importlinter:contract:layers]
+name = Layered architecture
+type = layers
+layers =
+    ngdesign.cli
+    ngdesign.api
+    ngdesign.agent
+    ngdesign.export
+    ngdesign.pipeline
+    ngdesign.flowsheets
+    ngdesign.solver
+    ngdesign.units
+    ngdesign.amine
+    ngdesign.thermo
+    ngdesign.contracts | ngdesign.registry | ngdesign.data
+ignore_imports =
+    # P0-01: units must not import flowsheets.slice (example feeds move into units/)
+    ngdesign.units.separator -> ngdesign.flowsheets.slice
+    ngdesign.units.jt_valve -> ngdesign.flowsheets.slice
+    ngdesign.units.expander -> ngdesign.flowsheets.slice
+    ngdesign.units.heat_exchange -> ngdesign.flowsheets.slice
+    ngdesign.units.compression_train -> ngdesign.flowsheets.slice
+    ngdesign.units.compressor -> ngdesign.flowsheets.slice
+    # P0-02: amine must not import units (shared equilibrium code moves into amine/)
+    ngdesign.amine.equilibrium -> ngdesign.units.mdea_equilibrium
+    ngdesign.amine.enrtl -> ngdesign.units.mdea_equilibrium
+    # P0-03: pipeline lifted out of cli
+    ngdesign.export -> ngdesign.cli
+    ngdesign.api.routes_plot -> ngdesign.cli
+    ngdesign.api.routes_iso -> ngdesign.cli
+    ngdesign.api.routes_pid -> ngdesign.cli
+
+[importlinter:contract:engineering-independent]
+name = Engineering deliverables never import the simulation engine
+type = forbidden
+source_modules =
+    ngdesign.sizing
+    ngdesign.pid_rules
+    ngdesign.piping
+    ngdesign.render
+forbidden_modules =
+    ngdesign.thermo
+    ngdesign.units
+    ngdesign.amine
+    ngdesign.solver
+    ngdesign.flowsheets
+    ngdesign.cli
+    ngdesign.api
+
+[importlinter:contract:no-cli-reuse]
+name = Nothing imports cli (orchestration belongs in a library module)
+type = forbidden
+source_modules =
+    ngdesign.api
+    ngdesign.export
+    ngdesign.render
+    ngdesign.pid_rules
+forbidden_modules =
+    ngdesign.cli
+ignore_imports =
+    # P0-03
+    ngdesign.export -> ngdesign.cli
+    ngdesign.api.routes_plot -> ngdesign.cli
+    ngdesign.api.routes_iso -> ngdesign.cli
+    ngdesign.api.routes_pid -> ngdesign.cli
+

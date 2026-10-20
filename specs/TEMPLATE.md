@@ -1,24 +1,28 @@
-# S-XX: <title>
+# <ID>: <title>
 
-- **Wave:** 0 (start immediately) | 1 (after deps merge) | 2 | stretch
-- **Depends on:** S-YY, ... (merged to main) or none
-- **Plugin:** kind `<kind>`, name `<name>`
+- **Phase:** 0 | 1 | 2 | ...   (docs/PLAN.md)
+- **Depends on:** <IDs merged to main> or none
+- **Packages you may edit:** `ngdesign.<pkg>`, `tests/<layer>/`
+- **Contract change:** no | yes (which models, why)
+- **Benchmark delta expected:** none | <case>: flashes −X %, wall ±Y %
+- **GitHub issue:** #<n>  (comment your PR URL here when open)
 
 ## Goal
-One or two sentences: what this adds and why.
+One or two sentences: what this adds or fixes and why it matters structurally.
 
-## Files (create only these)
-- `src/ngdesign/<layer>/<module>.py`
-- `tests/<layer>/test_<module>.py`
+## Files
+- Create: `...`
+- Edit: `...`
+- Delete: `...`
 
 ## Method
-Equations / rules with sources. Units. Edge cases.
+Equations / rules with sources. Units. Edge cases. For refactors: what must stay byte-identical.
 
 ## Acceptance criteria
-- [ ] Oracle test(s) `<path::name>` PASS (not skipped)
-- [ ] Own tests cover: <cases>
-- [ ] ruff, mypy, full `pytest -rs` green
-- [ ] No locked file touched
+- [ ] ...
+- [ ] Tests named here PASS (not skip): `<path::name>`
+- [ ] ruff, mypy, lint-imports, full `pytest -rs` green
+- [ ] Nothing outside the listed packages changed
 
 ## Out of scope
 What not to do.
