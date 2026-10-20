@@ -58,8 +58,16 @@ from ngdesign.contracts.common import Direction, Nozzle, Vec3
 from ngdesign.contracts.flowsheet import Datasheet, SolvedFlowsheet, StreamSpec
 from ngdesign.contracts.stream import StreamState
 from ngdesign.registry import register
-from ngdesign.sizing.flange_rating import min_flange_class
-from ngdesign.sizing.line_size import line_size
+from ngdesign.sizing._nozzles import (
+    PA_PER_PSIG,
+    Ports,
+    connected,
+    min_flange_class,
+    mixture_density,
+    nozzle,
+    nozzle_nps_in,
+    volumetric_flow,
+)
 from ngdesign.sizing.souders_brown import souders_brown
 
 __all__ = [
@@ -70,6 +78,7 @@ __all__ = [
     "VERTICAL_K_M_S",
     "design_conditions",
     "horizontal_3phase",
+    "mixture_density",
     "volumetric_flow",
 ]
 
@@ -81,8 +90,6 @@ RETENTION_WATER_S = 300.0  # 5 min free-water retention
 LD_MIN, LD_MAX = 3.0, 5.0
 DIAMETER_STEP_M = 0.15  # nominal diameter rounds up to this grid
 
-PA_PER_PSIG = 6894.757293168  # exact psi (lbf/in^2) in Pa
-
 # Accessory nozzle NPS [in] -- no flow basis in this spec. VERIFY.
 PSV_NPS_IN = 6.0
 VENT_NPS_IN = 2.0
@@ -90,40 +97,12 @@ DRAIN_NPS_IN = 2.0
 LEVEL_NPS_IN = 2.0
 PRESSURE_NPS_IN = 1.0
 
-# Port name -> (stream spec, solved state) for one unit's connected ports.
-Ports = dict[str, tuple[StreamSpec, StreamState]]
-
 
 def _ceil_step(value: float, step: float) -> float:
     """Smallest multiple of ``step`` >= value (tolerance-safe)."""
     if value <= 0:
         raise ValueError(f"value must be positive, got {value}")
     return round(math.ceil(round(value / step, 9)) * step, 9)
-
-
-def volumetric_flow(state: StreamState) -> float:
-    """Actual volumetric flow [m3/s] of a stream state, all phases summed.
-
-    Phase model holds density [kg/m3] and molecular weight [g/mol]; the mass
-    flow of one phase is mole_fraction * molar_flow * MW / 1000.
-    """
-    if not state.phases:
-        raise ValueError("stream state has no phases (flash it with thermo first)")
-    q = 0.0
-    for phase in state.phases:
-        mass = phase.mole_fraction * state.molar_flow * phase.molecular_weight / 1000.0
-        if phase.density <= 0:
-            raise ValueError(f"phase {phase.kind} has non-positive density {phase.density}")
-        q += mass / phase.density
-    return q
-
-
-def mixture_density(state: StreamState) -> float:
-    """Mixture density [kg/m3] = mass flow / volumetric flow."""
-    q = volumetric_flow(state)
-    if q <= 0:
-        raise ValueError("stream state has zero volumetric flow")
-    return state.mass_flow / q
 
 
 def design_conditions(P_op: float, T_op: float) -> dict[str, float]:
@@ -205,33 +184,6 @@ def horizontal_3phase(
     }
 
 
-def _connected(solved: SolvedFlowsheet, tag: str) -> Ports:
-    """Port name -> (stream spec, solved state) for every port of the unit."""
-    out: dict[str, tuple[StreamSpec, StreamState]] = {}
-    fs = solved.flowsheet
-    for spec in (*fs.inlets(tag), *fs.outlets(tag)):
-        ref = spec.target if (spec.target is not None and spec.target.unit == tag) else spec.source
-        if ref is None:  # pragma: no cover - Flowsheet forbids streams with both ends None
-            raise ValueError(f"stream {spec.id} has no end on unit {tag}")
-        out[ref.port] = (spec, solved.streams[spec.id])
-    return out
-
-
-def _nozzle_nps_in(service: str, state: StreamState, role: str = "line") -> float:
-    """Process nozzle NPS [in] from the S-20 line sizing correlation."""
-    return float(
-        line_size(
-            service=service, flow_m3_s=volumetric_flow(state), rho_kg_m3=mixture_density(state), role=role
-        )["nps_in"]
-    )
-
-
-def _min_flange_class(design_p_pa: float, design_t_k: float, material_group: str) -> int:
-    psig = design_p_pa / PA_PER_PSIG
-    temp_f = (design_t_k - 273.15) * 9.0 / 5.0 + 32.0
-    return min_flange_class(material_group, psig, temp_f)
-
-
 class _VesselSizerBase:
     """Shared datasheet assembly; subclasses pick the shell sizing."""
 
@@ -244,7 +196,7 @@ class _VesselSizerBase:
         unit = solved.flowsheet.unit(tag)
         if unit.kind != self.unit_kind:
             raise ValueError(f"sizer {self.unit_kind} got unit {tag} of kind {unit.kind}")
-        ports = _connected(solved, tag)
+        ports = connected(solved, tag)
         if not ports:
             raise ValueError(f"unit {tag} has no connected streams to size from")
 
@@ -253,7 +205,7 @@ class _VesselSizerBase:
         t_op = max(state.T for _, state in ports.values())
         design = design_conditions(p_op, t_op)
         material_group = str(params.get("material_group", "1.1"))  # VERIFY
-        flange_class = _min_flange_class(
+        flange_class = min_flange_class(
             design["design_pressure_Pa"], design["design_temperature_K"], material_group
         )
 
@@ -282,26 +234,6 @@ class _VesselSizerBase:
         flange_class: int,
     ) -> list[Nozzle]:
         raise NotImplementedError
-
-
-def _nozzle(
-    n: int,
-    service: str,
-    port: str | None,
-    nps_in: float,
-    position: Vec3,
-    facing: Direction,
-    flange_class: int,
-) -> Nozzle:
-    return Nozzle(
-        id=f"N{n}",
-        service=service,
-        port=port,
-        nps_in=nps_in,
-        flange_class=flange_class,
-        position_mm=Vec3(x=position.x * 1000.0, y=position.y * 1000.0, z=position.z * 1000.0),
-        facing=facing,
-    )
 
 
 @register("sizer", "separator_3phase")
@@ -363,12 +295,12 @@ class Separator3PhaseSizer(_VesselSizerBase):
             n += 1
             pos, facing = spot[port]
             nozzles.append(
-                _nozzle(n, spec.service, port, _nozzle_nps_in(spec.service, state), pos, facing, flange_class)
+                nozzle(n, spec.service, port, nozzle_nps_in(spec.service, state), pos, facing, flange_class)
             )
         for service, nps in accessory_nps.items():
             n += 1
             pos, facing = spot[service]
-            nozzles.append(_nozzle(n, service, None, nps, pos, facing, flange_class))
+            nozzles.append(nozzle(n, service, None, nps, pos, facing, flange_class))
         return nozzles
 
 
@@ -455,12 +387,12 @@ class _VerticalSizerBase(_VesselSizerBase):
             n += 1
             pos, facing = spot[port]
             nozzles.append(
-                _nozzle(n, spec.service, port, _nozzle_nps_in(spec.service, state), pos, facing, flange_class)
+                nozzle(n, spec.service, port, nozzle_nps_in(spec.service, state), pos, facing, flange_class)
             )
         for service, nps in accessory_nps.items():
             n += 1
             pos, facing = spot[service]
-            nozzles.append(_nozzle(n, service, None, nps, pos, facing, flange_class))
+            nozzles.append(nozzle(n, service, None, nps, pos, facing, flange_class))
         return nozzles
 
 

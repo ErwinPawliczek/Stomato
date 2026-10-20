@@ -23,6 +23,7 @@ from ngdesign.contracts import (
 )
 from ngdesign.registry import register
 from ngdesign.render import symbols as sym
+from ngdesign.render._graph import topological_layers
 
 #: mm (contract units for nozzle positions) -> SVG pixels
 SCALE = 0.05
@@ -54,33 +55,6 @@ class _Placement:
     origin_y: float
 
 
-def _topological_layers(tags: list[str], edges: list[tuple[str, str]]) -> dict[str, int]:
-    """Longest-path layering via Kahn's algorithm; cycle leftovers go last."""
-    succ: dict[str, set[str]] = {t: set() for t in tags}
-    indeg: dict[str, int] = {t: 0 for t in tags}
-    for u, v in edges:
-        if v not in succ[u]:
-            succ[u].add(v)
-            indeg[v] += 1
-    layer = {t: 0 for t in tags}
-    queue = sorted(t for t in tags if indeg[t] == 0)
-    done: set[str] = set()
-    while queue:
-        n = queue.pop(0)
-        done.add(n)
-        for m in sorted(succ[n]):
-            layer[m] = max(layer[m], layer[n] + 1)
-            indeg[m] -= 1
-            if indeg[m] == 0:
-                queue.append(m)
-    # Nodes caught in a cycle never reach indeg 0: park them after the last layer.
-    max_layer = max(layer.values(), default=0)
-    for t in tags:
-        if t not in done:
-            layer[t] = max_layer + 1
-    return layer
-
-
 def _equipment_bbox_mm(eq: PidEquipment) -> tuple[float, float, float, float]:
     """(min_x, max_x, min_z, max_z) over the nozzles plus padding."""
     xs = [0.0] + [n.position_mm.x for n in eq.nozzles]
@@ -97,7 +71,7 @@ def _layout(pid: PID, placed: dict[str, XY] | None = None) -> dict[str, _Placeme
         for ln in pid.lines
         if ln.start.equipment and ln.end.equipment and ln.start.equipment != ln.end.equipment
     ]
-    layers = _topological_layers(tags, edges)
+    layers = topological_layers(tags, edges)
 
     spans = {t: _equipment_bbox_mm(by_tag[t]) for t in tags}
     widths = {t: (spans[t][1] - spans[t][0]) * SCALE for t in tags}
