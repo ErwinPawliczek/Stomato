@@ -80,12 +80,12 @@ its own `.importlinter` ignore lines. The orchestrator updates **Status** here o
 
 | Spec | Title | Depends on | Status |
 |---|---|---|---|
-| P1-01 | Thermo contract v2 — properties, K-values, saturation, derivatives | P0-04, P0-06 | PR #89 reviewed, auto-merging |
-| P1-02 | Open component registry — databank species, pseudo-components, per-flowsheet slate | P0-01, P1-01 | drafted |
-| P1-03 | Column consumes contract v2; split the god-file | P1-01, P0-06 | drafted |
-| P1-04 | Amine chemistry as property packages (apparent-component reactive VLE) | P0-02, P1-01 | drafted |
+| P1-01 | Thermo contract v2 — properties, K-values, saturation, derivatives | P0-04, P0-06 | merged #89 |
+| P1-02 | Open component registry — databank species, pseudo-components, per-flowsheet slate | P0-01, P1-01 | dispatched (issue #90) |
+| P1-03 | Column consumes contract v2; split the god-file | P1-01, P0-06 | dispatched (issue #91) |
+| P1-04 | Amine chemistry as property packages (apparent-component reactive VLE) | P0-02, P1-01 | dispatched (issue #92) |
 | P1-06 | Staged amine absorber/regenerator via column + amine package | P1-03, P1-04 | drafted |
-| P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | drafted |
+| P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | dispatched (issue #93) |
 
 Dispatch order: P1-01 first (merged 2026-10-20); then P1-02, P1-03, P1-04, P1-05 in parallel
 (disjoint packages; P1-02 and P1-04 both touch `units/`, resolve on rebase); P1-06 after P1-03 and
