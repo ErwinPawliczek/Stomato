@@ -71,7 +71,7 @@ All frontend work follows the UI theme in `specs/frontend/F-09-octagon-ui-theme.
 | P0-03 | One deliverables pipeline module (nothing imports cli) | none | merged #84 |
 | P0-04 | One cubic-EOS base; PR/SRK/PR78 become registrations | none | merged #86 |
 | P0-05 | Engineering layer de-duplication | none | open |
-| P0-06 | Benchmark baseline (flash count + wall time) in CI | none | open |
+| P0-06 | Benchmark baseline (flash count + wall time) in CI | none | merged #85 |
 
 All six are independent and dispatched in parallel. Merge order does not matter; each deletes
 its own `.importlinter` ignore lines. The orchestrator updates **Status** here on merge.
