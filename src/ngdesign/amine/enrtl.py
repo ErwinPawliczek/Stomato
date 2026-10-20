@@ -3,10 +3,10 @@
 Second amine chemistry, per the wave-3 spec: a from-scratch Long-Li-Chen
 electrolyte-NRTL (e-NRTL) speciation module, opt-in through the amine units'
 ``equilibrium_model`` parameter. Like the Kent-Eisenberg module
-(``ngdesign.units.mdea_equilibrium``), chemistry lives at unit level: the
-thermodynamic package never sees the ionic species, the unit owns the
-equilibrium solve, and the stream ``z`` stays molecular -- ions never leave
-this module. H2S is deliberately unsupported (see ``_reject_h2s``): no
+(``ngdesign.amine.kent_eisenberg``), chemistry lives in the amine package as
+a property model: the thermodynamic package never sees the ionic species,
+the unit operations consume the model, and the stream ``z`` stays molecular
+-- ions never leave this module. H2S is deliberately unsupported (see ``_reject_h2s``): no
 citable e-NRTL parameter set covers it, so sour-gas loading stays
 Kent-Eisenberg.
 
@@ -29,7 +29,7 @@ in the Long-Li-Chen / Chen e-NRTL form:
    with I_m the molality ionic strength (mol/kg water) and b = 1.2 the
    published Pitzer coefficient. The molality base is chosen deliberately:
    the chemical equilibria below (Edwards et al. / NeqSim constants, shared
-   with mdea_equilibrium.py) live on the molal-1 standard state, so the
+   with kent_eisenberg.py) live on the molal-1 standard state, so the
    activity coefficients must live there too -- one consistent scale, no
    standard-state conversion chain. (The wave-3 open-access reference,
    Vivier, Kamalpour & Mehablia, "Thermodynamics of CO2-MDEA using eNRTL
@@ -93,10 +93,10 @@ Parameter provenance (per constant)
   library; pinned to the published 0.392 at 298.15 K by a test.
 - Chemical equilibria (thermodynamic constants on the molal-1 standard
   state, mol/kg): K1/K2/Kw from Edwards, Maurer, Newman & Prausnitz, 1978,
-  AIChE J. 24(6) 966-976 (identical expressions to mdea_equilibrium.py);
+  AIChE J. 24(6) 966-976 (identical expressions to kent_eisenberg.py);
   amine protonation Kam and (MEA) carbamate reversion Kc from NeqSim's
   AmineKentEisenberg model -- the same repo-citable constant set
-  mdea_equilibrium.py carries (MDEA Kam = exp(-6.40 - 4210/T), MEA
+  kent_eisenberg.py carries (MDEA Kam = exp(-6.40 - 4210/T), MEA
   Kam = exp(-3.10 - 5630/T), MEA Kc = exp(3.90 - 1800/T)). The
   Kent-Eisenberg module applies these constants to mol/L concentrations
   (its documented apparent convention); this module applies them to
@@ -104,7 +104,7 @@ Parameter provenance (per constant)
   coincide at the dilute end and the property tests pin the cross-check.
 - Henry CO2 (water-referenced, Pa.m3/mol): Versteeg & van Swaaij, 1988,
   J. Chem. Eng. Data 33, 29-34: H = 2.82e6 exp(-2044/T) -- identical to
-  mdea_equilibrium.py. p_CO2 = H * c_CO2 * gamma*_CO2 with c_CO2 the
+  kent_eisenberg.py. p_CO2 = H * c_CO2 * gamma*_CO2 with c_CO2 the
   molecular-CO2 molarity and gamma*_CO2 the unsymmetric activity
   coefficient (-> 1 at infinite dilution in water, where Henry's law is
   defined).
@@ -122,7 +122,7 @@ STRUCTURE with the published structural constants and defaults above, and
 its accuracy is asserted -- not claimed -- against published CO2 loading
 anchors (tests): the NeqSim CO2 regression anchors for 50 wt% MDEA at
 313.15 K (p_CO2 ~ 0.0093 bara at loading 0.10, ~0.229 bara at 0.40, the
-anchors mdea_equilibrium.py carries) and NeqSim's documented MEA
+anchors kent_eisenberg.py carries) and NeqSim's documented MEA
 engineering band (30 wt%, 313.15 K, loading 0.5: p_CO2 within 5-30 kPa).
 When publisher access to the two journal tables exists, swapping their
 tau values into ``_PAIR_TAU_OVERRIDES`` is a data change, not a model
@@ -158,7 +158,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 
-from ngdesign.units.mdea_equilibrium import _brent_root
+from ngdesign.amine.roots import brent_root
 
 __all__ = [
     "AMINES",
@@ -306,7 +306,7 @@ def _reject_h2s(h2s_loading: float, p_h2s: float) -> None:
         )
 
 
-# --- Equilibrium constants (identical expressions to mdea_equilibrium.py) ---
+# --- Equilibrium constants (identical expressions to kent_eisenberg.py) ---
 
 
 def _co2_k1(T: float) -> float:
@@ -776,7 +776,7 @@ def _carbon_balance_at_h(
         co3 = k2e * hco3 / h
         amine = M_A / (1.0 + h / kame)
         return co2, hco3, co3, amine, 0.0
-    hco3 = _brent_root(carbon_residual, 0.0, M_co2)
+    hco3 = brent_root(carbon_residual, 0.0, M_co2)
     co2 = hco3 * h_over_k1e
     co3 = hco3 * k2e_over_h
     amine = M_A / (1.0 + h / kame + hco3 / kce)
@@ -813,7 +813,7 @@ def _speciate_from_loading(
     fn: Callable[[float], float] = partial(
         _charge_residual_ln_h, T=T, M_A=M_A, M_co2=M_co2, gamma=gamma, chem=chem
     )
-    ln_h = _brent_root(fn, _LN_H_LO, _LN_H_HI)
+    ln_h = brent_root(fn, _LN_H_LO, _LN_H_HI)
     h = math.exp(ln_h)
     k1e, k2e, kwe, kame = _activity_factors(gamma, T, chem)
     kce = _kc_activity(gamma, T, chem)
@@ -926,7 +926,7 @@ def _water_molarity_from_amine(chem: EnrtlChemistry, amine_molarity_mol_m3: floa
     return water_volume * 997.0 / _M_WATER_KG_MOL  # rho_water ~ 997 kg/m3 (databank, 298 K)
 
 
-# --- Public API (mirrors mdea_equilibrium so units swap models cleanly) ---
+# --- Public API (mirrors kent_eisenberg so units swap models cleanly) ---
 
 
 def equilibrium_partial_pressures(
@@ -988,7 +988,7 @@ def equilibrium_loadings(
         spec = _solve_speciation(T, M_A, co2_loading, kg_water_per_l, chem)
         return spec.p_co2 - p_co2
 
-    loading = _brent_root(residual, 0.0, _MAX_LOADING)
+    loading = brent_root(residual, 0.0, _MAX_LOADING)
     return loading, 0.0
 
 

@@ -20,9 +20,6 @@ layers =
     ngdesign.thermo
     ngdesign.contracts | ngdesign.registry | ngdesign.data
 ignore_imports =
-    # P0-02: amine must not import units (shared equilibrium code moves into amine/)
-    ngdesign.amine.equilibrium -> ngdesign.units.mdea_equilibrium
-    ngdesign.amine.enrtl -> ngdesign.units.mdea_equilibrium
     # P0-03: pipeline lifted out of cli
     ngdesign.export -> ngdesign.cli
     ngdesign.api.routes_plot -> ngdesign.cli

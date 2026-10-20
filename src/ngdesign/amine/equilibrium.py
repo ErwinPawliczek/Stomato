@@ -15,10 +15,10 @@ from collections.abc import Mapping
 from typing import Any
 
 from ngdesign.amine import enrtl
-from ngdesign.units.mdea_equilibrium import (
+from ngdesign.amine.kent_eisenberg import (
     equilibrium_loadings as _ke_loadings,
 )
-from ngdesign.units.mdea_equilibrium import (
+from ngdesign.amine.kent_eisenberg import (
     equilibrium_partial_pressures as _ke_pressures,
 )
 
