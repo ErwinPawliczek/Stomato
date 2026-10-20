@@ -50,6 +50,8 @@ xfail_strict = false
 
 [tool.ruff]
 line-length = 110
+# Prose with illustrative code blocks; not formatted.
+exclude = ["specs", "docs"]
 target-version = "py312"
 
 [tool.ruff.lint]
