@@ -1,23 +1,23 @@
 """B-07 addendum acceptance: export values match the live CLI/API surfaces
-exactly — cells are compared against direct ``cli._cell`` calls and the
+exactly — cells are compared against direct ``export._cell`` calls and the
 ``Datasheet`` contract values, never recorded fixtures."""
 
 from __future__ import annotations
 
 import pytest
 
-from ngdesign import cli, export
+from ngdesign import cli, export, pipeline
 from ngdesign.contracts import SolvedFlowsheet
 
 
 def _solved() -> SolvedFlowsheet:
     """One full CLI-stage solve: solver + sizers, the state the demo exports."""
     solved = cli._solve_slice()
-    return cli._run_sizers(solved)
+    return pipeline.run_sizers(solved)
 
 
 def test_stream_rows_match_cli_cell() -> None:
-    """Every exported stream cell is byte-equal to cli._cell for the same state."""
+    """Every exported stream cell is byte-equal to export._cell for the same state."""
     solved = _solved()
     rows = export.stream_rows(solved)
     assert len(rows) == len(solved.flowsheet.streams)
@@ -26,9 +26,9 @@ def test_stream_rows_match_cli_cell() -> None:
         assert row == [
             spec.id,
             spec.service,
-            cli._port(spec.source),
-            cli._port(spec.target),
-            *(cli._cell(state, c).replace("&mdash;", "") for c in ("T", "P", "F", "W", "VF")),
+            export._port(spec.source),
+            export._port(spec.target),
+            *(export._cell(state, c).replace("&mdash;", "") for c in ("T", "P", "F", "W", "VF")),
         ]
 
 

@@ -54,7 +54,7 @@ _HC_Z = {"C3": 0.05, "iC4": 0.04, "nC4": 0.06, "iC5": 0.04, "nC5": 0.05, "C6+": 
 _RICH_TEG_Z = {"TEG": 0.75, "H2O": 0.25}
 
 
-_REAL_SIZER_LOOKUP = builder._sizer_for
+_REAL_SIZER_LOOKUP = builder.sizer_for
 
 
 @pytest.fixture(autouse=True)
@@ -64,7 +64,7 @@ def _no_registered_sizers(monkeypatch: pytest.MonkeyPatch) -> None:
     Sibling sizer plugins (S-31/S-32) register on main and would otherwise
     take precedence over the deterministic fixture expectations here; tests
     that need the real plugins (or their own fake) override this stub."""
-    monkeypatch.setattr(builder, "_sizer_for", lambda kind: None)
+    monkeypatch.setattr(builder, "sizer_for", lambda kind: None)
 
 
 @pytest.fixture()
@@ -74,7 +74,7 @@ def _real_sizers(monkeypatch: pytest.MonkeyPatch) -> None:
     The composition tests are integration tests: the vessels' psv nozzles are
     owned by their sizer datasheets (S-14) and psv_sizing sizes the relief
     from them, so the rules cannot reach a clean check on the no-sizer path."""
-    monkeypatch.setattr(builder, "_sizer_for", _REAL_SIZER_LOOKUP)
+    monkeypatch.setattr(builder, "sizer_for", _REAL_SIZER_LOOKUP)
 
 
 def _renorm(z: dict[str, float]) -> dict[str, float]:
@@ -408,7 +408,7 @@ class _StubVesselSizer:
 
 def test_datasheet_nozzles_adopted_and_conditions_used(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        builder, "_sizer_for", lambda kind: _StubVesselSizer() if kind == "separator_3phase" else None
+        builder, "sizer_for", lambda kind: _StubVesselSizer() if kind == "separator_3phase" else None
     )
     pid = _built()
     v101 = next(e for e in pid.equipment if e.tag == "V-101")
@@ -443,7 +443,7 @@ def test_prepopulated_datasheet_wins(monkeypatch: pytest.MonkeyPatch) -> None:
     )
     monkeypatch.setattr(
         builder,
-        "_sizer_for",
+        "sizer_for",
         lambda kind: fail if kind == "separator_3phase" else None,
     )
     pid = DefaultPidBuilder().build(solved)
