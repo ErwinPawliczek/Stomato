@@ -69,7 +69,7 @@ All frontend work follows the UI theme in `specs/frontend/F-09-octagon-ui-theme.
 | P0-01 | Units own their example feeds (break units → flowsheets) | none | merged #82 |
 | P0-02 | Amine package owns its equilibrium code (break amine → units) | none | merged #83 |
 | P0-03 | One deliverables pipeline module (nothing imports cli) | none | merged #84 |
-| P0-04 | One cubic-EOS base; PR/SRK/PR78 become registrations | none | open |
+| P0-04 | One cubic-EOS base; PR/SRK/PR78 become registrations | none | merged #86 |
 | P0-05 | Engineering layer de-duplication | none | open |
 | P0-06 | Benchmark baseline (flash count + wall time) in CI | none | open |
 
