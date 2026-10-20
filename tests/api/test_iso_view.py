@@ -14,10 +14,10 @@ from urllib.parse import quote
 import pytest
 from fastapi.testclient import TestClient
 
-from ngdesign import cli, registry
+from ngdesign import cli, pipeline, registry
 from ngdesign.api.app import app
 from ngdesign.api.routes_iso import _iso_placements
-from ngdesign.cli import _apply_rules, _iso_stem, _rule_set, _run_sizers, _solve_slice
+from ngdesign.cli import _iso_stem, _solve_slice
 from ngdesign.contracts import PID, PipingNetwork, RoutedLine
 from ngdesign.flowsheets.samples import sample_pid, sample_routed_line
 
@@ -38,9 +38,9 @@ def _u(part: str) -> str:
 
 def _routed_locally() -> tuple[PID, PipingNetwork]:
     """The exact chain the endpoints serve, computed locally as the oracle."""
-    solved = _run_sizers(_solve_slice())
+    solved = pipeline.run_sizers(_solve_slice())
     pid = registry.create("pid_builder", "default").build(solved)
-    pid = _apply_rules(pid, _rule_set(solved))
+    pid = pipeline.apply_rules(pid, pipeline.rule_set(solved, k_gas=pipeline.DEFAULT_K_GAS))
     return pid, registry.create("router", "orthogonal").route(pid, {})
 
 

@@ -2,10 +2,11 @@
 
 Serves the S-19 fabrication isometric per routed line, exactly the S-35 CLI
 chain at the iso stage: solve -> sizers -> P&ID builder -> every registered
-pid_rule to a fixed point -> S-21 routing (with the project's ``layout.plot``
-placements) -> ``registry.create("iso_renderer", "svg").render(line, pid)``
-for each routed line. With an empty ``layout.iso`` every served ``.svg`` is
-byte-identical to the CLI demo's ``out/iso_NN_<line>.svg``.
+pid_rule to a fixed point (``pipeline.build_pid``) -> S-21 routing
+(``pipeline.route``, with the project's ``layout.plot`` placements) ->
+``registry.create("iso_renderer", "svg").render(line, pid)`` for each routed
+line. With an empty ``layout.iso`` every served ``.svg`` is byte-identical to
+the CLI demo's ``out/iso_NN_<line>.svg``.
 
 ``layout.iso`` placement overrides are 2D screen-space shifts (dx, dy)
 applied to a tagged SVG group after projection — the draft's recommended
@@ -22,7 +23,7 @@ from typing import Any
 
 from fastapi import APIRouter, HTTPException, Response
 
-from ngdesign import registry
+from ngdesign import pipeline, registry
 from ngdesign.contracts import PID, XY, IsoSheet, PipingNetwork, RoutedLine
 
 router = APIRouter()
@@ -34,27 +35,6 @@ _SVG: dict[int | str, dict[str, Any]] = {200: {"content": {"image/svg+xml": {}}}
 _iso_placements: dict[str, XY] = {}
 
 
-def _routed() -> tuple[PID, PipingNetwork]:
-    """The S-35 chain through routing: solve -> sizers -> builder -> rules -> S-21."""
-    # Late imports: app.py owns the current project and registers this router,
-    # so a module-level import would be circular (same pattern as routes_solve).
-    from ngdesign.api.app import _project
-    from ngdesign.api.routes_solve import solve
-    from ngdesign.cli import _apply_rules, _rule_set, _run_sizers
-
-    project = _project()
-    # Sizers mutate the flowsheet with datasheets: run them on a copy so the
-    # cached solve result (spec B-02) stays byte-identical to a bare solve.
-    solved = _run_sizers(solve().model_copy(deep=True))
-    pid = registry.create("pid_builder", "default").build(solved)
-    pid = _apply_rules(pid, _rule_set(solved))
-    # Placements for tags that left the P&ID are ignored, like layout.pfd/pid.
-    tags = {eq.tag for eq in pid.equipment}
-    layout = {tag: pos for tag, pos in project.layout.plot.items() if tag in tags}
-    net: PipingNetwork = registry.create("router", "orthogonal").route(pid, layout)
-    return pid, net
-
-
 def _find_line(net: PipingNetwork, line_number: str) -> RoutedLine:
     line = next((ln for ln in net.lines if ln.line_number == line_number), None)
     if line is None:
@@ -62,16 +42,36 @@ def _find_line(net: PipingNetwork, line_number: str) -> RoutedLine:
     return line
 
 
+def _routed_for(project: Any) -> tuple[PID, PipingNetwork]:
+    """Build and route the current project's P&ID through pipeline (P0-03)."""
+    from ngdesign.api.routes_solve import solve
+
+    # Sizers mutate the flowsheet with datasheets: build on a copy so the
+    # cached solve result (spec B-02) stays byte-identical to a bare solve.
+    pid = pipeline.build_pid(solve().model_copy(deep=True), k_gas=pipeline.DEFAULT_K_GAS)
+    # Placements for tags that left the P&ID are ignored, like layout.pfd/pid.
+    tags = {eq.tag for eq in pid.equipment}
+    layout = {tag: pos for tag, pos in project.layout.plot.items() if tag in tags}
+    return pid, pipeline.route(pid, layout)
+
+
 @router.get("/api/views/iso")
 def iso_lines() -> list[str]:
     """Routed line numbers available for isometric views (empty when none)."""
-    return [line.line_number for line in _routed()[1].lines]
+    # Late import: app.py owns the current project and registers this router,
+    # so a module-level import would be circular (same pattern as routes_solve).
+    from ngdesign.api.app import _project
+
+    _, net = _routed_for(_project())
+    return [line.line_number for line in net.lines]
 
 
 @router.get("/api/views/iso/{line_number}.svg", response_class=Response, responses=_SVG)
 def iso_svg(line_number: str) -> Response:
     """Fabrication isometric for one routed line, layout.iso applied."""
-    pid, net = _routed()
+    from ngdesign.api.app import _project
+
+    pid, net = _routed_for(_project())
     line = _find_line(net, line_number)
     placements = {key: (pos.x, pos.y) for key, pos in _iso_placements.items()}
     sheet: IsoSheet = registry.create("iso_renderer", "svg").render(line, pid, placements=placements)
@@ -81,7 +81,9 @@ def iso_svg(line_number: str) -> Response:
 @router.get("/api/views/iso/{line_number}.json", response_model=IsoSheet)
 def iso_sheet(line_number: str) -> IsoSheet:
     """IsoSheet for one routed line: title block, BOM, cut list, totals."""
-    pid, net = _routed()
+    from ngdesign.api.app import _project
+
+    pid, net = _routed_for(_project())
     sheet: IsoSheet = registry.create("iso_renderer", "svg").render(_find_line(net, line_number), pid)
     return sheet
 
