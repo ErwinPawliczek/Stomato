@@ -16,7 +16,6 @@ from ngdesign.contracts import (
     InlineItem,
     InlineKind,
     LineEnd,
-    Nozzle,
     PidEquipment,
     PidLine,
     RuleViolation,
@@ -24,6 +23,7 @@ from ngdesign.contracts import (
     ValveType,
 )
 from ngdesign.data import pipe_classes
+from ngdesign.pid_rules._common import psv_nozzle
 from ngdesign.registry import register
 
 RULE_NAME = "vessel_psv"
@@ -41,10 +41,6 @@ _PRESSURE_VESSEL_KINDS = frozenset(
         "ko_drum",
     }
 )
-
-
-def _psv_nozzle(eq: PidEquipment) -> Nozzle | None:
-    return next((n for n in eq.nozzles if n.service == "psv"), None)
 
 
 def _inlet_line(pid: PID, eq: PidEquipment) -> PidLine | None:
@@ -95,7 +91,7 @@ class VesselPsv:
         for eq in pid.equipment:
             if eq.kind not in _PRESSURE_VESSEL_KINDS:
                 continue
-            nozzle = _psv_nozzle(eq)
+            nozzle = psv_nozzle(eq)
             if nozzle is None:
                 violations.append(
                     RuleViolation(
@@ -119,7 +115,7 @@ class VesselPsv:
         for eq in fixed.equipment:
             if eq.kind not in _PRESSURE_VESSEL_KINDS:
                 continue
-            nozzle = _psv_nozzle(eq)
+            nozzle = psv_nozzle(eq)
             if nozzle is None or _relieved(fixed, eq, nozzle.id):
                 continue
             inlet = _inlet_line(fixed, eq)

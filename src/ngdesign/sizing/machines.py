@@ -24,9 +24,8 @@ Compressor (``compressor``):
 Exchangers (``air_cooler``, ``shell_tube``):
     Area = Q / (U * F * LMTD), F = 1.0 (counter-current, no correction).
     U defaults by process service: 300 W/m2K gas cooling, 600 W/m2K liquid
-    (VERIFY). LMTD is the counter-current logarithmic mean (S-04 formula;
-    the ``lmtd_counter`` correlation itself is not merged yet, so the formula
-    lives here with the same definition and will stay consistent with it).
+    (VERIFY). LMTD is the counter-current logarithmic mean from the registered
+    ``lmtd_counter`` correlation (S-04, ``ngdesign.sizing.lmtd``).
     Air cooler utility: ambient air at 35 C in with a 15 K rise
     (308.15 -> 323.15 K). Shell-and-tube utility temperatures come from
     params (``utility_T_in``/``utility_T_out``) -- the utility is a design
@@ -61,8 +60,15 @@ from ngdesign.contracts.common import Direction, Nozzle, Vec3
 from ngdesign.contracts.flowsheet import Datasheet, SolvedFlowsheet, StreamSpec
 from ngdesign.contracts.stream import StreamState
 from ngdesign.registry import register
-from ngdesign.sizing.flange_rating import min_flange_class
-from ngdesign.sizing.line_size import line_size
+from ngdesign.sizing._nozzles import (
+    connected,
+    min_flange_class,
+    mixture_density,
+    nozzle,
+    nozzle_nps_in,
+)
+from ngdesign.sizing.lmtd import lmtd_counter
+from ngdesign.sizing.pump_power import npsh_available
 
 __all__ = [
     "G_STD",
@@ -117,8 +123,6 @@ STANDARD_MOTOR_KW: tuple[float, ...] = (
 VENT_NPS_IN = 2.0
 DRAIN_NPS_IN = 2.0
 
-PA_PER_PSIG = 6894.757293168  # exact psi (lbf/in^2) in Pa
-
 # U defaults [W/m2K] by process service -- VERIFY.
 U_GAS_COOLING = 300.0
 U_LIQUID = 600.0
@@ -129,40 +133,6 @@ AIR_T_OUT_K = 323.15
 
 # Max pressure ratio per compressor stage (spec method).
 MAX_STAGE_RATIO = 3.5
-
-
-def npsh_available(
-    P_suction_Pa: float, P_vapor_Pa: float, rho: float, static_head_m: float, friction_head_m: float
-) -> float:
-    """Net positive suction head [m] (S-08 definition, not yet merged as a plugin).
-
-    NPSHa = (P_suction - P_vapor) / (rho * g) + z_static - h_friction, g = 9.80665.
-    """
-    if P_suction_Pa <= 0:
-        raise ValueError(f"P_suction_Pa must be positive, got {P_suction_Pa}")
-    if P_vapor_Pa < 0:
-        raise ValueError(f"P_vapor_Pa must be non-negative, got {P_vapor_Pa}")
-    if rho <= 0:
-        raise ValueError(f"rho must be positive, got {rho}")
-    if friction_head_m < 0:
-        raise ValueError(f"friction_head_m must be non-negative, got {friction_head_m}")
-    return (P_suction_Pa - P_vapor_Pa) / (rho * G_STD) + static_head_m - friction_head_m
-
-
-def lmtd_counter(Th_in: float, Th_out: float, Tc_in: float, Tc_out: float) -> float:
-    """Counter-current LMTD [K] (S-04 formula, not yet merged as a plugin).
-
-    dT1 = Th_in - Tc_out, dT2 = Th_out - Tc_in;
-    LMTD = (dT1 - dT2) / ln(dT1 / dT2); dT1 == dT2 (within 1e-9) returns dT1.
-    Temperature cross (dT <= 0) raises ValueError.
-    """
-    dT1 = Th_in - Tc_out
-    dT2 = Th_out - Tc_in
-    if dT1 <= 0 or dT2 <= 0:
-        raise ValueError(f"temperature cross: dT1={dT1}, dT2={dT2}")
-    if abs(dT1 - dT2) <= 1e-9:
-        return dT1
-    return (dT1 - dT2) / math.log(dT1 / dT2)
 
 
 def exchanger_area(Q_W: float, U_W_m2K: float, lmtd_K: float, F: float = 1.0) -> float:
@@ -201,81 +171,11 @@ def compressor_stages(pressure_ratio: float, max_per_stage: float = MAX_STAGE_RA
     return math.ceil(math.log(pressure_ratio) / math.log(max_per_stage) - 1e-9)
 
 
-def _volumetric_flow(state: StreamState) -> float:
-    """Actual volumetric flow [m3/s], all phases summed."""
-    if not state.phases:
-        raise ValueError("stream state has no phases (flash it with thermo first)")
-    q = 0.0
-    for phase in state.phases:
-        mass = phase.mole_fraction * state.molar_flow * phase.molecular_weight / 1000.0
-        if phase.density <= 0:
-            raise ValueError(f"phase {phase.kind} has non-positive density {phase.density}")
-        q += mass / phase.density
-    return q
-
-
-def _mixture_density(state: StreamState) -> float:
-    q = _volumetric_flow(state)
-    if q <= 0:
-        raise ValueError("stream state has zero volumetric flow")
-    return state.mass_flow / q
-
-
-def _connected(solved: SolvedFlowsheet, tag: str) -> dict[str, tuple[StreamSpec, StreamState]]:
-    """Port name -> (stream spec, solved state) for every port of the unit."""
-    out: dict[str, tuple[StreamSpec, StreamState]] = {}
-    fs = solved.flowsheet
-    for spec in (*fs.inlets(tag), *fs.outlets(tag)):
-        ref = spec.target if (spec.target is not None and spec.target.unit == tag) else spec.source
-        if ref is None:  # pragma: no cover - Flowsheet forbids streams with both ends None
-            raise ValueError(f"stream {spec.id} has no end on unit {tag}")
-        out[ref.port] = (spec, solved.streams[spec.id])
-    return out
-
-
-def _nozzle_nps_in(service: str, state: StreamState, role: str) -> float:
-    """Nozzle NPS [in] from the S-20 line sizing correlation."""
-    return float(
-        line_size(
-            service=service,
-            flow_m3_s=_volumetric_flow(state),
-            rho_kg_m3=_mixture_density(state),
-            role=role,
-        )["nps_in"]
-    )
-
-
 def _design_conditions(ports: dict[str, tuple[StreamSpec, StreamState]]) -> tuple[float, float]:
     """(P_d, T_d): most severe connected stream with the S-31 design margins."""
     p_op = max(state.P for _, state in ports.values())
     t_op = max(state.T for _, state in ports.values())
     return max(1.1 * p_op, p_op + 170e3), t_op + 25.0
-
-
-def _min_flange_class(design_p_pa: float, design_t_k: float, material_group: str) -> int:
-    psig = design_p_pa / PA_PER_PSIG
-    temp_f = (design_t_k - 273.15) * 9.0 / 5.0 + 32.0
-    return min_flange_class(material_group, psig, temp_f)
-
-
-def _nozzle(
-    n: int,
-    service: str,
-    port: str | None,
-    nps_in: float,
-    position: Vec3,
-    facing: Direction,
-    flange_class: int,
-) -> Nozzle:
-    return Nozzle(
-        id=f"N{n}",
-        service=service,
-        port=port,
-        nps_in=nps_in,
-        flange_class=flange_class,
-        position_mm=Vec3(x=position.x * 1000.0, y=position.y * 1000.0, z=position.z * 1000.0),
-        facing=facing,
-    )
 
 
 class _MachineSizerBase:
@@ -304,13 +204,13 @@ class _MachineSizerBase:
         unit = solved.flowsheet.unit(tag)
         if unit.kind != self.unit_kind:
             raise ValueError(f"sizer {self.unit_kind} got unit {tag} of kind {unit.kind}")
-        ports = _connected(solved, tag)
+        ports = connected(solved, tag)
         if not ports:
             raise ValueError(f"unit {tag} has no connected streams to size from")
 
         p_d, t_d = _design_conditions(ports)
         material_group = str(params.get("material_group", "1.1"))  # VERIFY
-        flange_class = _min_flange_class(p_d, t_d, material_group)
+        flange_class = min_flange_class(p_d, t_d, material_group)
         dimensions = self._dimensions(tag, solved, ports, params)
 
         return Datasheet(
@@ -346,8 +246,8 @@ def _machine_nozzles(
             raise ValueError(f"machine {tag} is missing its {port} stream")
         spec, state = ports[port]
         nozzles.append(
-            _nozzle(
-                n, spec.service, port, _nozzle_nps_in(spec.service, state, role), spot, facing, flange_class
+            nozzle(
+                n, spec.service, port, nozzle_nps_in(spec.service, state, role), spot, facing, flange_class
             )
         )
     return nozzles
@@ -375,7 +275,7 @@ class PumpSizer(_MachineSizerBase):
         npsh = npsh_available(
             P_suction_Pa=suction.P,
             P_vapor_Pa=float(params.get("vapor_Pa", 0.0)),  # VERIFY: supply when known
-            rho=_mixture_density(suction),
+            rho=mixture_density(suction),
             static_head_m=float(params.get("static_head_m", 0.0)),  # VERIFY
             friction_head_m=float(params.get("friction_head_m", 0.0)),  # VERIFY
         )
@@ -485,11 +385,11 @@ class _ExchangerSizerBase(_MachineSizerBase):
             spec, state = ports[port]
             n += 1
             nozzles.append(
-                _nozzle(
+                nozzle(
                     n,
                     spec.service,
                     port,
-                    _nozzle_nps_in(spec.service, state, "line"),
+                    nozzle_nps_in(spec.service, state, "line"),
                     spot,
                     facing,
                     flange_class,
@@ -501,7 +401,7 @@ class _ExchangerSizerBase(_MachineSizerBase):
         ):
             n += 1
             nozzles.append(
-                _nozzle(
+                nozzle(
                     n,
                     service,
                     None,

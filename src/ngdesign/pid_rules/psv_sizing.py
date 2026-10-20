@@ -36,7 +36,6 @@ from ngdesign.contracts import (
     PID,
     InlineItem,
     InlineKind,
-    Nozzle,
     PhaseKind,
     PidEquipment,
     PidLine,
@@ -45,6 +44,7 @@ from ngdesign.contracts import (
     Valve,
     ValveType,
 )
+from ngdesign.pid_rules._common import psv_nozzle
 from ngdesign.pid_rules.vessel_psv import _PRESSURE_VESSEL_KINDS
 from ngdesign.registry import register
 from ngdesign.sizing.psv_gas import api526_orifice
@@ -234,11 +234,6 @@ def relief_basis(solved: SolvedFlowsheet, k_gas: float) -> dict[str, VesselRelie
     return basis
 
 
-def _psv_nozzle(eq: PidEquipment) -> Nozzle | None:
-    """The vessel's psv nozzle, or None (nozzles are owned by the sizers)."""
-    return next((n for n in eq.nozzles if n.service == "psv"), None)
-
-
 def _relief_valves(pid: PID, eq: PidEquipment, nozzle_id: str) -> list[tuple[PidLine, InlineItem, Valve]]:
     """The PSV valves sitting on lines leaving the vessel's psv nozzle."""
     out: list[tuple[PidLine, InlineItem, Valve]] = []
@@ -284,7 +279,7 @@ class PsvSizing:
         for eq in pid.equipment:
             if eq.kind not in _PRESSURE_VESSEL_KINDS:
                 continue
-            nozzle = _psv_nozzle(eq)
+            nozzle = psv_nozzle(eq)
             if nozzle is None:
                 continue  # nozzles are owned by the sizers; vessel_psv reports the gap
             reliefs = _relief_valves(pid, eq, nozzle.id)
@@ -315,7 +310,7 @@ class PsvSizing:
         for eq in fixed.equipment:
             if eq.kind not in _PRESSURE_VESSEL_KINDS:
                 continue
-            nozzle = _psv_nozzle(eq)
+            nozzle = psv_nozzle(eq)
             if nozzle is None:
                 continue
             for _ln, item, valve in _relief_valves(fixed, eq, nozzle.id):

@@ -25,10 +25,10 @@ from ngdesign.contracts import (
     SolvedFlowsheet,
     StreamState,
     UnitResult,
-    UnitSpec,
 )
 from ngdesign.registry import register
 from ngdesign.render import symbols as sym
+from ngdesign.render._graph import topological_layers
 
 MARGIN = 40.0
 H_GAP = 80.0
@@ -53,33 +53,6 @@ class _Placement:
     h: float
 
 
-def _topological_layers(units: list[UnitSpec], flowsheet: Flowsheet) -> dict[str, int]:
-    tags = [u.tag for u in units]
-    succ: dict[str, set[str]] = {t: set() for t in tags}
-    indeg: dict[str, int] = {t: 0 for t in tags}
-    for s in flowsheet.streams:
-        if s.source and s.target and s.source.unit != s.target.unit:
-            if s.target.unit not in succ[s.source.unit]:
-                succ[s.source.unit].add(s.target.unit)
-                indeg[s.target.unit] += 1
-    layer = {t: 0 for t in tags}
-    queue = sorted(t for t in tags if indeg[t] == 0)
-    done: set[str] = set()
-    while queue:
-        n = queue.pop(0)
-        done.add(n)
-        for m in sorted(succ[n]):
-            layer[m] = max(layer[m], layer[n] + 1)
-            indeg[m] -= 1
-            if indeg[m] == 0:
-                queue.append(m)
-    max_layer = max(layer.values(), default=0)
-    for t in tags:  # cycles park after the last layer
-        if t not in done:
-            layer[t] = max_layer + 1
-    return layer
-
-
 def _unit_size(kind: str) -> tuple[float, float]:
     k = kind.lower()
     if "pump" in k:
@@ -94,7 +67,15 @@ def _unit_size(kind: str) -> tuple[float, float]:
 
 
 def _layout(flowsheet: Flowsheet, overrides: dict[str, XY] | None = None) -> dict[str, _Placement]:
-    layers = _topological_layers(flowsheet.units, flowsheet)
+    # Units left to right by topological order of the Flowsheet (shared layering
+    # in ngdesign.render._graph).
+    tags = [u.tag for u in flowsheet.units]
+    edges = [
+        (s.source.unit, s.target.unit)
+        for s in flowsheet.streams
+        if s.source and s.target and s.source.unit != s.target.unit
+    ]
+    layers = topological_layers(tags, edges)
     sizes = {u.tag: _unit_size(u.kind) for u in flowsheet.units}
     cell_w = max(sizes.values(), key=lambda s: s[0])[0] + H_GAP
     cell_h = max(sizes.values(), key=lambda s: s[1])[1] + V_GAP
