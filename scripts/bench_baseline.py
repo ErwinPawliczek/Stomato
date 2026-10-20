@@ -10,7 +10,10 @@ A ``CountingThermo`` proxy wraps any registered ``thermo`` plugin: it counts
 ``flash_pt/ph/ps`` calls and accumulates wall time spent inside them
 (``time.perf_counter`` around each delegated call). It satisfies
 ``contracts.plugins.Thermo`` (runtime-checkable) and is transparent: the
-``StreamState`` it returns is the wrapped plugin's own object, untouched.
+``StreamState`` it returns is the wrapped plugin's own object, untouched. The
+contract-v2 methods (spec P1-01) delegate untouched and are deliberately not
+counted — the baseline measures flash counts, and the per-instance PT/phase_props
+cache (P1-01) sits inside the plugin, below the proxy, where it belongs.
 
 Cases (spec P0-06; flowsheet builders reused from ``ngdesign.flowsheets`` /
 ``scripts.bench_cases``, the standalone column reuses its own ``example_case``):
@@ -49,7 +52,8 @@ from typing import Any, cast
 from ngdesign import registry
 from ngdesign.contracts.flowsheet import SolvedFlowsheet
 from ngdesign.contracts.plugins import Thermo, UnitModel
-from ngdesign.contracts.stream import StreamState
+from ngdesign.contracts.stream import PhaseKind, StreamState
+from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
 from ngdesign.flowsheets import amine_loop, mea_amine_loop, recycle_bench
 from ngdesign.flowsheets import slice as slice_fs
 
@@ -67,7 +71,10 @@ class CountingThermo:
     """Transparent ``Thermo`` wrapper that counts flash calls and their wall time.
 
     Delegates every flash to the wrapped plugin and returns its ``StreamState``
-    unchanged, so results are bit-identical to an unwrapped solve.
+    unchanged, so results are bit-identical to an unwrapped solve. Flash
+    counters stay as P0-06 shipped them; the new Thermo-protocol v2 methods
+    (spec P1-01) delegate without counting — the baseline tracks flashes, and
+    the package's per-instance cache sits below this proxy.
     """
 
     def __init__(self, inner: Thermo) -> None:
@@ -100,6 +107,38 @@ class CountingThermo:
             return self._inner.flash_ps(z, P, S, molar_flow)
         finally:
             self.flash_wall_s += time.perf_counter() - start
+
+    # -- Thermo contract v2 (spec P1-01): delegate untouched, do not count -------
+
+    def flash_tvf(self, z: dict[str, float], T: float, vf: float, molar_flow: float) -> StreamState:
+        return self._inner.flash_tvf(z, T, vf, molar_flow)
+
+    def flash_pvf(self, z: dict[str, float], P: float, vf: float, molar_flow: float) -> StreamState:
+        return self._inner.flash_pvf(z, P, vf, molar_flow)
+
+    def bubble_point(
+        self, z: dict[str, float], *, T: float | None = None, P: float | None = None
+    ) -> SaturationPoint:
+        return self._inner.bubble_point(z, T=T, P=P)
+
+    def dew_point(
+        self, z: dict[str, float], *, T: float | None = None, P: float | None = None
+    ) -> SaturationPoint:
+        return self._inner.dew_point(z, T=T, P=P)
+
+    def k_values(self, z: dict[str, float], T: float, P: float) -> dict[str, float] | None:
+        return self._inner.k_values(z, T, P)
+
+    def phase_props(self, composition: dict[str, float], T: float, P: float, kind: PhaseKind) -> PhaseProps:
+        return self._inner.phase_props(composition, T, P, kind)
+
+    def derivatives(
+        self, composition: dict[str, float], T: float, P: float, kind: PhaseKind
+    ) -> PropertyDerivatives:
+        return self._inner.derivatives(composition, T, P, kind)
+
+    def pure_psat(self, cid: str, T: float) -> float | None:
+        return self._inner.pure_psat(cid, T)
 
 
 # --------------------------------------------------------------------------- cases

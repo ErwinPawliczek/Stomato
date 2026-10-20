@@ -57,3 +57,38 @@ def test_slice_inlet_three_phase(thermo: Thermo) -> None:
     s = thermo.flash_pt(INLET_COMPOSITION, 293.15, 3.447e6, 1.0)
     kinds = sorted(p.kind.value for p in s.phases)
     assert kinds == ["aqueous", "hc_liquid", "vapor"], kinds
+
+
+# --- spec P1-01 additions: saturation vs CoolProp --------------------------------
+
+PURE_SAT = [
+    ("C1", "Methane", (120.0, 140.0, 160.0)),
+    ("C2", "Ethane", (200.0, 250.0, 280.0)),
+    ("C3", "n-Propane", (250.0, 300.0, 320.0)),
+    ("H2O", "Water", (450.0, 480.0, 500.0)),
+]
+
+
+@pytest.mark.parametrize(("comp", "cp_name", "ts"), PURE_SAT)
+def test_pure_bubble_vs_coolprop(thermo: Thermo, comp: str, cp_name: str, ts: tuple[float, ...]) -> None:
+    for T in ts:
+        point = thermo.bubble_point({comp: 1.0}, T=T)
+        ref = PropsSI("P", "T", T, "Q", 0, cp_name)
+        assert math.isclose(point.P, ref, rel_tol=0.02), f"{comp} {T}K: PR {point.P} vs ref {ref}"
+
+
+@pytest.mark.parametrize(("comp", "cp_name", "ts"), PURE_SAT)
+def test_pure_dew_vs_coolprop(thermo: Thermo, comp: str, cp_name: str, ts: tuple[float, ...]) -> None:
+    for T in ts:
+        point = thermo.dew_point({comp: 1.0}, T=T)
+        ref = PropsSI("P", "T", T, "Q", 1, cp_name)
+        assert math.isclose(point.P, ref, rel_tol=0.02), f"{comp} {T}K: PR {point.P} vs ref {ref}"
+
+
+@pytest.mark.parametrize(("comp", "ts"), [(c, ts) for c, _cp, ts in PURE_SAT])
+def test_pure_dew_equals_bubble(thermo: Thermo, comp: str, ts: tuple[float, ...]) -> None:
+    """A pure fluid has one saturation pressure; both solvers converge on the same jump."""
+    for T in ts:
+        bubble = thermo.bubble_point({comp: 1.0}, T=T)
+        dew = thermo.dew_point({comp: 1.0}, T=T)
+        assert math.isclose(dew.P, bubble.P, rel_tol=1e-6), f"{comp} {T}K"

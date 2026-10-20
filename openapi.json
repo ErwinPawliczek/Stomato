@@ -518,12 +518,35 @@
             "title": "Composition",
             "type": "object"
           },
+          "cp": {
+            "default": 0.0,
+            "title": "Cp",
+            "type": "number"
+          },
           "density": {
             "title": "Density",
             "type": "number"
           },
+          "enthalpy": {
+            "default": 0.0,
+            "title": "Enthalpy",
+            "type": "number"
+          },
+          "entropy": {
+            "default": 0.0,
+            "title": "Entropy",
+            "type": "number"
+          },
           "kind": {
             "$ref": "#/components/schemas/PhaseKind"
+          },
+          "ln_phi": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "default": {},
+            "title": "Ln Phi",
+            "type": "object"
           },
           "mole_fraction": {
             "title": "Mole Fraction",

@@ -18,7 +18,8 @@ layers =
     ngdesign.units
     ngdesign.amine
     ngdesign.thermo
-    ngdesign.contracts | ngdesign.registry | ngdesign.data
+    ngdesign.contracts | ngdesign.registry
+    ngdesign.data
 
 [importlinter:contract:engineering-independent]
 name = Engineering deliverables never import the simulation engine

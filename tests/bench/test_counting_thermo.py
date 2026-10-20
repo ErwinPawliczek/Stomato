@@ -41,6 +41,26 @@ def test_transparent_same_stream_state(thermo: Thermo) -> None:
     assert wrapped_ps == raw_ps
 
 
+def test_new_methods_delegated_transparently(thermo: Thermo) -> None:
+    """The contract-v2 methods (P1-01) return the wrapped plugin's own answers."""
+    from ngdesign.contracts.stream import PhaseKind
+
+    counting = CountingThermo(thermo)
+    z2 = {"C1": 0.6, "C3": 0.2, "nC5": 0.2}
+
+    assert counting.bubble_point(dict(z2), T=250.0) == thermo.bubble_point(dict(z2), T=250.0)
+    assert counting.k_values(dict(z2), 300.0, 3.0e6) == thermo.k_values(dict(z2), 300.0, 3.0e6)
+    assert counting.pure_psat("C1", 150.0) == thermo.pure_psat("C1", 150.0)
+    assert counting.phase_props(dict(z2), 300.0, 3.0e6, PhaseKind.HC_LIQUID) == thermo.phase_props(
+        dict(z2), 300.0, 3.0e6, PhaseKind.HC_LIQUID
+    )
+    assert counting.derivatives(dict(z2), 300.0, 3.0e6, PhaseKind.VAPOR) == thermo.derivatives(
+        dict(z2), 300.0, 3.0e6, PhaseKind.VAPOR
+    )
+    # the delegates bypass the counters: flash counts unchanged
+    assert counting.flashes_pt == 0 and counting.flashes_ph == 0 and counting.flashes_ps == 0
+
+
 def test_satisfies_thermo_protocol(thermo: Thermo) -> None:
     counting = CountingThermo(thermo)
     assert isinstance(counting, Thermo)
