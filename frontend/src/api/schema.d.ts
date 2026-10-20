@@ -450,6 +450,11 @@ export interface components {
         };
         /** Flowsheet */
         Flowsheet: {
+            /**
+             * Components
+             * @default []
+             */
+            components: string[];
             /** Name */
             name: string;
             /** Streams */

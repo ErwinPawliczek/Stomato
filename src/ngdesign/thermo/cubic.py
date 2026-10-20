@@ -6,7 +6,10 @@ over Caleb Bell's `thermo` library: a FlashVLN flasher with two liquid phases
 wrappers, and a Michelsen-style stability re-check for single-phase results.
 It is parameterised by the `thermo`-library mixture EOS class (``PRMIX``,
 ``SRKMIX``, ``PR78MIX``) and the k_ij source used today — the embedded
-'ChemSep PR' IPDB table, 0 where the table has no pair.
+'ChemSep PR' IPDB table, 0 where the table has no pair. Component ids resolve
+through the open component registry (spec P1-02): constants build in
+:mod:`ngdesign.thermo._state` from the resolved Component records, so any
+curated id, databank CAS/name or registered pseudo-components flash here.
 
 The contract-v2 surface (flashes, saturation, K-values, single-phase
 properties, derivatives, property cache) lives in

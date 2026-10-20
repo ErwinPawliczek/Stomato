@@ -338,6 +338,14 @@
       "Flowsheet": {
         "additionalProperties": false,
         "properties": {
+          "components": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Components",
+            "type": "array"
+          },
           "name": {
             "title": "Name",
             "type": "string"

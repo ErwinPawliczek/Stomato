@@ -65,6 +65,27 @@ class Flowsheet(Model):
     # Registered "thermo" plugin name (expansion spec): resolved against the
     # registry at solve entry; an unknown name fails the solve there.
     thermo: str = "pr"
+    # The flowsheet's component slate (spec P1-02). Open: any id the component
+    # registry resolves. When omitted, a validator derives it from the feed
+    # compositions (sorted, for deterministic tear-vector indexing) so every
+    # existing sample keeps its meaning.
+    components: list[str] = []
+
+    @model_validator(mode="before")
+    @classmethod
+    def _default_components(cls, data: Any) -> Any:
+        """Default the slate to the ids present in the feeds when it is not given."""
+        if isinstance(data, dict) and data.get("components") is None:
+            ids: set[str] = set()
+            for stream in data.get("streams") or []:
+                feed = stream.get("feed") if isinstance(stream, dict) else getattr(stream, "feed", None)
+                composition = (
+                    feed.get("composition") if isinstance(feed, dict) else getattr(feed, "composition", None)
+                )
+                if composition:
+                    ids |= set(composition)
+            data = {**data, "components": sorted(ids)}
+        return data
 
     @model_validator(mode="after")
     def _topology(self) -> Flowsheet:
@@ -75,8 +96,16 @@ class Flowsheet(Model):
         if len(ids) != len(set(ids)):
             raise ValueError("duplicate stream ids")
         known = set(tags)
+        slate = set(self.components)
         used: set[tuple[str, str]] = set()
         for s in self.streams:
+            if s.feed is not None:
+                unknown = set(s.feed.composition) - slate
+                if unknown:
+                    raise ValueError(
+                        f"stream {s.id}: feed components {sorted(unknown)} are not in the "
+                        "flowsheet component slate"
+                    )
             for ref in (s.source, s.target):
                 if ref is None:
                     continue
