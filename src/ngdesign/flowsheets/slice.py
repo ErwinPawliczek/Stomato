@@ -10,24 +10,13 @@ At these conditions PR gives vapor + HC liquid (~1.1 mol%) + free water (~0.2 mo
 from __future__ import annotations
 
 from ngdesign.contracts import FeedSpec, Flowsheet, PortRef, StreamSpec, UnitSpec
+from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 
-INLET_COMPOSITION = {
-    "N2": 0.005,
-    "CO2": 0.015,
-    "C1": 0.848,
-    "C2": 0.062,
-    "C3": 0.032,
-    "iC4": 0.007,
-    "nC4": 0.010,
-    "iC5": 0.004,
-    "nC5": 0.004,
-    "C6+": 0.010,
-    "H2O": 0.003,
-}
+# Explicit re-exports: slice keeps being the import surface for the sample basis.
+__all__ = ["INLET_COMPOSITION", "LEAN_TEG_COMPOSITION", "MMSCFD_TO_MOL_S"]
+
 # 98.7 wt% TEG lean glycol -> mole fractions
 LEAN_TEG_COMPOSITION = {"TEG": 0.9011, "H2O": 0.0989}
-
-MMSCFD_TO_MOL_S = 1e6 / 379.49 * 453.59237 / 86400  # lbmol at 60F,14.696 psia -> mol/s
 
 
 def build() -> Flowsheet:

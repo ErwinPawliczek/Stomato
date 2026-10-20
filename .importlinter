@@ -20,13 +20,6 @@ layers =
     ngdesign.thermo
     ngdesign.contracts | ngdesign.registry | ngdesign.data
 ignore_imports =
-    # P0-01: units must not import flowsheets.slice (example feeds move into units/)
-    ngdesign.units.separator -> ngdesign.flowsheets.slice
-    ngdesign.units.jt_valve -> ngdesign.flowsheets.slice
-    ngdesign.units.expander -> ngdesign.flowsheets.slice
-    ngdesign.units.heat_exchange -> ngdesign.flowsheets.slice
-    ngdesign.units.compression_train -> ngdesign.flowsheets.slice
-    ngdesign.units.compressor -> ngdesign.flowsheets.slice
     # P0-02: amine must not import units (shared equilibrium code moves into amine/)
     ngdesign.amine.equilibrium -> ngdesign.units.mdea_equilibrium
     ngdesign.amine.enrtl -> ngdesign.units.mdea_equilibrium
