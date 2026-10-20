@@ -61,3 +61,17 @@ Dispatch order: all wave 0 at 11:00 (S-01 first), wave 1 as soon as S-01 merges,
 Rule: do not start L(n+1) UI before L(n) passes end to end.
 
 All frontend work follows the UI theme in `specs/frontend/F-09-octagon-ui-theme.md` (reference designs in `specs/frontend/design/`).
+
+## Phase 0 — freeze, measure, de-duplicate (docs/PLAN.md §3)
+
+| Spec | Title | Depends on | Status |
+|---|---|---|---|
+| P0-01 | Units own their example feeds (break units → flowsheets) | none | open |
+| P0-02 | Amine package owns its equilibrium code (break amine → units) | none | open |
+| P0-03 | One deliverables pipeline module (nothing imports cli) | none | open |
+| P0-04 | One cubic-EOS base; PR/SRK/PR78 become registrations | none | open |
+| P0-05 | Engineering layer de-duplication | none | open |
+| P0-06 | Benchmark baseline (flash count + wall time) in CI | none | open |
+
+All six are independent and dispatched in parallel. Merge order does not matter; each deletes
+its own `.importlinter` ignore lines. The orchestrator updates **Status** here on merge.
