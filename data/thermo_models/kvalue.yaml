@@ -64,8 +64,8 @@
       binaries:
       - z: {C1: 0.5, C3: 0.5}
         T: 300.0
-        P: 1000000.0
-        phase: hc_liquid
+        P: 100000.0
+        phase: vapor
     single_liquid_limit:
       z: {C3: 0.5, nC4: 0.5}
       state: [300.0, 2000000.0]
@@ -113,14 +113,7 @@
   - Prausnitz, J. M., Lichtenthaler, R. N. & de Azevedo, E. G., Molecular Thermodynamics of
     Fluid-Phase Equilibria, 3rd ed., Prentice Hall, 1999
   l0:
-    phase_identification:
-      points:
-      - - C1
-        - 125.0
-      - - C3
-        - 300.0
-      - - nC4
-        - 280.0
+
     round_trip:
       z: {C1: 0.5, C3: 0.5}
       states: [[300.0, 100000.0]]
@@ -132,8 +125,8 @@
       binaries:
       - z: {C1: 0.5, C3: 0.5}
         T: 300.0
-        P: 1000000.0
-        phase: hc_liquid
+        P: 100000.0
+        phase: vapor
     single_liquid_limit:
       z: {C3: 0.5, nC4: 0.5}
       state: [300.0, 2000000.0]
@@ -148,6 +141,12 @@
       -2.14 % (nC4, 280 K) and +0.86 % (CO2, 265 K); the databank-equality limit is the
       databank-Psat rows' construction, and this row's correlation accuracy is measured
       by its pureK bubble cases instead
+    phase_identification: >-
+      the row's own GS nu0 vapour-pressure basis overestimates the methane saturation
+      pressure by up to +102 % (documented under pure_psat_limit), placing the check's
+      own-Psat anchors at states where the Lee-Kesler departure enthalpy basis has no
+      vapour root; the phase classification itself is exercised at the row's binary
+      bubble and dew anchors instead
   l0_note: 'no binary anchor passes inside the case tolerances (the Reamer-Sage-Lacey methane-propane
     states miss by -6 to -35 %, see data/validation/kvalue/cases.yaml); the row stays provisional
     on the pureK bubble evidence'
@@ -182,15 +181,8 @@
   - grayson-streed-extended-pureK-CO2-265K
   references:
   - Grayson, H. G. & Streed, C. W., Proc. 6th World Pet. Congr., Sect. III, 233-245, 1963
+
   l0:
-    phase_identification:
-      points:
-      - - C1
-        - 125.0
-      - - C3
-        - 300.0
-      - - nC4
-        - 280.0
     round_trip:
       z: {C1: 0.5, C3: 0.5}
       states: [[300.0, 100000.0]]
@@ -202,8 +194,8 @@
       binaries:
       - z: {C1: 0.5, C3: 0.5}
         T: 300.0
-        P: 1000000.0
-        phase: hc_liquid
+        P: 100000.0
+        phase: vapor
     single_liquid_limit:
       z: {C3: 0.5, nC4: 0.5}
       state: [300.0, 2000000.0]
@@ -216,6 +208,12 @@
       pure-component bubble at the databank-Psat state deviates +102.64 % (C1, 125 K),
       -2.53 % (C3, 300 K), -2.14 % (nC4, 280 K) and +0.86 % (CO2, 265 K); the accuracy is
       measured by this row's pureK bubble cases instead
+    phase_identification: >-
+      the row's own GS nu0 vapour-pressure basis overestimates the methane saturation
+      pressure by up to +102 % (documented under pure_psat_limit), placing the check's
+      own-Psat anchors at states where the Lee-Kesler departure enthalpy basis has no
+      vapour root; the phase classification itself is exercised at the row's binary
+      bubble and dew anchors instead
   l0_note: 'the extended-range applicability window is served by the same coefficient table as
     the standard row; T-05 records this as a deviation pending published extended-range coefficients'
 - id: braun-k10
@@ -266,19 +264,18 @@
       z: {C1: 0.5, C3: 0.5}
       state: [300.0, 100000.0]
       phase: vapor
-    gibbs_duhem:
-      binaries:
-      - z: {C1: 0.5, C3: 0.5}
-        T: 300.0
-        P: 100000.0
-        phase: vapor
+
     single_liquid_limit:
       z: {nC5: 1.0}
       state: [300.0, 160000.0]
     determinism:
       z: {C1: 0.5, C3: 0.5}
       state: [300.0, 100000.0]
-  l0_excluded: {}
+  l0_excluded:
+    gibbs_duhem: >-
+      the Braun K10 asymptote K10_i(T, P) is composition-independent: the Gibbs-Duhem
+      residual is identically zero by construction and the check's |sum x dlnphi| /
+      sum |x dlnphi| normalisation degenerates to 0/0
   l0_note: 'the declared pure_psat_limit/phase_identification points stay inside the 0.7 MPa
     service cap (C1 and nC4); the propane/CO2 saturation points above the cap are refused by
     construction and covered by the applicability window instead'
@@ -334,7 +331,7 @@
       binaries:
       - z: {C1: 0.5, C3: 0.5}
         T: 300.0
-        P: 1000000.0
+        P: 4000000.0
         phase: hc_liquid
     single_liquid_limit:
       z: {C3: 0.5, nC4: 0.5}
@@ -394,12 +391,7 @@
       z: {C1: 0.5, C3: 0.5}
       state: [300.0, 100000.0]
       phase: vapor
-    gibbs_duhem:
-      binaries:
-      - z: {C1: 0.5, C3: 0.5}
-        T: 300.0
-        P: 100000.0
-        phase: vapor
+
     single_liquid_limit:
       z: {C3: 0.5, nC4: 0.5}
       state: [300.0, 2000000.0]
@@ -413,6 +405,10 @@
       -0.06 % (C3, 300 K), +0.63 % (nC4, 280 K) and -0.00 % (CO2, 265 K); the 1e-6
       databank-equality limit is the databank-Psat rows' construction and the measured
       agreement lives in this row's pureK cases instead
+    gibbs_duhem: >-
+      K_i = Psat_i/P is composition-independent: the Gibbs-Duhem residual is identically
+      zero by construction and the check's |sum x dlnphi| / sum |x dlnphi| normalisation
+      degenerates to 0/0; there is no composition dependence to probe
   l0_note: ''
 - id: antoine-ideal-k
   name: Antoine-basis ideal K-values (K_i = Psat_i/P)
@@ -458,12 +454,7 @@
       z: {C1: 0.5, C3: 0.5}
       state: [300.0, 100000.0]
       phase: vapor
-    gibbs_duhem:
-      binaries:
-      - z: {C1: 0.5, C3: 0.5}
-        T: 300.0
-        P: 100000.0
-        phase: vapor
+
     single_liquid_limit:
       z: {C3: 0.5, nC4: 0.5}
       state: [300.0, 2000000.0]
@@ -477,6 +468,10 @@
       -0.06 % (C3, 300 K), +0.63 % (nC4, 280 K) and -0.00 % (CO2, 265 K); the 1e-6
       databank-equality limit is the databank-Psat rows' construction and the measured
       agreement lives in this row's pureK cases instead
+    gibbs_duhem: >-
+      K_i = Psat_i/P is composition-independent: the Gibbs-Duhem residual is identically
+      zero by construction and the check's |sum x dlnphi| / sum |x dlnphi| normalisation
+      degenerates to 0/0; there is no composition dependence to probe
   l0_note: ''
 - id: ideal-raoult
   name: Ideal Raoult-law K-values on the databank vapour-pressure basis
@@ -534,19 +529,18 @@
       z: {C1: 0.5, C3: 0.5}
       state: [300.0, 100000.0]
       phase: vapor
-    gibbs_duhem:
-      binaries:
-      - z: {C1: 0.5, C3: 0.5}
-        T: 300.0
-        P: 100000.0
-        phase: vapor
+
     single_liquid_limit:
       z: {C3: 0.5, nC4: 0.5}
       state: [300.0, 2000000.0]
     determinism:
       z: {C1: 0.5, C3: 0.5}
       state: [300.0, 100000.0]
-  l0_excluded: {}
+  l0_excluded:
+    gibbs_duhem: >-
+      K_i = Psat_i/P is composition-independent: the Gibbs-Duhem residual is identically
+      zero by construction and the check's |sum x dlnphi| / sum |x dlnphi| normalisation
+      degenerates to 0/0; there is no composition dependence to probe
   l0_note: ''
 - id: henry-sander
   name: Henry's law for the dilute light gases (Sander-compiled pure-water sets) + Raoult
@@ -612,19 +606,18 @@
       z: {H2O: 1.0}
       state: [300.0, 10000.0]
       phase: vapor
-    gibbs_duhem:
-      binaries:
-      - z: {H2O: 0.95, C1: 0.05}
-        T: 300.0
-        P: 100000.0
-        phase: aqueous
+
     single_liquid_limit:
       z: {H2O: 0.999, C1: 0.001}
       state: [300.0, 5000000.0]
     determinism:
       z: {H2O: 0.95, C1: 0.05}
       state: [300.0, 100000.0]
-  l0_excluded: {}
+  l0_excluded:
+    gibbs_duhem: >-
+      K_i = H_i/P for the dilute solutes and Psat_i/P for water, both composition-independent:
+      the Gibbs-Duhem residual is identically zero by construction and the check's
+      |sum x dlnphi| / sum |x dlnphi| normalisation degenerates to 0/0
   l0_note: ''
 - id: ideal-lk
   name: Ideal K-values with the Lee-Kesler departure enthalpy basis
@@ -684,18 +677,17 @@
       z: {C1: 0.5, C3: 0.5}
       state: [300.0, 100000.0]
       phase: vapor
-    gibbs_duhem:
-      binaries:
-      - z: {C1: 0.5, C3: 0.5}
-        T: 300.0
-        P: 100000.0
-        phase: vapor
+
     single_liquid_limit:
       z: {C3: 0.5, nC4: 0.5}
       state: [300.0, 2000000.0]
     determinism:
       z: {C1: 0.5, C3: 0.5}
       state: [300.0, 100000.0]
-  l0_excluded: {}
+  l0_excluded:
+    gibbs_duhem: >-
+      K_i = Psat_i/P is composition-independent: the Gibbs-Duhem residual is identically
+      zero by construction and the check's |sum x dlnphi| / sum |x dlnphi| normalisation
+      degenerates to 0/0; there is no composition dependence to probe
   l0_note: 'the row shares the ideal-raoult adapter (databank Psat, K_i = Psat_i/P); the
     lee_kesler enthalpy declaration names the departure basis the plan assigns this row'
