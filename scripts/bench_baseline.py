@@ -110,7 +110,7 @@ class CountingThermo:
             + self.flashes_flash_pvf
         )
 
-    def _timed_flash(self, fn: Callable[[], Any]) -> Any:
+    def _timed_flash[T](self, fn: Callable[[], T]) -> T:
         start = time.perf_counter()
         try:
             return fn()
