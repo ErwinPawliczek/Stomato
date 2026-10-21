@@ -138,10 +138,10 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | T-04 | Helmholtz adapter: IAPWS-95/IF97, CoolProp fluids, GERG-2008 (optional dependency) | T-01 | merged #152 (2026-10-21): iapws95/iapws_if97/coolprop_heos/gerg2008 (CoolProp multifluid path until T-07)/bwrs provisional, 5 placeholders experimental; review added the spec's unit tests, #154 filed |
 | T-05 | Classic K-value correlations: Chao–Seader, Grayson–Streed, Braun K10, Lee–Kesler–Plöcker, ideal/Henry | T-01 | dispatched 2026-10-21 (issue #139) |
 | T-06 | Predictive mixing rules: PSRK, VTPR, MHV1/2, Wong–Sandler, Huron–Vidal, LCVM | T-02, T-03 | planned (issue #141; after T-02+T-03) |
-| T-07 | teqp bridge: PC-SAFT, SAFT-VR Mie, CPA, multi-fluid Helmholtz | T-01 | dispatched 2026-10-21 (issue #140) |
+| T-07 | teqp bridge: PC-SAFT, SAFT-VR Mie, CPA, multi-fluid Helmholtz | T-01 | merged #156 (2026-10-21): teqp bridge, 8 saft rows all experimental (CI lacks the extra), hand-rolled CPA-SRK; review: refuse at first use, fixed tolerances with assessed misses |
 | T-08 | Model advisor + agent tool `recommend_thermo` + UI package picker | T-01..T-05 | planned (issue #142; after T-01..T-05) |
 | T-09 | General electrolytes: eNRTL, Pitzer, extended UNIQUAC, sour water | T-03 | planned (issue #143; after T-03 and #125) |
-| T-10 | Solids, polymers, HOC dimerisation, HF | T-03, T-07 | planned (issue #144; after T-03+T-07) |
+| T-10 | Solids, polymers, HOC dimerisation, HF | T-03, T-07 | dispatched 2026-10-21 17:02 (issue #144) |
 | T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | all merged: T-11 #131, T-12 #132, T-13 #135, T-14 #147 (2026-10-21) |
 
 Dispatch: T-01 alone; then T-02, T-03, T-04, T-05, T-07, T-11, T-12, T-13 in parallel (disjoint files); then T-06, T-08, T-09, T-14; then T-10; then the catalogue freeze (status audit).
