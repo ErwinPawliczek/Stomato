@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type Project } from "./api/client";
+import { onProjectChanged } from "./api/refresh";
 import { Rail, type GlobalPage } from "./components/Rail";
 import { applyPalette, loadPalette, savePalette, type PaletteId } from "./theme/palettes";
 import { AgentView } from "./views/AgentView";
@@ -27,10 +28,16 @@ export default function App() {
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [palette, setPalette] = useState<PaletteId>(loadPalette);
+  // Bumped when the agent raises the shared project-changed signal: Results and
+  // Drawings remount (re-fetching their data); Flowsheet re-renders from the
+  // fresh project state fetched here.
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     api.getProject().then(setProject).catch((e: Error) => setError(e.message));
-  }, []);
+  }, [refresh]);
+
+  useEffect(() => onProjectChanged(() => setRefresh((k) => k + 1)), []);
 
   useEffect(() => applyPalette(palette), [palette]);
 
@@ -85,10 +92,10 @@ export default function App() {
             )}
             {tab === "results" && (
               <section className="page panel ob">
-                <ResultsView />
+                <ResultsView key={refresh} />
               </section>
             )}
-            {tab === "drawings" && <DrawingsView project={project} />}
+            {tab === "drawings" && <DrawingsView key={refresh} project={project} />}
           </>
         )}
       </main>

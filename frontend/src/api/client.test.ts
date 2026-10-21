@@ -1,4 +1,20 @@
 import { api } from "./client";
+import type { AgentEvent } from "./client";
+
+test("mock agent.send streams the canned event sequence in order and ends with done", async () => {
+  const events: AgentEvent[] = [];
+  await api.agent.send("Build the treating train", undefined, (e) => events.push(e));
+  expect(events.length).toBeGreaterThan(5);
+  expect(events[0].type).toBe("text_delta");
+  // every tool_call gets a matching tool_result
+  for (const call of events.filter((e): e is Extract<AgentEvent, { type: "tool_call" }> => e.type === "tool_call")) {
+    const result = events.find((e) => e.type === "tool_result" && e.id === call.id);
+    expect(result).toBeTruthy();
+  }
+  const done = events[events.length - 1];
+  expect(done.type).toBe("done");
+  if (done.type === "done") expect(done.conversation_id).toBe("c_mock_1");
+});
 
 test("placement round-trips through the client", async () => {
   api._resetMock();
