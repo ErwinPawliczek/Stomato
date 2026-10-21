@@ -16,6 +16,7 @@ from ngdesign import registry
 from ngdesign.contracts import StreamState
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import register_pseudo
+from ngdesign.thermo.cubic import ThermoSurfaceMixin
 
 _C7P_TB = 372.0
 _C7P_SG = 0.73
@@ -56,3 +57,29 @@ def test_pseudo_flash_enthalpy_identity_and_balance(thermo: Thermo) -> None:
     for cid, z in _Z.items():
         back = sum(p.mole_fraction * p.composition[cid] for p in state.phases)
         assert math.isclose(back, z, abs_tol=1e-6)
+
+
+# ------------------------------------------------------------------ spec P1-07
+
+
+def test_slate_context_drives_flasher_constants(thermo: ThermoSurfaceMixin) -> None:
+    """The package flashes a flowsheet-owned pseudo from the slate's own definition."""
+    from ngdesign.contracts.components import PseudoDefinition, resolve_set
+
+    lean = PseudoDefinition(id="C7+", name="lean", Tb=372.0, sg=0.73)
+    rich = PseudoDefinition(id="C7+", name="rich", Tb=430.0, sg=0.80)
+
+    thermo.set_component_set(resolve_set([lean]))
+    lean_bp = thermo.bubble_point({"C7+": 1.0}, T=400.0).P
+    lean_flasher = thermo._build_flasher(("C7+",))
+
+    thermo.set_component_set(resolve_set([rich]))
+    rich_bp = thermo.bubble_point({"C7+": 1.0}, T=400.0).P
+    rich_flasher = thermo._build_flasher(("C7+",))
+
+    assert lean_bp is not None and rich_bp is not None
+    assert lean_bp != pytest.approx(rich_bp)
+    assert lean_flasher is not rich_flasher  # the cache key carries the definitions
+
+    thermo.set_component_set(resolve_set([lean]))
+    assert thermo._build_flasher(("C7+",)) is lean_flasher  # same context, same cache entry

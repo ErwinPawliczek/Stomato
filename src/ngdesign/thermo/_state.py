@@ -51,6 +51,7 @@ from ngdesign.contracts.thermo import (
     SaturationError,
     SaturationPoint,
 )
+from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.thermo.saturation import _solve_saturation, interior_vf_solve
 
 #: CODATA 2018 molar gas constant, J/(mol.K).
@@ -69,10 +70,28 @@ PhasePair = tuple[Any, float]
 _CH2_MASS = 12.011 + 2.0 * 1.008
 _H2_MASS = 2.0 * 1.008
 
+#: The flowsheet-owned pseudo definitions of one solve's slate (spec P1-07), as
+#: the hashable data-layer records. Empty tuple = no flowsheet context: pseudo
+#: ids resolve through the module-level register_pseudo default. A non-empty
+#: tuple is the ONLY pseudo source, so two flowsheets with different definitions
+#: of the same id never share flasher constants; the tuple itself is part of the
+#: flasher and Psat cache keys.
+SlatePseudos = tuple[DataPseudoDefinition, ...]
 
-def _records(ids: tuple[str, ...]) -> list[Component]:
-    """Resolved Component records for a (sorted) flash support, in support order."""
-    return [resolve(cid) for cid in ids]
+
+def _pseudo_mapping(pseudos: SlatePseudos) -> dict[str, DataPseudoDefinition] | None:
+    """The slate's pseudo definitions as component_record's mapping (None = no context)."""
+    return {d.id: d for d in pseudos} or None
+
+
+def _records(ids: tuple[str, ...], pseudos: SlatePseudos = ()) -> list[Component]:
+    """Resolved Component records for a (sorted) flash support, in support order.
+
+    Flowsheet-owned pseudo ids (spec P1-07) resolve through the slate's own
+    definitions; everything else through the open component registry.
+    """
+    context = _pseudo_mapping(pseudos)
+    return [resolve(cid, pseudos=context) for cid in ids]
 
 
 def _pseudo_heat_capacity(record: Component) -> HeatCapacityGas:
@@ -202,17 +221,18 @@ def _kij_matrix(records: list[Component], kij_table: str) -> list[list[float]]:
     return kijs
 
 
-def build_flasher(ids: tuple[str, ...], eos: Any, kij_table: str) -> Any:
+def build_flasher(ids: tuple[str, ...], eos: Any, kij_table: str, pseudos: SlatePseudos = ()) -> Any:
     """Build a FlashVLN flasher over exactly this sorted component set.
 
     Parameterised by the `thermo`-library mixture EOS class (PRMIX, SRKMIX,
     PR78MIX) and the IPDB k_ij table used today; callers own the caching (the
-    cache key is the reduced, sorted support of the feed composition -
-    zero-fraction components are dropped by the caller before this is reached).
+    cache key is the reduced, sorted support of the feed composition plus the
+    flowsheet-owned pseudo definitions' slate context - zero-fraction components
+    are dropped by the caller before this is reached).
     Constants build from the resolved Component records (spec P1-02), so every
     id must resolve before this is reached.
     """
-    records = _records(ids)
+    records = _records(ids, pseudos)
     constants, correlations = _constants_package(records)
     kijs = _kij_matrix(records, kij_table)
     eos_kwargs: dict[str, Any] = {
@@ -424,14 +444,14 @@ def cache_key(z: dict[str, float], T: float, P: float) -> tuple[Any, ...]:
     return (tuple(sorted((cid, round(x, 10)) for cid, x in z.items())), round(T, 6), round(P, 3))
 
 
-def build_flasher_vl(ids: tuple[str, ...], eos: Any, kij_table: str) -> Any:
+def build_flasher_vl(ids: tuple[str, ...], eos: Any, kij_table: str, pseudos: SlatePseudos = ()) -> Any:
     """Build a two-phase FlashVL flasher over exactly this sorted component set.
 
     The saturation fast path (spec P1-01): when the feed cannot form a second
     liquid (no water), a VLE-only FlashVL over the same EOS objects reaches the
     same equilibrium without liquid-liquid stability work.
     """
-    records = _records(ids)
+    records = _records(ids, pseudos)
     constants, correlations = _constants_package(records)
     kijs = _kij_matrix(records, kij_table)
     eos_kwargs: dict[str, Any] = {
@@ -482,13 +502,16 @@ def _thermal_conductivity(phase: Any) -> float | None:
 
 
 @cache
-def _psat_data(cid: str) -> tuple[Any, float, float, float]:
+def _psat_data(cid: str, pseudos: SlatePseudos = ()) -> tuple[Any, float, float, float]:
     """(vapor-pressure correlation, Tc, Pc, omega) for one component id, cached.
+
+    The cache key includes the slate's flowsheet-owned pseudo definitions (spec
+    P1-07): two different definitions of the same id get separate entries.
 
     Databank-resolved ids use the same from_IDs path as the flashers (identical
     constants); pseudos use the generalized Tb/Tc/Pc/omega VaporPressure.
     """
-    record = resolve(cid)
+    record = resolve(cid, pseudos=_pseudo_mapping(pseudos))
     if record.cas is None:
         return _pseudo_vapor_pressure(record), record.Tc, record.Pc, record.omega
     constants, correlations = ChemicalConstantsPackage.from_IDs([str(record.cas)])
@@ -500,9 +523,9 @@ def _psat_data(cid: str) -> tuple[Any, float, float, float]:
     )
 
 
-def pure_psat(cid: str, T: float) -> float | None:
+def pure_psat(cid: str, T: float, pseudos: SlatePseudos = ()) -> float | None:
     """Pure-component vapour pressure (Pa) at T (K); None at or above Tc."""
-    vp, tc, _pc, _omega = _psat_data(cid)
+    vp, tc, _pc, _omega = _psat_data(cid, pseudos)
     if T >= tc:
         return None
     value = vp.T_dependent_property(T)
@@ -511,7 +534,7 @@ def pure_psat(cid: str, T: float) -> float | None:
     return float(value)
 
 
-def _wilson_psat(cid: str, T: float) -> float:
+def _wilson_psat(cid: str, T: float, pseudos: SlatePseudos = ()) -> float:
     """Wilson-correlation vapour-pressure estimate (Pa) at T.
 
     Deliberately rough but defined past Tc — used only to bound saturation
@@ -519,34 +542,34 @@ def _wilson_psat(cid: str, T: float) -> float:
     pressure up (methane raises a C1/H2O feed's bubble pressure at 300 K far
     above any subcritical component's real Psat).
     """
-    _vp, tc, pc, omega = _psat_data(cid)
+    _vp, tc, pc, omega = _psat_data(cid, pseudos)
     return pc * math.exp(5.373 * (1.0 + omega) * (1.0 - tc / T))
 
 
-def _wilson_T(cid: str, P: float) -> float:
+def _wilson_T(cid: str, P: float, pseudos: SlatePseudos = ()) -> float:
     """Wilson-correlation saturation-temperature estimate (K) at P, same caveat as _wilson_psat."""
-    _vp, tc, pc, omega = _psat_data(cid)
+    _vp, tc, pc, omega = _psat_data(cid, pseudos)
     denom = 1.0 - math.log(P / pc) / (5.373 * (1.0 + omega))
     if denom <= 0.05:  # far above the component's Psat ceiling: no usable T bound
         raise ValueError(f"{cid} has no Wilson T bound at P={P} Pa")
     return tc / denom
 
 
-def _wilson_T_safe(cid: str, P: float) -> float | None:
+def _wilson_T_safe(cid: str, P: float, pseudos: SlatePseudos = ()) -> float | None:
     """_wilson_T with unusable bounds (denominator collapse) mapped to None."""
     try:
-        return _wilson_T(cid, P)
+        return _wilson_T(cid, P, pseudos)
     except ValueError:
         return None
 
 
-def _psat_T(cid: str, P: float) -> float | None:
+def _psat_T(cid: str, P: float, pseudos: SlatePseudos = ()) -> float | None:
     """Saturation temperature (K) of one component at P (Pa); None when P >= Pc.
 
     Wilson initial guess (ln Pr = 5.373 (1 + omega) (1 - 1/Tr)) refined by
     secant iteration on the databank vapour-pressure correlation.
     """
-    vp, tc, pc, omega = _psat_data(cid)
+    vp, tc, pc, omega = _psat_data(cid, pseudos)
     if P >= pc:
         return None
     tr = 1.0 / (1.0 - math.log(P / pc) / (5.373 * (1.0 + omega)))
@@ -581,6 +604,7 @@ def _saturation(
     *,
     T: float | None = None,
     P: float | None = None,
+    pseudos: SlatePseudos = (),
 ) -> SaturationPoint:
     """Bubble or dew point via a bracketed secant on the PT flash's vapour fraction.
 
@@ -613,23 +637,23 @@ def _saturation(
         # solvers short-circuit to Psat / its inverse.
         cid = ids[0]
         if T is not None:
-            p_sat = pure_psat(cid, T)
+            p_sat = pure_psat(cid, T, pseudos)
             if p_sat is None:
                 raise SaturationError(f"{cid} is supercritical at T={T} K: no saturation point")
             return SaturationPoint(T=T, P=p_sat, kind=kind, incipient_composition={cid: 1.0})
         assert P is not None
-        t_sat = _psat_T(cid, P)
+        t_sat = _psat_T(cid, P, pseudos)
         if t_sat is None:
             raise SaturationError(f"{cid} is supercritical at P={P} Pa: no saturation point")
         return SaturationPoint(T=t_sat, P=P, kind=kind, incipient_composition={cid: 1.0})
 
     if T is not None:
-        psats = [p for cid in ids if (p := pure_psat(cid, T)) is not None]
+        psats = [p for cid in ids if (p := pure_psat(cid, T, pseudos)) is not None]
         if not psats:
             raise SaturationError(
                 f"no two-phase region at T={T} K: every component of {sorted(z)} is supercritical"
             )
-        bounds = [_wilson_psat(cid, T) for cid in ids]
+        bounds = [_wilson_psat(cid, T, pseudos) for cid in ids]
         lo, hi = _P_LO * min(bounds), _P_HI * max(bounds)
         label = f"T={T} K"
         unknown: Literal["P", "T"] = "P"
@@ -638,14 +662,14 @@ def _saturation(
             return _pt_phase_pairs(flasher, zs, T, x)
 
     else:
-        ts = [t for cid in ids if (t := _psat_T(cid, P)) is not None]  # type: ignore[arg-type]
+        ts = [t for cid in ids if (t := _psat_T(cid, P, pseudos)) is not None]  # type: ignore[arg-type]
         if not ts:
             raise SaturationError(
                 f"no two-phase region at P={P} Pa: every component of {sorted(z)} is supercritical"
             )
         assert P is not None
         p_given: float = P
-        bounds_t = [t for cid in ids if (t := _wilson_T_safe(cid, P)) is not None]
+        bounds_t = [t for cid in ids if (t := _wilson_T_safe(cid, P, pseudos)) is not None]
         lo, hi = _T_LO * min(bounds_t), _T_HI * max(bounds_t)
         label = f"P={p_given} Pa"
         unknown = "T"
@@ -682,17 +706,38 @@ def _saturation(
 
 
 def bubble_point(
-    flasher: Any, z: dict[str, float], *, T: float | None = None, P: float | None = None
+    flasher: Any,
+    z: dict[str, float],
+    *,
+    T: float | None = None,
+    P: float | None = None,
+    pseudos: SlatePseudos = (),
 ) -> SaturationPoint:
     """Bubble point of the feed: exactly one of T (K) and P (Pa) given."""
-    return _saturation(flasher, z, "bubble", T=T, P=P)
+    return _saturation(flasher, z, "bubble", T=T, P=P, pseudos=pseudos)
 
 
 def dew_point(
-    flasher: Any, z: dict[str, float], *, T: float | None = None, P: float | None = None
+    flasher: Any,
+    z: dict[str, float],
+    *,
+    T: float | None = None,
+    P: float | None = None,
+    pseudos: SlatePseudos = (),
 ) -> SaturationPoint:
     """Dew point of the feed: exactly one of T (K) and P (Pa) given."""
-    return _saturation(flasher, z, "dew", T=T, P=P)
+    return _saturation(flasher, z, "dew", T=T, P=P, pseudos=pseudos)
+
+
+def _pkg_pseudos(pkg: Any) -> SlatePseudos:
+    """The package's slate context, when it carries one (ThermoSurfaceMixin instances).
+
+    The TVF/PVF flows take the package object (not a flasher plus context), so
+    the flowsheet-owned pseudo definitions (spec P1-07) are read off it here;
+    packages without a slate context resolve pseudos through the module default.
+    """
+    pseudos: SlatePseudos = getattr(pkg, "_slate_pseudos", ())
+    return pseudos
 
 
 def flash_tvf(pkg: Any, z: dict[str, float], T: float, vf: float, molar_flow: float) -> StreamState:
@@ -701,13 +746,14 @@ def flash_tvf(pkg: Any, z: dict[str, float], T: float, vf: float, molar_flow: fl
         raise ValueError(f"vapour fraction {vf} outside [0, 1]")
     ids = support_ids(z)
     flasher = pkg._sat_flasher(ids)
+    context = _pkg_pseudos(pkg)
     if vf <= _VF_EDGE:
-        P = _saturation(flasher, z, "bubble", T=T).P
+        P = _saturation(flasher, z, "bubble", T=T, pseudos=context).P
     elif vf >= 1.0 - _VF_EDGE:
-        P = _saturation(flasher, z, "dew", T=T).P
+        P = _saturation(flasher, z, "dew", T=T, pseudos=context).P
     else:
-        p_dew = _saturation(flasher, z, "dew", T=T).P
-        p_bub = _saturation(flasher, z, "bubble", T=T).P
+        p_dew = _saturation(flasher, z, "dew", T=T, pseudos=context).P
+        p_bub = _saturation(flasher, z, "bubble", T=T, pseudos=context).P
         zs = [float(z[cid]) for cid in ids]
 
         def vf_at(x: float) -> float:
@@ -727,13 +773,14 @@ def flash_pvf(pkg: Any, z: dict[str, float], P: float, vf: float, molar_flow: fl
         raise ValueError(f"vapour fraction {vf} outside [0, 1]")
     ids = support_ids(z)
     flasher = pkg._sat_flasher(ids)
+    context = _pkg_pseudos(pkg)
     if vf <= _VF_EDGE:
-        T = _saturation(flasher, z, "bubble", P=P).T
+        T = _saturation(flasher, z, "bubble", P=P, pseudos=context).T
     elif vf >= 1.0 - _VF_EDGE:
-        T = _saturation(flasher, z, "dew", P=P).T
+        T = _saturation(flasher, z, "dew", P=P, pseudos=context).T
     else:
-        t_bub = _saturation(flasher, z, "bubble", P=P).T
-        t_dew = _saturation(flasher, z, "dew", P=P).T
+        t_bub = _saturation(flasher, z, "bubble", P=P, pseudos=context).T
+        t_dew = _saturation(flasher, z, "dew", P=P, pseudos=context).T
         zs = [float(z[cid]) for cid in ids]
 
         def vf_at(x: float) -> float:

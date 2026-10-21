@@ -25,7 +25,9 @@ from functools import cache
 from typing import Any, cast
 
 from ngdesign.contracts import StreamState
+from ngdesign.contracts.components import ComponentSet, data_definitions
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
+from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.thermo import _state
 
 #: The IPDB's fitted cubic-EOS kijs (no SRK/PR78-specific table exists in thermo).
@@ -50,7 +52,22 @@ class ThermoSurfaceMixin:
 
     def __init__(self) -> None:
         self._lru_cache: OrderedDict[tuple[Any, ...], Any] = OrderedDict()
+        # The solving slate's flowsheet-owned pseudo definitions (spec P1-07),
+        # set once per solve through set_component_set. Empty = no flowsheet
+        # context: pseudo ids resolve through the module register_pseudo default.
+        self._slate_pseudos: tuple[DataPseudoDefinition, ...] = ()
         super().__init__()
+
+    def set_component_set(self, cs: ComponentSet) -> None:
+        """Receive the slate resolved once at solve entry (spec P1-07).
+
+        The solver hands over the ComponentSet it built from
+        ``Flowsheet.components``; flasher and Psat constants for
+        flowsheet-owned pseudo-components then build from the flowsheet's own
+        definitions, never from the module-level register_pseudo default. The
+        solver calls this once per solve, before any flash.
+        """
+        self._slate_pseudos = data_definitions(cs.pseudo_definitions)
 
     def _build_flasher(self, ids: tuple[str, ...]) -> Any:
         """The package's full FlashVLN flasher over this sorted component support."""
@@ -70,7 +87,12 @@ class ThermoSurfaceMixin:
         return self._build_flasher_vl(ids)
 
     def _cached(self, key: tuple[Any, ...], compute: Callable[[], Any]) -> Any:
+        # The slate's flowsheet-owned pseudo definitions (spec P1-07) scope every
+        # per-instance result cache entry: pseudo constants change with the
+        # solving slate, so a cached flash or phase-prop result from one
+        # flowsheet must never satisfy another's request for the same (z, T, P).
         cache = self._lru_cache
+        key = (self._slate_pseudos, *key)
         hit = cache.get(key)
         if hit is not None:
             cache.move_to_end(key)
@@ -113,17 +135,21 @@ class ThermoSurfaceMixin:
         self, z: dict[str, float], *, T: float | None = None, P: float | None = None
     ) -> SaturationPoint:
         """Bubble point; exactly one of T (K) and P (Pa) given."""
-        return _state.bubble_point(self._sat_flasher(_state.support_ids(z)), z, T=T, P=P)
+        return _state.bubble_point(
+            self._sat_flasher(_state.support_ids(z)), z, T=T, P=P, pseudos=self._slate_pseudos
+        )
 
     def dew_point(
         self, z: dict[str, float], *, T: float | None = None, P: float | None = None
     ) -> SaturationPoint:
         """Dew point; exactly one of T (K) and P (Pa) given."""
-        return _state.dew_point(self._sat_flasher(_state.support_ids(z)), z, T=T, P=P)
+        return _state.dew_point(
+            self._sat_flasher(_state.support_ids(z)), z, T=T, P=P, pseudos=self._slate_pseudos
+        )
 
     def pure_psat(self, cid: str, T: float) -> float | None:
         """Pure-component vapour pressure (Pa) at T (K); None at or above Tc."""
-        return _state.pure_psat(cid, T)
+        return _state.pure_psat(cid, T, self._slate_pseudos)
 
     # -- properties -----------------------------------------------------------
 
@@ -155,24 +181,33 @@ class CubicEOS(ThermoSurfaceMixin):
     eos: Any
 
     def _build_flasher(self, ids: tuple[str, ...]) -> Any:
-        return _flasher_for(self.eos, _CHEMSEP_CUBIC_TABLE, ids)
+        return _flasher_for(self.eos, _CHEMSEP_CUBIC_TABLE, ids, self._slate_pseudos)
 
     def _build_flasher_vl(self, ids: tuple[str, ...]) -> Any:
-        return _flasher_vl_for(self.eos, _CHEMSEP_CUBIC_TABLE, ids)
+        return _flasher_vl_for(self.eos, _CHEMSEP_CUBIC_TABLE, ids, self._slate_pseudos)
 
 
 @cache
-def _flasher_for(eos: Any, kij_table: str, ids: tuple[str, ...]) -> Any:
+def _flasher_for(
+    eos: Any, kij_table: str, ids: tuple[str, ...], pseudos: tuple[DataPseudoDefinition, ...] = ()
+) -> Any:
     """Build (and cache) a FlashVLN flasher over exactly this sorted component set.
 
     Zero-fraction components are dropped by the caller before this is reached, so
     the cache key is the reduced, sorted support of the feed composition (plus the
-    EOS class and k_ij table, which pin the package variant).
+    EOS class and k_ij table, which pin the package variant, plus the slate's
+    flowsheet-owned pseudo definitions - spec P1-07: two flowsheets with
+    different definitions of the same pseudo id never share a flasher).
     """
-    return _state.build_flasher(ids, eos, kij_table)
+    return _state.build_flasher(ids, eos, kij_table, pseudos)
 
 
 @cache
-def _flasher_vl_for(eos: Any, kij_table: str, ids: tuple[str, ...]) -> Any:
-    """Build (and cache) the two-phase FlashVL saturation fast path (spec P1-01)."""
-    return _state.build_flasher_vl(ids, eos, kij_table)
+def _flasher_vl_for(
+    eos: Any, kij_table: str, ids: tuple[str, ...], pseudos: tuple[DataPseudoDefinition, ...] = ()
+) -> Any:
+    """Build (and cache) the two-phase FlashVL saturation fast path (spec P1-01).
+
+    Cache key carries the slate's flowsheet-owned pseudo definitions (spec P1-07).
+    """
+    return _state.build_flasher_vl(ids, eos, kij_table, pseudos)
