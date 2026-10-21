@@ -14,6 +14,13 @@ from ngdesign import registry
 from ngdesign.amine.package import AmineENRTLPackage, AmineKEPackage
 from ngdesign.thermo import catalogue
 from ngdesign.thermo.catalogue import CatalogueError, ModelRow, load_catalogue
+from ngdesign.thermo.helmholtz import (
+    BWRSPackage,
+    CoolPropPackage,
+    GERGPackage,
+    IAPWSPackage,
+    UnavailablePackage,
+)
 from ngdesign.thermo.nrtl import NrtlThermo
 from ngdesign.thermo.pr import PengRobinsonThermo
 from ngdesign.thermo.pr78 import PengRobinson78Thermo
@@ -36,9 +43,26 @@ def _load_harness() -> Any:
 
 
 def test_rows_load_and_build() -> None:
-    """Six rows load; the registry resolves each id to its adapter class."""
+    """Sixteen rows load; the registry resolves each id to its adapter class."""
     rows = load_catalogue()
-    assert sorted(rows) == ["amine_enrtl", "amine_ke", "nrtl", "pr", "pr78", "srk"]
+    assert sorted(rows) == [
+        "aga8_dc92",
+        "amine_enrtl",
+        "amine_ke",
+        "asme_steam",
+        "bwr_ls",
+        "bwrs",
+        "coolprop_heos",
+        "eos_cg",
+        "gerg2008",
+        "iapws95",
+        "iapws_if97",
+        "mbwr",
+        "nrtl",
+        "pr",
+        "pr78",
+        "srk",
+    ]
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
         "pr": PengRobinsonThermo,
@@ -47,6 +71,17 @@ def test_rows_load_and_build() -> None:
         "nrtl": NrtlThermo,
         "amine_ke": AmineKEPackage,
         "amine_enrtl": AmineENRTLPackage,
+        # helmholtz family (T-04): placeholders build without CoolProp installed
+        "iapws95": IAPWSPackage,
+        "iapws_if97": IAPWSPackage,
+        "coolprop_heos": CoolPropPackage,
+        "gerg2008": GERGPackage,
+        "bwrs": BWRSPackage,
+        "asme_steam": UnavailablePackage,
+        "eos_cg": UnavailablePackage,
+        "aga8_dc92": UnavailablePackage,
+        "mbwr": UnavailablePackage,
+        "bwr_ls": UnavailablePackage,
     }
     for model_id, cls in expected_types.items():
         assert type(registry.create("thermo", model_id)) is cls
