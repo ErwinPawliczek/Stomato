@@ -132,7 +132,7 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | T-01 | Thermo catalogue as data: registry, status, L0/L4 validation layers | P1-05, P1-07, #124 | merged #134 (2026-10-21) |
 | T-02 | Cubic family options: alpha functions, volume translation, Boston–Mathias, sour terms, all thermo cubic classes | T-01 | dispatched 2026-10-21 (issue #136) |
 | T-03 | Gamma-phi adapter: NRTL/UNIQUAC/Wilson/van Laar/Margules/UNIFAC×5 × ideal/virial/cubic vapour; ChemSep + UNIFAC group data | T-01 | merged #150 (2026-10-21): 12 liquids x 5 vapours, 60 rows (virial vapours experimental), in-house van Laar/Margules, 16 live T-12 combos; review fixed Wilson aij, dropped circular fits, L4 refusals once per row |
-| T-04 | Helmholtz adapter: IAPWS-95/IF97, CoolProp fluids, GERG-2008 (optional dependency) | T-01 | dispatched 2026-10-21 (issue #138) |
+| T-04 | Helmholtz adapter: IAPWS-95/IF97, CoolProp fluids, GERG-2008 (optional dependency) | T-01 | merged #152 (2026-10-21): iapws95/iapws_if97/coolprop_heos/gerg2008 (CoolProp multifluid path until T-07)/bwrs provisional, 5 placeholders experimental; review added the spec's unit tests, #154 filed |
 | T-05 | Classic K-value correlations: Chao–Seader, Grayson–Streed, Braun K10, Lee–Kesler–Plöcker, ideal/Henry | T-01 | dispatched 2026-10-21 (issue #139) |
 | T-06 | Predictive mixing rules: PSRK, VTPR, MHV1/2, Wong–Sandler, Huron–Vidal, LCVM | T-02, T-03 | planned (issue #141; after T-02+T-03) |
 | T-07 | teqp bridge: PC-SAFT, SAFT-VR Mie, CPA, multi-fluid Helmholtz | T-01 | dispatched 2026-10-21 (issue #140) |
