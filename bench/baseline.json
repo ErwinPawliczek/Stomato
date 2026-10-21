@@ -11,8 +11,24 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 0,
-      "flash_wall_s": 3.959799,
-      "total_wall_s": 3.960739,
+      "flash_wall_s": 0.755118,
+      "total_wall_s": 3.78703,
+      "solver_passes": 1,
+      "converged": true
+    },
+    "slice_spec": {
+      "flashes": 65,
+      "flashes_pt": 50,
+      "flashes_ph": 10,
+      "flashes_ps": 5,
+      "flashes_k_values": 0,
+      "flashes_bubble_point": 0,
+      "flashes_dew_point": 0,
+      "flashes_flash_tvf": 0,
+      "flashes_flash_pvf": 0,
+      "props_calls": 0,
+      "flash_wall_s": 2.960788,
+      "total_wall_s": 2.965968,
       "solver_passes": 1,
       "converged": true
     },
@@ -27,8 +43,8 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 0,
-      "flash_wall_s": 46.273216,
-      "total_wall_s": 46.296217,
+      "flash_wall_s": 49.058819,
+      "total_wall_s": 49.087687,
       "solver_passes": 20,
       "converged": true
     },
@@ -43,8 +59,8 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 0,
-      "flash_wall_s": 0.466934,
-      "total_wall_s": 0.48547,
+      "flash_wall_s": 0.550921,
+      "total_wall_s": 0.575731,
       "solver_passes": 4,
       "converged": true
     },
@@ -59,8 +75,8 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 0,
-      "flash_wall_s": 2.880704,
-      "total_wall_s": 2.909625,
+      "flash_wall_s": 3.323758,
+      "total_wall_s": 3.35373,
       "solver_passes": 6,
       "converged": true
     },
@@ -75,8 +91,8 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 66,
-      "flash_wall_s": 7.457541,
-      "total_wall_s": 8.684787,
+      "flash_wall_s": 7.913096,
+      "total_wall_s": 9.232573,
       "solver_passes": 0,
       "converged": true
     }
@@ -89,6 +105,6 @@
   "metadata": {
     "python": "3.13.14",
     "platform": "Linux-6.1.158+-x86_64-with-glibc2.41",
-    "commit": "00839f94b6480e8556feffd1dd72d57bd194530e"
+    "commit": "02a9a587b788f914b6b5d6eb07627928bc7c1c18"
   }
 }

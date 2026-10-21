@@ -16,6 +16,7 @@ layers =
     ngdesign.pipeline
     ngdesign.flowsheets
     ngdesign.solver
+    ngdesign.variables
     ngdesign.units
     ngdesign.amine
     ngdesign.thermo

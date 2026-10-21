@@ -214,7 +214,8 @@
         "service": "W"
       }
     ],
-    "thermo": "pr"
+    "thermo": "pr",
+    "design_specs": []
   },
   "streams": {
     "S-001": {
@@ -1799,5 +1800,6 @@
       "records": [],
       "wall_s": 0.0
     }
-  ]
+  ],
+  "design_spec_results": []
 }

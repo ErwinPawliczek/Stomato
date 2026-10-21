@@ -331,6 +331,109 @@
         "title": "Datasheet",
         "type": "object"
       },
+      "DesignSpec": {
+        "additionalProperties": false,
+        "description": "One design specification: drive ``target`` to ``value`` via ``manipulated``.\n\n``target`` and ``manipulated`` are variable addresses (grammar in\n``ngdesign.variables``); the flowsheet validator checks they parse and that\ntheir heads name a stream or unit of the sheet. ``tolerance`` is relative on\nthe target: converged when ``|achieved - value| <= tolerance * |value|``.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "lower": {
+            "title": "Lower",
+            "type": "number"
+          },
+          "manipulated": {
+            "title": "Manipulated",
+            "type": "string"
+          },
+          "max_iterations": {
+            "default": 30,
+            "title": "Max Iterations",
+            "type": "integer"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "tolerance": {
+            "default": 0.0001,
+            "title": "Tolerance",
+            "type": "number"
+          },
+          "upper": {
+            "title": "Upper",
+            "type": "number"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "target",
+          "value",
+          "manipulated",
+          "lower",
+          "upper"
+        ],
+        "title": "DesignSpec",
+        "type": "object"
+      },
+      "DesignSpecResult": {
+        "additionalProperties": false,
+        "description": "One design spec's outcome after the outer loop (spec P2-01).\n\n``history`` holds one ``(manipulated, achieved)`` pair per outer iteration\nthat produced a solvable flowsheet. On convergence ``achieved`` is the last\niteration's value; otherwise it is the closest value any iteration reached\n(with ``manipulated_value`` the manipulated variable that produced it). A\nspec aborted by a failed inner solve has ``converged=False``; if no\niteration ever solved, ``achieved`` and ``manipulated_value`` are NaN.",
+        "properties": {
+          "achieved": {
+            "title": "Achieved",
+            "type": "number"
+          },
+          "converged": {
+            "title": "Converged",
+            "type": "boolean"
+          },
+          "history": {
+            "items": {
+              "maxItems": 2,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "iterations": {
+            "title": "Iterations",
+            "type": "integer"
+          },
+          "manipulated_value": {
+            "title": "Manipulated Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "achieved",
+          "manipulated_value",
+          "iterations",
+          "converged",
+          "history"
+        ],
+        "title": "DesignSpecResult",
+        "type": "object"
+      },
       "Direction": {
         "enum": [
           "E",
@@ -425,6 +528,14 @@
               ]
             },
             "title": "Components",
+            "type": "array"
+          },
+          "design_specs": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DesignSpec"
+            },
+            "title": "Design Specs",
             "type": "array"
           },
           "name": {
@@ -960,6 +1071,14 @@
             "default": {},
             "title": "Datasheets",
             "type": "object"
+          },
+          "design_spec_results": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DesignSpecResult"
+            },
+            "title": "Design Spec Results",
+            "type": "array"
           },
           "errors": {
             "default": [],

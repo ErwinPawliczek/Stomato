@@ -52,6 +52,7 @@ from typing import Any, cast
 from ngdesign import registry
 from ngdesign.contracts.flowsheet import SolvedFlowsheet
 from ngdesign.contracts.plugins import Thermo, UnitModel
+from ngdesign.contracts.specs import DesignSpec
 from ngdesign.contracts.stream import PhaseKind, StreamState
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
 from ngdesign.flowsheets import amine_loop, mea_amine_loop, recycle_bench
@@ -189,6 +190,28 @@ def _case_slice(thermo: Thermo) -> SolvedFlowsheet:
     return _solver()(fs, thermo)
 
 
+def _case_slice_spec(thermo: Thermo) -> SolvedFlowsheet:
+    """The slice with one design spec (P2-01): K-101 discharge pressure set so the
+    compressor outlet temperature S-003.T reaches 390 K, bounds [6, 14] MPa.
+
+    (The spec's literal water-content target is not reachable on this model -
+    the TEG contactor always meets its own lb/MMscf param, so S-005.x.H2O does
+    not respond to pressure - see the PR; discharge temperature is the same
+    outer-loop question on a responsive target.)
+    """
+    fs = slice_fs.build()
+    spec = DesignSpec(
+        id="DS-001",
+        target="S-003.T",
+        value=390.0,
+        manipulated="K-101.params.P_out",
+        lower=6e6,
+        upper=14e6,
+    )
+    fs_with_spec = type(fs)(**{**fs.model_dump(), "design_specs": [spec.model_dump()]})
+    return _solver()(fs_with_spec, thermo)
+
+
 def _case_recycle_bench(thermo: Thermo) -> SolvedFlowsheet:
     fs = recycle_bench.build()
     return _solver()(fs, thermo)
@@ -217,6 +240,7 @@ def _case_column(thermo: Thermo) -> object:
 
 CASES: dict[str, Callable[[Thermo], object]] = {
     "slice": _case_slice,
+    "slice_spec": _case_slice_spec,
     "recycle_bench": _case_recycle_bench,
     "amine_loop": _case_amine_loop,
     "mea_amine_loop": _case_mea_amine_loop,
