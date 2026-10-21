@@ -1,0 +1,701 @@
+# Family ``kvalue`` — the classic refinery-era K-value correlations (spec T-05).
+#
+# Rows are correlations, not equations of state: K_i = nu_i gamma_i / phi_i with published
+# components, sharing the KValuePackage adapter (flash on Rachford-Rice, enthalpies from
+# the Lee-Kesler departures implemented in kvalue.py). Every row is provisional: the
+# binary anchors bind only where the measured deviations are inside the case tolerances
+# (see data/validation/kvalue/cases.yaml for the reconciliation notes).
+#
+# L0 declarations are inline per row (the schema owns no ``kvalue`` l0_defaults): the
+# databank-Psat rows declare pure_psat_limit; the rows carrying their own vapour-pressure
+# basis (nu0 charts, LK EOS, Antoine) exclude it with the measured deviation named.
+- id: chao-seader
+  name: Chao-Seader K-values (nu0 + regular solution + Redlich-Kwong)
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:ChaoSeaderThermo
+  options:
+    k_model: chao_seader
+  params:
+    source: nu0/regular-solution coefficient tables under data/thermo_params/kvalue/, critical
+      constants and acentric factors from the ChemSep databank
+    provenance: Chao, K. C. & Seader, J. D., 'A General Correlation of Vapor-Liquid Equilibria
+      in Hydrocarbon Mixtures', AIChE J. 7(4), 598-605, 1961; nu0 coefficient sets verified
+      against the DWSIM ChaoSeader implementation (commit 1abf72d) after re-transcription
+      from the Rust DWSIM-kernel port; solubility parameters and molar volumes from Prausnitz,
+      Lichtenthaler & de Azevedo, Molecular Thermodynamics of Fluid-Phase Equilibria, 3rd ed., 1999
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    polar: false
+    electrolyte: false
+    T_K: [200.0, 530.0]
+    P_Pa: [1000.0, 14000000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation:
+  - chao-seader-pureK-C3-300K
+  - chao-seader-pureK-nC4-280K
+  - chao-seader-pureK-CO2-265K
+  - chao-seader-c1c3-277.59K-4.826MPa
+  - chao-seader-c1c3-294.26K-4.137MPa
+  references:
+  - Chao, K. C. & Seader, J. D., AIChE J. 7(4), 598-605, 1961
+  - Prausnitz, J. M., Lichtenthaler, R. N. & de Azevedo, E. G., Molecular Thermodynamics of
+    Fluid-Phase Equilibria, 3rd ed., Prentice Hall, 1999
+  l0:
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+      - - nC4
+        - 280.0
+    round_trip:
+      z: {C1: 0.5, C3: 0.5}
+      states: [[300.0, 100000.0]]
+    dhdT_cp:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.5, C3: 0.5}
+        T: 300.0
+        P: 1000000.0
+        phase: hc_liquid
+    single_liquid_limit:
+      z: {C3: 0.5, nC4: 0.5}
+      state: [300.0, 2000000.0]
+    determinism:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+  l0_excluded:
+    pure_psat_limit: >-
+      the row's own nu0/RK correlation is the vapour-pressure basis: the measured
+      pure-component bubble at the databank-Psat state deviates +11.74 % (C1, 125 K),
+      -4.87 % (C3, 300 K), -2.21 % (nC4, 280 K) and -3.28 % (CO2, 265 K); the 1e-6
+      databank-equality limit is the databank-Psat rows' construction, and this row's
+      correlation accuracy is measured by its pureK bubble cases instead
+  l0_note: ''
+- id: grayson-streed
+  name: Grayson-Streed K-values (GS nu0 sets, original RK vapour phase)
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:GraysonStreedThermo
+  options:
+    k_model: grayson_streed
+  params:
+    source: nu0/regular-solution coefficient tables under data/thermo_params/kvalue/, critical
+      constants and acentric factors from the ChemSep databank
+    provenance: Grayson, H. G. & Streed, C. W., 'Vapor-Liquid Equilibria for High Temperature,
+      High Pressure Hydrogen-Hydrocarbon Systems', Proc. 6th World Pet. Congr., Frankfurt,
+      Sect. III, 233-245, 1963; coefficient sets verified against the DWSIM ChaoSeader
+      implementation (commit 1abf72d)
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    polar: false
+    electrolyte: false
+    T_K: [255.0, 533.0]
+    P_Pa: [1000.0, 13800000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation:
+  - grayson-streed-pureK-C3-300K
+  - grayson-streed-pureK-nC4-280K
+  - grayson-streed-pureK-CO2-265K
+  references:
+  - Grayson, H. G. & Streed, C. W., Proc. 6th World Pet. Congr., Sect. III, 233-245, 1963
+  - Prausnitz, J. M., Lichtenthaler, R. N. & de Azevedo, E. G., Molecular Thermodynamics of
+    Fluid-Phase Equilibria, 3rd ed., Prentice Hall, 1999
+  l0:
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+      - - nC4
+        - 280.0
+    round_trip:
+      z: {C1: 0.5, C3: 0.5}
+      states: [[300.0, 100000.0]]
+    dhdT_cp:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.5, C3: 0.5}
+        T: 300.0
+        P: 1000000.0
+        phase: hc_liquid
+    single_liquid_limit:
+      z: {C3: 0.5, nC4: 0.5}
+      state: [300.0, 2000000.0]
+    determinism:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+  l0_excluded:
+    pure_psat_limit: >-
+      the row's own GS nu0/RK correlation is the vapour-pressure basis: the measured
+      pure-component bubble at the databank-Psat state deviates +102.64 % (C1, 125 K,
+      the GS methane set outside its fitted range at Tr = 0.66), -2.53 % (C3, 300 K),
+      -2.14 % (nC4, 280 K) and +0.86 % (CO2, 265 K); the databank-equality limit is the
+      databank-Psat rows' construction, and this row's correlation accuracy is measured
+      by its pureK bubble cases instead
+  l0_note: 'no binary anchor passes inside the case tolerances (the Reamer-Sage-Lacey methane-propane
+    states miss by -6 to -35 %, see data/validation/kvalue/cases.yaml); the row stays provisional
+    on the pureK bubble evidence'
+- id: grayson-streed-extended
+  name: Grayson-Streed K-values, extended range (same adapter and coefficient table)
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:GraysonStreedThermo
+  options:
+    k_model: grayson_streed
+  params:
+    source: nu0/regular-solution coefficient tables under data/thermo_params/kvalue/, critical
+      constants and acentric factors from the ChemSep databank
+    provenance: Grayson, H. G. & Streed, C. W., 'Vapor-Liquid Equilibria for High Temperature,
+      High Pressure Hydrogen-Hydrocarbon Systems', Proc. 6th World Pet. Congr., Frankfurt,
+      Sect. III, 233-245, 1963; the extended-range row shares the standard row's adapter
+      and coefficient table — the separately refitted extended-range coefficients are not
+      available from a published source (deviation recorded for the T-05 review)
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    polar: false
+    electrolyte: false
+    T_K: [255.0, 730.0]
+    P_Pa: [1000.0, 20000000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation:
+  - grayson-streed-extended-pureK-C3-300K
+  - grayson-streed-extended-pureK-nC4-280K
+  - grayson-streed-extended-pureK-CO2-265K
+  references:
+  - Grayson, H. G. & Streed, C. W., Proc. 6th World Pet. Congr., Sect. III, 233-245, 1963
+  l0:
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+      - - nC4
+        - 280.0
+    round_trip:
+      z: {C1: 0.5, C3: 0.5}
+      states: [[300.0, 100000.0]]
+    dhdT_cp:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.5, C3: 0.5}
+        T: 300.0
+        P: 1000000.0
+        phase: hc_liquid
+    single_liquid_limit:
+      z: {C3: 0.5, nC4: 0.5}
+      state: [300.0, 2000000.0]
+    determinism:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+  l0_excluded:
+    pure_psat_limit: >-
+      shares the grayson-streed adapter and vapour-pressure basis; the measured
+      pure-component bubble at the databank-Psat state deviates +102.64 % (C1, 125 K),
+      -2.53 % (C3, 300 K), -2.14 % (nC4, 280 K) and +0.86 % (CO2, 265 K); the accuracy is
+      measured by this row's pureK bubble cases instead
+  l0_note: 'the extended-range applicability window is served by the same coefficient table as
+    the standard row; T-05 records this as a deviation pending published extended-range coefficients'
+- id: braun-k10
+  name: Braun K10 low-pressure limit (ideal-K asymptote of the K10 charts)
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:BraunK10Thermo
+  options:
+    k_model: braun_k10
+  params:
+    source: vapour pressures from the ChemSep databank Psat basis; the row refuses service
+      above 0.7 MPa by construction
+    provenance: Braun convergence-pressure K10 charts, Cajander, B. C., Hipkin, H. G. & Lenoir,
+      J. M., 'Prediction of Equilibrium Ratios from Nomographs of Improved Accuracy', J. Chem.
+      Eng. Data 5(3), 251-259, 1960; the digitised polynomial fits are blocked on a published
+      parameter source (GitHub issue 139), so the row implements the charts' documented low-pressure
+      asymptote K_i = Psat_i/P and refuses outside it (deviation recorded for the T-05 review)
+  applicability:
+    component_classes:
+    - hydrocarbon
+    polar: false
+    electrolyte: false
+    T_K: [200.0, 560.0]
+    P_Pa: [1000.0, 700000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation:
+  - braun-k10-pureK-C1-125K
+  - braun-k10-pureK-nC4-280K
+  references:
+  - Cajander, B. C., Hipkin, H. G. & Lenoir, J. M., J. Chem. Eng. Data 5(3), 251-259, 1960
+  l0:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 125.0
+      - - nC4
+        - 280.0
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - nC4
+        - 280.0
+    round_trip:
+      z: {C1: 0.5, C3: 0.5}
+      states: [[300.0, 100000.0]]
+    dhdT_cp:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.5, C3: 0.5}
+        T: 300.0
+        P: 100000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {nC5: 1.0}
+      state: [300.0, 160000.0]
+    determinism:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+  l0_excluded: {}
+  l0_note: 'the declared pure_psat_limit/phase_identification points stay inside the 0.7 MPa
+    service cap (C1 and nC4); the propane/CO2 saturation points above the cap are refused by
+    construction and covered by the applicability window instead'
+- id: lee-kesler-ploecker
+  name: Lee-Kesler-Ploecker corresponding states (Ploecker mixing rules, k_ij = 0)
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:LeeKeslerPloeckerThermo
+  options:
+    k_model: lee_kesler_plocker
+  params:
+    source: critical constants, acentric factors and the Lee-Kesler tables under
+      data/thermo_params/kvalue/, from the ChemSep databank and the source papers
+    provenance: Ploecker, U., Knapp, H. & Prausnitz, J. M., 'Calculation of High-Pressure
+      Vapor-Liquid Equilibria from a Corresponding-States Correlation', Ind. Eng. Chem.
+      Process Des. Dev. 17(3), 324-332, 1978; Lee, B. I. & Kesler, M. G., 'A Generalized
+      Thermodynamic Correlation Based on Three-Parameter Corresponding States', AIChE J.
+      21(3), 510-527, 1975; binary interaction parameters set to zero (k_ij = 0)
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    polar: false
+    electrolyte: false
+    T_K: [200.0, 560.0]
+    P_Pa: [1000.0, 15000000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation:
+  - lee-kesler-ploecker-pureK-C1-125K
+  - lee-kesler-ploecker-pureK-C3-300K
+  - lee-kesler-ploecker-pureK-CO2-265K
+  - lee-kesler-ploecker-c1c3-294.26K-4.137MPa
+  references:
+  - Ploecker, U., Knapp, H. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 17(3),
+    324-332, 1978
+  - Lee, B. I. & Kesler, M. G., AIChE J. 21(3), 510-527, 1975
+  l0:
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+    round_trip:
+      z: {C1: 0.5, C3: 0.5}
+      states: [[300.0, 100000.0]]
+    dhdT_cp:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.5, C3: 0.5}
+        T: 300.0
+        P: 1000000.0
+        phase: hc_liquid
+    single_liquid_limit:
+      z: {C3: 0.5, nC4: 0.5}
+      state: [300.0, 2000000.0]
+    determinism:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+  l0_excluded:
+    pure_psat_limit: >-
+      the Lee-Kesler EOS is the row's own corresponding-states vapour-pressure basis: the
+      measured pure-component bubble at the databank-Psat state deviates +0.32 % (C1, 125 K),
+      +2.10 % (C3, 300 K), +7.49 % (nC4, 280 K) and -0.96 % (CO2, 265 K); the 1e-6
+      databank-equality limit is the databank-Psat rows' construction, and this row's EOS
+      accuracy is measured by its pureK bubble cases instead
+  l0_note: 'the methane-propane states at 4.826/6.205 MPa have no Lee-Kesler vapour root at the
+    iterated vapour composition (the flash classifies them single-phase); only the 4.137 MPa
+    state binds as a binary anchor'
+- id: esso-tabular
+  name: Esso tabular K-values (Antoine-basis ideal K stand-in)
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:AntoineIdealKThermo
+  options:
+    k_model: ideal
+  params:
+    source: Antoine Psat coefficients via the chemicals library; components from the ChemSep
+      databank
+    provenance: the tabulated Esso charts are blocked on a published parameter source
+      (GitHub issue 139); the row serves the Antoine ideal-K basis with its applicability window
+      and records the mapping for the T-05 review
+  applicability:
+    component_classes:
+    - hydrocarbon
+    polar: false
+    electrolyte: false
+    T_K: [150.0, 620.0]
+    P_Pa: [1000.0, 3000000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation:
+  - esso-tabular-pureK-C1-125K
+  - esso-tabular-pureK-C3-300K
+  - esso-tabular-pureK-nC4-280K
+  - esso-tabular-pureK-CO2-265K
+  references:
+  - Carlson, H. C., Chem. Eng. Prog. 92(10), 35, 1996 (applicability window)
+  l0:
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+    round_trip:
+      z: {C1: 0.5, C3: 0.5}
+      states: [[300.0, 100000.0]]
+    dhdT_cp:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.5, C3: 0.5}
+        T: 300.0
+        P: 100000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {C3: 0.5, nC4: 0.5}
+      state: [300.0, 2000000.0]
+    determinism:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+  l0_excluded:
+    pure_psat_limit: >-
+      the row's vapour-pressure basis is the Antoine correlation, not the databank: the
+      measured pure-component bubble at the databank-Psat state deviates +0.45 % (C1, 125 K),
+      -0.06 % (C3, 300 K), +0.63 % (nC4, 280 K) and -0.00 % (CO2, 265 K); the 1e-6
+      databank-equality limit is the databank-Psat rows' construction and the measured
+      agreement lives in this row's pureK cases instead
+  l0_note: ''
+- id: antoine-ideal-k
+  name: Antoine-basis ideal K-values (K_i = Psat_i/P)
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:AntoineIdealKThermo
+  options:
+    k_model: ideal
+  params:
+    source: Antoine Psat coefficients via the chemicals library; components from the ChemSep
+      databank
+    provenance: ideal Raoult-law K-values on the Antoine vapour-pressure basis; Antoine
+      coefficients from the chemicals library (Cory Simon et al.), components from the
+      ChemSep databank
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - water
+    polar: true
+    electrolyte: false
+    T_K: [150.0, 620.0]
+    P_Pa: [1000.0, 3000000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation:
+  - antoine-ideal-k-pureK-C1-125K
+  - antoine-ideal-k-pureK-C3-300K
+  - antoine-ideal-k-pureK-nC4-280K
+  - antoine-ideal-k-pureK-CO2-265K
+  references:
+  - Carlson, H. C., Chem. Eng. Prog. 92(10), 35, 1996 (applicability window)
+  l0:
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+    round_trip:
+      z: {C1: 0.5, C3: 0.5}
+      states: [[300.0, 100000.0]]
+    dhdT_cp:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.5, C3: 0.5}
+        T: 300.0
+        P: 100000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {C3: 0.5, nC4: 0.5}
+      state: [300.0, 2000000.0]
+    determinism:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+  l0_excluded:
+    pure_psat_limit: >-
+      the row's vapour-pressure basis is the Antoine correlation, not the databank: the
+      measured pure-component bubble at the databank-Psat state deviates +0.45 % (C1, 125 K),
+      -0.06 % (C3, 300 K), +0.63 % (nC4, 280 K) and -0.00 % (CO2, 265 K); the 1e-6
+      databank-equality limit is the databank-Psat rows' construction and the measured
+      agreement lives in this row's pureK cases instead
+  l0_note: ''
+- id: ideal-raoult
+  name: Ideal Raoult-law K-values on the databank vapour-pressure basis
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:IdealRaoultThermo
+  options:
+    k_model: ideal
+  params:
+    source: vapour pressures from the ChemSep databank Psat basis
+    provenance: Raoult, F.-M., 'Lois generales des tensions des vapeurs des dissolvants',
+      Compt. Rend. 104, 1430-1433, 1887; Psat from the ChemSep databank
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    - alcohol
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K: [90.0, 620.0]
+    P_Pa: [1000.0, 3000000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation:
+  - ideal-raoult-pureK-C1-125K
+  - ideal-raoult-pureK-C3-300K
+  - ideal-raoult-pureK-nC4-280K
+  - ideal-raoult-pureK-CO2-265K
+  references:
+  - Raoult, F.-M., Compt. Rend. 104, 1430-1433, 1887
+  - Carlson, H. C., Chem. Eng. Prog. 92(10), 35, 1996 (applicability window)
+  l0:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+      - - nC4
+        - 280.0
+      - - CO2
+        - 265.0
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+    round_trip:
+      z: {C1: 0.5, C3: 0.5}
+      states: [[300.0, 100000.0]]
+    dhdT_cp:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.5, C3: 0.5}
+        T: 300.0
+        P: 100000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {C3: 0.5, nC4: 0.5}
+      state: [300.0, 2000000.0]
+    determinism:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+  l0_excluded: {}
+  l0_note: ''
+- id: henry-sander
+  name: Henry's law for the dilute light gases (Sander-compiled pure-water sets) + Raoult
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:HenryIdealThermo
+  options:
+    k_model: henry_ideal
+  params:
+    source: Henry constants under data/thermo_params/kvalue/henry.yaml; water Psat from the
+      ChemSep databank
+    provenance: methane from Lekvam, K. & Bishnoi, P. R., 'Dissolution of methane in water at
+      low temperatures and intermediate pressures', Fluid Phase Equilib. 131, 297-309, 1997,
+      as compiled in Sander 2015 (the Sander methane note-71 entry is seawater and was
+      rejected); CO2 from Versteeg, G. F. & van Swaaij, W. P. M., 'Solubility and Diffusivity
+      of Acid Gases in Aqueous Alkanolamine Solutions', J. Chem. Eng. Data 33(1), 29-34, 1988;
+      Raoult for the non-solute components
+  applicability:
+    component_classes:
+    - light_gas
+    - water
+    - acid_gas
+    polar: true
+    electrolyte: false
+    T_K: [273.0, 373.0]
+    P_Pa: [100000.0, 10000000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation:
+  - henry-sander-pureK-C1-125K
+  - henry-sander-pureK-C3-300K
+  - henry-sander-pureK-nC4-280K
+  - henry-sander-pureK-CO2-265K
+  - henry-sander-c1h2o-298.2K-4.54MPa
+  - henry-sander-c1h2o-310.9K-6.55MPa
+  references:
+  - Sander, R., 'Compilation of Henry's law constants (version 4.0) for water as solvent',
+    Atmos. Chem. Phys. 15, 4399-4981, 2015
+  - Lekvam, K. & Bishnoi, P. R., Fluid Phase Equilib. 131, 297-309, 1997
+  - Culberson, O. L. & McKetta, J. J., 'Phase Equilibria in Hydrocarbon-Water Systems III -
+    The Solubility of Methane in Water at Pressures to 10,000 psia', J. Petrol. Technol.
+    3(5), 223, 1951
+  l0:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+      - - nC4
+        - 280.0
+      - - CO2
+        - 265.0
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - H2O
+        - 300.0
+    round_trip:
+      z: {H2O: 1.0}
+      states: [[300.0, 10000.0]]
+    dhdT_cp:
+      z: {H2O: 1.0}
+      state: [300.0, 10000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {H2O: 0.95, C1: 0.05}
+        T: 300.0
+        P: 100000.0
+        phase: aqueous
+    single_liquid_limit:
+      z: {H2O: 0.999, C1: 0.001}
+      state: [300.0, 5000000.0]
+    determinism:
+      z: {H2O: 0.95, C1: 0.05}
+      state: [300.0, 100000.0]
+  l0_excluded: {}
+  l0_note: ''
+- id: ideal-lk
+  name: Ideal K-values with the Lee-Kesler departure enthalpy basis
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:IdealRaoultThermo
+  options:
+    k_model: ideal
+    enthalpy: lee_kesler
+  params:
+    source: vapour pressures from the ChemSep databank Psat basis
+    provenance: shares the ideal-raoult adapter and databank Psat basis; the row's named role
+      is the Lee-Kesler departure enthalpy basis (the row options declare enthalpy lee_kesler),
+      which is the KValuePackage implementation for every row of this family
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    - alcohol
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K: [90.0, 620.0]
+    P_Pa: [1000.0, 3000000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation:
+  - ideal-lk-pureK-C1-125K
+  - ideal-lk-pureK-C3-300K
+  - ideal-lk-pureK-nC4-280K
+  - ideal-lk-pureK-CO2-265K
+  references:
+  - Raoult, F.-M., Compt. Rend. 104, 1430-1433, 1887
+  - Lee, B. I. & Kesler, M. G., AIChE J. 21(3), 510-527, 1975 (departure basis)
+  l0:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+      - - nC4
+        - 280.0
+      - - CO2
+        - 265.0
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - C3
+        - 300.0
+    round_trip:
+      z: {C1: 0.5, C3: 0.5}
+      states: [[300.0, 100000.0]]
+    dhdT_cp:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.5, C3: 0.5}
+        T: 300.0
+        P: 100000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {C3: 0.5, nC4: 0.5}
+      state: [300.0, 2000000.0]
+    determinism:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+  l0_excluded: {}
+  l0_note: 'the row shares the ideal-raoult adapter (databank Psat, K_i = Psat_i/P); the
+    lee_kesler enthalpy declaration names the departure basis the plan assigns this row'

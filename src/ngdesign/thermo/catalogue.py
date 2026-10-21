@@ -39,6 +39,7 @@ from ngdesign.thermo.options import (
     AlphaFunction,
     EnthalpyMethod,
     GammaPhiOptions,
+    KValueModel,
     VolumeTranslation,
 )
 
@@ -70,6 +71,20 @@ class HelmholtzOptions(BaseModel):
 
     #: IAPWSPackage steam-table formulation (iapws_if97 row selects "IF97").
     formulation: Literal["IAPWS95", "IF97"] = "IAPWS95"
+
+
+class KValueOptions(BaseModel):
+    """Typed options for family ``kvalue`` (spec T-05).
+
+    Additive and small by design: the row names its correlation and the
+    enthalpy-departure basis; every other constant lives in the row's
+    parameter tables under ``data/thermo_params/kvalue/``.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    k_model: KValueModel
+    enthalpy: EnthalpyMethod = EnthalpyMethod.LEE_KESLER
 
 
 class Applicability(BaseModel):
@@ -144,6 +159,15 @@ def _validate_options(row: ModelRow, where: str) -> None:
                 # pairing); any row that declares options validates against the
                 # liquid/vapour vocabulary, extra keys refuse.
                 GammaPhiOptions(**row.options)
+        elif row.family == "kvalue":
+            kopts = KValueOptions(**row.options)
+            adapter = _import_adapter(row, where)
+            pinned = getattr(adapter, "k_model", None)
+            if pinned != kopts.k_model.value:
+                raise CatalogueError(
+                    f"{where}: options.k_model {kopts.k_model.value!r} does not match adapter "
+                    f"{row.adapter!r} (pins {pinned!r})"
+                )
         elif row.options:
             raise CatalogueError(
                 f"{where}: no typed options are declared for family {row.family!r} yet "

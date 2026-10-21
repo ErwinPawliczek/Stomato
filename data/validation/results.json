@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-10-21T19:18:53+00:00",
-    "python": "3.14.7",
-    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "b5295c6",
+    "generated": "2026-10-21T19:45:01+00:00",
+    "python": "3.13.14",
+    "platform": "Linux-6.1.158+-x86_64-with-glibc2.41",
+    "git_rev": "8ce6e1b",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 1016,
-    "n_pass": 776
+    "n_comparisons": 993,
+    "n_pass": 753
   },
   "rows": [
     {
@@ -5956,54 +5956,54 @@
       "package": "pr",
       "property": "bubble_P",
       "expected": 9653000.0,
-      "got": 5938859.891183879,
-      "rel_err": 0.38476536919259513,
-      "pass": false
+      "got": 9694014.860152602,
+      "rel_err": 0.00424892366648733,
+      "pass": true
     },
     {
       "case": "c1c3-294.26K-9.653MPa",
       "package": "pr",
       "property": "vapor_comp",
       "expected": 0.7309,
-      "got": 0.7383141697208029,
-      "rel_err": 0.007414169720802888,
-      "pass": true
+      "got": 0.681898473211513,
+      "rel_err": 0.049001526788487015,
+      "pass": false
     },
     {
       "case": "c1c3-294.26K-9.653MPa",
       "package": "srk",
       "property": "bubble_P",
       "expected": 9653000.0,
-      "got": 5873485.296052454,
-      "rel_err": 0.39153783320703883,
-      "pass": false
+      "got": 9770003.382826727,
+      "rel_err": 0.012120934717365263,
+      "pass": true
     },
     {
       "case": "c1c3-294.26K-9.653MPa",
       "package": "srk",
       "property": "vapor_comp",
       "expected": 0.7309,
-      "got": 0.7427899189695687,
-      "rel_err": 0.011889918969568702,
-      "pass": true
+      "got": 0.6967401348592207,
+      "rel_err": 0.03415986514077929,
+      "pass": false
     },
     {
       "case": "c1c3-294.26K-9.653MPa",
       "package": "pr78",
       "property": "bubble_P",
       "expected": 9653000.0,
-      "got": 5938859.891183879,
-      "rel_err": 0.38476536919259513,
-      "pass": false
+      "got": 9694014.860152602,
+      "rel_err": 0.00424892366648733,
+      "pass": true
     },
     {
       "case": "c1c3-294.26K-9.653MPa",
       "package": "pr78",
       "property": "vapor_comp",
       "expected": 0.7309,
-      "got": 0.7383141697208029,
-      "rel_err": 0.007414169720802888,
-      "pass": true
+      "got": 0.681898473211513,
+      "rel_err": 0.049001526788487015,
+      "pass": false
     },
     {
       "case": "c1c3-310.93K-1.379MPa",
@@ -6442,8 +6442,8 @@
       "package": "pr",
       "property": "bubble_P",
       "expected": 7584000.0,
-      "got": 4840061.7564332085,
-      "rel_err": 0.3618062030019504,
+      "got": 7273622.634697005,
+      "rel_err": 0.040925285509361135,
       "pass": false
     },
     {
@@ -6451,8 +6451,8 @@
       "package": "pr",
       "property": "vapor_comp",
       "expected": 0.5546,
-      "got": 0.4566452559015715,
-      "rel_err": 0.09795474409842847,
+      "got": 0.5122394238175867,
+      "rel_err": 0.04236057618241329,
       "pass": false
     },
     {
@@ -6460,8 +6460,8 @@
       "package": "srk",
       "property": "bubble_P",
       "expected": 7584000.0,
-      "got": 4817955.550748412,
-      "rel_err": 0.36472105079794154,
+      "got": 7282458.9726246875,
+      "rel_err": 0.03976015656320049,
       "pass": false
     },
     {
@@ -6469,8 +6469,8 @@
       "package": "srk",
       "property": "vapor_comp",
       "expected": 0.5546,
-      "got": 0.4590101290727236,
-      "rel_err": 0.09558987092727639,
+      "got": 0.5234820160634213,
+      "rel_err": 0.03111798393657872,
       "pass": false
     },
     {
@@ -6478,8 +6478,8 @@
       "package": "pr78",
       "property": "bubble_P",
       "expected": 7584000.0,
-      "got": 4840061.7564332085,
-      "rel_err": 0.3618062030019504,
+      "got": 7273622.634697005,
+      "rel_err": 0.040925285509361135,
       "pass": false
     },
     {
@@ -6487,8 +6487,8 @@
       "package": "pr78",
       "property": "vapor_comp",
       "expected": 0.5546,
-      "got": 0.4566452559015715,
-      "rel_err": 0.09795474409842847,
+      "got": 0.5122394238175867,
+      "rel_err": 0.04236057618241329,
       "pass": false
     },
     {
@@ -8053,8 +8053,8 @@
       "package": "amine_ke",
       "property": "K",
       "expected": 15.1424,
-      "got": 15.372717267005736,
-      "rel_err": 0.015210090012530118,
+      "got": 15.372717267005797,
+      "rel_err": 0.015210090012534106,
       "pass": true
     },
     {
@@ -8062,8 +8062,8 @@
       "package": "amine_ke",
       "property": "K",
       "expected": 1.28491,
-      "got": 1.2227060342745155,
-      "rel_err": 0.048411146092321236,
+      "got": 1.222706034274515,
+      "rel_err": 0.04841114609232158,
       "pass": true
     },
     {
@@ -8071,8 +8071,8 @@
       "package": "amine_ke",
       "property": "K",
       "expected": 16.207,
-      "got": 16.331753941878702,
-      "rel_err": 0.007697534514635736,
+      "got": 16.331753941878695,
+      "rel_err": 0.007697534514635297,
       "pass": true
     },
     {
@@ -8080,8 +8080,8 @@
       "package": "amine_ke",
       "property": "K",
       "expected": 15.3345,
-      "got": 15.257580343672943,
-      "rel_err": 0.005016117664550972,
+      "got": 15.25758034367295,
+      "rel_err": 0.005016117664550509,
       "pass": true
     },
     {
@@ -8265,894 +8265,687 @@
       "pass": false
     },
     {
-      "case": "uniquac-ig-megh2o-431.25K-101.325kPa",
-      "package": "uniquac_ig",
-      "property": "bubble_T",
-      "expected": 431.25,
-      "got": 430.4697408581738,
-      "rel_err": 0.0018092965607564215,
+      "case": "chao-seader-c1c3-277.59K-4.826MPa",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 2.87036,
+      "got": 2.8889968776870965,
+      "rel_err": 0.0064928711684585395,
       "pass": true
     },
     {
-      "case": "uniquac-ig-megh2o-431.25K-101.325kPa",
-      "package": "uniquac_ig",
-      "property": "vapor_comp",
-      "expected": 0.224,
-      "got": 0.22960640676621485,
-      "rel_err": 0.00560640676621485,
+      "case": "chao-seader-c1c3-277.59K-4.826MPa",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 0.2602,
+      "got": 0.25162825354829016,
+      "rel_err": 0.03294291487974569,
       "pass": true
     },
     {
-      "case": "uniquac-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "uniquac_ig",
+      "case": "chao-seader-c1c3-294.26K-4.137MPa",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 3.54202,
+      "got": 3.483773069326782,
+      "rel_err": 0.016444551604230938,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-c1c3-294.26K-4.137MPa",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 0.369649,
+      "got": 0.3612197484069817,
+      "rel_err": 0.022803393470612197,
+      "pass": true
+    },
+    {
+      "case": "lee-kesler-ploecker-c1c3-294.26K-4.137MPa",
+      "package": "lee-kesler-ploecker",
+      "property": "K",
+      "expected": 3.54202,
+      "got": 3.5472212341280587,
+      "rel_err": 0.0014684372555939067,
+      "pass": true
+    },
+    {
+      "case": "lee-kesler-ploecker-c1c3-294.26K-4.137MPa",
+      "package": "lee-kesler-ploecker",
+      "property": "K",
+      "expected": 0.369649,
+      "got": 0.36115199809222076,
+      "rel_err": 0.022986676300434317,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-c1h2o-298.2K-4.54MPa",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 999.3,
+      "got": 1017.0125264491151,
+      "rel_err": 0.017724933902847097,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-c1h2o-310.9K-6.55MPa",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 889.586,
+      "got": 975.4084779476383,
+      "rel_err": 0.09647462746450403,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-pureK-C3-300K",
+      "package": "chao-seader",
       "property": "bubble_P",
-      "expected": 336600.0,
-      "got": 336598.09247690614,
-      "rel_err": 5.667032364413333e-06,
+      "expected": 997682.6201918732,
+      "got": 949143.9999988619,
+      "rel_err": 0.04865136388130762,
       "pass": true
     },
     {
-      "case": "uniquac-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "uniquac_ig",
-      "property": "vapor_comp",
-      "expected": 0.1591,
-      "got": 0.15910089775036562,
-      "rel_err": 8.977503656304453e-07,
+      "case": "chao-seader-pureK-C3-300K",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "uniquac-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "uniquac_ig",
-      "property": "bubble_T",
-      "expected": 351.35,
-      "got": 351.97030656085656,
-      "rel_err": 0.0017654946943404977,
-      "pass": true
-    },
-    {
-      "case": "uniquac-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "uniquac_ig",
-      "property": "vapor_comp",
-      "expected": 0.8947,
-      "got": 0.9125934057633128,
-      "rel_err": 0.017893405763312775,
-      "pass": true
-    },
-    {
-      "case": "wilson-ig-megh2o-431.25K-101.325kPa",
-      "package": "wilson_ig",
-      "property": "bubble_T",
-      "expected": 431.25,
-      "got": 430.8311640427861,
-      "rel_err": 0.0009712138138293348,
-      "pass": true
-    },
-    {
-      "case": "wilson-ig-megh2o-431.25K-101.325kPa",
-      "package": "wilson_ig",
-      "property": "vapor_comp",
-      "expected": 0.224,
-      "got": 0.2328895024614751,
-      "rel_err": 0.008889502461475102,
-      "pass": true
-    },
-    {
-      "case": "wilson-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "wilson_ig",
+      "case": "chao-seader-pureK-nC4-280K",
+      "package": "chao-seader",
       "property": "bubble_P",
-      "expected": 336600.0,
-      "got": 336601.38467154326,
-      "rel_err": 4.11370036618887e-06,
+      "expected": 132816.54823974936,
+      "got": 129882.92266138001,
+      "rel_err": 0.022087801687737076,
       "pass": true
     },
     {
-      "case": "wilson-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "wilson_ig",
-      "property": "vapor_comp",
-      "expected": 0.1591,
-      "got": 0.1590993831585221,
-      "rel_err": 6.168414778962017e-07,
-      "pass": true
-    },
-    {
-      "case": "wilson-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "wilson_ig",
-      "property": "bubble_T",
-      "expected": 351.35,
-      "got": 351.26523895312556,
-      "rel_err": 0.00024124390742695872,
-      "pass": true
-    },
-    {
-      "case": "wilson-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "wilson_ig",
-      "property": "vapor_comp",
-      "expected": 0.8947,
-      "got": 0.8944616481793662,
-      "rel_err": 0.00023835182063380866,
-      "pass": true
-    },
-    {
-      "case": "vanlaar-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "vanlaar_ig",
-      "property": "bubble_P",
-      "expected": 336600.0,
-      "got": 336599.84052079683,
-      "rel_err": 4.737944241482554e-07,
-      "pass": true
-    },
-    {
-      "case": "vanlaar-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "vanlaar_ig",
-      "property": "vapor_comp",
-      "expected": 0.1591,
-      "got": 0.15910008075841647,
-      "rel_err": 8.075841648191862e-08,
-      "pass": true
-    },
-    {
-      "case": "vanlaar-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "vanlaar_ig",
-      "property": "bubble_T",
-      "expected": 351.35,
-      "got": 351.3500018088856,
-      "rel_err": 5.148386507841712e-09,
-      "pass": true
-    },
-    {
-      "case": "vanlaar-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "vanlaar_ig",
-      "property": "vapor_comp",
-      "expected": 0.8947,
-      "got": 0.8947,
+      "case": "chao-seader-pureK-nC4-280K",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
       "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "margules-ig-megh2o-431.25K-101.325kPa",
-      "package": "margules_ig",
-      "property": "bubble_T",
-      "expected": 431.25,
-      "got": 430.3604584306888,
-      "rel_err": 0.0020627050882578023,
-      "pass": true
-    },
-    {
-      "case": "margules-ig-megh2o-431.25K-101.325kPa",
-      "package": "margules_ig",
-      "property": "vapor_comp",
-      "expected": 0.224,
-      "got": 0.2295635056480395,
-      "rel_err": 0.005563505648039507,
-      "pass": true
-    },
-    {
-      "case": "margules-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "margules_ig",
-      "property": "bubble_P",
-      "expected": 336600.0,
-      "got": 336599.8078978937,
-      "rel_err": 5.707133282474018e-07,
-      "pass": true
-    },
-    {
-      "case": "margules-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "margules_ig",
-      "property": "vapor_comp",
-      "expected": 0.1591,
-      "got": 0.15910008980242557,
-      "rel_err": 8.980242557909968e-08,
-      "pass": true
-    },
-    {
-      "case": "margules-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "margules_ig",
-      "property": "bubble_T",
-      "expected": 351.35,
-      "got": 351.34999851648496,
-      "rel_err": 4.2223283440521315e-09,
-      "pass": true
-    },
-    {
-      "case": "margules-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "margules_ig",
-      "property": "vapor_comp",
-      "expected": 0.8947,
-      "got": 0.8947,
-      "rel_err": 0.0,
-      "pass": true
-    },
-    {
-      "case": "unifac-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "unifac_ig",
-      "property": "bubble_T",
-      "expected": 351.35,
-      "got": 351.3039444156354,
-      "rel_err": 0.00013108178273697887,
-      "pass": true
-    },
-    {
-      "case": "unifac-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "unifac_ig",
-      "property": "vapor_comp",
-      "expected": 0.8947,
-      "got": 0.8947,
-      "rel_err": 0.0,
-      "pass": true
-    },
-    {
-      "case": "unifac-dortmund-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "unifac_dortmund_ig",
-      "property": "bubble_P",
-      "expected": 336600.0,
-      "got": 339877.0585268419,
-      "rel_err": 0.009735765082715162,
-      "pass": true
-    },
-    {
-      "case": "unifac-dortmund-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "unifac_dortmund_ig",
-      "property": "vapor_comp",
-      "expected": 0.1591,
-      "got": 0.1549733834271367,
-      "rel_err": 0.004126616572863284,
-      "pass": true
-    },
-    {
-      "case": "unifac-dortmund-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "unifac_dortmund_ig",
-      "property": "bubble_T",
-      "expected": 351.35,
-      "got": 351.39929563201406,
-      "rel_err": 0.0001403034922841512,
-      "pass": true
-    },
-    {
-      "case": "unifac-dortmund-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "unifac_dortmund_ig",
-      "property": "vapor_comp",
-      "expected": 0.8947,
-      "got": 0.8947,
-      "rel_err": 0.0,
-      "pass": true
-    },
-    {
-      "case": "unifac-psrk-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "unifac_psrk_ig",
-      "property": "bubble_P",
-      "expected": 336600.0,
-      "got": 330659.51434798155,
-      "rel_err": 0.017648501639983525,
-      "pass": true
-    },
-    {
-      "case": "unifac-psrk-ig-meohnc4-323.22K-0.3366MPa",
-      "package": "unifac_psrk_ig",
-      "property": "vapor_comp",
-      "expected": 0.1591,
-      "got": 0.15886165110811043,
-      "rel_err": 0.00023834889188956154,
-      "pass": true
-    },
-    {
-      "case": "unifac-psrk-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "unifac_psrk_ig",
-      "property": "bubble_T",
-      "expected": 351.35,
-      "got": 351.3039444156354,
-      "rel_err": 0.00013108178273697887,
-      "pass": true
-    },
-    {
-      "case": "unifac-psrk-ig-etohh2o-azeotrope-101.325kPa",
-      "package": "unifac_psrk_ig",
-      "property": "vapor_comp",
-      "expected": 0.8947,
-      "got": 0.8947,
-      "rel_err": 0.0,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-216.7K",
-      "package": "gerg2008",
-      "property": "bubble_P",
-      "expected": 520401.256268029,
-      "got": 520401.256268029,
-      "rel_err": 0.0,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-216.7K",
-      "package": "gerg2008",
-      "property": "dew_P",
-      "expected": 520401.256268029,
-      "got": 520401.256268029,
-      "rel_err": 0.0,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-216.7K",
-      "package": "gerg2008",
-      "property": "rho_V",
-      "expected": 13.822674477833518,
-      "got": 13.822674477834383,
-      "rel_err": 6.258454412532113e-14,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-216.7K",
-      "package": "gerg2008",
-      "property": "rho_L",
-      "expected": 1178.0752220352338,
-      "got": 1178.0752220352329,
-      "rel_err": 7.720175119222796e-16,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-216.7K",
-      "package": "gerg2008",
-      "property": "Cp",
-      "expected": 85.97118053434417,
-      "got": 85.97118053434407,
-      "rel_err": 1.1570852277255272e-15,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-240.0K",
-      "package": "gerg2008",
-      "property": "bubble_P",
-      "expected": 1282483.4984006712,
-      "got": 1282483.4984006712,
-      "rel_err": 0.0,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-240.0K",
-      "package": "gerg2008",
-      "property": "dew_P",
-      "expected": 1282483.4984006712,
-      "got": 1282483.4984006712,
-      "rel_err": 0.0,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-240.0K",
-      "package": "gerg2008",
-      "property": "rho_V",
-      "expected": 33.29513808635024,
-      "got": 33.295138086350796,
-      "rel_err": 1.6645773699917133e-14,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-240.0K",
-      "package": "gerg2008",
-      "property": "rho_L",
-      "expected": 1088.8692401220028,
-      "got": 1088.8692401220032,
-      "rel_err": 4.176326542528759e-16,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-240.0K",
-      "package": "gerg2008",
-      "property": "Cp",
-      "expected": 90.2633373679705,
-      "got": 90.26333736738852,
-      "rel_err": 6.4475472558604886e-12,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-265.0K",
-      "package": "gerg2008",
+      "case": "chao-seader-pureK-CO2-265K",
+      "package": "chao-seader",
       "property": "bubble_P",
       "expected": 2790916.074974494,
-      "got": 2790916.074974494,
+      "got": 2699259.056489499,
+      "rel_err": 0.03284119479867659,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-pureK-CO2-265K",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
       "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "pure-CO2-265.0K",
-      "package": "gerg2008",
-      "property": "dew_P",
+      "case": "grayson-streed-pureK-C3-300K",
+      "package": "grayson-streed",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 972396.0026183368,
+      "rel_err": 0.02534535238137481,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-C3-300K",
+      "package": "grayson-streed",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-nC4-280K",
+      "package": "grayson-streed",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 129979.62935348686,
+      "rel_err": 0.021359679376259138,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-nC4-280K",
+      "package": "grayson-streed",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-CO2-265K",
+      "package": "grayson-streed",
+      "property": "bubble_P",
       "expected": 2790916.074974494,
-      "got": 2790916.074974494,
+      "got": 2814844.4386668233,
+      "rel_err": 0.008573659346796355,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-CO2-265K",
+      "package": "grayson-streed",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
       "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "pure-CO2-265.0K",
-      "package": "gerg2008",
-      "property": "rho_V",
-      "expected": 75.47077353408034,
-      "got": 75.47077353408065,
-      "rel_err": 4.1425148980786025e-15,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-265.0K",
-      "package": "gerg2008",
-      "property": "rho_L",
-      "expected": 973.2544843551278,
-      "got": 973.2544843551283,
-      "rel_err": 4.672440334942579e-16,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-265.0K",
-      "package": "gerg2008",
-      "property": "Cp",
-      "expected": 103.05559698734537,
-      "got": 103.0555969885889,
-      "rel_err": 1.2066642560531336e-11,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-285.0K",
-      "package": "gerg2008",
+      "case": "grayson-streed-extended-pureK-C3-300K",
+      "package": "grayson-streed-extended",
       "property": "bubble_P",
-      "expected": 4712303.46473758,
-      "got": 4712303.46473758,
+      "expected": 997682.6201918732,
+      "got": 972396.0026183368,
+      "rel_err": 0.02534535238137481,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-extended-pureK-C3-300K",
+      "package": "grayson-streed-extended",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
       "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "pure-CO2-285.0K",
-      "package": "gerg2008",
-      "property": "dew_P",
-      "expected": 4712303.46473758,
-      "got": 4712303.46473758,
+      "case": "grayson-streed-extended-pureK-nC4-280K",
+      "package": "grayson-streed-extended",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 129979.62935348686,
+      "rel_err": 0.021359679376259138,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-extended-pureK-nC4-280K",
+      "package": "grayson-streed-extended",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
       "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "pure-CO2-285.0K",
-      "package": "gerg2008",
-      "property": "rho_V",
-      "expected": 143.92260865325676,
-      "got": 143.922608653257,
-      "rel_err": 1.5798329225050976e-15,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-285.0K",
-      "package": "gerg2008",
-      "property": "rho_L",
-      "expected": 847.0463756053841,
-      "got": 847.0463756053848,
-      "rel_err": 8.05293601359411e-16,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-285.0K",
-      "package": "gerg2008",
-      "property": "Cp",
-      "expected": 137.89526869642648,
-      "got": 137.89526869653227,
-      "rel_err": 7.671445402006394e-13,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-288.9K",
-      "package": "gerg2008",
+      "case": "grayson-streed-extended-pureK-CO2-265K",
+      "package": "grayson-streed-extended",
       "property": "bubble_P",
-      "expected": 5179673.129875787,
-      "got": 5179673.129875787,
+      "expected": 2790916.074974494,
+      "got": 2814844.4386668233,
+      "rel_err": 0.008573659346796355,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-extended-pureK-CO2-265K",
+      "package": "grayson-streed-extended",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
       "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "pure-CO2-288.9K",
-      "package": "gerg2008",
-      "property": "dew_P",
-      "expected": 5179673.129875787,
-      "got": 5179673.129875787,
+      "case": "braun-k10-pureK-C1-125K",
+      "package": "braun-k10",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "braun-k10-pureK-C1-125K",
+      "package": "braun-k10",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
       "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "pure-CO2-288.9K",
-      "package": "gerg2008",
-      "property": "rho_V",
-      "expected": 165.14581022973502,
-      "got": 165.14581022973536,
-      "rel_err": 2.0652083918471645e-15,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-288.9K",
-      "package": "gerg2008",
-      "property": "rho_L",
-      "expected": 814.6391777699876,
-      "got": 814.6391777699881,
-      "rel_err": 6.977741853321188e-16,
-      "pass": true
-    },
-    {
-      "case": "pure-CO2-288.9K",
-      "package": "gerg2008",
-      "property": "Cp",
-      "expected": 155.1893706579236,
-      "got": 155.18937064674543,
-      "rel_err": 7.202924405492377e-11,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-273.179K",
-      "package": "iapws95",
+      "case": "braun-k10-pureK-nC4-280K",
+      "package": "braun-k10",
       "property": "bubble_P",
-      "expected": 612.48,
-      "got": 612.4997668266071,
-      "rel_err": 3.2273423796875794e-05,
+      "expected": 132816.54823974936,
+      "got": 132816.3753248366,
+      "rel_err": 1.3019078950720502e-06,
       "pass": true
     },
     {
-      "case": "h2o-nist-273.179K",
-      "package": "iapws95",
-      "property": "dew_P",
-      "expected": 612.48,
-      "got": 612.4997668266071,
-      "rel_err": 3.2273423796875794e-05,
+      "case": "braun-k10-pureK-nC4-280K",
+      "package": "braun-k10",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "h2o-nist-273.179K",
-      "package": "iapws95",
-      "property": "rho_V",
-      "expected": 0.0048608,
-      "got": 0.004860789657482703,
-      "rel_err": 2.127739733675813e-06,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-273.179K",
-      "package": "iapws95",
-      "property": "rho_L",
-      "expected": 999.794,
-      "got": 999.7938082337795,
-      "rel_err": 1.918057324768827e-07,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-273.179K",
-      "package": "iapws95",
-      "property": "Cp",
-      "expected": 76.0217,
-      "got": 76.02164906451445,
-      "rel_err": 6.700124510065961e-07,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-347.390K",
-      "package": "iapws95",
+      "case": "lee-kesler-ploecker-pureK-C1-125K",
+      "package": "lee-kesler-ploecker",
       "property": "bubble_P",
-      "expected": 37384.8,
-      "got": 37384.52999381221,
-      "rel_err": 7.22235207333718e-06,
+      "expected": 268757.80384445406,
+      "got": 269612.86032367055,
+      "rel_err": 0.0031815131206808286,
       "pass": true
     },
     {
-      "case": "h2o-nist-347.390K",
-      "package": "iapws95",
-      "property": "dew_P",
-      "expected": 37384.8,
-      "got": 37384.52999381221,
-      "rel_err": 7.22235207333718e-06,
+      "case": "lee-kesler-ploecker-pureK-C1-125K",
+      "package": "lee-kesler-ploecker",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "h2o-nist-347.390K",
-      "package": "iapws95",
-      "property": "rho_V",
-      "expected": 0.235069,
-      "got": 0.235069017882045,
-      "rel_err": 7.607147267997102e-08,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-347.390K",
-      "package": "iapws95",
-      "property": "rho_L",
-      "expected": 975.267,
-      "got": 975.2670990276966,
-      "rel_err": 1.0153906221804093e-07,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-347.390K",
-      "package": "iapws95",
-      "property": "Cp",
-      "expected": 75.5351,
-      "got": 75.53514055183496,
-      "rel_err": 5.36860809830915e-07,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-401.605K",
-      "package": "iapws95",
+      "case": "lee-kesler-ploecker-pureK-C3-300K",
+      "package": "lee-kesler-ploecker",
       "property": "bubble_P",
-      "expected": 258019.0,
-      "got": 258021.58174802753,
-      "rel_err": 1.0006038421701898e-05,
+      "expected": 997682.6201918732,
+      "got": 1018673.3337481356,
+      "rel_err": 0.021039469999212298,
       "pass": true
     },
     {
-      "case": "h2o-nist-401.605K",
-      "package": "iapws95",
-      "property": "dew_P",
-      "expected": 258019.0,
-      "got": 258021.58174802753,
-      "rel_err": 1.0006038421701898e-05,
+      "case": "lee-kesler-ploecker-pureK-C3-300K",
+      "package": "lee-kesler-ploecker",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "h2o-nist-401.605K",
-      "package": "iapws95",
-      "property": "rho_V",
-      "expected": 1.43326,
-      "got": 1.4332586989726626,
-      "rel_err": 9.077399337309448e-07,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-401.605K",
-      "package": "iapws95",
-      "property": "rho_L",
-      "expected": 936.14,
-      "got": 936.1400476276611,
-      "rel_err": 5.087664362246225e-08,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-401.605K",
-      "package": "iapws95",
-      "property": "Cp",
-      "expected": 76.7184,
-      "got": 76.71845141099074,
-      "rel_err": 6.701259506935711e-07,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-500.184K",
-      "package": "iapws95",
+      "case": "lee-kesler-ploecker-pureK-CO2-265K",
+      "package": "lee-kesler-ploecker",
       "property": "bubble_P",
-      "expected": 2648220.0,
-      "got": 2648225.2585702473,
-      "rel_err": 1.9856999219588145e-06,
+      "expected": 2790916.074974494,
+      "got": 2764028.3406609646,
+      "rel_err": 0.009634017502219294,
       "pass": true
     },
     {
-      "case": "h2o-nist-500.184K",
-      "package": "iapws95",
-      "property": "dew_P",
-      "expected": 2648220.0,
-      "got": 2648225.2585702473,
-      "rel_err": 1.9856999219588145e-06,
+      "case": "lee-kesler-ploecker-pureK-CO2-265K",
+      "package": "lee-kesler-ploecker",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "h2o-nist-500.184K",
-      "package": "iapws95",
-      "property": "rho_V",
-      "expected": 13.2438,
-      "got": 13.243770281993033,
-      "rel_err": 2.2439184348353193e-06,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-500.184K",
-      "package": "iapws95",
-      "property": "rho_L",
-      "expected": 831.07,
-      "got": 831.0701949630724,
-      "rel_err": 2.345928409369581e-07,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-500.184K",
-      "package": "iapws95",
-      "property": "Cp",
-      "expected": 84.0383,
-      "got": 84.03829552595853,
-      "rel_err": 5.323812446322312e-08,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-600.070K",
-      "package": "iapws95",
+      "case": "esso-tabular-pureK-C1-125K",
+      "package": "esso-tabular",
       "property": "bubble_P",
-      "expected": 12356100.0,
-      "got": 12356051.019614628,
-      "rel_err": 3.964065147774394e-06,
+      "expected": 268757.80384445406,
+      "got": 269977.75966667954,
+      "rel_err": 0.004539238692884786,
       "pass": true
     },
     {
-      "case": "h2o-nist-600.070K",
-      "package": "iapws95",
-      "property": "dew_P",
-      "expected": 12356100.0,
-      "got": 12356051.019614628,
-      "rel_err": 3.964065147774394e-06,
+      "case": "esso-tabular-pureK-C1-125K",
+      "package": "esso-tabular",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "h2o-nist-600.070K",
-      "package": "iapws95",
-      "property": "rho_V",
-      "expected": 72.9331,
-      "got": 72.93325153305864,
-      "rel_err": 2.0776994072850606e-06,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-600.070K",
-      "package": "iapws95",
-      "property": "rho_L",
-      "expected": 649.222,
-      "got": 649.2233735283677,
-      "rel_err": 2.1156528394106747e-06,
-      "pass": true
-    },
-    {
-      "case": "h2o-nist-600.070K",
-      "package": "iapws95",
-      "property": "Cp",
-      "expected": 125.352,
-      "got": 125.35120380342467,
-      "rel_err": 6.351686254201719e-06,
-      "pass": true
-    },
-    {
-      "case": "c1n2-149.989K-2.908MPa",
-      "package": "gerg2008",
+      "case": "esso-tabular-pureK-C3-300K",
+      "package": "esso-tabular",
       "property": "bubble_P",
-      "expected": 2908400.0,
-      "got": 2846050.9349531797,
-      "rel_err": 0.021437582535696713,
+      "expected": 997682.6201918732,
+      "got": 998307.5052927453,
+      "rel_err": 0.0006263365605706976,
       "pass": true
     },
     {
-      "case": "c1n2-149.989K-2.908MPa",
-      "package": "gerg2008",
-      "property": "vapor_comp",
-      "expected": 0.5981,
-      "got": 0.5930328364527131,
-      "rel_err": 0.005067163547286868,
+      "case": "esso-tabular-pureK-C3-300K",
+      "package": "esso-tabular",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "c1n2-159.972K-1.789MPa",
-      "package": "gerg2008",
+      "case": "esso-tabular-pureK-nC4-280K",
+      "package": "esso-tabular",
       "property": "bubble_P",
-      "expected": 1789200.0,
-      "got": 1787133.9809027745,
-      "rel_err": 0.0011547166874723382,
+      "expected": 132816.54823974936,
+      "got": 133650.71562110606,
+      "rel_err": 0.006280598256859783,
       "pass": true
     },
     {
-      "case": "c1n2-159.972K-1.789MPa",
-      "package": "gerg2008",
-      "property": "vapor_comp",
-      "expected": 0.0908,
-      "got": 0.09660684141272906,
-      "rel_err": 0.005806841412729052,
+      "case": "esso-tabular-pureK-nC4-280K",
+      "package": "esso-tabular",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "c1n2-179.976K-5.062MPa",
-      "package": "gerg2008",
+      "case": "esso-tabular-pureK-CO2-265K",
+      "package": "esso-tabular",
       "property": "bubble_P",
-      "expected": 5061500.0,
-      "got": 4959975.915307602,
-      "rel_err": 0.020058102280430323,
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
       "pass": true
     },
     {
-      "case": "c1n2-179.976K-5.062MPa",
-      "package": "gerg2008",
-      "property": "vapor_comp",
-      "expected": 0.193,
-      "got": 0.20346007686318213,
-      "rel_err": 0.010460076863182122,
+      "case": "esso-tabular-pureK-CO2-265K",
+      "package": "esso-tabular",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "c1co2-293.130K-6.135MPa",
-      "package": "gerg2008",
+      "case": "antoine-ideal-k-pureK-C1-125K",
+      "package": "antoine-ideal-k",
       "property": "bubble_P",
-      "expected": 6134800.0,
-      "got": 6123935.794439762,
-      "rel_err": 0.0017709143835557965,
+      "expected": 268757.80384445406,
+      "got": 269977.75966667954,
+      "rel_err": 0.004539238692884786,
       "pass": true
     },
     {
-      "case": "c1co2-293.130K-6.135MPa",
-      "package": "gerg2008",
-      "property": "vapor_comp",
-      "expected": 0.9603,
-      "got": 0.9607982357178224,
-      "rel_err": 0.0004982357178223706,
+      "case": "antoine-ideal-k-pureK-C1-125K",
+      "package": "antoine-ideal-k",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "c1co2-293.130K-6.976MPa",
-      "package": "gerg2008",
+      "case": "antoine-ideal-k-pureK-C3-300K",
+      "package": "antoine-ideal-k",
       "property": "bubble_P",
-      "expected": 6975600.0,
-      "got": 6944755.912185675,
-      "rel_err": 0.004421711080670413,
+      "expected": 997682.6201918732,
+      "got": 998307.5052927453,
+      "rel_err": 0.0006263365605706976,
       "pass": true
     },
     {
-      "case": "c1co2-293.130K-6.976MPa",
-      "package": "gerg2008",
-      "property": "vapor_comp",
-      "expected": 0.89863,
-      "got": 0.8984479747190802,
-      "rel_err": 0.0001820252809198175,
+      "case": "antoine-ideal-k-pureK-C3-300K",
+      "package": "antoine-ideal-k",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "c1co2-298.142K-6.976MPa",
-      "package": "gerg2008",
+      "case": "antoine-ideal-k-pureK-nC4-280K",
+      "package": "antoine-ideal-k",
       "property": "bubble_P",
-      "expected": 6975500.0,
-      "got": 6961309.176691267,
-      "rel_err": 0.0020343808054954183,
+      "expected": 132816.54823974936,
+      "got": 133650.71562110606,
+      "rel_err": 0.006280598256859783,
       "pass": true
     },
     {
-      "case": "c1co2-298.142K-6.976MPa",
-      "package": "gerg2008",
-      "property": "vapor_comp",
-      "expected": 0.95917,
-      "got": 0.9591974540550608,
-      "rel_err": 2.745405506088261e-05,
+      "case": "antoine-ideal-k-pureK-nC4-280K",
+      "package": "antoine-ideal-k",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "c1co2-298.142K-7.508MPa",
-      "package": "gerg2008",
+      "case": "antoine-ideal-k-pureK-CO2-265K",
+      "package": "antoine-ideal-k",
       "property": "bubble_P",
-      "expected": 7507900.0,
-      "got": 7498096.695057178,
-      "rel_err": 0.001305731954717309,
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
       "pass": true
     },
     {
-      "case": "c1co2-298.142K-7.508MPa",
-      "package": "gerg2008",
-      "property": "vapor_comp",
-      "expected": 0.9318,
-      "got": 0.9281071058480467,
-      "rel_err": 0.0036928941519532854,
+      "case": "antoine-ideal-k-pureK-CO2-265K",
+      "package": "antoine-ideal-k",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "aga8-c1n2-134.02K-dew",
-      "package": "gerg2008",
-      "property": "dew_P",
-      "expected": 953319.19,
-      "got": 952823.9801371163,
-      "rel_err": 0.0005194586116363276,
+      "case": "ideal-raoult-pureK-C1-125K",
+      "package": "ideal-raoult",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
       "pass": true
     },
     {
-      "case": "aga8-c1n2-146.37K-dew",
-      "package": "gerg2008",
-      "property": "dew_P",
-      "expected": 1866384.4,
-      "got": 1866187.0132967127,
-      "rel_err": 0.00010575886901286322,
+      "case": "ideal-raoult-pureK-C1-125K",
+      "package": "ideal-raoult",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     },
     {
-      "case": "aga8-c1n2-153.41K-dew",
-      "package": "gerg2008",
-      "property": "dew_P",
-      "expected": 2658444.0,
-      "got": 2658635.8689004895,
-      "rel_err": 7.217338431410544e-05,
+      "case": "ideal-raoult-pureK-C3-300K",
+      "package": "ideal-raoult",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-C3-300K",
+      "package": "ideal-raoult",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-nC4-280K",
+      "package": "ideal-raoult",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.3753248366,
+      "rel_err": 1.3019078950720502e-06,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-nC4-280K",
+      "package": "ideal-raoult",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-CO2-265K",
+      "package": "ideal-raoult",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-CO2-265K",
+      "package": "ideal-raoult",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-C1-125K",
+      "package": "henry-sander",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-C1-125K",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-C3-300K",
+      "package": "henry-sander",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-C3-300K",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-nC4-280K",
+      "package": "henry-sander",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.3753248366,
+      "rel_err": 1.3019078950720502e-06,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-nC4-280K",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-CO2-265K",
+      "package": "henry-sander",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-CO2-265K",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-C1-125K",
+      "package": "ideal-lk",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-C1-125K",
+      "package": "ideal-lk",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-C3-300K",
+      "package": "ideal-lk",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-C3-300K",
+      "package": "ideal-lk",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-nC4-280K",
+      "package": "ideal-lk",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.3753248366,
+      "rel_err": 1.3019078950720502e-06,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-nC4-280K",
+      "package": "ideal-lk",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-CO2-265K",
+      "package": "ideal-lk",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-CO2-265K",
+      "package": "ideal-lk",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     }
   ]

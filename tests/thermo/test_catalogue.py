@@ -21,6 +21,15 @@ from ngdesign.thermo.helmholtz import (
     IAPWSPackage,
     UnavailablePackage,
 )
+from ngdesign.thermo.kvalue import (
+    AntoineIdealKThermo,
+    BraunK10Thermo,
+    ChaoSeaderThermo,
+    GraysonStreedThermo,
+    HenryIdealThermo,
+    IdealRaoultThermo,
+    LeeKeslerPloeckerThermo,
+)
 from ngdesign.thermo.nrtl import NrtlThermo
 from ngdesign.thermo.pr import PengRobinsonThermo
 from ngdesign.thermo.pr78 import PengRobinson78Thermo
@@ -43,7 +52,7 @@ def _load_harness() -> Any:
 
 
 def test_rows_load_and_build() -> None:
-    """75 rows load; the registry resolves each id to its adapter class."""
+    """85 rows load; the registry resolves each id to its adapter class."""
     rows = load_catalogue()
     gamma_phi_ids = [
         f"{liquid}_{vapour}"
@@ -77,9 +86,21 @@ def test_rows_load_and_build() -> None:
         "iapws_if97",
         "mbwr",
     ]
+    kvalue_ids = [
+        "antoine-ideal-k",
+        "braun-k10",
+        "chao-seader",
+        "esso-tabular",
+        "grayson-streed",
+        "grayson-streed-extended",
+        "henry-sander",
+        "ideal-lk",
+        "ideal-raoult",
+        "lee-kesler-ploecker",
+    ]
     non_gamma = ["amine_enrtl", "amine_ke", "pr", "pr78", "srk"]
-    expected = sorted(gamma_phi_ids + nrtl_ids + helmholtz_ids + non_gamma)
-    assert len(expected) == 75
+    expected = sorted(gamma_phi_ids + nrtl_ids + helmholtz_ids + kvalue_ids + non_gamma)
+    assert len(expected) == 85
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
@@ -100,6 +121,17 @@ def test_rows_load_and_build() -> None:
         "aga8_dc92": UnavailablePackage,
         "mbwr": UnavailablePackage,
         "bwr_ls": UnavailablePackage,
+        # kvalue family (T-05)
+        "chao-seader": ChaoSeaderThermo,
+        "grayson-streed": GraysonStreedThermo,
+        "grayson-streed-extended": GraysonStreedThermo,
+        "braun-k10": BraunK10Thermo,
+        "lee-kesler-ploecker": LeeKeslerPloeckerThermo,
+        "esso-tabular": AntoineIdealKThermo,
+        "antoine-ideal-k": AntoineIdealKThermo,
+        "ideal-raoult": IdealRaoultThermo,
+        "ideal-lk": IdealRaoultThermo,
+        "henry-sander": HenryIdealThermo,
     }
     for model_id, cls in expected_types.items():
         assert type(registry.create("thermo", model_id)) is cls

@@ -37,6 +37,17 @@ class VolumeTranslation(StrEnum):
     PENELOUX = "peneloux"
 
 
+class KValueModel(StrEnum):
+    """K-value correlation group of the K-value adapters (spec T-05)."""
+
+    CHAO_SEADER = "chao_seader"
+    GRAYSON_STREED = "grayson_streed"
+    BRAUN_K10 = "braun_k10"
+    LEE_KESLER_PLOCKER = "lee_kesler_plocker"
+    IDEAL = "ideal"
+    HENRY_IDEAL = "henry_ideal"
+
+
 class EnthalpyMethod(StrEnum):
     """Enthalpy-departure group of the cubic adapter (T-02 adds Lee-Kesler)."""
 
