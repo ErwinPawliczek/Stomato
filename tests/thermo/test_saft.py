@@ -38,18 +38,30 @@ def test_saft_rows_register_as_experimental() -> None:
         assert rows[rid].status == "experimental", f"{rid}: row must stay experimental"
 
 
-def test_saft_packages_require_the_extra_at_construction(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Without teqp the rows still load, but creating a package refuses with the extra named.
+def test_saft_packages_require_the_extra_at_first_use(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Without teqp the rows load AND construct; the first property call refuses, naming the extra.
 
-    The bridge verifies the optional backend eagerly at construction (documented design:
-    absence is a build-time refusal), so the failure surfaces as SaftDependencyMissing on
-    create, never as an ImportError leaking out of the package.
+    Construction never touches the optional backend (the CoolProp and virial rows set the
+    pattern, and the thermo-protocol contract test instantiates every registered row), so
+    the failure surfaces as SaftDependencyMissing on the first call, never as an ImportError
+    leaking out of the package.
     """
     monkeypatch.setitem(sys.modules, "teqp", None)
     from ngdesign import registry
 
+    pkg = registry.create("thermo", "pc_saft")
     with pytest.raises(SaftDependencyMissing, match="optional extra"):
-        registry.create("thermo", "pc_saft")
+        pkg.pure_psat("C1", 150.0)
+
+
+def test_refusing_rows_raise_at_first_use_naming_the_engine() -> None:
+    """Rows teqp cannot serve construct, then refuse at the first call with the engine named."""
+    from ngdesign import registry
+
+    for rid in REFUSING_IDS:
+        pkg = registry.create("thermo", rid)
+        with pytest.raises(NotImplementedError, match="teqp"):
+            pkg.pure_psat("H2O", 373.15)
 
 
 class TestConstructionContract:
@@ -76,14 +88,6 @@ class TestConstructionContract:
         for rid, cls in expected.items():
             assert type(registry.create("thermo", rid)) is cls, rid
 
-    def test_refusing_rows_raise_naming_the_engine(self) -> None:
-        pytest.importorskip("teqp")
-        from ngdesign import registry
-
-        for rid in REFUSING_IDS:
-            with pytest.raises(NotImplementedError, match="teqp"):
-                registry.create("thermo", rid)
-
 
 class TestNamedSpotChecks:
     """The spec's named numbers; CoolProp HEOS as the in-process NIST-aligned reference."""
@@ -101,14 +105,25 @@ class TestNamedSpotChecks:
         ref_rho = CP.PropsSI("D", "T", 150.0, "Q", 0, "Methane")
         assert rho_l == pytest.approx(ref_rho, rel=0.02), "spec: liquid density within 2 % of NIST"
 
+    @pytest.mark.xfail(
+        strict=True,
+        reason=(
+            "spec T-07 names 1 %; the published Kontogeorgis et al. water 4C set measures "
+            "-1.15 % against IAPWS-95 (reported on the PR and issue #140; the band is not widened)"
+        ),
+    )
     def test_cpa_srk_water_psat_373k(self) -> None:
         pytest.importorskip("teqp")
         pkg = catalogue.build(catalogue.load_catalogue()["cpa_srk"])
         sp = pkg.bubble_point({"H2O": 1.0}, T=373.15)
-        # Spec names 1 %; the published Kontogeorgis et al. water 4C set measures -1.15 %
-        # against the IAPWS-95 value (assessed and reported in the T-07 PR and issue #140
-        # per the spec's no-tuning protocol). 1.2 % encodes the measured capability.
-        assert sp.P == pytest.approx(101_417.997, rel=0.012)
+        assert sp.P == pytest.approx(101_417.997, rel=0.01)
+
+    def test_cpa_srk_water_psat_373k_measured_capability(self) -> None:
+        """Regression pin at the measured -1.15 %: a drift past 2 % is a defect."""
+        pytest.importorskip("teqp")
+        pkg = catalogue.build(catalogue.load_catalogue()["cpa_srk"])
+        sp = pkg.bubble_point({"H2O": 1.0}, T=373.15)
+        assert sp.P == pytest.approx(101_417.997, rel=0.02)
 
     def test_pc_saft_c1co2_bubble_293k(self) -> None:
         pytest.importorskip("teqp")

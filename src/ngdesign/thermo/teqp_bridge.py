@@ -21,8 +21,8 @@ the VLE flash loop (teqp has no general VLE driver):
   resolved component records.
 
 teqp is an optional dependency (``uv sync --extra saft``). The module imports lazily:
-the catalogue rows load without the extra and the packages raise
-:class:`SaftDependencyMissing` (an ``ImportError``) at build time when it is absent.
+the catalogue rows load and their packages construct without the extra; the first
+property call raises :class:`SaftDependencyMissing` (an ``ImportError``) when it is absent.
 Unsupported components are refused by name — never silently treated as ideal.
 
 Registered through the thermo catalogue (data/thermo_models/saft.yaml); the adapter
@@ -510,12 +510,17 @@ class TeqpPackage(ThermoSurfaceMixin):
 
     def __init__(self) -> None:
         super().__init__()
-        _teqp()  # verify the optional backend at construction: absence is a build-time refusal
         self._psat_cache: dict[tuple[str, tuple[str, ...], float], tuple[float]] = {}
-        self._validate_kind()
 
     def _validate_kind(self) -> None:
-        """Refusal rows raise here at build time, naming the missing engine."""
+        """Refusal rows raise here at FIRST USE, naming the missing engine.
+
+        Construction never touches the optional backend: every catalogue row
+        must instantiate through the registry without the extra installed (the
+        CoolProp and virial rows set the pattern), so the API can list it, the
+        contract test can type it and the refusal reason surfaces at the first
+        property call via ``_kernel`` - the single entry to the engines.
+        """
         if self.model_kind == "pc_saft_assoc":
             raise NotImplementedError(
                 "saft row 'pc_saft_assoc' refuses to build: teqp 0.23.2's PC-SAFT "
@@ -548,6 +553,9 @@ class TeqpPackage(ThermoSurfaceMixin):
         return ids
 
     def _kernel(self, z: dict[str, float]) -> tuple[_Kernel, tuple[str, ...], _IdealGasPart]:
+        # The one entry to the engines: refusal rows refuse here, and a missing
+        # teqp extra surfaces here as SaftDependencyMissing (from _build_kernel).
+        self._validate_kind()
         ids = self._ids(z)
         return _build_kernel(self.model_kind, ids), ids, _IdealGasPart(ids)
 

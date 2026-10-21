@@ -130,9 +130,6 @@ def test_rows_load_and_build() -> None:
         "multifluid_pure": MultifluidPureThermo,
     }
     for model_id, cls in expected_types.items():
-        if model_id in {"pc_saft", "pc_saft_assoc", "pc_saft_polar", "saft_vr_mie",
-                        "cpa_srk", "cpa_pr", "multifluid", "multifluid_pure"}:
-            continue  # saft construction needs the optional teqp extra; test_saft.py covers it
         assert type(registry.create("thermo", model_id)) is cls
 
 

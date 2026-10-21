@@ -126,10 +126,8 @@ pure_cases:
   # triple-point-adjacent end - teqp's own pure_VLE_T solver on the identical model returns
   # the same pressures, excluding a solver artifact. Cp is evaluated at the reference Psat,
   # where this model's liquid is stretched, so its deviation is downstream of the Psat one.
-  tolerance:
-    bubble_P: 0.10
-    dew_P: 0.10
-    Cp: 0.15
+  # Tolerance stays at the fixed P1-05 policy; the miss is assessed in
+  # scripts/validate_properties.py::xfail_reason (PR #156 review), never widened.
   expected:
     bubble_P: 520401.256268029
     dew_P: 520401.256268029
@@ -151,10 +149,7 @@ pure_cases:
   # reproduces the pressure, excluding a solver artifact); 5 % matches the tolerance the
   # spec fixes for CO2-containing SAFT checks. Cp is evaluated at the reference Psat,
   # where this model's liquid is stretched, so its deviation is downstream of the Psat one.
-  tolerance:
-    bubble_P: 0.05
-    dew_P: 0.05
-    Cp: 0.12
+  # Tolerance stays at the fixed P1-05 policy; assessed in xfail_reason (PR #156 review).
   expected:
     bubble_P: 1282483.4984006712
     dew_P: 1282483.4984006712

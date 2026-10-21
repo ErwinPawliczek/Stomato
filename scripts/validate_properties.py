@@ -158,6 +158,18 @@ def xfail_reason(case: Case, failed_props: frozenset[str]) -> str | None:
     here — it fails the test and forces a fresh assessment. Used by the reference-case tests
     (dynamic xfail) and by ``write_doc`` (assessment section).
     """
+    if (
+        case.package == "pc_saft"
+        and case.id.startswith("pure-CO2-")
+        and failed_props <= {"bubble_P", "dew_P", "Cp", "rho_L", "rho_V"}
+    ):
+        return (
+            "PC-SAFT without a quadrupole term overpredicts CO2 saturation pressure by 4-10 % "
+            "between the triple point and 265 K (Gross & Sadowski 2001 parameters verified; teqp's "
+            "own pure_VLE_T reproduces the same pressures, excluding a solver artifact); the "
+            "saturated-phase properties are evaluated at the reference Psat, where this model's "
+            "liquid is stretched (model limitation; assessed in docs/validation.md)"
+        )
     if case.id.startswith("pure-") and failed_props <= {"rho_L", "rho_V", "Cp"}:
         return (
             "cubic saturation properties beyond tolerance vs the CoolProp reference EOS "
