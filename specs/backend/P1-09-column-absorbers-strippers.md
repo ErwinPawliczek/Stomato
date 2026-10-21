@@ -92,8 +92,10 @@ tuning:
      `component_recovery` of C1 to the distillate 0.95 — converges, spec met within `_SPEC_TOL`,
      balances as in (1).
   4. Rectifier without reboiler, `condenser="total"`, `reboiler="none"`, saturated vapour feed on
-     stage N, one spec `reflux_ratio` plus the required rate pin (`distillate_rate`), N = 6:
-     converges, balances as in (1).
+     stage N, N = 6, **exactly one spec** (one tear, the reflux L_0): `distillate_rate` (bounded
+     secant on the reflux tear); and the same column with `reflux_ratio` alone as the single spec
+     (R = L_0 / D with D = V_1 − L_0 an outcome of the mesh). Two specs on this column must raise
+     `ColumnSpecError`. Converges, balances as in (1).
   5. Every failure path is typed: a stripper with two specs raises `ColumnSpecError`; a column
      pushed outside its band (e.g. absorber lean feed at 150 K) raises `ColumnConvergenceError`
      carrying residual numbers, never a bare `ValueError`.
