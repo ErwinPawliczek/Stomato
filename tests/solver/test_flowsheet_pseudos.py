@@ -13,6 +13,7 @@ import pytest
 from ngdesign import registry
 from ngdesign.contracts import FeedSpec, Flowsheet, PortRef, StreamSpec, UnitSpec
 from ngdesign.contracts.components import PseudoDefinition
+from ngdesign.data import register_pseudo
 from ngdesign.solver.sequential_modular import SequentialModular
 
 
@@ -52,12 +53,23 @@ def test_two_flowsheets_own_conflicting_c7_definitions() -> None:
 
 
 def test_flowsheet_pseudo_differs_from_the_registered_default() -> None:
+    """The owned definition wins over the module-level register_pseudo default.
+
+    The registered default (Tb 372 K, sg 0.73 - the P1-02 tests' C7+) is what a
+    package without slate context flashes; the same id owned by the flowsheet
+    with Tb 430 K must give a different bubble pressure inside the solve's own
+    package context.
+    """
+    register_pseudo("C7+", "C7+ pseudo", Tb=372.0, sg=0.73)
+    default_pkg = registry.create("thermo", "pr")
+    default_bp = default_pkg.bubble_point({"C7+": 1.0}, T=450.0).P
+
     thermo = registry.create("thermo", "pr")
     owned = PseudoDefinition(id="C7+", name="owned C7+", Tb=430.0, sg=0.80)
     solved = SequentialModular().solve(_flowsheet(owned), thermo)
     assert solved.converged
-    # The registered module default is Tb = 372.0 K; the owned definition must
-    # win inside the solve's own package context.
     owned_bp = thermo.bubble_point({"C7+": 1.0}, T=450.0).P
-    assert owned_bp is not None
-    assert owned_bp > 0
+
+    assert default_bp is not None and owned_bp is not None
+    assert owned_bp != pytest.approx(default_bp)
+    assert owned_bp < default_bp  # the heavier cut (higher Tb) is less volatile
