@@ -204,7 +204,7 @@ def test_deethanizer_mesh_converges_under_50_sweeps(thermo: Thermo) -> None:
     tb = _ThermoBox(thermo, 1.7e6, 1.7e6)
     col = col_mod._build_column(parsed, tb)
     t_top, t_bot = col_mod._temperature_seed(col, tb)
-    prof = col_mod._seed_profile(col, t_top, t_bot)
+    prof = col_mod._seed_profile(col, tb, t_top, t_bot)
     prof = col_mod._solve_mesh(col, tb, 3.0 * 37.0, 3.0 * 37.0 + 20.0, prof)
     assert prof.outer < 50
     m_norm, _h_norm = col_mod._exact_residuals(col, tb, prof)

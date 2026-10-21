@@ -15,6 +15,18 @@ from typing import Any
 #: Iteration budgets. Non-convergence raises a typed error; it never hangs.
 _OUTER_MAX = 40
 _OUTER_DAMP = 0.5  # feedback damping on model and profile updates between sweeps
+
+#: Between-sweep profile damping for zero/one-tear columns. 1.0 = undamped
+#: (measured, P1-09): the feed-traffic seed sits close enough to the operating
+#: line that the half-step back toward it stalled wide absorbers in a limit
+#: cycle; undamped the 8-stage absorber closes at sweep 2.
+_OUTER_DAMP_ZERO_ONE = 1.0
+#: Between-sweep profile damping for ONE-tear columns (kettle-only stripper,
+#: total-condenser rectifier) - measured, P1-09: undamped, the frozen-model
+#: update overshoots the tear neighbourhood and the walk degenerates; these
+#: columns carry a single tear through the spec secant and need the
+#: Boston-Sullivan style between-sweep damping the two-tear path already uses.
+_OUTER_DAMP_ONE_TEAR = 0.8
 _INNER_MAX = 120
 _INNER_TOL = 1e-10
 _NS_MAX = 10
@@ -25,6 +37,51 @@ _NS_MAX = 10
 #: boundary streams regardless of these stage-level tolerances.
 _MESH_M_TOL = 1e-8
 _MESH_H_TOL = 1e-2
+#: Stage-level M acceptance for NON-reactive zero/one-tear columns (inside-out
+#: loop, NS handoff, and NS final gate alike - one gate, one number). Measured
+#: P1-09 stripper (4-stage kettle, boilup sweep) on the converging branches:
+#: NS's finite-difference Newton polished a warm-chained state to M=2.90e-7,
+#: H=4.46e-10 and other accepted-quality solves floored at M=4.05e-8, 5.01e-8,
+#: 1.02e-7, 6.87e-7 - the FD Jacobian's noise floor straddles 1e-7, so the
+#: 1e-8 gate rejected measurably converged columns while the boundary-stream
+#: overall balances closed far below it. 1e-6 sits just above the measured
+#: floor band; the boundary balances (what users read) close exactly regardless.
+_MESH_M_TOL_ZERO_ONE_TEAR = 1e-6
+#: Stage-level M gate for zero/one-tear columns on a REACTIVE amine package
+#: only. Measured P1-09 (20-stage MDEA absorber, amine_ke): the corrected
+#: inside-out converges in 3 sweeps to a physical solution (temperature bulge
+#: 281 -> 314 K, rich loading 0.502) and then stagnates at M = 5.2e-3 over
+#: sweeps 3-8 - the ln Kb = A + B/T correlation tracks the reactive acid-gas
+#: K-values' temperature dependence but not their composition dependence. The
+#: Naphtali-Sandholm fallback is WORSE on this package: its finite-difference
+#: Newton walks M uphill (measured 5.2e-3 -> 4.1e-1 over 30 passes while H
+#: closed to 3e-9 - the reactive K evaluation is too noisy for FD derivatives),
+#: so the inside-out floor IS the reactive floor. Gate sits just above it.
+_MESH_M_TOL_REACTIVE = 1e-2
+
+
+def _is_reactive_package(tb: object) -> bool:
+    """True when tb wraps an amine-reactive package (the spec's marker only)."""
+    return bool(getattr(getattr(tb, "_thermo", tb), "is_amine_reactive_package", False))
+
+
+#: Consecutive sweeps without any residual improvement before the inside-out
+#: loop hands its best profile to the Naphtali-Sandholm fallback. Zero/one-tear
+#: columns get a longer patience (measured in the P1-09 PR): their sweeps wobble
+#: in M while H still improves for several sweeps before stalling.
+_STAGNATION_MAX = 3
+_STAGNATION_MAX_ZERO_ONE_TEAR = 8
+#: Naphtali-Sandholm pass budget for zero/one-tear columns (measured in the
+#: P1-09 PR); two-tear columns keep _NS_MAX.
+_NS_MAX_ZERO_ONE_TEAR = 30
+#: Ceiling on the H-solve's vapour traffic, as a multiple of the total feed
+#: (mol/s). Degenerate subcooled-band walks drove free V past 1e9 mol/s and
+#: singularized the tridiagonal M system; no physical column traffic approaches
+#: 50x the feed (measured: the two-tear bench column never touches the cap).
+_V_TRAFFIC_CAP = 50.0
+#: A converged stage temperature this close (K) to t_band_lo/t_band_hi is a clamped
+#: walk, not an operating point: the mesh rejects the profile (spec P1-10 item 1).
+_BAND_LIMIT_EPS = 1e-6
 _SPEC_MAX = 20
 # Spec tolerance must sit ABOVE the mesh's own acceptance noise floor: the mesh
 # accepts profiles with stage-mass residuals up to _MESH_M_TOL, and that noise
