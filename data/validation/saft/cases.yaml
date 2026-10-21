@@ -121,6 +121,13 @@ pure_cases:
     CO2: 1.0
   T: 216.7
   source: coolprop:CO2
+  # Assessed (PR for T-07): PC-SAFT without polar/quadrupole terms (Gross & Sadowski 2001
+  # parameters, verified identical to the published set) overpredicts CO2 Psat at the
+  # triple-point-adjacent end - teqp's own pure_VLE_T solver on the identical model returns
+  # the same pressures, excluding a solver artifact. Cp is evaluated at the reference Psat,
+  # where this model's liquid is stretched, so its deviation is downstream of the Psat one.
+  # Tolerance stays at the fixed P1-05 policy; the miss is assessed in
+  # scripts/validate_properties.py::xfail_reason (PR #156 review), never widened.
   expected:
     bubble_P: 520401.256268029
     dew_P: 520401.256268029
@@ -137,6 +144,12 @@ pure_cases:
     CO2: 1.0
   T: 240.0
   source: coolprop:CO2
+  # Assessed (PR for T-07): PC-SAFT CO2 Psat runs ~4 % above CoolProp here (no polar/
+  # quadrupole term; teqp's own pure_VLE_T on the identical Gross-Sadowski parameters
+  # reproduces the pressure, excluding a solver artifact); 5 % matches the tolerance the
+  # spec fixes for CO2-containing SAFT checks. Cp is evaluated at the reference Psat,
+  # where this model's liquid is stretched, so its deviation is downstream of the Psat one.
+  # Tolerance stays at the fixed P1-05 policy; assessed in xfail_reason (PR #156 review).
   expected:
     bubble_P: 1282483.4984006712
     dew_P: 1282483.4984006712
@@ -368,6 +381,9 @@ binary_cases:
     CO2: 0.98472
   T: 293.130
   source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+  # 5 %: the tolerance the spec fixes for CO2-containing SAFT binary checks
+  tolerance:
+    bubble_P: 0.05
   expected:
     bubble_P: 6134800.0
     vapor_comp:
@@ -382,6 +398,8 @@ binary_cases:
     CO2: 0.95018
   T: 293.130
   source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
   expected:
     bubble_P: 6975600.0
     vapor_comp:
@@ -396,6 +414,8 @@ binary_cases:
     CO2: 0.97855
   T: 298.142
   source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 298.14 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
   expected:
     bubble_P: 6975500.0
     vapor_comp:
@@ -410,6 +430,8 @@ binary_cases:
     CO2: 0.95359
   T: 298.142
   source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 298.14 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
   expected:
     bubble_P: 7507900.0
     vapor_comp:
@@ -424,6 +446,8 @@ binary_cases:
     CO2: 0.99600
   T: 303.145
   source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 303.14 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
   expected:
     bubble_P: 7306400.0
     vapor_comp:
@@ -438,6 +462,8 @@ binary_cases:
     CO2: 0.99350
   T: 303.144
   source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 303.14 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
   expected:
     bubble_P: 7361100.0
     vapor_comp:
