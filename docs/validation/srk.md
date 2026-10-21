@@ -34,7 +34,7 @@ family `cubic` · status **validated** · adapter `ngdesign.thermo.srk:SoaveRedl
 
 ## L1/L2 reference-case outcomes
 
-201/275 comparisons pass. Failing comparisons are assessed in the
+201/278 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:

@@ -36,7 +36,7 @@ family `cubic` · status **validated** · adapter `ngdesign.thermo.pr:PengRobins
 
 ## L1/L2 reference-case outcomes
 
-213/275 comparisons pass. Failing comparisons are assessed in the
+213/278 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:

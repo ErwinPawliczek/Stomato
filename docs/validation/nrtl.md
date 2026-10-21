@@ -36,7 +36,7 @@ Note: pure hydrocarbons are NOT phase-identification points: thermo's pure-compo
 
 ## L1/L2 reference-case outcomes
 
-14/42 comparisons pass. Failing comparisons are assessed in the
+29/62 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
