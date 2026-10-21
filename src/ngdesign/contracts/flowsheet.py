@@ -11,6 +11,7 @@ from ngdesign.data import is_curated
 from .common import Model, Nozzle, check_tag
 from .components import ComponentRef, PseudoDefinition
 from .diagnostics import BlockRecord, SolveStatus, UnitError
+from .specs import DesignSpec, DesignSpecResult, check_read_address, check_write_address
 from .stream import StreamState, _check_composition
 
 
@@ -77,6 +78,10 @@ class Flowsheet(Model):
     # the slate from the feed compositions (sorted, for deterministic tear-vector
     # indexing) so every existing sample keeps its meaning.
     components: list[ComponentRef] = []
+    # Design specs (spec P2-01): targets the solver's outer loop drives to their
+    # values by manipulating writable addresses. Empty = plain sequential-modular
+    # solve, byte-identical to the pre-P2-01 behaviour.
+    design_specs: list[DesignSpec] = []
 
     @model_validator(mode="before")
     @classmethod
@@ -140,6 +145,38 @@ class Flowsheet(Model):
     def outlets(self, tag: str) -> list[StreamSpec]:
         return [s for s in self.streams if s.source and s.source.unit == tag]
 
+    @model_validator(mode="after")
+    def _design_specs(self) -> Flowsheet:
+        """Design specs: unique ids, lower < upper, addresses parse with a known head."""
+        ids = [spec.id for spec in self.design_specs]
+        if len(ids) != len(set(ids)):
+            raise ValueError("duplicate design spec ids")
+        stream_ids = {s.id for s in self.streams}
+        feed_ids = {s.id for s in self.streams if s.feed is not None}
+        unit_tags = {u.tag for u in self.units}
+        for spec in self.design_specs:
+            for addr, kind in ((spec.target, "read"), (spec.manipulated, "write")):
+                head = addr.split(".", 1)[0]
+                if head in stream_ids:
+                    head_is_stream = True
+                elif head in unit_tags:
+                    head_is_stream = False
+                else:
+                    raise ValueError(
+                        f"design spec {spec.id!r}: address {addr!r} head {head!r} is neither "
+                        "a stream id nor a unit tag"
+                    )
+                if kind == "read":
+                    check_read_address(addr, head_is_stream=head_is_stream)
+                else:
+                    check_write_address(addr, head_is_stream=head_is_stream)
+                    if head_is_stream and head not in feed_ids:
+                        raise ValueError(
+                            f"design spec {spec.id!r}: write address {addr!r} targets stream "
+                            f"{head!r}, which has no feed spec"
+                        )
+        return self
+
 
 class UnitResult(Model):
     """What a unit plugin returns from solve()."""
@@ -176,6 +213,9 @@ class SolvedFlowsheet(Model):
     status: SolveStatus = "converged"
     errors: list[UnitError] = []
     history: list[BlockRecord] = []
+    # Spec P2-01: one DesignSpecResult per entry of flowsheet.design_specs (same
+    # order), filled by the design-spec outer loop.
+    design_spec_results: list[DesignSpecResult] = []
 
     @model_validator(mode="after")
     def _derive_status(self) -> SolvedFlowsheet:

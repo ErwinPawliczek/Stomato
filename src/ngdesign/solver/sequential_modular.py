@@ -74,7 +74,6 @@ from ngdesign.contracts import (
 from ngdesign.contracts.components import resolve_set
 from ngdesign.contracts.diagnostics import BlockRecord, SolveAcceleration, TearRecord, UnitError
 from ngdesign.contracts.plugins import Thermo, UnitModel
-from ngdesign.registry import register
 
 #: Relative convergence tolerance for torn variables (spec S-30).
 RTOL = 1e-6
@@ -116,6 +115,9 @@ class _Context:
     components: tuple[str, ...]
     errors: list[UnitError]  # spec P2-02: per-unit failure records
     history: list[BlockRecord]  # spec P2-02: one record per executed block
+    # Spec P2-01: previous solve's tear vectors per stream id (design-spec outer
+    # loop). None keeps the mean-of-feeds initialization below, byte-identically.
+    warm_start: dict[str, list[float]] | None = None
 
 
 def _stream_edges(fs: Flowsheet) -> list[_Edge]:
@@ -566,7 +568,14 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
     """
     start = time.perf_counter()
     guess, fallback_composition = _init_guess(ctx.fs, ctx.components)
-    torn = [_Tear(stream_id=sid, x=list(guess)) for sid in tears]
+    torn: list[_Tear] = []
+    for sid in tears:
+        x = list(guess)
+        if ctx.warm_start is not None:
+            warm = ctx.warm_start.get(sid)
+            if warm is not None and len(warm) == len(ctx.components) + 2:
+                x = list(warm)  # warm start (spec P2-01): the previous solve's tear vector
+        torn.append(_Tear(stream_id=sid, x=x))
     converged = False
     iterations = 0
     records: list[TearRecord] = []
@@ -603,11 +612,22 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
     return converged, iterations
 
 
-@register("solver", "sequential_modular")
 class SequentialModular:
-    """Solver plugin: sequential-modular execution with tearing + Wegstein."""
+    """Sequential-modular execution with tearing + Wegstein.
 
-    def solve(self, fs: Flowsheet, thermo: Thermo) -> SolvedFlowsheet:
+    Unregistered as of spec P2-01: the "sequential_modular" registry name now
+    belongs to the design-spec outer solver (solver/design_specs.py), which
+    delegates here when the flowsheet carries no design specs. Import this class
+    for the bare inner solve; ``solve``'s ``warm_start`` argument takes the
+    previous solve's tear vectors per stream id so an outer loop (or a repeated
+    solve) starts each recycle from the converged values instead of the
+    mean-of-feeds guess — with ``warm_start=None`` the behaviour and flash
+    counts are unchanged.
+    """
+
+    def solve(
+        self, fs: Flowsheet, thermo: Thermo, warm_start: dict[str, list[float]] | None = None
+    ) -> SolvedFlowsheet:
         units: dict[str, UnitModel] = {u.tag: registry.create("unit", u.kind) for u in fs.units}
         errors = _check_ports(fs, units)
         # Specs P1-02/P1-07: every slate id must resolve through the open
@@ -632,6 +652,7 @@ class SequentialModular:
             components=components,
             errors=errors,
             history=[],
+            warm_start=warm_start,
         )
         for s in fs.streams:
             if s.source is None:
