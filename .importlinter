@@ -13,6 +13,7 @@ layers =
     ngdesign.jobs
     ngdesign.store
     ngdesign.agent
+    ngdesign.study
     ngdesign.export
     ngdesign.pipeline
     ngdesign.flowsheets

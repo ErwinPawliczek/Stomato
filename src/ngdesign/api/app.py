@@ -36,6 +36,7 @@ from ngdesign.api.routes_pid import router as pid_router
 from ngdesign.api.routes_plot import router as plot_router
 from ngdesign.api.routes_projects import router as projects_router
 from ngdesign.api.routes_solve import router as solve_router
+from ngdesign.api.routes_study import router as study_router
 from ngdesign.api.routes_views import router as views_router
 from ngdesign.contracts import XY, Layout, Project, Vec3
 from ngdesign.store import (
@@ -92,6 +93,7 @@ def create_app() -> FastAPI:
     # the iso placement PUT matches /api/project/layout/iso/{key} first.
     application.include_router(iso_router)
     application.include_router(solve_router)
+    application.include_router(study_router)
     application.include_router(views_router)
     application.include_router(export_router)
     application.include_router(meta_router)
