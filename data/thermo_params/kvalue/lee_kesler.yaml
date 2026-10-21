@@ -1,0 +1,56 @@
+# Lee-Kesler corresponding-states EOS constants (spec T-05): simple fluid (argon)
+# and reference fluid (n-octane) sets, and the Plöcker mixing-rule constants.
+#
+# EOS in reduced variables (Tr = T/Tc, Pr = P/Pc, rho_r = Vc/V = Z*Pr/Tr):
+#   Z = 1 + B*rho_r + C*rho_r^2 + D*rho_r^5
+#       + c4/Tr^3 * rho_r^2 * (beta + gamma*rho_r^2) * exp(-gamma*rho_r^2)
+#   B = b1 - b2/Tr - b3/Tr^2 - b4/Tr^3
+#   C = c1 - c2/Tr + c3/Tr^3
+#   D = d1 + d2/Tr
+# Mixture properties follow the corresponding-states composition
+#   M = M0 + (omega_m/omega_ref) * (M1 - M0)
+# with Plöcker pseudo-criticals (Tcm, Pcm) and omega_m.
+#
+# Provenance: Lee, B.I. & Kesler, M.G., "A generalized thermodynamic correlation
+# based on three-parameter corresponding states", AIChE J. 21(3):510-527 (1975),
+# Table 2; mixing rules: Plöcker, U., Knapp, H. & Prausnitz, J.M.,
+# "Calculation of high-pressure vapor-liquid equilibria from a corresponding-
+# states correlation with special emphasis on asymmetric mixtures",
+# Ind. Eng. Chem. Process Des. Dev. 17(3):324-332 (1978).
+# omega_ref is the n-octane reference acentric factor used by Plöcker.
+# The constant set is verified numerically against NIST teqp's LKP model
+# (TREND-based check values) before merge; see tests and the PR description.
+
+simple:
+  b1: 0.1181193
+  b2: 0.265728
+  b3: 0.154790
+  b4: 0.030323
+  c1: 0.0236744
+  c2: 0.0186984
+  c3: 0.0
+  c4: 0.042724
+  d1: 0.0000155428
+  d2: 0.0000623689
+  beta: 0.65392
+  gamma: 0.060167
+
+reference:
+  b1: 0.2026579
+  b2: 0.331511
+  b3: 0.027655
+  b4: 0.203488
+  c1: 0.0313385
+  c2: 0.0503618
+  c3: 0.016901
+  c4: 0.041577
+  d1: 0.000048736
+  d2: 0.00000740336
+  beta: 1.226
+  gamma: 0.03754
+
+omega_ref: 0.3978
+# Binary interaction parameters k_ij default to 0.0 (Plöcker's hydrocarbon-
+# hydrocarbon limit). The Knapp-Prausnitz k_ij tables for asymmetric pairs are
+# a follow-up; light-gas pairs are outside the LKP row's validated scope until
+# they land.

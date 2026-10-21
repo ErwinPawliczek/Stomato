@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-10-21T19:18:53+00:00",
-    "python": "3.14.7",
-    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "b5295c6",
+    "generated": "2026-10-21T22:39:53+00:00",
+    "python": "3.13.14",
+    "platform": "Linux-6.1.158+-x86_64-with-glibc2.41",
+    "git_rev": "4d8dfde",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 1016,
-    "n_pass": 776
+    "n_comparisons": 1092,
+    "n_pass": 852
   },
   "rows": [
     {
@@ -9153,6 +9153,690 @@
       "expected": 2658444.0,
       "got": 2658635.8689004895,
       "rel_err": 7.217338431410544e-05,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-c1c3-277.59K-4.826MPa",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 2.87036,
+      "got": 2.8889968776870965,
+      "rel_err": 0.0064928711684585395,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-c1c3-277.59K-4.826MPa",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 0.2602,
+      "got": 0.25162825354829016,
+      "rel_err": 0.03294291487974569,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-c1c3-294.26K-4.137MPa",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 3.54202,
+      "got": 3.483773069326782,
+      "rel_err": 0.016444551604230938,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-c1c3-294.26K-4.137MPa",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 0.369649,
+      "got": 0.3612197484069817,
+      "rel_err": 0.022803393470612197,
+      "pass": true
+    },
+    {
+      "case": "lee-kesler-ploecker-c1c3-294.26K-4.137MPa",
+      "package": "lee-kesler-ploecker",
+      "property": "K",
+      "expected": 3.54202,
+      "got": 3.5472212341280587,
+      "rel_err": 0.0014684372555939067,
+      "pass": true
+    },
+    {
+      "case": "lee-kesler-ploecker-c1c3-294.26K-4.137MPa",
+      "package": "lee-kesler-ploecker",
+      "property": "K",
+      "expected": 0.369649,
+      "got": 0.36115199809222076,
+      "rel_err": 0.022986676300434317,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-c1h2o-298.2K-4.54MPa",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 999.3,
+      "got": 1017.0125264491151,
+      "rel_err": 0.017724933902847097,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-c1h2o-310.9K-6.55MPa",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 889.586,
+      "got": 975.4084779476383,
+      "rel_err": 0.09647462746450403,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-pureK-C3-300K",
+      "package": "chao-seader",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 949143.9999988619,
+      "rel_err": 0.04865136388130762,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-pureK-C3-300K",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-pureK-nC4-280K",
+      "package": "chao-seader",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 129882.92266138001,
+      "rel_err": 0.022087801687737076,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-pureK-nC4-280K",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-pureK-CO2-265K",
+      "package": "chao-seader",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2699259.056489499,
+      "rel_err": 0.03284119479867659,
+      "pass": true
+    },
+    {
+      "case": "chao-seader-pureK-CO2-265K",
+      "package": "chao-seader",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-C3-300K",
+      "package": "grayson-streed",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 972396.0026183368,
+      "rel_err": 0.02534535238137481,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-C3-300K",
+      "package": "grayson-streed",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-nC4-280K",
+      "package": "grayson-streed",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 129979.62935348686,
+      "rel_err": 0.021359679376259138,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-nC4-280K",
+      "package": "grayson-streed",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-CO2-265K",
+      "package": "grayson-streed",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2814844.4386668233,
+      "rel_err": 0.008573659346796355,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-pureK-CO2-265K",
+      "package": "grayson-streed",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-extended-pureK-C3-300K",
+      "package": "grayson-streed-extended",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 972396.0026183368,
+      "rel_err": 0.02534535238137481,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-extended-pureK-C3-300K",
+      "package": "grayson-streed-extended",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-extended-pureK-nC4-280K",
+      "package": "grayson-streed-extended",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 129979.62935348686,
+      "rel_err": 0.021359679376259138,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-extended-pureK-nC4-280K",
+      "package": "grayson-streed-extended",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-extended-pureK-CO2-265K",
+      "package": "grayson-streed-extended",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2814844.4386668233,
+      "rel_err": 0.008573659346796355,
+      "pass": true
+    },
+    {
+      "case": "grayson-streed-extended-pureK-CO2-265K",
+      "package": "grayson-streed-extended",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "braun-k10-pureK-C1-125K",
+      "package": "braun-k10",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "braun-k10-pureK-C1-125K",
+      "package": "braun-k10",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "braun-k10-pureK-nC4-280K",
+      "package": "braun-k10",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.3753248366,
+      "rel_err": 1.3019078950720502e-06,
+      "pass": true
+    },
+    {
+      "case": "braun-k10-pureK-nC4-280K",
+      "package": "braun-k10",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "lee-kesler-ploecker-pureK-C1-125K",
+      "package": "lee-kesler-ploecker",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 269612.86032367055,
+      "rel_err": 0.0031815131206808286,
+      "pass": true
+    },
+    {
+      "case": "lee-kesler-ploecker-pureK-C1-125K",
+      "package": "lee-kesler-ploecker",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "lee-kesler-ploecker-pureK-C3-300K",
+      "package": "lee-kesler-ploecker",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 1018673.3337481356,
+      "rel_err": 0.021039469999212298,
+      "pass": true
+    },
+    {
+      "case": "lee-kesler-ploecker-pureK-C3-300K",
+      "package": "lee-kesler-ploecker",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "lee-kesler-ploecker-pureK-CO2-265K",
+      "package": "lee-kesler-ploecker",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2764028.3406609646,
+      "rel_err": 0.009634017502219294,
+      "pass": true
+    },
+    {
+      "case": "lee-kesler-ploecker-pureK-CO2-265K",
+      "package": "lee-kesler-ploecker",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "esso-tabular-pureK-C1-125K",
+      "package": "esso-tabular",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 269977.75966667954,
+      "rel_err": 0.004539238692884786,
+      "pass": true
+    },
+    {
+      "case": "esso-tabular-pureK-C1-125K",
+      "package": "esso-tabular",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "esso-tabular-pureK-C3-300K",
+      "package": "esso-tabular",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 998307.5052927453,
+      "rel_err": 0.0006263365605706976,
+      "pass": true
+    },
+    {
+      "case": "esso-tabular-pureK-C3-300K",
+      "package": "esso-tabular",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "esso-tabular-pureK-nC4-280K",
+      "package": "esso-tabular",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 133650.71562110606,
+      "rel_err": 0.006280598256859783,
+      "pass": true
+    },
+    {
+      "case": "esso-tabular-pureK-nC4-280K",
+      "package": "esso-tabular",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "esso-tabular-pureK-CO2-265K",
+      "package": "esso-tabular",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "esso-tabular-pureK-CO2-265K",
+      "package": "esso-tabular",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "antoine-ideal-k-pureK-C1-125K",
+      "package": "antoine-ideal-k",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 269977.75966667954,
+      "rel_err": 0.004539238692884786,
+      "pass": true
+    },
+    {
+      "case": "antoine-ideal-k-pureK-C1-125K",
+      "package": "antoine-ideal-k",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "antoine-ideal-k-pureK-C3-300K",
+      "package": "antoine-ideal-k",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 998307.5052927453,
+      "rel_err": 0.0006263365605706976,
+      "pass": true
+    },
+    {
+      "case": "antoine-ideal-k-pureK-C3-300K",
+      "package": "antoine-ideal-k",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "antoine-ideal-k-pureK-nC4-280K",
+      "package": "antoine-ideal-k",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 133650.71562110606,
+      "rel_err": 0.006280598256859783,
+      "pass": true
+    },
+    {
+      "case": "antoine-ideal-k-pureK-nC4-280K",
+      "package": "antoine-ideal-k",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "antoine-ideal-k-pureK-CO2-265K",
+      "package": "antoine-ideal-k",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "antoine-ideal-k-pureK-CO2-265K",
+      "package": "antoine-ideal-k",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-C1-125K",
+      "package": "ideal-raoult",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-C1-125K",
+      "package": "ideal-raoult",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-C3-300K",
+      "package": "ideal-raoult",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-C3-300K",
+      "package": "ideal-raoult",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-nC4-280K",
+      "package": "ideal-raoult",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.3753248366,
+      "rel_err": 1.3019078950720502e-06,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-nC4-280K",
+      "package": "ideal-raoult",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-CO2-265K",
+      "package": "ideal-raoult",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "ideal-raoult-pureK-CO2-265K",
+      "package": "ideal-raoult",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-C1-125K",
+      "package": "henry-sander",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-C1-125K",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-C3-300K",
+      "package": "henry-sander",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-C3-300K",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-nC4-280K",
+      "package": "henry-sander",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.3753248366,
+      "rel_err": 1.3019078950720502e-06,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-nC4-280K",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-CO2-265K",
+      "package": "henry-sander",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "henry-sander-pureK-CO2-265K",
+      "package": "henry-sander",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-C1-125K",
+      "package": "ideal-lk",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-C1-125K",
+      "package": "ideal-lk",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-C3-300K",
+      "package": "ideal-lk",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-C3-300K",
+      "package": "ideal-lk",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-nC4-280K",
+      "package": "ideal-lk",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.3753248366,
+      "rel_err": 1.3019078950720502e-06,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-nC4-280K",
+      "package": "ideal-lk",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-CO2-265K",
+      "package": "ideal-lk",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "ideal-lk-pureK-CO2-265K",
+      "package": "ideal-lk",
+      "property": "K",
+      "expected": 1.0,
+      "got": 1.0,
+      "rel_err": 0.0,
       "pass": true
     }
   ]

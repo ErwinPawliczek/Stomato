@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-21T19:19:33+00:00 from `data/validation/results.json` (git b5295c6, CoolProp 8.0.0).
+Generated 2026-10-21T22:47:08+00:00 from `data/validation/results.json` (git 4d8dfde, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -32,25 +32,42 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [aga8_dc92](validation/aga8_dc92.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/aga8_dc92.md) |
 | [amine_enrtl](validation/amine_enrtl.md) | electrolyte | provisional | 3/3 | L1=4 L2=0 | [report](validation/amine_enrtl.md) |
 | [amine_ke](validation/amine_ke.md) | electrolyte | validated | 3/3 | L1=4 L2=5 | [report](validation/amine_ke.md) |
+| [antoine-ideal-k](validation/antoine-ideal-k.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/antoine-ideal-k.md) |
 | [asme_steam](validation/asme_steam.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/asme_steam.md) |
+| [braun-k10](validation/braun-k10.md) | kvalue | provisional | 6/6 | L1=0 L2=0 | [report](validation/braun-k10.md) |
 | [bwr_ls](validation/bwr_ls.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/bwr_ls.md) |
 | [bwrs](validation/bwrs.md) | helmholtz | provisional | 7/7 | L1=0 L2=0 | [report](validation/bwrs.md) |
+| [chao-seader](validation/chao-seader.md) | kvalue | provisional | 6/6 | L1=0 L2=2 | [report](validation/chao-seader.md) |
 | [coolprop_heos](validation/coolprop_heos.md) | helmholtz | provisional | 7/7 | L1=0 L2=0 | [report](validation/coolprop_heos.md) |
+| [cpa_pr](validation/cpa_pr.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/cpa_pr.md) |
+| [cpa_srk](validation/cpa_srk.md) | saft | experimental | 7/7 | L1=2 L2=9 | [report](validation/cpa_srk.md) |
 | [eos_cg](validation/eos_cg.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/eos_cg.md) |
+| [esso-tabular](validation/esso-tabular.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/esso-tabular.md) |
 | [gerg2008](validation/gerg2008.md) | helmholtz | provisional | 7/7 | L1=5 L2=10 | [report](validation/gerg2008.md) |
+| [grayson-streed](validation/grayson-streed.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/grayson-streed.md) |
+| [grayson-streed-extended](validation/grayson-streed-extended.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/grayson-streed-extended.md) |
+| [henry-sander](validation/henry-sander.md) | kvalue | provisional | 6/6 | L1=0 L2=2 | [report](validation/henry-sander.md) |
 | [iapws95](validation/iapws95.md) | helmholtz | provisional | 6/6 | L1=0 L2=5 | [report](validation/iapws95.md) |
 | [iapws_if97](validation/iapws_if97.md) | helmholtz | provisional | 6/6 | L1=0 L2=0 | [report](validation/iapws_if97.md) |
+| [ideal-lk](validation/ideal-lk.md) | kvalue | provisional | 6/6 | L1=0 L2=0 | [report](validation/ideal-lk.md) |
+| [ideal-raoult](validation/ideal-raoult.md) | kvalue | provisional | 6/6 | L1=0 L2=0 | [report](validation/ideal-raoult.md) |
+| [lee-kesler-ploecker](validation/lee-kesler-ploecker.md) | kvalue | provisional | 6/6 | L1=0 L2=1 | [report](validation/lee-kesler-ploecker.md) |
 | [margules_hoc](validation/margules_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/margules_hoc.md) |
 | [margules_ig](validation/margules_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=3 | [report](validation/margules_ig.md) |
 | [margules_nothnagel](validation/margules_nothnagel.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/margules_nothnagel.md) |
 | [margules_pr](validation/margules_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_pr.md) |
 | [margules_rk](validation/margules_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_rk.md) |
 | [mbwr](validation/mbwr.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/mbwr.md) |
+| [multifluid](validation/multifluid.md) | saft | experimental | 0/7 | L1=0 L2=0 | [report](validation/multifluid.md) |
+| [multifluid_pure](validation/multifluid_pure.md) | saft | experimental | 0/6 | L1=0 L2=0 | [report](validation/multifluid_pure.md) |
 | [nrtl](validation/nrtl.md) | gamma_phi | provisional | 7/7 | L1=0 L2=21 | [report](validation/nrtl.md) |
 | [nrtl_hoc](validation/nrtl_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/nrtl_hoc.md) |
 | [nrtl_ig](validation/nrtl_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_ig.md) |
 | [nrtl_nothnagel](validation/nrtl_nothnagel.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/nrtl_nothnagel.md) |
 | [nrtl_rk](validation/nrtl_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_rk.md) |
+| [pc_saft](validation/pc_saft.md) | saft | experimental | 0/7 | L1=6 L2=4 | [report](validation/pc_saft.md) |
+| [pc_saft_assoc](validation/pc_saft_assoc.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_assoc.md) |
+| [pc_saft_polar](validation/pc_saft_polar.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_polar.md) |
 | [pr](validation/pr.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr.md) |
 | [pr78](validation/pr78.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr78.md) |
 | [regular_solution_hoc](validation/regular_solution_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/regular_solution_hoc.md) |
@@ -58,6 +75,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [regular_solution_nothnagel](validation/regular_solution_nothnagel.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/regular_solution_nothnagel.md) |
 | [regular_solution_pr](validation/regular_solution_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/regular_solution_pr.md) |
 | [regular_solution_rk](validation/regular_solution_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/regular_solution_rk.md) |
+| [saft_vr_mie](validation/saft_vr_mie.md) | saft | experimental | 0/7 | L1=0 L2=0 | [report](validation/saft_vr_mie.md) |
 | [srk](validation/srk.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/srk.md) |
 | [unifac_dortmund_hoc](validation/unifac_dortmund_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/unifac_dortmund_hoc.md) |
 | [unifac_dortmund_ig](validation/unifac_dortmund_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=2 | [report](validation/unifac_dortmund_ig.md) |
@@ -108,27 +126,43 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 ### L4 cross-model pairs on the natural-gas slice feed
 
 - `aga8_dc92`: ok — n/a — refuses the slice feed: UnavailableBackend: helmholtz-family placeholder row has no dew_point implementation; the backend lands with a later spec (teqp bridge, T-07)
+- `antoine-ideal-k`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
+- `braun-k10`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
 - `bwr_ls`: ok — n/a — refuses the slice feed: UnavailableBackend: helmholtz-family placeholder row has no dew_point implementation; the backend lands with a later spec (teqp bridge, T-07)
 - `bwrs`: ok — n/a — refuses the slice feed: ComponentNotSupported: BWRSPackage has no parameters for component(s) ['C6+', 'H2O']; supported: ['C1', 'C2', 'C3', 'CO2', 'H2S', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
+- `chao-seader`: ok — n/a — refuses the slice feed: ValueError: no Chao-Seader/Grayson-Streed regular-solution constants for C6+, H2O; extend data/thermo_params/kvalue/regular_solution.yaml from a cited source (pseudo-components, water and alcohols are outside the correlation's scope)
 - `coolprop_heos`: ok — n/a — refuses the slice feed: ComponentNotSupported: CoolPropPackage has no parameters for component(s) ['C6+']; supported: ['C1', 'C2', 'C3', 'CO2', 'H2O', 'H2S', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
 - `eos_cg`: ok — n/a — refuses the slice feed: UnavailableBackend: helmholtz-family placeholder row has no dew_point implementation; the backend lands with a later spec (teqp bridge, T-07)
+- `esso-tabular`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
 - `gerg2008`: ok — n/a — refuses the slice feed: ComponentNotSupported: GERGPackage has no parameters for component(s) ['C6+', 'H2O']; supported: ['C1', 'C2', 'C3', 'CO2', 'H2S', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
+- `grayson-streed`: ok — n/a — refuses the slice feed: ValueError: no Chao-Seader/Grayson-Streed regular-solution constants for C6+, H2O; extend data/thermo_params/kvalue/regular_solution.yaml from a cited source (pseudo-components, water and alcohols are outside the correlation's scope)
+- `grayson-streed-extended`: ok — n/a — refuses the slice feed: ValueError: no Chao-Seader/Grayson-Streed regular-solution constants for C6+, H2O; extend data/thermo_params/kvalue/regular_solution.yaml from a cited source (pseudo-components, water and alcohols are outside the correlation's scope)
+- `henry-sander`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
+- `ideal-lk`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
+- `ideal-raoult`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
+- `lee-kesler-ploecker`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K did not converge
 - `margules_hoc`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_ig`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_nothnagel`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_pr`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_rk`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `mbwr`: ok — n/a — refuses the slice feed: UnavailableBackend: helmholtz-family placeholder row has no dew_point implementation; the backend lands with a later spec (teqp bridge, T-07)
+- `multifluid`: ok — n/a — refuses the slice feed: SaftParameterError: no verified multifluid parameters for ['H2O']; supported: ['C1', 'C2', 'C3', 'C6+', 'CO2', 'N2', 'iC4', 'iC5', 'nC4', 'nC5'] (unsupported components are refused, never treated as ideal)
+- `multifluid_pure`: ok — n/a — refuses the slice feed: SaftParameterError: multifluid_pure flashes pure fluids only; got ['C1', 'C2', 'C3', 'C6+', 'CO2', 'H2O', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
 - `nrtl`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `nrtl_hoc`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `nrtl_ig`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `nrtl_nothnagel`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `nrtl_rk`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `pc_saft`: ok — n/a — refuses the slice feed: SaftParameterError: no verified pc_saft parameters for ['H2O', 'N2', 'iC4', 'iC5']; supported: ['C1', 'C2', 'C3', 'C6+', 'CO2', 'binary_kij', 'excluded', 'nC4', 'nC5'] (unsupported components are refused, never treated as ideal)
+- `pc_saft_assoc`: ok — n/a — refuses the slice feed: NotImplementedError: saft row 'pc_saft_assoc' refuses to build: teqp 0.23.2's PC-SAFT implements no association contribution (teqp docs, PCSAFT.html: 'It does NOT include the association contribution, only the dispersive contributions')
+- `pc_saft_polar`: ok — n/a — refuses the slice feed: NotImplementedError: saft row 'pc_saft_polar' refuses to build: teqp (>= 0.15) ships a polar PC-SAFT extension, but no verified, citable component polar parameters ((Q*)^2, (mu*)^2) exist in data/thermo_params/saft/pure.yaml; parameter retrieval is out of T-07 scope
 - `regular_solution_hoc`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_ig`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_nothnagel`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_pr`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_rk`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
+- `saft_vr_mie`: ok — n/a — refuses the slice feed: SaftParameterError: no verified saft_vr_mie parameters for ['C6+', 'CO2', 'H2O', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']; supported: ['C1', 'C2', 'C3'] (unsupported components are refused, never treated as ideal)
 - `unifac_dortmund_hoc`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_dortmund_ig`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_dortmund_nothnagel`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
@@ -195,6 +229,34 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | bubble_P | 4 | 4 | 100.0 % |
 | dew_P | 4 | 4 | 100.0 % |
 
+### package `antoine-ideal-k` — 8/8 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 4 | 4 | 100.0 % |
+| bubble_P | 4 | 4 | 100.0 % |
+
+### package `braun-k10` — 4/4 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 2 | 2 | 100.0 % |
+| bubble_P | 2 | 2 | 100.0 % |
+
+### package `chao-seader` — 10/10 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 7 | 7 | 100.0 % |
+| bubble_P | 3 | 3 | 100.0 % |
+
+### package `esso-tabular` — 8/8 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 4 | 4 | 100.0 % |
+| bubble_P | 4 | 4 | 100.0 % |
+
 ### package `gerg2008` — 42/42 pass (100.0 %)
 
 | property | n | pass | rate |
@@ -206,6 +268,27 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_V | 5 | 5 | 100.0 % |
 | vapor_comp | 7 | 7 | 100.0 % |
 
+### package `grayson-streed` — 6/6 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 3 | 3 | 100.0 % |
+| bubble_P | 3 | 3 | 100.0 % |
+
+### package `grayson-streed-extended` — 6/6 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 3 | 3 | 100.0 % |
+| bubble_P | 3 | 3 | 100.0 % |
+
+### package `henry-sander` — 10/10 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 6 | 6 | 100.0 % |
+| bubble_P | 4 | 4 | 100.0 % |
+
 ### package `iapws95` — 25/25 pass (100.0 %)
 
 | property | n | pass | rate |
@@ -215,6 +298,27 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | dew_P | 5 | 5 | 100.0 % |
 | rho_L | 5 | 5 | 100.0 % |
 | rho_V | 5 | 5 | 100.0 % |
+
+### package `ideal-lk` — 8/8 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 4 | 4 | 100.0 % |
+| bubble_P | 4 | 4 | 100.0 % |
+
+### package `ideal-raoult` — 8/8 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 4 | 4 | 100.0 % |
+| bubble_P | 4 | 4 | 100.0 % |
+
+### package `lee-kesler-ploecker` — 8/8 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 5 | 5 | 100.0 % |
+| bubble_P | 3 | 3 | 100.0 % |
 
 ### package `margules_ig` — 6/6 pass (100.0 %)
 
@@ -663,6 +767,8 @@ Pure-fluid expected values are generated from the CoolProp reference EOS (versio
 - Culberson & McKetta (1951) J. Pet. Technol. 3, 223-226; IUPAC SDS 27/28 printed p. 31, 100 F isotherm; retrieved 2026-10-20
 - Culberson & McKetta (1951) J. Pet. Technol. 3, 223-226; IUPAC SDS 27/28 printed p. 32, 160 F isotherm; retrieved 2026-10-20
 - Culberson & McKetta (1951) J. Pet. Technol. 3, 223-226; IUPAC SDS 27/28 printed p. 32, 280 F isotherm; retrieved 2026-10-20
+- Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf; x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+- Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf; x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
 - DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
 - Ethanol/water azeotrope at 760 mmHg: b.p. 78.20 C, 4.40 wt% water (x_EtOH = 0.8947 mole fraction) - Edinburgh Azeotrope Database (homepages.ed.ac.uk/jwp/Chemeng/azeotrope/EE.html, CRC Handbook/Lange compilation); retrieved 2026-10-21
 - Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (doi 10.1021/je700210n), CH4+N2 149.989 K isotherm; retrieved 2026-10-21
@@ -678,6 +784,8 @@ Pure-fluid expected values are generated from the CoolProp reference EOS (versio
 - Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
 - Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 310.93 K isotherm; retrieved 2026-10-20
 - Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20
+- Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf; x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+- Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf; x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
 - p_CO2 at fixed loading, 4.3638 kmol/m3 (50 wt%) aqueous MDEA at 313.15 K: 0.0093 bara at loading 0.10 and 0.229 bara at loading 0.40 — NeqSim MDEA-model regression anchors (apparent constants fitted to Jou, Mather & Otto, I&EC Process Des. Dev., vol. 21, p. 539, 1982), as curated in tests/units/test_mdea_equilibrium.py; retrieved 2026-10-21
 
 ## How to add a case
