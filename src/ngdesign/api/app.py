@@ -11,6 +11,7 @@ from typing import Literal
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from ngdesign.api.routes_agent import router as agent_router
 from ngdesign.api.routes_export import router as export_router
 from ngdesign.api.routes_iso import router as iso_router
 from ngdesign.api.routes_meta import router as meta_router
@@ -33,6 +34,7 @@ app.include_router(solve_router)
 app.include_router(views_router)
 app.include_router(export_router)
 app.include_router(meta_router)
+app.include_router(agent_router)
 
 _state: dict[str, Project] = {}
 
