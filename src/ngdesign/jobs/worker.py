@@ -25,7 +25,6 @@ from collections.abc import Callable
 
 from ngdesign.agent import engine
 from ngdesign.agent.tools import ProjectStore
-from ngdesign.contracts import Project
 from ngdesign.contracts.diagnostics import TearRecord
 from ngdesign.contracts.flowsheet import SolvedFlowsheet
 from ngdesign.jobs.models import Job
@@ -39,38 +38,6 @@ POLL_SECONDS = 0.2
 #: The store a worker opens per job: one DbProjectStore per project id (jobs
 #: from different projects share one worker, so the factory takes the id).
 StoreFactory = Callable[[str], ProjectStore]
-
-#: The ``chemicals`` databank lazy-loads its reaction/heat-capacity tables on
-#: first use, and that lazy load is not thread-safe (two threads racing
-#: ``_load_Cp_data`` crash with ``AttributeError: 'PiecewiseHeatCapacity'
-#: object has no attribute 'append'``). Solve jobs are the one surface that
-#: runs concurrent solves in a single process, so the worker resolves the
-#: project's component slate once, serialized, before any solve — after that
-#: the tables are loaded and concurrent solves are safe.
-_databank_lock = threading.Lock()
-_databank_warm = False
-
-
-def _warm_databank(project: Project) -> None:
-    """Resolve the project's component slate once per process, serialized.
-
-    Resolution failures here are deliberately swallowed: the real solve
-    re-resolves and reports them as proper engine errors with provenance.
-    """
-    global _databank_warm
-    if _databank_warm:
-        return
-    with _databank_lock:
-        if _databank_warm:
-            return
-        try:
-            from ngdesign.contracts.components import resolve_set
-
-            resolve_set(project.flowsheet.components)
-        except Exception:
-            pass
-        finally:
-            _databank_warm = True
 
 
 def default_store_factory(project_id: str) -> DbProjectStore:
@@ -97,7 +64,6 @@ def process_job(job: Job, queue: JobQueue, store_factory: StoreFactory) -> None:
         queue.progress(job.id, record)
 
     try:
-        _warm_databank(project)
         solved: SolvedFlowsheet = engine.solve_project(project, on_progress=on_progress)
     except Exception as exc:  # noqa: BLE001 — a job failure is data, never a crash
         queue.fail(job.id, f"{type(exc).__name__}: {exc}")

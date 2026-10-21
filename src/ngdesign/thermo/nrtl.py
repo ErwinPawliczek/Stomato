@@ -35,6 +35,7 @@ from thermo import PRMIX, CEOSGas, ChemicalConstantsPackage, FlashVL, FlashVLN, 
 from thermo.interaction_parameters import IPDB
 from thermo.nrtl import NRTL
 
+from ngdesign.data import DATABANK_LOCK
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.registry import register
 from ngdesign.thermo import _state
@@ -93,49 +94,50 @@ def _build_flasher_inner(
     so a support with a databank-missing pair cannot produce a silently ideal
     result - whichever flasher the caller asks for.
     """
-    records = _state._records(ids, pseudos)
-    pseudo_ids = [r.id for r in records if r.cas is None]
-    if pseudo_ids:
-        raise ValueError(
-            f"NRTL has no fitted binary parameters for pseudo-components {pseudo_ids} "
-            "(the ChemSep NRTL databank is keyed by CAS); refusing to flash an "
-            "ideal pseudo pair matrix - register no pseudos or select an EOS model"
-        )
-    cas_list = [str(r.cas) for r in records]
-    constants, correlations = ChemicalConstantsPackage.from_IDs(cas_list)
-    tau_bs = IPDB.get_ip_asymmetric_matrix(name=_CHEMSEP_NRTL_TABLE, CASs=cas_list, ip="bij")
-    alpha_cs = IPDB.get_ip_asymmetric_matrix(name=_CHEMSEP_NRTL_TABLE, CASs=cas_list, ip="alphaij")
-    _require_databanked_pairs(ids, cas_list, tau_bs)
+    with DATABANK_LOCK:
+        records = _state._records(ids, pseudos)
+        pseudo_ids = [r.id for r in records if r.cas is None]
+        if pseudo_ids:
+            raise ValueError(
+                f"NRTL has no fitted binary parameters for pseudo-components {pseudo_ids} "
+                "(the ChemSep NRTL databank is keyed by CAS); refusing to flash an "
+                "ideal pseudo pair matrix - register no pseudos or select an EOS model"
+            )
+        cas_list = [str(r.cas) for r in records]
+        constants, correlations = ChemicalConstantsPackage.from_IDs(cas_list)
+        tau_bs = IPDB.get_ip_asymmetric_matrix(name=_CHEMSEP_NRTL_TABLE, CASs=cas_list, ip="bij")
+        alpha_cs = IPDB.get_ip_asymmetric_matrix(name=_CHEMSEP_NRTL_TABLE, CASs=cas_list, ip="alphaij")
+        _require_databanked_pairs(ids, cas_list, tau_bs)
 
-    heat_caps = correlations.HeatCapacityGases
-    kijs = IPDB.get_ip_symmetric_matrix(name=_CHEMSEP_PR_TABLE, CASs=cas_list, ip="kij")
-    eos_kwargs: dict[str, Any] = {
-        "Tcs": constants.Tcs,
-        "Pcs": constants.Pcs,
-        "omegas": constants.omegas,
-        "kijs": kijs,
-    }
+        heat_caps = correlations.HeatCapacityGases
+        kijs = IPDB.get_ip_symmetric_matrix(name=_CHEMSEP_PR_TABLE, CASs=cas_list, ip="kij")
+        eos_kwargs: dict[str, Any] = {
+            "Tcs": constants.Tcs,
+            "Pcs": constants.Pcs,
+            "omegas": constants.omegas,
+            "kijs": kijs,
+        }
 
-    def ge_liquid() -> Any:
-        """One NRTL liquid phase.
+        def ge_liquid() -> Any:
+            """One NRTL liquid phase.
 
-        Each liquid phase gets its own NRTL instance: the model object carries
-        (T, xs) state that two evolving phases would alias.
-        """
-        model = NRTL(xs=[1.0 / len(ids)] * len(ids), T=298.15, tau_bs=tau_bs, alpha_cs=alpha_cs)
-        return GibbsExcessLiquid(
-            VaporPressures=correlations.VaporPressures,
-            HeatCapacityGases=heat_caps,
-            HeatCapacityLiquids=correlations.HeatCapacityLiquids,
-            EnthalpyVaporizations=correlations.EnthalpyVaporizations,
-            VolumeLiquids=correlations.VolumeLiquids,
-            GibbsExcessModel=model,
-        )
+            Each liquid phase gets its own NRTL instance: the model object carries
+            (T, xs) state that two evolving phases would alias.
+            """
+            model = NRTL(xs=[1.0 / len(ids)] * len(ids), T=298.15, tau_bs=tau_bs, alpha_cs=alpha_cs)
+            return GibbsExcessLiquid(
+                VaporPressures=correlations.VaporPressures,
+                HeatCapacityGases=heat_caps,
+                HeatCapacityLiquids=correlations.HeatCapacityLiquids,
+                EnthalpyVaporizations=correlations.EnthalpyVaporizations,
+                VolumeLiquids=correlations.VolumeLiquids,
+                GibbsExcessModel=model,
+            )
 
-    gas = CEOSGas(PRMIX, eos_kwargs, HeatCapacityGases=heat_caps)
-    if three_phase:
-        return FlashVLN(constants, correlations, gas=gas, liquids=[ge_liquid(), ge_liquid()])
-    return FlashVL(constants, correlations, gas=gas, liquid=ge_liquid())
+        gas = CEOSGas(PRMIX, eos_kwargs, HeatCapacityGases=heat_caps)
+        if three_phase:
+            return FlashVLN(constants, correlations, gas=gas, liquids=[ge_liquid(), ge_liquid()])
+        return FlashVL(constants, correlations, gas=gas, liquid=ge_liquid())
 
 
 @register("thermo", "nrtl")

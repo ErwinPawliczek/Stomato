@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import csv
 import math
+import threading
 from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import cache
@@ -222,8 +223,29 @@ def is_curated(cid: str) -> bool:
     return cid in _curated_table()
 
 
+#: One process-wide lock around every ``chemicals`` / ``thermo`` databank load.
+#: The libraries lazy-load their tables (heat capacities, vapour pressures, the
+#: IPDB interaction parameters) on first use, and that lazy load is not
+#: thread-safe: two threads racing the first ``from_IDs`` crash inside
+#: ``_load_Cp_data``. Every entry point that can trigger a load - this module's
+#: record resolution, the flasher builders and the pure-Psat data in
+#: ``thermo/_state.py`` and ``thermo/nrtl.py`` - takes this lock, so concurrent
+#: solves in one process (the P3-02 job worker) are safe by construction. An
+#: RLock: a flasher build resolves records while holding it.
+DATABANK_LOCK = threading.RLock()
+
+
 @cache
 def _databank_record(query: str) -> dict[str, Any] | None:
+    """One ``chemicals`` databank record by CAS or name; None when the databank has no hit.
+
+    Cached per query; the miss path runs under :data:`DATABANK_LOCK`.
+    """
+    with DATABANK_LOCK:
+        return _databank_record_uncached(query)
+
+
+def _databank_record_uncached(query: str) -> dict[str, Any] | None:
     """One ``chemicals`` databank record by CAS or name; None when the databank has no hit.
 
     ``CAS_from_any`` is the databank's universal resolver: dashed CAS numbers

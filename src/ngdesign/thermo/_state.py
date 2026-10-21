@@ -51,6 +51,7 @@ from ngdesign.contracts.thermo import (
     SaturationError,
     SaturationPoint,
 )
+from ngdesign.data import DATABANK_LOCK
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.thermo.saturation import _solve_saturation, interior_vf_solve
 
@@ -232,22 +233,23 @@ def build_flasher(ids: tuple[str, ...], eos: Any, kij_table: str, pseudos: Slate
     Constants build from the resolved Component records (spec P1-02), so every
     id must resolve before this is reached.
     """
-    records = _records(ids, pseudos)
-    constants, correlations = _constants_package(records)
-    kijs = _kij_matrix(records, kij_table)
-    eos_kwargs: dict[str, Any] = {
-        "Tcs": constants.Tcs,
-        "Pcs": constants.Pcs,
-        "omegas": constants.omegas,
-        "kijs": kijs,
-    }
-    heat_caps = correlations.HeatCapacityGases
-    gas = CEOSGas(eos, eos_kwargs, HeatCapacityGases=heat_caps)
-    liquids = [
-        CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps),
-        CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps),
-    ]
-    return FlashVLN(constants, correlations, liquids=liquids, gas=gas)
+    with DATABANK_LOCK:
+        records = _records(ids, pseudos)
+        constants, correlations = _constants_package(records)
+        kijs = _kij_matrix(records, kij_table)
+        eos_kwargs: dict[str, Any] = {
+            "Tcs": constants.Tcs,
+            "Pcs": constants.Pcs,
+            "omegas": constants.omegas,
+            "kijs": kijs,
+        }
+        heat_caps = correlations.HeatCapacityGases
+        gas = CEOSGas(eos, eos_kwargs, HeatCapacityGases=heat_caps)
+        liquids = [
+            CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps),
+            CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps),
+        ]
+        return FlashVLN(constants, correlations, liquids=liquids, gas=gas)
 
 
 def _classify(is_gas: bool, water_fraction: float) -> PhaseKind:
@@ -451,22 +453,23 @@ def build_flasher_vl(ids: tuple[str, ...], eos: Any, kij_table: str, pseudos: Sl
     liquid (no water), a VLE-only FlashVL over the same EOS objects reaches the
     same equilibrium without liquid-liquid stability work.
     """
-    records = _records(ids, pseudos)
-    constants, correlations = _constants_package(records)
-    kijs = _kij_matrix(records, kij_table)
-    eos_kwargs: dict[str, Any] = {
-        "Tcs": constants.Tcs,
-        "Pcs": constants.Pcs,
-        "omegas": constants.omegas,
-        "kijs": kijs,
-    }
-    heat_caps = correlations.HeatCapacityGases
-    gas = CEOSGas(eos, eos_kwargs, HeatCapacityGases=heat_caps)
-    liquid = CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps)
-    # N=1 is never flashed through this path: thermo's FlashVL stability guess
-    # divides by N-1, so pure feeds short-circuit to the databank Psat curve in
-    # _saturation and the full flasher maps their states.
-    return FlashVL(constants, correlations, gas=gas, liquid=liquid)
+    with DATABANK_LOCK:
+        records = _records(ids, pseudos)
+        constants, correlations = _constants_package(records)
+        kijs = _kij_matrix(records, kij_table)
+        eos_kwargs: dict[str, Any] = {
+            "Tcs": constants.Tcs,
+            "Pcs": constants.Pcs,
+            "omegas": constants.omegas,
+            "kijs": kijs,
+        }
+        heat_caps = correlations.HeatCapacityGases
+        gas = CEOSGas(eos, eos_kwargs, HeatCapacityGases=heat_caps)
+        liquid = CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps)
+        # N=1 is never flashed through this path: thermo's FlashVL stability guess
+        # divides by N-1, so pure feeds short-circuit to the databank Psat curve in
+        # _saturation and the full flasher maps their states.
+        return FlashVL(constants, correlations, gas=gas, liquid=liquid)
 
 
 def _pt_phase_pairs(flasher: Any, zs: list[float], T: float, P: float) -> list[PhasePair]:
@@ -511,16 +514,17 @@ def _psat_data(cid: str, pseudos: SlatePseudos = ()) -> tuple[Any, float, float,
     Databank-resolved ids use the same from_IDs path as the flashers (identical
     constants); pseudos use the generalized Tb/Tc/Pc/omega VaporPressure.
     """
-    record = resolve(cid, pseudos=_pseudo_mapping(pseudos))
-    if record.cas is None:
-        return _pseudo_vapor_pressure(record), record.Tc, record.Pc, record.omega
-    constants, correlations = ChemicalConstantsPackage.from_IDs([str(record.cas)])
-    return (
-        correlations.VaporPressures[0],
-        float(constants.Tcs[0]),
-        float(constants.Pcs[0]),
-        float(constants.omegas[0]),
-    )
+    with DATABANK_LOCK:
+        record = resolve(cid, pseudos=_pseudo_mapping(pseudos))
+        if record.cas is None:
+            return _pseudo_vapor_pressure(record), record.Tc, record.Pc, record.omega
+        constants, correlations = ChemicalConstantsPackage.from_IDs([str(record.cas)])
+        return (
+            correlations.VaporPressures[0],
+            float(constants.Tcs[0]),
+            float(constants.Pcs[0]),
+            float(constants.omegas[0]),
+        )
 
 
 def pure_psat(cid: str, T: float, pseudos: SlatePseudos = ()) -> float | None:
