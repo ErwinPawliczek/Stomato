@@ -887,20 +887,22 @@ def _sour_molecular_fractions(
     xw = max(zs[water_index], 1e-12)
     c_mol = [z / xw * 55.5084 for z in zs]  # mol/L over water
 
-    def ionic_sum(h: float) -> float:
-        total = 0.0
+    def charge(h: float) -> float:
+        """Electroneutrality residual: H+ + NH4+ - (OH- + HS- + HCO3-)."""
+        positive = h
+        negative = kw / h
         for idx, pk in ionising:
             ka = 10.0 ** -pk
-            if pk == _SOUR_PK_NH3:  # base: protonated fraction
-                total += c_mol[idx] * h / (h + ka)
-            else:
-                total += c_mol[idx] * ka / (h + ka)
-        return total
+            if pk == _SOUR_PK_NH3:  # base: NH4+ carries positive charge
+                positive += c_mol[idx] * h / (h + ka)
+            else:  # acid: the ionised fraction carries negative charge
+                negative += c_mol[idx] * ka / (h + ka)
+        return positive - negative
 
     lo, hi = 1e-14, 1.0
     for _ in range(200):
         h = math.sqrt(lo * hi)
-        if h + ionic_sum(h) > kw / h:
+        if charge(h) > 0.0:
             hi = h
         else:
             lo = h
