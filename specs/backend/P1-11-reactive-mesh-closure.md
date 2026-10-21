@@ -34,8 +34,10 @@ remove the paper.
    package's K reads as converged at M ≈ 5e-3 while the true MESH residual is ≈ 0.49 (measured
    MDEA absorber). The gate evaluates the balances with y_ij = K_ij(T_j, x_j)·x_ij from the live
    package (refresh y before the balance, or add the E-residual; one owner, the number NS sees).
-   Non-reactive columns are unaffected by construction — measure it: bench 4959, every P1-09/P1-10
-   test identical. The P1-09 MDEA assertions become `xfail(strict=True)` with the measured residual
+   The same definition serves every package (no per-package branch). Ruling 2026-10-21 16:20: the
+   honest gate crosses 1e-8 one to three sweeps later on non-reactive columns, so the `column` bench
+   baseline moves 4959 → 6508 flash-equivalents with byte-identical products (`--update` for that
+   case only, trace in the commit); every other bench case and every P1-09/P1-10 test identical. The P1-09 MDEA assertions become `xfail(strict=True)` with the measured residual
    until the mesh closes.
 4. **Then close the mesh with Naphtali–Sandholm on the smooth surface.** First suspect: the FD
    Jacobian step `delta = max(|u|·1e-7, 1e-9)` sits below the smoothness floor step 1 certified
@@ -60,7 +62,7 @@ remove the paper.
 
 ## Acceptance criteria
 - [ ] Smoothness test green with the measured floor documented in `package.py`
-- [ ] Exact gate equilibrium-consistent; non-reactive columns byte-identical (bench 4959)
+- [ ] Exact gate equilibrium-consistent for every package; `column` baseline updated to the measured count with the trace, all other bench cases byte-identical
 - [ ] MDEA absorber boundary balances ≤ 1e-6 relative; `_MESH_M_TOL_REACTIVE` lowered to the measured floor (or deleted) with the measurement in `spec.py`
 - [ ] Reboiled MDEA regenerator converges on the physical branch with the test above
 - [ ] Bench counts identical on all six cases; ruff, mypy, lint-imports, full `pytest -rs` green; nothing outside the listed packages changed
