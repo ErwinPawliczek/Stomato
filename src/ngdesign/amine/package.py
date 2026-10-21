@@ -450,14 +450,21 @@ class AmineReactivePackage(Thermo):
             if sum(f / k[cid] for cid, f in z.items()) <= 1.0:
                 return "vapor", 1.0, dict(z), dict(z)
 
+            # The Rachford-Rice denominator is written (1 - beta) + beta * K, not
+            # 1 + beta * (K - 1): the two are equal algebraically, but when an
+            # acid-gas K underflows below machine epsilon (lean liquid, p_eq ~ 0:
+            # measured K_CO2 = 1.9e-17 at 412 K in a reboiled regenerator, P1-06
+            # BLOCKED report) the second form cancels to exactly 0.0 at the
+            # all-vapour bracket end beta = 1 and the root bracket divides by
+            # zero; the first form evaluates to K there.
             def rr(beta: float, k: dict[str, float] = k) -> float:
-                return sum(f * (k[cid] - 1.0) / (1.0 + beta * (k[cid] - 1.0)) for cid, f in z.items())
+                return sum(f * (k[cid] - 1.0) / ((1.0 - beta) + beta * k[cid]) for cid, f in z.items())
 
             beta = brent_root(rr, 0.0, 1.0)
             y_raw: dict[str, float] = {}
             x_new: dict[str, float] = {}
             for cid, f in z.items():
-                denom = 1.0 + beta * (k[cid] - 1.0)
+                denom = (1.0 - beta) + beta * k[cid]
                 y_raw[cid] = max(f * k[cid] / denom, 0.0)
                 x_new[cid] = max(y_raw[cid] / k[cid], 0.0)
             sy, sx = sum(y_raw.values()), sum(x_new.values())
