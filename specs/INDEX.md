@@ -86,6 +86,8 @@ its own `.importlinter` ignore lines. The orchestrator updates **Status** here o
 | P1-04 | Amine chemistry as property packages (apparent-component reactive VLE) | P0-02, P1-01 | dispatched (issue #92) |
 | P1-06 | Staged amine absorber/regenerator via column + amine package | P1-03, P1-04 | drafted |
 | P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | dispatched (issue #93) |
+| P1-07 | Pseudo-component definitions owned by the Flowsheet (no process-global registry) | P1-02 | to write |
+| P1-08 | One saturation solver over a vapour-fraction callable (amine package reuses `_state._saturation`) | P1-01, P1-04 | to write |
 
 Dispatch order: P1-01 first (merged 2026-10-20); then P1-02, P1-03, P1-04, P1-05 in parallel
 (disjoint packages; P1-02 and P1-04 both touch `units/`, resolve on rebase); P1-06 after P1-03 and
