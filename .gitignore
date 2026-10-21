@@ -8,3 +8,5 @@ out/
 *.egg-info/
 node_modules/
 dist/
+stomato.db
+stomato.db-*
