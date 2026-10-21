@@ -136,8 +136,8 @@ def run(
 
     Raises ValueError for a structurally impossible study (no input axes, an
     axis with no values) and never for a failed case. ``on_progress`` (spec
-    P3-02, pass-through) is called with every tear record the bare inner solve
-    produces; the design-spec outer loop does not forward it.
+    P3-02, pass-through) is called with every tear record each case's solve
+    produces, on both solve paths.
     """
     if not study.inputs:
         raise ValueError("a case study needs at least one input axis")
@@ -197,12 +197,12 @@ def _solve_case(
     """One case solve through the right P2-01 seam (see the module docstring).
 
     The bare inner solve takes the caller's warm start (``warm_start=False``
-    keeps the mean-of-feeds init byte-identically) and the P3-02
-    ``on_progress`` callback; the design-spec outer loop warm-starts its own
-    inner solves.
+    keeps the mean-of-feeds init byte-identically); the design-spec outer loop
+    warm-starts its own inner solves. Both forward the P3-02 ``on_progress``
+    callback.
     """
     if with_specs:
-        solved: SolvedFlowsheet = registry.create("solver", solver)(fs, thermo)
+        solved: SolvedFlowsheet = registry.create("solver", solver).solve(fs, thermo, on_progress=on_progress)
         return solved
     return SequentialModular().solve(fs, thermo, warm if warm_start else None, on_progress=on_progress)
 

@@ -14,6 +14,7 @@ from typing import cast
 import pytest
 
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.specs import DesignSpec
 from ngdesign.flowsheets import slice as slice_fs
 from ngdesign.registry import create as _create_plugin
 from ngdesign.study import Axis, CaseStudy, StudyResult, run, to_csv, to_markdown
@@ -151,3 +152,30 @@ def test_tables_render_the_grid() -> None:
     cells = to_csv(result).strip().split("\r\n")
     assert len(cells) == 2  # header + one case
     assert "K-101.params.P_out" in cells[0] and "status" in cells[0] and "wall_s" in cells[0]
+
+
+def test_design_spec_flowsheet_runs_through_the_outer_loop() -> None:
+    """A base flowsheet carrying design specs solves every case through the
+    registered outer loop (spec P2-01): the spec target holds in each row."""
+    base = slice_fs.build()
+    spec = DesignSpec(
+        id="DS-001",
+        target="S-003.T",
+        value=390.0,
+        manipulated="K-101.params.P_out",
+        lower=6e6,
+        upper=14e6,
+    )
+    base = base.model_copy(update={"design_specs": [spec]})
+    result = run(
+        CaseStudy(
+            id="specs",
+            inputs=[Axis(address="S-001.feed.T", values=[300.0, 305.0])],
+            outputs=["S-003.T", "K-101.power_W"],
+            base=base,
+        ),
+        _thermo(),
+    )
+    assert [row.status for row in result.rows] == ["converged", "converged"]
+    for row in result.rows:
+        assert row.outputs["S-003.T"] == pytest.approx(390.0, rel=1e-4)
