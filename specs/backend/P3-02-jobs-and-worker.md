@@ -2,7 +2,7 @@
 
 - **Phase:** 3
 - **Depends on:** P3-01 (store), P2-02 (history records)
-- **Packages you may edit:** `ngdesign.jobs` (new), `ngdesign.api` (`routes_jobs.py`, `app.py` include), `ngdesign.cli` (`worker` command), `tests/jobs/`, `tests/api/test_jobs.py`, `pyproject.toml` + `uv.lock` **only to add `redis`**, `openapi.json` + `schema.d.ts` (regenerated)
+- **Packages you may edit:** `ngdesign.jobs` (new), `ngdesign.api` (`routes_jobs.py`, `app.py` include), `ngdesign.cli` (`worker` command), `ngdesign.solver` (`sequential_modular.py` only for the optional `on_progress` callback) and `ngdesign.agent` (`engine.py` only to pass the callback through `solve_project`), `tests/jobs/`, `tests/api/test_jobs.py`, `pyproject.toml` + `uv.lock` **only to add `redis`**, `openapi.json` + `schema.d.ts` (regenerated)
 - **Contract change:** yes — new routes, dependency
 - **Benchmark delta expected:** none
 
