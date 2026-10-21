@@ -20,7 +20,17 @@ from .inside_out import (
     _v_free_indices,
 )
 from .linalg import _gauss
-from .spec import _FLOW_FLOOR, _MESH_H_TOL, _MESH_M_TOL, _NS_MAX, ColumnConvergenceError
+from .spec import (
+    _FLOW_FLOOR,
+    _MESH_H_TOL,
+    _MESH_M_TOL,
+    _MESH_M_TOL_REACTIVE,
+    _MESH_M_TOL_ZERO_ONE_TEAR,
+    _NS_MAX,
+    _NS_MAX_ZERO_ONE_TEAR,
+    ColumnConvergenceError,
+    _is_reactive_package,
+)
 from .thermo_adapter import _flash_ready, _ThermoBox
 
 # --------------------------------------------------------------------------------------
@@ -129,7 +139,15 @@ def _ns_residual_function(
                     vs[j] + col.draw_v[j]
                 ) * k_live[j].get(cid, 1.0) * xs[j].get(cid, 0.0)
                 out.append(inflow - outflow)
-            out.append(sum(xs[j].values()) - 1.0)
+            # Canonical NS summation row (Naphtali & Sandholm 1971): sum_i x_ij
+            # = sum_i K_ij x_ij, i.e. the bubble condition sum_i x_ij (1 - K_ij)
+            # = 0. The former sum(x) - 1 form made the row vanish whenever K was
+            # near 1 for every component (wide absorber mid-stages), so the row
+            # carried no temperature information exactly where the walk needed
+            # it; this form scales with the local volatility spread.
+            out.append(
+                sum(xs[j].values()) - sum(k_live[j].get(cid, 1.0) * xs[j].get(cid, 0.0) for cid in col.comps)
+            )
             if j in h_stages:
                 h_in = (
                     (vs[j + 1] * _enthalpy_at(models.h_vap[j + 1], ts[j + 1]) if j + 1 < n else 0.0)
@@ -167,25 +185,33 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
     h_scale = max(col.f_total * 2e4, 1.0)
     n_m = n * len(col.comps) + n  # component M rows + summation rows
 
-    def norm_of(r: list[float]) -> float:
-        return max(
-            max(abs(r[i]) for i in range(n_m)) / f_scale,
-            max(abs(r[i]) for i in range(n_m, len(r))) / h_scale,
-        )
+    def m_norm_of(r: list[float]) -> float:
+        """Scaled max residual over the M + summation rows (the exact-M gate's block)."""
+        return max(abs(r[i]) for i in range(n_m)) / f_scale
 
-    def gates_ok(r: list[float]) -> bool:
-        """Same acceptance semantics as the inside-out mesh gate.
+    def h_norm_of(r: list[float]) -> float:
+        """Scaled max residual over the H rows (the line-search's second block)."""
+        return max(abs(r[i]) for i in range(n_m, len(r))) / h_scale
 
-        A pure 1e-10 norm can never be reached: the frozen enthalpy lines carry
-        an anchor floor around 1e-3 relative, so Newton would exhaust its pass
-        budget refining a state the mesh itself already accepts.
-        """
-        return (
-            max(abs(r[i]) for i in range(n_m)) / f_scale < _MESH_M_TOL
-            and max(abs(r[i]) for i in range(n_m, len(r))) / h_scale < _MESH_H_TOL
-        )
-
-    for _ in range(_NS_MAX):
+    ns_max = _NS_MAX if col.n_tears >= 2 else _NS_MAX_ZERO_ONE_TEAR
+    live_norm = col.n_tears < 2
+    best_u: list[float] | None = None
+    best_m = float("inf")
+    best_h = float("inf")
+    if col.n_tears >= 2:
+        m_tol = _MESH_M_TOL
+    elif _is_reactive_package(tb):
+        m_tol = _MESH_M_TOL_REACTIVE
+    else:
+        # Same gate the mesh accepts at (_MESH_M_TOL_ZERO_ONE_TEAR): the NS
+        # state hands off to _solve_mesh's inside-out polish, and the polish
+        # lifts the state further before the mesh's own acceptance decides.
+        # A tighter intermediate gate only discarded measurably converged
+        # states (measured P1-09 stripper: NS polished a warm-chained state
+        # to M=2.90e-7, H=4.46e-10 and the 1e-7 gate typed the tear failed).
+        m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
+    for _ in range(ns_max):
+        prof.ns_passes += 1
         k_stages = [
             tb.k_values(
                 [
@@ -220,9 +246,31 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
 
         u = _pack_state(prof, col, v_free)
         r0 = residuals(u)
-        norm = norm_of(r0)
-        if gates_ok(r0):
+        # The pass gate must carry exact-residual semantics, not the NS residual's.
+        # The NS residual derives vapour compositions as K*x (equilibrium-consistent
+        # by construction), so a state whose STORED y is stale reads as converged
+        # internally while the exact check - which uses the stored y - is wide open.
+        # Measured P1-09 absorber, seed state (y = gas-feed composition, not K*x):
+        # NS-internal M=6.3e-3 vs exact M=1.00 - the former gate broke before the
+        # first Newton step and the fallback never ran for these columns.
+        _refresh_y(col, tb, prof)
+        ex_m, ex_h = _exact_residuals(col, tb, prof)
+        # Live-norm acceptance (zero/one-tear columns): keep the best exact state
+        # across passes and restore it at exit. NS's finite-difference Newton can
+        # walk PAST the near-converged state it started from into an unevaluable
+        # one (measured P1-09 stripper, physical branch at boilup 20-50 mol/s:
+        # inside-out best M=2.2e-11/H=1.7e-1 or M=1.5e-2/H=3.4e-6, then NS's own
+        # final state M=1.00 - a stage the thermo can no longer evaluate). The
+        # best-exact state is what the inside-out polish in _solve_mesh needs.
+        if live_norm and ex_m + ex_h < best_m + best_h:
+            best_u, best_m, best_h = list(u), ex_m, ex_h
+        if ex_m < m_tol and ex_h < _MESH_H_TOL:
             break
+        # Baseline norms for the line search's descent test (a descent proxy on
+        # the frozen models; acceptance is decided by the exact gate above on
+        # the NEXT pass, so a polished-but-not-exact state keeps iterating).
+        m_current = m_norm_of(r0)
+        h_current = h_norm_of(r0)
         n_unk = len(u)
         jac = [[0.0] * n_unk for _ in range(len(r0))]
         for i in range(n_unk):
@@ -237,22 +285,54 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
         except ColumnConvergenceError:
             break
         lam = 1.0
+        accepted = False
         for _ in range(10):
             u_try = [u[i] + lam * step[i] for i in range(n_unk)]
             try:
-                trial_norm = norm_of(residuals(u_try))
-            except ColumnConvergenceError:
-                # A trial step landed in a degenerate state the residual
-                # machinery cannot evaluate; reject it and shrink the step.
-                trial_norm = float("inf")
-            if trial_norm < norm:
+                r_try = residuals(u_try)
+                trial_m = m_norm_of(r_try)
+                trial_h = h_norm_of(r_try)
+            except (ColumnConvergenceError, ValueError):
+                # A trial step landed in a degenerate or off-chemistry state the
+                # residual machinery cannot evaluate (SaturationError is a
+                # ValueError subclass); reject it and shrink the step.
+                trial_m = float("inf")
+                trial_h = float("inf")
+            # Joint max-norm descent: a step that polishes M while letting H
+            # drift is rejected (measured P1-09 rectifier: the M-only search
+            # walked M to 1e-8 with H pinned at 0.34 - the state had drifted
+            # into an energy-infeasible corner the model refresh never
+            # recovered from).
+            if max(trial_m, trial_h) < max(m_current, h_current):
                 _apply_state(prof, u_try, col, v_free, t_bot_tear)
-                break
+                if not live_norm:
+                    accepted = True
+                    break
+                # Live-norm acceptance: the frozen-row descent must also not
+                # worsen the exact (refreshed-thermo) residuals. Trials that
+                # improve the frozen rows while walking the exact residuals
+                # uphill are rejected and the pre-step state restored
+                # (measured P1-09 stripper: frozen rows closed to 6.9e-10
+                # while refreshed exact M rose to 1.00 - the diverged trial
+                # displaced a near-converged state the mesh could have kept).
+                _refresh_y(col, tb, prof)
+                try:
+                    ex_try_m, ex_try_h = _exact_residuals(col, tb, prof)
+                except (ColumnConvergenceError, ValueError):
+                    ex_try_m, ex_try_h = float("inf"), float("inf")
+                if max(ex_try_m, ex_try_h) < max(ex_m, ex_h):
+                    accepted = True
+                    break
+                _apply_state(prof, u, col, v_free, t_bot_tear)
             lam *= 0.5
-        else:
+        if not accepted:
             break
     else:
+        if live_norm and best_u is not None:
+            _apply_state(prof, best_u, col, v_free, t_bot_tear)
         raise ColumnConvergenceError("Naphtali-Sandholm fallback did not converge within budget")
+    if live_norm and best_u is not None:
+        _apply_state(prof, best_u, col, v_free, t_bot_tear)
     _refresh_y(col, tb, prof)
     m_res, h_res = _exact_residuals(col, tb, prof)
     prof.ns_used = True
@@ -260,7 +340,7 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
     # anchor floor sits around 1e-3-1e-4 relative, while mass closes to
     # machine precision. Demanding 1e-6 on H here would reject a solution
     # the mesh itself accepts.
-    if m_res > _MESH_M_TOL or h_res > _MESH_H_TOL:
+    if m_res > m_tol or h_res > _MESH_H_TOL:
         raise ColumnConvergenceError(
             f"Naphtali-Sandholm fallback stalled: max residuals M={m_res:.2e}, H={h_res:.2e}"
         )
@@ -269,7 +349,12 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
 
 
 def _pack_state(prof: _Profile, col: _Column, v_free: list[int]) -> list[float]:
-    u = [prof.x[j][cid] for j in range(col.n) for cid in col.comps]
+    # .get with a 0.0 default: the seed profile for a zero/one-tear column can
+    # carry only the components present in the seed compositions (measured P1-09
+    # absorber: a pure-nC4 liquid seed gives x = {"nC4": 1.0} and a bare
+    # [cid] lookup raises KeyError before the first Newton pass - the fallback
+    # never ran at all for these columns).
+    u = [prof.x[j].get(cid, 0.0) for j in range(col.n) for cid in col.comps]
     u.extend(prof.T)
     u.extend(prof.V[j] for j in v_free)
     return u
@@ -286,7 +371,9 @@ def _unpack_x(u: list[float], col: _Column) -> list[dict[str, float]]:
 
 def _unpack_t(u: list[float], col: _Column) -> list[float]:
     base = col.n * len(col.comps)
-    return [min(max(u[base + j], 100.0), 800.0) for j in range(col.n)]
+    # Trial temperatures are clamped to the two-phase operating band (spec D):
+    # an unclamped Newton trial can leave it and degenerate the live-K flash.
+    return [min(max(u[base + j], col.t_band_lo), col.t_band_hi) for j in range(col.n)]
 
 
 def _unpack_v(u: list[float], col: _Column, v_free: list[int], t_bot_tear: float | None) -> list[float]:

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import yaml
 
+from ngdesign import registry
 from scripts.validate_properties import ABSOLUTE_ERROR_PROPERTIES, TOLERANCE_POLICY, _load_cases
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -73,24 +74,7 @@ def test_all_case_packages_are_registered_names() -> None:
     for case in _load_cases():
         if case.package == "all":
             continue
-        assert case.package in {
-            "pr",
-            "srk",
-            "pr78",
-            "nrtl",
-            # T-03 gamma-phi rows (12 liquid models x ideal vapour are case-bearing)
-            "uniquac_ig",
-            "wilson_ig",
-            "vanlaar_ig",
-            "margules_ig",
-            "regular_solution_ig",
-            "unifac_ig",
-            "unifac_dortmund_ig",
-            "unifac_psrk_ig",
-            "unifac_nist_ig",
-            "unifac_lle_ig",
-            "unifac_lyngby_ig",
-        }, f"{case.id}: unexpected package {case.package}"
+        assert case.package in registry.available("thermo"), f"{case.id}: unexpected package {case.package}"
 
 
 def test_results_json_row_schema_when_present() -> None:
