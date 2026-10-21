@@ -32,7 +32,7 @@
     - L
     - VLL
   status: validated
-  validation: &id002
+  validation: &id001
   - pure-C1-95.3K
   - pure-C1-125K
   - pure-C1-155K
@@ -130,71 +130,7 @@
   - Peng, D.-Y. & Robinson, D. B., 'A New Equation of State and Its Application to Binary Mixtures', Ind.
     Eng. Chem. Fundam. 15(1), 59-64, 1976
   - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
-  l0:
-    pure_psat_limit:
-      points:
-      - - C1
-        - 160.0
-      - - C3
-        - 300.0
-      - - nC4
-        - 300.0
-      - - H2O
-        - 400.0
-    phase_identification:
-      points:
-      - - nC4
-        - 300.0
-      - - C3
-        - 300.0
-      - - H2O
-        - 300.0
-    round_trip:
-      z: &id001
-        N2: 0.005
-        CO2: 0.015
-        C1: 0.848
-        C2: 0.062
-        C3: 0.032
-        iC4: 0.007
-        nC4: 0.01
-        iC5: 0.004
-        nC5: 0.004
-        C6+: 0.01
-        H2O: 0.003
-      states:
-      - - 350.0
-        - 3447000.0
-    dhdT_cp:
-      z: *id001
-      state:
-      - 350.0
-      - 3447000.0
-      phase: vapor
-    gibbs_duhem:
-      binaries:
-      - z:
-          C1: 0.6
-          C3: 0.4
-        T: 250.0
-        P: 2000000.0
-        phase: hc_liquid
-      - z:
-          C1: 0.7
-          CO2: 0.3
-        T: 250.0
-        P: 2000000.0
-        phase: vapor
-    single_liquid_limit:
-      z:
-        C3: 0.3
-        nC4: 0.7
-      state: [250.0, 2000000.0]
-    determinism:
-      z: *id001
-      state:
-      - 350.0
-      - 3447000.0
+  l0: {}
   l0_excluded: {}
   l0_note: ''
 - id: srk
@@ -231,65 +167,12 @@
     - L
     - VLL
   status: validated
-  validation: *id002
+  validation: *id001
   references:
   - Soave, G., 'Equilibrium Constants from a Modified Redlich-Kwong Equation of State', Chem. Eng. Sci.
     27(6), 1197-1203, 1972
   - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
-  l0:
-    pure_psat_limit:
-      points:
-      - - C1
-        - 160.0
-      - - C3
-        - 300.0
-      - - nC4
-        - 300.0
-      - - H2O
-        - 400.0
-    phase_identification:
-      points:
-      - - nC4
-        - 300.0
-      - - C3
-        - 300.0
-      - - H2O
-        - 300.0
-    round_trip:
-      z: *id001
-      states:
-      - - 350.0
-        - 3447000.0
-    dhdT_cp:
-      z: *id001
-      state:
-      - 350.0
-      - 3447000.0
-      phase: vapor
-    gibbs_duhem:
-      binaries:
-      - z:
-          C1: 0.6
-          C3: 0.4
-        T: 250.0
-        P: 2000000.0
-        phase: hc_liquid
-      - z:
-          C1: 0.7
-          CO2: 0.3
-        T: 250.0
-        P: 2000000.0
-        phase: vapor
-    single_liquid_limit:
-      z:
-        C3: 0.3
-        nC4: 0.7
-      state: [250.0, 2000000.0]
-    determinism:
-      z: *id001
-      state:
-      - 350.0
-      - 3447000.0
+  l0: {}
   l0_excluded: {}
   l0_note: ''
 - id: pr78
@@ -326,64 +209,11 @@
     - L
     - VLL
   status: validated
-  validation: *id002
+  validation: *id001
   references:
   - Robinson, D. B., Peng, D.-Y. & Ng, H.-J., 'Applications of the Peng-Robinson Equation of State', GPA
     Research Report RR-28, 1978
   - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
-  l0:
-    pure_psat_limit:
-      points:
-      - - C1
-        - 160.0
-      - - C3
-        - 300.0
-      - - nC4
-        - 300.0
-      - - H2O
-        - 400.0
-    phase_identification:
-      points:
-      - - nC4
-        - 300.0
-      - - C3
-        - 300.0
-      - - H2O
-        - 300.0
-    round_trip:
-      z: *id001
-      states:
-      - - 350.0
-        - 3447000.0
-    dhdT_cp:
-      z: *id001
-      state:
-      - 350.0
-      - 3447000.0
-      phase: vapor
-    gibbs_duhem:
-      binaries:
-      - z:
-          C1: 0.6
-          C3: 0.4
-        T: 250.0
-        P: 2000000.0
-        phase: hc_liquid
-      - z:
-          C1: 0.7
-          CO2: 0.3
-        T: 250.0
-        P: 2000000.0
-        phase: vapor
-    single_liquid_limit:
-      z:
-        C3: 0.3
-        nC4: 0.7
-      state: [250.0, 2000000.0]
-    determinism:
-      z: *id001
-      state:
-      - 350.0
-      - 3447000.0
+  l0: {}
   l0_excluded: {}
   l0_note: ''

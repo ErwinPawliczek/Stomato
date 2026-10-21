@@ -175,6 +175,11 @@ def _load_dir(dir_path: str) -> dict[str, ModelRow]:
                     f"{where}: duplicate thermo catalogue id {row.id!r} "
                     f"(already defined in {rows[row.id].source_file} row {rows[row.id].source_row})"
                 )
+            # L0 parameters are owned per FAMILY (``l0_defaults`` in _schema.yaml); a row
+            # lists only what differs. Merging here means every consumer (the harness,
+            # describe()) sees the full check set without 25 cubic rows repeating it.
+            family_l0 = dict(schema.get("l0_defaults", {}).get(row.family, {}))
+            row = row.model_copy(update={"l0": {**family_l0, **row.l0}})
             _validate_vocab(row, where, schema)
             _validate_options(row, where)
             rows[row.id] = row

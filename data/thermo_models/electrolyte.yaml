@@ -30,26 +30,8 @@
   - Kent, R. L. & Eisenberg, B., Hydrocarbon Process. 55(2), 87-90, 1976
   - Jou, F.-Y. et al., 'Equilibrium Partial Pressures of CO2 and H2S in Aqueous MDEA Solutions', Can.
     J. Chem. Eng. 71, 264-268, 1993
-  l0:
-    single_liquid_limit:
-      z: &id001
-        MDEA: 0.1337049774159722
-        H2O: 0.8395540271008334
-        CO2: 0.026740995483194443
-      state:
-      - 313.15
-      - 5000000.0
-    round_trip:
-      z: *id001
-      states:
-      - - 313.15
-        - 5000000.0
-    determinism:
-      z: *id001
-      state:
-      - 313.15
-      - 5000000.0
-  l0_excluded: &id002
+  l0: {}
+  l0_excluded: &id001
     pure_psat_limit: applicability is the aqueous amine liquid; the pure-component saturation limits of
       the molecular databank components are not this package's claimed surface (the amine feed carries
       reactive acid-gas chemistry)
@@ -58,9 +40,9 @@
     dhdT_cp: the reactive-liquid cp is the carrier's databank cp plus the fixed-loading heat of absorption;
       its T-derivative is not part of the reported cp, so the dH/dT == Cp identity does not apply to this
       phase
-    gibbs_duhem: "the reactive liquid's ln_phi carries the speciation equilibrium (f_i == p_eq_i phi_i^V),\
-      \ not a Gibbs-excess composition derivative; the Gibbs-Duhem identity at fixed T, P is not the composition-consistency\
-      \ surface here \u2014 flash consistency is pinned by the P1-04 tests instead"
+    gibbs_duhem: the reactive liquid's ln_phi carries the speciation equilibrium (f_i == p_eq_i phi_i^V),
+      not a Gibbs-excess composition derivative; the Gibbs-Duhem identity at fixed T, P is not the composition-consistency
+      surface here — flash consistency is pinned by the P1-04 tests instead
   l0_note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the
     single-liquid limit run today
 - id: amine_enrtl
@@ -95,22 +77,7 @@
   - Kent, R. L. & Eisenberg, B., Hydrocarbon Process. 55(2), 87-90, 1976
   - Jou, F.-Y. et al., 'Equilibrium Partial Pressures of CO2 and H2S in Aqueous MDEA Solutions', Can.
     J. Chem. Eng. 71, 264-268, 1993
-  l0:
-    single_liquid_limit:
-      z: *id001
-      state:
-      - 313.15
-      - 5000000.0
-    round_trip:
-      z: *id001
-      states:
-      - - 313.15
-        - 5000000.0
-    determinism:
-      z: *id001
-      state:
-      - 313.15
-      - 5000000.0
-  l0_excluded: *id002
+  l0: {}
+  l0_excluded: *id001
   l0_note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the
     single-liquid limit run today
