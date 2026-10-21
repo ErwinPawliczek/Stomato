@@ -1,0 +1,97 @@
+# Stomato local stack (spec P3-03). `docker compose up` serves the whole app on
+# http://localhost:8080 — two api replicas behind the web nginx upstream, one
+# worker, bundled Postgres and Redis.
+#
+# Configuration comes from environment variables (STOMATO_*); copy .env.example
+# to .env in this directory to override the defaults. The defaults give an open
+# (token-less) local install.
+name: stomato
+
+x-backend-env: &backend-env
+  STOMATO_DATABASE_URL: ${STOMATO_DATABASE_URL:-postgresql+psycopg://stomato:${POSTGRES_PASSWORD:-stomato}@postgres:5432/stomato}
+  STOMATO_REDIS_URL: ${STOMATO_REDIS_URL:-redis://redis:6379/0}
+  STOMATO_API_TOKENS: ${STOMATO_API_TOKENS:-}
+  STOMATO_CORS_ORIGINS: ${STOMATO_CORS_ORIGINS:-http://localhost:8080}
+
+x-backend-depends: &backend-depends
+  db-init:
+    condition: service_completed_successfully
+  postgres:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
+
+services:
+  postgres:
+    image: postgres:17.2-alpine
+    environment:
+      POSTGRES_USER: stomato
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stomato}
+      POSTGRES_DB: stomato
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stomato -d stomato"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4.2-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # One-shot schema migration: the api replicas start only after it succeeds.
+  db-init:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: ghcr.io/erwinpawliczek/stomato-api:local
+    environment: *backend-env
+    command: ["db-init"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: ghcr.io/erwinpawliczek/stomato-api:local
+    environment: *backend-env
+    deploy:
+      replicas: 2
+    depends_on: *backend-depends
+    restart: unless-stopped
+
+  worker:
+    image: ghcr.io/erwinpawliczek/stomato-api:local
+    environment: *backend-env
+    # Same image as `api`, worker command. The image HEALTHCHECK targets
+    # /api/health, which the worker does not serve — disabled here.
+    command: ["worker"]
+    healthcheck:
+      disable: true
+    depends_on: *backend-depends
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    image: ghcr.io/erwinpawliczek/stomato-web:local
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:

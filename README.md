@@ -19,6 +19,17 @@ Run the end-to-end demo on the built-in sample flowsheet:
 python -m ngdesign.cli slice
 ```
 
+## Deploying the whole app (compose, Helm)
+
+The full stack — 2 × api behind one nginx URL, the solve worker, Postgres and
+Redis — runs with `docker compose -f deploy/compose.yaml up` and serves on
+http://localhost:8080. For clusters there is a Helm chart at
+`deploy/helm/stomato/` (api + optional HPA, worker, web + Ingress, a
+pre-install `db-init` Job, and Postgres/Redis StatefulSets you swap for
+external URLs). Container images are built and pushed to GHCR on a `v*` tag.
+See **[docs/deploy.md](docs/deploy.md)** for the quickstarts, the environment
+reference and how the Phase 3 gate was verified.
+
 ## The demo: one flowsheet, every deliverable
 
 `python -m ngdesign.cli slice` runs the full chain on the locked sample slice — a 50 MMSCFD rich wet sweet gas train at 500 psia: a 3-phase inlet separator (V-101), a gas compressor (K-101), an air cooler (E-101) and a TEG dehydration contactor (T-101), plus a pumped-and-heated condensate leg (P-101, E-102). With `--out DIR` (default `out/`) it writes every artefact to that directory:
