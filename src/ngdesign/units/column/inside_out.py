@@ -182,6 +182,21 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         feed_ts = [part.t for part in feeds if part.total > _FLOW_FLOOR]
         col.t_band_lo = min(feed_ts) - 30.0
         col.t_band_hi = max(feed_ts) + 80.0
+        if col.reboiler == "kettle":
+            # A reboiled stripper's bottom stage sits at the kettle's bubble
+            # point of the bottoms (spec P1-10) - for a top-fed nC4-rich
+            # stripper at 2 MPa that is ~375-385 K, ABOVE the feed-based
+            # ceiling of max(feed T) + 80 (300 + 80 = 380 K here). A ceiling
+            # below the kettle's own operating point clamps the physical
+            # profile at the band limit and the band-limit guard then rejects
+            # it (measured: the boilup-ratio 0.8 physical root carries a
+            # bottoms 4-5 K above 380 K). Extend the ceiling to cover the
+            # estimated kettle temperature; the floor stays feed-based (the
+            # band-floor branch is the failure mode, never the solution).
+            xb = _nearest_feed_phase(col, col.n - 1, vapor=False)
+            t_kettle = tb.bubble_temperature(_flash_ready(xb, col.feed_comp), col.pressures[-1])
+            if t_kettle is not None:
+                col.t_band_hi = max(col.t_band_hi, t_kettle + 15.0)
         return col
     t_top, t_bot = _temperature_seed(col, tb)
     if t_bot > t_top + 20.0:
@@ -427,6 +442,25 @@ def _seed_profile(
             # composition, which a reactive package cannot evaluate as a liquid.
             x = [_nearest_feed_phase(col, j, vapor=False) for j in range(n)]
             y = [_nearest_feed_phase(col, j, vapor=True) for j in range(n)]
+        if col.reboiler == "kettle":
+            # A reboiled stripper's bottom stage sits at the kettle's bubble
+            # point of the bottoms estimate, not the feed or mixed-feed
+            # temperature (spec P1-10): the kettle supplies vapour at the
+            # BOTTOM. The mixed/linear seeds put every stage at ~the feed
+            # temperature, and the inside-out walk from a cold bottom stage
+            # descended to the t_band_lo floor branch (measured P1-10 C1/nC4
+            # stripper, 2 MPa, feed 300 K: cold solves at kettle V=26-40
+            # landed on 270 K - the branch the band-limit guard rejects;
+            # the physical branch runs 300-377 K). The bottoms estimate is
+            # the liquid phase of the nearest feed to the bottom stage - for
+            # a top-fed stripper, the feed's own flashed liquid. Ramp every
+            # stage linearly up to it so the walk starts on the physical
+            # side. Reactive packages (amine regenerators, spec P1-06) are
+            # out of scope here: their chemistry is seeded by P1-06.
+            xb = _nearest_feed_phase(col, n - 1, vapor=False)
+            t_kettle = tb.bubble_temperature(_flash_ready(xb, col.feed_comp), col.pressures[-1])
+            if t_kettle is not None and t_kettle > temps[-1]:
+                temps = [temps[j] + (t_kettle - temps[-1]) * (j / max(n - 1, 1)) for j in range(n)]
         return _Profile(T=temps, V=vapour, L=liquid, x=x, y=y, l0=l0)
     temps = [t_top + (t_bot - t_top) * (j / max(n - 1, 1)) for j in range(n)]
     z = col.feed_comp

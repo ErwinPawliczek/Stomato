@@ -33,9 +33,11 @@ from .spec import (
     _MESH_M_TOL,
     _MESH_M_TOL_REACTIVE,
     _MESH_M_TOL_ZERO_ONE_TEAR,
+    _NS_FLOOR_M,
     _OUTER_DAMP,
     _OUTER_DAMP_ZERO_ONE,
     _OUTER_MAX,
+    _POLISH_M_TOL_ZERO_ONE_TEAR,
     _SPEC_MAX,
     _SPEC_TOL,
     _STAGNATION_MAX,
@@ -138,7 +140,67 @@ def _solve_mesh(
     best_prof: _Profile | None = None
     best_m = float("inf")
     best_h = float("inf")
-    for outer in range(1, _OUTER_MAX + 1):
+    if zero_one:
+        # Never hand the fallback a state worse than the one it was given: a
+        # warm seed (the secant's last converged profile, re-teared) is already
+        # near-converged, but the first inside-out sweeps can wander off it.
+        # Measured P1-10 stripper on the physical branch warm from V=41: the
+        # sweeps drove exact M to 1e-10 while H drifted to 1e-1, and the
+        # Naphtali-Sandholm fallback started from that wandered state and
+        # stalled at every neighbouring tear - while starting NS from the
+        # incoming state itself converges in a few passes at every tear
+        # 24-48 (each ~0.2 s). Two-tear columns keep the original loop
+        # untouched: their benchmarked mesh sequence is locked (bench 4,959).
+        best_m, best_h = _exact_residuals(col, tb, prof)
+        best_prof = _copy_profile(col, prof)
+    ns_direct = False
+    ns_floor = False
+    if (
+        zero_one
+        and not _is_reactive_package(tb)
+        and (seed is not None or (col.n_tears == 1 and col.reboiler == "kettle"))
+    ):
+        # Naphtali-Sandholm FIRST for non-reactive zero/one-tear columns:
+        # - warm (a promoted seed exists): NS from the re-teared seed converges
+        #   in ~0.2 s at every neighbouring kettle tear (measured P1-10, V=24-76
+        #   from the V=41 physical profile), while the sweep loop first wanders
+        #   off the seed (M closes to 1e-10 while H drifts to 1e-1) and NS
+        #   started from that wandered state stalls. The best-state tracker
+        #   cannot rescue this: the wandered state can beat the seed on the
+        #   M+H sum while being a worse NS start.
+        # - cold (no seed): one-tear kettle strippers only (measured P1-10
+        #   E-NSCOLD: NS from the crude hot-bottom seed converges outright at
+        #   every tear V=24-48 mol/s in 0.2-0.3 s; the inside-out loop from the
+        #   same seed reaches the band-floor branch at most tears). Absorbers
+        #   (zero tears) keep the inside-out loop - their measured P1-09 sweep
+        #   sequence is locked, and NS is measurably worse there on reactive
+        #   packages. Two-tear columns keep the original loop untouched: their
+        #   benchmarked mesh sequence is locked (bench 4,959).
+        try:
+            _naphtali_sandholm(col, tb, prof, t_bot)
+            ns_direct = True
+        except ColumnConvergenceError:
+            # NS may raise at its finite-difference floor while holding a
+            # physically converged state (measured P1-10 stripper: M = 4.2e-6
+            # - 7.3e-6 against the 1e-6 gate, with the boundary total balance
+            # closed at D + B = 100.00000000 on a 100 mol/s feed; a stalled
+            # state sits at 1e-2 or worse). Keep that state for the polish
+            # stage below; otherwise restart from the untouched seed.
+            if _at_ns_floor(col, tb, prof):
+                ns_floor = True
+            elif seed is None:
+                t_top_seed, t_bot_seed = _temperature_seed(col, tb)
+                prof = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot)
+                _apply_tears(col, prof, t_top, t_bot)
+            else:
+                prof = _copy_profile(col, seed)
+                _apply_tears(col, prof, t_top, t_bot)
+    if ns_direct or ns_floor:
+        # The sweeps can only wander off a near-converged NS state, so the
+        # inside-out loop is skipped entirely; the polish stage below still
+        # runs and its gate decides acceptance.
+        best_prof = _copy_profile(col, prof)
+    for outer in range(1, 1 if (ns_direct or ns_floor) else _OUTER_MAX + 1):
         t_prev, v_prev = list(prof.T), list(prof.V)
         model = _refresh_model(col, tb, prof, model)
         prof.outer = outer
@@ -183,20 +245,35 @@ def _solve_mesh(
     # seconds (measured P1-09 stripper retreat ladder).
     if best_prof is not None:
         prof = _copy_profile(col, best_prof)
-    if not allow_fallback:
+    if not allow_fallback and not (ns_direct or ns_floor):
+        # Probe verdict path: only an UNCONVERGED inside-out loop without NS
+        # success raises here; a converged NS-first state falls through to the
+        # polish gate below (the NS-first attempt runs even in probes - one-tear
+        # kettles only, measured 0.2-0.3 s per call).
         raise ColumnConvergenceError(
             f"inside-out mesh did not converge at tears {(t_top, t_bot)} "
             f"(best residuals M={best_m:.2e}, H={best_h:.2e})"
         )
-    try:
-        _naphtali_sandholm(col, tb, prof, t_bot)
-    except ColumnConvergenceError as exc:
-        raise ColumnConvergenceError(
-            f"column did not converge in {_OUTER_MAX} inside-out sweeps and the "
-            f"Naphtali-Sandholm fallback failed after {prof.ns_passes} passes: {exc} "
-            f"(best inside-out profile residuals M={best_m:.2e}, H={best_h:.2e} over "
-            f"{prof.outer} outer sweeps, {prof.inner} inner iterations)"
-        ) from exc
+    if not (ns_direct or ns_floor):
+        try:
+            _naphtali_sandholm(col, tb, prof, t_bot)
+        except ColumnConvergenceError as exc:
+            # NS may raise at its finite-difference floor while holding a
+            # physically converged state (measured P1-10 stripper, kettle
+            # vapour 50-76 mol/s on the physical branch: NS exits at
+            # M = 4.2e-6 - 5.6e-6 against the 1e-6 gate, with the boundary
+            # total balance closed at D + B = 100.00000000 on a 100 mol/s
+            # feed). Non-reactive zero/one-tear columns hand that state to the
+            # polish below; everything else, and a genuinely stalled state
+            # (measured stalls sit at M >= 1e-2), is a failure.
+            polishable = zero_one and not _is_reactive_package(tb)
+            if not (polishable and _at_ns_floor(col, tb, prof)):
+                raise ColumnConvergenceError(
+                    f"column did not converge in {_OUTER_MAX} inside-out sweeps and the "
+                    f"Naphtali-Sandholm fallback failed after {prof.ns_passes} passes: {exc} "
+                    f"(best inside-out profile residuals M={best_m:.2e}, H={best_h:.2e} over "
+                    f"{prof.outer} outer sweeps, {prof.inner} inner iterations)"
+                ) from exc
     if zero_one and not _is_reactive_package(tb):
         # NS globalizes; the inside-out polishes. NS's finite-difference Newton
         # floors at M=3.9e-8 (measured P1-09 absorber: passes 20-30 stagnant),
@@ -213,7 +290,7 @@ def _solve_mesh(
             prof.outer = outer
             _inner_solve(col, model, prof, t_bot)
             m_pol, h_pol = _exact_residuals(col, tb, prof)
-            if m_pol < m_tol and h_pol < _MESH_H_TOL:
+            if m_pol < _POLISH_M_TOL_ZERO_ONE_TEAR and h_pol < _MESH_H_TOL:
                 break
             if m_pol + h_pol < pol_m + pol_h:
                 stalled = 0
@@ -233,6 +310,18 @@ def _solve_mesh(
     _reject_band_limit(col, prof)
     _finalize_duties(col, tb, prof)
     return prof
+
+
+def _at_ns_floor(col: _Column, tb: _ThermoBox, prof: _Profile) -> bool:
+    """True when a Naphtali-Sandholm exit left a physically converged state.
+
+    NS raises at its finite-difference Newton floor (spec P1-10, measured
+    M = 4e-6 - 7e-6 against the 1e-6 gate with the boundary total balance
+    closed at D + B = 100.00000000 on a 100 mol/s feed); a stalled state sits
+    at M >= 1e-2. The bound is _NS_FLOOR_M.
+    """
+    m_ns, h_ns = _exact_residuals(col, tb, prof)
+    return m_ns < _NS_FLOOR_M and h_ns < _MESH_H_TOL
 
 
 def _copy_profile(col: _Column, src: _Profile) -> _Profile:
@@ -279,7 +368,20 @@ def _initial_tears(col: _Column, params: _Params) -> tuple[float | None, float |
             # liquid traffic went negative and the mesh could never close).
             liq_in = sum(part.l_flow for part in col.feeds)
             ratio = params.specs.get("boilup_ratio")
-            r = float(ratio) if ratio is not None else 0.8
+            if ratio is not None:
+                r = float(ratio)
+            elif any(key == "component_recovery" for key in params.specs):
+                # Recovery specs have no ratio to read; the 0.8 default lands the
+                # P1-10 stripper at V=79.5 - inside the 78-82 collapse zone where
+                # NS stalls (M~0.96 from the crude seed) and the sweeps return
+                # wrong-root profiles with PLATEAUED recovery (the secant Jacobian
+                # then reads singular on the first iteration). Start inside the
+                # NS-converging window instead: the recovery secant walks UP the
+                # physical branch from here (damped steps; the measured branch
+                # spans V=41-88 with recovery 0.86-0.97).
+                r = 0.45
+            else:
+                r = 0.8
             # The no-recycle ratio-exact guess r*L/(1+r) sits BELOW the true
             # feasible window: the rising vapour partially condenses on its way
             # up, inflating the kettle's liquid supply (measured P1-09 stripper:
@@ -783,6 +885,20 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                 f"column specs are unsatisfiable (secant Jacobian singular); "
                 f"residuals {[round(r, 6) for r in rel]}"
             )
+        if col.n_tears < 2:
+            # Damp the secant step for zero/one-tear columns (measured P1-10
+            # recovery case): the full Newton step from the ratio-0.5 root
+            # (V=44.8) extrapolated the shallow recovery slope straight to
+            # V=79.5, where the cold mesh collapses (NS stalls at M~0.96 from
+            # the crude seed) and the inside-out sweeps land on a WRONG root -
+            # component recovery DROPPED with more boilup, the Jacobian read
+            # singular, and the walk aborted. The physical branch is smooth in
+            # the tear; steps of at most a quarter of the current tear keep
+            # every evaluation on it (the branch spans V=41-88 with recovery
+            # 0.86-0.95+; _SPEC_MAX=20 leaves ample iterations).
+            for i in range(nf):
+                cap = 0.25 * abs(x[i])
+                step[i] = max(-cap, min(cap, step[i]))
         if sep_idx:
             sep_step = sum(tear_dir[i] * step[i] for i in range(nf))
             improved = False
