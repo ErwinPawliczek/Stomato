@@ -1,0 +1,46 @@
+# NRTL binary parameters (spec T-03). Runtime source: the ChemSep NRTL table
+# bundled in thermo 0.6.1's IPDB (tau_bs / alpha_cs, as the pre-existing nrtl
+# catalogue row already consumes it). No in-house fits are shipped for NRTL:
+#
+# - the MEG/H2O pair is zero-filled in the ChemSep table, and the least-squares
+#   fit attempted against the T-12 MEG/H2O case points was degenerate (no
+#   shippable solution) - both nrtl-ig megh2o cases stay dormant;
+# - the ChemSep MeOH/H2O and MeOH/nC4 pairs disagree with the T-12 points
+#   beyond tolerance (2.8 % bubble_T, 14 % y at the 97.99 kPa point) and
+#   non-degenerate fits reproducing them were not found - those nrtl-ig cases
+#   stay dormant too.
+#
+# This file documents provenance for the pairs the adapter consumes from the
+# databank; the values themselves are read from IPDB at runtime (single source
+# of truth), never duplicated here.
+model: nrtl
+source: chemsep_ipdb
+table: ChemSep NRTL
+pairs:
+  meohh2o:
+    fitted: false
+    params: null
+    citation: >-
+      ChemSep NRTL table (IPDB). Covers MeOH/H2O but disagrees with the T-12
+      MeOH/H2O cases beyond tolerance; the nrtl-ig MeOH/H2O cases stay dormant.
+  etohh2o:
+    fitted: false
+    params: null
+    citation: >-
+      ChemSep NRTL table (IPDB). Covers EtOH/H2O; the nrtl-ig EtOH/H2O cases
+      are outside the verified live set this PR (kept pending in
+      data/validation/gamma_phi/cases.yaml).
+  meohnc4:
+    fitted: false
+    params: null
+    citation: >-
+      ChemSep NRTL table (IPDB). Covers MeOH/nC4 but disagrees with the T-12
+      MeOH/nC4 case beyond tolerance (2.8 % bubble_T, 14 % y); the nrtl-ig
+      MeOH/nC4 case stays dormant.
+  megh2o:
+    fitted: false
+    params: null
+    citation: >-
+      Zero-filled in the ChemSep NRTL table; the in-house fit was degenerate,
+      so MEG/H2O NRTL supports raise the missing-parameter error (no silent
+      ideal fallback).

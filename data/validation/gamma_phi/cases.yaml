@@ -30,6 +30,58 @@
 # - MeOH/nC4 Courtial point measured on the registered nrtl package: bubble_P 323521 Pa vs
 #   336600 Pa expected (3.9 % > 3 % tolerance) - filed as a GitHub issue; the case is kept as
 #   pending:nrtl_pr with the measured value recorded in the PR body.
+# Case disposition (T-03, branch t-03/gamma-phi):
+# - Sixteen binary case-model combos are ACTIVATED (pending: prefix removed):
+#   uniquac_ig x {megh2o-431.25K, meohnc4, etohh2o-azeotrope};
+#   wilson_ig x {megh2o-431.25K, meohnc4, etohh2o-azeotrope};
+#   vanlaar_ig x {meohnc4, etohh2o-azeotrope};
+#   margules_ig x {meohnc4, megh2o-431.25K, etohh2o-azeotrope};
+#   unifac_ig x {etohh2o-azeotrope};
+#   unifac_dortmund_ig x {meohnc4, etohh2o-azeotrope};
+#   unifac_psrk_ig x {meohnc4, etohh2o-azeotrope}.
+# - Verification method: ChemSep databank pairs where the table carries the pair and
+#   reproduces the point (uniquac/wilson EtOH/H2O), otherwise in-house least-squares fits
+#   against ln-gamma targets derived from the cited literature points (modified Raoult's
+#   law, ideal vapour, thermo 0.6.1); every live combo is re-verified end-to-end through the
+#   adapter flasher (scripts/validate_properties.py evaluate_case). Fitted pairs and
+#   citations live in data/thermo_params/<model>/pairs.yaml.
+#   REVIEW RULING (PR #150): a case that a pair was fitted TO is a regression pin, not an
+#   independent validation - those rows stay `provisional`; promotion to `validated` needs
+#   a case the parameters were not fitted against (tracked on issue #100).
+# - Data-quality finding (PR #150 review): at the MeOH/H2O 97.99 kPa / x_MeOH 0.24 point the
+#   NRTL, UNIQUAC and Wilson ChemSep pairs all give bubble_T 351.8-352.2 K and y_MeOH
+#   0.624-0.628 against the transcribed 349.05 K / 0.68, and Perry's 1-atm table puts
+#   x_MeOH ~0.38 at that temperature; the Bennett (1929) transcription is suspect
+#   (issue #100). No pair is fitted to it.
+# - Dormant binary cases (pending: prefix kept) with measured reasons:
+#   * nrtl-ig meohh2o both points: ChemSep databank pair misses beyond tolerance
+#     (97.99 kPa point: bubble_T +0.88 % vs 0.5 %, y +5.40 % vs 2 % abs); no non-degenerate
+#     in-house NRTL fit found, so both stay dormant.
+#   * nrtl-ig megh2o both points: ChemSep NRTL table zero-fills MEG/H2O; refusal error.
+#   * nrtl-ig meohnc4: databank bubble_P error 10.5 % (3.9 % measured on the nrtl_pr
+#     pairing; see Known gaps above).
+#   * uniquac-ig meohh2o both points: databank pair +0.91 % bubble_T / y -8 % (97.99 kPa),
+#     bubble_P +3.1 % / y -6 % (312.91 K); no fit shipped (see the data-quality finding).
+#   * uniquac-ig / wilson-ig / margules-ig megh2o-383.15K and the unifac_* megh2o-383.15K
+#     siblings: 0.9-2.0 % bubble_T errors vs 0.5 % tolerance (fitted pairs are single-point
+#     fits, not tabulations; the 431.25 K points are the fitted ones).
+#   * wilson-ig meohh2o both points (full aij + bij form): bubble_T +0.81 % / y -8 %
+#     (97.99 kPa), bubble_P +8.2 % / y -5.6 % (312.91 K); no fit shipped.
+#   * vanlaar-ig megh2o: fit degenerate (A12 ~ -4.4e10 J/mol) -> not shipped; refusal error.
+#   * vanlaar-ig / margules-ig meohh2o: no non-degenerate fit found -> refusal error.
+#   * regular-solution-ig binaries: model-intrinsic misses (bubble_T 2.9-7.7 %, y up to
+#     40 %); meohnc4 refuses because thermo's nC4 liquid-volume correlation returns None.
+#   * unifac_ig / unifac_dortmund_ig / unifac_psrk_ig / unifac_nist_ig meohh2o + megh2o:
+#     tabulation misses outside tolerance (y 4.1-14.5 %, bubble_T/P 0.8-6.4 %);
+#     unifac_nist_ig meohnc4 bubble_P 3.3 % vs 3 %.
+#   * unifac_lle_ig binaries: the curated LLE table has no alcohol main group in
+#     data/thermo_params/unifac/groups.yaml -> refusal errors (alcohol cases stay dormant).
+#   * unifac_lyngby_ig meohh2o + meohnc4: misses outside tolerance.
+# - Measured PASSING but kept dormant per the task's locked 17-combo scope (candidate
+#   activations for a follow-up): unifac-nist-ig-etohh2o-azeotrope-101.325kPa,
+#   unifac-lyngby-ig-etohh2o-azeotrope-101.325kPa,
+#   unifac-lyngby-ig-megh2o-431.25K-101.325kPa.
+#
 pure_cases:
 - id: pure-MeOH-305K-nrtl
   package: nrtl
@@ -965,6 +1017,10 @@ binary_cases:
     vapor_comp: 0.02
 - id: uniquac-ig-meohh2o-97.99kPa-349.05K
   package: pending:uniquac_ig
+  # Dormant: the ChemSep databank pair misses this point (+0.91 % bubble_T,
+  # y 0.624 vs 0.68) and NRTL/Wilson agree with it within 0.35 K - the point is
+  # suspect (issue #100). The single-point fit that once activated it was
+  # removed in the PR #150 review (see data/thermo_params/uniquac/pairs.yaml).
   components:
   - MeOH
   - H2O
@@ -1015,7 +1071,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: uniquac-ig-megh2o-431.25K-101.325kPa
-  package: pending:uniquac_ig
+  package: uniquac_ig
   components:
   - MEG
   - H2O
@@ -1032,7 +1088,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: uniquac-ig-meohnc4-323.22K-0.3366MPa
-  package: pending:uniquac_ig
+  package: uniquac_ig
   components:
   - MeOH
   - nC4
@@ -1046,7 +1102,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: uniquac-ig-etohh2o-azeotrope-101.325kPa
-  package: pending:uniquac_ig
+  package: uniquac_ig
   components:
   - EtOH
   - H2O
@@ -1114,7 +1170,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: wilson-ig-megh2o-431.25K-101.325kPa
-  package: pending:wilson_ig
+  package: wilson_ig
   components:
   - MEG
   - H2O
@@ -1131,7 +1187,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: wilson-ig-meohnc4-323.22K-0.3366MPa
-  package: pending:wilson_ig
+  package: wilson_ig
   components:
   - MeOH
   - nC4
@@ -1145,7 +1201,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: wilson-ig-etohh2o-azeotrope-101.325kPa
-  package: pending:wilson_ig
+  package: wilson_ig
   components:
   - EtOH
   - H2O
@@ -1230,7 +1286,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: vanlaar-ig-meohnc4-323.22K-0.3366MPa
-  package: pending:vanlaar_ig
+  package: vanlaar_ig
   components:
   - MeOH
   - nC4
@@ -1244,7 +1300,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: vanlaar-ig-etohh2o-azeotrope-101.325kPa
-  package: pending:vanlaar_ig
+  package: vanlaar_ig
   components:
   - EtOH
   - H2O
@@ -1312,7 +1368,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: margules-ig-megh2o-431.25K-101.325kPa
-  package: pending:margules_ig
+  package: margules_ig
   components:
   - MEG
   - H2O
@@ -1329,7 +1385,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: margules-ig-meohnc4-323.22K-0.3366MPa
-  package: pending:margules_ig
+  package: margules_ig
   components:
   - MeOH
   - nC4
@@ -1343,7 +1399,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: margules-ig-etohh2o-azeotrope-101.325kPa
-  package: pending:margules_ig
+  package: margules_ig
   components:
   - EtOH
   - H2O
@@ -1541,7 +1597,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: unifac-ig-etohh2o-azeotrope-101.325kPa
-  package: pending:unifac_ig
+  package: unifac_ig
   components:
   - EtOH
   - H2O
@@ -1626,7 +1682,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: unifac-dortmund-ig-meohnc4-323.22K-0.3366MPa
-  package: pending:unifac_dortmund_ig
+  package: unifac_dortmund_ig
   components:
   - MeOH
   - nC4
@@ -1640,7 +1696,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: unifac-dortmund-ig-etohh2o-azeotrope-101.325kPa
-  package: pending:unifac_dortmund_ig
+  package: unifac_dortmund_ig
   components:
   - EtOH
   - H2O
@@ -1725,7 +1781,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: unifac-psrk-ig-meohnc4-323.22K-0.3366MPa
-  package: pending:unifac_psrk_ig
+  package: unifac_psrk_ig
   components:
   - MeOH
   - nC4
@@ -1739,7 +1795,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: unifac-psrk-ig-etohh2o-azeotrope-101.325kPa
-  package: pending:unifac_psrk_ig
+  package: unifac_psrk_ig
   components:
   - EtOH
   - H2O

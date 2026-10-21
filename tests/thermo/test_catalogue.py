@@ -36,9 +36,32 @@ def _load_harness() -> Any:
 
 
 def test_rows_load_and_build() -> None:
-    """Six rows load; the registry resolves each id to its adapter class."""
+    """65 rows load; the registry resolves each id to its adapter class."""
     rows = load_catalogue()
-    assert sorted(rows) == ["amine_enrtl", "amine_ke", "nrtl", "pr", "pr78", "srk"]
+    gamma_phi_ids = [
+        f"{liquid}_{vapour}"
+        for liquid in (
+            "uniquac",
+            "wilson",
+            "vanlaar",
+            "margules",
+            "regular_solution",
+            "unifac",
+            "unifac_dortmund",
+            "unifac_psrk",
+            "unifac_nist",
+            "unifac_lle",
+            "unifac_lyngby",
+        )
+        for vapour in ("ig", "rk", "pr", "hoc", "nothnagel")
+    ]
+    # The pre-existing NRTL row keeps its bare id (its PR vapour IS the row);
+    # nrtl_pr therefore does not exist - the four suffixed NRTL ids are new.
+    nrtl_ids = ["nrtl", "nrtl_ig", "nrtl_rk", "nrtl_hoc", "nrtl_nothnagel"]
+    non_gamma = ["amine_enrtl", "amine_ke", "pr", "pr78", "srk"]
+    expected = sorted(gamma_phi_ids + nrtl_ids + non_gamma)
+    assert len(expected) == 65
+    assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
         "pr": PengRobinsonThermo,
@@ -98,7 +121,10 @@ def test_non_cubic_options_fail_at_load(tmp_path: Path) -> None:
     _plant_schema(tmp_path)
     row = _pr_row_dict() | {"id": "notcubic", "family": "gamma_phi", "options": {"alpha": "twu"}}
     (tmp_path / "bad.yaml").write_text(yaml.safe_dump([row]))
-    with pytest.raises(CatalogueError, match="no typed options are declared for family"):
+    # gamma_phi declares typed options since T-03, so the load fails on option
+    # validation (unknown keys, missing liquid/vapour) instead of the cubic-era
+    # "family declares no typed options" message.
+    with pytest.raises(CatalogueError, match="unknown or invalid option value"):
         _load_planted(tmp_path)
 
 
@@ -158,16 +184,24 @@ def test_slice_solves_identically_through_catalogue(model_id: str) -> None:
 
 
 def test_l0_green_on_all_rows() -> None:
-    """Every declared L0 check on every row passes (probes fixed the points/tolerances)."""
+    """Every declared L0 check on every non-experimental row passes (audit mirrors this)."""
     vp = _load_harness()
     for model_id, row in sorted(load_catalogue().items()):
+        if row.status == "experimental":
+            continue
         results = vp.run_l0_row(row)
         failed = [r for r in results if not r.passed]
         assert not failed, f"{model_id}: {[(r.check, r.detail) for r in failed]}"
 
 
+@pytest.mark.timeout(600)
 def test_audit_passes_on_the_real_catalogue() -> None:
-    """The T-01 audit gate is green on the committed catalogue."""
+    """The T-01 audit gate is green on the committed catalogue.
+
+    The default 120 s budget was sized for the 6-row catalogue; at 65 rows the
+    audit's exhaustive L0 sweep plus quadratic L4 pair loop (locked harness)
+    runs ~3 minutes on one core, so this test carries its own budget.
+    """
     vp = _load_harness()
     assert vp.audit() == 0
 
