@@ -108,7 +108,7 @@ P1-04 merge. Contract-change PRs are reviewed by the orchestrator before merge.
 | P2-02 | Partial results, per-unit error records, convergence history | P1-02, P1-03 | merged #111 (2026-10-21) |
 | P2-01 | Flowsheet design specs (Spec/Adjust) with an outer loop; `ngdesign.variables` | P2-02, B-08 | merged #116 (2026-10-21) |
 | P2-03 | Per-block tear initialisation; Broyden option for tears | P2-02 | dispatched 2026-10-21 (issue #118) |
-| P2-04 | Case-study runner (CLI, API, agent) | P2-01, B-08 | dispatched 2026-10-21 (issue #119) |
+| P2-04 | Case-study runner (CLI, API, agent) | P2-01, B-08 | merged #122 (2026-10-21) |
 
 Dispatch order: P2-02 first (solver + contract), then P2-01 and P2-03 in parallel (P2-01 adds a new
 solver module and `variables.py`; P2-03 edits the SM loop), P2-04 after P2-01 and B-08.
