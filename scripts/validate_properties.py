@@ -31,6 +31,7 @@ import dataclasses
 import datetime
 import json
 import platform
+import re
 import subprocess
 from functools import cache
 from pathlib import Path
@@ -44,6 +45,17 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 CASES_PATH = REPO_ROOT / "data" / "validation" / "cases.yaml"
 RESULTS_PATH = REPO_ROOT / "data" / "validation" / "results.json"
 DOC_PATH = REPO_ROOT / "docs" / "validation.md"
+
+
+def _case_files() -> list[Path]:
+    """Every reference-case file: the root ``cases.yaml`` plus per-family ``cases*.yaml``.
+
+    Data sweeps (spec T-11) add ``data/validation/<family>/cases.yaml``; entries whose
+    ``package`` is ``pending:<id>`` name a catalogue row that is not registered yet and are
+    skipped by :func:`_load_cases` until the row lands.
+    """
+    return sorted((REPO_ROOT / "data" / "validation").glob("**/cases*.yaml"))
+
 
 #: Package expansion of ``package: all`` — the three cubic packages. NRTL runs only where the
 #: reference system is an activity-coefficient system (its cases name ``nrtl`` directly).
@@ -160,6 +172,12 @@ def xfail_reason(case: Case, failed_props: frozenset[str]) -> str | None:
             "cubic two-phase flash yields an unphysical water/methane phase split at 13 MPa, so "
             "the aqueous methane solubility is not representable (flagged for thermo investigation)"
         )
+    if case.id.startswith("ng-dew-morch-") and failed_props <= {"dew_P"}:
+        return (
+            "dew pressures of the asymmetric C1/C2/nC5 synthetic natural gas ternary run 10-35 % "
+            "above the Mørch et al. (2006) cooled-mirror measurements under databank/zero k_ij "
+            "(model limitation, issue #130; assessed in docs/validation.md)"
+        )
     if case.id == "slice-inlet-K-500psia-300K":
         return (
             "chart-read K values (5-7 % reading precision) vs k_ij=0 cubic K "
@@ -171,25 +189,30 @@ def xfail_reason(case: Case, failed_props: frozenset[str]) -> str | None:
 def _load_cases() -> list[Case]:
     import yaml
 
-    raw = yaml.safe_load(CASES_PATH.read_text())
     cases: list[Case] = []
-    for section in ("pure_cases", "binary_cases", "multicomponent_cases"):
-        for entry in raw.get(section) or []:
-            case = Case(
-                id=str(entry["id"]),
-                package=str(entry.get("package", "all")),
-                components=list(entry.get("components", [])),
-                z={k: float(v) for k, v in entry["z"].items()},
-                source=str(entry["source"]),
-                expected=dict(entry.get("expected") or {}),
-                T=float(entry["T"]) if entry.get("T") is not None else None,
-                P=float(entry["P"]) if entry.get("P") is not None else None,
-                tolerance={k: float(v) for k, v in (entry.get("tolerance") or {}).items()},
-                note=str(entry.get("note", "")),
-                fluid=str(entry.get("fluid", "")),
-                coolprop_fluid=str(entry.get("coolprop_fluid", "")),
-            )
-            cases.append(case)
+    for path in _case_files():
+        raw = yaml.safe_load(path.read_text())
+        for section in ("pure_cases", "binary_cases", "multicomponent_cases"):
+            for entry in raw.get(section) or []:
+                if str(entry.get("package", "all")).startswith("pending:"):
+                    # Catalogue row not registered yet (T-02..T-07 adapter specs): the data
+                    # sweep commits the cases ahead of the model; skip until the id lands.
+                    continue
+                case = Case(
+                    id=str(entry["id"]),
+                    package=str(entry.get("package", "all")),
+                    components=list(entry.get("components", [])),
+                    z={k: float(v) for k, v in entry["z"].items()},
+                    source=str(entry["source"]),
+                    expected=dict(entry.get("expected") or {}),
+                    T=float(entry["T"]) if entry.get("T") is not None else None,
+                    P=float(entry["P"]) if entry.get("P") is not None else None,
+                    tolerance={k: float(v) for k, v in (entry.get("tolerance") or {}).items()},
+                    note=str(entry.get("note", "")),
+                    fluid=str(entry.get("fluid", "")),
+                    coolprop_fluid=str(entry.get("coolprop_fluid", "")),
+                )
+                cases.append(case)
     return cases
 
 
@@ -314,28 +337,36 @@ def run_all(cases: list[Case]) -> list[Row]:
 
 
 def regen_coolprop() -> None:
-    """Fill the ``pure_cases`` expected values from CoolProp, rewriting ``cases.yaml``."""
+    """Fill the ``pure_cases`` expected values from CoolProp, rewriting each case file.
+
+    Every file matched by :func:`_case_files` is rewritten in place; each file's header
+    comment block (everything before its ``meta:`` key) is preserved.
+    """
     import CoolProp
     import yaml
     from CoolProp.CoolProp import PropsSI
 
-    raw = yaml.safe_load(CASES_PATH.read_text())
     version = ""
-    for case in raw.get("pure_cases") or []:
-        fluid = case["coolprop_fluid"]
-        T = float(case["T"])
-        version = CoolProp.__version__
-        case["expected"] = {
-            "bubble_P": PropsSI("P", "T", T, "Q", 0, fluid),
-            "dew_P": PropsSI("P", "T", T, "Q", 1, fluid),
-            "rho_V": PropsSI("D", "T", T, "Q", 1, fluid),
-            "rho_L": PropsSI("D", "T", T, "Q", 0, fluid),
-            "Cp": PropsSI("Cpmolar", "T", T, "Q", 0, fluid),
-        }
-    raw["meta"]["coolprop_version"] = version
-    CASES_PATH.write_text(HEADER + yaml.dump(raw, sort_keys=False, default_flow_style=False, width=1000))
-    n_pure = len(raw.get("pure_cases") or [])
-    print(f"regenerated {n_pure} pure cases with CoolProp {version}")
+    n_pure = 0
+    for path in _case_files():
+        text = path.read_text()
+        raw = yaml.safe_load(text)
+        for case in raw.get("pure_cases") or []:
+            fluid = case["coolprop_fluid"]
+            T = float(case["T"])
+            version = CoolProp.__version__
+            case["expected"] = {
+                "bubble_P": PropsSI("P", "T", T, "Q", 0, fluid),
+                "dew_P": PropsSI("P", "T", T, "Q", 1, fluid),
+                "rho_V": PropsSI("D", "T", T, "Q", 1, fluid),
+                "rho_L": PropsSI("D", "T", T, "Q", 0, fluid),
+                "Cp": PropsSI("Cpmolar", "T", T, "Q", 0, fluid),
+            }
+            n_pure += 1
+        raw["meta"]["coolprop_version"] = version
+        head = re.split(r"(?m)^meta:", text, maxsplit=1)[0]
+        path.write_text(head + yaml.dump(raw, sort_keys=False, default_flow_style=False, width=1000))
+    print(f"regenerated {n_pure} pure cases in {len(_case_files())} files with CoolProp {version}")
 
 
 # -- Reporting ---------------------------------------------------------------------------------

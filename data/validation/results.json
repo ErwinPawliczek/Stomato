@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-10-21T00:11:01+00:00",
+    "generated": "2026-10-21T13:10:58+00:00",
     "python": "3.13.14",
     "platform": "Linux-6.1.158+-x86_64-with-glibc2.41",
-    "git_rev": "00839f9",
+    "git_rev": "43c6954",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 867,
-    "n_pass": 638
+    "n_comparisons": 876,
+    "n_pass": 641
   },
   "rows": [
     {
@@ -7252,27 +7252,27 @@
       "package": "pr",
       "property": "liquid_comp",
       "expected": 0.001857,
-      "got": 0.9519201391175452,
-      "rel_err": 0.9500631391175453,
-      "pass": false
+      "got": 0.001609660242188723,
+      "rel_err": 0.0002473397578112769,
+      "pass": true
     },
     {
       "case": "c1h2o-410.9K-13.10MPa",
       "package": "srk",
       "property": "liquid_comp",
       "expected": 0.001857,
-      "got": 0.9545507584832305,
-      "rel_err": 0.9526937584832305,
-      "pass": false
+      "got": 0.0013201677080723914,
+      "rel_err": 0.0005368322919276085,
+      "pass": true
     },
     {
       "case": "c1h2o-410.9K-13.10MPa",
       "package": "pr78",
       "property": "liquid_comp",
       "expected": 0.001857,
-      "got": 0.9519201391175452,
-      "rel_err": 0.9500631391175453,
-      "pass": false
+      "got": 0.001609660242188723,
+      "rel_err": 0.0002473397578112769,
+      "pass": true
     },
     {
       "case": "c1h2o-410.9K-24.51MPa",
@@ -7813,6 +7813,87 @@
       "got": 0.4103315061790128,
       "rel_err": 0.025828765447531987,
       "pass": true
+    },
+    {
+      "case": "ng-dew-morch-243.4K-0.30MPa",
+      "package": "pr",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 406518.332822541,
+      "rel_err": 0.35506110940847,
+      "pass": false
+    },
+    {
+      "case": "ng-dew-morch-243.4K-0.30MPa",
+      "package": "srk",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 377792.37663995684,
+      "rel_err": 0.2593079221331895,
+      "pass": false
+    },
+    {
+      "case": "ng-dew-morch-243.4K-0.30MPa",
+      "package": "pr78",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 406518.332822541,
+      "rel_err": 0.35506110940847,
+      "pass": false
+    },
+    {
+      "case": "ng-dew-morch-254.6K-0.68MPa",
+      "package": "pr",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 829096.1187764448,
+      "rel_err": 0.21925899820065414,
+      "pass": false
+    },
+    {
+      "case": "ng-dew-morch-254.6K-0.68MPa",
+      "package": "srk",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 774164.5509423886,
+      "rel_err": 0.13847728079763028,
+      "pass": false
+    },
+    {
+      "case": "ng-dew-morch-254.6K-0.68MPa",
+      "package": "pr78",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 829096.1187764448,
+      "rel_err": 0.21925899820065414,
+      "pass": false
+    },
+    {
+      "case": "ng-dew-morch-260.8K-1.04MPa",
+      "package": "pr",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1237803.6776636227,
+      "rel_err": 0.19019584390732946,
+      "pass": false
+    },
+    {
+      "case": "ng-dew-morch-260.8K-1.04MPa",
+      "package": "srk",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1151892.119405194,
+      "rel_err": 0.10758857635114803,
+      "pass": false
+    },
+    {
+      "case": "ng-dew-morch-260.8K-1.04MPa",
+      "package": "pr78",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1237803.6776636227,
+      "rel_err": 0.19019584390732946,
+      "pass": false
     }
   ]
 }

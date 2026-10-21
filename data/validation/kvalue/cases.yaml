@@ -1,0 +1,707 @@
+# K-value / Rs-gamma family reference cases (data sweep, spec T-11).
+#
+# Loads together with the root data/validation/cases.yaml (the harness discovers every
+# cases*.yaml under data/validation/). Entries whose package is "pending:<id>" name a
+# planned catalogue row that is not registered yet and are skipped by the harness until
+# the row lands; their ids must be reconciled with the ids the K-value adapter spec
+# (docs/thermo-catalogue-plan.md, family E) actually registers.
+#
+# Sections:
+#   multicomponent_cases - (a) four single-component K cases per pending row at the
+#     component saturation point: K = Psat/P = 1 is the definitional pure-component limit
+#     (catalogue plan L0 "pure-component limits"); the case pressure is the CoolProp
+#     saturation pressure from the root file (regenerated, CoolProp 8.0.0), with bubble_P
+#     cross-checking the same number. (b) one copy of the root DePriester slice-inlet K
+#     case per pending row (chart-read K values, 5-7 % reading precision).
+#
+# Units: T in K, P in Pa, compositions in mole fractions.
+meta:
+  coolprop_version: 8.0.0
+multicomponent_cases:
+- id: chao-seader-pureK-C1-125K
+  package: pending:chao-seader
+  components:
+  - C1
+  z:
+    C1: 1.0
+  source: coolprop:CH4 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C1: 1.0
+    bubble_P: 268757.80384445406
+  T: 125.0
+  P: 268757.80384445406
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: chao-seader-pureK-C3-300K
+  package: pending:chao-seader
+  components:
+  - C3
+  z:
+    C3: 1.0
+  source: coolprop:Propane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C3: 1.0
+    bubble_P: 997682.6201918732
+  T: 300.0
+  P: 997682.6201918732
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: chao-seader-pureK-nC4-280K
+  package: pending:chao-seader
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  source: coolprop:n-Butane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      nC4: 1.0
+    bubble_P: 132816.54823974936
+  T: 280.0
+  P: 132816.54823974936
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: chao-seader-pureK-CO2-265K
+  package: pending:chao-seader
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  source: coolprop:CO2 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      CO2: 1.0
+    bubble_P: 2790916.074974494
+  T: 265.0
+  P: 2790916.074974494
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- package: pending:chao-seader
+  components: &id001
+  - N2
+  - CO2
+  - C1
+  - C2
+  - C3
+  - iC4
+  - nC4
+  - iC5
+  - nC5
+  - C6+
+  - H2O
+  z: &id002
+    N2: 0.005
+    CO2: 0.015
+    C1: 0.848
+    C2: 0.062
+    C3: 0.032
+    iC4: 0.007
+    nC4: 0.01
+    iC5: 0.004
+    nC5: 0.004
+    C6+: 0.01
+    H2O: 0.003
+  T: 300.0
+  P: 3447378.65
+  source: literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+  expected: &id003
+    K:
+      C1: 5.1
+      C2: 1.17
+      C3: 0.4
+  tolerance: &id004
+    K: 0.05
+  id: chao-seader-slice-inlet-K-500psia-300K
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+- id: grayson-streed-pureK-C1-125K
+  package: pending:grayson-streed
+  components:
+  - C1
+  z:
+    C1: 1.0
+  source: coolprop:CH4 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C1: 1.0
+    bubble_P: 268757.80384445406
+  T: 125.0
+  P: 268757.80384445406
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: grayson-streed-pureK-C3-300K
+  package: pending:grayson-streed
+  components:
+  - C3
+  z:
+    C3: 1.0
+  source: coolprop:Propane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C3: 1.0
+    bubble_P: 997682.6201918732
+  T: 300.0
+  P: 997682.6201918732
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: grayson-streed-pureK-nC4-280K
+  package: pending:grayson-streed
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  source: coolprop:n-Butane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      nC4: 1.0
+    bubble_P: 132816.54823974936
+  T: 280.0
+  P: 132816.54823974936
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: grayson-streed-pureK-CO2-265K
+  package: pending:grayson-streed
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  source: coolprop:CO2 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      CO2: 1.0
+    bubble_P: 2790916.074974494
+  T: 265.0
+  P: 2790916.074974494
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- package: pending:grayson-streed
+  components: *id001
+  z: *id002
+  T: 300.0
+  P: 3447378.65
+  source: literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+  expected: *id003
+  tolerance: *id004
+  id: grayson-streed-slice-inlet-K-500psia-300K
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+- id: grayson-streed-extended-pureK-C1-125K
+  package: pending:grayson-streed-extended
+  components:
+  - C1
+  z:
+    C1: 1.0
+  source: coolprop:CH4 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C1: 1.0
+    bubble_P: 268757.80384445406
+  T: 125.0
+  P: 268757.80384445406
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: grayson-streed-extended-pureK-C3-300K
+  package: pending:grayson-streed-extended
+  components:
+  - C3
+  z:
+    C3: 1.0
+  source: coolprop:Propane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C3: 1.0
+    bubble_P: 997682.6201918732
+  T: 300.0
+  P: 997682.6201918732
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: grayson-streed-extended-pureK-nC4-280K
+  package: pending:grayson-streed-extended
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  source: coolprop:n-Butane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      nC4: 1.0
+    bubble_P: 132816.54823974936
+  T: 280.0
+  P: 132816.54823974936
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: grayson-streed-extended-pureK-CO2-265K
+  package: pending:grayson-streed-extended
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  source: coolprop:CO2 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      CO2: 1.0
+    bubble_P: 2790916.074974494
+  T: 265.0
+  P: 2790916.074974494
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- package: pending:grayson-streed-extended
+  components: *id001
+  z: *id002
+  T: 300.0
+  P: 3447378.65
+  source: literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+  expected: *id003
+  tolerance: *id004
+  id: grayson-streed-extended-slice-inlet-K-500psia-300K
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+- id: braun-k10-pureK-C1-125K
+  package: pending:braun-k10
+  components:
+  - C1
+  z:
+    C1: 1.0
+  source: coolprop:CH4 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C1: 1.0
+    bubble_P: 268757.80384445406
+  T: 125.0
+  P: 268757.80384445406
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: braun-k10-pureK-C3-300K
+  package: pending:braun-k10
+  components:
+  - C3
+  z:
+    C3: 1.0
+  source: coolprop:Propane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C3: 1.0
+    bubble_P: 997682.6201918732
+  T: 300.0
+  P: 997682.6201918732
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: braun-k10-pureK-nC4-280K
+  package: pending:braun-k10
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  source: coolprop:n-Butane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      nC4: 1.0
+    bubble_P: 132816.54823974936
+  T: 280.0
+  P: 132816.54823974936
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: braun-k10-pureK-CO2-265K
+  package: pending:braun-k10
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  source: coolprop:CO2 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      CO2: 1.0
+    bubble_P: 2790916.074974494
+  T: 265.0
+  P: 2790916.074974494
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- package: pending:braun-k10
+  components: *id001
+  z: *id002
+  T: 300.0
+  P: 3447378.65
+  source: literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+  expected: *id003
+  tolerance: *id004
+  id: braun-k10-slice-inlet-K-500psia-300K
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+- id: lee-kesler-ploecker-pureK-C1-125K
+  package: pending:lee-kesler-ploecker
+  components:
+  - C1
+  z:
+    C1: 1.0
+  source: coolprop:CH4 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C1: 1.0
+    bubble_P: 268757.80384445406
+  T: 125.0
+  P: 268757.80384445406
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: lee-kesler-ploecker-pureK-C3-300K
+  package: pending:lee-kesler-ploecker
+  components:
+  - C3
+  z:
+    C3: 1.0
+  source: coolprop:Propane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C3: 1.0
+    bubble_P: 997682.6201918732
+  T: 300.0
+  P: 997682.6201918732
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: lee-kesler-ploecker-pureK-nC4-280K
+  package: pending:lee-kesler-ploecker
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  source: coolprop:n-Butane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      nC4: 1.0
+    bubble_P: 132816.54823974936
+  T: 280.0
+  P: 132816.54823974936
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: lee-kesler-ploecker-pureK-CO2-265K
+  package: pending:lee-kesler-ploecker
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  source: coolprop:CO2 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      CO2: 1.0
+    bubble_P: 2790916.074974494
+  T: 265.0
+  P: 2790916.074974494
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- package: pending:lee-kesler-ploecker
+  components: *id001
+  z: *id002
+  T: 300.0
+  P: 3447378.65
+  source: literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+  expected: *id003
+  tolerance: *id004
+  id: lee-kesler-ploecker-slice-inlet-K-500psia-300K
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+- id: esso-tabular-pureK-C1-125K
+  package: pending:esso-tabular
+  components:
+  - C1
+  z:
+    C1: 1.0
+  source: coolprop:CH4 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C1: 1.0
+    bubble_P: 268757.80384445406
+  T: 125.0
+  P: 268757.80384445406
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: esso-tabular-pureK-C3-300K
+  package: pending:esso-tabular
+  components:
+  - C3
+  z:
+    C3: 1.0
+  source: coolprop:Propane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C3: 1.0
+    bubble_P: 997682.6201918732
+  T: 300.0
+  P: 997682.6201918732
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: esso-tabular-pureK-nC4-280K
+  package: pending:esso-tabular
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  source: coolprop:n-Butane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      nC4: 1.0
+    bubble_P: 132816.54823974936
+  T: 280.0
+  P: 132816.54823974936
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: esso-tabular-pureK-CO2-265K
+  package: pending:esso-tabular
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  source: coolprop:CO2 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      CO2: 1.0
+    bubble_P: 2790916.074974494
+  T: 265.0
+  P: 2790916.074974494
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- package: pending:esso-tabular
+  components: *id001
+  z: *id002
+  T: 300.0
+  P: 3447378.65
+  source: literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+  expected: *id003
+  tolerance: *id004
+  id: esso-tabular-slice-inlet-K-500psia-300K
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+- id: antoine-ideal-k-pureK-C1-125K
+  package: pending:antoine-ideal-k
+  components:
+  - C1
+  z:
+    C1: 1.0
+  source: coolprop:CH4 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C1: 1.0
+    bubble_P: 268757.80384445406
+  T: 125.0
+  P: 268757.80384445406
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: antoine-ideal-k-pureK-C3-300K
+  package: pending:antoine-ideal-k
+  components:
+  - C3
+  z:
+    C3: 1.0
+  source: coolprop:Propane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C3: 1.0
+    bubble_P: 997682.6201918732
+  T: 300.0
+  P: 997682.6201918732
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: antoine-ideal-k-pureK-nC4-280K
+  package: pending:antoine-ideal-k
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  source: coolprop:n-Butane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      nC4: 1.0
+    bubble_P: 132816.54823974936
+  T: 280.0
+  P: 132816.54823974936
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: antoine-ideal-k-pureK-CO2-265K
+  package: pending:antoine-ideal-k
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  source: coolprop:CO2 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      CO2: 1.0
+    bubble_P: 2790916.074974494
+  T: 265.0
+  P: 2790916.074974494
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- package: pending:antoine-ideal-k
+  components: *id001
+  z: *id002
+  T: 300.0
+  P: 3447378.65
+  source: literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+  expected: *id003
+  tolerance: *id004
+  id: antoine-ideal-k-slice-inlet-K-500psia-300K
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+- id: ideal-raoult-pureK-C1-125K
+  package: pending:ideal-raoult
+  components:
+  - C1
+  z:
+    C1: 1.0
+  source: coolprop:CH4 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C1: 1.0
+    bubble_P: 268757.80384445406
+  T: 125.0
+  P: 268757.80384445406
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: ideal-raoult-pureK-C3-300K
+  package: pending:ideal-raoult
+  components:
+  - C3
+  z:
+    C3: 1.0
+  source: coolprop:Propane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C3: 1.0
+    bubble_P: 997682.6201918732
+  T: 300.0
+  P: 997682.6201918732
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: ideal-raoult-pureK-nC4-280K
+  package: pending:ideal-raoult
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  source: coolprop:n-Butane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      nC4: 1.0
+    bubble_P: 132816.54823974936
+  T: 280.0
+  P: 132816.54823974936
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: ideal-raoult-pureK-CO2-265K
+  package: pending:ideal-raoult
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  source: coolprop:CO2 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      CO2: 1.0
+    bubble_P: 2790916.074974494
+  T: 265.0
+  P: 2790916.074974494
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- package: pending:ideal-raoult
+  components: *id001
+  z: *id002
+  T: 300.0
+  P: 3447378.65
+  source: literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+  expected: *id003
+  tolerance: *id004
+  id: ideal-raoult-slice-inlet-K-500psia-300K
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+- id: henry-sander-pureK-C1-125K
+  package: pending:henry-sander
+  components:
+  - C1
+  z:
+    C1: 1.0
+  source: coolprop:CH4 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C1: 1.0
+    bubble_P: 268757.80384445406
+  T: 125.0
+  P: 268757.80384445406
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: henry-sander-pureK-C3-300K
+  package: pending:henry-sander
+  components:
+  - C3
+  z:
+    C3: 1.0
+  source: coolprop:Propane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C3: 1.0
+    bubble_P: 997682.6201918732
+  T: 300.0
+  P: 997682.6201918732
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: henry-sander-pureK-nC4-280K
+  package: pending:henry-sander
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  source: coolprop:n-Butane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      nC4: 1.0
+    bubble_P: 132816.54823974936
+  T: 280.0
+  P: 132816.54823974936
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: henry-sander-pureK-CO2-265K
+  package: pending:henry-sander
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  source: coolprop:CO2 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      CO2: 1.0
+    bubble_P: 2790916.074974494
+  T: 265.0
+  P: 2790916.074974494
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- package: pending:henry-sander
+  components: *id001
+  z: *id002
+  T: 300.0
+  P: 3447378.65
+  source: literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+  expected: *id003
+  tolerance: *id004
+  id: henry-sander-slice-inlet-K-500psia-300K
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+- id: ideal-lk-pureK-C1-125K
+  package: pending:ideal-lk
+  components:
+  - C1
+  z:
+    C1: 1.0
+  source: coolprop:CH4 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C1: 1.0
+    bubble_P: 268757.80384445406
+  T: 125.0
+  P: 268757.80384445406
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: ideal-lk-pureK-C3-300K
+  package: pending:ideal-lk
+  components:
+  - C3
+  z:
+    C3: 1.0
+  source: coolprop:Propane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      C3: 1.0
+    bubble_P: 997682.6201918732
+  T: 300.0
+  P: 997682.6201918732
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: ideal-lk-pureK-nC4-280K
+  package: pending:ideal-lk
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  source: coolprop:n-Butane - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      nC4: 1.0
+    bubble_P: 132816.54823974936
+  T: 280.0
+  P: 132816.54823974936
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- id: ideal-lk-pureK-CO2-265K
+  package: pending:ideal-lk
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  source: coolprop:CO2 - K = Psat/P at P = Psat is the definitional pure-component saturation limit (catalogue plan L0); the case pressure is the CoolProp saturation pressure regenerated in data/validation/cases.yaml
+  expected:
+    K:
+      CO2: 1.0
+    bubble_P: 2790916.074974494
+  T: 265.0
+  P: 2790916.074974494
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands.'
+- package: pending:ideal-lk
+  components: *id001
+  z: *id002
+  T: 300.0
+  P: 3447378.65
+  source: literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+  expected: *id003
+  tolerance: *id004
+  id: ideal-lk-slice-inlet-K-500psia-300K
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
