@@ -106,7 +106,7 @@ P1-04 merge. Contract-change PRs are reviewed by the orchestrator before merge.
 | Spec | Title | Depends on | Status |
 |---|---|---|---|
 | P2-02 | Partial results, per-unit error records, convergence history | P1-02, P1-03 | merged #111 (2026-10-21) |
-| P2-01 | Flowsheet design specs (Spec/Adjust) with an outer loop; `ngdesign.variables` | P2-02, B-08 | PR #116 in review (2026-10-21) |
+| P2-01 | Flowsheet design specs (Spec/Adjust) with an outer loop; `ngdesign.variables` | P2-02, B-08 | PR #116 approved, auto-merge (2026-10-21) |
 | P2-03 | Per-block tear initialisation; Broyden option for tears | P2-02 | drafted |
 | P2-04 | Case-study runner (CLI, API, agent) | P2-01, B-08 | drafted |
 
@@ -118,7 +118,7 @@ solver module and `variables.py`; P2-03 edits the SM loop), P2-04 after P2-01 an
 | Spec | Title | Depends on | Status |
 |---|---|---|---|
 | P3-01 | Project store (SQLModel), multi-project API, token auth, locked CORS | B-08, P2-02 | merged #109 |
-| P3-02 | Solve jobs: queue, worker process, progress stream | P3-01, P2-02 | dispatched 2026-10-21 (issue #114) |
+| P3-02 | Solve jobs: queue, worker process, progress stream | P3-01, P2-02 | PR #117 in review (2026-10-21) |
 | P3-03 | Containers, compose, Helm chart, image build on tag | P3-01, P3-02 | drafted |
 
 Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after P3-02.
