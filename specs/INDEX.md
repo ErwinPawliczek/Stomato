@@ -111,3 +111,13 @@ P1-04 merge. Contract-change PRs are reviewed by the orchestrator before merge.
 
 Dispatch order: P2-02 first (solver + contract), then P2-01 and P2-03 in parallel (P2-01 adds a new
 solver module and `variables.py`; P2-03 edits the SM loop), P2-04 after P2-01 and B-08.
+
+## Phase 3 — Platform (docs/PLAN.md §3; parallel with Phase 2)
+
+| Spec | Title | Depends on | Status |
+|---|---|---|---|
+| P3-01 | Project store (SQLModel), multi-project API, token auth, locked CORS | B-08, P2-02 | drafted |
+| P3-02 | Solve jobs: queue, worker process, progress stream | P3-01, P2-02 | drafted |
+| P3-03 | Containers, compose, Helm chart, image build on tag | P3-01, P3-02 | drafted |
+
+Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after P3-02.
