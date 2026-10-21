@@ -1,4 +1,5 @@
-# K-value / Rs-gamma family reference cases (data sweep, spec T-11).
+# K-value / Rs-gamma family reference cases (data sweep, spec T-11; binary VLE
+# extension, spec T-14).
 #
 # Loads together with the root data/validation/cases.yaml (the harness discovers every
 # cases*.yaml under data/validation/). Entries whose package is "pending:<id>" name a
@@ -13,6 +14,16 @@
 #     saturation pressure from the root file (regenerated, CoolProp 8.0.0), with bubble_P
 #     cross-checking the same number. (b) one copy of the root DePriester slice-inlet K
 #     case per pending row (chart-read K values, 5-7 % reading precision).
+#   binary_cases - (a) three methane-propane VLE points per pending row: Reamer, Sage &
+#     Lacey 1950 as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane),
+#     pp. 270-271 (compiled errors dP 0.05 %, dx/dy 0.002); K_C1 = y/x and
+#     K_C3 = (1-y)/(1-x) at the cited isotherm and pressure; the default K 5 % tolerance
+#     comfortably exceeds the compiled data precision at these points (worst ~1.3 %).
+#     (b) two methane-in-water cases for the henry-sander row: K_C1 = y_C1/x_C1 with
+#     y_C1 = 1 - Psat_H2O(T)/P (databank Psat, 3179.4 Pa at 298.2 K, 6543.7 Pa at
+#     310.9 K), x from Culberson & McKetta 1951 (compiled error dx 3 %); tolerance
+#     K 0.10 covers data precision, the y ~ 1 idealisation, and Henry fugacity effects
+#     at elevated pressure.
 #
 # Units: T in K, P in Pa, compositions in mole fractions.
 meta:
@@ -110,7 +121,8 @@ multicomponent_cases:
   tolerance: &id004
     K: 0.05
   id: chao-seader-slice-inlet-K-500psia-300K
-  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as
+    the root case.'
 - id: grayson-streed-pureK-C1-125K
   package: pending:grayson-streed
   components:
@@ -176,7 +188,8 @@ multicomponent_cases:
   expected: *id003
   tolerance: *id004
   id: grayson-streed-slice-inlet-K-500psia-300K
-  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as
+    the root case.'
 - id: grayson-streed-extended-pureK-C1-125K
   package: pending:grayson-streed-extended
   components:
@@ -242,7 +255,8 @@ multicomponent_cases:
   expected: *id003
   tolerance: *id004
   id: grayson-streed-extended-slice-inlet-K-500psia-300K
-  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as
+    the root case.'
 - id: braun-k10-pureK-C1-125K
   package: pending:braun-k10
   components:
@@ -308,7 +322,8 @@ multicomponent_cases:
   expected: *id003
   tolerance: *id004
   id: braun-k10-slice-inlet-K-500psia-300K
-  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as
+    the root case.'
 - id: lee-kesler-ploecker-pureK-C1-125K
   package: pending:lee-kesler-ploecker
   components:
@@ -374,7 +389,8 @@ multicomponent_cases:
   expected: *id003
   tolerance: *id004
   id: lee-kesler-ploecker-slice-inlet-K-500psia-300K
-  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as
+    the root case.'
 - id: esso-tabular-pureK-C1-125K
   package: pending:esso-tabular
   components:
@@ -440,7 +456,8 @@ multicomponent_cases:
   expected: *id003
   tolerance: *id004
   id: esso-tabular-slice-inlet-K-500psia-300K
-  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as
+    the root case.'
 - id: antoine-ideal-k-pureK-C1-125K
   package: pending:antoine-ideal-k
   components:
@@ -506,7 +523,8 @@ multicomponent_cases:
   expected: *id003
   tolerance: *id004
   id: antoine-ideal-k-slice-inlet-K-500psia-300K
-  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as
+    the root case.'
 - id: ideal-raoult-pureK-C1-125K
   package: pending:ideal-raoult
   components:
@@ -572,7 +590,8 @@ multicomponent_cases:
   expected: *id003
   tolerance: *id004
   id: ideal-raoult-slice-inlet-K-500psia-300K
-  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as
+    the root case.'
 - id: henry-sander-pureK-C1-125K
   package: pending:henry-sander
   components:
@@ -638,7 +657,8 @@ multicomponent_cases:
   expected: *id003
   tolerance: *id004
   id: henry-sander-slice-inlet-K-500psia-300K
-  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as
+    the root case.'
 - id: ideal-lk-pureK-C1-125K
   package: pending:ideal-lk
   components:
@@ -704,4 +724,511 @@ multicomponent_cases:
   expected: *id003
   tolerance: *id004
   id: ideal-lk-slice-inlet-K-500psia-300K
-  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as the root case.'
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Same feed and chart-read K references as
+    the root case.'
+binary_cases:
+- id: chao-seader-c1c3-277.59K-4.826MPa
+  package: pending:chao-seader
+  T: 277.59
+  P: 482600.0
+  components: &id005
+  - C1
+  - C3
+  z: &id006
+    C1: 0.2834
+    C3: 0.7166
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
+  expected: &id007
+    K:
+      C1: 2.87036
+      C3: 0.2602
+- id: chao-seader-c1c3-277.59K-6.205MPa
+  package: pending:chao-seader
+  T: 277.59
+  P: 620500.0
+  components: &id008
+  - C1
+  - C3
+  z: &id009
+    C1: 0.3481
+    C3: 0.6519
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.3481, y_C1 0.7471; retrieved 2026-10-21
+  expected: &id010
+    K:
+      C1: 2.14651
+      C3: 0.387943
+- id: chao-seader-c1c3-294.26K-4.137MPa
+  package: pending:chao-seader
+  T: 294.26
+  P: 413700.0
+  components: &id011
+  - C1
+  - C3
+  z: &id012
+    C1: 0.1987
+    C3: 0.8013
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+  expected: &id013
+    K:
+      C1: 3.54202
+      C3: 0.369649
+- id: chao-seader-c1h2o-298.2K-4.54MPa
+  package: pending:chao-seader
+  T: 298.2
+  P: 4540000.0
+  components: &id014
+  - C1
+  - H2O
+  z: &id015
+    C1: 0.001
+    H2O: 0.999
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+  tolerance: &id016
+    K: 0.1
+  expected: &id017
+    K:
+      C1: 999.3
+- id: chao-seader-c1h2o-310.9K-6.55MPa
+  package: pending:chao-seader
+  T: 310.9
+  P: 6550000.0
+  components: &id018
+  - C1
+  - H2O
+  z: &id019
+    C1: 0.001123
+    H2O: 0.998877
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
+  tolerance: &id020
+    K: 0.1
+  expected: &id021
+    K:
+      C1: 889.586
+- id: grayson-streed-c1c3-277.59K-4.826MPa
+  package: pending:grayson-streed
+  T: 277.59
+  P: 482600.0
+  components: *id005
+  z: *id006
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
+  expected: *id007
+- id: grayson-streed-c1c3-277.59K-6.205MPa
+  package: pending:grayson-streed
+  T: 277.59
+  P: 620500.0
+  components: *id008
+  z: *id009
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.3481, y_C1 0.7471; retrieved 2026-10-21
+  expected: *id010
+- id: grayson-streed-c1c3-294.26K-4.137MPa
+  package: pending:grayson-streed
+  T: 294.26
+  P: 413700.0
+  components: *id011
+  z: *id012
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+  expected: *id013
+- id: grayson-streed-c1h2o-298.2K-4.54MPa
+  package: pending:grayson-streed
+  T: 298.2
+  P: 4540000.0
+  components: *id014
+  z: *id015
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+  tolerance: *id016
+  expected: *id017
+- id: grayson-streed-c1h2o-310.9K-6.55MPa
+  package: pending:grayson-streed
+  T: 310.9
+  P: 6550000.0
+  components: *id018
+  z: *id019
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
+  tolerance: *id020
+  expected: *id021
+- id: grayson-streed-extended-c1c3-277.59K-4.826MPa
+  package: pending:grayson-streed-extended
+  T: 277.59
+  P: 482600.0
+  components: *id005
+  z: *id006
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
+  expected: *id007
+- id: grayson-streed-extended-c1c3-277.59K-6.205MPa
+  package: pending:grayson-streed-extended
+  T: 277.59
+  P: 620500.0
+  components: *id008
+  z: *id009
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.3481, y_C1 0.7471; retrieved 2026-10-21
+  expected: *id010
+- id: grayson-streed-extended-c1c3-294.26K-4.137MPa
+  package: pending:grayson-streed-extended
+  T: 294.26
+  P: 413700.0
+  components: *id011
+  z: *id012
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+  expected: *id013
+- id: grayson-streed-extended-c1h2o-298.2K-4.54MPa
+  package: pending:grayson-streed-extended
+  T: 298.2
+  P: 4540000.0
+  components: *id014
+  z: *id015
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+  tolerance: *id016
+  expected: *id017
+- id: grayson-streed-extended-c1h2o-310.9K-6.55MPa
+  package: pending:grayson-streed-extended
+  T: 310.9
+  P: 6550000.0
+  components: *id018
+  z: *id019
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
+  tolerance: *id020
+  expected: *id021
+- id: braun-k10-c1c3-277.59K-4.826MPa
+  package: pending:braun-k10
+  T: 277.59
+  P: 482600.0
+  components: *id005
+  z: *id006
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
+  expected: *id007
+- id: braun-k10-c1c3-277.59K-6.205MPa
+  package: pending:braun-k10
+  T: 277.59
+  P: 620500.0
+  components: *id008
+  z: *id009
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.3481, y_C1 0.7471; retrieved 2026-10-21
+  expected: *id010
+- id: braun-k10-c1c3-294.26K-4.137MPa
+  package: pending:braun-k10
+  T: 294.26
+  P: 413700.0
+  components: *id011
+  z: *id012
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+  expected: *id013
+- id: braun-k10-c1h2o-298.2K-4.54MPa
+  package: pending:braun-k10
+  T: 298.2
+  P: 4540000.0
+  components: *id014
+  z: *id015
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+  tolerance: *id016
+  expected: *id017
+- id: braun-k10-c1h2o-310.9K-6.55MPa
+  package: pending:braun-k10
+  T: 310.9
+  P: 6550000.0
+  components: *id018
+  z: *id019
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
+  tolerance: *id020
+  expected: *id021
+- id: lee-kesler-ploecker-c1c3-277.59K-4.826MPa
+  package: pending:lee-kesler-ploecker
+  T: 277.59
+  P: 482600.0
+  components: *id005
+  z: *id006
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
+  expected: *id007
+- id: lee-kesler-ploecker-c1c3-277.59K-6.205MPa
+  package: pending:lee-kesler-ploecker
+  T: 277.59
+  P: 620500.0
+  components: *id008
+  z: *id009
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.3481, y_C1 0.7471; retrieved 2026-10-21
+  expected: *id010
+- id: lee-kesler-ploecker-c1c3-294.26K-4.137MPa
+  package: pending:lee-kesler-ploecker
+  T: 294.26
+  P: 413700.0
+  components: *id011
+  z: *id012
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+  expected: *id013
+- id: lee-kesler-ploecker-c1h2o-298.2K-4.54MPa
+  package: pending:lee-kesler-ploecker
+  T: 298.2
+  P: 4540000.0
+  components: *id014
+  z: *id015
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+  tolerance: *id016
+  expected: *id017
+- id: lee-kesler-ploecker-c1h2o-310.9K-6.55MPa
+  package: pending:lee-kesler-ploecker
+  T: 310.9
+  P: 6550000.0
+  components: *id018
+  z: *id019
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
+  tolerance: *id020
+  expected: *id021
+- id: esso-tabular-c1c3-277.59K-4.826MPa
+  package: pending:esso-tabular
+  T: 277.59
+  P: 482600.0
+  components: *id005
+  z: *id006
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
+  expected: *id007
+- id: esso-tabular-c1c3-277.59K-6.205MPa
+  package: pending:esso-tabular
+  T: 277.59
+  P: 620500.0
+  components: *id008
+  z: *id009
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.3481, y_C1 0.7471; retrieved 2026-10-21
+  expected: *id010
+- id: esso-tabular-c1c3-294.26K-4.137MPa
+  package: pending:esso-tabular
+  T: 294.26
+  P: 413700.0
+  components: *id011
+  z: *id012
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+  expected: *id013
+- id: esso-tabular-c1h2o-298.2K-4.54MPa
+  package: pending:esso-tabular
+  T: 298.2
+  P: 4540000.0
+  components: *id014
+  z: *id015
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+  tolerance: *id016
+  expected: *id017
+- id: esso-tabular-c1h2o-310.9K-6.55MPa
+  package: pending:esso-tabular
+  T: 310.9
+  P: 6550000.0
+  components: *id018
+  z: *id019
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
+  tolerance: *id020
+  expected: *id021
+- id: antoine-ideal-k-c1c3-277.59K-4.826MPa
+  package: pending:antoine-ideal-k
+  T: 277.59
+  P: 482600.0
+  components: *id005
+  z: *id006
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
+  expected: *id007
+- id: antoine-ideal-k-c1c3-277.59K-6.205MPa
+  package: pending:antoine-ideal-k
+  T: 277.59
+  P: 620500.0
+  components: *id008
+  z: *id009
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.3481, y_C1 0.7471; retrieved 2026-10-21
+  expected: *id010
+- id: antoine-ideal-k-c1c3-294.26K-4.137MPa
+  package: pending:antoine-ideal-k
+  T: 294.26
+  P: 413700.0
+  components: *id011
+  z: *id012
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+  expected: *id013
+- id: antoine-ideal-k-c1h2o-298.2K-4.54MPa
+  package: pending:antoine-ideal-k
+  T: 298.2
+  P: 4540000.0
+  components: *id014
+  z: *id015
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+  tolerance: *id016
+  expected: *id017
+- id: antoine-ideal-k-c1h2o-310.9K-6.55MPa
+  package: pending:antoine-ideal-k
+  T: 310.9
+  P: 6550000.0
+  components: *id018
+  z: *id019
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
+  tolerance: *id020
+  expected: *id021
+- id: ideal-raoult-c1c3-277.59K-4.826MPa
+  package: pending:ideal-raoult
+  T: 277.59
+  P: 482600.0
+  components: *id005
+  z: *id006
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
+  expected: *id007
+- id: ideal-raoult-c1c3-277.59K-6.205MPa
+  package: pending:ideal-raoult
+  T: 277.59
+  P: 620500.0
+  components: *id008
+  z: *id009
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.3481, y_C1 0.7471; retrieved 2026-10-21
+  expected: *id010
+- id: ideal-raoult-c1c3-294.26K-4.137MPa
+  package: pending:ideal-raoult
+  T: 294.26
+  P: 413700.0
+  components: *id011
+  z: *id012
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+  expected: *id013
+- id: ideal-raoult-c1h2o-298.2K-4.54MPa
+  package: pending:ideal-raoult
+  T: 298.2
+  P: 4540000.0
+  components: *id014
+  z: *id015
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+  tolerance: *id016
+  expected: *id017
+- id: ideal-raoult-c1h2o-310.9K-6.55MPa
+  package: pending:ideal-raoult
+  T: 310.9
+  P: 6550000.0
+  components: *id018
+  z: *id019
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
+  tolerance: *id020
+  expected: *id021
+- id: henry-sander-c1c3-277.59K-4.826MPa
+  package: pending:henry-sander
+  T: 277.59
+  P: 482600.0
+  components: *id005
+  z: *id006
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
+  expected: *id007
+- id: henry-sander-c1c3-277.59K-6.205MPa
+  package: pending:henry-sander
+  T: 277.59
+  P: 620500.0
+  components: *id008
+  z: *id009
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.3481, y_C1 0.7471; retrieved 2026-10-21
+  expected: *id010
+- id: henry-sander-c1c3-294.26K-4.137MPa
+  package: pending:henry-sander
+  T: 294.26
+  P: 413700.0
+  components: *id011
+  z: *id012
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+  expected: *id013
+- id: henry-sander-c1h2o-298.2K-4.54MPa
+  package: pending:henry-sander
+  T: 298.2
+  P: 4540000.0
+  components: *id014
+  z: *id015
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+  tolerance: *id016
+  expected: *id017
+- id: henry-sander-c1h2o-310.9K-6.55MPa
+  package: pending:henry-sander
+  T: 310.9
+  P: 6550000.0
+  components: *id018
+  z: *id019
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
+  tolerance: *id020
+  expected: *id021
+- id: ideal-lk-c1c3-277.59K-4.826MPa
+  package: pending:ideal-lk
+  T: 277.59
+  P: 482600.0
+  components: *id005
+  z: *id006
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.2834, y_C1 0.8135; retrieved 2026-10-21
+  expected: *id007
+- id: ideal-lk-c1c3-277.59K-6.205MPa
+  package: pending:ideal-lk
+  T: 277.59
+  P: 620500.0
+  components: *id008
+  z: *id009
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.3481, y_C1 0.7471; retrieved 2026-10-21
+  expected: *id010
+- id: ideal-lk-c1c3-294.26K-4.137MPa
+  package: pending:ideal-lk
+  T: 294.26
+  P: 413700.0
+  components: *id011
+  z: *id012
+  source: literature:Reamer, Sage & Lacey, methane-propane VLE, Ind. Eng. Chem., vol. 42, p. 534, 1950, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 270-271, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.1987, y_C1 0.7038; retrieved 2026-10-21
+  expected: *id013
+- id: ideal-lk-c1h2o-298.2K-4.54MPa
+  package: pending:ideal-lk
+  T: 298.2
+  P: 4540000.0
+  components: *id014
+  z: *id015
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001000 at 4.54 MPa; retrieved 2026-10-21
+  tolerance: *id016
+  expected: *id017
+- id: ideal-lk-c1h2o-310.9K-6.55MPa
+  package: pending:ideal-lk
+  T: 310.9
+  P: 6550000.0
+  components: *id018
+  z: *id019
+  source: literature:Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf;
+    x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
+  tolerance: *id020
+  expected: *id021

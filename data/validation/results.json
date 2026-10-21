@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-10-21T14:56:29+00:00",
+    "generated": "2026-10-21T16:05:08+00:00",
     "python": "3.14.7",
     "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "b5b0eb6",
+    "git_rev": "20c148e",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 896,
-    "n_pass": 656
+    "n_comparisons": 917,
+    "n_pass": 677
   },
   "rows": [
     {
@@ -7894,6 +7894,195 @@
       "got": 1237803.6776636227,
       "rel_err": 0.19019584390732946,
       "pass": false
+    },
+    {
+      "case": "pure-H2O-323.5K-amine-ke",
+      "package": "amine_ke",
+      "property": "bubble_P",
+      "expected": 12568.1,
+      "got": 12568.074903691115,
+      "rel_err": 1.996826002786612e-06,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-323.5K-amine-ke",
+      "package": "amine_ke",
+      "property": "dew_P",
+      "expected": 12568.1,
+      "got": 12568.074903691115,
+      "rel_err": 1.996826002786612e-06,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-420K-amine-ke",
+      "package": "amine_ke",
+      "property": "bubble_P",
+      "expected": 437297.0,
+      "got": 437296.6832205295,
+      "rel_err": 7.244034843107778e-07,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-420K-amine-ke",
+      "package": "amine_ke",
+      "property": "dew_P",
+      "expected": 437297.0,
+      "got": 437296.6832205295,
+      "rel_err": 7.244034843107778e-07,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-520K-amine-ke",
+      "package": "amine_ke",
+      "property": "bubble_P",
+      "expected": 3768950.0,
+      "got": 3768951.003089846,
+      "rel_err": 2.6614570267895145e-07,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-520K-amine-ke",
+      "package": "amine_ke",
+      "property": "dew_P",
+      "expected": 3768950.0,
+      "got": 3768951.003089846,
+      "rel_err": 2.6614570267895145e-07,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-600K-amine-ke",
+      "package": "amine_ke",
+      "property": "bubble_P",
+      "expected": 12344800.0,
+      "got": 12344824.357185958,
+      "rel_err": 1.9730725453594495e-06,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-600K-amine-ke",
+      "package": "amine_ke",
+      "property": "dew_P",
+      "expected": 12344800.0,
+      "got": 12344824.357185958,
+      "rel_err": 1.9730725453594495e-06,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-323.5K-amine-enrtl",
+      "package": "amine_enrtl",
+      "property": "bubble_P",
+      "expected": 12568.1,
+      "got": 12568.074903691115,
+      "rel_err": 1.996826002786612e-06,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-323.5K-amine-enrtl",
+      "package": "amine_enrtl",
+      "property": "dew_P",
+      "expected": 12568.1,
+      "got": 12568.074903691115,
+      "rel_err": 1.996826002786612e-06,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-420K-amine-enrtl",
+      "package": "amine_enrtl",
+      "property": "bubble_P",
+      "expected": 437297.0,
+      "got": 437296.6832205295,
+      "rel_err": 7.244034843107778e-07,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-420K-amine-enrtl",
+      "package": "amine_enrtl",
+      "property": "dew_P",
+      "expected": 437297.0,
+      "got": 437296.6832205295,
+      "rel_err": 7.244034843107778e-07,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-520K-amine-enrtl",
+      "package": "amine_enrtl",
+      "property": "bubble_P",
+      "expected": 3768950.0,
+      "got": 3768951.003089846,
+      "rel_err": 2.6614570267895145e-07,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-520K-amine-enrtl",
+      "package": "amine_enrtl",
+      "property": "dew_P",
+      "expected": 3768950.0,
+      "got": 3768951.003089846,
+      "rel_err": 2.6614570267895145e-07,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-600K-amine-enrtl",
+      "package": "amine_enrtl",
+      "property": "bubble_P",
+      "expected": 12344800.0,
+      "got": 12344824.357185958,
+      "rel_err": 1.9730725453594495e-06,
+      "pass": true
+    },
+    {
+      "case": "pure-H2O-600K-amine-enrtl",
+      "package": "amine_enrtl",
+      "property": "dew_P",
+      "expected": 12344800.0,
+      "got": 12344824.357185958,
+      "rel_err": 1.9730725453594495e-06,
+      "pass": true
+    },
+    {
+      "case": "amine-ke-co2-loading-0.10-313K",
+      "package": "amine_ke",
+      "property": "K",
+      "expected": 9.61968,
+      "got": 9.50596115836513,
+      "rel_err": 0.011821478639088894,
+      "pass": true
+    },
+    {
+      "case": "amine-ke-co2-loading-0.40-313K",
+      "package": "amine_ke",
+      "property": "K",
+      "expected": 15.1424,
+      "got": 15.372717266991232,
+      "rel_err": 0.015210090011572282,
+      "pass": true
+    },
+    {
+      "case": "amine-ke-h2s-loading-0.01-313K",
+      "package": "amine_ke",
+      "property": "K",
+      "expected": 1.28491,
+      "got": 1.222706036336426,
+      "rel_err": 0.048411144487609296,
+      "pass": true
+    },
+    {
+      "case": "amine-ke-h2s-loading-0.165-313K",
+      "package": "amine_ke",
+      "property": "K",
+      "expected": 16.207,
+      "got": 16.33175394186364,
+      "rel_err": 0.007697534513706291,
+      "pass": true
+    },
+    {
+      "case": "amine-ke-h2s-loading-0.453-313K",
+      "package": "amine_ke",
+      "property": "K",
+      "expected": 15.3345,
+      "got": 15.257580343676544,
+      "rel_err": 0.005016117664316163,
+      "pass": true
     },
     {
       "case": "pure-MeOH-305K-nrtl",
