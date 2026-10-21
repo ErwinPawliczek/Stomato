@@ -31,10 +31,17 @@ Method:
 Injection of a torn stream flashes the guessed (T, P, flows) through the thermo
 package, so downstream units always see a consistent StreamState. Wegstein iterates
 that leave the physical range (negative flows, T or P <= 0) are clamped for injection
-only; raw values stay in the secant history. A unit model that raises is a plugin bug
-and propagates: only the iteration budget yields converged=False. Tear initialization
-is the molar-flow-weighted mean of the boundary feeds (simple, deterministic;
-feed-free sheets start from 1 mol/s nitrogen at ambient conditions).
+only; raw values stay in the secant history. A unit model that raises no longer
+aborts the solve (spec P2-02): the exception is recorded as a UnitError, its outlet
+streams stay unset, and every downstream unit whose inlet is missing is recorded as
+an upstream skip - the partial SolvedFlowsheet (status "failed") is the result.
+Port-check failures and unconnected inlets are recorded the same way, as stage
+"ports" errors. Only the iteration budget yields converged=False for a loop that
+merely fails to converge; a failed unit marks its block (and the sheet) converged
+too. Every block appends a BlockRecord (tears, iterations, wall time) and every
+tear iteration a TearRecord per tear stream to SolvedFlowsheet.history. Tear
+initialization is the molar-flow-weighted mean of the boundary feeds (simple,
+deterministic; feed-free sheets start from 1 mol/s nitrogen at ambient conditions).
 
 The torn component flows are indexed by the flowsheet's own component slate (spec
 P1-02), not a fixed module constant: solve entry resolves every slate id through the
@@ -45,6 +52,7 @@ built in `fs.components` order with T at index len(slate) and P at len(slate) + 
 from __future__ import annotations
 
 import heapq
+import time
 from dataclasses import dataclass
 from typing import NamedTuple
 
@@ -58,6 +66,7 @@ from ngdesign.contracts import (
     UnitResult,
 )
 from ngdesign.contracts.components import resolve_set
+from ngdesign.contracts.diagnostics import BlockRecord, SolveAcceleration, TearRecord, UnitError
 from ngdesign.contracts.plugins import Thermo, UnitModel
 from ngdesign.registry import register
 
@@ -99,6 +108,8 @@ class _Context:
     states: dict[str, StreamState]
     results: dict[str, UnitResult]
     components: tuple[str, ...]
+    errors: list[UnitError]  # spec P2-02: per-unit failure records
+    history: list[BlockRecord]  # spec P2-02: one record per executed block
 
 
 def _stream_edges(fs: Flowsheet) -> list[_Edge]:
@@ -270,16 +281,39 @@ def _block_order(fs: Flowsheet, block: set[str], torn: set[str]) -> list[str]:
     return _topo_order(tags, edges)
 
 
-def _check_ports(fs: Flowsheet, units: dict[str, UnitModel]) -> None:
-    """Every stream end must name a port the unit plugin actually declares.
+def _check_ports(fs: Flowsheet, units: dict[str, UnitModel]) -> list[UnitError]:
+    """Record every stream end naming a port the unit plugin does not declare.
 
     Without this, a typo'd port name would silently drop or invent material.
+    Spec P2-02: the failures are stage="ports" UnitErrors on the unit owning the
+    mistyped end - the solve continues and the partial result carries them,
+    instead of aborting the whole sheet.
     """
+    errors: list[UnitError] = []
     for s in fs.streams:
         if s.source is not None and s.source.port not in units[s.source.unit].outlet_ports:
-            raise ValueError(f"stream {s.id}: unit {s.source.unit} has no outlet port {s.source.port!r}")
+            tag = s.source.unit
+            errors.append(
+                UnitError(
+                    tag=tag,
+                    kind=fs.unit(tag).kind,
+                    error_type="ValueError",
+                    message=f"stream {s.id}: unit {tag} has no outlet port {s.source.port!r}",
+                    stage="ports",
+                )
+            )
         if s.target is not None and s.target.port not in units[s.target.unit].inlet_ports:
-            raise ValueError(f"stream {s.id}: unit {s.target.unit} has no inlet port {s.target.port!r}")
+            tag = s.target.unit
+            errors.append(
+                UnitError(
+                    tag=tag,
+                    kind=fs.unit(tag).kind,
+                    error_type="ValueError",
+                    message=f"stream {s.id}: unit {tag} has no inlet port {s.target.port!r}",
+                    stage="ports",
+                )
+            )
+    return errors
 
 
 def _flash_feed(spec: StreamSpec, thermo: Thermo) -> StreamState:
@@ -385,48 +419,186 @@ def _converged(x: list[float], y: list[float]) -> bool:
     return all(abs(yc - xc) <= RTOL * max(abs(xc), 1.0) for xc, yc in zip(x, y, strict=True))
 
 
-def _run_units(ctx: _Context, order: list[str]) -> None:
-    """Run the units of one block in order, writing stream states and unit results."""
+def _run_units(ctx: _Context, order: list[str]) -> bool:
+    """Run the units of one block in order, writing stream states and unit results.
+
+    Spec P2-02: a unit exception is recorded as a stage="solve" UnitError, its
+    outlet streams stay unset, and every later unit in the block whose inlet has
+    no state is recorded as an upstream skip (no exception propagates). An inlet
+    port with no connected stream is a stage="ports" error. A unit that fails
+    outright, or cannot run at all (blocked inlet), marks the block not
+    converged; a block whose units all ran cleanly stays converged. Upstream
+    skips keep the sheet's status derivation honest (they are not failures), but
+    the block they sit in did not execute, so it is not converged either.
+    """
+    ok = True
     for tag in order:
         spec = ctx.fs.unit(tag)
         unit = ctx.units[tag]
         inlets: dict[str, StreamState] = {}
+        blocked: UnitError | None = None
         for port in unit.inlet_ports:
             incoming = [s for s in ctx.fs.inlets(tag) if s.target is not None and s.target.port == port]
             if not incoming:
-                raise ValueError(f"unit {tag}: inlet port {port!r} has no connected stream")
-            inlets[port] = ctx.states[incoming[0].id]
-        result = unit.solve(inlets, spec.params, ctx.thermo)
+                blocked = UnitError(
+                    tag=tag,
+                    kind=spec.kind,
+                    error_type="ValueError",
+                    message=f"unit {tag}: inlet port {port!r} has no connected stream",
+                    stage="ports",
+                )
+                break
+            state = ctx.states.get(incoming[0].id)
+            if state is None:
+                blocked = UnitError(
+                    tag=tag,
+                    kind=spec.kind,
+                    error_type="",
+                    message=(
+                        f"unit {tag} skipped: inlet stream {incoming[0].id} on port {port!r} has no "
+                        "state (its source unit failed or was skipped)"
+                    ),
+                    stage="solve",
+                    upstream=True,
+                )
+                break
+            inlets[port] = state
+        if blocked is not None:
+            ok = False
+            ctx.errors.append(blocked)
+            continue
+        try:
+            result = unit.solve(inlets, spec.params, ctx.thermo)
+        except Exception as exc:  # the failure IS the result (spec P2-02)
+            ok = False
+            ctx.errors.append(
+                UnitError(
+                    tag=tag,
+                    kind=spec.kind,
+                    error_type=type(exc).__name__,
+                    message=str(exc),
+                    stage="solve",
+                )
+            )
+            continue
         ctx.results[tag] = result
         for stream in ctx.fs.outlets(tag):
             source = stream.source
             if source is None or source.port not in result.outlets:
-                raise ValueError(
-                    f"unit {tag} returned no state for outlet port "
-                    f"{source.port if source else '?'!r} (stream {stream.id})"
+                ok = False
+                ctx.errors.append(
+                    UnitError(
+                        tag=tag,
+                        kind=spec.kind,
+                        error_type="ValueError",
+                        message=(
+                            f"unit {tag} returned no state for outlet port "
+                            f"{source.port if source else '?'!r} (stream {stream.id})"
+                        ),
+                        stage="outlet_missing",
+                    )
                 )
+                continue
             ctx.states[stream.id] = result.outlets[source.port]
+    return ok
+
+
+def _tear_record(iteration: int, tear: _Tear, state: StreamState, components: tuple[str, ...]) -> TearRecord:
+    """One tear stream's residual record at one iteration (spec P2-02).
+
+    Residuals use the convergence test's own relative measure, |y - x| / max(|x|,
+    1.0), keyed by component id then "T" and "P". ``acceleration`` names the step
+    taken at this iteration (the first pass and an all-degenerate secant are direct
+    substitution); ``q`` is the clamped Wegstein factor of the variable with the
+    largest residual - the per-variable secant makes one representative q the
+    honest summary.
+    """
+    y = _tear_vector(state, components)
+    x = tear.x
+    residuals = [abs(yc - xc) / max(abs(xc), 1.0) for xc, yc in zip(x, y, strict=True)]
+    n = len(components)
+    residual_vector = {
+        **dict(zip(components, residuals[:n], strict=True)),
+        "T": residuals[n],
+        "P": residuals[n + 1],
+    }
+    residual_max = max(residuals)
+    acceleration: SolveAcceleration
+    q: float | None
+    if tear.y_prev is None or tear.x_prev is None:
+        acceleration, q = "direct", None
+    else:
+        q_values: list[float] = []
+        degenerate: list[bool] = []
+        for xc, yc, xp, yp in zip(x, y, tear.x_prev, tear.y_prev, strict=True):
+            dx = xc - xp
+            if abs(dx) <= 1e-12 * max(abs(xc), 1.0):
+                q_values.append(0.0)  # degenerate secant: direct substitution for this variable
+                degenerate.append(True)
+                continue
+            slope = (yc - yp) / dx
+            q_values.append(min(max(slope / (slope - 1.0), WEGSTEIN_Q_MIN), 0.0))
+            degenerate.append(False)
+        if all(degenerate):
+            acceleration, q = "direct", None
+        else:
+            worst = max(range(len(residuals)), key=residuals.__getitem__)
+            acceleration, q = "wegstein", q_values[worst]
+    return TearRecord(
+        iteration=iteration,
+        stream_id=tear.stream_id,
+        residual_max=residual_max,
+        residual_vector=residual_vector,
+        acceleration=acceleration,
+        q=q,
+    )
 
 
 def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[bool, int]:
-    """Iterate one cyclic block to a converged tear solution, or give up at the cap."""
+    """Iterate one cyclic block to a converged tear solution, or give up at the cap.
+
+    Every pass appends one TearRecord per tear stream to the block's record list
+    (spec P2-02). A unit that fails mid-iteration ends the block after that pass
+    with converged=False: the torn states downstream of the failure are
+    meaningless, so further Wegstein passes would iterate on garbage.
+    """
+    start = time.perf_counter()
     guess, fallback_composition = _init_guess(ctx.fs, ctx.components)
     torn = [_Tear(stream_id=sid, x=list(guess)) for sid in tears]
+    converged = False
+    iterations = 0
+    records: list[TearRecord] = []
     for iteration in range(1, MAX_ITERATIONS + 1):
+        iterations = iteration
         for t in torn:
             ctx.states[t.stream_id] = _inject_tear(t.x, ctx.components, fallback_composition, ctx.thermo)
-        _run_units(ctx, order)
+        if not _run_units(ctx, order):
+            break  # a unit failed this pass: stop iterating, converged stays False
         if all(_converged(t.x, _tear_vector(ctx.states[t.stream_id], ctx.components)) for t in torn):
-            return True, iteration
+            converged = True
+            for t in torn:
+                records.append(_tear_record(iteration, t, ctx.states[t.stream_id], ctx.components))
+            break
         for t in torn:
             calculated = _tear_vector(ctx.states[t.stream_id], ctx.components)
+            records.append(_tear_record(iteration, t, ctx.states[t.stream_id], ctx.components))
             injected = t.x
             if t.y_prev is None or t.x_prev is None:
                 t.x = list(calculated)  # first pass: direct substitution
             else:
                 t.x = _wegstein_next(injected, calculated, t.x_prev, t.y_prev)
             t.x_prev, t.y_prev = injected, calculated
-    return False, MAX_ITERATIONS
+    ctx.history.append(
+        BlockRecord(
+            units=list(order),
+            tears=list(tears),
+            iterations=iterations,
+            converged=converged,
+            records=records,
+            wall_s=time.perf_counter() - start,
+        )
+    )
+    return converged, iterations
 
 
 @register("solver", "sequential_modular")
@@ -435,12 +607,21 @@ class SequentialModular:
 
     def solve(self, fs: Flowsheet, thermo: Thermo) -> SolvedFlowsheet:
         units: dict[str, UnitModel] = {u.tag: registry.create("unit", u.kind) for u in fs.units}
-        _check_ports(fs, units)
+        errors = _check_ports(fs, units)
         # Spec P1-02: every slate id must resolve through the open component
         # registry - the thermo factory and tear vectors below both index by it,
         # so an unresolvable id fails here, at the solve entry, with its name.
         components = tuple(resolve_set(fs.components).ids)
-        ctx = _Context(fs=fs, units=units, thermo=thermo, states={}, results={}, components=components)
+        ctx = _Context(
+            fs=fs,
+            units=units,
+            thermo=thermo,
+            states={},
+            results={},
+            components=components,
+            errors=errors,
+            history=[],
+        )
         for s in fs.streams:
             if s.source is None:
                 ctx.states[s.id] = _flash_feed(s, thermo)
@@ -453,10 +634,21 @@ class SequentialModular:
             order = _block_order(fs, block_set, set(tears))
             if tears:
                 ok, block_iterations = _converge_block(ctx, order, tears)
-                converged = converged and ok
             else:
-                _run_units(ctx, order)
+                start = time.perf_counter()
+                ok = _run_units(ctx, order)
+                ctx.history.append(
+                    BlockRecord(
+                        units=list(order),
+                        tears=[],
+                        iterations=1,
+                        converged=ok,
+                        records=[],
+                        wall_s=time.perf_counter() - start,
+                    )
+                )
                 block_iterations = 1
+            converged = converged and ok
             iterations = max(iterations, block_iterations)
         return SolvedFlowsheet(
             flowsheet=fs,
@@ -464,4 +656,6 @@ class SequentialModular:
             units=ctx.results,
             converged=converged,
             iterations=iterations,
+            errors=ctx.errors,
+            history=ctx.history,
         )

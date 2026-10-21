@@ -7,9 +7,10 @@
 - Non-convergence is a *result*, not an error: the solver never raises for
   non-convergence (sequential_modular contract, spec S-30), so POST /api/solve
   answers 200 with converged=false at the iteration cap, and the views still render.
-- A semantically invalid project the PUT-time contracts cannot reject (a stream
-  naming a port the unit plugin does not declare — ports are only known to the
-  plugins at solve time) is client error 422, never an unhandled 500.
+- A stream naming a port the unit plugin does not declare (ports are only known to
+  the plugins at solve time) is also a *result*, not an error, since spec P2-02:
+  the solve answers 200 with a stage="ports" UnitError naming the port in the
+  partial SolvedFlowsheet, never an unhandled 500.
 """
 
 from __future__ import annotations
@@ -100,8 +101,8 @@ def test_non_convergence_is_a_result_not_an_error(monkeypatch: Any) -> None:
     assert c.get("/api/views/pfd.svg").status_code == 200
 
 
-def test_unknown_port_is_422_not_500(monkeypatch: Any) -> None:
-    """Schema-valid PUT, semantically invalid streams: client error, not a crash."""
+def test_unknown_port_is_a_recorded_error_not_a_crash(monkeypatch: Any) -> None:
+    """Schema-valid PUT, mistyped port: 200 with a stage="ports" error (P2-02)."""
     monkeypatch.setattr(routes_solve, "_cache", {})
     _reset()
     project = c.get("/api/project").json()
@@ -110,5 +111,10 @@ def test_unknown_port_is_422_not_500(monkeypatch: Any) -> None:
     assert c.put("/api/project", json=project).status_code == 200
 
     r = c.post("/api/solve")
-    assert r.status_code == 422, r.text
-    assert "no_such_port" in r.json()["detail"]
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["status"] == "failed"
+    ports_errors = [e for e in body["errors"] if e["stage"] == "ports"]
+    assert ports_errors
+    assert all("no_such_port" in e["message"] for e in ports_errors)
+    assert all(e["upstream"] is False for e in ports_errors)

@@ -7,6 +7,7 @@ from typing import Any
 from pydantic import field_validator, model_validator
 
 from .common import Model, Nozzle, check_tag
+from .diagnostics import BlockRecord, SolveStatus, UnitError
 from .stream import StreamState, _check_composition
 
 
@@ -155,3 +156,22 @@ class SolvedFlowsheet(Model):
     datasheets: dict[str, Datasheet] = {}  # tag -> sizing
     converged: bool
     iterations: int = 0
+    # Spec P2-02 diagnostics: which units failed, and how the tears converged.
+    # ``status`` is derived, never set by hand: ``failed`` when any unit failed
+    # outright (a non-upstream UnitError - upstream skips are not failures),
+    # else the ``converged`` flag as "converged"/"not_converged".
+    status: SolveStatus = "converged"
+    errors: list[UnitError] = []
+    history: list[BlockRecord] = []
+
+    @model_validator(mode="after")
+    def _derive_status(self) -> SolvedFlowsheet:
+        # Derived, never set by hand. The write goes through __dict__ because
+        # validate_assignment re-runs this validator on a plain assignment.
+        if any(not e.upstream for e in self.errors):
+            self.__dict__["status"] = "failed"
+        elif self.converged:
+            self.__dict__["status"] = "converged"
+        else:
+            self.__dict__["status"] = "not_converged"
+        return self

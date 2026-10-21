@@ -1735,5 +1735,69 @@
   },
   "datasheets": {},
   "converged": true,
-  "iterations": 1
+  "iterations": 1,
+  "status": "converged",
+  "errors": [],
+  "history": [
+    {
+      "units": [
+        "V-101"
+      ],
+      "tears": [],
+      "iterations": 1,
+      "converged": true,
+      "records": [],
+      "wall_s": 0.0
+    },
+    {
+      "units": [
+        "P-101"
+      ],
+      "tears": [],
+      "iterations": 1,
+      "converged": true,
+      "records": [],
+      "wall_s": 0.0
+    },
+    {
+      "units": [
+        "K-101"
+      ],
+      "tears": [],
+      "iterations": 1,
+      "converged": true,
+      "records": [],
+      "wall_s": 0.0
+    },
+    {
+      "units": [
+        "E-102"
+      ],
+      "tears": [],
+      "iterations": 1,
+      "converged": true,
+      "records": [],
+      "wall_s": 0.0
+    },
+    {
+      "units": [
+        "E-101"
+      ],
+      "tears": [],
+      "iterations": 1,
+      "converged": true,
+      "records": [],
+      "wall_s": 0.0
+    },
+    {
+      "units": [
+        "T-101"
+      ],
+      "tears": [],
+      "iterations": 1,
+      "converged": true,
+      "records": [],
+      "wall_s": 0.0
+    }
+  ]
 }
