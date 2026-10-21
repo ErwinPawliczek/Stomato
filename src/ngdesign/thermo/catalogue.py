@@ -70,6 +70,18 @@ class CubicOptions(BaseModel):
     enthalpy: EnthalpyMethod = EnthalpyMethod.EOS
     mixing: MixingRule = MixingRule.NONE
 
+    @property
+    def is_default(self) -> bool:
+        """True when every tunable option sits at its default (the pr/srk/pr78 path)."""
+        return (
+            self.alpha == AlphaFunction.DEFAULT
+            and self.translation == VolumeTranslation.NONE
+            and self.liquid_density == LiquidDensity.EOS
+            and self.sour == SourTerm.NONE
+            and self.enthalpy == EnthalpyMethod.EOS
+            and self.mixing == MixingRule.NONE
+        )
+
 
 class HelmholtzOptions(BaseModel):
     """Typed options for family ``helmholtz`` (spec T-04)."""
@@ -145,6 +157,14 @@ def _import_adapter(row: ModelRow, where: str) -> type:
     return adapter
 
 
+@cache
+def _option_aware_adapter() -> type:
+    """The T-02 adapter base that applies option values (lazy: avoids a cycle)."""
+    from ngdesign.thermo.cubic import OptionCubicEOS
+
+    return OptionCubicEOS
+
+
 def _validate_options(row: ModelRow, where: str) -> None:
     """Validate options against the typed declarations; cross-check pinned eos."""
     try:
@@ -157,6 +177,12 @@ def _validate_options(row: ModelRow, where: str) -> None:
                 raise CatalogueError(
                     f"{where}: options.eos {opts.eos!r} does not match adapter "
                     f"{row.adapter!r} (pins {eos_name!r})"
+                )
+            if not opts.is_default and not issubclass(adapter, _option_aware_adapter()):
+                raise CatalogueError(
+                    f"{where}: adapter {row.adapter!r} declares non-default cubic option "
+                    f"values but does not support option values (T-02); it would silently "
+                    f"ignore them - use an ngdesign.thermo.cubic:OptionCubicEOS adapter"
                 )
         elif row.family == "helmholtz":
             HelmholtzOptions(**row.options)

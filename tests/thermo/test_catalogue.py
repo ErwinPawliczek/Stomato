@@ -62,7 +62,7 @@ def _load_harness() -> Any:
 
 
 def test_rows_load_and_build() -> None:
-    """98 rows load; the registry resolves each id to its adapter class."""
+    """120 rows load; the registry resolves each id to its adapter class."""
     rows = load_catalogue()
     gamma_phi_ids = [
         f"{liquid}_{vapour}"
@@ -118,13 +118,37 @@ def test_rows_load_and_build() -> None:
         "ideal-raoult",
         "lee-kesler-ploecker",
     ]
-    non_gamma = ["amine_enrtl", "amine_ke", "pr", "pr78", "srk"]
+    cubic_t02 = [
+        "api-srk",
+        "kabadi-danner-srk",
+        "pr-bm",
+        "pr-boston-mathias",
+        "pr-lee-kesler-enthalpy",
+        "pr-mathias-copeman",
+        "pr-peneloux",
+        "prsv",
+        "prsv2",
+        "rk",
+        "rks-bm",
+        "sour-pr",
+        "sour-srk",
+        "srk-boston-mathias",
+        "srk-lee-kesler-enthalpy",
+        "srk-mathias-copeman",
+        "srk-peneloux",
+        "twu-pr",
+        "twu-sim-tassone",
+        "twu-srk",
+        "vdw",
+        "zudkevitch-joffe-rk",
+    ]
+    non_gamma = ["amine_enrtl", "amine_ke", "pr", "pr78", "srk"] + cubic_t02
     # special family (T-10): experimental rows, hidden from the advisor
     special_ids = ["flory_huggins", "hoc_dimer", "ideal_solid", "polymer_nrtl", "unifac_fv"]
     expected = sorted(
         gamma_phi_ids + nrtl_ids + helmholtz_ids + non_gamma + saft_ids + kvalue_ids + special_ids
     )
-    assert len(expected) == 98
+    assert len(expected) == 120
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
@@ -222,17 +246,16 @@ def test_non_cubic_options_fail_at_load(tmp_path: Path) -> None:
         _load_planted(tmp_path)
 
 
-def test_non_default_option_loads_but_build_raises(tmp_path: Path) -> None:
-    """The vocabulary admits non-default cubic options; build refuses until T-02 lands."""
+def test_non_default_options_reject_option_blind_adapter(tmp_path: Path) -> None:
+    """Non-default cubic options need an OptionCubicEOS adapter, or the row would build."""
     _plant_schema(tmp_path)
     row = _pr_row_dict() | {
         "id": "prtwu",
         "options": {"eos": "PRMIX", "kij_table": "ChemSep PR", "alpha": "twu"},
     }  # noqa: E501
     (tmp_path / "twu.yaml").write_text(yaml.safe_dump([row]))
-    loaded = _load_planted(tmp_path)
-    with pytest.raises(NotImplementedError, match="alpha=twu.*T-02"):
-        catalogue.build(loaded["prtwu"])
+    with pytest.raises(CatalogueError, match="does not support option values"):
+        _load_planted(tmp_path)
 
 
 def test_eos_mismatch_fails_at_load(tmp_path: Path) -> None:
