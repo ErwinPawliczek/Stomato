@@ -1,5 +1,11 @@
 # Plan: the unit-operation catalogue (~70 units) built breadth-first, then in rigour rounds
 
+> **Status: draft, not for dispatch.** Agreed in outline on 2026-10-21. The programme is re-evaluated
+> with Erwin after the thermo catalogue freeze (T wave 4) and before U-00 is written: scope cuts
+> (electrolysers, membranes, adsorption, Claus, cooling towers, hydrocyclones are candidates), the
+> reaction contract's placement in U-00, and the exclusion of dynamic mode are the open decisions.
+> Nothing in this file is a spec until that review.
+
 Written 2026-10-21, while the thermo catalogue (`docs/thermo-catalogue-plan.md`, 168 property
 methods in 8 families) is landing. This plan starts when that catalogue is frozen (its wave 4) and
 P1-11/P1-06 have put the amine units on the rigorous column, so the unit layer never competes with

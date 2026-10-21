@@ -136,6 +136,10 @@ exports PFD/P&ID/iso without touching JSON.
 Rigorous heat-exchanger rating (`ht`), CSTR/PFR with kinetics, PC-SAFT/CPA via `thermo`,
 electrolytes beyond amines, dynamic mode (later), DWSIM/Aspen file import.
 
+Sequenced as two catalogues: the thermo catalogue (`docs/thermo-catalogue-plan.md`, in flight)
+and then the unit-operation catalogue (`docs/unit-catalogue-plan.md`, draft — re-evaluated with
+Erwin after the thermo freeze and before any unit spec is dispatched).
+
 ## 4. Hackathon showcase (what to build first for the $20k of tokens)
 
 The highest-leverage demo is the agent: a chat where you say *"50 MMSCFD wet sour gas at 500 psia,
