@@ -15,6 +15,7 @@ from ngdesign.contracts import Project
 from ngdesign.store import (
     DEFAULT_PROJECT_NAME,
     DbProjectStore,
+    ProjectExists,
     ProjectForbidden,
     ProjectNotFound,
     create_project,
@@ -45,5 +46,10 @@ def default_project_store(owner: str = Depends(current_owner)) -> DbProjectStore
     """The store bound to the owner's ``default`` project, created on first use."""
     row = find_project(name=DEFAULT_PROJECT_NAME, owner=owner)
     if row is None:
-        row = create_project(name=DEFAULT_PROJECT_NAME, owner=owner, project=slice_project())
+        try:
+            row = create_project(name=DEFAULT_PROJECT_NAME, owner=owner, project=slice_project())
+        except ProjectExists:
+            # Two first requests raced on the unique (owner, name): the other one won.
+            row = find_project(name=DEFAULT_PROJECT_NAME, owner=owner)
+            assert row is not None
     return DbProjectStore(row.id)

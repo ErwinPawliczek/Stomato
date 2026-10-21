@@ -16,6 +16,7 @@ works without lifespan events.
 
 from __future__ import annotations
 
+import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
@@ -45,6 +46,21 @@ from ngdesign.store import (
 )
 
 
+#: Allowed browser origins (spec P3-01): comma-separated STOMATO_CORS_ORIGINS,
+#: default the Vite dev server; "*" is never accepted.
+CORS_ORIGINS_ENV = "STOMATO_CORS_ORIGINS"
+DEFAULT_CORS_ORIGINS = ("http://localhost:5173",)
+
+
+def cors_origins() -> list[str]:
+    """The configured origins; a '*' entry is a config error, not a wildcard."""
+    raw = os.environ.get(CORS_ORIGINS_ENV)
+    origins = [o.strip() for o in raw.split(",") if o.strip()] if raw else list(DEFAULT_CORS_ORIGINS)
+    if "*" in origins:
+        raise ValueError(f"{CORS_ORIGINS_ENV} must list explicit origins; '*' is not allowed")
+    return origins
+
+
 def create_app() -> FastAPI:
     """The FastAPI app: routers, auth dependency, CORS, store error mapping."""
 
@@ -61,7 +77,9 @@ def create_app() -> FastAPI:
         # Every /api route is owner-checked; auth.py exempts /api/health itself.
         dependencies=[Depends(auth.current_owner)],
     )
-    application.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+    application.add_middleware(
+        CORSMiddleware, allow_origins=cors_origins(), allow_methods=["*"], allow_headers=["*"]
+    )
 
     application.include_router(projects_router)
     application.include_router(plot_router)

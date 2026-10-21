@@ -4,11 +4,14 @@ sharing the legacy solve path (same 501 for a missing plugin)."""
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 
-from ngdesign.api.app import app
+from ngdesign.api.app import app, cors_origins, create_app
+from ngdesign.store import reset_engine
 
 c = TestClient(app)
 
@@ -124,3 +127,39 @@ def test_unknown_unit_project_view_returns_409() -> None:
     pid = _create("alpha")["id"]
     response = c.put(f"/api/projects/{pid}/layout/plot/NOPE", json={"x": 1.0, "y": 2.0, "z": 0.0})
     assert response.status_code == 409
+
+
+def test_two_app_instances_share_one_sqlite_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Spec P3-01 gate: a project created through one app instance is visible to
+    a second instance (a restart, or a second replica) over the same file."""
+    monkeypatch.setenv("STOMATO_DATABASE_URL", f"sqlite:///{tmp_path}/shared.db")
+    reset_engine()
+    first = TestClient(create_app())
+    body = first.get("/api/project").json()
+    body["name"] = "survivor"
+    assert first.post("/api/projects", json={"name": "survivor", "project": body}).status_code == 201
+
+    reset_engine()  # the restart seam: a new engine over the same file
+    second = TestClient(create_app())
+    names = [p["name"] for p in second.get("/api/projects").json()["projects"]]
+    assert "survivor" in names
+
+
+def test_cors_origins_come_from_the_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("STOMATO_CORS_ORIGINS", raising=False)
+    assert cors_origins() == ["http://localhost:5173"]
+    monkeypatch.setenv("STOMATO_CORS_ORIGINS", "https://app.example.com, http://localhost:3000")
+    assert cors_origins() == ["https://app.example.com", "http://localhost:3000"]
+    monkeypatch.setenv("STOMATO_CORS_ORIGINS", "*")
+    with pytest.raises(ValueError):
+        cors_origins()
+    client = (
+        TestClient(create_app())
+        if monkeypatch.setenv("STOMATO_CORS_ORIGINS", "https://app.example.com") is None
+        else None
+    )
+    assert client is not None
+    allowed = client.get("/api/health", headers={"Origin": "https://app.example.com"})
+    assert allowed.headers.get("access-control-allow-origin") == "https://app.example.com"
+    denied = client.get("/api/health", headers={"Origin": "https://evil.example.com"})
+    assert "access-control-allow-origin" not in denied.headers
