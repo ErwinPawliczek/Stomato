@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-10-21T16:05:08+00:00",
+    "generated": "2026-10-21T19:02:11+00:00",
     "python": "3.14.7",
     "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "20c148e",
+    "git_rev": "2736c9e",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 917,
-    "n_pass": 677
+    "n_comparisons": 949,
+    "n_pass": 709
   },
   "rows": [
     {
@@ -5956,54 +5956,54 @@
       "package": "pr",
       "property": "bubble_P",
       "expected": 9653000.0,
-      "got": 9694014.860152602,
-      "rel_err": 0.00424892366648733,
-      "pass": true
+      "got": 5938859.891183879,
+      "rel_err": 0.38476536919259513,
+      "pass": false
     },
     {
       "case": "c1c3-294.26K-9.653MPa",
       "package": "pr",
       "property": "vapor_comp",
       "expected": 0.7309,
-      "got": 0.681898473211513,
-      "rel_err": 0.049001526788487015,
-      "pass": false
+      "got": 0.7383141697208029,
+      "rel_err": 0.007414169720802888,
+      "pass": true
     },
     {
       "case": "c1c3-294.26K-9.653MPa",
       "package": "srk",
       "property": "bubble_P",
       "expected": 9653000.0,
-      "got": 9770003.382826727,
-      "rel_err": 0.012120934717365263,
-      "pass": true
+      "got": 5873485.296052454,
+      "rel_err": 0.39153783320703883,
+      "pass": false
     },
     {
       "case": "c1c3-294.26K-9.653MPa",
       "package": "srk",
       "property": "vapor_comp",
       "expected": 0.7309,
-      "got": 0.6967401348592207,
-      "rel_err": 0.03415986514077929,
-      "pass": false
+      "got": 0.7427899189695687,
+      "rel_err": 0.011889918969568702,
+      "pass": true
     },
     {
       "case": "c1c3-294.26K-9.653MPa",
       "package": "pr78",
       "property": "bubble_P",
       "expected": 9653000.0,
-      "got": 9694014.860152602,
-      "rel_err": 0.00424892366648733,
-      "pass": true
+      "got": 5938859.891183879,
+      "rel_err": 0.38476536919259513,
+      "pass": false
     },
     {
       "case": "c1c3-294.26K-9.653MPa",
       "package": "pr78",
       "property": "vapor_comp",
       "expected": 0.7309,
-      "got": 0.681898473211513,
-      "rel_err": 0.049001526788487015,
-      "pass": false
+      "got": 0.7383141697208029,
+      "rel_err": 0.007414169720802888,
+      "pass": true
     },
     {
       "case": "c1c3-310.93K-1.379MPa",
@@ -6442,8 +6442,8 @@
       "package": "pr",
       "property": "bubble_P",
       "expected": 7584000.0,
-      "got": 7273622.634697005,
-      "rel_err": 0.040925285509361135,
+      "got": 4840061.7564332085,
+      "rel_err": 0.3618062030019504,
       "pass": false
     },
     {
@@ -6451,8 +6451,8 @@
       "package": "pr",
       "property": "vapor_comp",
       "expected": 0.5546,
-      "got": 0.5122394238175867,
-      "rel_err": 0.04236057618241329,
+      "got": 0.4566452559015715,
+      "rel_err": 0.09795474409842847,
       "pass": false
     },
     {
@@ -6460,8 +6460,8 @@
       "package": "srk",
       "property": "bubble_P",
       "expected": 7584000.0,
-      "got": 7282458.9726246875,
-      "rel_err": 0.03976015656320049,
+      "got": 4817955.550748412,
+      "rel_err": 0.36472105079794154,
       "pass": false
     },
     {
@@ -6469,8 +6469,8 @@
       "package": "srk",
       "property": "vapor_comp",
       "expected": 0.5546,
-      "got": 0.5234820160634213,
-      "rel_err": 0.03111798393657872,
+      "got": 0.4590101290727236,
+      "rel_err": 0.09558987092727639,
       "pass": false
     },
     {
@@ -6478,8 +6478,8 @@
       "package": "pr78",
       "property": "bubble_P",
       "expected": 7584000.0,
-      "got": 7273622.634697005,
-      "rel_err": 0.040925285509361135,
+      "got": 4840061.7564332085,
+      "rel_err": 0.3618062030019504,
       "pass": false
     },
     {
@@ -6487,8 +6487,8 @@
       "package": "pr78",
       "property": "vapor_comp",
       "expected": 0.5546,
-      "got": 0.5122394238175867,
-      "rel_err": 0.04236057618241329,
+      "got": 0.4566452559015715,
+      "rel_err": 0.09795474409842847,
       "pass": false
     },
     {
@@ -8044,8 +8044,8 @@
       "package": "amine_ke",
       "property": "K",
       "expected": 9.61968,
-      "got": 9.50596115836513,
-      "rel_err": 0.011821478639088894,
+      "got": 9.505961158341828,
+      "rel_err": 0.011821478641511247,
       "pass": true
     },
     {
@@ -8053,8 +8053,8 @@
       "package": "amine_ke",
       "property": "K",
       "expected": 15.1424,
-      "got": 15.372717266991232,
-      "rel_err": 0.015210090011572282,
+      "got": 15.372717267005797,
+      "rel_err": 0.015210090012534106,
       "pass": true
     },
     {
@@ -8062,8 +8062,8 @@
       "package": "amine_ke",
       "property": "K",
       "expected": 1.28491,
-      "got": 1.222706036336426,
-      "rel_err": 0.048411144487609296,
+      "got": 1.222706034274515,
+      "rel_err": 0.04841114609232158,
       "pass": true
     },
     {
@@ -8071,8 +8071,8 @@
       "package": "amine_ke",
       "property": "K",
       "expected": 16.207,
-      "got": 16.33175394186364,
-      "rel_err": 0.007697534513706291,
+      "got": 16.331753941878695,
+      "rel_err": 0.007697534514635297,
       "pass": true
     },
     {
@@ -8080,8 +8080,8 @@
       "package": "amine_ke",
       "property": "K",
       "expected": 15.3345,
-      "got": 15.257580343676544,
-      "rel_err": 0.005016117664316163,
+      "got": 15.25758034367295,
+      "rel_err": 0.005016117664550509,
       "pass": true
     },
     {
@@ -8263,6 +8263,294 @@
       "got": 66.64832378925219,
       "rel_err": 0.12169996252549573,
       "pass": false
+    },
+    {
+      "case": "uniquac-ig-megh2o-431.25K-101.325kPa",
+      "package": "uniquac_ig",
+      "property": "bubble_T",
+      "expected": 431.25,
+      "got": 430.4697408581738,
+      "rel_err": 0.0018092965607564215,
+      "pass": true
+    },
+    {
+      "case": "uniquac-ig-megh2o-431.25K-101.325kPa",
+      "package": "uniquac_ig",
+      "property": "vapor_comp",
+      "expected": 0.224,
+      "got": 0.22960640676621485,
+      "rel_err": 0.00560640676621485,
+      "pass": true
+    },
+    {
+      "case": "uniquac-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "uniquac_ig",
+      "property": "bubble_P",
+      "expected": 336600.0,
+      "got": 336598.09247690614,
+      "rel_err": 5.667032364413333e-06,
+      "pass": true
+    },
+    {
+      "case": "uniquac-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "uniquac_ig",
+      "property": "vapor_comp",
+      "expected": 0.1591,
+      "got": 0.15910089775036562,
+      "rel_err": 8.977503656304453e-07,
+      "pass": true
+    },
+    {
+      "case": "uniquac-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "uniquac_ig",
+      "property": "bubble_T",
+      "expected": 351.35,
+      "got": 351.97030656085656,
+      "rel_err": 0.0017654946943404977,
+      "pass": true
+    },
+    {
+      "case": "uniquac-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "uniquac_ig",
+      "property": "vapor_comp",
+      "expected": 0.8947,
+      "got": 0.9125934057633128,
+      "rel_err": 0.017893405763312775,
+      "pass": true
+    },
+    {
+      "case": "wilson-ig-megh2o-431.25K-101.325kPa",
+      "package": "wilson_ig",
+      "property": "bubble_T",
+      "expected": 431.25,
+      "got": 430.8311640427861,
+      "rel_err": 0.0009712138138293348,
+      "pass": true
+    },
+    {
+      "case": "wilson-ig-megh2o-431.25K-101.325kPa",
+      "package": "wilson_ig",
+      "property": "vapor_comp",
+      "expected": 0.224,
+      "got": 0.2328895024614751,
+      "rel_err": 0.008889502461475102,
+      "pass": true
+    },
+    {
+      "case": "wilson-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "wilson_ig",
+      "property": "bubble_P",
+      "expected": 336600.0,
+      "got": 336601.38467154326,
+      "rel_err": 4.11370036618887e-06,
+      "pass": true
+    },
+    {
+      "case": "wilson-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "wilson_ig",
+      "property": "vapor_comp",
+      "expected": 0.1591,
+      "got": 0.1590993831585221,
+      "rel_err": 6.168414778962017e-07,
+      "pass": true
+    },
+    {
+      "case": "wilson-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "wilson_ig",
+      "property": "bubble_T",
+      "expected": 351.35,
+      "got": 351.26523895312556,
+      "rel_err": 0.00024124390742695872,
+      "pass": true
+    },
+    {
+      "case": "wilson-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "wilson_ig",
+      "property": "vapor_comp",
+      "expected": 0.8947,
+      "got": 0.8944616481793662,
+      "rel_err": 0.00023835182063380866,
+      "pass": true
+    },
+    {
+      "case": "vanlaar-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "vanlaar_ig",
+      "property": "bubble_P",
+      "expected": 336600.0,
+      "got": 336599.84052079683,
+      "rel_err": 4.737944241482554e-07,
+      "pass": true
+    },
+    {
+      "case": "vanlaar-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "vanlaar_ig",
+      "property": "vapor_comp",
+      "expected": 0.1591,
+      "got": 0.15910008075841647,
+      "rel_err": 8.075841648191862e-08,
+      "pass": true
+    },
+    {
+      "case": "vanlaar-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "vanlaar_ig",
+      "property": "bubble_T",
+      "expected": 351.35,
+      "got": 351.3500018088856,
+      "rel_err": 5.148386507841712e-09,
+      "pass": true
+    },
+    {
+      "case": "vanlaar-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "vanlaar_ig",
+      "property": "vapor_comp",
+      "expected": 0.8947,
+      "got": 0.8947,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "margules-ig-megh2o-431.25K-101.325kPa",
+      "package": "margules_ig",
+      "property": "bubble_T",
+      "expected": 431.25,
+      "got": 430.3604584306888,
+      "rel_err": 0.0020627050882578023,
+      "pass": true
+    },
+    {
+      "case": "margules-ig-megh2o-431.25K-101.325kPa",
+      "package": "margules_ig",
+      "property": "vapor_comp",
+      "expected": 0.224,
+      "got": 0.2295635056480395,
+      "rel_err": 0.005563505648039507,
+      "pass": true
+    },
+    {
+      "case": "margules-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "margules_ig",
+      "property": "bubble_P",
+      "expected": 336600.0,
+      "got": 336599.8078978937,
+      "rel_err": 5.707133282474018e-07,
+      "pass": true
+    },
+    {
+      "case": "margules-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "margules_ig",
+      "property": "vapor_comp",
+      "expected": 0.1591,
+      "got": 0.15910008980242557,
+      "rel_err": 8.980242557909968e-08,
+      "pass": true
+    },
+    {
+      "case": "margules-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "margules_ig",
+      "property": "bubble_T",
+      "expected": 351.35,
+      "got": 351.34999851648496,
+      "rel_err": 4.2223283440521315e-09,
+      "pass": true
+    },
+    {
+      "case": "margules-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "margules_ig",
+      "property": "vapor_comp",
+      "expected": 0.8947,
+      "got": 0.8947,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "unifac-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "unifac_ig",
+      "property": "bubble_T",
+      "expected": 351.35,
+      "got": 351.3039444156354,
+      "rel_err": 0.00013108178273697887,
+      "pass": true
+    },
+    {
+      "case": "unifac-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "unifac_ig",
+      "property": "vapor_comp",
+      "expected": 0.8947,
+      "got": 0.8947,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "unifac-dortmund-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "unifac_dortmund_ig",
+      "property": "bubble_P",
+      "expected": 336600.0,
+      "got": 339877.0585268419,
+      "rel_err": 0.009735765082715162,
+      "pass": true
+    },
+    {
+      "case": "unifac-dortmund-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "unifac_dortmund_ig",
+      "property": "vapor_comp",
+      "expected": 0.1591,
+      "got": 0.1549733834271367,
+      "rel_err": 0.004126616572863284,
+      "pass": true
+    },
+    {
+      "case": "unifac-dortmund-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "unifac_dortmund_ig",
+      "property": "bubble_T",
+      "expected": 351.35,
+      "got": 351.39929563201406,
+      "rel_err": 0.0001403034922841512,
+      "pass": true
+    },
+    {
+      "case": "unifac-dortmund-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "unifac_dortmund_ig",
+      "property": "vapor_comp",
+      "expected": 0.8947,
+      "got": 0.8947,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "unifac-psrk-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "unifac_psrk_ig",
+      "property": "bubble_P",
+      "expected": 336600.0,
+      "got": 330659.51434798155,
+      "rel_err": 0.017648501639983525,
+      "pass": true
+    },
+    {
+      "case": "unifac-psrk-ig-meohnc4-323.22K-0.3366MPa",
+      "package": "unifac_psrk_ig",
+      "property": "vapor_comp",
+      "expected": 0.1591,
+      "got": 0.15886165110811043,
+      "rel_err": 0.00023834889188956154,
+      "pass": true
+    },
+    {
+      "case": "unifac-psrk-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "unifac_psrk_ig",
+      "property": "bubble_T",
+      "expected": 351.35,
+      "got": 351.3039444156354,
+      "rel_err": 0.00013108178273697887,
+      "pass": true
+    },
+    {
+      "case": "unifac-psrk-ig-etohh2o-azeotrope-101.325kPa",
+      "package": "unifac_psrk_ig",
+      "property": "vapor_comp",
+      "expected": 0.8947,
+      "got": 0.8947,
+      "rel_err": 0.0,
+      "pass": true
     }
   ]
 }

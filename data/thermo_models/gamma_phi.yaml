@@ -246,7 +246,6 @@
     - VLL
   status: provisional
   validation:
-  - uniquac-ig-meohh2o-97.99kPa-349.05K
   - uniquac-ig-megh2o-431.25K-101.325kPa
   - uniquac-ig-meohnc4-323.22K-0.3366MPa
   - uniquac-ig-etohh2o-azeotrope-101.325kPa
@@ -427,8 +426,8 @@
     vapour: ideal
   params:
     source: thermo IPDB (ChemSep), 'ChemSep Wilson' binary table
-    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4, EtOH/H2O) from
-      data/thermo_params/wilson/pairs.yaml
+    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4) from
+      data/thermo_params/wilson/pairs.yaml; aij + bij from the table otherwise
   applicability:
     component_classes:
     - alcohol
@@ -477,8 +476,8 @@
     vapour: rk
   params:
     source: thermo IPDB (ChemSep), 'ChemSep Wilson' binary table
-    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4, EtOH/H2O) from
-      data/thermo_params/wilson/pairs.yaml
+    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4) from
+      data/thermo_params/wilson/pairs.yaml; aij + bij from the table otherwise
   applicability:
     component_classes:
     - alcohol
@@ -586,8 +585,8 @@
     vapour: pr
   params:
     source: thermo IPDB (ChemSep), 'ChemSep Wilson' binary table
-    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4, EtOH/H2O) from
-      data/thermo_params/wilson/pairs.yaml
+    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4) from
+      data/thermo_params/wilson/pairs.yaml; aij + bij from the table otherwise
   applicability:
     component_classes:
     - alcohol

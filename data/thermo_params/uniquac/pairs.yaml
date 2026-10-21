@@ -34,18 +34,18 @@ pairs:
       Table 4); reproduces the uniquac-ig-meohnc4-323.22K-0.3366MPa case within
       tolerance. Case-fitted, not a DECHEMA tabulation (documented deviation).
   meohh2o:
-    fitted: true
-    pair: [MeOH, H2O]  # orientation of the params below: [MeOH->H2O, H2O->MeOH]
-    params: [-7021.48, 288.84]  # [bij12 (MeOH->H2O), bij21 (H2O->MeOH)] K
+    fitted: false
+    params: null  # ChemSep IPDB bij (MeOH<->H2O)
     citation: >-
-      In-house single-point least-squares fit to the MeOH/H2O 97.99 kPa /
-      349.05 K T-12 case point (Bennett 1929, J. Chem. Educ. 6, 1544-1549; DDB
-      set 466) via modified Raoult's law with an ideal vapour, verified through
-      the full adapter. The fit is larger than typical UNIQUAC energies and the
-      312.91 K sibling misses bubble_P by 16.8 % with it, so only the 97.99 kPa
-      case is activated - see the asymmetry comment on that case in
-      data/validation/gamma_phi/cases.yaml. Case-fitted, not a DECHEMA
-      tabulation (documented deviation).
+      ChemSep UNIQUAC table (IPDB). A single-point fit to the 97.99 kPa /
+      349.05 K case (bij = -7021 K, tau ~ 5e8) was removed in the PR #150
+      review: it is a degenerate tuning of one point, not a parameter, and it
+      missed the 312.91 K sibling by 16.8 %. Measured with the databank pair:
+      97.99 kPa point bubble_T 352.23 K vs 349.05 K (+0.91 %), y_MeOH 0.624 vs
+      0.68; 312.91 K point bubble_P +3.1 %, y -6.0 %. NRTL and Wilson databank
+      pairs give the same answer within 0.35 K at the 97.99 kPa point, so the
+      case point itself is suspect (issue #100); both uniquac-ig MeOH/H2O cases
+      stay dormant.
   etohh2o:
     fitted: false
     params: null  # ChemSep IPDB bij (EtOH<->H2O)

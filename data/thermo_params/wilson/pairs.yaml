@@ -32,21 +32,23 @@ pairs:
       Table 4); reproduces the wilson-ig-meohnc4-323.22K-0.3366MPa case within
       tolerance. Case-fitted, not a DECHEMA tabulation (documented deviation).
   etohh2o:
-    fitted: true
-    pair: [EtOH, H2O]  # orientation of the params below: [EtOH->H2O, H2O->EtOH]
-    params: [-450.85, -93.37]  # [bij12 (EtOH->H2O), bij21 (H2O->EtOH)]
+    fitted: false
+    params: null  # ChemSep IPDB aij + bij (EtOH<->H2O)
     citation: >-
-      In-house least-squares fit to ln-gamma targets derived from the EtOH/H2O
-      1-atm azeotrope point (b.p. 78.20 C, x_EtOH = 0.8947 - Edinburgh
-      Azeotrope Database compilation; historical measurement Bayer, 1927);
-      reproduces the wilson-ig-etohh2o-azeotrope-101.325kPa case within
-      tolerance. Case-fitted, not a DECHEMA tabulation (documented deviation);
-      the ChemSep databank pair for this system is zero-filled in-session.
+      ChemSep Wilson table (IPDB), both the aij = ln(Vj/Vi) and bij = -Aij/R
+      matrices (the PR #150 review found the adapter dropped aij; the earlier
+      "zero-filled" claim for this pair was a reading of that defect - the
+      table carries bij = [-192.4, -480.8] K). With the full form the databank
+      pair reproduces the 1-atm azeotrope case within tolerance (measured
+      351.27 K vs 351.35 K, y_EtOH 0.8945 vs 0.8947), so no fit is shipped.
   meohh2o:
     fitted: false
     params: null  # ChemSep IPDB bij (MeOH<->H2O)
     citation: >-
-      ChemSep Wilson table (IPDB). The databank pair disagrees with the T-12
-      MeOH/H2O cases beyond tolerance (2.8 % bubble_T, 14 % y at the 97.99 kPa
-      point) and non-degenerate fits reproducing them were not found, so both
-      wilson-ig MeOH/H2O cases stay dormant.
+      ChemSep Wilson table (IPDB), aij + bij. Measured with the full form
+      (PR #150 review): 97.99 kPa / x_MeOH 0.24 point bubble_T 351.87 K vs
+      349.05 K (+0.81 %), y_MeOH 0.625 vs 0.68; 312.91 K point bubble_P
+      +8.2 %, y -5.6 %. NRTL and UNIQUAC databank pairs land within 0.35 K and
+      0.003 in y of the same answer at the 97.99 kPa point, so the case point
+      itself is suspect (issue #100); both wilson-ig MeOH/H2O cases stay
+      dormant and no fit is shipped.

@@ -202,6 +202,30 @@ def _chemsep_matrix(
     return [[float(v) for v in row] for row in matrix]
 
 
+def _wilson_matrices(
+    ids: tuple[str, ...], cas_list: list[str]
+) -> tuple[list[list[float]], list[list[float]]]:
+    """(lambda_as, lambda_bs) for thermo's Wilson from the ChemSep table.
+
+    ChemSep writes Lambda_ij = (V_j / V_i) exp(-A_ij / (R T)); thermo stores it
+    as ln Lambda_ij = a_ij + b_ij / T with a_ij = ln(V_j / V_i) (table ip
+    ``aij``) and b_ij = -A_ij / R (ip ``bij``). Both matrices are needed: with
+    ``bij`` alone the EtOH/H2O activity coefficients at 343.15 K come out
+    [2.20, 1.08] instead of thermo's documented [1.957, 1.160] (measured, review
+    of PR #150). Fitted overrides in data/thermo_params/wilson/pairs.yaml were
+    fitted in the two-parameter form ln Lambda_ij = b_ij / T, so their a_ij is
+    zero by construction.
+    """
+    lambda_bs = _chemsep_matrix("wilson", "bij", ids, cas_list)
+    lambda_as = [
+        [float(v) for v in row]
+        for row in IPDB.get_ip_asymmetric_matrix(name=_CHEMSEP_LIQUIDS["wilson"][1], CASs=cas_list, ip="aij")
+    ]
+    for i, j in _fitted_pair_params("wilson", ids):
+        lambda_as[i][j] = lambda_as[j][i] = 0.0
+    return lambda_as, lambda_bs
+
+
 def _fitted_only_matrix(liquid: str, ids: tuple[str, ...], cas_list: list[str]) -> list[list[float]]:
     """Full binary matrix from the fitted pairs.yaml entries; a missing pair raises."""
     display = _display(liquid)
@@ -391,10 +415,10 @@ def _ge_model_factory(liquid: str, ids: tuple[str, ...], cas_list: list[str], co
 
             return make
         if liquid == "wilson":
-            lambda_bs = _chemsep_matrix(liquid, "bij", ids, cas_list)
+            lambda_as, lambda_bs = _wilson_matrices(ids, cas_list)
 
             def make(xs: list[float]) -> GibbsExcess:
-                return Wilson(xs=list(xs), T=298.15, lambda_bs=lambda_bs)
+                return Wilson(xs=list(xs), T=298.15, lambda_as=lambda_as, lambda_bs=lambda_bs)
 
             return make
         raise ValueError(f"unhandled ChemSep liquid {liquid!r}")  # pragma: no cover
