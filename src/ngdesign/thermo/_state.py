@@ -653,18 +653,22 @@ def _saturation(
         def pairs_at(x: float) -> list[PhasePair]:
             return _pt_phase_pairs(flasher, zs, x, p_given)
 
+    # The shared solver sees vapour fractions only; the pairs of every
+    # evaluation are kept here so the incipient composition comes from the
+    # solver's recorded interior evaluation without a second flash.
+    seen: dict[float, list[PhasePair]] = {}
+
     def vf_at(x: float) -> float:
-        return _vapor_fraction(pairs_at(x))
+        pairs = pairs_at(x)
+        seen[x] = pairs
+        return _vapor_fraction(pairs)
 
     solution = _solve_saturation(vf_at, kind=kind, unknown=unknown, bounds=(lo, hi), label=label)
 
     incipient = dict(z)
     if solution.interior_x is not None:
-        # The shared solver sees vapour fractions only; one deterministic
-        # re-flash at its recorded interior evaluation recovers the (phase,
-        # beta) pairs the incipient composition is taken from.
         want_gas = kind == "bubble"
-        for phase, beta in pairs_at(solution.interior_x):
+        for phase, beta in seen[solution.interior_x]:
             if beta > 0.0 and isinstance(phase, CEOSGas) == want_gas:
                 incipient = _composition([float(v) for v in phase.zs], ids, full_keys)
                 break
