@@ -711,21 +711,32 @@ def run_l4(rows: dict[str, ModelRow]) -> list[L4Result]:
     """Cross-model consistency on the natural-gas slice feed for every in-scope pair.
 
     A package that refuses the feed is recorded (visible), not failed: it is a coverage
-    finding, not a wrong number. A pair inside the loose 20 % band passes.
+    finding, not a wrong number. A pair inside the loose 20 % band passes. A row that
+    declares ``l4_excluded`` (its alpha is vapour-pressure-fitted or its EOS is
+    deliberately crude, so the band deviation is the row's documented design) forms no
+    pairs and is recorded once under its own id; a partner-specific ``l4_excluded`` key
+    skips exactly that pair, also visibly. Each row's slice point is evaluated ONCE. A
+    row that refuses the feed is recorded once, under its own id, and forms no pairs:
+    with 60+ gamma-phi rows the per-pair refusal lines would otherwise swamp every
+    report (measured T-03: ~700 identical lines per cubic row).
     """
     out: list[L4Result] = []
     ids = [rid for rid in sorted(rows) if set(rows[rid].applicability.component_classes) & L4_PAIRING_CLASSES]
-    # Each row's slice point is evaluated ONCE. A row that refuses the feed is
-    # recorded once, under its own id, and forms no pairs: with 60+ gamma-phi
-    # rows the per-pair refusal lines would otherwise swamp every report
-    # (measured T-03: ~700 identical lines per cubic row).
     points: dict[str, tuple[float, float]] = {}
     for rid in ids:
         try:
             points[rid] = _l4_point(catalogue.build(rows[rid]))
         except Exception as exc:  # noqa: BLE001 - refusal is recorded, not failed
             out.append(L4Result(rid, True, f"n/a — refuses the slice feed: {type(exc).__name__}: {exc}"))
-    covered = [rid for rid in ids if rid in points]
+    covered = []
+    for rid in ids:
+        if rid not in points:
+            continue  # refused the feed; already recorded under its own id
+        star_reason = rows[rid].l4_excluded.get("*")
+        if star_reason is not None:
+            out.append(L4Result(rid, True, f"n/a — l4_excluded: {star_reason}"))
+            continue
+        covered.append(rid)
     for i, a in enumerate(covered):
         for b in covered[i + 1 :]:
             shared = (
@@ -735,13 +746,18 @@ def run_l4(rows: dict[str, ModelRow]) -> list[L4Result]:
             )
             if not shared:
                 continue
+            pair = f"{a}-{b}"
+            declared = rows[a].l4_excluded.get(b) or rows[b].l4_excluded.get(a)
+            if declared is not None:
+                out.append(L4Result(pair, True, f"n/a — l4_excluded: {declared}"))
+                continue
             (pa, rho_a), (pb, rho_b) = points[a], points[b]
             rel_p = abs(pa - pb) / pb
             rel_rho = abs(rho_a - rho_b) / rho_b
             passed = max(rel_p, rel_rho) <= L4_BAND
             out.append(
                 L4Result(
-                    f"{a}-{b}",
+                    pair,
                     passed,
                     f"dew P {pa:.6g} vs {pb:.6g} (rel {rel_p:.3g}); rhoV {rho_a:.6g} vs "
                     f"{rho_b:.6g} (rel {rel_rho:.3g}); band {L4_BAND:.0%}",
@@ -773,7 +789,9 @@ def audit() -> int:
             table.append((row.id, row.status, "exempt", "", ""))
             continue
         l0 = run_l0_row(row)
-        l0_fail = [r for r in l0 if not r.passed]
+        # l0_excluded checks were validated above (known name, non-empty reason);
+        # the gate skips them the same way the catalogue report does.
+        l0_fail = [r for r in l0 if not r.passed and r.check not in row.l0_excluded]
         declared = set(row.l0) | set(row.l0_excluded)
         for missing in sorted(L0_CHECKS - declared):
             failures.append(f"{row.id}: L0 check {missing!r} is neither declared nor excluded")
@@ -782,6 +800,11 @@ def audit() -> int:
                 failures.append(f"{row.id}: l0_excluded names unknown check {name!r}")
             if not reason.strip():
                 failures.append(f"{row.id}: l0_excluded[{name!r}] is empty — exclusions declare why")
+        for key, reason in sorted(row.l4_excluded.items()):
+            if key != "*" and key not in rows_map:
+                failures.append(f"{row.id}: l4_excluded names unknown row {key!r}")
+            if not reason.strip():
+                failures.append(f"{row.id}: l4_excluded[{key!r}] is empty — exclusions declare why")
         bad_ids = sorted(set(row.validation) - case_ids)
         if bad_ids:
             failures.append(f"{row.id}: validation names unknown case ids {bad_ids}")

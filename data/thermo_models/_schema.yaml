@@ -41,6 +41,10 @@
 #                 audit and report).
 #   l0_note       measured caveat shown with the L0 results (e.g. a component
 #                 deliberately not used as a check point, and why).
+#   l4_excluded   partner row id or '*' -> declared reason (non-empty) for
+#                 skipping that L4 cross-model pair; printed in every audit and
+#                 report. Rows whose alpha is vapour-pressure-fitted or whose
+#                 EOS is deliberately crude sit outside the L4 band by design.
 #   references    literature citations.
 families:
 - cubic

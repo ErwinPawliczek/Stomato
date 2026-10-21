@@ -230,7 +230,8 @@ def build_flasher(
     eos: Any,
     kij_table: str,
     pseudos: SlatePseudos = (),
-    configure: Callable[[list[Any], Any, list[list[float]]], tuple[Any, dict[str, Any], Any, Any]] | None = None,
+    configure: Callable[[list[Any], Any, list[list[float]]], tuple[Any, dict[str, Any], Any, Any]]
+    | None = None,
 ) -> Any:
     """Build a FlashVLN flasher over exactly this sorted component set.
 
@@ -514,7 +515,8 @@ def build_flasher_vl(
     eos: Any,
     kij_table: str,
     pseudos: SlatePseudos = (),
-    configure: Callable[[list[Any], Any, list[list[float]]], tuple[Any, dict[str, Any], Any, Any]] | None = None,
+    configure: Callable[[list[Any], Any, list[list[float]]], tuple[Any, dict[str, Any], Any, Any]]
+    | None = None,
 ) -> Any:
     """Build a two-phase FlashVL flasher over exactly this sorted component set.
 

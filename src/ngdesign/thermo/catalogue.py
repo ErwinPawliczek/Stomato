@@ -133,6 +133,7 @@ class ModelRow(BaseModel):
     l0: dict[str, Any] = Field(default_factory=dict)
     l0_excluded: dict[str, str] = Field(default_factory=dict)
     l0_note: str = ""
+    l4_excluded: dict[str, str] = Field(default_factory=dict)
     source_file: str = ""
     source_row: int = 0
 
@@ -298,7 +299,9 @@ def build(row: ModelRow, *args: Any, **kwargs: Any) -> Thermo:
     return cast(Thermo, adapter(*args, **kwargs))
 
 
-_CUBIC_DEFAULTS: dict[str, AlphaFunction | VolumeTranslation | EnthalpyMethod | SourTerm | MixingRule] = {
+_CUBIC_DEFAULTS: dict[
+    str, AlphaFunction | VolumeTranslation | EnthalpyMethod | SourTerm | MixingRule | LiquidDensity
+] = {
     "alpha": AlphaFunction.DEFAULT,
     "translation": VolumeTranslation.NONE,
     "enthalpy": EnthalpyMethod.EOS,

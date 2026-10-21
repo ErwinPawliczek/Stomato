@@ -14,6 +14,7 @@ Literature anchors used here (values quoted in the tests, not invented):
 """
 
 import math
+from typing import Any
 
 import pytest
 from thermo.eos_alpha_functions import TwuPR95_a_alpha
@@ -49,17 +50,18 @@ NEW_ROW_IDS = [
 Z_C1_C3 = {"methane": 0.6, "propane": 0.4}
 
 
-def _pkg(row_id: str):
+def _pkg(row_id: str) -> Any:
     return catalogue.build(catalogue.load_catalogue()[row_id])
 
 
-def _load_harness():
+def _load_harness() -> Any:
     import importlib.util
     import sys
     from pathlib import Path
 
     script = Path(__file__).resolve().parents[2] / "scripts" / "validate_properties.py"
     spec = importlib.util.spec_from_file_location("validate_properties_t02", script)
+    assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     # dataclass processing resolves string annotations through sys.modules[cls.__module__];
     # without this registration every @dataclass in the harness explodes on import.
@@ -69,14 +71,22 @@ def _load_harness():
 
 
 def test_every_new_row_builds_and_passes_l0() -> None:
-    """Each T-02 row constructs through the catalogue and passes its L0 checks."""
+    """Each T-02 row constructs through the catalogue and passes its L0 checks.
+
+    Checks the row excludes in ``l0_excluded`` (with a documented reason) are
+    skipped here, mirroring the audit's treatment; every other check must pass.
+    """
     vp = _load_harness()
     rows = catalogue.load_catalogue()
     for row_id in NEW_ROW_IDS:
-        pkg = catalogue.build(rows[row_id])
+        row = rows[row_id]
+        pkg = catalogue.build(row)
         assert pkg is not None
-        failed = [(r.check, r.detail) for r in vp.run_l0_row(rows[row_id]) if not r.passed]
-        assert not failed, f"{row_id}: {failed}"
+        excluded = set(row.l0_excluded)
+        unexpected = [
+            (r.check, r.detail) for r in vp.run_l0_row(row) if not r.passed and r.check not in excluded
+        ]
+        assert not unexpected, f"{row_id}: {unexpected}"
 
 
 def test_peneloux_changes_density_but_not_phase_equilibrium() -> None:
@@ -116,7 +126,7 @@ def test_boston_mathias_matches_default_below_tc_and_decays_above() -> None:
 
 def test_twu_generalised_matches_thermo_reference() -> None:
     """The in-house generalised Twu fallback reproduces thermo's TwuPR95 exactly."""
-    lib = TwuPR95_a_alpha.__new__(TwuPR95_a_alpha)
+    lib: Any = TwuPR95_a_alpha.__new__(TwuPR95_a_alpha)
     lib.Tc = 190.564
     lib.omega = 0.01142
     lib.a = 1.0
@@ -125,7 +135,7 @@ def test_twu_generalised_matches_thermo_reference() -> None:
     class _Probe(cubic.TST_a_alpha):
         pass
 
-    probe = _Probe.__new__(_Probe)
+    probe: Any = _Probe.__new__(_Probe)
     probe.Tcs = [190.564]
     probe.ais = [1.0]
     probe.omegas = [0.01142]
@@ -142,9 +152,7 @@ def test_twu_fitted_alpha_reproduces_databank_psat() -> None:
     -pressure correlation is what Twu fitted the alpha against).
     """
     twu = _pkg("twu-pr")
-    bubble = _state.bubble_point(
-        twu._flasher({"methane": 1.0}), {"methane": 1.0}, T=150.0
-    ).P
+    bubble = _state.bubble_point(twu._flasher({"methane": 1.0}), {"methane": 1.0}, T=150.0).P
     psat = _state.pure_psat("methane", 150.0)
     assert bubble == pytest.approx(psat, rel=1e-6)
 
@@ -167,7 +175,7 @@ def test_sour_shift_matches_api955_speciation_factor() -> None:
     Measured ratio 1.0004 at x_H2S = 0.02, 1.002 at x_H2S = 1e-3.
     """
     sour, base = _pkg("sour-pr"), _pkg("pr")
-    ka = 10.0 ** -7.00  # pKa1(H2S) = 7.00 at 298.15 K
+    ka = 10.0**-7.00  # pKa1(H2S) = 7.00 at 298.15 K
     for x_total in (0.02, 1.0e-3):
         zs = {"H2O": 1.0 - x_total, "H2S": x_total}
         ln_sour = sour.phase_props(zs, 298.15, 1.013e5, PhaseKind.AQUEOUS).ln_phi["H2S"]

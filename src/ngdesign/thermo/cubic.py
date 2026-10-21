@@ -19,16 +19,41 @@ SI units throughout: K, Pa, kg/m3, Pa.s, J/mol, J/(mol K).
 
 from __future__ import annotations
 
+import math
 from collections import OrderedDict
 from collections.abc import Callable
 from functools import cache
 from typing import Any, cast
+
+from thermo.eos_mix import (
+    APISRKMIX,
+    PRMIX,
+    PRSV2MIX,
+    PRSVMIX,
+    RKMIX,
+    SRKMIX,
+    TWUPRMIX,
+    TWUSRKMIX,
+    VDWMIX,
+    PRMIXTranslated,
+    SRKMIXTranslated,
+)
+from thermo.phases import CEOSGas, CEOSLiquid
 
 from ngdesign.contracts import StreamState
 from ngdesign.contracts.components import ComponentSet, data_definitions
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.thermo import _state
+from ngdesign.thermo.options import (
+    CUBIC_OPTION_DEFAULTS,
+    AlphaFunction,
+    CubicOptionValues,
+    EnthalpyMethod,
+    MixingRule,
+    SourTerm,
+    VolumeTranslation,
+)
 
 #: The IPDB's fitted cubic-EOS kijs (no SRK/PR78-specific table exists in thermo).
 _CHEMSEP_CUBIC_TABLE = "ChemSep PR"
@@ -193,7 +218,8 @@ def _flasher_for(
     kij_table: str,
     ids: tuple[str, ...],
     pseudos: tuple[DataPseudoDefinition, ...] = (),
-    configure: Callable[[list[Any], Any, list[list[float]]], tuple[Any, dict[str, Any], Any, Any]] | None = None,
+    configure: Callable[[list[Any], Any, list[list[float]]], tuple[Any, dict[str, Any], Any, Any]]
+    | None = None,
 ) -> Any:
     """Build (and cache) a FlashVLN flasher over exactly this sorted component set.
 
@@ -214,7 +240,8 @@ def _flasher_vl_for(
     kij_table: str,
     ids: tuple[str, ...],
     pseudos: tuple[DataPseudoDefinition, ...] = (),
-    configure: Callable[[list[Any], Any, list[list[float]]], tuple[Any, dict[str, Any], Any, Any]] | None = None,
+    configure: Callable[[list[Any], Any, list[list[float]]], tuple[Any, dict[str, Any], Any, Any]]
+    | None = None,
 ) -> Any:
     """Build (and cache) the two-phase FlashVL saturation fast path (spec P1-01).
 
@@ -222,6 +249,7 @@ def _flasher_vl_for(
     and the T-02 ``configure`` hook, like the full flasher.
     """
     return _state.build_flasher_vl(ids, eos, kij_table, pseudos, configure)
+
 
 # ---------------------------------------------------------------------------
 # T-02: cubic option implementations
@@ -254,33 +282,6 @@ def _flasher_vl_for(
 # - Sour-water ionisation: Wilson/API Publication 955 speciation framework;
 #   constants held at 298.15 K literature values (documented deviation).
 
-import math
-
-from thermo.eos_mix import (
-    APISRKMIX,
-    PRMIX,
-    PRMIXTranslated,
-    PRSV2MIX,
-    PRSVMIX,
-    RKMIX,
-    SRKMIX,
-    SRKMIXTranslated,
-    TWUPRMIX,
-    TWUSRKMIX,
-    VDWMIX,
-)
-from thermo.phases import CEOSGas, CEOSLiquid
-
-from ngdesign.thermo.options import (
-    CUBIC_OPTION_DEFAULTS,
-    AlphaFunction,
-    CubicOptionValues,
-    EnthalpyMethod,
-    MixingRule,
-    SourTerm,
-    VolumeTranslation,
-)
-
 #: Temperature-independent ionisation pK values at 298.15 K (documented
 #: deviation: the API-955 temperature correlations could not be re-verified
 #: this session, so no invented temperature form is used).
@@ -288,6 +289,8 @@ _SOUR_PK_H2S = 7.00  # H2S -> HS- (pKa1)
 _SOUR_PK_CO2 = 6.35  # CO2 -> HCO3- (pKa1)
 _SOUR_PK_NH3 = 9.25  # NH4+ -> NH3
 _SOUR_PK_W = 14.00
+
+_R = 8.31446261815324  # J/(mol K), CODATA 2018 - shared by KD and LK terms
 
 _MC_SRK: dict[str, tuple[float, float, float]] = {
     "H2": (0.161, -0.225, -0.232),
@@ -370,43 +373,58 @@ class BostonMathias_a_alpha:
     ``exp[Cd (1 - Tr^d)]`` with ``d = 1 + m/2`` and ``Cd = m/d^2`` -- positive,
     monotonically decreasing, and value-continuous at Tr = 1 where the Soave
     bracket crosses zero at high Tr.
+
+    Mixed into thermo EOS mixes (untyped), which provide these attributes.
     """
+
+    N: int
+    Tcs: list[float]
+    ais: list[float]
+    kappas: list[float]
+    ms: list[float]
 
     def _bm_eval(self, T: float) -> tuple[list[float], list[float], list[float]]:
         a_alphas, das, d2as = [], [], []
+        kappas = getattr(self, "kappas", None)
+        if kappas is None:  # SRK mixes store the Soave m as ``ms``
+            kappas = self.ms
         for i in range(self.N):
-            Tc, a, m = self.Tcs[i], self.ais[i], self.kappas[i]
+            Tc, a, m = self.Tcs[i], self.ais[i], kappas[i]
             rt = math.sqrt(T / Tc)
             if T <= Tc:
                 x0 = 1.0 + m * (1.0 - rt)
                 a_alpha = x0 * x0 * a
                 da = -a * (rt * x0 * m / T)
-                d2 = a * (m * (m / Tc + rt * x0 / T) / (2.0 * T))
+                d2 = a * m * rt * (x0 + m * rt) / (2.0 * T * T)
             else:
                 d = 1.0 + m / 2.0
                 cd = m / (d * d)
                 e = math.exp(cd * (1.0 - (T / Tc) ** d))
                 a_alpha = e * a
                 da = -a * e * cd * d * (T / Tc) ** (d - 1.0) / Tc
-                d2 = a * e * (
-                    (cd * d * (T / Tc) ** (d - 1.0) / Tc) ** 2
-                    - cd * d * (d - 1.0) * (T / Tc) ** (d - 2.0) / (Tc * Tc)
+                d2 = (
+                    a
+                    * e
+                    * (
+                        (cd * d * (T / Tc) ** (d - 1.0) / Tc) ** 2
+                        - cd * d * (d - 1.0) * (T / Tc) ** (d - 2.0) / (Tc * Tc)
+                    )
                 )
             a_alphas.append(a_alpha)
             das.append(da)
             d2as.append(d2)
         return a_alphas, das, d2as
 
-    def a_alphas_vectorized(self, T):
+    def a_alphas_vectorized(self, T: float) -> Any:
         return self._bm_eval(T)[0]
 
-    def a_alpha_and_derivatives_vectorized(self, T):
+    def a_alpha_and_derivatives_vectorized(self, T: float) -> Any:
         return self._bm_eval(T)
 
-    def a_alpha_pure(self, T):
+    def a_alpha_pure(self, T: float) -> Any:
         return self._bm_eval(T)[0][0]
 
-    def a_alpha_and_derivatives_pure(self, T):
+    def a_alpha_and_derivatives_pure(self, T: float) -> Any:
         vals = self._bm_eval(T)
         return vals[0][0], vals[1][0], vals[2][0]
 
@@ -416,7 +434,14 @@ class MC_a_alpha:
 
     Coefficient order is the thermo mixin's ``[c3, c2, c1, 1.0]``; the
     supercritical branch uses the published c1-only form.
+
+    Mixed into thermo EOS mixes (untyped), which provide these attributes.
     """
+
+    N: int
+    Tcs: list[float]
+    ais: list[float]
+    alpha_coeffs: list[list[float]]
 
     def _mc_eval(self, T: float) -> tuple[list[float], list[float], list[float]]:
         a_alphas, das, d2as = [], [], []
@@ -431,27 +456,27 @@ class MC_a_alpha:
                 x2 = 6.0 * c3 * tau + 2.0 * c2
                 a_alpha = x0 * x0 * a
                 da = -a * (rt * x0 * x1 / T)
-                d2 = a * ((x0 * x2 / Tc + x1 * x1 / Tc + rt * x0 * x1 / T) / (2.0 * T))
+                d2 = a * (rt * rt * (x1 * x1 + x0 * x2) + rt * x0 * x1) / (2.0 * T * T)
             else:
                 x = 1.0 + c1 * tau
                 a_alpha = x * x * a
                 da = -a * rt * x * c1 / T
-                d2 = a * c1 * (c1 * rt * rt / Tc + rt * x / T) / (2.0 * T)
+                d2 = a * c1 * rt * (1.0 + c1) / (2.0 * T * T)
             a_alphas.append(a_alpha)
             das.append(da)
             d2as.append(d2)
         return a_alphas, das, d2as
 
-    def a_alphas_vectorized(self, T):
+    def a_alphas_vectorized(self, T: float) -> Any:
         return self._mc_eval(T)[0]
 
-    def a_alpha_and_derivatives_vectorized(self, T):
+    def a_alpha_and_derivatives_vectorized(self, T: float) -> Any:
         return self._mc_eval(T)
 
-    def a_alpha_pure(self, T):
+    def a_alpha_pure(self, T: float) -> Any:
         return self._mc_eval(T)[0][0]
 
-    def a_alpha_and_derivatives_pure(self, T):
+    def a_alpha_and_derivatives_pure(self, T: float) -> Any:
         vals = self._mc_eval(T)
         return vals[0][0], vals[1][0], vals[2][0]
 
@@ -464,7 +489,15 @@ class TST_a_alpha:
     (subcritical: L 0.125283 / 0.511614, M 0.911807 / 0.784054, N 1.948150 /
     2.812520; supercritical per thermo's TwuPR95_a_alpha), matching the
     library's omega-interpolated alpha rather than a single fitted triplet.
+
+    Mixed into thermo EOS mixes (untyped), which provide these attributes.
     """
+
+    N: int
+    Tcs: list[float]
+    ais: list[float]
+    omegas: list[float]
+    alpha_coeffs: list[list[float] | None]
 
     def _tst_eval(self, T: float) -> tuple[list[float], list[float], list[float]]:
         a_alphas, das, d2as = [], [], []
@@ -487,45 +520,57 @@ class TST_a_alpha:
                 d2as.append(a * (d2al0 + w * (d2al1 - d2al0)) / (Tc * Tc))
         return a_alphas, das, d2as
 
-    def a_alphas_vectorized(self, T):
+    def a_alphas_vectorized(self, T: float) -> Any:
         return self._tst_eval(T)[0]
 
-    def a_alpha_and_derivatives_vectorized(self, T):
+    def a_alpha_and_derivatives_vectorized(self, T: float) -> Any:
         return self._tst_eval(T)
 
-    def a_alpha_pure(self, T):
+    def a_alpha_pure(self, T: float) -> Any:
         return self._tst_eval(T)[0][0]
 
-    def a_alpha_and_derivatives_pure(self, T):
+    def a_alpha_and_derivatives_pure(self, T: float) -> Any:
         vals = self._tst_eval(T)
         return vals[0][0], vals[1][0], vals[2][0]
 
 
-class PRMIX_BM(BostonMathias_a_alpha, PRMIX):
+class PRMIX_BM(BostonMathias_a_alpha, PRMIX):  # type: ignore[misc]
     """PRMIX with the Boston-Mathias supercritical alpha."""
 
 
-class SRKMIX_BM(BostonMathias_a_alpha, SRKMIX):
+class SRKMIX_BM(BostonMathias_a_alpha, SRKMIX):  # type: ignore[misc]
     """SRKMIX with the Boston-Mathias supercritical alpha."""
 
 
 class _AlphaCoeffsInit:
     """Stores ``alpha_coeffs`` before the EOS init solves with them."""
 
-    def __init__(self, Tcs, Pcs, omegas, zs, alpha_coeffs=None, kijs=None, T=None, P=None, V=None, **kw):
+    def __init__(
+        self,
+        Tcs: list[float],
+        Pcs: list[float],
+        omegas: list[float],
+        zs: list[float],
+        alpha_coeffs: list[list[float] | None] | None = None,
+        kijs: list[list[float]] | None = None,
+        T: float | None = None,
+        P: float | None = None,
+        V: float | None = None,
+        **kw: Any,
+    ) -> None:
         self.alpha_coeffs = alpha_coeffs
-        super().__init__(Tcs=Tcs, Pcs=Pcs, omegas=omegas, zs=zs, kijs=kijs, T=T, P=P, V=V, **kw)
+        super().__init__(Tcs=Tcs, Pcs=Pcs, omegas=omegas, zs=zs, kijs=kijs, T=T, P=P, V=V, **kw)  # type: ignore[call-arg]
 
 
-class PRMIX_MC(_AlphaCoeffsInit, MC_a_alpha, PRMIX):
+class PRMIX_MC(_AlphaCoeffsInit, MC_a_alpha, PRMIX):  # type: ignore[misc]
     """PRMIX with the Mathias-Copeman alpha (alpha_coeffs in eos_kwargs)."""
 
 
-class SRKMIX_MC(_AlphaCoeffsInit, MC_a_alpha, SRKMIX):
+class SRKMIX_MC(_AlphaCoeffsInit, MC_a_alpha, SRKMIX):  # type: ignore[misc]
     """SRKMIX with the Mathias-Copeman alpha (alpha_coeffs in eos_kwargs)."""
 
 
-class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):
+class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
     """The Twu-Sim-Tassone (2002) cubic: PR-family attraction with c1 = 0.470507,
     b = 0.0740740 RTc/Pc and the ``v^2 + 2.5 b v - 1.5 b^2`` denominator."""
 
@@ -534,10 +579,30 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):
     c1R2_c2R = c1 * 8.31446261815324 * 8.31446261815324
     c2R = c2 * 8.31446261815324
 
-    def __init__(self, Tcs, Pcs, omegas, zs, alpha_coeffs=None, kijs=None, T=None, P=None, V=None, **kw):
+    def __init__(
+        self,
+        Tcs: list[float],
+        Pcs: list[float],
+        omegas: list[float],
+        zs: list[float],
+        alpha_coeffs: list[list[float] | None] | None = None,
+        kijs: list[list[float]] | None = None,
+        T: float | None = None,
+        P: float | None = None,
+        V: float | None = None,
+        **kw: Any,
+    ) -> None:
         super().__init__(
-            Tcs=Tcs, Pcs=Pcs, omegas=omegas, zs=zs, alpha_coeffs=alpha_coeffs,
-            kijs=kijs, T=T, P=P, V=V, **kw,
+            Tcs=Tcs,
+            Pcs=Pcs,
+            omegas=omegas,
+            zs=zs,
+            alpha_coeffs=alpha_coeffs,
+            kijs=kijs,
+            T=T,
+            P=P,
+            V=V,
+            **kw,
         )
         # PR's init solved with PR's delta/epsilon; re-pin the TST repulsive
         # term and re-solve the roots at the requested state.
@@ -556,7 +621,8 @@ def _twu_triplet(L: float, M: float, N: float, tr: float) -> tuple[float, float,
     al = tr ** (N * (M - 1.0)) * math.exp(L * (1.0 - tr ** (N * M)))
     dal = al * (N * (M - 1.0) / tr - L * N * M * tr ** (N * M - 1.0))
     d2al = al * (
-        -N * (M - 1.0) / (tr * tr)
+        (N * (M - 1.0) / tr - L * N * M * tr ** (N * M - 1.0)) ** 2
+        - N * (M - 1.0) / (tr * tr)
         - L * N * M * (N * M - 1.0) * tr ** (N * M - 2.0)
     )
     return al, dal, d2al
@@ -570,7 +636,7 @@ def _tst_coeffs(cid: str, omega: float) -> list[float] | None:
     return None
 
 
-class SRKMIXKD(SRKMIX):
+class SRKMIXKD(SRKMIX):  # type: ignore[misc]
     """SRK with the Kabadi-Danner (1985) water-hydrocarbon mixing rule.
 
     Adds ``x_w x_j^2 a''_j(T)`` to the mixed a_alpha,
@@ -585,9 +651,19 @@ class SRKMIXKD(SRKMIX):
     _a_prime: dict[int, float] = {}  # component index -> G_j (0 = no term)
 
     def __init__(
-        self, Tcs, Pcs, omegas, zs, kd_water_index=-1, kd_groups=None,
-        kijs=None, T=None, P=None, V=None, **kw,
-    ):
+        self,
+        Tcs: list[float],
+        Pcs: list[float],
+        omegas: list[float],
+        zs: list[float],
+        kd_water_index: int = -1,
+        kd_groups: dict[int, float] | None = None,
+        kijs: list[list[float]] | None = None,
+        T: float | None = None,
+        P: float | None = None,
+        V: float | None = None,
+        **kw: Any,
+    ) -> None:
         self._water_i = kd_water_index
         self._a_prime = kd_groups if kd_groups is not None else {}
         super().__init__(Tcs=Tcs, Pcs=Pcs, omegas=omegas, zs=zs, kijs=kijs, T=T, P=P, V=V, **kw)
@@ -602,7 +678,9 @@ class SRKMIXKD(SRKMIX):
             out.append(g * aw * (1.0 - (T / Tcw) ** 0.8) if g else 0.0)
         return out
 
-    def a_alpha_and_derivatives(self, T, full=True, quick=True, pure_a_alphas=True):
+    def a_alpha_and_derivatives(
+        self, T: float, full: bool = True, quick: bool = True, pure_a_alphas: bool = True
+    ) -> Any:
         vals = super().a_alpha_and_derivatives(T, full=full, quick=quick, pure_a_alphas=pure_a_alphas)
         iw = self._water_i
         xw = self.zs[iw] if 0 <= iw < self.N else 0.0
@@ -610,20 +688,16 @@ class SRKMIXKD(SRKMIX):
             return vals
         aps = self._a_prime_values(T)
         # a_KD = xw * sum_j x_j^2 a''_j; T derivatives from the same factors.
-        a_kd = xw * sum(x * x * ap for x, ap in zip(self.zs, aps))
+        a_kd = xw * sum(x * x * ap for x, ap in zip(self.zs, aps, strict=True))
         h = 1e-4
-        a_kd_p = xw * sum(
-            x * x * p for x, p in zip(self.zs, self._a_prime_values(T + h))
-        )
-        a_kd_m = xw * sum(
-            x * x * p for x, p in zip(self.zs, self._a_prime_values(T - h))
-        )
+        a_kd_p = xw * sum(x * x * p for x, p in zip(self.zs, self._a_prime_values(T + h), strict=True))
+        a_kd_m = xw * sum(x * x * p for x, p in zip(self.zs, self._a_prime_values(T - h), strict=True))
         da_kd = (a_kd_p - a_kd_m) / (2.0 * h)
         d2a_kd = (a_kd_p - 2.0 * a_kd + a_kd_m) / (h * h)
         a_mix, da_mix, d2a_mix = vals
         return (a_mix + a_kd, da_mix + da_kd, d2a_mix + d2a_kd)
 
-    def fugacity_coefficients(self, Z):
+    def fugacity_coefficients(self, Z: float) -> Any:
         """SRK lnphis with the Kabadi-Danner mixing-rule correction applied.
 
         ``solve`` ran with the corrected ``a_alpha`` (base rows plus
@@ -639,8 +713,11 @@ class SRKMIXKD(SRKMIX):
             return lnphis
         xw = zs[iw]
         aps = self._a_prime_values(self.T)
-        S = sum(x * x * ap for x, ap in zip(zs, aps))
-        corr = -(self.A / self.B) * math.log(1.0 + self.B / Z) / self.a_alpha
+        S = sum(x * x * ap for x, ap in zip(zs, aps, strict=True))
+        # A/B = a_alpha/(R T b); A tracks the KD-corrected a_alpha, so a_alpha
+        # cancels and the correction collapses to -ln(1 + B/Z)/(R T b).
+        big_b = self.b * self.P / (_R * self.T)
+        corr = -math.log(1.0 + big_b / Z) / (_R * self.T * self.b)
         for i in range(self.N):
             if i == iw:
                 kd_i = (1.0 - xw) * S + 2.0 * xw * xw * aps[i]
@@ -706,7 +783,7 @@ def _rk_pure_lnphis(alpha: float, a_c: float, b: float, T: float, P: float) -> t
 
     roots: list[float] = []
     edges = (1e-12, 1e-6, 1e-3, 0.5, 1.0, 1e3)
-    for z0, z1 in zip(edges, edges[1:]):
+    for z0, z1 in zip(edges, edges[1:], strict=True):
         f0, f1 = f(z0), f(z1)
         if f0 == 0.0:
             roots.append(z0)
@@ -725,11 +802,14 @@ def _rk_pure_lnphis(alpha: float, a_c: float, b: float, T: float, P: float) -> t
     z_l, z_v = roots[0], roots[-1]
     if z_l <= B:
         return None
-    lnphi = lambda z: z - 1.0 - math.log(z - B) - (A / B) * math.log(1.0 + B / z)
+
+    def lnphi(z: float) -> float:
+        return z - 1.0 - math.log(z - B) - (A / B) * math.log(1.0 + B / z)
+
     return lnphi(z_l), lnphi(z_v)
 
 
-class ZJRKMIX(RKMIX):
+class ZJRKMIX(RKMIX):  # type: ignore[misc]
     """Redlich-Kwong with the Zudkevitch-Joffe (1970) Psat-fitted alpha.
 
     ``Omega_a(T)`` per component solves the pure-fugacity equality at the
@@ -756,16 +836,16 @@ class ZJRKMIX(RKMIX):
             d2as.append(a * d2)
         return a_alphas, das, d2as
 
-    def a_alphas_vectorized(self, T):
+    def a_alphas_vectorized(self, T: float) -> Any:
         return self._zj_eval(T)[0]
 
-    def a_alpha_and_derivatives_vectorized(self, T):
+    def a_alpha_and_derivatives_vectorized(self, T: float) -> Any:
         return self._zj_eval(T)
 
-    def a_alpha_pure(self, T):
+    def a_alpha_pure(self, T: float) -> Any:
         return self._zj_eval(T)[0][0]
 
-    def a_alpha_and_derivatives_pure(self, T):
+    def a_alpha_and_derivatives_pure(self, T: float) -> Any:
         vals = self._zj_eval(T)
         return vals[0][0], vals[1][0], vals[2][0]
 
@@ -773,17 +853,35 @@ class ZJRKMIX(RKMIX):
 # -- Lee-Kesler enthalpy departures (EnthalpyMethod.LEE_KESLER) ---------------
 
 _LK_SIMPLE = {
-    "b1": 0.1181193, "b2": 0.265728, "b3": 0.154790, "b4": 0.030323,
-    "c1": 0.0236744, "c2": 0.0186984, "c3": 0.0, "c4": 0.042724,
-    "d1": 0.000155488, "d2": 0.000623689, "beta": 0.65392, "gamma": 0.060167,
+    "b1": 0.1181193,
+    "b2": 0.265728,
+    "b3": 0.154790,
+    "b4": 0.030323,
+    "c1": 0.0236744,
+    "c2": 0.0186984,
+    "c3": 0.0,
+    "c4": 0.042724,
+    "d1": 0.000155488,
+    "d2": 0.000623689,
+    "beta": 0.65392,
+    "gamma": 0.060167,
 }
 _LK_REFERENCE = {
-    "b1": 0.2026579, "b2": 0.331511, "b3": 0.027655, "b4": 0.203488,
-    "c1": 0.0313385, "c2": 0.0503618, "c3": 0.016901, "c4": 0.041577,
-    "d1": 0.00048736, "d2": 0.0740336, "beta": 1.226, "gamma": 0.037854,
+    "b1": 0.2026579,
+    "b2": 0.331511,
+    "b3": 0.027655,
+    "b4": 0.203488,
+    "c1": 0.0313385,
+    "c2": 0.0503618,
+    "c3": 0.016901,
+    "c4": 0.041577,
+    "d1": 0.00048736,
+    "d2": 0.0740336,
+    "beta": 1.226,
+    "gamma": 0.037854,
 }
 _LK_OMEGA_REF = 0.3978
-_LK_R = 8.31446261815324
+_LK_R = _R
 
 
 def _lk_solve_vr(Tr: float, Pr: float, p: dict[str, float], gas: bool) -> float | None:
@@ -818,7 +916,7 @@ def _lk_solve_vr(Tr: float, Pr: float, p: dict[str, float], gas: bool) -> float 
             hi = mid
         else:
             lo = mid
-    return 0.5 * (lo + hi)
+    return float(0.5 * (lo + hi))
 
 
 def _lk_hdep_fluid(Tr: float, Pr: float, p: dict[str, float], gas: bool) -> float | None:
@@ -832,41 +930,68 @@ def _lk_hdep_fluid(Tr: float, Pr: float, p: dict[str, float], gas: bool) -> floa
     d_d = -p["d2"] / (Tr * Tr)
     e = math.exp(-p["gamma"] / (vr * vr))
     quad = b_d / vr + c_d / (2.0 * vr * vr) + d_d / (5.0 * vr**4)
-    exp_part = p["beta"] * (1.0 - e) / (2.0 * p["gamma"]) + (
-        1.0 - e * (1.0 + p["gamma"] / (vr * vr))
-    ) / (2.0 * p["gamma"])
+    exp_part = p["beta"] * (1.0 - e) / (2.0 * p["gamma"]) + (1.0 - e * (1.0 + p["gamma"] / (vr * vr))) / (
+        2.0 * p["gamma"]
+    )
     return Tr * (z - 1.0) - Tr * Tr * quad + 3.0 * p["c4"] / (Tr * Tr) * exp_part
 
 
-def _lee_kesler_H_dep(T: float, P: float, Tcs, Pcs, omegas, zs, gas: bool) -> float:
+def _lee_kesler_H_dep(
+    T: float, P: float, Tcs: list[float], Pcs: list[float], omegas: list[float], zs: list[float], gas: bool
+) -> float:
     """Lee-Kesler (1975) enthalpy departure (J/mol) with Kay mixing rules.
 
     H_dep = RTcm [H0 + (omega_m/omega_r)(Hr - H0)]; enthalpy only -- the flash
     (K-values, phase split, density) stays the selected cubic EOS's.
     """
-    Tcm = sum(y * tc for y, tc in zip(zs, Tcs))
-    Pcm = sum(y * pc for y, pc in zip(zs, Pcs))
-    om = sum(y * w for y, w in zip(zs, omegas))
+    Tcm = sum(y * tc for y, tc in zip(zs, Tcs, strict=True))
+    Pcm = sum(y * pc for y, pc in zip(zs, Pcs, strict=True))
+    om = sum(y * w for y, w in zip(zs, omegas, strict=True))
     Tr, Pr = T / Tcm, P / Pcm
     h0 = _lk_hdep_fluid(Tr, Pr, _LK_SIMPLE, gas)
     hr = _lk_hdep_fluid(Tr, Pr, _LK_REFERENCE, gas)
     if h0 is None or hr is None:
         return float("nan")
-    return _LK_R * Tcm * (h0 + om / _LK_OMEGA_REF * (hr - h0))
+    return float(_LK_R * Tcm * (h0 + om / _LK_OMEGA_REF * (hr - h0)))
 
 
-class LKCEOSGas(CEOSGas):
+class LKCEOSGas(CEOSGas):  # type: ignore[misc]
     """CEOSGas whose enthalpy departure comes from Lee-Kesler (1975)."""
 
-    def H_dep(self):
-        return _lee_kesler_H_dep(self.T, self.P, self.eos_mix.Tcs, self.eos_mix.Pcs, self.eos_mix.omegas, self.zs, gas=True)
+    def H_dep(self) -> float:
+        return _lee_kesler_H_dep(
+            self.T, self.P, self.eos_mix.Tcs, self.eos_mix.Pcs, self.eos_mix.omegas, self.zs, gas=True
+        )
+
+    def Cp(self) -> float:
+        """Cp as the T-derivative of the full enthalpy, matching the LK departure.
+
+        The LK departure is a corresponding-states correlation, so its T-slope
+        is not the cubic EOS's Cp; the secant over +/-0.5 K of the same H chain
+        keeps H and Cp thermodynamically consistent.
+        """
+        d_t = 0.5
+        return (
+            float(self.to(T=self.T + d_t, P=self.P, zs=self.zs).H())
+            - float(self.to(T=self.T - d_t, P=self.P, zs=self.zs).H())
+        ) / (2.0 * d_t)
 
 
-class LKCEOSLiquid(CEOSLiquid):
+class LKCEOSLiquid(CEOSLiquid):  # type: ignore[misc]
     """CEOSLiquid whose enthalpy departure comes from Lee-Kesler (1975)."""
 
-    def H_dep(self):
-        return _lee_kesler_H_dep(self.T, self.P, self.eos_mix.Tcs, self.eos_mix.Pcs, self.eos_mix.omegas, self.zs, gas=False)
+    def H_dep(self) -> float:
+        return _lee_kesler_H_dep(
+            self.T, self.P, self.eos_mix.Tcs, self.eos_mix.Pcs, self.eos_mix.omegas, self.zs, gas=False
+        )
+
+    def Cp(self) -> float:
+        """Cp as the T-derivative of the full enthalpy; see LKCEOSGas.Cp."""
+        d_t = 0.5
+        return (
+            float(self.to(T=self.T + d_t, P=self.P, zs=self.zs).H())
+            - float(self.to(T=self.T - d_t, P=self.P, zs=self.zs).H())
+        ) / (2.0 * d_t)
 
 
 # -- Sour-water ionisation correction (SourTerm.SOUR) ------------------------
@@ -883,7 +1008,7 @@ def _sour_molecular_fractions(
     Ka/([H+] + Ka), the base's is [H+]/([H+] + Ka). Concentrations are taken
     molar over the aqueous medium (55.5084 mol/L pure water).
     """
-    kw = 10.0 ** -_SOUR_PK_W
+    kw = 10.0**-_SOUR_PK_W
     xw = max(zs[water_index], 1e-12)
     c_mol = [z / xw * 55.5084 for z in zs]  # mol/L over water
 
@@ -892,12 +1017,12 @@ def _sour_molecular_fractions(
         positive = h
         negative = kw / h
         for idx, pk in ionising:
-            ka = 10.0 ** -pk
+            ka = 10.0**-pk
             if pk == _SOUR_PK_NH3:  # base: NH4+ carries positive charge
                 positive += c_mol[idx] * h / (h + ka)
             else:  # acid: the ionised fraction carries negative charge
                 negative += c_mol[idx] * ka / (h + ka)
-        return positive - negative
+        return float(positive - negative)
 
     lo, hi = 1e-14, 1.0
     for _ in range(200):
@@ -909,13 +1034,13 @@ def _sour_molecular_fractions(
     h = math.sqrt(lo * hi)
     out = list(zs)
     for idx, pk in ionising:
-        ka = 10.0 ** -pk
+        ka = 10.0**-pk
         alpha = h / (h + ka) if pk == _SOUR_PK_NH3 else ka / (h + ka)
         out[idx] = zs[idx] * (1.0 - alpha)
     return out
 
 
-class SourCEOSLiquid(CEOSLiquid):
+class SourCEOSLiquid(CEOSLiquid):  # type: ignore[misc]
     """Aqueous liquid with the Wilson/API-955 ionisation apparent-fugacity correction.
 
     On water-rich roots (x_w > 0.5) the ionising species' ln phi gains
@@ -928,15 +1053,14 @@ class SourCEOSLiquid(CEOSLiquid):
     sour_ionising: tuple[tuple[int, float], ...] = ()
     sour_water_index: int = -1
 
-    def lnphis(self):
+    def lnphis(self) -> Any:
         base = super().lnphis()
         iw = self.sour_water_index
         if iw < 0 or not self.sour_ionising or self.zs[iw] <= 0.5:
             return base
         xmol = _sour_molecular_fractions(list(self.zs), iw, self.sour_ionising)
         return [
-            b + math.log(xm / x) if x > 1e-300 else b
-            for b, xm, x in zip(base, xmol, self.zs)
+            b + math.log(xm / x) if x > 1e-300 else b for b, xm, x in zip(base, xmol, self.zs, strict=True)
         ]
 
 
@@ -971,14 +1095,14 @@ def configure_options(
     if options.alpha == AlphaFunction.MATHIAS_COPEMAN:
         table = _MC_PR if getattr(eos, "__name__", "").startswith("PR") else _MC_SRK
         eos_kwargs["alpha_coeffs"] = [
-            _mc_coeffs(cid, table, om) for cid, om in zip(ids, constants.omegas)
+            _mc_coeffs(cid, table, om) for cid, om in zip(ids, constants.omegas, strict=True)
         ]
     elif options.alpha == AlphaFunction.TWU_SIM_TASSONE:
         eos_kwargs["alpha_coeffs"] = [
-            _tst_coeffs(cid, om) for cid, om in zip(ids, constants.omegas)
+            _tst_coeffs(cid, om) for cid, om in zip(ids, constants.omegas, strict=True)
         ]
     elif options.alpha == AlphaFunction.ZUDKEVITCH_JOFFE:
-        for cid, tc, pc in zip(ids, constants.Tcs, constants.Pcs):
+        for cid, tc, pc in zip(ids, constants.Tcs, constants.Pcs, strict=True):
             _ZJ_COMPONENT_CRITICALS[cid] = (tc, pc)
             _ZJ_CONSTANTS[cid] = (
                 0.4274802327 * _LK_R**2 * tc * tc / pc,
@@ -989,7 +1113,7 @@ def configure_options(
         # Peneloux (1982) c from the Rackett (1970) Z_RA correlation.
         eos_kwargs["cs"] = [
             0.4068 * _LK_R * tc / pc * (0.29441 - (0.29056 - 0.08775 * om))
-            for tc, pc, om in zip(constants.Tcs, constants.Pcs, constants.omegas)
+            for tc, pc, om in zip(constants.Tcs, constants.Pcs, constants.omegas, strict=True)
         ]
 
     if options.mixing == MixingRule.KABADI_DANNER:
