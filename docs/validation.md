@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-21T22:00:11+00:00 from `data/validation/results.json` (git 47694a3, CoolProp 8.0.0).
+Generated 2026-10-21T22:47:08+00:00 from `data/validation/results.json` (git 4d8dfde, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -39,6 +39,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [bwrs](validation/bwrs.md) | helmholtz | provisional | 7/7 | L1=0 L2=0 | [report](validation/bwrs.md) |
 | [chao-seader](validation/chao-seader.md) | kvalue | provisional | 6/6 | L1=0 L2=2 | [report](validation/chao-seader.md) |
 | [coolprop_heos](validation/coolprop_heos.md) | helmholtz | provisional | 7/7 | L1=0 L2=0 | [report](validation/coolprop_heos.md) |
+| [cpa_pr](validation/cpa_pr.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/cpa_pr.md) |
+| [cpa_srk](validation/cpa_srk.md) | saft | experimental | 7/7 | L1=2 L2=9 | [report](validation/cpa_srk.md) |
 | [eos_cg](validation/eos_cg.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/eos_cg.md) |
 | [esso-tabular](validation/esso-tabular.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/esso-tabular.md) |
 | [gerg2008](validation/gerg2008.md) | helmholtz | provisional | 7/7 | L1=5 L2=10 | [report](validation/gerg2008.md) |
@@ -56,11 +58,16 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [margules_pr](validation/margules_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_pr.md) |
 | [margules_rk](validation/margules_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_rk.md) |
 | [mbwr](validation/mbwr.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/mbwr.md) |
+| [multifluid](validation/multifluid.md) | saft | experimental | 0/7 | L1=0 L2=0 | [report](validation/multifluid.md) |
+| [multifluid_pure](validation/multifluid_pure.md) | saft | experimental | 0/6 | L1=0 L2=0 | [report](validation/multifluid_pure.md) |
 | [nrtl](validation/nrtl.md) | gamma_phi | provisional | 7/7 | L1=0 L2=21 | [report](validation/nrtl.md) |
 | [nrtl_hoc](validation/nrtl_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/nrtl_hoc.md) |
 | [nrtl_ig](validation/nrtl_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_ig.md) |
 | [nrtl_nothnagel](validation/nrtl_nothnagel.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/nrtl_nothnagel.md) |
 | [nrtl_rk](validation/nrtl_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_rk.md) |
+| [pc_saft](validation/pc_saft.md) | saft | experimental | 0/7 | L1=6 L2=4 | [report](validation/pc_saft.md) |
+| [pc_saft_assoc](validation/pc_saft_assoc.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_assoc.md) |
+| [pc_saft_polar](validation/pc_saft_polar.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_polar.md) |
 | [pr](validation/pr.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr.md) |
 | [pr78](validation/pr78.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr78.md) |
 | [regular_solution_hoc](validation/regular_solution_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/regular_solution_hoc.md) |
@@ -68,6 +75,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [regular_solution_nothnagel](validation/regular_solution_nothnagel.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/regular_solution_nothnagel.md) |
 | [regular_solution_pr](validation/regular_solution_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/regular_solution_pr.md) |
 | [regular_solution_rk](validation/regular_solution_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/regular_solution_rk.md) |
+| [saft_vr_mie](validation/saft_vr_mie.md) | saft | experimental | 0/7 | L1=0 L2=0 | [report](validation/saft_vr_mie.md) |
 | [srk](validation/srk.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/srk.md) |
 | [unifac_dortmund_hoc](validation/unifac_dortmund_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/unifac_dortmund_hoc.md) |
 | [unifac_dortmund_ig](validation/unifac_dortmund_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=2 | [report](validation/unifac_dortmund_ig.md) |
@@ -139,16 +147,22 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `margules_pr`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_rk`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `mbwr`: ok — n/a — refuses the slice feed: UnavailableBackend: helmholtz-family placeholder row has no dew_point implementation; the backend lands with a later spec (teqp bridge, T-07)
+- `multifluid`: ok — n/a — refuses the slice feed: SaftParameterError: no verified multifluid parameters for ['H2O']; supported: ['C1', 'C2', 'C3', 'C6+', 'CO2', 'N2', 'iC4', 'iC5', 'nC4', 'nC5'] (unsupported components are refused, never treated as ideal)
+- `multifluid_pure`: ok — n/a — refuses the slice feed: SaftParameterError: multifluid_pure flashes pure fluids only; got ['C1', 'C2', 'C3', 'C6+', 'CO2', 'H2O', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
 - `nrtl`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `nrtl_hoc`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `nrtl_ig`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `nrtl_nothnagel`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `nrtl_rk`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `pc_saft`: ok — n/a — refuses the slice feed: SaftParameterError: no verified pc_saft parameters for ['H2O', 'N2', 'iC4', 'iC5']; supported: ['C1', 'C2', 'C3', 'C6+', 'CO2', 'binary_kij', 'excluded', 'nC4', 'nC5'] (unsupported components are refused, never treated as ideal)
+- `pc_saft_assoc`: ok — n/a — refuses the slice feed: NotImplementedError: saft row 'pc_saft_assoc' refuses to build: teqp 0.23.2's PC-SAFT implements no association contribution (teqp docs, PCSAFT.html: 'It does NOT include the association contribution, only the dispersive contributions')
+- `pc_saft_polar`: ok — n/a — refuses the slice feed: NotImplementedError: saft row 'pc_saft_polar' refuses to build: teqp (>= 0.15) ships a polar PC-SAFT extension, but no verified, citable component polar parameters ((Q*)^2, (mu*)^2) exist in data/thermo_params/saft/pure.yaml; parameter retrieval is out of T-07 scope
 - `regular_solution_hoc`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_ig`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_nothnagel`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_pr`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_rk`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
+- `saft_vr_mie`: ok — n/a — refuses the slice feed: SaftParameterError: no verified saft_vr_mie parameters for ['C6+', 'CO2', 'H2O', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']; supported: ['C1', 'C2', 'C3'] (unsupported components are refused, never treated as ideal)
 - `unifac_dortmund_hoc`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_dortmund_ig`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_dortmund_nothnagel`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
