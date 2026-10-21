@@ -59,6 +59,7 @@ from __future__ import annotations
 
 import heapq
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import NamedTuple
 
@@ -118,6 +119,9 @@ class _Context:
     # Spec P2-01: previous solve's tear vectors per stream id (design-spec outer
     # loop). None keeps the mean-of-feeds initialization below, byte-identically.
     warm_start: dict[str, list[float]] | None = None
+    # Spec P3-02: optional progress sink, called with every TearRecord as it is
+    # appended. Purely observational - no numeric change, None by default.
+    on_progress: Callable[[TearRecord], None] | None = None
 
 
 def _stream_edges(fs: Flowsheet) -> list[_Edge]:
@@ -516,6 +520,12 @@ def _run_units(ctx: _Context, order: list[str]) -> bool:
     return ok
 
 
+def _emit_progress(ctx: _Context, record: TearRecord) -> None:
+    """Forward one freshly appended TearRecord to the progress sink, if any."""
+    if ctx.on_progress is not None:
+        ctx.on_progress(record)
+
+
 def _tear_record(iteration: int, tear: _Tear, state: StreamState, components: tuple[str, ...]) -> TearRecord:
     """One tear stream's residual record at one iteration (spec P2-02).
 
@@ -588,11 +598,15 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
         if all(_converged(t.x, _tear_vector(ctx.states[t.stream_id], ctx.components)) for t in torn):
             converged = True
             for t in torn:
-                records.append(_tear_record(iteration, t, ctx.states[t.stream_id], ctx.components))
+                record = _tear_record(iteration, t, ctx.states[t.stream_id], ctx.components)
+                records.append(record)
+                _emit_progress(ctx, record)
             break
         for t in torn:
             calculated = _tear_vector(ctx.states[t.stream_id], ctx.components)
-            records.append(_tear_record(iteration, t, ctx.states[t.stream_id], ctx.components))
+            record = _tear_record(iteration, t, ctx.states[t.stream_id], ctx.components)
+            records.append(record)
+            _emit_progress(ctx, record)
             injected = t.x
             if t.y_prev is None or t.x_prev is None:
                 t.x = list(calculated)  # first pass: direct substitution
@@ -622,11 +636,19 @@ class SequentialModular:
     previous solve's tear vectors per stream id so an outer loop (or a repeated
     solve) starts each recycle from the converged values instead of the
     mean-of-feeds guess — with ``warm_start=None`` the behaviour and flash
-    counts are unchanged.
+    counts are unchanged. ``on_progress`` (spec P3-02) is called with every
+    freshly appended TearRecord — the async-job path streams them; cached
+    replays (engine-level) never reach here and emit nothing. Both seams are
+    observational for the numerics.
     """
 
     def solve(
-        self, fs: Flowsheet, thermo: Thermo, warm_start: dict[str, list[float]] | None = None
+        self,
+        fs: Flowsheet,
+        thermo: Thermo,
+        warm_start: dict[str, list[float]] | None = None,
+        *,
+        on_progress: Callable[[TearRecord], None] | None = None,
     ) -> SolvedFlowsheet:
         units: dict[str, UnitModel] = {u.tag: registry.create("unit", u.kind) for u in fs.units}
         errors = _check_ports(fs, units)
@@ -654,6 +676,7 @@ class SequentialModular:
             history=[],
             warm_start=warm_start,
         )
+        ctx.on_progress = on_progress
         for s in fs.streams:
             if s.source is None:
                 ctx.states[s.id] = _flash_feed(s, thermo)

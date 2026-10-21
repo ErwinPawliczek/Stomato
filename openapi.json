@@ -627,6 +627,116 @@
         "title": "IsoSheet",
         "type": "object"
       },
+      "Job": {
+        "additionalProperties": false,
+        "description": "One solve job: identity, project binding, lifecycle, progress.",
+        "properties": {
+          "created_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "solve",
+            "default": "solve",
+            "title": "Kind",
+            "type": "string"
+          },
+          "progress": {
+            "items": {
+              "$ref": "#/components/schemas/TearRecord"
+            },
+            "title": "Progress",
+            "type": "array"
+          },
+          "project_hash": {
+            "title": "Project Hash",
+            "type": "string"
+          },
+          "project_id": {
+            "title": "Project Id",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "default": "queued",
+            "enum": [
+              "queued",
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "project_id",
+          "project_hash"
+        ],
+        "title": "Job",
+        "type": "object"
+      },
+      "JobEnqueued": {
+        "description": "POST /api/projects/{id}/jobs/solve body (202).",
+        "properties": {
+          "job_id": {
+            "title": "Job Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "title": "JobEnqueued",
+        "type": "object"
+      },
       "Layout": {
         "additionalProperties": false,
         "description": "User placements per view, keyed by tag. A missing tag means: auto-layout decides.",
@@ -1798,6 +1908,84 @@
         "summary": "Health"
       }
     },
+    "/api/jobs/{job_id}": {
+      "get": {
+        "description": "One job's identity, lifecycle and accumulated P2-02 progress records.",
+        "operationId": "get_job_api_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Job"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Job"
+      }
+    },
+    "/api/jobs/{job_id}/events": {
+      "get": {
+        "description": "Stream the job's progress records, then done|failed, as SSE frames.",
+        "operationId": "job_events_api_jobs__job_id__events_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Job Events"
+      }
+    },
     "/api/meta": {
       "get": {
         "description": "List registered plugin names for every registry kind.",
@@ -2526,6 +2714,46 @@
           }
         },
         "summary": "Export Sheet Project"
+      }
+    },
+    "/api/projects/{project_id}/jobs/solve": {
+      "post": {
+        "description": "Enqueue a solve of the project; 202 with the job id \u2014 the worker solves\nit (a 10-minute column solve must not block an API worker).",
+        "operationId": "enqueue_solve_job_api_projects__project_id__jobs_solve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobEnqueued"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enqueue Solve Job"
       }
     },
     "/api/projects/{project_id}/layout/iso/{key}": {

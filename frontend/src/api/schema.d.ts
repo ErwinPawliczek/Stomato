@@ -94,6 +94,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Job
+         * @description One job's identity, lifecycle and accumulated P2-02 progress records.
+         */
+        get: operations["get_job_api_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job Events
+         * @description Stream the job's progress records, then done|failed, as SSE frames.
+         */
+        get: operations["job_events_api_jobs__job_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/meta": {
         parameters: {
             query?: never;
@@ -338,6 +378,27 @@ export interface paths {
         get: operations["export_sheet_project_api_projects__project_id__export_sheet_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/jobs/solve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enqueue Solve Job
+         * @description Enqueue a solve of the project; 202 with the job id — the worker solves
+         *     it (a 10-minute column solve must not block an API worker).
+         */
+        post: operations["enqueue_solve_job_api_projects__project_id__jobs_solve_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1011,6 +1072,48 @@ export interface components {
             weld_count: number;
         };
         /**
+         * Job
+         * @description One solve job: identity, project binding, lifecycle, progress.
+         */
+        Job: {
+            /** Created At */
+            created_at?: string | null;
+            /** Error */
+            error?: string | null;
+            /** Finished At */
+            finished_at?: string | null;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @default solve
+             * @constant
+             */
+            kind: "solve";
+            /** Progress */
+            progress?: components["schemas"]["TearRecord"][];
+            /** Project Hash */
+            project_hash: string;
+            /** Project Id */
+            project_id: string;
+            /** Started At */
+            started_at?: string | null;
+            /**
+             * Status
+             * @default queued
+             * @enum {string}
+             */
+            status: "queued" | "running" | "done" | "failed";
+        };
+        /**
+         * JobEnqueued
+         * @description POST /api/projects/{id}/jobs/solve body (202).
+         */
+        JobEnqueued: {
+            /** Job Id */
+            job_id: string;
+        };
+        /**
          * Layout
          * @description User placements per view, keyed by tag. A missing tag means: auto-layout decides.
          */
@@ -1663,6 +1766,68 @@ export interface operations {
             };
         };
     };
+    get_job_api_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_events_api_jobs__job_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     meta_api_meta_get: {
         parameters: {
             query?: never;
@@ -2178,6 +2343,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    enqueue_solve_job_api_projects__project_id__jobs_solve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobEnqueued"];
+                };
             };
             /** @description Validation Error */
             422: {
