@@ -1,0 +1,22 @@
+[
+  { "type": "text_delta", "text": "I'll build the treating train: the sour gas goes through an MDEA absorber for CO2/H2S removal, then a TEG contactor for dehydration, then a compression train to pipeline pressure." },
+  { "type": "tool_call", "id": "toolu_1", "name": "add_unit", "input": { "kind": "mdea_absorber", "tag": "C-201" } },
+  { "type": "tool_result", "id": "toolu_1", "ok": true, "summary": "C-201 added (mdea_absorber)", "result": { "tag": "C-201", "kind": "mdea_absorber" } },
+  { "type": "tool_call", "id": "toolu_2", "name": "add_unit", "input": { "kind": "teg_contactor", "tag": "C-202" } },
+  { "type": "tool_result", "id": "toolu_2", "ok": true, "summary": "C-202 added (teg_contactor)", "result": { "tag": "C-202", "kind": "teg_contactor" } },
+  { "type": "tool_call", "id": "toolu_3", "name": "add_unit", "input": { "kind": "compression_train", "tag": "K-201" } },
+  { "type": "tool_result", "id": "toolu_3", "ok": true, "summary": "K-201 added (compression_train)", "result": { "tag": "K-201", "kind": "compression_train" } },
+  { "type": "tool_call", "id": "toolu_4", "name": "connect", "input": { "from": "V-101.gas_out", "to": "C-201.gas_in" } },
+  { "type": "tool_result", "id": "toolu_4", "ok": true, "summary": "V-101.gas_out → C-201.gas_in" },
+  { "type": "tool_call", "id": "toolu_5", "name": "connect", "input": { "from": "C-201.gas_out", "to": "C-202.feed" } },
+  { "type": "tool_result", "id": "toolu_5", "ok": true, "summary": "C-201.gas_out → C-202.feed" },
+  { "type": "tool_call", "id": "toolu_6", "name": "connect", "input": { "from": "C-202.gas_out", "to": "K-201.inlet" } },
+  { "type": "tool_result", "id": "toolu_6", "ok": true, "summary": "C-202.gas_out → K-201.inlet" },
+  { "type": "tool_call", "id": "toolu_7", "name": "solve", "input": {} },
+  { "type": "tool_result", "id": "toolu_7", "ok": true, "summary": "converged, 4 passes", "result": { "converged": true, "passes": 4, "max_residual": 3.2e-9 } },
+  { "type": "project_changed" },
+  { "type": "tool_call", "id": "toolu_8", "name": "read_variable", "input": { "tag": "K-201.power" } },
+  { "type": "tool_result", "id": "toolu_8", "ok": true, "summary": "2,148.3 kW", "result": { "value": 2148.3, "units": "kW" } },
+  { "type": "text_delta", "text": "The treating train is in place: C-201 scrubs the sour gas with MDEA, C-202 dehydrates below 7 lb/MMSCFD, and K-201 boosts to pipeline pressure drawing 2,148 kW. The flowsheet and drawings are refreshed." },
+  { "type": "done", "conversation_id": "c_mock_1", "stop_reason": "end_turn", "usage": { "input_tokens": 4123, "output_tokens": 356, "cache_read_input_tokens": 0 } }
+]

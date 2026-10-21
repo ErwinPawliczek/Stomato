@@ -130,6 +130,11 @@
 .calls { display: grid; gap: 4px }
 .call { --c: 5px; clip-path: var(--oct); background: var(--surface); display: flex; justify-content: space-between; gap: 12px; padding: 4px 10px; font-family: var(--f-mono); font-size: 12px }
 .call .okc { color: var(--ok) }
+.call summary { display: flex; justify-content: space-between; gap: 12px; cursor: pointer; list-style: none }
+.call summary::-webkit-details-marker { display: none }
+.call .badc { color: var(--bad, #c0392b) }
+.call-io { margin: 6px 0 0; padding: 8px 10px; background: var(--surface2, rgba(127,127,127,.12)); border-radius: 6px; font-size: 11px; white-space: pre-wrap; overflow-x: auto }
+.msg .chip.bad { display: inline-block; max-width: 100% }
 .mini-t { font-size: 12px }
 .mini-t td, .mini-t th { padding: 3px 12px 3px 0; border: 0; background: none; position: static; font-family: var(--f-mono) }
 .mini-t tbody tr:hover td { background: none }

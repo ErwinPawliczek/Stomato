@@ -6,6 +6,7 @@ import mockSolved from "../../mocks/solved.json";
 import { mockPfdSvg } from "../../mocks/pfdSvg";
 import { mockPidSvg } from "../../mocks/pidSvg";
 import { mockPlotSvg } from "../../mocks/plotSvg";
+import mockAgentEvents from "../../mocks/agent-events.json";
 
 export type Project = components["schemas"]["Project"];
 export type XY = components["schemas"]["XY"];
@@ -100,7 +101,69 @@ async function httpText(path: string): Promise<string> {
   return r.text();
 }
 
+// --- Agent (B-08 SSE) ---
+// Typed locally from the event schema in specs/frontend/F-08-l8-agent-chat-panel.md
+// because src/api/schema.d.ts does not carry the agent routes yet (generated file —
+// never hand-edited). When B-08 merges, these become generated types in a follow-up.
+export type AgentEvent =
+  | { type: "text_delta"; text: string }
+  | { type: "tool_call"; id: string; name: string; input: unknown }
+  | { type: "tool_result"; id: string; ok: boolean; summary: string; result?: unknown }
+  | { type: "project_changed" }
+  | { type: "done"; conversation_id: string; stop_reason: string; usage?: Record<string, number> }
+  | { type: "error"; message: string };
+
+/** Parse one SSE frame (the text between blank lines) into events. */
+function parseSseFrame(frame: string, onEvent: (e: AgentEvent) => void): void {
+  for (const line of frame.split("\n")) {
+    if (!line.startsWith("data:")) continue;
+    const data = line.slice(5).trim();
+    if (data) onEvent(JSON.parse(data) as AgentEvent);
+  }
+}
+
+const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const agent = {
+  /** Send one message to POST /api/agent and stream the reply as AgentEvents.
+   * `conversationId` continues a session (undefined starts one); the `done`
+   * event carries the id to pass back on the next send. */
+  async send(message: string, conversationId: string | undefined, onEvent: (e: AgentEvent) => void): Promise<void> {
+    if (MOCK) {
+      // Canned showcase conversation, one event at a time.
+      for (const e of mockAgentEvents as AgentEvent[]) {
+        onEvent(e);
+        await delay(40);
+      }
+      return;
+    }
+    const r = await fetch("/api/agent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, conversation_id: conversationId }),
+    });
+    if (!r.ok || !r.body) throw new ApiError(`POST /api/agent: ${r.status} ${await r.text()}`, r.status);
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      let sep: number;
+      while ((sep = buf.indexOf("\n\n")) !== -1) {
+        parseSseFrame(buf.slice(0, sep), onEvent);
+        buf = buf.slice(sep + 2);
+      }
+    }
+    buf += decoder.decode();
+    if (buf.trim()) parseSseFrame(buf, onEvent);
+  },
+};
+
 export const api = {
+  /** Chat with the engine agent over the B-08 SSE stream. */
+  agent,
   /** Registered plugin names per registry kind — feeds the thermo selector and
    * the add-unit palette. The backend validates any choice at solve time. */
   async getMeta(): Promise<Meta> {
