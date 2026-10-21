@@ -27,7 +27,6 @@ them). SI units throughout: K, Pa, kg/m3, Pa.s, J/mol, J/(mol K).
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
 from functools import cache
 from typing import Any, Literal, cast
 
@@ -52,6 +51,7 @@ from ngdesign.contracts.thermo import (
     SaturationError,
     SaturationPoint,
 )
+from ngdesign.thermo.saturation import _solve_saturation, interior_vf_solve
 
 #: CODATA 2018 molar gas constant, J/(mol.K).
 R_IDEAL = 8.31446261815324
@@ -403,30 +403,12 @@ WATER_ID = "H2O"
 #: Property-cache size (PT flashes and phase_props, per package instance), spec P1-01.
 PROPERTY_CACHE_SIZE = 4096
 
-#: Saturation solver limits: 1e-8 relative on the unknown, 60 iterations (spec P1-01).
-SATURATION_REL_TOL = 1e-8
-SATURATION_MAX_ITER = 60
-
-#: Bracket-refinement loop cap (expansions/shrinks) before declaring no two-phase region.
-_BRACKET_REFINEMENTS = 40
-
-#: Widths of the initial Psat-based brackets (pressure solve) and Psat-inversion brackets.
+#: Initial-bracket factors: Psat-based brackets (pressure solve) and Psat-inversion brackets.
 _P_LO, _P_HI = 0.5, 3.0
 _T_LO, _T_HI = 0.9, 1.15
 
-#: Plateau membership tolerance: vf approaches the bubble/dew target tangentially
-#: (and PR flashes can turn away from the plateau again above the bubble point),
-#: so bracket ends are matched within this tolerance instead of by equality.
-_PLATEAU_EPS = 1e-6
-
-#: Geometric scan factor for plateau search and bracket refinement.
-_SCAN_FACTOR = 1.3
-
 #: Saturation targets within this distance of 0 / 1 are solved as bubble / dew points.
 _VF_EDGE = 1e-9
-
-#: Interior-target residual at which the secant stops: |vf - target| tolerance.
-_VF_TARGET_TOL = 1e-9
 
 
 def support_ids(z: dict[str, float]) -> tuple[str, ...]:
@@ -558,38 +540,6 @@ def _wilson_T_safe(cid: str, P: float) -> float | None:
         return None
 
 
-def _scan_to_plateau(
-    pairs_at: Callable[[float], list[PhasePair]],
-    start: float,
-    other: float,
-    target: float,
-    label: str,
-) -> tuple[float, float]:
-    """Move one bracket end onto the first vf == target plateau.
-
-    Scans first between ``start`` and ``other`` — a spurious PR two-phase split
-    above a bubble point can push the initial end past the plateau — then
-    outward from ``start``. Raises SaturationError when no plateau is in reach.
-    """
-    downward = start > other
-    x = start
-    for _ in range(_BRACKET_REFINEMENTS):
-        xn = x / _SCAN_FACTOR if downward else x * _SCAN_FACTOR
-        if (xn <= other) if downward else (xn >= other):
-            break
-        vn = _vapor_fraction(pairs_at(xn))
-        if abs(vn - target) <= _PLATEAU_EPS:
-            return xn, vn
-        x = xn
-    x = start
-    for _ in range(_BRACKET_REFINEMENTS):
-        x = x * _SCAN_FACTOR if downward else x / _SCAN_FACTOR
-        v = _vapor_fraction(pairs_at(x))
-        if abs(v - target) <= _PLATEAU_EPS:
-            return x, v
-    raise SaturationError(f"no two-phase bracket found at {label}")
-
-
 def _psat_T(cid: str, P: float) -> float | None:
     """Saturation temperature (K) of one component at P (Pa); None when P >= Pc.
 
@@ -642,17 +592,19 @@ def _saturation(
     iteration cap. Michelsen & Mollerup, Thermodynamic Models: Fundamentals and
     Computational Aspects, ch. 10 (saturation).
 
-    The vapour fraction is continuous inside the two-phase envelope but plateaus
-    at 1 below the dew point and at 0 above the bubble point, so ``flat`` names
-    the plateau end for each problem orientation and a g == 0 evaluation moves
-    that end of the bracket.
+    The plateau-scan-then-bracketed-secant algorithm lives in the shared
+    ``thermo.saturation`` solver (spec P1-08); this wrapper builds ``vf_at``
+    from ``_pt_phase_pairs``, keeps the Wilson bounds (defined past Tc) and the
+    pure-feed Psat short-circuit, and recovers the incipient composition from
+    the solver's recorded interior evaluation.  The vapour fraction is
+    continuous inside the two-phase envelope but plateaus at 1 below the dew
+    point and at 0 above the bubble point.
     """
     if (T is None) == (P is None):
         raise ValueError("specify exactly one of T and P")
     ids = support_ids(z)
     zs = [float(z[cid]) for cid in ids]
     full_keys = tuple(z.keys())
-    target = 0.0 if kind == "bubble" else 1.0
 
     if len(ids) == 1:
         # Pure feed: bubble and dew coincide with the databank vapour-pressure
@@ -679,19 +631,12 @@ def _saturation(
             )
         bounds = [_wilson_psat(cid, T) for cid in ids]
         lo, hi = _P_LO * min(bounds), _P_HI * max(bounds)
+        label = f"T={T} K"
+        unknown: Literal["P", "T"] = "P"
 
         def pairs_at(x: float) -> list[PhasePair]:
             return _pt_phase_pairs(flasher, zs, T, x)
 
-        def expand(x: float) -> float:
-            return x * 2.0
-
-        def shrink(x: float) -> float:
-            return x / 2.0
-
-        # bubble: vf == 0 plateau at high P; dew: vf == 1 plateau at low P
-        flat: Literal["lo", "hi", "none"] = "hi" if kind == "bubble" else "lo"
-        label = f"T={T} K"
     else:
         ts = [t for cid in ids if (t := _psat_T(cid, P)) is not None]  # type: ignore[arg-type]
         if not ts:
@@ -702,84 +647,31 @@ def _saturation(
         p_given: float = P
         bounds_t = [t for cid in ids if (t := _wilson_T_safe(cid, P)) is not None]
         lo, hi = _T_LO * min(bounds_t), _T_HI * max(bounds_t)
+        label = f"P={p_given} Pa"
+        unknown = "T"
 
         def pairs_at(x: float) -> list[PhasePair]:
             return _pt_phase_pairs(flasher, zs, x, p_given)
 
-        # bubble: vf == target plateau at low T; dew: plateau at high T
-        flat = "lo" if kind == "bubble" else "hi"
-        label = f"P={P} Pa"
+    def vf_at(x: float) -> float:
+        return _vapor_fraction(pairs_at(x))
 
-    lo_vf = _vapor_fraction(pairs_at(lo))
-    hi_vf = _vapor_fraction(pairs_at(hi))
-    if flat == "hi" and abs(hi_vf - target) > _PLATEAU_EPS:
-        hi, hi_vf = _scan_to_plateau(pairs_at, hi, lo, target, label)
-    if flat == "lo" and abs(lo_vf - target) > _PLATEAU_EPS:
-        lo, lo_vf = _scan_to_plateau(pairs_at, lo, hi, target, label)
-
-    # tighten the non-plateau end away from the target so the secant sees a slope
-    for _ in range(_BRACKET_REFINEMENTS):
-        if flat == "hi":
-            if abs(lo_vf - target) > _PLATEAU_EPS:
-                break
-            lo, lo_vf = lo / _SCAN_FACTOR, _vapor_fraction(pairs_at(lo / _SCAN_FACTOR))
-        else:
-            if abs(hi_vf - target) > _PLATEAU_EPS:
-                break
-            hi, hi_vf = hi * _SCAN_FACTOR, _vapor_fraction(pairs_at(hi * _SCAN_FACTOR))
-    else:
-        raise SaturationError(f"no two-phase bracket found for the {kind} point of {sorted(z)} at {label}")
-
-    g_lo = lo_vf - target
-    g_hi = hi_vf - target
-    if g_lo >= 0.0 and g_hi <= 0.0:
-        x_pos, g_pos, x_neg, g_neg = lo, g_lo, hi, g_hi
-    elif g_hi >= 0.0 and g_lo <= 0.0:
-        x_pos, g_pos, x_neg, g_neg = hi, g_hi, lo, g_lo
-    else:
-        raise SaturationError(f"bracket does not straddle the {kind} point of {sorted(z)} at {label}")
-
-    interior: list[PhasePair] | None = None
-    for _ in range(SATURATION_MAX_ITER):
-        width = abs(x_pos - x_neg)
-        if width <= SATURATION_REL_TOL * min(abs(x_pos), abs(x_neg)):
-            break
-        if g_pos != 0.0 and g_neg != 0.0:
-            x = x_pos - g_pos * (x_neg - x_pos) / (g_neg - g_pos)
-            if not min(x_pos, x_neg) < x < max(x_pos, x_neg):
-                x = 0.5 * (x_pos + x_neg)
-        else:
-            x = 0.5 * (x_pos + x_neg)
-        pairs = pairs_at(x)
-        v = _vapor_fraction(pairs)
-        g = v - target
-        if 0.0 < v < 1.0:
-            interior = pairs
-        if g > 0.0:
-            x_pos, g_pos = x, g
-        elif g < 0.0:
-            x_neg, g_neg = x, g
-        elif g_pos == 0.0:
-            x_pos, g_pos = x, 0.0
-        elif g_neg == 0.0:
-            x_neg, g_neg = x, 0.0
-        elif flat == "lo":
-            x_pos, g_pos = x, 0.0  # plateau sits at the g >= 0 end (lo)
-        else:
-            x_neg, g_neg = x, 0.0  # plateau sits at the g <= 0 end (hi)
-    x_star = 0.5 * (x_pos + x_neg)
+    solution = _solve_saturation(vf_at, kind=kind, unknown=unknown, bounds=(lo, hi), label=label)
 
     incipient = dict(z)
-    if interior is not None:
+    if solution.interior_x is not None:
+        # The shared solver sees vapour fractions only; one deterministic
+        # re-flash at its recorded interior evaluation recovers the (phase,
+        # beta) pairs the incipient composition is taken from.
         want_gas = kind == "bubble"
-        for phase, beta in interior:
+        for phase, beta in pairs_at(solution.interior_x):
             if beta > 0.0 and isinstance(phase, CEOSGas) == want_gas:
                 incipient = _composition([float(v) for v in phase.zs], ids, full_keys)
                 break
 
     return SaturationPoint(
-        T=T if T is not None else x_star,
-        P=P if P is not None else x_star,
+        T=T if T is not None else solution.x,
+        P=P if P is not None else solution.x,
         kind=kind,
         incipient_composition=incipient,
     )
@@ -814,10 +706,10 @@ def flash_tvf(pkg: Any, z: dict[str, float], T: float, vf: float, molar_flow: fl
         p_bub = _saturation(flasher, z, "bubble", T=T).P
         zs = [float(z[cid]) for cid in ids]
 
-        def pairs_at(x: float) -> list[PhasePair]:
-            return _pt_phase_pairs(flasher, zs, T, x)
+        def vf_at(x: float) -> float:
+            return _vapor_fraction(_pt_phase_pairs(flasher, zs, T, x))
 
-        P, _ = _secant_solve(pairs_at, vf, p_dew, p_bub)
+        P = interior_vf_solve(vf_at, vf, p_dew, p_bub)
     # Final state through the package's own (cached) PT flash: the full flasher
     # and the VL fast path agree at the converged point (verified 2026-10-20 on
     # the C1/C3/nC5 feed, identical VF and G), so the stream a caller gets back
@@ -840,64 +732,11 @@ def flash_pvf(pkg: Any, z: dict[str, float], P: float, vf: float, molar_flow: fl
         t_dew = _saturation(flasher, z, "dew", P=P).T
         zs = [float(z[cid]) for cid in ids]
 
-        def pairs_at(x: float) -> list[PhasePair]:
-            return _pt_phase_pairs(flasher, zs, x, P)
+        def vf_at(x: float) -> float:
+            return _vapor_fraction(_pt_phase_pairs(flasher, zs, x, P))
 
-        T, _ = _secant_solve(pairs_at, vf, t_bub, t_dew)
+        T = interior_vf_solve(vf_at, vf, t_bub, t_dew)
     return cast(StreamState, pkg.flash_pt(z, T, P, molar_flow))  # as in flash_tvf
-
-
-def _secant_solve(
-    pairs_at: Callable[[float], list[PhasePair]],
-    target: float,
-    lo: float,
-    hi: float,
-) -> tuple[float, list[PhasePair] | None]:
-    """Bracketed secant for an interior vapour-fraction target between lo and hi.
-
-    Orientation-agnostic: after normalization ``lo`` is the end with g >= 0,
-    ``hi`` the end with g <= 0, so callers may pass the bracket in either order.
-    """
-    lo_pairs = pairs_at(lo)
-    hi_pairs = pairs_at(hi)
-    g_lo = _vapor_fraction(lo_pairs) - target
-    g_hi = _vapor_fraction(hi_pairs) - target
-    if g_lo < 0.0 <= g_hi:
-        lo, hi = hi, lo
-        lo_pairs, hi_pairs = hi_pairs, lo_pairs
-        g_lo, g_hi = g_hi, g_lo
-    interior: list[PhasePair] | None = None
-    if 0.0 < _vapor_fraction(lo_pairs) < 1.0:
-        interior = lo_pairs
-    for _ in range(SATURATION_MAX_ITER):
-        if abs(hi - lo) <= SATURATION_REL_TOL * min(abs(lo), abs(hi)):
-            break
-        if g_lo != 0.0 and g_hi != 0.0:
-            x = lo - g_lo * (hi - lo) / (g_hi - g_lo)
-            if not min(lo, hi) < x < max(lo, hi):
-                x = 0.5 * (lo + hi)
-        else:
-            x = 0.5 * (lo + hi)
-        pairs = pairs_at(x)
-        v = _vapor_fraction(pairs)
-        if 0.0 < v < 1.0:
-            interior = pairs
-        g = v - target
-        if abs(g) <= _VF_TARGET_TOL:
-            return x, interior
-        if g > 0.0:
-            lo, g_lo = x, g
-        elif g < 0.0:
-            hi, g_hi = x, g
-        else:
-            return x, interior
-    # One-sided secant convergence (vf curves are typically convex through the
-    # target) can leave the far end parked at the bracket bound while the near
-    # end sits on the root: return the end with the smaller residual rather
-    # than a misleading midpoint.
-    if abs(g_lo) <= abs(g_hi):
-        return lo, interior
-    return hi, interior
 
 
 # ------------------------------------------------------------------ K-values, phase props, derivatives
