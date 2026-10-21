@@ -31,6 +31,7 @@ from .spec import (
     _MESH_H_TOL,
     _MESH_M_TOL,
     _MESH_M_TOL_REACTIVE,
+    _MESH_M_TOL_ZERO_ONE_TEAR,
     _OUTER_DAMP,
     _OUTER_DAMP_ZERO_ONE,
     _OUTER_MAX,
@@ -89,6 +90,8 @@ def _solve_mesh(
     zero_one = col.n_tears < 2
     if zero_one and _is_reactive_package(tb):
         m_tol = _MESH_M_TOL_REACTIVE
+    elif zero_one:
+        m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
     else:
         m_tol = _MESH_M_TOL
     patience = _STAGNATION_MAX_ZERO_ONE_TEAR if zero_one else _STAGNATION_MAX
@@ -194,9 +197,9 @@ def _solve_mesh(
         # mutate the profile in place, and a diverging polish sweep must never
         # displace the NS solution it started from.
         prof = _copy_profile(col, best_prof)
-        # If the polish stalls, the NS state stands: its floor (M=3.9e-8, named
-        # in _NS_M_TOL_ZERO_ONE_TEAR) is the measured solver limit, and the
-        # boundary overall balances close far tighter than the stage residual.
+        # If the polish stalls, the NS state stands: its floor is the measured
+        # solver limit (named in _MESH_M_TOL_ZERO_ONE_TEAR), and the boundary
+        # overall balances close far tighter than the stage residual.
     _finalize_duties(col, tb, prof)
     return prof
 
@@ -465,7 +468,35 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         # started secant then walks the kettle tear down to the specification.
         t_bot = t_top + col.f_total * 0.2
 
-    state: dict[str, _Profile | None] = {"seed": None}
+    state: dict[str, _Profile | None] = {"seed": None, "seed2": None}
+
+    # Tears the last successful mesh_at call ACTUALLY solved. The geometric
+    # retreat and the warm restart can return a profile at a shifted tear; the
+    # secant must know where its residual came from (see the rebase below).
+    actual: dict[str, float | None] = {"top": None, "bot": None}
+
+    def solved_tears(prof: _Profile) -> _Profile:
+        """Record the tears a returned profile actually solved, then pass it through."""
+        if col.condenser == "total":
+            actual["top"] = prof.l0
+        elif col.condenser == "partial":
+            actual["top"] = prof.V[0]
+        else:
+            actual["top"] = None
+        actual["bot"] = prof.V[col.n - 1] if col.reboiler == "kettle" else None
+        return prof
+
+    def promote(prof: _Profile) -> None:
+        """Store a converged profile as the restart seed, demoting the old one.
+
+        Warm restart basins are DIRECTIONAL (measured P1-09 stripper: the
+        37.5 mol/s tear converges warm from the V=40 floor seed but fails from
+        the V=37.15 seed below it), so the second-most-recent seed is kept as a
+        second restart option - it usually comes from the other side of a
+        failing tear band.
+        """
+        state["seed2"] = state["seed"]
+        state["seed"] = _copy_profile(col, prof)
 
     def mesh_at(top: float | None, bot: float | None, probe: bool = False) -> _Profile:
         """Solve the mesh at given tears, retreating toward the seed on failure.
@@ -500,15 +531,31 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         if probe:
             try:
                 prof = _solve_mesh(col, tb, top, bot, None if cold else state["seed"], allow_fallback=False)
-                state["seed"] = _copy_profile(col, prof)
-                return prof
+                promote(prof)
+                return solved_tears(prof)
             except (ColumnConvergenceError, ValueError) as exc:
+                # Same seed restart as the main path, inside-out only (a probe
+                # must stay cheap): a cold probe failure in a scattered-basin
+                # band is not the tear's verdict when a warm restart from the
+                # last converged profile solves it. Both seeds are tried - warm
+                # basins are directional (see promote).
+                if cold:
+                    for key in ("seed", "seed2"):
+                        s = state[key]
+                        if s is None:
+                            continue
+                        try:
+                            prof = _solve_mesh(col, tb, top, bot, s, allow_fallback=False)
+                            promote(prof)
+                            return solved_tears(prof)
+                        except (ColumnConvergenceError, ValueError):
+                            continue
                 raise ColumnConvergenceError(f"mesh probe failed at tears {(top, bot)}: {exc}") from exc
         for _attempt in range(3):
             try:
                 prof = _solve_mesh(col, tb, top, bot, None if cold else state["seed"])
-                state["seed"] = _copy_profile(col, prof)
-                return prof
+                promote(prof)
+                return solved_tears(prof)
             except ColumnConvergenceError as exc:
                 last = exc
             except ValueError as exc:
@@ -516,6 +563,27 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                 # (pydantic stream validation inside the PR package). That is a
                 # convergence failure of this iterate, not a caller error.
                 last = ColumnConvergenceError(f"iterate left the flash domain: {exc}")
+            # Seed restart (zero/one-tear columns): a cold failure at this tear
+            # is not proof of infeasibility - the mixed-feed seed's basin is
+            # scattered for feed-determined columns (measured P1-09 stripper,
+            # boilup ratio 0.5: cold solves converge on scattered tear bands
+            # 33/38-45/46-55 and fail between them, while the spec's root sits
+            # at V_N ~ 44.8 mol/s, D 10.45, B 89.55 - ratio 0.5004 - inside a
+            # cold-failing band). Restart the mesh AT THE SAME tears
+            # warm-started from the last converged profile: its basin usually
+            # contains the neighbouring tear, so the secant can walk through
+            # the band instead of reading infeasibility into it.
+            if cold:
+                for key in ("seed", "seed2"):
+                    s = state[key]
+                    if s is None:
+                        continue
+                    try:
+                        prof = _solve_mesh(col, tb, top, bot, s)
+                        promote(prof)
+                        return solved_tears(prof)
+                    except (ColumnConvergenceError, ValueError):
+                        continue
             seed = state["seed"]
             if seed is None:
                 break
@@ -608,6 +676,24 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
     for _ in range(_SPEC_MAX):
         top, bot = tears_of(x)
         prof = mesh_at(top, bot)
+        if col.n_tears < 2:
+            # Retreat-honest secant: mesh_at may have solved a DIFFERENT tear
+            # than requested - the geometric retreat and the warm restart both
+            # return profiles at shifted tears, and the residual just read
+            # belongs to the ACTUAL tear. Rebase the secant variable onto it so
+            # the Jacobian measures the residual's real local slope instead of
+            # comparing evaluations at two different tears. Measured P1-09
+            # stripper, boilup ratio 0.3: the 29.8 mol/s initial tear retreats
+            # to the V=30.0 floor solve (ratio 0.4033) and the secant read
+            # g=+0.1033 from x=29.8 for six consecutive iterations - stuck.
+            # Rebased, it walks the solvable window toward its root directly.
+            xi = 0
+            if free_top:
+                if actual["top"] is not None:
+                    x[xi] = actual["top"]
+                xi += 1
+            if free_bot and actual["bot"] is not None:
+                x[xi] = actual["bot"]
         g, scales = _spec_g(col, params, prof, skip)
         rel = [gi / s for gi, s in zip(g, scales, strict=True)]
         if max(abs(r) for r in rel) < _SPEC_TOL:

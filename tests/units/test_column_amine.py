@@ -76,7 +76,8 @@ def test_co2_is_absorbed(solved: Any) -> None:
     """
     d = solved.outlets["distillate"]
     co2_out = d.molar_flow * d.composition.get("CO2", 0.0)
-    assert co2_out < 6.0
+    # Review pin: CO2 slip below 1e-2 mol/s; the measured anchor is tighter.
+    assert co2_out < 1e-2
     assert co2_out == pytest.approx(0.00036, abs=1e-3)
 
 
@@ -85,15 +86,21 @@ def test_rich_loading_in_range(solved: Any) -> None:
     inside the MDEA 0-1 window."""
     b = solved.outlets["bottoms"]
     loading = b.composition.get("CO2", 0.0) / b.composition.get("MDEA", 1.0)
-    assert 0.0 < loading < 1.0
+    # Review pin: rich loading in (0.45, 0.55); the measured anchor is tighter.
+    assert 0.45 < loading < 0.55
     assert loading == pytest.approx(0.498, abs=0.02)
 
 
 def test_stage_temperatures_in_band(solved: Any) -> None:
-    """Deviation from the spec's expected absorption exotherm: the measured max
-    stage temperature is 299.29 K against the 303.15 K lean inlet (rise -3.86 K)
-    because part of the reactive-K correlation's stage profile rides the 273.15 K
-    band floor. Assert the measured band; the balances above are exact."""
+    """The absorption exotherm, pinned (review step 4).
+
+    Measured on this branch: the stage profile carries the reactive exotherm -
+    max stage 314.3 K against the 303.15 K lean inlet (rise 11.2 K, inside the
+    spec's 0-30 K window) and the coldest stage 281.6 K, 21.6 K below the lean
+    inlet (at most 25 K allowed). The old band-floor profile (max 299.29 K,
+    rise -3.86 K, frozen reactive K) is gone; the physical bulge is restored.
+    """
     ts = [solved.info[f"stage_{j}_T_K"] for j in range(20)]
-    assert max(ts) - 303.15 < 30.0
-    assert max(ts) - 303.15 > -5.0
+    rise = max(ts) - 303.15
+    assert 0.0 <= rise <= 30.0
+    assert min(ts) > 303.15 - 25.0

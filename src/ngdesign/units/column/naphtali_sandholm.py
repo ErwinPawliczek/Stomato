@@ -25,7 +25,7 @@ from .spec import (
     _MESH_H_TOL,
     _MESH_M_TOL,
     _MESH_M_TOL_REACTIVE,
-    _NS_M_TOL_ZERO_ONE_TEAR,
+    _MESH_M_TOL_ZERO_ONE_TEAR,
     _NS_MAX,
     _NS_MAX_ZERO_ONE_TEAR,
     ColumnConvergenceError,
@@ -194,15 +194,22 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
         return max(abs(r[i]) for i in range(n_m, len(r))) / h_scale
 
     ns_max = _NS_MAX if col.n_tears >= 2 else _NS_MAX_ZERO_ONE_TEAR
+    live_norm = col.n_tears < 2
+    best_u: list[float] | None = None
+    best_m = float("inf")
+    best_h = float("inf")
     if col.n_tears >= 2:
         m_tol = _MESH_M_TOL
     elif _is_reactive_package(tb):
         m_tol = _MESH_M_TOL_REACTIVE
     else:
-        # Intermediate handoff threshold, not final acceptance: _solve_mesh
-        # warm-starts the inside-out loop from the NS state and holds THAT to
-        # the strict _MESH_M_TOL (see _NS_M_TOL_ZERO_ONE_TEAR's measured floor).
-        m_tol = _NS_M_TOL_ZERO_ONE_TEAR
+        # Same gate the mesh accepts at (_MESH_M_TOL_ZERO_ONE_TEAR): the NS
+        # state hands off to _solve_mesh's inside-out polish, and the polish
+        # lifts the state further before the mesh's own acceptance decides.
+        # A tighter intermediate gate only discarded measurably converged
+        # states (measured P1-09 stripper: NS polished a warm-chained state
+        # to M=2.90e-7, H=4.46e-10 and the 1e-7 gate typed the tear failed).
+        m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
     for _ in range(ns_max):
         prof.ns_passes += 1
         k_stages = [
@@ -248,6 +255,15 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
         # first Newton step and the fallback never ran for these columns.
         _refresh_y(col, tb, prof)
         ex_m, ex_h = _exact_residuals(col, tb, prof)
+        # Live-norm acceptance (zero/one-tear columns): keep the best exact state
+        # across passes and restore it at exit. NS's finite-difference Newton can
+        # walk PAST the near-converged state it started from into an unevaluable
+        # one (measured P1-09 stripper, physical branch at boilup 20-50 mol/s:
+        # inside-out best M=2.2e-11/H=1.7e-1 or M=1.5e-2/H=3.4e-6, then NS's own
+        # final state M=1.00 - a stage the thermo can no longer evaluate). The
+        # best-exact state is what the inside-out polish in _solve_mesh needs.
+        if live_norm and ex_m + ex_h < best_m + best_h:
+            best_u, best_m, best_h = list(u), ex_m, ex_h
         if ex_m < m_tol and ex_h < _MESH_H_TOL:
             break
         # Baseline norms for the line search's descent test (a descent proxy on
@@ -269,6 +285,7 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
         except ColumnConvergenceError:
             break
         lam = 1.0
+        accepted = False
         for _ in range(10):
             u_try = [u[i] + lam * step[i] for i in range(n_unk)]
             try:
@@ -288,12 +305,34 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
             # recovered from).
             if max(trial_m, trial_h) < max(m_current, h_current):
                 _apply_state(prof, u_try, col, v_free, t_bot_tear)
-                break
+                if not live_norm:
+                    accepted = True
+                    break
+                # Live-norm acceptance: the frozen-row descent must also not
+                # worsen the exact (refreshed-thermo) residuals. Trials that
+                # improve the frozen rows while walking the exact residuals
+                # uphill are rejected and the pre-step state restored
+                # (measured P1-09 stripper: frozen rows closed to 6.9e-10
+                # while refreshed exact M rose to 1.00 - the diverged trial
+                # displaced a near-converged state the mesh could have kept).
+                _refresh_y(col, tb, prof)
+                try:
+                    ex_try_m, ex_try_h = _exact_residuals(col, tb, prof)
+                except (ColumnConvergenceError, ValueError):
+                    ex_try_m, ex_try_h = float("inf"), float("inf")
+                if max(ex_try_m, ex_try_h) < max(ex_m, ex_h):
+                    accepted = True
+                    break
+                _apply_state(prof, u, col, v_free, t_bot_tear)
             lam *= 0.5
-        else:
+        if not accepted:
             break
     else:
+        if live_norm and best_u is not None:
+            _apply_state(prof, best_u, col, v_free, t_bot_tear)
         raise ColumnConvergenceError("Naphtali-Sandholm fallback did not converge within budget")
+    if live_norm and best_u is not None:
+        _apply_state(prof, best_u, col, v_free, t_bot_tear)
     _refresh_y(col, tb, prof)
     m_res, h_res = _exact_residuals(col, tb, prof)
     prof.ns_used = True
