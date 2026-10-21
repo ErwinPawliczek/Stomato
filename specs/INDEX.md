@@ -85,7 +85,7 @@ its own `.importlinter` ignore lines. The orchestrator updates **Status** here o
 | P1-03 | Column consumes contract v2; split the god-file | P1-01, P0-06 | merged #96 (−56 % flash-equivalents; see #91) |
 | P1-04 | Amine chemistry as property packages (apparent-component reactive VLE) | P0-02, P1-01 | merged #95 |
 | P1-06 | Staged amine absorber/regenerator via column + amine package | P1-11, P1-09, P1-10, P1-03, P1-04 | BLOCKED again 2026-10-21 (issue #98): amine RR ZeroDivisionError (hotfixed) + reactive mesh floor 1.8e-3 vs locked 1e-6 → P1-11; re-dispatch after P1-11 |
-| P1-11 | Reactive-package mesh closure: smooth amine K-values, converged stages, regenerator band | P1-09, P1-10, amine RR hotfix | spec written 2026-10-21; dispatch after the hotfix merges |
+| P1-11 | Reactive-package mesh closure: smooth amine K-values, converged stages, regenerator band | P1-09, P1-10, amine RR hotfix (#151 merged) | dispatched 2026-10-21 (issue #153) |
 | P1-10 | One-tear stripper convergence: physical branch selection, band-floor guard | P1-09, #124 | merged #149 (2026-10-21): NS-first for non-reactive one-tear kettles, damped spec secant, band-limit rejection; boundary component balances 1e-6 (NS FD floor) |
 | P1-09 | Column zero/one-tear configurations (absorbers, strippers), seed, error containment; amine states inside the column | P1-03, P1-04, P1-08 | merged #125 (2026-10-21): absorbers, Kremser-proper, MDEA column; stripper branch → P1-10 |
 | P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | merged #97 (867 comparisons, 74 xfail families; issues #99, #100) |
