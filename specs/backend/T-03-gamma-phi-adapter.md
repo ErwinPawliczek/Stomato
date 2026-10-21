@@ -31,8 +31,9 @@ correlations), and the cubic gas phases from family A.
 - `data/thermo_models/gamma_phi.yaml`: 60 rows; applicability `polar: true`, `P_Pa` ceiling 1.5 MPa
   for ideal/virial vapour rows, higher for cubic-vapour rows; `status: provisional` until T-12 data.
 - Tests: every row builds and passes L0 (Gibbs–Duhem on γ for MeOH/H2O at 1 bar; pure limits);
-  NRTL/ideal reproduces the methanol/water azeotrope at 1 atm within 0.5 K and 0.01 in x (cite
-  Gmehling & Onken vol. 1 part 1); UNIFAC-Dortmund ethanol/water azeotrope within 1 K; UNIFAC-LLE
+  the rows that carry ethanol/water parameters reproduce the ethanol/water azeotrope at 1 atm
+  within 0.5 K and 0.01 in x (methanol/water is zeotropic - the original wording was wrong;
+  cite the Edinburgh Azeotrope Database / Gmehling & Onken vol. 1 part 1); UNIFAC-Dortmund ethanol/water azeotrope within 1 K; UNIFAC-LLE
   water/toluene mutual solubilities within 30 % (order-of-magnitude physics, cite Sørensen & Arlt);
   Hayden–O'Connell B for acetic acid dimerisation sign and magnitude at 400 K (cite); the existing
   `nrtl` row byte-identical.

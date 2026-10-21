@@ -31,10 +31,12 @@ from functools import cache
 from typing import Any, Literal, cast
 
 from chemicals.elements import similarity_variable
+from chemicals.exceptions import PhaseCountReducedError
 from thermo import (
     CEOSGas,
     CEOSLiquid,
     ChemicalConstantsPackage,
+    EquilibriumState,
     FlashVL,
     FlashVLN,
     PropertyCorrelationsPackage,
@@ -268,6 +270,32 @@ def _holds_gas_root(phase_obj: Any) -> bool:
     return phase != "l"
 
 
+# Vapour-phase classes the shared state layer recognises. Non-CEOS adapters
+# register their gas classes at import time: ``isinstance(phase, CEOSGas)``
+# alone misreads the gamma-phi adapter's IdealGas vapour (and any future
+# non-CEOS gas), which once made every ideal-vapour saturation bracket fail
+# (vf stuck at 0) and classified the vapour phase as liquid.
+_VAPOUR_PHASE_CLASSES: list[type[Any]] = [CEOSGas]
+
+
+def register_vapour_phase_class(*classes: type[Any]) -> None:
+    """Extend the shared vapour-phase recognition to non-CEOS gas classes."""
+    for cls in classes:
+        if cls not in _VAPOUR_PHASE_CLASSES:
+            _VAPOUR_PHASE_CLASSES.append(cls)
+
+
+def _is_vapour_phase(phase_obj: Any) -> bool:
+    """Vapour identity across phase classes, CEOS or not.
+
+    A phase is vapour when its class is registered as a gas class and, for
+    CEOS phases, the EOS actually sits on its gas root (_holds_gas_root);
+    for non-CEOS gas classes there is no root to check and the class flag
+    alone decides.
+    """
+    return isinstance(phase_obj, tuple(_VAPOUR_PHASE_CLASSES)) and _holds_gas_root(phase_obj)
+
+
 def _classify(is_gas: bool, water_fraction: float) -> PhaseKind:
     """Spec S-01 rule: vapor = gas phase; liquid with water mole fraction > 0.5 = AQUEOUS."""
     if is_gas:
@@ -364,7 +392,7 @@ def _build_stream_state(
             continue
         zs = [float(v) for v in phase_obj.zs]
         water_fraction = zs[water_idx] if water_idx >= 0 else 0.0
-        is_gas = isinstance(phase_obj, CEOSGas) and _holds_gas_root(phase_obj)
+        is_gas = _is_vapour_phase(phase_obj)
         kind = _classify(is_gas, water_fraction)
         density = float(phase_obj.rho_mass())  # kg/m3
         mw = float(phase_obj.MW())  # g/mol
@@ -420,7 +448,10 @@ def run_flash(flasher: Any, z: dict[str, float], molar_flow: float, **spec: floa
     if not ids:
         raise ValueError("composition has no positive mole fractions")
     zs = [float(z[cid]) for cid in ids]
-    state = flasher.flash(zs=zs, **spec)
+    if set(spec) == {"T", "P"}:
+        state = _flash_tp_with_stability_fallback(flasher, zs, float(spec["T"]), float(spec["P"]))
+    else:
+        state = flasher.flash(zs=zs, **spec)
     T, P = float(state.T), float(state.P)
     phase_pairs: list[PhasePair] = [(p, float(p.beta)) for p in state.phases]
     enthalpy, entropy = float(state.H()), float(state.S())
@@ -495,7 +526,7 @@ def _pt_phase_pairs(flasher: Any, zs: list[float], T: float, P: float) -> list[P
     run_flash does, so the vapour fraction the saturation solver sees has the
     same semantics as StreamState.vapor_fraction.
     """
-    state = flasher.flash(zs=zs, T=T, P=P)
+    state = _flash_tp_with_stability_fallback(flasher, zs, T, P)
     phase_pairs: list[PhasePair] = [(p, float(p.beta)) for p in state.phases]
     if sum(1 for _, beta in phase_pairs if beta > 0.0) == 1:
         verified, _h, _s = _stability_resolved(flasher, zs, T, P)
@@ -504,9 +535,53 @@ def _pt_phase_pairs(flasher: Any, zs: list[float], T: float, P: float) -> list[P
     return phase_pairs
 
 
+def _flash_tp_with_stability_fallback(flasher: Any, zs: list[float], T: float, P: float) -> Any:
+    """flasher.flash at (T, P), recovering collapsed stability-test trials.
+
+    flash_TP_stability_test's two-phase refinement can collapse to a trivial
+    split (all trial K values on one side of 1 — Rachford-Rice then has no
+    positive-composition solution and thermo raises PhaseCountReducedError;
+    thermo's own FlashVLN path catches that condition, its VL path does not).
+    The Michelsen convention treats a non-converged trial split as stable, so
+    recover the Gibbs-selected single phase the test had already built.
+
+    thermo 0.6.1's ``incipient_guesses`` also divides by ``N - 1``, so the
+    same stability test raises ZeroDivisionError on a pure feed (N == 1)
+    before refining any trial split; recover it the same way and re-raise the
+    signal for anything but that known pure-feed case.
+    """
+    try:
+        return flasher.flash(zs=zs, T=T, P=P)
+    except PhaseCountReducedError:
+        pass
+    except ZeroDivisionError:
+        if len(zs) != 1:
+            raise
+    gas, liquid = flasher.phases_at_TP_binary(T, P, zs, flasher.liquids[0], flasher.gas)
+    if getattr(flasher, "ideal_gas_basis", False):
+        g_liq, g_gas = liquid.G_dep(), gas.G_dep()
+    else:
+        g_liq, g_gas = liquid.G(), gas.G()
+    stable_is_liquid = g_liq <= g_gas
+    liquids = [liquid] if stable_is_liquid else []
+    gas_out = None if stable_is_liquid else gas
+    return EquilibriumState(
+        T,
+        P,
+        zs,
+        gas_out,
+        liquids,
+        [],
+        [1.0],
+        constants=flasher.constants,
+        correlations=flasher.correlations,
+        flasher=flasher,
+    )
+
+
 def _vapor_fraction(pairs: list[PhasePair]) -> float:
     """Molar vapour fraction of (phase, beta) pairs — non-vapor phases count as liquid."""
-    return sum(beta for phase, beta in pairs if isinstance(phase, CEOSGas))
+    return sum(beta for phase, beta in pairs if _is_vapour_phase(phase))
 
 
 def _thermal_conductivity(phase: Any) -> float | None:
@@ -713,7 +788,7 @@ def _saturation(
     if solution.interior_x is not None:
         want_gas = kind == "bubble"
         for phase, beta in seen[solution.interior_x]:
-            if beta > 0.0 and isinstance(phase, CEOSGas) == want_gas:
+            if beta > 0.0 and _is_vapour_phase(phase) == want_gas:
                 incipient = _composition([float(v) for v in phase.zs], ids, full_keys)
                 break
 

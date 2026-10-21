@@ -1,0 +1,24 @@
+# UNIQUAC r,q surface parameters for the curated slate (spec T-03): UNIFAC
+# group contributions via thermo's UNIFAC_RQ against the ORIGINAL UNIFAC
+# subgroup table (UFSG), the convention the ChemSep UNIQUAC table assumes.
+#
+# Subgroup names resolve against thermo.unifac.UFSG at load; unknown names are
+# an error (never silently ignored). Methanol uses the combined CH3OH subgroup
+# (UFSG 15, main group 6) - the standard original-UNIFAC assignment.
+model: uniquac
+subgroups: UFSG
+components:
+  MeOH:
+    CH3OH: 1
+  EtOH:
+    CH3: 1
+    CH2: 1
+    OH: 1
+  MEG:
+    CH2: 2
+    OH: 2
+  H2O:
+    H2O: 1
+  nC4:
+    CH3: 2
+    CH2: 2

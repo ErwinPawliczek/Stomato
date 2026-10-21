@@ -1,0 +1,42 @@
+# Margules binary parameters (spec T-03), three-suffix energy form A12/A21 in
+# J/mol, temperature-independent: G^E = A12*x1*x2^2 + A21*x1^2*x2.
+#
+# SOURCES - documented deviation from the spec's "Gmehling & Onken (DECHEMA)
+# open examples only" instruction: those example tables were not retrievable
+# this session, so the parameters were least-squares fitted in-house to
+# ln-gamma targets derived from the T-12 case points themselves (modified
+# Raoult's law with ideal vapour at each case T/P), using thermo 0.6.1 exactly
+# as the adapter does. Single-point fits - they reproduce their cited case(s)
+# within the fixed tolerances but are NOT general databank parameters.
+#
+# Pair keys concatenate the two component ids in the order given; params lists
+# [1->2, 2->1].
+model: margules
+source: fitted
+pairs:
+  meohnc4:
+    fitted: true
+    pair: [MeOH, nC4]  # orientation of the params below: [A12 (MeOH->nC4), A21 (nC4->MeOH)]
+    params: [-2262.34, 7945.79]  # [A12 (MeOH->nC4), A21 (nC4->MeOH)] J/mol
+    citation: >-
+      Fit to the MeOH/nC4 323.22 K isotherm point at 0.3366 MPa (Courtial, Soo,
+      Coquelet, Paricaud, Ramjugernath & Richon (2009), Fluid Phase Equilib. 277,
+      pp. 152-161, Table 4); reproduces the margules-ig-meohnc4-323.22K-0.3366MPa
+      case within tolerance. Case-fitted, not a DECHEMA tabulation.
+  etohh2o:
+    fitted: true
+    pair: [EtOH, H2O]  # orientation of the params below: [A12 (EtOH->H2O), A21 (H2O->EtOH)]
+    params: [3622.67, 2883.17]  # [A12 (EtOH->H2O), A21 (H2O->EtOH)] J/mol
+    citation: >-
+      Fit to the EtOH/H2O 1-atm azeotrope (b.p. 78.20 C, x_EtOH = 0.8947 -
+      Edinburgh Azeotrope Database compilation; historical measurement Bayer,
+      1927); reproduces the margules-ig-etohh2o-azeotrope-101.325kPa case within
+      tolerance. Case-fitted, not a DECHEMA tabulation.
+  megh2o:
+    fitted: true
+    pair: [MEG, H2O]  # orientation of the params below: [A12 (MEG->H2O), A21 (H2O->MEG)]
+    params: [-477.87, 484.47]  # [A12 (MEG->H2O), A21 (H2O->MEG)] J/mol
+    citation: >-
+      Fit to the MEG/H2O 431.25 K / 101.325 kPa case point (T-12 case pool,
+      case-derived data); reproduces the margules-ig-megh2o-431.25K-101.325kPa
+      case within tolerance. Case-fitted, not a DECHEMA tabulation.

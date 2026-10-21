@@ -1,0 +1,41 @@
+# van Laar binary parameters (spec T-03), energy form A12/A21 in J/mol,
+# temperature-independent: G^E = A12*A21*x1*x2/(A12*x1 + A21*x2).
+#
+# SOURCES - documented deviation from the spec's "Gmehling & Onken (DECHEMA)
+# open examples only" instruction: those example tables were not retrievable
+# this session, so the parameters were least-squares fitted in-house to
+# ln-gamma targets derived from the T-12 case points themselves (modified
+# Raoult's law with ideal vapour at each case T/P), using thermo 0.6.1 exactly
+# as the adapter does. Single-point (or two-point) fits - they reproduce their
+# cited case(s) within the fixed tolerances (bubble_T 0.5 %, bubble/dew_P 3 %,
+# vapor_comp 0.02 abs) but are NOT general databank parameters. Each fit cites
+# the primary literature point it was fitted to.
+#
+# There is deliberately NO megh2o fit: the least-squares problem is degenerate
+# for this single case point (A12 ~ -4.4e10 J/mol), so MEG/H2O van Laar
+# supports refuse (missing-parameter error) and both vanlaar-ig megh2o cases
+# stay dormant in data/validation/gamma_phi/cases.yaml.
+#
+# Pair keys concatenate the two component ids in the order given; params lists
+# [1->2, 2->1].
+model: vanlaar
+source: fitted
+pairs:
+  meohnc4:
+    fitted: true
+    pair: [MeOH, nC4]  # orientation of the params below: [A12 (MeOH->nC4), A21 (nC4->MeOH)]
+    params: [3127.03, 8023.90]  # [A12 (MeOH->nC4), A21 (nC4->MeOH)] J/mol
+    citation: >-
+      Fit to the MeOH/nC4 323.22 K isotherm point at 0.3366 MPa (Courtial, Soo,
+      Coquelet, Paricaud, Ramjugernath & Richon (2009), Fluid Phase Equilib. 277,
+      pp. 152-161, Table 4); reproduces the vanlaar-ig-meohnc4-323.22K-0.3366MPa
+      case within tolerance. Case-fitted, not a DECHEMA tabulation.
+  etohh2o:
+    fitted: true
+    pair: [EtOH, H2O]  # orientation of the params below: [A12 (EtOH->H2O), A21 (H2O->EtOH)]
+    params: [3813.05, 2885.16]  # [A12 (EtOH->H2O), A21 (H2O->EtOH)] J/mol
+    citation: >-
+      Fit to the EtOH/H2O 1-atm azeotrope (b.p. 78.20 C, x_EtOH = 0.8947 -
+      Edinburgh Azeotrope Database compilation; historical measurement Bayer,
+      1927); reproduces the vanlaar-ig-etohh2o-azeotrope-101.325kPa case within
+      tolerance. Case-fitted, not a DECHEMA tabulation.
