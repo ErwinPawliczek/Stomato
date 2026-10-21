@@ -706,6 +706,70 @@
         "title": "Project",
         "type": "object"
       },
+      "ProjectCreate": {
+        "description": "POST /api/projects body.",
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          }
+        },
+        "required": [
+          "name",
+          "project"
+        ],
+        "title": "ProjectCreate",
+        "type": "object"
+      },
+      "ProjectInfo": {
+        "description": "A stored project: identity, audit stamp, version, and the body.",
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner": {
+            "title": "Owner",
+            "type": "string"
+          },
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "owner",
+          "version",
+          "created_at",
+          "updated_at",
+          "project"
+        ],
+        "title": "ProjectInfo",
+        "type": "object"
+      },
       "RoutedLine": {
         "additionalProperties": false,
         "properties": {
@@ -1134,7 +1198,8 @@
   "paths": {
     "/api/agent": {
       "get": {
-        "description": "Every known conversation id (transcripts live in memory, spec B-08).",
+        "deprecated": true,
+        "description": "Every conversation id of the default project.",
         "operationId": "list_conversations_api_agent_get",
         "responses": {
           "200": {
@@ -1158,7 +1223,8 @@
         "summary": "List Conversations"
       },
       "post": {
-        "description": "Stream one agent turn as SSE frames (see module docstring for the contract).",
+        "deprecated": true,
+        "description": "Stream one agent turn on the default project as SSE frames.",
         "operationId": "agent_message_api_agent_post",
         "requestBody": {
           "content": {
@@ -1195,7 +1261,8 @@
     },
     "/api/agent/{conversation_id}": {
       "delete": {
-        "description": "Forget one conversation; the project state is untouched.",
+        "deprecated": true,
+        "description": "Forget one conversation of the default project.",
         "operationId": "delete_conversation_api_agent__conversation_id__delete",
         "parameters": [
           {
@@ -1237,7 +1304,8 @@
         "summary": "Delete Conversation"
       },
       "get": {
-        "description": "The conversation's message history in Anthropic API shape (tool calls and results included).",
+        "deprecated": true,
+        "description": "The default project's conversation history.",
         "operationId": "transcript_api_agent__conversation_id__get",
         "parameters": [
           {
@@ -1279,7 +1347,8 @@
     },
     "/api/export/sheet": {
       "get": {
-        "description": "Export the solved flowsheet's sheet; 422 naming the allowed values on a bad format/scope.",
+        "deprecated": true,
+        "description": "Export the default project's solved sheet.",
         "operationId": "export_sheet_api_export_sheet_get",
         "parameters": [
           {
@@ -1375,6 +1444,8 @@
     },
     "/api/project": {
       "get": {
+        "deprecated": true,
+        "description": "The default project (deprecated: GET /api/projects/{id}).",
         "operationId": "get_project_api_project_get",
         "responses": {
           "200": {
@@ -1391,6 +1462,8 @@
         "summary": "Get Project"
       },
       "put": {
+        "deprecated": true,
+        "description": "Replace the default project's body (deprecated: PUT /api/projects/{id}).",
         "operationId": "put_project_api_project_put",
         "requestBody": {
           "content": {
@@ -1429,7 +1502,8 @@
     },
     "/api/project/layout/iso/{key}": {
       "put": {
-        "description": "Store a layout.iso placement; the iso views apply it on the next render.",
+        "deprecated": true,
+        "description": "Store a layout.iso placement on the default project.",
         "operationId": "place_iso_api_project_layout_iso__key__put",
         "parameters": [
           {
@@ -1483,6 +1557,8 @@
     },
     "/api/project/layout/plot/{tag}": {
       "put": {
+        "deprecated": true,
+        "description": "Place default-project equipment on the plot plan (deprecated twin available).",
         "operationId": "place_plot_api_project_layout_plot__tag__put",
         "parameters": [
           {
@@ -1532,6 +1608,8 @@
     },
     "/api/project/layout/{view}/{tag}": {
       "put": {
+        "deprecated": true,
+        "description": "Place a default-project pfd/pid element (deprecated twin available).",
         "operationId": "place_api_project_layout__view___tag__put",
         "parameters": [
           {
@@ -1594,6 +1672,8 @@
     },
     "/api/project/reset": {
       "post": {
+        "deprecated": true,
+        "description": "Reset the default project to the sample slice (deprecated: PUT /api/projects/{id}).",
         "operationId": "reset_project_api_project_reset_post",
         "responses": {
           "200": {
@@ -1610,9 +1690,986 @@
         "summary": "Reset Project"
       }
     },
+    "/api/projects": {
+      "get": {
+        "description": "The caller's projects (the token's owner; open mode: 'local').",
+        "operationId": "projects_api_projects_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "items": {
+                      "$ref": "#/components/schemas/ProjectInfo"
+                    },
+                    "type": "array"
+                  },
+                  "title": "Response Projects Api Projects Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Projects"
+      },
+      "post": {
+        "description": "Create a project; 409 when the owner already has one with this name.",
+        "operationId": "create_project_route_api_projects_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Project Route"
+      }
+    },
+    "/api/projects/{project_id}": {
+      "delete": {
+        "description": "Delete a project and its conversations.",
+        "operationId": "delete_project_route_api_projects__project_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "title": "Response Delete Project Route Api Projects  Project Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Project Route"
+      },
+      "get": {
+        "description": "One project's identity, version and body.",
+        "operationId": "get_project_route_api_projects__project_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Project Route"
+      },
+      "put": {
+        "description": "Replace a project's body; 409 when expected_version is stale.",
+        "operationId": "put_project_route_api_projects__project_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "expected_version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Expected Version"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Project"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Project Route"
+      }
+    },
+    "/api/projects/{project_id}/agent": {
+      "get": {
+        "description": "The project's stored conversation ids.",
+        "operationId": "agent_conversations_project_api_projects__project_id__agent_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "title": "Response Agent Conversations Project Api Projects  Project Id  Agent Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Agent Conversations Project"
+      },
+      "post": {
+        "description": "One agent turn on the project, streamed as SSE.",
+        "operationId": "agent_message_project_api_projects__project_id__agent_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Agent Message Project"
+      }
+    },
+    "/api/projects/{project_id}/agent/{conversation_id}": {
+      "delete": {
+        "description": "Forget one stored conversation of the project.",
+        "operationId": "agent_delete_project_api_projects__project_id__agent__conversation_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Agent Delete Project Api Projects  Project Id  Agent  Conversation Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Agent Delete Project"
+      },
+      "get": {
+        "description": "One stored conversation's history.",
+        "operationId": "agent_transcript_project_api_projects__project_id__agent__conversation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Agent Transcript Project Api Projects  Project Id  Agent  Conversation Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Agent Transcript Project"
+      }
+    },
+    "/api/projects/{project_id}/export/sheet": {
+      "get": {
+        "description": "Export the project's solved sheet; 422 naming the allowed values on a bad format/scope.",
+        "operationId": "export_sheet_project_api_projects__project_id__export_sheet_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "required": true,
+            "schema": {
+              "title": "Format",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "title": "Scope",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Sheet Project"
+      }
+    },
+    "/api/projects/{project_id}/layout/iso/{key}": {
+      "put": {
+        "description": "Store a layout.iso placement for the project.",
+        "operationId": "place_iso_project_api_projects__project_id__layout_iso__key__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key",
+            "required": true,
+            "schema": {
+              "title": "Key",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/XY"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/XY"
+                  },
+                  "title": "Response Place Iso Project Api Projects  Project Id  Layout Iso  Key  Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Place Iso Project"
+      }
+    },
+    "/api/projects/{project_id}/layout/plot/{tag}": {
+      "put": {
+        "description": "Place project equipment on the plot plan and return the layout.",
+        "operationId": "place_plot_project_api_projects__project_id__layout_plot__tag__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tag",
+            "required": true,
+            "schema": {
+              "title": "Tag",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Vec3"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Layout"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Place Plot Project"
+      }
+    },
+    "/api/projects/{project_id}/layout/{view}/{tag}": {
+      "put": {
+        "description": "Place a pfd/pid element of the project and return the layout.",
+        "operationId": "place_project_api_projects__project_id__layout__view___tag__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "view",
+            "required": true,
+            "schema": {
+              "enum": [
+                "pfd",
+                "pid"
+              ],
+              "title": "View",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "tag",
+            "required": true,
+            "schema": {
+              "title": "Tag",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/XY"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Layout"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Place Project"
+      }
+    },
+    "/api/projects/{project_id}/route": {
+      "post": {
+        "description": "Route the project's P&ID through its layout.plot placements.",
+        "operationId": "route_project_api_projects__project_id__route_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PipingNetwork"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Route Project"
+      }
+    },
+    "/api/projects/{project_id}/solve": {
+      "post": {
+        "description": "Solve a project; 501 naming the kind when a unit is missing.",
+        "operationId": "solve_project_route_api_projects__project_id__solve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SolvedFlowsheet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Solve Project Route"
+      }
+    },
+    "/api/projects/{project_id}/views/iso": {
+      "get": {
+        "description": "The project's routed line numbers (empty when none).",
+        "operationId": "iso_lines_project_api_projects__project_id__views_iso_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Iso Lines Project Api Projects  Project Id  Views Iso Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Iso Lines Project"
+      }
+    },
+    "/api/projects/{project_id}/views/iso/{line_number}.json": {
+      "get": {
+        "description": "IsoSheet of the project for one routed line.",
+        "operationId": "iso_sheet_project_api_projects__project_id__views_iso__line_number__json_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "line_number",
+            "required": true,
+            "schema": {
+              "title": "Line Number",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IsoSheet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Iso Sheet Project"
+      }
+    },
+    "/api/projects/{project_id}/views/iso/{line_number}.svg": {
+      "get": {
+        "description": "Fabrication isometric of the project for one routed line.",
+        "operationId": "iso_svg_project_api_projects__project_id__views_iso__line_number__svg_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "line_number",
+            "required": true,
+            "schema": {
+              "title": "Line Number",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/svg+xml": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Iso Svg Project"
+      }
+    },
+    "/api/projects/{project_id}/views/pfd.svg": {
+      "get": {
+        "description": "The project's PFD with layout.pfd placement overrides.",
+        "operationId": "pfd_svg_project_api_projects__project_id__views_pfd_svg_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/svg+xml": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pfd Svg Project"
+      }
+    },
+    "/api/projects/{project_id}/views/pid.svg": {
+      "get": {
+        "description": "The project's P&ID: builder + all rules at a fixed point.",
+        "operationId": "pid_svg_project_api_projects__project_id__views_pid_svg_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/svg+xml": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Pid Svg Project"
+      }
+    },
+    "/api/projects/{project_id}/views/plot.svg": {
+      "get": {
+        "description": "Top view of the project's routed piping, plan north up.",
+        "operationId": "plot_svg_project_api_projects__project_id__views_plot_svg_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/svg+xml": {}
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Plot Svg Project"
+      }
+    },
     "/api/route": {
       "post": {
-        "description": "Route the current project's P&ID through the layout.plot placements.",
+        "deprecated": true,
+        "description": "Route the default project's P&ID through the layout.plot placements.",
         "operationId": "route_api_route_post",
         "responses": {
           "200": {
@@ -1631,7 +2688,8 @@
     },
     "/api/solve": {
       "post": {
-        "description": "Solve the current project; 501 naming the kind when a unit is missing.",
+        "deprecated": true,
+        "description": "Solve the default project; 501 naming the kind when a unit is missing.",
         "operationId": "solve_api_solve_post",
         "responses": {
           "200": {
@@ -1650,7 +2708,8 @@
     },
     "/api/views/iso": {
       "get": {
-        "description": "Routed line numbers available for isometric views (empty when none).",
+        "deprecated": true,
+        "description": "Routed line numbers of the default project (empty when none).",
         "operationId": "iso_lines_api_views_iso_get",
         "responses": {
           "200": {
@@ -1673,7 +2732,8 @@
     },
     "/api/views/iso/{line_number}.json": {
       "get": {
-        "description": "IsoSheet for one routed line: title block, BOM, cut list, totals.",
+        "deprecated": true,
+        "description": "IsoSheet of the default project for one routed line.",
         "operationId": "iso_sheet_api_views_iso__line_number__json_get",
         "parameters": [
           {
@@ -1713,7 +2773,8 @@
     },
     "/api/views/iso/{line_number}.svg": {
       "get": {
-        "description": "Fabrication isometric for one routed line, layout.iso applied.",
+        "deprecated": true,
+        "description": "Fabrication isometric of the default project for one routed line.",
         "operationId": "iso_svg_api_views_iso__line_number__svg_get",
         "parameters": [
           {
@@ -1749,7 +2810,8 @@
     },
     "/api/views/pfd.svg": {
       "get": {
-        "description": "Render the current project's PFD with layout.pfd placement overrides.",
+        "deprecated": true,
+        "description": "Render the default project's PFD with layout.pfd placement overrides.",
         "operationId": "pfd_svg_api_views_pfd_svg_get",
         "responses": {
           "200": {
@@ -1764,7 +2826,8 @@
     },
     "/api/views/pid.svg": {
       "get": {
-        "description": "P&ID of the current project: builder + all rules at a fixed point.",
+        "deprecated": true,
+        "description": "P&ID of the default project: builder + all rules at a fixed point.",
         "operationId": "pid_svg_api_views_pid_svg_get",
         "responses": {
           "200": {
@@ -1779,7 +2842,8 @@
     },
     "/api/views/plot.svg": {
       "get": {
-        "description": "Top view of the current project's routed piping, plan north up.",
+        "deprecated": true,
+        "description": "Top view of the default project's routed piping, plan north up.",
         "operationId": "plot_svg_api_views_plot_svg_get",
         "responses": {
           "200": {

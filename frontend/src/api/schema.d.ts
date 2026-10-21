@@ -13,13 +13,15 @@ export interface paths {
         };
         /**
          * List Conversations
-         * @description Every known conversation id (transcripts live in memory, spec B-08).
+         * @deprecated
+         * @description Every conversation id of the default project.
          */
         get: operations["list_conversations_api_agent_get"];
         put?: never;
         /**
          * Agent Message
-         * @description Stream one agent turn as SSE frames (see module docstring for the contract).
+         * @deprecated
+         * @description Stream one agent turn on the default project as SSE frames.
          */
         post: operations["agent_message_api_agent_post"];
         delete?: never;
@@ -37,14 +39,16 @@ export interface paths {
         };
         /**
          * Transcript
-         * @description The conversation's message history in Anthropic API shape (tool calls and results included).
+         * @deprecated
+         * @description The default project's conversation history.
          */
         get: operations["transcript_api_agent__conversation_id__get"];
         put?: never;
         post?: never;
         /**
          * Delete Conversation
-         * @description Forget one conversation; the project state is untouched.
+         * @deprecated
+         * @description Forget one conversation of the default project.
          */
         delete: operations["delete_conversation_api_agent__conversation_id__delete"];
         options?: never;
@@ -61,7 +65,8 @@ export interface paths {
         };
         /**
          * Export Sheet
-         * @description Export the solved flowsheet's sheet; 422 naming the allowed values on a bad format/scope.
+         * @deprecated
+         * @description Export the default project's solved sheet.
          */
         get: operations["export_sheet_api_export_sheet_get"];
         put?: never;
@@ -116,9 +121,17 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get Project */
+        /**
+         * Get Project
+         * @deprecated
+         * @description The default project (deprecated: GET /api/projects/{id}).
+         */
         get: operations["get_project_api_project_get"];
-        /** Put Project */
+        /**
+         * Put Project
+         * @deprecated
+         * @description Replace the default project's body (deprecated: PUT /api/projects/{id}).
+         */
         put: operations["put_project_api_project_put"];
         post?: never;
         delete?: never;
@@ -137,7 +150,8 @@ export interface paths {
         get?: never;
         /**
          * Place Iso
-         * @description Store a layout.iso placement; the iso views apply it on the next render.
+         * @deprecated
+         * @description Store a layout.iso placement on the default project.
          */
         put: operations["place_iso_api_project_layout_iso__key__put"];
         post?: never;
@@ -155,7 +169,11 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Place Plot */
+        /**
+         * Place Plot
+         * @deprecated
+         * @description Place default-project equipment on the plot plan (deprecated twin available).
+         */
         put: operations["place_plot_api_project_layout_plot__tag__put"];
         post?: never;
         delete?: never;
@@ -172,7 +190,11 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        /** Place */
+        /**
+         * Place
+         * @deprecated
+         * @description Place a default-project pfd/pid element (deprecated twin available).
+         */
         put: operations["place_api_project_layout__view___tag__put"];
         post?: never;
         delete?: never;
@@ -190,8 +212,352 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reset Project */
+        /**
+         * Reset Project
+         * @deprecated
+         * @description Reset the default project to the sample slice (deprecated: PUT /api/projects/{id}).
+         */
         post: operations["reset_project_api_project_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Projects
+         * @description The caller's projects (the token's owner; open mode: 'local').
+         */
+        get: operations["projects_api_projects_get"];
+        put?: never;
+        /**
+         * Create Project Route
+         * @description Create a project; 409 when the owner already has one with this name.
+         */
+        post: operations["create_project_route_api_projects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Project Route
+         * @description One project's identity, version and body.
+         */
+        get: operations["get_project_route_api_projects__project_id__get"];
+        /**
+         * Put Project Route
+         * @description Replace a project's body; 409 when expected_version is stale.
+         */
+        put: operations["put_project_route_api_projects__project_id__put"];
+        post?: never;
+        /**
+         * Delete Project Route
+         * @description Delete a project and its conversations.
+         */
+        delete: operations["delete_project_route_api_projects__project_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/agent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Agent Conversations Project
+         * @description The project's stored conversation ids.
+         */
+        get: operations["agent_conversations_project_api_projects__project_id__agent_get"];
+        put?: never;
+        /**
+         * Agent Message Project
+         * @description One agent turn on the project, streamed as SSE.
+         */
+        post: operations["agent_message_project_api_projects__project_id__agent_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/agent/{conversation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Agent Transcript Project
+         * @description One stored conversation's history.
+         */
+        get: operations["agent_transcript_project_api_projects__project_id__agent__conversation_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Agent Delete Project
+         * @description Forget one stored conversation of the project.
+         */
+        delete: operations["agent_delete_project_api_projects__project_id__agent__conversation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/export/sheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Sheet Project
+         * @description Export the project's solved sheet; 422 naming the allowed values on a bad format/scope.
+         */
+        get: operations["export_sheet_project_api_projects__project_id__export_sheet_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/layout/iso/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Place Iso Project
+         * @description Store a layout.iso placement for the project.
+         */
+        put: operations["place_iso_project_api_projects__project_id__layout_iso__key__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/layout/plot/{tag}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Place Plot Project
+         * @description Place project equipment on the plot plan and return the layout.
+         */
+        put: operations["place_plot_project_api_projects__project_id__layout_plot__tag__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/layout/{view}/{tag}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Place Project
+         * @description Place a pfd/pid element of the project and return the layout.
+         */
+        put: operations["place_project_api_projects__project_id__layout__view___tag__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/route": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Route Project
+         * @description Route the project's P&ID through its layout.plot placements.
+         */
+        post: operations["route_project_api_projects__project_id__route_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/solve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Solve Project Route
+         * @description Solve a project; 501 naming the kind when a unit is missing.
+         */
+        post: operations["solve_project_route_api_projects__project_id__solve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/views/iso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Iso Lines Project
+         * @description The project's routed line numbers (empty when none).
+         */
+        get: operations["iso_lines_project_api_projects__project_id__views_iso_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/views/iso/{line_number}.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Iso Sheet Project
+         * @description IsoSheet of the project for one routed line.
+         */
+        get: operations["iso_sheet_project_api_projects__project_id__views_iso__line_number__json_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/views/iso/{line_number}.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Iso Svg Project
+         * @description Fabrication isometric of the project for one routed line.
+         */
+        get: operations["iso_svg_project_api_projects__project_id__views_iso__line_number__svg_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/views/pfd.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pfd Svg Project
+         * @description The project's PFD with layout.pfd placement overrides.
+         */
+        get: operations["pfd_svg_project_api_projects__project_id__views_pfd_svg_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/views/pid.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Pid Svg Project
+         * @description The project's P&ID: builder + all rules at a fixed point.
+         */
+        get: operations["pid_svg_project_api_projects__project_id__views_pid_svg_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/views/plot.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Plot Svg Project
+         * @description Top view of the project's routed piping, plan north up.
+         */
+        get: operations["plot_svg_project_api_projects__project_id__views_plot_svg_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -209,7 +575,8 @@ export interface paths {
         put?: never;
         /**
          * Route
-         * @description Route the current project's P&ID through the layout.plot placements.
+         * @deprecated
+         * @description Route the default project's P&ID through the layout.plot placements.
          */
         post: operations["route_api_route_post"];
         delete?: never;
@@ -229,7 +596,8 @@ export interface paths {
         put?: never;
         /**
          * Solve
-         * @description Solve the current project; 501 naming the kind when a unit is missing.
+         * @deprecated
+         * @description Solve the default project; 501 naming the kind when a unit is missing.
          */
         post: operations["solve_api_solve_post"];
         delete?: never;
@@ -247,7 +615,8 @@ export interface paths {
         };
         /**
          * Iso Lines
-         * @description Routed line numbers available for isometric views (empty when none).
+         * @deprecated
+         * @description Routed line numbers of the default project (empty when none).
          */
         get: operations["iso_lines_api_views_iso_get"];
         put?: never;
@@ -267,7 +636,8 @@ export interface paths {
         };
         /**
          * Iso Sheet
-         * @description IsoSheet for one routed line: title block, BOM, cut list, totals.
+         * @deprecated
+         * @description IsoSheet of the default project for one routed line.
          */
         get: operations["iso_sheet_api_views_iso__line_number__json_get"];
         put?: never;
@@ -287,7 +657,8 @@ export interface paths {
         };
         /**
          * Iso Svg
-         * @description Fabrication isometric for one routed line, layout.iso applied.
+         * @deprecated
+         * @description Fabrication isometric of the default project for one routed line.
          */
         get: operations["iso_svg_api_views_iso__line_number__svg_get"];
         put?: never;
@@ -307,7 +678,8 @@ export interface paths {
         };
         /**
          * Pfd Svg
-         * @description Render the current project's PFD with layout.pfd placement overrides.
+         * @deprecated
+         * @description Render the default project's PFD with layout.pfd placement overrides.
          */
         get: operations["pfd_svg_api_views_pfd_svg_get"];
         put?: never;
@@ -327,7 +699,8 @@ export interface paths {
         };
         /**
          * Pid Svg
-         * @description P&ID of the current project: builder + all rules at a fixed point.
+         * @deprecated
+         * @description P&ID of the default project: builder + all rules at a fixed point.
          */
         get: operations["pid_svg_api_views_pid_svg_get"];
         put?: never;
@@ -347,7 +720,8 @@ export interface paths {
         };
         /**
          * Plot Svg
-         * @description Top view of the current project's routed piping, plan north up.
+         * @deprecated
+         * @description Top view of the default project's routed piping, plan north up.
          */
         get: operations["plot_svg_api_views_plot_svg_get"];
         put?: never;
@@ -667,6 +1041,40 @@ export interface components {
             layout: components["schemas"]["Layout"];
             /** Name */
             name: string;
+        };
+        /**
+         * ProjectCreate
+         * @description POST /api/projects body.
+         */
+        ProjectCreate: {
+            /** Name */
+            name: string;
+            project: components["schemas"]["Project"];
+        };
+        /**
+         * ProjectInfo
+         * @description A stored project: identity, audit stamp, version, and the body.
+         */
+        ProjectInfo: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Owner */
+            owner: string;
+            project: components["schemas"]["Project"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
         };
         /** RoutedLine */
         RoutedLine: {
@@ -1249,6 +1657,691 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Project"];
+                };
+            };
+        };
+    };
+    projects_api_projects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["ProjectInfo"][];
+                    };
+                };
+            };
+        };
+    };
+    create_project_route_api_projects_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_project_route_api_projects__project_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_project_route_api_projects__project_id__put: {
+        parameters: {
+            query?: {
+                expected_version?: number | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Project"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_project_route_api_projects__project_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    agent_conversations_project_api_projects__project_id__agent_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string[];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    agent_message_project_api_projects__project_id__agent_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    agent_transcript_project_api_projects__project_id__agent__conversation_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    agent_delete_project_api_projects__project_id__agent__conversation_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversation_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_sheet_project_api_projects__project_id__export_sheet_get: {
+        parameters: {
+            query: {
+                format: string;
+                scope?: string;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    place_iso_project_api_projects__project_id__layout_iso__key__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["XY"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["XY"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    place_plot_project_api_projects__project_id__layout_plot__tag__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Vec3"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Layout"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    place_project_api_projects__project_id__layout__view___tag__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                view: "pfd" | "pid";
+                tag: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["XY"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Layout"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    route_project_api_projects__project_id__route_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PipingNetwork"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    solve_project_route_api_projects__project_id__solve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SolvedFlowsheet"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    iso_lines_project_api_projects__project_id__views_iso_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    iso_sheet_project_api_projects__project_id__views_iso__line_number__json_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                line_number: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IsoSheet"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    iso_svg_project_api_projects__project_id__views_iso__line_number__svg_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                line_number: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pfd_svg_project_api_projects__project_id__views_pfd_svg_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    pid_svg_project_api_projects__project_id__views_pid_svg_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    plot_svg_project_api_projects__project_id__views_plot_svg_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

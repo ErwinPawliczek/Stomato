@@ -1,15 +1,22 @@
 """POST /api/agent (spec B-08): chat with the engineering agent over SSE.
 
-The route owns only session identity and transport: in-memory conversations
-keyed by ``conversation_id`` (a restart starts fresh — the engine is the state,
-not the chat log), a worker thread running :func:`run_conversation`, and a
-queue feeding the SSE frames. The frontend contract (F-08) is:
-``{message, conversation_id?}`` in, then ``data: {json}`` frames —
-``text_delta``, ``tool_call``, ``tool_result``, ``project_changed`` and a final
-``done`` carrying the conversation id, or ``error``.
+The route owns only session identity and transport: conversations keyed by
+``conversation_id`` live in the store's ConversationRow (spec P3-01 — a restart
+keeps the transcripts; the engine is still the state, not the chat log), a
+worker thread running :func:`run_conversation`, and a queue feeding the SSE
+frames. The frontend contract (F-08) is: ``{message, conversation_id?}`` in,
+then ``data: {json}`` frames — ``text_delta``, ``tool_call``, ``tool_result``,
+``project_changed`` and a final ``done`` carrying the conversation id, or
+``error``.
 
-The model and the project store are injected: tests set a :class:`ScriptedModel`
-via :func:`set_model` and no test ever touches the network.
+The model is injected: tests set a :class:`ScriptedModel` via
+:func:`set_model` and no test ever touches the network. The project store
+arrives as a dependency (the deps' :class:`DbProjectStore` implements the
+agent's ProjectStore protocol).
+
+Spec P3-01: :func:`agent_message_core` and friends take the store, so
+routes_projects.py can register the project-scoped twins; the legacy unscoped
+routes are deprecated aliases bound to the ``default`` project.
 """
 
 from __future__ import annotations
@@ -20,9 +27,9 @@ import queue
 import threading
 import uuid
 from collections.abc import Iterator
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -36,12 +43,10 @@ from ngdesign.agent.model import (
     ScriptedModel,
     ToolUseRequest,
 )
+from ngdesign.api.deps import default_project_store
+from ngdesign.store import DbProjectStore, delete_all_conversations
 
 router = APIRouter()
-
-#: conversation_id -> message history in Anthropic API shape. In-memory by
-#: design (spec B-08): the project is the durable state, the chat is not.
-_sessions: dict[str, list[dict[str, Any]]] = {}
 
 #: The injected model client; lazily the real one when never set explicitly.
 _model: ModelClient | None = None
@@ -54,8 +59,8 @@ def set_model(model: ModelClient) -> None:
 
 
 def reset_sessions() -> None:
-    """Drop every conversation (test isolation)."""
-    _sessions.clear()
+    """Drop every conversation of every project (test isolation)."""
+    delete_all_conversations()
 
 
 def scripted_demo_script() -> list[ModelResponse]:
@@ -113,21 +118,6 @@ def get_model() -> ModelClient:
     return _model
 
 
-class _AppStateStore:
-    """ProjectStore over app.py's single-project state (the API owns the project)."""
-
-    def get(self) -> Any:
-        from ngdesign.api.app import _project
-
-        return _project()
-
-    def put(self, project: Any) -> Any:
-        from ngdesign.api.app import _state
-
-        _state["p"] = project
-        return project
-
-
 class AgentRequest(BaseModel):
     """POST /api/agent body (the F-08 frontend contract)."""
 
@@ -140,34 +130,45 @@ def _sse(event: dict[str, Any]) -> str:
     return f"data: {json.dumps(event)}\n\n"
 
 
-@router.post("/api/agent")
-def agent_message(req: AgentRequest) -> StreamingResponse:
-    """Stream one agent turn as SSE frames (see module docstring for the contract)."""
+def agent_message_core(store: DbProjectStore, req: AgentRequest) -> StreamingResponse:
+    """Stream one agent turn on ``store``'s project as SSE frames (see module
+    docstring for the contract; the legacy route and the project-scoped twin
+    both call this)."""
     message = req.message.strip()
     if not message:
         raise HTTPException(status_code=422, detail="message must not be empty")
-    if req.conversation_id is not None and req.conversation_id not in _sessions:
+    conversations = store.conversations
+    if req.conversation_id is not None and conversations.load(req.conversation_id) is None:
         raise HTTPException(
             status_code=404,
             detail="unknown conversation_id — the server does not remember it; start a new conversation",
         )
     conversation_id = req.conversation_id or uuid.uuid4().hex
-    messages = _sessions.setdefault(conversation_id, [])
+    messages: list[dict[str, Any]] = []
+    if req.conversation_id is not None:
+        loaded = conversations.load(req.conversation_id)
+        if loaded is not None:
+            messages = loaded
 
     events: queue.Queue[dict[str, Any] | DoneInfo | None] = queue.Queue()
 
     def worker() -> None:
         try:
-            done = run_conversation(
-                get_model(), _AppStateStore(), DEFAULT_ENGINE, message, messages, events.put
-            )
+            done = run_conversation(get_model(), store, DEFAULT_ENGINE, message, messages, events.put)
             events.put(done)
         except ModelSetupError as exc:
             events.put({"type": "error", "message": str(exc)})
         except Exception as exc:  # noqa: BLE001 — the stream must end with an error event, never hang
             events.put({"type": "error", "message": f"agent failed: {exc}"})
         finally:
-            events.put(None)
+            # The loop mutates the history in place; persist whatever the turn
+            # produced — a restart (or the next turn) picks up here.
+            try:
+                conversations.save(conversation_id, messages)
+            except Exception as exc:  # noqa: BLE001 — persistence must not kill the stream
+                events.put({"type": "error", "message": f"failed to persist conversation: {exc}"})
+            finally:
+                events.put(None)
 
     threading.Thread(target=worker, daemon=True, name="agent-conversation").start()
 
@@ -195,24 +196,54 @@ def agent_message(req: AgentRequest) -> StreamingResponse:
     )
 
 
-@router.get("/api/agent")
-def list_conversations() -> dict[str, list[str]]:
-    """Every known conversation id (transcripts live in memory, spec B-08)."""
-    return {"conversations": sorted(_sessions)}
+@router.post("/api/agent", deprecated=True)
+def agent_message(
+    req: AgentRequest, store: Annotated[DbProjectStore, Depends(default_project_store)]
+) -> StreamingResponse:
+    """Stream one agent turn on the default project as SSE frames."""
+    return agent_message_core(store, req)
 
 
-@router.get("/api/agent/{conversation_id}")
-def transcript(conversation_id: str) -> dict[str, Any]:
-    """The conversation's message history in Anthropic API shape (tool calls and results included)."""
-    if conversation_id not in _sessions:
+def agent_conversations_core(store: DbProjectStore) -> dict[str, list[str]]:
+    """Conversation ids stored for this project (transcripts live in the store)."""
+    return {"conversations": store.conversations.list_ids()}
+
+
+@router.get("/api/agent", deprecated=True)
+def list_conversations(
+    store: Annotated[DbProjectStore, Depends(default_project_store)],
+) -> dict[str, list[str]]:
+    """Every conversation id of the default project."""
+    return agent_conversations_core(store)
+
+
+def agent_transcript_core(store: DbProjectStore, conversation_id: str) -> dict[str, Any]:
+    """The conversation's message history in Anthropic API shape (tool calls and
+    results included)."""
+    messages = store.conversations.load(conversation_id)
+    if messages is None:
         raise HTTPException(status_code=404, detail=f"unknown conversation {conversation_id!r}")
-    return {"conversation_id": conversation_id, "messages": _sessions[conversation_id]}
+    return {"conversation_id": conversation_id, "messages": messages}
 
 
-@router.delete("/api/agent/{conversation_id}")
-def delete_conversation(conversation_id: str) -> dict[str, str]:
+@router.get("/api/agent/{conversation_id}", deprecated=True)
+def transcript(
+    conversation_id: str, store: Annotated[DbProjectStore, Depends(default_project_store)]
+) -> dict[str, Any]:
+    """The default project's conversation history."""
+    return agent_transcript_core(store, conversation_id)
+
+
+def agent_conversation_delete_core(store: DbProjectStore, conversation_id: str) -> dict[str, str]:
     """Forget one conversation; the project state is untouched."""
-    if conversation_id not in _sessions:
+    if not store.conversations.delete(conversation_id):
         raise HTTPException(status_code=404, detail=f"unknown conversation {conversation_id!r}")
-    del _sessions[conversation_id]
     return {"deleted": conversation_id}
+
+
+@router.delete("/api/agent/{conversation_id}", deprecated=True)
+def delete_conversation(
+    conversation_id: str, store: Annotated[DbProjectStore, Depends(default_project_store)]
+) -> dict[str, str]:
+    """Forget one conversation of the default project."""
+    return agent_conversation_delete_core(store, conversation_id)
