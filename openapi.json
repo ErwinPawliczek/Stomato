@@ -596,6 +596,9 @@
             "title": "Name",
             "type": "string"
           },
+          "solver_options": {
+            "$ref": "#/components/schemas/SolverOptions"
+          },
           "streams": {
             "items": {
               "$ref": "#/components/schemas/StreamSpec"
@@ -1300,6 +1303,39 @@
           "converged"
         ],
         "title": "SolvedFlowsheet",
+        "type": "object"
+      },
+      "SolverOptions": {
+        "additionalProperties": false,
+        "description": "Per-flowsheet tear-solver settings (spec P2-03).\n\nOne flowsheet owns its own tear-solving behaviour instead of the solver\nmodule keeping three module constants: the iteration cap, the relative\ntolerance and the acceleration all come from here at solve time. The\ndefaults are the spec S-30 values the solver used before options existed -\na flowsheet that never mentions ``solver_options`` solves exactly as it\nalways did, and saved projects carry the block only when they want\nsomething different.",
+        "properties": {
+          "max_iterations": {
+            "default": 100,
+            "title": "Max Iterations",
+            "type": "integer"
+          },
+          "rtol": {
+            "default": 1e-06,
+            "title": "Rtol",
+            "type": "number"
+          },
+          "tear_acceleration": {
+            "default": "wegstein",
+            "enum": [
+              "wegstein",
+              "direct",
+              "broyden"
+            ],
+            "title": "Tear Acceleration",
+            "type": "string"
+          },
+          "wegstein_q_min": {
+            "default": -5.0,
+            "title": "Wegstein Q Min",
+            "type": "number"
+          }
+        },
+        "title": "SolverOptions",
         "type": "object"
       },
       "StreamSpec": {

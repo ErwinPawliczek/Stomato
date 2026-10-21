@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal
 
-from pydantic import field_validator, model_validator
+from pydantic import Field, field_validator, model_validator
 
 from ngdesign.data import is_curated
 
@@ -63,6 +63,31 @@ class UnitSpec(Model):
         return check_tag(v)
 
 
+class SolverOptions(Model):
+    """Per-flowsheet tear-solver settings (spec P2-03).
+
+    One flowsheet owns its own tear-solving behaviour instead of the solver
+    module keeping three module constants: the iteration cap, the relative
+    tolerance and the acceleration all come from here at solve time. The
+    defaults are the spec S-30 values the solver used before options existed -
+    a flowsheet that never mentions ``solver_options`` solves exactly as it
+    always did, and saved projects carry the block only when they want
+    something different.
+    """
+
+    tear_acceleration: Literal["wegstein", "direct", "broyden"] = "wegstein"
+    """Tear-stream acceleration scheme (spec P2-03)."""
+
+    max_iterations: int = 100
+    """Hard cap on passes over a cyclic component (spec S-30)."""
+
+    rtol: float = 1e-6
+    """Relative convergence tolerance for torn variables (spec S-30)."""
+
+    wegstein_q_min: float = -5.0
+    """Strongest Wegstein acceleration allowed (spec S-30: q in [-5, 0])."""
+
+
 class Flowsheet(Model):
     name: str
     units: list[UnitSpec]
@@ -82,6 +107,9 @@ class Flowsheet(Model):
     # values by manipulating writable addresses. Empty = plain sequential-modular
     # solve, byte-identical to the pre-P2-01 behaviour.
     design_specs: list[DesignSpec] = []
+    # Tear-solver settings (spec P2-03): acceleration, iteration cap and
+    # tolerance. Defaults keep the pre-P2-03 module-constant behaviour.
+    solver_options: SolverOptions = Field(default_factory=SolverOptions)
 
     @model_validator(mode="before")
     @classmethod
