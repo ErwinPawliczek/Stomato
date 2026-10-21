@@ -31,6 +31,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+import pytest
+
 from ngdesign import registry
 from ngdesign.contracts import Flowsheet, SolvedFlowsheet
 from ngdesign.contracts.flowsheet import SolverOptions
@@ -72,6 +74,7 @@ def _worst_diffs(
     return worst_rel, worst_comp
 
 
+@pytest.mark.timeout(600)
 def test_mea_amine_loop_broyden_fewer_passes_same_sheet() -> None:
     wegstein = _solve(mea_amine_loop.build, "wegstein")
     broyden = _solve(mea_amine_loop.build, "broyden")
@@ -87,6 +90,7 @@ def test_mea_amine_loop_broyden_fewer_passes_same_sheet() -> None:
     assert worst_comp <= 10 * RTOL
 
 
+@pytest.mark.timeout(600)
 def test_recycle_bench_broyden_converges_same_family() -> None:
     wegstein = _solve(recycle_bench.build, "wegstein")
     broyden = _solve(recycle_bench.build, "broyden")
