@@ -1086,6 +1086,7 @@ export interface components {
             design_specs: components["schemas"]["DesignSpec"][];
             /** Name */
             name: string;
+            solver_options?: components["schemas"]["SolverOptions"];
             /** Streams */
             streams: components["schemas"]["StreamSpec"][];
             /**
@@ -1272,11 +1273,13 @@ export interface components {
         /** Project */
         Project: {
             flowsheet: components["schemas"]["Flowsheet"];
-            /** @default {
+            /**
+             * @default {
              *       "pfd": {},
              *       "pid": {},
              *       "plot": {}
-             *     } */
+             *     }
+             */
             layout: components["schemas"]["Layout"];
             /** Name */
             name: string;
@@ -1412,6 +1415,41 @@ export interface components {
             units: {
                 [key: string]: components["schemas"]["UnitResult"];
             };
+        };
+        /**
+         * SolverOptions
+         * @description Per-flowsheet tear-solver settings (spec P2-03).
+         *
+         *     One flowsheet owns its own tear-solving behaviour instead of the solver
+         *     module keeping three module constants: the iteration cap, the relative
+         *     tolerance and the acceleration all come from here at solve time. The
+         *     defaults are the spec S-30 values the solver used before options existed -
+         *     a flowsheet that never mentions ``solver_options`` solves exactly as it
+         *     always did, and saved projects carry the block only when they want
+         *     something different.
+         */
+        SolverOptions: {
+            /**
+             * Max Iterations
+             * @default 100
+             */
+            max_iterations: number;
+            /**
+             * Rtol
+             * @default 0.000001
+             */
+            rtol: number;
+            /**
+             * Tear Acceleration
+             * @default wegstein
+             * @enum {string}
+             */
+            tear_acceleration: "wegstein" | "direct" | "broyden";
+            /**
+             * Wegstein Q Min
+             * @default -5
+             */
+            wegstein_q_min: number;
         };
         /**
          * StreamSpec
