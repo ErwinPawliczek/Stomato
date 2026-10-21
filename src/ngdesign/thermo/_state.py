@@ -252,6 +252,22 @@ def build_flasher(ids: tuple[str, ...], eos: Any, kij_table: str, pseudos: Slate
         return FlashVLN(constants, correlations, liquids=liquids, gas=gas)
 
 
+def _holds_gas_root(phase_obj: Any) -> bool:
+    """True when a thermo phase object actually sits on its EOS's gas root.
+
+    ``isinstance(phase, CEOSGas)`` is not the phase identity: for a pure
+    component below its critical point and above its vapour pressure (one real
+    root, the liquid), thermo's flash hands back the ``CEOSGas`` wrapper holding
+    that liquid root - ``eos_mix.phase == "l"`` - and labelling it vapour gave
+    nC4 at 300 K / 2 MPa a vapour fraction of 1 with the liquid's enthalpy
+    (found reviewing P1-09, whose absorber "lean vapour" was this). A gas is a
+    gas-class object whose EOS has a gas root; a ``"l"``-only EOS is liquid.
+    """
+    eos = getattr(phase_obj, "eos_mix", None)
+    phase = getattr(eos, "phase", None)
+    return phase != "l"
+
+
 def _classify(is_gas: bool, water_fraction: float) -> PhaseKind:
     """Spec S-01 rule: vapor = gas phase; liquid with water mole fraction > 0.5 = AQUEOUS."""
     if is_gas:
@@ -348,7 +364,7 @@ def _build_stream_state(
             continue
         zs = [float(v) for v in phase_obj.zs]
         water_fraction = zs[water_idx] if water_idx >= 0 else 0.0
-        is_gas = isinstance(phase_obj, CEOSGas)
+        is_gas = isinstance(phase_obj, CEOSGas) and _holds_gas_root(phase_obj)
         kind = _classify(is_gas, water_fraction)
         density = float(phase_obj.rho_mass())  # kg/m3
         mw = float(phase_obj.MW())  # g/mol

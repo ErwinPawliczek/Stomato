@@ -18,6 +18,7 @@ from ngdesign import registry
 from ngdesign.amine.package import AmineReactivePackage
 from ngdesign.contracts.flowsheet import Flowsheet, SolvedFlowsheet
 from ngdesign.contracts.plugins import Solver, Thermo
+from ngdesign.contracts.stream import PhaseKind
 from ngdesign.flowsheets.amine_loop import build
 from ngdesign.flowsheets.mea_amine_loop import build as build_mea
 
@@ -93,21 +94,24 @@ def test_mea_absorber_duty_delta_is_heat_of_absorption(pr: Thermo, ke: AmineReac
 
 @pytest.mark.timeout(600)
 def test_mdea_absorber_duty_delta_excess_is_documented(pr: Thermo, ke: AmineReactivePackage) -> None:
-    """MDEA duty delta carries an extra vaporization term; bounded and documented.
+    """MDEA duty delta carries an extra phase-split term; bounded and documented.
 
-    The plain-cubic solve flashes the 50 wt% MDEA rich solvent two-phase
-    (vapour fraction ~0.17 -- a PR artefact for aqueous amines at 6.5 MPa /
-    30 C), so its absorber duty already includes that vaporization enthalpy.
-    The reactive package keeps the rich solvent all-liquid, and the duty
-    difference therefore exceeds flow x dH_abs by that physical (not
-    reactive) term -- ~23% for this sample.  MEA, where both packages agree
-    the rich solvent is all-liquid, passes the spec's 5% anchor exactly.
+    The plain-cubic solve splits the 50 wt% MDEA rich solvent into two LIQUIDS
+    (an aqueous phase and a hydrocarbon-rich one -- a PR artefact for aqueous
+    amines at 6.5 MPa / 30 C; before the pure-phase identification fix the
+    second liquid root was mislabelled a 0.17 vapour fraction), so its absorber
+    duty already includes that phase-split enthalpy. The reactive package keeps
+    the rich solvent one liquid, and the duty difference therefore exceeds
+    flow x dH_abs by that physical (not reactive) term -- ~30% for this sample
+    (measured 1.295). MEA, where both packages agree the rich solvent is one
+    liquid, passes the spec's 5% anchor exactly.
     """
     s_pr = _solve("MDEA", build, pr)
     s_ke = _solve("MDEA", build, ke)
     rich_pr = s_pr.streams["S-005"]
     rich_ke = s_ke.streams["S-005"]
-    assert rich_pr.vapor_fraction is not None and rich_pr.vapor_fraction > 0.05
+    assert rich_pr.vapor_fraction == 0.0
+    assert {p.kind for p in rich_pr.phases} == {PhaseKind.HC_LIQUID, PhaseKind.AQUEOUS}
     assert rich_ke.vapor_fraction is not None and rich_ke.vapor_fraction < 0.01
 
     absorber_pr = s_pr.units["A-101"]
