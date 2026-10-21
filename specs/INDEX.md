@@ -125,6 +125,8 @@ solver module and `variables.py`; P2-03 edits the SM loop), P2-04 after P2-01 an
 
 Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after P3-02.
 
+## Unit-operation catalogue (plan: docs/unit-catalogue-plan.md) — starts after the thermo catalogue freeze and P1-11/P1-06; U-00 first, then rounds R0 → R1 → R2 → R3 per family
+
 ## Thermo catalogue (plan: docs/thermo-catalogue-plan.md) — starts after P1-09 and P1-06 merge
 
 | Spec | Title | Depends on | Status |
