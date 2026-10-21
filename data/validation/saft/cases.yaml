@@ -1,0 +1,592 @@
+# T-13 validation reference cases — family F: SAFT / CPA association models.
+# Spec: specs/backend/T-13-validation-data-saft.md. Schema: data/validation/cases.yaml header.
+#
+# Units: T [K], P [Pa abs], density [kg/m3], Cp [J/(mol K)], compositions [mole fraction].
+# Tolerances follow the fixed P1-05 policy (bubble/dew P 3 %, rho 3 % liquid / 8 % vapour,
+# Cp 5 %, composition 0.02 abs); isobaric bubble-temperature cases override bubble_T to 0.5 %
+# and vapour composition to 0.02 abs, mirroring the root nrtl isobaric cases.
+#
+# Pure-fluid cases are machine-generated with the harness's CoolProp formula
+# (scripts/validate_properties.py regen_coolprop, CoolProp 8.0.0) — never hand-typed.
+# Binary and canonical cases are hand-typed from the cited open sources with the retrieval
+# date; sources were not machine-fetched into the expected values.
+#
+# Layer assignment (per spec L1/L2/L3):
+#   L1 pure          : pure-C1-*, pure-CO2-* (PC-SAFT row), pure-H2O-*, pure-MeOH-* (CPA-SRK row).
+#   L2 binary        : c1co2-* (Petropoulou 2018, PC-SAFT row) and
+#                      meohh2o-*97.99kPa* (Bennett 1929, CPA-SRK row).
+#   L3 canonical     : meohh2o-*322.91K* (Bayer 1927 isotherm; near-pure-MeOH rectification
+#                      region where CPA association chemistry dominates — the family's
+#                      L3-associating case).
+#
+# `package: pending:<id>` cases stay skipped until the registering spec lands (T-01/T-12
+# pending convention). The pending ids and the rows they are meant to bind to (T-07 owns
+# data/thermo_models/saft.yaml):
+#   pending:pc_saft  -> TeqpPackage(model=pc_saft)
+#   pending:cpa_srk  -> TeqpPackage(model=cpa_srk)
+# If T-07 registers different row ids, update these `package:` fields in the same PR.
+# The other saft.yaml rows (pc_saft_polar, saft_vr_mie, cpa_pr, multifluid) inherit this
+# family's coverage through their `validation:` lists in data/thermo_models/saft.yaml and
+# the root package:all pure cases.
+meta:
+  coolprop_version: 8.0.0
+pure_cases:
+- id: pure-C1-95.3K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: pending:pc_saft
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 95.3
+  source: coolprop:CH4
+  expected:
+    bubble_P: 20516.959456238896
+    dew_P: 20516.959456238896
+    rho_V: 0.4202352992283802
+    rho_L: 445.30073366872654
+    Cp: 54.315463111257486
+- id: pure-C1-125.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: pending:pc_saft
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+- id: pure-C1-155.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: pending:pc_saft
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 155.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 1295003.4509910743
+    dew_P: 1295003.4509910743
+    rho_V: 20.418904925344048
+    rho_L: 347.5068280431007
+    Cp: 67.6128793208551
+- id: pure-C1-172.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: pending:pc_saft
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 172.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 2500733.3980837795
+    dew_P: 2500733.3980837795
+    rho_V: 42.51387462698286
+    rho_L: 304.5590510326234
+    Cp: 87.12993462434143
+- id: pure-C1-181.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: pending:pc_saft
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 181.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 3394772.10519219
+    dew_P: 3394772.10519219
+    rho_V: 64.52258944445151
+    rho_L: 271.9129243864554
+    Cp: 124.1390921872483
+- id: pure-CO2-216.7K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:pc_saft
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 216.7
+  source: coolprop:CO2
+  expected:
+    bubble_P: 520401.256268029
+    dew_P: 520401.256268029
+    rho_V: 13.822674477833518
+    rho_L: 1178.0752220352338
+    Cp: 85.97118053434417
+- id: pure-CO2-240.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:pc_saft
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 240.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 1282483.4984006712
+    dew_P: 1282483.4984006712
+    rho_V: 33.29513808635024
+    rho_L: 1088.8692401220028
+    Cp: 90.2633373679705
+- id: pure-CO2-265.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:pc_saft
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+- id: pure-CO2-285.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:pc_saft
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 285.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 4712303.46473758
+    dew_P: 4712303.46473758
+    rho_V: 143.92260865325676
+    rho_L: 847.0463756053841
+    Cp: 137.89526869642648
+- id: pure-CO2-288.9K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:pc_saft
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 288.9
+  source: coolprop:CO2
+  expected:
+    bubble_P: 5179673.129875787
+    dew_P: 5179673.129875787
+    rho_V: 165.14581022973502
+    rho_L: 814.6391777699876
+    Cp: 155.1893706579236
+- id: pure-H2O-323.5K
+  fluid: H2O
+  coolprop_fluid: Water
+  package: pending:cpa_srk
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 323.5
+  source: coolprop:Water
+  expected:
+    bubble_P: 12568.074903762043
+    dew_P: 12568.074903762043
+    rho_V: 0.0845139200802139
+    rho_L: 987.8376013261548
+    Cp: 75.33348967660713
+- id: pure-H2O-420.0K
+  fluid: H2O
+  coolprop_fluid: Water
+  package: pending:cpa_srk
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 420.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 437296.6832205554
+    dew_P: 437296.6832205554
+    rho_V: 2.351828448387723
+    rho_L: 919.9289056471974
+    Cp: 77.44715834539281
+- id: pure-H2O-520.0K
+  fluid: H2O
+  coolprop_fluid: Water
+  package: pending:cpa_srk
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 520.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 3768951.0030896734
+    dew_P: 3768951.0030896734
+    rho_V: 18.900102345041386
+    rho_L: 803.5346284235177
+    Cp: 87.14904502895989
+- id: pure-H2O-600.0K
+  fluid: H2O
+  coolprop_fluid: Water
+  package: pending:cpa_srk
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 600.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 12344824.357185591
+    dew_P: 12344824.357185591
+    rho_V: 72.84231718283307
+    rho_L: 649.4114062017267
+    Cp: 125.26394764191221
+- id: pure-H2O-614.7K
+  fluid: H2O
+  coolprop_fluid: Water
+  package: pending:cpa_srk
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 614.7
+  source: coolprop:Water
+  expected:
+    bubble_P: 14886958.230685582
+    dew_P: 14886958.230685582
+    rho_V: 95.58767627288478
+    rho_L: 605.5542923811505
+    Cp: 151.74725059632752
+- id: pure-MeOH-256.3K
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 256.3
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 1296.4950796125859
+    dew_P: 1296.4950796125859
+    rho_V: 0.019659073267946643
+    rho_L: 825.5296619830086
+    Cp: 74.76223856132154
+- id: pure-MeOH-307.6K
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 307.6
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 27285.726673983212
+    dew_P: 27285.726673983212
+    rho_V: 0.3523083242143164
+    rho_L: 777.3531023134508
+    Cp: 83.1689114929538
+- id: pure-MeOH-358.8K
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 358.8
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 220672.06148295978
+    dew_P: 220672.06148295978
+    rho_V: 2.564992417359229
+    rho_L: 726.6365086539073
+    Cp: 96.78299108071067
+- id: pure-MeOH-410.1K
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 410.1
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 1008961.6235828616
+    dew_P: 1008961.6235828616
+    rho_V: 11.431378628663305
+    rho_L: 665.0831489742104
+    Cp: 116.39882382840209
+- id: pure-MeOH-461.3K
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 461.3
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 3203531.8555181804
+    dew_P: 3203531.8555181804
+    rho_V: 39.97612900903269
+    rho_L: 577.3203069692399
+    Cp: 152.323705909922
+binary_cases:
+# --- L2: CO2 + CH4 VLE (Petropoulou et al. 2018) — PC-SAFT row -------------------------------
+# Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462,
+# 44-58, via NIST ThermoML (doi 10.1016/j.fluid.2018.01.011): bubble points with liquid x_CO2
+# and vapour y_CO2 at the stated T and P, retrieved 2026-10-21. Same source points as the
+# helmholtz file's c1co2-* cases, scoped to the PC-SAFT row. The source isotherms
+# (293.13/298.14/303.14 K, 5.7-7.9 MPa) sit near the CO2 critical region by construction.
+- id: c1co2-293.130K-6.135MPa
+  package: pending:pc_saft
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.01528
+    CO2: 0.98472
+  T: 293.130
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 6134800.0
+    vapor_comp:
+      CO2: 0.96030
+- id: c1co2-293.130K-6.976MPa
+  package: pending:pc_saft
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.04982
+    CO2: 0.95018
+  T: 293.130
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 6975600.0
+    vapor_comp:
+      CO2: 0.89863
+- id: c1co2-298.142K-6.976MPa
+  package: pending:pc_saft
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.02145
+    CO2: 0.97855
+  T: 298.142
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 298.14 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 6975500.0
+    vapor_comp:
+      CO2: 0.95917
+- id: c1co2-298.142K-7.508MPa
+  package: pending:pc_saft
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.04641
+    CO2: 0.95359
+  T: 298.142
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 298.14 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 7507900.0
+    vapor_comp:
+      CO2: 0.93180
+- id: c1co2-303.145K-7.306MPa
+  package: pending:pc_saft
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.00400
+    CO2: 0.99600
+  T: 303.145
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 303.14 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 7306400.0
+    vapor_comp:
+      CO2: 0.99438
+- id: c1co2-303.144K-7.361MPa
+  package: pending:pc_saft
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.00650
+    CO2: 0.99350
+  T: 303.144
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 303.14 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 7361100.0
+    vapor_comp:
+      CO2: 0.99142
+# --- L2: MeOH + H2O isobaric VLE (Bennett 1929) — CPA-SRK row --------------------------------
+# Bennett & Dodge (1929), Ind. Eng. Chem. 21, 284-288 (also in Ind. Eng. Chem. 21, 1075,
+# 1929 per DDB Explorer data set 466), methanol/water at 97.99 kPa, retrieved 2026-10-20
+# (values were verified against the archived DDB Explorer page). Three mid-range points of
+# the published table; the root nrtl file carries the same source at all eight published
+# x points, so this set deliberately overlaps it to give the CPA row binary coverage.
+- id: meohh2o-97.99kPa-353.25K
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.137
+    H2O: 0.863
+  P: 97990.0
+  source: literature:Bennett & Dodge (1929) Ind. Eng. Chem. 21, 284-288, methanol/water at 97.99 kPa, via archived DDB Explorer VLE data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 353.25
+    vapor_comp:
+      MeOH: 0.568
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-349.05K
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.24
+    H2O: 0.76
+  P: 97990.0
+  source: literature:Bennett & Dodge (1929) Ind. Eng. Chem. 21, 284-288, methanol/water at 97.99 kPa, via archived DDB Explorer VLE data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 349.05
+    vapor_comp:
+      MeOH: 0.68
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-343.75K
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.48
+    H2O: 0.52
+  P: 97990.0
+  source: literature:Bennett & Dodge (1929) Ind. Eng. Chem. 21, 284-288, methanol/water at 97.99 kPa, via archived DDB Explorer VLE data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 343.75
+    vapor_comp:
+      MeOH: 0.79
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+# --- L3 canonical: MeOH + H2O isothermal VLE, near-pure-MeOH region (Bayer 1927) -------------
+# Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer
+# VLE data set 468, retrieved 2026-10-20. This is the family's L3-associating canonical
+# case: a MeOH/H2O rectification column overhead region (MeOH mole fraction 0.05-0.95) where
+# the cross-association chemistry dominates the VLE surface. The same published isotherm is
+# carried in the root nrtl file at 312.91 K and for nrtl-scoped 322.91 K cases; these copies
+# scope it to the CPA row.
+- id: meohh2o-322.91K-15.932kPa
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.0486
+    H2O: 0.9514
+  T: 322.91
+  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 15932.0
+    vapor_comp:
+      MeOH: 0.2741
+- id: meohh2o-322.91K-26.131kPa
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.2131
+    H2O: 0.7869
+  T: 322.91
+  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 26131.0
+    vapor_comp:
+      MeOH: 0.6294
+- id: meohh2o-322.91K-31.544kPa
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.3252
+    H2O: 0.6748
+  T: 322.91
+  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 31544.0
+    vapor_comp:
+      MeOH: 0.758
+- id: meohh2o-322.91K-40.850kPa
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.6279
+    H2O: 0.3721
+  T: 322.91
+  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 40850.0
+    vapor_comp:
+      MeOH: 0.8654
+- id: meohh2o-322.91K-46.450kPa
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.8037
+    H2O: 0.1963
+  T: 322.91
+  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 46450.0
+    vapor_comp:
+      MeOH: 0.9406
+- id: meohh2o-322.91K-52.142kPa
+  package: pending:cpa_srk
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.9461
+    H2O: 0.0539
+  T: 322.91
+  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 52142.0
+    vapor_comp:
+      MeOH: 0.9736

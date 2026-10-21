@@ -1,0 +1,556 @@
+# T-13 validation reference cases — family D: Helmholtz / reference equations.
+# Spec: specs/backend/T-13-validation-data-helmholtz.md. Schema: data/validation/cases.yaml header.
+#
+# Units: T [K], P [Pa abs], density [kg/m3], Cp [J/(mol K)], compositions [mole fraction].
+# Tolerances follow the fixed P1-05 policy (bubble/dew P 3 %, rho 3 % liquid / 8 % vapour,
+# Cp 5 %, composition 0.02 abs); no per-case overrides are used in this file.
+#
+# Pure-fluid cases are machine-generated with the harness's CoolProp formula
+# (scripts/validate_properties.py regen_coolprop, CoolProp 8.0.0) — never hand-typed.
+# Binary and canonical cases below are hand-typed from the cited open sources with the
+# retrieval date; sources were not machine-fetched into the expected values.
+#
+# Layer assignment (per spec L1/L2/L3):
+#   L1 pure          : pure-C1-*  (BWRS row), pure-CO2-* (GERG-2008 row); H2O pure coverage for
+#                      the IAPWS row also comes from the root cases.yaml pure-H2O-* (package: all)
+#                      plus the hand-typed NIST water points below.
+#   L2 binary        : c1n2-* (Janisch 2007), c1co2-* (Petropoulou 2018), aga8-c1n2-* (AGA8).
+#   L3 canonical     : aga8-ng2-* (GERG-2008 natural-gas boundary points) and
+#                      h2o-nist-* (NIST WebBook water saturation points, IAPWS row).
+#
+# `package: pending:<id>` cases stay skipped until the registering spec lands (T-01/T-12
+# pending convention). The pending ids and the rows they are meant to bind to (T-04 owns
+# data/thermo_models/helmholtz.yaml):
+#   pending:iapws95  -> IAPWSPackage (IAPWS-95 water)
+#   pending:gerg2008 -> GERG-2008 mixture row (CoolProp HEOS GERG mixture backend / teqp multifluid)
+#   pending:bwrs     -> BWRSPackage (Starling 1973)
+# If T-04 registers different row ids, update these `package:` fields in the same PR.
+meta:
+  coolprop_version: 8.0.0
+pure_cases:
+- id: pure-C1-95.3K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: pending:bwrs
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 95.3
+  source: coolprop:CH4
+  expected:
+    bubble_P: 20516.959456238896
+    dew_P: 20516.959456238896
+    rho_V: 0.4202352992283802
+    rho_L: 445.30073366872654
+    Cp: 54.315463111257486
+- id: pure-C1-125.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: pending:bwrs
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+- id: pure-C1-155.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: pending:bwrs
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 155.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 1295003.4509910743
+    dew_P: 1295003.4509910743
+    rho_V: 20.418904925344048
+    rho_L: 347.5068280431007
+    Cp: 67.6128793208551
+- id: pure-C1-172.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: pending:bwrs
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 172.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 2500733.3980837795
+    dew_P: 2500733.3980837795
+    rho_V: 42.51387462698286
+    rho_L: 304.5590510326234
+    Cp: 87.12993462434143
+- id: pure-C1-181.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: pending:bwrs
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 181.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 3394772.10519219
+    dew_P: 3394772.10519219
+    rho_V: 64.52258944445151
+    rho_L: 271.9129243864554
+    Cp: 124.1390921872483
+- id: pure-CO2-216.7K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:gerg2008
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 216.7
+  source: coolprop:CO2
+  expected:
+    bubble_P: 520401.256268029
+    dew_P: 520401.256268029
+    rho_V: 13.822674477833518
+    rho_L: 1178.0752220352338
+    Cp: 85.97118053434417
+- id: pure-CO2-240.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:gerg2008
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 240.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 1282483.4984006712
+    dew_P: 1282483.4984006712
+    rho_V: 33.29513808635024
+    rho_L: 1088.8692401220028
+    Cp: 90.2633373679705
+- id: pure-CO2-265.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:gerg2008
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+- id: pure-CO2-285.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:gerg2008
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 285.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 4712303.46473758
+    dew_P: 4712303.46473758
+    rho_V: 143.92260865325676
+    rho_L: 847.0463756053841
+    Cp: 137.89526869642648
+- id: pure-CO2-288.9K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:gerg2008
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 288.9
+  source: coolprop:CO2
+  expected:
+    bubble_P: 5179673.129875787
+    dew_P: 5179673.129875787
+    rho_V: 165.14581022973502
+    rho_L: 814.6391777699876
+    Cp: 155.1893706579236
+binary_cases:
+# --- L3: water saturation points, IAPWS row (hand-typed, NIST WebBook) -----------------------
+# NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185), saturation
+# table (Type=SatT rows; the WebBook fluid data follow IAPWS-95), retrieved 2026-10-21.
+# Liquid Cp is the saturated-liquid Cp at the row temperature; rho_V the saturated-vapour
+# density at the same state.
+- id: h2o-nist-273.179K
+  package: pending:iapws95
+  components:
+  - H2O
+  fluid: H2O
+  z:
+    H2O: 1.0
+  T: 273.179
+  source: literature:NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
+  expected:
+    bubble_P: 612.480
+    dew_P: 612.480
+    rho_V: 0.00486080
+    rho_L: 999.794
+    Cp: 76.0217
+- id: h2o-nist-347.390K
+  package: pending:iapws95
+  components:
+  - H2O
+  fluid: H2O
+  z:
+    H2O: 1.0
+  T: 347.390
+  source: literature:NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
+  expected:
+    bubble_P: 37384.8
+    dew_P: 37384.8
+    rho_V: 0.235069
+    rho_L: 975.267
+    Cp: 75.5351
+- id: h2o-nist-401.605K
+  package: pending:iapws95
+  components:
+  - H2O
+  fluid: H2O
+  z:
+    H2O: 1.0
+  T: 401.605
+  source: literature:NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
+  expected:
+    bubble_P: 258019.0
+    dew_P: 258019.0
+    rho_V: 1.43326
+    rho_L: 936.140
+    Cp: 76.7184
+- id: h2o-nist-500.184K
+  package: pending:iapws95
+  components:
+  - H2O
+  fluid: H2O
+  z:
+    H2O: 1.0
+  T: 500.184
+  source: literature:NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
+  expected:
+    bubble_P: 2648220.0
+    dew_P: 2648220.0
+    rho_V: 13.2438
+    rho_L: 831.070
+    Cp: 84.0383
+- id: h2o-nist-600.070K
+  package: pending:iapws95
+  components:
+  - H2O
+  fluid: H2O
+  z:
+    H2O: 1.0
+  T: 600.070
+  source: literature:NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
+  expected:
+    bubble_P: 12356100.0
+    dew_P: 12356100.0
+    rho_V: 72.9331
+    rho_L: 649.222
+    Cp: 125.352
+# --- L2: CH4 + N2 VLE (Janisch, Raabe & Kohler 2007) -----------------------------------------
+# Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML
+# (doi 10.1021/je700210n), CH4(1)+N2(2) isothermal VLE: liquid x_N2 with the coexisting
+# pressure and vapour y_N2 from the paired property tables, retrieved 2026-10-21.
+- id: c1n2-130.079K-0.614MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.9539
+    N2: 0.0461
+  T: 130.079
+  source: literature:Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (10.1021/je700210n), CH4+N2 130.079 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 613700.0
+    vapor_comp:
+      N2: 0.3468
+- id: c1n2-149.989K-2.908MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.7226
+    N2: 0.2774
+  T: 149.989
+  source: literature:Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (10.1021/je700210n), CH4+N2 149.989 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 2908400.0
+    vapor_comp:
+      N2: 0.5981
+- id: c1n2-149.928K-4.527MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.4062
+    N2: 0.5938
+  T: 149.928
+  source: literature:Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (10.1021/je700210n), CH4+N2 149.928 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 4527300.0
+    vapor_comp:
+      N2: 0.6897
+- id: c1n2-159.972K-1.789MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.9776
+    N2: 0.0224
+  T: 159.972
+  source: literature:Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (10.1021/je700210n), CH4+N2 159.972 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 1789200.0
+    vapor_comp:
+      N2: 0.0908
+- id: c1n2-170.009K-4.933MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.6987
+    N2: 0.3013
+  T: 170.009
+  source: literature:Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (10.1021/je700210n), CH4+N2 170.009 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 4933400.0
+    vapor_comp:
+      N2: 0.3919
+- id: c1n2-179.976K-5.062MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.8102
+    N2: 0.1898
+  T: 179.976
+  source: literature:Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (10.1021/je700210n), CH4+N2 179.976 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 5061500.0
+    vapor_comp:
+      N2: 0.1930
+# --- L2: CO2 + CH4 VLE (Petropoulou et al. 2018) ---------------------------------------------
+# Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462,
+# 44-58, via NIST ThermoML (doi 10.1016/j.fluid.2018.01.011), "Vapor - liquid equilibrium of
+# the carbon dioxide/methane mixture at three isotherms": bubble points with liquid x_CO2 and
+# vapour y_CO2 at the stated T and P, retrieved 2026-10-21. Points are near the CO2 critical
+# region by construction of the source isotherms (293.13/298.14/303.14 K, 5.7-7.9 MPa).
+- id: c1co2-293.130K-6.135MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.01528
+    CO2: 0.98472
+  T: 293.130
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 6134800.0
+    vapor_comp:
+      CO2: 0.96030
+- id: c1co2-293.130K-6.976MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.04982
+    CO2: 0.95018
+  T: 293.130
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 6975600.0
+    vapor_comp:
+      CO2: 0.89863
+- id: c1co2-298.142K-6.976MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.02145
+    CO2: 0.97855
+  T: 298.142
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 298.14 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 6975500.0
+    vapor_comp:
+      CO2: 0.95917
+- id: c1co2-298.142K-7.508MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.04641
+    CO2: 0.95359
+  T: 298.142
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 298.14 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 7507900.0
+    vapor_comp:
+      CO2: 0.93180
+- id: c1co2-303.145K-7.306MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.00400
+    CO2: 0.99600
+  T: 303.145
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 303.14 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 7306400.0
+    vapor_comp:
+      CO2: 0.99438
+- id: c1co2-303.144K-7.361MPa
+  package: pending:gerg2008
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.00650
+    CO2: 0.99350
+  T: 303.144
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 303.14 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 7361100.0
+    vapor_comp:
+      CO2: 0.99142
+# --- L2/L3: AGA8 / GERG-2008 model-calculated points -----------------------------------------
+# American Gas Association, AGA Report No. 8 Part 1 & Part 2 supplementary test data
+# (NIST AGA8 distribution, pages.nist.gov/AGA8, SUPPMATR/TESTDATA "Test Data.xls"),
+# GERG-2008 columns, retrieved 2026-10-21. Points are calculated along the saturation
+# boundary (saturation temperature at the stated density from REFPROP 9.1) and are published
+# for validation of other code only. The densities at these points (1-3 mol/l) put them on
+# the vapour (dew) side of the boundary, so the compared property is dew_P at the given T.
+- id: aga8-c1n2-134.02K-dew
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.5
+    N2: 0.5
+  T: 134.02
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen 50/50 mol %); retrieved 2026-10-21
+  expected:
+    dew_P: 953319.19
+  note: saturation-boundary point at d = 1.0 mol/l (vapour side), model-calculated GERG-2008 reference
+- id: aga8-c1n2-146.37K-dew
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.5
+    N2: 0.5
+  T: 146.37
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen 50/50 mol %); retrieved 2026-10-21
+  expected:
+    dew_P: 1866384.4
+  note: saturation-boundary point at d = 2.0 mol/l (vapour side), model-calculated GERG-2008 reference
+- id: aga8-c1n2-153.41K-dew
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.5
+    N2: 0.5
+  T: 153.41
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen 50/50 mol %); retrieved 2026-10-21
+  expected:
+    dew_P: 2658444.0
+  note: saturation-boundary point at d = 3.0 mol/l (vapour side), model-calculated GERG-2008 reference
+# L3 canonical: natural gas #2 (AGA8 "Natural Gas Compositions" row 2) along the saturation
+# boundary. Composition in mole % from the workbook: CH4 99.5494, N2 0.3672, CO2 0.047,
+# C2H6 0.0344, n-C6H14 0.001, n-C7H16 0.001; hexane + heptane are mapped to the C6+ slate
+# component. Densities 1-3 mol/l (17-54 kg/m3) are vapour side -> dew_P.
+- id: aga8-ng2-165.933K-dew
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  - CO2
+  - C2
+  - C6+
+  z:
+    C1: 0.995494
+    N2: 0.003672
+    CO2: 0.00047
+    C2: 0.000344
+    C6+: 0.00002
+  T: 165.933
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Natural Gas Calculations sheet, GERG-2008 column, Gas #2, d = 1 mol/l); retrieved 2026-10-21
+  expected:
+    dew_P: 1178980.0
+  note: saturation-boundary point, model-calculated GERG-2008 reference; C6+ = hexane + heptane from the workbook composition
+- id: aga8-ng2-169.184K-dew
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  - CO2
+  - C2
+  - C6+
+  z:
+    C1: 0.995494
+    N2: 0.003672
+    CO2: 0.00047
+    C2: 0.000344
+    C6+: 0.00002
+  T: 169.184
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Natural Gas Calculations sheet, GERG-2008 column, Gas #2, d = 2 mol/l); retrieved 2026-10-21
+  expected:
+    dew_P: 2049730.0
+  note: saturation-boundary point, model-calculated GERG-2008 reference; C6+ = hexane + heptane from the workbook composition
+- id: aga8-ng2-176.240K-dew
+  package: pending:gerg2008
+  components:
+  - C1
+  - N2
+  - CO2
+  - C2
+  - C6+
+  z:
+    C1: 0.995494
+    N2: 0.003672
+    CO2: 0.00047
+    C2: 0.000344
+    C6+: 0.00002
+  T: 176.240
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Natural Gas Calculations sheet, GERG-2008 column, Gas #2, d = 3 mol/l); retrieved 2026-10-21
+  expected:
+    dew_P: 2807790.0
+  note: saturation-boundary point, model-calculated GERG-2008 reference; C6+ = hexane + heptane from the workbook composition
