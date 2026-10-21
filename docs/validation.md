@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-21T14:56:51+00:00 from `data/validation/results.json` (git b5b0eb6, CoolProp 8.0.0).
+Generated 2026-10-21T16:05:30+00:00 from `data/validation/results.json` (git 20c148e, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -29,8 +29,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 | model | family | status | L0 | L1/L2 cases | report |
 | --- | --- | --- | --- | --- | --- |
-| [amine_enrtl](validation/amine_enrtl.md) | electrolyte | provisional | 3/3 | L1=0 L2=0 | [report](validation/amine_enrtl.md) |
-| [amine_ke](validation/amine_ke.md) | electrolyte | provisional | 3/3 | L1=0 L2=0 | [report](validation/amine_ke.md) |
+| [amine_enrtl](validation/amine_enrtl.md) | electrolyte | provisional | 3/3 | L1=4 L2=0 | [report](validation/amine_enrtl.md) |
+| [amine_ke](validation/amine_ke.md) | electrolyte | validated | 3/3 | L1=4 L2=5 | [report](validation/amine_ke.md) |
 | [nrtl](validation/nrtl.md) | gamma_phi | provisional | 7/7 | L1=0 L2=21 | [report](validation/nrtl.md) |
 | [pr](validation/pr.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr.md) |
 | [pr78](validation/pr78.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr78.md) |
@@ -46,6 +46,21 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `pr78-srk`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 
 ## Results
+
+### package `amine_enrtl` — 8/8 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| bubble_P | 4 | 4 | 100.0 % |
+| dew_P | 4 | 4 | 100.0 % |
+
+### package `amine_ke` — 13/13 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| K | 5 | 5 | 100.0 % |
+| bubble_P | 4 | 4 | 100.0 % |
+| dew_P | 4 | 4 | 100.0 % |
 
 ### package `nrtl` — 29/62 pass (46.8 %)
 
@@ -437,12 +452,14 @@ Pure-fluid expected values are generated from the CoolProp reference EOS (versio
 - Culberson & McKetta (1951) J. Pet. Technol. 3, 223-226; IUPAC SDS 27/28 printed p. 32, 160 F isotherm; retrieved 2026-10-20
 - Culberson & McKetta (1951) J. Pet. Technol. 3, 223-226; IUPAC SDS 27/28 printed p. 32, 280 F isotherm; retrieved 2026-10-20
 - DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
+- Jou, Mather & Otto 1982 H2S isotherm, 4.28 kmol/m3 aqueous MDEA at 313.15 K (I&EC Process Des. Dev., vol. 21, p. 539, 1982): p_H2S 0.0108 kPa at loading 0.01, 3.31 kPa at 0.165, 36.9 kPa at 0.453, as curated in tests/units/test_mdea_equilibrium.py; retrieved 2026-10-21
 - Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
 - Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21
 - Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20
 - Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
 - Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 310.93 K isotherm; retrieved 2026-10-20
 - Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20
+- p_CO2 at fixed loading, 4.3638 kmol/m3 (50 wt%) aqueous MDEA at 313.15 K: 0.0093 bara at loading 0.10 and 0.229 bara at loading 0.40 — NeqSim MDEA-model regression anchors (apparent constants fitted to Jou, Mather & Otto, I&EC Process Des. Dev., vol. 21, p. 539, 1982), as curated in tests/units/test_mdea_equilibrium.py; retrieved 2026-10-21
 
 ## How to add a case
 

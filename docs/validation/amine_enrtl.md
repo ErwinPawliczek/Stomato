@@ -33,7 +33,15 @@ Declared exclusions (not silent skips):
 
 ## L1/L2 reference-case outcomes
 
-None yet — validation case ids arrive with the data tasks (T-11..T-13).
+8/8 comparisons pass. Failing comparisons are assessed in the
+main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
+
+Declared case ids:
+
+- `pure-H2O-323.5K-amine-enrtl` — coolprop:H2O
+- `pure-H2O-420K-amine-enrtl` — coolprop:H2O
+- `pure-H2O-520K-amine-enrtl` — coolprop:H2O
+- `pure-H2O-600K-amine-enrtl` — coolprop:H2O
 
 ## References
 
