@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-10-22T01:28:04+00:00",
-    "python": "3.14.7",
-    "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "ff0ba53",
+    "generated": "2026-10-22T00:57:54+00:00",
+    "python": "3.13.14",
+    "platform": "Linux-6.1.158+-x86_64-with-glibc2.41",
+    "git_rev": "7c68cc0",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 1092,
-    "n_pass": 852
+    "n_comparisons": 1664,
+    "n_pass": 1243
   },
   "rows": [
     {
@@ -7813,6 +7813,5154 @@
       "got": 0.4103315061790128,
       "rel_err": 0.025828765447531987,
       "pass": true
+    },
+    {
+      "case": "rk-pure-C1-125K",
+      "package": "rk",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-C1-125K",
+      "package": "rk",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-C1-125K",
+      "package": "rk",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.4507950802352,
+      "rel_err": 0.003608493616545281,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-C1-125K",
+      "package": "rk",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 402.71483472085083,
+      "rel_err": 0.0015027010380990779,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-C1-125K",
+      "package": "rk",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 88.12368767274792,
+      "rel_err": 0.5261852645905394,
+      "pass": false
+    },
+    {
+      "case": "rk-pure-C3-300K",
+      "package": "rk",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-C3-300K",
+      "package": "rk",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-C3-300K",
+      "package": "rk",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.152117916994005,
+      "rel_err": 0.02207232690289776,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-C3-300K",
+      "package": "rk",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 435.2386153553778,
+      "rel_err": 0.11075503238458526,
+      "pass": false
+    },
+    {
+      "case": "rk-pure-C3-300K",
+      "package": "rk",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 132.83132800576527,
+      "rel_err": 0.09955394298942621,
+      "pass": false
+    },
+    {
+      "case": "rk-pure-nC4-280K",
+      "package": "rk",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-nC4-280K",
+      "package": "rk",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-nC4-280K",
+      "package": "rk",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4511701977847324,
+      "rel_err": 0.011007511823271103,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-nC4-280K",
+      "package": "rk",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 538.198837573426,
+      "rel_err": 0.09286312213623735,
+      "pass": false
+    },
+    {
+      "case": "rk-pure-nC4-280K",
+      "package": "rk",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 148.7501655824309,
+      "rel_err": 0.09150537941953416,
+      "pass": false
+    },
+    {
+      "case": "rk-pure-CO2-265K",
+      "package": "rk",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-CO2-265K",
+      "package": "rk",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "rk-pure-CO2-265K",
+      "package": "rk",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 72.55214246443362,
+      "rel_err": 0.038672335434971464,
+      "pass": false
+    },
+    {
+      "case": "rk-pure-CO2-265K",
+      "package": "rk",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 814.2931352931066,
+      "rel_err": 0.16332968572690212,
+      "pass": false
+    },
+    {
+      "case": "rk-pure-CO2-265K",
+      "package": "rk",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 108.90325170653765,
+      "rel_err": 0.05674271839801516,
+      "pass": false
+    },
+    {
+      "case": "vdw-pure-C1-125K",
+      "package": "vdw",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "vdw-pure-C1-125K",
+      "package": "vdw",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "vdw-pure-C1-125K",
+      "package": "vdw",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.359319895441665,
+      "rel_err": 0.024086879057808694,
+      "pass": true
+    },
+    {
+      "case": "vdw-pure-C1-125K",
+      "package": "vdw",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 274.7524602885001,
+      "rel_err": 0.3167241249343799,
+      "pass": false
+    },
+    {
+      "case": "vdw-pure-C1-125K",
+      "package": "vdw",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 42.39548908848394,
+      "rel_err": 0.2657664194418117,
+      "pass": false
+    },
+    {
+      "case": "vdw-pure-C3-300K",
+      "package": "vdw",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "vdw-pure-C3-300K",
+      "package": "vdw",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "vdw-pure-C3-300K",
+      "package": "vdw",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 20.26249092530736,
+      "rel_err": 0.06320252754372946,
+      "pass": false
+    },
+    {
+      "case": "vdw-pure-C3-300K",
+      "package": "vdw",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 303.46392894860134,
+      "rel_err": 0.3799866047041655,
+      "pass": false
+    },
+    {
+      "case": "vdw-pure-C3-300K",
+      "package": "vdw",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 97.2117214284945,
+      "rel_err": 0.19529878074507015,
+      "pass": false
+    },
+    {
+      "case": "vdw-pure-nC4-280K",
+      "package": "vdw",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "vdw-pure-nC4-280K",
+      "package": "vdw",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "vdw-pure-nC4-280K",
+      "package": "vdw",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.411889915875678,
+      "rel_err": 0.02226395572929904,
+      "pass": true
+    },
+    {
+      "case": "vdw-pure-nC4-280K",
+      "package": "vdw",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 367.1221270183754,
+      "rel_err": 0.381213787826664,
+      "pass": false
+    },
+    {
+      "case": "vdw-pure-nC4-280K",
+      "package": "vdw",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 103.2650250084948,
+      "rel_err": 0.24225744649538958,
+      "pass": false
+    },
+    {
+      "case": "vdw-pure-CO2-265K",
+      "package": "vdw",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "vdw-pure-CO2-265K",
+      "package": "vdw",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "vdw-pure-CO2-265K",
+      "package": "vdw",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 68.57170517725149,
+      "rel_err": 0.09141377560829474,
+      "pass": false
+    },
+    {
+      "case": "vdw-pure-CO2-265K",
+      "package": "vdw",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 570.302859346626,
+      "rel_err": 0.4140249353954891,
+      "pass": false
+    },
+    {
+      "case": "vdw-pure-CO2-265K",
+      "package": "vdw",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 83.019952979798,
+      "rel_err": 0.1944158744721805,
+      "pass": false
+    },
+    {
+      "case": "prsv-pure-C1-125K",
+      "package": "prsv",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-C1-125K",
+      "package": "prsv",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-C1-125K",
+      "package": "prsv",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.453300835914087,
+      "rel_err": 0.0030475345900104183,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-C1-125K",
+      "package": "prsv",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 449.9142322552584,
+      "rel_err": 0.11888184886821683,
+      "pass": false
+    },
+    {
+      "case": "prsv-pure-C1-125K",
+      "package": "prsv",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 58.618373759530485,
+      "rel_err": 0.015192403185395383,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-C3-300K",
+      "package": "prsv",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-C3-300K",
+      "package": "prsv",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-C3-300K",
+      "package": "prsv",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.633873813848783,
+      "rel_err": 0.00020073459670236806,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-C3-300K",
+      "package": "prsv",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 508.5382513864676,
+      "rel_err": 0.03900496171765393,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-C3-300K",
+      "package": "prsv",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 125.17835538472497,
+      "rel_err": 0.036204006288576826,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-nC4-280K",
+      "package": "prsv",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-nC4-280K",
+      "package": "prsv",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-nC4-280K",
+      "package": "prsv",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4692713032059146,
+      "rel_err": 0.005820327111043576,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-nC4-280K",
+      "package": "prsv",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 625.124631919831,
+      "rel_err": 0.05365074631571273,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-nC4-280K",
+      "package": "prsv",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 133.54066899787244,
+      "rel_err": 0.02009952048297311,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-CO2-265K",
+      "package": "prsv",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-CO2-265K",
+      "package": "prsv",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-CO2-265K",
+      "package": "prsv",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 75.62395571202306,
+      "rel_err": 0.002029688722794821,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-CO2-265K",
+      "package": "prsv",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 973.2049765483107,
+      "rel_err": 5.086830588809047e-05,
+      "pass": true
+    },
+    {
+      "case": "prsv-pure-CO2-265K",
+      "package": "prsv",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 111.25211504306624,
+      "rel_err": 0.07953491411754529,
+      "pass": false
+    },
+    {
+      "case": "prsv2-pure-C1-125K",
+      "package": "prsv2",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-C1-125K",
+      "package": "prsv2",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-C1-125K",
+      "package": "prsv2",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.453300835914087,
+      "rel_err": 0.0030475345900104183,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-C1-125K",
+      "package": "prsv2",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 449.9142322552584,
+      "rel_err": 0.11888184886821683,
+      "pass": false
+    },
+    {
+      "case": "prsv2-pure-C1-125K",
+      "package": "prsv2",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 58.6183737595305,
+      "rel_err": 0.01519240318539563,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-C3-300K",
+      "package": "prsv2",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-C3-300K",
+      "package": "prsv2",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-C3-300K",
+      "package": "prsv2",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.633873813848783,
+      "rel_err": 0.00020073459670236806,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-C3-300K",
+      "package": "prsv2",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 508.5382513864676,
+      "rel_err": 0.03900496171765393,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-C3-300K",
+      "package": "prsv2",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 125.17835538472497,
+      "rel_err": 0.036204006288576826,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-nC4-280K",
+      "package": "prsv2",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-nC4-280K",
+      "package": "prsv2",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-nC4-280K",
+      "package": "prsv2",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4692713032059146,
+      "rel_err": 0.005820327111043576,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-nC4-280K",
+      "package": "prsv2",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 625.124631919831,
+      "rel_err": 0.05365074631571273,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-nC4-280K",
+      "package": "prsv2",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 133.54066899787244,
+      "rel_err": 0.02009952048297311,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-CO2-265K",
+      "package": "prsv2",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-CO2-265K",
+      "package": "prsv2",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-CO2-265K",
+      "package": "prsv2",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 75.62395571202306,
+      "rel_err": 0.002029688722794821,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-CO2-265K",
+      "package": "prsv2",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 973.2049765483107,
+      "rel_err": 5.086830588809047e-05,
+      "pass": true
+    },
+    {
+      "case": "prsv2-pure-CO2-265K",
+      "package": "prsv2",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 111.25211504306624,
+      "rel_err": 0.07953491411754529,
+      "pass": false
+    },
+    {
+      "case": "twu-pr-pure-C1-125K",
+      "package": "twu-pr",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-C1-125K",
+      "package": "twu-pr",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-C1-125K",
+      "package": "twu-pr",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.453085744001797,
+      "rel_err": 0.0030956868303706466,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-C1-125K",
+      "package": "twu-pr",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 449.80315215095357,
+      "rel_err": 0.11860560619001996,
+      "pass": false
+    },
+    {
+      "case": "twu-pr-pure-C1-125K",
+      "package": "twu-pr",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 57.94001447909483,
+      "rel_err": 0.0034441211372837417,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-C3-300K",
+      "package": "twu-pr",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-C3-300K",
+      "package": "twu-pr",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-C3-300K",
+      "package": "twu-pr",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.629841294268456,
+      "rel_err": 1.4298774749046467e-05,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-C3-300K",
+      "package": "twu-pr",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 508.28449610420705,
+      "rel_err": 0.03848650908088184,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-C3-300K",
+      "package": "twu-pr",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 125.72892669698348,
+      "rel_err": 0.04076153700350301,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-nC4-280K",
+      "package": "twu-pr",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-nC4-280K",
+      "package": "twu-pr",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-nC4-280K",
+      "package": "twu-pr",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4692653002948144,
+      "rel_err": 0.005822047349004921,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-nC4-280K",
+      "package": "twu-pr",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 625.1171313370987,
+      "rel_err": 0.053638104045371525,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-nC4-280K",
+      "package": "twu-pr",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 138.29478330709935,
+      "rel_err": 0.014785424502321405,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-CO2-265K",
+      "package": "twu-pr",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-CO2-265K",
+      "package": "twu-pr",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-CO2-265K",
+      "package": "twu-pr",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 75.5824467047881,
+      "rel_err": 0.0014796876390478792,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-CO2-265K",
+      "package": "twu-pr",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 972.0667480128591,
+      "rel_err": 0.0012203759256816946,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-pure-CO2-265K",
+      "package": "twu-pr",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 111.96342190756661,
+      "rel_err": 0.08643708037822607,
+      "pass": false
+    },
+    {
+      "case": "twu-srk-pure-C1-125K",
+      "package": "twu-srk",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-C1-125K",
+      "package": "twu-srk",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-C1-125K",
+      "package": "twu-srk",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.438542173039174,
+      "rel_err": 0.00635152995916204,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-C1-125K",
+      "package": "twu-srk",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 397.2788146247346,
+      "rel_err": 0.012016018263442268,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-C1-125K",
+      "package": "twu-srk",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 56.95870546995853,
+      "rel_err": 0.013550847971537463,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-C3-300K",
+      "package": "twu-srk",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-C3-300K",
+      "package": "twu-srk",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-C3-300K",
+      "package": "twu-srk",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.374313357518798,
+      "rel_err": 0.011799546135605398,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-C3-300K",
+      "package": "twu-srk",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 448.8912838037888,
+      "rel_err": 0.08286098465088801,
+      "pass": false
+    },
+    {
+      "case": "twu-srk-pure-C3-300K",
+      "package": "twu-srk",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 124.59171841477324,
+      "rel_err": 0.031347930518666633,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-nC4-280K",
+      "package": "twu-srk",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-nC4-280K",
+      "package": "twu-srk",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-nC4-280K",
+      "package": "twu-srk",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.462714774961657,
+      "rel_err": 0.0076992136366201515,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-nC4-280K",
+      "package": "twu-srk",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 552.5655902686613,
+      "rel_err": 0.068647887402999,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-nC4-280K",
+      "package": "twu-srk",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 136.73633045119914,
+      "rel_err": 0.003349741932649468,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-CO2-265K",
+      "package": "twu-srk",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-CO2-265K",
+      "package": "twu-srk",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-CO2-265K",
+      "package": "twu-srk",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 74.1328461455707,
+      "rel_err": 0.017727755074690908,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-pure-CO2-265K",
+      "package": "twu-srk",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 859.8863911349027,
+      "rel_err": 0.11648350461528267,
+      "pass": false
+    },
+    {
+      "case": "twu-srk-pure-CO2-265K",
+      "package": "twu-srk",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 111.89193835488662,
+      "rel_err": 0.08574343971464551,
+      "pass": false
+    },
+    {
+      "case": "api-srk-pure-C1-125K",
+      "package": "api-srk",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-C1-125K",
+      "package": "api-srk",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-C1-125K",
+      "package": "api-srk",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.439905653258427,
+      "rel_err": 0.0060462900896342785,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-C1-125K",
+      "package": "api-srk",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 397.91031443288705,
+      "rel_err": 0.010445555223489646,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-C1-125K",
+      "package": "api-srk",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 61.947628384213075,
+      "rel_err": 0.07285067287934266,
+      "pass": false
+    },
+    {
+      "case": "api-srk-pure-C3-300K",
+      "package": "api-srk",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-C3-300K",
+      "package": "api-srk",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-C3-300K",
+      "package": "api-srk",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.364792858327817,
+      "rel_err": 0.012239708187324961,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-C3-300K",
+      "package": "api-srk",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 448.35460439843035,
+      "rel_err": 0.0839574853831315,
+      "pass": false
+    },
+    {
+      "case": "api-srk-pure-C3-300K",
+      "package": "api-srk",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 129.0665004092326,
+      "rel_err": 0.06838937443024382,
+      "pass": false
+    },
+    {
+      "case": "api-srk-pure-nC4-280K",
+      "package": "api-srk",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-nC4-280K",
+      "package": "api-srk",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-nC4-280K",
+      "package": "api-srk",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4630176146813825,
+      "rel_err": 0.007612429679073766,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-nC4-280K",
+      "package": "api-srk",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 552.9077154109605,
+      "rel_err": 0.06807123373569772,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-nC4-280K",
+      "package": "api-srk",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 137.71771769930396,
+      "rel_err": 0.01055100760120122,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-CO2-265K",
+      "package": "api-srk",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-CO2-265K",
+      "package": "api-srk",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-CO2-265K",
+      "package": "api-srk",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 74.0621670058234,
+      "rel_err": 0.018664265149221704,
+      "pass": true
+    },
+    {
+      "case": "api-srk-pure-CO2-265K",
+      "package": "api-srk",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 858.1345808410955,
+      "rel_err": 0.11828345552428668,
+      "pass": false
+    },
+    {
+      "case": "api-srk-pure-CO2-265K",
+      "package": "api-srk",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 115.74181193336484,
+      "rel_err": 0.12310068853006857,
+      "pass": false
+    },
+    {
+      "case": "pr-boston-mathias-pure-C1-125K",
+      "package": "pr-boston-mathias",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-C1-125K",
+      "package": "pr-boston-mathias",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-C1-125K",
+      "package": "pr-boston-mathias",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.452793890830732,
+      "rel_err": 0.003161023475962752,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-C1-125K",
+      "package": "pr-boston-mathias",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 449.65210921703544,
+      "rel_err": 0.11822998082623973,
+      "pass": false
+    },
+    {
+      "case": "pr-boston-mathias-pure-C1-125K",
+      "package": "pr-boston-mathias",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 58.4492991842031,
+      "rel_err": 0.012264256028869186,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-C3-300K",
+      "package": "pr-boston-mathias",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-C3-300K",
+      "package": "pr-boston-mathias",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-C3-300K",
+      "package": "pr-boston-mathias",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.635745054743815,
+      "rel_err": 0.00028724783672227276,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-C3-300K",
+      "package": "pr-boston-mathias",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 508.65573806727105,
+      "rel_err": 0.03924500117183009,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-C3-300K",
+      "package": "pr-boston-mathias",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 125.25915975103801,
+      "rel_err": 0.036872890360762085,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-nC4-280K",
+      "package": "pr-boston-mathias",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-nC4-280K",
+      "package": "pr-boston-mathias",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-nC4-280K",
+      "package": "pr-boston-mathias",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4694051168741638,
+      "rel_err": 0.005781980490874353,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-nC4-280K",
+      "package": "pr-boston-mathias",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 625.291643863258,
+      "rel_err": 0.053932245795736404,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-nC4-280K",
+      "package": "pr-boston-mathias",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 133.66168775857693,
+      "rel_err": 0.019211503802101362,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-CO2-265K",
+      "package": "pr-boston-mathias",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-CO2-265K",
+      "package": "pr-boston-mathias",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-CO2-265K",
+      "package": "pr-boston-mathias",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 75.6379566209503,
+      "rel_err": 0.0022152030387561058,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-CO2-265K",
+      "package": "pr-boston-mathias",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 973.5870316173937,
+      "rel_err": 0.0003416858258672106,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-pure-CO2-265K",
+      "package": "pr-boston-mathias",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 111.40941709696902,
+      "rel_err": 0.08106129461992691,
+      "pass": false
+    },
+    {
+      "case": "srk-boston-mathias-pure-C1-125K",
+      "package": "srk-boston-mathias",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-C1-125K",
+      "package": "srk-boston-mathias",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-C1-125K",
+      "package": "srk-boston-mathias",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.439273200307172,
+      "rel_err": 0.00618787619671358,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-C1-125K",
+      "package": "srk-boston-mathias",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 397.6182616147184,
+      "rel_err": 0.011171854979604774,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-C1-125K",
+      "package": "srk-boston-mathias",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 61.72088389240045,
+      "rel_err": 0.06892375934031116,
+      "pass": false
+    },
+    {
+      "case": "srk-boston-mathias-pure-C3-300K",
+      "package": "srk-boston-mathias",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-C3-300K",
+      "package": "srk-boston-mathias",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-C3-300K",
+      "package": "srk-boston-mathias",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.362128880975877,
+      "rel_err": 0.012362872079621199,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-C3-300K",
+      "package": "srk-boston-mathias",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 448.2037313304468,
+      "rel_err": 0.08426573725169227,
+      "pass": false
+    },
+    {
+      "case": "srk-boston-mathias-pure-C3-300K",
+      "package": "srk-boston-mathias",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 128.94213968585993,
+      "rel_err": 0.06735993863531228,
+      "pass": false
+    },
+    {
+      "case": "srk-boston-mathias-pure-nC4-280K",
+      "package": "srk-boston-mathias",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-nC4-280K",
+      "package": "srk-boston-mathias",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-nC4-280K",
+      "package": "srk-boston-mathias",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4629352820798145,
+      "rel_err": 0.007636023509518595,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-nC4-280K",
+      "package": "srk-boston-mathias",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 552.8148610272818,
+      "rel_err": 0.06822774027162033,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-nC4-280K",
+      "package": "srk-boston-mathias",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 137.6384564108412,
+      "rel_err": 0.009969400700811695,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-CO2-265K",
+      "package": "srk-boston-mathias",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-CO2-265K",
+      "package": "srk-boston-mathias",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-CO2-265K",
+      "package": "srk-boston-mathias",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 74.05634911230905,
+      "rel_err": 0.01874135318266713,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-pure-CO2-265K",
+      "package": "srk-boston-mathias",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 857.9893818886256,
+      "rel_err": 0.11843264461594143,
+      "pass": false
+    },
+    {
+      "case": "srk-boston-mathias-pure-CO2-265K",
+      "package": "srk-boston-mathias",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 115.67062617365644,
+      "rel_err": 0.12240993750063016,
+      "pass": false
+    },
+    {
+      "case": "pr-mathias-copeman-pure-C1-125K",
+      "package": "pr-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-C1-125K",
+      "package": "pr-mathias-copeman",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-C1-125K",
+      "package": "pr-mathias-copeman",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.453249559806149,
+      "rel_err": 0.0030590136802648806,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-C1-125K",
+      "package": "pr-mathias-copeman",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 449.88776987403315,
+      "rel_err": 0.11881604015200362,
+      "pass": false
+    },
+    {
+      "case": "pr-mathias-copeman-pure-C1-125K",
+      "package": "pr-mathias-copeman",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 58.8625398819061,
+      "rel_err": 0.019421036234272163,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-C3-300K",
+      "package": "pr-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-C3-300K",
+      "package": "pr-mathias-copeman",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-C3-300K",
+      "package": "pr-mathias-copeman",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.633299382296048,
+      "rel_err": 0.00017417685369411145,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-C3-300K",
+      "package": "pr-mathias-copeman",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 508.5021517586295,
+      "rel_err": 0.03893120582547141,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-C3-300K",
+      "package": "pr-mathias-copeman",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 126.4249806176721,
+      "rel_err": 0.046523346694912635,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-nC4-280K",
+      "package": "pr-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-nC4-280K",
+      "package": "pr-mathias-copeman",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-nC4-280K",
+      "package": "pr-mathias-copeman",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4694051168741638,
+      "rel_err": 0.005781980490874353,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-nC4-280K",
+      "package": "pr-mathias-copeman",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 625.291643863258,
+      "rel_err": 0.053932245795736404,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-nC4-280K",
+      "package": "pr-mathias-copeman",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 133.66168775857693,
+      "rel_err": 0.019211503802101362,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-CO2-265K",
+      "package": "pr-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-CO2-265K",
+      "package": "pr-mathias-copeman",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-CO2-265K",
+      "package": "pr-mathias-copeman",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 75.55202547711039,
+      "rel_err": 0.0010766014342408067,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-CO2-265K",
+      "package": "pr-mathias-copeman",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 971.2272574497334,
+      "rel_err": 0.002082936105593829,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-pure-CO2-265K",
+      "package": "pr-mathias-copeman",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 111.3329757162812,
+      "rel_err": 0.08031954567156836,
+      "pass": false
+    },
+    {
+      "case": "srk-mathias-copeman-pure-C1-125K",
+      "package": "srk-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-C1-125K",
+      "package": "srk-mathias-copeman",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-C1-125K",
+      "package": "srk-mathias-copeman",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.438630838612615,
+      "rel_err": 0.006331680556371688,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-C1-125K",
+      "package": "srk-mathias-copeman",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 397.32009353893625,
+      "rel_err": 0.011913362635924763,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-C1-125K",
+      "package": "srk-mathias-copeman",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 58.02046563104676,
+      "rel_err": 0.004837428270370799,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-C3-300K",
+      "package": "srk-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-C3-300K",
+      "package": "srk-mathias-copeman",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-C3-300K",
+      "package": "srk-mathias-copeman",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.387493315574027,
+      "rel_err": 0.011190196009861621,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-C3-300K",
+      "package": "srk-mathias-copeman",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 449.62784865645534,
+      "rel_err": 0.08135609384973214,
+      "pass": false
+    },
+    {
+      "case": "srk-mathias-copeman-pure-C3-300K",
+      "package": "srk-mathias-copeman",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 122.62455907383247,
+      "rel_err": 0.015064137814839855,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-nC4-280K",
+      "package": "srk-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-nC4-280K",
+      "package": "srk-mathias-copeman",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-nC4-280K",
+      "package": "srk-mathias-copeman",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4629352820798145,
+      "rel_err": 0.007636023509518595,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-nC4-280K",
+      "package": "srk-mathias-copeman",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 552.8148610272818,
+      "rel_err": 0.06822774027162033,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-nC4-280K",
+      "package": "srk-mathias-copeman",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 137.6384564108412,
+      "rel_err": 0.009969400700811695,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-CO2-265K",
+      "package": "srk-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-CO2-265K",
+      "package": "srk-mathias-copeman",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-CO2-265K",
+      "package": "srk-mathias-copeman",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 74.10704151984892,
+      "rel_err": 0.018069670554199318,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-pure-CO2-265K",
+      "package": "srk-mathias-copeman",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 859.2494019338617,
+      "rel_err": 0.11713799859530591,
+      "pass": false
+    },
+    {
+      "case": "srk-mathias-copeman-pure-CO2-265K",
+      "package": "srk-mathias-copeman",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 110.42896349315824,
+      "rel_err": 0.07154746293613024,
+      "pass": false
+    },
+    {
+      "case": "pr-peneloux-pure-C1-125K",
+      "package": "pr-peneloux",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-C1-125K",
+      "package": "pr-peneloux",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-C1-125K",
+      "package": "pr-peneloux",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.453636539542247,
+      "rel_err": 0.0029723812212907354,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-C1-125K",
+      "package": "pr-peneloux",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 458.4106247858575,
+      "rel_err": 0.1400113413399139,
+      "pass": false
+    },
+    {
+      "case": "pr-peneloux-pure-C1-125K",
+      "package": "pr-peneloux",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 58.44929918420311,
+      "rel_err": 0.012264256028869432,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-C3-300K",
+      "package": "pr-peneloux",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-C3-300K",
+      "package": "pr-peneloux",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-C3-300K",
+      "package": "pr-peneloux",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.68973590100658,
+      "rel_err": 0.002783411240381629,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-C3-300K",
+      "package": "pr-peneloux",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 540.273539027649,
+      "rel_err": 0.10384398067213221,
+      "pass": false
+    },
+    {
+      "case": "pr-peneloux-pure-C3-300K",
+      "package": "pr-peneloux",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 125.25915975103801,
+      "rel_err": 0.036872890360762085,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-nC4-280K",
+      "package": "pr-peneloux",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-nC4-280K",
+      "package": "pr-peneloux",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-nC4-280K",
+      "package": "pr-peneloux",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4710957226593058,
+      "rel_err": 0.005297508173905804,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-nC4-280K",
+      "package": "pr-peneloux",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 685.4626337138964,
+      "rel_err": 0.15535075520237096,
+      "pass": false
+    },
+    {
+      "case": "pr-peneloux-pure-nC4-280K",
+      "package": "pr-peneloux",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 133.66168775857693,
+      "rel_err": 0.019211503802101362,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-CO2-265K",
+      "package": "pr-peneloux",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-CO2-265K",
+      "package": "pr-peneloux",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-CO2-265K",
+      "package": "pr-peneloux",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 76.06740806795545,
+      "rel_err": 0.007905504421598328,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-CO2-265K",
+      "package": "pr-peneloux",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 1049.8810598492096,
+      "rel_err": 0.07873231177029102,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-pure-CO2-265K",
+      "package": "pr-peneloux",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 111.40941709696898,
+      "rel_err": 0.08106129461992649,
+      "pass": false
+    },
+    {
+      "case": "srk-peneloux-pure-C1-125K",
+      "package": "srk-peneloux",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-C1-125K",
+      "package": "srk-peneloux",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-C1-125K",
+      "package": "srk-peneloux",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.440110738983604,
+      "rel_err": 0.006000377916424188,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-C1-125K",
+      "package": "srk-peneloux",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 404.4515863814956,
+      "rel_err": 0.005821790699580751,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-C1-125K",
+      "package": "srk-peneloux",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 61.720883892400494,
+      "rel_err": 0.06892375934031189,
+      "pass": false
+    },
+    {
+      "case": "srk-peneloux-pure-C3-300K",
+      "package": "srk-peneloux",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-C3-300K",
+      "package": "srk-peneloux",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-C3-300K",
+      "package": "srk-peneloux",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.414761112093178,
+      "rel_err": 0.009929521645946748,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-C3-300K",
+      "package": "srk-peneloux",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 472.57275696996004,
+      "rel_err": 0.0344768797121692,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-C3-300K",
+      "package": "srk-peneloux",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 128.9421396858599,
+      "rel_err": 0.06735993863531205,
+      "pass": false
+    },
+    {
+      "case": "srk-peneloux-pure-nC4-280K",
+      "package": "srk-peneloux",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-nC4-280K",
+      "package": "srk-peneloux",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-nC4-280K",
+      "package": "srk-peneloux",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4646195868443894,
+      "rel_err": 0.0071533568589332045,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-nC4-280K",
+      "package": "srk-peneloux",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 599.326766203993,
+      "rel_err": 0.010168312450698703,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-nC4-280K",
+      "package": "srk-peneloux",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 137.63845641084123,
+      "rel_err": 0.009969400700811903,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-CO2-265K",
+      "package": "srk-peneloux",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-CO2-265K",
+      "package": "srk-peneloux",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-CO2-265K",
+      "package": "srk-peneloux",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 74.4679795999225,
+      "rel_err": 0.013287182404523843,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-CO2-265K",
+      "package": "srk-peneloux",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 916.6954007839937,
+      "rel_err": 0.05811335522241114,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-pure-CO2-265K",
+      "package": "srk-peneloux",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 115.67062617365647,
+      "rel_err": 0.12240993750063044,
+      "pass": false
+    },
+    {
+      "case": "sour-pr-pure-C1-125K",
+      "package": "sour-pr",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-C1-125K",
+      "package": "sour-pr",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-C1-125K",
+      "package": "sour-pr",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.452793890830731,
+      "rel_err": 0.003161023475962951,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-C1-125K",
+      "package": "sour-pr",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 449.65210921703544,
+      "rel_err": 0.11822998082623973,
+      "pass": false
+    },
+    {
+      "case": "sour-pr-pure-C1-125K",
+      "package": "sour-pr",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 58.4492991842031,
+      "rel_err": 0.012264256028869186,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-C3-300K",
+      "package": "sour-pr",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-C3-300K",
+      "package": "sour-pr",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-C3-300K",
+      "package": "sour-pr",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.635745054743815,
+      "rel_err": 0.00028724783672227276,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-C3-300K",
+      "package": "sour-pr",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 508.65573806727093,
+      "rel_err": 0.03924500117182986,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-C3-300K",
+      "package": "sour-pr",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 125.259159751038,
+      "rel_err": 0.03687289036076197,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-nC4-280K",
+      "package": "sour-pr",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-nC4-280K",
+      "package": "sour-pr",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-nC4-280K",
+      "package": "sour-pr",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4694051168741638,
+      "rel_err": 0.005781980490874353,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-nC4-280K",
+      "package": "sour-pr",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 625.291643863258,
+      "rel_err": 0.053932245795736404,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-nC4-280K",
+      "package": "sour-pr",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 133.66168775857693,
+      "rel_err": 0.019211503802101362,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-CO2-265K",
+      "package": "sour-pr",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-CO2-265K",
+      "package": "sour-pr",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-CO2-265K",
+      "package": "sour-pr",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 75.6379566209503,
+      "rel_err": 0.0022152030387561058,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-CO2-265K",
+      "package": "sour-pr",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 973.5870316173937,
+      "rel_err": 0.0003416858258672106,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-pure-CO2-265K",
+      "package": "sour-pr",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 111.40941709696902,
+      "rel_err": 0.08106129461992691,
+      "pass": false
+    },
+    {
+      "case": "sour-srk-pure-C1-125K",
+      "package": "sour-srk",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-C1-125K",
+      "package": "sour-srk",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-C1-125K",
+      "package": "sour-srk",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.439273200307172,
+      "rel_err": 0.00618787619671358,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-C1-125K",
+      "package": "sour-srk",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 397.6182616147184,
+      "rel_err": 0.011171854979604774,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-C1-125K",
+      "package": "sour-srk",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 61.720883892400465,
+      "rel_err": 0.0689237593403114,
+      "pass": false
+    },
+    {
+      "case": "sour-srk-pure-C3-300K",
+      "package": "sour-srk",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-C3-300K",
+      "package": "sour-srk",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-C3-300K",
+      "package": "sour-srk",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.362128880975877,
+      "rel_err": 0.012362872079621199,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-C3-300K",
+      "package": "sour-srk",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 448.2037313304468,
+      "rel_err": 0.08426573725169227,
+      "pass": false
+    },
+    {
+      "case": "sour-srk-pure-C3-300K",
+      "package": "sour-srk",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 128.9421396858599,
+      "rel_err": 0.06735993863531205,
+      "pass": false
+    },
+    {
+      "case": "sour-srk-pure-nC4-280K",
+      "package": "sour-srk",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-nC4-280K",
+      "package": "sour-srk",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-nC4-280K",
+      "package": "sour-srk",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4629352820798145,
+      "rel_err": 0.007636023509518595,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-nC4-280K",
+      "package": "sour-srk",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 552.8148610272818,
+      "rel_err": 0.06822774027162033,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-nC4-280K",
+      "package": "sour-srk",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 137.6384564108412,
+      "rel_err": 0.009969400700811695,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-CO2-265K",
+      "package": "sour-srk",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-CO2-265K",
+      "package": "sour-srk",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-CO2-265K",
+      "package": "sour-srk",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 74.05634911230905,
+      "rel_err": 0.01874135318266713,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-pure-CO2-265K",
+      "package": "sour-srk",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 857.9893818886256,
+      "rel_err": 0.11843264461594143,
+      "pass": false
+    },
+    {
+      "case": "sour-srk-pure-CO2-265K",
+      "package": "sour-srk",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 115.67062617365644,
+      "rel_err": 0.12240993750063016,
+      "pass": false
+    },
+    {
+      "case": "kabadi-danner-srk-pure-C1-125K",
+      "package": "kabadi-danner-srk",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-C1-125K",
+      "package": "kabadi-danner-srk",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-C1-125K",
+      "package": "kabadi-danner-srk",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.439273200307172,
+      "rel_err": 0.00618787619671358,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-C1-125K",
+      "package": "kabadi-danner-srk",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 397.6182616147184,
+      "rel_err": 0.011171854979604774,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-C1-125K",
+      "package": "kabadi-danner-srk",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 61.720883892400465,
+      "rel_err": 0.0689237593403114,
+      "pass": false
+    },
+    {
+      "case": "kabadi-danner-srk-pure-C3-300K",
+      "package": "kabadi-danner-srk",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-C3-300K",
+      "package": "kabadi-danner-srk",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-C3-300K",
+      "package": "kabadi-danner-srk",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.362128880975877,
+      "rel_err": 0.012362872079621199,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-C3-300K",
+      "package": "kabadi-danner-srk",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 448.2037313304468,
+      "rel_err": 0.08426573725169227,
+      "pass": false
+    },
+    {
+      "case": "kabadi-danner-srk-pure-C3-300K",
+      "package": "kabadi-danner-srk",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 128.9421396858599,
+      "rel_err": 0.06735993863531205,
+      "pass": false
+    },
+    {
+      "case": "kabadi-danner-srk-pure-nC4-280K",
+      "package": "kabadi-danner-srk",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-nC4-280K",
+      "package": "kabadi-danner-srk",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-nC4-280K",
+      "package": "kabadi-danner-srk",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4629352820798145,
+      "rel_err": 0.007636023509518595,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-nC4-280K",
+      "package": "kabadi-danner-srk",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 552.8148610272818,
+      "rel_err": 0.06822774027162033,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-nC4-280K",
+      "package": "kabadi-danner-srk",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 137.6384564108412,
+      "rel_err": 0.009969400700811695,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-CO2-265K",
+      "package": "kabadi-danner-srk",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-CO2-265K",
+      "package": "kabadi-danner-srk",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-CO2-265K",
+      "package": "kabadi-danner-srk",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 74.05634911230905,
+      "rel_err": 0.01874135318266713,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-pure-CO2-265K",
+      "package": "kabadi-danner-srk",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 857.9893818886256,
+      "rel_err": 0.11843264461594143,
+      "pass": false
+    },
+    {
+      "case": "kabadi-danner-srk-pure-CO2-265K",
+      "package": "kabadi-danner-srk",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 115.67062617365644,
+      "rel_err": 0.12240993750063016,
+      "pass": false
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-C1-125K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-C1-125K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-C1-125K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.43864578449208,
+      "rel_err": 0.0063283346491603935,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-C1-125K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 397.3270487667619,
+      "rel_err": 0.01189606583219876,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-C1-125K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 58.703832019570584,
+      "rel_err": 0.016672426782400152,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-C3-300K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-C3-300K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-C3-300K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.37988560077789,
+      "rel_err": 0.011541924137388533,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-C3-300K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 449.20359097934505,
+      "rel_err": 0.08222290343654806,
+      "pass": false
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-C3-300K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 125.85479456482747,
+      "rel_err": 0.04180344867043694,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-nC4-280K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-nC4-280K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-nC4-280K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4627014996783094,
+      "rel_err": 0.007703017898582582,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-nC4-280K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 552.550556117598,
+      "rel_err": 0.06867322754107569,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-nC4-280K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 137.49288643461,
+      "rel_err": 0.00890123105194983,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-CO2-265K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-CO2-265K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-CO2-265K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 74.14341092937842,
+      "rel_err": 0.017587769974326827,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-CO2-265K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 860.1463319230727,
+      "rel_err": 0.1162164205254085,
+      "pass": false
+    },
+    {
+      "case": "zudkevitch-joffe-rk-pure-CO2-265K",
+      "package": "zudkevitch-joffe-rk",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 111.97467667880666,
+      "rel_err": 0.08654629105255199,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.316668851735017,
+      "rel_err": 0.033635091662880624,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 280.2747500612722,
+      "rel_err": 0.30299086346369203,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 248.39086029873772,
+      "rel_err": 3.301799900325026,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 19.506517210302917,
+      "rel_err": 0.09815352483572691,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 19.506517210302917,
+      "rel_err": 0.9601458334509173,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 77.77865196142966,
+      "rel_err": 0.35616224930853396,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4049702543905407,
+      "rel_err": 0.024246904363336073,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 495.8209649237804,
+      "rel_err": 0.16429124200961578,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 161.603311095633,
+      "rel_err": 0.18581974482000638,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 63.930103637048454,
+      "rel_err": 0.15291574945658218,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 63.930103637048454,
+      "rel_err": 0.9343130654266565,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 42.3340712315119,
+      "rel_err": 0.5892113337938328,
+      "pass": false
+    },
+    {
+      "case": "pr-bm-pure-C1-125K",
+      "package": "pr-bm",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-C1-125K",
+      "package": "pr-bm",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-C1-125K",
+      "package": "pr-bm",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.452793890830732,
+      "rel_err": 0.003161023475962752,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-C1-125K",
+      "package": "pr-bm",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 449.65210921703544,
+      "rel_err": 0.11822998082623973,
+      "pass": false
+    },
+    {
+      "case": "pr-bm-pure-C1-125K",
+      "package": "pr-bm",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 58.4492991842031,
+      "rel_err": 0.012264256028869186,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-C3-300K",
+      "package": "pr-bm",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-C3-300K",
+      "package": "pr-bm",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-C3-300K",
+      "package": "pr-bm",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.635745054743815,
+      "rel_err": 0.00028724783672227276,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-C3-300K",
+      "package": "pr-bm",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 508.65573806727105,
+      "rel_err": 0.03924500117183009,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-C3-300K",
+      "package": "pr-bm",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 125.25915975103801,
+      "rel_err": 0.036872890360762085,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-nC4-280K",
+      "package": "pr-bm",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-nC4-280K",
+      "package": "pr-bm",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-nC4-280K",
+      "package": "pr-bm",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4694051168741638,
+      "rel_err": 0.005781980490874353,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-nC4-280K",
+      "package": "pr-bm",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 625.291643863258,
+      "rel_err": 0.053932245795736404,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-nC4-280K",
+      "package": "pr-bm",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 133.66168775857693,
+      "rel_err": 0.019211503802101362,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-CO2-265K",
+      "package": "pr-bm",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-CO2-265K",
+      "package": "pr-bm",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-CO2-265K",
+      "package": "pr-bm",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 75.6379566209503,
+      "rel_err": 0.0022152030387561058,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-CO2-265K",
+      "package": "pr-bm",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 973.5870316173937,
+      "rel_err": 0.0003416858258672106,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-pure-CO2-265K",
+      "package": "pr-bm",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 111.40941709696902,
+      "rel_err": 0.08106129461992691,
+      "pass": false
+    },
+    {
+      "case": "rks-bm-pure-C1-125K",
+      "package": "rks-bm",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-C1-125K",
+      "package": "rks-bm",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-C1-125K",
+      "package": "rks-bm",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.439273200307172,
+      "rel_err": 0.00618787619671358,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-C1-125K",
+      "package": "rks-bm",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 397.6182616147184,
+      "rel_err": 0.011171854979604774,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-C1-125K",
+      "package": "rks-bm",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 61.72088389240045,
+      "rel_err": 0.06892375934031116,
+      "pass": false
+    },
+    {
+      "case": "rks-bm-pure-C3-300K",
+      "package": "rks-bm",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-C3-300K",
+      "package": "rks-bm",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-C3-300K",
+      "package": "rks-bm",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.362128880975877,
+      "rel_err": 0.012362872079621199,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-C3-300K",
+      "package": "rks-bm",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 448.2037313304468,
+      "rel_err": 0.08426573725169227,
+      "pass": false
+    },
+    {
+      "case": "rks-bm-pure-C3-300K",
+      "package": "rks-bm",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 128.94213968585993,
+      "rel_err": 0.06735993863531228,
+      "pass": false
+    },
+    {
+      "case": "rks-bm-pure-nC4-280K",
+      "package": "rks-bm",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-nC4-280K",
+      "package": "rks-bm",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-nC4-280K",
+      "package": "rks-bm",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4629352820798145,
+      "rel_err": 0.007636023509518595,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-nC4-280K",
+      "package": "rks-bm",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 552.8148610272818,
+      "rel_err": 0.06822774027162033,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-nC4-280K",
+      "package": "rks-bm",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 137.6384564108412,
+      "rel_err": 0.009969400700811695,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-CO2-265K",
+      "package": "rks-bm",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-CO2-265K",
+      "package": "rks-bm",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-CO2-265K",
+      "package": "rks-bm",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 74.05634911230905,
+      "rel_err": 0.01874135318266713,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-pure-CO2-265K",
+      "package": "rks-bm",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 857.9893818886256,
+      "rel_err": 0.11843264461594143,
+      "pass": false
+    },
+    {
+      "case": "rks-bm-pure-CO2-265K",
+      "package": "rks-bm",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 115.67062617365644,
+      "rel_err": 0.12240993750063016,
+      "pass": false
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-C1-125K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-C1-125K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-C1-125K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.452793890830731,
+      "rel_err": 0.003161023475962951,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-C1-125K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 449.65210921703544,
+      "rel_err": 0.11822998082623973,
+      "pass": false
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-C1-125K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 45.382018163414614,
+      "rel_err": 0.21404370121698232,
+      "pass": false
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-C3-300K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-C3-300K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-C3-300K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.635745054743815,
+      "rel_err": 0.00028724783672227276,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-C3-300K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 508.65573806727093,
+      "rel_err": 0.03924500117182986,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-C3-300K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 89.47564098075395,
+      "rel_err": 0.25933666915063763,
+      "pass": false
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-nC4-280K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-nC4-280K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-nC4-280K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4694051168741638,
+      "rel_err": 0.005781980490874353,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-nC4-280K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 625.291643863258,
+      "rel_err": 0.053932245795736404,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-nC4-280K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 103.16625855742495,
+      "rel_err": 0.24298217921905957,
+      "pass": false
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-CO2-265K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-CO2-265K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-CO2-265K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 75.6379566209503,
+      "rel_err": 0.0022152030387561058,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-CO2-265K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 973.5870316173937,
+      "rel_err": 0.0003416858258672106,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-pure-CO2-265K",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 63.10607258275468,
+      "rel_err": 0.38765021573254543,
+      "pass": false
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-C1-125K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-C1-125K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-C1-125K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.439273200307172,
+      "rel_err": 0.00618787619671358,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-C1-125K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 397.6182616147184,
+      "rel_err": 0.011171854979604774,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-C1-125K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 61.720883892400465,
+      "rel_err": 0.0689237593403114,
+      "pass": false
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-C3-300K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-C3-300K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-C3-300K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.362128880975877,
+      "rel_err": 0.012362872079621199,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-C3-300K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 448.2037313304468,
+      "rel_err": 0.08426573725169227,
+      "pass": false
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-C3-300K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 128.9421396858599,
+      "rel_err": 0.06735993863531205,
+      "pass": false
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-nC4-280K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-nC4-280K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-nC4-280K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4629352820798145,
+      "rel_err": 0.007636023509518595,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-nC4-280K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 552.8148610272818,
+      "rel_err": 0.06822774027162033,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-nC4-280K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 137.6384564108412,
+      "rel_err": 0.009969400700811695,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-CO2-265K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-CO2-265K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-CO2-265K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 74.05634911230905,
+      "rel_err": 0.01874135318266713,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-CO2-265K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 857.9893818886256,
+      "rel_err": 0.11843264461594143,
+      "pass": false
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-pure-CO2-265K",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 115.67062617365644,
+      "rel_err": 0.12240993750063016,
+      "pass": false
+    },
+    {
+      "case": "rk-c1c3-294.26K-6.895MPa",
+      "package": "rk",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6369198.085708063,
+      "rel_err": 0.07625843572036793,
+      "pass": false
+    },
+    {
+      "case": "rk-c1c3-294.26K-6.895MPa",
+      "package": "rk",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7166790027466683,
+      "rel_err": 0.03302099725333174,
+      "pass": false
+    },
+    {
+      "case": "rk-c1co2-277.15K-5.97MPa",
+      "package": "rk",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5961105.943811486,
+      "rel_err": 0.0014897916563675806,
+      "pass": true
+    },
+    {
+      "case": "vdw-c1c3-294.26K-6.895MPa",
+      "package": "vdw",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 4945111.457189603,
+      "rel_err": 0.2827974681378386,
+      "pass": false
+    },
+    {
+      "case": "vdw-c1c3-294.26K-6.895MPa",
+      "package": "vdw",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.5883842143575903,
+      "rel_err": 0.16131578564240978,
+      "pass": false
+    },
+    {
+      "case": "vdw-c1co2-277.15K-5.97MPa",
+      "package": "vdw",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5832580.585317234,
+      "rel_err": 0.023018327417548813,
+      "pass": true
+    },
+    {
+      "case": "prsv-c1c3-294.26K-6.895MPa",
+      "package": "prsv",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6799755.222546807,
+      "rel_err": 0.013813600790890999,
+      "pass": true
+    },
+    {
+      "case": "prsv-c1c3-294.26K-6.895MPa",
+      "package": "prsv",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7435372599720516,
+      "rel_err": 0.006162740027948477,
+      "pass": true
+    },
+    {
+      "case": "prsv-c1co2-277.15K-5.97MPa",
+      "package": "prsv",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5800884.0473236665,
+      "rel_err": 0.02832763026404246,
+      "pass": true
+    },
+    {
+      "case": "prsv2-c1c3-294.26K-6.895MPa",
+      "package": "prsv2",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6799755.222546807,
+      "rel_err": 0.013813600790890999,
+      "pass": true
+    },
+    {
+      "case": "prsv2-c1c3-294.26K-6.895MPa",
+      "package": "prsv2",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7435372599720516,
+      "rel_err": 0.006162740027948477,
+      "pass": true
+    },
+    {
+      "case": "prsv2-c1co2-277.15K-5.97MPa",
+      "package": "prsv2",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5800884.0473236665,
+      "rel_err": 0.02832763026404246,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-c1c3-294.26K-6.895MPa",
+      "package": "twu-pr",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6857011.546038704,
+      "rel_err": 0.00550956547662016,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-c1c3-294.26K-6.895MPa",
+      "package": "twu-pr",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7427361296634136,
+      "rel_err": 0.0069638703365864085,
+      "pass": true
+    },
+    {
+      "case": "twu-pr-c1co2-277.15K-5.97MPa",
+      "package": "twu-pr",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5830127.59782996,
+      "rel_err": 0.023429213093808996,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-c1c3-294.26K-6.895MPa",
+      "package": "twu-srk",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 7090128.552393688,
+      "rel_err": 0.028300007598794474,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-c1c3-294.26K-6.895MPa",
+      "package": "twu-srk",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7515162153724004,
+      "rel_err": 0.0018162153724003982,
+      "pass": true
+    },
+    {
+      "case": "twu-srk-c1co2-277.15K-5.97MPa",
+      "package": "twu-srk",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5847886.894944575,
+      "rel_err": 0.020454456458195196,
+      "pass": true
+    },
+    {
+      "case": "api-srk-c1c3-294.26K-6.895MPa",
+      "package": "api-srk",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6828397.469697408,
+      "rel_err": 0.009659540290441134,
+      "pass": true
+    },
+    {
+      "case": "api-srk-c1c3-294.26K-6.895MPa",
+      "package": "api-srk",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7508469358529063,
+      "rel_err": 0.0011469358529062612,
+      "pass": true
+    },
+    {
+      "case": "api-srk-c1co2-277.15K-5.97MPa",
+      "package": "api-srk",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5779366.280955484,
+      "rel_err": 0.031931946238612376,
+      "pass": false
+    },
+    {
+      "case": "pr-boston-mathias-c1c3-294.26K-6.895MPa",
+      "package": "pr-boston-mathias",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6675412.525748026,
+      "rel_err": 0.03184734942015582,
+      "pass": false
+    },
+    {
+      "case": "pr-boston-mathias-c1c3-294.26K-6.895MPa",
+      "package": "pr-boston-mathias",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7442452427058096,
+      "rel_err": 0.0054547572941904265,
+      "pass": true
+    },
+    {
+      "case": "pr-boston-mathias-c1co2-277.15K-5.97MPa",
+      "package": "pr-boston-mathias",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5750296.227187974,
+      "rel_err": 0.03680130197856375,
+      "pass": false
+    },
+    {
+      "case": "srk-boston-mathias-c1c3-294.26K-6.895MPa",
+      "package": "srk-boston-mathias",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6597717.390270263,
+      "rel_err": 0.04311567943868558,
+      "pass": false
+    },
+    {
+      "case": "srk-boston-mathias-c1c3-294.26K-6.895MPa",
+      "package": "srk-boston-mathias",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7508142992807466,
+      "rel_err": 0.001114299280746578,
+      "pass": true
+    },
+    {
+      "case": "srk-boston-mathias-c1co2-277.15K-5.97MPa",
+      "package": "srk-boston-mathias",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5700423.042683322,
+      "rel_err": 0.04515526923227438,
+      "pass": false
+    },
+    {
+      "case": "pr-mathias-copeman-c1c3-294.26K-6.895MPa",
+      "package": "pr-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6889065.369350119,
+      "rel_err": 0.000860715105131463,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-c1c3-294.26K-6.895MPa",
+      "package": "pr-mathias-copeman",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7431913339343627,
+      "rel_err": 0.006508666065637381,
+      "pass": true
+    },
+    {
+      "case": "pr-mathias-copeman-c1co2-277.15K-5.97MPa",
+      "package": "pr-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5838130.669071177,
+      "rel_err": 0.02208866514720653,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-c1c3-294.26K-6.895MPa",
+      "package": "srk-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 7044942.747889707,
+      "rel_err": 0.021746591427078587,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-c1c3-294.26K-6.895MPa",
+      "package": "srk-mathias-copeman",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7534242994836314,
+      "rel_err": 0.003724299483631399,
+      "pass": true
+    },
+    {
+      "case": "srk-mathias-copeman-c1co2-277.15K-5.97MPa",
+      "package": "srk-mathias-copeman",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5827837.953676261,
+      "rel_err": 0.02381273807767822,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-c1c3-294.26K-6.895MPa",
+      "package": "pr-peneloux",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6784786.626125522,
+      "rel_err": 0.015984535732339093,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-c1c3-294.26K-6.895MPa",
+      "package": "pr-peneloux",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7438786023419814,
+      "rel_err": 0.00582139765801859,
+      "pass": true
+    },
+    {
+      "case": "pr-peneloux-c1co2-277.15K-5.97MPa",
+      "package": "pr-peneloux",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5793581.21917614,
+      "rel_err": 0.029550884560110607,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-c1c3-294.26K-6.895MPa",
+      "package": "srk-peneloux",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6805807.432273483,
+      "rel_err": 0.012935832882743597,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-c1c3-294.26K-6.895MPa",
+      "package": "srk-peneloux",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7504751481713491,
+      "rel_err": 0.0007751481713490493,
+      "pass": true
+    },
+    {
+      "case": "srk-peneloux-c1co2-277.15K-5.97MPa",
+      "package": "srk-peneloux",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5773906.24457296,
+      "rel_err": 0.03284652519715916,
+      "pass": false
+    },
+    {
+      "case": "sour-pr-c1c3-294.26K-6.895MPa",
+      "package": "sour-pr",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6784786.626125522,
+      "rel_err": 0.015984535732339093,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-c1c3-294.26K-6.895MPa",
+      "package": "sour-pr",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7438786023419823,
+      "rel_err": 0.005821397658017702,
+      "pass": true
+    },
+    {
+      "case": "sour-pr-c1co2-277.15K-5.97MPa",
+      "package": "sour-pr",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5793581.21917614,
+      "rel_err": 0.029550884560110607,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-c1c3-294.26K-6.895MPa",
+      "package": "sour-srk",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6805807.432273483,
+      "rel_err": 0.012935832882743597,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-c1c3-294.26K-6.895MPa",
+      "package": "sour-srk",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7504751481713489,
+      "rel_err": 0.0007751481713488273,
+      "pass": true
+    },
+    {
+      "case": "sour-srk-c1co2-277.15K-5.97MPa",
+      "package": "sour-srk",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5773906.24457296,
+      "rel_err": 0.03284652519715916,
+      "pass": false
+    },
+    {
+      "case": "kabadi-danner-srk-c1c3-294.26K-6.895MPa",
+      "package": "kabadi-danner-srk",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6805807.432273483,
+      "rel_err": 0.012935832882743597,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-c1c3-294.26K-6.895MPa",
+      "package": "kabadi-danner-srk",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7504751481713489,
+      "rel_err": 0.0007751481713488273,
+      "pass": true
+    },
+    {
+      "case": "kabadi-danner-srk-c1co2-277.15K-5.97MPa",
+      "package": "kabadi-danner-srk",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5773906.24457296,
+      "rel_err": 0.03284652519715916,
+      "pass": false
+    },
+    {
+      "case": "zudkevitch-joffe-rk-c1c3-294.26K-6.895MPa",
+      "package": "zudkevitch-joffe-rk",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6512152.6589103285,
+      "rel_err": 0.055525357663476646,
+      "pass": false
+    },
+    {
+      "case": "zudkevitch-joffe-rk-c1c3-294.26K-6.895MPa",
+      "package": "zudkevitch-joffe-rk",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7531055788972169,
+      "rel_err": 0.003405578897216821,
+      "pass": true
+    },
+    {
+      "case": "zudkevitch-joffe-rk-c1co2-277.15K-5.97MPa",
+      "package": "zudkevitch-joffe-rk",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5961105.943811486,
+      "rel_err": 0.0014897916563675806,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-c1c3-294.26K-6.895MPa",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 7919770.432637537,
+      "rel_err": 0.14862515339195603,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-c1c3-294.26K-6.895MPa",
+      "package": "twu-sim-tassone",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.3707,
+      "rel_err": 0.37900000000000006,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-c1co2-277.15K-5.97MPa",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 12575460.007898215,
+      "rel_err": 1.1064422123782605,
+      "pass": false
+    },
+    {
+      "case": "pr-bm-c1c3-294.26K-6.895MPa",
+      "package": "pr-bm",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6675412.525748026,
+      "rel_err": 0.03184734942015582,
+      "pass": false
+    },
+    {
+      "case": "pr-bm-c1c3-294.26K-6.895MPa",
+      "package": "pr-bm",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7442452427058096,
+      "rel_err": 0.0054547572941904265,
+      "pass": true
+    },
+    {
+      "case": "pr-bm-c1co2-277.15K-5.97MPa",
+      "package": "pr-bm",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5750296.227187974,
+      "rel_err": 0.03680130197856375,
+      "pass": false
+    },
+    {
+      "case": "rks-bm-c1c3-294.26K-6.895MPa",
+      "package": "rks-bm",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6597717.390270263,
+      "rel_err": 0.04311567943868558,
+      "pass": false
+    },
+    {
+      "case": "rks-bm-c1c3-294.26K-6.895MPa",
+      "package": "rks-bm",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7508142992807466,
+      "rel_err": 0.001114299280746578,
+      "pass": true
+    },
+    {
+      "case": "rks-bm-c1co2-277.15K-5.97MPa",
+      "package": "rks-bm",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5700423.042683322,
+      "rel_err": 0.04515526923227438,
+      "pass": false
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-c1c3-294.26K-6.895MPa",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6784786.626125522,
+      "rel_err": 0.015984535732339093,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-c1c3-294.26K-6.895MPa",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7438786023419823,
+      "rel_err": 0.005821397658017702,
+      "pass": true
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-c1co2-277.15K-5.97MPa",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5793581.21917614,
+      "rel_err": 0.029550884560110607,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-c1c3-294.26K-6.895MPa",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 6805807.432273483,
+      "rel_err": 0.012935832882743597,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-c1c3-294.26K-6.895MPa",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7504751481713489,
+      "rel_err": 0.0007751481713488273,
+      "pass": true
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-c1co2-277.15K-5.97MPa",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5773906.24457296,
+      "rel_err": 0.03284652519715916,
+      "pass": false
+    },
+    {
+      "case": "rk-ng-dew-morch-243.4K-0.30MPa",
+      "package": "rk",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 1054147.2421490494,
+      "rel_err": 2.5138241404968316,
+      "pass": false
+    },
+    {
+      "case": "rk-ng-dew-morch-254.6K-0.68MPa",
+      "package": "rk",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 10359990.183928166,
+      "rel_err": 14.235279682247302,
+      "pass": false
+    },
+    {
+      "case": "rk-ng-dew-morch-260.8K-1.04MPa",
+      "package": "rk",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 10908089.759992907,
+      "rel_err": 9.488547846147025,
+      "pass": false
+    },
+    {
+      "case": "vdw-ng-dew-morch-243.4K-0.30MPa",
+      "package": "vdw",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 8164584.977024227,
+      "rel_err": 26.215283256747426,
+      "pass": false
+    },
+    {
+      "case": "vdw-ng-dew-morch-254.6K-0.68MPa",
+      "package": "vdw",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 8964507.772236578,
+      "rel_err": 12.183099665053792,
+      "pass": false
+    },
+    {
+      "case": "vdw-ng-dew-morch-260.8K-1.04MPa",
+      "package": "vdw",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 9388711.709108656,
+      "rel_err": 8.027607412604477,
+      "pass": false
+    },
+    {
+      "case": "prsv-ng-dew-morch-243.4K-0.30MPa",
+      "package": "prsv",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 411129.79053324775,
+      "rel_err": 0.37043263511082586,
+      "pass": false
+    },
+    {
+      "case": "prsv-ng-dew-morch-254.6K-0.68MPa",
+      "package": "prsv",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 838244.816029628,
+      "rel_err": 0.232712964749453,
+      "pass": false
+    },
+    {
+      "case": "prsv-ng-dew-morch-260.8K-1.04MPa",
+      "package": "prsv",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1251910.5605300195,
+      "rel_err": 0.20376015435578795,
+      "pass": false
+    },
+    {
+      "case": "prsv2-ng-dew-morch-243.4K-0.30MPa",
+      "package": "prsv2",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 411129.79053324775,
+      "rel_err": 0.37043263511082586,
+      "pass": false
+    },
+    {
+      "case": "prsv2-ng-dew-morch-254.6K-0.68MPa",
+      "package": "prsv2",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 838244.816029628,
+      "rel_err": 0.232712964749453,
+      "pass": false
+    },
+    {
+      "case": "prsv2-ng-dew-morch-260.8K-1.04MPa",
+      "package": "prsv2",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1251910.5605300195,
+      "rel_err": 0.20376015435578795,
+      "pass": false
+    },
+    {
+      "case": "twu-pr-ng-dew-morch-243.4K-0.30MPa",
+      "package": "twu-pr",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 387803.49551192566,
+      "rel_err": 0.29267831837308556,
+      "pass": false
+    },
+    {
+      "case": "twu-pr-ng-dew-morch-254.6K-0.68MPa",
+      "package": "twu-pr",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 802379.4212536511,
+      "rel_err": 0.17996973713772227,
+      "pass": false
+    },
+    {
+      "case": "twu-pr-ng-dew-morch-260.8K-1.04MPa",
+      "package": "twu-pr",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1204727.2691742915,
+      "rel_err": 0.15839160497528032,
+      "pass": false
+    },
+    {
+      "case": "twu-srk-ng-dew-morch-243.4K-0.30MPa",
+      "package": "twu-srk",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 386167.1163535621,
+      "rel_err": 0.28722372117854034,
+      "pass": false
+    },
+    {
+      "case": "twu-srk-ng-dew-morch-254.6K-0.68MPa",
+      "package": "twu-srk",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 793288.8018464567,
+      "rel_err": 0.16660117918596576,
+      "pass": false
+    },
+    {
+      "case": "twu-srk-ng-dew-morch-260.8K-1.04MPa",
+      "package": "twu-srk",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1181839.203147303,
+      "rel_err": 0.1363838491800991,
+      "pass": false
+    },
+    {
+      "case": "api-srk-ng-dew-morch-243.4K-0.30MPa",
+      "package": "api-srk",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 376554.9651763387,
+      "rel_err": 0.25518321725446225,
+      "pass": false
+    },
+    {
+      "case": "api-srk-ng-dew-morch-254.6K-0.68MPa",
+      "package": "api-srk",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 771740.7490949502,
+      "rel_err": 0.13491286631610316,
+      "pass": false
+    },
+    {
+      "case": "api-srk-ng-dew-morch-260.8K-1.04MPa",
+      "package": "api-srk",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1148235.7718213568,
+      "rel_err": 0.10407285752053543,
+      "pass": false
+    },
+    {
+      "case": "pr-boston-mathias-ng-dew-morch-243.4K-0.30MPa",
+      "package": "pr-boston-mathias",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 406383.79170593165,
+      "rel_err": 0.3546126390197722,
+      "pass": false
+    },
+    {
+      "case": "pr-boston-mathias-ng-dew-morch-254.6K-0.68MPa",
+      "package": "pr-boston-mathias",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 828676.116024297,
+      "rel_err": 0.21864134709455435,
+      "pass": false
+    },
+    {
+      "case": "pr-boston-mathias-ng-dew-morch-260.8K-1.04MPa",
+      "package": "pr-boston-mathias",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1237051.1329136717,
+      "rel_err": 0.18947224318622274,
+      "pass": false
+    },
+    {
+      "case": "srk-boston-mathias-ng-dew-morch-243.4K-0.30MPa",
+      "package": "srk-boston-mathias",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 377630.2725822008,
+      "rel_err": 0.25876757527400274,
+      "pass": false
+    },
+    {
+      "case": "srk-boston-mathias-ng-dew-morch-254.6K-0.68MPa",
+      "package": "srk-boston-mathias",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 773658.5277051807,
+      "rel_err": 0.1377331289782069,
+      "pass": false
+    },
+    {
+      "case": "srk-boston-mathias-ng-dew-morch-260.8K-1.04MPa",
+      "package": "srk-boston-mathias",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1151010.2965225002,
+      "rel_err": 0.1067406697331733,
+      "pass": false
+    },
+    {
+      "case": "pr-mathias-copeman-ng-dew-morch-243.4K-0.30MPa",
+      "package": "pr-mathias-copeman",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 406576.8028341867,
+      "rel_err": 0.355256009447289,
+      "pass": false
+    },
+    {
+      "case": "pr-mathias-copeman-ng-dew-morch-254.6K-0.68MPa",
+      "package": "pr-mathias-copeman",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 829293.4939859572,
+      "rel_err": 0.21954925586170182,
+      "pass": false
+    },
+    {
+      "case": "pr-mathias-copeman-ng-dew-morch-260.8K-1.04MPa",
+      "package": "pr-mathias-copeman",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1238158.4915896798,
+      "rel_err": 0.19053701114392294,
+      "pass": false
+    },
+    {
+      "case": "srk-mathias-copeman-ng-dew-morch-243.4K-0.30MPa",
+      "package": "srk-mathias-copeman",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 377757.0960752892,
+      "rel_err": 0.25919032025096395,
+      "pass": false
+    },
+    {
+      "case": "srk-mathias-copeman-ng-dew-morch-254.6K-0.68MPa",
+      "package": "srk-mathias-copeman",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 774019.9737746837,
+      "rel_err": 0.13826466731571127,
+      "pass": false
+    },
+    {
+      "case": "srk-mathias-copeman-ng-dew-morch-260.8K-1.04MPa",
+      "package": "srk-mathias-copeman",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1151509.1152399697,
+      "rel_err": 0.10722030311535546,
+      "pass": false
+    },
+    {
+      "case": "pr-peneloux-ng-dew-morch-243.4K-0.30MPa",
+      "package": "pr-peneloux",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 406518.332822541,
+      "rel_err": 0.35506110940847,
+      "pass": false
+    },
+    {
+      "case": "pr-peneloux-ng-dew-morch-254.6K-0.68MPa",
+      "package": "pr-peneloux",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 829096.1187764448,
+      "rel_err": 0.21925899820065414,
+      "pass": false
+    },
+    {
+      "case": "pr-peneloux-ng-dew-morch-260.8K-1.04MPa",
+      "package": "pr-peneloux",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1237803.6776636227,
+      "rel_err": 0.19019584390732946,
+      "pass": false
+    },
+    {
+      "case": "srk-peneloux-ng-dew-morch-243.4K-0.30MPa",
+      "package": "srk-peneloux",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 377792.37663995684,
+      "rel_err": 0.2593079221331895,
+      "pass": false
+    },
+    {
+      "case": "srk-peneloux-ng-dew-morch-254.6K-0.68MPa",
+      "package": "srk-peneloux",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 774164.5509423886,
+      "rel_err": 0.13847728079763028,
+      "pass": false
+    },
+    {
+      "case": "srk-peneloux-ng-dew-morch-260.8K-1.04MPa",
+      "package": "srk-peneloux",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1151892.119405194,
+      "rel_err": 0.10758857635114803,
+      "pass": false
+    },
+    {
+      "case": "sour-pr-ng-dew-morch-243.4K-0.30MPa",
+      "package": "sour-pr",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 406518.332822541,
+      "rel_err": 0.35506110940847,
+      "pass": false
+    },
+    {
+      "case": "sour-pr-ng-dew-morch-254.6K-0.68MPa",
+      "package": "sour-pr",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 829096.1187764448,
+      "rel_err": 0.21925899820065414,
+      "pass": false
+    },
+    {
+      "case": "sour-pr-ng-dew-morch-260.8K-1.04MPa",
+      "package": "sour-pr",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1237803.6776636227,
+      "rel_err": 0.19019584390732946,
+      "pass": false
+    },
+    {
+      "case": "sour-srk-ng-dew-morch-243.4K-0.30MPa",
+      "package": "sour-srk",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 377792.37663995684,
+      "rel_err": 0.2593079221331895,
+      "pass": false
+    },
+    {
+      "case": "sour-srk-ng-dew-morch-254.6K-0.68MPa",
+      "package": "sour-srk",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 774164.5509423886,
+      "rel_err": 0.13847728079763028,
+      "pass": false
+    },
+    {
+      "case": "sour-srk-ng-dew-morch-260.8K-1.04MPa",
+      "package": "sour-srk",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1151892.119405194,
+      "rel_err": 0.10758857635114803,
+      "pass": false
+    },
+    {
+      "case": "kabadi-danner-srk-ng-dew-morch-243.4K-0.30MPa",
+      "package": "kabadi-danner-srk",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 377792.37663995684,
+      "rel_err": 0.2593079221331895,
+      "pass": false
+    },
+    {
+      "case": "kabadi-danner-srk-ng-dew-morch-254.6K-0.68MPa",
+      "package": "kabadi-danner-srk",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 774164.5509423886,
+      "rel_err": 0.13847728079763028,
+      "pass": false
+    },
+    {
+      "case": "kabadi-danner-srk-ng-dew-morch-260.8K-1.04MPa",
+      "package": "kabadi-danner-srk",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1151892.119405194,
+      "rel_err": 0.10758857635114803,
+      "pass": false
+    },
+    {
+      "case": "zudkevitch-joffe-rk-ng-dew-morch-243.4K-0.30MPa",
+      "package": "zudkevitch-joffe-rk",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 390931.262307817,
+      "rel_err": 0.30310420769272334,
+      "pass": false
+    },
+    {
+      "case": "zudkevitch-joffe-rk-ng-dew-morch-254.6K-0.68MPa",
+      "package": "zudkevitch-joffe-rk",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 798943.4091192572,
+      "rel_err": 0.17491677811655476,
+      "pass": false
+    },
+    {
+      "case": "zudkevitch-joffe-rk-ng-dew-morch-260.8K-1.04MPa",
+      "package": "zudkevitch-joffe-rk",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1187935.401357054,
+      "rel_err": 0.14224557822793654,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 11868400.835746113,
+      "rel_err": 38.56133611915371,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 12424117.304663803,
+      "rel_err": 17.270760742152653,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 12707765.649110049,
+      "rel_err": 11.219005431836585,
+      "pass": false
+    },
+    {
+      "case": "pr-bm-ng-dew-morch-243.4K-0.30MPa",
+      "package": "pr-bm",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 406383.79170593165,
+      "rel_err": 0.3546126390197722,
+      "pass": false
+    },
+    {
+      "case": "pr-bm-ng-dew-morch-254.6K-0.68MPa",
+      "package": "pr-bm",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 828676.116024297,
+      "rel_err": 0.21864134709455435,
+      "pass": false
+    },
+    {
+      "case": "pr-bm-ng-dew-morch-260.8K-1.04MPa",
+      "package": "pr-bm",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1237051.1329136717,
+      "rel_err": 0.18947224318622274,
+      "pass": false
+    },
+    {
+      "case": "rks-bm-ng-dew-morch-243.4K-0.30MPa",
+      "package": "rks-bm",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 377630.2725822008,
+      "rel_err": 0.25876757527400274,
+      "pass": false
+    },
+    {
+      "case": "rks-bm-ng-dew-morch-254.6K-0.68MPa",
+      "package": "rks-bm",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 773658.5277051807,
+      "rel_err": 0.1377331289782069,
+      "pass": false
+    },
+    {
+      "case": "rks-bm-ng-dew-morch-260.8K-1.04MPa",
+      "package": "rks-bm",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1151010.2965225002,
+      "rel_err": 0.1067406697331733,
+      "pass": false
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-ng-dew-morch-243.4K-0.30MPa",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 406518.332822541,
+      "rel_err": 0.35506110940847,
+      "pass": false
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-ng-dew-morch-254.6K-0.68MPa",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 829096.1187764448,
+      "rel_err": 0.21925899820065414,
+      "pass": false
+    },
+    {
+      "case": "pr-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa",
+      "package": "pr-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1237803.6776636227,
+      "rel_err": 0.19019584390732946,
+      "pass": false
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-ng-dew-morch-243.4K-0.30MPa",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 377792.37663995684,
+      "rel_err": 0.2593079221331895,
+      "pass": false
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-ng-dew-morch-254.6K-0.68MPa",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 774164.5509423886,
+      "rel_err": 0.13847728079763028,
+      "pass": false
+    },
+    {
+      "case": "srk-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa",
+      "package": "srk-lee-kesler-enthalpy",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 1151892.119405194,
+      "rel_err": 0.10758857635114803,
+      "pass": false
     },
     {
       "case": "ng-dew-morch-243.4K-0.30MPa",
