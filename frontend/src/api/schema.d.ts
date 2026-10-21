@@ -667,6 +667,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/study": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Study Case
+         * @description Run the parameter grid against the current project's flowsheet.
+         */
+        post: operations["study_case_api_study_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/views/iso": {
         parameters: {
             query?: never;
@@ -808,6 +828,17 @@ export interface components {
             message: string;
         };
         /**
+         * Axis
+         * @description One swept address and the values it takes; every combination with the
+         *     other axes (the full grid) becomes one case.
+         */
+        Axis: {
+            /** Address */
+            address: string;
+            /** Values */
+            values: number[];
+        };
+        /**
          * BlockRecord
          * @description Execution record of one strongly connected component (block).
          *
@@ -847,6 +878,19 @@ export interface components {
             qty: number;
             /** Unit */
             unit: string;
+        };
+        /**
+         * CaseStudyRequest
+         * @description The ``POST /api/study`` body: a :class:`CaseStudy` without ``base`` -
+         *     the route fills it from the current project's flowsheet.
+         */
+        CaseStudyRequest: {
+            /** Id */
+            id: string;
+            /** Inputs */
+            inputs: components["schemas"]["Axis"][];
+            /** Outputs */
+            outputs: string[];
         };
         /**
          * Component
@@ -1411,6 +1455,60 @@ export interface components {
             phases: components["schemas"]["Phase"][];
             /** Vapor Fraction */
             vapor_fraction: number;
+        };
+        /**
+         * StudyResult
+         * @description Every case's row in sweep order. ``failed`` is the subset of rows whose
+         *     ``status`` is ``"failed"``: the same rows, singled out for the caller.
+         */
+        StudyResult: {
+            /** Failed */
+            failed: components["schemas"]["StudyRow"][];
+            /** Rows */
+            rows: components["schemas"]["StudyRow"][];
+        };
+        /**
+         * StudyRow
+         * @description One case of the grid: its inputs, its read outputs and how it solved.
+         *
+         *     ``status`` mirrors the case's :class:`~ngdesign.contracts.SolvedFlowsheet`
+         *     ``status`` (spec P2-02); ``errors`` carries the case's ``UnitError`` list.
+         *     ``message`` is set (and ``errors`` empty) when the case failed before any
+         *     unit ran: a write address :func:`~ngdesign.variables.assign` rejected -
+         *     the exception's text names the mistake. An output address the case cannot
+         *     answer reads ``None``.
+         */
+        StudyRow: {
+            /**
+             * Errors
+             * @default []
+             */
+            errors: components["schemas"]["UnitError"][];
+            /** Inputs */
+            inputs: {
+                [key: string]: number;
+            };
+            /**
+             * Iterations
+             * @default 0
+             */
+            iterations: number;
+            /** Message */
+            message?: string | null;
+            /** Outputs */
+            outputs: {
+                [key: string]: number | null;
+            };
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "converged" | "not_converged" | "failed";
+            /**
+             * Wall S
+             * @default 0
+             */
+            wall_s: number;
         };
         /**
          * TearRecord
@@ -2783,6 +2881,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SolvedFlowsheet"];
+                };
+            };
+        };
+    };
+    study_case_api_study_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CaseStudyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StudyResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

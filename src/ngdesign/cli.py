@@ -21,15 +21,20 @@ from __future__ import annotations
 
 import argparse
 import html
+import sys
 import threading
 from pathlib import Path
 from typing import Any
 
+import numpy as np
+
 from ngdesign import pipeline, registry
-from ngdesign.contracts import PID, SolvedFlowsheet
+from ngdesign.contracts import PID, Project, SolvedFlowsheet
 from ngdesign.export import _cell, _port
 from ngdesign.flowsheets import slice as slice_fs
 from ngdesign.pipeline import DEFAULT_K_GAS
+from ngdesign.study import Axis, CaseStudy, to_csv, to_markdown
+from ngdesign.study import run as run_study
 
 
 def _solve_slice() -> SolvedFlowsheet:
@@ -123,6 +128,63 @@ def _index_html(
 """
 
 
+def _axis_values(spec_value: str) -> list[float]:
+    """The values of one input axis: 'start:stop:n' spans n evenly spaced
+    points (inclusive); a comma list and a bare value are literal."""
+    parts = spec_value.split(":")
+    if len(parts) == 3:
+        start, stop, points = float(parts[0]), float(parts[1]), int(parts[2])
+        if points < 2:
+            raise ValueError(f"the range form needs at least 2 points, got {points}")
+        return [float(v) for v in np.linspace(start, stop, points)]
+    return [float(v) for v in spec_value.split(",")]
+
+
+def _axis_spec(raw: str) -> tuple[str, list[float]]:
+    """argparse type for --input: '<address>=<values>' -> (address, values)."""
+    if "=" not in raw:
+        raise argparse.ArgumentTypeError(
+            f"bad --input {raw!r}: expected '<address>=<start>:<stop>:<points>' or '<address>=<v1,v2,...>'"
+        )
+    address, values_part = raw.split("=", 1)
+    if not address.strip():
+        raise argparse.ArgumentTypeError(f"bad --input {raw!r}: empty address")
+    try:
+        return address.strip(), _axis_values(values_part)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"bad --input {raw!r}: {exc}") from exc
+
+
+def _study(args: argparse.Namespace) -> int:
+    """One case study against a project JSON file: the table to stdout, CSV
+    to ``--csv`` when given."""
+    try:
+        project = Project.model_validate_json(Path(args.project).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        print(f"error: cannot load project {args.project}: {exc}", file=sys.stderr)
+        return 2
+    study = CaseStudy(
+        id="cli",
+        inputs=[Axis(address=address, values=values) for address, values in args.input],
+        outputs=list(args.output),
+        base=project.flowsheet,
+    )
+    try:
+        thermo = registry.create("thermo", study.base.thermo)
+        result = run_study(study, thermo)
+    except (KeyError, ValueError) as exc:
+        # Unknown thermo/unit plugin (KeyError) or a structurally impossible
+        # study (ValueError, e.g. an empty axis): a CLI error, not a traceback.
+        print(f"error: {exc.args[0] if isinstance(exc, KeyError) and exc.args else exc}", file=sys.stderr)
+        return 2
+    print(to_markdown(result), end="")
+    if args.csv is not None:
+        csv_path = Path(args.csv)
+        csv_path.write_text(to_csv(result), encoding="utf-8")
+        print(f"wrote {csv_path}")
+    return 0
+
+
 def _write_all(out: Path, solved: SolvedFlowsheet, pid: PID, net: Any, rules: list[Any]) -> list[Path]:
     """Render and write every drawing plus the index; returns the paths."""
     written = [
@@ -157,8 +219,30 @@ def main(argv: list[str] | None = None) -> int:
     worker.add_argument(
         "--once", action="store_true", help="process at most one job (or exit when none is queued), then exit"
     )
+    study_cmd = sub.add_parser(
+        "study", help="run a case study over a project JSON file and print the table (spec P2-04)"
+    )
+    study_cmd.add_argument("project", help="path to a project JSON file (the ngdesign Project model)")
+    study_cmd.add_argument(
+        "--input",
+        action="append",
+        type=_axis_spec,
+        required=True,
+        metavar="ADDR=START:STOP:N",
+        help="swept write address, 'a:b:n' is n evenly spaced points; comma lists are literal; repeat it",
+    )
+    study_cmd.add_argument(
+        "--output",
+        action="append",
+        required=True,
+        metavar="ADDR",
+        help="readable address to report per case; repeatable",
+    )
+    study_cmd.add_argument("--csv", default=None, help="also write the table as CSV to this path")
     args = parser.parse_args(argv)
 
+    if args.command == "study":
+        return _study(args)
     if args.command == "db-init":
         from ngdesign.store import database_url_log_safe, init_db
 

@@ -25,6 +25,8 @@ from ngdesign.agent import addresses
 from ngdesign.agent.engine import DEFAULT_ENGINE, Engine, rebuild_flowsheet
 from ngdesign.contracts import FeedSpec, Flowsheet, PortRef, Project, StreamSpec, UnitSpec
 from ngdesign.contracts.plugins import UnitModel
+from ngdesign.study import Axis, CaseStudy, StudyResult
+from ngdesign.study import run as run_study
 
 
 class ProjectStore(Protocol):
@@ -296,18 +298,30 @@ def _case_study(
 ) -> dict[str, Any]:
     """Sweep a write address over ``values``; one solved row per value.
 
-    The sweep runs on copies — the stored project is unchanged.
+    The sweep runs on copies — the stored project is unchanged. Spec P2-04
+    re-pointed this tool at :func:`ngdesign.study.run` (the same runner the
+    CLI and POST /api/study use); the B-08 output shape and error behaviour
+    are kept: when every case failed (a P2-02 failed solve or an address the
+    contracts rejected), the reasons come back as this tool's error outcome
+    so the model can fix its own mistake.
     """
     project = store.get()
-    rows = []
-    for value in values:
-        try:
-            swept = addresses.set_address(project, address, float(value))
-            solved = engine.solve_project(swept)
-            row = {"value": value, **{out: addresses.resolve(out, solved) for out in outputs}}
-        except ValueError as exc:
-            raise ValueError(f"{address}={value}: {exc}") from exc
-        rows.append(row)
+    study = CaseStudy(
+        id="agent",
+        inputs=[Axis(address=address, values=[float(v) for v in values])],
+        outputs=list(outputs),
+        base=project.flowsheet,
+    )
+    thermo = registry.create("thermo", project.flowsheet.thermo)
+    result: StudyResult = run_study(study, thermo)
+    if result.failed and len(result.failed) == len(result.rows):
+        why = "; ".join(
+            f"{address}={row.inputs[address]}: "
+            + (row.message or (row.errors[0].message if row.errors else "the solve did not converge"))
+            for row in result.failed
+        )
+        raise ValueError(why)
+    rows = [{"value": row.inputs[address], **row.outputs} for row in result.rows]
     return {"address": address, "outputs": list(outputs), "rows": rows}
 
 

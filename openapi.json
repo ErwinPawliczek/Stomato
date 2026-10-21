@@ -26,6 +26,29 @@
         "title": "AgentRequest",
         "type": "object"
       },
+      "Axis": {
+        "additionalProperties": false,
+        "description": "One swept address and the values it takes; every combination with the\nother axes (the full grid) becomes one case.",
+        "properties": {
+          "address": {
+            "title": "Address",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "address",
+          "values"
+        ],
+        "title": "Axis",
+        "type": "object"
+      },
       "BlockRecord": {
         "additionalProperties": false,
         "description": "Execution record of one strongly connected component (block).\n\nAn acyclic block runs once (``iterations == 1``, no tears, no records); a\ncyclic block records one :class:`TearRecord` per tear stream per pass, so\n``len(records) == iterations * len(tears)``. A block with a failed unit, or\none that could not run at all (a blocked inlet), stops and is marked\n``converged=False``. ``wall_s`` is timing telemetry: two runs of the same\nflowsheet produce the same record except for it, so equality and hashing\nignore it - the double-run determinism oracles compare whole solved models.",
@@ -112,6 +135,37 @@
           "material"
         ],
         "title": "BomItem",
+        "type": "object"
+      },
+      "CaseStudyRequest": {
+        "additionalProperties": false,
+        "description": "The ``POST /api/study`` body: a :class:`CaseStudy` without ``base`` -\nthe route fills it from the current project's flowsheet.",
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "inputs": {
+            "items": {
+              "$ref": "#/components/schemas/Axis"
+            },
+            "title": "Inputs",
+            "type": "array"
+          },
+          "outputs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Outputs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "inputs",
+          "outputs"
+        ],
+        "title": "CaseStudyRequest",
         "type": "object"
       },
       "Component": {
@@ -1352,6 +1406,104 @@
           "entropy"
         ],
         "title": "StreamState",
+        "type": "object"
+      },
+      "StudyResult": {
+        "additionalProperties": false,
+        "description": "Every case's row in sweep order. ``failed`` is the subset of rows whose\n``status`` is ``\"failed\"``: the same rows, singled out for the caller.",
+        "properties": {
+          "failed": {
+            "items": {
+              "$ref": "#/components/schemas/StudyRow"
+            },
+            "title": "Failed",
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/StudyRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rows",
+          "failed"
+        ],
+        "title": "StudyResult",
+        "type": "object"
+      },
+      "StudyRow": {
+        "additionalProperties": false,
+        "description": "One case of the grid: its inputs, its read outputs and how it solved.\n\n``status`` mirrors the case's :class:`~ngdesign.contracts.SolvedFlowsheet`\n``status`` (spec P2-02); ``errors`` carries the case's ``UnitError`` list.\n``message`` is set (and ``errors`` empty) when the case failed before any\nunit ran: a write address :func:`~ngdesign.variables.assign` rejected -\nthe exception's text names the mistake. An output address the case cannot\nanswer reads ``None``.",
+        "properties": {
+          "errors": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/UnitError"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "inputs": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Inputs",
+            "type": "object"
+          },
+          "iterations": {
+            "default": 0,
+            "title": "Iterations",
+            "type": "integer"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "outputs": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Outputs",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "converged",
+              "not_converged",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "wall_s": {
+            "default": 0.0,
+            "title": "Wall S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "inputs",
+          "outputs",
+          "status"
+        ],
+        "title": "StudyRow",
         "type": "object"
       },
       "TearRecord": {
@@ -3314,6 +3466,45 @@
           }
         },
         "summary": "Solve"
+      }
+    },
+    "/api/study": {
+      "post": {
+        "description": "Run the parameter grid against the current project's flowsheet.",
+        "operationId": "study_case_api_study_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaseStudyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudyResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Study Case"
       }
     },
     "/api/views/iso": {
