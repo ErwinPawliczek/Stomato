@@ -127,7 +127,7 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 
 | Spec | Title | Depends on | Status |
 |---|---|---|---|
-| T-01 | Thermo catalogue as data: registry, status, L0/L4 validation layers | P1-05, P1-07, #124 | drafted |
+| T-01 | Thermo catalogue as data: registry, status, L0/L4 validation layers | P1-05, P1-07, #124 | dispatched 2026-10-21 (issue #126) |
 | T-02 | Cubic family options: alpha functions, volume translation, Boston–Mathias, sour terms, all thermo cubic classes | T-01 | planned |
 | T-03 | Gamma-phi adapter: NRTL/UNIQUAC/Wilson/van Laar/Margules/UNIFAC×5 × ideal/virial/cubic vapour; ChemSep + UNIFAC group data | T-01 | planned |
 | T-04 | Helmholtz adapter: IAPWS-95/IF97, CoolProp fluids, GERG-2008 (optional dependency) | T-01 | planned |
