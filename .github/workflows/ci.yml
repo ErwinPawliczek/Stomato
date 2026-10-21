@@ -45,7 +45,7 @@ jobs:
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'contract-change') }}
         run: |
           changed=$(git diff --name-only origin/${{ github.base_ref }}...HEAD)
-          locked=$(echo "$changed" | grep -E '^(data/golden/|tests/golden/test_|tests/property/|\.github/|AGENTS\.md|frontend/AGENTS\.md|CLAUDE\.md|pyproject\.toml|uv\.lock|frontend/package\.json)' || true)
+          locked=$(echo "$changed" | grep -E '^(data/golden/|data/validation/|tests/golden/test_|tests/property/|\.github/|AGENTS\.md|frontend/AGENTS\.md|CLAUDE\.md|pyproject\.toml|uv\.lock|frontend/package\.json)' || true)
           if [ -n "$locked" ]; then
             echo "::error::PR edits locked files (needs human 'contract-change' label):"; echo "$locked"; exit 1
           fi

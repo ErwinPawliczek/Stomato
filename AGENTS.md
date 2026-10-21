@@ -50,7 +50,7 @@ sizing, pid_rules, piping, render  ->  contracts|registry|data only   (never the
 lines your spec names; never add one.
 
 ## Locked (CI rejects PRs that touch these without the `contract-change` label)
-`tests/golden/test_*.py`, `tests/property/`, `data/golden/`, `.github/`, `AGENTS.md`,
+`tests/golden/test_*.py`, `tests/property/`, `data/golden/`, `data/validation/`, `.github/`, `AGENTS.md`,
 `pyproject.toml`, `uv.lock`.
 These are the oracles and the rules. If one blocks you, stop and write why in the PR.
 Need a new dependency? Stop and say so in the PR; do not add it.
