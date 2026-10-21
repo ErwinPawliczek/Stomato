@@ -117,6 +117,11 @@ class CountingThermo:
         finally:
             self.flash_wall_s += time.perf_counter() - start
 
+    def __getattr__(self, name: str) -> Any:
+        """Transparent for everything the protocol does not name (package helpers,
+        duck-typing markers such as ``is_amine_reactive_package``)."""
+        return getattr(self._inner, name)
+
     def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         self.flashes_pt += 1
         return self._timed_flash(lambda: self._inner.flash_pt(z, T, P, molar_flow))

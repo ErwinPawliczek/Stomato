@@ -40,12 +40,13 @@ nonlinear; the Kremser shortcut is the TEG-contact precedent, not this unit's).
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from ngdesign.amine.equilibrium import (
     equilibrium_loadings,
     equilibrium_partial_pressures,
 )
+from ngdesign.amine.package import AmineReactivePackage
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import components
@@ -241,21 +242,35 @@ class MdeaAbsorber:
         T = gas_in.T
         P = gas_in.P
 
-        # Top (lean) floor: lowest outlet content the lean amine can impose.
-        p_co2_floor, p_h2s_floor = equilibrium_partial_pressures(
-            params, T, c_amine, lean_co2_loading, lean_h2s_loading, amine=amine
+        # A reactive amine property package carries its own chemistry: use it
+        # for speciation and every outlet state (spec P1-04).  A plain cubic
+        # keeps today's facade-based behaviour byte-identical.
+        amine_pkg = (
+            cast(AmineReactivePackage, thermo)
+            if getattr(thermo, "is_amine_reactive_package", False)
+            else None
         )
+        model_name = "the selected equilibrium model" if amine_pkg is not None else "Kent-Eisenberg"
+
+        # Top (lean) floor: lowest outlet content the lean amine can impose.
+        if amine_pkg is not None:
+            floor_eq = amine_pkg.equilibrium_pressures(z_lean, T, lean_co2_loading, lean_h2s_loading)
+            p_co2_floor, p_h2s_floor = floor_eq["CO2"], floor_eq["H2S"]
+        else:
+            p_co2_floor, p_h2s_floor = equilibrium_partial_pressures(
+                params, T, c_amine, lean_co2_loading, lean_h2s_loading, amine=amine
+            )
         floor_co2 = p_co2_floor / P
         floor_h2s = p_h2s_floor / P
         if y_co2_out < floor_co2:
             raise ValueError(
                 f"infeasible spec: requested outlet CO2 {co2_out_molpct} mol% is below the "
-                f"lean-amine equilibrium floor {floor_co2 * 100:.4g} mol% (Kent-Eisenberg)"
+                f"lean-amine equilibrium floor {floor_co2 * 100:.4g} mol% ({model_name})"
             )
         if y_h2s_out < floor_h2s:
             raise ValueError(
                 f"infeasible spec: requested outlet H2S {h2s_out_ppmv} ppmv is below the "
-                f"lean-amine equilibrium floor {floor_h2s * 1e6:.4g} ppmv (Kent-Eisenberg)"
+                f"lean-amine equilibrium floor {floor_h2s * 1e6:.4g} ppmv ({model_name})"
             )
 
         removed_co2, removed_h2s = _acid_gas_removals(
@@ -263,9 +278,14 @@ class MdeaAbsorber:
         )
 
         # Bottom (rich) ceiling: loadings the inlet gas partial pressures support.
-        max_co2_loading, max_h2s_loading = equilibrium_loadings(
-            params, T, c_amine, y_co2_in * P, y_h2s_in * P, amine=amine
-        )
+        if amine_pkg is not None:
+            max_co2_loading, max_h2s_loading = amine_pkg.equilibrium_loadings(
+                z_lean, T, y_co2_in * P, y_h2s_in * P
+            )
+        else:
+            max_co2_loading, max_h2s_loading = equilibrium_loadings(
+                params, T, c_amine, y_co2_in * P, y_h2s_in * P, amine=amine
+            )
         rich_co2_loading = lean_co2_loading + removed_co2 / n_amine
         rich_h2s_loading = lean_h2s_loading + removed_h2s / n_amine
         if rich_co2_loading > max_co2_loading:
@@ -319,6 +339,11 @@ class MdeaAbsorber:
             "inlet_h2s_ppmv": y_h2s_in * 1e6,
             "outlet_h2s_ppmv": float(h2s_out_ppmv),
         }
+        if amine_pkg is not None:
+            # Heat of absorption released into the streams by the removed acid
+            # gas; the reactive package's outlet enthalpies already carry it.
+            d_h_abs = amine_pkg.heat_of_absorption(rich_comp, T)
+            info["heat_of_absorption_W"] = removed_co2 * d_h_abs["CO2"] + removed_h2s * d_h_abs["H2S"]
 
         return UnitResult(
             outlets={"gas_out": gas_out, "rich_amine_out": rich_amine_out},

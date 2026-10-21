@@ -10,7 +10,8 @@ def test_meta_lists_registered_plugins() -> None:
     m = c.get("/api/meta").json()
     assert sorted(set(m)) == sorted(map(str, registry.KINDS))
     # Live-registered thermo plugins: the names POST /api/solve honors.
-    assert ["nrtl", "pr", "pr78", "srk"] == sorted(m["thermo"])
+    assert sorted(registry.available("thermo")) == sorted(m["thermo"])
+    assert {"pr", "srk", "pr78", "nrtl", "amine_ke", "amine_enrtl"} <= set(m["thermo"])
     # Every registered unit kind is visible to the frontend. Superset, not
     # equality: newly merged plugins must not break this contract test.
     assert {
