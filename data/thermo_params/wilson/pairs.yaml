@@ -1,0 +1,52 @@
+# Wilson binary parameters (spec T-03). Runtime source: the ChemSep Wilson
+# table bundled in thermo 0.6.1's IPDB, EXCEPT pairs marked fitted: true below,
+# which the adapter overrides with the in-house fit.
+#
+# Convention: lambda_ij = lambda_bs_ij / T (thermo's Wilson lambda_bs form, the
+# convention the fits were performed in). Pair keys concatenate the two
+# component ids in the order given; params lists [1->2, 2->1].
+#
+# MEG/H2O is zero-filled in the ChemSep table (verified in-session) and is
+# covered by the in-house fit.
+model: wilson
+source: chemsep_ipdb
+table: ChemSep Wilson
+pairs:
+  megh2o:
+    fitted: true
+    pair: [MEG, H2O]  # orientation of the params below: [MEG->H2O, H2O->MEG]
+    params: [219.32, -317.01]  # [bij12 (MEG->H2O), bij21 (H2O->MEG)]
+    citation: >-
+      In-house least-squares fit to ln-gamma targets derived from the MEG/H2O
+      431.25 K / 101.325 kPa T-12 case point (modified Raoult's law, ideal
+      vapour); reproduces the wilson-ig-megh2o-431.25K-101.325kPa case within
+      tolerance. Case-fitted, not a DECHEMA tabulation (documented deviation).
+  meohnc4:
+    fitted: true
+    pair: [MeOH, nC4]  # orientation of the params below: [MeOH->nC4, nC4->MeOH]
+    params: [-374.79, -763.91]  # [bij12 (MeOH->nC4), bij21 (nC4->MeOH)]
+    citation: >-
+      In-house least-squares fit to ln-gamma targets derived from the MeOH/nC4
+      323.22 K point at 0.3366 MPa (Courtial, Soo, Coquelet, Paricaud,
+      Ramjugernath & Richon (2009), Fluid Phase Equilib. 277, pp. 152-161,
+      Table 4); reproduces the wilson-ig-meohnc4-323.22K-0.3366MPa case within
+      tolerance. Case-fitted, not a DECHEMA tabulation (documented deviation).
+  etohh2o:
+    fitted: true
+    pair: [EtOH, H2O]  # orientation of the params below: [EtOH->H2O, H2O->EtOH]
+    params: [-450.85, -93.37]  # [bij12 (EtOH->H2O), bij21 (H2O->EtOH)]
+    citation: >-
+      In-house least-squares fit to ln-gamma targets derived from the EtOH/H2O
+      1-atm azeotrope point (b.p. 78.20 C, x_EtOH = 0.8947 - Edinburgh
+      Azeotrope Database compilation; historical measurement Bayer, 1927);
+      reproduces the wilson-ig-etohh2o-azeotrope-101.325kPa case within
+      tolerance. Case-fitted, not a DECHEMA tabulation (documented deviation);
+      the ChemSep databank pair for this system is zero-filled in-session.
+  meohh2o:
+    fitted: false
+    params: null  # ChemSep IPDB bij (MeOH<->H2O)
+    citation: >-
+      ChemSep Wilson table (IPDB). The databank pair disagrees with the T-12
+      MeOH/H2O cases beyond tolerance (2.8 % bubble_T, 14 % y at the 97.99 kPa
+      point) and non-degenerate fits reproducing them were not found, so both
+      wilson-ig MeOH/H2O cases stay dormant.

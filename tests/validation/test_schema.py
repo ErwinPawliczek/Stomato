@@ -73,7 +73,24 @@ def test_all_case_packages_are_registered_names() -> None:
     for case in _load_cases():
         if case.package == "all":
             continue
-        assert case.package in {"pr", "srk", "pr78", "nrtl"}, f"{case.id}: unexpected package {case.package}"
+        assert case.package in {
+            "pr",
+            "srk",
+            "pr78",
+            "nrtl",
+            # T-03 gamma-phi rows (12 liquid models x ideal vapour are case-bearing)
+            "uniquac_ig",
+            "wilson_ig",
+            "vanlaar_ig",
+            "margules_ig",
+            "regular_solution_ig",
+            "unifac_ig",
+            "unifac_dortmund_ig",
+            "unifac_psrk_ig",
+            "unifac_nist_ig",
+            "unifac_lle_ig",
+            "unifac_lyngby_ig",
+        }, f"{case.id}: unexpected package {case.package}"
 
 
 def test_results_json_row_schema_when_present() -> None:

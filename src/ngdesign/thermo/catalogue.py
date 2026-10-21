@@ -35,7 +35,12 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from ngdesign import registry
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.thermo.options import AlphaFunction, EnthalpyMethod, VolumeTranslation
+from ngdesign.thermo.options import (
+    AlphaFunction,
+    EnthalpyMethod,
+    GammaPhiOptions,
+    VolumeTranslation,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_MODELS_DIR = REPO_ROOT / "data" / "thermo_models"
@@ -122,6 +127,12 @@ def _validate_options(row: ModelRow, where: str) -> None:
                     f"{where}: options.eos {opts.eos!r} does not match adapter "
                     f"{row.adapter!r} (pins {eos_name!r})"
                 )
+        elif row.family == "gamma_phi":
+            if row.options:
+                # The pre-T-03 nrtl row declares no options (its adapter pins the
+                # pairing); any row that declares options validates against the
+                # liquid/vapour vocabulary, extra keys refuse.
+                GammaPhiOptions(**row.options)
         elif row.options:
             raise CatalogueError(
                 f"{where}: no typed options are declared for family {row.family!r} yet "
@@ -201,7 +212,11 @@ def describe(model_id: str) -> ModelRow:
 
 
 def build(row: ModelRow, *args: Any, **kwargs: Any) -> Thermo:
-    """Construct the row's package, enforcing non-default option declarations."""
+    """Construct the row's package, enforcing non-default option declarations.
+
+    The row's typed options are constructor input for adapters that read them
+    (the gamma-phi pairing); callers may not override them per build.
+    """
     adapter = _import_adapter(row, f"catalogue row {row.id!r}")
     if row.family == "cubic":
         opts = CubicOptions(**row.options)
@@ -215,6 +230,8 @@ def build(row: ModelRow, *args: Any, **kwargs: Any) -> Thermo:
                 f"catalogue row {row.id!r} declares non-default cubic options "
                 f"[{', '.join(pending)}]; the implementations land with T-02"
             )
+    if row.family == "gamma_phi" and row.options:
+        kwargs = {**row.options, **kwargs}
     return cast(Thermo, adapter(*args, **kwargs))
 
 
@@ -233,6 +250,16 @@ def _has_nondefault_options(row: ModelRow) -> bool:
     return any(
         getattr(opts, field) != _CUBIC_DEFAULTS[field] for field in ("alpha", "translation", "enthalpy")
     )
+
+
+def _needs_option_factory(row: ModelRow) -> bool:
+    """True when the adapter must receive the row's options at construction.
+
+    Cubic adapters pin their options as class attributes, so only non-default
+    cubic declarations need a closure; the gamma-phi adapter is one shared class
+    whose liquid/vapour pairing lives entirely in the row's options.
+    """
+    return bool(row.options) and (row.family == "gamma_phi" or _has_nondefault_options(row))
 
 
 def _factory(row: ModelRow) -> Callable[..., Thermo]:
@@ -271,6 +298,7 @@ def register_all(existing: Mapping[str, type] | None = None) -> None:
         # All-default rows register the adapter class itself: a class is a callable
         # factory that builds the package, and registry.get(id) must return the same
         # object the pre-catalogue decorators registered (locked contract tests assert
-        # identity). Only rows declaring non-default options get a validating closure.
-        factory = adapter if not _has_nondefault_options(row) else cast(type, _factory(row))
+        # identity). Rows whose options are constructor input (gamma-phi pairings,
+        # non-default cubic declarations) get a validating closure.
+        factory = adapter if not _needs_option_factory(row) else cast(type, _factory(row))
         registry.register("thermo", row.id)(factory)

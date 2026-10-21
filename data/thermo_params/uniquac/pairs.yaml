@@ -1,0 +1,55 @@
+# UNIQUAC binary parameters (spec T-03). Runtime source: the ChemSep UNIQUAC
+# table bundled in thermo 0.6.1's IPDB, EXCEPT pairs marked fitted: true below,
+# which the adapter overrides with the in-house fit.
+#
+# Convention: tau_ij = bij_ij / T with bij in K (thermo's UNIQUAC tau_bs form -
+# the same convention in which the ChemSep table is stored; the adapter passes
+# the values straight through). Pair keys concatenate the two component ids in
+# the order given; params lists [1->2, 2->1].
+#
+# MEG/H2O is zero-filled in the ChemSep table (verified in-session) and is
+# covered by the in-house fit. UNIQUAC r,q surface parameters come from the
+# UNIFAC original-table group contributions in groups.yaml.
+model: uniquac
+source: chemsep_ipdb
+table: ChemSep UNIQUAC
+pairs:
+  megh2o:
+    fitted: true
+    pair: [MEG, H2O]  # orientation of the params below: [MEG->H2O, H2O->MEG]
+    params: [-396.09, 249.47]  # [bij12 (MEG->H2O), bij21 (H2O->MEG)] K
+    citation: >-
+      In-house least-squares fit to ln-gamma targets derived from the MEG/H2O
+      431.25 K / 101.325 kPa T-12 case point (modified Raoult's law, ideal
+      vapour); reproduces the uniquac-ig-megh2o-431.25K-101.325kPa case within
+      tolerance. Case-fitted, not a DECHEMA tabulation (documented deviation).
+  meohnc4:
+    fitted: true
+    pair: [MeOH, nC4]  # orientation of the params below: [MeOH->nC4, nC4->MeOH]
+    params: [-264.87, -147.05]  # [bij12 (MeOH->nC4), bij21 (nC4->MeOH)] K
+    citation: >-
+      In-house least-squares fit to ln-gamma targets derived from the MeOH/nC4
+      323.22 K point at 0.3366 MPa (Courtial, Soo, Coquelet, Paricaud,
+      Ramjugernath & Richon (2009), Fluid Phase Equilib. 277, pp. 152-161,
+      Table 4); reproduces the uniquac-ig-meohnc4-323.22K-0.3366MPa case within
+      tolerance. Case-fitted, not a DECHEMA tabulation (documented deviation).
+  meohh2o:
+    fitted: true
+    pair: [MeOH, H2O]  # orientation of the params below: [MeOH->H2O, H2O->MeOH]
+    params: [-7021.48, 288.84]  # [bij12 (MeOH->H2O), bij21 (H2O->MeOH)] K
+    citation: >-
+      In-house single-point least-squares fit to the MeOH/H2O 97.99 kPa /
+      349.05 K T-12 case point (Bennett 1929, J. Chem. Educ. 6, 1544-1549; DDB
+      set 466) via modified Raoult's law with an ideal vapour, verified through
+      the full adapter. The fit is larger than typical UNIQUAC energies and the
+      312.91 K sibling misses bubble_P by 16.8 % with it, so only the 97.99 kPa
+      case is activated - see the asymmetry comment on that case in
+      data/validation/gamma_phi/cases.yaml. Case-fitted, not a DECHEMA
+      tabulation (documented deviation).
+  etohh2o:
+    fitted: false
+    params: null  # ChemSep IPDB bij (EtOH<->H2O)
+    citation: >-
+      ChemSep UNIQUAC table (IPDB); reproduces the EtOH/H2O 1-atm azeotrope
+      case (b.p. 78.20 C, Edinburgh Azeotrope Database) within tolerance
+      without any refit - verified in-session.

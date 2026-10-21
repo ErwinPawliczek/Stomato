@@ -58,3 +58,2619 @@
     correlation sits ~8% above the ChemSep databank Psat for nC4 at 300 K (measured condensation at 2.78e5
     Pa vs databank 2.58e5 Pa), so a bracket on the databank Psat lands inside the model''s own two-phase
     region; MeOH/H2O correlations agree with the databank and are used instead'
+- id: nrtl_ig
+  name: NRTL liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: nrtl
+    vapour: ideal
+  params:
+    source: thermo IPDB (ChemSep), 'ChemSep NRTL' binary table (as the pre-existing nrtl row consumes it)
+    provenance: no in-house overrides - pairs the databank lacks raise rather than falling back to ideal
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  references:
+  - Renon, H. & Prausnitz, J. M., AIChE J. 14(1), 135-144, 1968
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+  l0_excluded: {}
+
+- id: nrtl_rk
+  name: NRTL liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: nrtl
+    vapour: rk
+  params:
+    source: thermo IPDB (ChemSep), 'ChemSep NRTL' binary table (as the pre-existing nrtl row consumes it)
+    provenance: no in-house overrides - pairs the databank lacks raise rather than falling back to ideal
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  references:
+  - Renon, H. & Prausnitz, J. M., AIChE J. 14(1), 135-144, 1968
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+
+- id: nrtl_hoc
+  name: NRTL liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: nrtl
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: nrtl_nothnagel
+  name: NRTL liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: nrtl
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: uniquac_ig
+  name: UNIQUAC liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: uniquac
+    vapour: ideal
+  params:
+    source: thermo IPDB (ChemSep), 'ChemSep UNIQUAC' binary table
+    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4) from data/thermo_params/uniquac/pairs.yaml; r,q
+      from UNIFAC group contributions (data/thermo_params/uniquac/groups.yaml)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - uniquac-ig-meohh2o-97.99kPa-349.05K
+  - uniquac-ig-megh2o-431.25K-101.325kPa
+  - uniquac-ig-meohnc4-323.22K-0.3366MPa
+  - uniquac-ig-etohh2o-azeotrope-101.325kPa
+  references:
+  - Abrams, D. S. & Prausnitz, J. M., AIChE J. 21(1), 116-128, 1975
+  - Maurer, G. & Prausnitz, J. M., Fluid Phase Equilib. 2(2), 91-99, 1978 (r,q form)
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+  l0_excluded: {}
+
+- id: uniquac_rk
+  name: UNIQUAC liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: uniquac
+    vapour: rk
+  params:
+    source: thermo IPDB (ChemSep), 'ChemSep UNIQUAC' binary table
+    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4) from data/thermo_params/uniquac/pairs.yaml; r,q
+      from UNIFAC group contributions (data/thermo_params/uniquac/groups.yaml)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  references:
+  - Abrams, D. S. & Prausnitz, J. M., AIChE J. 21(1), 116-128, 1975
+  - Maurer, G. & Prausnitz, J. M., Fluid Phase Equilib. 2(2), 91-99, 1978 (r,q form)
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+
+- id: uniquac_hoc
+  name: UNIQUAC liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: uniquac
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: uniquac_nothnagel
+  name: UNIQUAC liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: uniquac
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: uniquac_pr
+  name: UNIQUAC liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: uniquac
+    vapour: pr
+  params:
+    source: thermo IPDB (ChemSep), 'ChemSep UNIQUAC' binary table
+    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4) from data/thermo_params/uniquac/pairs.yaml; r,q
+      from UNIFAC group contributions (data/thermo_params/uniquac/groups.yaml)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  references:
+  - Abrams, D. S. & Prausnitz, J. M., AIChE J. 21(1), 116-128, 1975
+  - Maurer, G. & Prausnitz, J. M., Fluid Phase Equilib. 2(2), 91-99, 1978 (r,q form)
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+
+- id: wilson_ig
+  name: Wilson liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: wilson
+    vapour: ideal
+  params:
+    source: thermo IPDB (ChemSep), 'ChemSep Wilson' binary table
+    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4, EtOH/H2O) from
+      data/thermo_params/wilson/pairs.yaml
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation:
+  - wilson-ig-megh2o-431.25K-101.325kPa
+  - wilson-ig-meohnc4-323.22K-0.3366MPa
+  - wilson-ig-etohh2o-azeotrope-101.325kPa
+  references:
+  - Wilson, G. M., J. Am. Chem. Soc. 86(2), 127-130, 1964
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+  l0_excluded: {}
+
+- id: wilson_rk
+  name: Wilson liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: wilson
+    vapour: rk
+  params:
+    source: thermo IPDB (ChemSep), 'ChemSep Wilson' binary table
+    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4, EtOH/H2O) from
+      data/thermo_params/wilson/pairs.yaml
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Wilson, G. M., J. Am. Chem. Soc. 86(2), 127-130, 1964
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+
+- id: wilson_hoc
+  name: Wilson liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: wilson
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: wilson_nothnagel
+  name: Wilson liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: wilson
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: wilson_pr
+  name: Wilson liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: wilson
+    vapour: pr
+  params:
+    source: thermo IPDB (ChemSep), 'ChemSep Wilson' binary table
+    provenance: in-house case-fitted overrides (MEG/H2O, MeOH/nC4, EtOH/H2O) from
+      data/thermo_params/wilson/pairs.yaml
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Wilson, G. M., J. Am. Chem. Soc. 86(2), 127-130, 1964
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+
+- id: vanlaar_ig
+  name: van Laar liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: vanlaar
+    vapour: ideal
+  params:
+    source: in-house case-fitted parameters (data/thermo_params/vanlaar/pairs.yaml), least-squares fitted to ln-gamma targets from the cited literature points
+    provenance: DECHEMA (Gmehling & Onken) open example tables were not retrievable (documented deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation:
+  - vanlaar-ig-meohnc4-323.22K-0.3366MPa
+  - vanlaar-ig-etohh2o-azeotrope-101.325kPa
+  references:
+  - van Laar, J. J., Z. Phys. Chem. 72, 723-751, 1910
+  - Bennett, J. P., J. Phys. Chem. 33(2), 258-270, 1929 (MeOH/H2O fit source point)
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          EtOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+  l0_excluded: {}
+
+- id: vanlaar_rk
+  name: van Laar liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: vanlaar
+    vapour: rk
+  params:
+    source: in-house case-fitted parameters (data/thermo_params/vanlaar/pairs.yaml), least-squares fitted to ln-gamma targets from the cited literature points
+    provenance: DECHEMA (Gmehling & Onken) open example tables were not retrievable (documented deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - van Laar, J. J., Z. Phys. Chem. 72, 723-751, 1910
+  - Bennett, J. P., J. Phys. Chem. 33(2), 258-270, 1929 (MeOH/H2O fit source point)
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - P: 100000.0
+        T: 350.0
+        phase: aqueous
+        z:
+          EtOH: 0.5
+          H2O: 0.5
+      - P: 50000.0
+        T: 380.0
+        phase: vapor
+        z:
+          EtOH: 0.5
+          H2O: 0.5
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+  l0_excluded: {}
+
+- id: vanlaar_hoc
+  name: van Laar liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: vanlaar
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: vanlaar_nothnagel
+  name: van Laar liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: vanlaar
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: vanlaar_pr
+  name: van Laar liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: vanlaar
+    vapour: pr
+  params:
+    source: in-house case-fitted parameters (data/thermo_params/vanlaar/pairs.yaml), least-squares fitted to ln-gamma targets from the cited literature points
+    provenance: DECHEMA (Gmehling & Onken) open example tables were not retrievable (documented deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - van Laar, J. J., Z. Phys. Chem. 72, 723-751, 1910
+  - Bennett, J. P., J. Phys. Chem. 33(2), 258-270, 1929 (MeOH/H2O fit source point)
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - P: 100000.0
+        T: 350.0
+        phase: aqueous
+        z:
+          EtOH: 0.5
+          H2O: 0.5
+      - P: 50000.0
+        T: 380.0
+        phase: vapor
+        z:
+          EtOH: 0.5
+          H2O: 0.5
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+  l0_excluded: {}
+
+- id: margules_ig
+  name: Margules liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: margules
+    vapour: ideal
+  params:
+    source: in-house case-fitted parameters (data/thermo_params/margules/pairs.yaml), least-squares fitted to ln-gamma targets from the cited literature points
+    provenance: DECHEMA (Gmehling & Onken) open example tables were not retrievable (documented deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation:
+  - margules-ig-meohnc4-323.22K-0.3366MPa
+  - margules-ig-megh2o-431.25K-101.325kPa
+  - margules-ig-etohh2o-azeotrope-101.325kPa
+  references:
+  - Margules, M., Sitzungsber. Akad. Wiss. Wien 104, 1243-1278, 1895
+  - Bennett, J. P., J. Phys. Chem. 33(2), 258-270, 1929 (MeOH/H2O fit source point)
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          EtOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+  l0_excluded: {}
+
+- id: margules_rk
+  name: Margules liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: margules
+    vapour: rk
+  params:
+    source: in-house case-fitted parameters (data/thermo_params/margules/pairs.yaml), least-squares fitted to ln-gamma targets from the cited literature points
+    provenance: DECHEMA (Gmehling & Onken) open example tables were not retrievable (documented deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Margules, M., Sitzungsber. Akad. Wiss. Wien 104, 1243-1278, 1895
+  - Bennett, J. P., J. Phys. Chem. 33(2), 258-270, 1929 (MeOH/H2O fit source point)
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - P: 100000.0
+        T: 350.0
+        phase: aqueous
+        z:
+          EtOH: 0.5
+          H2O: 0.5
+      - P: 50000.0
+        T: 380.0
+        phase: vapor
+        z:
+          EtOH: 0.5
+          H2O: 0.5
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+  l0_excluded: {}
+
+- id: margules_hoc
+  name: Margules liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: margules
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: margules_nothnagel
+  name: Margules liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: margules
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: margules_pr
+  name: Margules liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: margules
+    vapour: pr
+  params:
+    source: in-house case-fitted parameters (data/thermo_params/margules/pairs.yaml), least-squares fitted to ln-gamma targets from the cited literature points
+    provenance: DECHEMA (Gmehling & Onken) open example tables were not retrievable (documented deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Margules, M., Sitzungsber. Akad. Wiss. Wien 104, 1243-1278, 1895
+  - Bennett, J. P., J. Phys. Chem. 33(2), 258-270, 1929 (MeOH/H2O fit source point)
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - P: 100000.0
+        T: 350.0
+        phase: aqueous
+        z:
+          EtOH: 0.5
+          H2O: 0.5
+      - P: 50000.0
+        T: 380.0
+        phase: vapor
+        z:
+          EtOH: 0.5
+          H2O: 0.5
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+  l0_excluded: {}
+
+- id: regular_solution_ig
+  name: regular solution liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: regular_solution
+    vapour: ideal
+  params:
+    source: pure solubility parameters SP_i = sqrt(dHvap_i(T)/V_i(T,P)) from the thermo pure-component correlations at 298.15 K (EnthalpyVaporizations, VolumeLiquids)
+    provenance: components whose correlation returns no value raise rather than default
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Scatchard, G., Chem. Rev. 8(2), 321-333, 1931
+  - Hildebrand, J. H. & Scott, R. L., The Solubility of Nonelectrolytes, 3rd ed., 1950
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+  l0_excluded: {}
+
+- id: regular_solution_rk
+  name: regular solution liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: regular_solution
+    vapour: rk
+  params:
+    source: pure solubility parameters SP_i = sqrt(dHvap_i(T)/V_i(T,P)) from the thermo pure-component correlations at 298.15 K (EnthalpyVaporizations, VolumeLiquids)
+    provenance: components whose correlation returns no value raise rather than default
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Scatchard, G., Chem. Rev. 8(2), 321-333, 1931
+  - Hildebrand, J. H. & Scott, R. L., The Solubility of Nonelectrolytes, 3rd ed., 1950
+  l0: {}
+  l0_excluded: {}
+
+- id: regular_solution_hoc
+  name: regular solution liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: regular_solution
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: regular_solution_nothnagel
+  name: regular solution liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: regular_solution
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: regular_solution_pr
+  name: regular solution liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: regular_solution
+    vapour: pr
+  params:
+    source: pure solubility parameters SP_i = sqrt(dHvap_i(T)/V_i(T,P)) from the thermo pure-component correlations at 298.15 K (EnthalpyVaporizations, VolumeLiquids)
+    provenance: components whose correlation returns no value raise rather than default
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Scatchard, G., Chem. Rev. 8(2), 321-333, 1931
+  - Hildebrand, J. H. & Scott, R. L., The Solubility of Nonelectrolytes, 3rd ed., 1950
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_ig
+  name: UNIFAC liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac
+    vapour: ideal
+  params:
+    source: thermo 0.6.1 bundled UNIFAC original interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation:
+  - unifac-ig-etohh2o-azeotrope-101.325kPa
+  references:
+  - Fredenslund, A., Jones, R. L. & Prausnitz, J. M., AIChE J. 21(6), 1086-1099, 1975
+  - Skjold-Jorgensen, S., Fredenslund, A. & Rasmussen, P., AIChE J. 25(2), 337-339, 1979 (group conventions)
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+  l0_excluded: {}
+
+- id: unifac_rk
+  name: UNIFAC liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac
+    vapour: rk
+  params:
+    source: thermo 0.6.1 bundled UNIFAC original interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Fredenslund, A., Jones, R. L. & Prausnitz, J. M., AIChE J. 21(6), 1086-1099, 1975
+  - Skjold-Jorgensen, S., Fredenslund, A. & Rasmussen, P., AIChE J. 25(2), 337-339, 1979 (group conventions)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_hoc
+  name: UNIFAC liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_nothnagel
+  name: UNIFAC liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_pr
+  name: UNIFAC liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac
+    vapour: pr
+  params:
+    source: thermo 0.6.1 bundled UNIFAC original interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Fredenslund, A., Jones, R. L. & Prausnitz, J. M., AIChE J. 21(6), 1086-1099, 1975
+  - Skjold-Jorgensen, S., Fredenslund, A. & Rasmussen, P., AIChE J. 25(2), 337-339, 1979 (group conventions)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_dortmund_ig
+  name: UNIFAC (Dortmund) liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_dortmund
+    vapour: ideal
+  params:
+    source: thermo 0.6.1 bundled UNIFAC Dortmund interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation:
+  - unifac-dortmund-ig-meohnc4-323.22K-0.3366MPa
+  - unifac-dortmund-ig-etohh2o-azeotrope-101.325kPa
+  references:
+  - Gmehling, J., Li, J. & Schiller, M., Ind. Eng. Chem. Res. 32(1), 178-193, 1993
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+  l0_excluded: {}
+
+- id: unifac_dortmund_rk
+  name: UNIFAC (Dortmund) liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_dortmund
+    vapour: rk
+  params:
+    source: thermo 0.6.1 bundled UNIFAC Dortmund interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Gmehling, J., Li, J. & Schiller, M., Ind. Eng. Chem. Res. 32(1), 178-193, 1993
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_dortmund_hoc
+  name: UNIFAC (Dortmund) liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_dortmund
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_dortmund_nothnagel
+  name: UNIFAC (Dortmund) liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_dortmund
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_dortmund_pr
+  name: UNIFAC (Dortmund) liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_dortmund
+    vapour: pr
+  params:
+    source: thermo 0.6.1 bundled UNIFAC Dortmund interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Gmehling, J., Li, J. & Schiller, M., Ind. Eng. Chem. Res. 32(1), 178-193, 1993
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_psrk_ig
+  name: UNIFAC (PSRK) liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_psrk
+    vapour: ideal
+  params:
+    source: thermo 0.6.1 bundled UNIFAC PSRK interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation:
+  - unifac-psrk-ig-meohnc4-323.22K-0.3366MPa
+  - unifac-psrk-ig-etohh2o-azeotrope-101.325kPa
+  references:
+  - Holderbaum, T. & Gmehling, J., Fluid Phase Equilib. 70(2-3), 251-265, 1991
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+  l0_excluded: {}
+
+- id: unifac_psrk_rk
+  name: UNIFAC (PSRK) liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_psrk
+    vapour: rk
+  params:
+    source: thermo 0.6.1 bundled UNIFAC PSRK interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Holderbaum, T. & Gmehling, J., Fluid Phase Equilib. 70(2-3), 251-265, 1991
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_psrk_hoc
+  name: UNIFAC (PSRK) liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_psrk
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_psrk_nothnagel
+  name: UNIFAC (PSRK) liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_psrk
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_psrk_pr
+  name: UNIFAC (PSRK) liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_psrk
+    vapour: pr
+  params:
+    source: thermo 0.6.1 bundled UNIFAC PSRK interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Holderbaum, T. & Gmehling, J., Fluid Phase Equilib. 70(2-3), 251-265, 1991
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_nist_ig
+  name: UNIFAC (NIST) liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_nist
+    vapour: ideal
+  params:
+    source: thermo 0.6.1 bundled UNIFAC NIST interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Kang, J. W., Diky, V., Chirico, R. D., Magee, J. W., Muzny, C. D., Abdulagatov, I., Kazakov, A. F. &
+      Frenkel, M., Fluid Phase Equilib. 309(1), 68-75, 2011
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+  l0_excluded: {}
+
+- id: unifac_nist_rk
+  name: UNIFAC (NIST) liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_nist
+    vapour: rk
+  params:
+    source: thermo 0.6.1 bundled UNIFAC NIST interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Kang, J. W., Diky, V., Chirico, R. D., Magee, J. W., Muzny, C. D., Abdulagatov, I., Kazakov, A. F. &
+      Frenkel, M., Fluid Phase Equilib. 309(1), 68-75, 2011
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_nist_hoc
+  name: UNIFAC (NIST) liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_nist
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_nist_nothnagel
+  name: UNIFAC (NIST) liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_nist
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_nist_pr
+  name: UNIFAC (NIST) liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_nist
+    vapour: pr
+  params:
+    source: thermo 0.6.1 bundled UNIFAC NIST interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Kang, J. W., Diky, V., Chirico, R. D., Magee, J. W., Muzny, C. D., Abdulagatov, I., Kazakov, A. F. &
+      Frenkel, M., Fluid Phase Equilib. 309(1), 68-75, 2011
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_lle_ig
+  name: UNIFAC-LLE liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_lle
+    vapour: ideal
+  params:
+    source: thermo 0.6.1 bundled UNIFAC LLE interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  references:
+  - Magnussen, T., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Process Des. Dev. 20(2), 331-339, 1981
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          H2O: 0.5
+          nC4: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    phase_identification:
+      points:
+      - - H2O
+        - 350.0
+      - - H2O
+        - 400.0
+    pure_psat_limit:
+      points:
+      - - H2O
+        - 300.0
+      - - H2O
+        - 350.0
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    single_liquid_limit:
+      state:
+      - 298.15
+      - 100000.0
+      z:
+        H2O: 1.0
+  l0_excluded: {}
+
+- id: unifac_lle_rk
+  name: UNIFAC-LLE liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_lle
+    vapour: rk
+  params:
+    source: thermo 0.6.1 bundled UNIFAC LLE interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  references:
+  - Magnussen, T., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Process Des. Dev. 20(2), 331-339, 1981
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    gibbs_duhem:
+      binaries:
+      - P: 100000.0
+        T: 350.0
+        phase: aqueous
+        z:
+          H2O: 0.5
+          nC4: 0.5
+      - P: 50000.0
+        T: 380.0
+        phase: vapor
+        z:
+          H2O: 0.5
+          nC4: 0.5
+    phase_identification:
+      points:
+      - - H2O
+        - 350.0
+      - - H2O
+        - 400.0
+    pure_psat_limit:
+      points:
+      - - H2O
+        - 300.0
+      - - H2O
+        - 350.0
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    single_liquid_limit:
+      state:
+      - 298.15
+      - 100000.0
+      z:
+        H2O: 1.0
+  l0_excluded: {}
+
+- id: unifac_lle_hoc
+  name: UNIFAC-LLE liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_lle
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_lle_nothnagel
+  name: UNIFAC-LLE liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_lle
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_lle_pr
+  name: UNIFAC-LLE liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_lle
+    vapour: pr
+  params:
+    source: thermo 0.6.1 bundled UNIFAC LLE interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  references:
+  - Magnussen, T., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Process Des. Dev. 20(2), 331-339, 1981
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    gibbs_duhem:
+      binaries:
+      - P: 100000.0
+        T: 350.0
+        phase: aqueous
+        z:
+          H2O: 0.5
+          nC4: 0.5
+      - P: 50000.0
+        T: 380.0
+        phase: vapor
+        z:
+          H2O: 0.5
+          nC4: 0.5
+    phase_identification:
+      points:
+      - - H2O
+        - 350.0
+      - - H2O
+        - 400.0
+    pure_psat_limit:
+      points:
+      - - H2O
+        - 300.0
+      - - H2O
+        - 350.0
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    single_liquid_limit:
+      state:
+      - 298.15
+      - 100000.0
+      z:
+        H2O: 1.0
+  l0_excluded: {}
+
+- id: unifac_lyngby_ig
+  name: UNIFAC (Lyngby) liquid + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_lyngby
+    vapour: ideal
+  params:
+    source: thermo 0.6.1 bundled UNIFAC Lyngby-A interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Larsen, B. L., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Res. 26(11), 2274-2286, 1987
+  # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
+  # so the composition loop's normalizer is exactly zero and the ratio is undefined
+  # (0/0 in the harness); the identity holds trivially. Only the liquid loop runs.
+  l0:
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+  l0_excluded: {}
+
+- id: unifac_lyngby_rk
+  name: UNIFAC (Lyngby) liquid + Redlich-Kwong vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_lyngby
+    vapour: rk
+  params:
+    source: thermo 0.6.1 bundled UNIFAC Lyngby-A interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Larsen, B. L., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Res. 26(11), 2274-2286, 1987
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_lyngby_hoc
+  name: UNIFAC (Lyngby) liquid + Hayden-O'Connell virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_lyngby
+    vapour: hoc
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_lyngby_nothnagel
+  name: UNIFAC (Lyngby) liquid + Nothnagel virial vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_lyngby
+    vapour: nothnagel
+  params:
+    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
+    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
+      ngdesign.thermo.virial (spec deviation)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: experimental
+  references:
+  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
+      verifiable open parameter table found this session)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
+      (equation reference; same parameter-table gap)
+  l0: {}
+  l0_excluded: {}
+
+- id: unifac_lyngby_pr
+  name: UNIFAC (Lyngby) liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: unifac_lyngby
+    vapour: pr
+  params:
+    source: thermo 0.6.1 bundled UNIFAC Lyngby-A interaction and subgroup tables (load_unifac_ip)
+    provenance: curated per-component group assignments in data/thermo_params/unifac/groups.yaml - a component
+      outside the curated set raises rather than predicting
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  references:
+  - Larsen, B. L., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Res. 26(11), 2274-2286, 1987
+  l0: {}
+  l0_excluded: {}

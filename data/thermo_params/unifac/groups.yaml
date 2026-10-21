@@ -1,0 +1,76 @@
+# UNIFAC subgroup assignments for the curated slate, per variant (spec T-03).
+#
+# Names resolve against the thermo 0.6.1 subgroup tables listed per variant at
+# load time; an unknown name is an error (never silently ignored). Assignments
+# follow the per-variant published tables:
+# - Dortmund splits the alcohol OH as "OH(P)" (primary alcohol);
+# - NIST uses its own "OH prim" subgroup;
+# - original UNIFAC, PSRK and UNIQUAC use the combined CH3OH subgroup for
+#   methanol (UFSG 15, main group 6);
+# - Lyngby has its own OH subgroup (12) and no aromatic CH subgroup, so
+#   toluene has no Lyngby assignment (the curated slate has no toluene rows
+#   for the Lyngby variant; the test suite exercises the refusal directly).
+#
+# The Magnussen LLE variant is parameterized for water/organic liquid-liquid
+# systems only: alcohol and glycol components have NO assignment and the
+# adapter refuses them by name (the corresponding unifac-lle-* cases stay
+# dormant in data/validation/gamma_phi/cases.yaml).
+model: unifac
+variants:
+  unifac:
+    version: 0
+    interaction: UFIP
+    subgroups: UFSG
+    components:
+      MeOH: {CH3OH: 1}
+      EtOH: {CH3: 1, CH2: 1, OH: 1}
+      MEG: {CH2: 2, OH: 2}
+      H2O: {H2O: 1}
+      nC4: {CH3: 2, CH2: 2}
+  unifac_dortmund:
+    version: 1
+    interaction: DOUFIP2016
+    subgroups: DOUFSG
+    components:
+      MeOH: {CH3: 1, OH(P): 1}
+      EtOH: {CH3: 1, CH2: 1, OH(P): 1}
+      MEG: {CH2: 2, OH(P): 2}
+      H2O: {H2O: 1}
+      nC4: {CH3: 2, CH2: 2}
+  unifac_psrk:
+    version: 2
+    interaction: PSRKIP
+    subgroups: PSRKSG
+    components:
+      MeOH: {CH3OH: 1}
+      EtOH: {CH3: 1, CH2: 1, OH: 1}
+      MEG: {CH2: 2, OH: 2}
+      H2O: {H2O: 1}
+      nC4: {CH3: 2, CH2: 2}
+  unifac_nist:
+    version: 0
+    interaction: NISTUFIP
+    subgroups: NISTUFSG
+    components:
+      MeOH: {CH3: 1, OH prim: 1}
+      EtOH: {CH3: 1, CH2: 1, OH prim: 1}
+      MEG: {CH2: 2, OH prim: 2}
+      H2O: {H2O: 1}
+      nC4: {CH3: 2, CH2: 2}
+  unifac_lle:
+    version: 0
+    interaction: LLEUFIP
+    subgroups: LLEUFSG
+    components:
+      H2O: {H2O: 1}
+      nC4: {CH3: 2, CH2: 2}
+  unifac_lyngby:
+    version: 4
+    interaction: LUFIP
+    subgroups: LUFSG
+    components:
+      MeOH: {CH3: 1, OH: 1}
+      EtOH: {CH3: 1, CH2: 1, OH: 1}
+      MEG: {CH2: 2, OH: 2}
+      H2O: {H2O: 1}
+      nC4: {CH3: 2, CH2: 2}
