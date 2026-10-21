@@ -1,0 +1,11 @@
+# Allowlist the build context: both images build from the repo root (the web
+# image with dockerfile=frontend/Dockerfile), so keep only what they COPY.
+*
+!pyproject.toml
+!uv.lock
+!src/
+!data/
+!frontend/
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo

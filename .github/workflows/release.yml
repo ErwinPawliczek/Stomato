@@ -7,13 +7,18 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 concurrency:
   # One release at a time; tagging a new version cancels a stale build of an old tag.
   group: release-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  REGISTRY: ghcr.io
+
 jobs:
+  # Pre-existing (C-8): version check, wheel build + smoke test, GitHub Release.
   release:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -51,3 +56,67 @@ jobs:
             --title "ngdesign ${{ github.ref_name }}" \
             --generate-notes \
             dist/*
+
+  # Spec P3-03: the deployable container images. stomato-worker is the same
+  # backend image tagged separately (the chart and compose pass the command via
+  # args, but a dedicated tag lets a release pin the worker independently).
+  images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Metadata (shared tag set)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          # metadata-action lowercases the image path; ghcr requires lowercase.
+          images: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/stomato-api
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
+      - name: Build and push api image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push worker image (same image, separate tag)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/stomato-worker:${{ steps.meta.outputs.version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/stomato-web:${{ steps.meta.outputs.version }}
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/stomato-web:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

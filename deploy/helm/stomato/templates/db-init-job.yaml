@@ -1,0 +1,30 @@
+{{/* Pre-install/pre-upgrade one-shot: `ngdesign db-init` creates the store
+     schema before the api Deployments start. before-hook-creation keeps one
+     previous Job around for forensics. */}}
+{{- $fullname := include "stomato.fullname" . -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ $fullname }}-db-init
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-weight: "-5"
+    helm.sh/hook-delete-policy: before-hook-creation
+  labels:
+    {{- include "stomato.componentLabels" (dict "component" "db-init" "context" $) | nindent 4 }}
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        {{- include "stomato.componentLabels" (dict "component" "db-init" "context" $) | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: db-init
+          image: "{{ .Values.image.api }}:{{ include "stomato.imageTag" . }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["db-init"]
+          envFrom:
+            - secretRef:
+                name: {{ $fullname }}

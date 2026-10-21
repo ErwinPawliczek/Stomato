@@ -1,0 +1,28 @@
+{{- $fullname := include "stomato.fullname" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullname }}-worker
+  labels:
+    {{- include "stomato.componentLabels" (dict "component" "worker" "context" $) | nindent 4 }}
+spec:
+  replicas: {{ .Values.worker.replicas }}
+  selector:
+    matchLabels:
+      {{- include "stomato.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: worker
+  template:
+    metadata:
+      labels:
+        {{- include "stomato.componentLabels" (dict "component" "worker" "context" $) | nindent 8 }}
+    spec:
+      containers:
+        - name: worker
+          image: "{{ .Values.image.worker }}:{{ include "stomato.imageTag" . }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["worker"]
+          envFrom:
+            - secretRef:
+                name: {{ $fullname }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}

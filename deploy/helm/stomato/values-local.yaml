@@ -1,0 +1,18 @@
+# values-local.yaml — a worked local install (spec P3-03):
+#   helm install stomato deploy/helm/stomato -f deploy/helm/stomato/values-local.yaml
+#
+# Bundled Postgres/Redis, open auth, port-forward access (no ingress needed):
+#   kubectl -n stomato port-forward svc/stomato-web 8080:80
+# For auth, generate a token and pass it:
+#   helm install stomato deploy/helm/stomato -f values-local.yaml \
+#     --set auth.tokens="s3cr3t:local"
+
+ingress:
+  enabled: false
+
+cors:
+  # The origin you browse the app through when port-forwarding.
+  origins: "http://localhost:8080"
+
+auth:
+  tokens: ""

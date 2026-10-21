@@ -1,0 +1,16 @@
+{{- $fullname := include "stomato.fullname" . -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $fullname }}-web
+  labels:
+    {{- include "stomato.componentLabels" (dict "component" "web" "context" $) | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  selector:
+    {{- include "stomato.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: web

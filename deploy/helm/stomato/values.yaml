@@ -1,0 +1,100 @@
+# Default values for the stomato chart (spec P3-03). See values-local.yaml for
+# a worked local example and docs/deploy.md for the env reference.
+
+image:
+  api: ghcr.io/erwinpawliczek/stomato-api
+  # Same image as api, different command; a separate tag so a release can pin it.
+  worker: ghcr.io/erwinpawliczek/stomato-worker
+  web: ghcr.io/erwinpawliczek/stomato-web
+  # Empty = Chart appVersion.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+api:
+  port: 8000
+  replicas: 2
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 80
+
+worker:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+
+web:
+  replicas: 1
+  port: 80
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 128Mi
+
+ingress:
+  enabled: true
+  className: nginx
+  # Empty host = the rule accepts all hosts. Set the DNS name in production.
+  host: ""
+  # Extra annotations, e.g. cert-manager.
+  annotations: {}
+
+auth:
+  # STOMATO_API_TOKENS: comma-separated `token:owner` pairs. Empty = open mode
+  # (no authentication) — acceptable only for a throwaway cluster.
+  tokens: ""
+
+cors:
+  # STOMATO_CORS_ORIGINS: comma-separated browser origins. Empty = the library
+  # default (the Vite dev server) — set this to the ingress origin in production.
+  origins: ""
+
+postgres:
+  # When `url` is set the chart uses it verbatim and never deploys the bundled
+  # StatefulSet. When it is empty, a bundled StatefulSet runs and the database
+  # URL is assembled from the values below.
+  url: ""
+  bundled: true
+  image: postgres:17.2-alpine
+  user: stomato
+  database: stomato
+  # When empty, the chart generates a random password into its own config
+  # Secret (stable across upgrades via lookup).
+  password: ""
+  storage: 10Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+
+redis:
+  # Same pattern as postgres: set `url` for an external Redis and the bundled
+  # StatefulSet is skipped.
+  url: ""
+  bundled: true
+  image: redis:7.4.2-alpine
+  storage: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      memory: 256Mi

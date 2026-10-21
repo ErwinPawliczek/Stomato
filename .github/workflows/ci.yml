@@ -15,6 +15,7 @@ jobs:
     outputs:
       backend: ${{ steps.f.outputs.backend }}
       frontend: ${{ steps.f.outputs.frontend }}
+      deploy: ${{ steps.f.outputs.deploy }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -32,6 +33,12 @@ jobs:
             frontend:
               - 'frontend/**'
               - 'openapi.json'
+            deploy:
+              - 'deploy/**'
+              - 'Dockerfile'
+              - 'frontend/Dockerfile'
+              - '.dockerignore'
+              - '.github/workflows/release.yml'
 
   guard:
     # Agents may not edit oracles/contracts, and one PR may not mix frontend and backend.
@@ -101,10 +108,25 @@ jobs:
       - run: npm test
       - run: npm run build
 
+  # Spec P3-03: the chart must stay lintable and renderable on every change to
+  # the deployables.
+  helm:
+    needs: changes
+    if: needs.changes.outputs.deploy == 'true' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with:
+          version: v3.16.4
+      - run: helm lint deploy/helm/stomato
+      - run: helm template stomato deploy/helm/stomato
+
   # Required status check for branch protection: passes when every job that ran passed.
   ci-ok:
     if: always()
-    needs: [guard, backend, frontend]
+    needs: [guard, backend, frontend, helm]
     runs-on: ubuntu-latest
     steps:
       - run: |
