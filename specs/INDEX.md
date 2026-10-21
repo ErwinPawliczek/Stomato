@@ -119,6 +119,6 @@ solver module and `variables.py`; P2-03 edits the SM loop), P2-04 after P2-01 an
 |---|---|---|---|
 | P3-01 | Project store (SQLModel), multi-project API, token auth, locked CORS | B-08, P2-02 | merged #109 |
 | P3-02 | Solve jobs: queue, worker process, progress stream | P3-01, P2-02 | merged #117 (2026-10-21) |
-| P3-03 | Containers, compose, Helm chart, image build on tag | P3-01, P3-02 | drafted |
+| P3-03 | Containers, compose, Helm chart, image build on tag | P3-01, P3-02 | dispatched 2026-10-21 (issue #120) |
 
 Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after P3-02.
