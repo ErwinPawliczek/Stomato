@@ -84,8 +84,8 @@ its own `.importlinter` ignore lines. The orchestrator updates **Status** here o
 | P1-02 | Open component registry — databank species, pseudo-components, per-flowsheet slate | P0-01, P1-01 | merged #94 |
 | P1-03 | Column consumes contract v2; split the god-file | P1-01, P0-06 | merged #96 (−56 % flash-equivalents; see #91) |
 | P1-04 | Amine chemistry as property packages (apparent-component reactive VLE) | P0-02, P1-01 | merged #95 |
-| P1-06 | Staged amine absorber/regenerator via column + amine package | P1-09, P1-03, P1-04 | BLOCKED 2026-10-21 (issue #98): column cannot solve zero/one-tear configurations → P1-09; re-dispatch after P1-09 merges |
-| P1-10 | One-tear stripper convergence: physical branch selection, band-floor guard | P1-09, #124 | dispatched 2026-10-21 (issue #148); P1-06 follows |
+| P1-06 | Staged amine absorber/regenerator via column + amine package | P1-09, P1-10, P1-03, P1-04 | re-dispatched 2026-10-21 after P1-10 (issue #98); regenerator = reboiled stripper, `component_ratio` spec kind |
+| P1-10 | One-tear stripper convergence: physical branch selection, band-floor guard | P1-09, #124 | merged #149 (2026-10-21): NS-first for non-reactive one-tear kettles, damped spec secant, band-limit rejection; boundary component balances 1e-6 (NS FD floor) |
 | P1-09 | Column zero/one-tear configurations (absorbers, strippers), seed, error containment; amine states inside the column | P1-03, P1-04, P1-08 | merged #125 (2026-10-21): absorbers, Kremser-proper, MDEA column; stripper branch → P1-10 |
 | P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | merged #97 (867 comparisons, 74 xfail families; issues #99, #100) |
 | P1-07 | Pseudo-component definitions owned by the Flowsheet (no process-global registry) | P1-02 | merged #115 (2026-10-21) |
