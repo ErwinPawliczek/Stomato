@@ -1,54 +1,94 @@
 {
   "cases": {
     "slice": {
+      "flashes": 13,
       "flashes_pt": 10,
       "flashes_ph": 2,
       "flashes_ps": 1,
-      "flash_wall_s": 3.513685,
-      "total_wall_s": 3.514593,
+      "flashes_k_values": 0,
+      "flashes_bubble_point": 0,
+      "flashes_dew_point": 0,
+      "flashes_flash_tvf": 0,
+      "flashes_flash_pvf": 0,
+      "props_calls": 0,
+      "flash_wall_s": 3.959799,
+      "total_wall_s": 3.960739,
       "solver_passes": 1,
       "converged": true
     },
     "recycle_bench": {
+      "flashes": 515,
       "flashes_pt": 375,
       "flashes_ph": 100,
       "flashes_ps": 40,
-      "flash_wall_s": 53.415254,
-      "total_wall_s": 53.437729,
+      "flashes_k_values": 0,
+      "flashes_bubble_point": 0,
+      "flashes_dew_point": 0,
+      "flashes_flash_tvf": 0,
+      "flashes_flash_pvf": 0,
+      "props_calls": 0,
+      "flash_wall_s": 46.273216,
+      "total_wall_s": 46.296217,
       "solver_passes": 20,
       "converged": true
     },
     "amine_loop": {
+      "flashes": 31,
       "flashes_pt": 27,
       "flashes_ph": 4,
       "flashes_ps": 0,
-      "flash_wall_s": 0.570991,
-      "total_wall_s": 0.588476,
+      "flashes_k_values": 0,
+      "flashes_bubble_point": 0,
+      "flashes_dew_point": 0,
+      "flashes_flash_tvf": 0,
+      "flashes_flash_pvf": 0,
+      "props_calls": 0,
+      "flash_wall_s": 0.466934,
+      "total_wall_s": 0.48547,
       "solver_passes": 4,
       "converged": true
     },
     "mea_amine_loop": {
+      "flashes": 45,
       "flashes_pt": 39,
       "flashes_ph": 6,
       "flashes_ps": 0,
-      "flash_wall_s": 2.301377,
-      "total_wall_s": 2.326127,
+      "flashes_k_values": 0,
+      "flashes_bubble_point": 0,
+      "flashes_dew_point": 0,
+      "flashes_flash_tvf": 0,
+      "flashes_flash_pvf": 0,
+      "props_calls": 0,
+      "flash_wall_s": 2.880704,
+      "total_wall_s": 2.909625,
       "solver_passes": 6,
       "converged": true
     },
     "column": {
-      "flashes_pt": 11208,
+      "flashes": 4959,
+      "flashes_pt": 4953,
       "flashes_ph": 0,
       "flashes_ps": 0,
-      "flash_wall_s": 21.032088,
-      "total_wall_s": 22.167786,
+      "flashes_k_values": 0,
+      "flashes_bubble_point": 3,
+      "flashes_dew_point": 3,
+      "flashes_flash_tvf": 0,
+      "flashes_flash_pvf": 0,
+      "props_calls": 66,
+      "flash_wall_s": 7.457541,
+      "total_wall_s": 8.684787,
       "solver_passes": 0,
       "converged": true
+    }
+  },
+  "budgets": {
+    "column": {
+      "pre_change_flash_equivalents": 11208
     }
   },
   "metadata": {
     "python": "3.13.14",
     "platform": "Linux-6.1.158+-x86_64-with-glibc2.41",
-    "commit": "3ecd2850ad9ef6b06b61e1a3dc3832037f8c97fd"
+    "commit": "00839f94b6480e8556feffd1dd72d57bd194530e"
   }
 }

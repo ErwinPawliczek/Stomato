@@ -1,0 +1,246 @@
+"""Rigorous equilibrium-stage vapour-liquid equilibrium column. Plugin kind "unit", name "column".
+
+A staged distillation/absorption column on the shared Peng-Robinson thermo plugin.
+N equilibrium stages numbered 1..N top to bottom; the kettle reboiler is stage N
+and a partial condenser is stage 1. A total condenser is hardware *above* stage 1
+(it adds no separation: x_D = y_1, the McCabe-Thiele convention), so stage 1
+remains a normal equilibrium tray whose overhead vapour V_1 is fully condensed
+into reflux L_0 + distillate D.
+
+Method (primary): Boston-Sullivan inside-out. Outer sweeps refresh real K-values
+stage by stage from ``thermo.k_values`` (contract v2), falling back to the
+Clausius-Clapeyron estimate (``k_estimate``) where a stage state comes back
+single-phase, and refit the frozen inner models - per
+stage relative volatilities alpha_ij = K_ij / Kb_j against one column-wide
+reference component, the two-parameter correlation ln Kb = A + B/T (Boston &
+Sullivan 1974, "An Improved Algorithm for Solving Mass Balance Equations in
+Multistage Separation Processes", Can. J. Chem. Eng. 52, 52-63), and linear
+per-phase enthalpy models H(T) = h0 + cp*(T - T_ref). The inner loop then solves
+MESH with those frozen models only (no thermo calls): component balances as a
+tridiagonal system (Thomas algorithm), bubble equations Kb_j = 1/(sum_i
+alpha_ij x_ij), stage temperatures from the Kb correlation, and the enthalpy
+balances as a damped Newton system for the vapour profile. This keeps the
+expensive flash-equivalent calls on the outer sweeps only (the v2 contract
+k_values/flash_pt/phase_props/bubble_point are all LRU-cached per package
+instance); PH/PS flashes are never used.
+
+Fallback: if the inside-out loop fails to converge, a Naphtali-Sandholm style
+simultaneous Newton corrects (x, T, V) together against the MESH residuals with
+K-values frozen between Newton passes and refreshed from the thermo plugin each
+pass (Naphtali & Sandholm 1971, "Multicomponent Separation Calculations by
+Linearization", AIChE J. 17(1), 148-153: the equations are grouped by stage and
+linearized; the K-composition coupling is updated between passes).
+
+Boundary structure: the column's degrees of freedom are its boundary flows -
+the top tear (reflux L_0 for a total condenser, distillate D for a partial
+condenser) and the bottom tear (boilup V_N for a kettle reboiler). A
+condenserless stage's vapour and a reboilerless stage's vapour are outcomes of
+their enthalpy balances, as are all duties. The number of required column specs
+therefore equals the number of tears: two for a condenser+reboiler column, one
+for a stripper or a rectifier-without-reboiler, zero for a feed-determined
+absorber. Specs are driven to their targets by a bounded Broyden secant loop
+over the tears.
+
+Per-phase enthalpies: the thermo contract v2 (spec P1-01) exposes per-phase
+properties, so liquid/vapour phase enthalpies and heat capacities come from
+single ``thermo.phase_props`` builds at the stage state — no straddling
+flashes, no extrapolation across the phase boundary. The reboiler
+duty is finally defined by the exact overall energy balance over the real
+boundary streams given the condenser-duty balance, so the reported duty closes
+the stream table exactly (module users get a consistent UnitResult.duty_W; the
+Qc/Qr split is accurate to the converged stage-balance residual).
+
+All SI: K, Pa abs, mol/s, J/mol, W. Pure functions; no I/O; no global state.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from ngdesign.contracts import StreamState, UnitResult
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.registry import register
+
+from .inside_out import (
+    _build_column,
+    _close_energy_balance,
+    _exact_residuals,
+    _seed_profile,
+    _temperature_seed,
+)
+from .spec import _FLOW_FLOOR, ColumnConvergenceError, ColumnSpecError, _parse_params
+from .specs import _solve_mesh, _solve_specs
+from .thermo_adapter import _flash_ready, _ThermoBox
+
+__all__ = [
+    "Column",
+    "ColumnConvergenceError",
+    "ColumnSpecError",
+    "_ThermoBox",
+    "_build_column",
+    "_exact_residuals",
+    "_flash_ready",
+    "_parse_params",
+    "_seed_profile",
+    "_solve_mesh",
+    "_solve_specs",
+    "_temperature_seed",
+]
+
+
+def _condensed_distillate(
+    tb: _ThermoBox, y0: dict[str, float], t_top: float, p_cond: float, d: float
+) -> StreamState:
+    """Total-condenser product: saturated liquid at the condenser pressure.
+
+    Flashed at the bubble point of the vapour composition so the returned phase
+    list is self-consistent; flashing the two-phase top-stage equilibrium would
+    carry phase fractions that do not sum to one for a pure-liquid product.
+    """
+    y0_ready = _flash_ready(y0, y0)
+    t_bubble = tb.bubble_temperature(y0_ready, p_cond)
+    if t_bubble is None:
+        t_bubble = t_top  # degenerate edge; flash near the top-stage state
+    return tb.pt(y0_ready, t_bubble, p_cond, max(d, _FLOW_FLOOR))
+
+
+def _zero_flow_state(comp: dict[str, float], t: float, p: float) -> StreamState:
+    """Placeholder outlet for a port the configuration leaves unused."""
+    return StreamState(
+        T=t,
+        P=p,
+        molar_flow=0.0,
+        composition=_flash_ready(comp, comp),
+        vapor_fraction=0.0,
+        enthalpy=0.0,
+        entropy=0.0,
+        phases=[],
+    )
+
+
+@register("unit", "column")
+class Column:
+    """Rigorous equilibrium-stage column: inside-out (Boston-Sullivan) primary,
+    Naphtali-Sandholm Newton fallback on non-convergence.
+
+    Ports: one ``feed`` inlet; ``distillate``, ``bottoms`` and one ``side_draw``
+    outlet (a zero-flow state when no draw is configured). Additional feeds on
+    any stage and further draws are declared in params; their material stays
+    inside the unit's own balance (reported in info) - the flowsheet graph sees
+    the three outlet ports only.
+    """
+
+    inlet_ports = ("feed",)
+    outlet_ports = ("distillate", "bottoms", "side_draw")
+
+    def solve(
+        self,
+        inlets: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> UnitResult:
+        graph_feed = inlets.get("feed")
+        graph_dict: dict[str, Any] | None = None
+        if graph_feed is not None:
+            if graph_feed.molar_flow <= 0.0:
+                raise ColumnSpecError("feed port stream has zero molar flow")
+            graph_dict = {
+                "T": graph_feed.T,
+                "P": graph_feed.P,
+                "molar_flow": graph_feed.molar_flow,
+                "composition": dict(graph_feed.composition),
+            }
+        parsed = _parse_params(params, graph_dict)
+        tb = _ThermoBox(thermo, min(parsed.pressures), max(parsed.pressures))
+        col = _build_column(parsed, tb)
+
+        prof = _solve_specs(col, tb, parsed)
+
+        # Boundary stream states (exact; these drive the reported energy balance).
+        feed_states: list[StreamState] = []
+        if graph_feed is not None:
+            feed_states.append(graph_feed)
+        for f in parsed.feeds:
+            if graph_feed is not None and f.comp == dict(graph_feed.composition) and f is parsed.feeds[0]:
+                continue  # the port feed is already counted
+            feed_states.append(tb.pt(f.comp, f.T, f.P, f.flow))
+
+        try:
+            if col.condenser == "total":
+                distillate = _condensed_distillate(tb, prof.y[0], prof.T[0], col.pressures[0], prof.d)
+            else:
+                distillate = tb.pt(prof.y[0], prof.T[0], col.pressures[0], prof.d)
+            bottoms = tb.pt(prof.x[col.n - 1], prof.T[col.n - 1], col.pressures[col.n - 1], prof.b)
+            out_states: list[StreamState] = [distillate, bottoms]
+            if parsed.draws:
+                first = parsed.draws[0]
+                j = first.stage - 1
+                comp = prof.y[j] if first.vapor else prof.x[j]
+                side_draw = tb.pt(comp, prof.T[j], col.pressures[j], first.flow)
+                out_states.append(side_draw)
+                for extra in parsed.draws[1:]:
+                    je = extra.stage - 1
+                    comp_e = prof.y[je] if extra.vapor else prof.x[je]
+                    out_states.append(tb.pt(comp_e, prof.T[je], col.pressures[je], extra.flow))
+            else:
+                side_draw = _zero_flow_state(bottoms.composition, prof.T[col.n - 1], col.pressures[col.n - 1])
+
+            _close_energy_balance(col, tb, prof, feed_states, out_states)
+        except ValueError as exc:
+            # A converged profile should be physical; a degenerate edge (zero
+            # distillate at an extreme tear) still must not leak a pydantic
+            # error past the plugin contract.
+            raise ColumnConvergenceError(f"converged column state left the physical domain: {exc}") from exc
+
+        info: dict[str, float] = {
+            "n_stages": float(col.n),
+            "condenser_duty_W": prof.qc,
+            "reboiler_duty_W": prof.qr,
+            "distillate_mol_s": prof.d,
+            "bottoms_mol_s": prof.b,
+            "outer_iterations": float(prof.outer),
+            "inner_iterations": float(prof.inner),
+            "ns_used": float(prof.ns_used),
+            "reflux_ratio": prof.l0 / max(prof.d, _FLOW_FLOOR) if col.condenser == "total" else 0.0,
+            "boilup_ratio": (
+                prof.V[col.n - 1] / max(prof.b, _FLOW_FLOOR) if col.reboiler == "kettle" else 0.0
+            ),
+        }
+        for j in range(col.n):
+            info[f"stage_{j}_T_K"] = prof.T[j]
+            info[f"stage_{j}_P_Pa"] = col.pressures[j]
+            info[f"stage_{j}_L_mol_s"] = prof.L[j]
+            info[f"stage_{j}_V_mol_s"] = prof.V[j]
+            for cid, frac in prof.x[j].items():
+                info[f"stage_{j}_x_{cid}"] = frac
+            for cid, frac in prof.y[j].items():
+                info[f"stage_{j}_y_{cid}"] = frac
+
+        return UnitResult(
+            outlets={"distillate": distillate, "bottoms": bottoms, "side_draw": side_draw},
+            duty_W=prof.qr - prof.qc,
+            info=info,
+        )
+
+    @staticmethod
+    def example_case() -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """16-stage propane/isobutane split: 100 mol/s 50/50 at 330 K, 1.5 MPa.
+
+        Total condenser, kettle reboiler, feed on stage 8, reflux ratio 2.5,
+        distillate 45 mol/s.
+        """
+        feed = {
+            "T": 330.0,
+            "P": 1.5e6,
+            "molar_flow": 100.0,
+            "composition": {"C3": 0.5, "iC4": 0.5},
+        }
+        params = {
+            "n_stages": 16,
+            "condenser": "total",
+            "reboiler": "kettle",
+            "feed_stage": 8,
+            "pressure_profile": 1.5e6,
+            "specs": {"reflux_ratio": 2.5, "distillate_rate": 45.0},
+        }
+        return {"feed": feed}, params
