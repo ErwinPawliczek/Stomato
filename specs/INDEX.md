@@ -122,3 +122,21 @@ solver module and `variables.py`; P2-03 edits the SM loop), P2-04 after P2-01 an
 | P3-03 | Containers, compose, Helm chart, image build on tag | P3-01, P3-02 | merged #121 (2026-10-21) |
 
 Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after P3-02.
+
+## Thermo catalogue (plan: docs/thermo-catalogue-plan.md) — starts after P1-09 and P1-06 merge
+
+| Spec | Title | Depends on | Status |
+|---|---|---|---|
+| T-01 | Thermo catalogue as data: registry, status, L0/L4 validation layers | P1-05, P1-07, #124 | drafted |
+| T-02 | Cubic family options: alpha functions, volume translation, Boston–Mathias, sour terms, all thermo cubic classes | T-01 | planned |
+| T-03 | Gamma-phi adapter: NRTL/UNIQUAC/Wilson/van Laar/Margules/UNIFAC×5 × ideal/virial/cubic vapour; ChemSep + UNIFAC group data | T-01 | planned |
+| T-04 | Helmholtz adapter: IAPWS-95/IF97, CoolProp fluids, GERG-2008 (optional dependency) | T-01 | planned |
+| T-05 | Classic K-value correlations: Chao–Seader, Grayson–Streed, Braun K10, Lee–Kesler–Plöcker, ideal/Henry | T-01 | planned |
+| T-06 | Predictive mixing rules: PSRK, VTPR, MHV1/2, Wong–Sandler, Huron–Vidal, LCVM | T-02, T-03 | planned |
+| T-07 | teqp bridge: PC-SAFT, SAFT-VR Mie, CPA, multi-fluid Helmholtz | T-01 | planned |
+| T-08 | Model advisor + agent tool `recommend_thermo` + UI package picker | T-01..T-05 | planned |
+| T-09 | General electrolytes: eNRTL, Pitzer, extended UNIQUAC, sour water | T-03 | planned |
+| T-10 | Solids, polymers, HOC dimerisation, HF | T-03, T-07 | planned |
+| T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | planned |
+
+Dispatch: T-01 alone; then T-02, T-03, T-04, T-05, T-07, T-11, T-12, T-13 in parallel (disjoint files); then T-06, T-08, T-09, T-14; then T-10; then the catalogue freeze (status audit).
