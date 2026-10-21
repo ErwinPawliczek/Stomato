@@ -70,7 +70,10 @@ jobs:
     needs: changes
     if: needs.changes.outputs.backend == 'true' || github.event_name == 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The thermo-catalogue audit test grows with the row count (65 rows: the
+    # backend job measured 7 min 10 s on 2026-10-21); 20 min leaves headroom
+    # for the T-02/T-04/T-05 families without hiding a genuine hang.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
