@@ -2,7 +2,7 @@
 
 - **Phase:** 2
 - **Depends on:** P1-02 (per-flowsheet slate), P1-03
-- **Packages you may edit:** `ngdesign.contracts` (`flowsheet.py`: `SolvedFlowsheet`, new `diagnostics.py`), `ngdesign.solver`, `ngdesign.api` (only `routes_solve.py` / the shared solve helper to return partial results with HTTP 200), `tests/contracts/`, `tests/solver/`, `tests/api/`, `openapi.json` + `frontend/src/api/schema.d.ts` (regenerated)
+- **Packages you may edit:** `ngdesign.contracts` (`flowsheet.py`: `SolvedFlowsheet`, new `diagnostics.py`), `ngdesign.solver`, `ngdesign.api` (only `routes_solve.py` and the project-scoped solve route in `routes_projects.py`, status handling only) and `ngdesign.agent/engine.py` (only `solve_project`, the shared solve helper, to return partial results with HTTP 200), `tests/contracts/`, `tests/solver/`, `tests/api/`, `openapi.json` + `frontend/src/api/schema.d.ts` (regenerated)
 - **Contract change:** yes — `SolvedFlowsheet` gains `errors`, `history`, `status`
 - **Benchmark delta expected:** none (flash counts identical; history recording adds no flashes)
 
