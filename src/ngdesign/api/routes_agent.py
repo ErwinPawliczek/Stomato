@@ -76,7 +76,9 @@ def scripted_demo_script() -> list[ModelResponse]:
         ),
         ModelResponse(
             text="Now reading the compressor's power draw.",
-            tool_uses=(ToolUseRequest(id="demo-2", name="read_variable", input={"addr": "K-101.power_W"}),),
+            tool_uses=(
+                ToolUseRequest(id="demo-2", name="read_variable", input={"address": "K-101.power_W"}),
+            ),
             stop_reason="tool_use",
             input_tokens=15,
             output_tokens=6,

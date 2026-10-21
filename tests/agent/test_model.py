@@ -80,7 +80,9 @@ def test_anthropic_model_streams_text_and_parses_tool_use() -> None:
     kwargs = client.requests[0]
     assert kwargs["model"] == DEFAULT_MODEL
     assert kwargs["max_tokens"] == MAX_TOKENS
-    assert kwargs["system"] == "system prompt"
+    assert kwargs["system"] == [
+        {"type": "text", "text": "system prompt", "cache_control": {"type": "ephemeral"}}
+    ]
     assert kwargs["output_config"] == {"effort": DEFAULT_EFFORT}
     assert "thinking" not in kwargs
     assert "tool_choice" not in kwargs

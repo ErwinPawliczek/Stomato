@@ -24,10 +24,10 @@ DEFAULT_MODEL = "claude-opus-5-5"
 
 #: Reasoning effort sent as ``output_config={"effort": ...}`` (no thinking
 #: parameter, no budget tokens — the locked call shape).
-DEFAULT_EFFORT = "high"
+DEFAULT_EFFORT = "medium"
 
 #: Response cap for the agent's messages call (SI-scale tool sessions are small).
-MAX_TOKENS = 8000
+MAX_TOKENS = 16000
 
 #: Text deltas flow from the model to the loop through this callback.
 TextSink = Callable[[str], None]
@@ -125,10 +125,14 @@ class AnthropicModel:
 
     def __init__(
         self,
-        model: str = DEFAULT_MODEL,
-        effort: str = DEFAULT_EFFORT,
+        model: str | None = None,
+        effort: str | None = None,
         client: Any | None = None,
     ) -> None:
+        # Spec B-08: model and effort come from the environment when not given
+        # (STOMATO_AGENT_MODEL / STOMATO_AGENT_EFFORT), defaulting to the locked values.
+        model = model or os.environ.get("STOMATO_AGENT_MODEL") or DEFAULT_MODEL
+        effort = effort or os.environ.get("STOMATO_AGENT_EFFORT") or DEFAULT_EFFORT
         if client is None:
             if not os.environ.get("ANTHROPIC_API_KEY"):
                 raise ModelSetupError(
@@ -152,7 +156,9 @@ class AnthropicModel:
         with self._client.messages.stream(
             model=self._model,
             max_tokens=MAX_TOKENS,
-            system=system,
+            # Prompt caching (spec B-08): the system prompt is byte-stable per
+            # process, so it carries a cache breakpoint like the last tool does.
+            system=[{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}],
             # SDK boundary: the loop's message/tool dicts are JSON wire shapes and
             # match the SDK's TypedDict params at runtime; the SDK's static types
             # are nominal, so pass them through as Any rather than rebuild dicts.

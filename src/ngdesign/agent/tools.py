@@ -281,16 +281,16 @@ def _read_unit(store: ProjectStore, engine: Engine, *, tag: str) -> dict[str, An
     }
 
 
-def _read_variable(store: ProjectStore, engine: Engine, *, addr: str) -> dict[str, Any]:
+def _read_variable(store: ProjectStore, engine: Engine, *, address: str) -> dict[str, Any]:
     solved = engine.solve_project(store.get())
-    return {"address": addr, "value": addresses.resolve(addr, solved)}
+    return {"address": address, "value": addresses.resolve(address, solved)}
 
 
 def _case_study(
     store: ProjectStore,
     engine: Engine,
     *,
-    addr: str,
+    address: str,
     values: list[float],
     outputs: list[str],
 ) -> dict[str, Any]:
@@ -302,13 +302,13 @@ def _case_study(
     rows = []
     for value in values:
         try:
-            swept = addresses.set_address(project, addr, float(value))
+            swept = addresses.set_address(project, address, float(value))
             solved = engine.solve_project(swept)
             row = {"value": value, **{out: addresses.resolve(out, solved) for out in outputs}}
         except ValueError as exc:
-            raise ValueError(f"{addr}={value}: {exc}") from exc
+            raise ValueError(f"{address}={value}: {exc}") from exc
         rows.append(row)
-    return {"address": addr, "outputs": list(outputs), "rows": rows}
+    return {"address": address, "outputs": list(outputs), "rows": rows}
 
 
 def _render(store: ProjectStore, engine: Engine, *, view: str) -> dict[str, Any]:
@@ -464,7 +464,7 @@ TOOLS: tuple[ToolSpec, ...] = (
         "vapor_fraction>', '<stream>.x.<component_id>' (mole fraction), or "
         "'<unit>.<duty_W|power_W|info.<key>>'. Unknown addresses come back with "
         "the nearest valid ones.",
-        _schema({"addr": {"type": "string"}}),
+        _schema({"address": {"type": "string"}}),
         _read_variable,
     ),
     ToolSpec(
@@ -474,7 +474,7 @@ TOOLS: tuple[ToolSpec, ...] = (
         "every requested output address. The stored project is unchanged.",
         _schema(
             {
-                "addr": {"type": "string"},
+                "address": {"type": "string"},
                 "values": {"type": "array", "items": {"type": "number"}},
                 "outputs": {"type": "array", "items": {"type": "string"}},
             }

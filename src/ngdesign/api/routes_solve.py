@@ -6,7 +6,8 @@ error types into ``ngdesign.agent.engine``, so this route and the agent's
 plugin -> 501, semantically invalid project -> 422) and the route's own cache
 dict — a locked test (tests/api/test_solve_errors.py) monkeypatches
 ``routes_solve._cache`` for isolation, so the route keeps that seam and injects
-it into the shared helper (the agent path uses the engine's module cache).
+it into the shared helper. Outside that test the attribute IS the engine's
+cache, so the route and the agent share one cache.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ router = APIRouter()
 
 #: project hash -> solved result (spec B-02: "cache by project hash"). Injected
 #: into the shared solve helper; a locked test monkeypatches this attribute.
-_cache: dict[str, SolvedFlowsheet] = {}
+_cache: dict[str, SolvedFlowsheet] = engine._cache  # the engine's own cache: one cache in production
 
 # The shared helpers, re-exported under their historical names.
 project_hash = engine.project_hash

@@ -146,7 +146,7 @@ def test_solve_converges_on_the_slice() -> None:
 def test_read_variable_equals_solved_result() -> None:
     store = _store()
     solved = _run(store, "solve")
-    power = _run(store, "read_variable", addr="K-101.power_W")
+    power = _run(store, "read_variable", address="K-101.power_W")
     assert power == {"address": "K-101.power_W", "value": solved["units"]["K-101"]["power_W"]}
 
 
@@ -157,7 +157,7 @@ def test_case_study_sweeps_copies_monotonically() -> None:
     study = _run(
         store,
         "case_study",
-        addr="K-101.params.P_out",
+        address="K-101.params.P_out",
         # From the slice's own 7.0 MPa upward: lower discharge pressures push the
         # TEG contactor's 7.0 lb/MMscf water spec below its equilibrium floor.
         values=[7.0e6, 7.5e6, 8.0e6, 8.5e6, 9.0e6],
@@ -173,7 +173,7 @@ def test_case_study_sweeps_copies_monotonically() -> None:
 def test_case_study_reports_bad_values_as_errors() -> None:
     outcome = run_tool(
         "case_study",
-        {"addr": "K-101.params.P_out", "values": [-1.0], "outputs": ["K-101.power_W"]},
+        {"address": "K-101.params.P_out", "values": [-1.0], "outputs": ["K-101.power_W"]},
         _store(),
         DEFAULT_ENGINE,
     )
