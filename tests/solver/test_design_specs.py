@@ -9,9 +9,10 @@ from ngdesign.contracts import Flowsheet
 from ngdesign.contracts.components import resolve_set
 from ngdesign.contracts.flowsheet import SolvedFlowsheet
 from ngdesign.contracts.specs import DesignSpec
+from ngdesign.flowsheets import recycle_bench
 from ngdesign.flowsheets import slice as slice_fs
 from ngdesign.solver.design_specs import solve_with_specs
-from ngdesign.solver.sequential_modular import SequentialModular, _tear_vector
+from ngdesign.solver.sequential_modular import RTOL, SequentialModular, _tear_vector
 
 
 def _spec(**kw: object) -> DesignSpec:
@@ -107,6 +108,7 @@ def test_registry_name_runs_specs_automatically() -> None:
 
 
 def test_warm_start_reproduces_the_same_converged_sheet() -> None:
+    """Acyclic sheet: a warm start changes nothing (no tears to seed)."""
     thermo = registry.create("thermo", "pr")
     fs = slice_fs.build()
     first = SequentialModular().solve(fs, thermo)
@@ -115,6 +117,31 @@ def test_warm_start_reproduces_the_same_converged_sheet() -> None:
     again = SequentialModular().solve(fs, thermo, warm_start=warm)
     assert again.converged
     assert again == first
+
+
+def test_warm_start_skips_the_recycle_iterations() -> None:
+    """Cyclic sheet: tears seeded from a converged solve are already converged.
+
+    recycle_bench converges its one torn block in 20 passes from the mean-of-
+    feeds guess; warm-started from that solve's tear vectors the block must
+    accept on far fewer passes and land on the same streams within the solver's
+    tolerance - this is the point of the design-spec outer loop's warm start.
+    """
+    thermo = registry.create("thermo", "pr")
+    fs = recycle_bench.build()
+    cold = SequentialModular().solve(fs, thermo)
+    assert cold.converged
+    components = tuple(resolve_set(fs.components).ids)
+    warm = {sid: _tear_vector(st, components) for sid, st in cold.streams.items()}
+    hot = SequentialModular().solve(fs, thermo, warm_start=warm)
+    assert hot.converged
+    assert hot.iterations < cold.iterations
+    assert hot.iterations <= 3
+    for sid, state in cold.streams.items():
+        other = hot.streams[sid]
+        assert other.T == pytest.approx(state.T, rel=10 * RTOL)
+        assert other.P == pytest.approx(state.P, rel=10 * RTOL)
+        assert other.molar_flow == pytest.approx(state.molar_flow, rel=10 * RTOL)
 
 
 def test_deterministic_double_run() -> None:

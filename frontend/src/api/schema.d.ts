@@ -871,6 +871,67 @@ export interface components {
             tag: string;
         };
         /**
+         * DesignSpec
+         * @description One design specification: drive ``target`` to ``value`` via ``manipulated``.
+         *
+         *     ``target`` and ``manipulated`` are variable addresses (grammar in
+         *     ``ngdesign.variables``); the flowsheet validator checks they parse and that
+         *     their heads name a stream or unit of the sheet. ``tolerance`` is relative on
+         *     the target: converged when ``|achieved - value| <= tolerance * |value|``.
+         */
+        DesignSpec: {
+            /** Id */
+            id: string;
+            /** Lower */
+            lower: number;
+            /** Manipulated */
+            manipulated: string;
+            /**
+             * Max Iterations
+             * @default 30
+             */
+            max_iterations: number;
+            /** Target */
+            target: string;
+            /**
+             * Tolerance
+             * @default 0.0001
+             */
+            tolerance: number;
+            /** Upper */
+            upper: number;
+            /** Value */
+            value: number;
+        };
+        /**
+         * DesignSpecResult
+         * @description One design spec's outcome after the outer loop (spec P2-01).
+         *
+         *     ``history`` holds one ``(manipulated, achieved)`` pair per outer iteration
+         *     that produced a solvable flowsheet. On convergence ``achieved`` is the last
+         *     iteration's value; otherwise it is the closest value any iteration reached
+         *     (with ``manipulated_value`` the manipulated variable that produced it). A
+         *     spec aborted by a failed inner solve has ``converged=False``; if no
+         *     iteration ever solved, ``achieved`` and ``manipulated_value`` are NaN.
+         */
+        DesignSpecResult: {
+            /** Achieved */
+            achieved: number;
+            /** Converged */
+            converged: boolean;
+            /** History */
+            history: [
+                number,
+                number
+            ][];
+            /** Id */
+            id: string;
+            /** Iterations */
+            iterations: number;
+            /** Manipulated Value */
+            manipulated_value: number;
+        };
+        /**
          * Direction
          * @enum {string}
          */
@@ -913,6 +974,11 @@ export interface components {
              * @default []
              */
             components: (string | components["schemas"]["PseudoDefinition"])[];
+            /**
+             * Design Specs
+             * @default []
+             */
+            design_specs: components["schemas"]["DesignSpec"][];
             /** Name */
             name: string;
             /** Streams */
@@ -1164,6 +1230,11 @@ export interface components {
             datasheets: {
                 [key: string]: components["schemas"]["Datasheet"];
             };
+            /**
+             * Design Spec Results
+             * @default []
+             */
+            design_spec_results: components["schemas"]["DesignSpecResult"][];
             /**
              * Errors
              * @default []
