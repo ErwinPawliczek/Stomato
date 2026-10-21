@@ -28,8 +28,29 @@ remove the paper.
 ## Method
 1. **Measure the K-value surface first.** Write a probe (keep it as a test, `tests/thermo/test_amine_k_smoothness.py`) that evaluates `amine_ke` K-values, `flash_pt` phase split and enthalpies on the P1-09 MDEA absorber's stage states (take the converged 20-stage profile from `tests/units/test_column_feed_determined.py`'s MDEA case: T 281–315 K, loadings 0.0–0.5) and reports, for each stage and each component, the central finite-difference derivative dK/dT and dK/dx_CO2 at steps h = 1e-2, 1e-3, …, 1e-7 (relative). A smooth function gives derivatives that converge as h shrinks until round-off (≈ 1e-8 relative for an evaluation accurate to 1e-16); a noisy one gives derivatives that *diverge* as h shrinks. Record the step at which each derivative stops converging — that is the noise floor the NS Jacobian sees. Candidate sources, in order of likelihood (verify, do not assume): the `_LOADING_MAX_ITER = 50` loading loop returning its `best` non-converged state (a hidden discontinuity), the `max(x_i, 1e-12)` and `_MAX_LOADING` clamps, the `_ALL_VAPOR_K` switch at `k <= 0`, the speciation root's bracket tolerance in `kent_eisenberg.py` / `enrtl.py` (`brent_root` xtol) and any `min`/`max`/`abs` kinks inside the speciation residual, and the Henry's-law and Psat correlations crossing table boundaries.
 2. **Make the surface smooth and deterministic to 1e-10 relative** at every source found in step 1, in `ngdesign.amine`: a converged loading iteration (raise or tighten, never "best"), continuous clamps (none inside the physical window), speciation roots solved to machine precision, no branch switches inside the applicability window. The package's *values* must not change beyond the former noise: `tests/thermo/test_amine_package.py`, `tests/units/test_amine_units_package.py`, both e2e amine loops and their bench flash counts stay identical — if a bench count moves, the flash path moved, stop and report.
-3. **Then close the mesh.** With a smooth surface, Naphtali–Sandholm on the reactive package should behave like it does on PR (P1-09 absorbers: FD floor ≈ 4e-8). Measure the 20-stage MDEA absorber (zero-tear) and the 20-stage reboiled MDEA regenerator (one-tear, `MdeaRegenerator.example_case()` rich amine on stage 1, 1.9 bar, `boilup_ratio` spec; the P1-06 report's reproduction) at fixed tears: M after NS, boundary closure, wall time. Lower `_MESH_M_TOL_REACTIVE` to the measured floor (target: the zero/one-tear gate `1e-6`, i.e. delete the reactive exception if the floor allows) and document the measured floor in `spec.py` exactly as P1-09/P1-10 did. If the inside-out anchoring's composition blindness still stalls the cold walk before NS takes over, make the reactive seed/anchoring loading-aware (re-anchor Kb per stage at the current loading each outer sweep) — in `inside_out.py`, measured, not guessed.
-4. **The regenerator trust band.** The P1-06 report notes that for a water-based solvent `t_band_hi = max(feed + 80, t_kettle + 15)` sits in superheated-steam territory and the walk clamps stages there. Keep the band (it is a trust region), but the kettle estimate for a reactive package must be the bottoms bubble point *of the lean solvent* (water + amine at the regenerator pressure), not a flash of a loaded feed; measure where the physical regenerator profile sits (expect 380–400 K at 1.9 bar for 50 wt % MDEA) and set the ceiling from that. P1-10's `_reject_band_limit` stays: a profile on the limit is a failed mesh.
+3. **Make the exact gate equilibrium-consistent (revised 2026-10-21 after the step-1/2 report on
+   #153).** `_exact_residuals` closes the component balances with the profile's stored y and never
+   checks y = K(T, x)·x, so an inside-out profile whose anchor-built y is 2.5 decades off the
+   package's K reads as converged at M ≈ 5e-3 while the true MESH residual is ≈ 0.49 (measured
+   MDEA absorber). The gate evaluates the balances with y_ij = K_ij(T_j, x_j)·x_ij from the live
+   package (refresh y before the balance, or add the E-residual; one owner, the number NS sees).
+   Non-reactive columns are unaffected by construction — measure it: bench 4959, every P1-09/P1-10
+   test identical. The P1-09 MDEA assertions become `xfail(strict=True)` with the measured residual
+   until the mesh closes.
+4. **Then close the mesh with Naphtali–Sandholm on the smooth surface.** First suspect: the FD
+   Jacobian step `delta = max(|u|·1e-7, 1e-9)` sits below the smoothness floor step 1 certified
+   (h = 1e-6 relative), so the Newton direction is noise and the line search rejects every trial.
+   Measure a reactive stage's FD Jacobian column at 1e-5/1e-6/1e-7 against the step-1 derivative,
+   raise the step to the certified floor (relative, scale-aware, central differences if needed),
+   confirm the `_unpack_t` band clamp and the x ≥ 0 clamp are inactive, and run NS from the
+   inside-out best state. Lower `_MESH_M_TOL_REACTIVE` only to a floor NS actually reaches, with the
+   measurement in `spec.py`. Continuation on the reaction strength (a package knob, contract change)
+   is allowed only if NS descends but stalls far from the solution — measured first.
+5. **The regenerator.** Its seed is mass-consistent (M ≈ 1e-16) and energy-inconsistent (H ≈ 0.07);
+   the inside-out energy walk diverges from it and Kb re-anchoring does not help (measured,
+   reverted). Once NS descends, extend the P1-10 NS-first path to reactive one-tear kettles, start
+   from that seed, measure the profile it lands on (expect 380–400 K at 1.9 bar for 50 wt % MDEA)
+   and set the trust-band ceiling from the measured kettle, keeping `_reject_band_limit`.
 
 ## Tests
 - `tests/thermo/test_amine_k_smoothness.py`: for both packages, every stage state above: FD derivatives converge monotonically down to h = 1e-6 relative with the final two steps agreeing within 1e-4 relative (document the measured floor); two evaluations at the same state are bit-identical.
@@ -39,6 +60,7 @@ remove the paper.
 
 ## Acceptance criteria
 - [ ] Smoothness test green with the measured floor documented in `package.py`
+- [ ] Exact gate equilibrium-consistent; non-reactive columns byte-identical (bench 4959)
 - [ ] MDEA absorber boundary balances ≤ 1e-6 relative; `_MESH_M_TOL_REACTIVE` lowered to the measured floor (or deleted) with the measurement in `spec.py`
 - [ ] Reboiled MDEA regenerator converges on the physical branch with the test above
 - [ ] Bench counts identical on all six cases; ruff, mypy, lint-imports, full `pytest -rs` green; nothing outside the listed packages changed
