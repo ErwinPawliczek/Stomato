@@ -21,7 +21,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 
-from fastapi import Depends, FastAPI, Request
+from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -45,7 +45,6 @@ from ngdesign.store import (
     init_db,
 )
 
-
 #: Allowed browser origins (spec P3-01): comma-separated STOMATO_CORS_ORIGINS,
 #: default the Vite dev server; "*" is never accepted.
 CORS_ORIGINS_ENV = "STOMATO_CORS_ORIGINS"
@@ -59,6 +58,10 @@ def cors_origins() -> list[str]:
     if "*" in origins:
         raise ValueError(f"{CORS_ORIGINS_ENV} must list explicit origins; '*' is not allowed")
     return origins
+
+
+#: The legacy unscoped routes (deprecated aliases bound to the default project).
+legacy_router = APIRouter()
 
 
 def create_app() -> FastAPI:
@@ -92,6 +95,8 @@ def create_app() -> FastAPI:
     application.include_router(export_router)
     application.include_router(meta_router)
     application.include_router(agent_router)
+    # Last: its /api/project/layout/{view}/{tag} catch-all must not shadow the iso PUT.
+    application.include_router(legacy_router)
 
     @application.exception_handler(ProjectNotFound)
     def _not_found(_: Request, exc: ProjectNotFound) -> JSONResponse:
@@ -108,21 +113,18 @@ def create_app() -> FastAPI:
     return application
 
 
-app = create_app()
-
-
-@app.get("/api/health")
+@legacy_router.get("/api/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/api/project", deprecated=True)
+@legacy_router.get("/api/project", deprecated=True)
 def get_project(store: Annotated[DbProjectStore, Depends(default_project_store)]) -> Project:
     """The default project (deprecated: GET /api/projects/{id})."""
     return store.get()
 
 
-@app.put("/api/project", deprecated=True)
+@legacy_router.put("/api/project", deprecated=True)
 def put_project(
     project: Project, store: Annotated[DbProjectStore, Depends(default_project_store)]
 ) -> Project:
@@ -131,7 +133,7 @@ def put_project(
     return project
 
 
-@app.post("/api/project/reset", deprecated=True)
+@legacy_router.post("/api/project/reset", deprecated=True)
 def reset_project(store: Annotated[DbProjectStore, Depends(default_project_store)]) -> Project:
     """Reset the default project to the sample slice (deprecated: PUT /api/projects/{id})."""
     store.put(slice_project())
@@ -141,7 +143,7 @@ def reset_project(store: Annotated[DbProjectStore, Depends(default_project_store
 # The plot route must be registered before the {view}/{tag} catch-all:
 # Starlette matches in registration order, and the catch-all's Literal["pfd", "pid"]
 # would 422 every plot placement (the XY body also rejects Vec3's z).
-@app.put("/api/project/layout/plot/{tag}", deprecated=True)
+@legacy_router.put("/api/project/layout/plot/{tag}", deprecated=True)
 def place_plot(
     tag: str, pos: Vec3, store: Annotated[DbProjectStore, Depends(default_project_store)]
 ) -> Layout:
@@ -152,7 +154,7 @@ def place_plot(
     return project.layout
 
 
-@app.put("/api/project/layout/{view}/{tag}", deprecated=True)
+@legacy_router.put("/api/project/layout/{view}/{tag}", deprecated=True)
 def place(
     view: Literal["pfd", "pid"],
     tag: str,
@@ -164,3 +166,6 @@ def place(
     getattr(project.layout, view)[tag] = pos
     store.put(project)
     return project.layout
+
+
+app = create_app()

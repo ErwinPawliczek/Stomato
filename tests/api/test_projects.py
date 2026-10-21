@@ -153,12 +153,8 @@ def test_cors_origins_come_from_the_environment(monkeypatch: pytest.MonkeyPatch)
     monkeypatch.setenv("STOMATO_CORS_ORIGINS", "*")
     with pytest.raises(ValueError):
         cors_origins()
-    client = (
-        TestClient(create_app())
-        if monkeypatch.setenv("STOMATO_CORS_ORIGINS", "https://app.example.com") is None
-        else None
-    )
-    assert client is not None
+    monkeypatch.setenv("STOMATO_CORS_ORIGINS", "https://app.example.com")
+    client = TestClient(create_app())
     allowed = client.get("/api/health", headers={"Origin": "https://app.example.com"})
     assert allowed.headers.get("access-control-allow-origin") == "https://app.example.com"
     denied = client.get("/api/health", headers={"Origin": "https://evil.example.com"})
