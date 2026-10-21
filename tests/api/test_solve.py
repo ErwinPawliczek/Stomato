@@ -9,8 +9,10 @@ output (converged in 1 pass; the full CLI chain gives 5 sizer datasheets,
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 
 from ngdesign import pipeline, registry
@@ -18,6 +20,27 @@ from ngdesign.api.app import app
 from ngdesign.cli import _solve_slice, _violations
 
 c = TestClient(app)
+
+#: Test-only raising unit kind, registered per test and popped afterwards.
+BOOM_KIND = "p2_api_boom"
+BOOM_MESSAGE = "boom: compressor surge"
+
+
+class _BoomUnit:
+    """A plugin bug on the API path: raises instead of returning outlets."""
+
+    inlet_ports = ("inlet",)
+    outlet_ports = ("out",)
+
+    def solve(self, inlets: Any, params: Any, thermo: Any) -> Any:
+        raise RuntimeError(BOOM_MESSAGE)
+
+
+@pytest.fixture()
+def _boom_unit() -> Iterator[None]:
+    registry.register("unit", BOOM_KIND)(_BoomUnit)
+    yield
+    registry._REGISTRY["unit"].pop(BOOM_KIND, None)  # no public unregister
 
 
 def _reset() -> None:
@@ -36,12 +59,65 @@ def test_solve_returns_converged_slice() -> None:
     assert set(body["units"]) == {u["tag"] for u in project["flowsheet"]["units"]}
 
 
+def test_solve_failed_project_answers_200_with_errors(_boom_unit: None) -> None:
+    """Spec P2-02: a solve whose unit raises is a 200 carrying the partial result.
+
+    The UI decides what to show; only invalid projects (validation errors) stay
+    4xx and only missing plugins stay 501.
+    """
+    _reset()
+    broken = {
+        "name": "broken",
+        "flowsheet": {
+            "name": "broken",
+            "units": [{"tag": "X-101", "kind": BOOM_KIND, "params": {}}],
+            "streams": [
+                {
+                    "id": "S-001",
+                    "target": {"unit": "X-101", "port": "inlet"},
+                    "feed": {"T": 300.0, "P": 1.0e6, "molar_flow": 100.0, "composition": {"C1": 1.0}},
+                },
+                {"id": "S-002", "source": {"unit": "X-101", "port": "out"}},
+            ],
+        },
+    }
+    assert c.put("/api/project", json=broken).status_code == 200
+    r = c.post("/api/solve")
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["status"] == "failed"
+    assert body["converged"] is False
+    assert body["errors"] == [
+        {
+            "tag": "X-101",
+            "kind": BOOM_KIND,
+            "error_type": "RuntimeError",
+            "message": BOOM_MESSAGE,
+            "stage": "solve",
+            "upstream": False,
+        }
+    ]
+    # The feed was flashed and is in the partial result; the unit has no result.
+    assert set(body["streams"]) == {"S-001"}
+    assert body["units"] == {}
+    assert body["history"][0]["units"] == ["X-101"]
+    assert body["history"][0]["converged"] is False
+
+
 def test_solve_matches_cli_slice() -> None:
-    """Parity: the API response equals the CLI's solve of the same project."""
+    """Parity: the API response equals the CLI's solve of the same project.
+
+    History wall times are stripped before the comparison: they are telemetry,
+    not results (BlockRecord equality ignores them for the same reason).
+    """
     _reset()
     r = c.post("/api/solve")
     assert r.status_code == 200
-    assert r.json() == _solve_slice().model_dump(mode="json")
+    body = r.json()
+    expected = _solve_slice().model_dump(mode="json")
+    for record in body["history"] + expected["history"]:
+        record.pop("wall_s")
+    assert body == expected
 
 
 def test_cli_slice_parity_numbers() -> None:
@@ -124,4 +200,8 @@ def test_solve_explicit_pr_matches_default() -> None:
     assert c.put("/api/project", json=p).status_code == 200
     r = c.post("/api/solve")
     assert r.status_code == 200
-    assert r.json() == _solve_slice().model_dump(mode="json")
+    body = r.json()
+    expected = _solve_slice().model_dump(mode="json")
+    for record in body["history"] + expected["history"]:
+        record.pop("wall_s")
+    assert body == expected

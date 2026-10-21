@@ -26,6 +26,55 @@
         "title": "AgentRequest",
         "type": "object"
       },
+      "BlockRecord": {
+        "additionalProperties": false,
+        "description": "Execution record of one strongly connected component (block).\n\nAn acyclic block runs once (``iterations == 1``, no tears, no records); a\ncyclic block records one :class:`TearRecord` per tear stream per pass, so\n``len(records) == iterations * len(tears)``. A block with a failed unit, or\none that could not run at all (a blocked inlet), stops and is marked\n``converged=False``. ``wall_s`` is timing telemetry: two runs of the same\nflowsheet produce the same record except for it, so equality and hashing\nignore it - the double-run determinism oracles compare whole solved models.",
+        "properties": {
+          "converged": {
+            "title": "Converged",
+            "type": "boolean"
+          },
+          "iterations": {
+            "title": "Iterations",
+            "type": "integer"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/TearRecord"
+            },
+            "title": "Records",
+            "type": "array"
+          },
+          "tears": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tears",
+            "type": "array"
+          },
+          "units": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Units",
+            "type": "array"
+          },
+          "wall_s": {
+            "title": "Wall S",
+            "type": "number"
+          }
+        },
+        "required": [
+          "units",
+          "tears",
+          "iterations",
+          "converged",
+          "records",
+          "wall_s"
+        ],
+        "title": "BlockRecord",
+        "type": "object"
+      },
       "BomItem": {
         "additionalProperties": false,
         "properties": {
@@ -823,13 +872,39 @@
             "title": "Datasheets",
             "type": "object"
           },
+          "errors": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/UnitError"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
           "flowsheet": {
             "$ref": "#/components/schemas/Flowsheet"
+          },
+          "history": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/BlockRecord"
+            },
+            "title": "History",
+            "type": "array"
           },
           "iterations": {
             "default": 0,
             "title": "Iterations",
             "type": "integer"
+          },
+          "status": {
+            "default": "converged",
+            "enum": [
+              "converged",
+              "not_converged",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
           },
           "streams": {
             "additionalProperties": {
@@ -961,6 +1036,60 @@
         "title": "StreamState",
         "type": "object"
       },
+      "TearRecord": {
+        "additionalProperties": false,
+        "description": "One tear stream's residuals at one tear iteration.\n\n``residual_vector`` holds the same relative measure the convergence test\nuses, ``|y - x| / max(|x|, 1.0)``, keyed by component id then ``\"T\"`` and\n``\"P\"`` (the tear vector's variable order, spec P1-02 slate order).\n``acceleration`` names the step taken at this iteration; ``q`` is the\nclamped Wegstein factor of the variable with the largest residual, ``None``\nfor direct substitution.",
+        "properties": {
+          "acceleration": {
+            "enum": [
+              "direct",
+              "wegstein",
+              "broyden"
+            ],
+            "title": "Acceleration",
+            "type": "string"
+          },
+          "iteration": {
+            "title": "Iteration",
+            "type": "integer"
+          },
+          "q": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          },
+          "residual_max": {
+            "title": "Residual Max",
+            "type": "number"
+          },
+          "residual_vector": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Residual Vector",
+            "type": "object"
+          },
+          "stream_id": {
+            "title": "Stream Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "iteration",
+          "stream_id",
+          "residual_max",
+          "residual_vector",
+          "acceleration"
+        ],
+        "title": "TearRecord",
+        "type": "object"
+      },
       "TitleBlock": {
         "additionalProperties": false,
         "properties": {
@@ -1003,6 +1132,51 @@
           "test_pressure_kPag"
         ],
         "title": "TitleBlock",
+        "type": "object"
+      },
+      "UnitError": {
+        "additionalProperties": false,
+        "description": "One unit's failure or skip, as data instead of an aborting exception.\n\n``error_type`` is the exception class name; it is ``\"\"`` for an upstream\nskip, where no exception occurred - the unit was skipped because an inlet\nstream had no state (its source unit failed or was skipped).",
+        "properties": {
+          "error_type": {
+            "title": "Error Type",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "stage": {
+            "enum": [
+              "ports",
+              "solve",
+              "outlet_missing"
+            ],
+            "title": "Stage",
+            "type": "string"
+          },
+          "tag": {
+            "title": "Tag",
+            "type": "string"
+          },
+          "upstream": {
+            "default": false,
+            "title": "Upstream",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "tag",
+          "kind",
+          "error_type",
+          "message",
+          "stage"
+        ],
+        "title": "UnitError",
         "type": "object"
       },
       "UnitResult": {

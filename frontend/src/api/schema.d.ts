@@ -746,6 +746,32 @@ export interface components {
             /** Message */
             message: string;
         };
+        /**
+         * BlockRecord
+         * @description Execution record of one strongly connected component (block).
+         *
+         *     An acyclic block runs once (``iterations == 1``, no tears, no records); a
+         *     cyclic block records one :class:`TearRecord` per tear stream per pass, so
+         *     ``len(records) == iterations * len(tears)``. A block with a failed unit, or
+         *     one that could not run at all (a blocked inlet), stops and is marked
+         *     ``converged=False``. ``wall_s`` is timing telemetry: two runs of the same
+         *     flowsheet produce the same record except for it, so equality and hashing
+         *     ignore it - the double-run determinism oracles compare whole solved models.
+         */
+        BlockRecord: {
+            /** Converged */
+            converged: boolean;
+            /** Iterations */
+            iterations: number;
+            /** Records */
+            records: components["schemas"]["TearRecord"][];
+            /** Tears */
+            tears: string[];
+            /** Units */
+            units: string[];
+            /** Wall S */
+            wall_s: number;
+        };
         /** BomItem */
         BomItem: {
             /** Description */
@@ -1104,12 +1130,28 @@ export interface components {
             datasheets: {
                 [key: string]: components["schemas"]["Datasheet"];
             };
+            /**
+             * Errors
+             * @default []
+             */
+            errors: components["schemas"]["UnitError"][];
             flowsheet: components["schemas"]["Flowsheet"];
+            /**
+             * History
+             * @default []
+             */
+            history: components["schemas"]["BlockRecord"][];
             /**
              * Iterations
              * @default 0
              */
             iterations: number;
+            /**
+             * Status
+             * @default converged
+             * @enum {string}
+             */
+            status: "converged" | "not_converged" | "failed";
             /** Streams */
             streams: {
                 [key: string]: components["schemas"]["StreamState"];
@@ -1162,6 +1204,36 @@ export interface components {
             /** Vapor Fraction */
             vapor_fraction: number;
         };
+        /**
+         * TearRecord
+         * @description One tear stream's residuals at one tear iteration.
+         *
+         *     ``residual_vector`` holds the same relative measure the convergence test
+         *     uses, ``|y - x| / max(|x|, 1.0)``, keyed by component id then ``"T"`` and
+         *     ``"P"`` (the tear vector's variable order, spec P1-02 slate order).
+         *     ``acceleration`` names the step taken at this iteration; ``q`` is the
+         *     clamped Wegstein factor of the variable with the largest residual, ``None``
+         *     for direct substitution.
+         */
+        TearRecord: {
+            /**
+             * Acceleration
+             * @enum {string}
+             */
+            acceleration: "direct" | "wegstein" | "broyden";
+            /** Iteration */
+            iteration: number;
+            /** Q */
+            q?: number | null;
+            /** Residual Max */
+            residual_max: number;
+            /** Residual Vector */
+            residual_vector: {
+                [key: string]: number;
+            };
+            /** Stream Id */
+            stream_id: string;
+        };
         /** TitleBlock */
         TitleBlock: {
             /** Design Pressure Kpag */
@@ -1184,6 +1256,34 @@ export interface components {
             sheet: string;
             /** Test Pressure Kpag */
             test_pressure_kPag: number;
+        };
+        /**
+         * UnitError
+         * @description One unit's failure or skip, as data instead of an aborting exception.
+         *
+         *     ``error_type`` is the exception class name; it is ``""`` for an upstream
+         *     skip, where no exception occurred - the unit was skipped because an inlet
+         *     stream had no state (its source unit failed or was skipped).
+         */
+        UnitError: {
+            /** Error Type */
+            error_type: string;
+            /** Kind */
+            kind: string;
+            /** Message */
+            message: string;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "ports" | "solve" | "outlet_missing";
+            /** Tag */
+            tag: string;
+            /**
+             * Upstream
+             * @default false
+             */
+            upstream: boolean;
         };
         /**
          * UnitResult
