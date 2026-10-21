@@ -691,9 +691,28 @@ class KValuePackage(ThermoSurfaceMixin):
                     if henry is not None:
                         k.append(henry)
                         continue
-                psat = self._psat_basis_value(sup, i, T)
-                if psat is None:
-                    psat = sup.wilson_psat(i, T, self._slate_pseudos)
+                if x[i] > 0.0:
+                    # The Wilson estimate below is a solver start, never a K basis.
+                    # A basis that is out of range or missing is a coverage refusal
+                    # (recorded visibly by the audit's L4 sweep), not a default.
+                    if T > sup.tcs[i]:
+                        raise ValueError(
+                            f"{self.k_model!r} K basis is undefined for {sup.ids[i]} at T={T} K: "
+                            f"above its critical temperature {sup.tcs[i]:.1f} K the pure component "
+                            f"has no vapour-pressure curve; refusing rather than defaulting - select "
+                            f"a thermo model whose basis covers this state"
+                        )
+                    psat = self._psat_basis_value(sup, i, T)
+                    if psat is None:
+                        raise ValueError(
+                            f"no vapour-pressure basis for {sup.ids[i]} at T={T} K on row basis "
+                            f"{self.psat_basis!r}; refusing rather than defaulting - extend the row's "
+                            f"basis table under data/thermo_params/kvalue/ from a cited source"
+                        )
+                else:
+                    psat = self._psat_basis_value(sup, i, T)
+                    if psat is None:
+                        psat = sup.wilson_psat(i, T, self._slate_pseudos)
                 k.append(psat / P)
             return k
         raise NotImplementedError(f"unknown k_model {self.k_model!r}")
