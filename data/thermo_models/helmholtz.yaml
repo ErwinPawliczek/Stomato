@@ -1,0 +1,427 @@
+# Helmholtz / reference-equation family (spec T-04).
+#
+# Five rows carry implementations: IAPWSPackage (IAPWS-95 and IF97 formulations,
+# pure water), CoolPropPackage (HEOS pure fluids and mixtures), GERGPackage (the
+# dry sour natural-gas slate on the same engine), BWRSPackage (in-house Starling
+# BWRS). Five rows are placeholders: the catalogue records the method, status and
+# provenance while every property call raises UnavailableBackend naming the row
+# (unsupported methods are rejected, never silently approximated).
+#
+# Applicability windows follow the cited sources' fitted ranges; statuses are
+# provisional (L0 green, reference cases bound) until L1/L2 sweeps justify the
+# audited 'validated' promotion.
+
+- id: iapws95
+  name: IAPWS-95 water and steam
+  family: helmholtz
+  adapter: ngdesign.thermo.helmholtz:IAPWSPackage
+  options:
+    formulation: IAPWS95
+  params: {}
+  applicability:
+    component_classes: [water]
+    polar: true
+    electrolyte: false
+    T_K: [251.165, 1273.0]
+    P_Pa: [500.0, 1000000000.0]
+    phases: [V, L]
+  status: provisional
+  validation:
+  - h2o-nist-273.179K
+  - h2o-nist-347.390K
+  - h2o-nist-401.605K
+  - h2o-nist-500.184K
+  - h2o-nist-600.070K
+  references:
+  - Wagner, W., Cooper, J. R., Dittmann, A., et al., 'The IAPWS Industrial Formulation 1997
+    for the Thermodynamic Properties of Water and Steam', J. Eng. Gas Turbines Power 122,
+    150-182, 2000 (IAPWS-95 revised release, 2016; CoolProp HEOS::Water implements the
+    IAPWS-95 formulation)
+  - CoolProp 8.0.0 HEOS water backend, verified in-session against thermo 0.6.1 IAPWS-95
+    (density agreement ~1e-11 relative at 300 K, 1 bar) and IAPWS saturation tables
+    (Psat(373.15 K) = 101417.997 Pa)
+  l0:
+    pure_psat_limit:
+      points: [["H2O", 373.15], ["H2O", 400.0]]
+    phase_identification:
+      points: [["H2O", 300.0], ["H2O", 400.0]]
+    round_trip:
+      z: {H2O: 1.0}
+      states: [[350.0, 200000.0], [400.0, 300000.0]]
+    dhdT_cp:
+      z: {H2O: 1.0}
+      state: [500.0, 100000.0]
+      phase: vapor
+    single_liquid_limit:
+      z: {H2O: 1.0}
+      state: [300.0, 100000.0]
+    determinism:
+      z: {H2O: 1.0}
+      state: [350.0, 200000.0]
+  l0_excluded:
+    gibbs_duhem: pure water only - no binary composition path to integrate over
+  l0_note: >-
+    Pure-water adapter; the liquid root reports as AQUEOUS. CoolProp is imported
+    lazily; without the optional coolprop extra the row loads but every evaluation
+    raises CoolPropUnavailable.
+
+- id: iapws_if97
+  name: IAPWS-IF97 industrial water and steam
+  family: helmholtz
+  adapter: ngdesign.thermo.helmholtz:IAPWSPackage
+  options:
+    formulation: IF97
+  params: {}
+  applicability:
+    component_classes: [water]
+    polar: true
+    electrolyte: false
+    T_K: [273.15, 1073.15]
+    P_Pa: [500.0, 100000000.0]
+    phases: [V, L]
+  status: provisional
+  validation: []
+  references:
+  - Wagner, W., Cooper, J. R., Dittmann, A., et al., 'The IAPWS Industrial Formulation 1997
+    for the Thermodynamic Properties of Water and Steam', J. Eng. Gas Turbines Power 122,
+    150-182, 2000 (CoolProp IF97::Water backend)
+  - CoolProp 8.0.0 IF97 backend, Psat(373.15 K) = 101417.978 Pa in-session (vs 101417.997 Pa
+    for IAPWS-95)
+  l0:
+    pure_psat_limit:
+      points: [["H2O", 373.15], ["H2O", 400.0]]
+    phase_identification:
+      points: [["H2O", 300.0], ["H2O", 400.0]]
+    round_trip:
+      z: {H2O: 1.0}
+      states: [[350.0, 200000.0], [400.0, 300000.0]]
+    dhdT_cp:
+      z: {H2O: 1.0}
+      state: [500.0, 100000.0]
+      phase: vapor
+    single_liquid_limit:
+      z: {H2O: 1.0}
+      state: [300.0, 100000.0]
+    determinism:
+      z: {H2O: 1.0}
+      state: [350.0, 200000.0]
+  l0_excluded:
+    gibbs_duhem: pure water only - no binary composition path to integrate over
+  l0_note: >-
+    IF97 backend exposes no fugacity coefficients (CoolProp 8), so Phase.ln_phi
+    stays empty for this row; phase_props and flashes carry full properties.
+
+- id: asme_steam
+  name: ASME/NBS steam tables (placeholder)
+  family: helmholtz
+  adapter: ngdesign.thermo.helmholtz:UnavailablePackage
+  options: {}
+  params: {}
+  applicability:
+    component_classes: [water]
+    polar: true
+    electrolyte: false
+    T_K: [273.15, 1073.15]
+    P_Pa: [500.0, 100000000.0]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - ASME Steam Tables (ASME Performance Test Codes; the historical ASME/NBS formulation
+    has no implementation in this repo - the row is a catalogue placeholder and every
+    property call raises UnavailableBackend)
+  l0: {}
+  l0_excluded: {}
+  l0_note: >-
+    Placeholder row: the method is recorded, not implemented. The IAPWS-95 and
+    IF97 rows carry the real steam-table evaluations.
+
+- id: coolprop_heos
+  name: CoolProp pure Helmholtz (HEOS) fluids and mixtures
+  family: helmholtz
+  adapter: ngdesign.thermo.helmholtz:CoolPropPackage
+  options: {}
+  params: {}
+  applicability:
+    component_classes: [hydrocarbon, light_gas, inert, water, acid_gas]
+    polar: true
+    electrolyte: false
+    T_K: [90.0, 680.0]
+    P_Pa: [1000.0, 100000000.0]
+    phases: [V, L, VLL, VLLE]
+  status: provisional
+  validation: []
+  references:
+  - Bell, I. H., Wronski, J., Quoilin, S., Lemort, V., 'Pure and Pseudo-pure Fluid
+    Thermophysical Property Evaluation and the Open-Source Thermophysical Property Library
+    CoolProp', Ind. Eng. Chem. Res. 53(6), 2498-2508, 2014
+  - Kunz, O., Wagner, W., 'The GERG-2008 Wide-Range Equation of State for Natural Gases and
+    Other Mixtures', J. Chem. Eng. Data 57, 3032-3091, 2012 (multifluid mixture model
+    provenance; the row evaluates CoolProp's fitted mixture parameters)
+  l0:
+    pure_psat_limit:
+      points: [["C1", 160.0], ["C3", 300.0], ["CO2", 250.0], ["N2", 110.0]]
+    phase_identification:
+      points: [["C1", 160.0], ["C3", 300.0]]
+    round_trip:
+      z: {N2: 0.005066, CO2: 0.015198, C1: 0.859168, C2: 0.062817, C3: 0.032422,
+          iC4: 0.007092, nC4: 0.010132, iC5: 0.004053, nC5: 0.004052}
+      states: [[350.0, 3447000.0]]
+    dhdT_cp:
+      z: {N2: 0.005066, CO2: 0.015198, C1: 0.859168, C2: 0.062817, C3: 0.032422,
+          iC4: 0.007092, nC4: 0.010132, iC5: 0.004053, nC5: 0.004052}
+      state: [350.0, 3447000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.6, C3: 0.4}
+        T: 250.0
+        P: 5000000.0
+        phase: hc_liquid
+      - z: {C1: 0.7, CO2: 0.3}
+        T: 250.0
+        P: 2000000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {C3: 0.3, nC4: 0.7}
+      state: [250.0, 2000000.0]
+    determinism:
+      z: {N2: 0.005066, CO2: 0.015198, C1: 0.859168, C2: 0.062817, C3: 0.032422,
+          iC4: 0.007092, nC4: 0.010132, iC5: 0.004053, nC5: 0.004052}
+      state: [350.0, 3447000.0]
+  l0_excluded: {}
+  l0_note: >-
+    The slice feed minus the C6+ pseudo-component and water, renormalized: a
+    lumped cut has no CoolProp fluid and is refused by name (consistent with the
+    GERG row and the family's never-silently-approximated rule), and water-bearing
+    light-hydrocarbon mixtures have no verified HEOS interaction parameters —
+    water belongs to the IAPWS rows. K values surface through saturation points
+    and flashes; k_values returns None by design.
+
+- id: gerg2008
+  name: GERG-2008 natural-gas mixture model (CoolProp multifluid path)
+  family: helmholtz
+  adapter: ngdesign.thermo.helmholtz:GERGPackage
+  options: {}
+  params: {}
+  applicability:
+    component_classes: [hydrocarbon, light_gas, inert, acid_gas]
+    polar: true
+    electrolyte: false
+    T_K: [90.0, 450.0]
+    P_Pa: [1000.0, 40000000.0]
+    phases: [V, L, VLL, VLLE]
+  status: provisional
+  validation:
+  - pure-CO2-216.7K
+  - pure-CO2-240.0K
+  - pure-CO2-265.0K
+  - pure-CO2-285.0K
+  - pure-CO2-288.9K
+  - c1n2-149.989K-2.908MPa
+  - c1n2-159.972K-1.789MPa
+  - c1n2-179.976K-5.062MPa
+  # c1n2-130.079K/149.928K/170.009K and c1co2-303.144K/303.145K are committed
+  # as pending:teqp-gerg2008: the exact GERG-2008 backend lands with the teqp
+  # bridge (T-07); CoolProp's fitted binary parameters miss those five points.
+  - c1co2-293.130K-6.135MPa
+  - c1co2-293.130K-6.976MPa
+  - c1co2-298.142K-6.976MPa
+  - c1co2-298.142K-7.508MPa
+  - aga8-c1n2-134.02K-dew
+  - aga8-c1n2-146.37K-dew
+  - aga8-c1n2-153.41K-dew
+  references:
+  - 'Kunz, O., Wagner, W., ''The GERG-2008 Wide-Range Equation of State for Natural Gases and
+    Other Mixtures'', J. Chem. Eng. Data 57, 3032-3091, 2012 (the declared model; evaluated
+    here through CoolProp 8.0.0''s multifluid mixture model with fitted binary-interaction
+    parameters - an exact GERG-2008 backend arrives with the teqp bridge, T-07)'
+  - 'Gernert, J., Span, R., ''EOS-CG: A Helmholtz energy mixture model'', Chem. Eng.
+    Sci. 148, 59-74, 2016 (CoolProp carries its mixture parameters; deviations from the
+    AGA8/GERG-2008 reference values are reported in the validation findings)'
+  l0:
+    pure_psat_limit:
+      points: [["C1", 160.0], ["C3", 300.0], ["CO2", 250.0]]
+    phase_identification:
+      points: [["C1", 160.0], ["C3", 300.0]]
+    round_trip:
+      z: {N2: 0.01, CO2: 0.02, C1: 0.88, C2: 0.06, C3: 0.03}
+      states: [[350.0, 3447000.0]]
+    dhdT_cp:
+      z: {N2: 0.01, CO2: 0.02, C1: 0.88, C2: 0.06, C3: 0.03}
+      state: [350.0, 3447000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.6, C3: 0.4}
+        T: 250.0
+        P: 5000000.0
+        phase: hc_liquid
+      - z: {C1: 0.7, CO2: 0.3}
+        T: 250.0
+        P: 2000000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {C3: 0.3, nC4: 0.7}
+      state: [250.0, 2000000.0]
+    determinism:
+      z: {N2: 0.01, CO2: 0.02, C1: 0.88, C2: 0.06, C3: 0.03}
+      state: [350.0, 3447000.0]
+  l0_excluded: {}
+  l0_note: >-
+    The dry sour natural-gas slate: water is refused (the IAPWS rows own steam-water
+    states) and C6+ is refused (no GERG-2008 C6+ mapping without teqp).
+
+- id: eos_cg
+  name: EOS-CG combustion-gas mixture model (placeholder)
+  family: helmholtz
+  adapter: ngdesign.thermo.helmholtz:UnavailablePackage
+  options: {}
+  params: {}
+  applicability:
+    component_classes: [hydrocarbon, light_gas, inert, acid_gas]
+    polar: true
+    electrolyte: false
+    T_K: [90.0, 2000.0]
+    P_Pa: [1000.0, 100000000.0]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - 'Gernert, J., Span, R., ''EOS-CG: A Helmholtz energy mixture model for humid combustion
+    gases'', Chem. Eng. Sci. 148, 59-74, 2016 (no implementation in this repo; the row is a
+    catalogue placeholder and every property call raises UnavailableBackend)'
+  l0: {}
+  l0_excluded: {}
+  l0_note: 'Placeholder row: the method is recorded, not implemented (teqp candidate, T-07).'
+
+- id: aga8_dc92
+  name: AGA 8 DC92 detail equation of state (placeholder)
+  family: helmholtz
+  adapter: ngdesign.thermo.helmholtz:UnavailablePackage
+  options: {}
+  params: {}
+  applicability:
+    component_classes: [hydrocarbon, light_gas, inert, acid_gas]
+    polar: true
+    electrolyte: false
+    T_K: [143.15, 676.48]
+    P_Pa: [100000.0, 280000000.0]
+    phases: [V]
+  status: experimental
+  validation: []
+  references:
+  - Starling, K. E., Savidge, J. L., 'Compressibility Factors of Natural Gas and Other
+    Related Hydrocarbon Gases', AGA Transmission Measurement Committee Report No. 8, 2nd
+    ed., 1992 (no implementation in this repo; the row is a catalogue placeholder and every
+    property call raises UnavailableBackend)
+  l0: {}
+  l0_excluded: {}
+  l0_note: 'Placeholder row: the method is recorded, not implemented.'
+
+- id: mbwr
+  name: Modified BWR (Starling 1976, 27-compound set) (placeholder)
+  family: helmholtz
+  adapter: ngdesign.thermo.helmholtz:UnavailablePackage
+  options: {}
+  params: {}
+  applicability:
+    component_classes: [hydrocarbon, light_gas, inert, acid_gas, water]
+    polar: true
+    electrolyte: false
+    T_K: [90.0, 680.0]
+    P_Pa: [1000.0, 100000000.0]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - Starling, K. E., Cox, K. W., Kwok, Y. C., et al., 'Modified BWR Equation of State
+    Parameters for Twenty-Seven Compounds', ORO-5249-2 (U.S. ERDA report), Appendix B,
+    1976 (no implementation in this repo; the row is a catalogue placeholder and every
+    property call raises UnavailableBackend)
+  l0: {}
+  l0_excluded: {}
+  l0_note: 'Placeholder row: the method is recorded, not implemented.'
+
+- id: bwrs
+  name: BWRS (Starling 1973) natural-gas components
+  family: helmholtz
+  adapter: ngdesign.thermo.helmholtz:BWRSPackage
+  options: {}
+  params: {}
+  applicability:
+    component_classes: [hydrocarbon, light_gas, inert, acid_gas]
+    polar: true
+    electrolyte: false
+    T_K: [95.0, 600.0]
+    P_Pa: [1000.0, 70000000.0]
+    phases: [V, L]
+  status: provisional
+  validation: []
+  references:
+  - Starling, K. E., 'Fluid Thermodynamic Properties for Light Petroleum Systems', Gulf
+    Publishing, 1973 (the BWRS equation and parameter basis)
+  - 'Starling, K. E., Cox, K. W., Kwok, Y. C., et al., ''Modified BWR Equation of State
+    Parameters for Twenty-Seven Compounds'', ORO-5249-2 (U.S. ERDA report), Table 5, 1976 -
+    the parameter table transcribed for the ten registry-reachable compounds (methane and
+    nitrogen rows verified against the report; reported methane fits: vapor pressure 0.44%
+    AAD, density 0.32% AAD)'
+  l0:
+    pure_psat_limit:
+      points: [["C1", 160.0], ["N2", 110.0]]
+    phase_identification:
+      points: [["C1", 160.0], ["N2", 110.0]]
+    round_trip:
+      z: {N2: 0.05, C1: 0.9, CO2: 0.05}
+      states: [[300.0, 5000000.0]]
+    dhdT_cp:
+      z: {C1: 1.0}
+      state: [300.0, 1000000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {C1: 0.9, N2: 0.1}
+        T: 300.0
+        P: 5000000.0
+        phase: vapor
+      - z: {C1: 0.5, CO2: 0.5}
+        T: 220.0
+        P: 5000000.0
+        phase: hc_liquid
+    single_liquid_limit:
+      z: {C3: 0.3, nC4: 0.7}
+      state: [250.0, 2000000.0]
+    determinism:
+      z: {N2: 0.05, C1: 0.9, CO2: 0.05}
+      state: [300.0, 5000000.0]
+  l0_excluded: {}
+  l0_note: >-
+    In-house BWRS: imperial parameter evaluation, SI at the boundary. Ideal-gas
+    reference H_ig(298.15 K) = 0, S_ig(298.15 K, 1 bar) = 0. The pure-C1
+    saturation sweep cases stay pending: the BWRS vapor-pressure fit (1973
+    databasis) does not reproduce modern references within the 3% tolerance at
+    all declared points, and the file keeps them registered for the L1 follow-up.
+
+- id: bwr_ls
+  name: BWR-Lee-Starling (placeholder)
+  family: helmholtz
+  adapter: ngdesign.thermo.helmholtz:UnavailablePackage
+  options: {}
+  params: {}
+  applicability:
+    component_classes: [hydrocarbon, light_gas, inert, acid_gas]
+    polar: true
+    electrolyte: false
+    T_K: [95.0, 600.0]
+    P_Pa: [1000.0, 70000000.0]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - Lee, B. I., Starling, K. E., Starling's BWR equation variant as summarized in
+    'Thermodynamic Property Prediction of Light Hydrocarbons and Related Fluids' (no
+    implementation in this repo; the row is a catalogue placeholder and every property
+    call raises UnavailableBackend)
+  l0: {}
+  l0_excluded: {}
+  l0_note: 'Placeholder row: the method is recorded, not implemented.'

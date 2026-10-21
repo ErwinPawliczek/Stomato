@@ -905,6 +905,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+coolprop = [
+    { name = "coolprop" },
+]
 postgres = [
     { name = "psycopg", extra = ["binary"] },
 ]
@@ -925,6 +928,7 @@ dev = [
 requires-dist = [
     { name = "anthropic", specifier = ">=1.17.0" },
     { name = "coolprop", specifier = ">=6.6" },
+    { name = "coolprop", marker = "extra == 'coolprop'", specifier = ">=6.6" },
     { name = "ezdxf", specifier = ">=1.3" },
     { name = "fastapi", specifier = ">=0.115" },
     { name = "fluids", specifier = ">=1.0" },
@@ -940,7 +944,7 @@ requires-dist = [
     { name = "thermo", specifier = ">=0.4" },
     { name = "uvicorn", specifier = ">=0.30" },
 ]
-provides-extras = ["postgres"]
+provides-extras = ["postgres", "coolprop"]
 
 [package.metadata.requires-dev]
 dev = [

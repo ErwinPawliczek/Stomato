@@ -28,7 +28,7 @@ import os
 from collections.abc import Callable, Mapping
 from functools import cache
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -61,6 +61,15 @@ class CubicOptions(BaseModel):
     alpha: AlphaFunction = AlphaFunction.DEFAULT
     translation: VolumeTranslation = VolumeTranslation.NONE
     enthalpy: EnthalpyMethod = EnthalpyMethod.EOS
+
+
+class HelmholtzOptions(BaseModel):
+    """Typed options for family ``helmholtz`` (spec T-04)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    #: IAPWSPackage steam-table formulation (iapws_if97 row selects "IF97").
+    formulation: Literal["IAPWS95", "IF97"] = "IAPWS95"
 
 
 class Applicability(BaseModel):
@@ -127,6 +136,8 @@ def _validate_options(row: ModelRow, where: str) -> None:
                     f"{where}: options.eos {opts.eos!r} does not match adapter "
                     f"{row.adapter!r} (pins {eos_name!r})"
                 )
+        elif row.family == "helmholtz":
+            HelmholtzOptions(**row.options)
         elif row.family == "gamma_phi":
             if row.options:
                 # The pre-T-03 nrtl row declares no options (its adapter pins the
@@ -230,7 +241,11 @@ def build(row: ModelRow, *args: Any, **kwargs: Any) -> Thermo:
                 f"catalogue row {row.id!r} declares non-default cubic options "
                 f"[{', '.join(pending)}]; the implementations land with T-02"
             )
-    if row.family == "gamma_phi" and row.options:
+    elif row.family == "helmholtz":
+        hopts = HelmholtzOptions(**row.options)
+        if hopts.formulation != _HELMHOLTZ_DEFAULTS["formulation"]:
+            kwargs = {**kwargs, "formulation": hopts.formulation}
+    elif row.family == "gamma_phi" and row.options:
         kwargs = {**row.options, **kwargs}
     return cast(Thermo, adapter(*args, **kwargs))
 
@@ -241,15 +256,20 @@ _CUBIC_DEFAULTS: dict[str, AlphaFunction | VolumeTranslation | EnthalpyMethod] =
     "enthalpy": EnthalpyMethod.EOS,
 }
 
+_HELMHOLTZ_DEFAULTS: dict[str, str] = {"formulation": "IAPWS95"}
+
 
 def _has_nondefault_options(row: ModelRow) -> bool:
-    """True when the row declares cubic options other than the T-02 defaults."""
-    if row.family != "cubic":
-        return False
-    opts = CubicOptions(**row.options)
-    return any(
-        getattr(opts, field) != _CUBIC_DEFAULTS[field] for field in ("alpha", "translation", "enthalpy")
-    )
+    """True when the row declares options other than the T-02/T-04 defaults."""
+    if row.family == "cubic":
+        opts = CubicOptions(**row.options)
+        return any(
+            getattr(opts, field) != _CUBIC_DEFAULTS[field] for field in ("alpha", "translation", "enthalpy")
+        )
+    if row.family == "helmholtz":
+        hopts = HelmholtzOptions(**row.options)
+        return bool(hopts.formulation != _HELMHOLTZ_DEFAULTS["formulation"])
+    return False
 
 
 def _needs_option_factory(row: ModelRow) -> bool:
