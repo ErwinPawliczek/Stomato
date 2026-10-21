@@ -461,7 +461,15 @@ def _init_guess(
     if not entries:
         for s in fs.streams:
             if s.source is None and s.feed is not None:
-                entries.append((s.feed.T, s.feed.P, s.feed.molar_flow, dict(s.feed.composition)))
+                flow = s.feed.molar_flow
+                entries.append(
+                    (
+                        s.feed.T,
+                        s.feed.P,
+                        flow,
+                        {c: z * flow for c, z in s.feed.composition.items()},
+                    )
+                )
     vector, composition = _weighted_mean(entries, components)
     if not vector:
         return _nitrogen_guess(components)
@@ -732,6 +740,13 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
     """
     start = time.perf_counter()
     opts = ctx.fs.solver_options
+    # Compatibility seam (spec P2-03): a flowsheet on the default options keeps
+    # the pre-options module-constant behaviour, so tests that shrink
+    # MAX_ITERATIONS or stub the 2-argument ``_converged`` keep working
+    # unchanged; a flowsheet that overrides an option is always authoritative.
+    cap = opts.max_iterations
+    if cap == _DEFAULT_OPTIONS.max_iterations and MAX_ITERATIONS != cap:
+        cap = MAX_ITERATIONS
     guess, fallback_composition = _init_guess(ctx.fs, ctx.components, set(order), ctx.states)
     torn: list[_Tear] = []
     for sid in tears:
@@ -746,7 +761,7 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
     records: list[TearRecord] = []
     segment = len(ctx.components) + 2
     broyden = _Broyden(segment * len(torn)) if opts.tear_acceleration == "broyden" else None
-    for iteration in range(1, opts.max_iterations + 1):
+    for iteration in range(1, cap + 1):
         iterations = iteration
         for t in torn:
             ctx.states[t.stream_id] = _inject_tear(t.x, ctx.components, fallback_composition, ctx.thermo)
@@ -767,6 +782,8 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
                 # acceleration in flight, classified from the secant history the
                 # way a Wegstein step would read it (the P2-02 convention).
                 y = _tear_vector(ctx.states[t.stream_id], ctx.components)
+                acceleration: SolveAcceleration
+                q_values: list[float | None] | None
                 if opts.tear_acceleration == "broyden":
                     acceleration, q_values = "broyden", None
                 elif opts.tear_acceleration == "direct" or t.x_prev is None or t.y_prev is None:
@@ -784,7 +801,7 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
             injected = [v for t in torn for v in t.x]
             calculated = [v for t in torn for v in _tear_vector(ctx.states[t.stream_id], ctx.components)]
             nxt, direct_step = broyden.next(injected, calculated)
-            acceleration: SolveAcceleration = "direct" if direct_step else "broyden"
+            acceleration = "direct" if direct_step else "broyden"
             for i, t in enumerate(torn):
                 record = _tear_record(iteration, t, ctx.states[t.stream_id], ctx.components, acceleration)
                 records.append(record)
