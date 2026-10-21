@@ -68,6 +68,13 @@ _MESH_M_TOL_REACTIVE = 1e-2
 #: inside-out polish instead of failing the tear; the polish lifts it onto
 #: the gate or the NS state stands (its floor is the measured solver limit).
 _NS_FLOOR_M = 1e-3
+#: Polish target for non-reactive zero/one-tear columns, two decades below the
+#: 1e-6 acceptance gate (spec P1-10): the spec tests read BOUNDARY component
+#: balances, and a profile accepted at the stage gate leaves ~1e-7 relative
+#: component residuals at the boundary (measured P1-10 recovery case: C1 closed
+#: at 1.5e-7 with a 1e-6 break). The stagnation counter bounds the effort when
+#: the solver floor is above this.
+_POLISH_M_TOL_ZERO_ONE_TEAR = 1e-8
 
 
 def _is_reactive_package(tb: object) -> bool:

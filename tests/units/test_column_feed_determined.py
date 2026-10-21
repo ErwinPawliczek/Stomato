@@ -313,7 +313,13 @@ def test_mesh_rejects_band_floor_profile() -> None:
             "feed_stage": 1,
             "specs": {"boilup_ratio": 0.5},
             "feeds": [
-                {"T": 300.0, "P": 2e6, "molar_flow": 100.0, "composition": {"C1": 0.1, "NC4": 0.9}, "stage": 1}
+                {
+                    "T": 300.0,
+                    "P": 2e6,
+                    "molar_flow": 100.0,
+                    "composition": {"C1": 0.1, "NC4": 0.9},
+                    "stage": 1,
+                }
             ],
         },
         None,
@@ -325,7 +331,6 @@ def test_mesh_rejects_band_floor_profile() -> None:
     prof.T[0] = col.t_band_lo
     with pytest.raises(ColumnConvergenceError, match=r"stages \[1\] at 270\.00"):
         _reject_band_limit(col, prof)
-
 
 
 def test_rectifier_reflux_ratio_spec() -> None:

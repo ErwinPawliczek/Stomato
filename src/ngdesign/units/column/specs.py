@@ -33,10 +33,11 @@ from .spec import (
     _MESH_M_TOL,
     _MESH_M_TOL_REACTIVE,
     _MESH_M_TOL_ZERO_ONE_TEAR,
+    _NS_FLOOR_M,
     _OUTER_DAMP,
     _OUTER_DAMP_ZERO_ONE,
     _OUTER_MAX,
-    _NS_FLOOR_M,
+    _POLISH_M_TOL_ZERO_ONE_TEAR,
     _SPEC_MAX,
     _SPEC_TOL,
     _STAGNATION_MAX,
@@ -154,8 +155,10 @@ def _solve_mesh(
         best_prof = _copy_profile(col, prof)
     ns_direct = False
     ns_floor = False
-    if zero_one and not _is_reactive_package(tb) and (
-        seed is not None or (col.n_tears == 1 and col.reboiler == "kettle")
+    if (
+        zero_one
+        and not _is_reactive_package(tb)
+        and (seed is not None or (col.n_tears == 1 and col.reboiler == "kettle"))
     ):
         # Naphtali-Sandholm FIRST for non-reactive zero/one-tear columns:
         # - warm (a promoted seed exists): NS from the re-teared seed converges
@@ -173,28 +176,25 @@ def _solve_mesh(
         #   sequence is locked, and NS is measurably worse there on reactive
         #   packages. Two-tear columns keep the original loop untouched: their
         #   benchmarked mesh sequence is locked (bench 4,959).
-        try_ns = seed is not None or (col.n_tears == 1 and col.reboiler == "kettle")
-        if try_ns:
-            try:
-                _naphtali_sandholm(col, tb, prof, t_bot)
-                ns_direct = True
-            except ColumnConvergenceError:
-                # NS may raise at its finite-difference floor while holding a
-                # physically converged state (measured P1-10 stripper: M = 4.2e-6
-                # - 7.3e-6 against the 1e-6 gate, with the boundary total balance
-                # closed at D + B = 100.00000000 on a 100 mol/s feed; a stalled
-                # state sits at 1e-2 or worse). Keep that state for the polish
-                # stage below; otherwise restart from the untouched seed.
-                m_ns, h_ns = _exact_residuals(col, tb, prof)
-                if m_ns < _NS_FLOOR_M and h_ns < _MESH_H_TOL:
-                    ns_floor = True
-                else:
-                    if seed is None:
-                        t_top_seed, t_bot_seed = _temperature_seed(col, tb)
-                        prof = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot)
-                    else:
-                        prof = _copy_profile(col, seed)
-                    _apply_tears(col, prof, t_top, t_bot)
+        try:
+            _naphtali_sandholm(col, tb, prof, t_bot)
+            ns_direct = True
+        except ColumnConvergenceError:
+            # NS may raise at its finite-difference floor while holding a
+            # physically converged state (measured P1-10 stripper: M = 4.2e-6
+            # - 7.3e-6 against the 1e-6 gate, with the boundary total balance
+            # closed at D + B = 100.00000000 on a 100 mol/s feed; a stalled
+            # state sits at 1e-2 or worse). Keep that state for the polish
+            # stage below; otherwise restart from the untouched seed.
+            if _at_ns_floor(col, tb, prof):
+                ns_floor = True
+            elif seed is None:
+                t_top_seed, t_bot_seed = _temperature_seed(col, tb)
+                prof = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot)
+                _apply_tears(col, prof, t_top, t_bot)
+            else:
+                prof = _copy_profile(col, seed)
+                _apply_tears(col, prof, t_top, t_bot)
     if ns_direct or ns_floor:
         # The sweeps can only wander off a near-converged NS state, so the
         # inside-out loop is skipped entirely; the polish stage below still
@@ -258,23 +258,16 @@ def _solve_mesh(
         try:
             _naphtali_sandholm(col, tb, prof, t_bot)
         except ColumnConvergenceError as exc:
-            if zero_one and not _is_reactive_package(tb):
-                # NS may raise at its finite-difference floor while holding a
-                # physically converged state (measured P1-10 stripper, kettle
-                # vapour 50-76 mol/s on the physical branch: NS exits at
-                # M = 4.2e-6 - 5.6e-6 against the 1e-6 gate, with the boundary
-                # total balance closed at D + B = 100.00000000 on a 100 mol/s
-                # feed). Hand that state to the polish below; re-raise only a
-                # genuinely stalled one (measured stalls sit at M >= 1e-2).
-                m_ns, h_ns = _exact_residuals(col, tb, prof)
-                if not (m_ns < _NS_FLOOR_M and h_ns < _MESH_H_TOL):
-                    raise ColumnConvergenceError(
-                        f"column did not converge in {_OUTER_MAX} inside-out sweeps and the "
-                        f"Naphtali-Sandholm fallback failed after {prof.ns_passes} passes: {exc} "
-                        f"(best inside-out profile residuals M={best_m:.2e}, H={best_h:.2e} over "
-                        f"{prof.outer} outer sweeps, {prof.inner} inner iterations)"
-                    ) from exc
-            else:
+            # NS may raise at its finite-difference floor while holding a
+            # physically converged state (measured P1-10 stripper, kettle
+            # vapour 50-76 mol/s on the physical branch: NS exits at
+            # M = 4.2e-6 - 5.6e-6 against the 1e-6 gate, with the boundary
+            # total balance closed at D + B = 100.00000000 on a 100 mol/s
+            # feed). Non-reactive zero/one-tear columns hand that state to the
+            # polish below; everything else, and a genuinely stalled state
+            # (measured stalls sit at M >= 1e-2), is a failure.
+            polishable = zero_one and not _is_reactive_package(tb)
+            if not (polishable and _at_ns_floor(col, tb, prof)):
                 raise ColumnConvergenceError(
                     f"column did not converge in {_OUTER_MAX} inside-out sweeps and the "
                     f"Naphtali-Sandholm fallback failed after {prof.ns_passes} passes: {exc} "
@@ -297,16 +290,7 @@ def _solve_mesh(
             prof.outer = outer
             _inner_solve(col, model, prof, t_bot)
             m_pol, h_pol = _exact_residuals(col, tb, prof)
-            if m_pol < 1e-8 and h_pol < _MESH_H_TOL:
-                # Polishing two decades BELOW the 1e-6 acceptance gate: the spec
-                # tests read BOUNDARY component balances at 1e-8 relative, and a
-                # profile accepted at the stage gate leaves ~1e-7 relative
-                # component residuals at the boundary (measured P1-10 recovery
-                # case: C1 closed at 1.5e-7 with the 1e-6 break). From a
-                # near-converged state the extra sweeps are cheap; the
-                # stagnation break below bounds the effort when the floor is
-                # the solver limit, and the best-state handback keeps a
-                # diverging sweep from displacing a good profile.
+            if m_pol < _POLISH_M_TOL_ZERO_ONE_TEAR and h_pol < _MESH_H_TOL:
                 break
             if m_pol + h_pol < pol_m + pol_h:
                 stalled = 0
@@ -326,6 +310,18 @@ def _solve_mesh(
     _reject_band_limit(col, prof)
     _finalize_duties(col, tb, prof)
     return prof
+
+
+def _at_ns_floor(col: _Column, tb: _ThermoBox, prof: _Profile) -> bool:
+    """True when a Naphtali-Sandholm exit left a physically converged state.
+
+    NS raises at its finite-difference Newton floor (spec P1-10, measured
+    M = 4e-6 - 7e-6 against the 1e-6 gate with the boundary total balance
+    closed at D + B = 100.00000000 on a 100 mol/s feed); a stalled state sits
+    at M >= 1e-2. The bound is _NS_FLOOR_M.
+    """
+    m_ns, h_ns = _exact_residuals(col, tb, prof)
+    return m_ns < _NS_FLOOR_M and h_ns < _MESH_H_TOL
 
 
 def _copy_profile(col: _Column, src: _Profile) -> _Profile:
