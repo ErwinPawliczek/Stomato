@@ -137,6 +137,6 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | T-08 | Model advisor + agent tool `recommend_thermo` + UI package picker | T-01..T-05 | planned |
 | T-09 | General electrolytes: eNRTL, Pitzer, extended UNIQUAC, sour water | T-03 | planned |
 | T-10 | Solids, polymers, HOC dimerisation, HF | T-03, T-07 | planned |
-| T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | T-11, T-12, T-13 dispatched 2026-10-21 (data-only, parallel with T-01) |
+| T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | T-11 merged #131; T-12 PR #132, T-13 PR #135 in review (2026-10-21) |
 
 Dispatch: T-01 alone; then T-02, T-03, T-04, T-05, T-07, T-11, T-12, T-13 in parallel (disjoint files); then T-06, T-08, T-09, T-14; then T-10; then the catalogue freeze (status audit).
