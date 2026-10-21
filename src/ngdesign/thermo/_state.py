@@ -14,8 +14,14 @@ Contents:
 - the single-phase stability re-check,
 - the PT flash flow the PH/PS wrappers reuse.
 
-Component ids map to CAS via ngdesign.data.components() (C6+ = n-hexane per the
-reference-data note). SI units throughout: K, Pa, kg/m3, Pa.s, J/mol, J/(mol K).
+Component ids resolve through the open component registry (spec P1-02):
+`ngdesign.contracts.components.resolve` over `ngdesign.data.component_record` -
+curated slate by id (C6+ stays n-hexane per its provenance note), the chemicals
+databank by CAS or name, and registered pseudo-components (CAS None). All-databank
+supports take thermo's own `from_IDs` path unchanged; supports with pseudos get a
+merged constants package (databank constants for CAS-bearing records, Component
+fields for pseudos, Lastovka-Shaw Cp and generalized VaporPressure correlations for
+them). SI units throughout: K, Pa, kg/m3, Pa.s, J/mol, J/(mol K).
 """
 
 from __future__ import annotations
@@ -25,17 +31,27 @@ from collections.abc import Callable
 from functools import cache
 from typing import Any, Literal, cast
 
-from thermo import CEOSGas, CEOSLiquid, ChemicalConstantsPackage, FlashVL, FlashVLN
+from chemicals.elements import similarity_variable
+from thermo import (
+    CEOSGas,
+    CEOSLiquid,
+    ChemicalConstantsPackage,
+    FlashVL,
+    FlashVLN,
+    PropertyCorrelationsPackage,
+)
+from thermo.heat_capacity import HeatCapacityGas
 from thermo.interaction_parameters import IPDB
+from thermo.vapor_pressure import VaporPressure
 
 from ngdesign.contracts import Phase, PhaseKind, StreamState
+from ngdesign.contracts.components import Component, resolve
 from ngdesign.contracts.thermo import (
     PhaseProps,
     PropertyDerivatives,
     SaturationError,
     SaturationPoint,
 )
-from ngdesign.data import components
 
 #: CODATA 2018 molar gas constant, J/(mol.K).
 R_IDEAL = 8.31446261815324
@@ -48,11 +64,142 @@ _KIND_ORDER = (PhaseKind.VAPOR, PhaseKind.HC_LIQUID, PhaseKind.AQUEOUS)
 # (phase object, phase mole fraction) as carried through state construction.
 PhasePair = tuple[Any, float]
 
+# CH2 group mass and H2 mass for the paraffinic atom estimate (CnH2n+2),
+# IUPAC standard atomic weights: C 12.011, H 1.008.
+_CH2_MASS = 12.011 + 2.0 * 1.008
+_H2_MASS = 2.0 * 1.008
 
-def _cas_list(ids: tuple[str, ...]) -> list[str]:
-    """CAS numbers for component ids, in the given (sorted) order."""
-    comps = components()
-    return [str(comps[cid]["cas"]) for cid in ids]
+
+def _records(ids: tuple[str, ...]) -> list[Component]:
+    """Resolved Component records for a (sorted) flash support, in support order."""
+    return [resolve(cid) for cid in ids]
+
+
+def _pseudo_heat_capacity(record: Component) -> HeatCapacityGas:
+    """Ideal-gas Cp correlation for a pseudo-component (Lastovka & Shaw 2013 via thermo).
+
+    Lastovka-Shaw needs the similarity variable; a pseudo has no formula, so the
+    atoms are estimated paraffinically (CnH2n+2) from the Riazi-Daubert MW of the
+    record - the same stated approximation the Tb + sg characterization makes.
+    """
+    return HeatCapacityGas(CASRN="", MW=record.mw, similarity_variable=_pseudo_similarity_variable(record))
+
+
+def _pseudo_similarity_variable(record: Component) -> float:
+    """Lastovka-Shaw similarity variable from a paraffinic CnH2n+2 atom estimate."""
+    n_carbon = (record.mw - _H2_MASS) / _CH2_MASS
+    return float(similarity_variable(atoms={"C": n_carbon, "H": 2.0 * n_carbon + 2.0}, MW=record.mw))
+
+
+def _pseudo_vapor_pressure(record: Component) -> VaporPressure:
+    """Generalized vapor-pressure correlation for a pseudo (no CAS, no databank Psat).
+
+    VaporPressure(Tb, Tc, Pc, omega) auto-selects a generalized method (Ambrose-
+    Walton in-session); good enough for K-value phase splitting, not for design
+    duty claims - provenance on the Component records says as much.
+    """
+    return VaporPressure(Tb=record.Tb, Tc=record.Tc, Pc=record.Pc, omega=record.omega)
+
+
+def _constants_package(records: list[Component]) -> tuple[ChemicalConstantsPackage, Any]:
+    """(constants, correlations) for a flash support, from resolved Component records.
+
+    All-databank supports take thermo's own ``from_IDs`` path unchanged - the
+    records carry the same CAS the EOS always used, so golden thermo output and
+    the bench baseline stay byte-identical. Supports with pseudo-components
+    (CAS None) get the merged package: databank constants for CAS-bearing
+    records in slate order, Component fields for pseudos, Cp via
+    ``_pseudo_heat_capacity`` and Psat via ``_pseudo_vapor_pressure`` for them,
+    zero k_ij to every databank partner.
+    """
+    if all(r.cas is not None for r in records):
+        constants, correlations = ChemicalConstantsPackage.from_IDs([str(r.cas) for r in records])
+        return constants, correlations
+    return _merged_constants_package(records)
+
+
+def _merged_constants_package(records: list[Component]) -> tuple[ChemicalConstantsPackage, Any]:
+    """Mixed databank + pseudo constants package, vectors in slate order."""
+    databank_idx = [i for i, r in enumerate(records) if r.cas is not None]
+    constants, correlations = ChemicalConstantsPackage.from_IDs([str(records[i].cas) for i in databank_idx])
+    by_position = {i: j for j, i in enumerate(databank_idx)}  # slate position -> from_IDs index
+
+    def db(i: int, vector: Any) -> Any:
+        return vector[by_position[i]]
+
+    tcs: list[float] = []
+    pcs: list[float] = []
+    omegas: list[float] = []
+    mws: list[float] = []
+    names: list[str] = []
+    cass: list[str | None] = []
+    tbs: list[float] = []
+    heat_caps: list[Any] = []
+    vapor_pressures: list[Any] = []
+    for i, record in enumerate(records):
+        if record.cas is not None:
+            tcs.append(float(db(i, constants.Tcs)))
+            pcs.append(float(db(i, constants.Pcs)))
+            omegas.append(float(db(i, constants.omegas)))
+            mws.append(float(db(i, constants.MWs)))
+            names.append(str(db(i, constants.names)))
+            cass.append(str(db(i, constants.CASs)))
+            tbs.append(float(db(i, constants.Tbs)))
+            heat_caps.append(correlations.HeatCapacityGases[by_position[i]])
+            vapor_pressures.append(correlations.VaporPressures[by_position[i]])
+        else:
+            tcs.append(record.Tc)
+            pcs.append(record.Pc)
+            omegas.append(record.omega)
+            mws.append(record.mw)
+            names.append(record.name)
+            cass.append(None)
+            tbs.append(_required_tb(record))
+            heat_caps.append(_pseudo_heat_capacity(record))
+            vapor_pressures.append(_pseudo_vapor_pressure(record))
+    merged = ChemicalConstantsPackage(
+        Tcs=tcs,
+        Pcs=pcs,
+        omegas=omegas,
+        MWs=mws,
+        names=names,
+        CASs=cass,
+        Tbs=tbs,
+    )
+    mixed = PropertyCorrelationsPackage(
+        constants=merged,
+        HeatCapacityGases=heat_caps,
+        VaporPressures=vapor_pressures,
+        skip_missing=True,
+    )
+    return merged, mixed
+
+
+def _required_tb(record: Component) -> float:
+    """A pseudo must carry its Tb (the characterization pair includes it)."""
+    if record.Tb is None:
+        raise ValueError(f"pseudo-component {record.id!r} has no Tb; register it with Tb and sg")
+    return record.Tb
+
+
+def _kij_matrix(records: list[Component], kij_table: str) -> list[list[float]]:
+    """Symmetric k_ij matrix for the support: fitted pairs from the IPDB table,
+    0.0 to every pseudo (no fitted BIPs exist for pseudos)."""
+    if all(r.cas is not None for r in records):
+        fitted_databank: list[list[float]] = IPDB.get_ip_symmetric_matrix(
+            name=kij_table, CASs=[str(r.cas) for r in records], ip="kij"
+        )
+        return fitted_databank
+    databank_idx = [i for i, r in enumerate(records) if r.cas is not None]
+    fitted = IPDB.get_ip_symmetric_matrix(
+        name=kij_table, CASs=[str(records[i].cas) for i in databank_idx], ip="kij"
+    )
+    n = len(records)
+    kijs: list[list[float]] = [[0.0] * n for _ in range(n)]
+    for a, i in enumerate(databank_idx):
+        for b, j in enumerate(databank_idx):
+            kijs[i][j] = float(fitted[a][b])
+    return kijs
 
 
 def build_flasher(ids: tuple[str, ...], eos: Any, kij_table: str) -> Any:
@@ -60,12 +207,14 @@ def build_flasher(ids: tuple[str, ...], eos: Any, kij_table: str) -> Any:
 
     Parameterised by the `thermo`-library mixture EOS class (PRMIX, SRKMIX,
     PR78MIX) and the IPDB k_ij table used today; callers own the caching (the
-    cache key is the reduced, sorted support of the feed composition —
+    cache key is the reduced, sorted support of the feed composition -
     zero-fraction components are dropped by the caller before this is reached).
+    Constants build from the resolved Component records (spec P1-02), so every
+    id must resolve before this is reached.
     """
-    cas_list = _cas_list(ids)
-    constants, correlations = ChemicalConstantsPackage.from_IDs(cas_list)
-    kijs = IPDB.get_ip_symmetric_matrix(name=kij_table, CASs=cas_list, ip="kij")
+    records = _records(ids)
+    constants, correlations = _constants_package(records)
+    kijs = _kij_matrix(records, kij_table)
     eos_kwargs: dict[str, Any] = {
         "Tcs": constants.Tcs,
         "Pcs": constants.Pcs,
@@ -300,9 +449,9 @@ def build_flasher_vl(ids: tuple[str, ...], eos: Any, kij_table: str) -> Any:
     liquid (no water), a VLE-only FlashVL over the same EOS objects reaches the
     same equilibrium without liquid-liquid stability work.
     """
-    cas_list = _cas_list(ids)
-    constants, correlations = ChemicalConstantsPackage.from_IDs(cas_list)
-    kijs = IPDB.get_ip_symmetric_matrix(name=kij_table, CASs=cas_list, ip="kij")
+    records = _records(ids)
+    constants, correlations = _constants_package(records)
+    kijs = _kij_matrix(records, kij_table)
     eos_kwargs: dict[str, Any] = {
         "Tcs": constants.Tcs,
         "Pcs": constants.Pcs,
@@ -352,9 +501,15 @@ def _thermal_conductivity(phase: Any) -> float | None:
 
 @cache
 def _psat_data(cid: str) -> tuple[Any, float, float, float]:
-    """(vapor-pressure correlation, Tc, Pc, omega) for one component id, cached."""
-    cas = str(components()[cid]["cas"])
-    constants, correlations = ChemicalConstantsPackage.from_IDs([cas])
+    """(vapor-pressure correlation, Tc, Pc, omega) for one component id, cached.
+
+    Databank-resolved ids use the same from_IDs path as the flashers (identical
+    constants); pseudos use the generalized Tb/Tc/Pc/omega VaporPressure.
+    """
+    record = resolve(cid)
+    if record.cas is None:
+        return _pseudo_vapor_pressure(record), record.Tc, record.Pc, record.omega
+    constants, correlations = ChemicalConstantsPackage.from_IDs([str(record.cas)])
     return (
         correlations.VaporPressures[0],
         float(constants.Tcs[0]),

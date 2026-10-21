@@ -10,7 +10,7 @@ from ngdesign.data import components
 
 from .common import Model
 
-COMPONENTS: tuple[str, ...] = (
+DEFAULT_SLATE: tuple[str, ...] = (
     "N2",
     "CO2",
     "H2S",
@@ -29,15 +29,18 @@ COMPONENTS: tuple[str, ...] = (
     "DEA",
     "MeOH",
     "MEG",
-)  # keys of data/components.yaml
+)  # keys of data/components.yaml - the sample flowsheets' default slate, not a type
 
 COMP_TOL = 1e-6
 
 
 def _check_composition(z: dict[str, float]) -> dict[str, float]:
-    unknown = set(z) - set(COMPONENTS)
-    if unknown:
-        raise ValueError(f"unknown components {sorted(unknown)}")
+    """Non-negativity and sum-to-1 only (spec P1-02).
+
+    Component membership is not checked here: any id the open component registry
+    resolves is legal. A flowsheet validates its feeds against its own component
+    slate, and the thermo layer validates ids again at flasher build.
+    """
     if any(v < 0 for v in z.values()):
         raise ValueError("negative mole fraction")
     s = sum(z.values())

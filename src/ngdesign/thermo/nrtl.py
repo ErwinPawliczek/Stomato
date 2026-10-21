@@ -89,7 +89,15 @@ def _build_flasher_inner(ids: tuple[str, ...], three_phase: bool) -> Any:
     so a support with a databank-missing pair cannot produce a silently ideal
     result - whichever flasher the caller asks for.
     """
-    cas_list = _state._cas_list(ids)
+    records = _state._records(ids)
+    pseudos = [r.id for r in records if r.cas is None]
+    if pseudos:
+        raise ValueError(
+            f"NRTL has no fitted binary parameters for pseudo-components {pseudos} "
+            "(the ChemSep NRTL databank is keyed by CAS); refusing to flash an "
+            "ideal pseudo pair matrix - register no pseudos or select an EOS model"
+        )
+    cas_list = [str(r.cas) for r in records]
     constants, correlations = ChemicalConstantsPackage.from_IDs(cas_list)
     tau_bs = IPDB.get_ip_asymmetric_matrix(name=_CHEMSEP_NRTL_TABLE, CASs=cas_list, ip="bij")
     alpha_cs = IPDB.get_ip_asymmetric_matrix(name=_CHEMSEP_NRTL_TABLE, CASs=cas_list, ip="alphaij")

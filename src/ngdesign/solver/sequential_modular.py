@@ -35,6 +35,11 @@ only; raw values stay in the secant history. A unit model that raises is a plugi
 and propagates: only the iteration budget yields converged=False. Tear initialization
 is the molar-flow-weighted mean of the boundary feeds (simple, deterministic;
 feed-free sheets start from 1 mol/s nitrogen at ambient conditions).
+
+The torn component flows are indexed by the flowsheet's own component slate (spec
+P1-02), not a fixed module constant: solve entry resolves every slate id through the
+open component registry (unresolvable ids fail the solve there), so tear vectors are
+built in `fs.components` order with T at index len(slate) and P at len(slate) + 1.
 """
 
 from __future__ import annotations
@@ -45,7 +50,6 @@ from typing import NamedTuple
 
 from ngdesign import registry
 from ngdesign.contracts import (
-    COMPONENTS,
     FeedSpec,
     Flowsheet,
     SolvedFlowsheet,
@@ -53,6 +57,7 @@ from ngdesign.contracts import (
     StreamState,
     UnitResult,
 )
+from ngdesign.contracts.components import resolve_set
 from ngdesign.contracts.plugins import Thermo, UnitModel
 from ngdesign.registry import register
 
@@ -64,10 +69,6 @@ MAX_ITERATIONS = 100
 
 #: Strongest Wegstein acceleration allowed (spec S-30: q in [-5, 0]).
 WEGSTEIN_Q_MIN = -5.0
-
-#: Index of T and P inside a tear vector, after the component flows.
-_T_IDX = len(COMPONENTS)
-_P_IDX = len(COMPONENTS) + 1
 
 
 class _Edge(NamedTuple):
@@ -97,6 +98,7 @@ class _Context:
     thermo: Thermo
     states: dict[str, StreamState]
     results: dict[str, UnitResult]
+    components: tuple[str, ...]
 
 
 def _stream_edges(fs: Flowsheet) -> list[_Edge]:
@@ -288,23 +290,32 @@ def _flash_feed(spec: StreamSpec, thermo: Thermo) -> StreamState:
     return thermo.flash_pt(feed.composition, feed.T, feed.P, feed.molar_flow)
 
 
-def _tear_vector(state: StreamState) -> list[float]:
-    """The torn variables of a stream: component flows (mol/s), then T (K), P (Pa)."""
+def _tear_vector(state: StreamState, components: tuple[str, ...]) -> list[float]:
+    """The torn variables of a stream: component flows (mol/s), then T (K), P (Pa).
+
+    Component flows are indexed by the flowsheet's slate order (spec P1-02); T sits
+    at index len(components), P at len(components) + 1.
+    """
     flows = state.component_flows()
-    return [flows.get(c, 0.0) for c in COMPONENTS] + [state.T, state.P]
+    return [flows.get(c, 0.0) for c in components] + [state.T, state.P]
 
 
-def _inject_tear(vector: list[float], fallback_composition: dict[str, float], thermo: Thermo) -> StreamState:
+def _inject_tear(
+    vector: list[float],
+    components: tuple[str, ...],
+    fallback_composition: dict[str, float],
+    thermo: Thermo,
+) -> StreamState:
     """Build the StreamState a tear guess is injected as, by flashing it.
 
     Values outside the physical range (negative flows, T or P <= 0) are clamped for
     injection only - raw values stay in the secant history. A zero-flow guess cannot
     be flashed; it becomes a degenerate stream at the fallback composition.
     """
-    flows = {c: max(vector[i], 0.0) for i, c in enumerate(COMPONENTS)}
+    flows = {c: max(vector[i], 0.0) for i, c in enumerate(components)}
     total = sum(flows.values())
-    t = max(vector[_T_IDX], 1.0)
-    p = max(vector[_P_IDX], 1.0)
+    t = max(vector[len(components)], 1.0)
+    p = max(vector[len(components) + 1], 1.0)
     if total <= 0.0:
         return StreamState(
             T=t,
@@ -320,11 +331,13 @@ def _inject_tear(vector: list[float], fallback_composition: dict[str, float], th
     return thermo.flash_pt(composition, t, p, total)
 
 
-def _init_guess(fs: Flowsheet) -> tuple[list[float], dict[str, float]]:
+def _init_guess(fs: Flowsheet, components: tuple[str, ...]) -> tuple[list[float], dict[str, float]]:
     """Initial tear guess: the molar-flow-weighted mean of the boundary feeds.
 
     Feed-free sheets start from 1 mol/s nitrogen at ambient conditions - any
-    positive, normalized guess converges for a well-posed loop.
+    positive, normalized guess converges for a well-posed loop. (A feed-free sheet
+    whose slate omits N2 gets a zero first guess; the degenerate-stream path keeps
+    it consistent.)
     """
     feeds: list[FeedSpec] = []
     for s in fs.streams:
@@ -343,7 +356,7 @@ def _init_guess(fs: Flowsheet) -> tuple[list[float], dict[str, float]]:
             for c, z in f.composition.items():
                 moles[c] = moles.get(c, 0.0) + z * f.molar_flow
         composition = {c: n / flow for c, n in sorted(moles.items())}
-    vector = [flow * composition.get(c, 0.0) for c in COMPONENTS] + [t, p]
+    vector = [flow * composition.get(c, 0.0) for c in components] + [t, p]
     return vector, composition
 
 
@@ -397,16 +410,16 @@ def _run_units(ctx: _Context, order: list[str]) -> None:
 
 def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[bool, int]:
     """Iterate one cyclic block to a converged tear solution, or give up at the cap."""
-    guess, fallback_composition = _init_guess(ctx.fs)
+    guess, fallback_composition = _init_guess(ctx.fs, ctx.components)
     torn = [_Tear(stream_id=sid, x=list(guess)) for sid in tears]
     for iteration in range(1, MAX_ITERATIONS + 1):
         for t in torn:
-            ctx.states[t.stream_id] = _inject_tear(t.x, fallback_composition, ctx.thermo)
+            ctx.states[t.stream_id] = _inject_tear(t.x, ctx.components, fallback_composition, ctx.thermo)
         _run_units(ctx, order)
-        if all(_converged(t.x, _tear_vector(ctx.states[t.stream_id])) for t in torn):
+        if all(_converged(t.x, _tear_vector(ctx.states[t.stream_id], ctx.components)) for t in torn):
             return True, iteration
         for t in torn:
-            calculated = _tear_vector(ctx.states[t.stream_id])
+            calculated = _tear_vector(ctx.states[t.stream_id], ctx.components)
             injected = t.x
             if t.y_prev is None or t.x_prev is None:
                 t.x = list(calculated)  # first pass: direct substitution
@@ -423,7 +436,11 @@ class SequentialModular:
     def solve(self, fs: Flowsheet, thermo: Thermo) -> SolvedFlowsheet:
         units: dict[str, UnitModel] = {u.tag: registry.create("unit", u.kind) for u in fs.units}
         _check_ports(fs, units)
-        ctx = _Context(fs=fs, units=units, thermo=thermo, states={}, results={})
+        # Spec P1-02: every slate id must resolve through the open component
+        # registry - the thermo factory and tear vectors below both index by it,
+        # so an unresolvable id fails here, at the solve entry, with its name.
+        components = tuple(resolve_set(fs.components).ids)
+        ctx = _Context(fs=fs, units=units, thermo=thermo, states={}, results={}, components=components)
         for s in fs.streams:
             if s.source is None:
                 ctx.states[s.id] = _flash_feed(s, thermo)
