@@ -58,6 +58,16 @@ _MESH_M_TOL_ZERO_ONE_TEAR = 1e-6
 #: closed to 3e-9 - the reactive K evaluation is too noisy for FD derivatives),
 #: so the inside-out floor IS the reactive floor. Gate sits just above it.
 _MESH_M_TOL_REACTIVE = 1e-2
+#: Loose bound separating a Naphtali-Sandholm state that reached its
+#: finite-difference Newton floor from a genuinely stalled one (spec P1-10).
+#: Measured P1-10 stripper on the physical branch at kettle vapour 50-76 mol/s:
+#: NS converges to M = 4.2e-6 - 5.6e-6 (boundary total balance closes at
+#: D + B = 100.00000000 against a 100 mol/s feed) but cannot cross the 1e-6
+#: gate - the FD Jacobian's noise floor at these tears. A stalled state sits
+#: at 1e-2 or worse. Below this bound the mesh hands the state to the
+#: inside-out polish instead of failing the tear; the polish lifts it onto
+#: the gate or the NS state stands (its floor is the measured solver limit).
+_NS_FLOOR_M = 1e-3
 
 
 def _is_reactive_package(tb: object) -> bool:
