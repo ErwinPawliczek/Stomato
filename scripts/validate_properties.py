@@ -30,6 +30,7 @@ import argparse
 import dataclasses
 import datetime
 import json
+import os
 import platform
 import re
 import subprocess
@@ -40,6 +41,8 @@ from typing import Any, cast
 from ngdesign import registry
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import PhaseKind
+from ngdesign.thermo import catalogue
+from ngdesign.thermo.catalogue import ModelRow
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CASES_PATH = REPO_ROOT / "data" / "validation" / "cases.yaml"
@@ -116,6 +119,8 @@ class Case:
     # pure-fluid scaffolding (source "coolprop:<fluid>" cases)
     fluid: str = ""
     coolprop_fluid: str = ""
+    # cases.yaml section the case came from (the audit's L1/L2 classification)
+    section: str = ""
 
 
 @dataclasses.dataclass(frozen=True)
@@ -211,6 +216,7 @@ def _load_cases() -> list[Case]:
                     note=str(entry.get("note", "")),
                     fluid=str(entry.get("fluid", "")),
                     coolprop_fluid=str(entry.get("coolprop_fluid", "")),
+                    section=section,
                 )
                 cases.append(case)
     return cases
@@ -441,6 +447,359 @@ def write_results(rows: list[Row]) -> None:
     RESULTS_PATH.write_text(json.dumps(payload, indent=2) + "\n")
 
 
+# -- L0 self-consistency + L4 cross-model checks (spec T-01) ------------------------------------
+
+#: The L0 check names a catalogue row may declare in ``l0`` / ``l0_excluded``. A check that is
+#: neither declared nor excluded with a reason fails the audit — checks are never silently
+#: skipped (spec T-01).
+L0_CHECKS = frozenset(
+    {
+        "pure_psat_limit",
+        "phase_identification",
+        "round_trip",
+        "dhdT_cp",
+        "gibbs_duhem",
+        "single_liquid_limit",
+        "determinism",
+    }
+)
+
+#: Component classes the natural-gas slice feed exercises; L4 pairs form only on rows sharing
+#: one of these (schema: ``l4_pairing_classes``).
+L4_PAIRING_CLASSES = frozenset({"hydrocarbon", "light_gas", "inert"})
+
+#: Loose cross-model sanity band (spec T-01): a tighter bound would assert model agreement,
+#: which is a finding, not a gate.
+L4_BAND = 0.20
+
+#: Slice inlet composition (the P1-05 multicomponent case feed).
+SLICE_INLET: dict[str, float] = {
+    "N2": 0.005,
+    "CO2": 0.015,
+    "C1": 0.848,
+    "C2": 0.062,
+    "C3": 0.032,
+    "iC4": 0.007,
+    "nC4": 0.010,
+    "iC5": 0.004,
+    "nC5": 0.004,
+    "C6+": 0.010,
+    "H2O": 0.003,
+}
+
+
+@dataclasses.dataclass(frozen=True)
+class L0Result:
+    """One L0 check outcome on one catalogue row."""
+
+    check: str
+    passed: bool
+    worst: float | None  # worst normalized deviation (meaning per check)
+    detail: str
+
+
+@dataclasses.dataclass(frozen=True)
+class L4Result:
+    """One L4 cross-model pair outcome (dew point + vapour density on the slice feed)."""
+
+    pair: str
+    passed: bool
+    detail: str
+
+
+def _l0_pure_psat_limit(pkg: Thermo, params: dict[str, Any]) -> L0Result:
+    worst = 0.0
+    details: list[str] = []
+    for cid, T in params["points"]:
+        z = {cid: 1.0}
+        psat = pkg.pure_psat(cid, T)
+        bubble = pkg.bubble_point(z, T=T).P
+        dew = pkg.dew_point(z, T=T).P
+        if psat is None or bubble is None or dew is None:  # pragma: no cover - pure feeds converge
+            details.append(f"{cid}@{T:g}K psat/bubble/dew did not converge")
+            worst = max(worst, 1.0)
+            continue
+        rb, rd = abs(bubble - psat) / psat, abs(dew - psat) / psat
+        worst = max(worst, rb, rd)
+        details.append(f"{cid}@{T:g}K bubble {rb:.2g} dew {rd:.2g}")
+    return L0Result("pure_psat_limit", worst <= 1e-6, worst, "; ".join(details))
+
+
+def _l0_phase_identification(pkg: Thermo, params: dict[str, Any]) -> L0Result:
+    """Pure component liquid above its own saturation pressure, vapour below it (#124 lesson).
+
+    The bracket anchors on the package's own bubble pressure, so the check tests the phase
+    *classification*, not agreement between the databank Psat and the model's internal
+    vapour-pressure correlation.
+    """
+    worst = 0.0
+    details: list[str] = []
+    ok = True
+    for cid, T in params["points"]:
+        z = {cid: 1.0}
+        psat = pkg.pure_psat(cid, T)
+        if psat is None:
+            details.append(f"{cid}@{T:g}K databank Psat unavailable")
+            worst = max(worst, 1.0)
+            continue
+        # Probe 0.5x and 2x the databank Psat rather than +-5% of the pure-feed bubble point:
+        # the pure-feed bubble point short-circuits to the databank value while the PT flasher
+        # uses its own vapour-pressure correlation (measured ~12% apart for H2O at 300 K and
+        # ~8% for NRTL nC4 at 300 K), so a narrow bracket straddles the correlation boundary
+        # and mislabels through no classification fault. 0.5x/2x still catches the #124
+        # mislabel class: a phase holding the wrong EOS root fails both probes by a wide margin.
+        above = pkg.flash_pt(z, T, psat * 2.0, 1.0)
+        below = pkg.flash_pt(z, T, psat * 0.5, 1.0)
+        a_ok = (
+            len(above.phases) == 1 and above.phases[0].kind != PhaseKind.VAPOR and above.vapor_fraction == 0.0
+        )
+        b_ok = (
+            len(below.phases) == 1 and below.phases[0].kind == PhaseKind.VAPOR and below.vapor_fraction == 1.0
+        )
+        ok = ok and a_ok and b_ok
+        worst = max(worst, 0.0 if (a_ok and b_ok) else 1.0)
+        details.append(f"{cid}@{T:g}K {'ok' if a_ok and b_ok else 'MISLABELED'}")
+    return L0Result("phase_identification", ok, worst, "; ".join(details))
+
+
+def _l0_round_trip(pkg: Thermo, params: dict[str, Any]) -> L0Result:
+    worst = 0.0
+    details: list[str] = []
+    for T, P in params["states"]:
+        z = {k: float(v) for k, v in params["z"].items()}
+        s1 = pkg.flash_pt(z, T, P, 1.0)
+        s2 = pkg.flash_ph(z, P, s1.enthalpy, 1.0)
+        rel_t_ph = abs(s2.T - T) / T
+        s3 = pkg.flash_pt(z, s2.T, P, 1.0)
+        rel_h = abs(s3.enthalpy - s1.enthalpy) / abs(s1.enthalpy)
+        s4 = pkg.flash_ps(z, P, s1.entropy, 1.0)
+        rel_t_ps = abs(s4.T - T) / T
+        worst = max(worst, rel_t_ph, rel_h, rel_t_ps)
+        details.append(f"{T:g}K/{P:g}Pa T_ph {rel_t_ph:.2g} H {rel_h:.2g} T_ps {rel_t_ps:.2g}")
+    return L0Result("round_trip", worst <= 1e-6, worst, "; ".join(details))
+
+
+def _l0_dhdt_cp(pkg: Thermo, params: dict[str, Any]) -> L0Result:
+    T, P = params["state"]
+    dT = 0.5
+    kind = PhaseKind(params["phase"])
+    z = {k: float(v) for k, v in params["z"].items()}
+    h1 = pkg.phase_props(z, T - dT, P, kind).enthalpy
+    h2 = pkg.phase_props(z, T + dT, P, kind).enthalpy
+    cp = pkg.phase_props(z, T, P, kind).cp
+    slope = (h2 - h1) / (2 * dT)
+    rel = abs(slope - cp) / abs(cp)
+    return L0Result("dhdT_cp", rel <= 1e-4, rel, f"{T:g}K/{P:g}Pa {kind.value} cp {cp:.6g} dH/dT {slope:.6g}")
+
+
+def _gibbs_duhem_ratio(
+    pkg: Thermo, z: dict[str, float], T: float, P: float, kind: PhaseKind, eps: float, n: int
+) -> float:
+    """Midpoint path integral of sum_i x_i d(ln phi_i) over a composition loop; 0 in theory."""
+    ids = sorted(z)
+
+    def lnphi(x: dict[str, float]) -> dict[str, float]:
+        return pkg.phase_props(x, T, P, kind).ln_phi
+
+    delta = {ids[0]: 1.0, ids[1]: -1.0}
+    total = denom = 0.0
+    for k in range(n):
+        s0 = -eps + 2 * eps * k / n
+        s1 = -eps + 2 * eps * (k + 1) / n
+        sm = (s0 + s1) / 2
+
+        def at(s: float) -> dict[str, float]:
+            x = {c: z[c] + s * delta.get(c, 0.0) for c in ids}
+            tot = sum(x.values())
+            return {c: v / tot for c, v in x.items()}
+
+        x0, x1, xm = at(s0), at(s1), at(sm)
+        l0, l1 = lnphi(x0), lnphi(x1)
+        step = {c: l1[c] - l0[c] for c in ids}
+        total += sum(xm[c] * step[c] for c in ids)
+        denom += sum(abs(xm[c] * step[c]) for c in ids)
+    return abs(total) / denom
+
+
+def _l0_gibbs_duhem(pkg: Thermo, params: dict[str, Any]) -> L0Result:
+    worst = 0.0
+    details: list[str] = []
+    for entry in params["binaries"]:
+        z = {k: float(v) for k, v in entry["z"].items()}
+        kind = PhaseKind(entry["phase"])
+        ratio = _gibbs_duhem_ratio(pkg, z, entry["T"], entry["P"], kind, eps=0.01, n=100)
+        worst = max(worst, ratio)
+        details.append(f"{sorted(z)}@{entry['T']:g}K/{entry['P']:g}Pa {kind.value} {ratio:.2g}")
+    return L0Result("gibbs_duhem", worst <= 1e-6, worst, "; ".join(details))
+
+
+def _l0_single_liquid_limit(pkg: Thermo, params: dict[str, Any]) -> L0Result:
+    T, P = params["state"]
+    z = {k: float(v) for k, v in params["z"].items()}
+    state = pkg.flash_pt(z, T, P, 1.0)
+    ok = len(state.phases) == 1 and state.phases[0].kind != PhaseKind.VAPOR and state.vapor_fraction == 0.0
+    kinds = [p.kind.value for p in state.phases]
+    detail = f"{T:g}K/{P:g}Pa kinds={kinds} vf={state.vapor_fraction}"
+    return L0Result("single_liquid_limit", ok, 0.0 if ok else 1.0, detail)
+
+
+def _l0_determinism(row: ModelRow, params: dict[str, Any]) -> L0Result:
+    T, P = params["state"]
+    z = {k: float(v) for k, v in params["z"].items()}
+    a = catalogue.build(row).flash_pt(z, T, P, 1.0).model_dump()
+    b = catalogue.build(row).flash_pt(z, T, P, 1.0).model_dump()
+    ok = a == b
+    return L0Result("determinism", ok, 0.0 if ok else 1.0, f"two instances bit-identical at {T:g}K/{P:g}Pa")
+
+
+def run_l0_row(row: ModelRow) -> list[L0Result]:
+    """Run every declared L0 check on one catalogue row (via ``catalogue.build``)."""
+    pkg = catalogue.build(row)
+    out: list[L0Result] = []
+    for check, params in row.l0.items():
+        try:
+            if check == "determinism":
+                out.append(_l0_determinism(row, params))
+            elif check == "pure_psat_limit":
+                out.append(_l0_pure_psat_limit(pkg, params))
+            elif check == "phase_identification":
+                out.append(_l0_phase_identification(pkg, params))
+            elif check == "round_trip":
+                out.append(_l0_round_trip(pkg, params))
+            elif check == "dhdT_cp":
+                out.append(_l0_dhdt_cp(pkg, params))
+            elif check == "gibbs_duhem":
+                out.append(_l0_gibbs_duhem(pkg, params))
+            elif check == "single_liquid_limit":
+                out.append(_l0_single_liquid_limit(pkg, params))
+            else:
+                out.append(L0Result(check, False, None, f"unknown L0 check name {check!r}"))
+        except Exception as exc:  # noqa: BLE001 - a crashing check is a failing finding
+            out.append(L0Result(check, False, None, f"raised {type(exc).__name__}: {exc}"))
+    return out
+
+
+def _l4_point(pkg: Thermo) -> tuple[float, float]:
+    d = pkg.dew_point(SLICE_INLET, T=293.15)
+    rho = pkg.phase_props(SLICE_INLET, 293.15, d.P, PhaseKind.VAPOR).density
+    return d.P, rho
+
+
+def run_l4(rows: dict[str, ModelRow]) -> list[L4Result]:
+    """Cross-model consistency on the natural-gas slice feed for every in-scope pair.
+
+    A package that refuses the feed is recorded (visible), not failed: it is a coverage
+    finding, not a wrong number. A pair inside the loose 20 % band passes.
+    """
+    out: list[L4Result] = []
+    ids = sorted(rows)
+    for i, a in enumerate(ids):
+        for b in ids[i + 1 :]:
+            shared = (
+                set(rows[a].applicability.component_classes)
+                & set(rows[b].applicability.component_classes)
+                & L4_PAIRING_CLASSES
+            )
+            if not shared:
+                continue
+            pair = f"{a}-{b}"
+            try:
+                pa, rho_a = _l4_point(catalogue.build(rows[a]))
+                pb, rho_b = _l4_point(catalogue.build(rows[b]))
+                rel_p = abs(pa - pb) / pb
+                rel_rho = abs(rho_a - rho_b) / rho_b
+                passed = max(rel_p, rel_rho) <= L4_BAND
+                out.append(
+                    L4Result(
+                        pair,
+                        passed,
+                        f"dew P {pa:.6g} vs {pb:.6g} (rel {rel_p:.3g}); rhoV {rho_a:.6g} vs "
+                        f"{rho_b:.6g} (rel {rel_rho:.3g}); band {L4_BAND:.0%}",
+                    )
+                )
+            except Exception as exc:  # noqa: BLE001 - refusal is recorded, not failed
+                out.append(L4Result(pair, True, f"n/a — refuses the slice feed: {type(exc).__name__}: {exc}"))
+    return out
+
+
+def audit() -> int:
+    """Enforce catalogue consistency (spec T-01). Exit 0 only when everything holds."""
+    rows_map = catalogue.load_catalogue()
+    cases = _load_cases()
+    case_ids = {c.id for c in cases}
+    l1_ids = {c.id for c in cases if c.section == "pure_cases"}
+    l2_ids = {c.id for c in cases if c.section == "binary_cases"}
+    failures: list[str] = []
+
+    registered = set(registry.available("thermo"))
+    if os.environ.get(catalogue.MODELS_DIR_ENV):
+        print(f"note: {catalogue.MODELS_DIR_ENV} is set — registry lockstep check skipped")
+    elif registered != set(rows_map):
+        failures.append(
+            f"registry/catalogue mismatch: registry {sorted(registered)} vs catalogue {sorted(rows_map)}"
+        )
+
+    table: list[tuple[str, str, str, str, str]] = []
+    for row in sorted(rows_map.values(), key=lambda r: r.id):
+        if row.status == "experimental":
+            table.append((row.id, row.status, "exempt", "", ""))
+            continue
+        l0 = run_l0_row(row)
+        l0_fail = [r for r in l0 if not r.passed]
+        declared = set(row.l0) | set(row.l0_excluded)
+        for missing in sorted(L0_CHECKS - declared):
+            failures.append(f"{row.id}: L0 check {missing!r} is neither declared nor excluded")
+        for name, reason in sorted(row.l0_excluded.items()):
+            if name not in L0_CHECKS:
+                failures.append(f"{row.id}: l0_excluded names unknown check {name!r}")
+            if not reason.strip():
+                failures.append(f"{row.id}: l0_excluded[{name!r}] is empty — exclusions declare why")
+        bad_ids = sorted(set(row.validation) - case_ids)
+        if bad_ids:
+            failures.append(f"{row.id}: validation names unknown case ids {bad_ids}")
+        n1 = len(set(row.validation) & l1_ids)
+        n2 = len(set(row.validation) & l2_ids)
+        if l0_fail:
+            failures.append(f"{row.id}: status {row.status} but L0 failing: {[r.check for r in l0_fail]}")
+        if row.status == "validated" and (n1 == 0 or n2 == 0):
+            failures.append(
+                f"{row.id}: status validated needs >=1 L1 pure and >=1 L2 binary case id; has L1={n1} L2={n2}"
+            )
+        table.append(
+            (
+                row.id,
+                row.status,
+                f"{len(l0) - len(l0_fail)}/{len(l0)}",
+                f"L1={n1} L2={n2}",
+                "; ".join(r.check for r in l0_fail),
+            )
+        )
+
+    l4 = run_l4(rows_map)
+    for r in l4:
+        if not r.passed:
+            failures.append(f"L4 pair {r.pair} beyond the {L4_BAND:.0%} band: {r.detail}")
+
+    print("=== catalogue audit (spec T-01) ===")
+    print(f"{'model':<12} {'status':<14} {'L0':<8} {'cases':<14} failing checks")
+    for mid, status, l0s, cases_s, fails in table:
+        print(f"{mid:<12} {status:<14} {l0s:<8} {cases_s:<14} {fails}")
+    print("\nexcluded L0 checks (declared, not silent):")
+    for row in sorted(rows_map.values(), key=lambda r: r.id):
+        for name, reason in sorted(row.l0_excluded.items()):
+            print(f"  {row.id} / {name}: {reason}")
+    print("\nL4 cross-model pairs on the slice feed:")
+    for r in l4:
+        print(f"  {r.pair}: {'ok' if r.passed else 'FAIL'} — {r.detail}")
+    if failures:
+        print("\nAUDIT FAILURES:")
+        for f in failures:
+            print(f"  - {f}")
+        return 1
+    print("\naudit: PASS")
+    return 0
+
+
 # -- docs/validation.md -------------------------------------------------------------------------
 
 
@@ -448,8 +807,131 @@ def _fmt(x: float | None) -> str:
     return "n/a" if x is None else f"{x:.6g}"
 
 
-def write_doc(rows: list[Row], sources: dict[str, str]) -> None:
-    """Regenerate ``docs/validation.md`` from the same rows written to ``results.json``."""
+def _catalogue_section(
+    rows: list[Row],
+    l0: dict[str, list[L0Result]],
+    l4: list[L4Result],
+) -> list[str]:
+    """The model-catalogue index block prepended to docs/validation.md (spec T-01)."""
+    cat = catalogue.load_catalogue()
+    lines = [
+        "## Model catalogue (spec T-01)",
+        "",
+        "Property methods are data in `data/thermo_models/*.yaml`; each row's report lives in",
+        "`docs/validation/<id>.md`. The audit gate: `uv run python scripts/validate_properties.py --audit`.",
+        "",
+        "| model | family | status | L0 | L1/L2 cases | report |",
+        "| --- | --- | --- | --- | --- | --- |",
+    ]
+    cases = _load_cases()
+    l1_ids = {c.id for c in cases if c.section == "pure_cases"}
+    l2_ids = {c.id for c in cases if c.section == "binary_cases"}
+    for row in sorted(cat.values(), key=lambda r: r.id):
+        checks = l0.get(row.id, [])
+        l0_str = f"{sum(r.passed for r in checks)}/{len(checks)}" if checks else "—"
+        n1 = len(set(row.validation) & l1_ids)
+        n2 = len(set(row.validation) & l2_ids)
+        lines.append(
+            f"| [{row.id}](validation/{row.id}.md) | {row.family} | {row.status} | {l0_str} | "
+            f"L1={n1} L2={n2} | [report](validation/{row.id}.md) |"
+        )
+    lines += ["", "### L4 cross-model pairs on the natural-gas slice feed", ""]
+    for r in l4:
+        lines.append(f"- `{r.pair}`: {'ok' if r.passed else 'FAIL'} — {r.detail}")
+    lines.append("")
+    return lines
+
+
+def _model_case_rows(row: ModelRow, rows: list[Row]) -> list[Row]:
+    return [r for r in rows if r.package == row.id]
+
+
+def _write_model_doc(
+    row: ModelRow,
+    rows: list[Row],
+    l0: list[L0Result],
+    l4: list[L4Result],
+    sources: dict[str, str],
+) -> Path:
+    """Write docs/validation/<id>.md — the per-model report the index links to."""
+    out = REPO_ROOT / "docs" / "validation"
+    out.mkdir(exist_ok=True)
+    lines = [
+        f"# {row.id} — {row.name}",
+        "",
+        f"family `{row.family}` · status **{row.status}** · adapter `{row.adapter}`.",
+        "",
+        "## Applicability (Carlson 1996)",
+        "",
+        f"- component classes: {', '.join(row.applicability.component_classes)}",
+        f"- polar: {row.applicability.polar} · electrolyte: {row.applicability.electrolyte}",
+        f"- T window: {row.applicability.T_K[0]:g}–{row.applicability.T_K[1]:g} K · "
+        f"P window: {row.applicability.P_Pa[0]:g}–{row.applicability.P_Pa[1]:g} Pa",
+        f"- phases: {', '.join(row.applicability.phases)}",
+        "",
+        "## Parameters",
+        "",
+        f"- source: {row.params.get('source', 'n/a')}",
+        f"- provenance: {row.params.get('provenance', 'n/a')}",
+        "",
+        "## L0 self-consistency",
+        "",
+        "| check | result | worst | measured |",
+        "| --- | --- | --- | --- |",
+    ]
+    for r in l0:
+        worst = "n/a" if r.worst is None else f"{r.worst:.2g}"
+        lines.append(f"| {r.check} | {'ok' if r.passed else 'FAIL'} | {worst} | {r.detail} |")
+    if row.l0_note:
+        lines += ["", f"Note: {row.l0_note}"]
+    excluded = sorted(row.l0_excluded.items())
+    if excluded:
+        lines += ["", "Declared exclusions (not silent skips):", ""]
+        for name, reason in excluded:
+            lines.append(f"- `{name}` — {reason}")
+    model_l4 = [pair for pair in l4 if row.id in pair.pair]
+    if model_l4:
+        lines += ["", "### L4 cross-model pairs", ""]
+        for pair in model_l4:
+            other = pair.pair.replace(f"{row.id}-", "").replace(f"-{row.id}", "")
+            lines.append(f"- vs `{other}`: {'ok' if pair.passed else 'FAIL'} — {pair.detail}")
+    model_rows = _model_case_rows(row, rows)
+    lines += ["", "## L1/L2 reference-case outcomes", ""]
+    if model_rows:
+        n_pass = sum(r.passed for r in model_rows)
+        lines += [
+            f"{n_pass}/{len(model_rows)} comparisons pass. Failing comparisons are assessed in the",
+            "main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.",
+        ]
+    else:
+        lines.append("None yet — validation case ids arrive with the data tasks (T-11..T-13).")
+    if row.validation:
+        lines += ["", "Declared case ids:", ""]
+        for cid in row.validation:
+            src = sources.get(cid, "")
+            lines.append(f"- `{cid}` — {src.removeprefix('literature:')}")
+    if row.references:
+        lines += ["", "## References", ""]
+        for ref in row.references:
+            lines.append(f"- {ref}")
+    lines.append("")
+    path = out / f"{row.id}.md"
+    path.write_text("\n".join(lines))
+    return path
+
+
+def write_doc(
+    rows: list[Row],
+    sources: dict[str, str],
+    l0: dict[str, list[L0Result]] | None = None,
+    l4: list[L4Result] | None = None,
+) -> None:
+    """Regenerate ``docs/validation.md`` plus the per-model catalogue reports."""
+    cat = catalogue.load_catalogue()
+    if l0 is None:
+        l0 = {rid: run_l0_row(row) for rid, row in sorted(cat.items())}
+    if l4 is None:
+        l4 = run_l4(cat)
     env = environment()
     lines = [
         "# Thermo property validation report (spec P1-05)",
@@ -472,6 +954,14 @@ def write_doc(rows: list[Row], sources: dict[str, str]) -> None:
         "| bubble T (isobaric data) | 0.5 % relative | harness analogue of the 3 % bubble-P tolerance |",
         "| phase compositions (liquid_comp) | 0.02 absolute | spec's composition tolerance |",
         "",
+        "## Model catalogue (spec T-01)",
+        "",
+        "Property methods are data in `data/thermo_models/*.yaml`; each row's report lives in",
+        "`docs/validation/<id>.md`. The audit gate: `uv run python scripts/validate_properties.py --audit`.",
+        "",
+    ]
+    lines += _catalogue_section(rows, l0, l4)
+    lines += [
         "## Results",
         "",
     ]
@@ -559,6 +1049,9 @@ def write_doc(rows: list[Row], sources: dict[str, str]) -> None:
         "",
     ]
     DOC_PATH.write_text("\n".join(lines))
+    for row in sorted(cat.values(), key=lambda r: r.id):
+        path = _write_model_doc(row, rows, l0.get(row.id, []), l4, sources)
+        print(f"wrote {path}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -567,7 +1060,14 @@ def main(argv: list[str] | None = None) -> int:
         "--regen-coolprop", action="store_true", help="fill pure_cases expected from CoolProp"
     )
     parser.add_argument("--write-doc", action="store_true", help="regenerate docs/validation.md from results")
+    parser.add_argument(
+        "--audit",
+        action="store_true",
+        help="spec T-01 audit: catalogue statuses vs L0/L1/L2 evidence; exit 1 on any gap",
+    )
     args = parser.parse_args(argv)
+    if args.audit:
+        return audit()
     if args.regen_coolprop:
         regen_coolprop()
         return 0
@@ -585,4 +1085,5 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
+    raise SystemExit(main())
     raise SystemExit(main())

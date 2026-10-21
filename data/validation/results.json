@@ -1,9 +1,9 @@
 {
   "environment": {
-    "generated": "2026-10-21T14:44:58+00:00",
+    "generated": "2026-10-21T14:56:29+00:00",
     "python": "3.14.7",
     "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "011f9a5",
+    "git_rev": "b5b0eb6",
     "coolprop_version": "8.0.0"
   },
   "summary": {

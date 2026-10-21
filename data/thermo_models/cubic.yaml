@@ -1,0 +1,219 @@
+- id: pr
+  name: Peng-Robinson
+  family: cubic
+  adapter: ngdesign.thermo.pr:PengRobinsonThermo
+  options:
+    eos: PRMIX
+    kij_table: ChemSep PR
+    alpha: default
+    translation: none
+    enthalpy: eos
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the ChemSep
+      pure-component database; binary interaction parameters from the 'ChemSep PR' table, 0 where the
+      table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: validated
+  validation: &id001
+  - pure-C1-95.3K
+  - pure-C1-125K
+  - pure-C1-155K
+  - pure-C1-172K
+  - pure-C1-181K
+  - pure-C2-152.7K
+  - pure-C2-200K
+  - pure-C2-250K
+  - pure-C2-285K
+  - pure-C2-290K
+  - pure-C3-184.9K
+  - pure-C3-240K
+  - pure-C3-300K
+  - pure-C3-340K
+  - pure-C3-351.3K
+  - pure-nC4-212.6K
+  - pure-nC4-280K
+  - pure-nC4-350K
+  - pure-nC4-390K
+  - pure-nC4-403.9K
+  - pure-CO2-216.7K
+  - pure-CO2-240K
+  - pure-CO2-265K
+  - pure-CO2-285K
+  - pure-CO2-288.9K
+  - pure-H2S-187.8K
+  - pure-H2S-240K
+  - pure-H2S-300K
+  - pure-H2S-345K
+  - pure-H2S-354.4K
+  - pure-N2-63.2K
+  - pure-N2-82K
+  - pure-N2-100K
+  - pure-N2-112K
+  - pure-N2-119.9K
+  - pure-H2O-323.5K
+  - pure-H2O-420K
+  - pure-H2O-520K
+  - pure-H2O-600K
+  - pure-H2O-614.7K
+  - c1c3-277.59K-0.689MPa
+  - c1c3-277.59K-1.724MPa
+  - c1c3-277.59K-2.758MPa
+  - c1c3-277.59K-4.137MPa
+  - c1c3-277.59K-5.516MPa
+  - c1c3-277.59K-6.895MPa
+  - c1c3-294.26K-6.895MPa
+  - c1c3-294.26K-7.584MPa
+  - c1c3-294.26K-8.274MPa
+  - c1c3-294.26K-8.963MPa
+  - c1c3-294.26K-9.653MPa
+  - c1c3-310.93K-1.379MPa
+  - c1c3-310.93K-1.724MPa
+  - c1c3-310.93K-2.068MPa
+  - c1c3-310.93K-2.413MPa
+  - c1c3-327.59K-3.103MPa
+  - c1c3-327.59K-4.482MPa
+  - c1c3-327.59K-5.861MPa
+  - c1c3-327.59K-7.239MPa
+  - c1c3-327.59K-7.584MPa
+  - c1co2-274.15K-4.11MPa
+  - c1co2-274.15K-4.99MPa
+  - c1co2-274.15K-5.90MPa
+  - c1co2-274.15K-6.60MPa
+  - c1co2-274.15K-7.56MPa
+  - c1co2-274.15K-8.04MPa
+  - c1co2-277.15K-4.69MPa
+  - c1co2-277.15K-5.97MPa
+  - c1co2-277.15K-7.04MPa
+  - c1co2-277.15K-8.02MPa
+  - c1co2-283.15K-5.37MPa
+  - c1co2-283.15K-7.24MPa
+  - c1co2-288.15K-6.62MPa
+  - c1co2-288.15K-7.63MPa
+  - c1h2o-310.9K-2.28MPa
+  - c1h2o-310.9K-6.55MPa
+  - c1h2o-310.9K-13.10MPa
+  - c1h2o-310.9K-24.37MPa
+  - c1h2o-310.9K-44.99MPa
+  - c1h2o-310.9K-68.22MPa
+  - c1h2o-344.3K-2.28MPa
+  - c1h2o-344.3K-6.50MPa
+  - c1h2o-344.3K-12.96MPa
+  - c1h2o-344.3K-24.37MPa
+  - c1h2o-344.3K-44.99MPa
+  - c1h2o-344.3K-68.02MPa
+  - c1h2o-410.9K-2.32MPa
+  - c1h2o-410.9K-6.49MPa
+  - c1h2o-410.9K-13.10MPa
+  - c1h2o-410.9K-24.51MPa
+  - c1h2o-410.9K-44.99MPa
+  - c1h2o-410.9K-67.81MPa
+  - slice-inlet-K-500psia-300K
+  references:
+  - Peng, D.-Y. & Robinson, D. B., 'A New Equation of State and Its Application to Binary Mixtures', Ind.
+    Eng. Chem. Fundam. 15(1), 59-64, 1976
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+  l0_note: ''
+- id: srk
+  name: Soave-Redlich-Kwong
+  family: cubic
+  adapter: ngdesign.thermo.srk:SoaveRedlichKwongThermo
+  options:
+    eos: SRKMIX
+    kij_table: ChemSep PR
+    alpha: default
+    translation: none
+    enthalpy: eos
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the ChemSep
+      pure-component database; binary interaction parameters from the 'ChemSep PR' table, 0 where the
+      table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: validated
+  validation: *id001
+  references:
+  - Soave, G., 'Equilibrium Constants from a Modified Redlich-Kwong Equation of State', Chem. Eng. Sci.
+    27(6), 1197-1203, 1972
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+  l0_note: ''
+- id: pr78
+  name: Peng-Robinson (1978 alpha)
+  family: cubic
+  adapter: ngdesign.thermo.pr78:PengRobinson78Thermo
+  options:
+    eos: PR78MIX
+    kij_table: ChemSep PR
+    alpha: default
+    translation: none
+    enthalpy: eos
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the ChemSep
+      pure-component database; binary interaction parameters from the 'ChemSep PR' table, 0 where the
+      table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: validated
+  validation: *id001
+  references:
+  - Robinson, D. B., Peng, D.-Y. & Ng, H.-J., 'Applications of the Peng-Robinson Equation of State', GPA
+    Research Report RR-28, 1978
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+  l0_note: ''

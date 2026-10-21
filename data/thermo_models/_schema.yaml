@@ -1,0 +1,225 @@
+# Schema for data/thermo_models/*.yaml — one row per property method (spec T-01).
+#
+# A property method is DATA: id, family, adapter, options, parameters provenance,
+# applicability, status, validation case ids, and the L0 self-consistency
+# parameters the validation harness runs. ngdesign.thermo.catalogue loads these
+# files and registers every row as a "thermo" plugin factory under its id; the
+# adapter classes stay as code (ngdesign.thermo.pr, srk, pr78, nrtl).
+#
+# Fields:
+#   id            registry name; stable; what Flowsheet.thermo names. Unique
+#                 across all files — a duplicate fails at load, naming both rows.
+#   name          human-readable name (API surface).
+#   family        one of `families` below.
+#   adapter       "module:ClassName", imported at load; must be a class.
+#   options       per-family typed options. family cubic: eos, kij_table, alpha,
+#                 translation, enthalpy — vocabularies declared in
+#                 ngdesign.thermo.options. Any other key fails at load, and a
+#                 non-cubic row with options fails at load (T-02/T-03 add typed
+#                 options for their families). A non-default alpha/translation/
+#                 enthalpy value loads but build() raises NotImplementedError
+#                 naming the option until T-02 lands the implementation.
+#   params        where the numbers come from: source + provenance citation.
+#   applicability model-validity window (Carlson 1996, Chem. Eng. Prog. 92(10),
+#                 35): component_classes (subset of the vocabulary below),
+#                 polar, electrolyte, inclusive T_K / P_Pa windows, phases.
+#   status        validated | provisional | experimental — enforced by
+#                 scripts/validate_properties.py --audit:
+#                   validated   = L0 green AND >= 1 L1 and >= 1 L2 case id in
+#                                 validation (L1 = pure_cases, L2 = binary_cases);
+#                   provisional = L0 green;
+#                   experimental = exempt, hidden from the audit table.
+#   validation    P1-05 case ids (data/validation/cases.yaml) that run against
+#                 the row; audit fails on unknown ids.
+#   l0            per-row L0 OVERRIDES keyed by check name (merged over the
+#                 family's `l0_defaults` below; a row only lists what differs):
+#                 pure_psat_limit, phase_identification, round_trip, dhdT_cp,
+#                 gibbs_duhem, single_liquid_limit, determinism. A check that is
+#                 neither declared here nor excluded in l0_excluded fails the
+#                 audit — checks are never silently skipped.
+#   l0_excluded   check name -> declared reason (non-empty; printed in every
+#                 audit and report).
+#   l0_note       measured caveat shown with the L0 results (e.g. a component
+#                 deliberately not used as a check point, and why).
+#   references    literature citations.
+families:
+- cubic
+- gamma_phi
+- mixing
+- helmholtz
+- kvalue
+- saft
+- electrolyte
+- special
+statuses:
+- validated
+- provisional
+- experimental
+component_classes:
+- hydrocarbon
+- light_gas
+- inert
+- water
+- acid_gas
+- amine
+- glycol
+- alcohol
+- polar_organic
+phases:
+- V
+- L
+- VLL
+- VLLE
+l4_pairing_classes:
+- hydrocarbon
+- light_gas
+- inert
+l0_defaults:
+  cubic:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 160.0
+      - - C3
+        - 300.0
+      - - nC4
+        - 300.0
+      - - H2O
+        - 400.0
+    phase_identification:
+      points:
+      - - nC4
+        - 300.0
+      - - C3
+        - 300.0
+      - - H2O
+        - 300.0
+    round_trip:
+      z: &id001
+        N2: 0.005
+        CO2: 0.015
+        C1: 0.848
+        C2: 0.062
+        C3: 0.032
+        iC4: 0.007
+        nC4: 0.01
+        iC5: 0.004
+        nC5: 0.004
+        C6+: 0.01
+        H2O: 0.003
+      states:
+      - - 350.0
+        - 3447000.0
+    dhdT_cp:
+      z: *id001
+      state:
+      - 350.0
+      - 3447000.0
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z:
+          C1: 0.6
+          C3: 0.4
+        T: 250.0
+        P: 2000000.0
+        phase: hc_liquid
+      - z:
+          C1: 0.7
+          CO2: 0.3
+        T: 250.0
+        P: 2000000.0
+        phase: vapor
+    single_liquid_limit:
+      z:
+        C3: 0.3
+        nC4: 0.7
+      state:
+      - 250.0
+      - 2000000.0
+    determinism:
+      z: *id001
+      state:
+      - 350.0
+      - 3447000.0
+  electrolyte:
+    single_liquid_limit:
+      z: &id002
+        MDEA: 0.1337049774159722
+        H2O: 0.8395540271008334
+        CO2: 0.026740995483194443
+      state:
+      - 313.15
+      - 5000000.0
+    round_trip:
+      z: *id002
+      states:
+      - - 313.15
+        - 5000000.0
+    determinism:
+      z: *id002
+      state:
+      - 313.15
+      - 5000000.0
+  gamma_phi:
+    pure_psat_limit:
+      points:
+      - - MeOH
+        - 300.0
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 350.0
+    phase_identification:
+      points:
+      - - MeOH
+        - 300.0
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 400.0
+    round_trip:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+    dhdT_cp:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 380.0
+      - 50000.0
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 380.0
+        P: 50000.0
+        phase: vapor
+    determinism:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 380.0
+      - 50000.0
+    single_liquid_limit:
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+      state:
+      - 298.15
+      - 100000.0

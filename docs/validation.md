@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-21T14:44:58+00:00 from `data/validation/results.json` (git 011f9a5, CoolProp 8.0.0).
+Generated 2026-10-21T14:56:51+00:00 from `data/validation/results.json` (git b5b0eb6, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -16,6 +16,34 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | NRTL y | 0.02 absolute | spec P1-05 (written for ethanol/water) |
 | bubble T (isobaric data) | 0.5 % relative | harness analogue of the 3 % bubble-P tolerance |
 | phase compositions (liquid_comp) | 0.02 absolute | spec's composition tolerance |
+
+## Model catalogue (spec T-01)
+
+Property methods are data in `data/thermo_models/*.yaml`; each row's report lives in
+`docs/validation/<id>.md`. The audit gate: `uv run python scripts/validate_properties.py --audit`.
+
+## Model catalogue (spec T-01)
+
+Property methods are data in `data/thermo_models/*.yaml`; each row's report lives in
+`docs/validation/<id>.md`. The audit gate: `uv run python scripts/validate_properties.py --audit`.
+
+| model | family | status | L0 | L1/L2 cases | report |
+| --- | --- | --- | --- | --- | --- |
+| [amine_enrtl](validation/amine_enrtl.md) | electrolyte | provisional | 3/3 | L1=0 L2=0 | [report](validation/amine_enrtl.md) |
+| [amine_ke](validation/amine_ke.md) | electrolyte | provisional | 3/3 | L1=0 L2=0 | [report](validation/amine_ke.md) |
+| [nrtl](validation/nrtl.md) | gamma_phi | provisional | 7/7 | L1=0 L2=21 | [report](validation/nrtl.md) |
+| [pr](validation/pr.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr.md) |
+| [pr78](validation/pr78.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr78.md) |
+| [srk](validation/srk.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/srk.md) |
+
+### L4 cross-model pairs on the natural-gas slice feed
+
+- `nrtl-pr`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `nrtl-pr78`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `nrtl-srk`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `pr-pr78`: ok — dew P 717386 vs 717386 (rel 0); rhoV 6.08846 vs 6.08846 (rel 0); band 20%
+- `pr-srk`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- `pr78-srk`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 
 ## Results
 
