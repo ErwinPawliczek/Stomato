@@ -70,11 +70,17 @@ WALL_TOLERANCE = 1.50  # wall time is noisy: generous 50 % headroom
 class CountingThermo:
     """Transparent ``Thermo`` wrapper that counts flash calls and their wall time.
 
-    Delegates every flash to the wrapped plugin and returns its ``StreamState``
-    unchanged, so results are bit-identical to an unwrapped solve. Flash
-    counters stay as P0-06 shipped them; the new Thermo-protocol v2 methods
-    (spec P1-01) delegate without counting — the baseline tracks flashes, and
-    the package's per-instance cache sits below this proxy.
+    Delegates every call to the wrapped plugin and returns its results
+    unchanged, so counts are bit-identical to an unwrapped solve.
+
+    Flash-equivalent counting (spec P1-03): ``flash_pt``/``flash_ph``/
+    ``flash_ps`` plus the v2 calls that each cost one flash internally
+    (``k_values``, ``bubble_point``, ``dew_point``, ``flash_tvf``,
+    ``flash_pvf``) each add 1 to ``flashes``; ``phase_props``,
+    ``derivatives`` and ``pure_psat`` are single-phase builds that skip the
+    flash and are tracked separately as ``props_calls`` (not budgeted).
+    Existing baselines are unchanged by this definition because the cases
+    that predate P1-03 call none of the v2 methods.
     """
 
     def __init__(self, inner: Thermo) -> None:
@@ -82,62 +88,86 @@ class CountingThermo:
         self.flashes_pt: int = 0
         self.flashes_ph: int = 0
         self.flashes_ps: int = 0
+        self.flashes_k_values: int = 0
+        self.flashes_bubble_point: int = 0
+        self.flashes_dew_point: int = 0
+        self.flashes_flash_tvf: int = 0
+        self.flashes_flash_pvf: int = 0
+        self.props_calls: int = 0
         self.flash_wall_s: float = 0.0
+
+    @property
+    def flashes(self) -> int:
+        """Total flash-equivalents: every call that runs a PT/PH/PS flash."""
+        return int(
+            self.flashes_pt
+            + self.flashes_ph
+            + self.flashes_ps
+            + self.flashes_k_values
+            + self.flashes_bubble_point
+            + self.flashes_dew_point
+            + self.flashes_flash_tvf
+            + self.flashes_flash_pvf
+        )
+
+    def _timed_flash(self, fn: Callable[[], Any]) -> Any:
+        start = time.perf_counter()
+        try:
+            return fn()
+        finally:
+            self.flash_wall_s += time.perf_counter() - start
 
     def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         self.flashes_pt += 1
-        start = time.perf_counter()
-        try:
-            return self._inner.flash_pt(z, T, P, molar_flow)
-        finally:
-            self.flash_wall_s += time.perf_counter() - start
+        return self._timed_flash(lambda: self._inner.flash_pt(z, T, P, molar_flow))
 
     def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:
         self.flashes_ph += 1
-        start = time.perf_counter()
-        try:
-            return self._inner.flash_ph(z, P, H, molar_flow)
-        finally:
-            self.flash_wall_s += time.perf_counter() - start
+        return self._timed_flash(lambda: self._inner.flash_ph(z, P, H, molar_flow))
 
     def flash_ps(self, z: dict[str, float], P: float, S: float, molar_flow: float) -> StreamState:
         self.flashes_ps += 1
-        start = time.perf_counter()
-        try:
-            return self._inner.flash_ps(z, P, S, molar_flow)
-        finally:
-            self.flash_wall_s += time.perf_counter() - start
+        return self._timed_flash(lambda: self._inner.flash_ps(z, P, S, molar_flow))
 
-    # -- Thermo contract v2 (spec P1-01): delegate untouched, do not count -------
+    # -- Thermo contract v2 (spec P1-01): flash-equivalent calls are counted;
+    #    single-phase builds are tracked separately and are not budgeted ------
 
     def flash_tvf(self, z: dict[str, float], T: float, vf: float, molar_flow: float) -> StreamState:
-        return self._inner.flash_tvf(z, T, vf, molar_flow)
+        self.flashes_flash_tvf += 1
+        return self._timed_flash(lambda: self._inner.flash_tvf(z, T, vf, molar_flow))
 
     def flash_pvf(self, z: dict[str, float], P: float, vf: float, molar_flow: float) -> StreamState:
-        return self._inner.flash_pvf(z, P, vf, molar_flow)
+        self.flashes_flash_pvf += 1
+        return self._timed_flash(lambda: self._inner.flash_pvf(z, P, vf, molar_flow))
 
     def bubble_point(
         self, z: dict[str, float], *, T: float | None = None, P: float | None = None
     ) -> SaturationPoint:
-        return self._inner.bubble_point(z, T=T, P=P)
+        self.flashes_bubble_point += 1
+        return self._timed_flash(lambda: self._inner.bubble_point(z, T=T, P=P))
 
     def dew_point(
         self, z: dict[str, float], *, T: float | None = None, P: float | None = None
     ) -> SaturationPoint:
-        return self._inner.dew_point(z, T=T, P=P)
+        self.flashes_dew_point += 1
+        return self._timed_flash(lambda: self._inner.dew_point(z, T=T, P=P))
 
     def k_values(self, z: dict[str, float], T: float, P: float) -> dict[str, float] | None:
-        return self._inner.k_values(z, T, P)
+        self.flashes_k_values += 1
+        return self._timed_flash(lambda: self._inner.k_values(z, T, P))
 
     def phase_props(self, composition: dict[str, float], T: float, P: float, kind: PhaseKind) -> PhaseProps:
+        self.props_calls += 1
         return self._inner.phase_props(composition, T, P, kind)
 
     def derivatives(
         self, composition: dict[str, float], T: float, P: float, kind: PhaseKind
     ) -> PropertyDerivatives:
+        self.props_calls += 1
         return self._inner.derivatives(composition, T, P, kind)
 
     def pure_psat(self, cid: str, T: float) -> float | None:
+        self.props_calls += 1
         return self._inner.pure_psat(cid, T)
 
 
@@ -224,15 +254,23 @@ def run_case(name: str, thermo_name: str = "pr") -> dict[str, Any]:
         solver_passes = 0
         converged = True
 
-    return {
+    record: dict[str, Any] = {
+        "flashes": counting.flashes,
         "flashes_pt": counting.flashes_pt,
         "flashes_ph": counting.flashes_ph,
         "flashes_ps": counting.flashes_ps,
+        "flashes_k_values": counting.flashes_k_values,
+        "flashes_bubble_point": counting.flashes_bubble_point,
+        "flashes_dew_point": counting.flashes_dew_point,
+        "flashes_flash_tvf": counting.flashes_flash_tvf,
+        "flashes_flash_pvf": counting.flashes_flash_pvf,
+        "props_calls": counting.props_calls,
         "flash_wall_s": round(counting.flash_wall_s, 6),
         "total_wall_s": round(total_wall_s, 6),
         "solver_passes": solver_passes,
         "converged": converged,
     }
+    return record
 
 
 def run_all() -> dict[str, Any]:
@@ -240,6 +278,7 @@ def run_all() -> dict[str, Any]:
     cases = {name: run_case(name) for name in CASES}
     return {
         "cases": cases,
+        "budgets": _preserve_budgets(),
         "metadata": {
             "python": platform.python_version(),
             "platform": platform.platform(),
@@ -248,11 +287,32 @@ def run_all() -> dict[str, Any]:
     }
 
 
+# Pre-change flash-equivalent totals frozen for budget tests (spec P1-03):
+# the column case measured on main before the contract-v2 migration
+# (11,208 flash_pt calls; the v2 counting definition maps 1:1 onto it).
+PRE_CHANGE_FLASHES: dict[str, int] = {"column": 11208}
+
+
+def _preserve_budgets() -> dict[str, Any]:
+    """Carry the frozen pre-change totals forward across baseline rewrites."""
+    existing: dict[str, Any] = {}
+    if BASELINE_PATH.exists():
+        try:
+            existing = json.loads(BASELINE_PATH.read_text()).get("budgets", {})
+        except (OSError, json.JSONDecodeError):
+            existing = {}
+    budgets: dict[str, Any] = {
+        name: {"pre_change_flash_equivalents": count} for name, count in PRE_CHANGE_FLASHES.items()
+    }
+    budgets.update(existing)
+    return budgets
+
+
 # --------------------------------------------------------------------------- compare / report
 
 
 def _total_flashes(record: dict[str, Any]) -> int:
-    total = record["flashes_pt"] + record["flashes_ph"] + record["flashes_ps"]
+    total = record["flashes"]
     return cast(int, total)
 
 
@@ -365,9 +425,12 @@ def main() -> int:
         meta = doc["metadata"]
         print(f"baseline written: {BASELINE_PATH} (python {meta['python']}, {meta['platform']})")
         for name, record in doc["cases"].items():
+            v2_equiv = record["flashes"] - record["flashes_pt"] - record["flashes_ph"] - record["flashes_ps"]
             print(
-                f"  {name:<16} flashes pt/ph/ps "
-                f"{record['flashes_pt']}/{record['flashes_ph']}/{record['flashes_ps']}  "
+                f"  {name:<16} flashes {record['flashes']:>6} "
+                f"(pt/ph/ps {record['flashes_pt']}/{record['flashes_ph']}/{record['flashes_ps']}, "
+                f"v2 flash-equivalents {v2_equiv}, "
+                f"props {record['props_calls']})  "
                 f"flash_wall {record['flash_wall_s']:.2f} s  "
                 f"total {record['total_wall_s']:.2f} s  "
                 f"passes {record['solver_passes']}  converged {record['converged']}"
