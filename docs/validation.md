@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-21T13:10:58+00:00 from `data/validation/results.json` (git 43c6954, CoolProp 8.0.0).
+Generated 2026-10-21T14:44:58+00:00 from `data/validation/results.json` (git 011f9a5, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -19,12 +19,16 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 
 ## Results
 
-### package `nrtl` — 14/42 pass (33.3 %)
+### package `nrtl` — 29/62 pass (46.8 %)
 
 | property | n | pass | rate |
 | --- | --- | --- | --- |
-| bubble_P | 13 | 0 | 0.0 % |
+| Cp | 4 | 0 | 0.0 % |
+| bubble_P | 17 | 4 | 23.5 % |
 | bubble_T | 8 | 5 | 62.5 % |
+| dew_P | 4 | 4 | 100.0 % |
+| rho_L | 4 | 4 | 100.0 % |
+| rho_V | 4 | 3 | 75.0 % |
 | vapor_comp | 21 | 9 | 42.9 % |
 
 ### package `pr` — 213/278 pass (76.6 %)
@@ -66,7 +70,7 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | rho_V | 40 | 33 | 82.5 % |
 | vapor_comp | 20 | 16 | 80.0 % |
 
-## Failing comparisons (235)
+## Failing comparisons (240)
 
 | case | package | property | expected | got | err | source |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -135,6 +139,7 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | pure-H2O-520K | pr78 | Cp | 87.149 | 102.925 | 0.181022 | coolprop:Water |
 | pure-C3-340K | srk | Cp | 158.07 | 186.594 | 0.180451 | coolprop:Propane |
 | pure-CO2-288.9K | srk | rho_L | 814.639 | 672.534 | 0.17444 | coolprop:CO2 |
+| pure-MeOH-330K-nrtl | nrtl | Cp | 88.5047 | 73.1651 | 0.173319 | coolprop:Methanol |
 | pure-H2O-420K | pr | rho_L | 919.929 | 762.594 | 0.17103 | coolprop:Water |
 | pure-H2O-420K | pr78 | rho_L | 919.929 | 762.594 | 0.17103 | coolprop:Water |
 | pure-C3-351.3K | srk | rho_L | 379.569 | 314.954 | 0.170233 | coolprop:Propane |
@@ -170,6 +175,7 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | pure-C1-95.3K | pr | rho_L | 445.301 | 502.166 | 0.1277 | coolprop:CH4 |
 | pure-C1-95.3K | pr78 | rho_L | 445.301 | 502.166 | 0.1277 | coolprop:CH4 |
 | pure-CO2-265K | srk | Cp | 103.056 | 115.671 | 0.12241 | coolprop:CO2 |
+| pure-H2O-370K-nrtl | nrtl | Cp | 75.8833 | 66.6483 | 0.1217 | coolprop:Water |
 | pure-H2S-187.8K | pr | Cp | 68.8292 | 60.4703 | 0.121444 | coolprop:H2S |
 | pure-H2S-187.8K | pr78 | Cp | 68.8292 | 60.4703 | 0.121444 | coolprop:H2S |
 | pure-CO2-265K | srk | rho_L | 973.254 | 857.989 | 0.118433 | coolprop:CO2 |
@@ -177,6 +183,7 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | pure-C1-125K | pr78 | rho_L | 402.111 | 449.652 | 0.11823 | coolprop:CH4 |
 | meohh2o-312.91K-16.319kPa | nrtl | bubble_P | 16319 | 18215.9 | 0.116242 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | pure-H2S-345K | srk | rho_L | 628.082 | 556.936 | 0.113275 | coolprop:H2S |
+| pure-MeOH-305K-nrtl | nrtl | Cp | 82.6135 | 73.3846 | 0.111712 | coolprop:Methanol |
 | slice-inlet-K-500psia-300K | pr | K | 1.17 | 1.04263 | 0.108863 | literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20 |
 | slice-inlet-K-500psia-300K | pr78 | K | 1.17 | 1.04263 | 0.108863 | literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20 |
 | ng-dew-morch-260.8K-1.04MPa | srk | dew_P | 1.04e+06 | 1.15189e+06 | 0.107589 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
@@ -217,6 +224,7 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | pure-H2O-323.5K | pr78 | Cp | 75.3335 | 81.2495 | 0.0785313 | coolprop:Water |
 | pure-C3-184.9K | pr | Cp | 91.8478 | 84.9224 | 0.0754009 | coolprop:Propane |
 | pure-C3-184.9K | pr78 | Cp | 91.8478 | 84.9224 | 0.0754009 | coolprop:Propane |
+| pure-H2O-340K-nrtl | nrtl | Cp | 75.4562 | 70.2529 | 0.0689572 | coolprop:Water |
 | pure-C1-125K | srk | Cp | 57.7411 | 61.7209 | 0.0689238 | coolprop:CH4 |
 | pure-H2O-614.7K | pr | rho_V | 95.5877 | 89.0623 | 0.0682662 | coolprop:Water |
 | pure-H2O-614.7K | pr78 | rho_V | 95.5877 | 89.0623 | 0.0682662 | coolprop:Water |
@@ -286,6 +294,7 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | c1co2-277.15K-5.97MPa | srk | bubble_P | 5.97e+06 | 5.77391e+06 | 0.0328465 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
 | c1co2-277.15K-7.04MPa | srk | bubble_P | 7.04e+06 | 6.80905e+06 | 0.0328052 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
 | pure-CO2-288.9K | srk | rho_V | 165.146 | 159.741 | 0.0327274 | coolprop:CO2 |
+| pure-MeOH-330K-nrtl | nrtl | rho_V | 0.911218 | 0.882017 | 0.0320466 | coolprop:Methanol |
 | pure-H2O-520K | pr | rho_V | 18.9001 | 18.2989 | 0.0318087 | coolprop:Water |
 | pure-H2O-520K | pr78 | rho_V | 18.9001 | 18.2989 | 0.0318087 | coolprop:Water |
 | c1co2-288.15K-6.62MPa | pr | bubble_P | 6.62e+06 | 6.41389e+06 | 0.031134 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
@@ -365,6 +374,8 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 - `pure-CO2-285K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-CO2-288.9K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-H2O-323.5K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
+- `pure-H2O-340K-nrtl` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
+- `pure-H2O-370K-nrtl` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-H2O-420K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-H2O-520K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-H2O-600K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
@@ -374,6 +385,8 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 - `pure-H2S-300K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-H2S-345K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-H2S-354.4K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
+- `pure-MeOH-305K-nrtl` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
+- `pure-MeOH-330K-nrtl` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-N2-100K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-N2-112K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-N2-119.9K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
