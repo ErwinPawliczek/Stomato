@@ -79,6 +79,9 @@ _NS_MAX_ZERO_ONE_TEAR = 30
 #: singularized the tridiagonal M system; no physical column traffic approaches
 #: 50x the feed (measured: the two-tear bench column never touches the cap).
 _V_TRAFFIC_CAP = 50.0
+#: A converged stage temperature this close (K) to t_band_lo/t_band_hi is a clamped
+#: walk, not an operating point: the mesh rejects the profile (spec P1-10 item 1).
+_BAND_LIMIT_EPS = 1e-6
 _SPEC_MAX = 20
 # Spec tolerance must sit ABOVE the mesh's own acceptance noise floor: the mesh
 # accepts profiles with stage-mass residuals up to _MESH_M_TOL, and that noise

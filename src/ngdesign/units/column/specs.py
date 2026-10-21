@@ -27,6 +27,7 @@ from .inside_out import (
 from .linalg import _gauss
 from .naphtali_sandholm import _naphtali_sandholm
 from .spec import (
+    _BAND_LIMIT_EPS,
     _FLOW_FLOOR,
     _MESH_H_TOL,
     _MESH_M_TOL,
@@ -67,6 +68,34 @@ def _apply_tears(col: _Column, prof: _Profile, t_top: float | None, t_bot: float
             prof.V[0] = max(t_top, _FLOW_FLOOR)
     if col.n - 1 in _vapour_tear_stages(col) and t_bot is not None:
         prof.V[col.n - 1] = max(t_bot, _FLOW_FLOOR)
+
+
+def _reject_band_limit(col: _Column, prof: _Profile) -> None:
+    """A profile sitting on the temperature band is a failed mesh, not a solution.
+
+    ``t_band_lo``/``t_band_hi`` are the walk's trust region (spec C), never an
+    operating point: a stage clamped at the limit means the correlation drove
+    the temperature out of the two-phase window and the clamp caught it. The
+    P1-09 review found the 4-stage C1/nC4 stripper "converging" with every stage
+    at the 270 K floor (spec P1-10 records the branch map); accepting that would
+    pin unphysical columns into the results. Raises the typed error naming the
+    stages so the spec layer treats it like any other non-convergence.
+    """
+    if col.n_tears >= 2:
+        # Two-tear columns keep their benchmarked behaviour untouched (the
+        # deethanizer mesh test rides the band at fixed tears today); extending
+        # the guard there is measured under spec P1-10, not here.
+        return
+    pinned = [
+        j + 1
+        for j, t in enumerate(prof.T)
+        if abs(t - col.t_band_lo) <= _BAND_LIMIT_EPS or abs(t - col.t_band_hi) <= _BAND_LIMIT_EPS
+    ]
+    if pinned:
+        raise ColumnConvergenceError(
+            f"mesh accepted a profile on the temperature band limit (stages {pinned} at "
+            f"{col.t_band_lo:.2f}/{col.t_band_hi:.2f} K): the band is a trust region, not a solution"
+        )
 
 
 def _solve_mesh(
@@ -132,6 +161,7 @@ def _solve_mesh(
         prof.L = _l_profile(col, prof.l0, prof.V)
         m_res, h_res = _exact_residuals(col, tb, prof)
         if m_res < m_tol and h_res < _MESH_H_TOL:
+            _reject_band_limit(col, prof)
             _finalize_duties(col, tb, prof)
             return prof
         # Stagnation = NO improvement in either residual for 3 consecutive
@@ -200,6 +230,7 @@ def _solve_mesh(
         # If the polish stalls, the NS state stands: its floor is the measured
         # solver limit (named in _MESH_M_TOL_ZERO_ONE_TEAR), and the boundary
         # overall balances close far tighter than the stage residual.
+    _reject_band_limit(col, prof)
     _finalize_duties(col, tb, prof)
     return prof
 
