@@ -62,7 +62,16 @@ def register(kind: str, name: str) -> Callable[[T], T]:
 
 
 def discover() -> None:
-    """Import every module under PLUGIN_PACKAGES (idempotent)."""
+    """Import every module under PLUGIN_PACKAGES (idempotent), then the catalogue.
+
+    Spec T-01: thermo property methods are data — after the decorator-based
+    plugins import, ``ngdesign.thermo.catalogue.register_all`` registers one
+    factory per row in ``data/thermo_models/*.yaml``. The import is dynamic on
+    purpose: ``ngdesign.registry`` sits BELOW ``ngdesign.thermo`` in the layer
+    contract (.importlinter), so a static import would be a lint failure and
+    ignore_imports lines are not allowed. The hook is the one registry-side
+    seam the T-01 spec grants.
+    """
     global _discovered
     if _discovered:
         return
@@ -70,6 +79,7 @@ def discover() -> None:
         pkg = importlib.import_module(pkg_name)
         for mod in pkgutil.walk_packages(pkg.__path__, prefix=pkg_name + "."):
             importlib.import_module(mod.name)
+    importlib.import_module("ngdesign.thermo.catalogue").register_all(_REGISTRY["thermo"])
     _discovered = True
 
 

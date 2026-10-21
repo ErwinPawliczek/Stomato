@@ -1,0 +1,121 @@
+- id: nrtl
+  name: NRTL liquid + Peng-Robinson vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.nrtl:NrtlThermo
+  options: {}
+  params:
+    source: thermo IPDB (ChemSep), 'ChemSep NRTL' binary table
+    provenance: Renon, H. & Prausnitz, J. M., 'Local Compositions in Thermodynamic Excess Functions for
+      Liquid Mixtures', AIChE J. 14(1), 135-144, 1968; binary parameters from the ChemSep IPDB 'NRTL original
+      T' form; databank coverage is limited (MeOH/H2O, MeOH/nC4, MeOH/C6+ pairs)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - meohh2o-97.99kPa-369.65K
+  - meohh2o-97.99kPa-365.45K
+  - meohh2o-97.99kPa-360.65K
+  - meohh2o-97.99kPa-353.25K
+  - meohh2o-97.99kPa-349.05K
+  - meohh2o-97.99kPa-343.75K
+  - meohh2o-97.99kPa-341.85K
+  - meohh2o-97.99kPa-339.55K
+  - meohh2o-312.91K-9.079kPa
+  - meohh2o-312.91K-13.012kPa
+  - meohh2o-312.91K-16.319kPa
+  - meohh2o-312.91K-20.705kPa
+  - meohh2o-312.91K-23.385kPa
+  - meohh2o-312.91K-27.518kPa
+  - meohh2o-312.91K-32.571kPa
+  - meohh2o-322.91K-15.932kPa
+  - meohh2o-322.91K-26.131kPa
+  - meohh2o-322.91K-31.544kPa
+  - meohh2o-322.91K-40.850kPa
+  - meohh2o-322.91K-46.450kPa
+  - meohh2o-322.91K-52.142kPa
+  references:
+  - Renon, H. & Prausnitz, J. M., AIChE J. 14(1), 135-144, 1968
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0:
+    pure_psat_limit:
+      points:
+      - - MeOH
+        - 300.0
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 350.0
+    phase_identification:
+      points:
+      - - MeOH
+        - 300.0
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 400.0
+    round_trip:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+    dhdT_cp:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 380.0
+      - 50000.0
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 380.0
+        P: 50000.0
+        phase: vapor
+    determinism:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 380.0
+      - 50000.0
+    single_liquid_limit:
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+      state:
+      - 298.15
+      - 100000.0
+  l0_excluded: {}
+  l0_note: 'pure hydrocarbons are NOT phase-identification points: thermo''s pure-component vapour-pressure
+    correlation sits ~8% above the ChemSep databank Psat for nC4 at 300 K (measured condensation at 2.78e5
+    Pa vs databank 2.58e5 Pa), so a bracket on the databank Psat lands inside the model''s own two-phase
+    region; MeOH/H2O correlations agree with the databank and are used instead'

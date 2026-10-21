@@ -37,7 +37,6 @@ from thermo.nrtl import NRTL
 
 from ngdesign.data import DATABANK_LOCK
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
-from ngdesign.registry import register
 from ngdesign.thermo import _state
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
 
@@ -140,9 +139,13 @@ def _build_flasher_inner(
         return FlashVL(constants, correlations, gas=gas, liquid=ge_liquid())
 
 
-@register("thermo", "nrtl")
 class NrtlThermo(ThermoSurfaceMixin):
-    """NRTL liquid + Peng-Robinson vapour package over the `thermo` library."""
+    """NRTL liquid + Peng-Robinson vapour package over the `thermo` library.
+
+    Spec T-01: registered through the thermo catalogue
+    (data/thermo_models/gamma_phi.yaml) as a factory — the class stays as the
+    adapter, there is no @register decorator here any more.
+    """
 
     def __init__(self, components: tuple[str, ...] | None = None) -> None:
         """Build the plugin; `components` forces the databank provenance check eagerly.
