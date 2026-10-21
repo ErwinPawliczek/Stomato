@@ -48,6 +48,7 @@ from typing import Any
 from thermo import Chemical
 
 from ngdesign.amine.equilibrium import equilibrium_partial_pressures
+from ngdesign.amine.package import AmineReactivePackage
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import components
@@ -176,12 +177,21 @@ class MdeaRegenerator:
                 "the reboiler temperature"
             )
 
+        # A reactive amine property package carries its own chemistry: use it
+        # for speciation and every outlet state (spec P1-04).  A plain cubic
+        # keeps today's facade-based behaviour byte-identical.
+        amine_pkg = thermo if isinstance(thermo, AmineReactivePackage) else None
+
         # Lean ceiling: the equilibrium pressures the lean solvent exerts at the
         # reboiler temperature must fit under the regenerator pressure alongside
         # the water vapor pressure (Raoult over the water-rich solvent).
-        p_co2_eq, p_h2s_eq = equilibrium_partial_pressures(
-            params, T_reb, c_amine, lean_co2_target, lean_h2s_target, amine=amine
-        )
+        if amine_pkg is not None:
+            lean_eq = amine_pkg.equilibrium_pressures(z_rich, T_reb, lean_co2_target, lean_h2s_target)
+            p_co2_eq, p_h2s_eq = lean_eq["CO2"], lean_eq["H2S"]
+        else:
+            p_co2_eq, p_h2s_eq = equilibrium_partial_pressures(
+                params, T_reb, c_amine, lean_co2_target, lean_h2s_target, amine=amine
+            )
         p_h2o = z_rich.get("H2O", 0.0) * p_sat_water
         p_acid_eq = p_co2_eq + p_h2s_eq
         if p_acid_eq + p_h2o > P_reg:
@@ -246,6 +256,12 @@ class MdeaRegenerator:
             )
             / _mixture_mw({"CO2": stripped_co2 / stripped_total, "H2S": stripped_h2s / stripped_total}),
         }
+        if amine_pkg is not None:
+            # Heat of absorption the stripped acid gas releases on reabsorption;
+            # stripping must supply it, and the reactive package's outlet
+            # enthalpies already carry it.
+            d_h_abs = amine_pkg.heat_of_absorption(z_rich, T_reb)
+            info["heat_of_absorption_W"] = stripped_co2 * d_h_abs["CO2"] + stripped_h2s * d_h_abs["H2S"]
 
         return UnitResult(
             outlets={"lean_amine_out": lean_amine_out, "acid_gas_out": acid_gas_out},
@@ -298,6 +314,3 @@ class DeaRegenerator(MdeaRegenerator):
 
     AMINE = "DEA"
     SOLVENT_MASS_FRACTION = 0.30
-
-
-CTION = 0.30
