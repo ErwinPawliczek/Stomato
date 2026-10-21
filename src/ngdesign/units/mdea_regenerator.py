@@ -43,7 +43,7 @@ reboiler temperature (thermo library water databank, ``Chemical('water')``).
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from thermo import Chemical
 
@@ -180,7 +180,11 @@ class MdeaRegenerator:
         # A reactive amine property package carries its own chemistry: use it
         # for speciation and every outlet state (spec P1-04).  A plain cubic
         # keeps today's facade-based behaviour byte-identical.
-        amine_pkg = thermo if isinstance(thermo, AmineReactivePackage) else None
+        amine_pkg = (
+            cast(AmineReactivePackage, thermo)
+            if getattr(thermo, "is_amine_reactive_package", False)
+            else None
+        )
 
         # Lean ceiling: the equilibrium pressures the lean solvent exerts at the
         # reboiler temperature must fit under the regenerator pressure alongside

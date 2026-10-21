@@ -32,6 +32,7 @@ KINDS = (
 )
 PLUGIN_PACKAGES = (
     "ngdesign.thermo",
+    "ngdesign.amine",  # reactive amine property packages (P1-04)
     "ngdesign.units",
     "ngdesign.sizing",
     "ngdesign.solver",

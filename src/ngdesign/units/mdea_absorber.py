@@ -40,7 +40,7 @@ nonlinear; the Kremser shortcut is the TEG-contact precedent, not this unit's).
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from ngdesign.amine.equilibrium import (
     equilibrium_loadings,
@@ -245,7 +245,11 @@ class MdeaAbsorber:
         # A reactive amine property package carries its own chemistry: use it
         # for speciation and every outlet state (spec P1-04).  A plain cubic
         # keeps today's facade-based behaviour byte-identical.
-        amine_pkg = thermo if isinstance(thermo, AmineReactivePackage) else None
+        amine_pkg = (
+            cast(AmineReactivePackage, thermo)
+            if getattr(thermo, "is_amine_reactive_package", False)
+            else None
+        )
         model_name = "the selected equilibrium model" if amine_pkg is not None else "Kent-Eisenberg"
 
         # Top (lean) floor: lowest outlet content the lean amine can impose.
