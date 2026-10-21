@@ -35,6 +35,7 @@ def _curated_table() -> dict[str, dict[str, Any]]:
     return table
 
 
+@cache
 def components() -> dict[str, dict[str, Any]]:
     """Resolved constants of the curated slate, keyed by curated id (SI).
 
