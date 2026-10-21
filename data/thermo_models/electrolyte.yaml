@@ -24,8 +24,10 @@
     phases:
     - V
     - L
-  status: provisional
-  validation: []
+  status: validated
+  validation: [pure-H2O-323.5K-amine-ke, pure-H2O-420K-amine-ke, pure-H2O-520K-amine-ke,
+    pure-H2O-600K-amine-ke, amine-ke-co2-loading-0.10-313K, amine-ke-co2-loading-0.40-313K,
+    amine-ke-h2s-loading-0.01-313K, amine-ke-h2s-loading-0.165-313K, amine-ke-h2s-loading-0.453-313K]
   references:
   - Kent, R. L. & Eisenberg, B., Hydrocarbon Process. 55(2), 87-90, 1976
   - Jou, F.-Y. et al., 'Equilibrium Partial Pressures of CO2 and H2S in Aqueous MDEA Solutions', Can.
@@ -72,7 +74,8 @@
     - V
     - L
   status: provisional
-  validation: []
+  validation: [pure-H2O-323.5K-amine-enrtl, pure-H2O-420K-amine-enrtl, pure-H2O-520K-amine-enrtl,
+    pure-H2O-600K-amine-enrtl]
   references:
   - Kent, R. L. & Eisenberg, B., Hydrocarbon Process. 55(2), 87-90, 1976
   - Jou, F.-Y. et al., 'Equilibrium Partial Pressures of CO2 and H2S in Aqueous MDEA Solutions', Can.

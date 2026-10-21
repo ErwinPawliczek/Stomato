@@ -19,6 +19,8 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+from pydantic import BaseModel, ConfigDict
+
 
 class AlphaFunction(StrEnum):
     """Alpha-function group of the cubic adapter (T-02 adds the implementations)."""
@@ -40,3 +42,44 @@ class EnthalpyMethod(StrEnum):
 
     EOS = "eos"
     LEE_KESLER = "lee_kesler"
+
+
+class GammaPhiLiquid(StrEnum):
+    """Liquid-phase model group of the gamma-phi adapter (spec T-03)."""
+
+    NRTL = "nrtl"
+    UNIQUAC = "uniquac"
+    WILSON = "wilson"
+    VANLAAR = "vanlaar"
+    MARGULES = "margules"
+    REGULAR_SOLUTION = "regular_solution"
+    UNIFAC = "unifac"
+    UNIFAC_DORTMUND = "unifac_dortmund"
+    UNIFAC_PSRK = "unifac_psrk"
+    UNIFAC_NIST = "unifac_nist"
+    UNIFAC_LLE = "unifac_lle"
+    UNIFAC_LYNGBY = "unifac_lyngby"
+
+
+class GammaPhiVapour(StrEnum):
+    """Vapour-phase model group of the gamma-phi adapter (spec T-03)."""
+
+    IDEAL = "ideal"
+    HOC = "hoc"
+    NOTHNAGEL = "nothnagel"
+    RK = "rk"
+    PR = "pr"
+
+
+class GammaPhiOptions(BaseModel):
+    """Typed options for family ``gamma_phi`` (values declared in thermo.options).
+
+    Parameters provenance stays in each row's ``params`` field and in
+    ``data/thermo_params/<model>/``; the options only pin which liquid and
+    vapour models the row's flasher wires together.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    liquid: GammaPhiLiquid
+    vapour: GammaPhiVapour

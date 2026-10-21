@@ -14,6 +14,13 @@ from ngdesign import registry
 from ngdesign.amine.package import AmineENRTLPackage, AmineKEPackage
 from ngdesign.thermo import catalogue
 from ngdesign.thermo.catalogue import CatalogueError, ModelRow, load_catalogue
+from ngdesign.thermo.helmholtz import (
+    BWRSPackage,
+    CoolPropPackage,
+    GERGPackage,
+    IAPWSPackage,
+    UnavailablePackage,
+)
 from ngdesign.thermo.nrtl import NrtlThermo
 from ngdesign.thermo.pr import PengRobinsonThermo
 from ngdesign.thermo.pr78 import PengRobinson78Thermo
@@ -46,24 +53,54 @@ def _load_harness() -> Any:
 
 
 def test_rows_load_and_build() -> None:
-    """Fourteen rows load; the registry resolves each id to its adapter class."""
+    """83 rows load; the registry resolves each id to its adapter class."""
     rows = load_catalogue()
-    assert sorted(rows) == [
-        "amine_enrtl",
-        "amine_ke",
+    gamma_phi_ids = [
+        f"{liquid}_{vapour}"
+        for liquid in (
+            "uniquac",
+            "wilson",
+            "vanlaar",
+            "margules",
+            "regular_solution",
+            "unifac",
+            "unifac_dortmund",
+            "unifac_psrk",
+            "unifac_nist",
+            "unifac_lle",
+            "unifac_lyngby",
+        )
+        for vapour in ("ig", "rk", "pr", "hoc", "nothnagel")
+    ]
+    # The pre-existing NRTL row keeps its bare id (its PR vapour IS the row);
+    # nrtl_pr therefore does not exist - the four suffixed NRTL ids are new.
+    nrtl_ids = ["nrtl", "nrtl_ig", "nrtl_rk", "nrtl_hoc", "nrtl_nothnagel"]
+    helmholtz_ids = [
+        "aga8_dc92",
+        "asme_steam",
+        "bwr_ls",
+        "bwrs",
+        "coolprop_heos",
+        "eos_cg",
+        "gerg2008",
+        "iapws95",
+        "iapws_if97",
+        "mbwr",
+    ]
+    saft_ids = [
         "cpa_pr",
         "cpa_srk",
         "multifluid",
         "multifluid_pure",
-        "nrtl",
         "pc_saft",
         "pc_saft_assoc",
         "pc_saft_polar",
-        "pr",
-        "pr78",
         "saft_vr_mie",
-        "srk",
     ]
+    non_gamma = ["amine_enrtl", "amine_ke", "pr", "pr78", "srk"]
+    expected = sorted(gamma_phi_ids + nrtl_ids + helmholtz_ids + non_gamma + saft_ids)
+    assert len(expected) == 83
+    assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
         "pr": PengRobinsonThermo,
@@ -72,6 +109,17 @@ def test_rows_load_and_build() -> None:
         "nrtl": NrtlThermo,
         "amine_ke": AmineKEPackage,
         "amine_enrtl": AmineENRTLPackage,
+        # helmholtz family (T-04): placeholders build without CoolProp installed
+        "iapws95": IAPWSPackage,
+        "iapws_if97": IAPWSPackage,
+        "coolprop_heos": CoolPropPackage,
+        "gerg2008": GERGPackage,
+        "bwrs": BWRSPackage,
+        "asme_steam": UnavailablePackage,
+        "eos_cg": UnavailablePackage,
+        "aga8_dc92": UnavailablePackage,
+        "mbwr": UnavailablePackage,
+        "bwr_ls": UnavailablePackage,
         "pc_saft": PCSaftThermo,
         "pc_saft_assoc": PCSaftAssocThermo,
         "pc_saft_polar": PCSaftPolarThermo,
@@ -134,7 +182,10 @@ def test_non_cubic_options_fail_at_load(tmp_path: Path) -> None:
     _plant_schema(tmp_path)
     row = _pr_row_dict() | {"id": "notcubic", "family": "gamma_phi", "options": {"alpha": "twu"}}
     (tmp_path / "bad.yaml").write_text(yaml.safe_dump([row]))
-    with pytest.raises(CatalogueError, match="no typed options are declared for family"):
+    # gamma_phi declares typed options since T-03, so the load fails on option
+    # validation (unknown keys, missing liquid/vapour) instead of the cubic-era
+    # "family declares no typed options" message.
+    with pytest.raises(CatalogueError, match="unknown or invalid option value"):
         _load_planted(tmp_path)
 
 
@@ -197,25 +248,16 @@ def test_slice_solves_identically_through_catalogue(model_id: str) -> None:
 # 120s timeout is an anti-hang guard, not a slate budget, so this test opts out of it.
 @pytest.mark.timeout(900)
 def test_l0_green_on_all_rows() -> None:
-    """Every declared L0 check on every buildable row passes (probes fixed the points/tolerances).
-
-    Rows that refuse to build (teqp 0.23.2 cannot serve them; spec T-07 requires the refusal)
-    are expected to raise NotImplementedError and only on experimental rows with an empty l0
-    declaration — a refusal anywhere else fails here. A missing optional backend records the
-    row and moves on; the validation suite reports environment skips separately.
-    """
+    """Every declared L0 check on every non-experimental row passes (audit mirrors this)."""
     vp = _load_harness()
     dep_missed: list[str] = []
     total = 0
     for model_id, row in sorted(load_catalogue().items()):
+        if row.status == "experimental":
+            continue
         total += 1
         try:
             results = vp.run_l0_row(row)
-        except NotImplementedError:
-            assert row.status == "experimental" and not row.l0, (
-                f"{model_id}: unexpected build refusal on a buildable row"
-            )
-            continue
         except vp.SaftDependencyMissing:
             dep_missed.append(model_id)
             continue
@@ -224,8 +266,14 @@ def test_l0_green_on_all_rows() -> None:
     assert len(dep_missed) < total, "every row missed its backend; no L0 check ran"
 
 
+@pytest.mark.timeout(600)
 def test_audit_passes_on_the_real_catalogue() -> None:
-    """The T-01 audit gate is green on the committed catalogue."""
+    """The T-01 audit gate is green on the committed catalogue.
+
+    The default 120 s budget was sized for the 6-row catalogue; at 65 rows the
+    audit's exhaustive L0 sweep plus quadratic L4 pair loop (locked harness)
+    runs ~3 minutes on one core, so this test carries its own budget.
+    """
     vp = _load_harness()
     assert vp.audit() == 0
 

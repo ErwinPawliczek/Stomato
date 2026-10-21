@@ -1,6 +1,6 @@
 # amine_ke — MDEA Kent-Eisenberg (fixed loading)
 
-family `electrolyte` · status **provisional** · adapter `ngdesign.amine.package:AmineKEPackage`.
+family `electrolyte` · status **validated** · adapter `ngdesign.amine.package:AmineKEPackage`.
 
 ## Applicability (Carlson 1996)
 
@@ -33,7 +33,20 @@ Declared exclusions (not silent skips):
 
 ## L1/L2 reference-case outcomes
 
-None yet — validation case ids arrive with the data tasks (T-11..T-13).
+13/13 comparisons pass. Failing comparisons are assessed in the
+main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
+
+Declared case ids:
+
+- `pure-H2O-323.5K-amine-ke` — coolprop:H2O
+- `pure-H2O-420K-amine-ke` — coolprop:H2O
+- `pure-H2O-520K-amine-ke` — coolprop:H2O
+- `pure-H2O-600K-amine-ke` — coolprop:H2O
+- `amine-ke-co2-loading-0.10-313K` — p_CO2 at fixed loading, 4.3638 kmol/m3 (50 wt%) aqueous MDEA at 313.15 K: 0.0093 bara at loading 0.10 and 0.229 bara at loading 0.40 — NeqSim MDEA-model regression anchors (apparent constants fitted to Jou, Mather & Otto, I&EC Process Des. Dev., vol. 21, p. 539, 1982), as curated in tests/units/test_mdea_equilibrium.py; retrieved 2026-10-21
+- `amine-ke-co2-loading-0.40-313K` — p_CO2 at fixed loading, 4.3638 kmol/m3 (50 wt%) aqueous MDEA at 313.15 K: 0.0093 bara at loading 0.10 and 0.229 bara at loading 0.40 — NeqSim MDEA-model regression anchors (apparent constants fitted to Jou, Mather & Otto, I&EC Process Des. Dev., vol. 21, p. 539, 1982), as curated in tests/units/test_mdea_equilibrium.py; retrieved 2026-10-21
+- `amine-ke-h2s-loading-0.01-313K` — Jou, Mather & Otto 1982 H2S isotherm, 4.28 kmol/m3 aqueous MDEA at 313.15 K (I&EC Process Des. Dev., vol. 21, p. 539, 1982): p_H2S 0.0108 kPa at loading 0.01, 3.31 kPa at 0.165, 36.9 kPa at 0.453, as curated in tests/units/test_mdea_equilibrium.py; retrieved 2026-10-21
+- `amine-ke-h2s-loading-0.165-313K` — Jou, Mather & Otto 1982 H2S isotherm, 4.28 kmol/m3 aqueous MDEA at 313.15 K (I&EC Process Des. Dev., vol. 21, p. 539, 1982): p_H2S 0.0108 kPa at loading 0.01, 3.31 kPa at 0.165, 36.9 kPa at 0.453, as curated in tests/units/test_mdea_equilibrium.py; retrieved 2026-10-21
+- `amine-ke-h2s-loading-0.453-313K` — Jou, Mather & Otto 1982 H2S isotherm, 4.28 kmol/m3 aqueous MDEA at 313.15 K (I&EC Process Des. Dev., vol. 21, p. 539, 1982): p_H2S 0.0108 kPa at loading 0.01, 3.31 kPa at 0.165, 36.9 kPa at 0.453, as curated in tests/units/test_mdea_equilibrium.py; retrieved 2026-10-21
 
 ## References
 

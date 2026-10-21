@@ -702,9 +702,20 @@ def run_l4(rows: dict[str, ModelRow]) -> list[L4Result]:
     finding, not a wrong number. A pair inside the loose 20 % band passes.
     """
     out: list[L4Result] = []
-    ids = sorted(rows)
-    for i, a in enumerate(ids):
-        for b in ids[i + 1 :]:
+    ids = [rid for rid in sorted(rows) if set(rows[rid].applicability.component_classes) & L4_PAIRING_CLASSES]
+    # Each row's slice point is evaluated ONCE. A row that refuses the feed is
+    # recorded once, under its own id, and forms no pairs: with 60+ gamma-phi
+    # rows the per-pair refusal lines would otherwise swamp every report
+    # (measured T-03: ~700 identical lines per cubic row).
+    points: dict[str, tuple[float, float]] = {}
+    for rid in ids:
+        try:
+            points[rid] = _l4_point(catalogue.build(rows[rid]))
+        except Exception as exc:  # noqa: BLE001 - refusal is recorded, not failed
+            out.append(L4Result(rid, True, f"n/a — refuses the slice feed: {type(exc).__name__}: {exc}"))
+    covered = [rid for rid in ids if rid in points]
+    for i, a in enumerate(covered):
+        for b in covered[i + 1 :]:
             shared = (
                 set(rows[a].applicability.component_classes)
                 & set(rows[b].applicability.component_classes)
@@ -712,23 +723,18 @@ def run_l4(rows: dict[str, ModelRow]) -> list[L4Result]:
             )
             if not shared:
                 continue
-            pair = f"{a}-{b}"
-            try:
-                pa, rho_a = _l4_point(catalogue.build(rows[a]))
-                pb, rho_b = _l4_point(catalogue.build(rows[b]))
-                rel_p = abs(pa - pb) / pb
-                rel_rho = abs(rho_a - rho_b) / rho_b
-                passed = max(rel_p, rel_rho) <= L4_BAND
-                out.append(
-                    L4Result(
-                        pair,
-                        passed,
-                        f"dew P {pa:.6g} vs {pb:.6g} (rel {rel_p:.3g}); rhoV {rho_a:.6g} vs "
-                        f"{rho_b:.6g} (rel {rel_rho:.3g}); band {L4_BAND:.0%}",
-                    )
+            (pa, rho_a), (pb, rho_b) = points[a], points[b]
+            rel_p = abs(pa - pb) / pb
+            rel_rho = abs(rho_a - rho_b) / rho_b
+            passed = max(rel_p, rel_rho) <= L4_BAND
+            out.append(
+                L4Result(
+                    f"{a}-{b}",
+                    passed,
+                    f"dew P {pa:.6g} vs {pb:.6g} (rel {rel_p:.3g}); rhoV {rho_a:.6g} vs "
+                    f"{rho_b:.6g} (rel {rel_rho:.3g}); band {L4_BAND:.0%}",
                 )
-            except Exception as exc:  # noqa: BLE001 - refusal is recorded, not failed
-                out.append(L4Result(pair, True, f"n/a — refuses the slice feed: {type(exc).__name__}: {exc}"))
+            )
     return out
 
 
@@ -899,11 +905,17 @@ def _write_model_doc(
         lines += ["", "Declared exclusions (not silent skips):", ""]
         for name, reason in excluded:
             lines.append(f"- `{name}` — {reason}")
-    model_l4 = [pair for pair in l4 if row.id in pair.pair]
+    # Row ids are snake_case, so the pair key splits on its single hyphen; a
+    # bare id is the row's own refusal line.
+    model_l4 = [pair for pair in l4 if row.id in pair.pair.split("-")]
     if model_l4:
         lines += ["", "### L4 cross-model pairs", ""]
         for pair in model_l4:
-            other = pair.pair.replace(f"{row.id}-", "").replace(f"-{row.id}", "")
+            members = pair.pair.split("-")
+            if len(members) == 1:
+                lines.append(f"- {pair.detail}")
+                continue
+            other = members[1] if members[0] == row.id else members[0]
             lines.append(f"- vs `{other}`: {'ok' if pair.passed else 'FAIL'} — {pair.detail}")
     model_rows = _model_case_rows(row, rows)
     lines += ["", "## L1/L2 reference-case outcomes", ""]

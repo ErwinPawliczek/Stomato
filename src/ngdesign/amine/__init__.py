@@ -11,12 +11,14 @@ contract forbids thermo-side shims importing back up into this package).
 """
 
 from ngdesign.amine.package import (
+    AmineChemistryError,
     AmineENRTLPackage,
     AmineKEPackage,
     AmineReactivePackage,
 )
 
 __all__ = [
+    "AmineChemistryError",
     "AmineENRTLPackage",
     "AmineKEPackage",
     "AmineReactivePackage",

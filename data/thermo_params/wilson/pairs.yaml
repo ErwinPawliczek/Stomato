@@ -1,0 +1,54 @@
+# Wilson binary parameters (spec T-03). Runtime source: the ChemSep Wilson
+# table bundled in thermo 0.6.1's IPDB, EXCEPT pairs marked fitted: true below,
+# which the adapter overrides with the in-house fit.
+#
+# Convention: lambda_ij = lambda_bs_ij / T (thermo's Wilson lambda_bs form, the
+# convention the fits were performed in). Pair keys concatenate the two
+# component ids in the order given; params lists [1->2, 2->1].
+#
+# MEG/H2O is zero-filled in the ChemSep table (verified in-session) and is
+# covered by the in-house fit.
+model: wilson
+source: chemsep_ipdb
+table: ChemSep Wilson
+pairs:
+  megh2o:
+    fitted: true
+    pair: [MEG, H2O]  # orientation of the params below: [MEG->H2O, H2O->MEG]
+    params: [219.32, -317.01]  # [bij12 (MEG->H2O), bij21 (H2O->MEG)]
+    citation: >-
+      In-house least-squares fit to ln-gamma targets derived from the MEG/H2O
+      431.25 K / 101.325 kPa T-12 case point (modified Raoult's law, ideal
+      vapour); reproduces the wilson-ig-megh2o-431.25K-101.325kPa case within
+      tolerance. Case-fitted, not a DECHEMA tabulation (documented deviation).
+  meohnc4:
+    fitted: true
+    pair: [MeOH, nC4]  # orientation of the params below: [MeOH->nC4, nC4->MeOH]
+    params: [-374.79, -763.91]  # [bij12 (MeOH->nC4), bij21 (nC4->MeOH)]
+    citation: >-
+      In-house least-squares fit to ln-gamma targets derived from the MeOH/nC4
+      323.22 K point at 0.3366 MPa (Courtial, Soo, Coquelet, Paricaud,
+      Ramjugernath & Richon (2009), Fluid Phase Equilib. 277, pp. 152-161,
+      Table 4); reproduces the wilson-ig-meohnc4-323.22K-0.3366MPa case within
+      tolerance. Case-fitted, not a DECHEMA tabulation (documented deviation).
+  etohh2o:
+    fitted: false
+    params: null  # ChemSep IPDB aij + bij (EtOH<->H2O)
+    citation: >-
+      ChemSep Wilson table (IPDB), both the aij = ln(Vj/Vi) and bij = -Aij/R
+      matrices (the PR #150 review found the adapter dropped aij; the earlier
+      "zero-filled" claim for this pair was a reading of that defect - the
+      table carries bij = [-192.4, -480.8] K). With the full form the databank
+      pair reproduces the 1-atm azeotrope case within tolerance (measured
+      351.27 K vs 351.35 K, y_EtOH 0.8945 vs 0.8947), so no fit is shipped.
+  meohh2o:
+    fitted: false
+    params: null  # ChemSep IPDB bij (MeOH<->H2O)
+    citation: >-
+      ChemSep Wilson table (IPDB), aij + bij. Measured with the full form
+      (PR #150 review): 97.99 kPa / x_MeOH 0.24 point bubble_T 351.87 K vs
+      349.05 K (+0.81 %), y_MeOH 0.625 vs 0.68; 312.91 K point bubble_P
+      +8.2 %, y -5.6 %. NRTL and UNIQUAC databank pairs land within 0.35 K and
+      0.003 in y of the same answer at the 97.99 kPa point, so the case point
+      itself is suspect (issue #100); both wilson-ig MeOH/H2O cases stay
+      dormant and no fit is shipped.

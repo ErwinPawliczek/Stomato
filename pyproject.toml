@@ -29,6 +29,12 @@ postgres = [
 saft = [
     "teqp>=0.22",
 ]
+# Helmholtz-family evaluation extra (spec T-04). CoolProp currently ships as a
+# core dependency as well; this extra declares the optional-evaluation contract
+# for the family (rows load and refuse with CoolPropUnavailable without it).
+coolprop = [
+    "CoolProp>=6.6",
+]
 
 [dependency-groups]
 dev = [

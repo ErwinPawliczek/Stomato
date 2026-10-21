@@ -1,0 +1,31 @@
+# Family H (special) validation data — spec T-14 (#145).
+#
+# Status: intentionally empty. Every special-family case is blocked twice over,
+# and both blockers are outside this task's allowed files:
+#
+# 1. No rows to claim the cases. The special-family rows (solids with a
+#    solubility product, polymer NRTL/PC-SAFT/SRK, carboxylic-acid HOC
+#    dimerization, HF) are not registered in the thermo catalogue yet
+#    (docs/thermo-catalogue-plan.md family H, issue #140; the row sweep is the
+#    T-10 follow-up), so any case written today would have to name
+#    pending:<id> and would validate nothing when it runs.
+# 2. No components in the locked curated slate. Solids (naphthalene and the
+#    like), polymer monomers, acetic/formic acid and HF are all absent from
+#    data/components.yaml (spec P1-02 locked the slate to 18 molecular
+#    components), so no case can even name its species today.
+#
+# The aspirational numeric sources are also not retrievable as open tables:
+# the Prausnitz, Lichtenthaler & de Azevedo solid-solubility worked examples,
+# the Danner & High DIPPR polymer-solution data book, and the GPSA/Perry HOC
+# dimerization examples are print or paywalled (no open numeric source was
+# retrievable this session, 2026-10-21 — the same basis on which the T-12
+# sweep omitted the ethanol-water azeotrope). Cases for this family are
+# authored when the row sweep registers the family H rows AND the component
+# slate curates the species; the wave-3 validation sweep is the natural home.
+
+meta:
+  coolprop_version: 8.0.0
+
+pure_cases: []
+binary_cases: []
+multicomponent_cases: []

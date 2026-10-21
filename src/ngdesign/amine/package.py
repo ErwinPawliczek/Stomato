@@ -119,12 +119,60 @@ _CACHE_SIZE = _state.PROPERTY_CACHE_SIZE
 #: of zero, which would divide by zero in the Rachford-Rice terms.
 _ALL_VAPOR_K = 1e12
 
-#: Loading-residual at which the best-seen iterate is accepted when the fixed
-#: point stalls (extreme scan pressures where the liquid is a trace phase).
-_LOADING_ACCEPT_RESIDUAL = 1e-4
+#: Wegstein-walk iterations after the bracketed loading solve: the solved
+#: loading sits in the walk's convergence basin, and the polish re-enters the
+#: walk's own return path so the state is produced by exactly the code the
+#: fast path uses (measured P1-11: the polish closes 1e-4 -> 1e-12).
+_LOADING_POLISH_ITER = 8
 
-#: Damping factor applied while the loading fixed point oscillates.
-_LOADING_OSC_DAMP = 0.05
+#: Loading residual at which the bracketed state is returned directly when the
+#: polish walk cannot close (the substitution map's fixed point is repelling in
+#: the trace-liquid regions; measured P1-11: a bounded ~1e-5 loading limit
+#: cycle at T 295 K).  1e-11 keeps the flash identity y_CO2 * P == p_CO2 well
+#: inside the spec's 1e-10 smoothness target (d p_eq / d loading ~ 15/K).
+_BRACKET_RESIDUAL = 1e-11
+
+#: Outer basis-substitution passes of the bracketed loading solve (the inner
+#: frozen-basis brackets are exact; only the basis iterates).  Measured P1-11
+#: at the failing states: the outer map contracts ~3x per pass from the
+#: solvent-basis seed (1.16 -> 5e-6 in 12 passes, floor ~1e-13 in ~25);
+#: 60 leaves headroom and exits early once the residual gate is met.
+_BRACKET_OUTER_MAX = 60
+
+#: Amine mole fraction below which the feed is treated as amine-free and the
+#: caller delegates to the carrier. The loading (acid gas / amine) is undefined
+#: there and the speciation fixed point cannot converge on it; a trace amine
+#: contributes nothing physical to the phase split (measured P1-09: a column's
+#: purified top vapour carried MDEA ~1e-9 and burned the 50-iteration cap on
+#: it). Six orders of magnitude below any real solvent charge.
+_TRACE_AMINE_FRAC = 1e-6
+
+
+def _wegstein_w(a_used: list[float], a_raws: list[float]) -> float:
+    """Under-relaxation weight for one loading from the measured map slope.
+
+    The classical Wegstein weight 1/(1 - s) on the secant slope of the last two
+    substitution iterates: an oscillating map (s < 0) gets the near-optimal mid
+    weight, a crawling map (0 < s < 1) accelerates toward full substitution,
+    and a diverging map (s -> 1) is floored. Before two iterates exist the
+    plain 0.5 half-step applies.
+    """
+    if len(a_used) < 2 or a_used[-1] == a_used[-2]:
+        return 0.5
+    slope = (a_raws[-1] - a_raws[-2]) / (a_used[-1] - a_used[-2])
+    slope = min(max(slope, -50.0), 0.95)
+    return min(max(1.0 / (1.0 - slope), 0.05), 1.0)
+
+
+class AmineChemistryError(ValueError):
+    """The amine speciation left its fitted chemistry window.
+
+    Typed subclass of ValueError (the contract's flash-failure type) so callers
+    can distinguish a chemistry-window excursion from other flash failures; the
+    message names T and the speciation bracket that failed.  Also raised when
+    the loading fixed point cannot be solved at all -- a non-converged iterate
+    is never returned.
+    """
 
 
 @cache
@@ -261,13 +309,35 @@ class AmineReactivePackage(Thermo):
             )
         return present[0]
 
+    def _reactive_domain(self, z: dict[str, float]) -> str | None:
+        """The amine id when z carries enough solvent for the reactive chemistry.
+
+        None means the caller must delegate to the carrier: either no supported
+        amine at all, or only a trace (below _TRACE_AMINE_FRAC) where the
+        loadings are undefined and the speciation fixed point cannot converge.
+        """
+        amine_id = self._amine_id(self._support(z))
+        if amine_id is None or z.get(amine_id, 0.0) < _TRACE_AMINE_FRAC:
+            return None
+        return amine_id
+
     def _pressures(
         self, T: float, c_a: float, a_co2: float, a_h2s: float, amine_id: str
     ) -> tuple[float, float]:
-        """(p_CO2, p_H2S) in Pa from the pinned speciation model at fixed loadings."""
-        if self._model == ENRTL:
-            return _enrtl_pressures(T, c_a, a_co2, a_h2s, amine=amine_id)
-        return _ke_pressures(T, c_a, a_co2, a_h2s, amine=amine_id)
+        """(p_CO2, p_H2S) in Pa from the pinned speciation model at fixed loadings.
+
+        A root find leaving its bracket means the state left the fitted
+        chemistry window (spec E2): surface it as the typed error naming T and
+        the failed bracket, never as a bare bracketing failure.
+        """
+        try:
+            if self._model == ENRTL:
+                return _enrtl_pressures(T, c_a, a_co2, a_h2s, amine=amine_id)
+            return _ke_pressures(T, c_a, a_co2, a_h2s, amine=amine_id)
+        except ValueError as exc:
+            raise AmineChemistryError(
+                f"amine speciation left its chemistry window at T={T} K (speciation bracket: {exc})"
+            ) from exc
 
     def _amine_molarity(self, x: dict[str, float], amine_id: str) -> float:
         """Amine molarity of the liquid (mol/m3) on the solvent (amine + water) basis.
@@ -366,69 +436,259 @@ class AmineReactivePackage(Thermo):
         Rachford-Rice on the current K-values gives the split; the acid-gas
         K-values depend on the liquid's own loading, so the liquid composition
         is iterated to a fixed point (tolerance 1e-12 on the loadings, cap 50
-        iterations).  At convergence y_CO2 * P == p_CO2(loading) exactly.
+        iterations).  At convergence y_CO2 * P == p_CO2(loading) exactly.  When
+        the substitution walk cycles or stalls, the loadings are solved by a
+        bracketed fixed-point solve nested in a basis substitution, then the
+        walk is polished from there; a non-converged iterate is never returned.
         """
         amine_id = self._amine_id(self._support(z))
         if amine_id is None:  # pragma: no cover - callers gate on amine presence
             raise ValueError("the reactive flash requires an amine in the feed")
-        x = dict(z)
-        a_prev = (0.0, 0.0)
-        best: tuple[float, float, dict[str, float], dict[str, float]] | None = None
-        for _ in range(_LOADING_MAX_ITER):
-            k = self._k_values_internal(z, T, P, x)
-            if sum(f * k[cid] for cid, f in z.items()) <= 1.0:
-                return "liquid", 0.0, dict(x), dict(x)
-            if sum(f / k[cid] for cid, f in z.items()) <= 1.0:
-                return "vapor", 1.0, dict(z), dict(z)
+        # Seed the liquid from the SOLVENT basis: a stage's mixed overall is
+        # gas-dominated (the spec's solvent-lean case) and seeding x at z makes
+        # the first K set a hydrocarbon-as-liquid fantasy whose fixed point the
+        # iteration never escapes (measured P1-09: the loadings two-cycled
+        # 0.63-0.80 from the raw seed; from the solvent basis the same state
+        # splits at a real beta ~0.74).
+        solvent_total = z.get(amine_id, 0.0) + z.get("H2O", 0.0)
+        if solvent_total > 0.0:
+            x = {cid: f / solvent_total for cid, f in z.items() if cid in (amine_id, "H2O", "CO2", "H2S")}
+            sx = sum(x.values())
+            x = {cid: v / sx for cid, v in x.items()}
+        else:  # pragma: no cover - callers gate on amine presence
+            x = dict(z)
+        x_a0 = x.get(amine_id, 0.0)
+        a_use = (
+            min(max(x.get("CO2", 0.0) / x_a0, 0.0), _MAX_LOADING) if x_a0 > 0.0 else 0.0,
+            min(max(x.get("H2S", 0.0) / x_a0, 0.0), _MAX_LOADING) if x_a0 > 0.0 else 0.0,
+        )
+        result = self._loading_walk(z, T, P, x, amine_id, a_use, _LOADING_MAX_ITER)
+        if result is None:
+            # Substitution cycled or stalled (measured P1-11: a period-3
+            # loading cycle at a solvent-lean stage overall, T 292 K): solve
+            # the loadings by bracketing -- the map is continuous with a sign
+            # change on [0, _MAX_LOADING] -- then polish the walk from the
+            # solved state.  A non-converged "best" iterate is never returned:
+            # it was a hidden ~1e-4 loading discontinuity in the FD Jacobian.
+            a_use, x = self._bracketed_loadings(z, T, P, x, amine_id, a_use)
+            result = self._loading_walk(z, T, P, x, amine_id, a_use, _LOADING_POLISH_ITER)
+            if result is None and self._loading_residual(z, T, P, x, amine_id, a_use) <= _BRACKET_RESIDUAL:
+                # The substitution map's fixed point is repelling here (measured
+                # P1-11: a bounded ~1e-5 loading limit cycle at T 295 K); the
+                # bracketed state itself satisfies the flash identity y_i * P ==
+                # p_eq_i(loading) to _BRACKET_RESIDUAL.
+                result = self._rr_split(z, T, P, x)
+        if result is not None:
+            return result
+        z_str = ", ".join(f"{cid}: {v:.6g}" for cid, v in sorted(z.items()))
+        raise AmineChemistryError(
+            f"the amine loading fixed point did not converge at T={T} K, P={P} Pa, z={{{z_str}}} "
+            f"({_LOADING_MAX_ITER} walk iterations + bracketed solve)"
+        )
 
-            def rr(beta: float, k: dict[str, float] = k) -> float:
-                return sum(f * (k[cid] - 1.0) / (1.0 + beta * (k[cid] - 1.0)) for cid, f in z.items())
+    def _rr_split(
+        self, z: dict[str, float], T: float, P: float, x: dict[str, float]
+    ) -> tuple[Literal["liquid", "vapor", "two_phase"], float, dict[str, float], dict[str, float]]:
+        """One loading-map evaluation: K-values at x, phase edge checks, RR split.
 
-            beta = brent_root(rr, 0.0, 1.0)
-            y_raw: dict[str, float] = {}
-            x_new: dict[str, float] = {}
-            for cid, f in z.items():
-                denom = 1.0 + beta * (k[cid] - 1.0)
-                y_raw[cid] = max(f * k[cid] / denom, 0.0)
-                x_new[cid] = max(y_raw[cid] / k[cid], 0.0)
-            sy, sx = sum(y_raw.values()), sum(x_new.values())
-            y = {cid: v / sy for cid, v in y_raw.items()}
-            x_new = {cid: v / sx for cid, v in x_new.items()}
-            x_a = x_new[amine_id]
-            a_new = (
-                min(max(x_new.get("CO2", 0.0) / x_a, 0.0), _MAX_LOADING),
-                min(max(x_new.get("H2S", 0.0) / x_a, 0.0), _MAX_LOADING),
-            )
-            residual = max(abs(a_new[0] - a_prev[0]), abs(a_new[1] - a_prev[1]))
+        Returns ("liquid", 0.0, x, x) / ("vapor", 1.0, z, z) at the single-phase
+        edges, else ("two_phase", beta, x_new, y) with x_new the raw
+        Rachford-Rice liquid (acid gases at their RR loadings).
+        """
+        k = self._k_values_internal(z, T, P, x)
+        if sum(f * k[cid] for cid, f in z.items()) <= 1.0:
+            return "liquid", 0.0, dict(x), dict(x)
+        if sum(f / k[cid] for cid, f in z.items()) <= 1.0:
+            return "vapor", 1.0, dict(z), dict(z)
+
+        # The Rachford-Rice denominator is written (1 - beta) + beta * K, not
+        # 1 + beta * (K - 1): the two are equal algebraically, but when an
+        # acid-gas K underflows below machine epsilon (lean liquid, p_eq ~ 0:
+        # measured K_CO2 = 1.9e-17 at 412 K in a reboiled regenerator, P1-06
+        # BLOCKED report) the second form cancels to exactly 0.0 at the
+        # all-vapour bracket end beta = 1 and the root bracket divides by
+        # zero; the first form evaluates to K there.
+        def rr(beta: float, k: dict[str, float] = k) -> float:
+            return sum(f * (k[cid] - 1.0) / ((1.0 - beta) + beta * k[cid]) for cid, f in z.items())
+
+        beta = brent_root(rr, 0.0, 1.0)
+        y_raw: dict[str, float] = {}
+        x_new: dict[str, float] = {}
+        for cid, f in z.items():
+            denom = (1.0 - beta) + beta * k[cid]
+            y_raw[cid] = max(f * k[cid] / denom, 0.0)
+            x_new[cid] = max(y_raw[cid] / k[cid], 0.0)
+        sy, sx = sum(y_raw.values()), sum(x_new.values())
+        y = {cid: v / sy for cid, v in y_raw.items()}
+        x_new = {cid: v / sx for cid, v in x_new.items()}
+        return "two_phase", beta, x_new, y
+
+    @staticmethod
+    def _loadings_of(x_new: dict[str, float], amine_id: str) -> tuple[float, float]:
+        """(CO2/amine, H2S/amine) mole ratios of a liquid, clamped to the window."""
+        x_a = x_new[amine_id]
+        return (
+            min(max(x_new.get("CO2", 0.0) / x_a, 0.0), _MAX_LOADING),
+            min(max(x_new.get("H2S", 0.0) / x_a, 0.0), _MAX_LOADING),
+        )
+
+    def _loading_walk(
+        self,
+        z: dict[str, float],
+        T: float,
+        P: float,
+        x: dict[str, float],
+        amine_id: str,
+        a_use: tuple[float, float],
+        max_iter: int,
+    ) -> tuple[Literal["liquid", "vapor", "two_phase"], float, dict[str, float], dict[str, float]] | None:
+        """Wegstein-damped substitution walk on the loadings; None when stalled.
+
+        Under-relaxed LOADING walk: the raw fixed point oscillates in the
+        trace-liquid regions saturation scans and solvent-lean stage overalls
+        pass through - the composition-substitution map there has an unstable
+        fixed point (an amine K of ~1e-5 next to an acid-gas K of ~1e4 swings
+        the loadings wildly). Walking the LOADING itself and rebuilding the
+        liquid from the damped loading folds the two-cycle monotonically.
+        Rebuild keeps the solvent and inert fractions of the RR liquid and
+        rescales the acid gases to the damped loading.
+
+        Wegstein-measured under-relaxation: a fixed weight cannot serve both
+        regimes the loading walk sees (measured P1-09: w=0.5 closed a
+        solvent-lean stage overall in ~8 iterations but crawled at
+        0.905/iteration on the trace-gas two-cycle; w=0.05 the reverse). The
+        weight comes from the secant slope of the last two iterates per
+        loading component.
+        """
+        hist: list[tuple[tuple[float, float], tuple[float, float]]] = []
+        for _ in range(max_iter):
+            state, beta, x_new, y = self._rr_split(z, T, P, x)
+            if state != "two_phase":
+                return state, beta, x_new, y
+            a_raw = self._loadings_of(x_new, amine_id)
+            residual = max(abs(a_raw[0] - a_use[0]), abs(a_raw[1] - a_use[1]))
             if residual <= _LOADING_TOL:
                 return "two_phase", beta, x_new, y
-            if best is None or residual < best[0]:
-                best = (residual, beta, x_new, y)
-            # Under-relaxed liquid update: the raw fixed point oscillates in the
-            # trace-liquid regions saturation scans pass through (an amine K of
-            # ~1e-5 next to an acid-gas K of ~1e4 swings the loadings wildly).
-            x = {cid: 0.5 * x[cid] + 0.5 * x_new[cid] for cid in z}
-            a_prev = a_new
-        if best is not None and best[0] <= _LOADING_ACCEPT_RESIDUAL:
-            _r, beta_b, x_b, y_b = best
-            return "two_phase", beta_b, x_b, y_b
-        raise ValueError(
-            f"amine reactive flash did not converge at T={T} K, P={P} Pa "
-            f"({_LOADING_MAX_ITER} loading fixed-point iterations)"
-        )
+            hist.append((a_use, a_raw))
+            w_co2 = _wegstein_w([h[0][0] for h in hist], [h[1][0] for h in hist])
+            w_h2s = _wegstein_w([h[0][1] for h in hist], [h[1][1] for h in hist])
+            a_use = (
+                a_use[0] + w_co2 * (a_raw[0] - a_use[0]),
+                a_use[1] + w_h2s * (a_raw[1] - a_use[1]),
+            )
+            x_a = x_new[amine_id]
+            if x_a > 0.0:
+                x = dict(x_new)
+                x["CO2"] = a_use[0] * x_a
+                x["H2S"] = a_use[1] * x_a
+                sx = sum(x.values())
+                x = {cid: v / sx for cid, v in x.items()}
+            else:  # pragma: no cover - degenerate amine-free liquid
+                x = x_new
+        return None
+
+    def _bracketed_loadings(
+        self,
+        z: dict[str, float],
+        T: float,
+        P: float,
+        x: dict[str, float],
+        amine_id: str,
+        a_use: tuple[float, float],
+    ) -> tuple[tuple[float, float], dict[str, float]]:
+        """Bracketed solve of the loading fixed point when substitution cycles.
+
+        For a liquid whose solvent/inert basis is frozen, the loading map
+        g_i(a) = a_raw_i(a) - a is continuous on [0, _MAX_LOADING] with a sign
+        change at the bracket ends: at a = 0 the acid gas's equilibrium partial
+        pressure is zero and its RR-liquid loading is >= 0, at the cap a_raw is
+        clamped to <= cap so g <= 0 -- brentq always converges, where the
+        Wegstein walk cannot (measured P1-11: a period-3 cycle at a
+        solvent-lean stage overall, T 292 K).  The basis itself must follow the
+        RR liquid, so the frozen-basis solve is nested in a substitution on the
+        basis; measured at the failing states (P1-11): the outer map contracts
+        ~3x per pass from the solvent-basis seed, reaching the 1e-11 gate in
+        ~25 passes.  Returns the solved loadings and the liquid rebuilt at
+        them, ready for the polish walk.
+        """
+        x_work = dict(x)
+        a_sol = a_use
+
+        def frozen_solve(
+            x_cur: dict[str, float], a_start: tuple[float, float]
+        ) -> tuple[tuple[float, float], dict[str, float]]:
+            basis = {cid: v for cid, v in x_cur.items() if cid not in _ACID_GAS_IDS}
+            x_a = x_cur.get(amine_id, 0.0)
+
+            def x_at(a_co2: float, a_h2s: float) -> dict[str, float]:
+                xt = dict(basis)
+                if x_a > 0.0:
+                    xt["CO2"] = a_co2 * x_a
+                    xt["H2S"] = a_h2s * x_a
+                sx = sum(xt.values())
+                return {cid: v / sx for cid, v in xt.items()}
+
+            def root(idx: int, a_fixed: float) -> float:
+                """Bracketed root of loading component idx at fixed other loading."""
+
+                def g(a: float) -> float:
+                    a_try = (a, a_fixed) if idx == 0 else (a_fixed, a)
+                    state, _beta, x_new, _y = self._rr_split(z, T, P, x_at(*a_try))
+                    if state == "liquid":  # the liquid takes everything: a_raw > a
+                        return 1.0
+                    if state == "vapor":  # no liquid: a_raw < a
+                        return -1.0
+                    a_raw = self._loadings_of(x_new, amine_id)
+                    return a_raw[idx] - a
+
+                return brent_root(g, 0.0, _MAX_LOADING, xtol=1e-14)
+
+            a_co2, a_h2s = a_start
+            if z.get("CO2", 0.0) > 0.0:
+                a_co2 = root(0, a_h2s)
+            if z.get("H2S", 0.0) > 0.0:
+                a_h2s = root(1, a_co2)
+            # Second Gauss-Seidel pass: the CO2 root was solved at the
+            # pre-solve H2S loading; re-solving tightens joint consistency.
+            if z.get("CO2", 0.0) > 0.0 and z.get("H2S", 0.0) > 0.0:
+                a_co2 = root(0, a_h2s)
+                a_h2s = root(1, a_co2)
+            return (a_co2, a_h2s), x_at(a_co2, a_h2s)
+
+        for _ in range(_BRACKET_OUTER_MAX):
+            a_sol, x_work = frozen_solve(x_work, a_sol)
+            if self._loading_residual(z, T, P, x_work, amine_id, a_sol) <= _BRACKET_RESIDUAL:
+                break
+        return a_sol, x_work
+
+    def _loading_residual(
+        self,
+        z: dict[str, float],
+        T: float,
+        P: float,
+        x: dict[str, float],
+        amine_id: str,
+        a_use: tuple[float, float],
+    ) -> float:
+        """Loading residual of the map at x: max |a_raw - a_use| (0 at edges)."""
+        state, _beta, x_new, _y = self._rr_split(z, T, P, x)
+        if state != "two_phase":
+            return 0.0
+        a_raw = self._loadings_of(x_new, amine_id)
+        return max(abs(a_raw[0] - a_use[0]), abs(a_raw[1] - a_use[1]))
 
     # -- flashes --------------------------------------------------------------
 
     def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         """PT flash: reactive equilibrium at temperature T (K), pressure P (Pa abs)."""
-        if self._amine_id(self._support(z)) is None:
+        if self._reactive_domain(z) is None:
             return self._carrier.flash_pt(z, T, P, molar_flow)
         key = ("pt", *_state.cache_key(z, T, P), round(molar_flow, 9))
         return cast(StreamState, self._cached(key, lambda: self._build_state(z, T, P, molar_flow)))
 
     def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:
         """PH flash: secant on T through the reactive flash enthalpy (carrier T guess)."""
-        if self._amine_id(self._support(z)) is None:
+        if self._reactive_domain(z) is None:
             return self._carrier.flash_ph(z, P, H, molar_flow)
         t = self._carrier.flash_ph(z, P, H, molar_flow).T
 
@@ -452,7 +712,7 @@ class AmineReactivePackage(Thermo):
 
     def flash_ps(self, z: dict[str, float], P: float, S: float, molar_flow: float) -> StreamState:
         """PS flash: secant on T through the reactive flash entropy (carrier T guess)."""
-        if self._amine_id(self._support(z)) is None:
+        if self._reactive_domain(z) is None:
             return self._carrier.flash_ps(z, P, S, molar_flow)
         t = self._carrier.flash_ps(z, P, S, molar_flow).T
 
@@ -476,7 +736,7 @@ class AmineReactivePackage(Thermo):
 
     def flash_tvf(self, z: dict[str, float], T: float, vf: float, molar_flow: float) -> StreamState:
         """TVF flash: vapour fraction vf in [0, 1] at temperature T (K)."""
-        if self._amine_id(self._support(z)) is None:
+        if self._reactive_domain(z) is None:
             return self._carrier.flash_tvf(z, T, vf, molar_flow)
         if not 0.0 <= vf <= 1.0:
             raise ValueError(f"vapour fraction {vf} outside [0, 1]")
@@ -495,7 +755,7 @@ class AmineReactivePackage(Thermo):
 
     def flash_pvf(self, z: dict[str, float], P: float, vf: float, molar_flow: float) -> StreamState:
         """PVF flash: vapour fraction vf in [0, 1] at pressure P (Pa abs)."""
-        if self._amine_id(self._support(z)) is None:
+        if self._reactive_domain(z) is None:
             return self._carrier.flash_pvf(z, P, vf, molar_flow)
         if not 0.0 <= vf <= 1.0:
             raise ValueError(f"vapour fraction {vf} outside [0, 1]")
@@ -518,7 +778,7 @@ class AmineReactivePackage(Thermo):
         self, z: dict[str, float], *, T: float | None = None, P: float | None = None
     ) -> SaturationPoint:
         """Bubble point of an amine-bearing feed: exactly one of T (K) and P (Pa)."""
-        if self._amine_id(self._support(z)) is None:
+        if self._reactive_domain(z) is None:
             return self._carrier.bubble_point(z, T=T, P=P)
         return self._boundary(z, "bubble", T=T, P=P)
 
@@ -526,7 +786,7 @@ class AmineReactivePackage(Thermo):
         self, z: dict[str, float], *, T: float | None = None, P: float | None = None
     ) -> SaturationPoint:
         """Dew point of an amine-bearing feed: exactly one of T (K) and P (Pa)."""
-        if self._amine_id(self._support(z)) is None:
+        if self._reactive_domain(z) is None:
             return self._carrier.dew_point(z, T=T, P=P)
         return self._boundary(z, "dew", T=T, P=P)
 
@@ -577,7 +837,7 @@ class AmineReactivePackage(Thermo):
 
     def k_values(self, z: dict[str, float], T: float, P: float) -> dict[str, float] | None:
         """K_i = y_i/x_i at (T, P); None when the reactive flash is single-phase."""
-        if self._amine_id(self._support(z)) is None:
+        if self._reactive_domain(z) is None:
             return self._carrier.k_values(z, T, P)
         state, _vf, x, y = self._equilibrium_internal(z, T, P)
         if state != "two_phase":
@@ -792,8 +1052,18 @@ class AmineReactivePackage(Thermo):
         """
         amine_id, c_a = self._solvent_basis(x_liquid)
         if self._model == ENRTL:
-            return _enrtl_loadings(T, c_a, p_co2, p_h2s, amine=amine_id)
-        return _ke_loadings(T, c_a, p_co2, p_h2s, amine=amine_id)
+            try:
+                return _enrtl_loadings(T, c_a, p_co2, p_h2s, amine=amine_id)
+            except ValueError as exc:
+                raise AmineChemistryError(
+                    f"amine speciation left its chemistry window at T={T} K (speciation bracket: {exc})"
+                ) from exc
+        try:
+            return _ke_loadings(T, c_a, p_co2, p_h2s, amine=amine_id)
+        except ValueError as exc:
+            raise AmineChemistryError(
+                f"amine speciation left its chemistry window at T={T} K (speciation bracket: {exc})"
+            ) from exc
 
     def heat_of_absorption(
         self, z_liquid: dict[str, float], T: float, P: float = 101325.0

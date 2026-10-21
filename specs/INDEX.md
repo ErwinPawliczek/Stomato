@@ -84,8 +84,10 @@ its own `.importlinter` ignore lines. The orchestrator updates **Status** here o
 | P1-02 | Open component registry — databank species, pseudo-components, per-flowsheet slate | P0-01, P1-01 | merged #94 |
 | P1-03 | Column consumes contract v2; split the god-file | P1-01, P0-06 | merged #96 (−56 % flash-equivalents; see #91) |
 | P1-04 | Amine chemistry as property packages (apparent-component reactive VLE) | P0-02, P1-01 | merged #95 |
-| P1-06 | Staged amine absorber/regenerator via column + amine package | P1-09, P1-03, P1-04 | BLOCKED 2026-10-21 (issue #98): column cannot solve zero/one-tear configurations → P1-09; re-dispatch after P1-09 merges |
-| P1-09 | Column zero/one-tear configurations (absorbers, strippers), seed, error containment; amine states inside the column | P1-03, P1-04, P1-08 | PR #125 changes requested (zero-tear mesh rides the band floor; measured on the #124-fixed main); v3 thread finishing it (2026-10-21) |
+| P1-06 | Staged amine absorber/regenerator via column + amine package | P1-11, P1-09, P1-10, P1-03, P1-04 | BLOCKED again 2026-10-21 (issue #98): amine RR ZeroDivisionError (hotfixed) + reactive mesh floor 1.8e-3 vs locked 1e-6 → P1-11; re-dispatch after P1-11 |
+| P1-11 | Reactive-package mesh closure: smooth amine K-values, converged stages, regenerator band | P1-09, P1-10, amine RR hotfix (#151 merged) | steps 1-2 merged #155 (2026-10-21: smooth, deterministic loading solve); steps 3-5 re-dispatched (equilibrium-consistent exact gate, NS FD step, regenerator via NS-first) — issue #153 |
+| P1-10 | One-tear stripper convergence: physical branch selection, band-floor guard | P1-09, #124 | merged #149 (2026-10-21): NS-first for non-reactive one-tear kettles, damped spec secant, band-limit rejection; boundary component balances 1e-6 (NS FD floor) |
+| P1-09 | Column zero/one-tear configurations (absorbers, strippers), seed, error containment; amine states inside the column | P1-03, P1-04, P1-08 | merged #125 (2026-10-21): absorbers, Kremser-proper, MDEA column; stripper branch → P1-10 |
 | P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | merged #97 (867 comparisons, 74 xfail families; issues #99, #100) |
 | P1-07 | Pseudo-component definitions owned by the Flowsheet (no process-global registry) | P1-02 | merged #115 (2026-10-21) |
 | P1-08 | One saturation solver over a vapour-fraction callable (amine package reuses `_state._saturation`) | P1-01, P1-04 | merged #106 |
@@ -123,20 +125,22 @@ solver module and `variables.py`; P2-03 edits the SM loop), P2-04 after P2-01 an
 
 Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after P3-02.
 
+## Unit-operation catalogue (plan: docs/unit-catalogue-plan.md) — starts after the thermo catalogue freeze and P1-11/P1-06; U-00 first, then rounds R0 → R1 → R2 → R3 per family
+
 ## Thermo catalogue (plan: docs/thermo-catalogue-plan.md) — starts after P1-09 and P1-06 merge
 
 | Spec | Title | Depends on | Status |
 |---|---|---|---|
 | T-01 | Thermo catalogue as data: registry, status, L0/L4 validation layers | P1-05, P1-07, #124 | merged #134 (2026-10-21) |
 | T-02 | Cubic family options: alpha functions, volume translation, Boston–Mathias, sour terms, all thermo cubic classes | T-01 | dispatched 2026-10-21 (issue #136) |
-| T-03 | Gamma-phi adapter: NRTL/UNIQUAC/Wilson/van Laar/Margules/UNIFAC×5 × ideal/virial/cubic vapour; ChemSep + UNIFAC group data | T-01 | dispatched 2026-10-21 (issue #137) |
-| T-04 | Helmholtz adapter: IAPWS-95/IF97, CoolProp fluids, GERG-2008 (optional dependency) | T-01 | dispatched 2026-10-21 (issue #138) |
+| T-03 | Gamma-phi adapter: NRTL/UNIQUAC/Wilson/van Laar/Margules/UNIFAC×5 × ideal/virial/cubic vapour; ChemSep + UNIFAC group data | T-01 | merged #150 (2026-10-21): 12 liquids x 5 vapours, 60 rows (virial vapours experimental), in-house van Laar/Margules, 16 live T-12 combos; review fixed Wilson aij, dropped circular fits, L4 refusals once per row |
+| T-04 | Helmholtz adapter: IAPWS-95/IF97, CoolProp fluids, GERG-2008 (optional dependency) | T-01 | merged #152 (2026-10-21): iapws95/iapws_if97/coolprop_heos/gerg2008 (CoolProp multifluid path until T-07)/bwrs provisional, 5 placeholders experimental; review added the spec's unit tests, #154 filed |
 | T-05 | Classic K-value correlations: Chao–Seader, Grayson–Streed, Braun K10, Lee–Kesler–Plöcker, ideal/Henry | T-01 | dispatched 2026-10-21 (issue #139) |
 | T-06 | Predictive mixing rules: PSRK, VTPR, MHV1/2, Wong–Sandler, Huron–Vidal, LCVM | T-02, T-03 | planned (issue #141; after T-02+T-03) |
 | T-07 | teqp bridge: PC-SAFT, SAFT-VR Mie, CPA, multi-fluid Helmholtz | T-01 | dispatched 2026-10-21 (issue #140) |
 | T-08 | Model advisor + agent tool `recommend_thermo` + UI package picker | T-01..T-05 | planned (issue #142; after T-01..T-05) |
 | T-09 | General electrolytes: eNRTL, Pitzer, extended UNIQUAC, sour water | T-03 | planned (issue #143; after T-03 and #125) |
 | T-10 | Solids, polymers, HOC dimerisation, HF | T-03, T-07 | planned (issue #144; after T-03+T-07) |
-| T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | T-11 merged #131, T-12 merged #132, T-13 merged #135; T-14 dispatched 2026-10-21 (issue #145) |
+| T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | all merged: T-11 #131, T-12 #132, T-13 #135, T-14 #147 (2026-10-21) |
 
 Dispatch: T-01 alone; then T-02, T-03, T-04, T-05, T-07, T-11, T-12, T-13 in parallel (disjoint files); then T-06, T-08, T-09, T-14; then T-10; then the catalogue freeze (status audit).
