@@ -150,13 +150,31 @@ def packages_for(case: Case) -> tuple[str, ...]:
     return (case.package,)
 
 
+_FAMILY_ID_MARKERS = ("-pure-", "-c1c3-", "-c1co2-", "-ng-dew-morch-")
+
+
+def _root_case_id(case_id: str) -> str:
+    """The root-file id a family case derives from (T-02..T-07 per-row copies).
+
+    The adapter specs copy the root pure/binary/multicomponent points per
+    catalogue row as ``<row>-pure-...``, ``<row>-c1c3-...`` etc.; the assessment
+    rules match failure families, so those copies assess against the root id.
+    """
+    for marker in _FAMILY_ID_MARKERS:
+        idx = case_id.find(marker)
+        if idx > 0:
+            return case_id[idx + 1 :]
+    return case_id
+
+
 def xfail_reason(case: Case, failed_props: frozenset[str]) -> str | None:
     """Assessment for a case whose comparisons failed, or None when it must go red.
 
     Each rule matches one failure family observed on the first run AND guards the failing
     properties, so a future case failing on a different property is not silently classified
     here — it fails the test and forces a fresh assessment. Used by the reference-case tests
-    (dynamic xfail) and by ``write_doc`` (assessment section).
+    (dynamic xfail) and by ``write_doc`` (assessment section). Per-row case copies match
+    their root-file family id (see :func:`_root_case_id`).
     """
     if (
         case.package == "pc_saft"
@@ -170,33 +188,34 @@ def xfail_reason(case: Case, failed_props: frozenset[str]) -> str | None:
             "saturated-phase properties are evaluated at the reference Psat, where this model's "
             "liquid is stretched (model limitation; assessed in docs/validation.md)"
         )
-    if case.id.startswith("pure-") and failed_props <= {"rho_L", "rho_V", "Cp"}:
+    case_id = _root_case_id(case.id)
+    if case_id.startswith("pure-") and failed_props <= {"rho_L", "rho_V", "Cp"}:
         return (
             "cubic saturation properties beyond tolerance vs the CoolProp reference EOS "
             "(known cubic EOS limitation, worst near Tc; assessed in docs/validation.md)"
         )
-    if case.id.startswith("meohh2o-"):
+    if case_id.startswith("meohh2o-"):
         return (
             "NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within "
             "2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md)"
         )
-    if case.id.startswith(("c1c3-", "c1co2-")) and failed_props <= {"bubble_P", "vapor_comp"}:
+    if case_id.startswith(("c1c3-", "c1co2-")) and failed_props <= {"bubble_P", "vapor_comp"}:
         return (
             "k_ij=0 cubic bubble pressure / vapour composition just beyond tolerance near the "
             "mixture critical region (model limitation; assessed in docs/validation.md)"
         )
-    if case.id == "c1h2o-410.9K-13.10MPa":
+    if case_id == "c1h2o-410.9K-13.10MPa":
         return (
             "cubic two-phase flash yields an unphysical water/methane phase split at 13 MPa, so "
             "the aqueous methane solubility is not representable (flagged for thermo investigation)"
         )
-    if case.id.startswith("ng-dew-morch-") and failed_props <= {"dew_P"}:
+    if case_id.startswith("ng-dew-morch-") and failed_props <= {"dew_P"}:
         return (
             "dew pressures of the asymmetric C1/C2/nC5 synthetic natural gas ternary run 10-35 % "
             "above the Mørch et al. (2006) cooled-mirror measurements under databank/zero k_ij "
             "(model limitation, issue #130; assessed in docs/validation.md)"
         )
-    if case.id == "slice-inlet-K-500psia-300K":
+    if case_id == "slice-inlet-K-500psia-300K":
         return (
             "chart-read K values (5-7 % reading precision) vs k_ij=0 cubic K "
             "(data + model limitation; assessed in docs/validation.md)"

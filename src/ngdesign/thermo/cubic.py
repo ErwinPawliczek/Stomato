@@ -23,6 +23,7 @@ import math
 from collections import OrderedDict
 from collections.abc import Callable
 from functools import cache
+from itertools import pairwise
 from typing import Any, cast
 
 from thermo.eos_mix import (
@@ -669,12 +670,13 @@ class SRKMIXKD(SRKMIX):  # type: ignore[misc]
         super().__init__(Tcs=Tcs, Pcs=Pcs, omegas=omegas, zs=zs, kijs=kijs, T=T, P=P, V=V, **kw)
 
     def _a_prime_values(self, T: float) -> list[float]:
-        iw = self._water_i
+        cids = _cids_from_criticals(self)
+        iw = cids.index("H2O") if "H2O" in cids else -1
         Tcw = self.Tcs[iw]
         aw = self.ais[iw] * math.sqrt(Tcw / T)  # SRK pure a_alpha of water
         out = []
-        for i in range(self.N):
-            g = self._a_prime.get(i, 0.0)
+        for cid in cids:
+            g = _KD_G.get(cid, 0.0)
             out.append(g * aw * (1.0 - (T / Tcw) ** 0.8) if g else 0.0)
         return out
 
@@ -682,7 +684,8 @@ class SRKMIXKD(SRKMIX):  # type: ignore[misc]
         self, T: float, full: bool = True, quick: bool = True, pure_a_alphas: bool = True
     ) -> Any:
         vals = super().a_alpha_and_derivatives(T, full=full, quick=quick, pure_a_alphas=pure_a_alphas)
-        iw = self._water_i
+        cids = _cids_from_criticals(self)
+        iw = cids.index("H2O") if "H2O" in cids else -1
         xw = self.zs[iw] if 0 <= iw < self.N else 0.0
         if xw <= 0.0:
             return vals
@@ -707,7 +710,8 @@ class SRKMIXKD(SRKMIX):  # type: ignore[misc]
         inside the bracket, which the standard SRK rule does not have.
         """
         lnphis = super().fugacity_coefficients(Z)
-        iw = self._water_i
+        cids = _cids_from_criticals(self)
+        iw = cids.index("H2O") if "H2O" in cids else -1
         zs = self.zs
         if not (0 <= iw < self.N) or zs[iw] <= 0.0:
             return lnphis
@@ -734,9 +738,12 @@ _ZJ_CONSTANTS: dict[str, tuple[float, float]] = {}  # cid -> (a_c, b)
 def _zj_alpha(cid: str, T: float) -> float:
     """Zudkevitch-Joffe (1970) alpha: pure-RK fugacity equality at Psat.
 
-    Falls back to the RK ``sqrt(Tc/T)`` form at/above Tc or when the root
-    does not bracket (near-critical). Cached per (component, T) -- the
-    databank Psat underneath is cached too, so repeats are cheap.
+    Solves alpha so the RK saturation pressure at T equals the databank Psat
+    (``ln phi_l == ln phi_v`` at ``(T, Psat)``): raising alpha raises the EOS
+    saturation pressure, so g crosses from negative to positive. Falls back to
+    the RK ``sqrt(Tc/T)`` form at/above Tc or when no two-root sign change
+    brackets the root (near-critical). Cached per (component, T) -- the
+    databank Psat underneath is cached too.
     """
     psat = _state.pure_psat(cid, T)
     Tc, Pc = _ZJ_COMPONENT_CRITICALS[cid]
@@ -744,46 +751,84 @@ def _zj_alpha(cid: str, T: float) -> float:
     if psat is None or T >= Tc:
         return math.sqrt(Tc / T)
 
-    def g(alpha: float) -> float:
+    def g(alpha: float) -> float | None:
         pair = _rk_pure_lnphis(alpha, a_c, b, T, psat)
         if pair is None:
-            return 0.0
+            return None
         return pair[0] - pair[1]
 
-    lo, hi = 1e-8, 80.0
-    if not (g(lo) > 0.0 > g(hi)):
+    # Inside the two-root window g runs positive->negative as alpha rises (the
+    # EOS saturation pressure crosses the databank Psat from below to above);
+    # single-root alphas are unfittable and skipped. Bisect that crossing.
+    xs = [0.2 * 1.15**i for i in range(45)]
+    prev: tuple[float, float] | None = None
+    lo = hi = 0.0
+    for x in xs:
+        gx = g(x)
+        if gx is None:
+            continue
+        if prev is not None and prev[1] > 0.0 > gx:
+            lo, hi = prev[0], x
+            break
+        prev = (x, gx)
+    else:
         return math.sqrt(Tc / T)
     for _ in range(200):
         mid = 0.5 * (lo + hi)
-        if g(lo) * g(mid) <= 0.0:
+        gm = g(mid)
+        if gm is None:
+            break  # unreachable inside a two-root bracket; keep the best estimate
+        if gm > 0.0:
+            lo = mid
+        elif gm < 0.0:
             hi = mid
         else:
-            lo = mid
+            return mid
     return 0.5 * (lo + hi)
 
 
 _ZJ_COMPONENT_CRITICALS: dict[str, tuple[float, float]] = {}
 
+#: Reverse of the option criticals tables: (Tc, Pc) -> component id. thermo
+#: clones EOS instances per flash state (``to_TP_zs_fast``) with an attribute
+#: whitelist, so per-instance ids/indices do not survive a re-solve; (Tc, Pc)
+#: pairs are copied verbatim and identify the component exactly.
+_CID_BY_CRITICALS: dict[tuple[float, float], str] = {}
+
+
+def _cids_from_criticals(eos: Any) -> list[str]:
+    """Per-component ids of an option EOS instance, recovered from (Tc, Pc)."""
+    try:
+        return [_CID_BY_CRITICALS[(tc, pc)] for tc, pc in zip(eos.Tcs, eos.Pcs, strict=True)]
+    except KeyError as exc:  # a slate component configure never registered
+        raise KeyError(f"option EOS component with (Tc, Pc)={exc.args[0]} is not registered") from exc
+
 
 def _rk_pure_lnphis(alpha: float, a_c: float, b: float, T: float, P: float) -> tuple[float, float] | None:
     """(ln phi_liquid, ln phi_vapour) of a pure RK fluid at (T, P); None when one root.
 
-    RK: ``P = RT/(v-b) - a_c alpha/(sqrt(T) v (v+b))``; A = a P/(R^2 T^2.5),
-    B = b P/(RT); Z-roots of ``Z^3 - Z^2 - (A - B - B^2) Z - A B = 0``;
-    ``ln phi = Z - 1 - ln(Z - B) - (A/B) ln(1 + B/Z)``.
+    RK: ``P = RT/(v-b) - a(T)/(v (v+b))`` with the T-folded attraction
+    ``a(T) = a_c alpha(T)`` (``a_c = 0.42748 R^2 Tc^2/Pc``, ``alpha =
+    sqrt(Tc/T)`` -- the ``1/sqrt(T)`` is already inside ``alpha``);
+    ``A = a(T) P/(R^2 T^2)``, ``B = b P/(RT)``; Z-roots of the RK/SRK cubic
+    ``Z^3 - Z^2 + (A - B - B^2) Z - A B = 0``; ``ln phi = Z - 1 - ln(Z - B) -
+    (A/B) ln(1 + B/Z)``.
     """
     R = 8.31446261815324
-    A = a_c * alpha * P / (R * R * T * T * math.sqrt(T))
+    A = a_c * alpha * P / (R * R * T * T)
     B = b * P / (R * T)
     if B <= 0.0 or A <= 0.0:
         return None
 
     def f(z: float) -> float:
-        return z**3 - z * z - (A - B - B * B) * z - A * B
+        return z**3 - z * z + (A - B - B * B) * z - A * B
 
     roots: list[float] = []
-    edges = (1e-12, 1e-6, 1e-3, 0.5, 1.0, 1e3)
-    for z0, z1 in zip(edges, edges[1:], strict=True):
+    # Dense edge grid: the RK cubic below Tc has three real roots (liquid,
+    # middle, vapour); a coarse grid can leave two of them inside one interval
+    # with no endpoint sign change.
+    edges = (1e-12, 1e-6, 1e-4, 1e-3, 3e-3, 0.01, 0.03, 0.1, 0.3, 0.7, 1.0, 1e3)
+    for z0, z1 in pairwise(edges):
         f0, f1 = f(z0), f(z1)
         if f0 == 0.0:
             roots.append(z0)
@@ -817,14 +862,14 @@ class ZJRKMIX(RKMIX):  # type: ignore[misc]
     temperature-dependent ``Omega_b`` is not implemented -- it would require
     overriding the repulsive-term matrix inside thermo's EOSMIX machinery;
     ``Omega_b`` stays at the RK constant. At/above Tc the RK alpha applies.
+    Components are identified from their (Tc, Pc) pairs, so the fitted ids
+    survive thermo's EOS state clones (see :func:`_cids_from_criticals`).
     """
-
-    _zj_cids: tuple[str, ...] = ()
 
     def _zj_eval(self, T: float) -> tuple[list[float], list[float], list[float]]:
         a_alphas, das, d2as = [], [], []
         h = 1e-4
-        for i, cid in enumerate(self._zj_cids):
+        for i, cid in enumerate(_cids_from_criticals(self)):
             a = self.ais[i]
             a0 = _zj_alpha(cid, T)
             am = _zj_alpha(cid, T - h)
@@ -1104,6 +1149,7 @@ def configure_options(
     elif options.alpha == AlphaFunction.ZUDKEVITCH_JOFFE:
         for cid, tc, pc in zip(ids, constants.Tcs, constants.Pcs, strict=True):
             _ZJ_COMPONENT_CRITICALS[cid] = (tc, pc)
+            _CID_BY_CRITICALS[(tc, pc)] = cid
             _ZJ_CONSTANTS[cid] = (
                 0.4274802327 * _LK_R**2 * tc * tc / pc,
                 0.0866403500 * _LK_R * tc / pc,
@@ -1112,11 +1158,13 @@ def configure_options(
     if options.translation == VolumeTranslation.PENELOUX:
         # Peneloux (1982) c from the Rackett (1970) Z_RA correlation.
         eos_kwargs["cs"] = [
-            0.4068 * _LK_R * tc / pc * (0.29441 - (0.29056 - 0.08775 * om))
+            0.4078 * _LK_R * tc / pc * (0.29441 - (0.29056 - 0.08775 * om))
             for tc, pc, om in zip(constants.Tcs, constants.Pcs, constants.omegas, strict=True)
         ]
 
     if options.mixing == MixingRule.KABADI_DANNER:
+        for cid, tc, pc in zip(ids, constants.Tcs, constants.Pcs, strict=True):
+            _CID_BY_CRITICALS[(tc, pc)] = cid
         groups = {i: _KD_G[cid] for i, cid in enumerate(ids) if cid in _KD_G}
         eos_kwargs["kd_water_index"] = ids.index("H2O") if "H2O" in ids else -1
         eos_kwargs["kd_groups"] = groups

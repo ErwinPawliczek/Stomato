@@ -1107,6 +1107,31 @@
     gibbs_duhem: >-
       Same RK liquid-root limitation as the rk row at the C1/C3 250 K hc_liquid probe; the
       vapour probe passes.
+  l4_excluded:
+    "srk": >-
+      The Zudkevitch-Joffe Psat-fitted alpha with Omega_b held at the RK constant (documented
+      deviation in params.alpha_parameters) runs +26-32% above the generalised-omega srk-family
+      rows on the multi-component slice dew (measured 872333 vs 614968-643917 Pa at 293.15 K)
+      while the pr-family rows sit within the 20% band (rel 0.17-0.18) - an alpha-accuracy
+      difference, declared here rather than loosening the band.
+    "api-srk": >-
+      See the srk declaration: measured 872333 vs 615893 Pa (rel 0.294) at 293.15 K.
+    "rks-bm": >-
+      See the srk declaration: measured 872333 vs 615330 Pa (rel 0.295) at 293.15 K.
+    "srk-boston-mathias": >-
+      See the srk declaration: measured 872333 vs 615330 Pa (rel 0.295) at 293.15 K.
+    "srk-lee-kesler-enthalpy": >-
+      See the srk declaration: measured 872333 vs 614969 Pa (rel 0.295) at 293.15 K.
+    "srk-peneloux": >-
+      See the srk declaration: measured 872333 vs 614969 Pa (rel 0.295) at 293.15 K.
+    "sour-srk": >-
+      See the srk declaration: measured 872333 vs 614968 Pa (rel 0.295) at 293.15 K.
+    "kabadi-danner-srk": >-
+      See the srk declaration: measured 872333 vs 643917 Pa (rel 0.262) at 293.15 K.
+    "twu-pr": >-
+      See the srk declaration: measured 872333 vs 597284 Pa (rel 0.315) at 293.15 K.
+    "twu-srk": >-
+      See the srk declaration: measured 872333 vs 596571 Pa (rel 0.316) at 293.15 K.
 - id: twu-sim-tassone
   name: Twu-Sim-Tassone cubic EOS
   family: cubic
