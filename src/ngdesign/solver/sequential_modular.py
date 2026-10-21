@@ -394,23 +394,28 @@ def _init_guess(fs: Flowsheet, components: tuple[str, ...]) -> tuple[list[float]
     return vector, composition
 
 
-def _wegstein_next(x: list[float], y: list[float], x_prev: list[float], y_prev: list[float]) -> list[float]:
-    """One bounded-Wegstein step, per variable:
+def _wegstein_q(xc: float, yc: float, xp: float, yp: float) -> float | None:
+    """Bounded Wegstein factor of one torn variable from its secant history.
 
         s = (y - y_prev) / (x - x_prev); q = s / (s - 1), clamped to [-5, 0]
-        x_next = q * x + (1 - q) * y
 
-    Direct substitution (q = 0) when the secant is degenerate.
+    ``None`` when the secant is degenerate (direct substitution, q = 0). The one
+    owner of the formula: the step and the history record both read it here.
     """
+    dx = xc - xp
+    if abs(dx) <= 1e-12 * max(abs(xc), 1.0):
+        return None
+    slope = (yc - yp) / dx
+    return min(max(slope / (slope - 1.0), WEGSTEIN_Q_MIN), 0.0)
+
+
+def _wegstein_next(x: list[float], y: list[float], x_prev: list[float], y_prev: list[float]) -> list[float]:
+    """One bounded-Wegstein step, per variable: x_next = q * x + (1 - q) * y with
+    q from :func:`_wegstein_q`; direct substitution when the secant is degenerate."""
     out: list[float] = []
     for xc, yc, xp, yp in zip(x, y, x_prev, y_prev, strict=True):
-        dx = xc - xp
-        if abs(dx) <= 1e-12 * max(abs(xc), 1.0):
-            out.append(yc)
-            continue
-        slope = (yc - yp) / dx
-        q = min(max(slope / (slope - 1.0), WEGSTEIN_Q_MIN), 0.0)
-        out.append(q * xc + (1.0 - q) * yc)
+        q = _wegstein_q(xc, yc, xp, yp)
+        out.append(yc if q is None else q * xc + (1.0 - q) * yc)
     return out
 
 
@@ -528,22 +533,13 @@ def _tear_record(iteration: int, tear: _Tear, state: StreamState, components: tu
     if tear.y_prev is None or tear.x_prev is None:
         acceleration, q = "direct", None
     else:
-        q_values: list[float] = []
-        degenerate: list[bool] = []
-        for xc, yc, xp, yp in zip(x, y, tear.x_prev, tear.y_prev, strict=True):
-            dx = xc - xp
-            if abs(dx) <= 1e-12 * max(abs(xc), 1.0):
-                q_values.append(0.0)  # degenerate secant: direct substitution for this variable
-                degenerate.append(True)
-                continue
-            slope = (yc - yp) / dx
-            q_values.append(min(max(slope / (slope - 1.0), WEGSTEIN_Q_MIN), 0.0))
-            degenerate.append(False)
-        if all(degenerate):
+        history = zip(x, y, tear.x_prev, tear.y_prev, strict=True)
+        q_values = [_wegstein_q(xc, yc, xp, yp) for xc, yc, xp, yp in history]
+        if all(qv is None for qv in q_values):
             acceleration, q = "direct", None
         else:
             worst = max(range(len(residuals)), key=residuals.__getitem__)
-            acceleration, q = "wegstein", q_values[worst]
+            acceleration, q = "wegstein", q_values[worst] or 0.0  # degenerate worst variable: q = 0
     return TearRecord(
         iteration=iteration,
         stream_id=tear.stream_id,
