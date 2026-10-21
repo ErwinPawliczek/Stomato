@@ -584,13 +584,8 @@ class _Broyden:
         return [float(v) for v in trial], direct
 
 
-def _converged(x: list[float], y: list[float], rtol: float = RTOL) -> bool:
-    """Every torn variable stable to ``rtol`` relative (with a near-zero absolute floor).
-
-    The default keeps the module constant (spec S-30): flowsheets on the default
-    ``SolverOptions`` exercise exactly this 2-argument form - the signature stays
-    monkeypatch-compatible for tests that stub the convergence test itself.
-    """
+def _converged(x: list[float], y: list[float], rtol: float) -> bool:
+    """Every torn variable stable to ``rtol`` relative (with a near-zero absolute floor)."""
     return all(abs(yc - xc) <= rtol * max(abs(xc), 1.0) for xc, yc in zip(x, y, strict=True))
 
 
@@ -739,14 +734,8 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
     vector), or direct substitution.
     """
     start = time.perf_counter()
-    opts = ctx.fs.solver_options
-    # Compatibility seam (spec P2-03): a flowsheet on the default options keeps
-    # the pre-options module-constant behaviour, so tests that shrink
-    # MAX_ITERATIONS or stub the 2-argument ``_converged`` keep working
-    # unchanged; a flowsheet that overrides an option is always authoritative.
+    opts = ctx.fs.solver_options  # the one source of truth for cap, tolerance, acceleration
     cap = opts.max_iterations
-    if cap == _DEFAULT_OPTIONS.max_iterations and MAX_ITERATIONS != cap:
-        cap = MAX_ITERATIONS
     guess, fallback_composition = _init_guess(ctx.fs, ctx.components, set(order), ctx.states)
     torn: list[_Tear] = []
     for sid in tears:
@@ -767,14 +756,9 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
             ctx.states[t.stream_id] = _inject_tear(t.x, ctx.components, fallback_composition, ctx.thermo)
         if not _run_units(ctx, order):
             break  # a unit failed this pass: stop iterating, converged stays False
-        # Default tolerance keeps the 2-argument convergence call (module-constant
-        # rtol), so tests that stub _converged keep working unchanged.
-        stable = [
-            _converged(t.x, _tear_vector(ctx.states[t.stream_id], ctx.components))
-            if opts.rtol == RTOL
-            else _converged(t.x, _tear_vector(ctx.states[t.stream_id], ctx.components), opts.rtol)
-            for t in torn
-        ]
+        stable = (
+            _converged(t.x, _tear_vector(ctx.states[t.stream_id], ctx.components), opts.rtol) for t in torn
+        )
         if all(stable):
             converged = True
             for t in torn:

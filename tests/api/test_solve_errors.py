@@ -80,14 +80,15 @@ def test_non_convergence_is_a_result_not_an_error(monkeypatch: Any) -> None:
     project = c.get("/api/project").json()
 
     # A full 100-pass tear loop re-solves the slice ~100x (~60 s): shrink the cap
-    # to keep the surface test fast; the cap value itself is what we assert on.
-    monkeypatch.setattr(sequential_modular, "MAX_ITERATIONS", 3)
+    # through the project's own solver options (spec P2-03) to keep the surface
+    # test fast; the cap value itself is what we assert on.
+    project["flowsheet"]["solver_options"] = {"max_iterations": 3}
 
     def forced_tear(fs: Any, block: Any) -> set[str]:
         return {fs.streams[0].id}
 
     monkeypatch.setattr(sequential_modular, "_pick_tears", forced_tear)
-    monkeypatch.setattr(sequential_modular, "_converged", lambda x, y: False)
+    monkeypatch.setattr(sequential_modular, "_converged", lambda *_args: False)
     assert c.put("/api/project", json=project).status_code == 200
 
     r = c.post("/api/solve")

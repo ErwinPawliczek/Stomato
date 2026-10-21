@@ -1273,13 +1273,11 @@ export interface components {
         /** Project */
         Project: {
             flowsheet: components["schemas"]["Flowsheet"];
-            /**
-             * @default {
+            /** @default {
              *       "pfd": {},
              *       "pid": {},
              *       "plot": {}
-             *     }
-             */
+             *     } */
             layout: components["schemas"]["Layout"];
             /** Name */
             name: string;
