@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from ngdesign.data import component_record, register_pseudo
+from ngdesign.data import PseudoDefinition, component_record, register_pseudo
 
 _C7P_TB = 372.0
 _C7P_SG = 0.73
@@ -82,3 +82,32 @@ def test_pseudo_cannot_shadow_curated_ids() -> None:
 def test_unknown_component_raises_naming_the_key() -> None:
     with pytest.raises(ValueError, match="unobtanium"):
         component_record("unobtanium")
+
+
+# ------------------------------------------------------------------ spec P1-07
+
+
+def test_explicit_pseudos_mapping_resolves_without_registration() -> None:
+    definition = PseudoDefinition(id="C9+", name="C9+ pseudo", Tb=450.0, sg=0.82)
+    record = component_record("C9+", pseudos={"C9+": definition})
+    assert record["kind"] == "pseudo"
+    assert record["Tb"] == 450.0
+    assert record["sg"] == 0.82
+    assert record["provenance"]["Tb"] == "user"
+
+
+def test_explicit_pseudos_mapping_is_the_only_pseudo_source() -> None:
+    # A flowsheet context never falls back to the module-level register_pseudo
+    # default: two flowsheets in one process stay independent (spec P1-07).
+    with pytest.raises(ValueError, match="unobtanium9"):
+        component_record("unobtanium9", pseudos={})
+
+
+def test_override_replaces_the_correlated_value() -> None:
+    definition = PseudoDefinition(
+        id="C9+", name="C9+ pseudo", Tb=450.0, sg=0.82, mw=120.0, provenance=(("mw", "lab distillation"),)
+    )
+    record = component_record("C9+", pseudos={"C9+": definition})
+    assert record["mw"] == 120.0
+    assert record["provenance"]["mw"] == "lab distillation"
+    assert "Kesler" in record["provenance"]["Tc"]  # un-overridden props stay correlated

@@ -912,7 +912,7 @@ export interface components {
              * Components
              * @default []
              */
-            components: string[];
+            components: (string | components["schemas"]["PseudoDefinition"])[];
             /** Name */
             name: string;
             /** Streams */
@@ -1101,6 +1101,40 @@ export interface components {
             updated_at: string;
             /** Version */
             version: number;
+        };
+        /**
+         * PseudoDefinition
+         * @description A flowsheet-owned pseudo-component characterization (spec P1-07).
+         *
+         *     The Tb + sg pair drives the Lee-Kesler / Riazi-Daubert correlations; each of
+         *     ``mw`` / ``Tc`` / ``Pc`` / ``omega`` may be overridden explicitly, and every
+         *     override carries its own provenance note in ``provenance``. A pseudo id may
+         *     not shadow a curated id (the Flowsheet validator rejects it).
+         */
+        PseudoDefinition: {
+            /** Pc */
+            Pc?: number | null;
+            /** Tb */
+            Tb: number;
+            /** Tc */
+            Tc?: number | null;
+            /** Id */
+            id: string;
+            /** Mw */
+            mw?: number | null;
+            /** Name */
+            name: string;
+            /** Omega */
+            omega?: number | null;
+            /**
+             * Provenance
+             * @default {}
+             */
+            provenance: {
+                [key: string]: string;
+            };
+            /** Sg */
+            sg: number;
         };
         /** RoutedLine */
         RoutedLine: {

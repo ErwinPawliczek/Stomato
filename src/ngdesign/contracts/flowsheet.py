@@ -6,7 +6,10 @@ from typing import Any
 
 from pydantic import field_validator, model_validator
 
+from ngdesign.data import is_curated
+
 from .common import Model, Nozzle, check_tag
+from .components import ComponentRef, PseudoDefinition
 from .diagnostics import BlockRecord, SolveStatus, UnitError
 from .stream import StreamState, _check_composition
 
@@ -66,11 +69,14 @@ class Flowsheet(Model):
     # Registered "thermo" plugin name (expansion spec): resolved against the
     # registry at solve entry; an unknown name fails the solve there.
     thermo: str = "pr"
-    # The flowsheet's component slate (spec P1-02). Open: any id the component
-    # registry resolves. When omitted, a validator derives it from the feed
-    # compositions (sorted, for deterministic tear-vector indexing) so every
-    # existing sample keeps its meaning.
-    components: list[str] = []
+    # The flowsheet's component slate (specs P1-02, P1-07). Each entry is a plain
+    # id the component registry resolves (curated, databank or registered pseudo)
+    # or a PseudoDefinition the flowsheet owns and carries with itself - so a
+    # saved project is self-describing and two flowsheets in one process can
+    # define the same pseudo id differently. When omitted, a validator derives
+    # the slate from the feed compositions (sorted, for deterministic tear-vector
+    # indexing) so every existing sample keeps its meaning.
+    components: list[ComponentRef] = []
 
     @model_validator(mode="before")
     @classmethod
@@ -90,6 +96,9 @@ class Flowsheet(Model):
 
     @model_validator(mode="after")
     def _topology(self) -> Flowsheet:
+        for entry in self.components:
+            if isinstance(entry, PseudoDefinition) and is_curated(entry.id):
+                raise ValueError(f"pseudo-component {entry.id!r} is reserved by the curated slate")
         tags = [u.tag for u in self.units]
         if len(tags) != len(set(tags)):
             raise ValueError("duplicate unit tags")
@@ -97,7 +106,7 @@ class Flowsheet(Model):
         if len(ids) != len(set(ids)):
             raise ValueError("duplicate stream ids")
         known = set(tags)
-        slate = set(self.components)
+        slate = set(self.slate_ids())
         used: set[tuple[str, str]] = set()
         for s in self.streams:
             if s.feed is not None:
@@ -117,6 +126,10 @@ class Flowsheet(Model):
                     raise ValueError(f"port {ref.unit}.{ref.port} connected twice")
                 used.add(key)
         return self
+
+    def slate_ids(self) -> list[str]:
+        """The component ids of the slate, in order (tear-vector indexing order)."""
+        return [entry if isinstance(entry, str) else entry.id for entry in self.components]
 
     def unit(self, tag: str) -> UnitSpec:
         return next(u for u in self.units if u.tag == tag)

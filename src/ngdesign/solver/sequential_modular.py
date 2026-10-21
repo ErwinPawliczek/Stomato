@@ -44,9 +44,15 @@ initialization is the molar-flow-weighted mean of the boundary feeds (simple,
 deterministic; feed-free sheets start from 1 mol/s nitrogen at ambient conditions).
 
 The torn component flows are indexed by the flowsheet's own component slate (spec
-P1-02), not a fixed module constant: solve entry resolves every slate id through the
-open component registry (unresolvable ids fail the solve there), so tear vectors are
-built in `fs.components` order with T at index len(slate) and P at len(slate) + 1.
+P1-02), not a fixed module constant: solve entry resolves every slate id through
+the open component registry (unresolvable ids fail the solve there), so tear
+vectors are built in `fs.components` order with T at index len(slate) and P at
+len(slate) + 1. The slate may carry flowsheet-owned pseudo definitions (spec
+P1-07): they resolve through the flowsheet's own slate - never the module-level
+register_pseudo default - and the resolved ComponentSet is handed to the thermo
+package once per solve (set_component_set), whose flasher and Psat caches key on
+the definitions, so two flowsheets with different definitions of the same pseudo
+id never share a flasher.
 """
 
 from __future__ import annotations
@@ -604,10 +610,19 @@ class SequentialModular:
     def solve(self, fs: Flowsheet, thermo: Thermo) -> SolvedFlowsheet:
         units: dict[str, UnitModel] = {u.tag: registry.create("unit", u.kind) for u in fs.units}
         errors = _check_ports(fs, units)
-        # Spec P1-02: every slate id must resolve through the open component
-        # registry - the thermo factory and tear vectors below both index by it,
-        # so an unresolvable id fails here, at the solve entry, with its name.
-        components = tuple(resolve_set(fs.components).ids)
+        # Specs P1-02/P1-07: every slate id must resolve through the open
+        # component registry - the thermo factory and tear vectors below both
+        # index by it, so an unresolvable id fails here, at the solve entry,
+        # with its name. Flowsheet-owned pseudo definitions resolve through the
+        # flowsheet's own slate, and the resolved ComponentSet is handed to the
+        # thermo package so its flasher constants build from the slate's own
+        # characterizations (packages without the seam - test doubles, amine
+        # packages - keep the spec P1-02 global-resolution behaviour).
+        component_set = resolve_set(fs.components)
+        set_component_set = getattr(thermo, "set_component_set", None)
+        if callable(set_component_set):
+            set_component_set(component_set)
+        components = tuple(component_set.ids)
         ctx = _Context(
             fs=fs,
             units=units,

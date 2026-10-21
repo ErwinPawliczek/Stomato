@@ -415,7 +415,14 @@
           "components": {
             "default": [],
             "items": {
-              "type": "string"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/components/schemas/PseudoDefinition"
+                }
+              ]
             },
             "title": "Components",
             "type": "array"
@@ -817,6 +824,88 @@
           "project"
         ],
         "title": "ProjectInfo",
+        "type": "object"
+      },
+      "PseudoDefinition": {
+        "additionalProperties": false,
+        "description": "A flowsheet-owned pseudo-component characterization (spec P1-07).\n\nThe Tb + sg pair drives the Lee-Kesler / Riazi-Daubert correlations; each of\n``mw`` / ``Tc`` / ``Pc`` / ``omega`` may be overridden explicitly, and every\noverride carries its own provenance note in ``provenance``. A pseudo id may\nnot shadow a curated id (the Flowsheet validator rejects it).",
+        "properties": {
+          "Pc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pc"
+          },
+          "Tb": {
+            "title": "Tb",
+            "type": "number"
+          },
+          "Tc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tc"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "mw": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mw"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "omega": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Omega"
+          },
+          "provenance": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Provenance",
+            "type": "object"
+          },
+          "sg": {
+            "title": "Sg",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "Tb",
+          "sg"
+        ],
+        "title": "PseudoDefinition",
         "type": "object"
       },
       "RoutedLine": {

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import csv
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
 from functools import cache
 from pathlib import Path
@@ -159,36 +160,66 @@ def _riazi_daubert_mw(Tb: float, sg: float) -> float:
 
 @dataclass(frozen=True)
 class PseudoDefinition:
-    """A user-registered pseudo-component: id plus the Tb + sg characterization pair."""
+    """A user pseudo-component: the Tb + sg characterization pair, optional property overrides.
+
+    ``mw`` / ``Tc`` / ``Pc`` / ``omega`` default to None = derive from Tb + sg
+    (Kesler & Lee, Lee-Kesler, Riazi & Daubert). An override carries a provenance
+    note per property in ``provenance`` (spec P1-07). Frozen and hashable, so a
+    tuple of definitions is a valid flasher-cache key component.
+    """
 
     id: str
     name: str
     Tb: float  # K
     sg: float  # specific gravity, water = 1
+    mw: float | None = None  # g/mol
+    Tc: float | None = None  # K
+    Pc: float | None = None  # Pa
+    omega: float | None = None  # acentric factor, -
+    provenance: tuple[tuple[str, str], ...] = ()  # (property, note) per override
 
 
 #: User-registered pseudo-components, by id. Registration is explicit user intent
 #: (flowsheet authoring, tests, a future project store); the curated slate and the
-#: databank always take precedence in the resolution order.
+#: databank always take precedence in the resolution order. This module-level default
+#: mapping backs ``component_record`` calls without a flowsheet context (scripts,
+#: tests, validation cases) and - even with a context given - any pseudo id the
+#: flowsheet's own slate does not define. Flowsheet-owned ids (spec P1-07) resolve
+#: exclusively from the flowsheet's mapping, so two flowsheets in one process can
+#: define the same pseudo id differently.
 _PSEUDOS: dict[str, PseudoDefinition] = {}
 
 
 def register_pseudo(id: str, name: str, Tb: float, sg: float) -> None:
     """Register a user pseudo-component defined by its normal boiling point and gravity.
 
-    Re-registering the same definition is a no-op; a conflicting definition for a
-    known id raises. The curated slate is reserved and cannot be shadowed (the
-    resolution order resolves curated ids first anyway).
+    Thin adapter over the module-level default mapping, used only when no
+    flowsheet context is given (spec P1-07) - scripts, tests and validation
+    cases. Flowsheets carry their own pseudo definitions on
+    ``Flowsheet.components`` instead; those travel with the project and never
+    touch this mapping. Re-registering the same definition is a no-op; a
+    conflicting definition for a known id raises. The curated slate is reserved
+    and cannot be shadowed (the resolution order resolves curated ids first
+    anyway).
     """
     if Tb <= 0.0 or sg <= 0.0:
         raise ValueError(f"pseudo-component {id!r} needs positive Tb and sg")
-    if id in _curated_table():
+    if is_curated(id):
         raise ValueError(f"component id {id!r} is reserved by the curated slate")
     definition = PseudoDefinition(id=id, name=name, Tb=Tb, sg=sg)
     known = _PSEUDOS.get(id)
     if known is not None and known != definition:
         raise ValueError(f"pseudo-component {id!r} is already registered with a different definition")
     _PSEUDOS[id] = definition
+
+
+def is_curated(cid: str) -> bool:
+    """True when ``cid`` belongs to the curated slate (data/components.yaml).
+
+    Pseudo-component definitions may not shadow a curated id (spec P1-07); the
+    resolution order would silently prefer the curated entry anyway.
+    """
+    return cid in _curated_table()
 
 
 @cache
@@ -262,41 +293,62 @@ def _curated_record(cid: str) -> dict[str, Any]:
 
 
 def _pseudo_record(definition: PseudoDefinition) -> dict[str, Any]:
-    """Derived record for a registered pseudo: Lee-Kesler Tc/Pc/omega, Riazi-Daubert MW."""
+    """Derived record for a pseudo: Lee-Kesler Tc/Pc/omega, Riazi-Daubert MW.
+
+    Optional explicit overrides (mw, Tc, Pc, omega) replace the correlated
+    values, each with its user provenance note (spec P1-07); everything else
+    keeps the correlation provenance.
+    """
     tc, pc = _lee_kesler_tc_pc(definition.Tb, definition.sg)
     omega = float(LK_omega(definition.Tb, tc, pc))
     mw = _riazi_daubert_mw(definition.Tb, definition.sg)
+    values: dict[str, float] = {"Tc": tc, "Pc": pc, "omega": omega, "mw": mw}
+    derived_provenance: dict[str, str] = {
+        "Tc": KESLER_LEE_1976,
+        "Pc": KESLER_LEE_1976,
+        "omega": LEE_KESLER_1975,
+        "mw": RIAZI_DAUBERT_1980,
+        "Tb": "user",
+        "sg": "user",
+    }
+    notes = dict(definition.provenance)
+    for prop, override in (
+        ("mw", definition.mw),
+        ("Tc", definition.Tc),
+        ("Pc", definition.Pc),
+        ("omega", definition.omega),
+    ):
+        if override is not None:
+            values[prop] = float(override)
+            derived_provenance[prop] = notes.get(prop, "user override")
     return {
         "id": definition.id,
         "name": definition.name,
         "cas": None,
         "formula": None,
-        "mw": mw,
-        "Tc": tc,
-        "Pc": pc,
-        "omega": omega,
+        **values,
         "Tb": definition.Tb,
         "sg": definition.sg,
         "kind": "pseudo",
-        "provenance": {
-            "Tc": KESLER_LEE_1976,
-            "Pc": KESLER_LEE_1976,
-            "omega": LEE_KESLER_1975,
-            "mw": RIAZI_DAUBERT_1980,
-            "Tb": "user",
-            "sg": "user",
-        },
+        "provenance": derived_provenance,
     }
 
 
-def component_record(id_or_cas_or_name: str) -> dict[str, Any]:
+def component_record(
+    id_or_cas_or_name: str, *, pseudos: Mapping[str, PseudoDefinition] | None = None
+) -> dict[str, Any]:
     """Resolve one component key to its constant record, in the spec P1-02 order:
 
     1. curated ``data/components.yaml`` entry (by id; properties filled from the
        databank by CAS, with the yaml's deliberate overrides and notes kept),
     2. the ``chemicals`` databank (search_chemical handles CAS numbers and names),
-    3. a registered pseudo-component (by id; Tc/Pc/omega/MW derived and
-       provenance-graded).
+    3. a pseudo-component (by id; Tc/Pc/omega/MW derived or overridden and
+       provenance-graded). With ``pseudos`` given (the flowsheet's own slate,
+       spec P1-07) the ids it defines resolve exclusively from it - a
+       flowsheet-owned id never reads the module default, so two flowsheets in
+       one process can define the same id differently. Pseudo ids the mapping
+       does not define, and every call without a mapping, resolve through the
+       module-level ``register_pseudo`` default.
 
     Raises ValueError naming the key when no source resolves it.
     """
@@ -305,9 +357,11 @@ def component_record(id_or_cas_or_name: str) -> dict[str, Any]:
     databank = _databank_record(id_or_cas_or_name)
     if databank is not None:
         return databank
-    pseudo = _PSEUDOS.get(id_or_cas_or_name)
-    if pseudo is not None:
-        return _pseudo_record(pseudo)
+    definition = pseudos.get(id_or_cas_or_name) if pseudos is not None else None
+    if definition is None:
+        definition = _PSEUDOS.get(id_or_cas_or_name)
+    if definition is not None:
+        return _pseudo_record(definition)
     raise ValueError(
         f"unknown component {id_or_cas_or_name!r}: not a curated id, not in the "
         "chemicals databank, and not a registered pseudo-component"

@@ -35,6 +35,7 @@ from thermo import PRMIX, CEOSGas, ChemicalConstantsPackage, FlashVL, FlashVLN, 
 from thermo.interaction_parameters import IPDB
 from thermo.nrtl import NRTL
 
+from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.registry import register
 from ngdesign.thermo import _state
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
@@ -65,35 +66,38 @@ def _require_databanked_pairs(ids: tuple[str, ...], cas_list: list[str], tau_bs:
 
 
 @cache
-def _flasher_for(ids: tuple[str, ...]) -> Any:
+def _flasher_for(ids: tuple[str, ...], pseudos: tuple[DataPseudoDefinition, ...] = ()) -> Any:
     """Build (and cache) a FlashVLN flasher over exactly this sorted component set.
 
     Zero-fraction components are dropped by the caller before this is reached, so
-    the cache key is the reduced, sorted support of the feed composition. The
-    provenance check runs at flasher construction, before any flash exists, so a
-    support with a databank-missing pair cannot produce a silently ideal result.
+    the cache key is the reduced, sorted support of the feed composition plus the
+    slate's flowsheet-owned pseudo definitions (spec P1-07). The provenance check
+    runs at flasher construction, before any flash exists, so a support with a
+    databank-missing pair cannot produce a silently ideal result.
     """
-    return _build_flasher_inner(ids, three_phase=True)
+    return _build_flasher_inner(ids, three_phase=True, pseudos=pseudos)
 
 
 @cache
-def _flasher_vl_for(ids: tuple[str, ...]) -> Any:
+def _flasher_vl_for(ids: tuple[str, ...], pseudos: tuple[DataPseudoDefinition, ...] = ()) -> Any:
     """Build (and cache) the two-phase FlashVL saturation fast path (spec P1-01)."""
-    return _build_flasher_inner(ids, three_phase=False)
+    return _build_flasher_inner(ids, three_phase=False, pseudos=pseudos)
 
 
-def _build_flasher_inner(ids: tuple[str, ...], three_phase: bool) -> Any:
+def _build_flasher_inner(
+    ids: tuple[str, ...], three_phase: bool, pseudos: tuple[DataPseudoDefinition, ...] = ()
+) -> Any:
     """Build an NRTL/PR flasher over exactly this sorted component set.
 
     The provenance check runs at flasher construction, before any flash exists,
     so a support with a databank-missing pair cannot produce a silently ideal
     result - whichever flasher the caller asks for.
     """
-    records = _state._records(ids)
-    pseudos = [r.id for r in records if r.cas is None]
-    if pseudos:
+    records = _state._records(ids, pseudos)
+    pseudo_ids = [r.id for r in records if r.cas is None]
+    if pseudo_ids:
         raise ValueError(
-            f"NRTL has no fitted binary parameters for pseudo-components {pseudos} "
+            f"NRTL has no fitted binary parameters for pseudo-components {pseudo_ids} "
             "(the ChemSep NRTL databank is keyed by CAS); refusing to flash an "
             "ideal pseudo pair matrix - register no pseudos or select an EOS model"
         )
@@ -152,7 +156,7 @@ class NrtlThermo(ThermoSurfaceMixin):
             _flasher_for(tuple(sorted(components)))
 
     def _build_flasher(self, ids: tuple[str, ...]) -> Any:
-        return _flasher_for(ids)
+        return _flasher_for(ids, self._slate_pseudos)
 
     def _build_flasher_vl(self, ids: tuple[str, ...]) -> Any:
-        return _flasher_vl_for(ids)
+        return _flasher_vl_for(ids, self._slate_pseudos)
