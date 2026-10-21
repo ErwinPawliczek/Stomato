@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Web image (spec P3-03): build the Vite app, serve dist/ with nginx, and proxy
 # /api to the api service (compose service name `api`; the Helm chart mounts a
 # ConfigMap that overrides this file with the chart's api Service name).
@@ -14,7 +15,7 @@ FROM nginx:1.27.3-alpine
 COPY --from=build /app/dist /usr/share/nginx/html
 RUN rm /etc/nginx/conf.d/default.conf
 # Static SPA + API proxy: cache hashed assets, never cache index.html.
-RUN <<'EOF' >> /etc/nginx/conf.d/default.conf
+COPY <<'EOF' /etc/nginx/conf.d/default.conf
 server {
   listen 80;
   root /usr/share/nginx/html;

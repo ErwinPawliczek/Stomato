@@ -71,6 +71,9 @@ services:
     restart: unless-stopped
 
   worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile
     image: ghcr.io/erwinpawliczek/stomato-api:local
     environment: *backend-env
     # Same image as `api`, worker command. The image HEALTHCHECK targets

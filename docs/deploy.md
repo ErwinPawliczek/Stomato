@@ -101,7 +101,7 @@ solve shows progress.*
 - **Projects survive restart:** state lives in Postgres (P3-01 store) and the
   queue in Redis (P3-02), both with persistent volumes in compose; `restart`
   and container replacement do not touch project data.
-- **Progress on long solves:** P3-02's SSE endpoint (`GET /jobs/{id}`) is
+- **Progress on long solves:** P3-02's SSE endpoint (`GET /api/jobs/{id}/events`) is
   reached through `web`'s nginx proxy, configured with
   `proxy_buffering off` and a 3600 s read timeout.
 - **What was actually executed for this spec:** `helm lint` (clean),
