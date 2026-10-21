@@ -1,7 +1,10 @@
 # Stomato (package `ngdesign`)
 Open, modular steady-state process simulator plus engineering deliverables (sizing, PFD, P&ID,
 piping routing, isometrics) generated from one Project model (src/ngdesign/contracts/project.py).
-Backend is Python (src/ngdesign, FastAPI in src/ngdesign/api). Frontend is React/TS in frontend/.
+Backend is Python (src/ngdesign, FastAPI in src/ngdesign/api). The store layer (src/ngdesign/store)
+persists projects and conversations over SQLModel; STOMATO_DATABASE_URL (default sqlite:///./stomato.db)
+and bearer auth via STOMATO_API_TOKENS (unset = open local mode) come from the environment only.
+Frontend is React/TS in frontend/.
 Architecture and roadmap: docs/PLAN.md.
 
 Constraints for automated work:

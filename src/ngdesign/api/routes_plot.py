@@ -22,16 +22,22 @@ A project whose unit kind has no registered plugin cannot be solved, so it
 cannot be routed either: both routes answer 501 naming the kind, exactly like
 POST /api/solve. Layout placements for tags that are no longer in the P&ID
 are ignored (same policy as the pfd/pid views).
+
+Spec P3-01: :func:`route_core` and :func:`plot_svg_core` take the store, so
+routes_projects.py can register the project-scoped twins; the legacy unscoped
+routes are deprecated aliases bound to the ``default`` project.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 
 from ngdesign import pipeline
+from ngdesign.agent.tools import ProjectStore
+from ngdesign.api.deps import default_project_store
 from ngdesign.contracts import PipingNetwork
 from ngdesign.render.plot_svg import render_plot_svg
 
@@ -40,25 +46,32 @@ router = APIRouter()
 _SVG_RESPONSES: dict[int | str, dict[str, Any]] = {200: {"content": {"image/svg+xml": {}}}}
 
 
-@router.post("/api/route")
-def route() -> PipingNetwork:
-    """Route the current project's P&ID through the layout.plot placements."""
-    # Late imports: app.py owns the current project and registers this router,
-    # so a module-level import would be circular (same pattern as routes_solve).
-    from ngdesign.api.app import _project
-    from ngdesign.api.routes_solve import solve
+def route_core(store: ProjectStore) -> PipingNetwork:
+    """Route the project's P&ID through the layout.plot placements."""
+    project = store.get()
+    from ngdesign.api.routes_solve import solve_core
 
-    project = _project()
     # Sizers mutate the flowsheet with datasheets: build on a copy so the
     # cached solve result (spec B-02) stays byte-identical to a bare solve.
-    pid = pipeline.build_pid(solve().model_copy(deep=True), k_gas=pipeline.DEFAULT_K_GAS)
+    pid = pipeline.build_pid(solve_core(store).model_copy(deep=True), k_gas=pipeline.DEFAULT_K_GAS)
     # Placements for tags that left the P&ID are ignored, like layout.pfd/pid.
     tags = {eq.tag for eq in pid.equipment}
     layout = {tag: pos for tag, pos in project.layout.plot.items() if tag in tags}
     return pipeline.route(pid, layout)
 
 
-@router.get("/api/views/plot.svg", response_class=Response, responses=_SVG_RESPONSES)
-def plot_svg() -> Response:
-    """Top view of the current project's routed piping, plan north up."""
-    return Response(content=render_plot_svg(route()), media_type="image/svg+xml")
+@router.post("/api/route", deprecated=True)
+def route(store: Annotated[ProjectStore, Depends(default_project_store)]) -> PipingNetwork:
+    """Route the default project's P&ID through the layout.plot placements."""
+    return route_core(store)
+
+
+def plot_svg_core(store: ProjectStore) -> Response:
+    """Top view of the project's routed piping, plan north up."""
+    return Response(content=render_plot_svg(route_core(store)), media_type="image/svg+xml")
+
+
+@router.get("/api/views/plot.svg", response_class=Response, responses=_SVG_RESPONSES, deprecated=True)
+def plot_svg(store: Annotated[ProjectStore, Depends(default_project_store)]) -> Response:
+    """Top view of the default project's routed piping, plan north up."""
+    return plot_svg_core(store)

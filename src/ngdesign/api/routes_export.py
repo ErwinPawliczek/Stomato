@@ -10,13 +10,21 @@ The datasheet block renders whatever ``solved.datasheets`` carries — today the
 solve seam does not attach datasheets (sizing is a CLI wiring stage), so the
 section is header-only until a solve that carries them; the contract-field
 headers keep the export checkable against the solve payload either way.
+
+Spec P3-01: :func:`export_sheet_core` takes the store, so routes_projects.py
+can register the project-scoped twin; the legacy unscoped route is a deprecated
+alias bound to the ``default`` project.
 """
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 
+from ngdesign.agent.tools import ProjectStore
+from ngdesign.api.deps import default_project_store
 from ngdesign.export import coerce_scope, sheet_csv, sheet_html
 
 router = APIRouter()
@@ -24,9 +32,8 @@ router = APIRouter()
 _FORMATS: tuple[str, ...] = ("csv", "html")
 
 
-@router.get("/api/export/sheet")
-def export_sheet(format: str, scope: str = "all") -> Response:
-    """Export the solved flowsheet's sheet; 422 naming the allowed values on a bad format/scope."""
+def export_sheet_core(store: ProjectStore, format: str, scope: str = "all") -> Response:
+    """Export the project's solved sheet; 422 naming the allowed values on a bad format/scope."""
     if format not in _FORMATS:
         raise HTTPException(status_code=422, detail=f"format must be one of: {', '.join(_FORMATS)}")
     try:
@@ -34,11 +41,9 @@ def export_sheet(format: str, scope: str = "all") -> Response:
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
-    # Late import: app.py owns the current project and registers this router,
-    # so a module-level import would be circular (same pattern as routes_solve).
-    from ngdesign.api.routes_solve import solve
+    from ngdesign.api.routes_solve import solve_core
 
-    solved = solve()  # cached by project hash; re-solves only after an edit
+    solved = solve_core(store)  # cached by project hash; re-solves only after an edit
 
     if format == "csv":
         return Response(
@@ -47,3 +52,11 @@ def export_sheet(format: str, scope: str = "all") -> Response:
             headers={"Content-Disposition": 'attachment; filename="sheet.csv"'},
         )
     return Response(content=sheet_html(solved, scope_arg), media_type="text/html; charset=utf-8")
+
+
+@router.get("/api/export/sheet", deprecated=True)
+def export_sheet(
+    format: str, store: Annotated[ProjectStore, Depends(default_project_store)], scope: str = "all"
+) -> Response:
+    """Export the default project's solved sheet."""
+    return export_sheet_core(store, format, scope)

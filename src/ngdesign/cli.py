@@ -148,7 +148,28 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     demo = sub.add_parser("slice", help="run the sample slice end to end and write every drawing")
     demo.add_argument("--out", default="out", help="output directory (default: out)")
+    db_init = sub.add_parser("db-init", help="create the store schema (spec P3-01)")  # noqa: F841 -- parser registration side effect
+    serve = sub.add_parser("serve", help="run the API server against the store (spec P3-01)")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8000)
     args = parser.parse_args(argv)
+
+    if args.command == "db-init":
+        from ngdesign.store import database_url_log_safe, init_db
+
+        init_db()
+        print(f"database ready: {database_url_log_safe()}")
+        return 0
+    if args.command == "serve":
+        import uvicorn
+
+        from ngdesign.api.app import app as api_app
+        from ngdesign.store import database_url_log_safe, init_db
+
+        init_db()
+        print(f"database ready: {database_url_log_safe()}")
+        uvicorn.run(api_app, host=args.host, port=args.port)
+        return 0
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
