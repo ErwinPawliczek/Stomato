@@ -87,7 +87,7 @@ its own `.importlinter` ignore lines. The orchestrator updates **Status** here o
 | P1-06 | Staged amine absorber/regenerator via column + amine package | P1-09, P1-03, P1-04 | BLOCKED 2026-10-21 (issue #98): column cannot solve zero/one-tear configurations → P1-09; re-dispatch after P1-09 merges |
 | P1-09 | Column zero/one-tear configurations (absorbers, strippers), seed, error containment; amine states inside the column | P1-03, P1-04, P1-08 | dispatched 2026-10-21 |
 | P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | merged #97 (867 comparisons, 74 xfail families; issues #99, #100) |
-| P1-07 | Pseudo-component definitions owned by the Flowsheet (no process-global registry) | P1-02 | dispatched 2026-10-21 (issue #113) |
+| P1-07 | Pseudo-component definitions owned by the Flowsheet (no process-global registry) | P1-02 | merged #115 (2026-10-21) |
 | P1-08 | One saturation solver over a vapour-fraction callable (amine package reuses `_state._saturation`) | P1-01, P1-04 | merged #106 |
 
 Dispatch order: P1-01 first (merged 2026-10-20); then P1-02, P1-03, P1-04, P1-05 in parallel
@@ -106,7 +106,7 @@ P1-04 merge. Contract-change PRs are reviewed by the orchestrator before merge.
 | Spec | Title | Depends on | Status |
 |---|---|---|---|
 | P2-02 | Partial results, per-unit error records, convergence history | P1-02, P1-03 | merged #111 (2026-10-21) |
-| P2-01 | Flowsheet design specs (Spec/Adjust) with an outer loop; `ngdesign.variables` | P2-02, B-08 | dispatched 2026-10-21 (issue #112) |
+| P2-01 | Flowsheet design specs (Spec/Adjust) with an outer loop; `ngdesign.variables` | P2-02, B-08 | PR #116 in review (2026-10-21) |
 | P2-03 | Per-block tear initialisation; Broyden option for tears | P2-02 | drafted |
 | P2-04 | Case-study runner (CLI, API, agent) | P2-01, B-08 | drafted |
 
