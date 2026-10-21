@@ -1,0 +1,584 @@
+# SAFT / CPA / multi-fluid Helmholtz family (spec T-07). Every row loads without teqp
+# (lazy import); the teqp-backed builds require `uv sync --extra saft` (teqp>=0.22).
+# Registered but non-building rows (pc_saft_assoc, pc_saft_polar, cpa_pr) refuse in
+# _build_kernel with the named reason, so a feed selecting them fails loudly instead of
+# silently dropping the physics they stand for. All rows are `experimental` until CI runs
+# the optional extra; parameters live in data/thermo_params/saft/pure.yaml.
+#
+# The reference cases listed under `validation:` currently run against the pc_saft /
+# cpa_srk packages (data/validation/saft/cases.yaml). The other rows carry no case ids
+# yet: no case names their package, and a validation id that does not run against the
+# row would be claimed, not measured, evidence.
+
+- id: pc_saft
+  name: PC-SAFT (teqp)
+  family: saft
+  adapter: ngdesign.thermo.teqp_bridge:PCSaftThermo
+  params:
+    source: teqp PC-SAFT, explicit coefficients (data/thermo_params/saft/pure.yaml)
+    provenance: m, sigma, epsilon/k from Gross & Sadowski (2001) Ind. Eng. Chem. Res. 40,
+      1244-1257 (methane, ethane, propane, n-butane, n-pentane, n-hexane) and Gross &
+      Sadowski (2001) as reported in teqp's compiled library (CO2, cross-checked to
+      teqp's compiled values to printed precision); k_ij = 0 — no verifiable open
+      citation for the cited pairs' interaction parameters was found, and tuning k_ij
+      against the validation points is forbidden
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - acid_gas
+    polar: false
+    electrolyte: false
+    T_K: [95.0, 600.0]
+    P_Pa: [1000.0, 1.0e+8]
+    phases: [V, L]
+  status: experimental
+  validation: &pc_saft_cases
+  - pure-C1-95.3K
+  - pure-C1-125.0K
+  - pure-C1-155.0K
+  - pure-C1-172.0K
+  - pure-C1-181.0K
+  - pure-CO2-216.7K
+  - pure-CO2-240.0K
+  - pure-CO2-265.0K
+  - pure-CO2-285.0K
+  - pure-CO2-288.9K
+  - c1co2-293.130K-6.135MPa
+  - c1co2-293.130K-6.976MPa
+  - c1co2-298.142K-6.976MPa
+  - c1co2-298.142K-7.508MPa
+  - c1co2-303.145K-7.306MPa
+  - c1co2-303.144K-7.361MPa
+  references:
+  - >-
+    Gross & Sadowski, "Perturbed-Chain SAFT: An Equation of State Based on a Perturbation
+    Theory for Chain Molecules", Ind. Eng. Chem. Res. 40 (2001) 1244-1257
+  - teqp 0.23 (Thol & Bell), https://teqp.readthedocs.io, MIT licence
+  l0:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 150.0
+      - - C2
+        - 200.0
+      - - nC4
+        - 250.0
+      - - CO2
+        - 240.0
+    phase_identification:
+      points:
+      - - C1
+        - 150.0
+      - - nC4
+        - 300.0
+      - - CO2
+        - 250.0
+    round_trip:
+      z:
+        C1: 1.0
+      states:
+      - - 150.0
+        - 4.0e+6
+      - - 250.0
+        - 2.0e+5
+    dhdT_cp:
+      state: [250.0, 2.0e+5]
+      phase: vapor
+      z:
+        C1: 1.0
+    gibbs_duhem:
+      binaries:
+      - z:
+          C1: 0.5
+          CO2: 0.5
+        phase: vapor
+        T: 250.0
+        P: 5.0e+5
+      - z:
+          C1: 0.5
+          C2: 0.5
+        phase: hc_liquid
+        T: 150.0
+        P: 5.0e+6
+    single_liquid_limit:
+      state: [150.0, 5.0e+6]
+      z:
+        C1: 1.0
+    determinism:
+      state: [250.0, 5.0e+5]
+      z:
+        C1: 0.8
+        CO2: 0.2
+  l0_excluded: {}
+  l0_note: ''
+
+- id: pc_saft_assoc
+  name: PC-SAFT with association (registered refusal)
+  family: saft
+  adapter: ngdesign.thermo.teqp_bridge:PCSaftAssocThermo
+  params:
+    source: none — the row refuses to build
+    provenance: teqp 0.23.2's PC-SAFT factory schema has no association-parameter fields,
+      and no verified citable explicit PC-SAFT association parameter set is loaded in
+      data/thermo_params/saft/pure.yaml; water/methanol association chemistry therefore
+      stays outside the family instead of being silently dropped
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - water
+    - alcohol
+    polar: true
+    electrolyte: false
+    T_K: [95.0, 600.0]
+    P_Pa: [1000.0, 1.0e+8]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - Gross & Sadowski (2001), Ind. Eng. Chem. Res. 40, 1244-1257 (association term
+    background)
+  l0: {}
+  l0_excluded:
+    pure_psat_limit: row refuses to build — teqp's PC-SAFT has no association term
+      (NotImplementedError in _build_kernel)
+    phase_identification: row refuses to build — teqp's PC-SAFT has no association term
+      (NotImplementedError in _build_kernel)
+    round_trip: row refuses to build — teqp's PC-SAFT has no association term
+      (NotImplementedError in _build_kernel)
+    dhdT_cp: row refuses to build — teqp's PC-SAFT has no association term
+      (NotImplementedError in _build_kernel)
+    gibbs_duhem: row refuses to build — teqp's PC-SAFT has no association term
+      (NotImplementedError in _build_kernel)
+    single_liquid_limit: row refuses to build — teqp's PC-SAFT has no association term
+      (NotImplementedError in _build_kernel)
+    determinism: row refuses to build — teqp's PC-SAFT has no association term
+      (NotImplementedError in _build_kernel)
+  l0_note: ''
+
+- id: pc_saft_polar
+  name: Polar PC-SAFT (registered refusal)
+  family: saft
+  adapter: ngdesign.thermo.teqp_bridge:PCSaftPolarThermo
+  params:
+    source: none — the row refuses to build
+    provenance: teqp's PC-SAFT supports dipolar/quadrupolar coefficient fields, but no
+      verified citable polar parameter set for the curated slate is loaded in
+      data/thermo_params/saft/pure.yaml; unverified parameters are excluded rather than
+      shipped (see pure.yaml `excluded:`)
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - acid_gas
+    polar: true
+    electrolyte: false
+    T_K: [95.0, 600.0]
+    P_Pa: [1000.0, 1.0e+8]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - >-
+    Gross & Vrabec, "An equation of state contribution for polar components: Dipolar
+    molecules", AIChE J. 52 (2006) 1194-1204 (term background)
+  l0: {}
+  l0_excluded:
+    pure_psat_limit: row refuses to build — no verified citable polar PC-SAFT parameter
+      set (NotImplementedError in _build_kernel)
+    phase_identification: row refuses to build — no verified citable polar PC-SAFT
+      parameter set (NotImplementedError in _build_kernel)
+    round_trip: row refuses to build — no verified citable polar PC-SAFT parameter set
+      (NotImplementedError in _build_kernel)
+    dhdT_cp: row refuses to build — no verified citable polar PC-SAFT parameter set
+      (NotImplementedError in _build_kernel)
+    gibbs_duhem: row refuses to build — no verified citable polar PC-SAFT parameter set
+      (NotImplementedError in _build_kernel)
+    single_liquid_limit: row refuses to build — no verified citable polar PC-SAFT
+      parameter set (NotImplementedError in _build_kernel)
+    determinism: row refuses to build — no verified citable polar PC-SAFT parameter set
+      (NotImplementedError in _build_kernel)
+  l0_note: ''
+
+- id: saft_vr_mie
+  name: SAFT-VR Mie (teqp)
+  family: saft
+  adapter: ngdesign.thermo.teqp_bridge:SaftVrMieThermo
+  params:
+    source: teqp SAFT-VR-Mie, explicit coefficients (data/thermo_params/saft/pure.yaml)
+    provenance: m, sigma, lambda_r, lambda_a from Lafitte, Apostolakis, Essmann & Muller
+      (2013) J. Chem. Phys. 139, 154504 (DOI 10.1063/1.4819786), cross-checked against
+      teqp 0.23.2's compiled parameter values to printed precision (methane, ethane,
+      propane); k_ij = 0 for the pairs in scope
+  applicability:
+    component_classes:
+    - hydrocarbon
+    polar: false
+    electrolyte: false
+    T_K: [90.0, 420.0]
+    P_Pa: [1000.0, 1.0e+8]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - Lafitte, Apostolakis, Essmann & Muller, "Development of the truncated perturbed
+    chain-polar SAFT... ", J. Chem. Phys. 139 (2013) 154504
+  - teqp 0.23 (Thol & Bell), https://teqp.readthedocs.io, MIT licence
+  l0:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 150.0
+      - - C2
+        - 200.0
+      - - C3
+        - 250.0
+    phase_identification:
+      points:
+      - - C1
+        - 150.0
+      - - C3
+        - 250.0
+    round_trip:
+      z:
+        C1: 1.0
+      states:
+      - - 150.0
+        - 4.0e+6
+      - - 180.0
+        - 3.0e+5
+    dhdT_cp:
+      state: [180.0, 3.0e+5]
+      phase: vapor
+      z:
+        C1: 1.0
+    gibbs_duhem:
+      binaries:
+      - z:
+          C1: 0.5
+          C3: 0.5
+        phase: vapor
+        T: 250.0
+        P: 5.0e+5
+    single_liquid_limit:
+      state: [150.0, 4.0e+6]
+      z:
+        C1: 1.0
+    determinism:
+      state: [250.0, 5.0e+5]
+      z:
+        C1: 0.7
+        C3: 0.3
+  l0_excluded: {}
+  l0_note: ''
+
+- id: cpa_srk
+  name: CPA-SRK (hand-rolled association kernel)
+  family: saft
+  adapter: ngdesign.thermo.teqp_bridge:CpaSrkThermo
+  params:
+    source: CPA-SRK, Kontogeorgis parameters (data/thermo_params/saft/pure.yaml)
+    provenance: water 4C and methanol 2B CPA parameters from Kontogeorgis, Voutsas,
+      Yakoumis & Tassios (1996) Ind. Eng. Chem. Res. 35, 4631-4642, retrieved and
+      verified this session against Table 1 of Kontogeorgis et al. (1999) Fluid Phase
+      Equilib. 158-160, 21-29; SRK cubic term closed-form, association term by
+      successive substitution (Michelsen-Hendriks); k_ij = 0 — no verifiable open
+      citation for the water-methanol CPA k_ij was found
+  applicability:
+    component_classes:
+    - water
+    - alcohol
+    polar: true
+    electrolyte: false
+    T_K: [250.0, 620.0]
+    P_Pa: [100.0, 1.0e+8]
+    phases: [V, L]
+  status: experimental
+  validation: &cpa_srk_cases
+  - pure-H2O-323.5K
+  - pure-H2O-420.0K
+  - pure-H2O-520.0K
+  - pure-H2O-600.0K
+  - pure-H2O-614.7K
+  - pure-MeOH-256.3K
+  - pure-MeOH-307.6K
+  - pure-MeOH-358.8K
+  - pure-MeOH-410.1K
+  - pure-MeOH-461.3K
+  - meohh2o-97.99kPa-353.25K
+  - meohh2o-97.99kPa-349.05K
+  - meohh2o-97.99kPa-343.75K
+  - meohh2o-322.91K-15.932kPa
+  - meohh2o-322.91K-26.131kPa
+  - meohh2o-322.91K-31.544kPa
+  - meohh2o-322.91K-40.850kPa
+  - meohh2o-322.91K-46.450kPa
+  - meohh2o-322.91K-52.142kPa
+  references:
+  - Kontogeorgis, Voutsas, Yakoumis & Tassios, "An Equation of State for Associating
+    Fluids", Ind. Eng. Chem. Res. 35 (1996) 4631-4642
+  - Kontogeorgis, Yakoumis, Meijer, Hendriks & Moorwood, "Multicomponent phase
+    equilibrium calculations for water-methanol-alkane mixtures", Fluid Phase Equilib.
+    158-160 (1999) 201-209
+  l0:
+    pure_psat_limit:
+      points:
+      - - H2O
+        - 373.15
+      - - H2O
+        - 423.15
+      - - MeOH
+        - 337.7
+      - - MeOH
+        - 298.15
+    phase_identification:
+      points:
+      - - H2O
+        - 373.15
+      - - MeOH
+        - 320.0
+    round_trip:
+      z:
+        H2O: 1.0
+      states:
+      # 350 K / 3e5 Pa: a compressed-liquid state well below the 3e5 Pa saturation
+      # temperature (~407 K) so the PH inversion classifies trial temperatures via
+      # the cheap Wilson band instead of an exact psat solve per trial; at 373.15 K
+      # the trials clustered inside the near-saturation band and the check cost
+      # ~200 s of exact saturation solves.
+      - - 350.0
+        - 3.0e+5
+    dhdT_cp:
+      state: [400.0, 1.0e+5]
+      phase: vapor
+      z:
+        H2O: 1.0
+    gibbs_duhem:
+      # 30 midpoint steps: the association kernel evaluates ~100x slower than a
+      # closed-form EOS and the integral is smooth; the 1e-6 bar is unchanged.
+      steps: 30
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        phase: vapor
+        T: 400.0
+        P: 1.0e+5
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        phase: aqueous
+        T: 350.0
+        P: 3.0e+5
+    single_liquid_limit:
+      state: [373.15, 3.0e+5]
+      z:
+        H2O: 1.0
+    determinism:
+      state: [400.0, 1.0e+5]
+      z:
+        MeOH: 0.4
+        H2O: 0.6
+  l0_excluded: {}
+  l0_note: teqp 0.23.2's own CPA engine NaNs its fugacity coefficients at liquid-like
+    densities and collapses the water saturation line with the published Kontogeorgis
+    parameters, so this row runs the bridge's hand-rolled CPA-SRK kernel instead
+    (measured in the T-07 exploration).
+
+- id: cpa_pr
+  name: CPA-PR (registered refusal)
+  family: saft
+  adapter: ngdesign.thermo.teqp_bridge:CpaPrThermo
+  params:
+    source: none — the row refuses to build
+    provenance: teqp 0.23.2's CPA engine NaNs its fugacity coefficients at liquid-like
+      densities and collapses the water saturation line with the published Kontogeorgis
+      parameters (measured in the T-07 exploration); a Peng-Robinson CPA variant would
+      need the same hand-rolled treatment as cpa_srk and no verified citable CPA-PR
+      parameter set is loaded for the slate
+  applicability:
+    component_classes:
+    - water
+    - alcohol
+    - glycol
+    polar: true
+    electrolyte: false
+    T_K: [250.0, 620.0]
+    P_Pa: [100.0, 1.0e+8]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - Kontogeorgis, Voutsas, Yakoumis & Tassios, Ind. Eng. Chem. Res. 35 (1996) 4631-4642
+  l0: {}
+  l0_excluded:
+    pure_psat_limit: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
+      liquid-like density; NotImplementedError in _build_kernel)
+    phase_identification: row refuses to build — teqp's CPA is unusable (fugacity NaNs
+      at liquid-like density; NotImplementedError in _build_kernel)
+    round_trip: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
+      liquid-like density; NotImplementedError in _build_kernel)
+    dhdT_cp: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
+      liquid-like density; NotImplementedError in _build_kernel)
+    gibbs_duhem: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
+      liquid-like density; NotImplementedError in _build_kernel)
+    single_liquid_limit: row refuses to build — teqp's CPA is unusable (fugacity NaNs
+      at liquid-like density; NotImplementedError in _build_kernel)
+    determinism: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
+      liquid-like density; NotImplementedError in _build_kernel)
+  l0_note: ''
+
+- id: multifluid
+  name: Multi-fluid Helmholtz (teqp CoolProp library)
+  family: saft
+  adapter: ngdesign.thermo.teqp_bridge:MultifluidThermo
+  params:
+    source: teqp multifluid over the CoolProp fluid library (data/thermo_params/saft/pure.yaml
+      alias table)
+    provenance: fluid names resolve to teqp's bundled CoolProp-32 fluid library (IAPWS,
+      NIST REFPROP-derived and GERG Helmholtz formulations as shipped by teqp 0.23.2);
+      binary pairs and departure functions from teqp's bundled mixture files. Water-bearing
+      feeds are refused — teqp's bundled pair file has no water interaction data (bare
+      Lorentz-Berthelot), which puts the slice dew 2x above the CoolProp with-water value
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - acid_gas
+    polar: false
+    electrolyte: false
+    T_K: [60.0, 800.0]
+    P_Pa: [100.0, 1.0e+8]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - teqp 0.23 (Thol & Bell), https://teqp.readthedocs.io, MIT licence
+  - Huber, Lemmon, Diky, Smith & Brunner, "ThermoData Engine (TDE103b)", J. Chem. Eng.
+    Data 61 (2016) 3382-3395 (CoolProp fluid data lineage)
+  l0:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 150.0
+      - - C2
+        - 200.0
+      - - N2
+        - 90.0
+      - - CO2
+        - 240.0
+    phase_identification:
+      points:
+      - - C1
+        - 150.0
+      - - C3
+        - 250.0
+    round_trip:
+      z:
+        C1: 0.9
+        N2: 0.1
+      states:
+      - - 150.0
+        - 3.0e+6
+      - - 200.0
+        - 3.0e+5
+    dhdT_cp:
+      state: [200.0, 3.0e+5]
+      phase: vapor
+      z:
+        C1: 0.9
+        N2: 0.1
+    gibbs_duhem:
+      binaries:
+      - z:
+          C1: 0.5
+          N2: 0.5
+        phase: vapor
+        T: 200.0
+        P: 5.0e+5
+      - z:
+          C1: 0.9
+          N2: 0.1
+        phase: hc_liquid
+        T: 150.0
+        P: 3.0e+6
+    single_liquid_limit:
+      state: [150.0, 3.0e+6]
+      z:
+        C1: 0.9
+        N2: 0.1
+    determinism:
+      state: [200.0, 5.0e+5]
+      z:
+        C1: 0.5
+        N2: 0.5
+  l0_excluded: {}
+  l0_note: ''
+
+- id: multifluid_pure
+  name: Multi-fluid Helmholtz, pure fluids (teqp CoolProp library)
+  family: saft
+  adapter: ngdesign.thermo.teqp_bridge:MultifluidPureThermo
+  params:
+    source: teqp multifluid over the CoolProp fluid library (data/thermo_params/saft/pure.yaml
+      alias table)
+    provenance: same fluid data as the multifluid row; the row pins the pure-fluid
+      surface (binary feeds are refused by design)
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    - acid_gas
+    polar: false
+    electrolyte: false
+    T_K: [60.0, 800.0]
+    P_Pa: [100.0, 1.0e+8]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - teqp 0.23 (Thol & Bell), https://teqp.readthedocs.io, MIT licence
+  l0:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 150.0
+      - - N2
+        - 90.0
+      - - H2O
+        - 450.0
+    phase_identification:
+      points:
+      - - C1
+        - 150.0
+      - - H2O
+        - 450.0
+    round_trip:
+      z:
+        H2O: 1.0
+      states:
+      - - 450.0
+        - 3.0e+6
+      - - 500.0
+        - 1.0e+6
+    dhdT_cp:
+      state: [450.0, 2.0e+5]
+      phase: vapor
+      z:
+        H2O: 1.0
+    single_liquid_limit:
+      state: [450.0, 3.0e+6]
+      z:
+        H2O: 1.0
+    determinism:
+      state: [500.0, 1.0e+6]
+      z:
+        H2O: 1.0
+  l0_excluded:
+    gibbs_duhem: pure-fluid-only surface — binary feeds are refused by design, and the
+      composition-loop check needs a binary; the family's mixture coverage runs on the
+      multifluid row
+  l0_note: ''

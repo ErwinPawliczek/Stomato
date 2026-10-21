@@ -3,13 +3,17 @@
 One test per case, across every package the case names. A failure message always shows the
 expected value, the package's value, the error against the case's tolerance, and the cited
 source, so a red run is assessable (model limitation vs bug) without re-reading the dataset.
-Never skipped: every case runs on every package it names, every time.
+Never skipped: every case runs on every package it names, every time. The one exception is
+a package whose OPTIONAL backend is not installed (the saft rows' teqp extra) — a dependency
+fact about the environment, never a model outcome — reported as a skip; every model failure
+stays red.
 """
 
 from __future__ import annotations
 
 import pytest
 
+from ngdesign.thermo.teqp_bridge import SaftDependencyMissing
 from scripts.validate_properties import Case, Row, _load_cases, evaluate_case, packages_for, xfail_reason
 
 pytestmark = [pytest.mark.validation, pytest.mark.slow]
@@ -26,14 +30,20 @@ def test_reference_case(case: Case) -> None:
     """Every comparison of one case passes on every package the case names."""
     failures: list[Row] = []
     crashes: list[str] = []
+    dep_skips: list[str] = []
     for pkg in packages_for(case):
         try:
             failures.extend(row for row in evaluate_case(case, pkg) if not row.passed)
+        except SaftDependencyMissing as exc:
+            # Deferred: a case naming several packages still runs its available ones.
+            dep_skips.append(f"{pkg}: optional backend not installed ({exc})")
         except Exception as exc:  # noqa: BLE001 - a package crash is a failing case, not a suite error
             crashes.append(f"  {pkg} raised {type(exc).__name__}: {exc}\n    source: {case.source}")
+    if dep_skips and not failures and not crashes:
+        pytest.skip(f"{case.id}: {'; '.join(dep_skips)}")
     if not failures and not crashes:
         return
-    detail = "\n".join([*(_format_row(row, case.source) for row in failures), *crashes])
+    detail = "\n".join([*(_format_row(row, case.source) for row in failures), *crashes, *dep_skips])
     failed_props = frozenset(row.property for row in failures)
     reason = xfail_reason(case, failed_props | {"crash" for _ in crashes})
     if reason is not None:

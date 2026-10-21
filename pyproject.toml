@@ -26,6 +26,9 @@ dependencies = [
 postgres = [
     "psycopg[binary]>=3.1",
 ]
+saft = [
+    "teqp>=0.22",
+]
 
 [dependency-groups]
 dev = [

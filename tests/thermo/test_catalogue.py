@@ -18,6 +18,16 @@ from ngdesign.thermo.nrtl import NrtlThermo
 from ngdesign.thermo.pr import PengRobinsonThermo
 from ngdesign.thermo.pr78 import PengRobinson78Thermo
 from ngdesign.thermo.srk import SoaveRedlichKwongThermo
+from ngdesign.thermo.teqp_bridge import (
+    CpaPrThermo,
+    CpaSrkThermo,
+    MultifluidPureThermo,
+    MultifluidThermo,
+    PCSaftAssocThermo,
+    PCSaftPolarThermo,
+    PCSaftThermo,
+    SaftVrMieThermo,
+)
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -36,9 +46,24 @@ def _load_harness() -> Any:
 
 
 def test_rows_load_and_build() -> None:
-    """Six rows load; the registry resolves each id to its adapter class."""
+    """Fourteen rows load; the registry resolves each id to its adapter class."""
     rows = load_catalogue()
-    assert sorted(rows) == ["amine_enrtl", "amine_ke", "nrtl", "pr", "pr78", "srk"]
+    assert sorted(rows) == [
+        "amine_enrtl",
+        "amine_ke",
+        "cpa_pr",
+        "cpa_srk",
+        "multifluid",
+        "multifluid_pure",
+        "nrtl",
+        "pc_saft",
+        "pc_saft_assoc",
+        "pc_saft_polar",
+        "pr",
+        "pr78",
+        "saft_vr_mie",
+        "srk",
+    ]
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
         "pr": PengRobinsonThermo,
@@ -47,8 +72,19 @@ def test_rows_load_and_build() -> None:
         "nrtl": NrtlThermo,
         "amine_ke": AmineKEPackage,
         "amine_enrtl": AmineENRTLPackage,
+        "pc_saft": PCSaftThermo,
+        "pc_saft_assoc": PCSaftAssocThermo,
+        "pc_saft_polar": PCSaftPolarThermo,
+        "saft_vr_mie": SaftVrMieThermo,
+        "cpa_srk": CpaSrkThermo,
+        "cpa_pr": CpaPrThermo,
+        "multifluid": MultifluidThermo,
+        "multifluid_pure": MultifluidPureThermo,
     }
     for model_id, cls in expected_types.items():
+        if model_id in {"pc_saft", "pc_saft_assoc", "pc_saft_polar", "saft_vr_mie",
+                        "cpa_srk", "cpa_pr", "multifluid", "multifluid_pure"}:
+            continue  # saft construction needs the optional teqp extra; test_saft.py covers it
         assert type(registry.create("thermo", model_id)) is cls
 
 
@@ -157,13 +193,35 @@ def test_slice_solves_identically_through_catalogue(model_id: str) -> None:
     assert direct_dump == registry_dump
 
 
+# The saft association kernels evaluate ~10x slower than closed-form EOS; the global
+# 120s timeout is an anti-hang guard, not a slate budget, so this test opts out of it.
+@pytest.mark.timeout(900)
 def test_l0_green_on_all_rows() -> None:
-    """Every declared L0 check on every row passes (probes fixed the points/tolerances)."""
+    """Every declared L0 check on every buildable row passes (probes fixed the points/tolerances).
+
+    Rows that refuse to build (teqp 0.23.2 cannot serve them; spec T-07 requires the refusal)
+    are expected to raise NotImplementedError and only on experimental rows with an empty l0
+    declaration — a refusal anywhere else fails here. A missing optional backend records the
+    row and moves on; the validation suite reports environment skips separately.
+    """
     vp = _load_harness()
+    dep_missed: list[str] = []
+    total = 0
     for model_id, row in sorted(load_catalogue().items()):
-        results = vp.run_l0_row(row)
+        total += 1
+        try:
+            results = vp.run_l0_row(row)
+        except NotImplementedError:
+            assert row.status == "experimental" and not row.l0, (
+                f"{model_id}: unexpected build refusal on a buildable row"
+            )
+            continue
+        except vp.SaftDependencyMissing:
+            dep_missed.append(model_id)
+            continue
         failed = [r for r in results if not r.passed]
         assert not failed, f"{model_id}: {[(r.check, r.detail) for r in failed]}"
+    assert len(dep_missed) < total, "every row missed its backend; no L0 check ran"
 
 
 def test_audit_passes_on_the_real_catalogue() -> None:

@@ -73,7 +73,9 @@ def test_all_case_packages_are_registered_names() -> None:
     for case in _load_cases():
         if case.package == "all":
             continue
-        assert case.package in {"pr", "srk", "pr78", "nrtl"}, f"{case.id}: unexpected package {case.package}"
+        assert case.package in {"pr", "srk", "pr78", "nrtl", "pc_saft", "cpa_srk"}, (
+            f"{case.id}: unexpected package {case.package}"
+        )
 
 
 def test_results_json_row_schema_when_present() -> None:
