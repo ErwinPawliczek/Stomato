@@ -27,6 +27,7 @@ them). SI units throughout: K, Pa, kg/m3, Pa.s, J/mol, J/(mol K).
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from functools import cache
 from typing import Any, Literal, cast
 
@@ -224,7 +225,13 @@ def _kij_matrix(records: list[Component], kij_table: str) -> list[list[float]]:
     return kijs
 
 
-def build_flasher(ids: tuple[str, ...], eos: Any, kij_table: str, pseudos: SlatePseudos = ()) -> Any:
+def build_flasher(
+    ids: tuple[str, ...],
+    eos: Any,
+    kij_table: str,
+    pseudos: SlatePseudos = (),
+    configure: Callable[[list[Any], Any, list[list[float]]], tuple[Any, dict[str, Any], Any, Any]] | None = None,
+) -> Any:
     """Build a FlashVLN flasher over exactly this sorted component set.
 
     Parameterised by the `thermo`-library mixture EOS class (PRMIX, SRKMIX,
@@ -234,6 +241,11 @@ def build_flasher(ids: tuple[str, ...], eos: Any, kij_table: str, pseudos: Slate
     are dropped by the caller before this is reached).
     Constants build from the resolved Component records (spec P1-02), so every
     id must resolve before this is reached.
+
+    ``configure`` (spec T-02): optional callback over (records, constants,
+    kijs) returning the option-adjusted (eos, eos_kwargs, gas_cls,
+    liquid_cls) for non-default cubic options. None keeps the plain
+    `thermo`-library construction.
     """
     with DATABANK_LOCK:
         records = _records(ids, pseudos)
@@ -245,11 +257,15 @@ def build_flasher(ids: tuple[str, ...], eos: Any, kij_table: str, pseudos: Slate
             "omegas": constants.omegas,
             "kijs": kijs,
         }
+        gas_cls: Any = CEOSGas
+        liquid_cls: Any = CEOSLiquid
+        if configure is not None:
+            eos, eos_kwargs, gas_cls, liquid_cls = configure(records, constants, kijs)
         heat_caps = correlations.HeatCapacityGases
-        gas = CEOSGas(eos, eos_kwargs, HeatCapacityGases=heat_caps)
+        gas = gas_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps)
         liquids = [
-            CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps),
-            CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps),
+            liquid_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps),
+            liquid_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps),
         ]
         return FlashVLN(constants, correlations, liquids=liquids, gas=gas)
 
@@ -493,12 +509,19 @@ def cache_key(z: dict[str, float], T: float, P: float) -> tuple[Any, ...]:
     return (tuple(sorted((cid, round(x, 10)) for cid, x in z.items())), round(T, 6), round(P, 3))
 
 
-def build_flasher_vl(ids: tuple[str, ...], eos: Any, kij_table: str, pseudos: SlatePseudos = ()) -> Any:
+def build_flasher_vl(
+    ids: tuple[str, ...],
+    eos: Any,
+    kij_table: str,
+    pseudos: SlatePseudos = (),
+    configure: Callable[[list[Any], Any, list[list[float]]], tuple[Any, dict[str, Any], Any, Any]] | None = None,
+) -> Any:
     """Build a two-phase FlashVL flasher over exactly this sorted component set.
 
     The saturation fast path (spec P1-01): when the feed cannot form a second
     liquid (no water), a VLE-only FlashVL over the same EOS objects reaches the
-    same equilibrium without liquid-liquid stability work.
+    same equilibrium without liquid-liquid stability work. ``configure`` is the
+    T-02 option hook (:func:`build_flasher`).
     """
     with DATABANK_LOCK:
         records = _records(ids, pseudos)
@@ -510,9 +533,13 @@ def build_flasher_vl(ids: tuple[str, ...], eos: Any, kij_table: str, pseudos: Sl
             "omegas": constants.omegas,
             "kijs": kijs,
         }
+        gas_cls: Any = CEOSGas
+        liquid_cls: Any = CEOSLiquid
+        if configure is not None:
+            eos, eos_kwargs, gas_cls, liquid_cls = configure(records, constants, kijs)
         heat_caps = correlations.HeatCapacityGases
-        gas = CEOSGas(eos, eos_kwargs, HeatCapacityGases=heat_caps)
-        liquid = CEOSLiquid(eos, eos_kwargs, HeatCapacityGases=heat_caps)
+        gas = gas_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps)
+        liquid = liquid_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps)
         # N=1 is never flashed through this path: thermo's FlashVL stability guess
         # divides by N-1, so pure feeds short-circuit to the databank Psat curve in
         # _saturation and the full flasher maps their states.

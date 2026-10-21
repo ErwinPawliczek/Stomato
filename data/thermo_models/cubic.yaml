@@ -217,3 +217,1065 @@
   l0: {}
   l0_excluded: {}
   l0_note: ''
+- id: rk
+  name: Redlich-Kwong
+  family: cubic
+  adapter: ngdesign.thermo.cubic:RedlichKwongThermo
+  options:
+    eos: RKMIX
+    kij_table: ChemSep PR
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - rk-pure-C1-125K
+  - rk-pure-C3-300K
+  - rk-pure-nC4-280K
+  - rk-pure-CO2-265K
+  - rk-c1c3-294.26K-6.895MPa
+  - rk-c1co2-277.15K-5.97MPa
+  - rk-ng-dew-morch-243.4K-0.30MPa
+  - rk-ng-dew-morch-254.6K-0.68MPa
+  - rk-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Redlich, O.; Kwong, J. N. S. On the Thermodynamics of Solutions. V. An Equation of State. Fugacities
+    of Gaseous Solutions. Chem. Rev. 1949, 44 (1), 233-244.
+- id: vdw
+  name: van der Waals
+  family: cubic
+  adapter: ngdesign.thermo.cubic:VanDerWaalsThermo
+  options:
+    eos: VDWMIX
+    kij_table: ChemSep PR
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - vdw-pure-C1-125K
+  - vdw-pure-C3-300K
+  - vdw-pure-nC4-280K
+  - vdw-pure-CO2-265K
+  - vdw-c1c3-294.26K-6.895MPa
+  - vdw-c1co2-277.15K-5.97MPa
+  - vdw-ng-dew-morch-243.4K-0.30MPa
+  - vdw-ng-dew-morch-254.6K-0.68MPa
+  - vdw-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - van der Waals, J. D. Over de Continuiteit van den Gas- en Vloeistoftoestand; thesis, Universiteit
+    Leiden, 1873.
+- id: prsv
+  name: Peng-Robinson-Stryjek-Vera (PRSV)
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrsvThermo
+  options:
+    eos: PRSVMIX
+    kij_table: ChemSep PR
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - prsv-pure-C1-125K
+  - prsv-pure-C3-300K
+  - prsv-pure-nC4-280K
+  - prsv-pure-CO2-265K
+  - prsv-c1c3-294.26K-6.895MPa
+  - prsv-c1co2-277.15K-5.97MPa
+  - prsv-ng-dew-morch-243.4K-0.30MPa
+  - prsv-ng-dew-morch-254.6K-0.68MPa
+  - prsv-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - 'Stryjek, R.; Vera, J. H. PRSV: An Improved Peng-Robinson Equation of State for Pure Compounds
+    and Mixtures. Can. J. Chem. Eng. 1986, 64 (2), 323-333 and 334-340.'
+- id: prsv2
+  name: Peng-Robinson-Stryjek-Vera 2 (PRSV2)
+  family: cubic
+  adapter: ngdesign.thermo.cubic:Prsv2Thermo
+  options:
+    eos: PRSV2MIX
+    kij_table: ChemSep PR
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - prsv2-pure-C1-125K
+  - prsv2-pure-C3-300K
+  - prsv2-pure-nC4-280K
+  - prsv2-pure-CO2-265K
+  - prsv2-c1c3-294.26K-6.895MPa
+  - prsv2-c1co2-277.15K-5.97MPa
+  - prsv2-ng-dew-morch-243.4K-0.30MPa
+  - prsv2-ng-dew-morch-254.6K-0.68MPa
+  - prsv2-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Twu, C. H.; Coon, J. E.; Simnick, J. J. An Improved Alpha Function for the Peng-Robinson Equation
+    of State. Fluid Phase Equilib. 1995, 117, 100-106.
+  - 'Stryjek, R.; Vera, J. H. PRSV: An Improved Peng-Robinson Equation of State for Pure Compounds
+    and Mixtures. Can. J. Chem. Eng. 1986, 64 (2), 323-333.'
+- id: twu-pr
+  name: Peng-Robinson, Twu generalised alpha
+  family: cubic
+  adapter: ngdesign.thermo.cubic:TwuPengRobinsonThermo
+  options:
+    eos: TWUPRMIX
+    kij_table: ChemSep PR
+    alpha: twu
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - twu-pr-pure-C1-125K
+  - twu-pr-pure-C3-300K
+  - twu-pr-pure-nC4-280K
+  - twu-pr-pure-CO2-265K
+  - twu-pr-c1c3-294.26K-6.895MPa
+  - twu-pr-c1co2-277.15K-5.97MPa
+  - twu-pr-ng-dew-morch-243.4K-0.30MPa
+  - twu-pr-ng-dew-morch-254.6K-0.68MPa
+  - twu-pr-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Twu, C. H.; Bluck, D.; Coon, J. E.; Cunningham, J. R. A Cubic Equation of State with a New Alpha
+    Function and a New Mixing Rule. Fluid Phase Equilib. 1991, 69 (1), 33-50.
+- id: twu-srk
+  name: Soave-Redlich-Kwong, Twu generalised alpha
+  family: cubic
+  adapter: ngdesign.thermo.cubic:TwuSrkThermo
+  options:
+    eos: TWUSRKMIX
+    kij_table: ChemSep PR
+    alpha: twu
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - twu-srk-pure-C1-125K
+  - twu-srk-pure-C3-300K
+  - twu-srk-pure-nC4-280K
+  - twu-srk-pure-CO2-265K
+  - twu-srk-c1c3-294.26K-6.895MPa
+  - twu-srk-c1co2-277.15K-5.97MPa
+  - twu-srk-ng-dew-morch-243.4K-0.30MPa
+  - twu-srk-ng-dew-morch-254.6K-0.68MPa
+  - twu-srk-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Twu, C. H.; Bluck, D.; Coon, J. E.; Cunningham, J. R. A Cubic Equation of State with a New Alpha
+    Function and a New Mixing Rule. Fluid Phase Equilib. 1991, 69 (1), 33-50.
+- id: api-srk
+  name: API Soave-Redlich-Kwong
+  family: cubic
+  adapter: ngdesign.thermo.cubic:ApiSrkThermo
+  options:
+    eos: APISRKMIX
+    kij_table: ChemSep PR
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - api-srk-pure-C1-125K
+  - api-srk-pure-C3-300K
+  - api-srk-pure-nC4-280K
+  - api-srk-pure-CO2-265K
+  - api-srk-c1c3-294.26K-6.895MPa
+  - api-srk-c1co2-277.15K-5.97MPa
+  - api-srk-ng-dew-morch-243.4K-0.30MPa
+  - api-srk-ng-dew-morch-254.6K-0.68MPa
+  - api-srk-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - 'American Petroleum Institute, API Technical Data Book - Petroleum Refining, Chapter 4: Thermodynamic
+    Properties (API form of the Soave-Redlich-Kwong equation of state).'
+  - Soave, G. Equilibrium Constants from a Modified Redlich-Kwong Equation of State. Chem. Eng. Sci.
+    1972, 27 (6), 1197-1203.
+- id: pr-boston-mathias
+  name: Peng-Robinson, Boston-Mathias alpha
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrBostonMathiasThermo
+  options:
+    eos: PRMIX_BM
+    kij_table: ChemSep PR
+    alpha: boston_mathias
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - pr-boston-mathias-pure-C1-125K
+  - pr-boston-mathias-pure-C3-300K
+  - pr-boston-mathias-pure-nC4-280K
+  - pr-boston-mathias-pure-CO2-265K
+  - pr-boston-mathias-c1c3-294.26K-6.895MPa
+  - pr-boston-mathias-c1co2-277.15K-5.97MPa
+  - pr-boston-mathias-ng-dew-morch-243.4K-0.30MPa
+  - pr-boston-mathias-ng-dew-morch-254.6K-0.68MPa
+  - pr-boston-mathias-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Boston, J. F.; Mathias, P. M. Phase Equilibria in a Third-Parameter Equation of State. Proc.
+    2nd Int. Conf. Phase Equilibria and Fluid Properties in the Chemical Process Industries, West
+    Berlin, 1980; pp 39-48.
+  - Peng, D.-Y.; Robinson, D. B. A New Two-Constant Equation of State. Ind. Eng. Chem. Fundam. 1976,
+    15 (1), 59-64.
+  - Soave, G. Equilibrium Constants from a Modified Redlich-Kwong Equation of State. Chem. Eng. Sci.
+    1972, 27 (6), 1197-1203.
+- id: srk-boston-mathias
+  name: Soave-Redlich-Kwong, Boston-Mathias alpha
+  family: cubic
+  adapter: ngdesign.thermo.cubic:SrkBostonMathiasThermo
+  options:
+    eos: SRKMIX_BM
+    kij_table: ChemSep PR
+    alpha: boston_mathias
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - srk-boston-mathias-pure-C1-125K
+  - srk-boston-mathias-pure-C3-300K
+  - srk-boston-mathias-pure-nC4-280K
+  - srk-boston-mathias-pure-CO2-265K
+  - srk-boston-mathias-c1c3-294.26K-6.895MPa
+  - srk-boston-mathias-c1co2-277.15K-5.97MPa
+  - srk-boston-mathias-ng-dew-morch-243.4K-0.30MPa
+  - srk-boston-mathias-ng-dew-morch-254.6K-0.68MPa
+  - srk-boston-mathias-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Boston, J. F.; Mathias, P. M. Phase Equilibria in a Third-Parameter Equation of State. Proc.
+    2nd Int. Conf. Phase Equilibria and Fluid Properties in the Chemical Process Industries, West
+    Berlin, 1980; pp 39-48.
+  - Peng, D.-Y.; Robinson, D. B. A New Two-Constant Equation of State. Ind. Eng. Chem. Fundam. 1976,
+    15 (1), 59-64.
+  - Soave, G. Equilibrium Constants from a Modified Redlich-Kwong Equation of State. Chem. Eng. Sci.
+    1972, 27 (6), 1197-1203.
+- id: pr-mathias-copeman
+  name: Peng-Robinson, Mathias-Copeman alpha
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrMathiasCopemanThermo
+  options:
+    eos: PRMIX_MC
+    kij_table: ChemSep PR
+    alpha: mathias_copeman
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    alpha_parameters: Mathias-Copeman coefficients from the Coquelet et al. (2004) Table II PR fits
+      (the table's 'Sulfur dioxide' row carries H2S critical properties and is keyed as H2S); components
+      without published fits use the EOS default kappa(omega) alpha
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - pr-mathias-copeman-pure-C1-125K
+  - pr-mathias-copeman-pure-C3-300K
+  - pr-mathias-copeman-pure-nC4-280K
+  - pr-mathias-copeman-pure-CO2-265K
+  - pr-mathias-copeman-c1c3-294.26K-6.895MPa
+  - pr-mathias-copeman-c1co2-277.15K-5.97MPa
+  - pr-mathias-copeman-ng-dew-morch-243.4K-0.30MPa
+  - pr-mathias-copeman-ng-dew-morch-254.6K-0.68MPa
+  - pr-mathias-copeman-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - 'Mathias, P. M.; Copeman, T. W. Extension of the Peng-Robinson Equation of State to Complex Mixtures:
+    Evaluation of the Various Forms of the Local Composition Concept. Fluid Phase Equilib. 1983,
+    13, 91-108.'
+  - Coquelet, C.; Chapoy, A.; Richon, D. Review of the alpha functions and alpha parameters used
+    in cubic equations of state. Ind. Eng. Chem. Res. 2004 (open-access comparative study; Table
+    II PR and SRK coefficient fits used here).
+- id: srk-mathias-copeman
+  name: Soave-Redlich-Kwong, Mathias-Copeman alpha
+  family: cubic
+  adapter: ngdesign.thermo.cubic:SrkMathiasCopemanThermo
+  options:
+    eos: SRKMIX_MC
+    kij_table: ChemSep PR
+    alpha: mathias_copeman
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    alpha_parameters: Mathias-Copeman coefficients from the Coquelet et al. (2004) Table II SRK fits
+      (the table's 'Sulfur dioxide' row carries H2S critical properties and is keyed as H2S); components
+      without published fits use the EOS default kappa(omega) alpha
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - srk-mathias-copeman-pure-C1-125K
+  - srk-mathias-copeman-pure-C3-300K
+  - srk-mathias-copeman-pure-nC4-280K
+  - srk-mathias-copeman-pure-CO2-265K
+  - srk-mathias-copeman-c1c3-294.26K-6.895MPa
+  - srk-mathias-copeman-c1co2-277.15K-5.97MPa
+  - srk-mathias-copeman-ng-dew-morch-243.4K-0.30MPa
+  - srk-mathias-copeman-ng-dew-morch-254.6K-0.68MPa
+  - srk-mathias-copeman-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - 'Mathias, P. M.; Copeman, T. W. Extension of the Peng-Robinson Equation of State to Complex Mixtures:
+    Evaluation of the Various Forms of the Local Composition Concept. Fluid Phase Equilib. 1983,
+    13, 91-108.'
+  - Coquelet, C.; Chapoy, A.; Richon, D. Review of the alpha functions and alpha parameters used
+    in cubic equations of state. Ind. Eng. Chem. Res. 2004 (open-access comparative study; Table
+    II PR and SRK coefficient fits used here).
+- id: pr-peneloux
+  name: Peng-Robinson, Peneloux volume translation
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrPenelouxThermo
+  options:
+    eos: PRMIXTranslated
+    kij_table: ChemSep PR
+    translation: peneloux
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    translation_shifts: Peneloux c from the Rackett (1970) saturated-liquid Z_RA correlation
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - pr-peneloux-pure-C1-125K
+  - pr-peneloux-pure-C3-300K
+  - pr-peneloux-pure-nC4-280K
+  - pr-peneloux-pure-CO2-265K
+  - pr-peneloux-c1c3-294.26K-6.895MPa
+  - pr-peneloux-c1co2-277.15K-5.97MPa
+  - pr-peneloux-ng-dew-morch-243.4K-0.30MPa
+  - pr-peneloux-ng-dew-morch-254.6K-0.68MPa
+  - pr-peneloux-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Peneloux, A.; Rauzy, E.; Freze, R. A Consistent Correction for Redlich-Kwong-Soave Volumes. Fluid
+    Phase Equilib. 1982, 8 (1), 7-23.
+  - Rackett, H. G. Equation of State for Saturated Liquids. J. Chem. Eng. Data 1970, 15 (4), 514-517.
+- id: srk-peneloux
+  name: Soave-Redlich-Kwong, Peneloux volume translation
+  family: cubic
+  adapter: ngdesign.thermo.cubic:SrkPenelouxThermo
+  options:
+    eos: SRKMIXTranslated
+    kij_table: ChemSep PR
+    translation: peneloux
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    translation_shifts: Peneloux c from the Rackett (1970) saturated-liquid Z_RA correlation
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - srk-peneloux-pure-C1-125K
+  - srk-peneloux-pure-C3-300K
+  - srk-peneloux-pure-nC4-280K
+  - srk-peneloux-pure-CO2-265K
+  - srk-peneloux-c1c3-294.26K-6.895MPa
+  - srk-peneloux-c1co2-277.15K-5.97MPa
+  - srk-peneloux-ng-dew-morch-243.4K-0.30MPa
+  - srk-peneloux-ng-dew-morch-254.6K-0.68MPa
+  - srk-peneloux-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Peneloux, A.; Rauzy, E.; Freze, R. A Consistent Correction for Redlich-Kwong-Soave Volumes. Fluid
+    Phase Equilib. 1982, 8 (1), 7-23.
+  - Rackett, H. G. Equation of State for Saturated Liquids. J. Chem. Eng. Data 1970, 15 (4), 514-517.
+- id: sour-pr
+  name: Peng-Robinson, sour-water correction
+  family: cubic
+  adapter: ngdesign.thermo.cubic:SourPrThermo
+  options:
+    eos: PRMIX
+    kij_table: ChemSep PR
+    sour: sour
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    sour_model: Wilson/API-955 ionisation apparent-fugacity correction on the aqueous phase; ionisation
+      constants held at 298.15 K literature values (H2S pKa1 7.00, CO2 pKa1 6.35, NH4+ pKa 9.25),
+      temperature correlations not implemented (documented deviation)
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - sour-pr-pure-C1-125K
+  - sour-pr-pure-C3-300K
+  - sour-pr-pure-nC4-280K
+  - sour-pr-pure-CO2-265K
+  - sour-pr-c1c3-294.26K-6.895MPa
+  - sour-pr-c1co2-277.15K-5.97MPa
+  - sour-pr-ng-dew-morch-243.4K-0.30MPa
+  - sour-pr-ng-dew-morch-254.6K-0.68MPa
+  - sour-pr-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - 'American Petroleum Institute, API Publication 955, sour-water equilibrium (Wilson) model; documentation
+    as EPA-600/2-80-067, ''Design guide: sour water systems'' ionisation framework.'
+  - Wilson, G. M. A Modified Redlich-Kwong Equation of State, Application to General Physical Data
+    Calculations. AIChE 65th National Meeting, Cleveland, 1969, Paper 15C.
+  l0_note: Aqueous-only; identical to pr off water-rich roots.
+- id: sour-srk
+  name: Soave-Redlich-Kwong, sour-water correction
+  family: cubic
+  adapter: ngdesign.thermo.cubic:SourSrkThermo
+  options:
+    eos: SRKMIX
+    kij_table: ChemSep PR
+    sour: sour
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    sour_model: Wilson/API-955 ionisation apparent-fugacity correction on the aqueous phase; ionisation
+      constants held at 298.15 K literature values (H2S pKa1 7.00, CO2 pKa1 6.35, NH4+ pKa 9.25),
+      temperature correlations not implemented (documented deviation)
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - sour-srk-pure-C1-125K
+  - sour-srk-pure-C3-300K
+  - sour-srk-pure-nC4-280K
+  - sour-srk-pure-CO2-265K
+  - sour-srk-c1c3-294.26K-6.895MPa
+  - sour-srk-c1co2-277.15K-5.97MPa
+  - sour-srk-ng-dew-morch-243.4K-0.30MPa
+  - sour-srk-ng-dew-morch-254.6K-0.68MPa
+  - sour-srk-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - 'American Petroleum Institute, API Publication 955, sour-water equilibrium (Wilson) model; documentation
+    as EPA-600/2-80-067, ''Design guide: sour water systems'' ionisation framework.'
+  - Wilson, G. M. A Modified Redlich-Kwong Equation of State, Application to General Physical Data
+    Calculations. AIChE 65th National Meeting, Cleveland, 1969, Paper 15C.
+  l0_note: Aqueous-only; identical to srk off water-rich roots.
+- id: kabadi-danner-srk
+  name: SRK, Kabadi-Danner water-hydrocarbon mixing
+  family: cubic
+  adapter: ngdesign.thermo.cubic:KabadiDannerSrkThermo
+  options:
+    eos: SRKMIXKD
+    kij_table: ChemSep PR
+    mixing: kabadi_danner
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    a_prime_terms: a''_j = G_j a_w(T)[1-(T/Tcw)^0.8] with published group contributions (g_CH4 1.3580,
+      g_CH3 0.9822, g_CH2 1.0780; G_i by group sum) for methane through n-hexane; components outside
+      the published paraffinic groups carry no a'' term
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - kabadi-danner-srk-pure-C1-125K
+  - kabadi-danner-srk-pure-C3-300K
+  - kabadi-danner-srk-pure-nC4-280K
+  - kabadi-danner-srk-pure-CO2-265K
+  - kabadi-danner-srk-c1c3-294.26K-6.895MPa
+  - kabadi-danner-srk-c1co2-277.15K-5.97MPa
+  - kabadi-danner-srk-ng-dew-morch-243.4K-0.30MPa
+  - kabadi-danner-srk-ng-dew-morch-254.6K-0.68MPa
+  - kabadi-danner-srk-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Kabadi, V. N.; Danner, R. P. A Modified Soave-Redlich-Kwong Equation of State for Water-Hydrocarbon
+    Systems. Ind. Eng. Chem. Process Des. Dev. 1985, 24 (3), 537-541.
+  l0_note: Water-dependent a'' terms; the validation cases contain no water, so the row exercises
+    the plain-SRK path there.
+- id: zudkevitch-joffe-rk
+  name: Redlich-Kwong, Zudkevitch-Joffe alpha
+  family: cubic
+  adapter: ngdesign.thermo.cubic:ZudkevitchJoffeRkThermo
+  options:
+    eos: ZJRKMIX
+    kij_table: ChemSep PR
+    alpha: zudkevitch_joffe
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    alpha_parameters: 'Omega_a(T) solved per component so the pure-RK fugacity equality holds at
+      the databank vapour pressure (Zudkevitch-Joffe 1970); Omega_b held at the RK constant (documented
+      deviation: the published temperature-dependent Omega_b needs deeper EOS internals); RK form
+      at/above Tc'
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - zudkevitch-joffe-rk-pure-C1-125K
+  - zudkevitch-joffe-rk-pure-C3-300K
+  - zudkevitch-joffe-rk-pure-nC4-280K
+  - zudkevitch-joffe-rk-pure-CO2-265K
+  - zudkevitch-joffe-rk-c1c3-294.26K-6.895MPa
+  - zudkevitch-joffe-rk-c1co2-277.15K-5.97MPa
+  - zudkevitch-joffe-rk-ng-dew-morch-243.4K-0.30MPa
+  - zudkevitch-joffe-rk-ng-dew-morch-254.6K-0.68MPa
+  - zudkevitch-joffe-rk-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Zudkevitch, D.; Joffe, J. Correlation and Prediction of Vapor-Liquid Equilibria with the Redlich-Kwong
+    Equation of State. AIChE J. 1970, 16 (1), 112-119.
+- id: twu-sim-tassone
+  name: Twu-Sim-Tassone cubic EOS
+  family: cubic
+  adapter: ngdesign.thermo.cubic:TwuSimTassoneThermo
+  options:
+    eos: TSTMIX
+    kij_table: ChemSep PR
+    alpha: twu_sim_tassone
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    eos_constants: a_c = 0.470507 R^2 Tc^2/Pc, b = 0.0740740 R Tc/Pc, denominator v^2 + 2.5 b v -
+      1.5 b^2; alpha coefficients [L, M, N] from the paper's fitted normal-paraffin table (C1-C6),
+      generalised Twu form for other components (documented fallback)
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - twu-sim-tassone-pure-C1-125K
+  - twu-sim-tassone-pure-C3-300K
+  - twu-sim-tassone-pure-nC4-280K
+  - twu-sim-tassone-pure-CO2-265K
+  - twu-sim-tassone-c1c3-294.26K-6.895MPa
+  - twu-sim-tassone-c1co2-277.15K-5.97MPa
+  - twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa
+  - twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa
+  - twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Twu, C. H.; Sim, W. D.; Tassone, V. A new cubic equation of state with a Twu-form alpha for hydrogen/hydrocarbon
+    systems, 2002; constants and form as implemented in the Clapeyron.jl TSTEOS (github.com/ClapeyronThermo/Clapeyron.jl),
+    retrieved 2026-10. Full journal citation unavailable offline; see PR body.
+  - Twu, C. H.; Bluck, D.; Coon, J. E.; Cunningham, J. R. A Cubic Equation of State with a New Alpha
+    Function and a New Mixing Rule. Fluid Phase Equilib. 1991, 69 (1), 33-50 (generalised alpha used
+    for components outside the fitted table).
+  l0_note: Fitted alpha table covers C1-nC6; CO2/N2/H2S in the slate use the generalised Twu alpha.
+- id: pr-bm
+  name: Peng-Robinson-BM (databank variant)
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrBmThermo
+  options:
+    eos: PRMIX_BM
+    kij_table: ChemSep PR
+    alpha: boston_mathias
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - pr-bm-pure-C1-125K
+  - pr-bm-pure-C3-300K
+  - pr-bm-pure-nC4-280K
+  - pr-bm-pure-CO2-265K
+  - pr-bm-c1c3-294.26K-6.895MPa
+  - pr-bm-c1co2-277.15K-5.97MPa
+  - pr-bm-ng-dew-morch-243.4K-0.30MPa
+  - pr-bm-ng-dew-morch-254.6K-0.68MPa
+  - pr-bm-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Boston, J. F.; Mathias, P. M. Phase Equilibria in a Third-Parameter Equation of State. Proc.
+    2nd Int. Conf. Phase Equilibria and Fluid Properties in the Chemical Process Industries, West
+    Berlin, 1980; pp 39-48.
+  - Peng, D.-Y.; Robinson, D. B. A New Two-Constant Equation of State. Ind. Eng. Chem. Fundam. 1976,
+    15 (1), 59-64.
+  - Soave, G. Equilibrium Constants from a Modified Redlich-Kwong Equation of State. Chem. Eng. Sci.
+    1972, 27 (6), 1197-1203.
+  l0_note: 'Databank-variant row: identical physics to pr-boston-mathias (databanks list both names).'
+- id: rks-bm
+  name: SRK-BM (databank variant)
+  family: cubic
+  adapter: ngdesign.thermo.cubic:RksBmThermo
+  options:
+    eos: SRKMIX_BM
+    kij_table: ChemSep PR
+    alpha: boston_mathias
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - rks-bm-pure-C1-125K
+  - rks-bm-pure-C3-300K
+  - rks-bm-pure-nC4-280K
+  - rks-bm-pure-CO2-265K
+  - rks-bm-c1c3-294.26K-6.895MPa
+  - rks-bm-c1co2-277.15K-5.97MPa
+  - rks-bm-ng-dew-morch-243.4K-0.30MPa
+  - rks-bm-ng-dew-morch-254.6K-0.68MPa
+  - rks-bm-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Boston, J. F.; Mathias, P. M. Phase Equilibria in a Third-Parameter Equation of State. Proc.
+    2nd Int. Conf. Phase Equilibria and Fluid Properties in the Chemical Process Industries, West
+    Berlin, 1980; pp 39-48.
+  - Peng, D.-Y.; Robinson, D. B. A New Two-Constant Equation of State. Ind. Eng. Chem. Fundam. 1976,
+    15 (1), 59-64.
+  - Soave, G. Equilibrium Constants from a Modified Redlich-Kwong Equation of State. Chem. Eng. Sci.
+    1972, 27 (6), 1197-1203.
+  l0_note: 'Databank-variant row: identical physics to srk-boston-mathias (databanks list both names).'
+- id: pr-lee-kesler-enthalpy
+  name: Peng-Robinson, Lee-Kesler enthalpies
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrLeeKeslerThermo
+  options:
+    eos: PRMIX
+    kij_table: ChemSep PR
+    enthalpy: lee_kesler
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    enthalpy_departures: Lee-Kesler (1975) three-parameter corresponding-states departures with Kay
+      mixing rules; enthalpy only, VLE and density stay PRMIX
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - pr-lee-kesler-enthalpy-pure-C1-125K
+  - pr-lee-kesler-enthalpy-pure-C3-300K
+  - pr-lee-kesler-enthalpy-pure-nC4-280K
+  - pr-lee-kesler-enthalpy-pure-CO2-265K
+  - pr-lee-kesler-enthalpy-c1c3-294.26K-6.895MPa
+  - pr-lee-kesler-enthalpy-c1co2-277.15K-5.97MPa
+  - pr-lee-kesler-enthalpy-ng-dew-morch-243.4K-0.30MPa
+  - pr-lee-kesler-enthalpy-ng-dew-morch-254.6K-0.68MPa
+  - pr-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Lee, B. I.; Kesler, M. G. A Generalized Thermodynamic Correlation Based on Three-Parameter Corresponding
+    States. AIChE J. 1975, 21 (3), 510-527.
+- id: srk-lee-kesler-enthalpy
+  name: Soave-Redlich-Kwong, Lee-Kesler enthalpies
+  family: cubic
+  adapter: ngdesign.thermo.cubic:SrkLeeKeslerThermo
+  options:
+    eos: SRKMIX
+    kij_table: ChemSep PR
+    enthalpy: lee_kesler
+  params:
+    source: thermo IPDB (ChemSep)
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants and acentric factors from the
+      ChemSep pure-component database; binary interaction parameters from the 'ChemSep PR' table,
+      0 where the table has no pair
+    enthalpy_departures: Lee-Kesler (1975) three-parameter corresponding-states departures with Kay
+      mixing rules; enthalpy only, VLE and density stay SRKMIX
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - srk-lee-kesler-enthalpy-pure-C1-125K
+  - srk-lee-kesler-enthalpy-pure-C3-300K
+  - srk-lee-kesler-enthalpy-pure-nC4-280K
+  - srk-lee-kesler-enthalpy-pure-CO2-265K
+  - srk-lee-kesler-enthalpy-c1c3-294.26K-6.895MPa
+  - srk-lee-kesler-enthalpy-c1co2-277.15K-5.97MPa
+  - srk-lee-kesler-enthalpy-ng-dew-morch-243.4K-0.30MPa
+  - srk-lee-kesler-enthalpy-ng-dew-morch-254.6K-0.68MPa
+  - srk-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa
+  references:
+  - Lee, B. I.; Kesler, M. G. A Generalized Thermodynamic Correlation Based on Three-Parameter Corresponding
+    States. AIChE J. 1975, 21 (3), 510-527.
