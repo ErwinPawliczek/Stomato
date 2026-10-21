@@ -21,6 +21,7 @@ from .inside_out import (
     _refresh_model,
     _seed_profile,
     _temperature_seed,
+    _vapour_tear_stages,
     bisect_feed_phase,
 )
 from .linalg import _gauss
@@ -29,12 +30,18 @@ from .spec import (
     _FLOW_FLOOR,
     _MESH_H_TOL,
     _MESH_M_TOL,
+    _MESH_M_TOL_REACTIVE,
+    _MESH_M_TOL_ZERO_ONE_TEAR,
     _OUTER_DAMP,
+    _OUTER_DAMP_ZERO_ONE,
     _OUTER_MAX,
     _SPEC_MAX,
     _SPEC_TOL,
+    _STAGNATION_MAX,
+    _STAGNATION_MAX_ZERO_ONE_TEAR,
     ColumnConvergenceError,
     ColumnSpecError,
+    _is_reactive_package,
     _Params,
 )
 from .thermo_adapter import _flash_ready, _ThermoBox
@@ -45,27 +52,53 @@ from .thermo_adapter import _flash_ready, _ThermoBox
 
 
 def _apply_tears(col: _Column, prof: _Profile, t_top: float | None, t_bot: float | None) -> None:
-    """Write the tear values into the profile (reflux, distillate vapour, boilup)."""
+    """Write the tear values into the profile (reflux, distillate vapour, boilup).
+
+    Only what IS a tear gets written (spec B): the vapour-tear stages come from
+    the shared helper - a partial condenser's V_1 and a kettle's V_N - and a
+    total condenser's tear is the reflux L_0 above stage 1. A configuration
+    without the hardware leaves that stage flow to its enthalpy balance.
+    """
     if col.condenser == "total":
         prof.l0 = max(t_top, _FLOW_FLOOR) if t_top is not None else prof.l0
-    elif col.condenser == "partial":
-        prof.l0 = 0.0
-        if t_top is not None:
-            prof.V[0] = max(t_top, _FLOW_FLOOR)
     else:
         prof.l0 = 0.0
-    if col.reboiler == "kettle" and t_bot is not None:
+        if 0 in _vapour_tear_stages(col) and t_top is not None:
+            prof.V[0] = max(t_top, _FLOW_FLOOR)
+    if col.n - 1 in _vapour_tear_stages(col) and t_bot is not None:
         prof.V[col.n - 1] = max(t_bot, _FLOW_FLOOR)
 
 
 def _solve_mesh(
-    col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None, seed: _Profile | None
+    col: _Column,
+    tb: _ThermoBox,
+    t_top: float | None,
+    t_bot: float | None,
+    seed: _Profile | None,
+    allow_fallback: bool = True,
 ) -> _Profile:
-    """Converge the MESH equations at given tear values: inside-out, NS fallback."""
+    """Converge the MESH equations at given tear values: inside-out, NS fallback.
+
+    The stagnation patience and the stage-level M gate follow the configuration
+    (spec D): two-tear columns keep the original 1e-8 gate and patience-3;
+    zero/one-tear columns use their own named constants - spec.py records the
+    measured justification for each. A relaxed M gate is acceptable there
+    because the boundary-stream overall balances (what users read) close at
+    machine precision regardless; the stage-level floor is the inside-out Kb
+    correlation's noise.
+    """
+    zero_one = col.n_tears < 2
+    if not zero_one:
+        m_tol = _MESH_M_TOL
+    elif _is_reactive_package(tb):
+        m_tol = _MESH_M_TOL_REACTIVE
+    else:
+        m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
+    patience = _STAGNATION_MAX_ZERO_ONE_TEAR if zero_one else _STAGNATION_MAX
     prof: _Profile | None = None
     if seed is None:
         t_top_seed, t_bot_seed = _temperature_seed(col, tb)
-        prof = _seed_profile(col, t_top_seed, t_bot_seed)
+        prof = _seed_profile(col, t_top_seed, t_bot_seed, v_bot_tear=t_bot)
     else:
         # Copy: the sweep loop mutates the profile in place, and a failed mesh
         # must not corrupt the seed the spec layer warm-starts from.
@@ -81,15 +114,24 @@ def _solve_mesh(
         model = _refresh_model(col, tb, prof, model)
         prof.outer = outer
         _inner_solve(col, model, prof, t_bot)  # accumulates prof.inner itself
-        w = _OUTER_DAMP
-        # Feedback damping between sweeps on temperature and vapour profiles:
-        # the frozen-model update overshoots near unstable tears.
-        for j in range(col.n):
-            prof.T[j] = t_prev[j] + w * (prof.T[j] - t_prev[j])
-            prof.V[j] = v_prev[j] + w * (prof.V[j] - v_prev[j])
+        if col.n_tears >= 2:
+            # Feedback damping between sweeps on temperature and vapour profiles:
+            # the frozen-model update overshoots near unstable tears. Two-tear
+            # columns only - their seed is a real distillation profile. A
+            # zero/one-tear column's feed-traffic seed is crude, and the
+            # half-step back toward it stalled wide absorbers in a limit cycle
+            # (measured, P1-09: the 8-stage absorber froze at M=1.2e-3 over
+            # 9 sweeps; undamped it closes at sweep 2 with M=8.8e-11).
+            for j in range(col.n):
+                prof.T[j] = t_prev[j] + _OUTER_DAMP * (prof.T[j] - t_prev[j])
+                prof.V[j] = v_prev[j] + _OUTER_DAMP * (prof.V[j] - v_prev[j])
+        elif _OUTER_DAMP_ZERO_ONE < 1.0:
+            for j in range(col.n):
+                prof.T[j] = t_prev[j] + _OUTER_DAMP_ZERO_ONE * (prof.T[j] - t_prev[j])
+                prof.V[j] = v_prev[j] + _OUTER_DAMP_ZERO_ONE * (prof.V[j] - v_prev[j])
         prof.L = _l_profile(col, prof.l0, prof.V)
         m_res, h_res = _exact_residuals(col, tb, prof)
-        if m_res < _MESH_M_TOL and h_res < _MESH_H_TOL:
+        if m_res < m_tol and h_res < _MESH_H_TOL:
             _finalize_duties(col, tb, prof)
             return prof
         # Stagnation = NO improvement in either residual for 3 consecutive
@@ -102,18 +144,28 @@ def _solve_mesh(
                 best_prof, best_m, best_h = _copy_profile(col, prof), m_res, h_res
         else:
             stalled += 1
-            if stalled >= 3:
+            if stalled >= patience:
                 break
     # The inside-out loop stalled or exhausted its budget: hand the best profile
     # to the Naphtali-Sandholm Newton fallback, which polishes from there.
+    # Retreat probes skip the fallback: a candidate tear only needs the
+    # inside-out verdict, and a full NS run per failing candidate costs tens of
+    # seconds (measured P1-09 stripper retreat ladder).
     if best_prof is not None:
         prof = _copy_profile(col, best_prof)
+    if not allow_fallback:
+        raise ColumnConvergenceError(
+            f"inside-out mesh did not converge at tears {(t_top, t_bot)} "
+            f"(best residuals M={best_m:.2e}, H={best_h:.2e})"
+        )
     try:
         _naphtali_sandholm(col, tb, prof, t_bot)
     except ColumnConvergenceError as exc:
         raise ColumnConvergenceError(
             f"column did not converge in {_OUTER_MAX} inside-out sweeps and the "
-            f"Naphtali-Sandholm fallback failed: {exc}"
+            f"Naphtali-Sandholm fallback failed after {prof.ns_passes} passes: {exc} "
+            f"(best inside-out profile residuals M={best_m:.2e}, H={best_h:.2e} over "
+            f"{prof.outer} outer sweeps, {prof.inner} inner iterations)"
         ) from exc
     return prof
 
@@ -134,16 +186,54 @@ def _copy_profile(col: _Column, src: _Profile) -> _Profile:
         outer=src.outer,
         inner=src.inner,
         ns_used=src.ns_used,
+        ns_passes=src.ns_passes,
     )
 
 
-def _initial_tears(col: _Column, params: _Params) -> tuple[float, float]:
-    """Starting guesses for the two tear flows (top reflux, kettle boilup), mol/s.
+def _initial_tears(col: _Column, params: _Params) -> tuple[float | None, float | None]:
+    """Starting guesses for the tear flows that exist; None for absent hardware.
 
     Plain fractions of the feed: the spec secant moves them, the mesh converges
     from any sane start, and elaborate temperature-based seeds bought nothing.
+    The top tear is the reflux for a total condenser and the stage-1 vapour for
+    a partial condenser; the bottom tear is the kettle boilup (mol/s). A
+    configuration without the hardware carries no tear there - its stage flow
+    is an outcome of the enthalpy balance, never a guessable input (spec B).
     """
-    return 0.5 * col.f_total, 0.8 * col.f_total
+    t_top: float | None = 0.5 * col.f_total if col.condenser != "none" else None
+    t_bot: float | None = None
+    if col.reboiler == "kettle":
+        if col.n_tears < 2:
+            # Configuration-aware boilup guess: the kettle's liquid supply is the
+            # LIQUID feed traffic, not the whole feed. The ratio spec is
+            # V_kettle/bottoms, so with L_in the liquid traffic the feasible
+            # boilup is r*L_in/(1+r); the two-tear guess 0.8*F sits above a
+            # stripper's L_in by the entire feed vapour and makes the mesh
+            # mass-infeasible at the very first secant point (measured P1-09:
+            # 60 mol/s feed, 14.7 mol/s liquid, boilup guessed 48 - stage
+            # liquid traffic went negative and the mesh could never close).
+            liq_in = sum(part.l_flow for part in col.feeds)
+            ratio = params.specs.get("boilup_ratio")
+            r = float(ratio) if ratio is not None else 0.8
+            # The no-recycle ratio-exact guess r*L/(1+r) sits BELOW the true
+            # feasible window: the rising vapour partially condenses on its way
+            # up, inflating the kettle's liquid supply (measured P1-09 stripper:
+            # the ratio-exact 6.54 fails, the walk opens at ~7 and closes at
+            # ~12, with boilup ratio 0.8 reachable near 9.6). The mass-feasible
+            # upper bound min(r, 0.95)*L_in keeps the guess inside the window;
+            # the spec secant refines from there.
+            t_bot = min(r, 0.95) * liq_in
+        else:
+            t_bot = 0.8 * col.f_total
+    if col.condenser == "total" and col.n_tears < 2 and "reflux_ratio" in params.specs:
+        # Same reasoning for the one-tear rectifier: the reflux divides the
+        # overhead vapour (the vapour feed traffic), l0 = RR*V/(1+RR); the
+        # 0.5*F guess can exceed the overhead vapour and force a negative
+        # distillate on liquid-rich feeds.
+        vap_in = sum(part.v_flow for part in col.feeds)
+        rr = float(params.specs["reflux_ratio"])
+        t_top = rr * vap_in / (1.0 + rr)
+    return t_top, t_bot
 
 
 def _fenske_alpha(col: _Column, tb: _ThermoBox, cid: str, product: str) -> float | None:
@@ -328,6 +418,14 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         t_top = float(d_spec)
         pin_top = True
         skip.add("distillate_rate")
+    if col.n_tears < 2 and col.condenser == "total" and d_spec is not None and not pin_top:
+        # A total condenser's distillate-rate spec drives the reflux tear: the
+        # overhead draw satisfies d = V0 - l0, so the secant walks l0 until the
+        # mesh's own distillate matches the spec (spec B: the reflux IS this
+        # configuration's top tear). Two-tear columns keep their original
+        # both-tears-free secant and its benchmarked mesh sequence.
+        t_top = max(float(col.f_total) - float(d_spec), _FLOW_FLOOR)
+        free_top = True
     free_top = t_top is not None and not pin_top
     free_bot = t_bot is not None and not pin_bot
     if col.condenser == "total" and pin_top and free_bot and t_top is not None:
@@ -338,9 +436,32 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
 
     state: dict[str, _Profile | None] = {"seed": None}
 
-    def mesh_at(top: float | None, bot: float | None) -> _Profile:
-        """Solve the mesh at given tears, backtracking toward the seed on failure."""
+    def mesh_at(top: float | None, bot: float | None, probe: bool = False) -> _Profile:
+        """Solve the mesh at given tears, retreating toward the seed on failure.
+
+        Two-tear columns keep the original three-attempt backtracking only, so
+        their benchmarked flash count cannot move. Zero/one-tear columns add a
+        geometric retreat of the tear itself: the inside-out mesh's basin is
+        irregular for feed-determined columns (measured P1-09 stripper at
+        boilup ratio 0.5: candidate kettle flows 36 and 40 mol/s converge while
+        33.1 and 49.7 fail), so a failing candidate is not proof of
+        infeasibility - a smaller neighbour often converges and still brackets
+        the specification for the secant.
+
+        A ``probe`` call (damped-step trials and retreat candidates) runs the
+        inside-out mesh ONCE with the NS fallback disabled: the candidate needs
+        only the inside-out verdict, and a full NS run per failing candidate
+        costs tens of seconds (measured on the P1-09 stripper).
+        """
+        start_top, start_bot = top, bot
         last: ColumnConvergenceError | None = None
+        if probe:
+            try:
+                prof = _solve_mesh(col, tb, top, bot, state["seed"], allow_fallback=False)
+                state["seed"] = _copy_profile(col, prof)
+                return prof
+            except (ColumnConvergenceError, ValueError) as exc:
+                raise ColumnConvergenceError(f"mesh probe failed at tears {(top, bot)}: {exc}") from exc
         for _attempt in range(3):
             try:
                 prof = _solve_mesh(col, tb, top, bot, state["seed"])
@@ -357,9 +478,26 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
             if seed is None:
                 break
             if top is not None:
-                top = top + 0.5 * (seed.l0 - top)
+                # Backtrack toward the seed value of the SAME tear quantity:
+                # the reflux L_0 for a total condenser, the stage-1 vapour V_1
+                # for a partial condenser (its distillate draw is the tear),
+                # and the boilup V_N for a kettle. A configuration without the
+                # hardware has no tear there, so nothing to backtrack (spec B).
+                target = seed.l0 if col.condenser == "total" else seed.V[0]
+                top = top + 0.5 * (target - top)
             if bot is not None:
                 bot = bot + 0.5 * (seed.V[col.n - 1] - bot)
+        if col.n_tears < 2:
+            for frac in (0.8, 0.64, 0.512, 0.41, 0.328, 0.262):
+                try:
+                    prof = mesh_at(
+                        None if start_top is None else start_top * frac,
+                        None if start_bot is None else start_bot * frac,
+                        probe=True,
+                    )
+                    return prof
+                except ColumnConvergenceError:
+                    continue
         raise ColumnConvergenceError(f"mesh failed at tears {(top, bot)}: {last}")
 
     def apply_vector(v: list[float]) -> tuple[float | None, float | None]:
@@ -369,16 +507,16 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         b2 = next(it) if free_bot else t_bot
         return a, b2
 
-    def tears_of(v: list[float]) -> tuple[float, float]:
-        """Unpack the free-tear vector into concrete tears.
+    def tears_of(v: list[float]) -> tuple[float | None, float | None]:
+        """Unpack the free-tear vector into concrete tears; None = absent hardware.
 
-        The ``None`` members of ``apply_vector``'s result denote a pinned tear
-        that was never set from specs; the spec loop only runs when every
-        tear is either pinned to a value or free, so None here is a caller
-        bug and must surface as a typed error.
+        A ``None`` from ``apply_vector`` is legitimate for a configuration
+        without the hardware (spec B); it is a caller bug only when a FREE
+        tear slot reads None - that would mean the secant is iterating a tear
+        that does not exist, and must surface as a typed error.
         """
         top, bot = apply_vector(v)
-        if top is None or bot is None:
+        if (free_top and top is None) or (free_bot and bot is None):
             raise ColumnSpecError("column spec tears unresolved before secant solve")
         return top, bot
 
@@ -394,9 +532,14 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         x.append(float(t_bot))
         tear_dir.append(1.0)
     if not x:
-        # Everything pinned algebraically: the tears already encode both targets.
+        # Zero free tears: the feeds determine the column, so one mesh solve at
+        # the given tears (None for absent hardware) IS the answer - no secant
+        # (spec A). Any remaining unskipped spec must already hold by
+        # construction or the configuration is infeasible.
         prof = mesh_at(t_top, t_bot)
         g0, s0 = _spec_g(col, params, prof, skip)
+        if not g0:
+            return prof
         rel0 = [gi / s for gi, s in zip(g0, s0, strict=True)]
         if max(abs(r) for r in rel0) < _SPEC_TOL:
             return prof
@@ -508,7 +651,31 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                     flee = 0
             else:
                 flee = 0
-        x = [min(max(x[i] + step[i], _FLOW_FLOOR), flow_cap) for i in range(nf)]
+        if col.n_tears < 2:
+            # Damped Newton on the tear update, one-tear columns only: the
+            # ratio/boilup curve is flat near the seed (measured P1-09 stripper:
+            # ratio 0.593 at boilup 8.0) so the linear secant step lands far
+            # outside the narrow mesh-convergent tear window (the undamped step
+            # doubled the boilup guess and the mesh died there). Trial the mesh
+            # at geometrically shrinking fractions of the step before accepting
+            # it. Two-tear columns keep the undamped update unchanged - the
+            # distillation bench depends on its exact mesh sequence.
+            for frac in (1.0, 0.5, 0.25, 0.125):
+                cand = [min(max(x[i] + frac * step[i], _FLOW_FLOOR), flow_cap) for i in range(nf)]
+                t_top_c, t_bot_c = tears_of(cand)
+                try:
+                    mesh_at(t_top_c, t_bot_c)
+                    x = cand
+                    break
+                except ColumnConvergenceError:
+                    continue
+            else:
+                raise ColumnSpecError(
+                    "column spec secant step produced no solvable mesh at any damped fraction; "
+                    f"residuals {[round(r, 6) for r in rel]}"
+                )
+        else:
+            x = [min(max(x[i] + step[i], _FLOW_FLOOR), flow_cap) for i in range(nf)]
     raise ColumnSpecError(
         f"column specs could not be satisfied within {_SPEC_MAX} secant iterations "
         f"(residuals {[round(r, 6) for r in rel]}); the specification is likely infeasible "

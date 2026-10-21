@@ -20,11 +20,21 @@ from .spec import (
     _INNER_TOL,
     _OUTER_DAMP,
     _SEED_SPAN_MAX,
+    _V_TRAFFIC_CAP,
     ColumnConvergenceError,
     _DrawSpec,
     _Params,
 )
 from .thermo_adapter import _flash_ready, _ThermoBox
+
+#: Default slope of a stage's ln Kb = A + B/T line (K). K falls with T, so the
+#: slope is negative; the magnitude is the Clausius-Clapeyron scale of the
+#: light-hydrocarbon reference components (the thermo adapter's own CC fallback
+#: uses the same 2500 K). Used until a stage's history has two distinct
+#: temperatures to fit a slope from.
+_KB_SLOPE_DEFAULT = -2500.0
+#: (T, ln Kb) history points kept per stage for its correlation fit.
+_KB_HIST_MAX = 4
 
 # --------------------------------------------------------------------------------------
 # Column model
@@ -41,6 +51,7 @@ class _StageFeed:
     x: dict[str, float] = field(default_factory=dict)
     h_flow: float = 0.0
     total: float = 0.0
+    t: float = 0.0  # feed temperature, flow-weighted over the stage's feeds (K)
 
 
 @dataclass
@@ -50,6 +61,10 @@ class _Column:
     n: int
     condenser: str
     reboiler: str
+    #: Number of column tears (boundary degrees of freedom): 0 for a
+    #: feed-determined absorber, 1 for a reboiled stripper or a rectifier
+    #: without reboiler, 2 for a condenser + kettle column.
+    n_tears: int
     pressures: list[float]
     feeds: list[_StageFeed]
     draw_l: list[float]
@@ -82,6 +97,7 @@ class _Profile:
     outer: int = 0
     inner: int = 0
     ns_used: bool = False
+    ns_passes: int = 0
 
 
 def _flash_stage_feeds(col_params: _Params, tb: _ThermoBox) -> list[_StageFeed]:
@@ -91,6 +107,7 @@ def _flash_stage_feeds(col_params: _Params, tb: _ThermoBox) -> list[_StageFeed]:
         state = tb.pt(f.comp, f.T, f.P, f.flow)
         part = stage_feeds[f.stage - 1]
         part.total += f.flow
+        part.t += f.T * f.flow
         part.h_flow += state.enthalpy * f.flow
         vapor_part = state.vapor_fraction * f.flow
         liquid_part = (1.0 - state.vapor_fraction) * f.flow
@@ -109,6 +126,8 @@ def _flash_stage_feeds(col_params: _Params, tb: _ThermoBox) -> list[_StageFeed]:
                     for cid, frac in phase.composition.items():
                         part.x[cid] = part.x.get(cid, 0.0) + frac * weight * liquid_part
     for part in stage_feeds:
+        if part.total > _FLOW_FLOOR:
+            part.t /= part.total
         if part.v_flow > _FLOW_FLOOR:
             s = sum(part.y.values())
             part.y = {cid: v / s for cid, v in part.y.items()}
@@ -135,6 +154,7 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         n=col_params.n_stages,
         condenser=col_params.condenser,
         reboiler=col_params.reboiler,
+        n_tears=(1 if col_params.condenser != "none" else 0) + (1 if col_params.reboiler != "none" else 0),
         pressures=list(col_params.pressures),
         feeds=feeds,
         draw_l=[0.0] * col_params.n_stages,
@@ -150,6 +170,18 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
     # range: the seed estimates the distillate/bottoms temperatures, and stages
     # wandering far outside that range sit in single-phase states where the
     # equilibrium correlation degenerates and the profile collapses.
+    if col.n_tears < 2:
+        # Zero/one-tear columns take the band from the FEED temperatures: the
+        # distillation seed's mixed-feed flash is not even evaluable on a
+        # reactive package (gas + amine mixed overalls), and an absorber's
+        # operating window is its feeds' window. The +80 K top headroom carries
+        # the absorption exotherm (spec C). Only stages that carry feed enter
+        # the window: feed-less stages keep part.t at its 0.0 default and would
+        # otherwise drag the floor to -30 K.
+        feed_ts = [part.t for part in feeds if part.total > _FLOW_FLOOR]
+        col.t_band_lo = min(feed_ts) - 30.0
+        col.t_band_hi = max(feed_ts) + 80.0
+        return col
     t_top, t_bot = _temperature_seed(col, tb)
     if t_bot > t_top + 20.0:
         col.t_band_lo = max(t_top - 30.0, 150.0)
@@ -202,7 +234,13 @@ def _d_and_b(col: _Column, l0: float, v: list[float], liquid: list[float]) -> tu
 def _temperature_seed(col: _Column, tb: _ThermoBox) -> tuple[float, float]:
     """Estimate (T_top, T_bottom) for the starting profile.
 
-    Two estimates. (1) Pure-component extremes: coldest and hottest component
+    Zero/one-tear columns skip the flash work entirely: their profile is linear
+    between the topmost and bottommost feed temperatures (a single feed's T
+    +/- 10 K). The mixed-feed flash the distillation estimates need is not even
+    evaluable there - an absorber's mixed gas + amine composition is a state a
+    reactive package cannot flash as a liquid.
+
+    Two estimates for two-tear columns. (1) Pure-component extremes: coldest and hottest component
     saturation temperatures at the end pressures - good for narrow-boiling
     feeds (their own bubble/dew can sit within a few kelvin, on either side).
     (2) Equilibrium-based: flash the feed at the mid-column pressure, take the
@@ -213,6 +251,11 @@ def _temperature_seed(col: _Column, tb: _ThermoBox) -> tuple[float, float]:
     (a trace of C1 drops the top seed ~70 K into a region where the flash of
     C3+ liquids degenerates), so wide spans defer to the equilibrium estimate.
     """
+    if col.n_tears < 2:
+        fed = [part for part in col.feeds if part.total > _FLOW_FLOOR]
+        if len(fed) == 1:
+            return fed[0].t - 10.0, fed[0].t + 10.0
+        return fed[0].t, fed[-1].t
     ext = _extreme_seed(col, tb)
     if ext is not None:
         t_top, t_bot = ext
@@ -278,8 +321,47 @@ def bisect_feed_phase(col: _Column, tb: _ThermoBox, p: float, want_vapor: bool) 
     return 0.5 * (lo + hi)
 
 
-def _seed_profile(col: _Column, t_top: float, t_bot: float) -> _Profile:
+def _nearest_feed_phase(col: _Column, j: int, vapor: bool) -> dict[str, float]:
+    """Composition of the nearest feed's flashed phase (vapour or liquid).
+
+    Nearest by stage distance; falls back to the mixed feed composition when no
+    feed carries the wanted phase (a rectifier's only feed is vapour - the
+    mixed composition is physical there, unlike a reactive absorber's).
+    """
+    best: tuple[int, dict[str, float]] | None = None
+    for k, part in enumerate(col.feeds):
+        flow = part.v_flow if vapor else part.l_flow
+        comp = part.y if vapor else part.x
+        if flow > _FLOW_FLOOR and comp and (best is None or abs(k - j) < abs(best[0] - j)):
+            best = (k, comp)
+    return dict(best[1]) if best is not None else dict(col.feed_comp)
+
+
+def _seed_profile(col: _Column, t_top: float, t_bot: float, v_bot_tear: float | None = None) -> _Profile:
+    """Starting profile: feed-traffic seed for zero/one-tear columns (spec C),
+    the distillation-shaped seed for two-tear columns (unchanged).
+
+    ``v_bot_tear`` is the pinned kettle boilup (None when there is no bottom
+    tear): the vapour enters the bottom stage from below and rises through
+    every stage, so it belongs in every stage's vapour-traffic sum - without it
+    the stages above the kettle seed at the flow floor and the first sweeps
+    solve from a degenerate column.
+    """
     n = col.n
+    if col.n_tears < 2:
+        # V_j = vapour feed flow entering at or below stage j (vapour rises);
+        # L_j = liquid feed flow entering at or above stage j (liquid falls).
+        # Both floored so degenerate stages stay solvable. x/y from the nearest
+        # feed's flashed phase - NEVER the mixed feed composition, which a
+        # reactive package cannot evaluate as a liquid.
+        boilup = v_bot_tear if v_bot_tear is not None else 0.0
+        vapour = [max(sum(part.v_flow for part in col.feeds[j:]) + boilup, _FLOW_FLOOR) for j in range(n)]
+        liquid = [max(sum(part.l_flow for part in col.feeds[: j + 1]), _FLOW_FLOOR) for j in range(n)]
+        l0 = max(0.5 * vapour[0], _FLOW_FLOOR) if col.condenser == "total" else 0.0
+        temps = [t_top + (t_bot - t_top) * (j / max(n - 1, 1)) for j in range(n)]
+        x = [_nearest_feed_phase(col, j, vapor=False) for j in range(n)]
+        y = [_nearest_feed_phase(col, j, vapor=True) for j in range(n)]
+        return _Profile(T=temps, V=vapour, L=liquid, x=x, y=y, l0=l0)
     temps = [t_top + (t_bot - t_top) * (j / max(n - 1, 1)) for j in range(n)]
     z = col.feed_comp
     d_guess = max(0.35 * col.f_total, _FLOW_FLOOR)
@@ -302,7 +384,12 @@ def _seed_profile(col: _Column, t_top: float, t_bot: float) -> _Profile:
 
 @dataclass
 class _InnerModel:
-    """Frozen per-sweep models: raw K, alpha_ij, the ln Kb = A + B/T fit, enthalpy lines."""
+    """Frozen per-sweep models: raw K, alpha_ij, the ln Kb = A + B/T fit, enthalpy lines.
+
+    Zero/one-tear columns additionally carry per-stage correlation lines
+    (``corr_a_s``/``corr_b_s``) anchored on each stage's own (T, ln Kb) history
+    (``kb_hist``) - the Boston-Sullivan scheme - instead of the column-wide fit.
+    """
 
     k_raw: list[dict[str, float]]
     alpha: list[dict[str, float]]
@@ -313,6 +400,32 @@ class _InnerModel:
     h_liq: list[tuple[float, float, float]]  # per stage, liquid
     h_cond: tuple[float, float, float] | None  # condensate (total-condenser reflux) line
     fit_T: list[float]  # temperatures the enthalpy lines were fitted at
+    corr_a_s: list[float] = field(default_factory=list)  # per-stage intercepts (n_tears < 2)
+    corr_b_s: list[float] = field(default_factory=list)  # per-stage slopes (n_tears < 2)
+    kb_hist: tuple[tuple[tuple[float, float], ...], ...] = ()  # per-stage (T, ln Kb) points
+
+
+def _fit_ln_kb(hist: tuple[tuple[float, float], ...], b_default: float) -> tuple[float, float]:
+    """Least-squares ln Kb = A + B/T over one stage's (T, ln Kb) history points.
+
+    Fewer than two distinct temperatures, a singular normal matrix, or a
+    non-physical slope (K rises with T, so B must be negative) fall back to the
+    given default slope anchored on the latest history point - the line passes
+    exactly through the stage's freshest equilibrium state.
+    """
+    latest_t, latest_ln = hist[-1]
+    if len(hist) >= 2:
+        s_xx = sum(1.0 / (t * t) for t, _ in hist)
+        s_x = sum(1.0 / t for t, _ in hist)
+        s_y = sum(y for _, y in hist)
+        s_xy = sum(y / t for t, y in hist)
+        det = len(hist) * s_xx - s_x * s_x
+        if abs(det) > 1e-300:
+            b = (len(hist) * s_xy - s_x * s_y) / det
+            a = (s_y - b * s_x) / len(hist)
+            if math.isfinite(a) and math.isfinite(b) and b < 0.0:
+                return a, b
+    return latest_ln - b_default / latest_t, b_default
 
 
 def _stage_overall(col: _Column, prof: _Profile, j: int) -> dict[str, float]:
@@ -385,6 +498,35 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
             for j in range(n)
         ]
 
+    # Per-stage ln Kb = A + B/T lines (zero/one-tear columns, spec D): Boston-
+    # Sullivan anchors each stage's reference-K correlation on the stage's OWN
+    # (T, ln Kb) history instead of one column-wide least-squares fit. At the
+    # isothermal start every stage sits at the same T, the column-wide fit is
+    # degenerate (no slope information), and its noise walks the stages out of
+    # the two-phase window (measured on the 8/20-stage absorber: the walk never
+    # recovers). Gated on the configuration - the two-tear path is unchanged.
+    corr_a_s: list[float] = []
+    corr_b_s: list[float] = []
+    kb_hist_new: list[tuple[tuple[float, float], ...]] = []
+    if col.n_tears < 2:
+        for j in range(n):
+            ln_kb = math.log(kb[j])
+            prev_hist = model.kb_hist[j] if model is not None and j < len(model.kb_hist) else ()
+            hist = ((*prev_hist, (prof.T[j], ln_kb)))[-_KB_HIST_MAX:]
+            b_prev = model.corr_b_s[j] if model is not None and j < len(model.corr_b_s) else _KB_SLOPE_DEFAULT
+            a_fit, b_fit = _fit_ln_kb(hist, b_prev)
+            if model is not None and j < len(model.corr_a_s):
+                # Boston-Sullivan feedback damping on the fitted line itself: the
+                # history's (T, ln Kb) points come from different composition
+                # states, so an undamped refit drifts and the temperature walk
+                # marches across the band (measured P1-09 stripper trace: T
+                # 366 -> 400 -> 290 with undamped refits).
+                a_fit = _OUTER_DAMP * a_fit + (1.0 - _OUTER_DAMP) * model.corr_a_s[j]
+                b_fit = _OUTER_DAMP * b_fit + (1.0 - _OUTER_DAMP) * model.corr_b_s[j]
+            corr_a_s.append(a_fit)
+            corr_b_s.append(b_fit)
+            kb_hist_new.append(hist)
+
     # Refit the enthalpy anchors every sweep: near convergence temperatures
     # barely move, so a refit-on-temperature-drift rule left the lines anchored
     # at stale compositions while x kept sharpening - the exact energy recheck
@@ -425,6 +567,9 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
         h_liq=h_liq,
         h_cond=h_cond,
         fit_T=list(prof.T),
+        corr_a_s=corr_a_s,
+        corr_b_s=corr_b_s,
+        kb_hist=tuple(kb_hist_new),
     )
 
 
@@ -468,26 +613,39 @@ def _mesh_x(col: _Column, model: _InnerModel, prof: _Profile, kb: list[float]) -
     return out
 
 
-def _h_equation_stages(col: _Column) -> list[int]:
-    """Stages whose energy balance closes with the profile (duty-output stages drop out)."""
-    n = col.n
-    stages = list(range(n))
+def _vapour_tear_stages(col: _Column) -> frozenset[int]:
+    """Stage indices (0-based) whose vapour flow is a column tear, not an outcome.
+
+    THE one definition of the vapour-tear rule, shared by every solver module
+    (inside-out H stages, free-vapour indices, tear application, NS packing):
+    V_1 (stage 0) is the top tear for a partial condenser - the distillate
+    leaves as stage-1 vapour - and V_N (stage n-1) is the bottom tear for a
+    kettle reboiler (the boilup). A total condenser's tear is the reflux L_0,
+    a liquid flow above stage 1; a configuration without the hardware has no
+    tear there at all, and the stage vapour is an enthalpy-balance outcome.
+    """
+    tears: set[int] = set()
     if col.condenser == "partial":
-        stages = [j for j in stages if j != 0]
+        tears.add(0)
     if col.reboiler == "kettle":
-        stages = [j for j in stages if j != n - 1]
-    return stages
+        tears.add(col.n - 1)
+    return frozenset(tears)
+
+
+def _h_equation_stages(col: _Column) -> list[int]:
+    """Stages whose energy balance closes with the profile (duty-output stages drop out).
+
+    The duty-output stages are exactly the vapour-tear stages: a partial
+    condenser's and a kettle reboiler's own balances define qc/qr instead.
+    """
+    tears = _vapour_tear_stages(col)
+    return [j for j in range(col.n) if j not in tears]
 
 
 def _v_free_indices(col: _Column) -> list[int]:
-    """Vapour flows the enthalpy system may correct (tears and V_1-outcome excluded)."""
-    n = col.n
-    free = list(range(n))
-    if col.condenser == "partial":
-        free = [j for j in free if j != 0]  # V_1 = D is the top tear
-    if col.reboiler == "kettle":
-        free = [j for j in free if j != n - 1]  # V_N = boilup is the bottom tear
-    return free
+    """Vapour flows the enthalpy system may correct: every non-tear stage's V."""
+    tears = _vapour_tear_stages(col)
+    return [j for j in range(col.n) if j not in tears]
 
 
 def _mesh_v(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: float | None) -> list[float]:
@@ -527,6 +685,11 @@ def _mesh_v(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: float 
     v_work = list(prof.V)
     if t_bot_tear is not None:
         v_work[n - 1] = t_bot_tear
+    # Degenerate subcooled-band walks drove free vapour past 1e9 mol/s and
+    # singularized the tridiagonal M system; cap the traffic the H solve may
+    # demand (spec D). No physical column approaches the cap (measured on the
+    # two-tear bench column: untouched).
+    v_cap = _V_TRAFFIC_CAP * max(col.f_total, 1.0)
     r0 = residuals(v_work)
     jac_cols = []
     for vk in free:
@@ -542,7 +705,7 @@ def _mesh_v(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: float 
         # residual test will reject it and the NS fallback takes over
     candidate = list(v_work)
     for idx, vk in enumerate(free):
-        candidate[vk] = max(v_work[vk] + step[idx], _FLOW_FLOOR)
+        candidate[vk] = min(max(v_work[vk] + step[idx], _FLOW_FLOOR), v_cap)
     if t_bot_tear is not None:
         candidate[n - 1] = t_bot_tear
     # One safeguarded refinement pass guards against conditioning loss; the
@@ -564,7 +727,7 @@ def _mesh_v(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: float 
             break
         refined = list(candidate)
         for idx, vk in enumerate(free):
-            refined[vk] = max(candidate[vk] + step[idx], _FLOW_FLOOR)
+            refined[vk] = min(max(candidate[vk] + step[idx], _FLOW_FLOOR), v_cap)
         if t_bot_tear is not None:
             refined[n - 1] = t_bot_tear
         candidate = refined
@@ -575,7 +738,10 @@ def _inner_solve(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: f
     """The inside-out inner loop: M -> bubble (Kb) -> T (correlation) -> H (Newton).
 
     With alpha, the Kb correlation and the enthalpy lines frozen, the loop
-    iterates until flows and temperatures stop moving. No thermo calls.
+    iterates until flows and temperatures stop moving. No thermo calls: every
+    flash lives in the outer refresh, keeping the inner loop flash-free (a
+    live per-iteration bubble solve was measured at unbounded flash cost on
+    degenerate states and abandoned, P1-09).
     """
     n = col.n
     kb = [1.0] * n
@@ -598,8 +764,11 @@ def _inner_solve(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: f
         v_old = prof.V
         t_new = []
         for j in range(n):
-            denom = math.log(kb[j]) - model.corr_a
-            t_corr = model.corr_b / denom if abs(denom) > 1e-12 else t_old[j]
+            corr_a_j, corr_b_j = (
+                (model.corr_a_s[j], model.corr_b_s[j]) if col.n_tears < 2 else (model.corr_a, model.corr_b)
+            )
+            denom = math.log(kb[j]) - corr_a_j
+            t_corr = corr_b_j / denom if abs(denom) > 1e-12 else t_old[j]
             t_corr = min(max(t_corr, col.t_band_lo), col.t_band_hi)  # two-phase operating window
             step = 0.7 * (t_corr - t_old[j])
             step = max(min(step, 30.0), -30.0)  # bounded walk, one sweep at a time
