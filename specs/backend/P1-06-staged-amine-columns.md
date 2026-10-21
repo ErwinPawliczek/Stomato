@@ -1,7 +1,7 @@
 # P1-06: Staged amine absorber and regenerator on the rigorous column
 
 - **Phase:** 1
-- **Depends on:** P1-03 (column on contract v2, `units/column/` package), P1-04 (`amine_ke` / `amine_enrtl` thermo packages)
+- **Depends on:** P1-09 (column zero/one-tear configurations and amine states inside the column — **must be merged first**; the first P1-06 attempt was BLOCKED on it, issue #98), P1-03 (column on contract v2, `units/column/` package), P1-04 (`amine_ke` / `amine_enrtl` thermo packages)
 - **Packages you may edit:** `ngdesign.units` (new `units/amine_column.py`; `mdea_absorber.py` / `mdea_regenerator.py` only to add the `mode="staged"` dispatch), `ngdesign.flowsheets` (new sample only), `tests/units/`, `tests/e2e/` (new file only), `bench/baseline.json` (add the new case with `--update`; existing cases unchanged), `scripts/bench_baseline.py` (only to register the new case)
 - **Contract change:** no
 - **Benchmark delta expected:** existing cases none; one new case `amine_staged` (state its numbers in the PR)
@@ -9,7 +9,8 @@
 ## Goal
 The amine units are single-equilibrium-stage shortcuts: the absorber removes acid gas to a spec and
 checks feasibility against Kent–Eisenberg bounds; the regenerator inverts the same equilibrium at the
-reboiler temperature. Neither has stages, so stage count, lean-amine temperature bulge, rich-loading
+reboiler temperature. (P1-09 made the column's zero-tear absorber and one-tear stripper paths work;
+this spec only wires units onto them.) Neither has stages, so stage count, lean-amine temperature bulge, rich-loading
 profile and reboiler duty vs stripping steam cannot be designed. With P1-03 (a stage-by-stage column
 that only talks to the `Thermo` protocol) and P1-04 (amine chemistry *is* a `Thermo` package), a
 staged amine column is a column solve with the amine package — no new numerics. This spec wires that
@@ -24,25 +25,30 @@ up and proves it against the shortcut units.
     which must be an amine package — raise a typed `AmineColumnSpecError` naming the registered
     amine packages when it is a plain cubic).
     Implementation: build the P1-03 column with `condenser="none"`, `reboiler="none"`, gas fed to
-    stage N, lean amine to stage 1, no specs (a feed-determined absorber has zero tears), and run
-    it with the amine package. Map stage-1 vapour → `gas_out`, stage-N liquid → `rich_amine_out`.
+    stage N, lean amine to stage 1, no specs (a feed-determined absorber has zero tears, P1-09), and
+    run it with the amine package. The MDEA sample loop's 4 ppmv H2S outlet spec is infeasible under
+    the reactive package (lean floor 5.4 ppmv): the staged sample flowsheet sets `h2s_out_ppmv` to
+    6.0 like `tests/units/test_amine_units_package.py` and says so in its docstring. Map stage-1 vapour → `gas_out`, stage-N liquid → `rich_amine_out`.
     Report in `info`: per-stage T profile (`stage_T_K: list`), rich loading `rich_co2_loading`,
     `rich_h2s_loading`, `lean_co2_loading`, outlet `outlet_co2_molpct`, `outlet_h2s_ppmv`,
     `heat_of_absorption_W` (from the package, P1-04), `temperature_bulge_K` (max stage T − lean
     inlet T) and `n_stages`.
   - `@register("unit", "amine_regenerator")` — ports `rich_amine_in` → `lean_amine_out`,
     `acid_gas_out`. Params: `n_stages` (default 20), `regenerator_P` (default 1.9 bara, same as
-    the shortcut), `condenser` (`"partial"` default, reflux returns water; or `"none"`),
-    `reboiler="kettle"`, specs: exactly one of `reboiler_duty_W`, `lean_co2_loading` (default:
-    the shortcut's `DEFAULT_LEAN_CO2_LOADING`), or `steam_ratio_kg_per_kg_acid_gas`. A loading
-    spec is a column product spec on the bottoms composition (CO2 mole fraction expressed as a
-    loading = x_CO2 / x_amine); use the column's existing spec machinery
-    (`units/column/specs.py` after P1-03) — add a `component_ratio` spec kind there if none fits,
-    and only there.
-    Map: stage-N liquid → `lean_amine_out`, condenser vapour → `acid_gas_out`. `duty_W` = reboiler
-    duty; `info` also carries `condenser_duty_W`, `stripping_steam_kg_per_h` (reboiler duty ÷
-    water latent heat at the reboiler T via `thermo.phase_props` enthalpies, no `Chemical()`),
-    `steam_kg_per_kg_acid_gas`, `stage_T_K`, `lean_co2_loading`, `lean_h2s_loading`.
+    the shortcut), `reboiler="kettle"`, `condenser="none"` (the staged regenerator is a **reboiled
+    stripper**: one tear, one degree of freedom, exactly one spec — this resolves the design
+    conflict the first attempt found: a partial condenser would add a second tear that the unit's
+    single regeneration spec cannot pin; the overhead condenser / reflux drum are flowsheet units
+    downstream, reflux return is out of scope). Specs: exactly one of `reboiler_duty_W`,
+    `lean_co2_loading` (default: the shortcut's `DEFAULT_LEAN_CO2_LOADING`), or
+    `steam_ratio_kg_per_kg_acid_gas`. A loading spec is a column product spec on the bottoms
+    composition (CO2 mole fraction expressed as a loading = x_CO2 / x_amine); use the column's
+    existing spec machinery (`units/column/specs.py`) — add a `component_ratio` spec kind there if
+    none fits, and only there.
+    Map: stage-N liquid → `lean_amine_out`, stage-1 vapour → `acid_gas_out`. `duty_W` = reboiler
+    duty; `info` also carries `stripping_steam_kg_per_h` (reboiler duty ÷ water latent heat at
+    the reboiler T via `thermo.phase_props` enthalpies, no `Chemical()`), `steam_kg_per_kg_acid_gas`,
+    `stage_T_K`, `lean_co2_loading`, `lean_h2s_loading`.
 - Edit: `src/ngdesign/units/mdea_absorber.py`, `mdea_regenerator.py` — accept `params["mode"]`
   (`"shortcut"` default, `"staged"`): `"staged"` delegates to the units above with the same
   ports, so the existing `amine_loop` / `mea_amine_loop` flowsheets switch by one param. The
@@ -62,7 +68,8 @@ up and proves it against the shortcut units.
     relative (`tests/property/test_unit_balances.py` style); (5) plain-cubic thermo raises
     `AmineColumnSpecError`; (6) regenerator: `lean_co2_loading` spec met within the column spec
     tolerance and `steam_kg_per_kg_acid_gas` for MDEA between 0.8 and 1.6 (Kohl & Nielsen ch. 2,
-    MDEA reboiler steam 0.9–1.4 lb/lb typical); for MEA between 1.5 and 3.0.
+    MDEA reboiler steam 0.9–1.4 lb/lb typical); for MEA between 1.5 and 3.0. If a band cannot be
+    met, report both numbers in the PR; do not widen the band.
   - `tests/e2e/test_amine_loop_staged.py`: the staged loop converges with the sequential-modular
     solver (same checks as `tests/e2e/test_amine_loop.py`: convergence, determinism, overall
     balances); lean loading at the absorber inlet equals the regenerator spec within the solver
@@ -70,7 +77,8 @@ up and proves it against the shortcut units.
   - Existing amine tests, `tests/e2e/test_amine_loop.py`, `test_mea_amine_loop.py` PASS unchanged.
 
 ## Method
-No new numerics: the column's inside-out / Naphtali–Sandholm machinery does the stage solve; the
+No new numerics (if the column still cannot converge a case, that is a P1-09 defect: file it on
+issue #98 with the reproduction and stop, do not add solver code to `amine_column.py`): the column's inside-out / Naphtali–Sandholm machinery does the stage solve; the
 amine package supplies reactive K-values and enthalpies with the heat of absorption. Cite Kohl &
 Nielsen for the validation bands and Murphree (1925, Ind. Eng. Chem. 17, 747) for the stage
 efficiency. Convergence failures surface as the column's `ColumnConvergenceError` with the stage
