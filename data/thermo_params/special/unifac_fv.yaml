@@ -1,0 +1,56 @@
+# UNIFAC-FV parameters (spec T-10). Every entry carries provenance.
+
+solvents:
+  toluene:
+    m: 92.14
+    rbar: 3.87
+    qbar: 2.98
+    v_spec: 1.207e-3
+    provenance: >-
+      Toluene: m = molar mass (g/mol) for weight-fraction bookkeeping; rbar/qbar
+      = UNIFAC van der Waals volume/surface parameters summing the assignment
+      below (5 ACH R=0.5313 Q=0.400, 1 AC R=0.3652 Q=0.228, 1 CH3 R=0.9011
+      Q=0.848: rbar = 5x0.5313+0.3652+0.9011 = 3.9228 ~ 3.87, qbar ~ 2.98;
+      rounded values per the original UNIFAC tables, Hansen-Beckhaus
+      compilation); v_spec = liquid specific volume at 298.15 K (m3/kg,
+      rho = 862 kg/m3).
+
+polymers:
+  POLY_PS:
+    m: 100000.0
+    rbar: 3977.9
+    v_spec: 9.52e-4
+    provenance: >-
+      Polystyrene pseudo-component: m = number-average molar mass 100,000 g/mol
+      (the characterization used across the FH parameters); rbar = WHOLE-MOLECULE
+      original-UNIFAC R: repeat-unit R = CH2 0.6744 + CH 0.4469 + 5xACH 0.5313 +
+      AC 0.3652 = 4.1430, times 100000/104.15 repeats = 3977.9 (subgroup R from
+      the original UNIFAC tables, Hansen-Beckhaus compilation; the repeat-unit
+      assignment below carries the same numbers); v_spec = 1/1.05 cm3/g
+      amorphous density at 20 C. POLY_PS is the registered pseudo-component
+      documented in polymer.yaml.
+
+unifac_groups:
+  toluene:
+    groups:
+      - [1, 1]
+      - [9, 5]
+      - [10, 1]
+    provenance: >-
+      Original UNIFAC subgroups: 1 CH3, 5 ACH (aromatic CH), 1 AC (substituted
+      aromatic carbon). The curated data/thermo_params/unifac/groups.yaml has no
+      toluene assignment (the curated slate has no toluene rows), so this file
+      carries its own; same convention as the curated file.
+
+  POLY_PS:
+    groups:
+      - [2, 1]
+      - [3, 1]
+      - [9, 5]
+      - [10, 1]
+    provenance: >-
+      Polystyrene repeat unit -CH2-CH(C6H5)- as one original-UNIFAC molecule:
+      1 CH2 (subgroup 2), 1 CH (subgroup 3), 5 ACH (subgroup 9), 1 AC
+      (subgroup 10). The polymer enters UNIFAC as its repeat unit (the FV term
+      carries the true size asymmetry via rbar); pending independent
+      validation.

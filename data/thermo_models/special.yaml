@@ -1,0 +1,147 @@
+# Special-chemistry catalogue rows (spec T-10).
+#
+# One row per special property method, registered by ngdesign.thermo.catalogue
+# like every other family. All rows ship `experimental`: the models are
+# implemented and unit-tested against published references, but the parameter
+# base is thin (one polymer pair, dimerization only), so the rows are hidden
+# from the advisor's suggested set and exempt from the L0 audit until their
+# validation cases bind (data/validation/special/cases.yaml carries the pending
+# cases with reasons). Options are deliberately empty - the special adapters
+# read their parameters from data/thermo_params/special/ keyed by component id.
+
+- id: flory_huggins
+  name: Flory-Huggins polymer solution
+  family: special
+  adapter: ngdesign.thermo.special:FloryHugginsPackage
+  options: {}
+  params:
+    source: data/thermo_params/special/polymer.yaml
+    provenance: >-
+      Segment counts and chi per solvent/polymer pair with per-entry provenance;
+      polystyrene/toluene chi = 0.67 at 435.46 K from Gunduz & Dincer, Polymer
+      21 (1980) 1131 (reduced from IGC infinite-dilution data). chi is the
+      original composition- and temperature-independent FH form.
+  applicability:
+    component_classes: [hydrocarbon, polar_organic]
+    polar: true
+    electrolyte: false
+    T_K: [250.0, 600.0]
+    P_Pa: [10000.0, 10000000.0]
+    phases: [V, L]
+    notes: >-
+      Solvent/polymer liquid-phase nonideality over the VLE surface; the polymer
+      enters as a flowsheet-owned pseudo-component (P1-07). Vapour phase ideal.
+      The shipped chi is fitted at 435.46 K; treat T_K as a structural, not
+      validated, window. Infinite-dilution and concentrated regimes only as
+      validated.
+  status: experimental
+  validation: []
+
+- id: polymer_nrtl
+  name: Chen segment-based polymer NRTL
+  family: special
+  adapter: ngdesign.thermo.special:ChenPolymerNRTLPackage
+  options: {}
+  params:
+    source: data/thermo_params/special/polymer.yaml
+    provenance: >-
+      Chen (1993), Fluid Phase Equilibria 83, 301: segment combinatorial plus
+      segment-level NRTL residual. Segment assignments and tau/alpha per
+      segment pair with provenance; the shipped toluene/PS parameterization is
+      an illustrative fit (no verified published parameter set located).
+  applicability:
+    component_classes: [hydrocarbon, polar_organic]
+    polar: true
+    electrolyte: false
+    T_K: [250.0, 600.0]
+    P_Pa: [10000.0, 10000000.0]
+    phases: [V, L]
+    notes: >-
+      Solvent/polymer liquid nonideality with local-composition enthalpy; the
+      polymer enters as a flowsheet-owned pseudo-component. Vapour phase ideal.
+      The shipped tau/alpha are illustrative, so T_K is structural only.
+  status: experimental
+  validation: []
+
+- id: unifac_fv
+  name: UNIFAC free-volume (Oishi-Prausnitz)
+  family: special
+  adapter: ngdesign.thermo.special:UnifacFvPackage
+  options: {}
+  params:
+    source: data/thermo_params/special/unifac_fv.yaml
+    provenance: >-
+      Oishi & Prausnitz, Ind. Eng. Chem. Process Des. Dev. 17, 333 (1978):
+      UNIFAC solvent activity plus the Flory free-volume term (c1 = 1.1,
+      15.17 cm3/mol CH2 reference volume, b = 1.28); polymer activity by
+      Gibbs-Duhem integration. UNIFAC subgroup assignment for toluene carries
+      its own provenance (the curated groups.yaml has no toluene rows).
+  applicability:
+    component_classes: [hydrocarbon, polar_organic]
+    polar: true
+    electrolyte: false
+    T_K: [250.0, 600.0]
+    P_Pa: [10000.0, 10000000.0]
+    phases: [V, L]
+    notes: >-
+      Binary solvent/polymer supports only. The polymer pseudo-component's
+      generalized vapour-pressure correlation is an operational placeholder
+      (polymers do not boil); only solvent K-values are meaningful.
+  status: experimental
+  validation: []
+
+- id: ideal_solid
+  name: Ideal-solubility solid-liquid equilibrium
+  family: special
+  adapter: ngdesign.thermo.special:IdealSolidPackage
+  options: {}
+  params:
+    source: chemicals databank fusion properties (Tm, Hfus by CAS)
+    provenance: >-
+      van't Hoff ideal solubility ln x = -(dHfus/R)(1/T - 1/Tm), gamma = 1.
+      Fusion properties resolved from the chemicals databank at build time;
+      a component without them refuses. Not a flash package: solubility(cid, T)
+      is the surface, flash-style calls refuse.
+  applicability:
+    component_classes: [hydrocarbon, polar_organic]
+    polar: true
+    electrolyte: false
+    T_K: [90.0, 600.0]
+    P_Pa: [10000.0, 10000000.0]
+    phases: [L]
+    notes: >-
+      Ideal solubility of a solid in a liquid solvent. Non-ideal gamma
+      corrections (NRTL/S MDL) are future work; melting-point curvature of the
+      liquidus is not computed.
+  status: experimental
+  validation: []
+
+- id: hoc_dimer
+  name: Dimerizing-acid gamma-phi (Hayden-O'Connell family, in-house kernel)
+  family: special
+  adapter: ngdesign.thermo.special:HaydenOConnellDimerPackage
+  options: {}
+  params:
+    source: data/thermo_params/special/association.yaml
+    provenance: >-
+      In-house dimerization chemical-theory kernel (Marek-Standart form, the
+      leading association term of Hayden-O'Connell): Kp(T) from a reference
+      dimerization constant and association enthalpy per component. Acetic-acid
+      parameters reduced from Mehling & Kleiber (2020) J. Chem. Eng. Data /
+      Ind. Eng. Chem. Res. acetic-acid vapour association data. The curated
+      nrtl_hoc / nrtl_nothnagel rows keep their refusal (their wiring lives in
+      ngdesign.thermo.gamma_phi, outside this spec's file list).
+  applicability:
+    component_classes: [polar_organic, acid_gas]
+    polar: true
+    electrolyte: false
+    T_K: [300.0, 500.0]
+    P_Pa: [1000.0, 2000000.0]
+    phases: [V, L]
+    notes: >-
+      Carboxylic-acid vapour association via dimerization equilibrium; liquid
+      phase ideal on apparent composition. The kernel function
+      dimer_vapor_compressibility is exercised directly against the published
+      compressibility point in tests/thermo/test_special.py.
+  status: experimental
+  validation: []

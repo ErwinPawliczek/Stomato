@@ -98,8 +98,10 @@ def test_rows_load_and_build() -> None:
         "saft_vr_mie",
     ]
     non_gamma = ["amine_enrtl", "amine_ke", "pr", "pr78", "srk"]
-    expected = sorted(gamma_phi_ids + nrtl_ids + helmholtz_ids + non_gamma + saft_ids)
-    assert len(expected) == 83
+    # special family (T-10): experimental rows, hidden from the advisor
+    special_ids = ["flory_huggins", "hoc_dimer", "ideal_solid", "polymer_nrtl", "unifac_fv"]
+    expected = sorted(gamma_phi_ids + nrtl_ids + helmholtz_ids + non_gamma + saft_ids + special_ids)
+    assert len(expected) == 88
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {

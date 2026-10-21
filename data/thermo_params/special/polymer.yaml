@@ -1,0 +1,42 @@
+# Polymer-solution parameters (spec T-10). Every entry carries provenance;
+# a pair without parameters is a construction-time refusal, never an ideal.
+
+segments:
+  toluene:
+    r: 1.0
+    segments: [[s, 1]]
+    provenance: 'solvent reference segment: one segment per solvent molecule (FH lattice convention)'
+  POLY_PS:
+    r: 962.0
+    segments: [[p, 962]]
+    provenance: >-
+      Polystyrene Mn = 100,000 g/mol with styrene repeat 104 g/mol and toluene
+      repeat-equivalent volume: r = Mn/M_repeat x (M_repeat/M_tol) ~ 962
+      solvent-sized segments, per the worked example in Penn State MATSE 202
+      Lesson 10 (Flory-Huggins polymer-solution section, worked toluene/PS
+      entropy-of-mixing example). POLY_PS is a registered pseudo-component
+      (P1-07); register it as register_pseudo('POLY_PS', 'Polystyrene',
+      Tb=871.0, sg=1.05) - Tb is an operational placeholder (polystyrene
+      decomposes before boiling; an n-tetracosane-analogue value keeps the
+      Riazi-Daubert characterization defined), sg = 1.05 is the standard
+      amorphous polystyreneg density at 20 C.
+
+chi:
+  toluene/POLY_PS:
+    chi: 0.67
+    provenance: >-
+      Gunduz & Dincer, Polymer 21 (1980) 1131, polystyrene/toluene at
+      162.31 C (435.46 K), reduced from inverse gas chromatography
+      infinite-dilution data (the same source's Omega_1^inf = 7.90).
+
+segment_tau:
+  s/p:
+    tau_ab: 0.45
+    tau_ba: 0.45
+    alpha: 0.2
+    provenance: >-
+      ILLUSTRATIVE parameterization (toluene solvent segment / polystyrene
+      segment): no verified published Chen-1993 parameter set for this pair was
+      located this session. Values are order-of-magnitude placeholders so the
+      model's algebra is exercised end-to-end; they are NOT engineering data.
+      Replace with fitted values before any design use.
