@@ -83,8 +83,8 @@ its own `.importlinter` ignore lines. The orchestrator updates **Status** here o
 | P1-01 | Thermo contract v2 — properties, K-values, saturation, derivatives | P0-04, P0-06 | merged #89 |
 | P1-02 | Open component registry — databank species, pseudo-components, per-flowsheet slate | P0-01, P1-01 | merged #94 |
 | P1-03 | Column consumes contract v2; split the god-file | P1-01, P0-06 | merged #96 (−56 % flash-equivalents; see #91) |
-| P1-04 | Amine chemistry as property packages (apparent-component reactive VLE) | P0-02, P1-01 | PR #95 reviewed, auto-merging |
-| P1-06 | Staged amine absorber/regenerator via column + amine package | P1-03, P1-04 | issue #98, dispatch after #95 |
+| P1-04 | Amine chemistry as property packages (apparent-component reactive VLE) | P0-02, P1-01 | merged #95 |
+| P1-06 | Staged amine absorber/regenerator via column + amine package | P1-03, P1-04 | dispatched (issue #98) |
 | P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | merged #97 (867 comparisons, 74 xfail families; issues #99, #100) |
 | P1-07 | Pseudo-component definitions owned by the Flowsheet (no process-global registry) | P1-02 | to write |
 | P1-08 | One saturation solver over a vapour-fraction callable (amine package reuses `_state._saturation`) | P1-01, P1-04 | to write |
@@ -92,3 +92,10 @@ its own `.importlinter` ignore lines. The orchestrator updates **Status** here o
 Dispatch order: P1-01 first (merged 2026-10-20); then P1-02, P1-03, P1-04, P1-05 in parallel
 (disjoint packages; P1-02 and P1-04 both touch `units/`, resolve on rebase); P1-06 after P1-03 and
 P1-04 merge. Contract-change PRs are reviewed by the orchestrator before merge.
+
+## Hackathon showcase — the agent (docs/PLAN.md §4)
+
+| Spec | Title | Depends on | Status |
+|---|---|---|---|
+| B-08 | Engineering agent: Claude tool use over the project, streamed through /api/agent | B-02..B-04, P0-03 | dispatched (issue #101) |
+| F-08 | Agent chat panel streaming /api/agent events | B-08 event schema | dispatched (issue #102) |
