@@ -1,39 +1,31 @@
-"""POST /api/solve (spec B-02).
+"""POST /api/solve (spec B-02) — the HTTP surface over the shared solve path.
 
-Solves the current project through the registry seam — the thermo package comes
-from the project's ``thermo`` selection (default ``pr``) and the solver is
-``sequential_modular``; the same engine path as the S-35 CLI slice demo. Results
-are cached by project hash so repeated solves of an unchanged project return
-instantly.
+Spec B-08 moved the solve logic, its project-hash helper and the plugin/semantic
+error types into ``ngdesign.agent.engine``, so this route and the agent's
+``solve`` tool are ONE solve path. What stays here: the HTTP mapping (missing
+plugin -> 501, semantically invalid project -> 422) and the route's own cache
+dict — a locked test (tests/api/test_solve_errors.py) monkeypatches
+``routes_solve._cache`` for isolation, so the route keeps that seam and injects
+it into the shared helper. Outside that test the attribute IS the engine's
+cache, so the route and the agent share one cache.
 """
 
 from __future__ import annotations
 
-import hashlib
-
 from fastapi import APIRouter, HTTPException
 
-from ngdesign import registry
-from ngdesign.contracts import Project, SolvedFlowsheet
+from ngdesign.agent import engine
+from ngdesign.contracts import SolvedFlowsheet
 
 router = APIRouter()
 
-#: project hash -> solved result (spec B-02: "cache by project hash").
-_cache: dict[str, SolvedFlowsheet] = {}
+#: project hash -> solved result (spec B-02: "cache by project hash"). Injected
+#: into the shared solve helper; a locked test monkeypatches this attribute.
+_cache: dict[str, SolvedFlowsheet] = engine._cache  # the engine's own cache: one cache in production
 
-
-def project_hash(project: Project) -> str:
-    """Stable content hash of the full project model."""
-    return hashlib.sha256(project.model_dump_json().encode("utf-8")).hexdigest()
-
-
-def first_missing_unit_kind(project: Project) -> str | None:
-    """First unit kind in the flowsheet with no registered plugin, if any."""
-    known = set(registry.available("unit"))
-    for spec in project.flowsheet.units:
-        if spec.kind not in known:
-            return spec.kind
-    return None
+# The shared helpers, re-exported under their historical names.
+project_hash = engine.project_hash
+first_missing_unit_kind = engine.first_missing_unit_kind
 
 
 @router.post("/api/solve")
@@ -43,26 +35,12 @@ def solve() -> SolvedFlowsheet:
     # so a module-level import would be circular.
     from ngdesign.api.app import _project
 
-    project = _project()
-    missing = first_missing_unit_kind(project)
-    if missing is not None:
-        raise HTTPException(status_code=501, detail=f"unit kind {missing!r} has no registered plugin")
-    thermo_name = project.flowsheet.thermo
-    known_thermo = registry.available("thermo")
-    if thermo_name not in known_thermo:
-        raise HTTPException(
-            status_code=501,
-            detail=f"thermo model {thermo_name!r} has no registered plugin; have {known_thermo}",
-        )
-    key = project_hash(project)
-    if key not in _cache:
-        thermo = registry.create("thermo", thermo_name)
-        try:
-            _cache[key] = registry.create("solver", "sequential_modular").solve(project.flowsheet, thermo)
-        except ValueError as exc:
-            # Semantically invalid project the PUT-time contracts cannot reject:
-            # declared ports and feed specs are only known to the plugins at
-            # solve time (e.g. a stream naming a port the unit does not have).
-            # That is client error (422), never a 500.
-            raise HTTPException(status_code=422, detail=str(exc)) from exc
-    return _cache[key]
+    try:
+        return engine.solve_project(_project(), cache=_cache)
+    except engine.UnknownPluginError as exc:
+        raise HTTPException(status_code=501, detail=str(exc)) from exc
+    except engine.InvalidProjectError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+__all__ = ["first_missing_unit_kind", "project_hash", "router", "solve"]
