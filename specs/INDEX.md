@@ -98,7 +98,7 @@ P1-04 merge. Contract-change PRs are reviewed by the orchestrator before merge.
 | Spec | Title | Depends on | Status |
 |---|---|---|---|
 | B-08 | Engineering agent: Claude tool use over the project, streamed through /api/agent | B-02..B-04, P0-03 | dispatched (issue #101) |
-| F-08 | Agent chat panel streaming /api/agent events | B-08 event schema | dispatched (issue #102) |
+| F-08 | Agent chat panel streaming /api/agent events | B-08 event schema | PR #104 approved, auto-merging |
 
 ## Phase 2 — Solver and diagnostics (docs/PLAN.md §3)
 
