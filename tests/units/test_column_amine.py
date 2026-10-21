@@ -64,11 +64,20 @@ def test_boundary_balance_closes(solved: Any) -> None:
 
 
 def test_co2_is_absorbed(solved: Any) -> None:
-    """Measured: 6.0 mol/s CO2 in, 0.0489 mol/s out with the gas - 99.2% removed."""
+    """Measured: 6.06 mol/s CO2 in, 0.00036 mol/s out with the gas - 99.99% removed.
+
+    Re-recorded on the corrected solver: the previous 0.0489 mol/s slip rode a
+    stage profile pinned at the 273.15 K band floor (frozen reactive K). The
+    physical profile carries the absorption exotherm (stage bulge to 314 K,
+    docstring of test_stage_temperatures_in_band) and the rich loading sits at
+    ~0.502 mol/mol MDEA - the lean solvent's equilibrium capacity (~12 mol/s
+    MDEA x 0.5) matches the CO2 feed, so near-total capture is the
+    equilibrium-limited answer.
+    """
     d = solved.outlets["distillate"]
     co2_out = d.molar_flow * d.composition.get("CO2", 0.0)
     assert co2_out < 6.0
-    assert co2_out == pytest.approx(0.0489, abs=1e-3)
+    assert co2_out == pytest.approx(0.00036, abs=1e-3)
 
 
 def test_rich_loading_in_range(solved: Any) -> None:

@@ -31,7 +31,6 @@ from .spec import (
     _MESH_H_TOL,
     _MESH_M_TOL,
     _MESH_M_TOL_REACTIVE,
-    _MESH_M_TOL_ZERO_ONE_TEAR,
     _OUTER_DAMP,
     _OUTER_DAMP_ZERO_ONE,
     _OUTER_MAX,
@@ -88,17 +87,15 @@ def _solve_mesh(
     correlation's noise.
     """
     zero_one = col.n_tears < 2
-    if not zero_one:
-        m_tol = _MESH_M_TOL
-    elif _is_reactive_package(tb):
+    if zero_one and _is_reactive_package(tb):
         m_tol = _MESH_M_TOL_REACTIVE
     else:
-        m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
+        m_tol = _MESH_M_TOL
     patience = _STAGNATION_MAX_ZERO_ONE_TEAR if zero_one else _STAGNATION_MAX
     prof: _Profile | None = None
     if seed is None:
         t_top_seed, t_bot_seed = _temperature_seed(col, tb)
-        prof = _seed_profile(col, t_top_seed, t_bot_seed, v_bot_tear=t_bot)
+        prof = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot)
     else:
         # Copy: the sweep loop mutates the profile in place, and a failed mesh
         # must not corrupt the seed the spec layer warm-starts from.
@@ -167,6 +164,40 @@ def _solve_mesh(
             f"(best inside-out profile residuals M={best_m:.2e}, H={best_h:.2e} over "
             f"{prof.outer} outer sweeps, {prof.inner} inner iterations)"
         ) from exc
+    if zero_one and not _is_reactive_package(tb):
+        # NS globalizes; the inside-out polishes. NS's finite-difference Newton
+        # floors at M=3.9e-8 (measured P1-09 absorber: passes 20-30 stagnant),
+        # while the anchored-correlation inside-out closes to machine precision
+        # from a near-converged state (measured N=2/N=4: M ~ 1e-10). Warm-start
+        # sweeps lift the solution the last two decades onto the strict gate.
+        model = None
+        stalled = 0
+        m_ns, h_ns = _exact_residuals(col, tb, prof)
+        pol_m, pol_h = m_ns, h_ns
+        best_prof = _copy_profile(col, prof)
+        for outer in range(1, _OUTER_MAX + 1):
+            model = _refresh_model(col, tb, prof, model)
+            prof.outer = outer
+            _inner_solve(col, model, prof, t_bot)
+            m_pol, h_pol = _exact_residuals(col, tb, prof)
+            if m_pol < m_tol and h_pol < _MESH_H_TOL:
+                break
+            if m_pol + h_pol < pol_m + pol_h:
+                stalled = 0
+                pol_m, pol_h = m_pol, h_pol
+                best_prof = _copy_profile(col, prof)
+            else:
+                stalled += 1
+                if stalled >= _STAGNATION_MAX_ZERO_ONE_TEAR:
+                    break
+        # Whatever the polish did, hand back the best state seen: the sweeps
+        # mutate the profile in place, and a diverging polish sweep must never
+        # displace the NS solution it started from.
+        prof = _copy_profile(col, best_prof)
+        # If the polish stalls, the NS state stands: its floor (M=3.9e-8, named
+        # in _NS_M_TOL_ZERO_ONE_TEAR) is the measured solver limit, and the
+        # boundary overall balances close far tighter than the stage residual.
+    _finalize_duties(col, tb, prof)
     return prof
 
 
@@ -455,16 +486,27 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         """
         start_top, start_bot = top, bot
         last: ColumnConvergenceError | None = None
+        # Zero/one-tear columns solve every secant mesh evaluation COLD. The
+        # mesh has multiple roots at one tear (measured P1-09 rectifier at
+        # reflux 20.4: d=83.9 vs d=81.0 depending on the warm start), so a
+        # warm-started evaluation returns whichever root the seed's basin
+        # holds; the spec residual then hops between roots as the secant's
+        # finite-difference probes and main line land in different basins, and
+        # the Jacobian reads noise. A cold start always takes the mixed-feed
+        # seed's root, making g(tear) single-valued - and the mixed-feed seed
+        # keeps cold solves at 1-3 sweeps. Two-tear columns keep the warm
+        # start: their benchmarked mesh sequence is locked.
+        cold = col.n_tears < 2
         if probe:
             try:
-                prof = _solve_mesh(col, tb, top, bot, state["seed"], allow_fallback=False)
+                prof = _solve_mesh(col, tb, top, bot, None if cold else state["seed"], allow_fallback=False)
                 state["seed"] = _copy_profile(col, prof)
                 return prof
             except (ColumnConvergenceError, ValueError) as exc:
                 raise ColumnConvergenceError(f"mesh probe failed at tears {(top, bot)}: {exc}") from exc
         for _attempt in range(3):
             try:
-                prof = _solve_mesh(col, tb, top, bot, state["seed"])
+                prof = _solve_mesh(col, tb, top, bot, None if cold else state["seed"])
                 state["seed"] = _copy_profile(col, prof)
                 return prof
             except ColumnConvergenceError as exc:

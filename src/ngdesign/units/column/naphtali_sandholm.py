@@ -24,10 +24,12 @@ from .spec import (
     _FLOW_FLOOR,
     _MESH_H_TOL,
     _MESH_M_TOL,
-    _MESH_M_TOL_ZERO_ONE_TEAR,
+    _MESH_M_TOL_REACTIVE,
+    _NS_M_TOL_ZERO_ONE_TEAR,
     _NS_MAX,
     _NS_MAX_ZERO_ONE_TEAR,
     ColumnConvergenceError,
+    _is_reactive_package,
 )
 from .thermo_adapter import _flash_ready, _ThermoBox
 
@@ -191,17 +193,16 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
         """Scaled max residual over the H rows (the line-search's second block)."""
         return max(abs(r[i]) for i in range(n_m, len(r))) / h_scale
 
-    def gates_ok(r: list[float]) -> bool:
-        """Same acceptance semantics as the inside-out mesh gate.
-
-        A pure 1e-10 norm can never be reached: the frozen enthalpy lines carry
-        an anchor floor around 1e-3 relative, so Newton would exhaust its pass
-        budget refining a state the mesh itself already accepts.
-        """
-        return m_norm_of(r) < m_tol and max(abs(r[i]) for i in range(n_m, len(r))) / h_scale < _MESH_H_TOL
-
     ns_max = _NS_MAX if col.n_tears >= 2 else _NS_MAX_ZERO_ONE_TEAR
-    m_tol = _MESH_M_TOL if col.n_tears >= 2 else _MESH_M_TOL_ZERO_ONE_TEAR
+    if col.n_tears >= 2:
+        m_tol = _MESH_M_TOL
+    elif _is_reactive_package(tb):
+        m_tol = _MESH_M_TOL_REACTIVE
+    else:
+        # Intermediate handoff threshold, not final acceptance: _solve_mesh
+        # warm-starts the inside-out loop from the NS state and holds THAT to
+        # the strict _MESH_M_TOL (see _NS_M_TOL_ZERO_ONE_TEAR's measured floor).
+        m_tol = _NS_M_TOL_ZERO_ONE_TEAR
     for _ in range(ns_max):
         prof.ns_passes += 1
         k_stages = [
@@ -238,15 +239,22 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
 
         u = _pack_state(prof, col, v_free)
         r0 = residuals(u)
-        # The exact-M gate: the M rows (live-K equilibrium balances) are the
-        # strongly nonlinear block that must close to tolerance; the H rows are
-        # near-linear in the frozen models and recover on the next pass's model
-        # refresh. The former mixed-norm acceptance let a step polish H while
-        # walking M uphill, exhausting the budget with M still open.
+        # The pass gate must carry exact-residual semantics, not the NS residual's.
+        # The NS residual derives vapour compositions as K*x (equilibrium-consistent
+        # by construction), so a state whose STORED y is stale reads as converged
+        # internally while the exact check - which uses the stored y - is wide open.
+        # Measured P1-09 absorber, seed state (y = gas-feed composition, not K*x):
+        # NS-internal M=6.3e-3 vs exact M=1.00 - the former gate broke before the
+        # first Newton step and the fallback never ran for these columns.
+        _refresh_y(col, tb, prof)
+        ex_m, ex_h = _exact_residuals(col, tb, prof)
+        if ex_m < m_tol and ex_h < _MESH_H_TOL:
+            break
+        # Baseline norms for the line search's descent test (a descent proxy on
+        # the frozen models; acceptance is decided by the exact gate above on
+        # the NEXT pass, so a polished-but-not-exact state keeps iterating).
         m_current = m_norm_of(r0)
         h_current = h_norm_of(r0)
-        if gates_ok(r0):
-            break
         n_unk = len(u)
         jac = [[0.0] * n_unk for _ in range(len(r0))]
         for i in range(n_unk):
@@ -302,7 +310,12 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
 
 
 def _pack_state(prof: _Profile, col: _Column, v_free: list[int]) -> list[float]:
-    u = [prof.x[j][cid] for j in range(col.n) for cid in col.comps]
+    # .get with a 0.0 default: the seed profile for a zero/one-tear column can
+    # carry only the components present in the seed compositions (measured P1-09
+    # absorber: a pure-nC4 liquid seed gives x = {"nC4": 1.0} and a bare
+    # [cid] lookup raises KeyError before the first Newton pass - the fallback
+    # never ran at all for these columns).
+    u = [prof.x[j].get(cid, 0.0) for j in range(col.n) for cid in col.comps]
     u.extend(prof.T)
     u.extend(prof.V[j] for j in v_free)
     return u

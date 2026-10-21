@@ -36,25 +36,27 @@ _NS_MAX = 10
 #: The overall mass/energy balances reported to the user close exactly over the
 #: boundary streams regardless of these stage-level tolerances.
 _MESH_M_TOL = 1e-8
-#: Stage-level M gate for zero/one-tear columns (absorbers, strippers, rectifiers)
-#: ONLY - the two-tear gate above stays untouched. Measured P1-09 floors: with a
-#: substantial liquid lean (200 mol/s against a 100 mol/s gas) the converged
-#: absorbers floor at 3e-7 (N=2) to 2e-6 (N=8/20); with the spec's own 30 mol/s
-#: lean nC4 at 300 K / 2 MPa - which this PR package flashes as essentially
-#: saturated vapour - the near-dry stages floor at 9.6e-2 (N=8). The
-#: boundary-stream overall balances close at machine precision in every measured
-#: case; the stage-level residual is the inside-out Kb correlation's noise.
-_MESH_M_TOL_ZERO_ONE_TEAR = 1e-1
 _MESH_H_TOL = 1e-2
+#: Intermediate acceptance for the Naphtali-Sandholm fallback on non-reactive
+#: zero/one-tear columns - NOT a final acceptance: after NS, _solve_mesh
+#: warm-starts the inside-out loop and holds that to the strict _MESH_M_TOL.
+#: Measured P1-09 absorber: NS converges from the seed in 5 passes and its
+#: finite-difference Newton then stagnates at M = 3.9e-8 (passes 20-30 all
+#: within 4e-8 - the FD Jacobian's noise floor), just above the 1e-8 final
+#: gate; the inside-out polish closes the gap to machine precision (measured
+#: N=2/N=4: M ~ 1e-10 from a near-converged state).
+_NS_M_TOL_ZERO_ONE_TEAR = 1e-7
 #: Stage-level M gate for zero/one-tear columns on a REACTIVE amine package
-#: only. The per-stage ln Kb = A + B/T correlation tracks the temperature
-#: dependence of the reactive acid-gas K-values but not their composition
-#: dependence, so the inside-out fixed point has a measured M-residual floor
-#: (~2.3e-2 on the 20-stage MDEA absorber after 3 sweeps) far above the
-#: physical-mixture gate; the boundary overall balances still close exactly.
-#: Spec D: a relaxed gate only as a separate named constant, only for
-#: zero/one-tear columns, with the measured floor recorded in the PR.
-_MESH_M_TOL_REACTIVE = 5e-2
+#: only. Measured P1-09 (20-stage MDEA absorber, amine_ke): the corrected
+#: inside-out converges in 3 sweeps to a physical solution (temperature bulge
+#: 281 -> 314 K, rich loading 0.502) and then stagnates at M = 5.2e-3 over
+#: sweeps 3-8 - the ln Kb = A + B/T correlation tracks the reactive acid-gas
+#: K-values' temperature dependence but not their composition dependence. The
+#: Naphtali-Sandholm fallback is WORSE on this package: its finite-difference
+#: Newton walks M uphill (measured 5.2e-3 -> 4.1e-1 over 30 passes while H
+#: closed to 3e-9 - the reactive K evaluation is too noisy for FD derivatives),
+#: so the inside-out floor IS the reactive floor. Gate sits just above it.
+_MESH_M_TOL_REACTIVE = 1e-2
 
 
 def _is_reactive_package(tb: object) -> bool:

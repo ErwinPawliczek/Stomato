@@ -23,6 +23,7 @@ from .spec import (
     _V_TRAFFIC_CAP,
     ColumnConvergenceError,
     _DrawSpec,
+    _is_reactive_package,
     _Params,
 )
 from .thermo_adapter import _flash_ready, _ThermoBox
@@ -321,6 +322,42 @@ def bisect_feed_phase(col: _Column, tb: _ThermoBox, p: float, want_vapor: bool) 
     return 0.5 * (lo + hi)
 
 
+def _mixed_feed_seed(col: _Column, tb: _ThermoBox) -> tuple[float, dict[str, float], dict[str, float]] | None:
+    """Adiabatic mixed-feed flash seed for zero/one-tear columns.
+
+    The stage feeds already carry each feed's inlet enthalpy flow (flashed at
+    its own T/P, which conserves enthalpy), so the mixed inlet state is
+    sum(h_flow)/f_total J/mol over col.feed_comp. Bisect the mixed-feed
+    composition's flash temperature until the flashed enthalpy matches - the
+    single-stage adiabatic equilibrium the column's bulk operates near.
+    Returns (T_ad, liquid-x, vapour-y) from that two-phase flash, or None when
+    the mixed state is single-phase (no separation information to seed from).
+    """
+    f_tot = col.f_total
+    if f_tot <= _FLOW_FLOOR:
+        return None
+    h_mix = sum(part.h_flow for part in col.feeds) / f_tot
+    z = col.feed_comp
+    p_mid = col.pressures[len(col.pressures) // 2]
+    lo, hi = 150.0, 600.0
+    t_ad = 0.5 * (lo + hi)
+    for _ in range(40):
+        t_ad = 0.5 * (lo + hi)
+        h = tb.pt(z, t_ad, p_mid, f_tot).enthalpy
+        if h > h_mix:
+            hi = t_ad
+        else:
+            lo = t_ad
+    state = tb.pt(z, t_ad, p_mid, f_tot)
+    if not 1e-6 < state.vapor_fraction < 1.0 - 1e-6:
+        return None
+    vap = next((p for p in state.phases if p.kind == PhaseKind.VAPOR), None)
+    liq = next((p for p in state.phases if p.kind != PhaseKind.VAPOR), None)
+    if vap is None or liq is None:
+        return None
+    return t_ad, dict(liq.composition), dict(vap.composition)
+
+
 def _nearest_feed_phase(col: _Column, j: int, vapor: bool) -> dict[str, float]:
     """Composition of the nearest feed's flashed phase (vapour or liquid).
 
@@ -337,7 +374,9 @@ def _nearest_feed_phase(col: _Column, j: int, vapor: bool) -> dict[str, float]:
     return dict(best[1]) if best is not None else dict(col.feed_comp)
 
 
-def _seed_profile(col: _Column, t_top: float, t_bot: float, v_bot_tear: float | None = None) -> _Profile:
+def _seed_profile(
+    col: _Column, tb: _ThermoBox, t_top: float, t_bot: float, v_bot_tear: float | None = None
+) -> _Profile:
     """Starting profile: feed-traffic seed for zero/one-tear columns (spec C),
     the distillation-shaped seed for two-tear columns (unchanged).
 
@@ -351,16 +390,43 @@ def _seed_profile(col: _Column, t_top: float, t_bot: float, v_bot_tear: float | 
     if col.n_tears < 2:
         # V_j = vapour feed flow entering at or below stage j (vapour rises);
         # L_j = liquid feed flow entering at or above stage j (liquid falls).
-        # Both floored so degenerate stages stay solvable. x/y from the nearest
-        # feed's flashed phase - NEVER the mixed feed composition, which a
-        # reactive package cannot evaluate as a liquid.
+        # Both floored so degenerate stages stay solvable.
         boilup = v_bot_tear if v_bot_tear is not None else 0.0
         vapour = [max(sum(part.v_flow for part in col.feeds[j:]) + boilup, _FLOW_FLOOR) for j in range(n)]
         liquid = [max(sum(part.l_flow for part in col.feeds[: j + 1]), _FLOW_FLOOR) for j in range(n)]
         l0 = max(0.5 * vapour[0], _FLOW_FLOOR) if col.condenser == "total" else 0.0
         temps = [t_top + (t_bot - t_top) * (j / max(n - 1, 1)) for j in range(n)]
-        x = [_nearest_feed_phase(col, j, vapor=False) for j in range(n)]
-        y = [_nearest_feed_phase(col, j, vapor=True) for j in range(n)]
+        mixed = None
+        if not _is_reactive_package(tb):
+            # Multi-feed columns seed each stage's x from the nearest feed's
+            # flashed phase. When those phases bracket the band - a lean
+            # solvent flashing as near-pure liquid (bubble point above the
+            # band ceiling) against a gas feed whose condensate bubbles below
+            # the floor - the first inner solve pins stages to the band edges
+            # and the fixed point never reaches the physical root (measured
+            # P1-09 absorber, N=8/20: Tmin=270.0/Tmax=380.0 from sweep 1, then
+            # stagnation at M ~ 5e-1 or convergence onto the spurious floor
+            # root). The adiabatic mixed-feed flash gives the composition and
+            # temperature the bulk of the column actually operates near
+            # (measured absorber: T_ad = 293.1 K, x from its liquid phase -
+            # squarely inside the band), so it replaces the nearest-feed
+            # phases when it yields a two-phase state. Reactive packages
+            # cannot flash a mixed gas + amine composition as a liquid and
+            # keep the nearest-feed seed.
+            try:
+                mixed = _mixed_feed_seed(col, tb)
+            except Exception:
+                mixed = None
+        if mixed is not None:
+            t_ad, x_liq, y_vap = mixed
+            temps = [t_ad] * n
+            x = [dict(x_liq) for _ in range(n)]
+            y = [dict(y_vap) for _ in range(n)]
+        else:
+            # x/y from the nearest feed's flashed phase - NEVER the mixed feed
+            # composition, which a reactive package cannot evaluate as a liquid.
+            x = [_nearest_feed_phase(col, j, vapor=False) for j in range(n)]
+            y = [_nearest_feed_phase(col, j, vapor=True) for j in range(n)]
         return _Profile(T=temps, V=vapour, L=liquid, x=x, y=y, l0=l0)
     temps = [t_top + (t_bot - t_top) * (j / max(n - 1, 1)) for j in range(n)]
     z = col.feed_comp
@@ -471,7 +537,19 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
     weights = {
         cid: sum(k_stages[j].get(cid, 0.0) * prof.x[j].get(cid, 0.0) for j in range(n)) for cid in col.comps
     }
-    ref_comp = max(weights, key=lambda cid: weights[cid])
+    if model is not None and col.n_tears < 2:
+        # Boston-Sullivan: the reference component is FIXED for the whole solve.
+        # Re-picking it every sweep from the x-weighted K sums flips Kb between
+        # components as the compositions sharpen (measured P1-09 C1/nC4 absorber:
+        # nC4 at sweep 1, C1 from sweep 2, because K_C1 ~ 8.5 >> K_nC4 ~ 0.15
+        # wins the weights as soon as x_C1 ~ 0.1). The flip drops a different
+        # component's (T, ln Kb) points into each stage's history, the fitted
+        # line stops passing through the stage's own equilibrium state, and the
+        # inner temperature walk marches to the band floor (measured: every
+        # stage pinned at t_band_lo = 270 K with 5e-2 component-balance errors).
+        ref_comp = model.ref_comp
+    else:
+        ref_comp = max(weights, key=lambda cid: weights[cid])
     kb = [max(k_stages[j].get(ref_comp, 1.0), 1e-12) for j in range(n)]
     alpha = [{cid: max(k_stages[j].get(cid, 1.0) / kb[j], 1e-12) for cid in col.comps} for j in range(n)]
 
@@ -515,14 +593,21 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
             hist = ((*prev_hist, (prof.T[j], ln_kb)))[-_KB_HIST_MAX:]
             b_prev = model.corr_b_s[j] if model is not None and j < len(model.corr_b_s) else _KB_SLOPE_DEFAULT
             a_fit, b_fit = _fit_ln_kb(hist, b_prev)
-            if model is not None and j < len(model.corr_a_s):
-                # Boston-Sullivan feedback damping on the fitted line itself: the
+            if model is not None and j < len(model.corr_b_s):
+                # Boston-Sullivan feedback damping on the fitted SLOPE only: the
                 # history's (T, ln Kb) points come from different composition
-                # states, so an undamped refit drifts and the temperature walk
-                # marches across the band (measured P1-09 stripper trace: T
-                # 366 -> 400 -> 290 with undamped refits).
-                a_fit = _OUTER_DAMP * a_fit + (1.0 - _OUTER_DAMP) * model.corr_a_s[j]
-                b_fit = _OUTER_DAMP * b_fit + (1.0 - _OUTER_DAMP) * model.corr_b_s[j]
+                # states, so an undamped refit drifts. Blending the intercept as
+                # well drags the line OFF the stage's current equilibrium point
+                # (measured P1-09 absorber, sweep 2: line(T) = 0.19 against a
+                # true thermo ln Kb of 2.16 at the same T) and the temperature
+                # walk then aims at a bogus temperature - the march to the band
+                # floor. The intercept is therefore re-anchored instead:
+                a_fit = ln_kb - b_fit / prof.T[j]
+                # the line passes exactly through the stage's freshest
+                # equilibrium state (T_j, ln Kb_j) every sweep - the property
+                # that makes the inner T update a consistent Newton step along
+                # the correlation (measured: the absorber closes at machine
+                # precision when the line is anchored, in <= 8 sweeps).
             corr_a_s.append(a_fit)
             corr_b_s.append(b_fit)
             kb_hist_new.append(hist)
