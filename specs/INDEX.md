@@ -82,10 +82,10 @@ its own `.importlinter` ignore lines. The orchestrator updates **Status** here o
 |---|---|---|---|
 | P1-01 | Thermo contract v2 — properties, K-values, saturation, derivatives | P0-04, P0-06 | merged #89 |
 | P1-02 | Open component registry — databank species, pseudo-components, per-flowsheet slate | P0-01, P1-01 | merged #94 |
-| P1-03 | Column consumes contract v2; split the god-file | P1-01, P0-06 | dispatched (issue #91) |
+| P1-03 | Column consumes contract v2; split the god-file | P1-01, P0-06 | merged #96 (−56 % flash-equivalents; see #91) |
 | P1-04 | Amine chemistry as property packages (apparent-component reactive VLE) | P0-02, P1-01 | PR #95 reviewed, auto-merging |
-| P1-06 | Staged amine absorber/regenerator via column + amine package | P1-03, P1-04 | drafted |
-| P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | dispatched (issue #93) |
+| P1-06 | Staged amine absorber/regenerator via column + amine package | P1-03, P1-04 | issue #98, dispatch after #95 |
+| P1-05 | Validation harness: every package vs CoolProp/NIST reference set | P1-01 | PR #97 in review |
 | P1-07 | Pseudo-component definitions owned by the Flowsheet (no process-global registry) | P1-02 | to write |
 | P1-08 | One saturation solver over a vapour-fraction callable (amine package reuses `_state._saturation`) | P1-01, P1-04 | to write |
 

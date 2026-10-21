@@ -18,3 +18,5 @@ Constraints for automated work:
   Done = the spec's acceptance criteria are true and CI is green.
 - When the PR is open, comment its URL on the GitHub issue named in the task. If blocked, comment
   the blocker there and stop.
+- Never merge, approve or enable auto-merge on your PR, and never push to `main`: the orchestrator
+  reviews and merges (branch protection requires an approving review).

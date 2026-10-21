@@ -88,6 +88,8 @@ says `Contract change: yes`. Such PRs are reviewed by the orchestrator before me
    how you verified it.
 4. Comment the PR URL on the GitHub issue named in your task. If blocked, comment the blocker
    there instead and stop.
+5. Never merge, approve, or enable auto-merge on your own PR, and never push to `main`. The
+   orchestrator reviews, approves and merges every PR (branch protection requires one approval).
 
 ## Never
 - Weaken, skip, or xfail a test to get green. Loosen a tolerance.
