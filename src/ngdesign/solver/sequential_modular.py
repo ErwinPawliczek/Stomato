@@ -18,15 +18,16 @@ Method:
 
        x_k  injected guess, y_k  value calculated by the units
        s_k = (y_k - y_{k-1}) / (x_k - x_{k-1})          per-variable secant
-       q_k = s_k / (s_k - 1), clamped to [-5, 0]
+       q_k = s_k / (s_k - 1), clamped to [q_min, 0]
        x_{k+1} = q_k * x_k + (1 - q_k) * y_k
 
-   q = 0 is direct substitution, q = -5 the strongest acceleration allowed. The first
-   pass and any degenerate secant fall back to direct substitution.
-4. Converged when every torn variable satisfies |y - x| <= RTOL * max(|x|, 1.0):
-   1e-6 relative per the spec, with a near-zero absolute floor of 1e-6 in the
-   variable's own units (mol/s, K, Pa). MAX_ITERATIONS passes are allowed; past that
-   the solver returns converged=False - it never raises for non-convergence.
+   q = 0 is direct substitution, q = q_min the strongest acceleration allowed. The
+   first pass and any degenerate secant fall back to direct substitution.
+4. Converged when every torn variable satisfies |y - x| <= rtol * max(|x|, 1.0):
+   rtol = 1e-6 relative by default (SolverOptions.rtol, the spec S-30 value), with
+   a near-zero absolute floor of 1e-6 in the variable's own units (mol/s, K, Pa).
+   SolverOptions.max_iterations passes are allowed (100, the spec S-30 cap); past
+   that the solver returns converged=False - it never raises for non-convergence.
 
 Injection of a torn stream flashes the guessed (T, P, flows) through the thermo
 package, so downstream units always see a consistent StreamState. Wegstein iterates
@@ -40,8 +41,16 @@ Port-check failures and unconnected inlets are recorded the same way, as stage
 merely fails to converge; a failed unit marks its block (and the sheet) converged
 too. Every block appends a BlockRecord (tears, iterations, wall time) and every
 tear iteration a TearRecord per tear stream to SolvedFlowsheet.history. Tear
-initialization is the molar-flow-weighted mean of the boundary feeds (simple,
-deterministic; feed-free sheets start from 1 mol/s nitrogen at ambient conditions).
+initialization (spec P2-03) is the molar-flow-weighted mean of what actually
+enters each block - boundary feeds and already-solved unit outlets whose target
+unit sits in the block - falling back to the global mean of the boundary feeds,
+then to 1 mol/s nitrogen at ambient conditions (feed-free sheets); a flowsheet-level
+warm start (spec P2-01) takes precedence over both. The acceleration, iteration cap
+and tolerance come from ``fs.solver_options``: bounded Wegstein (q in
+[wegstein_q_min, 0]), bounded Broyden on the block's concatenated tear vector
+(Biegler et al., ch. 8; damped to keep flows >= 0 and T, P > 0; reset to direct
+substitution after three consecutive residual growths), or plain direct
+substitution.
 
 The torn component flows are indexed by the flowsheet's own component slate (spec
 P1-02), not a fixed module constant: solve entry resolves every slate id through
@@ -63,9 +72,10 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import NamedTuple
 
+import numpy as np
+
 from ngdesign import registry
 from ngdesign.contracts import (
-    FeedSpec,
     Flowsheet,
     SolvedFlowsheet,
     StreamSpec,
@@ -74,16 +84,24 @@ from ngdesign.contracts import (
 )
 from ngdesign.contracts.components import resolve_set
 from ngdesign.contracts.diagnostics import BlockRecord, SolveAcceleration, TearRecord, UnitError
+from ngdesign.contracts.flowsheet import SolverOptions
 from ngdesign.contracts.plugins import Thermo, UnitModel
 
-#: Relative convergence tolerance for torn variables (spec S-30).
-RTOL = 1e-6
+#: The pre-P2-03 solver constants (spec S-30) are the ``SolverOptions`` defaults:
+#: one source of truth, read from the flowsheet's options at solve time.
+_DEFAULT_OPTIONS = SolverOptions()
 
-#: Hard cap on passes over a cyclic component (spec S-30).
-MAX_ITERATIONS = 100
+#: Relative convergence tolerance for torn variables (spec S-30) - the
+#: ``SolverOptions.rtol`` default, kept importable for callers and tests.
+RTOL = _DEFAULT_OPTIONS.rtol
 
-#: Strongest Wegstein acceleration allowed (spec S-30: q in [-5, 0]).
-WEGSTEIN_Q_MIN = -5.0
+#: Hard cap on passes over a cyclic component (spec S-30) - the
+#: ``SolverOptions.max_iterations`` default.
+MAX_ITERATIONS = _DEFAULT_OPTIONS.max_iterations
+
+#: Strongest Wegstein acceleration allowed (spec S-30: q in [-5, 0]) - the
+#: ``SolverOptions.wegstein_q_min`` default.
+WEGSTEIN_Q_MIN = _DEFAULT_OPTIONS.wegstein_q_min
 
 
 class _Edge(NamedTuple):
@@ -377,39 +395,83 @@ def _inject_tear(
     return thermo.flash_pt(composition, t, p, total)
 
 
-def _init_guess(fs: Flowsheet, components: tuple[str, ...]) -> tuple[list[float], dict[str, float]]:
-    """Initial tear guess: the molar-flow-weighted mean of the boundary feeds.
+def _nitrogen_guess(components: tuple[str, ...]) -> tuple[list[float], dict[str, float]]:
+    """Feed-free fallback: 1 mol/s nitrogen at ambient conditions.
 
-    Feed-free sheets start from 1 mol/s nitrogen at ambient conditions - any
-    positive, normalized guess converges for a well-posed loop. (A feed-free sheet
-    whose slate omits N2 gets a zero first guess; the degenerate-stream path keeps
-    it consistent.)
+    Any positive, normalized guess converges for a well-posed loop. (A sheet
+    whose slate omits N2 gets a zero first guess; the degenerate-stream path
+    keeps it consistent.)
     """
-    feeds: list[FeedSpec] = []
-    for s in fs.streams:
-        if s.source is None and s.feed is not None:
-            feeds.append(s.feed)
-    total = sum(f.molar_flow for f in feeds)
-    if not feeds or total <= 0.0:
-        composition: dict[str, float] = {"N2": 1.0}
-        t, p, flow = 298.15, 101325.0, 1.0
-    else:
-        t = sum(f.T * f.molar_flow for f in feeds) / total
-        p = sum(f.P * f.molar_flow for f in feeds) / total
-        flow = total
-        moles: dict[str, float] = {}
-        for f in feeds:
-            for c, z in f.composition.items():
-                moles[c] = moles.get(c, 0.0) + z * f.molar_flow
-        composition = {c: n / flow for c, n in sorted(moles.items())}
-    vector = [flow * composition.get(c, 0.0) for c in components] + [t, p]
+    composition: dict[str, float] = {"N2": 1.0}
+    vector = [1.0 if c == "N2" else 0.0 for c in components] + [298.15, 101325.0]
     return vector, composition
 
 
-def _wegstein_q(xc: float, yc: float, xp: float, yp: float) -> float | None:
+def _weighted_mean(
+    entries: list[tuple[float, float, float, dict[str, float]]], components: tuple[str, ...]
+) -> tuple[list[float], dict[str, float]]:
+    """Molar-flow-weighted mean of entry states -> (tear vector, composition).
+
+    One entry is ``(T, P, molar_flow, component flows)``. Composition keys are
+    restricted to the entries' own support (spec P2-03): the guess never invents
+    a component the block has never seen.
+    """
+    total = sum(flow for _, _, flow, _ in entries)
+    if not entries or total <= 0.0:
+        return [], {}
+    t = sum(T * flow for T, _, flow, _ in entries) / total
+    p = sum(P * flow for _, P, flow, _ in entries) / total
+    moles: dict[str, float] = {}
+    for _, _, _flow, flows in entries:
+        for c, n in flows.items():
+            moles[c] = moles.get(c, 0.0) + n
+    composition = {c: n / total for c, n in sorted(moles.items())}
+    vector = [sum(flows.get(c, 0.0) for _, _, _, flows in entries) for c in components] + [t, p]
+    return vector, composition
+
+
+def _init_guess(
+    fs: Flowsheet,
+    components: tuple[str, ...],
+    block: set[str] | None = None,
+    states: dict[str, StreamState] | None = None,
+) -> tuple[list[float], dict[str, float]]:
+    """Initial tear guess (spec P2-03): the molar-flow-weighted mean of what
+    enters the block.
+
+    With ``block`` given, the entries are the streams whose target unit sits in
+    the block and whose source is outside it or a boundary feed, taken at their
+    current state (a boundary feed's flashed feed spec; an already-solved
+    upstream block's outlet state) - so a block sees its own reality, not the
+    whole flowsheet's average. Without a block (or when a block has no entries),
+    the fallback is the mean over all boundary feeds; a feed-free sheet starts
+    from :func:`_nitrogen_guess`. The 2-argument call reproduces the pre-P2-03
+    global-mean guess byte for byte.
+    """
+    entries: list[tuple[float, float, float, dict[str, float]]] = []
+    if block is not None and states is not None:
+        for s in fs.streams:
+            if s.target is None or s.target.unit not in block:
+                continue
+            if s.source is not None and s.source.unit in block:
+                continue  # internal (torn) stream: no guess of its own
+            state = states.get(s.id)
+            if state is not None:
+                entries.append((state.T, state.P, state.molar_flow, state.component_flows()))
+    if not entries:
+        for s in fs.streams:
+            if s.source is None and s.feed is not None:
+                entries.append((s.feed.T, s.feed.P, s.feed.molar_flow, dict(s.feed.composition)))
+    vector, composition = _weighted_mean(entries, components)
+    if not vector:
+        return _nitrogen_guess(components)
+    return vector, composition
+
+
+def _wegstein_q(xc: float, yc: float, xp: float, yp: float, q_min: float) -> float | None:
     """Bounded Wegstein factor of one torn variable from its secant history.
 
-        s = (y - y_prev) / (x - x_prev); q = s / (s - 1), clamped to [-5, 0]
+        s = (y - y_prev) / (x - x_prev); q = s / (s - 1), clamped to [q_min, 0]
 
     ``None`` when the secant is degenerate (direct substitution, q = 0). The one
     owner of the formula: the step and the history record both read it here.
@@ -418,22 +480,110 @@ def _wegstein_q(xc: float, yc: float, xp: float, yp: float) -> float | None:
     if abs(dx) <= 1e-12 * max(abs(xc), 1.0):
         return None
     slope = (yc - yp) / dx
-    return min(max(slope / (slope - 1.0), WEGSTEIN_Q_MIN), 0.0)
+    return min(max(slope / (slope - 1.0), q_min), 0.0)
 
 
-def _wegstein_next(x: list[float], y: list[float], x_prev: list[float], y_prev: list[float]) -> list[float]:
+def _wegstein_step(
+    x: list[float],
+    y: list[float],
+    x_prev: list[float],
+    y_prev: list[float],
+    q_min: float,
+) -> tuple[list[float], list[float | None], bool]:
     """One bounded-Wegstein step, per variable: x_next = q * x + (1 - q) * y with
-    q from :func:`_wegstein_q`; direct substitution when the secant is degenerate."""
+    q from :func:`_wegstein_q`; direct substitution when the secant is degenerate.
+
+    Returns (next guess, per-variable q factors, all-degenerate flag): the flag
+    is True when every secant was degenerate - the whole step was direct
+    substitution, which is what the history record then names.
+    """
     out: list[float] = []
+    q_values: list[float | None] = []
     for xc, yc, xp, yp in zip(x, y, x_prev, y_prev, strict=True):
-        q = _wegstein_q(xc, yc, xp, yp)
+        q = _wegstein_q(xc, yc, xp, yp, q_min)
+        q_values.append(q)
         out.append(yc if q is None else q * xc + (1.0 - q) * yc)
-    return out
+    return out, q_values, all(q is None for q in q_values)
 
 
-def _converged(x: list[float], y: list[float]) -> bool:
-    """Every torn variable stable to RTOL relative (with a near-zero absolute floor)."""
-    return all(abs(yc - xc) <= RTOL * max(abs(xc), 1.0) for xc, yc in zip(x, y, strict=True))
+class _Broyden:
+    """Bounded Broyden acceleration on one block's concatenated tear vector (spec P2-03).
+
+    Biegler, Grossmann & Westerberg, *Systematic Methods of Chemical Process
+    Design* (McGraw-Hill, 1997), ch. 8: the tear residual r = y - x is driven to
+    zero with Broyden's rank-one secant update of the inverse Jacobian (Broyden,
+    "A class of methods for solving nonlinear simultaneous equations", Maths.
+    Comput. 19, 1965), seeded with -I so the first step - and the step after
+    every reset - is exactly direct substitution. The step is damped by
+    successive halving until the trial point stays physical (every vector entry
+    non-negative: flows >= 0 and T, P > 0); a trial that is still negative after
+    20 halvings is accepted as-is and clamped at injection, like any Wegstein
+    iterate that leaves the physical range. Three consecutive iterations with a
+    growing residual norm (the relative measure of the convergence test - the
+    raw residual is dominated by P for loops that are actually progressing)
+    reset the update to direct substitution. ``next`` is the one owner of the
+    Broyden update, as :func:`_wegstein_q` is of the Wegstein factor.
+    """
+
+    def __init__(self, size: int) -> None:
+        self._size = size
+        self._h = -np.eye(size)
+        self._x_prev: np.ndarray | None = None
+        self._r_prev: np.ndarray | None = None
+        self._norm_prev: float | None = None
+        self._growing = 0
+
+    def reset(self) -> None:
+        """Back to direct substitution: H = -I, secant history cleared."""
+        self._h = -np.eye(self._size)
+        self._x_prev = None
+        self._r_prev = None
+        self._norm_prev = None
+        self._growing = 0
+
+    def next(self, x: list[float], y: list[float]) -> tuple[list[float], bool]:
+        """The next tear guess from injected ``x`` and calculated ``y``.
+
+        Returns (next guess, direct flag): True when this step is direct
+        substitution (the first pass, or the pass right after a reset).
+        """
+        x_arr = np.asarray(x, dtype=np.float64)
+        r = np.asarray(y, dtype=np.float64) - x_arr
+        scaled = np.abs(r) / np.maximum(np.abs(x_arr), 1.0)
+        norm = float(np.linalg.norm(scaled))
+        if self._norm_prev is not None and norm > self._norm_prev:
+            self._growing += 1
+        else:
+            self._growing = 0
+        direct = self._x_prev is None
+        if self._norm_prev is not None and self._growing >= 3:
+            self.reset()  # three residual growths in a row: direct substitution
+            direct = True
+        elif self._x_prev is not None and self._r_prev is not None:
+            dx = x_arr - self._x_prev  # the step actually taken, damping included
+            dr = r - self._r_prev
+            denom = float(dx @ (self._h @ dr))
+            if abs(denom) > 0.0:
+                self._h = self._h + np.outer(dx - self._h @ dr, dx @ self._h) / denom
+        self._norm_prev = norm
+        self._x_prev = x_arr
+        self._r_prev = r
+        step = -self._h @ r
+        alpha, trial = 1.0, x_arr + step
+        while alpha > 1e-6 and bool(np.any(trial < 0.0)):
+            alpha *= 0.5
+            trial = x_arr + alpha * step
+        return [float(v) for v in trial], direct
+
+
+def _converged(x: list[float], y: list[float], rtol: float = RTOL) -> bool:
+    """Every torn variable stable to ``rtol`` relative (with a near-zero absolute floor).
+
+    The default keeps the module constant (spec S-30): flowsheets on the default
+    ``SolverOptions`` exercise exactly this 2-argument form - the signature stays
+    monkeypatch-compatible for tests that stub the convergence test itself.
+    """
+    return all(abs(yc - xc) <= rtol * max(abs(xc), 1.0) for xc, yc in zip(x, y, strict=True))
 
 
 def _run_units(ctx: _Context, order: list[str]) -> bool:
@@ -526,15 +676,23 @@ def _emit_progress(ctx: _Context, record: TearRecord) -> None:
         ctx.on_progress(record)
 
 
-def _tear_record(iteration: int, tear: _Tear, state: StreamState, components: tuple[str, ...]) -> TearRecord:
-    """One tear stream's residual record at one iteration (spec P2-02).
+def _tear_record(
+    iteration: int,
+    tear: _Tear,
+    state: StreamState,
+    components: tuple[str, ...],
+    acceleration: SolveAcceleration,
+    q_values: list[float | None] | None = None,
+) -> TearRecord:
+    """One tear stream's residual record at one iteration (specs P2-02, P2-03).
 
     Residuals use the convergence test's own relative measure, |y - x| / max(|x|,
     1.0), keyed by component id then "T" and "P". ``acceleration`` names the step
-    taken at this iteration (the first pass and an all-degenerate secant are direct
-    substitution); ``q`` is the clamped Wegstein factor of the variable with the
-    largest residual - the per-variable secant makes one representative q the
-    honest summary.
+    taken at this iteration (the caller decides: the first pass, a post-reset
+    Broyden pass and an all-degenerate Wegstein secant are direct substitution;
+    ``broyden`` steps carry ``q=None``). ``q`` is the clamped Wegstein factor of
+    the variable with the largest residual - the per-variable secant makes one
+    representative q the honest summary.
     """
     y = _tear_vector(state, components)
     x = tear.x
@@ -545,23 +703,14 @@ def _tear_record(iteration: int, tear: _Tear, state: StreamState, components: tu
         "T": residuals[n],
         "P": residuals[n + 1],
     }
-    residual_max = max(residuals)
-    acceleration: SolveAcceleration
-    q: float | None
-    if tear.y_prev is None or tear.x_prev is None:
-        acceleration, q = "direct", None
-    else:
-        history = zip(x, y, tear.x_prev, tear.y_prev, strict=True)
-        q_values = [_wegstein_q(xc, yc, xp, yp) for xc, yc, xp, yp in history]
-        if all(qv is None for qv in q_values):
-            acceleration, q = "direct", None
-        else:
-            worst = max(range(len(residuals)), key=residuals.__getitem__)
-            acceleration, q = "wegstein", q_values[worst] or 0.0  # degenerate worst variable: q = 0
+    q: float | None = None
+    if acceleration == "wegstein" and q_values is not None:
+        worst = max(range(len(residuals)), key=residuals.__getitem__)
+        q = q_values[worst] or 0.0  # degenerate worst variable: q = 0
     return TearRecord(
         iteration=iteration,
         stream_id=tear.stream_id,
-        residual_max=residual_max,
+        residual_max=max(residuals),
         residual_vector=residual_vector,
         acceleration=acceleration,
         q=q,
@@ -574,10 +723,16 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
     Every pass appends one TearRecord per tear stream to the block's record list
     (spec P2-02). A unit that fails mid-iteration ends the block after that pass
     with converged=False: the torn states downstream of the failure are
-    meaningless, so further Wegstein passes would iterate on garbage.
+    meaningless, so further passes would iterate on garbage. Spec P2-03: the
+    first guess is what enters the block (per-block initialisation, with the
+    P2-01 warm start taking precedence when given), the iteration cap, tolerance
+    and acceleration come from ``fs.solver_options`` - bounded Wegstein (the
+    default), Broyden (one shared update over the block's concatenated tear
+    vector), or direct substitution.
     """
     start = time.perf_counter()
-    guess, fallback_composition = _init_guess(ctx.fs, ctx.components)
+    opts = ctx.fs.solver_options
+    guess, fallback_composition = _init_guess(ctx.fs, ctx.components, set(order), ctx.states)
     torn: list[_Tear] = []
     for sid in tears:
         x = list(guess)
@@ -589,30 +744,71 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
     converged = False
     iterations = 0
     records: list[TearRecord] = []
-    for iteration in range(1, MAX_ITERATIONS + 1):
+    segment = len(ctx.components) + 2
+    broyden = _Broyden(segment * len(torn)) if opts.tear_acceleration == "broyden" else None
+    for iteration in range(1, opts.max_iterations + 1):
         iterations = iteration
         for t in torn:
             ctx.states[t.stream_id] = _inject_tear(t.x, ctx.components, fallback_composition, ctx.thermo)
         if not _run_units(ctx, order):
             break  # a unit failed this pass: stop iterating, converged stays False
-        if all(_converged(t.x, _tear_vector(ctx.states[t.stream_id], ctx.components)) for t in torn):
+        # Default tolerance keeps the 2-argument convergence call (module-constant
+        # rtol), so tests that stub _converged keep working unchanged.
+        stable = [
+            _converged(t.x, _tear_vector(ctx.states[t.stream_id], ctx.components))
+            if opts.rtol == RTOL
+            else _converged(t.x, _tear_vector(ctx.states[t.stream_id], ctx.components), opts.rtol)
+            for t in torn
+        ]
+        if all(stable):
             converged = True
             for t in torn:
-                record = _tear_record(iteration, t, ctx.states[t.stream_id], ctx.components)
+                # No step is taken on the converging pass; the record names the
+                # acceleration in flight, classified from the secant history the
+                # way a Wegstein step would read it (the P2-02 convention).
+                y = _tear_vector(ctx.states[t.stream_id], ctx.components)
+                if opts.tear_acceleration == "broyden":
+                    acceleration, q_values = "broyden", None
+                elif opts.tear_acceleration == "direct" or t.x_prev is None or t.y_prev is None:
+                    acceleration, q_values = "direct", None
+                else:
+                    _, q_values, degenerate = _wegstein_step(t.x, y, t.x_prev, t.y_prev, opts.wegstein_q_min)
+                    acceleration = "direct" if degenerate else "wegstein"
+                record = _tear_record(
+                    iteration, t, ctx.states[t.stream_id], ctx.components, acceleration, q_values
+                )
                 records.append(record)
                 _emit_progress(ctx, record)
             break
-        for t in torn:
-            calculated = _tear_vector(ctx.states[t.stream_id], ctx.components)
-            record = _tear_record(iteration, t, ctx.states[t.stream_id], ctx.components)
-            records.append(record)
-            _emit_progress(ctx, record)
-            injected = t.x
-            if t.y_prev is None or t.x_prev is None:
-                t.x = list(calculated)  # first pass: direct substitution
-            else:
-                t.x = _wegstein_next(injected, calculated, t.x_prev, t.y_prev)
-            t.x_prev, t.y_prev = injected, calculated
+        if broyden is not None:
+            injected = [v for t in torn for v in t.x]
+            calculated = [v for t in torn for v in _tear_vector(ctx.states[t.stream_id], ctx.components)]
+            nxt, direct_step = broyden.next(injected, calculated)
+            acceleration: SolveAcceleration = "direct" if direct_step else "broyden"
+            for i, t in enumerate(torn):
+                record = _tear_record(iteration, t, ctx.states[t.stream_id], ctx.components, acceleration)
+                records.append(record)
+                _emit_progress(ctx, record)
+                t.x_prev, t.y_prev = t.x, calculated[i * segment : (i + 1) * segment]
+                t.x = nxt[i * segment : (i + 1) * segment]
+        else:
+            for t in torn:
+                calculated = _tear_vector(ctx.states[t.stream_id], ctx.components)
+                injected = t.x
+                if opts.tear_acceleration == "direct" or t.y_prev is None or t.x_prev is None:
+                    acceleration, q_values, x_next = "direct", None, list(calculated)
+                else:
+                    x_next, q_values, degenerate = _wegstein_step(
+                        injected, calculated, t.x_prev, t.y_prev, opts.wegstein_q_min
+                    )
+                    acceleration = "direct" if degenerate else "wegstein"
+                record = _tear_record(
+                    iteration, t, ctx.states[t.stream_id], ctx.components, acceleration, q_values
+                )
+                records.append(record)
+                _emit_progress(ctx, record)
+                t.x = x_next
+                t.x_prev, t.y_prev = injected, calculated
     ctx.history.append(
         BlockRecord(
             units=list(order),
