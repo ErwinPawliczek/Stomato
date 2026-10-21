@@ -1,6 +1,31 @@
 {
   "components": {
     "schemas": {
+      "AgentRequest": {
+        "description": "POST /api/agent body (the F-08 frontend contract).",
+        "properties": {
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "AgentRequest",
+        "type": "object"
+      },
       "BomItem": {
         "additionalProperties": false,
         "properties": {
@@ -1107,6 +1132,151 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/agent": {
+      "get": {
+        "description": "Every known conversation id (transcripts live in memory, spec B-08).",
+        "operationId": "list_conversations_api_agent_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "title": "Response List Conversations Api Agent Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Conversations"
+      },
+      "post": {
+        "description": "Stream one agent turn as SSE frames (see module docstring for the contract).",
+        "operationId": "agent_message_api_agent_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Agent Message"
+      }
+    },
+    "/api/agent/{conversation_id}": {
+      "delete": {
+        "description": "Forget one conversation; the project state is untouched.",
+        "operationId": "delete_conversation_api_agent__conversation_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Delete Conversation Api Agent  Conversation Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Conversation"
+      },
+      "get": {
+        "description": "The conversation's message history in Anthropic API shape (tool calls and results included).",
+        "operationId": "transcript_api_agent__conversation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Transcript Api Agent  Conversation Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Transcript"
+      }
+    },
     "/api/export/sheet": {
       "get": {
         "description": "Export the solved flowsheet's sheet; 422 naming the allowed values on a bad format/scope.",
