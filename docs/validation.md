@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-21T00:11:01+00:00 from `data/validation/results.json` (git 00839f9, CoolProp 8.0.0).
+Generated 2026-10-21T13:10:58+00:00 from `data/validation/results.json` (git 43c6954, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -27,52 +27,49 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | bubble_T | 8 | 5 | 62.5 % |
 | vapor_comp | 21 | 9 | 42.9 % |
 
-### package `pr` — 212/275 pass (77.1 %)
+### package `pr` — 213/278 pass (76.6 %)
 
 | property | n | pass | rate |
 | --- | --- | --- | --- |
 | Cp | 40 | 11 | 27.5 % |
 | K | 3 | 1 | 33.3 % |
 | bubble_P | 74 | 66 | 89.2 % |
-| dew_P | 40 | 40 | 100.0 % |
-| liquid_comp | 18 | 17 | 94.4 % |
+| dew_P | 43 | 40 | 93.0 % |
+| liquid_comp | 18 | 18 | 100.0 % |
 | rho_L | 40 | 26 | 65.0 % |
 | rho_V | 40 | 36 | 90.0 % |
 | vapor_comp | 20 | 15 | 75.0 % |
 
-### package `pr78` — 212/275 pass (77.1 %)
+### package `pr78` — 213/278 pass (76.6 %)
 
 | property | n | pass | rate |
 | --- | --- | --- | --- |
 | Cp | 40 | 11 | 27.5 % |
 | K | 3 | 1 | 33.3 % |
 | bubble_P | 74 | 66 | 89.2 % |
-| dew_P | 40 | 40 | 100.0 % |
-| liquid_comp | 18 | 17 | 94.4 % |
+| dew_P | 43 | 40 | 93.0 % |
+| liquid_comp | 18 | 18 | 100.0 % |
 | rho_L | 40 | 26 | 65.0 % |
 | rho_V | 40 | 36 | 90.0 % |
 | vapor_comp | 20 | 15 | 75.0 % |
 
-### package `srk` — 200/275 pass (72.7 %)
+### package `srk` — 201/278 pass (72.3 %)
 
 | property | n | pass | rate |
 | --- | --- | --- | --- |
 | Cp | 40 | 11 | 27.5 % |
 | K | 3 | 1 | 33.3 % |
 | bubble_P | 74 | 64 | 86.5 % |
-| dew_P | 40 | 40 | 100.0 % |
-| liquid_comp | 18 | 17 | 94.4 % |
+| dew_P | 43 | 40 | 93.0 % |
+| liquid_comp | 18 | 18 | 100.0 % |
 | rho_L | 40 | 18 | 45.0 % |
 | rho_V | 40 | 33 | 82.5 % |
 | vapor_comp | 20 | 16 | 80.0 % |
 
-## Failing comparisons (229)
+## Failing comparisons (235)
 
 | case | package | property | expected | got | err | source |
 | --- | --- | --- | --- | --- | --- | --- |
-| c1h2o-410.9K-13.10MPa | srk | liquid_comp | 0.001857 | 0.954551 | 0.952694 | literature:Culberson & McKetta (1951) J. Pet. Technol. 3, 223-226; IUPAC SDS 27/28 printed p. 32, 280 F isotherm; retrieved 2026-10-20 |
-| c1h2o-410.9K-13.10MPa | pr | liquid_comp | 0.001857 | 0.95192 | 0.950063 | literature:Culberson & McKetta (1951) J. Pet. Technol. 3, 223-226; IUPAC SDS 27/28 printed p. 32, 280 F isotherm; retrieved 2026-10-20 |
-| c1h2o-410.9K-13.10MPa | pr78 | liquid_comp | 0.001857 | 0.95192 | 0.950063 | literature:Culberson & McKetta (1951) J. Pet. Technol. 3, 223-226; IUPAC SDS 27/28 printed p. 32, 280 F isotherm; retrieved 2026-10-20 |
 | pure-H2O-614.7K | srk | Cp | 151.747 | 229.506 | 0.512425 | coolprop:Water |
 | pure-H2O-614.7K | pr | Cp | 151.747 | 220.634 | 0.453959 | coolprop:Water |
 | pure-H2O-614.7K | pr78 | Cp | 151.747 | 220.634 | 0.453959 | coolprop:Water |
@@ -80,6 +77,8 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | pure-H2O-600K | pr | Cp | 125.264 | 171.879 | 0.372138 | coolprop:Water |
 | pure-H2O-600K | pr78 | Cp | 125.264 | 171.879 | 0.372138 | coolprop:Water |
 | pure-C1-181K | srk | Cp | 124.139 | 168.599 | 0.358147 | coolprop:CH4 |
+| ng-dew-morch-243.4K-0.30MPa | pr | dew_P | 300000 | 406518 | 0.355061 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
+| ng-dew-morch-243.4K-0.30MPa | pr78 | dew_P | 300000 | 406518 | 0.355061 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | pure-N2-119.9K | srk | Cp | 125.022 | 168.848 | 0.350538 | coolprop:Nitrogen |
 | pure-H2O-614.7K | srk | rho_L | 605.554 | 394.072 | 0.349237 | coolprop:Water |
 | pure-H2O-600K | srk | rho_L | 649.411 | 432.471 | 0.334057 | coolprop:Water |
@@ -101,6 +100,7 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | pure-H2O-614.7K | pr | rho_L | 605.554 | 444.727 | 0.265587 | coolprop:Water |
 | pure-H2O-614.7K | pr78 | rho_L | 605.554 | 444.727 | 0.265587 | coolprop:Water |
 | pure-C2-285K | srk | Cp | 132.286 | 167.068 | 0.262933 | coolprop:Ethane |
+| ng-dew-morch-243.4K-0.30MPa | srk | dew_P | 300000 | 377792 | 0.259308 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | pure-H2O-323.5K | srk | rho_L | 987.838 | 741.661 | 0.249207 | coolprop:Water |
 | pure-H2S-354.4K | pr | Cp | 141.924 | 176.987 | 0.247053 | coolprop:H2S |
 | pure-H2S-354.4K | pr78 | Cp | 141.924 | 176.987 | 0.247053 | coolprop:H2S |
@@ -114,6 +114,8 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | pure-CO2-285K | pr78 | Cp | 137.895 | 169.831 | 0.231591 | coolprop:CO2 |
 | pure-C3-351.3K | pr | Cp | 191.089 | 234.044 | 0.224791 | coolprop:Propane |
 | pure-C3-351.3K | pr78 | Cp | 191.089 | 234.044 | 0.224791 | coolprop:Propane |
+| ng-dew-morch-254.6K-0.68MPa | pr | dew_P | 680000 | 829096 | 0.219259 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
+| ng-dew-morch-254.6K-0.68MPa | pr78 | dew_P | 680000 | 829096 | 0.219259 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | pure-C2-285K | pr | Cp | 132.286 | 161.185 | 0.218456 | coolprop:Ethane |
 | pure-C2-285K | pr78 | Cp | 132.286 | 161.185 | 0.218456 | coolprop:Ethane |
 | pure-nC4-403.9K | pr | Cp | 236.805 | 285.411 | 0.205254 | coolprop:n-Butane |
@@ -121,6 +123,8 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | pure-N2-112K | srk | Cp | 81.2659 | 97.1906 | 0.195958 | coolprop:Nitrogen |
 | pure-H2O-520K | pr | rho_L | 803.535 | 648.154 | 0.193371 | coolprop:Water |
 | pure-H2O-520K | pr78 | rho_L | 803.535 | 648.154 | 0.193371 | coolprop:Water |
+| ng-dew-morch-260.8K-1.04MPa | pr | dew_P | 1.04e+06 | 1.2378e+06 | 0.190196 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
+| ng-dew-morch-260.8K-1.04MPa | pr78 | dew_P | 1.04e+06 | 1.2378e+06 | 0.190196 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | pure-H2S-345K | pr | Cp | 112.837 | 133.856 | 0.186276 | coolprop:H2S |
 | pure-H2S-345K | pr78 | Cp | 112.837 | 133.856 | 0.186276 | coolprop:H2S |
 | meohh2o-312.91K-9.079kPa | nrtl | bubble_P | 9079 | 10747.1 | 0.183734 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
@@ -153,6 +157,7 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | pure-C2-285K | srk | rho_L | 368.125 | 315.192 | 0.143792 | coolprop:Ethane |
 | pure-C3-340K | srk | rho_L | 411.774 | 353.492 | 0.141538 | coolprop:Propane |
 | pure-C1-181K | srk | rho_L | 271.913 | 233.607 | 0.140876 | coolprop:CH4 |
+| ng-dew-morch-254.6K-0.68MPa | srk | dew_P | 680000 | 774165 | 0.138477 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | pure-H2S-354.4K | srk | rho_L | 583.871 | 505.336 | 0.134507 | coolprop:H2S |
 | pure-C1-155K | srk | Cp | 67.6129 | 76.6185 | 0.133194 | coolprop:CH4 |
 | pure-N2-63.2K | pr | rho_L | 867.021 | 981.868 | 0.132461 | coolprop:Nitrogen |
@@ -174,6 +179,7 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 | pure-H2S-345K | srk | rho_L | 628.082 | 556.936 | 0.113275 | coolprop:H2S |
 | slice-inlet-K-500psia-300K | pr | K | 1.17 | 1.04263 | 0.108863 | literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20 |
 | slice-inlet-K-500psia-300K | pr78 | K | 1.17 | 1.04263 | 0.108863 | literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20 |
+| ng-dew-morch-260.8K-1.04MPa | srk | dew_P | 1.04e+06 | 1.15189e+06 | 0.107589 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | pure-H2O-614.7K | srk | rho_V | 95.5877 | 85.4882 | 0.105657 | coolprop:Water |
 | pure-H2O-420K | pr | Cp | 77.4472 | 85.5571 | 0.104716 | coolprop:Water |
 | pure-H2O-420K | pr78 | Cp | 77.4472 | 85.5571 | 0.104716 | coolprop:Water |
@@ -318,7 +324,6 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 - `c1co2-283.15K-7.24MPa` — k_ij=0 cubic bubble pressure / vapour composition just beyond tolerance near the mixture critical region (model limitation; assessed in docs/validation.md).
 - `c1co2-288.15K-6.62MPa` — k_ij=0 cubic bubble pressure / vapour composition just beyond tolerance near the mixture critical region (model limitation; assessed in docs/validation.md).
 - `c1co2-288.15K-7.63MPa` — k_ij=0 cubic bubble pressure / vapour composition just beyond tolerance near the mixture critical region (model limitation; assessed in docs/validation.md).
-- `c1h2o-410.9K-13.10MPa` — cubic two-phase flash yields an unphysical water/methane phase split at 13 MPa, so the aqueous methane solubility is not representable (flagged for thermo investigation).
 - `meohh2o-312.91K-13.012kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-312.91K-16.319kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-312.91K-20.705kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
@@ -337,6 +342,9 @@ Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`
 - `meohh2o-97.99kPa-360.65K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-97.99kPa-365.45K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-97.99kPa-369.65K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `ng-dew-morch-243.4K-0.30MPa` — dew pressures of the asymmetric C1/C2/nC5 synthetic natural gas ternary run 10-35 % above the Mørch et al. (2006) cooled-mirror measurements under databank/zero k_ij (model limitation, issue #130; assessed in docs/validation.md).
+- `ng-dew-morch-254.6K-0.68MPa` — dew pressures of the asymmetric C1/C2/nC5 synthetic natural gas ternary run 10-35 % above the Mørch et al. (2006) cooled-mirror measurements under databank/zero k_ij (model limitation, issue #130; assessed in docs/validation.md).
+- `ng-dew-morch-260.8K-1.04MPa` — dew pressures of the asymmetric C1/C2/nC5 synthetic natural gas ternary run 10-35 % above the Mørch et al. (2006) cooled-mirror measurements under databank/zero k_ij (model limitation, issue #130; assessed in docs/validation.md).
 - `pure-C1-125K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-C1-155K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
 - `pure-C1-172K` — cubic saturation properties beyond tolerance vs the CoolProp reference EOS (known cubic EOS limitation, worst near Tc; assessed in docs/validation.md).
@@ -389,6 +397,7 @@ Pure-fluid expected values are generated from the CoolProp reference EOS (versio
 - Culberson & McKetta (1951) J. Pet. Technol. 3, 223-226; IUPAC SDS 27/28 printed p. 32, 280 F isotherm; retrieved 2026-10-20
 - DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
 - Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+- Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21
 - Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20
 - Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
 - Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 310.93 K isotherm; retrieved 2026-10-20

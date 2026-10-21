@@ -1,0 +1,2621 @@
+# Cubic EOS family reference cases (data sweep, spec T-11).
+#
+# Loads together with the root data/validation/cases.yaml (the harness discovers every
+# cases*.yaml under data/validation/). Entries whose package is "pending:<id>" name a
+# planned catalogue row that is not registered yet and are skipped by the harness until
+# the row lands; their ids must be reconciled with the ids the adapter specs (T-02..T-07)
+# actually register.
+#
+# Sections:
+#   pure_cases            - four pure-component points per pending row, copied from the root
+#                           file (same fluids/temperatures); expected values are regenerated
+#                           by `uv run scripts/validate_properties.py --regen-coolprop`
+#                           (source coolprop:<fluid>, tolerance policy as the root file).
+#   binary_cases          - two literature binary VLE points per pending row, copied from the
+#                           root file (Reamer et al. 1950 C1/C3 and Legoix et al. 2017 C1/CO2).
+#   multicomponent_cases  - the family L3 case: measured dew pressures of the Mørch et al.
+#                           (2006) synthetic natural gas ternary (C1/C2/nC5), committed for
+#                           every pending row and for the shipped packages (package: all).
+#                           Shipped-package failures are assessed xfails (issue #130).
+#
+# Units: T in K, P in Pa, compositions in mole fractions, enthalpies in J/mol.
+meta:
+  coolprop_version: 8.0.0
+pure_cases:
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:rk
+  components: &id001
+  - C1
+  z: &id002
+    C1: 1.0
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: rk-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:rk
+  components: &id003
+  - C3
+  z: &id004
+    C3: 1.0
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: rk-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:rk
+  components: &id005
+  - nC4
+  z: &id006
+    nC4: 1.0
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: rk-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:rk
+  components: &id007
+  - CO2
+  z: &id008
+    CO2: 1.0
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: rk-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:vdw
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: vdw-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:vdw
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: vdw-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:vdw
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: vdw-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:vdw
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: vdw-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:prsv
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: prsv-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:prsv
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: prsv-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:prsv
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: prsv-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:prsv
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: prsv-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:prsv2
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: prsv2-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:prsv2
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: prsv2-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:prsv2
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: prsv2-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:prsv2
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: prsv2-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:twu-pr
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: twu-pr-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:twu-pr
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: twu-pr-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:twu-pr
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: twu-pr-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:twu-pr
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: twu-pr-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:twu-srk
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: twu-srk-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:twu-srk
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: twu-srk-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:twu-srk
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: twu-srk-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:twu-srk
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: twu-srk-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:api-srk
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: api-srk-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:api-srk
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: api-srk-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:api-srk
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: api-srk-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:api-srk
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: api-srk-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:pr-boston-mathias
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: pr-boston-mathias-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:pr-boston-mathias
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: pr-boston-mathias-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:pr-boston-mathias
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: pr-boston-mathias-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:pr-boston-mathias
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: pr-boston-mathias-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:srk-boston-mathias
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: srk-boston-mathias-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:srk-boston-mathias
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: srk-boston-mathias-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:srk-boston-mathias
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: srk-boston-mathias-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:srk-boston-mathias
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: srk-boston-mathias-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:pr-mathias-copeman
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: pr-mathias-copeman-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:pr-mathias-copeman
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: pr-mathias-copeman-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:pr-mathias-copeman
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: pr-mathias-copeman-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:pr-mathias-copeman
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: pr-mathias-copeman-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:srk-mathias-copeman
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: srk-mathias-copeman-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:srk-mathias-copeman
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: srk-mathias-copeman-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:srk-mathias-copeman
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: srk-mathias-copeman-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:srk-mathias-copeman
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: srk-mathias-copeman-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:pr-peneloux
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: pr-peneloux-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:pr-peneloux
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: pr-peneloux-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:pr-peneloux
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: pr-peneloux-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:pr-peneloux
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: pr-peneloux-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:srk-peneloux
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: srk-peneloux-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:srk-peneloux
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: srk-peneloux-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:srk-peneloux
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: srk-peneloux-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:srk-peneloux
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: srk-peneloux-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:sour-pr
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: sour-pr-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:sour-pr
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: sour-pr-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:sour-pr
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: sour-pr-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:sour-pr
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: sour-pr-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:sour-srk
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: sour-srk-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:sour-srk
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: sour-srk-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:sour-srk
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: sour-srk-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:sour-srk
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: sour-srk-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:kabadi-danner-srk
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: kabadi-danner-srk-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:kabadi-danner-srk
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: kabadi-danner-srk-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:kabadi-danner-srk
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: kabadi-danner-srk-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:kabadi-danner-srk
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: kabadi-danner-srk-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:zudkevitch-joffe-rk
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: zudkevitch-joffe-rk-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:zudkevitch-joffe-rk
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: zudkevitch-joffe-rk-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:zudkevitch-joffe-rk
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: zudkevitch-joffe-rk-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:zudkevitch-joffe-rk
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: zudkevitch-joffe-rk-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:twu-sim-tassone
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: twu-sim-tassone-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:twu-sim-tassone
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: twu-sim-tassone-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:twu-sim-tassone
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: twu-sim-tassone-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:twu-sim-tassone
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: twu-sim-tassone-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:pr-bm
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: pr-bm-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:pr-bm
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: pr-bm-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:pr-bm
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: pr-bm-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:pr-bm
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: pr-bm-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:rks-bm
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: rks-bm-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:rks-bm
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: rks-bm-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:rks-bm
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: rks-bm-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:rks-bm
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: rks-bm-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:pr-lee-kesler-enthalpy
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: pr-lee-kesler-enthalpy-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:pr-lee-kesler-enthalpy
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: pr-lee-kesler-enthalpy-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:pr-lee-kesler-enthalpy
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: pr-lee-kesler-enthalpy-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:pr-lee-kesler-enthalpy
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: pr-lee-kesler-enthalpy-pure-CO2-265K
+- fluid: C1
+  coolprop_fluid: CH4
+  package: pending:srk-lee-kesler-enthalpy
+  components: *id001
+  z: *id002
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  id: srk-lee-kesler-enthalpy-pure-C1-125K
+- fluid: C3
+  coolprop_fluid: Propane
+  package: pending:srk-lee-kesler-enthalpy
+  components: *id003
+  z: *id004
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+  id: srk-lee-kesler-enthalpy-pure-C3-300K
+- fluid: nC4
+  coolprop_fluid: n-Butane
+  package: pending:srk-lee-kesler-enthalpy
+  components: *id005
+  z: *id006
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+  id: srk-lee-kesler-enthalpy-pure-nC4-280K
+- fluid: CO2
+  coolprop_fluid: CO2
+  package: pending:srk-lee-kesler-enthalpy
+  components: *id007
+  z: *id008
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  id: srk-lee-kesler-enthalpy-pure-CO2-265K
+binary_cases:
+- package: pending:rk
+  components: &id009
+  - C1
+  - C3
+  z: &id010
+    C1: 0.3707
+    C3: 0.6293
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: &id011
+    bubble_P: 6895000.0
+    vapor_comp:
+      C1: 0.7497
+  id: rk-c1c3-294.26K-6.895MPa
+- package: pending:rk
+  components: &id012
+  - C1
+  - CO2
+  z: &id013
+    C1: 0.0817
+    CO2: 0.9183
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: &id014
+    bubble_P: 5970000.0
+  id: rk-c1co2-277.15K-5.97MPa
+- package: pending:vdw
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: vdw-c1c3-294.26K-6.895MPa
+- package: pending:vdw
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: vdw-c1co2-277.15K-5.97MPa
+- package: pending:prsv
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: prsv-c1c3-294.26K-6.895MPa
+- package: pending:prsv
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: prsv-c1co2-277.15K-5.97MPa
+- package: pending:prsv2
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: prsv2-c1c3-294.26K-6.895MPa
+- package: pending:prsv2
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: prsv2-c1co2-277.15K-5.97MPa
+- package: pending:twu-pr
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: twu-pr-c1c3-294.26K-6.895MPa
+- package: pending:twu-pr
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: twu-pr-c1co2-277.15K-5.97MPa
+- package: pending:twu-srk
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: twu-srk-c1c3-294.26K-6.895MPa
+- package: pending:twu-srk
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: twu-srk-c1co2-277.15K-5.97MPa
+- package: pending:api-srk
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: api-srk-c1c3-294.26K-6.895MPa
+- package: pending:api-srk
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: api-srk-c1co2-277.15K-5.97MPa
+- package: pending:pr-boston-mathias
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: pr-boston-mathias-c1c3-294.26K-6.895MPa
+- package: pending:pr-boston-mathias
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: pr-boston-mathias-c1co2-277.15K-5.97MPa
+- package: pending:srk-boston-mathias
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: srk-boston-mathias-c1c3-294.26K-6.895MPa
+- package: pending:srk-boston-mathias
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: srk-boston-mathias-c1co2-277.15K-5.97MPa
+- package: pending:pr-mathias-copeman
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: pr-mathias-copeman-c1c3-294.26K-6.895MPa
+- package: pending:pr-mathias-copeman
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: pr-mathias-copeman-c1co2-277.15K-5.97MPa
+- package: pending:srk-mathias-copeman
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: srk-mathias-copeman-c1c3-294.26K-6.895MPa
+- package: pending:srk-mathias-copeman
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: srk-mathias-copeman-c1co2-277.15K-5.97MPa
+- package: pending:pr-peneloux
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: pr-peneloux-c1c3-294.26K-6.895MPa
+- package: pending:pr-peneloux
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: pr-peneloux-c1co2-277.15K-5.97MPa
+- package: pending:srk-peneloux
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: srk-peneloux-c1c3-294.26K-6.895MPa
+- package: pending:srk-peneloux
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: srk-peneloux-c1co2-277.15K-5.97MPa
+- package: pending:sour-pr
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: sour-pr-c1c3-294.26K-6.895MPa
+- package: pending:sour-pr
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: sour-pr-c1co2-277.15K-5.97MPa
+- package: pending:sour-srk
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: sour-srk-c1c3-294.26K-6.895MPa
+- package: pending:sour-srk
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: sour-srk-c1co2-277.15K-5.97MPa
+- package: pending:kabadi-danner-srk
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: kabadi-danner-srk-c1c3-294.26K-6.895MPa
+- package: pending:kabadi-danner-srk
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: kabadi-danner-srk-c1co2-277.15K-5.97MPa
+- package: pending:zudkevitch-joffe-rk
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: zudkevitch-joffe-rk-c1c3-294.26K-6.895MPa
+- package: pending:zudkevitch-joffe-rk
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: zudkevitch-joffe-rk-c1co2-277.15K-5.97MPa
+- package: pending:twu-sim-tassone
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: twu-sim-tassone-c1c3-294.26K-6.895MPa
+- package: pending:twu-sim-tassone
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: twu-sim-tassone-c1co2-277.15K-5.97MPa
+- package: pending:pr-bm
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: pr-bm-c1c3-294.26K-6.895MPa
+- package: pending:pr-bm
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: pr-bm-c1co2-277.15K-5.97MPa
+- package: pending:rks-bm
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: rks-bm-c1c3-294.26K-6.895MPa
+- package: pending:rks-bm
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: rks-bm-c1co2-277.15K-5.97MPa
+- package: pending:pr-lee-kesler-enthalpy
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: pr-lee-kesler-enthalpy-c1c3-294.26K-6.895MPa
+- package: pending:pr-lee-kesler-enthalpy
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: pr-lee-kesler-enthalpy-c1co2-277.15K-5.97MPa
+- package: pending:srk-lee-kesler-enthalpy
+  components: *id009
+  z: *id010
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected: *id011
+  id: srk-lee-kesler-enthalpy-c1c3-294.26K-6.895MPa
+- package: pending:srk-lee-kesler-enthalpy
+  components: *id012
+  z: *id013
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected: *id014
+  id: srk-lee-kesler-enthalpy-c1co2-277.15K-5.97MPa
+multicomponent_cases:
+- id: rk-ng-dew-morch-243.4K-0.30MPa
+  package: pending:rk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: rk-ng-dew-morch-254.6K-0.68MPa
+  package: pending:rk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: rk-ng-dew-morch-260.8K-1.04MPa
+  package: pending:rk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: vdw-ng-dew-morch-243.4K-0.30MPa
+  package: pending:vdw
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: vdw-ng-dew-morch-254.6K-0.68MPa
+  package: pending:vdw
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: vdw-ng-dew-morch-260.8K-1.04MPa
+  package: pending:vdw
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: prsv-ng-dew-morch-243.4K-0.30MPa
+  package: pending:prsv
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: prsv-ng-dew-morch-254.6K-0.68MPa
+  package: pending:prsv
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: prsv-ng-dew-morch-260.8K-1.04MPa
+  package: pending:prsv
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: prsv2-ng-dew-morch-243.4K-0.30MPa
+  package: pending:prsv2
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: prsv2-ng-dew-morch-254.6K-0.68MPa
+  package: pending:prsv2
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: prsv2-ng-dew-morch-260.8K-1.04MPa
+  package: pending:prsv2
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: twu-pr-ng-dew-morch-243.4K-0.30MPa
+  package: pending:twu-pr
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: twu-pr-ng-dew-morch-254.6K-0.68MPa
+  package: pending:twu-pr
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: twu-pr-ng-dew-morch-260.8K-1.04MPa
+  package: pending:twu-pr
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: twu-srk-ng-dew-morch-243.4K-0.30MPa
+  package: pending:twu-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: twu-srk-ng-dew-morch-254.6K-0.68MPa
+  package: pending:twu-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: twu-srk-ng-dew-morch-260.8K-1.04MPa
+  package: pending:twu-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: api-srk-ng-dew-morch-243.4K-0.30MPa
+  package: pending:api-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: api-srk-ng-dew-morch-254.6K-0.68MPa
+  package: pending:api-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: api-srk-ng-dew-morch-260.8K-1.04MPa
+  package: pending:api-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-boston-mathias-ng-dew-morch-243.4K-0.30MPa
+  package: pending:pr-boston-mathias
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-boston-mathias-ng-dew-morch-254.6K-0.68MPa
+  package: pending:pr-boston-mathias
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-boston-mathias-ng-dew-morch-260.8K-1.04MPa
+  package: pending:pr-boston-mathias
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-boston-mathias-ng-dew-morch-243.4K-0.30MPa
+  package: pending:srk-boston-mathias
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-boston-mathias-ng-dew-morch-254.6K-0.68MPa
+  package: pending:srk-boston-mathias
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-boston-mathias-ng-dew-morch-260.8K-1.04MPa
+  package: pending:srk-boston-mathias
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-mathias-copeman-ng-dew-morch-243.4K-0.30MPa
+  package: pending:pr-mathias-copeman
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-mathias-copeman-ng-dew-morch-254.6K-0.68MPa
+  package: pending:pr-mathias-copeman
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-mathias-copeman-ng-dew-morch-260.8K-1.04MPa
+  package: pending:pr-mathias-copeman
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-mathias-copeman-ng-dew-morch-243.4K-0.30MPa
+  package: pending:srk-mathias-copeman
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-mathias-copeman-ng-dew-morch-254.6K-0.68MPa
+  package: pending:srk-mathias-copeman
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-mathias-copeman-ng-dew-morch-260.8K-1.04MPa
+  package: pending:srk-mathias-copeman
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-peneloux-ng-dew-morch-243.4K-0.30MPa
+  package: pending:pr-peneloux
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-peneloux-ng-dew-morch-254.6K-0.68MPa
+  package: pending:pr-peneloux
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-peneloux-ng-dew-morch-260.8K-1.04MPa
+  package: pending:pr-peneloux
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-peneloux-ng-dew-morch-243.4K-0.30MPa
+  package: pending:srk-peneloux
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-peneloux-ng-dew-morch-254.6K-0.68MPa
+  package: pending:srk-peneloux
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-peneloux-ng-dew-morch-260.8K-1.04MPa
+  package: pending:srk-peneloux
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: sour-pr-ng-dew-morch-243.4K-0.30MPa
+  package: pending:sour-pr
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: sour-pr-ng-dew-morch-254.6K-0.68MPa
+  package: pending:sour-pr
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: sour-pr-ng-dew-morch-260.8K-1.04MPa
+  package: pending:sour-pr
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: sour-srk-ng-dew-morch-243.4K-0.30MPa
+  package: pending:sour-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: sour-srk-ng-dew-morch-254.6K-0.68MPa
+  package: pending:sour-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: sour-srk-ng-dew-morch-260.8K-1.04MPa
+  package: pending:sour-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: kabadi-danner-srk-ng-dew-morch-243.4K-0.30MPa
+  package: pending:kabadi-danner-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: kabadi-danner-srk-ng-dew-morch-254.6K-0.68MPa
+  package: pending:kabadi-danner-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: kabadi-danner-srk-ng-dew-morch-260.8K-1.04MPa
+  package: pending:kabadi-danner-srk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: zudkevitch-joffe-rk-ng-dew-morch-243.4K-0.30MPa
+  package: pending:zudkevitch-joffe-rk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: zudkevitch-joffe-rk-ng-dew-morch-254.6K-0.68MPa
+  package: pending:zudkevitch-joffe-rk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: zudkevitch-joffe-rk-ng-dew-morch-260.8K-1.04MPa
+  package: pending:zudkevitch-joffe-rk
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa
+  package: pending:twu-sim-tassone
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa
+  package: pending:twu-sim-tassone
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa
+  package: pending:twu-sim-tassone
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-bm-ng-dew-morch-243.4K-0.30MPa
+  package: pending:pr-bm
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-bm-ng-dew-morch-254.6K-0.68MPa
+  package: pending:pr-bm
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-bm-ng-dew-morch-260.8K-1.04MPa
+  package: pending:pr-bm
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: rks-bm-ng-dew-morch-243.4K-0.30MPa
+  package: pending:rks-bm
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: rks-bm-ng-dew-morch-254.6K-0.68MPa
+  package: pending:rks-bm
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: rks-bm-ng-dew-morch-260.8K-1.04MPa
+  package: pending:rks-bm
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-lee-kesler-enthalpy-ng-dew-morch-243.4K-0.30MPa
+  package: pending:pr-lee-kesler-enthalpy
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-lee-kesler-enthalpy-ng-dew-morch-254.6K-0.68MPa
+  package: pending:pr-lee-kesler-enthalpy
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: pr-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa
+  package: pending:pr-lee-kesler-enthalpy
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-lee-kesler-enthalpy-ng-dew-morch-243.4K-0.30MPa
+  package: pending:srk-lee-kesler-enthalpy
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-lee-kesler-enthalpy-ng-dew-morch-254.6K-0.68MPa
+  package: pending:srk-lee-kesler-enthalpy
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: srk-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa
+  package: pending:srk-lee-kesler-enthalpy
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Catalogue row not yet registered (plan docs/thermo-catalogue-plan.md); the harness skips entries whose package starts with pending: until the row lands. Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: ng-dew-morch-243.4K-0.30MPa
+  package: all
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 300000.0
+  T: 243.4
+  note: 'Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: ng-dew-morch-254.6K-0.68MPa
+  package: all
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 680000.0
+  T: 254.6
+  note: 'Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
+- id: ng-dew-morch-260.8K-1.04MPa
+  package: all
+  components:
+  - C1
+  - C2
+  - nC5
+  z:
+    C1: 0.94085
+    C2: 0.04468
+    nC5: 0.01447
+  source: "literature:M\xF8rch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21"
+  expected:
+    dew_P: 1040000.0
+  T: 260.8
+  note: 'Measured dew pressure at fixed temperature on the monotonic low-temperature dew branch; assessed xfail for the shipped packages - see issue #130.'
