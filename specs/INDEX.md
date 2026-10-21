@@ -132,11 +132,11 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | T-03 | Gamma-phi adapter: NRTL/UNIQUAC/Wilson/van Laar/Margules/UNIFAC×5 × ideal/virial/cubic vapour; ChemSep + UNIFAC group data | T-01 | dispatched 2026-10-21 (issue #137) |
 | T-04 | Helmholtz adapter: IAPWS-95/IF97, CoolProp fluids, GERG-2008 (optional dependency) | T-01 | dispatched 2026-10-21 (issue #138) |
 | T-05 | Classic K-value correlations: Chao–Seader, Grayson–Streed, Braun K10, Lee–Kesler–Plöcker, ideal/Henry | T-01 | dispatched 2026-10-21 (issue #139) |
-| T-06 | Predictive mixing rules: PSRK, VTPR, MHV1/2, Wong–Sandler, Huron–Vidal, LCVM | T-02, T-03 | planned |
+| T-06 | Predictive mixing rules: PSRK, VTPR, MHV1/2, Wong–Sandler, Huron–Vidal, LCVM | T-02, T-03 | planned (issue #141; after T-02+T-03) |
 | T-07 | teqp bridge: PC-SAFT, SAFT-VR Mie, CPA, multi-fluid Helmholtz | T-01 | dispatched 2026-10-21 (issue #140) |
-| T-08 | Model advisor + agent tool `recommend_thermo` + UI package picker | T-01..T-05 | planned |
-| T-09 | General electrolytes: eNRTL, Pitzer, extended UNIQUAC, sour water | T-03 | planned |
-| T-10 | Solids, polymers, HOC dimerisation, HF | T-03, T-07 | planned |
-| T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | T-11 merged #131, T-12 merged #132, T-13 merged #135 (2026-10-21); T-14 after T-01 |
+| T-08 | Model advisor + agent tool `recommend_thermo` + UI package picker | T-01..T-05 | planned (issue #142; after T-01..T-05) |
+| T-09 | General electrolytes: eNRTL, Pitzer, extended UNIQUAC, sour water | T-03 | planned (issue #143; after T-03 and #125) |
+| T-10 | Solids, polymers, HOC dimerisation, HF | T-03, T-07 | planned (issue #144; after T-03+T-07) |
+| T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | T-11 merged #131, T-12 merged #132, T-13 merged #135; T-14 dispatched 2026-10-21 (issue #145) |
 
 Dispatch: T-01 alone; then T-02, T-03, T-04, T-05, T-07, T-11, T-12, T-13 in parallel (disjoint files); then T-06, T-08, T-09, T-14; then T-10; then the catalogue freeze (status audit).
