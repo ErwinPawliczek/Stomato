@@ -8,6 +8,7 @@ published reference point quoted in the params/case provenance.
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import pytest
 
@@ -29,7 +30,7 @@ R = 8.31446261815324
 
 
 class TestFloryHuggins:
-    def test_solvent_activity_closed_form(self):
+    def test_solvent_activity_closed_form(self) -> None:
         """ln a1 = ln phi1 + (1 - 1/r) phi2 + chi phi2^2, hand-reduced (FH eq. 3.34)."""
         r1, r2, chi = 1.0, 962.0, 0.67
         x1 = 0.95
@@ -46,7 +47,7 @@ class TestFloryHuggins:
         # x1 = 0.95 (a1 < 1 is the physical polymer-solution expectation).
         assert ge < 0.0
 
-    def test_psu_entropy_example(self):
+    def test_psu_entropy_example(self) -> None:
         """FH entropy of mixing, hand-reduced: x1 = 0.95, r2/r1 = 962.
 
         phi1 = 0.95/(0.95 + 0.05*962) = 0.0193676; the segment combinatorial
@@ -60,7 +61,7 @@ class TestFloryHuggins:
         model = FloryHugginsGE(435.46, [0.95, 0.05], [1.0, 962.0], [[0.0, 0.0], [0.0, 0.0]])
         assert model.GE() / (R * 435.46) == pytest.approx(-3.7481, abs=2e-3)
 
-    def test_dGE_dxs_matches_finite_difference(self):
+    def test_dGE_dxs_matches_finite_difference(self) -> None:
         r1, r2, chi = 1.0, 500.0, 0.55
         model = FloryHugginsGE(350.0, [0.7, 0.3], [r1, r2], [[0.0, chi], [chi, 0.0]])
         analytic = model.dGE_dxs()
@@ -74,18 +75,18 @@ class TestFloryHuggins:
             model.xs[j] = orig
             assert analytic[j] == pytest.approx((up - dn) / (2 * h), rel=1e-5)
 
-    def test_missing_params_refuse(self):
+    def test_missing_params_refuse(self) -> None:
         """A component/pair without parameters is a construction-time refusal."""
         with pytest.raises(ValueError, match="has no chi"):
-            FloryHugginsPackage(("H2O", "MeOH")).build()
+            FloryHugginsPackage(("H2O", "MeOH"))
 
-    def test_package_flasher_builds_toluene_ps(self):
+    def test_package_flasher_builds_toluene_ps(self) -> None:
         _ensure_poly_ps_registered_helper()
         pkg = FloryHugginsPackage(("POLY_PS", "toluene"))
         assert pkg is not None
 
 
-def _ln_activity_from_dg(model, idx):
+def _ln_activity_from_dg(model: Any, idx: int) -> float:
     """ln a_i from the GE and its unconstrained partials (T fixed).
 
     Binary identity: ln a_i = d(n g)/dn_i = g + sum_m (delta_im - x_m) g_m
@@ -94,13 +95,13 @@ def _ln_activity_from_dg(model, idx):
     xs = list(model.xs)
     g = model.GE() / (R * model.T)
     g_partials = [v / (R * model.T) for v in model.dGE_dxs()]
-    return g + sum(
-        ((1.0 if m == idx else 0.0) - x) * gm
-        for m, (x, gm) in enumerate(zip(xs, g_partials, strict=False))
+    partials = sum(
+        ((1.0 if m == idx else 0.0) - x) * gm for m, (x, gm) in enumerate(zip(xs, g_partials, strict=False))
     )
+    return float(g + partials)
 
 
-def _ensure_poly_ps_registered_helper():
+def _ensure_poly_ps_registered_helper() -> None:
     from ngdesign.thermo.special import _ensure_poly_ps_registered
 
     _ensure_poly_ps_registered()
@@ -112,7 +113,7 @@ def _ensure_poly_ps_registered_helper():
 
 
 class TestChenPolymerNRTL:
-    def test_zero_tau_reduces_to_combinatorial(self):
+    def test_zero_tau_reduces_to_combinatorial(self) -> None:
         """tau = 0 kills the residual; gammas reduce to the segment combinatorial."""
         segs = [[("s", 1.0)], [("p", 962.0)]]
         n = 2
@@ -124,12 +125,10 @@ class TestChenPolymerNRTL:
         mbar = sum(x * mm for x, mm in zip(xs, m, strict=False))
         phis = [x * mm / mbar for x, mm in zip(xs, m, strict=False)]
         for i in range(2):
-            ln_comb = math.log(phis[i] / xs[i]) + 1.0 - m[i] * sum(
-                xs[j] * phis[j] / m[j] for j in range(2)
-            )
+            ln_comb = math.log(phis[i] / xs[i]) + 1.0 - m[i] * sum(xs[j] * phis[j] / m[j] for j in range(2))
             assert model.gammas()[i] == pytest.approx(math.exp(ln_comb), rel=1e-9)
 
-    def test_nonzero_tau_gives_finite_gammas(self):
+    def test_nonzero_tau_gives_finite_gammas(self) -> None:
         segs = [[("s", 1.0)], [("p", 962.0)]]
         tau = [[0.0, 0.45], [0.45, 0.0]]
         alpha = [[0.0, 0.2], [0.2, 0.0]]
@@ -137,11 +136,11 @@ class TestChenPolymerNRTL:
         gammas = model.gammas()
         assert all(math.isfinite(g) and g > 0.0 for g in gammas)
 
-    def test_missing_segment_assignment_refuses(self):
+    def test_missing_segment_assignment_refuses(self) -> None:
         with pytest.raises(ValueError, match="segment assignment"):
             from ngdesign.thermo.special import ChenPolymerNRTLPackage
 
-            ChenPolymerNRTLPackage(("H2O", "MeOH")).build()
+            ChenPolymerNRTLPackage(("H2O", "MeOH"))
 
 
 # --------------------------------------------------------------------------
@@ -150,7 +149,7 @@ class TestChenPolymerNRTL:
 
 
 class TestUnifacFv:
-    def test_solvent_activity_structure(self):
+    def test_solvent_activity_structure(self) -> None:
         """UNIFAC-FV: toluene activity < 1 and falls as the polymer fraction grows."""
         _ensure_poly_ps_registered_helper()
         pkg = UnifacFvPackage(("POLY_PS", "toluene"))
@@ -161,12 +160,12 @@ class TestUnifacFv:
         a_hi = hi[1] * 0.8
         assert 0.0 < a_hi < a_lo < 1.0
 
-    def test_ternary_refuses(self):
+    def test_ternary_refuses(self) -> None:
         _ensure_poly_ps_registered_helper()
         with pytest.raises(ValueError, match="exactly one solvent and one polymer"):
             UnifacFvPackage(("POLY_PS", "toluene", "H2O"))
 
-    def test_unparameterized_solvent_refuses(self):
+    def test_unparameterized_solvent_refuses(self) -> None:
         _ensure_poly_ps_registered_helper()
         with pytest.raises(ValueError, match="unifac_fv"):
             UnifacFvPackage(("POLY_PS", "H2O"))
@@ -178,7 +177,7 @@ class TestUnifacFv:
 
 
 class TestIdealSolid:
-    def test_naphthalene_solubility_value(self):
+    def test_naphthalene_solubility_value(self) -> None:
         """van't Hoff x at 298.15 K from Tm = 353.35 K, Hfus = 19010 J/mol.
 
         Hand-reduced: ln x = -(19010/R)(1/298.15 - 1/353.35) -> x = 0.30177.
@@ -193,18 +192,18 @@ class TestIdealSolid:
         assert x == pytest.approx(expected, rel=1e-9)
         assert x == pytest.approx(0.3018, abs=2e-4)
 
-    def test_solubility_increases_with_temperature(self):
+    def test_solubility_increases_with_temperature(self) -> None:
         pkg = IdealSolidPackage()
         low = pkg.solubility("naphthalene", 280.0)
         high = pkg.solubility("naphthalene", 330.0)
         assert low < high
 
-    def test_unknown_species_refuses(self):
+    def test_unknown_species_refuses(self) -> None:
         pkg = IdealSolidPackage()
         with pytest.raises(ValueError, match="fusion properties"):
             pkg.solubility("POLY_PS", 298.15)
 
-    def test_flash_calls_refuse(self):
+    def test_flash_calls_refuse(self) -> None:
         pkg = IdealSolidPackage()
         with pytest.raises(ValueError, match="does not flash"):
             pkg._build_flasher(("naphthalene",))
@@ -220,35 +219,27 @@ class TestDimerKernel:
     T_REF = 399.35
     DH = -25000.0
 
-    def test_reference_point_round_trip(self):
+    def test_reference_point_round_trip(self) -> None:
         """At (T_ref, P_nom = P_true/Z) the parameters reduce from Z = 0.6299.
 
         The 1 bar in the source is the TRUE pressure of the equilibrium
         mixture; the kernel takes the nominal pressure P = P_true / Z.
         """
         p_nom = 1.0e5 / 0.6299
-        z = dimer_vapor_compressibility(
-            self.T_REF, p_nom, self.DH, self.K2_REF, self.T_REF
-        )
+        z = dimer_vapor_compressibility(self.T_REF, p_nom, self.DH, self.K2_REF, self.T_REF)
         assert z == pytest.approx(0.6299, rel=1e-3)
 
-    def test_ideal_limit(self):
+    def test_ideal_limit(self) -> None:
         """Association vanishes as P -> 0: Z -> 1 (Z ~ 1 - kp P, so the
         approach is linear; 0.001 Pa keeps kp P under the tolerance)."""
-        z = dimer_vapor_compressibility(
-            self.T_REF, 1.0e-3, self.DH, self.K2_REF, self.T_REF
-        )
+        z = dimer_vapor_compressibility(self.T_REF, 1.0e-3, self.DH, self.K2_REF, self.T_REF)
         assert z == pytest.approx(1.0, abs=1e-6)
 
-    def test_association_strengthens_on_cooling(self):
-        z_hot = dimer_vapor_compressibility(
-            self.T_REF, 1.0e5, self.DH, self.K2_REF, self.T_REF
-        )
-        z_cold = dimer_vapor_compressibility(
-            self.T_REF - 40.0, 1.0e5, self.DH, self.K2_REF, self.T_REF
-        )
+    def test_association_strengthens_on_cooling(self) -> None:
+        z_hot = dimer_vapor_compressibility(self.T_REF, 1.0e5, self.DH, self.K2_REF, self.T_REF)
+        z_cold = dimer_vapor_compressibility(self.T_REF - 40.0, 1.0e5, self.DH, self.K2_REF, self.T_REF)
         assert z_cold < z_hot < 1.0
 
-    def test_invalid_inputs_refuse(self):
+    def test_invalid_inputs_refuse(self) -> None:
         with pytest.raises(ValueError, match="positive"):
             dimer_vapor_compressibility(0.0, 1.0e5, self.DH, self.K2_REF, self.T_REF)

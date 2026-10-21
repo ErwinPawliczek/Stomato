@@ -388,9 +388,7 @@ class ChenPolymerNRTLGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no s
             self.r_prime.append([counts[t] for t in self.types])
 
     def to_T_xs(self, T: float, xs: list[float]) -> ChenPolymerNRTLGE:
-        return ChenPolymerNRTLGE(
-            T=T, xs=list(xs), segments=self.segments, tau=self.tau, alpha=self.alpha
-        )
+        return ChenPolymerNRTLGE(T=T, xs=list(xs), segments=self.segments, tau=self.tau, alpha=self.alpha)
 
     def _phis(self) -> list[float]:
         mbar = sum(x * m for x, m in zip(self.xs, self.m, strict=False))
@@ -423,12 +421,7 @@ class ChenPolymerNRTLGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no s
                     denom_m2 = sum(X[k] * big_g[k][m2] for k in range(n))
                     inner += X[m2] * self.tau[m2][j] * big_g[m2][j] / denom_m2
                 s += X[j] * self.tau[j][i] * big_g[j][i] / denom_ik
-                s += (
-                    X[j]
-                    * big_g[i][j]
-                    / denom_j
-                    * (self.tau[i][j] - inner)
-                )
+                s += X[j] * big_g[i][j] / denom_j * (self.tau[i][j] - inner)
             ln_res += count * s
         return ln_res
 
@@ -438,14 +431,15 @@ class ChenPolymerNRTLGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no s
         seg_fracs = self._segment_fractions()
         n_types = len(self.types)
         big_g = [
-            [math.exp(-self.alpha[i][j] * self.tau[i][j]) for j in range(n_types)]
-            for i in range(n_types)
+            [math.exp(-self.alpha[i][j] * self.tau[i][j]) for j in range(n_types)] for i in range(n_types)
         ]
         i_idx = {t: k for k, t in enumerate(self.types)}
         out = []
         for comp in range(len(xs)):
-            ln_comb = math.log(phis[comp] / xs[comp]) + 1.0 - m[comp] * sum(
-                xs[J] * phis[J] / m[J] for J in range(len(xs))
+            ln_comb = (
+                math.log(phis[comp] / xs[comp])
+                + 1.0
+                - m[comp] * sum(xs[J] * phis[J] / m[J] for J in range(len(xs)))
             )
             ln_res = self._ln_res_component(comp, seg_fracs, big_g, i_idx)
             out.append(math.exp(ln_comb + ln_res))
@@ -454,8 +448,10 @@ class ChenPolymerNRTLGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no s
     def GE(self) -> float:
         """gE consistent with the gammas (gE/RT = sum x_I ln gamma_I)."""
         gammas = self.gammas()
-        return R * self.T * sum(
-            x * math.log(g) for x, g in zip(self.xs, gammas, strict=False) if x > 0.0 and g > 0.0
+        return (
+            R
+            * self.T
+            * sum(x * math.log(g) for x, g in zip(self.xs, gammas, strict=False) if x > 0.0 and g > 0.0)
         )
 
     def dGE_dxs(self) -> list[float]:
@@ -654,8 +650,10 @@ class UnifacFvGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no stubs fo
 
     def GE(self) -> float:
         gammas = self.gammas()
-        return R * self.T * sum(
-            x * math.log(g) for x, g in zip(self.xs, gammas, strict=False) if x > 0.0 and g > 0.0
+        return (
+            R
+            * self.T
+            * sum(x * math.log(g) for x, g in zip(self.xs, gammas, strict=False) if x > 0.0 and g > 0.0)
         )
 
     def dGE_dxs(self) -> list[float]:
@@ -821,8 +819,7 @@ class IdealSolidPackage:
                     return float(Tm(alt)), float(Hfus(alt))
             except Exception:
                 raise ValueError(
-                    f"ideal_solid could not resolve fusion properties (Tm, Hfus) "
-                    f"for {cid!r}: {exc}"
+                    f"ideal_solid could not resolve fusion properties (Tm, Hfus) for {cid!r}: {exc}"
                 ) from exc
 
     def solubility(self, cid: str, T: float) -> float:
@@ -870,14 +867,10 @@ class IdealSolidPackage:
     def flash_pvf(self, z: dict[str, float], P: float, vf: float, molar_flow: float) -> Any:
         self._refuse_flash()
 
-    def bubble_point(
-        self, z: dict[str, float], *, T: float | None = None, P: float | None = None
-    ) -> Any:
+    def bubble_point(self, z: dict[str, float], *, T: float | None = None, P: float | None = None) -> Any:
         self._refuse_flash()
 
-    def dew_point(
-        self, z: dict[str, float], *, T: float | None = None, P: float | None = None
-    ) -> Any:
+    def dew_point(self, z: dict[str, float], *, T: float | None = None, P: float | None = None) -> Any:
         self._refuse_flash()
 
     def k_values(self, z: dict[str, float], T: float, P: float) -> None:
@@ -913,9 +906,7 @@ def _association_params() -> dict[str, Any]:
         return yaml.safe_load(fh) or {}
 
 
-def dimer_vapor_compressibility(
-    T: float, P: float, dH_assoc: float, K2_ref: float, T_ref: float
-) -> float:
+def dimer_vapor_compressibility(T: float, P: float, dH_assoc: float, K2_ref: float, T_ref: float) -> float:
     """Vapour compressibility factor of a dimerizing acid vapour.
 
     Chemical theory with a single dimerization equilibrium (the leading term of
