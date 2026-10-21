@@ -20,6 +20,7 @@ from dataclasses import dataclass
 
 from ngdesign import pipeline, registry
 from ngdesign.contracts import XY, Flowsheet, Project, SolvedFlowsheet, StreamSpec, UnitSpec
+from ngdesign.contracts.diagnostics import TearRecord
 from ngdesign.render.pfd_svg import render_pfd_svg
 from ngdesign.render.pid_svg import render_pid_svg
 
@@ -54,6 +55,7 @@ def solve_project(
     project: Project,
     *,
     cache: dict[str, SolvedFlowsheet] | None = None,
+    on_progress: Callable[[TearRecord], None] | None = None,
 ) -> SolvedFlowsheet:
     """Solve the project: registry thermo by ``project.flowsheet.thermo`` and
     ``sequential_modular``, cached by project hash.
@@ -62,6 +64,11 @@ def solve_project(
     route passes its own module dict — a locked test (tests/api/test_solve_errors.py)
     monkeypatches ``routes_solve._cache`` for isolation, so the route keeps that
     seam and injects it here. One solve path, per-caller cache instances.
+
+    ``on_progress`` (spec P3-02) is forwarded to the solver, which calls it with
+    every P2-02 :class:`TearRecord` as it is appended to the history — the job
+    worker streams solve progress through it. ``None`` (the default) changes
+    nothing; the callback is observational and never alters the numerics.
 
     Raises :class:`UnknownPluginError` for a unit kind or thermo selection with
     no registered plugin, and :class:`InvalidProjectError` for a project whose
@@ -80,8 +87,15 @@ def solve_project(
     key = project_hash(project)
     if key not in store:
         thermo = registry.create("thermo", thermo_name)
+        solver = registry.create("solver", "sequential_modular")
         try:
-            store[key] = registry.create("solver", "sequential_modular").solve(project.flowsheet, thermo)
+            # Pass the callback only when set: solver plugins written against
+            # the pre-P3-02 two-argument solve keep working on the no-callback
+            # path (the locked cache test wraps exactly that signature).
+            if on_progress is None:
+                store[key] = solver.solve(project.flowsheet, thermo)
+            else:
+                store[key] = solver.solve(project.flowsheet, thermo, on_progress=on_progress)
         except ValueError as exc:
             # Semantically invalid project the PUT-time contracts cannot reject:
             # declared ports and feed specs are only known to the plugins at

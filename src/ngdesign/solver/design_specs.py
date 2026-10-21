@@ -28,10 +28,13 @@ value any iteration achieved and both bracket ends in the result history.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import numpy as np
 
 from ngdesign.contracts import Flowsheet, SolvedFlowsheet
 from ngdesign.contracts.components import resolve_set
+from ngdesign.contracts.diagnostics import TearRecord
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.specs import DesignSpec, DesignSpecResult
 from ngdesign.registry import register
@@ -41,7 +44,13 @@ from ngdesign.variables import assign, resolve
 __all__ = ["SequentialModularWithSpecs", "solve_with_specs"]
 
 
-def solve_with_specs(fs: Flowsheet, thermo: Thermo, inner: SequentialModular) -> SolvedFlowsheet:
+def solve_with_specs(
+    fs: Flowsheet,
+    thermo: Thermo,
+    inner: SequentialModular,
+    *,
+    on_progress: Callable[[TearRecord], None] | None = None,
+) -> SolvedFlowsheet:
     """Solve ``fs`` driving every entry of ``fs.design_specs`` to its target.
 
     ``inner`` is the bare sequential-modular solver; it runs once per outer
@@ -49,16 +58,23 @@ def solve_with_specs(fs: Flowsheet, thermo: Thermo, inner: SequentialModular) ->
     last inner solve with ``design_spec_results`` filled (one per spec, in
     order). Raises nothing for a non-converging spec: the result reports it.
     """
-    return _Outer(fs, thermo, inner).solve()
+    return _Outer(fs, thermo, inner, on_progress).solve()
 
 
 class _Outer:
     """The design-spec outer loop state: warm start, histories, last result."""
 
-    def __init__(self, fs: Flowsheet, thermo: Thermo, inner: SequentialModular) -> None:
+    def __init__(
+        self,
+        fs: Flowsheet,
+        thermo: Thermo,
+        inner: SequentialModular,
+        on_progress: Callable[[TearRecord], None] | None = None,
+    ) -> None:
         self.fs = fs
         self.thermo = thermo
         self.inner = inner
+        self.on_progress = on_progress  # P3-02: every inner solve streams its tear records
         self.specs = list(fs.design_specs)
         self.components = tuple(resolve_set(fs.components).ids)
         self.warm: dict[str, list[float]] | None = None
@@ -79,7 +95,7 @@ class _Outer:
         fs_i = self.fs
         for spec, val in zip(self.specs, u, strict=True):
             fs_i = assign(fs_i, spec.manipulated, val)
-        solved = self.inner.solve(fs_i, self.thermo, warm_start=self.warm)
+        solved = self.inner.solve(fs_i, self.thermo, warm_start=self.warm, on_progress=self.on_progress)
         self.warm = {sid: _tear_vector(state, self.components) for sid, state in solved.streams.items()}
         self.last = solved
         if solved.status == "failed":
@@ -327,9 +343,14 @@ class SequentialModularWithSpecs:
     """
 
     def solve(
-        self, fs: Flowsheet, thermo: Thermo, warm_start: dict[str, list[float]] | None = None
+        self,
+        fs: Flowsheet,
+        thermo: Thermo,
+        warm_start: dict[str, list[float]] | None = None,
+        *,
+        on_progress: Callable[[TearRecord], None] | None = None,
     ) -> SolvedFlowsheet:
         inner = SequentialModular()
         if not fs.design_specs:
-            return inner.solve(fs, thermo, warm_start)
-        return solve_with_specs(fs, thermo, inner)
+            return inner.solve(fs, thermo, warm_start, on_progress=on_progress)
+        return solve_with_specs(fs, thermo, inner, on_progress=on_progress)

@@ -4,8 +4,10 @@ and registers itself with @register(kind, name) from ngdesign.registry.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any, Protocol, runtime_checkable
 
+from .diagnostics import TearRecord
 from .flowsheet import Datasheet, Flowsheet, SolvedFlowsheet, UnitResult
 from .isometric import IsoSheet
 from .pid import PID, RuleViolation
@@ -79,9 +81,20 @@ class Sizer(Protocol):
 
 @runtime_checkable
 class Solver(Protocol):
-    """Kind "solver"."""
+    """Kind "solver".
 
-    def solve(self, fs: Flowsheet, thermo: Thermo) -> SolvedFlowsheet: ...
+    ``on_progress`` is the optional spec P3-02 seam: called with every
+    :class:`TearRecord` as it is appended to the history, so a job worker can
+    stream convergence progress without changing the solve's numerics.
+    """
+
+    def solve(
+        self,
+        fs: Flowsheet,
+        thermo: Thermo,
+        *,
+        on_progress: Callable[[TearRecord], None] | None = None,
+    ) -> SolvedFlowsheet: ...
 
 
 @runtime_checkable

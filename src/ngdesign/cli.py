@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -152,6 +153,10 @@ def main(argv: list[str] | None = None) -> int:
     serve = sub.add_parser("serve", help="run the API server against the store (spec P3-01)")
     serve.add_argument("--host", default="127.0.0.1")
     serve.add_argument("--port", type=int, default=8000)
+    worker = sub.add_parser("worker", help="run the solve-job worker until SIGTERM (spec P3-02)")
+    worker.add_argument(
+        "--once", action="store_true", help="process at most one job (or exit when none is queued), then exit"
+    )
     args = parser.parse_args(argv)
 
     if args.command == "db-init":
@@ -169,6 +174,20 @@ def main(argv: list[str] | None = None) -> int:
         init_db()
         print(f"database ready: {database_url_log_safe()}")
         uvicorn.run(api_app, host=args.host, port=args.port)
+        return 0
+    if args.command == "worker":
+        import signal
+
+        from ngdesign.jobs.queue import queue_from_env
+        from ngdesign.jobs.worker import run_worker
+        from ngdesign.store import init_db
+
+        init_db()
+        stop = threading.Event()
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            signal.signal(sig, lambda *_: stop.set())  # noqa: B023 — one shared event
+        processed = run_worker(queue_from_env(), once=args.once, stop_event=stop)
+        print(f"worker: processed {processed} job(s)")
         return 0
 
     out = Path(args.out)

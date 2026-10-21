@@ -30,6 +30,7 @@ from ngdesign.api.deps import default_project_store, slice_project
 from ngdesign.api.routes_agent import router as agent_router
 from ngdesign.api.routes_export import router as export_router
 from ngdesign.api.routes_iso import router as iso_router
+from ngdesign.api.routes_jobs import router as jobs_router
 from ngdesign.api.routes_meta import router as meta_router
 from ngdesign.api.routes_pid import router as pid_router
 from ngdesign.api.routes_plot import router as plot_router
@@ -95,6 +96,7 @@ def create_app() -> FastAPI:
     application.include_router(export_router)
     application.include_router(meta_router)
     application.include_router(agent_router)
+    application.include_router(jobs_router)
     # Last: its /api/project/layout/{view}/{tag} catch-all must not shadow the iso PUT.
     application.include_router(legacy_router)
 
