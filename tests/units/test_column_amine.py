@@ -57,12 +57,32 @@ def _solved() -> Any:
     return _COL.solve({"feed": _amine_case()[0]}, _amine_case()[1], get("thermo", "amine_ke")())
 
 
+# P1-11 step 3 (ruling on issue #153): the exact gate reads y = K(T, x) * x from the
+# live package for EVERY package - one definition of "converged". The P1-09 accepted
+# absorber state was anchor-consistent, not equilibrium-consistent: the same state
+# reads M = 1.13e-2, H = 2.67e-3 under the honest gate (measured) against the
+# 1e-2 / 1e-2 gates, so the mesh raises ColumnConvergenceError and these P1-09
+# assertions xfail until the mesh closes (step 4). strict=True: when the mesh
+# closes, these tests pass and XPASS flags the markers for removal.
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="P1-11 step 3: equilibrium-consistent exact gate reads the accepted absorber "
+    "state at M = 1.13e-2, H = 2.67e-3 (was M = 5.2e-3 on the anchor's stored y) - the "
+    "mesh now raises until NS closes it (step 4)",
+)
 def test_boundary_balance_closes(solved: Any) -> None:
     """Measured: d=96.4871, b=95.5129, total exactly 192 mol/s."""
     out_total = sum(s.molar_flow for s in solved.outlets.values())
     assert abs(out_total - 192.0) / 192.0 < 1e-8
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="P1-11 step 3: equilibrium-consistent exact gate reads the accepted absorber "
+    "state at M = 1.13e-2, H = 2.67e-3 - the mesh now raises until NS closes it (step 4)",
+)
 def test_co2_is_absorbed(solved: Any) -> None:
     """Measured: 6.06 mol/s CO2 in, 0.00036 mol/s out with the gas - 99.99% removed.
 
@@ -81,6 +101,11 @@ def test_co2_is_absorbed(solved: Any) -> None:
     assert co2_out == pytest.approx(0.00036, abs=1e-3)
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="P1-11 step 3: equilibrium-consistent exact gate reads the accepted absorber "
+    "state at M = 1.13e-2, H = 2.67e-3 - the mesh now raises until NS closes it (step 4)",
+)
 def test_rich_loading_in_range(solved: Any) -> None:
     """Measured rich liquid: x_MDEA=0.12765, x_CO2=0.06357 - loading 0.498 mol/mol,
     inside the MDEA 0-1 window."""
@@ -91,6 +116,11 @@ def test_rich_loading_in_range(solved: Any) -> None:
     assert loading == pytest.approx(0.498, abs=0.02)
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="P1-11 step 3: equilibrium-consistent exact gate reads the accepted absorber "
+    "state at M = 1.13e-2, H = 2.67e-3 - the mesh now raises until NS closes it (step 4)",
+)
 def test_stage_temperatures_in_band(solved: Any) -> None:
     """The absorption exotherm, pinned (review step 4).
 

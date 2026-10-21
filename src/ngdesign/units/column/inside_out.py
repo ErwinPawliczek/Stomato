@@ -915,6 +915,27 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
 
     The honest convergence measure: the frozen inner models closed the equations,
     and the refreshed thermo values must still close them.
+
+    The balances and enthalpy residuals read y_ij = K_ij(T_j, x_j) * x_ij from the
+    live package, not the profile's STORED y (built as alpha*Kb*x from the
+    inside-out anchor) - the same convention the Naphtali-Sandholm residual uses,
+    so this gate returns the number NS sees (one definition of "converged"; ruling
+    on issue #153, 2026-10-21). On the reactive package the anchor tracks the
+    acid-gas K-values' temperature dependence but not their composition (loading)
+    dependence: an anchor-consistent state read M = 5.2e-3 on stored y while the
+    same state read M = 0.49 on y = K*x (measured 20-stage MDEA absorber at the
+    accepted inside-out state) - the stored-y gate was a gate hole, not a solver
+    floor. The k-values are evaluated here anyway, so building y from them costs
+    no flash.
+
+    Non-reactive cost (measured, bench-column trace on the step-3 branch: the two
+    readings agree to a factor <= 5 mid-walk and reach the same < 1e-8 floor -
+    outer sweep 28: stored-y M = 8.1e-10 vs K*x M = 6.8e-9), so the honest gate
+    crosses 1e-8 one to three sweeps later per solve and the bench `column` case
+    moves 4959 -> 6508 flash-equivalents with byte-identical products; the
+    baseline moved with that trace per the ruling. The k = None guard is
+    preserved: a stage whose equilibrium cannot be evaluated is NOT converged
+    (skipping it let degenerate all-liquid profiles read as exact).
     """
     n = col.n
     max_m = 0.0
@@ -922,6 +943,8 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
     liquid = _l_profile(col, prof.l0, prof.V)
     h_scale = max(col.f_total * 2e4, 1.0)
     h_stages = set(_h_equation_stages(col))
+    k_stages: list[dict[str, float] | None] = []
+    y_eq: list[dict[str, float]] = []
     for j in range(n):
         k = tb.k_values(
             [
@@ -934,9 +957,16 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
         )
         if k is None:
             k = tb.k_estimate(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j])
+        k_stages.append(k)
         if k is None:
-            # A stage whose equilibrium cannot be evaluated is NOT converged.
-            # Skipping it let degenerate all-liquid profiles read as exact.
+            y_eq.append({})
+            continue
+        y_j = {cid: k.get(cid, 1.0) * prof.x[j].get(cid, 0.0) for cid in col.comps}
+        total = sum(y_j.values())
+        y_eq.append({cid: v / total for cid, v in y_j.items()} if total > _FLOW_FLOOR else y_j)
+    for j in range(n):
+        k = k_stages[j]
+        if k is None:
             max_m = max(max_m, 1.0)
             max_h = max(max_h, 1.0)
             continue
@@ -944,12 +974,12 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
         for cid in col.comps:
             inflow = liquid[j - 1] * prof.x[j - 1].get(cid, 0.0) if j > 0 else 0.0
             if j == 0 and col.condenser == "total":
-                inflow = prof.l0 * prof.y[0].get(cid, 0.0)
-            inflow += prof.V[j + 1] * prof.y[j + 1].get(cid, 0.0) if j + 1 < n else 0.0
+                inflow = prof.l0 * y_eq[0].get(cid, 0.0)
+            inflow += prof.V[j + 1] * y_eq[j + 1].get(cid, 0.0) if j + 1 < n else 0.0
             inflow += part.l_flow * part.x.get(cid, 0.0) + part.v_flow * part.y.get(cid, 0.0)
             outflow = (liquid[j] + col.draw_l[j]) * prof.x[j].get(cid, 0.0) + (
                 prof.V[j] + col.draw_v[j]
-            ) * prof.y[j].get(cid, 0.0)
+            ) * y_eq[j].get(cid, 0.0)
             scale = max(abs(inflow), abs(outflow), col.f_total * 1e-6)
             max_m = max(max_m, abs(inflow - outflow) / scale)
         if j not in h_stages:
@@ -958,7 +988,7 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
         h_in = (
             (
                 prof.V[j + 1]
-                * tb.h_vapor(_flash_ready(prof.y[j + 1], col.feed_comp), prof.T[j + 1], col.pressures[j + 1])
+                * tb.h_vapor(_flash_ready(y_eq[j + 1], col.feed_comp), prof.T[j + 1], col.pressures[j + 1])
                 if j + 1 < n
                 else 0.0
             )
@@ -971,9 +1001,9 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
             + part.h_flow
         )
         if j == 0 and col.condenser == "total":
-            h_in += prof.l0 * tb.h_liquid(_flash_ready(prof.y[0], col.feed_comp), prof.T[0], col.pressures[0])
+            h_in += prof.l0 * tb.h_liquid(_flash_ready(y_eq[0], col.feed_comp), prof.T[0], col.pressures[0])
         h_out = (prof.V[j] + col.draw_v[j]) * tb.h_vapor(
-            _flash_ready(prof.y[j], col.feed_comp), prof.T[j], col.pressures[j]
+            _flash_ready(y_eq[j], col.feed_comp), prof.T[j], col.pressures[j]
         ) + (liquid[j] + col.draw_l[j]) * tb.h_liquid(
             _flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j]
         )

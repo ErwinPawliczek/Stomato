@@ -39,6 +39,19 @@ from ngdesign.registry import get
 from ngdesign.units.column import Column
 from ngdesign.units.mdea_absorber import MdeaAbsorber
 
+# P1-11 step 3 (ruling on issue #153): the profile fixture solves the 20-stage MDEA
+# absorber, and under the now equilibrium-consistent exact gate that mesh raises
+# ColumnConvergenceError (its accepted state reads M = 1.13e-2, H = 2.67e-3 - see
+# tests/units/test_column_amine.py). The smoothness property is certified but cannot
+# be exercised on a converged absorber profile until the mesh closes (step 4).
+# strict=True: when the mesh closes, these tests run for real and XPASS flags this
+# marker for removal.
+pytestmark = pytest.mark.xfail(
+    strict=True,
+    reason="P1-11 step 3: the absorber profile fixture raises ColumnConvergenceError "
+    "under the equilibrium-consistent exact gate until NS closes the mesh (step 4)",
+)
+
 #: Relative FD steps, largest to smallest (spec: converge down to 1e-6).
 _STEPS = (1e-2, 1e-3, 1e-4, 1e-5, 1e-6)
 
