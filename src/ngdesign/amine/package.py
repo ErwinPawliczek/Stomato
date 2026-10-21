@@ -13,8 +13,8 @@ surface:
   == p_eq_i at convergence), water and amine K-values from databank
   Psat / P (Raoult), and hydrocarbon K-values from Henry's law in water.
 - Saturation (bubble/dew/TVF/PVF) solved on the package's own vapour
-  fraction: the P1-01 ``_state._saturation`` plateau method applied to
-  this package's vf.
+  fraction: the shared ``thermo.saturation`` plateau solver (spec P1-08)
+  applied to this package's vf.
 - Per-phase properties: the vapour phase is the carrier's; the liquid
   phase is the carrier's aqueous properties plus the heat of absorption
   of the dissolved acid gases, obtained by Gibbs-Helmholtz differentiation
@@ -79,6 +79,7 @@ from ngdesign.contracts.thermo import (
 from ngdesign.data import components
 from ngdesign.registry import register
 from ngdesign.thermo import _state
+from ngdesign.thermo.saturation import solve_saturation
 
 __all__ = [
     "AmineENRTLPackage",
@@ -103,16 +104,9 @@ _DERIV_D_T = 0.5
 _LOADING_TOL = 1e-12
 _LOADING_MAX_ITER = 50
 
-#: Plateau membership tolerance for the saturation scan (P1-01's semantics).
-_PLATEAU_EPS = 1e-6
-
-#: Geometric scan factor and refinement cap for saturation brackets (P1-01's).
-_SCAN_FACTOR = 1.3
-_SCAN_MAX_STEPS = 80
-
-#: Saturation bisection: relative tolerance on the unknown, iteration cap.
+#: Relative tolerance on the saturation unknown (also the brent_root xtol base
+#: for the interior TVF/PVF root).
 _SATURATION_REL_TOL = 1e-8
-_SATURATION_MAX_ITER = 60
 
 #: Interior vapour-fraction targets within this of 0/1 solve as bubble/dew.
 _VF_EDGE = 1e-9
@@ -211,20 +205,6 @@ def _wilson_T(cid: str, P: float) -> float | None:
     if denom <= 0.05:
         return None
     return tc / denom
-
-
-def _bisect_predicate(pred: Callable[[float], bool], known_false: float, known_true: float) -> float:
-    """Boundary where pred flips False -> True between the two ends (bisection)."""
-    a, b = known_false, known_true
-    for _ in range(_SATURATION_MAX_ITER):
-        if abs(b - a) <= _SATURATION_REL_TOL * min(abs(a), abs(b)):
-            return b
-        m = 0.5 * (a + b)
-        if pred(m):
-            b = m
-        else:
-            a = m
-    return b
 
 
 class AmineReactivePackage(Thermo):
@@ -553,7 +533,7 @@ class AmineReactivePackage(Thermo):
     def _boundary(
         self,
         z: dict[str, float],
-        kind: str,
+        kind: Literal["bubble", "dew"],
         *,
         T: float | None = None,
         P: float | None = None,
@@ -562,46 +542,36 @@ class AmineReactivePackage(Thermo):
 
         The vapour fraction is continuous inside the two-phase envelope and
         plateaus at 1 (below the dew point / above the dew temperature) and 0
-        (above the bubble point / below the bubble temperature).  The unknown
-        is scanned geometrically from a Wilson-correlation bound until the
-        target plateau is met, then bisected on the plateau transition (P1-01's
-        ``_state._saturation`` method applied to this package's vf).
+        (above the bubble point / below the bubble temperature).  The shared
+        plateau-scan-then-bracketed-secant solver (``thermo.saturation``,
+        spec P1-08) runs on this package's vf between Wilson-correlation
+        bounds (defined past Tc).
         """
         if (T is None) == (P is None):
             raise ValueError("specify exactly one of T and P")
         non_acid = [cid for cid in self._support(z) if cid not in _ACID_GAS_IDS]
-        target = 0.0 if kind == "bubble" else 1.0
 
         def vf_at(x: float) -> float:
             return self._equilibrium_internal(z, T if T is not None else x, P if P is not None else x)[1]
 
-        def on_plateau(x: float) -> bool:
-            return abs(vf_at(x) - target) <= _PLATEAU_EPS
-
         if T is not None:
             w = [_wilson_psat(cid, T) for cid in non_acid]
-            lo, hi = 0.5 * min(w), 3.0 * max(w)
+            bounds = (0.5 * min(w), 3.0 * max(w))
             label = f"T={T} K"
-            x_known = lo if kind == "bubble" else hi
-            x_scan = _scan_to_plateau(vf_at, x_known, other=hi if kind == "bubble" else lo, target=target)
+            unknown: Literal["P", "T"] = "P"
         else:
-            bounds = [t for cid in non_acid if (t := _wilson_T(cid, cast(float, P))) is not None]
-            if not bounds:
-                raise SaturationError(f"no Wilson T bound at P={P} Pa for {sorted(z)}")
-            lo, hi = 0.9 * min(bounds), 1.15 * max(bounds)
-            label = f"P={P} Pa"
-            x_known = hi if kind == "bubble" else lo
-            x_scan = _scan_to_plateau(vf_at, x_known, other=lo if kind == "bubble" else hi, target=target)
+            p_given = cast(float, P)
+            bounds_t = [t for cid in non_acid if (t := _wilson_T(cid, p_given)) is not None]
+            if not bounds_t:
+                raise SaturationError(f"no Wilson T bound at P={p_given} Pa for {sorted(z)}")
+            bounds = (0.9 * min(bounds_t), 1.15 * max(bounds_t))
+            label = f"P={p_given} Pa"
+            unknown = "T"
 
-        if not on_plateau(x_scan):  # pragma: no cover - _scan_to_plateau raises first
-            raise SaturationError(f"no {kind} point of {sorted(z)} at {label}")
-
-        x_star = _bisect_predicate(on_plateau, x_known, x_scan)
+        x_star = solve_saturation(vf_at, kind=kind, unknown=unknown, bounds=bounds, label=label)
         if T is not None:
-            return SaturationPoint(T=T, P=x_star, kind=cast(Any, kind), incipient_composition=dict(z))
-        return SaturationPoint(
-            T=x_star, P=cast(float, P), kind=cast(Any, kind), incipient_composition=dict(z)
-        )
+            return SaturationPoint(T=T, P=x_star, kind=kind, incipient_composition=dict(z))
+        return SaturationPoint(T=x_star, P=cast(float, P), kind=kind, incipient_composition=dict(z))
 
     # -- properties -----------------------------------------------------------
 
@@ -857,24 +827,6 @@ def _phase(kind: PhaseKind, mole_fraction: float, composition: dict[str, float],
         entropy=props.entropy,
         cp=props.cp,
         ln_phi=dict(props.ln_phi),
-    )
-
-
-def _scan_to_plateau(vf_at: Callable[[float], float], start: float, *, other: float, target: float) -> float:
-    """First point on the target vf plateau, scanning from ``start`` away from ``other``.
-
-    Geometric scan (factor 1.3, P1-01's semantics); SaturationError when the
-    scan passes the opposite bound without finding the plateau.
-    """
-    x = start
-    for _ in range(_SCAN_MAX_STEPS):
-        x = x * _SCAN_FACTOR if start < other else x / _SCAN_FACTOR
-        if abs(vf_at(x) - target) <= _PLATEAU_EPS:
-            return x
-        if (x > other) if start < other else (x < other):
-            break
-    raise SaturationError(
-        f"no {target:.0f}-vapour-fraction plateau reachable from {start:.4g} toward {other:.4g}"
     )
 
 
