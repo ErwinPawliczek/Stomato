@@ -597,20 +597,20 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 binary_cases:
-- id: psrk-meohh2o-97.99kPa-349.05K
+- id: psrk-meohh2o-101.325kPa-349.05K
   package: pending:psrk
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.24
-    H2O: 0.76
-  P: 97990.0
-  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 349.05
     vapor_comp:
-      MeOH: 0.68
+      MeOH: 0.7197
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
@@ -659,20 +659,20 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
-- id: vtpr-meohh2o-97.99kPa-349.05K
+- id: vtpr-meohh2o-101.325kPa-349.05K
   package: pending:vtpr
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.24
-    H2O: 0.76
-  P: 97990.0
-  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 349.05
     vapor_comp:
-      MeOH: 0.68
+      MeOH: 0.7197
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
@@ -721,20 +721,20 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
-- id: pr-mhv1-meohh2o-97.99kPa-349.05K
+- id: pr-mhv1-meohh2o-101.325kPa-349.05K
   package: pending:pr_mhv1
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.24
-    H2O: 0.76
-  P: 97990.0
-  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 349.05
     vapor_comp:
-      MeOH: 0.68
+      MeOH: 0.7197
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
@@ -783,20 +783,20 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
-- id: pr-mhv2-meohh2o-97.99kPa-349.05K
+- id: pr-mhv2-meohh2o-101.325kPa-349.05K
   package: pending:pr_mhv2
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.24
-    H2O: 0.76
-  P: 97990.0
-  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 349.05
     vapor_comp:
-      MeOH: 0.68
+      MeOH: 0.7197
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
@@ -845,20 +845,20 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
-- id: srk-mhv2-meohh2o-97.99kPa-349.05K
+- id: srk-mhv2-meohh2o-101.325kPa-349.05K
   package: pending:srk_mhv2
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.24
-    H2O: 0.76
-  P: 97990.0
-  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 349.05
     vapor_comp:
-      MeOH: 0.68
+      MeOH: 0.7197
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
@@ -907,20 +907,20 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
-- id: pr-wong-sandler-meohh2o-97.99kPa-349.05K
+- id: pr-wong-sandler-meohh2o-101.325kPa-349.05K
   package: pending:pr_wong_sandler
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.24
-    H2O: 0.76
-  P: 97990.0
-  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 349.05
     vapor_comp:
-      MeOH: 0.68
+      MeOH: 0.7197
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
@@ -969,20 +969,20 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
-- id: srk-wong-sandler-meohh2o-97.99kPa-349.05K
+- id: srk-wong-sandler-meohh2o-101.325kPa-349.05K
   package: pending:srk_wong_sandler
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.24
-    H2O: 0.76
-  P: 97990.0
-  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 349.05
     vapor_comp:
-      MeOH: 0.68
+      MeOH: 0.7197
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
@@ -1031,20 +1031,20 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
-- id: pr-huron-vidal-meohh2o-97.99kPa-349.05K
+- id: pr-huron-vidal-meohh2o-101.325kPa-349.05K
   package: pr_huron_vidal
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.24
-    H2O: 0.76
-  P: 97990.0
-  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 349.05
     vapor_comp:
-      MeOH: 0.68
+      MeOH: 0.7197
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
@@ -1095,20 +1095,20 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
-- id: lcvm-meohh2o-97.99kPa-349.05K
+- id: lcvm-meohh2o-101.325kPa-349.05K
   package: pending:lcvm
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.24
-    H2O: 0.76
-  P: 97990.0
-  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 349.05
     vapor_comp:
-      MeOH: 0.68
+      MeOH: 0.7197
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02

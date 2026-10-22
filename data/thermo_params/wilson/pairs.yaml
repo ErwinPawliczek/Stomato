@@ -52,3 +52,6 @@ pairs:
       0.003 in y of the same answer at the 97.99 kPa point, so the case point
       itself is suspect (issue #100); both wilson-ig MeOH/H2O cases stay
       dormant and no fit is shipped.
+      2026-10-22 (issue #100 resolution): the 97.99 kPa series was replaced with
+      Gao (2012) 101.325 kPa (case ids meohh2o-101.325kPa-*); the measurements
+      above refer to the retired Bennett (1929) point.
