@@ -13,6 +13,7 @@ Evidence ladder:
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 
 import pytest
 from thermo import ChemicalConstantsPackage
@@ -29,14 +30,14 @@ R_GAS = 8.31446261815324
 _T, _P = 350.0, 101325.0
 
 
-def _meoh_h2o_rule():
+def _meoh_h2o_rule() -> tuple[ChemicalConstantsPackage, HuronVidal]:
     """Huron-Vidal rule over the ChemSep NRTL databank, MeOH/H2O support."""
     consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
     provider = _nrtl_provider([c for c in consts.CASs], ("methanol", "water"))
     return consts, HuronVidal(provider)
 
 
-def _helmholtz_lnphi(rule, eos, xs, root_z):
+def _helmholtz_lnphi(rule: HuronVidal, eos: PRMIX_HV, xs: Sequence[float], root_z: float) -> list[float]:
     """Finite-difference ln phi via n*A_res/(R T) mole-number derivatives.
 
     PR form written directly from the residual Helmholtz departure,
@@ -47,7 +48,7 @@ def _helmholtz_lnphi(rule, eos, xs, root_z):
     # Total volume for the 1-mol reference state:
     V_tot = root_z * R_GAS * _T / _P
 
-    def F(nn):
+    def F(nn: Sequence[float]) -> float:
         ntot = sum(nn)
         v = V_tot / ntot
         xxs = [x / ntot for x in nn]
@@ -55,9 +56,12 @@ def _helmholtz_lnphi(rule, eos, xs, root_z):
         b = sum(x * bi for x, bi in zip(xxs, eos.bs, strict=True))
         s = 2.0 * math.sqrt(2.0) * b
         delta = 2.0 * b  # eps = -b^2 only enters the cubic, not A_res
-        return ntot * (
-            -math.log((v - b) / v)
-            + st.a / (R_GAS * _T * s) * math.log((2 * v + delta - s) / (2 * v + delta + s))
+        return float(
+            ntot
+            * (
+                -math.log((v - b) / v)
+                + st.a / (R_GAS * _T * s) * math.log((2 * v + delta - s) / (2 * v + delta + s))
+            )
         )
 
     n0 = [x for x in xs]
@@ -91,7 +95,9 @@ class _ToyProvider(GEProvider):
         (-0.4, 1.7, 0.0),
     )
 
-    def state(self, T, xs):
+    def state(
+        self, T: float, xs: Sequence[float]
+    ) -> tuple[float, tuple[float, ...], float, float, tuple[float, ...]]:
         n = len(xs)
         g = sum(xs[i] * xs[j] * self.B[i][j] for i in range(n) for j in range(n))
         g_x = tuple(
@@ -106,7 +112,7 @@ class _ToyProvider(GEProvider):
 
 
 class TestVdw1Identity:
-    def test_pr_bit_identical_to_prmix(self):
+    def test_pr_bit_identical_to_prmix(self) -> None:
         from thermo import PRMIX
 
         consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
@@ -130,7 +136,7 @@ class TestVdw1Identity:
         assert hosted.lnphis_g == base.lnphis_g
         assert hosted.lnphis_l == base.lnphis_l
 
-    def test_pure_feed_collapses_to_prmix(self):
+    def test_pure_feed_collapses_to_prmix(self) -> None:
         from thermo import PRMIX
 
         consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
@@ -160,7 +166,7 @@ class TestVdw1Identity:
 
 class TestAnalyticLnphi:
     @pytest.mark.parametrize("zs", ([0.3, 0.7], [0.5, 0.5]))
-    def test_hv_lnphi_matches_helmholtz_fd_both_roots(self, zs):
+    def test_hv_lnphi_matches_helmholtz_fd_both_roots(self, zs: Sequence[float]) -> None:
         consts, rule = _meoh_h2o_rule()
         eos = PRMIX_HV(
             Tcs=consts.Tcs,
@@ -179,7 +185,7 @@ class TestAnalyticLnphi:
 
 
 class TestRuleAlgebra:
-    def test_binary_euler_identity(self):
+    def test_binary_euler_identity(self) -> None:
         consts, rule = _meoh_h2o_rule()
         eos = PRMIX_HV(
             Tcs=consts.Tcs,
@@ -196,7 +202,7 @@ class TestRuleAlgebra:
         assert sum(x * axt for x, axt in zip(xs, st.a_xT, strict=True)) == pytest.approx(0.0, abs=1e-12)
 
     @pytest.mark.parametrize("xs", ((0.2, 0.3, 0.5), (0.9, 0.05, 0.05)))
-    def test_ternary_mole_number_fd(self, xs):
+    def test_ternary_mole_number_fd(self, xs: tuple[float, ...]) -> None:
         rule = HuronVidal(_ToyProvider())
         consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
         # Dummy third component: the rule layer is provider-agnostic; only
@@ -220,7 +226,7 @@ class TestRuleAlgebra:
             n_up[i] += h
             n_dn[i] -= h
 
-            def a_total(nn):
+            def a_total(nn: Sequence[float]) -> float:
                 ntot = sum(nn)
                 st_t = rule.state(_T, tuple(x / ntot for x in nn), pa, tuple(eos.bs))
                 return ntot * st_t.a
@@ -230,7 +236,7 @@ class TestRuleAlgebra:
 
 
 class TestProviderContract:
-    def test_thermo_provider_derivative_temperature_shape(self):
+    def test_thermo_provider_derivative_temperature_shape(self) -> None:
         """d(g)/dT of gE/(RT) matches a central difference in T."""
         consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
         provider = _nrtl_provider([c for c in consts.CASs], ("methanol", "water"))
@@ -241,7 +247,7 @@ class TestProviderContract:
         g_dn = provider.state(_T - h, xs)[0]
         assert g_t == pytest.approx((g_up - g_dn) / (2.0 * h), rel=1e-6)
 
-    def test_gE_vanishes_at_pure_endpoints(self):
+    def test_gE_vanishes_at_pure_endpoints(self) -> None:
         """NRTL gE must be zero (and smooth) at both pure-endpoint feeds."""
         consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
         provider = _nrtl_provider([c for c in consts.CASs], ("methanol", "water"))
