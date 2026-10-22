@@ -50,8 +50,8 @@ from thermo import CEOSGas, CEOSLiquid
 from thermo.activity import GibbsExcess
 from thermo.eos_mix import (
     PRMIX,
-    TWUPRMIX,
     SRKMIX,
+    TWUPRMIX,
     PR_lnphis,
     SRK_lnphis,
     a_alpha_and_derivatives_quadratic_terms,
@@ -74,16 +74,6 @@ __all__ = [
     "MHV1",
     "MHV2",
     "PRHuronVidalThermo",
-    "MHV1Rule",
-    "VTPRRule",
-    "LCVMRule",
-    "SRKMIX_PSRK",
-    "SRKMIX_MC",
-    "PRMIX_VTPR",
-    "PRMIX_LCVM",
-    "SRKPSRKThermo",
-    "PRVTPRThermo",
-    "PRLCVMThermo",
     "PRMHV1Thermo",
     "PRMHV2Thermo",
     "PRMIX_HV",
@@ -95,6 +85,16 @@ __all__ = [
     "SRKMIX_MHV2",
     "SRKMIX_WS",
     "SRKWongSandlerThermo",
+    "MHV1Rule",
+    "VTPRRule",
+    "LCVMRule",
+    "SRKMIX_PSRK",
+    "SRKMIX_MC",
+    "PRMIX_VTPR",
+    "PRMIX_LCVM",
+    "SRKPSRKThermo",
+    "PRVTPRThermo",
+    "PRLCVMThermo",
 ]
 
 
@@ -515,18 +515,18 @@ def _rule_for(eos_cls: type[Any], provider: GEProvider) -> GERule:
     kind = getattr(eos_cls, "rule_kind", None)
     if kind == "hv":
         return HuronVidal(provider, HuronVidal.M_PR)
-    if kind == "psrk":
-        return MHV1Rule(provider, MHV1Rule.Q1_SRK)
-    if kind == "vtpr":
-        return VTPRRule(provider)
-    if kind == "lcvm":
-        return LCVMRule(provider)
     if kind == "mhv1":
         return MHV1(provider, q1=eos_cls.q1)
     if kind == "mhv2":
         return MHV2(provider, q1=eos_cls.q1, q2=eos_cls.q2)
     if kind == "ws":
         return WongSandler(provider, eos_cls.ws_c)
+    if kind == "psrk":
+        return MHV1Rule(provider, MHV1Rule.Q1_SRK)
+    if kind == "vtpr":
+        return VTPRRule(provider)
+    if kind == "lcvm":
+        return LCVMRule(provider)
     raise ValueError(f"EOS class {eos_cls!r} declares no mixing rule")
 
 
@@ -610,26 +610,6 @@ class PRHuronVidalThermo(MixingRuleThermo):
     ge_kind = "nrtl"
 
 
-
-# ----------------------------------------------------------------------------
-# T-06c: PSRK, VTPR, LCVM (self-contained block; see head note on issue #141)
-# ----------------------------------------------------------------------------
-
-
-class MHV1Rule(GERule):
-    """MHV1 (Michelsen 1990; Dahl & Michelsen 1990), zero-pressure gE reference.
-
-    ``alpha_m = A + (g + F)/q1`` with ``A = sum x_i a_i/(b_i R T)`` (the
-    dimensionless pure-component moments) and ``F = sum x_i ln(b_i/b)`` the
-    Michelsen covolume term (linear b).  ``q1`` is the signed per-EOS constant:
-    ``q1 = -0.64663`` for SRK (Holderbaum & Gmehling 1991, PSRK); for a pure
-    feed ``g = F = 0`` and the rule collapses exactly to the base cubic.
-    """
-
-    Q1_SRK = -0.64663  # SRK, Holderbaum & Gmehling (1991)
-    Q1_PR = -0.62363  # PR, Dahl & Michelsen (1990)
-
-    def __init__(self, provider: GEProvider, q1: float = Q1_SRK):
 # ----------------------------------------------------------------------------
 # Wong-Sandler (1992) — second-virial-consistent gE mixing (T-06a, step 2)
 # ----------------------------------------------------------------------------
@@ -963,35 +943,6 @@ class MHV1(GERule):
     def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
         n = len(xs)
         g, gx, gT, gTT, gxT = self.provider.state(T, tuple(xs))
-        A, A_T, A_TT = _alpha_moments(pa, xs, bs, T)
-        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
-        fl, fl_x = _flory(xs, b, bs)
-        alpha_m = A + (g + fl) / self.q1
-        alpha_x = tuple(
-            _a_brt(pa, k, bs[k], T)[0] + (gx[k] + fl_x[k]) / self.q1 for k in range(n)
-        )
-        # F is T-independent (linear b).
-        alpha_xT = tuple(_a_brt(pa, k, bs[k], T)[1] + gxT[k] / self.q1 for k in range(n))
-        return _linear_rule_state(
-            alpha_m, A_T + gT / self.q1, A_TT + gTT / self.q1, alpha_x, alpha_xT, b, T, bs, xs
-        )
-
-
-class VTPRRule(GERule):
-    """VTPR mixing rule (Ahlers & Gmehling 2001): residual-gE reference.
-
-    ``alpha_m = A - g_res/0.53087`` where the gE model supplies the *residual*
-    part only - the VTPR UNIFAC variant (thermo version 3) omits the
-    combinatorial contribution, matching the source form.  Declared deviations
-    of the hosted form: linear covolume mixing (the paper's power-mean b
-    combining) and thermo's generalised Twu alpha on the host class (the
-    Ahlers-Gmehling fitted Twu table is not openly available).
-    """
-
-    A1_INV = 1.0 / 0.53087
-
-    def __init__(self, provider: GEProvider):
-        self.provider = provider
         b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
         s = s_t = s_tt = 0.0
         ab: list[tuple[float, float, float]] = []
@@ -1036,6 +987,163 @@ class MHV2(GERule):
         self.provider = provider
         self.q1 = q1
         self.q2 = q2
+
+    def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
+        n = len(xs)
+        g, gx, gT, gTT, gxT = self.provider.state(T, tuple(xs))
+        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
+        q1, q2 = self.q1, self.q2
+        s = s_t = s_tt = s2 = 0.0
+        ab: list[tuple[float, float, float]] = []
+        for k in range(n):
+            v, vt, vtt = _a_brt(pa, k, bs[k], T)
+            ab.append((v, vt, vtt))
+            s += xs[k] * v
+            s2 += xs[k] * v * v
+            s_t += xs[k] * vt
+            s_tt += xs[k] * vtt
+        f = sum(x * math.log(bi / b) for x, bi in zip(xs, bs, strict=True) if x)
+        c = -q1 * s - q2 * s2 - g + f
+        d = math.sqrt(q1 * q1 - 4.0 * q2 * c)
+        alpha = (-q1 - d) / (2.0 * q2)
+        # d alpha / d c = 1/d carries every first derivative; the second T
+        # derivative additionally carries the chain term 2 q2 c_T^2 / d^3.
+        # s2 = sum x_i ab_i^2 is a second MOMENT: its T derivatives are not
+        # those of s^2 (2 s s_t / s_t^2 + s s_tt); they use the per-component
+        # pairs (ab_i, ab_iT) and (ab_iT, ab_iTT).
+        s2_t = 2.0 * sum(x * ab[k][0] * ab[k][1] for k, x in enumerate(xs))
+        s2_tt = 2.0 * sum(x * (ab[k][1] ** 2 + ab[k][0] * ab[k][2]) for k, x in enumerate(xs))
+        c_t = -q1 * s_t - q2 * s2_t - gT
+        c_tt = -q1 * s_tt - q2 * s2_tt - gTT
+        c_x_raw = tuple(
+            -q1 * ab[k][0] - q2 * ab[k][0] ** 2 - gx[k] + math.log(bs[k]) - bs[k] / b for k in range(n)
+        )
+        c_xT_raw = tuple(-q1 * ab[k][1] - 2.0 * q2 * ab[k][0] * ab[k][1] - gxT[k] for k in range(n))
+        alpha_t = c_t / d
+        alpha_tt = c_tt / d + 2.0 * q2 * c_t * c_t / (d * d * d)
+        alpha_x_raw = tuple(cv / d for cv in c_x_raw)
+        # Mixed derivative: d/dT of c_x/d = c_xT/d + c_x * (d 1/d/dT); with
+        # d 1/d/dT = +2 q2 c_T / d^3 (d_T = -2 q2 c_T / d).
+        alpha_xT_raw = tuple(
+            cxT / d + 2.0 * q2 * cx * c_t / (d * d * d) for cxT, cx in zip(c_xT_raw, c_x_raw, strict=True)
+        )
+        return _linear_rule_state(alpha, alpha_t, alpha_tt, alpha_x_raw, alpha_xT_raw, b, T, bs, xs)
+
+
+class _RuleHost:
+    """Shared ``rule=`` kwarg handling for GCEOSMIX rule hosts.
+
+    ``thermo``'s ``GCEOSMIX.__init__`` takes no rule, so each host pops it
+    before delegation; the rule instance must be attached before the first
+    calculation (same contract as ``PRMIX_HV``).
+    """
+
+    def __init__(self, *args: Any, rule: GERule | None = None, **kwargs: Any) -> None:
+        self.rule = rule
+        super().__init__(*args, **kwargs)
+
+
+class PRMIX_MHV1(_RuleHost, _GEMixingEOS, PRMIX):  # type: ignore[misc]
+    """PRMIX with the MHV1 rule (Michelsen 1990), ``q1 = -0.53``."""
+
+    lnphi_kernel = staticmethod(PR_lnphis)
+    rule_kind = "mhv1"
+    q1 = -0.53
+
+
+class PRMIX_MHV2(_RuleHost, _GEMixingEOS, PRMIX):  # type: ignore[misc]
+    """PRMIX with the MHV2 rule (Dahl & Michelsen 1990), ``q1/q2 = -0.4347/-0.003654``."""
+
+    lnphi_kernel = staticmethod(PR_lnphis)
+    rule_kind = "mhv2"
+    q1 = -0.4347
+    q2 = -0.003654
+
+
+class SRKMIX_MHV2(_RuleHost, _GEMixingEOS, SRKMIX):  # type: ignore[misc]
+    """SRKMIX with the MHV2 rule (Dahl & Michelsen 1990), ``q1/q2 = -0.4783/-0.0047``."""
+
+    lnphi_kernel = staticmethod(SRK_lnphis)
+    rule_kind = "mhv2"
+    q1 = -0.4783
+    q2 = -0.0047
+
+
+class PRMHV1Thermo(MixingRuleThermo):
+    """Peng-Robinson with the MHV1 rule (Michelsen 1990) over NRTL gE."""
+
+    eos = PRMIX_MHV1
+    ge_kind = "nrtl"
+
+
+class PRMHV2Thermo(MixingRuleThermo):
+    """Peng-Robinson with the MHV2 rule (Dahl & Michelsen 1990) over NRTL gE."""
+
+    eos = PRMIX_MHV2
+    ge_kind = "nrtl"
+
+
+class SRKMHV2Thermo(MixingRuleThermo):
+    """SRK with the MHV2 rule (Dahl & Michelsen 1990) over NRTL gE."""
+
+    eos = SRKMIX_MHV2
+    ge_kind = "nrtl"
+
+
+# ----------------------------------------------------------------------------
+# T-06c: PSRK, VTPR, LCVM (self-contained block; see head note on issue #141)
+# ----------------------------------------------------------------------------
+
+
+class MHV1Rule(GERule):
+    """MHV1 (Michelsen 1990; Dahl & Michelsen 1990), zero-pressure gE reference.
+
+    ``alpha_m = A + (g + F)/q1`` with ``A = sum x_i a_i/(b_i R T)`` (the
+    dimensionless pure-component moments) and ``F = sum x_i ln(b_i/b)`` the
+    Michelsen covolume term (linear b).  ``q1`` is the signed per-EOS constant:
+    ``q1 = -0.64663`` for SRK (Holderbaum & Gmehling 1991, PSRK); for a pure
+    feed ``g = F = 0`` and the rule collapses exactly to the base cubic.
+    """
+
+    Q1_SRK = -0.64663  # SRK, Holderbaum & Gmehling (1991)
+    Q1_PR = -0.62363  # PR, Dahl & Michelsen (1990)
+
+    def __init__(self, provider: GEProvider, q1: float = Q1_SRK):
+        self.provider = provider
+        self.q1 = q1
+
+    def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
+        n = len(xs)
+        g, gx, gT, gTT, gxT = self.provider.state(T, tuple(xs))
+        A, A_T, A_TT = _alpha_moments(pa, xs, bs, T)
+        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
+        fl, fl_x = _flory(xs, b, bs)
+        alpha_m = A + (g + fl) / self.q1
+        alpha_x = tuple(
+            _a_brt(pa, k, bs[k], T)[0] + (gx[k] + fl_x[k]) / self.q1 for k in range(n)
+        )
+        # F is T-independent (linear b).
+        alpha_xT = tuple(_a_brt(pa, k, bs[k], T)[1] + gxT[k] / self.q1 for k in range(n))
+        return _linear_rule_state(
+            alpha_m, A_T + gT / self.q1, A_TT + gTT / self.q1, alpha_x, alpha_xT, b, T, bs, xs
+        )
+
+
+class VTPRRule(GERule):
+    """VTPR mixing rule (Ahlers & Gmehling 2001): residual-gE reference.
+
+    ``alpha_m = A - g_res/0.53087`` where the gE model supplies the *residual*
+    part only - the VTPR UNIFAC variant (thermo version 3) omits the
+    combinatorial contribution, matching the source form.  Declared deviations
+    of the hosted form: linear covolume mixing (the paper's power-mean b
+    combining) and thermo's generalised Twu alpha on the host class (the
+    Ahlers-Gmehling fitted Twu table is not openly available).
+    """
+
+    A1_INV = 1.0 / 0.53087
+
+    def __init__(self, provider: GEProvider):
+        self.provider = provider
 
     def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
         n = len(xs)
@@ -1238,100 +1346,3 @@ class PRLCVMThermo(MixingRuleThermo):
 
     eos = PRMIX_LCVM
     ge_kind = "unifac"
-        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
-        q1, q2 = self.q1, self.q2
-        s = s_t = s_tt = s2 = 0.0
-        ab: list[tuple[float, float, float]] = []
-        for k in range(n):
-            v, vt, vtt = _a_brt(pa, k, bs[k], T)
-            ab.append((v, vt, vtt))
-            s += xs[k] * v
-            s2 += xs[k] * v * v
-            s_t += xs[k] * vt
-            s_tt += xs[k] * vtt
-        f = sum(x * math.log(bi / b) for x, bi in zip(xs, bs, strict=True) if x)
-        c = -q1 * s - q2 * s2 - g + f
-        d = math.sqrt(q1 * q1 - 4.0 * q2 * c)
-        alpha = (-q1 - d) / (2.0 * q2)
-        # d alpha / d c = 1/d carries every first derivative; the second T
-        # derivative additionally carries the chain term 2 q2 c_T^2 / d^3.
-        # s2 = sum x_i ab_i^2 is a second MOMENT: its T derivatives are not
-        # those of s^2 (2 s s_t / s_t^2 + s s_tt); they use the per-component
-        # pairs (ab_i, ab_iT) and (ab_iT, ab_iTT).
-        s2_t = 2.0 * sum(x * ab[k][0] * ab[k][1] for k, x in enumerate(xs))
-        s2_tt = 2.0 * sum(x * (ab[k][1] ** 2 + ab[k][0] * ab[k][2]) for k, x in enumerate(xs))
-        c_t = -q1 * s_t - q2 * s2_t - gT
-        c_tt = -q1 * s_tt - q2 * s2_tt - gTT
-        c_x_raw = tuple(
-            -q1 * ab[k][0] - q2 * ab[k][0] ** 2 - gx[k] + math.log(bs[k]) - bs[k] / b for k in range(n)
-        )
-        c_xT_raw = tuple(-q1 * ab[k][1] - 2.0 * q2 * ab[k][0] * ab[k][1] - gxT[k] for k in range(n))
-        alpha_t = c_t / d
-        alpha_tt = c_tt / d + 2.0 * q2 * c_t * c_t / (d * d * d)
-        alpha_x_raw = tuple(cv / d for cv in c_x_raw)
-        # Mixed derivative: d/dT of c_x/d = c_xT/d + c_x * (d 1/d/dT); with
-        # d 1/d/dT = +2 q2 c_T / d^3 (d_T = -2 q2 c_T / d).
-        alpha_xT_raw = tuple(
-            cxT / d + 2.0 * q2 * cx * c_t / (d * d * d) for cxT, cx in zip(c_xT_raw, c_x_raw, strict=True)
-        )
-        return _linear_rule_state(alpha, alpha_t, alpha_tt, alpha_x_raw, alpha_xT_raw, b, T, bs, xs)
-
-
-class _RuleHost:
-    """Shared ``rule=`` kwarg handling for GCEOSMIX rule hosts.
-
-    ``thermo``'s ``GCEOSMIX.__init__`` takes no rule, so each host pops it
-    before delegation; the rule instance must be attached before the first
-    calculation (same contract as ``PRMIX_HV``).
-    """
-
-    def __init__(self, *args: Any, rule: GERule | None = None, **kwargs: Any) -> None:
-        self.rule = rule
-        super().__init__(*args, **kwargs)
-
-
-class PRMIX_MHV1(_RuleHost, _GEMixingEOS, PRMIX):  # type: ignore[misc]
-    """PRMIX with the MHV1 rule (Michelsen 1990), ``q1 = -0.53``."""
-
-    lnphi_kernel = staticmethod(PR_lnphis)
-    rule_kind = "mhv1"
-    q1 = -0.53
-
-
-class PRMIX_MHV2(_RuleHost, _GEMixingEOS, PRMIX):  # type: ignore[misc]
-    """PRMIX with the MHV2 rule (Dahl & Michelsen 1990), ``q1/q2 = -0.4347/-0.003654``."""
-
-    lnphi_kernel = staticmethod(PR_lnphis)
-    rule_kind = "mhv2"
-    q1 = -0.4347
-    q2 = -0.003654
-
-
-class SRKMIX_MHV2(_RuleHost, _GEMixingEOS, SRKMIX):  # type: ignore[misc]
-    """SRKMIX with the MHV2 rule (Dahl & Michelsen 1990), ``q1/q2 = -0.4783/-0.0047``."""
-
-    lnphi_kernel = staticmethod(SRK_lnphis)
-    rule_kind = "mhv2"
-    q1 = -0.4783
-    q2 = -0.0047
-
-
-class PRMHV1Thermo(MixingRuleThermo):
-    """Peng-Robinson with the MHV1 rule (Michelsen 1990) over NRTL gE."""
-
-    eos = PRMIX_MHV1
-    ge_kind = "nrtl"
-
-
-class PRMHV2Thermo(MixingRuleThermo):
-    """Peng-Robinson with the MHV2 rule (Dahl & Michelsen 1990) over NRTL gE."""
-
-    eos = PRMIX_MHV2
-    ge_kind = "nrtl"
-
-
-class SRKMHV2Thermo(MixingRuleThermo):
-    """SRK with the MHV2 rule (Dahl & Michelsen 1990) over NRTL gE."""
-
-    eos = SRKMIX_MHV2
-    ge_kind = "nrtl"
