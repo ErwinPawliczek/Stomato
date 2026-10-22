@@ -43,7 +43,7 @@ Declared case ids:
 - `pr-huron-vidal-pure-MeOH-330K` — coolprop:Methanol
 - `pr-huron-vidal-pure-H2O-340K` — coolprop:Water
 - `pr-huron-vidal-pure-H2O-370K` — coolprop:Water
-- `pr-huron-vidal-meohh2o-97.99kPa-349.05K` — Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+- `pr-huron-vidal-meohh2o-101.325kPa-349.05K` — Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
 - `pr-huron-vidal-meohh2o-312.91K-20.705kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20
 
 ## References

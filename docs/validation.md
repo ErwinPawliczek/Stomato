@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-22T14:04:37+00:00 from `data/validation/results.json` (git ef4bc04, CoolProp 8.0.0).
+Generated 2026-10-22T15:38:10+00:00 from `data/validation/results.json` (git f154a2a, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -589,29 +589,29 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | bubble_T | 3 | 2 | 66.7 % |
 | vapor_comp | 4 | 4 | 100.0 % |
 
-### package `nrtl` — 29/62 pass (46.8 %)
+### package `nrtl` — 37/62 pass (59.7 %)
 
 | property | n | pass | rate |
 | --- | --- | --- | --- |
 | Cp | 4 | 0 | 0.0 % |
 | bubble_P | 17 | 4 | 23.5 % |
-| bubble_T | 8 | 5 | 62.5 % |
+| bubble_T | 8 | 8 | 100.0 % |
 | dew_P | 4 | 4 | 100.0 % |
 | rho_L | 4 | 4 | 100.0 % |
 | rho_V | 4 | 3 | 75.0 % |
-| vapor_comp | 21 | 9 | 42.9 % |
+| vapor_comp | 21 | 14 | 66.7 % |
 
-### package `nrtl_hoc` — 21/31 pass (67.7 %)
+### package `nrtl_hoc` — 28/31 pass (90.3 %)
 
 | property | n | pass | rate |
 | --- | --- | --- | --- |
 | Cp | 3 | 1 | 33.3 % |
 | bubble_P | 3 | 3 | 100.0 % |
-| bubble_T | 8 | 5 | 62.5 % |
+| bubble_T | 8 | 7 | 87.5 % |
 | dew_P | 3 | 3 | 100.0 % |
 | rho_L | 3 | 3 | 100.0 % |
 | rho_V | 3 | 3 | 100.0 % |
-| vapor_comp | 8 | 3 | 37.5 % |
+| vapor_comp | 8 | 8 | 100.0 % |
 
 ### package `pr` — 213/278 pass (76.6 %)
 
@@ -909,17 +909,17 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | bubble_T | 3 | 2 | 66.7 % |
 | vapor_comp | 4 | 4 | 100.0 % |
 
-### package `wilson_nothnagel` — 22/31 pass (71.0 %)
+### package `wilson_nothnagel` — 29/31 pass (93.5 %)
 
 | property | n | pass | rate |
 | --- | --- | --- | --- |
 | Cp | 3 | 1 | 33.3 % |
 | bubble_P | 3 | 3 | 100.0 % |
-| bubble_T | 8 | 6 | 75.0 % |
+| bubble_T | 8 | 8 | 100.0 % |
 | dew_P | 3 | 3 | 100.0 % |
 | rho_L | 3 | 3 | 100.0 % |
 | rho_V | 3 | 3 | 100.0 % |
-| vapor_comp | 8 | 3 | 37.5 % |
+| vapor_comp | 8 | 8 | 100.0 % |
 
 ### package `zudkevitch-joffe-rk` — 19/26 pass (73.1 %)
 
@@ -932,7 +932,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_V | 4 | 4 | 100.0 % |
 | vapor_comp | 1 | 1 | 100.0 % |
 
-## Failing comparisons (435)
+## Failing comparisons (413)
 
 | case | package | property | expected | got | err | source |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1042,7 +1042,6 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pr-bm-ng-dew-morch-254.6K-0.68MPa | pr-bm | dew_P | 680000 | 828676 | 0.218641 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | pure-C2-285K | pr | Cp | 132.286 | 161.185 | 0.218456 | coolprop:Ethane |
 | pure-C2-285K | pr78 | Cp | 132.286 | 161.185 | 0.218456 | coolprop:Ethane |
-| pr-huron-vidal-meohh2o-97.99kPa-349.05K | pr_huron_vidal | vapor_comp | 0.68 | 0.472128 | 0.207872 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | pure-nC4-403.9K | pr | Cp | 236.805 | 285.411 | 0.205254 | coolprop:n-Butane |
 | pure-nC4-403.9K | pr78 | Cp | 236.805 | 285.411 | 0.205254 | coolprop:n-Butane |
 | prsv-ng-dew-morch-260.8K-1.04MPa | prsv | dew_P | 1.04e+06 | 1.25191e+06 | 0.20376 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
@@ -1233,6 +1232,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | prsv2-pure-CO2-265K | prsv2 | Cp | 103.056 | 111.252 | 0.0795349 | coolprop:CO2 |
 | pure-H2O-323.5K | pr | Cp | 75.3335 | 81.2495 | 0.0785313 | coolprop:Water |
 | pure-H2O-323.5K | pr78 | Cp | 75.3335 | 81.2495 | 0.0785313 | coolprop:Water |
+| pr-huron-vidal-meohh2o-101.325kPa-349.05K | pr_huron_vidal | vapor_comp | 0.7197 | 0.643194 | 0.076506 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
 | rk-c1c3-294.26K-6.895MPa | rk | bubble_P | 6.895e+06 | 6.3692e+06 | 0.0762584 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | pure-C3-184.9K | pr | Cp | 91.8478 | 84.9224 | 0.0754009 | coolprop:Propane |
 | pure-C3-184.9K | pr78 | Cp | 91.8478 | 84.9224 | 0.0754009 | coolprop:Propane |
@@ -1256,9 +1256,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-C3-300K | srk | Cp | 120.805 | 128.942 | 0.0673599 | coolprop:Propane |
 | sour-srk-pure-C3-300K | sour-srk | Cp | 120.805 | 128.942 | 0.0673599 | coolprop:Propane |
 | kabadi-danner-srk-pure-C3-300K | kabadi-danner-srk | Cp | 120.805 | 128.942 | 0.0673599 | coolprop:Propane |
-| meohh2o-97.99kPa-353.25K | nrtl | vapor_comp | 0.568 | 0.501294 | 0.0667056 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | pr-huron-vidal-meohh2o-312.91K-20.705kPa | pr_huron_vidal | vapor_comp | 0.8053 | 0.738809 | 0.0664911 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-353.25K-hoc | nrtl_hoc | vapor_comp | 0.568 | 0.502563 | 0.0654371 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | pure-H2S-187.8K | srk | Cp | 68.8292 | 64.4186 | 0.0640809 | coolprop:H2S |
 | pure-nC4-350K | srk | Cp | 163.885 | 174.284 | 0.0634523 | coolprop:n-Butane |
 | meohh2o-312.91K-20.705kPa | nrtl | bubble_P | 20705 | 22016.4 | 0.0633373 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
@@ -1272,9 +1270,6 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | meohh2o-322.91K-15.932kPa | nrtl | vapor_comp | 0.2741 | 0.334853 | 0.0607532 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | pure-C2-250K | pr | Cp | 90.0242 | 95.4911 | 0.0607269 | coolprop:Ethane |
 | pure-C2-250K | pr78 | Cp | 90.0242 | 95.4911 | 0.0607269 | coolprop:Ethane |
-| meohh2o-97.99kPa-353.25K-nothnagel | wilson_nothnagel | vapor_comp | 0.568 | 0.507817 | 0.0601826 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-365.45K-hoc | nrtl_hoc | vapor_comp | 0.227 | 0.16682 | 0.0601802 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-365.45K | nrtl | vapor_comp | 0.227 | 0.166878 | 0.0601223 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | pure-H2O-600K | pr | rho_V | 72.8423 | 68.6719 | 0.0572533 | coolprop:Water |
 | pure-H2O-600K | pr78 | rho_V | 72.8423 | 68.6719 | 0.0572533 | coolprop:Water |
 | meohh2o-322.91K-31.544kPa | nrtl | bubble_P | 31544 | 33347.3 | 0.0571669 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
@@ -1284,14 +1279,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-C1-95.3K | srk | Cp | 54.3155 | 57.3174 | 0.0552677 | coolprop:CH4 |
 | pure-H2S-240K | pr | Cp | 68.4609 | 64.6799 | 0.0552282 | coolprop:H2S |
 | pure-H2S-240K | pr78 | Cp | 68.4609 | 64.6799 | 0.0552282 | coolprop:H2S |
-| meohh2o-97.99kPa-349.05K-nothnagel | wilson_nothnagel | vapor_comp | 0.68 | 0.626658 | 0.0533424 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-349.05K | nrtl | vapor_comp | 0.68 | 0.627719 | 0.0522811 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-312.91K-13.012kPa | nrtl | vapor_comp | 0.6214 | 0.570676 | 0.0507236 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-349.05K-hoc | nrtl_hoc | vapor_comp | 0.68 | 0.629609 | 0.0503909 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-360.65K | nrtl | vapor_comp | 0.391 | 0.341179 | 0.049821 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-360.65K-hoc | nrtl_hoc | vapor_comp | 0.391 | 0.341649 | 0.0493507 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| pr-huron-vidal-meohh2o-97.99kPa-349.05K | pr_huron_vidal | bubble_T | 349.05 | 365.395 | 0.0468271 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-365.45K-nothnagel | wilson_nothnagel | vapor_comp | 0.227 | 0.180695 | 0.0463053 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-312.91K-27.518kPa | nrtl | bubble_P | 27518 | 28779.4 | 0.0458403 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | meohh2o-312.91K-20.705kPa | nrtl | vapor_comp | 0.8053 | 0.759733 | 0.0455667 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | srk-boston-mathias-c1co2-277.15K-5.97MPa | srk-boston-mathias | bubble_P | 5.97e+06 | 5.70042e+06 | 0.0451553 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
@@ -1301,8 +1289,6 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | c1c3-277.59K-1.724MPa | pr | bubble_P | 1.724e+06 | 1.65127e+06 | 0.0421879 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-277.59K-1.724MPa | pr78 | bubble_P | 1.724e+06 | 1.65127e+06 | 0.0421879 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-5.861MPa | srk | bubble_P | 5.861e+06 | 5.61512e+06 | 0.0419517 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-369.65K-hoc | nrtl_hoc | vapor_comp | 0.103 | 0.0614353 | 0.0415647 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-369.65K | nrtl | vapor_comp | 0.103 | 0.0615315 | 0.0414685 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | c1c3-327.59K-5.861MPa | pr | bubble_P | 5.861e+06 | 5.62072e+06 | 0.0409961 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-5.861MPa | pr78 | bubble_P | 5.861e+06 | 5.62072e+06 | 0.0409961 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | pure-H2O-520K | srk | rho_V | 18.9001 | 18.1349 | 0.0404873 | coolprop:Water |
@@ -1320,8 +1306,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | c1c3-327.59K-4.482MPa | pr | bubble_P | 4.482e+06 | 4.3208e+06 | 0.0359663 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-4.482MPa | pr78 | bubble_P | 4.482e+06 | 4.3208e+06 | 0.0359663 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-4.482MPa | srk | bubble_P | 4.482e+06 | 4.32193e+06 | 0.0357143 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-360.65K-nothnagel | wilson_nothnagel | vapor_comp | 0.391 | 0.355758 | 0.0352417 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-369.65K-nothnagel | wilson_nothnagel | vapor_comp | 0.103 | 0.0682673 | 0.0347327 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| pr-huron-vidal-meohh2o-101.325kPa-349.05K | pr_huron_vidal | bubble_T | 349.05 | 361.236 | 0.0349114 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
 | meohh2o-322.91K-31.544kPa | nrtl | vapor_comp | 0.758 | 0.723318 | 0.0346816 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | c1co2-283.15K-7.24MPa | srk | bubble_P | 7.24e+06 | 6.99089e+06 | 0.0344076 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
 | c1c3-294.26K-8.963MPa | pr | vapor_comp | 0.7561 | 0.721745 | 0.0343551 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
@@ -1360,17 +1345,10 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | c1c3-294.26K-8.963MPa | srk | vapor_comp | 0.7561 | 0.732695 | 0.0234047 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | c1c3-294.26K-8.274MPa | pr | vapor_comp | 0.7567 | 0.736645 | 0.020055 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | c1c3-294.26K-8.274MPa | pr78 | vapor_comp | 0.7567 | 0.736645 | 0.020055 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-353.25K | nrtl | bubble_T | 353.25 | 356.827 | 0.010127 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | uniquac-ig-megh2o-383.15K-101.325kPa | uniquac_ig | bubble_T | 383.15 | 379.31 | 0.0100231 | literature:Coker, Perry's Chemical Engineers' Handbook, McGraw-Hill, T-x-y table for ethylene glycol/water at 760 mmHg (Elsevier companion Fig. M-46); retrieved 2026-10-21 |
 | wilson-ig-megh2o-383.15K-101.325kPa | wilson_ig | bubble_T | 383.15 | 379.439 | 0.00968491 | literature:Coker, Perry's Chemical Engineers' Handbook, McGraw-Hill, T-x-y table for ethylene glycol/water at 760 mmHg (Elsevier companion Fig. M-46); retrieved 2026-10-21 |
-| meohh2o-97.99kPa-353.25K-hoc | nrtl_hoc | bubble_T | 353.25 | 356.568 | 0.00939359 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | margules-ig-megh2o-383.15K-101.325kPa | margules_ig | bubble_T | 383.15 | 379.799 | 0.00874672 | literature:Coker, Perry's Chemical Engineers' Handbook, McGraw-Hill, T-x-y table for ethylene glycol/water at 760 mmHg (Elsevier companion Fig. M-46); retrieved 2026-10-21 |
-| meohh2o-97.99kPa-353.25K-nothnagel | wilson_nothnagel | bubble_T | 353.25 | 356.2 | 0.00834965 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-349.05K | nrtl | bubble_T | 349.05 | 351.756 | 0.00775345 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-349.05K-hoc | nrtl_hoc | bubble_T | 349.05 | 351.44 | 0.00684718 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-349.05K-nothnagel | wilson_nothnagel | bubble_T | 349.05 | 351.382 | 0.00668104 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-365.45K | nrtl | bubble_T | 365.45 | 367.631 | 0.0059681 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
-| meohh2o-97.99kPa-365.45K-hoc | nrtl_hoc | bubble_T | 365.45 | 367.449 | 0.0054687 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-101.325kPa-341.20K-hoc | nrtl_hoc | bubble_T | 341.2 | 339.382 | 0.00532886 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
 
 ## Case assessments (marked xfail in the test suite)
 
@@ -1426,6 +1404,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `kabadi-danner-srk-pure-C3-300K` — Cp +6.7% (128.942 vs 120.805); rho_L -8.4% (448.204 vs 489.447) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table).
 - `kabadi-danner-srk-pure-CO2-265K` — Cp +12.2% (115.671 vs 103.056); rho_L -11.8% (857.989 vs 973.254) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table).
 - `margules-ig-megh2o-383.15K-101.325kPa` — bubble_T -0.87 % (379.80 vs 383.15 K) vs the 0.5 % tolerance — the MEG/H2O in-house fit is a single-point fit to the 431.25 K case and the independent 383.15 K Coker/Perry point sits outside it; no general databank pair shipped (measured 2026-10-22).
+- `meohh2o-101.325kPa-341.20K-hoc` — bubble_T -0.53% (339.3818 vs 341.2), just outside the 0.5 % band, at the methanol-rich end - Gao (2012) report their pure-methanol boiling point 0.41 K above the literature value (338.10 vs 337.69 K, their Table 1), a systematic warm bias the databank NRTL pair does not track; vapour composition passes (0.9272 vs 0.9221) (measured 2026-10-22, issue #100 resolution).
 - `meohh2o-312.91K-13.012kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-312.91K-16.319kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-312.91K-20.705kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
@@ -1439,21 +1418,6 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `meohh2o-322.91K-40.850kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-322.91K-46.450kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-322.91K-52.142kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-349.05K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-349.05K-hoc` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-349.05K-nothnagel` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-353.25K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-353.25K-hoc` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-353.25K-nothnagel` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-360.65K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-360.65K-hoc` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-360.65K-nothnagel` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-365.45K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-365.45K-hoc` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-365.45K-nothnagel` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-369.65K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-369.65K-hoc` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
-- `meohh2o-97.99kPa-369.65K-nothnagel` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `ng-dew-morch-243.4K-0.30MPa (pr)` — dew_P +35.5% (406518 vs 300000) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `ng-dew-morch-243.4K-0.30MPa (pr78)` — dew_P +35.5% (406518 vs 300000) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `ng-dew-morch-243.4K-0.30MPa (srk)` — dew_P +25.9% (377792 vs 300000) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
@@ -1477,8 +1441,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `pr-boston-mathias-ng-dew-morch-260.8K-1.04MPa` — dew_P +18.9% (1.23705e+06 vs 1.04e+06) - Boston-Mathias alpha (finite supercritical continuation) inherits PR property limits (measured 2026-10-22, PR #161 table).
 - `pr-boston-mathias-pure-C1-125K` — rho_L +11.8% (449.652 vs 402.111) - Boston-Mathias alpha (finite supercritical continuation) inherits PR property limits (measured 2026-10-22, PR #161 table).
 - `pr-boston-mathias-pure-CO2-265K` — Cp +8.1% (111.409 vs 103.056) - Boston-Mathias alpha (finite supercritical continuation) inherits PR property limits (measured 2026-10-22, PR #161 table).
+- `pr-huron-vidal-meohh2o-101.325kPa-349.05K` — bubble_T +3.5% (361.236 vs 349.05); vapor_comp -0.077 abs (0.643194 vs 0.7197) - the ChemSep NRTL binary parameters are low-pressure gamma-phi fits, not Huron-Vidal (infinite-pressure reference) parameters; the HV rule needs its own fitted set (Huron & Vidal 1979 section 4), which is not in an open databank; the MHV/WS rules exist precisely to reuse low-pressure gE parameters (measured 2026-10-22 on the Gao 2012 101.325 kPa point, issue #100 resolution; the earlier +4.7% / -0.208 values were measured on the retired Bennett 1929 point).
 - `pr-huron-vidal-meohh2o-312.91K-20.705kPa` — bubble_P -35.7% (13313.9 vs 20705); vapor_comp -0.066 abs (0.738809 vs 0.8053) - same cause: low-pressure NRTL parameters in the infinite-pressure HV reference (measured 2026-10-22, review of PR #175).
-- `pr-huron-vidal-meohh2o-97.99kPa-349.05K` — bubble_T +4.7% (365.395 vs 349.05); vapor_comp -0.208 abs (0.472128 vs 0.68) - the ChemSep NRTL binary parameters are low-pressure gamma-phi fits, not Huron-Vidal (infinite-pressure reference) parameters; the HV rule needs its own fitted set (Huron & Vidal 1979 section 4), which is not in an open databank; the MHV/WS rules exist precisely to reuse low-pressure gE parameters (measured 2026-10-22, review of PR #175).
 - `pr-huron-vidal-pure-H2O-340K` — rho_L -15.9% (823.513 vs 979.503); Cp +8.0% (81.5128 vs 75.4562) - pure-component limits of the untranslated PR form (measured 2026-10-22, review of PR #175).
 - `pr-huron-vidal-pure-H2O-370K` — rho_L -16.4% (802.915 vs 960.587); Cp +8.7% (82.4488 vs 75.8833) - pure-component limits of the untranslated PR form (measured 2026-10-22, review of PR #175).
 - `pr-huron-vidal-pure-MeOH-305K` — rho_L -13.2% (676.721 vs 779.805); Cp +36.7% (112.917 vs 82.6135) - pure-component limits of the untranslated PR form (the Huron-Vidal rule reduces to PR for a pure component; same misses as the pr row) (measured 2026-10-22, review of PR #175).
@@ -1704,7 +1668,6 @@ Pure-fluid expected values are generated from the CoolProp reference EOS (versio
 - AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen 50/50 mol %); retrieved 2026-10-21
 - Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20
 - Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
-- Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
 - Coker, Perry's Chemical Engineers' Handbook, McGraw-Hill, T-x-y table for ethylene glycol/water at 760 mmHg (Elsevier companion Fig. M-46); retrieved 2026-10-21
 - Courtial, Soo, Coquelet, Paricaud, Ramjugernath & Richon (2009) Fluid Phase Equilib. 277, pp. 152-161, Table 4, 323.22 K isotherm; retrieved 2026-10-21
 - Culberson & McKetta (1951) J. Pet. Technol. 3, 223-226; IUPAC SDS 27/28 printed p. 31, 100 F isotherm; retrieved 2026-10-20
@@ -1714,6 +1677,7 @@ Pure-fluid expected values are generated from the CoolProp reference EOS (versio
 - Culberson & McKetta, methane in water, J. Petrol. Technol., vol. 3, p. 223, 1951, as compiled in the IUPAC Solubility Data Series vol. 27/28 (Methane), pp. 31-32, https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf; x_C1 0.001123 at 6.55 MPa; retrieved 2026-10-21
 - DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
 - Ethanol/water azeotrope at 760 mmHg: b.p. 78.20 C, 4.40 wt% water (x_EtOH = 0.8947 mole fraction) - Edinburgh Azeotrope Database (homepages.ed.ac.uk/jwp/Chemeng/azeotrope/EE.html, CRC Handbook/Lange compilation); retrieved 2026-10-21
+- Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
 - Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (doi 10.1021/je700210n), CH4+N2 149.989 K isotherm; retrieved 2026-10-21
 - Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (doi 10.1021/je700210n), CH4+N2 159.972 K isotherm; retrieved 2026-10-21
 - Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (doi 10.1021/je700210n), CH4+N2 179.976 K isotherm; retrieved 2026-10-21

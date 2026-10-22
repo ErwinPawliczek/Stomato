@@ -33,7 +33,7 @@
   - pr-huron-vidal-pure-MeOH-330K
   - pr-huron-vidal-pure-H2O-340K
   - pr-huron-vidal-pure-H2O-370K
-  - pr-huron-vidal-meohh2o-97.99kPa-349.05K
+  - pr-huron-vidal-meohh2o-101.325kPa-349.05K
   - pr-huron-vidal-meohh2o-312.91K-20.705kPa
   references:
   - Huron, M.-J. & Vidal, J., Fluid Phase Equilib. 3, 255-271, 1979
@@ -46,7 +46,7 @@
     pr-huron-vidal-pure-MeOH-330K: "rho_V -3.2% (0.882017 vs 0.911218); rho_L -13.2% (656.228 vs 755.882); Cp +31.4% (116.265 vs 88.5047) - pure-component limits of the untranslated PR form (measured 2026-10-22, review of PR #175)"
     pr-huron-vidal-pure-H2O-340K: "rho_L -15.9% (823.513 vs 979.503); Cp +8.0% (81.5128 vs 75.4562) - pure-component limits of the untranslated PR form (measured 2026-10-22, review of PR #175)"
     pr-huron-vidal-pure-H2O-370K: "rho_L -16.4% (802.915 vs 960.587); Cp +8.7% (82.4488 vs 75.8833) - pure-component limits of the untranslated PR form (measured 2026-10-22, review of PR #175)"
-    pr-huron-vidal-meohh2o-97.99kPa-349.05K: "bubble_T +4.7% (365.395 vs 349.05); vapor_comp -0.208 abs (0.472128 vs 0.68) - the ChemSep NRTL binary parameters are low-pressure gamma-phi fits, not Huron-Vidal (infinite-pressure reference) parameters; the HV rule needs its own fitted set (Huron & Vidal 1979 section 4), which is not in an open databank; the MHV/WS rules exist precisely to reuse low-pressure gE parameters (measured 2026-10-22, review of PR #175)"
+    pr-huron-vidal-meohh2o-101.325kPa-349.05K: "bubble_T +3.5% (361.236 vs 349.05); vapor_comp -0.077 abs (0.643194 vs 0.7197) - the ChemSep NRTL binary parameters are low-pressure gamma-phi fits, not Huron-Vidal (infinite-pressure reference) parameters; the HV rule needs its own fitted set (Huron & Vidal 1979 section 4), which is not in an open databank; the MHV/WS rules exist precisely to reuse low-pressure gE parameters (measured 2026-10-22 on the Gao 2012 101.325 kPa point, issue #100 resolution; the earlier +4.7% / -0.208 values were measured on the retired Bennett 1929 point)"
     pr-huron-vidal-meohh2o-312.91K-20.705kPa: "bubble_P -35.7% (13313.9 vs 20705); vapor_comp -0.066 abs (0.738809 vs 0.8053) - same cause: low-pressure NRTL parameters in the infinite-pressure HV reference (measured 2026-10-22, review of PR #175)"
   l0_note: >-
     provisional on L0 only: the 6 bound T-12 cases all miss (declared above; the two C1/H2O

@@ -14,7 +14,7 @@
 # Layer assignment (per spec L1/L2/L3):
 #   L1 pure          : pure-C1-*, pure-CO2-* (PC-SAFT row), pure-H2O-*, pure-MeOH-* (CPA-SRK row).
 #   L2 binary        : c1co2-* (Petropoulou 2018, PC-SAFT row) and
-#                      meohh2o-*97.99kPa* (Bennett 1929, CPA-SRK row).
+#                      meohh2o-*101.325kPa* (Gao 2012, CPA-SRK row).
 #   L3 canonical     : meohh2o-*322.91K* (Bayer 1927 isotherm; near-pure-MeOH rectification
 #                      region where CPA association chemistry dominates — the family's
 #                      L3-associating case).
@@ -468,60 +468,63 @@ binary_cases:
     bubble_P: 7361100.0
     vapor_comp:
       CO2: 0.99142
-# --- L2: MeOH + H2O isobaric VLE (Bennett 1929) — CPA-SRK row --------------------------------
-# Bennett & Dodge (1929), Ind. Eng. Chem. 21, 284-288 (also in Ind. Eng. Chem. 21, 1075,
-# 1929 per DDB Explorer data set 466), methanol/water at 97.99 kPa, retrieved 2026-10-20
-# (values were verified against the archived DDB Explorer page). Three mid-range points of
-# the published table; the root nrtl file carries the same source at all eight published
-# x points, so this set deliberately overlaps it to give the CPA row binary coverage.
-- id: meohh2o-97.99kPa-353.25K
+# --- L2: MeOH + H2O isobaric VLE (Gao 2012) — CPA-SRK row ------------------------------------
+# Re-anchored on 2026-10-22 (issue #100 resolution): the retired Bennett (1929) 97.99 kPa
+# points are inconsistent with every independent modern reference (Perry's 1-atm table and
+# the ChemSep NRTL/UNIQUAC/Wilson parameterisations, PR #150 review finding). Replacement:
+# Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251,
+# DOI 10.1155/2012/641251, methanol/water at 101.325 kPa, retrieved 2026-10-22 (open access).
+# Three points of the published table; the root nrtl file carries the same source at all
+# eight published x points, so this set deliberately overlaps it to give the CPA row binary
+# coverage.
+- id: meohh2o-101.325kPa-353.25K
   package: pending:cpa_srk
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.137
-    H2O: 0.863
-  P: 97990.0
-  source: literature:Bennett & Dodge (1929) Ind. Eng. Chem. 21, 284-288, methanol/water at 97.99 kPa, via archived DDB Explorer VLE data set 466; retrieved 2026-10-20
+    MeOH: 0.2380
+    H2O: 0.762
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 353.25
     vapor_comp:
-      MeOH: 0.568
+      MeOH: 0.6237
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
-- id: meohh2o-97.99kPa-349.05K
+- id: meohh2o-101.325kPa-349.05K
   package: pending:cpa_srk
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.24
-    H2O: 0.76
-  P: 97990.0
-  source: literature:Bennett & Dodge (1929) Ind. Eng. Chem. 21, 284-288, methanol/water at 97.99 kPa, via archived DDB Explorer VLE data set 466; retrieved 2026-10-20
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
     bubble_T: 349.05
     vapor_comp:
-      MeOH: 0.68
+      MeOH: 0.7197
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
-- id: meohh2o-97.99kPa-343.75K
+- id: meohh2o-101.325kPa-346.20K
   package: pending:cpa_srk
   components:
   - MeOH
   - H2O
   z:
-    MeOH: 0.48
-    H2O: 0.52
-  P: 97990.0
-  source: literature:Bennett & Dodge (1929) Ind. Eng. Chem. 21, 284-288, methanol/water at 97.99 kPa, via archived DDB Explorer VLE data set 466; retrieved 2026-10-20
+    MeOH: 0.5240
+    H2O: 0.476
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
   expected:
-    bubble_T: 343.75
+    bubble_T: 346.2
     vapor_comp:
-      MeOH: 0.79
+      MeOH: 0.7860
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02

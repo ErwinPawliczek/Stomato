@@ -46,6 +46,9 @@ pairs:
       pairs give the same answer within 0.35 K at the 97.99 kPa point, so the
       case point itself is suspect (issue #100); both uniquac-ig MeOH/H2O cases
       stay dormant.
+      2026-10-22 (issue #100 resolution): the 97.99 kPa series was replaced with
+      Gao (2012) 101.325 kPa (case ids meohh2o-101.325kPa-*); the measurements
+      above refer to the retired Bennett (1929) point.
   etohh2o:
     fitted: false
     params: null  # ChemSep IPDB bij (EtOH<->H2O)

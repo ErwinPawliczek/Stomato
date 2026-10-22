@@ -28,14 +28,14 @@
     - VLL
   status: provisional
   validation:
-  - meohh2o-97.99kPa-369.65K
-  - meohh2o-97.99kPa-365.45K
-  - meohh2o-97.99kPa-360.65K
-  - meohh2o-97.99kPa-353.25K
-  - meohh2o-97.99kPa-349.05K
-  - meohh2o-97.99kPa-343.75K
-  - meohh2o-97.99kPa-341.85K
-  - meohh2o-97.99kPa-339.55K
+  - meohh2o-101.325kPa-366.0K
+  - meohh2o-101.325kPa-361.35K
+  - meohh2o-101.325kPa-356.95K
+  - meohh2o-101.325kPa-353.25K
+  - meohh2o-101.325kPa-349.05K
+  - meohh2o-101.325kPa-346.20K
+  - meohh2o-101.325kPa-343.31K
+  - meohh2o-101.325kPa-341.20K
   - meohh2o-312.91K-9.079kPa
   - meohh2o-312.91K-13.012kPa
   - meohh2o-312.91K-16.319kPa
@@ -182,14 +182,14 @@
   - pure-H2O-323.5K-hoc
   - pure-H2O-420K-hoc
   - pure-nC4-350K-hoc
-  - meohh2o-97.99kPa-369.65K-hoc
-  - meohh2o-97.99kPa-365.45K-hoc
-  - meohh2o-97.99kPa-360.65K-hoc
-  - meohh2o-97.99kPa-353.25K-hoc
-  - meohh2o-97.99kPa-349.05K-hoc
-  - meohh2o-97.99kPa-343.75K-hoc
-  - meohh2o-97.99kPa-341.85K-hoc
-  - meohh2o-97.99kPa-339.55K-hoc
+  - meohh2o-101.325kPa-366.0K-hoc
+  - meohh2o-101.325kPa-361.35K-hoc
+  - meohh2o-101.325kPa-356.95K-hoc
+  - meohh2o-101.325kPa-353.25K-hoc
+  - meohh2o-101.325kPa-349.05K-hoc
+  - meohh2o-101.325kPa-346.20K-hoc
+  - meohh2o-101.325kPa-343.31K-hoc
+  - meohh2o-101.325kPa-341.20K-hoc
   references:
   - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
     (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
@@ -202,6 +202,7 @@
   assessed:
     pure-H2O-420K-hoc: "Cp -23.9% (58.9479 vs 77.4472) - gamma-phi packages carry no residual liquid-Cp contribution, so saturated-liquid Cp under-predicts away from 298 K (the same limitation the amine row assessed per the PR #161 table; measured 2026-10-22)"
     pure-nC4-350K-hoc: "Cp -30.8% (113.4552 vs 163.8853) - same known gamma-phi liquid-Cp limitation (no residual liquid-Cp contribution; measured 2026-10-22)"
+    meohh2o-101.325kPa-341.20K-hoc: "bubble_T -0.53% (339.3818 vs 341.2), just outside the 0.5 % band, at the methanol-rich end - Gao (2012) report their pure-methanol boiling point 0.41 K above the literature value (338.10 vs 337.69 K, their Table 1), a systematic warm bias the databank NRTL pair does not track; vapour composition passes (0.9272 vs 0.9221) (measured 2026-10-22, issue #100 resolution)"
 
 - id: nrtl_nothnagel
   name: NRTL liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
@@ -626,14 +627,14 @@
   - pure-H2O-323.5K-nothnagel
   - pure-H2O-420K-nothnagel
   - pure-nC4-350K-nothnagel
-  - meohh2o-97.99kPa-369.65K-nothnagel
-  - meohh2o-97.99kPa-365.45K-nothnagel
-  - meohh2o-97.99kPa-360.65K-nothnagel
-  - meohh2o-97.99kPa-353.25K-nothnagel
-  - meohh2o-97.99kPa-349.05K-nothnagel
-  - meohh2o-97.99kPa-343.75K-nothnagel
-  - meohh2o-97.99kPa-341.85K-nothnagel
-  - meohh2o-97.99kPa-339.55K-nothnagel
+  - meohh2o-101.325kPa-366.0K-nothnagel
+  - meohh2o-101.325kPa-361.35K-nothnagel
+  - meohh2o-101.325kPa-356.95K-nothnagel
+  - meohh2o-101.325kPa-353.25K-nothnagel
+  - meohh2o-101.325kPa-349.05K-nothnagel
+  - meohh2o-101.325kPa-346.20K-nothnagel
+  - meohh2o-101.325kPa-343.31K-nothnagel
+  - meohh2o-101.325kPa-341.20K-nothnagel
   references:
   - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
     25-35, 1973 (b/K parameter table not available from open sources)
