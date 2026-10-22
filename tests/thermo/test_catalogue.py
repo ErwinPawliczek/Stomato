@@ -100,12 +100,14 @@ def test_rows_load_and_build() -> None:
     saft_ids = [
         "cpa_pr",
         "cpa_srk",
+        "gerg2008_teqp",
         "multifluid",
         "multifluid_pure",
         "pc_saft",
         "pc_saft_assoc",
         "pc_saft_polar",
         "saft_vr_mie",
+        "soft_saft",
     ]
     kvalue_ids = [
         "antoine-ideal-k",
@@ -157,7 +159,7 @@ def test_rows_load_and_build() -> None:
     expected = sorted(
         gamma_phi_ids + nrtl_ids + helmholtz_ids + non_gamma + saft_ids + kvalue_ids + special_ids
     )
-    assert len(expected) == 122
+    assert len(expected) == 124
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {

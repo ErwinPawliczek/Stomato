@@ -17,22 +17,24 @@ from ngdesign.thermo.teqp_bridge import SaftDependencyMissing
 SAFT_IDS = (
     "cpa_pr",
     "cpa_srk",
+    "gerg2008_teqp",
     "multifluid",
     "multifluid_pure",
     "pc_saft",
     "pc_saft_assoc",
     "pc_saft_polar",
     "saft_vr_mie",
+    "soft_saft",
 )
 # Rows teqp 0.23.2 cannot serve; each refuses to build with the engine named (spec
 # requirement). Their l0 declarations are empty and the refusal reason is recorded in
 # the row's l0_excluded.
-REFUSING_IDS = ("cpa_pr", "pc_saft_assoc", "pc_saft_polar")
-BUILDABLE_IDS = ("cpa_srk", "multifluid", "multifluid_pure", "pc_saft", "saft_vr_mie")
+REFUSING_IDS = ("cpa_pr", "pc_saft_assoc", "pc_saft_polar", "soft_saft")
+BUILDABLE_IDS = ("cpa_srk", "gerg2008_teqp", "multifluid", "multifluid_pure", "pc_saft", "saft_vr_mie")
 
 
 def test_saft_rows_register_as_experimental() -> None:
-    """The eight saft rows load with the real catalogue, marked experimental (T-07)."""
+    """The ten saft rows load with the real catalogue, marked experimental (T-07)."""
     rows = catalogue.load_catalogue()
     for rid in SAFT_IDS:
         assert rows[rid].status == "experimental", f"{rid}: row must stay experimental"
@@ -72,6 +74,7 @@ class TestConstructionContract:
         from ngdesign import registry
         from ngdesign.thermo.teqp_bridge import (
             CpaSrkThermo,
+            Gerg2008TeqpThermo,
             MultifluidPureThermo,
             MultifluidThermo,
             PCSaftThermo,
@@ -84,6 +87,7 @@ class TestConstructionContract:
             "cpa_srk": CpaSrkThermo,
             "multifluid": MultifluidThermo,
             "multifluid_pure": MultifluidPureThermo,
+            "gerg2008_teqp": Gerg2008TeqpThermo,
         }
         for rid, cls in expected.items():
             assert type(registry.create("thermo", rid)) is cls, rid
@@ -134,3 +138,21 @@ class TestNamedSpotChecks:
         # (documented deviation in the PR body; 5 % tolerance per the spec).
         sp = pkg.bubble_point({"C1": 0.01528, "CO2": 0.98472}, T=293.130)
         assert sp.P == pytest.approx(6_134_800.0, rel=0.05)
+
+    def test_gerg2008_teqp_c1n2_bubble_130k(self) -> None:
+        """The exact-GERG backend on the rebound T-04 cross-check case (issue #164).
+
+        Literature: 613.7 kPa (Janisch et al. 2007). The Kunz-Wagner (2012) parameter
+        set measures -5.77 % there — the same value CoolProp's HEOS gives, so the pin
+        guards the flash against drift while the parameter miss stays assessed in the
+        row's assessed map (data/thermo_models/saft.yaml), never hidden by a band.
+        """
+        pytest.importorskip("teqp")
+        import CoolProp.CoolProp as CP
+
+        pkg = catalogue.build(catalogue.load_catalogue()["gerg2008_teqp"])
+        sp = pkg.bubble_point({"C1": 0.9539, "N2": 0.0461}, T=130.079)
+        assert sp.P == pytest.approx(578_280.0, rel=0.02)
+        # Backend agreement: the teqp path must keep matching CoolProp HEOS.
+        ref_p = CP.PropsSI("P", "T", 130.079, "Q", 0, "HEOS::Methane[0.9539]&Nitrogen[0.0461]")
+        assert sp.P == pytest.approx(ref_p, rel=0.01)

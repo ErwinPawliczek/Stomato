@@ -284,7 +284,7 @@ binary_cases:
 # (doi 10.1021/je700210n), CH4(1)+N2(2) isothermal VLE: liquid x_N2 with the coexisting
 # pressure and vapour y_N2 from the paired property tables, retrieved 2026-10-21.
 - id: c1n2-130.079K-0.614MPa
-  package: pending:teqp-gerg2008
+  package: gerg2008_teqp
   components:
   - C1
   - N2
@@ -298,12 +298,12 @@ binary_cases:
     vapor_comp:
       N2: 0.3468
   note: >-
-    deferred to the teqp-backed GERG-2008 backend (T-07): CoolProp's fitted C1/N2 interaction
-    parameters miss this 130 K isotherm point by 5.8% (QT 578.3 kPa vs 613.7 kPa literature —
-    probed directly with CoolProp 8.0.0 on 2026-10-21), beyond the 3% band, while the same
-    wrapper reproduces the 159.972 K point to 0.12%, so the miss is the reference backend's
-    binary parameters vs the cited data, not the adapter; the same deferral pattern as the
-    aga8-ng2-* cases above
+    bound to gerg2008_teqp in the T-07 follow-up (issue #164): the exact-backend cross-check
+    the T-04 gerg2008 row deferred. The teqp Kunz-Wagner (2012) parameters converge here and
+    miss bubble_P by -5.77% (578,280 Pa vs 613,700 Pa literature) — the same 578.3 kPa
+    CoolProp's HEOS gives (probed 2026-10-21), so the miss is the shared Kunz-Wagner parameter
+    set vs the NGPSA data, not the backend; vapour_comp passes (+0.0057 abs vs the 0.02 band).
+    The miss is assessed in the row's assessed map; tolerances are untouched.
 - id: c1n2-149.989K-2.908MPa
   package: gerg2008
   components:
@@ -464,12 +464,16 @@ binary_cases:
     vapor_comp:
       CO2: 0.99438
   note: >-
-    deferred to the teqp-backed GERG-2008 backend (T-07): the point sits ~1 K below CO2's
-    critical temperature at ~99% of its critical pressure, and CoolProp's HEOS C1/CO2
-    parameters yield no two-phase solution there (QT fails with a negative guessed density;
-    PQ returns a root 5.5 K above the isotherm — probed directly with CoolProp 8.0.0 on
-    2026-10-21), so the case cannot produce a comparable value; the same deferral pattern as
-    the aga8-ng2-* cases above
+    stays pending (measured against the teqp-backed GERG-2008 backend, T-07 follow-up, issue
+    #164, 2026-10-22): the teqp Kunz-Wagner (2012) parameters DO have a two-phase solution
+    here — a van der Waals loop with its pressure peak at 7.2908 MPa (liquid-branch density
+    window 9309-11530 mol/m3, relative depth 0.04%) — but the model's bubble pressure sits
+    0.2% BELOW the case pressure, so the case state is single-phase per the model and the
+    bridge's density-root scan (coarse geometric grid plus single midpoint probes) cannot
+    resolve the sub-per-mille loop at any scanned pressure; the case would crash rather than
+    miss, and crashes are not declarable. Resolving near-critical loops adaptively is future
+    bridge work, not a parameter question; the same deferral pattern as the aga8-ng2-* cases
+    above
 - id: c1co2-303.144K-7.361MPa
   package: pending:teqp-gerg2008
   components:
