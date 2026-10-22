@@ -40,7 +40,7 @@ Declared exclusions (not silent skips):
 - vs `pr`: ok — dew P 717633 vs 872333 (rel 0.177); rhoV 6.09273 vs 7.41427 (rel 0.178); band 20%
 - vs `pr`: ok — dew P 717633 vs 872333 (rel 0.177); rhoV 6.09273 vs 7.41427 (rel 0.178); band 20%
 - vs `pr`: ok — dew P 717386 vs 872333 (rel 0.178); rhoV 6.08846 vs 7.41427 (rel 0.179); band 20%
-- vs `pr`: ok — dew P 717386 vs 872333 (rel 0.178); rhoV 6.09097 vs 7.41427 (rel 0.178); band 20%
+- vs `pr`: ok — dew P 717386 vs 872333 (rel 0.178); rhoV 6.07898 vs 7.41427 (rel 0.18); band 20%
 - vs `pr78`: ok — dew P 717386 vs 872333 (rel 0.178); rhoV 6.08846 vs 7.41427 (rel 0.179); band 20%
 - vs `prsv`: ok — dew P 724017 vs 872333 (rel 0.17); rhoV 6.14587 vs 7.41427 (rel 0.171); band 20%
 - vs `prsv2`: ok — dew P 724017 vs 872333 (rel 0.17); rhoV 6.14587 vs 7.41427 (rel 0.171); band 20%

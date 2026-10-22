@@ -163,6 +163,11 @@ def _row_status(row_id: str) -> str:
     return row.status if row is not None else ""
 
 
+#: The pre-catalogue root rows whose reference-case assessments live in the family
+#: fallback rules of :func:`xfail_reason`; every other row declares per case.
+_ROOT_CUBIC_ROWS = frozenset({"pr", "srk", "pr78"})
+
+
 def xfail_reason(case: Case, failed_props: frozenset[str], pkg: str | None = None) -> str | None:
     """Assessment for a case whose comparisons failed, or None when it must go red.
 
@@ -192,17 +197,23 @@ def xfail_reason(case: Case, failed_props: frozenset[str], pkg: str | None = Non
             "saturated-phase properties are evaluated at the reference Psat, where this model's "
             "liquid is stretched (model limitation; assessed in docs/validation.md)"
         )
-    if case.id.startswith("pure-") and failed_props <= {"rho_L", "rho_V", "Cp"}:
-        return (
-            "cubic saturation properties beyond tolerance vs the CoolProp reference EOS "
-            "(known cubic EOS limitation, worst near Tc; assessed in docs/validation.md)"
-        )
     case_id = case.id
     if case_id.startswith("meohh2o-"):
         return (
             "NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within "
             "2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md)"
         )
+    if pkg not in _ROOT_CUBIC_ROWS:
+        # Every catalogue row declares its own failing cases in `assessed:` (PR #161
+        # review ruling); the family fallbacks below exist only for the three
+        # pre-catalogue root rows whose assessments predate that mechanism.
+        return None
+    if case.id.startswith("pure-") and failed_props <= {"rho_L", "rho_V", "Cp"}:
+        return (
+            "cubic saturation properties beyond tolerance vs the CoolProp reference EOS "
+            "(known cubic EOS limitation, worst near Tc; assessed in docs/validation.md)"
+        )
+    case_id = case.id
     if case_id.startswith(("c1c3-", "c1co2-")) and failed_props <= {"bubble_P", "vapor_comp"}:
         return (
             "k_ij=0 cubic bubble pressure / vapour composition just beyond tolerance near the "

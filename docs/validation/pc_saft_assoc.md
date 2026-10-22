@@ -29,10 +29,6 @@ Declared exclusions (not silent skips):
 - `round_trip` — row refuses to build — teqp's PC-SAFT has no association term (NotImplementedError in _build_kernel)
 - `single_liquid_limit` — row refuses to build — teqp's PC-SAFT has no association term (NotImplementedError in _build_kernel)
 
-### L4 cross-model pairs
-
-- n/a — refuses the slice feed: NotImplementedError: saft row 'pc_saft_assoc' refuses to build: teqp 0.23.2's PC-SAFT implements no association contribution (teqp docs, PCSAFT.html: 'It does NOT include the association contribution, only the dispersive contributions')
-
 ## L1/L2 reference-case outcomes
 
 None yet — validation case ids arrive with the data tasks (T-11..T-13).

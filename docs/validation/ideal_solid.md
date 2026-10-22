@@ -19,10 +19,6 @@ family `special` · status **experimental** · adapter `ngdesign.thermo.special:
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-### L4 cross-model pairs
-
-- n/a — refuses the slice feed: ValueError: ideal_solid is a solid-liquid equilibrium package and does not flash; use solubility(cid, T). A solid-bearing stream must be routed to the SLE surface, never silently flashed as vapor/liquid
-
 ## L1/L2 reference-case outcomes
 
 None yet — validation case ids arrive with the data tasks (T-11..T-13).

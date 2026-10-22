@@ -19,10 +19,6 @@ family `special` · status **experimental** · adapter `ngdesign.thermo.special:
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-### L4 cross-model pairs
-
-- n/a — refuses the slice feed: ValueError: flory_huggins supports exactly one solvent and one polymer; got 11 components (chi keys name the solvent first: 'solvent/polymer')
-
 ## L1/L2 reference-case outcomes
 
 None yet — validation case ids arrive with the data tasks (T-11..T-13).

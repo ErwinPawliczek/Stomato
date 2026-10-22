@@ -18,17 +18,6 @@ family `gamma_phi` · status **experimental** · adapter `ngdesign.thermo.gamma_
 
 | check | result | worst | measured |
 | --- | --- | --- | --- |
-| pure_psat_limit | FAIL | n/a | raised NotImplementedError: the Hayden-O'Connell (1975) second-virial vapour model is not implemented (spec T-03 deviation: no complete, citable open equation set or association-parameter table was verifiable, so the row registers as experimental and refuses to build rather than invent physics) - select vapour 'ideal' or a cubic vapour ('rk', 'pr') |
-| phase_identification | FAIL | n/a | raised NotImplementedError: the Hayden-O'Connell (1975) second-virial vapour model is not implemented (spec T-03 deviation: no complete, citable open equation set or association-parameter table was verifiable, so the row registers as experimental and refuses to build rather than invent physics) - select vapour 'ideal' or a cubic vapour ('rk', 'pr') |
-| round_trip | FAIL | n/a | raised NotImplementedError: the Hayden-O'Connell (1975) second-virial vapour model is not implemented (spec T-03 deviation: no complete, citable open equation set or association-parameter table was verifiable, so the row registers as experimental and refuses to build rather than invent physics) - select vapour 'ideal' or a cubic vapour ('rk', 'pr') |
-| dhdT_cp | FAIL | n/a | raised NotImplementedError: the Hayden-O'Connell (1975) second-virial vapour model is not implemented (spec T-03 deviation: no complete, citable open equation set or association-parameter table was verifiable, so the row registers as experimental and refuses to build rather than invent physics) - select vapour 'ideal' or a cubic vapour ('rk', 'pr') |
-| gibbs_duhem | FAIL | n/a | raised NotImplementedError: the Hayden-O'Connell (1975) second-virial vapour model is not implemented (spec T-03 deviation: no complete, citable open equation set or association-parameter table was verifiable, so the row registers as experimental and refuses to build rather than invent physics) - select vapour 'ideal' or a cubic vapour ('rk', 'pr') |
-| determinism | FAIL | n/a | raised NotImplementedError: the Hayden-O'Connell (1975) second-virial vapour model is not implemented (spec T-03 deviation: no complete, citable open equation set or association-parameter table was verifiable, so the row registers as experimental and refuses to build rather than invent physics) - select vapour 'ideal' or a cubic vapour ('rk', 'pr') |
-| single_liquid_limit | FAIL | n/a | raised NotImplementedError: the Hayden-O'Connell (1975) second-virial vapour model is not implemented (spec T-03 deviation: no complete, citable open equation set or association-parameter table was verifiable, so the row registers as experimental and refuses to build rather than invent physics) - select vapour 'ideal' or a cubic vapour ('rk', 'pr') |
-
-### L4 cross-model pairs
-
-- n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 
 ## L1/L2 reference-case outcomes
 

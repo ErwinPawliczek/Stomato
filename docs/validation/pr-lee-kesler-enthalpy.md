@@ -20,15 +20,15 @@ family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:PrLee
 | --- | --- | --- | --- |
 | pure_psat_limit | ok | 0 | C1@160K bubble 0 dew 0; C3@300K bubble 0 dew 0; nC4@300K bubble 0 dew 0; H2O@400K bubble 0 dew 0 |
 | phase_identification | ok | 0 | nC4@300K ok; C3@300K ok; H2O@300K ok |
-| round_trip | ok | 4.9e-16 | 350K/3.447e+06Pa T_ph 0 H 0 T_ps 4.9e-16 |
-| dhdT_cp | ok | 0 | 350K/3.447e+06Pa vapor cp 47.3162 dH/dT 47.3162 |
+| round_trip | ok | 4.9e-16 | 350K/3.447e+06Pa T_ph 1.6e-16 H 0 T_ps 4.9e-16 |
+| dhdT_cp | ok | 0 | 350K/3.447e+06Pa vapor cp 47.3241 dH/dT 47.3241 |
 | gibbs_duhem | ok | 2e-07 | ['C1', 'C3']@250K/2e+06Pa hc_liquid 2e-07; ['C1', 'CO2']@250K/2e+06Pa vapor 2.7e-09 |
 | single_liquid_limit | ok | 0 | 250K/2e+06Pa kinds=['hc_liquid'] vf=0.0 |
 | determinism | ok | 0 | two instances bit-identical at 350K/3.447e+06Pa |
 
 ## L1/L2 reference-case outcomes
 
-18/26 comparisons pass. Failing comparisons are assessed in the
+21/26 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
