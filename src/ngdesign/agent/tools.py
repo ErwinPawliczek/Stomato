@@ -27,6 +27,7 @@ from ngdesign.contracts import FeedSpec, Flowsheet, PortRef, Project, StreamSpec
 from ngdesign.contracts.plugins import UnitModel
 from ngdesign.study import Axis, CaseStudy, StudyResult
 from ngdesign.study import run as run_study
+from ngdesign.thermo import advisor
 
 
 class ProjectStore(Protocol):
@@ -243,6 +244,12 @@ def _set_thermo(store: ProjectStore, engine: Engine, *, name: str) -> dict[str, 
     return {"thermo": name}
 
 
+def _recommend_thermo(store: ProjectStore, engine: Engine) -> dict[str, Any]:
+    """Ranked property-method recommendations for the current flowsheet (spec T-08)."""
+    result: dict[str, Any] = advisor.payload(store.get().flowsheet)
+    return result
+
+
 # --- solve / read tools ------------------------------------------------------
 
 
@@ -448,6 +455,16 @@ TOOLS: tuple[ToolSpec, ...] = (
         _schema({"name": {"type": "string"}}),
         _set_thermo,
         mutates=True,
+    ),
+    ToolSpec(
+        "recommend_thermo",
+        "Rank the registered thermo property methods for the CURRENT flowsheet: "
+        "component slate, feed conditions and expected phases, with the rule reasons "
+        "(Carlson 1996, GPSA, Kohl & Nielsen, Prausnitz) and warnings (missing binary "
+        "parameters, free water, provisional status) for each. Call this before "
+        "set_thermo; experimental rows never rank.",
+        _schema({}),
+        _recommend_thermo,
     ),
     ToolSpec(
         "solve",
