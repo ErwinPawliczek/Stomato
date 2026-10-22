@@ -84,3 +84,239 @@
   l0_excluded: *id001
   l0_note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the
     single-liquid limit run today
+- id: pitzer_nacl_water
+  name: Pitzer NaCl(aq) brine (25 C parameter set)
+  family: electrolyte
+  adapter: ngdesign.amine.electrolyte:ElectrolytePitzerNaCl
+  options: {}
+  params:
+    source: data/thermo_params/electrolyte/pitzer.yaml
+    provenance: >-
+      Classic 25 C Pitzer NaCl parameter set (PHRQPITZ convention; beta0 0.0765, beta1 0.2664,
+      Cphi 0.00127, Aphi 0.392) validated against Pitzer, Peiper & Busey (1984), J. Phys. Chem.
+      Ref. Data 13(1): mean activity coefficients (Table A-8, 0.1-6 molal within 0.36 %), osmotic
+      coefficients (Table A-9), and the 298.15 K saturation anchor (6.146 mol/kg at gamma 1.0065;
+      the SLE solve lands 6.155, +0.14 %). Water activity a_w = exp(-2 m phi / 55.5084).
+  applicability:
+    component_classes:
+    - water
+    polar: true
+    electrolyte: true
+    T_K:
+    - 293.15
+    - 303.15
+    P_Pa:
+    - 2000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    notes: >-
+      NaCl-H2O brines at 20-30 C; the parameter set is the 25 C one and temperature dependence
+      enters only through Psat.  Molality clamped to the verified domain (6.15 mol/kg, the
+      saturation anchor).  Na2SO4 is out of scope: no component record resolves in the open
+      registry (documented, T-09).
+  status: provisional
+  validation: []
+  references:
+  - Pitzer, K. S., Peiper, J. C. & Busey, R. H., J. Phys. Chem. Ref. Data 13(1), 1-102, 1984
+  - Plummer, L. N., Parkhurst, D. L. et al., PHRQPITZ, USGS Water-Resources Investigations Report 88-4153
+  l0:
+    single_liquid_limit:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+    round_trip:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      states:
+      - - 298.15
+        - 5000000.0
+    determinism:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+  l0_excluded: &id002
+    pure_psat_limit: applicability is the aqueous electrolyte liquid; the pure-component saturation
+      limits of the molecular databank components are not this package's claimed surface (the
+      involatile salt has no vapour pressure)
+    phase_identification: 'same basis: the single-liquid limit replaces the vapour-pressure bracket
+      for the electrolyte liquid (flash consistency y_i P == p_eq_i is pinned by the T-09 tests)'
+    dhdT_cp: the aqueous cp is the carrier's (no reaction-enthalpy correction is implemented; the
+      spec's acceptance criteria carry no reactive cp), so the dH/dT == Cp identity rides the
+      carrier surface unchanged
+    gibbs_duhem: the aqueous ln_phi carries the electrolyte chemistry (f_w == a_w Psat, f_i ==
+      p_eq_i phi_i^V), not a Gibbs-excess composition derivative; the Gibbs-Duhem identity at
+      fixed T, P is not the composition-consistency surface here -- flash consistency is pinned
+      by the T-09 tests instead
+  l0_note: >-
+    literature anchors run in tests/thermo/test_electrolyte.py — mean activity
+    coefficients from Pitzer, Peiper & Busey 1984 Table A-8 reproduce 0.1-6 molal within
+    0.36 % (spec points 0.1/1/3 m, tolerance 2 %); osmotic coefficient phi(1 m) = 0.9356
+    and water activity a_w(3 m) = 0.8932 match the same tables; the solid-liquid
+    saturation solve gives 6.1548 vs 6.146 mol/kg at 298.15 K (+0.14 %, tolerance 3 %).
+    L0 round trips and the single-liquid limit run today
+- id: sour_water
+  name: Sour water (EPA-600/2-80-067 SWEQ, NH3-H2S-H2O)
+  family: electrolyte
+  adapter: ngdesign.amine.electrolyte:ElectrolyteSourWater
+  options: {}
+  params:
+    source: data/thermo_params/electrolyte/reactions.yaml
+    provenance: >-
+      Wilson, G. M., 'Sour Water Equilibria', EPA-600/2-80-067 (1980): NH3-H2S-H2O speciation
+      with the report's reaction polynomials (k3 association, k5/k6/k7 dissociation;
+      ln k = A + B/T + C/T^2 + D/T^3 + E/T^4, T in degR, concentrations gmol/kg solution) and
+      Henry correlations (psia per gmol/kg solution).  Constants character-verified against the
+      report's printed worked examples (printed pp. 52-53) and cross-checked against DWSIM's
+      transcription; the k5 D-coefficient keeps the report's 2.5551e11 (DWSIM carries 2.555e11,
+      a dropped digit, -3.4 % on k5 at 100 C -- see docs/validation.md).
+  applicability:
+    component_classes:
+    - water
+    - acid_gas
+    polar: true
+    electrolyte: true
+    T_K:
+    - 293.15
+    - 373.15
+    P_Pa:
+    - 2000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    notes: >-
+      Aqueous NH3-H2S-H2O sour water, 20-100 C (the report's validated range).  The CO2/
+      carbonate path of the model is data-side only this cycle: CO2 in a feed refuses at first
+      use (no verified carbonate anchor; documented, T-09).  The report's own Table 19
+      reproduction scatters on dilute/high-strength rows -- a known applicability limit
+      (docs/validation.md).
+  status: provisional
+  validation: []
+  references:
+  - Wilson, G. M., 'Sour Water Equilibria', EPA-600/2-80-067, 1980
+  - Shih, T. S. et al., H2S solubility in buffered aqueous solutions (as tabulated in
+    EPA-600/2-80-067, Table 21)
+  - Edwards, T. J. et al. 1978 (the report's API comparison column)
+  l0:
+    single_liquid_limit:
+      z:
+        H2O: 0.95
+        NH3: 0.03
+        H2S: 0.02
+      state:
+      - 311.15
+      - 5000000.0
+    round_trip:
+      z:
+        H2O: 0.95
+        NH3: 0.03
+        H2S: 0.02
+      states:
+      - - 311.15
+        - 5000000.0
+    determinism:
+      z:
+        H2O: 0.95
+        NH3: 0.03
+        H2S: 0.02
+      state:
+      - 311.15
+      - 5000000.0
+  l0_excluded: *id002
+  l0_note: >-
+    literature anchors run in tests/thermo/test_electrolyte.py — the six printed
+    constants and both Henry correlations match the report's worked examples; H2S partial
+    pressures over the pH-7.00 buffered 0.010-m solution vs Table 21 (API column):
+    59.33/60.14/61.83/68.80 mmHg at 80/100/120/140 C vs 59.3/60.1/61.8/68.0 (+0.1 %,
+    +0.1 %, +0.1 %, +1.2 %; tolerance 10 %); the spec's 90 C point uses the linearly
+    interpolated API anchor 59.70 mmHg (the table has no 90 C row) against the model's
+    59.89 mmHg, +0.32 %. Known applicability limit — EPA Table 19 (Terres) 28 C rows
+    deviate up to +230 % on H2S while the 40 C rows reproduce within +15.7 % NH3 /
+    +8.1 % H2S; the report's own VK and API calculated columns disagree by up to 65 % on
+    the same rows and applying the report's ionic-strength correction to k5 over-corrects
+    (-90 %), so the scatter is a declared limit of this implementation — rely on 40-100 C
+    (the anchors below 40 C are the weak ones). L0 round trips and the single-liquid
+    limit run today
+- id: enrtl_nacl_water
+  name: eNRTL NaCl(aq) -- REFUSED (no open parameter table)
+  family: electrolyte
+  adapter: ngdesign.amine.electrolyte:ElectrolyteENRTLNaCl
+  options: {}
+  params:
+    source: none -- first-use refusal
+    provenance: >-
+      No openly retrievable, citable eNRTL parameter table for NaCl-H2O exists (the published
+      electrolyte-NRTL parameter sets for aqueous salts are not in citable open form, and
+      DWSIM's electrolyte parameter files are not in the open repository).  The T-07 precedent
+      applies: the row refuses at first use rather than ship unverifiable parameters.
+  applicability:
+    component_classes:
+    - water
+    polar: true
+    electrolyte: true
+    T_K:
+    - 293.15
+    - 303.15
+    P_Pa:
+    - 2000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    notes: >-
+      Refusal row: construction succeeds (the catalogue lists it) and every property call
+      raises NotImplementedError naming the gap.
+  status: experimental
+  validation: []
+  references: []
+  l0_note: >-
+    experimental row — L0 exempt; constructs successfully and refuses at first use
+    (NotImplementedError) because no citable open eNRTL parameter table for NaCl-H2O
+    exists (T-07 precedent)
+- id: ext_uniquac_nacl_water
+  name: Extended UNIQUAC NaCl(aq) -- REFUSED (no open parameter table)
+  family: electrolyte
+  adapter: ngdesign.amine.electrolyte:ElectrolyteExtUNIQUAC
+  options: {}
+  params:
+    source: none -- first-use refusal
+    provenance: >-
+      No openly retrievable, citable extended-UNIQUAC parameter table for NaCl-H2O exists
+      (Thomsen & Rasmussen's fitted parameters are not published in citable open form).  The
+      T-07 precedent applies: the row refuses at first use rather than ship unverifiable
+      parameters.
+  applicability:
+    component_classes:
+    - water
+    polar: true
+    electrolyte: true
+    T_K:
+    - 293.15
+    - 303.15
+    P_Pa:
+    - 2000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    notes: >-
+      Refusal row: construction succeeds (the catalogue lists it) and every property call
+      raises NotImplementedError naming the gap.
+  status: experimental
+  validation: []
+  references:
+  - Thomsen, K. & Rasmussen, P., 'Extended UNIQUAC for electrolyte systems' (parameters not
+    openly retrievable; refusal documented, T-09)
+  l0_note: >-
+    experimental row — L0 exempt; constructs successfully and refuses at first use
+    (NotImplementedError) because no citable open extended-UNIQUAC parameter table for
+    NaCl-H2O exists (T-07 precedent)

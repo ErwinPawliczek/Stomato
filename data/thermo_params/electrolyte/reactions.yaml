@@ -1,0 +1,73 @@
+# EPA-600/2-80-067 SWEQ sour-water constants (spec T-09, model row sour_water).
+#
+# Wilson, G. M., "Sour Water Equilibria," EPA-600/2-80-067 (1980).  All
+# coefficients below were read from the report and verified character-for-
+# character against its printed worked examples (printed pp. 52-53; the 100 C
+# anchor set k3=8.032e7, k5=2.805e-7, k6=9.06e-13, k7=5.054e-13,
+# H_NH3=3.64, H_H2S=442.5 psia per gmol/kg solution) and cross-checked
+# against DWSIM's transcription (DanWBR/dwsim, FlashAlgorithms/swreactions/
+# swreactions.dwrxm and FlashAlgorithms/SourWater.vb).
+#
+# One deliberate divergence from DWSIM: the k5 (H2S ionization) coefficient
+# D.  The report prints 2.5551e11; DWSIM's file carries 2.555e11 (a dropped
+# digit, -3.4 % on k5 at 100 C).  The report's digits reproduce the printed
+# k5 anchor to 0.02 % and put the model within 0.4 % of the report's API
+# column at the Table 21 Shih points, so the report value is kept; DWSIM's
+# variant is documented in docs/validation.md (T-09).
+#
+# Reaction form: ln k = a + b/T + c/T^2 + d/T^3 + e/T^4 with T in degR
+# (degR = (degC + 273.15) * 1.8) and concentrations in gmol per kg of
+# solution (the report's own basis).
+reactions:
+  # k3: H+ + NH3 <=> NH4+  (association constant -- sign convention per the
+  # report's worked example; the other three are dissociation constants)
+  nh4_association:
+    a: 1.587
+    b: 11160.0
+  # k5: H2S <=> HS- + H+
+  h2s_dissociation:
+    a: -293.88
+    b: 683858.0
+    c: -6.27125e8
+    d: 2.5551e11
+    e: -3.91757e13
+  # k6: HS- <=> S2- + H+
+  hs_dissociation:
+    a: -657.965
+    b: 1649360.0
+    c: -15.8964e8
+    d: 6.72472e11
+    e: -10.6043e13
+  # k7: H2O <=> OH- + H+
+  water_dissociation:
+    a: 39.5554
+    b: -177822.0
+    c: 1.843e8
+    d: -0.8541e11
+    e: 1.4292e13
+
+# Henry constants, psia per (gmol/kg solution); T in degR.  CAS is the FREE
+# ammonia concentration, CS the TOTAL acid-gas H2S concentration, CC the
+# total CO2-bearing species (all in gmol/kg solution) -- the DWSIM
+# SourWater.vb usage confirmed against the report's printed worked example.
+# The CC terms evaluate at CC = 0 in this package's NH3-H2S-H2O scope (the
+# CO2/carbonate path is not implemented; see the catalogue row and
+# docs/validation.md).
+henry:
+  nh3:
+    constant: 178.339
+    inv_t: -15517.91
+    ln_t: -25.6767
+    t: 0.01966
+    cas_inv_t: 131.4
+    cas: -0.1682
+    cs: 0.06
+  h2s:
+    constant: 100.684
+    inv_t: -246254.0
+    inv_t2: 2.39029e8
+    inv_t3: -1.01898e11
+    inv_t4: 1.59734e13
+    cas: -0.05
+    cc_inv_t: -486.0
+    cc: 0.965
