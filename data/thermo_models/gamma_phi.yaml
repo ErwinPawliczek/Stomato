@@ -152,9 +152,13 @@
     liquid: nrtl
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -173,26 +177,45 @@
     - V
     - L
     - VLL
-  status: experimental
+  status: provisional
+  validation: &nrtl-hoc-cases
+  - pure-H2O-323.5K-hoc
+  - pure-H2O-420K-hoc
+  - pure-nC4-350K-hoc
+  - meohh2o-97.99kPa-369.65K-hoc
+  - meohh2o-97.99kPa-365.45K-hoc
+  - meohh2o-97.99kPa-360.65K-hoc
+  - meohh2o-97.99kPa-353.25K-hoc
+  - meohh2o-97.99kPa-349.05K-hoc
+  - meohh2o-97.99kPa-343.75K-hoc
+  - meohh2o-97.99kPa-341.85K-hoc
+  - meohh2o-97.99kPa-339.55K-hoc
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
+  assessed:
+    pure-H2O-420K-hoc: "Cp -23.9% (58.9479 vs 77.4472) - gamma-phi packages carry no residual liquid-Cp contribution, so saturated-liquid Cp under-predicts away from 298 K (the same limitation the amine row assessed per the PR #161 table; measured 2026-10-22)"
+    pure-nC4-350K-hoc: "Cp -30.8% (113.4552 vs 163.8853) - same known gamma-phi liquid-Cp limitation (no residual liquid-Cp contribution; measured 2026-10-22)"
 
 - id: nrtl_nothnagel
-  name: NRTL liquid + Nothnagel virial vapour
+  name: NRTL liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: nrtl
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -211,12 +234,12 @@
     - V
     - L
     - VLL
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
   l0: {}
   l0_excluded: {}
 
@@ -317,9 +340,13 @@
     liquid: uniquac
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -338,26 +365,30 @@
     - V
     - L
     - VLL
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
 
 - id: uniquac_nothnagel
-  name: UNIQUAC liquid + Nothnagel virial vapour
+  name: UNIQUAC liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: uniquac
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -376,12 +407,12 @@
     - V
     - L
     - VLL
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
   l0: {}
   l0_excluded: {}
 
@@ -515,9 +546,13 @@
     liquid: wilson
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -535,26 +570,30 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
 
 - id: wilson_nothnagel
-  name: Wilson liquid + Nothnagel virial vapour
+  name: Wilson liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: wilson
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -572,14 +611,29 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
+  validation: &wilson-nothnagel-cases
+  - pure-H2O-323.5K-nothnagel
+  - pure-H2O-420K-nothnagel
+  - pure-nC4-350K-nothnagel
+  - meohh2o-97.99kPa-369.65K-nothnagel
+  - meohh2o-97.99kPa-365.45K-nothnagel
+  - meohh2o-97.99kPa-360.65K-nothnagel
+  - meohh2o-97.99kPa-353.25K-nothnagel
+  - meohh2o-97.99kPa-349.05K-nothnagel
+  - meohh2o-97.99kPa-343.75K-nothnagel
+  - meohh2o-97.99kPa-341.85K-nothnagel
+  - meohh2o-97.99kPa-339.55K-nothnagel
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
   l0: {}
   l0_excluded: {}
+  assessed:
+    pure-H2O-420K-nothnagel: "Cp -23.9% (58.9479 vs 77.4472) - gamma-phi packages carry no residual liquid-Cp contribution, so saturated-liquid Cp under-predicts away from 298 K (the same limitation the amine row assessed per the PR #161 table; measured 2026-10-22)"
+    pure-nC4-350K-nothnagel: "Cp -30.8% (113.4552 vs 163.8853) - same known gamma-phi liquid-Cp limitation (no residual liquid-Cp contribution; measured 2026-10-22)"
 
 - id: wilson_pr
   name: Wilson liquid + Peng-Robinson vapour
@@ -768,9 +822,13 @@
     liquid: vanlaar
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -788,26 +846,62 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
-  l0: {}
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          EtOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
   l0_excluded: {}
 
 - id: vanlaar_nothnagel
-  name: van Laar liquid + Nothnagel virial vapour
+  name: van Laar liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: vanlaar
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -825,13 +919,45 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
-  l0: {}
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          EtOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
   l0_excluded: {}
 
 - id: vanlaar_pr
@@ -1059,9 +1185,13 @@
     liquid: margules
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -1079,26 +1209,62 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
-  l0: {}
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          EtOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
   l0_excluded: {}
 
 - id: margules_nothnagel
-  name: Margules liquid + Nothnagel virial vapour
+  name: Margules liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: margules
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -1116,13 +1282,45 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
-  l0: {}
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          EtOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
   l0_excluded: {}
 
 - id: margules_pr
@@ -1284,9 +1482,13 @@
     liquid: regular_solution
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -1304,26 +1506,30 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
 
 - id: regular_solution_nothnagel
-  name: regular solution liquid + Nothnagel virial vapour
+  name: regular solution liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: regular_solution
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -1341,12 +1547,12 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
   l0: {}
   l0_excluded: {}
 
@@ -1475,9 +1681,13 @@
     liquid: unifac
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -1495,26 +1705,30 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
 
 - id: unifac_nothnagel
-  name: UNIFAC liquid + Nothnagel virial vapour
+  name: UNIFAC liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: unifac
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -1532,12 +1746,12 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
   l0: {}
   l0_excluded: {}
 
@@ -1666,9 +1880,13 @@
     liquid: unifac_dortmund
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -1686,26 +1904,30 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
 
 - id: unifac_dortmund_nothnagel
-  name: UNIFAC (Dortmund) liquid + Nothnagel virial vapour
+  name: UNIFAC (Dortmund) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: unifac_dortmund
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -1723,12 +1945,12 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
   l0: {}
   l0_excluded: {}
 
@@ -1856,9 +2078,13 @@
     liquid: unifac_psrk
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -1876,26 +2102,30 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
 
 - id: unifac_psrk_nothnagel
-  name: UNIFAC (PSRK) liquid + Nothnagel virial vapour
+  name: UNIFAC (PSRK) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: unifac_psrk
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -1913,12 +2143,12 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
   l0: {}
   l0_excluded: {}
 
@@ -2045,9 +2275,13 @@
     liquid: unifac_nist
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -2065,26 +2299,30 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
 
 - id: unifac_nist_nothnagel
-  name: UNIFAC (NIST) liquid + Nothnagel virial vapour
+  name: UNIFAC (NIST) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: unifac_nist
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -2102,12 +2340,12 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
   l0: {}
   l0_excluded: {}
 
@@ -2333,9 +2571,13 @@
     liquid: unifac_lle
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -2354,26 +2596,80 @@
     - V
     - L
     - VLL
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
-  l0: {}
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          H2O: 0.5
+          nC4: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    phase_identification:
+      points:
+      - - H2O
+        - 350.0
+      - - H2O
+        - 400.0
+    pure_psat_limit:
+      points:
+      - - H2O
+        - 300.0
+      - - H2O
+        - 350.0
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    single_liquid_limit:
+      state:
+      - 298.15
+      - 100000.0
+      z:
+        H2O: 1.0
   l0_excluded: {}
 
 - id: unifac_lle_nothnagel
-  name: UNIFAC-LLE liquid + Nothnagel virial vapour
+  name: UNIFAC-LLE liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: unifac_lle
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -2392,13 +2688,63 @@
     - V
     - L
     - VLL
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
-  l0: {}
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          H2O: 0.5
+          nC4: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    phase_identification:
+      points:
+      - - H2O
+        - 350.0
+      - - H2O
+        - 400.0
+    pure_psat_limit:
+      points:
+      - - H2O
+        - 300.0
+      - - H2O
+        - 350.0
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        H2O: 0.5
+        nC4: 0.5
+    single_liquid_limit:
+      state:
+      - 298.15
+      - 100000.0
+      z:
+        H2O: 1.0
   l0_excluded: {}
 
 - id: unifac_lle_pr
@@ -2579,9 +2925,13 @@
     liquid: unifac_lyngby
     vapour: hoc
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Hayden-O'Connell (1975) equation set transcribed from open sources (Lehigh 1986 MSc
+      thesis Appendix A; COBEQ-2014 proceedings paper; the Prausnitz-1980 book BIJS2 Fortran as
+      printed in the Maiorella LBL report LBL-1991); eta table data/thermo_params/virial/hoc_eta.yaml
+      from ChemSep Lite 8.50 HAYDENO.IPD
+    provenance: real second-virial kernel in ngdesign.thermo.virial; slates with a pure eta >= 4.0
+      component refuse (the Prausnitz-1980 apparent-fugacity correction for strongly associating
+      vapours is not available from open sources; use hoc_dimer for acids)
   applicability:
     component_classes:
     - alcohol
@@ -2599,26 +2949,30 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
+    (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
+    report LBL-1991)
+  - Prausnitz, J. M., Anderson, T., Grens, E., Eckert, C., Hsieh, R. & O'Connell, J. P., Computer
+    Calculations for Multicomponent Vapor-Liquid and Liquid-Liquid Equilibria, Prentice-Hall, 1980
+    (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
 
 - id: unifac_lyngby_nothnagel
-  name: UNIFAC (Lyngby) liquid + Nothnagel virial vapour
+  name: UNIFAC (Lyngby) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
     liquid: unifac_lyngby
     vapour: nothnagel
   params:
-    source: no verifiable, citable equation/parameter table found (DWSIM's implementation is GPLv3 and must not be copied)
-    provenance: the row registers as experimental and its builder refuses rather than inventing physics - see
-      ngdesign.thermo.virial (spec deviation)
+    source: Nothnagel (1973) b/K parameter table not available from open sources; the row builds
+      the declared Tsonopoulos-extended second-virial fallback (ngdesign.thermo.virial)
+      (spec deviation)
+    provenance: real second-virial phase via the declared Tsonopoulos-extended fallback; the row
+      name identifies that Nothnagel parameters remain unavailable (spec deviation)
   applicability:
     component_classes:
     - alcohol
@@ -2636,12 +2990,12 @@
     phases:
     - V
     - L
-  status: experimental
+  status: provisional
   references:
-  - Hayden-O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975 (equation reference; no
-      verifiable open parameter table found this session)
-  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1), 25-35, 1973
-      (equation reference; same parameter-table gap)
+  - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
+    25-35, 1973 (b/K parameter table not available from open sources)
+  - Tsonopoulos, C., AIChE J. 20(2), 263-272, 1974 (extended correlation used by the declared
+    fallback)
   l0: {}
   l0_excluded: {}
 

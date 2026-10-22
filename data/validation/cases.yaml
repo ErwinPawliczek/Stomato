@@ -658,7 +658,377 @@ pure_cases:
     rho_V: 95.58767627288478
     rho_L: 605.5542923811505
     Cp: 151.74725059632752
+- id: pure-H2O-323.5K-hoc
+  fluid: H2O
+  coolprop_fluid: Water
+  package: nrtl_hoc
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 323.5
+  source: coolprop:Water
+  expected:
+    bubble_P: 12568.074903762043
+    dew_P: 12568.074903762043
+    rho_V: 0.0845139200802139
+    rho_L: 987.8376013261548
+    Cp: 75.33348967660713
+- id: pure-H2O-323.5K-nothnagel
+  fluid: H2O
+  coolprop_fluid: Water
+  package: wilson_nothnagel
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 323.5
+  source: coolprop:Water
+  expected:
+    bubble_P: 12568.074903762043
+    dew_P: 12568.074903762043
+    rho_V: 0.0845139200802139
+    rho_L: 987.8376013261548
+    Cp: 75.33348967660713
+- id: pure-H2O-420K-hoc
+  fluid: H2O
+  coolprop_fluid: Water
+  package: nrtl_hoc
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 420.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 437296.6832205554
+    dew_P: 437296.6832205554
+    rho_V: 2.351828448387723
+    rho_L: 919.9289056471974
+    Cp: 77.44715834539281
+- id: pure-H2O-420K-nothnagel
+  fluid: H2O
+  coolprop_fluid: Water
+  package: wilson_nothnagel
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 420.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 437296.6832205554
+    dew_P: 437296.6832205554
+    rho_V: 2.351828448387723
+    rho_L: 919.9289056471974
+    Cp: 77.44715834539281
+- id: pure-nC4-350K-hoc
+  fluid: nC4
+  coolprop_fluid: n-Butane
+  package: nrtl_hoc
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  T: 350.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 944175.1271558887
+    dew_P: 944175.1271558887
+    rho_V: 23.389109113985192
+    rho_L: 505.17675174242464
+    Cp: 163.88529607695213
+- id: pure-nC4-350K-nothnagel
+  fluid: nC4
+  coolprop_fluid: n-Butane
+  package: wilson_nothnagel
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  T: 350.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 944175.1271558887
+    dew_P: 944175.1271558887
+    rho_V: 23.389109113985192
+    rho_L: 505.17675174242464
+    Cp: 163.88529607695213
+
 binary_cases:
+- id: meohh2o-97.99kPa-369.65K-hoc
+  package: nrtl_hoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.0084
+    H2O: 0.9916
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 369.65
+    vapor_comp:
+      MeOH: 0.103
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-369.65K-nothnagel
+  package: wilson_nothnagel
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.0084
+    H2O: 0.9916
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 369.65
+    vapor_comp:
+      MeOH: 0.103
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-365.45K-hoc
+  package: nrtl_hoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.0258
+    H2O: 0.9742
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 365.45
+    vapor_comp:
+      MeOH: 0.227
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-365.45K-nothnagel
+  package: wilson_nothnagel
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.0258
+    H2O: 0.9742
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 365.45
+    vapor_comp:
+      MeOH: 0.227
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-360.65K-hoc
+  package: nrtl_hoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.068
+    H2O: 0.932
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 360.65
+    vapor_comp:
+      MeOH: 0.391
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-360.65K-nothnagel
+  package: wilson_nothnagel
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.068
+    H2O: 0.932
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 360.65
+    vapor_comp:
+      MeOH: 0.391
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-353.25K-hoc
+  package: nrtl_hoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.137
+    H2O: 0.863
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 353.25
+    vapor_comp:
+      MeOH: 0.568
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-353.25K-nothnagel
+  package: wilson_nothnagel
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.137
+    H2O: 0.863
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 353.25
+    vapor_comp:
+      MeOH: 0.568
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-349.05K-hoc
+  package: nrtl_hoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.24
+    H2O: 0.76
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 349.05
+    vapor_comp:
+      MeOH: 0.68
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-349.05K-nothnagel
+  package: wilson_nothnagel
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.24
+    H2O: 0.76
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 349.05
+    vapor_comp:
+      MeOH: 0.68
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-343.75K-hoc
+  package: nrtl_hoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.48
+    H2O: 0.52
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 343.75
+    vapor_comp:
+      MeOH: 0.79
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-343.75K-nothnagel
+  package: wilson_nothnagel
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.48
+    H2O: 0.52
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 343.75
+    vapor_comp:
+      MeOH: 0.79
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-341.85K-hoc
+  package: nrtl_hoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.572
+    H2O: 0.428
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 341.85
+    vapor_comp:
+      MeOH: 0.82
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-341.85K-nothnagel
+  package: wilson_nothnagel
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.572
+    H2O: 0.428
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 341.85
+    vapor_comp:
+      MeOH: 0.82
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-339.55K-hoc
+  package: nrtl_hoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.741
+    H2O: 0.259
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 339.55
+    vapor_comp:
+      MeOH: 0.906
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: meohh2o-97.99kPa-339.55K-nothnagel
+  package: wilson_nothnagel
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.741
+    H2O: 0.259
+  P: 97990.0
+  source: literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20
+  expected:
+    bubble_T: 339.55
+    vapor_comp:
+      MeOH: 0.906
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+
 - id: c1c3-277.59K-0.689MPa
   package: all
   components:
@@ -1716,6 +2086,7 @@ binary_cases:
   tolerance:
     bubble_P: 0.02
     vapor_comp: 0.02
+
 multicomponent_cases:
 - id: slice-inlet-K-500psia-300K
   package: all

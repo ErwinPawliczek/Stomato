@@ -29,8 +29,9 @@ flash two-phase (VLE) through the same saturation path.
 
 Vapour models: ideal, RK and PR (ChemSep PR kijs, zero-filled where the table
 has no pair - a kij of 0 is pr.py's existing convention and does not affect
-liquid non-ideality). The Hayden-O'Connell and Nothnagel virial rows register
-as experimental and refuse to build (ngdesign.thermo.virial).
+liquid non-ideality). The Hayden-O'Connell and Nothnagel virial rows build
+real second-virial vapour phases through ngdesign.thermo.virial (Nothnagel
+on the declared Tsonopoulos-extended fallback).
 
 Component ids map to CAS via ngdesign.data.components() (C6+ = n-hexane per the
 reference-data note). SI units throughout: K, Pa, kg/m3, Pa.s, J/mol,
@@ -56,6 +57,7 @@ from thermo import (
     FlashVLN,
     GibbsExcessLiquid,
     IdealGas,
+    VirialGas,
 )
 from thermo.activity import GibbsExcess
 from thermo.interaction_parameters import IPDB
@@ -74,6 +76,10 @@ from ngdesign.thermo.ge_models import Margules, VanLaar
 # The ideal-gas vapour is not a CEOS class; without this registration the
 # shared state layer counts an all-ideal-gas state as liquid (vf stuck at 0).
 _state.register_vapour_phase_class(IdealGas)
+# The virial vapour is a non-CEOS gas phase too: without this registration
+# its saturation brackets fail exactly as the ideal-vapour ones did (the
+# shared state layer counts an all-virial state as liquid, vf stuck at 0).
+_state.register_vapour_phase_class(VirialGas)
 
 PARAMS_DIR = Path(__file__).resolve().parents[3] / "data" / "thermo_params"
 
@@ -444,9 +450,18 @@ def _ge_model_factory(liquid: str, ids: tuple[str, ...], cas_list: list[str], co
 
 
 def _gas_phase(vapour: str, cas_list: list[str], constants: Any, correlations: Any) -> Any:
-    """The vapour phase for the pairing; virial models refuse (ngdesign.thermo.virial)."""
-    virial.refuse_not_implemented(vapour)
+    """The vapour phase for the pairing.
+
+    The virial options build real second-virial phases (spec T-03b): ``hoc``
+    is the in-house Hayden-O'Connell kernel; ``nothnagel`` is the declared
+    Tsonopoulos-extended fallback (the Nothnagel parameter table has no
+    citable open source - the catalogue row name says so).
+    """
     heat_caps = correlations.HeatCapacityGases
+    if vapour in virial.VIRIAL_VAPOURS:
+        if vapour == "nothnagel":
+            return virial.tsonopoulos_fallback_phase(constants, correlations)
+        return virial.hoc_vapour_phase(cas_list, constants, correlations)
     if vapour == "ideal":
         return IdealGas(HeatCapacityGases=heat_caps)
     kijs = IPDB.get_ip_symmetric_matrix(name=_CHEMSEP_PR_TABLE, CASs=cas_list, ip="kij")
