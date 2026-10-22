@@ -341,6 +341,7 @@ def _copy_profile(col: _Column, src: _Profile) -> _Profile:
         inner=src.inner,
         ns_used=src.ns_used,
         ns_passes=src.ns_passes,
+        ns_trace=list(src.ns_trace),
     )
 
 

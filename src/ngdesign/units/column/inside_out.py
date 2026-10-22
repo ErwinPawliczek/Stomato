@@ -99,6 +99,10 @@ class _Profile:
     inner: int = 0
     ns_used: bool = False
     ns_passes: int = 0
+    #: Per-pass Naphtali-Sandholm controller trace (P1-11 step 4): one line per
+    #: pass - exact residuals, linear-model prediction, cap hits, damping and
+    #: achieved reduction. Diagnostics only; never read for control flow.
+    ns_trace: list[str] = field(default_factory=list)
 
 
 def _flash_stage_feeds(col_params: _Params, tb: _ThermoBox) -> list[_StageFeed]:
