@@ -221,9 +221,12 @@
   - c1n2-149.989K-2.908MPa
   - c1n2-159.972K-1.789MPa
   - c1n2-179.976K-5.062MPa
-  # c1n2-130.079K/149.928K/170.009K and c1co2-303.144K/303.145K are committed
-  # as pending:teqp-gerg2008: the exact GERG-2008 backend lands with the teqp
-  # bridge (T-07); CoolProp's fitted binary parameters miss those five points.
+  # c1n2-130.079K now runs against the teqp GERG-2008 backend (gerg2008_teqp, saft
+  # family) - the T-07 follow-up cross-check (issue #164); the other four points
+  # (c1n2-149.928K/170.009K, c1co2-303.144K/303.145K) stay pending:teqp-gerg2008:
+  # measured on the teqp backend, three have strictly monotone isotherms (no
+  # two-phase solution in the shipped parameters) and the fourth has a sub-per-mille
+  # loop the density scan cannot resolve, so neither backend can produce a value.
   - c1co2-293.130K-6.135MPa
   - c1co2-293.130K-6.976MPa
   - c1co2-298.142K-6.976MPa

@@ -1,4 +1,4 @@
-"""teqp bridge: PC-SAFT, SAFT-VR-Mie, CPA-SRK and multi-fluid Helmholtz (spec T-07).
+"""teqp bridge: PC-SAFT, SAFT-VR-Mie, CPA-SRK, multi-fluid Helmholtz, GERG-2008 (spec T-07).
 
 Family F through NIST's ``teqp`` (MIT licence) where teqp has a usable engine, plus a
 hand-rolled CPA-SRK kernel where it does not (teqp 0.23.2's own CPA NaNs its fugacity
@@ -24,6 +24,15 @@ teqp is an optional dependency (``uv sync --extra saft``). The module imports la
 the catalogue rows load and their packages construct without the extra; the first
 property call raises :class:`SaftDependencyMissing` (an ``ImportError``) when it is absent.
 Unsupported components are refused by name — never silently treated as ideal.
+
+The last two family-F rows (T-07 follow-up, issue #164): ``gerg2008_teqp`` runs the
+GERG-2008 natural-gas mixture through teqp's multi-fluid machinery with the Kunz &
+Wagner (2012) reducing/departure parameters as distributed in teqp 0.23.2's bundled
+fluid library (the exact-backend cross-check the T-04 ``gerg2008`` row defers to);
+``soft_saft`` (Blas & Vega 1997) has no engine — teqp 0.23.2 ships no soft-SAFT kernel
+(its only SAFT factories are the PC-SAFT and SAFT-VR-Mie explicit-coefficient engines;
+measured this session) — so the row constructs and refuses at first use naming the
+missing engine, never invented physics.
 
 Registered through the thermo catalogue (data/thermo_models/saft.yaml); the adapter
 classes carry no ``@register`` decorator (catalogue how-to, section 1).
@@ -485,9 +494,11 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
             for cid in cids
         ]
         return _TeqpKernel(kind, _teqp().make_model({"kind": "SAFT-VR-Mie", "model": {"coeffs": coeffs}}))
-    if kind in ("multifluid", "multifluid_pure"):
+    if kind in ("multifluid", "multifluid_pure", "gerg2008_teqp"):
         # Kind-keyed: the mixture row excludes H2O (no water interaction data in
-        # teqp's bundled pair library), the pure row keeps it.
+        # teqp's bundled pair library), the pure row keeps it, and the GERG-2008
+        # row restricts support to the GERG-2008 component slate (its own alias
+        # table; H2O is outside it for the same measured water-pair reason).
         block = _require_params(kind, cids, subkey="aliases")
         teqp = _teqp()
         datapath = teqp.get_datapath()
@@ -567,6 +578,16 @@ class TeqpPackage(ThermoSurfaceMixin):
                 "polar PC-SAFT extension, but no verified, citable component polar "
                 "parameters ((Q*)^2, (mu*)^2) exist in data/thermo_params/saft/pure.yaml; "
                 "parameter retrieval is out of T-07 scope"
+            )
+        if self.model_kind == "soft_saft":
+            raise NotImplementedError(
+                "saft row 'soft_saft' refuses to build: no soft-SAFT engine exists — "
+                "teqp 0.23.2 (the family's only optional backend) ships no soft-SAFT "
+                "kernel (its SAFT factories are the explicit-coefficient PC-SAFT and "
+                "SAFT-VR-Mie engines; there is no soft-SAFT model kind and no teqp.saft "
+                "module — measured against the installed teqp 0.23.2), and the T-07 "
+                "spec forbids writing SAFT by hand. Blas & Vega's (1997) soft-SAFT "
+                "stays outside the catalogue rather than being approximated"
             )
         if self.model_kind == "cpa_pr":
             raise NotImplementedError(
@@ -1299,7 +1320,16 @@ class TeqpPackage(ThermoSurfaceMixin):
             # vapour-like roots (ratio -> 1); a 1e-9 gap let the K-sum converge on the
             # trivial K -> 1 crossing there (the ideal-gas limit drives tot -> sum(x)
             # exactly), reporting ~10 kPa for a 6 MPa bubble — the 293.13 K C1/CO2 case.
-            if rho_heavy and rho_light and rho_heavy[-1] / rho_light[0] > 1.05:
+            # And above the mixture saturation pressure the scan can still return
+            # several dense roots whose pair ratio passes 1.05 with the lowest on the
+            # unstable middle branch (Z ~ 0.09 on the C1/N2 130 K isotherm), whose
+            # fugacity difference is not a K-value (measured K_C1 = 4e8, walking the
+            # bracket to gigapascals): the lowest root must be genuinely vapour-like
+            # (Z > 0.5, the same test the pure-psat hunt uses) before its fugacity
+            # votes; otherwise the state is single-liquid and the bracket classifies
+            # high.
+            light_vapour_like = bool(rho_light) and p / (rho_light[0] * R_GAS * T) > 0.5
+            if rho_heavy and light_vapour_like and rho_heavy[-1] / rho_light[0] > 1.05:
                 k = np.exp(kernel.ln_phi(T, rho_heavy[-1], x_liq) - kernel.ln_phi(T, rho_light[0], y_vap))
                 tot = float(np.sum(k * x_liq)) if bubble else float(np.sum(y_vap / k))
                 if abs(tot - 1.0) < 1e-10:
@@ -1553,3 +1583,28 @@ class MultifluidPureThermo(TeqpPackage):
     """Pure-fluid-only multi-fluid Helmholtz (row ``multifluid_pure``); mixtures refuse."""
 
     model_kind = "multifluid_pure"
+
+
+class Gerg2008TeqpThermo(TeqpPackage):
+    """GERG-2008 through teqp's multi-fluid machinery (row ``gerg2008_teqp``).
+
+    The exact-backend cross-check the T-04 ``gerg2008`` row (CoolProp's fitted
+    parameters) defers to: Kunz & Wagner (2012) pure-fluid and binary
+    reducing/departure parameters as distributed in teqp 0.23.2's bundled fluid
+    library, restricted to the GERG-2008 component slate
+    (data/thermo_params/saft/pure.yaml, ``gerg2008_teqp.aliases``).
+    """
+
+    model_kind = "gerg2008_teqp"
+
+
+class SoftSaftThermo(TeqpPackage):
+    """Registered refusal: no soft-SAFT engine exists (row ``soft_saft``).
+
+    Blas & Vega's (1997) soft-SAFT has no implementation here — teqp 0.23.2 ships
+    no soft-SAFT kernel and hand-rolling SAFT is invented physics (T-07 forbids
+    it). The row constructs so the registry and contract tests can instantiate
+    it, then refuses at first use via :meth:`TeqpPackage._validate_kind`.
+    """
+
+    model_kind = "soft_saft"

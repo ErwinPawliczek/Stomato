@@ -11,6 +11,12 @@ import pytest
 import yaml
 
 from ngdesign import registry
+from ngdesign.amine.electrolyte import (
+    ElectrolyteENRTLNaCl,
+    ElectrolyteExtUNIQUAC,
+    ElectrolytePitzerNaCl,
+    ElectrolyteSourWater,
+)
 from ngdesign.amine.package import AmineENRTLPackage, AmineKEPackage
 from ngdesign.thermo import catalogue
 from ngdesign.thermo.catalogue import CatalogueError, ModelRow, load_catalogue
@@ -63,7 +69,7 @@ def _load_harness() -> Any:
 
 
 def test_rows_load_and_build() -> None:
-    """120 rows load; the registry resolves each id to its adapter class."""
+    """128 rows load; the registry resolves each id to its adapter class."""
     rows = load_catalogue()
     gamma_phi_ids = [
         f"{liquid}_{vapour}"
@@ -100,12 +106,14 @@ def test_rows_load_and_build() -> None:
     saft_ids = [
         "cpa_pr",
         "cpa_srk",
+        "gerg2008_teqp",
         "multifluid",
         "multifluid_pure",
         "pc_saft",
         "pc_saft_assoc",
         "pc_saft_polar",
         "saft_vr_mie",
+        "soft_saft",
     ]
     kvalue_ids = [
         "antoine-ideal-k",
@@ -154,10 +162,25 @@ def test_rows_load_and_build() -> None:
         "polymer_pc_saft",
         "unifac_fv",
     ]
+    # electrolyte family (T-09): two literature-anchored aqueous models plus
+    # two first-use refusal rows (no open parameter tables)
+    electrolyte_ids = [
+        "enrtl_nacl_water",
+        "ext_uniquac_nacl_water",
+        "pitzer_nacl_water",
+        "sour_water",
+    ]
     expected = sorted(
-        gamma_phi_ids + nrtl_ids + helmholtz_ids + non_gamma + saft_ids + kvalue_ids + special_ids
+        gamma_phi_ids
+        + nrtl_ids
+        + helmholtz_ids
+        + non_gamma
+        + saft_ids
+        + kvalue_ids
+        + special_ids
+        + electrolyte_ids
     )
-    assert len(expected) == 122
+    assert len(expected) == 128
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
@@ -200,6 +223,11 @@ def test_rows_load_and_build() -> None:
         # special family (T-10)
         "hf_hexamer": HFHexamerPackage,
         "polymer_pc_saft": PolymerPCSAFT,
+        # electrolyte family (T-09): refusal rows construct and refuse at first use
+        "pitzer_nacl_water": ElectrolytePitzerNaCl,
+        "sour_water": ElectrolyteSourWater,
+        "enrtl_nacl_water": ElectrolyteENRTLNaCl,
+        "ext_uniquac_nacl_water": ElectrolyteExtUNIQUAC,
     }
     for model_id, cls in expected_types.items():
         assert type(registry.create("thermo", model_id)) is cls
