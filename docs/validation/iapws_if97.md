@@ -25,7 +25,7 @@ family `helmholtz` · status **provisional** · adapter `ngdesign.thermo.helmhol
 | single_liquid_limit | ok | 0 | 300K/100000Pa kinds=['aqueous'] vf=0.0 |
 | determinism | ok | 0 | two instances bit-identical at 350K/200000Pa |
 
-Note: IF97 backend exposes no fugacity coefficients (CoolProp 8), so Phase.ln_phi stays empty for this row; phase_props and flashes carry full properties.
+Note: IF97 backend exposes no fugacity coefficients (CoolProp 8), so Phase.ln_phi stays empty for this row; phase_props and flashes carry full properties. T-15 finding: at saturation states the adapter's saturated-phase densities come back label-swapped (rho_V reads the liquid value and vice versa) - an IAPWSPackage defect to fix in an engine spec, not a formulation limitation.
 
 Declared exclusions (not silent skips):
 
@@ -33,7 +33,14 @@ Declared exclusions (not silent skips):
 
 ## L1/L2 reference-case outcomes
 
-None yet — validation case ids arrive with the data tasks (T-11..T-13).
+11/15 comparisons pass. Failing comparisons are assessed in the
+main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
+
+Declared case ids:
+
+- `h2o-if97-273.179K` — coolprop:Water (CoolProp 8.0.0 HEOS reference values; state points match the hand-typed NIST WebBook h2o-nist cases)
+- `h2o-if97-347.390K` — coolprop:Water (CoolProp 8.0.0 HEOS reference values; state points match the hand-typed NIST WebBook h2o-nist cases)
+- `h2o-if97-401.605K` — coolprop:Water (CoolProp 8.0.0 HEOS reference values; state points match the hand-typed NIST WebBook h2o-nist cases)
 
 ## References
 

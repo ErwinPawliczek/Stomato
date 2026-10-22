@@ -198,8 +198,113 @@ pure_cases:
     rho_V: 165.14581022973502
     rho_L: 814.6391777699876
     Cp: 155.1893706579236
-binary_cases:
-# --- L3: water saturation points, IAPWS row (hand-typed, NIST WebBook) -----------------------
+
+# --- coolprop_heos row (T-15 promotion sweep): L1 pure points, CoolProp 8.0.0 machine values
+# copied verbatim from the root cases.yaml pure_cases (same regen formula, same version);
+# binary points hand-copied with citations from the gerg2008-bound Petropoulou 2018 cases.
+- id: heos-pure-C1-125K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: coolprop_heos
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+- id: heos-pure-nC4-280K
+  fluid: nC4
+  coolprop_fluid: n-Butane
+  package: coolprop_heos
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+- id: heos-pure-CO2-265K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: coolprop_heos
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+# --- iapws_if97 row (T-15 promotion sweep): L1 pure H2O points. Expected values generated in
+# session with PropsSI (CoolProp 8.0.0 HEOS::Water, Q=0/1, molar Cp via M=0.01801528 kg/mol);
+# the IF97 row is cross-checked against the HEOS reference at the h2o-nist state points.
+- id: h2o-if97-273.179K
+  fluid: H2O
+  coolprop_fluid: Water
+  package: iapws_if97
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 273.179
+  source: coolprop:Water (CoolProp 8.0.0 HEOS reference values; state points match the hand-typed NIST WebBook h2o-nist cases)
+  expected:
+    bubble_P: 612.4997668266071
+    dew_P: 612.4997668266071
+    rho_V: 0.004860946631774811
+    rho_L: 999.7938082437671
+    Cp: 76.02169970090921
+- id: h2o-if97-347.390K
+  fluid: H2O
+  coolprop_fluid: Water
+  package: iapws_if97
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 347.390
+  source: coolprop:Water (CoolProp 8.0.0 HEOS reference values; state points match the hand-typed NIST WebBook h2o-nist cases)
+  expected:
+    bubble_P: 37384.52999381221
+    dew_P: 37384.52999381221
+    rho_V: 0.23506730588597508
+    rho_L: 975.2670989077454
+    Cp: 75.53519087653518
+- id: h2o-if97-401.605K
+  fluid: H2O
+  coolprop_fluid: Water
+  package: iapws_if97
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 401.605
+  source: coolprop:Water (CoolProp 8.0.0 HEOS reference values; state points match the hand-typed NIST WebBook h2o-nist cases)
+  expected:
+    bubble_P: 258021.58174802753
+    dew_P: 258021.58174802753
+    rho_V: 1.433273504038486
+    rho_L: 936.1400489635712
+    Cp: 76.71850238689126
+# --- L1 pure + L3: water saturation points, IAPWS row (hand-typed, NIST WebBook) -----------
+# T-15 promotion sweep: moved from binary_cases to pure_cases - these are single-component
+# saturation states, and the audit counts L1 by section (spec T-01). Ids, values,
+# tolerances and citations unchanged.
 # NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185), saturation
 # table (Type=SatT rows; the WebBook fluid data follow IAPWS-95), retrieved 2026-10-21.
 # Liquid Cp is the saturated-liquid Cp at the row temperature; rho_V the saturated-vapour
@@ -283,6 +388,8 @@ binary_cases:
 # Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML
 # (doi 10.1021/je700210n), CH4(1)+N2(2) isothermal VLE: liquid x_N2 with the coexisting
 # pressure and vapour y_N2 from the paired property tables, retrieved 2026-10-21.
+
+binary_cases:
 - id: c1n2-130.079K-0.614MPa
   package: gerg2008_teqp
   components:
@@ -601,3 +708,33 @@ binary_cases:
   expected:
     dew_P: 2807790.0
   note: saturation-boundary point, model-calculated GERG-2008 reference; C6+ = hexane + heptane from the workbook composition
+# --- coolprop_heos row: L2 binary points, values hand-copied with citations from the
+# gerg2008-bound Petropoulou 2018 cases (same ThermoML source, independent row binding).
+- id: heos-c1co2-293.130K-6.135MPa
+  package: coolprop_heos
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.01528
+    CO2: 0.98472
+  T: 293.130
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (doi 10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 6134800.0
+    vapor_comp:
+      CO2: 0.96030
+- id: heos-c1co2-293.130K-6.976MPa
+  package: coolprop_heos
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.04982
+    CO2: 0.95018
+  T: 293.130
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (doi 10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 6975600.0
+    vapor_comp:
+      CO2: 0.89863

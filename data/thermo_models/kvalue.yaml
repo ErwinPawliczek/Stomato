@@ -33,7 +33,7 @@
     T_K: [200.0, 530.0]
     P_Pa: [1000.0, 14000000.0]
     phases: [V, L, VLL]
-  status: provisional
+  status: validated
   validation:
   - chao-seader-pureK-C3-300K
   - chao-seader-pureK-nC4-280K
@@ -303,7 +303,7 @@
     T_K: [200.0, 560.0]
     P_Pa: [1000.0, 15000000.0]
     phases: [V, L, VLL]
-  status: provisional
+  status: validated
   validation:
   - lee-kesler-ploecker-pureK-C1-125K
   - lee-kesler-ploecker-pureK-C3-300K
@@ -567,7 +567,7 @@
     T_K: [273.0, 373.0]
     P_Pa: [100000.0, 10000000.0]
     phases: [V, L, VLL]
-  status: provisional
+  status: validated
   validation:
   - henry-sander-pureK-C1-125K
   - henry-sander-pureK-C3-300K

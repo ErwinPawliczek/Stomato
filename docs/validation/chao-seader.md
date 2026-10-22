@@ -1,6 +1,6 @@
 # chao-seader — Chao-Seader K-values (nu0 + regular solution + Redlich-Kwong)
 
-family `kvalue` · status **provisional** · adapter `ngdesign.thermo.kvalue:ChaoSeaderThermo`.
+family `kvalue` · status **validated** · adapter `ngdesign.thermo.kvalue:ChaoSeaderThermo`.
 
 ## Applicability (Carlson 1996)
 

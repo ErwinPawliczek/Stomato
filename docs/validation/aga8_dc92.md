@@ -19,7 +19,7 @@ family `helmholtz` · status **experimental** · adapter `ngdesign.thermo.helmho
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-Note: Placeholder row: the method is recorded, not implemented.
+Note: Placeholder row: the method is recorded, not implemented. What would make it real: the AGA-8 DC92 detail-characterisation method, whose parameters live in the copyrighted AGA 1992 report (not redistributable) - needs a licensed copy or an in-house reimplementation from the published paper tables.
 
 ## L1/L2 reference-case outcomes
 

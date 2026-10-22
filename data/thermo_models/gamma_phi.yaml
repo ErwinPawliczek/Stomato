@@ -277,6 +277,11 @@
   - uniquac-ig-megh2o-431.25K-101.325kPa
   - uniquac-ig-meohnc4-323.22K-0.3366MPa
   - uniquac-ig-etohh2o-azeotrope-101.325kPa
+  # T-15: the 383.15 K point is the independent check (different T from the 431.25 K fit
+  # point; Coker/Perry T-x-y table) — the single-point MEG/H2O fit misses it (measured
+  # 2026-10-22), so the row stays provisional with the fit points as regression pins.
+  assessed:
+    uniquac-ig-megh2o-383.15K-101.325kPa: "bubble_T -1.00 % (379.31 vs 383.15 K) vs the 0.5 % tolerance — the MEG/H2O in-house fit is a single-point fit to the 431.25 K case and the independent 383.15 K Coker/Perry point sits outside it; no general databank pair shipped (measured 2026-10-22)"
   references:
   - Abrams, D. S. & Prausnitz, J. M., AIChE J. 21(1), 116-128, 1975
   - Maurer, G. & Prausnitz, J. M., Fluid Phase Equilib. 2(2), 91-99, 1978 (r,q form)
@@ -486,6 +491,11 @@
   - wilson-ig-megh2o-431.25K-101.325kPa
   - wilson-ig-meohnc4-323.22K-0.3366MPa
   - wilson-ig-etohh2o-azeotrope-101.325kPa
+  # T-15: the 383.15 K point is the independent check (different T from the 431.25 K fit
+  # point; Coker/Perry T-x-y table) — the single-point MEG/H2O fit misses it (measured
+  # 2026-10-22), so the row stays provisional with the fit points as regression pins.
+  assessed:
+    wilson-ig-megh2o-383.15K-101.325kPa: "bubble_T -0.97 % (379.44 vs 383.15 K) vs the 0.5 % tolerance — the MEG/H2O in-house fit is a single-point fit to the 431.25 K case and the independent 383.15 K Coker/Perry point sits outside it; no general databank pair shipped (measured 2026-10-22)"
   references:
   - Wilson, G. M., J. Am. Chem. Soc. 86(2), 127-130, 1964
   - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
@@ -1064,6 +1074,11 @@
   - margules-ig-meohnc4-323.22K-0.3366MPa
   - margules-ig-megh2o-431.25K-101.325kPa
   - margules-ig-etohh2o-azeotrope-101.325kPa
+  # T-15: the 383.15 K point is the independent check (different T from the 431.25 K fit
+  # point; Coker/Perry T-x-y table) — the single-point MEG/H2O fit misses it (measured
+  # 2026-10-22), so the row stays provisional with the fit points as regression pins.
+  assessed:
+    margules-ig-megh2o-383.15K-101.325kPa: "bubble_T -0.87 % (379.80 vs 383.15 K) vs the 0.5 % tolerance — the MEG/H2O in-house fit is a single-point fit to the 431.25 K case and the independent 383.15 K Coker/Perry point sits outside it; no general databank pair shipped (measured 2026-10-22)"
   references:
   - Margules, M., Sitzungsber. Akad. Wiss. Wien 104, 1243-1278, 1895
   - Bennett, J. P., J. Phys. Chem. 33(2), 258-270, 1929 (MeOH/H2O fit source point)

@@ -32,7 +32,7 @@ family `gamma_phi` · status **provisional** · adapter `ngdesign.thermo.gamma_p
 
 ## L1/L2 reference-case outcomes
 
-6/6 comparisons pass. Failing comparisons are assessed in the
+7/8 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:

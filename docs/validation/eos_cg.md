@@ -19,7 +19,7 @@ family `helmholtz` · status **experimental** · adapter `ngdesign.thermo.helmho
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-Note: Placeholder row: the method is recorded, not implemented (teqp candidate, T-07).
+Note: Placeholder row: the method is recorded, not implemented (teqp candidate, T-07). What would make it real: an in-house EOS-CG implementation from the open Kunz & Wagner 2012 formulation paper, or teqp multifluid support for its fluid files; no licence blocks it.
 
 ## L1/L2 reference-case outcomes
 
