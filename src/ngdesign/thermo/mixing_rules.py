@@ -44,28 +44,27 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache
-from typing import Any
+from typing import Any, cast
 
 from thermo import CEOSGas, CEOSLiquid
 from thermo.activity import GibbsExcess
 from thermo.eos_mix import (
     PRMIX,
-    PR_lnphis,
-    SRKMIX,
-    SRK_lnphis,
     TWUPRMIX,
+    PR_lnphis,
+    SRK_lnphis,
     a_alpha_and_derivatives_quadratic_terms,
 )
 from thermo.heat_capacity import R as R_GAS
 
 from ngdesign.thermo.cubic import (
     _CHEMSEP_CUBIC_TABLE,
-    CubicEOS,
     _MC_SRK,
+    SRKMIX_MC,
+    CubicEOS,
     _flasher_for,
     _flasher_vl_for,
     _mc_coeffs,
-    SRKMIX_MC,
 )
 from ngdesign.thermo.gamma_phi import _ge_model_factory
 
@@ -76,6 +75,7 @@ __all__ = [
     "VTPRRule",
     "LCVMRule",
     "SRKMIX_PSRK",
+    "SRKMIX_MC",
     "PRMIX_VTPR",
     "PRMIX_LCVM",
     "SRKPSRKThermo",
@@ -742,7 +742,7 @@ class SRKMIX_PSRK(_GEMixingEOS, SRKMIX_MC):  # type: ignore[misc]
             fugacities=fugacities,
             only_l=only_l,
             only_g=only_g,
-            alpha_coeffs=alpha_coeffs or [],
+            alpha_coeffs=cast("list[list[float] | None] | None", alpha_coeffs or []),
         )
 
 

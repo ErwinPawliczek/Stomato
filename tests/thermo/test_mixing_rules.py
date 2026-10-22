@@ -14,22 +14,24 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
+from typing import Any
 
 import pytest
 from thermo import ChemicalConstantsPackage
 
 from ngdesign.thermo.mixing_rules import (
-    LCVMRule,
-    MHV1Rule,
     PRMIX_HV,
     PRMIX_LCVM,
     PRMIX_VTPR,
     SRKMIX_MC,
     SRKMIX_PSRK,
-    VTPRRule,
     GEProvider,
+    GERule,
     HuronVidal,
+    LCVMRule,
     LinearVDW,
+    MHV1Rule,
+    VTPRRule,
     _nrtl_provider,
 )
 
@@ -236,7 +238,7 @@ class TestRuleAlgebra:
             def a_total(nn: Sequence[float]) -> float:
                 ntot = sum(nn)
                 st_t = rule.state(_T, tuple(x / ntot for x in nn), pa, tuple(eos.bs))
-                return ntot * st_t.a
+                return ntot * float(st_t.a)
 
             expected = (a_total(n_up) - a_total(n_dn)) / (2.0 * h)
             assert st.a + st.a_x[i] == pytest.approx(expected, rel=1e-6)
@@ -319,7 +321,9 @@ def _helmholtz_lnphi_general(
     return out
 
 
-def _hosted(rule_cls: Any, ge_kind: str, ids: tuple[str, ...], names: tuple[str, ...], zs: list[float]) -> Any:
+def _hosted(
+    rule_cls: Any, ge_kind: str, ids: tuple[str, ...], names: tuple[str, ...], zs: list[float]
+) -> Any:
     """Build a hosted EOS for the T-06c rules (rule attached before init)."""
     from ngdesign.thermo.cubic import _MC_SRK, _mc_coeffs
     from ngdesign.thermo.mixing_rules import _provider_for
@@ -334,7 +338,9 @@ def _hosted(rule_cls: Any, ge_kind: str, ids: tuple[str, ...], names: tuple[str,
     provider_kind = {"psrk": "unifac_psrk", "vtpr": "unifac_vtpr", "lcvm": "unifac"}[ge_kind]
     kwargs: dict[str, Any] = {}
     if getattr(eos_cls, "mc_table", None) is not None:
-        kwargs["alpha_coeffs"] = [_mc_coeffs(i, _MC_SRK, om) for i, om in zip(ids, consts.omegas)]
+        kwargs["alpha_coeffs"] = [
+            _mc_coeffs(i, _MC_SRK, om) for i, om in zip(ids, consts.omegas, strict=False)
+        ]
     return (
         eos_cls(
             Tcs=consts.Tcs,
@@ -403,7 +409,9 @@ class TestT06cPureFeedCollapse:
                 zs=zs,
                 T=_T,
                 P=_P,
-                alpha_coeffs=[_mc_coeffs(i, _MC_SRK, om) for i, om in zip(("MeOH", "H2O"), consts.omegas)],
+                alpha_coeffs=[
+                    _mc_coeffs(i, _MC_SRK, om) for i, om in zip(("MeOH", "H2O"), consts.omegas, strict=False)
+                ],
             )
         elif ge_kind == "vtpr":
             from thermo.eos_mix import TWUPRMIX
@@ -423,7 +431,7 @@ class TestT06cPureFeedCollapse:
 
 class TestT06cRuleAlgebra:
     @pytest.mark.parametrize("rule_cls", (MHV1Rule, VTPRRule, LCVMRule))
-    def test_ternary_mole_number_fd(self, rule_cls: type[GERule]) -> None:
+    def test_ternary_mole_number_fd(self, rule_cls: Any) -> None:
         rule = rule_cls(_ToyProvider())
         eos = PRMIX_HV(
             Tcs=[512.6, 647.1, 400.0],
@@ -449,7 +457,7 @@ class TestT06cRuleAlgebra:
             def a_total(nn: Sequence[float]) -> float:
                 ntot = sum(nn)
                 st_t = rule.state(_T, tuple(x / ntot for x in nn), pa, tuple(eos.bs))
-                return ntot * st_t.a
+                return ntot * float(st_t.a)
 
             expected = (a_total(n_up) - a_total(n_dn)) / (2.0 * h)
             assert st.a + st.a_x[i] == pytest.approx(expected, rel=1e-6)
@@ -462,8 +470,14 @@ class TestT06cRuleAlgebra:
         prov_zero = _ZeroProvider()
         xs = (0.3, 0.7)
         consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
-        eos_h = PRMIX_HV(Tcs=consts.Tcs, Pcs=consts.Pcs, omegas=consts.omegas, zs=list(xs), T=_T, P=_P, rule=MHV1Rule(prov_high, MHV1Rule.Q1_SRK))
-        eos_z = PRMIX_HV(Tcs=consts.Tcs, Pcs=consts.Pcs, omegas=consts.omegas, zs=list(xs), T=_T, P=_P, rule=MHV1Rule(prov_zero, MHV1Rule.Q1_SRK))
+        eos_h = PRMIX_HV(
+            Tcs=consts.Tcs, Pcs=consts.Pcs, omegas=consts.omegas, zs=list(xs), T=_T, P=_P,
+            rule=MHV1Rule(prov_high, MHV1Rule.Q1_SRK),
+        )
+        eos_z = PRMIX_HV(
+            Tcs=consts.Tcs, Pcs=consts.Pcs, omegas=consts.omegas, zs=list(xs), T=_T, P=_P,
+            rule=MHV1Rule(prov_zero, MHV1Rule.Q1_SRK),
+        )
         assert eos_z.a_alpha > eos_h.a_alpha
 
 

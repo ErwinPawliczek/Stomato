@@ -56,3 +56,218 @@
     do not transfer to the Huron-Vidal infinite-pressure reference; promotion needs an
     HV-specific NRTL parameter set with a citation (Huron & Vidal 1979 Table 2 or a later
     open fit) bound as an independent case
+- id: psrk
+  name: PSRK (SRK + MHV1 over PSRK-UNIFAC, Mathias-Copeman alpha)
+  family: mixing
+  adapter: ngdesign.thermo.mixing_rules:SRKPSRKThermo
+  options: {}
+  params:
+    source: 'PSRK (Predictive Soave-Redlich-Kwong, Holderbaum & Gmehling 1991): SRK with the MHV1 zero-pressure
+      mixing rule (q1 = -0.64663) over the PSRK-UNIFAC residual group model (thermo unifac_psrk variant,
+      PSRKSG/PSRKIP); Mathias-Copeman alpha with the T-02 fits (Coquelet et al. 2004) for the polar components'
+    provenance: 'Holderbaum, T. & Gmehling, J., "PSRK: A group contribution equation of state based on
+      UNIFAC", Fluid Phase Equilib. 70(2-3), 251-265, 1991; Michelsen, M. L., "A modified Huron-Vidal
+      mixing rule for cubic equations of state", Fluid Phase Equilib. 60, 213-219, 1990 (MHV1 reference);
+      Mathias, P. M. & Copeman, T. W., Fluid Phase Equilib. 13, 91-108, 1983; k_ij-free form - the gE
+      model carries all interaction information'
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 50000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - psrk-pure-MeOH-305K
+  - psrk-pure-MeOH-330K
+  - psrk-pure-H2O-340K
+  - psrk-pure-H2O-370K
+  - psrk-meohh2o-101.325kPa-349.05K
+  - psrk-meohh2o-312.91K-20.705kPa
+  - psrk-c1h2o-310.9K-13.10MPa
+  - psrk-c1h2o-310.9K-44.99MPa
+  references:
+  - Holderbaum, T. & Gmehling, J., Fluid Phase Equilib. 70(2-3), 251-265, 1991
+  - Michelsen, M. L., Fluid Phase Equilib. 60, 213-219, 1990
+  - Mathias, P. M. & Copeman, T. W., Fluid Phase Equilib. 13, 91-108, 1983
+  l0: {}
+  l0_excluded: {}
+  assessed:
+    psrk-pure-MeOH-305K: rho_L +22.9% (601.097 vs 779.805); Cp +45.2% (119.94 vs 82.6135) - pure-component
+      limits of the untranslated SRK form (the MHV1 rule reduces to SRK for a pure component; same liquid-density/Cp
+      misses as the srk row) (measured 2026-10-22, T-06c harness run)
+    psrk-pure-MeOH-330K: rho_V +3.2% (0.881659 vs 0.911218); rho_L +23.0% (581.927 vs 755.882); Cp +39.1%
+      (123.069 vs 88.5047) - pure-component limits of the untranslated SRK form (measured 2026-10-22,
+      T-06c harness run)
+    psrk-pure-H2O-340K: rho_L +25.5% (729.553 vs 979.503) - untranslated SRK liquid-density limit, as
+      the srk row (measured 2026-10-22, T-06c harness run)
+    psrk-pure-H2O-370K: rho_L +26.0% (710.618 vs 960.587) - untranslated SRK liquid-density limit, as
+      the srk row (measured 2026-10-22, T-06c harness run)
+    psrk-meohh2o-101.325kPa-349.05K: bubble_T +1.6% (354.776 vs 349.05); vapor_comp -0.054 abs (0.666052
+      vs 0.7197) - the PSRK-UNIFAC parameters are general group-contribution predictions, not a MeOH/H2O-specific
+      fit; the Gao 2012 system sits outside the PSRK parameter-fit systems (measured 2026-10-22 on the
+      Gao 2012 101.325 kPa point, T-06c harness run)
+    psrk-meohh2o-312.91K-20.705kPa: 'bubble_P +19.9% (16594.9 vs 20705); vapor_comp -0.085 abs (0.720068
+      vs 0.8053) - same cause: general group-contribution prediction, not a MeOH/H2O-specific parameter
+      fit (measured 2026-10-22, T-06c harness run)'
+  l0_note: 'provisional on L0 only: the 8 bound T-12 cases - 4 L1 pure, 2 L2 MeOH/H2O VLE and the 2 L3
+    aqueous-methane solubility points (which PASS: methane solubility in water at 13.1/45.0 MPa within
+    the liquid_comp tolerances) - are assessed above; the pure points inherit the untranslated SRK liquid-density
+    limits and the MeOH/H2O points are general group-contribution predictions without a MeOH/H2O-specific
+    parameter fit; promotion needs a PSRK-specific assessment beyond the transferred UNIFAC basis'
+- id: vtpr
+  name: VTPR (Twu-alpha PR host + residual-gE rule over VTPR-UNIFAC)
+  family: mixing
+  adapter: ngdesign.thermo.mixing_rules:PRVTPRThermo
+  options: {}
+  params:
+    source: 'VTPR (Ahlers & Gmehling 2001): PR-family host with thermo''s generalised Twu alpha and the
+      VTPR residual-gE mixing rule (1/0.53087) over the VTPR-UNIFAC residual group model (thermo unifac_vtpr
+      variant, VTPRSG/VTPRIP, version 3 - no combinatorial contribution)'
+    provenance: 'Ahlers, J. & Gmehling, J., "Development of an universal group contribution equation of
+      state: 1. Prediction of liquid densities and of vapor-liquid equilibria", Fluid Phase Equilib. 191-192,
+      177-188, 2001; k_ij-free form - the gE model carries all interaction information. Declared deviations
+      of the hosted form: linear covolume mixing (the paper''s power-mean combining) and the generalised
+      Twu alpha (the fitted Ahlers-Gmehling Twu table is not openly available)'
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 50000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - vtpr-pure-MeOH-305K
+  - vtpr-pure-MeOH-330K
+  - vtpr-pure-H2O-340K
+  - vtpr-pure-H2O-370K
+  - vtpr-meohh2o-101.325kPa-349.05K
+  - vtpr-meohh2o-312.91K-20.705kPa
+  - vtpr-c1h2o-310.9K-13.10MPa
+  - vtpr-c1h2o-310.9K-44.99MPa
+  references:
+  - Ahlers, J. & Gmehling, J., Fluid Phase Equilib. 191-192, 177-188, 2001
+  l0:
+    single_liquid_limit:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 298.15
+      - 100000.0
+  l0_excluded: {}
+  assessed:
+    vtpr-pure-MeOH-305K: 'rho_L +13.1% (677.553 vs 779.805); Cp +56.8% (129.578 vs 82.6135) - pure-component
+      limits of the untranslated generalised-Twu PR host (no Peneloux volume translation: density miss
+      as the pr row; Cp as the pr row) (measured 2026-10-22, T-06c harness run)'
+    vtpr-pure-MeOH-330K: rho_V +3.2% (0.882069 vs 0.911218); rho_L +13.1% (656.85 vs 755.882); Cp +44.5%
+      (127.928 vs 88.5047) - pure-component limits of the untranslated host form (measured 2026-10-22,
+      T-06c harness run)
+    vtpr-pure-H2O-340K: rho_L +15.8% (824.378 vs 979.503); Cp +33.0% (100.337 vs 75.4562) - pure-component
+      limits of the untranslated host form (measured 2026-10-22, T-06c harness run)
+    vtpr-pure-H2O-370K: rho_L +16.4% (803.424 vs 960.587); Cp +26.8% (96.2033 vs 75.8833) - pure-component
+      limits of the untranslated host form (measured 2026-10-22, T-06c harness run)
+    vtpr-meohh2o-101.325kPa-349.05K: 'bubble_T +0.6% (351.062 vs 349.05, just over the 0.5% tolerance)
+      - VTPR-UNIFAC prediction on the Gao 2012 point: vapor_comp passes, bubble_T marginally misses (measured
+      2026-10-22, T-06c harness run)'
+    vtpr-meohh2o-312.91K-20.705kPa: bubble_P +11.2% (18387.6 vs 20705) - vapor_comp passes (0.814345 vs
+      0.8053); the low-pressure isotherm is at the edge of the VTPR-UNIFAC fit range (measured 2026-10-22,
+      T-06c harness run)
+  l0_note: 'provisional on L0 only: the 8 bound T-12 cases - 4 L1 pure, 2 L2 MeOH/H2O VLE (vapor_comp
+    passes both; bubble_T +0.6% just over the 0.5% tolerance on the isobaric point) and the 2 L3 aqueous-methane
+    solubility points (which PASS) - are assessed above; the pure points inherit the untranslated host''s
+    liquid-density/Cp limits; promotion needs a VTPR-specific assessment beyond the transferred UNIFAC
+    basis. single_liquid_limit runs the row-level MeOH/H2O feed because the family default uses EtOH,
+    which the curated VTPR-UNIFAC map does not cover (the row refuses, first-use refusal pattern)'
+- id: lcvm
+  name: LCVM (PR + linear Vidal/MHV1 combination over original UNIFAC)
+  family: mixing
+  adapter: ngdesign.thermo.mixing_rules:PRLCVMThermo
+  options: {}
+  params:
+    source: 'LCVM (Boukouvalas et al. 1994): PR with the linear Vidal/MHV1 combination (lambda = 0.36,
+      the original Boukouvalas weighting) over original UNIFAC (thermo unifac variant)'
+    provenance: Boukouvalas, C. J., Spiliotis, N., Coutsikos, P., Tzoupanekos, N. & Magoulas, K., "Prediction
+      of vapor-liquid equilibria with the LCVM model", Fluid Phase Equilib. 92, 75-89, 1994; Michelsen,
+      M. L., Fluid Phase Equilib. 60, 213-219, 1990 (MHV1 reference, q1 = -0.62363 for PR); k_ij-free
+      form - the gE model carries all interaction information
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - lcvm-pure-MeOH-305K
+  - lcvm-pure-MeOH-330K
+  - lcvm-pure-H2O-340K
+  - lcvm-pure-H2O-370K
+  - lcvm-meohh2o-101.325kPa-349.05K
+  - lcvm-meohh2o-312.91K-20.705kPa
+  references:
+  - Boukouvalas, C. J., Spiliotis, N., Coutsikos, P., Tzoupanekos, N. & Magoulas, K., Fluid Phase Equilib.
+    92, 75-89, 1994
+  - Michelsen, M. L., Fluid Phase Equilib. 60, 213-219, 1990
+  l0: {}
+  l0_excluded: {}
+  assessed:
+    lcvm-pure-MeOH-305K: rho_L -13.2% (676.721 vs 779.805); Cp +36.7% (112.917 vs 82.6135) - pure-component
+      limits of the untranslated PR form (the LCVM rule reduces to PR for a pure component; same misses
+      as the pr row) (measured 2026-10-22, T-06c harness run)
+    lcvm-pure-MeOH-330K: rho_V -3.2% (0.882017 vs 0.911218); rho_L -13.2% (656.228 vs 755.882); Cp +31.4%
+      (116.265 vs 88.5047) - pure-component limits of the untranslated PR form (measured 2026-10-22, T-06c
+      harness run)
+    lcvm-pure-H2O-340K: rho_L -15.9% (823.513 vs 979.503); Cp +8.0% (81.5128 vs 75.4562) - pure-component
+      limits of the untranslated PR form (measured 2026-10-22, T-06c harness run)
+    lcvm-pure-H2O-370K: rho_L -16.4% (802.915 vs 960.587); Cp +8.7% (82.4488 vs 75.8833) - pure-component
+      limits of the untranslated PR form (measured 2026-10-22, T-06c harness run)
+    lcvm-meohh2o-101.325kPa-349.05K: bubble_T +2.8% (358.996 vs 349.05); vapor_comp -0.061 abs (0.659246
+      vs 0.7197) - the 64/36 Vidal/Michelsen weighting with original-UNIFAC parameters over-predicts the
+      MeOH/H2O bubble temperature at 101.325 kPa (Boukouvalas et al. developed LCVM for nonpolar/polar
+      asymmetry systems, not alcohol-water) (measured 2026-10-22 on the Gao 2012 101.325 kPa point, T-06c
+      harness run)
+    lcvm-meohh2o-312.91K-20.705kPa: 'bubble_P +29.3% (14637.2 vs 20705); vapor_comp -0.058 abs (0.747041
+      vs 0.8053) - same cause: original-UNIFAC parameters in the LCVM reference on the low-pressure Bayer
+      1927 isotherm (measured 2026-10-22, T-06c harness run)'
+  l0_note: 'provisional on L0 only: the 6 bound T-12 cases (4 L1 pure, 2 L2 MeOH/H2O VLE) all miss (declared
+    above; the two C1/H2O cases stay unbound because the original-UNIFAC curated map has no C1 assignment
+    and the row refuses) - the pure points inherit the untranslated PR limits and the MeOH/H2O points
+    show the 64/36 Vidal/Michelsen weighting with original-UNIFAC parameters over-predicts alcohol-water
+    bubble temperatures; promotion needs LCVM-assessed gE evidence beyond the transferred UNIFAC basis'
