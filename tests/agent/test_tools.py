@@ -18,6 +18,7 @@ from ngdesign.agent.engine import DEFAULT_ENGINE
 from ngdesign.agent.tools import run_tool, tool_definitions
 from ngdesign.contracts import Project
 from ngdesign.flowsheets import slice as slice_fs
+from ngdesign.thermo import advisor
 
 
 class _Store:
@@ -50,6 +51,17 @@ def _run_err(store: _Store, tool: str, **tool_input: Any) -> str:
     assert not outcome.ok, f"{tool}: expected an error outcome, got {outcome.result!r}"
     assert isinstance(outcome.error, str)
     return outcome.error
+
+
+def test_recommend_thermo_matches_advisor_payload() -> None:
+    """T-08: the tool reads the current flowsheet and returns the advisor payload."""
+    store = _store()
+    result = _run(store, "recommend_thermo")
+    assert result == advisor.payload(slice_fs.build())
+    recs = result["recommendations"]
+    assert recs[0]["id"] in ("pr", "srk")
+    assert any("water" in w for w in recs[0]["warnings"])
+    assert all(rec["status"] != "experimental" for rec in recs)
 
 
 def test_tool_definitions_are_strict_and_closed() -> None:

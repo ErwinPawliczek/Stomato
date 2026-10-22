@@ -52,7 +52,9 @@ rendering: read_variable reads solved values by address — '<stream>.T', '<stre
 '<feed>.feed.<T|P|molar_flow>') over values and reports each requested output; the \
 stored project is left unchanged.
 - Tool errors tell you what went wrong and what the nearest valid input is — read \
-them, fix the call, retry. Do not invent units, components, ports or params.
+them, fix the call, retry. Do not invent units, components, ports or params. \
+Call recommend_thermo before changing the property package (set_thermo): it ranks \
+the registered methods for the current slate and feed conditions with reasons and warnings.
 - render returns the URL of the requested drawing plus P&ID counts; the UI fetches it.
 - Report engineering results with units (K, Pa, mol/s, W). Be concise; let the tool \
 rows carry the detail.

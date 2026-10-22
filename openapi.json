@@ -3544,6 +3544,48 @@
         "summary": "Study Case"
       }
     },
+    "/api/thermo/models": {
+      "get": {
+        "description": "Every catalogue row with its selectable flag and refusal reason (issue #154).",
+        "operationId": "thermo_models_api_thermo_models_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Thermo Models Api Thermo Models Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Thermo Models"
+      }
+    },
+    "/api/thermo/recommend": {
+      "get": {
+        "description": "Ranked property-method recommendations for the current project (spec T-08).",
+        "operationId": "thermo_recommend_api_thermo_recommend_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Thermo Recommend Api Thermo Recommend Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Thermo Recommend"
+      }
+    },
     "/api/views/iso": {
       "get": {
         "deprecated": true,
