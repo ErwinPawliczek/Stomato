@@ -173,6 +173,8 @@ def test_rows_load_and_build() -> None:
     # mixing family (T-06): gE mixing rules hosted on thermo's GCEOSMIX
     mixing_ids = [
         "pr_huron_vidal",
+        "pr_wong_sandler",
+        "srk_wong_sandler",
     ]
     expected = sorted(
         gamma_phi_ids
@@ -185,7 +187,7 @@ def test_rows_load_and_build() -> None:
         + electrolyte_ids
         + mixing_ids
     )
-    assert len(expected) == 129
+    assert len(expected) == 131
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
