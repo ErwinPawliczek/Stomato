@@ -1,4 +1,4 @@
-# regular_solution_nothnagel — regular solution liquid + Nothnagel virial vapour
+# regular_solution_nothnagel — regular solution liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
 
 family `gamma_phi` · status **provisional** · adapter `ngdesign.thermo.gamma_phi:GammaPhiPackage`.
 

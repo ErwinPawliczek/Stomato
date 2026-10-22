@@ -1,4 +1,4 @@
-# unifac_dortmund_nothnagel — UNIFAC (Dortmund) liquid + Nothnagel virial vapour
+# unifac_dortmund_nothnagel — UNIFAC (Dortmund) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
 
 family `gamma_phi` · status **provisional** · adapter `ngdesign.thermo.gamma_phi:GammaPhiPackage`.
 

@@ -1,4 +1,4 @@
-# margules_nothnagel — Margules liquid + Nothnagel virial vapour
+# margules_nothnagel — Margules liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
 
 family `gamma_phi` · status **provisional** · adapter `ngdesign.thermo.gamma_phi:GammaPhiPackage`.
 

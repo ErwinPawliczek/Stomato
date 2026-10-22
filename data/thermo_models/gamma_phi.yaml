@@ -177,7 +177,7 @@
     - V
     - L
     - VLL
-  status: validated
+  status: provisional
   validation: &nrtl-hoc-cases
   - pure-H2O-323.5K-hoc
   - pure-H2O-420K-hoc
@@ -204,7 +204,7 @@
     pure-nC4-350K-hoc: "Cp -30.8% (113.4552 vs 163.8853) - same known gamma-phi liquid-Cp limitation (no residual liquid-Cp contribution; measured 2026-10-22)"
 
 - id: nrtl_nothnagel
-  name: NRTL liquid + Nothnagel virial vapour
+  name: NRTL liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -377,7 +377,7 @@
   l0_excluded: {}
 
 - id: uniquac_nothnagel
-  name: UNIQUAC liquid + Nothnagel virial vapour
+  name: UNIQUAC liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -582,7 +582,7 @@
   l0_excluded: {}
 
 - id: wilson_nothnagel
-  name: Wilson liquid + Nothnagel virial vapour
+  name: Wilson liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -611,7 +611,7 @@
     phases:
     - V
     - L
-  status: validated
+  status: provisional
   validation: &wilson-nothnagel-cases
   - pure-H2O-323.5K-nothnagel
   - pure-H2O-420K-nothnagel
@@ -890,7 +890,7 @@
   l0_excluded: {}
 
 - id: vanlaar_nothnagel
-  name: van Laar liquid + Nothnagel virial vapour
+  name: van Laar liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -1253,7 +1253,7 @@
   l0_excluded: {}
 
 - id: margules_nothnagel
-  name: Margules liquid + Nothnagel virial vapour
+  name: Margules liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -1518,7 +1518,7 @@
   l0_excluded: {}
 
 - id: regular_solution_nothnagel
-  name: regular solution liquid + Nothnagel virial vapour
+  name: regular solution liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -1717,7 +1717,7 @@
   l0_excluded: {}
 
 - id: unifac_nothnagel
-  name: UNIFAC liquid + Nothnagel virial vapour
+  name: UNIFAC liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -1916,7 +1916,7 @@
   l0_excluded: {}
 
 - id: unifac_dortmund_nothnagel
-  name: UNIFAC (Dortmund) liquid + Nothnagel virial vapour
+  name: UNIFAC (Dortmund) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -2114,7 +2114,7 @@
   l0_excluded: {}
 
 - id: unifac_psrk_nothnagel
-  name: UNIFAC (PSRK) liquid + Nothnagel virial vapour
+  name: UNIFAC (PSRK) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -2311,7 +2311,7 @@
   l0_excluded: {}
 
 - id: unifac_nist_nothnagel
-  name: UNIFAC (NIST) liquid + Nothnagel virial vapour
+  name: UNIFAC (NIST) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -2658,7 +2658,7 @@
   l0_excluded: {}
 
 - id: unifac_lle_nothnagel
-  name: UNIFAC-LLE liquid + Nothnagel virial vapour
+  name: UNIFAC-LLE liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:
@@ -2961,7 +2961,7 @@
   l0_excluded: {}
 
 - id: unifac_lyngby_nothnagel
-  name: UNIFAC (Lyngby) liquid + Nothnagel virial vapour
+  name: UNIFAC (Lyngby) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
   family: gamma_phi
   adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
   options:

@@ -1,4 +1,4 @@
-# vanlaar_nothnagel — van Laar liquid + Nothnagel virial vapour
+# vanlaar_nothnagel — van Laar liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
 
 family `gamma_phi` · status **provisional** · adapter `ngdesign.thermo.gamma_phi:GammaPhiPackage`.
 

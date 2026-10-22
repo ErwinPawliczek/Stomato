@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-22T08:31:32+00:00 from `data/validation/results.json` (git e178a35, CoolProp 8.0.0).
+Generated 2026-10-22T09:55:08+00:00 from `data/validation/results.json` (git 0ab3be8, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -67,7 +67,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [multifluid](validation/multifluid.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/multifluid.md) |
 | [multifluid_pure](validation/multifluid_pure.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/multifluid_pure.md) |
 | [nrtl](validation/nrtl.md) | gamma_phi | provisional | 7/7 | L1=0 L2=21 | [report](validation/nrtl.md) |
-| [nrtl_hoc](validation/nrtl_hoc.md) | gamma_phi | validated | 7/7 | L1=3 L2=8 | [report](validation/nrtl_hoc.md) |
+| [nrtl_hoc](validation/nrtl_hoc.md) | gamma_phi | provisional | 7/7 | L1=3 L2=8 | [report](validation/nrtl_hoc.md) |
 | [nrtl_ig](validation/nrtl_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_ig.md) |
 | [nrtl_nothnagel](validation/nrtl_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_nothnagel.md) |
 | [nrtl_rk](validation/nrtl_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_rk.md) |
@@ -147,7 +147,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [vdw](validation/vdw.md) | cubic | provisional | 5/7 | L1=4 L2=2 | [report](validation/vdw.md) |
 | [wilson_hoc](validation/wilson_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/wilson_hoc.md) |
 | [wilson_ig](validation/wilson_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=3 | [report](validation/wilson_ig.md) |
-| [wilson_nothnagel](validation/wilson_nothnagel.md) | gamma_phi | validated | 7/7 | L1=3 L2=8 | [report](validation/wilson_nothnagel.md) |
+| [wilson_nothnagel](validation/wilson_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=3 L2=8 | [report](validation/wilson_nothnagel.md) |
 | [wilson_pr](validation/wilson_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/wilson_pr.md) |
 | [wilson_rk](validation/wilson_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/wilson_rk.md) |
 | [zudkevitch-joffe-rk](validation/zudkevitch-joffe-rk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/zudkevitch-joffe-rk.md) |

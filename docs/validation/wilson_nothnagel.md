@@ -1,6 +1,6 @@
-# wilson_nothnagel — Wilson liquid + Nothnagel virial vapour
+# wilson_nothnagel — Wilson liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
 
-family `gamma_phi` · status **validated** · adapter `ngdesign.thermo.gamma_phi:GammaPhiPackage`.
+family `gamma_phi` · status **provisional** · adapter `ngdesign.thermo.gamma_phi:GammaPhiPackage`.
 
 ## Applicability (Carlson 1996)
 

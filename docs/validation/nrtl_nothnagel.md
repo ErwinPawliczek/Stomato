@@ -1,4 +1,4 @@
-# nrtl_nothnagel — NRTL liquid + Nothnagel virial vapour
+# nrtl_nothnagel — NRTL liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
 
 family `gamma_phi` · status **provisional** · adapter `ngdesign.thermo.gamma_phi:GammaPhiPackage`.
 

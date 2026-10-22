@@ -57,6 +57,7 @@ from thermo import (
     FlashVLN,
     GibbsExcessLiquid,
     IdealGas,
+    VirialGas,
 )
 from thermo.activity import GibbsExcess
 from thermo.interaction_parameters import IPDB
@@ -78,7 +79,7 @@ _state.register_vapour_phase_class(IdealGas)
 # The virial vapour is a non-CEOS gas phase too: without this registration
 # its saturation brackets fail exactly as the ideal-vapour ones did (the
 # shared state layer counts an all-virial state as liquid, vf stuck at 0).
-_state.register_vapour_phase_class(virial.VirialGas)
+_state.register_vapour_phase_class(VirialGas)
 
 PARAMS_DIR = Path(__file__).resolve().parents[3] / "data" / "thermo_params"
 
