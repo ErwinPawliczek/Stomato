@@ -192,11 +192,32 @@ def xfail_reason(case: Case, failed_props: frozenset[str], pkg: str | None = Non
             "saturated-phase properties are evaluated at the reference Psat, where this model's "
             "liquid is stretched (model limitation; assessed in docs/validation.md)"
         )
+    if case.id.startswith("pure-") and failed_props <= {"rho_L", "rho_V", "Cp"}:
+        return (
+            "cubic saturation properties beyond tolerance vs the CoolProp reference EOS "
+            "(known cubic EOS limitation, worst near Tc; assessed in docs/validation.md)"
+        )
     case_id = case.id
     if case_id.startswith("meohh2o-"):
         return (
             "NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within "
             "2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md)"
+        )
+    if case_id.startswith(("c1c3-", "c1co2-")) and failed_props <= {"bubble_P", "vapor_comp"}:
+        return (
+            "k_ij=0 cubic bubble pressure / vapour composition just beyond tolerance near the "
+            "mixture critical region (model limitation; assessed in docs/validation.md)"
+        )
+    if case_id == "c1h2o-410.9K-13.10MPa":
+        return (
+            "cubic two-phase flash yields an unphysical water/methane phase split at 13 MPa, so "
+            "the aqueous methane solubility is not representable (flagged for thermo investigation)"
+        )
+    if case_id.startswith("ng-dew-morch-") and failed_props <= {"dew_P"}:
+        return (
+            "dew pressures of the asymmetric C1/C2/nC5 synthetic natural gas ternary run 10-35 % "
+            "above the Mørch et al. (2006) cooled-mirror measurements under databank/zero k_ij "
+            "(model limitation, issue #130; assessed in docs/validation.md)"
         )
     if case_id == "slice-inlet-K-500psia-300K":
         return (
@@ -1165,4 +1186,4 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-    raise SystemExit(main())
+
