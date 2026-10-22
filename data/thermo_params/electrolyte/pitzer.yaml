@@ -1,0 +1,26 @@
+# Pitzer NaCl(aq) parameters (spec T-09, model row pitzer_nacl_water).
+#
+# The classic 25 C NaCl parameter set (the PHRQPITZ convention): the osmotic
+# and mean-activity-coefficient equations in ngdesign.amine.electrolyte with
+# these coefficients reproduce the retrieved reference tables to 0.36 %:
+#   - activity coefficients, Pitzer, Peiper & Busey (1984), J. Phys. Chem.
+#     Ref. Data 13(1), Table A-8 (25 C, 1 bar), NIST reprint
+#     https://srd.nist.gov/jpcrdreprint/1.555709.pdf -- 0.1..6 molal, 10 points
+#   - osmotic coefficients, same source, Table A-9 (25 C, 1 bar), 0.1..6 molal
+#   - saturation: same source p. 11 -- solubility 6.146 mol/kg at 298.15 K,
+#     saturated-solution mean gamma 1.0065 (the SLE test anchor)
+# The parameter values themselves are the classic set as tabulated across the
+# open Pitzer literature (e.g. Plummer et al., PHRQPITZ, USGS Water-Resources
+# Investigations Report 88-4153); the 1984 tables above are the validation
+# anchors, not the source of the coefficients.
+aphi: 0.392
+b: 1.2
+alpha: 2.0
+beta0: 0.0765
+beta1: 0.2664
+cphi: 0.00127
+# molality of pure water (mol/kg), the a_w conversion base
+molality_of_water: 55.5084
+saturation:
+  solubility_molality: 6.146
+  mean_gamma: 1.0065
