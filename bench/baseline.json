@@ -11,8 +11,8 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 0,
-      "flash_wall_s": 0.641876,
-      "total_wall_s": 3.263016,
+      "flash_wall_s": 0.644715,
+      "total_wall_s": 3.387619,
       "solver_passes": 1,
       "converged": true
     },
@@ -27,8 +27,8 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 0,
-      "flash_wall_s": 2.525357,
-      "total_wall_s": 2.530017,
+      "flash_wall_s": 2.890914,
+      "total_wall_s": 2.896539,
       "solver_passes": 1,
       "converged": true
     },
@@ -43,8 +43,8 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 0,
-      "flash_wall_s": 42.177207,
-      "total_wall_s": 42.201009,
+      "flash_wall_s": 44.928762,
+      "total_wall_s": 44.955314,
       "solver_passes": 20,
       "converged": true
     },
@@ -59,8 +59,8 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 0,
-      "flash_wall_s": 0.587428,
-      "total_wall_s": 0.609576,
+      "flash_wall_s": 0.507968,
+      "total_wall_s": 0.531576,
       "solver_passes": 4,
       "converged": true
     },
@@ -75,14 +75,14 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 0,
-      "flash_wall_s": 2.393032,
-      "total_wall_s": 2.420829,
+      "flash_wall_s": 2.77519,
+      "total_wall_s": 2.806295,
       "solver_passes": 6,
       "converged": true
     },
     "column": {
-      "flashes": 4959,
-      "flashes_pt": 4953,
+      "flashes": 6508,
+      "flashes_pt": 6502,
       "flashes_ph": 0,
       "flashes_ps": 0,
       "flashes_k_values": 0,
@@ -91,8 +91,8 @@
       "flashes_flash_tvf": 0,
       "flashes_flash_pvf": 0,
       "props_calls": 66,
-      "flash_wall_s": 6.822363,
-      "total_wall_s": 7.924469,
+      "flash_wall_s": 8.22267,
+      "total_wall_s": 9.487993,
       "solver_passes": 0,
       "converged": true
     }
@@ -105,6 +105,6 @@
   "metadata": {
     "python": "3.13.14",
     "platform": "Linux-6.1.158+-x86_64-with-glibc2.41",
-    "commit": "3494dacd19d251cab23cb1c8b810bee1df8a294a"
+    "commit": "5571887949f4d3248aee0a6b8bf0d60a915c40dc"
   }
 }

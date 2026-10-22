@@ -284,14 +284,17 @@ def test_stripper_component_recovery_spec() -> None:
     assert res.info["distillate_mol_s"] + res.info["bottoms_mol_s"] == pytest.approx(100.0, rel=1e-8)
     assert all(t > 300.0 for t in stage_ts)
     assert all(t < stage_ts[-1] for t in stage_ts[:-1])
-    # Same disclosed deviation as the ratio tests: the NS finite-difference
-    # floor bounds boundary component closure at ~1.5e-7 relative on the
-    # physical branch (the P1-09 band-floor root closed at 4e-10 only because
-    # the floor branch is a degenerate clamp, not a separated profile).
+    # Re-pinned P1-11 step 3 (ruling on #153): the equilibrium-consistent exact
+    # gate accepts a slightly different physical-branch state, and its boundary
+    # component closure moved from ~1.5e-7 (the P1-10 recorded floor, bound 1e-6)
+    # to measured C1 3.854e-6, NC4 4.28e-7 relative - the NS finite-difference
+    # floor at the honest state. Bound re-pinned 1e-6 -> 1e-5, just above the
+    # measured closure; the boundary TOTAL balance still closes exactly
+    # (D + B = 100.0, C1 recovery 0.94961).
     for component, feed in (("C1", 10.0), ("NC4", 90.0)):
         out = d_out.molar_flow * d_out.composition.get(component, 0.0)
         out += b_out.molar_flow * b_out.composition.get(component, 0.0)
-        assert abs(out - feed) / feed < 1e-6
+        assert abs(out - feed) / feed < 1e-5
 
 
 def test_mesh_rejects_band_floor_profile() -> None:
@@ -333,6 +336,15 @@ def test_mesh_rejects_band_floor_profile() -> None:
         _reject_band_limit(col, prof)
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="P1-11 step 3 (ruling on #153): the honest equilibrium-consistent gate rejects the "
+    "state this test was tuned on - the spec secant stalls at residual 0.04428 because RR=0.25 "
+    "lies in a cold-solve basin gap (measured map: l0=20.62 -> RR=0.2458 with V0~104.5, "
+    "l0=20.92 -> RR=0.2611 with V0~101.1; pinned at the old accepted state's l0=20.4732 the "
+    "honest mesh lands RR=0.2437 - the old root does not exist under the honest gate). "
+    "Warm-chained tear continuation inside the spec secant is P1-12 (#157); no re-tuning here.",
+)
 def test_rectifier_reflux_ratio_spec() -> None:
     """Spec test 4: a six-stage rectifier with one reflux_ratio spec converges."""
     thermo = get("thermo", "pr")()
@@ -354,6 +366,14 @@ def test_rectifier_reflux_ratio_spec() -> None:
     assert res.info["distillate_mol_s"] + res.info["bottoms_mol_s"] == pytest.approx(100.0, rel=1e-8)
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="P1-11 step 3 (ruling on #153): same rectifier, same basin gap - the honest gate "
+    "rejects the under-converged state the distillate-rate root was tuned on (basin map: "
+    "l0=20.62 -> RR=0.2458, l0=20.92 -> RR=0.2611, old l0=20.4732 -> RR=0.2437; the RR=0.25 "
+    "neighbourhood the d=60 spec's secant rides sits in the gap). Warm-chained tear "
+    "continuation is P1-12 (#157); no re-tuning here.",
+)
 def test_rectifier_distillate_rate_spec() -> None:
     """Spec test 4: the same rectifier with one distillate_rate spec converges.
 

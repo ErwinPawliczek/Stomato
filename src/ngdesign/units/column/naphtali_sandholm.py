@@ -5,6 +5,7 @@ Moved unchanged from the former ``units/column.py`` god-file.
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -36,6 +37,167 @@ from .thermo_adapter import _flash_ready, _ThermoBox
 # --------------------------------------------------------------------------------------
 # Naphtali-Sandholm fallback
 # --------------------------------------------------------------------------------------
+
+
+# --------------------------------------------------------------------------------------
+# Newton controller (P1-11 step 4, ruling on issue #153 16:54): per-variable-class
+# step cap before the Armijo backtracking, then Levenberg-Marquardt damping on the
+# normal equations with the damping adapted from the achieved-vs-predicted ratio.
+#
+# Measured motivation (step-4 probe on the 20-stage MDEA absorber, posted on #153):
+# the FD Jacobian is accurate (max |J(1e-7) - J(1e-5)| / max|J| = 5.9e-7, M rows
+# all well-conditioned) and one FULL Newton step achieves max|r| 10259 -> 2346.7
+# where the linear model predicts 8.3e-11 - an 11-order validity gap. The reactive
+# K-values swing orders of magnitude with loading, so the linearisation dies far
+# from the trial state: the uncapped Newton direction is not trustworthy at any
+# lambda the line search can reach. The caps bound the step into the model's
+# measured validity radius; LM takes over when even the capped step overshoots.
+
+#: |delta T_j| <= _NS_DT_CAP kelvin per pass. The reactive exotherm bulge spans
+#: ~33 K over 20 stages; a single pass moving a stage more than a few K is
+#: outside the frozen-model validity radius (measured: the uncapped step's
+#: predicted 8e-11 residual becomes 2.3e3 achieved).
+_NS_DT_CAP = 5.0
+#: |delta V_j| <= _NS_DV_REL * V_j per pass (relative traffic cap).
+_NS_DV_REL = 0.5
+#: |delta x_ij| <= max(_NS_DX_REL * x_ij, _NS_DX_ABS) per pass: bounds the
+#: RELATIVE composition move (the packed variable is raw x, so this is the
+#: delta-ln-x bound the ruling names, with an absolute floor at the packing's
+#: zero clamp so trace components can still grow from ~0).
+_NS_DX_REL = 0.5
+_NS_DX_ABS = 1e-3
+#: LM damping attempts per pass before the pass is abandoned.
+_NS_LM_TRIES = 6
+
+
+def _cap_ns_step(
+    u: list[float], step: list[float], col: _Column, v_free: list[int]
+) -> tuple[list[float], int]:
+    """Cap the packed Newton step per variable class; return (capped, cap hits).
+
+    One mechanism for every package (no per-case branch): the cap bounds each
+    pass's move into the linear model's measured validity radius (see the
+    constants above) instead of letting the line search discover overshoot by
+    halving lambda ten times from an unbounded direction.
+    """
+    nc = len(col.comps)
+    capped = list(step)
+    hits = 0
+    for i, x in enumerate(u[: nc * col.n]):
+        limit = max(_NS_DX_REL * abs(x), _NS_DX_ABS)
+        if abs(capped[i]) > limit:
+            capped[i] = math.copysign(limit, capped[i])
+            hits += 1
+    t_base = nc * col.n
+    for j in range(col.n):
+        if abs(capped[t_base + j]) > _NS_DT_CAP:
+            capped[t_base + j] = math.copysign(_NS_DT_CAP, capped[t_base + j])
+            hits += 1
+    v_base = t_base + col.n
+    for idx in range(len(v_free)):
+        limit = _NS_DV_REL * max(abs(u[v_base + idx]), _FLOW_FLOOR)
+        if abs(capped[v_base + idx]) > limit:
+            capped[v_base + idx] = math.copysign(limit, capped[v_base + idx])
+            hits += 1
+    return capped, hits
+
+
+def _lm_damped_step(jac: list[list[float]], r0: list[float], lam: float) -> list[float] | None:
+    """Levenberg-Marquardt step: solve (J'J + lam*diag(J'J)) d = -J'r.
+
+    Marquardt scaling (diag(J'J), not identity) keeps the damping per-variable:
+    the packed unknowns span mole fractions ~1e-2, temperatures ~300 K and
+    flows ~100 mol/s, so an identity damping would strangle the temperature and
+    flow blocks first for no reason. Returns None when the damped system is
+    singular (the caller abandons the pass).
+    """
+    m = len(r0)
+    n_unk = len(jac[0]) if jac else 0
+    if n_unk == 0:
+        return None
+    jtj = [[0.0] * n_unk for _ in range(n_unk)]
+    g = [0.0] * n_unk
+    for k in range(m):
+        row = jac[k]
+        rk = r0[k]
+        for i in range(n_unk):
+            ri = row[i]
+            if ri == 0.0:
+                continue
+            g[i] -= ri * rk
+            for j in range(i, n_unk):
+                jtj[i][j] += ri * row[j]
+    for i in range(n_unk):
+        for j in range(i + 1, n_unk):
+            jtj[j][i] = jtj[i][j]
+    a = [[jtj[i][j] + (lam * jtj[i][i] if i == j else 0.0) for j in range(n_unk)] for i in range(n_unk)]
+    try:
+        return _gauss(a, g)
+    except ColumnConvergenceError:
+        return None
+
+
+def _ns_try_accept(
+    svec: list[float],
+    u: list[float],
+    n_unk: int,
+    residuals: Callable[[list[float]], list[float]],
+    m_norm_of: Callable[[list[float]], float],
+    h_norm_of: Callable[[list[float]], float],
+    m_current: float,
+    h_current: float,
+    live_norm: bool,
+    ex_m: float,
+    ex_h: float,
+    prof: _Profile,
+    col: _Column,
+    tb: _ThermoBox,
+    v_free: list[int],
+    t_bot_tear: float | None,
+    force_exact: bool = False,
+) -> tuple[bool, tuple[float, float], float]:
+    """One trial state through the joint descent + exact-gate tests.
+
+    Returns (accepted, achieved scaled norms, sum-of-squares of the trial
+    residuals for the LM trust ratio). The acceptance semantics are the pass
+    loop's existing ones, unchanged.
+    """
+    u_try = [u[i] + svec[i] for i in range(n_unk)]
+    try:
+        r_try = residuals(u_try)
+        trial_m = m_norm_of(r_try)
+        trial_h = h_norm_of(r_try)
+        ss_try = sum(rv * rv for rv in r_try)
+    except (ColumnConvergenceError, ValueError):
+        # A trial step landed in a degenerate or off-chemistry state the
+        # residual machinery cannot evaluate (SaturationError is a
+        # ValueError subclass); reject it and shrink the step.
+        trial_m, trial_h, ss_try = float("inf"), float("inf"), float("inf")
+    # Joint max-norm descent: a step that polishes M while letting H
+    # drift is rejected (measured P1-09 rectifier: the M-only search
+    # walked M to 1e-8 with H pinned at 0.34 - the state had drifted
+    # into an energy-infeasible corner the model refresh never
+    # recovered from).
+    if max(trial_m, trial_h) >= max(m_current, h_current):
+        return False, (trial_m, trial_h), ss_try
+    _apply_state(prof, u_try, col, v_free, t_bot_tear)
+    if not (live_norm or force_exact):
+        return True, (trial_m, trial_h), ss_try
+    # Live-norm acceptance: the frozen-row descent must also not worsen
+    # either exact (refreshed-thermo) norm. Trials that improve the frozen
+    # rows while walking either exact residual uphill are rejected and the
+    # pre-step state restored (measured P1-09 stripper: frozen rows closed
+    # to 6.9e-10 while refreshed exact M rose to 1.00 - the diverged trial
+    # displaced a near-converged state the mesh could have kept).
+    _refresh_y(col, tb, prof)
+    try:
+        ex_try_m, ex_try_h = _exact_residuals(col, tb, prof)
+    except (ColumnConvergenceError, ValueError):
+        ex_try_m, ex_try_h = float("inf"), float("inf")
+    if max(ex_try_m, ex_try_h) < max(ex_m, ex_h):
+        return True, (trial_m, trial_h), ss_try
+    _apply_state(prof, u, col, v_free, t_bot_tear)
+    return False, (trial_m, trial_h), ss_try
 
 
 @dataclass(frozen=True)
@@ -284,47 +446,106 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
             step = _gauss(jac, [-r for r in r0])
         except ColumnConvergenceError:
             break
+        # Linear-model prediction of the full uncapped Newton step: the
+        # denominator of the achieved-vs-predicted trust test in the trace.
+        # Measured absorber probe: max|r| predicted 8.3e-11 vs 2346.7 achieved -
+        # the 11-order validity gap that motivates the controller.
+        lin = [r0[i] + sum(jac[i][j] * step[j] for j in range(n_unk)) for i in range(len(r0))]
+        pred_m = max(abs(lin[i]) for i in range(n_m)) / f_scale
+        pred_h = max((abs(lin[i]) for i in range(n_m, len(r0))), default=0.0) / h_scale
+
+        # The hoisted trial-acceptance call's per-pass context (plain tuple: the
+        # values rebind every pass, so no closure over loop variables).
+        ns_ctx = (
+            u,
+            n_unk,
+            residuals,
+            m_norm_of,
+            h_norm_of,
+            m_current,
+            h_current,
+            live_norm,
+            ex_m,
+            ex_h,
+            prof,
+            col,
+            tb,
+            v_free,
+            t_bot_tear,
+        )
+
         lam = 1.0
         accepted = False
+        ach_m = ach_h = float("inf")
+        ss0 = sum(rv * rv for rv in r0)
         for _ in range(10):
-            u_try = [u[i] + lam * step[i] for i in range(n_unk)]
-            try:
-                r_try = residuals(u_try)
-                trial_m = m_norm_of(r_try)
-                trial_h = h_norm_of(r_try)
-            except (ColumnConvergenceError, ValueError):
-                # A trial step landed in a degenerate or off-chemistry state the
-                # residual machinery cannot evaluate (SaturationError is a
-                # ValueError subclass); reject it and shrink the step.
-                trial_m = float("inf")
-                trial_h = float("inf")
-            # Joint max-norm descent: a step that polishes M while letting H
-            # drift is rejected (measured P1-09 rectifier: the M-only search
-            # walked M to 1e-8 with H pinned at 0.34 - the state had drifted
-            # into an energy-infeasible corner the model refresh never
-            # recovered from).
-            if max(trial_m, trial_h) < max(m_current, h_current):
-                _apply_state(prof, u_try, col, v_free, t_bot_tear)
-                if not live_norm:
-                    accepted = True
-                    break
-                # Live-norm acceptance: the frozen-row descent must also not
-                # worsen the exact (refreshed-thermo) residuals. Trials that
-                # improve the frozen rows while walking the exact residuals
-                # uphill are rejected and the pre-step state restored
-                # (measured P1-09 stripper: frozen rows closed to 6.9e-10
-                # while refreshed exact M rose to 1.00 - the diverged trial
-                # displaced a near-converged state the mesh could have kept).
-                _refresh_y(col, tb, prof)
-                try:
-                    ex_try_m, ex_try_h = _exact_residuals(col, tb, prof)
-                except (ColumnConvergenceError, ValueError):
-                    ex_try_m, ex_try_h = float("inf"), float("inf")
-                if max(ex_try_m, ex_try_h) < max(ex_m, ex_h):
-                    accepted = True
-                    break
-                _apply_state(prof, u, col, v_free, t_bot_tear)
+            # svec semantics: the helper builds u_try = u + svec, so the
+            # lambda-scaled STEP goes in - not u + lam*step (measured
+            # absorber[8] bisect: passing the trial state doubled it and
+            # every trial read trial_m ~2600 against m_cur=218).
+            ok, ach, _ss = _ns_try_accept([lam * step[i] for i in range(n_unk)], *ns_ctx)
+            if ok:
+                accepted = True
+                ach_m, ach_h = ach
+                break
             lam *= 0.5
+        via = "newton"
+        cap_hits = 0
+        lam_lm = 0.0
+        # The controller is scoped to reactive packages: that is where the
+        # uncapped step's validity gap is measured (11 orders, reactive
+        # absorber). Non-reactive columns converge via the baseline Newton
+        # line search plus the inside-out polish; engaging LM there shifted a
+        # converged stripper's D by 1e-4 and degraded its boundary C1 closure
+        # from 3.9e-6 to 1.26e-5 relative (measured N4-r0.8 probe) for no
+        # convergence gain. Scoped on the package, not the tear count, so the
+        # reactive regenerator keeps the controller at any tear count.
+        if not accepted and _is_reactive_package(tb):
+            # The uncapped step overshot at every lambda (measured reactive
+            # absorber: the step's linear prediction misses by 11 orders, so
+            # the line search rejects all its trials and NS stalled after one
+            # pass). Engage the step controller: the cap bounds each
+            # coordinate's move into the linear model's measured validity
+            # radius, and a Levenberg-Marquardt damped step on the normal
+            # equations trades residual reduction for model trust, with the
+            # damping adapted from the achieved-vs-predicted reduction ratio
+            # (the standard trust-region test).
+            step, cap_hits = _cap_ns_step(u, step, col, v_free)
+            lam_lm = 1.0
+            for _ in range(_NS_LM_TRIES):
+                d_step = _lm_damped_step(jac, r0, lam_lm)
+                if d_step is None:
+                    break
+                d_step, extra_caps = _cap_ns_step(u, d_step, col, v_free)
+                cap_hits += extra_caps
+                lin_lm = [r0[i] + sum(jac[i][j] * d_step[j] for j in range(n_unk)) for i in range(len(r0))]
+                ss_lin = sum(rv * rv for rv in lin_lm)
+                # force_exact: an LM acceptance on a non-reactive column must
+                # also close exact residuals. At the FD floor the frozen rows
+                # lag the true state, so a frozen-only gate can accept a step
+                # that wrecks a floor-converged profile (measured deethanizer:
+                # LM accepted via frozen M while exact went M=4.2e-6 -> 8.1,
+                # and the polish path then found no floor state to rescue).
+                # Rejected LM trials leave the state as the line search did -
+                # intact for the polish.
+                ok, ach, ss_try = _ns_try_accept(d_step, *ns_ctx, force_exact=True)
+                denom = ss0 - ss_lin
+                rho = (ss0 - ss_try) / denom if denom > 0.0 else float("inf")
+                if ok:
+                    accepted = True
+                    ach_m, ach_h = ach
+                    via = "lm"
+                    break
+                # Damping adaptation: a rejected trial (rho <= 0) or a poor
+                # model match (rho < 0.25) means the step overreached even
+                # damped - raise lambda; a good match pre-acceptance would
+                # lower it, but a trial this good is accepted above.
+                lam_lm *= 4.0 if rho < 0.25 else 2.0
+        prof.ns_trace.append(
+            f"pass {prof.ns_passes}: exact M={ex_m:.3e} H={ex_h:.3e} | lin-pred M={pred_m:.3e} "
+            f"H={pred_h:.3e} | caps={cap_hits} lam={lam:.3g} lam_lm={lam_lm:.3g} "
+            f"achieved M={ach_m:.3e} H={ach_h:.3e} via={via}"
+        )
         if not accepted:
             break
     else:
@@ -343,6 +564,7 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
     if m_res > m_tol or h_res > _MESH_H_TOL:
         raise ColumnConvergenceError(
             f"Naphtali-Sandholm fallback stalled: max residuals M={m_res:.2e}, H={h_res:.2e}"
+            + (f" | {'; '.join(prof.ns_trace)}" if prof.ns_trace else "")
         )
     _finalize_duties(col, tb, prof)
     return prof
