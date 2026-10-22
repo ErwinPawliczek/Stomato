@@ -79,7 +79,9 @@ def test_experimental_rows_never_rank() -> None:
     assert all(rec.status != "experimental" for rec in recs)
     ids = {rec.id for rec in recs}
     assert "hoc_dimer" not in ids  # experimental dimerization row
-    assert "pc_saft" not in ids  # placeholder row, not implemented
+    # T-15c: pc_saft was promoted to provisional and ranks like any other
+    # provisional row; the experimental-never-rank property above still holds.
+    assert "pc_saft" in ids
 
 
 def test_virial_vapour_rows_rank_as_provisional() -> None:

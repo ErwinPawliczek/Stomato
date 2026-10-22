@@ -33,10 +33,16 @@ REFUSING_IDS = ("cpa_pr", "pc_saft_assoc", "pc_saft_polar", "soft_saft")
 BUILDABLE_IDS = ("cpa_srk", "gerg2008_teqp", "multifluid", "multifluid_pure", "pc_saft", "saft_vr_mie")
 
 
-def test_saft_rows_register_as_experimental() -> None:
-    """The ten saft rows load with the real catalogue, marked experimental (T-07)."""
+def test_saft_rows_register_with_status() -> None:
+    """The ten saft rows load with the real catalogue. T-15c promoted pc_saft and
+    cpa_srk to provisional (all bound cases measured, every miss assessed per case);
+    the other rows stay experimental (T-07)."""
     rows = catalogue.load_catalogue()
+    for rid in ("pc_saft", "cpa_srk"):
+        assert rows[rid].status == "provisional", f"{rid}: row must stay provisional"
     for rid in SAFT_IDS:
+        if rid in ("pc_saft", "cpa_srk"):
+            continue
         assert rows[rid].status == "experimental", f"{rid}: row must stay experimental"
 
 

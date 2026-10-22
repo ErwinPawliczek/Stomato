@@ -9,6 +9,8 @@ saturation through the registered packages.
 
 from __future__ import annotations
 
+import math
+
 import pytest
 
 from ngdesign import registry
@@ -87,6 +89,58 @@ def test_acid_strength_refusal_names_gap_and_acid_path() -> None:
     # ethanol (eta 1.4) and water (1.7) pass
     refuse_acid_strength(["64-17-5", "7732-18-5"], [1.4, 1.7])
     assert PURE_ETA_ACID_LIMIT == 4.0
+
+
+def test_hoc_dimer_cross_check_acetic_acid() -> None:
+    """T-03b cross-check: HOC chemical theory vs the hoc_dimer kernel (AcOH, 400 K).
+
+    The T-03b spec asked for the ``hoc_dimer`` acetic-acid check to agree with
+    ``nrtl_hoc``'s vapour within 1 % — two implementations of one physics. One-percent
+    agreement is not achievable, and this test pins the measured discrepancy with the
+    explanation instead (no validation tolerance is touched; T-15c item 8):
+
+    - ``nrtl_hoc`` refuses acid-strength slates by design (pure eta = 4.50 >= 4.0):
+      its truncated virial fugacity evaluates to Z = 1 + B*P/(R*T) = -1.27 at
+      400 K / 1 bar — unphysical — so the only common ground between the two
+      implementations is the coefficient level, not a flash comparison.
+    - HOC's chemical term here is B_chem = -75,265 cm3/mol (B_total
+      -75,456 cm3/mol at 400 K), an implied dimerization constant
+      K = 2.262e-5 1/Pa. It comes from the generalized carboxylic-acid group
+      parameter eta = 4.50 (ChemSep HAYDENO.IPD) through the correlation's
+      empirical A-15b branch — Hayden & O'Connell (1975) themselves flag the
+      chemical-theory constant as the correlation's weakest link.
+    - The ``hoc_dimer`` kernel's Kp(400 K) = 3.412e-5 1/Pa (from K2_ref reduced
+      directly off Mehling & Kleiber's (2020) measured Z = 0.6299 at 399.35 K /
+      1 bar; data/thermo_params/special/association.yaml) gives -Kp*R*T =
+      -113,466 cm3/mol as the low-pressure limit of its effective B.
+
+    The 34 % gap (ratio 0.663 measured 2026-10-22) is a parameterization
+    difference, not an implementation error: the kernel reproduces the measured
+    compressibility point by construction (round-trip in test_special.py), and
+    HOC's number never reaches a flash at this strength because
+    ``refuse_acid_strength`` blocks the slate — which is the point of the
+    refusal. Neither number is "wrong" within its declared scope, so neither is
+    retuned to close the gap ("never widen").
+    """
+    T = 400.0
+    R = 8.314  # J/(mol K)
+
+    m = _model(["64-19-7"], T)  # acetic acid: eta = 4.50 from the ChemSep table
+    b_total_cm3 = m.B_pures()[0] * 1e6  # m3/mol -> cm3/mol
+    assert b_total_cm3 == pytest.approx(-75455.7, rel=0.02)
+
+    # Why the package refusal exists: the truncated-virial Z goes negative.
+    z_virial = 1.0 + b_total_cm3 * 1e-6 * 1e5 / (R * T)
+    assert z_virial < 0.0  # -1.27 measured; keep the refusal in place
+
+    # The kernel's low-pressure-limit effective B (chemical theory, exact balance).
+    k2_ref, t_ref, dh = 3.4539e-5, 399.35, -25000.0  # association.yaml (AcOH)
+    kp = k2_ref * math.exp(-(dh / R) * (1.0 / T - 1.0 / t_ref))  # 1/Pa
+    b_kernel_limit = -kp * R * T * 1e6  # cm3/mol -> -113,466
+    assert b_kernel_limit == pytest.approx(-113466.0, rel=0.01)
+
+    ratio = abs(b_total_cm3) / abs(b_kernel_limit)
+    assert 0.60 <= ratio <= 0.73  # measured 0.663: the explained 34 % gap
 
 
 def test_hoc_package_saturation_ethanol_water() -> None:

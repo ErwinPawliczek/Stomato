@@ -19,22 +19,24 @@
 #                      region where CPA association chemistry dominates — the family's
 #                      L3-associating case).
 #
-# `package: pending:<id>` cases stay skipped until the registering spec lands (T-01/T-12
-# pending convention). The pending ids and the rows they are meant to bind to (T-07 owns
-# data/thermo_models/saft.yaml):
-#   pending:pc_saft  -> TeqpPackage(model=pc_saft)
-#   pending:cpa_srk  -> TeqpPackage(model=cpa_srk)
-# If T-07 registers different row ids, update these `package:` fields in the same PR.
-# The other saft.yaml rows (pc_saft_polar, saft_vr_mie, cpa_pr, multifluid) inherit this
-# family's coverage through their `validation:` lists in data/thermo_models/saft.yaml and
-# the root package:all pure cases.
+# The pc_saft / cpa_srk bindings went live in T-15c (2026-10-22): the 16 pure-C1/CO2
+# cases bind to pc_saft and the 19 MeOH cases to cpa_srk (TeqpPackage rows, T-07 PR #156)
+# with both rows promoted to provisional; every failing case/property pair carries a
+# row-level `assessed` entry with the measured numbers in saft.yaml. Three of the 19
+# MeOH cases went back to `pending:cpa_srk` the same day: they crash
+# (SaturationError: no two-phase state at the Wilson seed T=179.68 K on the 101.325 kPa
+# isobar) and crashes are not declarable — the same policy as the four former
+# pending:teqp-gerg2008 cases in data/validation/helmholtz/cases.yaml. The other
+# saft.yaml rows (pc_saft_polar, saft_vr_mie, cpa_pr, multifluid) inherit this family's
+# coverage through their `validation:` lists in data/thermo_models/saft.yaml and the
+# root package:all pure cases.
 meta:
   coolprop_version: 8.0.0
 pure_cases:
 - id: pure-C1-95.3K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   z:
@@ -50,7 +52,7 @@ pure_cases:
 - id: pure-C1-125.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   z:
@@ -66,7 +68,7 @@ pure_cases:
 - id: pure-C1-155.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   z:
@@ -82,7 +84,7 @@ pure_cases:
 - id: pure-C1-172.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   z:
@@ -98,7 +100,7 @@ pure_cases:
 - id: pure-C1-181.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   z:
@@ -114,7 +116,7 @@ pure_cases:
 - id: pure-CO2-216.7K
   fluid: CO2
   coolprop_fluid: CO2
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - CO2
   z:
@@ -137,7 +139,7 @@ pure_cases:
 - id: pure-CO2-240.0K
   fluid: CO2
   coolprop_fluid: CO2
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - CO2
   z:
@@ -159,7 +161,7 @@ pure_cases:
 - id: pure-CO2-265.0K
   fluid: CO2
   coolprop_fluid: CO2
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - CO2
   z:
@@ -175,7 +177,7 @@ pure_cases:
 - id: pure-CO2-285.0K
   fluid: CO2
   coolprop_fluid: CO2
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - CO2
   z:
@@ -191,7 +193,7 @@ pure_cases:
 - id: pure-CO2-288.9K
   fluid: CO2
   coolprop_fluid: CO2
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - CO2
   z:
@@ -207,7 +209,7 @@ pure_cases:
 - id: pure-H2O-323.5K
   fluid: H2O
   coolprop_fluid: Water
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - H2O
   z:
@@ -223,7 +225,7 @@ pure_cases:
 - id: pure-H2O-420.0K
   fluid: H2O
   coolprop_fluid: Water
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - H2O
   z:
@@ -239,7 +241,7 @@ pure_cases:
 - id: pure-H2O-520.0K
   fluid: H2O
   coolprop_fluid: Water
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - H2O
   z:
@@ -255,7 +257,7 @@ pure_cases:
 - id: pure-H2O-600.0K
   fluid: H2O
   coolprop_fluid: Water
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - H2O
   z:
@@ -271,7 +273,7 @@ pure_cases:
 - id: pure-H2O-614.7K
   fluid: H2O
   coolprop_fluid: Water
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - H2O
   z:
@@ -287,7 +289,7 @@ pure_cases:
 - id: pure-MeOH-256.3K
   fluid: MeOH
   coolprop_fluid: Methanol
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   z:
@@ -303,7 +305,7 @@ pure_cases:
 - id: pure-MeOH-307.6K
   fluid: MeOH
   coolprop_fluid: Methanol
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   z:
@@ -319,7 +321,7 @@ pure_cases:
 - id: pure-MeOH-358.8K
   fluid: MeOH
   coolprop_fluid: Methanol
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   z:
@@ -335,7 +337,7 @@ pure_cases:
 - id: pure-MeOH-410.1K
   fluid: MeOH
   coolprop_fluid: Methanol
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   z:
@@ -351,7 +353,7 @@ pure_cases:
 - id: pure-MeOH-461.3K
   fluid: MeOH
   coolprop_fluid: Methanol
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   z:
@@ -372,7 +374,7 @@ binary_cases:
 # helmholtz file's c1co2-* cases, scoped to the PC-SAFT row. The source isotherms
 # (293.13/298.14/303.14 K, 5.7-7.9 MPa) sit near the CO2 critical region by construction.
 - id: c1co2-293.130K-6.135MPa
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   - CO2
@@ -380,7 +382,7 @@ binary_cases:
     C1: 0.01528
     CO2: 0.98472
   T: 293.130
-  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 293.13 K isotherm; retrieved 2026-10-21
   # 5 %: the tolerance the spec fixes for CO2-containing SAFT binary checks
   tolerance:
     bubble_P: 0.05
@@ -389,7 +391,7 @@ binary_cases:
     vapor_comp:
       CO2: 0.96030
 - id: c1co2-293.130K-6.976MPa
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   - CO2
@@ -397,7 +399,7 @@ binary_cases:
     C1: 0.04982
     CO2: 0.95018
   T: 293.130
-  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 293.13 K isotherm; retrieved 2026-10-21
   tolerance:
     bubble_P: 0.05
   expected:
@@ -405,7 +407,7 @@ binary_cases:
     vapor_comp:
       CO2: 0.89863
 - id: c1co2-298.142K-6.976MPa
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   - CO2
@@ -413,7 +415,7 @@ binary_cases:
     C1: 0.02145
     CO2: 0.97855
   T: 298.142
-  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 298.14 K isotherm; retrieved 2026-10-21
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 298.14 K isotherm; retrieved 2026-10-21
   tolerance:
     bubble_P: 0.05
   expected:
@@ -421,7 +423,7 @@ binary_cases:
     vapor_comp:
       CO2: 0.95917
 - id: c1co2-298.142K-7.508MPa
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   - CO2
@@ -429,7 +431,7 @@ binary_cases:
     C1: 0.04641
     CO2: 0.95359
   T: 298.142
-  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 298.14 K isotherm; retrieved 2026-10-21
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 298.14 K isotherm; retrieved 2026-10-21
   tolerance:
     bubble_P: 0.05
   expected:
@@ -437,7 +439,7 @@ binary_cases:
     vapor_comp:
       CO2: 0.93180
 - id: c1co2-303.145K-7.306MPa
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   - CO2
@@ -445,7 +447,7 @@ binary_cases:
     C1: 0.00400
     CO2: 0.99600
   T: 303.145
-  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 303.14 K isotherm; retrieved 2026-10-21
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 303.14 K isotherm; retrieved 2026-10-21
   tolerance:
     bubble_P: 0.05
   expected:
@@ -453,7 +455,7 @@ binary_cases:
     vapor_comp:
       CO2: 0.99438
 - id: c1co2-303.144K-7.361MPa
-  package: pending:pc_saft
+  package: pc_saft
   components:
   - C1
   - CO2
@@ -461,7 +463,7 @@ binary_cases:
     C1: 0.00650
     CO2: 0.99350
   T: 303.144
-  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (10.1016/j.fluid.2018.01.011), 303.14 K isotherm; retrieved 2026-10-21
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 303.14 K isotherm; retrieved 2026-10-21
   tolerance:
     bubble_P: 0.05
   expected:
@@ -477,6 +479,9 @@ binary_cases:
 # Three points of the published table; the root nrtl file carries the same source at all
 # eight published x points, so this set deliberately overlaps it to give the CPA row binary
 # coverage.
+# pending:cpa_srk — crashes on the bridge's Wilson seed (SaturationError: no two-phase
+# state at T=179.68 K, P=101325 Pa; measured T-15c 2026-10-22). Binds back when the
+# saturation seed follows the regression (crashes are not declarable).
 - id: meohh2o-101.325kPa-353.25K
   package: pending:cpa_srk
   components:
@@ -494,6 +499,7 @@ binary_cases:
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
+# pending:cpa_srk — same Wilson-seed SaturationError as the 353.25 K isobar (measured T-15c).
 - id: meohh2o-101.325kPa-349.05K
   package: pending:cpa_srk
   components:
@@ -511,6 +517,7 @@ binary_cases:
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
+# pending:cpa_srk — same Wilson-seed SaturationError as the 353.25 K isobar (measured T-15c).
 - id: meohh2o-101.325kPa-346.20K
   package: pending:cpa_srk
   components:
@@ -536,7 +543,7 @@ binary_cases:
 # carried in the root nrtl file at 312.91 K and for nrtl-scoped 322.91 K cases; these copies
 # scope it to the CPA row.
 - id: meohh2o-322.91K-15.932kPa
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   - H2O
@@ -544,13 +551,13 @@ binary_cases:
     MeOH: 0.0486
     H2O: 0.9514
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 15932.0
     vapor_comp:
       MeOH: 0.2741
 - id: meohh2o-322.91K-26.131kPa
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   - H2O
@@ -558,13 +565,13 @@ binary_cases:
     MeOH: 0.2131
     H2O: 0.7869
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 26131.0
     vapor_comp:
       MeOH: 0.6294
 - id: meohh2o-322.91K-31.544kPa
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   - H2O
@@ -572,13 +579,13 @@ binary_cases:
     MeOH: 0.3252
     H2O: 0.6748
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 31544.0
     vapor_comp:
       MeOH: 0.758
 - id: meohh2o-322.91K-40.850kPa
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   - H2O
@@ -586,13 +593,13 @@ binary_cases:
     MeOH: 0.6279
     H2O: 0.3721
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 40850.0
     vapor_comp:
       MeOH: 0.8654
 - id: meohh2o-322.91K-46.450kPa
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   - H2O
@@ -600,13 +607,13 @@ binary_cases:
     MeOH: 0.8037
     H2O: 0.1963
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 46450.0
     vapor_comp:
       MeOH: 0.9406
 - id: meohh2o-322.91K-52.142kPa
-  package: pending:cpa_srk
+  package: cpa_srk
   components:
   - MeOH
   - H2O
@@ -614,7 +621,7 @@ binary_cases:
     MeOH: 0.9461
     H2O: 0.0539
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 52142.0
     vapor_comp:
