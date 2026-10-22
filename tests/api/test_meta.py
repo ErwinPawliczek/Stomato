@@ -78,7 +78,9 @@ def test_thermo_models_marks_experimental_unselectable() -> None:
     assert len(models) == len(registry.available("thermo"))
     assert models["pr"]["selectable"] is True
     assert "refusal_reason" not in models["pr"]
-    for rid in ("hoc_dimer", "pc_saft", "eos_cg"):
+    # pc_saft left the list in T-15c: promoted to provisional, it selects and ranks
+    # like any other provisional row (assessed misses per docs/validation.md).
+    for rid in ("hoc_dimer", "eos_cg"):
         assert models[rid]["selectable"] is False, rid
         assert "experimental" in models[rid]["refusal_reason"]
     # Placeholder rows carry their refusal reason (status + l0_note).

@@ -2,8 +2,10 @@
 # (lazy import); the teqp-backed builds require `uv sync --extra saft` (teqp>=0.22).
 # Registered but non-building rows (pc_saft_assoc, pc_saft_polar, soft_saft, cpa_pr)
 # refuse in _validate_kind with the named reason, so a feed selecting them fails loudly
-# instead of silently dropping the physics they stand for. All rows are `experimental`
-# until CI runs the optional extra; parameters live in data/thermo_params/saft/pure.yaml.
+# instead of silently dropping the physics they stand for. pc_saft and cpa_srk were
+# promoted to provisional in T-15c (teqp 0.23.2 confirmed CI-runnable on cp312 wheels);
+# every other row stays `experimental` until its physics lands. Parameters live in
+# data/thermo_params/saft/pure.yaml.
 #
 # The reference cases listed under `validation:` currently run against the pc_saft /
 # cpa_srk packages (data/validation/saft/cases.yaml). gerg2008_teqp carries the
@@ -35,7 +37,7 @@
     T_K: [95.0, 600.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
+  status: provisional
   validation: &pc_saft_cases
   - pure-C1-95.3K
   - pure-C1-125.0K
@@ -119,8 +121,34 @@
     pending SAFT cases are runnable in CI (the local py3.13 gap is a sandbox fact, not a
     CI one). Promotion stays blocked on the measured misses: pure saturated-liquid Cp and
     CO2 saturation pressure outside tolerance (Gross & Sadowski 2001 parameters verified;
-    T-07), and the MeOH/H2O crash. The row keeps experimental status until an association
-    term or refit lands.
+    T-07), and the MeOH/H2O crash. T-15c confirmed the CI-runnability on 2026-10-22 and
+    promoted the row to provisional: all 16 bound cases measured, 44/62 comparisons
+    pass, and every miss is declared per case in `assessed:` with the measured values —
+    saturated-liquid Cp on all pure fluids (no explicit residual-Cp term in the chain
+    EOS), CO2 saturation pressure 4.0-9.5 % high without a quadrupole term, and C1/CO2
+    binary bubble_P 5.7-7.5 % low with k_ij = 0.
+
+  assessed:
+    pure-C1-95.3K: "Cp -6.0 % (54.315 vs 51.076) — PC-SAFT's derivative-based
+      saturated-liquid Cp with Gross & Sadowski (2001) parameters carries no explicit
+      residual-Cp fit and underpredicts at the triple-point end (CoolProp CH4 reference;
+      parameters verified T-07) (measured 2026-10-22, PR table)"
+    pure-C1-172.0K: "Cp +11.0 % (87.130 vs 96.690) — same no-residual-Cp limitation, now
+      overpredicting on the warm approach to the critical point (measured 2026-10-22, PR table)"
+    pure-C1-181.0K: "Cp +20.8 % (124.139 vs 149.979) — same no-residual-Cp limitation,
+      diverging as T approaches Tc (190.6 K), where the chain EOS's derivative-based Cp
+      is least reliable (measured 2026-10-22, PR table)"
+    c1co2-293.130K-6.976MPa: "bubble_P -7.0 % (6975600 vs 6484482) — k_ij = 0 (no
+      verifiable open citation for the C1-CO2 interaction parameter; tuning against the
+      validation points is forbidden) underpredicts the cross-dispersion attraction —
+      the opposite-sign twin of the k_ij = 0 limitation the NG-dew cubic cases carry
+      (measured 2026-10-22, PR table)"
+    c1co2-298.142K-7.508MPa: "bubble_P -7.5 % (7507900 vs 6946323) — same k_ij = 0
+      limitation (measured 2026-10-22, PR table)"
+    c1co2-303.144K-7.361MPa: "bubble_P -6.0 % (7361100 vs 6921345) — same k_ij = 0
+      limitation (measured 2026-10-22, PR table)"
+    c1co2-303.145K-7.306MPa: "bubble_P -5.7 % (7306400 vs 6889862) — same k_ij = 0
+      limitation (measured 2026-10-22, PR table)"
 
 - id: pc_saft_assoc
   name: PC-SAFT with association (registered refusal)
@@ -302,7 +330,7 @@
     T_K: [250.0, 620.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
+  status: provisional
   validation: &cpa_srk_cases
   - pure-H2O-323.5K
   - pure-H2O-420.0K
@@ -393,9 +421,55 @@
     teqp 0.23.2's own CPA engine NaNs its fugacity coefficients at liquid-like
     densities and collapses the water saturation line with the published Kontogeorgis
     parameters, so this row runs the bridge's hand-rolled CPA-SRK kernel instead
-    (measured in the T-07 exploration). T-15 disposition: teqp is CI-runnable (cp312
-    wheels) but the row keeps experimental status pending an L0 declaration; its bound
-    cases measured outside tolerance on the T-07 sweep.
+    (measured in the T-07 exploration). T-15c promoted the row to provisional on
+    2026-10-22 (teqp CI-runnable, L0 declaration present): the 16 runnable bound cases
+    measured 40/68 comparisons pass, and every miss is declared per case in `assessed:`
+    with the measured values — saturated-liquid Cp 5-21 % low (no residual-Cp term in
+    the cubic + association EOS), saturated-vapour density at the 8 % vapour-tolerance
+    edge, and MeOH/H2O bubble_P up to +22.5 % with k_ij = 0. The three 101.325 kPa
+    cases stay pending: they crash on the Wilson seed (SaturationError) and crashes
+    are not declarable.
+
+  assessed:
+    pure-H2O-323.5K: "Cp -8.9 % (75.333 vs 68.614) — CPA-SRK with published Kontogeorgis
+      (1996) parameters has no residual liquid-Cp contribution, the same class of
+      limitation the amine and gamma-phi rows assessed (parameters verified T-07)
+      (measured 2026-10-22, PR table)"
+    pure-H2O-600.0K: "Cp -13.5 % (125.264 vs 108.307); rho_V -6.0 % (72.842 vs 68.447) —
+      same no-residual-Cp limitation; vapour density deteriorates on the critical
+      approach (Tc 647.1 K) (measured 2026-10-22, PR table)"
+    pure-H2O-614.7K: "Cp -21.2 % (151.747 vs 119.659); rho_V -10.2 % (95.588 vs 85.874)
+      — critical-region divergence at 33 K below Tc: the cubic term's density and its
+      Cp derivative both degrade (measured 2026-10-22, PR table)"
+    pure-MeOH-256.3K: "Cp -17.5 % (74.762 vs 61.682) — no residual liquid-Cp
+      contribution, worst at the cold end of the 2B association range (measured
+      2026-10-22, PR table)"
+    pure-MeOH-307.6K: "Cp -9.4 % (83.169 vs 75.342); rho_V +5.0 % (0.3523 vs 0.3699) —
+      no-residual-Cp limitation; saturated-vapour density at the 8 % vapour-tolerance
+      edge (pure-component cubic-term density) (measured 2026-10-22, PR table)"
+    pure-MeOH-358.8K: "Cp -5.2 % (96.783 vs 91.775); rho_V +6.9 % (2.5650 vs 2.7408) —
+      same cubic-term vapour-density limitation (measured 2026-10-22, PR table)"
+    pure-MeOH-410.1K: "rho_V +5.2 % (11.431 vs 12.022) — same cubic-term vapour-density
+      limitation (Cp passes here) (measured 2026-10-22, PR table)"
+    pure-MeOH-461.3K: "Cp -7.6 % (152.324 vs 140.714) — no residual liquid-Cp
+      contribution (measured 2026-10-22, PR table)"
+    meohh2o-322.91K-15.932kPa: "bubble_P +22.5 % (15932 vs 19509); vapor_comp 0.129
+      abs above the 0.02 band (0.2741 vs 0.4029) — k_ij = 0: no verifiable open citation
+      for the water-methanol CPA k_ij and tuning against the validation points is
+      forbidden, so the cross-association is mispredicted and the methanol-lean end
+      suffers worst (Gao 2012 isotherm; measured 2026-10-22, PR table)"
+    meohh2o-322.91K-26.131kPa: "bubble_P +20.5 % (26131 vs 31474); vapor_comp 0.038 abs
+      above the 0.02 band (0.6294 vs 0.6672) — same k_ij = 0 limitation (measured
+      2026-10-22, PR table)"
+    meohh2o-322.91K-31.544kPa: "bubble_P +12.6 % (31544 vs 35503); vapor_comp 0.034 abs
+      above the 0.02 band (0.7580 vs 0.7243) — same k_ij = 0 limitation, decaying
+      toward the methanol-rich end (measured 2026-10-22, PR table)"
+    meohh2o-322.91K-40.850kPa: "bubble_P +7.1 % (40850 vs 43755); vapor_comp 0.029 abs
+      above the 0.02 band (0.8654 vs 0.8364) — same k_ij = 0 limitation (measured
+      2026-10-22, PR table)"
+    meohh2o-322.91K-46.450kPa: "bubble_P +4.8 % (46450 vs 48675); vapor_comp 0.032 abs
+      above the 0.02 band (0.9406 vs 0.9083) — same k_ij = 0 limitation (measured
+      2026-10-22, PR table)"
 
 - id: cpa_pr
   name: CPA-PR (registered refusal)

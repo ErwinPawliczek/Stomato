@@ -54,12 +54,12 @@ Declared case ids:
 - `meohh2o-312.91K-23.385kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20
 - `meohh2o-312.91K-27.518kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20
 - `meohh2o-312.91K-32.571kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20
-- `meohh2o-322.91K-15.932kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
-- `meohh2o-322.91K-26.131kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
-- `meohh2o-322.91K-31.544kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
-- `meohh2o-322.91K-40.850kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
-- `meohh2o-322.91K-46.450kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
-- `meohh2o-322.91K-52.142kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
+- `meohh2o-322.91K-15.932kPa` — Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+- `meohh2o-322.91K-26.131kPa` — Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+- `meohh2o-322.91K-31.544kPa` — Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+- `meohh2o-322.91K-40.850kPa` — Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+- `meohh2o-322.91K-46.450kPa` — Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+- `meohh2o-322.91K-52.142kPa` — Bayer, Sage & Lacey (1927), methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
 
 ## References
 

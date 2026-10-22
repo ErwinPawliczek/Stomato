@@ -1066,11 +1066,6 @@ def write_doc(
         "| bubble T (isobaric data) | 0.5 % relative | harness analogue of the 3 % bubble-P tolerance |",
         "| phase compositions (liquid_comp) | 0.02 absolute | spec's composition tolerance |",
         "",
-        "## Model catalogue (spec T-01)",
-        "",
-        "Property methods are data in `data/thermo_models/*.yaml`; each row's report lives in",
-        "`docs/validation/<id>.md`. The audit gate: `uv run python scripts/validate_properties.py --audit`.",
-        "",
     ]
     lines += _catalogue_section(rows, l0, l4)
     lines += [
