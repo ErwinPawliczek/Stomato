@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-22T09:49:24+00:00 from `data/validation/results.json` (git d9f0140, CoolProp 8.0.0).
+Generated 2026-10-22T10:18:29+00:00 from `data/validation/results.json` (git 2528fc8, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -61,18 +61,18 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [ideal_solid](validation/ideal_solid.md) | special | experimental | — | L1=0 L2=0 | [report](validation/ideal_solid.md) |
 | [kabadi-danner-srk](validation/kabadi-danner-srk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/kabadi-danner-srk.md) |
 | [lee-kesler-ploecker](validation/lee-kesler-ploecker.md) | kvalue | provisional | 6/6 | L1=0 L2=1 | [report](validation/lee-kesler-ploecker.md) |
-| [margules_hoc](validation/margules_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/margules_hoc.md) |
+| [margules_hoc](validation/margules_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_hoc.md) |
 | [margules_ig](validation/margules_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=3 | [report](validation/margules_ig.md) |
-| [margules_nothnagel](validation/margules_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/margules_nothnagel.md) |
+| [margules_nothnagel](validation/margules_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_nothnagel.md) |
 | [margules_pr](validation/margules_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_pr.md) |
 | [margules_rk](validation/margules_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_rk.md) |
 | [mbwr](validation/mbwr.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/mbwr.md) |
 | [multifluid](validation/multifluid.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/multifluid.md) |
 | [multifluid_pure](validation/multifluid_pure.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/multifluid_pure.md) |
 | [nrtl](validation/nrtl.md) | gamma_phi | provisional | 7/7 | L1=0 L2=21 | [report](validation/nrtl.md) |
-| [nrtl_hoc](validation/nrtl_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/nrtl_hoc.md) |
+| [nrtl_hoc](validation/nrtl_hoc.md) | gamma_phi | provisional | 7/7 | L1=3 L2=8 | [report](validation/nrtl_hoc.md) |
 | [nrtl_ig](validation/nrtl_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_ig.md) |
-| [nrtl_nothnagel](validation/nrtl_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/nrtl_nothnagel.md) |
+| [nrtl_nothnagel](validation/nrtl_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_nothnagel.md) |
 | [nrtl_rk](validation/nrtl_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_rk.md) |
 | [pc_saft](validation/pc_saft.md) | saft | experimental | — | L1=6 L2=4 | [report](validation/pc_saft.md) |
 | [pc_saft_assoc](validation/pc_saft_assoc.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_assoc.md) |
@@ -89,9 +89,9 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [pr78](validation/pr78.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr78.md) |
 | [prsv](validation/prsv.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/prsv.md) |
 | [prsv2](validation/prsv2.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/prsv2.md) |
-| [regular_solution_hoc](validation/regular_solution_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/regular_solution_hoc.md) |
+| [regular_solution_hoc](validation/regular_solution_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/regular_solution_hoc.md) |
 | [regular_solution_ig](validation/regular_solution_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/regular_solution_ig.md) |
-| [regular_solution_nothnagel](validation/regular_solution_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/regular_solution_nothnagel.md) |
+| [regular_solution_nothnagel](validation/regular_solution_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/regular_solution_nothnagel.md) |
 | [regular_solution_pr](validation/regular_solution_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/regular_solution_pr.md) |
 | [regular_solution_rk](validation/regular_solution_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/regular_solution_rk.md) |
 | [rk](validation/rk.md) | cubic | provisional | 5/7 | L1=4 L2=2 | [report](validation/rk.md) |
@@ -109,51 +109,51 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [twu-pr](validation/twu-pr.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/twu-pr.md) |
 | [twu-sim-tassone](validation/twu-sim-tassone.md) | cubic | experimental | — | L1=0 L2=0 | [report](validation/twu-sim-tassone.md) |
 | [twu-srk](validation/twu-srk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/twu-srk.md) |
-| [unifac_dortmund_hoc](validation/unifac_dortmund_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_dortmund_hoc.md) |
+| [unifac_dortmund_hoc](validation/unifac_dortmund_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_dortmund_hoc.md) |
 | [unifac_dortmund_ig](validation/unifac_dortmund_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=2 | [report](validation/unifac_dortmund_ig.md) |
-| [unifac_dortmund_nothnagel](validation/unifac_dortmund_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_dortmund_nothnagel.md) |
+| [unifac_dortmund_nothnagel](validation/unifac_dortmund_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_dortmund_nothnagel.md) |
 | [unifac_dortmund_pr](validation/unifac_dortmund_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_dortmund_pr.md) |
 | [unifac_dortmund_rk](validation/unifac_dortmund_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_dortmund_rk.md) |
 | [unifac_fv](validation/unifac_fv.md) | special | experimental | — | L1=0 L2=0 | [report](validation/unifac_fv.md) |
-| [unifac_hoc](validation/unifac_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_hoc.md) |
+| [unifac_hoc](validation/unifac_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_hoc.md) |
 | [unifac_ig](validation/unifac_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=1 | [report](validation/unifac_ig.md) |
-| [unifac_lle_hoc](validation/unifac_lle_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_lle_hoc.md) |
+| [unifac_lle_hoc](validation/unifac_lle_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_lle_hoc.md) |
 | [unifac_lle_ig](validation/unifac_lle_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_lle_ig.md) |
-| [unifac_lle_nothnagel](validation/unifac_lle_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_lle_nothnagel.md) |
+| [unifac_lle_nothnagel](validation/unifac_lle_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_lle_nothnagel.md) |
 | [unifac_lle_pr](validation/unifac_lle_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_lle_pr.md) |
 | [unifac_lle_rk](validation/unifac_lle_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_lle_rk.md) |
-| [unifac_lyngby_hoc](validation/unifac_lyngby_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_lyngby_hoc.md) |
+| [unifac_lyngby_hoc](validation/unifac_lyngby_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_lyngby_hoc.md) |
 | [unifac_lyngby_ig](validation/unifac_lyngby_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_lyngby_ig.md) |
-| [unifac_lyngby_nothnagel](validation/unifac_lyngby_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_lyngby_nothnagel.md) |
+| [unifac_lyngby_nothnagel](validation/unifac_lyngby_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_lyngby_nothnagel.md) |
 | [unifac_lyngby_pr](validation/unifac_lyngby_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_lyngby_pr.md) |
 | [unifac_lyngby_rk](validation/unifac_lyngby_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_lyngby_rk.md) |
-| [unifac_nist_hoc](validation/unifac_nist_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_nist_hoc.md) |
+| [unifac_nist_hoc](validation/unifac_nist_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_nist_hoc.md) |
 | [unifac_nist_ig](validation/unifac_nist_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_nist_ig.md) |
-| [unifac_nist_nothnagel](validation/unifac_nist_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_nist_nothnagel.md) |
+| [unifac_nist_nothnagel](validation/unifac_nist_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_nist_nothnagel.md) |
 | [unifac_nist_pr](validation/unifac_nist_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_nist_pr.md) |
 | [unifac_nist_rk](validation/unifac_nist_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_nist_rk.md) |
-| [unifac_nothnagel](validation/unifac_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_nothnagel.md) |
+| [unifac_nothnagel](validation/unifac_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_nothnagel.md) |
 | [unifac_pr](validation/unifac_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_pr.md) |
-| [unifac_psrk_hoc](validation/unifac_psrk_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_psrk_hoc.md) |
+| [unifac_psrk_hoc](validation/unifac_psrk_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_psrk_hoc.md) |
 | [unifac_psrk_ig](validation/unifac_psrk_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=2 | [report](validation/unifac_psrk_ig.md) |
-| [unifac_psrk_nothnagel](validation/unifac_psrk_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/unifac_psrk_nothnagel.md) |
+| [unifac_psrk_nothnagel](validation/unifac_psrk_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_psrk_nothnagel.md) |
 | [unifac_psrk_pr](validation/unifac_psrk_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_psrk_pr.md) |
 | [unifac_psrk_rk](validation/unifac_psrk_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_psrk_rk.md) |
 | [unifac_rk](validation/unifac_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_rk.md) |
-| [uniquac_hoc](validation/uniquac_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/uniquac_hoc.md) |
+| [uniquac_hoc](validation/uniquac_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/uniquac_hoc.md) |
 | [uniquac_ig](validation/uniquac_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=3 | [report](validation/uniquac_ig.md) |
-| [uniquac_nothnagel](validation/uniquac_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/uniquac_nothnagel.md) |
+| [uniquac_nothnagel](validation/uniquac_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/uniquac_nothnagel.md) |
 | [uniquac_pr](validation/uniquac_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/uniquac_pr.md) |
 | [uniquac_rk](validation/uniquac_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/uniquac_rk.md) |
-| [vanlaar_hoc](validation/vanlaar_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/vanlaar_hoc.md) |
+| [vanlaar_hoc](validation/vanlaar_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/vanlaar_hoc.md) |
 | [vanlaar_ig](validation/vanlaar_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=2 | [report](validation/vanlaar_ig.md) |
-| [vanlaar_nothnagel](validation/vanlaar_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/vanlaar_nothnagel.md) |
+| [vanlaar_nothnagel](validation/vanlaar_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/vanlaar_nothnagel.md) |
 | [vanlaar_pr](validation/vanlaar_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/vanlaar_pr.md) |
 | [vanlaar_rk](validation/vanlaar_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/vanlaar_rk.md) |
 | [vdw](validation/vdw.md) | cubic | provisional | 5/7 | L1=4 L2=2 | [report](validation/vdw.md) |
-| [wilson_hoc](validation/wilson_hoc.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/wilson_hoc.md) |
+| [wilson_hoc](validation/wilson_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/wilson_hoc.md) |
 | [wilson_ig](validation/wilson_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=3 | [report](validation/wilson_ig.md) |
-| [wilson_nothnagel](validation/wilson_nothnagel.md) | gamma_phi | experimental | — | L1=0 L2=0 | [report](validation/wilson_nothnagel.md) |
+| [wilson_nothnagel](validation/wilson_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=3 L2=8 | [report](validation/wilson_nothnagel.md) |
 | [wilson_pr](validation/wilson_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/wilson_pr.md) |
 | [wilson_rk](validation/wilson_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/wilson_rk.md) |
 | [zudkevitch-joffe-rk](validation/zudkevitch-joffe-rk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/zudkevitch-joffe-rk.md) |
@@ -173,40 +173,64 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `ideal-lk`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
 - `ideal-raoult`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
 - `lee-kesler-ploecker`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K did not converge
+- `margules_hoc`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_ig`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
+- `margules_nothnagel`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_pr`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_rk`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `nrtl`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `nrtl_hoc`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `nrtl_ig`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `nrtl_nothnagel`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `nrtl_rk`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `regular_solution_hoc`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_ig`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
+- `regular_solution_nothnagel`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_pr`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_rk`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
+- `unifac_dortmund_hoc`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_dortmund_ig`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_dortmund_nothnagel`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_dortmund_pr`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_dortmund_rk`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_hoc`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_ig`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_lle_hoc`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_lle_ig`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_lle_nothnagel`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_lle_pr`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_lle_rk`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_lyngby_hoc`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_lyngby_ig`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_lyngby_nothnagel`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_lyngby_pr`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_lyngby_rk`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_nist_hoc`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_nist_ig`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_nist_nothnagel`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_nist_pr`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_nist_rk`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_nothnagel`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_pr`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_psrk_hoc`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_psrk_ig`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_psrk_nothnagel`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_psrk_pr`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_psrk_rk`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_rk`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `uniquac_hoc`: ok — n/a — refuses the slice feed: ValueError: ChemSep UNIQUAC databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `uniquac_ig`: ok — n/a — refuses the slice feed: ValueError: ChemSep UNIQUAC databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `uniquac_nothnagel`: ok — n/a — refuses the slice feed: ValueError: ChemSep UNIQUAC databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `uniquac_pr`: ok — n/a — refuses the slice feed: ValueError: ChemSep UNIQUAC databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `uniquac_rk`: ok — n/a — refuses the slice feed: ValueError: ChemSep UNIQUAC databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `vanlaar_hoc`: ok — n/a — refuses the slice feed: ValueError: van Laar binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `vanlaar_ig`: ok — n/a — refuses the slice feed: ValueError: van Laar binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
+- `vanlaar_nothnagel`: ok — n/a — refuses the slice feed: ValueError: van Laar binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `vanlaar_pr`: ok — n/a — refuses the slice feed: ValueError: van Laar binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `vanlaar_rk`: ok — n/a — refuses the slice feed: ValueError: van Laar binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
+- `wilson_hoc`: ok — n/a — refuses the slice feed: ValueError: ChemSep Wilson databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `wilson_ig`: ok — n/a — refuses the slice feed: ValueError: ChemSep Wilson databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
+- `wilson_nothnagel`: ok — n/a — refuses the slice feed: ValueError: ChemSep Wilson databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `wilson_pr`: ok — n/a — refuses the slice feed: ValueError: ChemSep Wilson databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `wilson_rk`: ok — n/a — refuses the slice feed: ValueError: ChemSep Wilson databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `pr-mathias-copeman`: ok — n/a — l4_excluded: The Mathias-Copeman alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs +22% above the generalised-omega pr-family rows and +41% above the srk family (measured 876389 vs 717386/614969 Pa at 293.15 K) - the deviation the Psat fit exists to produce, declared here rather than loosening the 20% band.
@@ -554,6 +578,18 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_V | 4 | 3 | 75.0 % |
 | vapor_comp | 21 | 9 | 42.9 % |
 
+### package `nrtl_hoc` — 21/31 pass (67.7 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| Cp | 3 | 1 | 33.3 % |
+| bubble_P | 3 | 3 | 100.0 % |
+| bubble_T | 8 | 5 | 62.5 % |
+| dew_P | 3 | 3 | 100.0 % |
+| rho_L | 3 | 3 | 100.0 % |
+| rho_V | 3 | 3 | 100.0 % |
+| vapor_comp | 8 | 3 | 37.5 % |
+
 ### package `pr` — 213/278 pass (76.6 %)
 
 | property | n | pass | rate |
@@ -838,6 +874,18 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | bubble_T | 2 | 2 | 100.0 % |
 | vapor_comp | 3 | 3 | 100.0 % |
 
+### package `wilson_nothnagel` — 22/31 pass (71.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| Cp | 3 | 1 | 33.3 % |
+| bubble_P | 3 | 3 | 100.0 % |
+| bubble_T | 8 | 6 | 75.0 % |
+| dew_P | 3 | 3 | 100.0 % |
+| rho_L | 3 | 3 | 100.0 % |
+| rho_V | 3 | 3 | 100.0 % |
+| vapor_comp | 8 | 3 | 37.5 % |
+
 ### package `zudkevitch-joffe-rk` — 19/26 pass (73.1 %)
 
 | property | n | pass | rate |
@@ -849,7 +897,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_V | 4 | 4 | 100.0 % |
 | vapor_comp | 1 | 1 | 100.0 % |
 
-## Failing comparisons (396)
+## Failing comparisons (415)
 
 | case | package | property | expected | got | err | source |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -892,6 +940,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-CO2-288.9K | srk | Cp | 155.189 | 206.216 | 0.328801 | coolprop:CO2 |
 | pure-C2-290K | srk | Cp | 152.189 | 200.921 | 0.320205 | coolprop:Ethane |
 | vdw-pure-C1-125K | vdw | rho_L | 402.111 | 274.752 | 0.316724 | coolprop:CH4 |
+| pure-nC4-350K-hoc | nrtl_hoc | Cp | 163.885 | 113.455 | 0.307716 | coolprop:n-Butane |
+| pure-nC4-350K-nothnagel | wilson_nothnagel | Cp | 163.885 | 113.455 | 0.307716 | coolprop:n-Butane |
 | zudkevitch-joffe-rk-ng-dew-morch-243.4K-0.30MPa | zudkevitch-joffe-rk | dew_P | 300000 | 390931 | 0.303104 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | pure-H2S-354.4K | srk | Cp | 141.924 | 184.717 | 0.301517 | coolprop:H2S |
 | pure-C1-181K | pr | Cp | 124.139 | 161.076 | 0.297547 | coolprop:CH4 |
@@ -929,6 +979,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-H2O-600K | pr78 | rho_L | 649.411 | 489.546 | 0.246169 | coolprop:Water |
 | vdw-pure-nC4-280K | vdw | Cp | 136.28 | 103.265 | 0.242257 | coolprop:n-Butane |
 | pure-nC4-403.9K | srk | Cp | 236.805 | 293.525 | 0.23952 | coolprop:n-Butane |
+| pure-H2O-420K-hoc | nrtl_hoc | Cp | 77.4472 | 58.9479 | 0.238862 | coolprop:Water |
+| pure-H2O-420K-nothnagel | wilson_nothnagel | Cp | 77.4472 | 58.9479 | 0.238862 | coolprop:Water |
 | pure-H2O-520K | srk | Cp | 87.149 | 107.501 | 0.233533 | coolprop:Water |
 | pure-H2S-345K | srk | Cp | 112.837 | 139.176 | 0.233421 | coolprop:H2S |
 | pure-C1-172K | srk | Cp | 87.1299 | 107.453 | 0.233245 | coolprop:CH4 |
@@ -1156,6 +1208,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | sour-srk-pure-C3-300K | sour-srk | Cp | 120.805 | 128.942 | 0.0673599 | coolprop:Propane |
 | kabadi-danner-srk-pure-C3-300K | kabadi-danner-srk | Cp | 120.805 | 128.942 | 0.0673599 | coolprop:Propane |
 | meohh2o-97.99kPa-353.25K | nrtl | vapor_comp | 0.568 | 0.501294 | 0.0667056 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-353.25K-hoc | nrtl_hoc | vapor_comp | 0.568 | 0.502563 | 0.0654371 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | pure-H2S-187.8K | srk | Cp | 68.8292 | 64.4186 | 0.0640809 | coolprop:H2S |
 | pure-nC4-350K | srk | Cp | 163.885 | 174.284 | 0.0634523 | coolprop:n-Butane |
 | meohh2o-312.91K-20.705kPa | nrtl | bubble_P | 20705 | 22016.4 | 0.0633373 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
@@ -1169,6 +1222,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | meohh2o-322.91K-15.932kPa | nrtl | vapor_comp | 0.2741 | 0.334853 | 0.0607532 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | pure-C2-250K | pr | Cp | 90.0242 | 95.4911 | 0.0607269 | coolprop:Ethane |
 | pure-C2-250K | pr78 | Cp | 90.0242 | 95.4911 | 0.0607269 | coolprop:Ethane |
+| meohh2o-97.99kPa-353.25K-nothnagel | wilson_nothnagel | vapor_comp | 0.568 | 0.507817 | 0.0601826 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-365.45K-hoc | nrtl_hoc | vapor_comp | 0.227 | 0.16682 | 0.0601802 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-97.99kPa-365.45K | nrtl | vapor_comp | 0.227 | 0.166878 | 0.0601223 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | pure-H2O-600K | pr | rho_V | 72.8423 | 68.6719 | 0.0572533 | coolprop:Water |
 | pure-H2O-600K | pr78 | rho_V | 72.8423 | 68.6719 | 0.0572533 | coolprop:Water |
@@ -1179,9 +1234,13 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-C1-95.3K | srk | Cp | 54.3155 | 57.3174 | 0.0552677 | coolprop:CH4 |
 | pure-H2S-240K | pr | Cp | 68.4609 | 64.6799 | 0.0552282 | coolprop:H2S |
 | pure-H2S-240K | pr78 | Cp | 68.4609 | 64.6799 | 0.0552282 | coolprop:H2S |
+| meohh2o-97.99kPa-349.05K-nothnagel | wilson_nothnagel | vapor_comp | 0.68 | 0.626658 | 0.0533424 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-97.99kPa-349.05K | nrtl | vapor_comp | 0.68 | 0.627719 | 0.0522811 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-312.91K-13.012kPa | nrtl | vapor_comp | 0.6214 | 0.570676 | 0.0507236 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-349.05K-hoc | nrtl_hoc | vapor_comp | 0.68 | 0.629609 | 0.0503909 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-97.99kPa-360.65K | nrtl | vapor_comp | 0.391 | 0.341179 | 0.049821 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-360.65K-hoc | nrtl_hoc | vapor_comp | 0.391 | 0.341649 | 0.0493507 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-365.45K-nothnagel | wilson_nothnagel | vapor_comp | 0.227 | 0.180695 | 0.0463053 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-312.91K-27.518kPa | nrtl | bubble_P | 27518 | 28779.4 | 0.0458403 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | meohh2o-312.91K-20.705kPa | nrtl | vapor_comp | 0.8053 | 0.759733 | 0.0455667 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | srk-boston-mathias-c1co2-277.15K-5.97MPa | srk-boston-mathias | bubble_P | 5.97e+06 | 5.70042e+06 | 0.0451553 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
@@ -1191,6 +1250,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | c1c3-277.59K-1.724MPa | pr | bubble_P | 1.724e+06 | 1.65127e+06 | 0.0421879 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-277.59K-1.724MPa | pr78 | bubble_P | 1.724e+06 | 1.65127e+06 | 0.0421879 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-5.861MPa | srk | bubble_P | 5.861e+06 | 5.61512e+06 | 0.0419517 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-369.65K-hoc | nrtl_hoc | vapor_comp | 0.103 | 0.0614353 | 0.0415647 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-97.99kPa-369.65K | nrtl | vapor_comp | 0.103 | 0.0615315 | 0.0414685 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | c1c3-327.59K-5.861MPa | pr | bubble_P | 5.861e+06 | 5.62072e+06 | 0.0409961 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-5.861MPa | pr78 | bubble_P | 5.861e+06 | 5.62072e+06 | 0.0409961 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
@@ -1209,6 +1269,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | c1c3-327.59K-4.482MPa | pr | bubble_P | 4.482e+06 | 4.3208e+06 | 0.0359663 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-4.482MPa | pr78 | bubble_P | 4.482e+06 | 4.3208e+06 | 0.0359663 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-4.482MPa | srk | bubble_P | 4.482e+06 | 4.32193e+06 | 0.0357143 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-360.65K-nothnagel | wilson_nothnagel | vapor_comp | 0.391 | 0.355758 | 0.0352417 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-369.65K-nothnagel | wilson_nothnagel | vapor_comp | 0.103 | 0.0682673 | 0.0347327 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-322.91K-31.544kPa | nrtl | vapor_comp | 0.758 | 0.723318 | 0.0346816 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | c1co2-283.15K-7.24MPa | srk | bubble_P | 7.24e+06 | 6.99089e+06 | 0.0344076 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
 | c1c3-294.26K-8.963MPa | pr | vapor_comp | 0.7561 | 0.721745 | 0.0343551 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
@@ -1247,8 +1309,13 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | c1c3-294.26K-8.274MPa | pr | vapor_comp | 0.7567 | 0.736645 | 0.020055 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | c1c3-294.26K-8.274MPa | pr78 | vapor_comp | 0.7567 | 0.736645 | 0.020055 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | meohh2o-97.99kPa-353.25K | nrtl | bubble_T | 353.25 | 356.827 | 0.010127 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-353.25K-hoc | nrtl_hoc | bubble_T | 353.25 | 356.568 | 0.00939359 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-353.25K-nothnagel | wilson_nothnagel | bubble_T | 353.25 | 356.2 | 0.00834965 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-97.99kPa-349.05K | nrtl | bubble_T | 349.05 | 351.756 | 0.00775345 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-349.05K-hoc | nrtl_hoc | bubble_T | 349.05 | 351.44 | 0.00684718 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-349.05K-nothnagel | wilson_nothnagel | bubble_T | 349.05 | 351.382 | 0.00668104 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 | meohh2o-97.99kPa-365.45K | nrtl | bubble_T | 365.45 | 367.631 | 0.0059681 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
+| meohh2o-97.99kPa-365.45K-hoc | nrtl_hoc | bubble_T | 365.45 | 367.449 | 0.0054687 | literature:Bennett (1929) J. Chem. Educ. 6, pp. 1544-1549, isobaric 97.99 kPa; DDB Explorer Edition data set 466; retrieved 2026-10-20 |
 
 ## Case assessments (marked xfail in the test suite)
 
@@ -1314,10 +1381,20 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `meohh2o-322.91K-46.450kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-322.91K-52.142kPa` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-97.99kPa-349.05K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `meohh2o-97.99kPa-349.05K-hoc` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `meohh2o-97.99kPa-349.05K-nothnagel` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-97.99kPa-353.25K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `meohh2o-97.99kPa-353.25K-hoc` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `meohh2o-97.99kPa-353.25K-nothnagel` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-97.99kPa-360.65K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `meohh2o-97.99kPa-360.65K-hoc` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `meohh2o-97.99kPa-360.65K-nothnagel` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-97.99kPa-365.45K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `meohh2o-97.99kPa-365.45K-hoc` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `meohh2o-97.99kPa-365.45K-nothnagel` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `meohh2o-97.99kPa-369.65K` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `meohh2o-97.99kPa-369.65K-hoc` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
+- `meohh2o-97.99kPa-369.65K-nothnagel` — NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within 2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md).
 - `ng-dew-morch-243.4K-0.30MPa (pr)` — dew_P +35.5% (406518 vs 300000) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `ng-dew-morch-243.4K-0.30MPa (pr78)` — dew_P +35.5% (406518 vs 300000) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `ng-dew-morch-243.4K-0.30MPa (srk)` — dew_P +25.9% (377792 vs 300000) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
@@ -1422,6 +1499,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `pure-H2O-420K (pr)` — Cp +10.5% (85.5571 vs 77.4472); rho_L -17.1% (762.594 vs 919.929) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-H2O-420K (pr78)` — Cp +10.5% (85.5571 vs 77.4472); rho_L -17.1% (762.594 vs 919.929) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-H2O-420K (srk)` — Cp +16.7% (90.3881 vs 77.4472); rho_L -26.6% (674.912 vs 919.929) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `pure-H2O-420K-hoc` — Cp -23.9% (58.9479 vs 77.4472) - gamma-phi packages carry no residual liquid-Cp contribution, so saturated-liquid Cp under-predicts away from 298 K (the same limitation the amine row assessed per the PR #161 table; measured 2026-10-22).
+- `pure-H2O-420K-nothnagel` — Cp -23.9% (58.9479 vs 77.4472) - gamma-phi packages carry no residual liquid-Cp contribution, so saturated-liquid Cp under-predicts away from 298 K (the same limitation the amine row assessed per the PR #161 table; measured 2026-10-22).
 - `pure-H2O-520K (pr)` — Cp +18.1% (102.925 vs 87.149); rho_L -19.3% (648.154 vs 803.535); rho_V -3.2% (18.2989 vs 18.9001) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-H2O-520K (pr78)` — Cp +18.1% (102.925 vs 87.149); rho_L -19.3% (648.154 vs 803.535); rho_V -3.2% (18.2989 vs 18.9001) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-H2O-520K (srk)` — Cp +23.4% (107.501 vs 87.149); rho_L -28.9% (571.024 vs 803.535); rho_V -4.0% (18.1349 vs 18.9001) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
@@ -1461,6 +1540,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `pure-nC4-212.6K (pr)` — Cp -6.2% (114.033 vs 121.621) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-nC4-212.6K (pr78)` — Cp -6.2% (114.033 vs 121.621) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-nC4-350K` — Cp +6.3% (174.284 vs 163.885); rho_L -10.0% (454.822 vs 505.177) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `pure-nC4-350K-hoc` — Cp -30.8% (113.4552 vs 163.8853) - same known gamma-phi liquid-Cp limitation (no residual liquid-Cp contribution; measured 2026-10-22).
+- `pure-nC4-350K-nothnagel` — Cp -30.8% (113.4552 vs 163.8853) - same known gamma-phi liquid-Cp limitation (no residual liquid-Cp contribution; measured 2026-10-22).
 - `pure-nC4-390K (pr)` — Cp +12.8% (226.427 vs 200.774) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-nC4-390K (pr78)` — Cp +12.8% (226.427 vs 200.774) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-nC4-390K (srk)` — Cp +15.4% (231.664 vs 200.774); rho_L -15.1% (367.728 vs 433.172) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
