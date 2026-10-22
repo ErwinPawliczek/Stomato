@@ -266,7 +266,7 @@ def _solve_mesh(
             # feed). Non-reactive zero/one-tear columns hand that state to the
             # polish below; everything else, and a genuinely stalled state
             # (measured stalls sit at M >= 1e-2), is a failure.
-            polishable = zero_one and not _is_reactive_package(tb)
+            polishable = not _is_reactive_package(tb)
             if not (polishable and _at_ns_floor(col, tb, prof)):
                 raise ColumnConvergenceError(
                     f"column did not converge in {_OUTER_MAX} inside-out sweeps and the "
