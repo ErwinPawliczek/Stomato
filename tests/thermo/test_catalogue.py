@@ -33,6 +33,7 @@ from ngdesign.thermo.kvalue import (
 from ngdesign.thermo.nrtl import NrtlThermo
 from ngdesign.thermo.pr import PengRobinsonThermo
 from ngdesign.thermo.pr78 import PengRobinson78Thermo
+from ngdesign.thermo.special import HFHexamerPackage, PolymerPCSAFT
 from ngdesign.thermo.srk import SoaveRedlichKwongThermo
 from ngdesign.thermo.teqp_bridge import (
     CpaPrThermo,
@@ -144,11 +145,19 @@ def test_rows_load_and_build() -> None:
     ]
     non_gamma = ["amine_enrtl", "amine_ke", "pr", "pr78", "srk"] + cubic_t02
     # special family (T-10): experimental rows, hidden from the advisor
-    special_ids = ["flory_huggins", "hoc_dimer", "ideal_solid", "polymer_nrtl", "unifac_fv"]
+    special_ids = [
+        "flory_huggins",
+        "hf_hexamer",
+        "hoc_dimer",
+        "ideal_solid",
+        "polymer_nrtl",
+        "polymer_pc_saft",
+        "unifac_fv",
+    ]
     expected = sorted(
         gamma_phi_ids + nrtl_ids + helmholtz_ids + non_gamma + saft_ids + kvalue_ids + special_ids
     )
-    assert len(expected) == 120
+    assert len(expected) == 122
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
@@ -188,6 +197,9 @@ def test_rows_load_and_build() -> None:
         "cpa_pr": CpaPrThermo,
         "multifluid": MultifluidThermo,
         "multifluid_pure": MultifluidPureThermo,
+        # special family (T-10)
+        "hf_hexamer": HFHexamerPackage,
+        "polymer_pc_saft": PolymerPCSAFT,
     }
     for model_id, cls in expected_types.items():
         assert type(registry.create("thermo", model_id)) is cls

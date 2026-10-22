@@ -145,3 +145,64 @@
       compressibility point in tests/thermo/test_special.py.
   status: experimental
   validation: []
+
+- id: hf_hexamer
+  name: HF-hexamerizing gamma-phi (in-house kernel, Jarry & Davis parameters)
+  family: special
+  adapter: ngdesign.thermo.special:HFHexamerPackage
+  options: {}
+  params:
+    source: data/thermo_params/special/association.yaml
+    provenance: >-
+      In-house HF monomer-hexamer chemical-theory kernel: log10 Kp = a + b/T
+      regressed from saturated-vapour densities by Jarry & Davis (J. Phys.
+      Chem. 57, 600 (1953)), converted from their mmHg pressure basis to Pa.
+      Schotte (Ind. Eng. Chem. Process Des. Dev. 19, 432 (1980)) is the
+      oligomer-treatment reference for HF vapour association.
+  applicability:
+    component_classes: [polar_organic, acid_gas]
+    polar: true
+    electrolyte: false
+    T_K: [270.0, 380.0]
+    P_Pa: [1000.0, 500000.0]
+    phases: [V, L]
+    notes: >-
+      HF vapour association via the hexamerization equilibrium; liquid phase
+      ideal on apparent composition. The kernel function
+      hexamer_vapor_compressibility is exercised directly against the
+      published saturated-vapour association factors (3.580 at 298.16 K,
+      3.438 at 303.16 K) in tests/thermo/test_special.py.
+  status: experimental
+  validation: []
+
+- id: polymer_pc_saft
+  name: Polymer PC-SAFT (teqp bridge)
+  family: special
+  adapter: ngdesign.thermo.special:PolymerPCSAFT
+  options: {}
+  params:
+    source: data/thermo_params/special/polymer.yaml (polymer_pc_saft section)
+    provenance: >-
+      PC-SAFT segment parameters for the polystyrene pseudo-component POLY_PS
+      (AlHammadi & Abutaqiya, ACS Omega 5, 29530 (2020), Table 1, attributing
+      Gross & Sadowski 2001) and the solvent toluene (Gross & Sadowski, Ind.
+      Eng. Chem. Res. 40, 1244 (2001), Table 1; cross-checked against the
+      feos-pcsaft project's literature parameter record). Builds through the
+      T-07 teqp bridge (ngdesign.thermo.teqp_bridge); k_ij = 0 - no
+      verifiable open citation for this pair's interaction parameter.
+  applicability:
+    component_classes: [hydrocarbon, polar_organic]
+    polar: false
+    electrolyte: false
+    T_K: [250.0, 500.0]
+    P_Pa: [1000.0, 10000000.0]
+    phases: [V, L]
+    notes: >-
+      Solvent/polymer supports through the T-07 bridge: constructs without
+      teqp and refuses at first use like every saft row
+      (SaftDependencyMissing without the optional extra; SaftParameterError
+      naming any component without verified parameters). POLY_PS is the
+      registered pseudo-component of P1-07 (Mw 400,000 g/mol, m = 7600
+      segments).
+  status: experimental
+  validation: []

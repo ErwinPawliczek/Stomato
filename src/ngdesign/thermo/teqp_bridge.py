@@ -443,6 +443,17 @@ class _CpaKernel(_Kernel):
         return 0.98 / self._b_mix(z)
 
 
+@lru_cache(maxsize=1)
+def _polymer_pcsaft_params() -> dict[str, Any]:
+    """The cited polymer PC-SAFT parameter file, loaded once (spec T-10)."""
+    path = Path(__file__).resolve().parents[3] / "data" / "thermo_params" / "special" / "polymer.yaml"
+    raw = yaml.safe_load(path.read_text())
+    assert isinstance(raw, dict), f"{path}: malformed parameter file"
+    block = raw.get("polymer_pc_saft") or {}
+    assert isinstance(block, dict) and block, f"{path}: missing polymer_pc_saft block"
+    return block
+
+
 @lru_cache(maxsize=64)
 def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
     """Build (and cache) the kernel for one model kind over one sorted support."""
@@ -494,6 +505,28 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
         # package uses); the Kontogeorgis table carries the a0/b/c1 fit only.
         tcs = [float(resolve(cid).Tc) for cid in cids]
         return _CpaKernel(kind, [block[cid] for cid in cids], tcs)
+    if kind == "polymer_pc_saft":
+        # Polymer PC-SAFT (spec T-10): same PCSAFT engine as "pc_saft", but the
+        # parameters live in the special-family file (polymer.yaml), keyed by
+        # component id, so unsupported components refuse by name from there.
+        block = _polymer_pcsaft_params()
+        unsupported = [cid for cid in cids if cid not in block]
+        if unsupported:
+            raise SaftParameterError(
+                f"no verified polymer_pc_saft parameters for {unsupported}; supported: "
+                f"{sorted(block)} (unsupported components are refused, never treated as ideal)"
+            )
+        coeffs = [
+            {
+                "name": cid,
+                "m": float(block[cid]["m"]),
+                "sigma_Angstrom": float(block[cid]["sigma_Angstrom"]),
+                "epsilon_over_k": float(block[cid]["epsilon_over_k"]),
+                "BibTeXKey": "Gross-IECR-2001",
+            }
+            for cid in cids
+        ]
+        return _TeqpKernel(kind, _teqp().make_model({"kind": "PCSAFT", "model": {"coeffs": coeffs}}))
     raise NotImplementedError(f"no SAFT kernel for model kind {kind!r}")
 
 

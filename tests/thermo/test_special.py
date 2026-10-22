@@ -8,6 +8,7 @@ published reference point quoted in the params/case provenance.
 from __future__ import annotations
 
 import math
+import sys
 from typing import Any
 
 import pytest
@@ -16,10 +17,14 @@ from ngdesign.thermo.special import (
     ChenPolymerNRTLGE,
     FloryHugginsGE,
     FloryHugginsPackage,
+    HFHexamerPackage,
     IdealSolidPackage,
+    PolymerPCSAFT,
     UnifacFvPackage,
     dimer_vapor_compressibility,
+    hexamer_vapor_compressibility,
 )
+from ngdesign.thermo.teqp_bridge import SaftDependencyMissing, SaftParameterError
 
 R = 8.31446261815324
 
@@ -243,3 +248,122 @@ class TestDimerKernel:
     def test_invalid_inputs_refuse(self) -> None:
         with pytest.raises(ValueError, match="positive"):
             dimer_vapor_compressibility(0.0, 1.0e5, self.DH, self.K2_REF, self.T_REF)
+
+    def test_apparent_molar_mass_400k_1bar(self) -> None:
+        """Apparent molar mass at 400 K / 1 bar TRUE pressure vs the published value.
+
+        The cited chemical-theory prediction for acetic-acid vapour association
+        is Z = 0.6299 at 399.35 K and 1 bar TRUE pressure (Mehling & Kleiber,
+        ChemTexts 6, 4 (2020), appendix A - the same point the K2_ref above is
+        reduced from; Hayden-O'Connell, Ind. Eng. Chem. Process Des. Dev. 14,
+        209 (1975) is the standard predictive route for the same quantity, and
+        no standalone published HOC number at 400 K / 1 bar was retrievable
+        open access). M/Z gives Mapp = 60.052/0.6299 = 95.34 g/mol. The 1 bar
+        is the TRUE mixture pressure, so the kernel takes the nominal
+        P = P_true/Z and Z is solved self-consistently.
+        """
+        p_true = 1.0e5
+        z = 0.7
+        for _ in range(60):
+            z = dimer_vapor_compressibility(400.0, p_true / z, self.DH, self.K2_REF, self.T_REF)
+        mapp = 60.052 / z
+        assert mapp == pytest.approx(95.34, rel=0.03)
+
+
+# --------------------------------------------------------------------------
+# HF hexamerization kernel
+# --------------------------------------------------------------------------
+
+
+class TestHexamerKernel:
+    """HF hexamerization kernel against Jarry & Davis (J. Phys. Chem. 57, 600 (1953))."""
+
+    # Their monomer-hexamer line log10 K = -42.38089 + 8660.4/T with K in
+    # mmHg^-5 (their fig. 4 regression), converted to a Pa^-5 basis:
+    # a_Pa = a_mmHg - 5 log10(101325/760).
+    A_MMHG = -42.38089
+    B = 8660.4
+    A_PA = A_MMHG - 5.0 * math.log10(101325.0 / 760.0)
+
+    @staticmethod
+    def _psat_pa(t_c: float) -> float:
+        """Saturation pressure from Jarry & Davis eq. 1 (mmHg basis) to Pa."""
+        return float(10.0 ** (8.38036 - 1952.55 / (335.52 + t_c))) * 101325.0 / 760.0
+
+    def test_saturated_vapour_300k(self) -> None:
+        """Z at the 300 K saturation point within 5 % of the published value.
+
+        The published smoothed association factors (n_nominal/n_true, their
+        Table I, saturated vapour) are 3.580 at 298.16 K and 3.438 at
+        303.16 K, so Z = 1/factor; interpolated linearly in T, the 300 K
+        factor is 3.5277. The saturation pressure enters through their own
+        Antoine equation (eq. 1).
+        """
+        psat = self._psat_pa(26.85)
+        z = hexamer_vapor_compressibility(300.0, psat, self.A_PA, self.B)
+        factor = 3.580 + (3.438 - 3.580) * (300.0 - 298.16) / 5.0
+        assert z == pytest.approx(1.0 / factor, rel=0.05)
+
+    def test_exact_table_point_298k(self) -> None:
+        """At the 298.16 K table point Z stays within 5 % of 1/3.580."""
+        psat = self._psat_pa(25.01)
+        z = hexamer_vapor_compressibility(298.16, psat, self.A_PA, self.B)
+        assert z == pytest.approx(1.0 / 3.580, rel=0.05)
+
+    def test_ideal_limit(self) -> None:
+        """Association vanishes as P -> 0: Z -> 1."""
+        z = hexamer_vapor_compressibility(300.0, 1.0e-3, self.A_PA, self.B)
+        assert z == pytest.approx(1.0, abs=1e-8)
+
+    def test_association_strengthens_on_cooling(self) -> None:
+        z_hot = hexamer_vapor_compressibility(330.0, 2.0e5, self.A_PA, self.B)
+        z_cold = hexamer_vapor_compressibility(280.0, 2.0e5, self.A_PA, self.B)
+        assert z_cold < z_hot < 1.0
+
+    def test_invalid_inputs_refuse(self) -> None:
+        with pytest.raises(ValueError, match="positive"):
+            hexamer_vapor_compressibility(0.0, 1.0e5, self.A_PA, self.B)
+
+
+# --------------------------------------------------------------------------
+# Package construction contracts (hf_hexamer, polymer_pc_saft)
+# --------------------------------------------------------------------------
+
+
+class TestHFHexamerPackage:
+    def test_supported_component_builds_flasher(self) -> None:
+        """HF is parameterized: the gamma-phi flasher builds through the registry."""
+        HFHexamerPackage(components=("HF",))
+
+    def test_unparameterized_component_refuses(self) -> None:
+        """A component without hexamerization parameters refuses, never an ideal."""
+        with pytest.raises(ValueError, match="HCl"):
+            HFHexamerPackage(components=("HCl",))
+
+
+class TestPolymerPCSAFT:
+    def test_constructs_without_teqp(self) -> None:
+        """Construction never touches the optional backend (teqp absent here)."""
+        PolymerPCSAFT()
+
+    def test_first_use_refuses_without_teqp(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Without teqp the first property call raises SaftDependencyMissing."""
+        monkeypatch.setitem(sys.modules, "teqp", None)
+        with pytest.raises(SaftDependencyMissing, match="optional extra"):
+            PolymerPCSAFT().flash_pt({"toluene": 1.0}, 300.0, 1.0e5, 100.0)
+
+    def test_unparameterized_component_refuses_by_name(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """A component without verified segment parameters refuses, named, without teqp."""
+        monkeypatch.setitem(sys.modules, "teqp", None)
+        with pytest.raises(SaftParameterError, match="C1"):
+            PolymerPCSAFT().flash_pt({"C1": 1.0}, 300.0, 1.0e5, 100.0)
+
+    def test_teqp_kernel_smoke(self) -> None:
+        """With teqp installed the bridge builds the kernel from the special params."""
+        pytest.importorskip("teqp")
+        from ngdesign.thermo.special import _ensure_poly_ps_registered
+
+        _ensure_poly_ps_registered()
+        kernel, ids, _ = PolymerPCSAFT()._kernel({"POLY_PS": 0.5, "toluene": 0.5})
+        assert ids == ("POLY_PS", "toluene")
+        assert kernel is not None

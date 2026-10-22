@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-22T05:41:00+00:00 from `data/validation/results.json` (git e5e328d, CoolProp 8.0.0).
+Generated 2026-10-22T07:03:04+00:00 from `data/validation/results.json` (git 2e25c06, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -49,6 +49,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [grayson-streed](validation/grayson-streed.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/grayson-streed.md) |
 | [grayson-streed-extended](validation/grayson-streed-extended.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/grayson-streed-extended.md) |
 | [henry-sander](validation/henry-sander.md) | kvalue | provisional | 6/6 | L1=0 L2=2 | [report](validation/henry-sander.md) |
+| [hf_hexamer](validation/hf_hexamer.md) | special | experimental | — | L1=0 L2=0 | [report](validation/hf_hexamer.md) |
 | [hoc_dimer](validation/hoc_dimer.md) | special | experimental | — | L1=0 L2=0 | [report](validation/hoc_dimer.md) |
 | [iapws95](validation/iapws95.md) | helmholtz | provisional | 6/6 | L1=0 L2=5 | [report](validation/iapws95.md) |
 | [iapws_if97](validation/iapws_if97.md) | helmholtz | provisional | 6/6 | L1=0 L2=0 | [report](validation/iapws_if97.md) |
@@ -74,6 +75,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [pc_saft_assoc](validation/pc_saft_assoc.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_assoc.md) |
 | [pc_saft_polar](validation/pc_saft_polar.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_polar.md) |
 | [polymer_nrtl](validation/polymer_nrtl.md) | special | experimental | — | L1=0 L2=0 | [report](validation/polymer_nrtl.md) |
+| [polymer_pc_saft](validation/polymer_pc_saft.md) | special | experimental | — | L1=0 L2=0 | [report](validation/polymer_pc_saft.md) |
 | [pr](validation/pr.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr.md) |
 | [pr-bm](validation/pr-bm.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/pr-bm.md) |
 | [pr-boston-mathias](validation/pr-boston-mathias.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/pr-boston-mathias.md) |
