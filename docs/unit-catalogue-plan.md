@@ -1,6 +1,6 @@
 # Plan: the unit-operation catalogue (~70 units) built breadth-first, then in rigour rounds
 
-> **Status: draft, not for dispatch.** Agreed in outline on 2026-10-21. The programme is re-evaluated
+> **Status: draft, not for dispatch.** Agreed in outline on 2026-10-21; priority-set-first ordering agreed 2026-10-22. The programme is re-evaluated
 > with Erwin after the thermo catalogue freeze (T wave 4) and before U-00 is written: scope cuts
 > (electrolysers, membranes, adsorption, Claus, cooling towers, hydrocyclones are candidates), the
 > reaction contract's placement in U-00, and the exclusion of dynamic mode are the open decisions.
@@ -13,11 +13,12 @@ thermo or column threads for files.
 
 ## 0. Principles
 
-1. **Breadth first, then rounds.** Round 0 gives every unit in the catalogue a base model (R0)
-   that closes balances exactly and solves from a spec. Round 1 lifts every unit to its next
-   rigour level (R1), round 2 to R2, and so on. No unit skips a level: R2 is only reachable
-   through a green R1, because each level's validation cases become the regression floor for the
-   next.
+1. **Depth on the priority set first, then the palette.** (Revised 2026-10-22 with Erwin.) The
+   catalogue below is the full palette we support in the end, but the first rounds take a
+   *priority set* — the units of three reference flowsheets — to R1/R2 against published
+   answers, before the remaining units get their R0 base model. Within a unit no level is skipped:
+   R2 is only reachable through a green R1, because each level's validation cases become the
+   regression floor for the next.
 2. **Rigour is a per-unit option, not a new unit.** One registered id per unit (`shell_tube`,
    `pfr`, ...); the level is `params["model"]` (the P1-06 `mode="shortcut"|"staged"` pattern).
    Flowsheets, sizers, the P&ID builder and the agent see one unit whose fidelity can be raised
@@ -162,6 +163,21 @@ Status today: ✅ exists at the level shown, 🟡 exists but the level/contract 
 | 8 | NGL fractionation train (deethaniser/depropaniser/debutaniser) | flowsheet template over rigorous columns | — | — | ❌ (template) |
 | 9 | sour-water stripper | reboiled stripper on an electrolyte package (T-09) | — | — | ❌ |
 
+## 2b. The priority set — deep first (≈35 units, three reference flowsheets)
+
+Each slice is a sample flowsheet with a published answer (its V1 example is chosen *before* the
+units are built) and is finished only when every unit in it is at the level shown and the
+flowsheet reproduces the reference.
+
+| Slice | Reference | Units and target level |
+|---|---|---|
+| **S1 natural-gas processing** | GPSA Engineering Data Book examples; an NGL fractionation train (deethaniser / depropaniser / debutaniser) with published product specs | 2-phase and 3-phase separators R1 (Souders–Brown sizing); centrifugal compressor R1 (curve, polytropic) and compression train; air cooler R1 and shell-and-tube R1 (rating over `ht`); JT valve R0; control valve R1 (IEC 60534 Cv); pipe segment R1 (Darcy) and R2 (two-phase); TEG contactor R2 (staged) and TEG regenerator R2; shortcut distillation (FUG) R0; rigorous distillation R2 with side draws, pumparounds and multiple feeds; column internals R1 (hydraulics / HETP) |
+| **S2 amine sweetening** | Kohl & Nielsen ch. 2 loop (MDEA and MEA); the existing shortcut loops as the R0 oracle | amine absorber R2 and regenerator R2 on the reactive package (needs P1-11's mesh closure, then P1-06); flash drum with duty R0; pump R1 (curve, NPSH); plate exchanger R1 (lean/rich); reflux drum (2-phase separator R1); hydrate check / inhibitor injection R1 |
+| **S3 reactor + separation (chemicals)** | Fogler / Levenspiel worked reactors feeding a Seader–Henley column; element balances as the V0 floor | reaction-set contract (U-00); conversion, yield, equilibrium (Keq) and Gibbs reactors R0; CSTR R1 and PFR R1 (kinetics), PFR R2 (along length with heat transfer and Ergun ΔP); fixed-bed multi-tubular R2; heater/cooler R0; rigorous distillation R2 (shared with S1); decanter R1; component splitter and stream calculator R0 |
+
+Everything else in §2 is palette: it gets its R0 base model in a later round so the canvas is
+complete, and climbs only when a reference flowsheet needs it.
+
 ## 3. Architecture that makes the catalogue cheap
 
 - **One `UnitModel` protocol, one catalogue.** `contracts/plugins.py::UnitModel` stays as is
@@ -217,23 +233,21 @@ Partition by file ownership so threads never collide:
 | U-G treating | `units/treating/` (the amine/TEG modules move here), `data/unit_models/treating.yaml`, sample flowsheets |
 | U-V validation data per family | `data/validation_units/<family>/cases.yaml`, data-only PRs in parallel with the unit threads |
 
-Rounds (each round = one dispatch burst per family; a family's round N+1 starts when its round N
-and U-00 are on main):
+Rounds (each round = one dispatch burst; a round starts when its dependencies are on main):
 
-1. **Round 0 (serial, 1 thread):** U-00. Catalogue-as-data, level refusal, V0 harness, reaction
-   contract, the 21 existing units migrated with their current level recorded. Nothing else starts
-   before its schema is merged.
-2. **Round 0 breadth (parallel, 7 threads):** U-A..U-G at **R0** for every ❌ unit above, plus
-   U-V worked-example data for R0. Target: 71 units registered, each solving its example case with
-   balances at 1e-8, each with a V1 example or a documented gap.
-3. **Round 1 rating (parallel, 6 threads):** every unit with an R1 column above: curves, Cv,
-   Darcy, exchanger rating over `ht`, Souders-Brown, kinetics in ideal reactors, Kremser/FUG,
-   membrane permeances. U-A has no R1 and skips.
-4. **Round 2 rigorous (parallel, 4 threads):** PFR along length, two-phase pipes, zoned/multi-pass
-   exchangers, MESH extensions (pumparounds, VLLE stages, reactive stages, extractor, divided
-   wall), Gibbs per Claus stage, staged TEG regenerator.
-5. **Round 3 advanced (parallel, 2 threads):** rate-based stages (mass-transfer correlations and
-   interfacial area as a shared store), catalyst deactivation and pellet effectiveness.
+1. **Round 0 (serial, 1 thread):** U-00. Catalogue-as-data, level refusal, V0 harness, the
+   reaction-set contract (reviewed as a contract change on its own), the 21 existing units
+   migrated with their current level recorded, and the three reference flowsheets' V1 answers
+   committed as data before any unit is built.
+2. **Round 1 — priority set S1 + S3 (parallel, ~5 threads by family):** the §2b units to their
+   target levels; S1 and S3 share the rigorous column, so the column extensions (side draws,
+   pumparounds, multiple feeds, internals) go first. Each slice closes with its flowsheet
+   reproducing the reference.
+3. **Round 2 — priority set S2 (after P1-11 / P1-06):** the amine slice on the reactive package.
+4. **Round 3 — palette R0 (parallel, by family):** every remaining ❌ unit at its base level with a
+   V1 example or a documented gap, so the canvas is complete.
+5. **Round 4 — palette R1/R2 on demand and advanced levels:** rate-based stages, catalyst
+   deactivation, zoned exchangers and the rest, pulled by a reference case, never pushed.
 6. **Freeze:** every level's status audited against its harness report; `docs/units/` regenerated;
    the agent's `build` tool and the frontend palette regenerated from the catalogue.
 

@@ -88,6 +88,24 @@ jobs:
       - name: openapi.json up to date
         run: uv run python scripts/export_openapi.py && git diff --exit-code openapi.json
 
+  audit:
+    # The thermo-catalogue audit (L0 self-consistency on every row, L4 cross-model
+    # pairs, every bound validation case) is its own job: inside pytest it grew
+    # with the row count until the backend job hit its timeout at 120 rows
+    # (2026-10-22). The audit script is the single owner of those checks.
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-groups
+      - run: uv run python scripts/validate_properties.py --audit
+
   frontend:
     needs: changes
     if: needs.changes.outputs.frontend == 'true' || github.event_name == 'push'
@@ -129,7 +147,7 @@ jobs:
   # Required status check for branch protection: passes when every job that ran passed.
   ci-ok:
     if: always()
-    needs: [guard, backend, frontend, helm]
+    needs: [guard, backend, audit, frontend, helm]
     runs-on: ubuntu-latest
     steps:
       - run: |
