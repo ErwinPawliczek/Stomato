@@ -29,31 +29,33 @@
     - VLL
   status: provisional
   validation:
-  - meohh2o-97.99kPa-369.65K
-  - meohh2o-97.99kPa-365.45K
-  - meohh2o-97.99kPa-360.65K
-  - meohh2o-97.99kPa-353.25K
-  - meohh2o-97.99kPa-349.05K
-  - meohh2o-97.99kPa-343.75K
-  - meohh2o-97.99kPa-341.85K
-  - meohh2o-97.99kPa-339.55K
-  - meohh2o-312.91K-9.079kPa
-  - meohh2o-312.91K-13.012kPa
-  - meohh2o-312.91K-16.319kPa
-  - meohh2o-312.91K-20.705kPa
-  - meohh2o-312.91K-23.385kPa
-  - meohh2o-312.91K-27.518kPa
-  - meohh2o-312.91K-32.571kPa
-  - meohh2o-322.91K-15.932kPa
-  - meohh2o-322.91K-26.131kPa
-  - meohh2o-322.91K-31.544kPa
-  - meohh2o-322.91K-40.850kPa
-  - meohh2o-322.91K-46.450kPa
-  - meohh2o-322.91K-52.142kPa
+  - pr-huron-vidal-pure-MeOH-305K
+  - pr-huron-vidal-pure-MeOH-330K
+  - pr-huron-vidal-pure-H2O-340K
+  - pr-huron-vidal-pure-H2O-370K
+  - pr-huron-vidal-meohh2o-97.99kPa-349.05K
+  - pr-huron-vidal-meohh2o-312.91K-20.705kPa
+  - pr-huron-vidal-c1h2o-310.9K-13.10MPa
+  - pr-huron-vidal-c1h2o-310.9K-44.99MPa
   references:
   - Huron, M.-J. & Vidal, J., Fluid Phase Equilib. 3, 255-271, 1979
   - Renon, H. & Prausnitz, J. M., AIChE J. 14(1), 135-144, 1968
   - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
   l0: {}
   l0_excluded: {}
-  assessed: {}
+  assessed:
+    pr-huron-vidal-pure-MeOH-305K: "rho_L -13.2% (676.721 vs 779.805); Cp +36.7% (112.917 vs 82.6135) - pure-component limits of the untranslated PR form (the Huron-Vidal rule reduces to PR for a pure component; same misses as the pr row) (measured 2026-10-22, review of PR #175)"
+    pr-huron-vidal-pure-MeOH-330K: "rho_V -3.2% (0.882017 vs 0.911218); rho_L -13.2% (656.228 vs 755.882); Cp +31.4% (116.265 vs 88.5047) - pure-component limits of the untranslated PR form (measured 2026-10-22, review of PR #175)"
+    pr-huron-vidal-pure-H2O-340K: "rho_L -15.9% (823.513 vs 979.503); Cp +8.0% (81.5128 vs 75.4562) - pure-component limits of the untranslated PR form (measured 2026-10-22, review of PR #175)"
+    pr-huron-vidal-pure-H2O-370K: "rho_L -16.4% (802.915 vs 960.587); Cp +8.7% (82.4488 vs 75.8833) - pure-component limits of the untranslated PR form (measured 2026-10-22, review of PR #175)"
+    pr-huron-vidal-meohh2o-97.99kPa-349.05K: "bubble_T +4.7% (365.395 vs 349.05); vapor_comp -0.208 abs (0.472128 vs 0.68) - the ChemSep NRTL binary parameters are low-pressure gamma-phi fits, not Huron-Vidal (infinite-pressure reference) parameters; the HV rule needs its own fitted set (Huron & Vidal 1979 section 4), which is not in an open databank; the MHV/WS rules exist precisely to reuse low-pressure gE parameters (measured 2026-10-22, review of PR #175)"
+    pr-huron-vidal-meohh2o-312.91K-20.705kPa: "bubble_P -35.7% (13313.9 vs 20705); vapor_comp -0.066 abs (0.738809 vs 0.8053) - same cause: low-pressure NRTL parameters in the infinite-pressure HV reference (measured 2026-10-22, review of PR #175)"
+    pr-huron-vidal-c1h2o-310.9K-13.10MPa: "refuses at first use: ChemSep NRTL databank has no fitted binary parameters for pair C1/H2O (coverage limit of the gE databank, not a model miss) (measured 2026-10-22, review of PR #175)"
+    pr-huron-vidal-c1h2o-310.9K-44.99MPa: "refuses at first use: ChemSep NRTL databank has no fitted binary parameters for pair C1/H2O (coverage limit of the gE databank, not a model miss) (measured 2026-10-22, review of PR #175)"
+  l0_note: >-
+    provisional on L0 only: the 8 bound T-12 cases all miss or refuse (declared above) -
+    the pure points inherit the untranslated PR liquid-density/Cp limits and the
+    MeOH/H2O points show that the ChemSep NRTL parameters (low-pressure gamma-phi fits)
+    do not transfer to the Huron-Vidal infinite-pressure reference; promotion needs an
+    HV-specific NRTL parameter set with a citation (Huron & Vidal 1979 Table 2 or a later
+    open fit) bound as an independent case
