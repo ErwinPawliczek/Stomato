@@ -22,6 +22,38 @@
 # sweep omitted the ethanol-water azeotrope). Cases for this family are
 # authored when the row sweep registers the family H rows AND the component
 # slate curates the species; the wave-3 validation sweep is the natural home.
+#
+# T-10 UPDATE (same day): the row sweep has now landed (five special rows in
+# data/thermo_models/special.yaml, all `experimental`). The cases below are
+# the candidates to bind; each stays pending for the stated reason. Unit-level
+# checks pin the closed forms meanwhile (tests/thermo/test_special.py).
+#
+# - special_fh_toluene_ps_entropy: FH entropy of mixing against the PSU MATSE
+#   202 worked example (x1 = 0.95, r2/r1 = 962 -> dG_mix/RT = -1.463) and the
+#   closed-form solvent activity. Pending: the harness has no gamma-only case
+#   type for polymer surfaces yet.
+#
+# - special_fh_toluene_ps_activity_data: chi = 0.67 (Gunduz & Dincer 1980)
+#   against measured toluene activity in polystyrene (Omega_1^inf = 7.90).
+#   Pending: source precision not verified against the primary paper this
+#   session; table values must be digitized before a tolerance is set.
+#
+# - special_sle_naphthalene_benzene: van't Hoff ideal solubility x = 0.3018 at
+#   298.15 K (Tm = 353.35 K, Hfus = 19010 J/mol, chemicals databank) within 5%
+#   of the measured x ~ 0.292 for naphthalene in benzene (Oregon State PAH
+#   solubility table, retrieved this session). Pending: measured-value source
+#   precision is uncertain (secondary aggregation); re-verify against a
+#   primary source before binding.
+#
+# - special_assoc_acetic_acid_Z: dimerization-kernel nominal compressibility
+#   Z = 0.6299 at 399.35 K, 1 bar (Mehling & Kleiber 2020). Pending: K2 was
+#   reduced FROM that Z point, so the current check is a round trip, not an
+#   independent prediction; an independent K2(T) source is needed.
+#
+# - special_chen_polymer_nrtl_parameters: Chen 1993 against a published
+#   polymer-solution dataset with the paper's own parameterization. Pending:
+#   no verified published parameter set located this session; the shipped
+#   toluene/PS tau/alpha are explicitly illustrative.
 
 meta:
   coolprop_version: 8.0.0

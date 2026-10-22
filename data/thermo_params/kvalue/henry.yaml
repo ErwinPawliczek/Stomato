@@ -1,0 +1,41 @@
+# Henry coefficients for the henry-ideal K-value row (spec T-05).
+#
+#   H_CO2(T) = A * exp(B / T)   [Pa.m3/mol]  (dissolved concentration c [mol/m3]
+#   in equilibrium with partial pressure p = H * c)
+#
+# The K-value form uses y_i * P = H_i * c_i with c_i = x_i * c_L, c_L the liquid
+# molar density of the aqueous phase, so K_i = H_i * c_L / P for the dilute acid
+# gas in water service.
+#
+# Provenance: Versteeg, G.F. & van Swaaij, W.P.M., "Solubility and diffusivity of
+# acid gases in aqueous diethanolamine solutions", J. Chem. Eng. Data 33:29-34
+# (1988): H_CO2 = 2.82e6 exp(-2044/T). This is the SAME constant set the amine
+# package uses (ngdesign.amine.kent_eisenberg, retrieved from NeqSim's
+# AmineKentEisenberg reference model). It is re-declared here as data because the
+# layer contract forbids importing ngdesign.amine from ngdesign.thermo
+# (.importlinter: amine > thermo). H2S has NO water-referenced Henry constant in
+# this codebase (the amine package uses a per-amine lumped Lambda, not a water
+# Henry constant), and no Sander (2015) table exists in the repository, contrary
+# to the spec's premise; H2S therefore follows Raoult's law in this row until a
+# cited H2S-water table is added. Deviation recorded on issue #139.
+#
+# CH4 provenance: as compiled by R. Sander, "Compilation of Henry's law
+# constants (version 5.0.0) for water as solvent", Atmos. Chem. Phys.
+# 23:10901-12440 (2023), CAS 74-82-8 entry,
+# https://www.henrys-law.org/henry/casrn/74-82-8 (retrieved 2026-10-21),
+# measured pure-water set: Lekvam, K. & Bishnoi, P.R., "Dissolution of methane
+# in water at low temperatures and intermediate pressures", Fluid Phase Equilib.
+# 131:297-309 (1997): H_cp = 1.2e-5 mol/(m3 Pa) at 298.15 K, d ln H_cp/d(1/T) =
+# 2400 K. This is the compilation's methane entry measured at INTERMEDIATE
+# pressures (0.5-11 MPa), the regime of the Culberson & McKetta (1951) anchors;
+# the low-pressure infinite-dilution compilations (Rettich et al. 1981, Wilhelm
+# et al. 1977: H_cp = 1.4e-5, 1600 K) underpredict those anchors by 13-16%.
+# Conversion to the fugacity form H(T) = 1/H_cp(T) = A exp(B/T):
+# A = (1/1.2e-5) exp(2400/298.15) = 2.61e8, B = -2400.
+components:
+  CO2:
+    A: 2.82e6
+    B: -2044.0
+  C1:
+    A: 2.61e8
+    B: -2400.0

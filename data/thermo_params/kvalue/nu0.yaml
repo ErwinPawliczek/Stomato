@@ -1,0 +1,46 @@
+# Chao-Seader / Grayson-Streed nu0 simple-fluid and acentric correction coefficients (spec T-05).
+#
+# Form (log10 domain), with Tr = T/Tc, Pr = P/Pc of the pure component:
+#   log10(nu0_0) = A0 + A1/Tr + A2*Tr + A3*Tr^2 + A4*Tr^3
+#                  + (A5 + A6*Tr + A7*Tr^2)*Pr + (A8 + A9*Tr)*Pr^2 - log10(Pr)
+#   log10(nu0_1) = B0 + B1*Tr + B2/Tr + B3*Tr^3 + B4*(Pr - 0.6)
+#   log10(nu0)   = log10(nu0_0) + omega_cs * log10(nu0_1)
+# nu0 is the pure-component liquid fugacity coefficient f_L/P of the correlation.
+# The nu0_1 (acentric) correlation is SHARED by both models: only the A0..A9 sets
+# differ between Chao-Seader and Grayson-Streed.
+#
+# Provenance: Chao, K.C. & Seader, J.D., "A general correlation of vapor-liquid
+# equilibria in hydrocarbon mixtures", AIChE J. 7(4):598-605 (1961); Grayson, H.G.
+# & Streed, C.W., "Vapor-liquid equilibrium for high temperature, high pressure
+# hydrogen-hydrocarbon systems", Proc. 6th World Petroleum Congress, Sect. III,
+# pp. 233-245 (1963). Coefficient sets re-transcribed verbatim from the Rust port
+# of DWSIM's property kernels ('outram-park-fork-dwsim-libs', file
+# src/thermo/chao_seader_grayson.rs, ported from DWSIM commit 1abf72d,
+# DWSIM.Thermodynamics/PropertyPackages/Models/{ChaoSeader,GraysonStreed}.vb
+# CalcNu L69-104), retrieved 2026-10-21 from docs.rs. An earlier transcription in
+# this file put scrambled values here (the Grayson-Streed simple-fluid set with
+# shifted indices and a sign-flipped A4, under both model keys, plus a bogus
+# methane set); it never reproduced the published correlations and was replaced.
+# Sanity anchors for the corrected sets, cross-checked by evaluation:
+#   nu0(C3, 300 K, 997.7 kPa) ~ 0.90 (f_L/P at the C3 saturation point);
+#   nu0_0(CH4, 125 K, 2.69 bar) ~ 1.07 with the CS methane set, omega_cs = 0.011.
+# Constants are not copyrightable; no code was copied.
+
+sets:
+  chao_seader:
+    hydrogen: [1.96718, 1.02972, -0.054009, 0.0005288, 0.0, 0.008585, 0.0, 0.0, 0.0, 0.0]
+    methane: [2.4384, -2.2455, -0.34084, 0.00212, -0.00223, 0.10486, -0.03691, 0.0, 0.0, 0.0]
+    simple: [5.75748, -3.01761, -4.985, 2.02299, 0.0, 0.08427, 0.26667, -0.31138, -0.02655, 0.02883]
+  grayson_streed:
+    hydrogen: [1.50709, 2.74283, -0.0211, 0.00011, 0.0, 0.008585, 0.0, 0.0, 0.0, 0.0]
+    methane: [1.36822, -1.54831, 0.0, 0.02889, -0.01076, 0.10486, -0.02529, 0.0, 0.0, 0.0]
+    simple: [2.05135, -2.10889, 0.0, -0.19396, 0.02282, 0.08852, 0.0, -0.00872, -0.00353, 0.00203]
+
+# Shared acentric (Pitzer nu0_1) correction, both models.
+nu1: [-4.23893, 8.65808, -1.22060, -3.15224, -0.025]
+
+# Set selection by molar mass (the DWSIM rule: rounded M*1000 == 2 -> hydrogen,
+# == 16 -> methane, else simple; the bounds below are equivalent on the slate).
+selection:
+  hydrogen_max_mw: 6.0
+  methane_max_mw: 20.0

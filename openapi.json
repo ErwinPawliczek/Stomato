@@ -960,7 +960,8 @@
         "enum": [
           "vapor",
           "hc_liquid",
-          "aqueous"
+          "aqueous",
+          "solid"
         ],
         "title": "PhaseKind",
         "type": "string"

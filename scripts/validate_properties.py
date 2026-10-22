@@ -43,6 +43,7 @@ from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import PhaseKind
 from ngdesign.thermo import catalogue
 from ngdesign.thermo.catalogue import ModelRow
+from ngdesign.thermo.teqp_bridge import SaftDependencyMissing
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CASES_PATH = REPO_ROOT / "data" / "validation" / "cases.yaml"
@@ -157,6 +158,18 @@ def xfail_reason(case: Case, failed_props: frozenset[str]) -> str | None:
     here — it fails the test and forces a fresh assessment. Used by the reference-case tests
     (dynamic xfail) and by ``write_doc`` (assessment section).
     """
+    if (
+        case.package == "pc_saft"
+        and case.id.startswith("pure-CO2-")
+        and failed_props <= {"bubble_P", "dew_P", "Cp", "rho_L", "rho_V"}
+    ):
+        return (
+            "PC-SAFT without a quadrupole term overpredicts CO2 saturation pressure by 4-10 % "
+            "between the triple point and 265 K (Gross & Sadowski 2001 parameters verified; teqp's "
+            "own pure_VLE_T reproduces the same pressures, excluding a solver artifact); the "
+            "saturated-phase properties are evaluated at the reference Psat, where this model's "
+            "liquid is stretched (model limitation; assessed in docs/validation.md)"
+        )
     if case.id.startswith("pure-") and failed_props <= {"rho_L", "rho_V", "Cp"}:
         return (
             "cubic saturation properties beyond tolerance vs the CoolProp reference EOS "
@@ -329,6 +342,11 @@ def run_all(cases: list[Case]) -> list[Row]:
         for pkg in packages_for(case):
             try:
                 rows.extend(evaluate_case(case, pkg))
+            except SaftDependencyMissing as exc:
+                # An absent optional backend (the saft rows' teqp extra) is an
+                # environment fact, not a model failure: the case is skipped, visibly.
+                print(f"SKIP: {case.id} on {pkg}: {exc}")
+                continue
             except Exception as exc:  # noqa: BLE001 - reported as failed comparisons, never swallowed
                 print(f"WARNING: {case.id} on {pkg} raised {type(exc).__name__}: {exc}")
                 rows.extend(
@@ -624,10 +642,14 @@ def _gibbs_duhem_ratio(
 def _l0_gibbs_duhem(pkg: Thermo, params: dict[str, Any]) -> L0Result:
     worst = 0.0
     details: list[str] = []
+    # Rows may declare a smaller quadrature depth: 100 midpoint steps over an
+    # association kernel costs ~100x a closed-form EOS evaluation. The 1e-6 bar
+    # itself is never relaxed.
+    steps = int(params.get("steps", 100))
     for entry in params["binaries"]:
         z = {k: float(v) for k, v in entry["z"].items()}
         kind = PhaseKind(entry["phase"])
-        ratio = _gibbs_duhem_ratio(pkg, z, entry["T"], entry["P"], kind, eps=0.01, n=100)
+        ratio = _gibbs_duhem_ratio(pkg, z, entry["T"], entry["P"], kind, eps=0.01, n=steps)
         worst = max(worst, ratio)
         details.append(f"{sorted(z)}@{entry['T']:g}K/{entry['P']:g}Pa {kind.value} {ratio:.2g}")
     return L0Result("gibbs_duhem", worst <= 1e-6, worst, "; ".join(details))

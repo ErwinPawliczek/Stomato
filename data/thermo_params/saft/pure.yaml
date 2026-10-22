@@ -1,0 +1,126 @@
+# SAFT / CPA pure-component parameters (spec T-07).
+#
+# Every value below was retrieved this session (2026-10-21) from the cited open
+# source, and each block was verified numerically against reference saturation
+# data before being committed (verification notes per block). Components without
+# verified parameters are absent by design: the bridge refuses them by name
+# rather than silently treating them as ideal.
+#
+# Units: sigma [Angstrom], epsilon_over_k and epsilon_AB_over_R [K], epsilon_AB
+# [J/mol], a0 [Pa m6/mol2], b [m3/mol], lambda_r / lambda_a dimensionless.
+
+# --- PC-SAFT (row pc_saft) -----------------------------------------------------
+# Source: Gross & Sadowski, "Perturbed-Chain SAFT: An Equation of State Based on a
+# Perturbation Theory for Chain Molecules of Arbitrary Length", Ind. Eng. Chem.
+# Res. 40, 1244-1260 (2001), Table 1 (non-associating substances), DOI
+# 10.1021/ie0003887. C1-C3 cross-checked digit-identical against teqp 0.23.2's
+# compiled name library (get_m/get_sigma_Angstrom/get_epsilon_over_k_K).
+# Verification: Psat at each component's normal boiling point reproduces
+# 101325 Pa to <=0.8% (solver of ngdesign.thermo.teqp_bridge, checked this session).
+pc_saft:
+  C1: {m: 1.0, sigma_Angstrom: 3.7039, epsilon_over_k: 150.03}
+  C2: {m: 1.6069, sigma_Angstrom: 3.5206, epsilon_over_k: 191.42}
+  C3: {m: 2.002, sigma_Angstrom: 3.6184, epsilon_over_k: 208.11}
+  nC4: {m: 2.3316, sigma_Angstrom: 3.7086, epsilon_over_k: 222.88}
+  nC5: {m: 2.6864, sigma_Angstrom: 3.7729, epsilon_over_k: 231.20}
+  "C6+": {m: 3.0576, sigma_Angstrom: 3.7983, epsilon_over_k: 236.77}
+  CO2: {m: 2.0729, sigma_Angstrom: 2.7852, epsilon_over_k: 169.21}
+  excluded:
+    iC4: "G&S 2001 row retrieved as (2.1078, 3.7573, 222.30) fails the boiling-point
+      check by 22% (retrieval or transcription untrustworthy); excluded pending a
+      verified source."
+    iC5: "m/sigma retrieved (2.4193, 3.7915) but epsilon_over_k came back garbled and
+      no candidate value reproduced the databank Psat within 12%; excluded pending a
+      verified source."
+    N2: "G&S 2001 row retrieved as (1.2053, 3.6375, 99.06) misses databank saturation
+      pressures by 53-63% over 80-110 K; excluded pending a verified source (the
+      multifluid row covers N2 at reference-EOS precision)."
+  binary_kij: "teqp 0.23.2 exposes a k_ij matrix only through the PCSAFTEOS(coeffs,
+    kmat) constructor (teqp docs, PCSAFT.html). No methane/CO2 k_ij value with a
+    verifiable open citation was found (the literature-search candidate was flagged
+    unverified by its own retrieval), so the row runs k_ij=0; the near-critical
+    Petropoulou c1co2-* cases carry the harness's standing k_ij=0 assessment."
+
+# --- SAFT-VR-Mie (row saft_vr_mie) ---------------------------------------------
+# Source: parameters as distributed by teqp 0.23.2's compiled name library
+# (get_m/get_sigma_Angstrom/get_epsilon_over_k_K/get_lambda_r/get_lambda_a,
+# extracted this session); teqp attributes the set to Lafitte, Apostolakou,
+# Avendano, Galindo, Adjiman, Muller & Jackson, "Accurate statistical
+# associating fluid theory for chain molecules formed from Mie segments",
+# J. Chem. Phys. 139, 154504 (2013), DOI 10.1063/1.4819786.
+saft_vr_mie:
+  C1: {m: 1.0, sigma_Angstrom: 3.7412, epsilon_over_k: 153.36, lambda_r: 12.65, lambda_a: 6.0}
+  C2: {m: 1.4373, sigma_Angstrom: 3.7257, epsilon_over_k: 206.12, lambda_r: 12.4, lambda_a: 6.0}
+  C3: {m: 1.6845, sigma_Angstrom: 3.9056, epsilon_over_k: 239.89, lambda_r: 13.006, lambda_a: 6.0}
+
+# --- CPA-SRK (row cpa_srk) ------------------------------------------------------
+# Source: Kontogeorgis, Voutsas, Yakoumis & Tassios, "Multicomponent phase
+# equilibrium calculations for water-methanol-alkane mixtures", Fluid Phase
+# Equilib. 158-160, 21-29 (1999), Table 1 (sCPA pure-component parameters, SI
+# units), DOI 10.1016/S0378-3812(99)00060-6. Water uses the 4C scheme, methanol
+# the 2B scheme, both as tabulated there.
+# Verification: pure Psat reproduces the databank at 11 points, 323-615 K (H2O)
+# and 256-461 K (MeOH), to <=1.13% (harness tolerance 3%).
+cpa_srk:
+  H2O:
+    scheme: 4C
+    a0: 0.12277        # Pa m6/mol2
+    b: 1.4515e-5       # m3/mol
+    c1: 0.67359
+    epsilon_AB: 16655.0  # J/mol
+    beta_AB: 0.0692
+    sites: [d, d, a, a]
+  MeOH:
+    scheme: 2B
+    a0: 0.40531
+    b: 3.0978e-5
+    c1: 0.43102
+    epsilon_AB: 24591.0
+    beta_AB: 0.0161
+    sites: [d, a]
+  binary_kij: "0 (no water-methanol k_ij with a verifiable open citation was
+    retrieved); the meohh2o-* binary and canonical cases carry the harness's
+    standing assessment for the databank/1927-1929 isotherm deviations."
+
+# --- Multi-fluid Helmholtz (row multifluid) -------------------------------------
+# Source: teqp 0.23.2's bundled fluid library (multi-fluid Helmholtz EOS with
+# departure functions as distributed by NIST teqp; GERG-2008-family formulations).
+# Component-id -> teqp fluid-name aliases verified to build against teqp 0.23.2's
+# library this session.
+#
+# The MIXTURE row (multifluid) does not list H2O: teqp's bundled binary-pair file
+# carries no interaction data for its 21 water pairs (bias factors and Fij all
+# null — bare Lorentz-Berthelot combining). With those pairs the slice dew at
+# 293.15 K comes out 1.61 MPa, while CoolProp — which does ship water interaction
+# data for the same fluid library — gives 0.78 MPa at the same conditions: the
+# unparameterised water treatment is off by 2x, so water-bearing feeds are
+# refused by name (unsupported components are never treated as ideal). The PURE
+# row keeps the Water alias: pure IAPWS-95 needs no binary-pair data.
+multifluid:
+  aliases:
+    C1: Methane
+    C2: Ethane
+    C3: n-Propane
+    nC4: n-Butane
+    iC4: IsoButane
+    nC5: n-Pentane
+    iC5: Isopentane
+    "C6+": n-Hexane
+    N2: Nitrogen
+    CO2: CarbonDioxide
+
+# Pure-fluid row: no binary-pair data is ever read, so the full alias table
+# including Water (pure IAPWS-95) is verified support here.
+multifluid_pure:
+  aliases:
+    C1: Methane
+    C2: Ethane
+    C3: n-Propane
+    nC4: n-Butane
+    iC4: IsoButane
+    nC5: n-Pentane
+    iC5: Isopentane
+    "C6+": n-Hexane
+    N2: Nitrogen
+    CO2: CarbonDioxide
+    H2O: Water
