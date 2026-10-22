@@ -19,7 +19,7 @@ family `electrolyte` · status **experimental** · adapter `ngdesign.amine.elect
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-Note: experimental row — L0 exempt; constructs successfully and refuses at first use (NotImplementedError) because no citable open extended-UNIQUAC parameter table for NaCl-H2O exists (T-07 precedent)
+Note: experimental row — L0 exempt; constructs successfully and refuses at first use (NotImplementedError) because no citable open extended-UNIQUAC parameter table for NaCl-H2O exists (T-07 precedent). T-15 note: the model's basis is the Thomsen & Rasmussen parameterization (Thomsen, Ph.D. thesis, DTU 1997; Thomsen & Rasmussen, Chem. Eng. Technol. 22(12), 1041-1044, 1999), whose fitted parameters are not openly redistributable - the row needs a licensed parameter file or an in-house refit against open SLE/VLE data.
 
 ## L1/L2 reference-case outcomes
 

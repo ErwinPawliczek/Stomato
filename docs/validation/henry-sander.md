@@ -1,6 +1,6 @@
 # henry-sander — Henry's law for the dilute light gases (Sander-compiled pure-water sets) + Raoult
 
-family `kvalue` · status **provisional** · adapter `ngdesign.thermo.kvalue:HenryIdealThermo`.
+family `kvalue` · status **validated** · adapter `ngdesign.thermo.kvalue:HenryIdealThermo`.
 
 ## Applicability (Carlson 1996)
 

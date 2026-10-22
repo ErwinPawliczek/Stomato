@@ -19,6 +19,8 @@ family `saft` · status **experimental** · adapter `ngdesign.thermo.teqp_bridge
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
+Note: T-15 disposition: teqp 0.23.2 ships cp312 wheels and CI runs Python 3.12, so the pending SAFT cases are runnable in CI (the local py3.13 gap is a sandbox fact, not a CI one). Promotion stays blocked on the measured misses: pure saturated-liquid Cp and CO2 saturation pressure outside tolerance (Gross & Sadowski 2001 parameters verified; T-07), and the MeOH/H2O crash. The row keeps experimental status until an association term or refit lands.
+
 ## L1/L2 reference-case outcomes
 
 None yet — validation case ids arrive with the data tasks (T-11..T-13).

@@ -1,6 +1,6 @@
 # lee-kesler-ploecker — Lee-Kesler-Ploecker corresponding states (Ploecker mixing rules, k_ij = 0)
 
-family `kvalue` · status **provisional** · adapter `ngdesign.thermo.kvalue:LeeKeslerPloeckerThermo`.
+family `kvalue` · status **validated** · adapter `ngdesign.thermo.kvalue:LeeKeslerPloeckerThermo`.
 
 ## Applicability (Carlson 1996)
 

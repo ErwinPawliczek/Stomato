@@ -60,7 +60,9 @@
 # Units: T in K, P in Pa, compositions in mole fractions.
 meta:
   coolprop_version: 8.0.0
-multicomponent_cases:
+# T-15 promotion sweep: these single-component saturation points are L1 pure cases -
+# the audit counts L1 by section (spec T-01); ids, values, tolerances unchanged.
+pure_cases:
 - id: chao-seader-pureK-C3-300K
   package: chao-seader
   components: [C3]

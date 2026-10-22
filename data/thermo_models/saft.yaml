@@ -114,7 +114,13 @@
         C1: 0.8
         CO2: 0.2
   l0_excluded: {}
-  l0_note: ''
+  l0_note: >-
+    T-15 disposition: teqp 0.23.2 ships cp312 wheels and CI runs Python 3.12, so the
+    pending SAFT cases are runnable in CI (the local py3.13 gap is a sandbox fact, not a
+    CI one). Promotion stays blocked on the measured misses: pure saturated-liquid Cp and
+    CO2 saturation pressure outside tolerance (Gross & Sadowski 2001 parameters verified;
+    T-07), and the MeOH/H2O crash. The row keeps experimental status until an association
+    term or refit lands.
 
 - id: pc_saft_assoc
   name: PC-SAFT with association (registered refusal)
@@ -383,10 +389,13 @@
         MeOH: 0.4
         H2O: 0.6
   l0_excluded: {}
-  l0_note: teqp 0.23.2's own CPA engine NaNs its fugacity coefficients at liquid-like
+  l0_note: >-
+    teqp 0.23.2's own CPA engine NaNs its fugacity coefficients at liquid-like
     densities and collapses the water saturation line with the published Kontogeorgis
     parameters, so this row runs the bridge's hand-rolled CPA-SRK kernel instead
-    (measured in the T-07 exploration).
+    (measured in the T-07 exploration). T-15 disposition: teqp is CI-runnable (cp312
+    wheels) but the row keeps experimental status pending an L0 declaration; its bound
+    cases measured outside tolerance on the T-07 sweep.
 
 - id: cpa_pr
   name: CPA-PR (registered refusal)
@@ -433,6 +442,9 @@
 
 - id: multifluid
   name: Multi-fluid Helmholtz (teqp CoolProp library)
+  # T-15: blocked on the CoolProp multifluid JSON library - license-restricted
+  # redistribution means no fluid package can ship in-repo; experimental until a
+  # licensed fluid package is provided at build time (issue #167).
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:MultifluidThermo
   params:
@@ -521,6 +533,8 @@
 
 - id: multifluid_pure
   name: Multi-fluid Helmholtz, pure fluids (teqp CoolProp library)
+  # T-15: blocked on the CoolProp multifluid JSON library (license-restricted
+  # redistribution); experimental until a licensed fluid package is provided (issue #167).
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:MultifluidPureThermo
   params:
@@ -588,6 +602,9 @@
 
 - id: gerg2008_teqp
   name: GERG-2008 (teqp multi-fluid, exact parameters)
+  # T-15 disposition: teqp wheel is CI-runnable (cp312), but the row keeps experimental
+  # status pending an L0 declaration and the c1n2-130.079K binding; the measured
+  # no-two-phase-solution finding for the other pending points is on issue #164.
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:Gerg2008TeqpThermo
   params:

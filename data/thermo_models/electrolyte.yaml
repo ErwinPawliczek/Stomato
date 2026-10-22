@@ -49,6 +49,11 @@
     single-liquid limit run today
 - id: amine_enrtl
   name: MDEA Kent-Eisenberg + electrolyte-NRTL (fixed loading)
+  # T-15 disposition: stays provisional. Measured on the pending CO2-loading L2 clones
+  # (amine-enrtl-co2-loading-*-313K): the adapter returns no CO2 K for the loading flash
+  # (K=None, the eNRTL CO2-only opt-in path reports loading, not a VLE K), and the H2S
+  # loading clones refuse by design (amine speciation leaves the CO2-only chemistry
+  # window). The pure-H2O L1 points pass (4/4, measured 2026-10-22).
   family: electrolyte
   adapter: ngdesign.amine.package:AmineENRTLPackage
   options: {}
@@ -319,4 +324,8 @@
   l0_note: >-
     experimental row — L0 exempt; constructs successfully and refuses at first use
     (NotImplementedError) because no citable open extended-UNIQUAC parameter table for
-    NaCl-H2O exists (T-07 precedent)
+    NaCl-H2O exists (T-07 precedent). T-15 note: the model's basis is the Thomsen &
+    Rasmussen parameterization (Thomsen, Ph.D. thesis, DTU 1997; Thomsen & Rasmussen,
+    Chem. Eng. Technol. 22(12), 1041-1044, 1999), whose fitted parameters are not
+    openly redistributable - the row needs a licensed parameter file or an in-house
+    refit against open SLE/VLE data.

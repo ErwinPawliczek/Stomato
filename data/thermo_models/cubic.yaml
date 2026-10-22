@@ -1252,6 +1252,16 @@
     sour-srk-pure-CO2-265K: "Cp +12.2% (115.671 vs 103.056); rho_L -11.8% (857.989 vs 973.254) - sour-water term inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
 - id: kabadi-danner-srk
   name: SRK, Kabadi-Danner water-hydrocarbon mixing
+  # T-15 solubility-case finding (2026-10-22): the row's water/hydrocarbon strength is
+  # most directly validated by mutual-solubility points (e.g. Tsonopoulos & Wilson,
+  # AIChE J. 29(6), 993-996, 1983 - open access, benzene/cyclohexane/n-hexane measured
+  # 311-482 K at three-phase pressure), but (a) those compounds are not among the 18
+  # curated components, and (b) water-in-hydrocarbon / hydrocarbon-in-water mole
+  # fractions are 1e-4 to 1e-5, four orders below the fixed 0.02-absolute composition
+  # tolerance, so any solubility case bound under the current tolerance vocabulary
+  # would pass or fail vacuously. Binding needs either light-hydrocarbon (C1-C5)
+  # solubility anchors (NIST IUPAC SDS-24 for propane) or a relative liquid_comp
+  # tolerance - recorded for the harness follow-up (issue #167).
   family: cubic
   adapter: ngdesign.thermo.cubic:KabadiDannerSrkThermo
   options:

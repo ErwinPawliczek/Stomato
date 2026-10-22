@@ -19,7 +19,7 @@ family `saft` · status **experimental** · adapter `ngdesign.thermo.teqp_bridge
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-Note: teqp 0.23.2's own CPA engine NaNs its fugacity coefficients at liquid-like densities and collapses the water saturation line with the published Kontogeorgis parameters, so this row runs the bridge's hand-rolled CPA-SRK kernel instead (measured in the T-07 exploration).
+Note: teqp 0.23.2's own CPA engine NaNs its fugacity coefficients at liquid-like densities and collapses the water saturation line with the published Kontogeorgis parameters, so this row runs the bridge's hand-rolled CPA-SRK kernel instead (measured in the T-07 exploration). T-15 disposition: teqp is CI-runnable (cp312 wheels) but the row keeps experimental status pending an L0 declaration; its bound cases measured outside tolerance on the T-07 sweep.
 
 ## L1/L2 reference-case outcomes
 

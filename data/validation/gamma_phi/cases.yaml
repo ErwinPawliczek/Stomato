@@ -1054,7 +1054,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: uniquac-ig-megh2o-383.15K-101.325kPa
-  package: pending:uniquac_ig
+  package: uniquac_ig
   components:
   - MEG
   - H2O
@@ -1153,7 +1153,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: wilson-ig-megh2o-383.15K-101.325kPa
-  package: pending:wilson_ig
+  package: wilson_ig
   components:
   - MEG
   - H2O
@@ -1351,7 +1351,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: margules-ig-megh2o-383.15K-101.325kPa
-  package: pending:margules_ig
+  package: margules_ig
   components:
   - MEG
   - H2O

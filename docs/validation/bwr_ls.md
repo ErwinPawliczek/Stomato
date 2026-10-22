@@ -19,7 +19,7 @@ family `helmholtz` · status **experimental** · adapter `ngdesign.thermo.helmho
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-Note: Placeholder row: the method is recorded, not implemented.
+Note: Placeholder row: the method is recorded, not implemented. What would make it real: a BWR-Lee-Starling engine with the Lee-Starling coefficient tables transcribed from the open papers.
 
 ## L1/L2 reference-case outcomes
 

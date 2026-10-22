@@ -1,6 +1,6 @@
 # coolprop_heos — CoolProp pure Helmholtz (HEOS) fluids and mixtures
 
-family `helmholtz` · status **provisional** · adapter `ngdesign.thermo.helmholtz:CoolPropPackage`.
+family `helmholtz` · status **validated** · adapter `ngdesign.thermo.helmholtz:CoolPropPackage`.
 
 ## Applicability (Carlson 1996)
 
@@ -34,7 +34,16 @@ Note: The slice feed minus the C6+ pseudo-component and water, renormalized: a l
 
 ## L1/L2 reference-case outcomes
 
-None yet — validation case ids arrive with the data tasks (T-11..T-13).
+19/19 comparisons pass. Failing comparisons are assessed in the
+main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
+
+Declared case ids:
+
+- `heos-pure-C1-125K` — coolprop:CH4
+- `heos-pure-nC4-280K` — coolprop:n-Butane
+- `heos-pure-CO2-265K` — coolprop:CO2
+- `heos-c1co2-293.130K-6.135MPa` — Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (doi 10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
+- `heos-c1co2-293.130K-6.976MPa` — Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (doi 10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21
 
 ## References
 

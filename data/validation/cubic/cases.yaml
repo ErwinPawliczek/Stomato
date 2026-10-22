@@ -1584,6 +1584,12 @@ binary_cases:
   expected: *id014
   id: srk-lee-kesler-enthalpy-c1co2-277.15K-5.97MPa
 multicomponent_cases:
+# T-15 provenance cross-check (2026-10-22): the NIST ThermoML record for
+# doi:10.1016/j.fluid.2005.11.010 (trc.nist.gov/ThermoML/10.1016/j.fluid.2005.11.010.html)
+# confirms the paper's cooled-mirror dew-point method (visual cell) and 23 dew points
+# for this CH4/C2H6/nC5 ternary with the compositions transcribed below (0.94085 /
+# 0.04468 / 0.01447); the individual dew temperatures/pressures remain from the
+# original transcription of the paper's tables.
 - id: rk-ng-dew-morch-243.4K-0.30MPa
   package: rk
   components:

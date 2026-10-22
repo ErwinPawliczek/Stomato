@@ -80,7 +80,14 @@
     P_Pa: [500.0, 100000000.0]
     phases: [V, L]
   status: provisional
-  validation: []
+  validation:
+  # T-15 promotion sweep: L1 pure H2O points (CoolProp 8.0.0 HEOS reference values,
+  # helmholtz/cases.yaml; state points match the NIST WebBook h2o-nist cases). The row
+  # stays provisional: it is water-only, so no L2 binary case exists for it by design
+  # (the audit's validated gate needs >=1 L2 binary; recorded on issue #167).
+  - h2o-if97-273.179K
+  - h2o-if97-347.390K
+  - h2o-if97-401.605K
   references:
   - Wagner, W., Cooper, J. R., Dittmann, A., et al., 'The IAPWS Industrial Formulation 1997
     for the Thermodynamic Properties of Water and Steam', J. Eng. Gas Turbines Power 122,
@@ -110,6 +117,13 @@
   l0_note: >-
     IF97 backend exposes no fugacity coefficients (CoolProp 8), so Phase.ln_phi
     stays empty for this row; phase_props and flashes carry full properties.
+    T-15 finding: at saturation states the adapter's saturated-phase densities
+    come back label-swapped (rho_V reads the liquid value and vice versa) - an
+    IAPWSPackage defect to fix in an engine spec, not a formulation limitation.
+  assessed:
+    h2o-if97-273.179K: "rho_L x1/2e5 (0.00486078 vs 999.794) and Cp -55.3% (34.017 vs 76.0217) - the IF97 adapter swaps the saturated-phase labels at the saturation state (the liquid reads the vapour values); measured 2026-10-22, T-15 sweep"
+    h2o-if97-347.390K: "rho_V x4.2e3 (975.281 vs 0.235067) - the IF97 adapter swaps the saturated-phase labels (the vapour reads the liquid density); measured 2026-10-22, T-15 sweep"
+    h2o-if97-401.605K: "rho_V x652 (936.138 vs 1.43327) - the IF97 adapter swaps the saturated-phase labels (the vapour reads the liquid density); measured 2026-10-22, T-15 sweep"
 
 - id: asme_steam
   name: ASME/NBS steam tables (placeholder)
@@ -149,8 +163,15 @@
     T_K: [90.0, 680.0]
     P_Pa: [1000.0, 100000000.0]
     phases: [V, L, VLL, VLLE]
-  status: provisional
-  validation: []
+  status: validated
+  validation:
+  # T-15 promotion sweep: L1 pure points (CoolProp 8.0.0 machine values, helmholtz/cases.yaml)
+  - heos-pure-C1-125K
+  - heos-pure-nC4-280K
+  - heos-pure-CO2-265K
+  # L2 binary points (Petropoulou 2018 ThermoML, helmholtz/cases.yaml)
+  - heos-c1co2-293.130K-6.135MPa
+  - heos-c1co2-293.130K-6.976MPa
   references:
   - Bell, I. H., Wronski, J., Quoilin, S., Lemort, V., 'Pure and Pseudo-pure Fluid
     Thermophysical Property Evaluation and the Open-Source Thermophysical Property Library
@@ -211,7 +232,7 @@
     T_K: [90.0, 450.0]
     P_Pa: [1000.0, 40000000.0]
     phases: [V, L, VLL, VLLE]
-  status: provisional
+  status: validated
   validation:
   - pure-CO2-216.7K
   - pure-CO2-240.0K
@@ -296,7 +317,7 @@
     catalogue placeholder and every property call raises UnavailableBackend)'
   l0: {}
   l0_excluded: {}
-  l0_note: 'Placeholder row: the method is recorded, not implemented (teqp candidate, T-07).'
+  l0_note: 'Placeholder row: the method is recorded, not implemented (teqp candidate, T-07). What would make it real: an in-house EOS-CG implementation from the open Kunz & Wagner 2012 formulation paper, or teqp multifluid support for its fluid files; no licence blocks it.'
 
 - id: aga8_dc92
   name: AGA 8 DC92 detail equation of state (placeholder)
@@ -320,7 +341,7 @@
     property call raises UnavailableBackend)
   l0: {}
   l0_excluded: {}
-  l0_note: 'Placeholder row: the method is recorded, not implemented.'
+  l0_note: 'Placeholder row: the method is recorded, not implemented. What would make it real: the AGA-8 DC92 detail-characterisation method, whose parameters live in the copyrighted AGA 1992 report (not redistributable) - needs a licensed copy or an in-house reimplementation from the published paper tables.'
 
 - id: mbwr
   name: Modified BWR (Starling 1976, 27-compound set) (placeholder)
@@ -344,7 +365,7 @@
     property call raises UnavailableBackend)
   l0: {}
   l0_excluded: {}
-  l0_note: 'Placeholder row: the method is recorded, not implemented.'
+  l0_note: 'Placeholder row: the method is recorded, not implemented. What would make it real: an MBWR-32 engine plus the 32-coefficient sets from the open literature (Starling 1973 basis); refit targets on issue #167.'
 
 - id: bwrs
   name: BWRS (Starling 1973) natural-gas components
@@ -404,6 +425,11 @@
     saturation sweep cases stay pending: the BWRS vapor-pressure fit (1973
     databasis) does not reproduce modern references within the 3% tolerance at
     all declared points, and the file keeps them registered for the L1 follow-up.
+    T-15 re-measurement (2026-10-22, evaluate_case on all five pure-C1 states):
+    every point misses Cp far outside tolerance — the saturated-liquid Cp
+    extrapolates to nonsense below ~180 K (e.g. -146079 J/(mol K) at 95.3 K vs
+    the CoolProp reference 54.32) — so the cases must not be bound until the
+    parameter evaluation is repaired or re-fitted to a modern databasis.
 
 - id: bwr_ls
   name: BWR-Lee-Starling (placeholder)
@@ -427,4 +453,4 @@
     call raises UnavailableBackend)
   l0: {}
   l0_excluded: {}
-  l0_note: 'Placeholder row: the method is recorded, not implemented.'
+  l0_note: 'Placeholder row: the method is recorded, not implemented. What would make it real: a BWR-Lee-Starling engine with the Lee-Starling coefficient tables transcribed from the open papers.'

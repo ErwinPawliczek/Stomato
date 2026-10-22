@@ -26,7 +26,7 @@ family `helmholtz` · status **provisional** · adapter `ngdesign.thermo.helmhol
 | single_liquid_limit | ok | 0 | 250K/2e+06Pa kinds=['hc_liquid'] vf=0.0 |
 | determinism | ok | 0 | two instances bit-identical at 300K/5e+06Pa |
 
-Note: In-house BWRS: imperial parameter evaluation, SI at the boundary. Ideal-gas reference H_ig(298.15 K) = 0, S_ig(298.15 K, 1 bar) = 0. The pure-C1 saturation sweep cases stay pending: the BWRS vapor-pressure fit (1973 databasis) does not reproduce modern references within the 3% tolerance at all declared points, and the file keeps them registered for the L1 follow-up.
+Note: In-house BWRS: imperial parameter evaluation, SI at the boundary. Ideal-gas reference H_ig(298.15 K) = 0, S_ig(298.15 K, 1 bar) = 0. The pure-C1 saturation sweep cases stay pending: the BWRS vapor-pressure fit (1973 databasis) does not reproduce modern references within the 3% tolerance at all declared points, and the file keeps them registered for the L1 follow-up. T-15 re-measurement (2026-10-22, evaluate_case on all five pure-C1 states): every point misses Cp far outside tolerance — the saturated-liquid Cp extrapolates to nonsense below ~180 K (e.g. -146079 J/(mol K) at 95.3 K vs the CoolProp reference 54.32) — so the cases must not be bound until the parameter evaluation is repaired or re-fitted to a modern databasis.
 
 ### L4 cross-model pairs
 
