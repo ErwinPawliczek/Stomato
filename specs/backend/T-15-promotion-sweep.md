@@ -35,7 +35,17 @@ a row stays `provisional` where it does.
    `aga8_dc92`, `mbwr`, `bwr_ls`; `twu-sim-tassone`; saft refusal rows): leave `experimental`,
    but the row's `l0_note` must say what would make it real (engine, parameters, licence) so the
    advisor can show it.
-8. Regenerate every report; `docs/validation.md` gets a status table (validated / provisional /
+8. **Virial rows (T-03b, #172):** `nrtl_hoc` and `wilson_nothnagel` carry L1/L2 cases but stay
+   `provisional` until item 1 settles the MeOH/H2O series (their only L2 misses are on it); add the
+   HOC acetic-acid B(400 K) anchor from Hayden & O'Connell (1975) and the `hoc_dimer` vs `nrtl_hoc`
+   acetic-acid vapour cross-check the T-03b spec asked for (two implementations of one physics must
+   agree within 1 % or the discrepancy is explained, never widened); the 12 Nothnagel rows stay the
+   declared Tsonopoulos-extended fallback unless the 1973 b/K table is found in a citable source.
+9. **Electrolyte rows (T-09, #171):** the `enrtl_nacl_water` / `ext_uniquac_nacl_water` refusals are
+   NOT promoted here (new adapters are out of scope; see the T-09b follow-up issue) — only their
+   `l0_note` must name the published parameter sources (Chen & Evans 1986; Thomsen & Rasmussen 1999)
+   so the advisor shows what would make them real.
+10. Regenerate every report; `docs/validation.md` gets a status table (validated / provisional /
    experimental with the one-line reason per provisional row).
 
 ## Acceptance criteria
