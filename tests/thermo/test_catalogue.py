@@ -170,6 +170,10 @@ def test_rows_load_and_build() -> None:
         "pitzer_nacl_water",
         "sour_water",
     ]
+    # mixing family (T-06): gE mixing rules hosted on thermo's GCEOSMIX
+    mixing_ids = [
+        "pr_huron_vidal",
+    ]
     expected = sorted(
         gamma_phi_ids
         + nrtl_ids
@@ -179,8 +183,9 @@ def test_rows_load_and_build() -> None:
         + kvalue_ids
         + special_ids
         + electrolyte_ids
+        + mixing_ids
     )
-    assert len(expected) == 128
+    assert len(expected) == 129
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {

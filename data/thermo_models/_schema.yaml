@@ -227,3 +227,65 @@ l0_defaults:
       state:
       - 298.15
       - 100000.0
+  mixing:
+    pure_psat_limit:
+      points:
+      - - MeOH
+        - 300.0
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 350.0
+    phase_identification:
+      points:
+      - - MeOH
+        - 300.0
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 400.0
+    round_trip:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+    dhdT_cp:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 380.0
+      - 50000.0
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 380.0
+        P: 50000.0
+        phase: vapor
+    determinism:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 380.0
+      - 50000.0
+    single_liquid_limit:
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+      state:
+      - 298.15
+      - 100000.0
