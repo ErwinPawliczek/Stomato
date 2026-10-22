@@ -20,16 +20,20 @@ import pytest
 from thermo import ChemicalConstantsPackage
 
 from ngdesign.thermo.mixing_rules import (
+    C_WS_PR,
     MHV1,
     MHV2,
     PRMIX_HV,
     PRMIX_MHV1,
     PRMIX_MHV2,
+    PRMIX_WS,
     SRKMIX_MHV2,
+    SRKMIX_WS,
     GEProvider,
     HuronVidal,
     LinearVDW,
     RuleState,
+    WongSandler,
     _nrtl_provider,
     pure_alpha_from,
 )
@@ -454,3 +458,158 @@ class TestMHVRuleAlgebra:
 
             expected = (a_total(n_up) - a_total(n_dn)) / (2.0 * h)
             assert st.a + st.a_x[i] == pytest.approx(expected, rel=1e-6)
+
+
+# Wong-Sandler (1992) — T-06a step 2
+# ----------------------------------------------------------------------------
+
+
+class _ZeroGEProvider(GEProvider):
+    """gE = 0: isolates the WS second-virial machinery (ideal-solution limit)."""
+
+    def state(
+        self, T: float, xs: Sequence[float]
+    ) -> tuple[float, tuple[float, ...], float, float, tuple[float, ...]]:
+        n = len(xs)
+        return 0.0, tuple(0.0 for _ in range(n)), 0.0, 0.0, tuple(0.0 for _ in range(n))
+
+
+class TestWongSandler:
+    @staticmethod
+    def _ws_rule(eos_cls: type[PRMIX_WS] | type[SRKMIX_WS]) -> WongSandler:
+        consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
+        return WongSandler(_nrtl_provider([c for c in consts.CASs], ("methanol", "water")), eos_cls.ws_c)
+
+    @staticmethod
+    def _ws_eos(eos_cls: type, zs: Sequence[float], rule: WongSandler | None = None) -> Any:
+        consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
+        return eos_cls(
+            Tcs=consts.Tcs,
+            Pcs=consts.Pcs,
+            omegas=consts.omegas,
+            zs=list(zs),
+            T=_T,
+            P=_P,
+            rule=rule if rule is not None else TestWongSandler._ws_rule(eos_cls),
+        )
+
+    @pytest.mark.parametrize("eos_cls,base_cls", ((PRMIX_WS, "PRMIX"), (SRKMIX_WS, "SRKMIX")))
+    def test_pure_feed_collapses(self, eos_cls: type, base_cls: str) -> None:
+        import thermo  # noqa: PLC0415
+
+        base_ctor = getattr(thermo, base_cls)
+        consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
+        base = base_ctor(Tcs=consts.Tcs, Pcs=consts.Pcs, omegas=consts.omegas, zs=[1.0, 0.0], T=_T, P=_P)
+        hosted = self._ws_eos(eos_cls, [1.0, 0.0])
+        # Quotient arithmetic (b_m = Q/(1-D)) reorders the float ops, so the
+        # collapse is to double precision, not bit-for-bit.
+        assert hosted.a_alpha == pytest.approx(base.a_alpha, rel=1e-12)
+        assert hosted.Z_g == base.Z_g
+        assert hosted.Z_l == base.Z_l
+        assert hosted.lnphis_g[0] == pytest.approx(base.lnphis_g[0], rel=1e-12)
+        assert hosted.lnphis_l[0] == pytest.approx(base.lnphis_l[0], rel=1e-12)
+        # The absent component's infinite-dilution ln phi is rule-dependent
+        # (WS carries a non-linear covolume derivative; the base rule does not).
+        assert hosted.lnphis_g[1] != base.lnphis_g[1]
+
+    @pytest.mark.parametrize("zs", ([0.3, 0.7], [0.5, 0.5]))
+    @pytest.mark.parametrize("eos_cls,delta_factor", ((PRMIX_WS, 2.0), (SRKMIX_WS, 1.0)))
+    def test_ws_lnphi_matches_helmholtz_fd_both_roots(
+        self, eos_cls: type, delta_factor: float, zs: Sequence[float]
+    ) -> None:
+        """Analytic WS fugacity vs independent Helmholtz finite difference.
+
+        The reference writes the PR/SRK residual Helmholtz departure directly
+        with the rule's b_m(x) and a_m(x) (non-linear covolume), then takes
+        mole-number derivatives -- independent of the analytic path, whose
+        dQ/dn and dD/dn chain through the projected db/dn and da/dn rows.
+        """
+        eos = self._ws_eos(eos_cls, zs)
+        rule, pa = eos.rule, eos._pure_alpha()
+        for root_z, analytic in ((eos.Z_g, eos.lnphis_g), (eos.Z_l, eos.lnphis_l)):
+            V_tot = root_z * R_GAS * _T / _P
+
+            def F(nn: Sequence[float], _v_tot: float = V_tot) -> float:
+                ntot = sum(nn)
+                v = _v_tot / ntot
+                st = rule.state(_T, tuple(x / ntot for x in nn), pa, tuple(eos.bs))
+                b = st.b
+                s = 2.0 * math.sqrt(2.0) * b if delta_factor == 2.0 else b
+                delta = delta_factor * b
+                return float(
+                    ntot
+                    * (
+                        -math.log((v - b) / v)
+                        + st.a / (R_GAS * _T * s) * math.log((2 * v + delta - s) / (2 * v + delta + s))
+                    )
+                )
+
+            h = 1e-5
+            for i, got in enumerate(analytic):
+                n_up, n_dn = list(zs), list(zs)
+                n_up[i] += h
+                n_dn[i] -= h
+                f_h = (F(n_up) - F(n_dn)) / (2.0 * h) - math.log(root_z)
+                n_up, n_dn = list(zs), list(zs)
+                n_up[i] += h / 2.0
+                n_dn[i] -= h / 2.0
+                f_h2 = (F(n_up) - F(n_dn)) / h - math.log(root_z)
+                want = (4.0 * f_h2 - f_h) / 3.0
+                rel = abs(got - want) / max(abs(want), 1e-10)
+                assert rel < 1e-6, (eos_cls.__name__, zs, i, got, want)
+
+    @pytest.mark.parametrize("eos_cls", (PRMIX_WS, SRKMIX_WS))
+    def test_rule_scalars_match_paper_formulas(self, eos_cls: type[PRMIX_WS] | type[SRKMIX_WS]) -> None:
+        """a_m and b_m match an independent scalar re-implementation of the
+        Wong-Sandler equations (Q, D, b_m = Q/(1-D), a_m = R T b_m D)."""
+        eos = self._ws_eos(eos_cls, [0.3, 0.7])
+        pa = eos._pure_alpha()
+        bs, st = eos.bs, eos._rule_state
+        n = 2
+        xs = (0.3, 0.7)
+        q = 0.0
+        for i in range(n):
+            for j in range(n):
+                gi = bs[i] - pa.a_alphas[i] / (R_GAS * _T)
+                gj = bs[j] - pa.a_alphas[j] / (R_GAS * _T)
+                q += xs[i] * xs[j] * (gi + gj) / 2.0
+        d = (
+            sum(xs[k] * pa.a_alphas[k] / (bs[k] * R_GAS * _T) for k in range(n))
+            + eos.rule.provider.state(_T, xs)[0] / eos_cls.ws_c
+        )
+        assert st.b == pytest.approx(q / (1.0 - d), rel=1e-12)
+        assert st.a == pytest.approx(R_GAS * _T * (q / (1.0 - d)) * d, rel=1e-12)
+
+    def test_ideal_limit_second_virial_matches_quadratic_rule(self) -> None:
+        """WS with A^E = 0 and the exact-k_ij fit reproduces the quadratic
+        rule's mixture second virial (the Wong-Sandler 1992 vdW1f reduction
+        is a second-virial statement: the separate a_m and b_m do NOT equal
+        the quadratic rule's on general feeds, only their b - a/RT sum does).
+        """
+        consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
+        rule = WongSandler(_ZeroGEProvider(), C_WS_PR)
+        probe = PRMIX_WS(
+            Tcs=consts.Tcs, Pcs=consts.Pcs, omegas=consts.omegas, zs=[0.4, 0.6], T=_T, P=_P, rule=rule
+        )
+        pa = probe._pure_alpha()
+        rt = R_GAS * _T
+        # Exact k_ij: per-pair (b - a/RT)_ij = (1 - k_ij)(g_i + g_j)/2 must
+        # equal the quadratic rule's cross second virial
+        # (b_i + b_j)/2 - sqrt(a_i a_j)(1 - k_ij)/RT  (Wong-Sandler 1992).
+        k01 = 1.0 - (probe.bs[0] + probe.bs[1]) / (
+            (probe.bs[0] - pa.a_alphas[0] / rt)
+            + (probe.bs[1] - pa.a_alphas[1] / rt)
+            + 2.0 * math.sqrt(pa.a_alphas[0] * pa.a_alphas[1]) / rt
+        )
+        rule = WongSandler(_ZeroGEProvider(), C_WS_PR, [[0.0, k01], [k01, 0.0]])
+        eos = self._ws_eos(PRMIX_WS, [0.4, 0.6], rule)
+        st = eos._rule_state
+        ws_virial = st.b - st.a / rt
+        xs = (0.4, 0.6)
+        quad_virial = 0.0
+        for i in range(2):
+            for j in range(2):
+                k = 0.0 if i == j else k01
+                a_ij = math.sqrt(pa.a_alphas[i] * pa.a_alphas[j]) * (1.0 - k)
+                quad_virial += xs[i] * xs[j] * ((eos.bs[i] + eos.bs[j]) / 2.0 - a_ij / rt)
+        assert ws_virial == pytest.approx(quad_virial, rel=1e-9)

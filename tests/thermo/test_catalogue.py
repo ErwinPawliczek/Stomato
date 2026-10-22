@@ -176,6 +176,8 @@ def test_rows_load_and_build() -> None:
         "pr_mhv1",
         "pr_mhv2",
         "srk_mhv2",
+        "pr_wong_sandler",
+        "srk_wong_sandler",
     ]
     expected = sorted(
         gamma_phi_ids
@@ -188,7 +190,7 @@ def test_rows_load_and_build() -> None:
         + electrolyte_ids
         + mixing_ids
     )
-    assert len(expected) == 132
+    assert len(expected) == 134
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
