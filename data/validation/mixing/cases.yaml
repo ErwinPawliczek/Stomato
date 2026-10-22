@@ -149,7 +149,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: pr-mhv1-pure-MeOH-305K
-  package: pending:pr_mhv1
+  package: pr_mhv1
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -165,7 +165,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: pr-mhv1-pure-MeOH-330K
-  package: pending:pr_mhv1
+  package: pr_mhv1
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -181,7 +181,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: pr-mhv1-pure-H2O-340K
-  package: pending:pr_mhv1
+  package: pr_mhv1
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -197,7 +197,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: pr-mhv1-pure-H2O-370K
-  package: pending:pr_mhv1
+  package: pr_mhv1
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -213,7 +213,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: pr-mhv2-pure-MeOH-305K
-  package: pending:pr_mhv2
+  package: pr_mhv2
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -229,7 +229,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: pr-mhv2-pure-MeOH-330K
-  package: pending:pr_mhv2
+  package: pr_mhv2
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -245,7 +245,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: pr-mhv2-pure-H2O-340K
-  package: pending:pr_mhv2
+  package: pr_mhv2
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -261,7 +261,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: pr-mhv2-pure-H2O-370K
-  package: pending:pr_mhv2
+  package: pr_mhv2
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -277,7 +277,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: srk-mhv2-pure-MeOH-305K
-  package: pending:srk_mhv2
+  package: srk_mhv2
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -293,7 +293,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: srk-mhv2-pure-MeOH-330K
-  package: pending:srk_mhv2
+  package: srk_mhv2
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -309,7 +309,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: srk-mhv2-pure-H2O-340K
-  package: pending:srk_mhv2
+  package: srk_mhv2
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -325,7 +325,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: srk-mhv2-pure-H2O-370K
-  package: pending:srk_mhv2
+  package: srk_mhv2
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -722,7 +722,7 @@ binary_cases:
     liquid_comp:
       C1: 0.00391
 - id: pr-mhv1-meohh2o-101.325kPa-349.05K
-  package: pending:pr_mhv1
+  package: pr_mhv1
   components:
   - MeOH
   - H2O
@@ -739,7 +739,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: pr-mhv1-meohh2o-312.91K-20.705kPa
-  package: pending:pr_mhv1
+  package: pr_mhv1
   components:
   - MeOH
   - H2O
@@ -784,7 +784,7 @@ binary_cases:
     liquid_comp:
       C1: 0.00391
 - id: pr-mhv2-meohh2o-101.325kPa-349.05K
-  package: pending:pr_mhv2
+  package: pr_mhv2
   components:
   - MeOH
   - H2O
@@ -801,7 +801,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: pr-mhv2-meohh2o-312.91K-20.705kPa
-  package: pending:pr_mhv2
+  package: pr_mhv2
   components:
   - MeOH
   - H2O
@@ -846,7 +846,7 @@ binary_cases:
     liquid_comp:
       C1: 0.00391
 - id: srk-mhv2-meohh2o-101.325kPa-349.05K
-  package: pending:srk_mhv2
+  package: srk_mhv2
   components:
   - MeOH
   - H2O
@@ -863,7 +863,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: srk-mhv2-meohh2o-312.91K-20.705kPa
-  package: pending:srk_mhv2
+  package: srk_mhv2
   components:
   - MeOH
   - H2O

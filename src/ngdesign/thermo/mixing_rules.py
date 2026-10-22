@@ -62,11 +62,19 @@ from ngdesign.thermo.cubic import _CHEMSEP_CUBIC_TABLE, CubicEOS, _flasher_for, 
 from ngdesign.thermo.gamma_phi import _ge_model_factory
 
 __all__ = [
-    "PRMIX_HV",
-    "PRMIX_WS",
-    "SRKMIX_WS",
+    "MHV1",
+    "MHV2",
     "PRHuronVidalThermo",
+    "PRMHV1Thermo",
+    "PRMHV2Thermo",
+    "PRMIX_HV",
+    "PRMIX_MHV1",
+    "PRMIX_MHV2",
+    "PRMIX_WS",
     "PRWongSandlerThermo",
+    "SRKMHV2Thermo",
+    "SRKMIX_MHV2",
+    "SRKMIX_WS",
     "SRKWongSandlerThermo",
 ]
 
@@ -483,6 +491,10 @@ def _rule_for(eos_cls: type[Any], provider: GEProvider) -> GERule:
     kind = getattr(eos_cls, "rule_kind", None)
     if kind == "hv":
         return HuronVidal(provider, HuronVidal.M_PR)
+    if kind == "mhv1":
+        return MHV1(provider, q1=eos_cls.q1)
+    if kind == "mhv2":
+        return MHV2(provider, q1=eos_cls.q1, q2=eos_cls.q2)
     if kind == "ws":
         return WongSandler(provider, eos_cls.ws_c)
     raise ValueError(f"EOS class {eos_cls!r} declares no mixing rule")
@@ -861,4 +873,179 @@ class SRKWongSandlerThermo(MixingRuleThermo):
     """SRK with the Wong-Sandler (1992) mixing rule over NRTL gE (SRK C)."""
 
     eos = SRKMIX_WS
+    ge_kind = "nrtl"
+
+
+# ----------------------------------------------------------------------------
+# MHV1 / MHV2 (T-06 step 3, branch t-06b/mhv): zero-pressure gE reference
+# ----------------------------------------------------------------------------
+
+
+class MHV1(GERule):
+    """MHV1 — Michelsen's (1990) first-order modified Huron-Vidal rule.
+
+    Zero-pressure gE reference on the dimensionless attraction
+    ``alpha = a/(b R T)`` with the linear co-volume ``b = sum_i x_i b_i``:
+
+        alpha = sum_i x_i a_i alpha_i/(b_i R T)
+                + (gE/(R T) + sum_i x_i ln(b/b_i)) / q1
+
+    with the EOS-family constant ``q1 = -0.53`` (PR) / ``-0.593`` (SRK)
+    (Michelsen, M. L., "A modified Huron-Vidal mixing rule for cubic equations
+    of state", Fluid Phase Equilib. 60, 213-219, 1990).  At ``gE = 0`` the
+    rule collapses exactly to the pure-component attraction sum, i.e. the
+    zero-pressure reference is the pure EOS itself.
+    """
+
+    def __init__(self, provider: GEProvider, q1: float):
+        self.provider = provider
+        self.q1 = q1
+
+    def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
+        n = len(xs)
+        g, gx, gT, gTT, gxT = self.provider.state(T, tuple(xs))
+        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
+        s = s_t = s_tt = 0.0
+        ab: list[tuple[float, float, float]] = []
+        for k in range(n):
+            v, vt, vtt = _a_brt(pa, k, bs[k], T)
+            ab.append((v, vt, vtt))
+            s += xs[k] * v
+            s_t += xs[k] * vt
+            s_tt += xs[k] * vtt
+        # Flory covolume term: the rule needs N = gE/(RT) + sum_i x_i ln(b/b_i)
+        # = g - F with F = sum_i x_i ln(b_i/b).  Raw z-partials:
+        # dS/dz_k = alpha_bar_k, dF/dz_k = ln(b_k) - b_k/b (N = g - F).
+        f = sum(x * math.log(bi / b) for x, bi in zip(xs, bs, strict=True) if x)
+        alpha = s + (g - f) / self.q1
+        alpha_x_raw = tuple(ab[k][0] + (gx[k] - math.log(bs[k]) + bs[k] / b) / self.q1 for k in range(n))
+        alpha_t = s_t + gT / self.q1
+        alpha_tt = s_tt + gTT / self.q1
+        alpha_xT_raw = tuple(ab[k][1] + gxT[k] / self.q1 for k in range(n))
+        return _linear_rule_state(alpha, alpha_t, alpha_tt, alpha_x_raw, alpha_xT_raw, b, T, bs, xs)
+
+
+class MHV2(GERule):
+    """MHV2 — Dahl & Michelsen's (1990) second-order modified Huron-Vidal rule.
+
+    Same zero-pressure reference and linear co-volume as :class:`MHV1`, but
+    the zero-pressure constraint is kept to second order in the attraction
+    sum, giving a quadratic in ``alpha``:
+
+        c     = -q1 S - q2 S2 - gE/(RT) - sum_i x_i ln(b/b_i)
+        alpha = (-q1 - sqrt(q1^2 - 4 q2 c)) / (2 q2)
+
+    with ``S = sum_i x_i a_i alpha_i/(b_i R T)`` and
+    ``S2 = sum_i x_i (a_i alpha_i/(b_i R T))^2``.  Constants per EOS
+    (Dahl, S. & Michelsen, M. L., AIChE J. 36, 1829-1836, 1990):
+    ``q1/q2 = -0.4347/-0.003654`` (PR) and ``-0.4783/-0.0047`` (SRK).
+    ``d alpha/d c = 1/sqrt(q1^2 - 4 q2 c)`` carries every derivative; the
+    pure-feed limit (gE = 0, Flory term 0) reduces the discriminant to
+    ``|q1 + 2 q2 S|^2`` so ``alpha -> S`` exactly.
+    """
+
+    def __init__(self, provider: GEProvider, q1: float, q2: float):
+        self.provider = provider
+        self.q1 = q1
+        self.q2 = q2
+
+    def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
+        n = len(xs)
+        g, gx, gT, gTT, gxT = self.provider.state(T, tuple(xs))
+        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
+        q1, q2 = self.q1, self.q2
+        s = s_t = s_tt = s2 = 0.0
+        ab: list[tuple[float, float, float]] = []
+        for k in range(n):
+            v, vt, vtt = _a_brt(pa, k, bs[k], T)
+            ab.append((v, vt, vtt))
+            s += xs[k] * v
+            s2 += xs[k] * v * v
+            s_t += xs[k] * vt
+            s_tt += xs[k] * vtt
+        f = sum(x * math.log(bi / b) for x, bi in zip(xs, bs, strict=True) if x)
+        c = -q1 * s - q2 * s2 - g + f
+        d = math.sqrt(q1 * q1 - 4.0 * q2 * c)
+        alpha = (-q1 - d) / (2.0 * q2)
+        # d alpha / d c = 1/d carries every first derivative; the second T
+        # derivative additionally carries the chain term 2 q2 c_T^2 / d^3.
+        # s2 = sum x_i ab_i^2 is a second MOMENT: its T derivatives are not
+        # those of s^2 (2 s s_t / s_t^2 + s s_tt); they use the per-component
+        # pairs (ab_i, ab_iT) and (ab_iT, ab_iTT).
+        s2_t = 2.0 * sum(x * ab[k][0] * ab[k][1] for k, x in enumerate(xs))
+        s2_tt = 2.0 * sum(x * (ab[k][1] ** 2 + ab[k][0] * ab[k][2]) for k, x in enumerate(xs))
+        c_t = -q1 * s_t - q2 * s2_t - gT
+        c_tt = -q1 * s_tt - q2 * s2_tt - gTT
+        c_x_raw = tuple(
+            -q1 * ab[k][0] - q2 * ab[k][0] ** 2 - gx[k] + math.log(bs[k]) - bs[k] / b for k in range(n)
+        )
+        c_xT_raw = tuple(-q1 * ab[k][1] - 2.0 * q2 * ab[k][0] * ab[k][1] - gxT[k] for k in range(n))
+        alpha_t = c_t / d
+        alpha_tt = c_tt / d + 2.0 * q2 * c_t * c_t / (d * d * d)
+        alpha_x_raw = tuple(cv / d for cv in c_x_raw)
+        # Mixed derivative: d/dT of c_x/d = c_xT/d + c_x * (d 1/d/dT); with
+        # d 1/d/dT = +2 q2 c_T / d^3 (d_T = -2 q2 c_T / d).
+        alpha_xT_raw = tuple(
+            cxT / d + 2.0 * q2 * cx * c_t / (d * d * d) for cxT, cx in zip(c_xT_raw, c_x_raw, strict=True)
+        )
+        return _linear_rule_state(alpha, alpha_t, alpha_tt, alpha_x_raw, alpha_xT_raw, b, T, bs, xs)
+
+
+class _RuleHost:
+    """Shared ``rule=`` kwarg handling for GCEOSMIX rule hosts.
+
+    ``thermo``'s ``GCEOSMIX.__init__`` takes no rule, so each host pops it
+    before delegation; the rule instance must be attached before the first
+    calculation (same contract as ``PRMIX_HV``).
+    """
+
+    def __init__(self, *args: Any, rule: GERule | None = None, **kwargs: Any) -> None:
+        self.rule = rule
+        super().__init__(*args, **kwargs)
+
+
+class PRMIX_MHV1(_RuleHost, _GEMixingEOS, PRMIX):  # type: ignore[misc]
+    """PRMIX with the MHV1 rule (Michelsen 1990), ``q1 = -0.53``."""
+
+    lnphi_kernel = staticmethod(PR_lnphis)
+    rule_kind = "mhv1"
+    q1 = -0.53
+
+
+class PRMIX_MHV2(_RuleHost, _GEMixingEOS, PRMIX):  # type: ignore[misc]
+    """PRMIX with the MHV2 rule (Dahl & Michelsen 1990), ``q1/q2 = -0.4347/-0.003654``."""
+
+    lnphi_kernel = staticmethod(PR_lnphis)
+    rule_kind = "mhv2"
+    q1 = -0.4347
+    q2 = -0.003654
+
+
+class SRKMIX_MHV2(_RuleHost, _GEMixingEOS, SRKMIX):  # type: ignore[misc]
+    """SRKMIX with the MHV2 rule (Dahl & Michelsen 1990), ``q1/q2 = -0.4783/-0.0047``."""
+
+    lnphi_kernel = staticmethod(SRK_lnphis)
+    rule_kind = "mhv2"
+    q1 = -0.4783
+    q2 = -0.0047
+
+
+class PRMHV1Thermo(MixingRuleThermo):
+    """Peng-Robinson with the MHV1 rule (Michelsen 1990) over NRTL gE."""
+
+    eos = PRMIX_MHV1
+    ge_kind = "nrtl"
+
+
+class PRMHV2Thermo(MixingRuleThermo):
+    """Peng-Robinson with the MHV2 rule (Dahl & Michelsen 1990) over NRTL gE."""
+
+    eos = PRMIX_MHV2
+    ge_kind = "nrtl"
+
+
+class SRKMHV2Thermo(MixingRuleThermo):
+    """SRK with the MHV2 rule (Dahl & Michelsen 1990) over NRTL gE."""
+
+    eos = SRKMIX_MHV2
     ge_kind = "nrtl"
