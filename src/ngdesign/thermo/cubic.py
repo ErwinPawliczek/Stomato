@@ -981,7 +981,7 @@ def _lk_hdep_fluid(Tr: float, Pr: float, p: dict[str, float], gas: bool) -> floa
     c_d = p["c2"] / (Tr * Tr) - 3.0 * p["c3"] / Tr**4
     d_d = -p["d2"] / (Tr * Tr)
     e = math.exp(-p["gamma"] / (vr * vr))
-    quad = b_d / vr + c_d / (2.0 * vr * vr) + d_d / (5.0 * vr**4)
+    quad = b_d / vr + c_d / (2.0 * vr * vr) + d_d / (5.0 * vr**5)
     exp_part = p["beta"] * (1.0 - e) / (2.0 * p["gamma"]) + (1.0 - e * (1.0 + p["gamma"] / (vr * vr))) / (
         2.0 * p["gamma"]
     )
