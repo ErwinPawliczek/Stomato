@@ -17,7 +17,7 @@ from .inside_out import (
     _h_equation_stages,
     _l_profile,
     _Profile,
-    _stage_overall,
+    _stage_k_values,
     _v_free_indices,
 )
 from .linalg import _gauss
@@ -233,47 +233,37 @@ def _ns_residual_function(
     perturbation of one packed unknown changes only its own stage's state, so
     all other stages hit the cache and cost no flash.
     """
-    k_cache: dict[
-        tuple[tuple[tuple[str, float], ...], tuple[tuple[str, float], ...], float, float],
-        dict[str, float],
-    ] = {}
+    k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]] = {}
 
     def _live_k(
         j: int, xs: list[dict[str, float]], ts: list[float], vs: list[float], liquid: list[float]
     ) -> dict[str, float]:
-        part = col.feeds[j]
-        stage_total = liquid[j] + vs[j] + part.total - col.draw_l[j] - col.draw_v[j]
-        overall: dict[str, float] = {}
-        for src_comp, src_flow in ((xs[j], liquid[j]), (part.x, part.l_flow), (part.y, part.v_flow)):
-            for cid, frac in src_comp.items():
-                overall[cid] = overall.get(cid, 0.0) + frac * src_flow
-        if stage_total > _FLOW_FLOOR:
-            overall = {cid: v / stage_total for cid, v in overall.items()}
-        key = (
-            tuple(sorted(xs[j].items())),
-            tuple(sorted(overall.items())),
-            round(ts[j], 12),
-            col.pressures[j],
-        )
+        # THE stage-K evaluation (P1-11 ruling on #153): the same function the
+        # exact gate and the model refresh evaluate, so the linearisation reads
+        # one K surface by construction. The trial's vapour composition is not
+        # carried into the stage overall: at a Newton trial state the outgoing
+        # vapour is what this solve is computing (the M rows derive it as
+        # K*x from the live K below), so the overall weights liquid + feed
+        # only - the equilibrium side enters through the K*x rows themselves.
+        # Measured on the step-1 branch (issue #153): passing an
+        # equilibrium-consistent y = k_frozen*x instead moves three non-reactive
+        # spec outcomes without improving the reactive descent - at the absorber
+        # anchor the full Newton step still worsens the exact residual 5.4x with
+        # the frozen norm improving 5.3x, so the frozen-vs-exact disagreement is
+        # the absolute-vs-relative M-row scaling and the frozen enthalpy lines,
+        # not the overall's vapour term.
+        key = (tuple(sorted(xs[j].items())), round(ts[j], 12), col.pressures[j])
         hit = k_cache.get(key)
         if hit is not None:
             return hit
+        y_j: dict[str, float] = {}
         # The thermo flash validates normalized compositions; Newton trial states
         # can be far off-normalized or degenerate (all flows at the floor), so
-        # evaluate K at the normalized projection - or at the feed composition
-        # when the trial state carries no composition at all.
-        liq = xs[j] or col.feed_comp
-        liq_sum = sum(liq.values())
-        liq = {cid: v / liq_sum for cid, v in liq.items()} if liq_sum > _FLOW_FLOOR else col.feed_comp
-        overall_sum = sum(overall.values())
-        overall = (
-            {cid: v / overall_sum for cid, v in overall.items()}
-            if overall_sum > _FLOW_FLOOR
-            else col.feed_comp
-        )
+        # _stage_k_values evaluates at the normalized projection (or the feed
+        # composition when the trial state carries no composition at all).
         k = (
-            tb.k_values([liq, overall, col.feed_comp], ts[j], col.pressures[j])
-            or tb.k_estimate(liq, ts[j], col.pressures[j])
+            _stage_k_values(col, tb, j, xs[j], y_j, ts[j], liquid[j], vs[j])
+            or tb.k_estimate(_flash_ready(xs[j], col.feed_comp), ts[j], col.pressures[j])
             or models.k_stages[j]
         )
         k_cache[key] = k
@@ -375,15 +365,7 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
     for _ in range(ns_max):
         prof.ns_passes += 1
         k_stages = [
-            tb.k_values(
-                [
-                    _flash_ready(prof.x[j], col.feed_comp),
-                    _flash_ready(_stage_overall(col, prof, j), col.feed_comp),
-                    col.feed_comp,
-                ],
-                prof.T[j],
-                col.pressures[j],
-            )
+            _stage_k_values(col, tb, j, prof.x[j], prof.y[j], prof.T[j], prof.L[j], prof.V[j])
             or tb.k_estimate(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j])
             or {cid: 1.0 for cid in col.comps}
             for j in range(n)
@@ -630,15 +612,7 @@ def _refresh_y(col: _Column, tb: _ThermoBox, prof: _Profile) -> None:
     equilibrium, not the stale flash composition from an earlier state.
     """
     for j in range(col.n):
-        k = tb.k_values(
-            [
-                _flash_ready(prof.x[j], col.feed_comp),
-                _flash_ready(_stage_overall(col, prof, j), col.feed_comp),
-                col.feed_comp,
-            ],
-            prof.T[j],
-            col.pressures[j],
-        )
+        k = _stage_k_values(col, tb, j, prof.x[j], prof.y[j], prof.T[j], prof.L[j], prof.V[j])
         if k is None:
             k = tb.k_estimate(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j])
         if k is None:
