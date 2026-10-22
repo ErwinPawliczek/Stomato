@@ -389,11 +389,17 @@ def run_all(cases: list[Case]) -> list[Row]:
                 continue
             except Exception as exc:  # noqa: BLE001 - reported as failed comparisons, never swallowed
                 print(f"WARNING: {case.id} on {pkg} raised {type(exc).__name__}: {exc}")
-                rows.extend(
-                    Row(case.id, pkg, prop, float(case.expected[prop]), None, None, False)
-                    for prop in case.expected
-                    if prop in TOLERANCE_POLICY
-                )
+                for prop in case.expected:
+                    if prop not in TOLERANCE_POLICY:
+                        continue
+                    want = case.expected[prop]
+                    if isinstance(want, dict):
+                        # Composition targets are per-component rows (evaluate_case's shape).
+                        rows.extend(
+                            Row(case.id, pkg, prop, float(v), None, None, False) for v in want.values()
+                        )
+                    else:
+                        rows.append(Row(case.id, pkg, prop, float(want), None, None, False))
     return rows
 
 

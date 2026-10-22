@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-10-22T10:10:33+00:00",
+    "generated": "2026-10-22T13:21:34+00:00",
     "python": "3.14.7",
     "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "2528fc8",
+    "git_rev": "d149027",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 1700,
-    "n_pass": 1285
+    "n_comparisons": 1724,
+    "n_pass": 1296
   },
   "rows": [
     {
@@ -15310,6 +15310,222 @@
       "got": 1.0,
       "rel_err": 0.0,
       "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-MeOH-305K",
+      "package": "pr_huron_vidal",
+      "property": "bubble_P",
+      "expected": 24026.271404293875,
+      "got": 24026.35499784283,
+      "rel_err": 3.4792560006165954e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-MeOH-305K",
+      "package": "pr_huron_vidal",
+      "property": "dew_P",
+      "expected": 24026.271404293875,
+      "got": 24026.35499784283,
+      "rel_err": 3.4792560006165954e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-MeOH-305K",
+      "package": "pr_huron_vidal",
+      "property": "rho_V",
+      "expected": 0.31236941117164824,
+      "got": 0.30532077660530604,
+      "rel_err": 0.02256506019556742,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-MeOH-305K",
+      "package": "pr_huron_vidal",
+      "property": "rho_L",
+      "expected": 779.8052758222088,
+      "got": 676.7214321916542,
+      "rel_err": 0.1321917750836776,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-pure-MeOH-305K",
+      "package": "pr_huron_vidal",
+      "property": "Cp",
+      "expected": 82.61348725710509,
+      "got": 112.9171525464409,
+      "rel_err": 0.3668125665126135,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-pure-MeOH-330K",
+      "package": "pr_huron_vidal",
+      "property": "bubble_P",
+      "expected": 74453.42585625796,
+      "got": 74453.21612968323,
+      "rel_err": 2.8168828004469797e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-MeOH-330K",
+      "package": "pr_huron_vidal",
+      "property": "dew_P",
+      "expected": 74453.42585625796,
+      "got": 74453.21612968323,
+      "rel_err": 2.8168828004469797e-06,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-MeOH-330K",
+      "package": "pr_huron_vidal",
+      "property": "rho_V",
+      "expected": 0.9112183058078597,
+      "got": 0.8820168130207993,
+      "rel_err": 0.03204664853738997,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-pure-MeOH-330K",
+      "package": "pr_huron_vidal",
+      "property": "rho_L",
+      "expected": 755.881962161443,
+      "got": 656.22766624054,
+      "rel_err": 0.13183843630286102,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-pure-MeOH-330K",
+      "package": "pr_huron_vidal",
+      "property": "Cp",
+      "expected": 88.50470131431118,
+      "got": 116.26539941197478,
+      "rel_err": 0.3136635419973415,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-pure-H2O-340K",
+      "package": "pr_huron_vidal",
+      "property": "bubble_P",
+      "expected": 27187.814263541517,
+      "got": 27187.81426347609,
+      "rel_err": 2.406424077807238e-12,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-H2O-340K",
+      "package": "pr_huron_vidal",
+      "property": "dew_P",
+      "expected": 27187.814263541517,
+      "got": 27187.81426347609,
+      "rel_err": 2.406424077807238e-12,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-H2O-340K",
+      "package": "pr_huron_vidal",
+      "property": "rho_V",
+      "expected": 0.17440236566416578,
+      "got": 0.1737768121888884,
+      "rel_err": 0.0035868405390896917,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-H2O-340K",
+      "package": "pr_huron_vidal",
+      "property": "rho_L",
+      "expected": 979.503448491746,
+      "got": 823.5125825039138,
+      "rel_err": 0.15925504522524067,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-pure-H2O-340K",
+      "package": "pr_huron_vidal",
+      "property": "Cp",
+      "expected": 75.45615262276523,
+      "got": 81.51284617926578,
+      "rel_err": 0.08026772298847946,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-pure-H2O-370K",
+      "package": "pr_huron_vidal",
+      "property": "bubble_P",
+      "expected": 90535.17075857562,
+      "got": 90535.1707585203,
+      "rel_err": 6.11103742718795e-13,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-H2O-370K",
+      "package": "pr_huron_vidal",
+      "property": "dew_P",
+      "expected": 90535.17075857562,
+      "got": 90535.1707585203,
+      "rel_err": 6.11103742718795e-13,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-H2O-370K",
+      "package": "pr_huron_vidal",
+      "property": "rho_V",
+      "expected": 0.5379175992407982,
+      "got": 0.5344216104284871,
+      "rel_err": 0.006499115881772966,
+      "pass": true
+    },
+    {
+      "case": "pr-huron-vidal-pure-H2O-370K",
+      "package": "pr_huron_vidal",
+      "property": "rho_L",
+      "expected": 960.5870351015669,
+      "got": 802.9149280061202,
+      "rel_err": 0.1641414065918299,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-pure-H2O-370K",
+      "package": "pr_huron_vidal",
+      "property": "Cp",
+      "expected": 75.8833211266792,
+      "got": 82.44879921352877,
+      "rel_err": 0.08652070032476825,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-meohh2o-97.99kPa-349.05K",
+      "package": "pr_huron_vidal",
+      "property": "bubble_T",
+      "expected": 349.05,
+      "got": 365.3949947240407,
+      "rel_err": 0.04682708701916832,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-meohh2o-97.99kPa-349.05K",
+      "package": "pr_huron_vidal",
+      "property": "vapor_comp",
+      "expected": 0.68,
+      "got": 0.4721280693845155,
+      "rel_err": 0.20787193061548453,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-meohh2o-312.91K-20.705kPa",
+      "package": "pr_huron_vidal",
+      "property": "bubble_P",
+      "expected": 20705.0,
+      "got": 13313.903239851224,
+      "rel_err": 0.35697158947832774,
+      "pass": false
+    },
+    {
+      "case": "pr-huron-vidal-meohh2o-312.91K-20.705kPa",
+      "package": "pr_huron_vidal",
+      "property": "vapor_comp",
+      "expected": 0.8053,
+      "got": 0.7388088527536064,
+      "rel_err": 0.0664911472463936,
+      "pass": false
     }
   ]
 }
