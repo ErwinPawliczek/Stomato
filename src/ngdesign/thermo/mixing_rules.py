@@ -479,12 +479,12 @@ def _zero_kijs(n: int) -> list[list[float]]:
     return [[0.0] * n for _ in range(n)]
 
 
-def _rule_for(eos_cls: type, provider: GEProvider) -> GERule:
+def _rule_for(eos_cls: type[Any], provider: GEProvider) -> GERule:
     kind = getattr(eos_cls, "rule_kind", None)
     if kind == "hv":
         return HuronVidal(provider, HuronVidal.M_PR)
     if kind == "ws":
-        return WongSandler(provider, getattr(eos_cls, "ws_c"))
+        return WongSandler(provider, eos_cls.ws_c)
     raise ValueError(f"EOS class {eos_cls!r} declares no mixing rule")
 
 
@@ -649,7 +649,7 @@ class WongSandler(GERule):
             brt = ai / (R_GAS * T)
             gv[i] = bs[i] - brt
             gv_t[i] = -(dai / (R_GAS * T) - brt / T)
-            gv_tt[i] = -(d2ai / (R_GAS * T) - 2.0 * dai / (R_GAS * T * T) + 2.0 * brt / (T**3))
+            gv_tt[i] = -(d2ai / (R_GAS * T) - 2.0 * dai / (R_GAS * T * T) + 2.0 * brt / (T * T))
         w = self.w
         q = q_t = q_tt = 0.0
         q_x = [0.0] * n

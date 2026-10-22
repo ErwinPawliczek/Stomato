@@ -341,7 +341,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: pr-wong-sandler-pure-MeOH-305K
-  package: pending:pr_wong_sandler
+  package: pr_wong_sandler
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -357,7 +357,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: pr-wong-sandler-pure-MeOH-330K
-  package: pending:pr_wong_sandler
+  package: pr_wong_sandler
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -373,7 +373,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: pr-wong-sandler-pure-H2O-340K
-  package: pending:pr_wong_sandler
+  package: pr_wong_sandler
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -389,7 +389,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: pr-wong-sandler-pure-H2O-370K
-  package: pending:pr_wong_sandler
+  package: pr_wong_sandler
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -405,7 +405,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: srk-wong-sandler-pure-MeOH-305K
-  package: pending:srk_wong_sandler
+  package: srk_wong_sandler
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -421,7 +421,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: srk-wong-sandler-pure-MeOH-330K
-  package: pending:srk_wong_sandler
+  package: srk_wong_sandler
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -437,7 +437,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: srk-wong-sandler-pure-H2O-340K
-  package: pending:srk_wong_sandler
+  package: srk_wong_sandler
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -453,7 +453,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: srk-wong-sandler-pure-H2O-370K
-  package: pending:srk_wong_sandler
+  package: srk_wong_sandler
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -908,7 +908,7 @@ binary_cases:
     liquid_comp:
       C1: 0.00391
 - id: pr-wong-sandler-meohh2o-101.325kPa-349.05K
-  package: pending:pr_wong_sandler
+  package: pr_wong_sandler
   components:
   - MeOH
   - H2O
@@ -925,7 +925,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: pr-wong-sandler-meohh2o-312.91K-20.705kPa
-  package: pending:pr_wong_sandler
+  package: pr_wong_sandler
   components:
   - MeOH
   - H2O
@@ -942,6 +942,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: pr-wong-sandler-c1h2o-310.9K-13.10MPa
+  note: unbound (T-06a, 2026-10-22) - the row refuses this feed because the ChemSep NRTL databank has no C1/H2O pair (a crash is never an assessed miss); rebind when a gE source with that pair exists
   package: pending:pr_wong_sandler
   components:
   - C1
@@ -956,6 +957,7 @@ binary_cases:
     liquid_comp:
       C1: 0.00189
 - id: pr-wong-sandler-c1h2o-310.9K-44.99MPa
+  note: unbound (T-06a, 2026-10-22) - the row refuses this feed because the ChemSep NRTL databank has no C1/H2O pair (a crash is never an assessed miss); rebind when a gE source with that pair exists
   package: pending:pr_wong_sandler
   components:
   - C1
@@ -970,7 +972,7 @@ binary_cases:
     liquid_comp:
       C1: 0.00391
 - id: srk-wong-sandler-meohh2o-101.325kPa-349.05K
-  package: pending:srk_wong_sandler
+  package: srk_wong_sandler
   components:
   - MeOH
   - H2O
@@ -987,7 +989,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: srk-wong-sandler-meohh2o-312.91K-20.705kPa
-  package: pending:srk_wong_sandler
+  package: srk_wong_sandler
   components:
   - MeOH
   - H2O
@@ -1004,6 +1006,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: srk-wong-sandler-c1h2o-310.9K-13.10MPa
+  note: unbound (T-06a, 2026-10-22) - the row refuses this feed because the ChemSep NRTL databank has no C1/H2O pair (a crash is never an assessed miss); rebind when a gE source with that pair exists
   package: pending:srk_wong_sandler
   components:
   - C1
@@ -1018,6 +1021,7 @@ binary_cases:
     liquid_comp:
       C1: 0.00189
 - id: srk-wong-sandler-c1h2o-310.9K-44.99MPa
+  note: unbound (T-06a, 2026-10-22) - the row refuses this feed because the ChemSep NRTL databank has no C1/H2O pair (a crash is never an assessed miss); rebind when a gE source with that pair exists
   package: pending:srk_wong_sandler
   components:
   - C1
