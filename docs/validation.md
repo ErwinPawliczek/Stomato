@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-22T09:19:47+00:00 from `data/validation/results.json` (git 9214c56, CoolProp 8.0.0).
+Generated 2026-10-22T09:49:24+00:00 from `data/validation/results.json` (git d9f0140, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)

@@ -1,8 +1,8 @@
-# ext_uniquac_nacl_water — Extended UNIQUAC NaCl(aq) (registered refusal)
+# ext_uniquac_nacl_water — Extended UNIQUAC NaCl(aq) -- REFUSED (no open parameter table)
 
 family `electrolyte` · status **experimental** · adapter `ngdesign.amine.electrolyte:ElectrolyteExtUNIQUAC`.
 
-## Applicability
+## Applicability (Carlson 1996)
 
 - component classes: water
 - polar: True · electrolyte: True
@@ -11,20 +11,20 @@ family `electrolyte` · status **experimental** · adapter `ngdesign.amine.elect
 
 ## Parameters
 
-- source: none — the row refuses at first use
-- provenance: No openly retrievable, citable extended-UNIQUAC parameter table for NaCl-H2O exists (Thomsen & Rasmussen's fitted parameters are not published in citable open form). The T-07 precedent applies: the row refuses at first use rather than ship unverifiable parameters.
+- source: none -- first-use refusal
+- provenance: No openly retrievable, citable extended-UNIQUAC parameter table for NaCl-H2O exists (Thomsen & Rasmussen's fitted parameters are not published in citable open form).  The T-07 precedent applies: the row refuses at first use rather than ship unverifiable parameters.
 
 ## L0 self-consistency
 
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-The row refuses at first property use, so no L0 check can run; construction succeeds and every property call raises `NotImplementedError` naming the missing parameter table (pinned by tests/thermo/test_electrolyte.py).
+Note: experimental row — L0 exempt; constructs successfully and refuses at first use (NotImplementedError) because no citable open extended-UNIQUAC parameter table for NaCl-H2O exists (T-07 precedent)
 
 ## L1/L2 reference-case outcomes
 
-None yet — the refusal stands until a verified citable parameter table lands in `data/thermo_params/electrolyte/`.
+None yet — validation case ids arrive with the data tasks (T-11..T-13).
 
 ## References
 
-- Thomsen, K. & Rasmussen, P., "Extended UNIQUAC for electrolyte systems" (parameters not openly retrievable; refusal documented, T-09)
+- Thomsen, K. & Rasmussen, P., 'Extended UNIQUAC for electrolyte systems' (parameters not openly retrievable; refusal documented, T-09)

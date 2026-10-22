@@ -1,8 +1,8 @@
-# enrtl_nacl_water — eNRTL NaCl(aq) (registered refusal)
+# enrtl_nacl_water — eNRTL NaCl(aq) -- REFUSED (no open parameter table)
 
 family `electrolyte` · status **experimental** · adapter `ngdesign.amine.electrolyte:ElectrolyteENRTLNaCl`.
 
-## Applicability
+## Applicability (Carlson 1996)
 
 - component classes: water
 - polar: True · electrolyte: True
@@ -11,20 +11,16 @@ family `electrolyte` · status **experimental** · adapter `ngdesign.amine.elect
 
 ## Parameters
 
-- source: none — the row refuses at first use
-- provenance: No openly retrievable, citable eNRTL parameter table for NaCl-H2O exists (the published electrolyte-NRTL parameter sets for aqueous salts are not in citable open form, and DWSIM's electrolyte parameter files are not in the open repository). The T-07 precedent applies: the row refuses at first use rather than ship unverifiable parameters.
+- source: none -- first-use refusal
+- provenance: No openly retrievable, citable eNRTL parameter table for NaCl-H2O exists (the published electrolyte-NRTL parameter sets for aqueous salts are not in citable open form, and DWSIM's electrolyte parameter files are not in the open repository).  The T-07 precedent applies: the row refuses at first use rather than ship unverifiable parameters.
 
 ## L0 self-consistency
 
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-The row refuses at first property use, so no L0 check can run; construction succeeds and every property call raises `NotImplementedError` naming the missing parameter table (pinned by tests/thermo/test_electrolyte.py).
+Note: experimental row — L0 exempt; constructs successfully and refuses at first use (NotImplementedError) because no citable open eNRTL parameter table for NaCl-H2O exists (T-07 precedent)
 
 ## L1/L2 reference-case outcomes
 
-None yet — the refusal stands until a verified citable parameter table lands in `data/thermo_params/electrolyte/`.
-
-## References
-
-None — that is the point of the refusal.
+None yet — validation case ids arrive with the data tasks (T-11..T-13).
