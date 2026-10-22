@@ -50,13 +50,19 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from chemicals.molecular_geometry import CHEMSEP, RG
+from chemicals.molecular_geometry import RG
 from thermo.phases.virial_phase import (
     VIRIAL_B_TSONOPOULOS_EXTENDED,
     VIRIAL_C_ZERO,
     VirialCSP,
     VirialGas,
 )
+
+#: chemicals' data-source tag selecting the ChemSep radius-of-gyration table
+#: in ``RG`` (verified against the installed chemicals package, where the
+#: name evaluates to the string 'CHEMSEP' but is not in the module's
+#: ``__all__`` and so cannot be imported under mypy strict).
+CHEMSEP = "CHEMSEP"
 
 HOC_MODEL = "Hayden-O'Connell (1975)"
 NOTHNAGEL_MODEL = "Nothnagel (1973)"
@@ -369,6 +375,29 @@ class HaydenOConnellModel:
         return [[0.0] * n for _ in range(n)]
 
 
+class ConsistentCpVirialGas(VirialGas):  # type: ignore[misc]  # thermo ships no stubs
+    """``VirialGas`` whose reported cp matches dH/dT at constant pressure.
+
+    thermo's ``VirialGas`` reports ``Cp_dep = dH_dep_dT`` taken at fixed
+    volume, so for a temperature-sensitive second virial coefficient the
+    reported cp misses the V(T, P) contribution of the departure enthalpy
+    (measured 0.5 % off at 380 K / 50 kPa on the MeOH/H2O slate) and the
+    thermodynamic identity cp == (dH/dT)_P fails. This subclass evaluates
+    the phase's own enthalpy at T +/- 0.5 K and fixed P with the same
+    central stencil the validation harness uses, so cp stays consistent
+    with the reported enthalpy by construction.
+    """
+
+    dT = 0.5
+
+    def Cp(self) -> float:
+        P = self.P
+        zs = self.zs
+        hi = self.to(zs, self.T + self.dT, P).H()
+        lo = self.to(zs, self.T - self.dT, P).H()
+        return float((hi - lo) / (2.0 * self.dT))
+
+
 def hoc_vapour_phase(cas_list: list[str], constants: Any, correlations: Any) -> VirialGas:
     """The Hayden-O'Connell vapour phase over exactly this component set."""
     rgs = [rg_of(cas) for cas in cas_list]
@@ -384,7 +413,7 @@ def hoc_vapour_phase(cas_list: list[str], constants: Any, correlations: Any) -> 
         cas_list=cas_list,
     )
     # VirialGas requires composition at construction; the flasher rebases it.
-    return VirialGas(
+    return ConsistentCpVirialGas(
         model=model,
         HeatCapacityGases=correlations.HeatCapacityGases,
         zs=[1.0 / len(cas_list)] * len(cas_list),
@@ -424,7 +453,7 @@ def tsonopoulos_fallback_phase(constants: Any, correlations: Any) -> VirialGas:
         cross_C_model="Zeros",
     )
     # VirialGas requires composition at construction; the flasher rebases it.
-    return VirialGas(
+    return ConsistentCpVirialGas(
         model=model,
         HeatCapacityGases=correlations.HeatCapacityGases,
         zs=[1.0 / n_components] * n_components,

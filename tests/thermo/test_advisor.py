@@ -78,9 +78,17 @@ def test_experimental_rows_never_rank() -> None:
     recs = recommend(slice_fs.build())
     assert all(rec.status != "experimental" for rec in recs)
     ids = {rec.id for rec in recs}
-    assert "nrtl_hoc" not in ids  # experimental virial-vapour row
     assert "hoc_dimer" not in ids  # experimental dimerization row
     assert "pc_saft" not in ids  # placeholder row, not implemented
+
+
+def test_virial_vapour_rows_rank_once_validated() -> None:
+    # T-03b: the HOC/Nothnagel virial-vapour rows left experimental status and
+    # now rank on the slice slate like any other validated row.
+    recs = recommend(slice_fs.build())
+    by_id = {rec.id: rec for rec in recs}
+    assert by_id["nrtl_hoc"].status == "validated"
+    assert by_id["wilson_nothnagel"].status == "validated"
 
 
 def test_recommendation_is_deterministic() -> None:
