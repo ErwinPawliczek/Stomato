@@ -532,22 +532,73 @@ def _fit_ln_kb(hist: tuple[tuple[float, float], ...], b_default: float) -> tuple
     return latest_ln - b_default / latest_t, b_default
 
 
-def _stage_overall(col: _Column, prof: _Profile, j: int) -> dict[str, float]:
-    """Overall composition sitting on stage j: flows-weighted liquid, vapour and feed."""
+def _stage_overall_from_flows(
+    col: _Column, j: int, x_j: dict[str, float], y_j: dict[str, float], l_flow: float, v_flow: float
+) -> dict[str, float]:
+    """Overall composition sitting on stage j: flows-weighted liquid, vapour and feed.
+
+    The one overall construction behind ``_stage_overall`` and the stage-K
+    evaluation - every caller weights the SAME four sources in the SAME order,
+    so the gate and the Newton linearisation hand the package one composition.
+    """
     part = col.feeds[j]
-    total = prof.L[j] + prof.V[j] + part.total - col.draw_l[j] - col.draw_v[j]
+    total = l_flow + v_flow + part.total - col.draw_l[j] - col.draw_v[j]
     if total <= _FLOW_FLOOR:
         return col.feed_comp
     acc: dict[str, float] = {}
     for src_comp, src_flow in (
-        (prof.x[j], prof.L[j]),
-        (prof.y[j], prof.V[j]),
+        (x_j, l_flow),
+        (y_j, v_flow),
         (part.x, part.l_flow),
         (part.y, part.v_flow),
     ):
         for cid, frac in src_comp.items():
             acc[cid] = acc.get(cid, 0.0) + frac * src_flow
     return {cid: v / total for cid, v in acc.items() if v > 0.0} or col.feed_comp
+
+
+def _stage_overall(col: _Column, prof: _Profile, j: int) -> dict[str, float]:
+    """Overall composition sitting on stage j, from the profile's stage state."""
+    return _stage_overall_from_flows(col, j, prof.x[j], prof.y[j], prof.L[j], prof.V[j])
+
+
+def _stage_k_values(
+    col: _Column,
+    tb: _ThermoBox,
+    j: int,
+    x_j: dict[str, float],
+    y_j: dict[str, float],
+    t_j: float,
+    l_flow: float,
+    v_flow: float,
+) -> dict[str, float] | None:
+    """THE stage-K evaluation (P1-11 ruling on issue #153): one owner, one surface.
+
+    The exact gate (``_exact_residuals``), the inside-out model refresh
+    (``_refresh_model``), the y refresh (``_refresh_y``) and the
+    Naphtali-Sandholm residual (``_live_k``) all evaluate THIS function, so the
+    FD-Jacobian linearisation and the gate read the same K surface by
+    construction - the ruling's two-K-surfaces mechanism (the NS residual built
+    its stage overall without the stage's own vapour term while the gate
+    weighted the stored y in) is closed by having every caller evaluate the
+    same function with the same candidate chain and fallbacks.
+
+    ``y_j`` is the caller's current estimate of the stage vapour: the profile's
+    refreshed y = K*x on the mesh side, an empty dict from the NS trial (whose
+    outgoing vapour is what that solve is computing - the M rows derive it as
+    K*x from the live K themselves). Returns None when the stage's equilibrium
+    is not evaluable from any candidate (liquid x, stage overall, feed);
+    callers apply their documented fallbacks.
+    """
+    return tb.k_values(
+        [
+            _flash_ready(x_j, col.feed_comp),
+            _flash_ready(_stage_overall_from_flows(col, j, x_j, y_j, l_flow, v_flow), col.feed_comp),
+            col.feed_comp,
+        ],
+        t_j,
+        col.pressures[j],
+    )
 
 
 def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerModel | None) -> _InnerModel:
@@ -557,15 +608,7 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
     n = col.n
     k_stages: list[dict[str, float]] = []
     for j in range(n):
-        k = tb.k_values(
-            [
-                _flash_ready(prof.x[j], col.feed_comp),
-                _flash_ready(_stage_overall(col, prof, j), col.feed_comp),
-                col.feed_comp,
-            ],
-            prof.T[j],
-            col.pressures[j],
-        )
+        k = _stage_k_values(col, tb, j, prof.x[j], prof.y[j], prof.T[j], prof.L[j], prof.V[j])
         if k is None:
             k = tb.k_estimate(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j])
         if k is None and model is not None:
@@ -950,15 +993,7 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
     k_stages: list[dict[str, float] | None] = []
     y_eq: list[dict[str, float]] = []
     for j in range(n):
-        k = tb.k_values(
-            [
-                _flash_ready(prof.x[j], col.feed_comp),
-                _flash_ready(_stage_overall(col, prof, j), col.feed_comp),
-                col.feed_comp,
-            ],
-            prof.T[j],
-            col.pressures[j],
-        )
+        k = _stage_k_values(col, tb, j, prof.x[j], prof.y[j], prof.T[j], prof.L[j], prof.V[j])
         if k is None:
             k = tb.k_estimate(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j])
         k_stages.append(k)
