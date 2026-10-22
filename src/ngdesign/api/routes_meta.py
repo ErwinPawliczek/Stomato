@@ -53,8 +53,9 @@ def thermo_recommend(
 def thermo_models() -> dict[str, Any]:
     """Every catalogue row with its selectable flag and refusal reason (issue #154)."""
     models: list[dict[str, Any]] = []
-    for row_id in sorted(load_catalogue()):
-        row = load_catalogue()[row_id]
+    rows = load_catalogue()
+    for row_id in sorted(rows):
+        row = rows[row_id]
         selectable = row.status != "experimental"
         entry: dict[str, Any] = {
             "id": row.id,

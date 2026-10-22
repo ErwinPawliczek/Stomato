@@ -126,8 +126,6 @@ _BASE: dict[str, int] = {
     "special": 10,
 }
 
-_CUBIC_IDS = {"pr", "srk", "pr78", "rk"}
-
 
 def _amine_chemistry(slate: list[str]) -> bool:
     names = set(slate)
@@ -159,7 +157,11 @@ def _score_row(row: ModelRow, fs: Flowsheet, profile: Profile) -> tuple[int, lis
     # Polarity (Carlson 1996). The cubic demotion applies to polar-DOMINANT
     # systems (MeOH/H2O columns); gas plants carrying water/glycol keep the
     # GPSA-favoured PR/SRK on top.
-    if profile.polar_dominant and row.id in _CUBIC_IDS:
+    # Every cubic-family row carries a classical (van der Waals one-fluid)
+    # mixing rule; the gE-mixing rows (family C, spec T-06) are a separate
+    # family and are not demoted. Keyed on the family, not an id list, so
+    # new cubic rows inherit the rule.
+    if profile.polar_dominant and row.family == "cubic":
         score -= 40
         reasons.append(
             "polar feed: a cubic EOS with a classical mixing rule treats the polar "
