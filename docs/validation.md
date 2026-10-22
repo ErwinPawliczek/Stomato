@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-22T07:03:04+00:00 from `data/validation/results.json` (git 2e25c06, CoolProp 8.0.0).
+Generated 2026-10-22T08:15:25+00:00 from `data/validation/results.json` (git b14eece, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -46,6 +46,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [esso-tabular](validation/esso-tabular.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/esso-tabular.md) |
 | [flory_huggins](validation/flory_huggins.md) | special | experimental | — | L1=0 L2=0 | [report](validation/flory_huggins.md) |
 | [gerg2008](validation/gerg2008.md) | helmholtz | provisional | 7/7 | L1=5 L2=10 | [report](validation/gerg2008.md) |
+| [gerg2008_teqp](validation/gerg2008_teqp.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/gerg2008_teqp.md) |
 | [grayson-streed](validation/grayson-streed.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/grayson-streed.md) |
 | [grayson-streed-extended](validation/grayson-streed-extended.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/grayson-streed-extended.md) |
 | [henry-sander](validation/henry-sander.md) | kvalue | provisional | 6/6 | L1=0 L2=2 | [report](validation/henry-sander.md) |
@@ -93,6 +94,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [rk](validation/rk.md) | cubic | provisional | 5/7 | L1=4 L2=2 | [report](validation/rk.md) |
 | [rks-bm](validation/rks-bm.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/rks-bm.md) |
 | [saft_vr_mie](validation/saft_vr_mie.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/saft_vr_mie.md) |
+| [soft_saft](validation/soft_saft.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/soft_saft.md) |
 | [sour-pr](validation/sour-pr.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/sour-pr.md) |
 | [sour-srk](validation/sour-srk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/sour-srk.md) |
 | [srk](validation/srk.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/srk.md) |

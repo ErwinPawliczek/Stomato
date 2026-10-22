@@ -124,3 +124,24 @@ multifluid_pure:
     N2: Nitrogen
     CO2: CarbonDioxide
     H2O: Water
+
+# --- GERG-2008 through teqp's multi-fluid machinery (row gerg2008_teqp) ----------
+# The same teqp 0.23.2 bundled library and Kunz-JCED-2012 reducing/departure
+# parameters the T-04 CoolProp `gerg2008` row approximates with its own fitted
+# pure-fluid tables; this row IS the exact-backend cross-check (issue #164).
+# Slate: the ten GERG-2008 natural-gas components the catalogue already carries
+# ids for. H2O is excluded for the same measured reason as `multifluid` above —
+# teqp's bundled binary-pair file carries no water interaction data, and the
+# GERG-2008 water pairs are the ones the spec's water-sour cases would need.
+gerg2008_teqp:
+  aliases:
+    C1: Methane
+    C2: Ethane
+    C3: n-Propane
+    nC4: n-Butane
+    iC4: IsoButane
+    nC5: n-Pentane
+    iC5: Isopentane
+    "C6+": n-Hexane
+    N2: Nitrogen
+    CO2: CarbonDioxide

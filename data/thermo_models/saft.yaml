@@ -1,14 +1,17 @@
 # SAFT / CPA / multi-fluid Helmholtz family (spec T-07). Every row loads without teqp
 # (lazy import); the teqp-backed builds require `uv sync --extra saft` (teqp>=0.22).
-# Registered but non-building rows (pc_saft_assoc, pc_saft_polar, cpa_pr) refuse in
-# _build_kernel with the named reason, so a feed selecting them fails loudly instead of
-# silently dropping the physics they stand for. All rows are `experimental` until CI runs
-# the optional extra; parameters live in data/thermo_params/saft/pure.yaml.
+# Registered but non-building rows (pc_saft_assoc, pc_saft_polar, soft_saft, cpa_pr)
+# refuse in _validate_kind with the named reason, so a feed selecting them fails loudly
+# instead of silently dropping the physics they stand for. All rows are `experimental`
+# until CI runs the optional extra; parameters live in data/thermo_params/saft/pure.yaml.
 #
 # The reference cases listed under `validation:` currently run against the pc_saft /
-# cpa_srk packages (data/validation/saft/cases.yaml). The other rows carry no case ids
-# yet: no case names their package, and a validation id that does not run against the
-# row would be claimed, not measured, evidence.
+# cpa_srk packages (data/validation/saft/cases.yaml). gerg2008_teqp carries the
+# c1n2-130.079K-0.614MPa cross-check bound in the T-07 follow-up (issue #164); the
+# other four former pending:teqp-gerg2008 cases stay pending — measured this session,
+# three have strictly monotone isotherms (no two-phase solution exists in the shipped
+# parameters) and one has a sub-per-mille loop the density scan cannot resolve, so
+# binding them would crash rather than miss, and crashes are not declarable.
 
 - id: pc_saft
   name: PC-SAFT (teqp)
@@ -581,4 +584,145 @@
     gibbs_duhem: pure-fluid-only surface — binary feeds are refused by design, and the
       composition-loop check needs a binary; the family's mixture coverage runs on the
       multifluid row
+  l0_note: ''
+
+- id: gerg2008_teqp
+  name: GERG-2008 (teqp multi-fluid, exact parameters)
+  family: saft
+  adapter: ngdesign.thermo.teqp_bridge:Gerg2008TeqpThermo
+  params:
+    source: teqp multifluid over teqp's bundled fluid library with the Kunz & Wagner
+      (2012) GERG-2008 reducing/departure parameters (data/thermo_params/saft/pure.yaml
+      gerg2008_teqp alias table)
+    provenance: same teqp 0.23.2 bundled fluid library as the multifluid row; the
+      natural-gas binary pairs and departure functions carry Kunz-JCED-2012 citations
+      in teqp's mixture files. This row is the exact-backend cross-check the T-04
+      `gerg2008` row (CoolProp's fitted pure-fluid tables) defers to (issue #164)
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - acid_gas
+    polar: false
+    electrolyte: false
+    T_K: [60.0, 800.0]
+    P_Pa: [100.0, 1.0e+8]
+    phases: [V, L]
+  status: experimental
+  validation: &gerg2008_teqp_cases
+  - c1n2-130.079K-0.614MPa
+  assessed:
+    c1n2-130.079K-0.614MPa: "bubble_P -5.77% (578280 vs 613700) - teqp's Kunz-Wagner
+      (2012) mixture parameters vs the NGPSA data at the binary's dense-phase end (the
+      CoolProp HEOS cross-check gives the same 578.3 kPa, so the miss is the parameter
+      set, not the flash); vapour_comp passes (+0.0057 abs, tolerance 0.02) (measured
+      2026-10-22, PR table)"
+  references:
+  - >-
+    Kunz & Wagner, "The GERG-2008 Wide-Range Equation of State for Natural Gases and
+    Other Mixtures", J. Chem. Eng. Data 57 (2012) 3032-3091
+  - teqp 0.23 (Thol & Bell), https://teqp.readthedocs.io, MIT licence
+  l0:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 150.0
+      - - C2
+        - 200.0
+      - - N2
+        - 90.0
+      - - CO2
+        - 240.0
+    phase_identification:
+      points:
+      - - C1
+        - 150.0
+      - - C3
+        - 250.0
+    round_trip:
+      z:
+        C1: 0.9
+        N2: 0.1
+      states:
+      - - 150.0
+        - 3.0e+6
+      - - 200.0
+        - 3.0e+5
+    dhdT_cp:
+      state: [200.0, 3.0e+5]
+      phase: vapor
+      z:
+        C1: 0.9
+        N2: 0.1
+    gibbs_duhem:
+      binaries:
+      - z:
+          C1: 0.5
+          N2: 0.5
+        phase: vapor
+        T: 200.0
+        P: 5.0e+5
+      - z:
+          C1: 0.9
+          N2: 0.1
+        phase: hc_liquid
+        T: 150.0
+        P: 3.0e+6
+    single_liquid_limit:
+      state: [150.0, 3.0e+6]
+      z:
+        C1: 0.9
+        N2: 0.1
+    determinism:
+      state: [200.0, 5.0e+5]
+      z:
+        C1: 0.5
+        N2: 0.5
+  l0_excluded: {}
+  l0_note: ''
+
+- id: soft_saft
+  name: soft-SAFT (registered refusal)
+  family: saft
+  adapter: ngdesign.thermo.teqp_bridge:SoftSaftThermo
+  params:
+    source: none — the row refuses to build
+    provenance: Blas & Vega's (1997) soft-SAFT has no engine to run on — teqp 0.23.2
+      (the family's only optional backend) ships no soft-SAFT kernel (its SAFT factories
+      are the explicit-coefficient PC-SAFT and SAFT-VR-Mie engines), and writing SAFT
+      by hand is out of T-07 scope; the model therefore stays outside the family rather
+      than being approximated
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    polar: false
+    electrolyte: false
+    T_K: [95.0, 600.0]
+    P_Pa: [1000.0, 1.0e+8]
+    phases: [V, L]
+  status: experimental
+  validation: []
+  references:
+  - >-
+    Blas & Vega, "Prediction of binary and multicomponent vapor-liquid equilibria with
+    the soft-SAFT equation of state" (association-free soft-SAFT formulation),
+    Ind. Eng. Chem. Res. 37 (1998) 660-674; vega group soft-SAFT lineage
+  l0: {}
+  l0_excluded:
+    pure_psat_limit: row refuses to build — no soft-SAFT engine exists (measured —
+      teqp 0.23.2 has no soft-SAFT factory or teqp.saft module)
+    phase_identification: row refuses to build — no soft-SAFT engine exists (measured —
+      teqp 0.23.2 has no soft-SAFT factory or teqp.saft module)
+    round_trip: row refuses to build — no soft-SAFT engine exists (measured — teqp
+      0.23.2 has no soft-SAFT factory or teqp.saft module)
+    dhdT_cp: row refuses to build — no soft-SAFT engine exists (measured — teqp 0.23.2
+      has no soft-SAFT factory or teqp.saft module)
+    gibbs_duhem: row refuses to build — no soft-SAFT engine exists (measured — teqp
+      0.23.2 has no soft-SAFT factory or teqp.saft module)
+    single_liquid_limit: row refuses to build — no soft-SAFT engine exists (measured —
+      teqp 0.23.2 has no soft-SAFT factory or teqp.saft module)
+    determinism: row refuses to build — no soft-SAFT engine exists (measured — teqp
+      0.23.2 has no soft-SAFT factory or teqp.saft module)
   l0_note: ''
