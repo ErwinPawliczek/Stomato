@@ -277,7 +277,7 @@ class _ZeroGEProvider(GEProvider):
 
 class TestWongSandler:
     @staticmethod
-    def _ws_rule(eos_cls: type) -> WongSandler:
+    def _ws_rule(eos_cls: type[PRMIX_WS] | type[SRKMIX_WS]) -> WongSandler:
         consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
         return WongSandler(_nrtl_provider([c for c in consts.CASs], ("methanol", "water")), eos_cls.ws_c)
 
@@ -360,7 +360,7 @@ class TestWongSandler:
                 assert rel < 1e-6, (eos_cls.__name__, zs, i, got, want)
 
     @pytest.mark.parametrize("eos_cls", (PRMIX_WS, SRKMIX_WS))
-    def test_rule_scalars_match_paper_formulas(self, eos_cls: type) -> None:
+    def test_rule_scalars_match_paper_formulas(self, eos_cls: type[PRMIX_WS] | type[SRKMIX_WS]) -> None:
         """a_m and b_m match an independent scalar re-implementation of the
         Wong-Sandler equations (Q, D, b_m = Q/(1-D), a_m = R T b_m D)."""
         eos = self._ws_eos(eos_cls, [0.3, 0.7])
