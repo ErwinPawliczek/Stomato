@@ -101,7 +101,11 @@ def test_peneloux_changes_density_but_not_phase_equilibrium() -> None:
         assert dew == pytest.approx(dew_ref, rel=1e-10)
     density_base = pr.phase_props(Z_C1_C3, 280.0, 5.0e6, PhaseKind.HC_LIQUID).density
     density_pen = pen.phase_props(Z_C1_C3, 280.0, 5.0e6, PhaseKind.HC_LIQUID).density
-    assert density_pen > density_base * 1.005  # measured +1.12 % on the C1/C3 binary
+    # Jhaveri & Youngren (1988): c = 0.50033 (R Tc/Pc)(0.25969 - Z_RA) is negative
+    # for omega < 0.352 (C1/C3), so the PR translation lowers the over-predicted
+    # light-hydrocarbon liquid density. Measured -2.50 % on this binary (review
+    # #161; the SRK correlation of Peneloux et al. raised it by +1.12 %).
+    assert density_pen < density_base * 0.995  # measured -2.50 % on the C1/C3 binary
 
 
 def test_boston_mathias_matches_default_below_tc_and_decays_above() -> None:
