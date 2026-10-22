@@ -54,3 +54,32 @@ def test_meta_matches_live_registry() -> None:
     meta = c.get("/api/meta").json()
     for kind in registry.KINDS:
         assert meta[kind] == registry.available(kind)
+
+
+def test_thermo_recommend_matches_tool_payload() -> None:
+    """T-08: the route and the recommend_thermo tool return identical rankings."""
+    from ngdesign.flowsheets import slice as slice_fs
+    from ngdesign.thermo import advisor
+
+    r = c.get("/api/thermo/recommend")
+    assert r.status_code == 200
+    assert r.json() == advisor.payload(slice_fs.build())
+    recs = r.json()["recommendations"]
+    assert recs[0]["id"] in ("pr", "srk")
+    assert all(rec["status"] != "experimental" for rec in recs)
+
+
+def test_thermo_models_marks_experimental_unselectable() -> None:
+    """Issue #154: experimental rows stay registered and listed, but selectable: false
+    with the row's refusal reason (status + l0_note/references)."""
+    r = c.get("/api/thermo/models")
+    assert r.status_code == 200
+    models = {m["id"]: m for m in r.json()["models"]}
+    assert len(models) == len(registry.available("thermo"))
+    assert models["pr"]["selectable"] is True
+    assert "refusal_reason" not in models["pr"]
+    for rid in ("hoc_dimer", "nrtl_hoc", "eos_cg"):
+        assert models[rid]["selectable"] is False, rid
+        assert "experimental" in models[rid]["refusal_reason"]
+    # Placeholder rows carry their refusal reason (status + l0_note).
+    assert "not implemented" in models["eos_cg"]["refusal_reason"]
