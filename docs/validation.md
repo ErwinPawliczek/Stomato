@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-21T22:47:08+00:00 from `data/validation/results.json` (git 4d8dfde, CoolProp 8.0.0).
+Generated 2026-10-22T01:37:25+00:00 from `data/validation/results.json` (git ff0ba53, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -43,14 +43,17 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [cpa_srk](validation/cpa_srk.md) | saft | experimental | 7/7 | L1=2 L2=9 | [report](validation/cpa_srk.md) |
 | [eos_cg](validation/eos_cg.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/eos_cg.md) |
 | [esso-tabular](validation/esso-tabular.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/esso-tabular.md) |
+| [flory_huggins](validation/flory_huggins.md) | special | experimental | — | L1=0 L2=0 | [report](validation/flory_huggins.md) |
 | [gerg2008](validation/gerg2008.md) | helmholtz | provisional | 7/7 | L1=5 L2=10 | [report](validation/gerg2008.md) |
 | [grayson-streed](validation/grayson-streed.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/grayson-streed.md) |
 | [grayson-streed-extended](validation/grayson-streed-extended.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/grayson-streed-extended.md) |
 | [henry-sander](validation/henry-sander.md) | kvalue | provisional | 6/6 | L1=0 L2=2 | [report](validation/henry-sander.md) |
+| [hoc_dimer](validation/hoc_dimer.md) | special | experimental | — | L1=0 L2=0 | [report](validation/hoc_dimer.md) |
 | [iapws95](validation/iapws95.md) | helmholtz | provisional | 6/6 | L1=0 L2=5 | [report](validation/iapws95.md) |
 | [iapws_if97](validation/iapws_if97.md) | helmholtz | provisional | 6/6 | L1=0 L2=0 | [report](validation/iapws_if97.md) |
 | [ideal-lk](validation/ideal-lk.md) | kvalue | provisional | 6/6 | L1=0 L2=0 | [report](validation/ideal-lk.md) |
 | [ideal-raoult](validation/ideal-raoult.md) | kvalue | provisional | 6/6 | L1=0 L2=0 | [report](validation/ideal-raoult.md) |
+| [ideal_solid](validation/ideal_solid.md) | special | experimental | — | L1=0 L2=0 | [report](validation/ideal_solid.md) |
 | [lee-kesler-ploecker](validation/lee-kesler-ploecker.md) | kvalue | provisional | 6/6 | L1=0 L2=1 | [report](validation/lee-kesler-ploecker.md) |
 | [margules_hoc](validation/margules_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/margules_hoc.md) |
 | [margules_ig](validation/margules_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=3 | [report](validation/margules_ig.md) |
@@ -68,6 +71,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [pc_saft](validation/pc_saft.md) | saft | experimental | 0/7 | L1=6 L2=4 | [report](validation/pc_saft.md) |
 | [pc_saft_assoc](validation/pc_saft_assoc.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_assoc.md) |
 | [pc_saft_polar](validation/pc_saft_polar.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_polar.md) |
+| [polymer_nrtl](validation/polymer_nrtl.md) | special | experimental | — | L1=0 L2=0 | [report](validation/polymer_nrtl.md) |
 | [pr](validation/pr.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr.md) |
 | [pr78](validation/pr78.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr78.md) |
 | [regular_solution_hoc](validation/regular_solution_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/regular_solution_hoc.md) |
@@ -82,6 +86,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [unifac_dortmund_nothnagel](validation/unifac_dortmund_nothnagel.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/unifac_dortmund_nothnagel.md) |
 | [unifac_dortmund_pr](validation/unifac_dortmund_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_dortmund_pr.md) |
 | [unifac_dortmund_rk](validation/unifac_dortmund_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_dortmund_rk.md) |
+| [unifac_fv](validation/unifac_fv.md) | special | experimental | — | L1=0 L2=0 | [report](validation/unifac_fv.md) |
 | [unifac_hoc](validation/unifac_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/unifac_hoc.md) |
 | [unifac_ig](validation/unifac_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=1 | [report](validation/unifac_ig.md) |
 | [unifac_lle_hoc](validation/unifac_lle_hoc.md) | gamma_phi | experimental | 0/7 | L1=0 L2=0 | [report](validation/unifac_lle_hoc.md) |
@@ -134,12 +139,14 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `coolprop_heos`: ok — n/a — refuses the slice feed: ComponentNotSupported: CoolPropPackage has no parameters for component(s) ['C6+']; supported: ['C1', 'C2', 'C3', 'CO2', 'H2O', 'H2S', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
 - `eos_cg`: ok — n/a — refuses the slice feed: UnavailableBackend: helmholtz-family placeholder row has no dew_point implementation; the backend lands with a later spec (teqp bridge, T-07)
 - `esso-tabular`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
+- `flory_huggins`: ok — n/a — refuses the slice feed: ValueError: flory_huggins supports exactly one solvent and one polymer; got 11 components (chi keys name the solvent first: 'solvent/polymer')
 - `gerg2008`: ok — n/a — refuses the slice feed: ComponentNotSupported: GERGPackage has no parameters for component(s) ['C6+', 'H2O']; supported: ['C1', 'C2', 'C3', 'CO2', 'H2S', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
 - `grayson-streed`: ok — n/a — refuses the slice feed: ValueError: no Chao-Seader/Grayson-Streed regular-solution constants for C6+, H2O; extend data/thermo_params/kvalue/regular_solution.yaml from a cited source (pseudo-components, water and alcohols are outside the correlation's scope)
 - `grayson-streed-extended`: ok — n/a — refuses the slice feed: ValueError: no Chao-Seader/Grayson-Streed regular-solution constants for C6+, H2O; extend data/thermo_params/kvalue/regular_solution.yaml from a cited source (pseudo-components, water and alcohols are outside the correlation's scope)
 - `henry-sander`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
 - `ideal-lk`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
 - `ideal-raoult`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
+- `ideal_solid`: ok — n/a — refuses the slice feed: ValueError: ideal_solid is a solid-liquid equilibrium package and does not flash; use solubility(cid, T). A solid-bearing stream must be routed to the SLE surface, never silently flashed as vapor/liquid
 - `lee-kesler-ploecker`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K did not converge
 - `margules_hoc`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_ig`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
@@ -157,6 +164,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `pc_saft`: ok — n/a — refuses the slice feed: SaftParameterError: no verified pc_saft parameters for ['H2O', 'N2', 'iC4', 'iC5']; supported: ['C1', 'C2', 'C3', 'C6+', 'CO2', 'binary_kij', 'excluded', 'nC4', 'nC5'] (unsupported components are refused, never treated as ideal)
 - `pc_saft_assoc`: ok — n/a — refuses the slice feed: NotImplementedError: saft row 'pc_saft_assoc' refuses to build: teqp 0.23.2's PC-SAFT implements no association contribution (teqp docs, PCSAFT.html: 'It does NOT include the association contribution, only the dispersive contributions')
 - `pc_saft_polar`: ok — n/a — refuses the slice feed: NotImplementedError: saft row 'pc_saft_polar' refuses to build: teqp (>= 0.15) ships a polar PC-SAFT extension, but no verified, citable component polar parameters ((Q*)^2, (mu*)^2) exist in data/thermo_params/saft/pure.yaml; parameter retrieval is out of T-07 scope
+- `polymer_nrtl`: ok — n/a — refuses the slice feed: ValueError: the polymer_nrtl model has no segment assignment for 'C1'; add it to data/thermo_params/special/polymer.yaml with provenance
 - `regular_solution_hoc`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_ig`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_nothnagel`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
@@ -168,6 +176,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `unifac_dortmund_nothnagel`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_dortmund_pr`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_dortmund_rk`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
+- `unifac_fv`: ok — n/a — refuses the slice feed: ValueError: unifac_fv supports exactly one solvent and one polymer; got 11 components (the polymer activity follows by Gibbs-Duhem integration)
 - `unifac_hoc`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_ig`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `unifac_lle_hoc`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
