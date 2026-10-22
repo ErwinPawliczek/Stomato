@@ -1,0 +1,59 @@
+- id: pr_huron_vidal
+  name: Peng-Robinson Huron-Vidal (NRTL)
+  family: mixing
+  adapter: ngdesign.thermo.mixing_rules:PRHuronVidalThermo
+  options: {}
+  params:
+    source: Huron-Vidal (1979) mixing rule over thermo IPDB (ChemSep) 'ChemSep NRTL' binary matrices
+    provenance: Huron, M.-J. & Vidal, J., 'New mixing rules in simple equations of state for representing
+      vapour-liquid equilibria of strongly non-ideal mixtures', Fluid Phase Equilib. 3, 255-271, 1979;
+      NRTL binary parameters from the ChemSep IPDB via the T-03 gamma-phi adapter's loader (one owner
+      of the parameter plumbing); k_ij-free form - the gE model carries all interaction information
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - meohh2o-97.99kPa-369.65K
+  - meohh2o-97.99kPa-365.45K
+  - meohh2o-97.99kPa-360.65K
+  - meohh2o-97.99kPa-353.25K
+  - meohh2o-97.99kPa-349.05K
+  - meohh2o-97.99kPa-343.75K
+  - meohh2o-97.99kPa-341.85K
+  - meohh2o-97.99kPa-339.55K
+  - meohh2o-312.91K-9.079kPa
+  - meohh2o-312.91K-13.012kPa
+  - meohh2o-312.91K-16.319kPa
+  - meohh2o-312.91K-20.705kPa
+  - meohh2o-312.91K-23.385kPa
+  - meohh2o-312.91K-27.518kPa
+  - meohh2o-312.91K-32.571kPa
+  - meohh2o-322.91K-15.932kPa
+  - meohh2o-322.91K-26.131kPa
+  - meohh2o-322.91K-31.544kPa
+  - meohh2o-322.91K-40.850kPa
+  - meohh2o-322.91K-46.450kPa
+  - meohh2o-322.91K-52.142kPa
+  references:
+  - Huron, M.-J. & Vidal, J., Fluid Phase Equilib. 3, 255-271, 1979
+  - Renon, H. & Prausnitz, J. M., AIChE J. 14(1), 135-144, 1968
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+  assessed: {}
