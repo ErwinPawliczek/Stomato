@@ -53,6 +53,7 @@ class PhaseKind(StrEnum):
     VAPOR = "vapor"
     HC_LIQUID = "hc_liquid"
     AQUEOUS = "aqueous"
+    SOLID = "solid"  # T-10 contract change: solid-liquid equilibrium streams
 
 
 class Phase(Model):

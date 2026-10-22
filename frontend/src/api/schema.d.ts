@@ -1247,7 +1247,7 @@ export interface components {
          * PhaseKind
          * @enum {string}
          */
-        PhaseKind: "vapor" | "hc_liquid" | "aqueous";
+        PhaseKind: "vapor" | "hc_liquid" | "aqueous" | "solid";
         /** PipingNetwork */
         PipingNetwork: {
             /**
