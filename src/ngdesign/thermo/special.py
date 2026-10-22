@@ -1,6 +1,6 @@
 """Special-chemistry thermodynamics: polymer solutions, SLE, association (spec T-10).
 
-One module, four families behind the catalogue rows in
+One module, the special-chemistry families behind the catalogue rows in
 data/thermo_models/special.yaml:
 
 * :class:`FloryHugginsPackage` - Flory-Huggins gE for solvent/polymer solutions.
@@ -23,6 +23,13 @@ data/thermo_models/special.yaml:
   association). The curated ``nrtl_hoc``/``nrtl_nothnagel`` rows keep refusing
   (their wiring lives in ngdesign.thermo.gamma_phi, outside this spec's file
   list); this module ships the working kernel behind its own special-family row.
+* :class:`HFHexamerPackage` - same structure, HF vapour associating to hexamers:
+  the in-house hexamerization kernel on Jarry & Davis (1953) parameters, with
+  Schotte (1980) as the oligomer-treatment reference.
+* :class:`PolymerPCSAFT` - polymer PC-SAFT for solvent/polymer supports, built
+  through the T-07 teqp bridge (ngdesign.thermo.teqp_bridge); segment
+  parameters for POLY_PS and toluene carry citations, unsupported components
+  and a missing teqp extra refuse at first use like every saft row.
 
 Polymers enter as flowsheet-owned or registered pseudo-components (spec P1-07);
 the params file documents the polystyrene characterization used by the
@@ -53,6 +60,7 @@ from ngdesign.data import DATABANK_LOCK, register_pseudo
 from ngdesign.thermo import _state
 from ngdesign.thermo._state import R_IDEAL as R
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
+from ngdesign.thermo.teqp_bridge import TeqpPackage
 
 
 def _params_dir() -> Any:
@@ -986,3 +994,90 @@ class IdealLiquidGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no stubs
 
     def gammas(self) -> list[float]:
         return [1.0] * len(self.xs)
+
+
+# --------------------------------------------------------------------------
+# HF hexamerization kernel (Jarry & Davis 1953 chemical theory)
+# --------------------------------------------------------------------------
+
+
+def hexamer_vapor_compressibility(T: float, P: float, log10_k6_a: float, log10_k6_b: float) -> float:
+    """Vapour compressibility factor of an HF vapour associating to hexamers.
+
+    Chemical theory with the single hexamerization equilibrium (the oligomer
+    association treatment of Schotte 1980; parameters from Jarry & Davis
+    1953): monomers M and hexamers H in ideal gas-phase equilibrium 6 M <=> H
+    with
+
+        Kp(T) = p_H / p_M^6 = 10**(log10_k6_a + log10_k6_b / T)   [1/Pa^5]
+
+    and the material balance P = p_M + p_H (one pressure-bearing molecule per
+    six acid molecules). Substituting p_H = kp p_M^6 gives p_M + kp p_M^6 = P,
+    solved by bisection (the left side is monotone in p_M); the compressibility
+    of the *nominal* acid is
+
+        Z = (p_M + p_H) / (p_M + 6 p_H)
+
+    the ratio of equilibrium-mixture moles to analytical acid moles (same
+    convention as :func:`dimer_vapor_compressibility`).
+    """
+    if T <= 0.0 or P <= 0.0:
+        raise ValueError(f"association needs positive T and P, got T={T!r} P={P!r}")
+    kp: float = 10.0 ** (log10_k6_a + log10_k6_b / T)  # 1/Pa^5
+    lo, hi = 0.0, P
+    for _ in range(200):
+        mid = 0.5 * (lo + hi)
+        if mid + kp * mid**6 < P:
+            lo = mid
+        else:
+            hi = mid
+    p_m = 0.5 * (lo + hi)
+    p_h = kp * p_m**6
+    return (p_m + p_h) / (p_m + 6.0 * p_h)
+
+
+class HFHexamerPackage(SpecialGammaPhiPackage):
+    """Gamma-phi package with an HF-hexamerizing vapour (row ``hf_hexamer``).
+
+    Same structure as :class:`HaydenOConnellDimerPackage`: the liquid is ideal
+    on apparent composition; the hexamerization kernel above is the model's
+    vapour-phase content and is exercised directly against the published
+    Jarry & Davis saturated-vapour association factors
+    (tests/thermo/test_special.py). Wiring association kernels through the
+    two-phase flash is shared follow-up work for the special-family vapour
+    rows.
+    """
+
+    ge_name = "hf_hexamer"
+
+    def _make_ge_factory(self, ids: tuple[str, ...], pseudos: tuple[Any, ...]) -> Any:
+        params = _association_params()
+        assoc = params.get("hexamerization") or {}
+        for cid in ids:
+            if cid not in assoc:
+                raise ValueError(
+                    f"the hf_hexamer model has no hexamerization parameters for {cid!r}; add "
+                    "them to data/thermo_params/special/association.yaml with provenance"
+                )
+
+        def make(xs: list[float]) -> Any:
+            return IdealLiquidGE(298.15, list(xs))
+
+        return make
+
+
+class PolymerPCSAFT(TeqpPackage):
+    """Polymer PC-SAFT over the T-07 teqp bridge (row ``polymer_pc_saft``).
+
+    Segment parameters (chain length ``m``, segment diameter ``sigma``,
+    segment energy ``epsilon/k``) for the polystyrene pseudo-component
+    POLY_PS and the solvent toluene come from
+    data/thermo_params/special/polymer.yaml with citations; the kernel build
+    lives in the bridge (``_build_kernel`` kind ``polymer_pc_saft``). The row
+    constructs without teqp and refuses at first use like every saft row:
+    :class:`SaftDependencyMissing` without the optional extra,
+    :class:`SaftParameterError` naming any component without verified
+    parameters.
+    """
+
+    model_kind = "polymer_pc_saft"

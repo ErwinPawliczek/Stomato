@@ -40,3 +40,27 @@ segment_tau:
       located this session. Values are order-of-magnitude placeholders so the
       model's algebra is exercised end-to-end; they are NOT engineering data.
       Replace with fitted values before any design use.
+
+polymer_pc_saft:
+  toluene:
+    m: 2.8149
+    sigma_Angstrom: 3.7169
+    epsilon_over_k: 285.69
+    provenance: >-
+      Gross & Sadowski, Ind. Eng. Chem. Res. 40 (2001) 1244-1257, Table 1
+      (toluene); cross-checked against the feos-pcsaft project's literature
+      parameter record (feos-org/feos-pcsaft, parameters/gross2001.json,
+      toluene: m 2.8149, sigma 3.7169 A, epsilon/k 285.69 K, Mw 92.141).
+  POLY_PS:
+    m: 7600.0
+    sigma_Angstrom: 4.107
+    epsilon_over_k: 267.0
+    provenance: >-
+      AlHammadi & Abutaqiya, ACS Omega 5(45) 29530-29537 (2020), Table 1
+      (parameters attributed to Gross & Sadowski 2001; open access): a
+      polystyrene pseudo-component with Mw = 400,000 g/mol, m/Mw =
+      0.0190 mol/g (so m = 7600 chain segments), sigma = 4.107 A and
+      epsilon/k = 267.00 K. POLY_PS is the registered pseudo-component of
+      P1-07. k_ij = 0: no verifiable open citation for this pair's
+      interaction parameter was found, and tuning k_ij against a point is
+      forbidden (catalogue how-to).

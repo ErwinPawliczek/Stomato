@@ -18,3 +18,19 @@ dimerization:
       the tests/thermo round-trip against Z = 0.6299 exercises the
       chemical-theory algebra, not an independent prediction; an independent
       K2(T) source is the pending validation case.
+
+hexamerization:
+  HF:
+    log10_k6_a: -53.0054051
+    log10_k6_b: 8660.4
+    provenance: >-
+      HF monomer-hexamer chemical theory, 6 HF <=> (HF)6 with Kp = p_H/p_M^6
+      on a pressure basis: Jarry & Davis, J. Phys. Chem. 57, 600 (1953)
+      (also U.S. Bureau of Mines RI K-968) regress, from their saturated-vapour
+      densities over 273-378 K, log10 K = -42.38089 + 8660.4/T with K in
+      mmHg^-5; converted to a Pa basis with
+      a_Pa = a_mmHg - 5 log10(101325/760) = -53.0054051 (b unchanged). The
+      same paper's smoothed saturated-vapour association factors (n_nominal/
+      n_true) are 3.580 at 298.16 K and 3.438 at 303.16 K - the test anchors.
+      Schotte, Ind. Eng. Chem. Process Des. Dev. 19, 432 (1980), treats the
+      same equilibrium as the oligomer (hexamer) association of HF vapour.
