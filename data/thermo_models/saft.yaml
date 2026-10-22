@@ -423,7 +423,7 @@
     parameters, so this row runs the bridge's hand-rolled CPA-SRK kernel instead
     (measured in the T-07 exploration). T-15c promoted the row to provisional on
     2026-10-22 (teqp CI-runnable, L0 declaration present): the 16 runnable bound cases
-    measured 40/68 comparisons pass, and every miss is declared per case in `assessed:`
+    measured 40/62 comparisons pass, and every miss is declared per case in `assessed:`
     with the measured values — saturated-liquid Cp 5-21 % low (no residual-Cp term in
     the cubic + association EOS), saturated-vapour density at the 8 % vapour-tolerance
     edge, and MeOH/H2O bubble_P up to +22.5 % with k_ij = 0. The three 101.325 kPa

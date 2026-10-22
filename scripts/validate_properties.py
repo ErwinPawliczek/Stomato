@@ -34,6 +34,7 @@ import os
 import platform
 import re
 import subprocess
+from collections import Counter
 from functools import cache
 from pathlib import Path
 from typing import Any, cast
@@ -471,7 +472,17 @@ def environment() -> dict[str, Any]:
     }
 
 
-def print_report(rows: list[Row], sources: dict[str, str]) -> None:
+# Case ids repeat across case files (one copy per package that runs the same data point),
+# so a citation is looked up by (case id, package) with the shared "all" copy as fallback.
+Sources = dict[tuple[str, str], str]
+
+
+def _source(sources: Sources, case_id: str, package: str) -> str:
+    """Citation of ``case_id`` as run by ``package``; empty when the case is unknown."""
+    return sources.get((case_id, package)) or sources.get((case_id, "all"), "")
+
+
+def print_report(rows: list[Row], sources: Sources) -> None:
     """Per-package stdout table: n, pass rate, worst 5 misses with their sources."""
     for pkg in sorted({r.package for r in rows}):
         sub = [r for r in rows if r.package == pkg]
@@ -481,7 +492,7 @@ def print_report(rows: list[Row], sources: dict[str, str]) -> None:
         for r in worst:
             got = "n/a" if r.got is None else f"{r.got:.6g}"
             print(f"  {r.case} {r.property}: expected {r.expected:.6g} got {got} err {r.rel_err:.3g}")
-            print(f"    source: {sources.get(r.case, 'n/a')}")
+            print(f"    source: {_source(sources, r.case, r.package) or 'n/a'}")
         if not worst:
             print("  (no failing comparisons)")
 
@@ -941,10 +952,53 @@ def _catalogue_section(
             f"| [{row.id}](validation/{row.id}.md) | {row.family} | {row.status} | {l0_str} | "
             f"L1={n1} L2={n2} | [report](validation/{row.id}.md) |"
         )
+    lines += _status_summary(cat, l0, l1_ids, l2_ids)
     lines += ["", "### L4 cross-model pairs on the natural-gas slice feed", ""]
     for r in l4:
         lines.append(f"- `{r.pair}`: {'ok' if r.passed else 'FAIL'} — {r.detail}")
     lines.append("")
+    return lines
+
+
+STATUS_ORDER = ("validated", "provisional", "experimental")
+
+
+def _provisional_reason(row: ModelRow, checks: list[L0Result], n1: int, n2: int) -> str:
+    """One line on what keeps a provisional row from the audit's validated bar."""
+    failing = [r.check for r in checks if not r.passed]
+    if failing:
+        return f"L0 failing: {', '.join(failing)}"
+    if n1 == 0 or n2 == 0:
+        return f"needs >=1 L1 pure and >=1 L2 binary case (has L1={n1} L2={n2})"
+    if row.assessed:
+        return f"{len(row.assessed)} declared case misses (`assessed:` in the row; see its report)"
+    return "meets the audit bar; awaiting promotion review"
+
+
+def _status_summary(
+    cat: dict[str, ModelRow],
+    l0: dict[str, list[L0Result]],
+    l1_ids: set[str],
+    l2_ids: set[str],
+) -> list[str]:
+    """Status counts plus the one-line reason per provisional row (spec T-15 item 10)."""
+    counts = Counter(row.status for row in cat.values())
+    lines = [
+        "",
+        "### Status summary",
+        "",
+        f"{len(cat)} rows: " + ", ".join(f"{counts[s]} {s}" for s in STATUS_ORDER),
+        "",
+        "| provisional row | what keeps it from validated |",
+        "| --- | --- |",
+    ]
+    for row in sorted(cat.values(), key=lambda r: r.id):
+        if row.status != "provisional":
+            continue
+        n1 = len(set(row.validation) & l1_ids)
+        n2 = len(set(row.validation) & l2_ids)
+        reason = _provisional_reason(row, l0.get(row.id, []), n1, n2)
+        lines.append(f"| [{row.id}](validation/{row.id}.md) | {reason} |")
     return lines
 
 
@@ -957,7 +1011,7 @@ def _write_model_doc(
     rows: list[Row],
     l0: list[L0Result],
     l4: list[L4Result],
-    sources: dict[str, str],
+    sources: Sources,
 ) -> Path:
     """Write docs/validation/<id>.md — the per-model report the index links to."""
     out = REPO_ROOT / "docs" / "validation"
@@ -1020,7 +1074,7 @@ def _write_model_doc(
     if row.validation:
         lines += ["", "Declared case ids:", ""]
         for cid in row.validation:
-            src = sources.get(cid, "")
+            src = _source(sources, cid, row.id)
             lines.append(f"- `{cid}` — {src.removeprefix('literature:')}")
     if row.references:
         lines += ["", "## References", ""]
@@ -1034,7 +1088,7 @@ def _write_model_doc(
 
 def write_doc(
     rows: list[Row],
-    sources: dict[str, str],
+    sources: Sources,
     l0: dict[str, list[L0Result]] | None = None,
     l4: list[L4Result] | None = None,
 ) -> None:
@@ -1096,7 +1150,7 @@ def write_doc(
         for r in sorted(fails, key=lambda r: -(r.rel_err or 0.0)):
             lines.append(
                 f"| {r.case} | {r.package} | {r.property} | {_fmt(r.expected)} | {_fmt(r.got)} "
-                f"| {_fmt(r.rel_err)} | {sources.get(r.case, 'n/a')} |"
+                f"| {_fmt(r.rel_err)} | {_source(sources, r.case, r.package) or 'n/a'} |"
             )
     else:
         lines.append("None.")
@@ -1186,12 +1240,12 @@ def main(argv: list[str] | None = None) -> int:
     cases = _load_cases()
     rows = run_all(cases)
     write_results(rows)
-    print_report(rows, {c.id: c.source for c in cases})
+    print_report(rows, {(c.id, c.package): c.source for c in cases})
     total = len(rows)
     n_pass = sum(r.passed for r in rows)
     print(f"\ntotal: {n_pass}/{total} comparisons pass ({100.0 * n_pass / total:.1f} %)")
     if args.write_doc:
-        write_doc(rows, {c.id: c.source for c in cases})
+        write_doc(rows, {(c.id, c.package): c.source for c in cases})
         print(f"wrote {DOC_PATH}")
     return 0
 

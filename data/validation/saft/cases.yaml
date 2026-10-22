@@ -551,7 +551,7 @@ binary_cases:
     MeOH: 0.0486
     H2O: 0.9514
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 15932.0
     vapor_comp:
@@ -565,7 +565,7 @@ binary_cases:
     MeOH: 0.2131
     H2O: 0.7869
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 26131.0
     vapor_comp:
@@ -579,7 +579,7 @@ binary_cases:
     MeOH: 0.3252
     H2O: 0.6748
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 31544.0
     vapor_comp:
@@ -593,7 +593,7 @@ binary_cases:
     MeOH: 0.6279
     H2O: 0.3721
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 40850.0
     vapor_comp:
@@ -607,7 +607,7 @@ binary_cases:
     MeOH: 0.8037
     H2O: 0.1963
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 46450.0
     vapor_comp:
@@ -621,7 +621,7 @@ binary_cases:
     MeOH: 0.9461
     H2O: 0.0539
   T: 322.91
-  source: literature:Bayer, Sage & Lacey (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, methanol/water isothermal VLE at 322.91 K, via DDB Explorer VLE data set 468; retrieved 2026-10-20
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
   expected:
     bubble_P: 52142.0
     vapor_comp:
