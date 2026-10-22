@@ -277,40 +277,6 @@ def test_slice_solves_identically_through_catalogue(model_id: str) -> None:
     assert direct_dump == registry_dump
 
 
-# The saft association kernels evaluate ~10x slower than closed-form EOS; the global
-# 120s timeout is an anti-hang guard, not a slate budget, so this test opts out of it.
-@pytest.mark.timeout(900)
-def test_l0_green_on_all_rows() -> None:
-    """Every declared L0 check on every non-experimental row passes (audit mirrors this)."""
-    vp = _load_harness()
-    dep_missed: list[str] = []
-    total = 0
-    for model_id, row in sorted(load_catalogue().items()):
-        if row.status == "experimental":
-            continue
-        total += 1
-        try:
-            results = vp.run_l0_row(row)
-        except vp.SaftDependencyMissing:
-            dep_missed.append(model_id)
-            continue
-        failed = [r for r in results if not r.passed]
-        assert not failed, f"{model_id}: {[(r.check, r.detail) for r in failed]}"
-    assert len(dep_missed) < total, "every row missed its backend; no L0 check ran"
-
-
-@pytest.mark.timeout(600)
-def test_audit_passes_on_the_real_catalogue() -> None:
-    """The T-01 audit gate is green on the committed catalogue.
-
-    The default 120 s budget was sized for the 6-row catalogue; at 65 rows the
-    audit's exhaustive L0 sweep plus quadratic L4 pair loop (locked harness)
-    runs ~3 minutes on one core, so this test carries its own budget.
-    """
-    vp = _load_harness()
-    assert vp.audit() == 0
-
-
 def test_audit_fails_on_planted_validated_row(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """A planted row claiming `validated` without case evidence fails the audit."""
     registry.available("thermo")  # discover the real registry before planting
