@@ -15,10 +15,11 @@ The dynamic import in the registry is the only seam — a static
 
 Load errors are fatal and name the file and row: duplicate ids, unknown
 families/statuses/component classes/phases, unknown adapters, and option
-values outside the typed declarations (``ngdesign.thermo.options``). A row
-declaring a non-default cubic option loads (the vocabulary admits it) but
-:func:`build` raises :class:`NotImplementedError` naming the option until
-T-02 lands the implementation.
+values outside the typed declarations (``ngdesign.thermo.options``).
+
+``factory``/``build``: the row's adapter constructs the package; the typed
+options are re-validated on every build so an option value outside the
+declarations never reaches a solver.
 """
 
 from __future__ import annotations
@@ -40,6 +41,9 @@ from ngdesign.thermo.options import (
     EnthalpyMethod,
     GammaPhiOptions,
     KValueModel,
+    LiquidDensity,
+    MixingRule,
+    SourTerm,
     VolumeTranslation,
 )
 
@@ -61,7 +65,22 @@ class CubicOptions(BaseModel):
     kij_table: str
     alpha: AlphaFunction = AlphaFunction.DEFAULT
     translation: VolumeTranslation = VolumeTranslation.NONE
+    liquid_density: LiquidDensity = LiquidDensity.EOS
+    sour: SourTerm = SourTerm.NONE
     enthalpy: EnthalpyMethod = EnthalpyMethod.EOS
+    mixing: MixingRule = MixingRule.NONE
+
+    @property
+    def is_default(self) -> bool:
+        """True when every tunable option sits at its default (the pr/srk/pr78 path)."""
+        return (
+            self.alpha == AlphaFunction.DEFAULT
+            and self.translation == VolumeTranslation.NONE
+            and self.liquid_density == LiquidDensity.EOS
+            and self.sour == SourTerm.NONE
+            and self.enthalpy == EnthalpyMethod.EOS
+            and self.mixing == MixingRule.NONE
+        )
 
 
 class HelmholtzOptions(BaseModel):
@@ -114,6 +133,8 @@ class ModelRow(BaseModel):
     l0: dict[str, Any] = Field(default_factory=dict)
     l0_excluded: dict[str, str] = Field(default_factory=dict)
     l0_note: str = ""
+    l4_excluded: dict[str, str] = Field(default_factory=dict)
+    assessed: dict[str, str] = Field(default_factory=dict)
     source_file: str = ""
     source_row: int = 0
 
@@ -138,6 +159,14 @@ def _import_adapter(row: ModelRow, where: str) -> type:
     return adapter
 
 
+@cache
+def _option_aware_adapter() -> type:
+    """The T-02 adapter base that applies option values (lazy: avoids a cycle)."""
+    from ngdesign.thermo.cubic import OptionCubicEOS
+
+    return OptionCubicEOS
+
+
 def _validate_options(row: ModelRow, where: str) -> None:
     """Validate options against the typed declarations; cross-check pinned eos."""
     try:
@@ -150,6 +179,12 @@ def _validate_options(row: ModelRow, where: str) -> None:
                 raise CatalogueError(
                     f"{where}: options.eos {opts.eos!r} does not match adapter "
                     f"{row.adapter!r} (pins {eos_name!r})"
+                )
+            if not opts.is_default and not issubclass(adapter, _option_aware_adapter()):
+                raise CatalogueError(
+                    f"{where}: adapter {row.adapter!r} declares non-default cubic option "
+                    f"values but does not support option values (T-02); it would silently "
+                    f"ignore them - use an ngdesign.thermo.cubic:OptionCubicEOS adapter"
                 )
         elif row.family == "helmholtz":
             HelmholtzOptions(**row.options)
@@ -247,24 +282,15 @@ def describe(model_id: str) -> ModelRow:
 
 
 def build(row: ModelRow, *args: Any, **kwargs: Any) -> Thermo:
-    """Construct the row's package, enforcing non-default option declarations.
+    """Construct the row's package (spec T-02: every cubic option value builds).
 
     The row's typed options are constructor input for adapters that read them
-    (the gamma-phi pairing); callers may not override them per build.
+    (the cubic option factory and the gamma-phi pairing); callers may not
+    override them per build.
     """
     adapter = _import_adapter(row, f"catalogue row {row.id!r}")
     if row.family == "cubic":
-        opts = CubicOptions(**row.options)
-        pending = [
-            f"{field}={getattr(opts, field).value}"
-            for field in ("alpha", "translation", "enthalpy")
-            if getattr(opts, field) != _CUBIC_DEFAULTS[field]
-        ]
-        if pending:
-            raise NotImplementedError(
-                f"catalogue row {row.id!r} declares non-default cubic options "
-                f"[{', '.join(pending)}]; the implementations land with T-02"
-            )
+        CubicOptions(**row.options)  # unknown or invalid option values never build
     elif row.family == "helmholtz":
         hopts = HelmholtzOptions(**row.options)
         if hopts.formulation != _HELMHOLTZ_DEFAULTS["formulation"]:
@@ -274,21 +300,27 @@ def build(row: ModelRow, *args: Any, **kwargs: Any) -> Thermo:
     return cast(Thermo, adapter(*args, **kwargs))
 
 
-_CUBIC_DEFAULTS: dict[str, AlphaFunction | VolumeTranslation | EnthalpyMethod] = {
+_CUBIC_DEFAULTS: dict[
+    str, AlphaFunction | VolumeTranslation | EnthalpyMethod | SourTerm | MixingRule | LiquidDensity
+] = {
     "alpha": AlphaFunction.DEFAULT,
     "translation": VolumeTranslation.NONE,
     "enthalpy": EnthalpyMethod.EOS,
+    "liquid_density": LiquidDensity.EOS,
+    "sour": SourTerm.NONE,
+    "mixing": MixingRule.NONE,
 }
 
 _HELMHOLTZ_DEFAULTS: dict[str, str] = {"formulation": "IAPWS95"}
 
 
 def _has_nondefault_options(row: ModelRow) -> bool:
-    """True when the row declares options other than the T-02/T-04 defaults."""
+    """True when the row declares options other than the family defaults."""
     if row.family == "cubic":
         opts = CubicOptions(**row.options)
         return any(
-            getattr(opts, field) != _CUBIC_DEFAULTS[field] for field in ("alpha", "translation", "enthalpy")
+            getattr(opts, field) != _CUBIC_DEFAULTS[field]
+            for field in ("alpha", "translation", "enthalpy", "liquid_density", "sour", "mixing")
         )
     if row.family == "helmholtz":
         hopts = HelmholtzOptions(**row.options)

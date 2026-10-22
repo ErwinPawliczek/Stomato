@@ -18,13 +18,6 @@ family `saft` · status **experimental** · adapter `ngdesign.thermo.teqp_bridge
 
 | check | result | worst | measured |
 | --- | --- | --- | --- |
-| pure_psat_limit | ok | 0 | H2O@373.15K bubble 0 dew 0; H2O@423.15K bubble 0 dew 0; MeOH@337.7K bubble 0 dew 0; MeOH@298.15K bubble 0 dew 0 |
-| phase_identification | ok | 0 | H2O@373.15K ok; MeOH@320K ok |
-| round_trip | ok | 1.4e-07 | 350K/300000Pa T_ph 1.4e-07 H 8.4e-08 T_ps 1.4e-07 |
-| dhdT_cp | ok | 0 | 400K/100000Pa vapor cp 39.5898 dH/dT 39.5898 |
-| gibbs_duhem | ok | 5.6e-07 | ['H2O', 'MeOH']@400K/100000Pa vapor 5.6e-07; ['H2O', 'MeOH']@350K/300000Pa aqueous 5.7e-08 |
-| single_liquid_limit | ok | 0 | 373.15K/300000Pa kinds=['aqueous'] vf=0.0 |
-| determinism | ok | 0 | two instances bit-identical at 400K/100000Pa |
 
 Note: teqp 0.23.2's own CPA engine NaNs its fugacity coefficients at liquid-like densities and collapses the water saturation line with the published Kontogeorgis parameters, so this row runs the bridge's hand-rolled CPA-SRK kernel instead (measured in the T-07 exploration).
 

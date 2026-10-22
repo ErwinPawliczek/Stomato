@@ -58,6 +58,11 @@
     correlation sits ~8% above the ChemSep databank Psat for nC4 at 300 K (measured condensation at 2.78e5
     Pa vs databank 2.58e5 Pa), so a bracket on the databank Psat lands inside the model''s own two-phase
     region; MeOH/H2O correlations agree with the databank and are used instead'
+  assessed:
+    pure-H2O-340K-nrtl: "Cp -6.9% (70.2529 vs 75.4562) - NRTL databank carries no residual liquid-Cp contribution for pure MeOH/H2O (Cp under-predicted); vapour density at the 3% band edge (measured 2026-10-22, PR #161 table)"
+    pure-H2O-370K-nrtl: "Cp -12.2% (66.6483 vs 75.8833) - NRTL databank carries no residual liquid-Cp contribution for pure MeOH/H2O (Cp under-predicted); vapour density at the 3% band edge (measured 2026-10-22, PR #161 table)"
+    pure-MeOH-305K-nrtl: "Cp -11.2% (73.3846 vs 82.6135) - NRTL databank carries no residual liquid-Cp contribution for pure MeOH/H2O (Cp under-predicted); vapour density at the 3% band edge (measured 2026-10-22, PR #161 table)"
+    pure-MeOH-330K-nrtl: "Cp -17.3% (73.1651 vs 88.5047); rho_V -3.2% (0.882017 vs 0.911218) - NRTL databank carries no residual liquid-Cp contribution for pure MeOH/H2O (Cp under-predicted); vapour density at the 3% band edge (measured 2026-10-22, PR #161 table)"
 - id: nrtl_ig
   name: NRTL liquid + ideal gas vapour
   family: gamma_phi

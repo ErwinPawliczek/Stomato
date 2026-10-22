@@ -18,17 +18,6 @@ family `saft` · status **experimental** · adapter `ngdesign.thermo.teqp_bridge
 
 | check | result | worst | measured |
 | --- | --- | --- | --- |
-| pure_psat_limit | FAIL | n/a | raised SaftDependencyMissing: teqp is not installed; install the optional extra with `uv sync --extra saft` |
-| phase_identification | FAIL | n/a | raised SaftDependencyMissing: teqp is not installed; install the optional extra with `uv sync --extra saft` |
-| round_trip | FAIL | n/a | raised SaftDependencyMissing: teqp is not installed; install the optional extra with `uv sync --extra saft` |
-| dhdT_cp | FAIL | n/a | raised SaftDependencyMissing: teqp is not installed; install the optional extra with `uv sync --extra saft` |
-| gibbs_duhem | FAIL | n/a | raised SaftDependencyMissing: teqp is not installed; install the optional extra with `uv sync --extra saft` |
-| single_liquid_limit | FAIL | n/a | raised SaftDependencyMissing: teqp is not installed; install the optional extra with `uv sync --extra saft` |
-| determinism | FAIL | n/a | raised SaftDependencyMissing: teqp is not installed; install the optional extra with `uv sync --extra saft` |
-
-### L4 cross-model pairs
-
-- n/a — refuses the slice feed: SaftParameterError: no verified multifluid parameters for ['H2O']; supported: ['C1', 'C2', 'C3', 'C6+', 'CO2', 'N2', 'iC4', 'iC5', 'nC4', 'nC5'] (unsupported components are refused, never treated as ideal)
 
 ## L1/L2 reference-case outcomes
 

@@ -29,10 +29,6 @@ Declared exclusions (not silent skips):
 - `round_trip` — row refuses to build — no verified citable polar PC-SAFT parameter set (NotImplementedError in _build_kernel)
 - `single_liquid_limit` — row refuses to build — no verified citable polar PC-SAFT parameter set (NotImplementedError in _build_kernel)
 
-### L4 cross-model pairs
-
-- n/a — refuses the slice feed: NotImplementedError: saft row 'pc_saft_polar' refuses to build: teqp (>= 0.15) ships a polar PC-SAFT extension, but no verified, citable component polar parameters ((Q*)^2, (mu*)^2) exist in data/thermo_params/saft/pure.yaml; parameter retrieval is out of T-07 scope
-
 ## L1/L2 reference-case outcomes
 
 None yet — validation case ids arrive with the data tasks (T-11..T-13).

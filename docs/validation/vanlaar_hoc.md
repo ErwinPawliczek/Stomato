@@ -18,17 +18,6 @@ family `gamma_phi` · status **experimental** · adapter `ngdesign.thermo.gamma_
 
 | check | result | worst | measured |
 | --- | --- | --- | --- |
-| pure_psat_limit | FAIL | n/a | raised NotImplementedError: the Hayden-O'Connell (1975) second-virial vapour model is not implemented (spec T-03 deviation: no complete, citable open equation set or association-parameter table was verifiable, so the row registers as experimental and refuses to build rather than invent physics) - select vapour 'ideal' or a cubic vapour ('rk', 'pr') |
-| phase_identification | FAIL | n/a | raised NotImplementedError: the Hayden-O'Connell (1975) second-virial vapour model is not implemented (spec T-03 deviation: no complete, citable open equation set or association-parameter table was verifiable, so the row registers as experimental and refuses to build rather than invent physics) - select vapour 'ideal' or a cubic vapour ('rk', 'pr') |
-| round_trip | FAIL | n/a | raised ValueError: van Laar binary parameters for pair H2O (7732-18-5) / MeOH (67-56-1) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support |
-| dhdT_cp | FAIL | n/a | raised ValueError: van Laar binary parameters for pair H2O (7732-18-5) / MeOH (67-56-1) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support |
-| gibbs_duhem | FAIL | n/a | raised ValueError: van Laar binary parameters for pair H2O (7732-18-5) / MeOH (67-56-1) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support |
-| determinism | FAIL | n/a | raised ValueError: van Laar binary parameters for pair H2O (7732-18-5) / MeOH (67-56-1) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support |
-| single_liquid_limit | FAIL | n/a | raised NotImplementedError: the Hayden-O'Connell (1975) second-virial vapour model is not implemented (spec T-03 deviation: no complete, citable open equation set or association-parameter table was verifiable, so the row registers as experimental and refuses to build rather than invent physics) - select vapour 'ideal' or a cubic vapour ('rk', 'pr') |
-
-### L4 cross-model pairs
-
-- n/a — refuses the slice feed: ValueError: van Laar binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 
 ## L1/L2 reference-case outcomes
 

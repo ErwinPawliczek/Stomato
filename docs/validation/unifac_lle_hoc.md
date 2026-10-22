@@ -18,17 +18,6 @@ family `gamma_phi` · status **experimental** · adapter `ngdesign.thermo.gamma_
 
 | check | result | worst | measured |
 | --- | --- | --- | --- |
-| pure_psat_limit | FAIL | n/a | raised ValueError: no UNIFAC group assignment for MeOH (67-56-1) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems) |
-| phase_identification | FAIL | n/a | raised ValueError: no UNIFAC group assignment for MeOH (67-56-1) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems) |
-| round_trip | FAIL | n/a | raised ValueError: no UNIFAC group assignment for MeOH (67-56-1) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems) |
-| dhdT_cp | FAIL | n/a | raised ValueError: no UNIFAC group assignment for MeOH (67-56-1) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems) |
-| gibbs_duhem | FAIL | n/a | raised ValueError: no UNIFAC group assignment for MeOH (67-56-1) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems) |
-| determinism | FAIL | n/a | raised ValueError: no UNIFAC group assignment for MeOH (67-56-1) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems) |
-| single_liquid_limit | FAIL | n/a | raised ValueError: no UNIFAC group assignment for EtOH (64-17-5) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems) |
-
-### L4 cross-model pairs
-
-- n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C1 (74-82-8) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 
 ## L1/L2 reference-case outcomes
 

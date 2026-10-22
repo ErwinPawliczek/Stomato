@@ -21,10 +21,6 @@ family `helmholtz` · status **experimental** · adapter `ngdesign.thermo.helmho
 
 Note: Placeholder row: the method is recorded, not implemented.
 
-### L4 cross-model pairs
-
-- n/a — refuses the slice feed: UnavailableBackend: helmholtz-family placeholder row has no dew_point implementation; the backend lands with a later spec (teqp bridge, T-07)
-
 ## L1/L2 reference-case outcomes
 
 None yet — validation case ids arrive with the data tasks (T-11..T-13).
