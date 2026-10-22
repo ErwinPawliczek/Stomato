@@ -150,32 +150,36 @@ def packages_for(case: Case) -> tuple[str, ...]:
     return (case.package,)
 
 
-_FAMILY_ID_MARKERS = ("-pure-", "-c1c3-", "-c1co2-", "-ng-dew-morch-")
+@cache
+def _catalogue_rows() -> dict[str, ModelRow]:
+    """The catalogue rows by id (cached: every assessment lookup needs them)."""
+    return catalogue.load_catalogue()
 
 
-def _root_case_id(case_id: str) -> str:
-    """The root-file id a family case derives from (T-02..T-07 per-row copies).
-
-    The adapter specs copy the root pure/binary/multicomponent points per
-    catalogue row as ``<row>-pure-...``, ``<row>-c1c3-...`` etc.; the assessment
-    rules match failure families, so those copies assess against the root id.
-    """
-    for marker in _FAMILY_ID_MARKERS:
-        idx = case_id.find(marker)
-        if idx > 0:
-            return case_id[idx + 1 :]
-    return case_id
+@cache
+def _row_status(row_id: str) -> str:
+    """The status of the catalogue row ``row_id``, or ``""`` when not a row."""
+    row = _catalogue_rows().get(row_id)
+    return row.status if row is not None else ""
 
 
-def xfail_reason(case: Case, failed_props: frozenset[str]) -> str | None:
+def xfail_reason(case: Case, failed_props: frozenset[str], pkg: str | None = None) -> str | None:
     """Assessment for a case whose comparisons failed, or None when it must go red.
 
-    Each rule matches one failure family observed on the first run AND guards the failing
-    properties, so a future case failing on a different property is not silently classified
-    here — it fails the test and forces a fresh assessment. Used by the reference-case tests
-    (dynamic xfail) and by ``write_doc`` (assessment section). Per-row case copies match
-    their root-file family id (see :func:`_root_case_id`).
+    Per-row declarations first: a row's own ``assessed`` map (exact case id, with
+    the measured numbers in the note) assesses the failures observed on THAT row.
+    The remaining rules match failure families of non-catalogue packages, each
+    guarding the failing properties so a future case failing on a different
+    property is not silently classified here — it fails the test and forces a
+    fresh assessment. Used by the reference-case tests (dynamic xfail) and by
+    ``write_doc`` (assessment section).
     """
+    if pkg is not None:
+        row = _catalogue_rows().get(pkg)
+        if row is not None:
+            note = row.assessed.get(case.id)
+            if note is not None:
+                return note
     if (
         case.package == "pc_saft"
         and case.id.startswith("pure-CO2-")
@@ -188,32 +192,11 @@ def xfail_reason(case: Case, failed_props: frozenset[str]) -> str | None:
             "saturated-phase properties are evaluated at the reference Psat, where this model's "
             "liquid is stretched (model limitation; assessed in docs/validation.md)"
         )
-    case_id = _root_case_id(case.id)
-    if case_id.startswith("pure-") and failed_props <= {"rho_L", "rho_V", "Cp"}:
-        return (
-            "cubic saturation properties beyond tolerance vs the CoolProp reference EOS "
-            "(known cubic EOS limitation, worst near Tc; assessed in docs/validation.md)"
-        )
+    case_id = case.id
     if case_id.startswith("meohh2o-"):
         return (
             "NRTL databank MeOH/H2O parameters do not reproduce the 1927/1929 isotherms within "
             "2 % bubble P / 0.02 abs y (databank limitation; assessed in docs/validation.md)"
-        )
-    if case_id.startswith(("c1c3-", "c1co2-")) and failed_props <= {"bubble_P", "vapor_comp"}:
-        return (
-            "k_ij=0 cubic bubble pressure / vapour composition just beyond tolerance near the "
-            "mixture critical region (model limitation; assessed in docs/validation.md)"
-        )
-    if case_id == "c1h2o-410.9K-13.10MPa":
-        return (
-            "cubic two-phase flash yields an unphysical water/methane phase split at 13 MPa, so "
-            "the aqueous methane solubility is not representable (flagged for thermo investigation)"
-        )
-    if case_id.startswith("ng-dew-morch-") and failed_props <= {"dew_P"}:
-        return (
-            "dew pressures of the asymmetric C1/C2/nC5 synthetic natural gas ternary run 10-35 % "
-            "above the Mørch et al. (2006) cooled-mirror measurements under databank/zero k_ij "
-            "(model limitation, issue #130; assessed in docs/validation.md)"
         )
     if case_id == "slice-inlet-K-500psia-300K":
         return (
@@ -231,9 +214,15 @@ def _load_cases() -> list[Case]:
         raw = yaml.safe_load(path.read_text())
         for section in ("pure_cases", "binary_cases", "multicomponent_cases"):
             for entry in raw.get(section) or []:
-                if str(entry.get("package", "all")).startswith("pending:"):
+                pkg_name = str(entry.get("package", "all"))
+                if pkg_name.startswith("pending:"):
                     # Catalogue row not registered yet (T-02..T-07 adapter specs): the data
                     # sweep commits the cases ahead of the model; skip until the id lands.
+                    continue
+                if _row_status(pkg_name) == "experimental":
+                    # An experimental row runs no validation cases: its physics is not
+                    # implemented (the adapter refuses at first use); the cases stay bound
+                    # in the row definition until the row reaches provisional.
                     continue
                 case = Case(
                     id=str(entry["id"]),
@@ -695,6 +684,10 @@ def _l0_determinism(row: ModelRow, params: dict[str, Any]) -> L0Result:
 
 def run_l0_row(row: ModelRow) -> list[L0Result]:
     """Run every declared L0 check on one catalogue row (via ``catalogue.build``)."""
+    if row.status == "experimental":
+        # No implemented physics to check yet (first-use refusal); the checks
+        # run when the row reaches provisional.
+        return []
     pkg = catalogue.build(row)
     out: list[L0Result] = []
     for check, params in row.l0.items():
@@ -740,7 +733,12 @@ def run_l4(rows: dict[str, ModelRow]) -> list[L4Result]:
     report (measured T-03: ~700 identical lines per cubic row).
     """
     out: list[L4Result] = []
-    ids = [rid for rid in sorted(rows) if set(rows[rid].applicability.component_classes) & L4_PAIRING_CLASSES]
+    ids = [
+        rid
+        for rid in sorted(rows)
+        if rows[rid].status != "experimental"
+        and set(rows[rid].applicability.component_classes) & L4_PAIRING_CLASSES
+    ]
     points: dict[str, tuple[float, float]] = {}
     for rid in ids:
         try:
@@ -1074,14 +1072,19 @@ def write_doc(
     lines.append("")
     assessed: dict[str, str] = {}
     unassessed = 0
-    by_case: dict[str, frozenset[str]] = {}
+    by_case_pkg: dict[tuple[str, str], frozenset[str]] = {}
     for r in fails:
-        by_case[r.case] = by_case.get(r.case, frozenset()) | {r.property}
-    for cid, props in sorted(by_case.items()):
+        key = (r.case, r.package)
+        by_case_pkg[key] = by_case_pkg.get(key, frozenset()) | {r.property}
+    per_case_rows: dict[str, int] = {}
+    for cid, _pkg in by_case_pkg:
+        per_case_rows[cid] = per_case_rows.get(cid, 0) + 1
+    for (cid, pkg_id), props in sorted(by_case_pkg.items()):
         case = next((c for c in _load_cases() if c.id == cid), None)
-        reason = xfail_reason(case, props) if case else None
+        reason = xfail_reason(case, props, pkg_id) if case else None
         if reason:
-            assessed[cid] = reason
+            label = cid if per_case_rows[cid] == 1 else f"{cid} ({pkg_id})"
+            assessed[label] = reason
         else:
             unassessed += 1
     if assessed:

@@ -44,10 +44,19 @@ def test_reference_case(case: Case) -> None:
     if not failures and not crashes:
         return
     detail = "\n".join([*(_format_row(row, case.source) for row in failures), *crashes, *dep_skips])
-    failed_props = frozenset(row.property for row in failures)
-    reason = xfail_reason(case, failed_props | {"crash" for _ in crashes})
-    if reason is not None:
-        pytest.xfail(f"{reason}\n{detail}")
+    # Per-row assessments (row, failing properties): a case failing on several
+    # catalogue rows is xfailed only when EVERY failing pair is declared in that
+    # row's ``assessed`` map; a crash on any package is never declared.
+    per_pkg: dict[str, frozenset[str]] = {}
+    for row in failures:
+        per_pkg[row.package] = per_pkg.get(row.package, frozenset()) | {row.property}
+    reasons = [
+        f"{pkg_id}: {reason}"
+        for pkg_id, props in sorted(per_pkg.items())
+        if (reason := xfail_reason(case, props, pkg_id)) is not None
+    ]
+    if reasons and not crashes and len(reasons) == len(per_pkg):
+        pytest.xfail("\n".join(reasons) + f"\n{detail}")
     pytest.fail(
         f"{case.id}: {len(failures)} failing comparison(s), {len(crashes)} package crash(es)"
         f" (source: {case.source})\n{detail}"

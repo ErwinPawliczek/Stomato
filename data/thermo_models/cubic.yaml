@@ -1016,6 +1016,12 @@
     a_prime_terms: a''_j = G_j a_w(T)[1-(T/Tcw)^0.8] with published group contributions (g_CH4 1.3580,
       g_CH3 0.9822, g_CH2 1.0780; G_i by group sum) for methane through n-hexane; components outside
       the published paraffinic groups carry no a'' term
+    coverage_note: >-
+      The Kabadi-Danner water interaction is exercised by the family L0 checks (H2O sits in the
+      pure_psat_limit and phase_identification probe sets) but by no mixture validation case in
+      this PR: the C1/water two-phase flash at 410.9 K / 13.10 MPa shows the unphysical cubic
+      water/methane split flagged for the plain rows (issue #136), so a water/hydrocarbon case
+      for this row lands with the aqueous-phase work rather than a red or token case here.
   applicability:
     component_classes:
     - hydrocarbon
@@ -1148,6 +1154,11 @@
     eos_constants: a_c = 0.470507 R^2 Tc^2/Pc, b = 0.0740740 R Tc/Pc, denominator v^2 + 2.5 b v -
       1.5 b^2; alpha coefficients [L, M, N] from the paper's fitted normal-paraffin table (C1-C6),
       generalised Twu form for other components (documented fallback)
+    implementation: >-
+      EXPERIMENTAL — refuses at first use. TSTMIX reproduces the paper's alpha form but not the
+      TST liquid-volume form or its mixture fugacity expressions, so measured volumes are wrong
+      by an order of magnitude (PR #161 review). The validation cases stay bound above and are
+      not run until the TST EOS form is implemented and the row returns to provisional.
   applicability:
     component_classes:
     - hydrocarbon
@@ -1166,7 +1177,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: experimental
   validation:
   - twu-sim-tassone-pure-C1-125K
   - twu-sim-tassone-pure-C3-300K

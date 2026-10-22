@@ -134,6 +134,7 @@ class ModelRow(BaseModel):
     l0_excluded: dict[str, str] = Field(default_factory=dict)
     l0_note: str = ""
     l4_excluded: dict[str, str] = Field(default_factory=dict)
+    assessed: dict[str, str] = Field(default_factory=dict)
     source_file: str = ""
     source_row: int = 0
 

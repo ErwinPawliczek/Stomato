@@ -906,8 +906,8 @@ _LK_SIMPLE = {
     "c2": 0.0186984,
     "c3": 0.0,
     "c4": 0.042724,
-    "d1": 0.000155488,
-    "d2": 0.000623689,
+    "d1": 0.155428e-4,
+    "d2": 0.623689e-4,
     "beta": 0.65392,
     "gamma": 0.060167,
 }
@@ -920,10 +920,10 @@ _LK_REFERENCE = {
     "c2": 0.0503618,
     "c3": 0.016901,
     "c4": 0.041577,
-    "d1": 0.00048736,
-    "d2": 0.0740336,
+    "d1": 0.487360e-4,
+    "d2": 0.740336e-5,
     "beta": 1.226,
-    "gamma": 0.037854,
+    "gamma": 0.03754,
 }
 _LK_OMEGA_REF = 0.3978
 _LK_R = _R
@@ -944,18 +944,25 @@ def _lk_solve_vr(Tr: float, Pr: float, p: dict[str, float], gas: bool) -> float 
         )
         return Pr * vr / Tr - (1.0 + B / vr + C / (vr * vr) + D / vr**5 + E)
 
-    grid = [10.0 ** (-4.0 + 0.25 * i) for i in range(33)]
+    # Lee & Kesler (1975): the vapour root is the largest positive solution, the
+    # liquid root the smallest. At low Tr the liquid-root region can be narrower
+    # than a coarse scan step -- a positive island between two negative ends
+    # (the 0.25-decade scan walked straight over the compressed-liquid root and
+    # handed the vapour root to the liquid) -- so bracket on a dense log scan.
+    lo0, hi0, steps = 1e-6, 1e6, 2000
+    step = (math.log10(hi0) - math.log10(lo0)) / steps
     brackets = []
-    v_prev, f_prev = grid[0], f(grid[0])
-    for v in grid[1:]:
+    v_prev, f_prev = lo0, f(lo0)
+    for i in range(1, steps + 1):
+        v = 10.0 ** (math.log10(lo0) + i * step)
         fv = f(v)
         if f_prev * fv <= 0.0:
             brackets.append((v_prev, v))
         v_prev, f_prev = v, fv
     if not brackets:
         return None
-    lo, hi = brackets[-1] if gas else brackets[0]
-    for _ in range(150):
+    lo, hi = brackets[0] if not gas else brackets[-1]
+    for _ in range(120):
         mid = 0.5 * (lo + hi)
         if f(lo) * f(mid) <= 0.0:
             hi = mid
@@ -1156,11 +1163,20 @@ def configure_options(
             )
 
     if options.translation == VolumeTranslation.PENELOUX:
-        # Peneloux (1982) c from the Rackett (1970) Z_RA correlation.
-        eos_kwargs["cs"] = [
-            0.4078 * _LK_R * tc / pc * (0.29441 - (0.29056 - 0.08775 * om))
-            for tc, pc, om in zip(constants.Tcs, constants.Pcs, constants.omegas, strict=True)
-        ]
+        # The constant volume shift c from the Rackett (1970) Z_RA, with the
+        # EOS-family correlation: SRK uses Peneloux, Rauzy & Freze (1982); PR
+        # uses Jhaveri & Youngren (1988) -- PR over-predicts liquid density, so
+        # its shift acts opposite to SRK's.
+        if getattr(eos, "__name__", "").startswith("PR"):
+            eos_kwargs["cs"] = [
+                0.50033 * _LK_R * tc / pc * (0.25969 - (0.29056 - 0.08775 * om))
+                for tc, pc, om in zip(constants.Tcs, constants.Pcs, constants.omegas, strict=True)
+            ]
+        else:
+            eos_kwargs["cs"] = [
+                0.40768 * _LK_R * tc / pc * (0.29441 - (0.29056 - 0.08775 * om))
+                for tc, pc, om in zip(constants.Tcs, constants.Pcs, constants.omegas, strict=True)
+            ]
 
     if options.mixing == MixingRule.KABADI_DANNER:
         for cid, tc, pc in zip(ids, constants.Tcs, constants.Pcs, strict=True):
@@ -1309,14 +1325,14 @@ class SrkMathiasCopemanThermo(OptionCubicEOS):
 
 
 class PrPenelouxThermo(OptionCubicEOS):
-    """PRMIXTranslated with Rackett-derived Peneloux (1982) volume translation."""
+    """PRMIXTranslated with the Jhaveri & Youngren (1988) Rackett-derived shift."""
 
     eos = PRMIXTranslated
     options = CubicOptionValues(translation=VolumeTranslation.PENELOUX)
 
 
 class SrkPenelouxThermo(OptionCubicEOS):
-    """SRKMIXTranslated with Rackett-derived Peneloux (1982) volume translation."""
+    """SRKMIXTranslated with the Peneloux, Rauzy & Freze (1982) Rackett-derived shift."""
 
     eos = SRKMIXTranslated
     options = CubicOptionValues(translation=VolumeTranslation.PENELOUX)
@@ -1350,11 +1366,30 @@ class ZudkevitchJoffeRkThermo(OptionCubicEOS):
     options = CubicOptionValues(alpha=AlphaFunction.ZUDKEVITCH_JOFFE)
 
 
+_TST_REFUSAL = (
+    "Twu-Sim-Tassone row: the TST liquid-volume form and its mixture fugacity expressions "
+    "are not implemented (TSTMIX subclasses PRMIX and would predict liquid volumes wrong "
+    "by an order of magnitude). The row is experimental: it refuses at first use and runs "
+    "no validation cases (PR #161 review; issue #136)."
+)
+
+
 class TwuSimTassoneThermo(OptionCubicEOS):
-    """The Twu-Sim-Tassone (2002) cubic EOS with its fitted paraffin alpha table."""
+    """Twu-Sim-Tassone cubic (EXPERIMENTAL: builds, refuses at first use).
+
+    TSTMIX reproduces the paper's alpha form but not its distinct EOS volume
+    form, so the row cannot be validated; it stays in the catalogue as
+    ``experimental`` and raises :class:`NotImplementedError` on any flash.
+    """
 
     eos = TSTMIX
     options = CubicOptionValues(alpha=AlphaFunction.TWU_SIM_TASSONE)
+
+    def _build_flasher(self, ids: tuple[str, ...]) -> Any:
+        raise NotImplementedError(_TST_REFUSAL)
+
+    def _build_flasher_vl(self, ids: tuple[str, ...]) -> Any:
+        raise NotImplementedError(_TST_REFUSAL)
 
 
 class PrBmThermo(OptionCubicEOS):
@@ -1382,3 +1417,4 @@ class SrkLeeKeslerThermo(OptionCubicEOS):
     """SRKMIX VLE with Lee-Kesler (1975) enthalpy departures."""
 
     eos = SRKMIX
+    options = CubicOptionValues(enthalpy=EnthalpyMethod.LEE_KESLER)
