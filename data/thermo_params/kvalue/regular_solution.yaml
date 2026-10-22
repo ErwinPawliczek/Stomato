@@ -1,0 +1,30 @@
+# Regular-solution liquid constants for the Chao-Seader / Grayson-Streed gamma-phi
+# methods (spec T-05): hypothetical liquid molar volume V_L, solubility parameter
+# delta and Chao-Seader acentric factor omega_cs per component.
+#
+#   ln gamma_i = V_L,i * (delta_i - delta_bar)^2 / (R T),   delta_bar = sum_j x_j V_L,j delta_j / sum_j x_j V_L,j
+#
+# Units: V_L in m3/mol, delta in Pa^0.5 (1 (cal/cm3)^0.5 = 2045.48 Pa^0.5).
+#
+# Provenance: Chao & Seader, AIChE J. 7(4):598-605 (1961), Table 1 and the API
+# Technical Data Book chapter 8 tables as reproduced in Reid, Prausnitz & Poling,
+# "The Properties of Gases and Liquids". Cross-checked against the DWSIM
+# ChaoSeader.vb ported fixtures for CH4 (V=52, delta=5.68, omega=0.011), nC5
+# (116, 7.02, 0.251) and nC10 (196, 7.72, 0.490), retrieved 2026-10-21. The H2,
+# N2, CO2 and H2S entries are the Grayson-Streed extended-set table values
+# (DWSIM GraysonStreed.vb) and are PENDING VERIFICATION against a primary
+# source; pseudo-components (C6+) have no regular-solution constants and are
+# refused by the correlation rows that need them.
+
+components:
+  C1:  {v_liq: 5.2e-05,   delta: 11618.3, omega_cs: 0.011}
+  C2:  {v_liq: 6.8e-05,   delta: 12375.2, omega_cs: 0.105}
+  C3:  {v_liq: 9.1e-05,   delta: 13091.1, omega_cs: 0.153}
+  iC4: {v_liq: 1.05e-04,  delta: 13766.1, omega_cs: 0.182}
+  nC4: {v_liq: 1.014e-04, delta: 13766.1, omega_cs: 0.201}
+  iC5: {v_liq: 1.16e-04,  delta: 14359.3, omega_cs: 0.251}
+  nC5: {v_liq: 1.16e-04,  delta: 14359.3, omega_cs: 0.251}
+  nC6: {v_liq: 1.30e-04,  delta: 14870.6, omega_cs: 0.300}
+  N2:  {v_liq: 6.45e-05,  delta: 9081.8,  omega_cs: 0.040}
+  CO2: {v_liq: 5.5e-05,   delta: 13029.7, omega_cs: 0.225}
+  H2S: {v_liq: 8.42e-05,  delta: 12334.2, omega_cs: 0.100}
