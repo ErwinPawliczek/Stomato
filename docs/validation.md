@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-22T08:44:05+00:00 from `data/validation/results.json` (git 441bb1c, CoolProp 8.0.0).
+Generated 2026-10-22T09:19:47+00:00 from `data/validation/results.json` (git 9214c56, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -42,8 +42,10 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [coolprop_heos](validation/coolprop_heos.md) | helmholtz | provisional | 7/7 | L1=0 L2=0 | [report](validation/coolprop_heos.md) |
 | [cpa_pr](validation/cpa_pr.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/cpa_pr.md) |
 | [cpa_srk](validation/cpa_srk.md) | saft | experimental | — | L1=2 L2=9 | [report](validation/cpa_srk.md) |
+| [enrtl_nacl_water](validation/enrtl_nacl_water.md) | electrolyte | experimental | — | L1=0 L2=0 | [report](validation/enrtl_nacl_water.md) |
 | [eos_cg](validation/eos_cg.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/eos_cg.md) |
 | [esso-tabular](validation/esso-tabular.md) | kvalue | provisional | 5/5 | L1=0 L2=0 | [report](validation/esso-tabular.md) |
+| [ext_uniquac_nacl_water](validation/ext_uniquac_nacl_water.md) | electrolyte | experimental | — | L1=0 L2=0 | [report](validation/ext_uniquac_nacl_water.md) |
 | [flory_huggins](validation/flory_huggins.md) | special | experimental | — | L1=0 L2=0 | [report](validation/flory_huggins.md) |
 | [gerg2008](validation/gerg2008.md) | helmholtz | provisional | 7/7 | L1=5 L2=10 | [report](validation/gerg2008.md) |
 | [gerg2008_teqp](validation/gerg2008_teqp.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/gerg2008_teqp.md) |
@@ -75,6 +77,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [pc_saft](validation/pc_saft.md) | saft | experimental | — | L1=6 L2=4 | [report](validation/pc_saft.md) |
 | [pc_saft_assoc](validation/pc_saft_assoc.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_assoc.md) |
 | [pc_saft_polar](validation/pc_saft_polar.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_polar.md) |
+| [pitzer_nacl_water](validation/pitzer_nacl_water.md) | electrolyte | provisional | 3/3 | L1=0 L2=0 | [report](validation/pitzer_nacl_water.md) |
 | [polymer_nrtl](validation/polymer_nrtl.md) | special | experimental | — | L1=0 L2=0 | [report](validation/polymer_nrtl.md) |
 | [polymer_pc_saft](validation/polymer_pc_saft.md) | special | experimental | — | L1=0 L2=0 | [report](validation/polymer_pc_saft.md) |
 | [pr](validation/pr.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/pr.md) |
@@ -97,6 +100,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [soft_saft](validation/soft_saft.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/soft_saft.md) |
 | [sour-pr](validation/sour-pr.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/sour-pr.md) |
 | [sour-srk](validation/sour-srk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/sour-srk.md) |
+| [sour_water](validation/sour_water.md) | electrolyte | provisional | 3/3 | L1=0 L2=0 | [report](validation/sour_water.md) |
 | [srk](validation/srk.md) | cubic | validated | 7/7 | L1=40 L2=52 | [report](validation/srk.md) |
 | [srk-boston-mathias](validation/srk-boston-mathias.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/srk-boston-mathias.md) |
 | [srk-lee-kesler-enthalpy](validation/srk-lee-kesler-enthalpy.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/srk-lee-kesler-enthalpy.md) |
