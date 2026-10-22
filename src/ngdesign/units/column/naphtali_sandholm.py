@@ -16,6 +16,7 @@ from .inside_out import (
     _live_residual_vector,
     _Profile,
     _residual_row_blocks,
+    _residual_scales,
     _stage_k_values,
     _v_free_indices,
 )
@@ -168,7 +169,11 @@ def _ns_residual_function(
     l0: float,
     k_fallback: list[dict[str, float]],
     t_bot_tear: float | None,
-) -> tuple[Callable[[list[float]], list[float]], list[int], list[int]]:
+    scales: list[float] | None,
+    k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]],
+    k_misses: list[int],
+    h_evals: list[int],
+) -> Callable[[list[float]], list[float]]:
     """Build the residual callable for one Newton pass (fresh closures per pass).
 
     The rows are THE shared live residual (`_live_residual_vector`, inside_out.py
@@ -181,19 +186,30 @@ def _ns_residual_function(
     residual by construction. No frozen enthalpy lines and no absolute rows
     remain in NS.
 
+    ``scales`` (P1-11 ruling (c) on #153): the pass's FROZEN per-row M scale
+    vector, computed by the caller from the pass's reference state (the iterate
+    the Jacobian is built from) via `_residual_scales` and held fixed for the
+    FD Jacobian, every line-search trial and the acceptance test of this pass.
+    A scale derived per evaluation from the state being evaluated saturates the
+    dominated rows at plus/minus one - not a smooth function of the unknowns -
+    and the max-norm descent test then rejects the full steps that reduce the
+    true imbalance (measured on the N4-r0.8 stripper). The cache and the
+    counters are created by the caller and shared with the scale derivation,
+    so the frozen scale costs no flashes beyond the cache entries it fills.
+    ``None`` keeps the per-evaluation scale derivation - the warm two-tear
+    path only, where pass-frozen scales measurably degrade the FD Jacobian
+    (see `_naphtali_sandholm` for the deethanizer regression measurement).
+
     A per-stage K cache keeps the finite-difference Jacobian affordable: a
     perturbation of one packed unknown changes only its own stage's state, so
     all other stages hit the cache and cost no flash. The pass-frozen K models
     are the last-resort fallback when neither the live evaluation nor the
     k_estimate fallback is evaluable at a trial state.
 
-    Returns (residuals, k_misses, h_evals): the residual callable and two
+    Returns the residual callable; ``k_misses``/``h_evals`` are the caller's
     per-pass counters (K evaluations beyond the cache, live-enthalpy
     evaluations) for the flash-cost measurement the ruling requires.
     """
-    k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]] = {}
-    k_misses = [0]
-    h_evals = [0]
 
     def residuals(u: list[float]) -> list[float]:
         xs = _unpack_x(u, col)
@@ -210,9 +226,10 @@ def _ns_residual_function(
             k_cache=k_cache,
             k_misses=k_misses,
             h_evals=h_evals,
+            scales=scales,
         )
 
-    return residuals, k_misses, h_evals
+    return residuals
 
 
 def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None) -> _Profile:
@@ -226,7 +243,9 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
     package enthalpies are evaluated live at every state the walk visits, the
     pass-frozen K models survive only as the last-resort fallback, and the FD
     Jacobian, the LM damping and the line-search norms all read the exact
-    gate's own vector.
+    gate's own vector - with the per-row M scale frozen once per pass from the
+    pass's reference state (ruling (c) on #153; the gate freezes it from the
+    state it gates, the only frozen quantity that differs).
     """
     n = col.n
     l0 = prof.l0
@@ -267,9 +286,46 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
             or {cid: 1.0 for cid in col.comps}
             for j in range(n)
         ]
-        residuals, k_misses, h_evals = _ns_residual_function(col, tb, l0, k_stages, t_bot_tear)
-
+        # Ruling (c) on #153: the per-row M scale is a function of the iterate
+        # (a row divided by its own state-derived scale saturates at plus/minus
+        # one and the max-norm descent test then rejects the full steps that
+        # reduce the true imbalance - measured on the N4-r0.8 stripper), so it
+        # is computed ONCE per pass, here, from the pass's reference state
+        # (this iterate), and held fixed for the FD Jacobian, every
+        # line-search trial and the acceptance test. The cache and counters
+        # are shared with the residual closure so the derivation costs no
+        # flashes beyond the cache entries it fills.
+        #
+        # Frozen scales apply on the live-norm (zero/one-tear) path only.
+        # Measured regression on the warm two-tear path (C1-C5 deethanizer,
+        # 22 stages, inside-out best M=4.2e-6 whose stored y lags K*x so the
+        # NS rows start at M~0.5): with pass-frozen scales the FD Jacobian
+        # loses the d(scale) terms the per-evaluation rows carry, the full
+        # Newton step predicted machine-zero and achieved M=0.47, and the
+        # next pass went FD-singular - the legacy per-evaluation scaling
+        # converges this state in a few passes (main, measured). The two-tear
+        # path keeps its 1e-8 gate and its measured-good semantics; ruling
+        # (c)'s stall is a zero/one-tear physical-branch failure.
         u = _pack_state(prof, col, v_free)
+        k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]] = {}
+        k_misses = [0]
+        h_evals = [0]
+        pass_scales: list[float] | None = None
+        if live_norm:
+            pass_scales = _residual_scales(
+                col,
+                tb,
+                l0,
+                _unpack_x(u, col),
+                _unpack_t(u, col),
+                _unpack_v(u, col, v_free, t_bot_tear),
+                k_fallbacks=k_stages,
+                k_cache=k_cache,
+                k_misses=k_misses,
+            )
+        residuals = _ns_residual_function(
+            col, tb, l0, k_stages, t_bot_tear, pass_scales, k_cache, k_misses, h_evals
+        )
         r0 = residuals(u)
         # The pass gate must carry exact-residual semantics, not the NS residual's.
         # The NS residual derives vapour compositions as K*x (equilibrium-consistent
