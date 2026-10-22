@@ -957,23 +957,282 @@ def _inner_solve(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: f
     return iterations
 
 
+def _stage_equilibrium(
+    col: _Column,
+    tb: _ThermoBox,
+    l0: float,
+    xs: list[dict[str, float]],
+    ts: list[float],
+    vs: list[float],
+    y_estimates: list[dict[str, float]] | None = None,
+    k_fallbacks: list[dict[str, float]] | None = None,
+    k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]] | None = None,
+    k_misses: list[int] | None = None,
+) -> tuple[list[dict[str, float] | None], list[dict[str, float]]]:
+    """Per-stage live K dictionaries and the equilibrium vapour y = K*x they imply.
+
+    One owner of the stage-K candidate chain (live `_stage_k_values`, then the
+    k_estimate fallback, then the caller's pass-frozen K models) and of the
+    y = K*x construction read from it - shared by `_live_residual_vector` and
+    `_residual_scales` so a residual row and its scale are always derived from
+    the same K surface by construction (P1-11 ruling (c) on #153).
+    """
+    liquid = _l_profile(col, l0, vs)
+    k_stages: list[dict[str, float] | None] = []
+    for j in range(col.n):
+        k: dict[str, float] | None = None
+        if k_cache is not None:
+            key = (tuple(sorted(xs[j].items())), round(ts[j], 12), col.pressures[j])
+            k = k_cache.get(key)
+        if k is None:
+            if k_misses is not None:
+                k_misses[0] += 1
+            y_est = y_estimates[j] if y_estimates is not None else {}
+            k = (
+                _stage_k_values(col, tb, j, xs[j], y_est, ts[j], liquid[j], vs[j])
+                or tb.k_estimate(_flash_ready(xs[j], col.feed_comp), ts[j], col.pressures[j])
+                or (k_fallbacks[j] if k_fallbacks is not None else None)
+            )
+            if k_cache is not None and k is not None:
+                k_cache[key] = k
+        k_stages.append(k)
+    y_eq: list[dict[str, float]] = []
+    for j in range(col.n):
+        k = k_stages[j]
+        if k is None:
+            y_eq.append({})
+            continue
+        y_j = {cid: k.get(cid, 1.0) * xs[j].get(cid, 0.0) for cid in col.comps}
+        total = sum(y_j.values())
+        y_eq.append({cid: v / total for cid, v in y_j.items()} if total > _FLOW_FLOOR else y_j)
+    return k_stages, y_eq
+
+
+def _m_row_flows(
+    col: _Column,
+    l0: float,
+    xs: list[dict[str, float]],
+    vs: list[float],
+    y_eq: list[dict[str, float]],
+) -> list[tuple[float, float]]:
+    """Per (stage, component) in vector order: the M balance row's (inflow, outflow).
+
+    One owner of the M balance algebra: `_live_residual_vector` divides these
+    by their scales to form the rows and `_residual_scales` applies the scale
+    rule to them - so a row and its scale come from the same numbers by
+    construction (P1-11 ruling (c) on #153).
+    """
+    liquid = _l_profile(col, l0, vs)
+    n = col.n
+    flows: list[tuple[float, float]] = []
+    for j in range(n):
+        part = col.feeds[j]
+        for cid in col.comps:
+            inflow = liquid[j - 1] * xs[j - 1].get(cid, 0.0) if j > 0 else 0.0
+            if j == 0 and col.condenser == "total":
+                inflow = l0 * y_eq[0].get(cid, 0.0)
+            inflow += vs[j + 1] * y_eq[j + 1].get(cid, 0.0) if j + 1 < n else 0.0
+            inflow += part.l_flow * part.x.get(cid, 0.0) + part.v_flow * part.y.get(cid, 0.0)
+            outflow = (liquid[j] + col.draw_l[j]) * xs[j].get(cid, 0.0) + (vs[j] + col.draw_v[j]) * y_eq[
+                j
+            ].get(cid, 0.0)
+            flows.append((inflow, outflow))
+    return flows
+
+
+def _residual_scales(
+    col: _Column,
+    tb: _ThermoBox,
+    l0: float,
+    xs: list[dict[str, float]],
+    ts: list[float],
+    vs: list[float],
+    y_estimates: list[dict[str, float]] | None = None,
+    k_fallbacks: list[dict[str, float]] | None = None,
+    k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]] | None = None,
+    k_misses: list[int] | None = None,
+) -> list[float]:
+    """The per-M-row scale vector of `_live_residual_vector`, evaluated at a reference state.
+
+    P1-11 ruling (c) on issue #153: the scale rule is the gate's own
+    ``max(|inflow|, |outflow|, col.f_total * 1e-6)`` - but evaluated HERE,
+    once, at the reference state the caller hands in (for NS: the iterate the
+    Jacobian is built from), never inside the residual evaluation itself. A
+    scale derived per evaluation from the state being evaluated makes a row
+    ``(in - out)/max(|in|, |out|)`` bounded in [-1, 1] and identical (-1)
+    for every step in which the outflow dominates: not a smooth function of
+    the unknowns, so Newton's linear model of it is meaningless exactly there
+    and a max-norm descent test on it rejects the very full steps that reduce
+    the true imbalance (measured: the N4-r0.8 stripper's bottom-stage
+    light-key row, every line-search trial rejected, the 30-pass budget
+    exhausted while a 0.5x-per-pass crawl was accepted). Frozen once per NS
+    pass, the residual is linear in the flows within the pass, the linear
+    model's predicted reduction is comparable to the achieved one, and no row
+    can saturate. The exact gate keeps the frozen-from-the-gated-state
+    semantics by passing no scales. Used on the NS live-norm (zero/one-tear)
+    path only: the warm two-tear path keeps per-evaluation scales - measured
+    regression there (see `_naphtali_sandholm`).
+    """
+    k_stages, y_eq = _stage_equilibrium(col, tb, l0, xs, ts, vs, y_estimates, k_fallbacks, k_cache, k_misses)
+    flows = _m_row_flows(col, l0, xs, vs, y_eq)
+    return [max(abs(inflow), abs(outflow), col.f_total * 1e-6) for inflow, outflow in flows]
+
+
+def _live_residual_vector(
+    col: _Column,
+    tb: _ThermoBox,
+    l0: float,
+    xs: list[dict[str, float]],
+    ts: list[float],
+    vs: list[float],
+    y_estimates: list[dict[str, float]] | None = None,
+    k_fallbacks: list[dict[str, float]] | None = None,
+    k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]] | None = None,
+    k_misses: list[int] | None = None,
+    h_evals: list[int] | None = None,
+    scales: list[float] | None = None,
+) -> list[float]:
+    """The ONE MESH residual vector, evaluated live (P1-11 step 2, ruling on #153).
+
+    Row set per stage j, in this order: one M balance per component, the
+    canonical NS summation row sum_i x_ij (1 - K_ij) = 0, and an H row on
+    every duty-bearing stage. One convention throughout: y_ij = K_ij(T_j,
+    x_j) * x_ij read from the live package (the gate's equilibrium-consistent
+    reading), M rows scaled per row by max(|inflow|, |outflow|,
+    col.f_total * 1e-6) and H rows by max(col.f_total * 2e4, 1.0) - the
+    exact gate's own scaling.
+
+    ``_exact_residuals`` reads its max-norms from this vector, and the
+    Naphtali-Sandholm fallback builds its FD Jacobian, its LM damping and its
+    line-search norms on the same vector - the gate, the Newton linearisation
+    and the acceptance norm are one residual by construction (the ruling's
+    step-2 rule: no frozen enthalpy models and no absolute rows remain in NS).
+
+    ``y_estimates``: the caller's current vapour estimates handed to the shared
+    stage-K evaluation (the profile's refreshed y = K*x from the gate; empty
+    dicts from NS, whose outgoing vapour the M rows derive as K*x themselves -
+    the measured variant-A choice, P1-11 step 1). ``k_fallbacks``: per-stage
+    last-resort K dictionaries (the NS pass's frozen K models) used when
+    neither the live evaluation nor the k_estimate fallback is evaluable; the
+    gate passes None and treats a still-unevaluable stage as unconverged (each
+    of its rows reads 1.0). ``k_cache``: an optional per-stage K cache keyed by
+    (composition, T, P) so a finite-difference Jacobian over the packed
+    unknowns flashes only the perturbed stage. ``k_misses``/``h_evals``:
+    optional one-element counters (K evaluations beyond the cache, live
+    enthalpy evaluations) for the flash-cost measurement the ruling requires.
+    ``scales`` (P1-11 ruling (c) on #153): an explicit frozen per-row M scale
+    vector from `_residual_scales` - computed once per NS pass from the pass's
+    reference state and held fixed for the FD Jacobian, every line-search
+    trial and the acceptance test of that pass. When None (the exact gate),
+    the scale is derived from the state being evaluated - the gate freezes the
+    scale from the state it gates, the only place a frozen quantity differs.
+    """
+    n = col.n
+    liquid = _l_profile(col, l0, vs)
+    h_scale = max(col.f_total * 2e4, 1.0)
+    h_stage_set = set(_h_equation_stages(col))
+    k_stages, y_eq = _stage_equilibrium(col, tb, l0, xs, ts, vs, y_estimates, k_fallbacks, k_cache, k_misses)
+    flows = _m_row_flows(col, l0, xs, vs, y_eq)
+    out: list[float] = []
+    flow_pos = 0
+    for j in range(n):
+        k = k_stages[j]
+        part = col.feeds[j]
+        if k is None:
+            flow_pos += len(col.comps)
+            # The gate's "not evaluable is NOT converged" semantics: each row
+            # of the stage reads 1.0 (same number the gate's max-norm saw).
+            for _ in col.comps:
+                out.append(1.0)
+            out.append(1.0)
+            if j in h_stage_set:
+                out.append(1.0)
+            continue
+        for _cid in col.comps:
+            inflow, outflow = flows[flow_pos]
+            flow_pos += 1
+            if scales is not None:
+                scale = scales[flow_pos - 1]
+            else:
+                scale = max(abs(inflow), abs(outflow), col.f_total * 1e-6)
+            out.append((inflow - outflow) / scale)
+        # Canonical NS summation row (Naphtali & Sandholm 1971): sum_i x_ij
+        # = sum_i K_ij x_ij, i.e. the bubble condition sum_i x_ij (1 - K_ij)
+        # = 0. The former sum(x) - 1 form made the row vanish whenever K was
+        # near 1 for every component (wide absorber mid-stages), so the row
+        # carried no temperature information exactly where the walk needed
+        # it; this form scales with the local volatility spread.
+        out.append(sum(xs[j].values()) - sum(k.get(cid, 1.0) * xs[j].get(cid, 0.0) for cid in col.comps))
+        if j not in h_stage_set:
+            continue  # duty-output stage: its balance defines the duty (qc/qr)
+        h_in = (
+            (
+                vs[j + 1]
+                * tb.h_vapor(_flash_ready(y_eq[j + 1], col.feed_comp), ts[j + 1], col.pressures[j + 1])
+                if j + 1 < n
+                else 0.0
+            )
+            + (
+                liquid[j - 1]
+                * tb.h_liquid(_flash_ready(xs[j - 1], col.feed_comp), ts[j - 1], col.pressures[j - 1])
+                if j > 0
+                else 0.0
+            )
+            + part.h_flow
+        )
+        if j == 0 and col.condenser == "total":
+            h_in += l0 * tb.h_liquid(_flash_ready(y_eq[0], col.feed_comp), ts[0], col.pressures[0])
+        h_out = (vs[j] + col.draw_v[j]) * tb.h_vapor(
+            _flash_ready(y_eq[j], col.feed_comp), ts[j], col.pressures[j]
+        ) + (liquid[j] + col.draw_l[j]) * tb.h_liquid(
+            _flash_ready(xs[j], col.feed_comp), ts[j], col.pressures[j]
+        )
+        if h_evals is not None:
+            h_evals[0] += 4
+        out.append((h_in - h_out) / h_scale)
+    return out
+
+
+def _residual_row_blocks(col: _Column, h_stages: list[int]) -> tuple[list[int], list[int]]:
+    """Indices of the M rows and of the H rows in `_live_residual_vector`'s output.
+
+    The layout is fixed by construction (per stage: one M row per component,
+    one summation row, then one H row on duty-bearing stages - including the
+    unevaluable-stage placeholder rows), so the block indices are computable
+    without evaluating the residual.
+    """
+    m_idx: list[int] = []
+    h_idx: list[int] = []
+    pos = 0
+    nc = len(col.comps)
+    h_set = set(h_stages)
+    for j in range(col.n):
+        m_idx.extend(range(pos, pos + nc))
+        pos += nc + 1
+        if j in h_set:
+            h_idx.append(pos)
+            pos += 1
+    return m_idx, h_idx
+
+
 def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[float, float]:
     """Max relative MESH residuals with real thermo K-values and phase enthalpies.
 
     The honest convergence measure: the frozen inner models closed the equations,
     and the refreshed thermo values must still close them.
 
-    The balances and enthalpy residuals read y_ij = K_ij(T_j, x_j) * x_ij from the
-    live package, not the profile's STORED y (built as alpha*Kb*x from the
-    inside-out anchor) - the same convention the Naphtali-Sandholm residual uses,
-    so this gate returns the number NS sees (one definition of "converged"; ruling
-    on issue #153, 2026-10-21). On the reactive package the anchor tracks the
-    acid-gas K-values' temperature dependence but not their composition (loading)
-    dependence: an anchor-consistent state read M = 5.2e-3 on stored y while the
-    same state read M = 0.49 on y = K*x (measured 20-stage MDEA absorber at the
-    accepted inside-out state) - the stored-y gate was a gate hole, not a solver
-    floor. The k-values are evaluated here anyway, so building y from them costs
-    no flash.
+    The gate IS the shared live residual: it reads its max-norms from
+    `_live_residual_vector` (the one residual the Naphtali-Sandholm fallback
+    linearises and tests - P1-11 step 2, ruling on #153), evaluated at the
+    profile state with the profile's refreshed y = K*x as the stage-K vapour
+    estimates. The balances and enthalpy residuals read y_ij = K_ij(T_j, x_j) *
+    x_ij from the live package, not the profile's STORED y (built as alpha*Kb*x
+    from the inside-out anchor). On the reactive package the anchor tracks the
+    acid-gas K-values' temperature dependence but not their composition
+    (loading) dependence: an anchor-consistent state read M = 5.2e-3 on stored y
+    while the same state read M = 0.49 on y = K*x (measured 20-stage MDEA
+    absorber at the accepted inside-out state) - the stored-y gate was a gate
+    hole, not a solver floor.
 
     Non-reactive cost (measured, bench-column trace on the step-3 branch: the two
     readings agree to a factor <= 5 mid-walk and reach the same < 1e-8 floor -
@@ -984,69 +1243,10 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
     preserved: a stage whose equilibrium cannot be evaluated is NOT converged
     (skipping it let degenerate all-liquid profiles read as exact).
     """
-    n = col.n
-    max_m = 0.0
-    max_h = 0.0
-    liquid = _l_profile(col, prof.l0, prof.V)
-    h_scale = max(col.f_total * 2e4, 1.0)
-    h_stages = set(_h_equation_stages(col))
-    k_stages: list[dict[str, float] | None] = []
-    y_eq: list[dict[str, float]] = []
-    for j in range(n):
-        k = _stage_k_values(col, tb, j, prof.x[j], prof.y[j], prof.T[j], prof.L[j], prof.V[j])
-        if k is None:
-            k = tb.k_estimate(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j])
-        k_stages.append(k)
-        if k is None:
-            y_eq.append({})
-            continue
-        y_j = {cid: k.get(cid, 1.0) * prof.x[j].get(cid, 0.0) for cid in col.comps}
-        total = sum(y_j.values())
-        y_eq.append({cid: v / total for cid, v in y_j.items()} if total > _FLOW_FLOOR else y_j)
-    for j in range(n):
-        k = k_stages[j]
-        if k is None:
-            max_m = max(max_m, 1.0)
-            max_h = max(max_h, 1.0)
-            continue
-        part = col.feeds[j]
-        for cid in col.comps:
-            inflow = liquid[j - 1] * prof.x[j - 1].get(cid, 0.0) if j > 0 else 0.0
-            if j == 0 and col.condenser == "total":
-                inflow = prof.l0 * y_eq[0].get(cid, 0.0)
-            inflow += prof.V[j + 1] * y_eq[j + 1].get(cid, 0.0) if j + 1 < n else 0.0
-            inflow += part.l_flow * part.x.get(cid, 0.0) + part.v_flow * part.y.get(cid, 0.0)
-            outflow = (liquid[j] + col.draw_l[j]) * prof.x[j].get(cid, 0.0) + (
-                prof.V[j] + col.draw_v[j]
-            ) * y_eq[j].get(cid, 0.0)
-            scale = max(abs(inflow), abs(outflow), col.f_total * 1e-6)
-            max_m = max(max_m, abs(inflow - outflow) / scale)
-        if j not in h_stages:
-            continue  # duty-output stage: its balance defines the duty (qc/qr);
-            # counting it here would report the duty magnitude as a residual
-        h_in = (
-            (
-                prof.V[j + 1]
-                * tb.h_vapor(_flash_ready(y_eq[j + 1], col.feed_comp), prof.T[j + 1], col.pressures[j + 1])
-                if j + 1 < n
-                else 0.0
-            )
-            + (
-                liquid[j - 1]
-                * tb.h_liquid(_flash_ready(prof.x[j - 1], col.feed_comp), prof.T[j - 1], col.pressures[j - 1])
-                if j > 0
-                else 0.0
-            )
-            + part.h_flow
-        )
-        if j == 0 and col.condenser == "total":
-            h_in += prof.l0 * tb.h_liquid(_flash_ready(y_eq[0], col.feed_comp), prof.T[0], col.pressures[0])
-        h_out = (prof.V[j] + col.draw_v[j]) * tb.h_vapor(
-            _flash_ready(y_eq[j], col.feed_comp), prof.T[j], col.pressures[j]
-        ) + (liquid[j] + col.draw_l[j]) * tb.h_liquid(
-            _flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j]
-        )
-        max_h = max(max_h, abs(h_in - h_out) / h_scale)
+    vec = _live_residual_vector(col, tb, prof.l0, prof.x, prof.T, prof.V, y_estimates=list(prof.y))
+    m_idx, h_idx = _residual_row_blocks(col, _h_equation_stages(col))
+    max_m = max((abs(vec[i]) for i in m_idx), default=0.0)
+    max_h = max((abs(vec[i]) for i in h_idx), default=0.0)
     return max_m, max_h
 
 
