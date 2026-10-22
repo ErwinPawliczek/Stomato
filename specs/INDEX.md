@@ -142,6 +142,8 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | T-08 | Model advisor + agent tool `recommend_thermo` + UI package picker | T-01..T-05 | planned (issue #142; after T-01..T-05) |
 | T-09 | General electrolytes: eNRTL, Pitzer, extended UNIQUAC, sour water | T-03 | planned (issue #143; after T-03 and #125) |
 | T-10 | Solids, polymers, HOC dimerisation, HF | T-03, T-07 | merged #159 (2026-10-21): 5 of 7 family-H rows experimental (flory_huggins, polymer_nrtl, unifac_fv, ideal_solid, hoc_dimer), PhaseKind.SOLID contract change; PolymerPCSAFT + HFHexamer → #160; catalogue 98 rows |
+| T-03b | Virial vapour models (Hayden-O'Connell, Nothnagel; Tsonopoulos fallback) for the 24 experimental gamma-phi rows | T-03, T-02 | dispatched 2026-10-22 (issue #166) |
+| T-15 | Promotion sweep: validation debt (#100, #130, fitted-to-case rows, CI saft extra, L1 binding), status audit, freeze | T-06, T-08, T-09, T-03b, #160, #164 | spec written 2026-10-22 (issue #167); dispatch after wave 2 merges |
 | T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | all merged: T-11 #131, T-12 #132, T-13 #135, T-14 #147 (2026-10-21) |
 
 Dispatch: T-01 alone; then T-02, T-03, T-04, T-05, T-07, T-11, T-12, T-13 in parallel (disjoint files); then T-06, T-08, T-09, T-14; then T-10; then the catalogue freeze (status audit).
