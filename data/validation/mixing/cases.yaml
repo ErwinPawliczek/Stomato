@@ -1066,7 +1066,8 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: pr-huron-vidal-c1h2o-310.9K-13.10MPa
-  package: pr_huron_vidal
+  package: pending:pr_huron_vidal
+  note: unbound (T-06 review, 2026-10-22) - the row refuses this feed because the ChemSep NRTL databank has no C1/H2O pair (a crash is never an assessed miss); rebind when a gE source with that pair exists
   components:
   - C1
   - H2O
@@ -1080,7 +1081,8 @@ binary_cases:
     liquid_comp:
       C1: 0.00189
 - id: pr-huron-vidal-c1h2o-310.9K-44.99MPa
-  package: pr_huron_vidal
+  package: pending:pr_huron_vidal
+  note: unbound (T-06 review, 2026-10-22) - the row refuses this feed because the ChemSep NRTL databank has no C1/H2O pair (a crash is never an assessed miss); rebind when a gE source with that pair exists
   components:
   - C1
   - H2O

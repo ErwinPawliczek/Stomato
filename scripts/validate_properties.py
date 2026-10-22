@@ -395,7 +395,9 @@ def run_all(cases: list[Case]) -> list[Row]:
                     want = case.expected[prop]
                     if isinstance(want, dict):
                         # Composition targets are per-component rows (evaluate_case's shape).
-                        rows.extend(Row(case.id, pkg, prop, float(v), None, None, False) for v in want.values())
+                        rows.extend(
+                            Row(case.id, pkg, prop, float(v), None, None, False) for v in want.values()
+                        )
                     else:
                         rows.append(Row(case.id, pkg, prop, float(want), None, None, False))
     return rows
