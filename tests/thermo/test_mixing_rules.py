@@ -419,11 +419,13 @@ class TestMHVRuleAlgebra:
     @pytest.mark.parametrize("rule_cls,q", ((MHV1, (-0.53,)), (MHV2, (-0.4347, -0.003654))))
     @pytest.mark.parametrize("xs", ((0.2, 0.3, 0.5), (0.9, 0.05, 0.05)))
     def test_ternary_mole_number_fd(
-        self, rule_cls: type[GEProvider] | Any, q: tuple[float, ...], xs: tuple[float, ...]
+        self, rule_cls: type[MHV1] | type[MHV2], q: tuple[float, ...], xs: tuple[float, ...]
     ) -> None:
-        rule = (
-            rule_cls(_ToyProvider(), q1=q[0]) if len(q) == 1 else rule_cls(_ToyProvider(), q1=q[0], q2=q[1])
-        )
+        if len(q) == 1:
+            rule: MHV1 | MHV2 = MHV1(_ToyProvider(), q1=q[0])
+        else:
+            rule = MHV2(_ToyProvider(), q1=q[0], q2=q[1])
+        assert isinstance(rule, rule_cls)
         eos = PRMIX_HV(
             Tcs=[512.6, 647.1, 400.0],
             Pcs=[8.09e6, 2.206e7, 3.0e6],

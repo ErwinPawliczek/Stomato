@@ -482,14 +482,14 @@ def _zero_kijs(n: int) -> list[list[float]]:
     return [[0.0] * n for _ in range(n)]
 
 
-def _rule_for(eos_cls: type, provider: GEProvider) -> GERule:
+def _rule_for(eos_cls: type[Any], provider: GEProvider) -> GERule:
     kind = getattr(eos_cls, "rule_kind", None)
     if kind == "hv":
         return HuronVidal(provider, HuronVidal.M_PR)
     if kind == "mhv1":
-        return MHV1(provider, q1=getattr(eos_cls, "q1"))
+        return MHV1(provider, q1=eos_cls.q1)
     if kind == "mhv2":
-        return MHV2(provider, q1=getattr(eos_cls, "q1"), q2=getattr(eos_cls, "q2"))
+        return MHV2(provider, q1=eos_cls.q1, q2=eos_cls.q2)
     raise ValueError(f"EOS class {eos_cls!r} declares no mixing rule")
 
 
@@ -674,8 +674,7 @@ class MHV2(GERule):
         # Mixed derivative: d/dT of c_x/d = c_xT/d + c_x * (d 1/d/dT); with
         # d 1/d/dT = +2 q2 c_T / d^3 (d_T = -2 q2 c_T / d).
         alpha_xT_raw = tuple(
-            cxT / d + 2.0 * q2 * cx * c_t / (d * d * d)
-            for cxT, cx in zip(c_xT_raw, c_x_raw, strict=True)
+            cxT / d + 2.0 * q2 * cx * c_t / (d * d * d) for cxT, cx in zip(c_xT_raw, c_x_raw, strict=True)
         )
         return _linear_rule_state(alpha, alpha_t, alpha_tt, alpha_x_raw, alpha_xT_raw, b, T, bs, xs)
 
