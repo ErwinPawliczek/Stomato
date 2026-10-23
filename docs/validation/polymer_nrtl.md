@@ -12,7 +12,7 @@ family `special` · status **experimental** · adapter `ngdesign.thermo.special:
 ## Parameters
 
 - source: data/thermo_params/special/polymer.yaml
-- provenance: Chen (1993), Fluid Phase Equilibria 83, 301: segment combinatorial plus segment-level NRTL residual. Segment assignments and tau/alpha per segment pair with provenance; the shipped toluene/PS parameterization is an illustrative fit (no verified published parameter set located; T-19 search 2026-10-23: the Chen 1993 parameter tables remain paywalled with no open transcription found - the row keeps its experimental status per the spec escape hatch).
+- provenance: Chen (1993), Fluid Phase Equilibria 83, 301: segment combinatorial plus segment-level NRTL residual. Segment assignments and tau/alpha per segment pair with provenance; the shipped toluene/PS parameterization is an illustrative fit (no verified published parameter set located).
 
 ## L0 self-consistency
 
