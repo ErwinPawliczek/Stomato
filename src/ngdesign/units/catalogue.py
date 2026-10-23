@@ -34,7 +34,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
 from ngdesign import registry
-from ngdesign.units.levels import LEVEL_ORDER
+from ngdesign.units.levels import LEVEL_ORDER, resolve_level
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_MODELS_DIR = REPO_ROOT / "data" / "unit_models"

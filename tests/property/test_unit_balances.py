@@ -1,4 +1,10 @@
-"""Every registered unit must close mass, component and energy balances on its example case. LOCKED."""
+"""Every catalogue-implemented level must close mass, component and energy balances on its example case. LOCKED.
+
+Review round 2 (U-00, item 3): the test iterates the catalogue's implemented
+levels instead of the registered unit list — one solve per (row, level) pair,
+through the registry's ``LevelDispatch`` entry with ``params["model"]`` set to
+the level. The assertions and tolerances are unchanged.
+"""
 
 import math
 
@@ -6,20 +12,27 @@ import pytest
 
 from ngdesign import registry
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.units.catalogue import load_rows
+from ngdesign.units.levels import implemented_levels
 from tests.conftest import flash_feed
 
-UNITS = registry.available("unit")
+UNITS = [
+    f"{row.id}/{level}"
+    for row in load_rows().values()
+    for level in implemented_levels(row)
+]
 
 
 @pytest.mark.parametrize("name", UNITS or ["<none>"])
 def test_balances(thermo: Thermo, name: str) -> None:
     if name == "<none>":
         pytest.skip("no unit plugins yet")
-    unit = registry.create("unit", name)
+    row_id, level = name.split("/")
+    unit = registry.create("unit", row_id)  # the per-row LevelDispatch entry
     feeds, params = unit.example_case()
     assert set(feeds) == set(unit.inlet_ports), f"{name}: example_case must feed every inlet port"
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
-    res = unit.solve(inlets, params, thermo)
+    res = unit.solve(inlets, {**params, "model": level}, thermo)
     assert set(res.outlets) == set(unit.outlet_ports)
 
     fin: dict[str, float] = {}

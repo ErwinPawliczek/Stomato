@@ -107,3 +107,17 @@ def create(kind: str, name: str, *args: Any, **kwargs: Any) -> Any:
 def available(kind: str) -> list[str]:
     discover()
     return sorted(_REGISTRY[kind])
+
+
+def replace(kind: str, name: str, cls: type) -> None:
+    """Point an existing registration at another class (spec U-00 dispatch hook).
+
+    ``register`` stays duplicate-strict; ``replace`` is the one sanctioned
+    overwrite. The unit catalogue's review-round-2 contract requires it:
+    ``discover()`` imports the decorator-based plugins first, then replaces
+    every implemented unit id with its per-row ``LevelDispatch`` — the same
+    id, one entry, solve-time level resolution in front of the adapter.
+    """
+    if kind not in KINDS:
+        raise ValueError(f"unknown plugin kind {kind!r}; allowed: {KINDS}")
+    _REGISTRY[kind][name] = cls
