@@ -49,7 +49,7 @@ def test_fitted_alpha_triplet_direct() -> None:
 
     def gen_alpha(lmn: tuple[float, float, float], tr: float) -> float:
         gl, gm, gn = lmn
-        return tr ** (gn * (gm - 1.0)) * math.exp(gl * (1.0 - tr ** (gn * gm)))
+        return float(tr ** (gn * (gm - 1.0)) * math.exp(gl * (1.0 - tr ** (gn * gm))))
 
     tr1 = 350.0 / TCS[1]
     if tr1 < 1.0:
@@ -117,7 +117,7 @@ def test_lnphi_matches_chemical_potential_consistency() -> None:
         def total_g(ns: list[float]) -> float:
             total = sum(ns)
             eos = _build([x / total for x in ns])
-            return total * eos.G_dep_g
+            return total * float(eos.G_dep_g)
 
         mu = (total_g(np_) - total_g(nm)) / (2.0 * h) / 8.31446261815324 / T
         assert math.isclose(lnphi[i], mu, rel_tol=5.0e-3), i
