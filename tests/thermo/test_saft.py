@@ -29,7 +29,7 @@ SAFT_IDS = (
 # Rows teqp 0.23.2 cannot serve; each refuses to build with the engine named (spec
 # requirement). Their l0 declarations are empty and the refusal reason is recorded in
 # the row's l0_excluded.
-REFUSING_IDS = ("pc_saft_assoc", "pc_saft_polar", "soft_saft")
+REFUSING_IDS = ("pc_saft_polar", "soft_saft")
 BUILDABLE_IDS = (
     "cpa_pr",
     "cpa_srk",
@@ -37,6 +37,7 @@ BUILDABLE_IDS = (
     "multifluid",
     "multifluid_pure",
     "pc_saft",
+    "pc_saft_assoc",
     "saft_vr_mie",
 )
 
@@ -44,13 +45,14 @@ BUILDABLE_IDS = (
 def test_saft_rows_register_with_status() -> None:
     """The ten saft rows load with the real catalogue. T-15c promoted pc_saft and
     cpa_srk to provisional (all bound cases measured, every miss assessed per case);
-    T-17 promoted cpa_pr the same way (Sorensen 2018 parameters); the remaining rows
-    stay experimental (T-07)."""
+    T-17 promoted cpa_pr (Sorensen 2018 parameters) and pc_saft_assoc (G&S 2002
+    Table 1 two-site parameters) the same way; the remaining rows stay
+    experimental (T-07)."""
     rows = catalogue.load_catalogue()
-    for rid in ("pc_saft", "cpa_srk", "cpa_pr"):
+    for rid in ("pc_saft", "cpa_srk", "cpa_pr", "pc_saft_assoc"):
         assert rows[rid].status == "provisional", f"{rid}: row must stay provisional"
     for rid in SAFT_IDS:
-        if rid in ("pc_saft", "cpa_srk", "cpa_pr"):
+        if rid in ("pc_saft", "cpa_srk", "cpa_pr", "pc_saft_assoc"):
             continue
         assert rows[rid].status == "experimental", f"{rid}: row must stay experimental"
 
@@ -158,6 +160,75 @@ class TestNamedSpotChecks:
         assert water.P == pytest.approx(101_417.997, rel=0.02)
         methanol = pkg.bubble_point({"MeOH": 1.0}, T=337.65)
         assert methanol.P == pytest.approx(101_325.0, rel=0.02)
+
+    def test_pc_saft_assoc_physical_term_pinned_to_teqp(self) -> None:
+        """The hand-rolled PC-SAFT physical term must reproduce teqp's engine (spec T-17).
+
+        The association row's physical part is reimplemented (teqp's PC-SAFT factory
+        carries no association fields); this pin says the reimplementation is the
+        published Gross & Sadowski (2001) model, not a lookalike: residual Helmholtz
+        density against teqp's own PC-SAFT over states spanning the validation window.
+        """
+        pytest.importorskip("teqp")
+        import numpy as np
+
+        from ngdesign.thermo.teqp_bridge import _PCSaftAssocKernel, _teqp
+
+        params = [
+            {"name": "H2O", "m": 1.0656, "sigma_Angstrom": 3.0007, "epsilon_over_k": 366.51},
+            {"name": "MeOH", "m": 1.5255, "sigma_Angstrom": 3.2300, "epsilon_over_k": 188.90},
+        ]
+        kernel = _PCSaftAssocKernel("pc_saft_assoc", params)
+        teqp_model = _teqp().make_model(
+            {
+                "kind": "PCSAFT",
+                "model": {
+                    "coeffs": [
+                        {
+                            "name": "H2O",
+                            "m": 1.0656,
+                            "sigma_Angstrom": 3.0007,
+                            "epsilon_over_k": 366.51,
+                            "BibTeXKey": "Gross-IECR-2001",
+                        },
+                        {
+                            "name": "MeOH",
+                            "m": 1.5255,
+                            "sigma_Angstrom": 3.2300,
+                            "epsilon_over_k": 188.90,
+                            "BibTeXKey": "Gross-IECR-2001",
+                        },
+                    ]
+                },
+            }
+        )
+        worst = 0.0
+        for T, rho in ((300.0, 100.0), (350.0, 9000.0), (420.0, 15000.0), (500.0, 500.0)):
+            z = np.array([0.6, 0.4])
+            a_phys, _, _ = kernel._phys.derivs(T, rho, z)
+            ref = float(teqp_model.get_Ar00(T, rho, z))
+            worst = max(worst, abs(a_phys - ref))
+        assert worst < 1e-12, f"physical term drifted from teqp PC-SAFT: {worst:.3e}"
+
+    def test_pc_saft_assoc_water_psat_373k(self) -> None:
+        """PC-SAFT assoc (T-17): the G&S 2002 Table 1 two-site set measures -0.5 % on
+        water Psat at 373.15 K against CoolProp HEOS/IAPWS (row assessed map carries the
+        saturated-liquid-density miss of the same parameterization). The 2 % band guards
+        the kernel against drift; the parameters are pinned by the params file."""
+        pytest.importorskip("teqp")
+        pkg = catalogue.build(catalogue.load_catalogue()["pc_saft_assoc"])
+        sp = pkg.bubble_point({"H2O": 1.0}, T=373.15)
+        assert sp.P == pytest.approx(100_890.0, rel=0.02)
+
+    def test_pc_saft_assoc_methanol_psat_420k(self) -> None:
+        """PC-SAFT assoc (T-17): methanol Psat at 420 K measures +0.1 % (the set's
+        low-temperature Psat miss of about -3.5 % is assessed on the row); the pin
+        guards the association kernel against drift at a state it gets right."""
+        pytest.importorskip("teqp")
+        pkg = catalogue.build(catalogue.load_catalogue()["pc_saft_assoc"])
+        sp = pkg.bubble_point({"MeOH": 1.0}, T=420.0)
+        assert sp.P == pytest.approx(1_292_700.0, rel=0.02)
+
 
     def test_pc_saft_c1co2_bubble_293k(self) -> None:
         pytest.importorskip("teqp")

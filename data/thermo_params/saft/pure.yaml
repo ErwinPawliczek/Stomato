@@ -126,6 +126,42 @@ cpa_pr:
   binary_kij:
     H2O-MeOH: {kij_ref: -0.14146, kij_prime: -4.257e-4, T_ref: 288.15}
 
+# --- PC-SAFT + association (row pc_saft_assoc) ------------------------------------
+# Source: Gross & Sadowski (2002) Ind. Eng. Chem. Res. 41, 5510-5515, Table 1
+# ("pure component parameters of the associating compounds"), retrieved and
+# checked against the paper this session. The paper assigns the 2B scheme to
+# ALL three components, water included (one donor + one acceptor site).
+# Cross association follows G&S 2002 eqs. 2-3: epsilon_AB arithmetic mean,
+# kappa_AB geometric mean, sigma_ij arithmetic mean.
+# k_ij = 0: the paper introduces no binary interaction parameter for
+# associating-associating mixtures ("simple combining rules were used"), so
+# unlike-dispersion terms use the bare Lorentz-Berthelot rule.
+pc_saft_assoc:
+  H2O:
+    scheme: 2B
+    m: 1.0656
+    sigma_Angstrom: 3.0007
+    epsilon_over_k: 366.51   # K
+    epsilon_AB_over_k: 2500.7  # K, G&S 2002 Table 1
+    kappa_AB: 0.034868
+    sites: [d, a]
+  MeOH:
+    scheme: 2B
+    m: 1.5255
+    sigma_Angstrom: 3.2300
+    epsilon_over_k: 188.90   # K
+    epsilon_AB_over_k: 2899.5  # K
+    kappa_AB: 0.035176
+    sites: [d, a]
+  EtOH:
+    scheme: 2B
+    m: 2.3827
+    sigma_Angstrom: 3.1771
+    epsilon_over_k: 198.24   # K
+    epsilon_AB_over_k: 2653.4  # K
+    kappa_AB: 0.032384
+    sites: [d, a]
+
 # --- Multi-fluid Helmholtz (row multifluid) -------------------------------------
 # Source: teqp 0.23.2's bundled fluid library (multi-fluid Helmholtz EOS with
 # departure functions as distributed by NIST teqp; GERG-2008-family formulations).

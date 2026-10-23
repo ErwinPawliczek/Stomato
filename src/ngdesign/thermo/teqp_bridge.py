@@ -502,6 +502,66 @@ class _CpaPrKernel(_CpaKernel):
         return 0.98 / self._b_mix(z)
 
 
+class _PCSaftAssocKernel(_Kernel):
+    """Hand-rolled PC-SAFT engine with the Wertheim association term (spec T-17).
+
+    Physical part: PC-SAFT hard-chain + dispersion exactly as published (Gross &
+    Sadowski 2001, Table 3 constants, closed-form density and composition
+    derivatives) — reimplemented because teqp's PC-SAFT carries no association
+    contribution, and the shared kernel surface needs one coherent analytic
+    derivative field. The hand-rolled physical term is pinned to teqp's by the
+    check-value test in tests/thermo/test_saft.py before any association case
+    binds to it. Association part: the shared PCSaftWertheim term with G&S
+    2002's two-site (2B) assignment for every associating fluid and the eq. 2-3
+    cross-association combining rules; pure fluids associate through their own
+    donor-acceptor site pairs exactly as in the CPA kernels.
+    """
+
+    def __init__(self, name: str, params: list[dict[str, Any]]) -> None:
+        self.name = name
+        self.params = params
+        self._phys = _saft_assoc.PCSaftPhysical(params)
+        self._assoc = _saft_assoc.PCSaftWertheim(params)
+
+    def _alpha_r_derivs(self, T: float, rho: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
+        """alpha_r and its exact rho / composition derivatives (chain + disp + assoc)."""
+        a_phys, dadrho_phys, dz_phys = self._phys.derivs(T, rho, z)
+        alpha_a, dadrho_a, dz_a = self._assoc.derivs(T, rho, z)
+        return a_phys + alpha_a, dadrho_phys + dadrho_a, dz_phys + dz_a
+
+    def pressure(self, T: float, rho: float, z: np.ndarray) -> float:
+        """P = rho R T (1 + rho da_r/drho), the derivative in closed form."""
+        _a, dadrho, _dz = self._alpha_r_derivs(T, rho, z)
+        return rho * R_GAS * T * (1.0 + rho * dadrho)
+
+    def ln_phi(self, T: float, rho: float, z: np.ndarray) -> np.ndarray:
+        """Fully analytic fugacity coefficients (the cpa_pr formula, closed form)."""
+        a_r, dadrho, dz = self._alpha_r_derivs(T, rho, z)
+        Z = 1.0 + rho * dadrho
+        if Z <= 0.0:
+            raise _NonPhysicalZ(f"Z={Z:.6g} at T={T} K, rho={rho:.6g}")
+        mu = a_r + rho * dadrho + dz - float(z @ dz)
+        return mu - math.log(Z)
+
+    def h_res_rt(self, T: float, rho: float, z: np.ndarray) -> float:
+        """-T d(alpha_r)/dT + Z - 1; the T derivative is a central difference (the
+        cpa kernels' pattern; the density and composition derivatives stay analytic)."""
+        _a, dadrho, _dz = self._alpha_r_derivs(T, rho, z)
+        Z = 1.0 + rho * dadrho
+        ht = _DPTH_H * T
+        up = (self._alpha_r_derivs(T + ht, rho, z)[0] - self._alpha_r_derivs(T - ht, rho, z)[0]) / (2.0 * ht)
+        return -T * up + Z - 1.0
+
+    def max_density(self, T: float, z: np.ndarray) -> float:
+        """The BMCSL packing limit zeta_3 = 0.74 (teqp's max_rhoN), at 99.9 %."""
+        eps = np.array([float(p["epsilon_over_k"]) for p in self.params])
+        m = np.array([float(p["m"]) for p in self.params])
+        sigma = np.array([float(p["sigma_Angstrom"]) for p in self.params])
+        d = sigma * (1.0 - 0.12 * np.exp(-3.0 * eps / T))
+        packing_a3 = 6.0 * 0.74 / math.pi / float(np.sum(z * m * d**3))
+        return packing_a3 / _saft_assoc._MOL_TO_A3 * 0.999
+
+
 def _polymer_pcsaft_params() -> dict[str, Any]:
     """The cited polymer PC-SAFT parameter file, loaded once (spec T-10)."""
     path = Path(__file__).resolve().parents[3] / "data" / "thermo_params" / "special" / "polymer.yaml"
@@ -574,6 +634,10 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
         params = [block[cid] | {"name": cid} for cid in cids]
         kij_table = block.get("binary_kij") or {}
         return _CpaPrKernel(kind, params, tcs, kij_table)
+    if kind == "pc_saft_assoc":
+        block = _require_params("pc_saft_assoc", cids)
+        params = [block[cid] | {"name": cid} for cid in cids]
+        return _PCSaftAssocKernel(kind, params)
     if kind == "polymer_pc_saft":
         # Polymer PC-SAFT (spec T-10): same PCSAFT engine as "pc_saft", but the
         # parameters live in the special-family file (polymer.yaml), keyed by
@@ -623,13 +687,6 @@ class TeqpPackage(ThermoSurfaceMixin):
         contract test can type it and the refusal reason surfaces at the first
         property call via ``_kernel`` - the single entry to the engines.
         """
-        if self.model_kind == "pc_saft_assoc":
-            raise NotImplementedError(
-                "saft row 'pc_saft_assoc' refuses to build: teqp 0.23.2's PC-SAFT "
-                "implements no association contribution (teqp docs, PCSAFT.html: 'It "
-                "does NOT include the association contribution, only the dispersive "
-                "contributions')"
-            )
         if self.model_kind == "pc_saft_polar":
             raise NotImplementedError(
                 "saft row 'pc_saft_polar' refuses to build: teqp (>= 0.15) ships a "
@@ -1594,7 +1651,7 @@ class PCSaftThermo(TeqpPackage):
 
 
 class PCSaftAssocThermo(TeqpPackage):
-    """Refusal row: teqp's PC-SAFT has no association contribution (row ``pc_saft_assoc``)."""
+    """Hand-rolled PC-SAFT + association kernel (row ``pc_saft_assoc``, spec T-17)."""
 
     model_kind = "pc_saft_assoc"
 
