@@ -51,10 +51,14 @@
 #   case type for the solubility(cid, T) surface (scripts/validate_properties.py
 #   is outside the spec's editable files).
 #
-# - special_assoc_acetic_acid_Z: dimerization-kernel nominal compressibility
-#   Z = 0.6299 at 399.35 K, 1 bar (Mehling & Kleiber 2020). Pending: K2 was
-#   reduced FROM that Z point, so the current check is a round trip, not an
-#   independent prediction; an independent K2(T) source is needed.
+# - special_assoc_acetic_acid_Z: RESOLVED at unit level (T-19): the kernel is
+#   now parameterized INDEPENDENTLY (Ritter & Simons 1945, log10 K2 = 3164/T -
+#   10.4184 mmHg^-1, verified via Sebastiani & Lacquaniti 1967) and PREDICTS
+#   the Mehling & Kleiber (2020) Z = 0.6299 point with a +3.8% assessed miss
+#   (tests/thermo/test_special.py). A harness case stays unbound: the harness
+#   has no compressibility case type, and an AcOH/water VLE bind needs the
+#   kernel in flash K-values plus liquid non-ideality (ideal-liquid misses
+#   measured K's by ~7-15% at the Sebastiani midpoint).
 #
 # - special_chen_polymer_nrtl_parameters: Chen 1993 against a published
 #   polymer-solution dataset with the paper's own parameterization. T-19

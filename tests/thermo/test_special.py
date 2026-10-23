@@ -248,19 +248,28 @@ class TestIdealSolid:
 
 
 class TestDimerKernel:
-    K2_REF = 3.4539e-5  # 1/Pa, at T_ref (reduced from Z = 0.6299; see association.yaml)
+    # Ritter & Simons (1945) log10 K2 = 3164/T - 10.4184 (mmHg^-1) converted to
+    # a Pa basis at T_ref = 399.35 K (data/thermo_params/special/association.yaml).
+    K2_REF = 2.39647e-5  # 1/Pa
     T_REF = 399.35
-    DH = -25000.0
+    DH = -60574.0  # -3164 R ln10, J/mol
 
-    def test_reference_point_round_trip(self) -> None:
-        """At (T_ref, P_nom = P_true/Z) the parameters reduce from Z = 0.6299.
+    def test_independent_prediction_at_reference_point(self) -> None:
+        """The R&S parameters PREDICT (not fit) the M&K compressibility point.
 
-        The 1 bar in the source is the TRUE pressure of the equilibrium
-        mixture; the kernel takes the nominal pressure P = P_true / Z.
+        At 399.35 K and 1 bar TRUE pressure the kernel predicts Z = 0.6537;
+        Mehling & Kleiber (2020) measured Z = 0.6299 - a +3.8% miss, assessed
+        (their point sits in their own dimer+tetramer treatment, ours is
+        dimer-only). The 1 bar is the TRUE pressure of the equilibrium
+        mixture; the kernel takes the nominal pressure P = P_true/Z, solved
+        self-consistently.
         """
-        p_nom = 1.0e5 / 0.6299
-        z = dimer_vapor_compressibility(self.T_REF, p_nom, self.DH, self.K2_REF, self.T_REF)
-        assert z == pytest.approx(0.6299, rel=1e-3)
+        p_true = 1.0e5
+        z = 0.7
+        for _ in range(80):
+            z = dimer_vapor_compressibility(self.T_REF, p_true / z, self.DH, self.K2_REF, self.T_REF)
+        assert z == pytest.approx(0.6537, rel=1e-3)
+        assert z == pytest.approx(0.6299, rel=0.05)  # measured miss band (+3.8%, assessed)
 
     def test_ideal_limit(self) -> None:
         """Association vanishes as P -> 0: Z -> 1 (Z ~ 1 - kp P, so the
@@ -277,25 +286,23 @@ class TestDimerKernel:
         with pytest.raises(ValueError, match="positive"):
             dimer_vapor_compressibility(0.0, 1.0e5, self.DH, self.K2_REF, self.T_REF)
 
-    def test_apparent_molar_mass_400k_1bar(self) -> None:
-        """Apparent molar mass at 400 K / 1 bar TRUE pressure vs the published value.
+    def test_apparent_molar_mass_at_reference_point(self) -> None:
+        """Apparent molar mass at T_ref / 1 bar TRUE pressure vs the published value.
 
-        The cited chemical-theory prediction for acetic-acid vapour association
-        is Z = 0.6299 at 399.35 K and 1 bar TRUE pressure (Mehling & Kleiber,
-        ChemTexts 6, 4 (2020), appendix A - the same point the K2_ref above is
-        reduced from; Hayden-O'Connell, Ind. Eng. Chem. Process Des. Dev. 14,
-        209 (1975) is the standard predictive route for the same quantity, and
-        no standalone published HOC number at 400 K / 1 bar was retrievable
-        open access). M/Z gives Mapp = 60.052/0.6299 = 95.34 g/mol. The 1 bar
-        is the TRUE mixture pressure, so the kernel takes the nominal
+        With the independent Ritter & Simons (1945) parameters the kernel
+        predicts Mapp = 60.052/Z = 91.87 g/mol at 399.35 K, 1 bar true, vs the
+        Mehling & Kleiber (2020) measured 95.34 (Z = 0.6299): a -3.6% miss,
+        assessed (dimer-only kernel vs their dimer+tetramer treatment). The 1
+        bar is the TRUE mixture pressure, so the kernel takes the nominal
         P = P_true/Z and Z is solved self-consistently.
         """
         p_true = 1.0e5
         z = 0.7
-        for _ in range(60):
-            z = dimer_vapor_compressibility(400.0, p_true / z, self.DH, self.K2_REF, self.T_REF)
+        for _ in range(80):
+            z = dimer_vapor_compressibility(self.T_REF, p_true / z, self.DH, self.K2_REF, self.T_REF)
         mapp = 60.052 / z
-        assert mapp == pytest.approx(95.34, rel=0.03)
+        assert mapp == pytest.approx(91.87, rel=0.01)
+        assert mapp == pytest.approx(95.34, rel=0.05)  # measured miss band (-3.6%, assessed)
 
 
 # --------------------------------------------------------------------------

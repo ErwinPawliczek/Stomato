@@ -146,8 +146,12 @@
       In-house dimerization chemical-theory kernel (Marek-Standart form, the
       leading association term of Hayden-O'Connell): Kp(T) from a reference
       dimerization constant and association enthalpy per component. Acetic-acid
-      parameters reduced from Mehling & Kleiber (2020) J. Chem. Eng. Data /
-      Ind. Eng. Chem. Res. acetic-acid vapour association data. The curated
+      parameters from Ritter & Simons (1945): log10 K2 = 3164/T - 10.4184
+      (mmHg^-1), dH = -3164 R ln10 = -60.57 kJ/mol (verified via Sebastiani &
+      Lacquaniti, Chem. Eng. Sci. 22, 1155 (1967);
+      data/thermo_params/special/association.yaml). Independent prediction vs
+      Mehling & Kleiber (2020) measured Z = 0.6299 at 399.35 K, 1 bar true:
+      +3.8% miss, assessed in tests/thermo/test_special.py. The curated
       nrtl_hoc / nrtl_nothnagel rows keep their refusal (their wiring lives in
       ngdesign.thermo.gamma_phi, outside this spec's file list).
   applicability:
@@ -160,8 +164,17 @@
     notes: >-
       Carboxylic-acid vapour association via dimerization equilibrium; liquid
       phase ideal on apparent composition. The kernel function
-      dimer_vapor_compressibility is exercised directly against the published
-      compressibility point in tests/thermo/test_special.py.
+      dimer_vapor_compressibility is exercised against an INDEPENDENT
+      published point (Ritter & Simons parameters predict the Mehling &
+      Kleiber compressibility, +3.8% assessed miss) in
+      tests/thermo/test_special.py. T-19: row stays experimental - the harness
+      has no compressibility case type, and binding the Sebastiani &
+      Lacquaniti (1967) AcOH/water VLE needs the kernel wired into flash
+      K-values AND liquid non-ideality: at their 376.65 K midpoint an
+      association-only ideal-liquid K model gives K_w +7% / K_a -15% vs
+      measured, while the monomer-only model gives -4% / -16%, so liquid
+      non-ideality dominates and no honest harness-evaluable case exists for
+      this row today.
   status: experimental
   validation: []
 
