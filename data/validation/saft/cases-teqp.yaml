@@ -1,0 +1,594 @@
+# T-18 teqp-backed row bindings (spec specs/backend/T-18-teqp-backed-promotions.md).
+#
+# Each case is a COPY of an existing case in data/validation/ (saft/ or helmholtz/)
+# rebound to the teqp-backed row that runs it: same components, z, T and `expected`
+# values, only `package:` changed. Pure cases keep the harness's CoolProp-generated
+# expected values (never hand-typed); binary and AGA8 cases keep the original cited
+# literature sources verbatim. Never edit `expected` here — edit (or regenerate) the
+# original binding and copy again.
+#
+# Measured in T-18 and NOT bound (crashes and solver artifacts are not declarable):
+# - saft_vr_mie c1co2 at 298.142K/7.508MPa, 303.145K/7.306MPa, 303.144K/7.361MPa —
+#   SaturationError (bubble point: no convergence) on the near-critical Petropoulou points
+# - multifluid c1co2 at the same five near-critical points — same SaturationError
+# - multifluid_pure pure-CO2-265.0K/285.0K/288.9K — the bridge's pure-fluid saturation
+#   scan loses the CO2 loop above ~250 K on the multi-fluid surface (returns a wrong
+#   root, e.g. 196479 Pa at 285 K where the reference is 4712303 Pa, or refuses with
+#   "at/above Tc" at 265 K); the model itself is exact where the scan works (250 K:
+#   1785034 Pa measured, reference 1785000 Pa class)
+# - gerg2008_teqp aga8-ng2-165.933K/169.184K-dew — with the AGA8 trace hexane
+#   (C6+ = 2e-5) teqp's dew collapses to a spurious low-pressure root (81.97 kPa vs
+#   1.17898 MPa and 0.610 vs 2.0497 MPa; without the trace C6+ the same feed converges
+#   sanely) — teqp's bundled binary-pair file carries no Kunz-Wagner C1/nC6 pair (bare
+#   Lorentz-Berthelot); aga8-ng2-176.240K-dew — SaturationError, no convergence
+pure_cases:
+- id: h2o-nist-273.179K
+  package: multifluid_pure
+  components:
+  - H2O
+  fluid: H2O
+  z:
+    H2O: 1.0
+  T: 273.179
+  source: literature:NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation
+    table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
+  expected:
+    bubble_P: 612.48
+    dew_P: 612.48
+    rho_V: 0.0048608
+    rho_L: 999.794
+    Cp: 76.0217
+  note: '[T-18 binding: case copied with package multifluid_pure; expected values untouched from the original
+    binding.]'
+- id: h2o-nist-347.390K
+  package: multifluid_pure
+  components:
+  - H2O
+  fluid: H2O
+  z:
+    H2O: 1.0
+  T: 347.39
+  source: literature:NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation
+    table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
+  expected:
+    bubble_P: 37384.8
+    dew_P: 37384.8
+    rho_V: 0.235069
+    rho_L: 975.267
+    Cp: 75.5351
+  note: '[T-18 binding: case copied with package multifluid_pure; expected values untouched from the original
+    binding.]'
+- id: h2o-nist-401.605K
+  package: multifluid_pure
+  components:
+  - H2O
+  fluid: H2O
+  z:
+    H2O: 1.0
+  T: 401.605
+  source: literature:NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation
+    table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
+  expected:
+    bubble_P: 258019.0
+    dew_P: 258019.0
+    rho_V: 1.43326
+    rho_L: 936.14
+    Cp: 76.7184
+  note: '[T-18 binding: case copied with package multifluid_pure; expected values untouched from the original
+    binding.]'
+- id: pure-C1-125.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: multifluid_pure
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  note: '[T-18 binding: case copied with package multifluid_pure; expected values untouched from the original
+    binding.]'
+- id: pure-C1-155.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: multifluid_pure
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 155.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 1295003.4509910743
+    dew_P: 1295003.4509910743
+    rho_V: 20.418904925344048
+    rho_L: 347.5068280431007
+    Cp: 67.6128793208551
+  note: '[T-18 binding: case copied with package multifluid_pure; expected values untouched from the original
+    binding.]'
+- id: pure-C1-172.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: multifluid_pure
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 172.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 2500733.3980837795
+    dew_P: 2500733.3980837795
+    rho_V: 42.51387462698286
+    rho_L: 304.5590510326234
+    Cp: 87.12993462434143
+  note: '[T-18 binding: case copied with package multifluid_pure; expected values untouched from the original
+    binding.]'
+- id: pure-C1-181.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: multifluid_pure
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 181.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 3394772.10519219
+    dew_P: 3394772.10519219
+    rho_V: 64.52258944445151
+    rho_L: 271.9129243864554
+    Cp: 124.1390921872483
+  note: '[T-18 binding: case copied with package multifluid_pure; expected values untouched from the original
+    binding.]'
+- id: pure-C1-95.3K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: multifluid_pure
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 95.3
+  source: coolprop:CH4
+  expected:
+    bubble_P: 20516.959456238896
+    dew_P: 20516.959456238896
+    rho_V: 0.4202352992283802
+    rho_L: 445.30073366872654
+    Cp: 54.315463111257486
+  note: '[T-18 binding: case copied with package multifluid_pure; expected values untouched from the original
+    binding.]'
+- id: pure-CO2-216.7K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: multifluid_pure
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 216.7
+  source: coolprop:CO2
+  expected:
+    bubble_P: 520401.256268029
+    dew_P: 520401.256268029
+    rho_V: 13.822674477833518
+    rho_L: 1178.0752220352338
+    Cp: 85.97118053434417
+  note: '[T-18 binding: case copied with package multifluid_pure; expected values untouched from the original
+    binding.]'
+- id: pure-CO2-240.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: multifluid_pure
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 240.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 1282483.4984006712
+    dew_P: 1282483.4984006712
+    rho_V: 33.29513808635024
+    rho_L: 1088.8692401220028
+    Cp: 90.2633373679705
+  note: '[T-18 binding: case copied with package multifluid_pure; expected values untouched from the original
+    binding.]'
+- id: pure-C1-125.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: saft_vr_mie
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: pure-C1-155.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: saft_vr_mie
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 155.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 1295003.4509910743
+    dew_P: 1295003.4509910743
+    rho_V: 20.418904925344048
+    rho_L: 347.5068280431007
+    Cp: 67.6128793208551
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: pure-C1-172.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: saft_vr_mie
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 172.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 2500733.3980837795
+    dew_P: 2500733.3980837795
+    rho_V: 42.51387462698286
+    rho_L: 304.5590510326234
+    Cp: 87.12993462434143
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: pure-C1-181.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: saft_vr_mie
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 181.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 3394772.10519219
+    dew_P: 3394772.10519219
+    rho_V: 64.52258944445151
+    rho_L: 271.9129243864554
+    Cp: 124.1390921872483
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: pure-C1-95.3K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: saft_vr_mie
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 95.3
+  source: coolprop:CH4
+  expected:
+    bubble_P: 20516.959456238896
+    dew_P: 20516.959456238896
+    rho_V: 0.4202352992283802
+    rho_L: 445.30073366872654
+    Cp: 54.315463111257486
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: pure-CO2-216.7K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: saft_vr_mie
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 216.7
+  source: coolprop:CO2
+  expected:
+    bubble_P: 520401.256268029
+    dew_P: 520401.256268029
+    rho_V: 13.822674477833518
+    rho_L: 1178.0752220352338
+    Cp: 85.97118053434417
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: pure-CO2-240.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: saft_vr_mie
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 240.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 1282483.4984006712
+    dew_P: 1282483.4984006712
+    rho_V: 33.29513808635024
+    rho_L: 1088.8692401220028
+    Cp: 90.2633373679705
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: pure-CO2-265.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: saft_vr_mie
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: pure-CO2-285.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: saft_vr_mie
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 285.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 4712303.46473758
+    dew_P: 4712303.46473758
+    rho_V: 143.92260865325676
+    rho_L: 847.0463756053841
+    Cp: 137.89526869642648
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: pure-CO2-288.9K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: saft_vr_mie
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 288.9
+  source: coolprop:CO2
+  expected:
+    bubble_P: 5179673.129875787
+    dew_P: 5179673.129875787
+    rho_V: 165.14581022973502
+    rho_L: 814.6391777699876
+    Cp: 155.1893706579236
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+binary_cases:
+- id: aga8-c1n2-134.02K-dew
+  package: gerg2008_teqp
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.5
+    N2: 0.5
+  T: 134.02
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution,
+    pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen
+    50/50 mol %); retrieved 2026-10-21
+  expected:
+    dew_P: 953319.19
+  note: 'saturation-boundary point at d = 1.0 mol/l (vapour side), model-calculated GERG-2008 reference
+    [T-18 binding: case copied with package gerg2008_teqp; expected values untouched from the original
+    binding.]'
+- id: aga8-c1n2-146.37K-dew
+  package: gerg2008_teqp
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.5
+    N2: 0.5
+  T: 146.37
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution,
+    pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen
+    50/50 mol %); retrieved 2026-10-21
+  expected:
+    dew_P: 1866384.4
+  note: 'saturation-boundary point at d = 2.0 mol/l (vapour side), model-calculated GERG-2008 reference
+    [T-18 binding: case copied with package gerg2008_teqp; expected values untouched from the original
+    binding.]'
+- id: aga8-c1n2-153.41K-dew
+  package: gerg2008_teqp
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.5
+    N2: 0.5
+  T: 153.41
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution,
+    pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen
+    50/50 mol %); retrieved 2026-10-21
+  expected:
+    dew_P: 2658444.0
+  note: 'saturation-boundary point at d = 3.0 mol/l (vapour side), model-calculated GERG-2008 reference
+    [T-18 binding: case copied with package gerg2008_teqp; expected values untouched from the original
+    binding.]'
+- id: c1n2-149.989K-2.908MPa
+  package: gerg2008_teqp
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.7226
+    N2: 0.2774
+  T: 149.989
+  source: literature:Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML
+    (doi 10.1021/je700210n), CH4+N2 149.989 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 2908400.0
+    vapor_comp:
+      N2: 0.5981
+  note: '[T-18 binding: case copied with package gerg2008_teqp; expected values untouched from the original
+    binding.]'
+- id: aga8-c1n2-134.02K-dew
+  package: multifluid
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.5
+    N2: 0.5
+  T: 134.02
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution,
+    pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen
+    50/50 mol %); retrieved 2026-10-21
+  expected:
+    dew_P: 953319.19
+  note: 'saturation-boundary point at d = 1.0 mol/l (vapour side), model-calculated GERG-2008 reference
+    [T-18 binding: case copied with package multifluid; expected values untouched from the original binding.]'
+- id: aga8-c1n2-146.37K-dew
+  package: multifluid
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.5
+    N2: 0.5
+  T: 146.37
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution,
+    pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen
+    50/50 mol %); retrieved 2026-10-21
+  expected:
+    dew_P: 1866384.4
+  note: 'saturation-boundary point at d = 2.0 mol/l (vapour side), model-calculated GERG-2008 reference
+    [T-18 binding: case copied with package multifluid; expected values untouched from the original binding.]'
+- id: aga8-c1n2-153.41K-dew
+  package: multifluid
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.5
+    N2: 0.5
+  T: 153.41
+  source: literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution,
+    pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen
+    50/50 mol %); retrieved 2026-10-21
+  expected:
+    dew_P: 2658444.0
+  note: 'saturation-boundary point at d = 3.0 mol/l (vapour side), model-calculated GERG-2008 reference
+    [T-18 binding: case copied with package multifluid; expected values untouched from the original binding.]'
+- id: c1co2-293.130K-6.135MPa
+  package: multifluid
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.01528
+    CO2: 0.98472
+  T: 293.13
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib.
+    462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 293.13 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
+  expected:
+    bubble_P: 6134800.0
+    vapor_comp:
+      CO2: 0.9603
+  note: '[T-18 binding: case copied with package multifluid; expected values untouched from the original
+    binding.]'
+- id: c1n2-149.989K-2.908MPa
+  package: multifluid
+  components:
+  - C1
+  - N2
+  z:
+    C1: 0.7226
+    N2: 0.2774
+  T: 149.989
+  source: literature:Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML
+    (doi 10.1021/je700210n), CH4+N2 149.989 K isotherm; retrieved 2026-10-21
+  expected:
+    bubble_P: 2908400.0
+    vapor_comp:
+      N2: 0.5981
+  note: '[T-18 binding: case copied with package multifluid; expected values untouched from the original
+    binding.]'
+- id: c1co2-293.130K-6.135MPa
+  package: saft_vr_mie
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.01528
+    CO2: 0.98472
+  T: 293.13
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib.
+    462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 293.13 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
+  expected:
+    bubble_P: 6134800.0
+    vapor_comp:
+      CO2: 0.9603
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: c1co2-293.130K-6.976MPa
+  package: saft_vr_mie
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.04982
+    CO2: 0.95018
+  T: 293.13
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib.
+    462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 293.13 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
+  expected:
+    bubble_P: 6975600.0
+    vapor_comp:
+      CO2: 0.89863
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
+- id: c1co2-298.142K-6.976MPa
+  package: saft_vr_mie
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.02145
+    CO2: 0.97855
+  T: 298.142
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib.
+    462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 298.14 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
+  expected:
+    bubble_P: 6975500.0
+    vapor_comp:
+      CO2: 0.95917
+  note: '[T-18 binding: case copied with package saft_vr_mie; expected values untouched from the original
+    binding.]'
