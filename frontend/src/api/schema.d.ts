@@ -868,6 +868,16 @@ export interface components {
             message: string;
         };
         /**
+         * Arrhenius
+         * @description Arrhenius factor k0·exp(−Ea/(R·T)) with Ea in J/mol.
+         */
+        Arrhenius: {
+            /** Ea */
+            Ea: number;
+            /** K0 */
+            k0: number;
+        };
+        /**
          * Axis
          * @description One swept address and the values it takes; every combination with the
          *     other axes (the full grid) becomes one case.
@@ -1082,10 +1092,47 @@ export interface components {
          */
         Direction: "E" | "W" | "N" | "S" | "UP" | "DOWN";
         /**
+         * DrivingForceTerm
+         * @description One additive term of an LHHW numerator/denominator block.
+         */
+        DrivingForceTerm: {
+            arrhenius: components["schemas"]["Arrhenius"];
+            /**
+             * Orders
+             * @default {}
+             */
+            orders: {
+                [key: string]: number;
+            };
+        };
+        /**
          * EndType
          * @enum {string}
          */
         EndType: "bw" | "sw" | "fl" | "thd";
+        /**
+         * Equilibrium
+         * @description Equilibrium model of one reaction: Gibbs-driven or a ln K polynomial.
+         */
+        Equilibrium: {
+            /**
+             * Form
+             * @enum {string}
+             */
+            form: "from_gibbs" | "polynomial";
+            /**
+             * Polynomial
+             * @default {}
+             */
+            polynomial: {
+                [key: string]: number;
+            };
+            /** T Window */
+            t_window?: [
+                number,
+                number
+            ] | null;
+        };
         /**
          * EquipmentEnvelope
          * @description Axis-aligned box for collision checks (mm).
@@ -1113,7 +1160,7 @@ export interface components {
             molar_flow: number;
         };
         /** Flowsheet */
-        Flowsheet: {
+        "Flowsheet-Input": {
             /**
              * Components
              * @default []
@@ -1126,6 +1173,11 @@ export interface components {
             design_specs: components["schemas"]["DesignSpec"][];
             /** Name */
             name: string;
+            /**
+             * Reactions
+             * @default []
+             */
+            reactions: components["schemas"]["ReactionSet-Input"][];
             solver_options?: components["schemas"]["SolverOptions"];
             /** Streams */
             streams: components["schemas"]["StreamSpec"][];
@@ -1136,6 +1188,9 @@ export interface components {
             thermo: string;
             /** Units */
             units: components["schemas"]["UnitSpec"][];
+        };
+        "Flowsheet-Output": {
+            [key: string]: unknown;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1197,6 +1252,32 @@ export interface components {
         JobEnqueued: {
             /** Job Id */
             job_id: string;
+        };
+        /**
+         * LHHW
+         * @description Langmuir-Hinshelwood-Hougen-Watson rate expression.
+         */
+        LHHW: {
+            /**
+             * Adsorption
+             * @default []
+             */
+            adsorption: components["schemas"]["DrivingForceTerm"][];
+            /**
+             * Adsorption Exponent
+             * @default 1
+             */
+            adsorption_exponent: number;
+            /**
+             * Basis
+             * @default mole_fraction
+             * @enum {string}
+             */
+            basis: "mole_fraction" | "concentration";
+            /** Driving Force */
+            driving_force: components["schemas"]["DrivingForceTerm"][];
+            /** Rate Units */
+            rate_units: string;
         };
         /**
          * Layout
@@ -1310,9 +1391,81 @@ export interface components {
             /** Unit */
             unit: string;
         };
+        /**
+         * PowerLaw
+         * @description Power-law rate expression.
+         *
+         *     ``reverse`` carries the explicit reverse expression; without it a reaction
+         *     with an equilibrium model is equilibrium-limited, and without either the
+         *     expression is irreversible.
+         */
+        "PowerLaw-Input": {
+            /** Ea */
+            Ea: number;
+            /**
+             * Basis
+             * @default mole_fraction
+             * @enum {string}
+             */
+            basis: "mole_fraction" | "concentration";
+            /** K0 */
+            k0: number;
+            /**
+             * Orders
+             * @default {}
+             */
+            orders: {
+                [key: string]: number;
+            };
+            /** Rate Units */
+            rate_units: string;
+            reverse?: components["schemas"]["PowerLaw-Input"] | null;
+        };
+        /**
+         * PowerLaw
+         * @description Power-law rate expression.
+         *
+         *     ``reverse`` carries the explicit reverse expression; without it a reaction
+         *     with an equilibrium model is equilibrium-limited, and without either the
+         *     expression is irreversible.
+         */
+        "PowerLaw-Output": {
+            /** Ea */
+            Ea: number;
+            /**
+             * Basis
+             * @default mole_fraction
+             * @enum {string}
+             */
+            basis: "mole_fraction" | "concentration";
+            /** K0 */
+            k0: number;
+            /**
+             * Orders
+             * @default {}
+             */
+            orders: {
+                [key: string]: number;
+            };
+            /** Rate Units */
+            rate_units: string;
+            reverse?: components["schemas"]["PowerLaw-Output"] | null;
+        };
         /** Project */
-        Project: {
-            flowsheet: components["schemas"]["Flowsheet"];
+        "Project-Input": {
+            flowsheet: components["schemas"]["Flowsheet-Input"];
+            /** @default {
+             *       "pfd": {},
+             *       "pid": {},
+             *       "plot": {}
+             *     } */
+            layout: components["schemas"]["Layout"];
+            /** Name */
+            name: string;
+        };
+        /** Project */
+        "Project-Output": {
+            flowsheet: components["schemas"]["Flowsheet-Output"];
             /** @default {
              *       "pfd": {},
              *       "pid": {},
@@ -1329,7 +1482,7 @@ export interface components {
         ProjectCreate: {
             /** Name */
             name: string;
-            project: components["schemas"]["Project"];
+            project: components["schemas"]["Project-Input"];
         };
         /**
          * ProjectInfo
@@ -1347,7 +1500,7 @@ export interface components {
             name: string;
             /** Owner */
             owner: string;
-            project: components["schemas"]["Project"];
+            project: components["schemas"]["Project-Output"];
             /**
              * Updated At
              * Format: date-time
@@ -1390,6 +1543,100 @@ export interface components {
             /** Sg */
             sg: number;
         };
+        /**
+         * Reaction
+         * @description One stoichiometric reaction with optional kinetics and equilibrium model.
+         *
+         *     ``base_component`` is the component the extent of reaction is normalized
+         *     on; it must appear with ν < 0. Pseudo (lumped) components can only take
+         *     part in reactions explicitly marked ``lumped``, which switches validation
+         *     from element balances to a molecular-weight balance (pseudos carry no
+         *     formula). ``provenance`` is mandatory: every reaction names where its
+         *     stoichiometry and data come from.
+         */
+        "Reaction-Input": {
+            /** Base Component */
+            base_component: string;
+            equilibrium?: components["schemas"]["Equilibrium"] | null;
+            /** Id */
+            id: string;
+            /** Kinetics */
+            kinetics?: components["schemas"]["PowerLaw-Input"] | components["schemas"]["LHHW"] | null;
+            /**
+             * Lumped
+             * @default false
+             */
+            lumped: boolean;
+            /** Provenance */
+            provenance: string;
+            /** Stoichiometry */
+            stoichiometry: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * Reaction
+         * @description One stoichiometric reaction with optional kinetics and equilibrium model.
+         *
+         *     ``base_component`` is the component the extent of reaction is normalized
+         *     on; it must appear with ν < 0. Pseudo (lumped) components can only take
+         *     part in reactions explicitly marked ``lumped``, which switches validation
+         *     from element balances to a molecular-weight balance (pseudos carry no
+         *     formula). ``provenance`` is mandatory: every reaction names where its
+         *     stoichiometry and data come from.
+         */
+        "Reaction-Output": {
+            /** Base Component */
+            base_component: string;
+            equilibrium?: components["schemas"]["Equilibrium"] | null;
+            /** Id */
+            id: string;
+            /** Kinetics */
+            kinetics?: components["schemas"]["PowerLaw-Output"] | components["schemas"]["LHHW"] | null;
+            /**
+             * Lumped
+             * @default false
+             */
+            lumped: boolean;
+            /** Provenance */
+            provenance: string;
+            /** Stoichiometry */
+            stoichiometry: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * ReactionSet
+         * @description A flowsheet-owned set of reactions over its own component slate.
+         *
+         *     The slate is self-describing so a saved project carries everything needed
+         *     to replay it; the flowsheet slate may be wider. Lumped reactions are
+         *     validated on a molecular-weight balance instead of element counts.
+         */
+        "ReactionSet-Input": {
+            /** Components */
+            components: string[];
+            /** Id */
+            id: string;
+            /** Reactions */
+            reactions: components["schemas"]["Reaction-Input"][];
+        };
+        /**
+         * ReactionSet
+         * @description A flowsheet-owned set of reactions over its own component slate.
+         *
+         *     The slate is self-describing so a saved project carries everything needed
+         *     to replay it; the flowsheet slate may be wider. Lumped reactions are
+         *     validated on a molecular-weight balance instead of element counts.
+         */
+        "ReactionSet-Output": {
+            /** Components */
+            components: string[];
+            /** Id */
+            id: string;
+            /** Reactions */
+            reactions: components["schemas"]["Reaction-Output"][];
+        };
         /** RoutedLine */
         RoutedLine: {
             /** Components */
@@ -1428,7 +1675,7 @@ export interface components {
              * @default []
              */
             errors: components["schemas"]["UnitError"][];
-            flowsheet: components["schemas"]["Flowsheet"];
+            flowsheet: components["schemas"]["Flowsheet-Output"];
             /**
              * History
              * @default []
@@ -2039,7 +2286,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Project"];
+                    "application/json": components["schemas"]["Project-Output"];
                 };
             };
         };
@@ -2053,7 +2300,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Project"];
+                "application/json": components["schemas"]["Project-Input"];
             };
         };
         responses: {
@@ -2063,7 +2310,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Project"];
+                    "application/json": components["schemas"]["Project-Output"];
                 };
             };
             /** @description Validation Error */
@@ -2200,7 +2447,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Project"];
+                    "application/json": components["schemas"]["Project-Output"];
                 };
             };
         };
@@ -2304,7 +2551,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Project"];
+                "application/json": components["schemas"]["Project-Input"];
             };
         };
         responses: {
