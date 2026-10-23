@@ -52,7 +52,12 @@ def _amine_case() -> tuple[StreamState, dict[str, Any]]:
     return port, params
 
 
-@pytest.fixture(name="solved")
+# Module scope: the fixture's one mesh solve (~35 s carrier / ~120 s exothermic
+# continuation) is deterministic, so the four assertions below share a single
+# converged solution instead of paying four solves. The explicit timeout marker
+# accommodates the continuation solve's wall time against the suite-wide
+# pytest-timeout=120 in pyproject.toml.
+@pytest.fixture(name="solved", scope="module")
 def _solved() -> Any:
     return _COL.solve({"feed": _amine_case()[0]}, _amine_case()[1], get("thermo", "amine_ke")())
 
@@ -61,21 +66,27 @@ def _solved() -> Any:
 # live package for EVERY package - one definition of "converged". The P1-09 accepted
 # absorber state was anchor-consistent, not equilibrium-consistent: the same state
 # reads M = 1.13e-2, H = 2.67e-3 under the honest gate (measured) against the
-# 1e-2 / 1e-2 gates, so the mesh raised ColumnConvergenceError. P1-11 step 3 closed
-# the mesh: the NS fallback now aligns its vapour seeds with the gate (pass-frozen
-# refreshed y = K*x on the reactive package) and the absorber closes - measured
-# exact M = 1.654e-4, H = 2.679e-3 in four NS passes. The balance, absorption and
-# loading assertions run unmarked against the converged state; the temperature-band
-# test stays a strict xfail pending an orchestrator physics ruling (see its
-# rationale).
+# 1e-2 / 1e-2 gates, so the mesh raised ColumnConvergenceError.
+#
+# P1-11 R1 (ruling on #153, 2026-10-23): the exothermic van 't Hoff reference ships
+# as the package default (_heat_scale = 1.0). The mesh closes it cold through the
+# generic heat-of-reaction continuation in _solve_mesh (scales 0.0 -> 1.0, warm-
+# chained), after the exact-residual NS alignment (pass-frozen refreshed y = K*x
+# trial seeds). Measured closure: max_T 304.34 K (+1.19 K exotherm rise), CO2 slip
+# 8.9068e-6 mol/s, rich loading 0.5021. The balance, absorption, loading and
+# temperature-band assertions run unmarked against the converged state; the band
+# test's deferred physics question is resolved by the R1 ruling (exothermic is the
+# shipped reference, the equilibrium-consistent profile carries a small positive
+# exotherm).
 
 
+@pytest.mark.timeout(600)
 def test_boundary_balance_closes(solved: Any) -> None:
     """Boundary balance over the real feed and outlet streams.
 
-    Measured on the converged state: total closure exact, worst component H2O
-    at 3.668e-5 mol/s on a 192 mol/s feed (1.91e-7 relative). The 1e-6
-    relative bound is the honest-gate acceptance criterion.
+    Measured on the converged state (P1-11 R1): total closure exact, worst
+    component C3 at 1.13e-11 relative on a 192 mol/s feed. The 1e-6 relative
+    bound is the honest-gate acceptance criterion.
     """
     port, params = _amine_case()
     feed_total = port.molar_flow + sum(f["molar_flow"] for f in params["feeds"])
@@ -98,8 +109,10 @@ def test_boundary_balance_closes(solved: Any) -> None:
         assert abs(got - flow) / max(flow, 1e-12) < 1e-6, cid
 
 
+@pytest.mark.timeout(600)
 def test_co2_is_absorbed(solved: Any) -> None:
-    """Measured on the converged state: CO2 slip 9.202e-6 mol/s with the gas.
+    """Measured on the converged state (R1 exothermic reference): CO2 slip
+    8.9068e-6 mol/s with the gas.
 
     The old 0.0489 mol/s slip rode a stage profile pinned at the 273.15 K band
     floor (frozen reactive K). The physical profile carries the absorption
@@ -111,9 +124,10 @@ def test_co2_is_absorbed(solved: Any) -> None:
     co2_out = d.molar_flow * d.composition.get("CO2", 0.0)
     # Review pin: CO2 slip below 1e-2 mol/s; the measured anchor is tighter.
     assert co2_out < 1e-2
-    assert co2_out == pytest.approx(9.2e-6, rel=0.05)
+    assert co2_out == pytest.approx(8.9068e-6, rel=0.05)
 
 
+@pytest.mark.timeout(600)
 def test_rich_loading_in_range(solved: Any) -> None:
     """Measured on the converged state: rich loading 0.5021 mol/mol MDEA,
     inside the MDEA 0-1 window and the solvent's equilibrium capacity."""
@@ -124,26 +138,18 @@ def test_rich_loading_in_range(solved: Any) -> None:
     assert loading == pytest.approx(0.5021, abs=0.005)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="P1-11 step 3 (ruling on #153): the CONVERGED profile's maximum stage "
-    "temperature is 302.95 K - a -0.20 K rise from the 303.15 K lean inlet, "
-    "not the 314.3 K exotherm bulge measured on the pre-closure state (that "
-    "state was anchor-consistent, not equilibrium-consistent). Whether the "
-    "equilibrium-consistent solution should carry a bulge is a physics "
-    "question on the package surface, deferred to an orchestrator ruling; "
-    "strict=True flags the decision point",
-)
+@pytest.mark.timeout(600)
 def test_stage_temperatures_in_band(solved: Any) -> None:
     """The absorption exotherm, pinned (review step 4).
 
-    Measured on the CONVERGED state (P1-11 step 3): max stage 302.95 K, rise
-    -0.20 K against the 303.15 K lean inlet - the assert below fails on the
-    0 K floor. The pre-closure state carried a 314.3 K bulge (rise 11.2 K,
-    inside the spec's 0-30 K window) but read M = 1.13e-2 under the honest
-    equilibrium-consistent gate, i.e. it was not a converged state. Which
-    temperature profile the converged reactive absorber should carry is the
-    open question recorded in the xfail rationale.
+    Measured on the CONVERGED state (P1-11 R1): max stage 304.34 K, a +1.19 K
+    rise against the 303.15 K lean inlet - inside the spec's 0-30 K exotherm
+    window. The pre-closure state carried a 314.3 K bulge (rise 11.2 K) but
+    read M = 1.13e-2 under the honest equilibrium-consistent gate, i.e. it was
+    not a converged state; the earlier carrier-reference closure sat at
+    -0.20 K because the carrier sign removes the exotherm. The R1 ruling
+    (issue #153, 2026-10-23) ships the exothermic reference, so the small
+    positive rise is the equilibrium-consistent answer.
     """
     ts = [solved.info[f"stage_{j}_T_K"] for j in range(20)]
     rise = max(ts) - 303.15
