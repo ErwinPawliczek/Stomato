@@ -1,0 +1,44 @@
+# Example crude assay with open provenance (spec A-01).
+#
+# Source: Bagajewicz, M., Ji, S., "Rigorous Procedure for the Design of
+# Conventional Atmospheric Crude Fractionation Units. Part I: Targeting",
+# Ind. Eng. Chem. Res. 40 (2001) 617-626, DOI 10.1021/ie000302 - light crude
+# feed data. Author-hosted copy: https://www.ou.edu/class/che-design/pub-papers/
+# (the same Table 1 TBP row and light-crude density are reprinted in the
+# author-hosted follow-up "New Technologies To Enhance the Distillation Yield
+# of Petroleum Fractionation", Table 1 "Crude Oil Distillation Curves").
+#
+# Transcribed numbers (light crude):
+# - bulk density 845 kg/m3 = 36.0 deg API (paper Table 1 area feed data)
+# - TBP (NBP, deg C) at 5/10/30/50/70/90 vol%: 45/82/186/281/382/552 (Table 1)
+# - light ends, vol% of crude: C2 0.13, C3 0.78, iC4 0.49, nC4 1.36,
+#   iC5 1.05, nC5 1.30 (total 5.11) (Table 2)
+#
+# Gaps: the paper prints the curve at six points only (no 0/95/100 % points);
+# endpoints come from the Riazi distribution-model completion in
+# ngdesign.data.assay. The paper does not print a gravity-distribution curve,
+# so the constant-Watson-K default applies.
+id: bagajewicz_ji_2001_light
+curve:
+  kind: TBP
+  basis: LV%
+  points:  # (vol%, K)
+    - [5, 318.15]
+    - [10, 355.15]
+    - [30, 459.15]
+    - [50, 554.15]
+    - [70, 655.15]
+    - [90, 825.15]
+sg: 0.8451  # 141.5/(131.5+36.0), inverse API of the printed 36.0 deg API
+light_ends:
+  C2: 0.0013
+  C3: 0.0078
+  iC4: 0.0049
+  nC4: 0.0136
+  iC5: 0.0105
+  nC5: 0.0130
+light_ends_basis: volume
+provenance:
+  curve: "Bagajewicz & Ji 2001, I&EC Res. 40, 617, Table 1 (light crude TBP, deg C)"
+  sg: "Bagajewicz & Ji 2001, I&EC Res. 40, 617, feed data (845 kg/m3 = 36.0 API)"
+  light_ends: "Bagajewicz & Ji 2001, I&EC Res. 40, 617, Table 2 (vol%)"
