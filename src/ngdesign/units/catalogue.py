@@ -268,23 +268,74 @@ def units_catalogue() -> tuple[UnitRow, ...]:
     return tuple(sorted(rows.values(), key=lambda r: (family_rank[r.family], r.id)))
 
 
-def _row_adapter(row: UnitRow) -> type | None:
-    """The one adapter class behind a row's implemented levels, or None for a
-    roadmap-only row. A row with several implemented levels must name the same
-    adapter on each (one registered id, one class)."""
-    adapters = {
-        adapter
-        for level in LEVEL_ORDER
-        if (adapter := row.levels[level].adapter if level in row.levels else None) is not None
-    }
-    if not adapters:
-        return None
-    if len(adapters) > 1:
-        raise CatalogueError(
-            f"catalogue row {row.id!r}: implemented levels name different adapters {sorted(adapters)}"
-        )
+def _row_adapters(row: UnitRow) -> Mapping[str, type]:
+    """Adapter class per implemented level, in canonical level order.
+
+    Review round 2 (solve-time dispatch): a row may name a different adapter on
+    each implemented level — that is the point of the rigour ladder. The
+    lowest implemented level is the row's default.
+    """
+    adapters: dict[str, type] = {}
     where = f"catalogue row {row.id!r} ({row.source_file} row {row.source_row})"
-    return _check_adapter(adapters.pop(), where)
+    for level in LEVEL_ORDER:
+        spec = row.levels[level] if level in row.levels else None
+        if spec is not None and spec.adapter is not None:
+            adapters[level] = _check_adapter(spec.adapter, f"{where}, level {level}")
+    return adapters
+
+
+class LevelDispatch:
+    """Base class for per-row solve-time dispatch (spec U-00, review round 2).
+
+    ``_dispatch_class`` builds one concrete subclass per implemented row. The
+    registered surface is unchanged from a bare adapter: ``inlet_ports``,
+    ``outlet_ports`` and ``example_case()`` come from the default (lowest
+    implemented) adapter. ``solve`` resolves the level from params via
+    :func:`ngdesign.units.levels.resolve_level` (``model`` key, legacy
+    ``mode`` map, or the default) and delegates to that level's adapter —
+    params pass through unchanged, so single-adapter rows behave exactly as
+    on main.
+    """
+
+    _adapters: Mapping[str, type]
+    _row_id: str
+
+    def example_case(self) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
+        """The default level's example case."""
+        raise NotImplementedError
+
+    def solve(
+        self, inlets: Mapping[str, Any], params: Mapping[str, Any], thermo: Any
+    ) -> Any:
+        """Resolve the level from params and delegate to its adapter."""
+        raise NotImplementedError
+
+
+def _dispatch_class(row: UnitRow, adapters: Mapping[str, type]) -> type:
+    """The per-row dispatch class: one registry entry, solve-time levels."""
+    default = next(iter(adapters))
+    adapter_cls: Any = adapters[default]  # classmethod surface: example_case, ports
+
+    def example_case(*args: Any, **kwargs: Any) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
+        feeds, params = adapter_cls.example_case()
+        return feeds, params
+
+    def solve(_self: Any, inlets: Mapping[str, Any], params: Mapping[str, Any], thermo: Any) -> Any:
+        level = resolve_level(row, params)
+        return adapters[level]().solve(inlets, params, thermo)
+
+    return type(
+        f"LevelDispatch_{row.id}",
+        (LevelDispatch,),
+        {
+            "inlet_ports": adapter_cls.inlet_ports,
+            "outlet_ports": adapter_cls.outlet_ports,
+            "example_case": classmethod(example_case),
+            "solve": solve,
+            "_adapters": dict(adapters),
+            "_row_id": row.id,
+        },
+    )
 
 
 def register_all(existing: Mapping[str, type] | None = None) -> None:
@@ -292,22 +343,25 @@ def register_all(existing: Mapping[str, type] | None = None) -> None:
 
     Called from ``registry.discover()`` after the decorator-based plugins
     import. Roadmap-only rows (all levels planned) are skipped: the 83-row
-    palette includes future units without adapters. Where a decorator already
-    registered the same id with the SAME class, the class registration stays
-    and the catalogue row carries the metadata — the registry surface is
-    unchanged, so existing flowsheets and bench counts are byte-identical.
+    palette includes future units without adapters. Review round 2: every
+    implemented row replaces its registry entry with a per-row
+    :class:`LevelDispatch` — the id stays the same, the default adapter's
+    ports and example case keep the registered surface byte-identical, and
+    the level resolves at solve time. Where a decorator already registered
+    the same id, the dispatch still fronts it (the decorator class remains
+    the default level's adapter); the registry surface is unchanged, so
+    existing flowsheets and bench counts stay byte-identical.
     """
     current = dict(existing or {})
     for row in load_rows().values():
-        adapter = _row_adapter(row)
-        if adapter is None:
+        adapters = _row_adapters(row)
+        if not adapters:
             continue
+        default = next(iter(adapters))
         prior = current.get(row.id)
-        if prior is not None:
-            if prior is not adapter:
-                raise ValueError(
-                    f"duplicate unit plugin {row.id!r}: the registry holds {prior!r} but "
-                    f"catalogue {row.source_file} row {row.source_row} points at {adapter!r}"
-                )
-            continue
-        registry.register("unit", row.id)(adapter)
+        if prior is not None and prior is not adapters[default]:
+            raise ValueError(
+                f"duplicate unit plugin {row.id!r}: the registry holds {prior!r} but "
+                f"catalogue {row.source_file} row {row.source_row} points at {adapters[default]!r}"
+            )
+        registry.replace("unit", row.id, _dispatch_class(row, adapters))
