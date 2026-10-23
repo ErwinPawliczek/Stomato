@@ -1,10 +1,12 @@
 # Plan: the unit-operation catalogue (~70 units) built breadth-first, then in rigour rounds
 
-> **Status: draft, not for dispatch.** Agreed in outline on 2026-10-21; priority-set-first ordering agreed 2026-10-22. The programme is re-evaluated
-> with Erwin after the thermo catalogue freeze (T wave 4) and before U-00 is written: scope cuts
-> (electrolysers, membranes, adsorption, Claus, cooling towers, hydrocyclones are candidates), the
-> reaction contract's placement in U-00, and the exclusion of dynamic mode are the open decisions.
-> Nothing in this file is a spec until that review.
+> **Status: approved for dispatch 2026-10-23** (re-evaluation with Erwin after the thermo catalogue
+> reached 137 rows). Decisions: (1) the thermo catalogue is frozen at 137 rows and the 21
+> experimental rows are built in parallel (T-16..T-19) on files the unit threads never touch;
+> (2) no scope cuts — every unit in the palette is kept, each gets a **basic R0 model first**, and
+> only the important units go rigorous, **crude refining first** (new family U-H and slice S0);
+> (3) the reaction-set contract is its own spec (U-R), reviewed as a contract change before any
+> reactor; (4) steady state only, dynamic mode is a separate plan.
 
 Written 2026-10-21, while the thermo catalogue (`docs/thermo-catalogue-plan.md`, 168 property
 methods in 8 families) is landing. This plan starts when that catalogue is frozen (its wave 4) and
@@ -13,10 +15,11 @@ thermo or column threads for files.
 
 ## 0. Principles
 
-1. **Depth on the priority set first, then the palette.** (Revised 2026-10-22 with Erwin.) The
-   catalogue below is the full palette we support in the end, but the first rounds take a
-   *priority set* — the units of three reference flowsheets — to R1/R2 against published
-   answers, before the remaining units get their R0 base model. Within a unit no level is skipped:
+1. **Basic everywhere first, then depth where it matters.** (Revised 2026-10-23 with Erwin,
+   superseding the 2026-10-22 priority-first order.) Every unit in the palette gets its R0 base
+   model first so the canvas is complete; then only the priority set — crude refining (S0)
+   first, then natural gas (S1), reactor + separation (S3) and amine (S2) — climbs to R1/R2
+   against published answers. Within a unit no level is skipped:
    R2 is only reachable through a green R1, because each level's validation cases become the
    regression floor for the next.
 2. **Rigour is a per-unit option, not a new unit.** One registered id per unit (`shell_tube`,
@@ -163,6 +166,29 @@ Status today: ✅ exists at the level shown, 🟡 exists but the level/contract 
 | 8 | NGL fractionation train (deethaniser/depropaniser/debutaniser) | flowsheet template over rigorous columns | — | — | ❌ (template) |
 | 9 | sour-water stripper | reboiled stripper on an electrolyte package (T-09) | — | — | ❌ |
 
+### U-H Refining (12) — added 2026-10-23
+
+Petroleum fractions are pseudo-components (P1-07 `PseudoDefinition`, Tb + sg); the assay that
+cuts them is data-layer work (A-01), not a unit. Refinery reactors are lumped-yield models at R0
+and lumped kinetics at R1; nothing above R1 is planned for them.
+
+| # | unit | R0 | R1 | R2 | today |
+|---|---|---|---|---|---|
+| 1 | assay feeder | assay (A-01) → pseudo-component stream at T, P, flow | — | — | ❌ (pseudos exist, no assay cutting) |
+| 2 | desalter | water/salt/BS&W split spec, wash-water mix | efficiency vs wash rate and ΔT (cited correlation) | — | ❌ |
+| 3 | atmospheric crude column | cut-point fractionation (TBP cut points, gap/overlap spec) | — | MESH with side strippers, pumparounds, stripping steam, overflash (U-E 6 extensions) | ❌ |
+| 4 | side stripper | steam-stripped draw, Kremser on pseudos | — | MESH stage section coupled to the main column | ❌ |
+| 5 | vacuum column | cut-point fractionation at flash-zone P | — | MESH with pumparounds, no condenser, wash zone | ❌ |
+| 6 | preflash / flash column | flash drum on the assay stream | — | short MESH | ❌ (R0 is the separator) |
+| 7 | naphtha hydrotreater | yield shift + H2 consumption + S/N removal spec | lumped HDS/HDN kinetics in a PFR | — | ❌ |
+| 8 | catalytic reformer | lumped yield table (C5+ yield vs severity) | Smith (1959) lumped kinetics | — | ❌ |
+| 9 | FCC | yield table vs conversion | Weekman 3/4-lump kinetics with heat balance | — | ❌ |
+| 10 | hydrocracker | yield table vs conversion | lumped (continuous-lumping) kinetics | — | ❌ |
+| 11 | delayed coker / visbreaker | yield table vs CCR / severity | — | — | ❌ |
+| 12 | product blender | volume/mass blending with property indices (RVP, octane, cetane, sulfur, D86) | — | — | ❌ |
+
+Total palette: 83 units (71 + U-H 12).
+
 ## 2b. The priority set — deep first (≈35 units, three reference flowsheets)
 
 Each slice is a sample flowsheet with a published answer (its V1 example is chosen *before* the
@@ -171,6 +197,7 @@ flowsheet reproduces the reference.
 
 | Slice | Reference | Units and target level |
 |---|---|---|
+| **S0 crude distillation (first)** | a published atmospheric + vacuum crude unit with assay and product cuts (candidate: Bagajewicz & Ji 2001, Ind. Eng. Chem. Res. 40, 617 — the reference is chosen and committed as data in U-00 before any S0 unit is built); Riazi (2005) / API Technical Data Book procedures for the assay conversions | assay feeder R0 over A-01; desalter R1; preheat train shell-and-tube R1; fired heater R1; atmospheric column R2 with three side strippers, two pumparounds and stripping steam; vacuum column R2; product property back-calculation (D86/TBP of each cut) |
 | **S1 natural-gas processing** | GPSA Engineering Data Book examples; an NGL fractionation train (deethaniser / depropaniser / debutaniser) with published product specs | 2-phase and 3-phase separators R1 (Souders–Brown sizing); centrifugal compressor R1 (curve, polytropic) and compression train; air cooler R1 and shell-and-tube R1 (rating over `ht`); JT valve R0; control valve R1 (IEC 60534 Cv); pipe segment R1 (Darcy) and R2 (two-phase); TEG contactor R2 (staged) and TEG regenerator R2; shortcut distillation (FUG) R0; rigorous distillation R2 with side draws, pumparounds and multiple feeds; column internals R1 (hydraulics / HETP) |
 | **S2 amine sweetening** | Kohl & Nielsen ch. 2 loop (MDEA and MEA); the existing shortcut loops as the R0 oracle | amine absorber R2 and regenerator R2 on the reactive package (needs P1-11's mesh closure, then P1-06); flash drum with duty R0; pump R1 (curve, NPSH); plate exchanger R1 (lean/rich); reflux drum (2-phase separator R1); hydrate check / inhibitor injection R1 |
 | **S3 reactor + separation (chemicals)** | Fogler / Levenspiel worked reactors feeding a Seader–Henley column; element balances as the V0 floor | reaction-set contract (U-00); conversion, yield, equilibrium (Keq) and Gibbs reactors R0; CSTR R1 and PFR R1 (kinetics), PFR R2 (along length with heat transfer and Ergun ΔP); fixed-bed multi-tubular R2; heater/cooler R0; rigorous distillation R2 (shared with S1); decanter R1; component splitter and stream calculator R0 |
@@ -235,19 +262,18 @@ Partition by file ownership so threads never collide:
 
 Rounds (each round = one dispatch burst; a round starts when its dependencies are on main):
 
-1. **Round 0 (serial, 1 thread):** U-00. Catalogue-as-data, level refusal, V0 harness, the
-   reaction-set contract (reviewed as a contract change on its own), the 21 existing units
-   migrated with their current level recorded, and the three reference flowsheets' V1 answers
-   committed as data before any unit is built.
-2. **Round 1 — priority set S1 + S3 (parallel, ~5 threads by family):** the §2b units to their
-   target levels; S1 and S3 share the rigorous column, so the column extensions (side draws,
-   pumparounds, multiple feeds, internals) go first. Each slice closes with its flowsheet
-   reproducing the reference.
-3. **Round 2 — priority set S2 (after P1-11 / P1-06):** the amine slice on the reactive package.
-4. **Round 3 — palette R0 (parallel, by family):** every remaining ❌ unit at its base level with a
-   V1 example or a documented gap, so the canvas is complete.
-5. **Round 4 — palette R1/R2 on demand and advanced levels:** rate-based stages, catalyst
-   deactivation, zoned exchangers and the rest, pulled by a reference case, never pushed.
+1. **Round 0 (parallel, 3 threads):** U-R reaction-set contract (contract change, reviewed on its
+   own); U-00 catalogue-as-data + level refusal + V0 harness + migration of the existing units;
+   A-01 crude assay characterisation in the data layer, which also commits the S0 crude
+   reference (assay + published product cuts). U-00 owns no reaction code; U-R owns no unit code.
+2. **Round 1 — palette R0 (parallel, one thread per family A–H):** every ❌ unit at its base
+   level with V0 green and a V1 example or a documented gap. Reactors (U-F, U-H 7–11) build on
+   U-R. The canvas is complete at the end of this round.
+3. **Round 2 — S0 crude refining to R1/R2:** the column extensions first (side strippers,
+   pumparounds, stripping steam — after P1-11 has merged, since it owns `units/column/`), then
+   the slice units; the slice closes when the flowsheet reproduces the reference.
+4. **Round 3 — S1, S3, then S2 (after P1-11 / P1-06)** to their target levels.
+5. **Round 4 — R1/R2 on demand and advanced levels**, pulled by a reference case, never pushed.
 6. **Freeze:** every level's status audited against its harness report; `docs/units/` regenerated;
    the agent's `build` tool and the frontend palette regenerated from the catalogue.
 
@@ -262,8 +288,8 @@ end); each later round is smaller because the shared physics stores already exis
 
 ## 6. Dependencies on the rest of the roadmap
 
-- Starts after the thermo catalogue freeze (T wave 4) and P1-11/P1-06, so columns and thermo are
-  stable under the units.
+- Starts at the thermo catalogue freeze (137 rows, 2026-10-23). Column work waits for P1-11 to
+  merge; the amine slice waits for P1-06.
 - Contract additions raised against thermo before Round 1: transport properties on `PhaseProps`
   (μ, k, σ are already on the v2 contract; verify every catalogue row fills them or refuses),
   `formation_enthalpy`/`gibbs_formation` for reaction heats and Keq, and `dlnφ/dn` for rate-based
@@ -282,5 +308,9 @@ end); each later round is smaller because the shared physics stores already exis
   extrapolating.
 - **Rate-based stages (Round 3) are research-grade**; the plan allows `experimental` there and
   does not gate the freeze on them.
+- **Wrong constants pass self-consistency tests** (thermo lesson, 2026-10-22: LCVM's swapped λ
+  weights, the PSRK q1 duplicate, the Huron–Vidal Λ sign and √2 all passed FD/consistency tests).
+  Every correlation constant in a unit is checked against the cited source in review, and every
+  level carries at least one closed-form or worked-example test, not only balances.
 - **Breadth can hide depth**: the V2 cross-level check is what keeps R0 honest once R1/R2 exist,
   so it is mandatory from Round 1 on.
