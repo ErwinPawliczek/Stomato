@@ -67,3 +67,39 @@ def test_gerg_row_is_the_coolprop_multifluid_model() -> None:
     assert gerg.phase_props(z, 300.0, 1e7, PhaseKind.VAPOR).density == pytest.approx(
         heos.phase_props(z, 300.0, 1e7, PhaseKind.VAPOR).density, rel=1e-12
     )
+
+
+def test_if97_psat_matches_region4_check_table() -> None:
+    """IF97 Region 4 saturation-line check values (Wagner et al. 2000, Table 5).
+
+    IAPWS-IF97 (Wagner, W., Cooper, J. R., Dittmann, A., et al., J. Eng. Gas
+    Turbines Power 122, 150-182, 2000), Table 5, printed digits: Psat(300 K) =
+    3536.889 Pa, Psat(500 K) = 2638897.6 Pa, Psat(600 K) = 12344334.7 Pa.
+    Measured on this branch: rel 8.5e-5, 5.9e-8, 1.6e-6.
+    """
+    pkg = registry.create("thermo", "iapws_if97")
+    assert pkg.pure_psat("H2O", 300.0) == pytest.approx(3536.889, rel=2e-4)
+    assert pkg.pure_psat("H2O", 500.0) == pytest.approx(2638897.6, rel=2e-4)
+    assert pkg.pure_psat("H2O", 600.0) == pytest.approx(12344334.7, rel=2e-4)
+
+
+def test_if97_saturated_phase_labels_at_three_states() -> None:
+    """The IF97 adapter reports saturated liquid/vapour under the right labels (#177).
+
+    At (T, Psat) the CoolProp IF97 backend ignores specify_phase and returns one
+    root for both phase requests, so the adapter resolves the root through the
+    backend's PQ flash near the saturation isobar. Expected values are the
+    helmholtz/cases.yaml CoolProp 8.0.0 HEOS anchors; tolerances are the harness
+    defaults (density 3 % vapour / 8 % liquid, Cp 5 %).
+    """
+    pkg = registry.create("thermo", "iapws_if97")
+    for T, psat, rho_v, rho_l, cp_l in [
+        (273.179, 612.4997668266071, 0.004860946631774811, 999.7938082437671, 76.02169970090921),
+        (347.390, 37384.52999381221, 0.23506730588597508, 975.2670989077454, 75.53519087653518),
+        (401.605, 258002.9, 1.43327, 936.138, 76.778),
+    ]:
+        vap = pkg.phase_props(_WATER, T, psat, PhaseKind.VAPOR)
+        liq = pkg.phase_props(_WATER, T, psat, PhaseKind.AQUEOUS)
+        assert vap.density == pytest.approx(rho_v, rel=3e-2), f"rho_V at {T} K"
+        assert liq.density == pytest.approx(rho_l, rel=8e-2), f"rho_L at {T} K"
+        assert liq.cp == pytest.approx(cp_l, rel=5e-2), f"Cp at {T} K"

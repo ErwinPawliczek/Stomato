@@ -882,14 +882,28 @@ class IAPWSPackage(_HelmholtzSurface):
 
         backend = "HEOS" if self.formulation == "IAPWS95" else "IF97"
         state = AbstractState(backend, "Water")
-        state.specify_phase(CoolProp.iphase_liquid if phase == "liquid" else CoolProp.iphase_gas)
-        state.update(CoolProp.PT_INPUTS, P, T)
+        if self.formulation == "IF97":
+            # The IF97 backend ignores specify_phase at PT inputs: at a saturation
+            # state (T, Psat(T)) both phase requests resolve to one root, so the
+            # saturated-liquid/vapour labels come out swapped or collapsed
+            # (issue #177). Near the saturation isobar, resolve the root through
+            # the backend's PQ flash instead, which pins it by quality.
+            psat = self._psat("H2O", T)
+            if psat is not None and abs(P - psat) <= 1e-4 * psat:
+                state.update(CoolProp.QT_INPUTS, 0.0 if phase == "liquid" else 1.0, T)
+            else:
+                state.specify_phase(CoolProp.iphase_liquid if phase == "liquid" else CoolProp.iphase_gas)
+                state.update(CoolProp.PT_INPUTS, P, T)
+        else:
+            state.specify_phase(CoolProp.iphase_liquid if phase == "liquid" else CoolProp.iphase_gas)
+            state.update(CoolProp.PT_INPUTS, P, T)
         mm = state.molar_mass()  # kg/mol
         density = state.rhomass()
         h = state.hmass() * mm  # J/kg -> J/mol
         s = state.smass() * mm
         cp = state.cpmass() * mm
-        z_factor = P / (state.rhomolar() * R_IDEAL * T)
+        # z from the state's own pressure: the PQ route evaluates at Psat(T), not P.
+        z_factor = state.p() / (state.rhomolar() * R_IDEAL * T)
         if self.formulation == "IAPWS95":
             ln_phi = {"H2O": math.log(state.fugacity_coefficient(0))}
         else:
