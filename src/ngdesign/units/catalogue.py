@@ -304,9 +304,7 @@ class LevelDispatch:
         """The default level's example case."""
         raise NotImplementedError
 
-    def solve(
-        self, inlets: Mapping[str, Any], params: Mapping[str, Any], thermo: Any
-    ) -> Any:
+    def solve(self, inlets: Mapping[str, Any], params: Mapping[str, Any], thermo: Any) -> Any:
         """Resolve the level from params and delegate to its adapter."""
         raise NotImplementedError
 

@@ -16,11 +16,7 @@ from ngdesign.units.catalogue import load_rows
 from ngdesign.units.levels import implemented_levels
 from tests.conftest import flash_feed
 
-UNITS = [
-    f"{row.id}/{level}"
-    for row in load_rows().values()
-    for level in implemented_levels(row)
-]
+UNITS = [f"{row.id}/{level}" for row in load_rows().values() for level in implemented_levels(row)]
 
 
 @pytest.mark.parametrize("name", UNITS or ["<none>"])
