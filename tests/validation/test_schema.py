@@ -47,7 +47,12 @@ def test_literature_sources_cite_origin_and_retrieval_date() -> None:
             f"{case.id}: source lacks a retrieval date: {case.source}"
         )
         assert any(
-            k in lowered for k in ("journal", "doi", "series", "fig", "table", "p.", "pp.", "symposium")
+            k in lowered for k in (
+                "journal", "doi", "series", "fig", "table", "p.", "pp.", "symposium",
+                # NIST-recommended software citation: repository-hosted reference
+                # code is the publication origin (e.g. usnistgov/AGA8 check values).
+                "github.com",
+            )
         ), f"{case.id}: source lacks a publication locator: {case.source}"
 
 

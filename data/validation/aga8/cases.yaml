@@ -34,7 +34,7 @@ multicomponent_cases:
     Ar: 0.001
   T: 400.0
   P: 5.0e7
-  source: "literature:NIST public-domain AGA8 reference, AGA8CODE/C Detail_test_01.cpp printed check values (usnistgov/AGA8 @ 3bdb9ab8ff317c618b0b59d1b704c2c86ddc5fce): 21-component example gas at 400 K / 50 000 kPa - molar density 12.80792403648801 mol/l, molar mass 20.54333051 g/mol, Z 1.173801364147326, cp 58.54617672380667 J/(mol K); retrieved 2026-10-21"
+  source: "literature:Lemmon, Bell, Heinemann & Lu (2017) AGA8 Version 2.0 [Software], NIST, github.com/usnistgov/AGA8 @ 3bdb9ab8ff317c618b0b59d1b704c2c86ddc5fce, AGA8CODE/C Detail_test_01.cpp printed check values: 21-component example gas at 400 K / 50 000 kPa - molar density 12.80792403648801 mol/l, molar mass 20.54333051 g/mol, Z 1.173801364147326, cp 58.54617672380667 J/(mol K); retrieved 2026-10-21"
   expected:
     density: 263.117417
     Z: 1.173801364147326
