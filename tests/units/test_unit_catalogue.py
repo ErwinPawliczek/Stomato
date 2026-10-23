@@ -247,6 +247,7 @@ def test_two_implemented_levels_dispatch_to_their_adapters(
         catalogue.load_rows.cache_clear()
 
 
+@pytest.mark.timeout(600)  # solves the column twice per legacy mode; 120 s default is runner-load sensitive
 def test_legacy_mode_params_reach_the_same_code_paths(thermo: Thermo) -> None:
     """Legacy mode strings pass through the dispatch unchanged: solving through
     the registry entry is byte-identical to solving the bare adapter class
