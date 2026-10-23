@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-23T11:52:47+00:00 from `data/validation/results.json` (git 7fc9d38, CoolProp 8.0.0).
+Generated 2026-10-23T14:50:54+00:00 from `data/validation/results.json` (git 929c5ad, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -24,12 +24,12 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 | model | family | status | L0 | L1/L2 cases | report |
 | --- | --- | --- | --- | --- | --- |
-| [aga8_dc92](validation/aga8_dc92.md) | helmholtz | provisional | 1/2 | L1=0 L2=0 | [report](validation/aga8_dc92.md) |
+| [aga8_dc92](validation/aga8_dc92.md) | helmholtz | provisional | 2/2 | L1=0 L2=0 | [report](validation/aga8_dc92.md) |
 | [amine_enrtl](validation/amine_enrtl.md) | electrolyte | provisional | 3/3 | L1=4 L2=0 | [report](validation/amine_enrtl.md) |
 | [amine_ke](validation/amine_ke.md) | electrolyte | validated | 3/3 | L1=4 L2=5 | [report](validation/amine_ke.md) |
 | [antoine-ideal-k](validation/antoine-ideal-k.md) | kvalue | provisional | 5/5 | L1=4 L2=0 | [report](validation/antoine-ideal-k.md) |
 | [api-srk](validation/api-srk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/api-srk.md) |
-| [asme_steam](validation/asme_steam.md) | helmholtz | provisional | 5/6 | L1=2 L2=0 | [report](validation/asme_steam.md) |
+| [asme_steam](validation/asme_steam.md) | helmholtz | provisional | 6/6 | L1=2 L2=0 | [report](validation/asme_steam.md) |
 | [braun-k10](validation/braun-k10.md) | kvalue | provisional | 6/6 | L1=2 L2=0 | [report](validation/braun-k10.md) |
 | [bwr_ls](validation/bwr_ls.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/bwr_ls.md) |
 | [bwrs](validation/bwrs.md) | helmholtz | provisional | 7/7 | L1=0 L2=0 | [report](validation/bwrs.md) |
@@ -168,11 +168,11 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 | provisional row | what keeps it from validated |
 | --- | --- |
-| [aga8_dc92](validation/aga8_dc92.md) | L0 failing: determinism |
+| [aga8_dc92](validation/aga8_dc92.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [amine_enrtl](validation/amine_enrtl.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=4 L2=0) |
 | [antoine-ideal-k](validation/antoine-ideal-k.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=4 L2=0) |
 | [api-srk](validation/api-srk.md) | 7 declared case misses (`assessed:` in the row; see its report) |
-| [asme_steam](validation/asme_steam.md) | L0 failing: determinism |
+| [asme_steam](validation/asme_steam.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=2 L2=0) |
 | [braun-k10](validation/braun-k10.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=2 L2=0) |
 | [bwrs](validation/bwrs.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [cpa_srk](validation/cpa_srk.md) | 13 declared case misses (`assessed:` in the row; see its report) |
@@ -2116,10 +2116,10 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa` — dew_P -39.1% (182799 vs 300000) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table).
 - `twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa` — dew_P -43.9% (381274 vs 680000) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table).
 - `twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa` — dew_P -45.9% (562506 vs 1.04e+06) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table).
-- `twu-sim-tassone-pure-C1-125K` — rho_L +20.6% (485.125 vs 402.111) - TST liquid-volume form not implemented: the instance predicts PR-like volumes (measured 2026-10-23, validation sweep table).
-- `twu-sim-tassone-pure-C3-300K` — rho_L +15.0% (562.988 vs 489.447) - TST liquid-volume form not implemented: the instance predicts PR-like volumes (measured 2026-10-23, validation sweep table).
-- `twu-sim-tassone-pure-CO2-265K` — rho_L +14.1% (1110.71 vs 973.254) - TST liquid-volume form not implemented: the instance predicts PR-like volumes; CO2 uses the generalised Twu alpha (measured 2026-10-23, validation sweep table).
-- `twu-sim-tassone-pure-nC4-280K` — rho_L +13.6% (674.145 vs 593.294) - TST liquid-volume form not implemented: the instance predicts PR-like volumes (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-pure-C1-125K` — rho_L +18.4% (476.012 vs 402.111) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-pure-C3-300K` — rho_L +9.9% (538.028 vs 489.447) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-pure-CO2-265K` — rho_L +6.7% (1038.35 vs 973.254) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope; CO2 uses the generalised Twu alpha (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-pure-nC4-280K` — rho_L +12.1% (664.97 vs 593.294) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table).
 - `twu-srk-ng-dew-morch-243.4K-0.30MPa` — dew_P +28.7% (386167 vs 300000) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table).
 - `twu-srk-ng-dew-morch-254.6K-0.68MPa` — dew_P +16.7% (793289 vs 680000) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table).
 - `twu-srk-ng-dew-morch-260.8K-1.04MPa` — dew_P +13.6% (1.18184e+06 vs 1.04e+06) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table).

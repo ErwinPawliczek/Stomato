@@ -23,7 +23,7 @@ family `helmholtz` · status **provisional** · adapter `ngdesign.thermo.helmhol
 | round_trip | ok | 2e-13 | 350K/200000Pa T_ph 4.3e-14 H 2e-13 T_ps 4.3e-14; 400K/300000Pa T_ph 2.5e-14 H 8.1e-14 T_ps 2.5e-14 |
 | dhdT_cp | ok | 1.1e-07 | 500K/100000Pa vapor cp 35.6917 dH/dT 35.6917 |
 | single_liquid_limit | ok | 0 | 300K/100000Pa kinds=['aqueous'] vf=0.0 |
-| determinism | FAIL | n/a | raised KeyError: 'state' |
+| determinism | ok | 0 | two instances bit-identical at 350K/200000Pa |
 
 Note: Same kernel as iapws_if97; the checks and their results are identical by construction.
 

@@ -18,7 +18,7 @@ family `helmholtz` · status **provisional** · adapter `ngdesign.thermo.aga8:Ag
 
 | check | result | worst | measured |
 | --- | --- | --- | --- |
-| determinism | FAIL | n/a | raised KeyError: 'state' |
+| determinism | ok | 0 | two instances bit-identical at 350K/5e+06Pa |
 | dhdT_cp | ok | 5.6e-07 | 350K/5e+06Pa vapor cp 41.0134 dH/dT 41.0134 |
 
 Note: The declared checks exercise the gas surface the adapter offers (PT flash determinism, cp self-consistency); every excluded check exercises an operation the DC92 method structurally cannot provide, each refused with the typed Aga8Dc92Error.
