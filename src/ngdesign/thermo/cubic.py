@@ -28,6 +28,7 @@ from typing import Any, cast
 
 from thermo.eos_mix import (
     APISRKMIX,
+    GCEOSMIX,
     PRMIX,
     PRSV2MIX,
     PRSVMIX,
@@ -577,7 +578,11 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
 
     c1 = 0.470507
     c2 = 0.0740740
-    c1R2_c2R = c1 * 8.31446261815324 * 8.31446261815324
+    # thermo's PRMIX convention: ais = c1R2_c2R * Tc * bs with bs = c2R*Tc/Pc,
+    # so c1R2_c2R = c1*R/c2 (c1R2_c2R * c2R == c1*R^2). Setting it to c1*R^2
+    # (PR #161) made ais low by exactly c2R = 0.6159, which collapsed the TST
+    # vdW loop and erased the liquid root at every subcritical state.
+    c1R2_c2R = c1 * 8.31446261815324 / 0.0740740
     c2R = c2 * 8.31446261815324
 
     def __init__(
@@ -606,11 +611,104 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
             **kw,
         )
         # PR's init solved with PR's delta/epsilon; re-pin the TST repulsive
-        # term and re-solve the roots at the requested state.
+        # term and re-solve the roots at the requested state. Default phase
+        # flags: with both only_l and only_g set, thermo's set_from_PT assigns
+        # neither root, leaving PR-solved state and fugacities stale.
         self.delta = 2.5 * self.b
         self.epsilon = -1.5 * self.b * self.b
         if T is not None and P is not None:
-            self.solve(only_l=True, only_g=True)
+            self.solve()
+
+    def fugacity_coefficients(self, Z: float) -> list[float]:
+        """Generic two-parameter-cubic mixture ln phi with TST's delta/epsilon.
+
+        thermo's PRMIX method hardcodes the PR log term
+        ``ln[(Z + (1+sqrt(2))B) / (Z - (sqrt(2)-1)B)]``; with the TST
+        denominator delta = 2.5 b, epsilon = -1.5 b^2 the correct log term is
+        ``ln[(2Z + 2.5B + sqrt(8.5)B) / (2Z + 2.5B - sqrt(8.5)B)]`` (sqrt of
+        delta~^2 - 4 eps~ = sqrt(8.5) B). Everything else matches the PR form:
+        ln phi_i = (B_i/B)(Z-1) - ln(Z-B) + A/sqrt(D) [B_i/B - 2 sum_j y_j a_ij
+        / a] ln[...], verified against finite differences in composition,
+        temperature and pressure by tests/thermo/test_tst.py.
+        """
+        N = self.N
+        bs, b = self.bs, self.b
+        T_inv = 1.0 / self.T
+        P_T = self.P * T_inv
+        R_inv = 1.0 / 8.31446261815324
+        A = self.a_alpha * P_T * R_inv * R_inv * T_inv
+        B = b * P_T * R_inv
+        sqrt_d = math.sqrt(8.5) * B
+        a = self.a_alpha
+        log_term = math.log((2.0 * Z + 2.5 * B + sqrt_d) / (2.0 * Z + 2.5 * B - sqrt_d))
+        coeff = A / sqrt_d
+        rows = self._a_alpha_j_rows
+        z_m1 = Z - 1.0
+        out: list[float] = []
+        for i in range(N):
+            bi_over_b = bs[i] / b
+            out.append(
+                bi_over_b * z_m1 - math.log(Z - B) + coeff * (bi_over_b - 2.0 * rows[i] / a) * log_term
+            )
+        return out
+
+    # --- TST delta/epsilon derivative properties ---------------------------------
+    # thermo's PRMIX hardcodes the PR convention (delta = 2b, epsilon = -b^2) in
+    # these properties; TST has delta = 2.5 b, epsilon = -1.5 b^2, so every
+    # composition/mole-number derivative of the repulsive term differs. Verified
+    # against finite differences of the re-pinned self.delta/self.epsilon by
+    # tests/thermo/test_tst.py.
+    @property
+    def ddelta_dzs(self) -> list[float]:
+        return [2.5 * bi for bi in self.bs]
+
+    @property
+    def ddelta_dns(self) -> list[float]:
+        return [2.5 * (bi - self.b) for bi in self.bs]
+
+    @property
+    def d2delta_dzizjs(self) -> list[list[float]]:
+        return [[0.0] * self.N for _ in range(self.N)]
+
+    @property
+    def d2delta_dninjs(self) -> list[list[float]]:
+        b = self.b
+        return [[-2.5 * ((bi - b) + (bj - b)) for bj in self.bs] for bi in self.bs]
+
+    @property
+    def d3delta_dninjnks(self) -> list[list[list[float]]]:
+        b = self.b
+        return [[[-5.0 * (3.0 * b - bi - bj - bk) for bk in self.bs] for bj in self.bs] for bi in self.bs]
+
+    @property
+    def depsilon_dzs(self) -> list[float]:
+        return [-3.0 * self.b * bi for bi in self.bs]
+
+    @property
+    def depsilon_dns(self) -> list[float]:
+        return [-3.0 * self.b * (bi - self.b) for bi in self.bs]
+
+    @property
+    def d2epsilon_dzizjs(self) -> list[list[float]]:
+        return [[-3.0 * bi * bj for bj in self.bs] for bi in self.bs]
+
+    @property
+    def d2epsilon_dninjs(self) -> list[list[float]]:
+        b = self.b
+        return [
+            [-3.0 * ((bi - b) * (bj - b) - b * ((bi - b) + (bj - b))) for bj in self.bs] for bi in self.bs
+        ]
+
+    # PRMIX hardcodes the PR logarithm and PR A/B in its SymPy-derived
+    # dlnphis_dT/dlnphis_dP; for TST those are wrong (verified against finite
+    # differences: ~3% deviation, while the generic GCEOSMIX versions over the
+    # corrected delta/epsilon properties above agree to <0.1%). Delegate to the
+    # generic forms.
+    def dlnphis_dT(self, phase: str) -> list[float]:
+        return cast("list[float]", GCEOSMIX.dlnphis_dT(self, phase))
+
+    def dlnphis_dP(self, phase: str) -> list[float]:
+        return cast("list[float]", GCEOSMIX.dlnphis_dP(self, phase))
 
 
 _TWU_GEN_SUB = ((0.125283, 0.911807, 1.948150), (0.511614, 0.784054, 2.812520))
@@ -1366,30 +1464,18 @@ class ZudkevitchJoffeRkThermo(OptionCubicEOS):
     options = CubicOptionValues(alpha=AlphaFunction.ZUDKEVITCH_JOFFE)
 
 
-_TST_REFUSAL = (
-    "Twu-Sim-Tassone row: the TST liquid-volume form and its mixture fugacity expressions "
-    "are not implemented (TSTMIX subclasses PRMIX and would predict liquid volumes wrong "
-    "by an order of magnitude). The row is experimental: it refuses at first use and runs "
-    "no validation cases (PR #161 review; issue #136)."
-)
-
-
 class TwuSimTassoneThermo(OptionCubicEOS):
-    """Twu-Sim-Tassone cubic (EXPERIMENTAL: builds, refuses at first use).
+    """Twu-Sim-Tassone cubic (PR-family attraction, TST alpha constants).
 
-    TSTMIX reproduces the paper's alpha form but not its distinct EOS volume
-    form, so the row cannot be validated; it stays in the catalogue as
-    ``experimental`` and raises :class:`NotImplementedError` on any flash.
+    The TST liquid-volume form is not implemented: this instance predicts
+    PR-like molar volumes, so measured liquid densities run high (assessed per
+    validation case in the catalogue row). The paper is Twu, Sim & Tassone,
+    Fluid Phase Equilibria 194-197 (2002) 385-399,
+    doi:10.1016/S0378-3812(01)00663-X.
     """
 
     eos = TSTMIX
     options = CubicOptionValues(alpha=AlphaFunction.TWU_SIM_TASSONE)
-
-    def _build_flasher(self, ids: tuple[str, ...]) -> Any:
-        raise NotImplementedError(_TST_REFUSAL)
-
-    def _build_flasher_vl(self, ids: tuple[str, ...]) -> Any:
-        raise NotImplementedError(_TST_REFUSAL)
 
 
 class PrBmThermo(OptionCubicEOS):

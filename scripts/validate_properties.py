@@ -43,6 +43,7 @@ from ngdesign import registry
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import PhaseKind
 from ngdesign.thermo import catalogue
+from ngdesign.thermo._state import R_IDEAL
 from ngdesign.thermo.catalogue import ModelRow
 from ngdesign.thermo.teqp_bridge import SaftDependencyMissing
 
@@ -78,6 +79,10 @@ TOLERANCE_POLICY: dict[str, float] = {
     "K": 0.05,
     "vapor_comp": 0.02,  # absolute
     "liquid_comp": 0.02,  # absolute
+    # T-16a single-phase (T, P) comparisons (gas-only packages and single-phase states):
+    "density": 0.03,  # the vapour-density band, applied to the single phase the PT flash returns
+    "Z": 0.01,  # compressibility factors are the DC92 check values' home ground
+    "cp": 0.05,  # single-phase cp (lowercase: distinct from the saturated-phase `Cp` path)
 }
 
 #: Properties compared on absolute error (compositions) vs relative error (everything else).
@@ -121,6 +126,9 @@ class Case:
     # pure-fluid scaffolding (source "coolprop:<fluid>" cases)
     fluid: str = ""
     coolprop_fluid: str = ""
+    # T-16a single-phase (T, P) cases: optional PhaseKind value the comparison reads
+    # (e.g. "vapor"); empty means the PT flash must return exactly one phase
+    phase: str = ""
     # cases.yaml section the case came from (the audit's L1/L2 classification)
     section: str = ""
 
@@ -270,6 +278,7 @@ def _load_cases() -> list[Case]:
                     note=str(entry.get("note", "")),
                     fluid=str(entry.get("fluid", "")),
                     coolprop_fluid=str(entry.get("coolprop_fluid", "")),
+                    phase=str(entry.get("phase", "")),
                     section=section,
                 )
                 cases.append(case)
@@ -342,6 +351,31 @@ def evaluate_case(case: Case, pkg: str) -> list[Row]:
         for cid, want in exp["K"].items():
             got = kv.get(cid) if kv else None
             rows.append(_row(case, pkg, "K", float(want), float(got) if got is not None else None))
+    # T-16a: single-phase (T, P) comparisons — gas-only packages (AGA8 DC92) and
+    # single-phase states of any package. Expected keys `density`/`Z`/`cp` (lowercase
+    # `cp` is distinct from the saturated-phase `Cp` path above) compare against the
+    # single phase the PT flash returns; a case `phase` field picks the phase kind.
+    if {"density", "Z", "cp"} & exp.keys():
+        assert T is not None and P is not None, f"{case.id}: single-phase comparisons need T and P"
+        state = surf.flash_pt(z, T, P, 1.0)
+        phases = list(state.phases)
+        if case.phase:
+            phases = [p for p in phases if p.kind == PhaseKind(case.phase)]
+        ph = phases[0] if len(phases) == 1 else None
+        got_z = None
+        if ph is not None:
+            got_z = ph.z_factor
+            if got_z is None:
+                # Derive Z from the density the phase does carry: Z = P·M/(ρ·R·T).
+                got_z = P * (ph.molecular_weight / 1000.0) / (ph.density * R_IDEAL * T)
+        if "density" in exp:
+            got = None if ph is None else float(ph.density)
+            rows.append(_row(case, pkg, "density", float(exp["density"]), got))
+        if "Z" in exp:
+            rows.append(_row(case, pkg, "Z", float(exp["Z"]), None if got_z is None else float(got_z)))
+        if "cp" in exp:
+            rows.append(_row(case, pkg, "cp", float(exp["cp"]), None if ph is None else float(ph.cp)))
+
     # Pure-fluid saturated-phase properties at the reference saturation state (T, expected Psat).
     if {"rho_V", "rho_L", "Cp"} & exp.keys():
         assert T is not None, f"{case.id}: saturated-phase properties need T"

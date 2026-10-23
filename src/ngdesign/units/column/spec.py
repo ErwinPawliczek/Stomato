@@ -57,7 +57,7 @@ _MESH_M_TOL_ZERO_ONE_TEAR = 1e-6
 #: Newton walks M uphill (measured 5.2e-3 -> 4.1e-1 over 30 passes while H
 #: closed to 3e-9 - the reactive K evaluation is too noisy for FD derivatives),
 #: so the inside-out floor IS the reactive floor. Gate sits just above it.
-_MESH_M_TOL_REACTIVE = 1e-2
+_MESH_M_TOL_REACTIVE = 1e-3
 #: Loose bound separating a Naphtali-Sandholm state that reached its
 #: finite-difference Newton floor from a genuinely stalled one (spec P1-10).
 #: Measured P1-10 stripper on the physical branch at kettle vapour 50-76 mol/s:

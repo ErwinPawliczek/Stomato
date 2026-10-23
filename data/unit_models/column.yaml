@@ -1,0 +1,378 @@
+# U-E — Columns and staged contactors (plan §2 U-E, 12 rows).
+#
+# The registered `column` row is the rigorous MESH unit: plan U-E 2 (rigorous
+# distillation) and the R2 of U-E 3/4 (feed-determined absorber via the
+# zero-tear configuration, reboiled stripper via the one-tear configuration)
+# are its configurations. Rate-based stages are a later round, not this row's
+# declared ladder. Sour-water stripping (plan U-G 9) is a reboiled-stripper
+# configuration on an electrolyte package (T-09) — no separate row.
+
+- id: shortcut_distillation
+  name: Shortcut distillation (FUG)
+  family: column
+  ports:
+    inlet:
+    - name: feed
+      required: true
+      description: column feed
+    outlet:
+    - name: distillate
+      required: true
+      description: light-key product
+    - name: bottoms
+      required: true
+      description: heavy-key product
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: Fenske-Underwood-Gilliland with Kirkbride feed stage (Seader-Henley V1 oracle)
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 1
+  notes: roadmap; S1 slice needs it (plan §2b).
+
+- id: column
+  name: Rigorous distillation column
+  family: column
+  ports:
+    inlet:
+    - name: feed
+      required: true
+      description: main feed (further feeds via params)
+    outlet:
+    - name: distillate
+      required: true
+      description: overhead product (total condenser) or vapour overhead (partial)
+    - name: bottoms
+      required: true
+      description: bottoms product
+    - name: side_draw
+      required: true
+      description: side draw (zero-flow state when no draw is configured)
+  levels:
+    R2:
+      status: provisional
+      adapter: ngdesign.units.column:Column
+      params:
+        type: object
+        required: [n_stages, condenser, reboiler, feed_stage, specs]
+        properties:
+          n_stages: {type: integer, description: 'equilibrium stages, numbered 1..N top to bottom'}
+          condenser: {type: string, description: 'total | partial (total condenses above stage 1)'}
+          reboiler: {type: string, description: 'kettle | none (none = absorber/rectifier configuration)'}
+          feed_stage: {type: integer, description: main feed stage}
+          pressure_profile: {type: number, description: 'top pressure or per-stage profile, Pa'}
+          specs: {type: object, description: 'two specs for two tears (reflux_ratio, distillate_rate, boilup, ...); one for one-tear; none for an absorber'}
+          feeds: {type: object, description: additional feeds by stage}
+          side_draws: {type: object, description: additional draws by stage}
+      note: MESH on the inside-out (Boston-Sullivan) solver with Naphtali-Sandholm fallback;
+        configurations (absorber zero-tear, stripper/rectifier one-tear, two-tear distillation)
+        select themselves from the condenser/reboiler kinds
+      end_state: true
+  mode_map:
+    distillation: R2
+    absorber: R2
+    stripper: R2
+    rectifier: R2
+    reboiled_absorber: R2
+  pid_symbol: T
+  references:
+  - Boston & Sullivan 1974, Can. J. Chem. Eng. 52, 52-63
+  - Naphtali & Sandholm 1971, AIChE J. 17(1), 148-153
+  - docs/unit-catalogue-plan.md §2 U-E 2
+  notes: covers plan U-E 2 and the R2 of U-E 3 (feed-determined absorber, zero-tear) and
+    U-E 4 (reboiled stripper, one-tear) as configurations; rate-based stages (plan's R3
+    column) are a later round on their own ladder. Side draws exist (side_draw port);
+    pumparounds and multiple feeds beyond the params hooks are the column_extensions row.
+
+- id: absorber
+  name: Absorber (feed-determined)
+  family: column
+  ports:
+    inlet:
+    - name: gas_in
+      required: true
+      description: feed gas
+    - name: solvent_in
+      required: true
+      description: lean solvent
+    outlet:
+    - name: gas_out
+      required: true
+      description: treated gas
+    - name: rich_out
+      required: true
+      description: rich solvent
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: Kremser stage count (the kremser correlation plugin exists in sizing)
+    R2:
+      status: planned
+      params: {}
+      note: MESH zero-tear — today via the `column` row's absorber configuration
+    R3:
+      status: planned
+      params: {}
+      note: rate-based stages
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 3
+  notes: the amine-specific rows live in the treating family; this row is the generic solvent absorber.
+
+- id: reboiled_stripper
+  name: Reboiled stripper
+  family: column
+  ports:
+    inlet:
+    - name: feed
+      required: true
+      description: liquid feed to the top stage
+    outlet:
+    - name: overhead
+      required: true
+      description: stripped overhead
+    - name: bottoms
+      required: true
+      description: lean bottoms
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: Kremser on the stripping side
+    R2:
+      status: planned
+      params: {}
+      note: MESH one-tear (kettle only) — today via the `column` row's stripper configuration
+    R3:
+      status: planned
+      params: {}
+      note: rate-based stages
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 4
+  notes: sour-water stripping (plan U-G 9) is a reboiled-stripper configuration on an
+    electrolyte package (T-09) — no separate treating row.
+
+- id: refluxed_absorber
+  name: Refluxed absorber / reboiled absorber
+  family: column
+  ports:
+    inlet:
+    - name: gas_in
+      required: true
+      description: feed gas
+    - name: solvent_in
+      required: true
+      description: lean solvent
+    outlet:
+    - name: gas_out
+      required: true
+      description: treated gas
+    - name: rich_out
+      required: true
+      description: rich solvent
+  levels:
+    R2:
+      status: planned
+      params: {}
+      note: MESH with one end exchanger (the configurations exist; tests are missing)
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 5
+  notes: roadmap.
+
+- id: column_extensions
+  name: Column extensions (draws, pumparounds, multiple feeds)
+  family: column
+  ports:
+    inlet:
+    - name: feed
+      required: true
+      description: main feed
+    outlet:
+    - name: distillate
+      required: true
+      description: overhead product
+    - name: bottoms
+      required: true
+      description: bottoms product
+  levels:
+    R2:
+      status: planned
+      params: {}
+      note: side draws (exist), pumparounds (missing), multiple feeds, inter-stage heaters
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 6
+  notes: the MESH extensions the S0 crude column builds on (plan §2b, after P1-11).
+
+- id: three_phase_stages
+  name: Three-phase (VLLE) stages
+  family: column
+  ports:
+    inlet:
+    - name: feed
+      required: true
+      description: feed forming two liquids
+    outlet:
+    - name: distillate
+      required: true
+      description: overhead
+    - name: bottoms
+      required: true
+      description: bottoms
+  levels:
+    R2:
+      status: planned
+      params: {}
+      note: MESH with two liquids per stage
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 7
+  notes: roadmap.
+
+- id: reactive_stages
+  name: Reactive stages (equilibrium / kinetic)
+  family: column
+  ports:
+    inlet:
+    - name: feed
+      required: true
+      description: feed
+    outlet:
+    - name: distillate
+      required: true
+      description: overhead
+    - name: bottoms
+      required: true
+      description: bottoms
+  levels:
+    R2:
+      status: planned
+      params: {}
+      note: MESH + reaction set on the stage holdup (the reaction-set contract is U-R's)
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 8
+  notes: amine chemistry lives in the property package, not the stage (plan note).
+
+- id: liquid_liquid_extractor
+  name: Liquid-liquid extractor
+  family: column
+  ports:
+    inlet:
+    - name: feed
+      required: true
+      description: feed (raffinate phase)
+    - name: solvent_in
+      required: true
+      description: extracting solvent
+    outlet:
+    - name: extract
+      required: true
+      description: extract phase
+    - name: raffinate
+      required: true
+      description: raffinate phase
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: stage count from Kremser
+    R2:
+      status: planned
+      params: {}
+      note: MESH with LLE stages
+      end_state: true
+  pid_symbol: X
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 9
+  notes: roadmap.
+
+- id: divided_wall
+  name: Divided-wall / Petlyuk column
+  family: column
+  ports:
+    inlet:
+    - name: feed
+      required: true
+      description: feed
+    outlet:
+    - name: distillate
+      required: true
+      description: light product
+    - name: side_product
+      required: true
+      description: middle product
+    - name: bottoms
+      required: true
+      description: heavy product
+  levels:
+    R2:
+      status: planned
+      params: {}
+      note: two coupled MESH sections
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 10
+  notes: roadmap.
+
+- id: column_internals
+  name: Column internals (trays/packing)
+  family: column
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: solved column result (hydraulics input)
+    outlet:
+    - name: outlet
+      required: true
+      description: hydraulics report
+  levels:
+    R1:
+      status: planned
+      params: {}
+      note: hydraulics — flooding, pressure drop, HETP (Perry/fluids); sizer scope
+      end_state: true
+  pid_symbol: INT
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 11
+  notes: roadmap; S1 slice (plan §2b).
+
+- id: batch_distillation
+  name: Batch distillation
+  family: column
+  ports:
+    inlet:
+    - name: charge
+      required: true
+      description: initial charge
+    outlet:
+    - name: distillate
+      required: true
+      description: accumulated distillate
+    - name: residue
+      required: true
+      description: pot residue
+  levels:
+    R3:
+      status: planned
+      params: {}
+      note: dynamic — a separate axis and plan (steady-state catalogue excludes it)
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-E 12
+  notes: roadmap; out of the steady-state scope (plan §0 decision 4).

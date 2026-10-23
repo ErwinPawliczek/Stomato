@@ -2,22 +2,25 @@
 
 dimerization:
   AcOH:
-    dH_assoc: -25000.0
-    K2_ref: 3.4539e-5
+    dH_assoc: -60574.0
+    K2_ref: 2.39647e-5
     T_ref: 399.35
     provenance: >-
-      Acetic acid dimerization: the reference constant is reduced from the
-      Mehling & Kleiber (2020) acetic-acid vapour association data - their
-      measured nominal compressibility Z = 0.6299 at 399.35 K and 1 bar true
-      pressure gives, per nominal acid mole, dimer moles n_D = 1 - Z = 0.3701
-      and monomer moles n_M = 2Z - 1 = 0.2598, so the true mole fractions are
-      y_M = 0.41245 and y_D = 0.58755 and Kp = p_D/p_M^2 = y_D/(y_M^2 P) =
-      0.58755/(0.170115 x 1e5 Pa) = 3.4539e-5 1/Pa at T_ref (their reported
-      dimerization enthalpy ~ 25 kJ/mol is the standard literature value for
-      acetic acid dimerization). NOTE: with K2 reduced from the same Z point,
-      the tests/thermo round-trip against Z = 0.6299 exercises the
-      chemical-theory algebra, not an independent prediction; an independent
-      K2(T) source is the pending validation case.
+      Acetic acid dimerization: Ritter & Simons, J. Am. Chem. Soc. 67, 757
+      (1945), "The Molecular State of Acetic Acid Vapor", regress from their
+      vapour-density measurements log10 K2 = 3164/T - 10.4184 with K2 in
+      mmHg^-1 (verified 2026-10-23 against the open reproduction in Sebastiani
+      & Lacquaniti, Chem. Eng. Sci. 22, 1155 (1967), eq. 3). Converted to a Pa
+      basis, K2_Pa = K2_mmHg/133.322: at T_ref = 399.35 K,
+      K2 = 10^(3164/399.35 - 10.4184) mmHg^-1 = 3.19503e-3 mmHg^-1 =
+      2.39647e-5 1/Pa. Association enthalpy dH = -3164 R ln10 = -60.57 kJ/mol
+      (exothermic dimer formation; supersedes the previously shipped ~-25
+      kJ/mol point value, which disagreed with the regression slope).
+      Independent check (tests/thermo/test_special.py): the kernel now
+      PREDICTS, not fits, the Mehling & Kleiber (2020) measured compressibility
+      Z = 0.6299 at 399.35 K and 1 bar true pressure - predicted Z = 0.6537,
+      a +3.8% miss, assessed. The former K2-reduced-from-Z round trip is
+      removed.
 
 hexamerization:
   HF:

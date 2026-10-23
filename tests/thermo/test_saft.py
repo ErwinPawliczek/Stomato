@@ -36,12 +36,14 @@ BUILDABLE_IDS = ("cpa_srk", "gerg2008_teqp", "multifluid", "multifluid_pure", "p
 def test_saft_rows_register_with_status() -> None:
     """The ten saft rows load with the real catalogue. T-15c promoted pc_saft and
     cpa_srk to provisional (all bound cases measured, every miss assessed per case);
-    the other rows stay experimental (T-07)."""
+    T-18 promoted saft_vr_mie, multifluid, multifluid_pure and gerg2008_teqp the same
+    way (bindings in data/validation/saft/cases-teqp.yaml, every miss assessed); the
+    other rows stay experimental (T-07)."""
     rows = catalogue.load_catalogue()
-    for rid in ("pc_saft", "cpa_srk"):
+    for rid in ("pc_saft", "cpa_srk", "saft_vr_mie", "multifluid", "multifluid_pure", "gerg2008_teqp"):
         assert rows[rid].status == "provisional", f"{rid}: row must stay provisional"
     for rid in SAFT_IDS:
-        if rid in ("pc_saft", "cpa_srk"):
+        if rid in ("pc_saft", "cpa_srk", "saft_vr_mie", "multifluid", "multifluid_pure", "gerg2008_teqp"):
             continue
         assert rows[rid].status == "experimental", f"{rid}: row must stay experimental"
 

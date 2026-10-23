@@ -413,6 +413,39 @@ pure_cases:
     rho_V: 0.004860946631774811
     rho_L: 999.7938082437671
     Cp: 76.02169970090921
+# T-16a: ASME-labelled steam row. Verification values hand-typed from the IAPWS
+# R7-97(2012) check tables that pin the shared IF97 kernel (never regenerated; not
+# CoolProp-sourced). The Region-1 density is cross-checked in-session against the
+# kernel at 1e-9 relative before binding.
+- id: asme-steam-r1-300K-3MPa
+  fluid: H2O
+  coolprop_fluid: Water
+  package: asme_steam
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 300.0
+  P: 3000000.0
+  source: "literature:IAPWS R7-97(2012), Table 5 (Region 1 check values): T=300 K, p=3 MPa, v=0.100215168e-2 m3/kg, cp=0.417301218e1 kJ/(kg K); retrieved 2026-10-23 (density cross-checked against the shared kernel in-session before binding)"
+  expected:
+    density: 997.85294
+    cp: 75.178
+  note: single-phase compressed-liquid state; the ASME row is the IF97 kernel under the ASME label
+- id: asme-steam-psat-300K
+  fluid: H2O
+  coolprop_fluid: Water
+  package: asme_steam
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 300.0
+  source: "literature:IAPWS R7-97(2012), Table 35 (Region 4 saturation line): Psat(300 K) = 0.353658941e-2 MPa; retrieved 2026-10-23"
+  expected:
+    bubble_P: 3536.58941
+    dew_P: 3536.58941
+  note: saturation pressure of the shared kernel at the ASME-labelled row
 - id: h2o-if97-347.390K
   fluid: H2O
   coolprop_fluid: Water

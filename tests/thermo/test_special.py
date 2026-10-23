@@ -186,16 +186,44 @@ class TestIdealSolid:
         """van't Hoff x at 298.15 K from Tm = 353.35 K, Hfus = 19010 J/mol.
 
         Hand-reduced: ln x = -(19010/R)(1/298.15 - 1/353.35) -> x = 0.30177.
-        The measured naphthalene-in-benzene value is x ~ 0.292 ( Oregon State
-        PAH solubility table, retrieved this session); the ~3% gap is the
-        gamma != 1 correction the ideal model deliberately omits - the pending
-        validation case binds the 5% band.
+        The measured naphthalene-in-benzene value is x = 0.292 (Chang 1969,
+        IUPAC-NIST Solubility Database sysID 59_123, re-verified 2026-10-23);
+        the ~3% gap is the gamma != 1 correction the ideal model deliberately
+        omits.
         """
         pkg = IdealSolidPackage()
         x = pkg.solubility("naphthalene", 298.15)
         expected = math.exp(-(19010.0 / R) * (1.0 / 298.15 - 1.0 / 353.35))
         assert x == pytest.approx(expected, rel=1e-9)
         assert x == pytest.approx(0.3018, abs=2e-4)
+
+    def test_published_check_values(self) -> None:
+        """van't Hoff predictions vs IUPAC-NIST Solubility Database values (T-19).
+
+        Every measured value re-verified on the cited database pages
+        2026-10-23: naphthalene/benzene 298.15 K x = 0.292 (Chang 1969,
+        sysID 59_123), 307.5 K x = 0.372 (Ward 1926, sysID 59_125), 308.2 K
+        x = 0.3766 (McLaughlin & Zainal, sysID 59_124); biphenyl/benzene
+        298.15 K x = 0.381 (Chang 1969 via the Acree evaluation, sysID
+        58_241); anthracene/benzene 298.15 K x = 0.00713 (Acree evaluation
+        regression ln x = -3200.1/T + 5.7899, sysID 58_57). Measured
+        van't Hoff misses: +3.4% / +2.4% / +2.9% (naphthalene), -0.7%
+        (biphenyl), +32% (anthracene - strongly non-ideal solute; the miss
+        is pinned below rather than hidden).
+        """
+        pkg = IdealSolidPackage()
+        for t_k, meas in ((298.15, 0.292), (307.5, 0.372), (308.2, 0.3766)):
+            pred = pkg.solubility("naphthalene", t_k)
+            assert pred == pytest.approx(meas, rel=0.04)
+        # biphenyl/benzene is the near-ideal case: miss under 2%.
+        assert pkg.solubility("biphenyl", 298.15) == pytest.approx(0.381, rel=0.02)
+        # anthracene/benzene: the databank fusion properties (Tm = 489.15 K,
+        # Hfus = 29400 J/mol) predict x ~ 0.00973 against the evaluated
+        # 0.00713 - a ~+32% miss the ideal model cannot close; pinned so the
+        # assessed miss is visible.
+        x = pkg.solubility("anthracene", 298.15)
+        assert x == pytest.approx(math.exp(-(29400.0 / R) * (1.0 / 298.15 - 1.0 / 489.15)), rel=1e-6)
+        assert 1.25 < x / 0.00713 < 1.45
 
     def test_solubility_increases_with_temperature(self) -> None:
         pkg = IdealSolidPackage()
@@ -220,19 +248,28 @@ class TestIdealSolid:
 
 
 class TestDimerKernel:
-    K2_REF = 3.4539e-5  # 1/Pa, at T_ref (reduced from Z = 0.6299; see association.yaml)
+    # Ritter & Simons (1945) log10 K2 = 3164/T - 10.4184 (mmHg^-1) converted to
+    # a Pa basis at T_ref = 399.35 K (data/thermo_params/special/association.yaml).
+    K2_REF = 2.39647e-5  # 1/Pa
     T_REF = 399.35
-    DH = -25000.0
+    DH = -60574.0  # -3164 R ln10, J/mol
 
-    def test_reference_point_round_trip(self) -> None:
-        """At (T_ref, P_nom = P_true/Z) the parameters reduce from Z = 0.6299.
+    def test_independent_prediction_at_reference_point(self) -> None:
+        """The R&S parameters PREDICT (not fit) the M&K compressibility point.
 
-        The 1 bar in the source is the TRUE pressure of the equilibrium
-        mixture; the kernel takes the nominal pressure P = P_true / Z.
+        At 399.35 K and 1 bar TRUE pressure the kernel predicts Z = 0.6537;
+        Mehling & Kleiber (2020) measured Z = 0.6299 - a +3.8% miss, assessed
+        (their point sits in their own dimer+tetramer treatment, ours is
+        dimer-only). The 1 bar is the TRUE pressure of the equilibrium
+        mixture; the kernel takes the nominal pressure P = P_true/Z, solved
+        self-consistently.
         """
-        p_nom = 1.0e5 / 0.6299
-        z = dimer_vapor_compressibility(self.T_REF, p_nom, self.DH, self.K2_REF, self.T_REF)
-        assert z == pytest.approx(0.6299, rel=1e-3)
+        p_true = 1.0e5
+        z = 0.7
+        for _ in range(80):
+            z = dimer_vapor_compressibility(self.T_REF, p_true / z, self.DH, self.K2_REF, self.T_REF)
+        assert z == pytest.approx(0.6537, rel=1e-3)
+        assert z == pytest.approx(0.6299, rel=0.05)  # measured miss band (+3.8%, assessed)
 
     def test_ideal_limit(self) -> None:
         """Association vanishes as P -> 0: Z -> 1 (Z ~ 1 - kp P, so the
@@ -249,25 +286,23 @@ class TestDimerKernel:
         with pytest.raises(ValueError, match="positive"):
             dimer_vapor_compressibility(0.0, 1.0e5, self.DH, self.K2_REF, self.T_REF)
 
-    def test_apparent_molar_mass_400k_1bar(self) -> None:
-        """Apparent molar mass at 400 K / 1 bar TRUE pressure vs the published value.
+    def test_apparent_molar_mass_at_reference_point(self) -> None:
+        """Apparent molar mass at T_ref / 1 bar TRUE pressure vs the published value.
 
-        The cited chemical-theory prediction for acetic-acid vapour association
-        is Z = 0.6299 at 399.35 K and 1 bar TRUE pressure (Mehling & Kleiber,
-        ChemTexts 6, 4 (2020), appendix A - the same point the K2_ref above is
-        reduced from; Hayden-O'Connell, Ind. Eng. Chem. Process Des. Dev. 14,
-        209 (1975) is the standard predictive route for the same quantity, and
-        no standalone published HOC number at 400 K / 1 bar was retrievable
-        open access). M/Z gives Mapp = 60.052/0.6299 = 95.34 g/mol. The 1 bar
-        is the TRUE mixture pressure, so the kernel takes the nominal
+        With the independent Ritter & Simons (1945) parameters the kernel
+        predicts Mapp = 60.052/Z = 91.87 g/mol at 399.35 K, 1 bar true, vs the
+        Mehling & Kleiber (2020) measured 95.34 (Z = 0.6299): a -3.6% miss,
+        assessed (dimer-only kernel vs their dimer+tetramer treatment). The 1
+        bar is the TRUE mixture pressure, so the kernel takes the nominal
         P = P_true/Z and Z is solved self-consistently.
         """
         p_true = 1.0e5
         z = 0.7
-        for _ in range(60):
-            z = dimer_vapor_compressibility(400.0, p_true / z, self.DH, self.K2_REF, self.T_REF)
+        for _ in range(80):
+            z = dimer_vapor_compressibility(self.T_REF, p_true / z, self.DH, self.K2_REF, self.T_REF)
         mapp = 60.052 / z
-        assert mapp == pytest.approx(95.34, rel=0.03)
+        assert mapp == pytest.approx(91.87, rel=0.01)
+        assert mapp == pytest.approx(95.34, rel=0.05)  # measured miss band (-3.6%, assessed)
 
 
 # --------------------------------------------------------------------------
