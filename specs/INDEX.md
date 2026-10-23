@@ -155,7 +155,7 @@ Round 1 (palette R0, one thread per family U-A..U-H) after U-00 and U-R merge; r
 | T-16a | ASME steam (IF97 basis, fixes #177), AGA8 DC92, Twu–Sim–Tassone to real rows | T-04, T-15 | merged #198 (19f2adb) 2026-10-23: AGA8 DC92 (NIST port), ASME/IF97 row, TST; fixes #177; issue #187 |
 | T-16b | MBWR, BWR-Lee-Starling, EOS-CG to real rows | T-04, T-07, T-15 | issue #194; dispatched 2026-10-23 |
 | T-17 | SAFT association and polar: PC-SAFT assoc, polar PC-SAFT, CPA-PR, soft-SAFT | T-07, T-15c | issue #191; dispatched 2026-10-23 |
-| T-18 | teqp-backed rows to provisional: SAFT-VR Mie, multifluid, multifluid pure, GERG-2008 teqp | T-07, T-15c, #178 | issue #188; dispatched 2026-10-23 |
+| T-18 | teqp-backed rows to provisional: SAFT-VR Mie, multifluid, multifluid pure, GERG-2008 teqp | T-07, T-15c, #178 | merged #201 (63e576c) 2026-10-23: saft_vr_mie, multifluid, multifluid_pure, gerg2008_teqp provisional (teqp library runtime-only); issue #188 |
 | T-19 | Special family to provisional: solids, polymers, HOC dimer, HF hexamer | T-10, T-03b, T-15 | merged #200 (542c6fc) 2026-10-23: ideal_solid checks, hoc_dimer rebound to Ritter & Simons, polymer rows stay experimental (no open data); issue #190 |
 | T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | all merged: T-11 #131, T-12 #132, T-13 #135, T-14 #147 (2026-10-21) |
 
