@@ -34,6 +34,7 @@ from ngdesign.data import register_pseudo
 from ngdesign.data.assay import (
     CompletedCurve,
     CutScheme,
+    CutSlate,
     UnverifiedConversionError,
     _all_bases,
     complete_curve,
@@ -343,13 +344,13 @@ def test_light_ends_mismatched_basis_rejected() -> None:
 
 
 @pytest.fixture(scope="module")
-def example_slate() -> object:
+def example_slate() -> CutSlate:
     """The Bagajewicz & Ji 2001 light crude cut with its light ends."""
     assay = _assay_from_yaml("bagajewicz_ji_2001_light.yaml")
     return cut(assay, CutScheme.equal_count(10))
 
 
-def test_example_assay_cuts_to_valid_slate(example_slate: object) -> None:
+def test_example_assay_cuts_to_valid_slate(example_slate: CutSlate) -> None:
     for basis in ("mole", "mass", "volume"):
         assert sum(getattr(example_slate, basis).values()) == pytest.approx(1.0, abs=1e-12)
     ids = set(example_slate.mole)
@@ -357,7 +358,7 @@ def test_example_assay_cuts_to_valid_slate(example_slate: object) -> None:
     assert all(example_slate.volume[cid] > 0.0 for cid in ids)
 
 
-def test_example_assay_slate_flashes_with_pr(example_slate: object) -> None:
+def test_example_assay_slate_flashes_with_pr(example_slate: CutSlate) -> None:
     """Spec A-01 bridge: the slate feeds a PR PT flash (one run, no refusal)."""
     from ngdesign import registry
     from ngdesign.contracts.plugins import Thermo

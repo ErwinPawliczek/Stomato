@@ -77,10 +77,16 @@ STD_GRID = (0.0, 10.0, 30.0, 50.0, 70.0, 90.0, 95.0)
 class CurveLike(Protocol):
     """Structural view of a measured distillation curve (see contracts.assay)."""
 
-    kind: str  # "TBP" | "D86" | "D1160" | "D2887"
-    basis: str  # "LV%" | "wt%"
-    points: list[tuple[float, float]]  # (percent, T_K)
-    P_kPa: float | None
+    # Read-only members, so the frozen contract model (Literal-typed fields)
+    # satisfies the protocol structurally.
+    @property
+    def kind(self) -> str: ...  # "TBP" | "D86" | "D1160" | "D2887"
+    @property
+    def basis(self) -> str: ...  # "LV%" | "wt%"
+    @property
+    def points(self) -> list[tuple[float, float]]: ...  # (percent, T_K)
+    @property
+    def P_kPa(self) -> float | None: ...
 
 
 def _interp(points: list[tuple[float, float]], percent: float) -> float:
