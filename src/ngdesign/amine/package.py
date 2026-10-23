@@ -16,11 +16,16 @@ surface:
   fraction: the shared ``thermo.saturation`` plateau solver (spec P1-08)
   applied to this package's vf.
 - Per-phase properties: the vapour phase is the carrier's; the liquid
-  phase is the carrier's aqueous properties plus the heat of absorption
-  of the dissolved acid gases, obtained by Gibbs-Helmholtz differentiation
+  phase is the carrier's aqueous properties MINUS the heat of absorption
+  of the dissolved acid gases -- bound acid gas sits below the carrier's
+  unbound reference by the van 't Hoff heat the speciation releases on
+  absorption (exothermic), obtained by Gibbs-Helmholtz differentiation
   of the speciation equilibrium at fixed loading (no liquid heat-capacity
   data exists for the bound species, so the absorption enthalpy is the
-  chemistry's own van 't Hoff content).
+  chemistry's own van 't Hoff content).  Adding the released heat instead
+  made absorption endothermic: the converged absorber profile read a
+  -0.20 K temperature RISE (measured P1-11) where the exotherm bulge
+  belongs -- the ruling on issue #153.
 - ``acid_gas_partial_pressures`` and ``heat_of_absorption`` helpers for
   the units and tests.
 
@@ -491,13 +496,19 @@ class AmineReactivePackage(Thermo):
     ) -> tuple[Literal["liquid", "vapor", "two_phase"], float, dict[str, float], dict[str, float]]:
         """One loading-map evaluation: K-values at x, phase edge checks, RR split.
 
-        Returns ("liquid", 0.0, x, x) / ("vapor", 1.0, z, z) at the single-phase
-        edges, else ("two_phase", beta, x_new, y) with x_new the raw
+        Returns ("liquid", 0.0, z, z) / ("vapor", 1.0, z, z) at the single-phase
+        edges (a single phase IS the overall composition -- returning the walk
+        iterate there made the state discontinuous in T: the solvent-basis seed
+        the walk starts from carries no hydrocarbons, so the liquid enthalpy
+        jumped ~111 J/mol against the two-phase limit at vf ~ 1e-10 and the
+        Naphtali-Sandholm FD Jacobian's H_T derivative diverged; measured
+        P1-11 on the converged absorber profile), else
+        ("two_phase", beta, x_new, y) with x_new the raw
         Rachford-Rice liquid (acid gases at their RR loadings).
         """
         k = self._k_values_internal(z, T, P, x)
         if sum(f * k[cid] for cid, f in z.items()) <= 1.0:
-            return "liquid", 0.0, dict(x), dict(x)
+            return "liquid", 0.0, dict(z), dict(z)
         if sum(f / k[cid] for cid, f in z.items()) <= 1.0:
             return "vapor", 1.0, dict(z), dict(z)
 
@@ -852,9 +863,12 @@ class AmineReactivePackage(Thermo):
         """Single-phase properties at (composition, T, P), built without flashing.
 
         Vapour and hydrocarbon-liquid phases are the carrier's.  The aqueous
-        phase of an amine-bearing composition carries the heat of absorption of
-        its dissolved acid gases (Gibbs-Helmholtz on the speciation equilibrium
-        at fixed loading) and acid-gas fugacity-fraction ln_phi values.
+        phase of an amine-bearing composition carries the heat of absorption
+        of its dissolved acid gases SUBTRACTED from the carrier's unbound
+        reference (exothermic binding: the released van 't Hoff heat lowers
+        the liquid enthalpy -- adding it made absorption endothermic and the
+        absorber profile cold, the P1-11 ruling on #153) and acid-gas
+        fugacity-fraction ln_phi values.
         """
         key = ("pp", str(kind), *_state.cache_key(composition, T, P))
         return cast(
@@ -869,7 +883,9 @@ class AmineReactivePackage(Thermo):
         base = self._carrier.phase_props(composition, T, P, PhaseKind.AQUEOUS)
         _aid, c_a, a_co2, a_h2s, p_co2, p_h2s = self._liquid_chemistry(composition, T, P)
         dh = self._absorption_enthalpies(amine_id, T, c_a, a_co2, a_h2s)
-        extra_h = sum(composition.get(cid, 0.0) * dh[cid] for cid in _ACID_GAS_IDS)
+        # dh is the heat RELEASED on binding (positive, van 't Hoff): the
+        # bound acid gas sits BELOW the carrier's unbound reference by it.
+        extra_h = -sum(composition.get(cid, 0.0) * dh[cid] for cid in _ACID_GAS_IDS)
         ln_phi = dict(base.ln_phi)
         for cid, p_eq in (("CO2", p_co2), ("H2S", p_h2s)):
             if composition.get(cid, 0.0) > 0.0:
@@ -974,7 +990,8 @@ class AmineReactivePackage(Thermo):
         def h_of(t_try: float) -> float:
             base = self._carrier.phase_props(x, t_try, P, PhaseKind.AQUEOUS).enthalpy
             dh = self._absorption_enthalpies(amine_id, t_try, c_a, a_co2, a_h2s)
-            return base + sum(x.get(cid, 0.0) * dh[cid] for cid in _ACID_GAS_IDS)
+            # Same sign as _phase_props: the released heat SUBTRACTS (see there).
+            return base - sum(x.get(cid, 0.0) * dh[cid] for cid in _ACID_GAS_IDS)
 
         return (h_of(T + _DERIV_D_T) - h_of(T - _DERIV_D_T)) / (2.0 * _DERIV_D_T)
 
