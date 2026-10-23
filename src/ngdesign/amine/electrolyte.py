@@ -1,6 +1,6 @@
 """General electrolyte property packages (spec T-09).
 
-Two literature-anchored aqueous models plus documented first-use refusals,
+Four literature-anchored aqueous models,
 implemented over the same carrier + K-value flash machinery as the amine
 packages (``ngdesign.amine.package``):
 
@@ -14,9 +14,14 @@ packages (``ngdesign.amine.package``):
   against the report's printed worked examples and cross-checked against
   DWSIM's transcription.  See
   ``data/thermo_params/electrolyte/reactions.yaml``.
-* ``enrtl_nacl_water`` / ``ext_uniquac_nacl_water`` -- refusal rows: no
-  openly retrievable, citable parameter tables exist for either model, so
-  they refuse at first use (the T-07 precedent for unverifiable parameters).
+* ``enrtl_nacl_water`` -- electrolyte-NRTL NaCl(aq): the Pitzer-Debye-Hueckel
+  long-range term (Chen, Britt, Boston & Evans 1982) over the Chen & Evans
+  1986 local-composition binary (tau transcribed via the open Kwaterski &
+  Herri copy).  See ``data/thermo_params/electrolyte/enrtl.yaml``.
+* ``ext_uniquac_nacl_water`` -- extended UNIQUAC NaCl(aq) (Thomsen &
+  Rasmussen 1999 parameter set; formulation, infinite-dilution and
+  molality-scale conventions per Leal et al. 2025).  See
+  ``data/thermo_params/electrolyte/ext_uniquac.yaml``.
 
 Streams stay molecular (ionic species never leave this module): the brine
 model takes (H2O, NaCl), the sour-water model (H2O, NH3, H2S); anything else
@@ -64,6 +69,14 @@ __all__ = [
     "SWEQConstants",
     "SWHenry",
     "SourWaterSpeciation",
+    "enrtl_mean_gamma",
+    "enrtl_osmotic",
+    "enrtl_saturation_molality",
+    "enrtl_water_activity",
+    "ext_uniquac_mean_gamma",
+    "ext_uniquac_osmotic",
+    "ext_uniquac_saturation_molality",
+    "ext_uniquac_water_activity",
     "pitzer_mean_gamma",
     "pitzer_osmotic",
     "pitzer_saturation_molality",
@@ -109,38 +122,37 @@ _PSIA_TO_PA = 6894.757293168
 #: amine packages' loading-clamp precedent).
 _MAX_MOLALITY = 6.15
 
+#: Water molar mass on the molality basis the electrolyte anchor tables use
+#: (kg/mol; mol water per kg solvent below), and its reciprocal.
+_MW_WATER_KG = 0.018015268
+_NW = 1.0 / _MW_WATER_KG
+
 #: The fitted/verified chemistry windows per model (K), mirrored by the
-#: catalogue rows' applicability T_K.
+#: catalogue rows' applicability T_K.  All three brine parameter sets are
+#: the 25 C ones (temperature dependence enters only through Psat).
 _MODEL_WINDOWS: dict[str, tuple[float, float]] = {
     "pitzer": (293.15, 303.15),
+    "enrtl": (293.15, 303.15),
+    "ext_uniquac": (293.15, 303.15),
     "sour_water": (293.15, 373.15),
 }
 
 #: Molecular support per model (stream keys; ionic species never leave).
 _MODEL_SUPPORTS: dict[str, frozenset[str]] = {
     "pitzer": frozenset({"H2O", "NaCl"}),
+    "enrtl": frozenset({"H2O", "NaCl"}),
+    "ext_uniquac": frozenset({"H2O", "NaCl"}),
     "sour_water": frozenset({"H2O", "NH3", "H2S"}),
 }
 
-#: First-use refusals: models the spec names but whose open parameter bases
-#: are not verifiable (the T-07 precedent: refuse, never silently idealize).
-_REFUSALS: dict[str, str] = {
-    "enrtl": (
-        "electrolyte row 'enrtl_nacl_water' refuses at first use: no openly "
-        "retrievable, citable eNRTL parameter table for NaCl-H2O exists (the "
-        "published electrolyte-NRTL parameter sets for aqueous salts are not "
-        "in citable open form, and DWSIM's electrolyte parameter files are "
-        "not in the open repository). The T-07 precedent applies: refuse "
-        "rather than ship unverifiable parameters."
-    ),
-    "ext_uniquac": (
-        "electrolyte row 'ext_uniquac_nacl_water' refuses at first use: no "
-        "openly retrievable, citable extended-UNIQUAC parameter table for "
-        "NaCl-H2O exists (Thomsen & Rasmussen's fitted parameters are not "
-        "published in citable open form). The T-07 precedent applies: refuse "
-        "rather than ship unverifiable parameters."
-    ),
-}
+#: Brine models (involatile-salt paths).  Everything else with a window is
+#: the sour-water chemistry.
+_BRINE_MODELS: tuple[str, ...] = ("pitzer", "enrtl", "ext_uniquac")
+
+#: First-use refusals: models whose open parameter bases are not verifiable
+#: (the T-07 precedent: refuse, never silently idealize).  T-09b replaced the
+#: last two entries (enrtl, ext_uniquac) with real parameter-backed models.
+_REFUSALS: dict[str, str] = {}
 
 
 class ElectrolyteChemistryError(ValueError):
@@ -227,6 +239,256 @@ def pitzer_saturation_molality() -> float:
 
     def residual(m: float) -> float:
         return pitzer_mean_gamma(m) - gamma_sat
+
+    return brent_root(residual, 4.0, 10.0)
+
+
+# -- eNRTL NaCl(aq) (Chen et al. 1982 PDH + Chen & Evans 1986 local composition) ----
+
+
+@cache
+def _enrtl() -> dict[str, Any]:
+    """Cached eNRTL parameter table (data/thermo_params/electrolyte/enrtl.yaml)."""
+    with (_PARAMS_DIR / "enrtl.yaml").open(encoding="utf-8") as fh:
+        data = yaml.safe_load(fh)
+    return cast(dict[str, Any], data)
+
+
+def _enrtl_gE_rt(xw: float, xi: float) -> float:
+    """G^E/RT per total mole on the effective-fraction basis (xw + 2*xi = 1).
+
+    Long range: Pitzer-Debye-Hueckel on the mole-fraction basis (Chen, Britt,
+    Boston & Evans 1982), A_phi = 0.392, closest-approach rho = 14.9.  Short
+    range: the single-salt local-composition reduction of the Chen & Evans
+    1986 binary (tau_CA,w = -4.5916, tau_w,CA = 9.0234, alpha = 0.2, G =
+    exp(-alpha*tau)): a molecule cell and one ion cell per ion, X_CA = 2*xi,
+    X_i = xi (derived from Kwaterski & Herri eq 25; the salt-side composition
+    derivative of n*G^E returns ln gamma_Na + ln gamma_Cl for the 1:1 salt).
+    """
+    p = _enrtl()
+    aphi, rho, alpha = float(p["aphi"]), float(p["rho"]), float(p["alpha"])
+    ix = xi  # mole-fraction ionic strength (|z| = 1 for both ions)
+    g_pdh = -4.0 * aphi / math.sqrt(_MW_WATER_KG) * (ix / rho) * math.log1p(rho * math.sqrt(ix))
+    tau_caw, tau_wca = float(p["tau_ca_w"]), float(p["tau_w_ca"])
+    g_c = math.exp(-alpha * tau_caw)
+    g_w = math.exp(-alpha * tau_wca)
+    x_ca = 2.0 * xi
+    g_lc = xw * x_ca * g_c * tau_caw / (xw + x_ca * g_c) + x_ca * xw * g_w * tau_wca / (xw * g_w + xi)
+    return g_pdh + g_lc
+
+
+def _enrtl_ln_props(molality: float) -> tuple[float, float]:
+    """(ln gamma+-(m), ln a_w) of NaCl(aq) at the 25 C parameter set.
+
+    The composition derivatives of n*G^E/RT are numeric central differences
+    (the closed local-composition derivatives of the reduced single-salt form
+    are not published; the finite-difference form is pinned by the Gibbs-Duhem
+    unit tests): the salt-side derivative returns ln gamma_Na + ln gamma_Cl in
+    the SYMMETRIC rational convention, so the unsymmetric molality-scale mean
+    takes the infinite-dilution difference and the ln x_w conversion
+    (ln gamma+-(m) = ln gamma+-(x) - ln(1 + nu*m*M_w), worth ~22 % at 6 m);
+    the water side is already symmetric-rational, so a_w = gamma_w * x_w.
+    """
+    h = 1e-6 * max(molality, 1e-3)
+
+    def total(ms: float, mw: float = _NW) -> float:
+        n = mw + 2.0 * ms
+        return n * _enrtl_gE_rt(mw / n, ms / n)
+
+    d_salt = (total(molality + h) - total(molality - h)) / (2.0 * h)
+    d0 = (total(h) - total(0.0)) / h  # infinite-dilution reference (unsymmetric normalisation)
+    dw = 1e-3
+    d_w = (total(molality, _NW + dw) - total(molality, _NW - dw)) / (2.0 * dw)
+    xw = _NW / (_NW + 2.0 * molality)
+    ln_gamma_pm = 0.5 * (d_salt - d0) + math.log(xw)
+    ln_aw = d_w + math.log(xw)
+    return ln_gamma_pm, ln_aw
+
+
+def enrtl_mean_gamma(molality: float) -> float:
+    """Mean ionic activity coefficient of NaCl(aq), eNRTL 25 C parameter set.
+
+    Applicability: literature-faithful to ~1-5 % vs the PPB84 anchors (the
+    source model's own fit quality; the high-accuracy NaCl row is Pitzer).
+    """
+    return math.exp(_enrtl_ln_props(molality)[0])
+
+
+def enrtl_water_activity(molality: float) -> float:
+    """Water activity of NaCl(aq), eNRTL 25 C parameter set (a_w = gamma_w * x_w)."""
+    return math.exp(_enrtl_ln_props(molality)[1])
+
+
+def enrtl_osmotic(molality: float) -> float:
+    """Osmotic coefficient phi = -ln a_w / (nu * m * M_w), eNRTL 25 C parameter set."""
+    return -_enrtl_ln_props(molality)[1] / (2.0 * molality * _MW_WATER_KG)
+
+
+def enrtl_saturation_molality() -> float:
+    """NaCl solubility (mol/kg) from the SLE condition gamma(m) == 1.0065 (PPB84 p. 11)."""
+    gamma_sat = float(_enrtl()["saturation"]["mean_gamma"])
+
+    def residual(m: float) -> float:
+        return enrtl_mean_gamma(m) - gamma_sat
+
+    return brent_root(residual, 4.0, 10.0)
+
+
+# -- extended UNIQUAC NaCl(aq) (Thomsen & Rasmussen 1999; formulation per Leal 2025) --
+
+
+@cache
+def _ext_uniquac() -> dict[str, Any]:
+    """Cached extended-UNIQUAC parameter table (data/thermo_params/electrolyte/ext_uniquac.yaml)."""
+    with (_PARAMS_DIR / "ext_uniquac.yaml").open(encoding="utf-8") as fh:
+        data = yaml.safe_load(fh)
+    return cast(dict[str, Any], data)
+
+
+#: Species order of the extended-UNIQUAC parameter tables.
+_EU_SPECIES: tuple[str, str, str] = ("H2O", "Na", "Cl")
+
+
+def _eu_u_ij(p: dict[str, Any], k1: str, k2: str, t_k: float) -> float:
+    """u_ji = u0_ji + u1_ji*(T - 298.15), symmetric pair lookup (Leal eq 24)."""
+    u0, u1 = p["u0"], p["u1"]
+    pair = f"{k1}-{k2}" if f"{k1}-{k2}" in u0 else f"{k2}-{k1}"
+    return float(u0[pair]) + float(u1[pair]) * (t_k - 298.15)
+
+
+def _eu_a_dh(t_k: float) -> float:
+    """Extended-Debye-Hueckel A(T), (kg/mol)^0.5 (Sander et al. correlation as in Leal eq 40)."""
+    a = _ext_uniquac()["dh"]["a"]
+    t = t_k - 273.15
+    return float(a["c0"]) + float(a["c1"]) * t + float(a["c2"]) * t * t
+
+
+def _eu_state(
+    molality: float, t_k: float
+) -> tuple[dict[str, float], dict[str, float], dict[str, float], dict[str, dict[str, float]]]:
+    """(x, phi_, theta, psi[j][i]) over the species order (H2O, Na, Cl).
+
+    Basis: 1 kg of water.  psi_ji = exp[(u_ii - u_ji)/T] (Leal eq 23; the
+    division is by T, NOT RT -- the /RT reading of the J/mol table is the
+    transcription error that broke the first prototype; cross-checked against
+    Reaktoro ActivityModelExtendedUNIQUAC.cpp L249, used as a verification
+    reference only).
+    """
+    p = _ext_uniquac()
+    q: dict[str, float] = {k: float(v) for k, v in p["q"].items()}
+    r: dict[str, float] = {k: float(v) for k, v in p["r"].items()}
+    n = _NW + 2.0 * molality
+    x = {"H2O": _NW / n, "Na": molality / n, "Cl": molality / n}
+    rsum = sum(r[k] * x[k] for k in _EU_SPECIES)
+    qsum = sum(q[k] * x[k] for k in _EU_SPECIES)
+    phi_ = {k: x[k] * r[k] / rsum for k in _EU_SPECIES}
+    theta = {k: x[k] * q[k] / qsum for k in _EU_SPECIES}
+    psi: dict[str, dict[str, float]] = {}
+    for j in _EU_SPECIES:
+        psi[j] = {i: math.exp((_eu_u_ij(p, i, i, t_k) - _eu_u_ij(p, j, i, t_k)) / t_k) for i in _EU_SPECIES}
+    return x, phi_, theta, psi
+
+
+def _eu_ln_gamma_u(
+    x: dict[str, float], phi_: dict[str, float], theta: dict[str, float], psi: dict[str, dict[str, float]]
+) -> dict[str, float]:
+    """Closed-form UNIQUAC (combinatorial + residual) ln gamma (Leal eq 43).
+
+    The residual denominator S_j = sum_l theta_l * psi_lj -- the SAME
+    orientation as the G^E; the transposed form fails the finite-difference
+    check (verified to 6 decimals in all species and both directions).
+    """
+    p = _ext_uniquac()
+    zc = float(p["zq"])
+    q: dict[str, float] = {k: float(v) for k, v in p["q"].items()}
+    out: dict[str, float] = {}
+    for k in _EU_SPECIES:
+        sk = sum(theta[j] * psi[j][k] for j in _EU_SPECIES)
+        comb = (
+            math.log(phi_[k] / x[k])
+            + 1.0
+            - phi_[k] / x[k]
+            - (zc / 2.0) * q[k] * (math.log(phi_[k] / theta[k]) + 1.0 - phi_[k] / theta[k])
+        )
+        res_sum = sum(
+            theta[j] * psi[k][j] / sum(theta[sp] * psi[sp][j] for sp in _EU_SPECIES) for j in _EU_SPECIES
+        )
+        res = q[k] * (1.0 - math.log(sk) - res_sum)
+        out[k] = comb + res
+    return out
+
+
+def _eu_ln_gamma_inf(k: str, t_k: float) -> float:
+    """Infinite-dilution (x_w -> 1) UNIQUAC ln gamma of solute k (Leal eq 44).
+
+    The last term is q_k*[1 - ln psi_wk - psi_kw/psi_ww] with psi_ww = 1
+    (Reaktoro L284, used as a verification reference only).
+    """
+    p = _ext_uniquac()
+    zc = float(p["zq"])
+    qw, rw = float(p["q"]["H2O"]), float(p["r"]["H2O"])
+    qk, rk = float(p["q"][k]), float(p["r"][k])
+    psi_wk = math.exp((_eu_u_ij(p, k, k, t_k) - _eu_u_ij(p, "H2O", k, t_k)) / t_k)
+    psi_kw = math.exp((_eu_u_ij(p, "H2O", "H2O", t_k) - _eu_u_ij(p, k, "H2O", t_k)) / t_k)
+    comb = (
+        math.log(rk / rw)
+        + 1.0
+        - rk / rw
+        - (zc / 2.0) * qk * (math.log(rk * qw / (rw * qk)) + 1.0 - rk * qw / (rw * qk))
+    )
+    return comb + qk * (1.0 - math.log(psi_wk) - psi_kw)  # psi_ww == 1
+
+
+def _ext_uniquac_ln_props(molality: float, t_k: float) -> tuple[float, float]:
+    """(ln gamma+-(m, T), ln a_w(m, T)) of NaCl(aq), extended-UNIQUAC.
+
+    Assembly per Leal et al. 2025: ions ln gamma_i = ln gamma_i,DH +
+    (ln gamma_i,U - ln gamma_i,U^inf) + ln x_w (eq 45, unsymmetric molality
+    scale); water ln gamma_w = ln gamma_w,DH + ln gamma_w,U with
+    a_w = gamma_w * x_w (eqs 46, 39).  The DH term (eq 40/42) uses
+    b = 1.50 (kg/mol)^0.5 and A(T) in (kg/mol)^0.5.
+    """
+    p = _ext_uniquac()
+    b_dh = float(p["dh"]["b"])
+    x, _phi_, _theta, psi = _eu_state(molality, t_k)
+    sq = math.sqrt(molality)  # ionic strength == molality for the 1:1 salt
+    big = 1.0 + b_dh * sq
+    a_dh = _eu_a_dh(t_k)
+    ln_g_dh_ion = -a_dh * sq / big
+    ln_g_dh_w = (2.0 * a_dh * _MW_WATER_KG / b_dh**3) * (big - 1.0 / big - 2.0 * math.log(big))
+    ln_g_u = _eu_ln_gamma_u(x, _phi_, _theta, psi)
+    xw = x["H2O"]
+    ln_g_na = ln_g_dh_ion + ln_g_u["Na"] - _eu_ln_gamma_inf("Na", t_k) + math.log(xw)
+    ln_g_cl = ln_g_dh_ion + ln_g_u["Cl"] - _eu_ln_gamma_inf("Cl", t_k) + math.log(xw)
+    ln_g_w = ln_g_dh_w + ln_g_u["H2O"]
+    return 0.5 * (ln_g_na + ln_g_cl), ln_g_w + math.log(xw)
+
+
+def ext_uniquac_mean_gamma(molality: float, t_k: float = 298.15) -> float:
+    """Mean ionic activity coefficient of NaCl(aq), extended-UNIQUAC (Thomsen params).
+
+    Applicability: literature-faithful to a few % vs the PPB84 anchors (the
+    source model's own fit quality; the high-accuracy NaCl row is Pitzer).
+    """
+    return math.exp(_ext_uniquac_ln_props(molality, t_k)[0])
+
+
+def ext_uniquac_water_activity(molality: float, t_k: float = 298.15) -> float:
+    """Water activity of NaCl(aq), extended-UNIQUAC (a_w = gamma_w * x_w)."""
+    return math.exp(_ext_uniquac_ln_props(molality, t_k)[1])
+
+
+def ext_uniquac_osmotic(molality: float, t_k: float = 298.15) -> float:
+    """Osmotic coefficient phi = -ln a_w / (nu * m * M_w), extended-UNIQUAC."""
+    return -_ext_uniquac_ln_props(molality, t_k)[1] / (2.0 * molality * _MW_WATER_KG)
+
+
+def ext_uniquac_saturation_molality() -> float:
+    """NaCl solubility (mol/kg) from the SLE condition gamma(m) == 1.0065 (PPB84 p. 11)."""
+    gamma_sat = float(_ext_uniquac()["saturation"]["mean_gamma"])
+
+    def residual(m: float) -> float:
+        return ext_uniquac_mean_gamma(m) - gamma_sat
 
     return brent_root(residual, 4.0, 10.0)
 
@@ -431,11 +693,21 @@ def _psat_or_wilson(cid: str, t_k: float) -> float:
 # -- the package --------------------------------------------------------------------
 
 
+#: Per-model water-activity surface of the brine models (the K-value and
+#: fugacity driver: K_H2O = a_w(m) * Psat_H2O / P; the salt is involatile).
+_WATER_ACTIVITY: dict[str, Callable[[float], float]] = {
+    "pitzer": pitzer_water_activity,
+    "enrtl": enrtl_water_activity,
+    "ext_uniquac": ext_uniquac_water_activity,
+}
+
+
 class ElectrolytePackage(Thermo):
     """Electrolyte property package over a plain-cubic carrier.
 
-    Subclasses pin the model (``pitzer`` or ``sour_water``) and register the
-    catalogue rows; the refusal models construct but raise at first use.
+    Subclasses pin the model (a ``_BRINE_MODELS`` brine or ``sour_water``)
+    and register the catalogue rows; models whose open parameter bases are
+    not verifiable stay in ``_REFUSALS`` and raise at first use.
     K-values come from the model's own chemistry (water activity x Psat for
     the brine; the speciation equilibrium partial pressures for sour water),
     the phase split is a Rachford-Rice solve with a Wegstein-damped
@@ -470,6 +742,10 @@ class ElectrolytePackage(Thermo):
     def _support(self, z: dict[str, float]) -> tuple[str, ...]:
         """Sorted positive-fraction ids (the _state helpers' support semantics)."""
         return _state.support_ids(z)
+
+    def _water_activity(self, molality: float) -> float:
+        """This model's water-activity surface a_w(m) (the brine chemistry driver)."""
+        return _WATER_ACTIVITY[self._model](molality)
 
     def _refuse_if_needed(self) -> None:
         """First-use refusals (the T-07 idiom: construction never raises)."""
@@ -516,22 +792,24 @@ class ElectrolytePackage(Thermo):
         self, z: dict[str, float], t_k: float, p: float, x: dict[str, float]
     ) -> dict[str, float]:
         """K-values of the full key set at liquid composition ``x``."""
-        if self._model == "pitzer":
-            return self._k_pitzer(z, t_k, p, x)
+        if self._model != "sour_water":
+            return self._k_brine(z, t_k, p, x)
         return self._k_sour_water(z, t_k, p, x)
 
-    def _k_pitzer(self, z: dict[str, float], t_k: float, p: float, x: dict[str, float]) -> dict[str, float]:
+    def _k_brine(self, z: dict[str, float], t_k: float, p: float, x: dict[str, float]) -> dict[str, float]:
         """Brine K-values: K_H2O = a_w(m) * Psat_H2O / P; the salt is involatile.
 
-        The 25 C parameter set is used as-is across the model's window
-        (293.15-303.15 K, the catalogue row's T_K): the osmotic form is
-        T-independent by construction and temperature dependence enters only
-        through Psat.  Saturation scans evaluate these K-values at
-        exploratory temperatures outside the window by design; the solved
-        point is what must be inside it (checked in :meth:`_boundary`).
+        The 25 C parameter sets are used as-is across the models' window
+        (293.15-303.15 K, the catalogue rows' T_K): the osmotic surfaces are
+        T-independent by construction (the extended-UNIQUAC u_ij/A(T)
+        T-dependence is negligible across the 10 K window; see the parameter
+        file) and temperature dependence enters only through Psat.  Saturation
+        scans evaluate these K-values at exploratory temperatures outside the
+        window by design; the solved point is what must be inside it (checked
+        in :meth:`_boundary`).
         """
         m = _molality_nacl(x.get("NaCl", 0.0), x.get("H2O", 0.0))
-        k_h2o = pitzer_water_activity(m) * _psat_or_wilson("H2O", t_k) / p
+        k_h2o = self._water_activity(m) * _psat_or_wilson("H2O", t_k) / p
         return {cid: (k_h2o if cid == "H2O" else _NONVOLATILE_K) for cid in z}
 
     def _k_sour_water(
@@ -584,7 +862,7 @@ class ElectrolytePackage(Thermo):
         substitution converges (Wegstein-damped; tolerance 1e-12, cap 50
         iterations).  A non-converged iterate is never returned.
         """
-        if self._model == "pitzer":
+        if self._model in _BRINE_MODELS:
             return self._brine_split(z, t_k, p)
         # The stability edges are a property of the FEED: classify once at
         # x = z, then take a single Rachford-Rice split at the
@@ -626,7 +904,7 @@ class ElectrolytePackage(Thermo):
             return "vapor", 1.0, dict(z), dict(z)
         m_feed = _molality_nacl(z["NaCl"], z.get("H2O", 0.0))
         psat = _psat_or_wilson("H2O", t_k)
-        if p >= pitzer_water_activity(m_feed) * psat:
+        if p >= self._water_activity(m_feed) * psat:
             return "liquid", 0.0, dict(z), dict(z)
         # Below the feed's bubble pressure the boiling liquid concentrates,
         # shedding pure-water vapour, until it reaches the saturated-solution
@@ -906,9 +1184,9 @@ class ElectrolytePackage(Thermo):
         Sour water: f_NH3 and f_H2S are the SWEQ equilibrium partial
         pressures.  Absent components return None.
         """
-        if self._model == "pitzer":
+        if self._model != "sour_water":
             m = _molality_nacl(x.get("NaCl", 0.0), x.get("H2O", 0.0))
-            a_w = pitzer_water_activity(m)
+            a_w = self._water_activity(m)
             return {cid: (a_w * _psat_or_wilson("H2O", T) if cid == "H2O" else None) for cid in x}
         m_nh3, m_h2s = _solution_molalities(x)
         p_nh3, p_h2s = sour_water_partial_pressures(m_nh3, m_h2s, T)
@@ -943,7 +1221,7 @@ class ElectrolytePackage(Thermo):
 
     def _build_state(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         state, beta, x, y = self._equilibrium_internal(z, T, P)
-        if state == "two_phase" and self._model == "pitzer" and x.get("H2O", 0.0) > 0.0:
+        if state == "two_phase" and self._model in _BRINE_MODELS and x.get("H2O", 0.0) > 0.0:
             m_liq = 1000.0 * x.get("NaCl", 0.0) / (_mw("H2O") * x["H2O"])
             if m_liq >= _MAX_MOLALITY:
                 raise ElectrolyteChemistryError(
@@ -1007,13 +1285,13 @@ class ElectrolyteSourWater(ElectrolytePackage):
 
 @register("thermo", "enrtl_nacl_water")
 class ElectrolyteENRTLNaCl(ElectrolytePackage):
-    """Refusal row: no verified citable eNRTL parameter table for NaCl-H2O."""
+    """eNRTL NaCl(aq): PDH long range + Chen & Evans 1986 local composition."""
 
     model = "enrtl"
 
 
 @register("thermo", "ext_uniquac_nacl_water")
 class ElectrolyteExtUNIQUAC(ElectrolytePackage):
-    """Refusal row: no verified citable extended-UNIQUAC parameter table for NaCl-H2O."""
+    """Extended UNIQUAC NaCl(aq): Thomsen & Rasmussen 1999 parameter set."""
 
     model = "ext_uniquac"

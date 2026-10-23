@@ -1,0 +1,73 @@
+# Extended UNIQUAC NaCl(aq) parameters (spec T-09b, model row ext_uniquac_nacl_water).
+#
+# Model: Thomsen, K. & Rasmussen, P., 'Modeling of vapor-liquid-solid
+# equilibrium in gas-aqueous electrolyte systems', Chem. Eng. Sci. 54(13),
+# 1787-1802, 1999; Thomsen, K., Rasmussen, P. & Gani, R., Chem. Eng. Sci.
+# 51(16), 3675-3683, 1996 (the r, q, u0_ij, uT_ij parameter set for
+# Na+, Cl- and H2O, with the extended Debye-Hueckel term).
+#
+# Where each number was read (2026-10-22, T-09b research thread):
+#   - q, r, u0_ij, u1_ij (= uT_ij): verified against Leal, A. M. K. et al.,
+#     'A general and extensible ... electrolyte ... framework',
+#     Applied Geochemistry 180, 106274, 2025 (open access) -- the paper's
+#     Tables 1-2 carry the Thomsen Na+-Cl--H2O set verbatim; every value was
+#     character-verified from the RENDERED PDF (the text layer drops minus
+#     signs and subscript order).
+#   - The formulation (eqs 15-24, 40-46: DH G^E with the x_w*M_w prefactor,
+#     psi_ji = exp[(u_ii - u_ji)/T], residual denominator orientation
+#     S_j = sum_l theta_l psi_lj, infinite-dilution divisor psi_ww = 1, the
+#     eq 45 unsymmetric molality assembly, a_w = gamma_w x_w) follows the
+#     same Leal et al. 2025 open-access text, finite-difference-verified to
+#     6 decimals.
+#   - Cross-check reference: Reaktoro's ActivityModelExtendedUNIQUAC.cpp and
+#     its ExtendedUNIQUAC.v2023.yaml (LGPL-2.1) were used as a verification
+#     cross-check ONLY -- no code was copied; the implementation is written
+#     from the equations above.
+#
+# Licence note: transcribed from the open-access literature only (no DIPPR,
+# DECHEMA, Aspen, HYSYS or DWSIM values).
+#
+# Measured accuracy vs the independent anchors (PPB84 Table A-8/A-9, 25 C,
+# 0.1-6 molal; see the catalogue row's assessed map): gamma+- worst 4.33 %
+# (1 m), phi worst 3.68 % (4 m), phi rms 2.07 % -- a few-percent-class fit
+# (the Thomsen-type parameterisation's own published quality).
+q:
+  H2O: 1.4
+  Na: 1.199
+  Cl: 10.197
+r:
+  H2O: 0.92
+  Na: 1.4034
+  Cl: 10.386
+# u_ij = u0_ij + u1_ij*(T - 298.15), J/mol-convention table as published
+# (eq 23 divides the exponent by T; the Cl-Cl self-pair 2214.814 is real and
+# easy to miss).  Symmetric pairs.
+u0:
+  H2O-Na: 733.2863
+  H2O-Cl: 1523.393
+  Na-Cl: 1443.229
+  Cl-Cl: 2214.814
+  Na-Na: 0.0
+  H2O-H2O: 0.0
+u1:
+  H2O-Na: 0.48719
+  H2O-Cl: 14.631
+  Na-Cl: 15.635
+  Cl-Cl: 14.436
+  Na-Na: 0.0
+  H2O-H2O: 0.0
+# Extended Debye-Hueckel term: b in (kg/mol)^0.5; A(T) in (kg/mol)^0.5 by the
+# Sander et al. correlation (A = c0 + c1*t + c2*t^2, t in degC).
+zq: 10.0
+dh:
+  b: 1.5
+  a:
+    c0: 1.131
+    c1: 1.335e-3
+    c2: 1.164e-5
+# SLE anchor: NaCl solubility 6.146 mol/kg at 298.15 K with saturated-solution
+# mean gamma 1.0065 (Pitzer, Peiper & Busey 1984, p. 11 -- the same anchor the
+# Pitzer row uses).
+saturation:
+  solubility_molality: 6.146
+  mean_gamma: 1.0065
