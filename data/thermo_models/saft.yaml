@@ -246,17 +246,38 @@
     provenance: m, sigma, lambda_r, lambda_a from Lafitte, Apostolakis, Essmann & Muller
       (2013) J. Chem. Phys. 139, 154504 (DOI 10.1063/1.4819786), cross-checked against
       teqp 0.23.2's compiled parameter values to printed precision (methane, ethane,
-      propane); k_ij = 0 for the pairs in scope
+      propane); CO2 from the same Table III (p. 154504-25), typed and checked
+      digit-for-digit against the paper PDF in T-18. N2 stays absent — Lafitte (2013)
+      Table III carries no nitrogen row and no other verified citable table was found
+      (secondary sources attribute an N2 set to this table that it does not contain);
+      k_ij = 0 for the pairs in scope
   applicability:
     component_classes:
     - hydrocarbon
+    - acid_gas
     polar: false
     electrolyte: false
     T_K: [90.0, 420.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  - pure-C1-95.3K
+  - pure-C1-125.0K
+  - pure-C1-155.0K
+  - pure-C1-172.0K
+  - pure-C1-181.0K
+  - pure-CO2-216.7K
+  - pure-CO2-240.0K
+  - pure-CO2-265.0K
+  - pure-CO2-285.0K
+  - pure-CO2-288.9K
+  - c1co2-293.130K-6.135MPa
+  - c1co2-293.130K-6.976MPa
+  - c1co2-298.142K-6.976MPa
+  - c1co2-298.142K-7.508MPa
+  - c1co2-303.145K-7.306MPa
+  - c1co2-303.144K-7.361MPa
   references:
   - Lafitte, Apostolakis, Essmann & Muller, "Development of the truncated perturbed
     chain-polar SAFT... ", J. Chem. Phys. 139 (2013) 154504
@@ -516,9 +537,10 @@
 
 - id: multifluid
   name: Multi-fluid Helmholtz (teqp CoolProp library)
-  # T-15: blocked on the CoolProp multifluid JSON library - license-restricted
-  # redistribution means no fluid package can ship in-repo; experimental until a
-  # licensed fluid package is provided at build time (issue #167).
+  # Licensing ruling (orchestrator, 2026-10-23): the multi-fluid rows use the fluid
+  # library shipped inside the installed teqp wheel at runtime; the repository never
+  # copies, vendors or regenerates those fluid files. That is allowed; it replaces the
+  # T-15c "not redistributable" note (issue #167).
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:MultifluidThermo
   params:
@@ -540,8 +562,18 @@
     T_K: [60.0, 800.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  - c1co2-293.130K-6.135MPa
+  - c1co2-293.130K-6.976MPa
+  - c1co2-298.142K-6.976MPa
+  - c1co2-298.142K-7.508MPa
+  - c1co2-303.145K-7.306MPa
+  - c1co2-303.144K-7.361MPa
+  - c1n2-149.989K-2.908MPa
+  - aga8-c1n2-134.02K-dew
+  - aga8-c1n2-146.37K-dew
+  - aga8-c1n2-153.41K-dew
   references:
   - teqp 0.23 (Thol & Bell), https://teqp.readthedocs.io, MIT licence
   - Huber, Lemmon, Diky, Smith & Brunner, "ThermoData Engine (TDE103b)", J. Chem. Eng.
@@ -607,8 +639,10 @@
 
 - id: multifluid_pure
   name: Multi-fluid Helmholtz, pure fluids (teqp CoolProp library)
-  # T-15: blocked on the CoolProp multifluid JSON library (license-restricted
-  # redistribution); experimental until a licensed fluid package is provided (issue #167).
+  # Licensing ruling (orchestrator, 2026-10-23): the multi-fluid rows use the fluid
+  # library shipped inside the installed teqp wheel at runtime; the repository never
+  # copies, vendors or regenerates those fluid files. That is allowed; it replaces the
+  # T-15c "not redistributable" note (issue #167).
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:MultifluidPureThermo
   params:
@@ -628,8 +662,21 @@
     T_K: [60.0, 800.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  - pure-C1-95.3K
+  - pure-C1-125.0K
+  - pure-C1-155.0K
+  - pure-C1-172.0K
+  - pure-C1-181.0K
+  - pure-CO2-216.7K
+  - pure-CO2-240.0K
+  - pure-CO2-265.0K
+  - pure-CO2-285.0K
+  - pure-CO2-288.9K
+  - h2o-nist-273.179K
+  - h2o-nist-347.390K
+  - h2o-nist-401.605K
   references:
   - teqp 0.23 (Thol & Bell), https://teqp.readthedocs.io, MIT licence
   l0:
@@ -676,9 +723,12 @@
 
 - id: gerg2008_teqp
   name: GERG-2008 (teqp multi-fluid, exact parameters)
-  # T-15 disposition: teqp wheel is CI-runnable (cp312), but the row keeps experimental
-  # status pending an L0 declaration and the c1n2-130.079K binding; the measured
-  # no-two-phase-solution finding for the other pending points is on issue #164.
+  # T-18 promotion (2026-10-23): teqp wheel is CI-runnable (cp312), L0 sweep green on
+  # all seven checks, bound cases measured and every miss assessed; the four former
+  # pending:teqp-gerg2008 points stay pending (measured: three have strictly monotone
+  # isotherms — no two-phase solution exists in the shipped parameters — and one has a
+  # sub-per-mille loop the density scan cannot resolve, so binding them would crash
+  # rather than miss, and crashes are not declarable).
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:Gerg2008TeqpThermo
   params:
@@ -700,9 +750,16 @@
     T_K: [60.0, 800.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
+  status: provisional
   validation: &gerg2008_teqp_cases
   - c1n2-130.079K-0.614MPa
+  - c1n2-149.989K-2.908MPa
+  - aga8-c1n2-134.02K-dew
+  - aga8-c1n2-146.37K-dew
+  - aga8-c1n2-153.41K-dew
+  - aga8-ng2-165.933K-dew
+  - aga8-ng2-169.184K-dew
+  - aga8-ng2-176.240K-dew
   assessed:
     c1n2-130.079K-0.614MPa: "bubble_P -5.77% (578280 vs 613700) - teqp's Kunz-Wagner
       (2012) mixture parameters vs the NGPSA data at the binary's dense-phase end (the
