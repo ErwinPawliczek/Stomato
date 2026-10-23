@@ -435,13 +435,8 @@
       the srk row (measured 2026-10-22, T-06c harness run)
     psrk-pure-H2O-370K: rho_L +26.0% (710.618 vs 960.587) - untranslated SRK liquid-density limit, as
       the srk row (measured 2026-10-22, T-06c harness run)
-    psrk-meohh2o-101.325kPa-349.05K: bubble_T +1.6% (354.776 vs 349.05); vapor_comp -0.054 abs (0.666052
-      vs 0.7197) - the PSRK-UNIFAC parameters are general group-contribution predictions, not a MeOH/H2O-specific
-      fit; the Gao 2012 system sits outside the PSRK parameter-fit systems (measured 2026-10-22 on the
-      Gao 2012 101.325 kPa point, T-06c harness run)
-    psrk-meohh2o-312.91K-20.705kPa: 'bubble_P +19.9% (16594.9 vs 20705); vapor_comp -0.085 abs (0.720068
-      vs 0.8053) - same cause: general group-contribution prediction, not a MeOH/H2O-specific parameter
-      fit (measured 2026-10-22, T-06c harness run)'
+    psrk-meohh2o-101.325kPa-349.05K: "vapor_comp -0.028 abs (0.691649 vs 0.7197); bubble_T passes - PSRK-UNIFAC parameters are general group-contribution predictions, not a MeOH/H2O-specific fit (re-measured 2026-10-22 after the orchestrator review routed psrk through main's MHV1, fixing the covolume-term sign)"
+    psrk-meohh2o-312.91K-20.705kPa: "bubble_P -6.0% (19471.7 vs 20705); vapor_comp -0.071 abs (0.734401 vs 0.8053) - same cause: general group-contribution prediction on the low-pressure isotherm (re-measured 2026-10-22 after the covolume-sign fix)"
   l0_note: 'provisional on L0 only: the 8 bound T-12 cases - 4 L1 pure, 2 L2 MeOH/H2O VLE and the 2 L3
     aqueous-methane solubility points (which PASS: methane solubility in water at 13.1/45.0 MPa within
     the liquid_comp tolerances) - are assessed above; the pure points inherit the untranslated SRK liquid-density
@@ -579,14 +574,8 @@
       limits of the untranslated PR form (measured 2026-10-22, T-06c harness run)
     lcvm-pure-H2O-370K: rho_L -16.4% (802.915 vs 960.587); Cp +8.7% (82.4488 vs 75.8833) - pure-component
       limits of the untranslated PR form (measured 2026-10-22, T-06c harness run)
-    lcvm-meohh2o-101.325kPa-349.05K: bubble_T +2.8% (358.996 vs 349.05); vapor_comp -0.061 abs (0.659246
-      vs 0.7197) - the 64/36 Vidal/Michelsen weighting with original-UNIFAC parameters over-predicts the
-      MeOH/H2O bubble temperature at 101.325 kPa (Boukouvalas et al. developed LCVM for nonpolar/polar
-      asymmetry systems, not alcohol-water) (measured 2026-10-22 on the Gao 2012 101.325 kPa point, T-06c
-      harness run)
-    lcvm-meohh2o-312.91K-20.705kPa: 'bubble_P +29.3% (14637.2 vs 20705); vapor_comp -0.058 abs (0.747041
-      vs 0.8053) - same cause: original-UNIFAC parameters in the LCVM reference on the low-pressure Bayer
-      1927 isotherm (measured 2026-10-22, T-06c harness run)'
+    lcvm-meohh2o-101.325kPa-349.05K: "bubble_T +0.57% (351.039 vs 349.05, just over the 0.5% tolerance); vapor_comp passes - original-UNIFAC parameters in the LCVM reference (re-measured 2026-10-22 after the orchestrator review corrected the LCVM weighting to lambda = 0.36 on the Vidal term, A_V = -0.623, A_M = -0.52, and the covolume-term sign)"
+    lcvm-meohh2o-312.91K-20.705kPa: "bubble_P -6.1% (19433.7 vs 20705); vapor_comp -0.035 abs (0.769900 vs 0.8053) - same cause: original-UNIFAC parameters on the low-pressure isotherm (re-measured 2026-10-22 after the LCVM correction)"
   l0_note: 'provisional on L0 only: the 6 bound T-12 cases (4 L1 pure, 2 L2 MeOH/H2O VLE) all miss (declared
     above; the two C1/H2O cases stay unbound because the original-UNIFAC curated map has no C1 assignment
     and the row refuses) - the pure points inherit the untranslated PR limits and the MeOH/H2O points

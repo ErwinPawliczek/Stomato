@@ -20,9 +20,9 @@ family `mixing` · status **provisional** · adapter `ngdesign.thermo.mixing_rul
 | --- | --- | --- | --- |
 | pure_psat_limit | ok | 0 | MeOH@300K bubble 0 dew 0; MeOH@350K bubble 0 dew 0; H2O@350K bubble 0 dew 0 |
 | phase_identification | ok | 0 | MeOH@300K ok; MeOH@350K ok; H2O@400K ok |
-| round_trip | ok | 4.3e-16 | 380K/50000Pa T_ph 3e-16 H 0 T_ps 1.5e-16; 400K/100000Pa T_ph 1.4e-16 H 0 T_ps 4.3e-16 |
+| round_trip | ok | 2.8e-16 | 380K/50000Pa T_ph 1.5e-16 H 0 T_ps 1.5e-16; 400K/100000Pa T_ph 2.8e-16 H 0 T_ps 2.8e-16 |
 | dhdT_cp | ok | 7e-08 | 380K/50000Pa vapor cp 42.2408 dH/dT 42.2408 |
-| gibbs_duhem | ok | 2e-09 | ['H2O', 'MeOH']@350K/100000Pa aqueous 8e-10; ['H2O', 'MeOH']@380K/50000Pa vapor 2e-09 |
+| gibbs_duhem | ok | 9e-09 | ['H2O', 'MeOH']@350K/100000Pa aqueous 9e-09; ['H2O', 'MeOH']@380K/50000Pa vapor 7.9e-09 |
 | determinism | ok | 0 | two instances bit-identical at 380K/50000Pa |
 | single_liquid_limit | ok | 0 | 298.15K/100000Pa kinds=['hc_liquid'] vf=0.0 |
 
@@ -34,7 +34,7 @@ Note: provisional on L0 only: the 8 bound T-12 cases - 4 L1 pure, 2 L2 MeOH/H2O 
 
 ## L1/L2 reference-case outcomes
 
-15/26 comparisons pass. Failing comparisons are assessed in the
+16/26 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:

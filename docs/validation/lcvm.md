@@ -11,8 +11,8 @@ family `mixing` · status **provisional** · adapter `ngdesign.thermo.mixing_rul
 
 ## Parameters
 
-- source: LCVM (Boukouvalas et al. 1994): PR with the linear Vidal/MHV1 combination (lambda = 0.36, the original Boukouvalas weighting) over original UNIFAC (thermo unifac variant)
-- provenance: Boukouvalas, C. J., Spiliotis, N., Coutsikos, P., Tzoupanekos, N. & Magoulas, K., "Prediction of vapor-liquid equilibria with the LCVM model", Fluid Phase Equilib. 92, 75-89, 1994; Michelsen, M. L., Fluid Phase Equilib. 60, 213-219, 1990 (MHV1 reference, q1 = -0.62363 for PR); k_ij-free form - the gE model carries all interaction information
+- source: LCVM (Boukouvalas et al. 1994): PR with the linear Vidal/MHV1 combination (lambda = 0.36 on the Vidal term, A_V = -0.623, A_M = -0.52) over original UNIFAC (thermo unifac variant)
+- provenance: Boukouvalas, C., Spiliotis, N., Coutsikos, P., Tzouvaras, N. & Tassios, D., "Prediction of vapor-liquid equilibrium with the LCVM model", Fluid Phase Equilib. 92, 75-106, 1994 (alpha = A + (lambda/A_V + (1-lambda)/A_M) gE/RT + ((1-lambda)/A_M) sum x ln(b/b_i), lambda = 0.36, A_V = -0.623, A_M = -0.52 for PR); Michelsen, M. L., Fluid Phase Equilib. 60, 213-219, 1990 (MHV1 reference); k_ij-free form - the gE model carries all interaction information
 
 ## L0 self-consistency
 
@@ -20,9 +20,9 @@ family `mixing` · status **provisional** · adapter `ngdesign.thermo.mixing_rul
 | --- | --- | --- | --- |
 | pure_psat_limit | ok | 0 | MeOH@300K bubble 0 dew 0; MeOH@350K bubble 0 dew 0; H2O@350K bubble 0 dew 0 |
 | phase_identification | ok | 0 | MeOH@300K ok; MeOH@350K ok; H2O@400K ok |
-| round_trip | ok | 3e-16 | 380K/50000Pa T_ph 1.5e-16 H 0 T_ps 3e-16; 400K/100000Pa T_ph 2.8e-16 H 0 T_ps 2.8e-16 |
-| dhdT_cp | ok | 7e-08 | 380K/50000Pa vapor cp 42.2409 dH/dT 42.2409 |
-| gibbs_duhem | ok | 1.2e-08 | ['H2O', 'MeOH']@350K/100000Pa aqueous 1.2e-08; ['H2O', 'MeOH']@380K/50000Pa vapor 4.6e-10 |
+| round_trip | ok | 3e-16 | 380K/50000Pa T_ph 3e-16 H 0 T_ps 1.5e-16; 400K/100000Pa T_ph 0 H 0 T_ps 2.8e-16 |
+| dhdT_cp | ok | 7e-08 | 380K/50000Pa vapor cp 42.2423 dH/dT 42.2423 |
+| gibbs_duhem | ok | 8.8e-09 | ['H2O', 'MeOH']@350K/100000Pa aqueous 8.8e-09; ['H2O', 'MeOH']@380K/50000Pa vapor 6.8e-09 |
 | determinism | ok | 0 | two instances bit-identical at 380K/50000Pa |
 | single_liquid_limit | ok | 0 | 298.15K/100000Pa kinds=['hc_liquid'] vf=0.0 |
 
@@ -34,7 +34,7 @@ Note: provisional on L0 only: the 6 bound T-12 cases (4 L1 pure, 2 L2 MeOH/H2O V
 
 ## L1/L2 reference-case outcomes
 
-11/24 comparisons pass. Failing comparisons are assessed in the
+12/24 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
@@ -48,5 +48,5 @@ Declared case ids:
 
 ## References
 
-- Boukouvalas, C. J., Spiliotis, N., Coutsikos, P., Tzoupanekos, N. & Magoulas, K., Fluid Phase Equilib. 92, 75-89, 1994
+- Boukouvalas, C., Spiliotis, N., Coutsikos, P., Tzouvaras, N. & Tassios, D., Fluid Phase Equilib. 92, 75-106, 1994
 - Michelsen, M. L., Fluid Phase Equilib. 60, 213-219, 1990
