@@ -39,4 +39,4 @@ None yet — validation case ids arrive with the data tasks (T-11..T-13).
 ## References
 
 - Starling, K. E., 'Fluid Thermodynamic Properties for Light Petroleum Systems', Gulf Publishing, 1973 (the BWRS equation and parameter basis)
-- Starling, K. E., Cox, K. W., Kwok, Y. C., et al., 'Modified BWR Equation of State Parameters for Twenty-Seven Compounds', ORO-5249-2 (U.S. ERDA report), Table 5, 1976 - the parameter table transcribed for the ten registry-reachable compounds (all ten rows digit-verified against the printed Table 5, p. B-16 of the OSTI scan, 2026-10-23: zero discrepancies; reported methane fits: vapor pressure 0.44% AAD, density 0.32% AAD)
+- Starling, K. E., Cox, K. W., Kwok, Y. C., et al., 'Modified BWR Equation of State Parameters for Twenty-Seven Compounds', ORO-5249-2 (U.S. ERDA report), Table 5, 1976 - the parameter table transcribed for the ten registry-reachable compounds (methane and nitrogen rows verified against the report; reported methane fits: vapor pressure 0.44% AAD, density 0.32% AAD)
