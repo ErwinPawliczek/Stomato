@@ -1,0 +1,237 @@
+# U-A — Logical and stream handling (plan §2 U-A, 9 rows).
+#
+# mixer and splitter are the two registered rows; the rest are roadmap R0
+# rows so the palette is complete and later family threads only add adapters.
+
+- id: mixer
+  name: Mixer
+  family: logical
+  ports:
+    inlet:
+    - name: inlet_1
+      required: true
+      description: first feed
+    - name: inlet_2
+      required: true
+      description: second feed
+    - name: inlet_3
+      required: true
+      description: third feed
+    outlet:
+    - name: outlet
+      required: true
+      description: adiabatic mixed stream
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.mixer:Mixer
+      params:
+        type: object
+        properties: {}
+      note: outlet pressure = min inlet pressure; adiabatic PH flash of the combined feed
+      end_state: true
+  pid_symbol: MIX
+  references:
+  - docs/unit-catalogue-plan.md §2 U-A 1
+  notes: complete at R0 (plan §1) — a mixer has no rating or rigorous level.
+
+- id: splitter
+  name: Splitter
+  family: logical
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet_1
+      required: true
+      description: first split, fraction of the feed
+    - name: outlet_2
+      required: true
+      description: second split, fraction of the feed
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.splitter:Splitter
+      params:
+        type: object
+        required: [fractions]
+        properties:
+          fractions:
+            type: array
+            items: {type: number}
+            description: outlet split fractions (same order as the outlet ports)
+      note: splits the feed by fractions or flows; outlet T/P follow the inlet
+      end_state: true
+  pid_symbol: SPL
+  references:
+  - docs/unit-catalogue-plan.md §2 U-A 2
+  notes: complete at R0.
+
+- id: component_splitter
+  name: Component splitter
+  family: logical
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet_1
+      required: true
+      description: first component split
+    - name: outlet_2
+      required: true
+      description: second component split
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: per-component split fractions with outlet T/P specs
+      end_state: true
+  pid_symbol: CSP
+  references:
+  - docs/unit-catalogue-plan.md §2 U-A 3
+  notes: roadmap R0 — the canvas slice S3 needs it (plan §2b).
+
+- id: stream_calculator
+  name: Stream calculator (set)
+  family: logical
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: reference stream
+    outlet:
+    - name: outlet
+      required: true
+      description: copy/scale/override of the inlet
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: copy, scale or override stream variables (T, P, flow, composition)
+      end_state: true
+  pid_symbol: SMC
+  references:
+  - docs/unit-catalogue-plan.md §2 U-A 4
+  notes: P2-01 design specs exist at the solver level; the unit form is missing.
+
+- id: adjust
+  name: Adjust
+  family: logical
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: stream carrying the target
+    outlet:
+    - name: outlet
+      required: true
+      description: adjusted stream
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: manipulate a unit parameter to hit a stream target (wraps the solver design specs)
+      end_state: true
+  pid_symbol: ADJ
+  references:
+  - docs/unit-catalogue-plan.md §2 U-A 5
+  notes: exists at solver level only today (plan marks the line 🟡).
+
+- id: balance
+  name: Balance
+  family: logical
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: known streams
+    outlet:
+    - name: outlet
+      required: true
+      description: stream closed by the balance
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: mass/energy balance block closing an unknown stream
+      end_state: true
+  pid_symbol: BAL
+  references:
+  - docs/unit-catalogue-plan.md §2 U-A 6
+  notes: roadmap R0.
+
+- id: recycle_block
+  name: Recycle block
+  family: logical
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: torn stream guess
+    outlet:
+    - name: outlet
+      required: true
+      description: accelerated tear stream
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: explicit tear with per-block acceleration options
+      end_state: true
+  pid_symbol: RCY
+  references:
+  - docs/unit-catalogue-plan.md §2 U-A 7
+  notes: tear handling is implicit in the solver today (P2-03).
+
+- id: stream_duplicator
+  name: Stream duplicator / tee
+  family: logical
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet_1
+      required: true
+      description: identical copy
+    - name: outlet_2
+      required: true
+      description: identical copy
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: identical copies of the inlet
+      end_state: true
+  pid_symbol: TEE
+  references:
+  - docs/unit-catalogue-plan.md §2 U-A 8
+  notes: roadmap R0.
+
+- id: utility_stream
+  name: Utility stream source/sink
+  family: logical
+  ports:
+    inlet:
+    - name: inlet
+      required: false
+      description: process stream to absorb the utility (sink side)
+    outlet:
+    - name: outlet
+      required: true
+      description: utility stream at the declared level
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: steam levels, cooling water, fuel gas, electricity with cost basis
+      end_state: true
+  pid_symbol: UTL
+  references:
+  - docs/unit-catalogue-plan.md §2 U-A 9
+  notes: roadmap R0.

@@ -1,0 +1,90 @@
+# Schema for data/unit_models/*.yaml — one row per unit operation (spec U-00).
+#
+# A unit is DATA: id, name, family, ports, the rigour-level ladder, the legacy
+# mode->level map, sizer, P&ID symbol and references. ngdesign.units.catalogue
+# loads these files and registers every row with an implemented level as a
+# "unit" plugin under its id; the adapter classes stay as code
+# (ngdesign.units.*, ngdesign.units.column, the amine modules).
+#
+# Fields (one entry per row, a top-level YAML list, one file per family):
+#   id          registry name; stable; unique across all files — a duplicate
+#               fails at load, naming both rows. lower_snake_case.
+#   name        human-readable name (API surface).
+#   family      one of `families` below (plan §2 U-A..U-H).
+#   ports       inlet/outlet port names with required/optional and a phrase
+#               each. The example_case of the registered adapter must feed
+#               every required inlet and fill every outlet.
+#   levels      {R0|R1|R2|R3: {...}} in ladder order (R0 first). Keys out of
+#               ladder order fail at load. Each level:
+#     status      validated | provisional | experimental | planned
+#                 (implemented_status: experimental < provisional < validated;
+#                 a `planned` level has no adapter and refuses with
+#                 UnitLevelNotImplemented naming the implemented levels).
+#     adapter     "module:ClassName", imported at load; must be a class.
+#                 Required on implemented levels, forbidden on planned ones.
+#     params      JSON-schema fragment for the level's parameters.
+#     validation  V-prefixed case ids (data/validation_units/<family>/cases.yaml).
+#                 A `validated` level carries at least one; the ids must all
+#                 start with V.
+#     end_state   true only on the highest declared level of the row: the
+#                 terminal rigour of this unit's ladder.
+#     note        one line on what the level does (or why it is planned).
+#   mode_map    legacy parameter values -> level keys: the P1-06
+#               mode="shortcut"|"staged" strings and the column configuration
+#               names translate onto levels without renaming any existing
+#               parameter (ngdesign.units.levels.resolve_level).
+#   sizer       registered "sizer" plugin id (ngdesign.sizing); must resolve.
+#   pid_symbol  provisional P&ID abbreviation rendered in docs.
+#   references  literature / plan citations.
+#   notes       plan-to-registry mapping notes (which palette line this row is,
+#               what maps onto it instead of a separate row).
+#
+# Palette (plan §2, approved 2026-10-23): 83 units in 8 families —
+# logical 9, flow 12, heat 10, separation 10, column 12, reactors 9,
+# treating 9, refining 12. Round 0 ships the 21 existing registered units with
+# real adapters (status provisional); every other row is roadmap (planned).
+
+families:
+- logical
+- flow
+- heat
+- separation
+- column
+- reactors
+- treating
+- refining
+
+level_keys:
+- R0
+- R1
+- R2
+- R3
+
+# Implemented-level statuses, ordered experimental < provisional < validated
+# (plan §4 gates). `planned` is the roadmap status, not on this scale.
+statuses:
+- experimental
+- provisional
+- validated
+level_statuses:
+- validated
+- provisional
+- experimental
+- planned
+
+# Family row counts the catalogue is held to (tests/units/test_catalogue.py).
+palette_counts:
+  logical: 9
+  flow: 12
+  heat: 10
+  separation: 10
+  column: 12
+  reactors: 9
+  treating: 9
+  refining: 12
+
+# Palette lines that are NOT units and have no row (plan §3: templates are
+# flowsheets, not units).
+palette_excluded:
+  lng_liquefaction: flowsheet template composing catalogue units (plan U-G 7); a flowsheets sample, not a unit
+  ngl_fractionation: flowsheet template over rigorous columns (plan U-G 8); a flowsheets sample, not a unit
