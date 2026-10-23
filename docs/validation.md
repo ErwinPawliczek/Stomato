@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-23T05:55:31+00:00 from `data/validation/results.json` (git 9ddf964, CoolProp 8.0.0).
+Generated 2026-10-23T16:32:03+00:00 from `data/validation/results.json` (git f7ee6b9, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -219,7 +219,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [regular_solution_rk](validation/regular_solution_rk.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [rk](validation/rk.md) | L0 failing: phase_identification, gibbs_duhem |
 | [rks-bm](validation/rks-bm.md) | 8 declared case misses (`assessed:` in the row; see its report) |
-| [saft_vr_mie](validation/saft_vr_mie.md) | meets the audit bar; awaiting promotion review |
+| [saft_vr_mie](validation/saft_vr_mie.md) | 8 declared case misses (`assessed:` in the row; see its report) |
 | [sour-pr](validation/sour-pr.md) | 5 declared case misses (`assessed:` in the row; see its report) |
 | [sour-srk](validation/sour-srk.md) | 7 declared case misses (`assessed:` in the row; see its report) |
 | [sour_water](validation/sour_water.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
@@ -1784,6 +1784,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 ## Case assessments (marked xfail in the test suite)
 
+- `aga8-c1n2-153.41K-dew (gerg2008_teqp)` — dew_P +5.3% (2799037 vs 2658444 Pa) — same deviation as the multifluid row: identical teqp Kunz-Wagner (2012) pair set and flash path (measured 2026-10-23, T-18).
+- `aga8-c1n2-153.41K-dew (multifluid)` — dew_P +5.3% (2799037 vs 2658444 Pa) — teqp's Kunz-Wagner (2012) binary pair set vs the NGPSA-backed AGA8 check value; the same dew point through the CoolProp HEOS path gives the same 2799037 Pa, so the miss is the parameter source, not the flash path.
 - `api-srk-c1co2-277.15K-5.97MPa` — bubble_P -3.2% (5.77937e+06 vs 5.97e+06) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table).
 - `api-srk-ng-dew-morch-243.4K-0.30MPa` — dew_P +25.5% (376555 vs 300000) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table).
 - `api-srk-ng-dew-morch-254.6K-0.68MPa` — dew_P +13.5% (771741 vs 680000) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table).
@@ -1944,14 +1946,17 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `pure-C1-125K (pr)` — rho_L +11.8% (449.652 vs 402.111) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-125K (pr78)` — rho_L +11.8% (449.652 vs 402.111) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-125K (srk)` — Cp +6.9% (61.7209 vs 57.7411) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `pure-C1-155.0K` — rho_V -4.4% (19.526 vs 20.419 mol/l) — SAFT-VR-Mie vapour densities fall below the CoolProp reference as T rises toward methane's critical region.
 - `pure-C1-155K (pr)` — Cp +8.4% (73.2856 vs 67.6129) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-155K (pr78)` — Cp +8.4% (73.2856 vs 67.6129) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-155K (srk)` — Cp +13.3% (76.6185 vs 67.6129) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-172.0K (pc_saft)` — Cp +11.0 % (87.130 vs 96.690) — same no-residual-Cp limitation, now overpredicting on the warm approach to the critical point (measured 2026-10-22, PR table).
+- `pure-C1-172.0K (saft_vr_mie)` — rho_V -7.9% (39.163 vs 42.514) — same trend, steeper near Tc.
 - `pure-C1-172K (pr)` — Cp +18.3% (103.117 vs 87.1299) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-172K (pr78)` — Cp +18.3% (103.117 vs 87.1299) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-172K (srk)` — Cp +23.3% (107.453 vs 87.1299); rho_L -9.9% (274.35 vs 304.559) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-181.0K (pc_saft)` — Cp +20.8 % (124.139 vs 149.979) — same no-residual-Cp limitation, diverging as T approaches Tc (190.6 K), where the chain EOS's derivative-based Cp is least reliable (measured 2026-10-22, PR table).
+- `pure-C1-181.0K (saft_vr_mie)` — rho_V -11.3% (57.240 vs 64.523) and Cp -11.6% (109.738 vs 124.139 J/mol/K) — the point sits 4.5 K below methane's critical temperature, where the paper's fit residuals are largest.
 - `pure-C1-181K (pr)` — Cp +29.8% (161.076 vs 124.139) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-181K (pr78)` — Cp +29.8% (161.076 vs 124.139) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-181K (srk)` — Cp +35.8% (168.599 vs 124.139); rho_L -14.1% (233.607 vs 271.913) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
@@ -1983,15 +1988,20 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `pure-C3-351.3K (srk)` — Cp +26.6% (241.865 vs 191.089); rho_L -17.0% (314.954 vs 379.569); rho_V -3.1% (77.4636 vs 79.9466) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-CO2-216.7K (pr)` — Cp -8.9% (78.3254 vs 85.9712) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-CO2-216.7K (pr78)` — Cp -8.9% (78.3254 vs 85.9712) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `pure-CO2-216.7K (saft_vr_mie)` — Cp -7.1% (79.885 vs 85.971 J/mol/K) — saturation heat capacity just above CO2's triple point.
+- `pure-CO2-240.0K (saft_vr_mie)` — rho_V -3.3% (32.205 vs 33.295 mol/l).
 - `pure-CO2-240K` — rho_L -9.0% (990.451 vs 1088.87) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `pure-CO2-265.0K (saft_vr_mie)` — rho_V -4.8% (71.815 vs 75.471 mol/l).
 - `pure-CO2-265K (pr)` — Cp +8.1% (111.409 vs 103.056) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-CO2-265K (pr78)` — Cp +8.1% (111.409 vs 103.056) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-CO2-265K (srk)` — Cp +12.2% (115.671 vs 103.056); rho_L -11.8% (857.989 vs 973.254) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `pure-CO2-285.0K (saft_vr_mie)` — rho_V -6.8% (134.205 vs 143.923 mol/l).
 - `pure-CO2-285K (pr)` — Cp +23.2% (169.831 vs 137.895) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-CO2-285K (pr78)` — Cp +23.2% (169.831 vs 137.895) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-CO2-285K (srk)` — Cp +27.8% (176.26 vs 137.895); rho_L -16.2% (709.912 vs 847.046) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-CO2-288.9K (pr)` — Cp +27.8% (198.288 vs 155.189) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-CO2-288.9K (pr78)` — Cp +27.8% (198.288 vs 155.189) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `pure-CO2-288.9K (saft_vr_mie)` — rho_V -7.4% (152.984 vs 165.146 mol/l) — the Table III CO2 set undershoots saturation vapour densities by 3-8% against the CoolProp reference; pressures and liquid densities stay inside case tolerances at all five temperatures.
 - `pure-CO2-288.9K (srk)` — Cp +32.9% (206.216 vs 155.189); rho_L -17.4% (672.534 vs 814.639); rho_V -3.3% (159.741 vs 165.146) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-H2O-323.5K (cpa_srk)` — Cp -8.9 % (75.333 vs 68.614) — CPA-SRK with published Kontogeorgis (1996) parameters has no residual liquid-Cp contribution, the same class of limitation the amine and gamma-phi rows assessed (parameters verified T-07) (measured 2026-10-22, PR table).
 - `pure-H2O-323.5K (pr)` — Cp +7.9% (81.2495 vs 75.3335); rho_L -15.6% (833.88 vs 987.838) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
@@ -2159,7 +2169,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `zudkevitch-joffe-rk-ng-dew-morch-260.8K-1.04MPa` — dew_P +14.2% (1.18794e+06 vs 1.04e+06) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table).
 - `zudkevitch-joffe-rk-pure-C3-300K` — rho_L -8.2% (449.204 vs 489.447) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table).
 - `zudkevitch-joffe-rk-pure-CO2-265K` — Cp +8.7% (111.975 vs 103.056); rho_L -11.6% (860.146 vs 973.254) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table).
-- 15 failing case(s) have NO assessment yet: they are expected to fail the test suite red until assessed and classified here.
+- 5 failing case(s) have NO assessment yet: they are expected to fail the test suite red until assessed and classified here.
 
 ## Reference sources
 
