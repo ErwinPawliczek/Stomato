@@ -1,9 +1,9 @@
 {
   "environment": {
-    "generated": "2026-10-23T01:49:20+00:00",
+    "generated": "2026-10-23T02:56:11+00:00",
     "python": "3.14.7",
     "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "06d4a19",
+    "git_rev": "f08d855",
     "coolprop_version": "8.0.0"
   },
   "summary": {
@@ -17584,8 +17584,8 @@
       "package": "pr_huron_vidal",
       "property": "bubble_T",
       "expected": 349.05,
-      "got": 361.23581171457045,
-      "rel_err": 0.03491136431620236,
+      "got": 352.93222120051865,
+      "rel_err": 0.011122249535936522,
       "pass": false
     },
     {
@@ -17593,8 +17593,8 @@
       "package": "pr_huron_vidal",
       "property": "vapor_comp",
       "expected": 0.7197,
-      "got": 0.6431940406185344,
-      "rel_err": 0.07650595938146565,
+      "got": 0.69940199329678,
+      "rel_err": 0.020298006703220017,
       "pass": false
     },
     {
@@ -17602,8 +17602,8 @@
       "package": "pr_huron_vidal",
       "property": "bubble_P",
       "expected": 20705.0,
-      "got": 13313.903239851224,
-      "rel_err": 0.35697158947832774,
+      "got": 18546.06918565328,
+      "rel_err": 0.10427098837704518,
       "pass": false
     },
     {
@@ -17611,8 +17611,8 @@
       "package": "pr_huron_vidal",
       "property": "vapor_comp",
       "expected": 0.8053,
-      "got": 0.7388088527536064,
-      "rel_err": 0.0664911472463936,
+      "got": 0.7665286146233518,
+      "rel_err": 0.03877138537664826,
       "pass": false
     },
     {
