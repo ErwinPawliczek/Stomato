@@ -310,25 +310,25 @@ class LevelDispatch:
 
 
 def _dispatch_class(row: UnitRow, adapters: Mapping[str, type]) -> type:
-    """The per-row dispatch class: one registry entry, solve-time levels."""
+    """The per-row dispatch class: one registry entry, solve-time levels.
+
+    The class SUBCLASSES the default (lowest implemented) adapter, so every
+    registered instance is still an instance of that adapter class: ports,
+    ``example_case()``, adapter-specific attributes (``.amine`` …) and any
+    protocol ``isinstance`` checks are inherited untouched. Only ``solve``
+    is overridden to resolve the level and delegate.
+    """
     default = next(iter(adapters))
-    adapter_cls: Any = adapters[default]  # classmethod surface: example_case, ports
+    adapter_cls: Any = adapters[default]
 
-    def example_case(*args: Any, **kwargs: Any) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
-        feeds, params = adapter_cls.example_case()
-        return feeds, params
-
-    def solve(_self: Any, inlets: Mapping[str, Any], params: Mapping[str, Any], thermo: Any) -> Any:
+    def solve(self: Any, inlets: Mapping[str, Any], params: Mapping[str, Any], thermo: Any) -> Any:
         level = resolve_level(row, params)
         return adapters[level]().solve(inlets, params, thermo)
 
     return type(
         f"LevelDispatch_{row.id}",
-        (LevelDispatch,),
+        (adapter_cls, LevelDispatch),
         {
-            "inlet_ports": adapter_cls.inlet_ports,
-            "outlet_ports": adapter_cls.outlet_ports,
-            "example_case": classmethod(example_case),
             "solve": solve,
             "_adapters": dict(adapters),
             "_row_id": row.id,
