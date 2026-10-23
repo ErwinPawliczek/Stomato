@@ -227,6 +227,7 @@ def test_surface_derivatives_converge(profile: list[dict[str, Any]], pkg_name: s
             _check_walk(pkg_name, which, c, d, floor)
 
 
+@pytest.mark.timeout(_TIMEOUT_S)
 @pytest.mark.parametrize("pkg_name", ["amine_ke", "amine_enrtl"])
 def test_same_state_bit_identical(profile: list[dict[str, Any]], pkg_name: str) -> None:
     """Two evaluations at the same state return bit-identical values (spec)."""
