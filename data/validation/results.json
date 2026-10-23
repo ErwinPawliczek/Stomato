@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-10-23T06:21:47+00:00",
+    "generated": "2026-10-23T07:38:36+00:00",
     "python": "3.13.14",
     "platform": "Linux-6.1.158+-x86_64-with-glibc2.41",
-    "git_rev": "a1b91b1",
+    "git_rev": "20ccb78",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 2084,
-    "n_pass": 1546
+    "n_comparisons": 2110,
+    "n_pass": 1562
   },
   "rows": [
     {
@@ -11433,6 +11433,186 @@
       "pass": false
     },
     {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.461013825018895,
+      "rel_err": 0.0013208415622889217,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 485.1253836542719,
+      "rel_err": 0.2064476899855856,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 57.03275170379375,
+      "rel_err": 0.012268465516125489,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.836498710959997,
+      "rel_err": 0.009568708759909436,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 562.9875598081384,
+      "rel_err": 0.1502514637417811,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 121.04108448931787,
+      "rel_err": 0.001956418806331506,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4755199117842883,
+      "rel_err": 0.004029680289413323,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 674.1447846562809,
+      "rel_err": 0.13627446305624022,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 138.7982121200414,
+      "rel_err": 0.01847950615479882,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 77.61343414469759,
+      "rel_err": 0.028390600894658835,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 1110.7093768113862,
+      "rel_err": 0.14123222103346902,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 99.8302897749955,
+      "rel_err": 0.03129676899301171,
+      "pass": true
+    },
+    {
       "case": "pr-bm-pure-C1-125K",
       "package": "pr-bm",
       "property": "bubble_P",
@@ -12612,6 +12792,33 @@
       "pass": true
     },
     {
+      "case": "twu-sim-tassone-c1c3-294.26K-6.895MPa",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 5614474.584636524,
+      "rel_err": 0.18571797177135252,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-c1c3-294.26K-6.895MPa",
+      "package": "twu-sim-tassone",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.7984879085446354,
+      "rel_err": 0.04878790854463533,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-c1co2-277.15K-5.97MPa",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 5021693.749717133,
+      "rel_err": 0.15884526805408156,
+      "pass": false
+    },
+    {
       "case": "pr-bm-c1c3-294.26K-6.895MPa",
       "package": "pr-bm",
       "property": "bubble_P",
@@ -13176,6 +13383,33 @@
       "expected": 1040000.0,
       "got": 1187935.401357054,
       "rel_err": 0.14224557822793654,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 182798.96280606184,
+      "rel_err": 0.39067012397979384,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 381274.2878913125,
+      "rel_err": 0.4393025178068934,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 562505.8720871111,
+      "rel_err": 0.45912896914700857,
       "pass": false
     },
     {

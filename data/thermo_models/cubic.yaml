@@ -1467,6 +1467,16 @@
   - twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa
   - twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa
   - twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa
+  assessed:
+    twu-sim-tassone-pure-C1-125K: "rho_L +20.6% (485.125 vs 402.111) - TST liquid-volume form not implemented: the instance predicts PR-like volumes (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-pure-C3-300K: "rho_L +15.0% (562.988 vs 489.447) - TST liquid-volume form not implemented: the instance predicts PR-like volumes (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-pure-nC4-280K: "rho_L +13.6% (674.145 vs 593.294) - TST liquid-volume form not implemented: the instance predicts PR-like volumes (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-pure-CO2-265K: "rho_L +14.1% (1110.71 vs 973.254) - TST liquid-volume form not implemented: the instance predicts PR-like volumes; CO2 uses the generalised Twu alpha (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-c1c3-294.26K-6.895MPa: "bubble_P -18.6% (5.61447e+06 vs 6.895e+06); vapor_comp +4.9% (0.798488 vs 0.7497) - binary parameters from the generic ChemSep PR table (TST-fitted BIPs unavailable) and alpha fitted to normal paraffins only: mixture VLE outside bands by design (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-c1co2-277.15K-5.97MPa: "bubble_P -15.9% (5.02169e+06 vs 5.97e+06) - binary parameters from the generic ChemSep PR table (TST-fitted BIPs unavailable) and CO2 on the generalised Twu alpha: mixture VLE outside bands by design (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa: "dew_P -39.1% (182799 vs 300000) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa: "dew_P -43.9% (381274 vs 680000) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa: "dew_P -45.9% (562506 vs 1.04e+06) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table)"
   references:
   - Twu, C. H.; Sim, W. D.; Tassone, V. A versatile liquid activity model for SRK, PR and a new
     cubic equation-of-state TST. Fluid Phase Equilibria 194-197 (2002) 385-399,
