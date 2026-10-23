@@ -118,6 +118,102 @@ pure_cases:
     rho_V: 64.52258944445151
     rho_L: 271.9129243864554
     Cp: 124.1390921872483
+- id: pure-C2-110.0K
+  fluid: C2
+  coolprop_fluid: C2H6
+  package: pending:bwrs
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 110.0
+  source: coolprop:C2H6
+  expected:
+    bubble_P: 74.28702768793251
+    dew_P: 74.28702768793251
+    rho_V: 0.002442630853798281
+    rho_L: 629.9759086141128
+    Cp: 68.35101862239259
+- id: pure-C2-150.0K
+  fluid: C2
+  coolprop_fluid: C2H6
+  package: pending:bwrs
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 150.0
+  source: coolprop:C2H6
+  expected:
+    bubble_P: 9637.999311486175
+    dew_P: 9637.999311486175
+    rho_V: 0.2337330514473684
+    rho_L: 585.1688376925943
+    Cp: 70.13894884960538
+- id: pure-C2-230.0K
+  fluid: C2
+  coolprop_fluid: C2H6
+  package: pending:bwrs
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 230.0
+  source: coolprop:C2H6
+  expected:
+    bubble_P: 700182.3997941298
+    dew_P: 700182.3997941298
+    rho_V: 12.676274475640321
+    rho_L: 481.2905678767953
+    Cp: 82.22145360068032
+- id: pure-C3-150.0K
+  fluid: C3
+  coolprop_fluid: C3H8
+  package: pending:bwrs
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 150.0
+  source: coolprop:C3H8
+  expected:
+    bubble_P: 283.4471521186511
+    dew_P: 283.4471521186511
+    rho_V: 0.010025738233684666
+    rho_L: 667.4575177037098
+    Cp: 88.45687743556338
+- id: pure-C3-231.0K
+  fluid: C3
+  coolprop_fluid: C3H8
+  package: pending:bwrs
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 231.0
+  source: coolprop:C3H8
+  expected:
+    bubble_P: 101163.24473203377
+    dew_P: 101163.24473203377
+    rho_V: 2.4125508886016656
+    rho_L: 580.9247802466018
+    Cp: 99.03334174667786
+- id: pure-C3-300.0K
+  fluid: C3
+  coolprop_fluid: C3H8
+  package: pending:bwrs
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 300.0
+  source: coolprop:C3H8
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
 - id: pure-CO2-216.7K
   fluid: CO2
   coolprop_fluid: CO2

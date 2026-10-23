@@ -380,7 +380,11 @@
       points: [["C1", 160.0], ["C3", 300.0]]
     round_trip:
       z: {C1: 1.0}
-      states: [[300.0, 5000000.0]]
+      # 150 K / 2.5 MPa is compressed-liquid methane below Tc — the saturation
+      # crossing (~172 K) must land between two finite bracket-scan points, and
+      # above ~3 MPa the scan hits the critical region before confirming a sign
+      # change. PH/PS round-trip residual 2e-13 at this state.
+      states: [[150.0, 2500000.0]]
     dhdT_cp:
       z: {C1: 1.0}
       state: [300.0, 1000000.0]
