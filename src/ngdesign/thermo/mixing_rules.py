@@ -44,13 +44,14 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache
-from typing import Any
+from typing import Any, cast
 
 from thermo import CEOSGas, CEOSLiquid
 from thermo.activity import GibbsExcess
 from thermo.eos_mix import (
     PRMIX,
     SRKMIX,
+    TWUPRMIX,
     PR_lnphis,
     SRK_lnphis,
     a_alpha_and_derivatives_quadratic_terms,
@@ -58,7 +59,15 @@ from thermo.eos_mix import (
 from thermo.eos_mix_methods import eos_mix_lnphis_general
 from thermo.heat_capacity import R as R_GAS
 
-from ngdesign.thermo.cubic import _CHEMSEP_CUBIC_TABLE, CubicEOS, _flasher_for, _flasher_vl_for
+from ngdesign.thermo.cubic import (
+    _CHEMSEP_CUBIC_TABLE,
+    _MC_SRK,
+    SRKMIX_MC,
+    CubicEOS,
+    _flasher_for,
+    _flasher_vl_for,
+    _mc_coeffs,
+)
 from ngdesign.thermo.gamma_phi import _ge_model_factory
 
 __all__ = [
@@ -76,6 +85,16 @@ __all__ = [
     "SRKMIX_MHV2",
     "SRKMIX_WS",
     "SRKWongSandlerThermo",
+    "PSRK_Q1",
+    "VTPRRule",
+    "LCVMRule",
+    "SRKMIX_PSRK",
+    "SRKMIX_MC",
+    "PRMIX_VTPR",
+    "PRMIX_LCVM",
+    "SRKPSRKThermo",
+    "PRVTPRThermo",
+    "PRLCVMThermo",
 ]
 
 
@@ -181,6 +200,11 @@ def _nrtl_provider(cas_list: list[str], ids: tuple[str, ...]) -> GEProvider:
 def _provider_for(kind: str, cas_list: list[str], ids: tuple[str, ...]) -> GEProvider:
     if kind == "nrtl":
         return _nrtl_provider(cas_list, ids)
+    if kind.startswith("unifac"):
+        # The gamma-phi adapter owns the UNIFAC group tables (one owner of the
+        # group-assignment plumbing); variants: unifac (original), unifac_psrk
+        # and unifac_vtpr, each a data/thermo_params/unifac/groups.yaml entry.
+        return ThermoGEProvider(_ge_model_factory(kind, ids, cas_list, None))
     raise ValueError(f"unknown gE provider {kind!r}")
 
 
@@ -497,6 +521,12 @@ def _rule_for(eos_cls: type[Any], provider: GEProvider) -> GERule:
         return MHV2(provider, q1=eos_cls.q1, q2=eos_cls.q2)
     if kind == "ws":
         return WongSandler(provider, eos_cls.ws_c)
+    if kind == "psrk":
+        return MHV1(provider, q1=PSRK_Q1)
+    if kind == "vtpr":
+        return VTPRRule(provider)
+    if kind == "lcvm":
+        return LCVMRule(provider)
     raise ValueError(f"EOS class {eos_cls!r} declares no mixing rule")
 
 
@@ -524,6 +554,14 @@ def _mixing_configure(
             "kijs": _zero_kijs(len(cas_list)),
             "rule": rule,
         }
+        mc_table = getattr(eos_cls, "mc_table", None)
+        if mc_table is not None:
+            # Mathias-Copeman alpha (T-02 table, Coquelet et al. 2004 fits):
+            # components without a published fit fall back to the EOS default
+            # alpha inside _mc_coeffs.
+            eos_kwargs["alpha_coeffs"] = [
+                _mc_coeffs(str(r.id), mc_table, om) for r, om in zip(records, constants.omegas, strict=True)
+            ]
         return eos_cls, eos_kwargs, CEOSGas, CEOSLiquid
 
     return configure
@@ -1049,3 +1087,223 @@ class SRKMHV2Thermo(MixingRuleThermo):
 
     eos = SRKMIX_MHV2
     ge_kind = "nrtl"
+
+
+# ----------------------------------------------------------------------------
+# T-06c: PSRK, VTPR, LCVM (self-contained block; see head note on issue #141)
+# ----------------------------------------------------------------------------
+
+
+#: PSRK's MHV1 constant for SRK (Holderbaum & Gmehling 1991); PSRK runs main's
+#: :class:`MHV1` rule with this q1 over PSRK-UNIFAC.
+PSRK_Q1 = -0.64663
+
+
+class VTPRRule(GERule):
+    """VTPR mixing rule (Ahlers & Gmehling 2001): residual-gE reference.
+
+    ``alpha_m = A - g_res/0.53087`` where the gE model supplies the *residual*
+    part only - the VTPR UNIFAC variant (thermo version 3) omits the
+    combinatorial contribution, matching the source form.  Declared deviations
+    of the hosted form: linear covolume mixing (the paper's power-mean b
+    combining) and thermo's generalised Twu alpha on the host class (the
+    Ahlers-Gmehling fitted Twu table is not openly available).
+    """
+
+    A1_INV = 1.0 / 0.53087
+
+    def __init__(self, provider: GEProvider):
+        self.provider = provider
+
+    def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
+        n = len(xs)
+        g, gx, gT, gTT, gxT = self.provider.state(T, tuple(xs))
+        A, A_T, A_TT = _alpha_moments(pa, xs, bs, T)
+        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
+        alpha_m = A - g * self.A1_INV
+        alpha_x = tuple(_a_brt(pa, k, bs[k], T)[0] - gx[k] * self.A1_INV for k in range(n))
+        alpha_xT = tuple(_a_brt(pa, k, bs[k], T)[1] - gxT[k] * self.A1_INV for k in range(n))
+        return _linear_rule_state(
+            alpha_m, A_T - gT * self.A1_INV, A_TT - gTT * self.A1_INV, alpha_x, alpha_xT, b, T, bs, xs
+        )
+
+
+class LCVMRule(GERule):
+    """LCVM (Boukouvalas, Spiliotis, Coutsikos, Tzouvaras & Tassios 1994,
+    Fluid Phase Equilib. 92, 75-106): linear combination of the Vidal and
+    Michelsen (MHV1) mixing rules on PR.
+
+        alpha_m = A + (lambda/A_V + (1 - lambda)/A_M) g
+                    + ((1 - lambda)/A_M) sum_i x_i ln(b/b_i)
+
+    with ``lambda = 0.36`` weighting the Vidal (infinite-pressure) term and the
+    paper's PR constants ``A_V = -0.623`` and ``A_M = -0.52``.  ``_flory``
+    returns ``F = sum_i x_i ln(b_i/b)``, so the covolume term enters as ``-F``.
+    """
+
+    LAMBDA = 0.36
+    A_V = -0.623
+    A_M = -0.52
+
+    def __init__(self, provider: GEProvider, lam: float = LAMBDA):
+        self.provider = provider
+        self.lam = lam
+
+    def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
+        n = len(xs)
+        g, gx, gT, gTT, gxT = self.provider.state(T, tuple(xs))
+        A, A_T, A_TT = _alpha_moments(pa, xs, bs, T)
+        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
+        fl, fl_x = _flory(xs, b, bs)
+        c_m = (1.0 - self.lam) / self.A_M
+        c_g = self.lam / self.A_V + c_m
+        alpha_m = A + c_g * g - c_m * fl
+        alpha_x = tuple(_a_brt(pa, k, bs[k], T)[0] + c_g * gx[k] - c_m * fl_x[k] for k in range(n))
+        # F is T-independent (linear b).
+        alpha_xT = tuple(_a_brt(pa, k, bs[k], T)[1] + c_g * gxT[k] for k in range(n))
+        return _linear_rule_state(alpha_m, A_T + c_g * gT, A_TT + c_g * gTT, alpha_x, alpha_xT, b, T, bs, xs)
+
+
+class SRKMIX_PSRK(_GEMixingEOS, SRKMIX_MC):  # type: ignore[misc]
+    """SRKMIX with the PSRK rule (MHV1 over PSRK-UNIFAC) and the T-02
+    Mathias-Copeman alpha (the published PSRK alpha treatment for polar
+    components; components without a published fit keep the EOS default)."""
+
+    lnphi_kernel = staticmethod(SRK_lnphis)
+    rule_kind = "psrk"
+    mc_table = _MC_SRK
+
+    def __init__(
+        self,
+        Tcs: Any,
+        Pcs: Any,
+        omegas: Any,
+        zs: Any,
+        kijs: Any | None = None,
+        T: float | None = None,
+        P: float | None = None,
+        V: float | None = None,
+        fugacities: bool = True,
+        only_l: bool = False,
+        only_g: bool = False,
+        rule: GERule | None = None,
+        alpha_coeffs: list[list[float]] | None = None,
+    ):
+        self.rule = rule
+        super().__init__(
+            Tcs=Tcs,
+            Pcs=Pcs,
+            omegas=omegas,
+            zs=zs,
+            kijs=kijs,
+            T=T,
+            P=P,
+            V=V,
+            fugacities=fugacities,
+            only_l=only_l,
+            only_g=only_g,
+            alpha_coeffs=cast("list[list[float] | None] | None", alpha_coeffs or []),
+        )
+
+
+class PRMIX_VTPR(_GEMixingEOS, TWUPRMIX):  # type: ignore[misc]
+    """PRMIX with the VTPR rule (Ahlers & Gmehling 2001) over VTPR-UNIFAC.
+
+    The host carries thermo's generalised Twu alpha (TWUPRMIX); the fitted
+    Ahlers-Gmehling Twu table and the paper's Peneloux volume translation are
+    declared deviations (the latter changes liquid density only, not VLE).
+    """
+
+    lnphi_kernel = staticmethod(PR_lnphis)
+    rule_kind = "vtpr"
+
+    def __init__(
+        self,
+        Tcs: Any,
+        Pcs: Any,
+        omegas: Any,
+        zs: Any,
+        kijs: Any | None = None,
+        T: float | None = None,
+        P: float | None = None,
+        V: float | None = None,
+        fugacities: bool = True,
+        only_l: bool = False,
+        only_g: bool = False,
+        rule: GERule | None = None,
+    ):
+        self.rule = rule
+        super().__init__(
+            Tcs=Tcs,
+            Pcs=Pcs,
+            omegas=omegas,
+            zs=zs,
+            kijs=kijs,
+            T=T,
+            P=P,
+            V=V,
+            fugacities=fugacities,
+            only_l=only_l,
+            only_g=only_g,
+        )
+
+
+class PRMIX_LCVM(_GEMixingEOS, PRMIX):  # type: ignore[misc]
+    """PRMIX with the LCVM rule (Boukouvalas et al. 1994) over original UNIFAC."""
+
+    lnphi_kernel = staticmethod(PR_lnphis)
+    rule_kind = "lcvm"
+
+    def __init__(
+        self,
+        Tcs: Any,
+        Pcs: Any,
+        omegas: Any,
+        zs: Any,
+        kijs: Any | None = None,
+        T: float | None = None,
+        P: float | None = None,
+        V: float | None = None,
+        fugacities: bool = True,
+        only_l: bool = False,
+        only_g: bool = False,
+        rule: GERule | None = None,
+    ):
+        self.rule = rule
+        super().__init__(
+            Tcs=Tcs,
+            Pcs=Pcs,
+            omegas=omegas,
+            zs=zs,
+            kijs=kijs,
+            T=T,
+            P=P,
+            V=V,
+            fugacities=fugacities,
+            only_l=only_l,
+            only_g=only_g,
+        )
+
+
+class SRKPSRKThermo(MixingRuleThermo):
+    """PSRK (Holderbaum & Gmehling 1991): SRK + Mathias-Copeman alpha + MHV1
+    (q1 = -0.64663) over PSRK-UNIFAC (thermo PSRKSG/PSRKIP)."""
+
+    eos = SRKMIX_PSRK
+    ge_kind = "unifac_psrk"
+
+
+class PRVTPRThermo(MixingRuleThermo):
+    """VTPR (Ahlers & Gmehling 2001): Twu-alpha PR host with the residual-gE
+    rule over VTPR-UNIFAC (thermo VTPRSG/VTPRIP, no combinatorial term)."""
+
+    eos = PRMIX_VTPR
+    ge_kind = "unifac_vtpr"
+
+
+class PRLCVMThermo(MixingRuleThermo):
+    """LCVM (Boukouvalas et al. 1994): PR + linear Vidal/MHV1 combination
+    (lambda = 0.36) over original UNIFAC."""
+
+    eos = PRMIX_LCVM
+    ge_kind = "unifac"

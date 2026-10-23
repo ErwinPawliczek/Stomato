@@ -47,6 +47,16 @@ variants:
       MEG: {CH2: 2, OH: 2}
       H2O: {H2O: 1}
       nC4: {CH3: 2, CH2: 2}
+      C1: {CH4: 1}
+  unifac_vtpr:
+    version: 3
+    interaction: VTPRIP
+    subgroups: VTPRSG
+    components:
+      MeOH: {CH3OH: 1}
+      H2O: {H2O: 1}
+      nC4: {CH3: 2, CH2: 2}
+      C1: {CH4: 1}
   unifac_nist:
     version: 0
     interaction: NISTUFIP
