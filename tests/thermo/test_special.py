@@ -186,16 +186,44 @@ class TestIdealSolid:
         """van't Hoff x at 298.15 K from Tm = 353.35 K, Hfus = 19010 J/mol.
 
         Hand-reduced: ln x = -(19010/R)(1/298.15 - 1/353.35) -> x = 0.30177.
-        The measured naphthalene-in-benzene value is x ~ 0.292 ( Oregon State
-        PAH solubility table, retrieved this session); the ~3% gap is the
-        gamma != 1 correction the ideal model deliberately omits - the pending
-        validation case binds the 5% band.
+        The measured naphthalene-in-benzene value is x = 0.292 (Chang 1969,
+        IUPAC-NIST Solubility Database sysID 59_123, re-verified 2026-10-23);
+        the ~3% gap is the gamma != 1 correction the ideal model deliberately
+        omits.
         """
         pkg = IdealSolidPackage()
         x = pkg.solubility("naphthalene", 298.15)
         expected = math.exp(-(19010.0 / R) * (1.0 / 298.15 - 1.0 / 353.35))
         assert x == pytest.approx(expected, rel=1e-9)
         assert x == pytest.approx(0.3018, abs=2e-4)
+
+    def test_published_check_values(self) -> None:
+        """van't Hoff predictions vs IUPAC-NIST Solubility Database values (T-19).
+
+        Every measured value re-verified on the cited database pages
+        2026-10-23: naphthalene/benzene 298.15 K x = 0.292 (Chang 1969,
+        sysID 59_123), 307.5 K x = 0.372 (Ward 1926, sysID 59_125), 308.2 K
+        x = 0.3766 (McLaughlin & Zainal, sysID 59_124); biphenyl/benzene
+        298.15 K x = 0.381 (Chang 1969 via the Acree evaluation, sysID
+        58_241); anthracene/benzene 298.15 K x = 0.00713 (Acree evaluation
+        regression ln x = -3200.1/T + 5.7899, sysID 58_57). Measured
+        van't Hoff misses: +3.4% / +2.4% / +2.9% (naphthalene), -0.7%
+        (biphenyl), +32% (anthracene - strongly non-ideal solute; the miss
+        is pinned below rather than hidden).
+        """
+        pkg = IdealSolidPackage()
+        for t_k, meas in ((298.15, 0.292), (307.5, 0.372), (308.2, 0.3766)):
+            pred = pkg.solubility("naphthalene", t_k)
+            assert pred == pytest.approx(meas, rel=0.04)
+        # biphenyl/benzene is the near-ideal case: miss under 2%.
+        assert pkg.solubility("biphenyl", 298.15) == pytest.approx(0.381, rel=0.02)
+        # anthracene/benzene: the databank fusion properties (Tm = 489.15 K,
+        # Hfus = 29400 J/mol) predict x ~ 0.00973 against the evaluated
+        # 0.00713 - a ~+32% miss the ideal model cannot close; pinned so the
+        # assessed miss is visible.
+        x = pkg.solubility("anthracene", 298.15)
+        assert x == pytest.approx(math.exp(-(29400.0 / R) * (1.0 / 298.15 - 1.0 / 489.15)), rel=1e-6)
+        assert 1.25 < x / 0.00713 < 1.45
 
     def test_solubility_increases_with_temperature(self) -> None:
         pkg = IdealSolidPackage()

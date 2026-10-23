@@ -112,7 +112,17 @@
     notes: >-
       Ideal solubility of a solid in a liquid solvent. Non-ideal gamma
       corrections (NRTL/S MDL) are future work; melting-point curvature of the
-      liquidus is not computed.
+      liquidus is not computed. T-19: predictions re-verified against the
+      IUPAC-NIST Solubility Database (naphthalene/benzene x = 0.292 at
+      298.15 K, 0.372 at 307.5 K, 0.3766 at 308.2 K - sysIDs 59_123/59_125/
+      59_124; biphenyl/benzene x = 0.381 at 298.15 K - sysID 58_241;
+      anthracene/benzene x = 0.00713 at 298.15 K, Acree evaluation - sysID
+      58_57). Measured van't Hoff misses: +3.4%/+2.4%/+2.9% (naphthalene),
+      -0.7% (biphenyl), +32% (anthracene, strongly non-ideal solute -
+      assessed). Row stays experimental: the validation harness
+      (scripts/validate_properties.py, outside this spec's editable files)
+      has no case type for the solubility(cid, T) surface, so no L1/L2 case
+      can be bound; the published checks live in tests/thermo/test_special.py.
   status: experimental
   validation: []
 

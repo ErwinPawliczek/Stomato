@@ -38,12 +38,15 @@
 #   Pending: source precision not verified against the primary paper this
 #   session; table values must be digitized before a tolerance is set.
 #
-# - special_sle_naphthalene_benzene: van't Hoff ideal solubility x = 0.3018 at
-#   298.15 K (Tm = 353.35 K, Hfus = 19010 J/mol, chemicals databank) within 5%
-#   of the measured x ~ 0.292 for naphthalene in benzene (Oregon State PAH
-#   solubility table, retrieved this session). Pending: measured-value source
-#   precision is uncertain (secondary aggregation); re-verify against a
-#   primary source before binding.
+# - special_sle_naphthalene_benzene: RESOLVED at unit level (T-19): measured
+#   values re-verified on the IUPAC-NIST Solubility Database pages
+#   (naphthalene/benzene 0.292 @ 298.15 K sysID 59_123, 0.372 @ 307.5 K
+#   sysID 59_125, 0.3766 @ 308.2 K sysID 59_124; biphenyl/benzene 0.381 @
+#   298.15 K sysID 58_241; anthracene 0.00713 @ 298.15 K sysID 58_57) and the
+#   van't Hoff misses pinned in tests/thermo/test_special.py (+3.4%/+2.4%/
+#   +2.9%, -0.7%, +32% assessed). The case stays unbound: the harness has no
+#   case type for the solubility(cid, T) surface (scripts/validate_properties.py
+#   is outside the spec's editable files).
 #
 # - special_assoc_acetic_acid_Z: dimerization-kernel nominal compressibility
 #   Z = 0.6299 at 399.35 K, 1 bar (Mehling & Kleiber 2020). Pending: K2 was
