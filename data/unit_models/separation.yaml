@@ -1,0 +1,305 @@
+# U-D — Phase separation (plan §2 U-D, 10 rows).
+#
+# Molecular-sieve dehydration (plan U-G 6) maps onto the adsorption_bed row —
+# no separate treating row.
+
+- id: scrubber
+  name: 2-phase separator / KO drum
+  family: separation
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: two-phase feed
+    outlet:
+    - name: gas_out
+      required: true
+      description: vapour outlet
+    - name: liquid_out
+      required: true
+      description: liquid outlet
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.separator:Scrubber
+      params:
+        type: object
+        properties: {}
+      note: PT/PH/PVF flash with ΔP; gas and liquid leave at their flash states
+    R1:
+      status: planned
+      params: {}
+      note: Souders-Brown sizing, carry-over at a given diameter (the souders_brown correlation plugin exists)
+      end_state: true
+  sizer: scrubber
+  pid_symbol: V
+  references:
+  - docs/unit-catalogue-plan.md §2 U-D 1
+  notes: the registered id stays `scrubber` (historical); the row is the palette's 2-phase separator.
+
+- id: separator_3phase
+  name: 3-phase separator
+  family: separation
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: three-phase feed
+    outlet:
+    - name: gas_out
+      required: true
+      description: vapour outlet
+    - name: hc_out
+      required: true
+      description: hydrocarbon liquid outlet
+    - name: water_out
+      required: true
+      description: water outlet
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.separator:Separator3Phase
+      params:
+        type: object
+        properties: {}
+      note: VLLE flash; gas, hydrocarbon and water leave at their phase states
+      end_state: true
+  sizer: separator_3phase
+  pid_symbol: V
+  references:
+  - docs/unit-catalogue-plan.md §2 U-D 2
+  notes: roadmap R1 lands with the S1 slice (plan §2b).
+
+- id: flash_drum
+  name: Flash drum with duty
+  family: separation
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: gas_out
+      required: true
+      description: vapour outlet
+    - name: liquid_out
+      required: true
+      description: liquid outlet
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: PH/PT flash with a duty spec (the separator row runs without duty today)
+      end_state: true
+  pid_symbol: V
+  references:
+  - docs/unit-catalogue-plan.md §2 U-D 3
+  notes: roadmap; the S2 amine loop needs it (plan §2b).
+
+- id: decanter
+  name: Decanter
+  family: separation
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: LLE feed
+    outlet:
+    - name: light_out
+      required: true
+      description: light liquid phase
+    - name: heavy_out
+      required: true
+      description: heavy liquid phase
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: LLE split
+    R1:
+      status: planned
+      params: {}
+      note: settling (Stokes)
+      end_state: true
+  pid_symbol: V
+  references:
+  - docs/unit-catalogue-plan.md §2 U-D 4
+  notes: roadmap; S3 slice (plan §2b).
+
+- id: tank
+  name: Tank / surge drum
+  family: separation
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet
+      required: true
+      description: well-mixed outlet
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: mixing with holdup (steady state = the mixer row's physics with a holdup report)
+      end_state: true
+  pid_symbol: TK
+  references:
+  - docs/unit-catalogue-plan.md §2 U-D 5
+  notes: roadmap.
+
+- id: hydrocyclone
+  name: Hydrocyclone / cyclone
+  family: separation
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: slurry/gas feed
+    outlet:
+    - name: overflow
+      required: true
+      description: fine stream
+    - name: underflow
+      required: true
+      description: coarse stream
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: efficiency spec
+    R1:
+      status: planned
+      params: {}
+      note: Lapple / Barth cut size
+      end_state: true
+  pid_symbol: CYC
+  references:
+  - docs/unit-catalogue-plan.md §2 U-D 6
+  notes: roadmap.
+
+- id: filter
+  name: Filter
+  family: separation
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: slurry feed
+    outlet:
+    - name: filtrate
+      required: true
+      description: clear filtrate
+    - name: cake
+      required: true
+      description: solids cake
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: solids split spec
+    R1:
+      status: planned
+      params: {}
+      note: cake resistance
+      end_state: true
+  pid_symbol: FLT
+  references:
+  - docs/unit-catalogue-plan.md §2 U-D 7
+  notes: roadmap.
+
+- id: membrane
+  name: Membrane (gas)
+  family: separation
+  ports:
+    inlet:
+    - name: feed_in
+      required: true
+      description: high-pressure feed gas
+    outlet:
+    - name: permeate
+      required: true
+      description: permeate stream
+    - name: residue
+      required: true
+      description: residue stream
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: stage-cut / permeance spec
+    R1:
+      status: planned
+      params: {}
+      note: solution-diffusion with permeances, cross-flow
+    R2:
+      status: planned
+      params: {}
+      note: counter-current module
+      end_state: true
+  pid_symbol: M
+  references:
+  - docs/unit-catalogue-plan.md §2 U-D 8
+  notes: roadmap.
+
+- id: adsorption_bed
+  name: Adsorption bed (TSA/PSA)
+  family: separation
+  ports:
+    inlet:
+    - name: feed_in
+      required: true
+      description: gas to the bed
+    outlet:
+    - name: product_out
+      required: true
+      description: treated product
+    - name: regen_out
+      required: false
+      description: regeneration (tail-gas) outlet during the cycle
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: equilibrium capacity + breakthrough spec
+    R1:
+      status: planned
+      params: {}
+      note: Langmuir isotherm, LUB
+      end_state: true
+  pid_symbol: X
+  references:
+  - docs/unit-catalogue-plan.md §2 U-D 9
+  notes: molecular-sieve dehydration (plan U-G 6) maps onto this row with a cycle —
+    no separate treating row.
+
+- id: hydrate_check
+  name: Hydrate check / inhibitor injection
+  family: separation
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: gas stream at risk of hydrates
+    - name: inhibitor_in
+      required: false
+      description: inhibitor (MeOH/MEG) injection
+    outlet:
+    - name: outlet
+      required: true
+      description: gas with hydrate margin and inhibitor dose reported
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: hydrate T from Hammerschmidt + inhibitor dose (the hammerschmidt_formation correlation plugin exists)
+    R1:
+      status: planned
+      params: {}
+      note: Katz / van der Waals-Platteeuw (via thermo)
+      end_state: true
+  pid_symbol: HC
+  references:
+  - docs/unit-catalogue-plan.md §2 U-D 10
+  notes: roadmap; S2 slice (plan §2b).
