@@ -1,16 +1,43 @@
 {
   "environment": {
-    "generated": "2026-10-23T02:56:11+00:00",
+    "generated": "2026-10-23T14:40:40+00:00",
     "python": "3.14.7",
     "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "f08d855",
+    "git_rev": "929c5ad",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 2084,
-    "n_pass": 1542
+    "n_comparisons": 2117,
+    "n_pass": 1568
   },
   "rows": [
+    {
+      "case": "aga8-dc92-nist-check-gas-400K-50MPa",
+      "package": "aga8_dc92",
+      "property": "density",
+      "expected": 263.117417,
+      "got": 263.1174166285464,
+      "rel_err": 1.4117408624635586e-09,
+      "pass": true
+    },
+    {
+      "case": "aga8-dc92-nist-check-gas-400K-50MPa",
+      "package": "aga8_dc92",
+      "property": "Z",
+      "expected": 1.173801364147326,
+      "got": 1.1738013641473262,
+      "rel_err": 1.8916710416871017e-16,
+      "pass": true
+    },
+    {
+      "case": "aga8-dc92-nist-check-gas-400K-50MPa",
+      "package": "aga8_dc92",
+      "property": "cp",
+      "expected": 58.54617672380667,
+      "got": 58.54617672380668,
+      "rel_err": 2.427289963312572e-16,
+      "pass": true
+    },
     {
       "case": "pure-C1-95.3K",
       "package": "pr",
@@ -11433,6 +11460,186 @@
       "pass": false
     },
     {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 268757.827063163,
+      "rel_err": 8.639268737729815e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.459630330443832,
+      "rel_err": 0.0016305620097303646,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 476.01211974516167,
+      "rel_err": 0.18378411359517663,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-C1-125K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 58.56105231136881,
+      "rel_err": 0.014199671811576697,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997687.6456687356,
+      "rel_err": 5.0371498518006826e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.744985651227395,
+      "rel_err": 0.005337777658187511,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 538.0282318464009,
+      "rel_err": 0.0992565473855766,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-C3-300K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 127.22027388333643,
+      "rel_err": 0.05310664191015127,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 132816.54823974936,
+      "got": 132816.37532483658,
+      "rel_err": 1.3019078952911783e-06,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 3.4895818108256678,
+      "got": 3.4751307193741026,
+      "rel_err": 0.004141210103380822,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 593.2939677646473,
+      "got": 664.9696512484502,
+      "rel_err": 0.12080972903509414,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-pure-nC4-280K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 136.27982819611634,
+      "got": 139.48574875622214,
+      "rel_err": 0.023524542131739764,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 2790916.074974494,
+      "got": 2790915.905799384,
+      "rel_err": 6.061633717437183e-08,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "rho_V",
+      "expected": 75.47077353408034,
+      "got": 76.59915109935993,
+      "rel_err": 0.01495118590205056,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "rho_L",
+      "expected": 973.2544843551278,
+      "got": 1038.346287286315,
+      "rel_err": 0.06688055793990665,
+      "pass": true
+    },
+    {
+      "case": "twu-sim-tassone-pure-CO2-265K",
+      "package": "twu-sim-tassone",
+      "property": "Cp",
+      "expected": 103.05559698734537,
+      "got": 113.5094404855705,
+      "rel_err": 0.10143887186941238,
+      "pass": false
+    },
+    {
       "case": "pr-bm-pure-C1-125K",
       "package": "pr-bm",
       "property": "bubble_P",
@@ -12612,6 +12819,33 @@
       "pass": true
     },
     {
+      "case": "twu-sim-tassone-c1c3-294.26K-6.895MPa",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 6895000.0,
+      "got": 3905336.7280544685,
+      "rel_err": 0.4335987341472852,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-c1c3-294.26K-6.895MPa",
+      "package": "twu-sim-tassone",
+      "property": "vapor_comp",
+      "expected": 0.7497,
+      "got": 0.4875288353017823,
+      "rel_err": 0.2621711646982177,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-c1co2-277.15K-5.97MPa",
+      "package": "twu-sim-tassone",
+      "property": "bubble_P",
+      "expected": 5970000.0,
+      "got": 4742087.157597909,
+      "rel_err": 0.20568054311592818,
+      "pass": false
+    },
+    {
       "case": "pr-bm-c1c3-294.26K-6.895MPa",
       "package": "pr-bm",
       "property": "bubble_P",
@@ -13176,6 +13410,33 @@
       "expected": 1040000.0,
       "got": 1187935.401357054,
       "rel_err": 0.14224557822793654,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 300000.0,
+      "got": 853201.2708832475,
+      "rel_err": 1.8440042362774915,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 680000.0,
+      "got": 10030655.026587207,
+      "rel_err": 13.750963274392952,
+      "pass": false
+    },
+    {
+      "case": "twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa",
+      "package": "twu-sim-tassone",
+      "property": "dew_P",
+      "expected": 1040000.0,
+      "got": 10683704.228371901,
+      "rel_err": 9.272792527280675,
       "pass": false
     },
     {
@@ -14461,8 +14722,8 @@
       "package": "iapws_if97",
       "property": "rho_V",
       "expected": 0.004860946631774811,
-      "got": 0.004860781712750541,
-      "rel_err": 3.3927347235671866e-05,
+      "got": 0.004860799460165209,
+      "rel_err": 3.0276326968947336e-05,
       "pass": true
     },
     {
@@ -14470,18 +14731,54 @@
       "package": "iapws_if97",
       "property": "rho_L",
       "expected": 999.7938082437671,
-      "got": 0.004860781712750541,
-      "rel_err": 0.9999951382158274,
-      "pass": false
+      "got": 999.7950321803376,
+      "rel_err": 1.224188988131922e-06,
+      "pass": true
     },
     {
       "case": "h2o-if97-273.179K",
       "package": "iapws_if97",
       "property": "Cp",
       "expected": 76.02169970090921,
-      "got": 34.01704102638169,
-      "rel_err": 0.5525351161548042,
-      "pass": false
+      "got": 76.02136240999477,
+      "rel_err": 4.436771550380526e-06,
+      "pass": true
+    },
+    {
+      "case": "asme-steam-r1-300K-3MPa",
+      "package": "asme_steam",
+      "property": "density",
+      "expected": 997.85294,
+      "got": 997.8529400984818,
+      "rel_err": 9.869369289079661e-11,
+      "pass": true
+    },
+    {
+      "case": "asme-steam-r1-300K-3MPa",
+      "package": "asme_steam",
+      "property": "cp",
+      "expected": 75.178,
+      "got": 75.17793286324645,
+      "rel_err": 8.930372388623731e-07,
+      "pass": true
+    },
+    {
+      "case": "asme-steam-psat-300K",
+      "package": "asme_steam",
+      "property": "bubble_P",
+      "expected": 3536.58941,
+      "got": 3536.589413013015,
+      "rel_err": 8.519549843064583e-10,
+      "pass": true
+    },
+    {
+      "case": "asme-steam-psat-300K",
+      "package": "asme_steam",
+      "property": "dew_P",
+      "expected": 3536.58941,
+      "got": 3536.589413013015,
+      "rel_err": 8.519549843064583e-10,
+      "pass": true
     },
     {
       "case": "h2o-if97-347.390K",
@@ -14506,17 +14803,17 @@
       "package": "iapws_if97",
       "property": "rho_V",
       "expected": 0.23506730588597508,
-      "got": 975.2811491428979,
-      "rel_err": 4147.944258611536,
-      "pass": false
+      "got": 0.2350594129193099,
+      "rel_err": 3.357747533382029e-05,
+      "pass": true
     },
     {
       "case": "h2o-if97-347.390K",
       "package": "iapws_if97",
       "property": "rho_L",
       "expected": 975.2670989077454,
-      "got": 975.2811491428979,
-      "rel_err": 1.4406550952249916e-05,
+      "got": 975.2811491096056,
+      "rel_err": 1.440651681567239e-05,
       "pass": true
     },
     {
@@ -14524,8 +14821,8 @@
       "package": "iapws_if97",
       "property": "Cp",
       "expected": 75.53519087653518,
-      "got": 75.50427834703864,
-      "rel_err": 0.00040924672510690355,
+      "got": 75.50427835000443,
+      "rel_err": 0.00040924668584320226,
       "pass": true
     },
     {
@@ -14551,17 +14848,17 @@
       "package": "iapws_if97",
       "property": "rho_V",
       "expected": 1.433273504038486,
-      "got": 936.1378592522788,
-      "rel_err": 652.1466999247211,
-      "pass": false
+      "got": 1.4331048512652966,
+      "rel_err": 0.00011766963717269669,
+      "pass": true
     },
     {
       "case": "h2o-if97-401.605K",
       "package": "iapws_if97",
       "property": "rho_L",
       "expected": 936.1400489635712,
-      "got": 936.1378592522788,
-      "rel_err": 2.339085155960398e-06,
+      "got": 936.1378498299582,
+      "rel_err": 2.349150231752806e-06,
       "pass": true
     },
     {
@@ -14569,8 +14866,8 @@
       "package": "iapws_if97",
       "property": "Cp",
       "expected": 76.71850238689126,
-      "got": 76.77786289258276,
-      "rel_err": 0.000773744323007585,
+      "got": 76.77786378288124,
+      "rel_err": 0.0007737559277502816,
       "pass": true
     },
     {

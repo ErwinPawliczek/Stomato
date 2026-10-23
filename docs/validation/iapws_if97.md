@@ -33,7 +33,7 @@ Declared exclusions (not silent skips):
 
 ## L1/L2 reference-case outcomes
 
-11/15 comparisons pass. Failing comparisons are assessed in the
+15/15 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
