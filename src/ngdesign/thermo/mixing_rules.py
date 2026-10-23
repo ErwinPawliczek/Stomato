@@ -50,17 +50,32 @@ from thermo import CEOSGas, CEOSLiquid
 from thermo.activity import GibbsExcess
 from thermo.eos_mix import (
     PRMIX,
+    SRKMIX,
     PR_lnphis,
+    SRK_lnphis,
     a_alpha_and_derivatives_quadratic_terms,
 )
+from thermo.eos_mix_methods import eos_mix_lnphis_general
 from thermo.heat_capacity import R as R_GAS
 
 from ngdesign.thermo.cubic import _CHEMSEP_CUBIC_TABLE, CubicEOS, _flasher_for, _flasher_vl_for
 from ngdesign.thermo.gamma_phi import _ge_model_factory
 
 __all__ = [
-    "PRMIX_HV",
+    "MHV1",
+    "MHV2",
     "PRHuronVidalThermo",
+    "PRMHV1Thermo",
+    "PRMHV2Thermo",
+    "PRMIX_HV",
+    "PRMIX_MHV1",
+    "PRMIX_MHV2",
+    "PRMIX_WS",
+    "PRWongSandlerThermo",
+    "SRKMHV2Thermo",
+    "SRKMIX_MHV2",
+    "SRKMIX_WS",
+    "SRKWongSandlerThermo",
 ]
 
 
@@ -472,10 +487,16 @@ def _zero_kijs(n: int) -> list[list[float]]:
     return [[0.0] * n for _ in range(n)]
 
 
-def _rule_for(eos_cls: type, provider: GEProvider) -> GERule:
+def _rule_for(eos_cls: type[Any], provider: GEProvider) -> GERule:
     kind = getattr(eos_cls, "rule_kind", None)
     if kind == "hv":
         return HuronVidal(provider, HuronVidal.M_PR)
+    if kind == "mhv1":
+        return MHV1(provider, q1=eos_cls.q1)
+    if kind == "mhv2":
+        return MHV2(provider, q1=eos_cls.q1, q2=eos_cls.q2)
+    if kind == "ws":
+        return WongSandler(provider, eos_cls.ws_c)
     raise ValueError(f"EOS class {eos_cls!r} declares no mixing rule")
 
 
@@ -547,4 +568,484 @@ class PRHuronVidalThermo(MixingRuleThermo):
     """
 
     eos = PRMIX_HV
+    ge_kind = "nrtl"
+
+
+# ----------------------------------------------------------------------------
+# Wong-Sandler (1992) — second-virial-consistent gE mixing (T-06a, step 2)
+# ----------------------------------------------------------------------------
+#
+# Reference: Wong, D. S. H. & Sandler, S. I., "A theoretically correct mixing
+# rule for virial coefficients of mixtures", AIChE J. 38(5), 671-680, 1992
+# (primary; cited in mixing.yaml).  The rule mixes BOTH cubic parameters:
+#
+#   Q   = sum_i sum_j x_i x_j (b - a/RT)_ij
+#   (b - a/RT)_ij = (1 - k_ij) * [(b_i - a_i/RT) + (b_j - a_j/RT)] / 2
+#   D   = sum_i x_i a_i/(b_i R T) + A_inf^E(x) / (C * R T)
+#   b_m = Q / (1 - D)          and          a_m = R T b_m D
+#
+# with the EOS constant C carrying its sign (dispatch, 18:01Z review):
+# PR  C = ln(sqrt(2) - 1)/sqrt(2) = -0.62323,  SRK  C = -ln 2 = -0.69315.
+# A_inf^E is approximated by the same ChemSep NRTL gE the Huron-Vidal row
+# uses (the gE provider supplies g = gE/(RT), so the added term is g/C), and
+# the gE rows stay k_ij-free: ``kijs`` defaults to zeros, matching the
+# mixing-family convention that the gE model carries all interaction
+# information.
+#
+# Unlike Huron-Vidal, b_m is a NON-LINEAR function of composition, so the
+# linear-b ln-phi kernels (PR_lnphis/SRK_lnphis) are not exact here.  The
+# fugacity coefficients go through thermo's general mole-number route
+# ``eos_mix_lnphis_general`` (thermo.eos_mix_methods), which differentiates
+# the exact residual-Gibbs ln-phi expression through
+# (db/dn, ddelta/dn, depsilon/dn, da/dn):
+#
+#   dQ/dn_i and dD/dn_i enter ln phi as
+#     beta_i = d b_m/dn_i = [Q_i (1-D) + Q D_i] / (1-D)^2
+#   (mole-number derivatives of Q and D), which feed the covolume-derivative
+#   terms of the kernel: db_dns = beta_i, ddelta/dn = c_delta * beta_i,
+#   depsilon/dn = 2 c_eps b_m beta_i (c_delta = 2, c_eps = -1 for PR;
+#   c_delta = 1, c_eps = 0 for SRK), plus da/dn_i = d a_m/dn_i
+#   = R T (beta_i D + b_m D_i).  Both derivative groups are analytic and
+#   verified against Helmholtz finite differences to < 1e-6 (tests).
+#
+# Departure enthalpies/entropies stay on thermo's scalar kernel, which treats
+# the mixture covolume as T-invariant; the small db_m/dT contribution to
+# H_dep/S_dep is omitted (noted as a fidelity limit of the hosting layer).
+
+
+@dataclass(frozen=True)
+class WSRuleState(RuleState):
+    """:class:`RuleState` plus the Wong-Sandler covolume pieces.
+
+    ``b`` is the mixture covolume ``Q/(1-D)`` and ``b_x`` its
+    simplex-projected composition partials (the ``beta_i`` of the module
+    note); ``b_xT`` would only feed departure T-derivatives, which the
+    hosting layer does not consume (see the section note above).
+    """
+
+    b: float = 0.0
+    b_x: tuple[float, ...] = ()
+
+
+#: PR: C = ln(sqrt(2) - 1)/sqrt(2) (Wong & Sandler 1992; sign per the
+#: 18:01Z dispatch review).
+C_WS_PR = math.log(math.sqrt(2.0) - 1.0) / math.sqrt(2.0)
+#: SRK: C = -ln 2.
+C_WS_SRK = -math.log(2.0)
+
+
+class WongSandler(GERule):
+    """Wong-Sandler (1992) second-virial-consistent gE mixing rule.
+
+    ``C`` is the EOS constant with its sign (:data:`C_WS_PR` for PR,
+    :data:`C_WS_SRK` for SRK).  ``kijs`` defaults to zeros (k_ij-free gE
+    form); the cross second-virial term keeps the full ``(1 - k_ij)``
+    structure so fitted matrices can be supplied.
+    """
+
+    def __init__(self, provider: GEProvider, c: float, kijs: list[list[float]] | None = None):
+        self.provider = provider
+        self.c = c
+        n = len(kijs) if kijs else 0
+        self.w = [[(1.0 - kijs[i][j]) for j in range(n)] for i in range(n)] if kijs else None
+
+    def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> WSRuleState:
+        n = len(xs)
+        g, gx, g_t, g_tt, g_xt = self.provider.state(T, tuple(xs))
+        # Per-component (b_i - a_i/RT) and its first two T-derivatives.
+        gv = [0.0] * n
+        gv_t = [0.0] * n
+        gv_tt = [0.0] * n
+        for i in range(n):
+            ai, dai, d2ai = pa.a_alphas[i], pa.da_alphas[i], pa.d2a_alphas[i]
+            brt = ai / (R_GAS * T)
+            gv[i] = bs[i] - brt
+            gv_t[i] = -(dai / (R_GAS * T) - brt / T)
+            gv_tt[i] = -(d2ai / (R_GAS * T) - 2.0 * dai / (R_GAS * T * T) + 2.0 * brt / (T * T))
+        w = self.w
+        q = q_t = q_tt = 0.0
+        q_x = [0.0] * n
+        q_xt = [0.0] * n
+        for i in range(n):
+            wi = w[i] if w is not None else [1.0] * n
+            for j in range(n):
+                xij = xs[i] * xs[j] * wi[j]
+                q += xij * 0.5 * (gv[i] + gv[j])
+                q_t += xij * 0.5 * (gv_t[i] + gv_t[j])
+                q_tt += xij * 0.5 * (gv_tt[i] + gv_tt[j])
+                q_x[i] += xs[j] * wi[j] * (gv[i] + gv[j])
+                q_xt[i] += xs[j] * wi[j] * (gv_t[i] + gv_t[j])
+        # D = sum x_i a_i/(b_i RT) + gE/(C RT) = A + g/C
+        a_mom, a_mom_t, a_mom_tt = _alpha_moments(pa, xs, bs, T)
+        d = a_mom + g / self.c
+        d_t = a_mom_t + g_t / self.c
+        d_tt = a_mom_tt + g_tt / self.c
+        d_x = [0.0] * n
+        d_xt = [0.0] * n
+        for k in range(n):
+            val, dval, _ = _a_brt(pa, k, bs[k], T)
+            d_x[k] = val + gx[k] / self.c
+            d_xt[k] = dval + g_xt[k] / self.c
+        # b_m = Q/(1-D), a_m = RT b_m D -- quotient algebra with S = 1 - D.
+        s = 1.0 - d
+        b = q / s
+        b_t = (q_t * s + q * d_t) / (s * s)
+        b_tt = (q_tt * s + q * d_tt) / (s * s) + 2.0 * d_t * (q_t * s + q * d_t) / (s**3)
+        b_x_raw = [(q_x[k] * s + q * d_x[k]) / (s * s) for k in range(n)]
+        b_xt_raw = [
+            (q_xt[k] * s - q_x[k] * d_t + q_t * d_x[k] + q * d_xt[k]) / (s * s)
+            + 2.0 * d_t * (q_x[k] * s + q * d_x[k]) / (s**3)
+            for k in range(n)
+        ]
+        rt = R_GAS * T
+        a = rt * b * d
+        a_t = R_GAS * (b * d + T * (b_t * d + b * d_t))
+        a_tt = R_GAS * (2.0 * b_t * d + 2.0 * b * d_t + T * (b_tt * d + 2.0 * b_t * d_t + b * d_tt))
+        a_x_raw = [rt * (b_x_raw[k] * d + b * d_x[k]) for k in range(n)]
+        a_xt_raw = [
+            R_GAS * (b_x_raw[k] * d + b * d_x[k])
+            + rt * (b_xt_raw[k] * d + b_t * d_x[k] + b_x_raw[k] * d_t + b * d_xt[k])
+            for k in range(n)
+        ]
+        x_sum_a = sum(x * v for x, v in zip(xs, a_x_raw, strict=True))
+        x_sum_at = sum(x * v for x, v in zip(xs, a_xt_raw, strict=True))
+        x_sum_b = sum(x * v for x, v in zip(xs, b_x_raw, strict=True))
+        return WSRuleState(
+            a=a,
+            da_dT=a_t,
+            d2a_dT2=a_tt,
+            a_x=tuple(v - x_sum_a for v in a_x_raw),
+            a_xT=tuple(v - x_sum_at for v in a_xt_raw),
+            b=b,
+            b_x=tuple(v - x_sum_b for v in b_x_raw),
+        )
+
+
+class _WSMixingEOS(_GEMixingEOS):
+    """Mixin adding the WS covolume handling on the gE hosting layer.
+
+    Overrides ``a_alpha_and_derivatives`` to replace the linear covolume
+    (set by the base ``__init__``) with the rule's ``b_m`` before thermo
+    solves the cubic (``solve`` calls ``a_alpha_and_derivatives`` before
+    ``volume_solutions(self.b, ...)``), and ``fugacity_coefficients`` to
+    route through ``eos_mix_lnphis_general`` with the analytic
+    ``db/dn``/``da/dn`` terms.  ``delta_factor``/``epsilon_factor`` pin the
+    EOS family's covolume form: delta = factor * b, epsilon = factor2 * b^2.
+    """
+
+    delta_factor: float
+    epsilon_factor: float
+    ws_c: float
+
+    def a_alpha_and_derivatives(
+        self, T: float, full: bool = True, quick: bool = True, pure_a_alphas: bool = True
+    ) -> Any:
+        out = super().a_alpha_and_derivatives(T, full=full, quick=quick, pure_a_alphas=pure_a_alphas)
+        st = self._rule_state
+        b = st.b
+        self.b = b
+        self.delta = self.delta_factor * b
+        self.epsilon = self.epsilon_factor * b * b
+        return out
+
+    def fugacity_coefficients(self, Z: float) -> list[float]:
+        st = self._rule_state
+        db_dns = list(st.b_x)
+        ddelta_dns = [self.delta_factor * v for v in db_dns]
+        depsilon_dns = [2.0 * self.epsilon_factor * st.b * v for v in db_dns]
+        da_dns = list(st.a_x)
+        return [
+            float(v)
+            for v in eos_mix_lnphis_general(
+                self.T,
+                self.P,
+                Z,
+                st.b,
+                self.delta,
+                self.epsilon,
+                st.a,
+                self.bs,
+                self.a_alpha_roots,
+                self.N,
+                db_dns,
+                da_dns,
+                ddelta_dns,
+                depsilon_dns,
+            )
+        ]
+
+
+class PRMIX_WS(_WSMixingEOS, PRMIX):  # type: ignore[misc]
+    """PRMIX with the Wong-Sandler (1992) gE mixing rule."""
+
+    lnphi_kernel = staticmethod(PR_lnphis)  # unused by the WS route; kept for typing
+    rule_kind = "ws"
+    delta_factor = 2.0
+    epsilon_factor = -1.0
+    ws_c = C_WS_PR
+
+    def __init__(
+        self,
+        Tcs: Any,
+        Pcs: Any,
+        omegas: Any,
+        zs: Any,
+        kijs: Any | None = None,
+        T: float | None = None,
+        P: float | None = None,
+        V: float | None = None,
+        fugacities: bool = True,
+        only_l: bool = False,
+        only_g: bool = False,
+        rule: GERule | None = None,
+    ):
+        self.rule = rule
+        super().__init__(
+            Tcs=Tcs,
+            Pcs=Pcs,
+            omegas=omegas,
+            zs=zs,
+            kijs=kijs,
+            T=T,
+            P=P,
+            V=V,
+            fugacities=fugacities,
+            only_l=only_l,
+            only_g=only_g,
+        )
+
+
+class SRKMIX_WS(_WSMixingEOS, SRKMIX):  # type: ignore[misc]
+    """SRKMIX with the Wong-Sandler (1992) gE mixing rule (SRKMIX hosting)."""
+
+    lnphi_kernel = staticmethod(SRK_lnphis)  # unused by the WS route; kept for typing
+    rule_kind = "ws"
+    delta_factor = 1.0
+    epsilon_factor = 0.0
+    ws_c = C_WS_SRK
+
+    def __init__(
+        self,
+        Tcs: Any,
+        Pcs: Any,
+        omegas: Any,
+        zs: Any,
+        kijs: Any | None = None,
+        T: float | None = None,
+        P: float | None = None,
+        V: float | None = None,
+        fugacities: bool = True,
+        only_l: bool = False,
+        only_g: bool = False,
+        rule: GERule | None = None,
+    ):
+        self.rule = rule
+        super().__init__(
+            Tcs=Tcs,
+            Pcs=Pcs,
+            omegas=omegas,
+            zs=zs,
+            kijs=kijs,
+            T=T,
+            P=P,
+            V=V,
+            fugacities=fugacities,
+            only_l=only_l,
+            only_g=only_g,
+        )
+
+
+class PRWongSandlerThermo(MixingRuleThermo):
+    """Peng-Robinson with the Wong-Sandler (1992) mixing rule over NRTL gE.
+
+    Second-virial-consistent mixing (Wong & Sandler, AIChE J. 38, 1992):
+    ``b_m = Q/(1 - D)``, ``a_m = R T b_m D`` with the gE term
+    ``A_inf^E/(C R T)``; the covolume is non-linear in composition, so the
+    fugacity route is the general mole-number kernel (see the module
+    Wong-Sandler section).
+    """
+
+    eos = PRMIX_WS
+    ge_kind = "nrtl"
+
+
+class SRKWongSandlerThermo(MixingRuleThermo):
+    """SRK with the Wong-Sandler (1992) mixing rule over NRTL gE (SRK C)."""
+
+    eos = SRKMIX_WS
+    ge_kind = "nrtl"
+
+
+# ----------------------------------------------------------------------------
+# MHV1 / MHV2 (T-06 step 3, branch t-06b/mhv): zero-pressure gE reference
+# ----------------------------------------------------------------------------
+
+
+class MHV1(GERule):
+    """MHV1 — Michelsen's (1990) first-order modified Huron-Vidal rule.
+
+    Zero-pressure gE reference on the dimensionless attraction
+    ``alpha = a/(b R T)`` with the linear co-volume ``b = sum_i x_i b_i``:
+
+        alpha = sum_i x_i a_i alpha_i/(b_i R T)
+                + (gE/(R T) + sum_i x_i ln(b/b_i)) / q1
+
+    with the EOS-family constant ``q1 = -0.53`` (PR) / ``-0.593`` (SRK)
+    (Michelsen, M. L., "A modified Huron-Vidal mixing rule for cubic equations
+    of state", Fluid Phase Equilib. 60, 213-219, 1990).  At ``gE = 0`` the
+    rule collapses exactly to the pure-component attraction sum, i.e. the
+    zero-pressure reference is the pure EOS itself.
+    """
+
+    def __init__(self, provider: GEProvider, q1: float):
+        self.provider = provider
+        self.q1 = q1
+
+    def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
+        n = len(xs)
+        g, gx, gT, gTT, gxT = self.provider.state(T, tuple(xs))
+        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
+        s = s_t = s_tt = 0.0
+        ab: list[tuple[float, float, float]] = []
+        for k in range(n):
+            v, vt, vtt = _a_brt(pa, k, bs[k], T)
+            ab.append((v, vt, vtt))
+            s += xs[k] * v
+            s_t += xs[k] * vt
+            s_tt += xs[k] * vtt
+        # Flory covolume term: the rule needs N = gE/(RT) + sum_i x_i ln(b/b_i)
+        # = g - F with F = sum_i x_i ln(b_i/b).  Raw z-partials:
+        # dS/dz_k = alpha_bar_k, dF/dz_k = ln(b_k) - b_k/b (N = g - F).
+        f = sum(x * math.log(bi / b) for x, bi in zip(xs, bs, strict=True) if x)
+        alpha = s + (g - f) / self.q1
+        alpha_x_raw = tuple(ab[k][0] + (gx[k] - math.log(bs[k]) + bs[k] / b) / self.q1 for k in range(n))
+        alpha_t = s_t + gT / self.q1
+        alpha_tt = s_tt + gTT / self.q1
+        alpha_xT_raw = tuple(ab[k][1] + gxT[k] / self.q1 for k in range(n))
+        return _linear_rule_state(alpha, alpha_t, alpha_tt, alpha_x_raw, alpha_xT_raw, b, T, bs, xs)
+
+
+class MHV2(GERule):
+    """MHV2 — Dahl & Michelsen's (1990) second-order modified Huron-Vidal rule.
+
+    Same zero-pressure reference and linear co-volume as :class:`MHV1`, but
+    the zero-pressure constraint is kept to second order in the attraction
+    sum, giving a quadratic in ``alpha``:
+
+        c     = -q1 S - q2 S2 - gE/(RT) - sum_i x_i ln(b/b_i)
+        alpha = (-q1 - sqrt(q1^2 - 4 q2 c)) / (2 q2)
+
+    with ``S = sum_i x_i a_i alpha_i/(b_i R T)`` and
+    ``S2 = sum_i x_i (a_i alpha_i/(b_i R T))^2``.  Constants per EOS
+    (Dahl, S. & Michelsen, M. L., AIChE J. 36, 1829-1836, 1990):
+    ``q1/q2 = -0.4347/-0.003654`` (PR) and ``-0.4783/-0.0047`` (SRK).
+    ``d alpha/d c = 1/sqrt(q1^2 - 4 q2 c)`` carries every derivative; the
+    pure-feed limit (gE = 0, Flory term 0) reduces the discriminant to
+    ``|q1 + 2 q2 S|^2`` so ``alpha -> S`` exactly.
+    """
+
+    def __init__(self, provider: GEProvider, q1: float, q2: float):
+        self.provider = provider
+        self.q1 = q1
+        self.q2 = q2
+
+    def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
+        n = len(xs)
+        g, gx, gT, gTT, gxT = self.provider.state(T, tuple(xs))
+        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
+        q1, q2 = self.q1, self.q2
+        s = s_t = s_tt = s2 = 0.0
+        ab: list[tuple[float, float, float]] = []
+        for k in range(n):
+            v, vt, vtt = _a_brt(pa, k, bs[k], T)
+            ab.append((v, vt, vtt))
+            s += xs[k] * v
+            s2 += xs[k] * v * v
+            s_t += xs[k] * vt
+            s_tt += xs[k] * vtt
+        f = sum(x * math.log(bi / b) for x, bi in zip(xs, bs, strict=True) if x)
+        c = -q1 * s - q2 * s2 - g + f
+        d = math.sqrt(q1 * q1 - 4.0 * q2 * c)
+        alpha = (-q1 - d) / (2.0 * q2)
+        # d alpha / d c = 1/d carries every first derivative; the second T
+        # derivative additionally carries the chain term 2 q2 c_T^2 / d^3.
+        # s2 = sum x_i ab_i^2 is a second MOMENT: its T derivatives are not
+        # those of s^2 (2 s s_t / s_t^2 + s s_tt); they use the per-component
+        # pairs (ab_i, ab_iT) and (ab_iT, ab_iTT).
+        s2_t = 2.0 * sum(x * ab[k][0] * ab[k][1] for k, x in enumerate(xs))
+        s2_tt = 2.0 * sum(x * (ab[k][1] ** 2 + ab[k][0] * ab[k][2]) for k, x in enumerate(xs))
+        c_t = -q1 * s_t - q2 * s2_t - gT
+        c_tt = -q1 * s_tt - q2 * s2_tt - gTT
+        c_x_raw = tuple(
+            -q1 * ab[k][0] - q2 * ab[k][0] ** 2 - gx[k] + math.log(bs[k]) - bs[k] / b for k in range(n)
+        )
+        c_xT_raw = tuple(-q1 * ab[k][1] - 2.0 * q2 * ab[k][0] * ab[k][1] - gxT[k] for k in range(n))
+        alpha_t = c_t / d
+        alpha_tt = c_tt / d + 2.0 * q2 * c_t * c_t / (d * d * d)
+        alpha_x_raw = tuple(cv / d for cv in c_x_raw)
+        # Mixed derivative: d/dT of c_x/d = c_xT/d + c_x * (d 1/d/dT); with
+        # d 1/d/dT = +2 q2 c_T / d^3 (d_T = -2 q2 c_T / d).
+        alpha_xT_raw = tuple(
+            cxT / d + 2.0 * q2 * cx * c_t / (d * d * d) for cxT, cx in zip(c_xT_raw, c_x_raw, strict=True)
+        )
+        return _linear_rule_state(alpha, alpha_t, alpha_tt, alpha_x_raw, alpha_xT_raw, b, T, bs, xs)
+
+
+class _RuleHost:
+    """Shared ``rule=`` kwarg handling for GCEOSMIX rule hosts.
+
+    ``thermo``'s ``GCEOSMIX.__init__`` takes no rule, so each host pops it
+    before delegation; the rule instance must be attached before the first
+    calculation (same contract as ``PRMIX_HV``).
+    """
+
+    def __init__(self, *args: Any, rule: GERule | None = None, **kwargs: Any) -> None:
+        self.rule = rule
+        super().__init__(*args, **kwargs)
+
+
+class PRMIX_MHV1(_RuleHost, _GEMixingEOS, PRMIX):  # type: ignore[misc]
+    """PRMIX with the MHV1 rule (Michelsen 1990), ``q1 = -0.53``."""
+
+    lnphi_kernel = staticmethod(PR_lnphis)
+    rule_kind = "mhv1"
+    q1 = -0.53
+
+
+class PRMIX_MHV2(_RuleHost, _GEMixingEOS, PRMIX):  # type: ignore[misc]
+    """PRMIX with the MHV2 rule (Dahl & Michelsen 1990), ``q1/q2 = -0.4347/-0.003654``."""
+
+    lnphi_kernel = staticmethod(PR_lnphis)
+    rule_kind = "mhv2"
+    q1 = -0.4347
+    q2 = -0.003654
+
+
+class SRKMIX_MHV2(_RuleHost, _GEMixingEOS, SRKMIX):  # type: ignore[misc]
+    """SRKMIX with the MHV2 rule (Dahl & Michelsen 1990), ``q1/q2 = -0.4783/-0.0047``."""
+
+    lnphi_kernel = staticmethod(SRK_lnphis)
+    rule_kind = "mhv2"
+    q1 = -0.4783
+    q2 = -0.0047
+
+
+class PRMHV1Thermo(MixingRuleThermo):
+    """Peng-Robinson with the MHV1 rule (Michelsen 1990) over NRTL gE."""
+
+    eos = PRMIX_MHV1
+    ge_kind = "nrtl"
+
+
+class PRMHV2Thermo(MixingRuleThermo):
+    """Peng-Robinson with the MHV2 rule (Dahl & Michelsen 1990) over NRTL gE."""
+
+    eos = PRMIX_MHV2
+    ge_kind = "nrtl"
+
+
+class SRKMHV2Thermo(MixingRuleThermo):
+    """SRK with the MHV2 rule (Dahl & Michelsen 1990) over NRTL gE."""
+
+    eos = SRKMIX_MHV2
     ge_kind = "nrtl"

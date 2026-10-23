@@ -56,3 +56,322 @@
     do not transfer to the Huron-Vidal infinite-pressure reference; promotion needs an
     HV-specific NRTL parameter set with a citation (Huron & Vidal 1979 Table 2 or a later
     open fit) bound as an independent case
+- id: pr_wong_sandler
+  name: Peng-Robinson Wong-Sandler (NRTL)
+  family: mixing
+  adapter: ngdesign.thermo.mixing_rules:PRWongSandlerThermo
+  options: {}
+  params:
+    source: Wong-Sandler (1992) mixing rule over thermo IPDB (ChemSep) 'ChemSep NRTL' binary matrices
+    provenance: Wong, D. S. H. & Sandler, S. I., 'A theoretically correct mixing rule for cubic equations
+      of state for vapor-liquid equilibria', AIChE J. 38(5), 671-680, 1992; NRTL binary parameters from
+      the ChemSep IPDB via the T-03 gamma-phi adapter's loader (one owner of the parameter plumbing);
+      k_ij-free form - the gE model carries all interaction information; the rule's C constant is the
+      PR form ln(sqrt(2)-1)/sqrt(2)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - pr-wong-sandler-pure-MeOH-305K
+  - pr-wong-sandler-pure-MeOH-330K
+  - pr-wong-sandler-pure-H2O-340K
+  - pr-wong-sandler-pure-H2O-370K
+  - pr-wong-sandler-meohh2o-101.325kPa-349.05K
+  - pr-wong-sandler-meohh2o-312.91K-20.705kPa
+  references:
+  - Wong, D. S. H. & Sandler, S. I., AIChE J. 38(5), 671-680, 1992
+  - Renon, H. & Prausnitz, J. M., AIChE J. 14(1), 135-144, 1968
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+  assessed:
+    pr-wong-sandler-pure-MeOH-305K: "rho_L -13.2% (676.721 vs 779.805); Cp +36.7% (112.917 vs 82.6135) - pure-component limits of the untranslated PR form (the Wong-Sandler rule reduces to PR for a pure component; same misses as the pr row) (measured 2026-10-22, T-06a validation run)"
+    pr-wong-sandler-pure-MeOH-330K: "rho_V -3.2% (0.882017 vs 0.911218); rho_L -13.2% (656.228 vs 755.882); Cp +31.4% (116.265 vs 88.5047) - pure-component limits of the untranslated PR form (measured 2026-10-22, T-06a validation run)"
+    pr-wong-sandler-pure-H2O-340K: "rho_L -15.9% (823.513 vs 979.503); Cp +8.0% (81.513 vs 75.4562) - pure-component limits of the untranslated PR form (measured 2026-10-22, T-06a validation run)"
+    pr-wong-sandler-pure-H2O-370K: "rho_L -16.4% (802.915 vs 960.587); Cp +8.7% (82.449 vs 75.8833) - pure-component limits of the untranslated PR form (measured 2026-10-22, T-06a validation run)"
+    pr-wong-sandler-meohh2o-101.325kPa-349.05K: "bubble_T +0.8% (351.743 vs 349.05) - the ChemSep NRTL binary parameters are low-pressure gamma-phi fits, not WS-fitted parameters; the WS rule's zero-reference-pressure gE term transfers them far better than the Huron-Vidal infinite-pressure reference (bubble_T +3.5% on the same point, same parameter source) but a fit mismatch remains (measured 2026-10-22 on the Gao 2012 101.325 kPa point, T-06a validation run)"
+    pr-wong-sandler-meohh2o-312.91K-20.705kPa: "bubble_P -7.0% (19249.3 vs 20705); vapor_comp -0.036 abs (0.769019 vs 0.8053) - same cause: ChemSep NRTL parameters are not WS-fitted (measured 2026-10-22, T-06a validation run)"
+  l0_note: >-
+    provisional on L0 only: of the 12 bound cases the pure points inherit the untranslated
+    PR liquid-density/Cp limits (identical to the pr row - the rule collapses to PR on a
+    pure feed), and the MeOH/H2O points show the WS zero-reference-pressure gE term
+    transfers the low-pressure ChemSep NRTL parameters far better than the Huron-Vidal
+    infinite-pressure reference (bubble_T +0.8% vs +3.5% at 101.325 kPa; vapor_comp passes
+    where HV misses by -0.077); the parameters are still not WS-fitted, so promotion needs
+    a WS-specific gE parameter set bound as an independent case. The two C1/H2O cases stay
+    unbound: the ChemSep NRTL databank has no C1/H2O pair and the row refuses that feed at
+    first use (verified ValueError, ChemSep zero-BIP guard) - rebind when a gE source with
+    that pair exists.
+- id: srk_wong_sandler
+  name: Soave-Redlich-Kwong Wong-Sandler (NRTL)
+  family: mixing
+  adapter: ngdesign.thermo.mixing_rules:SRKWongSandlerThermo
+  options: {}
+  params:
+    source: Wong-Sandler (1992) mixing rule over thermo IPDB (ChemSep) 'ChemSep NRTL' binary matrices
+    provenance: Wong, D. S. H. & Sandler, S. I., 'A theoretically correct mixing rule for cubic equations
+      of state for vapor-liquid equilibria', AIChE J. 38(5), 671-680, 1992; NRTL binary parameters from
+      the ChemSep IPDB via the T-03 gamma-phi adapter's loader (one owner of the parameter plumbing);
+      k_ij-free form - the gE model carries all interaction information; the rule's C constant is the
+      SRK form -ln(2)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - srk-wong-sandler-pure-MeOH-305K
+  - srk-wong-sandler-pure-MeOH-330K
+  - srk-wong-sandler-pure-H2O-340K
+  - srk-wong-sandler-pure-H2O-370K
+  - srk-wong-sandler-meohh2o-101.325kPa-349.05K
+  - srk-wong-sandler-meohh2o-312.91K-20.705kPa
+  references:
+  - Wong, D. S. H. & Sandler, S. I., AIChE J. 38(5), 671-680, 1992
+  - Soave, G., Chem. Eng. Sci. 27(6), 1197-1203, 1972
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+  assessed:
+    srk-wong-sandler-pure-MeOH-305K: "rho_L -22.9% (601.097 vs 779.805); Cp +45.2% (119.940 vs 82.6135) - pure-component limits of the untranslated SRK form (the Wong-Sandler rule reduces to SRK for a pure component; same misses as the srk row) (measured 2026-10-22, T-06a validation run)"
+    srk-wong-sandler-pure-MeOH-330K: "rho_V -3.2% (0.881659 vs 0.911218); rho_L -23.0% (581.927 vs 755.882); Cp +39.1% (123.069 vs 88.5047) - pure-component limits of the untranslated SRK form (measured 2026-10-22, T-06a validation run)"
+    srk-wong-sandler-pure-H2O-340K: "rho_L -25.3% (731.854 vs 979.503); Cp +15.0% (86.795 vs 75.4562) - pure-component limits of the untranslated SRK form (measured 2026-10-22, T-06a validation run)"
+    srk-wong-sandler-pure-H2O-370K: "rho_L -25.8% (712.470 vs 960.587); Cp +15.4% (87.542 vs 75.8833) - pure-component limits of the untranslated SRK form (measured 2026-10-22, T-06a validation run)"
+    srk-wong-sandler-meohh2o-101.325kPa-349.05K: "bubble_T +1.0% (352.469 vs 349.05) - the ChemSep NRTL binary parameters are low-pressure gamma-phi fits, not WS-fitted parameters; the WS rule's zero-reference-pressure gE term transfers them far better than the Huron-Vidal infinite-pressure reference but a fit mismatch remains (measured 2026-10-22 on the Gao 2012 101.325 kPa point, T-06a validation run)"
+    srk-wong-sandler-meohh2o-312.91K-20.705kPa: "bubble_P -13.0% (18010.6 vs 20705); vapor_comp -0.028 abs (0.777347 vs 0.8053) - same cause: ChemSep NRTL parameters are not WS-fitted (measured 2026-10-22, T-06a validation run)"
+  l0_note: >-
+    provisional on L0 only: of the 12 bound cases the pure points inherit the untranslated
+    SRK liquid-density/Cp limits (same misses as the srk row - the rule collapses to SRK on
+    a pure feed), and the MeOH/H2O points show the WS zero-reference-pressure gE term
+    transfers the low-pressure ChemSep NRTL parameters far better than the Huron-Vidal
+    infinite-pressure reference (bubble_T +1.0% at 101.325 kPa; vapor_comp passes); the
+    parameters are still not WS-fitted, so promotion needs a WS-specific gE parameter set
+    bound as an independent case. The two C1/H2O cases stay unbound: the ChemSep NRTL
+    databank has no C1/H2O pair and the row refuses that feed at first use (verified
+    ValueError, ChemSep zero-BIP guard) - rebind when a gE source with that pair exists.
+- id: pr_mhv1
+  name: Peng-Robinson MHV1 (NRTL)
+  family: mixing
+  adapter: ngdesign.thermo.mixing_rules:PRMHV1Thermo
+  options: {}
+  params:
+    source: Michelsen (1990) MHV1 mixing rule over thermo IPDB (ChemSep) 'ChemSep NRTL' binary matrices
+    provenance: Michelsen, M. L., 'A modified Huron-Vidal mixing rule for cubic equations of state', Fluid Phase
+      Equilib. 60, 213-219, 1990; NRTL binary parameters from the ChemSep IPDB via the T-03 gamma-phi
+      adapter's loader (one owner of the parameter plumbing); k_ij-free form - the gE model carries all
+      interaction information; zero-pressure gE reference (q1 = -0.53)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - pr-mhv1-pure-MeOH-305K
+  - pr-mhv1-pure-MeOH-330K
+  - pr-mhv1-pure-H2O-340K
+  - pr-mhv1-pure-H2O-370K
+  - pr-mhv1-meohh2o-101.325kPa-349.05K
+  - pr-mhv1-meohh2o-312.91K-20.705kPa
+  references:
+  - Michelsen, M. L., Fluid Phase Equilib. 60, 213-219, 1990
+  - Renon, H. & Prausnitz, J. M., AIChE J. 14(1), 135-144, 1968
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+
+  assessed:
+    pr-mhv1-pure-MeOH-305K: "rho_L -13.2% (676.721 vs 779.805); Cp +36.7% (112.917 vs 82.6135)
+      - pure-component limits of the untranslated PR form (the MHV rule reduces to the pure EOS for a
+      pure component; same misses as the pr row) (measured 2026-10-22, branch t-06b/mhv)"
+    pr-mhv1-pure-MeOH-330K: "rho_V -3.2% (0.882017 vs 0.911218); rho_L -13.2% (656.228 vs 755.882); Cp +31.4%
+      (116.265 vs 88.5047) - pure-component limits of the untranslated PR form (measured 2026-10-22, branch
+      t-06b/mhv)"
+    pr-mhv1-pure-H2O-340K: "rho_L -15.9% (823.513 vs 979.503); Cp +8.0% (81.5128 vs 75.4562) - pure-component
+      limits of the untranslated PR form (measured 2026-10-22, branch t-06b/mhv)"
+    pr-mhv1-pure-H2O-370K: "rho_L -16.4% (802.915 vs 960.587); Cp +8.7% (82.4488 vs 75.8833) - pure-component
+      limits of the untranslated PR form (measured 2026-10-22, branch t-06b/mhv)"
+    pr-mhv1-meohh2o-312.91K-20.705kPa: "vapor_comp -0.029 abs (0.776173 vs 0.8053) - the ChemSep NRTL binary
+      parameters are low-pressure gamma-phi fits; they transfer to the MHV1 zero-pressure reference far
+      better than to Huron-Vidal (bubble_T at 101.325 kPa passes, where the HV row misses by +3.5%), but
+      the residual vapor-fraction miss shows the parameters are still not MHV-fitted (measured 2026-10-22,
+      branch t-06b/mhv)"
+  l0_note: >-
+    provisional on L0 only: the 4 bound pure cases miss on the untranslated PR liquid-density/Cp limits
+    (declared above) and the 312.91 K binary case misses vapor_comp -3%; the two C1/H2O cases stay
+    unbound (pending) because the NRTL databank has no C1/H2O pair and the row refuses, same as the
+    pr_huron_vidal row. The 101.325 kPa binary bubble point PASSES - the zero-pressure reference is the
+    right fix for the HV row's binary misses.
+- id: pr_mhv2
+  name: Peng-Robinson MHV2 (NRTL)
+  family: mixing
+  adapter: ngdesign.thermo.mixing_rules:PRMHV2Thermo
+  options: {}
+  params:
+    source: Dahl & Michelsen (1990) MHV2 mixing rule over thermo IPDB (ChemSep) 'ChemSep NRTL' binary matrices
+    provenance: Dahl, S. & Michelsen, M. L., 'High-pressure vapor-liquid equilibrium with a UNIFAC-based
+      equation of state', AIChE J. 36(12), 1829-1836, 1990; NRTL binary parameters from the ChemSep
+      IPDB via the T-03 gamma-phi adapter's loader; k_ij-free form; zero-pressure gE reference
+      (q1 = -0.4347, q2 = -0.003654)
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - pr-mhv2-pure-MeOH-305K
+  - pr-mhv2-pure-MeOH-330K
+  - pr-mhv2-pure-H2O-340K
+  - pr-mhv2-pure-H2O-370K
+  - pr-mhv2-meohh2o-101.325kPa-349.05K
+  - pr-mhv2-meohh2o-312.91K-20.705kPa
+  references:
+  - Dahl, S. & Michelsen, M. L., AIChE J. 36(12), 1829-1836, 1990
+  - Renon, H. & Prausnitz, J. M., AIChE J. 14(1), 135-144, 1968
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+
+  assessed:
+    pr-mhv2-pure-MeOH-305K: "rho_L -13.2% (676.721 vs 779.805); Cp +36.7% (112.917 vs 82.6135)
+      - pure-component limits of the untranslated PR form (the MHV rule reduces to the pure EOS for a
+      pure component; same misses as the pr row) (measured 2026-10-22, branch t-06b/mhv)"
+    pr-mhv2-pure-MeOH-330K: "rho_V -3.2% (0.882017 vs 0.911218); rho_L -13.2% (656.228 vs 755.882); Cp +31.4%
+      (116.265 vs 88.5047) - pure-component limits of the untranslated PR form (measured 2026-10-22, branch
+      t-06b/mhv)"
+    pr-mhv2-pure-H2O-340K: "rho_L -15.9% (823.513 vs 979.503); Cp +8.0% (81.5128 vs 75.4562) - pure-component
+      limits of the untranslated PR form (measured 2026-10-22, branch t-06b/mhv)"
+    pr-mhv2-pure-H2O-370K: "rho_L -16.4% (802.915 vs 960.587); Cp +8.7% (82.4488 vs 75.8833) - pure-component
+      limits of the untranslated PR form (measured 2026-10-22, branch t-06b/mhv)"
+    pr-mhv2-meohh2o-312.91K-20.705kPa: "vapor_comp -0.031 abs (0.774067 vs 0.8053) - the ChemSep NRTL binary
+      parameters are low-pressure gamma-phi fits; they transfer to the MHV2 zero-pressure reference far
+      better than to Huron-Vidal (bubble_T at 101.325 kPa passes, where the HV row misses by +3.5%), but
+      the residual vapor-fraction miss shows the parameters are still not MHV-fitted (measured 2026-10-22,
+      branch t-06b/mhv)"
+  l0_note: >-
+    provisional on L0 only: the 4 bound pure cases miss on the untranslated PR liquid-density/Cp limits
+    (declared above) and the 312.91 K binary case misses vapor_comp -3%; the two C1/H2O cases stay
+    unbound (pending) because the NRTL databank has no C1/H2O pair and the row refuses, same as the
+    pr_huron_vidal row. The 101.325 kPa binary bubble point PASSES - the zero-pressure reference is the
+    right fix for the HV row's binary misses.
+- id: srk_mhv2
+  name: Soave-Redlich-Kwong MHV2 (NRTL)
+  family: mixing
+  adapter: ngdesign.thermo.mixing_rules:SRKMHV2Thermo
+  options: {}
+  params:
+    source: Dahl & Michelsen (1990) MHV2 mixing rule on SRK over thermo IPDB (ChemSep) 'ChemSep NRTL' binary matrices
+    provenance: Dahl, S. & Michelsen, M. L., 'High-pressure vapor-liquid equilibrium with a UNIFAC-based
+      equation of state', AIChE J. 36(12), 1829-1836, 1990 (SRK constants q1 = -0.4783, q2 = -0.0047);
+      NRTL binary parameters from the ChemSep IPDB via the T-03 gamma-phi adapter's loader; k_ij-free
+      form; zero-pressure gE reference
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation:
+  - srk-mhv2-pure-MeOH-305K
+  - srk-mhv2-pure-MeOH-330K
+  - srk-mhv2-pure-H2O-340K
+  - srk-mhv2-pure-H2O-370K
+  - srk-mhv2-meohh2o-101.325kPa-349.05K
+  - srk-mhv2-meohh2o-312.91K-20.705kPa
+  references:
+  - Dahl, S. & Michelsen, M. L., AIChE J. 36(12), 1829-1836, 1990
+  - Renon, H. & Prausnitz, J. M., AIChE J. 14(1), 135-144, 1968
+  - Kooijman, H. A. & Taylor, R., The ChemSep Book, 2nd ed., 2000 (IPDB)
+  l0: {}
+  l0_excluded: {}
+
+  assessed:
+    srk-mhv2-pure-MeOH-305K: "rho_L -22.9% (601.097 vs 779.805); Cp +45.2% (119.940 vs 82.6135) - pure-component
+      limits of the untranslated SRK form, worse than PR's (measured 2026-10-22, branch t-06b/mhv)"
+    srk-mhv2-pure-MeOH-330K: "rho_V -3.2% (0.881659 vs 0.911218); rho_L -23.0% (581.927 vs 755.882); Cp +39.1%
+      (123.069 vs 88.5047) - pure-component limits of the untranslated SRK form (measured 2026-10-22,
+      branch t-06b/mhv)"
+    srk-mhv2-pure-H2O-340K: "rho_L -25.3% (731.854 vs 979.503); Cp +15.0% (86.7945 vs 75.4562) - pure-component
+      limits of the untranslated SRK form (measured 2026-10-22, branch t-06b/mhv)"
+    srk-mhv2-pure-H2O-370K: "rho_L -25.8% (712.470 vs 960.587); Cp +15.4% (87.5416 vs 75.8833) - pure-component
+      limits of the untranslated SRK form (measured 2026-10-22, branch t-06b/mhv)"
+    srk-mhv2-meohh2o-101.325kPa-349.05K: "bubble_T +0.6% (351.067 vs 349.05) - the ChemSep NRTL parameters
+      are low-pressure gamma-phi fits; they transfer to the MHV2 zero-pressure reference far better than
+      to Huron-Vidal, but not perfectly (measured 2026-10-22, branch t-06b/mhv)"
+    srk-mhv2-meohh2o-312.91K-20.705kPa: "bubble_P -8.8% (18883.8 vs 20705); vapor_comp -0.023 abs (0.782014
+      vs 0.8053) - same cause: low-pressure NRTL parameters in the zero-pressure SRK reference
+      (measured 2026-10-22, branch t-06b/mhv)"
+  l0_note: >-
+    provisional on L0 only: the 4 bound pure cases miss on the untranslated SRK liquid-density/Cp limits
+    and both binary cases miss (declared above); the two C1/H2O cases stay unbound (pending) because the
+    NRTL databank has no C1/H2O pair and the row refuses, same as the pr_huron_vidal row.
