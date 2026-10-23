@@ -121,7 +121,11 @@ class Flowsheet(Model):
     # component slate, so a saved project is self-describing. Omitted from the
     # serialized form when empty: every pre-reaction document round-trips
     # byte-identically.
-    reactions: list[ReactionSet] = []
+    # default_factory (not a literal []) keeps the JSON Schema free of a
+    # "default" entry: openapi-typescript emits properties carrying a default
+    # as required, which would make every stored project mock/type without the
+    # new key fail the frontend typecheck.
+    reactions: list[ReactionSet] = Field(default_factory=list)
 
     @model_serializer(mode="wrap")
     def _serialize(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:

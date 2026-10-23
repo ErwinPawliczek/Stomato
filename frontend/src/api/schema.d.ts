@@ -1160,7 +1160,7 @@ export interface components {
             molar_flow: number;
         };
         /** Flowsheet */
-        "Flowsheet-Input": {
+        Flowsheet: {
             /**
              * Components
              * @default []
@@ -1173,11 +1173,8 @@ export interface components {
             design_specs: components["schemas"]["DesignSpec"][];
             /** Name */
             name: string;
-            /**
-             * Reactions
-             * @default []
-             */
-            reactions: components["schemas"]["ReactionSet-Input"][];
+            /** Reactions */
+            reactions?: components["schemas"]["ReactionSet"][];
             solver_options?: components["schemas"]["SolverOptions"];
             /** Streams */
             streams: components["schemas"]["StreamSpec"][];
@@ -1188,9 +1185,6 @@ export interface components {
             thermo: string;
             /** Units */
             units: components["schemas"]["UnitSpec"][];
-        };
-        "Flowsheet-Output": {
-            [key: string]: unknown;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1397,9 +1391,15 @@ export interface components {
          *
          *     ``reverse`` carries the explicit reverse expression; without it a reaction
          *     with an equilibrium model is equilibrium-limited, and without either the
-         *     expression is irreversible.
+         *     expression is irreversible. The reverse side is a plain ``PowerLawRate``
+         *     body — it never nests a further ``reverse`` (detailed balance points its
+         *     forward side at this reaction, so a reverse-of-reverse has no physical
+         *     meaning). Keeping the graph acyclic also matters mechanically: a recursive
+         *     model makes FastAPI's request/response OpenAPI schemas textually
+         *     irreconcilable (`<Model>-Input`/`<Model>-Output` self-references), which
+         *     split and renamed every component the frontend types import.
          */
-        "PowerLaw-Input": {
+        PowerLaw: {
             /** Ea */
             Ea: number;
             /**
@@ -1419,17 +1419,16 @@ export interface components {
             };
             /** Rate Units */
             rate_units: string;
-            reverse?: components["schemas"]["PowerLaw-Input"] | null;
+            reverse?: components["schemas"]["PowerLawRate"] | null;
         };
         /**
-         * PowerLaw
-         * @description Power-law rate expression.
+         * PowerLawRate
+         * @description Power-law rate body: Arrhenius term plus composition orders.
          *
-         *     ``reverse`` carries the explicit reverse expression; without it a reaction
-         *     with an equilibrium model is equilibrium-limited, and without either the
-         *     expression is irreversible.
+         *     ``PowerLaw`` without the ``reverse`` slot. Splitting the body out keeps the
+         *     contract model graph non-recursive (see ``PowerLaw.reverse``).
          */
-        "PowerLaw-Output": {
+        PowerLawRate: {
             /** Ea */
             Ea: number;
             /**
@@ -1449,23 +1448,10 @@ export interface components {
             };
             /** Rate Units */
             rate_units: string;
-            reverse?: components["schemas"]["PowerLaw-Output"] | null;
         };
         /** Project */
-        "Project-Input": {
-            flowsheet: components["schemas"]["Flowsheet-Input"];
-            /** @default {
-             *       "pfd": {},
-             *       "pid": {},
-             *       "plot": {}
-             *     } */
-            layout: components["schemas"]["Layout"];
-            /** Name */
-            name: string;
-        };
-        /** Project */
-        "Project-Output": {
-            flowsheet: components["schemas"]["Flowsheet-Output"];
+        Project: {
+            flowsheet: components["schemas"]["Flowsheet"];
             /** @default {
              *       "pfd": {},
              *       "pid": {},
@@ -1482,7 +1468,7 @@ export interface components {
         ProjectCreate: {
             /** Name */
             name: string;
-            project: components["schemas"]["Project-Input"];
+            project: components["schemas"]["Project"];
         };
         /**
          * ProjectInfo
@@ -1500,7 +1486,7 @@ export interface components {
             name: string;
             /** Owner */
             owner: string;
-            project: components["schemas"]["Project-Output"];
+            project: components["schemas"]["Project"];
             /**
              * Updated At
              * Format: date-time
@@ -1554,45 +1540,14 @@ export interface components {
          *     formula). ``provenance`` is mandatory: every reaction names where its
          *     stoichiometry and data come from.
          */
-        "Reaction-Input": {
+        Reaction: {
             /** Base Component */
             base_component: string;
             equilibrium?: components["schemas"]["Equilibrium"] | null;
             /** Id */
             id: string;
             /** Kinetics */
-            kinetics?: components["schemas"]["PowerLaw-Input"] | components["schemas"]["LHHW"] | null;
-            /**
-             * Lumped
-             * @default false
-             */
-            lumped: boolean;
-            /** Provenance */
-            provenance: string;
-            /** Stoichiometry */
-            stoichiometry: {
-                [key: string]: number;
-            };
-        };
-        /**
-         * Reaction
-         * @description One stoichiometric reaction with optional kinetics and equilibrium model.
-         *
-         *     ``base_component`` is the component the extent of reaction is normalized
-         *     on; it must appear with ν < 0. Pseudo (lumped) components can only take
-         *     part in reactions explicitly marked ``lumped``, which switches validation
-         *     from element balances to a molecular-weight balance (pseudos carry no
-         *     formula). ``provenance`` is mandatory: every reaction names where its
-         *     stoichiometry and data come from.
-         */
-        "Reaction-Output": {
-            /** Base Component */
-            base_component: string;
-            equilibrium?: components["schemas"]["Equilibrium"] | null;
-            /** Id */
-            id: string;
-            /** Kinetics */
-            kinetics?: components["schemas"]["PowerLaw-Output"] | components["schemas"]["LHHW"] | null;
+            kinetics?: components["schemas"]["PowerLaw"] | components["schemas"]["LHHW"] | null;
             /**
              * Lumped
              * @default false
@@ -1613,29 +1568,13 @@ export interface components {
          *     to replay it; the flowsheet slate may be wider. Lumped reactions are
          *     validated on a molecular-weight balance instead of element counts.
          */
-        "ReactionSet-Input": {
+        ReactionSet: {
             /** Components */
             components: string[];
             /** Id */
             id: string;
             /** Reactions */
-            reactions: components["schemas"]["Reaction-Input"][];
-        };
-        /**
-         * ReactionSet
-         * @description A flowsheet-owned set of reactions over its own component slate.
-         *
-         *     The slate is self-describing so a saved project carries everything needed
-         *     to replay it; the flowsheet slate may be wider. Lumped reactions are
-         *     validated on a molecular-weight balance instead of element counts.
-         */
-        "ReactionSet-Output": {
-            /** Components */
-            components: string[];
-            /** Id */
-            id: string;
-            /** Reactions */
-            reactions: components["schemas"]["Reaction-Output"][];
+            reactions: components["schemas"]["Reaction"][];
         };
         /** RoutedLine */
         RoutedLine: {
@@ -1675,7 +1614,7 @@ export interface components {
              * @default []
              */
             errors: components["schemas"]["UnitError"][];
-            flowsheet: components["schemas"]["Flowsheet-Output"];
+            flowsheet: components["schemas"]["Flowsheet"];
             /**
              * History
              * @default []
@@ -2286,7 +2225,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Project-Output"];
+                    "application/json": components["schemas"]["Project"];
                 };
             };
         };
@@ -2300,7 +2239,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Project-Input"];
+                "application/json": components["schemas"]["Project"];
             };
         };
         responses: {
@@ -2310,7 +2249,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Project-Output"];
+                    "application/json": components["schemas"]["Project"];
                 };
             };
             /** @description Validation Error */
@@ -2447,7 +2386,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Project-Output"];
+                    "application/json": components["schemas"]["Project"];
                 };
             };
         };
@@ -2551,7 +2490,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["Project-Input"];
+                "application/json": components["schemas"]["Project"];
             };
         };
         responses: {

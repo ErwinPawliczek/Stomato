@@ -656,7 +656,7 @@
         "title": "FeedSpec",
         "type": "object"
       },
-      "Flowsheet-Input": {
+      "Flowsheet": {
         "additionalProperties": false,
         "properties": {
           "components": {
@@ -687,9 +687,8 @@
             "type": "string"
           },
           "reactions": {
-            "default": [],
             "items": {
-              "$ref": "#/components/schemas/ReactionSet-Input"
+              "$ref": "#/components/schemas/ReactionSet"
             },
             "title": "Reactions",
             "type": "array"
@@ -723,10 +722,6 @@
           "streams"
         ],
         "title": "Flowsheet",
-        "type": "object"
-      },
-      "Flowsheet-Output": {
-        "additionalProperties": true,
         "type": "object"
       },
       "HTTPValidationError": {
@@ -1162,9 +1157,9 @@
         "title": "PortRef",
         "type": "object"
       },
-      "PowerLaw-Input": {
+      "PowerLaw": {
         "additionalProperties": false,
-        "description": "Power-law rate expression.\n\n``reverse`` carries the explicit reverse expression; without it a reaction\nwith an equilibrium model is equilibrium-limited, and without either the\nexpression is irreversible.",
+        "description": "Power-law rate expression.\n\n``reverse`` carries the explicit reverse expression; without it a reaction\nwith an equilibrium model is equilibrium-limited, and without either the\nexpression is irreversible. The reverse side is a plain ``PowerLawRate``\nbody \u2014 it never nests a further ``reverse`` (detailed balance points its\nforward side at this reaction, so a reverse-of-reverse has no physical\nmeaning). Keeping the graph acyclic also matters mechanically: a recursive\nmodel makes FastAPI's request/response OpenAPI schemas textually\nirreconcilable (`<Model>-Input`/`<Model>-Output` self-references), which\nsplit and renamed every component the frontend types import.",
         "properties": {
           "Ea": {
             "title": "Ea",
@@ -1198,7 +1193,7 @@
           "reverse": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/PowerLaw-Input"
+                "$ref": "#/components/schemas/PowerLawRate"
               },
               {
                 "type": "null"
@@ -1214,9 +1209,9 @@
         "title": "PowerLaw",
         "type": "object"
       },
-      "PowerLaw-Output": {
+      "PowerLawRate": {
         "additionalProperties": false,
-        "description": "Power-law rate expression.\n\n``reverse`` carries the explicit reverse expression; without it a reaction\nwith an equilibrium model is equilibrium-limited, and without either the\nexpression is irreversible.",
+        "description": "Power-law rate body: Arrhenius term plus composition orders.\n\n``PowerLaw`` without the ``reverse`` slot. Splitting the body out keeps the\ncontract model graph non-recursive (see ``PowerLaw.reverse``).",
         "properties": {
           "Ea": {
             "title": "Ea",
@@ -1246,16 +1241,6 @@
           "rate_units": {
             "title": "Rate Units",
             "type": "string"
-          },
-          "reverse": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/PowerLaw-Output"
-              },
-              {
-                "type": "null"
-              }
-            ]
           }
         },
         "required": [
@@ -1263,40 +1248,14 @@
           "k0",
           "Ea"
         ],
-        "title": "PowerLaw",
+        "title": "PowerLawRate",
         "type": "object"
       },
-      "Project-Input": {
+      "Project": {
         "additionalProperties": false,
         "properties": {
           "flowsheet": {
-            "$ref": "#/components/schemas/Flowsheet-Input"
-          },
-          "layout": {
-            "$ref": "#/components/schemas/Layout",
-            "default": {
-              "pfd": {},
-              "pid": {},
-              "plot": {}
-            }
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "flowsheet"
-        ],
-        "title": "Project",
-        "type": "object"
-      },
-      "Project-Output": {
-        "additionalProperties": false,
-        "properties": {
-          "flowsheet": {
-            "$ref": "#/components/schemas/Flowsheet-Output"
+            "$ref": "#/components/schemas/Flowsheet"
           },
           "layout": {
             "$ref": "#/components/schemas/Layout",
@@ -1327,7 +1286,7 @@
             "type": "string"
           },
           "project": {
-            "$ref": "#/components/schemas/Project-Input"
+            "$ref": "#/components/schemas/Project"
           }
         },
         "required": [
@@ -1358,7 +1317,7 @@
             "type": "string"
           },
           "project": {
-            "$ref": "#/components/schemas/Project-Output"
+            "$ref": "#/components/schemas/Project"
           },
           "updated_at": {
             "format": "date-time",
@@ -1464,7 +1423,7 @@
         "title": "PseudoDefinition",
         "type": "object"
       },
-      "Reaction-Input": {
+      "Reaction": {
         "additionalProperties": false,
         "description": "One stoichiometric reaction with optional kinetics and equilibrium model.\n\n``base_component`` is the component the extent of reaction is normalized\non; it must appear with \u03bd < 0. Pseudo (lumped) components can only take\npart in reactions explicitly marked ``lumped``, which switches validation\nfrom element balances to a molecular-weight balance (pseudos carry no\nformula). ``provenance`` is mandatory: every reaction names where its\nstoichiometry and data come from.",
         "properties": {
@@ -1489,7 +1448,7 @@
           "kinetics": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/PowerLaw-Input"
+                "$ref": "#/components/schemas/PowerLaw"
               },
               {
                 "$ref": "#/components/schemas/LHHW"
@@ -1526,69 +1485,7 @@
         "title": "Reaction",
         "type": "object"
       },
-      "Reaction-Output": {
-        "additionalProperties": false,
-        "description": "One stoichiometric reaction with optional kinetics and equilibrium model.\n\n``base_component`` is the component the extent of reaction is normalized\non; it must appear with \u03bd < 0. Pseudo (lumped) components can only take\npart in reactions explicitly marked ``lumped``, which switches validation\nfrom element balances to a molecular-weight balance (pseudos carry no\nformula). ``provenance`` is mandatory: every reaction names where its\nstoichiometry and data come from.",
-        "properties": {
-          "base_component": {
-            "title": "Base Component",
-            "type": "string"
-          },
-          "equilibrium": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/Equilibrium"
-              },
-              {
-                "type": "null"
-              }
-            ]
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "kinetics": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/PowerLaw-Output"
-              },
-              {
-                "$ref": "#/components/schemas/LHHW"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Kinetics"
-          },
-          "lumped": {
-            "default": false,
-            "title": "Lumped",
-            "type": "boolean"
-          },
-          "provenance": {
-            "title": "Provenance",
-            "type": "string"
-          },
-          "stoichiometry": {
-            "additionalProperties": {
-              "type": "number"
-            },
-            "title": "Stoichiometry",
-            "type": "object"
-          }
-        },
-        "required": [
-          "id",
-          "stoichiometry",
-          "base_component",
-          "provenance"
-        ],
-        "title": "Reaction",
-        "type": "object"
-      },
-      "ReactionSet-Input": {
+      "ReactionSet": {
         "additionalProperties": false,
         "description": "A flowsheet-owned set of reactions over its own component slate.\n\nThe slate is self-describing so a saved project carries everything needed\nto replay it; the flowsheet slate may be wider. Lumped reactions are\nvalidated on a molecular-weight balance instead of element counts.",
         "properties": {
@@ -1605,38 +1502,7 @@
           },
           "reactions": {
             "items": {
-              "$ref": "#/components/schemas/Reaction-Input"
-            },
-            "title": "Reactions",
-            "type": "array"
-          }
-        },
-        "required": [
-          "id",
-          "reactions",
-          "components"
-        ],
-        "title": "ReactionSet",
-        "type": "object"
-      },
-      "ReactionSet-Output": {
-        "additionalProperties": false,
-        "description": "A flowsheet-owned set of reactions over its own component slate.\n\nThe slate is self-describing so a saved project carries everything needed\nto replay it; the flowsheet slate may be wider. Lumped reactions are\nvalidated on a molecular-weight balance instead of element counts.",
-        "properties": {
-          "components": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Components",
-            "type": "array"
-          },
-          "id": {
-            "title": "Id",
-            "type": "string"
-          },
-          "reactions": {
-            "items": {
-              "$ref": "#/components/schemas/Reaction-Output"
+              "$ref": "#/components/schemas/Reaction"
             },
             "title": "Reactions",
             "type": "array"
@@ -1720,7 +1586,7 @@
             "type": "array"
           },
           "flowsheet": {
-            "$ref": "#/components/schemas/Flowsheet-Output"
+            "$ref": "#/components/schemas/Flowsheet"
           },
           "history": {
             "default": [],
@@ -2674,7 +2540,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project-Output"
+                  "$ref": "#/components/schemas/Project"
                 }
               }
             },
@@ -2691,7 +2557,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Project-Input"
+                "$ref": "#/components/schemas/Project"
               }
             }
           },
@@ -2702,7 +2568,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project-Output"
+                  "$ref": "#/components/schemas/Project"
                 }
               }
             },
@@ -2902,7 +2768,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Project-Output"
+                  "$ref": "#/components/schemas/Project"
                 }
               }
             },
@@ -3090,7 +2956,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Project-Input"
+                "$ref": "#/components/schemas/Project"
               }
             }
           },

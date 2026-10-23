@@ -56,12 +56,11 @@ class DrivingForceTerm(Model):
     orders: dict[str, float] = {}
 
 
-class PowerLaw(Model):
-    """Power-law rate expression.
+class PowerLawRate(Model):
+    """Power-law rate body: Arrhenius term plus composition orders.
 
-    ``reverse`` carries the explicit reverse expression; without it a reaction
-    with an equilibrium model is equilibrium-limited, and without either the
-    expression is irreversible.
+    ``PowerLaw`` without the ``reverse`` slot. Splitting the body out keeps the
+    contract model graph non-recursive (see ``PowerLaw.reverse``).
     """
 
     rate_units: str  # documentation only, e.g. "mol/(m3·s)"
@@ -69,7 +68,23 @@ class PowerLaw(Model):
     Ea: float
     orders: dict[str, float] = {}
     basis: RateBasis = "mole_fraction"
-    reverse: PowerLaw | None = None
+
+
+class PowerLaw(PowerLawRate):
+    """Power-law rate expression.
+
+    ``reverse`` carries the explicit reverse expression; without it a reaction
+    with an equilibrium model is equilibrium-limited, and without either the
+    expression is irreversible. The reverse side is a plain ``PowerLawRate``
+    body — it never nests a further ``reverse`` (detailed balance points its
+    forward side at this reaction, so a reverse-of-reverse has no physical
+    meaning). Keeping the graph acyclic also matters mechanically: a recursive
+    model makes FastAPI's request/response OpenAPI schemas textually
+    irreconcilable (`<Model>-Input`/`<Model>-Output` self-references), which
+    split and renamed every component the frontend types import.
+    """
+
+    reverse: PowerLawRate | None = None
 
 
 class LHHW(Model):

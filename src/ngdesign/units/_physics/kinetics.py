@@ -11,7 +11,14 @@ import math
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING
 
-from ngdesign.contracts.reactions import LHHW, Arrhenius, PowerLaw, Reaction, ReactionSet
+from ngdesign.contracts.reactions import (
+    LHHW,
+    Arrhenius,
+    PowerLaw,
+    PowerLawRate,
+    Reaction,
+    ReactionSet,
+)
 from ngdesign.data.formation import (
     formation_enthalpy,
     formation_enthalpy_298,
@@ -46,7 +53,7 @@ def _basis_amounts(basis: str, T: float, P: float, z: Mapping[str, float]) -> di
     return {cid: float(y) * P / (R * T) for cid, y in z.items()}
 
 
-def _power_law_rate(kinetics: PowerLaw, T: float, P: float, z: Mapping[str, float]) -> float:
+def _power_law_rate(kinetics: PowerLawRate, T: float, P: float, z: Mapping[str, float]) -> float:
     amounts = _basis_amounts(kinetics.basis, T, P, z)
     value = _arrhenius_k(Arrhenius(k0=kinetics.k0, Ea=kinetics.Ea), T)
     for cid, order in kinetics.orders.items():
