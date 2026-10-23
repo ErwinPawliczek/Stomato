@@ -313,11 +313,13 @@
   validation: []
   references:
   - 'Gernert, J., Span, R., ''EOS-CG: A Helmholtz energy mixture model for humid combustion
-    gases'', Chem. Eng. Sci. 148, 59-74, 2016 (no implementation in this repo; the row is a
-    catalogue placeholder and every property call raises UnavailableBackend)'
+    gases'', J. Chem. Thermodyn. 93, 274-293, 2016 (the formulation paper; the parameter
+    tables live in its supplement, which is publisher-paywalled). no implementation in
+    this repo; the row is a catalogue placeholder and every property call raises
+    UnavailableBackend'
   l0: {}
   l0_excluded: {}
-  l0_note: 'Placeholder row: the method is recorded, not implemented (teqp candidate, T-07). What would make it real: an in-house EOS-CG implementation from the open Kunz & Wagner 2012 formulation paper, or teqp multifluid support for its fluid files; no licence blocks it.'
+  l0_note: 'Refusal row: EOS-CG stays unimplemented - the formulation is open (Gernert & Span 2016, J. Chem. Thermodyn. 93, 274-293), but the complete fluid parameter and departure-function tables ship only in the publisher''s paywalled supplement, no open supplement was confirmed in the sources checked 2026-10-23, teqp does not ship EOS-CG fluid/departure files, and CoolProp issue #3277 requests exactly this missing support. What would change it: an openly redistributable parameter table or a licence that permits transcription of the full supplement.'
 
 - id: aga8_dc92
   name: AGA 8 DC92 detail equation of state (placeholder)
@@ -402,10 +404,12 @@
     In-house MBWR-32: Younglove-Ely units (rho mol/l, P MPa) at the kernel, SI at the
     boundary; ideal-gas reference as for bwrs. Mixtures are refused by the adapter.
     Saturation verified against CoolProp 8.0.0 across the ten bound cases (worst
-    sampled Psat deviation about 0.4 %). Source caveats, not resolved in this work:
-    the ethane G(3) table reading is uncertain by one entry, and selected
-    Younglove-Ely isobar cross-checks (propane 250 K, methane 100 K) disagree by
-    several percent for reasons not resolved here.
+    sampled Psat deviation about 0.4 %). All 96 Appendix-J coefficients digit-verified
+    against the printed tables: the ethane G(3) entry was found mistranscribed and
+    corrected (finite-difference and consistency tests had passed on the wrong value).
+    One source caveat, not resolved in this work: selected Younglove-Ely isobar
+    cross-checks (propane 250 K, methane 100 K) disagree by several percent for
+    reasons not resolved here.
 
 - id: bwrs
   name: BWRS (Starling 1973) natural-gas components
@@ -484,8 +488,16 @@
     T_K: [95.0, 600.0]
     P_Pa: [1000.0, 70000000.0]
     phases: [V, L]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  - bwr_ls-C1-155.0K
+  - bwr_ls-C2-230.0K
+  - bwr_ls-C3-300.0K
+  - bwr_ls-c1c3-277.59K
+  assessed:
+    bwr_ls-C1-155.0K: "Cp -569.3% (calculated -38425.48 vs 67.6129 J/(mol K), saturated liquid): the shared BWRS parameter evaluation returns large negative Cp for bwr_ls — the same defect assessed on the bwrs row; bound and assessed, not excluded, so the defect stays visible. Measured 2026-10-23."
+    bwr_ls-C2-230.0K: "Cp -1187.6% (calculated -97565.23 vs 82.2215 J/(mol K), saturated liquid): same shared BWRS parameter-evaluation Cp defect. Measured 2026-10-23."
+    bwr_ls-C3-300.0K: "Cp -517.5% (calculated -62396.92 vs 120.8047 J/(mol K), saturated liquid): same shared BWRS parameter-evaluation Cp defect. Measured 2026-10-23."
   references:
   - Lee, B. I., Starling, K. E., Starling's BWR equation variant as summarized in
     'Thermodynamic Property Prediction of Light Hydrocarbons and Related Fluids' (the
@@ -495,6 +507,9 @@
   - 'Han, B.-H., Starling, K. E., ''Generalized Correlation for the Densities of
     Multicomponent Light Hydrocarbon Mixtures'', AIChE J. 18, 380-384, 1972 (the
     generalized mixing law; the row ships an empty k_ij table)'
+  - 'Starling, K. E. et al., ''Fluid Thermodynamic Property Data for Light Petroleum
+    Systems'' / OSTI report ORO-5249-2 (1976), Table 5 (the component parameter
+    dictionary the row evaluates, shared with the bwrs row)'
   l0:
     pure_psat_limit:
       points: [["C1", 160.0], ["N2", 110.0]]
@@ -530,4 +545,12 @@
     verifiable open C1/C3 Lee-Starling interaction set was found - and with the table
     empty the mixing law reduces exactly to the one used by the bwrs row, which is the
     row's only tested claim; the k_ij dependence itself is unvalidated. Component
-    constants are the ORO-5249-2 Table 5 set cited on the bwrs row.
+    constants are the ORO-5249-2 Table 5 set cited on the bwrs row. Measured results:
+    at the three bound pure-fluid saturation points (C1 155 K, C2 230 K, C3 300 K)
+    bubble/dew pressures and vapour/liquid densities track CoolProp closely, while Cp
+    comes out large and negative (assessed per case above) - the shared BWRS
+    parameter-evaluation Cp defect, made visible by binding the cases rather than
+    excluding Cp. The bound near-pure-propane C1/C3 VLE point (277.59 K, 0.689 MPa)
+    misses literature bubble_P by 1.24% and vapour composition by 0.50%; the
+    higher-pressure isotherm point (1.724 MPa) measured 4.73% and 56.03% and stays
+    unbound pending a mixing-rule decision.

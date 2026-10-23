@@ -7,10 +7,12 @@ the report's Appendix J (NIST-hosted reprint), pure fluids only. The
 coefficient tables were numerically verified two ways: the closed-form
 residual-Helmholtz pressure integral against numerical integration, and
 saturation against CoolProp 8.0.0 (worst sampled Psat deviation about 0.4%).
-Two source caveats are recorded on the catalogue row: the ethane G(3) table
-reading is uncertain by one entry, and selected Younglove-Ely isobar
-cross-checks (propane 250 K, methane 100 K) disagree by several percent for
-reasons not resolved here.
+All 96 Appendix-J coefficients were later digit-verified against the printed
+tables (pp. 794-796): the ethane G(3) entry had been mistranscribed and is
+corrected here — finite-difference and consistency tests had passed on the
+wrong value. One source caveat remains, not resolved in this work: selected
+Younglove-Ely isobar cross-checks (propane 250 K, methane 100 K) disagree by
+several percent for reasons not resolved here.
 
 ``BWRLeeStarlingPackage`` is the provisional ``bwr_ls`` catalogue row: the
 BWR-Lee-Starling equation reusing the BWRS parameter-dictionary equations of
@@ -18,7 +20,11 @@ BWR-Lee-Starling equation reusing the BWRS parameter-dictionary equations of
 deliberately empty (no verifiable open C1/C3 interaction set was found), and
 with the table empty the mixing law reduces to the one used by ``bwrs`` - that
 equivalence is the row's only tested claim; the k_ij dependence itself is
-unvalidated.
+unvalidated. Four reference cases are bound (three pure-fluid saturation
+points and one near-pure-propane C1/C3 VLE point): densities and pressures
+track the reference data closely, but Cp comes out large and negative from the
+shared BWRS parameter evaluation — the misses are bound and assessed per case,
+not excluded, so the defect stays visible.
 """
 
 from __future__ import annotations
@@ -148,7 +154,7 @@ _ETHANE: Final[_YEFluid] = _YEFluid(
     g=(
         -0.3204748852e-3,
         0.6529792241e-1,
-        -0.1669745910e1,
+        -0.1669704591e1,
         0.1147983381e3,
         -0.1854721998e5,
         0.4994149431e-4,

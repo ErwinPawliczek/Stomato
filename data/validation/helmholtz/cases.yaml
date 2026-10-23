@@ -41,7 +41,7 @@ pure_cases:
 - id: pure-C1-95.3K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:bwrs
+  package: mbwr
   components:
   - C1
   z:
@@ -57,7 +57,7 @@ pure_cases:
 - id: pure-C1-125.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:bwrs
+  package: mbwr
   components:
   - C1
   z:
@@ -73,7 +73,7 @@ pure_cases:
 - id: pure-C1-155.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:bwrs
+  package: mbwr
   components:
   - C1
   z:
@@ -89,7 +89,7 @@ pure_cases:
 - id: pure-C1-172.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:bwrs
+  package: mbwr
   components:
   - C1
   z:
@@ -105,7 +105,7 @@ pure_cases:
 - id: pure-C1-181.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:bwrs
+  package: mbwr
   components:
   - C1
   z:
@@ -121,7 +121,7 @@ pure_cases:
 - id: pure-C2-110.0K
   fluid: C2
   coolprop_fluid: C2H6
-  package: pending:bwrs
+  package: mbwr
   components:
   - C2
   z:
@@ -137,7 +137,7 @@ pure_cases:
 - id: pure-C2-150.0K
   fluid: C2
   coolprop_fluid: C2H6
-  package: pending:bwrs
+  package: mbwr
   components:
   - C2
   z:
@@ -153,7 +153,7 @@ pure_cases:
 - id: pure-C2-230.0K
   fluid: C2
   coolprop_fluid: C2H6
-  package: pending:bwrs
+  package: mbwr
   components:
   - C2
   z:
@@ -169,7 +169,7 @@ pure_cases:
 - id: pure-C3-150.0K
   fluid: C3
   coolprop_fluid: C3H8
-  package: pending:bwrs
+  package: mbwr
   components:
   - C3
   z:
@@ -185,7 +185,7 @@ pure_cases:
 - id: pure-C3-231.0K
   fluid: C3
   coolprop_fluid: C3H8
-  package: pending:bwrs
+  package: mbwr
   components:
   - C3
   z:
@@ -201,7 +201,55 @@ pure_cases:
 - id: pure-C3-300.0K
   fluid: C3
   coolprop_fluid: C3H8
-  package: pending:bwrs
+  package: mbwr
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 300.0
+  source: coolprop:C3H8
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+- id: bwr_ls-C1-155.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: bwr_ls
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 155.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 1295003.4509910743
+    dew_P: 1295003.4509910743
+    rho_V: 20.418904925344048
+    rho_L: 347.5068280431007
+    Cp: 67.6128793208551
+- id: bwr_ls-C2-230.0K
+  fluid: C2
+  coolprop_fluid: C2H6
+  package: bwr_ls
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 230.0
+  source: coolprop:C2H6
+  expected:
+    bubble_P: 700182.3997941298
+    dew_P: 700182.3997941298
+    rho_V: 12.676274475640321
+    rho_L: 481.2905678767953
+    Cp: 82.22145360068032
+- id: bwr_ls-C3-300.0K
+  fluid: C3
+  coolprop_fluid: C3H8
+  package: bwr_ls
   components:
   - C3
   z:

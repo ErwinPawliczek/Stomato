@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ngdesign.contracts import PhaseKind
-from ngdesign.thermo.bwr import MBWR32Package, _ls_mix
+from ngdesign.thermo.bwr import _YE_FLUIDS, MBWR32Package, _ls_mix
 from ngdesign.thermo.helmholtz import ComponentNotSupported, _bwrs_mix
 
 _CASES = Path(__file__).resolve().parents[2] / "data" / "validation" / "helmholtz" / "cases.yaml"
@@ -92,3 +92,23 @@ def test_mbwr_densities_match_validation_cases(mbwr: MBWR32Package) -> None:
         assert math.isclose(vap.density, case["expected"]["rho_V"], rel_tol=0.08), case["id"]
         checked += 1
     assert checked >= 3
+
+
+def test_mbwr_coefficients_match_appendix_j() -> None:
+    """Spot-anchor the printed Appendix J values (Younglove & Ely 1987, pp. 794-796).
+
+    The full 96-entry digit check ran in the T-16b verification pass; these are the
+    entries the OCR pass misread or flagged, held in the suite so a regression in
+    transcription cannot pass the internal-consistency tests unnoticed (the
+    2026-10-22 lesson).
+    """
+    expected = {
+        "C1": {5: -0.2234398926e4, 32: 0.6766926453e-6},  # methane p. 794
+        "C2": {3: -0.1669704591e1, 32: 0.2239717230e-2},  # ethane p. 795; G(3) was mistranscribed once
+        "C3": {25: 0.9936666689e3, 29: 0.1108612343e1},  # propane p. 796
+    }
+    for cid, spots in expected.items():
+        g = _YE_FLUIDS[cid].g
+        for i, want in spots.items():
+            assert g[i - 1] == want, f"{cid} G({i}): {g[i - 1]!r} != printed {want!r}"
+
