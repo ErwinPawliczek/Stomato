@@ -1,5 +1,7 @@
 """LOCKED contracts. Every layer talks only through these models."""
 
+from .assay import Assay, CurveBasis, CurveKind, DistillationCurve
+
 from .common import Direction, Model, Nozzle, Vec3
 from .components import ComponentSet
 from .flowsheet import (
@@ -31,6 +33,7 @@ from .project import XY, Layout, Project
 from .stream import DEFAULT_SLATE, Phase, PhaseKind, StreamState
 
 __all__ = [
+    "Assay",
     "BomItem",
     # NOTE: "Component" here is the PIPING Component (a fitting/weld item from
     # .piping). The component-registry record is deliberately not re-exported to
@@ -39,10 +42,13 @@ __all__ = [
     "Component",
     "ComponentSet",
     "ComponentKind",
+    "CurveBasis",
+    "CurveKind",
     "CutPiece",
     "DEFAULT_SLATE",
     "Datasheet",
     "Direction",
+    "DistillationCurve",
     "EndType",
     "EquipmentEnvelope",
     "FailPosition",
