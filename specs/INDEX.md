@@ -156,7 +156,7 @@ Round 1 (palette R0, one thread per family U-A..U-H) after U-00 and U-R merge; r
 | T-16b | MBWR, BWR-Lee-Starling, EOS-CG to real rows | T-04, T-07, T-15 | issue #194; dispatched 2026-10-23 |
 | T-17 | SAFT association and polar: PC-SAFT assoc, polar PC-SAFT, CPA-PR, soft-SAFT | T-07, T-15c | issue #191; dispatched 2026-10-23 |
 | T-18 | teqp-backed rows to provisional: SAFT-VR Mie, multifluid, multifluid pure, GERG-2008 teqp | T-07, T-15c, #178 | issue #188; dispatched 2026-10-23 |
-| T-19 | Special family to provisional: solids, polymers, HOC dimer, HF hexamer | T-10, T-03b, T-15 | issue #190; dispatched 2026-10-23 |
+| T-19 | Special family to provisional: solids, polymers, HOC dimer, HF hexamer | T-10, T-03b, T-15 | merged #200 (542c6fc) 2026-10-23: ideal_solid checks, hoc_dimer rebound to Ritter & Simons, polymer rows stay experimental (no open data); issue #190 |
 | T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | all merged: T-11 #131, T-12 #132, T-13 #135, T-14 #147 (2026-10-21) |
 
 Dispatch: T-01 alone; then T-02, T-03, T-04, T-05, T-07, T-11, T-12, T-13 in parallel (disjoint files); then T-06, T-08, T-09, T-14; then T-10; then the catalogue freeze (status audit).
