@@ -1,0 +1,226 @@
+# U-F — Reactors (plan §2 U-F, 9 rows). All rows are roadmap: reaction chemistry
+# lives in the property package and the reaction-set contract (U-R), and the
+# reactor units land with the S3 slice (plan §2b).
+
+- id: conversion_reactor
+  name: Conversion reactor
+  family: reactors
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet
+      required: true
+      description: effluent at specified conversion
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: fractional conversion per reaction, heat of reaction, adiabatic/isothermal/duty
+      end_state: true
+  pid_symbol: R
+  references:
+  - docs/unit-catalogue-plan.md §2 U-F 1
+  notes: roadmap.
+
+- id: yield_reactor
+  name: Yield reactor
+  family: reactors
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet
+      required: true
+      description: effluent at the specified product yields
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: product yields with an element-balance check
+      end_state: true
+  pid_symbol: R
+  references:
+  - docs/unit-catalogue-plan.md §2 U-F 2
+  notes: roadmap.
+
+- id: equilibrium_reactor
+  name: Equilibrium reactor (Keq)
+  family: reactors
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet
+      required: true
+      description: equilibrium effluent
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: Keq(T) per reaction with an approach-to-equilibrium ΔT
+      end_state: true
+  pid_symbol: R
+  references:
+  - docs/unit-catalogue-plan.md §2 U-F 3
+  notes: roadmap; the WGSR/Moe discrepancy is tracked by U-R (issue #192).
+
+- id: gibbs_reactor
+  name: Gibbs reactor
+  family: reactors
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet
+      required: true
+      description: Gibbs-minimum effluent
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: Gibbs minimisation over a species set with inerts and restricted equilibria
+      end_state: true
+  pid_symbol: R
+  references:
+  - docs/unit-catalogue-plan.md §2 U-F 4
+  notes: roadmap.
+
+- id: cstr
+  name: Continuous stirred-tank reactor
+  family: reactors
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet
+      required: true
+      description: reactor effluent (well-mixed)
+  levels:
+    R1:
+      status: planned
+      params: {}
+      note: kinetics (Arrhenius, LHHW, power-law), single phase
+    R2:
+      status: planned
+      params: {}
+      note: multi-phase with VLE in the vessel
+      end_state: true
+  pid_symbol: R
+  references:
+  - docs/unit-catalogue-plan.md §2 U-F 5
+  notes: roadmap.
+
+- id: pfr
+  name: Plug-flow reactor
+  family: reactors
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet
+      required: true
+      description: reactor effluent
+  levels:
+    R1:
+      status: planned
+      params: {}
+      note: kinetics, adiabatic/isothermal
+    R2:
+      status: planned
+      params: {}
+      note: integrated along length with heat transfer and pressure drop (Ergun)
+    R3:
+      status: planned
+      params: {}
+      note: catalyst deactivation, pellet effectiveness
+      end_state: true
+  pid_symbol: R
+  references:
+  - docs/unit-catalogue-plan.md §2 U-F 6
+  notes: roadmap; discretised units share one integrator (plan §2 note).
+
+- id: batch_reactor
+  name: Batch / semi-batch reactor
+  family: reactors
+  ports:
+    inlet:
+    - name: charge_in
+      required: true
+      description: initial charge
+    outlet:
+    - name: outlet
+      required: true
+      description: vessel contents at the end of the batch
+  levels:
+    R3:
+      status: planned
+      params: {}
+      note: dynamic — a separate axis and plan (steady-state catalogue excludes it)
+      end_state: true
+  pid_symbol: R
+  references:
+  - docs/unit-catalogue-plan.md §2 U-F 7
+  notes: roadmap; out of the steady-state scope (plan §0 decision 4).
+
+- id: fixed_bed_tubular
+  name: Fixed-bed multi-tubular reactor
+  family: reactors
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: tube-side feed
+    outlet:
+    - name: outlet
+      required: true
+      description: tube-side effluent
+  levels:
+    R2:
+      status: planned
+      params: {}
+      note: PFR with shell-side coolant
+      end_state: true
+  pid_symbol: R
+  references:
+  - docs/unit-catalogue-plan.md §2 U-F 8
+  notes: roadmap.
+
+- id: electrolyser_stack
+  name: Electrolyser / fuel cell stack
+  family: reactors
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet
+      required: true
+      description: converted effluent
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: conversion + Faradaic efficiency
+    R1:
+      status: planned
+      params: {}
+      note: polarisation curve
+      end_state: true
+  pid_symbol: FC
+  references:
+  - docs/unit-catalogue-plan.md §2 U-F 9
+  notes: roadmap.

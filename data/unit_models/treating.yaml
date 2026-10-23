@@ -1,0 +1,340 @@
+# U-G — Gas treating and specialty (plan §2 U-G, 9 rows).
+#
+# Palette lines 6-9 are NOT rows here: molecular-sieve dehydration maps to
+# separation's adsorption_bed row (U-D 9), LNG and NGL trains are flowsheet
+# templates, and sour-water stripping is a reboiled-stripper configuration on an
+# electrolyte package (T-09). Lines 1-2 expand into one row per registered
+# solvent (MDEA/MEA/DEA) — the absorbers share the Kent-Eisenberg adapter in
+# ngdesign.units.mdea_absorber, the regenerators the one in mdea_regenerator.
+
+- id: mdea_absorber
+  name: MDEA absorber
+  family: treating
+  ports:
+    inlet:
+    - name: gas_in
+      required: true
+      description: sour gas
+    - name: lean_amine_in
+      required: true
+      description: lean amine
+    outlet:
+    - name: gas_out
+      required: true
+      description: treated (sweet) gas
+    - name: rich_amine_out
+      required: true
+      description: rich amine
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.mdea_absorber:MdeaAbsorber
+      params:
+        type: object
+        properties:
+          amine: {type: string, description: 'solvent amine (a key of mdea_equilibrium.AMINES); the row default is MDEA'}
+          co2_out_molpct: {type: number, description: treated-gas CO2 spec, mol%}
+          h2s_out_ppmv: {type: number, description: treated-gas H2S spec, ppmv}
+      note: single-stage shortcut with Kent-Eisenberg equilibrium
+    R2:
+      status: planned
+      params: {}
+      note: staged on the reactive package — blocked on P1-11
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-G 1
+  notes: amine chemistry lives in the property package, not the stage (plan note).
+
+- id: mea_absorber
+  name: MEA absorber
+  family: treating
+  ports:
+    inlet:
+    - name: gas_in
+      required: true
+      description: sour gas
+    - name: lean_amine_in
+      required: true
+      description: lean amine
+    outlet:
+    - name: gas_out
+      required: true
+      description: treated (sweet) gas
+    - name: rich_amine_out
+      required: true
+      description: rich amine
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.mdea_absorber:MeaAbsorber
+      params:
+        type: object
+        properties:
+          amine: {type: string, description: 'solvent amine; the row default is MEA'}
+          co2_out_molpct: {type: number, description: treated-gas CO2 spec, mol%}
+          h2s_out_ppmv: {type: number, description: treated-gas H2S spec, ppmv}
+      note: single-stage shortcut with Kent-Eisenberg equilibrium
+    R2:
+      status: planned
+      params: {}
+      note: staged on the reactive package — blocked on P1-11
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-G 1
+  notes: thin subclass of the MDEA absorber over the same equilibrium model.
+
+- id: dea_absorber
+  name: DEA absorber
+  family: treating
+  ports:
+    inlet:
+    - name: gas_in
+      required: true
+      description: sour gas
+    - name: lean_amine_in
+      required: true
+      description: lean amine
+    outlet:
+    - name: gas_out
+      required: true
+      description: treated (sweet) gas
+    - name: rich_amine_out
+      required: true
+      description: rich amine
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.mdea_absorber:DeaAbsorber
+      params:
+        type: object
+        properties:
+          amine: {type: string, description: 'solvent amine; the row default is DEA'}
+          co2_out_molpct: {type: number, description: treated-gas CO2 spec, mol%}
+          h2s_out_ppmv: {type: number, description: treated-gas H2S spec, ppmv}
+      note: single-stage shortcut with Kent-Eisenberg equilibrium
+    R2:
+      status: planned
+      params: {}
+      note: staged on the reactive package — blocked on P1-11
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-G 1
+  notes: thin subclass of the MDEA absorber over the same equilibrium model.
+
+- id: mdea_regenerator
+  name: MDEA regenerator
+  family: treating
+  ports:
+    inlet:
+    - name: rich_amine_in
+      required: true
+      description: rich amine
+    outlet:
+    - name: lean_amine_out
+      required: true
+      description: lean amine bottoms
+    - name: acid_gas_out
+      required: true
+      description: acid gas overhead
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.mdea_regenerator:MdeaRegenerator
+      params:
+        type: object
+        properties:
+          amine: {type: string, description: 'solvent amine; the row default is MDEA'}
+          lean_co2_loading: {type: number, description: lean solvent CO2 loading target, mol CO2 / mol amine}
+          lean_h2s_loading: {type: number, description: lean solvent H2S loading target, mol H2S / mol amine}
+          regenerator_P: {type: number, description: regenerator pressure, Pa}
+          reboiler_T: {type: number, description: reboiler temperature, K}
+      note: shortcut stripping to lean-loading specifications
+    R2:
+      status: planned
+      params: {}
+      note: reboiled stripper on the reactive package — blocked on P1-11
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-G 2
+  notes: pairs with the absorber rows in the S2 amine loop (plan §2b).
+
+- id: mea_regenerator
+  name: MEA regenerator
+  family: treating
+  ports:
+    inlet:
+    - name: rich_amine_in
+      required: true
+      description: rich amine
+    outlet:
+    - name: lean_amine_out
+      required: true
+      description: lean amine bottoms
+    - name: acid_gas_out
+      required: true
+      description: acid gas overhead
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.mdea_regenerator:MeaRegenerator
+      params:
+        type: object
+        properties:
+          amine: {type: string, description: 'solvent amine; the row default is MEA'}
+          lean_co2_loading: {type: number, description: lean solvent CO2 loading target, mol CO2 / mol amine}
+          lean_h2s_loading: {type: number, description: lean solvent H2S loading target, mol H2S / mol amine}
+          regenerator_P: {type: number, description: regenerator pressure, Pa}
+          reboiler_T: {type: number, description: reboiler temperature, K}
+      note: shortcut stripping to lean-loading specifications
+    R2:
+      status: planned
+      params: {}
+      note: reboiled stripper on the reactive package — blocked on P1-11
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-G 2
+  notes: thin subclass of the MDEA regenerator.
+
+- id: dea_regenerator
+  name: DEA regenerator
+  family: treating
+  ports:
+    inlet:
+    - name: rich_amine_in
+      required: true
+      description: rich amine
+    outlet:
+    - name: lean_amine_out
+      required: true
+      description: lean amine bottoms
+    - name: acid_gas_out
+      required: true
+      description: acid gas overhead
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.mdea_regenerator:DeaRegenerator
+      params:
+        type: object
+        properties:
+          amine: {type: string, description: 'solvent amine; the row default is DEA'}
+          lean_co2_loading: {type: number, description: lean solvent CO2 loading target, mol CO2 / mol amine}
+          lean_h2s_loading: {type: number, description: lean solvent H2S loading target, mol H2S / mol amine}
+          regenerator_P: {type: number, description: regenerator pressure, Pa}
+          reboiler_T: {type: number, description: reboiler temperature, K}
+      note: shortcut stripping to lean-loading specifications
+    R2:
+      status: planned
+      params: {}
+      note: reboiled stripper on the reactive package — blocked on P1-11
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-G 2
+  notes: thin subclass of the MDEA regenerator.
+
+- id: teg_contactor
+  name: TEG contactor
+  family: treating
+  ports:
+    inlet:
+    - name: gas_in
+      required: true
+      description: wet gas
+    - name: lean_teg_in
+      required: true
+      description: lean glycol (TEG)
+    outlet:
+    - name: gas_out
+      required: true
+      description: dehydrated gas
+    - name: rich_teg_out
+      required: true
+      description: rich glycol
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.teg_contactor:TEGContactor
+      params:
+        type: object
+        properties:
+          water_out_lb_per_mmscf: {type: number, description: outlet water content spec, lb/MMscf}
+      note: activity-based water spec (GPSA/Parrish water-activity model)
+    R2:
+      status: planned
+      params: {}
+      note: staged with the TEG activity package — S1 slice (plan §2b)
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-G 3
+  notes: molecular-sieve dehydration (plan U-G 6) maps to separation's adsorption_bed row.
+
+- id: teg_regen
+  name: TEG regenerator + stripping gas
+  family: treating
+  ports:
+    inlet:
+    - name: rich_in
+      required: true
+      description: rich glycol
+    - name: stripping_gas_in
+      required: false
+      description: stripping gas
+    outlet:
+    - name: water_out
+      required: true
+      description: stripped water
+    - name: lean_out
+      required: true
+      description: regenerated glycol
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: shortcut water split at spec purity
+    R2:
+      status: planned
+      params: {}
+      note: staged — S1 slice (plan §2b)
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-G 4
+  notes: roadmap.
+
+- id: sulfur_recovery
+  name: Claus sulfur recovery
+  family: treating
+  ports:
+    inlet:
+    - name: acid_gas_in
+      required: true
+      description: acid gas feed
+    outlet:
+    - name: tail_gas_out
+      required: true
+      description: tail gas
+    - name: sulfur_out
+      required: true
+      description: liquid sulfur
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: conversion/equilibrium per stage
+    R2:
+      status: planned
+      params: {}
+      note: Gibbs per stage
+      end_state: true
+  pid_symbol: SRU
+  references:
+  - docs/unit-catalogue-plan.md §2 U-G 5
+  notes: roadmap; S2 slice (plan §2b). Sour-water stripping is NOT a row here — it is a
+    reboiled-stripper configuration on the electrolyte package (T-09, plan U-G 9).
