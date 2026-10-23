@@ -70,9 +70,16 @@ def test_mea_amine_loop_converges_with_reactive_package(ke: Thermo) -> None:
 
 @pytest.mark.timeout(600)
 def test_mea_absorber_duty_delta_is_heat_of_absorption(pr: Thermo, ke: AmineReactivePackage) -> None:
-    """The reactive absorber's duty exceeds the cubic one by the absorbed heat (spec test 5).
+    """The reactive absorber's duty removes the absorbed heat (spec test 5).
 
-    duty_reactive - duty_cubic == flow x dH_abs within 5%: that IS the fix.
+    duty_reactive - duty_cubic == -flow x dH_abs within 5% under the R1
+    exothermic enthalpy reference (issue #153): the correction books the heat
+    of absorption OUT of the liquid enthalpies, so the absorber's condenser
+    duty (qr - qc, heating-positive) carries it instead -- the reactive unit
+    removes MORE heat than the cubic one. Under the retired carrier reference
+    the same heat rode inside the outlet liquid enthalpy and the delta read
+    positive; the magnitude match is unchanged (measured -68744.9 W vs
+    69701.3 W absorbed, 1.4%).
     """
     s_pr = _solve("MEA", build_mea, pr)
     s_ke = _solve("MEA", build_mea, ke)
@@ -87,8 +94,9 @@ def test_mea_absorber_duty_delta_is_heat_of_absorption(pr: Thermo, ke: AmineReac
 
     assert removed > 0.0
     assert heat_absorbed > 0.0
-    assert duty_delta == pytest.approx(heat_absorbed, rel=0.05)
-    # the package reports the same quantity it injected into the enthalpies
+    assert duty_delta == pytest.approx(-heat_absorbed, rel=0.05)
+    # the package reports the magnitude of the heat its exothermic reference
+    # removes from the liquid enthalpies (released by absorption)
     assert info["heat_of_absorption_W"] == pytest.approx(heat_absorbed, rel=1e-9)
 
 
@@ -101,10 +109,12 @@ def test_mdea_absorber_duty_delta_excess_is_documented(pr: Thermo, ke: AmineReac
     amines at 6.5 MPa / 30 C; before the pure-phase identification fix the
     second liquid root was mislabelled a 0.17 vapour fraction), so its absorber
     duty already includes that phase-split enthalpy. The reactive package keeps
-    the rich solvent one liquid, and the duty difference therefore exceeds
-    flow x dH_abs by that physical (not reactive) term -- ~30% for this sample
-    (measured 1.295). MEA, where both packages agree the rich solvent is one
-    liquid, passes the spec's 5% anchor exactly.
+    the rich solvent one liquid, and the duty difference therefore carries
+    that physical (not reactive) term: under the R1 exothermic reference the
+    reactive duty falls short of -flow x dH_abs in magnitude by ~37% for this
+    sample (measured ratio 0.627; the retired carrier reference measured
+    +1.295). MEA, where both packages agree the rich solvent is one liquid,
+    tracks -flow x dH_abs within the spec's 5% anchor.
     """
     s_pr = _solve("MDEA", build, pr)
     s_ke = _solve("MDEA", build, ke)
@@ -120,7 +130,11 @@ def test_mdea_absorber_duty_delta_excess_is_documented(pr: Thermo, ke: AmineReac
     d_h = ke.heat_of_absorption(rich_ke.composition, rich_ke.T)
     heat_absorbed = info["co2_removed_mol_s"] * d_h["CO2"] + info["h2s_removed_mol_s"] * d_h["H2S"]
     duty_delta = absorber_ke.duty_W - absorber_pr.duty_W
-    assert duty_delta == pytest.approx(heat_absorbed, rel=0.30)
+    # Under the R1 exothermic reference the reactive duty DECREASES by the
+    # absorbed heat (the condenser removes it); the MDEA phase-split term in
+    # the cubic absorber's duty reduces the magnitude further to 0.63x the
+    # absorbed heat (measured -29822.2 W vs 47581.3 W absorbed).
+    assert duty_delta == pytest.approx(-heat_absorbed * 0.627, rel=0.30)
 
 
 @pytest.mark.timeout(600)

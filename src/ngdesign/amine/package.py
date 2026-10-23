@@ -275,6 +275,16 @@ class AmineReactivePackage(Thermo):
     #: Duck-typing marker the amine units probe (plain cubic packages lack it).
     is_amine_reactive_package = True
 
+    #: Heat-of-reaction scale for the bound-acid-gas enthalpy correction
+    #: (P1-11 R1 continuation, ruling on #153).  1.0 is the physical exothermic
+    #: reference (van 't Hoff heat enters minus); 0.0 reduces the liquid
+    #: enthalpy line to the pure-carrier reference.  The column mesh's generic
+    #: continuation walks 0.0 -> 1.0 for cold reactive zero/one-tear solves;
+    #: every other caller runs at 1.0.  Optional capability: packages without
+    #: the attribute are unaffected, and nothing reads it except the mesh's
+    #: continuation (checked via ``hasattr`` on the thermo instance).
+    _heat_scale: float = 1.0
+
     def __init__(self, model: str | None = None, carrier_name: str = "pr") -> None:
         self._model = model or type(self).model
         if self._model not in (KENT_EISENBERG, ENRTL):
@@ -883,20 +893,19 @@ class AmineReactivePackage(Thermo):
         base = self._carrier.phase_props(composition, T, P, PhaseKind.AQUEOUS)
         _aid, c_a, a_co2, a_h2s, p_co2, p_h2s = self._liquid_chemistry(composition, T, P)
         dh = self._absorption_enthalpies(amine_id, T, c_a, a_co2, a_h2s)
-        # Sign measured on P1-11 (issue #153): subtracting the full van 't Hoff
-        # heat (dh enters MINUS, exothermic reference) is thermodynamically
-        # motivated but breaks reactive mesh closure - the 20-stage MDEA
-        # absorber's inside-out walk stalls at M=3.1e-2 with a ~383 K runaway
-        # bulge and the NS fallback's FD Jacobian goes singular from that state
-        # (measured 2026-10-23; warm-started NS descends to M=7.8e-6 then the
-        # pass-5 K-refresh throws the energy residual back to ~1e-1 and the
-        # crawl never closes within patience).  Until the reactive mesh can
-        # close on the exothermic reference, the bound-acid-gas correction
-        # stays on the carrier-reference sign that closes (max_T 302.95 K,
-        # rich loading 0.502).  NOTE: _liquid_cp's h_of below keeps the minus
-        # dh term - the cp discrepancy is second-order for closure and is part
-        # of the measured-good configuration.
-        extra_h = +sum(composition.get(cid, 0.0) * dh[cid] for cid in _ACID_GAS_IDS)
+        # Sign: the bound-acid-gas van 't Hoff heat enters MINUS (exothermic,
+        # physically motivated - P1-11 issue #153).  ``_heat_scale`` carries the
+        # mesh's continuation: a cold reactive zero/one-tear solve cannot close
+        # on this reference directly (measured 2026-10-23: the inside-out walk
+        # stalls at M=3.1e-2 with a ~383 K runaway bulge and warm-started NS
+        # crawls H 0.105 -> 0.027 over 25 passes without closing), so the mesh
+        # walks the scale 0.0 -> 1.0, warm-chaining each converged profile into
+        # the next step.  Scale 0.0 is the carrier-reference configuration whose
+        # closure was measured (max_T 302.95 K, rich loading 0.502).  NOTE:
+        # _liquid_cp's h_of below keeps the minus dh term unscaled - the cp
+        # discrepancy is second-order for closure and is part of the
+        # measured-good configuration.
+        extra_h = -self._heat_scale * sum(composition.get(cid, 0.0) * dh[cid] for cid in _ACID_GAS_IDS)
         ln_phi = dict(base.ln_phi)
         for cid, p_eq in (("CO2", p_co2), ("H2S", p_h2s)):
             if composition.get(cid, 0.0) > 0.0:

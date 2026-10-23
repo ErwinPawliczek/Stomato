@@ -29,6 +29,8 @@ Two evaluations at the same state are bit-identical (asserted directly).
 
 from __future__ import annotations
 
+import fcntl
+import json
 from collections.abc import Iterator
 from typing import Any
 
@@ -114,8 +116,24 @@ def _profile_states() -> list[dict[str, Any]]:
 
 
 @pytest.fixture(name="profile", scope="module")
-def _profile() -> Iterator[list[dict[str, Any]]]:
-    yield _profile_states()
+def _profile(tmp_path_factory: pytest.TempPathFactory, worker_id: str) -> Iterator[list[dict[str, Any]]]:
+    """One absorber solve per test session, shared by every xdist worker.
+
+    The exothermic continuation solve is minutes on a CI runner; paying it once
+    per worker starved the backend job.  Workers serialise on a lock file in the
+    session's shared temp root and the first one writes the states as JSON
+    (floats round-trip exactly), so every worker sees the same profile.
+    """
+    if worker_id == "master":
+        yield _profile_states()
+        return
+    root = tmp_path_factory.getbasetemp().parent
+    cache = root / "amine_profile_states.json"
+    with open(root / "amine_profile_states.lock", "w") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if not cache.exists():
+            cache.write_text(json.dumps(_profile_states()))
+    yield json.loads(cache.read_text())
 
 
 def _derivs(
@@ -227,6 +245,7 @@ def test_surface_derivatives_converge(profile: list[dict[str, Any]], pkg_name: s
             _check_walk(pkg_name, which, c, d, floor)
 
 
+@pytest.mark.timeout(_TIMEOUT_S)
 @pytest.mark.parametrize("pkg_name", ["amine_ke", "amine_enrtl"])
 def test_same_state_bit_identical(profile: list[dict[str, Any]], pkg_name: str) -> None:
     """Two evaluations at the same state return bit-identical values (spec)."""
