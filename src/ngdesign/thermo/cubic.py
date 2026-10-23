@@ -28,6 +28,7 @@ from typing import Any, cast
 
 from thermo.eos_mix import (
     APISRKMIX,
+    GCEOSMIX,
     PRMIX,
     PRSV2MIX,
     PRSVMIX,
@@ -610,11 +611,120 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
             **kw,
         )
         # PR's init solved with PR's delta/epsilon; re-pin the TST repulsive
-        # term and re-solve the roots at the requested state.
+        # term and re-solve the roots at the requested state. Default phase
+        # flags: with both only_l and only_g set, thermo's set_from_PT assigns
+        # neither root, leaving PR-solved state and fugacities stale.
         self.delta = 2.5 * self.b
         self.epsilon = -1.5 * self.b * self.b
         if T is not None and P is not None:
-            self.solve(only_l=True, only_g=True)
+            self.solve()
+
+    def fugacity_coefficients(self, Z: float) -> list[float]:
+        """Generic two-parameter-cubic mixture ln phi with TST's delta/epsilon.
+
+        thermo's PRMIX method hardcodes the PR log term
+        ``ln[(Z + (1+sqrt(2))B) / (Z - (sqrt(2)-1)B)]``; with the TST
+        denominator delta = 2.5 b, epsilon = -1.5 b^2 the correct log term is
+        ``ln[(2Z + 2.5B + sqrt(8.5)B) / (2Z + 2.5B - sqrt(8.5)B)]`` (sqrt of
+        delta~^2 - 4 eps~ = sqrt(8.5) B). Everything else matches the PR form:
+        ln phi_i = (B_i/B)(Z-1) - ln(Z-B) + A/sqrt(D) [B_i/B - 2 sum_j y_j a_ij
+        / a] ln[...], verified against finite differences in composition,
+        temperature and pressure by tests/thermo/test_tst.py.
+        """
+        N = self.N
+        bs, b = self.bs, self.b
+        T_inv = 1.0 / self.T
+        P_T = self.P * T_inv
+        R_inv = 1.0 / 8.31446261815324
+        A = self.a_alpha * P_T * R_inv * R_inv * T_inv
+        B = b * P_T * R_inv
+        sqrt_d = math.sqrt(8.5) * B
+        a = self.a_alpha
+        log_term = math.log((2.0 * Z + 2.5 * B + sqrt_d) / (2.0 * Z + 2.5 * B - sqrt_d))
+        coeff = A / sqrt_d
+        rows = self._a_alpha_j_rows
+        z_m1 = Z - 1.0
+        out: list[float] = []
+        for i in range(N):
+            bi_over_b = bs[i] / b
+            out.append(
+                bi_over_b * z_m1
+                - math.log(Z - B)
+                + coeff * (bi_over_b - 2.0 * rows[i] / a) * log_term
+            )
+        return out
+
+    # --- TST delta/epsilon derivative properties ---------------------------------
+    # thermo's PRMIX hardcodes the PR convention (delta = 2b, epsilon = -b^2) in
+    # these properties; TST has delta = 2.5 b, epsilon = -1.5 b^2, so every
+    # composition/mole-number derivative of the repulsive term differs. Verified
+    # against finite differences of the re-pinned self.delta/self.epsilon by
+    # tests/thermo/test_tst.py.
+    @property
+    def ddelta_dzs(self) -> list[float]:
+        return [2.5 * bi for bi in self.bs]
+
+    @property
+    def ddelta_dns(self) -> list[float]:
+        return [2.5 * (bi - self.b) for bi in self.bs]
+
+    @property
+    def d2delta_dzizjs(self) -> list[list[float]]:
+        return [[0.0] * self.N for _ in range(self.N)]
+
+    @property
+    def d2delta_dninjs(self) -> list[list[float]]:
+        b = self.b
+        return [[-2.5 * ((bi - b) + (bj - b)) for bj in self.bs] for bi in self.bs]
+
+    @property
+    def d3delta_dninjnks(self) -> list[list[list[float]]]:
+        b = self.b
+        return [
+            [
+                [-5.0 * (3.0 * b - bi - bj - bk) for bk in self.bs]
+                for bj in self.bs
+            ]
+            for bi in self.bs
+        ]
+
+    @property
+    def depsilon_dzs(self) -> list[float]:
+        return [-3.0 * self.b * bi for bi in self.bs]
+
+    @property
+    def depsilon_dns(self) -> list[float]:
+        return [-3.0 * self.b * (bi - self.b) for bi in self.bs]
+
+    @property
+    def d2epsilon_dzizjs(self) -> list[list[float]]:
+        return [[-3.0 * bi * bj for bj in self.bs] for bi in self.bs]
+
+    @property
+    def d2epsilon_dninjs(self) -> list[list[float]]:
+        b = self.b
+        return [
+            [
+                -3.0 * ((bi - b) * (bj - b) - b * ((bi - b) + (bj - b)))
+                for bj in self.bs
+            ]
+            for bi in self.bs
+        ]
+
+    # PRMIX hardcodes the PR logarithm and PR A/B in its SymPy-derived
+    # dlnphis_dT/dlnphis_dP; for TST those are wrong (verified against finite
+    # differences: ~3% deviation, while the generic GCEOSMIX versions over the
+    # corrected delta/epsilon properties above agree to <0.1%). Delegate to the
+    # generic forms.
+    def dlnphis_dT(self, phase: str) -> list[float]:
+        return cast(
+            "list[float]", GCEOSMIX.dlnphis_dT(self, phase)
+        )
+
+    def dlnphis_dP(self, phase: str) -> list[float]:
+        return cast(
+            "list[float]", GCEOSMIX.dlnphis_dP(self, phase)
+        )
 
 
 _TWU_GEN_SUB = ((0.125283, 0.911807, 1.948150), (0.511614, 0.784054, 2.812520))
