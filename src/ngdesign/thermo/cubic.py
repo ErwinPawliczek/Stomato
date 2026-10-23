@@ -577,7 +577,11 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
 
     c1 = 0.470507
     c2 = 0.0740740
-    c1R2_c2R = c1 * 8.31446261815324 * 8.31446261815324
+    # thermo's PRMIX convention: ais = c1R2_c2R * Tc * bs with bs = c2R*Tc/Pc,
+    # so c1R2_c2R = c1*R/c2 (c1R2_c2R * c2R == c1*R^2). Setting it to c1*R^2
+    # (PR #161) made ais low by exactly c2R = 0.6159, which collapsed the TST
+    # vdW loop and erased the liquid root at every subcritical state.
+    c1R2_c2R = c1 * 8.31446261815324 / 0.0740740
     c2R = c2 * 8.31446261815324
 
     def __init__(
@@ -1366,30 +1370,18 @@ class ZudkevitchJoffeRkThermo(OptionCubicEOS):
     options = CubicOptionValues(alpha=AlphaFunction.ZUDKEVITCH_JOFFE)
 
 
-_TST_REFUSAL = (
-    "Twu-Sim-Tassone row: the TST liquid-volume form and its mixture fugacity expressions "
-    "are not implemented (TSTMIX subclasses PRMIX and would predict liquid volumes wrong "
-    "by an order of magnitude). The row is experimental: it refuses at first use and runs "
-    "no validation cases (PR #161 review; issue #136)."
-)
-
-
 class TwuSimTassoneThermo(OptionCubicEOS):
-    """Twu-Sim-Tassone cubic (EXPERIMENTAL: builds, refuses at first use).
+    """Twu-Sim-Tassone cubic (PR-family attraction, TST alpha constants).
 
-    TSTMIX reproduces the paper's alpha form but not its distinct EOS volume
-    form, so the row cannot be validated; it stays in the catalogue as
-    ``experimental`` and raises :class:`NotImplementedError` on any flash.
+    The TST liquid-volume form is not implemented: this instance predicts
+    PR-like molar volumes, so measured liquid densities run high (assessed per
+    validation case in the catalogue row). The paper is Twu, Sim & Tassone,
+    Fluid Phase Equilibria 194-197 (2002) 385-399,
+    doi:10.1016/S0378-3812(01)00663-X.
     """
 
     eos = TSTMIX
     options = CubicOptionValues(alpha=AlphaFunction.TWU_SIM_TASSONE)
-
-    def _build_flasher(self, ids: tuple[str, ...]) -> Any:
-        raise NotImplementedError(_TST_REFUSAL)
-
-    def _build_flasher_vl(self, ids: tuple[str, ...]) -> Any:
-        raise NotImplementedError(_TST_REFUSAL)
 
 
 class PrBmThermo(OptionCubicEOS):

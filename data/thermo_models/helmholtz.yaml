@@ -320,11 +320,21 @@
   l0_note: 'Placeholder row: the method is recorded, not implemented (teqp candidate, T-07). What would make it real: an in-house EOS-CG implementation from the open Kunz & Wagner 2012 formulation paper, or teqp multifluid support for its fluid files; no licence blocks it.'
 
 - id: aga8_dc92
-  name: AGA 8 DC92 detail equation of state (placeholder)
+  name: AGA 8 DC92 detail equation of state (direct module; adapter placeholder)
   family: helmholtz
   adapter: ngdesign.thermo.helmholtz:UnavailablePackage
   options: {}
-  params: {}
+  params:
+    implementation: >-
+      The DC92 detail method is ported as a standalone module (ngdesign.thermo.aga8:
+      aga8_dc92_properties), validated against the NIST reference's own printed check
+      values (21-component example gas, 400 K, 50 MPa; all match to printed digits).
+      It refuses components outside the 21 AGA8 species and states whose DC92 pressure
+      function has multiple density roots (two-phase/liquid). The catalogue adapter
+      stays a placeholder: the validation harness is saturation-shaped and cannot
+      express gas-only check cases, and experimental rows run no bound cases while
+      provisional rows must (issue #187). Call the module directly; the adapter raises
+      UnavailableBackend.
   applicability:
     component_classes: [hydrocarbon, light_gas, inert, acid_gas]
     polar: true
@@ -337,11 +347,12 @@
   references:
   - Starling, K. E., Savidge, J. L., 'Compressibility Factors of Natural Gas and Other
     Related Hydrocarbon Gases', AGA Transmission Measurement Committee Report No. 8, 2nd
-    ed., 1992 (no implementation in this repo; the row is a catalogue placeholder and every
-    property call raises UnavailableBackend)
+    ed., 1992 (coefficients as published in NIST''s public-domain reference implementation,
+    github.com/usnistgov/AGA8 @ 3bdb9ab8ff317c618b0b59d1b704c2c86ddc5fce, AGA8CODE/C,
+    retrieved 2026-10; the port reproduces Detail_test_01.cpp check values)
   l0: {}
   l0_excluded: {}
-  l0_note: 'Placeholder row: the method is recorded, not implemented. What would make it real: the AGA-8 DC92 detail-characterisation method, whose parameters live in the copyrighted AGA 1992 report (not redistributable) - needs a licensed copy or an in-house reimplementation from the published paper tables.'
+  l0_note: 'Direct module validated against the NIST printed check values; the catalogue adapter stays a placeholder because the validation harness is saturation-shaped and cannot express gas-only cases (experimental rows skip bound cases, provisional rows must run them) - the harness would need a gas-only case type before this row can promote.'
 
 - id: mbwr
   name: Modified BWR (Starling 1976, 27-compound set) (placeholder)

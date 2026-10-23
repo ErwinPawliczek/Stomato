@@ -70,17 +70,18 @@ def test_gerg_row_is_the_coolprop_multifluid_model() -> None:
 
 
 def test_if97_psat_matches_region4_check_table() -> None:
-    """IF97 Region 4 saturation-line check values (Wagner et al. 2000, Table 5).
+    """IF97 Region 4 saturation-line check values (IAPWS R7-97(2012), Table 35).
 
-    IAPWS-IF97 (Wagner, W., Cooper, J. R., Dittmann, A., et al., J. Eng. Gas
-    Turbines Power 122, 150-182, 2000), Table 5, printed digits: Psat(300 K) =
-    3536.889 Pa, Psat(500 K) = 2638897.6 Pa, Psat(600 K) = 12344334.7 Pa.
-    Measured on this branch: rel 8.5e-5, 5.9e-8, 1.6e-6.
+    Printed digits: Psat(300 K) = 0.353 658 941e-2 MPa, Psat(500 K) =
+    0.263 889 776e1 MPa, Psat(600 K) = 0.123 443 146e2 MPa. Checked against the
+    release PDF (iapws.org/relguide/IF97-Rev.pdf, mirrored at thermofluidprop.com),
+    retrieved 2026-10-23. Measured CoolProp 8.0.0 IF97 rel errors: 4e-10, 1.4e-9,
+    1.8e-9.
     """
     pkg = registry.create("thermo", "iapws_if97")
-    assert pkg.pure_psat("H2O", 300.0) == pytest.approx(3536.889, rel=2e-4)
-    assert pkg.pure_psat("H2O", 500.0) == pytest.approx(2638897.6, rel=2e-4)
-    assert pkg.pure_psat("H2O", 600.0) == pytest.approx(12344334.7, rel=2e-4)
+    assert pkg.pure_psat("H2O", 300.0) == pytest.approx(3536.58941, rel=1e-6)
+    assert pkg.pure_psat("H2O", 500.0) == pytest.approx(2638897.76, rel=1e-6)
+    assert pkg.pure_psat("H2O", 600.0) == pytest.approx(12344314.6, rel=1e-6)
 
 
 def test_if97_saturated_phase_labels_at_three_states() -> None:
