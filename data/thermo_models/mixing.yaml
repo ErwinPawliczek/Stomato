@@ -529,12 +529,13 @@
   adapter: ngdesign.thermo.mixing_rules:PRLCVMThermo
   options: {}
   params:
-    source: 'LCVM (Boukouvalas et al. 1994): PR with the linear Vidal/MHV1 combination (lambda = 0.36,
-      the original Boukouvalas weighting) over original UNIFAC (thermo unifac variant)'
-    provenance: Boukouvalas, C. J., Spiliotis, N., Coutsikos, P., Tzoupanekos, N. & Magoulas, K., "Prediction
-      of vapor-liquid equilibria with the LCVM model", Fluid Phase Equilib. 92, 75-89, 1994; Michelsen,
-      M. L., Fluid Phase Equilib. 60, 213-219, 1990 (MHV1 reference, q1 = -0.62363 for PR); k_ij-free
-      form - the gE model carries all interaction information
+    source: 'LCVM (Boukouvalas et al. 1994): PR with the linear Vidal/MHV1 combination (lambda = 0.36 on
+      the Vidal term, A_V = -0.623, A_M = -0.52) over original UNIFAC (thermo unifac variant)'
+    provenance: Boukouvalas, C., Spiliotis, N., Coutsikos, P., Tzouvaras, N. & Tassios, D., "Prediction of
+      vapor-liquid equilibrium with the LCVM model", Fluid Phase Equilib. 92, 75-106, 1994 (alpha = A +
+      (lambda/A_V + (1-lambda)/A_M) gE/RT + ((1-lambda)/A_M) sum x ln(b/b_i), lambda = 0.36, A_V = -0.623,
+      A_M = -0.52 for PR); Michelsen, M. L., Fluid Phase Equilib. 60, 213-219, 1990 (MHV1 reference);
+      k_ij-free form - the gE model carries all interaction information
   applicability:
     component_classes:
     - alcohol
@@ -562,8 +563,8 @@
   - lcvm-meohh2o-101.325kPa-349.05K
   - lcvm-meohh2o-312.91K-20.705kPa
   references:
-  - Boukouvalas, C. J., Spiliotis, N., Coutsikos, P., Tzoupanekos, N. & Magoulas, K., Fluid Phase Equilib.
-    92, 75-89, 1994
+  - Boukouvalas, C., Spiliotis, N., Coutsikos, P., Tzouvaras, N. & Tassios, D., Fluid Phase Equilib.
+    92, 75-106, 1994
   - Michelsen, M. L., Fluid Phase Equilib. 60, 213-219, 1990
   l0: {}
   l0_excluded: {}
