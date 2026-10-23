@@ -356,7 +356,15 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
                 k_misses=k_misses,
             )
         residuals = _ns_residual_function(
-            col, tb, l0, k_stages, t_bot_tear, pass_scales, k_cache, k_misses, h_evals,
+            col,
+            tb,
+            l0,
+            k_stages,
+            t_bot_tear,
+            pass_scales,
+            k_cache,
+            k_misses,
+            h_evals,
             y_estimates=y_seeds,
         )
         r0 = residuals(u)
