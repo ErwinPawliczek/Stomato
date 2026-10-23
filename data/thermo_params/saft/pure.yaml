@@ -107,6 +107,7 @@ cpa_srk:
 cpa_pr:
   H2O:
     scheme: 4C
+    Tc: 647.3          # K, Sorensen et al. 2018 Table 6
     a0: 0.15782        # Pa m6/mol2
     b: 1.4788e-5       # m3/mol
     c1: 0.6736
@@ -115,6 +116,7 @@ cpa_pr:
     sites: [d, d, a, a]
   MeOH:
     scheme: 2B
+    Tc: 512.6          # K, Sorensen et al. 2018 Table 6
     a0: 0.53485
     b: 3.2112e-5
     c1: 0.4310

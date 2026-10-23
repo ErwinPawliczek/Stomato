@@ -499,7 +499,8 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
         block = _require_params("cpa_pr", cids)
         # Tc from the resolved component records (the cpa_srk pattern); the paper's
         # Table 6 carries the a0/b/c1 fit and the association parameters only.
-        tcs = [float(resolve(cid).Tc) for cid in cids]
+        # The paper's own Tc (Table 6), not the databank's: a0/c1 were fitted with it.
+        tcs = [float(block[cid]["Tc"]) for cid in cids]
         params = [block[cid] | {"name": cid} for cid in cids]
         kij_table = block.get("binary_kij") or {}
         return _CpaPrKernel(kind, params, tcs, kij_table)
