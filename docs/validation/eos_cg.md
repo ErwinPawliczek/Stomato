@@ -19,7 +19,7 @@ family `helmholtz` · status **experimental** · adapter `ngdesign.thermo.helmho
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-Note: Placeholder row: the method is recorded, not implemented (teqp candidate, T-07). What would make it real: an in-house EOS-CG implementation from the open Kunz & Wagner 2012 formulation paper, or teqp multifluid support for its fluid files; no licence blocks it.
+Note: Refusal row: EOS-CG is not implemented - the formulation is open (Gernert & Span 2016, J. Chem. Thermodyn. 93, 274-293), but the complete fluid parameter and departure-function tables ship only in the publisher's paywalled supplement, no open supplement was confirmed in the sources checked 2026-10-23, teqp does not ship EOS-CG fluid/departure files, and CoolProp issue #3277 requests exactly this missing support. What would change it: an openly redistributable parameter table or a licence that permits transcription of the full supplement.
 
 ## L1/L2 reference-case outcomes
 
@@ -27,4 +27,4 @@ None yet — validation case ids arrive with the data tasks (T-11..T-13).
 
 ## References
 
-- Gernert, J., Span, R., 'EOS-CG: A Helmholtz energy mixture model for humid combustion gases', Chem. Eng. Sci. 148, 59-74, 2016 (no implementation in this repo; the row is a catalogue placeholder and every property call raises UnavailableBackend)
+- Gernert, J., Span, R., 'EOS-CG: A Helmholtz energy mixture model for humid combustion gases', J. Chem. Thermodyn. 93, 274-293, 2016 (the formulation paper; the parameter tables live in its supplement, which is publisher-paywalled). no implementation in this repo; the row is a catalogue placeholder and every property call raises UnavailableBackend

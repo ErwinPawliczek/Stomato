@@ -42,6 +42,72 @@ from .thermo_adapter import _flash_ready, _ThermoBox
 _NS_LM_TRIES = 6
 
 
+def _reactive_trial_seeds(
+    col: _Column,
+    tb: _ThermoBox,
+    l0: float,
+    xs: list[dict[str, float]],
+    ts: list[float],
+    vs: list[float],
+    y_reference: list[dict[str, float]],
+    k_fallbacks: list[dict[str, float]],
+    seed_cache: dict[
+        tuple[tuple[tuple[str, float], ...], float, float, tuple[tuple[str, float], ...]],
+        dict[str, float],
+    ],
+    k_misses: list[int],
+) -> list[dict[str, float]]:
+    """Vapour seeds for one residual evaluation, computed AT the trial state.
+
+    P1-11 R1 (ruling on #153): on the reactive package the stage-K vapour seed
+    enters the loading walk, so a residual evaluated with seeds frozen at the
+    pass's reference state sits on a different K surface than the exact gate,
+    which refreshes its seeds at the state it gates. Newton then linearises -
+    and descends - a residual the gate never reads (measured 20-stage MDEA
+    absorber, exothermic reference: warm-started NS descended its internal
+    rows to M = 7.8e-6 while the pass-5 seed refresh threw the exact energy
+    residual back to ~1e-1; cold, the FD Jacobian went singular at pass 1).
+    One loading-walk fixed-point iteration from the pass's reference y,
+    evaluated at the trial state itself: the seed responds to the trial's T
+    and x the way the gate's refreshed y = K*x does at the applied state, so
+    the FD Jacobian linearises the exact live residual the gate reads.
+
+    Deterministic in the trial state - a fixed iteration count from a
+    per-pass-frozen reference - which is what the finite-difference
+    directional derivative requires. The extra K evaluations go through their
+    own cache: the shared ``k_cache`` is keyed WITHOUT the seed, so sharing it
+    would return reference-seeded values for trial-seeded queries. The price
+    of linearising the gate's surface is a second round of stage flashes per
+    residual evaluation, reactive path only.
+
+    Returns the per-stage seed list (never None entries: the candidate chain
+    ends at the caller's pass-frozen K models, so the y = K*x construction is
+    always evaluable - matching `_refresh_y`'s fallback chain).
+    """
+    liquid = _l_profile(col, l0, vs)
+    out: list[dict[str, float]] = []
+    for j in range(col.n):
+        key = (
+            tuple(sorted(xs[j].items())),
+            round(ts[j], 12),
+            col.pressures[j],
+            tuple(sorted(y_reference[j].items())),
+        )
+        k = seed_cache.get(key)
+        if k is None:
+            k_misses[0] += 1
+            k = (
+                _stage_k_values(col, tb, j, xs[j], y_reference[j], ts[j], liquid[j], vs[j])
+                or tb.k_estimate(_flash_ready(xs[j], col.feed_comp), ts[j], col.pressures[j])
+                or k_fallbacks[j]
+            )
+            seed_cache[key] = k
+        y = {cid: k.get(cid, 1.0) * xs[j].get(cid, 0.0) for cid in col.comps}
+        total = sum(y.values())
+        out.append({cid: v / total for cid, v in y.items()} if total > _FLOW_FLOOR else y)
+    return out
+
+
 def _fd_jacobian(
     residuals: Callable[[list[float]], list[float]], r0: list[float], u: list[float], n_unk: int
 ) -> list[list[float]] | None:
@@ -174,6 +240,12 @@ def _ns_residual_function(
     k_misses: list[int],
     h_evals: list[int],
     y_estimates: list[dict[str, float]] | None = None,
+    y_reference: list[dict[str, float]] | None = None,
+    seed_cache: dict[
+        tuple[tuple[tuple[str, float], ...], float, float, tuple[tuple[str, float], ...]],
+        dict[str, float],
+    ]
+    | None = None,
 ) -> Callable[[list[float]], list[float]]:
     """Build the residual callable for one Newton pass (fresh closures per pass).
 
@@ -186,6 +258,17 @@ def _ns_residual_function(
     achieved reduction match what the linear model predicted?") is asked on one
     residual by construction. No frozen enthalpy lines and no absolute rows
     remain in NS.
+
+    ``y_reference`` + ``seed_cache`` (P1-11 R1, ruling on #153): on the reactive
+    package the pass-frozen ``y_estimates`` snapshot leaves the loading walk
+    seeded at the reference state while the trials move - Newton's linear model
+    aligned with a residual the gate never reads (measured exothermic absorber:
+    FD-singular at pass 1 cold; warm, M = 7.8e-6 on the internal rows vs ~1e-1
+    exact after the pass-5 seed refresh). When both are set, every residual
+    evaluation derives its seeds AT the state being evaluated (one loading-walk
+    iteration from the frozen reference - `_reactive_trial_seeds`), so the
+    Jacobian, the line search and the acceptance norm all read the exact
+    gate's own surface. Scoped to the reactive live-norm path by the caller.
 
     ``scales`` (P1-11 ruling (c) on #153): the pass's FROZEN per-row M scale
     vector, computed by the caller from the pass's reference state (the iterate
@@ -325,6 +408,10 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
         h_evals = [0]
         pass_scales: list[float] | None = None
         y_seeds: list[dict[str, float]] | None = None
+        seed_cache: dict[
+            tuple[tuple[tuple[str, float], ...], float, float, tuple[tuple[str, float], ...]],
+            dict[str, float],
+        ] = {}
         if live_norm and _is_reactive_package(tb):
             # P1-11 step 3 (ruling on #153): the exact gate reads its K surface
             # with the profile's refreshed y = K*x as the stage-K vapour seed,
@@ -366,6 +453,8 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
             k_misses,
             h_evals,
             y_estimates=y_seeds,
+            y_reference=y_seeds,
+            seed_cache=seed_cache if y_seeds is not None else None,
         )
         r0 = residuals(u)
         # The pass gate must carry exact-residual semantics, not the NS residual's.

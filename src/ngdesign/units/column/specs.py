@@ -100,7 +100,51 @@ def _reject_band_limit(col: _Column, prof: _Profile) -> None:
         )
 
 
+#: Heat-of-reaction continuation ladder for cold reactive zero/one-tear mesh
+#: solves (P1-11 R1, ruling on #153).  Measured justification: with the exact-
+#: residual Jacobian (seeds evaluated at each trial state), Naphtali–Sandholm
+#: still cannot close the exothermic absorber directly - cold, the first pass's
+#: damped solves go singular; warm, the max-norm acceptance trades M blow-ups
+#: for a ~5 %/pass H crawl that stalls near 0.02 after 29 passes, far from the
+#: 1e-2 gate.  The ladder warm-chains converged profiles across heat-scale
+#: fractions so each step's energy shift (~0.026 normalized at 0.25) is inside
+#: NS's measured warm-descent reach.  Generic: it drives whatever heat-scale
+#: capability the thermo instance exposes and is a no-op without one.
+_CONTINUATION_SCALES: tuple[float, ...] = (0.0, 0.25, 0.5, 0.75, 1.0)
+
+
 def _solve_mesh(
+    col: _Column,
+    tb: _ThermoBox,
+    t_top: float | None,
+    t_bot: float | None,
+    seed: _Profile | None,
+    allow_fallback: bool = True,
+) -> _Profile:
+    """Mesh entry: dispatch cold reactive zero/one-tear solves to the continuation.
+
+    A cold solve (``seed is None``) on a reactive zero/one-tear column walks the
+    thermo's ``_heat_scale`` capability up ``_CONTINUATION_SCALES``, warm-chaining
+    each converged profile into the next step; everything else (warm seeds,
+    two-tear columns, packages without the capability) solves directly at the
+    current scale, byte-identical to the un-continued path.
+    """
+    thermo = getattr(tb, "_thermo", tb)
+    if col.n_tears < 2 and seed is None and _is_reactive_package(tb) and hasattr(thermo, "_heat_scale"):
+        original = thermo._heat_scale
+        prof: _Profile | None = None
+        try:
+            for scale in _CONTINUATION_SCALES:
+                thermo._heat_scale = scale
+                prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, prof, allow_fallback)
+            assert prof is not None
+            return prof
+        finally:
+            thermo._heat_scale = original
+    return _solve_mesh_at_heat(col, tb, t_top, t_bot, seed, allow_fallback)
+
+
+def _solve_mesh_at_heat(
     col: _Column,
     tb: _ThermoBox,
     t_top: float | None,

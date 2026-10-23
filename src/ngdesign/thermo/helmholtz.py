@@ -1144,7 +1144,9 @@ _BWRS_COMPONENTS: Final[dict[str, str]] = {
 
 #: Starling's eleven BWRS parameters per compound, imperial basis, transcribed
 #: from ORO-5249-2 (1976) Table 5 (column scale factors applied): the table's
-#: C0 and c are x1e-8, D0 and E0 are x1e-10, d is x1e-4. Methane and nitrogen
+#: C0 and c are x1e-8, D0 and E0 are x1e-10, d is x1e-4. All ten rows were
+#: digit-verified against the printed Table 5 (p. B-16 of the OSTI scan,
+#: 200-dpi page image, 2026-10-23): zero discrepancies. Methane and nitrogen
 #: rows were additionally verified against the scratch Helmholtz implementation
 #: this package ports (a_res vs numerical density integral, ln phi_i vs finite
 #: differences of N*a_res at fixed T, V).

@@ -60,7 +60,7 @@ packages = ["src/ngdesign"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q -n auto --timeout=120 -p no:cacheprovider"
+addopts = "-q -n auto --dist loadgroup --timeout=120 -p no:cacheprovider"
 markers = [
     "slice: end-to-end vertical slice (S-35, landed)",
 ]
