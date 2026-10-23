@@ -41,7 +41,7 @@ pure_cases:
 - id: pure-C1-95.3K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:bwrs
+  package: mbwr
   components:
   - C1
   z:
@@ -57,7 +57,7 @@ pure_cases:
 - id: pure-C1-125.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:bwrs
+  package: mbwr
   components:
   - C1
   z:
@@ -73,7 +73,7 @@ pure_cases:
 - id: pure-C1-155.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:bwrs
+  package: mbwr
   components:
   - C1
   z:
@@ -89,7 +89,7 @@ pure_cases:
 - id: pure-C1-172.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:bwrs
+  package: mbwr
   components:
   - C1
   z:
@@ -105,7 +105,7 @@ pure_cases:
 - id: pure-C1-181.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: pending:bwrs
+  package: mbwr
   components:
   - C1
   z:
@@ -118,6 +118,150 @@ pure_cases:
     rho_V: 64.52258944445151
     rho_L: 271.9129243864554
     Cp: 124.1390921872483
+- id: pure-C2-110.0K
+  fluid: C2
+  coolprop_fluid: C2H6
+  package: mbwr
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 110.0
+  source: coolprop:C2H6
+  expected:
+    bubble_P: 74.28702768793251
+    dew_P: 74.28702768793251
+    rho_V: 0.002442630853798281
+    rho_L: 629.9759086141128
+    Cp: 68.35101862239259
+- id: pure-C2-150.0K
+  fluid: C2
+  coolprop_fluid: C2H6
+  package: mbwr
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 150.0
+  source: coolprop:C2H6
+  expected:
+    bubble_P: 9637.999311486175
+    dew_P: 9637.999311486175
+    rho_V: 0.2337330514473684
+    rho_L: 585.1688376925943
+    Cp: 70.13894884960538
+- id: pure-C2-230.0K
+  fluid: C2
+  coolprop_fluid: C2H6
+  package: mbwr
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 230.0
+  source: coolprop:C2H6
+  expected:
+    bubble_P: 700182.3997941298
+    dew_P: 700182.3997941298
+    rho_V: 12.676274475640321
+    rho_L: 481.2905678767953
+    Cp: 82.22145360068032
+- id: pure-C3-150.0K
+  fluid: C3
+  coolprop_fluid: C3H8
+  package: mbwr
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 150.0
+  source: coolprop:C3H8
+  expected:
+    bubble_P: 283.4471521186511
+    dew_P: 283.4471521186511
+    rho_V: 0.010025738233684666
+    rho_L: 667.4575177037098
+    Cp: 88.45687743556338
+- id: pure-C3-231.0K
+  fluid: C3
+  coolprop_fluid: C3H8
+  package: mbwr
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 231.0
+  source: coolprop:C3H8
+  expected:
+    bubble_P: 101163.24473203377
+    dew_P: 101163.24473203377
+    rho_V: 2.4125508886016656
+    rho_L: 580.9247802466018
+    Cp: 99.03334174667786
+- id: pure-C3-300.0K
+  fluid: C3
+  coolprop_fluid: C3H8
+  package: mbwr
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 300.0
+  source: coolprop:C3H8
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+- id: bwr_ls-C1-155.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: bwr_ls
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 155.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 1295003.4509910743
+    dew_P: 1295003.4509910743
+    rho_V: 20.418904925344048
+    rho_L: 347.5068280431007
+    Cp: 67.6128793208551
+- id: bwr_ls-C2-230.0K
+  fluid: C2
+  coolprop_fluid: C2H6
+  package: bwr_ls
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 230.0
+  source: coolprop:C2H6
+  expected:
+    bubble_P: 700182.3997941298
+    dew_P: 700182.3997941298
+    rho_V: 12.676274475640321
+    rho_L: 481.2905678767953
+    Cp: 82.22145360068032
+- id: bwr_ls-C3-300.0K
+  fluid: C3
+  coolprop_fluid: C3H8
+  package: bwr_ls
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 300.0
+  source: coolprop:C3H8
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
 - id: pure-CO2-216.7K
   fluid: CO2
   coolprop_fluid: CO2
@@ -421,6 +565,167 @@ pure_cases:
 # Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML
 # (doi 10.1021/je700210n), CH4(1)+N2(2) isothermal VLE: liquid x_N2 with the coexisting
 # pressure and vapour y_N2 from the paired property tables, retrieved 2026-10-21.
+
+- id: mbwr-C1-95.3K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: mbwr
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 95.3
+  source: coolprop:CH4
+  expected:
+    bubble_P: 20516.959456238896
+    dew_P: 20516.959456238896
+    rho_V: 0.4202352992283802
+    rho_L: 445.30073366872654
+    Cp: 54.315463111257486
+- id: mbwr-C1-125.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: mbwr
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+- id: mbwr-C1-155.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: mbwr
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 155.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 1295003.4509910743
+    dew_P: 1295003.4509910743
+    rho_V: 20.418904925344048
+    rho_L: 347.5068280431007
+    Cp: 67.6128793208551
+- id: mbwr-C1-181.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: mbwr
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 181.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 3394772.10519219
+    dew_P: 3394772.10519219
+    rho_V: 64.52258944445151
+    rho_L: 271.9129243864554
+    Cp: 124.1390921872483
+- id: mbwr-C2-110.0K
+  fluid: C2
+  coolprop_fluid: Ethane
+  package: mbwr
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 110.0
+  source: coolprop:Ethane
+  expected:
+    bubble_P: 74.28702768793251
+    dew_P: 74.28702768793251
+    rho_V: 0.002442630853798281
+    rho_L: 629.9759086141128
+    Cp: 68.35101862239259
+- id: mbwr-C2-150.0K
+  fluid: C2
+  coolprop_fluid: Ethane
+  package: mbwr
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 150.0
+  source: coolprop:Ethane
+  expected:
+    bubble_P: 9637.999311486175
+    dew_P: 9637.999311486175
+    rho_V: 0.2337330514473684
+    rho_L: 585.1688376925943
+    Cp: 70.13894884960538
+- id: mbwr-C2-230.0K
+  fluid: C2
+  coolprop_fluid: Ethane
+  package: mbwr
+  components:
+  - C2
+  z:
+    C2: 1.0
+  T: 230.0
+  source: coolprop:Ethane
+  expected:
+    bubble_P: 700182.3997941298
+    dew_P: 700182.3997941298
+    rho_V: 12.676274475640321
+    rho_L: 481.2905678767953
+    Cp: 82.22145360068032
+- id: mbwr-C3-150.0K
+  fluid: C3
+  coolprop_fluid: Propane
+  package: mbwr
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 150.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 283.4471521186511
+    dew_P: 283.4471521186511
+    rho_V: 0.010025738233684666
+    rho_L: 667.4575177037098
+    Cp: 88.45687743556338
+- id: mbwr-C3-231.0K
+  fluid: C3
+  coolprop_fluid: Propane
+  package: mbwr
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 231.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 101163.24473203377
+    dew_P: 101163.24473203377
+    rho_V: 2.4125508886016656
+    rho_L: 580.9247802466018
+    Cp: 99.03334174667786
+- id: mbwr-C3-300.0K
+  fluid: C3
+  coolprop_fluid: Propane
+  package: mbwr
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
 
 binary_cases:
 - id: c1n2-130.079K-0.614MPa

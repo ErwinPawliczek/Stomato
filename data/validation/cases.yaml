@@ -1043,6 +1043,20 @@ binary_cases:
     bubble_P: 689000.0
     vapor_comp:
       C1: 0.2034
+- id: bwr_ls-c1c3-277.59K
+  package: bwr_ls
+  components:
+  - C1
+  - C3
+  z:
+    C1: 0.0099
+    C3: 0.9901
+  T: 277.59
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20
+  expected:
+    bubble_P: 689000.0
+    vapor_comp:
+      C1: 0.2034
 - id: c1c3-277.59K-1.724MPa
   package: all
   components:

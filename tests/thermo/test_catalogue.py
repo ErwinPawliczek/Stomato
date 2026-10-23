@@ -20,6 +20,7 @@ from ngdesign.amine.electrolyte import (
 from ngdesign.amine.package import AmineENRTLPackage, AmineKEPackage
 from ngdesign.thermo import catalogue
 from ngdesign.thermo.aga8 import Aga8Dc92Package
+from ngdesign.thermo.bwr import BWRLeeStarlingPackage, MBWR32Package
 from ngdesign.thermo.catalogue import CatalogueError, ModelRow, load_catalogue
 from ngdesign.thermo.helmholtz import (
     ASMESteamPackage,
@@ -214,8 +215,8 @@ def test_rows_load_and_build() -> None:
         "asme_steam": ASMESteamPackage,
         "eos_cg": UnavailablePackage,
         "aga8_dc92": Aga8Dc92Package,
-        "mbwr": UnavailablePackage,
-        "bwr_ls": UnavailablePackage,
+        "mbwr": MBWR32Package,
+        "bwr_ls": BWRLeeStarlingPackage,
         # kvalue family (T-05)
         "chao-seader": ChaoSeaderThermo,
         "grayson-streed": GraysonStreedThermo,

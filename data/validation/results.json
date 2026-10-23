@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-10-23T17:12:30+00:00",
+    "generated": "2026-10-23T20:00:43+00:00",
     "python": "3.14.7",
     "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "172fa97",
+    "git_rev": "e5d781f",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 2237,
-    "n_pass": 1676
+    "n_comparisons": 2359,
+    "n_pass": 1795
   },
   "rows": [
     {
@@ -6048,6 +6048,24 @@
       "expected": 0.2034,
       "got": 0.18632122169836984,
       "rel_err": 0.017078778301630154,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-c1c3-277.59K",
+      "package": "bwr_ls",
+      "property": "bubble_P",
+      "expected": 689000.0,
+      "got": 697556.6202065737,
+      "rel_err": 0.012418897251921256,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-c1c3-277.59K",
+      "package": "bwr_ls",
+      "property": "vapor_comp",
+      "expected": 0.2034,
+      "got": 0.1983532846610173,
+      "rel_err": 0.00504671533898271,
       "pass": true
     },
     {
@@ -14340,6 +14358,636 @@
       "pass": true
     },
     {
+      "case": "pure-C1-95.3K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 20516.959456238896,
+      "got": 20614.692226144947,
+      "rel_err": 0.00476351138259585,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-95.3K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 20516.959456238896,
+      "got": 20614.692226144947,
+      "rel_err": 0.00476351138259585,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-95.3K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 0.4202352992283802,
+      "got": 0.42029115374727005,
+      "rel_err": 0.00013291248734316165,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-95.3K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 445.30073366872654,
+      "got": 445.4988478866053,
+      "rel_err": 0.00044489982364623076,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-95.3K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 54.315463111257486,
+      "got": 53.687959425305735,
+      "rel_err": 0.011552947356195775,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-125.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 269367.7506478873,
+      "rel_err": 0.002269503600298247,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-125.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 269367.7506478873,
+      "rel_err": 0.002269503600298247,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-125.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.468238749031458,
+      "rel_err": 0.0002965892092042888,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-125.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 402.3705183620442,
+      "rel_err": 0.0006464282275991523,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-125.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 57.6780528126701,
+      "rel_err": 0.0010927071065555704,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-155.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 1295003.4509910743,
+      "got": 1296576.4948164048,
+      "rel_err": 0.0012147024196163996,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-155.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 1295003.4509910743,
+      "got": 1296576.4948164048,
+      "rel_err": 0.0012147024196163996,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-155.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 20.418904925344048,
+      "got": 20.42880139990148,
+      "rel_err": 0.0004846721503242447,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-155.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 347.5068280431007,
+      "got": 347.9034267037931,
+      "rel_err": 0.0011412686850665718,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-155.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 67.6128793208551,
+      "got": 67.76108682631595,
+      "rel_err": 0.002192001094311205,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-172.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 2500733.3980837795,
+      "got": 2502364.1169840144,
+      "rel_err": 0.0006520962616344727,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-172.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 2500733.3980837795,
+      "got": 2502364.1169840144,
+      "rel_err": 0.0006520962616344727,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-172.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 42.51387462698286,
+      "got": 42.557064526627265,
+      "rel_err": 0.0010159012798375102,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-172.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 304.5590510326234,
+      "got": 304.8833719347189,
+      "rel_err": 0.0010648867633251443,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-172.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 87.12993462434143,
+      "got": 87.32971095484541,
+      "rel_err": 0.002292855278330122,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-181.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 3394772.10519219,
+      "got": 3396161.8831987907,
+      "rel_err": 0.0004093877183905991,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-181.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 3394772.10519219,
+      "got": 3396161.8831987907,
+      "rel_err": 0.0004093877183905991,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-181.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 64.52258944445151,
+      "got": 64.62345358845563,
+      "rel_err": 0.0015632376950859316,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-181.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 271.9129243864554,
+      "got": 272.1861620815098,
+      "rel_err": 0.001004872040087504,
+      "pass": true
+    },
+    {
+      "case": "pure-C1-181.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 124.1390921872483,
+      "got": 124.67639938435096,
+      "rel_err": 0.004328267491212217,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-110.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 74.28702768793251,
+      "got": 74.57608286395683,
+      "rel_err": 0.003891058574029812,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-110.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 74.28702768793251,
+      "got": 74.57608286395683,
+      "rel_err": 0.003891058574029812,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-110.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 0.002442630853798281,
+      "got": 0.002442778976814566,
+      "rel_err": 6.064077019844813e-05,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-110.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 629.9759086141128,
+      "got": 630.2396880008271,
+      "rel_err": 0.0004187134509549646,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-110.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 68.35101862239259,
+      "got": 69.72187337947086,
+      "rel_err": 0.02005609842702723,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-150.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 9637.999311486175,
+      "got": 9674.485176893424,
+      "rel_err": 0.0037856264799444703,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-150.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 9637.999311486175,
+      "got": 9674.485176893424,
+      "rel_err": 0.0037856264799444703,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-150.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 0.2337330514473684,
+      "got": 0.23380733956508187,
+      "rel_err": 0.00031783317444179093,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-150.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 585.1688376925943,
+      "got": 585.5575912156072,
+      "rel_err": 0.0006643441994380001,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-150.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 70.13894884960538,
+      "got": 70.52511466741663,
+      "rel_err": 0.005505725764999385,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-230.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 700182.3997941298,
+      "got": 699713.6859637982,
+      "rel_err": 0.000669416755504546,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-230.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 700182.3997941298,
+      "got": 699713.6859637982,
+      "rel_err": 0.000669416755504546,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-230.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 12.676274475640321,
+      "got": 12.686479507336834,
+      "rel_err": 0.0008050497578072914,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-230.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 481.2905678767953,
+      "got": 481.4122726988916,
+      "rel_err": 0.0002528718205162796,
+      "pass": true
+    },
+    {
+      "case": "pure-C2-230.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 82.22145360068032,
+      "got": 81.89662115023782,
+      "rel_err": 0.003950701869369678,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-150.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 283.4471521186511,
+      "got": 282.2774931357456,
+      "rel_err": 0.004126550484500486,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-150.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 283.4471521186511,
+      "got": 282.2774931357456,
+      "rel_err": 0.004126550484500486,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-150.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 0.010025738233684666,
+      "got": 0.010027224912764277,
+      "rel_err": 0.00014828624535752143,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-150.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 667.4575177037098,
+      "got": 667.8154797290491,
+      "rel_err": 0.0005363068297902727,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-150.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 88.45687743556338,
+      "got": 88.20603567162834,
+      "rel_err": 0.0028357519642016405,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-231.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 101163.24473203377,
+      "got": 101033.53880963792,
+      "rel_err": 0.0012821447427810463,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-231.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 101163.24473203377,
+      "got": 101033.53880963792,
+      "rel_err": 0.0012821447427810463,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-231.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 2.4125508886016656,
+      "got": 2.415567269192222,
+      "rel_err": 0.001250286824956821,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-231.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 580.9247802466018,
+      "got": 581.3130027587605,
+      "rel_err": 0.0006682836149524852,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-231.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 99.03334174667786,
+      "got": 98.94604409820253,
+      "rel_err": 0.0008814975536080657,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-300.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997420.1721966107,
+      "rel_err": 0.0002630575996322153,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-300.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997420.1721966107,
+      "rel_err": 0.0002630575996322153,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-300.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.660678346249508,
+      "rel_err": 0.0014399908310880809,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-300.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 489.54780745612743,
+      "rel_err": 0.00020519510216388117,
+      "pass": true
+    },
+    {
+      "case": "pure-C3-300.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 121.45467235661822,
+      "rel_err": 0.0053800250977852045,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C1-155.0K",
+      "package": "bwr_ls",
+      "property": "bubble_P",
+      "expected": 1295003.4509910743,
+      "got": 1293835.6473545034,
+      "rel_err": 0.0009017764668327326,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C1-155.0K",
+      "package": "bwr_ls",
+      "property": "dew_P",
+      "expected": 1295003.4509910743,
+      "got": 1293835.6473545034,
+      "rel_err": 0.0009017764668327326,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C1-155.0K",
+      "package": "bwr_ls",
+      "property": "rho_V",
+      "expected": 20.418904925344048,
+      "got": 20.387263214146746,
+      "rel_err": 0.0015496282152736096,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C1-155.0K",
+      "package": "bwr_ls",
+      "property": "rho_L",
+      "expected": 347.5068280431007,
+      "got": 348.661527515117,
+      "rel_err": 0.003322810888403741,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C1-155.0K",
+      "package": "bwr_ls",
+      "property": "Cp",
+      "expected": 67.6128793208551,
+      "got": -38425.475370124,
+      "rel_err": 569.3159148980616,
+      "pass": false
+    },
+    {
+      "case": "bwr_ls-C2-230.0K",
+      "package": "bwr_ls",
+      "property": "bubble_P",
+      "expected": 700182.3997941298,
+      "got": 704813.4780455037,
+      "rel_err": 0.006614102629165773,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C2-230.0K",
+      "package": "bwr_ls",
+      "property": "dew_P",
+      "expected": 700182.3997941298,
+      "got": 704813.4780455037,
+      "rel_err": 0.006614102629165773,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C2-230.0K",
+      "package": "bwr_ls",
+      "property": "rho_V",
+      "expected": 12.676274475640321,
+      "got": 12.767784104384884,
+      "rel_err": 0.007218968705704048,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C2-230.0K",
+      "package": "bwr_ls",
+      "property": "rho_L",
+      "expected": 481.2905678767953,
+      "got": 480.9093463062381,
+      "rel_err": 0.0007920819479986234,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C2-230.0K",
+      "package": "bwr_ls",
+      "property": "Cp",
+      "expected": 82.22145360068032,
+      "got": -97565.23456281523,
+      "rel_err": 1187.6152967406058,
+      "pass": false
+    },
+    {
+      "case": "bwr_ls-C3-300.0K",
+      "package": "bwr_ls",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 992318.0832663354,
+      "rel_err": 0.00537699747090517,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C3-300.0K",
+      "package": "bwr_ls",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 992318.0832663354,
+      "rel_err": 0.00537699747090517,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C3-300.0K",
+      "package": "bwr_ls",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.82379476590161,
+      "rel_err": 0.008981366183678773,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C3-300.0K",
+      "package": "bwr_ls",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 489.69431925399226,
+      "rel_err": 0.0005045363700364703,
+      "pass": true
+    },
+    {
+      "case": "bwr_ls-C3-300.0K",
+      "package": "bwr_ls",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": -62396.92422281076,
+      "rel_err": 517.5105633561549,
+      "pass": false
+    },
+    {
       "case": "pure-CO2-216.7K",
       "package": "gerg2008",
       "property": "bubble_P",
@@ -15093,6 +15741,456 @@
       "expected": 125.352,
       "got": 125.35120380342467,
       "rel_err": 6.351686254201719e-06,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-95.3K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 20516.959456238896,
+      "got": 20614.692226144947,
+      "rel_err": 0.00476351138259585,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-95.3K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 20516.959456238896,
+      "got": 20614.692226144947,
+      "rel_err": 0.00476351138259585,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-95.3K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 0.4202352992283802,
+      "got": 0.42029115374727005,
+      "rel_err": 0.00013291248734316165,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-95.3K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 445.30073366872654,
+      "got": 445.4988478866053,
+      "rel_err": 0.00044489982364623076,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-95.3K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 54.315463111257486,
+      "got": 53.687959425305735,
+      "rel_err": 0.011552947356195775,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-125.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 268757.80384445406,
+      "got": 269367.7506478873,
+      "rel_err": 0.002269503600298247,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-125.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 268757.80384445406,
+      "got": 269367.7506478873,
+      "rel_err": 0.002269503600298247,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-125.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 4.466913910567139,
+      "got": 4.468238749031458,
+      "rel_err": 0.0002965892092042888,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-125.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 402.1105827307507,
+      "got": 402.3705183620442,
+      "rel_err": 0.0006464282275991523,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-125.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 57.7411469743096,
+      "got": 57.6780528126701,
+      "rel_err": 0.0010927071065555704,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-155.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 1295003.4509910743,
+      "got": 1296576.4948164048,
+      "rel_err": 0.0012147024196163996,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-155.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 1295003.4509910743,
+      "got": 1296576.4948164048,
+      "rel_err": 0.0012147024196163996,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-155.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 20.418904925344048,
+      "got": 20.42880139990148,
+      "rel_err": 0.0004846721503242447,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-155.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 347.5068280431007,
+      "got": 347.9034267037931,
+      "rel_err": 0.0011412686850665718,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-155.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 67.6128793208551,
+      "got": 67.76108682631595,
+      "rel_err": 0.002192001094311205,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-181.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 3394772.10519219,
+      "got": 3396161.8831987907,
+      "rel_err": 0.0004093877183905991,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-181.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 3394772.10519219,
+      "got": 3396161.8831987907,
+      "rel_err": 0.0004093877183905991,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-181.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 64.52258944445151,
+      "got": 64.62345358845563,
+      "rel_err": 0.0015632376950859316,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-181.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 271.9129243864554,
+      "got": 272.1861620815098,
+      "rel_err": 0.001004872040087504,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C1-181.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 124.1390921872483,
+      "got": 124.67639938435096,
+      "rel_err": 0.004328267491212217,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-110.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 74.28702768793251,
+      "got": 74.57608286395683,
+      "rel_err": 0.003891058574029812,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-110.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 74.28702768793251,
+      "got": 74.57608286395683,
+      "rel_err": 0.003891058574029812,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-110.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 0.002442630853798281,
+      "got": 0.002442778976814566,
+      "rel_err": 6.064077019844813e-05,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-110.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 629.9759086141128,
+      "got": 630.2396880008271,
+      "rel_err": 0.0004187134509549646,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-110.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 68.35101862239259,
+      "got": 69.72187337947086,
+      "rel_err": 0.02005609842702723,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-150.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 9637.999311486175,
+      "got": 9674.485176893424,
+      "rel_err": 0.0037856264799444703,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-150.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 9637.999311486175,
+      "got": 9674.485176893424,
+      "rel_err": 0.0037856264799444703,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-150.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 0.2337330514473684,
+      "got": 0.23380733956508187,
+      "rel_err": 0.00031783317444179093,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-150.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 585.1688376925943,
+      "got": 585.5575912156072,
+      "rel_err": 0.0006643441994380001,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-150.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 70.13894884960538,
+      "got": 70.52511466741663,
+      "rel_err": 0.005505725764999385,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-230.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 700182.3997941298,
+      "got": 699713.6859637982,
+      "rel_err": 0.000669416755504546,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-230.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 700182.3997941298,
+      "got": 699713.6859637982,
+      "rel_err": 0.000669416755504546,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-230.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 12.676274475640321,
+      "got": 12.686479507336834,
+      "rel_err": 0.0008050497578072914,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-230.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 481.2905678767953,
+      "got": 481.4122726988916,
+      "rel_err": 0.0002528718205162796,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C2-230.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 82.22145360068032,
+      "got": 81.89662115023782,
+      "rel_err": 0.003950701869369678,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-150.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 283.4471521186511,
+      "got": 282.2774931357456,
+      "rel_err": 0.004126550484500486,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-150.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 283.4471521186511,
+      "got": 282.2774931357456,
+      "rel_err": 0.004126550484500486,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-150.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 0.010025738233684666,
+      "got": 0.010027224912764277,
+      "rel_err": 0.00014828624535752143,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-150.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 667.4575177037098,
+      "got": 667.8154797290491,
+      "rel_err": 0.0005363068297902727,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-150.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 88.45687743556338,
+      "got": 88.20603567162834,
+      "rel_err": 0.0028357519642016405,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-231.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 101163.24473203377,
+      "got": 101033.53880963792,
+      "rel_err": 0.0012821447427810463,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-231.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 101163.24473203377,
+      "got": 101033.53880963792,
+      "rel_err": 0.0012821447427810463,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-231.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 2.4125508886016656,
+      "got": 2.415567269192222,
+      "rel_err": 0.001250286824956821,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-231.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 580.9247802466018,
+      "got": 581.3130027587605,
+      "rel_err": 0.0006682836149524852,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-231.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 99.03334174667786,
+      "got": 98.94604409820253,
+      "rel_err": 0.0008814975536080657,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-300.0K",
+      "package": "mbwr",
+      "property": "bubble_P",
+      "expected": 997682.6201918732,
+      "got": 997420.1721966107,
+      "rel_err": 0.0002630575996322153,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-300.0K",
+      "package": "mbwr",
+      "property": "dew_P",
+      "expected": 997682.6201918732,
+      "got": 997420.1721966107,
+      "rel_err": 0.0002630575996322153,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-300.0K",
+      "package": "mbwr",
+      "property": "rho_V",
+      "expected": 21.629532018462196,
+      "got": 21.660678346249508,
+      "rel_err": 0.0014399908310880809,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-300.0K",
+      "package": "mbwr",
+      "property": "rho_L",
+      "expected": 489.44737525195876,
+      "got": 489.54780745612743,
+      "rel_err": 0.00020519510216388117,
+      "pass": true
+    },
+    {
+      "case": "mbwr-C3-300.0K",
+      "package": "mbwr",
+      "property": "Cp",
+      "expected": 120.80473982443137,
+      "got": 121.45467235661822,
+      "rel_err": 0.0053800250977852045,
       "pass": true
     },
     {

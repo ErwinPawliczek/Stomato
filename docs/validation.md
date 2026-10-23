@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-23T17:22:46+00:00 from `data/validation/results.json` (git 172fa97, CoolProp 8.0.0).
+Generated 2026-10-23T20:12:14+00:00 from `data/validation/results.json` (git e5d781f, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -31,7 +31,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [api-srk](validation/api-srk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/api-srk.md) |
 | [asme_steam](validation/asme_steam.md) | helmholtz | provisional | 6/6 | L1=2 L2=0 | [report](validation/asme_steam.md) |
 | [braun-k10](validation/braun-k10.md) | kvalue | provisional | 6/6 | L1=2 L2=0 | [report](validation/braun-k10.md) |
-| [bwr_ls](validation/bwr_ls.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/bwr_ls.md) |
+| [bwr_ls](validation/bwr_ls.md) | helmholtz | provisional | 7/7 | L1=3 L2=1 | [report](validation/bwr_ls.md) |
 | [bwrs](validation/bwrs.md) | helmholtz | provisional | 7/7 | L1=0 L2=0 | [report](validation/bwrs.md) |
 | [chao-seader](validation/chao-seader.md) | kvalue | validated | 6/6 | L1=3 L2=2 | [report](validation/chao-seader.md) |
 | [coolprop_heos](validation/coolprop_heos.md) | helmholtz | validated | 7/7 | L1=3 L2=2 | [report](validation/coolprop_heos.md) |
@@ -62,7 +62,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [margules_nothnagel](validation/margules_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_nothnagel.md) |
 | [margules_pr](validation/margules_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_pr.md) |
 | [margules_rk](validation/margules_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/margules_rk.md) |
-| [mbwr](validation/mbwr.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/mbwr.md) |
+| [mbwr](validation/mbwr.md) | helmholtz | provisional | 6/6 | L1=10 L2=0 | [report](validation/mbwr.md) |
 | [multifluid](validation/multifluid.md) | saft | provisional | 7/7 | L1=0 L2=5 | [report](validation/multifluid.md) |
 | [multifluid_pure](validation/multifluid_pure.md) | saft | provisional | 6/6 | L1=10 L2=0 | [report](validation/multifluid_pure.md) |
 | [nrtl](validation/nrtl.md) | gamma_phi | provisional | 7/7 | L1=0 L2=21 | [report](validation/nrtl.md) |
@@ -164,7 +164,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 ### Status summary
 
-137 rows: 9 validated, 114 provisional, 14 experimental
+137 rows: 9 validated, 116 provisional, 12 experimental
 
 | provisional row | what keeps it from validated |
 | --- | --- |
@@ -174,6 +174,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [api-srk](validation/api-srk.md) | 7 declared case misses (`assessed:` in the row; see its report) |
 | [asme_steam](validation/asme_steam.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=2 L2=0) |
 | [braun-k10](validation/braun-k10.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=2 L2=0) |
+| [bwr_ls](validation/bwr_ls.md) | 3 declared case misses (`assessed:` in the row; see its report) |
 | [bwrs](validation/bwrs.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [cpa_srk](validation/cpa_srk.md) | 13 declared case misses (`assessed:` in the row; see its report) |
 | [enrtl_nacl_water](validation/enrtl_nacl_water.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
@@ -193,6 +194,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [margules_nothnagel](validation/margules_nothnagel.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [margules_pr](validation/margules_pr.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [margules_rk](validation/margules_rk.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
+| [mbwr](validation/mbwr.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=10 L2=0) |
 | [multifluid](validation/multifluid.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=5) |
 | [multifluid_pure](validation/multifluid_pure.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=10 L2=0) |
 | [nrtl](validation/nrtl.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=21) |
@@ -288,6 +290,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `aga8_dc92`: ok — n/a — refuses the slice feed: Aga8Dc92Error: AGA8 DC92 models gas only: no dew point
 - `antoine-ideal-k`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
 - `braun-k10`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
+- `bwr_ls`: ok — n/a — refuses the slice feed: ComponentNotSupported: BWRLeeStarlingPackage has no parameters for component(s) ['C6+', 'H2O']; supported: ['C1', 'C2', 'C3', 'CO2', 'H2S', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
 - `bwrs`: ok — n/a — refuses the slice feed: ComponentNotSupported: BWRSPackage has no parameters for component(s) ['C6+', 'H2O']; supported: ['C1', 'C2', 'C3', 'CO2', 'H2S', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
 - `chao-seader`: ok — n/a — refuses the slice feed: ValueError: no Chao-Seader/Grayson-Streed regular-solution constants for C6+, H2O; extend data/thermo_params/kvalue/regular_solution.yaml from a cited source (pseudo-components, water and alcohols are outside the correlation's scope)
 - `coolprop_heos`: ok — n/a — refuses the slice feed: ComponentNotSupported: CoolPropPackage has no parameters for component(s) ['C6+']; supported: ['C1', 'C2', 'C3', 'CO2', 'H2O', 'H2S', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
@@ -306,6 +309,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `margules_nothnagel`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_pr`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `margules_rk`: ok — n/a — refuses the slice feed: ValueError: Margules binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/margules/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
+- `mbwr`: ok — n/a — refuses the slice feed: ComponentNotSupported: MBWR32Package has no parameters for component(s) ['C6+', 'CO2', 'H2O', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']; supported: ['C1', 'C2', 'C3']
 - `multifluid`: ok — n/a — refuses the slice feed: SaftParameterError: no verified multifluid parameters for ['H2O']; supported: ['C1', 'C2', 'C3', 'C6+', 'CO2', 'N2', 'iC4', 'iC5', 'nC4', 'nC5'] (unsupported components are refused, never treated as ideal)
 - `multifluid_pure`: ok — n/a — refuses the slice feed: SaftParameterError: multifluid_pure flashes pure fluids only; got ['C1', 'C2', 'C3', 'C6+', 'CO2', 'H2O', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
 - `nrtl`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
@@ -628,6 +632,17 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | K | 2 | 2 | 100.0 % |
 | bubble_P | 2 | 2 | 100.0 % |
 
+### package `bwr_ls` — 14/17 pass (82.4 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| Cp | 3 | 0 | 0.0 % |
+| bubble_P | 4 | 4 | 100.0 % |
+| dew_P | 3 | 3 | 100.0 % |
+| rho_L | 3 | 3 | 100.0 % |
+| rho_V | 3 | 3 | 100.0 % |
+| vapor_comp | 1 | 1 | 100.0 % |
+
 ### package `chao-seader` — 10/10 pass (100.0 %)
 
 | property | n | pass | rate |
@@ -775,6 +790,16 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | bubble_P | 1 | 1 | 100.0 % |
 | bubble_T | 3 | 2 | 66.7 % |
 | vapor_comp | 4 | 4 | 100.0 % |
+
+### package `mbwr` — 105/105 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| Cp | 21 | 21 | 100.0 % |
+| bubble_P | 21 | 21 | 100.0 % |
+| dew_P | 21 | 21 | 100.0 % |
+| rho_L | 21 | 21 | 100.0 % |
+| rho_V | 21 | 21 | 100.0 % |
 
 ### package `multifluid` — 6/7 pass (85.7 %)
 
@@ -1256,10 +1281,13 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_V | 4 | 4 | 100.0 % |
 | vapor_comp | 1 | 1 | 100.0 % |
 
-## Failing comparisons (561)
+## Failing comparisons (564)
 
 | case | package | property | expected | got | err | source |
 | --- | --- | --- | --- | --- | --- | --- |
+| bwr_ls-C2-230.0K | bwr_ls | Cp | 82.2215 | -97565.2 | 1187.62 | coolprop:C2H6 |
+| bwr_ls-C1-155.0K | bwr_ls | Cp | 67.6129 | -38425.5 | 569.316 | coolprop:CH4 |
+| bwr_ls-C3-300.0K | bwr_ls | Cp | 120.805 | -62396.9 | 517.511 | coolprop:C3H8 |
 | vdw-ng-dew-morch-243.4K-0.30MPa | vdw | dew_P | 300000 | 8.16458e+06 | 26.2153 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | rk-ng-dew-morch-254.6K-0.68MPa | rk | dew_P | 680000 | 1.036e+07 | 14.2353 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa | twu-sim-tassone | dew_P | 680000 | 1.00307e+07 | 13.751 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
@@ -1833,6 +1861,9 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `api-srk-pure-C1-125K` — Cp +7.3% (61.9476 vs 57.7411) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table).
 - `api-srk-pure-C3-300K` — Cp +6.8% (129.067 vs 120.805); rho_L -8.4% (448.355 vs 489.447) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table).
 - `api-srk-pure-CO2-265K` — Cp +12.3% (115.742 vs 103.056); rho_L -11.8% (858.135 vs 973.254) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table).
+- `bwr_ls-C1-155.0K` — Cp -569.3% (calculated -38425.48 vs 67.6129 J/(mol K), saturated liquid): the shared BWRS parameter evaluation returns large negative Cp for bwr_ls — the same defect assessed on the bwrs row; bound and assessed, not excluded, so the defect stays visible. Measured 2026-10-23..
+- `bwr_ls-C2-230.0K` — Cp -1187.6% (calculated -97565.23 vs 82.2215 J/(mol K), saturated liquid): same shared BWRS parameter-evaluation Cp defect. Measured 2026-10-23..
+- `bwr_ls-C3-300.0K` — Cp -517.5% (calculated -62396.92 vs 120.8047 J/(mol K), saturated liquid): same shared BWRS parameter-evaluation Cp defect. Measured 2026-10-23..
 - `c1c3-277.59K-1.724MPa (pr)` — bubble_P -4.2% (1.65127e+06 vs 1.724e+06) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `c1c3-277.59K-1.724MPa (pr78)` — bubble_P -4.2% (1.65127e+06 vs 1.724e+06) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `c1c3-277.59K-2.758MPa (pr)` — bubble_P -3.4% (2.66404e+06 vs 2.758e+06) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
