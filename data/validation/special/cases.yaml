@@ -64,6 +64,13 @@
 #   polymer-solution dataset with the paper's own parameterization. T-19
 #   (2026-10-23): still no open Chen 1993 parameter transcription found; the
 #   shipped toluene/PS tau/alpha are explicitly illustrative. Stays unbound.
+#
+# - special_hf_hexamer_factors: kernel vs Jarry & Davis smoothed association
+#   factors 3.580 @ 298.16 K and 3.438 @ 303.16 K - pinned in
+#   tests/thermo/test_special.py. T-19 (2026-10-23): the mmHg->Pa conversion
+#   re-verified exactly (-42.38089 - 5 log10(101325/760) = -53.0054051, the
+#   shipped constant); the paper's wider factor table is not retrievable open
+#   access, so no new-temperature point can be bound.
 
 meta:
   coolprop_version: 8.0.0

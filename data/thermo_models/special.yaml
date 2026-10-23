@@ -203,7 +203,13 @@
       ideal on apparent composition. The kernel function
       hexamer_vapor_compressibility is exercised directly against the
       published saturated-vapour association factors (3.580 at 298.16 K,
-      3.438 at 303.16 K) in tests/thermo/test_special.py.
+      3.438 at 303.16 K) in tests/thermo/test_special.py. T-19: the
+      mmHg-to-Pa conversion re-verified exactly (a_Pa = -42.38089 - 5
+      log10(101325/760) = -53.0054051, the shipped constant; the tests derive
+      A_PA from a_mmHg independently). The paper's wider association-factor
+      table is not retrievable open access (searched 2026-10-23), so no
+      new-temperature point can be bound; row stays experimental - the kernel
+      surface is not harness-evaluable.
   status: experimental
   validation: []
 
