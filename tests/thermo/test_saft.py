@@ -29,19 +29,28 @@ SAFT_IDS = (
 # Rows teqp 0.23.2 cannot serve; each refuses to build with the engine named (spec
 # requirement). Their l0 declarations are empty and the refusal reason is recorded in
 # the row's l0_excluded.
-REFUSING_IDS = ("cpa_pr", "pc_saft_assoc", "pc_saft_polar", "soft_saft")
-BUILDABLE_IDS = ("cpa_srk", "gerg2008_teqp", "multifluid", "multifluid_pure", "pc_saft", "saft_vr_mie")
+REFUSING_IDS = ("pc_saft_assoc", "pc_saft_polar", "soft_saft")
+BUILDABLE_IDS = (
+    "cpa_pr",
+    "cpa_srk",
+    "gerg2008_teqp",
+    "multifluid",
+    "multifluid_pure",
+    "pc_saft",
+    "saft_vr_mie",
+)
 
 
 def test_saft_rows_register_with_status() -> None:
     """The ten saft rows load with the real catalogue. T-15c promoted pc_saft and
     cpa_srk to provisional (all bound cases measured, every miss assessed per case);
-    the other rows stay experimental (T-07)."""
+    T-17 promoted cpa_pr the same way (Sorensen 2018 parameters); the remaining rows
+    stay experimental (T-07)."""
     rows = catalogue.load_catalogue()
-    for rid in ("pc_saft", "cpa_srk"):
+    for rid in ("pc_saft", "cpa_srk", "cpa_pr"):
         assert rows[rid].status == "provisional", f"{rid}: row must stay provisional"
     for rid in SAFT_IDS:
-        if rid in ("pc_saft", "cpa_srk"):
+        if rid in ("pc_saft", "cpa_srk", "cpa_pr"):
             continue
         assert rows[rid].status == "experimental", f"{rid}: row must stay experimental"
 
@@ -79,6 +88,7 @@ class TestConstructionContract:
         pytest.importorskip("teqp")
         from ngdesign import registry
         from ngdesign.thermo.teqp_bridge import (
+            CpaPrThermo,
             CpaSrkThermo,
             Gerg2008TeqpThermo,
             MultifluidPureThermo,
@@ -91,6 +101,7 @@ class TestConstructionContract:
             "pc_saft": PCSaftThermo,
             "saft_vr_mie": SaftVrMieThermo,
             "cpa_srk": CpaSrkThermo,
+            "cpa_pr": CpaPrThermo,
             "multifluid": MultifluidThermo,
             "multifluid_pure": MultifluidPureThermo,
             "gerg2008_teqp": Gerg2008TeqpThermo,
@@ -134,6 +145,19 @@ class TestNamedSpotChecks:
         pkg = catalogue.build(catalogue.load_catalogue()["cpa_srk"])
         sp = pkg.bubble_point({"H2O": 1.0}, T=373.15)
         assert sp.P == pytest.approx(101_417.997, rel=0.02)
+
+    def test_cpa_pr_water_and_methanol_psat(self) -> None:
+        """CPA-PR (T-17): the Sorensen et al. (2018) Table 6 set measures -0.9 % on
+        water Psat at 373.15 K and -0.8 % on methanol at its normal boiling point
+        against CoolProp HEOS/IAPWS — the PR variant beats the SRK variant's -1.15 %
+        water miss. The 2 % band guards the kernel against drift; the parameters are
+        pinned by data/thermo_params/saft/pure.yaml."""
+        pytest.importorskip("teqp")
+        pkg = catalogue.build(catalogue.load_catalogue()["cpa_pr"])
+        water = pkg.bubble_point({"H2O": 1.0}, T=373.15)
+        assert water.P == pytest.approx(101_417.997, rel=0.02)
+        methanol = pkg.bubble_point({"MeOH": 1.0}, T=337.65)
+        assert methanol.P == pytest.approx(101_325.0, rel=0.02)
 
     def test_pc_saft_c1co2_bubble_293k(self) -> None:
         pytest.importorskip("teqp")

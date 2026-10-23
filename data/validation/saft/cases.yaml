@@ -366,6 +366,166 @@ pure_cases:
     rho_V: 39.97612900903269
     rho_L: 577.3203069692399
     Cp: 152.323705909922
+- id: pure-H2O-323.5K-pr
+  package: cpa_pr
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 323.5
+  source: coolprop:Water
+  expected:
+    bubble_P: 12568.074903762043
+    dew_P: 12568.074903762043
+    rho_V: 0.0845139200802139
+    rho_L: 987.8376013261548
+    Cp: 75.33348967660713
+- id: pure-H2O-420.0K-pr
+  package: cpa_pr
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 420.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 437296.6832205554
+    dew_P: 437296.6832205554
+    rho_V: 2.351828448387723
+    rho_L: 919.9289056471974
+    Cp: 77.44715834539281
+- id: pure-H2O-520.0K-pr
+  package: cpa_pr
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 520.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 3768951.0030896734
+    dew_P: 3768951.0030896734
+    rho_V: 18.900102345041386
+    rho_L: 803.5346284235177
+    Cp: 87.14904502895989
+- id: pure-H2O-600.0K-pr
+  package: cpa_pr
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 600.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 12344824.357185591
+    dew_P: 12344824.357185591
+    rho_V: 72.84231718283307
+    rho_L: 649.4114062017267
+    Cp: 125.26394764191221
+- id: pure-H2O-614.7K-pr
+  package: cpa_pr
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 614.7
+  source: coolprop:Water
+  expected:
+    bubble_P: 14886958.230685582
+    dew_P: 14886958.230685582
+    rho_V: 95.58767627288478
+    rho_L: 605.5542923811505
+    Cp: 151.74725059632752
+- id: pure-MeOH-256.3K-pr
+  package: cpa_pr
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 256.3
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 1296.4950796125859
+    dew_P: 1296.4950796125859
+    rho_V: 0.019659073267946643
+    rho_L: 825.5296619830086
+    Cp: 74.76223856132154
+- id: pure-MeOH-307.6K-pr
+  package: cpa_pr
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 307.6
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 27285.726673983212
+    dew_P: 27285.726673983212
+    rho_V: 0.3523083242143164
+    rho_L: 777.3531023134508
+    Cp: 83.1689114929538
+- id: pure-MeOH-358.8K-pr
+  package: cpa_pr
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 358.8
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 220672.06148295978
+    dew_P: 220672.06148295978
+    rho_V: 2.564992417359229
+    rho_L: 726.6365086539073
+    Cp: 96.78299108071067
+- id: pure-MeOH-410.1K-pr
+  package: cpa_pr
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 410.1
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 1008961.6235828616
+    dew_P: 1008961.6235828616
+    rho_V: 11.431378628663305
+    rho_L: 665.0831489742104
+    Cp: 116.39882382840209
+- id: pure-MeOH-461.3K-pr
+  package: cpa_pr
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 461.3
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 3203531.8555181804
+    dew_P: 3203531.8555181804
+    rho_V: 39.97612900903269
+    rho_L: 577.3203069692399
+    Cp: 152.323705909922
 binary_cases:
 # --- L2: CO2 + CH4 VLE (Petropoulou et al. 2018) — PC-SAFT row -------------------------------
 # Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462,
@@ -622,6 +782,96 @@ binary_cases:
     H2O: 0.0539
   T: 322.91
   source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 52142.0
+    vapor_comp:
+      MeOH: 0.9736
+- id: meohh2o-322.91K-15.932kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.0486
+    H2O: 0.9514
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 15932.0
+    vapor_comp:
+      MeOH: 0.2741
+- id: meohh2o-322.91K-26.131kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.2131
+    H2O: 0.7869
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 26131.0
+    vapor_comp:
+      MeOH: 0.6294
+- id: meohh2o-322.91K-31.544kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.3252
+    H2O: 0.6748
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 31544.0
+    vapor_comp:
+      MeOH: 0.758
+- id: meohh2o-322.91K-40.850kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.6279
+    H2O: 0.3721
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 40850.0
+    vapor_comp:
+      MeOH: 0.8654
+- id: meohh2o-322.91K-46.450kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.8037
+    H2O: 0.1963
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 46450.0
+    vapor_comp:
+      MeOH: 0.9406
+- id: meohh2o-322.91K-52.142kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.9461
+    H2O: 0.0539
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
   expected:
     bubble_P: 52142.0
     vapor_comp:

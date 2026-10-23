@@ -384,7 +384,54 @@ class _CpaKernel(_Kernel):
         return 0.98 / self._b_mix(z)
 
 
-@lru_cache(maxsize=1)
+class _CpaPrKernel(_CpaKernel):
+    """CPA-PR (row ``cpa_pr``): PR physical term + the shared association term.
+
+    Physical part: Peng-Robinson, a_i(T) = a0_i (1 + c1_i (1 - sqrt(T/Tc_i)))^2
+    (the paper's fitted Soave-type alpha, Sorensen et al. 2018, Appendix A eq. A2),
+    classical vdW mixing with the paper's temperature-dependent k_ij (Table 7), and
+    A_phys/(NRT) = -ln(1 - b rho)
+                    - a_mix/(2 sqrt(2) b R T) ln((1 + (1 + sqrt 2) b rho) / (1 + (1 - sqrt 2) b rho)).
+    Association part: identical to cpa_srk — the shared saft_assoc.CPAWertheim term
+    with the paper's simplified-CPA RDF g = 1/(1 - 1.9 eta), eta = b rho/4
+    (Appendix A eq. A14) and CR-1 combining rules (eq. A15-A16).
+    """
+
+    def __init__(
+        self, name: str, params: list[dict[str, Any]], tcs: list[float], kij_table: dict[str, Any]
+    ) -> None:
+        super().__init__(name, params, tcs)
+        self._kij_table = kij_table
+
+    def _kij(self, i: int, j: int, T: float) -> float:
+        """Temperature-dependent binary interaction parameter (Sorensen 2018, Table 7)."""
+        key = "-".join(sorted((self.params[i]["name"], self.params[j]["name"])))
+        entry = self._kij_table.get(key)
+        if entry is None:
+            return 0.0
+        return float(entry["kij_ref"]) + float(entry["kij_prime"]) * (T - float(entry["T_ref"]))
+
+    def _a_mix(self, T: float, z: np.ndarray) -> float:
+        a_mix = 0.0
+        for i, xi in enumerate(z):
+            for j, xj in enumerate(z):
+                a_mix += xi * xj * math.sqrt(self._a_i(i, T) * self._a_i(j, T)) * (1.0 - self._kij(i, j, T))
+        return a_mix
+
+    def _alpha_phys(self, T: float, rho: float, z: np.ndarray) -> float:
+        b_mix = self._b_mix(z)
+        a_mix = self._a_mix(T, z)
+        br = b_mix * rho
+        return -math.log(1.0 - br) - (a_mix / (2.0 * math.sqrt(2.0) * b_mix * R_GAS * T)) * math.log(
+            (1.0 + (1.0 + math.sqrt(2.0)) * br) / (1.0 + (1.0 - math.sqrt(2.0)) * br)
+        )
+
+    def max_density(self, T: float, z: np.ndarray) -> float:
+        # The PR pole sits at rho = 1/b_mix (same co-volume as the SRK pole);
+        # the association g-divergence at 1.96/b_mix is beyond it.
+        return 0.98 / self._b_mix(z)
+
+
 def _polymer_pcsaft_params() -> dict[str, Any]:
     """The cited polymer PC-SAFT parameter file, loaded once (spec T-10)."""
     path = Path(__file__).resolve().parents[3] / "data" / "thermo_params" / "special" / "polymer.yaml"
@@ -448,6 +495,14 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
         # package uses); the Kontogeorgis table carries the a0/b/c1 fit only.
         tcs = [float(resolve(cid).Tc) for cid in cids]
         return _CpaKernel(kind, [block[cid] for cid in cids], tcs)
+    if kind == "cpa_pr":
+        block = _require_params("cpa_pr", cids)
+        # Tc from the resolved component records (the cpa_srk pattern); the paper's
+        # Table 6 carries the a0/b/c1 fit and the association parameters only.
+        tcs = [float(resolve(cid).Tc) for cid in cids]
+        params = [block[cid] | {"name": cid} for cid in cids]
+        kij_table = block.get("binary_kij") or {}
+        return _CpaPrKernel(kind, params, tcs, kij_table)
     if kind == "polymer_pc_saft":
         # Polymer PC-SAFT (spec T-10): same PCSAFT engine as "pc_saft", but the
         # parameters live in the special-family file (polymer.yaml), keyed by
@@ -520,14 +575,6 @@ class TeqpPackage(ThermoSurfaceMixin):
                 "module — measured against the installed teqp 0.23.2), and the T-07 "
                 "spec forbids writing SAFT by hand. Blas & Vega's (1997) soft-SAFT "
                 "stays outside the catalogue rather than being approximated"
-            )
-        if self.model_kind == "cpa_pr":
-            raise NotImplementedError(
-                "saft row 'cpa_pr' refuses to build: teqp 0.23.2's CPA is unusable "
-                "(its fugacity coefficients NaN at liquid-like densities and its "
-                "saturation line collapses with the published Kontogeorgis water "
-                "parameters — measured in the T-07 exploration); CPA-SRK is provided "
-                "by the hand-rolled kernel of row cpa_srk"
             )
 
     # -- kernel plumbing -------------------------------------------------------

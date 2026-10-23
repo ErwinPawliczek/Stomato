@@ -82,6 +82,48 @@ cpa_srk:
     retrieved); the meohh2o-* binary and canonical cases carry the harness's
     standing assessment for the databank/1927-1929 isotherm deviations."
 
+# --- CPA-PR (row cpa_pr) ---------------------------------------------------------
+# Source: Sorensen, Boesen, Leekumjorn & Herslund, "Peng-Robinson Equation of State
+# Extended to Handle Aqueous Components Using CPA Concept", Journal of Natural Gas
+# Engineering 6 (2018), DOI 10.7569/JNGE.2018.692501, Table 6 (PR-CPA pure-component
+# parameters and association schemes), retrieved and typed this session (2026-10-23)
+# from the open-access copy at https://d-nb.info/136523830X/34.
+# Constant-vs-source check (this session, against Table 6 as printed):
+#   H2O: a0 1.5782 bar l2/mol2 -> 0.15782 Pa m6/mol2 (x0.1); b 1.4788e-2 l/mol ->
+#     1.4788e-5 m3/mol (x1e-3); c1 0.6736; eps_AB 161.23 bar l/mol -> 16123.0 J/mol
+#     (x100); beta_AB 6.9662e-2; scheme 4C (2 negative / 2 positive sites).
+#   MeOH: a0 5.3485 -> 0.53485; b 3.2112e-2 -> 3.2112e-5; c1 0.4310; eps_AB 236.87
+#     -> 23687.0; beta_AB 1.3239e-2; scheme 2B (1 / 1).
+# Unit factors x0.1 / x1e-3 / x100 cross-checked against the cpa_srk block above
+# (Kontogeorgis 1999 Table 1 values, same convention, same printed digits).
+# RDF g = 1/(1 - 1.9 eta) with eta = b*rho/4: the paper's "simplified CPA" radial
+# distribution function (Appendix A, eq. A14) — the same form cpa_srk uses.
+# Volume correction c = 0 for associating components (paper, section 3).
+# alpha(T): the paper's functional form (Appendix A, eq. A2), a(T) = a0 (1 + c1
+# (1 - sqrt(T/Tc)))^2 — the same Soave-type expression cpa_srk uses, with the
+# fitted c1 of Table 6.
+# Binary interaction H2O-MeOH: k_ij = k_ij_ref + k_ij' * (T - 288.15 K) with
+# k_ij_ref = -0.14146, k_ij' = -4.257e-4 1/K (paper Table 7).
+cpa_pr:
+  H2O:
+    scheme: 4C
+    a0: 0.15782        # Pa m6/mol2
+    b: 1.4788e-5       # m3/mol
+    c1: 0.6736
+    epsilon_AB: 16123.0  # J/mol
+    beta_AB: 0.069662
+    sites: [d, d, a, a]
+  MeOH:
+    scheme: 2B
+    a0: 0.53485
+    b: 3.2112e-5
+    c1: 0.4310
+    epsilon_AB: 23687.0
+    beta_AB: 0.013239
+    sites: [d, a]
+  binary_kij:
+    H2O-MeOH: {kij_ref: -0.14146, kij_prime: -4.257e-4, T_ref: 288.15}
+
 # --- Multi-fluid Helmholtz (row multifluid) -------------------------------------
 # Source: teqp 0.23.2's bundled fluid library (multi-fluid Helmholtz EOS with
 # departure functions as distributed by NIST teqp; GERG-2008-family formulations).

@@ -1,10 +1,12 @@
 # SAFT / CPA / multi-fluid Helmholtz family (spec T-07). Every row loads without teqp
 # (lazy import); the teqp-backed builds require `uv sync --extra saft` (teqp>=0.22).
-# Registered but non-building rows (pc_saft_assoc, pc_saft_polar, soft_saft, cpa_pr)
+# Registered but non-building rows (pc_saft_assoc, pc_saft_polar, soft_saft)
 # refuse in _validate_kind with the named reason, so a feed selecting them fails loudly
 # instead of silently dropping the physics they stand for. pc_saft and cpa_srk were
 # promoted to provisional in T-15c (teqp 0.23.2 confirmed CI-runnable on cp312 wheels);
-# every other row stays `experimental` until its physics lands. Parameters live in
+# cpa_pr joined them in T-17 (hand-rolled PR physical term + the shared saft_assoc
+# association solver, Sorensen 2018 parameters); every other row stays `experimental`
+# until its physics lands. Parameters live in
 # data/thermo_params/saft/pure.yaml.
 #
 # The reference cases listed under `validation:` currently run against the pc_saft /
@@ -472,16 +474,21 @@
       2026-10-22, PR table)"
 
 - id: cpa_pr
-  name: CPA-PR (registered refusal)
+  name: CPA-PR (hand-rolled association kernel)
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:CpaPrThermo
   params:
-    source: none — the row refuses to build
-    provenance: teqp 0.23.2's CPA engine NaNs its fugacity coefficients at liquid-like
-      densities and collapses the water saturation line with the published Kontogeorgis
-      parameters (measured in the T-07 exploration); a Peng-Robinson CPA variant would
-      need the same hand-rolled treatment as cpa_srk and no verified citable CPA-PR
-      parameter set is loaded for the slate
+    source: CPA-PR, Sorensen parameters (data/thermo_params/saft/pure.yaml)
+    provenance: water 4C and methanol 2B PR-CPA parameters from Sorensen, Boesen,
+      Leekumjorn & Herslund, "Peng-Robinson Equation of State Extended to Handle
+      Aqueous Components Using CPA Concept", J. Nat. Gas Eng. 6 (2018), DOI
+      10.7569/JNGE.2018.692501, Table 6, retrieved and typed this session
+      (2026-10-23) from the open-access copy at https://d-nb.info/136523830X/34
+      with a constant-vs-source check against the printed table; the temperature-
+      dependent water-methanol k_ij is the paper's Table 7 fit; PR cubic term
+      closed-form, association term by the shared successive-substitution solver
+      (Michelsen-Hendriks) with the paper's simplified-CPA radial distribution
+      function (Appendix A eq. A14) and CR-1 combining rules
   applicability:
     component_classes:
     - water
@@ -492,27 +499,129 @@
     T_K: [250.0, 620.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  - pure-H2O-323.5K-pr
+  - pure-H2O-420.0K-pr
+  - pure-H2O-520.0K-pr
+  - pure-H2O-600.0K-pr
+  - pure-H2O-614.7K-pr
+  - pure-MeOH-256.3K-pr
+  - pure-MeOH-307.6K-pr
+  - pure-MeOH-358.8K-pr
+  - pure-MeOH-410.1K-pr
+  - pure-MeOH-461.3K-pr
+  - meohh2o-322.91K-15.932kPa-pr
+  - meohh2o-322.91K-26.131kPa-pr
+  - meohh2o-322.91K-31.544kPa-pr
+  - meohh2o-322.91K-40.850kPa-pr
+  - meohh2o-322.91K-46.450kPa-pr
+  - meohh2o-322.91K-52.142kPa-pr
   references:
-  - Kontogeorgis, Voutsas, Yakoumis & Tassios, Ind. Eng. Chem. Res. 35 (1996) 4631-4642
-  l0: {}
-  l0_excluded:
-    pure_psat_limit: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
-      liquid-like density; NotImplementedError in _build_kernel)
-    phase_identification: row refuses to build — teqp's CPA is unusable (fugacity NaNs
-      at liquid-like density; NotImplementedError in _build_kernel)
-    round_trip: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
-      liquid-like density; NotImplementedError in _build_kernel)
-    dhdT_cp: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
-      liquid-like density; NotImplementedError in _build_kernel)
-    gibbs_duhem: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
-      liquid-like density; NotImplementedError in _build_kernel)
-    single_liquid_limit: row refuses to build — teqp's CPA is unusable (fugacity NaNs
-      at liquid-like density; NotImplementedError in _build_kernel)
-    determinism: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
-      liquid-like density; NotImplementedError in _build_kernel)
-  l0_note: ''
+  - Sorensen, Boesen, Leekumjorn & Herslund, "Peng-Robinson Equation of State
+    Extended to Handle Aqueous Components Using CPA Concept", J. Nat. Gas Eng. 6
+    (2018), DOI 10.7569/JNGE.2018.692501
+  - Kontogeorgis, Voutsas, Yakoumis & Tassios, "An Equation of State for Associating
+    Fluids", Ind. Eng. Chem. Res. 35 (1996) 4631-4642
+  l0:
+    pure_psat_limit:
+      points:
+      - - H2O
+        - 373.15
+      - - H2O
+        - 423.15
+      - - MeOH
+        - 337.7
+      - - MeOH
+        - 298.15
+    phase_identification:
+      points:
+      - - H2O
+        - 373.15
+      - - MeOH
+        - 320.0
+    round_trip:
+      z:
+        H2O: 1.0
+      states:
+      # 350 K / 3e5 Pa: a compressed-liquid state well below the 3e5 Pa saturation
+      # temperature (~407 K) so the PH inversion classifies trial temperatures via
+      # the cheap Wilson band instead of an exact psat solve per trial; at 373.15 K
+      # the trials clustered inside the near-saturation band and the check cost
+      # ~200 s of exact saturation solves.
+      - - 350.0
+        - 3.0e+5
+    dhdT_cp:
+      state: [400.0, 1.0e+5]
+      phase: vapor
+      z:
+        H2O: 1.0
+    gibbs_duhem:
+      # 30 midpoint steps: the association kernel evaluates ~100x slower than a
+      # closed-form EOS and the integral is smooth; the 1e-6 bar is unchanged.
+      steps: 30
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        phase: vapor
+        T: 400.0
+        P: 1.0e+5
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        phase: aqueous
+        T: 350.0
+        P: 3.0e+5
+    single_liquid_limit:
+      state: [373.15, 3.0e+5]
+      z:
+        H2O: 1.0
+    determinism:
+      state: [400.0, 1.0e+5]
+      z:
+        MeOH: 0.4
+        H2O: 0.6
+  l0_excluded: {}
+  l0_note: >-
+    T-17 promoted the row from refusal to provisional on 2026-10-23: teqp 0.23.2's
+    own CPA engine stays unusable (fugacity NaNs at liquid-like densities, measured
+    in the T-07 exploration), so the row runs the bridge's hand-rolled CPA-PR kernel
+    (PR physical term + the shared saft_assoc association solver) with the Sorensen
+    et al. (2018) Table 6 parameters and the paper's Table 7 temperature-dependent
+    water-methanol k_ij — the k_ij cpa_srk could not carry.
+
+  assessed:
+    pure-H2O-323.5K-pr: "Cp -6.3 % (75.333 vs 70.609) — the cubic + association EOS has
+      no residual liquid-Cp contribution, the same limitation the cpa_srk row assessed
+      (parameters verified against Sorensen 2018 Table 6) (measured 2026-10-23, PR table)"
+    pure-H2O-600.0K-pr: "Cp -11.3 % (125.264 vs 111.068); rho_V -5.9 % (72.842 vs
+      68.546) — same no-residual-Cp limitation; saturated-vapour density degrades on
+      the critical approach (Tc 647.1 K) (measured 2026-10-23, PR table)"
+    pure-H2O-614.7K-pr: "Cp -18.5 % (151.747 vs 123.753); rho_V -9.7 % (95.588 vs
+      86.351) — critical-region divergence at 33 K below Tc: the cubic term's density
+      and its Cp derivative both degrade (measured 2026-10-23, PR table)"
+    pure-MeOH-256.3K-pr: "bubble_P/dew_P -5.0 % (1296.5 vs 1231.45); Cp -11.1 %
+      (74.762 vs 66.501) — saturation pressure low at the cold end of the 2B range
+      (the paper's PR-CPA fit targets reservoir conditions) plus the no-residual-Cp
+      limitation (measured 2026-10-23, PR table)"
+    pure-MeOH-461.3K-pr: "rho_V -5.2 % (39.976 vs 37.881) — same cubic-term
+      saturated-vapour-density limitation as the other pure cases (Cp passes here)
+      (measured 2026-10-23, PR table)"
+    meohh2o-322.91K-15.932kPa-pr: "bubble_P -13.1 % (15932 vs 13845.7); vapor_comp
+      0.105 abs below the 0.02 band (0.2741 vs 0.1688) — the paper's Table 7 k_ij
+      (fitted -0.14146 at 288.15 K) over-strengthens the cross-association at the
+      methanol-lean end for this isotherm; tuning against the validation points is
+      forbidden (Gao 2012 isotherm; measured 2026-10-23, PR table)"
+    meohh2o-322.91K-26.131kPa-pr: "bubble_P -19.8 % (26131 vs 20969.9); vapor_comp
+      0.079 abs below the 0.02 band (0.6294 vs 0.5502) — same Table 7 k_ij
+      limitation, worst at the methanol-lean end (measured 2026-10-23, PR table)"
+    meohh2o-322.91K-31.544kPa-pr: "bubble_P -17.6 % (31544 vs 26003.5); vapor_comp
+      0.069 abs below the 0.02 band (0.7580 vs 0.6890) — same Table 7 k_ij
+      limitation (measured 2026-10-23, PR table)"
+    meohh2o-322.91K-40.850kPa-pr: "bubble_P -5.3 % (40850 vs 38698.6) — same Table 7
+      k_ij limitation, decaying toward the methanol-rich end (vapor_comp passes)
+      (measured 2026-10-23, PR table)"
 
 - id: multifluid
   name: Multi-fluid Helmholtz (teqp CoolProp library)
