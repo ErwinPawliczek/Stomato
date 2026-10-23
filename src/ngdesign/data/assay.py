@@ -14,8 +14,13 @@ notes fixed by the spec and the source research behind them:
   printed inverse table is publicly verifiable; an inverse of a published
   correlation introduces no new constants).
 - **D2887 to TBP** uses Daubert's (1994) increment form (API TDB 3A3.1):
-  ``TBP(50 %) = SD(50 %)``, ``dT_TBP(F) = A * dT_SD(F) ** B`` per standard
-  interval, accumulated outward from 50 %; Riazi (2005) section 3.2.2.2 p. 103.
+  ``TBP(50 %) = SD(50 %)``, ``dT_TBP(F) = C * dT_SD(F) ** D`` per printed
+  interval, accumulated outward from 50 %; API TDB chapter 3 procedure 3A3.1
+  table (2025 ballot draft, "Conversion of Simulated Distillation Assays to
+  True Boiling Point Distillations"), cross-checked against the Riazi (2005)
+  MNL50 section 3.2.2.2 p. 103 K/C form of the same constants and against the
+  worked example transcribed in Kopisto (LUT thesis, 2017) Tables V/VII,
+  reproduced in tests/data/test_assay.py.
 - **D1160 to AET** uses Maxwell & Bonnell (1957) as printed in ASTM D1160
   annex A7.1 transcriptions and API TDB 5A1.19, with the pressure in kPa. Two
   printed constant sets circulate, one labelled mmHg; only the kPa reading is
@@ -137,50 +142,83 @@ def tbp_to_d86_points(points: list[tuple[float, float]]) -> list[tuple[float, fl
 # --------------------------------------------------------------------------- D2887 -> TBP (API 3A3.1)
 
 #: Daubert (1994) / API TDB 3A3.1 increment constants, per simulated-distillation
-#: interval: dT_TBP(F) = A * dT_SD(F) ** B. Riazi (2005) MNL50 section 3.2.2.2
-#: p. 103. Key: interval start percent. Intervals: 10-30, 30-50, 50-70, 70-90,
-#: 90-95, 95-100.
-D2887_TO_TBP_AB: dict[float, tuple[float, float]] = {
-    10.0: (5.8589, 0.6024),
-    30.0: (4.1481, 0.7164),
-    50.0: (2.6956, 0.8008),
-    70.0: (2.2744, 0.8200),
-    90.0: (2.6339, 0.7550),
-    95.0: (0.1403, 1.6606),
+#: interval: dT_TBP(F) = C * dT_SD(F) ** D, where dT_SD is the SD temperature
+#: difference across the printed vol% interval. Verified line by line against
+#: the printed API TDB chapter 3 procedure 3A3.1 table (2025 ballot draft);
+#: the same constants appear as a K/C form in Riazi (2005) MNL50 section
+#: 3.2.2.2 p. 103 (C_K = C_F * 1.8**(1 - D)) and reproduce the worked example
+#: transcribed in Kopisto (LUT thesis, 2017) Tables V/VII. Key: (lo, hi) of the
+#: interval in vol%.
+#:
+#: The last row is printed "10 % - 5 %" in the ballot table while equation
+#: (3A3.1-3) applies it from the 10 % point to reach TBP(5 %) and Riazi (2005)
+#: Table 3.7 labels the interval "10-0"; implemented as the 10-0 % width.
+#: The "approx. max. allowable dT_SD" column of the printed table (40/75 F by
+#: interval) is advisory ("approx.") and is not enforced - the printed worked
+#: example itself exceeds one of them.
+D2887_TO_TBP_CD: dict[tuple[float, float], tuple[float, float]] = {
+    (95.0, 100.0): (0.02172, 1.9733),
+    (90.0, 95.0): (0.97476, 0.8723),
+    (70.0, 90.0): (0.31531, 1.2938),
+    (50.0, 70.0): (0.19861, 1.3975),
+    (30.0, 50.0): (0.05342, 1.6988),
+    (10.0, 30.0): (0.011903, 2.0253),
+    (0.0, 10.0): (0.15779, 1.4296),
 }
-
-_D2887_INTERVALS: tuple[tuple[float, float, int], ...] = (
-    (30.0, 50.0, -1),
-    (10.0, 30.0, -1),  # downward: TBP(10) = TBP(30) - dT (walk outward from 50 %)
-    (50.0, 70.0, +1),  # upward: TBP(70) = TBP(50) + dT
-    (70.0, 90.0, +1),
-    (90.0, 95.0, +1),
-    (95.0, 100.0, +1),
-)
 
 
 def d2887_to_tbp_points(points: list[tuple[float, float]]) -> list[tuple[float, float]]:
     """Measured D2887 (simulated distillation) points (percent, K) -> TBP points (K).
 
-    TBP(50 %) = SD(50 %); each standard interval width converts with
-    ``dT_TBP = A * dT_SD ** B`` (widths in F, results back to K), accumulated
-    outward from the 50 % anchor. Interval endpoints outside the measured range
-    are skipped.
+    The printed equations (API TDB 3A3.1) anchor TBP(50 %) = SD(50 %) and
+    accumulate converted interval widths outward: TBP(70) = TBP(50) + W4,
+    TBP(90) = TBP(70) + W3, TBP(95) = TBP(90) + W2, TBP(100) = TBP(95) + W1
+    upward and TBP(30) = TBP(50) - W5, TBP(10) = TBP(30) - W6,
+    TBP(5) = TBP(50) - W5 - W6 - W7 downward, with W_i = C * dT_SD ** D in F
+    per the table above. Points whose interval endpoints fall outside the
+    measured range are skipped; the printed equations produce no 0 % point.
     """
-    grid = _to_std_grid(points)
-    if 50.0 not in grid:
+    pts = sorted(points)
+    if 50.0 < pts[0][0] or 50.0 > pts[-1][0]:
         raise ValueError("D2887 conversion needs the 50 % point (TBP50 = SD50)")
-    tbp: dict[float, float] = {50.0: grid[50.0]}
-    for start, end, direction in _D2887_INTERVALS:
-        if start not in grid or end not in grid:
-            continue
-        dt_sd_f = (grid[end] - grid[start]) * 1.8
-        a, b = D2887_TO_TBP_AB[start]
-        dt_tbp_k = a * dt_sd_f**b / 1.8
-        if direction < 0:
-            tbp[start] = tbp[end] - dt_tbp_k
-        else:
-            tbp[end] = tbp[start] + dt_tbp_k
+    needed = (0.0, 10.0, 30.0, 50.0, 70.0, 90.0, 95.0, 100.0)
+    sd = {p: _interp(pts, p) for p in needed if pts[0][0] <= p <= pts[-1][0]}
+
+    def width_f(lo: float, hi: float) -> float | None:
+        if lo not in sd or hi not in sd:
+            return None
+        return (sd[hi] - sd[lo]) * 1.8
+
+    def step(w_f: float | None, interval: tuple[float, float]) -> float | None:
+        if w_f is None:
+            return None
+        c, d = D2887_TO_TBP_CD[interval]
+        return float(c * w_f**d) / 1.8  # K (float(): typeshed types float**float as Any)
+
+    tbp: dict[float, float] = {}
+    if 50.0 in sd:
+        tbp[50.0] = sd[50.0]
+    w5 = step(width_f(30.0, 50.0), (30.0, 50.0))
+    w6 = step(width_f(10.0, 30.0), (10.0, 30.0))
+    w7 = step(width_f(0.0, 10.0), (0.0, 10.0))
+    w4 = step(width_f(50.0, 70.0), (50.0, 70.0))
+    w3 = step(width_f(70.0, 90.0), (70.0, 90.0))
+    w2 = step(width_f(90.0, 95.0), (90.0, 95.0))
+    w1 = step(width_f(95.0, 100.0), (95.0, 100.0))
+    if w4 is not None:
+        tbp[70.0] = tbp[50.0] + w4
+    if w3 is not None and 70.0 in tbp:
+        tbp[90.0] = tbp[70.0] + w3
+    if w2 is not None and 90.0 in tbp:
+        tbp[95.0] = tbp[90.0] + w2
+    if w1 is not None and 95.0 in tbp:
+        tbp[100.0] = tbp[95.0] + w1
+    if w5 is not None:
+        tbp[30.0] = tbp[50.0] - w5
+    if w6 is not None and 30.0 in tbp:
+        tbp[10.0] = tbp[30.0] - w6
+    if w5 is not None and w6 is not None and w7 is not None:
+        tbp[5.0] = tbp[50.0] - w5 - w6 - w7
     return sorted(tbp.items())
 
 
@@ -209,28 +247,121 @@ def d1160_aet_c(t_vapor_c: float, p_kpa: float) -> float:
 
 # --------------------------------------------------------------------------- D1160 AET -> TBP (API 3A2.1)
 
-#: API TDB 3A2.1 / Riazi-Daubert (T in K): TBP = a * T_AET ** b, per vol% point.
-#: Secondary printed reproduction (Riazi 2005 MNL50 section 3.2.2.3 p. 106
-#: area); no independently printable worked example exists - noted in the tests.
-D1160_TO_TBP_AB: dict[float, tuple[float, float]] = {
-    0.0: (0.9167, 1.0019),
-    10.0: (0.5277, 1.0900),
-    30.0: (0.7426, 1.0425),
-    50.0: (0.8919, 1.0176),
-    70.0: (0.8706, 1.0226),
-    90.0: (0.9490, 1.0110),
-    95.0: (0.8008, 1.0355),
-}
+#: API TDB procedure 3A2.1 is graphical (Figure 3A2.1): at 10 mmHg, TBP and
+#: D1160 temperatures are equal at 50 vol% and above; below 50 % each segment
+#: temperature difference (F) converts through the printed curves. The
+#: "10 % to 30 % and 30 % to 50 %" curve below is digitized from the printed
+#: figure (API TDB chapter 3, Figure 3A2.1, created 1974, remastered 2012) by
+#: calibrated image tracing at 300 dpi; the printed worked example next to the
+#: figure (difference 75 F -> 82 F and 100 F -> 106 F on this curve) is
+#: reproduced within 1 F. Digitized entries carry ~+-2 F figure-reading
+#: uncertainty; the table is (dT_D1160_F, dT_TBP_F) at 5 F steps, piecewise
+#: linear, identity beyond 155 F where the printed curve meets the diagonal.
+#: The printed "0 % to 10 %" curve is NOT digitized or applied: no printed
+#: numeric anchor exists for it, so no 0 % point is produced (curve completion
+#: supplies the endpoint).
+_D1160_SEG_10_50: tuple[tuple[float, float], ...] = (
+    (0.0, 0.0),
+    (5.0, 6.1),
+    (10.0, 12.3),
+    (15.0, 18.5),
+    (20.0, 24.7),
+    (25.0, 30.9),
+    (30.0, 36.8),
+    (35.0, 42.3),
+    (40.0, 47.8),
+    (45.0, 53.2),
+    (50.0, 58.3),
+    (55.0, 63.4),
+    (60.0, 68.4),
+    (65.0, 73.3),
+    (70.0, 78.2),
+    (75.0, 82.9),
+    (80.0, 87.5),
+    (85.0, 92.0),
+    (90.0, 96.4),
+    (95.0, 100.8),
+    (100.0, 105.5),
+    (105.0, 110.2),
+    (110.0, 115.0),
+    (115.0, 119.7),
+    (120.0, 124.2),
+    (125.0, 128.8),
+    (130.0, 133.3),
+    (135.0, 138.1),
+    (140.0, 142.8),
+    (145.0, 147.5),
+    (150.0, 152.0),
+    (155.0, 156.2),
+)
+
+#: 10 mmHg in kPa abs (module pressure convention: 1 mmHg = 0.133322 kPa).
+_D1160_10MMHG_KPA = 10.0 * 0.133322
+
+
+class UnverifiedConversionError(ValueError):
+    """A requested conversion has no verifiable printed source; it is refused.
+
+    Raised, not approximated: an unverified constant cannot be caught by
+    consistency tests (see the module docstring).
+    """
+
+
+def _fig32a1_increment(d_tbp_f: float) -> float:
+    """D1160 segment difference -> TBP segment difference (F), Figure 3A2.1."""
+    if d_tbp_f < 0.0:
+        raise ValueError("segment temperature difference must be non-negative")
+    if d_tbp_f <= _D1160_SEG_10_50[-1][0]:
+        for (x1, y1), (x2, y2) in zip(_D1160_SEG_10_50, _D1160_SEG_10_50[1:], strict=False):
+            if x1 <= d_tbp_f <= x2:
+                return y1 + (y2 - y1) * (d_tbp_f - x1) / (x2 - x1)
+        raise AssertionError("unreachable: difference inside table range")
+    return d_tbp_f  # beyond the printed curve extent the figure reads as the identity
+
+
+def d1160_tbp10_points(points: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    """D1160 points at 10 mmHg (percent, K) -> TBP points at 10 mmHg (K).
+
+    API TDB Figure 3A2.1: TBP = D1160 at 50 % and above; below 50 % the
+    10-30 and 30-50 segment differences convert through the digitized printed
+    curve, accumulated downward from the 50 % anchor. No 0 % point is produced
+    (see the digitization note above).
+    """
+    pts = sorted(points)
+    if 50.0 < pts[0][0] or 50.0 > pts[-1][0]:
+        raise UnverifiedConversionError(
+            "D1160 -> TBP needs the 50 % point (the printed 3A2.1 procedure anchors there)"
+        )
+    grid = {p: _interp(pts, p) for p in (10.0, 30.0, 50.0, 70.0, 90.0, 95.0) if pts[0][0] <= p <= pts[-1][0]}
+    tbp: dict[float, float] = {50.0: grid[50.0]}
+    for p in (70.0, 90.0, 95.0):
+        if p in grid:
+            tbp[p] = grid[p]  # printed: 50 % and above are equal at 10 mmHg
+    if 30.0 in grid:
+        dt_f = (grid[50.0] - grid[30.0]) * 1.8
+        tbp[30.0] = tbp[50.0] - _fig32a1_increment(dt_f) / 1.8
+    if 10.0 in grid and 30.0 in tbp:
+        dt_f = (grid[30.0] - grid[10.0]) * 1.8
+        tbp[10.0] = tbp[30.0] - _fig32a1_increment(dt_f) / 1.8
+    return sorted(tbp.items())
 
 
 def d1160_to_tbp_points(points: list[tuple[float, float]], p_kpa: float) -> list[tuple[float, float]]:
     """Measured D1160 points (percent, K at ``p_kpa``) -> TBP points (percent, K).
 
-    Two steps: vapor temperatures to atmospheric equivalents (Maxwell-Bonnell),
-    then AET to TBP (API 3A2.1), pointwise on the standard grid.
+    Two steps, as printed: D1160 at 10 mmHg -> TBP at 10 mmHg (Figure 3A2.1),
+    then TBP at 10 mmHg -> atmospheric equivalent (Maxwell-Bonnell). Only
+    10 mmHg input is verifiable; any other test pressure is refused.
     """
-    aet = [(p, d1160_aet_c(t - 273.15, p_kpa) + 273.15) for p, t in points]
-    return [(p, a * t**b) for p, t in sorted(_to_std_grid(aet).items()) for a, b in (D1160_TO_TBP_AB[p],)]
+    if abs(p_kpa - _D1160_10MMHG_KPA) > 0.02:
+        raise UnverifiedConversionError(
+            "D1160 -> TBP is only implemented for data measured at 10 mmHg "
+            f"(1.33322 kPa); got P = {p_kpa!r} kPa. The printed API TDB 3A2.1 "
+            "procedure is defined at 10 mmHg and no printed interconversion to "
+            "other D1160 test pressures is verifiable."
+        )
+    tbp10 = d1160_tbp10_points(points)
+    return [(p, d1160_aet_c(t - 273.15, p_kpa) + 273.15) for p, t in tbp10]
 
 
 # ----------------------------------------------------- completion (Riazi distribution model)

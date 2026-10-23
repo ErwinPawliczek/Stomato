@@ -34,12 +34,15 @@ from ngdesign.data import register_pseudo
 from ngdesign.data.assay import (
     CompletedCurve,
     CutScheme,
+    UnverifiedConversionError,
     _all_bases,
     complete_curve,
     cut,
     cut_slate,
     d86_to_tbp_points,
     d1160_aet_c,
+    d1160_tbp10_points,
+    d1160_to_tbp_points,
     d2887_to_tbp_points,
     effective_watson_k,
     sg_distribution,
@@ -128,6 +131,43 @@ def test_d1160_branches_continuous_at_switch() -> None:
     assert high == pytest.approx(low, rel=5e-4)
 
 
+def test_d1160_tbp10_reproduces_figure_3a2_1_worked_example() -> None:
+    """API TDB Figure 3A2.1 printed example: D1160 at 10 mmHg -> TBP at 10 mmHg.
+
+    D1160 300/400/475/550/650 F at 10/30/50/70/90 % converts to TBP
+    287.2/392.8/475/550/650 F (printed to 0.1 F at the 10 % point). Equality
+    holds at 50 % and above; below 50 % the digitized printed curve applies
+    (digitization verified to ~1 F against the figure's printed anchors, so
+    the assertion tolerance is +-2 F).
+    """
+    d1160 = [(10.0, 300.0), (30.0, 400.0), (50.0, 475.0), (70.0, 550.0), (90.0, 650.0)]
+    points_k = [(p, (f - 32.0) / 1.8 + 273.15) for p, f in d1160]
+    out = dict(d1160_tbp10_points(points_k))
+    expected_f = {10.0: 287.2, 30.0: 392.8, 50.0: 475.0, 70.0: 550.0, 90.0: 650.0}
+    for percent, tbp_f in expected_f.items():
+        expected_k = (tbp_f - 32.0) / 1.8 + 273.15
+        assert out[percent] == pytest.approx(expected_k, abs=1.2), f"{percent} %"
+
+
+def test_d1160_tbp10_has_no_zero_percent_point() -> None:
+    """The printed 0-10 % curve has no numeric anchor, so no 0 % point is made."""
+    d1160 = [(10.0, 300.0), (30.0, 400.0), (50.0, 475.0), (70.0, 550.0), (90.0, 650.0)]
+    points_k = [(p, (f - 32.0) / 1.8 + 273.15) for p, f in d1160]
+    out = dict(d1160_tbp10_points(points_k))
+    assert 0.0 not in out
+
+
+def test_d1160_refuses_test_pressure_other_than_10_mmhg() -> None:
+    """Only the 10 mmHg procedure is printed; other pressures are refused, not guessed."""
+    points = [(10.0, 422.04), (30.0, 477.59), (50.0, 519.26)]
+    with pytest.raises(UnverifiedConversionError, match="10 mmHg"):
+        d1160_to_tbp_points(points, 1.0 * 0.133322)
+    with pytest.raises(UnverifiedConversionError, match="10 mmHg"):
+        d1160_to_tbp_points(points, 101.325)
+    with pytest.raises(UnverifiedConversionError, match="10 mmHg"):
+        d1160_to_tbp_points(points, 50.0 * 0.133322)
+
+
 def test_d1160_to_tbp_full_curve() -> None:
     """A 10 mmHg D1160 curve converts to a monotone completed TBP curve."""
     curve = DistillationCurve(
@@ -155,6 +195,42 @@ def test_d2887_tbp50_equals_sd50_and_monotone() -> None:
     # simulated distillation is narrower than true TBP: endpoints spread outward
     assert out[10.0] < 560.15 and out[90.0] > 760.15
     assert out[30.0] < 610.15 and out[70.0] > 700.15
+
+
+def test_d2887_tbp_reproduces_printed_worked_example() -> None:
+    """API TDB 3A3.1 worked example (transcribed in Kopisto LUT thesis Tables V/VII).
+
+    SD in F at 0/5/10/30/50/70/90/95/100 vol% -> TBP in F at
+    5/10/30/50/70/90/95/100 % (printed to 0.01 F; the implementation uses
+    unrounded differences, so +-0.2 K absorbs transcription rounding).
+    """
+    sd_f = {
+        0.0: 271.558,
+        5.0: 329.841,
+        10.0: 345.650,
+        30.0: 385.606,
+        50.0: 420.174,
+        70.0: 459.164,
+        90.0: 511.185,
+        95.0: 527.114,
+        100.0: 560.892,
+    }
+    points_k = [(p, (t - 32.0) / 1.8 + 273.15) for p, t in sd_f.items()]
+    out = dict(d2887_to_tbp_points(points_k))
+    expected_f = {
+        5.0: 303.04,
+        10.0: 377.35,
+        30.0: 398.22,
+        50.0: 420.17,
+        70.0: 453.40,
+        90.0: 505.80,
+        95.0: 516.67,
+        100.0: 539.23,
+    }
+    assert sorted(out) == sorted(expected_f)  # the printed equations produce exactly these
+    for percent, tbp_f in expected_f.items():
+        expected_k = (tbp_f - 32.0) / 1.8 + 273.15
+        assert out[percent] == pytest.approx(expected_k, abs=0.2), f"{percent} %"
 
 
 # ------------------------------------------------------------------ completion

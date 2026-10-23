@@ -1,7 +1,6 @@
 """LOCKED contracts. Every layer talks only through these models."""
 
 from .assay import Assay, CurveBasis, CurveKind, DistillationCurve
-
 from .common import Direction, Model, Nozzle, Vec3
 from .components import ComponentSet
 from .flowsheet import (
