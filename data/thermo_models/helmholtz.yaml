@@ -175,6 +175,7 @@
       state: [300.0, 100000.0]
     determinism:
       z: {H2O: 1.0}
+      state: [350.0, 200000.0]
   l0_excluded:
     gibbs_duhem: pure water only - no binary composition path to integrate over
   l0_note: >-
@@ -388,6 +389,7 @@
   l0:
     determinism:
       z: {C1: 0.9, N2: 0.05, CO2: 0.05}
+      state: [350.0, 5000000.0]
     dhdT_cp:
       z: {C1: 0.9, N2: 0.05, CO2: 0.05}
       state: [350.0, 5000000.0]

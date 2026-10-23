@@ -40,9 +40,7 @@ def test_fitted_alpha_triplet_direct() -> None:
     e = _build(ZS, t=350.0)
     tr = 350.0 / TCS[0]
     twu_l, twu_m, twu_n = ALPHA_0
-    alpha = tr ** (twu_n * (twu_m - 1.0)) * math.exp(
-        twu_l * (1.0 - tr ** (twu_n * twu_m))
-    )
+    alpha = tr ** (twu_n * (twu_m - 1.0)) * math.exp(twu_l * (1.0 - tr ** (twu_n * twu_m)))
     # Component 0 carries the fitted triplet explicitly; component 1 has
     # alpha_coeffs=None and uses the generalized interpolation by omega,
     # selecting the sub- or supercritical pair by its own reduced temperature.
@@ -59,9 +57,7 @@ def test_fitted_alpha_triplet_direct() -> None:
     else:
         pair = ((0.401219, 4.963070, -0.2), (0.024955, 1.248089, -8.0))
     a_i1 = 0.470507 * 8.31446261815324**2 * TCS[1] * TCS[1] / PCS[1]
-    alpha_1 = gen_alpha(pair[0], tr1) + OMEGAS[1] * (
-        gen_alpha(pair[1], tr1) - gen_alpha(pair[0], tr1)
-    )
+    alpha_1 = gen_alpha(pair[0], tr1) + OMEGAS[1] * (gen_alpha(pair[1], tr1) - gen_alpha(pair[0], tr1))
     assert math.isclose(e.a_alphas[1], a_i1 * alpha_1, rel_tol=1e-12)
 
 
@@ -86,9 +82,7 @@ def test_dlnphis_dT_matches_finite_difference() -> None:
     ep, em = _build(ZS, t=T + 2.0 * h), _build(ZS, t=T - 2.0 * h)
     fd = [
         (a - b) / (4.0 * h)
-        for a, b in zip(
-            ep.fugacity_coefficients(ep.Z_g), em.fugacity_coefficients(em.Z_g), strict=True
-        )
+        for a, b in zip(ep.fugacity_coefficients(ep.Z_g), em.fugacity_coefficients(em.Z_g), strict=True)
     ]
     ana = e.dlnphis_dT("g")
     for i in range(2):
@@ -101,9 +95,7 @@ def test_dlnphis_dP_matches_finite_difference() -> None:
     ep, em = _build(ZS, p=P + 2.0 * h), _build(ZS, p=P - 2.0 * h)
     fd = [
         (a - b) / (4.0 * h)
-        for a, b in zip(
-            ep.fugacity_coefficients(ep.Z_g), em.fugacity_coefficients(em.Z_g), strict=True
-        )
+        for a, b in zip(ep.fugacity_coefficients(ep.Z_g), em.fugacity_coefficients(em.Z_g), strict=True)
     ]
     ana = e.dlnphis_dP("g")
     for i in range(2):

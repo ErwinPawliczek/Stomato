@@ -721,9 +721,7 @@ class Aga8Dc92Package:
     def k_values(self, z: dict[str, float], T: float, P: float) -> dict[str, float] | None:
         return None
 
-    def phase_props(
-        self, composition: dict[str, float], T: float, P: float, kind: PhaseKind
-    ) -> PhaseProps:
+    def phase_props(self, composition: dict[str, float], T: float, P: float, kind: PhaseKind) -> PhaseProps:
         if kind is not PhaseKind.VAPOR:
             raise Aga8Dc92Error(f"AGA8 DC92 supports vapour phase properties only, got {kind}")
         pr = self._props(composition, T, P)
@@ -743,9 +741,7 @@ class Aga8Dc92Package:
     def derivatives(
         self, composition: dict[str, float], T: float, P: float, kind: PhaseKind
     ) -> PropertyDerivatives:
-        raise Aga8Dc92Error(
-            "AGA8 DC92 exposes no fugacity model: ln phi derivatives are unsupported"
-        )
+        raise Aga8Dc92Error("AGA8 DC92 exposes no fugacity model: ln phi derivatives are unsupported")
 
     def pure_psat(self, cid: str, T: float) -> float | None:
         return None

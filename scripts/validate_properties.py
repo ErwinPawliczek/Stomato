@@ -369,7 +369,8 @@ def evaluate_case(case: Case, pkg: str) -> list[Row]:
                 # Derive Z from the density the phase does carry: Z = P·M/(ρ·R·T).
                 got_z = P * (ph.molecular_weight / 1000.0) / (ph.density * R_IDEAL * T)
         if "density" in exp:
-            rows.append(_row(case, pkg, "density", float(exp["density"]), None if ph is None else float(ph.density)))
+            got = None if ph is None else float(ph.density)
+            rows.append(_row(case, pkg, "density", float(exp["density"]), got))
         if "Z" in exp:
             rows.append(_row(case, pkg, "Z", float(exp["Z"]), None if got_z is None else float(got_z)))
         if "cp" in exp:

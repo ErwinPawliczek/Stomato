@@ -648,9 +648,7 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
         for i in range(N):
             bi_over_b = bs[i] / b
             out.append(
-                bi_over_b * z_m1
-                - math.log(Z - B)
-                + coeff * (bi_over_b - 2.0 * rows[i] / a) * log_term
+                bi_over_b * z_m1 - math.log(Z - B) + coeff * (bi_over_b - 2.0 * rows[i] / a) * log_term
             )
         return out
 
@@ -680,13 +678,7 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
     @property
     def d3delta_dninjnks(self) -> list[list[list[float]]]:
         b = self.b
-        return [
-            [
-                [-5.0 * (3.0 * b - bi - bj - bk) for bk in self.bs]
-                for bj in self.bs
-            ]
-            for bi in self.bs
-        ]
+        return [[[-5.0 * (3.0 * b - bi - bj - bk) for bk in self.bs] for bj in self.bs] for bi in self.bs]
 
     @property
     def depsilon_dzs(self) -> list[float]:
@@ -704,11 +696,7 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
     def d2epsilon_dninjs(self) -> list[list[float]]:
         b = self.b
         return [
-            [
-                -3.0 * ((bi - b) * (bj - b) - b * ((bi - b) + (bj - b)))
-                for bj in self.bs
-            ]
-            for bi in self.bs
+            [-3.0 * ((bi - b) * (bj - b) - b * ((bi - b) + (bj - b))) for bj in self.bs] for bi in self.bs
         ]
 
     # PRMIX hardcodes the PR logarithm and PR A/B in its SymPy-derived
@@ -717,14 +705,10 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
     # corrected delta/epsilon properties above agree to <0.1%). Delegate to the
     # generic forms.
     def dlnphis_dT(self, phase: str) -> list[float]:
-        return cast(
-            "list[float]", GCEOSMIX.dlnphis_dT(self, phase)
-        )
+        return cast("list[float]", GCEOSMIX.dlnphis_dT(self, phase))
 
     def dlnphis_dP(self, phase: str) -> list[float]:
-        return cast(
-            "list[float]", GCEOSMIX.dlnphis_dP(self, phase)
-        )
+        return cast("list[float]", GCEOSMIX.dlnphis_dP(self, phase))
 
 
 _TWU_GEN_SUB = ((0.125283, 0.911807, 1.948150), (0.511614, 0.784054, 2.812520))
