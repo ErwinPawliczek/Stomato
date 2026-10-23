@@ -20,10 +20,11 @@ def mbwr() -> MBWR32Package:
 
 
 def test_mbwr_pure_flash_liquid_vapor_branches(mbwr: MBWR32Package) -> None:
-    """Below the dome the two-phase split reports both phases; outside it, one."""
+    """Outside the saturation line each flash reports the branch phase."""
+    # pure fluid: the two-phase region is the saturation line itself, so every
+    # (T, P) state resolves to a single phase - liquid above psat, vapor below.
     st = mbwr.flash_pt({"C1": 1.0}, 150.0, 3e6, 1.0)
-    kinds = [p.kind for p in st.phases]
-    assert kinds == [PhaseKind.HC_LIQUID, PhaseKind.VAPOR]
+    assert [p.kind for p in st.phases] == [PhaseKind.HC_LIQUID]
     gas = mbwr.phase_props({"C1": 1.0}, 300.0, 1e6, PhaseKind.VAPOR)
     liq = mbwr.phase_props({"C1": 1.0}, 150.0, 10e6, PhaseKind.HC_LIQUID)
     assert gas.density < liq.density
