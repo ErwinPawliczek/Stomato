@@ -1430,10 +1430,14 @@
       1.5 b^2; alpha coefficients [L, M, N] from the paper's fitted normal-paraffin table (C1-C6),
       generalised Twu form for other components (documented fallback)
     implementation: >-
-      EXPERIMENTAL — refuses at first use. TSTMIX reproduces the paper's alpha form but not the
-      TST liquid-volume form or its mixture fugacity expressions, so measured volumes are wrong
-      by an order of magnitude (PR #161 review). The validation cases stay bound above and are
-      not run until the TST EOS form is implemented and the row returns to provisional.
+      PROVISIONAL — TSTMIX constants corrected: thermo's PRMIX convention requires
+      c1R2_c2R * c2R = c1*R^2, so c1R2_c2R = c1*R/c2; TSTMIX used c1*R^2, leaving the
+      critical attraction at ~0.62 of its stated value and suppressing the liquid root.
+      After the fix the four pure cases measure rho_V +0.13..2.84% and Cp +0.20..3.13%
+      against the references; rho_L evaluates from the TST liquid root (delta=2.5b, epsilon=-1.5b^2) and runs
+      6.7..18.4% high, intrinsic to the untranslated cubic (no volume translation in scope),
+      assessed per case below. Saturation columns short-circuit to the databank
+      vapour-pressure correlation and are not EOS checks.
   applicability:
     component_classes:
     - hydrocarbon
@@ -1452,7 +1456,7 @@
     - V
     - L
     - VLL
-  status: experimental
+  status: provisional
   validation:
   - twu-sim-tassone-pure-C1-125K
   - twu-sim-tassone-pure-C3-300K
@@ -1463,10 +1467,21 @@
   - twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa
   - twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa
   - twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa
+  assessed:
+    twu-sim-tassone-pure-C1-125K: "rho_L +18.4% (476.012 vs 402.111) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-pure-C3-300K: "rho_L +9.9% (538.028 vs 489.447) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-pure-nC4-280K: "rho_L +12.1% (664.97 vs 593.294) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-pure-CO2-265K: "rho_L +6.7% (1038.35 vs 973.254) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope; CO2 uses the generalised Twu alpha (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-c1c3-294.26K-6.895MPa: "bubble_P -18.6% (5.61447e+06 vs 6.895e+06); vapor_comp +4.9% (0.798488 vs 0.7497) - binary parameters from the generic ChemSep PR table (TST-fitted BIPs unavailable) and alpha fitted to normal paraffins only: mixture VLE outside bands by design (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-c1co2-277.15K-5.97MPa: "bubble_P -15.9% (5.02169e+06 vs 5.97e+06) - binary parameters from the generic ChemSep PR table (TST-fitted BIPs unavailable) and CO2 on the generalised Twu alpha: mixture VLE outside bands by design (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa: "dew_P -39.1% (182799 vs 300000) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa: "dew_P -43.9% (381274 vs 680000) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa: "dew_P -45.9% (562506 vs 1.04e+06) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table)"
   references:
-  - Twu, C. H.; Sim, W. D.; Tassone, V. A new cubic equation of state with a Twu-form alpha for hydrogen/hydrocarbon
-    systems, 2002; constants and form as implemented in the Clapeyron.jl TSTEOS (github.com/ClapeyronThermo/Clapeyron.jl),
-    retrieved 2026-10. Full journal citation unavailable offline; see PR body.
+  - Twu, C. H.; Sim, W. D.; Tassone, V. A versatile liquid activity model for SRK, PR and a new
+    cubic equation-of-state TST. Fluid Phase Equilibria 194-197 (2002) 385-399,
+    doi:10.1016/S0378-3812(01)00663-X; constants and form as implemented in the Clapeyron.jl
+    TSTEOS (github.com/ClapeyronThermo/Clapeyron.jl), retrieved 2026-10.
   - Twu, C. H.; Bluck, D.; Coon, J. E.; Cunningham, J. R. A Cubic Equation of State with a New Alpha
     Function and a New Mixing Rule. Fluid Phase Equilib. 1991, 69 (1), 33-50 (generalised alpha used
     for components outside the fitted table).

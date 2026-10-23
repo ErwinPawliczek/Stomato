@@ -126,11 +126,18 @@
     h2o-if97-401.605K: "rho_V x652 (936.138 vs 1.43327) - the IF97 adapter swaps the saturated-phase labels (the vapour reads the liquid density); measured 2026-10-22, T-15 sweep"
 
 - id: asme_steam
-  name: ASME/NBS steam tables (placeholder)
+  name: ASME steam tables (IAPWS-IF97 basis, ASME-labelled)
   family: helmholtz
-  adapter: ngdesign.thermo.helmholtz:UnavailablePackage
+  adapter: ngdesign.thermo.helmholtz:ASMESteamPackage
   options: {}
-  params: {}
+  params:
+    implementation: >-
+      The modern ASME Steam Tables (7th ed., 2000) are computed from IAPWS-IF97, so this row
+      is the IF97 adapter under the ASME label over the shared kernel (formulation IF97 is
+      pinned in the adapter constructor). No separate IFC-67 formulation is implemented: the
+      historical (pre-2000) ASME tables based on IFC-67 differ slightly from this row and are
+      out of scope. Verification values are bound from the IAPWS R7-97(2012) check tables
+      that pin the shared kernel.
   applicability:
     component_classes: [water]
     polar: true
@@ -138,17 +145,41 @@
     T_K: [273.15, 1073.15]
     P_Pa: [500.0, 100000000.0]
     phases: [V, L]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  # T-16a: verification values from the IAPWS R7-97(2012) check tables that pin the shared
+  # kernel. The row stays provisional: it is water-only, so no L2 binary case exists for it
+  # by design (the audit's validated gate needs >=1 L2 binary; recorded on issue #187).
+  - asme-steam-r1-300K-3MPa
+  - asme-steam-psat-300K
   references:
-  - ASME Steam Tables (ASME Performance Test Codes; the historical ASME/NBS formulation
-    has no implementation in this repo - the row is a catalogue placeholder and every
-    property call raises UnavailableBackend)
-  l0: {}
-  l0_excluded: {}
+  - ASME, 'ASME Steam Tables', 7th ed., 2000 (computed from IAPWS-IF97; this row is that
+    kernel under the ASME label)
+  - IAPWS, 'Revised Release on the IAPWS Industrial Formulation 1997 for the Thermodynamic
+    Properties of Water and Steam', R7-97(2012) - Table 5 (Region 1) and Table 35 (Region 4
+    saturation line) check values bound as cases; retrieved 2026-10-23
+  l0:
+    pure_psat_limit:
+      points: [["H2O", 373.15], ["H2O", 400.0]]
+    phase_identification:
+      points: [["H2O", 300.0], ["H2O", 400.0]]
+    round_trip:
+      z: {H2O: 1.0}
+      states: [[350.0, 200000.0], [400.0, 300000.0]]
+    dhdT_cp:
+      z: {H2O: 1.0}
+      state: [500.0, 100000.0]
+      phase: vapor
+    single_liquid_limit:
+      z: {H2O: 1.0}
+      state: [300.0, 100000.0]
+    determinism:
+      z: {H2O: 1.0}
+      state: [350.0, 200000.0]
+  l0_excluded:
+    gibbs_duhem: pure water only - no binary composition path to integrate over
   l0_note: >-
-    Placeholder row: the method is recorded, not implemented. The IAPWS-95 and
-    IF97 rows carry the real steam-table evaluations.
+    Same kernel as iapws_if97; the checks and their results are identical by construction.
 
 - id: coolprop_heos
   name: CoolProp pure Helmholtz (HEOS) fluids and mixtures
@@ -320,11 +351,21 @@
   l0_note: 'Placeholder row: the method is recorded, not implemented (teqp candidate, T-07). What would make it real: an in-house EOS-CG implementation from the open Kunz & Wagner 2012 formulation paper, or teqp multifluid support for its fluid files; no licence blocks it.'
 
 - id: aga8_dc92
-  name: AGA 8 DC92 detail equation of state (placeholder)
+  name: AGA 8 DC92 detail equation of state (gas phase)
   family: helmholtz
-  adapter: ngdesign.thermo.helmholtz:UnavailablePackage
+  adapter: ngdesign.thermo.aga8:Aga8Dc92Package
   options: {}
-  params: {}
+  params:
+    implementation: >-
+      The DC92 detail method is ported as a standalone module (ngdesign.thermo.aga8:
+      aga8_dc92_properties) behind a gas-phase Thermo adapter (Aga8Dc92Package) validated
+      against the NIST reference's own printed check values (21-component example gas,
+      400 K, 50 MPa; density and Z match to printed digits). flash_pt returns the single
+      vapour phase the method supports. Saturation boundaries (bubble/dew, TVF/PVF),
+      liquid-phase requests, H/S-driven flashes and fugacity derivatives refuse with the
+      typed Aga8Dc92Error: DC92 has no liquid root and no ln-phi surface by construction.
+      pure_psat and k_values return None. States whose DC92 pressure function has multiple
+      density roots (two-phase/liquid) refuse at the density solve.
   applicability:
     component_classes: [hydrocarbon, light_gas, inert, acid_gas]
     polar: true
@@ -332,16 +373,41 @@
     T_K: [143.15, 676.48]
     P_Pa: [100000.0, 280000000.0]
     phases: [V]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  # T-16a: the NIST reference's printed check-gas values, bound through the harness's
+  # single-phase (T, P) comparison path (density/Z/cp). The row stays provisional: the
+  # audit's validated gate needs >=1 L2 binary case and no published DC92 binary-mixture
+  # density/Z reference point has been bound yet (issue #187).
+  - aga8-dc92-nist-check-gas-400K-50MPa
   references:
   - Starling, K. E., Savidge, J. L., 'Compressibility Factors of Natural Gas and Other
     Related Hydrocarbon Gases', AGA Transmission Measurement Committee Report No. 8, 2nd
-    ed., 1992 (no implementation in this repo; the row is a catalogue placeholder and every
-    property call raises UnavailableBackend)
-  l0: {}
-  l0_excluded: {}
-  l0_note: 'Placeholder row: the method is recorded, not implemented. What would make it real: the AGA-8 DC92 detail-characterisation method, whose parameters live in the copyrighted AGA 1992 report (not redistributable) - needs a licensed copy or an in-house reimplementation from the published paper tables.'
+    ed., 1992 (coefficients as published in NIST''s public-domain reference implementation,
+    github.com/usnistgov/AGA8 @ 3bdb9ab8ff317c618b0b59d1b704c2c86ddc5fce, AGA8CODE/C,
+    retrieved 2026-10; the port reproduces Detail_test_01.cpp check values)
+  l0:
+    determinism:
+      z: {C1: 0.9, N2: 0.05, CO2: 0.05}
+      state: [350.0, 5000000.0]
+    dhdT_cp:
+      z: {C1: 0.9, N2: 0.05, CO2: 0.05}
+      state: [350.0, 5000000.0]
+      phase: vapor
+  l0_excluded:
+    pure_psat_limit: gas-only method - no vapour-pressure correlation exists in DC92
+    phase_identification: >-
+      the check anchors on the databank Psat, which pure_psat returns None for (no
+      vapour-pressure correlation in the DC92 method)
+    round_trip: >-
+      the check iterates flash_ph/flash_ps, which the gas-only adapter refuses by design
+      (no H/S-driven flashes are offered)
+    gibbs_duhem: no fugacity coefficients - ln phi is not part of the DC92 surface
+    single_liquid_limit: gas-only method - the adapter refuses liquid-phase requests
+  l0_note: >-
+    The declared checks exercise the gas surface the adapter offers (PT flash determinism,
+    cp self-consistency); every excluded check exercises an operation the DC92 method
+    structurally cannot provide, each refused with the typed Aga8Dc92Error.
 
 - id: mbwr
   name: Modified BWR (Starling 1976, 27-compound set) (placeholder)
