@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-23T16:32:03+00:00 from `data/validation/results.json` (git f7ee6b9, CoolProp 8.0.0).
+Generated 2026-10-23T17:22:46+00:00 from `data/validation/results.json` (git 172fa97, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -24,12 +24,12 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 | model | family | status | L0 | L1/L2 cases | report |
 | --- | --- | --- | --- | --- | --- |
-| [aga8_dc92](validation/aga8_dc92.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/aga8_dc92.md) |
+| [aga8_dc92](validation/aga8_dc92.md) | helmholtz | provisional | 2/2 | L1=0 L2=0 | [report](validation/aga8_dc92.md) |
 | [amine_enrtl](validation/amine_enrtl.md) | electrolyte | provisional | 3/3 | L1=4 L2=0 | [report](validation/amine_enrtl.md) |
 | [amine_ke](validation/amine_ke.md) | electrolyte | validated | 3/3 | L1=4 L2=5 | [report](validation/amine_ke.md) |
 | [antoine-ideal-k](validation/antoine-ideal-k.md) | kvalue | provisional | 5/5 | L1=4 L2=0 | [report](validation/antoine-ideal-k.md) |
 | [api-srk](validation/api-srk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/api-srk.md) |
-| [asme_steam](validation/asme_steam.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/asme_steam.md) |
+| [asme_steam](validation/asme_steam.md) | helmholtz | provisional | 6/6 | L1=2 L2=0 | [report](validation/asme_steam.md) |
 | [braun-k10](validation/braun-k10.md) | kvalue | provisional | 6/6 | L1=2 L2=0 | [report](validation/braun-k10.md) |
 | [bwr_ls](validation/bwr_ls.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/bwr_ls.md) |
 | [bwrs](validation/bwrs.md) | helmholtz | provisional | 7/7 | L1=0 L2=0 | [report](validation/bwrs.md) |
@@ -110,7 +110,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [srk_mhv2](validation/srk_mhv2.md) | mixing | provisional | 7/7 | L1=4 L2=2 | [report](validation/srk_mhv2.md) |
 | [srk_wong_sandler](validation/srk_wong_sandler.md) | mixing | provisional | 7/7 | L1=4 L2=2 | [report](validation/srk_wong_sandler.md) |
 | [twu-pr](validation/twu-pr.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/twu-pr.md) |
-| [twu-sim-tassone](validation/twu-sim-tassone.md) | cubic | experimental | — | L1=0 L2=0 | [report](validation/twu-sim-tassone.md) |
+| [twu-sim-tassone](validation/twu-sim-tassone.md) | cubic | provisional | 6/7 | L1=4 L2=2 | [report](validation/twu-sim-tassone.md) |
 | [twu-srk](validation/twu-srk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/twu-srk.md) |
 | [unifac_dortmund_hoc](validation/unifac_dortmund_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/unifac_dortmund_hoc.md) |
 | [unifac_dortmund_ig](validation/unifac_dortmund_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=2 | [report](validation/unifac_dortmund_ig.md) |
@@ -164,13 +164,15 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 ### Status summary
 
-137 rows: 9 validated, 111 provisional, 17 experimental
+137 rows: 9 validated, 114 provisional, 14 experimental
 
 | provisional row | what keeps it from validated |
 | --- | --- |
+| [aga8_dc92](validation/aga8_dc92.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [amine_enrtl](validation/amine_enrtl.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=4 L2=0) |
 | [antoine-ideal-k](validation/antoine-ideal-k.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=4 L2=0) |
 | [api-srk](validation/api-srk.md) | 7 declared case misses (`assessed:` in the row; see its report) |
+| [asme_steam](validation/asme_steam.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=2 L2=0) |
 | [braun-k10](validation/braun-k10.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=2 L2=0) |
 | [bwrs](validation/bwrs.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [cpa_srk](validation/cpa_srk.md) | 13 declared case misses (`assessed:` in the row; see its report) |
@@ -230,6 +232,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [srk_mhv2](validation/srk_mhv2.md) | 6 declared case misses (`assessed:` in the row; see its report) |
 | [srk_wong_sandler](validation/srk_wong_sandler.md) | 6 declared case misses (`assessed:` in the row; see its report) |
 | [twu-pr](validation/twu-pr.md) | 5 declared case misses (`assessed:` in the row; see its report) |
+| [twu-sim-tassone](validation/twu-sim-tassone.md) | L0 failing: gibbs_duhem |
 | [twu-srk](validation/twu-srk.md) | 5 declared case misses (`assessed:` in the row; see its report) |
 | [unifac_dortmund_hoc](validation/unifac_dortmund_hoc.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [unifac_dortmund_ig](validation/unifac_dortmund_ig.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=2) |
@@ -282,6 +285,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 ### L4 cross-model pairs on the natural-gas slice feed
 
+- `aga8_dc92`: ok — n/a — refuses the slice feed: Aga8Dc92Error: AGA8 DC92 models gas only: no dew point
 - `antoine-ideal-k`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
 - `braun-k10`: ok — n/a — refuses the slice feed: SaturationError: kvalue saturation at T=293.15 K: Lee-Kesler two-phase region collapses before K crosses unity
 - `bwrs`: ok — n/a — refuses the slice feed: ComponentNotSupported: BWRSPackage has no parameters for component(s) ['C6+', 'H2O']; supported: ['C1', 'C2', 'C3', 'CO2', 'H2S', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
@@ -372,6 +376,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `pr-mathias-copeman`: ok — n/a — l4_excluded: The Mathias-Copeman alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs +22% above the generalised-omega pr-family rows and +41% above the srk family (measured 876389 vs 717386/614969 Pa at 293.15 K) - the deviation the Psat fit exists to produce, declared here rather than loosening the 20% band.
 - `rk`: ok — n/a — l4_excluded: RK's databank-anchored alpha overpredicts the 293.15 K slice dew pressure ~16x versus the modern-EOS band (measured 1.18e7 vs 6.2e5-7.2e5 Pa) - the documented RK crudeness recorded in l0_excluded, an EOS-accuracy difference rather than a catalogue inconsistency.
 - `srk-mathias-copeman`: ok — n/a — l4_excluded: The Mathias-Copeman alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs +41% above the generalised-omega srk-family rows and +22% above the pr family (measured 869540 vs 614969/717386 Pa at 293.15 K) - the deviation the Psat fit exists to produce, declared here rather than loosening the 20% band.
+- `twu-sim-tassone`: ok — n/a — l4_excluded: The TST EOS is fitted to hydrogen/hydrocarbon systems; on the natural-gas slice its dew pressure sits ~19x above the modern-EOS band (measured 1.38e7 vs 6.2e5-7.2e5 Pa) - the same limitation recorded in l0_excluded.
 - `vdw`: ok — n/a — l4_excluded: van der Waals' constant-alpha overpredicts the 293.15 K slice dew pressure ~14x versus the modern-EOS band (measured 1.02e7 vs 6.2e5-7.2e5 Pa) - the documented vdW crudeness recorded in l0_excluded.
 - `api-srk-kabadi-danner-srk`: ok — dew P 615893 vs 643917 (rel 0.0435); rhoV 5.18815 vs 5.42979 (rel 0.0445); band 20%
 - `api-srk-pr`: ok — dew P 615893 vs 717386 (rel 0.141); rhoV 5.18815 vs 6.08846 (rel 0.148); band 20%
@@ -566,6 +571,14 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 ## Results
 
+### package `aga8_dc92` — 3/3 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| Z | 1 | 1 | 100.0 % |
+| cp | 1 | 1 | 100.0 % |
+| density | 1 | 1 | 100.0 % |
+
 ### package `amine_enrtl` — 8/8 pass (100.0 %)
 
 | property | n | pass | rate |
@@ -598,6 +611,15 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_L | 4 | 2 | 50.0 % |
 | rho_V | 4 | 4 | 100.0 % |
 | vapor_comp | 1 | 1 | 100.0 % |
+
+### package `asme_steam` — 4/4 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| bubble_P | 1 | 1 | 100.0 % |
+| cp | 1 | 1 | 100.0 % |
+| density | 1 | 1 | 100.0 % |
+| dew_P | 1 | 1 | 100.0 % |
 
 ### package `braun-k10` — 4/4 pass (100.0 %)
 
@@ -692,15 +714,15 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_L | 5 | 5 | 100.0 % |
 | rho_V | 5 | 5 | 100.0 % |
 
-### package `iapws_if97` — 11/15 pass (73.3 %)
+### package `iapws_if97` — 15/15 pass (100.0 %)
 
 | property | n | pass | rate |
 | --- | --- | --- | --- |
-| Cp | 3 | 2 | 66.7 % |
+| Cp | 3 | 3 | 100.0 % |
 | bubble_P | 3 | 3 | 100.0 % |
 | dew_P | 3 | 3 | 100.0 % |
-| rho_L | 3 | 2 | 66.7 % |
-| rho_V | 3 | 1 | 33.3 % |
+| rho_L | 3 | 3 | 100.0 % |
+| rho_V | 3 | 3 | 100.0 % |
 
 ### package `ideal-lk` — 8/8 pass (100.0 %)
 
@@ -1118,6 +1140,17 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_V | 4 | 4 | 100.0 % |
 | vapor_comp | 1 | 1 | 100.0 % |
 
+### package `twu-sim-tassone` — 15/26 pass (57.7 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| Cp | 4 | 2 | 50.0 % |
+| bubble_P | 6 | 4 | 66.7 % |
+| dew_P | 7 | 4 | 57.1 % |
+| rho_L | 4 | 1 | 25.0 % |
+| rho_V | 4 | 4 | 100.0 % |
+| vapor_comp | 1 | 0 | 0.0 % |
+
 ### package `twu-srk` — 20/26 pass (76.9 %)
 
 | property | n | pass | rate |
@@ -1223,21 +1256,20 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_V | 4 | 4 | 100.0 % |
 | vapor_comp | 1 | 1 | 100.0 % |
 
-## Failing comparisons (554)
+## Failing comparisons (561)
 
 | case | package | property | expected | got | err | source |
 | --- | --- | --- | --- | --- | --- | --- |
-| h2o-if97-347.390K | iapws_if97 | rho_V | 0.235067 | 975.281 | 4147.94 | coolprop:Water (CoolProp 8.0.0 HEOS reference values; state points match the hand-typed NIST WebBook h2o-nist cases) |
-| h2o-if97-401.605K | iapws_if97 | rho_V | 1.43327 | 936.138 | 652.147 | coolprop:Water (CoolProp 8.0.0 HEOS reference values; state points match the hand-typed NIST WebBook h2o-nist cases) |
 | vdw-ng-dew-morch-243.4K-0.30MPa | vdw | dew_P | 300000 | 8.16458e+06 | 26.2153 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | rk-ng-dew-morch-254.6K-0.68MPa | rk | dew_P | 680000 | 1.036e+07 | 14.2353 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
+| twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa | twu-sim-tassone | dew_P | 680000 | 1.00307e+07 | 13.751 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | vdw-ng-dew-morch-254.6K-0.68MPa | vdw | dew_P | 680000 | 8.96451e+06 | 12.1831 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | rk-ng-dew-morch-260.8K-1.04MPa | rk | dew_P | 1.04e+06 | 1.09081e+07 | 9.48855 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
+| twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa | twu-sim-tassone | dew_P | 1.04e+06 | 1.06837e+07 | 9.27279 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | vdw-ng-dew-morch-260.8K-1.04MPa | vdw | dew_P | 1.04e+06 | 9.38871e+06 | 8.02761 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | rk-ng-dew-morch-243.4K-0.30MPa | rk | dew_P | 300000 | 1.05415e+06 | 2.51382 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
-| h2o-if97-273.179K | iapws_if97 | rho_L | 999.794 | 0.00486078 | 0.999995 | coolprop:Water (CoolProp 8.0.0 HEOS reference values; state points match the hand-typed NIST WebBook h2o-nist cases) |
+| twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa | twu-sim-tassone | dew_P | 300000 | 853201 | 1.844 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | vtpr-pure-MeOH-305K | vtpr | Cp | 82.6135 | 129.578 | 0.568483 | coolprop:Methanol |
-| h2o-if97-273.179K | iapws_if97 | Cp | 76.0217 | 34.017 | 0.552535 | coolprop:Water (CoolProp 8.0.0 HEOS reference values; state points match the hand-typed NIST WebBook h2o-nist cases) |
 | rk-pure-C1-125K | rk | Cp | 57.7411 | 88.1237 | 0.526185 | coolprop:CH4 |
 | pure-H2O-614.7K | srk | Cp | 151.747 | 229.506 | 0.512425 | coolprop:Water |
 | pure-H2O-614.7K | pr | Cp | 151.747 | 220.634 | 0.453959 | coolprop:Water |
@@ -1246,6 +1278,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | psrk-pure-MeOH-305K | psrk | Cp | 82.6135 | 119.94 | 0.451827 | coolprop:Methanol |
 | srk-mhv2-pure-MeOH-305K | srk_mhv2 | Cp | 82.6135 | 119.94 | 0.451827 | coolprop:Methanol |
 | vtpr-pure-MeOH-330K | vtpr | Cp | 88.5047 | 127.928 | 0.445436 | coolprop:Methanol |
+| twu-sim-tassone-c1c3-294.26K-6.895MPa | twu-sim-tassone | bubble_P | 6.895e+06 | 3.90534e+06 | 0.433599 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | pure-H2O-600K | srk | Cp | 125.264 | 178.303 | 0.423422 | coolprop:Water |
 | vdw-pure-CO2-265K | vdw | rho_L | 973.254 | 570.303 | 0.414025 | coolprop:CO2 |
 | c1c3-294.26K-9.653MPa | srk | bubble_P | 9.653e+06 | 5.87349e+06 | 0.391538 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
@@ -1313,6 +1346,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-H2O-614.7K | pr | rho_L | 605.554 | 444.727 | 0.265587 | coolprop:Water |
 | pure-H2O-614.7K | pr78 | rho_L | 605.554 | 444.727 | 0.265587 | coolprop:Water |
 | pure-C2-285K | srk | Cp | 132.286 | 167.068 | 0.262933 | coolprop:Ethane |
+| twu-sim-tassone-c1c3-294.26K-6.895MPa | twu-sim-tassone | vapor_comp | 0.7497 | 0.487529 | 0.262171 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | psrk-pure-H2O-370K | psrk | rho_L | 960.587 | 710.618 | 0.260225 | coolprop:Water |
 | srk-peneloux-ng-dew-morch-243.4K-0.30MPa | srk-peneloux | dew_P | 300000 | 377792 | 0.259308 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | sour-srk-ng-dew-morch-243.4K-0.30MPa | sour-srk | dew_P | 300000 | 377792 | 0.259308 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
@@ -1365,6 +1399,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-C2-285K | pr78 | Cp | 132.286 | 161.185 | 0.218456 | coolprop:Ethane |
 | pure-H2O-614.7K | cpa_srk | Cp | 151.747 | 119.659 | 0.211461 | coolprop:Water |
 | pure-C1-181.0K | pc_saft | Cp | 124.139 | 149.979 | 0.208153 | coolprop:CH4 |
+| twu-sim-tassone-c1co2-277.15K-5.97MPa | twu-sim-tassone | bubble_P | 5.97e+06 | 4.74209e+06 | 0.205681 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
 | pure-nC4-403.9K | pr | Cp | 236.805 | 285.411 | 0.205254 | coolprop:n-Butane |
 | pure-nC4-403.9K | pr78 | Cp | 236.805 | 285.411 | 0.205254 | coolprop:n-Butane |
 | meohh2o-322.91K-26.131kPa | cpa_srk | bubble_P | 26131 | 31474.2 | 0.204479 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
@@ -1385,6 +1420,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pr-bm-ng-dew-morch-260.8K-1.04MPa | pr-bm | dew_P | 1.04e+06 | 1.23705e+06 | 0.189472 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | pure-H2S-345K | pr | Cp | 112.837 | 133.856 | 0.186276 | coolprop:H2S |
 | pure-H2S-345K | pr78 | Cp | 112.837 | 133.856 | 0.186276 | coolprop:H2S |
+| twu-sim-tassone-pure-C1-125K | twu-sim-tassone | rho_L | 402.111 | 476.012 | 0.183784 | coolprop:CH4 |
 | meohh2o-312.91K-9.079kPa | nrtl | bubble_P | 9079 | 10747.1 | 0.183734 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | pure-C1-172K | pr | Cp | 87.1299 | 103.117 | 0.183483 | coolprop:CH4 |
 | pure-C1-172K | pr78 | Cp | 87.1299 | 103.117 | 0.183483 | coolprop:CH4 |
@@ -1488,6 +1524,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-H2O-370K-nrtl | nrtl | Cp | 75.8833 | 66.6483 | 0.1217 | coolprop:Water |
 | pure-H2S-187.8K | pr | Cp | 68.8292 | 60.4703 | 0.121444 | coolprop:H2S |
 | pure-H2S-187.8K | pr78 | Cp | 68.8292 | 60.4703 | 0.121444 | coolprop:H2S |
+| twu-sim-tassone-pure-nC4-280K | twu-sim-tassone | rho_L | 593.294 | 664.97 | 0.12081 | coolprop:n-Butane |
 | prsv-pure-C1-125K | prsv | rho_L | 402.111 | 449.914 | 0.118882 | coolprop:CH4 |
 | prsv2-pure-C1-125K | prsv2 | rho_L | 402.111 | 449.914 | 0.118882 | coolprop:CH4 |
 | pr-mathias-copeman-pure-C1-125K | pr-mathias-copeman | rho_L | 402.111 | 449.888 | 0.118816 | coolprop:CH4 |
@@ -1533,10 +1570,12 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | api-srk-ng-dew-morch-260.8K-1.04MPa | api-srk | dew_P | 1.04e+06 | 1.14824e+06 | 0.104073 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | meohh2o-322.91K-15.932kPa | nrtl | bubble_P | 15932 | 17553.7 | 0.101786 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | pure-H2O-614.7K | cpa_srk | rho_V | 95.5877 | 85.8735 | 0.101626 | coolprop:Water |
+| twu-sim-tassone-pure-CO2-265K | twu-sim-tassone | Cp | 103.056 | 113.509 | 0.101439 | coolprop:CO2 |
 | pure-C2-250K | srk | Cp | 90.0242 | 99.0394 | 0.100142 | coolprop:Ethane |
 | pure-CO2-240.0K | pc_saft | Cp | 90.2633 | 81.2574 | 0.0997738 | coolprop:CO2 |
 | pure-nC4-350K | srk | rho_L | 505.177 | 454.822 | 0.0996774 | coolprop:n-Butane |
 | rk-pure-C3-300K | rk | Cp | 120.805 | 132.831 | 0.0995539 | coolprop:Propane |
+| twu-sim-tassone-pure-C3-300K | twu-sim-tassone | rho_L | 489.447 | 538.028 | 0.0992565 | coolprop:Propane |
 | pure-C1-172K | srk | rho_L | 304.559 | 274.35 | 0.0991902 | coolprop:CH4 |
 | slice-inlet-K-500psia-300K | srk | K | 1.17 | 1.05444 | 0.098766 | literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20 |
 | c1c3-327.59K-7.584MPa | pr | vapor_comp | 0.5546 | 0.456645 | 0.0979547 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
@@ -1672,6 +1711,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-H2S-240K | pr | Cp | 68.4609 | 64.6799 | 0.0552282 | coolprop:H2S |
 | pure-H2S-240K | pr78 | Cp | 68.4609 | 64.6799 | 0.0552282 | coolprop:H2S |
 | pure-CO2-285.0K | pc_saft | Cp | 137.895 | 130.322 | 0.0549197 | coolprop:CO2 |
+| twu-sim-tassone-pure-C3-300K | twu-sim-tassone | Cp | 120.805 | 127.22 | 0.0531066 | coolprop:Propane |
 | aga8-c1n2-153.41K-dew | gerg2008_teqp | dew_P | 2.65844e+06 | 2.79904e+06 | 0.0528855 | literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen 50/50 mol %); retrieved 2026-10-21 |
 | aga8-c1n2-153.41K-dew | multifluid | dew_P | 2.65844e+06 | 2.79904e+06 | 0.0528855 | literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Binary Mixture Calculations sheet, GERG-2008 column, methane/nitrogen 50/50 mol %); retrieved 2026-10-21 |
 | pure-MeOH-358.8K | cpa_srk | Cp | 96.783 | 91.7754 | 0.0517408 | coolprop:Methanol |
@@ -1832,9 +1872,6 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `c1co2-303.144K-7.361MPa` — bubble_P -6.0 % (7361100 vs 6921345) — same k_ij = 0 limitation (measured 2026-10-22, PR table).
 - `c1co2-303.145K-7.306MPa` — bubble_P -5.7 % (7306400 vs 6889862) — same k_ij = 0 limitation (measured 2026-10-22, PR table).
 - `c1n2-130.079K-0.614MPa` — bubble_P -5.77% (578280 vs 613700) - teqp's Kunz-Wagner (2012) mixture parameters vs the NGPSA data at the binary's dense-phase end (the CoolProp HEOS cross-check gives the same 578.3 kPa, so the miss is the parameter set, not the flash); vapour_comp passes (+0.0057 abs, tolerance 0.02) (measured 2026-10-22, PR table).
-- `h2o-if97-273.179K` — rho_L x1/2e5 (0.00486078 vs 999.794) and Cp -55.3% (34.017 vs 76.0217) - the IF97 adapter swaps the saturated-phase labels at the saturation state (the liquid reads the vapour values); measured 2026-10-22, T-15 sweep.
-- `h2o-if97-347.390K` — rho_V x4.2e3 (975.281 vs 0.235067) - the IF97 adapter swaps the saturated-phase labels (the vapour reads the liquid density); measured 2026-10-22, T-15 sweep.
-- `h2o-if97-401.605K` — rho_V x652 (936.138 vs 1.43327) - the IF97 adapter swaps the saturated-phase labels (the vapour reads the liquid density); measured 2026-10-22, T-15 sweep.
 - `kabadi-danner-srk-c1co2-277.15K-5.97MPa` — bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table).
 - `kabadi-danner-srk-ng-dew-morch-243.4K-0.30MPa` — dew_P +25.9% (377792 vs 300000) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table).
 - `kabadi-danner-srk-ng-dew-morch-254.6K-0.68MPa` — dew_P +13.8% (774165 vs 680000) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table).
@@ -2142,6 +2179,15 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `twu-pr-ng-dew-morch-260.8K-1.04MPa` — dew_P +15.8% (1.20473e+06 vs 1.04e+06) - Twu alpha (generalized omega correlation) inherits PR property limits (measured 2026-10-22, PR #161 table).
 - `twu-pr-pure-C1-125K` — rho_L +11.9% (449.803 vs 402.111) - Twu alpha (generalized omega correlation) inherits PR property limits (measured 2026-10-22, PR #161 table).
 - `twu-pr-pure-CO2-265K` — Cp +8.6% (111.963 vs 103.056) - Twu alpha (generalized omega correlation) inherits PR property limits (measured 2026-10-22, PR #161 table).
+- `twu-sim-tassone-c1c3-294.26K-6.895MPa` — bubble_P -18.6% (5.61447e+06 vs 6.895e+06); vapor_comp +4.9% (0.798488 vs 0.7497) - binary parameters from the generic ChemSep PR table (TST-fitted BIPs unavailable) and alpha fitted to normal paraffins only: mixture VLE outside bands by design (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-c1co2-277.15K-5.97MPa` — bubble_P -15.9% (5.02169e+06 vs 5.97e+06) - binary parameters from the generic ChemSep PR table (TST-fitted BIPs unavailable) and CO2 on the generalised Twu alpha: mixture VLE outside bands by design (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa` — dew_P -39.1% (182799 vs 300000) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa` — dew_P -43.9% (381274 vs 680000) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa` — dew_P -45.9% (562506 vs 1.04e+06) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-pure-C1-125K` — rho_L +18.4% (476.012 vs 402.111) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-pure-C3-300K` — rho_L +9.9% (538.028 vs 489.447) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-pure-CO2-265K` — rho_L +6.7% (1038.35 vs 973.254) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope; CO2 uses the generalised Twu alpha (measured 2026-10-23, validation sweep table).
+- `twu-sim-tassone-pure-nC4-280K` — rho_L +12.1% (664.97 vs 593.294) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table).
 - `twu-srk-ng-dew-morch-243.4K-0.30MPa` — dew_P +28.7% (386167 vs 300000) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table).
 - `twu-srk-ng-dew-morch-254.6K-0.68MPa` — dew_P +16.7% (793289 vs 680000) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table).
 - `twu-srk-ng-dew-morch-260.8K-1.04MPa` — dew_P +13.6% (1.18184e+06 vs 1.04e+06) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table).
@@ -2188,12 +2234,15 @@ Pure-fluid expected values are generated from the CoolProp reference EOS (versio
 - DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20
 - Ethanol/water azeotrope at 760 mmHg: b.p. 78.20 C, 4.40 wt% water (x_EtOH = 0.8947 mole fraction) - Edinburgh Azeotrope Database (homepages.ed.ac.uk/jwp/Chemeng/azeotrope/EE.html, CRC Handbook/Lange compilation); retrieved 2026-10-21
 - Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+- IAPWS R7-97(2012), Table 35 (Region 4 saturation line): Psat(300 K) = 0.353658941e-2 MPa; retrieved 2026-10-23
+- IAPWS R7-97(2012), Table 5 (Region 1 check values): T=300 K, p=3 MPa, v=0.100215168e-2 m3/kg, cp=0.417301218e1 kJ/(kg K); retrieved 2026-10-23 (density cross-checked against the shared kernel in-session before binding)
 - Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (doi 10.1021/je700210n), CH4+N2 130.079 K isotherm; retrieved 2026-10-21
 - Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (doi 10.1021/je700210n), CH4+N2 149.989 K isotherm; retrieved 2026-10-21
 - Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (doi 10.1021/je700210n), CH4+N2 159.972 K isotherm; retrieved 2026-10-21
 - Janisch, Raabe & Kohler (2007) J. Chem. Eng. Data 52, 1897-1903, via NIST ThermoML (doi 10.1021/je700210n), CH4+N2 179.976 K isotherm; retrieved 2026-10-21
 - Jou, Mather & Otto 1982 H2S isotherm, 4.28 kmol/m3 aqueous MDEA at 313.15 K (I&EC Process Des. Dev., vol. 21, p. 539, 1982): p_H2S 0.0108 kPa at loading 0.01, 3.31 kPa at 0.165, 36.9 kPa at 0.453, as curated in tests/units/test_mdea_equilibrium.py; retrieved 2026-10-21
 - Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+- Lemmon, Bell, Heinemann & Lu (2017) AGA8 Version 2.0 [Software], NIST, github.com/usnistgov/AGA8 @ 3bdb9ab8ff317c618b0b59d1b704c2c86ddc5fce, AGA8CODE/C Detail_test_01.cpp printed check values: 21-component example gas at 400 K / 50 000 kPa - molar density 12.80792403648801 mol/l, molar mass 20.54333051 g/mol, Z 1.173801364147326, cp 58.54617672380667 J/(mol K); retrieved 2026-10-21
 - Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21
 - NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
 - Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML (doi 10.1016/j.fluid.2018.01.011), 293.13 K isotherm; retrieved 2026-10-21

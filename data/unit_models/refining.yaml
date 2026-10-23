@@ -1,0 +1,408 @@
+# U-H — Refining (plan §2 U-H, 12 rows).
+#
+# Review round 2: the family is the plan table verbatim — every level note is
+# the plan table's R0/R1/R2 cell, and reactors declare nothing above R1 (plan:
+# "nothing above R1 is planned for them").
+#
+# Rows recorded on round 1 and dropped here, with the decisions:
+# - alkylation, isomerization: not on the plan's U-H list (plan §2 palette).
+# - LPG recovery: a flowsheet template built from the column-family absorber +
+#   regenerator rows, not a bespoke unit (plan §2 — LNG/NGL templates are
+#   example flowsheets, not catalogue rows).
+# - sour-water stripping: a reboiled-stripper CONFIGURATION on the electrolyte
+#   package (T-09), reached via the column row (plan U-G 9).
+# - assay-based feed characterization: merged into the assay feeder row — the
+#   assay that cuts pseudo-components is data-layer work (A-01, P1-14).
+
+- id: assay_feeder
+  name: Assay feeder
+  family: refining
+  ports:
+    inlet:
+    - name: assay_in
+      required: true
+      description: crude assay data (A-01 data layer)
+    outlet:
+    - name: cuts_out
+      required: true
+      description: pseudo-component stream at T, P, flow
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: assay (A-01) → pseudo-component stream at T, P, flow
+      end_state: true
+  pid_symbol: ASSAY
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 1
+  notes: roadmap; pairs with the A-01 assay work and the flowsheet-owned
+    pseudo-components (P1-14); assay cutting is data-layer work.
+
+- id: desalter
+  name: Desalter
+  family: refining
+  ports:
+    inlet:
+    - name: crude_in
+      required: true
+      description: crude feed
+    - name: wash_in
+      required: true
+      description: wash water
+    outlet:
+    - name: crude_out
+      required: true
+      description: desalted crude
+    - name: water_out
+      required: true
+      description: salty waste water
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: water/salt/BS&W split spec, wash-water mix
+    R1:
+      status: planned
+      params: {}
+      note: efficiency vs wash rate and ΔT (cited correlation)
+      end_state: true
+  pid_symbol: DS
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 2
+  notes: roadmap.
+
+- id: crude_column
+  name: Atmospheric crude column
+  family: refining
+  ports:
+    inlet:
+    - name: crude_in
+      required: true
+      description: heated crude feed
+    outlet:
+    - name: overhead
+      required: true
+      description: naphtha overhead
+    - name: kero_out
+      required: true
+      description: kerosene side draw
+    - name: diesel_out
+      required: true
+      description: diesel side draw
+    - name: ago_out
+      required: true
+      description: atmospheric gas oil side draw
+    - name: bottoms
+      required: true
+      description: reduced crude bottoms
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: cut-point fractionation (TBP cut points, gap/overlap spec)
+    R2:
+      status: planned
+      params: {}
+      note: MESH with side strippers, pumparounds, stripping steam, overflash
+        (U-E 6 extensions; needs column_extensions, P1-11)
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 3
+  notes: roadmap; needs pseudo-component preflash (P1-14) and column extensions (plan §2b).
+
+- id: side_strip
+  name: Side stripper
+  family: refining
+  ports:
+    inlet:
+    - name: draw_in
+      required: true
+      description: side draw from the main column
+    - name: steam_in
+      required: true
+      description: stripping steam
+    outlet:
+    - name: overhead_out
+      required: true
+      description: stripped product + steam back to the column
+    - name: bottoms_out
+      required: true
+      description: stripped liquid product
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: steam-stripped draw, Kremser on pseudos
+    R2:
+      status: planned
+      params: {}
+      note: MESH stage section coupled to the main column
+      end_state: true
+  pid_symbol: SS
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 4
+  notes: roadmap.
+
+- id: vacuum_column
+  name: Vacuum distillation column
+  family: refining
+  ports:
+    inlet:
+    - name: feed_in
+      required: true
+      description: reduced crude feed
+    outlet:
+    - name: overhead
+      required: true
+      description: overhead (wash oil / vacuum gas oil)
+    - name: vgo_out
+      required: true
+      description: vacuum gas oil draw
+    - name: bottoms
+      required: true
+      description: vacuum residuum
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: cut-point fractionation at flash-zone P
+    R2:
+      status: planned
+      params: {}
+      note: MESH with pumparounds, no condenser, wash zone
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 5
+  notes: roadmap.
+
+- id: preflash
+  name: Preflash / flash column
+  family: refining
+  ports:
+    inlet:
+    - name: feed_in
+      required: true
+      description: heated assay feed
+    outlet:
+    - name: vapor_out
+      required: true
+      description: flashed vapor
+    - name: liquid_out
+      required: true
+      description: flashed liquid
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: flash drum on the assay stream (today via the separator row)
+    R2:
+      status: planned
+      params: {}
+      note: short MESH
+      end_state: true
+  pid_symbol: FL
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 6
+  notes: roadmap.
+
+- id: naphtha_ht
+  name: Naphtha hydrotreater
+  family: refining
+  ports:
+    inlet:
+    - name: naphtha_in
+      required: true
+      description: naphtha feed
+    - name: h2_in
+      required: true
+      description: hydrogen feed
+    outlet:
+    - name: treated_out
+      required: true
+      description: hydrotreated naphtha
+    - name: gas_out
+      required: true
+      description: H2S / offgas
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: yield shift + H2 consumption + S/N removal spec
+    R1:
+      status: planned
+      params: {}
+      note: lumped HDS/HDN kinetics in a PFR
+      end_state: true
+  pid_symbol: HT
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 7
+  notes: roadmap.
+
+- id: reformer_cat
+  name: Catalytic reformer
+  family: refining
+  ports:
+    inlet:
+    - name: naphtha_in
+      required: true
+      description: naphtha feed
+    outlet:
+    - name: reformate_out
+      required: true
+      description: reformate
+    - name: h2_out
+      required: true
+      description: hydrogen by-product
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: lumped yield table (C5+ yield vs severity)
+    R1:
+      status: planned
+      params: {}
+      note: Smith (1959) lumped kinetics
+      end_state: true
+  pid_symbol: RF
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 8
+  notes: roadmap.
+
+- id: fcc
+  name: Fluid catalytic cracker
+  family: refining
+  ports:
+    inlet:
+    - name: feed_in
+      required: true
+      description: VGO feed
+    outlet:
+    - name: dry_gas_out
+      required: true
+      description: dry gas
+    - name: lpg_out
+      required: true
+      description: LPG
+    - name: gasoline_out
+      required: true
+      description: gasoline
+    - name: lco_out
+      required: true
+      description: light cycle oil
+    - name: slurry_out
+      required: true
+      description: slurry/slops
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: yield table vs conversion
+    R1:
+      status: planned
+      params: {}
+      note: Weekman 3/4-lump kinetics with heat balance
+      end_state: true
+  pid_symbol: FC
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 9
+  notes: roadmap; nothing above R1 is planned (plan §2 U-H preamble).
+
+- id: hcu
+  name: Hydrocracker
+  family: refining
+  ports:
+    inlet:
+    - name: vgo_in
+      required: true
+      description: VGO feed
+    - name: hydrogen_in
+      required: true
+      description: hydrogen feed
+    outlet:
+    - name: naphtha_out
+      required: true
+      description: hydrocracked naphtha
+    - name: diesel_out
+      required: true
+      description: diesel
+    - name: unconverted_out
+      required: true
+      description: unconverted oil recycle
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: yield table vs conversion
+    R1:
+      status: planned
+      params: {}
+      note: lumped (continuous-lumping) kinetics
+      end_state: true
+  pid_symbol: HC
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 10
+  notes: roadmap.
+
+- id: coker
+  name: Delayed coker / visbreaker
+  family: refining
+  ports:
+    inlet:
+    - name: feed_in
+      required: true
+      description: residuum feed
+    outlet:
+    - name: gas_out
+      required: true
+      description: coker gas
+    - name: naphtha_out
+      required: true
+      description: coker naphtha
+    - name: lgo_out
+      required: true
+      description: light gas oil
+    - name: hgo_out
+      required: true
+      description: heavy gas oil
+    - name: coke_out
+      required: true
+      description: petroleum coke
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: yield table vs CCR / severity
+      end_state: true
+  pid_symbol: CK
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 11
+  notes: roadmap; the refinery_leeps_distillation correlation plugin exists for
+    LEEP cut yields.
+
+- id: blending
+  name: Product blender
+  family: refining
+  ports:
+    inlet:
+    - name: component_in
+      required: true
+      description: blendstock feed (multiple via params)
+    outlet:
+    - name: blend_out
+      required: true
+      description: blended product
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: volume/mass blending with property indices (RVP, octane, cetane,
+        sulfur, D86)
+      end_state: true
+  sizer: null  # no registered blender sizer; sizing ships with a later spec
+  pid_symbol: BL
+  references:
+  - docs/unit-catalogue-plan.md §2 U-H 12
+  notes: roadmap; the R0 blend shares the mixer adapter for the linear part, the
+    index work (cloud_point and pour_point plugins exist) is U-H's thread.

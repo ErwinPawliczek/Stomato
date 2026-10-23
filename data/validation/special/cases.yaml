@@ -31,29 +31,46 @@
 # - special_fh_toluene_ps_entropy: FH entropy of mixing against the PSU MATSE
 #   202 worked example (x1 = 0.95, r2/r1 = 962 -> dG_mix/RT = -1.463) and the
 #   closed-form solvent activity. Pending: the harness has no gamma-only case
-#   type for polymer surfaces yet.
+#   type for polymer surfaces yet, and the PSU example did not reproduce from
+#   any FH normalization (T-10; the test pins the hand reduction instead).
 #
 # - special_fh_toluene_ps_activity_data: chi = 0.67 (Gunduz & Dincer 1980)
 #   against measured toluene activity in polystyrene (Omega_1^inf = 7.90).
-#   Pending: source precision not verified against the primary paper this
-#   session; table values must be digitized before a tolerance is set.
+#   T-19 (2026-10-23): the primary papers (Bawn 1950; Krigbaum & Geymer,
+#   J. Am. Chem. Soc. 81, 1859 (1959)) are paywalled; no open digitized
+#   activity table found, and the shipped chi is the Gunduz & Dincer fit
+#   point, so binding it would be a round trip. Stays unbound.
 #
-# - special_sle_naphthalene_benzene: van't Hoff ideal solubility x = 0.3018 at
-#   298.15 K (Tm = 353.35 K, Hfus = 19010 J/mol, chemicals databank) within 5%
-#   of the measured x ~ 0.292 for naphthalene in benzene (Oregon State PAH
-#   solubility table, retrieved this session). Pending: measured-value source
-#   precision is uncertain (secondary aggregation); re-verify against a
-#   primary source before binding.
+# - special_sle_naphthalene_benzene: RESOLVED at unit level (T-19): measured
+#   values re-verified on the IUPAC-NIST Solubility Database pages
+#   (naphthalene/benzene 0.292 @ 298.15 K sysID 59_123, 0.372 @ 307.5 K
+#   sysID 59_125, 0.3766 @ 308.2 K sysID 59_124; biphenyl/benzene 0.381 @
+#   298.15 K sysID 58_241; anthracene 0.00713 @ 298.15 K sysID 58_57) and the
+#   van't Hoff misses pinned in tests/thermo/test_special.py (+3.4%/+2.4%/
+#   +2.9%, -0.7%, +32% assessed). The case stays unbound: the harness has no
+#   case type for the solubility(cid, T) surface (scripts/validate_properties.py
+#   is outside the spec's editable files).
 #
-# - special_assoc_acetic_acid_Z: dimerization-kernel nominal compressibility
-#   Z = 0.6299 at 399.35 K, 1 bar (Mehling & Kleiber 2020). Pending: K2 was
-#   reduced FROM that Z point, so the current check is a round trip, not an
-#   independent prediction; an independent K2(T) source is needed.
+# - special_assoc_acetic_acid_Z: RESOLVED at unit level (T-19): the kernel is
+#   now parameterized INDEPENDENTLY (Ritter & Simons 1945, log10 K2 = 3164/T -
+#   10.4184 mmHg^-1, verified via Sebastiani & Lacquaniti 1967) and PREDICTS
+#   the Mehling & Kleiber (2020) Z = 0.6299 point with a +3.8% assessed miss
+#   (tests/thermo/test_special.py). A harness case stays unbound: the harness
+#   has no compressibility case type, and an AcOH/water VLE bind needs the
+#   kernel in flash K-values plus liquid non-ideality (ideal-liquid misses
+#   measured K's by ~7-15% at the Sebastiani midpoint).
 #
 # - special_chen_polymer_nrtl_parameters: Chen 1993 against a published
-#   polymer-solution dataset with the paper's own parameterization. Pending:
-#   no verified published parameter set located this session; the shipped
-#   toluene/PS tau/alpha are explicitly illustrative.
+#   polymer-solution dataset with the paper's own parameterization. T-19
+#   (2026-10-23): still no open Chen 1993 parameter transcription found; the
+#   shipped toluene/PS tau/alpha are explicitly illustrative. Stays unbound.
+#
+# - special_hf_hexamer_factors: kernel vs Jarry & Davis smoothed association
+#   factors 3.580 @ 298.16 K and 3.438 @ 303.16 K - pinned in
+#   tests/thermo/test_special.py. T-19 (2026-10-23): the mmHg->Pa conversion
+#   re-verified exactly (-42.38089 - 5 log10(101325/760) = -53.0054051, the
+#   shipped constant); the paper's wider factor table is not retrievable open
+#   access, so no new-temperature point can be bound.
 
 meta:
   coolprop_version: 8.0.0

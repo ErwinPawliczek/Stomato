@@ -79,8 +79,17 @@ def discover() -> None:
         pkg = importlib.import_module(pkg_name)
         for mod in pkgutil.walk_packages(pkg.__path__, prefix=pkg_name + "."):
             importlib.import_module(mod.name)
-    importlib.import_module("ngdesign.thermo.catalogue").register_all(_REGISTRY["thermo"])
+    # The flag goes up before the catalogue hooks: the unit catalogue validates
+    # its rows' sizer names against the registry while loading, which calls
+    # available("sizer") -> discover(); a second full pass here would
+    # re-register the thermo catalogue factories and fail on the duplicates.
     _discovered = True
+    try:
+        importlib.import_module("ngdesign.thermo.catalogue").register_all(_REGISTRY["thermo"])
+        importlib.import_module("ngdesign.units.catalogue").register_all(_REGISTRY["unit"])
+    except BaseException:
+        _discovered = False
+        raise
 
 
 def get(kind: str, name: str) -> type:
@@ -98,3 +107,17 @@ def create(kind: str, name: str, *args: Any, **kwargs: Any) -> Any:
 def available(kind: str) -> list[str]:
     discover()
     return sorted(_REGISTRY[kind])
+
+
+def replace(kind: str, name: str, cls: type) -> None:
+    """Point an existing registration at another class (spec U-00 dispatch hook).
+
+    ``register`` stays duplicate-strict; ``replace`` is the one sanctioned
+    overwrite. The unit catalogue's review-round-2 contract requires it:
+    ``discover()`` imports the decorator-based plugins first, then replaces
+    every implemented unit id with its per-row ``LevelDispatch`` — the same
+    id, one entry, solve-time level resolution in front of the adapter.
+    """
+    if kind not in KINDS:
+        raise ValueError(f"unknown plugin kind {kind!r}; allowed: {KINDS}")
+    _REGISTRY[kind][name] = cls

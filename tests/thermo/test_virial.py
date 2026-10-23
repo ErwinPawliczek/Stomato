@@ -109,18 +109,21 @@ def test_hoc_dimer_cross_check_acetic_acid() -> None:
       parameter eta = 4.50 (ChemSep HAYDENO.IPD) through the correlation's
       empirical A-15b branch — Hayden & O'Connell (1975) themselves flag the
       chemical-theory constant as the correlation's weakest link.
-    - The ``hoc_dimer`` kernel's Kp(400 K) = 3.412e-5 1/Pa (from K2_ref reduced
-      directly off Mehling & Kleiber's (2020) measured Z = 0.6299 at 399.35 K /
-      1 bar; data/thermo_params/special/association.yaml) gives -Kp*R*T =
-      -113,466 cm3/mol as the low-pressure limit of its effective B.
+    - The ``hoc_dimer`` kernel's Kp(400 K) = 2.327e-5 1/Pa (from the Ritter &
+      Simons (1945) regression log10 K2 = 3164/T - 10.4184 mmHg^-1, rebound
+      independently of the Mehling & Kleiber point in T-19;
+      data/thermo_params/special/association.yaml) gives -Kp*R*T =
+      -77,373 cm3/mol as the low-pressure limit of its effective B.
 
-    The 34 % gap (ratio 0.663 measured 2026-10-22) is a parameterization
-    difference, not an implementation error: the kernel reproduces the measured
-    compressibility point by construction (round-trip in test_special.py), and
-    HOC's number never reaches a flash at this strength because
-    ``refuse_acid_strength`` blocks the slate — which is the point of the
-    refusal. Neither number is "wrong" within its declared scope, so neither is
-    retuned to close the gap ("never widen").
+    The former 34 % gap (ratio 0.663, measured 2026-10-22) was an artifact of
+    reducing K2 from Mehling & Kleiber's single measured Z point with a
+    -25 kJ/mol enthalpy that disagreed with the regression slope; with the
+    T-19 Ritter & Simons parameters the two routes agree within ~2.5 %
+    (ratio 0.975, measured 2026-10-23) - a parameterization reconciliation,
+    not a retune. The recorded HOC B(400 K) gap stays recorded: no standalone
+    published HOC number at 400 K / 1 bar was retrievable open access, so the
+    eta-implied constant remains the proxy, and the refusal explanation above
+    is unchanged. Neither number is "wrong" within its declared scope.
     """
     T = 400.0
     R = 8.314  # J/(mol K)
@@ -134,13 +137,13 @@ def test_hoc_dimer_cross_check_acetic_acid() -> None:
     assert z_virial < 0.0  # -1.27 measured; keep the refusal in place
 
     # The kernel's low-pressure-limit effective B (chemical theory, exact balance).
-    k2_ref, t_ref, dh = 3.4539e-5, 399.35, -25000.0  # association.yaml (AcOH)
+    k2_ref, t_ref, dh = 2.39647e-5, 399.35, -60574.0  # association.yaml (AcOH, R&S)
     kp = k2_ref * math.exp(-(dh / R) * (1.0 / T - 1.0 / t_ref))  # 1/Pa
-    b_kernel_limit = -kp * R * T * 1e6  # cm3/mol -> -113,466
-    assert b_kernel_limit == pytest.approx(-113466.0, rel=0.01)
+    b_kernel_limit = -kp * R * T * 1e6  # cm3/mol -> -77,373
+    assert b_kernel_limit == pytest.approx(-77373.0, rel=0.01)
 
     ratio = abs(b_total_cm3) / abs(b_kernel_limit)
-    assert 0.60 <= ratio <= 0.73  # measured 0.663: the explained 34 % gap
+    assert 0.93 <= ratio <= 1.02  # measured 0.975: routes agree within ~2.5 %
 
 
 def test_hoc_package_saturation_ethanol_water() -> None:
