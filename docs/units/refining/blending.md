@@ -1,8 +1,8 @@
-# Gasoline / diesel blending (`blending`)
+# Product blender (`blending`)
 
 Family: **refining** · P&ID symbol: `BL`
 
-Rigour ladder: R0 planned, R1 planned
+Rigour ladder: R0 planned
 
 ## Ports
 
@@ -15,11 +15,10 @@ Rigour ladder: R0 planned, R1 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | linear blend of component properties — shares the mixer adapter (linear blend) |
-| R1 | planned | — | blend indices (RON/MON, RVP, pour) — the cloud_point and pour_point plugins exist |
+| R0 | planned | — | volume/mass blending with property indices (RVP, octane, cetane, sulfur, D86) |
 
 ## References
 
-- docs/unit-catalogue-plan.md §2 U-H 9
+- docs/unit-catalogue-plan.md §2 U-H 12
 
-> R0 shares the mixer adapter (linear blend); R1 index work is U-H's thread.
+> roadmap; the R0 blend shares the mixer adapter for the linear part, the index work (cloud_point and pour_point plugins exist) is U-H's thread.

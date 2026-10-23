@@ -1,4 +1,4 @@
-"""Every catalogue-implemented level must close mass, component and energy balances on its example case. LOCKED.
+"""Balance closure per catalogue-implemented level, on its example case. LOCKED.
 
 Review round 2 (U-00, item 3): the test iterates the catalogue's implemented
 levels instead of the registered unit list — one solve per (row, level) pair,

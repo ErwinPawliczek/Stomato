@@ -196,7 +196,7 @@
     R0:
       status: planned
       params: {}
-      note: flash drum on the assay stream (today: the separator row)
+      note: flash drum on the assay stream (today via the separator row)
     R2:
       status: planned
       params: {}

@@ -18,11 +18,11 @@ Rigour ladder: R0 planned, R1 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | yield spec |
-| R1 | planned | — | kinetic lumps |
+| R0 | planned | — | yield table vs conversion |
+| R1 | planned | — | lumped (continuous-lumping) kinetics |
 
 ## References
 
-- docs/unit-catalogue-plan.md §2 U-H 8
+- docs/unit-catalogue-plan.md §2 U-H 10
 
 > roadmap.

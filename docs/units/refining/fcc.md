@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `FC`
 
-Rigour ladder: R0 planned, R1 planned, R2 planned
+Rigour ladder: R0 planned, R1 planned
 
 ## Ports
 
@@ -19,12 +19,11 @@ Rigour ladder: R0 planned, R1 planned, R2 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | yield correlation spec |
-| R1 | planned | — | 5-lump kinetic model |
-| R2 | planned | — | 10-lump kinetic model |
+| R0 | planned | — | yield table vs conversion |
+| R1 | planned | — | Weekman 3/4-lump kinetics with heat balance |
 
 ## References
 
-- docs/unit-catalogue-plan.md §2 U-H 4
+- docs/unit-catalogue-plan.md §2 U-H 9
 
-> roadmap.
+> roadmap; nothing above R1 is planned (plan §2 U-H preamble).

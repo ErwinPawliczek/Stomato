@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `T`
 
-Rigour ladder: R2 planned, R3 planned
+Rigour ladder: R0 planned, R2 planned
 
 ## Ports
 
@@ -19,11 +19,11 @@ Rigour ladder: R2 planned, R3 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R2 | planned | — | MESH with multiple side draws + steam stripping (needs column_extensions, P1-11) |
-| R3 | planned | — | rate-based with film hydraulics |
+| R0 | planned | — | cut-point fractionation (TBP cut points, gap/overlap spec) |
+| R2 | planned | — | MESH with side strippers, pumparounds, stripping steam, overflash (U-E 6 extensions; needs column_extensions, P1-11) |
 
 ## References
 
-- docs/unit-catalogue-plan.md §2 U-H 1
+- docs/unit-catalogue-plan.md §2 U-H 3
 
 > roadmap; needs pseudo-component preflash (P1-14) and column extensions (plan §2b).

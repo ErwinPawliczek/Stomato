@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `T`
 
-Rigour ladder: R2 planned
+Rigour ladder: R0 planned, R2 planned
 
 ## Ports
 
@@ -17,10 +17,11 @@ Rigour ladder: R2 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R2 | planned | — | deep-vacuum MESH, TBP cut spec |
+| R0 | planned | — | cut-point fractionation at flash-zone P |
+| R2 | planned | — | MESH with pumparounds, no condenser, wash zone |
 
 ## References
 
-- docs/unit-catalogue-plan.md §2 U-H 2
+- docs/unit-catalogue-plan.md §2 U-H 5
 
 > roadmap.

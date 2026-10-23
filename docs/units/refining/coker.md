@@ -1,8 +1,8 @@
-# Coker (delayed) (`coker`)
+# Delayed coker / visbreaker (`coker`)
 
 Family: **refining** · P&ID symbol: `CK`
 
-Rigour ladder: R0 planned, R1 planned
+Rigour ladder: R0 planned
 
 ## Ports
 
@@ -19,11 +19,10 @@ Rigour ladder: R0 planned, R1 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | yield correlation spec (the refinery_leeps_distillation correlation plugin exists for LEEP cut yields) |
-| R1 | planned | — | kinetic coking model |
+| R0 | planned | — | yield table vs CCR / severity |
 
 ## References
 
-- docs/unit-catalogue-plan.md §2 U-H 3
+- docs/unit-catalogue-plan.md §2 U-H 11
 
-> roadmap.
+> roadmap; the refinery_leeps_distillation correlation plugin exists for LEEP cut yields.

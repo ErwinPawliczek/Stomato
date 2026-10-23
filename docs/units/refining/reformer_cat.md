@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `RF`
 
-Rigour ladder: R0 planned
+Rigour ladder: R0 planned, R1 planned
 
 ## Ports
 
@@ -16,10 +16,11 @@ Rigour ladder: R0 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | RON yield correlation |
+| R0 | planned | — | lumped yield table (C5+ yield vs severity) |
+| R1 | planned | — | Smith (1959) lumped kinetics |
 
 ## References
 
-- docs/unit-catalogue-plan.md §2 U-H 5
+- docs/unit-catalogue-plan.md §2 U-H 8
 
 > roadmap.
