@@ -27,10 +27,10 @@ multi-root guard the reference leaves to the user. A deep liquid state whose
 isotherm has no second root (T below a pure species' critical point and P well
 above its vapour pressure) still yields a single dense root and is not
 detected here; full phase-boundary detection is out of scope for the gas-phase
-method, which is why the ``aga8_dc92`` catalogue row keeps a refusing
-Thermo-surface adapter (the row is ``experimental``) and this module is the
-gas-phase property core. Components outside the 21
-AGA8 species are refused with the component named.
+method. Components outside the 21 AGA8 species are refused with the component
+named. The :class:`Aga8Dc92Package` adapter below exposes the gas surface on
+the ``Thermo`` protocol; the ``aga8_dc92`` catalogue row (``provisional``,
+T-16a) points at it.
 """
 
 from __future__ import annotations
@@ -39,7 +39,16 @@ import math
 from collections.abc import Mapping
 from dataclasses import dataclass
 
-__all__ = ["Aga8Dc92Error", "Dc92Properties", "aga8_dc92_properties", "dc92_species"]
+from ngdesign.contracts.stream import Phase, PhaseKind, StreamState
+from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
+
+__all__ = [
+    "Aga8Dc92Error",
+    "Aga8Dc92Package",
+    "Dc92Properties",
+    "aga8_dc92_properties",
+    "dc92_species",
+]
 
 _SOURCE_COMMIT = "3bdb9ab8ff317c618b0b59d1b704c2c86ddc5fce"
 _R = 8.31451  # J/(mol K), NIST reference value (Detail.cpp SetupDetail)
@@ -635,3 +644,108 @@ def aga8_dc92_properties(composition: Mapping[str, float], T: float, P: float) -
         joule_thomson=jt,
         isentropic_exponent=kappa,
     )
+
+
+class Aga8Dc92Package:
+    """AGA 8 DC92 gas-phase property package (kind ``thermo``).
+
+    Vapour-only adapter over :func:`aga8_dc92_properties`: a single vapour phase
+    at (T, P) from the PT flash, vapour :meth:`phase_props`, and typed refusals
+    for everything the DC92 detail characterisation does not model — liquid-like
+    phases, saturation and two-phase flashes, enthalpy/entropy-driven flashes,
+    and fugacity derivatives. Pure-component saturation pressure and K-values
+    are ``None`` (no saturation model), which the L0 gate reads as "not
+    applicable" for a gas-only package.
+    """
+
+    def _props(self, z: dict[str, float], T: float, P: float) -> Dc92Properties:
+        # Protocol pressures are Pa absolute; the DC92 kernel works in kPa.
+        return aga8_dc92_properties(z, T, P / 1000.0)
+
+    def _vapour_phase(self, z: dict[str, float], T: float, P: float) -> Phase:
+        pr = self._props(z, T, P)
+        # kernel molar_density is mol/L and molar_mass g/mol -> kg/m3.
+        return Phase(
+            kind=PhaseKind.VAPOR,
+            mole_fraction=1.0,
+            composition=dict(z),
+            density=pr.molar_density * pr.molar_mass,
+            molecular_weight=pr.molar_mass,
+            z_factor=pr.z_factor,
+            enthalpy=pr.enthalpy,
+            entropy=pr.entropy,
+            cp=pr.cp,
+        )
+
+    def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
+        ph = self._vapour_phase(z, T, P)
+        return StreamState(
+            T=T,
+            P=P,
+            molar_flow=molar_flow,
+            composition=dict(z),
+            vapor_fraction=1.0,
+            enthalpy=ph.enthalpy,
+            entropy=ph.entropy,
+            phases=[ph],
+        )
+
+    def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:
+        raise Aga8Dc92Error(
+            "AGA8 DC92 is a gas-only characterisation: enthalpy-driven flashes need a "
+            "saturation/two-phase inversion this package does not model"
+        )
+
+    def flash_ps(self, z: dict[str, float], P: float, S: float, molar_flow: float) -> StreamState:
+        raise Aga8Dc92Error(
+            "AGA8 DC92 is a gas-only characterisation: entropy-driven flashes need a "
+            "saturation/two-phase inversion this package does not model"
+        )
+
+    def flash_tvf(self, z: dict[str, float], T: float, vf: float, molar_flow: float) -> StreamState:
+        raise Aga8Dc92Error("AGA8 DC92 has no liquid phase: vapour-fraction flashes are unsupported")
+
+    def flash_pvf(self, z: dict[str, float], P: float, vf: float, molar_flow: float) -> StreamState:
+        raise Aga8Dc92Error("AGA8 DC92 has no liquid phase: vapour-fraction flashes are unsupported")
+
+    def bubble_point(
+        self, z: dict[str, float], *, T: float | None = None, P: float | None = None
+    ) -> SaturationPoint:
+        raise Aga8Dc92Error("AGA8 DC92 models gas only: no bubble point")
+
+    def dew_point(
+        self, z: dict[str, float], *, T: float | None = None, P: float | None = None
+    ) -> SaturationPoint:
+        raise Aga8Dc92Error("AGA8 DC92 models gas only: no dew point")
+
+    def k_values(self, z: dict[str, float], T: float, P: float) -> dict[str, float] | None:
+        return None
+
+    def phase_props(
+        self, composition: dict[str, float], T: float, P: float, kind: PhaseKind
+    ) -> PhaseProps:
+        if kind is not PhaseKind.VAPOR:
+            raise Aga8Dc92Error(f"AGA8 DC92 supports vapour phase properties only, got {kind}")
+        pr = self._props(composition, T, P)
+        return PhaseProps(
+            kind=PhaseKind.VAPOR,
+            mole_fraction=1.0,
+            composition=dict(composition),
+            molecular_weight=pr.molar_mass,
+            density=pr.molar_density * pr.molar_mass,
+            enthalpy=pr.enthalpy,
+            entropy=pr.entropy,
+            cp=pr.cp,
+            gibbs=pr.gibbs,
+            z_factor=pr.z_factor,
+        )
+
+    def derivatives(
+        self, composition: dict[str, float], T: float, P: float, kind: PhaseKind
+    ) -> PropertyDerivatives:
+        raise Aga8Dc92Error(
+            "AGA8 DC92 exposes no fugacity model: ln phi derivatives are unsupported"
+        )
+
+    def pure_psat(self, cid: str, T: float) -> float | None:
+        return None

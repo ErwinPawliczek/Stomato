@@ -54,6 +54,7 @@ from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, Saturatio
 from ngdesign.thermo._state import R_IDEAL, _constants_package, _records
 
 __all__ = [
+    "ASMESteamPackage",
     "BWRSPackage",
     "CoolPropPackage",
     "CoolPropUnavailable",
@@ -952,6 +953,21 @@ class IAPWSPackage(_HelmholtzSurface):
             return float(state.T())
         except Exception as exc:
             raise SaturationError(f"no {kind} temperature for water at P={P} Pa: {exc}") from exc
+
+
+class ASMESteamPackage(IAPWSPackage):
+    """ASME-labelled steam tables over the IAPWS-IF97 kernel.
+
+    The modern ASME Steam Tables (7th ed., 2000) are computed from IAPWS-IF97,
+    so this package is the IF97 kernel under the ASME label — not a separate
+    formulation. The historical (pre-2000) ASME tables are based on IFC-67 and
+    differ slightly; they are out of scope here. Verification values for the
+    ``asme_steam`` row are bound from the IAPWS R7-97(2012) check tables that
+    pin the shared kernel (helmholtz/cases.yaml, ``asme-steam-*`` cases).
+    """
+
+    def __init__(self) -> None:
+        super().__init__(formulation="IF97")
 
 
 # ---------------------------------------------------------------------------
