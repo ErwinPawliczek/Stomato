@@ -33,7 +33,11 @@
       enters as a flowsheet-owned pseudo-component (P1-07). Vapour phase ideal.
       The shipped chi is fitted at 435.46 K; treat T_K as a structural, not
       validated, window. Infinite-dilution and concentrated regimes only as
-      validated.
+      validated. T-19 search (2026-10-23): no open digitized
+      polystyrene/toluene activity table was found - Bawn's osmometry data and
+      Krigbaum & Geymer (J. Am. Chem. Soc. 81, 1859 (1959)) are paywalled, and
+      the shipped chi is itself reduced from the Gunduz & Dincer IGC fit
+      point, so binding it would be a round trip. Row stays experimental.
   status: experimental
   validation: []
 
@@ -48,7 +52,10 @@
       Chen (1993), Fluid Phase Equilibria 83, 301: segment combinatorial plus
       segment-level NRTL residual. Segment assignments and tau/alpha per
       segment pair with provenance; the shipped toluene/PS parameterization is
-      an illustrative fit (no verified published parameter set located).
+      an illustrative fit (no verified published parameter set located; T-19
+      search 2026-10-23: the Chen 1993 parameter tables remain paywalled with
+      no open transcription found - the row keeps its experimental status per
+      the spec escape hatch).
   applicability:
     component_classes: [hydrocarbon, polar_organic]
     polar: true
@@ -86,7 +93,9 @@
     notes: >-
       Binary solvent/polymer supports only. The polymer pseudo-component's
       generalized vapour-pressure correlation is an operational placeholder
-      (polymers do not boil); only solvent K-values are meaningful.
+      (polymers do not boil); only solvent K-values are meaningful. T-19
+      search (2026-10-23): the Oishi & Prausnitz (1978) worked-example tables
+      are paywalled with no open transcription found; row stays experimental.
   status: experimental
   validation: []
 
@@ -213,6 +222,11 @@
       (SaftDependencyMissing without the optional extra; SaftParameterError
       naming any component without verified parameters). POLY_PS is the
       registered pseudo-component of P1-07 (Mw 400,000 g/mol, m = 7600
-      segments).
+      segments). T-19 (2026-10-23): the source paper is open access (ACS
+      Omega), but it publishes no polystyrene/toluene binary equilibrium
+      table an ideal-free k_ij = 0 bridge could be bound against, and the
+      kernel refuses at first use without the optional saft extra, so a bound
+      case cannot run in the default local environment. Row stays
+      experimental.
   status: experimental
   validation: []

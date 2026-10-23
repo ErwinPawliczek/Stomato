@@ -31,12 +31,15 @@
 # - special_fh_toluene_ps_entropy: FH entropy of mixing against the PSU MATSE
 #   202 worked example (x1 = 0.95, r2/r1 = 962 -> dG_mix/RT = -1.463) and the
 #   closed-form solvent activity. Pending: the harness has no gamma-only case
-#   type for polymer surfaces yet.
+#   type for polymer surfaces yet, and the PSU example did not reproduce from
+#   any FH normalization (T-10; the test pins the hand reduction instead).
 #
 # - special_fh_toluene_ps_activity_data: chi = 0.67 (Gunduz & Dincer 1980)
 #   against measured toluene activity in polystyrene (Omega_1^inf = 7.90).
-#   Pending: source precision not verified against the primary paper this
-#   session; table values must be digitized before a tolerance is set.
+#   T-19 (2026-10-23): the primary papers (Bawn 1950; Krigbaum & Geymer,
+#   J. Am. Chem. Soc. 81, 1859 (1959)) are paywalled; no open digitized
+#   activity table found, and the shipped chi is the Gunduz & Dincer fit
+#   point, so binding it would be a round trip. Stays unbound.
 #
 # - special_sle_naphthalene_benzene: RESOLVED at unit level (T-19): measured
 #   values re-verified on the IUPAC-NIST Solubility Database pages
@@ -54,9 +57,9 @@
 #   independent prediction; an independent K2(T) source is needed.
 #
 # - special_chen_polymer_nrtl_parameters: Chen 1993 against a published
-#   polymer-solution dataset with the paper's own parameterization. Pending:
-#   no verified published parameter set located this session; the shipped
-#   toluene/PS tau/alpha are explicitly illustrative.
+#   polymer-solution dataset with the paper's own parameterization. T-19
+#   (2026-10-23): still no open Chen 1993 parameter transcription found; the
+#   shipped toluene/PS tau/alpha are explicitly illustrative. Stays unbound.
 
 meta:
   coolprop_version: 8.0.0
