@@ -868,6 +868,16 @@ export interface components {
             message: string;
         };
         /**
+         * Arrhenius
+         * @description Arrhenius factor k0·exp(−Ea/(R·T)) with Ea in J/mol.
+         */
+        Arrhenius: {
+            /** Ea */
+            Ea: number;
+            /** K0 */
+            k0: number;
+        };
+        /**
          * Axis
          * @description One swept address and the values it takes; every combination with the
          *     other axes (the full grid) becomes one case.
@@ -1082,10 +1092,47 @@ export interface components {
          */
         Direction: "E" | "W" | "N" | "S" | "UP" | "DOWN";
         /**
+         * DrivingForceTerm
+         * @description One additive term of an LHHW numerator/denominator block.
+         */
+        DrivingForceTerm: {
+            arrhenius: components["schemas"]["Arrhenius"];
+            /**
+             * Orders
+             * @default {}
+             */
+            orders: {
+                [key: string]: number;
+            };
+        };
+        /**
          * EndType
          * @enum {string}
          */
         EndType: "bw" | "sw" | "fl" | "thd";
+        /**
+         * Equilibrium
+         * @description Equilibrium model of one reaction: Gibbs-driven or a ln K polynomial.
+         */
+        Equilibrium: {
+            /**
+             * Form
+             * @enum {string}
+             */
+            form: "from_gibbs" | "polynomial";
+            /**
+             * Polynomial
+             * @default {}
+             */
+            polynomial: {
+                [key: string]: number;
+            };
+            /** T Window */
+            t_window?: [
+                number,
+                number
+            ] | null;
+        };
         /**
          * EquipmentEnvelope
          * @description Axis-aligned box for collision checks (mm).
@@ -1126,6 +1173,8 @@ export interface components {
             design_specs: components["schemas"]["DesignSpec"][];
             /** Name */
             name: string;
+            /** Reactions */
+            reactions?: components["schemas"]["ReactionSet"][];
             solver_options?: components["schemas"]["SolverOptions"];
             /** Streams */
             streams: components["schemas"]["StreamSpec"][];
@@ -1197,6 +1246,32 @@ export interface components {
         JobEnqueued: {
             /** Job Id */
             job_id: string;
+        };
+        /**
+         * LHHW
+         * @description Langmuir-Hinshelwood-Hougen-Watson rate expression.
+         */
+        LHHW: {
+            /**
+             * Adsorption
+             * @default []
+             */
+            adsorption: components["schemas"]["DrivingForceTerm"][];
+            /**
+             * Adsorption Exponent
+             * @default 1
+             */
+            adsorption_exponent: number;
+            /**
+             * Basis
+             * @default mole_fraction
+             * @enum {string}
+             */
+            basis: "mole_fraction" | "concentration";
+            /** Driving Force */
+            driving_force: components["schemas"]["DrivingForceTerm"][];
+            /** Rate Units */
+            rate_units: string;
         };
         /**
          * Layout
@@ -1310,6 +1385,70 @@ export interface components {
             /** Unit */
             unit: string;
         };
+        /**
+         * PowerLaw
+         * @description Power-law rate expression.
+         *
+         *     ``reverse`` carries the explicit reverse expression; without it a reaction
+         *     with an equilibrium model is equilibrium-limited, and without either the
+         *     expression is irreversible. The reverse side is a plain ``PowerLawRate``
+         *     body — it never nests a further ``reverse`` (detailed balance points its
+         *     forward side at this reaction, so a reverse-of-reverse has no physical
+         *     meaning). Keeping the graph acyclic also matters mechanically: a recursive
+         *     model makes FastAPI's request/response OpenAPI schemas textually
+         *     irreconcilable (`<Model>-Input`/`<Model>-Output` self-references), which
+         *     split and renamed every component the frontend types import.
+         */
+        PowerLaw: {
+            /** Ea */
+            Ea: number;
+            /**
+             * Basis
+             * @default mole_fraction
+             * @enum {string}
+             */
+            basis: "mole_fraction" | "concentration";
+            /** K0 */
+            k0: number;
+            /**
+             * Orders
+             * @default {}
+             */
+            orders: {
+                [key: string]: number;
+            };
+            /** Rate Units */
+            rate_units: string;
+            reverse?: components["schemas"]["PowerLawRate"] | null;
+        };
+        /**
+         * PowerLawRate
+         * @description Power-law rate body: Arrhenius term plus composition orders.
+         *
+         *     ``PowerLaw`` without the ``reverse`` slot. Splitting the body out keeps the
+         *     contract model graph non-recursive (see ``PowerLaw.reverse``).
+         */
+        PowerLawRate: {
+            /** Ea */
+            Ea: number;
+            /**
+             * Basis
+             * @default mole_fraction
+             * @enum {string}
+             */
+            basis: "mole_fraction" | "concentration";
+            /** K0 */
+            k0: number;
+            /**
+             * Orders
+             * @default {}
+             */
+            orders: {
+                [key: string]: number;
+            };
+            /** Rate Units */
+            rate_units: string;
+        };
         /** Project */
         Project: {
             flowsheet: components["schemas"]["Flowsheet"];
@@ -1389,6 +1528,53 @@ export interface components {
             };
             /** Sg */
             sg: number;
+        };
+        /**
+         * Reaction
+         * @description One stoichiometric reaction with optional kinetics and equilibrium model.
+         *
+         *     ``base_component`` is the component the extent of reaction is normalized
+         *     on; it must appear with ν < 0. Pseudo (lumped) components can only take
+         *     part in reactions explicitly marked ``lumped``, which switches validation
+         *     from element balances to a molecular-weight balance (pseudos carry no
+         *     formula). ``provenance`` is mandatory: every reaction names where its
+         *     stoichiometry and data come from.
+         */
+        Reaction: {
+            /** Base Component */
+            base_component: string;
+            equilibrium?: components["schemas"]["Equilibrium"] | null;
+            /** Id */
+            id: string;
+            /** Kinetics */
+            kinetics?: components["schemas"]["PowerLaw"] | components["schemas"]["LHHW"] | null;
+            /**
+             * Lumped
+             * @default false
+             */
+            lumped: boolean;
+            /** Provenance */
+            provenance: string;
+            /** Stoichiometry */
+            stoichiometry: {
+                [key: string]: number;
+            };
+        };
+        /**
+         * ReactionSet
+         * @description A flowsheet-owned set of reactions over its own component slate.
+         *
+         *     The slate is self-describing so a saved project carries everything needed
+         *     to replay it; the flowsheet slate may be wider. Lumped reactions are
+         *     validated on a molecular-weight balance instead of element counts.
+         */
+        ReactionSet: {
+            /** Components */
+            components: string[];
+            /** Id */
+            id: string;
+            /** Reactions */
+            reactions: components["schemas"]["Reaction"][];
         };
         /** RoutedLine */
         RoutedLine: {

@@ -16,10 +16,11 @@ works without lifespan events.
 
 from __future__ import annotations
 
+import json
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -64,6 +65,39 @@ def cors_origins() -> list[str]:
 
 #: The legacy unscoped routes (deprecated aliases bound to the default project).
 legacy_router = APIRouter()
+
+
+def _merge_openapi_mode_copies(schema: dict[str, Any]) -> dict[str, Any]:
+    """Collapse FastAPI's ``<Model>-Input``/``<Model>-Output`` copies to ``<Model>``.
+
+    ``Flowsheet`` carries a wrap ``model_serializer`` (it pops the empty
+    ``reactions`` key so pre-reaction documents round-trip byte-identically).
+    Pydantic cannot introspect a custom serializer, so the model's
+    serialization-mode schema degrades to a bare object while its
+    validation-mode schema keeps the full property list — the two modes can
+    never be equal, and FastAPI (``separate_input_output_schemas`` default)
+    therefore splits every model reachable from both a request body and a
+    response into ``-Input``/``-Output`` copies. Those suffixed names break the
+    frontend's ``components["schemas"]["Project"]`` imports.
+
+    The merge keeps the ``-Input`` (validation) structure — the serialization
+    divergence is a runtime omission, not a different shape — rewrites every
+    ``$ref`` to the plain name, and drops the copies. Idempotent.
+    """
+    components = schema.get("components", {}).get("schemas", {})
+    pairs = {name[:-6] for name in components if name.endswith("-Input")} & {
+        name[:-7] for name in components if name.endswith("-Output")
+    }
+    if not pairs:
+        return schema
+    for base in pairs:
+        components[base] = components.pop(f"{base}-Input")
+        del components[f"{base}-Output"]
+    text = json.dumps(schema)
+    for base in pairs:
+        text = text.replace(f"#/components/schemas/{base}-Input", f"#/components/schemas/{base}")
+        text = text.replace(f"#/components/schemas/{base}-Output", f"#/components/schemas/{base}")
+    return cast(dict[str, Any], json.loads(text))
 
 
 def create_app() -> FastAPI:
@@ -114,6 +148,7 @@ def create_app() -> FastAPI:
     def _conflict(_: Request, exc: ProjectConflict) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": str(exc)})
 
+    application.openapi_schema = _merge_openapi_mode_copies(application.openapi())
     return application
 
 
