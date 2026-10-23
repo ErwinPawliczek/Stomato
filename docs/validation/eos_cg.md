@@ -19,7 +19,7 @@ family `helmholtz` · status **experimental** · adapter `ngdesign.thermo.helmho
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 
-Note: Refusal row: EOS-CG stays unimplemented - the formulation is open (Gernert & Span 2016, J. Chem. Thermodyn. 93, 274-293), but the complete fluid parameter and departure-function tables ship only in the publisher's paywalled supplement, no open supplement was confirmed in the sources checked 2026-10-23, teqp does not ship EOS-CG fluid/departure files, and CoolProp issue #3277 requests exactly this missing support. What would change it: an openly redistributable parameter table or a licence that permits transcription of the full supplement.
+Note: Refusal row: EOS-CG is not implemented - the formulation is open (Gernert & Span 2016, J. Chem. Thermodyn. 93, 274-293), but the complete fluid parameter and departure-function tables ship only in the publisher's paywalled supplement, no open supplement was confirmed in the sources checked 2026-10-23, teqp does not ship EOS-CG fluid/departure files, and CoolProp issue #3277 requests exactly this missing support. What would change it: an openly redistributable parameter table or a licence that permits transcription of the full supplement.
 
 ## L1/L2 reference-case outcomes
 
