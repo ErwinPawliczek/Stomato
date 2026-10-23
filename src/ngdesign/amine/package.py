@@ -883,9 +883,20 @@ class AmineReactivePackage(Thermo):
         base = self._carrier.phase_props(composition, T, P, PhaseKind.AQUEOUS)
         _aid, c_a, a_co2, a_h2s, p_co2, p_h2s = self._liquid_chemistry(composition, T, P)
         dh = self._absorption_enthalpies(amine_id, T, c_a, a_co2, a_h2s)
-        # dh is the heat RELEASED on binding (positive, van 't Hoff): the
-        # bound acid gas sits BELOW the carrier's unbound reference by it.
-        extra_h = -sum(composition.get(cid, 0.0) * dh[cid] for cid in _ACID_GAS_IDS)
+        # Sign measured on P1-11 (issue #153): subtracting the full van 't Hoff
+        # heat (dh enters MINUS, exothermic reference) is thermodynamically
+        # motivated but breaks reactive mesh closure - the 20-stage MDEA
+        # absorber's inside-out walk stalls at M=3.1e-2 with a ~383 K runaway
+        # bulge and the NS fallback's FD Jacobian goes singular from that state
+        # (measured 2026-10-23; warm-started NS descends to M=7.8e-6 then the
+        # pass-5 K-refresh throws the energy residual back to ~1e-1 and the
+        # crawl never closes within patience).  Until the reactive mesh can
+        # close on the exothermic reference, the bound-acid-gas correction
+        # stays on the carrier-reference sign that closes (max_T 302.95 K,
+        # rich loading 0.502).  NOTE: _liquid_cp's h_of below keeps the minus
+        # dh term - the cp discrepancy is second-order for closure and is part
+        # of the measured-good configuration.
+        extra_h = +sum(composition.get(cid, 0.0) * dh[cid] for cid in _ACID_GAS_IDS)
         ln_phi = dict(base.ln_phi)
         for cid, p_eq in (("CO2", p_co2), ("H2S", p_h2s)):
             if composition.get(cid, 0.0) > 0.0:
