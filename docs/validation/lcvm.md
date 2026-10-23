@@ -26,7 +26,7 @@ family `mixing` · status **provisional** · adapter `ngdesign.thermo.mixing_rul
 | determinism | ok | 0 | two instances bit-identical at 380K/50000Pa |
 | single_liquid_limit | ok | 0 | 298.15K/100000Pa kinds=['hc_liquid'] vf=0.0 |
 
-Note: provisional on L0 only: the 6 bound T-12 cases (4 L1 pure, 2 L2 MeOH/H2O VLE) all miss (declared above; the two C1/H2O cases stay unbound because the original-UNIFAC curated map has no C1 assignment and the row refuses) - the pure points inherit the untranslated PR limits and the MeOH/H2O points show the 64/36 Vidal/Michelsen weighting with original-UNIFAC parameters over-predicts alcohol-water bubble temperatures; promotion needs LCVM-assessed gE evidence beyond the transferred UNIFAC basis
+Note: provisional on L0 only: the 6 bound T-12 cases (4 L1 pure, 2 L2 MeOH/H2O VLE) all miss (declared above; the two C1/H2O cases stay unbound because the original-UNIFAC curated map has no C1 assignment and the row refuses) - the pure points inherit the untranslated PR limits and the MeOH/H2O points sit just outside tolerance with original-UNIFAC parameters (bubble_T +0.57 %, bubble_P -6.1 % after the review corrected lambda = 0.36 onto the Vidal term); promotion needs LCVM-assessed gE evidence beyond the transferred UNIFAC basis
 
 ### L4 cross-model pairs
 

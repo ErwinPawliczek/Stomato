@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-23T01:07:23+00:00 from `data/validation/results.json` (git 3194cba, CoolProp 8.0.0).
+Generated 2026-10-23T01:59:30+00:00 from `data/validation/results.json` (git 06d4a19, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -1782,8 +1782,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `kabadi-danner-srk-pure-C1-125K` — Cp +6.9% (61.7209 vs 57.7411) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table).
 - `kabadi-danner-srk-pure-C3-300K` — Cp +6.7% (128.942 vs 120.805); rho_L -8.4% (448.204 vs 489.447) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table).
 - `kabadi-danner-srk-pure-CO2-265K` — Cp +12.2% (115.671 vs 103.056); rho_L -11.8% (857.989 vs 973.254) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table).
-- `lcvm-meohh2o-101.325kPa-349.05K` — bubble_T +2.8% (358.996 vs 349.05); vapor_comp -0.061 abs (0.659246 vs 0.7197) - the 64/36 Vidal/Michelsen weighting with original-UNIFAC parameters over-predicts the MeOH/H2O bubble temperature at 101.325 kPa (Boukouvalas et al. developed LCVM for nonpolar/polar asymmetry systems, not alcohol-water) (measured 2026-10-22 on the Gao 2012 101.325 kPa point, T-06c harness run).
-- `lcvm-meohh2o-312.91K-20.705kPa` — bubble_P +29.3% (14637.2 vs 20705); vapor_comp -0.058 abs (0.747041 vs 0.8053) - same cause: original-UNIFAC parameters in the LCVM reference on the low-pressure Bayer 1927 isotherm (measured 2026-10-22, T-06c harness run).
+- `lcvm-meohh2o-101.325kPa-349.05K` — bubble_T +0.57% (351.039 vs 349.05, just over the 0.5% tolerance); vapor_comp passes - original-UNIFAC parameters in the LCVM reference (re-measured 2026-10-22 after the orchestrator review corrected the LCVM weighting to lambda = 0.36 on the Vidal term, A_V = -0.623, A_M = -0.52, and the covolume-term sign).
+- `lcvm-meohh2o-312.91K-20.705kPa` — bubble_P -6.1% (19433.7 vs 20705); vapor_comp -0.035 abs (0.769900 vs 0.8053) - same cause: original-UNIFAC parameters on the low-pressure isotherm (re-measured 2026-10-22 after the LCVM correction).
 - `lcvm-pure-H2O-340K` — rho_L -15.9% (823.513 vs 979.503); Cp +8.0% (81.5128 vs 75.4562) - pure-component limits of the untranslated PR form (measured 2026-10-22, T-06c harness run).
 - `lcvm-pure-H2O-370K` — rho_L -16.4% (802.915 vs 960.587); Cp +8.7% (82.4488 vs 75.8833) - pure-component limits of the untranslated PR form (measured 2026-10-22, T-06c harness run).
 - `lcvm-pure-MeOH-305K` — rho_L -13.2% (676.721 vs 779.805); Cp +36.7% (112.917 vs 82.6135) - pure-component limits of the untranslated PR form (the LCVM rule reduces to PR for a pure component; same misses as the pr row) (measured 2026-10-22, T-06c harness run).
@@ -1877,8 +1877,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `prsv2-ng-dew-morch-260.8K-1.04MPa` — dew_P +20.4% (1.25191e+06 vs 1.04e+06) - PRSV2 alpha inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table).
 - `prsv2-pure-C1-125K` — rho_L +11.9% (449.914 vs 402.111) - PRSV2 alpha inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table).
 - `prsv2-pure-CO2-265K` — Cp +8.0% (111.252 vs 103.056) - PRSV2 alpha inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table).
-- `psrk-meohh2o-101.325kPa-349.05K` — bubble_T +1.6% (354.776 vs 349.05); vapor_comp -0.054 abs (0.666052 vs 0.7197) - the PSRK-UNIFAC parameters are general group-contribution predictions, not a MeOH/H2O-specific fit; the Gao 2012 system sits outside the PSRK parameter-fit systems (measured 2026-10-22 on the Gao 2012 101.325 kPa point, T-06c harness run).
-- `psrk-meohh2o-312.91K-20.705kPa` — bubble_P +19.9% (16594.9 vs 20705); vapor_comp -0.085 abs (0.720068 vs 0.8053) - same cause: general group-contribution prediction, not a MeOH/H2O-specific parameter fit (measured 2026-10-22, T-06c harness run).
+- `psrk-meohh2o-101.325kPa-349.05K` — vapor_comp -0.028 abs (0.691649 vs 0.7197); bubble_T passes - PSRK-UNIFAC parameters are general group-contribution predictions, not a MeOH/H2O-specific fit (re-measured 2026-10-22 after the orchestrator review routed psrk through main's MHV1, fixing the covolume-term sign).
+- `psrk-meohh2o-312.91K-20.705kPa` — bubble_P -6.0% (19471.7 vs 20705); vapor_comp -0.071 abs (0.734401 vs 0.8053) - same cause: general group-contribution prediction on the low-pressure isotherm (re-measured 2026-10-22 after the covolume-sign fix).
 - `psrk-pure-H2O-340K` — rho_L +25.5% (729.553 vs 979.503) - untranslated SRK liquid-density limit, as the srk row (measured 2026-10-22, T-06c harness run).
 - `psrk-pure-H2O-370K` — rho_L +26.0% (710.618 vs 960.587) - untranslated SRK liquid-density limit, as the srk row (measured 2026-10-22, T-06c harness run).
 - `psrk-pure-MeOH-305K` — rho_L +22.9% (601.097 vs 779.805); Cp +45.2% (119.94 vs 82.6135) - pure-component limits of the untranslated SRK form (the MHV1 rule reduces to SRK for a pure component; same liquid-density/Cp misses as the srk row) (measured 2026-10-22, T-06c harness run).
