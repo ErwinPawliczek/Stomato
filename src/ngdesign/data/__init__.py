@@ -26,7 +26,7 @@ from chemicals.acentric import LK_omega
 from chemicals.identifiers import CAS_from_any
 from thermo import ChemicalConstantsPackage
 
-DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+DATA_DIR = Path(__file__).resolve().parents[3] / "data"
 
 
 @cache
@@ -268,6 +268,7 @@ def _databank_record_uncached(query: str) -> dict[str, Any] | None:
         "Pc": "chemicals",
         "omega": "chemicals",
         "Tb": "chemicals",
+        "sg": "chemicals",
     }
     return {
         "id": query,
@@ -279,7 +280,9 @@ def _databank_record_uncached(query: str) -> dict[str, Any] | None:
         "Pc": float(constants.Pcs[0]),
         "omega": float(constants.omegas[0]),
         "Tb": float(constants.Tbs[0]),
-        "sg": None,
+        # liquid sg at 60 F referenced to water at 60 F (999.016 kg/m3);
+        # nC4 cross-check: 583.63/999.016 = 0.584
+        "sg": (float(constants.rhol_60Fs_mass[0]) / 999.016 if constants.rhol_60Fs_mass[0] else None),
         "kind": "databank",
         "provenance": provenance,
     }
