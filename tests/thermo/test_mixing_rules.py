@@ -830,11 +830,21 @@ class TestT06cRuleAlgebra:
         xs = (0.3, 0.7)
         consts, _ = ChemicalConstantsPackage.from_IDs(["methanol", "water"])
         eos_h = PRMIX_HV(
-            Tcs=consts.Tcs, Pcs=consts.Pcs, omegas=consts.omegas, zs=list(xs), T=_T, P=_P,
+            Tcs=consts.Tcs,
+            Pcs=consts.Pcs,
+            omegas=consts.omegas,
+            zs=list(xs),
+            T=_T,
+            P=_P,
             rule=MHV1Rule(prov_high, MHV1Rule.Q1_SRK),
         )
         eos_z = PRMIX_HV(
-            Tcs=consts.Tcs, Pcs=consts.Pcs, omegas=consts.omegas, zs=list(xs), T=_T, P=_P,
+            Tcs=consts.Tcs,
+            Pcs=consts.Pcs,
+            omegas=consts.omegas,
+            zs=list(xs),
+            T=_T,
+            P=_P,
             rule=MHV1Rule(prov_zero, MHV1Rule.Q1_SRK),
         )
         assert eos_z.a_alpha > eos_h.a_alpha
@@ -848,4 +858,3 @@ class _ZeroProvider(GEProvider):
     ) -> tuple[float, tuple[float, ...], float, float, tuple[float, ...]]:
         n = len(xs)
         return 0.0, tuple(0.0 for _ in range(n)), 0.0, 0.0, tuple(0.0 for _ in range(n))
-

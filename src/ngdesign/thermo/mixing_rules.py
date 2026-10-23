@@ -560,8 +560,7 @@ def _mixing_configure(
             # components without a published fit fall back to the EOS default
             # alpha inside _mc_coeffs.
             eos_kwargs["alpha_coeffs"] = [
-                _mc_coeffs(str(r.id), mc_table, om)
-                for r, om in zip(records, constants.omegas, strict=True)
+                _mc_coeffs(str(r.id), mc_table, om) for r, om in zip(records, constants.omegas, strict=True)
             ]
         return eos_cls, eos_kwargs, CEOSGas, CEOSLiquid
 
@@ -1119,9 +1118,7 @@ class MHV1Rule(GERule):
         b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
         fl, fl_x = _flory(xs, b, bs)
         alpha_m = A + (g + fl) / self.q1
-        alpha_x = tuple(
-            _a_brt(pa, k, bs[k], T)[0] + (gx[k] + fl_x[k]) / self.q1 for k in range(n)
-        )
+        alpha_x = tuple(_a_brt(pa, k, bs[k], T)[0] + (gx[k] + fl_x[k]) / self.q1 for k in range(n))
         # F is T-independent (linear b).
         alpha_xT = tuple(_a_brt(pa, k, bs[k], T)[1] + gxT[k] / self.q1 for k in range(n))
         return _linear_rule_state(
@@ -1184,12 +1181,8 @@ class LCVMRule(GERule):
         c_v = (1.0 - self.lam) / self.M_V
         c_m = self.lam / MHV1Rule.Q1_PR
         alpha_m = A - c_v * g + c_m * (g + fl)
-        alpha_x = tuple(
-            _a_brt(pa, k, bs[k], T)[0] - c_v * gx[k] + c_m * (gx[k] + fl_x[k]) for k in range(n)
-        )
-        alpha_xT = tuple(
-            _a_brt(pa, k, bs[k], T)[1] - c_v * gxT[k] + c_m * gxT[k] for k in range(n)
-        )
+        alpha_x = tuple(_a_brt(pa, k, bs[k], T)[0] - c_v * gx[k] + c_m * (gx[k] + fl_x[k]) for k in range(n))
+        alpha_xT = tuple(_a_brt(pa, k, bs[k], T)[1] - c_v * gxT[k] + c_m * gxT[k] for k in range(n))
         return _linear_rule_state(
             alpha_m,
             A_T - c_v * gT + c_m * gT,

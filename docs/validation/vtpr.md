@@ -24,9 +24,9 @@ family `mixing` · status **provisional** · adapter `ngdesign.thermo.mixing_rul
 | dhdT_cp | ok | 7.3e-08 | 380K/50000Pa vapor cp 42.2589 dH/dT 42.2589 |
 | gibbs_duhem | ok | 8.9e-09 | ['H2O', 'MeOH']@350K/100000Pa aqueous 6.4e-09; ['H2O', 'MeOH']@380K/50000Pa vapor 8.9e-09 |
 | determinism | ok | 0 | two instances bit-identical at 380K/50000Pa |
-| single_liquid_limit | FAIL | n/a | raised ValueError: no UNIFAC group assignment for EtOH (64-17-5) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems) |
+| single_liquid_limit | ok | 0 | 298.15K/100000Pa kinds=['hc_liquid'] vf=0.0 |
 
-Note: provisional on L0 only: the 8 bound T-12 cases - 4 L1 pure, 2 L2 MeOH/H2O VLE (vapor_comp passes both; bubble_T +0.6% just over the 0.5% tolerance on the isobaric point) and the 2 L3 aqueous-methane solubility points (which PASS) - are assessed above; the pure points inherit the untranslated host's liquid-density/Cp limits; promotion needs a VTPR-specific assessment beyond the transferred UNIFAC basis
+Note: provisional on L0 only: the 8 bound T-12 cases - 4 L1 pure, 2 L2 MeOH/H2O VLE (vapor_comp passes both; bubble_T +0.6% just over the 0.5% tolerance on the isobaric point) and the 2 L3 aqueous-methane solubility points (which PASS) - are assessed above; the pure points inherit the untranslated host's liquid-density/Cp limits; promotion needs a VTPR-specific assessment beyond the transferred UNIFAC basis. single_liquid_limit runs the row-level MeOH/H2O feed because the family default uses EtOH, which the curated VTPR-UNIFAC map does not cover (the row refuses, first-use refusal pattern)
 
 ### L4 cross-model pairs
 

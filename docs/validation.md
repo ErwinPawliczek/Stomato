@@ -1,10 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-<<<<<<< HEAD
-Generated 2026-10-22T22:19:04+00:00 from `data/validation/results.json` (git b0c6177, CoolProp 8.0.0).
-=======
-Generated 2026-10-22T22:25:10+00:00 from `data/validation/results.json` (git bb847f4, CoolProp 8.0.0).
->>>>>>> origin/main
+Generated 2026-10-23T00:15:39+00:00 from `data/validation/results.json` (git b62bf54, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -74,7 +70,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [nrtl_ig](validation/nrtl_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_ig.md) |
 | [nrtl_nothnagel](validation/nrtl_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_nothnagel.md) |
 | [nrtl_rk](validation/nrtl_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/nrtl_rk.md) |
-| [pc_saft](validation/pc_saft.md) | saft | provisional | 0/7 | L1=10 L2=6 | [report](validation/pc_saft.md) |
+| [pc_saft](validation/pc_saft.md) | saft | provisional | 7/7 | L1=10 L2=6 | [report](validation/pc_saft.md) |
 | [pc_saft_assoc](validation/pc_saft_assoc.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_assoc.md) |
 | [pc_saft_polar](validation/pc_saft_polar.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/pc_saft_polar.md) |
 | [pitzer_nacl_water](validation/pitzer_nacl_water.md) | electrolyte | provisional | 3/3 | L1=0 L2=0 | [report](validation/pitzer_nacl_water.md) |
@@ -158,7 +154,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [vanlaar_pr](validation/vanlaar_pr.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/vanlaar_pr.md) |
 | [vanlaar_rk](validation/vanlaar_rk.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/vanlaar_rk.md) |
 | [vdw](validation/vdw.md) | cubic | provisional | 5/7 | L1=4 L2=2 | [report](validation/vdw.md) |
-| [vtpr](validation/vtpr.md) | mixing | provisional | 6/7 | L1=4 L2=4 | [report](validation/vtpr.md) |
+| [vtpr](validation/vtpr.md) | mixing | provisional | 7/7 | L1=4 L2=4 | [report](validation/vtpr.md) |
 | [wilson_hoc](validation/wilson_hoc.md) | gamma_phi | provisional | 7/7 | L1=0 L2=0 | [report](validation/wilson_hoc.md) |
 | [wilson_ig](validation/wilson_ig.md) | gamma_phi | provisional | 7/7 | L1=0 L2=3 | [report](validation/wilson_ig.md) |
 | [wilson_nothnagel](validation/wilson_nothnagel.md) | gamma_phi | provisional | 7/7 | L1=3 L2=8 | [report](validation/wilson_nothnagel.md) |
@@ -168,11 +164,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 ### Status summary
 
-<<<<<<< HEAD
-132 rows: 9 validated, 100 provisional, 23 experimental
-=======
-134 rows: 9 validated, 102 provisional, 23 experimental
->>>>>>> origin/main
+137 rows: 9 validated, 105 provisional, 23 experimental
 
 | provisional row | what keeps it from validated |
 | --- | --- |
@@ -201,7 +193,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [nrtl_ig](validation/nrtl_ig.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [nrtl_nothnagel](validation/nrtl_nothnagel.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [nrtl_rk](validation/nrtl_rk.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
-| [pc_saft](validation/pc_saft.md) | L0 failing: pure_psat_limit, phase_identification, round_trip, dhdT_cp, gibbs_duhem, single_liquid_limit, determinism |
+| [pc_saft](validation/pc_saft.md) | 7 declared case misses (`assessed:` in the row; see its report) |
 | [pitzer_nacl_water](validation/pitzer_nacl_water.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [pr-bm](validation/pr-bm.md) | 7 declared case misses (`assessed:` in the row; see its report) |
 | [pr-boston-mathias](validation/pr-boston-mathias.md) | 7 declared case misses (`assessed:` in the row; see its report) |
@@ -274,7 +266,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [vanlaar_pr](validation/vanlaar_pr.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [vanlaar_rk](validation/vanlaar_rk.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [vdw](validation/vdw.md) | L0 failing: phase_identification, gibbs_duhem |
-| [vtpr](validation/vtpr.md) | L0 failing: single_liquid_limit |
+| [vtpr](validation/vtpr.md) | 6 declared case misses (`assessed:` in the row; see its report) |
 | [wilson_hoc](validation/wilson_hoc.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [wilson_ig](validation/wilson_ig.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=3) |
 | [wilson_nothnagel](validation/wilson_nothnagel.md) | 2 declared case misses (`assessed:` in the row; see its report) |
@@ -310,13 +302,10 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `nrtl_rk`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `pc_saft`: ok — n/a — refuses the slice feed: SaftParameterError: no verified pc_saft parameters for ['H2O', 'N2', 'iC4', 'iC5']; supported: ['C1', 'C2', 'C3', 'C6+', 'CO2', 'binary_kij', 'excluded', 'nC4', 'nC5'] (unsupported components are refused, never treated as ideal)
 - `pr_huron_vidal`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
-<<<<<<< HEAD
-- `psrk`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C2 (74-84-0) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
-=======
 - `pr_mhv1`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `pr_mhv2`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `pr_wong_sandler`: ok — n/a — refuses the slice feed: ValueError: ChemSep NRTL databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
->>>>>>> origin/main
+- `psrk`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C2 (74-84-0) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE set, for example, is not parameterized for alcohol/glycol systems)
 - `regular_solution_hoc`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_ig`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
 - `regular_solution_nothnagel`: ok — n/a — refuses the slice feed: ValueError: the regular-solution solubility parameter for C1 (74-82-8) cannot be formed: the thermo pure-component correlation returns no liquid molar volume at 298.15 K; refusing rather than defaulting - select a model whose parameters cover this component support
@@ -771,6 +760,17 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_V | 3 | 3 | 100.0 % |
 | vapor_comp | 8 | 8 | 100.0 % |
 
+### package `pc_saft` — 44/62 pass (71.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| Cp | 10 | 2 | 20.0 % |
+| bubble_P | 16 | 10 | 62.5 % |
+| dew_P | 10 | 8 | 80.0 % |
+| rho_L | 10 | 10 | 100.0 % |
+| rho_V | 10 | 8 | 80.0 % |
+| vapor_comp | 6 | 6 | 100.0 % |
+
 ### package `pr` — 213/278 pass (76.6 %)
 
 | property | n | pass | rate |
@@ -1176,11 +1176,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_V | 4 | 4 | 100.0 % |
 | vapor_comp | 1 | 1 | 100.0 % |
 
-<<<<<<< HEAD
-## Failing comparisons (470)
-=======
-## Failing comparisons (509)
->>>>>>> origin/main
+## Failing comparisons (544)
 
 | case | package | property | expected | got | err | source |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -1199,22 +1195,16 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-H2O-614.7K | srk | Cp | 151.747 | 229.506 | 0.512425 | coolprop:Water |
 | pure-H2O-614.7K | pr | Cp | 151.747 | 220.634 | 0.453959 | coolprop:Water |
 | pure-H2O-614.7K | pr78 | Cp | 151.747 | 220.634 | 0.453959 | coolprop:Water |
-<<<<<<< HEAD
+| srk-wong-sandler-pure-MeOH-305K | srk_wong_sandler | Cp | 82.6135 | 119.94 | 0.451827 | coolprop:Methanol |
 | psrk-pure-MeOH-305K | psrk | Cp | 82.6135 | 119.94 | 0.451827 | coolprop:Methanol |
+| srk-mhv2-pure-MeOH-305K | srk_mhv2 | Cp | 82.6135 | 119.94 | 0.451827 | coolprop:Methanol |
 | vtpr-pure-MeOH-330K | vtpr | Cp | 88.5047 | 127.928 | 0.445436 | coolprop:Methanol |
 | pure-H2O-600K | srk | Cp | 125.264 | 178.303 | 0.423422 | coolprop:Water |
 | vdw-pure-CO2-265K | vdw | rho_L | 973.254 | 570.303 | 0.414025 | coolprop:CO2 |
 | c1c3-294.26K-9.653MPa | srk | bubble_P | 9.653e+06 | 5.87349e+06 | 0.391538 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
-| psrk-pure-MeOH-330K | psrk | Cp | 88.5047 | 123.069 | 0.390541 | coolprop:Methanol |
-=======
-| srk-wong-sandler-pure-MeOH-305K | srk_wong_sandler | Cp | 82.6135 | 119.94 | 0.451827 | coolprop:Methanol |
-| srk-mhv2-pure-MeOH-305K | srk_mhv2 | Cp | 82.6135 | 119.94 | 0.451827 | coolprop:Methanol |
-| pure-H2O-600K | srk | Cp | 125.264 | 178.303 | 0.423422 | coolprop:Water |
-| vdw-pure-CO2-265K | vdw | rho_L | 973.254 | 570.303 | 0.414025 | coolprop:CO2 |
-| c1c3-294.26K-9.653MPa | srk | bubble_P | 9.653e+06 | 5.87349e+06 | 0.391538 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | srk-wong-sandler-pure-MeOH-330K | srk_wong_sandler | Cp | 88.5047 | 123.069 | 0.390541 | coolprop:Methanol |
+| psrk-pure-MeOH-330K | psrk | Cp | 88.5047 | 123.069 | 0.390541 | coolprop:Methanol |
 | srk-mhv2-pure-MeOH-330K | srk_mhv2 | Cp | 88.5047 | 123.069 | 0.390541 | coolprop:Methanol |
->>>>>>> origin/main
 | c1c3-294.26K-9.653MPa | pr | bubble_P | 9.653e+06 | 5.93886e+06 | 0.384765 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | c1c3-294.26K-9.653MPa | pr78 | bubble_P | 9.653e+06 | 5.93886e+06 | 0.384765 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | vdw-pure-nC4-280K | vdw | rho_L | 593.294 | 367.122 | 0.381214 | coolprop:n-Butane |
@@ -1226,11 +1216,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pr-mhv1-pure-MeOH-305K | pr_mhv1 | Cp | 82.6135 | 112.917 | 0.366813 | coolprop:Methanol |
 | pr-mhv2-pure-MeOH-305K | pr_mhv2 | Cp | 82.6135 | 112.917 | 0.366813 | coolprop:Methanol |
 | pr-huron-vidal-pure-MeOH-305K | pr_huron_vidal | Cp | 82.6135 | 112.917 | 0.366813 | coolprop:Methanol |
-<<<<<<< HEAD
 | lcvm-pure-MeOH-305K | lcvm | Cp | 82.6135 | 112.917 | 0.366813 | coolprop:Methanol |
-=======
 | pr-wong-sandler-pure-MeOH-305K | pr_wong_sandler | Cp | 82.6135 | 112.917 | 0.366813 | coolprop:Methanol |
->>>>>>> origin/main
 | c1c3-327.59K-7.584MPa | srk | bubble_P | 7.584e+06 | 4.81796e+06 | 0.364721 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-7.584MPa | pr | bubble_P | 7.584e+06 | 4.84006e+06 | 0.361806 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-7.584MPa | pr78 | bubble_P | 7.584e+06 | 4.84006e+06 | 0.361806 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
@@ -1254,11 +1241,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pr-wong-sandler-pure-MeOH-330K | pr_wong_sandler | Cp | 88.5047 | 116.265 | 0.313664 | coolprop:Methanol |
 | pr-mhv1-pure-MeOH-330K | pr_mhv1 | Cp | 88.5047 | 116.265 | 0.313664 | coolprop:Methanol |
 | pr-huron-vidal-pure-MeOH-330K | pr_huron_vidal | Cp | 88.5047 | 116.265 | 0.313664 | coolprop:Methanol |
-<<<<<<< HEAD
 | lcvm-pure-MeOH-330K | lcvm | Cp | 88.5047 | 116.265 | 0.313664 | coolprop:Methanol |
-=======
 | pr-mhv2-pure-MeOH-330K | pr_mhv2 | Cp | 88.5047 | 116.265 | 0.313664 | coolprop:Methanol |
->>>>>>> origin/main
 | pure-nC4-350K-hoc | nrtl_hoc | Cp | 163.885 | 113.455 | 0.307716 | coolprop:n-Butane |
 | pure-nC4-350K-nothnagel | wilson_nothnagel | Cp | 163.885 | 113.455 | 0.307716 | coolprop:n-Butane |
 | zudkevitch-joffe-rk-ng-dew-morch-243.4K-0.30MPa | zudkevitch-joffe-rk | dew_P | 300000 | 390931 | 0.303104 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
@@ -1296,12 +1280,9 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | srk-mhv2-pure-H2O-370K | srk_mhv2 | rho_L | 960.587 | 712.47 | 0.258298 | coolprop:Water |
 | srk-wong-sandler-pure-H2O-370K | srk_wong_sandler | rho_L | 960.587 | 712.47 | 0.258298 | coolprop:Water |
 | api-srk-ng-dew-morch-243.4K-0.30MPa | api-srk | dew_P | 300000 | 376555 | 0.255183 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
-<<<<<<< HEAD
 | psrk-pure-H2O-340K | psrk | rho_L | 979.503 | 729.553 | 0.255181 | coolprop:Water |
-=======
 | srk-wong-sandler-pure-H2O-340K | srk_wong_sandler | rho_L | 979.503 | 731.854 | 0.252832 | coolprop:Water |
 | srk-mhv2-pure-H2O-340K | srk_mhv2 | rho_L | 979.503 | 731.854 | 0.252832 | coolprop:Water |
->>>>>>> origin/main
 | pure-H2O-323.5K | srk | rho_L | 987.838 | 741.661 | 0.249207 | coolprop:Water |
 | pure-H2S-354.4K | pr | Cp | 141.924 | 176.987 | 0.247053 | coolprop:H2S |
 | pure-H2S-354.4K | pr78 | Cp | 141.924 | 176.987 | 0.247053 | coolprop:H2S |
@@ -1318,15 +1299,12 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | prsv2-ng-dew-morch-254.6K-0.68MPa | prsv2 | dew_P | 680000 | 838245 | 0.232713 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | pure-CO2-285K | pr | Cp | 137.895 | 169.831 | 0.231591 | coolprop:CO2 |
 | pure-CO2-285K | pr78 | Cp | 137.895 | 169.831 | 0.231591 | coolprop:CO2 |
-<<<<<<< HEAD
 | psrk-pure-MeOH-330K | psrk | rho_L | 755.882 | 581.927 | 0.230135 | coolprop:Methanol |
-| psrk-pure-MeOH-305K | psrk | rho_L | 779.805 | 601.097 | 0.22917 | coolprop:Methanol |
-=======
 | srk-mhv2-pure-MeOH-330K | srk_mhv2 | rho_L | 755.882 | 581.927 | 0.230135 | coolprop:Methanol |
 | srk-wong-sandler-pure-MeOH-330K | srk_wong_sandler | rho_L | 755.882 | 581.927 | 0.230135 | coolprop:Methanol |
+| psrk-pure-MeOH-305K | psrk | rho_L | 779.805 | 601.097 | 0.22917 | coolprop:Methanol |
 | srk-mhv2-pure-MeOH-305K | srk_mhv2 | rho_L | 779.805 | 601.097 | 0.22917 | coolprop:Methanol |
 | srk-wong-sandler-pure-MeOH-305K | srk_wong_sandler | rho_L | 779.805 | 601.097 | 0.22917 | coolprop:Methanol |
->>>>>>> origin/main
 | pure-C3-351.3K | pr | Cp | 191.089 | 234.044 | 0.224791 | coolprop:Propane |
 | pure-C3-351.3K | pr78 | Cp | 191.089 | 234.044 | 0.224791 | coolprop:Propane |
 | meohh2o-322.91K-15.932kPa | cpa_srk | bubble_P | 15932 | 19508.8 | 0.224506 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
@@ -1341,6 +1319,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-C2-285K | pr | Cp | 132.286 | 161.185 | 0.218456 | coolprop:Ethane |
 | pure-C2-285K | pr78 | Cp | 132.286 | 161.185 | 0.218456 | coolprop:Ethane |
 | pure-H2O-614.7K | cpa_srk | Cp | 151.747 | 119.659 | 0.211461 | coolprop:Water |
+| pure-C1-181.0K | pc_saft | Cp | 124.139 | 149.979 | 0.208153 | coolprop:CH4 |
 | pure-nC4-403.9K | pr | Cp | 236.805 | 285.411 | 0.205254 | coolprop:n-Butane |
 | pure-nC4-403.9K | pr78 | Cp | 236.805 | 285.411 | 0.205254 | coolprop:n-Butane |
 | meohh2o-322.91K-26.131kPa | cpa_srk | bubble_P | 26131 | 31474.2 | 0.204479 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
@@ -1383,12 +1362,9 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pr-mhv1-pure-H2O-370K | pr_mhv1 | rho_L | 960.587 | 802.915 | 0.164141 | coolprop:Water |
 | pr-mhv2-pure-H2O-370K | pr_mhv2 | rho_L | 960.587 | 802.915 | 0.164141 | coolprop:Water |
 | pr-huron-vidal-pure-H2O-370K | pr_huron_vidal | rho_L | 960.587 | 802.915 | 0.164141 | coolprop:Water |
-<<<<<<< HEAD
 | lcvm-pure-H2O-370K | lcvm | rho_L | 960.587 | 802.915 | 0.164141 | coolprop:Water |
-| vtpr-pure-H2O-370K | vtpr | rho_L | 960.587 | 803.424 | 0.163612 | coolprop:Water |
-=======
 | pr-wong-sandler-pure-H2O-370K | pr_wong_sandler | rho_L | 960.587 | 802.915 | 0.164141 | coolprop:Water |
->>>>>>> origin/main
+| vtpr-pure-H2O-370K | vtpr | rho_L | 960.587 | 803.424 | 0.163612 | coolprop:Water |
 | rk-pure-CO2-265K | rk | rho_L | 973.254 | 814.293 | 0.16333 | coolprop:CO2 |
 | pure-CO2-285K | srk | rho_L | 847.046 | 709.912 | 0.161897 | coolprop:CO2 |
 | vdw-c1c3-294.26K-6.895MPa | vdw | vapor_comp | 0.7497 | 0.588384 | 0.161316 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
@@ -1397,11 +1373,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pr-mhv1-pure-H2O-340K | pr_mhv1 | rho_L | 979.503 | 823.513 | 0.159255 | coolprop:Water |
 | pr-mhv2-pure-H2O-340K | pr_mhv2 | rho_L | 979.503 | 823.513 | 0.159255 | coolprop:Water |
 | pr-huron-vidal-pure-H2O-340K | pr_huron_vidal | rho_L | 979.503 | 823.513 | 0.159255 | coolprop:Water |
-<<<<<<< HEAD
 | lcvm-pure-H2O-340K | lcvm | rho_L | 979.503 | 823.513 | 0.159255 | coolprop:Water |
-=======
 | pr-wong-sandler-pure-H2O-340K | pr_wong_sandler | rho_L | 979.503 | 823.513 | 0.159255 | coolprop:Water |
->>>>>>> origin/main
 | twu-pr-ng-dew-morch-260.8K-1.04MPa | twu-pr | dew_P | 1.04e+06 | 1.20473e+06 | 0.158392 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
 | vtpr-pure-H2O-340K | vtpr | rho_L | 979.503 | 824.378 | 0.158372 | coolprop:Water |
 | pure-H2O-323.5K | pr | rho_L | 987.838 | 833.88 | 0.155853 | coolprop:Water |
@@ -1442,20 +1415,16 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pr-mhv1-pure-MeOH-305K | pr_mhv1 | rho_L | 779.805 | 676.721 | 0.132192 | coolprop:Methanol |
 | pr-mhv2-pure-MeOH-305K | pr_mhv2 | rho_L | 779.805 | 676.721 | 0.132192 | coolprop:Methanol |
 | pr-huron-vidal-pure-MeOH-305K | pr_huron_vidal | rho_L | 779.805 | 676.721 | 0.132192 | coolprop:Methanol |
-<<<<<<< HEAD
 | lcvm-pure-MeOH-305K | lcvm | rho_L | 779.805 | 676.721 | 0.132192 | coolprop:Methanol |
-| pr-huron-vidal-pure-MeOH-330K | pr_huron_vidal | rho_L | 755.882 | 656.228 | 0.131838 | coolprop:Methanol |
-| lcvm-pure-MeOH-330K | lcvm | rho_L | 755.882 | 656.228 | 0.131838 | coolprop:Methanol |
-| vtpr-pure-MeOH-305K | vtpr | rho_L | 779.805 | 677.553 | 0.131125 | coolprop:Methanol |
-| vtpr-pure-MeOH-330K | vtpr | rho_L | 755.882 | 656.85 | 0.131015 | coolprop:Methanol |
-=======
 | pr-wong-sandler-pure-MeOH-330K | pr_wong_sandler | rho_L | 755.882 | 656.228 | 0.131838 | coolprop:Methanol |
 | pr-mhv1-pure-MeOH-330K | pr_mhv1 | rho_L | 755.882 | 656.228 | 0.131838 | coolprop:Methanol |
 | pr-mhv2-pure-MeOH-330K | pr_mhv2 | rho_L | 755.882 | 656.228 | 0.131838 | coolprop:Methanol |
 | pr-huron-vidal-pure-MeOH-330K | pr_huron_vidal | rho_L | 755.882 | 656.228 | 0.131838 | coolprop:Methanol |
+| lcvm-pure-MeOH-330K | lcvm | rho_L | 755.882 | 656.228 | 0.131838 | coolprop:Methanol |
+| vtpr-pure-MeOH-305K | vtpr | rho_L | 779.805 | 677.553 | 0.131125 | coolprop:Methanol |
 | pure-CO2-216.7K | pc_saft | Cp | 85.9712 | 74.6983 | 0.131123 | coolprop:CO2 |
+| vtpr-pure-MeOH-330K | vtpr | rho_L | 755.882 | 656.85 | 0.131015 | coolprop:Methanol |
 | srk-wong-sandler-meohh2o-312.91K-20.705kPa | srk_wong_sandler | bubble_P | 20705 | 18010.6 | 0.130132 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
->>>>>>> origin/main
 | pure-N2-119.9K | srk | rho_L | 524.673 | 456.965 | 0.129048 | coolprop:Nitrogen |
 | meohh2o-322.91K-15.932kPa | cpa_srk | vapor_comp | 0.2741 | 0.402852 | 0.128752 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | pure-N2-82K | pr | rho_L | 784.556 | 885.48 | 0.128639 | coolprop:Nitrogen |
@@ -1500,6 +1469,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | vtpr-meohh2o-312.91K-20.705kPa | vtpr | bubble_P | 20705 | 18387.6 | 0.111925 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | pure-MeOH-305K-nrtl | nrtl | Cp | 82.6135 | 73.3846 | 0.111712 | coolprop:Methanol |
 | rk-pure-C3-300K | rk | rho_L | 489.447 | 435.239 | 0.110755 | coolprop:Propane |
+| pure-C1-172.0K | pc_saft | Cp | 87.1299 | 96.6901 | 0.109723 | coolprop:CH4 |
 | slice-inlet-K-500psia-300K | pr | K | 1.17 | 1.04263 | 0.108863 | literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20 |
 | slice-inlet-K-500psia-300K | pr78 | K | 1.17 | 1.04263 | 0.108863 | literature:DePriester (1953) Chem. Eng. Prog. Symp. Ser. 49(7), p. 42, high-T nomogram (as Fig. 10.14 in Felder & Rousseau), read at 500 psia / 80.33 F; retrieved 2026-10-20 |
 | srk-peneloux-ng-dew-morch-260.8K-1.04MPa | srk-peneloux | dew_P | 1.04e+06 | 1.15189e+06 | 0.107589 | literature:Mørch, Nasrifar, Bolland, Solbraa, Fredheim & Gjertsen (2006) Fluid Phase Equilib. 239(2), 138-145, doi:10.1016/j.fluid.2005.11.010 - cooled mirror dew points for the synthetic natural gas ternary z(C1)=0.94085, z(C2)=0.04468, z(nC5)=0.01447; NIST ThermoML compilation, retrieved 2026-10-21 |
@@ -1517,6 +1487,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | meohh2o-322.91K-15.932kPa | nrtl | bubble_P | 15932 | 17553.7 | 0.101786 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | pure-H2O-614.7K | cpa_srk | rho_V | 95.5877 | 85.8735 | 0.101626 | coolprop:Water |
 | pure-C2-250K | srk | Cp | 90.0242 | 99.0394 | 0.100142 | coolprop:Ethane |
+| pure-CO2-240.0K | pc_saft | Cp | 90.2633 | 81.2574 | 0.0997738 | coolprop:CO2 |
 | pure-nC4-350K | srk | rho_L | 505.177 | 454.822 | 0.0996774 | coolprop:n-Butane |
 | rk-pure-C3-300K | rk | Cp | 120.805 | 132.831 | 0.0995539 | coolprop:Propane |
 | pure-C1-172K | srk | rho_L | 304.559 | 274.35 | 0.0991902 | coolprop:CH4 |
@@ -1528,6 +1499,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-N2-100K | srk | Cp | 64.9347 | 71.168 | 0.0959925 | coolprop:Nitrogen |
 | c1c3-327.59K-7.584MPa | srk | vapor_comp | 0.5546 | 0.45901 | 0.0955899 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | meohh2o-312.91K-9.079kPa | nrtl | vapor_comp | 0.2559 | 0.350953 | 0.0950533 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
+| pure-CO2-216.7K | pc_saft | bubble_P | 520401 | 569698 | 0.0947293 | coolprop:CO2 |
+| pure-CO2-216.7K | pc_saft | dew_P | 520401 | 569698 | 0.0947293 | coolprop:CO2 |
 | meohh2o-322.91K-26.131kPa | nrtl | bubble_P | 26131 | 28604.1 | 0.0946409 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | pure-MeOH-307.6K | cpa_srk | Cp | 83.1689 | 75.3424 | 0.0941042 | coolprop:Methanol |
 | pure-H2S-240K | pr | rho_L | 899.829 | 984.26 | 0.0938308 | coolprop:H2S |
@@ -1546,12 +1519,9 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | zudkevitch-joffe-rk-pure-CO2-265K | zudkevitch-joffe-rk | Cp | 103.056 | 111.975 | 0.0865463 | coolprop:CO2 |
 | pr-mhv1-pure-H2O-370K | pr_mhv1 | Cp | 75.8833 | 82.4488 | 0.0865207 | coolprop:Water |
 | pr-huron-vidal-pure-H2O-370K | pr_huron_vidal | Cp | 75.8833 | 82.4488 | 0.0865207 | coolprop:Water |
-<<<<<<< HEAD
 | lcvm-pure-H2O-370K | lcvm | Cp | 75.8833 | 82.4488 | 0.0865207 | coolprop:Water |
-=======
 | pr-mhv2-pure-H2O-370K | pr_mhv2 | Cp | 75.8833 | 82.4488 | 0.0865207 | coolprop:Water |
 | pr-wong-sandler-pure-H2O-370K | pr_wong_sandler | Cp | 75.8833 | 82.4488 | 0.0865207 | coolprop:Water |
->>>>>>> origin/main
 | twu-pr-pure-CO2-265K | twu-pr | Cp | 103.056 | 111.963 | 0.0864371 | coolprop:CO2 |
 | twu-srk-pure-CO2-265K | twu-srk | Cp | 103.056 | 111.892 | 0.0857434 | coolprop:CO2 |
 | pure-C2-200K | pr | rho_L | 523.977 | 568.762 | 0.0854708 | coolprop:Ethane |
@@ -1584,30 +1554,26 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pr-wong-sandler-pure-H2O-340K | pr_wong_sandler | Cp | 75.4562 | 81.5128 | 0.0802677 | coolprop:Water |
 | pr-mhv1-pure-H2O-340K | pr_mhv1 | Cp | 75.4562 | 81.5128 | 0.0802677 | coolprop:Water |
 | pr-huron-vidal-pure-H2O-340K | pr_huron_vidal | Cp | 75.4562 | 81.5128 | 0.0802677 | coolprop:Water |
-<<<<<<< HEAD
 | lcvm-pure-H2O-340K | lcvm | Cp | 75.4562 | 81.5128 | 0.0802677 | coolprop:Water |
-=======
 | pr-mhv2-pure-H2O-340K | pr_mhv2 | Cp | 75.4562 | 81.5128 | 0.0802677 | coolprop:Water |
->>>>>>> origin/main
 | prsv-pure-CO2-265K | prsv | Cp | 103.056 | 111.252 | 0.0795349 | coolprop:CO2 |
 | prsv2-pure-CO2-265K | prsv2 | Cp | 103.056 | 111.252 | 0.0795349 | coolprop:CO2 |
 | pure-H2O-323.5K | pr | Cp | 75.3335 | 81.2495 | 0.0785313 | coolprop:Water |
 | pure-H2O-323.5K | pr78 | Cp | 75.3335 | 81.2495 | 0.0785313 | coolprop:Water |
+| pure-CO2-288.9K | pc_saft | Cp | 155.189 | 143.265 | 0.0768369 | coolprop:CO2 |
 | pr-huron-vidal-meohh2o-101.325kPa-349.05K | pr_huron_vidal | vapor_comp | 0.7197 | 0.643194 | 0.076506 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
 | rk-c1c3-294.26K-6.895MPa | rk | bubble_P | 6.895e+06 | 6.3692e+06 | 0.0762584 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | pure-MeOH-461.3K | cpa_srk | Cp | 152.324 | 140.714 | 0.0762191 | coolprop:Methanol |
 | pure-C3-184.9K | pr | Cp | 91.8478 | 84.9224 | 0.0754009 | coolprop:Propane |
 | pure-C3-184.9K | pr78 | Cp | 91.8478 | 84.9224 | 0.0754009 | coolprop:Propane |
+| c1co2-298.142K-7.508MPa | pc_saft | bubble_P | 7.5079e+06 | 6.94632e+06 | 0.0747981 | literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 298.14 K isotherm; retrieved 2026-10-21 |
 | api-srk-pure-C1-125K | api-srk | Cp | 57.7411 | 61.9476 | 0.0728507 | coolprop:CH4 |
 | pr-lee-kesler-enthalpy-pure-CO2-265K | pr-lee-kesler-enthalpy | Cp | 103.056 | 95.6672 | 0.0716929 | coolprop:CO2 |
 | srk-lee-kesler-enthalpy-pure-CO2-265K | srk-lee-kesler-enthalpy | Cp | 103.056 | 95.6672 | 0.0716929 | coolprop:CO2 |
 | srk-mathias-copeman-pure-CO2-265K | srk-mathias-copeman | Cp | 103.056 | 110.429 | 0.0715475 | coolprop:CO2 |
 | meohh2o-322.91K-40.850kPa | cpa_srk | bubble_P | 40850 | 43754.9 | 0.0711105 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
-<<<<<<< HEAD
-=======
 | c1co2-293.130K-6.976MPa | pc_saft | bubble_P | 6.9756e+06 | 6.48448e+06 | 0.0704051 | literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 293.13 K isotherm; retrieved 2026-10-21 |
 | pr-wong-sandler-meohh2o-312.91K-20.705kPa | pr_wong_sandler | bubble_P | 20705 | 19249.3 | 0.0703056 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
->>>>>>> origin/main
 | pure-H2O-340K-nrtl | nrtl | Cp | 75.4562 | 70.2529 | 0.0689572 | coolprop:Water |
 | pure-C1-125K | srk | Cp | 57.7411 | 61.7209 | 0.0689238 | coolprop:CH4 |
 | srk-peneloux-pure-C1-125K | srk-peneloux | Cp | 57.7411 | 61.7209 | 0.0689238 | coolprop:CH4 |
@@ -1641,16 +1607,21 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | pure-C2-250K | pr78 | Cp | 90.0242 | 95.4911 | 0.0607269 | coolprop:Ethane |
 | lcvm-meohh2o-101.325kPa-349.05K | lcvm | vapor_comp | 0.7197 | 0.659246 | 0.0604537 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
 | pure-H2O-600.0K | cpa_srk | rho_V | 72.8423 | 68.4471 | 0.0603385 | coolprop:Water |
+| pure-CO2-265.0K | pc_saft | Cp | 103.056 | 96.876 | 0.0599635 | coolprop:CO2 |
+| c1co2-303.144K-7.361MPa | pc_saft | bubble_P | 7.3611e+06 | 6.92134e+06 | 0.0597404 | literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 303.14 K isotherm; retrieved 2026-10-21 |
+| pure-C1-95.3K | pc_saft | Cp | 54.3155 | 51.0758 | 0.059645 | coolprop:CH4 |
 | lcvm-meohh2o-312.91K-20.705kPa | lcvm | vapor_comp | 0.8053 | 0.747041 | 0.0582589 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | pure-H2O-600K | pr | rho_V | 72.8423 | 68.6719 | 0.0572533 | coolprop:Water |
 | pure-H2O-600K | pr78 | rho_V | 72.8423 | 68.6719 | 0.0572533 | coolprop:Water |
 | meohh2o-322.91K-31.544kPa | nrtl | bubble_P | 31544 | 33347.3 | 0.0571669 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | meohh2o-322.91K-46.450kPa | nrtl | bubble_P | 46450 | 49105.1 | 0.0571601 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
+| c1co2-303.145K-7.306MPa | pc_saft | bubble_P | 7.3064e+06 | 6.88986e+06 | 0.05701 | literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 303.14 K isotherm; retrieved 2026-10-21 |
 | rk-pure-CO2-265K | rk | Cp | 103.056 | 108.903 | 0.0567427 | coolprop:CO2 |
 | zudkevitch-joffe-rk-c1c3-294.26K-6.895MPa | zudkevitch-joffe-rk | bubble_P | 6.895e+06 | 6.51215e+06 | 0.0555254 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | pure-C1-95.3K | srk | Cp | 54.3155 | 57.3174 | 0.0552677 | coolprop:CH4 |
 | pure-H2S-240K | pr | Cp | 68.4609 | 64.6799 | 0.0552282 | coolprop:H2S |
 | pure-H2S-240K | pr78 | Cp | 68.4609 | 64.6799 | 0.0552282 | coolprop:H2S |
+| pure-CO2-285.0K | pc_saft | Cp | 137.895 | 130.322 | 0.0549197 | coolprop:CO2 |
 | psrk-meohh2o-101.325kPa-349.05K | psrk | vapor_comp | 0.7197 | 0.666052 | 0.053648 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
 | pure-MeOH-358.8K | cpa_srk | Cp | 96.783 | 91.7754 | 0.0517408 | coolprop:Methanol |
 | pure-MeOH-410.1K | cpa_srk | rho_V | 11.4314 | 12.0222 | 0.0516867 | coolprop:Methanol |
@@ -1666,9 +1637,12 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | c1c3-277.59K-1.724MPa | pr | bubble_P | 1.724e+06 | 1.65127e+06 | 0.0421879 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-277.59K-1.724MPa | pr78 | bubble_P | 1.724e+06 | 1.65127e+06 | 0.0421879 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-5.861MPa | srk | bubble_P | 5.861e+06 | 5.61512e+06 | 0.0419517 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
+| pure-CO2-288.9K | pc_saft | rho_V | 165.146 | 158.28 | 0.0415764 | coolprop:CO2 |
 | c1c3-327.59K-5.861MPa | pr | bubble_P | 5.861e+06 | 5.62072e+06 | 0.0409961 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-5.861MPa | pr78 | bubble_P | 5.861e+06 | 5.62072e+06 | 0.0409961 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | pure-H2O-520K | srk | rho_V | 18.9001 | 18.1349 | 0.0404873 | coolprop:Water |
+| pure-CO2-240.0K | pc_saft | bubble_P | 1.28248e+06 | 1.33424e+06 | 0.0403583 | coolprop:CO2 |
+| pure-CO2-240.0K | pc_saft | dew_P | 1.28248e+06 | 1.33424e+06 | 0.0403583 | coolprop:CO2 |
 | c1c3-327.59K-7.239MPa | pr | vapor_comp | 0.5532 | 0.513071 | 0.040129 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-7.239MPa | pr78 | vapor_comp | 0.5532 | 0.513071 | 0.040129 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | pure-H2S-354.4K | srk | rho_V | 133.989 | 128.7 | 0.0394728 | coolprop:H2S |
@@ -1677,6 +1651,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | c1c3-327.59K-7.239MPa | pr | bubble_P | 7.239e+06 | 6.95919e+06 | 0.0386531 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-7.239MPa | pr78 | bubble_P | 7.239e+06 | 6.95919e+06 | 0.0386531 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
 | c1c3-327.59K-7.239MPa | srk | bubble_P | 7.239e+06 | 6.96085e+06 | 0.0384241 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 327.59 K isotherm; retrieved 2026-10-20 |
+| pure-CO2-285.0K | pc_saft | rho_V | 143.923 | 138.435 | 0.0381323 | coolprop:CO2 |
 | meohh2o-322.91K-26.131kPa | cpa_srk | vapor_comp | 0.6294 | 0.667225 | 0.0378255 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | pr-boston-mathias-c1co2-277.15K-5.97MPa | pr-boston-mathias | bubble_P | 5.97e+06 | 5.7503e+06 | 0.0368013 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
 | pr-bm-c1co2-277.15K-5.97MPa | pr-bm | bubble_P | 5.97e+06 | 5.7503e+06 | 0.0368013 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
@@ -1705,12 +1680,9 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | srk-lee-kesler-enthalpy-c1co2-277.15K-5.97MPa | srk-lee-kesler-enthalpy | bubble_P | 5.97e+06 | 5.77391e+06 | 0.0328465 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
 | c1co2-277.15K-7.04MPa | srk | bubble_P | 7.04e+06 | 6.80905e+06 | 0.0328052 | literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20 |
 | pure-CO2-288.9K | srk | rho_V | 165.146 | 159.741 | 0.0327274 | coolprop:CO2 |
-<<<<<<< HEAD
 | psrk-pure-MeOH-330K | psrk | rho_V | 0.911218 | 0.881659 | 0.032439 | coolprop:Methanol |
-=======
 | srk-mhv2-pure-MeOH-330K | srk_mhv2 | rho_V | 0.911218 | 0.881659 | 0.032439 | coolprop:Methanol |
 | srk-wong-sandler-pure-MeOH-330K | srk_wong_sandler | rho_V | 0.911218 | 0.881659 | 0.032439 | coolprop:Methanol |
->>>>>>> origin/main
 | meohh2o-322.91K-46.450kPa | cpa_srk | vapor_comp | 0.9406 | 0.90835 | 0.0322503 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | pure-MeOH-330K-nrtl | nrtl | rho_V | 0.911218 | 0.882017 | 0.0320466 | coolprop:Methanol |
 | pr-mhv1-pure-MeOH-330K | pr_mhv1 | rho_V | 0.911218 | 0.882017 | 0.0320466 | coolprop:Methanol |
@@ -1736,11 +1708,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | meohh2o-312.91K-23.385kPa | nrtl | vapor_comp | 0.8457 | 0.816434 | 0.029266 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | pr-mhv1-meohh2o-312.91K-20.705kPa | pr_mhv1 | vapor_comp | 0.8053 | 0.776173 | 0.0291271 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | meohh2o-322.91K-40.850kPa | cpa_srk | vapor_comp | 0.8654 | 0.836393 | 0.0290073 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
-<<<<<<< HEAD
 | lcvm-meohh2o-101.325kPa-349.05K | lcvm | bubble_T | 349.05 | 358.996 | 0.0284952 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
-=======
 | srk-wong-sandler-meohh2o-312.91K-20.705kPa | srk_wong_sandler | vapor_comp | 0.8053 | 0.777347 | 0.027953 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
->>>>>>> origin/main
 | meohh2o-312.91K-16.319kPa | nrtl | vapor_comp | 0.6954 | 0.669234 | 0.0261658 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | c1c3-294.26K-8.963MPa | srk | vapor_comp | 0.7561 | 0.732695 | 0.0234047 | literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20 |
 | srk-mhv2-meohh2o-312.91K-20.705kPa | srk_mhv2 | vapor_comp | 0.8053 | 0.782014 | 0.0232856 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
@@ -1751,12 +1720,9 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | srk-wong-sandler-meohh2o-101.325kPa-349.05K | srk_wong_sandler | bubble_T | 349.05 | 352.469 | 0.00979629 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
 | wilson-ig-megh2o-383.15K-101.325kPa | wilson_ig | bubble_T | 383.15 | 379.439 | 0.00968491 | literature:Coker, Perry's Chemical Engineers' Handbook, McGraw-Hill, T-x-y table for ethylene glycol/water at 760 mmHg (Elsevier companion Fig. M-46); retrieved 2026-10-21 |
 | margules-ig-megh2o-383.15K-101.325kPa | margules_ig | bubble_T | 383.15 | 379.799 | 0.00874672 | literature:Coker, Perry's Chemical Engineers' Handbook, McGraw-Hill, T-x-y table for ethylene glycol/water at 760 mmHg (Elsevier companion Fig. M-46); retrieved 2026-10-21 |
-<<<<<<< HEAD
-| vtpr-meohh2o-101.325kPa-349.05K | vtpr | bubble_T | 349.05 | 351.062 | 0.00576488 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
-=======
 | pr-wong-sandler-meohh2o-101.325kPa-349.05K | pr_wong_sandler | bubble_T | 349.05 | 351.743 | 0.00771382 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
 | srk-mhv2-meohh2o-101.325kPa-349.05K | srk_mhv2 | bubble_T | 349.05 | 351.067 | 0.00577883 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
->>>>>>> origin/main
+| vtpr-meohh2o-101.325kPa-349.05K | vtpr | bubble_T | 349.05 | 351.062 | 0.00576488 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
 | meohh2o-101.325kPa-341.20K-hoc | nrtl_hoc | bubble_T | 341.2 | 339.382 | 0.00532886 | literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22 |
 
 ## Case assessments (marked xfail in the test suite)
@@ -1802,6 +1768,10 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `c1co2-288.15K-6.62MPa (pr78)` — bubble_P -3.1% (6.41389e+06 vs 6.62e+06) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `c1co2-288.15K-6.62MPa (srk)` — bubble_P -3.3% (6.40134e+06 vs 6.62e+06) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `c1co2-288.15K-7.63MPa` — bubble_P -3.1% (7.39464e+06 vs 7.63e+06) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `c1co2-293.130K-6.976MPa` — bubble_P -7.0 % (6975600 vs 6484482) — k_ij = 0 (no verifiable open citation for the C1-CO2 interaction parameter; tuning against the validation points is forbidden) underpredicts the cross-dispersion attraction — the opposite-sign twin of the k_ij = 0 limitation the NG-dew cubic cases carry (measured 2026-10-22, PR table).
+- `c1co2-298.142K-7.508MPa` — bubble_P -7.5 % (7507900 vs 6946323) — same k_ij = 0 limitation (measured 2026-10-22, PR table).
+- `c1co2-303.144K-7.361MPa` — bubble_P -6.0 % (7361100 vs 6921345) — same k_ij = 0 limitation (measured 2026-10-22, PR table).
+- `c1co2-303.145K-7.306MPa` — bubble_P -5.7 % (7306400 vs 6889862) — same k_ij = 0 limitation (measured 2026-10-22, PR table).
 - `h2o-if97-273.179K` — rho_L x1/2e5 (0.00486078 vs 999.794) and Cp -55.3% (34.017 vs 76.0217) - the IF97 adapter swaps the saturated-phase labels at the saturation state (the liquid reads the vapour values); measured 2026-10-22, T-15 sweep.
 - `h2o-if97-347.390K` — rho_V x4.2e3 (975.281 vs 0.235067) - the IF97 adapter swaps the saturated-phase labels (the vapour reads the liquid density); measured 2026-10-22, T-15 sweep.
 - `h2o-if97-401.605K` — rho_V x652 (936.138 vs 1.43327) - the IF97 adapter swaps the saturated-phase labels (the vapour reads the liquid density); measured 2026-10-22, T-15 sweep.
@@ -1919,12 +1889,15 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `pure-C1-155K (pr)` — Cp +8.4% (73.2856 vs 67.6129) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-155K (pr78)` — Cp +8.4% (73.2856 vs 67.6129) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-155K (srk)` — Cp +13.3% (76.6185 vs 67.6129) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `pure-C1-172.0K` — Cp +11.0 % (87.130 vs 96.690) — same no-residual-Cp limitation, now overpredicting on the warm approach to the critical point (measured 2026-10-22, PR table).
 - `pure-C1-172K (pr)` — Cp +18.3% (103.117 vs 87.1299) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-172K (pr78)` — Cp +18.3% (103.117 vs 87.1299) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-172K (srk)` — Cp +23.3% (107.453 vs 87.1299); rho_L -9.9% (274.35 vs 304.559) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `pure-C1-181.0K` — Cp +20.8 % (124.139 vs 149.979) — same no-residual-Cp limitation, diverging as T approaches Tc (190.6 K), where the chain EOS's derivative-based Cp is least reliable (measured 2026-10-22, PR table).
 - `pure-C1-181K (pr)` — Cp +29.8% (161.076 vs 124.139) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-181K (pr78)` — Cp +29.8% (161.076 vs 124.139) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-181K (srk)` — Cp +35.8% (168.599 vs 124.139); rho_L -14.1% (233.607 vs 271.913) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
+- `pure-C1-95.3K (pc_saft)` — Cp -6.0 % (54.315 vs 51.076) — PC-SAFT's derivative-based saturated-liquid Cp with Gross & Sadowski (2001) parameters carries no explicit residual-Cp fit and underpredicts at the triple-point end (CoolProp CH4 reference; parameters verified T-07) (measured 2026-10-22, PR table).
 - `pure-C1-95.3K (pr)` — rho_L +12.8% (502.166 vs 445.301) - cubic-EOS limits of PR (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-95.3K (pr78)` — rho_L +12.8% (502.166 vs 445.301) - cubic-EOS limits of PR78 (light-alkane liquid-density and Cp departure errors; CO2 liquid Cp/density outside the cubic form; optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
 - `pure-C1-95.3K (srk)` — Cp +5.5% (57.3174 vs 54.3155) - cubic-EOS limits of SRK (severe liquid-density deficit, Cp departure errors including CO2, optimistic dew P on the nC5-heavy Morch ternary) (measured 2026-10-22, PR #161 table).
@@ -2128,6 +2101,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `zudkevitch-joffe-rk-ng-dew-morch-260.8K-1.04MPa` — dew_P +14.2% (1.18794e+06 vs 1.04e+06) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table).
 - `zudkevitch-joffe-rk-pure-C3-300K` — rho_L -8.2% (449.204 vs 489.447) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table).
 - `zudkevitch-joffe-rk-pure-CO2-265K` — Cp +8.7% (111.975 vs 103.056); rho_L -11.6% (860.146 vs 973.254) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table).
+- 5 failing case(s) have NO assessment yet: they are expected to fail the test suite red until assessed and classified here.
 
 ## Reference sources
 
