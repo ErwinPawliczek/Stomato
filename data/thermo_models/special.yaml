@@ -33,7 +33,11 @@
       enters as a flowsheet-owned pseudo-component (P1-07). Vapour phase ideal.
       The shipped chi is fitted at 435.46 K; treat T_K as a structural, not
       validated, window. Infinite-dilution and concentrated regimes only as
-      validated.
+      validated. T-19 search (2026-10-23): no open digitized
+      polystyrene/toluene activity table was found - Bawn's osmometry data and
+      Krigbaum & Geymer (J. Am. Chem. Soc. 81, 1859 (1959)) are paywalled, and
+      the shipped chi is itself reduced from the Gunduz & Dincer IGC fit
+      point, so binding it would be a round trip. Row stays experimental.
   status: experimental
   validation: []
 
@@ -48,7 +52,10 @@
       Chen (1993), Fluid Phase Equilibria 83, 301: segment combinatorial plus
       segment-level NRTL residual. Segment assignments and tau/alpha per
       segment pair with provenance; the shipped toluene/PS parameterization is
-      an illustrative fit (no verified published parameter set located).
+      an illustrative fit (no verified published parameter set located; T-19
+      search 2026-10-23: the Chen 1993 parameter tables remain paywalled with
+      no open transcription found - the row keeps its experimental status per
+      the spec escape hatch).
   applicability:
     component_classes: [hydrocarbon, polar_organic]
     polar: true
@@ -86,7 +93,9 @@
     notes: >-
       Binary solvent/polymer supports only. The polymer pseudo-component's
       generalized vapour-pressure correlation is an operational placeholder
-      (polymers do not boil); only solvent K-values are meaningful.
+      (polymers do not boil); only solvent K-values are meaningful. T-19
+      search (2026-10-23): the Oishi & Prausnitz (1978) worked-example tables
+      are paywalled with no open transcription found; row stays experimental.
   status: experimental
   validation: []
 
@@ -112,7 +121,17 @@
     notes: >-
       Ideal solubility of a solid in a liquid solvent. Non-ideal gamma
       corrections (NRTL/S MDL) are future work; melting-point curvature of the
-      liquidus is not computed.
+      liquidus is not computed. T-19: predictions re-verified against the
+      IUPAC-NIST Solubility Database (naphthalene/benzene x = 0.292 at
+      298.15 K, 0.372 at 307.5 K, 0.3766 at 308.2 K - sysIDs 59_123/59_125/
+      59_124; biphenyl/benzene x = 0.381 at 298.15 K - sysID 58_241;
+      anthracene/benzene x = 0.00713 at 298.15 K, Acree evaluation - sysID
+      58_57). Measured van't Hoff misses: +3.4%/+2.4%/+2.9% (naphthalene),
+      -0.7% (biphenyl), +32% (anthracene, strongly non-ideal solute -
+      assessed). Row stays experimental: the validation harness
+      (scripts/validate_properties.py, outside this spec's editable files)
+      has no case type for the solubility(cid, T) surface, so no L1/L2 case
+      can be bound; the published checks live in tests/thermo/test_special.py.
   status: experimental
   validation: []
 
@@ -127,8 +146,12 @@
       In-house dimerization chemical-theory kernel (Marek-Standart form, the
       leading association term of Hayden-O'Connell): Kp(T) from a reference
       dimerization constant and association enthalpy per component. Acetic-acid
-      parameters reduced from Mehling & Kleiber (2020) J. Chem. Eng. Data /
-      Ind. Eng. Chem. Res. acetic-acid vapour association data. The curated
+      parameters from Ritter & Simons (1945): log10 K2 = 3164/T - 10.4184
+      (mmHg^-1), dH = -3164 R ln10 = -60.57 kJ/mol (verified via Sebastiani &
+      Lacquaniti, Chem. Eng. Sci. 22, 1155 (1967);
+      data/thermo_params/special/association.yaml). Independent prediction vs
+      Mehling & Kleiber (2020) measured Z = 0.6299 at 399.35 K, 1 bar true:
+      +3.8% miss, assessed in tests/thermo/test_special.py. The curated
       nrtl_hoc / nrtl_nothnagel rows keep their refusal (their wiring lives in
       ngdesign.thermo.gamma_phi, outside this spec's file list).
   applicability:
@@ -141,8 +164,17 @@
     notes: >-
       Carboxylic-acid vapour association via dimerization equilibrium; liquid
       phase ideal on apparent composition. The kernel function
-      dimer_vapor_compressibility is exercised directly against the published
-      compressibility point in tests/thermo/test_special.py.
+      dimer_vapor_compressibility is exercised against an INDEPENDENT
+      published point (Ritter & Simons parameters predict the Mehling &
+      Kleiber compressibility, +3.8% assessed miss) in
+      tests/thermo/test_special.py. T-19: row stays experimental - the harness
+      has no compressibility case type, and binding the Sebastiani &
+      Lacquaniti (1967) AcOH/water VLE needs the kernel wired into flash
+      K-values AND liquid non-ideality: at their 376.65 K midpoint an
+      association-only ideal-liquid K model gives K_w +7% / K_a -15% vs
+      measured, while the monomer-only model gives -4% / -16%, so liquid
+      non-ideality dominates and no honest harness-evaluable case exists for
+      this row today.
   status: experimental
   validation: []
 
@@ -171,7 +203,13 @@
       ideal on apparent composition. The kernel function
       hexamer_vapor_compressibility is exercised directly against the
       published saturated-vapour association factors (3.580 at 298.16 K,
-      3.438 at 303.16 K) in tests/thermo/test_special.py.
+      3.438 at 303.16 K) in tests/thermo/test_special.py. T-19: the
+      mmHg-to-Pa conversion re-verified exactly (a_Pa = -42.38089 - 5
+      log10(101325/760) = -53.0054051, the shipped constant; the tests derive
+      A_PA from a_mmHg independently). The paper's wider association-factor
+      table is not retrievable open access (searched 2026-10-23), so no
+      new-temperature point can be bound; row stays experimental - the kernel
+      surface is not harness-evaluable.
   status: experimental
   validation: []
 
@@ -203,6 +241,11 @@
       (SaftDependencyMissing without the optional extra; SaftParameterError
       naming any component without verified parameters). POLY_PS is the
       registered pseudo-component of P1-07 (Mw 400,000 g/mol, m = 7600
-      segments).
+      segments). T-19 (2026-10-23): the source paper is open access (ACS
+      Omega), but it publishes no polystyrene/toluene binary equilibrium
+      table an ideal-free k_ij = 0 bridge could be bound against, and the
+      kernel refuses at first use without the optional saft extra, so a bound
+      case cannot run in the default local environment. Row stays
+      experimental.
   status: experimental
   validation: []
