@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-23T07:46:13+00:00 from `data/validation/results.json` (git 9a0b564, CoolProp 8.0.0).
+Generated 2026-10-23T10:25:21+00:00 from `data/validation/results.json` (git 542ef60, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -35,7 +35,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [bwrs](validation/bwrs.md) | helmholtz | provisional | 7/7 | L1=0 L2=0 | [report](validation/bwrs.md) |
 | [chao-seader](validation/chao-seader.md) | kvalue | validated | 6/6 | L1=3 L2=2 | [report](validation/chao-seader.md) |
 | [coolprop_heos](validation/coolprop_heos.md) | helmholtz | validated | 7/7 | L1=3 L2=2 | [report](validation/coolprop_heos.md) |
-| [cpa_pr](validation/cpa_pr.md) | saft | provisional | 6/7 | L1=10 L2=6 | [report](validation/cpa_pr.md) |
+| [cpa_pr](validation/cpa_pr.md) | saft | provisional | 7/7 | L1=10 L2=6 | [report](validation/cpa_pr.md) |
 | [cpa_srk](validation/cpa_srk.md) | saft | provisional | 7/7 | L1=10 L2=9 | [report](validation/cpa_srk.md) |
 | [enrtl_nacl_water](validation/enrtl_nacl_water.md) | electrolyte | provisional | 3/3 | L1=0 L2=0 | [report](validation/enrtl_nacl_water.md) |
 | [eos_cg](validation/eos_cg.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/eos_cg.md) |
@@ -173,7 +173,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [api-srk](validation/api-srk.md) | 7 declared case misses (`assessed:` in the row; see its report) |
 | [braun-k10](validation/braun-k10.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=2 L2=0) |
 | [bwrs](validation/bwrs.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
-| [cpa_pr](validation/cpa_pr.md) | L0 failing: gibbs_duhem |
+| [cpa_pr](validation/cpa_pr.md) | 9 declared case misses (`assessed:` in the row; see its report) |
 | [cpa_srk](validation/cpa_srk.md) | 13 declared case misses (`assessed:` in the row; see its report) |
 | [enrtl_nacl_water](validation/enrtl_nacl_water.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [esso-tabular](validation/esso-tabular.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=4 L2=0) |
@@ -1650,8 +1650,8 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | meohh2o-322.91K-40.850kPa-pr | cpa_pr | bubble_P | 40850 | 38764 | 0.0510658 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | meohh2o-312.91K-13.012kPa | nrtl | vapor_comp | 0.6214 | 0.570676 | 0.0507236 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | pure-MeOH-307.6K | cpa_srk | rho_V | 0.352308 | 0.369914 | 0.0499719 | coolprop:Methanol |
-| pure-MeOH-256.3K-pr | cpa_pr | bubble_P | 1296.5 | 1234.18 | 0.0480639 | coolprop:Methanol |
-| pure-MeOH-256.3K-pr | cpa_pr | dew_P | 1296.5 | 1234.18 | 0.0480639 | coolprop:Methanol |
+| pure-MeOH-256.3K-pr | cpa_pr | bubble_P | 1296.5 | 1234.18 | 0.0480621 | coolprop:Methanol |
+| pure-MeOH-256.3K-pr | cpa_pr | dew_P | 1296.5 | 1234.18 | 0.0480621 | coolprop:Methanol |
 | meohh2o-322.91K-46.450kPa | cpa_srk | bubble_P | 46450 | 48674.8 | 0.0478958 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20 |
 | meohh2o-312.91K-27.518kPa | nrtl | bubble_P | 27518 | 28779.4 | 0.0458403 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |
 | meohh2o-312.91K-20.705kPa | nrtl | vapor_comp | 0.8053 | 0.759733 | 0.0455667 | literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20 |

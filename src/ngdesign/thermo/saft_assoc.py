@@ -128,3 +128,53 @@ class CPAWertheim:
         d = self._delta_matrix(T, rho, z)
         x = solve_site_fractions(rho, d, self._site_weights(z))
         return alpha_assoc_value(self._site_weights(z), x)
+
+    def derivs(self, T: float, rho: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
+        """A_assoc/(N R T) and its exact rho / composition derivatives at the fixed point.
+
+        Returns ``(alpha, dalpha/drho, dalpha/dz_i)`` with the site fractions
+        differentiated through the fixed-point equation X = 1/(1 + rho*Delta*X*w)
+        by implicit differentiation: (dF/dX) dX = -dF/explicit, where
+        F_s = X_s (1 + N_s) - 1 and N_s = (rho Delta X w)_s. Delta carries the
+        composition dependence only through the radial distribution factor
+        g(eta), eta = b_mix rho / 4 (the site-level Delta_t entries are pair
+        properties), and the weights w through z. Closed-form derivatives keep
+        an analytic-physical-term kernel coherent: a Gibbs-Duhem loop measures
+        the *surface* ln phi_i, and any finite-difference error field left in
+        one derivative (density, Z or mu) integrates into the loop residual.
+        """
+        sites = self._site_iter()
+        w = self._site_weights(z)
+        d = self._delta_matrix(T, rho, z)
+        big_d = rho * d
+        x = solve_site_fractions(rho, d, w)
+        xw = x * w
+        big_n = big_d @ xw
+        phi = np.log(x) - x / 2.0 + 0.5
+        dphi = 1.0 / x - 0.5
+        alpha = float(np.sum(w * phi))
+        b_mix = float(sum(xi * p["b"] for xi, p in zip(z, self.params, strict=True)))
+        eta = b_mix * rho / 4.0
+        one_m = 1.0 - 1.9 * eta
+        # dD/drho with D = rho*Delta = rho*g*Delta_t: Delta + rho*Delta_t*g'(eta)*b_mix/4
+        # and g'(eta)*b_mix/4 * rho/g = 1.9 b_mix rho / (4 (1-1.9 eta)) since 1/g = (1-1.9 eta)
+        d_d_drho = d * (1.0 + rho * 1.9 * b_mix / (4.0 * one_m))
+        # Jacobian of F_s = X_s (1 + N_s) - 1 wrt X, with N = (rho Delta)(X w)
+        jac = np.diag(1.0 + big_n) + x[:, None] * big_d * w[None, :]
+        ns = len(sites)
+        rhs = np.zeros((ns, 1 + z.size))
+        rhs[:, 0] = x * (d_d_drho @ xw)
+        comp_of = [ia for ia, _t in sites]
+        for i in range(z.size):
+            # dD/dz_i = D * 1.9 b_i rho / (4 (1-1.9 eta)): only g depends on z
+            dd_di = big_d * (1.9 * float(self.params[i]["b"]) * rho / (4.0 * one_m))
+            m_i = np.array([1.0 if comp_of[s] == i else 0.0 for s in range(ns)])
+            rhs[:, 1 + i] = x * ((dd_di @ xw) + (big_d @ (x * m_i)))
+        # (dF/dX) dX = -dF/explicit, solved for rho and every z_i at once
+        dx = np.linalg.solve(jac, -rhs)
+        dalpha_drho = float(np.sum(w * dphi * dx[:, 0]))
+        dalpha_dz = np.zeros(z.size)
+        for i in range(z.size):
+            site_own = np.array([1.0 if comp_of[s] == i else 0.0 for s in range(ns)])
+            dalpha_dz[i] = float(np.sum(site_own * phi + w * dphi * dx[:, 1 + i]))
+        return alpha, dalpha_drho, dalpha_dz

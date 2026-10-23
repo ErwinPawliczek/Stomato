@@ -22,7 +22,7 @@ family `saft` · status **provisional** · adapter `ngdesign.thermo.teqp_bridge:
 | phase_identification | ok | 0 | H2O@373.15K ok; MeOH@320K ok |
 | round_trip | ok | 1.5e-07 | 350K/300000Pa T_ph 1.2e-07 H 7.6e-08 T_ps 1.5e-07 |
 | dhdT_cp | ok | 0 | 400K/100000Pa vapor cp 38.6886 dH/dT 38.6886 |
-| gibbs_duhem | FAIL | 3.7e-06 | ['H2O', 'MeOH']@400K/100000Pa vapor 1.3e-07; ['H2O', 'MeOH']@350K/300000Pa aqueous 3.7e-06 |
+| gibbs_duhem | ok | 2.3e-07 | ['H2O', 'MeOH']@400K/100000Pa vapor 1.4e-08; ['H2O', 'MeOH']@350K/300000Pa aqueous 2.3e-07 |
 | single_liquid_limit | ok | 0 | 373.15K/300000Pa kinds=['aqueous'] vf=0.0 |
 | determinism | ok | 0 | two instances bit-identical at 400K/100000Pa |
 

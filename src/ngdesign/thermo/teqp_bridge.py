@@ -426,6 +426,76 @@ class _CpaPrKernel(_CpaKernel):
             (1.0 + (1.0 + math.sqrt(2.0)) * br) / (1.0 + (1.0 - math.sqrt(2.0)) * br)
         )
 
+    def _alpha_phys_derivs(
+        self, T: float, rho: float, z: np.ndarray
+    ) -> tuple[float, float, np.ndarray]:
+        """a_phys and its exact rho / composition derivatives at fixed (T, rho).
+
+        Returns ``(a_phys, da/drho, [da/dz_i])``. The composition derivative is
+
+            da/dz_i = rho b_i/(1 - B)
+                      - 1/(2 sqrt(2) R T) [ ((da_i b - a b_i)/b^2) f(B)
+                                            + (a/b) rho b_i f'(B) ],
+
+        with B = b rho, f(B) the PR log term, da_i = da_mix/dz_i = 2 sum_j z_j a_ij,
+        and da/drho = b/(1 - B) - a f'(B)/(2 sqrt(2) R T).
+        """
+        b = self._b_mix(z)
+        a = self._a_mix(T, z)
+        br = b * rho
+        s2 = math.sqrt(2.0)
+        f = math.log((1.0 + (1.0 + s2) * br) / (1.0 + (1.0 - s2) * br))
+        fp = (1.0 + s2) / (1.0 + (1.0 + s2) * br) - (1.0 - s2) / (1.0 + (1.0 - s2) * br)
+        a_phys = -math.log(1.0 - br) - (a / (2.0 * s2 * b * R_GAS * T)) * f
+        dadrho = b / (1.0 - br) - a * fp / (2.0 * s2 * R_GAS * T)
+        out = np.zeros(z.size)
+        for i in range(z.size):
+            bi = float(self.params[i]["b"])
+            da_i = 0.0
+            for j, xj in enumerate(z):
+                da_i += xj * math.sqrt(self._a_i(i, T) * self._a_i(j, T)) * (1.0 - self._kij(i, j, T))
+            da_i *= 2.0
+            out[i] = rho * bi / (1.0 - br) - (
+                (da_i * b - a * bi) / (b * b) * f + (a / b) * rho * bi * fp
+            ) / (2.0 * s2 * R_GAS * T)
+        return a_phys, dadrho, out
+
+    def _alpha_r_derivs(
+        self, T: float, rho: float, z: np.ndarray
+    ) -> tuple[float, float, np.ndarray]:
+        """a_r and its exact rho / composition derivatives (PR physical + association)."""
+        a_phys, dadrho_phys, dz_phys = self._alpha_phys_derivs(T, rho, z)
+        alpha_a, dadrho_a, dz_a = self._assoc.derivs(T, rho, z)
+        return a_phys + alpha_a, dadrho_phys + dadrho_a, dz_phys + dz_a
+
+    def pressure(self, T: float, rho: float, z: np.ndarray) -> float:
+        """P = rho R T (1 + rho da_r/drho) with both derivative terms in closed form."""
+        _a, dadrho, _dz = self._alpha_r_derivs(T, rho, z)
+        return rho * R_GAS * T * (1.0 + rho * dadrho)
+
+    def ln_phi(self, T: float, rho: float, z: np.ndarray) -> np.ndarray:
+        """Fully analytic fugacity coefficients.
+
+        ln phi_i = a_r + rho da_r/drho + da_r/dz_i - sum_j z_j da_r/dz_j - ln Z,
+        every term closed-form (the PR physical term and the association term
+        both differentiated exactly). The Michelsen-shift finite difference the
+        parent class uses carries a truncation error of order h^2 times the
+        third shift-derivative, which at this row's liquid-like packing
+        fractions (the PR pole sits at 1/b_mix) breaks the bridge's 1e-6
+        Gibbs-Duhem integral: measured 3.7e-6 at 30 midpoint steps, 3.5e-6 at
+        120 (quadrature-converged), against cpa_srk's 5.7e-8 on the flatter
+        ln(1+B) SRK form. Closed-form derivatives on the whole surface remove
+        the finite-difference error fields entirely; partial fixes (analytic mu
+        with finite-difference Z and density roots) keep an incoherent surface
+        and still measured 3.8e-6.
+        """
+        a_r, dadrho, dz = self._alpha_r_derivs(T, rho, z)
+        Z = 1.0 + rho * dadrho
+        if Z <= 0.0:
+            raise _NonPhysicalZ(f"Z={Z:.6g} at T={T} K, rho={rho:.6g}")
+        mu = a_r + rho * dadrho + dz - float(z @ dz)
+        return mu - math.log(Z)
+
     def max_density(self, T: float, z: np.ndarray) -> float:
         # The PR pole sits at rho = 1/b_mix (same co-volume as the SRK pole);
         # the association g-divergence at 1.96/b_mix is beyond it.
