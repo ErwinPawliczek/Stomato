@@ -1,0 +1,366 @@
+# U-B — Pressure change and flow (plan §2 U-B, 12 rows).
+#
+# The compression train is its own row (plan marks compressor's R2
+# "multi-section with intercooling" as "train ✅"); the hydraulic turbine is
+# covered by the expander row, not a separate row.
+
+- id: pump
+  name: Pump
+  family: flow
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: liquid feed
+    outlet:
+    - name: outlet
+      required: true
+      description: pressurised liquid (PS flash)
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.pump:Pump
+      params:
+        type: object
+        required: [P_out]
+        properties:
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+          eta: {type: number, description: 'pump efficiency in (0, 1], default 0.65'}
+      note: ΔP/outlet P with efficiency; PS flash on the outlet
+    R1:
+      status: planned
+      params: {}
+      note: curve (head/efficiency vs flow) and NPSHa check
+      end_state: true
+  sizer: pump
+  pid_symbol: P
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 1
+  notes: shaft power currently inlined in the unit; the pump_power correlation plugin exists.
+
+- id: compressor
+  name: Centrifugal compressor
+  family: flow
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: gas feed
+    outlet:
+    - name: outlet
+      required: true
+      description: compressed gas (PS flash)
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.compressor:Compressor
+      params:
+        type: object
+        required: [P_out]
+        properties:
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+          eta_isentropic: {type: number, description: 'isentropic efficiency in (0, 1], default 0.75'}
+      note: isentropic/polytropic efficiency; PS flash on the outlet
+    R1:
+      status: planned
+      params: {}
+      note: performance map (head/efficiency vs flow, surge/stonewall), Schultz polytropic
+      end_state: true
+  sizer: compressor
+  pid_symbol: C
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 2
+  notes: multi-section compression with intercooling is its own flow row (compression_train), not a level of this row.
+
+- id: reciprocating_compressor
+  name: Reciprocating compressor
+  family: flow
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: gas feed
+    outlet:
+    - name: outlet
+      required: true
+      description: compressed gas
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: clearance-volume model, stages
+    R1:
+      status: planned
+      params: {}
+      note: rod load, capacity vs clearance
+      end_state: true
+  pid_symbol: RC
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 3
+  notes: roadmap.
+
+- id: compression_train
+  name: Compression train
+  family: flow
+  ports:
+    inlet:
+    - name: gas_in
+      required: true
+      description: gas feed to the first section
+    outlet:
+    - name: gas_out
+      required: true
+      description: discharge of the last section after intercooling
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.compression_train:CompressionTrain
+      params:
+        type: object
+        required: [P_discharge]
+        properties:
+          P_discharge: {type: number, description: 'final discharge pressure, Pa'}
+          eta_isentropic: {type: number, description: 'per-section isentropic efficiency, default 0.75'}
+          T_interstage_out: {type: number, description: 'interstage outlet temperature after cooling, K'}
+      note: multi-section compression with intercooling to a fixed interstage temperature
+      end_state: true
+  pid_symbol: CT
+  references:
+  - 'docs/unit-catalogue-plan.md §2 U-B 2 (today: train ✅)'
+  notes: its own flow row per the plan-to-registry mapping — the plan's compressor R2
+    (multi-section with intercooling) lives here, not on the compressor row.
+
+- id: expander
+  name: Expander / turbine
+  family: flow
+  ports:
+    inlet:
+    - name: gas_in
+      required: true
+      description: gas feed
+    outlet:
+    - name: gas_out
+      required: true
+      description: expanded gas (PS flash)
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.expander:Expander
+      params:
+        type: object
+        required: [P_out]
+        properties:
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+          eta_isentropic: {type: number, description: 'isentropic efficiency in (0, 1], default 0.8'}
+      note: isentropic expansion with power recovery
+    R1:
+      status: planned
+      params: {}
+      note: performance map
+      end_state: true
+  pid_symbol: T
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 4
+  notes: the hydraulic turbine / pressure-recovery line (plan U-B 12) is covered by this
+    row — isentropic expansion recovering shaft power — not a separate row.
+
+- id: jt_valve
+  name: JT valve
+  family: flow
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet
+      required: true
+      description: isenthalpic (flash_ph) outlet
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.jt_valve:JTValve
+      params:
+        type: object
+        required: [P_out]
+        properties:
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+      note: isenthalpic flash to the outlet pressure
+      end_state: true
+  pid_symbol: V
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 5
+  notes: the palette defines no higher level for the JT valve (plan §2 U-B 5).
+
+- id: control_valve
+  name: Control valve
+  family: flow
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: outlet
+      required: true
+      description: throttled outlet
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: Cv / outlet P spec, isenthalpic (the cv_liquid correlation plugin exists)
+    R1:
+      status: planned
+      params: {}
+      note: IEC 60534 sizing, choked flow, Cv curve
+      end_state: true
+  pid_symbol: CV
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 6
+  notes: roadmap.
+
+- id: relief_valve
+  name: Relief valve
+  family: flow
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: relieved stream at set pressure
+    outlet:
+    - name: outlet
+      required: true
+      description: discharge
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: set pressure, orifice from API 520 (the psv_api520_gas correlation plugin exists)
+    R1:
+      status: planned
+      params: {}
+      note: two-phase sizing (HEM/omega)
+    R2:
+      status: planned
+      params: {}
+      note: inlet/outlet loss checks
+      end_state: true
+  pid_symbol: PSV
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 7
+  notes: roadmap.
+
+- id: pipe_segment
+  name: Pipe segment
+  family: flow
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: segment inlet
+    outlet:
+    - name: outlet
+      required: true
+      description: segment outlet
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: fixed ΔP spec
+    R1:
+      status: planned
+      params: {}
+      note: single-phase Darcy (Colebrook) with elevation; the darcy_colebrook correlation plugin exists
+    R2:
+      status: planned
+      params: {}
+      note: two-phase Beggs-Brill / fluids multiphase, profile along the length
+      end_state: true
+  pid_symbol: PIPE
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 8
+  notes: roadmap.
+
+- id: orifice
+  name: Orifice / flow element
+  family: flow
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: element inlet
+    outlet:
+    - name: outlet
+      required: true
+      description: element outlet
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: ΔP from a discharge coefficient
+    R1:
+      status: planned
+      params: {}
+      note: ISO 5167 sizing
+      end_state: true
+  pid_symbol: FE
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 9
+  notes: roadmap.
+
+- id: ejector
+  name: Ejector
+  family: flow
+  ports:
+    inlet:
+    - name: motive_in
+      required: true
+      description: motive stream
+    - name: suction_in
+      required: true
+      description: suction stream
+    outlet:
+    - name: outlet
+      required: true
+      description: combined discharge
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: entrainment ratio spec
+    R1:
+      status: planned
+      params: {}
+      note: 1-D momentum (ESDU-style)
+      end_state: true
+  pid_symbol: EJ
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 10
+  notes: roadmap.
+
+- id: fan
+  name: Fan / blower
+  family: flow
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: gas feed
+    outlet:
+    - name: outlet
+      required: true
+      description: raised-pressure gas
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: ΔP + efficiency
+    R1:
+      status: planned
+      params: {}
+      note: performance curve
+      end_state: true
+  pid_symbol: FAN
+  references:
+  - docs/unit-catalogue-plan.md §2 U-B 11
+  notes: roadmap.

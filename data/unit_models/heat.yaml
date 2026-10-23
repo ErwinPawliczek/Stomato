@@ -1,0 +1,298 @@
+# U-C — Heat transfer (plan §2 U-C, 10 rows).
+#
+# heater and cooler are separate rows. The electric-heater concept (plan U-C 9)
+# maps onto the heater row (its R0 IS a duty spec) — no separate row.
+
+- id: heater
+  name: Heater
+  family: heat
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: process feed
+    outlet:
+    - name: outlet
+      required: true
+      description: heated outlet (PH flash)
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.heat_exchange:HeatExchanger
+      params:
+        type: object
+        properties:
+          T_out: {type: number, description: 'outlet temperature spec, K'}
+          duty_W: {type: number, description: 'duty spec, W (one of T_out/duty_W)'}
+          dP: {type: number, description: 'pressure drop, Pa'}
+      note: duty or outlet T with ΔP
+      end_state: true
+  pid_symbol: E
+  references:
+  - docs/unit-catalogue-plan.md §2 U-C 1
+  notes: heater and cooler are separate rows. The electric-heater line (plan U-C 9, R0
+    duty only) maps onto this row — no separate electric-heater row.
+
+- id: cooler
+  name: Cooler
+  family: heat
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: process feed
+    outlet:
+    - name: outlet
+      required: true
+      description: cooled outlet (PH flash)
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.heat_exchange:HeatExchanger
+      params:
+        type: object
+        properties:
+          T_out: {type: number, description: 'outlet temperature spec, K'}
+          duty_W: {type: number, description: 'duty spec, W (one of T_out/duty_W)'}
+          dP: {type: number, description: 'pressure drop, Pa'}
+      note: duty or outlet T with ΔP
+      end_state: true
+  pid_symbol: E
+  references:
+  - docs/unit-catalogue-plan.md §2 U-C 1
+  notes: separate row from the heater so flowsheets read naturally.
+
+- id: shell_tube
+  name: Shell-and-tube exchanger
+  family: heat
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: process feed
+    outlet:
+    - name: outlet
+      required: true
+      description: exchanger outlet
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.heat_exchange:HeatExchanger
+      params:
+        type: object
+        properties:
+          T_out: {type: number, description: 'outlet temperature spec, K'}
+          duty_W: {type: number, description: 'duty spec, W (one of T_out/duty_W)'}
+          dP: {type: number, description: 'pressure drop, Pa'}
+      note: approach / duty with LMTD-F specification
+    R1:
+      status: planned
+      params: {}
+      note: rating — U from ht film coefficients, TEMA type, F factor, ΔP both sides
+    R2:
+      status: planned
+      params: {}
+      note: zoned (phase change), multi-pass with temperature cross
+      end_state: true
+  sizer: shell_tube
+  pid_symbol: E
+  references:
+  - docs/unit-catalogue-plan.md §2 U-C 2
+  notes: the R0 row shares the HeatExchanger adapter; R1/R2 rating physics is the U-C
+    family thread's work on the shared _physics/heat_transfer store.
+
+- id: air_cooler
+  name: Air cooler
+  family: heat
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: process feed
+    outlet:
+    - name: outlet
+      required: true
+      description: cooled outlet
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.heat_exchange:HeatExchanger
+      params:
+        type: object
+        properties:
+          T_out: {type: number, description: 'outlet temperature spec, K'}
+          duty_W: {type: number, description: 'duty spec, W (one of T_out/duty_W)'}
+          dP: {type: number, description: 'pressure drop, Pa'}
+      note: approach / duty spec
+    R1:
+      status: planned
+      params: {}
+      note: rating — bundle geometry, fan power, ht air-side correlation
+      end_state: true
+  sizer: air_cooler
+  pid_symbol: AC
+  references:
+  - docs/unit-catalogue-plan.md §2 U-C 3
+  notes: roadmap R1 lands with the S1 natural-gas slice (plan §2b).
+
+- id: plate_exchanger
+  name: Plate exchanger
+  family: heat
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: process feed
+    outlet:
+    - name: outlet
+      required: true
+      description: exchanger outlet
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: approach / duty spec
+    R1:
+      status: planned
+      params: {}
+      note: rating — chevron-correlation film coefficients
+      end_state: true
+  pid_symbol: PHE
+  references:
+  - docs/unit-catalogue-plan.md §2 U-C 4
+  notes: roadmap; the S2 amine slice uses it as the lean/rich exchanger (plan §2b).
+
+- id: double_pipe
+  name: Double-pipe / hairpin exchanger
+  family: heat
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: process feed
+    outlet:
+    - name: outlet
+      required: true
+      description: exchanger outlet
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: approach / duty spec
+    R1:
+      status: planned
+      params: {}
+      note: rating
+      end_state: true
+  pid_symbol: E
+  references:
+  - docs/unit-catalogue-plan.md §2 U-C 5
+  notes: roadmap.
+
+- id: multi_stream
+  name: Multi-stream exchanger (LNG cold box)
+  family: heat
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: first process stream
+    outlet:
+    - name: outlet
+      required: true
+      description: first process stream outlet (further streams via params)
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: stream-by-stream duties, composite curves, pinch check
+    R1:
+      status: planned
+      params: {}
+      note: layer-wise UA distribution
+    R2:
+      status: planned
+      params: {}
+      note: zoned with phase change
+      end_state: true
+  pid_symbol: MS
+  references:
+  - docs/unit-catalogue-plan.md §2 U-C 6
+  notes: roadmap.
+
+- id: fired_heater
+  name: Fired heater
+  family: heat
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: process feed (coil inlet)
+    outlet:
+    - name: outlet
+      required: true
+      description: coil outlet
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: duty, efficiency, fuel from LHV
+    R1:
+      status: planned
+      params: {}
+      note: radiant/convective split (Lobo-Evans)
+      end_state: true
+  pid_symbol: FH
+  references:
+  - docs/unit-catalogue-plan.md §2 U-C 7
+  notes: roadmap; S0 crude preheat train (plan §2b).
+
+- id: cooling_tower
+  name: Cooling tower
+  family: heat
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: warm circulating water
+    outlet:
+    - name: outlet
+      required: true
+      description: cooled water (with evaporation/blowdown in info)
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: approach to wet bulb, evaporation + blowdown
+    R1:
+      status: planned
+      params: {}
+      note: Merkel method
+      end_state: true
+  pid_symbol: CT
+  references:
+  - docs/unit-catalogue-plan.md §2 U-C 8
+  notes: roadmap.
+
+- id: hen_block
+  name: Heat exchanger network block (HEN)
+  family: heat
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: network stream set
+    outlet:
+    - name: outlet
+      required: true
+      description: targeted network result
+  levels:
+    R0:
+      status: planned
+      params: {}
+      note: pinch targets from stream data
+      end_state: true
+  pid_symbol: HEN
+  references:
+  - docs/unit-catalogue-plan.md §2 U-C 10
+  notes: engineering deliverable, not a solve unit (plan §2 U-C 10).

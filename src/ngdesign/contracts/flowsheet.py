@@ -4,13 +4,20 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import (
+    Field,
+    SerializerFunctionWrapHandler,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 from ngdesign.data import is_curated
 
 from .common import Model, Nozzle, check_tag
 from .components import ComponentRef, PseudoDefinition
 from .diagnostics import BlockRecord, SolveStatus, UnitError
+from .reactions import ReactionSet
 from .specs import DesignSpec, DesignSpecResult, check_read_address, check_write_address
 from .stream import StreamState, _check_composition
 
@@ -110,6 +117,22 @@ class Flowsheet(Model):
     # Tear-solver settings (spec P2-03): acceleration, iteration cap and
     # tolerance. Defaults keep the pre-P2-03 module-constant behaviour.
     solver_options: SolverOptions = Field(default_factory=SolverOptions)
+    # Flowsheet-owned reaction sets (spec U-R). Each set carries its own
+    # component slate, so a saved project is self-describing. Omitted from the
+    # serialized form when empty: every pre-reaction document round-trips
+    # byte-identically.
+    # default_factory (not a literal []) keeps the JSON Schema free of a
+    # "default" entry: openapi-typescript emits properties carrying a default
+    # as required, which would make every stored project mock/type without the
+    # new key fail the frontend typecheck.
+    reactions: list[ReactionSet] = Field(default_factory=list)
+
+    @model_serializer(mode="wrap")
+    def _serialize(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        payload: dict[str, Any] = handler(self)
+        if isinstance(payload, dict) and not self.reactions:
+            payload.pop("reactions", None)
+        return payload
 
     @model_validator(mode="before")
     @classmethod

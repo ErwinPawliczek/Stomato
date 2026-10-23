@@ -26,6 +26,26 @@
         "title": "AgentRequest",
         "type": "object"
       },
+      "Arrhenius": {
+        "additionalProperties": false,
+        "description": "Arrhenius factor k0\u00b7exp(\u2212Ea/(R\u00b7T)) with Ea in J/mol.",
+        "properties": {
+          "Ea": {
+            "title": "Ea",
+            "type": "number"
+          },
+          "k0": {
+            "title": "K0",
+            "type": "number"
+          }
+        },
+        "required": [
+          "k0",
+          "Ea"
+        ],
+        "title": "Arrhenius",
+        "type": "object"
+      },
       "Axis": {
         "additionalProperties": false,
         "description": "One swept address and the values it takes; every combination with the\nother axes (the full grid) becomes one case.",
@@ -500,6 +520,28 @@
         "title": "Direction",
         "type": "string"
       },
+      "DrivingForceTerm": {
+        "additionalProperties": false,
+        "description": "One additive term of an LHHW numerator/denominator block.",
+        "properties": {
+          "arrhenius": {
+            "$ref": "#/components/schemas/Arrhenius"
+          },
+          "orders": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "default": {},
+            "title": "Orders",
+            "type": "object"
+          }
+        },
+        "required": [
+          "arrhenius"
+        ],
+        "title": "DrivingForceTerm",
+        "type": "object"
+      },
       "EndType": {
         "enum": [
           "bw",
@@ -509,6 +551,54 @@
         ],
         "title": "EndType",
         "type": "string"
+      },
+      "Equilibrium": {
+        "additionalProperties": false,
+        "description": "Equilibrium model of one reaction: Gibbs-driven or a ln K polynomial.",
+        "properties": {
+          "form": {
+            "enum": [
+              "from_gibbs",
+              "polynomial"
+            ],
+            "title": "Form",
+            "type": "string"
+          },
+          "polynomial": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "default": {},
+            "title": "Polynomial",
+            "type": "object"
+          },
+          "t_window": {
+            "anyOf": [
+              {
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "number"
+                  }
+                ],
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T Window"
+          }
+        },
+        "required": [
+          "form"
+        ],
+        "title": "Equilibrium",
+        "type": "object"
       },
       "EquipmentEnvelope": {
         "additionalProperties": false,
@@ -595,6 +685,13 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "reactions": {
+            "items": {
+              "$ref": "#/components/schemas/ReactionSet"
+            },
+            "title": "Reactions",
+            "type": "array"
           },
           "solver_options": {
             "$ref": "#/components/schemas/SolverOptions"
@@ -792,6 +889,51 @@
           "job_id"
         ],
         "title": "JobEnqueued",
+        "type": "object"
+      },
+      "LHHW": {
+        "additionalProperties": false,
+        "description": "Langmuir-Hinshelwood-Hougen-Watson rate expression.",
+        "properties": {
+          "adsorption": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/DrivingForceTerm"
+            },
+            "title": "Adsorption",
+            "type": "array"
+          },
+          "adsorption_exponent": {
+            "default": 1.0,
+            "title": "Adsorption Exponent",
+            "type": "number"
+          },
+          "basis": {
+            "default": "mole_fraction",
+            "enum": [
+              "mole_fraction",
+              "concentration"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "driving_force": {
+            "items": {
+              "$ref": "#/components/schemas/DrivingForceTerm"
+            },
+            "title": "Driving Force",
+            "type": "array"
+          },
+          "rate_units": {
+            "title": "Rate Units",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rate_units",
+          "driving_force"
+        ],
+        "title": "LHHW",
         "type": "object"
       },
       "Layout": {
@@ -1015,6 +1157,100 @@
         "title": "PortRef",
         "type": "object"
       },
+      "PowerLaw": {
+        "additionalProperties": false,
+        "description": "Power-law rate expression.\n\n``reverse`` carries the explicit reverse expression; without it a reaction\nwith an equilibrium model is equilibrium-limited, and without either the\nexpression is irreversible. The reverse side is a plain ``PowerLawRate``\nbody \u2014 it never nests a further ``reverse`` (detailed balance points its\nforward side at this reaction, so a reverse-of-reverse has no physical\nmeaning). Keeping the graph acyclic also matters mechanically: a recursive\nmodel makes FastAPI's request/response OpenAPI schemas textually\nirreconcilable (`<Model>-Input`/`<Model>-Output` self-references), which\nsplit and renamed every component the frontend types import.",
+        "properties": {
+          "Ea": {
+            "title": "Ea",
+            "type": "number"
+          },
+          "basis": {
+            "default": "mole_fraction",
+            "enum": [
+              "mole_fraction",
+              "concentration"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "k0": {
+            "title": "K0",
+            "type": "number"
+          },
+          "orders": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "default": {},
+            "title": "Orders",
+            "type": "object"
+          },
+          "rate_units": {
+            "title": "Rate Units",
+            "type": "string"
+          },
+          "reverse": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PowerLawRate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "rate_units",
+          "k0",
+          "Ea"
+        ],
+        "title": "PowerLaw",
+        "type": "object"
+      },
+      "PowerLawRate": {
+        "additionalProperties": false,
+        "description": "Power-law rate body: Arrhenius term plus composition orders.\n\n``PowerLaw`` without the ``reverse`` slot. Splitting the body out keeps the\ncontract model graph non-recursive (see ``PowerLaw.reverse``).",
+        "properties": {
+          "Ea": {
+            "title": "Ea",
+            "type": "number"
+          },
+          "basis": {
+            "default": "mole_fraction",
+            "enum": [
+              "mole_fraction",
+              "concentration"
+            ],
+            "title": "Basis",
+            "type": "string"
+          },
+          "k0": {
+            "title": "K0",
+            "type": "number"
+          },
+          "orders": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "default": {},
+            "title": "Orders",
+            "type": "object"
+          },
+          "rate_units": {
+            "title": "Rate Units",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rate_units",
+          "k0",
+          "Ea"
+        ],
+        "title": "PowerLawRate",
+        "type": "object"
+      },
       "Project": {
         "additionalProperties": false,
         "properties": {
@@ -1185,6 +1421,99 @@
           "sg"
         ],
         "title": "PseudoDefinition",
+        "type": "object"
+      },
+      "Reaction": {
+        "additionalProperties": false,
+        "description": "One stoichiometric reaction with optional kinetics and equilibrium model.\n\n``base_component`` is the component the extent of reaction is normalized\non; it must appear with \u03bd < 0. Pseudo (lumped) components can only take\npart in reactions explicitly marked ``lumped``, which switches validation\nfrom element balances to a molecular-weight balance (pseudos carry no\nformula). ``provenance`` is mandatory: every reaction names where its\nstoichiometry and data come from.",
+        "properties": {
+          "base_component": {
+            "title": "Base Component",
+            "type": "string"
+          },
+          "equilibrium": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Equilibrium"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kinetics": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PowerLaw"
+              },
+              {
+                "$ref": "#/components/schemas/LHHW"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kinetics"
+          },
+          "lumped": {
+            "default": false,
+            "title": "Lumped",
+            "type": "boolean"
+          },
+          "provenance": {
+            "title": "Provenance",
+            "type": "string"
+          },
+          "stoichiometry": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Stoichiometry",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "stoichiometry",
+          "base_component",
+          "provenance"
+        ],
+        "title": "Reaction",
+        "type": "object"
+      },
+      "ReactionSet": {
+        "additionalProperties": false,
+        "description": "A flowsheet-owned set of reactions over its own component slate.\n\nThe slate is self-describing so a saved project carries everything needed\nto replay it; the flowsheet slate may be wider. Lumped reactions are\nvalidated on a molecular-weight balance instead of element counts.",
+        "properties": {
+          "components": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Components",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "reactions": {
+            "items": {
+              "$ref": "#/components/schemas/Reaction"
+            },
+            "title": "Reactions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "reactions",
+          "components"
+        ],
+        "title": "ReactionSet",
         "type": "object"
       },
       "RoutedLine": {
