@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-10-22T18:56:47+00:00 from `data/validation/results.json` (git 40fa336, CoolProp 8.0.0).
+Generated 2026-10-22T23:39:17+00:00 from `data/validation/results.json` (git 7bb69cb, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -37,10 +37,10 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [coolprop_heos](validation/coolprop_heos.md) | helmholtz | validated | 7/7 | L1=3 L2=2 | [report](validation/coolprop_heos.md) |
 | [cpa_pr](validation/cpa_pr.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/cpa_pr.md) |
 | [cpa_srk](validation/cpa_srk.md) | saft | provisional | 7/7 | L1=10 L2=9 | [report](validation/cpa_srk.md) |
-| [enrtl_nacl_water](validation/enrtl_nacl_water.md) | electrolyte | experimental | — | L1=0 L2=0 | [report](validation/enrtl_nacl_water.md) |
+| [enrtl_nacl_water](validation/enrtl_nacl_water.md) | electrolyte | provisional | 3/3 | L1=0 L2=0 | [report](validation/enrtl_nacl_water.md) |
 | [eos_cg](validation/eos_cg.md) | helmholtz | experimental | — | L1=0 L2=0 | [report](validation/eos_cg.md) |
 | [esso-tabular](validation/esso-tabular.md) | kvalue | provisional | 5/5 | L1=4 L2=0 | [report](validation/esso-tabular.md) |
-| [ext_uniquac_nacl_water](validation/ext_uniquac_nacl_water.md) | electrolyte | experimental | — | L1=0 L2=0 | [report](validation/ext_uniquac_nacl_water.md) |
+| [ext_uniquac_nacl_water](validation/ext_uniquac_nacl_water.md) | electrolyte | provisional | 3/3 | L1=0 L2=0 | [report](validation/ext_uniquac_nacl_water.md) |
 | [flory_huggins](validation/flory_huggins.md) | special | experimental | — | L1=0 L2=0 | [report](validation/flory_huggins.md) |
 | [gerg2008](validation/gerg2008.md) | helmholtz | validated | 7/7 | L1=5 L2=10 | [report](validation/gerg2008.md) |
 | [gerg2008_teqp](validation/gerg2008_teqp.md) | saft | experimental | — | L1=0 L2=0 | [report](validation/gerg2008_teqp.md) |
@@ -156,7 +156,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 ### Status summary
 
-129 rows: 9 validated, 97 provisional, 23 experimental
+129 rows: 9 validated, 99 provisional, 21 experimental
 
 | provisional row | what keeps it from validated |
 | --- | --- |
@@ -166,7 +166,9 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [braun-k10](validation/braun-k10.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=2 L2=0) |
 | [bwrs](validation/bwrs.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [cpa_srk](validation/cpa_srk.md) | 13 declared case misses (`assessed:` in the row; see its report) |
+| [enrtl_nacl_water](validation/enrtl_nacl_water.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [esso-tabular](validation/esso-tabular.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=4 L2=0) |
+| [ext_uniquac_nacl_water](validation/ext_uniquac_nacl_water.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [grayson-streed](validation/grayson-streed.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=3 L2=0) |
 | [grayson-streed-extended](validation/grayson-streed-extended.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=3 L2=0) |
 | [iapws95](validation/iapws95.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=5 L2=0) |

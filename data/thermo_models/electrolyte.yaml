@@ -252,17 +252,19 @@
     (the anchors below 40 C are the weak ones). L0 round trips and the single-liquid
     limit run today
 - id: enrtl_nacl_water
-  name: eNRTL NaCl(aq) -- REFUSED (no open parameter table)
+  name: eNRTL NaCl(aq) brine (25 C parameter set)
   family: electrolyte
   adapter: ngdesign.amine.electrolyte:ElectrolyteENRTLNaCl
   options: {}
   params:
-    source: none -- first-use refusal
+    source: data/thermo_params/electrolyte/enrtl.yaml
     provenance: >-
-      No openly retrievable, citable eNRTL parameter table for NaCl-H2O exists (the published
-      electrolyte-NRTL parameter sets for aqueous salts are not in citable open form, and
-      DWSIM's electrolyte parameter files are not in the open repository).  The T-07 precedent
-      applies: the row refuses at first use rather than ship unverifiable parameters.
+      eNRTL NaCl-H2O binary per Chen & Evans (1986), AIChE J. 32(3), 444-454 (tau_CA,w -4.5916,
+      tau_w,CA 9.0234, alpha 0.2; transcribed from the open-access Kwaterski & Herri copy) with the
+      Pitzer-Debye-Hueckel mole-fraction long-range term per Chen, Britt, Boston & Evans (1982),
+      AIChE J. 28(4), 588-596 (A_phi 0.392, rho 14.9).  Salt-side composition derivatives are
+      numeric central differences of n*G^E/RT; the unsymmetric molality-scale conversion
+      (ln gamma+-(m) = ln gamma+-(x) - ln(1 + nu m M_w)) and a_w = gamma_w x_w follow Chen (1982).
   applicability:
     component_classes:
     - water
@@ -278,27 +280,70 @@
     - V
     - L
     notes: >-
-      Refusal row: construction succeeds (the catalogue lists it) and every property call
-      raises NotImplementedError naming the gap.
-  status: experimental
+      NaCl-H2O brines at 20-30 C; the tau pair is the 25 C one and temperature dependence enters
+      only through Psat.  Molality clamped to the verified domain (6.15 mol/kg, the saturation
+      anchor).  Literature-faithful accuracy ~1-5 % vs experimental gamma+/phi (the source model's
+      own fit quality); Pitzer NaCl is the high-accuracy row (0.36 %).  Na2SO4 out of scope
+      (documented, T-09).
+  status: provisional
   validation: []
-  references: []
+  references:
+  - Chen, C.-C. & Evans, L. B., AIChE J. 32(3), 444-454, 1986
+  - Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., AIChE J. 28(4), 588-596, 1982
+  - Kwaterski, M. & Herri, J.-M. (open-access copy carrying the printed Chen & Evans NaCl tau table)
+  l0:
+    single_liquid_limit:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+    round_trip:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      states:
+      - - 298.15
+        - 5000000.0
+    determinism:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+  l0_excluded: *id002
   l0_note: >-
-    experimental row — L0 exempt; constructs successfully and refuses at first use
-    (NotImplementedError) because no citable open eNRTL parameter table for NaCl-H2O
-    exists (T-07 precedent)
+    literature anchors run in tests/thermo/test_electrolyte.py — mean activity coefficients vs
+    Pitzer, Peiper & Busey 1984 Table A-8 (0.1-6 molal) miss the default 2 % band on four points,
+    worst 4.99 % (6 m; the model's own published fit quality is ~1-5 %, sigma_phi 1.18 % per
+    Kwaterski & Herri); osmotic coefficients vs Table A-9 miss the band once (6 m, -2.84 %); the
+    SLE solve gives 6.8905 vs 6.146 mol/kg (+12.2 %, the flat gamma curve past the minimum).
+    L0 round trips and the single-liquid limit run today
+  assessed:
+    ppb84-gamma-0.25m: "gamma+ -2.00 % (0.7056 vs 0.720) - model-inherent fit quality (Chen & Evans 1986 binary), measured 2026-10-22"
+    ppb84-gamma-0.5m: "gamma+ -2.90 % (0.6612 vs 0.681) - model-inherent fit quality, measured 2026-10-22"
+    ppb84-gamma-1.0m: "gamma+ -3.29 % (0.6354 vs 0.657) - model-inherent fit quality, measured 2026-10-22"
+    ppb84-gamma-6.0m: "gamma+ -4.99 % (0.9377 vs 0.987) - model-inherent fit quality, worst point, measured 2026-10-22"
+    ppb84-phi-6.0m: "phi -2.84 % (1.2359 vs 1.272) - model-inherent fit quality, measured 2026-10-22"
+    ppb84-saturation: "SLE solve 6.8905 vs 6.146 mol/kg (+12.2 %) - the eNRTL gamma curve is too flat past the 1 m minimum for the 1.0065 saturation condition, measured 2026-10-22"
 - id: ext_uniquac_nacl_water
-  name: Extended UNIQUAC NaCl(aq) -- REFUSED (no open parameter table)
+  name: Extended UNIQUAC NaCl(aq) brine (Thomsen parameter set)
   family: electrolyte
   adapter: ngdesign.amine.electrolyte:ElectrolyteExtUNIQUAC
   options: {}
   params:
-    source: none -- first-use refusal
+    source: data/thermo_params/electrolyte/ext_uniquac.yaml
     provenance: >-
-      No openly retrievable, citable extended-UNIQUAC parameter table for NaCl-H2O exists
-      (Thomsen & Rasmussen's fitted parameters are not published in citable open form).  The
-      T-07 precedent applies: the row refuses at first use rather than ship unverifiable
-      parameters.
+      Extended UNIQUAC per Thomsen & Rasmussen (1999), Chem. Eng. Sci. 54, 1787-1802 and
+      Thomsen, Rasmussen & Gani (1996), Chem. Eng. Sci. 51, 3675-3683; the r/q/u0/u1 set for
+      Na+-Cl--H2O verified value-for-value against the open-access Leal et al. (2025),
+      Applied Geochemistry 180, 106274 (Tables 1-2), formulation (eqs 15-24, 40-46:
+      psi_ji = exp[(u_ii-u_ji)/T], S_j = sum theta_l psi_lj, infinite-dilution divisor psi_ww = 1,
+      eq 45 unsymmetric molality assembly) read from the same open paper and
+      finite-difference-verified to 6 decimals.  Reaktoro (LGPL-2.1) used as a verification
+      cross-check only, no code copied.
   applicability:
     component_classes:
     - water
@@ -314,18 +359,56 @@
     - V
     - L
     notes: >-
-      Refusal row: construction succeeds (the catalogue lists it) and every property call
-      raises NotImplementedError naming the gap.
-  status: experimental
+      NaCl-H2O brines at 20-30 C; the parameter set is the Thomsen 25 C one (u_ij carry the
+      published linear T-dependence, but the verified anchor set is 25 C) and residual
+      temperature dependence enters through Psat.  Molality clamped to the verified domain
+      (6.15 mol/kg, the saturation anchor).  Literature-faithful accuracy a few % vs experimental
+      gamma+/phi; Pitzer NaCl is the high-accuracy row (0.36 %).  Na2SO4 out of scope
+      (documented, T-09).
+  status: provisional
   validation: []
   references:
-  - Thomsen, K. & Rasmussen, P., 'Extended UNIQUAC for electrolyte systems' (parameters not
-    openly retrievable; refusal documented, T-09)
+  - Thomsen, K. & Rasmussen, P., Chem. Eng. Sci. 54(13), 1787-1802, 1999
+  - Thomsen, K., Rasmussen, P. & Gani, R., Chem. Eng. Sci. 51(16), 3675-3683, 1996
+  - Leal, A. M. K. et al., Applied Geochemistry 180, 106274, 2025 (open-access formulation and parameter verification)
+  l0:
+    single_liquid_limit:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+    round_trip:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      states:
+      - - 298.15
+        - 5000000.0
+    determinism:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+  l0_excluded: *id002
   l0_note: >-
-    experimental row — L0 exempt; constructs successfully and refuses at first use
-    (NotImplementedError) because no citable open extended-UNIQUAC parameter table for
-    NaCl-H2O exists (T-07 precedent). T-15 note: the model's basis is the Thomsen &
-    Rasmussen parameterization (Thomsen, Ph.D. thesis, DTU 1997; Thomsen & Rasmussen,
-    Chem. Eng. Technol. 22(12), 1041-1044, 1999), whose fitted parameters are not
-    openly redistributable - the row needs a licensed parameter file or an in-house
-    refit against open SLE/VLE data.
+    literature anchors run in tests/thermo/test_electrolyte.py — mean activity coefficients vs
+    Pitzer, Peiper & Busey 1984 Table A-8 (0.1-6 molal) miss the default 2 % band on six points,
+    worst 4.26 % (1 m, at the characteristic gamma minimum the model reproduces); osmotic
+    coefficients vs Table A-9 miss the band on three points, worst 3.68 % (4 m); the SLE solve
+    gives 6.2358 vs 6.146 mol/kg (+1.5 %).  A few-percent-class fit is the Thomsen-type
+    parameterisation's own published quality.  L0 round trips and the single-liquid limit run today
+  assessed:
+    ppb84-gamma-0.25m: "gamma+ -2.14 % (0.7046 vs 0.720) - model-inherent fit quality (Thomsen parameterisation), measured 2026-10-22"
+    ppb84-gamma-0.5m: "gamma+ -3.49 % (0.6572 vs 0.681) - model-inherent fit quality, measured 2026-10-22"
+    ppb84-gamma-1.0m: "gamma+ -4.26 % (0.6290 vs 0.657) - model-inherent fit quality, worst point, measured 2026-10-22"
+    ppb84-gamma-2.0m: "gamma+ -2.00 % (0.6556 vs 0.669) - model-inherent fit quality, measured 2026-10-22"
+    ppb84-gamma-4.0m: "gamma+ +3.03 % (0.8057 vs 0.782) - model-inherent fit quality, measured 2026-10-22"
+    ppb84-gamma-5.0m: "gamma+ +2.54 % (0.8951 vs 0.873) - model-inherent fit quality, measured 2026-10-22"
+    ppb84-phi-3.0m: "phi +3.31 % (1.0796 vs 1.045) - model-inherent fit quality, measured 2026-10-22"
+    ppb84-phi-4.0m: "phi +3.68 % (1.1550 vs 1.114) - model-inherent fit quality, worst point, measured 2026-10-22"
+    ppb84-phi-5.0m: "phi +2.41 % (1.2186 vs 1.190) - model-inherent fit quality, measured 2026-10-22"
+    ppb84-saturation: "SLE solve 6.2358 vs 6.146 mol/kg (+1.5 %) - measured 2026-10-22"

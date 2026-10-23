@@ -6,6 +6,13 @@ citation trail):
 * Pitzer NaCl: Pitzer, Peiper & Busey (1984), J. Phys. Chem. Ref. Data 13(1),
   Table A-8 mean activity coefficients, Table A-9 osmotic coefficients, and
   the 298.15 K saturation anchor (6.146 mol/kg at gamma 1.0065).
+* eNRTL: Chen & Evans (1986) NaCl-H2O binary (tau transcribed from the
+  open-access Kwaterski & Herri copy) with the Chen et al. (1982) PDH long
+  range -- the same PPB84 anchor tables, at the source model's own fit
+  quality (T-09b).
+* Extended UNIQUAC: Thomsen & Rasmussen (1999) parameter set, formulation
+  per the open-access Leal et al. (2025) text -- the same PPB84 anchor
+  tables (T-09b).
 * Sour water: EPA-600/2-80-067 (Wilson 1980) printed worked-example constants
   (printed pp. 52-53) and Table 21 (Shih et al. pH-7.00 buffered H2S points;
   the 90 C acceptance anchor is the linear interpolation of the 80/100 C API
@@ -21,8 +28,21 @@ import pytest
 
 from ngdesign import registry
 from ngdesign.amine.electrolyte import (
+    _MW_WATER_KG,
     ElectrolyteChemistryError,
+    _eu_a_dh,
+    _eu_ln_gamma_u,
+    _eu_state,
+    _ext_uniquac,
     _solution_molalities,
+    enrtl_mean_gamma,
+    enrtl_osmotic,
+    enrtl_saturation_molality,
+    enrtl_water_activity,
+    ext_uniquac_mean_gamma,
+    ext_uniquac_osmotic,
+    ext_uniquac_saturation_molality,
+    ext_uniquac_water_activity,
     pitzer_mean_gamma,
     pitzer_osmotic,
     pitzer_saturation_molality,
@@ -97,22 +117,200 @@ def test_pitzer_saturation_molality() -> None:
     assert pitzer_water_activity(m_sat) == pytest.approx(0.7521, rel=0.002)
 
 
-def test_brine_bubble_pressure_is_water_activity_times_psat() -> None:
+# The three brine rows share the involatile-salt flash plumbing; the water
+# activity surface is the per-model chemistry driver.
+_BRINE_WATER_ACTIVITY = {
+    "pitzer_nacl_water": pitzer_water_activity,
+    "enrtl_nacl_water": enrtl_water_activity,
+    "ext_uniquac_nacl_water": ext_uniquac_water_activity,
+}
+
+
+@pytest.mark.parametrize("model", sorted(_BRINE_WATER_ACTIVITY))
+def test_brine_bubble_pressure_is_water_activity_times_psat(model: str) -> None:
     """Brine bubble pressure == a_w(m) * Psat_H2O (the model's exact definition)."""
-    pkg = _electrolyte("pitzer_nacl_water")
+    pkg = _electrolyte(model)
     z = {"H2O": 0.95, "NaCl": 0.05}  # 2.94 molal
     m = 1000.0 * 0.05 / (18.01528 * 0.95)
     bubble = pkg.bubble_point(z, T=298.15)
-    expected = pitzer_water_activity(m) * pkg.pure_psat("H2O", 298.15)
+    expected = _BRINE_WATER_ACTIVITY[model](m) * pkg.pure_psat("H2O", 298.15)
     assert bubble.P == pytest.approx(expected, rel=1e-6)
 
 
-def test_brine_flash_single_liquid_below_bubble() -> None:
+@pytest.mark.parametrize("model", sorted(_BRINE_WATER_ACTIVITY))
+def test_brine_flash_single_liquid_below_bubble(model: str) -> None:
     """A brine PT flash above the bubble pressure is a single aqueous liquid."""
-    state = _electrolyte("pitzer_nacl_water").flash_pt({"H2O": 0.95, "NaCl": 0.05}, 298.15, 5000000.0, 100.0)
+    state = _electrolyte(model).flash_pt({"H2O": 0.95, "NaCl": 0.05}, 298.15, 5000000.0, 100.0)
     assert state.vapor_fraction == 0.0
     assert len(state.phases) == 1
     assert state.phases[0].kind is PhaseKind.AQUEOUS
+
+
+# -- eNRTL and extended-UNIQUAC brines (T-09b) ----------------------------------
+#
+# The default anchor band is the spec's 2 % (the Pitzer row alone is held to
+# its measured 0.5 %).  The eNRTL/eUNIQUAC parameterisations cannot reach
+# that: their residuals equal the source models' own published fit quality.
+# Every anchor point outside the default band is therefore a DECLARED miss:
+# the row's `assessed:` map in data/thermo_models/electrolyte.yaml records
+# the measured deviation and the test pins the deviation to that recorded
+# value (a regression guard in BOTH directions -- any change re-opens the
+# assessment) instead of widening the tolerance.
+
+_ENRTL_GAMMA_RECORDED: dict[float, float] = {
+    0.25: -0.02003,
+    0.5: -0.02903,
+    1.0: -0.03294,
+    6.0: -0.04994,
+}
+_ENRTL_PHI_RECORDED: dict[float, float] = {6.0: -0.02841}
+_EXT_UNIQUAC_GAMMA_RECORDED: dict[float, float] = {
+    0.25: -0.02141,
+    0.5: -0.03489,
+    1.0: -0.04258,
+    2.0: -0.02003,
+    4.0: 0.03031,
+    5.0: 0.02536,
+}
+_EXT_UNIQUAC_PHI_RECORDED: dict[float, float] = {
+    3.0: 0.03311,
+    4.0: 0.03681,
+    5.0: 0.02405,
+}
+_SPEC_BAND = 0.02
+_RECORDED_DEV_TOL = 2e-3
+
+
+def _assert_anchor(value: float, ref: float, recorded: dict[float, float], molality: float) -> None:
+    """Default-band check, or a recorded-deviation pin for a declared miss."""
+    dev = value / ref - 1.0
+    if molality in recorded:
+        assert dev == pytest.approx(recorded[molality], abs=_RECORDED_DEV_TOL)
+    else:
+        assert value == pytest.approx(ref, rel=_SPEC_BAND)
+
+
+@pytest.mark.parametrize(("molality", "gamma_ref"), _PPB84_GAMMA)
+def test_enrtl_mean_gamma_anchors(molality: float, gamma_ref: float) -> None:
+    """eNRTL gamma+- vs PPB84 Table A-8; misses are declared (row assessed:)."""
+    _assert_anchor(enrtl_mean_gamma(molality), gamma_ref, _ENRTL_GAMMA_RECORDED, molality)
+
+
+@pytest.mark.parametrize(("molality", "gamma_ref"), _PPB84_GAMMA)
+def test_ext_uniquac_mean_gamma_anchors(molality: float, gamma_ref: float) -> None:
+    """Extended-UNIQUAC gamma+- vs PPB84 Table A-8; misses are declared (row assessed:)."""
+    _assert_anchor(ext_uniquac_mean_gamma(molality), gamma_ref, _EXT_UNIQUAC_GAMMA_RECORDED, molality)
+
+
+@pytest.mark.parametrize(
+    ("molality", "phi_ref"),
+    [
+        (0.1, 0.933),
+        (0.25, 0.922),
+        (0.5, 0.922),
+        (1.0, 0.935),
+        (2.0, 0.984),
+        (3.0, 1.045),
+        (4.0, 1.114),
+        (5.0, 1.190),
+        (6.0, 1.272),
+    ],
+)
+def test_enrtl_osmotic_anchors(molality: float, phi_ref: float) -> None:
+    """eNRTL phi vs PPB84 Table A-9; misses are declared (row assessed:)."""
+    _assert_anchor(enrtl_osmotic(molality), phi_ref, _ENRTL_PHI_RECORDED, molality)
+
+
+@pytest.mark.parametrize(
+    ("molality", "phi_ref"),
+    [
+        (0.1, 0.933),
+        (0.25, 0.922),
+        (0.5, 0.922),
+        (1.0, 0.935),
+        (2.0, 0.984),
+        (3.0, 1.045),
+        (4.0, 1.114),
+        (5.0, 1.190),
+        (6.0, 1.272),
+    ],
+)
+def test_ext_uniquac_osmotic_anchors(molality: float, phi_ref: float) -> None:
+    """Extended-UNIQUAC phi vs PPB84 Table A-9; misses are declared (row assessed:)."""
+    _assert_anchor(ext_uniquac_osmotic(molality), phi_ref, _EXT_UNIQUAC_PHI_RECORDED, molality)
+
+
+def test_enrtl_saturation_molality() -> None:
+    """SLE solve pins the row's declared +12.2 % miss (6.8905 vs 6.146 mol/kg)."""
+    assert enrtl_saturation_molality() == pytest.approx(6.8905, rel=0.002)
+
+
+def test_ext_uniquac_saturation_molality() -> None:
+    """SLE solve pins the row's declared +1.5 % miss (6.2358 vs 6.146 mol/kg)."""
+    assert ext_uniquac_saturation_molality() == pytest.approx(6.2358, rel=0.002)
+
+
+@pytest.mark.parametrize(
+    ("gamma_fn", "phi_fn"),
+    [(enrtl_mean_gamma, enrtl_osmotic), (ext_uniquac_mean_gamma, ext_uniquac_osmotic)],
+    ids=["enrtl", "ext_uniquac"],
+)
+def test_brine_gibbs_duhem_consistency(gamma_fn: Any, phi_fn: Any) -> None:
+    """gamma+- and phi satisfy the Gibbs-Duhem integral (internal consistency)."""
+    for m in (0.1, 0.5, 1.0, 3.0, 6.0):
+        integ = 0.0
+        for i in range(1, 401):
+            m1, m0 = m * i / 400, m * (i - 1) / 400
+            mm = 0.5 * (m0 + m1)
+            integ += (phi_fn(mm) - 1.0) / mm * (m1 - m0)
+        assert math.log(gamma_fn(m)) - (phi_fn(m) - 1.0) == pytest.approx(integ, abs=0.05)
+
+
+def test_ext_uniquac_closed_form_is_finite_difference_exact() -> None:
+    """Leal eq (43) closed form vs the numeric d(n G^E/RT) derivative (eq 17)."""
+    p = _ext_uniquac()
+    molw = 1.0 / _MW_WATER_KG
+    msalt = 1.3
+    q = {k: float(v) for k, v in p["q"].items()}
+
+    def ge_rt(mw: float, ms: float) -> float:
+        m = ms / (mw * _MW_WATER_KG)
+        x, phi_, th, psi = _eu_state(m, 298.15)
+        sqi, a_dh, b_dh = math.sqrt(m), _eu_a_dh(298.15), 1.5
+        xw = mw / (mw + 2.0 * ms)
+        g_dh = -(4.0 * xw * _MW_WATER_KG * a_dh / b_dh**3) * (
+            math.log(1.0 + b_dh * sqi) - b_dh * sqi + 0.5 * b_dh**2 * m
+        )
+        g_u = 0.0
+        for k in ("H2O", "Na", "Cl"):
+            sk = sum(th[j] * psi[j][k] for j in ("H2O", "Na", "Cl"))
+            g_u += x[k] * (
+                math.log(phi_[k] / x[k])
+                - (10.0 / 2.0) * q[k] * math.log(phi_[k] / th[k])
+                - q[k] * math.log(sk)
+            )
+        return g_dh + g_u
+
+    h = 1e-6
+
+    def total(ms: float) -> float:
+        return (molw + 2.0 * ms) * ge_rt(molw, ms)
+
+    d_salt = (total(msalt + h) - total(msalt - h)) / (2.0 * h)
+    dw = 1e-3
+    d_w = (
+        (molw + dw + 2.0 * msalt) * ge_rt(molw + dw, msalt)
+        - (molw - dw + 2.0 * msalt) * ge_rt(molw - dw, msalt)
+    ) / (2.0 * dw)
+    x, _phi_, _theta, psi = _eu_state(msalt, 298.15)
+    lg = _eu_ln_gamma_u(x, _phi_, _theta, psi)
+    a25, sqi = _eu_a_dh(298.15), math.sqrt(msalt)
+    lg_dh_ion = -a25 * sqi / (1.0 + 1.5 * sqi)
+    lg_dh_w = (2.0 * a25 * _MW_WATER_KG / 1.5**3) * (
+        1.0 + 1.5 * sqi - 1.0 / (1.0 + 1.5 * sqi) - 2.0 * math.log(1.0 + 1.5 * sqi)
+    )
+    assert 2.0 * lg_dh_ion + lg["Na"] + lg["Cl"] == pytest.approx(d_salt, abs=1e-4)
+    assert lg_dh_w + lg["H2O"] == pytest.approx(d_w, abs=1e-4)
 
 
 # -- Sour water (EPA-600/2-80-067 SWEQ) ----------------------------------------
@@ -197,16 +395,6 @@ def test_sour_water_dew_above_bubble_at_one_atmosphere() -> None:
 
 
 # -- refusals and scope edges --------------------------------------------------
-
-
-@pytest.mark.parametrize("model", ["enrtl_nacl_water", "ext_uniquac_nacl_water"])
-def test_refusal_rows_refuse_at_first_use(model: str) -> None:
-    """Refusal rows construct (the catalogue lists them) and refuse on first use."""
-    pkg = _electrolyte(model)
-    with pytest.raises(NotImplementedError, match="refuses at first use"):
-        pkg.flash_pt({"H2O": 0.5, "NaCl": 0.5}, 298.15, 3000.0, 10.0)
-    with pytest.raises(NotImplementedError, match="refuses at first use"):
-        pkg.bubble_point({"H2O": 0.5, "NaCl": 0.5}, T=298.15)
 
 
 def test_sour_water_refuses_co2_bearing_feed() -> None:

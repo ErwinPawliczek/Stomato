@@ -1,0 +1,44 @@
+# eNRTL NaCl(aq) parameters (spec T-09b, model row enrtl_nacl_water).
+#
+# Model: Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., 'Local
+# composition model for excess Gibbs energy of electrolyte systems', part I
+# (the Pitzer-Debye-Hueckel long-range term), AIChE J. 28(4), 588-596, 1982;
+# Chen, C.-C. & Evans, L. B., AIChE J. 32(3), 444-454, 1986 (the
+# local-composition binary and its NaCl-H2O tau parameters).
+#
+# Where each number was read (2026-10-22, T-09b research thread):
+#   - tau_ca_w (-4.5916), tau_w_ca (9.0234), alpha (0.2): Chen & Evans 1986
+#     NaCl-H2O binary parameters as printed in the OPEN copy of Kwaterski,
+#     M. & Herri, J.-M., 'Extension of the eNRTL model...', (HAL open-access
+#     copy; table transcribed and character-verified from the rendered PDF
+#     pages, not the paywalled AIChE original).
+#   - aphi (0.392) and rho (14.9): the Pitzer-Debye-Hueckel mole-fraction
+#     long-range term per Chen et al. 1982; A_phi from the same PPB84/NIST
+#     basis the Pitzer row cites (Pitzer, Peiper & Busey 1984, J. Phys.
+#     Chem. Ref. Data 13(1)); rho = 14.9 is the published closest-approach
+#     parameter for aqueous 1:1 electrolytes (Chen et al. 1982).
+#   - The short-range binary reduction for a single 1-1 electrolyte (molecule
+#     cell + ion cells, X_CA = 2*x_i, X_i = x_i) is derived from Kwaterski &
+#     Herri eq (25); the implementation is in ngdesign.amine.electrolyte.
+#
+# Licence note: transcribed from the open-access literature only (no DIPPR,
+# DECHEMA, Aspen, HYSYS or DWSIM values).
+#
+# Measured accuracy vs the independent anchors (PPB84 Table A-8/A-9, 25 C,
+# 0.1-6 molal; see the catalogue row's assessed map): gamma+- worst 4.94 %
+# (6 m, typical < 1.5 % mid-range), phi worst 2.84 %, phi rms 1.39 % -- the
+# source model's own reported fit quality for NaCl is sigma_phi = 1.18 %
+# (Kwaterski & Herri table, NaCl <= 6 m).  The tau pair is the 25 C set;
+# temperature dependence across the row's 293.15-303.15 K window enters only
+# through Psat (documented in the row).
+aphi: 0.392
+rho: 14.9
+alpha: 0.2
+tau_ca_w: -4.5916
+tau_w_ca: 9.0234
+# SLE anchor: NaCl solubility 6.146 mol/kg at 298.15 K with saturated-solution
+# mean gamma 1.0065 (Pitzer, Peiper & Busey 1984, p. 11 -- the same anchor the
+# Pitzer row uses).
+saturation:
+  solubility_molality: 6.146
+  mean_gamma: 1.0065

@@ -162,8 +162,8 @@ def test_rows_load_and_build() -> None:
         "polymer_pc_saft",
         "unifac_fv",
     ]
-    # electrolyte family (T-09): two literature-anchored aqueous models plus
-    # two first-use refusal rows (no open parameter tables)
+    # electrolyte family (T-09/T-09b): four literature-anchored aqueous models
+    # (the T-09b rows replaced their first-use refusal predecessors)
     electrolyte_ids = [
         "enrtl_nacl_water",
         "ext_uniquac_nacl_water",
@@ -228,7 +228,7 @@ def test_rows_load_and_build() -> None:
         # special family (T-10)
         "hf_hexamer": HFHexamerPackage,
         "polymer_pc_saft": PolymerPCSAFT,
-        # electrolyte family (T-09): refusal rows construct and refuse at first use
+        # electrolyte family (T-09/T-09b): all four rows construct and run
         "pitzer_nacl_water": ElectrolytePitzerNaCl,
         "sour_water": ElectrolyteSourWater,
         "enrtl_nacl_water": ElectrolyteENRTLNaCl,
