@@ -74,7 +74,9 @@ jobs:
     # The thermo-catalogue audit test grows with the row count (65 rows: the
     # backend job measured 7 min 10 s on 2026-10-21); 20 min leaves headroom
     # for the T-02/T-04/T-05 families without hiding a genuine hang.
-    timeout-minutes: 20
+    # Raised to 30 on 2026-10-23: the suite measured 19 min 08 s once the
+    # exothermic amine continuation landed (P1-11 R1, PR #204).
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
