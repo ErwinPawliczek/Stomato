@@ -139,6 +139,13 @@ class UnitRow(BaseModel):
     pid_symbol: str | None = None
     references: tuple[str, ...] = Field(default_factory=tuple)
     notes: str = ""
+    #: V0 material basis: ``molar`` (moles are conserved; every non-reactive
+    #: unit) or ``mass_elements`` (reactive units: mass and per-element atom
+    #: balances, energy on the formation-enthalpy basis).
+    balance: Literal["molar", "mass_elements"] = "molar"
+    #: Registered thermo package the harness solves this row's example and V1
+    #: cases on when the case names none (default ``pr``).
+    example_thermo: str | None = None
     source_file: str = ""
     source_row: int = 0
 
