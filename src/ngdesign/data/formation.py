@@ -124,13 +124,21 @@ def _cpg_molar(cid: str) -> HeatCapacityGas | None:
 
 
 def _cp_molar(cid: str, T: float) -> float:
-    """Ideal-gas Cp at T, J/(mol K); 0.0 when the databank has no correlation."""
+    """Ideal-gas Cp at T, J/(mol K); 0.0 when the databank has no correlation.
+
+    ``HeatCapacityGas.T_dependent_property`` already returns **molar**
+    J/(mol K) (thermo convention: ``Chemical.Cpg`` is mass-basis, ``Cpgm``
+    and ``HeatCapacityGas`` are molar), so no mass conversion is applied.
+    The original code multiplied by ``mw_kg`` as if the accessor were
+    mass-basis, deflating Cp by a factor ``mw`` (CO at 900 K: 0.90 instead
+    of 32.1 J/(mol K)) and crippling every ∫Cp dT term inside
+    ΔfH(T), ΔfS(T), ΔfG(T) and the reaction Cp integrals.
+    """
     accessor = _cpg_molar(cid)
-    mw_kg = float(_record(cid)["mw"]) / 1000.0
     if accessor is None:
         return 0.0
     value = accessor.T_dependent_property(T)
-    return float(value) * mw_kg if value is not None else 0.0
+    return float(value) if value is not None else 0.0
 
 
 def _integrate_cp(cid: str, T: float, over_t: bool) -> float:
@@ -188,6 +196,21 @@ def standard_entropy_298(cid: str) -> float:
     return _element_entropy(atomic_composition(cid)) - delta_s_formation
 
 
+def formation_enthalpy_298(cid: str) -> float:
+    """ΔfH°298 of one component, J/mol; exactly 0.0 for elemental species.
+
+    Used to anchor the reaction-path ΔrG°(T) assembly (see kinetics.ln_keq).
+    """
+    if is_element(cid):
+        return 0.0
+    return _formation_298(cid)[0]
+
+
+def integral_cp(cid: str, T: float, over_t: bool) -> float:
+    """Public wrapper over :func:`_integrate_cp` for reaction-level Cp integrals."""
+    return _integrate_cp(cid, T, over_t)
+
+
 def formation_enthalpy(cid: str, T: float) -> float:
     """ΔfH°(cid, T), J/mol, ideal gas; identically 0 for elemental species."""
     if is_element(cid):
@@ -202,8 +225,9 @@ def formation_gibbs(cid: str, T: float) -> float:
     ΔfS°298 = (ΔfH°298 − ΔfG°298)/T_REF from the databank pair; the
     temperature dependence is ΔfS(T) = ΔfS°298 + ∫ Cp(cid)/T dT — i.e. element
     standard-state entropies are treated as temperature-independent. For
-    balanced reactions the element terms cancel identically in Σν·ΔfG, so
-    reaction equilibrium constants are unaffected by that approximation.
+    balanced reactions the element terms cancel identically in Σν·ΔfG;
+    equilibrium constants themselves ride the reaction path in
+    ``kinetics.ln_keq``, which needs no per-species ΔfG(T).
     Identically 0 for elemental species.
     """
     if is_element(cid):

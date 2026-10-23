@@ -58,18 +58,33 @@ def test_wgsr_delta_g_298_matches_published_nist_value() -> None:
     assert delta_g_298 == pytest.approx(-28_620.0, rel=0.005)
 
 
-def test_wgsr_keq_matches_moe_correlation_within_measured_envelope() -> None:
-    # Moe 1962 correlation: log10 K = 2073/T − 2.029. The databank's JANAF-1998
-    # tables sit below this fit and diverge with temperature; measured this
-    # session against the installed databank: K/K_moe = 0.972 (500 K), 0.888
-    # (700 K), 0.848 (900 K) - the spec's 2 % gate is not met by the data
-    # itself (see issue #192). This test pins the measured envelope and
-    # catches sign/constant regressions.
-    for t, measured in ((500.0, 0.972), (700.0, 0.888), (900.0, 0.848)):
+def test_wgsr_keq_matches_nist_janaf_within_1_percent() -> None:
+    # NIST-JANAF 4th ed. tables (CO C-093, CO2 C-095, H2O H-064), tabulated
+    # ΔfG°: Σν·ΔfG° gives ΔrG°(T) = −20474 (500 K), −13068 (700 K), −6249
+    # (900 K) J/mol → K = 137.7, 9.443, 2.305. The 1 % gate is the spec's
+    # acceptance criterion for the reaction-path assembly in ln_keq.
+    janaf_delta_g = {500.0: -20_474.0, 700.0: -13_068.0, 900.0: -6_249.0}
+    for t, delta_g in janaf_delta_g.items():
+        k = equilibrium_constant(_wgsr(), t)
+        k_janaf = math.exp(-delta_g / (R_CODATA * t))
+        assert k > 0.0
+        assert k / k_janaf == pytest.approx(1.0, abs=0.01)
+
+
+def test_wgsr_keq_secondary_moe_correlation_check() -> None:
+    # Secondary check, Moe 1962 (Chem. Eng. Prog. 58(3), 33–36):
+    # log10 K = 2073/T − 2.029. Moe published no numeric accuracy figure;
+    # contemporary reviews characterize it as "sufficiently good for design
+    # computations". Measured against the NIST-JANAF tables the correlation
+    # itself runs K_moe/K_janaf = 0.95 (500 K), 0.90 (700 K), 0.82 (900 K), so
+    # the code sits K/K_moe = 1.04 (500 K), 1.11 (700 K), 1.22 (900 K); this
+    # secondary gate is ±0.2 around 1.1 — the 1 % JANAF gate above is the
+    # acceptance criterion.
+    for t in (500.0, 700.0, 900.0):
         k = equilibrium_constant(_wgsr(), t)
         k_moe = 10.0 ** (2073.0 / t - 2.029)
         assert k > 0.0
-        assert k / k_moe == pytest.approx(measured, rel=0.01)
+        assert k / k_moe == pytest.approx(1.1, abs=0.2)
 
 
 def test_wgsr_keq_decreases_with_temperature_exothermic() -> None:
@@ -95,9 +110,13 @@ def test_ln_keq_polynomial_evaluates_inside_window_only() -> None:
 
 
 def test_heat_of_reaction_nh3_synthesis_at_298() -> None:
-    # N2 + 3 H2 -> 2 NH3: ΔH°298 = −91.8 kJ per extent; −45.9 kJ per mol NH3
-    # (NIST-JANAF ΔfH°(NH3, g) = −45.90 kJ/mol). The databank ships −45.56,
-    # 0.7 % below JANAF; elements contribute exactly 0.
+    # N2 + 3 H2 -> 2 NH3: ΔH°298 = −91.8 kJ per extent. The databank ships
+    # ΔfH°(NH3, g) = −45.558 kJ/mol; NIST-JANAF H-083 tabulates −45.898
+    # kJ/mol — a 340 J/mol (0.74 %) databank offset. The ±0.3 kJ/mol
+    # tolerance is anchored to the databank value and is NOT widened to cover
+    # the offset: it must stay tight enough to catch wiring regressions, and
+    # the offset is databank property uncertainty, not a code error. Elements
+    # contribute exactly 0.
     reaction = Reaction(
         id="nh3_synthesis",
         stoichiometry={"N2": -1.0, "H2": -3.0, "NH3": 2.0},
@@ -105,7 +124,7 @@ def test_heat_of_reaction_nh3_synthesis_at_298() -> None:
         provenance="SVA ch. 13 ammonia synthesis stoichiometry",
     )
     per_extent = heat_of_reaction(reaction, 298.15)
-    assert per_extent / 2.0 == pytest.approx(-45_900.0, abs=500.0)
+    assert per_extent / 2.0 == pytest.approx(-45_558.0, abs=300.0)
 
 
 def test_first_order_rate_matches_closed_form() -> None:

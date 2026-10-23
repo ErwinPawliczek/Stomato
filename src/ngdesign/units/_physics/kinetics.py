@@ -12,7 +12,12 @@ from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING
 
 from ngdesign.contracts.reactions import LHHW, Arrhenius, PowerLaw, Reaction, ReactionSet
-from ngdesign.data.formation import formation_enthalpy, formation_gibbs
+from ngdesign.data.formation import (
+    formation_enthalpy,
+    formation_enthalpy_298,
+    integral_cp,
+    standard_entropy_298,
+)
 
 #: CODATA 2018 molar gas constant, J/(mol K).
 R = 8.31446261815324
@@ -104,9 +109,17 @@ def rate(reaction: Reaction, T: float, P: float, z: Mapping[str, float]) -> floa
 def ln_keq(reaction: Reaction, T: float) -> float:
     """Natural log of the equilibrium constant of one reaction at T.
 
-    ``from_gibbs`` assembles ln K = −ΔG°(T)/(R·T) from the databank formation
-    properties; ``polynomial`` evaluates its T-power series and refuses
-    temperatures outside the declared window.
+    ``from_gibbs`` assembles ln K = −ΔG°(T)/(R·T) on the reaction path,
+    NIST-JANAF style: ΔrG°(T) = ΔrH°(298) − T·ΔrS°(298) + ∫ΔrCp dT
+    − T·∫ΔrCp/T dT, with ΔrCp(T) = Σν·Cp(T) over all stoichiometric species.
+    No per-species ΔfG(T) is formed: the per-species element-reference
+    bookkeeping drops the sensible-heat terms of elemental species
+    (ΔfG(element, T) ≡ 0), which mis-states any reaction in which an element
+    appears with nonzero stoichiometric coefficient (H2 in the water-gas
+    shift). Elemental species contribute exactly zero formation enthalpy,
+    and their standard entropies enter through ΔrS°(298).
+    ``polynomial`` evaluates its T-power series and refuses temperatures
+    outside the declared window.
     """
     equilibrium = reaction.equilibrium
     if equilibrium is None:
@@ -120,7 +133,15 @@ def ln_keq(reaction: Reaction, T: float) -> float:
                 f"outside its validity window {window_repr}"
             )
         return float(sum(coeff * T**power for power, coeff in equilibrium.polynomial.items()))
-    delta_g = float(sum(nu * formation_gibbs(cid, T) for cid, nu in reaction.stoichiometry.items()))
+    delta_h_298 = float(sum(nu * formation_enthalpy_298(cid) for cid, nu in reaction.stoichiometry.items()))
+    delta_s_298 = float(sum(nu * standard_entropy_298(cid) for cid, nu in reaction.stoichiometry.items()))
+    delta_cp = float(
+        sum(nu * integral_cp(cid, T, over_t=False) for cid, nu in reaction.stoichiometry.items())
+    )
+    delta_cp_over_t = float(
+        sum(nu * integral_cp(cid, T, over_t=True) for cid, nu in reaction.stoichiometry.items())
+    )
+    delta_g = delta_h_298 - T * delta_s_298 + delta_cp - T * delta_cp_over_t
     return -delta_g / (R * T)
 
 
