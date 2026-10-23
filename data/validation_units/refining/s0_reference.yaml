@@ -1,0 +1,52 @@
+# S0 reference flowsheet: published atmospheric crude unit (spec A-01).
+#
+# Source: Bagajewicz, M., Ji, S., "Rigorous Procedure for the Design of
+# Conventional Atmospheric Crude Fractionation Units. Part I: Targeting",
+# Ind. Eng. Chem. Res. 40 (2001) 617-626, DOI 10.1021/ie000302. Author-hosted
+# copy: https://www.ou.edu/class/che-design/pub-papers/Rigorous%20Procedure%20
+# Crude%20Fractionation-I%20(Ji-Bagajewicz)-01.pdf
+#
+# What the paper prints and this file records:
+# - crude feed: the light crude of data/assays/bagajewicz_ji_2001_light.yaml,
+#   795 m3/h (~120,000 bbl/d)
+# - column configuration: atmospheric crude column with one top pump-around
+#   circuit (the paper's base conventional configuration, Part I Figure 2 area)
+# - product quality constraints (Part I, product specification table):
+#   naphtha D86 95% 182 C; kerosene D86 95% 271 C; diesel D86 95% 327 C;
+#   kerosene-naphtha 5-95 gap 16.7 C; diesel-kerosene 5-95 gap 0 C;
+#   gasoil-diesel 5-95 gap -2.9 C
+#
+# GAPS (recorded per spec A-01, not filled from anywhere else):
+# - The Part I paper states design TARGETS, not a solved flowsheet's yields;
+#   the optimal column product yields and stage/pumparound data are only
+#   summarized graphically/numerically in later tables that the open copy
+#   does not transcribe cleanly. No product cut yields, stage counts, or
+#   utility loads are recorded here.
+# - The vacuum column of the crude slice (round 2) is not covered by this
+#   paper's Part I.
+# => Round-2 validation can assert cut TEMPERATURES and 5-95 gaps against the
+#    printed constraints above, not yields.
+source: "Bagajewicz & Ji 2001, Ind. Eng. Chem. Res. 40, 617-626 (Part I: Targeting)"
+feed:
+  assay: bagajewicz_ji_2001_light
+  throughput_m3_h: 795.0
+column:
+  type: atmospheric_crude
+  configuration: conventional, one top pump-around circuit (paper Fig. 2 base case)
+products:
+  - name: naphtha
+    spec: D86 95% = 182 C
+  - name: kerosene
+    spec: D86 95% = 271 C
+  - name: diesel
+    spec: D86 95% = 327 C
+  - name: gasoil
+    spec: (5-95 gaps constrain the cut between diesel and residue)
+gaps_C:
+  kerosene_naphtha_5_95: 16.7
+  diesel_kerosene_5_95: 0.0
+  gasoil_diesel_5_95: -2.9
+not_recorded:
+  - product cut yields (not printed in the openly accessible copy)
+  - stage counts and pump-around duties (same)
+  - utility loads (same)

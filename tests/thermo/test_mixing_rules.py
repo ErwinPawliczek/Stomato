@@ -874,3 +874,15 @@ class _ZeroProvider(GEProvider):
     ) -> tuple[float, tuple[float, ...], float, float, tuple[float, ...]]:
         n = len(xs)
         return 0.0, tuple(0.0 for _ in range(n)), 0.0, 0.0, tuple(0.0 for _ in range(n))
+
+
+def test_huron_vidal_pr_constant_closed_form() -> None:
+    """#185: the HV infinite-pressure constant for PR is (1/(2 sqrt 2)) ln((2+sqrt 2)/(2-sqrt 2)).
+
+    It equals -C_WS_PR (same EOS integral), and a positive gE must lower the mixture
+    attraction: alpha_m = A - g/0.62323.
+    """
+    lam = math.log((2.0 + math.sqrt(2.0)) / (2.0 - math.sqrt(2.0))) / (2.0 * math.sqrt(2.0))
+    assert HuronVidal.M_PR == pytest.approx(lam, rel=1e-14)
+    assert HuronVidal.M_PR == pytest.approx(0.62323, abs=1e-5)
+    assert HuronVidal.M_PR == pytest.approx(-C_WS_PR, rel=1e-14)

@@ -343,11 +343,14 @@ class LinearVDW(GERule):
 class HuronVidal(GERule):
     """Huron-Vidal (1979), infinite-pressure gE reference.
 
-    ``alpha_m = sum x_i a_i/(b_i R T) - g/m`` with the EOS constant
-    ``m = ln(sqrt(2) - 1)`` for PR (u = 2, w = -1).
+    ``alpha_m = sum x_i a_i/(b_i R T) - g/m`` with the infinite-pressure EOS
+    constant ``m = (1/(2 sqrt 2)) ln((2 + sqrt 2)/(2 - sqrt 2))
+    = -ln(sqrt(2) - 1)/sqrt(2) = 0.62323`` for PR (u = 2, w = -1), so a positive
+    gE lowers the mixture attraction.  This is the magnitude of the WS rule's
+    ``C_WS_PR`` (#185 fixed a sign and sqrt(2) error here).
     """
 
-    M_PR = math.log(math.sqrt(2.0) - 1.0)  # PR
+    M_PR = -math.log(math.sqrt(2.0) - 1.0) / math.sqrt(2.0)  # PR, 0.62323
 
     def __init__(self, provider: GEProvider, m: float = M_PR):
         self.provider = provider
