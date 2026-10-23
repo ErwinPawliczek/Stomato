@@ -85,7 +85,7 @@ __all__ = [
     "SRKMIX_MHV2",
     "SRKMIX_WS",
     "SRKWongSandlerThermo",
-    "MHV1Rule",
+    "PSRK_Q1",
     "VTPRRule",
     "LCVMRule",
     "SRKMIX_PSRK",
@@ -522,7 +522,7 @@ def _rule_for(eos_cls: type[Any], provider: GEProvider) -> GERule:
     if kind == "ws":
         return WongSandler(provider, eos_cls.ws_c)
     if kind == "psrk":
-        return MHV1Rule(provider, MHV1Rule.Q1_SRK)
+        return MHV1(provider, q1=PSRK_Q1)
     if kind == "vtpr":
         return VTPRRule(provider)
     if kind == "lcvm":
@@ -1094,36 +1094,9 @@ class SRKMHV2Thermo(MixingRuleThermo):
 # ----------------------------------------------------------------------------
 
 
-class MHV1Rule(GERule):
-    """MHV1 (Michelsen 1990; Dahl & Michelsen 1990), zero-pressure gE reference.
-
-    ``alpha_m = A + (g + F)/q1`` with ``A = sum x_i a_i/(b_i R T)`` (the
-    dimensionless pure-component moments) and ``F = sum x_i ln(b_i/b)`` the
-    Michelsen covolume term (linear b).  ``q1`` is the signed per-EOS constant:
-    ``q1 = -0.64663`` for SRK (Holderbaum & Gmehling 1991, PSRK); for a pure
-    feed ``g = F = 0`` and the rule collapses exactly to the base cubic.
-    """
-
-    Q1_SRK = -0.64663  # SRK, Holderbaum & Gmehling (1991)
-    Q1_PR = -0.62363  # PR, Dahl & Michelsen (1990)
-
-    def __init__(self, provider: GEProvider, q1: float = Q1_SRK):
-        self.provider = provider
-        self.q1 = q1
-
-    def state(self, T: float, xs: tuple[float, ...], pa: PureAlpha, bs: tuple[float, ...]) -> RuleState:
-        n = len(xs)
-        g, gx, gT, gTT, gxT = self.provider.state(T, tuple(xs))
-        A, A_T, A_TT = _alpha_moments(pa, xs, bs, T)
-        b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
-        fl, fl_x = _flory(xs, b, bs)
-        alpha_m = A + (g + fl) / self.q1
-        alpha_x = tuple(_a_brt(pa, k, bs[k], T)[0] + (gx[k] + fl_x[k]) / self.q1 for k in range(n))
-        # F is T-independent (linear b).
-        alpha_xT = tuple(_a_brt(pa, k, bs[k], T)[1] + gxT[k] / self.q1 for k in range(n))
-        return _linear_rule_state(
-            alpha_m, A_T + gT / self.q1, A_TT + gTT / self.q1, alpha_x, alpha_xT, b, T, bs, xs
-        )
+#: PSRK's MHV1 constant for SRK (Holderbaum & Gmehling 1991); PSRK runs main's
+#: :class:`MHV1` rule with this q1 over PSRK-UNIFAC.
+PSRK_Q1 = -0.64663
 
 
 class VTPRRule(GERule):
@@ -1156,17 +1129,21 @@ class VTPRRule(GERule):
 
 
 class LCVMRule(GERule):
-    """LCVM (Boukouvalas et al. 1994): linear combination of the Vidal and
-    MHV1 references.
+    """LCVM (Boukouvalas, Spiliotis, Coutsikos, Tzouvaras & Tassios 1994,
+    Fluid Phase Equilib. 92, 75-106): linear combination of the Vidal and
+    Michelsen (MHV1) mixing rules on PR.
 
-    ``alpha_m = (1 - lambda)(A - g/m_V) + lambda(A + (g + F)/q1)`` with
-    ``lambda = 0.36``, the PR Vidal constant ``m_V = ln(sqrt(2) - 1)`` (the
-    merged HV row's constant) and the PR MHV1 constant ``q1 = -0.62363``.
-    The original Boukouvalas weighting is kept: 64 % Vidal / 36 % Michelsen.
+        alpha_m = A + (lambda/A_V + (1 - lambda)/A_M) g
+                    + ((1 - lambda)/A_M) sum_i x_i ln(b/b_i)
+
+    with ``lambda = 0.36`` weighting the Vidal (infinite-pressure) term and the
+    paper's PR constants ``A_V = -0.623`` and ``A_M = -0.52``.  ``_flory``
+    returns ``F = sum_i x_i ln(b_i/b)``, so the covolume term enters as ``-F``.
     """
 
     LAMBDA = 0.36
-    M_V = HuronVidal.M_PR
+    A_V = -0.623
+    A_M = -0.52
 
     def __init__(self, provider: GEProvider, lam: float = LAMBDA):
         self.provider = provider
@@ -1178,22 +1155,13 @@ class LCVMRule(GERule):
         A, A_T, A_TT = _alpha_moments(pa, xs, bs, T)
         b = sum(x * bi for x, bi in zip(xs, bs, strict=True))
         fl, fl_x = _flory(xs, b, bs)
-        c_v = (1.0 - self.lam) / self.M_V
-        c_m = self.lam / MHV1Rule.Q1_PR
-        alpha_m = A - c_v * g + c_m * (g + fl)
-        alpha_x = tuple(_a_brt(pa, k, bs[k], T)[0] - c_v * gx[k] + c_m * (gx[k] + fl_x[k]) for k in range(n))
-        alpha_xT = tuple(_a_brt(pa, k, bs[k], T)[1] - c_v * gxT[k] + c_m * gxT[k] for k in range(n))
-        return _linear_rule_state(
-            alpha_m,
-            A_T - c_v * gT + c_m * gT,
-            A_TT - c_v * gTT + c_m * gTT,
-            alpha_x,
-            alpha_xT,
-            b,
-            T,
-            bs,
-            xs,
-        )
+        c_m = (1.0 - self.lam) / self.A_M
+        c_g = self.lam / self.A_V + c_m
+        alpha_m = A + c_g * g - c_m * fl
+        alpha_x = tuple(_a_brt(pa, k, bs[k], T)[0] + c_g * gx[k] - c_m * fl_x[k] for k in range(n))
+        # F is T-independent (linear b).
+        alpha_xT = tuple(_a_brt(pa, k, bs[k], T)[1] + c_g * gxT[k] for k in range(n))
+        return _linear_rule_state(alpha_m, A_T + c_g * gT, A_TT + c_g * gTT, alpha_x, alpha_xT, b, T, bs, xs)
 
 
 class SRKMIX_PSRK(_GEMixingEOS, SRKMIX_MC):  # type: ignore[misc]

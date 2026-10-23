@@ -13,7 +13,7 @@ Evidence ladder:
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any
 
 import pytest
@@ -29,6 +29,7 @@ from ngdesign.thermo.mixing_rules import (
     PRMIX_MHV2,
     PRMIX_VTPR,
     PRMIX_WS,
+    PSRK_Q1,
     SRKMIX_MC,
     SRKMIX_MHV2,
     SRKMIX_PSRK,
@@ -38,7 +39,6 @@ from ngdesign.thermo.mixing_rules import (
     HuronVidal,
     LCVMRule,
     LinearVDW,
-    MHV1Rule,
     RuleState,
     VTPRRule,
     WongSandler,
@@ -47,6 +47,20 @@ from ngdesign.thermo.mixing_rules import (
 )
 
 R_GAS = 8.31446261815324
+
+
+def _psrk_rule(provider: GEProvider, q1: float = PSRK_Q1) -> MHV1:
+    """PSRK's rule: main's MHV1 with the Holderbaum-Gmehling SRK constant."""
+    return MHV1(provider, q1=q1)
+
+
+_T06C_RULES: dict[str, Callable[[GEProvider], GERule]] = {
+    "psrk": _psrk_rule,
+    "vtpr": VTPRRule,
+    "lcvm": LCVMRule,
+}
+
+
 _T, _P = 350.0, 101325.0
 
 
@@ -723,7 +737,7 @@ class TestT06cAnalyticLnphi:
         (("psrk", "srk"), ("vtpr", "pr"), ("lcvm", "pr")),
     )
     def test_lnphi_matches_helmholtz_fd_both_roots(self, ge_kind: str, family: str) -> None:
-        rule_cls = {"psrk": MHV1Rule, "vtpr": VTPRRule, "lcvm": LCVMRule}[ge_kind]
+        rule_cls = _T06C_RULES[ge_kind]
         zs = [0.3, 0.7]
         eos, _ = _hosted(rule_cls, ge_kind, ("MeOH", "H2O"), ("methanol", "water"), zs)
         for root_z, analytic in ((eos.Z_g, eos.lnphis_g), (eos.Z_l, eos.lnphis_l)):
@@ -735,9 +749,11 @@ class TestT06cAnalyticLnphi:
     def test_psrk_c1h2o_lnphi_matches_helmholtz_fd(self) -> None:
         """The methane solubility support (head note: psrk MUST run C1/H2O)."""
         zs = [0.01, 0.99]
-        eos, _ = _hosted(MHV1Rule, "psrk", ("C1", "H2O"), ("methane", "water"), zs)
+        eos, _ = _hosted(_psrk_rule, "psrk", ("C1", "H2O"), ("methane", "water"), zs)
         for root_z, analytic in ((eos.Z_g, eos.lnphis_g), (eos.Z_l, eos.lnphis_l)):
-            reference = _helmholtz_lnphi_general(MHV1Rule(eos.rule.provider), eos, zs, root_z, _T, _P, "srk")
+            reference = _helmholtz_lnphi_general(
+                _psrk_rule(eos.rule.provider), eos, zs, root_z, _T, _P, "srk"
+            )
             for got, want in zip(analytic, reference, strict=True):
                 rel = abs(got - want) / max(abs(want), 1e-10)
                 assert rel < 1e-6
@@ -755,7 +771,7 @@ class TestT06cPureFeedCollapse:
         ),
     )
     def test_pure_feed_matches_base(self, ge_kind: str, base_cls: str) -> None:
-        rule_cls = {"psrk": MHV1Rule, "vtpr": VTPRRule, "lcvm": LCVMRule}[ge_kind]
+        rule_cls = _T06C_RULES[ge_kind]
         zs = [1.0, 0.0]
         eos, consts = _hosted(rule_cls, ge_kind, ("MeOH", "H2O"), ("methanol", "water"), zs)
         if base_cls == "srk":
@@ -789,7 +805,7 @@ class TestT06cPureFeedCollapse:
 
 
 class TestT06cRuleAlgebra:
-    @pytest.mark.parametrize("rule_cls", (MHV1Rule, VTPRRule, LCVMRule))
+    @pytest.mark.parametrize("rule_cls", (_psrk_rule, VTPRRule, LCVMRule))
     def test_ternary_mole_number_fd(self, rule_cls: Any) -> None:
         rule = rule_cls(_ToyProvider())
         eos = PRMIX_HV(
@@ -836,7 +852,7 @@ class TestT06cRuleAlgebra:
             zs=list(xs),
             T=_T,
             P=_P,
-            rule=MHV1Rule(prov_high, MHV1Rule.Q1_SRK),
+            rule=_psrk_rule(prov_high, PSRK_Q1),
         )
         eos_z = PRMIX_HV(
             Tcs=consts.Tcs,
@@ -845,7 +861,7 @@ class TestT06cRuleAlgebra:
             zs=list(xs),
             T=_T,
             P=_P,
-            rule=MHV1Rule(prov_zero, MHV1Rule.Q1_SRK),
+            rule=_psrk_rule(prov_zero, PSRK_Q1),
         )
         assert eos_z.a_alpha > eos_h.a_alpha
 
