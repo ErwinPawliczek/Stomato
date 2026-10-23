@@ -95,6 +95,10 @@ def dc92_species() -> tuple[str, ...]:
     return tuple(k for k in _SPECIES_INDEX if k not in ("helium", "argon"))
 
 
+# The coefficient tables below are transcribed 1:1 from the NIST reference C
+# sources (Detail.cpp setup tables); the fmt directives keep the compact
+# reference layout so the transcription can be diffed against the original.
+# fmt: off
 _MOLAR_MASS = [  # g/mol
     16.043, 28.0135, 44.01, 30.07, 44.097, 58.123, 58.123, 72.15, 72.15,
     86.177, 100.204, 114.231, 128.258, 142.285, 2.0159, 31.9988, 28.01,
@@ -207,6 +211,7 @@ _KIJ = {
 }
 _GIJ = {(1, 3): 0.807653, (1, 15): 1.95731, (2, 3): 0.982746,
         (3, 4): 0.370296, (3, 18): 1.67309}
+# fmt: on
 
 # Ideal-gas terms n0i[i][1..7] and th0i[i][4..7] (Detail.cpp, verbatim).
 _N0I_RAW = [
@@ -258,8 +263,8 @@ _TH0I = [
 
 # --- SetupDetail() precalculations -----------------------------------------
 
-_KI25 = [k ** 2.5 for k in _KI]
-_EI25 = [e ** 2.5 for e in _EI]
+_KI25 = [k**2.5 for k in _KI]
+_EI25 = [e**2.5 for e in _EI]
 
 
 def _b_row(i: int, j: int) -> list[float]:
@@ -304,16 +309,13 @@ for _i in range(_NC):
         _kij = _KIJ.get((_i + 1, _j + 1), 1.0 if _j >= _i else 1.0)
         _uij = _UIJ.get((_i + 1, _j + 1), 1.0)
         _gij = _GIJ.get((_i + 1, _j + 1), 1.0)
-        _KIJ5[_i][_j] = (_kij ** 5 - 1.0) * _KI25[_i] * _KI25[_j]
-        _UIJ5[_i][_j] = (_uij ** 5 - 1.0) * _EI25[_i] * _EI25[_j]
+        _KIJ5[_i][_j] = (_kij**5 - 1.0) * _KI25[_i] * _KI25[_j]
+        _UIJ5[_i][_j] = (_uij**5 - 1.0) * _EI25[_i] * _EI25[_j]
         _GIJ5[_i][_j] = (_gij - 1.0) * (_GI.get(_i, 0.0) + _GI.get(_j, 0.0)) / 2.0
 
 # Ideal-gas reference-state shift: n0[3] -= 1; n0[1] -= log(d0).
 _D0 = 101.325 / _R / 298.15
-_N0I = [
-    [row[0] - math.log(_D0), row[1], row[2] - 1.0, row[3], row[4], row[5], row[6]]
-    for row in _N0I_RAW
-]
+_N0I = [[row[0] - math.log(_D0), row[1], row[2] - 1.0, row[3], row[4], row[5], row[6]] for row in _N0I_RAW]
 
 del _i, _j, _kij, _uij, _gij
 
@@ -321,6 +323,7 @@ del _i, _j, _kij, _uij, _gij
 # ---------------------------------------------------------------------------
 # Mixture composition terms (Detail.cpp xTermsDetail, uncached)
 # ---------------------------------------------------------------------------
+
 
 def _composition_terms(x: list[float]) -> tuple[list[float], list[float]]:
     """(Bs[1..18], Csn[1..58]) mixture terms; returns 0-based lists."""
@@ -360,8 +363,8 @@ def _composition_terms(x: list[float]) -> tuple[list[float], list[float]]:
             row_ij = _BSNIJ2[i][j]
             for n in range(18):
                 bs[n] += xij * row_ij[n]
-    k3 = k3 ** 0.6
-    u = u ** 0.2
+    k3 = k3**0.6
+    u = u**0.2
     q2 = q * q
 
     csn = [0.0] * _NT
@@ -380,6 +383,7 @@ def _composition_terms(x: list[float]) -> tuple[list[float], list[float]]:
 # ---------------------------------------------------------------------------
 # Helmholtz terms (Detail.cpp Alpha0Detail / AlpharDetail, uncached)
 # ---------------------------------------------------------------------------
+
 
 def _alpha0(T: float, d: float, x: list[float]) -> list[float]:
     """Ideal-gas Helmholtz energy and its T-derivatives [a0, da0/dT, T*d2a0/dT2]."""
@@ -479,7 +483,7 @@ def _alphar(T: float, d: float, x: list[float], itau: bool) -> list[list[float]]
 
 def _k3_of(x: list[float]) -> float:
     """Mixture size sum K3 (Detail.cpp xTermsDetail K3)."""
-    k3 = 0.0
+    k3: float = 0.0
     for i in range(_NC):
         if x[i] > 0.0:
             k3 += x[i] * _KI25[i]
@@ -490,13 +494,14 @@ def _k3_of(x: list[float]) -> float:
         for j in range(i + 1, _NC):
             if x[j] > 0.0:
                 k3 += 2.0 * x[i] * x[j] * _KIJ5[i][j]
-    return k3 ** 0.6
+    return float(k3**0.6)
 
 
 # ---------------------------------------------------------------------------
 # Pressure / density / properties (Detail.cpp PressureDetail / DensityDetail /
 # PropertiesDetail)
 # ---------------------------------------------------------------------------
+
 
 def _pressure(T: float, d: float, x: list[float]) -> tuple[float, float, float]:
     """(P [kPa], Z, dP/dD [kPa/(mol/l)]) at T, D."""
