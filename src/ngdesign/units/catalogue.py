@@ -299,6 +299,8 @@ class LevelDispatch:
 
     _adapters: Mapping[str, type]
     _row_id: str
+    inlet_ports: tuple[str, ...]
+    outlet_ports: tuple[str, ...]
 
     def example_case(self) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
         """The default level's example case."""

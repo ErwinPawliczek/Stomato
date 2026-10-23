@@ -167,7 +167,7 @@ def test_implemented_rows_register_a_dispatch(rows: dict[str, UnitRow]) -> None:
     for row in _implemented(rows):
         entry = registry.get("unit", row.id)
         assert issubclass(entry, catalogue.LevelDispatch), f"{row.id}: registry entry is not a LevelDispatch"
-        adapters = _row_adapters(row)
+        adapters: dict[str, Any] = dict(_row_adapters(row))
         default = next(iter(adapters))
         assert entry.inlet_ports == adapters[default].inlet_ports
         assert entry.outlet_ports == adapters[default].outlet_ports
@@ -229,7 +229,7 @@ def test_two_implemented_levels_dispatch_to_their_adapters(
         dispatch = registry.get("unit", "pump")
         assert issubclass(dispatch, catalogue.LevelDispatch)
         row = load_rows()["pump"]
-        adapters = _row_adapters(row)
+        adapters: dict[str, Any] = dict(_row_adapters(row))
         assert set(adapters) == {"R0", "R1"}
 
         unit = dispatch()
@@ -252,7 +252,7 @@ def test_legacy_mode_params_reach_the_same_code_paths(thermo: Thermo) -> None:
     the registry entry is byte-identical to solving the bare adapter class
     directly (main's path) for every mapped mode."""
     row = load_rows()["column"]
-    dispatch = registry.get("unit", "column")
+    dispatch: Any = registry.get("unit", "column")
     feeds, params = dispatch.example_case()
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
     for mode, level in row.mode_map.items():
