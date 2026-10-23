@@ -52,6 +52,11 @@ def _amine_case() -> tuple[StreamState, dict[str, Any]]:
     return port, params
 
 
+# One xdist worker runs the whole module (``--dist loadgroup`` in pyproject.toml), so the
+# module-scoped solve below is paid once per CI run, not once per worker.
+pytestmark = pytest.mark.xdist_group("column_amine")
+
+
 # Module scope: the fixture's one mesh solve (~35 s carrier / ~120 s exothermic
 # continuation) is deterministic, so the four assertions below share a single
 # converged solution instead of paying four solves. The explicit timeout marker
