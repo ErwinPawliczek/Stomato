@@ -180,7 +180,6 @@ class CPAWertheim:
         return alpha, dalpha_drho, dalpha_dz
 
 
-
 #: Universal dispersive constants of the PC-SAFT chain and dispersion terms,
 #: Gross & Sadowski, Ind. Eng. Chem. Res. 40 (2001) 1244-1257, Table 3 (the rows
 #: are the constant, (m-1)/m and (m-1)(m-2)/m^2 coefficient series of I1 and I2,
@@ -247,9 +246,7 @@ class PCSaftPhysical:
 
     def _zeta(self, rho_a3: float, z: np.ndarray, d: np.ndarray) -> np.ndarray:
         """The four zeta moments, eq. A.8: zeta_k = pi/6 rho_A3 sum x m d^k."""
-        return np.array(
-            [np.pi / 6.0 * rho_a3 * float(np.sum(z * self._m * d**k)) for k in range(4)]
-        )
+        return np.array([np.pi / 6.0 * rho_a3 * float(np.sum(z * self._m * d**k)) for k in range(4)])
 
     def _s_terms(self, T: float, z: np.ndarray) -> tuple[float, float]:
         """The dispersion cross sums (eqs. A.24-A.26): S1 = sum x_i x_j m_i m_j
@@ -283,11 +280,15 @@ class PCSaftPhysical:
         """dC1/deta, eq. A.31."""
         ome = 1.0 - eta
         c1 = PCSaftPhysical._c1(eta, mbar)
-        return -c1 * c1 * (
-            mbar * (-4.0 * eta * eta + 20.0 * eta + 8.0) / ome**5
-            + (1.0 - mbar)
-            * (2.0 * eta**3 + 12.0 * eta * eta - 48.0 * eta + 40.0)
-            / ((1.0 - eta) * (2.0 - eta)) ** 3
+        return (
+            -c1
+            * c1
+            * (
+                mbar * (-4.0 * eta * eta + 20.0 * eta + 8.0) / ome**5
+                + (1.0 - mbar)
+                * (2.0 * eta**3 + 12.0 * eta * eta - 48.0 * eta + 40.0)
+                / ((1.0 - eta) * (2.0 - eta)) ** 3
+            )
         )
 
     @staticmethod
@@ -353,7 +354,8 @@ class PCSaftPhysical:
                         + t2 * (-1.0 / z3 + 2.0 / u)
                         - 2.0 * z2**3 * math.log(u) / z3**3
                         - (z2**3 / z3**2 - z0) / u
-                    ) / z0,
+                    )
+                    / z0,
                 ]
             )
 

@@ -229,7 +229,6 @@ class TestNamedSpotChecks:
         sp = pkg.bubble_point({"MeOH": 1.0}, T=420.0)
         assert sp.P == pytest.approx(1_292_700.0, rel=0.02)
 
-
     def test_pc_saft_c1co2_bubble_293k(self) -> None:
         pytest.importorskip("teqp")
         pkg = catalogue.build(catalogue.load_catalogue()["pc_saft"])

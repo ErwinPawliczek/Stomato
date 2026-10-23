@@ -426,9 +426,7 @@ class _CpaPrKernel(_CpaKernel):
             (1.0 + (1.0 + math.sqrt(2.0)) * br) / (1.0 + (1.0 - math.sqrt(2.0)) * br)
         )
 
-    def _alpha_phys_derivs(
-        self, T: float, rho: float, z: np.ndarray
-    ) -> tuple[float, float, np.ndarray]:
+    def _alpha_phys_derivs(self, T: float, rho: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
         """a_phys and its exact rho / composition derivatives at fixed (T, rho).
 
         Returns ``(a_phys, da/drho, [da/dz_i])``. The composition derivative is
@@ -455,14 +453,12 @@ class _CpaPrKernel(_CpaKernel):
             for j, xj in enumerate(z):
                 da_i += xj * math.sqrt(self._a_i(i, T) * self._a_i(j, T)) * (1.0 - self._kij(i, j, T))
             da_i *= 2.0
-            out[i] = rho * bi / (1.0 - br) - (
-                (da_i * b - a * bi) / (b * b) * f + (a / b) * rho * bi * fp
-            ) / (2.0 * s2 * R_GAS * T)
+            out[i] = rho * bi / (1.0 - br) - ((da_i * b - a * bi) / (b * b) * f + (a / b) * rho * bi * fp) / (
+                2.0 * s2 * R_GAS * T
+            )
         return a_phys, dadrho, out
 
-    def _alpha_r_derivs(
-        self, T: float, rho: float, z: np.ndarray
-    ) -> tuple[float, float, np.ndarray]:
+    def _alpha_r_derivs(self, T: float, rho: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
         """a_r and its exact rho / composition derivatives (PR physical + association)."""
         a_phys, dadrho_phys, dz_phys = self._alpha_phys_derivs(T, rho, z)
         alpha_a, dadrho_a, dz_a = self._assoc.derivs(T, rho, z)
