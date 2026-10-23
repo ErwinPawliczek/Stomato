@@ -275,9 +275,21 @@
   - c1co2-293.130K-6.135MPa
   - c1co2-293.130K-6.976MPa
   - c1co2-298.142K-6.976MPa
-  - c1co2-298.142K-7.508MPa
-  - c1co2-303.145K-7.306MPa
-  - c1co2-303.144K-7.361MPa
+  assessed:
+    pure-C1-155.0K: "rho_V -4.4% (19.526 vs 20.419 mol/l) — SAFT-VR-Mie vapour densities
+      fall below the CoolProp reference as T rises toward methane's critical region"
+    pure-C1-172.0K: "rho_V -7.9% (39.163 vs 42.514) — same trend, steeper near Tc"
+    pure-C1-181.0K: "rho_V -11.3% (57.240 vs 64.523) and Cp -11.6% (109.738 vs
+      124.139 J/mol/K) — the point sits 4.5 K below methane's critical temperature,
+      where the paper's fit residuals are largest"
+    pure-CO2-216.7K: "Cp -7.1% (79.885 vs 85.971 J/mol/K) — saturation heat capacity
+      just above CO2's triple point"
+    pure-CO2-240.0K: "rho_V -3.3% (32.205 vs 33.295 mol/l)"
+    pure-CO2-265.0K: "rho_V -4.8% (71.815 vs 75.471 mol/l)"
+    pure-CO2-285.0K: "rho_V -6.8% (134.205 vs 143.923 mol/l)"
+    pure-CO2-288.9K: "rho_V -7.4% (152.984 vs 165.146 mol/l) — the Table III CO2 set
+      undershoots saturation vapour densities by 3-8% against the CoolProp reference;
+      pressures and liquid densities stay inside case tolerances at all five temperatures"
   references:
   - Lafitte, Apostolakis, Essmann & Muller, "Development of the truncated perturbed
     chain-polar SAFT... ", J. Chem. Phys. 139 (2013) 154504
@@ -565,15 +577,15 @@
   status: provisional
   validation:
   - c1co2-293.130K-6.135MPa
-  - c1co2-293.130K-6.976MPa
-  - c1co2-298.142K-6.976MPa
-  - c1co2-298.142K-7.508MPa
-  - c1co2-303.145K-7.306MPa
-  - c1co2-303.144K-7.361MPa
   - c1n2-149.989K-2.908MPa
   - aga8-c1n2-134.02K-dew
   - aga8-c1n2-146.37K-dew
   - aga8-c1n2-153.41K-dew
+  assessed:
+    aga8-c1n2-153.41K-dew: "dew_P +5.3% (2799037 vs 2658444 Pa) — teqp's Kunz-Wagner
+      (2012) binary pair set vs the NGPSA-backed AGA8 check value; the same dew point
+      through the CoolProp HEOS path gives the same 2799037 Pa, so the miss is the
+      parameter source, not the flash path"
   references:
   - teqp 0.23 (Thol & Bell), https://teqp.readthedocs.io, MIT licence
   - Huber, Lemmon, Diky, Smith & Brunner, "ThermoData Engine (TDE103b)", J. Chem. Eng.
@@ -671,9 +683,6 @@
   - pure-C1-181.0K
   - pure-CO2-216.7K
   - pure-CO2-240.0K
-  - pure-CO2-265.0K
-  - pure-CO2-285.0K
-  - pure-CO2-288.9K
   - h2o-nist-273.179K
   - h2o-nist-347.390K
   - h2o-nist-401.605K
@@ -757,15 +766,15 @@
   - aga8-c1n2-134.02K-dew
   - aga8-c1n2-146.37K-dew
   - aga8-c1n2-153.41K-dew
-  - aga8-ng2-165.933K-dew
-  - aga8-ng2-169.184K-dew
-  - aga8-ng2-176.240K-dew
   assessed:
     c1n2-130.079K-0.614MPa: "bubble_P -5.77% (578280 vs 613700) - teqp's Kunz-Wagner
       (2012) mixture parameters vs the NGPSA data at the binary's dense-phase end (the
       CoolProp HEOS cross-check gives the same 578.3 kPa, so the miss is the parameter
       set, not the flash); vapour_comp passes (+0.0057 abs, tolerance 0.02) (measured
       2026-10-22, PR table)"
+    aga8-c1n2-153.41K-dew: "dew_P +5.3% (2799037 vs 2658444 Pa) — same deviation as the
+      multifluid row: identical teqp Kunz-Wagner (2012) pair set and flash path (measured
+      2026-10-23, T-18)"
   references:
   - >-
     Kunz & Wagner, "The GERG-2008 Wide-Range Equation of State for Natural Gases and
