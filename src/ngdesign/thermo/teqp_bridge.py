@@ -53,6 +53,7 @@ from ngdesign.contracts.components import resolve
 from ngdesign.contracts.stream import Phase, PhaseKind, StreamState
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationError, SaturationPoint
 from ngdesign.thermo import _state
+from ngdesign.thermo import saft_assoc as _saft_assoc
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
 
 #: CODATA 2018 molar gas constant, J/(mol.K).
@@ -329,11 +330,10 @@ class _CpaKernel(_Kernel):
         self.name = name
         self.params = params
         self.tcs = tcs
-        # Memo for the temperature-only association strength: density root scans
-        # rebuild Delta at ~60-100 densities per scan and only the scalar radial
-        # factor g(rho) changes with rho. Cached values are pure functions of
-        # (T, composition), so results never depend on call order.
-        self._delta_t_cache: dict[tuple[float, bytes], np.ndarray] = {}
+        # The Wertheim association term lives in saft_assoc.py (spec T-17), shared
+        # with the cpa_pr and pc_saft_assoc rows; the arithmetic is moved verbatim,
+        # so this row's numbers are unchanged.
+        self._assoc = _saft_assoc.CPAWertheim(params)
 
     def _a_i(self, i: int, T: float) -> float:
         p = self.params[i]
@@ -351,76 +351,8 @@ class _CpaKernel(_Kernel):
         br = b_mix * rho
         return -math.log(1.0 - br) - (a_mix / (b_mix * R_GAS * T)) * math.log(1.0 + br)
 
-    def _site_iter(self) -> list[tuple[int, str]]:
-        return [(i, t) for i, p in enumerate(self.params) for t in p["sites"]]
-
-    def _site_weights(self, z: np.ndarray) -> np.ndarray:
-        return np.array([z[i] for i, _t in self._site_iter()])
-
-    def _delta_t_matrix(self, T: float, z: np.ndarray) -> np.ndarray:
-        """Temperature-only association strength (exp(eps/RT)-1) * beta * b_ij."""
-        key = (round(T, 12), z.tobytes())
-        cached = self._delta_t_cache.get(key)
-        if cached is None:
-            sites = self._site_iter()
-            d = np.zeros((len(sites), len(sites)))
-            for a, (ia, ta) in enumerate(sites):
-                pa = self.params[ia]
-                for b, (ib, tb) in enumerate(sites):
-                    if not ((ta == "d" and tb == "a") or (ta == "a" and tb == "d")):
-                        continue
-                    pb = self.params[ib]
-                    if ia == ib:
-                        eps, beta = pa["epsilon_AB"], pa["beta_AB"]
-                    else:  # CR1 cross-association rule
-                        eps = 0.5 * (pa["epsilon_AB"] + pb["epsilon_AB"])
-                        beta = math.sqrt(pa["beta_AB"] * pb["beta_AB"])
-                    b_ij = 0.5 * (pa["b"] + pb["b"])
-                    d[a, b] = (math.exp(eps / (R_GAS * T)) - 1.0) * beta * b_ij
-            cached = d
-            self._delta_t_cache[key] = cached
-        return cached
-
-    def _delta_matrix(self, T: float, rho: float, z: np.ndarray) -> np.ndarray:
-        """Delta_AB over the site list (association pairs donor with acceptor only)."""
-        eta = self._b_mix(z) * rho / 4.0
-        g = 1.0 / (1.0 - 1.9 * eta) if eta < 0.49 else 1.0e10
-        return g * self._delta_t_matrix(T, z)
-
-    def _solve_x(self, rho: float, z: np.ndarray, d: np.ndarray) -> np.ndarray:
-        """Site fractions X_A by successive substitution from a deterministic start.
-
-        The iteration must be a pure function of state: a warm start carried
-        across calls made alpha_r history-dependent, which flipped marginal
-        states (saturated-liquid roots hugging their spinodal) between SSA
-        branches depending on call order and made scans and fugacities
-        irreproducible.
-        """
-        weights = self._site_weights(z)
-        x = np.asarray(1.0 / (1.0 + rho * (d @ weights)), dtype=float)
-        # Undamped SSA 2-cycles at liquid-like densities for strongly associating
-        # feeds (observed: it stalled above 1e-13 and burned its whole iteration
-        # budget every call); 0.5-damping contracts the cycle and reaches the same
-        # fixed point. Tolerance 1e-10 keeps the association term smooth enough that
-        # the composition finite differences meet the harness's 1e-6 Gibbs-Duhem bar
-        # (measured integral ratio 8.6e-7 here; a Newton variant reached a tighter
-        # residual yet a WORSE integral, so the sweep residual is not the binding
-        # error source - keep the simple damped iteration).
-        for _ in range(150):
-            nxt = np.asarray(1.0 / (1.0 + rho * (d @ (x * weights))), dtype=float)
-            nxt = 0.5 * x + 0.5 * nxt
-            delta = float(np.max(np.abs(nxt - x)))
-            x = nxt
-            if delta < 1e-10:
-                break
-        return x
-
     def _alpha_assoc(self, T: float, rho: float, z: np.ndarray) -> float:
-        d = self._delta_matrix(T, rho, z)
-        x = self._solve_x(rho, z, d)
-        w = self._site_weights(z)
-        # sum_i x_i sum_A (ln X_A - X_A/2 + 1/2): exactly zero when X = 1.
-        return float(np.sum(w * (np.log(x) - x / 2.0 + 0.5)))
+        return self._assoc.alpha(T, rho, z)
 
     def _alpha_r(self, T: float, rho: float, z: np.ndarray) -> float:
         return self._alpha_phys(T, rho, z) + self._alpha_assoc(T, rho, z)
