@@ -173,6 +173,7 @@ def _ns_residual_function(
     k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]],
     k_misses: list[int],
     h_evals: list[int],
+    y_estimates: list[dict[str, float]] | None = None,
 ) -> Callable[[list[float]], list[float]]:
     """Build the residual callable for one Newton pass (fresh closures per pass).
 
@@ -200,6 +201,17 @@ def _ns_residual_function(
     path only, where pass-frozen scales measurably degrade the FD Jacobian
     (see `_naphtali_sandholm` for the deethanizer regression measurement).
 
+    ``y_estimates`` (P1-11 step 3, ruling on #153): the caller's pass-frozen
+    refreshed vapour seeds, handed to the shared stage-K evaluation. On the
+    reactive package the seed enters the loading walk, so a residual evaluated
+    with empty seeds sits on a different K surface than the exact gate, which
+    reads the refreshed y = K*x - Newton's linear model then aligns with a
+    residual the gate never sees (measured 20-stage MDEA absorber at the stall
+    state: NS-internal M=1.4956e-1 vs exact M=1.1345e-2; with the seeds
+    aligned the absorber closes in four NS passes). ``None`` keeps empty
+    seeds - the non-reactive path, where passing seeds measurably moved the
+    Kremser oracle outcomes.
+
     A per-stage K cache keeps the finite-difference Jacobian affordable: a
     perturbation of one packed unknown changes only its own stage's state, so
     all other stages hit the cache and cost no flash. The pass-frozen K models
@@ -222,6 +234,7 @@ def _ns_residual_function(
             xs,
             ts,
             vs,
+            y_estimates=y_estimates,
             k_fallbacks=k_fallback,
             k_cache=k_cache,
             k_misses=k_misses,
@@ -311,6 +324,24 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
         k_misses = [0]
         h_evals = [0]
         pass_scales: list[float] | None = None
+        y_seeds: list[dict[str, float]] | None = None
+        if live_norm and _is_reactive_package(tb):
+            # P1-11 step 3 (ruling on #153): the exact gate reads its K surface
+            # with the profile's refreshed y = K*x as the stage-K vapour seed,
+            # while the NS rows passed empty seeds - on the reactive package the
+            # seed enters the loading walk, so Newton's linear model aligned
+            # with a residual the gate never saw (measured 20-stage MDEA
+            # absorber at the stall state: NS-internal M=1.4956e-1 vs exact
+            # M=1.1345e-2). Refresh once per pass from this pass's reference
+            # state and hand the frozen snapshot to both the scale derivation
+            # and the residual evaluation, so the linearisation, the line
+            # search and the gate read one surface. Scoped to the reactive
+            # package (passing seeds on non-reactive columns measurably moved
+            # the Kremser oracle outcomes) and to the live-norm path (the warm
+            # two-tear path keeps its convention; see the deethanizer
+            # regression above).
+            _refresh_y(col, tb, prof)
+            y_seeds = list(prof.y)
         if live_norm:
             pass_scales = _residual_scales(
                 col,
@@ -319,12 +350,14 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
                 _unpack_x(u, col),
                 _unpack_t(u, col),
                 _unpack_v(u, col, v_free, t_bot_tear),
+                y_estimates=y_seeds,
                 k_fallbacks=k_stages,
                 k_cache=k_cache,
                 k_misses=k_misses,
             )
         residuals = _ns_residual_function(
-            col, tb, l0, k_stages, t_bot_tear, pass_scales, k_cache, k_misses, h_evals
+            col, tb, l0, k_stages, t_bot_tear, pass_scales, k_cache, k_misses, h_evals,
+            y_estimates=y_seeds,
         )
         r0 = residuals(u)
         # The pass gate must carry exact-residual semantics, not the NS residual's.
