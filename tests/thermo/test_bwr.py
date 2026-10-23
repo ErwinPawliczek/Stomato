@@ -111,4 +111,3 @@ def test_mbwr_coefficients_match_appendix_j() -> None:
         g = _YE_FLUIDS[cid].g
         for i, want in spots.items():
             assert g[i - 1] == want, f"{cid} G({i}): {g[i - 1]!r} != printed {want!r}"
-
