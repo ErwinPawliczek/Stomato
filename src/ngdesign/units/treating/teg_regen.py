@@ -14,9 +14,11 @@ R0 method (spec U-G): balances plus a spec, no sizing physics.
   are neglected, exactly as in the owner correlation). ``gamma_w`` and the
   water activity come from ``ngdesign.units.teg_activity`` (Parrish-Won-
   Baltatu) — the one owner of TEG-water equilibrium in the repo; nothing is
-  re-derived here. The solved ``x_w`` is the lean liquid's water mole
-  fraction; every other mole of water in the rich feed, and every absorbed
-  light component, leaves overhead.
+  re-derived here. The solved ``x_w`` is a purity **cap**: a rich feed already
+  drier than the equilibrium water content cannot boil water at all, so the
+  lean glycol keeps its water and only the absorbed lights strip. Every other
+  mole of water in the rich feed, and every absorbed light component, leaves
+  overhead.
 
 - **Stripping gas is refused at R0.** The GPSA enhancement (lean-glycol
   concentration vs stripping-gas rate, GPSA Engineering Data Book Sect. 20
@@ -53,7 +55,7 @@ from typing import Any
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import component_record
-from ngdesign.units.teg_activity import activity_equilibrium_slope, water_activity
+from ngdesign.units.teg_activity import activity_equilibrium_slope
 
 __all__ = ["TEGRegen", "TEGRegenError"]
 
@@ -65,7 +67,7 @@ DEFAULT_T_REBOILER = 477.15
 DEFAULT_P = 101325.0
 
 #: Mole-fraction bracket and iteration count for the boiling-line bisection.
-_X_LO, _X_HI, _ITERS = 1e-12, 1.0 - 1e-12, 200
+_X_LO, _X_HI, _ITERS = 1e-9, 1.0 - 1e-9, 100
 
 #: The component that stays in the liquid (everything else is water or lights).
 _TEG = "TEG"
@@ -86,13 +88,12 @@ def _lean_water_mole_fraction(T: float, P: float) -> float:
 
     Solves ``m(x_w) * x_w = 1`` where ``m = gamma_w * Psat_H2O / P`` is the
     activity equilibrium slope (``teg_activity.activity_equilibrium_slope``),
-    i.e. ``gamma_w(x_w) * x_w * Psat_H2O(T) = P``. Bisection on the monotone
-    left side; the high end must boil (slope at pure water > 1 over x_w... the
-    limit ``x_w -> 1`` gives ``Psat_H2O(T) / P``), so P above the water
-    saturation pressure at T is refused before solving.
+    i.e. ``gamma_w(x_w) * x_w * Psat_H2O(T) = P``. The left side is monotone
+    increasing in ``x_w``, so the root is bracketed and bisected. The high
+    limit ``x_w -> 1`` reduces the condition to ``Psat_H2O(T) / P``: if that
+    is below 1 the water cannot boil at all at this pressure, so the caller
+    must refuse before solving.
     """
-    if P >= water_activity(T, _X_HI) * 0.0 + 0.0:  # pragma: no cover - placeholder guard
-        pass
     # Water saturation pressure at T, from the owner's slope at the pure-water
     # limit: m(x_w -> 1) = Psat/P, so require it above the boiling line.
     slope_pure = activity_equilibrium_slope(T, P, 1.0 - 1e-9)
@@ -157,16 +158,13 @@ class TEGRegen:
 
         # Lean purity: the boiling line at (T_reb, P), via the owner correlation.
         x_w_lean = _lean_water_mole_fraction(T_reb, P)
-        n_water_lean = n_teg * x_w_lean / (1.0 - x_w_lean)
         n_water_in = rich.get(_WATER, 0.0)
-        if n_water_lean > n_water_in:
-            raise TEGRegenError(
-                f"infeasible regeneration: the lean purity at reboiler temperature {T_reb:.4g} K and "
-                f"pressure {P:.4g} Pa (lean water mole fraction {x_w_lean:.4g}) needs "
-                f"{n_water_lean:.6g} mol/s of water held in the lean glycol but the rich feed carries "
-                f"only {n_water_in:.6g} mol/s -- lower the reboiler temperature, lower the pressure, "
-                "or feed a wetter glycol"
-            )
+        n_water_at_equilibrium = n_teg * x_w_lean / (1.0 - x_w_lean)
+        # The boiling line is a purity CAP, not a demand: a feed already drier
+        # than the equilibrium water content cannot boil water (the activity
+        # product sits below the pressure), so the glycol heats through and
+        # keeps every mole of its water -- only the lights strip.
+        n_water_lean = min(n_water_at_equilibrium, n_water_in)
 
         # Lean outlet: all the TEG plus the equilibrium-held water.
         n_lean = n_teg + n_water_lean
@@ -179,31 +177,45 @@ class TEGRegen:
         if n_water_overhead > 0.0:
             overhead[_WATER] = overhead.get(_WATER, 0.0) + n_water_overhead
         total_overhead = sum(overhead.values())
-        if total_overhead <= 0.0:
+        if total_overhead > 0.0:
+            overhead_comp = {cid: n / total_overhead for cid, n in overhead.items()}
+            water_out = thermo.flash_pt(overhead_comp, T_reb, P, total_overhead)
+        elif n_water_in > 0.0:
+            # Drier than the cap and no absorbed lights: nothing strips, yet
+            # the overhead port still exists -- as a zero-flow stream (the
+            # plugin convention for empty ports).
+            water_out = StreamState(
+                T=T_reb,
+                P=P,
+                molar_flow=0.0,
+                composition={_WATER: 1.0},
+                vapor_fraction=1.0,
+                enthalpy=0.0,
+                entropy=0.0,
+                phases=[],
+            )
+        else:
             raise TEGRegenError(
                 "rich_in carries no water or light components to strip: the regenerator has nothing "
                 "to regenerate"
             )
-        overhead_comp = {cid: n / total_overhead for cid, n in overhead.items()}
-        water_out = thermo.flash_pt(overhead_comp, T_reb, P, total_overhead)
 
         duty_W = (
             lean_out.enthalpy * lean_out.molar_flow
             + water_out.enthalpy * water_out.molar_flow
             - rich_in.enthalpy * rich_in.molar_flow
         )
-        if gas_in is not None:  # zero-flow port stream: it leaves as it entered
-            duty_W += gas_in.enthalpy * gas_in.molar_flow - gas_in.enthalpy * gas_in.molar_flow
+        # A wired-but-zero-flow stripping_gas_in contributes nothing to the
+        # balance (molar_flow 0); a positive flow was refused above.
 
         mw_teg, mw_water = _mw(_TEG), _mw(_WATER)
         mass_teg = n_teg * mw_teg
         lean_mass_fraction = mass_teg / (mass_teg + n_water_lean * mw_water)
-        mass_teg_in = mass_teg
         rich_mass = sum(n * _mw(cid) for cid, n in rich.items())
         info: dict[str, float] = {
             "lean_teg_mass_fraction": lean_mass_fraction,
             "lean_water_mole_fraction": x_w_lean,
-            "rich_teg_mass_fraction": mass_teg_in / rich_mass,
+            "rich_teg_mass_fraction": mass_teg / rich_mass,
             "water_stripped_mol_s": n_water_overhead,
             "water_held_in_lean_mol_s": n_water_lean,
             "lean_out_mol_s": n_lean,

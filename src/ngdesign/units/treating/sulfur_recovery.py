@@ -105,17 +105,16 @@ def _approach_extent(
 ) -> tuple[float, float]:
     """Extent of the Claus reaction at an equilibrium approach, mol/s.
 
-    Solves ``Q(xi) = ln K(T - approach)`` with ``Q = sum(nu_i * ln(y_i P / P0))``
-    on ideal-gas activities, bisected between zero and the stoichiometric
-    limit. Returns (extent, ln K used). Q is monotone increasing in xi: the
-    reactants H2S and SO2 thin out while the products (water, and total moles
-    via nu_sum = +0.625) grow.
+    An adiabatic catalyst bed falls ``approach_K`` short of equilibrium: its
+    exit composition equals the equilibrium composition at ``T + approach_K``
+    (warmer, hence less converted -- the standard direction for the exothermic
+    Claus reaction). Solves ``Q(xi) = ln K(T + approach)`` with
+    ``Q = sum(nu_i * ln(y_i P / P0))`` on ideal-gas activities, bisected between
+    zero and the stoichiometric limit. Returns (extent, ln K used). Q is
+    monotone increasing in xi: the reactants H2S and SO2 thin out while the
+    products (water, and total moles via nu_sum = +0.625) grow.
     """
-    T_eq = T - approach_K
-    if not T_eq > 0.0:
-        raise SulfurRecoveryError(
-            f"equilibrium approach {approach_K} K drives the stage temperature below zero (stage T {T:.4g} K)"
-        )
+    T_eq = T + approach_K
     ln_k = ln_keq(claus, T_eq)
     nu = claus.stoichiometry
 
@@ -262,13 +261,10 @@ class SulfurRecovery:
             T_stage = float(stage["T"])
             if "conversion" in stage:
                 xi = float(stage["conversion"]) * gas.get("SO2", 0.0)
-                # Diagnostic only: a finite ln K at stage temperature keeps the
-                # info dict comparable across runs (NaN != NaN), even though the
-                # extent is fixed by the given conversion, not equilibrium.
-                try:
-                    stage_ln_k = ln_keq(claus, T_stage)
-                except KineticsError:
-                    stage_ln_k = float("inf")
+                # Reported for reference; on the conversion path it does not
+                # set the extent. Finite on purpose: info must serialize and
+                # compare equal run to run (no NaN).
+                stage_ln_k = ln_keq(claus, T_stage)
             else:
                 try:
                     xi, stage_ln_k = _approach_extent(gas, claus, T_stage, float(stage["approach_K"]), P)
