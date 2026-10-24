@@ -118,6 +118,20 @@ def test_feed_without_teg_is_refused() -> None:
         _solve(feed)
 
 
+def test_activity_extrapolated_flag_marks_out_of_range_reboilers() -> None:
+    """The Parrish-Won-Baltatu correlation is fitted over 300-380 K: a 400 F
+    (477.594 K) reboiler sits outside it and is flagged 1.0; an in-range
+    reboiler that can still boil water is flagged 0.0."""
+    hot = _feed({"TEG": 0.95, "H2O": 0.05})
+    result = _solve(hot, {"T_reboiler": 477.594, "P": DEFAULT_P})
+    assert result.info["activity_extrapolated"] == 1.0
+    # 360 K is inside the fit range and still boils water at 0.5 bar
+    # (Psat_H2O(360 K) ~ 62 kPa > 50 kPa).
+    warm = _feed({"TEG": 0.85, "H2O": 0.15}, T=360.0, P=5.0e4)
+    warm_result = _solve(warm, {"T_reboiler": 360.0, "P": 5.0e4})
+    assert warm_result.info["activity_extrapolated"] == 0.0
+
+
 def test_solve_is_deterministic() -> None:
     feed = _feed({"TEG": 0.95, "H2O": 0.05})
     first = _solve(feed)

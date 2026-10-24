@@ -2,7 +2,7 @@
 
 Family: **flow** · P&ID symbol: `RC`
 
-Rigour ladder: R0 planned, R1 planned
+Rigour ladder: R0 provisional, R1 planned
 
 ## Ports
 
@@ -15,11 +15,11 @@ Rigour ladder: R0 planned, R1 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | clearance-volume model, stages |
+| R0 | provisional | `ngdesign.units.flow.reciprocating_compressor:ReciprocatingCompressor` | clearance-volume model, stages |
 | R1 | planned | — | rod load, capacity vs clearance |
 
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-B 3
 
-> roadmap.
+> R0 isentropic stages with intercooling and a clearance-volume volumetric-efficiency report; rod load and capacity-vs-clearance remain roadmap.

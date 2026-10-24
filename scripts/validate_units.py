@@ -620,6 +620,24 @@ def audit_docs(files: dict[Path, str]) -> list[str]:
             stale.append(f"missing generated doc: {path.relative_to(REPO_ROOT)}")
         elif path.read_text() != content:
             stale.append(f"stale generated doc: {path.relative_to(REPO_ROOT)}")
+            # Show where the committed page diverges from regeneration so the
+            # mismatch (usually one computed cell) is visible in CI logs.
+            committed = path.read_text().splitlines()
+            regen = content.splitlines()
+            shown = 0
+            for line_no, (old, new) in enumerate(zip(committed, regen, strict=False), start=1):
+                if old != new and shown < 5:
+                    stale.append(
+                        f"  {path.relative_to(REPO_ROOT)}:{line_no}\n"
+                        f"    committed: {old}\n"
+                        f"    generated: {new}"
+                    )
+                    shown += 1
+            if shown == 0 and (len(committed) != len(regen)):
+                stale.append(
+                    f"  {path.relative_to(REPO_ROOT)}: line count differs "
+                    f"(committed {len(committed)}, generated {len(regen)})"
+                )
     for path in sorted(UNIT_PAGES_DIR.rglob("*.md")):
         if path not in files:
             stale.append(f"orphan generated doc: {path.relative_to(REPO_ROOT)}")

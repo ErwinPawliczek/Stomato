@@ -304,9 +304,10 @@
           P: {type: number, description: regenerator pressure, Pa abs}
       validation: [V1201-teg-regen-gpsa]
       note: shortcut water split; lean purity on the TEG-water boiling line (teg_activity owner),
-        stripping gas refused at R0 (uncited); V1 miss assessed — measured 99.26 wt% vs the
-        GPSA 98.8 wt% read (activity correlation extrapolated past its fitted range), so the
-        level stays provisional until the purity model is defensible at reboiler conditions
+        stripping gas refused at R0 (uncited); info["activity_extrapolated"] flags reboilers
+        outside the Parrish-Won-Baltatu 300-380 K fit range; V1 miss assessed — measured 99.27
+        wt% vs the GPSA 98.8 wt% read (activity correlation extrapolated past its fitted range),
+        so the level stays provisional until the purity model is defensible at reboiler conditions
     R2:
       status: planned
       params: {}
@@ -332,12 +333,29 @@
     - name: sulfur_out
       required: true
       description: liquid sulfur
+  balance: mass_elements
   levels:
     R0:
-      status: planned
-      params: {}
-      note: blocked at planned — the locked property balance test has no reactive branch yet
-        (measured on issue #212; adapter written, unregistered, in ngdesign.units.treating.sulfur_recovery)
+      status: provisional
+      adapter: ngdesign.units.treating.sulfur_recovery:SulfurRecovery
+      params:
+        type: object
+        properties:
+          T_thermal: {type: number, description: thermal-stage (reaction-furnace) temperature, K}
+          P: {type: number, description: process pressure, Pa abs}
+          T_condenser: {type: number, description: sulfur condenser temperature, K}
+          thermal_conversion: {type: number, description: fraction of the post-burn H2S consumed
+              by the Claus reaction in the thermal stage}
+          catalytic_stages: {type: array, description: one entry per catalytic stage, each
+              with T (K) and exactly one of conversion (fraction) or approach_K (K)}
+          reaction_set: {type: object, description: flowsheet-owned reaction set (H2S burn
+              + Claus reaction, U-01b pattern (a))}
+      validation: [V1202-sulfur-recovery-gpsa]
+      note: condenses S8 only (databank species with usable formula + formation data — recorded
+        choice); hydrocarbons pass through unburned at R0; V1 case on GPSA EDB Sect. 22 Ex. 22-1
+        printed stage results — the example's printed overall recovery is not accessible in any
+        copy reachable (official GPSA workbook companion ends at the first converter), so it is
+        a documented V1 gap and the level stays provisional
     R2:
       status: planned
       params: {}

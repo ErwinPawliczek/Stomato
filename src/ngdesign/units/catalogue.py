@@ -174,6 +174,25 @@ def _check_adapter(adapter: str, where: str) -> type:
     return adapter_cls
 
 
+def _check_ports(row: UnitRow, adapter_cls: type, where: str) -> None:
+    """The adapter's ports are the row's ports (spec U-01c).
+
+    The catalogue row is the contract the palette and flowsheets wire against,
+    so an adapter must expose exactly the row's inlet and outlet names (order
+    free). A mismatch means a flowsheet wired from the palette connects ports
+    the adapter never reads or never produces.
+    """
+    for side, declared, names in (
+        ("inlet", row.ports.inlet_names, getattr(adapter_cls, "inlet_ports", None)),
+        ("outlet", row.ports.outlet_names, getattr(adapter_cls, "outlet_ports", None)),
+    ):
+        if names is None or set(names) != set(declared):
+            raise CatalogueError(
+                f"{where}: adapter {side} ports {sorted(names or ())} differ from the row's "
+                f"{side} ports {sorted(declared)}"
+            )
+
+
 def _check_row(row: UnitRow, schema: dict[str, Any], where: str) -> None:
     """Structural rules the pydantic model cannot express positionally."""
     if not _SLUG_RE.fullmatch(row.id):
@@ -199,7 +218,7 @@ def _check_row(row: UnitRow, schema: dict[str, Any], where: str) -> None:
         else:
             if spec.adapter is None:
                 raise CatalogueError(f"{level_where}: a {spec.status} level names an adapter")
-            _check_adapter(spec.adapter, level_where)
+            _check_ports(row, _check_adapter(spec.adapter, level_where), level_where)
         for case_id in spec.validation:
             if not _VALIDATION_ID_RE.match(case_id):
                 raise CatalogueError(f"{level_where}: validation id {case_id!r} is not V-prefixed")
