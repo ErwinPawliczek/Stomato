@@ -86,7 +86,8 @@
       description: compressed gas
   levels:
     R0:
-      status: planned
+      status: provisional
+      adapter: ngdesign.units.flow.reciprocating_compressor:ReciprocatingCompressor
       params: {}
       note: clearance-volume model, stages
     R1:
@@ -97,7 +98,7 @@
   pid_symbol: RC
   references:
   - docs/unit-catalogue-plan.md §2 U-B 3
-  notes: roadmap.
+  notes: R0 isentropic stages with intercooling and a clearance-volume volumetric-efficiency report; rod load and capacity-vs-clearance remain roadmap.
 
 - id: compression_train
   name: Compression train
@@ -206,7 +207,8 @@
       description: throttled outlet
   levels:
     R0:
-      status: planned
+      status: provisional
+      adapter: ngdesign.units.flow.control_valve:ControlValve
       params: {}
       note: Cv / outlet P spec, isenthalpic (the cv_liquid correlation plugin exists)
     R1:
@@ -217,7 +219,7 @@
   pid_symbol: CV
   references:
   - docs/unit-catalogue-plan.md §2 U-B 6
-  notes: roadmap.
+  notes: R0 isenthalpic letdown; ISA liquid Cv is reported when the inlet is liquid and a viscosity is available (PR phase property or a mu_liquid param); IEC 60534 sizing and the choked-flow correlation remain roadmap.
 
 - id: relief_valve
   name: Relief valve
@@ -233,7 +235,8 @@
       description: discharge
   levels:
     R0:
-      status: planned
+      status: provisional
+      adapter: ngdesign.units.flow.relief_valve:ReliefValve
       params: {}
       note: set pressure, orifice from API 520 (the psv_api520_gas correlation plugin exists)
     R1:
@@ -248,7 +251,7 @@
   pid_symbol: PSV
   references:
   - docs/unit-catalogue-plan.md §2 U-B 7
-  notes: roadmap.
+  notes: R0 gas PSV sizing per API 520 Part I with API 526 orifice selection; two-phase sizing and relief-system loss checks remain roadmap.
 
 - id: pipe_segment
   name: Pipe segment
@@ -264,7 +267,8 @@
       description: segment outlet
   levels:
     R0:
-      status: planned
+      status: provisional
+      adapter: ngdesign.units.flow.pipe_segment:PipeSegment
       params: {}
       note: fixed ΔP spec
     R1:
@@ -279,7 +283,7 @@
   pid_symbol: PIPE
   references:
   - docs/unit-catalogue-plan.md §2 U-B 8
-  notes: roadmap.
+  notes: R0 fixed dP with optional hydrostatic head; Darcy friction and two-phase flowsheeting remain roadmap.
 
 - id: orifice
   name: Orifice / flow element
@@ -295,7 +299,8 @@
       description: element outlet
   levels:
     R0:
-      status: planned
+      status: provisional
+      adapter: ngdesign.units.flow.orifice:Orifice
       params: {}
       note: ΔP from a discharge coefficient
     R1:
@@ -306,7 +311,7 @@
   pid_symbol: FE
   references:
   - docs/unit-catalogue-plan.md §2 U-B 9
-  notes: roadmap.
+  notes: R0 fixed-Cd dP read; ISO 5167 sizing remains roadmap.
 
 - id: ejector
   name: Ejector
@@ -325,7 +330,8 @@
       description: combined discharge
   levels:
     R0:
-      status: planned
+      status: provisional
+      adapter: ngdesign.units.flow.ejector:Ejector
       params: {}
       note: entrainment ratio spec
     R1:
@@ -336,7 +342,7 @@
   pid_symbol: EJ
   references:
   - docs/unit-catalogue-plan.md §2 U-B 10
-  notes: roadmap.
+  notes: R0 momentum balance at a specified entrainment ratio; 1-D momentum design mode remains roadmap.
 
 - id: fan
   name: Fan / blower
@@ -352,7 +358,8 @@
       description: raised-pressure gas
   levels:
     R0:
-      status: planned
+      status: provisional
+      adapter: ngdesign.units.flow.fan:Fan
       params: {}
       note: ΔP + efficiency
     R1:
@@ -363,4 +370,4 @@
   pid_symbol: FAN
   references:
   - docs/unit-catalogue-plan.md §2 U-B 11
-  notes: roadmap.
+  notes: R0 fixed dP rise with efficiency; performance curves remain roadmap.

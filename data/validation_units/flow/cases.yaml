@@ -1,0 +1,29 @@
+# V1 worked cases — flow family (spec U-01).
+# Sources fixed before the run; tols carry the book's rounding, not a fit.
+
+- id: V-control-valve-emerson-propane
+  unit: control_valve
+  level: R0
+  thermo: coolprop_heos
+  source: "Emerson control-valve sizing example, liquid propane: 800 gpm basis, SG 0.5, dP 25 psi, Fp 0.96, published Cv 117.9 (117.9 x 0.96 = 113.2 is the bare-valve Cv the adapter reports)"
+  params:
+    mu_liquid: 1.0371e-4   # CoolProp liquid propane at 294.261 K, Pa s
+  expected:
+  - {quantity: info.Cv, value: 113.2, tol_rel: 0.005}
+  - {quantity: info.choked, value: 0.0, tol_abs: 0.0}
+
+- id: V-relief-valve-api520-ex1
+  unit: relief_valve
+  level: R0
+  source: "API 520 Part I, 10th ed., sec. 5.6.3.2 Example 1: required orifice area 6.51 in2 (adapter reproduces the API 526 letter selection, not the rounded print)"
+  expected:
+  - {quantity: info.required_area_in2, value: 6.51, tol_rel: 0.005}
+  - {quantity: info.selected_orifice_area_in2, value: 11.05, tol_rel: 1.0e-9}
+
+- id: V-ejector-graham-3to1
+  unit: ejector
+  level: R0
+  source: "Graham Manufacturing ejector performance data: 3:1 motive/suction mass-ratio operating point (steam both streams, 146.873 mol/s motive at 6.0e5 Pa / 433.15 K entraining 48.958 mol/s at 5.0e4 Pa to 1.0e5 Pa discharge)"
+  expected:
+  - {quantity: info.motive_to_suction_required, value: 3.0, tol_rel: 1.0e-6}
+  - {quantity: info.entrainment_achieved, value: 0.3333333, tol_rel: 0.001}

@@ -1,0 +1,174 @@
+"""Closed-form and refusal tests for the U-B flow adapters (plan §2 U-B)."""
+
+from __future__ import annotations
+
+import pytest
+
+from ngdesign import registry
+from ngdesign.units.flow import (
+    control_valve,
+    ejector,
+    fan,
+    orifice,
+    pipe_segment,
+    reciprocating_compressor,
+    relief_valve,
+)
+from tests.conftest import flash_feed
+
+
+@pytest.fixture(scope="module")
+def thermo():
+    registry.discover()
+    return registry.create("thermo", "pr")
+
+
+UNITS = [
+    reciprocating_compressor.ReciprocatingCompressor,
+    control_valve.ControlValve,
+    relief_valve.ReliefValve,
+    pipe_segment.PipeSegment,
+    orifice.Orifice,
+    ejector.Ejector,
+    fan.Fan,
+]
+
+
+@pytest.mark.parametrize("cls", UNITS, ids=lambda c: c.__name__)
+def test_example_case_solves(cls, thermo):
+    """Every adapter solves its own example to a fully specified outlet."""
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = cls().solve(inlets, params, thermo)
+    outlet = result.outlets["outlet"]
+    assert outlet.T > 0.0 and outlet.P > 0.0 and outlet.molar_flow > 0.0
+
+
+def test_reciprocating_compressor_isentropic_stages(thermo):
+    """Two stages with intercooling beat one stage to the same discharge."""
+    cls = reciprocating_compressor.ReciprocatingCompressor
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    two = cls().solve(inlets, params, thermo)
+    assert two.info["pressure_ratio_per_stage"] == pytest.approx(
+        (params["P_out"] / inlets["inlet"].P) ** 0.5, rel=1e-9
+    )
+    one = cls().solve(inlets, {**params, "n_stages": 1}, thermo)
+    assert one.power_W > two.power_W > 0.0
+
+
+def test_control_valve_isenthalpic(thermo):
+    """A letdown preserves enthalpy: the outlet state flashes at inlet h."""
+    cls = control_valve.ControlValve
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = cls().solve(inlets, params, thermo)
+    outlet = result.outlets["outlet"]
+    assert outlet.enthalpy == pytest.approx(inlets["inlet"].enthalpy, rel=1e-12)
+    assert outlet.P == pytest.approx(params["P_out"], rel=1e-12)
+
+
+def test_control_valve_reports_no_cv_for_vapor(thermo):
+    """A vapour letdown throttles isenthalpically and reports no liquid Cv."""
+    cls = control_valve.ControlValve
+    gas = {
+        "T": 348.15,
+        "P": 670170.408,
+        "molar_flow": 130.128,
+        "composition": {"C3": 0.45, "nC4": 0.55},
+    }
+    inlets = {"inlet": flash_feed(thermo, gas)}
+    result = cls().solve(inlets, {"P_out": 3.0e5}, thermo)
+    outlet = result.outlets["outlet"]
+    assert outlet.enthalpy == pytest.approx(inlets["inlet"].enthalpy, rel=1e-12)
+    assert result.info["cv_reported"] == 0.0
+
+
+def test_relief_valve_selects_api526_letter(thermo):
+    """The selected orifice area is the smallest API 526 area at or above the requirement."""
+    cls = relief_valve.ReliefValve
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = cls().solve(inlets, params, thermo)
+    required = result.info["required_area_in2"]
+    selected = result.info["selected_orifice_area_in2"]
+    assert selected >= required
+    assert selected == pytest.approx(
+        min(
+            a * relief_valve.IN2_PER_M2
+            for a in __import__("fluids").API526_A
+            if a * relief_valve.IN2_PER_M2 >= required
+        ),
+        rel=1e-12,
+    )
+
+
+def test_relief_valve_refuses_oversized_requirement(thermo):
+    """A required area beyond the T orifice raises a typed spec error."""
+    cls = relief_valve.ReliefValve
+    feeds, params = cls.example_case()
+    feeds = {port: {**feed, "molar_flow": feed["molar_flow"] * 10.0} for port, feed in feeds.items()}
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    with pytest.raises(relief_valve.ReliefValveSpecError, match="API 526"):
+        cls().solve(inlets, params, thermo)
+
+
+def test_pipe_segment_hydrostatic_head(thermo):
+    """Raising the elevation adds rho*g*z to the pressure the fixed dP consumed."""
+    cls = pipe_segment.PipeSegment
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    inlet = inlets["inlet"]
+    rho = max(inlet.phases, key=lambda p: p.mole_fraction).density
+    up = cls().solve(inlets, {**params, "elevation_m": 100.0}, thermo)
+    flat = cls().solve(inlets, {**params, "elevation_m": 0.0}, thermo)
+    assert up.outlets["outlet"].P == pytest.approx(flat.outlets["outlet"].P - rho * 9.80665 * 100.0, rel=1e-9)
+
+
+def test_pipe_segment_refuses_negative_outlet_pressure(thermo):
+    """A dP larger than the inlet pressure is a typed refusal, not a negative pressure."""
+    cls = pipe_segment.PipeSegment
+    feeds, params = cls.example_case()
+    params = {**params, "dP": 5.0e6}
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    with pytest.raises(pipe_segment.PipeSegmentSpecError, match="must be > 0"):
+        cls().solve(inlets, params, thermo)
+
+
+def test_orifice_mass_balance(thermo):
+    """The orifice consumes its dP without changing the stream's mass or enthalpy."""
+    cls = orifice.Orifice
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = cls().solve(inlets, params, thermo)
+    inlet, outlet = inlets["inlet"], result.outlets["outlet"]
+    assert outlet.molar_flow == pytest.approx(inlet.molar_flow, rel=1e-12)
+    assert outlet.enthalpy == pytest.approx(inlet.enthalpy, rel=1e-12)
+
+
+def test_ejector_discharge_pressure(thermo):
+    """At the required entrainment the momentum balance lands exactly on P_out."""
+    cls = ejector.Ejector
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = cls().solve(inlets, params, thermo)
+    motive, suction = inlets["motive"], inlets["suction"]
+    assert result.info["motive_to_suction_required"] == pytest.approx(
+        motive.mass_flow / suction.mass_flow, rel=1e-4
+    )
+    assert result.outlets["outlet"].P == pytest.approx(params["P_out"], rel=1e-9)
+
+
+def test_fan_power_positive_on_pressure_rise(thermo):
+    """A fan raising dP consumes shaft power; a looser efficiency consumes more."""
+    cls = fan.Fan
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = cls().solve(inlets, params, thermo)
+    inlet = inlets["inlet"]
+    assert result.power_W > 0.0
+    assert result.duty_W == 0.0
+    assert result.info["pressure_ratio"] == pytest.approx((inlet.P + params["dP"]) / inlet.P, rel=1e-9)
+    assert result.outlets["outlet"].P == pytest.approx(inlet.P + params["dP"], rel=1e-9)
+    ideal = cls().solve(inlets, {**params, "eta": 1.0}, thermo)
+    assert ideal.power_W < result.power_W
