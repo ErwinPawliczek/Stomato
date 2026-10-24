@@ -29,8 +29,7 @@
   params:
     hot_T_out: 310.928
   expected:
-  - {quantity: outlet.hot_out.T, value: 310.928, tol_abs: 0.1}
-  - {quantity: outlet.cold_out.T, value: 322.039, tol_abs: 0.5}
+  - {quantity: outlet.cold_out.T, value: 322.039, tol_abs: 0.28}
   - {quantity: info.duty_W, value: 48943.0, tol_rel: 0.02}
   assessed: >-
     Measured: benzene outlet 322.969 K (+0.93 K over the book's 120 F) and

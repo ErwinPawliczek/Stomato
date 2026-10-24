@@ -49,8 +49,7 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V2082` | R0 | `outlet.hot_out.T` | 310.928 | 310.928 | abs 0.1 | pass |
-| `V2082` | R0 | `outlet.cold_out.T` | 322.039 | 322.977 | abs 0.5 | assessed miss |
+| `V2082` | R0 | `outlet.cold_out.T` | 322.039 | 322.977 | abs 0.28 | assessed miss |
 | `V2082` | R0 | `info.duty_W` | 48943 | 44974.3 | rel 0.02 | assessed miss |
 
 - `V2082`: Kern, Process Heat Transfer, Example 6.1: 9,820 lb/h of benzene heated 80 -> 120 F against 6,330 lb/h of toluene cooled 160 -> 100 F, Q = 6,330 * 0.44 * 60 = 167,000 Btu/h = 48,943 W. Flows from the printed lb/h over the package molar masses: toluene 8.66 mol/s, benzene 15.84 mol/s.
