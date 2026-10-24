@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
-from ngdesign import registry
+from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.flow import (
     control_valve,
     ejector,
@@ -15,13 +17,6 @@ from ngdesign.units.flow import (
     relief_valve,
 )
 from tests.conftest import flash_feed
-
-
-@pytest.fixture(scope="module")
-def thermo():
-    registry.discover()
-    return registry.create("thermo", "pr")
-
 
 UNITS = [
     reciprocating_compressor.ReciprocatingCompressor,
@@ -35,7 +30,7 @@ UNITS = [
 
 
 @pytest.mark.parametrize("cls", UNITS, ids=lambda c: c.__name__)
-def test_example_case_solves(cls, thermo):
+def test_example_case_solves(cls: type[Any], thermo: Thermo) -> None:
     """Every adapter solves its own example to a fully specified outlet."""
     feeds, params = cls.example_case()
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
@@ -44,7 +39,7 @@ def test_example_case_solves(cls, thermo):
     assert outlet.T > 0.0 and outlet.P > 0.0 and outlet.molar_flow > 0.0
 
 
-def test_reciprocating_compressor_isentropic_stages(thermo):
+def test_reciprocating_compressor_isentropic_stages(thermo: Thermo) -> None:
     """Two stages with intercooling beat one stage to the same discharge."""
     cls = reciprocating_compressor.ReciprocatingCompressor
     feeds, params = cls.example_case()
@@ -57,7 +52,7 @@ def test_reciprocating_compressor_isentropic_stages(thermo):
     assert one.power_W > two.power_W > 0.0
 
 
-def test_control_valve_isenthalpic(thermo):
+def test_control_valve_isenthalpic(thermo: Thermo) -> None:
     """A letdown preserves enthalpy: the outlet state flashes at inlet h."""
     cls = control_valve.ControlValve
     feeds, params = cls.example_case()
@@ -68,7 +63,7 @@ def test_control_valve_isenthalpic(thermo):
     assert outlet.P == pytest.approx(params["P_out"], rel=1e-12)
 
 
-def test_control_valve_reports_no_cv_for_vapor(thermo):
+def test_control_valve_reports_no_cv_for_vapor(thermo: Thermo) -> None:
     """A vapour letdown throttles isenthalpically and reports no liquid Cv."""
     cls = control_valve.ControlValve
     gas = {
@@ -84,7 +79,7 @@ def test_control_valve_reports_no_cv_for_vapor(thermo):
     assert result.info["cv_reported"] == 0.0
 
 
-def test_relief_valve_selects_api526_letter(thermo):
+def test_relief_valve_selects_api526_letter(thermo: Thermo) -> None:
     """The selected orifice area is the smallest API 526 area at or above the requirement."""
     cls = relief_valve.ReliefValve
     feeds, params = cls.example_case()
@@ -103,7 +98,7 @@ def test_relief_valve_selects_api526_letter(thermo):
     )
 
 
-def test_relief_valve_refuses_oversized_requirement(thermo):
+def test_relief_valve_refuses_oversized_requirement(thermo: Thermo) -> None:
     """A required area beyond the T orifice raises a typed spec error."""
     cls = relief_valve.ReliefValve
     feeds, params = cls.example_case()
@@ -113,7 +108,7 @@ def test_relief_valve_refuses_oversized_requirement(thermo):
         cls().solve(inlets, params, thermo)
 
 
-def test_pipe_segment_hydrostatic_head(thermo):
+def test_pipe_segment_hydrostatic_head(thermo: Thermo) -> None:
     """Raising the elevation adds rho*g*z to the pressure the fixed dP consumed."""
     cls = pipe_segment.PipeSegment
     feeds, params = cls.example_case()
@@ -125,7 +120,7 @@ def test_pipe_segment_hydrostatic_head(thermo):
     assert up.outlets["outlet"].P == pytest.approx(flat.outlets["outlet"].P - rho * 9.80665 * 100.0, rel=1e-9)
 
 
-def test_pipe_segment_refuses_negative_outlet_pressure(thermo):
+def test_pipe_segment_refuses_negative_outlet_pressure(thermo: Thermo) -> None:
     """A dP larger than the inlet pressure is a typed refusal, not a negative pressure."""
     cls = pipe_segment.PipeSegment
     feeds, params = cls.example_case()
@@ -135,7 +130,7 @@ def test_pipe_segment_refuses_negative_outlet_pressure(thermo):
         cls().solve(inlets, params, thermo)
 
 
-def test_orifice_mass_balance(thermo):
+def test_orifice_mass_balance(thermo: Thermo) -> None:
     """The orifice consumes its dP without changing the stream's mass or enthalpy."""
     cls = orifice.Orifice
     feeds, params = cls.example_case()
@@ -146,7 +141,7 @@ def test_orifice_mass_balance(thermo):
     assert outlet.enthalpy == pytest.approx(inlet.enthalpy, rel=1e-12)
 
 
-def test_ejector_discharge_pressure(thermo):
+def test_ejector_discharge_pressure(thermo: Thermo) -> None:
     """At the required entrainment the momentum balance lands exactly on P_out."""
     cls = ejector.Ejector
     feeds, params = cls.example_case()
@@ -159,7 +154,7 @@ def test_ejector_discharge_pressure(thermo):
     assert result.outlets["outlet"].P == pytest.approx(params["P_out"], rel=1e-9)
 
 
-def test_fan_power_positive_on_pressure_rise(thermo):
+def test_fan_power_positive_on_pressure_rise(thermo: Thermo) -> None:
     """A fan raising dP consumes shaft power; a looser efficiency consumes more."""
     cls = fan.Fan
     feeds, params = cls.example_case()

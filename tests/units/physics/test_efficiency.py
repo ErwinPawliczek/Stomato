@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import pytest
 
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.stream import PhaseKind
 from ngdesign.units._physics.efficiency import isentropic_step
 from tests.conftest import flash_feed
 
@@ -29,7 +31,7 @@ N2_FEED = {
 T2S_1_TO_3 = 300.0 * 3.0 ** ((K_IDEAL - 1.0) / K_IDEAL)
 
 
-def test_isentropic_compress_matches_ideal_gas_t2s(thermo) -> None:
+def test_isentropic_compress_matches_ideal_gas_t2s(thermo: Thermo) -> None:
     inlet = flash_feed(thermo, N2_FEED)
     outlet, power = isentropic_step(inlet, 3.0e5, 1.0, thermo, "compress")
     assert outlet.T == pytest.approx(T2S_1_TO_3, rel=0.005)
@@ -37,18 +39,18 @@ def test_isentropic_compress_matches_ideal_gas_t2s(thermo) -> None:
     assert power > 0.0
 
 
-def test_eta_compression_temperature_and_power(thermo) -> None:
+def test_eta_compression_temperature_and_power(thermo: Thermo) -> None:
     """T2 = T1 + (T2s - T1)/eta for an ideal gas with constant cp."""
     inlet = flash_feed(thermo, N2_FEED)
     eta = 0.8
     outlet, power = isentropic_step(inlet, 3.0e5, eta, thermo, "compress")
     assert outlet.T == pytest.approx(300.0 + (T2S_1_TO_3 - 300.0) / eta, rel=0.005)
     # Power = F * cp * dT with cp from the registered package.
-    cp = thermo.phase_props({"N2": 1.0}, 300.0, 1.0e5, "vapor").cp
+    cp = thermo.phase_props({"N2": 1.0}, 300.0, 1.0e5, PhaseKind.VAPOR).cp
     assert power == pytest.approx(10.0 * cp * (outlet.T - 300.0), rel=0.02)
 
 
-def test_eta_expansion_mirrors_compression(thermo) -> None:
+def test_eta_expansion_mirrors_compression(thermo: Thermo) -> None:
     """Expansion from 3 bar recovers eta of the isentropic drop."""
     inlet = flash_feed(thermo, {"T": 300.0, "P": 3.0e5, "molar_flow": 10.0, "composition": {"N2": 1.0}})
     outlet, power = isentropic_step(inlet, 1.0e5, 0.8, thermo, "expand")
@@ -57,7 +59,7 @@ def test_eta_expansion_mirrors_compression(thermo) -> None:
     assert power < 0.0  # shaft power leaves the process
 
 
-def test_refuses_wrong_direction_and_bad_eta(thermo) -> None:
+def test_refuses_wrong_direction_and_bad_eta(thermo: Thermo) -> None:
     inlet = flash_feed(thermo, N2_FEED)
     with pytest.raises(ValueError, match="exceed"):
         isentropic_step(inlet, 0.5e5, 1.0, thermo, "compress")
