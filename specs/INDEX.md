@@ -142,7 +142,7 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | U-H1 | Refining separation R0: assay feeder, desalter, crude/vacuum cut-point columns, side strip, preflash, blending | U-R1, A-01, U-E (side_strip) | issue #213 |
 | U-H2 | Refining reactors R0: lumped yield correlations | U-R1, U-F1 | issue #214; dispatch after U-F1 merges |
 | U-00 | Unit catalogue as data: 83-row YAML registry, rigour-level dispatch/refusal, V0 harness | none | merged #197 (8cf4d20) 2026-10-23; issue #189 |
-| U-01 | Unit harness: cited V1 cases with tolerances and assessed misses, mass/element V0 for reactive rows, per-row example thermo | U-00, U-R | DONE 2026-10-23 (#205, 8cc9b2b) |
+| U-01 | Unit harness: cited V1 cases with tolerances and assessed misses, mass/element V0 for reactive rows, per-row example thermo | U-00, U-R | DONE 2026-10-23 (#205, 8cc9b2b; U-01b reactive balance bases #220, 16432b9) |
 | A-01 | Crude assay characterisation: curve conversions, light ends, pseudo cutting, S0 reference data | P1-07 | merged #195 (2026-10-23): `contracts/assay.py`, `data/assay.py` (`data.py` became the `data/` package); D86→TBP Riazi–Daubert, D2887→TBP API 3A3.1 (Daubert 1994 °F table), D1160 at 10 mmHg via the graphical 3A2.1 procedure (other pressures refuse), Maxwell–Bonnell AET; S0 reference = Bagajewicz & Ji 2001 Part I cut temperatures/gaps only — round 2 needs a yields source (Part II) |
 
 Round 1 (palette R0, one thread per family U-A..U-H) after U-00 and U-R merge; round 2 (S0 crude to R1/R2) after round 1 and P1-11.
