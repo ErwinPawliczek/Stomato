@@ -218,3 +218,13 @@ def test_side_strip_row_registers_its_adapter() -> None:
     unit = registry.create("unit", "side_strip")
     assert unit.inlet_ports == ("draw_in", "steam_in")
     assert unit.outlet_ports == ("overhead_out", "bottoms_out")
+
+
+def test_zero_steam_strips_nothing() -> None:
+    """No stripping vapour: V stays 0, every fraction is 0 (no ValueError)."""
+    from ngdesign.units.refining.side_strip import _stripped_amounts
+
+    flows = {"a": 3.0, "b": 2.0}
+    stripped, phi = _stripped_amounts(flows, {"a": 2.5, "b": 0.4}, l_flow=5.0, steam_flow=0.0, n_stages=4.0)
+    assert stripped == 0.0
+    assert phi == {"a": 0.0, "b": 0.0}

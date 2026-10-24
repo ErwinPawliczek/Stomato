@@ -38,9 +38,6 @@ from ngdesign.units._physics.shortcut import kremser_fraction
 from ngdesign.units.refining._cuts import RefiningSpecError, optional_float, require_float
 from ngdesign.units.refining.slate import WATER_60F_KG_M3, register_slate
 
-#: Assay id of the example crude (the stored Bagajewicz & Ji 2001 light crude).
-_EXAMPLE_ASSAY = "bagajewicz_ji_2001_light"
-
 #: Fixed-point cap on the vapour-rate iterations (a contraction: each mol of
 #: rising vapour strips at most the draw's moles, and S_i grows sublinearly).
 _MAX_V_ITERATIONS = 200
@@ -191,6 +188,10 @@ def _stripped_amounts(
     if n_stages == 0.0:
         # Zero stages strip exactly nothing by definition; kremser_fraction's
         # exp(log(A)) round-trip would leak ~1e-17 per component instead.
+        return 0.0, {cid: 0.0 for cid in draw_flows}
+    if steam_flow <= 0.0:
+        # No stripping vapour: V = steam + stripped stays 0, so S_i = 0 and
+        # nothing strips (kremser_fraction itself refuses a zero factor).
         return 0.0, {cid: 0.0 for cid in draw_flows}
     v = steam_flow
     phi: dict[str, float] = {}
