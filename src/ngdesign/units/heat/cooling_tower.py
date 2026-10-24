@@ -41,6 +41,27 @@ def _z_with_water(dry: dict[str, float], y: float) -> dict[str, float]:
     return {cid: x * (1.0 - y) / dry_sum for cid, x in dry.items()} | {"H2O": y}
 
 
+def _humid_enthalpy(
+    thermo: Thermo,
+    dry: dict[str, float],
+    T: float,
+    P: float,
+    y: float,
+) -> float:
+    """Ideal saturated-air enthalpy per mol mixture, J/mol.
+
+    ``(1 - y) * h_dry(T) + y * h_vapour(T)`` with each component flashed in
+    its vapour region (the water at half its saturation pressure, where the
+    flash is safely all gas). A PT flash of an exactly saturated mixture
+    returns a fog sliver instead - the real mixture holds slightly less water
+    than the ideal psat humidity - which would leak liquid-water enthalpy
+    (about -45 MJ/kmol for water) into the balance.
+    """
+    h_dry = thermo.flash_pt({cid: x / sum(dry.values()) for cid, x in dry.items()}, T, P, 1.0).enthalpy
+    h_vap = thermo.flash_pt({"H2O": 1.0}, T, 0.5 * thermo.pure_psat("H2O", T), 1.0).enthalpy
+    return (1.0 - y) * h_dry + y * h_vap
+
+
 def wet_bulb(
     thermo: Thermo,
     air: StreamState,
@@ -50,10 +71,11 @@ def wet_bulb(
 
     Per mol of dry gas, with ``W = y/(1-y)`` and ``H = h/(1-y)`` (the
     dry-gas normalization is what keeps the balance molar-consistent):
-    ``f(T) = H1 + (W2(T) - W1)*h_w(T) - H2(T)`` where ``H2(T)`` is the
-    saturated mixture enthalpy at T. A saturated or supersaturated inlet
-    (``f(T_dry_bulb) >= 0``) returns the dry bulb immediately. Otherwise the
-    scan walks DOWN from the dry bulb - f increases as the air cools - to
+    ``f(T) = H1 + (W2(T) - W1)*h_w(T) - H2(T)`` where ``H2(T)`` is the ideal
+    saturated mixture enthalpy at T (dry gas plus water vapour, no fog
+    condensate; see :func:`_humid_enthalpy`). A saturated or supersaturated
+    inlet (``f(T_dry_bulb) >= 0``) returns the dry bulb immediately. Otherwise
+    the scan walks DOWN from the dry bulb - f increases as the air cools - to
     bracket the root, then bisects. Raises ValueError when no bracket is
     found within the scan span.
     """
@@ -65,9 +87,8 @@ def wet_bulb(
         w1 = y1 / (1.0 - y1)
         h1 = air.enthalpy / (1.0 - y1)
         y2 = thermo.pure_psat("H2O", T) / air.P
-        h_sat = thermo.flash_pt(_z_with_water(dry, y2), T, air.P, 1.0).enthalpy
         h_w = thermo.flash_pt(water_z, T, air.P, 1.0).enthalpy
-        return h1 + (y2 / (1.0 - y2) - w1) * h_w - h_sat / (1.0 - y2)
+        return h1 + (y2 / (1.0 - y2) - w1) * h_w - _humid_enthalpy(thermo, dry, T, air.P, y2) / (1.0 - y2)
 
     # Saturated or supersaturated inlet: the dry bulb IS the wet bulb. Checking
     # before the scan avoids the degenerate lo == hi bracket a saturated feed
@@ -145,7 +166,7 @@ class CoolingTower:
             )
         dry = {cid: x for cid, x in air.composition.items() if cid != "H2O"}
         z_air_out = _z_with_water(dry, y2)
-        h_air_out = thermo.flash_pt(z_air_out, T_wb, air.P, 1.0).enthalpy
+        h_air_out = _humid_enthalpy(thermo, dry, T_wb, air.P, y2)
 
         # Water outlet from the OVERALL energy closure (the exit state is fixed,
         # so the residual falls monotonically with the water outlet temperature):
@@ -182,6 +203,10 @@ class CoolingTower:
 
         water_out = thermo.flash_pt({"H2O": 1.0}, T_w2, water.P, water.molar_flow - E)
         air_out = thermo.flash_pt(z_air_out, T_wb, air.P, air.molar_flow + E)
+        # The exit air is the ideal saturated gas: pin its enthalpy and vapour
+        # fraction to the fog-free construction the balance solved with (the
+        # raw flash of the exactly saturated composition fogs a sliver).
+        air_out = air_out.model_copy(update={"enthalpy": h_air_out, "vapor_fraction": 1.0})
 
         # Cycles of concentration: the blowdown removes evaporation/(COC - 1)
         # so the dissolved solids hold at COC x the makeup; makeup replaces

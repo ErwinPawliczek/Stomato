@@ -230,18 +230,27 @@ def _sample_side(
 
 
 def _cum_hot(sides: tuple[_Sampled, ...], T: float) -> float:
-    """Cumulative heat released above temperature T by the hot composite, W."""
+    """Cumulative heat released above temperature T by the hot composite, W.
+
+    T is clamped into each side's span: above a side's top it has released
+    nothing, below its bottom everything (the composite plateaus there).
+    """
     total = 0.0
     for s in sides:
-        total += s.flow * (s.h_at(s.T_top) - s.h_at(min(T, s.T_top)))
+        t = min(max(T, s.T_bottom), s.T_top)
+        total += s.flow * (s.h_at(s.T_top) - s.h_at(t))
     return total
 
 
 def _cum_cold(sides: tuple[_Sampled, ...], T: float) -> float:
-    """Cumulative heat absorbed below temperature T by the cold composite, W."""
+    """Cumulative heat absorbed below temperature T by the cold composite, W.
+
+    Same span clamping as :func:`_cum_hot`.
+    """
     total = 0.0
     for s in sides:
-        total += s.flow * (s.h_at(min(T, s.T_top)) - s.h_at(s.T_bottom))
+        t = min(max(T, s.T_bottom), s.T_top)
+        total += s.flow * (s.h_at(t) - s.h_at(s.T_bottom))
     return total
 
 
@@ -287,20 +296,16 @@ def _pinch(
     function sits on a knot of one of the two curves).
     """
     q_tot = _cum_hot(hots, min(s.T_bottom for s in hots))
-    boundary_temps: set[float] = set()
-    for s in hots + colds:
-        boundary_temps.update(s.temps)
 
     # Hot composite: (u, T) with u ascending as T descends. Cold composite:
     # (v, T) with v ascending as T ASCENDS (absorbed from the cold inlet end).
-    hot_pairs: list[tuple[float, float]] = []
-    cold_pairs: list[tuple[float, float]] = []
-    for T in sorted(boundary_temps, reverse=True):
-        hot_pairs.append((_cum_hot(hots, T), T))
-    for T in sorted(boundary_temps):
-        cold_pairs.append((_cum_cold(colds, T), T))
-    hot_grid = tuple(hot_pairs)
-    cold_grid = tuple(cold_pairs)
+    # Each grid carries only its OWN sides' temperatures: a knot from the other
+    # stream's span would be a plateau point whose temperature is not a real
+    # state of this composite, and pairing against it reports a phantom pinch.
+    hot_temps = sorted({t for s in hots for t in s.temps}, reverse=True)
+    cold_temps = sorted({t for s in colds for t in s.temps})
+    hot_grid = tuple((_cum_hot(hots, T), T) for T in hot_temps)
+    cold_grid = tuple((_cum_cold(colds, T), T) for T in cold_temps)
 
     best = (float("inf"), float("nan"), float("nan"))
     for u, T_hot in hot_grid:
