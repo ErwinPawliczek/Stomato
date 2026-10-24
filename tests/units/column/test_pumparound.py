@@ -121,6 +121,37 @@ def test_fixed_duty_loop_reports_return_temperature(thermo: Thermo) -> None:
     assert info["pa_duty_pa_return_T_K"] < info["pa_duty_pa_draw_T_K"]
 
 
+def test_heater_pumparound_refused_on_converged_column() -> None:
+    """A loop whose return T lands above its draw T is a heater: refused (PR #238 review item 5).
+
+    The gate runs once on the final converged profile, so the input must be
+    one the column can actually solve: the converged draw sits at 340.5 K and
+    a return fixed 0.7 K above it converges - adding a few hundred watts of
+    heat mid-column - and the post-solve gate then refuses the reported
+    positive duty (measured ~+2 kW) instead of reporting a heating pumparound.
+    """
+    unit = registry.create("unit", "column")
+    thermo = registry.create("thermo", "pr")
+    feed = thermo.flash_pt(_feed()["composition"], 330.0, 1.5e6, 100.0)
+    with pytest.raises(ColumnSpecError, match="may only remove heat"):
+        unit.solve(
+            {"feed": feed},
+            {
+                **_base_params(),
+                "pumparounds": [
+                    {
+                        "name": "heater",
+                        "draw_stage": 12,
+                        "return_stage": 8,
+                        "flow_mol_s": 30.0,
+                        "return_T_K": 341.2,
+                    }
+                ],
+            },
+            thermo,
+        )
+
+
 def test_return_below_draw_refused() -> None:
     """A pumparound returns cooled liquid at or above the draw, never below."""
     with pytest.raises(ColumnSpecError, match="return_stage"):
@@ -209,13 +240,17 @@ def test_pumparound_flow_exceeding_internal_liquid_refused() -> None:
 
     500 mol/s recirculated through a column whose internal liquid is tens of
     mol/s cannot run: the fixed-return-temperature loop pulls the draw stage
-    below its bubble regime and the solve raises a typed error instead of
-    returning a column with a silently clamped profile.
+    below its bubble regime and the solve raises ColumnConvergenceError from
+    the exact-residual gate instead of returning a column with a silently
+    clamped profile. That convergence failure IS the protection (the round-1
+    flow-vs-internal-liquid gate is unreachable - see _check_pumparounds), so
+    the narrowed assertion pins the typed convergence verdict, not a
+    spec-refusal class no input can reach.
     """
     unit = registry.create("unit", "column")
     thermo = registry.create("thermo", "pr")
     feed = thermo.flash_pt(_feed()["composition"], 330.0, 1.5e6, 100.0)
-    with pytest.raises((ColumnSpecError, ColumnConvergenceError)):
+    with pytest.raises(ColumnConvergenceError, match="did not converge"):
         unit.solve(
             {"feed": feed},
             {
@@ -326,6 +361,14 @@ def test_whole_unit_energy_closure_no_condenser_no_reboiler() -> None:
     mesh duty there is flow*(h_line(T_return) - h_line(T_draw)) while the
     report uses true thermo, and the enthalpy-line curvature over the loop's
     10.5 K return gap lands in qr — measured -1181.5 W (3.9e-3 of scale).
+    Measured decomposition of the 19.15 W: the bisection is NOT the source —
+    the reported loop duty equals the specified -20000.0 W to machine
+    precision (the bisected return T lands exactly on the true-enthalpy
+    target), and the boundary closure residual is 0.0 by construction (qr IS
+    the closure value). The whole 19.15 W is the converged MESH residual of
+    the profile carrying the loop: a 20 kW internal recirculation held on the
+    frozen enthalpy lines leaves the true-thermo stage balances short by ~19 W
+    (0.1% of the loop duty), where a loop-free profile leaves 0.0098 W.
     """
     params = {
         "n_stages": 8,
@@ -356,6 +399,44 @@ def test_whole_unit_energy_closure_no_condenser_no_reboiler() -> None:
         f"residual level 1e-3 * {scale:.6g} W for absent hardware"
     )
     _assert_closed(thermo, result, feed_dict)
+
+
+def test_unreachable_fixed_duty_refused_at_finalize() -> None:
+    """A fixed duty the draw composition cannot reach by cooling is refused (PR #238 review item 5).
+
+    On the no-hardware column the converged draw sits at ~340 K while the
+    operating band floors at 310 K: a -50 kW duty on a 10 mol/s loop asks for
+    a return enthalpy (~-17.4 kJ/mol) below h(310 K) (~-16.9 kJ/mol). The
+    column still CONVERGES - the mesh holds the 50 kW loop on its frozen
+    enthalpy line - so the refusal fires in the report's return-temperature
+    bisection at finalize, not at the parse or the convergence gate, and the
+    solve fails loudly instead of reporting return_T with an unreachable duty.
+    """
+    unit = registry.create("unit", "column")
+    thermo = registry.create("thermo", "pr")
+    feed = thermo.flash_pt(_feed()["composition"], 340.0, 1.5e6, 100.0)
+    with pytest.raises(ColumnSpecError, match="outside the achievable bracket"):
+        unit.solve(
+            {"feed": feed},
+            {
+                "n_stages": 8,
+                "condenser": "none",
+                "reboiler": "none",
+                "feed_stage": 5,
+                "pressure_profile": 1.5e6,
+                "specs": {},
+                "pumparounds": [
+                    {
+                        "name": "br",
+                        "draw_stage": 7,
+                        "return_stage": 5,
+                        "flow_mol_s": 10.0,
+                        "duty_W": -50.0e3,
+                    }
+                ],
+            },
+            thermo,
+        )
 
 
 def test_default_pumparound_name_is_bare_index() -> None:
