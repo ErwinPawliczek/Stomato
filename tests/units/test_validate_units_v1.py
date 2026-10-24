@@ -36,7 +36,10 @@ def vu() -> ModuleType:
 
 @pytest.fixture(scope="module")
 def rows() -> dict[str, UnitRow]:
-    return load_rows()
+    # These pins run the harness on synthetic cases in a tmp case directory, so
+    # rows that declare real validation ids (round-1 families) would report
+    # their cases missing; the pins use only rows without validation ids.
+    return {k: r for k, r in load_rows().items() if not any(spec.validation for spec in r.levels.values())}
 
 
 def _measured_mixer_T(vu: ModuleType, rows: dict[str, UnitRow]) -> float:
