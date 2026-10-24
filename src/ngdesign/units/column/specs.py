@@ -711,6 +711,12 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                 prof = _solve_mesh(col, tb, top, bot, None if cold else state["seed"], allow_fallback=False)
                 promote(prof)
                 return solved_tears(prof)
+            except ColumnSpecError:
+                # A converged-state spec refusal (pumparound bracket) is a typed
+                # verdict, not a transient convergence failure: finalize runs
+                # only behind the exact-residual gate, so retrying seeds cannot
+                # rescue it and wrapping it would hide the refusal from callers.
+                raise
             except (ColumnConvergenceError, ValueError) as exc:
                 # Same seed restart as the main path, inside-out only (a probe
                 # must stay cheap): a cold probe failure in a scattered-basin
@@ -726,6 +732,8 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                             prof = _solve_mesh(col, tb, top, bot, s, allow_fallback=False)
                             promote(prof)
                             return solved_tears(prof)
+                        except ColumnSpecError:
+                            raise
                         except (ColumnConvergenceError, ValueError):
                             continue
                 raise ColumnConvergenceError(f"mesh probe failed at tears {(top, bot)}: {exc}") from exc
@@ -736,6 +744,11 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                 return solved_tears(prof)
             except ColumnConvergenceError as exc:
                 last = exc
+            except ColumnSpecError:
+                # A converged-state spec refusal (pumparound bracket) is a typed
+                # verdict, not a transient convergence failure: finalize runs
+                # only behind the exact-residual gate.
+                raise
             except ValueError as exc:
                 # Unconverged iterates can leave the flash's physical domain
                 # (pydantic stream validation inside the PR package). That is a
@@ -760,6 +773,8 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                         prof = _solve_mesh(col, tb, top, bot, s)
                         promote(prof)
                         return solved_tears(prof)
+                    except ColumnSpecError:
+                        raise
                     except (ColumnConvergenceError, ValueError):
                         continue
             seed = state["seed"]

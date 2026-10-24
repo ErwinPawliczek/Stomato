@@ -314,8 +314,18 @@ def test_whole_unit_energy_closure_no_condenser_no_reboiler() -> None:
     With condenser 'none' and reboiler 'none' the pre-fix closure reported
     the pumparound heat AS the reboiler duty (qr = closure without the PA
     subtraction, i.e. qr ~ Sum Q_PA, a large negative number for absent
-    hardware). The fixed code reports a reboiler duty that is the converged
-    residual only, and the full duty set closes the stream table.
+    hardware). The fixed code reports a reboiler duty at the converged MESH
+    residual level, and the full duty set closes the stream table.
+
+    The loop is fixed-duty because that mode isolates the residual: the mesh
+    removes exactly the specified duty on its frozen enthalpy line and the
+    report bisects the return temperature with true thermo to the same duty,
+    so qr is the closure residual alone — measured -19.15 W, 6.3e-5 of the
+    3.04e5 W boundary scale (a plain no-pumparound no-hardware column
+    measures 0.0098 W). The fixed-return-T mode cannot carry this bound: the
+    mesh duty there is flow*(h_line(T_return) - h_line(T_draw)) while the
+    report uses true thermo, and the enthalpy-line curvature over the loop's
+    10.5 K return gap lands in qr — measured -1181.5 W (3.9e-3 of scale).
     """
     params = {
         "n_stages": 8,
@@ -325,7 +335,7 @@ def test_whole_unit_energy_closure_no_condenser_no_reboiler() -> None:
         "pressure_profile": 1.5e6,
         "specs": {},
         "pumparounds": [
-            {"name": "mid", "draw_stage": 7, "return_stage": 5, "flow_mol_s": 20.0, "return_T_K": 330.0}
+            {"name": "mid", "draw_stage": 7, "return_stage": 5, "flow_mol_s": 20.0, "duty_W": -2.0e4}
         ],
     }
     unit = registry.create("unit", "column")
@@ -334,11 +344,17 @@ def test_whole_unit_energy_closure_no_condenser_no_reboiler() -> None:
     feed = thermo.flash_pt(feed_dict["composition"], 340.0, 1.5e6, 100.0)
     result = unit.solve({"feed": feed}, params, thermo)
     q_pa = result.info["pa_mid_duty_W"]
+    assert q_pa == pytest.approx(-2.0e4, rel=1e-8)
     assert q_pa < 0.0
+    _, scale = _closure_residual(thermo, result, feed_dict)
     # The reboiler duty is NOT the pumparound heat dumped into a phantom
-    # reboiler: it sits at the converged-residual level, orders of magnitude
-    # below the pumparound duty.
-    assert abs(result.info["reboiler_duty_W"]) < 0.1 * abs(q_pa)
+    # reboiler: it sits at the converged-residual level. The pre-fix bug
+    # (|qr| ~ 2e4 W = 6.6e-2 of scale) fails this bound by two decades; the
+    # measured fixed value is -19.15 W = 6.3e-5 of scale, 16x under the bound.
+    assert abs(result.info["reboiler_duty_W"]) <= 1e-3 * scale, (
+        f"reboiler duty {result.info['reboiler_duty_W']:.6g} W exceeds the converged "
+        f"residual level 1e-3 * {scale:.6g} W for absent hardware"
+    )
     _assert_closed(thermo, result, feed_dict)
 
 

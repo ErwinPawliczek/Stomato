@@ -1547,39 +1547,28 @@ def _close_energy_balance(
 
 
 def _check_pumparounds(col: _Column, prof: _Profile) -> None:
-    """Post-solve pumparound feasibility gates (review items 4 and 5, PR #238).
+    """Post-solve pumparound feasibility gate (review item 5, PR #238).
 
     Runs ONCE on the final converged profile — never mid-secant, where a
     transient state must be free to fail and retry. Raises ``ColumnSpecError``:
+    a reported duty > 0 means the loop's return temperature sits above its
+    draw temperature — a heater, not a pumparound cooler.
 
-    - a pumparound flow larger than the internal liquid would be floored away
-      inside ``_l_profile`` and the mass balance would quietly not close: the
-      raw (unfloored) cascade must stay above the flow floor on every stage
-      between the return and the draw, inclusive;
-    - a reported duty > 0 means the loop's return temperature sits above its
-      draw temperature — a heater, not a pumparound cooler.
+    The round-1 flow-vs-internal-liquid gate (review item 4) is gone: no input
+    reaches it. The raw cascade between the return and the draw carries the
+    loop flow (``raw = base + flow``), so only the draw stage itself could dip
+    to the flow floor, and there the raw cascade equals the loop-free cascade
+    of a converged column — measured unreachable on every oversized-flow case
+    tried (flows 100-800 mol/s at return temperatures 300-341 K, plus
+    starved-draw specs at distillate 1e-8 and 5 mol/s: all raise
+    ``ColumnConvergenceError`` from the exact-residual gate first). The
+    protection that gate intended is that convergence failure itself: a flow
+    the internals cannot carry never returns a silently floored profile
+    (tested in ``test_pumparound_flow_exceeding_internal_liquid_refused``).
     """
     if not col.pumparounds:
         return
-    pa_out, pa_in = _pa_stage_flows(col)
-    cum = 0.0
-    raw: list[float] = []
-    for j in range(col.n):
-        cum += col.feeds[j].total - col.draw_l[j] - col.draw_v[j] + pa_in[j] - pa_out[j]
-        v_above = prof.V[j + 1] if j + 1 < col.n else 0.0
-        raw.append(prof.l0 + cum + v_above - prof.V[0])
     for idx, pa in _live_pumparounds(col):
-        lo = pa.return_stage - 1
-        hi = pa.draw_stage - 1
-        for j in range(lo, hi + 1):
-            if raw[j] <= _FLOW_FLOOR:
-                raise ColumnSpecError(
-                    f"pumparound '{pa.name}': flow {col.pa_flows[idx]:.6g} mol/s exceeds the "
-                    f"internal liquid — stage {j + 1} between the return (stage "
-                    f"{pa.return_stage}) and the draw (stage {pa.draw_stage}) carries "
-                    f"{raw[j]:.3g} mol/s, at or below the flow floor; the mass balance "
-                    f"cannot close"
-                )
         rep = prof.pa_report[idx]
         if rep["duty_W"] > 0.0:
             raise ColumnSpecError(
