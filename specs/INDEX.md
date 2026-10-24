@@ -131,8 +131,8 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | Spec | Title | Depends on | Status |
 |---|---|---|---|
 | U-R | Reaction-set contract: stoichiometry, kinetics forms, formation properties, extent arithmetic | none | merged #199 (676aac1) 2026-10-23; issue #192 |
-| U-R1 | Round-1 conventions binding every family thread (R0 adapter, YAML flip, cited V1, closed-form test, ownership) | U-00, U-R, U-01 | in progress: round 1 dispatched 2026-10-23 19:11 CDT (U-A..U-H1; U-H2 after U-F1) |
-| U-A | Logical units R0 (+ U-A1 `_physics/splitting.py`; solver lowering for adjust/recycle) | U-R1 | issue #206 |
+| U-R1 | Round-1 conventions binding every family thread (R0 adapter, YAML flip, cited V1, closed-form test, ownership) | U-00, U-R, U-01 | DONE 2026-10-24: all nine round-1 families merged (U-A..U-H2) |
+| U-A | Logical units R0 (+ U-A1 `_physics/splitting.py`; solver lowering for adjust/recycle) | U-R1 | DONE 2026-10-24 (#215 splitting; #231 07aad93): logical units R0 + adjust/recycle_block lowering |
 | U-B | Flow units R0 (+ `_physics/efficiency.py`) | U-R1 | DONE 2026-10-24 (#217, 3eb7ed8): reciprocating compressor, control valve, relief valve, pipe segment, orifice, ejector, fan R0; efficiency owner |
 | U-C | Heat units R0 (+ `_physics/heat_balance.py`: two-stream, multi-stream, problem table) | U-R1 | DONE 2026-10-24 (#226, f9449d0): plate, double-pipe, multi-stream, fired heater, cooling tower, HEN block R0; heat_balance owner |
 | U-D | Separation units R0 | U-R1, U-A1 (3 units) | DONE 2026-10-24 (#224, 501afcc): flash_drum, decanter, tank, adsorption_bed, hydrate_check, hydrocyclone, filter, membrane R0 |
