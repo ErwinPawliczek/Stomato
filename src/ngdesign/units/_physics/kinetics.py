@@ -250,6 +250,9 @@ def yield_shift(
     if any(y < 0.0 for y in yields_mass):
         negative = sorted(cid for cid, y in zip(products, yields_mass, strict=True) if y < 0.0)
         raise KineticsError(f"yield shift: negative mass yield for {negative}")
+    nan = [cid for cid, y in zip(products, yields_mass, strict=True) if not math.isfinite(y)]
+    if nan:
+        raise KineticsError(f"yield shift: mass yield for {nan} is not finite")
     if abs(total_yield - 1.0) > 1e-9:
         raise KineticsError(f"yield shift: mass yields sum to {total_yield!r}, not 1 within 1e-9")
 

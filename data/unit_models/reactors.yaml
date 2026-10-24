@@ -1,6 +1,7 @@
-# U-F — Reactors (plan §2 U-F, 9 rows). All rows are roadmap: reaction chemistry
-# lives in the property package and the reaction-set contract (U-R), and the
-# reactor units land with the S3 slice (plan §2b).
+# U-F — Reactors (plan §2 U-F, 9 rows). Five R0 rows are implemented and
+# registered through the catalogue (status provisional): conversion, yield,
+# equilibrium, Gibbs and the electrolyser stack. The remaining rows are
+# roadmap: kinetic reactors land with the S3 slice (plan §2b).
 
 - id: conversion_reactor
   name: Conversion reactor
@@ -16,14 +17,31 @@
       description: effluent at specified conversion
   levels:
     R0:
-      status: planned
-      params: {}
-      note: fractional conversion per reaction, heat of reaction, adiabatic/isothermal/duty
+      status: provisional
+      adapter: ngdesign.units.reactors.conversion_reactor:ConversionReactor
+      params:
+        type: object
+        properties:
+          reaction_set:
+            description: inline ReactionSet, or a string id resolved against Flowsheet.reactions
+          conversion:
+            type: object
+            description: '{reaction_id: fraction of the reaction base component converted}'
+          sequential:
+            type: boolean
+            description: "true: each conversion applies to the amounts left by the preceding reactions (declaration order); default false: all conversions on the inlet basis"
+          thermal:
+            description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K} (default isothermal)"
+      validation:
+      - V1-FOGLER-CONV
+      note: fractional conversion per reaction (simultaneous or sequential); outlet flashed at
+        inlet P; info carries extents
       end_state: true
+  balance: mass_elements
   pid_symbol: R
   references:
   - docs/unit-catalogue-plan.md §2 U-F 1
-  notes: roadmap.
+  notes: R0 implemented (U-F). Components absent from the reaction set pass through.
 
 - id: yield_reactor
   name: Yield reactor
@@ -39,14 +57,31 @@
       description: effluent at the specified product yields
   levels:
     R0:
-      status: planned
-      params: {}
-      note: product yields with an element-balance check
+      status: provisional
+      adapter: ngdesign.units.reactors.yield_reactor:YieldReactor
+      params:
+        type: object
+        properties:
+          feed_components:
+            type: array
+            description: lumped feed components consumed by the reactor
+          products:
+            type: array
+            description: outlet components, aligned with yields_mass
+          yields_mass:
+            type: array
+            description: kg product per kg consumed feed, Σ = 1
+          thermal:
+            description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K} (default isothermal)"
+      validation:
+      - V1-SMR-YIELD
+      note: product mass yields; the shift enforces mass closure, no reaction set required
       end_state: true
+  balance: mass_elements
   pid_symbol: R
   references:
   - docs/unit-catalogue-plan.md §2 U-F 2
-  notes: roadmap.
+  notes: R0 implemented (U-F). Undeclared components pass through unconverted.
 
 - id: equilibrium_reactor
   name: Equilibrium reactor (Keq)
@@ -62,14 +97,33 @@
       description: equilibrium effluent
   levels:
     R0:
-      status: planned
-      params: {}
-      note: Keq(T) per reaction with an approach-to-equilibrium ΔT
+      status: provisional
+      adapter: ngdesign.units.reactors.equilibrium_reactor:EquilibriumReactor
+      params:
+        type: object
+        properties:
+          reaction_set:
+            description: inline ReactionSet, or a string id resolved against Flowsheet.reactions
+          approach_K:
+            type: number
+            description: K evaluated at T_out − approach_K; 0 = full equilibrium. Sign convention —
+              equilibrium evaluated at the temperature that gives LESS conversion than ideal
+              (positive falls short for an endothermic reaction; negative for an exothermic one,
+              matching U-G's Claus T_out + approach on the hot side)
+          thermal:
+            description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K} (default isothermal)"
+      validation:
+      - V1-WGS-EQ
+      note: extents solve ln Q = ln K(T_out − approach_K) per reaction; ideal-gas quotient on the
+        JANAF standard state; info reports ln K at the temperature actually used; a solve that
+        pushes a species negative or past depletion is refused, never clipped
       end_state: true
+  balance: mass_elements
   pid_symbol: R
   references:
   - docs/unit-catalogue-plan.md §2 U-F 3
-  notes: roadmap; the WGSR/Moe discrepancy is tracked by U-R (issue #192).
+  notes: R0 implemented (U-F); cross-checks the Gibbs reactor to 1e-6 (U-F V2). The
+    WGSR/Moe discrepancy is tracked by U-R (issue #192).
 
 - id: gibbs_reactor
   name: Gibbs reactor
@@ -85,14 +139,34 @@
       description: Gibbs-minimum effluent
   levels:
     R0:
-      status: planned
-      params: {}
-      note: Gibbs minimisation over a species set with inerts and restricted equilibria
+      status: provisional
+      adapter: ngdesign.units.reactors.gibbs_reactor:GibbsReactor
+      params:
+        type: object
+        properties:
+          species:
+            type: array
+            description: components allowed to react (element-potential Gibbs minimum)
+          inerts:
+            type: array
+            description: fixed-amount spectators excluded from the minimisation
+          thermal:
+            description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K} (default isothermal)"
+      validation:
+      - V1-WGS-GIBBS
+      note: Gibbs minimisation at the stationarity conditions (element-potential method)
       end_state: true
+  balance: mass_elements
   pid_symbol: R
   references:
   - docs/unit-catalogue-plan.md §2 U-F 4
-  notes: roadmap.
+  notes: R0 implemented (U-F). Every feed component must be listed in species or
+    inerts; restricted equilibria stay an R1+ concern. The SVA steam-methane-reforming
+    worked example (mole fractions to 3 decimals) could not be verified in any open
+    source (searched 2026-10-24 — the FOSSEE ch13 transcription, whose Ex 13.5 is the
+    WGS example at 1100 K, plus solution-manual and course-note searches); the Gibbs
+    oracle anchors to the JANAF-printed WGS case (V1-WGS-GIBBS) until a copy of the
+    7th-edition example page is available.
 
 - id: cstr
   name: Continuous stirred-tank reactor
@@ -205,22 +279,39 @@
     inlet:
     - name: inlet
       required: true
-      description: feed
+      description: feed (no H2 or O2 present)
     outlet:
-    - name: outlet
+    - name: h2_out
       required: true
-      description: converted effluent
+      description: pure hydrogen product
+    - name: o2_out
+      required: true
+      description: coproduct oxygen plus everything else fed
   levels:
     R0:
-      status: planned
-      params: {}
-      note: conversion + Faradaic efficiency
+      status: provisional
+      adapter: ngdesign.units.reactors.electrolyser:ElectrolyserStack
+      params:
+        type: object
+        properties:
+          current_A: {type: number, description: stack current, A}
+          n_cells: {type: number, description: cells in series}
+          cell_voltage_V: {type: number, description: cell voltage, V}
+          faradaic_efficiency: {type: number, description: "charge efficiency in (0, 1]; default 1"}
+      validation:
+      - V1-ELECTROLYSER
+      note: Faraday's law n(H2) = η·I·N/(2F); power = V·I·N is electrical work
     R1:
       status: planned
       params: {}
       note: polarisation curve
       end_state: true
+  balance: mass_elements
   pid_symbol: FC
   references:
   - docs/unit-catalogue-plan.md §2 U-F 9
-  notes: roadmap.
+  notes: R0 implemented (U-F). Thermoneutral voltage is computed from the actual
+    stream balance, (H_out − H_in)/(2F·n_H2) — on the 298.15 K liquid-water feed it
+    measures 1.4895 V, +0.58 % against the printed 1.481 V (Züttel, Borgschulte &
+    Schlapbach 2008, p. 5) — the databank miss is recorded, not tuned away, in the
+    V1-ELECTROLYSER assessed note.

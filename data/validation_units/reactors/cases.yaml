@@ -1,0 +1,126 @@
+# U-F — Reactors V1 worked cases (spec U-01). Every oracle is closed-form or a
+# cited textbook value; pressures use plain decimal literals (PyYAML turns
+# 1.01325e6 into a string without an explicit float tag).
+#
+# The equilibrium and Gibbs cases share one basis — equimolar CO/H2O at
+# 1100 K — so the two adapters are cross-checked against the same closed form.
+# The closed form comes from the JANAF Thermochemical Tables (Chase 1998)
+# *printed* log Kf values at 1100 K — CO2 18.805 (table C-095), CO 9.928
+# (C-093), H2O 8.881 (H-064), elemental H2 = 0 by definition — so
+# log K(WGS) = 18.805 − 9.928 − 8.881 = −0.004 and, for the equimolar feed,
+# X = sqrt(K)/(1+sqrt(K)) = 0.498846. The model's databank assembly reproduces
+# the printed tables to ~2e-4 in X; tolerances are set at 1e-3, not widened
+# further. (A printed SVA steam-methane-reforming Gibbs example could not be
+# verified in any open source — see the Gibbs row note in
+# data/unit_models/reactors.yaml — so the JANAF-anchored WGS case is the Gibbs
+# oracle for now.)
+#
+# The yield case deliberately omits feeds/params to solve on the conversion
+# adapter's exact SMR example basis: the two outlets agree by construction.
+
+- id: V1-WGS-EQ
+  unit: equilibrium_reactor
+  level: R0
+  source: "JANAF Thermochemical Tables (Chase 1998), printed log Kf at 1100 K: CO2 18.805, CO 9.928, H2O 8.881 (janaf.nist.gov C-095/C-093/H-064) -> log K(WGS) = -0.004; X = sqrt(K)/(1+sqrt(K)) = 0.498846"
+  feeds:
+    inlet: {T: 1100.0, P: 1013250.0, molar_flow: 2.0, composition: {CO: 0.5, H2O: 0.5}}
+  params:
+    reaction_set:
+      id: wgs_case
+      components: [CO, H2O, CO2, H2]
+      reactions:
+      - id: wgsr
+        stoichiometry: {CO: -1.0, H2O: -1.0, CO2: 1.0, H2: 1.0}
+        base_component: CO
+        provenance: water-gas shift, standard reference (e.g. SVA App. C)
+        equilibrium: {form: from_gibbs}
+    thermal: isothermal
+  expected:
+  - {quantity: info.extent_wgsr, value: 0.498846, tol_abs: 0.001}
+  - {quantity: outlet.outlet.composition.CO, value: 0.250577, tol_abs: 0.001}
+  - {quantity: outlet.outlet.composition.CO2, value: 0.249423, tol_abs: 0.001}
+
+- id: V1-WGS-GIBBS
+  unit: gibbs_reactor
+  level: R0
+  source: "JANAF Thermochemical Tables (Chase 1998), printed log Kf at 1100 K: CO2 18.805, CO 9.928, H2O 8.881 (janaf.nist.gov C-095/C-093/H-064) -> log K(WGS) = -0.004; X = sqrt(K)/(1+sqrt(K)) = 0.498846"
+  feeds:
+    inlet: {T: 1100.0, P: 1013250.0, molar_flow: 2.0, composition: {CO: 0.5, H2O: 0.5}}
+  params:
+    species: [CO, H2O, CO2, H2]
+    thermal: isothermal
+  expected:
+  - {quantity: outlet.outlet.composition.CO, value: 0.250577, tol_abs: 0.001}
+  - {quantity: outlet.outlet.composition.CO2, value: 0.249423, tol_abs: 0.001}
+  - {quantity: outlet.outlet.composition.H2, value: 0.249423, tol_abs: 0.001}
+
+- id: V1-FOGLER-CONV
+  unit: conversion_reactor
+  level: R0
+  source: "Fogler, Elements of Chemical Reaction Engineering, 4th ed., Example 8-3 (adiabatic n-butane isomerization): T = 330 + 43.4 X on the book feed (90 % n-butane + 10 % i-pentane inert, liquid phase; Θ_I = 0.111 mol inert per mol n-butane)"
+  feeds:
+    inlet: {T: 330.0, P: 1013250.0, molar_flow: 10.0, composition: {nC4: 0.9, iC5: 0.1}}
+  params:
+    reaction_set:
+      id: isom_case
+      components: [nC4, iC4, iC5]
+      reactions:
+      - id: isom
+        stoichiometry: {nC4: -1.0, iC4: 1.0}
+        base_component: nC4
+        provenance: n-butane isomerization (Fogler Ex. 8-3)
+        equilibrium: {form: from_gibbs}
+    conversion: {isom: 0.5}
+    thermal: adiabatic
+  expected:
+  - {quantity: outlet.outlet.T, value: 351.7, tol_abs: 0.5}
+  assessed: >-
+    The temperature comparison misses: the book's constant-Cp correlation
+    T = 330 + 43.4·X gives 351.7 K (ΔT = 21.7 K), while the model measures
+    342.872 K (ΔT = 12.87 K) on the JANAF databank's ΔH°rx ≈ −9510 J/mol and PR
+    gas heat capacities. The book's slope combines ΔH°rx = −6900 J/mol with a
+    much smaller assumed lumped Cp (ΘCp ≈ 159 J/mol·K); the mixture Cp of the
+    actual book feed (nC4 + iC5 inert) measures 266.6 J/mol·K at the inlet state
+    (finite difference of the model's molar enthalpy), and PR's larger Cp more
+    than offsets the larger |ΔH°rx|, so the adiabatic rise is smaller. Data-source
+    and Cp-treatment differences, documented rather than tuned away; no tolerance
+    is widened to hide it.
+
+- id: V1-SMR-YIELD
+  unit: yield_reactor
+  level: R0
+  source: "Closed form: the conversion reactor's SMR example basis (10 CH4 + 40 H2O + 5 N2 at X = 0.7) — outlet amounts CH4 3, H2O 33, CO 7, H2 21, N2 5, total 69"
+  # Feeds/params omitted on purpose: the case solves on the adapter's exact
+  # example basis, whose mass yields are the closed-form amounts above.
+  expected:
+  - {quantity: outlet.outlet.molar_flow, value: 69.0, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.CH4, value: 0.043478, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.H2O, value: 0.478261, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.CO, value: 0.101449, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.H2, value: 0.304348, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.N2, value: 0.072464, tol_abs: 0.000001}
+
+- id: V1-ELECTROLYSER
+  unit: electrolyser_stack
+  level: R0
+  source: "Züttel, Borgschulte & Schlapbach (eds.), Hydrogen as a Future Energy Carrier, Wiley-VCH 2008, ch. 1 §1.1, p. 5 (ISBN 978-3-527-30817-0): 'Electrolysis at ambient temperature and pressure requires a minimum voltage of 1.481 V and therefore, a minimum energy of 39.4 kWh kg−1 hydrogen' — a check on the formation data, not an echo of the model"
+  feeds:
+    inlet: {T: 298.15, P: 3000000.0, molar_flow: 50.0, composition: {H2O: 1.0}}
+  params:
+    current_A: 2000.0
+    n_cells: 100.0
+    cell_voltage_V: 1.75
+    faradaic_efficiency: 0.98
+  expected:
+  - {quantity: info.thermoneutral_voltage_V, value: 1.481, tol_abs: 0.0005}
+  assessed: >-
+    The Faraday flows (n(H2) = η·I·N/(2F) ≈ 1.0157 mol/s, O2 half that) are
+    closed-form on the inputs and live as a unit test in
+    tests/units/reactors/test_reactors.py, not here. The one case oracle is the
+    thermoneutral voltage against the printed source value: measured 1.48953 V
+    from the actual stream balance (H_out − H_in)/(2F·n_H2) at the 298.15 K
+    liquid-water feed — +0.576 % above the printed 1.481 V, a miss of 0.0085 V
+    against the ±0.0005 V book-rounding tolerance. The direction and size match
+    the databank's liquid-water formation enthalpy sitting ~1.6 kJ/mol more
+    endothermic than the 285.83 kJ/mol HHV anchor the source value encodes;
+    recorded as a databank finding, not tuned away.
