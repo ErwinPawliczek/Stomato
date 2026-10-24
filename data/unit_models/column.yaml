@@ -24,14 +24,30 @@
       description: heavy-key product
   levels:
     R0:
-      status: planned
-      params: {}
-      note: Fenske-Underwood-Gilliland with Kirkbride feed stage (Seader-Henley V1 oracle)
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.distillation:ShortcutDistillation
+      params:
+        type: object
+        required: [light_key, heavy_key, R_over_Rmin]
+        properties:
+          light_key: {type: string, description: light-key component id}
+          heavy_key: {type: string, description: heavy-key component id}
+          recovery_LK_D: {type: number, description: 'fraction of the light key in the distillate (default 1)'}
+          recovery_HK_B: {type: number, description: 'fraction of the heavy key in the bottoms (default 1)'}
+          condenser: {type: string, description: 'total | partial (default total)'}
+          P_top: {type: number, description: 'top-stage pressure, Pa (default feed pressure)'}
+          P_bottom: {type: number, description: 'bottom-stage pressure, Pa (default P_top)'}
+          R: {type: number, description: 'reflux ratio (give R or R_over_Rmin)'}
+          R_over_Rmin: {type: number, description: 'reflux ratio as multiple of the Underwood Rmin'}
+      note: Fenske-Underwood-Gilliland with Kirkbride feed stage (Seader-Henley V1 oracle); saturation K-values at product states, two-phase feed q from the inlet flash
+      validation:
+      - V1-fug-debutanizer-seader97
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 1
   notes: roadmap; S1 slice needs it (plan §2b).
+
 
 - id: column
   name: Rigorous distillation column
@@ -107,9 +123,17 @@
       description: rich solvent
   levels:
     R0:
-      status: planned
-      params: {}
-      note: Kremser stage count (the kremser correlation plugin exists in sizing)
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.absorber:KremserAbsorber
+      params:
+        type: object
+        required: [N]
+        properties:
+          N: {type: number, description: 'ideal stages, positive'}
+          k_overrides: {type: object, description: '{cid: K} replacing thermo k_values per component (book-estimated-K reference cases)'}
+      note: Kremser stage count (the kremser correlation plugin exists in sizing); two-feed split lets lean-solvent components strip
+      validation:
+      - V1-kremser-absorber-seader53
     R2:
       status: planned
       params: {}
@@ -141,9 +165,18 @@
       description: lean bottoms
   levels:
     R0:
-      status: planned
-      params: {}
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.stripper:ReboiledStripper
+      params:
+        type: object
+        required: [N]
+        properties:
+          N: {type: number, description: 'ideal stages, positive'}
+          vapour_flow: {type: number, description: 'stripping vapour flow, mol/s'}
+          k_overrides: {type: object, description: '{cid: K} replacing thermo k_values per component'}
       note: Kremser on the stripping side
+      validation:
+      - V1-kremser-stripper-seader98
     R2:
       status: planned
       params: {}
@@ -286,9 +319,17 @@
       description: raffinate phase
   levels:
     R0:
-      status: planned
-      params: {}
-      note: stage count from Kremser
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.extractor:LiquidLiquidExtractor
+      params:
+        type: object
+        required: [N]
+        properties:
+          N: {type: number, description: 'ideal stages, positive'}
+          K_D: {type: object, description: '{cid: distribution coefficient}; omitted = thermo k_values, refused when no second liquid phase'}
+      note: stage count from Kremser; nonsolutes immiscible at R0 (each stays with its inlet phase)
+      validation:
+      - V1-kremser-extractor-seader52
     R2:
       status: planned
       params: {}
