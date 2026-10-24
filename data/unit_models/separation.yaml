@@ -103,7 +103,7 @@
           duty_W: {type: number, description: 'heat added to the drum, W; PH flash with H_out = H_in + duty_W'}
           vapor_fraction: {type: number, minimum: 0, maximum: 1, description: 'molar vapour fraction; PVF flash at outlet_P'}
       validation:
-      - V-flash-corripio-2013
+      - V1-flash-corripio-2013
       note: PT / PH (duty_W) / PVF flash at the outlet pressure — exactly one of
         duty_W and vapor_fraction; the inlets are first adiabatically PH-mixed at
         the lowest inlet pressure (a single inlet passes through unchanged); the
@@ -118,7 +118,7 @@
   references:
   - docs/unit-catalogue-plan.md §2 U-D 3
   notes: R0 PT/PH/PVF flash implemented with an optional mixed second inlet; the
-    flash family is validated by V-flash-corripio-2013 (assessed PR-vs-ideal-K
+    flash family is validated by V1-flash-corripio-2013 (assessed PR-vs-ideal-K
     miss) and V0 self-consistency; Souders-Brown sizing is R1.
 
 - id: decanter
@@ -301,7 +301,7 @@
             description: 'component id to relative permeance; required with stage_cut (binary)'
           P_permeate: {type: number, description: 'permeate-side absolute pressure, Pa; required'}
       validation:
-      - V-membrane-geankoplis-13-4-2
+      - V1-membrane-geankoplis-13-4-2
       note: exactly one of permeate_recovery (any components) and stage_cut with
         perm_ratio (binary Weller-Steiner complete mixing); the permeate leaves
         at P_permeate, the residue at P_in. Evidence gap — the stage-cut model is
@@ -358,7 +358,7 @@
         their own T (product_T / regen_T, default feed T) and their own P;
         info cycle_time_s = capacity * bed_mass / adsorbate mass rate. The
         default capacity 0.10 kg/kg is the ~10 wt% design water loading GPSA
-        quotes for molecular sieves (Sect. 20, dehydration). V1 gap: no printed
+        quotes for molecular sieves (Sect. 20, dehydration). V1 gap -- no printed
         worked example of a split-spec adsorption bed with its printed outlet
         state was found; the row is checked by closed-form tests only
     R1:
@@ -397,7 +397,7 @@
           P: {type: number, description: 'mixed outlet pressure, Pa abs; default min inlet P'}
           T_operating_K: {type: number, description: 'target operating temperature, K; drives the required-inhibitor-dose info'}
       validation:
-      - V-hydrate-gpsa-20-10
+      - V1-hydrate-gpsa-20-10
       note: adiabatic PH mix; hydrate_T from hammerschmidt_formation at the mixed P,
         dose from nielsen_bucklin_suppression at the operating T; the required
         inhibitor rate covers the aqueous phase only — GPSA's vapour and

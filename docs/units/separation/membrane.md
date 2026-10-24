@@ -47,11 +47,10 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V-membrane-geankoplis-13-4-2` | R0 | `outlet.permeate.composition.O2` | 0.5068 | 0.506809 | abs 0.001 | pass |
-| `V-membrane-geankoplis-13-4-2` | R0 | `outlet.residue.composition.O2` | 0.1345 | 0.134548 | abs 0.001 | pass |
-| `V-membrane-geankoplis-13-4-2` | R0 | `outlet.permeate.molar_flow` | 20 | 20 | rel 1e-09 | pass |
+| `V1-membrane-geankoplis-13-4-2` | R0 | `outlet.permeate.composition.O2` | 0.5068 | 0.506809 | abs 0.0001 | pass |
+| `V1-membrane-geankoplis-13-4-2` | R0 | `outlet.residue.composition.O2` | 0.1345 | 0.134548 | abs 0.0001 | pass |
 
-- `V-membrane-geankoplis-13-4-2`: Geankoplis, "Transport Processes and Separation Process Principles", 4th ed., Example 13.4-2 "Membrane Design for Separation of Air" (p. 767): an air feed (z_O2 = 0.209) at 190 cmHg with the permeate side at 19 cmHg (pressure ratio 10), alpha = 10 (O2 permeability / N2 permeability) and stage cut theta = 0.2 give a permeate y_O2 = 0.5068 and a reject x_O2 = 0.1345 by the Weller-Steiner complete-mixing model. Numbers read from the FOSSEE open transcription of Geankoplis Ch. 13 (tbc-python.fossee.in, GeankoplisChapter13, Example 13.4-2). The compositions come from the complete-mixing algebra alone (thermo only sets the outlet states), so no equation-of-state gap applies; the tolerances are the book's four-decimal rounding.
+- `V1-membrane-geankoplis-13-4-2`: Geankoplis, "Transport Processes and Separation Process Principles", 4th ed., Example 13.4-2 "Membrane Design for Separation of Air" (p. 767): an air feed (z_O2 = 0.209) at 190 cmHg with the permeate side at 19 cmHg (pressure ratio 10), alpha = 10 (O2 permeability / N2 permeability) and stage cut theta = 0.2 give a permeate y_O2 = 0.5068 and a reject x_O2 = 0.1345 by the Weller-Steiner complete-mixing model. Numbers read from the FOSSEE open transcription of Geankoplis Ch. 13 (tbc-python.fossee.in, GeankoplisChapter13, Example 13.4-2). The compositions come from the complete-mixing algebra alone (thermo only sets the outlet states), so no equation-of-state gap applies; the tolerances are the book's four-decimal rounding.
 
 ## References
 

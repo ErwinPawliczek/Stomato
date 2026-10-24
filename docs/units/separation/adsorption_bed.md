@@ -16,7 +16,7 @@ Rigour ladder: R0 provisional, R1 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.separation.adsorption_bed:AdsorptionBed` | adsorbate split spec to regen_out; product and desorbate flashed at their own T (product_T / regen_T, default feed T) and their own P; info cycle_time_s = capacity * bed_mass / adsorbate mass rate. The default capacity 0.10 kg/kg is the ~10 wt% design water loading GPSA quotes for molecular sieves (Sect. 20, dehydration) |
+| R0 | provisional | `ngdesign.units.separation.adsorption_bed:AdsorptionBed` | adsorbate split spec to regen_out; product and desorbate flashed at their own T (product_T / regen_T, default feed T) and their own P; info cycle_time_s = capacity * bed_mass / adsorbate mass rate. The default capacity 0.10 kg/kg is the ~10 wt% design water loading GPSA quotes for molecular sieves (Sect. 20, dehydration). V1 gap -- no printed worked example of a split-spec adsorption bed with its printed outlet state was found; the row is checked by closed-form tests only |
 | R1 | planned | — | Langmuir isotherm, LUB |
 
 ### R0 parameters
@@ -34,8 +34,14 @@ properties:
   product_P:
     description: product outlet pressure, Pa abs; default feed P
     type: number
+  product_T:
+    description: product outlet temperature, K; default feed T
+    type: number
   regen_P:
     description: desorbate outlet pressure, Pa abs; default feed P
+    type: number
+  regen_T:
+    description: desorbate outlet temperature, K; default feed T
     type: number
   removal_fraction:
     description: component id -> fraction of its molar flow taken to the desorbate

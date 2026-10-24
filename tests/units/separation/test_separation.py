@@ -30,27 +30,36 @@ def _solve(
 # --- flash_drum -----------------------------------------------------------
 
 
+def _mixed(inlets: dict[str, StreamState]) -> tuple[dict[str, float], float, float]:
+    """Mixed feed of every inlet: (composition, molar flow, molar enthalpy)."""
+    n = sum(s.molar_flow for s in inlets.values())
+    flows: dict[str, float] = {}
+    for s in inlets.values():
+        for cid, x in s.composition.items():
+            flows[cid] = flows.get(cid, 0.0) + x * s.molar_flow
+    h = sum(s.molar_flow * s.enthalpy for s in inlets.values()) / n
+    return {cid: f / n for cid, f in flows.items()}, n, h
+
+
 def test_flash_drum_vf_spec_matches_independent_flash(thermo: Thermo) -> None:
     inlets, result = _solve(thermo, "flash_drum", {"duty_W": None, "vapor_fraction": 0.5, "outlet_P": 3.0e6})
-    feed = inlets["inlet"]
-    flashed = thermo.flash_pvf(feed.composition, 3.0e6, 0.5, feed.molar_flow)
+    z, n, _ = _mixed(inlets)
+    flashed = thermo.flash_pvf(z, 3.0e6, 0.5, n)
     assert result.info["T_out_K"] == pytest.approx(flashed.T, rel=1e-9)
-    assert result.outlets["gas_out"].molar_flow == pytest.approx(0.5 * feed.molar_flow, rel=1e-6)
+    assert result.outlets["gas_out"].molar_flow == pytest.approx(0.5 * n, rel=1e-6)
 
 
 def test_flash_drum_duty_case_matches_independent_flash(thermo: Thermo) -> None:
     inlets, result = _solve(thermo, "flash_drum")  # example: 500 kW duty
-    feed = inlets["inlet"]
-    h_mix = feed.enthalpy + 5.0e5 / feed.molar_flow
-    flashed = thermo.flash_ph(feed.composition, 3.0e6, h_mix, feed.molar_flow)
+    z, n, h = _mixed(inlets)
+    flashed = thermo.flash_ph(z, 3.0e6, h + 5.0e5 / n, n)
     assert result.info["T_out_K"] == pytest.approx(flashed.T, rel=1e-9)
 
 
 def test_flash_drum_molar_balance(thermo: Thermo) -> None:
     inlets, result = _solve(thermo, "flash_drum")
-    feed = inlets["inlet"]
     total = sum(s.molar_flow for s in result.outlets.values())
-    assert total == pytest.approx(feed.molar_flow, rel=1e-9)
+    assert total == pytest.approx(sum(s.molar_flow for s in inlets.values()), rel=1e-9)
 
 
 def test_flash_drum_rejects_two_specs(thermo: Thermo) -> None:

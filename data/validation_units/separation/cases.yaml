@@ -10,7 +10,7 @@
 # PR-vs-ideal-K miss is recorded under `assessed`, never absorbed by the
 # tolerance. Evidence gaps per row are documented in
 # data/unit_models/separation.yaml.
-- id: V-hydrate-gpsa-20-10
+- id: V1-hydrate-gpsa-20-10
   unit: hydrate_check
   level: R0
   source: >-
@@ -49,7 +49,7 @@
   params: {T_operating_K: 297.31}
   expected:
   - {quantity: info.required_inhibitor_mass_fraction, value: 0.275, tol_abs: 0.005}
-- id: V-flash-corripio-2013
+- id: V1-flash-corripio-2013
   unit: flash_drum
   level: R0
   source: >-
@@ -79,7 +79,7 @@
     these conditions are less ideal; the PVF spec then lands at a higher T.
     The book's own rounding (+/- 0.1 K) is kept as the tolerance; the miss is
     the model gap, reported here rather than absorbed.
-- id: V-membrane-geankoplis-13-4-2
+- id: V1-membrane-geankoplis-13-4-2
   unit: membrane
   level: R0
   source: >-

@@ -43,13 +43,13 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V-flash-corripio-2013` | R0 | `outlet.gas_out.T` | 355.05 | 357.382 | abs 0.1 | assessed miss |
+| `V1-flash-corripio-2013` | R0 | `outlet.gas_out.T` | 355.05 | 357.382 | abs 0.1 | assessed miss |
 
-- `V-flash-corripio-2013`: Corripio, "Flash Distillation" lecture notes (2013), Example 1: 38 wt% propane / balance n-octane (z = 0.614 / 0.386 molar, 802 kmol/h = 222.78 mol/s), drum at 3.5 atm with V/F = 0.61 gives T = 81.9 degC, y_C3 = 0.937 by ideal-K (Antoine, Reid-Sherwood-Prausnitz). The tolerance is the book's rounding of 81.9 degC (+/- 0.1 K on 355.05 K), fixed before the run. The catalogue PR package is expected to sit above the book's ideal-K route; the measured miss is recorded in `assessed`, never absorbed by the tolerance.
+- `V1-flash-corripio-2013`: Corripio, "Flash Distillation" lecture notes (2013), Example 1: 38 wt% propane / balance n-octane (z = 0.614 / 0.386 molar, 802 kmol/h = 222.78 mol/s), drum at 3.5 atm with V/F = 0.61 gives T = 81.9 degC, y_C3 = 0.937 by ideal-K (Antoine, Reid-Sherwood-Prausnitz). The tolerance is the book's rounding of 81.9 degC (+/- 0.1 K on 355.05 K), fixed before the run. The catalogue PR package is expected to sit above the book's ideal-K route; the measured miss is recorded in `assessed`, never absorbed by the tolerance.
   - assessed: Measured miss (PR package, this case's feeds and params): T = 357.382 K (84.23 degC), 2.33 K above the book's 355.05 K; y_C3 = 0.9213 vs the printed 0.937. Cause: the book solves the Rachford-Rice isothermal flash with ideal K-values from Antoine constants (Reid-Sherwood-Prausnitz), while the catalogue package is Peng-Robinson, whose C3/nC8 K-values at these conditions are less ideal; the PVF spec then lands at a higher T. The book's own rounding (+/- 0.1 K) is kept as the tolerance; the miss is the model gap, reported here rather than absorbed.
 
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-D 3
 
-> R0 PT/PH/PVF flash implemented with an optional mixed second inlet; the flash family is validated by V-flash-corripio-2013 (assessed PR-vs-ideal-K miss) and V0 self-consistency; Souders-Brown sizing is R1.
+> R0 PT/PH/PVF flash implemented with an optional mixed second inlet; the flash family is validated by V1-flash-corripio-2013 (assessed PR-vs-ideal-K miss) and V0 self-consistency; Souders-Brown sizing is R1.

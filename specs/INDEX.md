@@ -136,7 +136,7 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | U-B | Flow units R0 (+ `_physics/efficiency.py`) | U-R1 | issue #207 |
 | U-C | Heat units R0 (+ `_physics/heat_balance.py`: two-stream, multi-stream, problem table) | U-R1 | issue #208 |
 | U-D | Separation units R0 | U-R1, U-A1 (3 units) | issue #209 |
-| U-E | Shortcut column units R0 (+ `_physics/shortcut.py`: FUG, Kremser fraction; V2 vs MESH) | U-R1, P1-11 | issue #210 |
+| U-E | Shortcut column units R0 (+ `_physics/shortcut.py`: FUG, Kremser fraction; V2 vs MESH) | U-R1, P1-11 | DONE 2026-10-24 (#225, 1534141): FUG + Kremser absorber, stripper, extractor R0; V2 vs MESH measured |
 | U-F | Reactors R0 (+ U-F1 `kinetics.yield_shift`, `_physics/gibbs.py`; solver reaction-set hook) | U-R1 | issue #211 |
 | U-G | Treating R0: TEG regenerator, Claus | U-R1 | issue #212 |
 | U-H1 | Refining separation R0: assay feeder, desalter, crude/vacuum cut-point columns, side strip, preflash, blending | U-R1, A-01, U-E (side_strip) | issue #213 |
