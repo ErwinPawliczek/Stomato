@@ -6,20 +6,24 @@ from typing import Any
 
 import pytest
 
+from ngdesign.contracts import StreamState, UnitResult
+from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import component_record
 from ngdesign.registry import create
 from ngdesign.units.teg_activity import activity_equilibrium_slope
 from ngdesign.units.treating.teg_regen import DEFAULT_P, DEFAULT_T_REBOILER, TEGRegen, TEGRegenError
 
-THERMO = create("thermo", "pr")
+THERMO: Thermo = create("thermo", "pr")
 PARAMS: dict[str, Any] = {"T_reboiler": DEFAULT_T_REBOILER, "P": DEFAULT_P}
 
 
-def _feed(composition: dict[str, float], T: float = 422.15, P: float = 1.5e5, molar_flow: float = 100.0):
+def _feed(
+    composition: dict[str, float], T: float = 422.15, P: float = 1.5e5, molar_flow: float = 100.0
+) -> StreamState:
     return THERMO.flash_pt(composition, T, P, molar_flow)
 
 
-def _solve(feed, params: dict[str, Any] | None = None):
+def _solve(feed: StreamState, params: dict[str, Any] | None = None) -> UnitResult:
     return TEGRegen().solve({"rich_in": feed}, params or dict(PARAMS), THERMO)
 
 
