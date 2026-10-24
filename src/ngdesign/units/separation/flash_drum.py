@@ -40,32 +40,55 @@ class FlashDrum:
         params: dict[str, Any],
         thermo: Thermo,
     ) -> UnitResult:
-        inlet = inlets["inlet"]
         duty_W = params.get("duty_W")
         vapor_fraction = params.get("vapor_fraction")
         if duty_W is not None and vapor_fraction is not None:
             raise FlashDrumSpecError("give exactly one of duty_W and vapor_fraction, not both")
-        P_out = float(params.get("outlet_P", inlet.P))
-        if P_out <= 0:
-            raise FlashDrumSpecError(f"outlet_P {P_out} must be positive")
         if vapor_fraction is not None and not 0.0 <= float(vapor_fraction) <= 1.0:
             raise FlashDrumSpecError(f"vapor_fraction {vapor_fraction} outside [0, 1]")
 
-        if inlet.molar_flow <= 0.0:  # nothing to flash; zero-flow outlets
+        # Adiabatic mix of the positive-flow inlets at the lowest inlet
+        # pressure; a single inlet reproduces the original one-port flash
+        # exactly (same composition, enthalpy, T and flows).
+        active = [s for s in inlets.values() if s.molar_flow > 0.0]
+        if not active:  # nothing to flash; zero-flow outlets
+            reference = next(iter(inlets.values()))
+            P_out = float(params.get("outlet_P", reference.P))
+            if P_out <= 0:
+                raise FlashDrumSpecError(f"outlet_P {P_out} must be positive")
             outlets = {
-                "gas_out": phase_outlet(thermo, inlet, inlet.T, P_out, None),
-                "liquid_out": phase_outlet(thermo, inlet, inlet.T, P_out, None),
-                "aqueous_out": phase_outlet(thermo, inlet, inlet.T, P_out, None),
+                "gas_out": phase_outlet(thermo, reference, reference.T, P_out, None),
+                "liquid_out": phase_outlet(thermo, reference, reference.T, P_out, None),
+                "aqueous_out": phase_outlet(thermo, reference, reference.T, P_out, None),
             }
             return UnitResult(outlets=outlets, duty_W=0.0, power_W=0.0, info={})
+        feed = active[0]
+        n_in = sum(s.molar_flow for s in active)
+        P_mix = min(s.P for s in active)
+        P_out = float(params.get("outlet_P", P_mix))
+        if P_out <= 0:
+            raise FlashDrumSpecError(f"outlet_P {P_out} must be positive")
+        h_in_W = sum(s.enthalpy * s.molar_flow for s in active)
+        z_mix: dict[str, float]
+        if len(active) == 1:
+            z_mix = dict(feed.composition)
+            h_mix0 = feed.enthalpy
+            T_mix = feed.T
+        else:
+            z_mix = {}
+            for s in active:
+                for cid, x in s.composition.items():
+                    z_mix[cid] = z_mix.get(cid, 0.0) + x * s.molar_flow
+            z_mix = {cid: x / n_in for cid, x in z_mix.items()}
+            h_mix0 = h_in_W / n_in
+            T_mix = thermo.flash_ph(z_mix, P_mix, h_mix0, n_in).T
 
         if duty_W is not None:
-            h_mix = (inlet.enthalpy * inlet.molar_flow + float(duty_W)) / inlet.molar_flow
-            flashed = thermo.flash_ph(inlet.composition, P_out, h_mix, inlet.molar_flow)
+            flashed = thermo.flash_ph(z_mix, P_out, h_mix0 + float(duty_W) / n_in, n_in)
         elif vapor_fraction is not None:
-            flashed = thermo.flash_pvf(inlet.composition, P_out, float(vapor_fraction), inlet.molar_flow)
+            flashed = thermo.flash_pvf(z_mix, P_out, float(vapor_fraction), n_in)
         else:
-            flashed = thermo.flash_pt(inlet.composition, inlet.T, P_out, inlet.molar_flow)
+            flashed = thermo.flash_pt(z_mix, T_mix, P_out, n_in)
 
         vapor = next((p for p in flashed.phases if p.kind is PhaseKind.VAPOR), None)
         aqueous = next((p for p in flashed.phases if p.kind is PhaseKind.AQUEOUS), None)
