@@ -10,7 +10,8 @@ with ``FF = 0.96 - 0.28*sqrt(Psat/Pc)`` (IEC 60534-2-1) and the valve's
 liquid pressure-recovery factor ``FL`` (default 0.9). Vapour or two-phase Cv
 is reported as not-applicable at R0 — never invented. ISA sizing needs a
 positive viscosity; when the thermo package reports none, an optional
-``mu_liquid`` param supplies it, otherwise ``Cv`` is not reported.
+``mu_liquid`` param supplies it, otherwise ``Cv`` is not reported. ``Cv``
+is also not reported at zero pressure drop (nothing to size).
 """
 
 from __future__ import annotations
@@ -38,6 +39,10 @@ def _outlet_pressure(inlet_P: float, params: dict[str, Any]) -> float:
         P_out = float(params["P_out"])
         if P_out <= 0:
             raise ControlValveSpecError(f"P_out {P_out} Pa must be > 0")
+        if P_out > inlet_P:
+            raise ControlValveSpecError(
+                f"P_out {P_out} Pa is above the inlet pressure {inlet_P} Pa; a valve cannot raise pressure"
+            )
         return P_out
     dP = float(params["dP"])
     if dP < 0:
@@ -73,9 +78,11 @@ class ControlValve:
         mu = liquid.viscosity if liquid is not None else None
         if mu is None and params.get("mu_liquid") is not None:
             mu = float(params["mu_liquid"])
-        if liquid is not None and mu is not None:
+        if liquid is not None and mu is not None and P_out < inlet.P:
             info.update(self._cv_info(inlet, params, thermo, liquid.density, mu))
         else:
+            # Vapour/two-phase Cv is not applicable at R0, and a zero-dP inlet
+            # has nothing to size: cv_liquid_isa needs a positive drop.
             info["cv_reported"] = 0.0
 
         outlet = thermo.flash_ph(inlet.composition, P_out, inlet.enthalpy, inlet.molar_flow)

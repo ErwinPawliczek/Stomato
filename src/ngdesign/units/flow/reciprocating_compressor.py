@@ -105,6 +105,14 @@ class ReciprocatingCompressor:
         power_W = 0.0
         duty_W = 0.0
         for stage in range(1, n_stages + 1):
+            if stage > 1 and state.vapor_fraction < 0.999:
+                # Intercooling to T_intercool condensed liquid: compressing a
+                # two-phase stage suction is refused at R0.
+                raise ReciprocatingCompressorSpecError(
+                    f"stage {stage} suction has liquid (vapor_fraction="
+                    f"{state.vapor_fraction:.4f}) after intercooling to "
+                    f"T_intercool={T_intercool} K; a two-phase stage suction is refused at R0"
+                )
             P_stage = inlet.P * ratio_per_stage**stage
             state, stage_power = isentropic_step(state, P_stage, eta, thermo, "compress")
             power_W += stage_power

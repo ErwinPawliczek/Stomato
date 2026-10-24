@@ -13,7 +13,14 @@ ISO 5167-2 §5.3.2.2 expansibility factor
 applies, iterated to consistency with the implied P2 (fixed point, 1e-10
 relative), and refused outside the standard's validity ``P2/P1 >= 0.75``.
 ``kappa`` uses the ideal-gas relation ``cp/(cp - R)`` from the inlet vapour.
-The outlet is an isenthalpic PH flash at P2.
+The tap differential ``dP`` is the metering result; the flowsheet outlet sits
+at ``P1 - delta_varpi`` instead, the ISO 5167-2 §5.4 permanent pressure loss
+(a plate recovers part of the differential downstream):
+
+    delta_varpi = (sqrt(1 - beta^4 (1 - C^2)) - C beta^2)
+                  / (sqrt(1 - beta^4 (1 - C^2)) + C beta^2) * dP
+
+Both ``dP_Pa`` and ``permanent_loss_Pa`` are reported in info.
 """
 
 from __future__ import annotations
@@ -26,6 +33,13 @@ from ngdesign.contracts.plugins import Thermo
 
 #: ISO 5167-2 §5.3.2.2 minimum validity ratio of downstream to upstream pressure.
 MIN_PRESSURE_RATIO = 0.75
+
+
+def permanent_loss_ratio(beta: float, C: float) -> float:
+    """ISO 5167-2 §5.4 permanent pressure loss ratio, ``delta_varpi / dP``."""
+    root = math.sqrt(1.0 - beta**4 * (1.0 - C**2))
+    return (root - C * beta**2) / (root + C * beta**2)
+
 
 #: CODATA 2018 molar gas constant, J/(mol.K) (same reference as thermo.pr).
 R_IDEAL = 8.31446261815324
@@ -69,16 +83,13 @@ class Orifice:
 
         vapor = next((p for p in inlet.phases if p.kind == PhaseKind.VAPOR), None)
         is_gas = inlet.vapor_fraction > 0.999 and vapor is not None
-        dominant = (
-            vapor
-            if is_gas
-            else max(
-                (p for p in inlet.phases if p.kind is not PhaseKind.VAPOR),
-                key=lambda p: p.mole_fraction,
-            )
-        )
-        if dominant is None:
-            raise OrificeSpecError("inlet has no dense phase to meter")
+        if is_gas and vapor is not None:
+            dominant = vapor
+        else:
+            dense = [p for p in inlet.phases if p.kind is not PhaseKind.VAPOR]
+            if not dense:
+                raise OrificeSpecError("inlet has no dense phase to meter")
+            dominant = max(dense, key=lambda p: p.mole_fraction)
         rho = dominant.density
         E = 1.0 / math.sqrt(1.0 - beta**4)
         A = math.pi / 4.0 * bore_m**2
@@ -107,12 +118,20 @@ class Orifice:
         elif dP >= inlet.P:
             raise OrificeSpecError(f"implied dP {dP} Pa reaches or exceeds the inlet pressure")
 
-        outlet = thermo.flash_ph(inlet.composition, inlet.P - dP, inlet.enthalpy, inlet.molar_flow)
+        permanent_loss = permanent_loss_ratio(beta, Cd) * dP
+        outlet = thermo.flash_ph(
+            inlet.composition, inlet.P - permanent_loss, inlet.enthalpy, inlet.molar_flow
+        )
         return UnitResult(
             outlets={"outlet": outlet},
             duty_W=0.0,
             power_W=0.0,
-            info={"dP_Pa": dP, "velocity_approach": E, "expansibility": Y},
+            info={
+                "dP_Pa": dP,
+                "permanent_loss_Pa": permanent_loss,
+                "velocity_approach": E,
+                "expansibility": Y,
+            },
         )
 
     @classmethod

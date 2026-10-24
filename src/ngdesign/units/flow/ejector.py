@@ -40,6 +40,10 @@ class Ejector:
         entrainment = float(params["entrainment"])
         if P_out <= 0:
             raise EjectorSpecError(f"P_out {P_out} Pa must be > 0")
+        if P_out > motive.P:
+            raise EjectorSpecError(f"P_out {P_out} Pa is above the motive pressure {motive.P} Pa")
+        if P_out < suction.P:
+            raise EjectorSpecError(f"P_out {P_out} Pa is below the suction pressure {suction.P} Pa")
         if entrainment <= 0:
             raise EjectorSpecError(f"entrainment {entrainment} kg/kg must be > 0")
 
@@ -53,13 +57,15 @@ class Ejector:
         outlet = thermo.flash_ph(z_mix, P_out, h_mix, n_m + n_s)
 
         mass_m, mass_s = motive.mass_flow, suction.mass_flow
+        achieved = mass_s / mass_m
         return UnitResult(
             outlets={"outlet": outlet},
             duty_W=0.0,
             power_W=0.0,
             info={
-                "entrainment_achieved": mass_s / mass_m,
+                "entrainment_achieved": achieved,
                 "motive_to_suction_required": 1.0 / entrainment,
+                "entrainment_spec_met": 1.0 if abs(achieved / entrainment - 1.0) <= 1e-5 else 0.0,
             },
         )
 

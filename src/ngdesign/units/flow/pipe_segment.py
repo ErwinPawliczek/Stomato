@@ -6,8 +6,10 @@ inlet enthalpy. This is definitional at R0: the pressure drop itself is
 claimed, not computed (Crane TP-410-style; the U-B Darcy line
 ``units/_physics/pressure_drop.py`` is a later round). An ``elevation_m``
 rise contributes a ``rho * g * dz`` hydrostatic term evaluated with the
-inlet's dominant phase density and reported in info — it does **not** move
-the outlet state at R0.
+inlet's dominant phase density. In ``dP`` mode the term is physical: an
+elevation rise costs ``rho * g * z`` on top of the frictional drop, so the
+outlet pressure is ``P_in - dP - rho*g*z``. In ``P_out`` mode the elevation
+is reported in info only — the spec already fixes the outlet pressure.
 """
 
 from __future__ import annotations

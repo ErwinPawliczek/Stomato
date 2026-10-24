@@ -251,7 +251,7 @@
   pid_symbol: PSV
   references:
   - docs/unit-catalogue-plan.md §2 U-B 7
-  notes: R0 gas PSV sizing per API 520 Part I with API 526 orifice selection; two-phase sizing and relief-system loss checks remain roadmap.
+  notes: R0 gas PSV sizing per API 520 Part I with API 526 orifice selection. V1 gap (PR #217): the sizing layer is pinned by a unit test to the API worked example's printed inputs and published area (API RP 520 Part I Example 3.6.2.2, p. 44 — W 53500 lb/h, M 65, Z 0.84, k 1.09, T 627 R, P1 97.2 psia, Kd 0.975, Kb = Kc = 1.0, C = 326 from Table 8; published area 3179 mm2 = 4.93 in2, read from FluidFlow's results-verified reproduction of that example), but no feed in the installed packages reproduces the printed M/Z/k as a single-phase vapour (C4/C5/C6 composition search at the relieving point: M ~ 65 states are liquid or two-phase; all-vapour tops out near M 61, Z 0.854, k 1.069), so the adapter-level V1 case is withdrawn, not tuned. Two-phase sizing and relief-system loss checks remain roadmap.
 
 - id: pipe_segment
   name: Pipe segment
@@ -342,7 +342,7 @@
   pid_symbol: EJ
   references:
   - docs/unit-catalogue-plan.md §2 U-B 10
-  notes: R0 momentum balance at a specified entrainment ratio; 1-D momentum design mode remains roadmap.
+  notes: R0 momentum balance at a specified entrainment ratio. V1 gap (PR #217): the previous Graham 3:1 case was circular (both expectations restated the inputs) and is withdrawn; no open published ejector example with a printed outlet state was found (searched Graham Manufacturing ejector performance literature and Perry sect. 10 — operating points are entrainment ratios and curves, not outlet states). R0 mixing remains covered by closed-form unit tests. 1-D momentum design mode remains roadmap.
 
 - id: fan
   name: Fan / blower

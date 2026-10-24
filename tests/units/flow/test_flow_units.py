@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.sizing.psv_gas import psv_api520_gas
 from ngdesign.units.flow import (
     control_valve,
     ejector,
@@ -152,6 +153,123 @@ def test_ejector_discharge_pressure(thermo: Thermo) -> None:
         motive.mass_flow / suction.mass_flow, rel=1e-4
     )
     assert result.outlets["outlet"].P == pytest.approx(params["P_out"], rel=1e-9)
+
+
+def test_psv_api520_gas_api520_example() -> None:
+    """Pins the sizing layer to the API 520 gas example's printed inputs and area.
+
+    Basis: API RP 520 Part I Example 3.6.2.2, p. 44 (2000-edition numbering) —
+    W = 53500 lb/h, T = 627 R, P1 = 97.2 psia, M = 65, Z = 0.84, k = 1.09,
+    Kd = 0.975, Kb = Kc = 1.0 (critical flow, no rupture disk), C = 326
+    (Table 8); the published required area is 3179 mm2 = 4.93 in2. Inputs and
+    the published result are read from FluidFlow's results-verified
+    reproduction ("Sizing Pressure Relief Valves", webinar deck and Case 3.9).
+    The exact-C correlation lands within 0.2 percent of the print.
+    """
+    result = psv_api520_gas(
+        W_lb_h=53500.0,
+        T_R=627.0,
+        Z=0.84,
+        M=65.0,
+        k=1.09,
+        P1_psia=97.2,
+        Kd=0.975,
+        Kb=1.0,
+        Kc=1.0,
+    )
+    assert result["C"] == pytest.approx(326.0, rel=0.002)
+    assert result["area_in2"] == pytest.approx(3179.0 / 645.16, rel=0.005)
+
+
+def test_control_valve_refuses_pressure_rise(thermo: Thermo) -> None:
+    """P_out above the inlet pressure is a typed refusal, not an invented pressure gain."""
+    cls = control_valve.ControlValve
+    feeds, _ = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    with pytest.raises(control_valve.ControlValveSpecError, match="cannot raise pressure"):
+        cls().solve(inlets, {"P_out": inlets["inlet"].P * 2.0}, thermo)
+
+
+def test_control_valve_skips_cv_at_zero_drop(thermo: Thermo) -> None:
+    """A zero-dP spec solves isenthalpically but reports no Cv (nothing to size)."""
+    cls = control_valve.ControlValve
+    feeds, _ = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    inlet = inlets["inlet"]
+    result = cls().solve(inlets, {"P_out": inlet.P}, thermo)
+    assert result.info["cv_reported"] == 0.0
+    assert result.outlets["outlet"].P == pytest.approx(inlet.P, rel=1e-12)
+    assert result.outlets["outlet"].enthalpy == pytest.approx(inlet.enthalpy, rel=1e-12)
+
+
+def test_orifice_outlet_at_permanent_loss(thermo: Thermo) -> None:
+    """The outlet flashes at P1 - delta_varpi, below the tap differential dP.
+
+    Closed form at the example's beta = 0.5, C = 0.61: the ISO 5167-2
+    permanent-loss ratio is 0.7307, independent of the flowing state.
+    """
+    cls = orifice.Orifice
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = cls().solve(inlets, params, thermo)
+    ratio = result.info["permanent_loss_Pa"] / result.info["dP_Pa"]
+    assert ratio == pytest.approx(0.7307, rel=1e-3)
+    assert result.info["permanent_loss_Pa"] < result.info["dP_Pa"]
+    assert result.outlets["outlet"].P == pytest.approx(
+        inlets["inlet"].P - result.info["permanent_loss_Pa"], rel=1e-9
+    )
+
+
+def test_orifice_refuses_liquid_inlet_without_dense_phase(thermo: Thermo) -> None:
+    """A non-gas inlet carrying only a vapour phase is refused, not a TypeError."""
+    gas_feed = {
+        "T": 348.15,
+        "P": 670170.408,
+        "molar_flow": 130.128,
+        "composition": {"C3": 0.45, "nC4": 0.55},
+    }
+    inlet = flash_feed(thermo, gas_feed)
+    assert inlet.vapor_fraction > 0.999  # the flash reports a single vapour phase
+    mislabelled = inlet.model_copy(update={"vapor_fraction": 0.5})
+    _, params = orifice.Orifice.example_case()
+    with pytest.raises(orifice.OrificeSpecError, match="no dense phase"):
+        orifice.Orifice().solve({"inlet": mislabelled}, params, thermo)
+
+
+def test_ejector_refuses_outlet_pressure_outside_band(thermo: Thermo) -> None:
+    """A discharge above the motive or below the suction pressure is a typed refusal."""
+    cls = ejector.Ejector
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    motive, suction = inlets["motive"], inlets["suction"]
+    with pytest.raises(ejector.EjectorSpecError, match="above the motive pressure"):
+        cls().solve(inlets, {**params, "P_out": motive.P * 2.0}, thermo)
+    with pytest.raises(ejector.EjectorSpecError, match="below the suction pressure"):
+        cls().solve(inlets, {**params, "P_out": suction.P / 2.0}, thermo)
+
+
+def test_ejector_reports_entrainment_spec_met(thermo: Thermo) -> None:
+    """The example's rounded flows land on the specified entrainment within 1e-5."""
+    cls = ejector.Ejector
+    feeds, params = cls.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = cls().solve(inlets, params, thermo)
+    assert result.info["entrainment_spec_met"] == 1.0
+
+
+def test_reciprocating_compressor_refuses_two_phase_stage_suction(thermo: Thermo) -> None:
+    """Intercooling that condenses liquid into the next stage's suction is refused, naming the stage."""
+    feed = {
+        "T": 300.0,
+        "P": 1.0e6,
+        "molar_flow": 10.0,
+        "composition": {"C2": 0.5, "C3": 0.5},
+    }
+    inlet = flash_feed(thermo, feed)
+    assert inlet.vapor_fraction > 0.999  # single-phase at the machine inlet
+    params = {"P_out": 3.0e6, "efficiency": 0.75, "n_stages": 2, "T_intercool": 290.0}
+    with pytest.raises(reciprocating_compressor.ReciprocatingCompressorSpecError, match="stage 2"):
+        reciprocating_compressor.ReciprocatingCompressor().solve({"inlet": inlet}, params, thermo)
 
 
 def test_fan_power_positive_on_pressure_rise(thermo: Thermo) -> None:

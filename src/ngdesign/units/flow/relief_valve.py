@@ -117,14 +117,21 @@ class ReliefValve:
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-        """API 520 Part I 10th-ed. §5.6.3.2 Example 1 basis: 45% C3 / 55% nC4 vapour, W = 53500 lb/h."""
+        """Gas relief basis at the API 520 worked example's relieving point.
+
+        348 K / 97.2 psia set point from API 520 Part I Example 3.6.2.2; the
+        composition is a stand-in (the example's own mixture is not stated
+        beyond M = 65 — see the row note for the V1 adapter-level gap), and
+        Kd 0.975 with Kb = Kc = 1.0 (critical flow, no rupture disk) are the
+        example's printed factors.
+        """
         feed = {
             "T": 348.15,
             "P": 670170.408,
             "molar_flow": 130.128,
             "composition": {"C3": 0.45, "nC4": 0.55},
         }
-        return {"inlet": feed}, {"P_back": 101325.0, "Kd": 0.975, "Kb": 0.88, "Kc": 1.0}
+        return {"inlet": feed}, {"P_back": 101325.0, "Kd": 0.975, "Kc": 1.0}
 
 
 def _next_orifice(required_in2: float) -> str:
