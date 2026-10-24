@@ -38,6 +38,14 @@
 #   references  literature / plan citations.
 #   notes       plan-to-registry mapping notes (which palette line this row is,
 #               what maps onto it instead of a separate row).
+#   balance     optional, `molar` (default) or `mass_elements`. Reactive units
+#               declare `mass_elements`: V0 then checks total mass and every
+#               element's atom flow (components with a formula) instead of
+#               moles, and the energy balance uses the formation-enthalpy basis
+#               (ngdesign.units._physics.kinetics.enthalpy_with_formation).
+#   example_thermo  optional registered thermo id the harness solves the row's
+#               example_case and V1 cases on (default `pr`); a V1 case may name
+#               its own `thermo`.
 #
 # Palette (plan §2, approved 2026-10-23): 83 units in 8 families —
 # logical 9, flow 12, heat 10, separation 10, column 12, reactors 9,
