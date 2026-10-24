@@ -171,7 +171,9 @@ class ShortcutDistillation:
             d_map = {**d, lk: d_lk, hk: d_hk}
             xd = {cid: d_map[cid] / total_d for cid in z_feed}
             xb = {cid: (f_flows[cid] - d_map[cid]) / total_b for cid in z_feed}
-            _, k_top_raw = _dew_k(thermo, xd, p_top) if condenser == "partial" else _bubble_k(thermo, xd, p_top)
+            _, k_top_raw = (
+                _dew_k(thermo, xd, p_top) if condenser == "partial" else _bubble_k(thermo, xd, p_top)
+            )
             _, k_bottom_raw = _bubble_k(thermo, xb, p_bottom)
             k_top = {**k_feed, **k_top_raw}
             k_bottom = {**k_feed, **k_bottom_raw}
