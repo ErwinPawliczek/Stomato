@@ -2,7 +2,7 @@
 
 Family: **flow** · P&ID symbol: `FAN`
 
-Rigour ladder: R0 planned, R1 planned
+Rigour ladder: R0 provisional, R1 planned
 
 ## Ports
 
@@ -15,11 +15,11 @@ Rigour ladder: R0 planned, R1 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | ΔP + efficiency |
+| R0 | provisional | `ngdesign.units.flow.fan:Fan` | ΔP + efficiency |
 | R1 | planned | — | performance curve |
 
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-B 11
 
-> roadmap.
+> R0 fixed dP rise with efficiency; performance curves remain roadmap.

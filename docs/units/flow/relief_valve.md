@@ -2,7 +2,7 @@
 
 Family: **flow** · P&ID symbol: `PSV`
 
-Rigour ladder: R0 planned, R1 planned, R2 planned
+Rigour ladder: R0 provisional, R1 planned, R2 planned
 
 ## Ports
 
@@ -15,7 +15,7 @@ Rigour ladder: R0 planned, R1 planned, R2 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | set pressure, orifice from API 520 (the psv_api520_gas correlation plugin exists) |
+| R0 | provisional | `ngdesign.units.flow.relief_valve:ReliefValve` | set pressure, orifice from API 520 (the psv_api520_gas correlation plugin exists) |
 | R1 | planned | — | two-phase sizing (HEM/omega) |
 | R2 | planned | — | inlet/outlet loss checks |
 
@@ -23,4 +23,4 @@ Rigour ladder: R0 planned, R1 planned, R2 planned
 
 - docs/unit-catalogue-plan.md §2 U-B 7
 
-> roadmap.
+> R0 gas PSV sizing per API 520 Part I with API 526 orifice selection. V1 gap (PR
