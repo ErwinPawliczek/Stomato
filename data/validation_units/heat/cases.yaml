@@ -92,7 +92,7 @@
     cycles_of_concentration: 3.0
     approach_K: 5.0
   expected:
-  - {quantity: info.wet_bulb_K, value: 293.15, tol_abs: 0.5}
+  - {quantity: info.wet_bulb_K, value: 293.15, tol_abs: 0.2}
 
 - id: V2086
   unit: hen_block

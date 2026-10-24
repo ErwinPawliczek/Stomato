@@ -139,6 +139,22 @@ def test_material_and_blowdown_closure() -> None:
     assert result.outlets["water_out"].molar_flow == pytest.approx(555.0 - evap, rel=1e-9)
 
 
+def test_exit_air_reflash_identity() -> None:
+    """The outlet air is the package's own flash result: re-flashing the
+    returned state reproduces its enthalpy exactly (no hand-overwritten
+    fields), so a downstream unit sees the state the balance closed on."""
+    thermo = _thermo()
+    unit = registry.create("unit", "cooling_tower")
+    result = unit.solve(_feeds(thermo), _params(), thermo)
+    air_out = result.outlets["air_out"]
+    reflashed = thermo.flash_pt(air_out.composition, air_out.T, air_out.P, air_out.molar_flow)
+    assert reflashed.enthalpy == pytest.approx(air_out.enthalpy, rel=1e-12)
+    assert reflashed.vapor_fraction == pytest.approx(air_out.vapor_fraction, rel=1e-9)
+    # And the balance closed against that flash enthalpy, not a fog-free ideal:
+    # a saturated humid exit carries the package's fog sliver (vf < 1).
+    assert air_out.vapor_fraction < 1.0
+
+
 def test_energy_closure_zero_net_duty() -> None:
     """The unit closes: sum n*h in == sum n*h out (the balance pins the exit)."""
     thermo = _thermo()

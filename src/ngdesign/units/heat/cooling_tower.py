@@ -2,11 +2,16 @@
 
 Plugin kind "unit", name "cooling_tower", registered from the catalogue
 row. Water port (water_in -> water_out) against an air port (air_in ->
-air_out, humid). The exit air is SATURATED AT THE MEAN WATER TEMPERATURE
-of the solved outlet and the warm inlet (the counter-current mean): that
-pin fixes the humidity rise, the material balance fixes the evaporation
-rate, and the overall energy closure SOLVES the water outlet temperature
-(bisection). The inlet air's wet bulb (adiabatic-saturation balance
+air_out, humid). The WATER OUTLET is pinned at the inlet air's wet bulb
+plus the ``approach_K`` input; the exit air is saturated at a temperature
+SOLVED FROM THE OVERALL ENERGY BALANCE (bisection upward from the wet
+bulb), and the material balance fixes the evaporation rate. The exit-air
+OUTLET STATE is the package's own ``flash_pt`` result at the solved
+temperature, pressure and overall composition - saturated humid air
+carries the fog sliver the package predicts, and no enthalpy, vapour
+fraction or composition field is hand-overwritten - so a downstream unit
+that re-flashes the stream sees the same state the balance closed on.
+The inlet air's wet bulb (adiabatic-saturation balance
 ``f(T) = H1 + (W2 - W1)*h_w(T) - H2(T)`` per mol of dry gas, bisected; a
 saturated inlet returns the dry bulb immediately) is reported and sets the
 approach. ``cycles_of_concentration`` scales the blowdown. info:
@@ -182,25 +187,27 @@ class CoolingTower:
         dry = {cid: x for cid, x in air.composition.items() if cid != "H2O"}
         n_dry = air.molar_flow * (1.0 - y1)
 
-        def exit_air(T_exit: float) -> tuple[float, float, float, float]:
-            """(y2, E, n_out, enthalpy) of saturated exit air at T_exit."""
+        def exit_air(T_exit: float) -> tuple[float, float, float, StreamState]:
+            """(y2, E, n_out, package flash state) of saturated exit air at T_exit."""
             y2 = _psat(thermo, T_exit) / air.P
             # Evaporation is the humidity-RATIO jump over the inlet, on dry air.
             evap = (y2 / (1.0 - y2) - y1 / (1.0 - y1)) * n_dry
             n_out = n_dry / (1.0 - y2)  # exit carries dry air plus ALL its water
-            h_a2 = _humid_enthalpy(thermo, dry, T_exit, air.P, y2)
-            return y2, evap, n_out, h_a2
+            # The exit-air enthalpy is the PACKAGE's own flash at the exit
+            # state, fog sliver included - never an ideal hand-built value.
+            state = thermo.flash_pt(_z_with_water(dry, y2), T_exit, air.P, n_out)
+            return y2, evap, n_out, state
 
         h_water_out = thermo.flash_pt({"H2O": 1.0}, T_water_out, water.P, 1.0).enthalpy
 
         def residual(T_exit: float) -> float:
             """h_in - h_out; falls monotonically as the exit air warms."""
-            _y2, evap, n_out, h_a2 = exit_air(T_exit)
+            _y2, evap, n_out, air_state = exit_air(T_exit)
             return (
                 water.molar_flow * water.enthalpy
                 + air.molar_flow * air.enthalpy
                 - (water.molar_flow - evap) * h_water_out
-                - n_out * h_a2
+                - n_out * air_state.enthalpy
             )
 
         # The exit-air enthalpy rises with T_exit, so the residual falls; the
@@ -238,23 +245,18 @@ class CoolingTower:
                 break
         T_exit_air = t_hi  # saturated state that exactly closes the balance
 
-        y2, E, n_air_out, h_air_out = exit_air(T_exit_air)
+        y2, E, n_air_out, air_state = exit_air(T_exit_air)
         if E >= water.molar_flow:
             raise ValueError(
                 "cooling tower: the material closure evaporates more water than "
                 "the water stream carries; reduce the air flow"
             )
-        z_air_out = _z_with_water(dry, y2)
+        # The outlet state IS the package's flash result at the solved exit
+        # state (overall composition, fog sliver and all): a downstream unit
+        # that re-flashes this stream reproduces exactly the enthalpy the
+        # energy balance closed on. Nothing is overwritten.
+        air_out = air_state
         water_out = thermo.flash_pt({"H2O": 1.0}, T_water_out, water.P, water.molar_flow - E)
-        air_out = thermo.flash_pt(z_air_out, T_exit_air, air.P, n_air_out)
-        # The exit air is the ideal saturated gas: pin its enthalpy and vapour
-        # fraction to the fog-free construction the balance solved with, and pin
-        # the composition too - the raw PR flash of an exactly saturated humid
-        # feed can report the vapour-phase composition of a two-phase split
-        # instead of the overall composition this balance solved with.
-        air_out = air_out.model_copy(
-            update={"composition": dict(z_air_out), "enthalpy": h_air_out, "vapor_fraction": 1.0}
-        )
 
         # Cycles of concentration: the blowdown removes evaporation/(COC - 1)
         # so the dissolved solids hold at COC x the makeup; makeup replaces

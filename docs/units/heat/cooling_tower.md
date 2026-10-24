@@ -37,7 +37,7 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V2085` | R0 | `info.wet_bulb_K` | 293.15 | 292.989 | abs 0.5 | pass |
+| `V2085` | R0 | `info.wet_bulb_K` | 293.15 | 292.989 | abs 0.2 | pass |
 
 - `V2085`: ASHRAE Fundamentals 2021, SI edition, Ch. 1 Psychrometrics, Example 1: 40 C dry bulb, 20 C thermodynamic wet bulb, 101.325 kPa; chart humidity ratio 6.5 g_w/kg_da -> y = 0.010343 mol/mol. The case runs the tower on the printed air state and checks the model wet bulb against the printed 293.15 K; the water and air flows are carrier sizes, not cited values, and no model output beyond the wet bulb is compared.
 
