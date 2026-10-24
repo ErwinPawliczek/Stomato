@@ -208,9 +208,9 @@ def _fixture_catalogue(tmp_path: Path) -> Path:
         if row["id"] == "pump":
             row["levels"]["R1"] = {
                 "status": "experimental",
-                "adapter": "ngdesign.units.mixer:Mixer",
+                "adapter": "ngdesign.units.separation.tank:Tank",
                 "params": {},
-                "note": "test fixture: stand-in second adapter",
+                "note": "test fixture: stand-in second adapter with the row's ports (U-01c)",
                 "end_state": True,
             }
     (dst / "flow.yaml").write_text(yaml.safe_dump(flow, sort_keys=False))
@@ -240,7 +240,7 @@ def test_two_implemented_levels_dispatch_to_their_adapters(
         r0 = unit.solve(inlets, {**params, "model": "R0"}, thermo)
         r1 = unit.solve(inlets, {"model": "R1"}, thermo)
         assert r0.outlets["outlet"].P > inlets["inlet"].P  # the pump raised pressure
-        assert r1.outlets["outlet"].P == inlets["inlet"].P  # the mixer held it
+        assert r1.outlets["outlet"].P == inlets["inlet"].P  # the tank held it
     finally:
         catalogue.load_rows.cache_clear()
         catalogue.register_all()  # restore the real dispatch classes
