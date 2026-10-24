@@ -26,11 +26,31 @@
     - name: cuts_out
       required: true
       description: pseudo-component stream at T, P, flow
+  balance: molar
   levels:
     R0:
-      status: planned
-      params: {}
-      note: assay (A-01) → pseudo-component stream at T, P, flow
+      status: provisional
+      validation:
+      - V2101
+      adapter: ngdesign.units.refining.assay_feeder:AssayFeeder
+      params:
+        type: object
+        properties:
+          assay_id:
+            type: string
+            description: id of the stored A-01 assay whose slate is the feed
+          T:
+            type: number
+            description: outlet temperature (K)
+          P:
+            type: number
+            description: outlet pressure (Pa abs)
+        required:
+        - assay_id
+        - T
+        - P
+      note: assay (A-01) → pseudo-component stream at T, P, flow (spec U-H1,
+        the inlet must match the declared slate exactly)
       end_state: true
   pid_symbol: ASSAY
   references:
@@ -56,11 +76,34 @@
     - name: water_out
       required: true
       description: salty waste water
+  balance: molar
   levels:
     R0:
-      status: planned
-      params: {}
-      note: water/salt/BS&W split spec, wash-water mix
+      status: provisional
+      validation: []
+      adapter: ngdesign.units.refining.desalter:Desalter
+      params:
+        type: object
+        properties:
+          T:
+            type: number
+            description: outlet temperature (K), isothermal desalter
+          dP:
+            type: number
+            description: pressure drop from the crude inlet (Pa, default 0)
+          water_carryover_frac:
+            type: number
+            description: fraction of inlet water reporting to the desalted crude
+              (the BS&W)
+          salt_removal:
+            type: number
+            description: fraction of tracked NaCl leaving with the brine
+        required:
+        - T
+        - water_carryover_frac
+        - salt_removal
+      note: water/salt/BS&W split spec, wash-water mix (spec U-H1, component
+        split at isothermal T with ΔP)
     R1:
       status: planned
       params: {}
@@ -69,7 +112,12 @@
   pid_symbol: DS
   references:
   - docs/unit-catalogue-plan.md §2 U-H 2
-  notes: roadmap.
+  notes: "V1 gap - provisional without a case. Searched PetroWiki 'Desalting' and
+    Wauquier (Petroleum Refining vol. 1, crude desalting): both state a
+    0.1-0.2 vol% BS&W specification but print no worked case, so the former
+    V2102 pin (which echoed its own input spec and the adapter's default salt
+    removal) was withdrawn at re-review. The water/salt/BS&W split is covered
+    by closed-form tests in tests/units/refining/test_separation.py."
 
 - id: crude_column
   name: Atmospheric crude column
@@ -79,6 +127,9 @@
     - name: crude_in
       required: true
       description: heated crude feed
+    - name: stripping_steam
+      required: false
+      description: stripping steam; its water (H2O) reports to the overhead
     outlet:
     - name: overhead
       required: true
@@ -95,11 +146,33 @@
     - name: bottoms
       required: true
       description: reduced crude bottoms
+  balance: molar
   levels:
     R0:
-      status: planned
-      params: {}
-      note: cut-point fractionation (TBP cut points, gap/overlap spec)
+      status: provisional
+      validation: []
+      adapter: ngdesign.units.refining.crude_column:CrudeColumn
+      params:
+        type: object
+        properties:
+          cut_points_K:
+            type: array
+            items:
+              type: number
+            description: four ascending TBP cut boundaries (K) for the five
+              products
+          overlap_K:
+            type: number
+            description: linear split band (K) at each cut boundary (default 0)
+          draws:
+            type: object
+            description: per-port {T, P} draw conditions (default the feed state)
+        required:
+        - cut_points_K
+      note: cut-point fractionation (TBP cut points, gap/overlap spec) — spec
+        U-H1 sharp cut, light ends and water to the overhead; optional
+        stripping_steam inlet carries its water to the overhead at R0
+        (one net duty)
     R2:
       status: planned
       params: {}
@@ -109,7 +182,12 @@
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-H 3
-  notes: roadmap; needs pseudo-component preflash (P1-14) and column extensions (plan §2b).
+  notes: V1 gap — provisional without a case. The open Bagajewicz & Ji (2001)
+    copy prints no per-cut product-yield table (transcription gaps recorded in
+    data/validation_units/refining/s0_reference.yaml), so the former V2103 pin
+    (a closed-form recomputation of the adapter's own cut arithmetic) was moved
+    to a closed-form test in tests/units/refining/test_separation.py. Column
+    extensions still planned (P1-11).
 
 - id: side_strip
   name: Side stripper
@@ -162,11 +240,32 @@
     - name: bottoms
       required: true
       description: vacuum residuum
+  balance: molar
   levels:
     R0:
-      status: planned
-      params: {}
-      note: cut-point fractionation at flash-zone P
+      status: provisional
+      validation:
+      - V2104
+      adapter: ngdesign.units.refining.vacuum_column:VacuumColumn
+      params:
+        type: object
+        properties:
+          cut_points_K:
+            type: array
+            items:
+              type: number
+            description: two ascending TBP cut boundaries (K) for the three
+              products
+          overlap_K:
+            type: number
+            description: linear split band (K) at each cut boundary (default 0)
+          draws:
+            type: object
+            description: per-port {T, P} draw conditions (default the feed state)
+        required:
+        - cut_points_K
+      note: cut-point fractionation at flash-zone P (spec U-H1 sharp cut on the
+        reduced-crude feed; single VGO draw, the row's three ports)
     R2:
       status: planned
       params: {}
@@ -192,11 +291,25 @@
     - name: liquid_out
       required: true
       description: flashed liquid
+  balance: molar
   levels:
     R0:
-      status: planned
-      params: {}
-      note: flash drum on the assay stream (today via the separator row)
+      status: provisional
+      validation: []
+      adapter: ngdesign.units.refining.preflash:Preflash
+      params:
+        type: object
+        properties:
+          T:
+            type: number
+            description: drum temperature (K)
+          P:
+            type: number
+            description: drum pressure (Pa abs, default the inlet pressure)
+        required:
+        - T
+      note: flash drum on the assay stream (spec U-H1 PT flash at the drum
+        conditions; vapour to vapor_out, pooled liquid to liquid_out)
     R2:
       status: planned
       params: {}
@@ -205,7 +318,12 @@
   pid_symbol: FL
   references:
   - docs/unit-catalogue-plan.md §2 U-H 6
-  notes: roadmap.
+  notes: V1 gap — provisional without a case. The drum conditions are published
+    (Gary et al., Petroleum Refining, p. 66), but no open source prints a
+    flashed-vapour yield for that basis, so the former V2105 pin (a regression
+    value computed by the registered PR package) was withdrawn; plumbing and
+    vapour-fraction consistency live as closed-form tests in
+    tests/units/refining/test_separation.py.
 
 - id: naphtha_ht
   name: Naphtha hydrotreater
@@ -451,23 +569,50 @@
   family: refining
   ports:
     inlet:
-    - name: component_in
+    - name: component_in_1
       required: true
-      description: blendstock feed (multiple via params)
+      description: first blendstock feed
+    - name: component_in_2
+      required: true
+      description: second blendstock feed
+    - name: component_in_3
+      required: true
+      description: third blendstock feed (zero-flow when unused)
     outlet:
     - name: blend_out
       required: true
       description: blended product
+  balance: molar
   levels:
     R0:
-      status: planned
-      params: {}
-      note: volume/mass blending with property indices (RVP, octane, cetane,
-        sulfur, D86)
+      status: provisional
+      validation: []
+      adapter: ngdesign.units.refining.blending:Blender
+      params:
+        type: object
+        properties:
+          P:
+            type: number
+            description: blend pressure (Pa abs, default the first inlet's)
+          properties:
+            type: object
+            description: per-inlet-port blendstock properties
+              {rvp_psi, sulfur_wt_ppm, ron, cetane_index, d86_point_k}; an
+              index is reported only when every flowing inlet declares it
+      note: adiabatic PH mix (duty 0) plus property indices — RVP by the
+        Gary-Handwerk-Kaiser/Chevron index RVP^1.25 on a volume basis,
+        sulfur mass-weighted, octane and cetane linear by volume (documented
+        R0 simplification; real blending is interactive), one D86 point by
+        volume-average T (R0); every rule cited in the adapter (spec U-H1,
+        three declared inlets, unused ports zero-flow)
       end_state: true
   sizer: null  # no registered blender sizer; sizing ships with a later spec
   pid_symbol: BL
   references:
   - docs/unit-catalogue-plan.md §2 U-H 12
-  notes: roadmap; the R0 blend shares the mixer adapter for the linear part, the
-    index work (cloud_point and pour_point plugins exist) is U-H's thread.
+  notes: V1 gap — provisional without a case. The GHK 5th ed. ch. 12 printed
+    RVP blending example could not be re-read from an open copy at re-review
+    time, and the former V2106 pin was index arithmetic on its own input values
+    (with an invented reformate stand-in), so it was withdrawn; the RVP/sulfur/
+    RON index arithmetic is covered by closed-form tests in
+    tests/units/refining/test_separation.py.
