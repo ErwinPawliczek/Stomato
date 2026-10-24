@@ -26,6 +26,7 @@
     - name: cuts_out
       required: true
       description: pseudo-component stream at T, P, flow
+  balance: molar
   levels:
     R0:
       status: provisional
@@ -75,11 +76,11 @@
     - name: water_out
       required: true
       description: salty waste water
+  balance: molar
   levels:
     R0:
       status: provisional
-      validation:
-      - V2102
+      validation: []
       adapter: ngdesign.units.refining.desalter:Desalter
       params:
         type: object
@@ -111,7 +112,12 @@
   pid_symbol: DS
   references:
   - docs/unit-catalogue-plan.md §2 U-H 2
-  notes: roadmap.
+  notes: V1 gap — provisional without a case. Searched PetroWiki "Desalting" and
+    Wauquier (Petroleum Refining vol. 1, crude desalting): both state a
+    0.1–0.2 vol% BS&W specification but print no worked case, so the former
+    V2102 pin (which echoed its own input spec and the adapter's default salt
+    removal) was withdrawn at re-review. The water/salt/BS&W split is covered
+    by closed-form tests in tests/units/refining/test_separation.py.
 
 - id: crude_column
   name: Atmospheric crude column
@@ -140,11 +146,11 @@
     - name: bottoms
       required: true
       description: reduced crude bottoms
+  balance: molar
   levels:
     R0:
       status: provisional
-      validation:
-      - V2103
+      validation: []
       adapter: ngdesign.units.refining.crude_column:CrudeColumn
       params:
         type: object
@@ -176,7 +182,12 @@
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-H 3
-  notes: roadmap; needs pseudo-component preflash (P1-14) and column extensions (plan §2b).
+  notes: V1 gap — provisional without a case. The open Bagajewicz & Ji (2001)
+    copy prints no per-cut product-yield table (transcription gaps recorded in
+    data/validation_units/refining/s0_reference.yaml), so the former V2103 pin
+    (a closed-form recomputation of the adapter's own cut arithmetic) was moved
+    to a closed-form test in tests/units/refining/test_separation.py. Column
+    extensions still planned (P1-11).
 
 - id: side_strip
   name: Side stripper
@@ -229,6 +240,7 @@
     - name: bottoms
       required: true
       description: vacuum residuum
+  balance: molar
   levels:
     R0:
       status: provisional
@@ -279,11 +291,11 @@
     - name: liquid_out
       required: true
       description: flashed liquid
+  balance: molar
   levels:
     R0:
       status: provisional
-      validation:
-      - V2105
+      validation: []
       adapter: ngdesign.units.refining.preflash:Preflash
       params:
         type: object
@@ -306,7 +318,12 @@
   pid_symbol: FL
   references:
   - docs/unit-catalogue-plan.md §2 U-H 6
-  notes: roadmap.
+  notes: V1 gap — provisional without a case. The drum conditions are published
+    (Gary et al., Petroleum Refining, p. 66), but no open source prints a
+    flashed-vapour yield for that basis, so the former V2105 pin (a regression
+    value computed by the registered PR package) was withdrawn; plumbing and
+    vapour-fraction consistency live as closed-form tests in
+    tests/units/refining/test_separation.py.
 
 - id: naphtha_ht
   name: Naphtha hydrotreater
@@ -565,11 +582,11 @@
     - name: blend_out
       required: true
       description: blended product
+  balance: molar
   levels:
     R0:
       status: provisional
-      validation:
-      - V2106
+      validation: []
       adapter: ngdesign.units.refining.blending:Blender
       params:
         type: object
@@ -593,5 +610,9 @@
   pid_symbol: BL
   references:
   - docs/unit-catalogue-plan.md §2 U-H 12
-  notes: roadmap; the R0 blend shares the mixer adapter for the linear part, the
-    index work (cloud_point and pour_point plugins exist) is U-H's thread.
+  notes: V1 gap — provisional without a case. The GHK 5th ed. ch. 12 printed
+    RVP blending example could not be re-read from an open copy at re-review
+    time, and the former V2106 pin was index arithmetic on its own input values
+    (with an invented reformate stand-in), so it was withdrawn; the RVP/sulfur/
+    RON index arithmetic is covered by closed-form tests in
+    tests/units/refining/test_separation.py.

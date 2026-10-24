@@ -24,9 +24,7 @@ def _slate() -> dict[str, float]:
     return dict(mole)
 
 
-def _inlets(
-    thermo: Thermo, feeds: dict[str, dict[str, Any]]
-) -> dict[str, StreamState]:
+def _inlets(thermo: Thermo, feeds: dict[str, dict[str, Any]]) -> dict[str, StreamState]:
     return {port: flash_feed(thermo, f) for port, f in feeds.items()}
 
 
@@ -269,6 +267,124 @@ def test_blender_refuses_an_undeclared_port(thermo: Thermo) -> None:
 
 
 # ------------------------------------------------------------------- catalogue
+
+
+# Re-review on 6f1a44b, item 3: V2102/V2103/V2105/V2106 echoed their own
+# inputs, echoed default params, or pinned model output, so they moved here
+# from data/validation_units/refining/cases.yaml as closed-form checks
+# recomputed independently of the adapters (data-bank MW/sg, the published
+# example feeds, the input params). The rows carry the documented V1 gaps.
+_WATER_60F_KG_M3 = 999.0  # water density at 60 degF, the slate bank's basis
+
+
+def _independent_volume(composition: dict[str, float], molar_flow: float) -> float:
+    """Reference liquid volume recomputed from data-bank MW/sg (slate basis)."""
+    volume = 0.0
+    for cid, x in composition.items():
+        record = component_record(cid)
+        mass_kg_s = x * molar_flow * record["mw"] / 1000.0
+        volume += mass_kg_s / (record["sg"] * _WATER_60F_KG_M3)
+    return volume
+
+
+def test_desalter_bsw_and_salt_removal_are_the_declared_split(thermo: Thermo) -> None:
+    """Former V2102: BS&W is the carryover split the params declare, salt removal
+    the declared fraction — recomputed here from the outlet composition, not
+    echoed from an input."""
+    unit = registry.create("unit", "desalter")
+    feeds, params = unit.example_case()
+    result = unit.solve(_inlets(thermo, feeds), params, thermo)
+    crude_out = result.outlets["crude_out"]
+    # BS&W: water reference volume over the desalted-crude reference volume.
+    water_vol = _independent_volume({"H2O": crude_out.composition.get("H2O", 0.0)}, crude_out.molar_flow)
+    total_vol = _independent_volume(crude_out.composition, crude_out.molar_flow)
+    assert result.info["bsw_vol_pct"] == pytest.approx(100.0 * water_vol / total_vol, rel=1e-9)
+    # Salt removal: the declared fraction, observed on the tracked component.
+    crude_in = flash_feed(thermo, feeds["crude_in"])
+    wash_in = flash_feed(thermo, feeds["wash_in"])
+    salt_in = crude_in.composition["NaCl"] * crude_in.molar_flow
+    assert result.info["salt_removed_frac"] == pytest.approx(params["salt_removal"], abs=1e-12)
+    removed = 1.0 - crude_out.composition["NaCl"] * crude_out.molar_flow / salt_in
+    assert removed == pytest.approx(params["salt_removal"], rel=1e-9)
+    # Water split: exactly carryover of the inlet water to the crude.
+    water_in = (
+        crude_in.composition["H2O"] * crude_in.molar_flow + wash_in.composition["H2O"] * wash_in.molar_flow
+    )
+    assert crude_out.composition["H2O"] * crude_out.molar_flow == pytest.approx(
+        params["water_carryover_frac"] * water_in, rel=1e-9
+    )
+
+
+def test_crude_column_product_shares_recomputed_from_the_slate(thermo: Thermo) -> None:
+    """Former V2103: the five product volume shares, recomputed independently of
+    the adapter as a sharp-cut assignment of the slate pseudos by Tb (the
+    example runs overlap_K = 0.0), volumed on data-bank MW/sg."""
+    unit = registry.create("unit", "crude_column")
+    feeds, params = unit.example_case()
+    assert params["overlap_K"] == 0.0
+    result = unit.solve(_inlets(thermo, feeds), params, thermo)
+    cuts = params["cut_points_K"]
+    ports = list(unit.outlet_ports)
+    feed_flow = feeds["crude_in"]["molar_flow"]
+    vols = {port: 0.0 for port in ports}
+    for cid, x in _slate().items():
+        tb = component_record(cid)["Tb"]
+        index = sum(1 for cut in cuts if tb >= cut)
+        vols[ports[index]] += _independent_volume({cid: x}, feed_flow)
+    total = sum(vols.values())
+    for port in ports:
+        assert result.info[f"{port}_vol_pct"] == pytest.approx(100.0 * vols[port] / total, rel=1e-6)
+    assert math.isclose(sum(result.info[f"{p}_vol_pct"] for p in ports), 100.0, rel_tol=1e-9)
+
+
+def test_preflash_vapor_fraction_is_the_flash_at_the_published_conditions(thermo: Thermo) -> None:
+    """Former V2105: the drum runs the published conditions (Gary et al. p. 66);
+    the vapour fraction must equal the thermo package's flash of the same feed
+    at those conditions and the outlets must split accordingly. No open source
+    prints a vapour yield for this basis (documented V1 gap on the row)."""
+    unit = registry.create("unit", "preflash")
+    feeds, params = unit.example_case()
+    inlets = _inlets(thermo, feeds)
+    result = unit.solve(inlets, params, thermo)
+    feed = inlets["feed_in"]
+    independent = thermo.flash_pt(feed.composition, params["T"], params["P"], feed.molar_flow)
+    assert result.info["vapor_frac"] == pytest.approx(independent.vapor_fraction, rel=1e-9)
+    vapour = result.outlets["vapor_out"]
+    liquid = result.outlets["liquid_out"]
+    assert vapour.molar_flow == pytest.approx(independent.vapor_fraction * feed.molar_flow, rel=1e-6)
+    assert liquid.molar_flow == pytest.approx((1.0 - independent.vapor_fraction) * feed.molar_flow, rel=1e-6)
+    assert vapour.P == pytest.approx(params["P"])
+    assert liquid.P == pytest.approx(params["P"])
+
+
+def test_blender_indices_recomputed_from_the_inputs(thermo: Thermo) -> None:
+    """Former V2106: the GHK/Chevron RVP^1.25 volume index, the mass-basis sulfur
+    and the volume-linear RON recomputed from the declared params and the
+    data-bank reference volumes."""
+    unit = registry.create("unit", "blending")
+    feeds, params = unit.example_case()
+    result = unit.solve(_inlets(thermo, feeds), params, thermo)
+    props = params["properties"]
+    volumes: dict[str, float] = {}
+    masses: dict[str, float] = {}
+    for port, feed in feeds.items():
+        volumes[port] = _independent_volume(feed["composition"], feed["molar_flow"])
+        masses[port] = sum(
+            x * feed["molar_flow"] * component_record(cid)["mw"] / 1000.0
+            for cid, x in feed["composition"].items()
+        )
+    vol_total = sum(volumes.values())
+    mass_total = sum(masses.values())
+    rvp_index = sum(volumes[p] * props[p]["rvp_psi"] ** 1.25 for p in volumes) / vol_total
+    assert result.info["rvp_psi"] == pytest.approx(rvp_index ** (1.0 / 1.25), rel=1e-9)
+    assert result.info["sulfur_wt_ppm"] == pytest.approx(
+        sum(masses[p] * props[p]["sulfur_wt_ppm"] for p in masses) / mass_total, rel=1e-9
+    )
+    assert result.info["ron"] == pytest.approx(
+        sum(volumes[p] * props[p]["ron"] for p in volumes) / vol_total, rel=1e-9
+    )
+    # Adiabatic: the mixer adds no heat.
+    assert result.duty_W == pytest.approx(0.0, abs=1e-6)
 
 
 def test_refining_rows_register_their_adapters() -> None:
