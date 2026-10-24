@@ -22,16 +22,16 @@
       P: 7.0e+6
       molar_flow: 24.2449
       composition:
-        N2: 0.005
-        CO2: 0.015
-        C1: 0.848
-        C2: 0.062
-        C3: 0.032
-        iC4: 0.007
-        nC4: 0.010
-        iC5: 0.004
-        nC5: 0.004
-        C6+: 0.010
+        N2: 0.00487
+        CO2: 0.0146
+        C1: 0.82500
+        C2: 0.06034
+        C3: 0.03114
+        iC4: 0.00681
+        nC4: 0.00973
+        iC5: 0.00389
+        nC5: 0.00389
+        C6+: 0.00973
         H2O: 0.030
     inhibitor_in:
       T: 288.15
@@ -52,7 +52,7 @@
     the catalogue PR package, which sits ~2.3 K above the ideal-K route; the
     tolerance covers that model gap, fixed before the run.
   feeds:
-    feed_in:
+    inlet:
       T: 303.15
       P: 4.25325e+5
       molar_flow: 0.22278

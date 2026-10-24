@@ -37,7 +37,10 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V-hydrate-gpsa-20-10` | R0 | — | — | — | — | error: TypeError: type str doesn't define __round__ method |
+| `V-hydrate-gpsa-20-10` | R0 | — | — | — | — | error: ValidationError: 1 validation error for StreamState
+composition
+  Value error, mole fractions sum to 1.00019, not 1 [type=value_error, input_value={'N2': 0.00487, 'CO2': 0....': 0.00973, 'H2O': 0.03}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.14/v/value_error |
 
 - `V-hydrate-gpsa-20-10`: GPSA Engineering Data Book (SI), Sect. 20, Example 20-10 with the 2004 SI errata (K_H,MeOH = 1297; Hammerschmidt not to be used beyond 20-25 wt% MeOH, Nielsen-Bucklin preferred): a 14 degC hydrate-temperature depression needs 27.5 wt% MeOH in the free-water phase (Hammerschmidt gives 25.5). The case fixes T_operating_K at hydrate_T - 14.0 K (hydrate_T from the catalogue hammerschmidt_formation at the case pressure) so the required aqueous mass fraction reproduces exactly that scenario.
 
