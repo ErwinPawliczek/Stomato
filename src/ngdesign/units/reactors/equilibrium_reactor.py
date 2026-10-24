@@ -173,20 +173,52 @@ class EquilibriumReactor:
                 outlet, _ = state_at(T)
                 return enthalpy_with_formation(outlet) - target
 
-            lo, hi = max(_T_MIN, inlet.T - 400.0), inlet.T + 2000.0
-            while f(lo) > 0.0 and lo > _T_MIN:
-                lo = max(_T_MIN, lo - 500.0)
-            if f(lo) > 0.0:
+            def f_known(T: float) -> float | None:
+                """f(T), or None where the equilibrium extent solve refuses (sign unknown)."""
+                try:
+                    return f(T)
+                except ValueError:
+                    return None
+
+            # Bracket the adiabatic outlet temperature outward from the inlet in
+            # small steps. The extent solve only converges in a band around the
+            # feed state; far outside it f is undefined rather than signed, so a
+            # refused evaluation is skipped, never treated as a bracket side,
+            # and brentq only ever evaluates inside the solvable band.
+            lo: float | None = None
+            hi: float | None = None
+            lo_hot = False  # a known f > 0 was seen on the cold side
+            hi_hot = False  # a known f < 0 was seen on the hot side
+            step = 50.0
+            while (lo is None or hi is None) and step <= _T_MAX:
+                if lo is None:
+                    value = f_known(max(_T_MIN, inlet.T - step))
+                    if value is not None:
+                        if value <= 0.0:
+                            lo = max(_T_MIN, inlet.T - step)
+                        else:
+                            lo_hot = True
+                if hi is None:
+                    value = f_known(min(_T_MAX, inlet.T + step))
+                    if value is not None:
+                        if value >= 0.0:
+                            hi = min(_T_MAX, inlet.T + step)
+                        else:
+                            hi_hot = True
+                step += 100.0
+            if lo is None and lo_hot:
                 raise ValueError(
-                    "adiabatic heat balance is infeasible: even at 1 K the outlet enthalpy "
+                    "adiabatic heat balance is infeasible: even at the 1 K floor the outlet enthalpy "
                     "exceeds the inlet enthalpy (the reaction heat exceeds all available sensible heat)"
                 )
-            while f(hi) < 0.0:
-                if hi >= _T_MAX:
-                    raise ValueError(
-                        f"reactor outlet temperature exceeds {_T_MAX} K closing the heat balance"
-                    )
-                hi = min(_T_MAX, hi + 1000.0)
+            if hi is None and hi_hot:
+                raise ValueError(f"reactor outlet temperature exceeds {_T_MAX} K closing the heat balance")
+            if lo is None or hi is None:
+                raise ValueError(
+                    f"reaction set {rset.id!r}: could not bracket the adiabatic outlet temperature — "
+                    "the equilibrium extent solve refuses on one side of the feed state; refusing "
+                    "rather than extrapolating"
+                )
             T_out = float(brentq(f, lo, hi, xtol=1e-9, maxiter=200))
             outlet, extents = state_at(T_out)
         else:
