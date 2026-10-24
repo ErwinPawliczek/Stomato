@@ -148,7 +148,7 @@ def test_ejector_discharge_pressure(thermo: Thermo) -> None:
     feeds, params = cls.example_case()
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
     result = cls().solve(inlets, params, thermo)
-    motive, suction = inlets["motive"], inlets["suction"]
+    motive, suction = inlets["motive_in"], inlets["suction_in"]
     assert result.info["motive_to_suction_required"] == pytest.approx(
         motive.mass_flow / suction.mass_flow, rel=1e-4
     )
@@ -242,7 +242,7 @@ def test_ejector_refuses_outlet_pressure_outside_band(thermo: Thermo) -> None:
     cls = ejector.Ejector
     feeds, params = cls.example_case()
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
-    motive, suction = inlets["motive"], inlets["suction"]
+    motive, suction = inlets["motive_in"], inlets["suction_in"]
     with pytest.raises(ejector.EjectorSpecError, match="above the motive pressure"):
         cls().solve(inlets, {**params, "P_out": motive.P * 2.0}, thermo)
     with pytest.raises(ejector.EjectorSpecError, match="below the suction pressure"):

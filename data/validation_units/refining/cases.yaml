@@ -1,3 +1,55 @@
+# Refining family V1 worked cases (spec U-H1 review round).
+#
+# Provenance rules per repo conventions: every case cites a published example
+# or a documented closed form; expected values are recomputed independently of
+# the adapters (from the transcribed assay/component data and the cited index
+# formulas), so a regression in the adapter arithmetic cannot satisfy its own
+# check. The A-01 assay's transcription gaps are recorded in
+# data/validation_units/refining/s0_reference.yaml: the open Bagajewicz & Ji
+# copy prints no product yields, so crude/vacuum column cases assert the
+# closed-form cut assignment, not published yields.
+#
+# Desalter, crude_column, preflash and blending ship provisional WITHOUT a V1
+# case (re-review on 6f1a44b, item 3): the former V2102/V2103/V2105/V2106 pins
+# echoed inputs, echoed default params, or pinned model output. Their
+# expectations live on as closed-form tests in
+# tests/units/refining/test_separation.py, and the row `notes` record what was
+# searched and why no open worked example could be pinned (conventions: no
+# open worked example -> provisional without one).
+
+- id: V2101
+  unit: assay_feeder
+  level: R0
+  source: "Bagajewicz & Ji 2001, Ind. Eng. Chem. Res. 40, 617-626: Table 1 light-crude
+    feed density 845 kg/m3 = 36.0 deg API; Table 2 light ends total 5.11 vol%
+    (transcribed in data/assays/bagajewicz_ji_2001_light.yaml)"
+  expected:
+  - quantity: info.api_gravity
+    value: 36.0
+    tol_rel: 0.01
+  - quantity: info.light_ends_vol_pct
+    value: 5.11
+    tol_rel: 0.005
+
+- id: V2104
+  unit: vacuum_column
+  level: R0
+  source: "Documented closed form: the example basis cuts the A-01 assay's pseudos
+    above the AGO end point at 40 mmHg (Gary et al., Petroleum Refining, p. 77
+    vacuum conditions, as cited on the adapter example); shares recomputed
+    independently from the slate mole fractions, MW and sg at cut points
+    755 K / 950 K"
+  expected:
+  - quantity: info.overhead_vol_pct
+    value: 34.9476
+    tol_rel: 0.001
+  - quantity: info.vgo_out_vol_pct
+    value: 39.8267
+    tol_rel: 0.001
+  - quantity: info.bottoms_vol_pct
+    value: 25.2257
+    tol_rel: 0.001
+
 # V1 worked cases for the refining family (spec U-H2).
 # E12.2 numbers: Fahim, Al-Sahhaf & Elkilani, Fundamentals of Petroleum Refining,
 # Elsevier 2010, ch. 12, Example E12.2, p. 309 — 100 lb/h naphtha (5/30/15/50 lb/h
