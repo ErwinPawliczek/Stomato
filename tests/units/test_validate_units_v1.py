@@ -8,7 +8,6 @@ pass/miss/assessed/finding rules are pinned before round-1 units add real ones.
 from __future__ import annotations
 
 import importlib.util
-import shutil
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -51,14 +50,8 @@ def _measured_mixer_T(vu: ModuleType, rows: dict[str, UnitRow]) -> float:
 def _run(
     vu: ModuleType, rows: dict[str, UnitRow], tmp_path: Path, monkeypatch: Any, cases: list[dict[str, Any]]
 ) -> Any:
-    real_dir = vu.VALIDATION_DIR
-    # Round-1 rows declare real validation ids in the catalogue; carry the real
-    # case files into the isolated world so those ids still resolve there.
-    for real_family in real_dir.iterdir():
-        if real_family.is_dir():
-            shutil.copytree(real_family, tmp_path / real_family.name, dirs_exist_ok=True)
     family = tmp_path / "logical"
-    family.mkdir(exist_ok=True)
+    family.mkdir()
     (family / "cases.yaml").write_text(yaml.safe_dump(cases))
     monkeypatch.setattr(vu, "VALIDATION_DIR", tmp_path)
     return vu.run_v1(rows)
@@ -76,22 +69,13 @@ def _case(value: float, **extra: Any) -> dict[str, Any]:
     return case
 
 
-def _synthetic(results: list[Any]) -> Any:
-    """The synthetic case's result — the isolated world also carries the real
-    round-1 cases (real catalogue rows declare validation ids), so select by id
-    rather than position."""
-    mine = [r for r in results if r.case == "V-mixer-synthetic"]
-    assert len(mine) == 1, results
-    return mine[0]
-
-
 def test_v1_case_matching_its_expected_value_passes(
     vu: ModuleType, rows: dict[str, UnitRow], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     T = _measured_mixer_T(vu, rows)
     results, findings = _run(vu, rows, tmp_path, monkeypatch, [_case(T)])
     assert findings == []
-    assert _synthetic(results).passed
+    assert len(results) == 1 and results[0].passed
 
 
 def test_v1_unassessed_miss_is_a_finding(
@@ -99,7 +83,7 @@ def test_v1_unassessed_miss_is_a_finding(
 ) -> None:
     T = _measured_mixer_T(vu, rows)
     results, findings = _run(vu, rows, tmp_path, monkeypatch, [_case(T + 1.0)])
-    assert not _synthetic(results).passed
+    assert not results[0].passed
     assert [f.case for f in findings] == ["V-mixer-synthetic"]
     assert "unassessed miss" in findings[0].detail
 
@@ -112,7 +96,7 @@ def test_v1_assessed_miss_is_recorded_not_a_finding(
         vu, rows, tmp_path, monkeypatch, [_case(T + 1.0, assessed="measured +1 K; explained")]
     )
     assert findings == []
-    assert not _synthetic(results).passed
+    assert not results[0].passed
     page = vu.unit_page(rows["mixer"], results)
     assert "assessed miss" in page and "measured +1 K; explained" in page
 
@@ -133,8 +117,7 @@ def test_v1_bad_quantity_path_is_an_error_not_a_pass(
     case = _case(0.0)
     case["expected"] = [{"quantity": "outlet.nope.T", "value": 0.0, "tol_abs": 1.0}]
     results, findings = _run(vu, rows, tmp_path, monkeypatch, [case])
-    synthetic = _synthetic(results)
-    assert synthetic.error is not None and "nope" in synthetic.error
+    assert results[0].error is not None and "nope" in results[0].error
     assert findings
 
 
@@ -147,7 +130,7 @@ def test_v1_params_overlay_and_feeds_override(
     case["expected"] = [{"quantity": "outlet.outlet.T", "value": 300.0, "tol_abs": 1e-6}]
     results, findings = _run(vu, rows, tmp_path, monkeypatch, [case])
     assert findings == [], findings
-    assert _synthetic(results).passed
+    assert results[0].passed
 
 
 def test_level_validation_id_without_case_is_a_finding(
