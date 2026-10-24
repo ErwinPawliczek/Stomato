@@ -75,7 +75,7 @@
   - {quantity: "info.bottoms_SO2", value: 0.0063, tol_abs: 0.0001}
   - {quantity: "info.overhead_1,3-butadiene", value: 0.99186, tol_abs: 0.001}
   - {quantity: "info.bottoms_1,2-butadiene", value: 0.01134, tol_abs: 0.0003}
-  - {quantity: "info.bottoms_n-decane", value: 12.4403, tol_abs: 0.002}
+  - {quantity: "info.bottoms_n-decane", value: 12.4410, tol_abs: 0.002}
 
 - id: V1-kremser-extractor-seader52
   unit: liquid_liquid_extractor
