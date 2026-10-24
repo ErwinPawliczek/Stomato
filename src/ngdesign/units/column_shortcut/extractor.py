@@ -25,16 +25,18 @@ from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.column_shortcut._kremser import two_feed_split
 
-#: Treybal / Seader-Henley Example 5.2 basis (pp. 161-163), used as the
-#: adapter's example case: 123.7 kmol/h of p-dioxane (12.87) and water
-#: (110.83) extracted by 87.1 kmol/h of benzene; K'D = 1.2 for dioxane and
-#: N = 2 stages give the book's 89.1 % extraction (E = 2.4).
-_EXAMPLE_FEED_KMOL_H = {"p-dioxane": 12.87, "water": 110.83}
-_EXAMPLE_SOLVENT_KMOL_H = {"benzene": 87.09}
+#: Seader-Henley Example 5.2 basis (pp. 183-185), used as the adapter's
+#: example case: 4,536 kg/h of p-dioxane (25 wt%) and water extracted by
+#: 6,804 kg/h of benzene; the book's constant mass-ratio coefficient K'D =
+#: 1.2 converts to the adapter's mole-ratio basis K_D = K'D x MW_benzene /
+#: MW_water = 1.2 x 78.11 / 18.015 = 5.2027, giving E = K_D x S/F = 2.399
+#: and N = 2 stages -> the book's 89.1 % extraction (89.08 % computed).
+_EXAMPLE_FEED_KMOL_H = {"p-dioxane": 12.871, "water": 188.840}
+_EXAMPLE_SOLVENT_KMOL_H = {"benzene": 87.085}
 _EXAMPLE_T = 298.15
 _EXAMPLE_P = 101325.0
 _EXAMPLE_N = 2.0
-_EXAMPLE_KD = {"p-dioxane": 1.2}
+_EXAMPLE_KD = {"p-dioxane": 5.2027}
 
 
 class LiquidLiquidExtractor:
@@ -141,9 +143,9 @@ class LiquidLiquidExtractor:
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-        """Treybal / Seader-Henley Example 5.2 basis (pp. 161-163): p-dioxane
-        extracted from water by benzene, K'D = 1.2, N = 2 stages, on the
-        book's constant-distribution-coefficient basis."""
+        """Seader-Henley Example 5.2 basis (pp. 183-185): p-dioxane extracted
+        from water by benzene at the book's mass-ratio K'D = 1.2 converted to
+        the mole basis (K_D = 5.2027), N = 2 stages, 89.1 % extraction."""
         feeds = {
             "feed": {
                 "T": _EXAMPLE_T,
