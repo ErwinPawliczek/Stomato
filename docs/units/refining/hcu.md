@@ -25,4 +25,4 @@ Rigour ladder: R0 planned, R1 planned
 
 - docs/unit-catalogue-plan.md §2 U-H 10
 
-> roadmap.
+> roadmap. R0 record of what was searched (U-H2 review) - published hydrocracker yield correlations are chart/figure-based (Gary, Handwerk & Kaiser, Petroleum Refining, 5th ed. 2007, §7.6 Hydrocracking Yields, pp. 170-172, reads Figure 7.4 / Figure 7.6 curves; its Table 7.3 is fixed-feed vol% tables, not a correlation) and the U-R1 conventions forbid digitising figures, so the row stays planned rather than shipping a figure-transcription.
