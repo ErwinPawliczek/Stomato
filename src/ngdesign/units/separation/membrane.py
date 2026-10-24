@@ -69,9 +69,9 @@ class Membrane:
             )
             fast = max(fractions, key=lambda cid: fractions[cid] * inlet.composition[cid])
             y_fast = fractions[fast] * inlet.composition[fast] / float(stage_cut)
+            # UnitResult.info is dict[str, float]; the model and component
+            # names stay out of it (the catalogue note documents the model).
             info = {
-                "model": "weller_steiner_complete_mixing",
-                "fast_component": fast,
                 "stage_cut": float(stage_cut),
                 "permeate_y_fast": y_fast,
                 "residue_x_fast": (inlet.composition[fast] - float(stage_cut) * y_fast)
