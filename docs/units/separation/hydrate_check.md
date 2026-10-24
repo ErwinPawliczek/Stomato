@@ -16,7 +16,7 @@ Rigour ladder: R0 provisional, R1 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.separation.hydrate_check:HydrateCheck` | adiabatic PH mix; hydrate_T from hammerschmidt_formation at the mixed P, suppression from nielsen_bucklin_suppression at the aqueous inhibitor fraction, and the required inhibitor dose for T_operating_K |
+| R0 | provisional | `ngdesign.units.separation.hydrate_check:HydrateCheck` | adiabatic PH mix; hydrate_T from hammerschmidt_formation at the mixed P, dose from nielsen_bucklin_suppression at the operating T; the required inhibitor rate covers the aqueous phase only — GPSA's vapour and hydrocarbon-liquid methanol losses are excluded at R0 |
 | R1 | planned | — | Katz / van der Waals-Platteeuw (via thermo) |
 
 ### R0 parameters
