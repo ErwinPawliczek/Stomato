@@ -12,7 +12,9 @@ which owns its checks outside pytest.
    ``balance: mass_elements`` rows (reactive units) total mass and every
    element's atom flow in == out instead (relative tolerance 1e-8);
 2. energy: ``sum(n*h) in + duty_W + power_W == sum(n*h) out`` (relative 1e-8),
-   with ``h`` lifted to the formation-enthalpy basis on ``mass_elements`` rows;
+   with ``h`` lifted to the formation-enthalpy basis on ``mass_elements`` rows
+   (or the package enthalpy, when a species lacks formation data and the unit
+   declares ``heat_of_reaction_basis_sensible_only``; ``ngdesign.units.balance``);
 3. determinism: a second solve reproduces every outlet state within 1e-8.
 
 Each row solves on its ``example_thermo`` package (default ``pr``).
@@ -67,9 +69,7 @@ from ngdesign import registry
 from ngdesign.contracts.flowsheet import UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import StreamState
-from ngdesign.data import component_record
-from ngdesign.data.formation import atomic_composition
-from ngdesign.units._physics.kinetics import enthalpy_with_formation
+from ngdesign.units.balance import BalanceBasisError, energy_basis, mass_and_atoms, stream_enthalpy
 from ngdesign.units.catalogue import UnitRow, load_rows, register_all
 from ngdesign.units.levels import (
     LEVEL_ORDER,
@@ -204,31 +204,11 @@ def _relative(value: float, scale: float) -> float:
     return abs(value) / max(abs(scale), 1.0)
 
 
-def _mass_and_atoms(states: dict[str, StreamState]) -> tuple[float, dict[str, float]]:
-    """Total mass flow (g/s) and per-element atom flows (mol/s) of a stream set.
-
-    Components without a molecular formula (pseudo-components) carry mass only.
-    """
-    mass = 0.0
-    atoms: dict[str, float] = {}
-    for state in states.values():
-        for cid, y in state.composition.items():
-            n = state.molar_flow * y
-            mass += n * float(component_record(cid)["mw"])
-            try:
-                formula = atomic_composition(cid)
-            except ValueError:
-                continue
-            for element, count in formula.items():
-                atoms[element] = atoms.get(element, 0.0) + n * count
-    return mass, atoms
-
-
 def check_material(solved: Solved) -> str | None:
     """Molar (or, on ``mass_elements`` rows, mass + element) inventory in == out, relative 1e-8."""
     if solved.row.balance == "mass_elements":
-        mass_in, atoms_in = _mass_and_atoms(solved.inlets)
-        mass_out, atoms_out = _mass_and_atoms(solved.outlets)
+        mass_in, atoms_in = mass_and_atoms(solved.inlets.values())
+        mass_out, atoms_out = mass_and_atoms(solved.outlets.values())
         if _relative(mass_out - mass_in, mass_in) > TOLERANCE:
             return f"material: {mass_in:.6f} g/s in vs {mass_out:.6f} g/s out"
         for element in sorted(set(atoms_in) | set(atoms_out)):
@@ -246,19 +226,22 @@ def check_material(solved: Solved) -> str | None:
 def check_energy(solved: Solved) -> str | None:
     """Duty + shaft power balance the enthalpy change, relative 1e-8.
 
-    ``mass_elements`` rows balance on the formation-enthalpy basis, so a
-    reactor's heat of reaction appears in the stream enthalpies, not the duty.
+    The basis comes from :func:`ngdesign.units.balance.energy_basis`:
+    ``mass_elements`` rows close on the formation-enthalpy basis, so a
+    reactor's heat of reaction appears in the stream enthalpies, not the duty;
+    a row whose streams carry species without formation data closes on the
+    package enthalpy only when the unit declares that in its info.
     """
-    if solved.row.balance == "mass_elements":
-        h_in = sum(enthalpy_with_formation(s) for s in solved.inlets.values())
-        h_out = sum(enthalpy_with_formation(s) for s in solved.outlets.values())
-    else:
-        h_in = sum(s.molar_flow * s.enthalpy for s in solved.inlets.values())
-        h_out = sum(s.molar_flow * s.enthalpy for s in solved.outlets.values())
+    try:
+        basis = energy_basis(solved.row.balance, solved.inlets.values(), solved.outlets.values(), solved.info)
+    except BalanceBasisError as exc:
+        return f"energy: {exc}"
+    h_in = stream_enthalpy(solved.inlets.values(), basis)
+    h_out = stream_enthalpy(solved.outlets.values(), basis)
     residual = h_out - h_in - solved.duty_W - solved.power_W
     scale = max(abs(h_in), abs(h_out), abs(solved.duty_W), abs(solved.power_W))
     if _relative(residual, scale) > TOLERANCE:
-        return f"energy: residual {residual:.6g} W on {scale:.6g} W scale"
+        return f"energy: residual {residual:.6g} W on {scale:.6g} W scale ({basis} basis)"
     return None
 
 
