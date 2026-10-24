@@ -226,12 +226,12 @@ consistency_notes:
   #   and below the flash-zone temperature.
 
 not_recorded:  # items the spec asks for that NO paper of the series prints
-  - atmospheric flash-zone pressure and column-top pressure (searched [P1],
-    [P2], [V1] and the series' Part III and stripping-type papers: no column
+  - "atmospheric flash-zone pressure and column-top pressure (searched [P1],
+    [P2], [V1] and the series' Part III and stripping-type papers — no column
     pressure is printed anywhere; only the VACUUM flash-zone pressure is
-    printed, in [V1] Table 1)
-  - tray efficiency (the paper counts trays, not packing or efficiency)
-  - vacuum-column packing section temperatures (only top-PA cool-oil
-    guidance 65-95 C, [V1] text p. 6095) and vacuum column-top pressure
-  - individual stripping-steam rates in SI mass units (ratios and the diesel
-    kg mol/h values above are the only printed steam flows)
+    printed, in [V1] Table 1)"
+  - "tray efficiency (the paper counts trays, not packing or efficiency)"
+  - "vacuum-column packing section temperatures (only top-PA cool-oil
+    guidance 65-95 C, [V1] text p. 6095) and vacuum column-top pressure"
+  - "individual stripping-steam rates in SI mass units (ratios and the diesel
+    kg mol/h values above are the only printed steam flows)"

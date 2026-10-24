@@ -72,7 +72,11 @@ def test_vacuum_products_balance_their_feed() -> None:
     vacuum_feed = rates["LVGO"] + rates["HVGO"] + rates["vacuum_overhead"] + rates["vacuum_residue"]
     atmospheric_distillates = sum(rates[k] for k in ("naphtha", "kerosene", "diesel", "gas_oil"))
     vacuum_feed_from_atm = float(ref["feed"]["throughput_m3_h"]) - atmospheric_distillates
-    assert vacuum_feed == pytest.approx(vacuum_feed_from_atm, abs=0.1)
+    # Both sides are sums of printed values rounded to 0.01-0.1 m3/h; the
+    # printed rounding alone can account for ~0.3 m3/h here (vacuum products
+    # 210.082 vs feed-minus-distillates 209.78). The printed-rounding bound
+    # is the same one the feed-sum check uses.
+    assert vacuum_feed == pytest.approx(vacuum_feed_from_atm, abs=_RATE_SUM_TOL_M3_H)
 
 
 def test_d86_95_points_ascending() -> None:
@@ -97,9 +101,7 @@ def test_withdrawal_and_flash_temps_ordered(design: str) -> None:
     flash = float(d["flash_zone_temp_C"])
     assert temps["kerosene"] < temps["diesel"] < temps["gas_oil"] < temps["residue"] < flash
     pumparounds = cast(dict[str, Any], d["pumparounds"])
-    draw_temps = [
-        float(cast(list[Any], pumparounds[pa]["temp_range_C"])[0]) for pa in pumparounds
-    ]
+    draw_temps = [float(cast(list[Any], pumparounds[pa]["temp_range_C"])[0]) for pa in pumparounds]
     assert draw_temps == sorted(draw_temps)
     assert all(t < flash for t in draw_temps)
 
