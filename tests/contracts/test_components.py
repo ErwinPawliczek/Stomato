@@ -25,7 +25,13 @@ def _feed(composition: dict[str, float]) -> FeedSpec:
 
 
 def test_default_slate_is_the_curated_yaml_keys() -> None:
-    assert DEFAULT_SLATE == tuple(components())  # same 18 ids, same order
+    # The curated registry may grow beyond the legacy slate (P1-02 made it the
+    # open identity table; DME joined for the pc_saft_polar row because the
+    # chemicals databank cannot resolve that id), but the legacy 18 must stay
+    # its ordered prefix: curated additions append, never reorder or remove.
+    curated = tuple(components())
+    assert curated[: len(DEFAULT_SLATE)] == DEFAULT_SLATE
+    assert set(DEFAULT_SLATE) <= set(curated)
 
 
 def test_slate_defaults_to_sorted_feed_components() -> None:
