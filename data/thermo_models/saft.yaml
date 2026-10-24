@@ -362,6 +362,17 @@
   - pure-DME-280.0K-ps
   - pure-DME-320.0K-ps
   - pure-DME-360.0K-ps
+  assessed:
+    pure-ACETONE-350.0K-ps: "rho_V -3.3% (4.109 vs 4.249 kg/m3) — the published G&V 2006
+      parameterization under-predicts saturated vapour density as T rises toward Tc"
+    pure-ACETONE-400.0K-ps: "rho_V -5.8% (13.975 vs 14.830 kg/m3) — same trend"
+    pure-ACETONE-450.0K-ps: "rho_V -9.9% (38.458 vs 42.672 kg/m3), the worst point — assessed
+      as a parameterization limitation, not a transcription defect: teqp 0.23.2's own
+      GrossVrabec model (PSAFTEOS + '(mu^*)^2': 2.6764, nmu 1) returns -3.31/-5.76/-9.87%
+      at these exact states, and a dipole-strength sweep cannot close the gap (mu*^2 x1.5
+      moves rho_V to about -2/+3% only at the cost of Psat -40 to -51%); the G&V 2006 fit
+      targets Psat and saturated liquid density"
+    pure-DME-360.0K-ps: "rho_V -5.1% (55.286 vs 58.253 kg/m3) — same acetone trend"
   references:
   - >-
     Gross & Vrabec, "An equation of state contribution for polar components: Dipolar

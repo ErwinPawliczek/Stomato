@@ -1,6 +1,6 @@
 # pc_saft_polar — Polar PC-SAFT (hand-rolled kernel)
 
-family `saft` · status **experimental** · adapter `ngdesign.thermo.teqp_bridge:PCSaftPolarThermo`.
+family `saft` · status **provisional** · adapter `ngdesign.thermo.teqp_bridge:PCSaftPolarThermo`.
 
 ## Applicability (Carlson 1996)
 
@@ -18,31 +18,29 @@ family `saft` · status **experimental** · adapter `ngdesign.thermo.teqp_bridge
 
 | check | result | worst | measured |
 | --- | --- | --- | --- |
-
-Declared exclusions (not silent skips):
-
-- `determinism` — row refuses to build — no verified citable polar PC-SAFT parameter set (NotImplementedError in _build_kernel)
-- `dhdT_cp` — row refuses to build — no verified citable polar PC-SAFT parameter set (NotImplementedError in _build_kernel)
-- `gibbs_duhem` — row refuses to build — no verified citable polar PC-SAFT parameter set (NotImplementedError in _build_kernel)
-- `phase_identification` — row refuses to build — no verified citable polar PC-SAFT parameter set (NotImplementedError in _build_kernel)
-- `pure_psat_limit` — row refuses to build — no verified citable polar PC-SAFT parameter set (NotImplementedError in _build_kernel)
-- `round_trip` — row refuses to build — no verified citable polar PC-SAFT parameter set (NotImplementedError in _build_kernel)
-- `single_liquid_limit` — row refuses to build — no verified citable polar PC-SAFT parameter set (NotImplementedError in _build_kernel)
+| pure_psat_limit | ok | 0 | ACETONE@329.44K bubble 0 dew 0; ACETONE@400K bubble 0 dew 0; DME@248K bubble 0 dew 0; DME@320K bubble 0 dew 0 |
+| phase_identification | ok | 0 | ACETONE@350K ok; DME@280K ok |
+| round_trip | ok | 3.4e-07 | 300K/300000Pa T_ph 1.1e-07 H 1.2e-07 T_ps 9.2e-08; 450K/100000Pa T_ph 9.9e-08 H 3.4e-07 T_ps 1.2e-07 |
+| dhdT_cp | ok | 0 | 400K/100000Pa vapor cp 92.7286 dH/dT 92.7286 |
+| gibbs_duhem | ok | 1e-08 | ['ACETONE', 'DME']@350K/300000Pa vapor 1e-08 |
+| single_liquid_limit | ok | 0 | 300K/300000Pa kinds=['hc_liquid'] vf=0.0 |
+| determinism | ok | 0 | two instances bit-identical at 400K/100000Pa |
 
 ## L1/L2 reference-case outcomes
 
-None yet — validation case ids arrive with the data tasks (T-11..T-13).
+36/40 comparisons pass. Failing comparisons are assessed in the
+main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
 
-- `pure-ACETONE-296.0K-ps` — 
-- `pure-ACETONE-350.0K-ps` — 
-- `pure-ACETONE-400.0K-ps` — 
-- `pure-ACETONE-450.0K-ps` — 
-- `pure-DME-248.0K-ps` — 
-- `pure-DME-280.0K-ps` — 
-- `pure-DME-320.0K-ps` — 
-- `pure-DME-360.0K-ps` — 
+- `pure-ACETONE-296.0K-ps` — coolprop:Acetone
+- `pure-ACETONE-350.0K-ps` — coolprop:Acetone
+- `pure-ACETONE-400.0K-ps` — coolprop:Acetone
+- `pure-ACETONE-450.0K-ps` — coolprop:Acetone
+- `pure-DME-248.0K-ps` — coolprop:DimethylEther
+- `pure-DME-280.0K-ps` — coolprop:DimethylEther
+- `pure-DME-320.0K-ps` — coolprop:DimethylEther
+- `pure-DME-360.0K-ps` — coolprop:DimethylEther
 
 ## References
 

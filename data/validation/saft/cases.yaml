@@ -759,7 +759,10 @@ pure_cases:
 # pc_saft_polar pure-fluid cases: CoolProp HEOS references generated 2026-10-23.
 # The G&V 2006 parameterization targets the polar fluids' Psat; plain PC-SAFT
 # misses acetone Psat by about -8%, the dipolar term recovers it to the sub-1%
-# band below.
+# band below. Saturated-vapour-density misses near Tc are assessed per case in
+# the row's `assessed:` map (data/thermo_models/saft.yaml): teqp 0.23.2's own
+# GrossVrabec model reproduces them at the same states, so the miss belongs to
+# the published parameterization, not to this kernel.
 - id: pure-ACETONE-296.0K-ps
   package: pc_saft_polar
   coolprop_fluid: Acetone
