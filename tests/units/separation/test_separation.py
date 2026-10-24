@@ -269,7 +269,7 @@ def test_flash_drum_zero_flow_second_inlet_unchanged(thermo: Thermo) -> None:
     feeds["inlet_2"] = dict(feeds["inlet"])
     feeds["inlet_2"]["molar_flow"] = 0.0
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
-    result = unit.solve(inlets, {"duty_W": None, "vapor_fraction": 0.5}, thermo)
+    result = unit.solve(inlets, {"outlet_P": 3.0e6, "duty_W": None, "vapor_fraction": 0.5}, thermo)
     assert result.info["T_out_K"] == pytest.approx(single.info["T_out_K"], rel=1e-9)
 
 
