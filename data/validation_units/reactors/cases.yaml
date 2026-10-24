@@ -1,0 +1,109 @@
+# U-F — Reactors V1 worked cases (spec U-01). Every oracle is closed-form or a
+# cited textbook value; pressures use plain decimal literals (PyYAML turns
+# 1.01325e6 into a string without an explicit float tag).
+#
+# The equilibrium and Gibbs cases share one basis — equimolar CO/H2O at
+# 1100 K — so the two adapters are cross-checked against the same closed form
+# (X = sqrt(K)/(1+sqrt(K)) from the databank's JANAF ln K = −0.007436).
+# The yield case deliberately omits feeds/params to solve on the conversion
+# adapter's exact SMR example basis: the two outlets agree by construction.
+
+- id: V1-WGS-EQ
+  unit: equilibrium_reactor
+  level: R0
+  source: "Closed form from the JANAF databank WGS ln K(1100 K) = -0.007436 (U-F V2; cf. the CMU/Kitchin NIST-Webbook worked example at 1000 K)"
+  feeds:
+    inlet: {T: 1100.0, P: 1013250.0, molar_flow: 2.0, composition: {CO: 0.5, H2O: 0.5}}
+  params:
+    reaction_set:
+      id: wgs_case
+      components: [CO, H2O, CO2, H2]
+      reactions:
+      - id: wgsr
+        stoichiometry: {CO: -1.0, H2O: -1.0, CO2: 1.0, H2: 1.0}
+        base_component: CO
+        provenance: water-gas shift, standard reference (e.g. SVA App. C)
+        equilibrium: {form: from_gibbs}
+    thermal: isothermal
+  expected:
+  - {quantity: info.extent_wgsr, value: 0.499071, tol_abs: 0.00001}
+  - {quantity: outlet.outlet.composition.CO, value: 0.250465, tol_abs: 0.00001}
+  - {quantity: outlet.outlet.composition.CO2, value: 0.249535, tol_abs: 0.00001}
+
+- id: V1-WGS-GIBBS
+  unit: gibbs_reactor
+  level: R0
+  source: "Closed form from the JANAF databank WGS ln K(1100 K) = -0.007436 (U-F V2; cf. the CMU/Kitchin NIST-Webbook worked example at 1000 K)"
+  feeds:
+    inlet: {T: 1100.0, P: 1013250.0, molar_flow: 2.0, composition: {CO: 0.5, H2O: 0.5}}
+  params:
+    species: [CO, H2O, CO2, H2]
+    thermal: isothermal
+  expected:
+  - {quantity: outlet.outlet.composition.CO, value: 0.250465, tol_abs: 0.00001}
+  - {quantity: outlet.outlet.composition.CO2, value: 0.249535, tol_abs: 0.00001}
+  - {quantity: outlet.outlet.composition.H2, value: 0.249535, tol_abs: 0.00001}
+
+- id: V1-FOGLER-CONV
+  unit: conversion_reactor
+  level: R0
+  source: "Fogler, Elements of Chemical Reaction Engineering, 4th ed., Example 8-3 (adiabatic n-butane isomerization): T = 330 + 43.4 X"
+  feeds:
+    inlet: {T: 330.0, P: 1013250.0, molar_flow: 10.0, composition: {nC4: 1.0}}
+  params:
+    reaction_set:
+      id: isom_case
+      components: [nC4, iC4]
+      reactions:
+      - id: isom
+        stoichiometry: {nC4: -1.0, iC4: 1.0}
+        base_component: nC4
+        provenance: n-butane isomerization (Fogler Ex. 8-3)
+        equilibrium: {form: from_gibbs}
+    conversion: {isom: 0.5}
+    thermal: adiabatic
+  expected:
+  - {quantity: outlet.outlet.composition.iC4, value: 0.5, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.T, value: 351.7, tol_abs: 0.5}
+  assessed: >-
+    The composition check is exact (X = 0.5 fixed by the conversion spec; outlet
+    amounts 5.0/5.0 mol/s). The temperature comparison misses: the book's
+    constant-Cp correlation T = 330 + 43.4·X gives 351.7 K (ΔT = 21.7 K), while
+    the model measures 344.400 K (ΔT = 14.40 K) on the JANAF databank's
+    ΔH°rx ≈ −9510 J/mol and PR gas heat capacities. The book's slope combines
+    ΔH°rx = −6900 J/mol with a much smaller assumed Cp (≈ 159 J/mol·K); the
+    larger |ΔH| is more than offset by PR's larger Cp (≈ 330 J/mol·K), so the
+    adiabatic rise is smaller. Data-source and Cp-treatment differences,
+    documented rather than tuned away; no tolerance is widened to hide it.
+
+- id: V1-SMR-YIELD
+  unit: yield_reactor
+  level: R0
+  source: "Closed form: the conversion reactor's SMR example basis (10 CH4 + 40 H2O + 5 N2 at X = 0.7) — outlet amounts CH4 3, H2O 33, CO 7, H2 21, N2 5, total 69"
+  # Feeds/params omitted on purpose: the case solves on the adapter's exact
+  # example basis, whose mass yields are the closed-form amounts above.
+  expected:
+  - {quantity: outlet.outlet.molar_flow, value: 69.0, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.CH4, value: 0.043478, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.H2O, value: 0.478261, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.CO, value: 0.101449, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.H2, value: 0.304348, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.N2, value: 0.072464, tol_abs: 0.000001}
+
+- id: V1-ELECTROLYSER
+  unit: electrolyser_stack
+  level: R0
+  source: "Closed form, Faraday's law: n(H2) = η·I·N/(2F) = 0.98·2000·100/(2·96485) ≈ 1.0157 mol/s; power = V·I·N = 350 kW"
+  feeds:
+    inlet: {T: 353.15, P: 3000000.0, molar_flow: 50.0, composition: {H2O: 1.0}}
+  params:
+    current_A: 2000.0
+    n_cells: 100.0
+    cell_voltage_V: 1.75
+    faradaic_efficiency: 0.98
+  expected:
+  - {quantity: power_W, value: 350000.0, tol_rel: 0.000001}
+  - {quantity: info.cell_voltage_V, value: 1.75, tol_abs: 0.000001}
+  - {quantity: info.thermoneutral_voltage_V, value: 1.253154, tol_abs: 0.0001}
+  - {quantity: outlet.h2_out.molar_flow, value: 1.015698, tol_abs: 0.0001}
+  - {quantity: outlet.o2_out.composition.O2, value: 0.010261, tol_abs: 0.0001}
