@@ -114,8 +114,7 @@ def _approach_extent(
     T_eq = T - approach_K
     if not T_eq > 0.0:
         raise SulfurRecoveryError(
-            f"equilibrium approach {approach_K} K drives the stage temperature below zero "
-            f"(stage T {T:.4g} K)"
+            f"equilibrium approach {approach_K} K drives the stage temperature below zero (stage T {T:.4g} K)"
         )
     ln_k = ln_keq(claus, T_eq)
     nu = claus.stoichiometry
@@ -263,7 +262,13 @@ class SulfurRecovery:
             T_stage = float(stage["T"])
             if "conversion" in stage:
                 xi = float(stage["conversion"]) * gas.get("SO2", 0.0)
-                stage_ln_k = float("nan")
+                # Diagnostic only: a finite ln K at stage temperature keeps the
+                # info dict comparable across runs (NaN != NaN), even though the
+                # extent is fixed by the given conversion, not equilibrium.
+                try:
+                    stage_ln_k = ln_keq(claus, T_stage)
+                except KineticsError:
+                    stage_ln_k = float("inf")
             else:
                 try:
                     xi, stage_ln_k = _approach_extent(gas, claus, T_stage, float(stage["approach_K"]), P)
@@ -346,8 +351,7 @@ class SulfurRecovery:
                     "id": "claus_reaction",
                     "stoichiometry": {"H2S": -2.0, "SO2": -1.0, "H2O": 2.0, "S8": 0.375},
                     "base_component": "SO2",
-                    "provenance": "standard Claus reaction, Kohl & Nielsen, "
-                    "Gas Purification, 5th ed., ch. 8",
+                    "provenance": "standard Claus reaction, Kohl & Nielsen, Gas Purification, 5th ed., ch. 8",
                     "equilibrium": {"form": "from_gibbs"},
                 },
             ],

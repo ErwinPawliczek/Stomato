@@ -98,10 +98,7 @@ def test_larger_approach_recovers_less_sulfur() -> None:
         {"T": 573.15, "conversion": 0.7},
         {"T": 473.15, "approach_K": 60.0},
     ]
-    assert (
-        _solve(feed, near).info["stage_1_extent_mol_s"]
-        > _solve(feed, far).info["stage_1_extent_mol_s"]
-    )
+    assert _solve(feed, near).info["stage_1_extent_mol_s"] > _solve(feed, far).info["stage_1_extent_mol_s"]
 
 
 def test_oxygen_lean_feed_is_refused() -> None:
@@ -117,9 +114,7 @@ def test_reaction_set_shape_is_validated() -> None:
     """Wrong reaction count, wrong base components: typed refusals."""
     feed, params = _example()
     single = dict(params)
-    single["reaction_set"] = dict(
-        params["reaction_set"], reactions=[params["reaction_set"]["reactions"][0]]
-    )
+    single["reaction_set"] = dict(params["reaction_set"], reactions=[params["reaction_set"]["reactions"][0]])
     with pytest.raises(SulfurRecoveryError, match="exactly 2 reactions"):
         _solve(feed, single)
     swapped = dict(params)

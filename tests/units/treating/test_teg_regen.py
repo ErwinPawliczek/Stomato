@@ -15,9 +15,7 @@ THERMO = create("thermo", "pr")
 PARAMS: dict[str, Any] = {"T_reboiler": DEFAULT_T_REBOILER, "P": DEFAULT_P}
 
 
-def _feed(
-    composition: dict[str, float], T: float = 422.15, P: float = 1.5e5, molar_flow: float = 100.0
-):
+def _feed(composition: dict[str, float], T: float = 422.15, P: float = 1.5e5, molar_flow: float = 100.0):
     return THERMO.flash_pt(composition, T, P, molar_flow)
 
 
@@ -44,9 +42,7 @@ def test_water_split_matches_the_closed_form() -> None:
     assert result.info["water_held_in_lean_mol_s"] == pytest.approx(expected_lean_water, abs=1e-9)
     assert result.info["water_stripped_mol_s"] == pytest.approx(15.0 - expected_lean_water, abs=1e-9)
     assert result.outlets["lean_out"].molar_flow == pytest.approx(n_teg + expected_lean_water, abs=1e-9)
-    assert result.outlets["water_out"].molar_flow == pytest.approx(
-        15.0 - expected_lean_water, abs=1e-9
-    )
+    assert result.outlets["water_out"].molar_flow == pytest.approx(15.0 - expected_lean_water, abs=1e-9)
 
 
 def test_lean_mass_fraction_matches_the_hand_formula() -> None:

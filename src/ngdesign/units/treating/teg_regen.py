@@ -53,7 +53,7 @@ from typing import Any
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import component_record
-from ngdesign.units.teg_activity import water_activity, activity_equilibrium_slope
+from ngdesign.units.teg_activity import activity_equilibrium_slope, water_activity
 
 __all__ = ["TEGRegen", "TEGRegenError"]
 
