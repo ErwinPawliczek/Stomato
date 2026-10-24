@@ -137,7 +137,7 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | U-C | Heat units R0 (+ `_physics/heat_balance.py`: two-stream, multi-stream, problem table) | U-R1 | issue #208 |
 | U-D | Separation units R0 | U-R1, U-A1 (3 units) | DONE 2026-10-24 (#224, 501afcc): flash_drum, decanter, tank, adsorption_bed, hydrate_check, hydrocyclone, filter, membrane R0 |
 | U-E | Shortcut column units R0 (+ `_physics/shortcut.py`: FUG, Kremser fraction; V2 vs MESH) | U-R1, P1-11 | DONE 2026-10-24 (#225, 1534141): FUG + Kremser absorber, stripper, extractor R0; V2 vs MESH measured |
-| U-F | Reactors R0 (+ U-F1 `kinetics.yield_shift`, `_physics/gibbs.py`; solver reaction-set hook) | U-R1 | issue #211 |
+| U-F | Reactors R0 (+ U-F1 `kinetics.yield_shift`, `_physics/gibbs.py`; solver reaction-set hook) | U-R1 | DONE 2026-10-24 (#216 yield_shift; #227, dbc36de): conversion, yield, equilibrium, gibbs reactors + electrolyser stack R0; solver reaction-set hook |
 | U-G | Treating R0: TEG regenerator, Claus | U-R1 | in progress: #221 merged (3d67eae) teg_regen R0 + unregistered Claus; U-G2 (Claus registration + V1) dispatched 2026-10-24 |
 | U-H1 | Refining separation R0: assay feeder, desalter, crude/vacuum cut-point columns, side strip, preflash, blending | U-R1, A-01, U-E (side_strip) | issue #213 |
 | U-H2 | Refining reactors R0: lumped yield correlations | U-R1, U-F1 | DONE 2026-10-23 (#218, 0c8f357): naphtha_ht, reformer_cat, coker R0; fcc and hcu refused (figure-only sources), issue #222 pseudo characterisation |
