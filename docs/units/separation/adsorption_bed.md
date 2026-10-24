@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `X`
 
-Rigour ladder: R0 planned, R1 planned
+Rigour ladder: R0 provisional, R1 planned
 
 ## Ports
 
@@ -16,8 +16,34 @@ Rigour ladder: R0 planned, R1 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | equilibrium capacity + breakthrough spec |
+| R0 | provisional | `ngdesign.units.separation.adsorption_bed:AdsorptionBed` | adsorbate split spec to regen_out; product and desorbate flashed at the feed T and their own P; info cycle_time_s = capacity * bed_mass / adsorbate mass rate |
 | R1 | planned | — | Langmuir isotherm, LUB |
+
+### R0 parameters
+
+```yaml
+properties:
+  bed_mass_kg:
+    description: bed mass, kg
+    minimum: 0
+    type: number
+  capacity_kg_per_kg:
+    description: adsorbate loading, kg per kg bed
+    minimum: 0
+    type: number
+  product_P:
+    description: product outlet pressure, Pa abs; default feed P
+    type: number
+  regen_P:
+    description: desorbate outlet pressure, Pa abs; default feed P
+    type: number
+  removal_fraction:
+    description: component id -> fraction of its molar flow taken to the desorbate
+    type: object
+required:
+- removal_fraction
+type: object
+```
 
 ## References
 

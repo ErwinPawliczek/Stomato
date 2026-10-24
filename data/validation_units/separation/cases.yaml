@@ -19,7 +19,7 @@
   feeds:
     inlet:
       T: 288.15
-      P: 7.0e6
+      P: 7.0e+6
       molar_flow: 24.2449
       composition:
         N2: 0.005
@@ -35,7 +35,7 @@
         H2O: 0.030
     inhibitor_in:
       T: 288.15
-      P: 7.0e6
+      P: 7.0e+6
       molar_flow: 15.6
       composition: {MeOH: 1.0}
   params: {T_operating_K: 297.545}
@@ -54,7 +54,7 @@
   feeds:
     feed_in:
       T: 303.15
-      P: 4.25325e5
+      P: 4.25325e+5
       molar_flow: 0.22278
       composition: {C3: 0.614, nC8: 0.386}
   params: {outlet_P: 354637.5, vapor_fraction: 0.61}
