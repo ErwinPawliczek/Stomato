@@ -2,7 +2,7 @@
 
 Family: **logical** · P&ID symbol: `SMC`
 
-Rigour ladder: R0 planned
+Rigour ladder: R0 provisional
 
 ## Ports
 
@@ -15,7 +15,21 @@ Rigour ladder: R0 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | copy, scale or override stream variables (T, P, flow, composition) |
+| R0 | provisional | `ngdesign.units.logical.stream_calculator:StreamCalculator` | scale, set overrides, then a PT flash; duty = enthalpy change. breaks the mole balance when scale != 1 or set.molar_flow/set.composition is used, as the stream_duplicator does. closed-form only; definitional unit (no open textbook worked example; searched Towler & Sinnott ch. 2 and Coulson & Richardson vol. 2) |
+
+### R0 parameters
+
+```yaml
+properties:
+  scale:
+    description: multiplies the inlet flow (default 1)
+    type: number
+  set:
+    description: overrides applied before a PT flash; T (K), P (Pa), molar_flow (mol/s),
+      composition (renormalised, negative entries refused)
+    type: object
+type: object
+```
 
 ## References
 

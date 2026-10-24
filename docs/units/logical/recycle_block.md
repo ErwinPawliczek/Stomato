@@ -2,7 +2,7 @@
 
 Family: **logical** · P&ID symbol: `RCY`
 
-Rigour ladder: R0 planned
+Rigour ladder: R0 provisional
 
 ## Ports
 
@@ -15,7 +15,25 @@ Rigour ladder: R0 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | explicit tear with per-block acceleration options |
+| R0 | provisional | `ngdesign.units.logical.recycle_block:RecycleBlock` | identity at R0; lowers to the P2-03 flowsheet tear options (solver.lowering) — flowsheet-level SolverOptions only; tear selection stays automatic. closed-form only; definitional unit (no open textbook worked example) |
+
+### R0 parameters
+
+```yaml
+properties:
+  acceleration:
+    description: tear acceleration for the loop (default solver value); none = direct
+      substitution
+    enum:
+    - none
+    - wegstein
+    - broyden
+    type: string
+  tolerance:
+    description: relative tear tolerance (default solver value)
+    type: number
+type: object
+```
 
 ## References
 

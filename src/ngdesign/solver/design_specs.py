@@ -38,6 +38,7 @@ from ngdesign.contracts.diagnostics import TearRecord
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.specs import DesignSpec, DesignSpecResult
 from ngdesign.registry import register
+from ngdesign.solver.lowering import lower_logical_nodes
 from ngdesign.solver.sequential_modular import SequentialModular, _tear_vector
 from ngdesign.variables import assign, resolve
 
@@ -350,6 +351,7 @@ class SequentialModularWithSpecs:
         *,
         on_progress: Callable[[TearRecord], None] | None = None,
     ) -> SolvedFlowsheet:
+        fs = lower_logical_nodes(fs)  # spec U-A step 4: declarative logical nodes first
         inner = SequentialModular()
         if not fs.design_specs:
             return inner.solve(fs, thermo, warm_start, on_progress=on_progress)

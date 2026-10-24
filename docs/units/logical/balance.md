@@ -2,7 +2,7 @@
 
 Family: **logical** · P&ID symbol: `BAL`
 
-Rigour ladder: R0 planned
+Rigour ladder: R0 provisional
 
 ## Ports
 
@@ -15,7 +15,20 @@ Rigour ladder: R0 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | mass/energy balance block closing an unknown stream |
+| R0 | provisional | `ngdesign.units.logical.balance:Balance` | closes one unknown outlet by component balance then a PH flash so energy closes too; negative component flows refused. closed-form only; definitional unit (no open textbook worked example) |
+
+### R0 parameters
+
+```yaml
+properties:
+  P:
+    description: PH-flash pressure of the closed outlet (default inlet P), Pa abs
+    type: number
+  known_outlets:
+    description: FeedSpec kwargs of already-known outlet streams, subtracted per component
+    type: array
+type: object
+```
 
 ## References
 
