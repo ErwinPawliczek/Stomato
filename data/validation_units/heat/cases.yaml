@@ -1,84 +1,57 @@
 # U-C heat V1 worked cases (spec U-01; validator scripts/validate_units.py).
 #
-# Feed heat-capacity rates are stand-in N2 (or water) flows sized from
-# measured package properties (span-enthalpy sizing: n = CP*dT/dh_span), so
-# the case CPs match the cited sources' kW/K values without assuming a cp.
+# Cases cite printed examples with their printed inputs; a measured miss is
+# documented in ``assessed`` rather than hidden by a loosened tolerance.
 # Exponent literals carry explicit signs (1.0e+6) — bare 1.0e6 parses as a
 # string in PyYAML.
-
-- id: V2081
-  unit: plate_exchanger
-  level: R0
-  source: >-
-    Smith, Chemical Process Design and Integration, 1st ed., Table 16.1
-    (hot water 160->40 C, CP 0.1 MW/K; cold water 40->110 C, CP 0.2 MW/K).
-    The book's table is a network problem, not a single exchanger; the case
-    runs its two streams at an 11.0 MW duty, which keeps both inside the
-    book's envelope with a 10.0 K cold-end approach: hot outlet 323.15 K,
-    cold outlet 368.15 K (CP x dT arithmetic at the case duty).
-  thermo: pr
-  feeds:
-    hot_in:
-      T: 433.15
-      P: 1.0e+6
-      molar_flow: 1202.379
-      composition: {H2O: 1.0}
-    cold_in:
-      T: 313.15
-      P: 1.0e+6
-      molar_flow: 2451.658
-      composition: {H2O: 1.0}
-  params:
-    duty_W: 1.1e+7
-  expected:
-  - {quantity: outlet.hot_out.T, value: 323.15, tol_abs: 0.1}
-  - {quantity: outlet.cold_out.T, value: 368.15, tol_abs: 0.1}
-  - {quantity: info.duty_W, value: 1.1e+7, tol_rel: 0.001}
-  - {quantity: info.min_approach_K, value: 10.0, tol_abs: 0.01}
 
 - id: V2082
   unit: double_pipe
   level: R0
   source: >-
-    Kern, Process Heat Transfer, Example 6.1 (toluene 195->100 F against
-    benzene 80->120 F; duty 167,000 Btu/h = 48,943 W).
+    Kern, Process Heat Transfer, Example 6.1: 9,820 lb/h of benzene heated
+    80 -> 120 F against 6,330 lb/h of toluene cooled 160 -> 100 F, Q =
+    6,330 * 0.44 * 60 = 167,000 Btu/h = 48,943 W. Flows from the printed
+    lb/h over the package molar masses: toluene 8.66 mol/s, benzene 15.84
+    mol/s.
   thermo: pr
   feeds:
     hot_in:
-      T: 363.15
+      T: 344.26
       P: 1.01325e+5
-      molar_flow: 5.0
+      molar_flow: 8.66
       composition: {TOLUENE: 1.0}
     cold_in:
       T: 299.817
       P: 1.01325e+5
-      molar_flow: 15.0
+      molar_flow: 15.84
       composition: {BENZENE: 1.0}
   params:
     hot_T_out: 310.928
   expected:
   - {quantity: outlet.hot_out.T, value: 310.928, tol_abs: 0.1}
-  - {quantity: outlet.cold_out.T, value: 322.039, tol_abs: 2.5}
-  - {quantity: info.duty_W, value: 48943.0, tol_rel: 0.05}
+  - {quantity: outlet.cold_out.T, value: 322.039, tol_abs: 0.5}
+  - {quantity: info.duty_W, value: 48943.0, tol_rel: 0.02}
   assessed: >-
-    Measured miss on the duty only: the adapter reports 41660.5 W against
-    Kern's 167,000 Btu/h (48,943 W), -14.9%. Kern's toluene cp (0.44
-    Btu/lb-F, about 1.84 kJ/kg-K) is about 6% above the PR package's liquid
-    cp at these conditions (the case's toluene flow is a stand-in sized so
-    the hot outlet hits the book's 100 F, so the whole cp gap lands on the
-    reported duty); the exchanger itself closes exactly (hot outlet at the
-    spec'd 100 F, benzene outlet 0.44 K from the book's 120 F). Documented
-    as a property-package difference rather than hidden by a loosened
+    Measured: benzene outlet 322.969 K (+0.93 K over the book's 120 F) and
+    duty 44,968 W (-8.1% on the printed 167,000 Btu/h). Kern's chart cp
+    values (toluene 0.44, benzene 0.47 Btu/lb-F) sit a few percent above
+    the PR package's liquid cp at these conditions, and the printed-input
+    arithmetic carries that gap end to end; the exchanger itself closes
+    exactly (hot outlet at the spec'd 100 F). Documented as a
+    property-package difference rather than hidden by a loosened
     tolerance.
 
 - id: V2083
   unit: fired_heater
   level: R0
   source: >-
-    GPSA, Engineering Data Book, 12th ed. (methane LHV 802.3 kJ/mol, water
-    vapour basis). The package's formation-enthalpy LHV (water as VAPOUR,
-    gas-phase standard states) is 802.584 kJ/mol, +0.036% on GPSA - a
-    source-data difference, not a calculation choice.
+    NBSIR 82-2401, Heating Values of Natural Gas and Its Components (Table
+    14: methane net heat of combustion 802.125 kJ/mol at 288.15 K and
+    101.325 kPa). The package's formation-enthalpy LHV (water as VAPOUR,
+    gas-phase standard states at 298.15 K) is 802.584 kJ/mol, +0.057% on
+    the printed value - a reference-state difference, not a calculation
+    choice.
   thermo: pr
   feeds:
     inlet:
@@ -91,87 +64,35 @@
     efficiency: 0.9
     fuel_composition: {CH4: 1.0}
   expected:
-  - {quantity: outlet.outlet.T, value: 573.15, tol_abs: 0.1}
-  - {quantity: info.fuel_LHV_J_per_mol, value: 802300.0, tol_rel: 0.001}
-  - {quantity: info.Q_fired_W, value: 183126.41610671542, tol_rel: 0.001}
-  - {quantity: info.fuel_molar_flow, value: 0.22817102771387845, tol_rel: 0.001}
-
-- id: V2084
-  unit: multi_stream
-  level: R0
-  source: >-
-    Smith, Chemical Process Design and Integration, 1st ed., Table 16.2,
-    streams 1 and 3 only (hot 250->40 C, CP 0.15 MW/K; cold 20->180 C, CP
-    0.2 MW/K). The book's 180 C cold target needs 0.5 MW hot utility on top
-    of the hot stream's 31.5 MW, which this utility-free unit does not
-    model, so the cold stream runs as the balance stream (no T_out param;
-    solved outlet lands near 450.65 K / 177.5 C). Smith's full four-stream
-    problem needs 7.5 MW hot utility (Fig. 16.5a) - a documented R0
-    limitation of the row; every single-balance arrangement of the four
-    streams crosses (verified by hand cascade).
-  thermo: pr
-  feeds:
-    hot_in_1:
-      T: 523.15
-      P: 1.0e+6
-      molar_flow: 5068.172
-      composition: {N2: 1.0}
-    hot_in_2:
-      T: 523.15
-      P: 1.0e+6
-      molar_flow: 0.0
-      composition: {N2: 1.0}
-    cold_in_1:
-      T: 293.15
-      P: 1.0e+6
-      molar_flow: 6767.022
-      composition: {N2: 1.0}
-    cold_in_2:
-      T: 293.15
-      P: 1.0e+6
-      molar_flow: 0.0
-      composition: {N2: 1.0}
-  params:
-    T_out_hot_in_1: 313.15
-  expected:
-  - {quantity: outlet.cold_out_1.T, value: 450.65, tol_abs: 3.0}
-  - {quantity: info.duty_cold_in_1_W, value: 31.5e+6, tol_rel: 0.05}
-  - {quantity: info.pinch_T_hot_K, value: 313.15, tol_abs: 2.0}
-  - {quantity: info.pinch_T_cold_K, value: 293.15, tol_abs: 2.0}
+  - {quantity: info.fuel_LHV_J_per_mol, value: 802125.0, tol_rel: 0.001}
 
 - id: V2085
   unit: cooling_tower
   level: R0
   source: >-
-    Perry, Chemical Engineers' Handbook, 8th ed. (evaporative cooling:
-    water 90->70 F). The brief's 78 F (298.706 K) wet-bulb anchor cannot
-    coexist with a 70 F water outlet in any evaporative model - the outlet
-    must stay above the wet bulb - and a near-saturated inlet has almost no
-    capacity in the R0 exit-pin model (the air's adiabatic enthalpy drop
-    then pays only its own humidification). The case keeps Perry's water
-    basis against 26.67 C dry-bulb air at 50% RH (y pinned by the package's
-    p_sat(299.817 K) = 3498.938 Pa), with the air flow 604.738 mol/s (L/G
-    about 1.0 kg/kg) sized so the water reaches the book's 70 F outlet; the
-    model wet bulb 292.31 K is cross-checked against a psychrometric-chart
-    anchor to 0.2 K.
+    ASHRAE Fundamentals 2021, SI edition, Ch. 1 Psychrometrics, Example 1:
+    40 C dry bulb, 20 C thermodynamic wet bulb, 101.325 kPa; chart humidity
+    ratio 6.5 g_w/kg_da -> y = 0.010343 mol/mol. The case runs the tower on
+    the printed air state and checks the model wet bulb against the printed
+    293.15 K; the water and air flows are carrier sizes, not cited values,
+    and no model output beyond the wet bulb is compared.
   thermo: pr
   feeds:
     water_in:
-      T: 305.372
+      T: 313.15
       P: 1.01325e+5
       molar_flow: 555.0
       composition: {H2O: 1.0}
     air_in:
-      T: 299.817
+      T: 313.15
       P: 1.01325e+5
-      molar_flow: 604.738
-      composition: {N2: 0.98273408, H2O: 0.01726592}
+      molar_flow: 3000.0
+      composition: {N2: 0.989657, H2O: 0.010343}
   params:
     cycles_of_concentration: 3.0
+    approach_K: 5.0
   expected:
-  - {quantity: outlet.water_out.T, value: 294.28, tol_abs: 0.3}
-  - {quantity: info.wet_bulb_K, value: 292.3121357841492, tol_abs: 0.3}
-  - {quantity: info.evaporation_mol_s, value: 10.826477185626702, tol_rel: 0.05}
+  - {quantity: info.wet_bulb_K, value: 293.15, tol_abs: 0.5}
 
 - id: V2086
   unit: hen_block
@@ -180,9 +101,11 @@
     Kemp, User Guide on Process Integration for the Efficient Use of Energy
     (the Linnhoff four-stream problem table): hot 170->60 C CP 3.0 kW/K,
     hot 150->30 C CP 1.5, cold 20->135 C CP 2.0, cold 80->140 C CP 4.0;
-    targets QHmin 20 kW, QCmin 60 kW at dTmin 10 K. Kemp is the secondary
-    reference for the classic Linnhoff basis; feed flows are CP/cp_molar(N2)
-    stand-ins (101.01 / 50.505 / 67.34 / 134.68 mol/s).
+    targets QHmin 20 kW, QCmin 60 kW at dTmin 10 K. The cp_*_W_per_K params
+    pin the analysis CPs to the book's constant values, so the problem
+    table is the book's arithmetic; the N2 feed flows (101.01 / 50.505 /
+    67.34 / 134.68 mol/s, cp_molar(N2) stand-ins) size only the outlet
+    flashes.
   thermo: pr
   feeds:
     hot_in_1:
@@ -211,8 +134,12 @@
     T_out_cold_in_1: 408.15
     T_out_cold_in_2: 413.15
     dT_min: 10.0
+    cp_hot_in_1_W_per_K: 3000.0
+    cp_hot_in_2_W_per_K: 1500.0
+    cp_cold_in_1_W_per_K: 2000.0
+    cp_cold_in_2_W_per_K: 4000.0
   expected:
-  - {quantity: info.QH_min_W, value: 20000.0, tol_rel: 0.1}
-  - {quantity: info.QC_min_W, value: 60000.0, tol_rel: 0.1}
-  - {quantity: info.pinch_T_hot_K, value: 363.15, tol_abs: 0.5}
-  - {quantity: info.pinch_T_cold_K, value: 353.15, tol_abs: 0.5}
+  - {quantity: info.QH_min_W, value: 20000.0, tol_rel: 0.001}
+  - {quantity: info.QC_min_W, value: 60000.0, tol_rel: 0.001}
+  - {quantity: info.pinch_T_hot_K, value: 363.15, tol_abs: 0.01}
+  - {quantity: info.pinch_T_cold_K, value: 353.15, tol_abs: 0.01}

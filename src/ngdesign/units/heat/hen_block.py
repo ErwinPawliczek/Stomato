@@ -5,9 +5,12 @@ Two hot + two cold optional ports with positional outlets
 (hot_out_1/2, cold_out_1/2): a network STAGE whose every active stream
 reaches its ``T_out_<port>`` target. The Linnhoff problem table
 (:func:`ngdesign.units._physics.heat_balance.problem_table`, pure arithmetic
-on CP*delta-T intervals from the flashed supply/target states) gives the
-utility targets ``QH_min_W`` / ``QC_min_W`` and the pinch; the adapter does
-NOT add utilities - the block balances at zero net duty (the R0 problem
+on CP*delta-T intervals) gives the utility targets ``QH_min_W`` / ``QC_min_W``
+and the pinch. Each stream's CP defaults to the package-derived
+``n * dh/dT`` between supply and target; an optional ``cp_<port>_W_per_K``
+param pins the analysis CP to a cited constant basis (e.g. the book's
+kW/K values) while the outlet states stay package-consistent. The adapter
+does NOT add utilities - the block balances at zero net duty (the R0 problem
 rows are configured so targets match). ``dT_min`` defaults to 10 K.
 Zero-flow ports pass through as inlet copies and stay out of the table.
 """

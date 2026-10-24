@@ -1,8 +1,8 @@
 """Adapter tests: the fired heater (spec U-C 7).
 
 The fuel LHV comes from formation enthalpies with water as VAPOUR: the repo
-databank gives methane 802,584 J/mol against GPSA's 802,300 J/mol
-(+0.036%, a source-data difference).
+databank gives methane 802,584 J/mol against NBSIR 82-2401's printed
+802.125 kJ/mol at 288.15 K (+0.057%, a reference-state difference).
 """
 
 from __future__ import annotations

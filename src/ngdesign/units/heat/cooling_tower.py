@@ -158,76 +158,90 @@ class CoolingTower:
 
         T_wb = wet_bulb(thermo, air)
 
-        # Exit air saturated at the MEAN water temperature: the counter-current
-        # mean of the warm inlet and the solved outlet. Pinning the exit at the
-        # inlet's wet bulb instead would spend the air's entire adiabatic
-        # enthalpy drop on its own humidification (the AS identity), leaving no
-        # sink for the water duty - the model could never cool.
+        # Model method: the WATER OUTLET is pinned at the inlet air's wet
+        # bulb plus the required approach; the exit air - saturated at a
+        # temperature solved from the overall energy balance - carries the
+        # heat and the evaporation the material balance fixes.
+        approach = params.get("approach_K")
+        if approach is None:
+            raise ValueError(
+                "cooling tower: approach_K is required (water outlet above the "
+                "inlet-air wet bulb, K)"
+            )
+        approach = float(approach)
+        if approach <= 0.0:
+            raise ValueError(f"cooling tower: approach_K {approach} must be > 0")
+        T_water_out = T_wb + approach
+        if T_water_out >= water.T:
+            raise ValueError(
+                "cooling tower: the tower cannot cool - the specified water "
+                f"outlet {T_water_out:.2f} K (wet bulb + approach) is not below "
+                f"the inlet {water.T:.2f} K"
+            )
+
         y1 = air.composition.get("H2O", 0.0)
         dry = {cid: x for cid, x in air.composition.items() if cid != "H2O"}
+        n_dry = air.molar_flow * (1.0 - y1)
 
-        def exit_for(T_w2: float) -> tuple[float, float, float]:
-            """Exit-air state (y_H2O, enthalpy, evaporation) for a water outlet T_w2."""
-            T_m = 0.5 * (water.T + T_w2)
-            y2 = _psat(thermo, T_m) / air.P
-            h_a2 = _humid_enthalpy(thermo, dry, T_m, air.P, y2)
-            E = air.molar_flow * (y2 - y1) / (1.0 - y2)
-            return y2, h_a2, E
+        def exit_air(T_exit: float) -> tuple[float, float, float, float]:
+            """(y2, E, n_out, enthalpy) of saturated exit air at T_exit."""
+            y2 = _psat(thermo, T_exit) / air.P
+            evap = y2 / (1.0 - y2) * n_dry  # dry air conserved through the tower
+            n_out = n_dry + evap
+            h_a2 = _humid_enthalpy(thermo, dry, T_exit, air.P, y2)
+            return y2, evap, n_out, h_a2
 
-        y2, h_air_out, E = exit_for(water.T)
-        if E <= 0.0:
-            raise ValueError(
-                "cooling tower: the inlet air has no evaporative capacity against "
-                f"its saturated exit state (E = {E:.4f} mol/s <= 0); dry or cool "
-                "the air to cool the water"
+        h_water_out = thermo.flash_pt(
+            {"H2O": 1.0}, T_water_out, water.P, 1.0
+        ).enthalpy
+
+        def residual(T_exit: float) -> float:
+            """h_in - h_out; falls monotonically as the exit air warms."""
+            _y2, evap, n_out, h_a2 = exit_air(T_exit)
+            return (
+                water.molar_flow * water.enthalpy
+                + air.molar_flow * air.enthalpy
+                - (water.molar_flow - evap) * h_water_out
+                - n_out * h_a2
             )
+
+        # The exit-air enthalpy rises with T_exit, so the residual falls; the
+        # wet bulb is the lowest saturated state available. If even the
+        # wet-bulb exit overshoots the duty, nothing closes.
+        if residual(T_wb) < 0.0:
+            raise ValueError(
+                "cooling tower: no saturated exit air closes the energy balance "
+                "at the wet bulb; the water duty exceeds the tower's capacity"
+            )
+        t_lo, t_hi = T_wb, water.T
+        if residual(t_hi) > 0.0:
+            t_hi = 500.0  # span guard; widen only if the root sits above the inlet
+            if residual(t_hi) > 0.0:
+                raise ValueError(
+                    "cooling tower: the energy closure does not bracket an exit "
+                    "air below 500 K; the duty is outside the R0 range"
+                )
+        for _ in range(_BISECT_STEPS):
+            mid = 0.5 * (t_lo + t_hi)
+            if residual(mid) > 0.0:
+                t_lo = mid  # exit air can still absorb more duty: move up
+            else:
+                t_hi = mid
+            if t_hi - t_lo <= 1e-9:
+                break
+        T_exit_air = t_hi  # saturated state that exactly closes the balance
+
+        y2, E, n_air_out, h_air_out = exit_air(T_exit_air)
         if E >= water.molar_flow:
             raise ValueError(
                 "cooling tower: the material closure evaporates more water than "
                 "the water stream carries; reduce the air flow"
             )
-
-        # Water outlet from the OVERALL energy closure. The exit state moves
-        # with the solution (saturated at the mean water temperature), and the
-        # residual falls monotonically with the water outlet temperature: a
-        # colder outlet releases more water duty AND evaporates more air-side
-        # water, both raising H_in - H_out.
-        def residual(T_w2: float) -> float:
-            _y2, h_a2, e = exit_for(T_w2)
-            h_w2 = thermo.flash_pt({"H2O": 1.0}, T_w2, water.P, 1.0).enthalpy
-            return (
-                water.molar_flow * water.enthalpy
-                + air.molar_flow * air.enthalpy
-                - (water.molar_flow - e) * h_w2
-                - (air.molar_flow + e) * h_a2
-            )
-
-        t_lo, t_hi = 275.0, water.T  # liquid water range
-        if residual(t_hi) >= 0.0:
-            raise ValueError(
-                "cooling tower: the given air cannot cool the water below its "
-                f"inlet temperature {water.T:.2f} K; increase the air flow"
-            )
-        if residual(t_lo) <= 0.0:
-            raise ValueError(
-                "cooling tower: the energy closure does not bracket a water outlet "
-                "above 275 K; the duty is outside the R0 range"
-            )
-        for _ in range(_BISECT_STEPS):
-            mid = 0.5 * (t_lo + t_hi)
-            if residual(mid) > 0.0:
-                t_lo = mid  # outlet enthalpy still below the inlet total: move up
-            else:
-                t_hi = mid
-            if t_hi - t_lo <= 1e-9:
-                break
-        T_w2 = 0.5 * (t_lo + t_hi)
-
-        y2, h_air_out, E = exit_for(T_w2)
         z_air_out = _z_with_water(dry, y2)
-        water_out = thermo.flash_pt({"H2O": 1.0}, T_w2, water.P, water.molar_flow - E)
-        T_air_out = 0.5 * (water.T + T_w2)
-        air_out = thermo.flash_pt(z_air_out, T_air_out, air.P, air.molar_flow + E)
+        water_out = thermo.flash_pt(
+            {"H2O": 1.0}, T_water_out, water.P, water.molar_flow - E
+        )
+        air_out = thermo.flash_pt(z_air_out, T_exit_air, air.P, n_air_out)
         # The exit air is the ideal saturated gas: pin its enthalpy and vapour
         # fraction to the fog-free construction the balance solved with, and pin
         # the composition too - the raw PR flash of an exactly saturated humid
@@ -251,11 +265,12 @@ class CoolingTower:
             power_W=0.0,
             info={
                 "wet_bulb_K": T_wb,
-                "approach_K": T_w2 - T_wb,
+                "approach_K": approach,
+                "water_outlet_T_K": T_water_out,
                 "evaporation_mol_s": E,
                 "blowdown_mol_s": blowdown,
                 "makeup_mol_s": makeup,
-                "exit_air_T_K": T_air_out,
+                "exit_air_T_K": T_exit_air,
                 "exit_air_y_H2O": y2,
             },
         )

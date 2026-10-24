@@ -166,8 +166,6 @@
           min_approach_K: {type: number, description: 'solve the duty for this minimum approach, K'}
           dP_hot: {type: number, description: 'hot-side pressure drop, Pa'}
           dP_cold: {type: number, description: 'cold-side pressure drop, Pa'}
-      validation:
-      - V2081
       note: exactly one of duty_W / hot_T_out / cold_T_out; min-approach duty bisection, pinch
         check and LMTD/UA reported
     R1:

@@ -55,6 +55,36 @@ def test_kemp_targets() -> None:
     assert result.info["QH_min_W"] + result.info["QC_min_W"] == pytest.approx(80000.0, rel=0.05)
 
 
+def test_cp_overrides_pin_kemp_basis_exactly() -> None:
+    """cp_<port>_W_per_K pins the problem table to Kemp's kW/K analysis basis.
+
+    With the book's CPs (3.0/1.5 hot, 2.0/4.0 cold kW/K) the targets are
+    exact book arithmetic: QHmin 20 kW, QCmin 60 kW, pinch at 90/80 C. The
+    outlet flashes stay package-consistent - only the analysis CP changes.
+    """
+    thermo = _thermo()
+    unit = registry.create("unit", "hen_block")
+    params = dict(
+        _kemp_params(),
+        cp_hot_in_1_W_per_K=3000.0,
+        cp_hot_in_2_W_per_K=1500.0,
+        cp_cold_in_1_W_per_K=2000.0,
+        cp_cold_in_2_W_per_K=4000.0,
+    )
+    result = unit.solve(_kemp_feeds(thermo), params, thermo)
+    assert result.info["QH_min_W"] == pytest.approx(20000.0, rel=1e-9)
+    assert result.info["QC_min_W"] == pytest.approx(60000.0, rel=1e-9)
+    assert result.info["pinch_T_hot_K"] == pytest.approx(363.15, abs=1e-9)
+    assert result.info["pinch_T_cold_K"] == pytest.approx(353.15, abs=1e-9)
+
+
+def test_nonpositive_cp_override_refused() -> None:
+    thermo = _thermo()
+    unit = registry.create("unit", "hen_block")
+    with pytest.raises(Exception, match="cp_hot_in_1_W_per_K .* must be > 0"):
+        unit.solve(_kemp_feeds(thermo), dict(_kemp_params(), cp_hot_in_1_W_per_K=0.0), thermo)
+
+
 def test_all_active_streams_reach_their_targets() -> None:
     thermo = _thermo()
     unit = registry.create("unit", "hen_block")
