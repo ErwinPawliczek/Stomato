@@ -56,7 +56,7 @@ class UtilityStream:
 
         inlet = inlets["inlet"]
         return UnitResult(
-            outlets={"outlet": inlet.model_copy(composition=dict(inlet.composition))},
+            outlets={"outlet": inlet},
             duty_W=0.0,
             power_W=0.0,
             info={"utility_cost_rate": float(price)},

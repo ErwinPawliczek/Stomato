@@ -37,8 +37,9 @@ class Balance:
             raise ValueError(f"P must be > 0, got {P}")
 
         n_out = inlet.molar_flow
+        h_flow_out = inlet.molar_flow * inlet.enthalpy
         composition = {cid: x * inlet.molar_flow for cid, x in inlet.composition.items()}
-        for i, spec in enumerate(known):
+        for spec in known:
             n_known = float(spec["molar_flow"])
             n_out -= n_known
             known_comp = spec["composition"]
@@ -47,10 +48,19 @@ class Balance:
                 composition[cid] = (
                     composition.get(cid, 0.0) - float(known_comp.get(cid, 0.0)) / known_total * n_known
                 )
+            # energy closes only if the known outlets' own enthalpy is subtracted:
+            # flash each declared stream at its stated T/P to price its h flow
+            known_state = thermo.flash_pt(
+                {cid: float(x) / known_total for cid, x in known_comp.items()},
+                float(spec["T"]),
+                float(spec["P"]),
+                n_known,
+            )
+            h_flow_out -= known_state.molar_flow * known_state.enthalpy
 
         negative = {cid: f for cid, f in composition.items() if f < 0.0}
         if negative:
-            cid = min(negative, key=negative.get)
+            cid = min(negative, key=lambda c: negative[c])
             raise ValueError(
                 f"balance closes negative: component {cid!r} flow would be "
                 f"{negative[cid]!r} mol/s; the known outlets exceed the inlet"
@@ -59,7 +69,7 @@ class Balance:
             raise ValueError(f"balance closes at {n_out!r} mol/s total; known outlets exceed the inlet")
 
         outlet = thermo.flash_ph(
-            {cid: f / n_out for cid, f in composition.items()}, P, inlet.enthalpy, n_out
+            {cid: f / n_out for cid, f in composition.items()}, P, h_flow_out / n_out, n_out
         )
         return UnitResult(outlets={"outlet": outlet}, duty_W=0.0, power_W=0.0, info={})
 

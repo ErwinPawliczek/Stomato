@@ -23,9 +23,7 @@ def _to_top_bottom(spec: OutletSpec) -> OutletSpec:
         for key, value in spec.items():
             mapped = {"outlet_1": "top", "outlet_2": "bottom"}.get(key, key)
             if mapped not in ("top", "bottom"):
-                raise ValueError(
-                    f"outlet spec key {key!r}: expected 'outlet_1' or 'outlet_2'"
-                )
+                raise ValueError(f"outlet spec key {key!r}: expected 'outlet_1' or 'outlet_2'")
             out[mapped] = float(value)
         return out
     return spec
@@ -57,9 +55,7 @@ class ComponentSplitter:
         )
         duty = top.molar_flow * top.enthalpy + bottom.molar_flow * bottom.enthalpy
         duty -= inlet.molar_flow * inlet.enthalpy
-        return UnitResult(
-            outlets={"outlet_1": top, "outlet_2": bottom}, duty_W=duty, power_W=0.0, info={}
-        )
+        return UnitResult(outlets={"outlet_1": top, "outlet_2": bottom}, duty_W=duty, power_W=0.0, info={})
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:

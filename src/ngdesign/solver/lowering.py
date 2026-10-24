@@ -67,9 +67,7 @@ def _design_spec(unit: Any) -> DesignSpec:
         sub = target if name == "target" else manipulate
         missing = [k for k in keys if k not in sub]
         if missing:
-            raise ValueError(
-                f"adjust '{unit.tag}': {name} is missing {missing}; expected {list(keys)}"
-            )
+            raise ValueError(f"adjust '{unit.tag}': {name} is missing {missing}; expected {list(keys)}")
     bounds = params.get("bounds") or {}
     lower = float(bounds.get("lower", -1e30))
     upper = float(bounds.get("upper", 1e30))

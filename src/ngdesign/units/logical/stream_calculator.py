@@ -57,9 +57,7 @@ class StreamCalculator:
             raise ValueError(f"set.molar_flow must be >= 0, got {flow}")
 
         if flow <= 0.0:
-            outlet = inlet.model_copy(
-                update={"T": T, "P": P, "molar_flow": 0.0, "composition": composition}
-            )
+            outlet = inlet.model_copy(update={"T": T, "P": P, "molar_flow": 0.0, "composition": composition})
         else:
             outlet = thermo.flash_pt(composition, T, P, flow)
         duty = outlet.molar_flow * outlet.enthalpy - inlet.molar_flow * inlet.enthalpy

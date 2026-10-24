@@ -30,7 +30,7 @@ class Adjust:
         del thermo, params  # identity: the spec is consumed by the lowering hook
         inlet = inlets["inlet"]
         return UnitResult(
-            outlets={"outlet": inlet.model_copy(composition=dict(inlet.composition))},
+            outlets={"outlet": inlet},
             duty_W=0.0,
             power_W=0.0,
             info={},

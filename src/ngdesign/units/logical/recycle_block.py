@@ -29,7 +29,9 @@ class RecycleBlock:
         del thermo, params  # identity: options are consumed by the lowering hook
         inlet = inlets["inlet"]
         return UnitResult(
-            outlets={"outlet": inlet.model_copy(composition=dict(inlet.composition))},
+            # StreamState is frozen (spec P1-01), so the inlet itself is a safe
+            # pass-through state - no copy needed
+            outlets={"outlet": inlet},
             duty_W=0.0,
             power_W=0.0,
             info={},
