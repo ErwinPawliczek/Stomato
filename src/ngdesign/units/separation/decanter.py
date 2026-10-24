@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ngdesign.contracts import Phase, PhaseKind, StreamState, UnitResult
+from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.separation._util import phase_outlet
 

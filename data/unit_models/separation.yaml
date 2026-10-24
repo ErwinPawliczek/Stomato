@@ -101,7 +101,6 @@
       note: PT / PH (duty_W) / PVF flash at the outlet pressure — exactly one of
         duty_W and vapor_fraction; the balancing duty is reported; gas, liquid and
         (when the package gives one) aqueous outlets at their flash states
-      validation: [V-flash-sva-2023]
     R1:
       status: planned
       params: {}

@@ -1,0 +1,62 @@
+# Worked V1 cases for the separation family (spec U-D).
+#
+# flash_drum / decanter / adsorption_bed R0 V1 candidates (Seader-Henley,
+# SVA, GPSA Sect. 20 mol-sieve example) are not yet transcribed from a
+# verified copy of the source — they are added when the numbers can be
+# checked, not guessed. hydrate_check uses GPSA Example 20-10; the flash_drum
+# case is Corripio's worked example (fully reproduced lecture notes).
+- id: V-hydrate-gpsa-20-10
+  unit: hydrate_check
+  level: R0
+  source: >-
+    GPSA Engineering Data Book (SI), Sect. 20, Example 20-10 with the 2004 SI
+    errata (K_H,MeOH = 1297; Hammerschmidt not to be used beyond 20-25 wt% MeOH,
+    Nielsen-Bucklin preferred): a 14 degC hydrate-temperature depression needs
+    27.5 wt% MeOH in the free-water phase (Hammerschmidt gives 25.5). The case
+    fixes T_operating_K at hydrate_T - 14.0 K (hydrate_T from the catalogue
+    hammerschmidt_formation at the case pressure) so the required aqueous mass
+    fraction reproduces exactly that scenario.
+  feeds:
+    inlet:
+      T: 288.15
+      P: 7.0e6
+      molar_flow: 24.2449
+      composition:
+        N2: 0.005
+        CO2: 0.015
+        C1: 0.848
+        C2: 0.062
+        C3: 0.032
+        iC4: 0.007
+        nC4: 0.010
+        iC5: 0.004
+        nC5: 0.004
+        C6+: 0.010
+        H2O: 0.030
+    inhibitor_in:
+      T: 288.15
+      P: 7.0e6
+      molar_flow: 15.6
+      composition: {MeOH: 1.0}
+  params: {T_operating_K: 297.545}
+  expected:
+  - {quantity: info.required_inhibitor_mass_fraction, value: 0.275, tol_abs: 0.005}
+- id: V-flash-corripio-2013
+  unit: flash_drum
+  level: R0
+  source: >-
+    Corripio, "Flash Distillation" lecture notes (2013), Example 1: 38 wt%
+    propane / balance n-octane (z = 0.614 / 0.386 molar, 802 kmol/h), drum at
+    3.5 atm with V/F = 0.61 gives T = 81.9 degC, y_C3 = 0.937 by ideal-K
+    (Antoine, Reid-Sherwood-Prausnitz). This case runs the same PVF spec on
+    the catalogue PR package, which sits ~2.3 K above the ideal-K route; the
+    tolerance covers that model gap, fixed before the run.
+  feeds:
+    feed_in:
+      T: 303.15
+      P: 4.25325e5
+      molar_flow: 0.22278
+      composition: {C3: 0.614, nC8: 0.386}
+  params: {outlet_P: 354637.5, vapor_fraction: 0.61}
+  expected:
+  - {quantity: outlet.gas_out.T, value: 355.05, tol_abs: 3.0}
