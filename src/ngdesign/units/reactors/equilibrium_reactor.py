@@ -158,6 +158,7 @@ class EquilibriumReactor:
             outlet, extents = state_at(T_out)
             duty = enthalpy_with_formation(outlet) - h_in_W
         elif isinstance(thermal, str) and thermal == "isothermal":
+            T_out = inlet.T
             outlet, extents = state_at(inlet.T)
             duty = enthalpy_with_formation(outlet) - h_in_W
         elif (

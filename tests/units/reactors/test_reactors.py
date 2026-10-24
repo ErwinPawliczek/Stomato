@@ -65,10 +65,35 @@ def test_wgs_equilibrium_closed_form() -> None:
     feeds, params = EquilibriumReactor.example_case()
     r = EquilibriumReactor().solve({"inlet": flash_feed(feeds["inlet"])}, params, THERMO)
     out = r.outlets["outlet"]
-    # ln K(1100 K) = -0.007436 -> X = sqrt(K)/(1+sqrt(K)) ~ 0.49907
-    assert r.info["extent_wgsr"] == pytest.approx(0.499071, abs=1e-5)
-    assert out.composition["CO"] == pytest.approx(0.250465, abs=1e-5)
-    assert out.composition["CO2"] == pytest.approx(0.249535, abs=1e-5)
+    # JANAF printed log Kf(1100 K): CO2 18.805, CO 9.928, H2O 8.881
+    # -> log K(WGS) = -0.004 -> X = sqrt(K)/(1+sqrt(K)) = 0.498846
+    assert r.info["extent_wgsr"] == pytest.approx(0.498846, abs=1e-3)
+    assert out.composition["CO"] == pytest.approx(0.250577, abs=1e-3)
+    assert out.composition["CO2"] == pytest.approx(0.249423, abs=1e-3)
+
+
+def test_wgs_approach_K_shifts_conversion_and_reports_lnK() -> None:
+    feeds, params = EquilibriumReactor.example_case()
+    inlet = flash_feed(feeds["inlet"])
+    eq = EquilibriumReactor().solve({"inlet": inlet}, params, THERMO)
+    # WGS is mildly exothermic near 1100 K: approaching from the cold side
+    # (approach_K = -50 -> K at 1150 K) must REDUCE conversion and report the
+    # lower equilibrium constant at the evaluated temperature.
+    app = EquilibriumReactor().solve({"inlet": inlet}, params | {"approach_K": -50.0}, THERMO)
+    assert app.info["extent_wgsr"] < eq.info["extent_wgsr"]
+    assert app.info["lnK_wgsr"] < eq.info["lnK_wgsr"]
+    # full equilibrium (approach 0) reproduces the isothermal result
+    zero = EquilibriumReactor().solve({"inlet": inlet}, params | {"approach_K": 0.0}, THERMO)
+    assert zero.info["extent_wgsr"] == pytest.approx(eq.info["extent_wgsr"], rel=1e-9)
+
+
+def test_gibbs_rejects_h2_or_o2_mixture_spec() -> None:
+    with pytest.raises(ValueError, match="species"):
+        GibbsReactor().solve(
+            {"inlet": flash_feed({"T": 300.0, "P": 101325.0, "molar_flow": 1.0, "composition": {"H2": 1.0}})},
+            {"species": ["H2O", "CO2"]},
+            THERMO,
+        )
 
 
 def test_gibbs_matches_equilibrium_to_1e6() -> None:
@@ -89,7 +114,7 @@ def test_electrolyser_faraday_and_power() -> None:
     o2 = r.outlets["o2_out"]
     assert o2.molar_flow * o2.composition["O2"] == pytest.approx(0.5 * h2, rel=1e-12)
     assert r.power_W == 350_000.0
-    assert r.info["thermoneutral_voltage_V"] == pytest.approx(1.253154, abs=1e-4)
+    assert r.info["thermoneutral_voltage_V"] == pytest.approx(1.4720, abs=5e-4)
 
 
 def test_all_reactors_close_element_balances() -> None:

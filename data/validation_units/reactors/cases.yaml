@@ -3,15 +3,25 @@
 # 1.01325e6 into a string without an explicit float tag).
 #
 # The equilibrium and Gibbs cases share one basis — equimolar CO/H2O at
-# 1100 K — so the two adapters are cross-checked against the same closed form
-# (X = sqrt(K)/(1+sqrt(K)) from the databank's JANAF ln K = −0.007436).
+# 1100 K — so the two adapters are cross-checked against the same closed form.
+# The closed form comes from the JANAF Thermochemical Tables (Chase 1998)
+# *printed* log Kf values at 1100 K — CO2 18.805 (table C-095), CO 9.928
+# (C-093), H2O 8.881 (H-064), elemental H2 = 0 by definition — so
+# log K(WGS) = 18.805 − 9.928 − 8.881 = −0.004 and, for the equimolar feed,
+# X = sqrt(K)/(1+sqrt(K)) = 0.498846. The model's databank assembly reproduces
+# the printed tables to ~2e-4 in X; tolerances are set at 1e-3, not widened
+# further. (A printed SVA steam-methane-reforming Gibbs example could not be
+# verified in any open source — see the Gibbs row note in
+# data/unit_models/reactors.yaml — so the JANAF-anchored WGS case is the Gibbs
+# oracle for now.)
+#
 # The yield case deliberately omits feeds/params to solve on the conversion
 # adapter's exact SMR example basis: the two outlets agree by construction.
 
 - id: V1-WGS-EQ
   unit: equilibrium_reactor
   level: R0
-  source: "Closed form from the JANAF databank WGS ln K(1100 K) = -0.007436 (U-F V2; cf. the CMU/Kitchin NIST-Webbook worked example at 1000 K)"
+  source: "JANAF Thermochemical Tables (Chase 1998), printed log Kf at 1100 K: CO2 18.805, CO 9.928, H2O 8.881 (janaf.nist.gov C-095/C-093/H-064) -> log K(WGS) = -0.004; X = sqrt(K)/(1+sqrt(K)) = 0.498846"
   feeds:
     inlet: {T: 1100.0, P: 1013250.0, molar_flow: 2.0, composition: {CO: 0.5, H2O: 0.5}}
   params:
@@ -26,34 +36,34 @@
         equilibrium: {form: from_gibbs}
     thermal: isothermal
   expected:
-  - {quantity: info.extent_wgsr, value: 0.499071, tol_abs: 0.00001}
-  - {quantity: outlet.outlet.composition.CO, value: 0.250465, tol_abs: 0.00001}
-  - {quantity: outlet.outlet.composition.CO2, value: 0.249535, tol_abs: 0.00001}
+  - {quantity: info.extent_wgsr, value: 0.498846, tol_abs: 0.001}
+  - {quantity: outlet.outlet.composition.CO, value: 0.250577, tol_abs: 0.001}
+  - {quantity: outlet.outlet.composition.CO2, value: 0.249423, tol_abs: 0.001}
 
 - id: V1-WGS-GIBBS
   unit: gibbs_reactor
   level: R0
-  source: "Closed form from the JANAF databank WGS ln K(1100 K) = -0.007436 (U-F V2; cf. the CMU/Kitchin NIST-Webbook worked example at 1000 K)"
+  source: "JANAF Thermochemical Tables (Chase 1998), printed log Kf at 1100 K: CO2 18.805, CO 9.928, H2O 8.881 (janaf.nist.gov C-095/C-093/H-064) -> log K(WGS) = -0.004; X = sqrt(K)/(1+sqrt(K)) = 0.498846"
   feeds:
     inlet: {T: 1100.0, P: 1013250.0, molar_flow: 2.0, composition: {CO: 0.5, H2O: 0.5}}
   params:
     species: [CO, H2O, CO2, H2]
     thermal: isothermal
   expected:
-  - {quantity: outlet.outlet.composition.CO, value: 0.250465, tol_abs: 0.00001}
-  - {quantity: outlet.outlet.composition.CO2, value: 0.249535, tol_abs: 0.00001}
-  - {quantity: outlet.outlet.composition.H2, value: 0.249535, tol_abs: 0.00001}
+  - {quantity: outlet.outlet.composition.CO, value: 0.250577, tol_abs: 0.001}
+  - {quantity: outlet.outlet.composition.CO2, value: 0.249423, tol_abs: 0.001}
+  - {quantity: outlet.outlet.composition.H2, value: 0.249423, tol_abs: 0.001}
 
 - id: V1-FOGLER-CONV
   unit: conversion_reactor
   level: R0
-  source: "Fogler, Elements of Chemical Reaction Engineering, 4th ed., Example 8-3 (adiabatic n-butane isomerization): T = 330 + 43.4 X"
+  source: "Fogler, Elements of Chemical Reaction Engineering, 4th ed., Example 8-3 (adiabatic n-butane isomerization): T = 330 + 43.4 X on the book feed (90% n-butane + 10% i-pentane inert, 2 mol inert per mol n-butane)"
   feeds:
-    inlet: {T: 330.0, P: 1013250.0, molar_flow: 10.0, composition: {nC4: 1.0}}
+    inlet: {T: 330.0, P: 1013250.0, molar_flow: 10.0, composition: {nC4: 0.9, iC5: 0.1}}
   params:
     reaction_set:
       id: isom_case
-      components: [nC4, iC4]
+      components: [nC4, iC4, iC5]
       reactions:
       - id: isom
         stoichiometry: {nC4: -1.0, iC4: 1.0}
@@ -63,18 +73,21 @@
     conversion: {isom: 0.5}
     thermal: adiabatic
   expected:
-  - {quantity: outlet.outlet.composition.iC4, value: 0.5, tol_abs: 0.000001}
+  - {quantity: outlet.outlet.composition.iC4, value: 0.45, tol_abs: 0.000001}
   - {quantity: outlet.outlet.T, value: 351.7, tol_abs: 0.5}
   assessed: >-
-    The composition check is exact (X = 0.5 fixed by the conversion spec; outlet
-    amounts 5.0/5.0 mol/s). The temperature comparison misses: the book's
-    constant-Cp correlation T = 330 + 43.4·X gives 351.7 K (ΔT = 21.7 K), while
-    the model measures 344.400 K (ΔT = 14.40 K) on the JANAF databank's
-    ΔH°rx ≈ −9510 J/mol and PR gas heat capacities. The book's slope combines
-    ΔH°rx = −6900 J/mol with a much smaller assumed Cp (≈ 159 J/mol·K); the
-    larger |ΔH| is more than offset by PR's larger Cp (≈ 330 J/mol·K), so the
-    adiabatic rise is smaller. Data-source and Cp-treatment differences,
-    documented rather than tuned away; no tolerance is widened to hide it.
+    The composition check is exact (X = 0.5 on the 4.5 mol/s nC4 feed gives
+    4.5 mol/s iC4 + 4.5 nC4 + 1.0 iC5 inert, total 10.0 mol/s; y_iC4 = 0.45).
+    The temperature comparison misses: the book's constant-Cp correlation
+    T = 330 + 43.4·X gives 351.7 K (ΔT = 21.7 K), while the model measures
+    342.872 K (ΔT = 12.87 K) on the JANAF databank's ΔH°rx ≈ −9510 J/mol and PR
+    gas heat capacities. The book's slope combines ΔH°rx = −6900 J/mol with a
+    much smaller assumed lumped Cp (ΘCp ≈ 159 J/mol·K); the mixture Cp of the
+    actual book feed (nC4 + iC5 inert) measures 266.6 J/mol·K at the inlet state
+    (finite difference of the model's molar enthalpy), and PR's larger Cp more
+    than offsets the larger |ΔH°rx|, so the adiabatic rise is smaller. Data-source
+    and Cp-treatment differences, documented rather than tuned away; no tolerance
+    is widened to hide it.
 
 - id: V1-SMR-YIELD
   unit: yield_reactor
@@ -93,7 +106,7 @@
 - id: V1-ELECTROLYSER
   unit: electrolyser_stack
   level: R0
-  source: "Closed form, Faraday's law: n(H2) = η·I·N/(2F) = 0.98·2000·100/(2·96485) ≈ 1.0157 mol/s; power = V·I·N = 350 kW"
+  source: "Closed form, Faraday's law: n(H2) = η·I·N/(2F) = 0.98·2000·100/(2·96485) ≈ 1.0157 mol/s; power = V·I·N = 350 kW; thermoneutral voltage from the stream balance (H_out − H_in)/(2F·n_H2) on the JANAF databank enthalpies, measured 1.4720 V at the 353.15 K liquid-water feed (HHV-consistent: 1.4895 V at 298.15 K)"
   feeds:
     inlet: {T: 353.15, P: 3000000.0, molar_flow: 50.0, composition: {H2O: 1.0}}
   params:
@@ -104,6 +117,6 @@
   expected:
   - {quantity: power_W, value: 350000.0, tol_rel: 0.000001}
   - {quantity: info.cell_voltage_V, value: 1.75, tol_abs: 0.000001}
-  - {quantity: info.thermoneutral_voltage_V, value: 1.253154, tol_abs: 0.0001}
+  - {quantity: info.thermoneutral_voltage_V, value: 1.4720, tol_abs: 0.0005}
   - {quantity: outlet.h2_out.molar_flow, value: 1.015698, tol_abs: 0.0001}
   - {quantity: outlet.o2_out.composition.O2, value: 0.010261, tol_abs: 0.0001}

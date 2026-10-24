@@ -154,7 +154,6 @@
             description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K} (default isothermal)"
       validation:
       - V1-WGS-GIBBS
-      - V1-SVA-SMR-GIBBS
       note: Gibbs minimisation at the stationarity conditions (element-potential method)
       end_state: true
   balance: mass_elements
@@ -162,7 +161,12 @@
   references:
   - docs/unit-catalogue-plan.md §2 U-F 4
   notes: R0 implemented (U-F). Every feed component must be listed in species or
-    inerts; restricted equilibria stay an R1+ concern.
+    inerts; restricted equilibria stay an R1+ concern. The SVA steam-methane-reforming
+    worked example (mole fractions to 3 decimals) could not be verified in any open
+    source (searched 2026-10-24 — the FOSSEE ch13 transcription, whose Ex 13.5 is the
+    WGS example at 1100 K, plus solution-manual and course-note searches); the Gibbs
+    oracle anchors to the JANAF-printed WGS case (V1-WGS-GIBBS) until a copy of the
+    7th-edition example page is available.
 
 - id: cstr
   name: Continuous stirred-tank reactor
