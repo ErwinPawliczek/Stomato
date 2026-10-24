@@ -49,17 +49,28 @@
   level: R0
   source: >-
     Corripio, "Flash Distillation" lecture notes (2013), Example 1: 38 wt%
-    propane / balance n-octane (z = 0.614 / 0.386 molar, 802 kmol/h), drum at
-    3.5 atm with V/F = 0.61 gives T = 81.9 degC, y_C3 = 0.937 by ideal-K
-    (Antoine, Reid-Sherwood-Prausnitz). This case runs the same PVF spec on
-    the catalogue PR package, which sits ~2.3 K above the ideal-K route; the
-    tolerance covers that model gap, fixed before the run.
+    propane / balance n-octane (z = 0.614 / 0.386 molar, 802 kmol/h = 222.78
+    mol/s), drum at 3.5 atm with V/F = 0.61 gives T = 81.9 degC, y_C3 = 0.937
+    by ideal-K (Antoine, Reid-Sherwood-Prausnitz). The tolerance is the book's
+    rounding of 81.9 degC (+/- 0.1 K on 355.05 K), fixed before the run. The
+    catalogue PR package is expected to sit above the book's ideal-K route;
+    the measured miss is recorded in `assessed`, never absorbed by the
+    tolerance.
   feeds:
     inlet:
       T: 303.15
       P: 4.25325e+5
-      molar_flow: 0.22278
+      molar_flow: 222.78
       composition: {C3: 0.614, nC8: 0.386}
   params: {duty_W: null, outlet_P: 354637.5, vapor_fraction: 0.61}
   expected:
-  - {quantity: outlet.gas_out.T, value: 355.05, tol_abs: 3.0}
+  - {quantity: outlet.gas_out.T, value: 355.05, tol_abs: 0.1}
+  assessed: >-
+    Measured miss (PR package, this case's feeds and params): T = 357.382 K
+    (84.23 degC), 2.33 K above the book's 355.05 K; y_C3 = 0.9213 vs the
+    printed 0.937. Cause: the book solves the Rachford-Rice isothermal flash
+    with ideal K-values from Antoine constants (Reid-Sherwood-Prausnitz),
+    while the catalogue package is Peng-Robinson, whose C3/nC8 K-values at
+    these conditions are less ideal; the PVF spec then lands at a higher T.
+    The book's own rounding (+/- 0.1 K) is kept as the tolerance; the miss is
+    the model gap, reported here rather than absorbed.
