@@ -19,9 +19,13 @@ on `gas_out`; everything else on `treated_out`. The paraffin cracking
 reaction of E12.2.4 is out of scope: hydrocracking is not hydrotreating
 chemistry, and the example's H2 demand excludes it.
 
-The duty is the sensible-only package-enthalpy change, flagged
-`heat_of_reaction_basis_sensible_only` — the R0 slate carries no reaction
-enthalpies, so the duty is not a heat of reaction. `info` reports per-species
+The duty closes on the enthalpy basis `ngdesign.units.balance.energy_basis`
+declares for the row: with all-real species (no pseudo lump in play) it is the
+formation-enthalpy change across the unit — the actual heat of reaction,
+exothermic for hydrotreating; with a pseudo lump (e.g. `hdt_naphtha`) in the
+streams the pseudo carries no formation enthalpy, the duty is the
+sensible-only package-enthalpy change, and `info` sets
+`heat_of_reaction_basis_sensible_only`. `info` reports per-species
 production/consumption in mol/s, the feed's S/N wt% (IUPAC 2021 standard
 atomic weights S 32.06, N 14.007), and Maples's hydrogen make-up estimate
 191·S − 30.7 scf/bbl (S = feed sulfur wt%; Maples, *Petroleum Refinery
@@ -46,6 +50,12 @@ from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import component_record, register_pseudo
 from ngdesign.units._physics.kinetics import yield_shift
+from ngdesign.units.balance import (
+    SENSIBLE_ONLY_FLAG,
+    energy_basis,
+    species_without_formation,
+    stream_enthalpy,
+)
 
 register_pseudo("hdt_naphtha", "hydrotreater naphtha lump (inert)", Tb=400.0, sg=0.74)
 
@@ -166,17 +176,13 @@ class NaphthaHydrotreater:
             )
         n_gas = math.fsum(n_out[cid] for cid in gas_cids)
         n_treated = math.fsum(n_out[cid] for cid in treated_cids)
-        h_in = math.fsum(s.enthalpy * s.molar_flow for s in inlets.values())
-        h_out = 0.0
         outlets: dict[str, StreamState] = {}
         for port, cids, total in (
             ("treated_out", treated_cids, n_treated),
             ("gas_out", gas_cids, n_gas),
         ):
             z = {cid: n_out[cid] / total for cid in cids}
-            state = thermo.flash_pt(z, t_out, p_out, total)
-            outlets[port] = state
-            h_out += state.enthalpy * state.molar_flow
+            outlets[port] = thermo.flash_pt(z, t_out, p_out, total)
 
         feed_mass = math.fsum(
             y * s.molar_flow * float(component_record(cid)["mw"])
@@ -185,22 +191,27 @@ class NaphthaHydrotreater:
         )
         sulfur_w = 100.0 * n_thio * AW_SULFUR / feed_mass
         nitrogen_w = 100.0 * n_py * AW_NITROGEN / feed_mass
-        return UnitResult(
-            outlets=outlets,
-            duty_W=h_out - h_in,
-            info={
-                "h2_consumed_mol_s": h2_needed,
-                "h2s_mol_s": n_thio_r,
-                "nh3_mol_s": n_py_r,
-                "nbutane_mol_s": n_thio_r,
-                "npentane_mol_s": n_py_r + n_pent_r,
-                "cyclohexane_mol_s": n_bz_r,
-                "feed_sulfur_wt_pct": sulfur_w,
-                "feed_nitrogen_wt_pct": nitrogen_w,
-                "h2_makeup_maples_scf_bbl": 191.0 * sulfur_w - 30.7,
-                "heat_of_reaction_basis_sensible_only": 1.0,
-            },
-        )
+        info: dict[str, float] = {
+            "h2_consumed_mol_s": h2_needed,
+            "h2s_mol_s": n_thio_r,
+            "nh3_mol_s": n_py_r,
+            "nbutane_mol_s": n_thio_r,
+            "npentane_mol_s": n_py_r + n_pent_r,
+            "cyclohexane_mol_s": n_bz_r,
+            "feed_sulfur_wt_pct": sulfur_w,
+            "feed_nitrogen_wt_pct": nitrogen_w,
+            "h2_makeup_maples_scf_bbl": 191.0 * sulfur_w - 30.7,
+        }
+        # A pseudo lump in the streams (hdt_naphtha, or a feed-side pseudo)
+        # carries no formation enthalpy: the duty is then the sensible-only
+        # package-enthalpy change and the flag declares it. With all-real
+        # species the duty is the formation-basis change across the unit — the
+        # actual heat of reaction (exothermic for hydrotreating).
+        if species_without_formation([*inlets.values(), *outlets.values()]):
+            info[SENSIBLE_ONLY_FLAG] = 1.0
+        basis = energy_basis("mass_elements", inlets.values(), outlets.values(), info)
+        duty_W = stream_enthalpy(outlets.values(), basis) - stream_enthalpy(inlets.values(), basis)
+        return UnitResult(outlets=outlets, duty_W=duty_W, info=info)
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:

@@ -62,4 +62,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-H 8
 
-> R0 shipped by U-H2. The spec's "H2 and light ends as real components" is out of reach of the mass_elements balance (C/H atoms with no formula-bearing source from a pseudo naphtha); the offgas is a mass-only lump, species split in info. GitHub issue on pseudo-component elemental characterization pending.
+> R0 shipped by U-H2. The spec's "H2 and light ends as real components" is out of reach of the mass_elements balance (C/H atoms with no formula-bearing source from a pseudo naphtha); the offgas is a mass-only lump, species split in info. Pseudo-component elemental characterization - issue #222.

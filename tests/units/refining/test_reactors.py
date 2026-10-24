@@ -2,7 +2,10 @@
 
 Each adapter is a mass-only yield-table reactor on a ``mass_elements`` row:
 mass closes exactly, elements close on the formula-bearing species, and the
-duty is the sensible-only package enthalpy change (flagged in info).
+duty closes on the enthalpy basis ``ngdesign.units.balance.energy_basis``
+declares — the formation-basis heat of reaction for all-real slates, the
+sensible-only package-enthalpy change (flagged in info) when a pseudo lump is
+in play.
 """
 
 from __future__ import annotations
@@ -14,6 +17,8 @@ import pytest
 from ngdesign import registry
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.reactions import Reaction
+from ngdesign.units._physics.kinetics import heat_of_reaction
 from tests.conftest import flash_feed
 
 E12_2_FEEDS = {
@@ -255,6 +260,78 @@ class TestNaphthaHydrotreater:
         )
         mass_in, mass_out = _mass_flows(inlets, result)
         assert mass_out == pytest.approx(mass_in, rel=1e-12)
+
+    def test_pseudo_feed_flags_sensible_only(self, thermo: Thermo) -> None:
+        """The example basis carries the hdt_naphtha lump: sensible-only duty."""
+        _, result = _solve(thermo, "naphtha_ht", None, {})
+        assert result.info["heat_of_reaction_basis_sensible_only"] == pytest.approx(1.0)
+
+    def test_formation_basis_duty_is_the_reaction_enthalpy_sum(self) -> None:
+        """All-real feed, isothermal, departure-free: duty == sum(extent * dH_r(T)).
+
+        The classic-K package enthalpy is the ideal-gas cp integral plus a
+        Lee-Kesler mixture departure; at 1 kPa the departure difference is
+        ~3e-7 of the duty, so the formation-basis duty equals the
+        stoichiometric reaction sum exactly. 1-pentene is absent from the
+        feed (above its critical temperature the ideal K basis refuses it) so
+        olefin saturation has zero extent; HDS, HDN and benzene saturation
+        fire. With all-real species and no pseudo lump, the adapter must
+        report the actual (exothermic) heat of reaction, not a sensible-only
+        duty.
+        """
+        th = registry.create("thermo", "ideal-raoult")
+        T, P = 620.0, 1000.0
+        feeds: dict[str, Any] = {
+            "naphtha_in": {
+                "T": T,
+                "P": P,
+                "molar_flow": 100.0,
+                "composition": {"nC5": 0.98, "thiophene": 0.005, "pyridine": 0.001, "benzene": 0.014},
+            },
+            "h2_in": {"T": T, "P": P, "molar_flow": 10.0, "composition": {"H2": 1.0}},
+        }
+        params: dict[str, Any] = {
+            "sulfur_removal_frac": 1.0,
+            "nitrogen_removal_frac": 1.0,
+            "pentene_conversion": 0.0,
+            "benzene_conversion": 0.8,
+            "T_out": T,
+            "P_out": P,
+        }
+        _inlets, result = _solve(th, "naphtha_ht", feeds, params)
+        assert "heat_of_reaction_basis_sensible_only" not in result.info
+
+        h_pure = {
+            cid: th.flash_pt({cid: 1.0}, T, P, 1.0).enthalpy
+            for cid in ("thiophene", "pyridine", "benzene", "H2", "nC4", "nC5", "H2S", "NH3", "cyclohexane")
+        }
+
+        def _reaction(sid: str, stoichiometry: dict[str, float], base: str) -> Reaction:
+            return Reaction(
+                id=sid, stoichiometry=stoichiometry, base_component=base, provenance="closed-form duty test"
+            )
+
+        extents = (
+            (
+                result.info["h2s_mol_s"],
+                _reaction("hds", {"thiophene": -1.0, "H2": -4.0, "nC4": 1.0, "H2S": 1.0}, "thiophene"),
+            ),
+            (
+                result.info["nh3_mol_s"],
+                _reaction("hdn", {"pyridine": -1.0, "H2": -5.0, "nC5": 1.0, "NH3": 1.0}, "pyridine"),
+            ),
+            (
+                result.info["cyclohexane_mol_s"],
+                _reaction("bzs", {"benzene": -1.0, "H2": -3.0, "cyclohexane": 1.0}, "benzene"),
+            ),
+        )
+        duty_expected = 0.0
+        for extent, reaction in extents:
+            delta_r_h = heat_of_reaction(reaction, T) + sum(
+                nu * h_pure[cid] for cid, nu in reaction.stoichiometry.items()
+            )
+            duty_expected += extent * delta_r_h
+        assert result.duty_W == pytest.approx(duty_expected, rel=1e-6)
 
     def test_refuses_a_dead_reaction_set(self, thermo: Thermo) -> None:
         """No hydrogen excess and no reactions means gas_out would be empty."""

@@ -61,4 +61,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-H 7
 
-> R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental characterization (GitHub issue pending — see the PR).
+> R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental characterization (issue #222).

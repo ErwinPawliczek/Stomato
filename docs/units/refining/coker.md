@@ -19,7 +19,7 @@ Rigour ladder: R0 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.refining.reactors_coker:DelayedCoker` | Gary–Handwerk mass yields vs feed CCR; duty sensible-only (flag heat_of_reaction_basis_sensible_only) |
+| R0 | provisional | `ngdesign.units.refining.reactors_coker:DelayedCoker` | Gary–Handwerk mass yields vs feed CCR (Table 5.5, p. 104); duty sensible-only (flag heat_of_reaction_basis_sensible_only) |
 
 ### R0 parameters
 
@@ -46,17 +46,17 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V1_coker_jechura` | R0 | `info.coke_wt_pct` | 21.6 | 21.6 | abs 1e-06 | pass |
-| `V1_coker_jechura` | R0 | `info.gas_wt_pct` | 9.744 | 9.744 | abs 1e-06 | pass |
-| `V1_coker_jechura` | R0 | `info.naphtha_wt_pct` | 15.9205 | 15.9205 | abs 1e-06 | pass |
-| `V1_coker_jechura` | R0 | `info.gasoil_wt_pct` | 52.7355 | 52.7355 | abs 1e-06 | pass |
-| `V1_coker_jechura` | R0 | `info.lgo_wt_pct` | 26.3678 | 26.3678 | abs 1e-06 | pass |
-| `V1_coker_jechura` | R0 | `info.hgo_wt_pct` | 26.3678 | 26.3678 | abs 1e-06 | pass |
+| `V1_coker_gh_case_study` | R0 | `info.coke_wt_pct` | 22.72 | 22.72 | rel 0.001 | pass |
+| `V1_coker_gh_case_study` | R0 | `info.gas_wt_pct` | 9.84 | 9.8448 | rel 0.001 | pass |
+| `V1_coker_gh_case_study` | R0 | `info.naphtha_wt_pct` | 16.16 | 16.1606 | rel 0.001 | pass |
+| `V1_coker_gh_case_study` | R0 | `info.gasoil_wt_pct` | 51.3 | 51.2746 | rel 0.001 | pass |
+| `V1_coker_gh_case_study` | R0 | `info.lgo_wt_pct` | 32.061 | 32.0603 | rel 0.001 | pass |
+| `V1_coker_gh_case_study` | R0 | `info.hgo_wt_pct` | 19.214 | 19.2143 | rel 0.001 | pass |
 
-- `V1_coker_jechura`: Gary, Handwerk & Kaiser, Petroleum Refining: Technology and Economics, 5th ed., ch. 5 CCR yield correlations, at the Jechura (CSM) example feed, 13.5 wt% CCR
+- `V1_coker_gh_case_study`: Gary, Handwerk & Kaiser, Petroleum Refining: Technology and Economics, 5th ed. (2007), ch. 5, §5.9 case-study problem pp. 116-118 (printed product slate at coker-feed CCR 14.2 wt%)
 
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-H 11
 
-> R0 shipped by U-H2 (Gary–Handwerk CCR table, Jechura CSM example basis); products are mass-only pseudo lumps — the mass_elements element ledger has no atom sources for a pseudo feed. The refinery_leeps_distillation correlation plugin exists for LEEP cut yields.
+> R0 shipped by U-H2 (Gary-Handwerk CCR yield equations, 5th ed. Table 5.5 p. 104; V1 is the book's own worked example - §5.9 case-study problem, pp. 116-118, printed product slate at coker-feed CCR 14.2 wt%; the Jechura CSM feed stays the example_case basis); products are mass-only pseudo lumps - the mass_elements element ledger has no atom sources for a pseudo feed (pseudo-component elemental characterization - issue #222). The refinery_leeps_distillation correlation plugin exists for LEEP cut yields.
