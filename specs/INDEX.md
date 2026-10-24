@@ -136,11 +136,11 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | U-B | Flow units R0 (+ `_physics/efficiency.py`) | U-R1 | issue #207 |
 | U-C | Heat units R0 (+ `_physics/heat_balance.py`: two-stream, multi-stream, problem table) | U-R1 | issue #208 |
 | U-D | Separation units R0 | U-R1, U-A1 (3 units) | issue #209 |
-| U-E | Shortcut column units R0 (+ `_physics/shortcut.py`: FUG, Kremser fraction; V2 vs MESH) | U-R1, P1-11 | issue #210 |
+| U-E | Shortcut column units R0 (+ `_physics/shortcut.py`: FUG, Kremser fraction; V2 vs MESH) | U-R1, P1-11 | DONE 2026-10-24 (#225, 1534141): FUG + Kremser absorber, stripper, extractor R0; V2 vs MESH measured |
 | U-F | Reactors R0 (+ U-F1 `kinetics.yield_shift`, `_physics/gibbs.py`; solver reaction-set hook) | U-R1 | issue #211 |
 | U-G | Treating R0: TEG regenerator, Claus | U-R1 | issue #212 |
 | U-H1 | Refining separation R0: assay feeder, desalter, crude/vacuum cut-point columns, side strip, preflash, blending | U-R1, A-01, U-E (side_strip) | issue #213 |
-| U-H2 | Refining reactors R0: lumped yield correlations | U-R1, U-F1 | issue #214; dispatch after U-F1 merges |
+| U-H2 | Refining reactors R0: lumped yield correlations | U-R1, U-F1 | DONE 2026-10-23 (#218, 0c8f357): naphtha_ht, reformer_cat, coker R0; fcc and hcu refused (figure-only sources), issue #222 pseudo characterisation |
 | U-00 | Unit catalogue as data: 83-row YAML registry, rigour-level dispatch/refusal, V0 harness | none | merged #197 (8cf4d20) 2026-10-23; issue #189 |
 | U-01 | Unit harness: cited V1 cases with tolerances and assessed misses, mass/element V0 for reactive rows, per-row example thermo | U-00, U-R | DONE 2026-10-23 (#205, 8cc9b2b; U-01b reactive balance bases #220, 16432b9) |
 | A-01 | Crude assay characterisation: curve conversions, light ends, pseudo cutting, S0 reference data | P1-07 | merged #195 (2026-10-23): `contracts/assay.py`, `data/assay.py` (`data.py` became the `data/` package); D86→TBP Riazi–Daubert, D2887→TBP API 3A3.1 (Daubert 1994 °F table), D1160 at 10 mmHg via the graphical 3A2.1 procedure (other pressures refuse), Maxwell–Bonnell AET; S0 reference = Bagajewicz & Ji 2001 Part I cut temperatures/gaps only — round 2 needs a yields source (Part II) |
