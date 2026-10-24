@@ -447,6 +447,194 @@ class PCSaftPhysical:
         return total
 
 
+#: Gross & Vrabec (2006) dipolar-term universal coefficient series. Rows are the
+#: J2 exponent n = 0..4; columns the chain-length expansion order (constant,
+#: (m-1)/m, (m-1)(m-2)/m^2) of the a, b coefficients of J_DD,2 (eq. 10 with the
+#: coefficient series of eqs. 12-13) and of the c coefficients of J_DD,3 (eq. 11
+#: with eq. 14). Typed from the feos source (feos-org/feos, crates/feos/src/
+#: pcsaft/eos/polar.rs, BSD-3, retrieved 2026-10-23, 11 printed digits) and
+#: cross-checked digit by digit against the current teqp source (usnistgov/teqp,
+#: include/teqp/models/saft/polar_terms/GrossVrabec.hpp, public domain, 7 printed
+#: digits, which also carries the equation numbers) and CoolProp's
+#: PCSAFTBackend.cpp (7 printed digits): all 45 dipolar constants agree.
+_GV_DIP_A = (
+    (0.30435038064, 0.95346405973, -1.16100802773),
+    (-0.13585877707, -1.83963831920, 4.52586067320),
+    (1.44933285154, 2.01311801180, 0.97512223853),
+    (0.35569769252, -7.37249576667, -12.2810377713),
+    (-2.06533084541, 8.23741345333, 5.93975747420),
+)
+_GV_DIP_B = (
+    (0.21879385627, -0.58731641193, 3.48695755800),
+    (-1.18964307357, 1.24891317047, -14.9159739347),
+    (1.16268885692, -0.50852797392, 15.3720218600),
+    (0.0, 0.0, 0.0),
+    (0.0, 0.0, 0.0),
+)
+_GV_DIP_C = (
+    (-0.06467735252, -0.95208758351, -0.62609792333),
+    (0.19758818347, 2.99242575222, 1.29246858189),
+    (-0.80875619458, -2.38026356489, 1.65427830900),
+    (0.69028490492, -0.27012609786, -3.43967436378),
+    # J_DD,3 is a fourth-order series (n = 0..3); the fifth entry stays zero so
+    # the eta-power vector is shared with J_DD,2 (teqp/feos print 4 rows).
+    (0.0, 0.0, 0.0),
+)
+
+#: Debye-to-reduced-unit conversion of the note below Table 2 in Gross & Vrabec
+#: (2006): (mu*)^2 = mu^2 / (4 pi eps0 m eps sigma^3). Computed here from exact
+#: SI constants, not transcribed: mu_D = 1e-21/c C.m (c-exact since 1983),
+#: 1/(4 pi eps0) = 1e-7 c^2 (exact), sigma in Angstrom -> 1e-30 m^3, eps in K
+#: via the exact kB = 1.380649e-23 J/K:
+#:   (1e-7 c^2) (1e-21/c)^2 / (kB 1e-30) = 1e-19/kB = 7242.970516039922.
+#: feos (mu2 = mu^2/(m sigma^3 eps) * 1e-19 * (J/K/kB)) and teqp's documented
+#: mustar2 give the same value; CoolProp's PCSAFTBackend.cpp hardcodes
+#: 7242.702976750923, 37 ppm lower — the cross-check tolerance in
+#: tests/thermo/test_saft.py accounts for that difference.
+_GV_DIP_CONV = 1.0e-19 / 1.380649e-23
+
+
+class PCSaftDipolar:
+    """The Gross & Vrabec (2006) dipolar residual term, Padé [2/3] form.
+
+    alpha_dip = alpha2 / (1 - alpha3/alpha2) with (the paper's eqs. 8-14; the
+    J-integrals fitted to 2CLJ + point-dipole simulation data):
+
+        alpha2 = -pi rhoN sum_ij x_i x_j (eps_i/T)(eps_j/T) sigma_i^3 sigma_j^3
+                 / sigma_ij^3 nmu_i nmu_j (mu*)^2_i (mu*)^2_j J_DD,2ij
+        alpha3 = -(4 pi^2/3) rhoN^2 sum_ijk x_i x_j x_k (eps_i eps_j eps_k/T^3)
+                 sigma_i^3 sigma_j^3 sigma_k^3/(sigma_ij sigma_ik sigma_jk)
+                 nmu_i nmu_j nmu_k (mu*)^2_i (mu*)^2_j (mu*)^2_k J_DD,3ijk
+
+    J_DD,2 = sum_n [a_n(mbar_ij) + b_n(mbar_ij)/T*_ij] eta^n (eq. 10) and
+    J_DD,3 = sum_n c_n(mbar_ijk) eta^n (eq. 11), with mbar_ij =
+    min(sqrt(m_i m_j), 2), mbar_ijk = min((m_i m_j m_k)^(1/3), 2), T*_ij =
+    T/sqrt(eps_i eps_j), and eta the same packing fraction as the PC-SAFT
+    physical term (zeta_3 of the temperature-dependent segment diameters) — the
+    convention teqp, feos and CoolProp all implement. feos caps each component
+    m at 2 BEFORE the geometric mean, teqp/CoolProp after; for the bound slate
+    (acetone, DME, m > 2 both) the two caps coincide, and this implementation
+    follows the teqp/CoolProp reading. Every fluid in the paper's Table 2 slate
+    carries one dipolar segment (dipnum = 1). All density and composition
+    derivatives are closed-form (the Gibbs-Duhem bar; the PCSaftPhysical
+    docstring records why finite differences are not acceptable here).
+    """
+
+    def __init__(self, params: list[dict[str, Any]]) -> None:
+        self._m = np.array([float(p["m"]) for p in params])
+        self._sigma = np.array([float(p["sigma_Angstrom"]) for p in params])
+        self._eps = np.array([float(p["epsilon_over_k"]) for p in params])
+        mu = np.array([float(p.get("mu_debye", 0.0)) for p in params])
+        # Reduced dipole squares (dimensionless), folded with nmu = 1.
+        self._w = mu * mu * _GV_DIP_CONV / (self._m * self._eps * self._sigma**3)
+        self._has_dipole = bool(np.any(self._w > 0.0))
+        # Pair data: sigma_ij (arithmetic), eps_ij (geometric), mbar (capped).
+        self._s_ij = 0.5 * (self._sigma[:, None] + self._sigma[None, :])
+        self._e_ij = np.sqrt(self._eps[:, None] * self._eps[None, :])
+        mbar2 = np.minimum(np.sqrt(self._m[:, None] * self._m[None, :]), 2.0)
+        mbar3 = np.minimum(
+            np.cbrt(self._m[:, None, None] * self._m[None, :, None] * self._m[None, None, :]), 2.0
+        )
+        # The coefficient series per pair/triplet: a_n(mbar), b_n(mbar), c_n(mbar).
+        u2 = (mbar2 - 1.0) / mbar2
+        v2 = u2 * (mbar2 - 2.0) / mbar2
+        aa = np.array(_GV_DIP_A)  # (n, order)
+        bb = np.array(_GV_DIP_B)
+        self._a2 = (
+            aa[:, 0][None, None, :]
+            + u2[:, :, None] * aa[:, 1][None, None, :]
+            + v2[:, :, None] * aa[:, 2][None, None, :]
+        )
+        self._b2 = (
+            bb[:, 0][None, None, :]
+            + u2[:, :, None] * bb[:, 1][None, None, :]
+            + v2[:, :, None] * bb[:, 2][None, None, :]
+        )
+        u3 = (mbar3 - 1.0) / mbar3
+        v3 = u3 * (mbar3 - 2.0) / mbar3
+        cc = np.array(_GV_DIP_C)
+        self._c3 = (
+            cc[:, 0][None, None, None, :]
+            + u3[:, :, :, None] * cc[:, 1][None, None, None, :]
+            + v3[:, :, :, None] * cc[:, 2][None, None, None, :]
+        )
+        # State-independent prefactor shapes.
+        s3 = self._s_ij**3
+        self._p2_shape = (self._sigma[:, None] ** 3 * self._sigma[None, :] ** 3 / s3) * (
+            self._w[:, None] * self._w[None, :]
+        )
+        self._p3_shape = (
+            self._sigma[:, None, None] ** 3
+            * self._sigma[None, :, None] ** 3
+            * self._sigma[None, None, :] ** 3
+            / (self._s_ij[:, :, None] * self._s_ij[:, None, :] * self._s_ij[None, :, :])
+        ) * (self._w[:, None, None] * self._w[None, :, None] * self._w[None, None, :])
+
+    def _state(self, T: float, rho_a3: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
+        """eta and its (drho, z) derivatives at (T, rho, z)."""
+        d = self._sigma * (1.0 - 0.12 * np.exp(-3.0 * self._eps / T))
+        md3 = z * self._m * d**3
+        eta = math.pi / 6.0 * rho_a3 * float(md3.sum())
+        deta_drho = math.pi / 6.0 * float(md3.sum())
+        deta_dz = math.pi / 6.0 * rho_a3 * self._m * d**3
+        return eta, deta_drho, deta_dz
+
+    def derivs(self, T: float, rho: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
+        """alpha_dip and its exact rho / composition derivatives.
+
+        Returns ``(alpha, dalpha/drho, [dalpha/dz_i])`` at fixed (T, rho), with
+        rho the molar density in mol/m3. Zero for non-polar feeds (the term
+        must vanish exactly, never divide by an alpha2 of zero).
+        """
+        if not self._has_dipole:
+            return 0.0, 0.0, np.zeros(z.size)
+        rho_n = rho * _MOL_TO_A3
+        eta, deta_drho, deta_dz = self._state(T, rho_n, z)
+        eta_p = np.array([eta**k for k in range(5)])
+        eta_dp = np.array([k * eta ** (k - 1) if k else 0.0 for k in range(5)])
+        # Second-order sums: J2 per pair and its d/deta.
+        inv_t = 1.0 / T
+        coeff2 = self._a2 + self._b2 * (self._e_ij[:, :, None] * inv_t)
+        j2 = coeff2 @ eta_p  # (n, n)
+        dj2 = coeff2 @ eta_dp
+        p2 = self._p2_shape * (self._eps[:, None] * self._eps[None, :] * inv_t * inv_t)
+        g2 = p2 * j2
+        g2_eta = p2 * dj2
+        f2 = float(z @ g2 @ z)
+        df2_drho = float(z @ g2_eta @ z) * deta_drho
+        # Third-order sums.
+        coeff3 = self._c3  # (n, n, n, 5)
+        j3 = coeff3 @ eta_p
+        dj3 = coeff3 @ eta_dp
+        p3 = self._p3_shape * (
+            self._eps[:, None, None] * self._eps[None, :, None] * self._eps[None, None, :] * inv_t**3
+        )
+        f3 = float(np.einsum("i,j,k,ijk->", z, z, z, p3 * j3))
+        df3_drho = float(np.einsum("i,j,k,ijk->", z, z, z, p3 * dj3)) * deta_drho
+        # Composition derivatives: x_i x_j bilinear -> factor 2, x_i x_j x_k -> 3.
+        df2_dz = 2.0 * (g2 @ z) + (float(z @ g2_eta @ z)) * deta_dz
+        df3_dz = (
+            3.0 * np.einsum("j,k,ijk->i", z, z, p3 * j3)
+            + float(np.einsum("i,j,k,ijk->", z, z, z, p3 * dj3)) * deta_dz
+        )
+        a2 = -math.pi * rho_n * f2
+        da2_drho = -math.pi * (f2 + rho_n * df2_drho)
+        da2_dz = -math.pi * rho_n * df2_dz
+        a3 = -4.0 * math.pi * math.pi / 3.0 * rho_n * rho_n * f3
+        da3_drho = -4.0 * math.pi * math.pi / 3.0 * (2.0 * rho_n * f3 + rho_n * rho_n * df3_drho)
+        da3_dz = -4.0 * math.pi * math.pi / 3.0 * rho_n * rho_n * df3_dz
+        if a2 == 0.0:
+            return 0.0, 0.0, np.zeros(z.size)
+        # Pade quotient rule: alpha = a2^2/(a2 - a3). The rho derivative comes
+        # out wrt the number density (the term is written in molecules/A^3);
+        # chain-rule it to the molar density the kernel surface uses.
+        den = a2 - a3
+        d_pade = a2 * a2 / den
+        da_drho = (2.0 * a2 * da2_drho * den - a2 * a2 * (da2_drho - da3_drho)) / (den * den)
+        da_dz = (2.0 * a2 * da2_dz * den - a2 * a2 * (da2_dz - da3_dz)) / (den * den)
+        return d_pade, da_drho * _MOL_TO_A3, da_dz
+
+
 class PCSaftWertheim:
     """The PC-SAFT association term: Wertheim TPT1 with the hard-sphere contact RDF.
 

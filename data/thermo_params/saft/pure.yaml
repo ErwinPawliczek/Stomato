@@ -168,6 +168,30 @@ pc_saft_assoc:
     kappa_AB: 0.032384
     sites: [d, a]
 
+# --- PC-SAFT + dipolar term (row pc_saft_polar) -----------------------------------
+# Source: the polar parameters are from feos's curated copy of Gross & Vrabec
+# (2006) AIChE J. 52, 1194-1204 Table 2 (feos-org/feos,
+# parameters/pcsaft/gross2006.json, BSD-3, retrieved 2026-10-23; the file is the
+# paper's own fitted set for ketones/ethers and carries mu in Debye). DME is
+# identical in CoolProp's dev/pcsaft/all_pcsaft_fluids.json (BibTeXKey
+# Kleiner-JPCC-2007) and feos's test parameters; acetone agrees everywhere except
+# the 5th digit of m (feos 2.7447 vs CoolProp/Kleiner 2.7448 — a rounding of the
+# paper's table; Psat impact below the case band). The paper's own table is paywalled
+# (AIChE J.), so this curated open transcription is the provenance of record.
+# m/sigma/epsilon_over_k in PC-SAFT units, mu_debye in Debye; one dipolar segment
+# per molecule (dipnum = 1, as every fluid in the paper's Table 2 slate).
+pc_saft_polar:
+  ACETONE:
+    m: 2.7447
+    sigma_Angstrom: 3.2742
+    epsilon_over_k: 232.99   # K
+    mu_debye: 2.88
+  DME:
+    m: 2.2634
+    sigma_Angstrom: 3.2723
+    epsilon_over_k: 210.29   # K
+    mu_debye: 1.3
+
 # --- Multi-fluid Helmholtz (row multifluid) -------------------------------------
 # Source: teqp 0.23.2's bundled fluid library (multi-fluid Helmholtz EOS with
 # departure functions as distributed by NIST teqp; GERG-2008-family formulations).

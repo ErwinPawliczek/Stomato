@@ -558,6 +558,30 @@ class _PCSaftAssocKernel(_Kernel):
         return packing_a3 / _saft_assoc._MOL_TO_A3 * 0.999
 
 
+class _PCSaftPolarKernel(_PCSaftAssocKernel):
+    """Hand-rolled PC-SAFT + Gross & Vrabec dipolar term (row ``pc_saft_polar``).
+
+    Physical part identical to the association kernel (the teqp-pinned
+    PCSaftPhysical term); the association slot is replaced by the shared
+    PCSaftDipolar term (Gross & Vrabec 2006), so pressure, fugacity
+    coefficients, enthalpy and max density reuse the association kernel's
+    machinery unchanged. No association contribution: the bound slate
+    (acetone, DME) is non-associating.
+    """
+
+    def __init__(self, name: str, params: list[dict[str, Any]]) -> None:
+        self.name = name
+        self.params = params
+        self._phys = _saft_assoc.PCSaftPhysical(params)
+        self._dip = _saft_assoc.PCSaftDipolar(params)
+
+    def _alpha_r_derivs(self, T: float, rho: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
+        """alpha_r and its exact rho / composition derivatives (chain + disp + dipolar)."""
+        a_phys, dadrho_phys, dz_phys = self._phys.derivs(T, rho, z)
+        alpha_d, dadrho_d, dz_d = self._dip.derivs(T, rho, z)
+        return a_phys + alpha_d, dadrho_phys + dadrho_d, dz_phys + dz_d
+
+
 def _polymer_pcsaft_params() -> dict[str, Any]:
     """The cited polymer PC-SAFT parameter file, loaded once (spec T-10)."""
     path = Path(__file__).resolve().parents[3] / "data" / "thermo_params" / "special" / "polymer.yaml"
@@ -634,6 +658,10 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
         block = _require_params("pc_saft_assoc", cids)
         params = [block[cid] | {"name": cid} for cid in cids]
         return _PCSaftAssocKernel(kind, params)
+    if kind == "pc_saft_polar":
+        block = _require_params("pc_saft_polar", cids)
+        params = [block[cid] | {"name": cid} for cid in cids]
+        return _PCSaftPolarKernel(kind, params)
     if kind == "polymer_pc_saft":
         # Polymer PC-SAFT (spec T-10): same PCSAFT engine as "pc_saft", but the
         # parameters live in the special-family file (polymer.yaml), keyed by
@@ -682,17 +710,14 @@ class TeqpPackage(ThermoSurfaceMixin):
         CoolProp and virial rows set the pattern), so the API can list it, the
         contract test can type it and the refusal reason surfaces at the first
         property call via ``_kernel`` - the single entry to the engines.
+
+        pc_saft_polar refuses per-component from _require_params inside
+        _build_kernel (the pc_saft_assoc pattern), so it has no kind-level
+        branch here.
         """
-        if self.model_kind == "pc_saft_polar":
-            raise NotImplementedError(
-                "saft row 'pc_saft_polar' refuses to build: teqp (>= 0.15) ships a "
-                "polar PC-SAFT extension, but no verified, citable component polar "
-                "parameters ((Q*)^2, (mu*)^2) exist in data/thermo_params/saft/pure.yaml; "
-                "parameter retrieval is out of T-07 scope"
-            )
         if self.model_kind == "soft_saft":
             raise NotImplementedError(
-                "saft row 'soft_saft' refuses to build: no soft-SAFT engine exists — "
+                "saft row 'soft_saft' is not implemented: no soft-SAFT engine exists — "
                 "teqp 0.23.2 (the family's only optional backend) ships no soft-SAFT "
                 "kernel (its SAFT factories are the explicit-coefficient PC-SAFT and "
                 "SAFT-VR-Mie engines; there is no soft-SAFT model kind and no teqp.saft "
@@ -1653,7 +1678,7 @@ class PCSaftAssocThermo(TeqpPackage):
 
 
 class PCSaftPolarThermo(TeqpPackage):
-    """Refusal row: no verified citable polar parameters (row ``pc_saft_polar``)."""
+    """Hand-rolled PC-SAFT + Gross & Vrabec (2006) dipolar term (row ``pc_saft_polar``)."""
 
     model_kind = "pc_saft_polar"
 

@@ -324,47 +324,97 @@
       2026-10-23, PR table)"
 
 - id: pc_saft_polar
-  name: Polar PC-SAFT (registered refusal)
+  name: Polar PC-SAFT (hand-rolled kernel)
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:PCSaftPolarThermo
   params:
-    source: none — the row refuses to build
-    provenance: teqp's PC-SAFT supports dipolar/quadrupolar coefficient fields, but no
-      verified citable polar parameter set for the curated slate is loaded in
-      data/thermo_params/saft/pure.yaml; unverified parameters are excluded rather than
-      shipped (see pure.yaml `excluded:`)
+    source: hand-rolled PC-SAFT + Gross & Vrabec dipolar kernel, feos-curated G&V
+      2006 parameters (data/thermo_params/saft/pure.yaml)
+    provenance: physical term (hard chain + dispersion) is the teqp-pinned reimplementation
+      shared with pc_saft_assoc; dipolar term from Gross & Vrabec (2006) AIChE J. 52,
+      1194-1204 eqs. 8-14 (Padé [2/3]) with closed-form density and composition
+      derivatives; the a/b/c universal coefficients typed from the feos source
+      (feos-org/feos, BSD-3, 11 printed digits, retrieved 2026-10-23) and cross-checked
+      digit by digit against teqp's and CoolProp's 7-digit constants (all 45 agree);
+      the Debye-to-reduced-unit conversion is computed from exact SI constants
+      (1e-19/kB = 7242.9705...) matching teqp/feos, not CoolProp's hardcoded
+      7242.7029... (37 ppm lower, inside the case bands); fluid parameters from
+      feos's curated copy of the paper's Table 2 (gross2006.json — acetone and DME,
+      both non-associating, one dipolar segment each); quadrupolar fluids (CO2, Gross
+      2005) stay unbound pending resolution of an open-source sign discrepancy in the
+      J_QQQ,3ijk c0[0] constant; k_ij = 0 (the paper introduces no binary interaction
+      parameter for the bound slate)
   applicability:
     component_classes:
-    - hydrocarbon
-    - light_gas
-    - acid_gas
+    - polar_organic
     polar: true
     electrolyte: false
-    T_K: [95.0, 600.0]
+    T_K: [230.0, 520.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  - pure-ACETONE-296.0K-ps
+  - pure-ACETONE-350.0K-ps
+  - pure-ACETONE-400.0K-ps
+  - pure-ACETONE-450.0K-ps
+  - pure-DME-248.0K-ps
+  - pure-DME-280.0K-ps
+  - pure-DME-320.0K-ps
+  - pure-DME-360.0K-ps
   references:
   - >-
     Gross & Vrabec, "An equation of state contribution for polar components: Dipolar
     molecules", AIChE J. 52 (2006) 1194-1204 (term background)
-  l0: {}
-  l0_excluded:
-    pure_psat_limit: row refuses to build — no verified citable polar PC-SAFT parameter
-      set (NotImplementedError in _build_kernel)
-    phase_identification: row refuses to build — no verified citable polar PC-SAFT
-      parameter set (NotImplementedError in _build_kernel)
-    round_trip: row refuses to build — no verified citable polar PC-SAFT parameter set
-      (NotImplementedError in _build_kernel)
-    dhdT_cp: row refuses to build — no verified citable polar PC-SAFT parameter set
-      (NotImplementedError in _build_kernel)
-    gibbs_duhem: row refuses to build — no verified citable polar PC-SAFT parameter set
-      (NotImplementedError in _build_kernel)
-    single_liquid_limit: row refuses to build — no verified citable polar PC-SAFT
-      parameter set (NotImplementedError in _build_kernel)
-    determinism: row refuses to build — no verified citable polar PC-SAFT parameter set
-      (NotImplementedError in _build_kernel)
+  l0:
+    pure_psat_limit:
+      points:
+      - - ACETONE
+        - 329.44
+      - - ACETONE
+        - 400.0
+      - - DME
+        - 248.0
+      - - DME
+        - 320.0
+    phase_identification:
+      points:
+      - - ACETONE
+        - 350.0
+      - - DME
+        - 280.0
+    round_trip:
+      z:
+        ACETONE: 1.0
+      states:
+      - - 300.0
+        - 3.0e+5
+      - - 450.0
+        - 1.0e+5
+    dhdT_cp:
+      state: [400.0, 1.0e+5]
+      phase: vapor
+      z:
+        ACETONE: 1.0
+    gibbs_duhem:
+      steps: 30
+      binaries:
+      - z:
+          ACETONE: 0.5
+          DME: 0.5
+        phase: vapor
+        T: 350.0
+        P: 3.0e+5
+    single_liquid_limit:
+      state: [300.0, 3.0e+5]
+      z:
+        ACETONE: 1.0
+    determinism:
+      state: [400.0, 1.0e+5]
+      z:
+        ACETONE: 0.4
+        DME: 0.6
+  l0_excluded: {}
   l0_note: ''
 
 - id: saft_vr_mie

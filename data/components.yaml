@@ -63,3 +63,6 @@ components:
   MEG:
     name: ethylene glycol
     cas: 107-21-1
+  DME:
+    name: dimethyl ether
+    cas: 115-10-6

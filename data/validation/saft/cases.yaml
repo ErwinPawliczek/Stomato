@@ -756,6 +756,137 @@ pure_cases:
     rho_L: 537.8290843319744
     Cp: 228.46628425356184
 
+# pc_saft_polar pure-fluid cases: CoolProp HEOS references generated 2026-10-23.
+# The G&V 2006 parameterization targets the polar fluids' Psat; plain PC-SAFT
+# misses acetone Psat by about -8%, the dipolar term recovers it to the sub-1%
+# band below.
+- id: pure-ACETONE-296.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: Acetone
+  components:
+  - ACETONE
+  z:
+    ACETONE: 1.0
+  T: 296.0
+  source: coolprop:Acetone
+  expected:
+    bubble_P: 27984.798620785255
+    dew_P: 27984.798620785255
+    rho_V: 11.651087378582012
+    rho_L: 13550.942581708126
+    Cp: 124.16766114892393
+
+- id: pure-ACETONE-350.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: Acetone
+  components:
+  - ACETONE
+  z:
+    ACETONE: 1.0
+  T: 350.0
+  source: coolprop:Acetone
+  expected:
+    bubble_P: 196425.92364577646
+    dew_P: 196425.92364577646
+    rho_V: 73.16289146638569
+    rho_L: 12461.11763546282
+    Cp: 133.51184516168453
+
+- id: pure-ACETONE-400.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: Acetone
+  components:
+  - ACETONE
+  z:
+    ACETONE: 1.0
+  T: 400.0
+  source: coolprop:Acetone
+  expected:
+    bubble_P: 705586.1248734286
+    dew_P: 705586.1248734286
+    rho_V: 255.33421463176404
+    rho_L: 11293.626123646916
+    Cp: 146.3064421484779
+
+- id: pure-ACETONE-450.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: Acetone
+  components:
+  - ACETONE
+  z:
+    ACETONE: 1.0
+  T: 450.0
+  source: coolprop:Acetone
+  expected:
+    bubble_P: 1875884.2167017076
+    dew_P: 1875884.2167017076
+    rho_V: 734.7227702099141
+    rho_L: 9804.286516542259
+    Cp: 169.6731068132008
+
+- id: pure-DME-248.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: DimethylEther
+  components:
+  - DME
+  z:
+    DME: 1.0
+  T: 248.0
+  source: coolprop:DimethylEther
+  expected:
+    bubble_P: 99712.96420871113
+    dew_P: 99712.96420871113
+    rho_V: 50.198351532716515
+    rho_L: 15969.447361157001
+    Cp: 103.07595855521515
+
+- id: pure-DME-280.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: DimethylEther
+  components:
+  - DME
+  z:
+    DME: 1.0
+  T: 280.0
+  source: coolprop:DimethylEther
+  expected:
+    bubble_P: 336775.1545459868
+    dew_P: 336775.1545459868
+    rho_V: 157.56078874628417
+    rho_L: 14972.764549246396
+    Cp: 108.15833045851197
+
+- id: pure-DME-320.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: DimethylEther
+  components:
+  - DME
+  z:
+    DME: 1.0
+  T: 320.0
+  source: coolprop:DimethylEther
+  expected:
+    bubble_P: 1058681.969236121
+    dew_P: 1058681.969236121
+    rho_V: 482.0704023098584
+    rho_L: 13546.625373605715
+    Cp: 118.79282796139971
+
+- id: pure-DME-360.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: DimethylEther
+  components:
+  - DME
+  z:
+    DME: 1.0
+  T: 360.0
+  source: coolprop:DimethylEther
+  expected:
+    bubble_P: 2557874.382620193
+    dew_P: 2557874.382620193
+    rho_V: 1264.4788474240631
+    rho_L: 11692.695243985041
+    Cp: 144.61432987656343
 binary_cases:
 # --- L2: CO2 + CH4 VLE (Petropoulou et al. 2018) — PC-SAFT row -------------------------------
 # Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462,
@@ -1246,3 +1377,4 @@ binary_cases:
     bubble_T: 346.2
     vapor_comp:
       MeOH: 0.786
+
