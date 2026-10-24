@@ -6,7 +6,8 @@ Method (spec): ports inlet -> h2_out + o2_out. Params ``current_A``,
 ``n_cells``, ``cell_voltage_V`` and ``faradaic_efficiency`` (default 1.0). The
 stack splits its feed: H2O is consumed at n(H2) = η·I·N/(2F) (1 mol water per
 mol hydrogen), the hydrogen leaves pure on ``h2_out``, and everything else —
-including the coproduct oxygen — leaves on ``o2_out``. power = V·I·N is electrical work; the isothermal duty carries the balance
+including the coproduct oxygen — leaves on ``o2_out``. power = V·I·N is
+electrical work; the isothermal duty carries the balance
 (negative = heat removal). ``info`` reports the thermoneutral voltage computed
 from the actual stream balance, (H_out − H_in)/(2F·n_H2): on a liquid-water
 feed that is the HHV value (1.481 V at 298.15 K, less at warmer feeds); a

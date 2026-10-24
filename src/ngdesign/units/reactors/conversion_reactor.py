@@ -20,6 +20,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.units._physics.kinetics import apply_extents
 from ngdesign.units.reactors._shared import extents_from_conversion, reaction_set_param, thermal_outlet
 
 

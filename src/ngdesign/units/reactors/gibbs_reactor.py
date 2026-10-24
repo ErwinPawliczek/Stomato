@@ -23,6 +23,7 @@ from scipy.optimize import brentq
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.units._physics.gibbs import gibbs_minimum
 from ngdesign.units._physics.kinetics import enthalpy_with_formation
 from ngdesign.units.reactors._shared import _T_MAX, _T_MIN, z_from
 
@@ -69,7 +70,7 @@ class GibbsReactor:
             and thermal == "adiabatic"
             or (isinstance(thermal, Mapping) and set(thermal) == {"duty_W"})
         ):
-            duty = 0.0 if thermal == "adiabatic" else float(thermal["duty_W"])
+            duty = 0.0 if isinstance(thermal, str) else float(thermal["duty_W"])
             target = h_in_W + duty
 
             def f(T: float) -> float:

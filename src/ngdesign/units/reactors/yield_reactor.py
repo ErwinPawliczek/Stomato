@@ -19,6 +19,7 @@ from typing import Any
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import component_record
+from ngdesign.units._physics.kinetics import yield_shift
 from ngdesign.units.reactors._shared import thermal_outlet
 
 

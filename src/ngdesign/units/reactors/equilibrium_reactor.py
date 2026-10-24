@@ -165,7 +165,7 @@ class EquilibriumReactor:
             and thermal == "adiabatic"
             or (isinstance(thermal, Mapping) and set(thermal) == {"duty_W"})
         ):
-            duty = 0.0 if thermal == "adiabatic" else float(thermal["duty_W"])
+            duty = 0.0 if isinstance(thermal, str) else float(thermal["duty_W"])
             target = h_in_W + duty
 
             def f(T: float) -> float:
