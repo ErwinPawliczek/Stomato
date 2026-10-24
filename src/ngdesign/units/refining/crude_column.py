@@ -107,10 +107,11 @@ class CrudeColumn:
         info: dict[str, float] = {}
         if steam_flow > 0.0:
             info["stripping_steam_mol_s"] = steam_flow
-        feed_vol = reference_volume(feed)
-        for port, state in outlets.items():
-            info[f"{port}_vol_m3_s"] = reference_volume(state)
-            info[f"{port}_vol_pct"] = 100.0 * info[f"{port}_vol_m3_s"] / feed_vol if feed_vol else 0.0
+        outlet_vol = {port: reference_volume(state) for port, state in outlets.items()}
+        total_vol = sum(outlet_vol.values())
+        for port, vol in outlet_vol.items():
+            info[f"{port}_vol_m3_s"] = vol
+            info[f"{port}_vol_pct"] = 100.0 * vol / total_vol if total_vol else 0.0
         return UnitResult(outlets=outlets, duty_W=h_out - h_in, power_W=0.0, info=info)
 
 

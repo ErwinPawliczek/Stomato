@@ -149,8 +149,8 @@ def test_crude_column_routes_light_ends_overhead_and_closes(thermo: Thermo) -> N
         if port == "overhead":
             continue
         assert not (set(state.composition) & light), port
-    # Molar inventory closes.
-    flow_in = inlets["crude_in"].molar_flow
+    # Molar inventory closes (the example also feeds stripping steam).
+    flow_in = sum(s.molar_flow for s in inlets.values())
     flow_out = sum(s.molar_flow for s in result.outlets.values())
     assert math.isclose(flow_out, flow_in, rel_tol=1e-9)
     # The heaviest pseudo reports to the bottoms.
@@ -331,6 +331,10 @@ def test_crude_column_product_shares_recomputed_from_the_slate(thermo: Thermo) -
         tb = component_record(cid)["Tb"]
         index = sum(1 for cut in cuts if tb >= cut)
         vols[ports[index]] += _independent_volume({cid: x}, feed_flow)
+    # The example's stripping steam reports its water to the overhead, exactly
+    # as the adapter does; volume it on the same data-bank MW/sg basis.
+    steam = feeds["stripping_steam"]
+    vols["overhead"] += _independent_volume(steam["composition"], steam["molar_flow"])
     total = sum(vols.values())
     for port in ports:
         assert result.info[f"{port}_vol_pct"] == pytest.approx(100.0 * vols[port] / total, rel=1e-6)
