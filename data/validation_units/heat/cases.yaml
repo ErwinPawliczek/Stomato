@@ -1,0 +1,144 @@
+# U-C heat V1 worked cases (spec U-01; validator scripts/validate_units.py).
+#
+# Cases cite printed examples with their printed inputs; a measured miss is
+# documented in ``assessed`` rather than hidden by a loosened tolerance.
+# Exponent literals carry explicit signs (1.0e+6) — bare 1.0e6 parses as a
+# string in PyYAML.
+
+- id: V2082
+  unit: double_pipe
+  level: R0
+  source: >-
+    Kern, Process Heat Transfer, Example 6.1: 9,820 lb/h of benzene heated
+    80 -> 120 F against 6,330 lb/h of toluene cooled 160 -> 100 F, Q =
+    6,330 * 0.44 * 60 = 167,000 Btu/h = 48,943 W. Flows from the printed
+    lb/h over the package molar masses: toluene 8.66 mol/s, benzene 15.84
+    mol/s.
+  thermo: pr
+  feeds:
+    hot_in:
+      T: 344.26
+      P: 1.01325e+5
+      molar_flow: 8.66
+      composition: {TOLUENE: 1.0}
+    cold_in:
+      T: 299.817
+      P: 1.01325e+5
+      molar_flow: 15.84
+      composition: {BENZENE: 1.0}
+  params:
+    hot_T_out: 310.928
+  expected:
+  - {quantity: outlet.cold_out.T, value: 322.039, tol_abs: 0.28}
+  - {quantity: info.duty_W, value: 48943.0, tol_rel: 0.02}
+  assessed: >-
+    Measured: benzene outlet 322.969 K (+0.93 K over the book's 120 F) and
+    duty 44,968 W (-8.1% on the printed 167,000 Btu/h). Kern's chart cp
+    values (toluene 0.44, benzene 0.47 Btu/lb-F) sit a few percent above
+    the PR package's liquid cp at these conditions, and the printed-input
+    arithmetic carries that gap end to end; the exchanger itself closes
+    exactly (hot outlet at the spec'd 100 F). Documented as a
+    property-package difference rather than hidden by a loosened
+    tolerance.
+
+- id: V2083
+  unit: fired_heater
+  level: R0
+  source: >-
+    NBSIR 82-2401, Heating Values of Natural Gas and Its Components (Table
+    14: methane net heat of combustion 802.125 kJ/mol at 288.15 K and
+    101.325 kPa). The package's formation-enthalpy LHV (water as VAPOUR,
+    gas-phase standard states at 298.15 K) is 802.584 kJ/mol, +0.057% on
+    the printed value - a reference-state difference, not a calculation
+    choice.
+  thermo: pr
+  feeds:
+    inlet:
+      T: 293.15
+      P: 1.01325e+5
+      molar_flow: 20.0
+      composition: {N2: 1.0}
+  params:
+    T_out: 573.15
+    efficiency: 0.9
+    fuel_composition: {CH4: 1.0}
+  expected:
+  - {quantity: info.fuel_LHV_J_per_mol, value: 802125.0, tol_rel: 0.001}
+
+- id: V2085
+  unit: cooling_tower
+  level: R0
+  source: >-
+    ASHRAE Fundamentals 2021, SI edition, Ch. 1 Psychrometrics, Example 1:
+    40 C dry bulb, 20 C thermodynamic wet bulb, 101.325 kPa; chart humidity
+    ratio 6.5 g_w/kg_da -> y = 0.010343 mol/mol. The case runs the tower on
+    the printed air state and checks the model wet bulb against the printed
+    293.15 K; the water and air flows are carrier sizes, not cited values,
+    and no model output beyond the wet bulb is compared.
+  thermo: pr
+  feeds:
+    water_in:
+      T: 313.15
+      P: 1.01325e+5
+      molar_flow: 555.0
+      composition: {H2O: 1.0}
+    air_in:
+      T: 313.15
+      P: 1.01325e+5
+      molar_flow: 1100.0
+      composition: {N2: 0.989657, H2O: 0.010343}
+  params:
+    cycles_of_concentration: 3.0
+    approach_K: 5.0
+  expected:
+  - {quantity: info.wet_bulb_K, value: 293.15, tol_abs: 0.2}
+
+- id: V2086
+  unit: hen_block
+  level: R0
+  source: >-
+    Kemp, User Guide on Process Integration for the Efficient Use of Energy
+    (the Linnhoff four-stream problem table): hot 170->60 C CP 3.0 kW/K,
+    hot 150->30 C CP 1.5, cold 20->135 C CP 2.0, cold 80->140 C CP 4.0;
+    targets QHmin 20 kW, QCmin 60 kW at dTmin 10 K. The cp_*_W_per_K params
+    pin the analysis CPs to the book's constant values, so the problem
+    table is the book's arithmetic; the N2 feed flows (101.01 / 50.505 /
+    67.34 / 134.68 mol/s, cp_molar(N2) stand-ins) size only the outlet
+    flashes.
+  thermo: pr
+  feeds:
+    hot_in_1:
+      T: 443.15
+      P: 1.01325e+5
+      molar_flow: 101.01
+      composition: {N2: 1.0}
+    hot_in_2:
+      T: 423.15
+      P: 1.01325e+5
+      molar_flow: 50.505
+      composition: {N2: 1.0}
+    cold_in_1:
+      T: 293.15
+      P: 1.01325e+5
+      molar_flow: 67.34
+      composition: {N2: 1.0}
+    cold_in_2:
+      T: 353.15
+      P: 1.01325e+5
+      molar_flow: 134.68
+      composition: {N2: 1.0}
+  params:
+    T_out_hot_in_1: 333.15
+    T_out_hot_in_2: 303.15
+    T_out_cold_in_1: 408.15
+    T_out_cold_in_2: 413.15
+    dT_min: 10.0
+    cp_hot_in_1_W_per_K: 3000.0
+    cp_hot_in_2_W_per_K: 1500.0
+    cp_cold_in_1_W_per_K: 2000.0
+    cp_cold_in_2_W_per_K: 4000.0
+  expected:
+  - {quantity: info.QH_min_W, value: 20000.0, tol_rel: 0.001}
+  - {quantity: info.QC_min_W, value: 60000.0, tol_rel: 0.001}
+  - {quantity: info.pinch_T_hot_K, value: 363.15, tol_abs: 0.01}
+  - {quantity: info.pinch_T_cold_K, value: 353.15, tol_abs: 0.01}

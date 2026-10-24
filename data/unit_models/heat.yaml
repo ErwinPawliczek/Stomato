@@ -140,18 +140,34 @@
   family: heat
   ports:
     inlet:
-    - name: inlet
+    - name: hot_in
       required: true
-      description: process feed
+      description: hot-side feed (liquid service)
+    - name: cold_in
+      required: true
+      description: cold-side feed
     outlet:
-    - name: outlet
+    - name: hot_out
       required: true
-      description: exchanger outlet
+      description: cooled hot outlet
+    - name: cold_out
+      required: true
+      description: warmed cold outlet
   levels:
     R0:
-      status: planned
-      params: {}
-      note: approach / duty spec
+      status: provisional
+      adapter: ngdesign.units.heat.exchangers:PlateExchanger
+      params:
+        type: object
+        properties:
+          duty_W: {type: number, description: 'duty spec, W (one of duty_W/hot_T_out/cold_T_out)'}
+          hot_T_out: {type: number, description: 'hot outlet temperature spec, K'}
+          cold_T_out: {type: number, description: 'cold outlet temperature spec, K'}
+          min_approach_K: {type: number, description: 'solve the duty for this minimum approach, K'}
+          dP_hot: {type: number, description: 'hot-side pressure drop, Pa'}
+          dP_cold: {type: number, description: 'cold-side pressure drop, Pa'}
+      note: exactly one of duty_W / hot_T_out / cold_T_out; min-approach duty bisection, pinch
+        check and LMTD/UA reported
     R1:
       status: planned
       params: {}
@@ -160,25 +176,50 @@
   pid_symbol: PHE
   references:
   - docs/unit-catalogue-plan.md §2 U-C 4
-  notes: roadmap; the S2 amine slice uses it as the lean/rich exchanger (plan §2b).
+  notes: >-
+    No V1 worked case: no single-exchanger printed example with complete printed
+    inputs was located in accessible copies this round (the Kakaç & Liu duty example
+    and the Perry Sect. 11 candidates were checked but not transcribed; Smith Table
+    16.1 is a network table, not one exchanger). The Smith Table 16.1 water-water
+    streams are covered by the closed-form CP*ΔT test in
+    tests/units/heat/test_exchangers.py; a V1 case needs a printed example with
+    both feeds, an outlet spec and a printed duty/outlet.
 
 - id: double_pipe
   name: Double-pipe / hairpin exchanger
   family: heat
   ports:
     inlet:
-    - name: inlet
+    - name: hot_in
       required: true
-      description: process feed
+      description: hot-side feed (gas service)
+    - name: cold_in
+      required: true
+      description: cold-side feed
     outlet:
-    - name: outlet
+    - name: hot_out
       required: true
-      description: exchanger outlet
+      description: cooled hot outlet
+    - name: cold_out
+      required: true
+      description: warmed cold outlet
   levels:
     R0:
-      status: planned
-      params: {}
-      note: approach / duty spec
+      status: provisional
+      adapter: ngdesign.units.heat.exchangers:DoublePipeExchanger
+      params:
+        type: object
+        properties:
+          duty_W: {type: number, description: 'duty spec, W (one of duty_W/hot_T_out/cold_T_out)'}
+          hot_T_out: {type: number, description: 'hot outlet temperature spec, K'}
+          cold_T_out: {type: number, description: 'cold outlet temperature spec, K'}
+          min_approach_K: {type: number, description: 'solve the duty for this minimum approach, K'}
+          dP_hot: {type: number, description: 'hot-side pressure drop, Pa'}
+          dP_cold: {type: number, description: 'cold-side pressure drop, Pa'}
+      validation:
+      - V2082
+      note: exactly one of duty_W / hot_T_out / cold_T_out; min-approach duty bisection, pinch
+        check and LMTD/UA reported
     R1:
       status: planned
       params: {}
@@ -187,25 +228,54 @@
   pid_symbol: E
   references:
   - docs/unit-catalogue-plan.md §2 U-C 5
-  notes: roadmap.
+  notes: >-
+    V2082 runs Kern Example 6.1's printed inputs (9,820 lb/h benzene, 6,330 lb/h
+    toluene, 160 -> 100 F); measured duty 44,968 W (-8.1%) and benzene outlet
+    +0.93 K are assessed against the book's chart cp values, not widened away.
 
 - id: multi_stream
   name: Multi-stream exchanger (LNG cold box)
   family: heat
   ports:
     inlet:
-    - name: inlet
+    - name: hot_in_1
       required: true
-      description: first process stream
+      description: first hot feed (0 = inactive)
+    - name: hot_in_2
+      required: false
+      description: second hot feed (0 = inactive)
+    - name: cold_in_1
+      required: true
+      description: first cold feed (0 = inactive)
+    - name: cold_in_2
+      required: false
+      description: second cold feed (0 = inactive)
     outlet:
-    - name: outlet
+    - name: hot_out_1
       required: true
-      description: first process stream outlet (further streams via params)
+      description: positional outlet for hot_in_1
+    - name: hot_out_2
+      required: true
+      description: positional outlet for hot_in_2
+    - name: cold_out_1
+      required: true
+      description: positional outlet for cold_in_1
+    - name: cold_out_2
+      required: true
+      description: positional outlet for cold_in_2
   levels:
     R0:
-      status: planned
-      params: {}
-      note: stream-by-stream duties, composite curves, pinch check
+      status: provisional
+      adapter: ngdesign.units.heat.multi_stream:MultiStreamExchanger
+      params:
+        type: object
+        properties:
+          T_out_hot_in_1: {type: number, description: 'hot_in_1 outlet temperature spec, K'}
+          T_out_hot_in_2: {type: number, description: 'hot_in_2 outlet temperature spec, K'}
+          T_out_cold_in_1: {type: number, description: 'cold_in_1 outlet temperature spec, K'}
+          T_out_cold_in_2: {type: number, description: 'cold_in_2 outlet temperature spec, K'}
+      note: every active side carries a T_out spec except exactly one balance stream, which
+        absorbs the residual duty; zoned composite pinch check, per-port duties
     R1:
       status: planned
       params: {}
@@ -218,7 +288,13 @@
   pid_symbol: MS
   references:
   - docs/unit-catalogue-plan.md §2 U-C 6
-  notes: roadmap.
+  notes: >-
+    No V1 worked case: Smith Table 16.2 (the four-stream LNG-cold-box basis)
+    needs 7.5 MW of hot utility that the utility-free R0 unit does not model, and
+    every single-balance arrangement of the four streams crosses (verified by hand
+    cascade). The Smith streams 1+3 two-stream balance is covered by the
+    closed-form test in tests/units/heat/test_multi_stream.py; outlet ports are
+    positional, not mirrored inlet names.
 
 - id: fired_heater
   name: Fired heater
@@ -234,9 +310,20 @@
       description: coil outlet
   levels:
     R0:
-      status: planned
-      params: {}
-      note: duty, efficiency, fuel from LHV
+      status: provisional
+      adapter: ngdesign.units.heat.fired_heater:FiredHeater
+      params:
+        type: object
+        properties:
+          T_out: {type: number, description: 'outlet temperature spec, K (one of T_out/duty_W)'}
+          duty_W: {type: number, description: 'duty spec, W (one of T_out/duty_W)'}
+          efficiency: {type: number, description: 'firing efficiency on the LHV basis, (0, 1]'}
+          fuel_composition: {type: object, description: 'fuel component-id map; fuel flow is the solved demand'}
+          dP: {type: number, description: 'coil pressure drop, Pa'}
+      validation:
+      - V2083
+      note: process duty from a T_out/duty_W spec; fuel demand from the mixture LHV with
+        water as vapour
     R1:
       status: planned
       params: {}
@@ -245,25 +332,42 @@
   pid_symbol: FH
   references:
   - docs/unit-catalogue-plan.md §2 U-C 7
-  notes: roadmap; S0 crude preheat train (plan §2b).
+  notes: V2083 checks the methane LHV against NBSIR 82-2401 (802.125 kJ/mol at
+    288.15 K; package 802.584 kJ/mol on the 298.15 K formation basis, +0.057%).
 
 - id: cooling_tower
   name: Cooling tower
   family: heat
   ports:
     inlet:
-    - name: inlet
+    - name: water_in
       required: true
       description: warm circulating water
-    outlet:
-    - name: outlet
+    - name: air_in
       required: true
-      description: cooled water (with evaporation/blowdown in info)
+      description: inlet air (humid, N2/O2 dry basis)
+    outlet:
+    - name: water_out
+      required: true
+      description: cooled water
+    - name: air_out
+      required: true
+      description: exit air (saturated at the exit-air temperature solved from the
+        energy balance)
   levels:
     R0:
-      status: planned
-      params: {}
-      note: approach to wet bulb, evaporation + blowdown
+      status: provisional
+      adapter: ngdesign.units.heat.cooling_tower:CoolingTower
+      params:
+        type: object
+        properties:
+          cycles_of_concentration: {type: number, description: 'cycles of concentration, >= 1 (default 3)'}
+          approach_K: {type: number, description: 'water outlet above the inlet-air wet bulb, K (> 0, required)'}
+      validation:
+      - V2085
+      note: water outlet FIXED at wet bulb + approach_K; the exit air, saturated at
+        the exit-air temperature solved from the overall energy closure, carries
+        the heat and the evaporation; blowdown/makeup from cycles of concentration
     R1:
       status: planned
       params: {}
@@ -272,27 +376,62 @@
   pid_symbol: CT
   references:
   - docs/unit-catalogue-plan.md §2 U-C 8
-  notes: roadmap.
+  notes: V2085 checks the model wet bulb against ASHRAE Fundamentals 2021 SI Ch. 1
+    Example 1 (40 C dry-bulb / 20 C wet-bulb air; measured 292.989 K, -0.16 K).
 
 - id: hen_block
   name: Heat exchanger network block (HEN)
   family: heat
   ports:
     inlet:
-    - name: inlet
+    - name: hot_in_1
       required: true
-      description: network stream set
+      description: first hot stream (0 = inactive)
+    - name: hot_in_2
+      required: false
+      description: second hot stream (0 = inactive)
+    - name: cold_in_1
+      required: true
+      description: first cold stream (0 = inactive)
+    - name: cold_in_2
+      required: false
+      description: second cold stream (0 = inactive)
     outlet:
-    - name: outlet
+    - name: hot_out_1
       required: true
-      description: targeted network result
+      description: positional outlet for hot_in_1
+    - name: hot_out_2
+      required: true
+      description: positional outlet for hot_in_2
+    - name: cold_out_1
+      required: true
+      description: positional outlet for cold_in_1
+    - name: cold_out_2
+      required: true
+      description: positional outlet for cold_in_2
   levels:
     R0:
-      status: planned
-      params: {}
-      note: pinch targets from stream data
-      end_state: true
+      status: provisional
+      adapter: ngdesign.units.heat.hen_block:HenBlock
+      params:
+        type: object
+        properties:
+          T_out_hot_in_1: {type: number, description: 'hot_in_1 target, K'}
+          T_out_hot_in_2: {type: number, description: 'hot_in_2 target, K'}
+          T_out_cold_in_1: {type: number, description: 'cold_in_1 target, K'}
+          T_out_cold_in_2: {type: number, description: 'cold_in_2 target, K'}
+          dT_min: {type: number, description: 'minimum approach, K (default 10)'}
+          cp_hot_in_1_W_per_K: {type: number, description: 'analysis CP for hot_in_1, W/K (overrides the package-derived cp)'}
+          cp_hot_in_2_W_per_K: {type: number, description: 'analysis CP for hot_in_2, W/K (overrides the package-derived cp)'}
+          cp_cold_in_1_W_per_K: {type: number, description: 'analysis CP for cold_in_1, W/K (overrides the package-derived cp)'}
+          cp_cold_in_2_W_per_K: {type: number, description: 'analysis CP for cold_in_2, W/K (overrides the package-derived cp)'}
+      validation:
+      - V2086
+      note: every active stream reaches its T_out target; the Linnhoff problem table
+        (on package-derived or cp_*-overridden CPs) reports utility targets
+        QH_min/QC_min and the pinch (no utilities are added)
   pid_symbol: HEN
   references:
   - docs/unit-catalogue-plan.md §2 U-C 10
-  notes: engineering deliverable, not a solve unit (plan §2 U-C 10).
+  notes: V2086 runs the Kemp four-stream problem-table basis; engineering deliverable
+    (utility targets), not a balanced solver unit.

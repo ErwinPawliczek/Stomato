@@ -70,7 +70,7 @@ import heapq
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import numpy as np
 
@@ -86,6 +86,7 @@ from ngdesign.contracts.components import resolve_set
 from ngdesign.contracts.diagnostics import BlockRecord, SolveAcceleration, TearRecord, UnitError
 from ngdesign.contracts.flowsheet import SolverOptions
 from ngdesign.contracts.plugins import Thermo, UnitModel
+from ngdesign.contracts.reactions import ReactionSet
 
 #: The pre-P2-03 solver constants (spec S-30) are the ``SolverOptions`` defaults:
 #: one source of truth, read from the flowsheet's options at solve time.
@@ -589,6 +590,37 @@ def _converged(x: list[float], y: list[float], rtol: float) -> bool:
     return all(abs(yc - xc) <= rtol * max(abs(xc), 1.0) for xc, yc in zip(x, y, strict=True))
 
 
+def _resolve_reaction_params(params: dict[str, Any], reaction_sets: list[ReactionSet]) -> dict[str, Any]:
+    """Resolve reaction-set params against the flowsheet's owned sets (U-F).
+
+    A unit param named ``reaction_set`` (or ``reaction_sets``) may carry a
+    string id instead of an inline set: the id resolves against
+    ``Flowsheet.reactions`` here, at dispatch, so adapters only ever see the
+    resolved model. An unknown id is a hard ValueError naming the id and the
+    available registrations. Everything else — inline sets, non-string
+    values, unrelated params like ``thermal`` — passes through untouched.
+    """
+    if not params or not reaction_sets:
+        return params
+    by_id = {rs.id: rs for rs in reaction_sets}
+    resolved = dict(params)
+    changed = False
+    value = params.get("reaction_set")
+    if isinstance(value, str):
+        if value not in by_id:
+            raise ValueError(f"reaction_set {value!r} is not registered; available: {sorted(by_id)}")
+        resolved["reaction_set"] = by_id[value]
+        changed = True
+    sets = params.get("reaction_sets")
+    if isinstance(sets, list) and any(isinstance(v, str) for v in sets):
+        unknown = [v for v in sets if isinstance(v, str) and v not in by_id]
+        if unknown:
+            raise ValueError(f"reaction_sets {unknown} are not registered; available: {sorted(by_id)}")
+        resolved["reaction_sets"] = [by_id[v] if isinstance(v, str) else v for v in sets]
+        changed = True
+    return resolved if changed else params
+
+
 def _run_units(ctx: _Context, order: list[str]) -> bool:
     """Run the units of one block in order, writing stream states and unit results.
 
@@ -638,7 +670,8 @@ def _run_units(ctx: _Context, order: list[str]) -> bool:
             ctx.errors.append(blocked)
             continue
         try:
-            result = unit.solve(inlets, spec.params, ctx.thermo)
+            params = _resolve_reaction_params(spec.params, ctx.fs.reactions)
+            result = unit.solve(inlets, params, ctx.thermo)
         except Exception as exc:  # the failure IS the result (spec P2-02)
             ok = False
             ctx.errors.append(
