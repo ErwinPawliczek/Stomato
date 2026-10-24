@@ -68,18 +68,14 @@ _EXAMPLE_R_OVER_RMIN = 1.688
 _LBMOL_H_TO_MOL_S = 0.45359237 / 3.6
 
 
-def _bubble_k(
-    thermo: Thermo, z: dict[str, float], pressure: float
-) -> tuple[float, dict[str, float]]:
+def _bubble_k(thermo: Thermo, z: dict[str, float], pressure: float) -> tuple[float, dict[str, float]]:
     """Bubble-point temperature and K-values ``y_incipient/x`` at pressure."""
     sat = thermo.bubble_point(z, P=pressure)
     k = {cid: sat.incipient_composition[cid] / x for cid, x in z.items() if x > 0.0}
     return sat.T, k
 
 
-def _dew_k(
-    thermo: Thermo, z: dict[str, float], pressure: float
-) -> tuple[float, dict[str, float]]:
+def _dew_k(thermo: Thermo, z: dict[str, float], pressure: float) -> tuple[float, dict[str, float]]:
     """Dew-point temperature and K-values ``x/x_incipient`` at pressure."""
     sat = thermo.dew_point(z, P=pressure)
     k = {cid: x / sat.incipient_composition[cid] for cid, x in z.items() if x > 0.0}
@@ -158,33 +154,27 @@ class ShortcutDistillation:
         d_lk = recovery_lk * f_flows[lk]
         b_hk = recovery_hk * f_flows[hk]
         d_hk = f_flows[hk] - b_hk
-        b_lk = f_flows[lk] - d_lk
         nonkeys = [cid for cid in z_feed if cid not in (lk, hk)]
 
         # 2. Preliminary non-key split: feed K above the heavy key goes overhead.
         k_feed = _feed_k(thermo, feed)
         d = {cid: (f_flows[cid] if k_feed.get(cid, 0.0) > k_feed[hk] else 0.0) for cid in nonkeys}
 
-        # 3. Fenske fixed point on the non-key distribution. K-values for
-        # components that vanish from a product phase carry over from the
-        # previous iteration (seeded from the feed K), so the loop never
-        # loses a component the incipient composition dropped.
+        # 3. Fenske fixed point on the non-key distribution. Components that
+        # vanish from a product phase (a light non-key fully overhead on the
+        # first pass, say) miss K in that phase's incipient composition, so
+        # every K map is seeded with the feed K-values before each use.
         nmin = 0.0
-        k_prev: tuple[dict[str, float], dict[str, float]] | None = None
         for _ in range(200):
             total_d = d_lk + d_hk + sum(d.values())
             total_b = f_total - total_d
             d_map = {**d, lk: d_lk, hk: d_hk}
             xd = {cid: d_map[cid] / total_d for cid in z_feed}
             xb = {cid: (f_flows[cid] - d_map[cid]) / total_b for cid in z_feed}
-            _, k_top = (
-                _dew_k(thermo, xd, p_top) if condenser == "partial" else _bubble_k(thermo, xd, p_top)
-            )
-            _, k_bottom = _bubble_k(thermo, xb, p_bottom)
-            if k_prev is not None:
-                k_top = {**k_prev[0], **k_top}
-                k_bottom = {**k_prev[1], **k_bottom}
-            k_prev = (k_top, k_bottom)
+            _, k_top_raw = _dew_k(thermo, xd, p_top) if condenser == "partial" else _bubble_k(thermo, xd, p_top)
+            _, k_bottom_raw = _bubble_k(thermo, xb, p_bottom)
+            k_top = {**k_feed, **k_top_raw}
+            k_bottom = {**k_feed, **k_bottom_raw}
             if k_top.get(lk, 0.0) <= 0.0 or k_bottom.get(lk, 0.0) <= 0.0:
                 raise ValueError("shortcut_distillation: thermo gives non-positive key K-values")
             alpha_lk = math.sqrt((k_top[lk] / k_top[hk]) * (k_bottom[lk] / k_bottom[hk]))
@@ -230,12 +220,8 @@ class ShortcutDistillation:
         h_top_liq = thermo.flash_pt(xd, t_sat_liq, p_top, 1.0).enthalpy
         reflux_flow = reflux * total_d
         vapour_top = reflux_flow + total_d
-        duty_condenser_w = (h_top_vap - h_top_liq) * (
-            vapour_top if condenser == "total" else reflux_flow
-        )
-        distillate = thermo.flash_pt(
-            xd, t_sat_liq if condenser == "total" else t_sat_vap, p_top, total_d
-        )
+        duty_condenser_w = (h_top_vap - h_top_liq) * (vapour_top if condenser == "total" else reflux_flow)
+        distillate = thermo.flash_pt(xd, t_sat_liq if condenser == "total" else t_sat_vap, p_top, total_d)
         bottoms = thermo.flash_pt(xb, t_bottom, p_bottom, total_b)
         h_in = feed.molar_flow * feed.enthalpy
         h_out = total_d * distillate.enthalpy + total_b * bottoms.enthalpy

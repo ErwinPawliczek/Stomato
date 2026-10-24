@@ -67,9 +67,7 @@ class ReboiledStripper:
         if "N" not in params:
             raise ValueError("stripper requires the 'N' parameter (ideal stages)")
         if "vapour_flow" not in params:
-            raise ValueError(
-                "stripper requires the 'vapour_flow' parameter (mol/s of stripping vapour)"
-            )
+            raise ValueError("stripper requires the 'vapour_flow' parameter (mol/s of stripping vapour)")
         stages = float(params["N"])
         vapour = float(params["vapour_flow"])
         if stages <= 0.0:

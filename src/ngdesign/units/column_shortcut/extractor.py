@@ -151,13 +151,18 @@ class LiquidLiquidExtractor:
                 "T": _EXAMPLE_T,
                 "P": _EXAMPLE_P,
                 "molar_flow": sum(_EXAMPLE_FEED_KMOL_H.values()),
-                "composition": {cid: n / sum(_EXAMPLE_FEED_KMOL_H.values()) for cid, n in _EXAMPLE_FEED_KMOL_H.items()},
+                "composition": {
+                    cid: n / sum(_EXAMPLE_FEED_KMOL_H.values()) for cid, n in _EXAMPLE_FEED_KMOL_H.items()
+                },
             },
             "solvent_in": {
                 "T": _EXAMPLE_T,
                 "P": _EXAMPLE_P,
                 "molar_flow": sum(_EXAMPLE_SOLVENT_KMOL_H.values()),
-                "composition": {cid: n / sum(_EXAMPLE_SOLVENT_KMOL_H.values()) for cid, n in _EXAMPLE_SOLVENT_KMOL_H.items()},
+                "composition": {
+                    cid: n / sum(_EXAMPLE_SOLVENT_KMOL_H.values())
+                    for cid, n in _EXAMPLE_SOLVENT_KMOL_H.items()
+                },
             },
         }
         params = {"N": _EXAMPLE_N, "K_D": dict(_EXAMPLE_KD)}

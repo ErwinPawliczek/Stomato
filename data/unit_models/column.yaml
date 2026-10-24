@@ -124,7 +124,7 @@
   levels:
     R0:
       status: provisional
-      adapter: ngdesign.units.column_shortcut.absorber:KremserAbsorber
+      adapter: ngdesign.units.column_shortcut.absorber:Absorber
       params:
         type: object
         required: [N]

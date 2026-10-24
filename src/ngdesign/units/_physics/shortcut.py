@@ -6,14 +6,13 @@ cite Seader, Henley & Roper, *Separation Process Principles*, 3rd ed.
 5/6 for the Kremser absorption/stripping/extraction group methods.
 
 Every constant typed here is checked against the book in
-``tests/units/column_shortcut/test_shortcut_physics.py``.
+``tests/units/column/test_shortcut_physics.py``.
 """
 
 from __future__ import annotations
 
 import math
-
-from typing import Mapping
+from collections.abc import Mapping
 
 #: |A - 1| below this band uses the A -> 1 limit of the Kremser fraction.
 _KREMSER_A_BAND = 1e-9
@@ -22,9 +21,7 @@ _KREMSER_A_BAND = 1e-9
 _KREMSER_EXP_CAP = 350.0
 
 
-def fenske_nmin(
-    alpha_LK_HK: float, xD_LK: float, xD_HK: float, xB_LK: float, xB_HK: float
-) -> float:
+def fenske_nmin(alpha_LK_HK: float, xD_LK: float, xD_HK: float, xB_LK: float, xB_HK: float) -> float:
     """Minimum equilibrium stages at total reflux, eq. (9-12).
 
     ``Nmin = log[(xD_LK/xD_HK) * (xB_HK/xB_LK)] / log(alpha_LK_HK)`` where the
@@ -79,9 +76,7 @@ def underwood_theta(alphas: Mapping[str, float], z: Mapping[str, float], q: floa
     lo, hi = 1.0 + 1e-12, a_max - 1e-12
     f_lo, f_hi = residual(lo), residual(hi)
     if not (f_lo < 0.0 < f_hi):
-        raise ValueError(
-            f"Underwood root not bracketed in ({lo}, {hi}): f = {f_lo:.6g}, {f_hi:.6g}"
-        )
+        raise ValueError(f"Underwood root not bracketed in ({lo}, {hi}): f = {f_lo:.6g}, {f_hi:.6g}")
     for _ in range(200):
         mid = 0.5 * (lo + hi)
         if residual(mid) < 0.0:
@@ -138,9 +133,7 @@ def gilliland(R: float, Rmin: float, Nmin: float) -> float:
     return (Nmin + y) / (1.0 - y)
 
 
-def kirkbride(
-    z_F_HK: float, z_F_LK: float, xB_LK: float, xD_HK: float, B_over_D: float
-) -> float:
+def kirkbride(z_F_HK: float, z_F_LK: float, xB_LK: float, xD_HK: float, B_over_D: float) -> float:
     """Kirkbride (1944) feed-stage location ratio, eq. (9-36):
 
     ``N_R/N_S = [(z_F_HK/z_F_LK) * (xB_LK/xD_HK)^2 * (B/D)]**0.206``
@@ -160,7 +153,7 @@ def kirkbride(
     ):
         if value <= 0.0:
             raise ValueError(f"kirkbride {name} must be positive, got {value}")
-    return ((z_F_HK / z_F_LK) * (xB_LK / xD_HK) ** 2 * B_over_D) ** 0.206
+    return float(((z_F_HK / z_F_LK) * (xB_LK / xD_HK) ** 2 * B_over_D) ** 0.206)
 
 
 def kremser_fraction(A: float, N: float) -> float:

@@ -7,7 +7,7 @@ stripper adapters: Seader, Henley & Roper 3rd ed. eqs. (5-48)/(5-50)
 
 from __future__ import annotations
 
-from typing import Mapping
+from collections.abc import Mapping
 
 from ngdesign.units._physics.shortcut import kremser_fraction
 
