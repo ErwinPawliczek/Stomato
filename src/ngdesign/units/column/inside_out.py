@@ -22,6 +22,7 @@ from .spec import (
     _SEED_SPAN_MAX,
     _V_TRAFFIC_CAP,
     ColumnConvergenceError,
+    ColumnSpecError,
     _DrawSpec,
     _is_reactive_package,
     _Params,

@@ -16,7 +16,7 @@ import pytest
 
 from ngdesign import registry
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units.column.spec import ColumnSpecError
+from ngdesign.units.column.spec import ColumnConvergenceError, ColumnSpecError
 
 
 def _base_params() -> dict[str, Any]:
@@ -121,7 +121,7 @@ def test_fixed_duty_loop_reports_return_temperature(thermo: Thermo) -> None:
     assert info["pa_duty_pa_return_T_K"] < info["pa_duty_pa_draw_T_K"]
 
 
-def test_return_above_draw_refused() -> None:
+def test_return_below_draw_refused() -> None:
     """A pumparound returns cooled liquid at or above the draw, never below."""
     with pytest.raises(ColumnSpecError, match="return_stage"):
         _parse_only(
@@ -165,3 +165,197 @@ def _parse_only(params: dict[str, Any]) -> None:
     from ngdesign.units.column.spec import _parse_params
 
     _parse_params({**params, "feeds": [{**_feed(), "stage": 8}]}, None)
+
+
+def test_condenser_stage_pumparound_refused() -> None:
+    """A pumparound draw or return on the condenser stage is refused (PR #238 review item 2).
+
+    The condenser's own stage balance defines the condenser duty and carries
+    no pumparound terms, so a loop touching it would report wrong duties.
+    Both endpoints are checked.
+    """
+    for kwargs in ({"draw_stage": 1, "return_stage": 5}, {"draw_stage": 5, "return_stage": 1}):
+        with pytest.raises(ColumnSpecError, match="condenser stage"):
+            _parse_only(
+                {
+                    **_base_params(),
+                    "pumparounds": [{"name": "top", **kwargs, "flow_mol_s": 25.0, "duty_W": -1.0e3}],
+                }
+            )
+
+
+def test_reboiler_stage_pumparound_refused() -> None:
+    """A pumparound draw or return on the kettle-reboiler stage is refused (PR #238 review item 2)."""
+    for kwargs in ({"draw_stage": 16, "return_stage": 8}, {"draw_stage": 8, "return_stage": 16}):
+        with pytest.raises(ColumnSpecError, match="reboiler stage"):
+            _parse_only(
+                {
+                    **_base_params(),
+                    "pumparounds": [{"name": "bot", **kwargs, "flow_mol_s": 25.0, "duty_W": -1.0e3}],
+                }
+            )
+
+
+def test_unimplemented_feature_keys_refused() -> None:
+    """S0-1 features 2 and 3 refuse their keys instead of ignoring them (PR #238 review item 7)."""
+    with pytest.raises(ColumnSpecError, match="side_strippers.*not implemented"):
+        _parse_only({**_base_params(), "side_strippers": []})
+    with pytest.raises(ColumnSpecError, match="condenser_water_decant.*not implemented"):
+        _parse_only({**_base_params(), "condenser_water_decant": True})
+
+
+def test_pumparound_flow_exceeding_internal_liquid_refused() -> None:
+    """A pumparound flow far above the column's internal traffic fails loudly (PR #238 review item 4).
+
+    500 mol/s recirculated through a column whose internal liquid is tens of
+    mol/s cannot run: the fixed-return-temperature loop pulls the draw stage
+    below its bubble regime and the solve raises a typed error instead of
+    returning a column with a silently clamped profile.
+    """
+    unit = registry.create("unit", "column")
+    thermo = registry.create("thermo", "pr")
+    feed = thermo.flash_pt(_feed()["composition"], 330.0, 1.5e6, 100.0)
+    with pytest.raises((ColumnSpecError, ColumnConvergenceError)):
+        unit.solve(
+            {"feed": feed},
+            {
+                **_base_params(),
+                "pumparounds": [
+                    {
+                        "name": "huge",
+                        "draw_stage": 12,
+                        "return_stage": 8,
+                        "flow_mol_s": 500.0,
+                        "return_T_K": 335.0,
+                    }
+                ],
+            },
+            thermo,
+        )
+
+
+# ---------------------------------------------------------------------------
+# Whole-unit energy closure (PR #238 review item 1)
+# ---------------------------------------------------------------------------
+#
+# The reported duty set must satisfy, with enthalpies recomputed
+# INDEPENDENTLY from the thermo plugin over the reported boundary states,
+#
+#     H_in + Q_reb + Sum(Q_pumparound) - Q_cond - H_out = 0
+#
+# to 1e-8 relative to the largest term. The pre-fix code defined the
+# reboiler duty as that closure value WITHOUT subtracting the pumparound
+# cooler duties, so any pumparound column failed this identity by exactly
+# the pumparound heat.
+
+
+def _closure_residual(
+    thermo: Thermo, result: Any, feed_dict: dict[str, Any]
+) -> tuple[float, float]:
+    """Recompute the boundary enthalpies independently and return (residual, scale)."""
+    h_in = (
+        thermo.flash_pt(
+            dict(feed_dict["composition"]), feed_dict["T"], feed_dict["P"], feed_dict["molar_flow"]
+        ).enthalpy
+        * feed_dict["molar_flow"]
+    )
+    h_out = 0.0
+    for state in result.outlets.values():
+        if state.molar_flow:
+            h_out += (
+                thermo.flash_pt(dict(state.composition), state.T, state.P, state.molar_flow).enthalpy
+                * state.molar_flow
+            )
+    q_reb = result.info["reboiler_duty_W"]
+    q_cond = result.info["condenser_duty_W"]
+    q_pa = sum(v for k, v in result.info.items() if k.startswith("pa_") and k.endswith("_duty_W"))
+    residual = h_in + q_reb + q_pa - q_cond - h_out
+    scale = max(abs(h_in), abs(h_out), abs(q_reb), abs(q_cond), abs(q_pa), 1.0)
+    return residual, scale
+
+
+def _assert_closed(thermo: Thermo, result: Any, feed_dict: dict[str, Any]) -> None:
+    residual, scale = _closure_residual(thermo, result, feed_dict)
+    assert abs(residual) <= 1e-8 * scale, f"energy closure off by {residual:.6g} W (scale {scale:.6g})"
+    # The net unit duty closes the boundary stream table on its own.
+    net = result.duty_W
+    assert net == pytest.approx(
+        result.info["reboiler_duty_W"]
+        - result.info["condenser_duty_W"]
+        + sum(v for k, v in result.info.items() if k.startswith("pa_") and k.endswith("_duty_W"))
+    ), "UnitResult.duty_W must be the net unit duty (Q_reb + Sum Q_PA - Q_cond)"
+
+
+@pytest.mark.parametrize(
+    "pumparound",
+    [
+        pytest.param(
+            {"name": "mid", "draw_stage": 12, "return_stage": 8, "flow_mol_s": 30.0, "duty_W": -5.0e3},
+            id="fixed-duty",
+        ),
+        pytest.param(
+            {"name": "mid", "draw_stage": 12, "return_stage": 8, "flow_mol_s": 30.0, "return_T_K": 335.0},
+            id="fixed-return-T",
+        ),
+    ],
+)
+def test_whole_unit_energy_closure_with_pumparound(pumparound: dict[str, Any]) -> None:
+    """Pumparound duties fold into the reboiler at the overall balance, not into qr."""
+    unit = registry.create("unit", "column")
+    thermo = registry.create("thermo", "pr")
+    feed = thermo.flash_pt(_feed()["composition"], 330.0, 1.5e6, 100.0)
+    result = unit.solve({"feed": feed}, {**_base_params(), "pumparounds": [pumparound]}, thermo)
+    q_pa = result.info["pa_mid_duty_W"]
+    assert q_pa < 0.0, "a pumparound cooler must report a negative (heat-removed) duty"
+    _assert_closed(thermo, result, _feed())
+
+
+def test_whole_unit_energy_closure_no_condenser_no_reboiler() -> None:
+    """No-hardware column: item 1's failure mode is the reported reboiler duty itself.
+
+    With condenser 'none' and reboiler 'none' the pre-fix closure reported
+    the pumparound heat AS the reboiler duty (qr = closure without the PA
+    subtraction, i.e. qr ~ Sum Q_PA, a large negative number for absent
+    hardware). The fixed code reports a reboiler duty that is the converged
+    residual only, and the full duty set closes the stream table.
+    """
+    params = {
+        "n_stages": 8,
+        "condenser": "none",
+        "reboiler": "none",
+        "feed_stage": 5,
+        "pressure_profile": 1.5e6,
+        "specs": {},
+        "pumparounds": [{"name": "mid", "draw_stage": 7, "return_stage": 5,
+                         "flow_mol_s": 20.0, "return_T_K": 330.0}],
+    }
+    unit = registry.create("unit", "column")
+    thermo = registry.create("thermo", "pr")
+    feed_dict = {"T": 340.0, "P": 1.5e6, "molar_flow": 100.0, "composition": {"C3": 0.5, "iC4": 0.5}}
+    feed = thermo.flash_pt(feed_dict["composition"], 340.0, 1.5e6, 100.0)
+    result = unit.solve({"feed": feed}, params, thermo)
+    q_pa = result.info["pa_mid_duty_W"]
+    assert q_pa < 0.0
+    # The reboiler duty is NOT the pumparound heat dumped into a phantom
+    # reboiler: it sits at the converged-residual level, orders of magnitude
+    # below the pumparound duty.
+    assert abs(result.info["reboiler_duty_W"]) < 0.1 * abs(q_pa)
+    _assert_closed(thermo, result, feed_dict)
+
+
+def test_default_pumparound_name_is_bare_index() -> None:
+    """An unnamed pumparound reports as pa_1_* (not pa_pa_1_*) in info (PR #238 review item 8)."""
+    unit = registry.create("unit", "column")
+    thermo = registry.create("thermo", "pr")
+    feed = thermo.flash_pt(_feed()["composition"], 330.0, 1.5e6, 100.0)
+    result = unit.solve(
+        {"feed": feed},
+        {
+            **_base_params(),
+            "pumparounds": [{"draw_stage": 12, "return_stage": 8, "flow_mol_s": 30.0, "duty_W": -5.0e3}],
+        },
+        thermo,
+    )
+    assert "pa_1_duty_W" in result.info
+    assert "pa_1_flow_mol_s" in result.info
+    assert not any(k.startswith("pa_pa_") for k in result.info)
