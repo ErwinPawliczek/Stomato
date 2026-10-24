@@ -145,6 +145,7 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | U-01 | Unit harness: cited V1 cases with tolerances and assessed misses, mass/element V0 for reactive rows, per-row example thermo | U-00, U-R | DONE 2026-10-23 (#205, 8cc9b2b; U-01b reactive balance bases #220, 16432b9; U-01c adapter ports = row ports #232, 9674477) |
 | S0-1 | Column extensions: pumparounds, coupled side strippers, steam + condenser free-water decant, draw-rate and stage-T specs | P1-11, U-01c, round 1 | issue #235; dispatched 2026-10-24 |
 | S0-D | Complete the S0 crude reference (yields, stages, strippers, pumparounds, steam, flash zone, vacuum) from printed sources | A-01 | issue #236; dispatched 2026-10-24 |
+| S0-3 | Crude + vacuum columns R2 and the S0 flowsheet vs Bagajewicz & Ji [V1] Table 5 (3-pumparound complete plant) | S0-1, S0-D | spec written 2026-10-24; dispatch after S0-1 merges |
 | A-01 | Crude assay characterisation: curve conversions, light ends, pseudo cutting, S0 reference data | P1-07 | merged #195 (2026-10-23): `contracts/assay.py`, `data/assay.py` (`data.py` became the `data/` package); D86→TBP Riazi–Daubert, D2887→TBP API 3A3.1 (Daubert 1994 °F table), D1160 at 10 mmHg via the graphical 3A2.1 procedure (other pressures refuse), Maxwell–Bonnell AET; S0 reference = Bagajewicz & Ji 2001 Part I cut temperatures/gaps only — round 2 needs a yields source (Part II) |
 
 Round 1 (palette R0, one thread per family U-A..U-H) after U-00 and U-R merge; round 2 (S0 crude to R1/R2) after round 1 and P1-11.
