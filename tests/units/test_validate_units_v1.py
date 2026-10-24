@@ -36,9 +36,9 @@ def vu() -> ModuleType:
 
 @pytest.fixture(scope="module")
 def rows() -> dict[str, UnitRow]:
-    # Synthetic-case pins are hermetic: rows declaring validation ids pair with
-    # the real case files under data/validation_units/, which these tests
-    # replace with tmp fixtures (U-R1 flipped the first such rows).
+    # These pins run the harness on synthetic cases in a tmp case directory, so
+    # rows that declare real validation ids (round-1 families) would report
+    # their cases missing; the pins use only rows without validation ids.
     return {k: r for k, r in load_rows().items() if not any(spec.validation for spec in r.levels.values())}
 
 
