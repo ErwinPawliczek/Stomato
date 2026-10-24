@@ -165,8 +165,7 @@ class CoolingTower:
         approach = params.get("approach_K")
         if approach is None:
             raise ValueError(
-                "cooling tower: approach_K is required (water outlet above the "
-                "inlet-air wet bulb, K)"
+                "cooling tower: approach_K is required (water outlet above the inlet-air wet bulb, K)"
             )
         approach = float(approach)
         if approach <= 0.0:
@@ -192,9 +191,7 @@ class CoolingTower:
             h_a2 = _humid_enthalpy(thermo, dry, T_exit, air.P, y2)
             return y2, evap, n_out, h_a2
 
-        h_water_out = thermo.flash_pt(
-            {"H2O": 1.0}, T_water_out, water.P, 1.0
-        ).enthalpy
+        h_water_out = thermo.flash_pt({"H2O": 1.0}, T_water_out, water.P, 1.0).enthalpy
 
         def residual(T_exit: float) -> float:
             """h_in - h_out; falls monotonically as the exit air warms."""
@@ -248,9 +245,7 @@ class CoolingTower:
                 "the water stream carries; reduce the air flow"
             )
         z_air_out = _z_with_water(dry, y2)
-        water_out = thermo.flash_pt(
-            {"H2O": 1.0}, T_water_out, water.P, water.molar_flow - E
-        )
+        water_out = thermo.flash_pt({"H2O": 1.0}, T_water_out, water.P, water.molar_flow - E)
         air_out = thermo.flash_pt(z_air_out, T_exit_air, air.P, n_air_out)
         # The exit air is the ideal saturated gas: pin its enthalpy and vapour
         # fraction to the fog-free construction the balance solved with, and pin

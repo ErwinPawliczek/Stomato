@@ -102,9 +102,7 @@ def test_water_outlet_is_wet_bulb_plus_approach() -> None:
     thermo = _thermo()
     unit = registry.create("unit", "cooling_tower")
     result = unit.solve(_feeds(thermo), _params(6.0), thermo)
-    assert result.outlets["water_out"].T == pytest.approx(
-        result.info["wet_bulb_K"] + 6.0, rel=1e-9
-    )
+    assert result.outlets["water_out"].T == pytest.approx(result.info["wet_bulb_K"] + 6.0, rel=1e-9)
     assert result.info["approach_K"] == pytest.approx(6.0, abs=1e-12)
 
 

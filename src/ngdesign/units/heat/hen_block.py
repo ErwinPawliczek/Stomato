@@ -70,11 +70,7 @@ class HenBlock:
                 if cp <= 0.0:
                     raise ValueError(f"hen_block: cp_{port}_W_per_K {cp} W/K must be > 0")
             else:
-                cp = (
-                    inlet.molar_flow
-                    * abs(out.enthalpy - inlet.enthalpy)
-                    / abs(target - inlet.T)
-                )
+                cp = inlet.molar_flow * abs(out.enthalpy - inlet.enthalpy) / abs(target - inlet.T)
             streams.append(ProblemStream(T_supply=inlet.T, T_target=target, cp_W_per_K=cp, is_hot=is_hot))
 
         if not streams:
