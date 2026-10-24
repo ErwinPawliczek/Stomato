@@ -399,6 +399,7 @@ def test_refining_rows_register_their_adapters() -> None:
         "vacuum_column",
         "preflash",
         "blending",
+        "side_strip",
     ):
         unit = registry.create("unit", unit_id)
         assert unit.inlet_ports and unit.outlet_ports, unit_id
