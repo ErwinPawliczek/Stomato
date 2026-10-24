@@ -163,3 +163,119 @@ def test_hydrate_check_rejects_dose_without_inhibitor(thermo: Thermo) -> None:
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
     with pytest.raises(ValueError, match="inhibitor"):
         unit.solve(inlets, {"T_operating_K": 273.15}, thermo)
+
+
+def test_hydrate_check_dose_basis_is_water_plus_inhibitor() -> None:
+    """Nielsen-Bucklin's w is defined on water + inhibitor alone.
+
+    A 10 / 80 / 10 mol% MeOH / H2O / CH4 aqueous phase has w = 0.182 on that
+    basis (0.234 if dissolved methane were wrongly counted in the denominator).
+    """
+    from ngdesign.units.separation.hydrate_check import _inhibitor_mass_fraction
+
+    w = _inhibitor_mass_fraction({"MeOH": 0.1, "H2O": 0.8, "CH4": 0.1}, "MeOH")
+    assert w == pytest.approx(0.1820, abs=0.0005)
+
+
+# --- hydrocyclone -----------------------------------------------------------
+
+
+def test_hydrocyclone_splits_water_to_underflow(thermo: Thermo) -> None:
+    inlets, result = _solve(thermo, "hydrocyclone")
+    under, over = result.outlets["underflow"], result.outlets["overflow"]
+    feed = inlets["inlet"]
+    n_h2o_under = under.composition["H2O"] * under.molar_flow
+    assert n_h2o_under == pytest.approx(
+        0.95 * feed.composition["H2O"] * feed.molar_flow, rel=1e-9
+    )
+    n_oil_over = over.composition["nC5"] * over.molar_flow
+    assert n_oil_over == pytest.approx(feed.composition["nC5"] * feed.molar_flow, rel=1e-9)
+
+
+def test_hydrocyclone_dP_on_overflow_only(thermo: Thermo) -> None:
+    _, result = _solve(thermo, "hydrocyclone", {"dP": 2.0e4})
+    assert result.outlets["underflow"].P == pytest.approx(5.0e5, rel=1e-9)
+    assert result.outlets["overflow"].P == pytest.approx(5.0e5 - 2.0e4, rel=1e-9)
+
+
+# --- filter -----------------------------------------------------------------
+
+
+def test_filter_sends_solids_to_cake(thermo: Thermo) -> None:
+    inlets, result = _solve(thermo, "filter")
+    cake, filtrate = result.outlets["cake"], result.outlets["filtrate"]
+    feed = inlets["inlet"]
+    n_si_cake = cake.composition["SiO2"] * cake.molar_flow
+    assert n_si_cake == pytest.approx(feed.composition["SiO2"] * feed.molar_flow, rel=1e-9)
+    assert filtrate.composition["SiO2"] == pytest.approx(0.0, abs=1e-12)
+    assert cake.molar_flow + filtrate.molar_flow == pytest.approx(feed.molar_flow, rel=1e-9)
+
+
+def test_filter_dP_on_filtrate_only(thermo: Thermo) -> None:
+    _, result = _solve(thermo, "filter", {"dP": 3.0e4})
+    assert result.outlets["cake"].P == pytest.approx(3.0e5, rel=1e-9)
+    assert result.outlets["filtrate"].P == pytest.approx(3.0e5 - 3.0e4, rel=1e-9)
+
+
+# --- membrane ---------------------------------------------------------------
+
+
+def test_membrane_stage_cut_matches_geankoplis_13_4_2(thermo: Thermo) -> None:
+    """Geankoplis Ex. 13.4-2 (p. 767, 4th ed.): Weller-Steiner complete mixing.
+
+    Air (z_O2 = 0.209) at a 10:1 pressure ratio, alpha = 10, stage cut 0.2
+    gives a permeate y_O2 = 0.5068 and a reject x_O2 = 0.1345.
+    """
+    inlets, result = _solve(thermo, "membrane")
+    permeate, residue = result.outlets["permeate"], result.outlets["residue"]
+    assert permeate.composition["O2"] == pytest.approx(0.5068, abs=0.001)
+    assert residue.composition["O2"] == pytest.approx(0.1345, abs=0.001)
+    assert permeate.molar_flow == pytest.approx(0.2 * inlets["feed_in"].molar_flow, rel=1e-9)
+    assert permeate.molar_flow + residue.molar_flow == pytest.approx(
+        inlets["feed_in"].molar_flow, rel=1e-9
+    )
+    assert permeate.P == pytest.approx(2.533125e4, rel=1e-9)
+    assert residue.P == pytest.approx(2.533125e5, rel=1e-9)
+
+
+def test_membrane_rejects_stage_cut_of_one(thermo: Thermo) -> None:
+    with pytest.raises(ValueError, match="stage cut"):
+        _solve(thermo, "membrane", {"stage_cut": 1.0})
+
+
+def test_membrane_rejects_permeate_pressure_above_feed(thermo: Thermo) -> None:
+    with pytest.raises(ValueError, match="P_permeate"):
+        _solve(thermo, "membrane", {"P_permeate": 3.0e5})
+
+
+# --- flash_drum multi-inlet -------------------------------------------------
+
+
+def test_flash_drum_mixes_two_inlets(thermo: Thermo) -> None:
+    unit = registry.create("unit", "flash_drum")
+    feeds, _params = unit.example_case()
+    feeds["inlet_2"] = dict(feeds["inlet"])
+    feeds["inlet_2"]["molar_flow"] = 50.0
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = unit.solve(inlets, {"duty_W": None, "vapor_fraction": 0.5}, thermo)
+    total = sum(s.molar_flow for s in result.outlets.values())
+    assert total == pytest.approx(inlets["inlet"].molar_flow + 50.0, rel=1e-9)
+
+
+def test_flash_drum_zero_flow_second_inlet_unchanged(thermo: Thermo) -> None:
+    _inlets, single = _solve(thermo, "flash_drum", {"duty_W": None, "vapor_fraction": 0.5})
+    unit = registry.create("unit", "flash_drum")
+    feeds, params = unit.example_case()
+    feeds["inlet_2"] = dict(feeds["inlet"])
+    feeds["inlet_2"]["molar_flow"] = 0.0
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = unit.solve(inlets, {"duty_W": None, "vapor_fraction": 0.5}, thermo)
+    assert result.info["T_out_K"] == pytest.approx(single.info["T_out_K"], rel=1e-9)
+
+
+# --- tank refusal -----------------------------------------------------------
+
+
+def test_tank_rejects_pressure_above_lowest_inlet(thermo: Thermo) -> None:
+    with pytest.raises(ValueError, match="does not raise pressure"):
+        _solve(thermo, "tank", {"P": 4.0e6})
