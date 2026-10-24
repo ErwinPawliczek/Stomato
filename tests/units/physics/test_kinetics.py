@@ -19,6 +19,7 @@ from ngdesign.units._physics import (
     ln_keq,
     rate,
     stoich_matrix,
+    yield_shift,
 )
 
 #: CODATA 2018 molar gas constant, J/(mol K).
@@ -212,3 +213,75 @@ def test_enthalpy_with_formation_matches_heat_of_reaction(thermo: Thermo) -> Non
         - enthalpy_with_formation(state_h2)
     )
     assert delta_h == pytest.approx(heat_of_reaction(reaction, 298.15), rel=2e-3)
+
+
+# --- yield_shift (spec U-F step 1) -----------------------------------------
+
+
+def _smr_yield_shift_basis() -> tuple[dict[str, float], list[str], list[str], list[float], dict[str, float]]:
+    """Closed-form basis: steam-methane reforming lumped at fixed conversion.
+
+    CH4 + H2O -> CO + 3H2 at X = 0.7 on a 10 CH4 + 40 H2O feed (with 5 N2
+    passing through): outlet moles CH4 3, H2O 33, CO 7, H2 21, N2 5. The mass
+    yields are the exact product masses over the consumed-feed mass, so the
+    shift reproduces the outlet mole numbers exactly.
+    """
+    n_in = {"CH4": 10.0, "H2O": 40.0, "N2": 5.0}
+    n_expect = {"CH4": 3.0, "H2O": 33.0, "CO": 7.0, "H2": 21.0, "N2": 5.0}
+    feed_cids = ["CH4", "H2O"]
+    products = ["CH4", "H2O", "CO", "H2"]
+    consumed_mass = 10.0 * component_record("CH4")["mw"] + 40.0 * component_record("H2O")["mw"]
+    yields_mass = [
+        3.0 * component_record("CH4")["mw"] / consumed_mass,
+        33.0 * component_record("H2O")["mw"] / consumed_mass,
+        7.0 * component_record("CO")["mw"] / consumed_mass,
+        21.0 * component_record("H2")["mw"] / consumed_mass,
+    ]
+    return n_in, feed_cids, products, yields_mass, n_expect
+
+
+def test_yield_shift_matches_closed_form_moles() -> None:
+    n_in, feed_cids, products, yields_mass, n_expect = _smr_yield_shift_basis()
+    n_out = yield_shift(n_in, feed_cids, yields_mass, products)
+    assert set(n_out) == set(n_expect)
+    for cid, expected in n_expect.items():
+        assert n_out[cid] == pytest.approx(expected, abs=1e-9)
+
+
+def test_yield_shift_conserves_mass() -> None:
+    n_in, feed_cids, products, yields_mass, n_expect = _smr_yield_shift_basis()
+    mass_in = math.fsum(n * component_record(cid)["mw"] for cid, n in n_in.items())
+    n_out = yield_shift(n_in, feed_cids, yields_mass, products)
+    mass_out = math.fsum(n * component_record(cid)["mw"] for cid, n in n_out.items())
+    assert mass_out == pytest.approx(mass_in, rel=1e-12)
+
+
+def test_yield_shift_refuses_yields_off_one_naming_the_sum() -> None:
+    n_in, feed_cids, _products, _yields_mass, _n_expect = _smr_yield_shift_basis()
+    bad = [0.3, 0.3, 0.3, 0.2]  # sums to 1.1
+    with pytest.raises(KineticsError, match="sum to 1.1"):
+        yield_shift(n_in, feed_cids, bad, ["CH4", "H2O", "CO", "H2"])
+
+
+def test_yield_shift_refuses_negative_yield_naming_the_product() -> None:
+    n_in, feed_cids, _products, _yields_mass, _n_expect = _smr_yield_shift_basis()
+    with pytest.raises(KineticsError, match="negative mass yield for \\['CO'\\]"):
+        yield_shift(n_in, feed_cids, [0.2, 0.7, -0.1, 0.2], ["CH4", "H2O", "CO", "H2"])
+
+
+def test_yield_shift_refuses_missing_feed_component_naming_it() -> None:
+    n_in, _feed_cids, products, yields_mass, _n_expect = _smr_yield_shift_basis()
+    with pytest.raises(KineticsError, match="feed component 'C2H6' is not in the mixture"):
+        yield_shift(n_in, ["C2H6"], yields_mass, products)
+
+
+def test_yield_shift_refuses_misaligned_products_and_yields() -> None:
+    n_in, feed_cids, _products, _yields_mass, _n_expect = _smr_yield_shift_basis()
+    with pytest.raises(KineticsError, match="4 product ids for 3 mass yields"):
+        yield_shift(n_in, feed_cids, [0.5, 0.3, 0.2], ["CH4", "H2O", "CO", "H2"])
+
+
+def test_yield_shift_refuses_duplicate_product_naming_it() -> None:
+    n_in, feed_cids, _products, _yields_mass, _n_expect = _smr_yield_shift_basis()
+    with pytest.raises(KineticsError, match="duplicate product 'CO'"):
+        yield_shift(n_in, feed_cids, [0.5, 0.5], ["CO", "CO"])

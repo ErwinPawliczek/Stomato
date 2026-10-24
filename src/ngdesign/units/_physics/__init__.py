@@ -10,6 +10,7 @@ from ngdesign.units._physics.kinetics import (
     ln_keq,
     rate,
     stoich_matrix,
+    yield_shift,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "ln_keq",
     "rate",
     "stoich_matrix",
+    "yield_shift",
 ]
