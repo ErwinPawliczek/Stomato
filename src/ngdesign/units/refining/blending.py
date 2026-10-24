@@ -39,19 +39,19 @@ class Blender:
         register_slate(_EXAMPLE_ASSAY)
         _, mole = assay_slate(_EXAMPLE_ASSAY)
         feeds = {
-            "blend_in_1": {
+            "component_in_1": {
                 "T": 288.15,
                 "P": 1.0e5,
                 "molar_flow": 300.0,
                 "composition": dict(mole),
             },
-            "blend_in_2": {
+            "component_in_2": {
                 "T": 288.15,
                 "P": 1.0e5,
                 "molar_flow": 200.0,
                 "composition": dict(mole),
             },
-            "blend_in_3": {
+            "component_in_3": {
                 "T": 288.15,
                 "P": 1.0e5,
                 "molar_flow": 100.0,

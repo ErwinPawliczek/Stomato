@@ -36,7 +36,7 @@ class Preflash:
         register_slate(_EXAMPLE_ASSAY)
         _, mole = assay_slate(_EXAMPLE_ASSAY)
         feeds = {
-            "crude_in": {
+            "feed_in": {
                 "T": 505.37,
                 "P": 2.5e5,
                 "molar_flow": 1000.0,
@@ -47,9 +47,9 @@ class Preflash:
 
     def solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> UnitResult:
         """Flash the feed at (T, P) and route the vapour and liquid phases out."""
-        feed = inlets.get("crude_in")
+        feed = inlets.get("feed_in")
         if feed is None:
-            raise RefiningSpecError("crude_in: the crude inlet stream is required")
+            raise RefiningSpecError("feed_in: the crude inlet stream is required")
         t_out = require_float(params, "T")
         p_out = optional_float(params, "P", feed.P)
         if p_out <= 0.0:

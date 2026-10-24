@@ -137,8 +137,10 @@ def test_crude_column_routes_light_ends_overhead_and_closes(thermo: Thermo) -> N
     assert set(result.outlets) == set(unit.outlet_ports)
     overhead = result.outlets["overhead"]
     bottoms = result.outlets["bottoms"]
-    assert overhead.composition.get("C1", 0.0) > 0.0
-    assert overhead.composition.get("H2O", 0.0) > 0.0
+    # The assay's light ends (C2 upwards) report to the overhead; the stored
+    # slate carries no C1 and no water, so assert on the light ends it has.
+    assert overhead.composition.get("C2", 0.0) > 0.0
+    assert overhead.composition.get("C3", 0.0) > 0.0
     # Every non-overhead product carries no light ends and no water.
     light = {"C1", "C2", "C3", "iC4", "nC4", "H2O"}
     for port, state in result.outlets.items():

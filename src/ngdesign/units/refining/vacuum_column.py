@@ -15,6 +15,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.registry import register
 from ngdesign.units.refining._cuts import (
     LIGHT_ENDS_OVERHEAD,
     RefiningSpecError,
@@ -30,6 +31,7 @@ from ngdesign.units.refining.slate import reference_volume
 _PRODUCTS = ("overhead", "vgo_out", "bottoms")
 
 
+@register("unit", "vacuum_column")
 class VacuumColumn:
     """Cut-point fractionation of atmospheric residue under vacuum."""
 
@@ -71,9 +73,9 @@ class VacuumColumn:
 
     def solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> UnitResult:
         """Assign residue pseudos to vacuum products by NBP and flash each draw."""
-        feed = inlets.get("residue_in")
+        feed = inlets.get("feed_in")
         if feed is None:
-            raise RefiningSpecError("residue_in: the residue inlet stream is required")
+            raise RefiningSpecError("feed_in: the reduced-crude inlet stream is required")
         raw_cuts = params.get("cut_points_K")
         if not isinstance(raw_cuts, list) or len(raw_cuts) != len(_PRODUCTS) - 1:
             raise RefiningSpecError(f"cut_points_K: needs exactly {len(_PRODUCTS) - 1} ascending values")
