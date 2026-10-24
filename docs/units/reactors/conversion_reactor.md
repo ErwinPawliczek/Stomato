@@ -40,11 +40,10 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V1-FOGLER-CONV` | R0 | `outlet.outlet.composition.iC4` | 0.45 | 0.45 | abs 1e-06 | pass |
 | `V1-FOGLER-CONV` | R0 | `outlet.outlet.T` | 351.7 | 342.872 | abs 0.5 | assessed miss |
 
-- `V1-FOGLER-CONV`: Fogler, Elements of Chemical Reaction Engineering, 4th ed., Example 8-3 (adiabatic n-butane isomerization): T = 330 + 43.4 X on the book feed (90% n-butane + 10% i-pentane inert, 2 mol inert per mol n-butane)
-  - assessed: The composition check is exact (X = 0.5 on the 4.5 mol/s nC4 feed gives 4.5 mol/s iC4 + 4.5 nC4 + 1.0 iC5 inert, total 10.0 mol/s; y_iC4 = 0.45). The temperature comparison misses: the book's constant-Cp correlation T = 330 + 43.4·X gives 351.7 K (ΔT = 21.7 K), while the model measures 342.872 K (ΔT = 12.87 K) on the JANAF databank's ΔH°rx ≈ −9510 J/mol and PR gas heat capacities. The book's slope combines ΔH°rx = −6900 J/mol with a much smaller assumed lumped Cp (ΘCp ≈ 159 J/mol·K); the mixture Cp of the actual book feed (nC4 + iC5 inert) measures 266.6 J/mol·K at the inlet state (finite difference of the model's molar enthalpy), and PR's larger Cp more than offsets the larger |ΔH°rx|, so the adiabatic rise is smaller. Data-source and Cp-treatment differences, documented rather than tuned away; no tolerance is widened to hide it.
+- `V1-FOGLER-CONV`: Fogler, Elements of Chemical Reaction Engineering, 4th ed., Example 8-3 (adiabatic n-butane isomerization): T = 330 + 43.4 X on the book feed (90 % n-butane + 10 % i-pentane inert, liquid phase; Θ_I = 0.111 mol inert per mol n-butane)
+  - assessed: The temperature comparison misses: the book's constant-Cp correlation T = 330 + 43.4·X gives 351.7 K (ΔT = 21.7 K), while the model measures 342.872 K (ΔT = 12.87 K) on the JANAF databank's ΔH°rx ≈ −9510 J/mol and PR gas heat capacities. The book's slope combines ΔH°rx = −6900 J/mol with a much smaller assumed lumped Cp (ΘCp ≈ 159 J/mol·K); the mixture Cp of the actual book feed (nC4 + iC5 inert) measures 266.6 J/mol·K at the inlet state (finite difference of the model's molar enthalpy), and PR's larger Cp more than offsets the larger |ΔH°rx|, so the adiabatic rise is smaller. Data-source and Cp-treatment differences, documented rather than tuned away; no tolerance is widened to hide it.
 
 ## References
 
