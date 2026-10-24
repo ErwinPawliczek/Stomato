@@ -66,6 +66,7 @@ class VacuumColumn:
         return feeds, {
             "cut_points_K": [755.0, 950.0],
             "draws": {
+                "overhead": {"T": 653.15, "P": 5333.0},
                 "vgo_out": {"T": 533.15, "P": 5333.0},
                 "bottoms": {"T": 653.15, "P": 5333.0},
             },
