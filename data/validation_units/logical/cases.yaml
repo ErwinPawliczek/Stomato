@@ -1,0 +1,10 @@
+# V1 worked cases — logical family (spec U-01, U-R1).
+#
+# The logical units are definitional: they are balances plus a spec, with no
+# rated physics, so no open textbook worked example exists for any of them.
+# Each row's note records the gap and what was searched (Towler & Sinnott
+# "Chemical Engineering Design" ch. 2 stream chapters; Coulson & Richardson
+# vol. 2; no published worked example expresses a stream tee, balance block,
+# recycle block, adjust node or utility meter as a numerical exercise). Per
+# U-R1 the family ships provisional with closed-form tests in
+# tests/units/logical/ replacing V1.

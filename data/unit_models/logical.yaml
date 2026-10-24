@@ -86,9 +86,22 @@
       description: second component split
   levels:
     R0:
-      status: planned
-      params: {}
-      note: per-component split fractions with outlet T/P specs
+      status: provisional
+      adapter: ngdesign.units.logical.component_splitter:ComponentSplitter
+      params:
+        type: object
+        required: [fractions]
+        properties:
+          fractions:
+            type: object
+            description: cid -> fraction of its flow sent to outlet_1; unmapped cids go to outlet_2
+          outlet_T:
+            type: [number, object]
+            description: outlet temperature, scalar or per port (outlet_1/outlet_2), K
+          outlet_P:
+            type: [number, object]
+            description: outlet pressure, scalar or per port (outlet_1/outlet_2), Pa abs
+      note: per-component split fractions via units._physics.splitting, each outlet flashed at its own T/P; duty reported. closed-form only; definitional unit (no open textbook worked example; searched Towler & Sinnott ch. 2 and Coulson & Richardson vol. 2)
       end_state: true
   pid_symbol: CSP
   references:
@@ -109,9 +122,18 @@
       description: copy/scale/override of the inlet
   levels:
     R0:
-      status: planned
-      params: {}
-      note: copy, scale or override stream variables (T, P, flow, composition)
+      status: provisional
+      adapter: ngdesign.units.logical.stream_calculator:StreamCalculator
+      params:
+        type: object
+        properties:
+          scale:
+            type: number
+            description: multiplies the inlet flow (default 1)
+          set:
+            type: object
+            description: overrides applied before a PT flash; T (K), P (Pa), molar_flow (mol/s), composition (renormalised, negative entries refused)
+      note: scale, set overrides, then a PT flash; duty = enthalpy change. closed-form only; definitional unit (no open textbook worked example; searched Towler & Sinnott ch. 2 and Coulson & Richardson vol. 2)
       end_state: true
   pid_symbol: SMC
   references:
@@ -132,9 +154,22 @@
       description: adjusted stream
   levels:
     R0:
-      status: planned
-      params: {}
-      note: manipulate a unit parameter to hit a stream target (wraps the solver design specs)
+      status: provisional
+      adapter: ngdesign.units.logical.adjust:Adjust
+      params:
+        type: object
+        required: [target, manipulate]
+        properties:
+          target:
+            type: object
+            description: '{stream, variable, value} - the solver target address and value'
+          manipulate:
+            type: object
+            description: '{unit, param} - the unit parameter the solver may vary'
+          bounds:
+            type: object
+            description: '{lower, upper} on the manipulated variable (defaults unbounded)'
+      note: identity at R0; lowers to a P2-01 DesignSpec (solver.lowering). closed-form only; definitional unit (no open textbook worked example)
       end_state: true
   pid_symbol: ADJ
   references:
@@ -155,9 +190,18 @@
       description: stream closed by the balance
   levels:
     R0:
-      status: planned
-      params: {}
-      note: mass/energy balance block closing an unknown stream
+      status: provisional
+      adapter: ngdesign.units.logical.balance:Balance
+      params:
+        type: object
+        properties:
+          known_outlets:
+            type: array
+            description: FeedSpec kwargs of already-known outlet streams, subtracted per component
+          P:
+            type: number
+            description: PH-flash pressure of the closed outlet (default inlet P), Pa abs
+      note: closes one unknown outlet by component balance then a PH flash so energy closes too; negative component flows refused. closed-form only; definitional unit (no open textbook worked example)
       end_state: true
   pid_symbol: BAL
   references:
@@ -178,9 +222,19 @@
       description: accelerated tear stream
   levels:
     R0:
-      status: planned
-      params: {}
-      note: explicit tear with per-block acceleration options
+      status: provisional
+      adapter: ngdesign.units.logical.recycle_block:RecycleBlock
+      params:
+        type: object
+        properties:
+          acceleration:
+            type: string
+            enum: [none, wegstein, broyden]
+            description: tear acceleration for the loop (default solver value); none = direct substitution
+          tolerance:
+            type: number
+            description: relative tear tolerance (default solver value)
+      note: identity at R0; lowers to the P2-03 flowsheet tear options (solver.lowering). closed-form only; definitional unit (no open textbook worked example)
       end_state: true
   pid_symbol: RCY
   references:
@@ -204,9 +258,21 @@
       description: identical copy
   levels:
     R0:
-      status: planned
-      params: {}
-      note: identical copies of the inlet
+      status: provisional
+      adapter: ngdesign.units.logical.stream_duplicator:StreamDuplicator
+      params:
+        type: object
+        properties:
+          n_copies:
+            type: integer
+            description: number of outlets (default 2)
+          copy_flow_scale:
+            type: number
+            description: flow scale of copies 1..N-1 (default 0 so the balance closes)
+          allow_unbalanced:
+            type: boolean
+            description: permit the full-flow mirror form that breaks the mole balance (V0 never uses it)
+      note: 'reference-stream tees: copy_0 carries the material, copies 1..N-1 share the intensive state at copy_flow_scale. closed-form only; definitional unit (no open textbook worked example)'
       end_state: true
   pid_symbol: TEE
   references:
@@ -227,9 +293,19 @@
       description: utility stream at the declared level
   levels:
     R0:
-      status: planned
-      params: {}
-      note: steam levels, cooling water, fuel gas, electricity with cost basis
+      status: provisional
+      adapter: ngdesign.units.logical.utility_stream:UtilityStream
+      params:
+        type: object
+        required: [kind]
+        properties:
+          kind:
+            type: string
+            enum: [steam_lp, steam_mp, steam_hp, cooling_water, fuel_gas, electricity, refrigerant]
+          price:
+            type: number
+            description: currency per unit basis; reported as info.utility_cost_rate (pass-through, not physics)
+      note: metering pass-through reporting utility_cost_rate. closed-form only; definitional unit (no open textbook worked example; pricing data out of scope per spec)
       end_state: true
   pid_symbol: UTL
   references:
