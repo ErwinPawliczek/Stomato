@@ -37,17 +37,20 @@
     20.7 psia; stoichiometric air for the one-third H2S burn plus full HC
     burn at 180 F with 0.0297 humidity; furnace outlet 19.1 psia; first
     condenser 350 F; first converter at equilibrium). Printed thermal-stage
-    Claus extent x = 135.16 mol/hr of the 194.05 mol/hr H2S surviving the
+    Claus extent x = 135.16 lb-mol/hr of the 194.05 lb-mol/hr H2S surviving the
     burn (Fig. 22-27 heat-balance intercept; the official GPSA Section22.xlsx
     workbook companion intercepts x = 135.555 at 2163.3 F). Printed
-    first-converter Claus extent x = 38.0177 mol/hr H2S (workbook Step 5
+    first-converter Claus extent x = 38.0177 lb-mol/hr H2S (workbook Step 5
     intercept; converter outlet 581 F read from Fig. 22-27, 582.7 F by the
-    workbook Kp polynomial).
+    workbook Kp polynomial). GPSA flows are lb-mol/hr; the case runs the
+    printed lb-mol/hr numbers as mol/hr, i.e. at 1/453.59 scale (the
+    equilibrium extent fraction is scale-free and the expected value uses
+    the same scaling).
   feeds:
     acid_gas_in:
       T: 316.48          # 110 F
       P: 142721.5        # 20.7 psia
-      molar_flow: 0.3442785   # printed burner mixture, 1239.4025 mol/hr:
+      molar_flow: 0.3442785   # printed burner mixture, 1239.4025 lb-mol/hr run as mol/hr:
       composition:       # H2S 291.0754; CO2 154.3924; H2O 51.6612
         H2S: 0.234835    # (29.7554 acid gas + 21.9058 humid air);
         CO2: 0.124559    # C1 4.7033; O2 154.9443; N2 582.6259
@@ -63,7 +66,7 @@
     catalytic_stages:
     - {T: 578.15, approach_K: 0.0}   # 581 F outlet, "At equilibrium"
   expected:
-  - {quantity: info.stage_0_extent_mol_s, value: 0.00528, tol_abs: 0.0005}
+  - {quantity: info.stage_0_extent_mol_s, value: 0.0052802, tol_abs: 1.0e-6}  # 38.0177 / 2 / 3600, printed rounding
   assessed: >-
     DOCUMENTED GAP - the example's printed overall recovery is not checked:
     no copy reachable to this repo reproduces the example's final recovery
@@ -73,18 +76,18 @@
     front matter. Searched: GPSA posted workbook (gspsa.org), pdfcoffee and
     Scribd Section 22 reproductions (previews truncate before pp. 22-20+),
     vdoc.pub Kohl & Nielsen. The case instead checks the PRINTED
-    first-converter extent: 38.0177 mol/hr H2S consumed at equilibrium, on
+    first-converter extent: 38.0177 lb-mol/hr H2S consumed at equilibrium, on
     the S8 basis the workbook itself states is within 1% of total overall
     conversion. Inputs derived from printed values only (never back-solved):
-    thermal_conversion = 135.16/194.05; unit extent = H2S mol/hr / 2 / 3600
+    thermal_conversion = 135.16/194.05; unit extent = H2S (lb-mol/hr run as mol/hr) / 2 / 3600
     (the unit's extent is per mol SO2 consumed). Known adapter difference,
     documented not hidden: the R0 unit does not combust the 0.98 mol%
-    hydrocarbons, so the 9.4 mol/hr of O2 meant for HC burn passes through
+    hydrocarbons, so the 9.4 lb-mol/hr of O2 meant for HC burn passes through
     unreacted and the tail gas carries CH4 + O2 where the book carries CO2 +
     H2O (~0.8% effect on total moles). Measured stage_0_extent_mol_s 0.0050169
-    (36.1 mol/hr H2S consumed) vs the printed 38.0177: -5.0%, inside the
-    tolerance fixed before the run (the JANAF Gibbs equilibrium behind
-    ngdesign.units.reaction_set sits ~5% below the GPSA Fig. 22-27 chart read
+    (36.1 H2S consumed on the same scale) vs the printed 38.0177: -5.0%, a
+    recorded miss at the printed rounding (the JANAF-based equilibrium behind
+    ngdesign.units._physics.kinetics.ln_keq and ngdesign.data.formation sits ~5% below the GPSA Fig. 22-27 chart read
     at the converter outlet temperature). Measured sulfur_recovery_fraction
     0.8827 — no printed value exists to check it against (the example's final
     recovery step is not accessible); recorded for transparency, on the R0
