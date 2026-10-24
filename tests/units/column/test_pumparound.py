@@ -249,9 +249,7 @@ def test_pumparound_flow_exceeding_internal_liquid_refused() -> None:
 # the pumparound heat.
 
 
-def _closure_residual(
-    thermo: Thermo, result: Any, feed_dict: dict[str, Any]
-) -> tuple[float, float]:
+def _closure_residual(thermo: Thermo, result: Any, feed_dict: dict[str, Any]) -> tuple[float, float]:
     """Recompute the boundary enthalpies independently and return (residual, scale)."""
     h_in = (
         thermo.flash_pt(
@@ -326,8 +324,9 @@ def test_whole_unit_energy_closure_no_condenser_no_reboiler() -> None:
         "feed_stage": 5,
         "pressure_profile": 1.5e6,
         "specs": {},
-        "pumparounds": [{"name": "mid", "draw_stage": 7, "return_stage": 5,
-                         "flow_mol_s": 20.0, "return_T_K": 330.0}],
+        "pumparounds": [
+            {"name": "mid", "draw_stage": 7, "return_stage": 5, "flow_mol_s": 20.0, "return_T_K": 330.0}
+        ],
     }
     unit = registry.create("unit", "column")
     thermo = registry.create("thermo", "pr")
