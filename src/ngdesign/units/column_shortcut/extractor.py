@@ -6,8 +6,9 @@ component at R0 — ``E_i = K_D,i * S/F`` where ``S`` and ``F`` are the
 solvent-side and feed-side carrier flows (each port total minus its solute
 content, the dilute-solute basis of the book's examples); the fraction
 extracted is ``kremser_fraction(E_i, N)`` with ``N`` given in params.
-Distribution coefficients come from params ``K_D`` (``{cid: K_D}``) or from
-the package's ``k_values`` — which the registered packages return as None
+Distribution coefficients come from params ``K_D`` (``{cid: K_D}``; the
+absorber's ``k_overrides`` name is accepted as an alias — passing both is
+refused) or from the package's ``k_values`` — which the registered packages return as None
 when they describe no second liquid phase, and the adapter refuses in that
 case per the spec. Components that are not solutes are immiscible at R0:
 each goes wholly with its own inlet phase. Outlets flash at their inlet
@@ -63,7 +64,14 @@ class LiquidLiquidExtractor:
         stages = float(params["N"])
         if stages <= 0.0:
             raise ValueError(f"extractor N must be positive, got {stages}")
-        given_kd = params.get("K_D") or params.get("k_overrides") or {}
+        given_kd = params.get("K_D")
+        k_overrides = params.get("k_overrides")
+        if given_kd is not None and k_overrides is not None:
+            raise ValueError(
+                "extractor accepts one distribution-coefficient param name: give 'K_D' "
+                "or 'k_overrides', not both"
+            )
+        given_kd = given_kd if given_kd is not None else (k_overrides or {})
         if given_kd and not isinstance(given_kd, dict):
             raise ValueError("extractor K_D must be a {cid: distribution coefficient} mapping")
         if given_kd:

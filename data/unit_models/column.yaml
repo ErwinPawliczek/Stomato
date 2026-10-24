@@ -46,7 +46,11 @@
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 1
-  notes: roadmap; S1 slice needs it (plan §2b).
+  notes: >-
+    roadmap; S1 slice needs it (plan §2b). R0 duty approximation: the condenser
+    duty condenses the overhead vapour at the distillate composition
+    (h at its dew T minus h at its bubble T); a real total condenser's vapour
+    carries the top-tray composition, which R0 does not track.
 
 
 - id: column

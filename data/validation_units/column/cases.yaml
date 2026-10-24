@@ -1,8 +1,7 @@
 # V1 worked cases for the column family (spec U-01). Sources verified against
-# the printed tables of Seader, Henley & Roper, 3rd ed. Tolerances are fixed
-# before the run: the book's printed rounding, widened only where the
-# Peng-Robinson K-values of the default package differ from the book's
-# estimated/K-chart values (noted per case).
+# the printed tables of Seader, Henley & Roper, 3rd ed. Tolerances are the
+# book's printed rounding, fixed before the run and never widened; a measured
+# miss is recorded in the case's assessed note with its numbers and cause.
 
 - id: V1-fug-debutanizer-seader97
   unit: shortcut_distillation
@@ -14,18 +13,25 @@
     Underwood Rmin = 0.479.
   notes: >-
     The example_case carries the book's feeds, keys, recoveries and R/Rmin =
-    1.688, but the default Peng-Robinson package replaces the book's K-chart
-    K-values, so Nmin and Rmin shift with the relative volatilities while the
-    book's own printed figures are internally inconsistent on reflux.
-    Pre-justified tolerances: kirkbride_ratio is flow-based and tight
-    (0.01); Nmin (0.15) and Rmin (0.35) absorb the PR-vs-K-chart alpha spread
-    (measured deviations ~11% and ~28% in the direction of higher PR relative
-    volatilities). Not anchored: N, R, duties and product flows, which the
-    book prints inconsistently or does not print.
+    1.688. Tolerances are the book's printed rounding (two decimals on Nmin,
+    three on Rmin, 1 % on the flow-based Kirkbride ratio) and are never
+    widened; a measured miss is recorded in the assessed note with its number
+    and cause. Not anchored: N, R, duties and product flows, which the book
+    prints inconsistently or does not print.
+  assessed: >-
+    Measured on the default Peng-Robinson package (after the Underwood bracket
+    fix): Nmin 7.934 vs 8.88 (-10.7 %) and Rmin 0.3430 vs 0.479 (-28.4 %).
+    Cause: Fenske and Underwood consume relative volatilities, and the PR
+    K-ratios at the example's saturation states differ from the book's
+    K-chart estimates; the book's printed K-values for Examples 9.2-9.7 are
+    not carried in-repo (no published value is typed without reading its
+    source), so the case cannot be driven with them this round. The flow-based
+    Kirkbride ratio is unaffected (0.4459 vs 0.445, +0.2 %) and passes at the
+    book's rounding.
   expected:
   - {quantity: info.kirkbride_ratio, value: 0.445, tol_rel: 0.01}
-  - {quantity: info.Nmin, value: 8.88, tol_rel: 0.15}
-  - {quantity: info.Rmin, value: 0.479, tol_rel: 0.35}
+  - {quantity: info.Nmin, value: 8.88, tol_abs: 0.005}
+  - {quantity: info.Rmin, value: 0.479, tol_abs: 0.0005}
 
 - id: V1-kremser-absorber-seader53
   unit: absorber
