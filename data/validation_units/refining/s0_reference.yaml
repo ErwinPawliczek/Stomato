@@ -1,52 +1,237 @@
-# S0 reference flowsheet: published atmospheric crude unit (spec A-01).
+# S0 reference flowsheet: published conventional atmospheric + vacuum crude
+# unit (spec S0-D, completing spec A-01's partial reference).
 #
-# Source: Bagajewicz, M., Ji, S., "Rigorous Procedure for the Design of
-# Conventional Atmospheric Crude Fractionation Units. Part I: Targeting",
-# Ind. Eng. Chem. Res. 40 (2001) 617-626, DOI 10.1021/ie000302. Author-hosted
-# copy: https://www.ou.edu/class/che-design/pub-papers/Rigorous%20Procedure%20
-# Crude%20Fractionation-I%20(Ji-Bagajewicz)-01.pdf
+# The unit: the Bagajewicz design-series light-crude plant, 795 m3/h
+# (~120,000 bpd) of the crude assayed in
+# data/assays/bagajewicz_ji_2001_light.yaml (845 kg/m3 = 36.0 deg API).
+# The same crude and feed rate are printed in every paper of the series
+# (Part I Table 1 p. 620; Vacuum-I Table A.1 p. 6099), so every number below
+# describes ONE unit (same crude, same feed rate).
 #
-# What the paper prints and this file records:
-# - crude feed: the light crude of data/assays/bagajewicz_ji_2001_light.yaml,
-#   795 m3/h (~120,000 bbl/d)
-# - column configuration: atmospheric crude column with one top pump-around
-#   circuit (the paper's base conventional configuration, Part I Figure 2 area)
-# - product quality constraints (Part I, product specification table):
-#   naphtha D86 95% 182 C; kerosene D86 95% 271 C; diesel D86 95% 327 C;
-#   kerosene-naphtha 5-95 gap 16.7 C; diesel-kerosene 5-95 gap 0 C;
-#   gasoil-diesel 5-95 gap -2.9 C
+# Sources (author-hosted PDFs at ou.edu/class/che-design/pub-papers/):
+# [P1] Bagajewicz, M.; Ji, S. "Rigorous Procedure for the Design of
+#      Conventional Atmospheric Crude Fractionation Units. Part I: Targeting",
+#      Ind. Eng. Chem. Res. 40 (2001) 617-626.
+# [P2] Bagajewicz, M.; Soto, J. "... Part II: Heat Exchanger Network",
+#      Ind. Eng. Chem. Res. 40 (2001) 627-634, DOI 10.1021/ie0003032.
+# [V1] Ji, S.; Bagajewicz, M. "Design of Crude Distillation Plants with
+#      Vacuum Units. I. Targeting", Ind. Eng. Chem. Res. 41 (2002) 6095-6100,
+#      DOI 10.1021/ie011040u.
 #
-# GAPS (recorded per spec A-01, not filled from anywhere else):
-# - The Part I paper states design TARGETS, not a solved flowsheet's yields;
-#   the optimal column product yields and stage/pumparound data are only
-#   summarized graphically/numerically in later tables that the open copy
-#   does not transcribe cleanly. No product cut yields, stage counts, or
-#   utility loads are recorded here.
-# - The vacuum column of the crude slice (round 2) is not covered by this
-#   paper's Part I.
-# => Round-2 validation can assert cut TEMPERATURES and 5-95 gaps against the
-#    printed constraints above, not yields.
-source: "Bagajewicz & Ji 2001, Ind. Eng. Chem. Res. 40, 617-626 (Part I: Targeting)"
+# Every number below is read from a printed table or text and was verified
+# against a rendered image of the printed page (findings note:
+# docs/validation/s0-crude-reference-findings.md). No chart was digitised,
+# no value back-solved, no simulator output used. Printed values are kept in
+# their printed units (m3/h, deg C, MW, psia, lb/bbl) with SI conversions in
+# comments where helpful.
+source: "[P1]+[P2]+[V1] — one light-crude unit, 795 m3/h, in Bagajewicz's design-paper series"
+
 feed:
   assay: bagajewicz_ji_2001_light
-  throughput_m3_h: 795.0
-column:
+  throughput_m3_h: 795.0  # ~120,000 bpd (printed conversion, [P1] text)
+  provenance: "[P1] Table 1 (p. 620): light crude 845 kg/m3 (36.0 API), 795 m3/h; reprinted [V1] Table A.1 (p. 6099)"
+
+atmospheric_column:
+  source_config: "[P1] Table 4 (p. 621), Table 5 (p. 621) and text (p. 621)"
   type: atmospheric_crude
-  configuration: conventional, one top pump-around circuit (paper Fig. 2 base case)
-products:
-  - name: naphtha
-    spec: D86 95% = 182 C
-  - name: kerosene
-    spec: D86 95% = 271 C
-  - name: diesel
-    spec: D86 95% = 327 C
-  - name: gasoil
-    spec: (5-95 gaps constrain the cut between diesel and residue)
-gaps_C:
-  kerosene_naphtha_5_95: 16.7
-  diesel_kerosene_5_95: 0.0
-  gasoil_diesel_5_95: -2.9
-not_recorded:
-  - product cut yields (not printed in the openly accessible copy)
-  - stage counts and pump-around duties (same)
-  - utility loads (same)
+  trays_total: 34  # [P1] Table 4 'total trays' + text
+  feed_tray: 29  # [P1] Table 4
+  withdrawal_trays:  # [P1] Table 4
+    naphtha: 1
+    kerosene: 9
+    diesel: 16
+    gas_oil: 25
+  side_strippers:
+    count: 3  # kerosene, diesel, gas oil ([P1] text: '34 trays in the main
+    # column and 4 trays in each stripper'; residue is steam-stripped at the
+    # column bottom, no separate stripper vessel)
+    trays_each: 4  # [P1] text + Table 5 'steam stripping sections: 4'
+  overflash_rate: 0.03  # fraction of feed, [P1] Table 4
+  product_specs:  # [P1] Table 4 (p. 621)
+    d86_95pct_C:
+      naphtha: 182
+      kerosene: 271
+      diesel: 327
+      gas_oil: "377-410"
+    gap_specs_C:  # (5-95) gap specs as printed
+      kerosene_naphtha: ">= 16.7"
+      diesel_kerosene: ">= 0"
+      gasoil_diesel: "-5.6 to -11"
+  # Printed simulation results, three design variants ([P1] Tables 6 and 9).
+  # Product rates in m3/h as printed; sums vs 795 m3/h feed (printed rounding):
+  #   one-PA 796.0, two-PA 795.3, three-PA 795.55.
+  designs:
+    one_pumparound:
+      source: "[P1] Table 6 (p. 621), 'one pump-around' column; PA position text p. 622"
+      product_rates_m3_h:
+        naphtha: 248.0
+        kerosene: 146.0
+        diesel: 70.0
+        gas_oil: 121.0
+        residue: 211.0
+      gaps_C: {kerosene_naphtha_5_95: 23.0, diesel_kerosene_5_95: 5.31, gasoil_diesel_5_95: 0.91}
+      withdrawal_temps_C: {kerosene: 237.1, diesel: 298.7, gas_oil: 338.7, residue: 347.8}
+      condenser_duty_MW: 41.70
+      condenser_temp_range_C: [146.4, 43.3]
+      pumparounds:
+        PA1: {duty_MW: 62.14, temp_range_C: [179.6, 104.4], draw_tray: 4, return_tray: 2}
+      flash_zone_temp_C: 358.6
+      energy_consumption_MW: 96.77
+      steam_ratio_lb_per_bbl:  # lb/h steam per bbl/h product (printed footnote)
+        kerosene: 9.68
+        diesel: 10.27
+        gas_oil: 10.11
+        residue: 10.19
+    two_pumparound:
+      source: "[P1] Table 9 (p. 623), 'two pump-around' column; PA2 position text p. 622 (between trays 10 and 12)"
+      product_rates_m3_h:
+        naphtha: 244.0
+        kerosene: 145.6
+        diesel: 73.6
+        gas_oil: 121.6
+        residue: 210.5
+      gaps_C: {kerosene_naphtha_5_95: 16.7, diesel_kerosene_5_95: 0.0, gasoil_diesel_5_95: -2.0}
+      withdrawal_temps_C: {kerosene: 202.2, diesel: 291.2, gas_oil: 336.1, residue: 347.9}
+      condenser_duty_MW: 42.4
+      condenser_temp_range_C: [143.6, 43.3]
+      pumparounds:
+        PA1: {duty_MW: 22.3, temp_range_C: [169.2, 104.4]}
+        PA2: {duty_MW: 42.5, temp_range_C: [257.9, 171.1]}
+      flash_zone_temp_C: 358.7
+      energy_consumption_MW: 64.73
+      steam_ratio_lb_per_bbl:
+        kerosene: 19.02
+        diesel: 8.11
+        gas_oil: 7.84
+        residue: 10.20
+    three_pumparound:  # the paper's final (optimal) light-crude scheme
+      source: "[P1] Table 9 (p. 623), 'three pump-around' column; PA3 position text p. 623 (between trays 17 and 19)"
+      product_rates_m3_h:
+        naphtha: 244.0
+        kerosene: 145.5
+        diesel: 72.5
+        gas_oil: 123.85
+        residue: 209.7
+      gaps_C: {kerosene_naphtha_5_95: 16.7, diesel_kerosene_5_95: 0.0, gasoil_diesel_5_95: -2.9}
+      withdrawal_temps_C: {kerosene: 212.7, diesel: 289.9, gas_oil: 338.9, residue: 348.2}
+      condenser_duty_MW: 43.3
+      condenser_temp_range_C: [143.5, 43.3]
+      pumparounds:
+        PA1: {duty_MW: 22.3, temp_range_C: [169.4, 104.4]}
+        PA2: {duty_MW: 33.7, temp_range_C: [255.3, 171.1]}
+        PA3: {duty_MW: 8.8, temp_range_C: [310.6, 232.2]}
+      flash_zone_temp_C: 359.0
+      energy_consumption_MW: 61.64
+      steam_ratio_lb_per_bbl:
+        kerosene: 18.04
+        diesel: 12.54
+        gas_oil: 7.71
+        residue: 10.24
+  # Printed steam flow rates in absolute units ([P1] text, p. 624): diesel
+  # stripping steam for the 1/2/3-pumparound designs: 32.5 / 48.5 / 113.4
+  # kg mol/h. Steam ratios above are the printed design basis, 'adjusted to
+  # 10 lb per barrel of product, as suggested by Watkins' ([P1] text p. 621).
+  # PUMPAROUND COUNT resolved: the base conventional configuration of [P1]
+  # Table 6 carries one top pumparound; the paper's final light-crude design
+  # carries three ([P1] Table 9, confirmed stream-for-stream by [P2]
+  # Table 1). The round-2 plan's 'two' corresponds to the printed
+  # intermediate scheme ([P1] Table 9 left column).
+  # NOTE (paper-internal, recorded as printed): the achieved gasoil-diesel
+  # gaps (0.91 / -2.0 / -2.9 C) do not fall inside the printed spec range
+  # '-5.6 to -11 C' of [P1] Table 4; [V1] Table 5 prints -4.0 C for the
+  # complete plant. The spec row is transcribed verbatim from the rendered
+  # page; the discrepancy is the source's, not ours.
+
+vacuum_column:
+  source: "[V1] Table 1 (p. 6096) and text pp. 6095-6096; yields [V1] Table 5 (p. 6098)"
+  type: vacuum_crude
+  trays_total: 7  # [V1] Table 1
+  flash_zone_pressure_psia: 1.90  # = 13.1 kPa = 98.3 mmHg; [V1] text: flash-zone
+  # absolute pressure 'controlled between 25 and 100 mmHg' (3.3-13.3 kPa)
+  flash_zone_temp_C: 382
+  overflash_ratio: 0.02
+  lvgo_d86_95pct_C: 410  # printed footnote: equivalent to 30 vol% of total VGO
+  overhead_temp_C: 127
+  bottom_steam_per_vac_residue_lb_per_bbl: "2-3 (design value 2.74)"  # [V1] Table 1;
+  # [V1] text separately prints a 4-6 lb/bbl steam-to-net-residue guidance
+  # range for the residue section and a 10-50 lb/bbl range for total
+  # stripping steam — both as printed, both broader than the Table 1 value
+  bottoms_quench_temp_C: 365  # partially cooled bottoms circulated to quench ([V1] text)
+  # Product yields below are the CONVENTIONAL (atmospheric + vacuum) plant's,
+  # complete-plant case, light crude: [V1] Table 5, 'conventional' column.
+  yields_m3_h:
+    LVGO: 22.92
+    HVGO: 81.43
+    vacuum_overhead: 0.202
+    vacuum_residue: 105.53
+
+complete_plant:
+  # The conventional atmospheric + vacuum design of the light crude:
+  # [V1] Table 5 (p. 6098), 'conventional' column.
+  source: "[V1] Table 5 (p. 6098); atmospheric pumparound loads [V1] Table 4 (p. 6097)"
+  product_rates_m3_h:
+    naphtha: 244.39
+    kerosene: 144.76
+    diesel: 71.82
+    gas_oil: 124.25
+    LVGO: 22.92
+    HVGO: 81.43
+    vacuum_overhead: 0.202
+    vacuum_residue: 105.53
+  total_distillates_m3_h: 689.57  # printed row
+  product_gaps_C: {naphtha_kerosene_5_95: 16.6, kerosene_diesel_5_95: 0.0, diesel_gasoil_5_95: -4.0, LVGO_HVGO_5_95: -30.4}
+  steam_supply_MW: {atmospheric: 15.74, vacuum: 11.55, total: 27.28}
+  steam_consumption_lb_per_bbl_feed: 23.28  # [V1] Table 5 footnote a
+  heat_demand_before_recovery_MW: 195.81  # HDBR
+  minimum_heating_utility_MW: 62.57  # HU
+  energy_consumption_MW: 81.67
+  atmospheric_pumparound_duties_MW:  # [V1] Table 4 (p. 6097), complete-plant column
+    PA1: 23.07
+    PA2: 12.87
+    PA3: 22.69
+  # Same table's atmospheric-only column (22.28 / 33.71 / 8.79 MW) matches
+  # [P1] Table 9 three-PA duties (22.3 / 33.7 / 8.8) — cross-source consistency.
+
+hen_streams:  # the three-PA atmospheric design, as consumed by the HEN study
+  source: "[P2] Table 1 (p. 629), light (L) columns; CP = heat-capacity flow rate"
+  hot_streams_CP_MW_per_C_and_temps_C:  # (CP, Tin, Tout) per printed row
+    kerosene: [0.0720, 182.8, 21.1]
+    diesel: [0.0391, 262.2, 21.1]
+    AGO: [0.0720, 323.9, 21.1]
+    condenser: [0.4335, 143.3, 43.3]
+    PA1: [0.3427, 169.4, 104.4]
+    PA2: [0.4396, 254.4, 177.8]  # PA2 return optimised to 177.8 C ([P1] Table 10, p. 623)
+    PA3: [0.1123, 310.6, 232.2]
+    residue: [0.1539, 348.3, 260.0]
+    naphtha: [0.1002, 43.3, 21.1]
+    sour_water: [0.0939, 104.4, 21.1]
+  crude_preheating_C:
+    desalter_outlet_to_column: {C1: [104.4, 104.4], C2: [104.4, 359.4]}  # C1 pre-desalter, C2 post
+  energy_targets:  # [P2] Table 3 (p. 629), light crude, HRAT 11.1 C (20 F)
+    min_heating_utility_MW: 53.3
+    min_cooling_utility_MW: 41.6
+    pinch_C: "254.4-243.3"
+  desalter_temp_C: "104.4 (220 F) base; 137.8 (280 F) high option ([P2] text p. 631)"
+
+consistency_notes:
+  # Checked by tests/data/test_s0_reference.py:
+  # - every design's product rates sum to the 795 m3/h feed within 1.5 m3/h
+  #   (the printed rounding of five values at 0.1-1 m3/h; paper's own sums:
+  #   796.0 / 795.3 / 795.55 / 795.30);
+  # - D86 95 % spec points ascend down the flow sheet
+  #   (182 < 271 < 327 < 377 <= 410 C);
+  # - vacuum flash-zone pressure 1.90 psia (98.3 mmHg) lies inside the
+  #   printed 25-100 mmHg control range;
+  # - withdrawal and pumparound temperatures are monotone against tray order
+  #   and below the flash-zone temperature.
+
+not_recorded:  # items the spec asks for that NO paper of the series prints
+  - atmospheric flash-zone pressure and column-top pressure (searched [P1],
+    [P2], [V1] and the series' Part III and stripping-type papers: no column
+    pressure is printed anywhere; only the VACUUM flash-zone pressure is
+    printed, in [V1] Table 1)
+  - tray efficiency (the paper counts trays, not packing or efficiency)
+  - vacuum-column packing section temperatures (only top-PA cool-oil
+    guidance 65-95 C, [V1] text p. 6095) and vacuum column-top pressure
+  - individual stripping-steam rates in SI mass units (ratios and the diesel
+    kg mol/h values above are the only printed steam flows)
