@@ -606,7 +606,7 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
     b_spec = specs.get("bottoms_rate")
     r_spec = specs.get("reflux_ratio")
     vb_spec = specs.get("boilup_ratio")
-    draw_total = sum(dr.flow for dr in params.draws)
+    draw_total = sum(dr.flow for dr in params.draws if dr.flow is not None)
     pin_top = False
     pin_bot = False
     skip: set[str] = set()

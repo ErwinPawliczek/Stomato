@@ -174,11 +174,13 @@ class Column:
             out_states: list[StreamState] = [distillate, bottoms]
             if parsed.draws:
                 first = parsed.draws[0]
+                assert first.flow is not None  # parser rejects free-flow draws (S0-1 feature 4 pending)
                 j = first.stage - 1
                 comp = prof.y[j] if first.vapor else prof.x[j]
                 side_draw = tb.pt(comp, prof.T[j], col.pressures[j], first.flow)
                 out_states.append(side_draw)
                 for extra in parsed.draws[1:]:
+                    assert extra.flow is not None
                     je = extra.stage - 1
                     comp_e = prof.y[je] if extra.vapor else prof.x[je]
                     out_states.append(tb.pt(comp_e, prof.T[je], col.pressures[je], extra.flow))
@@ -206,6 +208,16 @@ class Column:
                 prof.V[col.n - 1] / max(prof.b, _FLOW_FLOOR) if col.reboiler == "kettle" else 0.0
             ),
         }
+        if col.pumparounds:
+            # Physical stage-balance reboiler duty (qr above is the closing value,
+            # which folds the pumparound heat in). S0-3 sizing reads this one.
+            info["reboiler_duty_stage_W"] = prof.qr_stage
+        for idx, pa in enumerate(col.pumparounds):
+            rep = prof.pa_report[idx] if idx < len(prof.pa_report) else {}
+            info[f"pa_{pa.name}_flow_mol_s"] = rep.get("flow_mol_s", col.pa_flows[idx])
+            info[f"pa_{pa.name}_duty_W"] = rep.get("duty_W", 0.0)
+            info[f"pa_{pa.name}_draw_T_K"] = rep.get("draw_T_K", 0.0)
+            info[f"pa_{pa.name}_return_T_K"] = rep.get("return_T_K", 0.0)
         for j in range(col.n):
             info[f"stage_{j}_T_K"] = prof.T[j]
             info[f"stage_{j}_P_Pa"] = col.pressures[j]

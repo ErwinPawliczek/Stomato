@@ -25,6 +25,7 @@ from .spec import (
     _DrawSpec,
     _is_reactive_package,
     _Params,
+    _Pumparound,
 )
 from .thermo_adapter import _flash_ready, _ThermoBox
 
@@ -75,6 +76,10 @@ class _Column:
     f_total: float
     z_total: dict[str, float]
     feed_comp: dict[str, float]
+    #: S0-1 pumparound loops (empty = none); pa_flows is the live flow per loop,
+    #: in list order (it moves in feature 4's tear vector, fixed before that).
+    pumparounds: list[_Pumparound] = field(default_factory=list)
+    pa_flows: list[float] = field(default_factory=list)
     # Two-phase operating window for the inner temperature walk, set from the
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
@@ -95,6 +100,12 @@ class _Profile:
     b: float = 0.0
     qc: float = 0.0  # condenser duty removed, W
     qr: float = 0.0  # reboiler duty added, W
+    #: S0-1: with pumparounds, qr is the closing value (PA heat folded in);
+    #: qr_stage is the physical stage-balance reboiler duty reported in info.
+    qr_stage: float = 0.0
+    #: S0-1: one dict per pumparound loop (in spec order): flow, duty, draw and
+    #: return temperatures. Empty without pumparounds.
+    pa_report: list[dict[str, float]] = field(default_factory=list)
     outer: int = 0
     inner: int = 0
     ns_used: bool = False
@@ -170,6 +181,12 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         z_total=z_total,
         feed_comp=dict(z_total),
     )
+    col.pumparounds = list(col_params.pumparounds)
+    pa_flows: list[float] = []
+    for pa in col.pumparounds:
+        assert pa.flow_mol_s is not None  # parser rejects free PA tears (S0-1 feature 4 pending)
+        pa_flows.append(pa.flow_mol_s)
+    col.pa_flows = pa_flows
     col.draw_l, col.draw_v = _draw_flows(col)
     # Clamp the inner temperature walk to a window around the physical operating
     # range: the seed estimates the distillate/bottoms temperatures, and stages
@@ -213,6 +230,8 @@ def _draw_flows(col: _Column) -> tuple[list[float], list[float]]:
     draw_l = [0.0] * col.n
     draw_v = [0.0] * col.n
     for d in col.draws:
+        if d.flow is None:
+            continue  # free tear (S0-1): its flow lives in col.draw_flows, not here
         if d.vapor:
             draw_v[d.stage - 1] += d.flow
         else:
@@ -220,15 +239,63 @@ def _draw_flows(col: _Column) -> tuple[list[float], list[float]]:
     return draw_l, draw_v
 
 
+def _pa_is_noop(pa: _Pumparound, idx: int, col: _Column) -> bool:
+    """A zero-duty loop returning where it drew is an exact no-op (spec identity).
+
+    Skipping it keeps the solve bit-identical to the column without the loop:
+    the terms cancel algebraically but not in floating point, and the ulp-level
+    perturbation moves the inside-out path off the 1e-10 identity gate.
+    """
+    return pa.duty_W == 0.0 and pa.draw_stage == pa.return_stage
+
+
+def _live_pumparounds(col: _Column) -> list[tuple[int, _Pumparound]]:
+    return [(i, pa) for i, pa in enumerate(col.pumparounds) if not _pa_is_noop(pa, i, col)]
+
+
+def _pa_return_terms(col: _Column) -> list[tuple[int, int, float]]:
+    """Per live pumparound: (return stage idx, draw stage idx, flow), 0-based.
+
+    Empty without pumparounds; no-op loops (zero duty, draw = return) skipped.
+    """
+    return [(pa.return_stage - 1, pa.draw_stage - 1, col.pa_flows[idx]) for idx, pa in _live_pumparounds(col)]
+
+
+def _pa_stage_flows(col: _Column) -> tuple[list[float], list[float]]:
+    """Per-stage pumparound net liquid outflow (at the draw) and inflow (at the return).
+
+    Zeros everywhere without pumparounds. A pumparound with draw = return and
+    zero duty contributes equal in/out at one stage: an exact no-op.
+    """
+    pa_out = [0.0] * col.n
+    pa_in = [0.0] * col.n
+    for idx, pa in _live_pumparounds(col):
+        pa_out[pa.draw_stage - 1] += col.pa_flows[idx]
+        pa_in[pa.return_stage - 1] += col.pa_flows[idx]
+    return pa_out, pa_in
+
+
 def _l_profile(col: _Column, l0: float, v: list[float]) -> list[float]:
     """Liquid profile from the stage-wise total balances, closed form:
 
     L_j = L_0 + sum_{m<=j}(F_m - S_m) + V_{j+1} - V_1  (V_{N+1} = 0),
     the telescoped sum of the stage total material balances.
+
+    Pumparounds (S0-1) enter as extra liquid outflow at the draw stage and
+    inflow at the return stage; the return is a feed, not cascade liquid, so
+    both terms sit in the telescoped sum exactly like a feed and a draw.
     """
     out = []
     cum = 0.0
     v1 = v[0]
+    if col.pumparounds:
+        pa_out, pa_in = _pa_stage_flows(col)
+        for j in range(col.n):
+            cum += col.feeds[j].total - col.draw_l[j] - col.draw_v[j]
+            cum += pa_in[j] - pa_out[j]
+            v_above = v[j + 1] if j + 1 < col.n else 0.0
+            out.append(max(l0 + cum + v_above - v1, _FLOW_FLOOR))
+        return out
     for j in range(col.n):
         cum += col.feeds[j].total - col.draw_l[j] - col.draw_v[j]
         v_above = v[j + 1] if j + 1 < col.n else 0.0
@@ -758,6 +825,9 @@ def _mesh_x(col: _Column, model: _InnerModel, prof: _Profile, kb: list[float]) -
     n = col.n
     k = [{cid: model.alpha[j].get(cid, 1.0) * kb[j] for cid in col.comps} for j in range(n)]
     liquid = _l_profile(col, prof.l0, prof.V)
+    # S0-1: pumparound draws widen the stage diagonal, returns widen the rhs.
+    pa_out, _ = _pa_stage_flows(col)
+    pa_return_terms = _pa_return_terms(col)
     out: list[list[float]] = []
     for cid in col.comps:
         sub = [0.0] * n
@@ -771,9 +841,14 @@ def _mesh_x(col: _Column, model: _InnerModel, prof: _Profile, kb: list[float]) -
             diag[j] = -((liquid[j] + col.draw_l[j]) + (prof.V[j] + col.draw_v[j]) * k[j].get(cid, 1.0))
             if j == 0 and col.condenser == "total":
                 diag[j] += prof.l0 * k[j].get(cid, 1.0)
+            if pa_out[j]:
+                diag[j] -= pa_out[j]
             if j < n - 1:
                 up[j] = prof.V[j + 1] * k[j + 1].get(cid, 1.0)
             rhs[j] = -(part.l_flow * part.x.get(cid, 0.0) + part.v_flow * part.y.get(cid, 0.0))
+            for ret_j, draw_j, flow in pa_return_terms:
+                if ret_j == j:
+                    rhs[j] -= flow * prof.x[draw_j].get(cid, 0.0)
         sol = _thomas(sub, diag, up, rhs)
         out.append([max(v, 0.0) for v in sol])
     return out
@@ -828,6 +903,21 @@ def _mesh_v(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: float 
     equation_stages = _h_equation_stages(col)
     free = _v_free_indices(col)
 
+    # S0-1: pumparound enthalpy couplings are v-independent here (temperatures
+    # and enthalpy lines are frozen), so they are constants of the H solve.
+    pa_h_in: dict[int, float] = {}
+    pa_h_out: dict[int, float] = {}
+    for idx, pa in enumerate(col.pumparounds):
+        flow = col.pa_flows[idx]
+        d_idx = pa.draw_stage - 1
+        h_draw = _enthalpy_at(model.h_liq[d_idx], prof.T[d_idx])
+        if pa.return_T_K is not None:
+            h_return = _enthalpy_at(model.h_liq[d_idx], pa.return_T_K)
+        else:
+            h_return = h_draw + (pa.duty_W if pa.duty_W is not None else 0.0) / flow
+        pa_h_out[d_idx] = pa_h_out.get(d_idx, 0.0) + flow * h_draw
+        pa_h_in[pa.return_stage - 1] = pa_h_in.get(pa.return_stage - 1, 0.0) + flow * h_return
+
     def residuals(v: list[float]) -> list[float]:
         liquid = _l_profile(col, prof.l0, v)
         out = []
@@ -845,6 +935,9 @@ def _mesh_v(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: float 
             h_out = (v[j] + col.draw_v[j]) * _enthalpy_at(model.h_vap[j], prof.T[j]) + (
                 liquid[j] + col.draw_l[j]
             ) * _enthalpy_at(model.h_liq[j], prof.T[j])
+            if col.pumparounds:
+                h_in += pa_h_in.get(j, 0.0)
+                h_out += pa_h_out.get(j, 0.0)
             out.append(h_in - h_out)
         return out
 
@@ -1024,18 +1117,25 @@ def _m_row_flows(
     """
     liquid = _l_profile(col, l0, vs)
     n = col.n
+    pa_out, _pa_in = _pa_stage_flows(col)
+    pa_return_terms = _pa_return_terms(col)
     flows: list[tuple[float, float]] = []
     for j in range(n):
         part = col.feeds[j]
+        pa_ret = [(draw_j, flow) for ret_j, draw_j, flow in pa_return_terms if ret_j == j]
         for cid in col.comps:
             inflow = liquid[j - 1] * xs[j - 1].get(cid, 0.0) if j > 0 else 0.0
             if j == 0 and col.condenser == "total":
                 inflow = l0 * y_eq[0].get(cid, 0.0)
             inflow += vs[j + 1] * y_eq[j + 1].get(cid, 0.0) if j + 1 < n else 0.0
             inflow += part.l_flow * part.x.get(cid, 0.0) + part.v_flow * part.y.get(cid, 0.0)
+            for draw_j, flow in pa_ret:
+                inflow += flow * xs[draw_j].get(cid, 0.0)
             outflow = (liquid[j] + col.draw_l[j]) * xs[j].get(cid, 0.0) + (vs[j] + col.draw_v[j]) * y_eq[
                 j
             ].get(cid, 0.0)
+            if pa_out[j]:
+                outflow += pa_out[j] * xs[j].get(cid, 0.0)
             flows.append((inflow, outflow))
     return flows
 
@@ -1133,6 +1233,24 @@ def _live_residual_vector(
     h_stage_set = set(_h_equation_stages(col))
     k_stages, y_eq = _stage_equilibrium(col, tb, l0, xs, ts, vs, y_estimates, k_fallbacks, k_cache, k_misses)
     flows = _m_row_flows(col, l0, xs, vs, y_eq)
+    # S0-1: live pumparound enthalpy couplings (real package enthalpies at the
+    # draw-stage composition; the return is that liquid subcooled by the duty
+    # or fixed at return_T_K).
+    pa_h_in: dict[int, float] = {}
+    pa_h_out: dict[int, float] = {}
+    live_pas = _live_pumparounds(col)
+    if live_pas:
+        for idx, pa in live_pas:
+            flow = col.pa_flows[idx]
+            d_idx = pa.draw_stage - 1
+            x_d = _flash_ready(xs[d_idx], col.feed_comp)
+            h_draw = tb.h_liquid(x_d, ts[d_idx], col.pressures[d_idx])
+            if pa.return_T_K is not None:
+                h_ret = tb.h_liquid(x_d, pa.return_T_K, col.pressures[d_idx])
+            else:
+                h_ret = h_draw + (pa.duty_W if pa.duty_W is not None else 0.0) / flow
+            pa_h_out[d_idx] = pa_h_out.get(d_idx, 0.0) + flow * h_draw
+            pa_h_in[pa.return_stage - 1] = pa_h_in.get(pa.return_stage - 1, 0.0) + flow * h_ret
     out: list[float] = []
     flow_pos = 0
     for j in range(n):
@@ -1187,6 +1305,9 @@ def _live_residual_vector(
         ) + (liquid[j] + col.draw_l[j]) * tb.h_liquid(
             _flash_ready(xs[j], col.feed_comp), ts[j], col.pressures[j]
         )
+        if col.pumparounds:
+            h_in += pa_h_in.get(j, 0.0)
+            h_out += pa_h_out.get(j, 0.0)
         if h_evals is not None:
             h_evals[0] += 4
         out.append((h_in - h_out) / h_scale)
@@ -1316,6 +1437,72 @@ def _finalize_duties(col: _Column, tb: _ThermoBox, prof: _Profile) -> None:
         prof.qr = max(h_in - h_out, 0.0)
     else:
         prof.qr = 0.0
+    prof.qr_stage = prof.qr
+    prof.pa_report = _pa_reports(col, tb, prof)
+
+
+def _pa_return_temperature(
+    tb: _ThermoBox,
+    comp: dict[str, float],
+    p: float,
+    target_h: float,
+    t_draw: float,
+    t_lo: float,
+    t_hi: float,
+) -> float:
+    """Liquid temperature whose enthalpy is ``target_h`` (deterministic bisection).
+
+    h_liquid rises monotonically with T for any real package; a non-evaluable
+    endpoint or a sign-flat bracket falls back to the draw temperature (the
+    report then reads duty == 0 for that loop rather than raising).
+    """
+    try:
+        h_lo = tb.h_liquid(comp, t_lo, p)
+        h_hi = tb.h_liquid(comp, t_hi, p)
+        if not (h_lo < target_h < h_hi):
+            return t_draw
+        for _ in range(80):
+            mid = 0.5 * (t_lo + t_hi)
+            if tb.h_liquid(comp, mid, p) < target_h:
+                t_lo = mid
+            else:
+                t_hi = mid
+        return 0.5 * (t_lo + t_hi)
+    except Exception:  # noqa: BLE001 - a report helper never fails a solve
+        return t_draw
+
+
+def _pa_reports(col: _Column, tb: _ThermoBox, prof: _Profile) -> list[dict[str, float]]:
+    """Per-pumparound converged operating state (S0-1), reported in ``info``.
+
+    Keys per loop: flow (mol/s), the cooler duty (W, negative = heat removed),
+    the draw temperature and the return temperature (K). With a fixed
+    ``return_T_K`` the duty follows from the draw enthalpy; with a fixed duty
+    the return temperature is bisected on the package's liquid enthalpy.
+    """
+    reports: list[dict[str, float]] = []
+    for idx, pa in enumerate(col.pumparounds):
+        flow = col.pa_flows[idx]
+        d_idx = pa.draw_stage - 1
+        comp = _flash_ready(prof.x[d_idx], col.feed_comp)
+        t_draw = prof.T[d_idx]
+        p = col.pressures[d_idx]
+        h_draw = tb.h_liquid(comp, t_draw, p)
+        if pa.return_T_K is not None:
+            t_return = pa.return_T_K
+            h_return = tb.h_liquid(comp, t_return, p)
+        else:
+            h_return = h_draw + (pa.duty_W if pa.duty_W is not None else 0.0) / flow
+            t_return = _pa_return_temperature(tb, comp, p, h_return, t_draw, col.t_band_lo, col.t_band_hi)
+        reports.append(
+            {
+                "flow_mol_s": flow,
+                "duty_W": flow * (h_return - h_draw),
+                "draw_T_K": t_draw,
+                "return_T_K": t_return,
+            }
+        )
+    return reports
 
 
 def _close_energy_balance(
