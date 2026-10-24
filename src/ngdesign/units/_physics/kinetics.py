@@ -19,6 +19,7 @@ from ngdesign.contracts.reactions import (
     Reaction,
     ReactionSet,
 )
+from ngdesign.data import component_record
 from ngdesign.data.formation import (
     formation_enthalpy,
     formation_enthalpy_298,
@@ -213,4 +214,52 @@ def apply_extents(n_in: Mapping[str, float], rset: ReactionSet, extents: Sequenc
     negative = sorted(cid for cid, n in n_out.items() if n < 0.0)
     if negative:
         raise ReactionExtentError(f"reaction set {rset.id!r}: extents drive components {negative} negative")
+    return n_out
+
+
+def yield_shift(
+    n_in: Mapping[str, float],
+    feed_cids: Sequence[str],
+    yields_mass: Sequence[float],
+    products: Sequence[str],
+) -> dict[str, float]:
+    """Lumped mass-basis yield shift (spec U-F step 1, yield reactor core).
+
+    The declared feed components are consumed; each product is formed from the
+    consumed mass at its mass yield — kg of product per kg of consumed feed,
+    with ``yields_mass[i]`` belonging to ``products[i]`` and ``Σ = 1``. Outlet
+    moles follow from each product's molar mass (``component_record``,
+    pseudo-components included). Components outside the declared feed pass
+    through untouched; a product may also name a feed component (unconverted
+    recycle lumps): the feed amount is zeroed first, then the product amount
+    is added.
+
+    Refuses (KineticsError, naming the offender): ``products`` and
+    ``yields_mass`` of different lengths, a negative yield, yields not
+    summing to 1 within 1e-9, duplicate product ids, and a declared feed
+    component absent from ``n_in``.
+    """
+    if len(yields_mass) != len(products):
+        raise KineticsError(f"yield shift: {len(products)} product ids for {len(yields_mass)} mass yields")
+    seen: set[str] = set()
+    for cid in products:
+        if cid in seen:
+            raise KineticsError(f"yield shift: duplicate product {cid!r}")
+        seen.add(cid)
+    total_yield = math.fsum(yields_mass)
+    if any(y < 0.0 for y in yields_mass):
+        negative = sorted(cid for cid, y in zip(products, yields_mass, strict=True) if y < 0.0)
+        raise KineticsError(f"yield shift: negative mass yield for {negative}")
+    if abs(total_yield - 1.0) > 1e-9:
+        raise KineticsError(f"yield shift: mass yields sum to {total_yield!r}, not 1 within 1e-9")
+
+    n_out = {cid: float(n) for cid, n in n_in.items()}
+    consumed_mass = 0.0
+    for cid in feed_cids:
+        if cid not in n_out:
+            raise KineticsError(f"yield shift: declared feed component {cid!r} is not in the mixture")
+        consumed_mass += float(n_out[cid]) * float(component_record(cid)["mw"])
+        n_out[cid] = 0.0
+    for cid, y in zip(products, yields_mass, strict=True):
+        n_out[cid] = n_out.get(cid, 0.0) + y * consumed_mass / float(component_record(cid)["mw"])
     return n_out
