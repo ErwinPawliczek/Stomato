@@ -326,11 +326,28 @@
     - name: gas_out
       required: true
       description: H2S / offgas
+  balance: mass_elements
   levels:
     R0:
-      status: planned
-      params: {}
-      note: yield shift + H2 consumption + S/N removal spec
+      status: provisional
+      adapter: ngdesign.units.refining.reactors_hdt:NaphthaHydrotreater
+      params:
+        type: object
+        properties:
+          sulfur_removal_frac:
+            {type: number, description: 'feed sulfur removal fraction, in [0, 1], default 1.0'}
+          nitrogen_removal_frac:
+            {type: number, description: 'feed nitrogen removal fraction, in [0, 1], default 1.0'}
+          pentene_conversion:
+            {type: number, description: 'olefin saturation conversion, in [0, 1], default 0'}
+          benzene_conversion:
+            {type: number, description: 'aromatic saturation conversion, in [0, 1], default 0'}
+          T_out: {type: number, description: 'outlet temperature, K, default 620'}
+          P_out: {type: number, description: 'outlet pressure, Pa, default 3.0e6'}
+      validation:
+      - V1_naphtha_ht_e12_2
+      note: Fahim E12.2 model-compound stoichiometry (thiophene HDS, pyridine HDN,
+        olefin/aromatic saturation) with declared removal fractions; duty sensible-only
     R1:
       status: planned
       params: {}
@@ -339,7 +356,9 @@
   pid_symbol: HT
   references:
   - docs/unit-catalogue-plan.md §2 U-H 7
-  notes: roadmap.
+  notes: "R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real
+    H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental
+    characterization (issue #222)."
 
 - id: reformer_cat
   name: Catalytic reformer
@@ -356,11 +375,25 @@
     - name: h2_out
       required: true
       description: hydrogen by-product
+  balance: mass_elements
   levels:
     R0:
-      status: planned
-      params: {}
-      note: lumped yield table (C5+ yield vs severity)
+      status: provisional
+      adapter: ngdesign.units.refining.reactors_reformer:CatalyticReformer
+      params:
+        type: object
+        required: [ron_reformate, naphthenes_vol_pct, aromatics_vol_pct]
+        properties:
+          ron_reformate:
+            {type: number, description: 'target reformate RON (correlation fitted near 80-104)'}
+          naphthenes_vol_pct: {type: number, description: 'feed naphthenes, vol%'}
+          aromatics_vol_pct: {type: number, description: 'feed aromatics, vol%'}
+          T_out: {type: number, description: 'outlet temperature, K, default 780'}
+          P_out: {type: number, description: 'outlet pressure, Pa, default 3.0e6'}
+      validation:
+      - V1_reformer_e5_2
+      note: Fahim Table 5.3 lumped yields vs reformate RON; duty sensible-only (flag
+        heat_of_reaction_basis_sensible_only)
     R1:
       status: planned
       params: {}
@@ -369,7 +402,10 @@
   pid_symbol: RF
   references:
   - docs/unit-catalogue-plan.md §2 U-H 8
-  notes: roadmap.
+  notes: "R0 shipped by U-H2. The spec's \"H2 and light ends as real components\" is
+    out of reach of the mass_elements balance (C/H atoms with no formula-bearing
+    source from a pseudo naphtha); the offgas is a mass-only lump, species split
+    in info. Pseudo-component elemental characterization - issue #222."
 
 - id: fcc
   name: Fluid catalytic cracker
@@ -408,7 +444,13 @@
   pid_symbol: FC
   references:
   - docs/unit-catalogue-plan.md §2 U-H 9
-  notes: roadmap; nothing above R1 is planned (plan §2 U-H preamble).
+  notes: roadmap; nothing above R1 is planned (plan §2 U-H preamble). R0 record of
+    what was searched (U-H2 review) - the published FCC yield correlations are
+    chart/figure-based (Gary, Handwerk & Kaiser, Petroleum Refining, 5th ed. 2007,
+    §6.12 Yield Estimation, pp. 143-144, points at Figures 6.17-6.28) and the U-R1
+    conventions forbid digitising figures; no equation-based R0 correlation was
+    found in the open sources searched, so the row stays planned rather than
+    shipping a figure-transcription.
 
 - id: hcu
   name: Hydrocracker
@@ -444,7 +486,12 @@
   pid_symbol: HC
   references:
   - docs/unit-catalogue-plan.md §2 U-H 10
-  notes: roadmap.
+  notes: roadmap. R0 record of what was searched (U-H2 review) - published hydrocracker
+    yield correlations are chart/figure-based (Gary, Handwerk & Kaiser, Petroleum
+    Refining, 5th ed. 2007, §7.6 Hydrocracking Yields, pp. 170-172, reads
+    Figure 7.4 / Figure 7.6 curves; its Table 7.3 is fixed-feed vol% tables, not a
+    correlation) and the U-R1 conventions forbid digitising figures, so the row
+    stays planned rather than shipping a figure-transcription.
 
 - id: coker
   name: Delayed coker / visbreaker
@@ -470,17 +517,35 @@
     - name: coke_out
       required: true
       description: petroleum coke
+  balance: mass_elements
   levels:
     R0:
-      status: planned
-      params: {}
-      note: yield table vs CCR / severity
+      status: provisional
+      adapter: ngdesign.units.refining.reactors_coker:DelayedCoker
+      params:
+        type: object
+        required: [ccr_wt_pct]
+        properties:
+          ccr_wt_pct: {type: number, description: 'feed Conradson carbon residue, wt%'}
+          gasoil_lgo_fraction:
+            {type: number, description: 'LGO share of the gas-oil yield, in (0, 1), default 0.5'}
+          T_out: {type: number, description: 'outlet temperature, K, default 773.15'}
+          P_out: {type: number, description: 'outlet pressure, Pa, default 4.0e5'}
+      validation:
+      - V1_coker_gh_case_study
+      note: Gary–Handwerk mass yields vs feed CCR (Table 5.5, p. 104); duty
+        sensible-only (flag heat_of_reaction_basis_sensible_only)
       end_state: true
   pid_symbol: CK
   references:
   - docs/unit-catalogue-plan.md §2 U-H 11
-  notes: roadmap; the refinery_leeps_distillation correlation plugin exists for
-    LEEP cut yields.
+  notes: "R0 shipped by U-H2 (Gary-Handwerk CCR yield equations, 5th ed. Table 5.5
+    p. 104; V1 is the book's own worked example - §5.9 case-study problem,
+    pp. 116-118, printed product slate at coker-feed CCR 14.2 wt%; the Jechura CSM
+    feed stays the example_case basis); products are mass-only pseudo lumps - the
+    mass_elements element ledger has no atom sources for a pseudo feed
+    (pseudo-component elemental characterization - issue #222). The
+    refinery_leeps_distillation correlation plugin exists for LEEP cut yields."
 
 - id: blending
   name: Product blender

@@ -164,3 +164,110 @@
   - quantity: duty_W
     value: 0.0
     tol_abs: 1.0e-6
+# V1 worked cases for the refining family (spec U-H2).
+# E12.2 numbers: Fahim, Al-Sahhaf & Elkilani, Fundamentals of Petroleum Refining,
+# Elsevier 2010, ch. 12, Example E12.2, p. 309 — 100 lb/h naphtha (5/30/15/50 lb/h
+# thiophene/1-pentene/benzene/octane). The book's printed slate, in its own units
+# (p. 309; each line as printed, lbmol/h beside lb/h):
+#   E12.2.1 (100% HDS): 0.0595 lbmol/h C4H10 = 3.451 lb/h; 0.0595 lbmol/h H2S =
+#   2.023 lb/h; H2 0.2381 lbmol/h = 0.4762 lb/h
+#   E12.2.2 (70% conversion): 0.3 lbmol/h C5H12 = 21.6 lb/h (C5H10 exit 9 lb/h);
+#   H2 0.3 lbmol/h = 0.6 lb/h
+#   E12.2.3 (80% conversion): 0.15385 lbmol/h C6H12 = 12.92 lb/h (C6H6 exit
+#   3 lb/h); H2 0.9231 lb/h
+#   E12.2.4 (80% paraffin cracking): C4H8 19.656 lb/h + C4H10 20.358 lb/h —
+#   excluded: the R0 slate carries no paraffin-cracking reaction (hydrocracking
+#   is not hydrotreating chemistry), so its products are absent from `expected`
+#   Total hydrogen required = 1.9993 lb/h = 378.86 SCF
+# Conversions to mol/s: n_mol_s = lbmol/h x 0.45359237 (kg/lb) x 1000 (g/kg) /
+# 3600 (s/h), i.e. x 0.12599788:
+#   H2S  0.0595 lbmol/h -> 0.00749687 mol/s | nC4 0.0595 lbmol/h -> 0.00749687 mol/s
+#   nC5  0.3    lbmol/h -> 0.03779936 mol/s | cyclohexane 0.15385 lbmol/h -> 0.01938477 mol/s
+#   H2   1.9993 lb/h / 2.016 lb/lbmol = 0.9917 lbmol/h -> 0.12495415 mol/s
+# Book rounding of the printed slate is 3-4 significant figures, hence the
+# 1% relative tolerances.
+- id: V1_naphtha_ht_e12_2
+  unit: naphtha_ht
+  level: R0
+  source: "Fahim, Al-Sahhaf & Elkilani, Fundamentals of Petroleum Refining, ch. 12, Example E12.2 (printed product slate)"
+  feeds:
+    naphtha_in:
+      T: 700.0
+      P: 3000000.0
+      molar_flow: 0.14073154
+      composition:
+        thiophene: 0.05320367
+        "1-pentene": 0.38297573
+        benzene: 0.17192783
+        octane: 0.39189277
+    h2_in:
+      T: 320.0
+      P: 3000000.0
+      molar_flow: 0.12574708
+      composition: {H2: 1.0}
+  params:
+    sulfur_removal_frac: 1.0
+    pentene_conversion: 0.7
+    benzene_conversion: 0.8
+  expected:
+  - {quantity: info.h2s_mol_s, value: 0.00749687, tol_rel: 0.01}
+  - {quantity: info.nbutane_mol_s, value: 0.00749687, tol_rel: 0.01}
+  - {quantity: info.npentane_mol_s, value: 0.03779936, tol_rel: 0.01}
+  - {quantity: info.cyclohexane_mol_s, value: 0.01938477, tol_rel: 0.01}
+  - {quantity: info.h2_consumed_mol_s, value: 0.12495415, tol_rel: 0.01}
+
+# E5.2 basis: Fahim ch. 5, worked Example E5.2 — 100 m3/h heavy naphtha,
+# sg 0.778, A = 11.5 vol%, N = 21.7 vol%, reformate RON 94; the book prints
+# H2 2.1051, C1 1.4871, C2 2.4012, C3 3.6441, total C4 4.2784 wt% and
+# C5+ 80.17 vol%. The example-case feeds carry that basis; params are stated
+# explicitly for the record.
+- id: V1_reformer_e5_2
+  unit: reformer_cat
+  level: R0
+  source: "Fahim, Al-Sahhaf & Elkilani, Fundamentals of Petroleum Refining, ch. 5, worked Example E5.2 (printed product slate)"
+  feeds:
+    naphtha_in:
+      T: 750.0
+      P: 3000000.0
+      molar_flow: 24.1211
+      composition: {reformer_naphtha: 1.0}
+  params:
+    ron_reformate: 94.0
+    naphthenes_vol_pct: 21.7
+    aromatics_vol_pct: 11.5
+  expected:
+  - {quantity: info.c5p_vol_pct, value: 80.17, tol_rel: 0.001}
+  - {quantity: info.h2_wt_pct, value: 2.1051, tol_rel: 0.005}
+  - {quantity: info.c1_wt_pct, value: 1.4871, tol_rel: 0.005}
+  - {quantity: info.c2_wt_pct, value: 2.4012, tol_rel: 0.005}
+  - {quantity: info.c3_wt_pct, value: 3.6441, tol_rel: 0.005}
+  - {quantity: info.c4_total_wt_pct, value: 4.2784, tol_rel: 0.005}
+
+# Coker: Gary, Handwerk & Kaiser, Petroleum Refining: Technology and Economics,
+# 5th ed. (2007), ch. 5 §5.9 case-study problem (pp. 116-118) — the book's own
+# worked example, on a 100,000 BPCD Alaska North Slope crude basis with coker feed
+# CCR 14.2 wt% (1050+degF RC, Table 4.6). Printed yield lines (p. 117):
+#   Coke = 1.6(14.2) = 22.72 wt% | Gas (C4-) = 7.8 + 0.144(14.2) = 9.84 wt%
+#   Naphtha = 11.29 + 0.343(14.2) = 16.16 wt% | Gas oil = 100 - (22.7+9.8+16.2) = 51.3 wt%
+# Table 5.16 (p. 118) prints the balance on 302,450 lb/h feed: LCGO 96,967 lb/h
+# (32.061 wt%), HCGO 58,114 lb/h (19.214 wt%). The LCGO/HCGO split is the
+# configuration parameter gasoil_lgo_fraction = 96,967/155,081 = 0.625267 (a
+# printed lb/h ratio, not a correlation constant); the book's light/heavy naphtha
+# and vol% lines are fractionator cuts outside the R0 mass-yield slate. Yields
+# are mass fractions on net fresh feed, so feeds default to the adapter's example
+# feed (Jechura CSM basis) without changing any expected value. Tolerances are
+# the book's own rounding of the printed lines (3-4 significant figures).
+- id: V1_coker_gh_case_study
+  unit: coker
+  level: R0
+  source: "Gary, Handwerk & Kaiser, Petroleum Refining: Technology and Economics, 5th ed. (2007), ch. 5, §5.9 case-study problem pp. 116-118 (printed product slate at coker-feed CCR 14.2 wt%)"
+  params:
+    ccr_wt_pct: 14.2
+    gasoil_lgo_fraction: 0.625267
+  expected:
+  - {quantity: info.coke_wt_pct, value: 22.72, tol_rel: 0.001}
+  - {quantity: info.gas_wt_pct, value: 9.84, tol_rel: 0.001}
+  - {quantity: info.naphtha_wt_pct, value: 16.16, tol_rel: 0.001}
+  - {quantity: info.gasoil_wt_pct, value: 51.3, tol_rel: 0.001}
+  - {quantity: info.lgo_wt_pct, value: 32.061, tol_rel: 0.001}
+  - {quantity: info.hgo_wt_pct, value: 19.214, tol_rel: 0.001}
