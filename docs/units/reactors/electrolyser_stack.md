@@ -44,7 +44,6 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V1-ELECTROLYSER` | R0 | `power_W` | 350000 | 350000 | rel 1e-06 | pass |
 | `V1-ELECTROLYSER` | R0 | `info.thermoneutral_voltage_V` | 1.472 | 1.47205 | abs 0.0005 | pass |
 | `V1-ELECTROLYSER` | R0 | `outlet.h2_out.molar_flow` | 1.0157 | 1.0157 | abs 0.0001 | pass |
 | `V1-ELECTROLYSER` | R0 | `outlet.o2_out.composition.O2` | 0.010261 | 0.0102612 | abs 0.0001 | pass |
