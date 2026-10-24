@@ -111,7 +111,8 @@ def test_desalter_splits_water_and_salt(thermo: Thermo) -> None:
         rel_tol=1e-9,
     )
     assert result.info["salt_tracked"] == 1.0
-    assert math.isclose(result.info["bsw_vol_pct"], 4.0, rel_tol=0.05)
+    # Wauquier: desalted crude carries below ~0.2 vol% water.
+    assert result.info["bsw_vol_pct"] < 0.25
 
 
 def test_desalter_refuses_out_of_range_fractions(thermo: Thermo) -> None:
