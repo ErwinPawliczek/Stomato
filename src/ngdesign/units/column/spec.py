@@ -191,31 +191,6 @@ class _Pumparound:
 
 
 @dataclass(frozen=True)
-class _SideStripper:
-    """One coupled side stripper: liquid drawn at ``draw_stage`` of the main
-    column feeds the top of an ``n_stages`` stripper section; stripping steam
-    (an ordinary bottom feed) or a fixed reboiler duty enters at its bottom;
-    the overhead vapour returns to ``return_stage`` of the main column and the
-    bottoms is a product.
-
-    ``n_stages = 0`` degenerates to a plain liquid side draw of the product
-    rate at ``draw_stage``. The main-column liquid draw flow is NOT an input:
-    it is the outcome of the stripper's overall mass balance,
-    ``S = B + V_return - steam``. ``product_rate_mol_s`` fixes the product;
-    None = free tear (a draw_rate spec drives it).
-    """
-
-    name: str
-    draw_stage: int  # 1-indexed, main column
-    return_stage: int  # 1-indexed, main column
-    n_stages: int
-    steam: _FeedSpec | None  # stripped-steam feed at the stripper bottom
-    reboiler_duty_W: float | None  # fixed stripper reboiler duty (steam XOR this)
-    product_rate_mol_s: float | None  # None = free tear
-    tear: str = ""  # "product" when the product rate is the free tear, else ""
-
-
-@dataclass(frozen=True)
 class _Params:
     """Validated column parameters."""
 
@@ -227,8 +202,6 @@ class _Params:
     pressures: list[float]
     specs: dict[str, Any]
     pumparounds: list[_Pumparound] = field(default_factory=list)
-    side_strippers: list[_SideStripper] = field(default_factory=list)
-    condenser_water_decant: bool = False
 
 
 def _positive(value: Any, name: str) -> float:
@@ -298,6 +271,18 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
     reboiler = str(params.get("reboiler", "kettle"))
     if reboiler not in _REBOILER_KINDS:
         raise ColumnSpecError(f"reboiler must be one of {_REBOILER_KINDS}, got {reboiler!r}")
+
+    # S0-1 features 2 and 3 are not implemented yet (review item 7, PR #238):
+    # refuse their keys explicitly instead of silently ignoring them and
+    # returning a plain column.
+    for key, feature in (
+        ("side_strippers", "S0-1 feature 2 (coupled side strippers)"),
+        ("condenser_water_decant", "S0-1 feature 3 (steam and free water)"),
+    ):
+        if key in params:
+            raise ColumnSpecError(
+                f"params['{key}'] is not implemented yet: it lands with {feature} (#235)"
+            )
 
     feeds: list[_FeedSpec] = []
     if graph_feed is not None:
@@ -432,12 +417,30 @@ def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumpar
     raw = params.get("pumparounds", [])
     if not isinstance(raw, (list, tuple)):
         raise ColumnSpecError("pumparounds must be a list of pumparound dicts")
+    # The duty stages are excluded hardware (review item 2, PR #238): the
+    # condenser and kettle-reboiler stage balances define qc/qr and carry no
+    # pumparound terms, so a loop touching them would report silently wrong
+    # duties. With no such hardware the stage is an ordinary tray and allowed.
+    condenser = str(params.get("condenser", "total"))
+    reboiler = str(params.get("reboiler", "kettle"))
+    forbidden_stages: list[tuple[int, str]] = []
+    if condenser != "none":
+        forbidden_stages.append((1, "the condenser stage (the condenser's own balance defines qc)"))
+    if reboiler == "kettle":
+        forbidden_stages.append((n_stages, "the reboiler stage (the kettle's own balance defines qr)"))
     pas: list[_Pumparound] = []
     names: set[str] = set()
     for k, item in enumerate(raw):
         pa = dict(item)
         draw_stage = _stage_index(pa.get("draw_stage"), f"pumparounds[{k}].draw_stage", n_stages)
         return_stage = _stage_index(pa.get("return_stage"), f"pumparounds[{k}].return_stage", n_stages)
+        for stage, why in forbidden_stages:
+            if draw_stage == stage or return_stage == stage:
+                which = "draw_stage" if draw_stage == stage else "return_stage"
+                raise ColumnSpecError(
+                    f"pumparounds[{k}]: {which} {stage} is {why}; "
+                    f"pumparounds on duty stages would report wrong duties"
+                )
         if return_stage > draw_stage:
             raise ColumnSpecError(
                 f"pumparounds[{k}]: return_stage {return_stage} must be at or above "
@@ -466,7 +469,7 @@ def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumpar
             raise ColumnSpecError(f"pumparounds[{k}]: exactly one of duty_W / return_T_K is required")
         name = pa.get("name")
         if name is None:
-            name = f"pa_{k + 1}"
+            name = str(k + 1)  # info keys read pa_1_duty_W, not pa_pa_1_duty_W (review item 8)
         if not isinstance(name, str) or not name:
             raise ColumnSpecError(f"pumparounds[{k}].name must be a non-empty string")
         if name in names:

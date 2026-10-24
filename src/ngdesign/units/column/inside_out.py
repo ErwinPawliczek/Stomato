@@ -99,10 +99,11 @@ class _Profile:
     d: float = 0.0
     b: float = 0.0
     qc: float = 0.0  # condenser duty removed, W
-    qr: float = 0.0  # reboiler duty added, W
-    #: S0-1: with pumparounds, qr is the closing value (PA heat folded in);
-    #: qr_stage is the physical stage-balance reboiler duty reported in info.
-    qr_stage: float = 0.0
+    #: Reboiler duty added, W — the PHYSICAL reboiler duty. The overall energy
+    #: balance is closed by folding the pumparound cooler duties in separately
+    #: (``_close_energy_balance`` subtracts them), so this key never carries
+    #: pumparound heat (review item 1, PR #238).
+    qr: float = 0.0
     #: S0-1: one dict per pumparound loop (in spec order): flow, duty, draw and
     #: return temperatures. Empty without pumparounds.
     pa_report: list[dict[str, float]] = field(default_factory=list)
@@ -239,7 +240,7 @@ def _draw_flows(col: _Column) -> tuple[list[float], list[float]]:
     return draw_l, draw_v
 
 
-def _pa_is_noop(pa: _Pumparound, idx: int, col: _Column) -> bool:
+def _pa_is_noop(pa: _Pumparound) -> bool:
     """A zero-duty loop returning where it drew is an exact no-op (spec identity).
 
     Skipping it keeps the solve bit-identical to the column without the loop:
@@ -250,7 +251,7 @@ def _pa_is_noop(pa: _Pumparound, idx: int, col: _Column) -> bool:
 
 
 def _live_pumparounds(col: _Column) -> list[tuple[int, _Pumparound]]:
-    return [(i, pa) for i, pa in enumerate(col.pumparounds) if not _pa_is_noop(pa, i, col)]
+    return [(i, pa) for i, pa in enumerate(col.pumparounds) if not _pa_is_noop(pa)]
 
 
 def _pa_return_terms(col: _Column) -> list[tuple[int, int, float]]:
@@ -905,9 +906,15 @@ def _mesh_v(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: float 
 
     # S0-1: pumparound enthalpy couplings are v-independent here (temperatures
     # and enthalpy lines are frozen), so they are constants of the H solve.
+    # Live loops only: a no-op loop (zero duty, draw = return) contributes
+    # flow*h_draw to BOTH dicts at one stage and cancels algebraically but not
+    # bit-exactly - skipping it keeps the solve identical to the plain column.
+    # The return enthalpy is evaluated at the DRAW-stage pressure: a subcooled
+    # liquid's enthalpy is pressure-insensitive, and the return stage sits at
+    # the (higher) draw-side pressure to within the column's dP (S0-1).
     pa_h_in: dict[int, float] = {}
     pa_h_out: dict[int, float] = {}
-    for idx, pa in enumerate(col.pumparounds):
+    for idx, pa in _live_pumparounds(col):
         flow = col.pa_flows[idx]
         d_idx = pa.draw_stage - 1
         h_draw = _enthalpy_at(model.h_liq[d_idx], prof.T[d_idx])
@@ -935,7 +942,7 @@ def _mesh_v(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: float 
             h_out = (v[j] + col.draw_v[j]) * _enthalpy_at(model.h_vap[j], prof.T[j]) + (
                 liquid[j] + col.draw_l[j]
             ) * _enthalpy_at(model.h_liq[j], prof.T[j])
-            if col.pumparounds:
+            if pa_h_in or pa_h_out:
                 h_in += pa_h_in.get(j, 0.0)
                 h_out += pa_h_out.get(j, 0.0)
             out.append(h_in - h_out)
@@ -1437,7 +1444,6 @@ def _finalize_duties(col: _Column, tb: _ThermoBox, prof: _Profile) -> None:
         prof.qr = max(h_in - h_out, 0.0)
     else:
         prof.qr = 0.0
-    prof.qr_stage = prof.qr
     prof.pa_report = _pa_reports(col, tb, prof)
 
 
@@ -1449,27 +1455,33 @@ def _pa_return_temperature(
     t_draw: float,
     t_lo: float,
     t_hi: float,
+    name: str,
 ) -> float:
     """Liquid temperature whose enthalpy is ``target_h`` (deterministic bisection).
 
-    h_liquid rises monotonically with T for any real package; a non-evaluable
-    endpoint or a sign-flat bracket falls back to the draw temperature (the
-    report then reads duty == 0 for that loop rather than raising).
+    h_liquid rises monotonically with T for any real package. A target outside
+    the bracket [h(t_lo), h(t_hi)] is a specification the column cannot reach
+    (the cooled return would leave the two-phase operating band): refused with
+    a typed error, never papered over with a fallback temperature — a fallback
+    would report return_T = draw_T together with a non-zero fixed duty, an
+    inconsistent pair (review item 5, PR #238).
     """
-    try:
-        h_lo = tb.h_liquid(comp, t_lo, p)
-        h_hi = tb.h_liquid(comp, t_hi, p)
-        if not (h_lo < target_h < h_hi):
-            return t_draw
-        for _ in range(80):
-            mid = 0.5 * (t_lo + t_hi)
-            if tb.h_liquid(comp, mid, p) < target_h:
-                t_lo = mid
-            else:
-                t_hi = mid
-        return 0.5 * (t_lo + t_hi)
-    except Exception:  # noqa: BLE001 - a report helper never fails a solve
-        return t_draw
+    h_lo = tb.h_liquid(comp, t_lo, p)
+    h_hi = tb.h_liquid(comp, t_hi, p)
+    if not (h_lo < target_h < h_hi):
+        raise ColumnSpecError(
+            f"pumparound '{name}': return enthalpy {target_h:.6g} J/mol is outside the "
+            f"achievable bracket [h({t_lo:.1f} K) = {h_lo:.6g}, h({t_hi:.1f} K) = {h_hi:.6g}] "
+            f"at {p:.3g} Pa — the fixed duty is not reachable by cooling in this column's "
+            f"operating window"
+        )
+    for _ in range(80):
+        mid = 0.5 * (t_lo + t_hi)
+        if tb.h_liquid(comp, mid, p) < target_h:
+            t_lo = mid
+        else:
+            t_hi = mid
+    return 0.5 * (t_lo + t_hi)
 
 
 def _pa_reports(col: _Column, tb: _ThermoBox, prof: _Profile) -> list[dict[str, float]]:
@@ -1486,6 +1498,9 @@ def _pa_reports(col: _Column, tb: _ThermoBox, prof: _Profile) -> list[dict[str, 
         d_idx = pa.draw_stage - 1
         comp = _flash_ready(prof.x[d_idx], col.feed_comp)
         t_draw = prof.T[d_idx]
+        # The return enthalpy is evaluated at the DRAW-stage pressure: fine for
+        # a subcooled liquid, whose enthalpy is pressure-insensitive, and the
+        # return stage sits above the draw at near-identical pressure (S0-1).
         p = col.pressures[d_idx]
         h_draw = tb.h_liquid(comp, t_draw, p)
         if pa.return_T_K is not None:
@@ -1493,7 +1508,9 @@ def _pa_reports(col: _Column, tb: _ThermoBox, prof: _Profile) -> list[dict[str, 
             h_return = tb.h_liquid(comp, t_return, p)
         else:
             h_return = h_draw + (pa.duty_W if pa.duty_W is not None else 0.0) / flow
-            t_return = _pa_return_temperature(tb, comp, p, h_return, t_draw, col.t_band_lo, col.t_band_hi)
+            t_return = _pa_return_temperature(
+                tb, comp, p, h_return, t_draw, col.t_band_lo, col.t_band_hi, pa.name
+            )
         reports.append(
             {
                 "flow_mol_s": flow,
@@ -1512,12 +1529,60 @@ def _close_energy_balance(
     feed_states: list[StreamState],
     out_states: list[StreamState],
 ) -> None:
-    """Exact overall closure: qr = sum(H_out) - sum(H_in) + qc, over the real streams.
+    """Exact overall closure over the real boundary streams.
 
-    This makes UnitResult.duty_W = qr - qc close the stream enthalpy table to
-    machine precision; the deviation from the stage-balance reboiler duty is the
-    converged MESH residual, far below the duty magnitudes.
+    ``prof.qr`` becomes the PHYSICAL reboiler duty: with pumparounds the
+    cooler duties fold in separately, ``ΣH_in + Q_reb + ΣQ_PA = ΣH_out +
+    Q_cond``, so ``Q_reb = ΣH_out − ΣH_in + qc − Σ pa_duty`` (review item 1,
+    PR #238). The pumparound duties stay visible per loop in ``info``
+    (``pa_<name>_duty_W``), and ``UnitResult.duty_W = qr − qc + Σ pa_duty``
+    is the net unit duty closing the stream table to machine precision; the
+    deviation of ``qr`` from the stage-balance reboiler duty is the converged
+    MESH residual, far below the duty magnitudes.
     """
     h_in = sum(s.enthalpy * s.molar_flow for s in feed_states)
     h_out = sum(s.enthalpy * s.molar_flow for s in out_states)
-    prof.qr = h_out - h_in + prof.qc
+    prof.qr = h_out - h_in + prof.qc - sum(rep["duty_W"] for rep in prof.pa_report)
+
+
+def _check_pumparounds(col: _Column, prof: _Profile) -> None:
+    """Post-solve pumparound feasibility gates (review items 4 and 5, PR #238).
+
+    Runs ONCE on the final converged profile — never mid-secant, where a
+    transient state must be free to fail and retry. Raises ``ColumnSpecError``:
+
+    - a pumparound flow larger than the internal liquid would be floored away
+      inside ``_l_profile`` and the mass balance would quietly not close: the
+      raw (unfloored) cascade must stay above the flow floor on every stage
+      between the return and the draw, inclusive;
+    - a reported duty > 0 means the loop's return temperature sits above its
+      draw temperature — a heater, not a pumparound cooler.
+    """
+    if not col.pumparounds:
+        return
+    pa_out, pa_in = _pa_stage_flows(col)
+    cum = 0.0
+    raw: list[float] = []
+    for j in range(col.n):
+        cum += col.feeds[j].total - col.draw_l[j] - col.draw_v[j] + pa_in[j] - pa_out[j]
+        v_above = prof.V[j + 1] if j + 1 < col.n else 0.0
+        raw.append(prof.l0 + cum + v_above - prof.V[0])
+    for idx, pa in _live_pumparounds(col):
+        lo = pa.return_stage - 1
+        hi = pa.draw_stage - 1
+        for j in range(lo, hi + 1):
+            if raw[j] <= _FLOW_FLOOR:
+                raise ColumnSpecError(
+                    f"pumparound '{pa.name}': flow {col.pa_flows[idx]:.6g} mol/s exceeds the "
+                    f"internal liquid — stage {j + 1} between the return (stage "
+                    f"{pa.return_stage}) and the draw (stage {pa.draw_stage}) carries "
+                    f"{raw[j]:.3g} mol/s, at or below the flow floor; the mass balance "
+                    f"cannot close"
+                )
+        rep = prof.pa_report[idx]
+        if rep["duty_W"] > 0.0:
+            raise ColumnSpecError(
+                f"pumparound '{pa.name}': reported duty {rep['duty_W']:.6g} W > 0 — the "
+                f"return temperature {rep['return_T_K']:.1f} K is above the draw "
+                f"temperature {rep['draw_T_K']:.1f} K; a pumparound may only remove heat"
+            )
