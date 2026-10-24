@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `CK`
 
-Rigour ladder: R0 planned
+Rigour ladder: R0 provisional
 
 ## Ports
 
@@ -19,10 +19,44 @@ Rigour ladder: R0 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | yield table vs CCR / severity |
+| R0 | provisional | `ngdesign.units.refining.reactors_coker:DelayedCoker` | Gary–Handwerk mass yields vs feed CCR; duty sensible-only (flag heat_of_reaction_basis_sensible_only) |
+
+### R0 parameters
+
+```yaml
+properties:
+  P_out:
+    description: outlet pressure, Pa, default 4.0e5
+    type: number
+  T_out:
+    description: outlet temperature, K, default 773.15
+    type: number
+  ccr_wt_pct:
+    description: feed Conradson carbon residue, wt%
+    type: number
+  gasoil_lgo_fraction:
+    description: LGO share of the gas-oil yield, in (0, 1), default 0.5
+    type: number
+required:
+- ccr_wt_pct
+type: object
+```
+
+## V1 worked cases
+
+| case | level | quantity | expected | measured | tolerance | result |
+|---|---|---|---|---|---|---|
+| `V1_coker_jechura` | R0 | `info.coke_wt_pct` | 21.6 | 21.6 | abs 1e-06 | pass |
+| `V1_coker_jechura` | R0 | `info.gas_wt_pct` | 9.744 | 9.744 | abs 1e-06 | pass |
+| `V1_coker_jechura` | R0 | `info.naphtha_wt_pct` | 15.9205 | 15.9205 | abs 1e-06 | pass |
+| `V1_coker_jechura` | R0 | `info.gasoil_wt_pct` | 52.7355 | 52.7355 | abs 1e-06 | pass |
+| `V1_coker_jechura` | R0 | `info.lgo_wt_pct` | 26.3678 | 26.3678 | abs 1e-06 | pass |
+| `V1_coker_jechura` | R0 | `info.hgo_wt_pct` | 26.3678 | 26.3678 | abs 1e-06 | pass |
+
+- `V1_coker_jechura`: Gary, Handwerk & Kaiser, Petroleum Refining: Technology and Economics, 5th ed., ch. 5 CCR yield correlations, at the Jechura (CSM) example feed, 13.5 wt% CCR
 
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-H 11
 
-> roadmap; the refinery_leeps_distillation correlation plugin exists for LEEP cut yields.
+> R0 shipped by U-H2 (Gary–Handwerk CCR table, Jechura CSM example basis); products are mass-only pseudo lumps — the mass_elements element ledger has no atom sources for a pseudo feed. The refinery_leeps_distillation correlation plugin exists for LEEP cut yields.

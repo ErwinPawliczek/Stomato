@@ -36,7 +36,10 @@ def vu() -> ModuleType:
 
 @pytest.fixture(scope="module")
 def rows() -> dict[str, UnitRow]:
-    return load_rows()
+    # Synthetic-case pins are hermetic: rows declaring validation ids pair with
+    # the real case files under data/validation_units/, which these tests
+    # replace with tmp fixtures (U-R1 flipped the first such rows).
+    return {k: r for k, r in load_rows().items() if not any(spec.validation for spec in r.levels.values())}
 
 
 def _measured_mixer_T(vu: ModuleType, rows: dict[str, UnitRow]) -> float:

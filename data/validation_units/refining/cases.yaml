@@ -1,0 +1,81 @@
+# V1 worked cases for the refining family (spec U-H2).
+# E12.2 numbers: Fahim, Al-Sahhaf & Elkilani, Fundamentals of Petroleum Refining,
+# ch. 12, Example E12.2 — 100 lb/h naphtha (5/30/15/50 lb/h thiophene/1-pentene/
+# benzene/octane), converted to mol/s with 0.45359237/3600 kg per (lb/h).
+# Book rounding of the printed slate is 3-4 significant figures, hence the
+# 1% relative tolerances.
+- id: V1_naphtha_ht_e12_2
+  unit: naphtha_ht
+  level: R0
+  source: "Fahim, Al-Sahhaf & Elkilani, Fundamentals of Petroleum Refining, ch. 12, Example E12.2 (printed product slate)"
+  feeds:
+    naphtha_in:
+      T: 700.0
+      P: 3000000.0
+      molar_flow: 0.14073154
+      composition:
+        thiophene: 0.05320367
+        "1-pentene": 0.38297573
+        benzene: 0.17192783
+        octane: 0.39189277
+    h2_in:
+      T: 320.0
+      P: 3000000.0
+      molar_flow: 0.12574708
+      composition: {H2: 1.0}
+  params:
+    sulfur_removal_frac: 1.0
+    pentene_conversion: 0.7
+    benzene_conversion: 0.8
+  expected:
+  - {quantity: info.h2s_mol_s, value: 0.00749687, tol_rel: 0.01}
+  - {quantity: info.nbutane_mol_s, value: 0.00749687, tol_rel: 0.01}
+  - {quantity: info.npentane_mol_s, value: 0.03779936, tol_rel: 0.01}
+  - {quantity: info.cyclohexane_mol_s, value: 0.01938477, tol_rel: 0.01}
+  - {quantity: info.h2_consumed_mol_s, value: 0.12495415, tol_rel: 0.01}
+
+# E5.2 basis: Fahim ch. 5, worked Example E5.2 — 100 m3/h heavy naphtha,
+# sg 0.778, A = 11.5 vol%, N = 21.7 vol%, reformate RON 94; the book prints
+# H2 2.1051, C1 1.4871, C2 2.4012, C3 3.6441, total C4 4.2784 wt% and
+# C5+ 80.17 vol%. The example-case feeds carry that basis; params are stated
+# explicitly for the record.
+- id: V1_reformer_e5_2
+  unit: reformer_cat
+  level: R0
+  source: "Fahim, Al-Sahhaf & Elkilani, Fundamentals of Petroleum Refining, ch. 5, worked Example E5.2 (printed product slate)"
+  feeds:
+    naphtha_in:
+      T: 750.0
+      P: 3000000.0
+      molar_flow: 24.1211
+      composition: {reformer_naphtha: 1.0}
+  params:
+    ron_reformate: 94.0
+    naphthenes_vol_pct: 21.7
+    aromatics_vol_pct: 11.5
+  expected:
+  - {quantity: info.c5p_vol_pct, value: 80.17, tol_rel: 0.001}
+  - {quantity: info.h2_wt_pct, value: 2.1051, tol_rel: 0.005}
+  - {quantity: info.c1_wt_pct, value: 1.4871, tol_rel: 0.005}
+  - {quantity: info.c2_wt_pct, value: 2.4012, tol_rel: 0.005}
+  - {quantity: info.c3_wt_pct, value: 3.6441, tol_rel: 0.005}
+  - {quantity: info.c4_total_wt_pct, value: 4.2784, tol_rel: 0.005}
+
+# Jechura (Colorado School of Mines) example feed: 40,000 bpd vacuum residuum,
+# 9.5 degAPI, 13.5 wt% CCR. The notes publish no worked result table, so the
+# case anchors the Gary-Handwerk ch. 5 CCR equations at that feed point
+# (coke 1.6*CCR, gas 7.8+0.144*CCR, gasoline 11.29+0.343*CCR, gas oil balance);
+# the default 50/50 LGO/HGO split applies. Closed-form values, tight tolerance.
+- id: V1_coker_jechura
+  unit: coker
+  level: R0
+  source: "Gary, Handwerk & Kaiser, Petroleum Refining: Technology and Economics, 5th ed., ch. 5 CCR yield correlations, at the Jechura (CSM) example feed, 13.5 wt% CCR"
+  params:
+    ccr_wt_pct: 13.5
+  expected:
+  - {quantity: info.coke_wt_pct, value: 21.6, tol_abs: 1.0e-6}
+  - {quantity: info.gas_wt_pct, value: 9.744, tol_abs: 1.0e-6}
+  - {quantity: info.naphtha_wt_pct, value: 15.9205, tol_abs: 1.0e-6}
+  - {quantity: info.gasoil_wt_pct, value: 52.7355, tol_abs: 1.0e-6}
+  - {quantity: info.lgo_wt_pct, value: 26.36775, tol_abs: 1.0e-6}
+  - {quantity: info.hgo_wt_pct, value: 26.36775, tol_abs: 1.0e-6}
