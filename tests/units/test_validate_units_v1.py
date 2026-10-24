@@ -54,7 +54,11 @@ def _run(
     family.mkdir()
     (family / "cases.yaml").write_text(yaml.safe_dump(cases))
     monkeypatch.setattr(vu, "VALIDATION_DIR", tmp_path)
-    return vu.run_v1(rows)
+    # The synthetic dir replaces the whole VALIDATION_DIR, so scope the runner
+    # to the family under test: rows of other families bind real validation
+    # cases that no longer exist here, and the runner's row-consistency check
+    # would fire phantom findings for them.
+    return vu.run_v1({k: r for k, r in rows.items() if r.family == "logical"})
 
 
 def _case(value: float, **extra: Any) -> dict[str, Any]:

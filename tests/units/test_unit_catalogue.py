@@ -298,6 +298,7 @@ def _dump_result(result: Any) -> dict[str, Any]:
     }
 
 
+@pytest.mark.timeout(600)  # deterministic benchmark solves; 120 s default is runner-load sensitive
 def test_bench_flowsheets_byte_identical_through_dispatch(thermo: Thermo) -> None:
     """The dispatcher sits in the bench solve path (registry.create -> dispatch
     -> adapter); every bench case reproduces main's results byte-identically.
