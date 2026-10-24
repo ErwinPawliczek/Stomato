@@ -208,9 +208,9 @@ def _fixture_catalogue(tmp_path: Path) -> Path:
         if row["id"] == "pump":
             row["levels"]["R1"] = {
                 "status": "experimental",
-                "adapter": "ngdesign.units.mixer:Mixer",
+                "adapter": "ngdesign.units.separation.tank:Tank",
                 "params": {},
-                "note": "test fixture: stand-in second adapter",
+                "note": "test fixture: stand-in second adapter with the row's ports (U-01c)",
                 "end_state": True,
             }
     (dst / "flow.yaml").write_text(yaml.safe_dump(flow, sort_keys=False))
@@ -240,7 +240,7 @@ def test_two_implemented_levels_dispatch_to_their_adapters(
         r0 = unit.solve(inlets, {**params, "model": "R0"}, thermo)
         r1 = unit.solve(inlets, {"model": "R1"}, thermo)
         assert r0.outlets["outlet"].P > inlets["inlet"].P  # the pump raised pressure
-        assert r1.outlets["outlet"].P == inlets["inlet"].P  # the mixer held it
+        assert r1.outlets["outlet"].P == inlets["inlet"].P  # the tank held it
     finally:
         catalogue.load_rows.cache_clear()
         catalogue.register_all()  # restore the real dispatch classes
@@ -314,3 +314,38 @@ def test_bench_flowsheets_byte_identical_through_dispatch(thermo: Thermo) -> Non
     for name in sorted(CASES):
         result = CASES[name](thermo)
         assert _dump_result(result) == golden[name], f"{name} drifted from main's results"
+
+
+def test_adapter_ports_are_the_row_ports(rows: dict[str, UnitRow]) -> None:
+    """U-01c: every implemented level's adapter exposes exactly its row's ports."""
+    for row in rows.values():
+        for level, spec in row.levels.items():
+            if spec.adapter is None:
+                continue
+            cls = catalogue._check_adapter(spec.adapter, f"{row.id}/{level}")
+            assert set(getattr(cls, "inlet_ports", ())) == set(row.ports.inlet_names), (
+                f"{row.id}/{level} inlets"
+            )
+            assert set(getattr(cls, "outlet_ports", ())) == set(row.ports.outlet_names), (
+                f"{row.id}/{level} outlets"
+            )
+
+
+def test_adapter_port_mismatch_raises_catalogue_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A row whose adapter exposes other port names is a load error (U-01c)."""
+    schema = Path("data") / "unit_models" / "_schema.yaml"
+    entries = yaml.safe_load((Path("data") / "unit_models" / "flow.yaml").read_text())
+    pump = next(e for e in entries if e["id"] == "pump")
+    pump["ports"]["outlet"][0]["name"] = "discharge"  # the adapter's port is "outlet"
+    (tmp_path / schema.name).write_text(schema.read_text())
+    (tmp_path / "flow.yaml").write_text(yaml.safe_dump([pump], sort_keys=False))
+
+    monkeypatch.setenv(catalogue.MODELS_DIR_ENV, str(tmp_path))
+    catalogue.load_rows.cache_clear()
+    try:
+        with pytest.raises(catalogue.CatalogueError, match="outlet ports"):
+            load_rows()
+    finally:
+        catalogue.load_rows.cache_clear()

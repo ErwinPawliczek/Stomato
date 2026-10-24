@@ -25,7 +25,7 @@ class EjectorSpecError(ValueError):
 class Ejector:
     """Adiabatic motive/suction mixer with an entrainment spec (R0)."""
 
-    inlet_ports = ("motive", "suction")
+    inlet_ports = ("motive_in", "suction_in")
     outlet_ports = ("outlet",)
 
     def solve(
@@ -34,8 +34,8 @@ class Ejector:
         params: dict[str, Any],
         thermo: Thermo,
     ) -> UnitResult:
-        motive = inlets["motive"]
-        suction = inlets["suction"]
+        motive = inlets["motive_in"]
+        suction = inlets["suction_in"]
         P_out = float(params["P_out"])
         entrainment = float(params["entrainment"])
         if P_out <= 0:
@@ -74,4 +74,4 @@ class Ejector:
         """Graham-style ejector basis: 500 K motive steam pulling 300 K vapour at ~15 torr."""
         motive = {"T": 500.0, "P": 1.0e6, "molar_flow": 146.873, "composition": {"H2O": 1.0}}
         suction = {"T": 300.0, "P": 2000.0, "molar_flow": 48.958, "composition": {"H2O": 1.0}}
-        return {"motive": motive, "suction": suction}, {"P_out": 5.0e4, "entrainment": 1.0 / 3.0}
+        return {"motive_in": motive, "suction_in": suction}, {"P_out": 5.0e4, "entrainment": 1.0 / 3.0}
