@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `CYC`
 
-Rigour ladder: R0 planned, R1 planned
+Rigour ladder: R0 provisional, R1 planned
 
 ## Ports
 
@@ -16,11 +16,26 @@ Rigour ladder: R0 planned, R1 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | efficiency spec |
+| R0 | provisional | `ngdesign.units.separation.hydrocyclone:Hydrocyclone` | per-component split spec — the underflow is the spec, not a correlation constant; the overflow leaves at P_in - dP, the underflow at P_in. Evidence gap — Perry Sect. 18 cut-size sizing is R1, so no worked example validates a cut size at R0 (V0 self-consistency only). |
 | R1 | planned | — | Lapple / Barth cut size |
+
+### R0 parameters
+
+```yaml
+properties:
+  dP:
+    description: pressure drop, Pa; applied to the overflow outlet
+    minimum: 0
+    type: number
+  underflow_fractions:
+    description: component id to the fraction of its molar flow sent to the underflow;
+      unnamed components go entirely to the overflow
+    type: object
+type: object
+```
 
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-D 6
 
-> roadmap.
+> R0 split spec implemented; deoiling example with 95 % water to the underflow.
