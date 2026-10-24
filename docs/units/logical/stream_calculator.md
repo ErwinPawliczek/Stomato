@@ -15,7 +15,7 @@ Rigour ladder: R0 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.logical.stream_calculator:StreamCalculator` | scale, set overrides, then a PT flash; duty = enthalpy change. closed-form only; definitional unit (no open textbook worked example; searched Towler & Sinnott ch. 2 and Coulson & Richardson vol. 2) |
+| R0 | provisional | `ngdesign.units.logical.stream_calculator:StreamCalculator` | scale, set overrides, then a PT flash; duty = enthalpy change. breaks the mole balance when scale != 1 or set.molar_flow/set.composition is used, as the stream_duplicator does. closed-form only; definitional unit (no open textbook worked example; searched Towler & Sinnott ch. 2 and Coulson & Richardson vol. 2) |
 
 ### R0 parameters
 

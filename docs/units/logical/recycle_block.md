@@ -15,7 +15,7 @@ Rigour ladder: R0 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.logical.recycle_block:RecycleBlock` | identity at R0; lowers to the P2-03 flowsheet tear options (solver.lowering). closed-form only; definitional unit (no open textbook worked example) |
+| R0 | provisional | `ngdesign.units.logical.recycle_block:RecycleBlock` | identity at R0; lowers to the P2-03 flowsheet tear options (solver.lowering) — flowsheet-level SolverOptions only; tear selection stays automatic. closed-form only; definitional unit (no open textbook worked example) |
 
 ### R0 parameters
 

@@ -133,7 +133,7 @@
           set:
             type: object
             description: overrides applied before a PT flash; T (K), P (Pa), molar_flow (mol/s), composition (renormalised, negative entries refused)
-      note: scale, set overrides, then a PT flash; duty = enthalpy change. closed-form only; definitional unit (no open textbook worked example; searched Towler & Sinnott ch. 2 and Coulson & Richardson vol. 2)
+      note: scale, set overrides, then a PT flash; duty = enthalpy change. breaks the mole balance when scale != 1 or set.molar_flow/set.composition is used, as the stream_duplicator does. closed-form only; definitional unit (no open textbook worked example; searched Towler & Sinnott ch. 2 and Coulson & Richardson vol. 2)
       end_state: true
   pid_symbol: SMC
   references:
@@ -234,7 +234,7 @@
           tolerance:
             type: number
             description: relative tear tolerance (default solver value)
-      note: identity at R0; lowers to the P2-03 flowsheet tear options (solver.lowering). closed-form only; definitional unit (no open textbook worked example)
+      note: identity at R0; lowers to the P2-03 flowsheet tear options (solver.lowering) — flowsheet-level SolverOptions only; tear selection stays automatic. closed-form only; definitional unit (no open textbook worked example)
       end_state: true
   pid_symbol: RCY
   references:
@@ -265,14 +265,14 @@
         properties:
           n_copies:
             type: integer
-            description: number of outlets (default 2)
+            description: number of outlets; R0 refuses any value other than 2 (the row declares exactly two ports)
           copy_flow_scale:
             type: number
-            description: flow scale of copies 1..N-1 (default 0 so the balance closes)
+            description: flow scale of outlet_2 (default 0 so the balance closes)
           allow_unbalanced:
             type: boolean
             description: permit the full-flow mirror form that breaks the mole balance (V0 never uses it)
-      note: 'reference-stream tees: copy_0 carries the material, copies 1..N-1 share the intensive state at copy_flow_scale. closed-form only; definitional unit (no open textbook worked example)'
+      note: 'reference-stream tees: outlet_1 carries the material, outlet_2 shares the intensive state at copy_flow_scale. closed-form only; definitional unit (no open textbook worked example)'
       end_state: true
   pid_symbol: TEE
   references:
@@ -304,8 +304,8 @@
             enum: [steam_lp, steam_mp, steam_hp, cooling_water, fuel_gas, electricity, refrigerant]
           price:
             type: number
-            description: currency per unit basis; reported as info.utility_cost_rate (pass-through, not physics)
-      note: metering pass-through reporting utility_cost_rate. closed-form only; definitional unit (no open textbook worked example; pricing data out of scope per spec)
+            description: currency per kg of the stream (fluid utilities); reported as info.utility_cost_rate = price x mass_flow in currency/s (pass-through, not physics)
+      note: metering pass-through reporting utility_cost_rate = price x mass_flow (currency per kg basis). electricity refused at R0 (no stream basis; per-J form on a declared power param is a later round). closed-form only; definitional unit (no open textbook worked example; pricing data out of scope per spec)
       end_state: true
   pid_symbol: UTL
   references:

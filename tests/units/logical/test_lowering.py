@@ -8,7 +8,8 @@ solved stream states agree, which is the spec U-A equivalence bar.
 
 from __future__ import annotations
 
-from typing import Any
+from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -16,10 +17,32 @@ from ngdesign import registry
 from ngdesign.contracts import FeedSpec, Flowsheet, PortRef, StreamSpec, UnitSpec
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.specs import DesignSpec
+from ngdesign.flowsheets.slice import build as build_slice
 from ngdesign.solver.design_specs import SequentialModularWithSpecs
 from ngdesign.solver.lowering import lower_logical_nodes
+from tests.solver.test_sequential_modular import FAKES, _port
+from tests.solver.test_sequential_modular import _feed as _p2_feed
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 FEED = FeedSpec(T=322.15, P=7.0e6, molar_flow=100.0, composition={"C1": 0.848, "nC4": 0.152})
+
+
+@contextmanager
+def _fake_units_registered() -> Iterator[None]:
+    """Register the P2-03 fake units for the loop solve and remove them after.
+
+    Same registration dance as the P2-03 test module's autouse fixture (the
+    fake kinds live only there); kept out of the registry the rest of the run.
+    """
+    for name, cls in FAKES.items():
+        registry.register("unit", name)(cls)
+    try:
+        yield
+    finally:
+        for name in FAKES:
+            registry._REGISTRY["unit"].pop(name, None)
 
 
 def _thermo() -> Thermo:
@@ -120,14 +143,61 @@ def test_adjust_refuses_an_incomplete_declaration() -> None:
         lower_logical_nodes(broken)
 
 
-def test_adjust_flowsheet_matches_design_spec_solution() -> None:
+def _slice_with_design_spec() -> Flowsheet:
+    """The P2-01 sheet (tests/solver/test_design_specs.py): the locked slice with
+    S-003.T set to 390 K via K-101.params.P_out."""
+    fs = build_slice()
+    spec = DesignSpec(
+        id="DS-001",
+        target="S-003.T",
+        value=390.0,
+        manipulated="K-101.params.P_out",
+        lower=6e6,
+        upper=14e6,
+    )
+    return fs.model_copy(update={"design_specs": [spec]})
+
+
+def _slice_with_adjust_node() -> Flowsheet:
+    """The same sheet, the spec declared as an adjust node in S-003's path."""
+    fs = build_slice()
+    units = list(fs.units) + [
+        UnitSpec(
+            tag="ADJ-101",
+            kind="adjust",
+            params={
+                "target": {"stream": "S-003", "variable": "T", "value": 390.0},
+                "manipulate": {"unit": "K-101", "param": "P_out"},
+                "bounds": {"lower": 6e6, "upper": 14e6},
+            },
+        )
+    ]
+    streams: list[StreamSpec] = []
+    for stream in fs.streams:
+        if stream.id == "S-003":
+            streams.append(stream.model_copy(update={"source": PortRef(unit="ADJ-101", port="outlet")}))
+            streams.append(
+                StreamSpec(
+                    id="S-KADJ",
+                    source=PortRef(unit="K-101", port="outlet"),
+                    target=PortRef(unit="ADJ-101", port="inlet"),
+                    service=stream.service,
+                )
+            )
+        else:
+            streams.append(stream)
+    return fs.model_copy(update={"units": units, "streams": streams, "design_specs": []})
+
+
+def test_adjust_on_the_p2_01_slice_sheet_matches_the_design_spec() -> None:
+    """E2E equivalence on the flowsheet the P2-01 tests already solve."""
     thermo = _thermo()
     solver = SequentialModularWithSpecs()
-    solved_node = solver.solve(_adjust_flowsheet(with_node=True), thermo)
-    solved_explicit = solver.solve(_adjust_flowsheet(with_node=False), thermo)
+    solved_node = solver.solve(_slice_with_adjust_node(), thermo)
+    solved_explicit = solver.solve(_slice_with_design_spec(), thermo)
 
-    a, b = solved_node.streams["S-OUT"], solved_explicit.streams["S-OUT"]
-    assert a.T == pytest.approx(320.0, abs=1e-8)
+    a, b = solved_node.streams["S-003"], solved_explicit.streams["S-003"]
+    assert a.T == pytest.approx(390.0, rel=1e-4)
     assert a.T == pytest.approx(b.T, abs=1e-8)
     assert a.molar_flow == pytest.approx(b.molar_flow, abs=1e-8)
     assert a.enthalpy == pytest.approx(b.enthalpy, abs=1e-8)
@@ -212,14 +282,46 @@ def test_recycle_loop_solves_to_the_hand_computed_split() -> None:
     assert solved.streams["S-TEAR"].molar_flow == pytest.approx(110.0, abs=1e-6)
 
 
-def test_recycle_loop_node_and_explicit_forms_agree() -> None:
+def _p2_loop_flowsheet(with_node: bool) -> Flowsheet:
+    """The P2-03 loop (tests/solver/test_sequential_modular.py::
+    test_recycle_loop_converges): 100 mol/s fresh feed, 40% of the mixed
+    stream recycled through a 5 K heater, fake units registered by that test
+    module's ``_fake_units`` context."""
+    units: list[UnitSpec] = [
+        UnitSpec(tag="MIX-101", kind="fake_mixer"),
+        UnitSpec(tag="HTR-101", kind="fake_heater", params={"dT": 5.0}),
+        UnitSpec(tag="SPL-101", kind="fake_splitter", params={"f": 0.4}),
+    ]
+    if with_node:
+        units.append(UnitSpec(tag="RCY-301", kind="recycle_block", params={"acceleration": "wegstein"}))
+    in_b = PortRef(unit="RCY-301", port="inlet") if with_node else _port("MIX-101", "in_b")
+    streams = [
+        StreamSpec(id="S-001", target=_port("MIX-101", "in_a"), feed=_p2_feed(100.0)),
+        StreamSpec(id="S-002", source=_port("SPL-101", "out_a"), target=in_b),
+        StreamSpec(id="S-003", source=_port("MIX-101", "out"), target=_port("HTR-101", "inlet")),
+        StreamSpec(id="S-004", source=_port("HTR-101", "outlet"), target=_port("SPL-101", "inlet")),
+        StreamSpec(id="S-005", source=_port("SPL-101", "out_b")),
+    ]
+    if with_node:
+        streams.append(
+            StreamSpec(
+                id="S-TEAR",
+                source=PortRef(unit="RCY-301", port="outlet"),
+                target=_port("MIX-101", "in_b"),
+            )
+        )
+    return Flowsheet(name="F-P2-LOOP", units=units, streams=streams)
+
+
+def test_recycle_block_on_the_p2_03_loop_matches_the_explicit_form() -> None:
+    """E2E equivalence on the flowsheet the P2-03 tests already solve."""
     thermo = _thermo()
     solver = SequentialModularWithSpecs()
-    solved_node = solver.solve(_loop_flowsheet(with_node=True), thermo)
-    solved_explicit = solver.solve(_loop_flowsheet(with_node=False), thermo)
-    # S-TEAR exists only in the node form; compare the streams both sheets share
-    for sid in ("S-MIX", "S-PROD", "S-RCY"):
-        a, b = solved_node.streams[sid], solved_explicit.streams[sid]
-        assert a.molar_flow == pytest.approx(b.molar_flow, abs=1e-8)
-        assert a.T == pytest.approx(b.T, abs=1e-8)
-        assert a.enthalpy == pytest.approx(b.enthalpy, abs=1e-8)
+    with _fake_units_registered():
+        solved_node = solver.solve(_p2_loop_flowsheet(with_node=True), thermo)
+        solved_explicit = solver.solve(_p2_loop_flowsheet(with_node=False), thermo)
+        for sid in ("S-002", "S-003", "S-005"):
+            a, b = solved_node.streams[sid], solved_explicit.streams[sid]
+            assert a.molar_flow == pytest.approx(b.molar_flow, abs=1e-8)
+            assert a.T == pytest.approx(b.T, abs=1e-8)
+            assert a.enthalpy == pytest.approx(b.enthalpy, abs=1e-8)

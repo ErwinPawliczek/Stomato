@@ -3,11 +3,14 @@
 N outlets (``n_copies``, default 2), each an identical copy of the inlet.
 
 **This breaks mole balance by design.** At R0 the copies are *reference
-streams*: outlet ``copy_0`` carries the material, and copies ``1..N-1`` carry
+streams*: outlet ``outlet_1`` carries the material, and ``outlet_2`` carries
 the same intensive state with ``molar_flow`` scaled by ``params.
 copy_flow_scale`` (default 0.0, so the balance closes). The full-flow mirror
 form — every copy carrying the full inlet flow — is refused at R0 unless
-``allow_unbalanced: true``, which V0 never uses.
+``allow_unbalanced: true``, which V0 never uses. The port names are the
+catalogue row's (``outlet_1``/``outlet_2``), so a sheet wired from the palette
+always connects ports the adapter produces; ``n_copies`` other than 2 is
+refused for the same reason.
 """
 
 from __future__ import annotations
@@ -22,7 +25,7 @@ class StreamDuplicator:
     """Tees a stream into N identical copies (spec U-A)."""
 
     inlet_ports = ("inlet",)
-    outlet_ports = ("copy_0", "copy_1")
+    outlet_ports = ("outlet_1", "outlet_2")
 
     def solve(
         self,
@@ -33,8 +36,11 @@ class StreamDuplicator:
         del thermo  # copies share the inlet state; no flash
         inlet = inlets["inlet"]
         n_copies = int(params.get("n_copies", 2))
-        if n_copies < 2:
-            raise ValueError(f"n_copies must be >= 2, got {n_copies}")
+        if n_copies != 2:
+            raise ValueError(
+                f"n_copies must be 2 at R0: the catalogue row declares exactly two "
+                f"outlets (outlet_1, outlet_2), got {n_copies}"
+            )
         copy_scale = float(params.get("copy_flow_scale", 0.0))
         if copy_scale < 0.0:
             raise ValueError(f"copy_flow_scale must be >= 0, got {copy_scale}")
@@ -45,11 +51,10 @@ class StreamDuplicator:
                 "mirror form (V0 never uses it)"
             )
 
-        outlets: dict[str, StreamState] = {"copy_0": inlet.model_copy()}
-        for i in range(1, n_copies):
-            outlets[f"copy_{i}"] = inlet.model_copy(
-                update={"molar_flow": inlet.molar_flow * copy_scale, "composition": dict(inlet.composition)}
-            )
+        outlets: dict[str, StreamState] = {"outlet_1": inlet.model_copy()}
+        outlets["outlet_2"] = inlet.model_copy(
+            update={"molar_flow": inlet.molar_flow * copy_scale, "composition": dict(inlet.composition)}
+        )
         return UnitResult(outlets=outlets, duty_W=0.0, power_W=0.0, info={})
 
     @classmethod

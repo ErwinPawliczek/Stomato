@@ -1,10 +1,13 @@
 """Utility stream unit plugin (spec U-A).
 
 Metering pass-through: one inlet, one outlet. Params declare the utility
-``kind`` (steam levels, cooling water, fuel gas, electricity, refrigerant) and
-``price`` (currency per unit basis). The unit reports ``utility_cost_rate``
-in ``info`` — the price passed through, not computed. Cost accounting is not
+``kind`` (steam levels, cooling water, fuel gas, refrigerant) and ``price``
+in currency per kg of the stream. The unit reports ``utility_cost_rate`` in
+``info`` — ``price x mass_flow`` in currency/s. Cost accounting is not
 physics: no duty, no power, no state change.
+
+``electricity`` is refused at R0: it has no stream basis. Its per-J form
+needs a declared power param and comes in a later round.
 
 The catalogue row marks the inlet optional (a pure source/sink form); this R0
 adapter implements the metering pass-through and refuses the inlet-less form.
@@ -50,16 +53,22 @@ class UtilityStream:
         kind = params.get("kind")
         if kind not in UTILITY_KINDS:
             raise ValueError(f"kind must be one of {UTILITY_KINDS}, got {kind!r}")
+        if kind == "electricity":
+            raise ValueError(
+                "electricity has no stream basis at R0; its per-J form on a "
+                "declared power param is a later round"
+            )
         price = params.get("price", 0.0)
         if float(price) < 0.0:
             raise ValueError(f"price must be >= 0, got {price}")
 
         inlet = inlets["inlet"]
+        rate = float(price) * inlet.mass_flow  # currency/kg x kg/s = currency/s
         return UnitResult(
             outlets={"outlet": inlet},
             duty_W=0.0,
             power_W=0.0,
-            info={"utility_cost_rate": float(price)},
+            info={"utility_cost_rate": rate},
         )
 
     @classmethod

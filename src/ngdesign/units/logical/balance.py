@@ -39,7 +39,18 @@ class Balance:
         n_out = inlet.molar_flow
         h_flow_out = inlet.molar_flow * inlet.enthalpy
         composition = {cid: x * inlet.molar_flow for cid, x in inlet.composition.items()}
-        for spec in known:
+        required = ("T", "P", "molar_flow", "composition")
+        for index, spec in enumerate(known):
+            if not isinstance(spec, dict):
+                raise ValueError(
+                    f"known_outlets[{index}] must be FeedSpec kwargs (a map), got {type(spec).__name__}"
+                )
+            missing = [key for key in required if key not in spec]
+            if missing:
+                raise ValueError(
+                    f"known_outlets[{index}] is missing required FeedSpec key(s) {missing}; "
+                    "each entry needs T, P, molar_flow and composition"
+                )
             n_known = float(spec["molar_flow"])
             n_out -= n_known
             known_comp = spec["composition"]

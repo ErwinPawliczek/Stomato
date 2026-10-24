@@ -15,7 +15,7 @@ Rigour ladder: R0 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.logical.utility_stream:UtilityStream` | metering pass-through reporting utility_cost_rate. closed-form only; definitional unit (no open textbook worked example; pricing data out of scope per spec) |
+| R0 | provisional | `ngdesign.units.logical.utility_stream:UtilityStream` | metering pass-through reporting utility_cost_rate = price x mass_flow (currency per kg basis). electricity refused at R0 (no stream basis; per-J form on a declared power param is a later round). closed-form only; definitional unit (no open textbook worked example; pricing data out of scope per spec) |
 
 ### R0 parameters
 
@@ -32,8 +32,8 @@ properties:
     - refrigerant
     type: string
   price:
-    description: currency per unit basis; reported as info.utility_cost_rate (pass-through,
-      not physics)
+    description: currency per kg of the stream (fluid utilities); reported as info.utility_cost_rate
+      = price x mass_flow in currency/s (pass-through, not physics)
     type: number
 required:
 - kind

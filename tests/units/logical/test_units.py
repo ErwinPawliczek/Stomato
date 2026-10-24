@@ -113,14 +113,15 @@ def test_stream_calculator_duty_is_the_enthalpy_change() -> None:
 
 def test_stream_duplicator_copies_close_the_balance() -> None:
     unit = StreamDuplicator()
+    assert unit.outlet_ports == ("outlet_1", "outlet_2")  # the catalogue row's ports
     inlet = flash_feed(_thermo(), _feed())
     res = unit.solve({"inlet": inlet}, {}, _thermo())
-    copy0, copy1 = res.outlets["copy_0"], res.outlets["copy_1"]
-    assert copy0.molar_flow == pytest.approx(inlet.molar_flow, abs=1e-12)
-    assert copy1.molar_flow == pytest.approx(0.0, abs=1e-12)
+    first, second = res.outlets["outlet_1"], res.outlets["outlet_2"]
+    assert first.molar_flow == pytest.approx(inlet.molar_flow, abs=1e-12)
+    assert second.molar_flow == pytest.approx(0.0, abs=1e-12)
     # reference copies share the intensive state
-    assert copy1.T == pytest.approx(copy0.T, abs=1e-12)
-    assert copy1.composition == pytest.approx(copy0.composition)
+    assert second.T == pytest.approx(first.T, abs=1e-12)
+    assert second.composition == pytest.approx(first.composition)
     total = sum(o.molar_flow for o in res.outlets.values())
     assert total == pytest.approx(inlet.molar_flow, abs=1e-8)
 
@@ -135,13 +136,12 @@ def test_stream_duplicator_full_flow_mirror_needs_the_explicit_flag() -> None:
         assert out.molar_flow == pytest.approx(inlet.molar_flow, abs=1e-12)
 
 
-def test_stream_duplicator_n_copies_and_refusals() -> None:
+def test_stream_duplicator_refuses_other_port_counts() -> None:
     unit = StreamDuplicator()
     inlet = flash_feed(_thermo(), _feed())
-    res = unit.solve({"inlet": inlet}, {"n_copies": 3}, _thermo())
-    assert set(res.outlets) == {"copy_0", "copy_1", "copy_2"}
-    with pytest.raises(ValueError, match="n_copies"):
-        unit.solve({"inlet": inlet}, {"n_copies": 1}, _thermo())
+    for count in (1, 3):
+        with pytest.raises(ValueError, match="n_copies"):
+            unit.solve({"inlet": inlet}, {"n_copies": count}, _thermo())
 
 
 def test_balance_closes_the_unknown_outlet_per_component() -> None:
@@ -179,6 +179,24 @@ def test_balance_refuses_negative_component_flows_by_name() -> None:
         unit.solve({"inlet": inlet}, {"known_outlets": [known]}, _thermo())
 
 
+def test_balance_refuses_an_incomplete_known_outlet_entry() -> None:
+    """A missing FeedSpec key is refused with the entry index and the key."""
+    unit = Balance()
+    inlet = flash_feed(_thermo(), _feed())
+    no_temperature = {"P": 7.0e6, "molar_flow": 30.0, "composition": {"C1": 1.0}}
+    with pytest.raises(ValueError, match=r"known_outlets\[0\].*'T'"):
+        unit.solve({"inlet": inlet}, {"known_outlets": [no_temperature]}, _thermo())
+    no_pressure = {"T": 322.15, "molar_flow": 30.0, "composition": {"C1": 1.0}}
+    with pytest.raises(ValueError, match=r"known_outlets\[0\].*'P'"):
+        unit.solve({"inlet": inlet}, {"known_outlets": [no_pressure]}, _thermo())
+    with pytest.raises(ValueError, match=r"known_outlets\[1\]"):
+        unit.solve(
+            {"inlet": inlet},
+            {"known_outlets": [{"T": 322.15, "P": 7.0e6, "molar_flow": 1.0, "composition": {"C1": 1.0}}, {}]},
+            _thermo(),
+        )
+
+
 def test_recycle_block_is_an_identity() -> None:
     unit = RecycleBlock()
     inlet = flash_feed(_thermo(), _feed())
@@ -193,8 +211,26 @@ def test_utility_stream_meters_and_passes_through() -> None:
     inlet = flash_feed(_thermo(), _feed())
     res = unit.solve({"inlet": inlet}, {"kind": "steam_lp", "price": 12.5}, _thermo())
     assert res.outlets["outlet"] == inlet
-    assert res.info["utility_cost_rate"] == pytest.approx(12.5)
+    assert res.info["utility_cost_rate"] == pytest.approx(12.5 * inlet.mass_flow, rel=1e-12)
     assert res.duty_W == 0.0 and res.power_W == 0.0
+
+
+def test_utility_stream_rate_is_price_times_mass_flow() -> None:
+    """Closed form: currency/kg x kg/s = currency/s, computed from the inlet."""
+    unit = UtilityStream()
+    inlet = flash_feed(_thermo(), _feed())
+    res = unit.solve({"inlet": inlet}, {"kind": "cooling_water", "price": 0.02}, _thermo())
+    assert inlet.mass_flow > 0.0
+    assert res.info["utility_cost_rate"] == pytest.approx(0.02 * inlet.mass_flow, rel=1e-12)
+    # the rate is a genuine rate now: it differs from the bare price
+    assert res.info["utility_cost_rate"] != pytest.approx(0.02)
+
+
+def test_utility_stream_refuses_electricity_at_r0() -> None:
+    unit = UtilityStream()
+    inlet = flash_feed(_thermo(), _feed())
+    with pytest.raises(ValueError, match="electricity"):
+        unit.solve({"inlet": inlet}, {"kind": "electricity", "price": 0.1}, _thermo())
 
 
 def test_utility_stream_refuses_unknown_kinds_and_missing_inlet() -> None:
