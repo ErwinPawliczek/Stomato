@@ -133,16 +133,16 @@ Dispatch order: P3-01 after B-08 and P2-02 merge; P3-02 after P3-01; P3-03 after
 | U-R | Reaction-set contract: stoichiometry, kinetics forms, formation properties, extent arithmetic | none | merged #199 (676aac1) 2026-10-23; issue #192 |
 | U-R1 | Round-1 conventions binding every family thread (R0 adapter, YAML flip, cited V1, closed-form test, ownership) | U-00, U-R, U-01 | in progress: round 1 dispatched 2026-10-23 19:11 CDT (U-A..U-H1; U-H2 after U-F1) |
 | U-A | Logical units R0 (+ U-A1 `_physics/splitting.py`; solver lowering for adjust/recycle) | U-R1 | issue #206 |
-| U-B | Flow units R0 (+ `_physics/efficiency.py`) | U-R1 | issue #207 |
-| U-C | Heat units R0 (+ `_physics/heat_balance.py`: two-stream, multi-stream, problem table) | U-R1 | issue #208 |
-| U-D | Separation units R0 | U-R1, U-A1 (3 units) | issue #209 |
-| U-E | Shortcut column units R0 (+ `_physics/shortcut.py`: FUG, Kremser fraction; V2 vs MESH) | U-R1, P1-11 | issue #210 |
-| U-F | Reactors R0 (+ U-F1 `kinetics.yield_shift`, `_physics/gibbs.py`; solver reaction-set hook) | U-R1 | issue #211 |
-| U-G | Treating R0: TEG regenerator, Claus | U-R1 | issue #212 |
+| U-B | Flow units R0 (+ `_physics/efficiency.py`) | U-R1 | DONE 2026-10-24 (#217, 3eb7ed8): reciprocating compressor, control valve, relief valve, pipe segment, orifice, ejector, fan R0; efficiency owner |
+| U-C | Heat units R0 (+ `_physics/heat_balance.py`: two-stream, multi-stream, problem table) | U-R1 | DONE 2026-10-24 (#226, f9449d0): plate, double-pipe, multi-stream, fired heater, cooling tower, HEN block R0; heat_balance owner |
+| U-D | Separation units R0 | U-R1, U-A1 (3 units) | DONE 2026-10-24 (#224, 501afcc): flash_drum, decanter, tank, adsorption_bed, hydrate_check, hydrocyclone, filter, membrane R0 |
+| U-E | Shortcut column units R0 (+ `_physics/shortcut.py`: FUG, Kremser fraction; V2 vs MESH) | U-R1, P1-11 | DONE 2026-10-24 (#225, 1534141): FUG + Kremser absorber, stripper, extractor R0; V2 vs MESH measured |
+| U-F | Reactors R0 (+ U-F1 `kinetics.yield_shift`, `_physics/gibbs.py`; solver reaction-set hook) | U-R1 | DONE 2026-10-24 (#216 yield_shift; #227, dbc36de): conversion, yield, equilibrium, gibbs reactors + electrolyser stack R0; solver reaction-set hook |
+| U-G | Treating R0: TEG regenerator, Claus | U-R1 | DONE 2026-10-24 (#221 + #230, 40b898d): teg_regen and Claus sulfur_recovery R0 |
 | U-H1 | Refining separation R0: assay feeder, desalter, crude/vacuum cut-point columns, side strip, preflash, blending | U-R1, A-01, U-E (side_strip) | issue #213 |
-| U-H2 | Refining reactors R0: lumped yield correlations | U-R1, U-F1 | issue #214; dispatch after U-F1 merges |
+| U-H2 | Refining reactors R0: lumped yield correlations | U-R1, U-F1 | DONE 2026-10-23 (#218, 0c8f357): naphtha_ht, reformer_cat, coker R0; fcc and hcu refused (figure-only sources), issue #222 pseudo characterisation |
 | U-00 | Unit catalogue as data: 83-row YAML registry, rigour-level dispatch/refusal, V0 harness | none | merged #197 (8cf4d20) 2026-10-23; issue #189 |
-| U-01 | Unit harness: cited V1 cases with tolerances and assessed misses, mass/element V0 for reactive rows, per-row example thermo | U-00, U-R | DONE 2026-10-23 (#205, 8cc9b2b) |
+| U-01 | Unit harness: cited V1 cases with tolerances and assessed misses, mass/element V0 for reactive rows, per-row example thermo | U-00, U-R | DONE 2026-10-23 (#205, 8cc9b2b; U-01b reactive balance bases #220, 16432b9) |
 | A-01 | Crude assay characterisation: curve conversions, light ends, pseudo cutting, S0 reference data | P1-07 | merged #195 (2026-10-23): `contracts/assay.py`, `data/assay.py` (`data.py` became the `data/` package); D86→TBP Riazi–Daubert, D2887→TBP API 3A3.1 (Daubert 1994 °F table), D1160 at 10 mmHg via the graphical 3A2.1 procedure (other pressures refuse), Maxwell–Bonnell AET; S0 reference = Bagajewicz & Ji 2001 Part I cut temperatures/gaps only — round 2 needs a yields source (Part II) |
 
 Round 1 (palette R0, one thread per family U-A..U-H) after U-00 and U-R merge; round 2 (S0 crude to R1/R2) after round 1 and P1-11.

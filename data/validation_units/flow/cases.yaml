@@ -1,0 +1,26 @@
+# V1 worked cases — flow family (spec U-01).
+# Sources fixed before the run; tols carry the book's rounding, not a fit.
+#
+# Withdrawn in the review-fix round (PR #217), both documented as V1 gaps in
+# data/unit_models/flow.yaml row notes:
+# - V-relief-valve-api520-ex1: the sizing layer is pinned instead by a unit
+#   test of psv_api520_gas against the API example's printed inputs and
+#   published area; an adapter-level case needs a feed whose thermo
+#   reproduces the printed M = 65, Z = 0.84, k = 1.09 as a single-phase
+#   vapour, and none exists in the installed packages (searched the C4/C5/C6
+#   composition space at the relieving point — M ~ 65 states are liquid or
+#   two-phase; all-vapour tops out near M 61, Z 0.854, k 1.069).
+# - V-ejector-graham-3to1: circular (both expectations restated the inputs)
+#   and the source state did not match the case. No open published ejector
+#   example with a printed outlet state was found.
+
+- id: V-control-valve-emerson-propane
+  unit: control_valve
+  level: R0
+  thermo: coolprop_heos
+  source: "Emerson control-valve sizing example, liquid propane: 800 gpm basis, SG 0.5, dP 25 psi, Fp 0.96, published Cv 117.9 (117.9 x 0.96 = 113.2 is the bare-valve Cv the adapter reports)"
+  params:
+    mu_liquid: 1.0371e-4   # CoolProp liquid propane at 294.261 K, Pa s
+  expected:
+  - {quantity: info.Cv, value: 113.2, tol_rel: 0.005}
+  - {quantity: info.choked, value: 0.0, tol_abs: 0.0}

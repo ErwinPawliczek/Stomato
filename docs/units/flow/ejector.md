@@ -2,7 +2,7 @@
 
 Family: **flow** · P&ID symbol: `EJ`
 
-Rigour ladder: R0 planned, R1 planned
+Rigour ladder: R0 provisional, R1 planned
 
 ## Ports
 
@@ -16,11 +16,11 @@ Rigour ladder: R0 planned, R1 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | entrainment ratio spec |
+| R0 | provisional | `ngdesign.units.flow.ejector:Ejector` | entrainment ratio spec |
 | R1 | planned | — | 1-D momentum (ESDU-style) |
 
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-B 10
 
-> roadmap.
+> R0 momentum balance at a specified entrainment ratio. V1 gap (PR
