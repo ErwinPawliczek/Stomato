@@ -57,6 +57,6 @@
       P: 4.25325e+5
       molar_flow: 0.22278
       composition: {C3: 0.614, nC8: 0.386}
-  params: {outlet_P: 354637.5, vapor_fraction: 0.61}
+  params: {duty_W: null, outlet_P: 354637.5, vapor_fraction: 0.61}
   expected:
   - {quantity: outlet.gas_out.T, value: 355.05, tol_abs: 3.0}
