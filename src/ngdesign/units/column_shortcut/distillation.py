@@ -165,22 +165,26 @@ class ShortcutDistillation:
         k_feed = _feed_k(thermo, feed)
         d = {cid: (f_flows[cid] if k_feed.get(cid, 0.0) > k_feed[hk] else 0.0) for cid in nonkeys}
 
-        # 3. Fenske fixed point on the non-key distribution.
+        # 3. Fenske fixed point on the non-key distribution. K-values for
+        # components that vanish from a product phase carry over from the
+        # previous iteration (seeded from the feed K), so the loop never
+        # loses a component the incipient composition dropped.
         nmin = 0.0
+        k_prev: tuple[dict[str, float], dict[str, float]] | None = None
         for _ in range(200):
             total_d = d_lk + d_hk + sum(d.values())
             total_b = f_total - total_d
-            xd = {
-                cid: (d[cid] if cid in d else (d_lk if cid == lk else d_hk)) / total_d
-                for cid in z_feed
-            }
-            xb = {cid: f_flows[cid] / total_b for cid in z_feed}
-            xb[lk] = b_lk / total_b
-            xb[hk] = b_hk / total_b
+            d_map = {**d, lk: d_lk, hk: d_hk}
+            xd = {cid: d_map[cid] / total_d for cid in z_feed}
+            xb = {cid: (f_flows[cid] - d_map[cid]) / total_b for cid in z_feed}
             _, k_top = (
                 _dew_k(thermo, xd, p_top) if condenser == "partial" else _bubble_k(thermo, xd, p_top)
             )
             _, k_bottom = _bubble_k(thermo, xb, p_bottom)
+            if k_prev is not None:
+                k_top = {**k_prev[0], **k_top}
+                k_bottom = {**k_prev[1], **k_bottom}
+            k_prev = (k_top, k_bottom)
             if k_top.get(lk, 0.0) <= 0.0 or k_bottom.get(lk, 0.0) <= 0.0:
                 raise ValueError("shortcut_distillation: thermo gives non-positive key K-values")
             alpha_lk = math.sqrt((k_top[lk] / k_top[hk]) * (k_bottom[lk] / k_bottom[hk]))
@@ -195,19 +199,18 @@ class ShortcutDistillation:
             if delta <= 1e-10 * f_total:
                 break
 
-        # 4. Underwood, Gilliland, Kirkbride.
+        # 4. Underwood, Gilliland, Kirkbride. Underwood's root is on
+        # heavy-key-relative alphas (alpha_HK = 1), not absolute K-values.
         total_d = d_lk + d_hk + sum(d.values())
         total_b = f_total - total_d
-        xd = {
-            cid: (d[cid] if cid in d else (d_lk if cid == lk else d_hk)) / total_d
-            for cid in z_feed
-        }
-        xb = {cid: f_flows[cid] / total_b for cid in z_feed}
-        xb[lk] = b_lk / total_b
-        xb[hk] = b_hk / total_b
+        d_map = {**d, lk: d_lk, hk: d_hk}
+        xd = {cid: d_map[cid] / total_d for cid in z_feed}
+        xb = {cid: (f_flows[cid] - d_map[cid]) / total_b for cid in z_feed}
         q = 1.0 - feed.vapor_fraction
-        theta = underwood_theta(k_feed, z_feed, q)
-        rmin = underwood_rmin(k_feed, xd, theta)
+        k_hk = k_feed[hk]
+        alphas = {cid: k / k_hk for cid, k in k_feed.items()}
+        theta = underwood_theta(alphas, z_feed, q)
+        rmin = underwood_rmin(alphas, xd, theta)
         if rmin <= 0.0:
             raise ValueError(
                 f"shortcut_distillation: Underwood Rmin is {rmin:.4g}; the key split is not "
