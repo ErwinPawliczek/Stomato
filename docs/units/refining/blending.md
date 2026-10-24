@@ -34,19 +34,8 @@ properties:
 type: object
 ```
 
-## V1 worked cases
-
-| case | level | quantity | expected | measured | tolerance | result |
-|---|---|---|---|---|---|---|
-| `V2106` | R0 | `info.rvp_psi` | 31.4449 | 31.4449 | rel 0.001 | pass |
-| `V2106` | R0 | `info.ron` | 91.0826 | 91.0826 | rel 0.001 | pass |
-| `V2106` | R0 | `info.sulfur_wt_ppm` | 0.8052 | 0.805211 | rel 0.001 | pass |
-| `V2106` | R0 | `duty_W` | 0 | 0 | abs 1e-06 | pass |
-
-- `V2106`: Gary, Handwerk & Kaiser, Petroleum Refining: Technology and Economics, 5th ed., ch. 12 blending indices: RVP^1.25 on a volume basis, sulfur linear on mass, octane linear by volume (the documented R0 simplification). Component values from Jechura, Product Blending & Optimization Considerations (CBEN 409, Colorado School of Mines): nC4 RVP 51.0 psi / RON 95.0; nC5 RVP 15.0 psi / RON 86.0; reformate stand-in (C6+ carrier) RVP 2.8 psi / RON 92.5. Expected values recomputed independently from the component MW/sg of the bank
-
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-H 12
 
-> roadmap; the R0 blend shares the mixer adapter for the linear part, the index work (cloud_point and pour_point plugins exist) is U-H's thread.
+> V1 gap — provisional without a case. The GHK 5th ed. ch. 12 printed RVP blending example could not be re-read from an open copy at re-review time, and the former V2106 pin was index arithmetic on its own input values (with an invented reformate stand-in), so it was withdrawn; the RVP/sulfur/ RON index arithmetic is covered by closed-form tests in tests/units/refining/test_separation.py.

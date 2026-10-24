@@ -212,6 +212,11 @@ def test_vacuum_column_cuts_residue_into_three_products(thermo: Thermo) -> None:
 # -------------------------------------------------------------------- preflash
 
 
+# The preflash solve is thermo-bound: the composed separator's per-phase
+# re-flashes take minutes on the 48-component crude (profiled on issue #213),
+# so lift the suite-wide 120 s per-test timeout here, as in
+# tests/e2e/test_amine_loop.py.
+@pytest.mark.timeout(600)
 def test_preflash_splits_vapour_from_liquid(thermo: Thermo) -> None:
     unit = registry.create("unit", "preflash")
     feeds, params = unit.example_case()
@@ -337,6 +342,7 @@ def test_crude_column_product_shares_recomputed_from_the_slate(thermo: Thermo) -
     assert math.isclose(sum(result.info[f"{p}_vol_pct"] for p in ports), 100.0, rel_tol=1e-9)
 
 
+@pytest.mark.timeout(600)  # thermo-bound solve; see issue #213
 def test_preflash_vapor_fraction_is_the_flash_at_the_published_conditions(thermo: Thermo) -> None:
     """Former V2105: the drum runs the published conditions (Gary et al. p. 66);
     the vapour fraction must equal the thermo package's flash of the same feed

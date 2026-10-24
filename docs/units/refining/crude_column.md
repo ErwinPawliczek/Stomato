@@ -43,20 +43,8 @@ required:
 type: object
 ```
 
-## V1 worked cases
-
-| case | level | quantity | expected | measured | tolerance | result |
-|---|---|---|---|---|---|---|
-| `V2103` | R0 | `info.overhead_vol_pct` | 32.0661 | 32.0661 | rel 0.001 | pass |
-| `V2103` | R0 | `info.kero_out_vol_pct` | 30.7684 | 30.7684 | rel 0.001 | pass |
-| `V2103` | R0 | `info.diesel_out_vol_pct` | 24.2067 | 24.2067 | rel 0.001 | pass |
-| `V2103` | R0 | `info.ago_out_vol_pct` | 3.6697 | 3.66972 | rel 0.001 | pass |
-| `V2103` | R0 | `info.bottoms_vol_pct` | 9.2891 | 9.2891 | rel 0.001 | pass |
-
-- `V2103`: Documented closed form on the published A-01 assay (Bagajewicz & Ji 2001 Table 1-2 data, transcribed in data/assays/bagajewicz_ji_2001_light.yaml): sharp-cut assignment by normal boiling point at the four cut points; each product share recomputed independently from the slate mole fractions, MW and sg. The paper's open copy prints no product yields (s0_reference.yaml gaps)
-
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-H 3
 
-> roadmap; needs pseudo-component preflash (P1-14) and column extensions (plan §2b).
+> V1 gap — provisional without a case. The open Bagajewicz & Ji (2001) copy prints no per-cut product-yield table (transcription gaps recorded in data/validation_units/refining/s0_reference.yaml), so the former V2103 pin (a closed-form recomputation of the adapter's own cut arithmetic) was moved to a closed-form test in tests/units/refining/test_separation.py. Column extensions still planned (P1-11).

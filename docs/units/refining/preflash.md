@@ -34,18 +34,8 @@ required:
 type: object
 ```
 
-## V1 worked cases
-
-| case | level | quantity | expected | measured | tolerance | result |
-|---|---|---|---|---|---|---|
-| `V2105` | R0 | `info.vapor_frac` | 0.44867 | 0.448666 | rel 0.005 | pass |
-| `V2105` | R0 | `outlet.vapor_out.P` | 250000 | 250000 | abs 1e-06 | pass |
-| `V2105` | R0 | `outlet.liquid_out.P` | 250000 | 250000 | abs 1e-06 | pass |
-
-- `V2105`: Flash at the adapter example's published drum conditions, 232 degC / 2.5 bar (Gary et al., Petroleum Refining, p. 66). The open sources print no flashed-vapour yield for this basis, so the vapour fraction is a regression pin computed by the registered PR package at those conditions; the drum pressure on both outlets is the closed-form plumbing check
-
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-H 6
 
-> roadmap.
+> V1 gap — provisional without a case. The drum conditions are published (Gary et al., Petroleum Refining, p. 66), but no open source prints a flashed-vapour yield for that basis, so the former V2105 pin (a regression value computed by the registered PR package) was withdrawn; plumbing and vapour-fraction consistency live as closed-form tests in tests/units/refining/test_separation.py.
