@@ -132,4 +132,7 @@ class FlashDrum:
             "molar_flow": 50 * MMSCFD_TO_MOL_S,
             "composition": dict(INLET_COMPOSITION),
         }
-        return {"inlet": feed}, {"outlet_P": 3.0e6, "duty_W": 5.0e5}
+        # A second, smaller stream of the same gas at a lower pressure
+        # exercises the multi-inlet mix (every inlet port must be fed).
+        feed_2 = {**feed, "P": 5.0e6, "molar_flow": 10 * MMSCFD_TO_MOL_S}
+        return {"inlet": feed, "inlet_2": feed_2}, {"outlet_P": 3.0e6, "duty_W": 5.0e5}
