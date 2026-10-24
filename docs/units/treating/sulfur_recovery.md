@@ -2,7 +2,7 @@
 
 Family: **treating** · P&ID symbol: `SRU`
 
-Rigour ladder: R0 planned, R2 planned
+Rigour ladder: R0 provisional, R2 planned
 
 ## Ports
 
@@ -16,8 +16,48 @@ Rigour ladder: R0 planned, R2 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | blocked at planned — the locked property balance test has no reactive branch yet (measured on issue |
+| R0 | provisional | `ngdesign.units.treating.sulfur_recovery:SulfurRecovery` | condenses S8 only (databank species with usable formula + formation data — recorded choice); hydrocarbons pass through unburned at R0; V1 case on GPSA EDB Sect. 22 Ex. 22-1 printed stage results — the example's printed overall recovery is not accessible in any copy reachable (official GPSA workbook companion ends at the first converter), so it is a documented V1 gap and the level stays provisional |
 | R2 | planned | — | Gibbs per stage |
+
+### R0 parameters
+
+```yaml
+properties:
+  P:
+    Pa abs: null
+    description: process pressure
+    type: number
+  T_condenser:
+    K: null
+    description: sulfur condenser temperature
+    type: number
+  T_thermal:
+    K: null
+    description: thermal-stage (reaction-furnace) temperature
+    type: number
+  catalytic_stages:
+    description: one entry per catalytic stage
+    each with T (K) and exactly one of conversion (fraction) or approach_K (K): null
+    type: array
+  reaction_set:
+    U-01b pattern (a)): null
+    description: flowsheet-owned reaction set (H2S burn + Claus reaction
+    type: object
+  thermal_conversion:
+    description: fraction of the post-burn H2S consumed by the Claus reaction in the
+      thermal stage
+    type: number
+type: object
+```
+
+## V1 worked cases
+
+| case | level | quantity | expected | measured | tolerance | result |
+|---|---|---|---|---|---|---|
+| `V1202-sulfur-recovery-gpsa` | R0 | `info.stage_0_extent_mol_s` | 0.00528 | 0.00501688 | abs 0.0005 | pass |
+
+- `V1202-sulfur-recovery-gpsa`: GPSA Engineering Data Book, Sect. 22, Example 22-1 "Claus Process Calculation" (printed inputs on a 100 LT/D sulfur basis: acid gas 60.65 mol% H2S, 32.17 CO2, 6.20 H2O, 0.98 hydrocarbons as C1 at 110 F, 20.7 psia; stoichiometric air for the one-third H2S burn plus full HC burn at 180 F with 0.0297 humidity; furnace outlet 19.1 psia; first condenser 350 F; first converter at equilibrium). Printed thermal-stage Claus extent x = 135.16 mol/hr of the 194.05 mol/hr H2S surviving the burn (Fig. 22-27 heat-balance intercept; the official GPSA Section22.xlsx workbook companion intercepts x = 135.555 at 2163.3 F). Printed first-converter Claus extent x = 38.0177 mol/hr H2S (workbook Step 5 intercept; converter outlet 581 F read from Fig. 22-27, 582.7 F by the workbook Kp polynomial).
+  - assessed: DOCUMENTED GAP - the example's printed overall recovery is not checked: no copy reachable to this repo reproduces the example's final recovery step. The official GPSA Section22.xlsx workbook companion ends at the first catalytic converter plus an incinerator sheet, and the Kohl & Nielsen, Gas Purification, 5th ed., ch. 8 copies found online expose only front matter. Searched: GPSA posted workbook (gspsa.org), pdfcoffee and Scribd Section 22 reproductions (previews truncate before pp. 22-20+), vdoc.pub Kohl & Nielsen. The case instead checks the PRINTED first-converter extent: 38.0177 mol/hr H2S consumed at equilibrium, on the S8 basis the workbook itself states is within 1% of total overall conversion. Inputs derived from printed values only (never back-solved): thermal_conversion = 135.16/194.05; unit extent = H2S mol/hr / 2 / 3600 (the unit's extent is per mol SO2 consumed). Known adapter difference, documented not hidden: the R0 unit does not combust the 0.98 mol% hydrocarbons, so the 9.4 mol/hr of O2 meant for HC burn passes through unreacted and the tail gas carries CH4 + O2 where the book carries CO2 + H2O (~0.8% effect on total moles). Measured stage_0_extent_mol_s: PLACEHOLDER. Measured sulfur_recovery_fraction: PLACEHOLDER (no printed value; recorded for transparency).
 
 ## References
 

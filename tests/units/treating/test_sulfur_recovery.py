@@ -1,7 +1,8 @@
 """Closed-form tests for the R0 Claus sulfur-recovery adapter (spec U-G).
 
-The row stays planned (the locked property balance test has no reactive
-branch), so these tests import the adapter class directly.
+The row is registered at R0 provisional; the V1 case lives in
+data/validation_units/treating/cases.yaml and these tests import the adapter
+class directly for the closed-form assertions.
 """
 
 from __future__ import annotations

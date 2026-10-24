@@ -69,6 +69,12 @@ DEFAULT_P = 101325.0
 #: Mole-fraction bracket and iteration count for the boiling-line bisection.
 _X_LO, _X_HI, _ITERS = 1e-9, 1.0 - 1e-9, 100
 
+#: The Parrish-Won-Baltatu activity correlation's fitted temperature range, K
+#: (the owner's fit, module docstring). A reboiler temperature outside this
+#: range extrapolates the correlation; ``info["activity_extrapolated"]`` is
+#: 1.0 then and 0.0 inside it.
+_PARRISH_T_MIN, _PARRISH_T_MAX = 300.0, 380.0
+
 #: The component that stays in the liquid (everything else is water or lights).
 _TEG = "TEG"
 _WATER = "H2O"
@@ -222,6 +228,7 @@ class TEGRegen:
             "overhead_mol_s": total_overhead,
             "reboiler_T_K": T_reb,
             "regenerator_P_Pa": P,
+            "activity_extrapolated": 0.0 if _PARRISH_T_MIN <= T_reb <= _PARRISH_T_MAX else 1.0,
         }
         return UnitResult(
             outlets={"lean_out": lean_out, "water_out": water_out},
