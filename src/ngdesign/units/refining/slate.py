@@ -21,6 +21,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import yaml
+
 from ngdesign.contracts.assay import Assay
 from ngdesign.contracts.stream import StreamState
 from ngdesign.data import PseudoDefinition, component_record, register_pseudo

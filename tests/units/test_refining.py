@@ -71,7 +71,11 @@ def test_assay_feeder_returns_the_slate(thermo: Thermo) -> None:
 def test_assay_feeder_refuses_a_foreign_inlet_composition(thermo: Thermo) -> None:
     unit = registry.create("unit", "assay_feeder")
     feeds, params = unit.example_case()
-    feeds["assay_in"]["composition"] = {**_slate(), "C6": 0.001}
+    # Swap one slate component for a foreign one (sum stays 1): keys mismatch.
+    composition = dict(_slate())
+    dropped = composition.pop(next(iter(composition)))
+    composition["N2"] = dropped
+    feeds["assay_in"]["composition"] = composition
     with pytest.raises(RefiningSpecError, match="keys do not match"):
         unit.solve(_inlets(thermo, feeds), params, thermo)
 
@@ -89,8 +93,7 @@ def test_desalter_splits_water_and_salt(thermo: Thermo) -> None:
     wash_in = flash_feed(thermo, feeds["wash_in"])
     salt_in = crude_in.composition["NaCl"] * crude_in.molar_flow
     water_in = (
-        crude_in.composition["H2O"] * crude_in.molar_flow
-        + wash_in.composition["H2O"] * wash_in.molar_flow
+        crude_in.composition["H2O"] * crude_in.molar_flow + wash_in.composition["H2O"] * wash_in.molar_flow
     )
     assert math.isclose(
         water_out.composition["H2O"] * water_out.molar_flow,

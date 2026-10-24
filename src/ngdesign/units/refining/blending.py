@@ -15,10 +15,11 @@ from typing import Any
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.registry import register
-from ngdesign.units.refining._cuts import RefiningSpecError, optional_float, require_float
+from ngdesign.units.refining._cuts import RefiningSpecError, optional_float
 from ngdesign.units.refining.slate import reference_volume
 
 
+@register("unit", "blending")
 class Blender:
     """Pool product streams into one blend stream isothermally."""
 
@@ -59,9 +60,7 @@ class Blender:
         }
         return feeds, {"T": 288.15}
 
-    def solve(
-        self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo
-    ) -> UnitResult:
+    def solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> UnitResult:
         """Pool all inlets into one stream, flashed isothermally at (T, P)."""
         if not inlets:
             raise RefiningSpecError("blend_in_*: at least one inlet stream is required")
@@ -88,13 +87,7 @@ class Blender:
         info: dict[str, float] = {}
         for port, stream in inlets.items():
             stream_vol = reference_volume(stream)
-            info[f"{port}_vol_pct"] = (
-                100.0 * stream_vol / blend_vol if blend_vol else 0.0
-            )
+            info[f"{port}_vol_pct"] = 100.0 * stream_vol / blend_vol if blend_vol else 0.0
         info["volume_m3_s"] = blend_vol
-        duty = blend.enthalpy * blend.molar_flow - sum(
-            s.enthalpy * s.molar_flow for s in inlets.values()
-        )
-        return UnitResult(
-            outlets={"blend_out": blend}, duty_W=duty, power_W=0.0, info=info
-        )
+        duty = blend.enthalpy * blend.molar_flow - sum(s.enthalpy * s.molar_flow for s in inlets.values())
+        return UnitResult(outlets={"blend_out": blend}, duty_W=duty, power_W=0.0, info=info)

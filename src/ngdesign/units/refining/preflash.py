@@ -20,6 +20,7 @@ from ngdesign.units.refining._cuts import RefiningSpecError, optional_float, req
 from ngdesign.units.refining.slate import reference_volume
 
 
+@register("unit", "preflash")
 class Preflash:
     """Flash the crude feed into vapour and liquid ahead of the crude column."""
 
@@ -44,9 +45,7 @@ class Preflash:
         }
         return feeds, {"T": 505.37, "P": 2.5e5}
 
-    def solve(
-        self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo
-    ) -> UnitResult:
+    def solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> UnitResult:
         """Flash the feed at (T, P) and route the vapour and liquid phases out."""
         feed = inlets.get("crude_in")
         if feed is None:
@@ -57,9 +56,7 @@ class Preflash:
             raise RefiningSpecError("P: must be positive")
 
         flashed = thermo.flash_pt(feed.composition, t_out, p_out, feed.molar_flow)
-        vapour_phase = next(
-            (p for p in flashed.phases if p.kind is PhaseKind.VAPOR), None
-        )
+        vapour_phase = next((p for p in flashed.phases if p.kind is PhaseKind.VAPOR), None)
         liquid_phase = _combined_liquid(flashed.phases)
         vapour = _reflashed_or_zero(thermo, feed, t_out, p_out, vapour_phase)
         liquid = _reflashed_or_zero(thermo, feed, t_out, p_out, liquid_phase)
@@ -71,7 +68,7 @@ class Preflash:
             "crude_vol_m3_s": reference_volume(liquid),
         }
         return UnitResult(
-            outlets={"light_ends_out": vapour, "crude_out": liquid},
+            outlets={"vapor_out": vapour, "liquid_out": liquid},
             duty_W=h_out - h_in,
             power_W=0.0,
             info=info,
@@ -100,9 +97,5 @@ def _reflashed_or_zero(
 ) -> StreamState:
     """Re-flash one phase at (T, P); an absent phase gives a zero-flow outlet."""
     if phase is None or phase.mole_fraction <= 0.0:
-        return feed.model_copy(
-            update={"T": t_out, "P": p_out, "molar_flow": 0.0}
-        )
-    return thermo.flash_pt(
-        phase.composition, t_out, p_out, phase.mole_fraction * feed.molar_flow
-    )
+        return feed.model_copy(update={"T": t_out, "P": p_out, "molar_flow": 0.0})
+    return thermo.flash_pt(phase.composition, t_out, p_out, phase.mole_fraction * feed.molar_flow)

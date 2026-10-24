@@ -18,7 +18,6 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.data import component_record
 from ngdesign.registry import register
 from ngdesign.units.refining._cuts import (
     RefiningSpecError,
@@ -60,20 +59,16 @@ class CrudeColumn:
             "overlap_K": 0.0,
         }
 
-    def solve(
-        self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo
-    ) -> UnitResult:
+    def solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> UnitResult:
         """Assign pseudos to products by NBP and flash each at its draw conditions."""
         feed = inlets.get("crude_in")
         if feed is None:
             raise RefiningSpecError("crude_in: the crude inlet stream is required")
         raw_cuts = params.get("cut_points_K")
         if not isinstance(raw_cuts, list) or len(raw_cuts) != len(_PRODUCTS) - 1:
-            raise RefiningSpecError(
-                f"cut_points_K: needs exactly {len(_PRODUCTS) - 1} ascending values"
-            )
+            raise RefiningSpecError(f"cut_points_K: needs exactly {len(_PRODUCTS) - 1} ascending values")
         cut_points = [_cut_point(raw_cuts[i], i) for i in range(len(raw_cuts))]
-        if any(a >= b for a, b in zip(cut_points, cut_points[1:])):
+        if any(a >= b for a, b in zip(cut_points, cut_points[1:], strict=False)):
             raise RefiningSpecError("cut_points_K: values must be strictly ascending")
         overlap_k = optional_float(params, "overlap_K", 0.0)
         draws = params.get("draws")
@@ -93,9 +88,7 @@ class CrudeColumn:
         feed_vol = reference_volume(feed)
         for port, state in outlets.items():
             info[f"{port}_vol_m3_s"] = reference_volume(state)
-            info[f"{port}_vol_pct"] = (
-                100.0 * info[f"{port}_vol_m3_s"] / feed_vol if feed_vol else 0.0
-            )
+            info[f"{port}_vol_pct"] = 100.0 * info[f"{port}_vol_m3_s"] / feed_vol if feed_vol else 0.0
         return UnitResult(outlets=outlets, duty_W=h_out - h_in, power_W=0.0, info=info)
 
 
@@ -116,8 +109,6 @@ def _flash_product(
     """Flash one product's component flows at (T, P); zero flow mirrors the feed."""
     total = sum(flows.values())
     if total <= 0.0:
-        return feed.model_copy(
-            update={"T": t_draw, "P": p_draw, "molar_flow": 0.0, "phases": []}
-        )
+        return feed.model_copy(update={"T": t_draw, "P": p_draw, "molar_flow": 0.0, "phases": []})
     composition = {cid: n / total for cid, n in flows.items() if n > 0.0}
     return thermo.flash_pt(composition, t_draw, p_draw, total)

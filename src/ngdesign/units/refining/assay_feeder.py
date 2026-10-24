@@ -20,7 +20,6 @@ from ngdesign.data import component_record
 from ngdesign.registry import register
 from ngdesign.units.refining._cuts import RefiningSpecError, require_float
 from ngdesign.units.refining.slate import (
-    WATER_60F_KG_M3,
     api_gravity,
     assay_slate,
     component_volume,
@@ -37,6 +36,7 @@ _COMPOSITION_TOL = 1e-9
 _EXAMPLE_ASSAY = "bagajewicz_ji_2001_light"
 
 
+@register("unit", "assay_feeder")
 class AssayFeeder:
     """Convert a declared assay slate into a stream (one inlet, one outlet)."""
 
@@ -58,9 +58,7 @@ class AssayFeeder:
         }
         return feeds, {"assay_id": _EXAMPLE_ASSAY, "T": 288.15, "P": 101325.0}
 
-    def solve(
-        self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo
-    ) -> UnitResult:
+    def solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> UnitResult:
         """Flash the slate at ``(T, P)``; duty is the enthalpy change of the slate."""
         assay_id = params.get("assay_id")
         if not isinstance(assay_id, str):
@@ -72,14 +70,11 @@ class AssayFeeder:
         if feed is None:
             raise RefiningSpecError("assay_in: the assay inlet stream is required")
         if set(feed.composition) != set(mole):
-            raise RefiningSpecError(
-                f"assay_in: composition keys do not match the {assay_id!r} slate"
-            )
+            raise RefiningSpecError(f"assay_in: composition keys do not match the {assay_id!r} slate")
         for cid, x in mole.items():
             if abs(feed.composition.get(cid, 0.0) - x) > _COMPOSITION_TOL:
                 raise RefiningSpecError(
-                    f"assay_in: mole fraction of {cid} does not match the "
-                    f"{assay_id!r} slate"
+                    f"assay_in: mole fraction of {cid} does not match the {assay_id!r} slate"
                 )
         outlet = thermo.flash_pt(mole, t_out, p_out, feed.molar_flow)
         return UnitResult(
@@ -92,9 +87,7 @@ class AssayFeeder:
     def _info(self, outlet: StreamState, mole: dict[str, float]) -> dict[str, float]:
         """Reference volume flow, API gravity and light-ends split of the slate."""
         total_vol = reference_volume(outlet)
-        light_ends_vol = sum(
-            component_volume(outlet, cid) for cid in mole if cid in _LIGHT_ENDS
-        )
+        light_ends_vol = sum(component_volume(outlet, cid) for cid in mole if cid in _LIGHT_ENDS)
         # Mixture sg on the additive reference-volume basis: the weight-fraction
         # harmonic mean of the component sg values.
         weight = 0.0

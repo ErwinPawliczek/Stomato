@@ -30,11 +30,9 @@ def cut_fractions(nbp: float, cut_points: list[float], overlap_k: float) -> list
     if overlap_k < 0.0:
         raise RefiningSpecError(f"overlap_K: must be >= 0, got {overlap_k}")
     if overlap_k > 0.0:
-        for lo, hi in zip(cut_points, cut_points[1:]):
+        for lo, hi in zip(cut_points, cut_points[1:], strict=False):
             if hi - lo <= 2.0 * overlap_k:
-                raise RefiningSpecError(
-                    f"overlap_K: bands around cut points {lo} K and {hi} K overlap"
-                )
+                raise RefiningSpecError(f"overlap_K: bands around cut points {lo} K and {hi} K overlap")
         # Disjoint bands: at most one boundary can hold this nbp.
         for i, cp in enumerate(cut_points):
             if abs(nbp - cp) < overlap_k:
@@ -114,9 +112,7 @@ def flash_product(
     """Flash one product's component flows at (T, P); zero flow mirrors ``reference``."""
     total = sum(flows.values())
     if total <= 0.0:
-        return reference.model_copy(
-            update={"T": t_draw, "P": p_draw, "molar_flow": 0.0, "phases": []}
-        )
+        return reference.model_copy(update={"T": t_draw, "P": p_draw, "molar_flow": 0.0, "phases": []})
     composition = {cid: n / total for cid, n in flows.items() if n > 0.0}
     return thermo.flash_pt(composition, t_draw, p_draw, total)
 
@@ -136,9 +132,7 @@ def draw_conditions(
     return entry.get("T", feed_t), entry.get("P", feed_p)
 
 
-def validate_draws(
-    draws: dict[str, dict[str, float]] | None, outlet_ports: tuple[str, ...]
-) -> None:
+def validate_draws(draws: dict[str, dict[str, float]] | None, outlet_ports: tuple[str, ...]) -> None:
     """Every ``draws`` key must be a declared outlet port."""
     if draws is None:
         return

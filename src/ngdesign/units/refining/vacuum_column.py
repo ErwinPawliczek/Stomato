@@ -15,7 +15,6 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.registry import register
 from ngdesign.units.refining._cuts import (
     LIGHT_ENDS_OVERHEAD,
     RefiningSpecError,
@@ -50,8 +49,7 @@ class VacuumColumn:
         heavy = {
             cid: x
             for cid, x in mole.items()
-            if cid not in LIGHT_ENDS_OVERHEAD
-            and component_record(cid)["Tb"] > 668.7
+            if cid not in LIGHT_ENDS_OVERHEAD and component_record(cid)["Tb"] > 668.7
         }
         total = sum(heavy.values())
         composition = {cid: x / total for cid, x in heavy.items()}
@@ -71,20 +69,16 @@ class VacuumColumn:
             },
         }
 
-    def solve(
-        self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo
-    ) -> UnitResult:
+    def solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> UnitResult:
         """Assign residue pseudos to vacuum products by NBP and flash each draw."""
         feed = inlets.get("residue_in")
         if feed is None:
             raise RefiningSpecError("residue_in: the residue inlet stream is required")
         raw_cuts = params.get("cut_points_K")
         if not isinstance(raw_cuts, list) or len(raw_cuts) != len(_PRODUCTS) - 1:
-            raise RefiningSpecError(
-                f"cut_points_K: needs exactly {len(_PRODUCTS) - 1} ascending values"
-            )
-        cut_points = [_cut_point(raw_cuts, i) for i in range(len(raw_cuts))]
-        if any(a >= b for a, b in zip(cut_points, cut_points[1:])):
+            raise RefiningSpecError(f"cut_points_K: needs exactly {len(_PRODUCTS) - 1} ascending values")
+        cut_points = [_cut_point(raw_cuts[i], i) for i in range(len(raw_cuts))]
+        if any(a >= b for a, b in zip(cut_points, cut_points[1:], strict=False)):
             raise RefiningSpecError("cut_points_K: values must be strictly ascending")
         overlap_k = optional_float(params, "overlap_K", 0.0)
         draws = params.get("draws")
@@ -104,9 +98,7 @@ class VacuumColumn:
         feed_vol = reference_volume(feed)
         for port, state in outlets.items():
             info[f"{port}_vol_m3_s"] = reference_volume(state)
-            info[f"{port}_vol_pct"] = (
-                100.0 * info[f"{port}_vol_m3_s"] / feed_vol if feed_vol else 0.0
-            )
+            info[f"{port}_vol_pct"] = 100.0 * info[f"{port}_vol_m3_s"] / feed_vol if feed_vol else 0.0
         return UnitResult(outlets=outlets, duty_W=h_out - h_in, power_W=0.0, info=info)
 
 

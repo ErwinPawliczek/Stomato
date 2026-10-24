@@ -51,8 +51,12 @@ class Desalter:
         """The light crude plus 5 vol% wash water at 130 degC (Gary et al. p. 76)."""
         register_slate(_EXAMPLE_ASSAY)
         _, mole = assay_slate(_EXAMPLE_ASSAY)
-        # Dose the crude with 1e-5 mol fraction NaCl so salt tracking is live.
-        crude_mole: dict[str, float] = {cid: x * (1.0 - 1e-5) for cid, x in mole.items()}
+        # Dose the crude with 1 vol% BS&W water (Wauquier: oilfield crude reaches
+        # the refinery at 1-2 vol%) and 1e-5 mol fraction NaCl so both tracked
+        # splits are live.
+        bsw = 0.01
+        crude_mole: dict[str, float] = {cid: x * (1.0 - bsw - 1e-5) for cid, x in mole.items()}
+        crude_mole[WATER_ID] = bsw
         crude_mole[SALT_ID] = 1e-5
         # Wash water at 5 reference vol% of the crude: n = V * rho_water / MW.
         crude_volume = _mole_volume(crude_mole) * 1000.0  # m3/s at 1000 mol/s
@@ -78,9 +82,7 @@ class Desalter:
             "salt_removal": _EXAMPLE_SALT_REMOVAL,
         }
 
-    def solve(
-        self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo
-    ) -> UnitResult:
+    def solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> UnitResult:
         """Split water and salt by component, then flash both outlets isothermally."""
         crude = inlets.get("crude_in")
         wash = inlets.get("wash_in")
@@ -123,17 +125,16 @@ class Desalter:
         crude_out_flow = sum(crude_flows.values())
         water_out_flow = sum(water_flows.values())
         crude_out = _flash_or_zero(thermo, crude_flows, crude_out_flow, t_out, p_out, crude)
-        water_out = _flash_or_zero(
-            thermo, water_flows, water_out_flow, t_out, p_out, wash
+        water_out = _flash_or_zero(thermo, water_flows, water_out_flow, t_out, p_out, wash)
+        duty = (
+            sum(s.enthalpy * s.molar_flow for s in (crude_out, water_out))
+            - crude.enthalpy * crude.molar_flow
+            - wash.enthalpy * wash.molar_flow
         )
-        duty = sum(
-            s.enthalpy * s.molar_flow for s in (crude_out, water_out)
-        ) - crude.enthalpy * crude.molar_flow - wash.enthalpy * wash.molar_flow
         salt_tracked = 1.0 if salt_in > 0.0 else 0.0
         removed = salt_removal if salt_tracked else 0.0
         info = {
-            "bsw_vol_pct": 100.0 * reference_volume(crude_out)
-            and 100.0 * _water_volume_frac(crude_out),
+            "bsw_vol_pct": 100.0 * reference_volume(crude_out) and 100.0 * _water_volume_frac(crude_out),
             "salt_removed_frac": removed,
             "salt_tracked": salt_tracked,
         }
@@ -155,9 +156,7 @@ def _flash_or_zero(
 ) -> StreamState:
     """Flash ``flows`` at (T, P); a zero-flow outlet mirrors the reference composition."""
     if total <= 0.0:
-        return reference.model_copy(
-            update={"T": t_out, "P": p_out, "molar_flow": 0.0, "phases": []}
-        )
+        return reference.model_copy(update={"T": t_out, "P": p_out, "molar_flow": 0.0, "phases": []})
     composition = {cid: n / total for cid, n in flows.items() if n > 0.0}
     return thermo.flash_pt(composition, t_out, p_out, total)
 
