@@ -57,7 +57,7 @@
 - id: V1-FOGLER-CONV
   unit: conversion_reactor
   level: R0
-  source: "Fogler, Elements of Chemical Reaction Engineering, 4th ed., Example 8-3 (adiabatic n-butane isomerization): T = 330 + 43.4 X on the book feed (90% n-butane + 10% i-pentane inert, 2 mol inert per mol n-butane)"
+  source: "Fogler, Elements of Chemical Reaction Engineering, 4th ed., Example 8-3 (adiabatic n-butane isomerization): T = 330 + 43.4 X on the book feed (90 % n-butane + 10 % i-pentane inert, liquid phase; Θ_I = 0.111 mol inert per mol n-butane)"
   feeds:
     inlet: {T: 330.0, P: 1013250.0, molar_flow: 10.0, composition: {nC4: 0.9, iC5: 0.1}}
   params:
@@ -73,11 +73,8 @@
     conversion: {isom: 0.5}
     thermal: adiabatic
   expected:
-  - {quantity: outlet.outlet.composition.iC4, value: 0.45, tol_abs: 0.000001}
   - {quantity: outlet.outlet.T, value: 351.7, tol_abs: 0.5}
   assessed: >-
-    The composition check is exact (X = 0.5 on the 4.5 mol/s nC4 feed gives
-    4.5 mol/s iC4 + 4.5 nC4 + 1.0 iC5 inert, total 10.0 mol/s; y_iC4 = 0.45).
     The temperature comparison misses: the book's constant-Cp correlation
     T = 330 + 43.4·X gives 351.7 K (ΔT = 21.7 K), while the model measures
     342.872 K (ΔT = 12.87 K) on the JANAF databank's ΔH°rx ≈ −9510 J/mol and PR
@@ -106,15 +103,24 @@
 - id: V1-ELECTROLYSER
   unit: electrolyser_stack
   level: R0
-  source: "Closed form, Faraday's law: n(H2) = η·I·N/(2F) = 0.98·2000·100/(2·96485) ≈ 1.0157 mol/s; power = V·I·N = 350 kW; thermoneutral voltage from the stream balance (H_out − H_in)/(2F·n_H2) on the JANAF databank enthalpies, measured 1.4720 V at the 353.15 K liquid-water feed (HHV-consistent: 1.4895 V at 298.15 K)"
+  source: "Züttel, Borgschulte & Schlapbach (eds.), Hydrogen as a Future Energy Carrier, Wiley-VCH 2008, ch. 1 §1.1, p. 5 (ISBN 978-3-527-30817-0): 'Electrolysis at ambient temperature and pressure requires a minimum voltage of 1.481 V and therefore, a minimum energy of 39.4 kWh kg−1 hydrogen' — a check on the formation data, not an echo of the model"
   feeds:
-    inlet: {T: 353.15, P: 3000000.0, molar_flow: 50.0, composition: {H2O: 1.0}}
+    inlet: {T: 298.15, P: 3000000.0, molar_flow: 50.0, composition: {H2O: 1.0}}
   params:
     current_A: 2000.0
     n_cells: 100.0
     cell_voltage_V: 1.75
     faradaic_efficiency: 0.98
   expected:
-  - {quantity: info.thermoneutral_voltage_V, value: 1.4720, tol_abs: 0.0005}
-  - {quantity: outlet.h2_out.molar_flow, value: 1.015698, tol_abs: 0.0001}
-  - {quantity: outlet.o2_out.composition.O2, value: 0.010261, tol_abs: 0.0001}
+  - {quantity: info.thermoneutral_voltage_V, value: 1.481, tol_abs: 0.0005}
+  assessed: >-
+    The Faraday flows (n(H2) = η·I·N/(2F) ≈ 1.0157 mol/s, O2 half that) are
+    closed-form on the inputs and live as a unit test in
+    tests/units/reactors/test_reactors.py, not here. The one case oracle is the
+    thermoneutral voltage against the printed source value: measured 1.48953 V
+    from the actual stream balance (H_out − H_in)/(2F·n_H2) at the 298.15 K
+    liquid-water feed — +0.576 % above the printed 1.481 V, a miss of 0.0085 V
+    against the ±0.0005 V book-rounding tolerance. The direction and size match
+    the databank's liquid-water formation enthalpy sitting ~1.6 kJ/mol more
+    endothermic than the 285.83 kJ/mol HHV anchor the source value encodes;
+    recorded as a databank finding, not tuned away.

@@ -9,10 +9,11 @@ mol hydrogen), the hydrogen leaves pure on ``h2_out``, and everything else —
 including the coproduct oxygen — leaves on ``o2_out``. power = V·I·N is
 electrical work; the isothermal duty carries the balance
 (negative = heat removal). ``info`` reports the thermoneutral voltage computed
-from the actual stream balance, (H_out − H_in)/(2F·n_H2): on a liquid-water
-feed that is the HHV value (1.481 V at 298.15 K, less at warmer feeds); a
-vapour feed gives the LHV value. It is a check on the formation data, not an
-echo of an input.
+computed
+from the actual stream balance, (H_out − H_in)/(2F·n_H2): on the 298.15 K
+liquid-water feed it measures 1.4895 V against the printed 1.481 V (Züttel,
+Borgschulte & Schlapbach 2008, p. 5); a vapour feed gives the LHV value. It is
+a check on the formation data, not an echo of an input.
 
 Refusals: feeds already containing H2 or O2 (products present at R0 keeps the
 split unambiguous), feeds without enough water, efficiency outside (0, 1],
@@ -96,13 +97,15 @@ class ElectrolyserStack:
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-        """100-cell alkaline-style stack: 2000 A at 1.75 V, η = 0.98, steam feed.
+        """100-cell alkaline-style stack: 2000 A at 1.75 V, η = 0.98, 298.15 K liquid-water feed.
 
         Closed form: n(H2) = 0.98·2000·100/(2F) ≈ 1.0157 mol/s, n(O2) ≈
-        0.5078 mol/s, power 350 kW.
+        0.5078 mol/s, power 350 kW. The thermoneutral voltage on this feed
+        measures 1.4895 V against the printed 1.481 V (Züttel et al. 2008,
+        p. 5) — the databank miss is recorded in the V1 case's assessed note.
         """
         feed = {
-            "T": 353.15,
+            "T": 298.15,
             "P": 3.0e6,
             "molar_flow": 50.0,
             "composition": {"H2O": 1.0},

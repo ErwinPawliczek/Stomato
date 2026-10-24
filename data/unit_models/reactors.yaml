@@ -310,5 +310,8 @@
   pid_symbol: FC
   references:
   - docs/unit-catalogue-plan.md §2 U-F 9
-  notes: R0 implemented (U-F). Thermoneutral voltage reported on the databank's
-    water-vapour basis (≈ 1.253 V); liquid-water HHV (1.481 V) deliberately not used.
+  notes: R0 implemented (U-F). Thermoneutral voltage is computed from the actual
+    stream balance, (H_out − H_in)/(2F·n_H2) — on the 298.15 K liquid-water feed it
+    measures 1.4895 V, +0.58 % against the printed 1.481 V (Züttel, Borgschulte &
+    Schlapbach 2008, p. 5) — the databank miss is recorded, not tuned away, in the
+    V1-ELECTROLYSER assessed note.
