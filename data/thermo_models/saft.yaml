@@ -1,10 +1,12 @@
 # SAFT / CPA / multi-fluid Helmholtz family (spec T-07). Every row loads without teqp
 # (lazy import); the teqp-backed builds require `uv sync --extra saft` (teqp>=0.22).
-# Registered but non-building rows (pc_saft_assoc, pc_saft_polar, soft_saft, cpa_pr)
-# refuse in _validate_kind with the named reason, so a feed selecting them fails loudly
-# instead of silently dropping the physics they stand for. pc_saft and cpa_srk were
+# Registered but non-building row (soft_saft)
+# refuses in _validate_kind with the named reason, so a feed selecting it fails loudly
+# instead of silently dropping the physics it stands for. pc_saft and cpa_srk were
 # promoted to provisional in T-15c (teqp 0.23.2 confirmed CI-runnable on cp312 wheels);
-# every other row stays `experimental` until its physics lands. Parameters live in
+# cpa_pr joined them in T-17 (hand-rolled PR physical term + the shared saft_assoc
+# association solver, Sorensen 2018 parameters); every other row stays `experimental`
+# until its physics lands. Parameters live in
 # data/thermo_params/saft/pure.yaml.
 #
 # The reference cases listed under `validation:` currently run against the pc_saft /
@@ -151,90 +153,279 @@
       limitation (measured 2026-10-22, PR table)"
 
 - id: pc_saft_assoc
-  name: PC-SAFT with association (registered refusal)
+  name: PC-SAFT with association (hand-rolled kernel)
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:PCSaftAssocThermo
   params:
-    source: none — the row refuses to build
-    provenance: teqp 0.23.2's PC-SAFT factory schema has no association-parameter fields,
-      and no verified citable explicit PC-SAFT association parameter set is loaded in
-      data/thermo_params/saft/pure.yaml; water/methanol association chemistry therefore
-      stays outside the family instead of being silently dropped
+    source: hand-rolled PC-SAFT + Wertheim association kernel, G&S 2002 parameters
+      (data/thermo_params/saft/pure.yaml)
+    provenance: physical term (hard chain + dispersion) reimplemented from Gross &
+      Sadowski (2001) Ind. Eng. Chem. Res. 40, 1244-1257 with closed-form density
+      and composition derivatives, pinned to teqp's PC-SAFT engine by a check-value
+      test (alpha agreement 4.4e-15 relative over 300-500 K, 100-15000 mol/m3);
+      association term (2B scheme for every fluid, G&S 2002 eqs. 2-3 combining
+      rules) from Gross & Sadowski (2002) Ind. Eng. Chem. Res. 41, 5510-5515
+      Table 1, retrieved and typed this session (2026-10-23); site fractions by
+      the shared successive-substitution solver (Michelsen & Hendriks 2001);
+      k_ij = 0 — the paper introduces no binary interaction parameter for
+      associating-associating mixtures ("simple combining rules were used")
   applicability:
     component_classes:
-    - hydrocarbon
     - water
     - alcohol
     polar: true
     electrolyte: false
-    T_K: [95.0, 600.0]
+    T_K: [250.0, 600.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  - pure-H2O-323.5K-ps
+  - pure-H2O-420.0K-ps
+  - pure-H2O-520.0K-ps
+  - pure-H2O-600.0K-ps
+  - pure-H2O-614.7K-ps
+  - pure-MeOH-256.3K-ps
+  - pure-MeOH-307.6K-ps
+  - pure-MeOH-358.8K-ps
+  - pure-MeOH-410.1K-ps
+  - pure-MeOH-461.3K-ps
+  - pure-EtOH-300.0K-ps
+  - pure-EtOH-351.45K-ps
+  - pure-EtOH-420.0K-ps
+  - pure-EtOH-480.0K-ps
+  - meohh2o-322.91K-15.932kPa-ps
+  - meohh2o-322.91K-26.131kPa-ps
+  - meohh2o-322.91K-31.544kPa-ps
+  - meohh2o-322.91K-40.850kPa-ps
+  - meohh2o-322.91K-46.450kPa-ps
+  - meohh2o-322.91K-52.142kPa-ps
   references:
-  - Gross & Sadowski (2001), Ind. Eng. Chem. Res. 40, 1244-1257 (association term
-    background)
-  l0: {}
-  l0_excluded:
-    pure_psat_limit: row refuses to build — teqp's PC-SAFT has no association term
-      (NotImplementedError in _build_kernel)
-    phase_identification: row refuses to build — teqp's PC-SAFT has no association term
-      (NotImplementedError in _build_kernel)
-    round_trip: row refuses to build — teqp's PC-SAFT has no association term
-      (NotImplementedError in _build_kernel)
-    dhdT_cp: row refuses to build — teqp's PC-SAFT has no association term
-      (NotImplementedError in _build_kernel)
-    gibbs_duhem: row refuses to build — teqp's PC-SAFT has no association term
-      (NotImplementedError in _build_kernel)
-    single_liquid_limit: row refuses to build — teqp's PC-SAFT has no association term
-      (NotImplementedError in _build_kernel)
-    determinism: row refuses to build — teqp's PC-SAFT has no association term
-      (NotImplementedError in _build_kernel)
-  l0_note: ''
+  - Gross & Sadowski, "Application of the Perturbed-Chain SAFT Equation of State
+    to Associating Systems", Ind. Eng. Chem. Res. 41 (2002) 5510-5515
+  - 'Gross & Sadowski, "Perturbed-Chain SAFT: An Equation of State Based on a
+    Perturbation Theory for Chain Molecules", Ind. Eng. Chem. Res. 40 (2001)
+    1244-1257'
+  - Michelsen & Hendriks, "Physical properties from association models", Fluid
+    Phase Equilib. 180 (2001) 165-174
+  l0:
+    pure_psat_limit:
+      points:
+      - - H2O
+        - 373.15
+      - - H2O
+        - 423.15
+      - - MeOH
+        - 337.7
+      - - EtOH
+        - 351.45
+    phase_identification:
+      points:
+      - - H2O
+        - 373.15
+      - - MeOH
+        - 320.0
+    round_trip:
+      z:
+        H2O: 1.0
+      states:
+      - - 350.0
+        - 3.0e+5
+    dhdT_cp:
+      state: [400.0, 1.0e+5]
+      phase: vapor
+      z:
+        H2O: 1.0
+    gibbs_duhem:
+      steps: 30
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        phase: vapor
+        T: 400.0
+        P: 1.0e+5
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        phase: aqueous
+        T: 350.0
+        P: 3.0e+5
+    single_liquid_limit:
+      state: [373.15, 3.0e+5]
+      z:
+        H2O: 1.0
+    determinism:
+      state: [400.0, 1.0e+5]
+      z:
+        MeOH: 0.4
+        H2O: 0.6
+  l0_excluded: {}
+  l0_note: >-
+    T-17 step B promoted the row from refusal to provisional on 2026-10-23: teqp's
+    PC-SAFT factory carries no association-parameter fields, so the row runs the
+    bridge's hand-rolled kernel — teqp-pinned PC-SAFT physical term plus the shared
+    saft_assoc association solver with the G&S (2002) Table 1 two-site parameters
+    and k_ij = 0 per the paper's own combining rule for associating-associating
+    mixtures.
+
+  assessed:
+    pure-H2O-323.5K-ps: "rho_L -8.1 % (907.353 vs 987.838); Cp -22.8 % (58.134 vs
+      75.334) — the G&S (2002) Table 1 water set underpredicts saturated-liquid
+      density away from its fitting window and the derivative-based Cp carries no
+      explicit residual-Cp fit, the same limitation the pc_saft row assessed
+      (parameters verified T-17; CoolProp Water reference) (measured 2026-10-23,
+      PR table)"
+    pure-H2O-420.0K-ps: "Cp -12.3 % (67.883 vs 77.447) — same no-residual-Cp
+      limitation (measured 2026-10-23, PR table)"
+    pure-H2O-520.0K-ps: "rho_V -5.6 % (17.833 vs 18.900); Cp -7.8 % (80.383 vs
+      87.149) — same no-residual-Cp limitation; vapour density starts to drift on
+      the approach to the critical point (measured 2026-10-23, PR table)"
+    pure-H2O-600.0K-ps: "rho_V -19.5 % (58.663 vs 72.842); Cp -16.6 % (104.520 vs
+      125.264) — same limitations, diverging as T approaches Tc (647.1 K) where the
+      chain EOS is least reliable (measured 2026-10-23, PR table)"
+    pure-H2O-614.7K-ps: "rho_V -24.6 % (72.027 vs 95.588); rho_L +8.9 % (659.255 vs
+      605.554); Cp -25.0 % (113.866 vs 151.747) — near-critical water is the worst
+      window of the G&S (2002) parameter set (paper reports its largest AADs there);
+      L0 checks (dH/dT vs Cp, Gibbs-Duhem, round trip) all pass, so the misses are
+      parametric, not a kernel inconsistency (measured 2026-10-23, PR table)"
+    pure-MeOH-256.3K-ps: "Cp -18.2 % (61.120 vs 74.762) — same no-residual-Cp
+      limitation (measured 2026-10-23, PR table)"
+    pure-MeOH-307.6K-ps: "bubble_P/dew_P -3.6 % (26292.6 vs 27285.7); rho_V +6.4 %
+      (0.3748 vs 0.3523); Cp -15.7 % (70.111 vs 83.169) — Psat low at the cold end
+      of the G&S (2002) 2B range plus the no-residual-Cp limitation (measured
+      2026-10-23, PR table)"
+    pure-MeOH-358.8K-ps: "rho_V +9.4 % (2.8066 vs 2.5650); Cp -13.7 % (83.564 vs
+      96.783) — same limitations (measured 2026-10-23, PR table)"
+    pure-MeOH-410.1K-ps: "rho_V +8.4 % (12.387 vs 11.431); Cp -11.7 % (102.747 vs
+      116.399) — same limitations (measured 2026-10-23, PR table)"
+    pure-MeOH-461.3K-ps: "Cp -9.9 % (137.195 vs 152.324) — same no-residual-Cp
+      limitation (measured 2026-10-23, PR table)"
+    pure-EtOH-420.0K-ps: "Cp -6.2 % (163.834 vs 174.588) — same no-residual-Cp
+      limitation (measured 2026-10-23, PR table)"
+    pure-EtOH-480.0K-ps: "rho_V -3.9 % (55.655 vs 57.899) — vapour density drift on
+      the warm approach to the critical point (measured 2026-10-23, PR table)"
+    meohh2o-322.91K-15.932kPa-ps: "bubble_P +54.5 % (24612.8 vs 15932); vapor_comp
+      +0.242 abs (0.5165 vs 0.2741) — k_ij = 0 (the G&S 2002 paper introduces no
+      binary interaction parameter for associating-associating mixtures and its own
+      MeOH/H2O figures show the combining rules miss this isotherm badly; tuning
+      against the validation points is forbidden) overstrengthens cross-association
+      at the methanol-lean end (Bayer 1927 isotherm; measured 2026-10-23, PR table)"
+    meohh2o-322.91K-26.131kPa-ps: "bubble_P +45.8 % (38106.9 vs 26131); vapor_comp
+      +0.083 abs (0.7120 vs 0.6294) — same k_ij = 0 limitation (measured
+      2026-10-23, PR table)"
+    meohh2o-322.91K-31.544kPa-ps: "bubble_P +28.9 % (40652.8 vs 31544) — same
+      k_ij = 0 limitation (measured 2026-10-23, PR table)"
+    meohh2o-322.91K-40.850kPa-ps: "bubble_P +12.4 % (45931.2 vs 40850); vapor_comp
+      -0.054 abs (0.8118 vs 0.8654) — same k_ij = 0 limitation (measured
+      2026-10-23, PR table)"
+    meohh2o-322.91K-46.450kPa-ps: "bubble_P +6.4 % (49414.6 vs 46450); vapor_comp
+      -0.058 abs (0.8829 vs 0.9406) — same k_ij = 0 limitation (measured
+      2026-10-23, PR table)"
 
 - id: pc_saft_polar
-  name: Polar PC-SAFT (registered refusal)
+  name: Polar PC-SAFT (hand-rolled kernel)
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:PCSaftPolarThermo
   params:
-    source: none — the row refuses to build
-    provenance: teqp's PC-SAFT supports dipolar/quadrupolar coefficient fields, but no
-      verified citable polar parameter set for the curated slate is loaded in
-      data/thermo_params/saft/pure.yaml; unverified parameters are excluded rather than
-      shipped (see pure.yaml `excluded:`)
+    source: hand-rolled PC-SAFT + Gross & Vrabec dipolar kernel, feos-curated G&V
+      2006 parameters (data/thermo_params/saft/pure.yaml)
+    provenance: physical term (hard chain + dispersion) is the teqp-pinned reimplementation
+      shared with pc_saft_assoc; dipolar term from Gross & Vrabec (2006) AIChE J. 52,
+      1194-1204 eqs. 8-14 (Padé [2/3]) with closed-form density and composition
+      derivatives; the a/b/c universal coefficients typed from the feos source
+      (feos-org/feos, BSD-3, 11 printed digits, retrieved 2026-10-23) and cross-checked
+      digit by digit against teqp's and CoolProp's 7-digit constants (all 45 agree);
+      the Debye-to-reduced-unit conversion is computed from exact SI constants
+      (1e-19/kB = 7242.9705...) matching teqp/feos, not CoolProp's hardcoded
+      7242.7029... (37 ppm lower, inside the case bands); fluid parameters from
+      feos's curated copy of the paper's Table 2 (gross2006.json — acetone and DME,
+      both non-associating, one dipolar segment each); quadrupolar fluids (CO2, Gross
+      2005) stay unbound pending resolution of an open-source sign discrepancy in the
+      J_QQQ,3ijk c0[0] constant; k_ij = 0 (the paper introduces no binary interaction
+      parameter for the bound slate)
   applicability:
     component_classes:
-    - hydrocarbon
-    - light_gas
-    - acid_gas
+    - polar_organic
     polar: true
     electrolyte: false
-    T_K: [95.0, 600.0]
+    T_K: [230.0, 520.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  - pure-ACETONE-296.0K-ps
+  - pure-ACETONE-350.0K-ps
+  - pure-ACETONE-400.0K-ps
+  - pure-ACETONE-450.0K-ps
+  - pure-DME-248.0K-ps
+  - pure-DME-280.0K-ps
+  - pure-DME-320.0K-ps
+  - pure-DME-360.0K-ps
+  assessed:
+    pure-ACETONE-350.0K-ps: "rho_V -3.3% (4.109 vs 4.249 kg/m3) — the published G&V 2006
+      parameterization under-predicts saturated vapour density as T rises toward Tc"
+    pure-ACETONE-400.0K-ps: "rho_V -5.8% (13.975 vs 14.830 kg/m3) — same trend"
+    pure-ACETONE-450.0K-ps: "rho_V -9.9% (38.458 vs 42.672 kg/m3), the worst point — assessed
+      as a parameterization limitation, not a transcription defect: teqp 0.23.2's own
+      GrossVrabec model (PSAFTEOS + '(mu^*)^2': 2.6764, nmu 1) returns -3.31/-5.76/-9.87%
+      at these exact states, and a dipole-strength sweep cannot close the gap (mu*^2 x1.5
+      moves rho_V to about -2/+3% only at the cost of Psat -40 to -51%); the G&V 2006 fit
+      targets Psat and saturated liquid density"
+    pure-DME-360.0K-ps: "rho_V -5.1% (55.286 vs 58.253 kg/m3) — same acetone trend"
   references:
   - >-
     Gross & Vrabec, "An equation of state contribution for polar components: Dipolar
     molecules", AIChE J. 52 (2006) 1194-1204 (term background)
-  l0: {}
-  l0_excluded:
-    pure_psat_limit: row refuses to build — no verified citable polar PC-SAFT parameter
-      set (NotImplementedError in _build_kernel)
-    phase_identification: row refuses to build — no verified citable polar PC-SAFT
-      parameter set (NotImplementedError in _build_kernel)
-    round_trip: row refuses to build — no verified citable polar PC-SAFT parameter set
-      (NotImplementedError in _build_kernel)
-    dhdT_cp: row refuses to build — no verified citable polar PC-SAFT parameter set
-      (NotImplementedError in _build_kernel)
-    gibbs_duhem: row refuses to build — no verified citable polar PC-SAFT parameter set
-      (NotImplementedError in _build_kernel)
-    single_liquid_limit: row refuses to build — no verified citable polar PC-SAFT
-      parameter set (NotImplementedError in _build_kernel)
-    determinism: row refuses to build — no verified citable polar PC-SAFT parameter set
-      (NotImplementedError in _build_kernel)
+  l0:
+    pure_psat_limit:
+      points:
+      - - ACETONE
+        - 329.44
+      - - ACETONE
+        - 400.0
+      - - DME
+        - 248.0
+      - - DME
+        - 320.0
+    phase_identification:
+      points:
+      - - ACETONE
+        - 350.0
+      - - DME
+        - 280.0
+    round_trip:
+      z:
+        ACETONE: 1.0
+      states:
+      - - 300.0
+        - 3.0e+5
+      - - 450.0
+        - 1.0e+5
+    dhdT_cp:
+      state: [400.0, 1.0e+5]
+      phase: vapor
+      z:
+        ACETONE: 1.0
+    gibbs_duhem:
+      steps: 30
+      binaries:
+      - z:
+          ACETONE: 0.5
+          DME: 0.5
+        phase: vapor
+        T: 350.0
+        P: 3.0e+5
+    single_liquid_limit:
+      state: [300.0, 3.0e+5]
+      z:
+        ACETONE: 1.0
+    determinism:
+      state: [400.0, 1.0e+5]
+      z:
+        ACETONE: 0.4
+        DME: 0.6
+  l0_excluded: {}
   l0_note: ''
 
 - id: saft_vr_mie
@@ -505,16 +696,21 @@
       2026-10-22, PR table)"
 
 - id: cpa_pr
-  name: CPA-PR (registered refusal)
+  name: CPA-PR (hand-rolled association kernel)
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:CpaPrThermo
   params:
-    source: none — the row refuses to build
-    provenance: teqp 0.23.2's CPA engine NaNs its fugacity coefficients at liquid-like
-      densities and collapses the water saturation line with the published Kontogeorgis
-      parameters (measured in the T-07 exploration); a Peng-Robinson CPA variant would
-      need the same hand-rolled treatment as cpa_srk and no verified citable CPA-PR
-      parameter set is loaded for the slate
+    source: CPA-PR, Sorensen parameters (data/thermo_params/saft/pure.yaml)
+    provenance: water 4C and methanol 2B PR-CPA parameters from Sorensen, Boesen,
+      Leekumjorn & Herslund, "Peng-Robinson Equation of State Extended to Handle
+      Aqueous Components Using CPA Concept", J. Nat. Gas Eng. 6 (2018), DOI
+      10.7569/JNGE.2018.692501, Table 6, retrieved and typed this session
+      (2026-10-23) from the open-access copy at https://d-nb.info/136523830X/34
+      with a constant-vs-source check against the printed table; the temperature-
+      dependent water-methanol k_ij is the paper's Table 7 fit; PR cubic term
+      closed-form, association term by the shared successive-substitution solver
+      (Michelsen-Hendriks) with the paper's simplified-CPA radial distribution
+      function (Appendix A eq. A14) and CR-1 combining rules
   applicability:
     component_classes:
     - water
@@ -525,27 +721,129 @@
     T_K: [250.0, 620.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
-  validation: []
+  status: provisional
+  validation:
+  - pure-H2O-323.5K-pr
+  - pure-H2O-420.0K-pr
+  - pure-H2O-520.0K-pr
+  - pure-H2O-600.0K-pr
+  - pure-H2O-614.7K-pr
+  - pure-MeOH-256.3K-pr
+  - pure-MeOH-307.6K-pr
+  - pure-MeOH-358.8K-pr
+  - pure-MeOH-410.1K-pr
+  - pure-MeOH-461.3K-pr
+  - meohh2o-322.91K-15.932kPa-pr
+  - meohh2o-322.91K-26.131kPa-pr
+  - meohh2o-322.91K-31.544kPa-pr
+  - meohh2o-322.91K-40.850kPa-pr
+  - meohh2o-322.91K-46.450kPa-pr
+  - meohh2o-322.91K-52.142kPa-pr
   references:
-  - Kontogeorgis, Voutsas, Yakoumis & Tassios, Ind. Eng. Chem. Res. 35 (1996) 4631-4642
-  l0: {}
-  l0_excluded:
-    pure_psat_limit: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
-      liquid-like density; NotImplementedError in _build_kernel)
-    phase_identification: row refuses to build — teqp's CPA is unusable (fugacity NaNs
-      at liquid-like density; NotImplementedError in _build_kernel)
-    round_trip: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
-      liquid-like density; NotImplementedError in _build_kernel)
-    dhdT_cp: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
-      liquid-like density; NotImplementedError in _build_kernel)
-    gibbs_duhem: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
-      liquid-like density; NotImplementedError in _build_kernel)
-    single_liquid_limit: row refuses to build — teqp's CPA is unusable (fugacity NaNs
-      at liquid-like density; NotImplementedError in _build_kernel)
-    determinism: row refuses to build — teqp's CPA is unusable (fugacity NaNs at
-      liquid-like density; NotImplementedError in _build_kernel)
-  l0_note: ''
+  - Sorensen, Boesen, Leekumjorn & Herslund, "Peng-Robinson Equation of State
+    Extended to Handle Aqueous Components Using CPA Concept", J. Nat. Gas Eng. 6
+    (2018), DOI 10.7569/JNGE.2018.692501
+  - Kontogeorgis, Voutsas, Yakoumis & Tassios, "An Equation of State for Associating
+    Fluids", Ind. Eng. Chem. Res. 35 (1996) 4631-4642
+  l0:
+    pure_psat_limit:
+      points:
+      - - H2O
+        - 373.15
+      - - H2O
+        - 423.15
+      - - MeOH
+        - 337.7
+      - - MeOH
+        - 298.15
+    phase_identification:
+      points:
+      - - H2O
+        - 373.15
+      - - MeOH
+        - 320.0
+    round_trip:
+      z:
+        H2O: 1.0
+      states:
+      # 350 K / 3e5 Pa: a compressed-liquid state well below the 3e5 Pa saturation
+      # temperature (~407 K) so the PH inversion classifies trial temperatures via
+      # the cheap Wilson band instead of an exact psat solve per trial; at 373.15 K
+      # the trials clustered inside the near-saturation band and the check cost
+      # ~200 s of exact saturation solves.
+      - - 350.0
+        - 3.0e+5
+    dhdT_cp:
+      state: [400.0, 1.0e+5]
+      phase: vapor
+      z:
+        H2O: 1.0
+    gibbs_duhem:
+      # 30 midpoint steps: the association kernel evaluates ~100x slower than a
+      # closed-form EOS and the integral is smooth; the 1e-6 bar is unchanged.
+      steps: 30
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        phase: vapor
+        T: 400.0
+        P: 1.0e+5
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        phase: aqueous
+        T: 350.0
+        P: 3.0e+5
+    single_liquid_limit:
+      state: [373.15, 3.0e+5]
+      z:
+        H2O: 1.0
+    determinism:
+      state: [400.0, 1.0e+5]
+      z:
+        MeOH: 0.4
+        H2O: 0.6
+  l0_excluded: {}
+  l0_note: >-
+    T-17 promoted the row from refusal to provisional on 2026-10-23: teqp 0.23.2's
+    own CPA engine stays unusable (fugacity NaNs at liquid-like densities, measured
+    in the T-07 exploration), so the row runs the bridge's hand-rolled CPA-PR kernel
+    (PR physical term + the shared saft_assoc association solver) with the Sorensen
+    et al. (2018) Table 6 parameters and the paper's Table 7 temperature-dependent
+    water-methanol k_ij — the k_ij cpa_srk could not carry.
+
+  assessed:
+    pure-H2O-323.5K-pr: "Cp -6.3 % (75.333 vs 70.609) — the cubic + association EOS has
+      no residual liquid-Cp contribution, the same limitation the cpa_srk row assessed
+      (parameters verified against Sorensen 2018 Table 6) (measured 2026-10-23, PR table)"
+    pure-H2O-600.0K-pr: "Cp -11.3 % (125.264 vs 111.068); rho_V -5.9 % (72.842 vs
+      68.546) — same no-residual-Cp limitation; saturated-vapour density degrades on
+      the critical approach (Tc 647.1 K) (measured 2026-10-23, PR table)"
+    pure-H2O-614.7K-pr: "Cp -18.5 % (151.747 vs 123.753); rho_V -9.7 % (95.588 vs
+      86.351) — critical-region divergence at 33 K below Tc: the cubic term's density
+      and its Cp derivative both degrade (measured 2026-10-23, PR table)"
+    pure-MeOH-256.3K-pr: "bubble_P/dew_P -5.0 % (1296.5 vs 1231.45); Cp -11.1 %
+      (74.762 vs 66.501) — saturation pressure low at the cold end of the 2B range
+      (the paper's PR-CPA fit targets reservoir conditions) plus the no-residual-Cp
+      limitation (measured 2026-10-23, PR table)"
+    pure-MeOH-461.3K-pr: "rho_V -5.2 % (39.976 vs 37.881) — same cubic-term
+      saturated-vapour-density limitation as the other pure cases (Cp passes here)
+      (measured 2026-10-23, PR table)"
+    meohh2o-322.91K-15.932kPa-pr: "bubble_P -13.1 % (15932 vs 13845.7); vapor_comp
+      0.105 abs below the 0.02 band (0.2741 vs 0.1688) — the paper's Table 7 k_ij
+      (fitted -0.14146 at 288.15 K) over-strengthens the cross-association at the
+      methanol-lean end for this isotherm; tuning against the validation points is
+      forbidden (Gao 2012 isotherm; measured 2026-10-23, PR table)"
+    meohh2o-322.91K-26.131kPa-pr: "bubble_P -19.8 % (26131 vs 20969.9); vapor_comp
+      0.079 abs below the 0.02 band (0.6294 vs 0.5502) — same Table 7 k_ij
+      limitation, worst at the methanol-lean end (measured 2026-10-23, PR table)"
+    meohh2o-322.91K-31.544kPa-pr: "bubble_P -17.6 % (31544 vs 26003.5); vapor_comp
+      0.069 abs below the 0.02 band (0.7580 vs 0.6890) — same Table 7 k_ij
+      limitation (measured 2026-10-23, PR table)"
+    meohh2o-322.91K-40.850kPa-pr: "bubble_P -5.3 % (40850 vs 38698.6) — same Table 7
+      k_ij limitation, decaying toward the methanol-rich end (vapor_comp passes)
+      (measured 2026-10-23, PR table)"
 
 - id: multifluid
   name: Multi-fluid Helmholtz (teqp CoolProp library)
@@ -844,12 +1142,18 @@
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:SoftSaftThermo
   params:
-    source: none — the row refuses to build
-    provenance: Blas & Vega's (1997) soft-SAFT has no engine to run on — teqp 0.23.2
-      (the family's only optional backend) ships no soft-SAFT kernel (its SAFT factories
-      are the explicit-coefficient PC-SAFT and SAFT-VR-Mie engines), and writing SAFT
-      by hand is out of T-07 scope; the model therefore stays outside the family rather
-      than being approximated
+    source: none — the row is not implemented
+    provenance: >-
+      Blas & Vega's (1997) soft-SAFT has no engine to run on: teqp 0.23.2 (the
+      family's only optional backend) ships no soft-SAFT kernel (its SAFT factories
+      are the explicit-coefficient PC-SAFT and SAFT-VR-Mie engines), and writing
+      SAFT by hand is out of T-07 scope. The implementation would mean coding the
+      Johnson, Zollweg & Gubbins (1993) 33-parameter MBWR Lennard-Jones reference
+      EOS plus the soft-SAFT chain term; open sources for the JZG EOS exist, but
+      published soft-SAFT parameter sets are scattered across the literature and
+      the whole effort is a dedicated-engine undertaking, so the row stays
+      outside the family rather than being approximated. Revisit under a
+      dedicated spec if coverage demands it.
   applicability:
     component_classes:
     - hydrocarbon
@@ -868,18 +1172,18 @@
     Ind. Eng. Chem. Res. 37 (1998) 660-674; vega group soft-SAFT lineage
   l0: {}
   l0_excluded:
-    pure_psat_limit: row refuses to build — no soft-SAFT engine exists (measured —
+    pure_psat_limit: row is not implemented — no soft-SAFT engine exists (measured —
       teqp 0.23.2 has no soft-SAFT factory or teqp.saft module)
-    phase_identification: row refuses to build — no soft-SAFT engine exists (measured —
+    phase_identification: row is not implemented — no soft-SAFT engine exists (measured —
       teqp 0.23.2 has no soft-SAFT factory or teqp.saft module)
-    round_trip: row refuses to build — no soft-SAFT engine exists (measured — teqp
+    round_trip: row is not implemented — no soft-SAFT engine exists (measured — teqp
       0.23.2 has no soft-SAFT factory or teqp.saft module)
-    dhdT_cp: row refuses to build — no soft-SAFT engine exists (measured — teqp 0.23.2
+    dhdT_cp: row is not implemented — no soft-SAFT engine exists (measured — teqp 0.23.2
       has no soft-SAFT factory or teqp.saft module)
-    gibbs_duhem: row refuses to build — no soft-SAFT engine exists (measured — teqp
+    gibbs_duhem: row is not implemented — no soft-SAFT engine exists (measured — teqp
       0.23.2 has no soft-SAFT factory or teqp.saft module)
-    single_liquid_limit: row refuses to build — no soft-SAFT engine exists (measured —
+    single_liquid_limit: row is not implemented — no soft-SAFT engine exists (measured —
       teqp 0.23.2 has no soft-SAFT factory or teqp.saft module)
-    determinism: row refuses to build — no soft-SAFT engine exists (measured — teqp
+    determinism: row is not implemented — no soft-SAFT engine exists (measured — teqp
       0.23.2 has no soft-SAFT factory or teqp.saft module)
   l0_note: ''

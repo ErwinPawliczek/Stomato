@@ -366,6 +366,530 @@ pure_cases:
     rho_V: 39.97612900903269
     rho_L: 577.3203069692399
     Cp: 152.323705909922
+- id: pure-H2O-323.5K-pr
+  package: cpa_pr
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 323.5
+  source: coolprop:Water
+  expected:
+    bubble_P: 12568.074903762043
+    dew_P: 12568.074903762043
+    rho_V: 0.0845139200802139
+    rho_L: 987.8376013261548
+    Cp: 75.33348967660713
+- id: pure-H2O-420.0K-pr
+  package: cpa_pr
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 420.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 437296.6832205554
+    dew_P: 437296.6832205554
+    rho_V: 2.351828448387723
+    rho_L: 919.9289056471974
+    Cp: 77.44715834539281
+- id: pure-H2O-520.0K-pr
+  package: cpa_pr
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 520.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 3768951.0030896734
+    dew_P: 3768951.0030896734
+    rho_V: 18.900102345041386
+    rho_L: 803.5346284235177
+    Cp: 87.14904502895989
+- id: pure-H2O-600.0K-pr
+  package: cpa_pr
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 600.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 12344824.357185591
+    dew_P: 12344824.357185591
+    rho_V: 72.84231718283307
+    rho_L: 649.4114062017267
+    Cp: 125.26394764191221
+- id: pure-H2O-614.7K-pr
+  package: cpa_pr
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 614.7
+  source: coolprop:Water
+  expected:
+    bubble_P: 14886958.230685582
+    dew_P: 14886958.230685582
+    rho_V: 95.58767627288478
+    rho_L: 605.5542923811505
+    Cp: 151.74725059632752
+- id: pure-MeOH-256.3K-pr
+  package: cpa_pr
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 256.3
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 1296.4950796125859
+    dew_P: 1296.4950796125859
+    rho_V: 0.019659073267946643
+    rho_L: 825.5296619830086
+    Cp: 74.76223856132154
+- id: pure-MeOH-307.6K-pr
+  package: cpa_pr
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 307.6
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 27285.726673983212
+    dew_P: 27285.726673983212
+    rho_V: 0.3523083242143164
+    rho_L: 777.3531023134508
+    Cp: 83.1689114929538
+- id: pure-MeOH-358.8K-pr
+  package: cpa_pr
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 358.8
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 220672.06148295978
+    dew_P: 220672.06148295978
+    rho_V: 2.564992417359229
+    rho_L: 726.6365086539073
+    Cp: 96.78299108071067
+- id: pure-MeOH-410.1K-pr
+  package: cpa_pr
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 410.1
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 1008961.6235828616
+    dew_P: 1008961.6235828616
+    rho_V: 11.431378628663305
+    rho_L: 665.0831489742104
+    Cp: 116.39882382840209
+- id: pure-MeOH-461.3K-pr
+  package: cpa_pr
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 461.3
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 3203531.8555181804
+    dew_P: 3203531.8555181804
+    rho_V: 39.97612900903269
+    rho_L: 577.3203069692399
+    Cp: 152.323705909922
+# --- pc_saft_assoc bindings (spec T-17 step B, suffix -ps) ---------------------
+# Clones of the cpa_srk reference cases re-scoped to the pc_saft_assoc row:
+# G&S 2002 Table 1 parameters, k_ij = 0 (the paper introduces no BIP for
+# associating-associating mixtures). Pure expected values are CoolProp-derived
+# (machine-generated); binary values are the cited literature numbers.
+
+- id: pure-H2O-323.5K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 323.5
+  source: coolprop:Water
+  expected:
+    bubble_P: 12568.074903762043
+    dew_P: 12568.074903762043
+    rho_V: 0.0845139200802139
+    rho_L: 987.8376013261548
+    Cp: 75.33348967660713
+
+- id: pure-H2O-420.0K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 420.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 437296.6832205554
+    dew_P: 437296.6832205554
+    rho_V: 2.351828448387723
+    rho_L: 919.9289056471974
+    Cp: 77.44715834539281
+
+- id: pure-H2O-520.0K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 520.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 3768951.0030896734
+    dew_P: 3768951.0030896734
+    rho_V: 18.900102345041386
+    rho_L: 803.5346284235177
+    Cp: 87.14904502895989
+
+- id: pure-H2O-600.0K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 600.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 12344824.357185591
+    dew_P: 12344824.357185591
+    rho_V: 72.84231718283307
+    rho_L: 649.4114062017267
+    Cp: 125.26394764191221
+
+- id: pure-H2O-614.7K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 614.7
+  source: coolprop:Water
+  expected:
+    bubble_P: 14886958.230685582
+    dew_P: 14886958.230685582
+    rho_V: 95.58767627288478
+    rho_L: 605.5542923811505
+    Cp: 151.74725059632752
+
+- id: pure-MeOH-256.3K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 256.3
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 1296.4950796125859
+    dew_P: 1296.4950796125859
+    rho_V: 0.019659073267946643
+    rho_L: 825.5296619830086
+    Cp: 74.76223856132154
+
+- id: pure-MeOH-307.6K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 307.6
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 27285.726673983212
+    dew_P: 27285.726673983212
+    rho_V: 0.3523083242143164
+    rho_L: 777.3531023134508
+    Cp: 83.1689114929538
+
+- id: pure-MeOH-358.8K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 358.8
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 220672.06148295978
+    dew_P: 220672.06148295978
+    rho_V: 2.564992417359229
+    rho_L: 726.6365086539073
+    Cp: 96.78299108071067
+
+- id: pure-MeOH-410.1K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 410.1
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 1008961.6235828616
+    dew_P: 1008961.6235828616
+    rho_V: 11.431378628663305
+    rho_L: 665.0831489742104
+    Cp: 116.39882382840209
+
+- id: pure-MeOH-461.3K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 461.3
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 3203531.8555181804
+    dew_P: 3203531.8555181804
+    rho_V: 39.97612900903269
+    rho_L: 577.3203069692399
+    Cp: 152.323705909922
+
+- id: pure-EtOH-300.0K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Ethanol
+  components:
+  - EtOH
+  z:
+    EtOH: 1.0
+  T: 300.0
+  source: coolprop:Ethanol
+  expected:
+    bubble_P: 8767.936448356271
+    dew_P: 8767.936448356271
+    rho_V: 0.16291856738668026
+    rho_L: 783.454800171495
+    Cp: 112.83302023266879
+
+- id: pure-EtOH-351.45K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Ethanol
+  components:
+  - EtOH
+  z:
+    EtOH: 1.0
+  T: 351.45
+  source: coolprop:Ethanol
+  expected:
+    bubble_P: 100844.61529065318
+    dew_P: 100844.61529065318
+    rho_V: 1.6430837314788493
+    rho_L: 736.530308138384
+    Cp: 134.98088035573033
+
+- id: pure-EtOH-420.0K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Ethanol
+  components:
+  - EtOH
+  z:
+    EtOH: 1.0
+  T: 420.0
+  source: coolprop:Ethanol
+  expected:
+    bubble_P: 906364.4034791503
+    dew_P: 906364.4034791503
+    rho_V: 13.80419377031243
+    rho_L: 654.2055322960692
+    Cp: 174.5882049172452
+
+- id: pure-EtOH-480.0K-ps
+  package: pc_saft_assoc
+  coolprop_fluid: Ethanol
+  components:
+  - EtOH
+  z:
+    EtOH: 1.0
+  T: 480.0
+  source: coolprop:Ethanol
+  expected:
+    bubble_P: 3397615.98968155
+    dew_P: 3397615.98968155
+    rho_V: 57.898503610880795
+    rho_L: 537.8290843319744
+    Cp: 228.46628425356184
+
+# pc_saft_polar pure-fluid cases: CoolProp HEOS references generated 2026-10-23.
+# The G&V 2006 parameterization targets the polar fluids' Psat; plain PC-SAFT
+# misses acetone Psat by about -8%, the dipolar term recovers it to the sub-1%
+# band below. Saturated-vapour-density misses near Tc are assessed per case in
+# the row's `assessed:` map (data/thermo_models/saft.yaml): teqp 0.23.2's own
+# GrossVrabec model reproduces them at the same states, so the miss belongs to
+# the published parameterization, not to this kernel.
+- id: pure-ACETONE-296.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: Acetone
+  components:
+  - ACETONE
+  z:
+    ACETONE: 1.0
+  T: 296.0
+  source: coolprop:Acetone
+  expected:
+    bubble_P: 27984.798620785255
+    dew_P: 27984.798620785255
+    rho_V: 0.6766851350128977
+    rho_L: 787.0270913349877
+    Cp: 124.16766114892393
+
+- id: pure-ACETONE-350.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: Acetone
+  components:
+  - ACETONE
+  z:
+    ACETONE: 1.0
+  T: 350.0
+  source: coolprop:Acetone
+  expected:
+    bubble_P: 196425.92364577646
+    dew_P: 196425.92364577646
+    rho_V: 4.24923781628102
+    rho_L: 723.7309957065141
+    Cp: 133.51184516168453
+
+- id: pure-ACETONE-400.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: Acetone
+  components:
+  - ACETONE
+  z:
+    ACETONE: 1.0
+  T: 400.0
+  source: coolprop:Acetone
+  expected:
+    bubble_P: 705586.1248734286
+    dew_P: 705586.1248734286
+    rho_V: 14.829591598388273
+    rho_L: 655.9240927429465
+    Cp: 146.3064421484779
+
+- id: pure-ACETONE-450.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: Acetone
+  components:
+  - ACETONE
+  z:
+    ACETONE: 1.0
+  T: 450.0
+  source: coolprop:Acetone
+  expected:
+    bubble_P: 1875884.2167017076
+    dew_P: 1875884.2167017076
+    rho_V: 42.67206663220943
+    rho_L: 569.4245291943702
+    Cp: 169.6731068132008
+
+- id: pure-DME-248.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: DimethylEther
+  components:
+  - DME
+  z:
+    DME: 1.0
+  T: 248.0
+  source: coolprop:DimethylEther
+  expected:
+    bubble_P: 99712.96420871113
+    dew_P: 99712.96420871113
+    rho_V: 2.312559745683859
+    rho_L: 735.6875275906197
+    Cp: 103.07595855521515
+
+- id: pure-DME-280.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: DimethylEther
+  components:
+  - DME
+  z:
+    DME: 1.0
+  T: 280.0
+  source: coolprop:DimethylEther
+  expected:
+    bubble_P: 336775.1545459868
+    dew_P: 336775.1545459868
+    rho_V: 7.258579742710868
+    rho_L: 689.7719052710847
+    Cp: 108.15833045851197
+
+- id: pure-DME-320.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: DimethylEther
+  components:
+  - DME
+  z:
+    DME: 1.0
+  T: 320.0
+  source: coolprop:DimethylEther
+  expected:
+    bubble_P: 1058681.969236121
+    dew_P: 1058681.969236121
+    rho_V: 22.208231404587575
+    rho_L: 624.0718982264325
+    Cp: 118.79282796139971
+
+- id: pure-DME-360.0K-ps
+  package: pc_saft_polar
+  coolprop_fluid: DimethylEther
+  components:
+  - DME
+  z:
+    DME: 1.0
+  T: 360.0
+  source: coolprop:DimethylEther
+  expected:
+    bubble_P: 2557874.382620193
+    dew_P: 2557874.382620193
+    rho_V: 58.252567913824606
+    rho_L: 538.6642292858103
+    Cp: 144.61432987656343
 binary_cases:
 # --- L2: CO2 + CH4 VLE (Petropoulou et al. 2018) — PC-SAFT row -------------------------------
 # Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462,
@@ -626,3 +1150,234 @@ binary_cases:
     bubble_P: 52142.0
     vapor_comp:
       MeOH: 0.9736
+- id: meohh2o-322.91K-15.932kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.0486
+    H2O: 0.9514
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 15932.0
+    vapor_comp:
+      MeOH: 0.2741
+- id: meohh2o-322.91K-26.131kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.2131
+    H2O: 0.7869
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 26131.0
+    vapor_comp:
+      MeOH: 0.6294
+- id: meohh2o-322.91K-31.544kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.3252
+    H2O: 0.6748
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 31544.0
+    vapor_comp:
+      MeOH: 0.758
+- id: meohh2o-322.91K-40.850kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.6279
+    H2O: 0.3721
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 40850.0
+    vapor_comp:
+      MeOH: 0.8654
+- id: meohh2o-322.91K-46.450kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.8037
+    H2O: 0.1963
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 46450.0
+    vapor_comp:
+      MeOH: 0.9406
+- id: meohh2o-322.91K-52.142kPa-pr
+  package: cpa_pr
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.9461
+    H2O: 0.0539
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468;
+    retrieved 2026-10-20
+  expected:
+    bubble_P: 52142.0
+    vapor_comp:
+      MeOH: 0.9736
+
+
+- id: meohh2o-322.91K-15.932kPa-ps
+  package: pc_saft_assoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.0486
+    H2O: 0.9514
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 15932.0
+    vapor_comp:
+      MeOH: 0.2741
+
+- id: meohh2o-322.91K-26.131kPa-ps
+  package: pc_saft_assoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.2131
+    H2O: 0.7869
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 26131.0
+    vapor_comp:
+      MeOH: 0.6294
+
+- id: meohh2o-322.91K-31.544kPa-ps
+  package: pc_saft_assoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.3252
+    H2O: 0.6748
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 31544.0
+    vapor_comp:
+      MeOH: 0.758
+
+- id: meohh2o-322.91K-40.850kPa-ps
+  package: pc_saft_assoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.6279
+    H2O: 0.3721
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 40850.0
+    vapor_comp:
+      MeOH: 0.8654
+
+- id: meohh2o-322.91K-46.450kPa-ps
+  package: pc_saft_assoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.8037
+    H2O: 0.1963
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 46450.0
+    vapor_comp:
+      MeOH: 0.9406
+
+- id: meohh2o-322.91K-52.142kPa-ps
+  package: pc_saft_assoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.9461
+    H2O: 0.0539
+  T: 322.91
+  source: literature:Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 322.91 K; DDB Explorer Edition data set 468; retrieved 2026-10-20
+  expected:
+    bubble_P: 52142.0
+    vapor_comp:
+      MeOH: 0.9736
+
+# pending:pc_saft_assoc — crashes on the bridge's Wilson seed (SaturationError: no
+# two-phase state at T=179.68 K, P=101325 Pa; measured T-17 step B 2026-10-23). Same
+# crash mode as the cpa_srk isobar above; binds back when the saturation seed follows
+# the regression (crashes are not declarable).
+- id: meohh2o-101.325kPa-353.25K-ps
+  package: pending:pc_saft_assoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.238
+    H2O: 0.762
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 353.25
+    vapor_comp:
+      MeOH: 0.6237
+
+- id: meohh2o-101.325kPa-349.05K-ps
+  package: pending:pc_saft_assoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 349.05
+    vapor_comp:
+      MeOH: 0.7197
+
+- id: meohh2o-101.325kPa-346.20K-ps
+  package: pending:pc_saft_assoc
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.524
+    H2O: 0.476
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 346.2
+    vapor_comp:
+      MeOH: 0.786
+

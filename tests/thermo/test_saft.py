@@ -8,11 +8,15 @@ HEOS in-process (the same NIST-aligned reference the validation cases use).
 from __future__ import annotations
 
 import sys
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ngdesign.thermo import catalogue
 from ngdesign.thermo.teqp_bridge import SaftDependencyMissing
+
+if TYPE_CHECKING:
+    from ngdesign.thermo.teqp_bridge import _PCSaftPolarKernel
 
 SAFT_IDS = (
     "cpa_pr",
@@ -29,21 +33,45 @@ SAFT_IDS = (
 # Rows teqp 0.23.2 cannot serve; each refuses to build with the engine named (spec
 # requirement). Their l0 declarations are empty and the refusal reason is recorded in
 # the row's l0_excluded.
-REFUSING_IDS = ("cpa_pr", "pc_saft_assoc", "pc_saft_polar", "soft_saft")
-BUILDABLE_IDS = ("cpa_srk", "gerg2008_teqp", "multifluid", "multifluid_pure", "pc_saft", "saft_vr_mie")
+REFUSING_IDS = ("soft_saft",)
+BUILDABLE_IDS = (
+    "cpa_pr",
+    "cpa_srk",
+    "gerg2008_teqp",
+    "multifluid",
+    "multifluid_pure",
+    "pc_saft",
+    "pc_saft_assoc",
+    "pc_saft_polar",
+    "saft_vr_mie",
+)
 
 
 def test_saft_rows_register_with_status() -> None:
     """The ten saft rows load with the real catalogue. T-15c promoted pc_saft and
     cpa_srk to provisional (all bound cases measured, every miss assessed per case);
     T-18 promoted saft_vr_mie, multifluid, multifluid_pure and gerg2008_teqp the same
-    way (bindings in data/validation/saft/cases-teqp.yaml, every miss assessed); the
-    other rows stay experimental (T-07)."""
+    way (bindings in data/validation/saft/cases-teqp.yaml, every miss assessed);
+    T-17 promoted cpa_pr (Sorensen 2018 parameters), pc_saft_assoc (G&S 2002
+    Table 1 two-site parameters), and pc_saft_polar (Gross–Vrabec 2006, T-17e)
+    the same way; the remaining rows stay
+    experimental (T-07)."""
     rows = catalogue.load_catalogue()
-    for rid in ("pc_saft", "cpa_srk", "saft_vr_mie", "multifluid", "multifluid_pure", "gerg2008_teqp"):
+    provisional = (
+        "pc_saft",
+        "cpa_srk",
+        "cpa_pr",
+        "pc_saft_assoc",
+        "pc_saft_polar",
+        "saft_vr_mie",
+        "multifluid",
+        "multifluid_pure",
+        "gerg2008_teqp",
+    )
+    for rid in provisional:
         assert rows[rid].status == "provisional", f"{rid}: row must stay provisional"
     for rid in SAFT_IDS:
-        if rid in ("pc_saft", "cpa_srk", "saft_vr_mie", "multifluid", "multifluid_pure", "gerg2008_teqp"):
+        if rid in provisional:
             continue
         assert rows[rid].status == "experimental", f"{rid}: row must stay experimental"
 
@@ -81,6 +109,7 @@ class TestConstructionContract:
         pytest.importorskip("teqp")
         from ngdesign import registry
         from ngdesign.thermo.teqp_bridge import (
+            CpaPrThermo,
             CpaSrkThermo,
             Gerg2008TeqpThermo,
             MultifluidPureThermo,
@@ -93,6 +122,7 @@ class TestConstructionContract:
             "pc_saft": PCSaftThermo,
             "saft_vr_mie": SaftVrMieThermo,
             "cpa_srk": CpaSrkThermo,
+            "cpa_pr": CpaPrThermo,
             "multifluid": MultifluidThermo,
             "multifluid_pure": MultifluidPureThermo,
             "gerg2008_teqp": Gerg2008TeqpThermo,
@@ -137,6 +167,87 @@ class TestNamedSpotChecks:
         sp = pkg.bubble_point({"H2O": 1.0}, T=373.15)
         assert sp.P == pytest.approx(101_417.997, rel=0.02)
 
+    def test_cpa_pr_water_and_methanol_psat(self) -> None:
+        """CPA-PR (T-17): the Sorensen et al. (2018) Table 6 set measures -0.9 % on
+        water Psat at 373.15 K and -0.8 % on methanol at its normal boiling point
+        against CoolProp HEOS/IAPWS — the PR variant beats the SRK variant's -1.15 %
+        water miss. The 2 % band guards the kernel against drift; the parameters are
+        pinned by data/thermo_params/saft/pure.yaml."""
+        pytest.importorskip("teqp")
+        pkg = catalogue.build(catalogue.load_catalogue()["cpa_pr"])
+        water = pkg.bubble_point({"H2O": 1.0}, T=373.15)
+        assert water.P == pytest.approx(101_417.997, rel=0.02)
+        methanol = pkg.bubble_point({"MeOH": 1.0}, T=337.65)
+        assert methanol.P == pytest.approx(101_325.0, rel=0.02)
+
+    def test_pc_saft_assoc_physical_term_pinned_to_teqp(self) -> None:
+        """The hand-rolled PC-SAFT physical term must reproduce teqp's engine (spec T-17).
+
+        The association row's physical part is reimplemented (teqp's PC-SAFT factory
+        carries no association fields); this pin says the reimplementation is the
+        published Gross & Sadowski (2001) model, not a lookalike: residual Helmholtz
+        density against teqp's own PC-SAFT over states spanning the validation window.
+        """
+        pytest.importorskip("teqp")
+        import numpy as np
+
+        from ngdesign.thermo.teqp_bridge import _PCSaftAssocKernel, _teqp
+
+        params = [
+            {"name": "H2O", "m": 1.0656, "sigma_Angstrom": 3.0007, "epsilon_over_k": 366.51},
+            {"name": "MeOH", "m": 1.5255, "sigma_Angstrom": 3.2300, "epsilon_over_k": 188.90},
+        ]
+        kernel = _PCSaftAssocKernel("pc_saft_assoc", params)
+        teqp_model = _teqp().make_model(
+            {
+                "kind": "PCSAFT",
+                "model": {
+                    "coeffs": [
+                        {
+                            "name": "H2O",
+                            "m": 1.0656,
+                            "sigma_Angstrom": 3.0007,
+                            "epsilon_over_k": 366.51,
+                            "BibTeXKey": "Gross-IECR-2001",
+                        },
+                        {
+                            "name": "MeOH",
+                            "m": 1.5255,
+                            "sigma_Angstrom": 3.2300,
+                            "epsilon_over_k": 188.90,
+                            "BibTeXKey": "Gross-IECR-2001",
+                        },
+                    ]
+                },
+            }
+        )
+        worst = 0.0
+        for T, rho in ((300.0, 100.0), (350.0, 9000.0), (420.0, 15000.0), (500.0, 500.0)):
+            z = np.array([0.6, 0.4])
+            a_phys, _, _ = kernel._phys.derivs(T, rho, z)
+            ref = float(teqp_model.get_Ar00(T, rho, z))
+            worst = max(worst, abs(a_phys - ref))
+        assert worst < 1e-12, f"physical term drifted from teqp PC-SAFT: {worst:.3e}"
+
+    def test_pc_saft_assoc_water_psat_373k(self) -> None:
+        """PC-SAFT assoc (T-17): the G&S 2002 Table 1 two-site set measures -0.5 % on
+        water Psat at 373.15 K against CoolProp HEOS/IAPWS (row assessed map carries the
+        saturated-liquid-density miss of the same parameterization). The 2 % band guards
+        the kernel against drift; the parameters are pinned by the params file."""
+        pytest.importorskip("teqp")
+        pkg = catalogue.build(catalogue.load_catalogue()["pc_saft_assoc"])
+        sp = pkg.bubble_point({"H2O": 1.0}, T=373.15)
+        assert sp.P == pytest.approx(100_890.0, rel=0.02)
+
+    def test_pc_saft_assoc_methanol_psat_420k(self) -> None:
+        """PC-SAFT assoc (T-17): methanol Psat at 420 K measures +0.1 % (the set's
+        low-temperature Psat miss of about -3.5 % is assessed on the row); the pin
+        guards the association kernel against drift at a state it gets right."""
+        pytest.importorskip("teqp")
+        pkg = catalogue.build(catalogue.load_catalogue()["pc_saft_assoc"])
+        sp = pkg.bubble_point({"MeOH": 1.0}, T=420.0)
+        assert sp.P == pytest.approx(1_292_700.0, rel=0.02)
+
     def test_pc_saft_c1co2_bubble_293k(self) -> None:
         pytest.importorskip("teqp")
         pkg = catalogue.build(catalogue.load_catalogue()["pc_saft"])
@@ -164,3 +275,110 @@ class TestNamedSpotChecks:
         # Backend agreement: the teqp path must keep matching CoolProp HEOS.
         ref_p = CP.PropsSI("P", "T", 130.079, "Q", 0, "HEOS::Methane[0.9539]&Nitrogen[0.0461]")
         assert sp.P == pytest.approx(ref_p, rel=0.01)
+
+
+class TestPcSaftPolar:
+    """The Gross & Vrabec (2006) dipolar row (spec T-17 step 4, dipolar scope).
+
+    No installed backend ships the polar term (teqp 0.23.2 has no polar PC-SAFT;
+    CoolProp's is a different parameterization), so the term is pinned by
+    derivative consistency instead of a cross-backend alpha check, and by the
+    bound cases' HEOS bands end to end. The universal coefficients were typed
+    from feos and cross-checked digit by digit against teqp and CoolProp
+    (all 45 agree); the derivation record lives in saft_assoc.py.
+    """
+
+    @staticmethod
+    def _kernel() -> _PCSaftPolarKernel:
+        from ngdesign.thermo.teqp_bridge import _PCSaftPolarKernel
+
+        params = [
+            {
+                "name": "ACETONE",
+                "m": 2.7447,
+                "sigma_Angstrom": 3.2742,
+                "epsilon_over_k": 232.99,
+                "mu_debye": 2.88,
+            },
+            {"name": "DME", "m": 2.2634, "sigma_Angstrom": 3.2723, "epsilon_over_k": 210.29, "mu_debye": 1.3},
+        ]
+        return _PCSaftPolarKernel("pc_saft_polar", params)
+
+    def test_dipolar_derivatives_match_finite_differences(self) -> None:
+        """The closed-form density/composition derivatives stay exact (the Gibbs-Duhem
+        bar requires it; the PCSaftPhysical docstring records the failure mode)."""
+        import numpy as np
+
+        kernel = self._kernel()
+        h = 1e-6
+        for T, rho, z in (
+            (400.0, 8000.0, [1.0, 0.0]),
+            (350.0, 9000.0, [0.5, 0.5]),
+            (300.0, 12000.0, [0.0, 1.0]),
+        ):
+            zv = np.array(z, dtype=float)
+            alpha, dadrho, dz = kernel._dip.derivs(T, rho, zv)
+            num_rho = (
+                kernel._dip.derivs(T, rho * (1 + h), zv)[0] - kernel._dip.derivs(T, rho * (1 - h), zv)[0]
+            ) / (2 * h * rho)
+            assert dadrho == pytest.approx(num_rho, rel=1e-6)
+            for i in range(zv.size):
+                zp = zv.copy()
+                zp[i] += h
+                zp /= zp.sum()
+                zm = zv.copy()
+                zm[i] -= h
+                zm /= zm.sum()
+                num_z = (kernel._dip.derivs(T, rho, zp)[0] - kernel._dip.derivs(T, rho, zm)[0]) / (2 * h)
+                # The finite difference moves along e_i - z (renormalized), so the
+                # analytic quantity is the projected directional derivative.
+                proj = dz[i] - float(zv @ dz)
+                assert proj == pytest.approx(num_z, rel=1e-6)
+
+    def test_dipolar_term_vanishes_without_dipoles(self) -> None:
+        """A mu = 0 parameter set must give exactly the physical term (no division
+        noise through the Pade denominator)."""
+        import numpy as np
+
+        from ngdesign.thermo.teqp_bridge import _PCSaftPolarKernel
+
+        nonpolar = _PCSaftPolarKernel(
+            "pc_saft_polar",
+            [
+                {
+                    "name": "ACETONE",
+                    "m": 2.7447,
+                    "sigma_Angstrom": 3.2742,
+                    "epsilon_over_k": 232.99,
+                    "mu_debye": 0.0,
+                },
+            ],
+        )
+        for T, rho in ((350.0, 9000.0), (450.0, 3000.0)):
+            zv = np.array([1.0])
+            a_phys, _da, _dz = nonpolar._phys.derivs(T, rho, zv)
+            a_total, _da_t, _dz_t = nonpolar._alpha_r_derivs(T, rho, zv)
+            assert a_total == a_phys  # the dipolar term adds exactly nothing
+            a_dip, da_dip, dz_dip = nonpolar._dip.derivs(T, rho, zv)
+            assert a_dip == 0.0 and da_dip == 0.0 and not dz_dip.any()
+
+    def test_pc_saft_polar_params_file_bound(self) -> None:
+        """The row loads acetone and DME with dipole moments from the params file."""
+        from ngdesign.thermo.teqp_bridge import _require_params
+
+        block = _require_params("pc_saft_polar", ("ACETONE", "DME"))
+        assert float(block["ACETONE"]["mu_debye"]) == pytest.approx(2.88)
+        assert float(block["DME"]["mu_debye"]) == pytest.approx(1.3)
+
+    def test_pc_saft_polar_acetone_psat_400k(self) -> None:
+        """The dipolar term must lift acetone Psat into the HEOS band: plain PC-SAFT
+        measures about -8 %, the G&V 2006 term about +0.6 % (measured 2026-10-23)."""
+        pkg = catalogue.build(catalogue.load_catalogue()["pc_saft_polar"])
+        sp = pkg.bubble_point({"ACETONE": 1.0}, T=400.0)
+        assert sp.P == pytest.approx(705_586.0, rel=0.02)
+
+    def test_pc_saft_polar_dme_psat_248k(self) -> None:
+        """DME (the only pure ether in the bound slate) at its 1 atm boiling point."""
+        pkg = catalogue.build(catalogue.load_catalogue()["pc_saft_polar"])
+        sp = pkg.bubble_point({"DME": 1.0}, T=248.0)
+        assert sp.P == pytest.approx(99_713.0, rel=0.02)

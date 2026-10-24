@@ -53,6 +53,7 @@ from ngdesign.contracts.components import resolve
 from ngdesign.contracts.stream import Phase, PhaseKind, StreamState
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationError, SaturationPoint
 from ngdesign.thermo import _state
+from ngdesign.thermo import saft_assoc as _saft_assoc
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
 
 #: CODATA 2018 molar gas constant, J/(mol.K).
@@ -329,11 +330,10 @@ class _CpaKernel(_Kernel):
         self.name = name
         self.params = params
         self.tcs = tcs
-        # Memo for the temperature-only association strength: density root scans
-        # rebuild Delta at ~60-100 densities per scan and only the scalar radial
-        # factor g(rho) changes with rho. Cached values are pure functions of
-        # (T, composition), so results never depend on call order.
-        self._delta_t_cache: dict[tuple[float, bytes], np.ndarray] = {}
+        # The Wertheim association term lives in saft_assoc.py (spec T-17), shared
+        # with the cpa_pr and pc_saft_assoc rows; the arithmetic is moved verbatim,
+        # so this row's numbers are unchanged.
+        self._assoc = _saft_assoc.CPAWertheim(params)
 
     def _a_i(self, i: int, T: float) -> float:
         p = self.params[i]
@@ -351,76 +351,8 @@ class _CpaKernel(_Kernel):
         br = b_mix * rho
         return -math.log(1.0 - br) - (a_mix / (b_mix * R_GAS * T)) * math.log(1.0 + br)
 
-    def _site_iter(self) -> list[tuple[int, str]]:
-        return [(i, t) for i, p in enumerate(self.params) for t in p["sites"]]
-
-    def _site_weights(self, z: np.ndarray) -> np.ndarray:
-        return np.array([z[i] for i, _t in self._site_iter()])
-
-    def _delta_t_matrix(self, T: float, z: np.ndarray) -> np.ndarray:
-        """Temperature-only association strength (exp(eps/RT)-1) * beta * b_ij."""
-        key = (round(T, 12), z.tobytes())
-        cached = self._delta_t_cache.get(key)
-        if cached is None:
-            sites = self._site_iter()
-            d = np.zeros((len(sites), len(sites)))
-            for a, (ia, ta) in enumerate(sites):
-                pa = self.params[ia]
-                for b, (ib, tb) in enumerate(sites):
-                    if not ((ta == "d" and tb == "a") or (ta == "a" and tb == "d")):
-                        continue
-                    pb = self.params[ib]
-                    if ia == ib:
-                        eps, beta = pa["epsilon_AB"], pa["beta_AB"]
-                    else:  # CR1 cross-association rule
-                        eps = 0.5 * (pa["epsilon_AB"] + pb["epsilon_AB"])
-                        beta = math.sqrt(pa["beta_AB"] * pb["beta_AB"])
-                    b_ij = 0.5 * (pa["b"] + pb["b"])
-                    d[a, b] = (math.exp(eps / (R_GAS * T)) - 1.0) * beta * b_ij
-            cached = d
-            self._delta_t_cache[key] = cached
-        return cached
-
-    def _delta_matrix(self, T: float, rho: float, z: np.ndarray) -> np.ndarray:
-        """Delta_AB over the site list (association pairs donor with acceptor only)."""
-        eta = self._b_mix(z) * rho / 4.0
-        g = 1.0 / (1.0 - 1.9 * eta) if eta < 0.49 else 1.0e10
-        return g * self._delta_t_matrix(T, z)
-
-    def _solve_x(self, rho: float, z: np.ndarray, d: np.ndarray) -> np.ndarray:
-        """Site fractions X_A by successive substitution from a deterministic start.
-
-        The iteration must be a pure function of state: a warm start carried
-        across calls made alpha_r history-dependent, which flipped marginal
-        states (saturated-liquid roots hugging their spinodal) between SSA
-        branches depending on call order and made scans and fugacities
-        irreproducible.
-        """
-        weights = self._site_weights(z)
-        x = np.asarray(1.0 / (1.0 + rho * (d @ weights)), dtype=float)
-        # Undamped SSA 2-cycles at liquid-like densities for strongly associating
-        # feeds (observed: it stalled above 1e-13 and burned its whole iteration
-        # budget every call); 0.5-damping contracts the cycle and reaches the same
-        # fixed point. Tolerance 1e-10 keeps the association term smooth enough that
-        # the composition finite differences meet the harness's 1e-6 Gibbs-Duhem bar
-        # (measured integral ratio 8.6e-7 here; a Newton variant reached a tighter
-        # residual yet a WORSE integral, so the sweep residual is not the binding
-        # error source - keep the simple damped iteration).
-        for _ in range(150):
-            nxt = np.asarray(1.0 / (1.0 + rho * (d @ (x * weights))), dtype=float)
-            nxt = 0.5 * x + 0.5 * nxt
-            delta = float(np.max(np.abs(nxt - x)))
-            x = nxt
-            if delta < 1e-10:
-                break
-        return x
-
     def _alpha_assoc(self, T: float, rho: float, z: np.ndarray) -> float:
-        d = self._delta_matrix(T, rho, z)
-        x = self._solve_x(rho, z, d)
-        w = self._site_weights(z)
-        # sum_i x_i sum_A (ln X_A - X_A/2 + 1/2): exactly zero when X = 1.
-        return float(np.sum(w * (np.log(x) - x / 2.0 + 0.5)))
+        return self._assoc.alpha(T, rho, z)
 
     def _alpha_r(self, T: float, rho: float, z: np.ndarray) -> float:
         return self._alpha_phys(T, rho, z) + self._alpha_assoc(T, rho, z)
@@ -452,7 +384,204 @@ class _CpaKernel(_Kernel):
         return 0.98 / self._b_mix(z)
 
 
-@lru_cache(maxsize=1)
+class _CpaPrKernel(_CpaKernel):
+    """CPA-PR (row ``cpa_pr``): PR physical term + the shared association term.
+
+    Physical part: Peng-Robinson, a_i(T) = a0_i (1 + c1_i (1 - sqrt(T/Tc_i)))^2
+    (the paper's fitted Soave-type alpha, Sorensen et al. 2018, Appendix A eq. A2),
+    classical vdW mixing with the paper's temperature-dependent k_ij (Table 7), and
+    A_phys/(NRT) = -ln(1 - b rho)
+                    - a_mix/(2 sqrt(2) b R T) ln((1 + (1 + sqrt 2) b rho) / (1 + (1 - sqrt 2) b rho)).
+    Association part: identical to cpa_srk — the shared saft_assoc.CPAWertheim term
+    with the paper's simplified-CPA RDF g = 1/(1 - 1.9 eta), eta = b rho/4
+    (Appendix A eq. A14) and CR-1 combining rules (eq. A15-A16).
+    """
+
+    def __init__(
+        self, name: str, params: list[dict[str, Any]], tcs: list[float], kij_table: dict[str, Any]
+    ) -> None:
+        super().__init__(name, params, tcs)
+        self._kij_table = kij_table
+
+    def _kij(self, i: int, j: int, T: float) -> float:
+        """Temperature-dependent binary interaction parameter (Sorensen 2018, Table 7)."""
+        key = "-".join(sorted((self.params[i]["name"], self.params[j]["name"])))
+        entry = self._kij_table.get(key)
+        if entry is None:
+            return 0.0
+        return float(entry["kij_ref"]) + float(entry["kij_prime"]) * (T - float(entry["T_ref"]))
+
+    def _a_mix(self, T: float, z: np.ndarray) -> float:
+        a_mix = 0.0
+        for i, xi in enumerate(z):
+            for j, xj in enumerate(z):
+                a_mix += xi * xj * math.sqrt(self._a_i(i, T) * self._a_i(j, T)) * (1.0 - self._kij(i, j, T))
+        return a_mix
+
+    def _alpha_phys(self, T: float, rho: float, z: np.ndarray) -> float:
+        b_mix = self._b_mix(z)
+        a_mix = self._a_mix(T, z)
+        br = b_mix * rho
+        return -math.log(1.0 - br) - (a_mix / (2.0 * math.sqrt(2.0) * b_mix * R_GAS * T)) * math.log(
+            (1.0 + (1.0 + math.sqrt(2.0)) * br) / (1.0 + (1.0 - math.sqrt(2.0)) * br)
+        )
+
+    def _alpha_phys_derivs(self, T: float, rho: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
+        """a_phys and its exact rho / composition derivatives at fixed (T, rho).
+
+        Returns ``(a_phys, da/drho, [da/dz_i])``. The composition derivative is
+
+            da/dz_i = rho b_i/(1 - B)
+                      - 1/(2 sqrt(2) R T) [ ((da_i b - a b_i)/b^2) f(B)
+                                            + (a/b) rho b_i f'(B) ],
+
+        with B = b rho, f(B) the PR log term, da_i = da_mix/dz_i = 2 sum_j z_j a_ij,
+        and da/drho = b/(1 - B) - a f'(B)/(2 sqrt(2) R T).
+        """
+        b = self._b_mix(z)
+        a = self._a_mix(T, z)
+        br = b * rho
+        s2 = math.sqrt(2.0)
+        f = math.log((1.0 + (1.0 + s2) * br) / (1.0 + (1.0 - s2) * br))
+        fp = (1.0 + s2) / (1.0 + (1.0 + s2) * br) - (1.0 - s2) / (1.0 + (1.0 - s2) * br)
+        a_phys = -math.log(1.0 - br) - (a / (2.0 * s2 * b * R_GAS * T)) * f
+        dadrho = b / (1.0 - br) - a * fp / (2.0 * s2 * R_GAS * T)
+        out = np.zeros(z.size)
+        for i in range(z.size):
+            bi = float(self.params[i]["b"])
+            da_i = 0.0
+            for j, xj in enumerate(z):
+                da_i += xj * math.sqrt(self._a_i(i, T) * self._a_i(j, T)) * (1.0 - self._kij(i, j, T))
+            da_i *= 2.0
+            out[i] = rho * bi / (1.0 - br) - ((da_i * b - a * bi) / (b * b) * f + (a / b) * rho * bi * fp) / (
+                2.0 * s2 * R_GAS * T
+            )
+        return a_phys, dadrho, out
+
+    def _alpha_r_derivs(self, T: float, rho: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
+        """a_r and its exact rho / composition derivatives (PR physical + association)."""
+        a_phys, dadrho_phys, dz_phys = self._alpha_phys_derivs(T, rho, z)
+        alpha_a, dadrho_a, dz_a = self._assoc.derivs(T, rho, z)
+        return a_phys + alpha_a, dadrho_phys + dadrho_a, dz_phys + dz_a
+
+    def pressure(self, T: float, rho: float, z: np.ndarray) -> float:
+        """P = rho R T (1 + rho da_r/drho) with both derivative terms in closed form."""
+        _a, dadrho, _dz = self._alpha_r_derivs(T, rho, z)
+        return rho * R_GAS * T * (1.0 + rho * dadrho)
+
+    def ln_phi(self, T: float, rho: float, z: np.ndarray) -> np.ndarray:
+        """Fully analytic fugacity coefficients.
+
+        ln phi_i = a_r + rho da_r/drho + da_r/dz_i - sum_j z_j da_r/dz_j - ln Z,
+        every term closed-form (the PR physical term and the association term
+        both differentiated exactly). The Michelsen-shift finite difference the
+        parent class uses carries a truncation error of order h^2 times the
+        third shift-derivative, which at this row's liquid-like packing
+        fractions (the PR pole sits at 1/b_mix) breaks the bridge's 1e-6
+        Gibbs-Duhem integral: measured 3.7e-6 at 30 midpoint steps, 3.5e-6 at
+        120 (quadrature-converged), against cpa_srk's 5.7e-8 on the flatter
+        ln(1+B) SRK form. Closed-form derivatives on the whole surface remove
+        the finite-difference error fields entirely; partial fixes (analytic mu
+        with finite-difference Z and density roots) keep an incoherent surface
+        and still measured 3.8e-6.
+        """
+        a_r, dadrho, dz = self._alpha_r_derivs(T, rho, z)
+        Z = 1.0 + rho * dadrho
+        if Z <= 0.0:
+            raise _NonPhysicalZ(f"Z={Z:.6g} at T={T} K, rho={rho:.6g}")
+        mu = a_r + rho * dadrho + dz - float(z @ dz)
+        return mu - math.log(Z)
+
+    def max_density(self, T: float, z: np.ndarray) -> float:
+        # The PR pole sits at rho = 1/b_mix (same co-volume as the SRK pole);
+        # the association g-divergence at 1.96/b_mix is beyond it.
+        return 0.98 / self._b_mix(z)
+
+
+class _PCSaftAssocKernel(_Kernel):
+    """Hand-rolled PC-SAFT engine with the Wertheim association term (spec T-17).
+
+    Physical part: PC-SAFT hard-chain + dispersion exactly as published (Gross &
+    Sadowski 2001, Table 3 constants, closed-form density and composition
+    derivatives) — reimplemented because teqp's PC-SAFT carries no association
+    contribution, and the shared kernel surface needs one coherent analytic
+    derivative field. The hand-rolled physical term is pinned to teqp's by the
+    check-value test in tests/thermo/test_saft.py before any association case
+    binds to it. Association part: the shared PCSaftWertheim term with G&S
+    2002's two-site (2B) assignment for every associating fluid and the eq. 2-3
+    cross-association combining rules; pure fluids associate through their own
+    donor-acceptor site pairs exactly as in the CPA kernels.
+    """
+
+    def __init__(self, name: str, params: list[dict[str, Any]]) -> None:
+        self.name = name
+        self.params = params
+        self._phys = _saft_assoc.PCSaftPhysical(params)
+        self._assoc = _saft_assoc.PCSaftWertheim(params)
+
+    def _alpha_r_derivs(self, T: float, rho: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
+        """alpha_r and its exact rho / composition derivatives (chain + disp + assoc)."""
+        a_phys, dadrho_phys, dz_phys = self._phys.derivs(T, rho, z)
+        alpha_a, dadrho_a, dz_a = self._assoc.derivs(T, rho, z)
+        return a_phys + alpha_a, dadrho_phys + dadrho_a, dz_phys + dz_a
+
+    def pressure(self, T: float, rho: float, z: np.ndarray) -> float:
+        """P = rho R T (1 + rho da_r/drho), the derivative in closed form."""
+        _a, dadrho, _dz = self._alpha_r_derivs(T, rho, z)
+        return rho * R_GAS * T * (1.0 + rho * dadrho)
+
+    def ln_phi(self, T: float, rho: float, z: np.ndarray) -> np.ndarray:
+        """Fully analytic fugacity coefficients (the cpa_pr formula, closed form)."""
+        a_r, dadrho, dz = self._alpha_r_derivs(T, rho, z)
+        Z = 1.0 + rho * dadrho
+        if Z <= 0.0:
+            raise _NonPhysicalZ(f"Z={Z:.6g} at T={T} K, rho={rho:.6g}")
+        mu = a_r + rho * dadrho + dz - float(z @ dz)
+        return mu - math.log(Z)
+
+    def h_res_rt(self, T: float, rho: float, z: np.ndarray) -> float:
+        """-T d(alpha_r)/dT + Z - 1; the T derivative is a central difference (the
+        cpa kernels' pattern; the density and composition derivatives stay analytic)."""
+        _a, dadrho, _dz = self._alpha_r_derivs(T, rho, z)
+        Z = 1.0 + rho * dadrho
+        ht = _DPTH_H * T
+        up = (self._alpha_r_derivs(T + ht, rho, z)[0] - self._alpha_r_derivs(T - ht, rho, z)[0]) / (2.0 * ht)
+        return -T * up + Z - 1.0
+
+    def max_density(self, T: float, z: np.ndarray) -> float:
+        """The BMCSL packing limit zeta_3 = 0.74 (teqp's max_rhoN), at 99.9 %."""
+        eps = np.array([float(p["epsilon_over_k"]) for p in self.params])
+        m = np.array([float(p["m"]) for p in self.params])
+        sigma = np.array([float(p["sigma_Angstrom"]) for p in self.params])
+        d = sigma * (1.0 - 0.12 * np.exp(-3.0 * eps / T))
+        packing_a3 = 6.0 * 0.74 / math.pi / float(np.sum(z * m * d**3))
+        return packing_a3 / _saft_assoc._MOL_TO_A3 * 0.999
+
+
+class _PCSaftPolarKernel(_PCSaftAssocKernel):
+    """Hand-rolled PC-SAFT + Gross & Vrabec dipolar term (row ``pc_saft_polar``).
+
+    Physical part identical to the association kernel (the teqp-pinned
+    PCSaftPhysical term); the association slot is replaced by the shared
+    PCSaftDipolar term (Gross & Vrabec 2006), so pressure, fugacity
+    coefficients, enthalpy and max density reuse the association kernel's
+    machinery unchanged. No association contribution: the bound slate
+    (acetone, DME) is non-associating.
+    """
+
+    def __init__(self, name: str, params: list[dict[str, Any]]) -> None:
+        self.name = name
+        self.params = params
+        self._phys = _saft_assoc.PCSaftPhysical(params)
+        self._dip = _saft_assoc.PCSaftDipolar(params)
+
+    def _alpha_r_derivs(self, T: float, rho: float, z: np.ndarray) -> tuple[float, float, np.ndarray]:
+        """alpha_r and its exact rho / composition derivatives (chain + disp + dipolar)."""
+        a_phys, dadrho_phys, dz_phys = self._phys.derivs(T, rho, z)
+        alpha_d, dadrho_d, dz_d = self._dip.derivs(T, rho, z)
+        return a_phys + alpha_d, dadrho_phys + dadrho_d, dz_phys + dz_d
+
+
 def _polymer_pcsaft_params() -> dict[str, Any]:
     """The cited polymer PC-SAFT parameter file, loaded once (spec T-10)."""
     path = Path(__file__).resolve().parents[3] / "data" / "thermo_params" / "special" / "polymer.yaml"
@@ -516,6 +645,23 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
         # package uses); the Kontogeorgis table carries the a0/b/c1 fit only.
         tcs = [float(resolve(cid).Tc) for cid in cids]
         return _CpaKernel(kind, [block[cid] for cid in cids], tcs)
+    if kind == "cpa_pr":
+        block = _require_params("cpa_pr", cids)
+        # Tc from the resolved component records (the cpa_srk pattern); the paper's
+        # Table 6 carries the a0/b/c1 fit and the association parameters only.
+        # The paper's own Tc (Table 6), not the databank's: a0/c1 were fitted with it.
+        tcs = [float(block[cid]["Tc"]) for cid in cids]
+        params = [block[cid] | {"name": cid} for cid in cids]
+        kij_table = block.get("binary_kij") or {}
+        return _CpaPrKernel(kind, params, tcs, kij_table)
+    if kind == "pc_saft_assoc":
+        block = _require_params("pc_saft_assoc", cids)
+        params = [block[cid] | {"name": cid} for cid in cids]
+        return _PCSaftAssocKernel(kind, params)
+    if kind == "pc_saft_polar":
+        block = _require_params("pc_saft_polar", cids)
+        params = [block[cid] | {"name": cid} for cid in cids]
+        return _PCSaftPolarKernel(kind, params)
     if kind == "polymer_pc_saft":
         # Polymer PC-SAFT (spec T-10): same PCSAFT engine as "pc_saft", but the
         # parameters live in the special-family file (polymer.yaml), keyed by
@@ -564,38 +710,20 @@ class TeqpPackage(ThermoSurfaceMixin):
         CoolProp and virial rows set the pattern), so the API can list it, the
         contract test can type it and the refusal reason surfaces at the first
         property call via ``_kernel`` - the single entry to the engines.
+
+        pc_saft_polar refuses per-component from _require_params inside
+        _build_kernel (the pc_saft_assoc pattern), so it has no kind-level
+        branch here.
         """
-        if self.model_kind == "pc_saft_assoc":
-            raise NotImplementedError(
-                "saft row 'pc_saft_assoc' refuses to build: teqp 0.23.2's PC-SAFT "
-                "implements no association contribution (teqp docs, PCSAFT.html: 'It "
-                "does NOT include the association contribution, only the dispersive "
-                "contributions')"
-            )
-        if self.model_kind == "pc_saft_polar":
-            raise NotImplementedError(
-                "saft row 'pc_saft_polar' refuses to build: teqp (>= 0.15) ships a "
-                "polar PC-SAFT extension, but no verified, citable component polar "
-                "parameters ((Q*)^2, (mu*)^2) exist in data/thermo_params/saft/pure.yaml; "
-                "parameter retrieval is out of T-07 scope"
-            )
         if self.model_kind == "soft_saft":
             raise NotImplementedError(
-                "saft row 'soft_saft' refuses to build: no soft-SAFT engine exists — "
+                "saft row 'soft_saft' is not implemented: no soft-SAFT engine exists — "
                 "teqp 0.23.2 (the family's only optional backend) ships no soft-SAFT "
                 "kernel (its SAFT factories are the explicit-coefficient PC-SAFT and "
                 "SAFT-VR-Mie engines; there is no soft-SAFT model kind and no teqp.saft "
                 "module — measured against the installed teqp 0.23.2), and the T-07 "
                 "spec forbids writing SAFT by hand. Blas & Vega's (1997) soft-SAFT "
                 "stays outside the catalogue rather than being approximated"
-            )
-        if self.model_kind == "cpa_pr":
-            raise NotImplementedError(
-                "saft row 'cpa_pr' refuses to build: teqp 0.23.2's CPA is unusable "
-                "(its fugacity coefficients NaN at liquid-like densities and its "
-                "saturation line collapses with the published Kontogeorgis water "
-                "parameters — measured in the T-07 exploration); CPA-SRK is provided "
-                "by the hand-rolled kernel of row cpa_srk"
             )
 
     # -- kernel plumbing -------------------------------------------------------
@@ -1544,13 +1672,13 @@ class PCSaftThermo(TeqpPackage):
 
 
 class PCSaftAssocThermo(TeqpPackage):
-    """Refusal row: teqp's PC-SAFT has no association contribution (row ``pc_saft_assoc``)."""
+    """Hand-rolled PC-SAFT + association kernel (row ``pc_saft_assoc``, spec T-17)."""
 
     model_kind = "pc_saft_assoc"
 
 
 class PCSaftPolarThermo(TeqpPackage):
-    """Refusal row: no verified citable polar parameters (row ``pc_saft_polar``)."""
+    """Hand-rolled PC-SAFT + Gross & Vrabec (2006) dipolar term (row ``pc_saft_polar``)."""
 
     model_kind = "pc_saft_polar"
 
