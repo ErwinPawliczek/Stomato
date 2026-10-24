@@ -84,7 +84,7 @@ def underwood_theta(
             raise ValueError(f"z[{cid}] must be non-negative, got {z[cid]}")
     if not math.isfinite(alpha_LK) or alpha_LK <= 1.0 + 1e-12:
         raise ValueError(
-            f"light-key relative volatility alpha_LK must exceed 1 (relative to the heavy key), got {alpha_LK}"
+            f"light-key relative volatility alpha_LK must exceed 1 (vs the heavy key), got {alpha_LK}"
         )
 
     def residual(theta: float) -> float:

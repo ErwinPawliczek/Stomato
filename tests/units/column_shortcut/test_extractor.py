@@ -12,7 +12,6 @@ from typing import Any
 
 import pytest
 
-from ngdesign import registry
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.column_shortcut.extractor import LiquidLiquidExtractor
 
@@ -39,9 +38,5 @@ def test_extractor_k_overrides_alias_matches_kd(thermo: Thermo) -> None:
     kd = {"p-dioxane": 5.2027}
     via_kd = LiquidLiquidExtractor().solve(states, {"N": 2.0, "K_D": dict(kd)}, thermo)
     via_alias = LiquidLiquidExtractor().solve(states, {"N": 2.0, "k_overrides": dict(kd)}, thermo)
-    assert via_alias.outlets["extract"].molar_flow == pytest.approx(
-        via_kd.outlets["extract"].molar_flow
-    )
-    assert via_alias.outlets["extract"].composition == pytest.approx(
-        via_kd.outlets["extract"].composition
-    )
+    assert via_alias.outlets["extract"].molar_flow == pytest.approx(via_kd.outlets["extract"].molar_flow)
+    assert via_alias.outlets["extract"].composition == pytest.approx(via_kd.outlets["extract"].composition)

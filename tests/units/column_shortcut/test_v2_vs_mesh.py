@@ -148,9 +148,7 @@ def test_v2b_kremser_vs_zero_tear_mesh_p1_09(thermo: Thermo, n_stages: int) -> N
             "reboiler": "none",
             "pressure_profile": 2e6,
             "feed_stage": n_stages,
-            "feeds": [
-                {"T": 300.0, "P": 2e6, "molar_flow": 50.0, "composition": {"nC5": 1.0}, "stage": 1}
-            ],
+            "feeds": [{"T": 300.0, "P": 2e6, "molar_flow": 50.0, "composition": {"nC5": 1.0}, "stage": 1}],
         },
         thermo,
     )
