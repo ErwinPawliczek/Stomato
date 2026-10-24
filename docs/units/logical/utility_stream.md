@@ -2,7 +2,7 @@
 
 Family: **logical** · P&ID symbol: `UTL`
 
-Rigour ladder: R0 planned
+Rigour ladder: R0 provisional
 
 ## Ports
 
@@ -15,7 +15,30 @@ Rigour ladder: R0 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | steam levels, cooling water, fuel gas, electricity with cost basis |
+| R0 | provisional | `ngdesign.units.logical.utility_stream:UtilityStream` | metering pass-through reporting utility_cost_rate. closed-form only; definitional unit (no open textbook worked example; pricing data out of scope per spec) |
+
+### R0 parameters
+
+```yaml
+properties:
+  kind:
+    enum:
+    - steam_lp
+    - steam_mp
+    - steam_hp
+    - cooling_water
+    - fuel_gas
+    - electricity
+    - refrigerant
+    type: string
+  price:
+    description: currency per unit basis; reported as info.utility_cost_rate (pass-through,
+      not physics)
+    type: number
+required:
+- kind
+type: object
+```
 
 ## References
 

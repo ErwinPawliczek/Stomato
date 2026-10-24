@@ -24,7 +24,8 @@ from tests.conftest import flash_feed
 
 def _thermo() -> Thermo:
     names = registry.available("thermo")
-    return registry.create("thermo", "pr" if "pr" in names else names[0])
+    thermo: Thermo = registry.create("thermo", "pr" if "pr" in names else names[0])
+    return thermo
 
 
 def _feed() -> dict[str, Any]:

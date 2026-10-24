@@ -8,6 +8,8 @@ solved stream states agree, which is the spec U-A equivalence bar.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from ngdesign import registry
@@ -22,7 +24,8 @@ FEED = FeedSpec(T=322.15, P=7.0e6, molar_flow=100.0, composition={"C1": 0.848, "
 
 def _thermo() -> Thermo:
     names = registry.available("thermo")
-    return registry.create("thermo", "pr" if "pr" in names else names[0])
+    thermo: Thermo = registry.create("thermo", "pr" if "pr" in names else names[0])
+    return thermo
 
 
 def _stream(sid: str, source: PortRef | None, target: PortRef | None = None) -> StreamSpec:
@@ -164,7 +167,7 @@ def _loop_flowsheet(with_node: bool) -> Flowsheet:
 
 
 def test_recycle_block_lowers_to_tear_options() -> None:
-    def _flowsheet(params: dict) -> Flowsheet:
+    def _flowsheet(params: dict[str, Any]) -> Flowsheet:
         return Flowsheet(
             name="F-RCY",
             units=[
