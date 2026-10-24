@@ -280,9 +280,7 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
         ("condenser_water_decant", "S0-1 feature 3 (steam and free water)"),
     ):
         if key in params:
-            raise ColumnSpecError(
-                f"params['{key}'] is not implemented yet: it lands with {feature} (#235)"
-            )
+            raise ColumnSpecError(f"params['{key}'] is not implemented yet: it lands with {feature} (#235)")
 
     feeds: list[_FeedSpec] = []
     if graph_feed is not None:
