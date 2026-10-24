@@ -185,9 +185,7 @@ def test_hydrocyclone_splits_water_to_underflow(thermo: Thermo) -> None:
     under, over = result.outlets["underflow"], result.outlets["overflow"]
     feed = inlets["inlet"]
     n_h2o_under = under.composition["H2O"] * under.molar_flow
-    assert n_h2o_under == pytest.approx(
-        0.95 * feed.composition["H2O"] * feed.molar_flow, rel=1e-9
-    )
+    assert n_h2o_under == pytest.approx(0.95 * feed.composition["H2O"] * feed.molar_flow, rel=1e-9)
     n_oil_over = over.composition["nC5"] * over.molar_flow
     assert n_oil_over == pytest.approx(feed.composition["nC5"] * feed.molar_flow, rel=1e-9)
 
@@ -231,9 +229,7 @@ def test_membrane_stage_cut_matches_geankoplis_13_4_2(thermo: Thermo) -> None:
     assert permeate.composition["O2"] == pytest.approx(0.5068, abs=0.001)
     assert residue.composition["O2"] == pytest.approx(0.1345, abs=0.001)
     assert permeate.molar_flow == pytest.approx(0.2 * inlets["feed_in"].molar_flow, rel=1e-9)
-    assert permeate.molar_flow + residue.molar_flow == pytest.approx(
-        inlets["feed_in"].molar_flow, rel=1e-9
-    )
+    assert permeate.molar_flow + residue.molar_flow == pytest.approx(inlets["feed_in"].molar_flow, rel=1e-9)
     assert permeate.P == pytest.approx(2.533125e4, rel=1e-9)
     assert residue.P == pytest.approx(2.533125e5, rel=1e-9)
 
