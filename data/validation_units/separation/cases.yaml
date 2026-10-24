@@ -4,7 +4,12 @@
 # SVA, GPSA Sect. 20 mol-sieve example) are not yet transcribed from a
 # verified copy of the source — they are added when the numbers can be
 # checked, not guessed. hydrate_check uses GPSA Example 20-10; the flash_drum
-# case is Corripio's worked example (fully reproduced lecture notes).
+# case is Corripio's worked example (fully reproduced lecture notes); the
+# membrane case is Geankoplis Ex. 13.4-2 (the Weller-Steiner compositions are
+# complete-mixing algebra, so no equation-of-state gap applies). The Corripio
+# PR-vs-ideal-K miss is recorded under `assessed`, never absorbed by the
+# tolerance. Evidence gaps per row are documented in
+# data/unit_models/separation.yaml.
 - id: V-hydrate-gpsa-20-10
   unit: hydrate_check
   level: R0
@@ -74,3 +79,29 @@
     these conditions are less ideal; the PVF spec then lands at a higher T.
     The book's own rounding (+/- 0.1 K) is kept as the tolerance; the miss is
     the model gap, reported here rather than absorbed.
+- id: V-membrane-geankoplis-13-4-2
+  unit: membrane
+  level: R0
+  source: >-
+    Geankoplis, "Transport Processes and Separation Process Principles", 4th
+    ed., Example 13.4-2 "Membrane Design for Separation of Air" (p. 767): an
+    air feed (z_O2 = 0.209) at 190 cmHg with the permeate side at 19 cmHg
+    (pressure ratio 10), alpha = 10 (O2 permeability / N2 permeability) and
+    stage cut theta = 0.2 give a permeate y_O2 = 0.5068 and a reject
+    x_O2 = 0.1345 by the Weller-Steiner complete-mixing model. Numbers read
+    from the FOSSEE open transcription of Geankoplis Ch. 13
+    (tbc-python.fossee.in, GeankoplisChapter13, Example 13.4-2). The
+    compositions come from the complete-mixing algebra alone (thermo only
+    sets the outlet states), so no equation-of-state gap applies; the
+    tolerances are the book's four-decimal rounding.
+  feeds:
+    feed_in:
+      T: 298.15
+      P: 2.533125e+5
+      molar_flow: 100.0
+      composition: {O2: 0.209, N2: 0.791}
+  params: {stage_cut: 0.2, perm_ratio: {O2: 10.0, N2: 1.0}, P_permeate: 2.533125e+4}
+  expected:
+  - {quantity: outlet.permeate.composition.O2, value: 0.5068, tol_abs: 0.001}
+  - {quantity: outlet.residue.composition.O2, value: 0.1345, tol_abs: 0.001}
+  - {quantity: outlet.permeate.molar_flow, value: 20.0, tol_rel: 1.0e-9}
