@@ -1,0 +1,95 @@
+# V1 worked cases for the column family (spec U-01). Sources verified against
+# the printed tables of Seader, Henley & Roper, 3rd ed. Tolerances are the
+# book's printed rounding, fixed before the run and never widened; a measured
+# miss is recorded in the case's assessed note with its numbers and cause.
+
+- id: V1-fug-debutanizer-seader97
+  unit: shortcut_distillation
+  level: R0
+  source: >-
+    Seader, Henley & Roper, 3rd ed., Examples 9.2-9.7, pp. 350-360:
+    debutanizer, Fenske Nmin = 8.88 and Kirkbride feed-stage ratio 0.445
+    (verified against the printed correlation and Example 9.2 product split);
+    Underwood Rmin = 0.479.
+  notes: >-
+    The example_case carries the book's feeds, keys, recoveries and R/Rmin =
+    1.688. Tolerances are the book's printed rounding (two decimals on Nmin,
+    three on Rmin, 1 % on the flow-based Kirkbride ratio) and are never
+    widened; a measured miss is recorded in the assessed note with its number
+    and cause. Not anchored: N, R, duties and product flows, which the book
+    prints inconsistently or does not print.
+  assessed: >-
+    Measured on the default Peng-Robinson package (after the Underwood bracket
+    fix): Nmin 7.934 vs 8.88 (-10.7 %) and Rmin 0.3430 vs 0.479 (-28.4 %).
+    Cause: Fenske and Underwood consume relative volatilities, and the PR
+    K-ratios at the example's saturation states differ from the book's
+    K-chart estimates; the book's printed K-values for Examples 9.2-9.7 are
+    not carried in-repo (no published value is typed without reading its
+    source), so the case cannot be driven with them this round. The flow-based
+    Kirkbride ratio is unaffected (0.4459 vs 0.445, +0.2 %) and passes at the
+    book's rounding.
+  expected:
+  - {quantity: info.kirkbride_ratio, value: 0.445, tol_rel: 0.01}
+  - {quantity: info.Nmin, value: 8.88, tol_abs: 0.005}
+  - {quantity: info.Rmin, value: 0.479, tol_abs: 0.0005}
+
+- id: V1-kremser-absorber-seader53
+  unit: absorber
+  level: R0
+  source: >-
+    Seader, Henley & Roper, 3rd ed., Example 5.3, p. 188: hydrocarbon-rich gas
+    absorbed by oil, N = 6, 800 lbmol/h gas at 105 F / 400 psia, 165 lbmol/h
+    absorbent oil at 90 F; printed fA/fS table at K-values estimated at
+    97.5 F (carried by the example_case as k_overrides).
+  notes: >-
+    Tolerances are the book's printed rounding of the recovery fractions
+    (three decimals; nC5 fA three significant figures; nC4 fA widened to
+    0.001 because the printed 0.119 is a rounded 0.1199). The book's printed
+    y1/l6 flow columns are internally inconsistent and are not anchored.
+  expected:
+  - {quantity: info.f_not_absorbed_C1, value: 0.969, tol_abs: 0.0005}
+  - {quantity: info.f_not_absorbed_C2, value: 0.874, tol_abs: 0.0005}
+  - {quantity: info.f_not_absorbed_C3, value: 0.647, tol_abs: 0.0005}
+  - {quantity: info.f_not_absorbed_nC4, value: 0.119, tol_abs: 0.001}
+  - {quantity: info.f_not_absorbed_nC5, value: 0.00112, tol_abs: 0.000005}
+  - {quantity: info.f_not_stripped_nC4, value: 0.168, tol_abs: 0.0005}
+  - {quantity: info.f_not_stripped_nC5, value: 0.654, tol_abs: 0.001}
+  - {quantity: "info.f_not_stripped_C6+", value: 0.9995, tol_abs: 0.0005}
+
+- id: V1-kremser-stripper-seader98
+  unit: reboiled_stripper
+  level: R0
+  source: >-
+    Seader, Henley & Roper, 3rd ed., Example 9.8, p. 372: SO2/butadienes
+    stripped by nitrogen from butadiene-sulfone liquor, converged N = 3 row
+    (V0 = 94.3 lbmol/h): fS = 0.0050 (SO2), 0.016 (B3), 0.045 (B2), 0.9874
+    (BS). Butadiene sulfone is not in the component registry; the example
+    carries the documented n-decane stand-in with the book's K-values as
+    k_overrides.
+  notes: >-
+    Expected bottoms/overhead flows are the printed fS fractions times the
+    feed component flows (10/8/2/100 lbmol/h), converted lbmol/h -> mol/s;
+    tolerances cover the printed rounding of each fS (two significant figures
+    for SO2/B3/B2, four for BS).
+  expected:
+  - {quantity: "info.bottoms_SO2", value: 0.0063, tol_abs: 0.0001}
+  - {quantity: "info.overhead_1,3-butadiene", value: 0.99186, tol_abs: 0.001}
+  - {quantity: "info.bottoms_1,2-butadiene", value: 0.01134, tol_abs: 0.0003}
+  - {quantity: "info.bottoms_n-decane", value: 12.4410, tol_abs: 0.002}
+
+- id: V1-kremser-extractor-seader52
+  unit: liquid_liquid_extractor
+  level: R0
+  source: >-
+    Seader, Henley & Roper, 3rd ed., Example 5.2, pp. 183-185: p-dioxane
+    extracted from water by benzene, countercurrent cascade with the
+    constant-distribution-coefficient basis K'D = 1.2 (mass ratios) and
+    carrier ratio S/FA = 2.0, so E = 2.4; two stages give 89.1 % extraction.
+  notes: >-
+    The example_case converts the book's mass-ratio coefficient to the
+    adapter's mole-ratio basis (K_D = K'D x MW_benzene/MW_water = 5.2027),
+    giving E = 2.3992; the 0.001 tolerance covers the mole-basis rounding
+    relative to the book's exact E = 2.4. Example flows are on the book's
+    kmol/h basis, so flow-quantity info values are kmol/h.
+  expected:
+  - {quantity: "info.extraction_fraction_p-dioxane", value: 0.891, tol_abs: 0.001}
