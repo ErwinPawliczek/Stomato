@@ -340,7 +340,7 @@
       description: cooled water
     - name: air_out
       required: true
-      description: exit air (saturated at the wet-bulb state)
+      description: exit air (saturated at the mean water temperature)
   levels:
     R0:
       status: provisional

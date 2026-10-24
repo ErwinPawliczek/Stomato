@@ -1,6 +1,6 @@
 """Multi-stream R0 exchanger (spec U-C 6).
 
-Plugin kind "unit", name "multi_stream_exchanger", registered from the
+Plugin kind "unit", name "multi_stream", registered from the
 catalogue row. Four optional stream pairs - hot_in_1/2, cold_in_1/2 in,
 positional hot_out_1/2, cold_out_1/2 out (outlet ports are NOT mirrored
 inlet names). Every active side carries a ``T_out_<port>`` spec except
@@ -36,10 +36,12 @@ class MultiStreamExchanger:
         thermo: Thermo,
     ) -> UnitResult:
         hot_sides = tuple(
-            MultiStreamSide(inlets[port], T_out=params.get(f"T_out_{port}")) for port in ("hot_in_1", "hot_in_2")
+            MultiStreamSide(inlets[port], T_out=params.get(f"T_out_{port}"))
+            for port in ("hot_in_1", "hot_in_2")
         )
         cold_sides = tuple(
-            MultiStreamSide(inlets[port], T_out=params.get(f"T_out_{port}")) for port in ("cold_in_1", "cold_in_2")
+            MultiStreamSide(inlets[port], T_out=params.get(f"T_out_{port}"))
+            for port in ("cold_in_1", "cold_in_2")
         )
         result = multi_stream(hot_sides, cold_sides, thermo)
 

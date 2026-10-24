@@ -1,7 +1,7 @@
-"""HEN block R0 (spec U-C 9).
+"""HEN block R0 (spec U-C 10).
 
 Plugin kind "unit", name "hen_block", registered from the catalogue row.
-Two hot + two cold optional ports with positional positional outlets
+Two hot + two cold optional ports with positional outlets
 (hot_out_1/2, cold_out_1/2): a network STAGE whose every active stream
 reaches its ``T_out_<port>`` target. The Linnhoff problem table
 (:func:`ngdesign.units._physics.heat_balance.problem_table`, pure arithmetic

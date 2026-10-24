@@ -348,9 +348,7 @@ def two_stream(
         # No heat transfer is possible: both sides pass through (the zero-flow
         # side as a copy of its inlet; the active side re-flashed at its dP).
         if spec.name != "duty_W" or spec.duty_W != 0.0:
-            raise ValueError(
-                f"{spec.name} needs both streams flowing; a zero-flow side cannot transfer duty"
-            )
+            raise ValueError(f"{spec.name} needs both streams flowing; a zero-flow side cannot transfer duty")
         hot_pass = hot.model_copy(update={"P": P_h_out}) if F_h > 0 else hot.model_copy()
         cold_pass = cold.model_copy(update={"P": P_c_out}) if F_c > 0 else cold.model_copy()
         return TwoStreamResult(
@@ -365,10 +363,26 @@ def two_stream(
             pinch_T_cold_K=cold.T,
         )
 
+    # A spec that already contradicts counter-current flow is refused before any
+    # outlet flash (a crossing outlet flash can fail inside the package before
+    # the zoned check runs).
+    if spec.name == "cold_T_out" and spec.cold_T_out is not None and spec.cold_T_out >= hot.T:
+        raise TemperatureCross(
+            f"temperature cross: cold outlet {spec.cold_T_out:.2f} K at or above the hot inlet {hot.T:.2f} K"
+        )
+    if spec.name == "hot_T_out" and spec.hot_T_out is not None and spec.hot_T_out <= cold.T:
+        raise TemperatureCross(
+            f"temperature cross: hot outlet {spec.hot_T_out:.2f} K at or below the cold inlet {cold.T:.2f} K"
+        )
+
     hot_out, cold_out, duty_W = _two_stream_outlets(hot, cold, spec, thermo, P_h_out, P_c_out)
 
-    hot_side = _sample_side(thermo, hot.composition, P_h_out, hot.T, hot.enthalpy, hot_out.T, hot_out.enthalpy, F_h)
-    cold_side = _sample_side(thermo, cold.composition, P_c_out, cold.T, cold.enthalpy, cold_out.T, cold_out.enthalpy, F_c)
+    hot_side = _sample_side(
+        thermo, hot.composition, P_h_out, hot.T, hot.enthalpy, hot_out.T, hot_out.enthalpy, F_h
+    )
+    cold_side = _sample_side(
+        thermo, cold.composition, P_c_out, cold.T, cold.enthalpy, cold_out.T, cold_out.enthalpy, F_c
+    )
     min_approach, pinch_T_hot, pinch_T_cold = _pinch((hot_side,), (cold_side,))
     if min_approach < 0.0:
         raise TemperatureCross(
@@ -444,8 +458,12 @@ def _two_stream_min_approach(
     def approach_at(duty: float) -> float:
         hot_out = thermo.flash_ph(hot.composition, P_h_out, hot.enthalpy - duty / F_h, F_h)
         cold_out = thermo.flash_ph(cold.composition, P_c_out, cold.enthalpy + duty / F_c, F_c)
-        hs = _sample_side(thermo, hot.composition, P_h_out, hot.T, hot.enthalpy, hot_out.T, hot_out.enthalpy, F_h)
-        cs = _sample_side(thermo, cold.composition, P_c_out, cold.T, cold.enthalpy, cold_out.T, cold_out.enthalpy, F_c)
+        hs = _sample_side(
+            thermo, hot.composition, P_h_out, hot.T, hot.enthalpy, hot_out.T, hot_out.enthalpy, F_h
+        )
+        cs = _sample_side(
+            thermo, cold.composition, P_c_out, cold.T, cold.enthalpy, cold_out.T, cold_out.enthalpy, F_c
+        )
         return _pinch((hs,), (cs,))[0]
 
     # Upper duty bound: the hot outlet reaches the cold inlet temperature
@@ -457,9 +475,7 @@ def _two_stream_min_approach(
 
     q_lo, q_hi = 0.0, q_max
     if approach_at(q_lo) < target:
-        raise ValueError(
-            f"min_approach_K {target} exceeds the zero-duty approach {approach_at(q_lo):.4f} K"
-        )
+        raise ValueError(f"min_approach_K {target} exceeds the zero-duty approach {approach_at(q_lo):.4f} K")
     for _ in range(_BISECT_STEPS):
         mid = 0.5 * (q_lo + q_hi)
         if approach_at(mid) >= target:
@@ -498,8 +514,7 @@ def multi_stream(
     ]
     if len(balance) != 1:
         raise ValueError(
-            "exactly one active stream must be the balance stream (no T_out spec); got "
-            f"{len(balance)}"
+            f"exactly one active stream must be the balance stream (no T_out spec); got {len(balance)}"
         )
     kind_b, i_b, side_b = balance[0]
     for _, side in (*active_hot, *active_cold):
@@ -509,8 +524,8 @@ def multi_stream(
             if side.dP < 0:
                 raise ValueError("side dP must be >= 0")
 
-    hot_outs = list(hots)
-    cold_outs = list(colds)
+    hot_outs: list[StreamState] = [side.state for side in hots]
+    cold_outs: list[StreamState] = [side.state for side in colds]
     residual_W = 0.0  # duty the balance stream must absorb (sign: into the stream)
     hot_duties: dict[int, float] = {}
     cold_duties: dict[int, float] = {}
@@ -531,7 +546,7 @@ def multi_stream(
             else:
                 cold_outs[i] = out
                 cold_duties[i] = duty  # absorbed
-                residual_W += duty
+                residual_W -= duty  # what spec'd colds already absorb
 
     b_state = side_b.state
     P_b_out = b_state.P - side_b.dP
@@ -548,11 +563,29 @@ def multi_stream(
         cold_duties[i_b] = b_duty
 
     sampled_hot = tuple(
-        _sample_side(thermo, s.state.composition, s.state.P - s.dP, s.state.T, s.state.enthalpy, out.T, out.enthalpy, s.state.molar_flow)
+        _sample_side(
+            thermo,
+            s.state.composition,
+            s.state.P - s.dP,
+            s.state.T,
+            s.state.enthalpy,
+            out.T,
+            out.enthalpy,
+            s.state.molar_flow,
+        )
         for s, out in ((side, hot_outs[i]) for i, side in active_hot)
     )
     sampled_cold = tuple(
-        _sample_side(thermo, s.state.composition, s.state.P - s.dP, s.state.T, s.state.enthalpy, out.T, out.enthalpy, s.state.molar_flow)
+        _sample_side(
+            thermo,
+            s.state.composition,
+            s.state.P - s.dP,
+            s.state.T,
+            s.state.enthalpy,
+            out.T,
+            out.enthalpy,
+            s.state.molar_flow,
+        )
         for s, out in ((side, cold_outs[i]) for i, side in active_cold)
     )
     min_approach, pinch_T_hot, pinch_T_cold = _pinch(sampled_hot, sampled_cold)
@@ -600,7 +633,9 @@ def problem_table(streams: tuple[ProblemStream, ...], dT_min: float) -> ProblemT
         raise ValueError("problem table needs at least one stream with CP > 0 and a temperature span")
     for s in active:
         if s.is_hot and s.T_target > s.T_supply:
-            raise ValueError(f"hot stream {s.T_supply} -> {s.T_target} K heats up: swap is_hot or fix targets")
+            raise ValueError(
+                f"hot stream {s.T_supply} -> {s.T_target} K heats up: swap is_hot or fix targets"
+            )
         if not s.is_hot and s.T_target < s.T_supply:
             raise ValueError(f"cold stream {s.T_supply} -> {s.T_target} K cools down: fix targets")
 
@@ -635,12 +670,16 @@ def problem_table(streams: tuple[ProblemStream, ...], dT_min: float) -> ProblemT
         cp_hot = sum(
             s.cp_W_per_K
             for s in active
-            if s.is_hot and s.T_supply - dT_min / 2.0 >= t_top - _ZONE_EPS and s.T_target - dT_min / 2.0 <= t_bottom + _ZONE_EPS
+            if s.is_hot
+            and s.T_supply - dT_min / 2.0 >= t_top - _ZONE_EPS
+            and s.T_target - dT_min / 2.0 <= t_bottom + _ZONE_EPS
         )
         cp_cold = sum(
             s.cp_W_per_K
             for s in active
-            if not s.is_hot and s.T_supply + dT_min / 2.0 <= t_bottom + _ZONE_EPS and s.T_target + dT_min / 2.0 >= t_top - _ZONE_EPS
+            if not s.is_hot
+            and s.T_supply + dT_min / 2.0 <= t_bottom + _ZONE_EPS
+            and s.T_target + dT_min / 2.0 >= t_top - _ZONE_EPS
         )
         cumulative += (cp_hot - cp_cold) * dT_zone
         if cumulative < min_cum:

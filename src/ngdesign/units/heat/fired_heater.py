@@ -48,8 +48,7 @@ def fuel_lhv(fuel_composition: dict[str, float]) -> float:
             hf_fuel = formation_enthalpy_298(cid)
         except MissingFormationData as exc:
             raise ValueError(
-                f"fired_heater: no formation data for fuel component {cid!r}; "
-                "the fuel LHV is unavailable"
+                f"fired_heater: no formation data for fuel component {cid!r}; the fuel LHV is unavailable"
             ) from exc
         unsupported = sorted(set(atoms) - {"C", "H", "O", "S", "N"})
         if unsupported or (atoms.get("N", 0) and set(atoms) != {"N"}):
@@ -107,9 +106,13 @@ class FiredHeater:
             if T_out <= 0:
                 raise ValueError(f"fired_heater: T_out {T_out} K must be > 0")
             out = thermo.flash_pt(inlet.composition, T_out, P_out, inlet.molar_flow)
-        else:
-            duty_spec = float(duty_spec)  # type: ignore[assignment]
-            out = thermo.flash_ph(inlet.composition, P_out, inlet.enthalpy + duty_spec / inlet.molar_flow, inlet.molar_flow)
+        elif T_out is None:
+            if duty_spec is None:  # unreachable: the mutex check above raised
+                raise ValueError("fired_heater: specify T_out (K) or duty_W (W)")
+            duty_W = float(duty_spec)
+            out = thermo.flash_ph(
+                inlet.composition, P_out, inlet.enthalpy + duty_W / inlet.molar_flow, inlet.molar_flow
+            )
         duty = inlet.molar_flow * (out.enthalpy - inlet.enthalpy)
         if duty <= 0.0:
             raise ValueError(
