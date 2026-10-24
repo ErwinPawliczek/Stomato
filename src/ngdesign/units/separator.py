@@ -3,8 +3,8 @@
 Plugin kind "unit", names "separator_3phase" and "scrubber".
 
 Splits a feed at inlet conditions (spec-outlet pressure drop dP applied):
-PT flash at (T_in, P_in - dP), then each outlet is its phase re-flashed at the
-same T and P with its own composition and molar flow. An absent phase gives a
+PT flash at (T_in, P_in - dP), then each outlet carries its equilibrium
+phase(s) from that flash as they are (no re-flash at the same state). An absent phase gives a
 zero-flow outlet carrying the inlet composition (StreamState requires a valid
 composition). duty_W = sum(H_out * F) - H_in * F_in, ~0 for dP = 0.
 """
@@ -19,31 +19,24 @@ from ngdesign.registry import register
 from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 
 
-def _combined_liquid(phases: list[Phase]) -> Phase | None:
-    """Flow-weighted combined liquid (hc_liquid + aqueous) for the scrubber variant."""
-    liquids = [p for p in phases if p.kind is not PhaseKind.VAPOR]
-    if not liquids:
-        return None
-    total = sum(p.mole_fraction for p in liquids)
-    composition = {
-        cid: sum(p.mole_fraction * p.composition[cid] for p in liquids) / total
-        for cid in liquids[0].composition
-    }
-    return liquids[0].model_copy(update={"mole_fraction": total, "composition": composition})
-
-
 def _phase_outlet(
-    thermo: Thermo,
     inlet: StreamState,
     T: float,
     P: float,
-    phase: Phase | None,
+    phases: list[Phase],
 ) -> StreamState:
-    """Re-flash one phase at (T, P) with its own composition and flow.
+    """One outlet built from the parent flash's equilibrium phase(s) at (T, P).
 
+    The phases are already the package's equilibrium result at this (T, P), so
+    the outlet carries them as they are (mole fractions renormalised to the
+    outlet, enthalpy and entropy flow-weighted), instead of re-flashing each
+    phase's composition: a re-flash at the same state is redundant and, for a
+    phase sitting on its own dew or bubble point, slow and liable to split off
+    a spurious trace phase. The scrubber's liquid outlet carries both liquids.
     An absent phase gives a zero-flow outlet with the inlet composition.
     """
-    if phase is None or phase.mole_fraction <= 0.0:
+    total = sum(p.mole_fraction for p in phases)
+    if total <= 0.0:
         return StreamState(
             T=T,
             P=P,
@@ -54,7 +47,23 @@ def _phase_outlet(
             entropy=inlet.entropy,
             phases=[],
         )
-    return thermo.flash_pt(phase.composition, T, P, phase.mole_fraction * inlet.molar_flow)
+    own = [
+        p.model_copy(update={"mole_fraction": p.mole_fraction / total})
+        for p in phases
+        if p.mole_fraction > 0.0
+    ]
+    cids = {cid for p in own for cid in p.composition}
+    composition = {cid: sum(p.mole_fraction * p.composition.get(cid, 0.0) for p in own) for cid in cids}
+    return StreamState(
+        T=T,
+        P=P,
+        molar_flow=total * inlet.molar_flow,
+        composition=composition,
+        vapor_fraction=sum(p.mole_fraction for p in own if p.kind is PhaseKind.VAPOR),
+        enthalpy=sum(p.mole_fraction * p.enthalpy for p in own),
+        entropy=sum(p.mole_fraction * p.entropy for p in own),
+        phases=own,
+    )
 
 
 class _SeparatorBase:
@@ -83,10 +92,10 @@ class _SeparatorBase:
         outlets: dict[str, StreamState] = {}
         for port, kind in self._kind_by_port.items():
             if kind is None:  # scrubber: combined liquid
-                phase = _combined_liquid(flashed.phases)
+                phases = [p for p in flashed.phases if p.kind is not PhaseKind.VAPOR]
             else:
-                phase = next((p for p in flashed.phases if p.kind is kind), None)
-            outlets[port] = _phase_outlet(thermo, inlet, T, P, phase)
+                phases = [p for p in flashed.phases if p.kind is kind]
+            outlets[port] = _phase_outlet(inlet, T, P, phases)
 
         h_in_W = inlet.enthalpy * inlet.molar_flow
         h_out_W = sum(s.enthalpy * s.molar_flow for s in outlets.values())

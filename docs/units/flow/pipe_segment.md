@@ -15,7 +15,7 @@ Rigour ladder: R0 provisional, R1 planned, R2 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.flow.pipe_segment:PipeSegment` | fixed ΔP spec |
+| R0 | provisional | `ngdesign.units.flow.pipe_segment:PipeSegment` | fixed ΔP spec; in dP mode an elevation rise subtracts rho*g*z from the outlet pressure, in P_out mode it is reported only |
 | R1 | planned | — | single-phase Darcy (Colebrook) with elevation; the darcy_colebrook correlation plugin exists |
 | R2 | planned | — | two-phase Beggs-Brill / fluids multiphase, profile along the length |
 

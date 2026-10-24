@@ -285,3 +285,11 @@ def test_yield_shift_refuses_duplicate_product_naming_it() -> None:
     n_in, feed_cids, _products, _yields_mass, _n_expect = _smr_yield_shift_basis()
     with pytest.raises(KineticsError, match="duplicate product 'CO'"):
         yield_shift(n_in, feed_cids, [0.5, 0.5], ["CO", "CO"])
+
+
+def test_yield_shift_refuses_non_finite_yield_naming_the_product() -> None:
+    n_in, feed_cids, _products, _yields_mass, _n_expect = _smr_yield_shift_basis()
+    # NaN passes both the negative check (NaN < 0 is False) and a naive sum
+    # check (abs(NaN - 1) > 1e-9 is False), so it must be refused explicitly.
+    with pytest.raises(KineticsError, match=r"mass yield for \['CO'\] is not finite"):
+        yield_shift(n_in, feed_cids, [0.2, 0.7, float("nan"), 0.1], ["CH4", "H2O", "CO", "H2"])
