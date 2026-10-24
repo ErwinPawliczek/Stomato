@@ -69,6 +69,22 @@ def test_full_split_leaves_bottom_empty(thermo: Thermo) -> None:
     assert math.isclose(top.molar_flow, 100.0, rel_tol=1e-12)
 
 
+def test_full_split_has_no_rounding_residue(thermo: Thermo) -> None:
+    """3 mol/s at 0.05/0.25/0.7: 3 - sum(z*3) is 4.4e-16, not 0, in floating point.
+
+    Every component to the top must still leave the bottom exactly empty
+    (zero-flow at the requested conditions), not a residue flashed with an
+    all-zero composition.
+    """
+    z = {"C1": 0.05, "C2": 0.25, "nC4": 0.7}
+    assert 3.0 - sum(x * 3.0 for x in z.values()) > 0.0  # the residue the helper must avoid
+    feed = thermo.flash_pt(z, 300.0, 5.0e5, 3.0)
+    top, bottom = split_by_component(feed, dict.fromkeys(z, 1.0), thermo, outlet_T={"bottom": 280.0})
+    assert bottom.molar_flow == 0.0
+    assert bottom.T == 280.0
+    assert top.molar_flow == pytest.approx(3.0, rel=1e-15)
+
+
 def test_per_outlet_conditions(thermo: Thermo) -> None:
     """Each outlet flashes at its own (T, P); a scalar applies to both."""
     feed = _feed_with_h(thermo)

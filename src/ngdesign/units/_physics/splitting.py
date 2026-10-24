@@ -44,6 +44,22 @@ def _per_outlet(spec: OutletSpec, fallback: float, key: str, what: str) -> float
     return value
 
 
+def _outlet(
+    state: StreamState,
+    flows: Mapping[str, float],
+    n: float,
+    T: float,
+    P: float,
+    thermo: Thermo,
+) -> StreamState:
+    """One outlet: flashed at (T, P), or a zero-flow state at (T, P) when empty."""
+    if n <= 0.0:
+        return state.model_copy(
+            update={"T": T, "P": P, "molar_flow": 0.0, "composition": dict(state.composition)}
+        )
+    return thermo.flash_pt({cid: f / n for cid, f in flows.items()}, T, P, n)
+
+
 def split_by_component(
     state: StreamState,
     fractions: Mapping[str, float],
@@ -72,30 +88,21 @@ def split_by_component(
             raise SplittingError(f"fraction for {cid!r} is {f}, outside [0, 1]")
 
     n_in = state.molar_flow
-    n_top = sum(state.composition[cid] * n_in * float(f) for cid, f in fractions.items())
-    n_bottom = n_in - n_top
+    # Each outlet's flow is summed from its own component flows (never as
+    # n_in - n_top), so a full split leaves exactly zero rather than a
+    # rounding residue that would be flashed with an all-zero composition.
+    top_flows = {cid: x * n_in * float(fractions.get(cid, 0.0)) for cid, x in state.composition.items()}
+    bottom_flows = {
+        cid: x * n_in * (1.0 - float(fractions.get(cid, 0.0))) for cid, x in state.composition.items()
+    }
+    n_top = sum(top_flows.values())
+    n_bottom = sum(bottom_flows.values())
 
     top_T = _per_outlet(outlet_T, state.T, "top", "T")
     bottom_T = _per_outlet(outlet_T, state.T, "bottom", "T")
     top_P = _per_outlet(outlet_P, state.P, "top", "P")
     bottom_P = _per_outlet(outlet_P, state.P, "bottom", "P")
 
-    top: StreamState
-    bottom: StreamState
-    if n_top <= 0.0:
-        top = state.model_copy(update={"molar_flow": 0.0, "composition": dict(state.composition)})
-    else:
-        z_top = {
-            cid: state.composition[cid] * float(fractions.get(cid, 0.0)) * n_in / n_top
-            for cid in state.composition
-        }
-        top = thermo.flash_pt(z_top, top_T, top_P, n_top)
-    if n_bottom <= 0.0:
-        bottom = state.model_copy(update={"molar_flow": 0.0, "composition": dict(state.composition)})
-    else:
-        z_bottom = {
-            cid: state.composition[cid] * (1.0 - float(fractions.get(cid, 0.0))) * n_in / n_bottom
-            for cid in state.composition
-        }
-        bottom = thermo.flash_pt(z_bottom, bottom_T, bottom_P, n_bottom)
+    top = _outlet(state, top_flows, n_top, top_T, top_P, thermo)
+    bottom = _outlet(state, bottom_flows, n_bottom, bottom_T, bottom_P, thermo)
     return top, bottom
