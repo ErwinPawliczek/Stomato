@@ -245,9 +245,19 @@
       description: solids cake
   levels:
     R0:
-      status: planned
-      params: {}
-      note: solids split spec
+      status: provisional
+      adapter: ngdesign.units.separation.filter:Filter
+      params:
+        type: object
+        properties:
+          cake_fractions:
+            type: object
+            description: 'component id to the fraction of its molar flow sent to the cake; unnamed components pass entirely to the filtrate'
+          dP: {type: number, minimum: 0, description: 'pressure drop, Pa; applied to the filtrate outlet (the cake leaves at the inlet pressure)'}
+      note: per-component split spec — the cake split is the spec, not a correlation
+        constant; the filtrate leaves at P_in - dP, the cake at P_in.
+        Evidence gap — cake-resistance physics is R1, so no worked example
+        validates a cake at R0 (V0 self-consistency only).
     R1:
       status: planned
       params: {}
