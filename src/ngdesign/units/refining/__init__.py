@@ -2,6 +2,8 @@
 vacuum columns, preflash drum and product blender, at catalogue rigour R0.
 
 The shared sharp-cut machinery lives in ``_cuts``; the stored-assay slate
-accessors live in ``slate``. Modules self-register their ``@register("unit",
-...)`` adapters; the catalogue discovers them by walking this package.
+accessors live in ``slate``. Registration comes from the catalogue YAML
+(``data/unit_models/refining.yaml`` adapter paths, applied by
+``units.catalogue.register_all``); no module carries a ``@register``
+decorator (U-R1 round-1 conventions).
 """

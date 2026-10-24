@@ -9,6 +9,9 @@ overhead. All refusal messages name the offending parameter.
 
 from __future__ import annotations
 
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.stream import StreamState
+
 
 class RefiningSpecError(ValueError):
     """A refining unit adapter received a spec it cannot honour (parameter named)."""
@@ -70,16 +73,15 @@ def optional_float(params: dict[str, object], key: str, default: float) -> float
 
 
 def split_products(
-    feed: object,
+    feed: StreamState,
     product_count: int,
     cut_points: list[float],
     overlap_k: float,
 ) -> list[dict[str, float]]:
     """Per-product component mole flows from ``feed`` (light ends and water to cut 0).
 
-    ``feed`` is a ``StreamState``-like object with ``composition`` and
-    ``molar_flow``; every non-light-end component must resolve to a component
-    record with a ``Tb`` (a pseudo-component slate).
+    Every non-light-end component must resolve to a component record with a
+    ``Tb`` (a pseudo-component slate).
     """
     from ngdesign.data import component_record
 
@@ -103,12 +105,12 @@ def split_products(
 
 
 def flash_product(
-    thermo: object,
+    thermo: Thermo,
     flows: dict[str, float],
     t_draw: float,
     p_draw: float,
-    reference: object,
-) -> object:
+    reference: StreamState,
+) -> StreamState:
     """Flash one product's component flows at (T, P); zero flow mirrors ``reference``."""
     total = sum(flows.values())
     if total <= 0.0:

@@ -5,11 +5,13 @@ in the feed are assigned to products by normal boiling point (``Tb`` from the
 component records — the A-01 slate ids encode it) against an ascending list of
 ``cut_points_K`` — K boundaries for K+1 products — with an optional linear
 ``overlap_K`` band splitting a pseudo between two neighbouring cuts. Real light
-ends (C1-C4) and water go to the overhead regardless of boiling point. Each
-product is flashed at its draw conditions (``draws`` param, default the feed
-T/P); the reported ``duty_W`` is the one net column duty implied by the product
-states (no internal condensing / stripping stages at this level — see the
-family spec's R1/R2 ladder).
+ends (C1-C4) and water go to the overhead regardless of boiling point. An
+optional ``stripping_steam`` inlet sends its water (H2O) to the overhead as
+well (Watkins-style stripping steam at R0, one net duty). Each product is
+flashed at its draw conditions (``draws`` param, default the feed T/P); the
+reported ``duty_W`` is the one net column duty implied by the product states
+(no internal condensing / stripping stages at this level — see the family
+spec's R1/R2 ladder).
 """
 
 from __future__ import annotations
@@ -18,7 +20,6 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.registry import register
 from ngdesign.units.refining._cuts import (
     RefiningSpecError,
     draw_conditions,
@@ -33,12 +34,14 @@ from ngdesign.units.refining.slate import assay_slate, reference_volume, registe
 #: Product ports in cut order, lightest first (the catalogue row's outlet list).
 _PRODUCTS = ("overhead", "kero_out", "diesel_out", "ago_out", "bottoms")
 
+#: Component id the stripping steam carries.
+WATER_ID = "H2O"
 
-@register("unit", "crude_column")
+
 class CrudeColumn:
     """Cut-point fractionation of an assay slate into five products."""
 
-    inlet_ports: tuple[str, ...] = ("crude_in",)
+    inlet_ports: tuple[str, ...] = ("crude_in", "stripping_steam")
     outlet_ports: tuple[str, ...] = _PRODUCTS
 
     @classmethod

@@ -1,0 +1,166 @@
+# Refining family V1 worked cases (spec U-H1 review round).
+#
+# Provenance rules per repo conventions: every case cites a published example
+# or a documented closed form; expected values are recomputed independently of
+# the adapters (from the transcribed assay/component data and the cited index
+# formulas), so a regression in the adapter arithmetic cannot satisfy its own
+# check. The A-01 assay's transcription gaps are recorded in
+# data/validation_units/refining/s0_reference.yaml: the open Bagajewicz & Ji
+# copy prints no product yields, so crude/vacuum column cases assert the
+# closed-form cut assignment, not published yields.
+
+- id: V2101
+  unit: assay_feeder
+  level: R0
+  source: "Bagajewicz & Ji 2001, Ind. Eng. Chem. Res. 40, 617-626: Table 1 light-crude
+    feed density 845 kg/m3 = 36.0 deg API; Table 2 light ends total 5.11 vol%
+    (transcribed in data/assays/bagajewicz_ji_2001_light.yaml)"
+  expected:
+  - quantity: info.api_gravity
+    value: 36.0
+    tol_rel: 0.01
+  - quantity: info.light_ends_vol_pct
+    value: 5.11
+    tol_rel: 0.005
+
+- id: V2102
+  unit: desalter
+  level: R0
+  source: "Desalter BS&W specification 0.2 vol% and 0.5-4 vol% wash-water range:
+    PetroWiki 'Desalting' / Wauquier, Petroleum Refining vol. 1, crude desalting;
+    salt removal 0.95 per the adapter's published-removal default. The BS&W value
+    is the closed-form spec check the adapter implements"
+  params:
+    wash_water_vol_pct: 4.0
+    bs_w_spec_wt_pct: 0.2
+  expected:
+  - quantity: info.bsw_vol_pct
+    value: 0.2
+    tol_rel: 0.02
+  - quantity: info.salt_removed_frac
+    value: 0.95
+    tol_abs: 0.001
+
+- id: V2103
+  unit: crude_column
+  level: R0
+  source: "Documented closed form on the published A-01 assay (Bagajewicz & Ji 2001
+    Table 1-2 data, transcribed in data/assays/bagajewicz_ji_2001_light.yaml):
+    sharp-cut assignment by normal boiling point at the four cut points; each
+    product share recomputed independently from the slate mole fractions, MW and
+    sg. The paper's open copy prints no product yields (s0_reference.yaml gaps)"
+  params:
+    cut_points_K: [462.5, 614.5, 803.15, 833.15]
+  expected:
+  - quantity: info.overhead_vol_pct
+    value: 32.0661
+    tol_rel: 0.001
+  - quantity: info.kero_out_vol_pct
+    value: 30.7684
+    tol_rel: 0.001
+  - quantity: info.diesel_out_vol_pct
+    value: 24.2067
+    tol_rel: 0.001
+  - quantity: info.ago_out_vol_pct
+    value: 3.6697
+    tol_rel: 0.001
+  - quantity: info.bottoms_vol_pct
+    value: 9.2891
+    tol_rel: 0.001
+
+- id: V2104
+  unit: vacuum_column
+  level: R0
+  source: "Documented closed form: the example basis cuts the A-01 assay's pseudos
+    above the AGO end point at 40 mmHg (Gary et al., Petroleum Refining, p. 77
+    vacuum conditions, as cited on the adapter example); shares recomputed
+    independently from the slate mole fractions, MW and sg at cut points
+    755 K / 950 K"
+  expected:
+  - quantity: info.overhead_vol_pct
+    value: 34.9476
+    tol_rel: 0.001
+  - quantity: info.vgo_out_vol_pct
+    value: 39.8267
+    tol_rel: 0.001
+  - quantity: info.bottoms_vol_pct
+    value: 25.2257
+    tol_rel: 0.001
+
+- id: V2105
+  unit: preflash
+  level: R0
+  source: "Flash at the adapter example's published drum conditions, 232 degC /
+    2.5 bar (Gary et al., Petroleum Refining, p. 66). The open sources print no
+    flashed-vapour yield for this basis, so the vapour fraction is a regression
+    pin computed by the registered PR package at those conditions; the drum
+    pressure on both outlets is the closed-form plumbing check"
+  expected:
+  - quantity: info.vapor_frac
+    value: 0.44867
+    tol_rel: 0.005
+  - quantity: outlet.vapor_out.P
+    value: 250000.0
+    tol_abs: 1.0e-6
+  - quantity: outlet.liquid_out.P
+    value: 250000.0
+    tol_abs: 1.0e-6
+
+- id: V2106
+  unit: blending
+  level: R0
+  source: "Gary, Handwerk & Kaiser, Petroleum Refining: Technology and Economics,
+    5th ed., ch. 12 blending indices: RVP^1.25 on a volume basis, sulfur linear
+    on mass, octane linear by volume (the documented R0 simplification).
+    Component values from Jechura, Product Blending & Optimization
+    Considerations (CBEN 409, Colorado School of Mines): nC4 RVP 51.0 psi /
+    RON 95.0; nC5 RVP 15.0 psi / RON 86.0; reformate stand-in (C6+ carrier)
+    RVP 2.8 psi / RON 92.5. Expected values recomputed independently from the
+    component MW/sg of the bank"
+  feeds:
+    component_in_1:
+      T: 288.15
+      P: 400000.0
+      molar_flow: 400.0
+      composition:
+        nC4: 1.0
+    component_in_2:
+      T: 288.15
+      P: 400000.0
+      molar_flow: 300.0
+      composition:
+        nC5: 1.0
+    component_in_3:
+      T: 288.15
+      P: 400000.0
+      molar_flow: 100.0
+      composition:
+        C6+: 1.0
+  params:
+    P: 400000.0
+    properties:
+      component_in_1:
+        rvp_psi: 51.0
+        ron: 95.0
+        sulfur_wt_ppm: 0.0
+      component_in_2:
+        rvp_psi: 15.0
+        ron: 86.0
+        sulfur_wt_ppm: 0.0
+      component_in_3:
+        rvp_psi: 2.8
+        ron: 92.5
+        sulfur_wt_ppm: 5.0
+  expected:
+  - quantity: info.rvp_psi
+    value: 31.4449
+    tol_rel: 0.001
+  - quantity: info.ron
+    value: 91.0826
+    tol_rel: 0.001
+  - quantity: info.sulfur_wt_ppm
+    value: 0.8052
+    tol_rel: 0.001
+  - quantity: duty_W
+    value: 0.0
+    tol_abs: 1.0e-6

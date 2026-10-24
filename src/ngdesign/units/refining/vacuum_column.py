@@ -15,7 +15,6 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.registry import register
 from ngdesign.units.refining._cuts import (
     LIGHT_ENDS_OVERHEAD,
     RefiningSpecError,
@@ -31,7 +30,6 @@ from ngdesign.units.refining.slate import reference_volume
 _PRODUCTS = ("overhead", "vgo_out", "bottoms")
 
 
-@register("unit", "vacuum_column")
 class VacuumColumn:
     """Cut-point fractionation of atmospheric residue under vacuum."""
 

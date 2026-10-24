@@ -28,7 +28,9 @@
       description: pseudo-component stream at T, P, flow
   levels:
     R0:
-      status: experimental
+      status: provisional
+      validation:
+      - V2101
       adapter: ngdesign.units.refining.assay_feeder:AssayFeeder
       params:
         type: object
@@ -75,7 +77,9 @@
       description: salty waste water
   levels:
     R0:
-      status: experimental
+      status: provisional
+      validation:
+      - V2102
       adapter: ngdesign.units.refining.desalter:Desalter
       params:
         type: object
@@ -117,6 +121,9 @@
     - name: crude_in
       required: true
       description: heated crude feed
+    - name: stripping_steam
+      required: false
+      description: stripping steam; its water (H2O) reports to the overhead
     outlet:
     - name: overhead
       required: true
@@ -135,7 +142,9 @@
       description: reduced crude bottoms
   levels:
     R0:
-      status: experimental
+      status: provisional
+      validation:
+      - V2103
       adapter: ngdesign.units.refining.crude_column:CrudeColumn
       params:
         type: object
@@ -155,8 +164,9 @@
         required:
         - cut_points_K
       note: cut-point fractionation (TBP cut points, gap/overlap spec) — spec
-        U-H1 sharp cut, light ends and water to the overhead; no stripping
-        steam port at this level (the row's ports are fixed)
+        U-H1 sharp cut, light ends and water to the overhead; optional
+        stripping_steam inlet carries its water to the overhead at R0
+        (one net duty)
     R2:
       status: planned
       params: {}
@@ -221,7 +231,9 @@
       description: vacuum residuum
   levels:
     R0:
-      status: experimental
+      status: provisional
+      validation:
+      - V2104
       adapter: ngdesign.units.refining.vacuum_column:VacuumColumn
       params:
         type: object
@@ -269,7 +281,9 @@
       description: flashed liquid
   levels:
     R0:
-      status: experimental
+      status: provisional
+      validation:
+      - V2105
       adapter: ngdesign.units.refining.preflash:Preflash
       params:
         type: object
@@ -488,22 +502,27 @@
       description: blended product
   levels:
     R0:
-      status: experimental
+      status: provisional
+      validation:
+      - V2106
       adapter: ngdesign.units.refining.blending:Blender
       params:
         type: object
         properties:
-          T:
-            type: number
-            description: blend temperature (K, default the first inlet's)
           P:
             type: number
             description: blend pressure (Pa abs, default the first inlet's)
-      note: volume/mass blending with property indices (RVP, octane, cetane,
-        sulfur, D86) — spec U-H1 ships the isothermal linear part (the
-        mixer convention, three declared inlets, unused ports zero-flow);
-        the index work (cloud_point and pour_point plugins exist) is U-H's
-        thread
+          properties:
+            type: object
+            description: per-inlet-port blendstock properties
+              {rvp_psi, sulfur_wt_ppm, ron, cetane_index, d86_point_k}; an
+              index is reported only when every flowing inlet declares it
+      note: adiabatic PH mix (duty 0) plus property indices — RVP by the
+        Gary-Handwerk-Kaiser/Chevron index RVP^1.25 on a volume basis,
+        sulfur mass-weighted, octane and cetane linear by volume (documented
+        R0 simplification; real blending is interactive), one D86 point by
+        volume-average T (R0); every rule cited in the adapter (spec U-H1,
+        three declared inlets, unused ports zero-flow)
       end_state: true
   sizer: null  # no registered blender sizer; sizing ships with a later spec
   pid_symbol: BL

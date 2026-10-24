@@ -17,7 +17,6 @@ from typing import Any
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import component_record
-from ngdesign.registry import register
 from ngdesign.units.refining._cuts import RefiningSpecError, require_float
 from ngdesign.units.refining.slate import (
     api_gravity,
@@ -36,7 +35,6 @@ _COMPOSITION_TOL = 1e-9
 _EXAMPLE_ASSAY = "bagajewicz_ji_2001_light"
 
 
-@register("unit", "assay_feeder")
 class AssayFeeder:
     """Convert a declared assay slate into a stream (one inlet, one outlet)."""
 

@@ -84,13 +84,13 @@ def reference_volume(state: StreamState) -> float:
     volume = 0.0
     for cid, x in state.composition.items():
         record = component_record(cid)
-        mass_kg_s = x * state.molar_flow * record["mw"] / 1000.0
-        volume += mass_kg_s / (record["sg"] * WATER_60F_KG_M3)
+        mass_kg_s = x * state.molar_flow * float(record["mw"]) / 1000.0
+        volume += mass_kg_s / (float(record["sg"]) * WATER_60F_KG_M3)
     return volume
 
 
 def component_volume(state: StreamState, cid: str) -> float:
     """Reference volume of one component in ``state`` (m3/s)."""
     record = component_record(cid)
-    mass_kg_s = state.composition.get(cid, 0.0) * state.molar_flow * record["mw"] / 1000.0
-    return mass_kg_s / (record["sg"] * WATER_60F_KG_M3)
+    mass_kg_s = state.composition.get(cid, 0.0) * state.molar_flow * float(record["mw"]) / 1000.0
+    return mass_kg_s / (float(record["sg"]) * WATER_60F_KG_M3)

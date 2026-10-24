@@ -16,7 +16,6 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.registry import register
 from ngdesign.units.refining._cuts import RefiningSpecError, optional_float, require_float
 from ngdesign.units.refining.slate import (
     WATER_60F_KG_M3,
@@ -39,7 +38,6 @@ _EXAMPLE_SALT_REMOVAL = 0.95
 _EXAMPLE_T = 403.15  # 130 degC: inside the printed 90-150 degC operating band
 
 
-@register("unit", "desalter")
 class Desalter:
     """Wash, coalesce and split crude into desalted crude and brine."""
 
@@ -134,7 +132,7 @@ class Desalter:
         salt_tracked = 1.0 if salt_in > 0.0 else 0.0
         removed = salt_removal if salt_tracked else 0.0
         info = {
-            "bsw_vol_pct": 100.0 * reference_volume(crude_out) and 100.0 * _water_volume_frac(crude_out),
+            "bsw_vol_pct": 100.0 * _water_volume_frac(crude_out),
             "salt_removed_frac": removed,
             "salt_tracked": salt_tracked,
         }

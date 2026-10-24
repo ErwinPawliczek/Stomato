@@ -9,6 +9,7 @@ import pytest
 
 from ngdesign import registry
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.stream import StreamState
 from ngdesign.data import component_record
 from ngdesign.units.refining._cuts import RefiningSpecError, cut_fractions
 from ngdesign.units.refining.slate import assay_slate, register_slate
@@ -23,7 +24,9 @@ def _slate() -> dict[str, float]:
     return dict(mole)
 
 
-def _inlets(thermo: Thermo, feeds: dict[str, dict[str, Any]]):
+def _inlets(
+    thermo: Thermo, feeds: dict[str, dict[str, Any]]
+) -> dict[str, StreamState]:
     return {port: flash_feed(thermo, f) for port, f in feeds.items()}
 
 
@@ -244,9 +247,13 @@ def test_blender_pools_component_flows(thermo: Thermo) -> None:
     blend = result.outlets["blend_out"]
     total_in = sum(s.molar_flow for s in inlets.values())
     assert math.isclose(blend.molar_flow, total_in, rel_tol=1e-9)
-    # Composition is the flow-weighted pool (all example inlets share it).
-    for cid, x in _slate().items():
-        assert blend.composition[cid] == pytest.approx(x, abs=1e-12)
+    # Composition is the flow-weighted pool of the example's three cuts.
+    pooled: dict[str, float] = {}
+    for stream in inlets.values():
+        for cid, x in stream.composition.items():
+            pooled[cid] = pooled.get(cid, 0.0) + x * stream.molar_flow
+    for cid, n in pooled.items():
+        assert blend.composition[cid] == pytest.approx(n / total_in, abs=1e-12)
     # Volume shares of the ports sum to 100 %.
     share = sum(v for k, v in result.info.items() if k.endswith("_vol_pct"))
     assert math.isclose(share, 100.0, rel_tol=1e-6)
@@ -257,7 +264,7 @@ def test_blender_refuses_an_undeclared_port(thermo: Thermo) -> None:
     feeds, params = unit.example_case()
     inlets = _inlets(thermo, feeds)
     inlets["surprise_in"] = inlets["component_in_1"]
-    with pytest.raises(RefiningSpecError, match="not a declared blender inlet"):
+    with pytest.raises(RefiningSpecError, match="undeclared inlet port"):
         unit.solve(inlets, params, thermo)
 
 
