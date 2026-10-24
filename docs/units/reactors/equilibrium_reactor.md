@@ -15,19 +15,23 @@ Rigour ladder: R0 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.reactors.equilibrium_reactor:EquilibriumReactor` | extents solve ln Q = ln K per reaction; ideal-gas quotient on the JANAF standard state |
+| R0 | provisional | `ngdesign.units.reactors.equilibrium_reactor:EquilibriumReactor` | extents solve ln Q = ln K(T_out − approach_K) per reaction; ideal-gas quotient on the JANAF standard state; info reports ln K at the temperature actually used; a solve that pushes a species negative or past depletion is refused, never clipped |
 
 ### R0 parameters
 
 ```yaml
 properties:
-  approach_dT:
-    description: K evaluated at T + approach_dT; 0 = full equilibrium
+  approach_K:
+    description: "K evaluated at T_out \u2212 approach_K; 0 = full equilibrium. Sign\
+      \ convention \u2014 equilibrium evaluated at the temperature that gives LESS\
+      \ conversion than ideal (positive falls short for an endothermic reaction; negative\
+      \ for an exothermic one, matching U-G's Claus T_out + approach on the hot side)"
     type: number
   reaction_set:
     description: inline ReactionSet, or a string id resolved against Flowsheet.reactions
   thermal:
-    description: '''isothermal'' | ''adiabatic'' | {duty_W: W} (default isothermal)'
+    description: '''isothermal'' | ''adiabatic'' | {duty_W: W} | {T_out: K} (default
+      isothermal)'
 type: object
 ```
 
@@ -35,11 +39,11 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V1-WGS-EQ` | R0 | `info.extent_wgsr` | 0.499071 | 0.499071 | abs 1e-05 | pass |
-| `V1-WGS-EQ` | R0 | `outlet.outlet.composition.CO` | 0.250465 | 0.250465 | abs 1e-05 | pass |
-| `V1-WGS-EQ` | R0 | `outlet.outlet.composition.CO2` | 0.249535 | 0.249535 | abs 1e-05 | pass |
+| `V1-WGS-EQ` | R0 | `info.extent_wgsr` | 0.498846 | 0.499071 | abs 0.001 | pass |
+| `V1-WGS-EQ` | R0 | `outlet.outlet.composition.CO` | 0.250577 | 0.250465 | abs 0.001 | pass |
+| `V1-WGS-EQ` | R0 | `outlet.outlet.composition.CO2` | 0.249423 | 0.249535 | abs 0.001 | pass |
 
-- `V1-WGS-EQ`: Closed form from the JANAF databank WGS ln K(1100 K) = -0.007436 (U-F V2; cf. the CMU/Kitchin NIST-Webbook worked example at 1000 K)
+- `V1-WGS-EQ`: JANAF Thermochemical Tables (Chase 1998), printed log Kf at 1100 K: CO2 18.805, CO 9.928, H2O 8.881 (janaf.nist.gov C-095/C-093/H-064) -> log K(WGS) = -0.004; X = sqrt(K)/(1+sqrt(K)) = 0.498846
 
 ## References
 

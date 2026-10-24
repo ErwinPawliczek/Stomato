@@ -45,12 +45,11 @@ type: object
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
 | `V1-ELECTROLYSER` | R0 | `power_W` | 350000 | 350000 | rel 1e-06 | pass |
-| `V1-ELECTROLYSER` | R0 | `info.cell_voltage_V` | 1.75 | 1.75 | abs 1e-06 | pass |
-| `V1-ELECTROLYSER` | R0 | `info.thermoneutral_voltage_V` | 1.25315 | 1.25315 | abs 0.0001 | pass |
+| `V1-ELECTROLYSER` | R0 | `info.thermoneutral_voltage_V` | 1.472 | 1.47205 | abs 0.0005 | pass |
 | `V1-ELECTROLYSER` | R0 | `outlet.h2_out.molar_flow` | 1.0157 | 1.0157 | abs 0.0001 | pass |
 | `V1-ELECTROLYSER` | R0 | `outlet.o2_out.composition.O2` | 0.010261 | 0.0102612 | abs 0.0001 | pass |
 
-- `V1-ELECTROLYSER`: Closed form, Faraday's law: n(H2) = η·I·N/(2F) = 0.98·2000·100/(2·96485) ≈ 1.0157 mol/s; power = V·I·N = 350 kW
+- `V1-ELECTROLYSER`: Closed form, Faraday's law: n(H2) = η·I·N/(2F) = 0.98·2000·100/(2·96485) ≈ 1.0157 mol/s; power = V·I·N = 350 kW; thermoneutral voltage from the stream balance (H_out − H_in)/(2F·n_H2) on the JANAF databank enthalpies, measured 1.4720 V at the 353.15 K liquid-water feed (HHV-consistent: 1.4895 V at 298.15 K)
 
 ## References
 

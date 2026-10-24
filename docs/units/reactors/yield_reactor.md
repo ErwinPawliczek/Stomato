@@ -28,7 +28,8 @@ properties:
     description: outlet components, aligned with yields_mass
     type: array
   thermal:
-    description: '''isothermal'' | ''adiabatic'' | {duty_W: W} (default isothermal)'
+    description: '''isothermal'' | ''adiabatic'' | {duty_W: W} | {T_out: K} (default
+      isothermal)'
   yields_mass:
     description: "kg product per kg consumed feed, \u03A3 = 1"
     type: array
