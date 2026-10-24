@@ -86,7 +86,7 @@
     air_in:
       T: 313.15
       P: 1.01325e+5
-      molar_flow: 3000.0
+      molar_flow: 1100.0
       composition: {N2: 0.989657, H2O: 0.010343}
   params:
     cycles_of_concentration: 3.0

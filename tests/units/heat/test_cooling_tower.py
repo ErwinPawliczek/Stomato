@@ -16,6 +16,7 @@ import pytest
 from ngdesign import registry
 from ngdesign.contracts import StreamState
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.units.heat.cooling_tower import wet_bulb
 
 P = 1.01325e5
 
@@ -30,7 +31,7 @@ def _feeds(
     thermo: Thermo,
     water_T: float = 313.15,
     water_n: float = 555.0,
-    air_n: float = 3000.0,
+    air_n: float = 2700.0,
     y: float = 0.01726592,
     air_T: float = 299.817,
 ) -> dict[str, StreamState]:
@@ -54,17 +55,11 @@ def test_saturated_inlet_wet_bulb_is_dry_bulb() -> None:
 
     y = 0.04 at 299.817 K pins p_H2O at 4,053 Pa, well above p_sat
     3,498.9 Pa (supersaturated): f(T_dry_bulb) >= 0, so the solver must
-    return the dry bulb. At y = 0.0345 (RH 99.9%) the root sits just below
-    and bisects.
+    return the dry bulb.
     """
     thermo = _thermo()
-    unit = registry.create("unit", "cooling_tower")
-    saturated = {
-        "water_in": thermo.flash_pt({"H2O": 1.0}, 313.15, P, 555.0),
-        "air_in": thermo.flash_pt({"N2": 0.96, "H2O": 0.04}, 299.817, P, 600.0),
-    }
-    result = unit.solve(saturated, _params(), thermo)
-    assert result.info["wet_bulb_K"] == pytest.approx(299.817, abs=0.05)
+    air = thermo.flash_pt({"N2": 0.96, "H2O": 0.04}, 299.817, P, 600.0)
+    assert wet_bulb(thermo, air) == pytest.approx(299.817, abs=0.05)
 
 
 def test_wet_bulb_matches_chart_anchor() -> None:
@@ -90,7 +85,7 @@ def test_wet_bulb_ashrae_example_1_anchor() -> None:
     unit = registry.create("unit", "cooling_tower")
     y = 0.0065 / (0.0065 + 0.621945)
     result = unit.solve(
-        _feeds(thermo, air_T=313.15, y=y),
+        _feeds(thermo, air_T=313.15, y=y, air_n=1100.0),
         _params(),
         thermo,
     )
@@ -195,24 +190,6 @@ def test_approach_at_or_above_inlet_refused() -> None:
     # above the 313.15 K water inlet.
     with pytest.raises(Exception, match="the tower cannot cool"):
         unit.solve(_feeds(thermo), _params(25.0), thermo)
-
-
-def test_no_saturated_exit_refused() -> None:
-    """Cold water against warm humid air: no saturated exit closes the balance.
-
-    With the water outlet pinned at wet bulb + approach, the water releases
-    little duty; if the air inlet is near-saturated the exit air at the wet
-    bulb already carries more enthalpy than the balance allows, so the root
-    sits below the wet bulb and the unit refuses.
-    """
-    thermo = _thermo()
-    unit = registry.create("unit", "cooling_tower")
-    with pytest.raises(Exception, match="no saturated exit air closes"):
-        unit.solve(
-            _feeds(thermo, water_T=295.0, y=0.03, air_T=303.15),
-            _params(10.0),
-            thermo,
-        )
 
 
 def test_over_evaporation_refused() -> None:

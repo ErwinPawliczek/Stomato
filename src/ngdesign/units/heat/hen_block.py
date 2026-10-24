@@ -64,7 +64,17 @@ class HenBlock:
                 )
             out = thermo.flash_pt(inlet.composition, target, inlet.P, inlet.molar_flow)
             outlets[port.replace("_in", "_out")] = out
-            cp = inlet.molar_flow * abs(out.enthalpy - inlet.enthalpy) / abs(target - inlet.T)
+            override = params.get(f"cp_{port}_W_per_K")
+            if override is not None:
+                cp = float(override)
+                if cp <= 0.0:
+                    raise ValueError(f"hen_block: cp_{port}_W_per_K {cp} W/K must be > 0")
+            else:
+                cp = (
+                    inlet.molar_flow
+                    * abs(out.enthalpy - inlet.enthalpy)
+                    / abs(target - inlet.T)
+                )
             streams.append(ProblemStream(T_supply=inlet.T, T_target=target, cp_W_per_K=cp, is_hot=is_hot))
 
         if not streams:

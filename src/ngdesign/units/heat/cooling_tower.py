@@ -186,8 +186,9 @@ class CoolingTower:
         def exit_air(T_exit: float) -> tuple[float, float, float, float]:
             """(y2, E, n_out, enthalpy) of saturated exit air at T_exit."""
             y2 = _psat(thermo, T_exit) / air.P
-            evap = y2 / (1.0 - y2) * n_dry  # dry air conserved through the tower
-            n_out = n_dry + evap
+            # Evaporation is the humidity-RATIO jump over the inlet, on dry air.
+            evap = (y2 / (1.0 - y2) - y1 / (1.0 - y1)) * n_dry
+            n_out = n_dry / (1.0 - y2)  # exit carries dry air plus ALL its water
             h_a2 = _humid_enthalpy(thermo, dry, T_exit, air.P, y2)
             return y2, evap, n_out, h_a2
 
@@ -207,7 +208,16 @@ class CoolingTower:
 
         # The exit-air enthalpy rises with T_exit, so the residual falls; the
         # wet bulb is the lowest saturated state available. If even the
-        # wet-bulb exit overshoots the duty, nothing closes.
+        # wet-bulb exit overshoots the duty, nothing closes. And the wet-bulb
+        # evaporation is the maximum the material balance allows: if it
+        # already drinks the whole water stream, no exit state keeps the
+        # water positive.
+        _y2_cap, evap_cap, _n_out_cap, _h_cap = exit_air(T_wb)
+        if evap_cap >= water.molar_flow:
+            raise ValueError(
+                "cooling tower: the material closure evaporates more water than "
+                "the water stream carries; reduce the air flow"
+            )
         if residual(T_wb) < 0.0:
             raise ValueError(
                 "cooling tower: no saturated exit air closes the energy balance "
