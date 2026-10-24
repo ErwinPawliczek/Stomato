@@ -348,9 +348,11 @@
           bed_mass_kg: {type: number, minimum: 0, description: 'bed mass, kg'}
           product_P: {type: number, description: 'product outlet pressure, Pa abs; default feed P'}
           regen_P: {type: number, description: 'desorbate outlet pressure, Pa abs; default feed P'}
-      note: adsorbate split spec to regen_out; product and desorbate flashed at the
-        feed T and their own P; info cycle_time_s = capacity * bed_mass / adsorbate
-        mass rate
+      note: adsorbate split spec to regen_out; product and desorbate flashed at
+        their own T (product_T / regen_T, default feed T) and their own P;
+        info cycle_time_s = capacity * bed_mass / adsorbate mass rate. The
+        default capacity 0.10 kg/kg is the ~10 wt% design water loading GPSA
+        quotes for molecular sieves (Sect. 20, dehydration)
     R1:
       status: planned
       params: {}
@@ -387,6 +389,9 @@
           P: {type: number, description: 'mixed outlet pressure, Pa abs; default min inlet P'}
           T_operating_K: {type: number, description: 'target operating temperature, K; drives the required-inhibitor-dose info'}
       note: adiabatic PH mix; hydrate_T from hammerschmidt_formation at the mixed P,
+        dose from nielsen_bucklin_suppression at the operating T.
+        required_inhibitor_rate_kg_s covers the aqueous-phase dose only —
+        GPSA's vapour and hydrocarbon-liquid methanol losses are excluded at R0
         suppression from nielsen_bucklin_suppression at the aqueous inhibitor fraction,
         and the required inhibitor dose for T_operating_K
     R1:
