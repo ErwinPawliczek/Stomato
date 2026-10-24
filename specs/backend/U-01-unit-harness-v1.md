@@ -33,3 +33,18 @@ The harness owns these rules once, so no family thread edits it.
 - [x] `tests/units/test_validate_units_v1.py`: pass, unassessed miss, assessed miss, missing source and
   expected, bad quantity path, feeds override, dangling validation id, mass/element balance
 - [x] ruff, ruff format, `mypy src tests`, lint-imports green
+
+## U-01b amendment (2026-10-23): reactive balances have one owner
+Found by U-H2 (PR #218): the locked property test still asserted per-component molar conservation on
+every row, and the V0 energy check crashed on pseudo-components (no formation enthalpy).
+- `src/ngdesign/units/balance.py` owns the bases: `mass_and_atoms`, `species_without_formation`,
+  `energy_basis`, `stream_enthalpy`. `scripts/validate_units.py` and
+  `tests/property/test_unit_balances.py` both call it.
+- `balance: mass_elements` rows: mass and every element (pseudo-components mass only); energy on
+  the formation basis when every species present has formation data.
+- When a species lacks formation data, the unit must set
+  `info["heat_of_reaction_basis_sensible_only"] = 1.0`; energy then closes on the package
+  enthalpy. Without the flag it is a V0 finding (and a property-test failure), never a silent
+  fallback.
+- `tests/units/test_validate_units_v1.py` pins only rows without validation ids (its cases live in a
+  tmp directory).
