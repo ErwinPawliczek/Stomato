@@ -270,7 +270,7 @@
       status: provisional
       adapter: ngdesign.units.flow.pipe_segment:PipeSegment
       params: {}
-      note: fixed ΔP spec
+      note: fixed ΔP spec; in dP mode an elevation rise subtracts rho*g*z from the outlet pressure, in P_out mode it is reported only
     R1:
       status: planned
       params: {}

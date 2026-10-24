@@ -178,7 +178,7 @@ def test_psv_api520_gas_api520_example() -> None:
         Kc=1.0,
     )
     assert result["C"] == pytest.approx(326.0, rel=0.002)
-    assert result["area_in2"] == pytest.approx(3179.0 / 645.16, rel=0.005)
+    assert result["area_in2"] == pytest.approx(3179.0 / 645.16, rel=0.002)  # printed 3179 mm2; exact C gives +0.14 %
 
 
 def test_control_valve_refuses_pressure_rise(thermo: Thermo) -> None:
