@@ -192,7 +192,9 @@ class ShortcutDistillation:
                 break
 
         # 4. Underwood, Gilliland, Kirkbride. Underwood's root is on
-        # heavy-key-relative alphas (alpha_HK = 1), not absolute K-values.
+        # heavy-key-relative alphas (alpha_HK = 1), not absolute K-values,
+        # bracketed on (1, alpha_LK) so a light non-key above the light key
+        # cannot capture the root.
         total_d = d_lk + d_hk + sum(d.values())
         total_b = f_total - total_d
         d_map = {**d, lk: d_lk, hk: d_hk}
@@ -201,7 +203,7 @@ class ShortcutDistillation:
         q = 1.0 - feed.vapor_fraction
         k_hk = k_feed[hk]
         alphas = {cid: k / k_hk for cid, k in k_feed.items()}
-        theta = underwood_theta(alphas, z_feed, q)
+        theta = underwood_theta(alphas, z_feed, q, alphas[lk])
         rmin = underwood_rmin(alphas, xd, theta)
         if rmin <= 0.0:
             raise ValueError(

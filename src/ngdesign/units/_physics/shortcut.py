@@ -6,7 +6,7 @@ cite Seader, Henley & Roper, *Separation Process Principles*, 3rd ed.
 5/6 for the Kremser absorption/stripping/extraction group methods.
 
 Every constant typed here is checked against the book in
-``tests/units/column/test_shortcut_physics.py``.
+``tests/units/column_shortcut/test_shortcut_physics.py``.
 """
 
 from __future__ import annotations
@@ -44,36 +44,66 @@ def fenske_nmin(alpha_LK_HK: float, xD_LK: float, xD_HK: float, xB_LK: float, xB
     return math.log(separation) / math.log(alpha_LK_HK)
 
 
-def underwood_theta(alphas: Mapping[str, float], z: Mapping[str, float], q: float) -> float:
+def underwood_theta(
+    alphas: Mapping[str, float],
+    z: Mapping[str, float],
+    q: float,
+    alpha_LK: float,
+) -> float:
     """Underwood root theta of eq. (9-28): ``sum_i alpha_i z_i/(alpha_i - theta) = 1 - q``.
 
     ``alphas`` are relative volatilities referenced to the heavy key
-    (``alpha_HK = 1``); the root returned is the one between ``alpha_HK`` and
-    ``alpha_LK = max(alphas)``, per the spec's Class-2 single-root convention.
-    Bisection; refuses when the root is not bracketed.
+    (``alpha_HK = 1``) and ``alpha_LK`` is the light key's relative volatility;
+    the root returned is the one between the keys, ``1 < theta < alpha_LK``,
+    per the spec's Class-2 single-root convention. The bracket is
+    ``(1, alpha_LK)`` — never ``(1, max(alpha))``: a light non-key above the
+    light key puts the alpha_LK pole inside that wider interval, where
+    bisection then lands on a wrong root or on the pole itself.
+
+    Any finite feed quality is accepted — subcooled liquid (``q > 1``) and
+    superheated vapour (``q < 0``) included: the residual is strictly
+    increasing on ``(1, alpha_LK)`` from ``-inf`` at the heavy-key pole to
+    ``+inf`` at the light-key pole for every finite ``q``, so the Class-2 root
+    exists there regardless of q (eq. 9-28 holds for any q). Bisection; refuses
+    when the root is not bracketed.
 
     Raises:
-        ValueError: on non-positive alphas or compositions, ``q`` outside
-            ``[0, 1]``, ``alpha_LK <= 1``, or an unbracketed root.
+        ValueError: on non-positive alphas or compositions, a non-finite ``q``,
+            ``alpha_LK <= 1``, a distributing component strictly between the
+            keys (its pole breaks the bracket — no Class-2 root is defined), or
+            an unbracketed root.
     """
     if not alphas:
         raise ValueError("alphas must not be empty")
-    a_max = max(alphas.values())
-    if a_max <= 1.0:
-        raise ValueError(f"alpha_LK must exceed 1 (relative to the heavy key), got {a_max}")
-    if not 0.0 <= q <= 1.0:
-        raise ValueError(f"feed quality q must lie in [0, 1], got {q}")
+    if not math.isfinite(q):
+        raise ValueError(f"feed quality q must be finite, got {q}")
     for cid, a in alphas.items():
         if a <= 0.0:
             raise ValueError(f"alpha[{cid}] must be positive, got {a}")
         if z.get(cid, 0.0) < 0.0:
             raise ValueError(f"z[{cid}] must be non-negative, got {z[cid]}")
+    if not math.isfinite(alpha_LK) or alpha_LK <= 1.0 + 1e-12:
+        raise ValueError(
+            f"light-key relative volatility alpha_LK must exceed 1 (relative to the heavy key), got {alpha_LK}"
+        )
 
     def residual(theta: float) -> float:
         return sum(a * z.get(cid, 0.0) / (a - theta) for cid, a in alphas.items()) - (1.0 - q)
 
-    # f(1+) -> -inf through the alpha = 1 (heavy-key) term; f(alpha_LK-) -> +inf.
-    lo, hi = 1.0 + 1e-12, a_max - 1e-12
+    # The bracket must be pole-free: a distributing component strictly between
+    # the keys puts a pole inside (1, alpha_LK), the residual is not continuous
+    # there, and the Class-2 single-root shortcut does not apply.
+    for cid, a in alphas.items():
+        if 1.0 + 1e-12 < a < alpha_LK - 1e-12 and z.get(cid, 0.0) > 0.0:
+            raise ValueError(
+                f"Underwood root not bracketed: component {cid!r} (alpha = {a:.6g}) lies between "
+                f"the heavy key (alpha = 1) and the light key (alpha = {alpha_LK:.6g}); the "
+                "Class-2 single-root shortcut requires adjacent keys"
+            )
+
+    # f(1+) -> -inf through the alpha = 1 (heavy-key) term; f(alpha_LK-) -> +inf
+    # through the light-key term.
+    lo, hi = 1.0 + 1e-12, alpha_LK - 1e-12
     f_lo, f_hi = residual(lo), residual(hi)
     if not (f_lo < 0.0 < f_hi):
         raise ValueError(f"Underwood root not bracketed in ({lo}, {hi}): f = {f_lo:.6g}, {f_hi:.6g}")

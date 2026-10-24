@@ -45,7 +45,7 @@ def test_fenske_nmin_symmetric_binary() -> None:
 )
 def test_fenske_nmin_refuses_nonphysical(args: tuple[float, ...], match: str) -> None:
     with pytest.raises(ValueError, match=match):
-        fenske_nmin(*args)  # type: ignore[arg-type]
+        fenske_nmin(*args)
 
 
 # ---------------------------------------------------------------------------
@@ -55,31 +55,84 @@ def test_fenske_nmin_refuses_nonphysical(args: tuple[float, ...], match: str) ->
 
 
 def test_underwood_theta_saturated_liquid() -> None:
-    theta = underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, 1.0)
+    theta = underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, 1.0, 2.0)
     assert theta == pytest.approx(4.0 / 3.0)
 
 
 def test_underwood_theta_saturated_vapour() -> None:
-    theta = underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, 0.0)
+    theta = underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, 0.0, 2.0)
     assert theta == pytest.approx(1.5)
 
 
 def test_underwood_theta_half_quality() -> None:
-    theta = underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, 0.5)
+    theta = underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, 0.5, 2.0)
     assert theta == pytest.approx(math.sqrt(2.0))
+
+
+def test_underwood_theta_subcooled_feed() -> None:
+    # q > 1 (subcooled liquid) is a normal FUG input; eq. (9-28) holds for any
+    # finite q and the Class-2 root stays inside (1, alpha_LK). Binary
+    # constant-alpha case: 1/(2-theta) + 0.5/(1-theta) = -0.2 solves to
+    # 0.2 theta^2 - 2.1 theta + 2.4 = 0; the key-interval root is
+    # (2.1 - sqrt(2.49))/0.4.
+    theta = underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, 1.2, 2.0)
+    assert theta == pytest.approx((2.1 - math.sqrt(2.49)) / 0.4)
+
+
+def test_underwood_theta_superheated_feed() -> None:
+    # q < 0 (superheated vapour): 1/(2-theta) + 0.5/(1-theta) = 1.2 solves to
+    # 1.2 theta^2 - 2.1 theta + 0.4 = 0; the root between the keys is the
+    # larger one (the smaller lies below the heavy key).
+    theta = underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, -0.2, 2.0)
+    assert theta == pytest.approx((2.1 + math.sqrt(2.49)) / 2.4)
+
+
+def test_underwood_theta_light_nonkey_above_light_key() -> None:
+    # The misbracketing the review measured: with a light non-key above the
+    # light key, bracketing (1, max(alpha)) puts the alpha_LK pole inside the
+    # interval and returned theta = 5.31 for alphas {12, 3, 1, 0.5} -- outside
+    # the key interval (1, 3). The root must lie between the keys and satisfy
+    # eq. (9-28).
+    alphas = {"LNK": 12.0, "LK": 3.0, "HK": 1.0, "HNK": 0.5}
+    z = {"LNK": 0.1, "LK": 0.3, "HK": 0.5, "HNK": 0.1}
+    theta = underwood_theta(alphas, z, 1.0, 3.0)
+    assert 1.0 < theta < 3.0
+    residual = sum(a * z[cid] / (a - theta) for cid, a in alphas.items()) - (1.0 - 1.0)
+    assert residual == pytest.approx(0.0, abs=1e-9)
+
+
+def test_underwood_theta_midpoint_on_light_key_pole() -> None:
+    # alpha_LK = 2 with a light non-key at 3: the old (1, max) bracket's first
+    # bisection midpoint lands exactly on the alpha_LK pole and raised
+    # ZeroDivisionError on 18 of 171 measured cases. The (1, alpha_LK) bracket
+    # stays clear of the pole and returns the key-interval root.
+    alphas = {"LNK": 3.0, "LK": 2.0, "HK": 1.0}
+    z = {"LNK": 0.2, "LK": 0.5, "HK": 0.3}
+    theta = underwood_theta(alphas, z, 1.0, 2.0)
+    assert 1.0 < theta < 2.0
+    residual = sum(a * z[cid] / (a - theta) for cid, a in alphas.items()) - (1.0 - 1.0)
+    assert residual == pytest.approx(0.0, abs=1e-9)
 
 
 def test_underwood_theta_unbracketed_without_heavy_key() -> None:
     # No heavy-key term means f(1+) is positive; the Class-2 root does not exist.
     with pytest.raises(ValueError, match="not bracketed"):
-        underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 1.0, "HK": 0.0}, 1.0)
+        underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 1.0, "HK": 0.0}, 1.0, 2.0)
+
+
+def test_underwood_theta_refuses_component_between_keys() -> None:
+    # A distributing component strictly between the keys puts a pole inside
+    # (1, alpha_LK): the Class-2 single-root shortcut does not apply and the
+    # refusal names the component.
+    with pytest.raises(ValueError, match="between"):
+        underwood_theta({"M": 1.5, "LK": 3.0, "HK": 1.0}, {"M": 0.1, "LK": 0.5, "HK": 0.4}, 1.0, 3.0)
 
 
 def test_underwood_theta_refuses_bad_inputs() -> None:
     with pytest.raises(ValueError, match="must exceed 1"):
-        underwood_theta({"LK": 1.0, "HK": 0.9}, {"LK": 0.5, "HK": 0.5}, 1.0)
-    with pytest.raises(ValueError, match="must lie in"):
-        underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, 1.5)
+        underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, 1.0, 1.0)
+    with pytest.raises(ValueError, match="must be finite"):
+        underwood_theta({"LK": 2.0, "HK": 1.0}, {"LK": 0.5, "HK": 0.5}, float("nan"), 2.0)
 
 
 def test_underwood_rmin_binary() -> None:
