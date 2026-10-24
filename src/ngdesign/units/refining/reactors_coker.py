@@ -21,10 +21,11 @@ Products are mass-only pseudo lumps (`coker_gas`, `coker_naphtha`,
 balance is ``mass_elements`` and its element ledger tracks atoms only for
 species with a molecular formula; a pseudo feed carries no atom sources, so
 real reaction products would leave with atoms that never entered. The gas
-lump hides the published coker-gas composition (G&H Table 5.8: H2 13.7, CO2
+lump hides the published coker-gas composition (G&H §5.9, p. 118,
+sulfur-free composition from Table 5.6: H2 13.7, CO2
 0.2, CH4 51.4, C2H4 1.5, C2H6 15.9, C3H6 3.1, C3H8 8.2, C4= 2.4, iC4 1.0,
 nC4 2.6 mol%); splitting it into real species needs the pseudo-component
-elemental characterization proposed in the row notes' GitHub issue.
+elemental characterization proposed in issue #222.
 
 The LGO/HGO split of the single published gas-oil yield is a configuration
 spec (`gasoil_lgo_fraction`), not a correlation constant. The duty is the
@@ -110,8 +111,8 @@ class DelayedCoker:
         yields_mass = [
             y_gas / 100.0,
             y_naphtha / 100.0,
-            (1.0 - f_lgo) * y_gasoil / 100.0,
             f_lgo * y_gasoil / 100.0,
+            (1.0 - f_lgo) * y_gasoil / 100.0,
             y_coke / 100.0,
         ]
         n_out = yield_shift(n_in, feed_cids, yields_mass, [lump for _, lump in _PORT_LUMP])
@@ -132,8 +133,8 @@ class DelayedCoker:
                 "gas_wt_pct": y_gas,
                 "naphtha_wt_pct": y_naphtha,
                 "gasoil_wt_pct": y_gasoil,
-                "lgo_wt_pct": (1.0 - f_lgo) * y_gasoil,
-                "hgo_wt_pct": f_lgo * y_gasoil,
+                "lgo_wt_pct": f_lgo * y_gasoil,
+                "hgo_wt_pct": (1.0 - f_lgo) * y_gasoil,
                 "heat_of_reaction_basis_sensible_only": 1.0,
             },
         )

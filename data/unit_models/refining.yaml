@@ -255,9 +255,9 @@
   pid_symbol: HT
   references:
   - docs/unit-catalogue-plan.md §2 U-H 7
-  notes: R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real
+  notes: "R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real
     H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental
-    characterization (GitHub issue pending — see the PR).
+    characterization (issue #222)."
 
 - id: reformer_cat
   name: Catalytic reformer
@@ -301,10 +301,10 @@
   pid_symbol: RF
   references:
   - docs/unit-catalogue-plan.md §2 U-H 8
-  notes: R0 shipped by U-H2. The spec's "H2 and light ends as real components" is
+  notes: "R0 shipped by U-H2. The spec's \"H2 and light ends as real components\" is
     out of reach of the mass_elements balance (C/H atoms with no formula-bearing
     source from a pseudo naphtha); the offgas is a mass-only lump, species split
-    in info. GitHub issue on pseudo-component elemental characterization pending.
+    in info. Pseudo-component elemental characterization - issue #222."
 
 - id: fcc
   name: Fluid catalytic cracker
@@ -343,7 +343,13 @@
   pid_symbol: FC
   references:
   - docs/unit-catalogue-plan.md §2 U-H 9
-  notes: roadmap; nothing above R1 is planned (plan §2 U-H preamble).
+  notes: roadmap; nothing above R1 is planned (plan §2 U-H preamble). R0 record of
+    what was searched (U-H2 review) - the published FCC yield correlations are
+    chart/figure-based (Gary, Handwerk & Kaiser, Petroleum Refining, 5th ed. 2007,
+    §6.12 Yield Estimation, pp. 143-144, points at Figures 6.17-6.28) and the U-R1
+    conventions forbid digitising figures; no equation-based R0 correlation was
+    found in the open sources searched, so the row stays planned rather than
+    shipping a figure-transcription.
 
 - id: hcu
   name: Hydrocracker
@@ -379,7 +385,12 @@
   pid_symbol: HC
   references:
   - docs/unit-catalogue-plan.md §2 U-H 10
-  notes: roadmap.
+  notes: roadmap. R0 record of what was searched (U-H2 review) - published hydrocracker
+    yield correlations are chart/figure-based (Gary, Handwerk & Kaiser, Petroleum
+    Refining, 5th ed. 2007, §7.6 Hydrocracking Yields, pp. 170-172, reads
+    Figure 7.4 / Figure 7.6 curves; its Table 7.3 is fixed-feed vol% tables, not a
+    correlation) and the U-R1 conventions forbid digitising figures, so the row
+    stays planned rather than shipping a figure-transcription.
 
 - id: coker
   name: Delayed coker / visbreaker
@@ -420,17 +431,20 @@
           T_out: {type: number, description: 'outlet temperature, K, default 773.15'}
           P_out: {type: number, description: 'outlet pressure, Pa, default 4.0e5'}
       validation:
-      - V1_coker_jechura
-      note: Gary–Handwerk mass yields vs feed CCR; duty sensible-only (flag
-        heat_of_reaction_basis_sensible_only)
+      - V1_coker_gh_case_study
+      note: Gary–Handwerk mass yields vs feed CCR (Table 5.5, p. 104); duty
+        sensible-only (flag heat_of_reaction_basis_sensible_only)
       end_state: true
   pid_symbol: CK
   references:
   - docs/unit-catalogue-plan.md §2 U-H 11
-  notes: R0 shipped by U-H2 (Gary–Handwerk CCR table, Jechura CSM example basis);
-    products are mass-only pseudo lumps — the mass_elements element ledger has no
-    atom sources for a pseudo feed. The refinery_leeps_distillation correlation
-    plugin exists for LEEP cut yields.
+  notes: "R0 shipped by U-H2 (Gary-Handwerk CCR yield equations, 5th ed. Table 5.5
+    p. 104; V1 is the book's own worked example - §5.9 case-study problem,
+    pp. 116-118, printed product slate at coker-feed CCR 14.2 wt%; the Jechura CSM
+    feed stays the example_case basis); products are mass-only pseudo lumps - the
+    mass_elements element ledger has no atom sources for a pseudo feed
+    (pseudo-component elemental characterization - issue #222). The
+    refinery_leeps_distillation correlation plugin exists for LEEP cut yields."
 
 - id: blending
   name: Product blender

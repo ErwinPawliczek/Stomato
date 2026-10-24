@@ -75,11 +75,32 @@ class TestDelayedCoker:
         assert result.info["lgo_wt_pct"] == pytest.approx(0.5 * gasoil, abs=1e-9)
         assert result.info["hgo_wt_pct"] == pytest.approx(0.5 * gasoil, abs=1e-9)
 
+    def test_gh_case_study_printed_slate(self, thermo: Thermo) -> None:
+        """Gary–Handwerk 5th ed. §5.9 worked example, printed slate at CCR 14.2 wt%.
+
+        The book prints Coke 22.72, Gas (C4-) 9.84, Naphtha 16.16 and Gas oil
+        51.3 wt% (pp. 116-118, Table 5.16 material balance on 302,450 lb/h
+        feed); the LCGO/HCGO split is its printed 96,967/155,081 lb/h ratio.
+        Same point the V1_coker_gh_case_study case anchors.
+        """
+        _, result = _solve(
+            thermo,
+            "coker",
+            None,
+            {"ccr_wt_pct": 14.2, "gasoil_lgo_fraction": 96967.0 / 155081.0},
+        )
+        assert result.info["coke_wt_pct"] == pytest.approx(22.72, rel=1e-3)
+        assert result.info["gas_wt_pct"] == pytest.approx(9.84, rel=1e-3)
+        assert result.info["naphtha_wt_pct"] == pytest.approx(16.16, rel=1e-3)
+        assert result.info["gasoil_wt_pct"] == pytest.approx(51.3, rel=1e-3)
+        assert result.info["lgo_wt_pct"] == pytest.approx(32.061, rel=1e-3)
+        assert result.info["hgo_wt_pct"] == pytest.approx(19.214, rel=1e-3)
+
     def test_gas_oil_split_is_a_configuration_not_a_correlation(self, thermo: Thermo) -> None:
         _, result = _solve(thermo, "coker", None, {"ccr_wt_pct": 13.5, "gasoil_lgo_fraction": 0.25})
         gasoil = result.info["gasoil_wt_pct"]
-        assert result.info["lgo_wt_pct"] == pytest.approx(0.75 * gasoil, abs=1e-9)
-        assert result.info["hgo_wt_pct"] == pytest.approx(0.25 * gasoil, abs=1e-9)
+        assert result.info["lgo_wt_pct"] == pytest.approx(0.25 * gasoil, abs=1e-9)
+        assert result.info["hgo_wt_pct"] == pytest.approx(0.75 * gasoil, abs=1e-9)
 
     def test_mass_closes_exactly(self, thermo: Thermo) -> None:
         inlets, result = _solve(thermo, "coker", None, {"ccr_wt_pct": 13.5})

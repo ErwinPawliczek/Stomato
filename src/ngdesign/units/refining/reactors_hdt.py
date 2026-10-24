@@ -4,11 +4,11 @@ R0 is a stoichiometric hydrotreater over model compounds: sulfur removal and
 nitrogen removal are declared as removal fractions (not kinetics), and
 olefin/aromatic saturation as conversions. The reaction slate (Fahim,
 Al-Sahhaf & Elkilani, *Fundamentals of Petroleum Refining*, Elsevier 2010,
-worked Example E12.2 and the E12.x pyridine example, re-typed from the open
-full text):
+worked Example E12.2 (p. 309) and the pyridine HDN reaction of the ch. 7
+hydroconversion scheme (7.1) (p. 156), re-typed from the open full text):
 
     thiophene  + 4 H2 -> nC4 + H2S          (E12.2.1, HDS)
-    pyridine   + 5 H2 -> nC5 + NH3          (E12.x, HDN)
+    pyridine   + 5 H2 -> nC5 + NH3          (scheme (7.1), p. 156, HDN)
     1-pentene  + 1 H2 -> nC5                (E12.2.2, olefin saturation)
     benzene    + 3 H2 -> cyclohexane        (E12.2.3, aromatic saturation)
 

@@ -28,7 +28,7 @@ correlations do not conserve (verified: C6+ feed, 1.3e-2 relative carbon
 mismatch against the E5.2 yields). The products are therefore two mass-only
 pseudo lumps (`reformate`, `reformer_offgas`) with the full species split
 reported in `info`; real light ends need the pseudo-component elemental
-characterization proposed in the row notes' GitHub issue.
+characterization proposed in issue #222.
 
 The duty is the sensible-only package-enthalpy change, flagged
 `heat_of_reaction_basis_sensible_only`. Refuses (ValueError, naming the
