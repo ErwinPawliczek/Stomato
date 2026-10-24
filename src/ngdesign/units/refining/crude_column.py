@@ -55,7 +55,15 @@ class CrudeColumn:
                 "P": 2.0e5,
                 "molar_flow": 1000.0,
                 "composition": dict(mole),
-            }
+            },
+            # Saturated stripping steam at the flash-zone pressure; its H2O
+            # reports to the overhead (R0, one net duty).
+            "stripping_steam": {
+                "T": 393.37,  # sat. steam at 2.0e5 Pa
+                "P": 2.0e5,
+                "molar_flow": 10.0,
+                "composition": {"H2O": 1.0},
+            },
         }
         return feeds, {
             "cut_points_K": [462.5, 556.5, 614.5, 668.7],
@@ -81,13 +89,24 @@ class CrudeColumn:
         validate_draws(draws_typed, _PRODUCTS)
 
         products = split_products(feed, len(_PRODUCTS), cut_points, overlap_k)
+        steam = inlets.get("stripping_steam")
+        steam_flow = 0.0
+        steam_enthalpy_term = 0.0
+        if steam is not None and steam.molar_flow > 0.0:
+            steam_water = steam.composition.get(WATER_ID, 0.0) * steam.molar_flow
+            if steam_water > 0.0:
+                products[0][WATER_ID] = products[0].get(WATER_ID, 0.0) + steam_water
+            steam_flow = steam.molar_flow
+            steam_enthalpy_term = steam.enthalpy * steam.molar_flow
         outlets: dict[str, StreamState] = {}
         for i, port in enumerate(_PRODUCTS):
             t_draw, p_draw = draw_conditions(port, draws_typed, feed.T, feed.P)
             outlets[port] = flash_product(thermo, products[i], t_draw, p_draw, feed)
-        h_in = feed.enthalpy * feed.molar_flow
+        h_in = feed.enthalpy * feed.molar_flow + steam_enthalpy_term
         h_out = sum(s.enthalpy * s.molar_flow for s in outlets.values())
         info: dict[str, float] = {}
+        if steam_flow > 0.0:
+            info["stripping_steam_mol_s"] = steam_flow
         feed_vol = reference_volume(feed)
         for port, state in outlets.items():
             info[f"{port}_vol_m3_s"] = reference_volume(state)
