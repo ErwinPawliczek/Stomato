@@ -15,7 +15,10 @@
     27.5 wt% MeOH in the free-water phase (Hammerschmidt gives 25.5). The case
     fixes T_operating_K at hydrate_T - 14.0 K (hydrate_T from the catalogue
     hammerschmidt_formation at the case pressure) so the required aqueous mass
-    fraction reproduces exactly that scenario.
+    fraction reproduces exactly that scenario. The feed carries 15 % water and
+    a 1.5 mol/s methanol trim so the PR package returns a distinct water-rich
+    liquid phase at the target T; the dose anchor itself is correlation-only
+    (the required fraction comes from the Nielsen-Bucklin bisection).
   feeds:
     inlet:
       T: 288.15
@@ -24,7 +27,7 @@
       composition:
         N2: 0.00487
         CO2: 0.0146
-        C1: 0.82500
+        C1: 0.705
         C2: 0.06034
         C3: 0.03114
         iC4: 0.00681
@@ -32,13 +35,13 @@
         iC5: 0.00389
         nC5: 0.00389
         C6+: 0.00973
-        H2O: 0.030
+        H2O: 0.15
     inhibitor_in:
       T: 288.15
       P: 7.0e+6
-      molar_flow: 15.6
+      molar_flow: 1.5
       composition: {MeOH: 1.0}
-  params: {T_operating_K: 297.545}
+  params: {T_operating_K: 297.31}
   expected:
   - {quantity: info.required_inhibitor_mass_fraction, value: 0.275, tol_abs: 0.005}
 - id: V-flash-corripio-2013

@@ -42,7 +42,7 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V-flash-corripio-2013` | R0 | — | — | — | — | error: FlashDrumSpecError: give exactly one of duty_W and vapor_fraction, not both |
+| `V-flash-corripio-2013` | R0 | `outlet.gas_out.T` | 355.05 | 357.382 | abs 3 | pass |
 
 - `V-flash-corripio-2013`: Corripio, "Flash Distillation" lecture notes (2013), Example 1: 38 wt% propane / balance n-octane (z = 0.614 / 0.386 molar, 802 kmol/h), drum at 3.5 atm with V/F = 0.61 gives T = 81.9 degC, y_C3 = 0.937 by ideal-K (Antoine, Reid-Sherwood-Prausnitz). This case runs the same PVF spec on the catalogue PR package, which sits ~2.3 K above the ideal-K route; the tolerance covers that model gap, fixed before the run.
 
