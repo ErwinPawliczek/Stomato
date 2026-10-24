@@ -61,6 +61,10 @@ class AdsorptionBed:
         P_regen = float(params.get("regen_P", feed.P))
         if min(P_product, P_regen) <= 0:
             raise AdsorptionBedSpecError("product_P and regen_P must be positive")
+        T_product = float(params.get("product_T", feed.T))
+        T_regen = float(params.get("regen_T", feed.T))
+        if min(T_product, T_regen) <= 0:
+            raise AdsorptionBedSpecError("product_T and regen_T must be positive absolute temperatures")
 
         n_regen: dict[str, float] = {}
         for cid, x in feed.composition.items():
@@ -75,25 +79,25 @@ class AdsorptionBed:
                 cid: (x * feed.molar_flow - n_regen[cid]) / product_flow
                 for cid, x in feed.composition.items()
             }
-            regen = thermo.flash_pt(regen_z, feed.T, P_regen, regen_flow)
-            product = thermo.flash_pt(product_z, feed.T, P_product, product_flow)
+            regen = thermo.flash_pt(regen_z, T_regen, P_regen, regen_flow)
+            product = thermo.flash_pt(product_z, T_product, P_product, product_flow)
             outlets = {"product_out": product, "regen_out": regen}
         elif regen_flow > 0.0:  # everything adsorbed: empty product
             regen_z = {cid: n / regen_flow for cid, n in n_regen.items()}
-            regen = thermo.flash_pt(regen_z, feed.T, P_regen, regen_flow)
+            regen = thermo.flash_pt(regen_z, T_regen, P_regen, regen_flow)
             outlets = {
-                "product_out": zero_flow_outlet(feed, feed.T, P_product),
+                "product_out": zero_flow_outlet(feed, T_product, P_product),
                 "regen_out": regen,
             }
         else:  # nothing adsorbed
             product = (
-                thermo.flash_pt(dict(feed.composition), feed.T, P_product, feed.molar_flow)
+                thermo.flash_pt(dict(feed.composition), T_product, P_product, feed.molar_flow)
                 if feed.molar_flow > 0.0
-                else zero_flow_outlet(feed, feed.T, P_product)
+                else zero_flow_outlet(feed, T_product, P_product)
             )
             outlets = {
                 "product_out": product,
-                "regen_out": zero_flow_outlet(feed, feed.T, P_regen),
+                "regen_out": zero_flow_outlet(feed, T_regen, P_regen),
             }
 
         # cycle_time_s = capacity * bed_mass / adsorbate mass rate (kg/s).

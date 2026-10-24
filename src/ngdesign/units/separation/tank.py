@@ -49,8 +49,13 @@ class Tank:
                 update={"molar_flow": 0.0, "composition": dict(reference.composition)}
             )
             return UnitResult(outlets={"outlet": zero}, duty_W=0.0, power_W=0.0, info={})
+        P_min = min(s.P for s in active)
+        if P_param is not None and float(P_param) > P_min:
+            raise TankSpecError(
+                f"P {P_param} exceeds the lowest inlet pressure {P_min}: the tank does not raise pressure"
+            )
+        P_out = float(P_param) if P_param is not None else P_min
 
-        P_out = float(P_param) if P_param is not None else min(s.P for s in active)
         total = sum(s.molar_flow for s in active)
         z: dict[str, float] = {}
         for s in active:

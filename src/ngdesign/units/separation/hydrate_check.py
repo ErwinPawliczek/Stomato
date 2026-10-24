@@ -10,8 +10,9 @@ inlet at ``P = min inlet P`` (or a given ``P``). ``info`` reports
   mixed pressure, with the gas specific gravity of the ``inlet`` port (mean
   molar mass over the standard dry-air molar mass);
 - ``suppression_K`` — from the ``nielsen_bucklin_suppression`` correlation at
-  the inhibitor's mass fraction in the outlet's aqueous phase (0.0 when there
-  is no aqueous phase or no inhibitor in it);
+  the inhibitor's mass fraction in the outlet's aqueous phase, on the water +
+  inhibitor basis (Nielsen-Bucklin's w; 0.0 when there is no aqueous phase or
+  no inhibitor in it);
 - ``required_inhibitor_mass_fraction`` and ``required_inhibitor_rate_kg_s`` —
   for a target ``T_operating_K``: the aqueous mass fraction whose suppression
   meets ``hydrate_T - T_operating`` (found by bisecting the correlation, never
@@ -206,9 +207,15 @@ def _required_dose(
 
 
 def _inhibitor_mass_fraction(composition: dict[str, float], cid: str) -> float:
-    """Inhibitor mass fraction within the aqueous-phase composition."""
-    mass = stream_molar_mass(composition)  # g/mol of the aqueous mixture
-    return composition.get(cid, 0.0) * float(stream_molar_mass({cid: 1.0})) / mass
+    """Inhibitor mass fraction on the water + inhibitor basis.
+
+    Nielsen-Bucklin's w is defined over water and inhibitor alone; any other
+    aqueous species (dissolved methane, salts) enters neither the numerator
+    nor the denominator.
+    """
+    inhibitor_mass = composition.get(cid, 0.0) * float(stream_molar_mass({cid: 1.0}))
+    water_mass = composition.get("H2O", 0.0) * float(stream_molar_mass({"H2O": 1.0}))
+    return inhibitor_mass / (inhibitor_mass + water_mass)
 
 
 def _bisect_required_fraction(dT_required: float, mw_inhibitor: float) -> float:

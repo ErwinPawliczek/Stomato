@@ -31,7 +31,7 @@ class FlashDrumSpecError(ValueError):
 class FlashDrum:
     """Flash drum: one of PT, PH (with duty) or PVF, then phase outlets."""
 
-    inlet_ports: tuple[str, ...] = ("inlet",)
+    inlet_ports: tuple[str, ...] = ("inlet", "inlet_2")
     outlet_ports: tuple[str, ...] = ("gas_out", "liquid_out", "aqueous_out")
 
     def solve(
@@ -78,11 +78,10 @@ class FlashDrum:
             liquid_phase = combined_liquid(list(flashed.phases))
 
         outlets = {
-            "gas_out": phase_outlet(thermo, inlet, flashed.T, P_out, vapor),
-            "liquid_out": phase_outlet(thermo, inlet, flashed.T, P_out, liquid_phase),
-            "aqueous_out": phase_outlet(thermo, inlet, flashed.T, P_out, aqueous),
+            "gas_out": phase_outlet(thermo, feed, flashed.T, P_out, vapor),
+            "liquid_out": phase_outlet(thermo, feed, flashed.T, P_out, liquid_phase),
+            "aqueous_out": phase_outlet(thermo, feed, flashed.T, P_out, aqueous),
         }
-        h_in_W = inlet.enthalpy * inlet.molar_flow
         h_out_W = sum(s.enthalpy * s.molar_flow for s in outlets.values())
         return UnitResult(
             outlets=outlets,

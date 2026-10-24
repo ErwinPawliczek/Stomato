@@ -78,6 +78,10 @@
     - name: inlet
       required: true
       description: feed
+    - name: inlet_2
+      required: false
+      description: optional second feed; the inlets are adiabatically PH-mixed at
+        the lowest inlet pressure before the outlet spec applies
     outlet:
     - name: gas_out
       required: true
@@ -95,12 +99,14 @@
       params:
         type: object
         properties:
-          outlet_P: {type: number, description: 'outlet pressure, Pa abs; default inlet P'}
+          outlet_P: {type: number, description: 'outlet pressure, Pa abs; default min inlet P'}
           duty_W: {type: number, description: 'heat added to the drum, W; PH flash with H_out = H_in + duty_W'}
           vapor_fraction: {type: number, minimum: 0, maximum: 1, description: 'molar vapour fraction; PVF flash at outlet_P'}
       note: PT / PH (duty_W) / PVF flash at the outlet pressure — exactly one of
-        duty_W and vapor_fraction; the balancing duty is reported; gas, liquid and
-        (when the package gives one) aqueous outlets at their flash states
+        duty_W and vapor_fraction; the inlets are first adiabatically PH-mixed at
+        the lowest inlet pressure (a single inlet passes through unchanged); the
+        balancing duty is reported; gas, liquid and (when the package gives one)
+        aqueous outlets at their flash states
     R1:
       status: planned
       params: {}
@@ -109,7 +115,9 @@
   pid_symbol: V
   references:
   - docs/unit-catalogue-plan.md §2 U-D 3
-  notes: roadmap; the S2 amine loop needs it (plan §2b).
+  notes: R0 PT/PH/PVF flash implemented with an optional mixed second inlet; the
+    flash family is validated by V-flash-corripio-2013 (assessed PR-vs-ideal-K
+    miss) and V0 self-consistency; Souders-Brown sizing is R1.
 
 - id: decanter
   name: Decanter
@@ -135,7 +143,9 @@
         properties:
           dP: {type: number, minimum: 0, description: 'pressure drop, Pa; default 0'}
       note: PT flash at (T_in, P_in - dP); the two liquid phases leave light/heavy by
-        phase density; a single-liquid or vapour-returning flash is refused, naming T and P
+        phase density; a single-liquid or vapour-returning flash is refused, naming T and P.
+        Evidence gap — V0 self-consistency only — no cited worked example validates
+        a decanter split at R0
     R1:
       status: planned
       params: {}
@@ -144,7 +154,7 @@
   pid_symbol: V
   references:
   - docs/unit-catalogue-plan.md §2 U-D 4
-  notes: roadmap; S3 slice (plan §2b).
+  notes: R0 LLE split implemented; Stokes settling sizing is R1 (plan §2b).
 
 - id: tank
   name: Tank / surge drum
@@ -167,13 +177,16 @@
         properties:
           P: {type: number, description: 'outlet pressure, Pa abs; default min inlet P'}
           volume_m3: {type: number, minimum: 0, description: 'liquid holdup, m3; drives the residence-time report'}
-      note: adiabatic PH mix at P = min inlet P (or a given P); info residence_time_s
-        = volume_m3 / liquid volumetric flow (from the outlet liquid phases' density)
+      note: adiabatic PH mix at P = min inlet P (or a given P — refused when it
+        exceeds the lowest inlet pressure — the tank does not raise pressure);
+        info residence_time_s = volume_m3 / liquid volumetric flow (from the
+        outlet liquid phases' density). Closed-form R0 — a pure mixer with spec
+        quantities only, no correlation constants
       end_state: true
   pid_symbol: TK
   references:
   - docs/unit-catalogue-plan.md §2 U-D 5
-  notes: roadmap.
+  notes: R0 mixer implemented; volume_m3 is an optional holdup report, not sizing.
 
 - id: hydrocyclone
   name: Hydrocyclone / cyclone
@@ -203,7 +216,7 @@
           dP: {type: number, minimum: 0, description: 'pressure drop, Pa; applied to the overflow outlet'}
       note: per-component split spec — the underflow is the spec, not a correlation
         constant; the overflow leaves at P_in - dP, the underflow at P_in.
-        Evidence gap: Perry Sect. 18 cut-size sizing is R1, so no worked example
+        Evidence gap — Perry Sect. 18 cut-size sizing is R1, so no worked example
         validates a cut size at R0 (V0 self-consistency only).
     R1:
       status: planned
@@ -277,7 +290,7 @@
           P_permeate: {type: number, description: 'permeate-side absolute pressure, Pa; required'}
       note: exactly one of permeate_recovery (any components) and stage_cut with
         perm_ratio (binary Weller-Steiner complete mixing); the permeate leaves
-        at P_permeate, the residue at P_in. Evidence gap: the stage-cut model is
+        at P_permeate, the residue at P_in. Evidence gap — the stage-cut model is
         validated against Geankoplis Ex. 13.4-2 (air, y_O2 = 0.5068, reject
         x_O2 = 0.1345); the permeate_recovery path is a spec split with V0
         self-consistency only.
