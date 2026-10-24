@@ -51,16 +51,21 @@ def extents_from_conversion(
     rset: ReactionSet,
     n_in: Mapping[str, float],
     conversion: Mapping[str, float],
+    *,
+    sequential: bool = False,
 ) -> list[float]:
     """Extent of each reaction from a stated fractional conversion.
 
     ``conversion[reaction_id]`` is the fraction of that reaction's
-    ``base_component`` amount converted, ξ = X·n_base/|ν_base| computed on the
-    inlet amounts (reactions in one set share the same basis; sequential
-    depletion is an R1+ kinetics concern, not an R0 one).
+    ``base_component`` amount converted. Simultaneous (default, R0): extents
+    are computed on the inlet amounts (reactions in one set share the same
+    basis). ``sequential=True`` processes the reactions in declaration order,
+    each conversion applied to the amounts left by the previous reactions —
+    the running depletion, not the inlet basis.
 
     Refuses: a reaction with no conversion entry, an entry for an unknown
-    reaction id, and a conversion outside [0, 1].
+    reaction id, a conversion outside [0, 1], and (naming the species) an
+    extent combination that drives any species negative.
     """
     ids = [r.id for r in rset.reactions]
     missing = [rid for rid in ids if rid not in conversion]
@@ -70,12 +75,27 @@ def extents_from_conversion(
     if unknown:
         raise ValueError(f"conversion entries for unknown reactions {unknown}")
     extents: list[float] = []
+    if not sequential:
+        for reaction in rset.reactions:
+            frac = float(conversion[reaction.id])
+            if not 0.0 <= frac <= 1.0:
+                raise ValueError(f"reaction {reaction.id!r}: conversion {frac} outside [0, 1]")
+            nu_base = float(reaction.stoichiometry[reaction.base_component])
+            extents.append(frac * float(n_in.get(reaction.base_component, 0.0)) / abs(nu_base))
+        return extents
+    running = {cid: float(n) for cid, n in n_in.items()}
     for reaction in rset.reactions:
         frac = float(conversion[reaction.id])
         if not 0.0 <= frac <= 1.0:
             raise ValueError(f"reaction {reaction.id!r}: conversion {frac} outside [0, 1]")
         nu_base = float(reaction.stoichiometry[reaction.base_component])
-        extents.append(frac * float(n_in.get(reaction.base_component, 0.0)) / abs(nu_base))
+        xi = frac * running.get(reaction.base_component, 0.0) / abs(nu_base)
+        extents.append(xi)
+        for cid, nu in reaction.stoichiometry.items():
+            running[cid] = running.get(cid, 0.0) + xi * nu
+    negative = sorted(cid for cid, n in running.items() if n < 0.0)
+    if negative:
+        raise ValueError(f"sequential conversions drive components {negative} negative")
     return extents
 
 
@@ -137,8 +157,9 @@ def thermal_outlet(
 
     ``thermal`` is ``"isothermal"`` (outlet at the inlet temperature, duty
     carries the reaction heat), ``"adiabatic"`` (zero duty, outlet temperature
-    solved from the balance), or ``{"duty_W": q}`` (fixed duty, temperature
-    solved). The balance is on the formation-enthalpy basis:
+    solved from the balance), ``{"duty_W": q}`` (fixed duty, temperature
+    solved) or ``{"T_out": K}`` (fixed outlet temperature, duty solved). The
+    balance is on the formation-enthalpy basis:
     H_in + duty + power = H_out, with the electrical work reactors like the
     electrolyser convert.
     """
@@ -153,12 +174,19 @@ def thermal_outlet(
             T_out = _solve_outlet_T(thermo, z, total, inlet.P, inlet.T, h_in_W + power_W)
             return thermo.flash_pt(z, T_out, inlet.P, total), 0.0
         raise ValueError(
-            f"thermal mode {thermal!r} is not one of 'isothermal', 'adiabatic' or a duty mapping"
+            f"thermal mode {thermal!r} is not one of 'isothermal', 'adiabatic', "
+            '{"duty_W": W} or {"T_out": K}'
         )
     if isinstance(thermal, Mapping):
-        if set(thermal) != {"duty_W"}:
-            raise ValueError(f"thermal duty mapping takes exactly {{'duty_W'}}, got {sorted(thermal)}")
-        duty = float(thermal["duty_W"])
-        T_out = _solve_outlet_T(thermo, z, total, inlet.P, inlet.T, h_in_W + power_W + duty)
-        return thermo.flash_pt(z, T_out, inlet.P, total), duty
-    raise ValueError(f"thermal mode must be a string or a duty mapping, got {type(thermal).__name__}")
+        if set(thermal) == {"duty_W"}:
+            duty = float(thermal["duty_W"])
+            T_out = _solve_outlet_T(thermo, z, total, inlet.P, inlet.T, h_in_W + power_W + duty)
+            return thermo.flash_pt(z, T_out, inlet.P, total), duty
+        if set(thermal) == {"T_out"}:
+            T_out = float(thermal["T_out"])
+            outlet = thermo.flash_pt(z, T_out, inlet.P, total)
+            return outlet, enthalpy_with_formation(outlet) - h_in_W - power_W
+        raise ValueError(
+            f"thermal mapping takes exactly {{'duty_W': W}} or {{'T_out': K}}, got {sorted(thermal)}"
+        )
+    raise ValueError(f"thermal mode must be a string or a mapping, got {type(thermal).__name__}")

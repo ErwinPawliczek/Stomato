@@ -5,7 +5,10 @@ Plugin kind "unit", name "conversion_reactor".
 Method (spec): ports inlet -> outlet. Params ``reaction_set`` (an inline
 reaction set; the solver resolves string ids against the flowsheet's owned
 sets), ``conversion`` ({reaction_id: fraction of the base component
-converted}), and ``thermal`` (isothermal / adiabatic / fixed duty). Components
+converted}), the optional ``sequential`` (true: each conversion applies to the
+amounts left by the preceding reactions, in declaration order; default false:
+all conversions on the inlet basis), and ``thermal`` (isothermal / adiabatic /
+fixed duty / fixed T_out). Components
 absent from the reaction set pass through unconverted; the outlet is flashed at
 the inlet pressure (no pressure drop at R0). ``info`` carries each reaction's
 extent, mol/s.
@@ -17,12 +20,9 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.registry import register
-from ngdesign.units._physics.kinetics import apply_extents
 from ngdesign.units.reactors._shared import extents_from_conversion, reaction_set_param, thermal_outlet
 
 
-@register("unit", "conversion_reactor")
 class ConversionReactor:
     """Reactor driven to a stated fractional conversion (spec U-F, R0)."""
 
@@ -38,7 +38,9 @@ class ConversionReactor:
         inlet = inlets["inlet"]
         rset = reaction_set_param(params["reaction_set"])
         n_in = inlet.component_flows()
-        extents = extents_from_conversion(rset, n_in, params["conversion"])
+        extents = extents_from_conversion(
+            rset, n_in, params["conversion"], sequential=bool(params.get("sequential", False))
+        )
         n_out = apply_extents(n_in, rset, extents)
         outlet, duty = thermal_outlet(inlet, n_out, params.get("thermal", "isothermal"), thermo)
         info = {f"extent_{reaction.id}": xi for reaction, xi in zip(rset.reactions, extents, strict=True)}

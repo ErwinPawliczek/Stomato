@@ -6,10 +6,12 @@ Method (spec): ports inlet -> h2_out + o2_out. Params ``current_A``,
 ``n_cells``, ``cell_voltage_V`` and ``faradaic_efficiency`` (default 1.0). The
 stack splits its feed: H2O is consumed at n(H2) = η·I·N/(2F) (1 mol water per
 mol hydrogen), the hydrogen leaves pure on ``h2_out``, and everything else —
-including the coproduct oxygen — leaves on ``o2_out``. Power = V·I·N is
-electrical work; the isothermal duty carries the balance (negative =
-heat removal). ``info`` reports the thermoneutral voltage on the databank's
-water-vapour basis (≈ 1.253 V; the liquid-water HHV value 1.481 V is not used).
+including the coproduct oxygen — leaves on ``o2_out``. power = V·I·N is electrical work; the isothermal duty carries the balance
+(negative = heat removal). ``info`` reports the thermoneutral voltage computed
+from the actual stream balance, (H_out − H_in)/(2F·n_H2): on a liquid-water
+feed that is the HHV value (1.481 V at 298.15 K, less at warmer feeds); a
+vapour feed gives the LHV value. It is a check on the formation data, not an
+echo of an input.
 
 Refusals: feeds already containing H2 or O2 (products present at R0 keeps the
 split unambiguous), feeds without enough water, efficiency outside (0, 1],
@@ -22,8 +24,6 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.registry import register
-from ngdesign.units._physics.gibbs import thermoneutral_voltage
 from ngdesign.units._physics.kinetics import enthalpy_with_formation
 from ngdesign.units.reactors._shared import z_from
 
@@ -31,7 +31,6 @@ from ngdesign.units.reactors._shared import z_from
 FARADAY = 96485.33212
 
 
-@register("unit", "electrolyser_stack")
 class ElectrolyserStack:
     """Faradaic water-electrolysis stack (spec U-F, R0)."""
 
@@ -79,20 +78,17 @@ class ElectrolyserStack:
         h2_out = thermo.flash_pt({"H2": 1.0}, inlet.T, inlet.P, n_h2)
         amounts = {**{cid: n for cid, n in n_out.items() if n > 0.0}, "O2": n_o2_total}
         o2_out = thermo.flash_pt(z_from(amounts), inlet.T, inlet.P, sum(amounts.values()))
-        duty = (
-            enthalpy_with_formation(h2_out)
-            + enthalpy_with_formation(o2_out)
-            - enthalpy_with_formation(inlet)
-            - power
-        )
+        h_in = enthalpy_with_formation(inlet)
+        h_out = enthalpy_with_formation(h2_out) + enthalpy_with_formation(o2_out)
+        duty = h_out - h_in - power
+        v_thermoneutral = (h_out - h_in) / (2.0 * FARADAY * n_h2)
         return UnitResult(
             outlets={"h2_out": h2_out, "o2_out": o2_out},
             duty_W=duty,
             power_W=power,
             info={
-                "thermoneutral_voltage_V": thermoneutral_voltage(),
+                "thermoneutral_voltage_V": v_thermoneutral,
                 "faradaic_efficiency": eta,
-                "cell_voltage_V": voltage,
                 "h2_production_mol_s": n_h2,
             },
         )

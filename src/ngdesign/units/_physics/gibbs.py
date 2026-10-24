@@ -4,8 +4,9 @@ Standard chemical potentials assemble exactly on the
 :func:`ngdesign.units._physics.kinetics.ln_keq` path (NIST-JANAF style,
 element reference, ideal-gas standard state at :data:`P_REF`) — the same
 assembly that produces equilibrium constants, which is why the Gibbs and
-equilibrium reactors cross-check to 1e-6 (spec U-F V2). Minimisation is SLSQP
-over species mole amounts with element-budget equality constraints; inert
+equilibrium reactors cross-check to 1e-6 (spec U-F V2). Minimisation is by Newton's method (``scipy.optimize.fsolve``) on the
+element-potential stationarity conditions — equal chemical potentials of each
+element across its species — with element-budget equality constraints; inert
 species carry fixed amounts and never enter the objective.
 """
 

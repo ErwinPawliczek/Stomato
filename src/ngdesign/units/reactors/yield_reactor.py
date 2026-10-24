@@ -19,12 +19,9 @@ from typing import Any
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import component_record
-from ngdesign.registry import register
-from ngdesign.units._physics.kinetics import yield_shift
 from ngdesign.units.reactors._shared import thermal_outlet
 
 
-@register("unit", "yield_reactor")
 class YieldReactor:
     """Reactor driven to stated product mass yields (spec U-F, R0)."""
 

@@ -27,11 +27,15 @@
           conversion:
             type: object
             description: '{reaction_id: fraction of the reaction base component converted}'
+          sequential:
+            type: boolean
+            description: "true: each conversion applies to the amounts left by the preceding reactions (declaration order); default false: all conversions on the inlet basis"
           thermal:
-            description: "'isothermal' | 'adiabatic' | {duty_W: W} (default isothermal)"
+            description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K} (default isothermal)"
       validation:
       - V1-FOGLER-CONV
-      note: fractional conversion per reaction; outlet flashed at inlet P; info carries extents
+      note: fractional conversion per reaction (simultaneous or sequential); outlet flashed at
+        inlet P; info carries extents
       end_state: true
   balance: mass_elements
   pid_symbol: R
@@ -68,7 +72,7 @@
             type: array
             description: kg product per kg consumed feed, Σ = 1
           thermal:
-            description: "'isothermal' | 'adiabatic' | {duty_W: W} (default isothermal)"
+            description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K} (default isothermal)"
       validation:
       - V1-SMR-YIELD
       note: product mass yields; the shift enforces mass closure, no reaction set required
@@ -100,14 +104,19 @@
         properties:
           reaction_set:
             description: inline ReactionSet, or a string id resolved against Flowsheet.reactions
-          approach_dT:
+          approach_K:
             type: number
-            description: K evaluated at T + approach_dT; 0 = full equilibrium
+            description: K evaluated at T_out − approach_K; 0 = full equilibrium. Sign convention —
+              equilibrium evaluated at the temperature that gives LESS conversion than ideal
+              (positive falls short for an endothermic reaction; negative for an exothermic one,
+              matching U-G's Claus T_out + approach on the hot side)
           thermal:
-            description: "'isothermal' | 'adiabatic' | {duty_W: W} (default isothermal)"
+            description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K} (default isothermal)"
       validation:
       - V1-WGS-EQ
-      note: extents solve ln Q = ln K per reaction; ideal-gas quotient on the JANAF standard state
+      note: extents solve ln Q = ln K(T_out − approach_K) per reaction; ideal-gas quotient on the
+        JANAF standard state; info reports ln K at the temperature actually used; a solve that
+        pushes a species negative or past depletion is refused, never clipped
       end_state: true
   balance: mass_elements
   pid_symbol: R
@@ -142,9 +151,10 @@
             type: array
             description: fixed-amount spectators excluded from the minimisation
           thermal:
-            description: "'isothermal' | 'adiabatic' | {duty_W: W} (default isothermal)"
+            description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K} (default isothermal)"
       validation:
       - V1-WGS-GIBBS
+      - V1-SVA-SMR-GIBBS
       note: Gibbs minimisation at the stationarity conditions (element-potential method)
       end_state: true
   balance: mass_elements
