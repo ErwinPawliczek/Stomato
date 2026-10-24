@@ -71,6 +71,7 @@ class FlashDrum:
         h_in_W = sum(s.enthalpy * s.molar_flow for s in active)
         z_mix: dict[str, float]
         if len(active) == 1:
+            reference = feed
             z_mix = dict(feed.composition)
             h_mix0 = feed.enthalpy
             T_mix = feed.T
@@ -82,6 +83,9 @@ class FlashDrum:
             z_mix = {cid: x / n_in for cid, x in z_mix.items()}
             h_mix0 = h_in_W / n_in
             T_mix = thermo.flash_ph(z_mix, P_mix, h_mix0, n_in).T
+            # The outlet template must carry the MIXED flow: phase_outlet
+            # scales each phase by reference.molar_flow.
+            reference = feed.model_copy(update={"molar_flow": n_in, "composition": z_mix})
 
         if duty_W is not None:
             flashed = thermo.flash_ph(z_mix, P_out, h_mix0 + float(duty_W) / n_in, n_in)
@@ -101,9 +105,9 @@ class FlashDrum:
             liquid_phase = combined_liquid(list(flashed.phases))
 
         outlets = {
-            "gas_out": phase_outlet(thermo, feed, flashed.T, P_out, vapor),
-            "liquid_out": phase_outlet(thermo, feed, flashed.T, P_out, liquid_phase),
-            "aqueous_out": phase_outlet(thermo, feed, flashed.T, P_out, aqueous),
+            "gas_out": phase_outlet(thermo, reference, flashed.T, P_out, vapor),
+            "liquid_out": phase_outlet(thermo, reference, flashed.T, P_out, liquid_phase),
+            "aqueous_out": phase_outlet(thermo, reference, flashed.T, P_out, aqueous),
         }
         h_out_W = sum(s.enthalpy * s.molar_flow for s in outlets.values())
         return UnitResult(
