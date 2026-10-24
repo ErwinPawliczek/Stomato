@@ -1,15 +1,12 @@
-"""Claus sulfur-recovery unit, R0 adapter (spec U-G). NOT registered.
+"""Claus sulfur-recovery unit, R0 adapter (spec U-G). Registered: R0 provisional.
 
-Catalogue row ``sulfur_recovery`` stays **planned**: this adapter implements the
-R0 level the plan describes, but the row cannot be flipped yet because the
-locked property test ``tests/property/test_unit_balances.py`` has no reactive
-branch -- its per-component molar assertion and plain-enthalpy energy check both
-fail for any reaction unit (measured on issue #212: H2S in 3.0000 vs 0.8000 out
-at 1e-5 tolerance; energy miss -5.256e5 W at ~37 W tolerance, because the file
-checks sensible enthalpy, not formation-basis enthalpy). The file is locked
-(orchestrator-owned) and the spec grants no edit to it, so registering the row
-would fail the suite. Flipping the row needs the orchestrator's locked-test
-extension first.
+Catalogue row ``sulfur_recovery`` is **R0 provisional** (registered on the
+U-01b mass-element balance branch, whose reactive harness branch closes this
+adapter's formation-basis element and energy balances). The V1 case checks the
+GPSA Sect. 22 Example 22-1 printed first-converter extent; the example's printed
+overall recovery is not accessible in any copy reachable (the official GPSA
+workbook companion ends at the first converter), so it is a documented V1 gap
+and the level stays provisional.
 
 Method (spec U-G, R0: balances plus a spec):
 
@@ -154,8 +151,8 @@ def _split_sulfur(n: dict[str, float]) -> tuple[dict[str, float], float]:
 class SulfurRecovery:
     """R0 Claus sulfur recovery over a flowsheet-owned two-reaction set.
 
-    NOT registered: the catalogue row ``sulfur_recovery`` stays planned until
-    the locked property balance test grows a reactive branch (module docstring).
+    Registered at R0 provisional (catalogue row ``sulfur_recovery``; V1 case
+    on the GPSA Sect. 22 Example 22-1 printed stage results — module docstring).
     """
 
     inlet_ports: tuple[str, ...] = ("acid_gas_in",)
