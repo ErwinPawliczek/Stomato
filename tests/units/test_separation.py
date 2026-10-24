@@ -156,11 +156,10 @@ def test_hydrate_check_zero_dose_above_hydrate_T(thermo: Thermo) -> None:
 def test_hydrate_check_rejects_dose_without_inhibitor(thermo: Thermo) -> None:
     unit = registry.create("unit", "hydrate_check")
     feeds, params = unit.example_case()
-    feeds["inlet"]["composition"] = {
-        **{k: v for k, v in feeds["inlet"]["composition"].items() if k != "H2O"},
-        "H2O": 0.03,
-    }
-    feeds.pop("inhibitor_in")
+    comp = {**{k: v for k, v in feeds["inlet"]["composition"].items() if k != "H2O"}, "H2O": 0.03}
+    total = sum(comp.values())
+    feeds["inlet"]["composition"] = {k: v / total for k, v in comp.items()}
+    feeds["inhibitor_in"]["molar_flow"] = 0.0  # port must exist; zero flow = no dose
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
     with pytest.raises(ValueError, match="inhibitor"):
         unit.solve(inlets, {"T_operating_K": 273.15}, thermo)

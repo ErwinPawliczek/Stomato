@@ -62,11 +62,7 @@ class Tank:
         outlet = thermo.flash_ph(composition, P_out, h_mix, total)
 
         liquid_vol_flow = _liquid_volumetric_flow(thermo, outlet)
-        residence = (
-            volume_m3 / liquid_vol_flow
-            if volume_m3 is not None and liquid_vol_flow > 0.0
-            else 0.0
-        )
+        residence = volume_m3 / liquid_vol_flow if volume_m3 is not None and liquid_vol_flow > 0.0 else 0.0
         return UnitResult(
             outlets={"outlet": outlet},
             duty_W=0.0,

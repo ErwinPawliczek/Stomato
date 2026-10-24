@@ -49,9 +49,7 @@ def _inhibitor_in(composition: dict[str, float]) -> str | None:
     """The single recognised inhibitor present at a positive fraction."""
     present = [cid for cid in INHIBITORS if composition.get(cid, 0.0) > 0.0]
     if len(present) > 1:
-        raise HydrateCheckSpecError(
-            f"both {present} present; dose one inhibitor at a time"
-        )
+        raise HydrateCheckSpecError(f"both {present} present; dose one inhibitor at a time")
     return present[0] if present else None
 
 
@@ -69,9 +67,7 @@ class HydrateCheck:
     ) -> UnitResult:
         T_operating = params.get("T_operating_K")
         if T_operating is not None and float(T_operating) <= 0:
-            raise HydrateCheckSpecError(
-                f"T_operating_K {T_operating} must be positive"
-            )
+            raise HydrateCheckSpecError(f"T_operating_K {T_operating} must be positive")
         P_param = params.get("P")
         if P_param is not None and float(P_param) <= 0:
             raise HydrateCheckSpecError(f"P {P_param} must be positive")
@@ -160,23 +156,19 @@ class HydrateCheck:
             "gas_specific_gravity": sg,
         }
 
-        aqueous = next(
-            (p for p in outlet.phases if p.kind is PhaseKind.AQUEOUS), None
-        )
+        aqueous = next((p for p in outlet.phases if p.kind is PhaseKind.AQUEOUS), None)
         inhibitor_cid = _inhibitor_in(aqueous.composition) if aqueous else None
         if aqueous is None or inhibitor_cid is None:
             info["suppression_K"] = 0.0
         else:
             w = _inhibitor_mass_fraction(aqueous.composition, inhibitor_cid)
-            suppression = nielsen_bucklin_suppression(
-                w, stream_molar_mass({inhibitor_cid: 1.0})
-            )["dT_suppression_K"]
+            suppression = nielsen_bucklin_suppression(w, stream_molar_mass({inhibitor_cid: 1.0}))[
+                "dT_suppression_K"
+            ]
             info["suppression_K"] = suppression
 
         if T_operating is not None:
-            info.update(
-                _required_dose(outlet, aqueous, inhibitor_cid, hydrate_T - float(T_operating))
-            )
+            info.update(_required_dose(outlet, aqueous, inhibitor_cid, hydrate_T - float(T_operating)))
         return info
 
 

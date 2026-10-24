@@ -43,24 +43,17 @@ class AdsorptionBed:
         removal = params.get("removal_fraction")
         if not isinstance(removal, dict) or not removal:
             raise AdsorptionBedSpecError(
-                "removal_fraction is required: a non-empty map of component id "
-                "to removed fraction"
+                "removal_fraction is required: a non-empty map of component id to removed fraction"
             )
         unknown = [cid for cid in removal if cid not in feed.composition]
         if unknown:
-            raise AdsorptionBedSpecError(
-                f"removal_fraction names component(s) {unknown} not in the feed"
-            )
+            raise AdsorptionBedSpecError(f"removal_fraction names component(s) {unknown} not in the feed")
         bad = {cid: f for cid, f in removal.items() if not 0.0 <= float(f) <= 1.0}
         if bad:
-            raise AdsorptionBedSpecError(
-                f"removal_fraction entries {bad} outside [0, 1]"
-            )
+            raise AdsorptionBedSpecError(f"removal_fraction entries {bad} outside [0, 1]")
         capacity = params.get("capacity_kg_per_kg")
         if capacity is not None and float(capacity) < 0:
-            raise AdsorptionBedSpecError(
-                f"capacity_kg_per_kg {capacity} must be >= 0"
-            )
+            raise AdsorptionBedSpecError(f"capacity_kg_per_kg {capacity} must be >= 0")
         bed_mass = params.get("bed_mass_kg")
         if bed_mass is not None and float(bed_mass) < 0:
             raise AdsorptionBedSpecError(f"bed_mass_kg {bed_mass} must be >= 0")

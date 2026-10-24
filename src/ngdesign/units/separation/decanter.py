@@ -50,9 +50,7 @@ class Decanter:
         flashed = thermo.flash_pt(inlet.composition, T, P, inlet.molar_flow)
 
         liquids = [
-            p
-            for p in flashed.phases
-            if p.kind is not PhaseKind.VAPOR and p.mole_fraction > _PHASE_PRESENT
+            p for p in flashed.phases if p.kind is not PhaseKind.VAPOR and p.mole_fraction > _PHASE_PRESENT
         ]
         vapor = next(
             (p for p in flashed.phases if p.kind is PhaseKind.VAPOR and p.mole_fraction > _PHASE_PRESENT),
@@ -73,9 +71,7 @@ class Decanter:
             )
 
         light, heavy = (
-            (liquids[0], liquids[1])
-            if liquids[0].density <= liquids[1].density
-            else (liquids[1], liquids[0])
+            (liquids[0], liquids[1]) if liquids[0].density <= liquids[1].density else (liquids[1], liquids[0])
         )
         outlets = {
             "light_out": phase_outlet(thermo, inlet, T, P, light),

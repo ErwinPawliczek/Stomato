@@ -44,16 +44,12 @@ class FlashDrum:
         duty_W = params.get("duty_W")
         vapor_fraction = params.get("vapor_fraction")
         if duty_W is not None and vapor_fraction is not None:
-            raise FlashDrumSpecError(
-                "give exactly one of duty_W and vapor_fraction, not both"
-            )
+            raise FlashDrumSpecError("give exactly one of duty_W and vapor_fraction, not both")
         P_out = float(params.get("outlet_P", inlet.P))
         if P_out <= 0:
             raise FlashDrumSpecError(f"outlet_P {P_out} must be positive")
         if vapor_fraction is not None and not 0.0 <= float(vapor_fraction) <= 1.0:
-            raise FlashDrumSpecError(
-                f"vapor_fraction {vapor_fraction} outside [0, 1]"
-            )
+            raise FlashDrumSpecError(f"vapor_fraction {vapor_fraction} outside [0, 1]")
 
         if inlet.molar_flow <= 0.0:  # nothing to flash; zero-flow outlets
             outlets = {
@@ -67,17 +63,13 @@ class FlashDrum:
             h_mix = (inlet.enthalpy * inlet.molar_flow + float(duty_W)) / inlet.molar_flow
             flashed = thermo.flash_ph(inlet.composition, P_out, h_mix, inlet.molar_flow)
         elif vapor_fraction is not None:
-            flashed = thermo.flash_pvf(
-                inlet.composition, P_out, float(vapor_fraction), inlet.molar_flow
-            )
+            flashed = thermo.flash_pvf(inlet.composition, P_out, float(vapor_fraction), inlet.molar_flow)
         else:
             flashed = thermo.flash_pt(inlet.composition, inlet.T, P_out, inlet.molar_flow)
 
         vapor = next((p for p in flashed.phases if p.kind is PhaseKind.VAPOR), None)
         aqueous = next((p for p in flashed.phases if p.kind is PhaseKind.AQUEOUS), None)
-        other_liquids = [
-            p for p in flashed.phases if p.kind not in (PhaseKind.VAPOR, PhaseKind.AQUEOUS)
-        ]
+        other_liquids = [p for p in flashed.phases if p.kind not in (PhaseKind.VAPOR, PhaseKind.AQUEOUS)]
         # With two liquids the aqueous phase leaves on its own port; with one
         # liquid it is "the liquid" whatever its classification.
         if aqueous is not None:
