@@ -297,4 +297,7 @@ class CoolingTower:
             "molar_flow": 3000.0,
             "composition": {"N2": 0.9792809, "H2O": 0.0207191},
         }
-        return {"water_in": water, "air_in": air}, {"cycles_of_concentration": 3.0}
+        return {"water_in": water, "air_in": air}, {
+            "cycles_of_concentration": 3.0,
+            "approach_K": 5.0,
+        }
