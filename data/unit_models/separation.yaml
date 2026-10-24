@@ -389,11 +389,9 @@
           P: {type: number, description: 'mixed outlet pressure, Pa abs; default min inlet P'}
           T_operating_K: {type: number, description: 'target operating temperature, K; drives the required-inhibitor-dose info'}
       note: adiabatic PH mix; hydrate_T from hammerschmidt_formation at the mixed P,
-        dose from nielsen_bucklin_suppression at the operating T.
-        required_inhibitor_rate_kg_s covers the aqueous-phase dose only —
-        GPSA's vapour and hydrocarbon-liquid methanol losses are excluded at R0
-        suppression from nielsen_bucklin_suppression at the aqueous inhibitor fraction,
-        and the required inhibitor dose for T_operating_K
+        dose from nielsen_bucklin_suppression at the operating T; the required
+        inhibitor rate covers the aqueous phase only — GPSA's vapour and
+        hydrocarbon-liquid methanol losses are excluded at R0
     R1:
       status: planned
       params: {}
