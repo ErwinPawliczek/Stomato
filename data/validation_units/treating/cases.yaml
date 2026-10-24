@@ -1,0 +1,26 @@
+# V1 validation cases for the treating family (spec U-01 / U-G).
+#
+# Case schema: see scripts/validate_units.py. Every case carries a mandatory
+# source citation and expected values with tolerances fixed before the run;
+# a measured miss is explained in `assessed` rather than hidden by a widened
+# tolerance.
+- id: V1201-teg-regen-gpsa
+  unit: teg_regen
+  level: R0
+  source: >-
+    GPSA Engineering Data Book, 14th ed., Sect. 20 regeneration example
+    (Ex. 20-12 basis: rich TEG 97.5 wt% at 300 F; Ex. 20-11 Fig. 20-56 read:
+    98.8 wt% lean TEG at a 400 F reboiler, no stripping gas)
+  expected:
+  - {quantity: info.lean_teg_mass_fraction, value: 0.988, tol_abs: 0.0015}
+  assessed: >-
+    Measured 0.9926 wt-fraction lean TEG (99.26 wt%) at the GPSA basis
+    (204 C reboiler, 1 atm): 0.46 wt% above the Fig. 20-56 read of 98.8 wt%.
+    The Parrish-Won-Baltatu water-activity correlation behind
+    ngdesign.units.teg_activity was fitted over 300-380 K; at reboiler
+    temperature it degenerates toward the ideal-boiling limit (~99.3 wt%),
+    so the shortcut over-purifies by ~0.5 wt% absolute. The miss is documented
+    here instead of widening the tolerance; the model reports the ideal-limit
+    purity it can defend at R0. Published cross-checks put the 400 F
+    no-stripping-gas value at 98.7-98.8 wt% (Moshfeghian, Campbell Tip of the
+    Month, May 2013), consistent with the GPSA figure.

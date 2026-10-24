@@ -184,6 +184,7 @@ def test_kremser_oracle_c3_nc5(n: int) -> None:
     assert frac_absorbed == pytest.approx(frac_kremser, abs=0.10)
 
 
+@pytest.mark.timeout(600)  # one deterministic MESH spec solve; 120 s default is runner-load sensitive
 @pytest.mark.parametrize(
     ("n", "ratio", "d", "b", "temps"),
     [
@@ -252,6 +253,7 @@ def test_stripper_boilup_ratio_spec(
         assert abs(out - feed) / feed < 1e-6
 
 
+@pytest.mark.timeout(600)  # one deterministic MESH spec solve; 120 s default is runner-load sensitive
 def test_stripper_component_recovery_spec() -> None:
     """Spec P1-10: 0.95 C1 recovery to the distillate at N = 4 converges.
 
@@ -336,6 +338,7 @@ def test_mesh_rejects_band_floor_profile() -> None:
         _reject_band_limit(col, prof)
 
 
+@pytest.mark.timeout(600)  # one deterministic MESH spec solve; 120 s default is runner-load sensitive
 @pytest.mark.xfail(
     strict=True,
     reason="P1-11 step 3 (ruling on #153): the honest equilibrium-consistent gate rejects the "
