@@ -29,6 +29,8 @@
             description: '{reaction_id: fraction of the reaction base component converted}'
           thermal:
             description: "'isothermal' | 'adiabatic' | {duty_W: W} (default isothermal)"
+      validation:
+      - V1-FOGLER-CONV
       note: fractional conversion per reaction; outlet flashed at inlet P; info carries extents
       end_state: true
   balance: mass_elements
@@ -67,6 +69,8 @@
             description: kg product per kg consumed feed, Σ = 1
           thermal:
             description: "'isothermal' | 'adiabatic' | {duty_W: W} (default isothermal)"
+      validation:
+      - V1-SMR-YIELD
       note: product mass yields; the shift enforces mass closure, no reaction set required
       end_state: true
   balance: mass_elements
@@ -101,6 +105,8 @@
             description: K evaluated at T + approach_dT; 0 = full equilibrium
           thermal:
             description: "'isothermal' | 'adiabatic' | {duty_W: W} (default isothermal)"
+      validation:
+      - V1-WGS-EQ
       note: extents solve ln Q = ln K per reaction; ideal-gas quotient on the JANAF standard state
       end_state: true
   balance: mass_elements
@@ -137,6 +143,8 @@
             description: fixed-amount spectators excluded from the minimisation
           thermal:
             description: "'isothermal' | 'adiabatic' | {duty_W: W} (default isothermal)"
+      validation:
+      - V1-WGS-GIBBS
       note: Gibbs minimisation at the stationarity conditions (element-potential method)
       end_state: true
   balance: mass_elements
@@ -276,6 +284,8 @@
           n_cells: {type: number, description: cells in series}
           cell_voltage_V: {type: number, description: cell voltage, V}
           faradaic_efficiency: {type: number, description: "charge efficiency in (0, 1]; default 1"}
+      validation:
+      - V1-ELECTROLYSER
       note: Faraday's law n(H2) = η·I·N/(2F); power = V·I·N is electrical work
     R1:
       status: planned
