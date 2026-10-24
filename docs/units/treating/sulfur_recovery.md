@@ -16,7 +16,7 @@ Rigour ladder: R0 planned, R2 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | planned | — | conversion/equilibrium per stage |
+| R0 | planned | — | blocked at planned — the locked property balance test has no reactive branch yet (measured on issue |
 | R2 | planned | — | Gibbs per stage |
 
 ## References

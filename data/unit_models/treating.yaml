@@ -295,9 +295,18 @@
       description: regenerated glycol
   levels:
     R0:
-      status: planned
-      params: {}
-      note: shortcut water split at spec purity
+      status: provisional
+      adapter: ngdesign.units.treating.teg_regen:TEGRegen
+      params:
+        type: object
+        properties:
+          T_reboiler: {type: number, description: reboiler temperature, K}
+          P: {type: number, description: regenerator pressure, Pa abs}
+      validation: [V1201-teg-regen-gpsa]
+      note: shortcut water split; lean purity on the TEG-water boiling line (teg_activity owner),
+        stripping gas refused at R0 (uncited); V1 miss assessed — measured 99.26 wt% vs the
+        GPSA 98.8 wt% read (activity correlation extrapolated past its fitted range), so the
+        level stays provisional until the purity model is defensible at reboiler conditions
     R2:
       status: planned
       params: {}
@@ -327,7 +336,8 @@
     R0:
       status: planned
       params: {}
-      note: conversion/equilibrium per stage
+      note: blocked at planned — the locked property balance test has no reactive branch yet
+        (measured on issue #212; adapter written, unregistered, in ngdesign.units.treating.sulfur_recovery)
     R2:
       status: planned
       params: {}
