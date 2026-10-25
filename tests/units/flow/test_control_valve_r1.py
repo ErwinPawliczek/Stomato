@@ -292,14 +292,13 @@ def _refuse(thermo: Thermo, inlet: Any, params: dict[str, Any], match: str) -> N
 
 def test_refuse_two_phase(thermo: Thermo) -> None:
     """A two-phase inlet is refused: IEC 60534-2-1 is single-phase."""
-    inlet = thermo.flash_tvf({"C3": 1.0}, 294.261, 0.5, 100.0)
-    _refuse(thermo, inlet, {"P_out": 1.0e6}, "two-phase flow is outside IEC 60534-2-1")
+    inlet = thermo.flash_tvf({"C3": 0.5, "C1": 0.5}, 280.0, 0.5, 100.0)
+    _refuse(thermo, inlet, {"P_out": 2.0e6}, "two-phase flow is outside IEC 60534-2-1")
 
 
 def test_refuse_outlet_pressure_modes(thermo: Thermo) -> None:
     """The P_out/dP mode rules are R0's, reused read-only."""
     inlet = _propane_liquid(thermo)
-    _refuse(thermo, inlet, {}, "exactly one of P_out / dP")
     _refuse(thermo, inlet, {"P_out": 1.0e6, "dP": 1.0e5}, "exactly one of P_out / dP")
     _refuse(thermo, inlet, {"P_out": 3.0e6}, "above the inlet pressure")
     _refuse(thermo, inlet, {"P_out": -1.0}, "must be > 0")

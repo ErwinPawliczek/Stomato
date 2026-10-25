@@ -40,13 +40,16 @@ import math
 from typing import Any, Final, Literal
 
 from fluids.control_valve import (
+    control_valve_choke_P_g,
+    control_valve_choke_P_l,
     size_control_valve_g,
     size_control_valve_l,
 )
 
-from ngdesign.contracts import StreamState, UnitResult
+from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units.flow.control_valve import ControlValveSpecError
+from ngdesign.data import components
+from ngdesign.units.flow.control_valve import ControlValveSpecError, _outlet_pressure
 
 __all__ = [
     "ControlValveRatingError",
@@ -67,6 +70,9 @@ KV_PER_CV: Final[float] = 0.865
 #: Molar volume of an ideal gas at 273.15 K and 101325 Pa, m3/mol
 #: (eq. 5: R*273.15/101325 with R = 8.31446261815324 J/(mol K)).
 VMOL_STD: Final[float] = 8.31446261815324 * 273.15 / 101325.0
+
+#: Universal gas constant, J/(mol K) (CODATA 2018).
+R_UNIVERSAL: Final[float] = 8.31446261815324
 
 CharacteristicKind = Literal["linear", "equal_percentage", "quick_opening"]
 
@@ -249,6 +255,10 @@ class ControlValveR1:
             if not 0.0 < v <= 1.0:
                 raise ControlValveSpecError(f"{name} {v} outside (0, 1]")
         kind = str(params.get("characteristic", "linear"))
+        if kind not in _KINDS:
+            raise ControlValveSpecError(
+                f"characteristic {kind!r} must be one of {', '.join(_KINDS)}"
+            )
         rangeability = float(params.get("rangeability", 50.0))
         if rangeability <= 1.0:
             raise ControlValveSpecError(f"rangeability {rangeability} must be > 1")
