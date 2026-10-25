@@ -25,8 +25,13 @@ from typing import Any
 import pytest
 
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units._physics.kinetics import R
-from ngdesign.units.reactors.cstr import CstrR1
+from ngdesign.units._physics.kinetics import R, enthalpy_with_formation
+from ngdesign.units.reactors.cstr import (
+    CstrConvergenceError,
+    CstrError,
+    CstrPhaseError,
+    CstrR1,
+)
 from tests.conftest import flash_feed
 
 
@@ -88,3 +93,178 @@ def test_r1a_isothermal_first_order_closed_form(thermo: Thermo) -> None:
     assert abs(result.info["T_closure_gap_K"]) < 1e-9
     # The isothermal duty carries the reaction heat (exothermic: removed).
     assert result.duty_W < 0.0
+
+
+# --- Step 2: adapter behaviours and refusals -------------------------------
+
+
+def test_r1_k0_zero_identity(thermo: Thermo) -> None:
+    """k0 = 0 kills the rate: the outlet is the inlet re-flashed, duty ~ 0."""
+    feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    inlet = flash_feed(thermo, feed)
+    params = _isom_params()
+    params["reaction_set"]["reactions"][0]["kinetics"]["k0"] = 0.0
+
+    result = CstrR1().solve({"inlet": inlet}, params, thermo)
+
+    n_out = result.outlets["outlet"].component_flows()
+    assert math.isclose(n_out["nC4"], 1.0, rel_tol=1e-12)
+    assert n_out.get("iC4", 0.0) == pytest.approx(0.0, abs=1e-12)
+    assert result.duty_W == pytest.approx(0.0, abs=1e-9)
+    assert result.outlets["outlet"].T == pytest.approx(500.0, rel=1e-12)
+
+
+def test_r1_adiabatic_energy_closure(thermo: Thermo) -> None:
+    """Adiabatic: V0 closes at 1e-8 and the Newton/closure temperatures agree."""
+    feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    inlet = flash_feed(thermo, feed)
+
+    result = CstrR1().solve({"inlet": inlet}, _isom_params(thermal="adiabatic"), thermo)
+    outlet = result.outlets["outlet"]
+
+    h_in = enthalpy_with_formation(inlet)
+    h_out = enthalpy_with_formation(outlet)
+    assert h_in + result.duty_W == pytest.approx(h_out, rel=1e-8)  # duty 0, adiabatic
+    assert abs(result.info["T_closure_gap_K"]) < 1e-6
+    # The isomerization is exothermic: the adiabatic outlet heats up.
+    assert outlet.T > 500.0
+    assert 0.0 < result.info["conversion_nC4_isom"] < 1.0
+
+
+def test_r1_duty_zero_matches_adiabatic(thermo: Thermo) -> None:
+    """{'duty_W': 0.0} is the same physics as 'adiabatic'."""
+    feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    inlet = flash_feed(thermo, feed)
+
+    adiabatic = CstrR1().solve({"inlet": inlet}, _isom_params(thermal="adiabatic"), thermo)
+    zero_duty = CstrR1().solve({"inlet": inlet}, _isom_params(thermal={"duty_W": 0.0}), thermo)
+
+    assert zero_duty.outlets["outlet"].T == pytest.approx(adiabatic.outlets["outlet"].T, rel=1e-9)
+
+
+def test_r1_fixed_outlet_temperature(thermo: Thermo) -> None:
+    """{'T_out': 520.0} pins the outlet temperature and the Newton solution."""
+    feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    inlet = flash_feed(thermo, feed)
+
+    result = CstrR1().solve({"inlet": inlet}, _isom_params(thermal={"T_out": 520.0}), thermo)
+
+    assert result.outlets["outlet"].T == pytest.approx(520.0, rel=1e-12)
+    assert result.info["T_newton_K"] == pytest.approx(520.0, rel=1e-12)
+    assert abs(result.info["T_closure_gap_K"]) < 1e-9
+    # Hotter than the 500 K isothermal case: conversion rises (Arrhenius).
+    assert result.info["conversion_nC4_isom"] > 0.365199967
+
+
+def test_r1_liquid_phase_p_eff_hand_value(thermo: Thermo) -> None:
+    """Liquid reaction: P_eff = P − P_vap(z,T) = P (single liquid), and the
+    concentration c = x·c_tot with c_tot = 1000·ρ_liq/MW_liq reproduces the
+    hand solution X = Da/(1+Da), Da = k(T)·V·c_tot/F_A0."""
+    feed = {"T": 300.0, "P": 3.0e6, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    inlet = flash_feed(thermo, feed)
+
+    result = CstrR1().solve({"inlet": inlet}, _isom_params(reacting_phase="liquid"), thermo)
+    outlet = result.outlets["outlet"]
+    liquid = [p for p in outlet.phases if p.kind != "vapor"][0]
+
+    k = 1.0e3 * math.exp(-5.0e4 / (R * 300.0))
+    c_tot = 1000.0 * liquid.density / liquid.molecular_weight
+    da = k * 2.0 * c_tot / 1.0
+    assert math.isclose(result.info["conversion_nC4_isom"], da / (1.0 + da), rel_tol=1e-9)
+
+
+def test_r1_two_phase_vessel_refusal(thermo: Thermo) -> None:
+    """A feed that condenses in the vessel is refused at level R1."""
+    feed = {"T": 300.0, "P": 1.0e6, "molar_flow": 2.0, "composition": {"C1": 0.5, "nC4": 0.5}}
+    inlet = flash_feed(thermo, feed)
+
+    with pytest.raises(CstrPhaseError, match="use level R2") as excinfo:
+        CstrR1().solve({"inlet": inlet}, _isom_params(), thermo)
+    assert "T = 300" in str(excinfo.value) and "1000000.0" in str(excinfo.value)
+
+
+def test_r1_liquid_mode_vapor_refusal(thermo: Thermo) -> None:
+    """reacting_phase='liquid' refuses a fully vaporized vessel."""
+    feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    inlet = flash_feed(thermo, feed)
+
+    with pytest.raises(CstrPhaseError, match="use level R2"):
+        CstrR1().solve({"inlet": inlet}, _isom_params(reacting_phase="liquid"), thermo)
+
+
+def test_r1_refusals(thermo: Thermo) -> None:
+    """The refusal table's first five rows, one case each."""
+    feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    inlet = flash_feed(thermo, feed)
+    unit = CstrR1()
+
+    with pytest.raises(CstrError, match="volume_m3"):
+        unit.solve({"inlet": inlet}, _isom_params(volume_m3=-1.0), thermo)
+    with pytest.raises(CstrError, match="volume_m3"):
+        unit.solve({"inlet": inlet}, _isom_params(volume_m3=0.0), thermo)
+
+    bad_units = _isom_params()
+    bad_units["reaction_set"]["reactions"][0]["kinetics"]["rate_units"] = "mol/(kg_cat·s)"
+    with pytest.raises(CstrError, match="rate_units"):
+        unit.solve({"inlet": inlet}, bad_units, thermo)
+
+    no_bulk = _isom_params()
+    no_bulk["reaction_set"]["reactions"][0]["kinetics"]["rate_units"] = "mol/(kg_cat·s)"
+    with pytest.raises(CstrError, match="bulk_density_kg_m3"):
+        unit.solve({"inlet": inlet}, no_bulk, thermo)
+
+    no_kin = _isom_params()
+    del no_kin["reaction_set"]["reactions"][0]["kinetics"]
+    with pytest.raises(CstrError, match="has no kinetics"):
+        unit.solve({"inlet": inlet}, no_kin, thermo)
+
+    equil = _isom_params()
+    equil["reaction_set"]["reactions"][0]["equilibrium"] = {"form": "from_gibbs"}
+    with pytest.raises(CstrError, match="explicit reverse"):
+        unit.solve({"inlet": inlet}, equil, thermo)
+
+    with pytest.raises(ValueError, match="thermal mode"):
+        unit.solve({"inlet": inlet}, _isom_params(thermal="geothermal"), thermo)
+
+    with pytest.raises(CstrError, match="reacting_phase"):
+        unit.solve({"inlet": inlet}, _isom_params(reacting_phase="plasma"), thermo)
+
+
+def test_r1_newton_cap_refusal(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The iteration cap: CstrConvergenceError naming the iteration count."""
+    monkeypatch.setattr("ngdesign.units.reactors.cstr._MAX_ITERATIONS", 2)
+    feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    inlet = flash_feed(thermo, feed)
+
+    with pytest.raises(CstrConvergenceError, match="did not converge in 2 Newton iterations"):
+        CstrR1().solve({"inlet": inlet}, _isom_params(thermal="adiabatic"), thermo)
+
+
+def test_r1_singular_jacobian_refusal(thermo: Thermo) -> None:
+    """Two reactions with identical stoichiometry make the Jacobian singular."""
+    feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    inlet = flash_feed(thermo, feed)
+    params = _isom_params()
+    twin = dict(params["reaction_set"]["reactions"][0])
+    twin["id"] = "isom_twin"
+    params["reaction_set"]["reactions"].append(twin)
+
+    with pytest.raises(CstrConvergenceError, match="singular"):
+        CstrR1().solve({"inlet": inlet}, params, thermo)
+
+
+def test_r1_example_case_roundtrip(thermo: Thermo) -> None:
+    """example_case feeds and params solve and report the documented keys."""
+    feeds, params = CstrR1.example_case()
+    inlet = flash_feed(thermo, feeds["inlet"])
+
+    result = CstrR1().solve({"inlet": inlet}, params, thermo)
+
+    for key in (
+        "extent_isom_mol_s",
+        "conversion_nC4_isom",
+        "newton_iterations",
+        "T_newton_K",
+        "T_closure_gap_K",
+    ):
+        assert key in result.info

@@ -276,6 +276,10 @@ def _solve_cstr(
                 break
             alpha *= 0.5
         if accepted is None:
+            if _norm_inf(g) <= _RESIDUAL_TOL:
+                # Already at the residual tolerance: backtracking cannot find a
+                # strict decrease at the finite-difference noise floor. Converged.
+                break
             raise CstrConvergenceError(
                 f"cstr did not converge: backtracking found no decreasing step in "
                 f"{_MAX_HALVINGS} halvings (last residual norm |g|inf = {_norm_inf(g):.3e})"
@@ -350,6 +354,14 @@ class CstrR1:
         if reacting_phase not in ("vapor", "liquid"):
             raise CstrError(f"reacting_phase {reacting_phase!r} is not one of 'vapor', 'liquid' (level R1)")
         rset = reaction_set_param(params["reaction_set"])
+        for reaction in rset.reactions:
+            if reaction.equilibrium is not None and (
+                not isinstance(reaction.kinetics, PowerLaw) or reaction.kinetics.reverse is None
+            ):
+                raise CstrError(
+                    f"reaction {reaction.id!r}: an equilibrium model without an explicit "
+                    "reverse expression cannot leave the vessel at steady state; give an explicit reverse"
+                )
         bulk = params.get("bulk_density_kg_m3")
         bulk_density = float(bulk) if bulk is not None else None
         scales = _validated_scales(rset, bulk_density)
