@@ -221,9 +221,22 @@
       note: exactly one of duty_W / hot_T_out / cold_T_out; min-approach duty bisection, pinch
         check and LMTD/UA reported
     R1:
-      status: planned
-      params: {}
-      note: rating
+      status: provisional
+      adapter: ngdesign.units.heat.double_pipe_r1:DoublePipeR1
+      params:
+        type: object
+        required: [inner_ID_m, inner_OD_m, outer_ID_m, length_m, inner_side]
+        properties:
+          inner_ID_m: {type: number, description: 'inner pipe inside diameter, m'}
+          inner_OD_m: {type: number, description: 'inner pipe outside diameter, m'}
+          outer_ID_m: {type: number, description: 'outer pipe inside diameter, m'}
+          length_m: {type: number, description: 'total effective exchange length, m'}
+          inner_side: {type: string, enum: [hot, cold], description: 'stream in the inner pipe'}
+          k_wall_W_mK: {type: number, description: 'wall conductivity, W/(m K), default 45'}
+          R_f_inner_m2K_W: {type: number, description: 'inside fouling, m2 K/W, default 0'}
+          R_f_outer_m2K_W: {type: number, description: 'outside fouling, m2 K/W, default 0'}
+          roughness_m: {type: number, description: 'absolute roughness, m, default 4.5e-5'}
+      note: rating (Gnielinski tube and annulus, counterflow e-NTU on enthalpies)
       end_state: true
   pid_symbol: E
   references:
@@ -232,6 +245,10 @@
     V2082 runs Kern Example 6.1's printed inputs (9,820 lb/h benzene, 6,330 lb/h
     toluene, 160 -> 100 F); measured duty 44,968 W (-8.1%) and benzene outlet
     +0.93 K are assessed against the book's chart cp values, not widened away.
+    R1 V1 gap: Kern 6.1's printed film coefficients and pressure drops
+    (Sieder-Tate chart basis) would need a primary-text transcription; none is
+    verified here, so no R1 V1 case is recorded - the closed-form correlation
+    tests and the R0-reduction identity carry the R1 verification.
 
 - id: multi_stream
   name: Multi-stream exchanger (LNG cold box)
