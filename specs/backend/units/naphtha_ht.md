@@ -36,7 +36,7 @@
    r = k·y_T·y_H2 / (1 + K_H2S·y_H2S)².
    This is an `LHHW` with driving force [k, {thiophene: 1, H2: 1}], adsorption [{1}, {K_H2S, H2S: 1}] and exponent 2.
    - A reaction omitted from `kinetics` is inactive (rate 0) and is listed in `info` as `inactive_<id>` = 1.
-   - Equilibrium-limited `arom_sat` must use an explicit `reverse`, per the pfr refusal.
+   - Equilibrium-limited `arom_sat` may use the PowerLaw + `equilibrium` form (forward·(1 − Q/K), #245) or an explicit `reverse`; state which and why.
 3. **Beds.** Each bed is the pfr integrator over volume V_b = W_b/ρ_b, with rates per kg_cat scaled by ρ_b (pfr equation 3). Then ∫ρ_b·r′ dV = ∫r′ dW exactly.
 4. **Feed mixing** (no reaction): n = n_naphtha + n_H2; H = n_naphtha·h_naphtha + n_H2·h_H2 (package enthalpies, J/s); P_mix = min of the two inlet pressures; mixed = `flash_ph(z, P_mix, H/n, n)`.
 5. **Heater before bed b** (optional `inlet_T_K`): Q_heat,b = n·[h(z, inlet_T_K, P) − h(state)], from `flash_pt`.

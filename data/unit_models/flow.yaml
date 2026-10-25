@@ -426,14 +426,29 @@
       params: {}
       note: ΔP from a discharge coefficient
     R1:
-      status: planned
-      params: {}
-      note: ISO 5167 sizing
+      status: provisional
+      adapter: ngdesign.units.flow.orifice_r1:OrificeR1
+      params:
+        type: object
+        required: [D_m]
+        properties:
+          D_m: {type: number, description: 'pipe internal diameter, m (ISO 5167-2: 0.05 to 1.0)'}
+          bore_m: {type: number, description: 'rating mode: orifice bore, m (>= 12.5 mm, beta in [0.1, 0.75])'}
+          dP_design_Pa: {type: number, description: 'sizing mode: differential pressure at the stream flow, Pa'}
+          taps: {type: string, enum: [corner, flange, D-D/2], description: 'tap arrangement, default flange'}
+          C_specified: {type: number, description: 'fixed discharge coefficient instead of Reader-Harris/Gallagher'}
+          mu_Pa_s: {type: number, description: 'viscosity override, Pa.s'}
+      note: ISO 5167-2 RHG C, expansibility, permanent loss; rating and sizing
       end_state: true
   pid_symbol: FE
   references:
   - docs/unit-catalogue-plan.md §2 U-B 9
-  notes: R0 fixed-Cd dP read; ISO 5167 sizing remains roadmap.
+  notes: R0 fixed-Cd dP read; R1 ISO 5167-2 RHG C, expansibility and permanent loss
+    (rating and sizing). V1 gap - ISO 5167 has no normative worked example; the spec's
+    candidates (API MPMS Ch. 14.3 Part 4 / AGA Report No. 3 Part 4 1992 and 2019, Miller
+    3rd ed., Reader-Harris 2015) were searched 2026-10-25 - only front-matter sample PDFs
+    openly accessible (the AGA Part 4 sample carries no example numbers), the books paywalled,
+    so no printed inputs-plus-results case could be transcribed.
 
 - id: ejector
   name: Ejector
