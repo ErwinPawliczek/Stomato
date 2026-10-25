@@ -237,9 +237,9 @@ def test_r1_refuses_p_back_out_of_range(thermo: Thermo) -> None:
 def test_r1_refuses_k_factors(thermo: Thermo) -> None:
     """Each correction factor must be in (0, 1]; the error names it."""
     inlet = _two_phase_inlet(thermo)
-    with pytest.raises(rv1.ReliefValveSpecError, match="Kd"):
+    with pytest.raises(r0.ReliefValveSpecError, match="Kd"):
         rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 6.0e5, "Kd": 1.5}, thermo)
-    with pytest.raises(rv1.ReliefValveSpecError, match="Kw"):
+    with pytest.raises(r0.ReliefValveSpecError, match="Kw"):
         rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 6.0e5, "Kw": 0.0}, thermo)
 
 
