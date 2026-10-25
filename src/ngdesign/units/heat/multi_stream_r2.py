@@ -48,6 +48,7 @@ from ngdesign.units.heat.multi_stream_r1 import (
     _HOT_PORTS,
     _OUTLET_OF,
     CommonWallResult,
+    MultiStreamRatingError,
     RatingConvergenceError,
     StreamLayer,
     build_T_of_H_table,
@@ -199,6 +200,7 @@ def surface_efficiency(h_W_m2K: float, k_fin_W_mK: float, geom: FinGeometry) -> 
     A_fin_over_A_ht = geom.fin_height_m / (geom.fin_spacing_m + geom.fin_height_m)
     return 1.0 - A_fin_over_A_ht * (1.0 - eta_f)
 
+
 #: Vapor-fraction band edges separating single-phase from two-phase zones.
 _VF_LIQUID_MAX = 1e-8
 _VF_VAPOR_MIN = 1.0 - 1e-8
@@ -273,7 +275,7 @@ def _mass_quality(state: StreamState) -> float:
         return 1.0 if state.vapor_fraction >= 0.5 else 0.0
     masses = [p.mole_fraction * p.molecular_weight for p in state.phases]
     total = sum(masses)
-    vapor = sum(m for m, p in zip(masses, state.phases) if p.kind == PhaseKind.VAPOR)
+    vapor = sum(m for m, p in zip(masses, state.phases, strict=False) if p.kind == PhaseKind.VAPOR)
     return vapor / total if total > 0.0 else 0.0
 
 
@@ -375,9 +377,7 @@ class MultiStreamR2:
         duty_W = float(detail.info.pop("duty_W"))
         return UnitResult(outlets=detail.outlets, duty_W=duty_W, power_W=0.0, info=detail.info)
 
-    def _solve(
-        self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo
-    ) -> R2SolveDetail:
+    def _solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> R2SolveDetail:
         hot_active = [(p, inlets[p]) for p in _HOT_PORTS if inlets[p].molar_flow > 0.0]
         cold_active = [(p, inlets[p]) for p in _COLD_PORTS if inlets[p].molar_flow > 0.0]
         if not hot_active or not cold_active:
@@ -451,7 +451,7 @@ class MultiStreamR2:
             return np.array(
                 [
                     [h * surface_efficiency(h, k_fin, s.geom) * s.heat_transfer_area_m2]
-                    for h, s in zip(h_values, streams)
+                    for h, s in zip(h_values, streams, strict=False)
                 ]
             )
 
@@ -468,13 +468,13 @@ class MultiStreamR2:
         result = solve_common_wall(tuple(s.layer for s in streams), hA_zones=conductance_from_h(h_values))
         h_min: dict[str, float] = {}
         h_max: dict[str, float] = {}
-        for stream, h in zip(streams, h_values):
+        for stream, h in zip(streams, h_values, strict=False):
             h_min[stream.port], h_max[stream.port] = h, h
 
         hA_zones = np.zeros((len(streams), n_zones))
         iterations = 0
         T_out_previous: list[float] | None = None
-        for iterations in range(1, ZONE_MAX_ITERATIONS + 1):
+        for _iterations in range(1, ZONE_MAX_ITERATIONS + 1):
             # (b) cut the hot composite into n_zones equal-delta-H zones.
             hot_idx = [i for i, stream in enumerate(streams) if stream.is_hot]
             composite = np.sum([result.H[i] for i in hot_idx], axis=0)
@@ -487,7 +487,9 @@ class MultiStreamR2:
             for k in range(n_zones):
                 x_lo, x_hi = sorted((edges[k], edges[k + 1]))
                 mask = (result.x >= x_lo) & (result.x <= x_hi)
-                T_wall_zone = float(np.mean(result.T_wall[mask])) if mask.any() else float(np.mean(result.T_wall))
+                T_wall_zone = (
+                    float(np.mean(result.T_wall[mask])) if mask.any() else float(np.mean(result.T_wall))
+                )
                 for i, stream in enumerate(streams):
                     H_zone = result.H[i][mask]
                     H_mean = float(np.mean(H_zone)) if H_zone.size else float(np.mean(result.H[i]))
@@ -519,10 +521,7 @@ class MultiStreamR2:
             # values need no zone-length scaling.
             hA_zones = np.array(
                 [
-                    [
-                        h * surface_efficiency(h, k_fin, s.geom) * s.heat_transfer_area_m2
-                        for h in h_zones[i]
-                    ]
+                    [h * surface_efficiency(h, k_fin, s.geom) * s.heat_transfer_area_m2 for h in h_zones[i]]
                     for i, s in enumerate(streams)
                 ]
             )
@@ -531,26 +530,23 @@ class MultiStreamR2:
             result = solve_common_wall(
                 tuple(s.layer for s in streams),
                 hA_zones=hA_zones,
-                y_init=np.vstack(
-                    [np.interp(zone_mesh, result.x, result.H[i]) for i in range(len(streams))]
-                ),
+                y_init=np.vstack([np.interp(zone_mesh, result.x, result.H[i]) for i in range(len(streams))]),
             )
             # (e) outlet temperatures; converged when max |delta T_out| < ZONE_TOL_K.
             H_out = result.outlet_enthalpy_flows()
             T_out = [
-                thermo.flash_ph(
-                    s.state.composition, s.state.P, H / s.state.molar_flow, s.state.molar_flow
-                ).T
-                for s, H in zip(streams, H_out)
+                thermo.flash_ph(s.state.composition, s.state.P, H / s.state.molar_flow, s.state.molar_flow).T
+                for s, H in zip(streams, H_out, strict=False)
             ]
-            if T_out_previous is not None and max(
-                abs(a - b) for a, b in zip(T_out, T_out_previous)
-            ) < ZONE_TOL_K:
+            if (
+                T_out_previous is not None
+                and max(abs(a - b) for a, b in zip(T_out, T_out_previous, strict=False)) < ZONE_TOL_K
+            ):
                 break
             T_out_previous = T_out
         else:
             residual = (
-                max(abs(a - b) for a, b in zip(T_out, T_out_previous))
+                max(abs(a - b) for a, b in zip(T_out, T_out_previous, strict=False))
                 if T_out_previous is not None
                 else float("inf")
             )

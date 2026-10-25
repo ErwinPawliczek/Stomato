@@ -20,10 +20,21 @@ eta_f = tanh(m L_f)/(m L_f), eta_o = 1 - (h_f/(s+h_f))(1 - eta_f).
 
 from __future__ import annotations
 
+import math
+from typing import Any
+
 import pytest
 
+from ngdesign import registry
+from ngdesign.contracts import StreamState
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.data import components
+from ngdesign.units._physics.heat_balance import TemperatureCross
+from ngdesign.units.heat.multi_stream import MultiStreamExchanger
+from ngdesign.units.heat.multi_stream_r1 import MultiStreamR1, MultiStreamRatingError
 from ngdesign.units.heat.multi_stream_r2 import (
     FinGeometry,
+    MultiStreamR2,
     fin_efficiency,
     manglik_bergles_f,
     manglik_bergles_j,
@@ -83,6 +94,7 @@ def test_fin_and_surface_efficiency() -> None:
     assert m == pytest.approx(192.45009, rel=1e-8)
     assert eta_f == pytest.approx(0.891694218, rel=1e-8)
     assert surface_efficiency(500.0, 180.0, _GEOM) == pytest.approx(0.91238959, rel=1e-8)
+
 
 # --- R2 adapter (level R2): identity, zone loop, refusals ---------------------
 
@@ -203,7 +215,11 @@ def test_r2_missing_geometry_refused() -> None:
     inlets = _inlets(thermo, _feeds())
     params = MultiStreamR2.example_case()[1]
     with pytest.raises(MultiStreamRatingError, match="fin_spacing_hot_in_1_m"):
-        MultiStreamR2().solve(inlets, {k: v for k, v in params.items() if k != "fin_spacing_hot_in_1_m"}, thermo)
+        MultiStreamR2().solve(
+            inlets,
+            {k: v for k, v in params.items() if k != "fin_spacing_hot_in_1_m"},
+            thermo,
+        )
 
 
 def test_r2_nonpositive_geometry_refused() -> None:
