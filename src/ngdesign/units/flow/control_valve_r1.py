@@ -37,7 +37,10 @@ choked capacity and ``P1``).
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from typing import Any, Final, Literal
+
+from scipy.optimize import brentq
 
 from fluids.control_valve import (
     control_valve_choke_P_g,
@@ -288,20 +291,14 @@ class ControlValveR1:
             Psat = _psat(inlet, thermo)
             Pc = _average_Pc(inlet)
             Q_m3_s = inlet.mass_flow / rho
-            kv = kv_liquid(
-                Q_m3_s=Q_m3_s,
-                rho=rho,
-                mu=mu,
-                Psat=Psat,
-                Pc=Pc,
-                P1=P1,
-                P2=P2,
-                FL=FL,
-                Fd=Fd,
-                D1_m=D1_m,
-                D2_m=D2_m,
-                d_m=d_m,
-            )
+            visc = float(mu)
+
+            def kv_at(P2: float) -> dict[str, float]:
+                return kv_liquid(
+                    Q_m3_s=Q_m3_s, rho=rho, mu=visc, Psat=Psat, Pc=Pc,
+                    P1=P1, P2=P2, FL=FL, Fd=Fd, D1_m=D1_m, D2_m=D2_m, d_m=d_m,
+                )
+
             P2_choke = float(control_valve_choke_P_l(Psat=Psat, Pc=Pc, FL=FL, P1=P1))
         else:
             vapor = next((p for p in inlet.phases if p.kind is PhaseKind.VAPOR), None)
@@ -320,24 +317,25 @@ class ControlValveR1:
             gamma = props.cp / (props.cp - R_UNIVERSAL)
             if not math.isfinite(gamma) or gamma <= 1.0:
                 raise ControlValveSpecError(f"gamma {gamma} must be > 1 (from cp {props.cp})")
-            kv = kv_gas(
-                n_mol_s=inlet.molar_flow,
-                MW=MW,
-                mu=mu,
-                gamma=gamma,
-                Z=Z,
-                T=inlet.T,
-                P1=P1,
-                P2=P2,
-                xT=xT,
-                FL=FL,
-                Fd=Fd,
-                D1_m=D1_m,
-                D2_m=D2_m,
-                d_m=d_m,
-            )
+            n_mol_s = inlet.molar_flow
+            visc = float(mu)
+            z_gas = float(Z)
+
+            def kv_at(P2: float) -> dict[str, float]:
+                return kv_gas(
+                    n_mol_s=n_mol_s, MW=MW, mu=visc, gamma=gamma, Z=z_gas, T=inlet.T,
+                    P1=P1, P2=P2, xT=xT, FL=FL, Fd=Fd, D1_m=D1_m, D2_m=D2_m, d_m=d_m,
+                )
+
             P2_choke = float(control_valve_choke_P_g(xT=xT, gamma=gamma, P1=P1))
 
+        if rating:
+            P2 = _rating_outlet_P(
+                params, kv_at, P1, P2_choke, kind, rangeability, opening
+            )
+        # else: P2 was already solved and zero-drop-checked above.
+
+        kv = kv_at(P2)
         outlet = thermo.flash_ph(inlet.composition, P2, inlet.enthalpy, inlet.molar_flow)
         info: dict[str, float] = {
             "Kv_m3h_bar05": kv["Kv"],
@@ -353,6 +351,8 @@ class ControlValveR1:
         if phase_code == 1:
             info["x"] = (P1 - P2) / P1
             info["Y"] = kv["Y"]
+        if rating:
+            info["opening"] = opening
         if not rating and "Cv_rated" in params:
             Cv_rated = float(params["Cv_rated"])
             if Cv_rated <= 0:
@@ -429,3 +429,44 @@ def _pipe_diameters(params: dict[str, Any]) -> tuple[float | None, float | None,
             f"D1_m, D2_m, d_m: valve d_m {d_m} exceeds the smaller pipe {min(D1_m, D2_m)}"
         )
     return D1_m, D2_m, d_m
+
+
+def _rating_outlet_P(
+    params: dict[str, Any],
+    kv_at: Callable[[float], dict[str, float]],
+    P1: float,
+    P2_choke: float,
+    kind: str,
+    rangeability: float,
+    opening: float,
+) -> float:
+    """Solve the outlet pressure whose Kv equals the valve's available capacity.
+
+    Kv rises monotonically from the choked floor ``Kv(P2_choke)`` (at ``P2 = P1``
+    the required Kv diverges), so the root is bracketed between the choked
+    capacity and ``P1``; brentq finds it. Below the choked capacity the valve
+    cannot pass the flow at all and the refusal is typed (``ChokedCapacityError``).
+    """
+    Cv_rated = float(params["Cv_rated"])
+    if Cv_rated <= 0:
+        raise ControlValveSpecError(f"Cv_rated {Cv_rated} must be > 0")
+    phi = characteristic(opening, kind, rangeability)
+    Kv_avail = KV_PER_CV * Cv_rated * phi
+    Kv_choke = float(kv_at(P2_choke)["Kv"])
+    if Kv_avail < Kv_choke * (1.0 - 1e-9):
+        raise ChokedCapacityError(
+            f"required Kv {Kv_avail:.6g} at opening {opening} exceeds the choked capacity "
+            f"Kv {Kv_choke:.6g}; the valve cannot pass the flow even at that opening"
+        )
+
+    def residual(P2: float) -> float:
+        return float(kv_at(P2)["Kv"]) - Kv_avail
+
+    try:
+        return float(
+            brentq(residual, P2_choke, P1 * (1.0 - 1e-9), xtol=1e-9 * P1, maxiter=200)
+        )
+    except (RuntimeError, ValueError) as e:
+        raise ControlValveRatingError(
+            f"rating solve did not converge for P1 {P1} Pa and available Kv {Kv_avail:.6g}: {e}"
+        ) from e
