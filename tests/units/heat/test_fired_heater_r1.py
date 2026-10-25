@@ -24,16 +24,18 @@ Test 3 (unit conversion): 2 Btu/(h ft2 degF) = 2 * 1055.05585262 J / (3600 s *
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
 from ngdesign import registry
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units.heat.fired_heater import fuel_lhv
+from ngdesign.units.heat.fired_heater import FiredHeater, fuel_lhv
 from ngdesign.units.heat.fired_heater_r1 import (
     H_CONV_RADIANT_DEFAULT,
     FiredHeaterConvergenceError,
+    FiredHeaterR1,
     FiredHeaterSpecError,
     btu_h_ft2_f_to_w_m2_k,
     combustion_stoichiometry,
@@ -236,3 +238,266 @@ def test_no_firing_rate_refused() -> None:
     )
     with pytest.raises(FiredHeaterConvergenceError, match="no firing rate"):
         solve_fuel_and_sections(thermo, **basis)
+
+
+# ---------------------------------------------------------------------------
+# Spec step 3: the FiredHeaterR1 adapter, identity and refusals
+# ---------------------------------------------------------------------------
+
+
+def _adapter_inlet_state(T: float = 300.0) -> Any:
+    thermo = _thermo()
+    return thermo.flash_pt({"C1": 1.0}, T, 5.0e5, 100.0)
+
+
+def _adapter_params(**overrides: Any) -> dict[str, Any]:
+    params: dict[str, Any] = {
+        "T_out": 600.0,
+        "dP": 1.0e4,
+        "fuel_composition": {"C1": 1.0},
+        "excess_air_frac": 0.15,
+        "alpha_Acp_m2": 8.0,
+        "exchange_factor": 0.6,
+        "tube_area_radiant_m2": 200.0,
+        "tube_wall_excess_K": 100.0,
+        "UA_convection_W_K": 1200.0,
+    }
+    params.update(overrides)
+    return params
+
+
+def test_adapter_matches_r0_fuel_and_outlet() -> None:
+    """Spec 'Reduction to the lower level': the R1 process outlet is
+    bit-identical to R0's for the same T_out/dP (== on T and enthalpy), and R0
+    run at the R1 efficiency reproduces the R1 fuel molar flow to 1e-10."""
+    thermo = _thermo()
+    inlets = {"inlet": _adapter_inlet_state()}
+    r1 = FiredHeaterR1().solve(inlets, _adapter_params(), thermo)
+    r0 = FiredHeater().solve(
+        inlets,
+        {
+            "T_out": 600.0,
+            "dP": 1.0e4,
+            "efficiency": r1.info["efficiency_LHV"],
+            "fuel_composition": {"C1": 1.0},
+        },
+        thermo,
+    )
+    assert r0.outlets["outlet"].T == r1.outlets["outlet"].T
+    assert r0.outlets["outlet"].enthalpy == r1.outlets["outlet"].enthalpy
+    assert r0.info["fuel_molar_flow"] == pytest.approx(r1.info["fuel_molar_flow"], rel=1e-10)
+
+
+def test_adapter_info_keys() -> None:
+    """All spec info keys present; power_W 0; Q_fired and flux consistent."""
+    thermo = _thermo()
+    result = FiredHeaterR1().solve({"inlet": _adapter_inlet_state()}, _adapter_params(), thermo)
+    for key in (
+        "Q_fired_W",
+        "fuel_LHV_J_per_mol",
+        "fuel_molar_flow",
+        "efficiency_LHV",
+        "Q_radiant_W",
+        "Q_convection_W",
+        "T_bridgewall_K",
+        "T_stack_K",
+        "T_crossover_K",
+        "T_tube_wall_K",
+        "T_adiabatic_K",
+        "radiant_flux_W_m2",
+        "air_molar_flow",
+        "flue_molar_flow",
+        "flue_y_O2",
+    ):
+        assert key in result.info, key
+    assert result.power_W == 0.0
+    assert result.info["Q_fired_W"] == pytest.approx(
+        result.info["fuel_molar_flow"] * result.info["fuel_LHV_J_per_mol"], rel=1e-12
+    )
+    assert result.info["radiant_flux_W_m2"] == pytest.approx(
+        result.info["Q_radiant_W"] / _adapter_params()["tube_area_radiant_m2"], rel=1e-12
+    )
+
+
+def test_energy_self_consistency_with_losses() -> None:
+    """Spec: fuel LHV*n_f + air sensible = Q + flue sensible at T_stack +
+    losses, to 1e-8 relative, re-evaluated independently in the test from the
+    reported info and flash_pt. air_T_K 400 K and radiant_loss_frac 0.05 make
+    both correction terms live."""
+    thermo = _thermo()
+    params = _adapter_params(air_T_K=400.0, radiant_loss_frac=0.05)
+    result = FiredHeaterR1().solve({"inlet": _adapter_inlet_state()}, params, thermo)
+    info = result.info
+    stoich = combustion_stoichiometry({"C1": 1.0}, None, 0.15)
+    n_f = info["fuel_molar_flow"]
+    Q = result.duty_W
+    air = {"N2": 0.79, "O2": 0.21}
+    h_air = mixture_enthalpy(thermo, air, 400.0, 101325.0) - mixture_enthalpy(thermo, air, 298.15, 101325.0)
+    h_stack = mixture_enthalpy(thermo, stoich["flue"], info["T_stack_K"], 101325.0)
+    h_ref = mixture_enthalpy(thermo, stoich["flue"], 298.15, 101325.0)
+    lhs = info["fuel_LHV_J_per_mol"] * n_f + n_f * stoich["nu_air"] * h_air
+    rhs = (
+        Q
+        + n_f * stoich["nu_fg"] * (h_stack - h_ref)
+        + params["radiant_loss_frac"] * info["fuel_LHV_J_per_mol"] * n_f
+    )
+    assert lhs == pytest.approx(rhs, rel=1e-8)
+
+
+@pytest.mark.parametrize(
+    "overrides, fragment",
+    [
+        ({"fuel_composition": None}, "fuel_composition"),
+        ({"alpha_Acp_m2": 0.0}, "alpha_Acp_m2"),
+        ({"tube_area_radiant_m2": -1.0}, "tube_area_radiant_m2"),
+        ({"exchange_factor": 1.5}, "exchange_factor"),
+        ({"excess_air_frac": -0.1}, "excess_air_frac"),
+        ({"radiant_loss_frac": 0.5}, "radiant_loss_frac"),
+    ],
+)
+def test_adapter_param_refusals(overrides: dict[str, Any], fragment: str) -> None:
+    thermo = _thermo()
+    with pytest.raises(FiredHeaterSpecError, match=fragment):
+        FiredHeaterR1().solve({"inlet": _adapter_inlet_state()}, _adapter_params(**overrides), thermo)
+
+
+def test_adapter_cooling_spec_refused() -> None:
+    """A cooling spec (600 K inlet down to 300 K) is refused like R0."""
+    thermo = _thermo()
+    with pytest.raises(ValueError, match="cannot be satisfied by firing"):
+        FiredHeaterR1().solve({"inlet": _adapter_inlet_state(T=600.0)}, _adapter_params(T_out=300.0), thermo)
+
+
+def test_adapter_no_firing_rate_refused() -> None:
+    """The step-2 refusal geometry through the adapter: a 0.5 m2 effective
+    radiant plane, 20 m2 of tube area and UA_C 1 W/K cannot reach the 1.32 MW
+    duty down to 20 % LHV efficiency."""
+    thermo = _thermo()
+    params = _adapter_params(alpha_Acp_m2=0.5, tube_area_radiant_m2=20.0, UA_convection_W_K=1.0)
+    with pytest.raises(FiredHeaterConvergenceError, match="no firing rate"):
+        FiredHeaterR1().solve({"inlet": _adapter_inlet_state()}, params, thermo)
+
+
+class _HotFlueThermo:
+    """flash_pt proxy refusing every enthalpy request above 3500 K, so the
+    adiabatic bracket [T_air, 4000 K] cannot be evaluated at its upper end.
+    (With the real thermo the bracket always brackets a root: measured by
+    probe, air preheat up to 3000 K still solves or fails at the outer
+    stage, because the flue absorbs the LHV below 4000 K for any hydrocarbon
+    fuel.)"""
+
+    def __init__(self, real: Thermo) -> None:
+        self._real = real
+
+    def flash_pt(self, composition: Any, T: float, P: float, molar_flow: float) -> Any:
+        if T > 3500.0:
+            raise ValueError("no flue enthalpy above 3500 K")
+        return self._real.flash_pt(composition, T, P, molar_flow)
+
+    def flash_ph(self, composition: Any, P: float, enthalpy: float, molar_flow: float) -> Any:
+        return self._real.flash_ph(composition, P, enthalpy, molar_flow)
+
+
+def test_ad_bracket_refused() -> None:
+    """A thermo refusing enthalpies above 3500 K breaks the adiabatic bracket
+    at its 4000 K end: brentq raises and the T_ad stage is named (spec
+    refusal row 'a T_ad or T_g bracket failure', fragment 'adiabatic')."""
+    thermo = _HotFlueThermo(_thermo())
+    inlet = thermo.flash_pt({"C1": 1.0}, 300.0, 5.0e5, 100.0)
+    out = thermo.flash_pt({"C1": 1.0}, 600.0, 4.9e5, 100.0)
+    Q = 100.0 * (out.enthalpy - inlet.enthalpy)
+    stoich = combustion_stoichiometry({"C1": 1.0}, None, 0.15)
+    with pytest.raises(FiredHeaterConvergenceError, match="adiabatic"):
+        solve_fuel_and_sections(
+            thermo,
+            lhv_J_per_mol=fuel_lhv({"C1": 1.0}),
+            flue_mol=stoich["flue"],
+            air_fractions={"N2": 0.79, "O2": 0.21},
+            nu_air=stoich["nu_air"],
+            nu_fg=stoich["nu_fg"],
+            Q_W=Q,
+            F_mol_s=100.0,
+            h_in_J_per_mol=inlet.enthalpy,
+            T_in_K=inlet.T,
+            T_out_K=out.T,
+            P_out_Pa=4.9e5,
+            composition={"C1": 1.0},
+            air_T_K=298.15,
+            box_P_Pa=101325.0,
+            alpha_Acp_m2=8.0,
+            exchange_factor=0.6,
+            tube_area_m2=200.0,
+            h_conv_W_m2K=11.3565267,
+            tube_wall_excess_K=100.0,
+            UA_convection_W_K=1200.0,
+            radiant_loss_frac=0.0,
+        )
+
+
+class _AlternatingCrossoverThermo:
+    """flash_ph proxy that alternates its crossover answer between 900 K and
+    300 K on every call, so the tube-wall iteration flips between
+    T_t = 850 K and 550 K forever (|delta T_t| = 300 K); flash_pt passes
+    through to PR."""
+
+    def __init__(self, real: Thermo) -> None:
+        self._real = real
+        self._hot = False
+
+    def flash_pt(self, composition: Any, T: float, P: float, molar_flow: float) -> Any:
+        return self._real.flash_pt(composition, T, P, molar_flow)
+
+    def flash_ph(self, composition: Any, P: float, enthalpy: float, molar_flow: float) -> Any:
+        self._hot = not self._hot
+        return SimpleNamespace(T=900.0 if self._hot else 300.0)
+
+
+def test_tube_wall_fixed_point_refused() -> None:
+    """An alternating flash_ph proxy makes the tube-wall map flip between
+    850 K and 550 K on every iteration: the 50-iteration cap trips (spec
+    refusal row 'the T_t fixed point does not converge', message 'tube
+    wall')."""
+    thermo = _thermo()
+    inlet = thermo.flash_pt({"C1": 1.0}, 300.0, 5.0e5, 100.0)
+    out = thermo.flash_pt({"C1": 1.0}, 600.0, 4.9e5, 100.0)
+    Q = 100.0 * (out.enthalpy - inlet.enthalpy)
+    stoich = combustion_stoichiometry({"C1": 1.0}, None, 0.15)
+    stub = _AlternatingCrossoverThermo(thermo)
+    with pytest.raises(FiredHeaterConvergenceError, match="tube wall"):
+        solve_fuel_and_sections(
+            stub,
+            lhv_J_per_mol=fuel_lhv({"C1": 1.0}),
+            flue_mol=stoich["flue"],
+            air_fractions={"N2": 0.79, "O2": 0.21},
+            nu_air=stoich["nu_air"],
+            nu_fg=stoich["nu_fg"],
+            Q_W=Q,
+            F_mol_s=100.0,
+            h_in_J_per_mol=inlet.enthalpy,
+            T_in_K=inlet.T,
+            T_out_K=out.T,
+            P_out_Pa=4.9e5,
+            composition={"C1": 1.0},
+            air_T_K=298.15,
+            box_P_Pa=101325.0,
+            alpha_Acp_m2=8.0,
+            exchange_factor=0.6,
+            tube_area_m2=200.0,
+            h_conv_W_m2K=11.3565267,
+            tube_wall_excess_K=100.0,
+            UA_convection_W_K=1200.0,
+            radiant_loss_frac=0.0,
+        )
+
+
+def test_example_case_solves() -> None:
+    """The example_case basis solves with the measured efficiency 0.8253 in
+    the 80-90 % band the spec identity section asks the geometry to give."""
+    feeds, params = FiredHeaterR1.example_case()
+    thermo = _thermo()
+    inlet_feed = feeds["inlet"]
+    inlet = thermo.flash_pt(
+        inlet_feed["composition"], inlet_feed["T"], inlet_feed["P"], inlet_feed["molar_flow"]
+    )
+    result = FiredHeaterR1().solve({"inlet": inlet}, params, thermo)
+    assert 0.80 < result.info["efficiency_LHV"] < 0.90

@@ -20,9 +20,11 @@ from typing import Any
 
 from scipy.optimize import brentq
 
+from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data.formation import atomic_composition
 from ngdesign.sizing.lmtd import lmtd_counter
+from ngdesign.units.heat.fired_heater import fuel_lhv
 
 #: CODATA 2018 Stefan-Boltzmann constant, W/(m2 K4).
 SIGMA_W_M2_K4 = 5.670374419e-8
@@ -406,3 +408,149 @@ def solve_fuel_and_sections(
         "efficiency_LHV": Q_W / (n_f * lhv_J_per_mol),
         **final,
     }
+
+
+class FiredHeaterR1:
+    """Fired heater R1 (spec U-C 7, level R1): Lobo-Evans radiant section
+    plus a rated convection section, with the fuel and flue-gas balance
+    solved rather than an assumed efficiency.
+
+    The process outlet is computed exactly as R0 (``T_out`` -> ``flash_pt`` at
+    ``P - dP``, or ``duty_W`` -> ``flash_ph``). ``fuel_composition`` is
+    required at R1; the LHV comes from the R0 ``fuel_lhv`` (298.15 K
+    formation basis, water as vapour). The firing rate, bridgewall, stack and
+    crossover temperatures solve spec algorithm 3; ``alpha_Acp_m2`` and
+    ``exchange_factor`` are chart-read params (Hottel/Lobo charts - computing
+    the gas emissivity is out of R1 scope). Refusals follow the spec table:
+    bad or missing params raise ``FiredHeaterSpecError``, infeasible firing
+    raise ``FiredHeaterConvergenceError``.
+    """
+
+    inlet_ports = ("inlet",)
+    outlet_ports = ("outlet",)
+
+    def solve(
+        self,
+        inlets: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> UnitResult:
+        inlet = inlets["inlet"]
+        if inlet.molar_flow <= 0.0:
+            raise ValueError("fired_heater R1 needs a process stream with positive flow")
+        validate_params(params)
+        T_out = params.get("T_out")
+        duty_spec = params.get("duty_W")
+        if T_out is not None and duty_spec is not None:
+            raise ValueError("fired_heater R1: specify exactly one of T_out (K) or duty_W (W)")
+        P_out = inlet.P - float(params.get("dP", 0.0))
+        if P_out <= 0:
+            raise ValueError(f"fired_heater R1: dP {params.get('dP')} leaves a non-positive outlet pressure")
+        if T_out is not None:
+            T_out_f = float(T_out)
+            if T_out_f <= 0:
+                raise ValueError(f"fired_heater R1: T_out {T_out_f} K must be > 0")
+            out = thermo.flash_pt(inlet.composition, T_out_f, P_out, inlet.molar_flow)
+        elif duty_spec is not None:
+            out = thermo.flash_ph(
+                inlet.composition,
+                P_out,
+                inlet.enthalpy + float(duty_spec) / inlet.molar_flow,
+                inlet.molar_flow,
+            )
+        else:
+            raise ValueError("fired_heater R1: specify exactly one of T_out (K) or duty_W (W)")
+        duty = inlet.molar_flow * (out.enthalpy - inlet.enthalpy)
+        if duty <= 0.0:
+            raise ValueError(
+                "fired_heater R1 heats the process stream; the spec gives duty "
+                f"{duty:.4f} W <= 0 and cannot be satisfied by firing"
+            )
+        fuel = {str(cid): float(y) for cid, y in params["fuel_composition"].items()}
+        lhv = fuel_lhv(fuel)
+        if lhv <= 0.0:
+            raise ValueError("fired_heater R1: the fuel mixture has no heating value (LHV <= 0)")
+        air = (
+            {str(k): float(v) for k, v in params["air_composition"].items()}
+            if params.get("air_composition")
+            else dict(DEFAULT_AIR_COMPOSITION)
+        )
+        air_T = float(params.get("air_T_K", 298.15))
+        if air_T <= 0.0:
+            raise FiredHeaterSpecError(f"fired_heater R1: air_T_K {air_T} must be > 0")
+        box_P = float(params.get("box_P_Pa", 101325.0))
+        if box_P <= 0.0:
+            raise FiredHeaterSpecError(f"fired_heater R1: box_P_Pa {box_P} must be > 0")
+        h_conv = float(params.get("h_conv_radiant_W_m2K", H_CONV_RADIANT_DEFAULT))
+        if h_conv < 0.0:
+            raise FiredHeaterSpecError(f"fired_heater R1: h_conv_radiant_W_m2K {h_conv} must be >= 0")
+        tube_area = float(params["tube_area_radiant_m2"])
+        stoich = combustion_stoichiometry(fuel, air, float(params["excess_air_frac"]))
+        solved = solve_fuel_and_sections(
+            thermo,
+            lhv_J_per_mol=lhv,
+            flue_mol=stoich["flue"],
+            air_fractions=air,
+            nu_air=stoich["nu_air"],
+            nu_fg=stoich["nu_fg"],
+            Q_W=duty,
+            F_mol_s=inlet.molar_flow,
+            h_in_J_per_mol=inlet.enthalpy,
+            T_in_K=inlet.T,
+            T_out_K=out.T,
+            P_out_Pa=P_out,
+            composition=inlet.composition,
+            air_T_K=air_T,
+            box_P_Pa=box_P,
+            alpha_Acp_m2=float(params["alpha_Acp_m2"]),
+            exchange_factor=float(params["exchange_factor"]),
+            tube_area_m2=tube_area,
+            h_conv_W_m2K=h_conv,
+            tube_wall_excess_K=float(params["tube_wall_excess_K"]),
+            UA_convection_W_K=float(params["UA_convection_W_K"]),
+            radiant_loss_frac=float(params.get("radiant_loss_frac", 0.0)),
+        )
+        n_f = solved["fuel_molar_flow"]
+        info: dict[str, Any] = {
+            "Q_fired_W": n_f * lhv,
+            "fuel_LHV_J_per_mol": lhv,
+            "fuel_molar_flow": n_f,
+            "efficiency_LHV": solved["efficiency_LHV"],
+            "Q_radiant_W": solved["Q_radiant_W"],
+            "Q_convection_W": solved["Q_convection_W"],
+            "T_bridgewall_K": solved["T_bridgewall_K"],
+            "T_stack_K": solved["T_stack_K"],
+            "T_crossover_K": solved["T_crossover_K"],
+            "T_tube_wall_K": solved["T_tube_wall_K"],
+            "T_adiabatic_K": solved["T_adiabatic_K"],
+            "radiant_flux_W_m2": solved["Q_radiant_W"] / tube_area,
+            "air_molar_flow": n_f * stoich["nu_air"],
+            "flue_molar_flow": n_f * stoich["nu_fg"],
+            "flue_y_O2": stoich["flue"].get("O2", 0.0) / stoich["nu_fg"],
+        }
+        h_out_total = out.enthalpy * out.molar_flow
+        return UnitResult(
+            outlets={"outlet": out},
+            duty_W=h_out_total - inlet.enthalpy * inlet.molar_flow,
+            power_W=0.0,
+            info=info,
+        )
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """Methane fuel (15 % excess air) heating natural gas 300 -> 600 K with
+        the step-2 basis geometry: measured efficiency_LHV 0.8253 (alpha_Acp
+        8 m2, exchange factor 0.6, A_t 200 m2, UA_C 1200 W/K)."""
+        inlet = {"T": 300.0, "P": 5.0e5, "molar_flow": 100.0, "composition": {"C1": 1.0}}
+        params: dict[str, Any] = {
+            "T_out": 600.0,
+            "dP": 1.0e4,
+            "fuel_composition": {"C1": 1.0},
+            "excess_air_frac": 0.15,
+            "alpha_Acp_m2": 8.0,
+            "exchange_factor": 0.6,
+            "tube_area_radiant_m2": 200.0,
+            "tube_wall_excess_K": 100.0,
+            "UA_convection_W_K": 1200.0,
+        }
+        return {"inlet": inlet}, params
