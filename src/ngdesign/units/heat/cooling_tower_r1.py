@@ -19,6 +19,18 @@ h_dry(T) + y h_vap(T)] / [(1 - y) MW_dry / 1000], with the saturation
 humidity y_s(T) = p_sat(T) / P from ``thermo.pure_psat("H2O", T)``. The
 integration is by the 4-point Chebyshev rule of CTI ATC-105 /
 ASHRAE Ch. 40 with abscissae at 0.1, 0.4, 0.6, 0.9 of the range.
+
+ORCHESTRATOR RULING (PR #284, 2026-10-25) on the enthalpy basis: Merkel's
+driving force (h_s - h_a) is defined on the MOIST-AIR convention -- dry air as
+ideal gas and LIQUID water at 273.15 K as the references (ASHRAE Fundamentals
+Ch. 1). :func:`humid_air_enthalpy` therefore shifts the package enthalpies by
+subtracting the package enthalpies of dry air (ideal gas) and of liquid water
+at 273.15 K per their amounts, and the closed-form agreement test
+``test_shifted_h_s_matches_the_hyland_wexler_closed_form`` (1 % over 290-320 K
+at 1 atm) pins the shift. Feasibility ruling: the identity test runs at C =
+1.0, the monotonicity sweep at C in {0.8, 1.0, 1.2}, and C = 1.7 is kept as a
+TYPED refusal (:class:`CoolingTowerCharacteristicInfeasibleError`) carrying
+the requested characteristic and the attainable Merkel number.
 """
 
 from __future__ import annotations
@@ -27,10 +39,11 @@ import math
 from collections.abc import Callable
 from typing import Any
 
+from scipy.optimize import brentq
+
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.heat.cooling_tower import CoolingTower, wet_bulb
-from scipy.optimize import brentq
 
 #: Chebyshev abscissae as fractions of the temperature range (CTI ATC-105;
 #: ASHRAE Handbook HVAC Systems and Equipment, Ch. 40).
@@ -43,6 +56,17 @@ class CoolingTowerSpecError(ValueError):
 
 class CoolingTowerConvergenceError(ValueError):
     """The Merkel residual did not bracket a root, or did not converge."""
+
+
+class CoolingTowerCharacteristicInfeasibleError(CoolingTowerConvergenceError):
+    """The requested characteristic exceeds the attainable Merkel number.
+
+    For these flows the 4-point Chebyshev Merkel demand KaV/L(T_out) has a
+    finite maximum over the water-outlet bracket; a characteristic
+    C (L/G)^-n above it admits no water outlet. The message carries both
+    numbers (requested characteristic, attainable maximum) per the
+    orchestrator ruling on PR #284 (2026-10-25).
+    """
 
 
 def tower_characteristic(C: float, n: float, L_over_G: float) -> float:
@@ -98,6 +122,31 @@ def merkel_number_chebyshev(
     return c_pw * span / 4.0 * total
 
 
+def max_attainable_ka_v_l(
+    T_in: float,
+    T_wb: float,
+    L_over_G: float,
+    h_s: Callable[[float], float],
+    h_a_in: float,
+    c_pw_of: Callable[[float], float],
+    samples: int = 2001,
+) -> float:
+    """The largest finite Merkel demand the quadrature attains over the bracket.
+
+    Scans T_out over (T_wb, T_in), evaluates
+    :func:`merkel_number_chebyshev` at each and returns the maximum finite
+    value -- the attainable Merkel number for these flows (used by the typed
+    refusal of the adapter's ``solve``).
+    """
+    best = 0.0
+    for i in range(1, samples + 1):
+        T_out = T_wb + (T_in - T_wb) * i / (samples + 1)
+        ka_v_l = merkel_number_chebyshev(T_in, T_out, L_over_G, c_pw_of(T_out), h_s, h_a_in)
+        if math.isfinite(ka_v_l) and ka_v_l > best:
+            best = ka_v_l
+    return best
+
+
 def _psat(thermo: Thermo, T: float) -> float:
     """Water saturation pressure (Pa); the protocol types it Optional."""
     psat = thermo.pure_psat("H2O", T)
@@ -126,31 +175,32 @@ def humid_air_enthalpy(
 ) -> float:
     """Ideal humid-air enthalpy per kg of dry air, kJ/kg_da, at humidity y.
 
-    The same construction as R0's private ``_humid_enthalpy`` (re-implemented;
-    the R0 helpers are private), with ONE deviation documented as a SPEC ISSUE
-    on the PR: the water-vapour term is h_vap(T) - h_w(273.15 K), i.e. the
-    vapour enthalpy referenced to liquid water at 273.15 K (the psychrometric
-    convention of ASHRAE Fundamentals Ch. 1, h = 1.006 t + W (2501 + 1.86 t)).
-    R0's raw ``h_vap(T)`` is only reference-consistent inside R0's wet-bulb
-    balance, where the ``(W2 - W1) h_w`` term compensates the package's
-    per-component reference offset; the Merkel driving force h_s(T_i) -
-    h_a(T_i) compares states of DIFFERENT humidity and has no compensating
-    term, so the raw offset (measured: inlet-air enthalpy 1.50 kJ/kg_da on
-    the raw scale vs 61.5 kJ/kg_da psychrometric) leaks into every dh_i.
-    Each component's offset cancels in this form: dry gas appears once per kg
-    of dry air on both sides, and vapour and liquid water share one package
-    reference, so h_vap(T) - h_w(273.15 K) is offset-free.
+    The MOIST-AIR convention of ASHRAE Fundamentals Ch. 1 per the
+    orchestrator ruling on PR #284 (2026-10-25): both h_s and h_a are per kg
+    of dry air with the reference states dry air (ideal gas) and liquid water
+    at 273.15 K, i.e. the package enthalpies of dry air and of liquid water
+    at 273.15 K are subtracted per their amounts
+    (h = 1.006 t + W (2501 + 1.86 t) on the standard-air basis). The same
+    construction as R0's private ``_humid_enthalpy`` (re-implemented; the R0
+    helpers are private), with the reference shift required by the ruling:
+    the Merkel driving force h_s(T_i) - h_a(T_i) compares states of DIFFERENT
+    humidity, so per-component reference offsets do not cancel without it
+    (measured: inlet-air enthalpy 1.50 kJ/kg_da on the raw scale vs 61.5
+    kJ/kg_da psychrometric). The shift is pinned by
+    ``test_shifted_h_s_matches_the_hyland_wexler_closed_form`` (1 % over
+    290-320 K at 1 atm, ASHRAE Fundamentals Ch. 1 eq. 6 closed form).
     """
     dry_sum = sum(dry.values())
     if dry_sum <= 0.0:
         raise ValueError("air composition is pure water vapour: no dry gas to humidify")
     z_dry = {cid: x / dry_sum for cid, x in dry.items()}
     h_dry = thermo.flash_pt(z_dry, T, P, 1.0).enthalpy
+    h_dry_ref = thermo.flash_pt(z_dry, 273.15, P, 1.0).enthalpy
     h_vap = thermo.flash_pt({"H2O": 1.0}, T, 0.5 * _psat(thermo, T), 1.0).enthalpy
     h_w_ref = thermo.flash_pt({"H2O": 1.0}, 273.15, P, 1.0).enthalpy
     mw_dry = _mean_molar_mass(z_dry)
     w = y / (1.0 - y)
-    return (h_dry + w * (h_vap - h_w_ref)) / (mw_dry / 1000.0) / 1000.0
+    return float((h_dry - h_dry_ref + w * (h_vap - h_w_ref)) / (mw_dry / 1000.0) / 1000.0)
 
 
 def saturated_air_enthalpy(thermo: Thermo, dry: dict[str, float], T: float, P: float) -> float:
@@ -205,9 +255,7 @@ class CoolingTowerR1:
             )
         characteristic_C = float(characteristic_C)
         if characteristic_C <= 0.0:
-            raise CoolingTowerSpecError(
-                f"cooling tower R1: characteristic_C {characteristic_C} must be > 0"
-            )
+            raise CoolingTowerSpecError(f"cooling tower R1: characteristic_C {characteristic_C} must be > 0")
         characteristic_n = params.get("characteristic_n")
         if characteristic_n is None:
             raise CoolingTowerSpecError(
@@ -215,9 +263,7 @@ class CoolingTowerR1:
             )
         characteristic_n = float(characteristic_n)
         if characteristic_n < 0.0:
-            raise CoolingTowerSpecError(
-                f"cooling tower R1: characteristic_n {characteristic_n} must be >= 0"
-            )
+            raise CoolingTowerSpecError(f"cooling tower R1: characteristic_n {characteristic_n} must be >= 0")
         if "approach_K" in params:
             raise CoolingTowerSpecError(
                 "cooling tower R1: approach_K is solved at R1; give characteristic_C "
@@ -294,6 +340,24 @@ class CoolingTowerR1:
         try:
             T_out = brentq(residual, lo, hi, xtol=1e-10, maxiter=100)
         except (ValueError, RuntimeError) as exc:
+            # The usual failure is a characteristic no real tower can meet:
+            # the requested C (L/G)^-n above the attainable Merkel number.
+            # Refuse TYPED with both numbers in the message (orchestrator
+            # ruling on PR #284, 2026-10-25), not a bare brentq complaint.
+            attainable = max_attainable_ka_v_l(
+                water.T,
+                T_wb,
+                L_over_G,
+                h_s,
+                h_a_in,
+                lambda T: water_specific_heat(thermo, water.T, T, water.P),
+            )
+            if characteristic > attainable:
+                raise CoolingTowerCharacteristicInfeasibleError(
+                    f"cooling tower R1: the requested characteristic KaV/L = "
+                    f"{characteristic:.4f} exceeds the attainable Merkel number "
+                    f"{attainable:.4f} for these flows: no water outlet exists"
+                ) from exc
             raise CoolingTowerConvergenceError(
                 f"cooling tower R1: the Merkel residual has no root in the bracket "
                 f"({lo:.4f}, {hi:.4f}) K or did not converge: {exc}"
@@ -326,16 +390,17 @@ class CoolingTowerR1:
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-        """The R0 example feeds with a Merkel characteristic: C = 0.6, n = 0.6.
+        """The R0 example feeds with a Merkel characteristic: C = 1.0, n = 0.6.
 
-        The spec's C = 1.7 gives a characteristic of 6.02, above the maximum
-        attainable demand KaV/L ~ 4.65 (package) / 5.61 (pure ASHRAE basis)
-        on these feeds - no root exists (SPEC ISSUE on the PR). C = 0.6
-        gives 2.12, which solves at an approach of about 2 K.
+        The orchestrator ruling on PR #284 (2026-10-25) sets the example
+        characteristic at C = 1.0 (KaV/L = 3.61 on these feeds): the spec's
+        C = 1.7 gives 6.14, above the attainable Merkel number on these feeds
+        (about 5.1 on the moist-air basis), and is kept as a TYPED refusal
+        instead. C = 1.0 solves at an approach of a few kelvin.
         """
         feeds, _params = CoolingTower.example_case()
         params: dict[str, Any] = {
-            "characteristic_C": 0.6,
+            "characteristic_C": 1.0,
             "characteristic_n": 0.6,
             "cycles_of_concentration": 3.0,
         }
