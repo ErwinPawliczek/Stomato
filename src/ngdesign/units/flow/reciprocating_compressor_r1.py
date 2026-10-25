@@ -143,9 +143,7 @@ class ReciprocatingCompressorR1:
         n_stages = int(params.get("n_stages", 1))
         raw_cylinders = params.get("cylinders")
         if not isinstance(raw_cylinders, (list, tuple)) or len(raw_cylinders) != n_stages:
-            raise RecipR1SpecError(
-                f"cylinders must have one entry per stage (n_stages={n_stages})"
-            )
+            raise RecipR1SpecError(f"cylinders must have one entry per stage (n_stages={n_stages})")
         cylinders = [_cylinder(raw, i) for i, raw in enumerate(raw_cylinders)]
         speed_rpm = params.get("speed_rpm")
         if speed_rpm is None:
@@ -171,13 +169,9 @@ class ReciprocatingCompressorR1:
             if not isinstance(rod_limit, dict):
                 raise RecipR1SpecError("rod_load_limit_N must be a mapping")
             limit_compression = (
-                float(rod_limit["compression"])
-                if rod_limit.get("compression") is not None
-                else None
+                float(rod_limit["compression"]) if rod_limit.get("compression") is not None else None
             )
-            limit_tension = (
-                float(rod_limit["tension"]) if rod_limit.get("tension") is not None else None
-            )
+            limit_tension = float(rod_limit["tension"]) if rod_limit.get("tension") is not None else None
             for name, value in (("compression", limit_compression), ("tension", limit_tension)):
                 if value is not None and value <= 0.0:
                     raise RecipR1SpecError(f"rod_load_limit_N.{name} {value} must be > 0")
