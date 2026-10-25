@@ -108,7 +108,7 @@ def test_r2_bellows_uses_fig30(thermo: Thermo) -> None:
     feeds, _ = rv1.ReliefValveR1.example_case()
     P_set = 0.9 * feeds["inlet"]["P"]
     params = {
-        "P_back": 0.4 * feeds["inlet"]["P"],
+        "P_back": 0.45 * feeds["inlet"]["P"],
         "P_set": P_set,
         "valve_type": "balanced_bellows",
     }
@@ -119,9 +119,7 @@ def test_r2_bellows_uses_fig30(thermo: Thermo) -> None:
     assert info["backpressure_ok"] == 1
     kb = API520_B(P_set, info["P_back_total_Pa"], 0.10)
     assert info["Kb_fig30"] == pytest.approx(kb, rel=1e-12)
-    assert info["area_with_backpressure_in2"] == pytest.approx(
-        info["required_area_in2"] / kb, rel=1e-12
-    )
+    assert info["area_with_backpressure_in2"] == pytest.approx(info["required_area_in2"] / kb, rel=1e-12)
 
 
 def test_r2_pilot_no_limit(thermo: Thermo) -> None:

@@ -38,6 +38,24 @@ class ReliefValveR1Error(ReliefValveSpecError):
     """Typed refusal for the U-R1 omega-method extension."""
 
 
+def _flash_ps_two_phase(
+    thermo: Thermo, z: dict[str, float], P: float, s: float, molar_flow: float
+) -> StreamState:
+    """Isentropic flash to P via flash_ps, with a manual PVF fallback.
+
+    The registered PR package's flash_ps raises ZeroDivisionError when the
+    (P, S) target lands in the two-phase region for a pure fluid (thermo lib
+    flash_utils.py:961); the manual entropy balance over PVF flashes avoids it.
+    """
+    try:
+        return thermo.flash_ps(z, P, s, molar_flow)
+    except Exception:
+        s_l = thermo.flash_pvf(z, P, 0.0, molar_flow).entropy
+        s_v = thermo.flash_pvf(z, P, 1.0, molar_flow).entropy
+        x = (s - s_l) / (s_v - s_l) if s_v != s_l else 0.0
+        return thermo.flash_pvf(z, P, min(1.0, max(0.0, x)), molar_flow)
+
+
 # --- omega-method closed forms (Annex C eqs. 1-4) ----------------------------
 
 
@@ -72,12 +90,14 @@ def eta_c(omega: float) -> float:
     if omega <= 0:
         raise ReliefValveR1Error(f"omega must be positive, got {omega!r}")
     try:
-        return brentq(
-            lambda eta: _eta_c_residual(omega, eta),
-            1e-9,
-            1.0 - 1e-12,
-            xtol=1e-14,
-            maxiter=200,
+        return float(
+            brentq(
+                lambda eta: _eta_c_residual(omega, eta),
+                1e-9,
+                1.0 - 1e-12,
+                xtol=1e-14,
+                maxiter=200,
+            )
         )
     except ValueError as e:
         raise ReliefValveR1Error(f"critical pressure ratio did not converge: {e}") from e
@@ -87,8 +107,9 @@ def eta_c_leung_fit(omega: float) -> float:
     """Leung's explicit fit for eta_c (test cross-check only, ~1e-3 accurate)."""
     if omega <= 0:
         raise ReliefValveR1Error(f"omega must be positive, got {omega!r}")
-    return (1.0 + (1.0446 - 0.0093431 * math.sqrt(omega)) * omega ** (-0.56261)) ** (
-        -0.70356 + 0.014685 * math.log(omega)
+    return float(
+        (1.0 + (1.0446 - 0.0093431 * math.sqrt(omega)) * omega ** (-0.56261))
+        ** (-0.70356 + 0.014685 * math.log(omega))
     )
 
 
@@ -146,22 +167,20 @@ def eta_c_subcooled_low(omega_s: float, eta_s: float) -> float:
     if not 0 < eta_s <= 1:
         raise ReliefValveR1Error(f"eta_s must be in (0, 1], got {eta_s!r}")
     try:
-        return brentq(
-            lambda eta: _eta_c_subcooled_residual(omega_s, eta_s, eta),
-            1e-9,
-            eta_s * (1.0 - 1e-12),
-            xtol=1e-14,
-            maxiter=200,
+        return float(
+            brentq(
+                lambda eta: _eta_c_subcooled_residual(omega_s, eta_s, eta),
+                1e-9,
+                eta_s * (1.0 - 1e-12),
+                xtol=1e-14,
+                maxiter=200,
+            )
         )
     except ValueError as e:
-        raise ReliefValveR1Error(
-            f"critical pressure ratio did not converge: {e}"
-        ) from e
+        raise ReliefValveR1Error(f"critical pressure ratio did not converge: {e}") from e
 
 
-def G_subcooled(
-    P0: float, rho_l0: float, omega_s: float, eta_s: float, P_a: float
-) -> tuple[float, int, int]:
+def G_subcooled(P0: float, rho_l0: float, omega_s: float, eta_s: float, P_a: float) -> tuple[float, int, int]:
     """Subcooled/liquid flux selection of Annex C eq. 4, (kg/(m2 s), regime, critical).
 
     Regimes: 2 = low subcooling (eta_s >= eta_st), choked at eta_c of eq. 4
@@ -192,11 +211,7 @@ def G_subcooled(
     G = (
         math.sqrt(
             2.0 * (1.0 - eta_s)
-            + 2.0
-            * (
-                omega_s * eta_s * math.log(eta_s / eta)
-                - (omega_s - 1.0) * (eta_s - eta)
-            )
+            + 2.0 * (omega_s * eta_s * math.log(eta_s / eta) - (omega_s - 1.0) * (eta_s - eta))
         )
         * math.sqrt(P0 * rho_l0)
         / (omega_s * (eta_s / eta - 1.0) + 1.0)
@@ -259,9 +274,7 @@ class ReliefValveR1(ReliefValve):
             raise ReliefValveSpecError(f"P_back must be numeric, got {type(P_back)}")
         P_back = float(P_back)
         if not 0 < P_back < P0:
-            raise ReliefValveSpecError(
-                f"P_back must be in (0, P0) = (0, {P0!r}), got {P_back!r}"
-            )
+            raise ReliefValveSpecError(f"P_back must be in (0, P0) = (0, {P0!r}), got {P_back!r}")
 
         phases = [p for p in inlet.phases if p.kind is not PhaseKind.AQUEOUS]
         all_vapour = len(phases) == 1 and phases[0].kind is PhaseKind.VAPOR
@@ -279,12 +292,13 @@ class ReliefValveR1(ReliefValve):
             if P_sat >= P0 * (1.0 - 1e-9):
                 # saturated liquid: handled as two-phase with v0 = 1/rho_l0
                 return self._solve_two_phase(
-                    inlets, params, thermo, v0_override=1.0 / rho_l0,
+                    inlets,
+                    params,
+                    thermo,
+                    v0_override=1.0 / rho_l0,
                     extra_info={"P_sat_Pa": P_sat},
                 )
-            return self._solve_subcooled(
-                inlets, params, thermo, rho_l0=rho_l0, P_sat=P_sat
-            )
+            return self._solve_subcooled(inlets, params, thermo, rho_l0=rho_l0, P_sat=P_sat)
         return self._solve_two_phase(inlets, params, thermo)
 
     # -- helpers --------------------------------------------------------------
@@ -301,9 +315,7 @@ class ReliefValveR1(ReliefValve):
         thermo: Thermo,
     ) -> UnitResult:
         """All-vapour inlet: delegate to R0 with R0's own params only."""
-        r0_params: dict[str, Any] = {
-            k: params[k] for k in ("P_back", "Kd", "Kc") if k in params
-        }
+        r0_params: dict[str, Any] = {k: params[k] for k in ("P_back", "Kd", "Kc") if k in params}
         result = ReliefValve().solve(inlets, r0_params, thermo)
         result.info["regime_code"] = 0
         return result
@@ -323,9 +335,7 @@ class ReliefValveR1(ReliefValve):
                 factors[key] = default
             else:
                 if not isinstance(val, (int, float)) or not 0 < val <= 1:
-                    raise ReliefValveSpecError(
-                        f"{key} must be a correction factor in (0, 1], got {val!r}"
-                    )
+                    raise ReliefValveSpecError(f"{key} must be a correction factor in (0, 1], got {val!r}")
                 factors[key] = float(val)
         return factors
 
@@ -343,13 +353,21 @@ class ReliefValveR1(ReliefValve):
         factors = self._factors(params, kd_default=0.85)
 
         v0 = mixture_v(inlet) if v0_override is None else v0_override
-        flashed = thermo.flash_ps(z, 0.9 * P0, inlet.entropy, inlet.molar_flow)
+        flashed = _flash_ps_two_phase(thermo, z, 0.9 * P0, inlet.entropy, inlet.molar_flow)
         omega = omega_two_phase(v0, mixture_v(flashed))
         G, critical = G_two_phase(P0, v0, omega, params["P_back"] / P0)
         return self._package(
-            inlet, factors, G, regime_code=1, critical=critical, omega=omega,
-            eta_c_value=eta_c(omega), v0=v0, extra_info=extra_info or {},
-            thermo=thermo, params=params,
+            inlet,
+            factors,
+            G,
+            regime_code=1,
+            critical=critical,
+            omega=omega,
+            eta_c_value=eta_c(omega),
+            v0=v0,
+            extra_info=extra_info or {},
+            thermo=thermo,
+            params=params,
         )
 
     def _solve_subcooled(
@@ -366,7 +384,7 @@ class ReliefValveR1(ReliefValve):
         factors = self._factors(params, kd_default=0.65)
 
         s_sat = thermo.flash_tvf(z, inlet.T, 0.0, inlet.molar_flow).entropy
-        flashed = thermo.flash_ps(z, 0.9 * P_sat, s_sat, inlet.molar_flow)
+        flashed = _flash_ps_two_phase(thermo, z, 0.9 * P_sat, s_sat, inlet.molar_flow)
         rho9 = 1.0 / mixture_v(flashed)
         omega_s = 9.0 * (rho_l0 / rho9 - 1.0)
         if omega_s <= 0:
@@ -377,9 +395,17 @@ class ReliefValveR1(ReliefValve):
         if regime_code == 2:
             ec = eta_c_subcooled_low(omega_s, eta_s)
         return self._package(
-            inlet, factors, G, regime_code=regime_code, critical=critical,
-            omega=omega_s, eta_c_value=ec, v0=1.0 / rho_l0,
-            extra_info={"P_sat_Pa": P_sat}, thermo=thermo, params=params,
+            inlet,
+            factors,
+            G,
+            regime_code=regime_code,
+            critical=critical,
+            omega=omega_s,
+            eta_c_value=ec,
+            v0=1.0 / rho_l0,
+            extra_info={"P_sat_Pa": P_sat},
+            thermo=thermo,
+            params=params,
         )
 
     def _package(
@@ -397,8 +423,13 @@ class ReliefValveR1(ReliefValve):
         params: dict[str, Any],
     ) -> UnitResult:
         area = area_m2(
-            inlet.mass_flow, G, factors["Kd"], factors["Kb"], factors["Kc"],
-            factors["Kv"], factors["Kw"],
+            inlet.mass_flow,
+            G,
+            factors["Kd"],
+            factors["Kb"],
+            factors["Kc"],
+            factors["Kv"],
+            factors["Kw"],
         )
         letter = _next_orifice(area * IN2_PER_M2)
         area_in2 = _orifice_area_in2(letter)

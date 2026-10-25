@@ -35,9 +35,7 @@ class ReliefValveR2Error(ReliefValveSpecError):
 def mcadams_viscosity(x_mass_vapor: float, mu_g: float, mu_l: float) -> float:
     """McAdams, Woods & Heroman (1942) two-phase viscosity 1/mu = x/mu_g + (1-x)/mu_l, Pa s."""
     if not 0.0 <= x_mass_vapor <= 1.0:
-        raise ReliefValveR2Error(
-            f"vapour mass fraction must be in [0, 1], got {x_mass_vapor!r}"
-        )
+        raise ReliefValveR2Error(f"vapour mass fraction must be in [0, 1], got {x_mass_vapor!r}")
     if mu_g <= 0 or mu_l <= 0:
         raise ReliefValveR2Error("phase viscosities must be positive")
     return 1.0 / (x_mass_vapor / mu_g + (1.0 - x_mass_vapor) / mu_l)
@@ -48,13 +46,10 @@ def _phase_viscosity(stream: StreamState, i: int, thermo: Thermo) -> float:
     phase = stream.phases[i]
     if phase.viscosity is not None:
         return phase.viscosity
-    props = thermo.phase_props(
-        dict(stream.composition), stream.T, stream.P, phase.kind
-    )
+    props = thermo.phase_props(dict(stream.composition), stream.T, stream.P, phase.kind)
     if props.viscosity is None:
         raise ReliefValveR2Error(
-            f"phase {i} ({phase.kind.value}) carries no viscosity; the line loss "
-            "cannot be evaluated"
+            f"phase {i} ({phase.kind.value}) carries no viscosity; the line loss cannot be evaluated"
         )
     return props.viscosity
 
@@ -80,9 +75,7 @@ def mixture_viscosity(stream: StreamState, thermo: Thermo) -> float:
         elif mu_liq is None:
             mu_liq = mu
     if mu_vapor is None or mu_liq is None:
-        raise ReliefValveR2Error(
-            "the McAdams two-phase viscosity needs one vapour and one liquid phase"
-        )
+        raise ReliefValveR2Error("the McAdams two-phase viscosity needs one vapour and one liquid phase")
     return mcadams_viscosity(x_vapor, mu_vapor, mu_liq)
 
 
@@ -119,9 +112,7 @@ def inlet_line_dP(
     if roughness_m < 0:
         raise ReliefValveR2Error(f"roughness must be non-negative, got {roughness_m!r}")
     if K < 0:
-        raise ReliefValveR2Error(
-            f"resistance coefficient must be non-negative, got {K!r}"
-        )
+        raise ReliefValveR2Error(f"resistance coefficient must be non-negative, got {K!r}")
     res = darcy_colebrook(W_rated / rho, D_m, rho, mu, roughness_m, L_m)
     res["dP_Pa"] += _form_dP(K, rho, res["velocity_m_s"])
     return res
@@ -144,7 +135,7 @@ class ReliefValveR2(ReliefValveR1):
             **params,
             "P_set": 0.9 * feeds["inlet"]["P"],
             "L_in_m": 1.0,
-            "D_in_m": 0.1,
+            "D_in_m": 0.12,
             "K_in": 0.5,
             "L_out_m": 5.0,
             "D_out_m": 0.15,
@@ -172,21 +163,16 @@ class ReliefValveR2(ReliefValveR1):
         inlet = self._inlet(inlets)
         P0 = inlet.P
         if not P_atm < P_set <= P0:
-            raise ReliefValveR2Error(
-                f"P_set must be in (P_atm, P0] = ({P_atm!r}, {P0!r}], got {P_set!r}"
-            )
+            raise ReliefValveR2Error(f"P_set must be in (P_atm, P0] = ({P_atm!r}, {P0!r}], got {P_set!r}")
 
         overpressure = params.get("overpressure", 0.10)
         if overpressure not in (0.10, 0.16, 0.21):
-            raise ReliefValveR2Error(
-                f"overpressure must be one of 0.10, 0.16 or 0.21, got {overpressure!r}"
-            )
+            raise ReliefValveR2Error(f"overpressure must be one of 0.10, 0.16 or 0.21, got {overpressure!r}")
 
         valve_type = params.get("valve_type", "conventional")
         if valve_type not in ("conventional", "balanced_bellows", "pilot"):
             raise ReliefValveR2Error(
-                f"valve_type must be 'conventional', 'balanced_bellows' or 'pilot', "
-                f"got {valve_type!r}"
+                f"valve_type must be 'conventional', 'balanced_bellows' or 'pilot', got {valve_type!r}"
             )
 
         L_in = params.get("L_in_m", 0.0)
@@ -203,8 +189,7 @@ class ReliefValveR2(ReliefValveR1):
         for name, length, val in (("D_in_m", L_in, D_in), ("D_out_m", L_out, D_out)):
             if length > 0 and (not isinstance(val, (int, float)) or val <= 0):
                 raise ReliefValveR2Error(
-                    f"{name} must be positive when the line length is positive, "
-                    f"got {val!r}"
+                    f"{name} must be positive when the line length is positive, got {val!r}"
                 )
         for name, val in (("K_in", K_in), ("K_out", K_out)):
             if not isinstance(val, (int, float)) or val < 0:
@@ -228,8 +213,13 @@ class ReliefValveR2(ReliefValveR1):
         if L_in > 0:
             mu_in = mixture_viscosity(inlet, thermo)
             dP_in = inlet_line_dP(
-                W_rated, rho_m, mu_in, float(D_in), float(L_in),
-                float(rough_in), float(K_in),
+                W_rated,
+                rho_m,
+                mu_in,
+                float(D_in),
+                float(L_in),
+                float(rough_in),
+                float(K_in),
             )["dP_Pa"]
         set_gauge = P_set - P_atm
         inlet_loss_frac = dP_in / set_gauge
@@ -242,8 +232,14 @@ class ReliefValveR2(ReliefValveR1):
         dP_out = 0.0
         if L_out > 0:
             dP_out = self._builtup_dP(
-                inlet, thermo, P_back, W_rated, float(D_out), float(L_out),
-                float(rough_out), float(K_out),
+                inlet,
+                thermo,
+                P_back,
+                W_rated,
+                float(D_out),
+                float(L_out),
+                float(rough_out),
+                float(K_out),
             )
         P_back_total = P_back + dP_out
         info["dP_builtup_Pa"] = dP_out
@@ -296,13 +292,10 @@ class ReliefValveR2(ReliefValveR1):
             state = thermo.flash_ph(z, P_mean, inlet.enthalpy, inlet.molar_flow)
             rho = 1.0 / mixture_v(state)
             mu = mixture_viscosity(state, thermo)
-            new = inlet_line_dP(
-                W_rated, rho, mu, D_out, L_out, rough_out, K_out
-            )["dP_Pa"]
+            new = inlet_line_dP(W_rated, rho, mu, D_out, L_out, rough_out, K_out)["dP_Pa"]
             if abs(new - dP) <= 1e-8 * max(new, 1.0):
                 return new
             dP = new
         raise ReliefValveR2Error(
-            "the discharge-line back-pressure iteration did not converge "
-            "within 50 passes"
+            "the discharge-line back-pressure iteration did not converge within 50 passes"
         )

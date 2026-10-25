@@ -204,12 +204,7 @@ def test_r1_area_matches_eq5(thermo: Thermo) -> None:
     result = rv1.ReliefValveR1().solve({"inlet": inlet}, params, thermo)
     info = result.info
     expected = inlet.mass_flow / (
-        info["Kd_used"]
-        * params["Kb"]
-        * params["Kc"]
-        * params["Kv"]
-        * params["Kw"]
-        * info["G_kg_m2s"]
+        info["Kd_used"] * params["Kb"] * params["Kc"] * params["Kv"] * params["Kw"] * info["G_kg_m2s"]
     )
     assert info["required_area_m2"] == pytest.approx(expected, rel=1e-12)
     assert info["required_area_in2"] == pytest.approx(expected * r0.IN2_PER_M2, rel=1e-12)
@@ -220,9 +215,7 @@ def test_r1_subcooled_propane_regimes(thermo: Thermo) -> None:
     """Subcooled propane at T0 300 K, P0 = 2x bubble P: regime 3 or 4 by P_back."""
     z = {"C3": 1.0}
     psat = thermo.bubble_point(z, T=300.0).P
-    inlet = flash_feed(
-        thermo, {"T": 300.0, "P": 2.0 * psat, "molar_flow": 5000.0, "composition": z}
-    )
+    inlet = flash_feed(thermo, {"T": 300.0, "P": 2.0 * psat, "molar_flow": 5000.0, "composition": z})
     choked = rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 0.2 * psat}, thermo)
     assert choked.info["critical"] == 1
     assert choked.info["regime_code"] in (2, 3)
