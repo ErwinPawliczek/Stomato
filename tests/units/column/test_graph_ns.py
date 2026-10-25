@@ -27,7 +27,6 @@ from ngdesign.units.column.graph_ns import (
     _colour_groups,
     _extend_profile_to_graph,
     _graph_fd_jacobian,
-    _graph_interlink_terms,
     _graph_k_args,
     _graph_liquid_profile,
     _graph_model,
@@ -42,8 +41,8 @@ from ngdesign.units.column.graph_ns import (
 )
 from ngdesign.units.column.inside_out import (
     _build_column,
-    _live_residual_vector,
     _Column,
+    _live_residual_vector,
     _Profile,
     _seed_profile,
     _stage_k_values,
@@ -222,7 +221,7 @@ def test_graph_dt_clamp_inactive_on_linear_columns(thermo: Thermo) -> None:
     """The graph-only per-pass dT clamp is a no-op on a linear column (no
     sections) and active on the two-stripper graph - the shared controller's
     one graph-only safeguard, gated so the dense-path steps stay untouched."""
-    from ngdesign.units.column.graph_ns import _GraphNSEngine, _NS_MAX_DT
+    from ngdesign.units.column.graph_ns import _NS_MAX_DT, _GraphNSEngine
 
     col_lin, tb_lin = _build(_linear_params(), thermo)
     prof_lin = _seed_profile(col_lin, tb_lin, *_temperature_seed(col_lin, tb_lin))
@@ -353,15 +352,11 @@ def test_solve_routed_through_graph_ns_matches_dense_ns(
     graph_calls = [0]
     real_dense = specs_mod._naphtali_sandholm
 
-    def counting_dense(
-        col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None
-    ) -> _Profile:
+    def counting_dense(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None) -> _Profile:
         dense_calls[0] += 1
         return real_dense(col, tb, prof, t_bot_tear)
 
-    def counting_graph(
-        col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None
-    ) -> _Profile:
+    def counting_graph(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None) -> _Profile:
         graph_calls[0] += 1
         return _graph_naphtali_sandholm(col, tb, prof, t_bot_tear)
 
