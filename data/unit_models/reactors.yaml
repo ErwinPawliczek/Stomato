@@ -234,15 +234,11 @@
         once per output point, so the flash count is O(n_output) and independent of V (P0-06);
         the outlet closes exactly on the formation-enthalpy basis and info carries extents,
         T_profile_out_K, T_closure_gap_K, T_max_K, V_at_T_max_m3. The energy ODE uses the
-        package-consistent dH (PR #311 review, blocking item 1: heat_of_reaction at 298.15 K
-        plus stoichiometric package phase enthalpies); the residual T_closure_gap_K measures
-        1.06e-3 K on ideal-raoult for the nC4 isomerisation case, within the spec's 2e-3 K
-        consistency bound. V1 gap — no transcribable printed validation case: searches
-        'Fogler Elements of Chemical Reaction Engineering PFR example first order irreversible
-        gas phase numerical conversion worked example printed values' and 'Example 4- Fogler PFR
-        gas phase 500 K volume final conversion table printed' found only umich web self-test
-        pages and a 4th-ed chapter PDF snippet, none with a full feed/kinetics/outlet state
-        reproducible without reconstruction
+        closure-consistent dH (PR #311 review, blocking items 1 and B: heat_of_reaction at
+        298.15 K plus stoichiometric partial molar enthalpies of the actual mixture, from a
+        finite difference of the mixture enthalpy flow); the residual T_closure_gap_K measures
+        6.6e-7 K on ideal-raoult for the nC4 isomerisation case, within the spec's 1e-3 K
+        consistency bound
     R2:
       status: planned
       params: {}
@@ -257,7 +253,13 @@
   pid_symbol: R
   references:
   - docs/unit-catalogue-plan.md §2 U-F 6
-  notes: R1 implemented (U-R2); single phase, no pressure drop.
+  notes: >-
+    R1 implemented (U-R2); single phase, no pressure drop. V1 gap — no transcribable
+    printed validation case: searches 'Fogler Elements of Chemical Reaction Engineering PFR
+    example first order irreversible gas phase numerical conversion worked example printed
+    values' and 'Example 4- Fogler PFR gas phase 500 K volume final conversion table printed'
+    found only umich web self-test pages and a 4th-ed chapter PDF snippet, none with a full
+    feed/kinetics/outlet state reproducible without reconstruction
 
 - id: batch_reactor
   name: Batch / semi-batch reactor

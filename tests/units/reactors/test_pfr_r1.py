@@ -120,21 +120,21 @@ def test_r1_zero_rate_identity(thermo: Thermo) -> None:
 def test_r1_adiabatic_consistency(thermo: Thermo) -> None:
     """Adiabatic nC4 -> iC4: V0 closes at 1e-8 and T_out > T_in.
 
-    The energy ODE uses the package-consistent reaction enthalpy
-    (review of this PR, blocking item 1): eq. 5's dH is the databank
-    formation-enthalpy lift ``heat_of_reaction(r, 298.15)`` plus
-    ``sum(nu_i * h_pkg,i(T, P))`` from ``thermo.phase_props``, the same
-    basis the outlet closure (``thermal_outlet``) balances.  The residual
-    ``T_closure_gap_K`` is then the closure's flash-based solve against
-    the ODE's package-consistent dH; measured -1.06e-3 K on
-    ``ideal-raoult`` for this case (review probe), so the plan's 2e-3 K
-    bound is asserted.
+    The energy ODE uses the closure-consistent reaction enthalpy
+    (review of this PR, blocking items 1 and B): eq. 5's dH is the
+    databank formation-enthalpy lift ``heat_of_reaction(r, 298.15)`` plus
+    ``sum(nu_i * h_bar_i)``, each h_bar_i a partial molar enthalpy of the
+    actual mixture (a central finite difference of the mixture enthalpy
+    flow from ``thermo.phase_props``), the same basis the outlet closure
+    (``thermal_outlet``) balances.  The residual ``T_closure_gap_K`` is
+    the closure's flash-based solve against the ODE's dH; measured
+    -6.6e-7 K on ``ideal-raoult`` for this case, so 1e-5 K is asserted
+    inside the plan's 1e-3 K ceiling.
 
     Case note (review, non-blocking): the spec's preferred
     2 C2H4 -> 1-butene case was checked — ``ideal-raoult`` resolves C2H4
     and 1-butene with formation data — and this nC4 -> iC4 case is kept
-    so the asserted bound matches the measured value quoted in the
-    review.
+    as the review-approved fallback.
     """
     from ngdesign import registry
 
@@ -153,8 +153,8 @@ def test_r1_adiabatic_consistency(thermo: Thermo) -> None:
                     "base_component": "nC4",
                     "provenance": "adiabatic consistency case (review-approved fallback: "
                     "nC4 -> iC4, dH ~ -8 kJ/mol; the preferred 2 C2H4 -> 1-butene "
-                    "dimerisation data were checked and are available — kept so the "
-                    "asserted bound matches the review's measured gap)",
+                    "dimerisation data were checked and are available — kept as the "
+                    "review-approved fallback)",
                     "kinetics": {
                         "rate_units": "mol/(m3·s)",
                         "k0": 1.0e3,
@@ -175,7 +175,7 @@ def test_r1_adiabatic_consistency(thermo: Thermo) -> None:
     assert result.duty_W == pytest.approx(0.0, abs=1.0e-8)
     assert out.T > 500.0
     gap = result.info["T_closure_gap_K"]
-    assert abs(gap) < 2.0e-3
+    assert abs(gap) < 1.0e-5
 
 
 def test_r1_uniform_duty(thermo: Thermo) -> None:
@@ -325,6 +325,20 @@ def test_r1_refuses_rhs_cap(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) -> 
     monkeypatch.setattr(plug_flow, "RHS_CAP", 50)
     feeds, params = _r1a()
     with pytest.raises(PlugFlowError, match="RHS evaluation cap"):
+        PfrR1().solve({"inlet": _flash(thermo, feeds["inlet"])}, params, thermo)
+
+
+def test_r1_refuses_integration_failed(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A solver failure (``solve_ivp`` success=False) refuses as a typed error."""
+    import ngdesign.units.reactors.plug_flow as plug_flow
+
+    class _FailedSolution:
+        success = False
+        message = "fake solver failure"
+
+    monkeypatch.setattr(plug_flow, "solve_ivp", lambda *args, **kwargs: _FailedSolution())
+    feeds, params = _r1a()
+    with pytest.raises(PlugFlowError, match="integration failed"):
         PfrR1().solve({"inlet": _flash(thermo, feeds["inlet"])}, params, thermo)
 
 

@@ -132,21 +132,71 @@ def _validate_reactions(rset: ReactionSet, bulk_density_kg_m3: float | None) -> 
     return scales
 
 
-def _pkg_reaction_enthalpy(reaction: Reaction, thermo: Thermo, t: float, p: float, kind: PhaseKind) -> float:
+#: Relative step of the finite difference on component flows, as a fraction
+#: of the total molar flow.
+_H_BAR_REL_STEP = 1e-5
+
+
+def _stream_enthalpy(thermo: Thermo, f: Mapping[str, float], t: float, p: float, kind: PhaseKind) -> float:
+    """The mixture enthalpy flow F_tot·H_mix(z, T, P) in J/s (flash-free)."""
+    f_tot = math.fsum(f.values())
+    return f_tot * float(thermo.phase_props(z_from(f), t, p, kind).enthalpy)
+
+
+def _partial_molar_enthalpies(
+    thermo: Thermo, f: Mapping[str, float], t: float, p: float, kind: PhaseKind
+) -> dict[str, float]:
+    """Partial molar enthalpies h̄_i = ∂(F·H_mix)/∂F_i at fixed (T, P), J/mol.
+
+    A central finite difference on the component flows of the mixture
+    enthalpy flow :func:`_stream_enthalpy`; ``phase_props`` never flashes,
+    so the O(1)-in-V flash budget is unchanged.  This is the derivative the
+    outlet closure balances: summing pure-component enthalpies instead
+    drops the mixture's enthalpy of mixing (about 0.16 J/mol on
+    ``ideal-raoult`` for the nC4/iC4 case) and leaves a systematic
+    ~1e-3 K offset in T_closure_gap_K (PR #311 review, blocking item B).
+    A species whose flow is below the step uses a second-order forward
+    stencil, so a product absent from the feed never needs a negative flow.
+    """
+    f_tot = math.fsum(f.values())
+    step = _H_BAR_REL_STEP * f_tot
+    s0 = _stream_enthalpy(thermo, f, t, p, kind)
+    out: dict[str, float] = {}
+    for cid, n in f.items():
+        f_plus = dict(f)
+        f_plus[cid] = n + step
+        if n - step < 0.0:
+            f_pp = dict(f)
+            f_pp[cid] = n + 2.0 * step
+            out[cid] = (
+                -3.0 * s0
+                + 4.0 * _stream_enthalpy(thermo, f_plus, t, p, kind)
+                - _stream_enthalpy(thermo, f_pp, t, p, kind)
+            ) / (2.0 * step)
+        else:
+            f_minus = dict(f)
+            f_minus[cid] = n - step
+            out[cid] = (
+                _stream_enthalpy(thermo, f_plus, t, p, kind) - _stream_enthalpy(thermo, f_minus, t, p, kind)
+            ) / (2.0 * step)
+    return out
+
+
+def _pkg_reaction_enthalpy(reaction: Reaction, h_bar: Mapping[str, float]) -> float:
     """Reaction enthalpy on the outlet-closure basis, J/mol extent (spec eq. 5).
 
-    The closure (``thermal_outlet`` / ``_solve_outlet_T``) balances the stream
-    enthalpy of :func:`kinetics.enthalpy_with_formation` — the package
-    enthalpy plus the databank ΔfH°298 lift.  The energy ODE must use the same
-    basis: ΔrH(T) = ΔrH°298 (databank, ``heat_of_reaction`` at 298.15 K) +
-    Σν·h_pkg,i(T, P), each h_pkg,i a pure-component ``thermo.phase_props``
-    enthalpy.  Using the databank's own Cp integral (``heat_of_reaction`` at
-    T) instead mixed two enthalpy bases and inflated T_closure_gap_K
-    (review of PR #311, blocking item 1).
+    The closure (``thermal_outlet`` / ``_solve_outlet_T``) balances
+    :func:`kinetics.enthalpy_with_formation` — the package mixture enthalpy
+    plus the databank ΔfH°298 lift.  The energy ODE must use the same basis:
+    ΔrH(T) = ΔrH°298 (databank, ``heat_of_reaction`` at 298.15 K) +
+    Σν·h̄_i, each h̄_i a partial molar enthalpy of the actual mixture
+    (:func:`_partial_molar_enthalpies`).  Earlier revisions used
+    pure-component enthalpies (dropping the mixing term, a systematic
+    ~1e-3 K gap) and the databank's own Cp integral (mixing two enthalpy
+    bases, a ~4e-2 K gap); see the PR #311 reviews, blocking items 1 and B.
     """
     return float(heat_of_reaction(reaction, T_REF_FORMATION)) + math.fsum(
-        float(nu) * float(thermo.phase_props({cid: 1.0}, t, p, kind).enthalpy)
-        for cid, nu in reaction.stoichiometry.items()
+        float(nu) * h_bar[cid] for cid, nu in reaction.stoichiometry.items()
     )
 
 
@@ -265,6 +315,11 @@ def integrate_plug_flow(
 
         dxi = np.zeros(m)
         d_h = 0.0
+        h_bar = (
+            _partial_molar_enthalpies(thermo, f, t, p, _PHASE_KIND[reacting_phase])
+            if energy != "isothermal"
+            else {}
+        )
         for j, reaction in enumerate(reactions):
             assert reaction.kinetics is not None
             r_j = rate(reaction, t, p_eff, z)
@@ -272,7 +327,7 @@ def integrate_plug_flow(
             nu_base = float(reaction.stoichiometry[reaction.base_component])
             dxi[j] = scales[j] * multiplier * r_j / abs(nu_base)
             if energy != "isothermal":
-                d_h += _pkg_reaction_enthalpy(reaction, thermo, t, p, _PHASE_KIND[reacting_phase]) * dxi[j]
+                d_h += _pkg_reaction_enthalpy(reaction, h_bar) * dxi[j]
 
         q = q_v(v, t, extra)
         if energy == "isothermal":
