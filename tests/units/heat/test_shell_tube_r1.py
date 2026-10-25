@@ -314,7 +314,9 @@ def _heating_case(thermo: Any, process_side: str) -> tuple[Any, dict[str, Any]]:
         "utility_P_Pa": 4.0e5,
         "utility_molar_flow": 1000.0,
     }
-    n2 = thermo.flash_pt(feeds["inlet"]["composition"], 280.0, 3.0e6, 60.0)
+    # Pure N2 stays single-phase at 280 K / 3 MPa; the rich dry-gas mix of
+    # the example does not (it condenses below ~300 K at that pressure).
+    n2 = thermo.flash_pt({"N2": 1.0}, 280.0, 3.0e6, 60.0)
     return n2, heating
 
 
