@@ -384,9 +384,7 @@ def test_flue_reference_is_all_vapour() -> None:
     assert flashed.vapor_fraction < 1.0  # a flash_pt reference condenses the flue water
     assert flashed.enthalpy == pytest.approx(-6616.15, rel=1e-3)
     h_vapour = thermo.phase_props(z_flue, 298.15, 101325.0, PhaseKind.VAPOR).enthalpy
-    assert mixture_enthalpy(thermo, stoich["flue"], 298.15, 101325.0) == pytest.approx(
-        h_vapour, rel=1e-12
-    )
+    assert mixture_enthalpy(thermo, stoich["flue"], 298.15, 101325.0) == pytest.approx(h_vapour, rel=1e-12)
     assert h_vapour == pytest.approx(-18.92, rel=1e-2)
     assert (h_vapour - flashed.enthalpy) * flue_total / fuel_lhv({"C1": 1.0}) == pytest.approx(
         0.098, rel=1e-2
