@@ -61,8 +61,11 @@ RE_MAX = 1.0e4
 #: Pramuanjaroenkij, Heat Exchangers, 3rd ed., ch. 10).
 PORT_VELOCITY_HEADS = 1.4
 
-#: Chevron angle bounds, degrees from the flow direction (spec Params table).
-CHEVRON_MIN_DEG = 0.0
+#: Chevron angle bounds, degrees from the flow direction. Martin's Nusselt form
+#: degenerates at phi -> 0 (sin 2phi -> 0 gives Nu -> 0 and a bare
+#: ZeroDivisionError in the overall U), so the range is the open interval
+#: (10, 80) of the catalogue description, not the plan's [0, 80].
+CHEVRON_MIN_DEG = 10.0
 CHEVRON_MAX_DEG = 80.0
 
 
@@ -159,10 +162,10 @@ def plate_geometry(params: dict[str, Any]) -> PlateGeometry:
     if chevron_value is None:
         raise PlateGeometryError("plate_exchanger R1 requires geometry param 'chevron_angle_deg'")
     chevron = float(chevron_value)
-    if not CHEVRON_MIN_DEG <= chevron <= CHEVRON_MAX_DEG:
+    if not CHEVRON_MIN_DEG < chevron < CHEVRON_MAX_DEG:
         raise PlateGeometryError(
             f"plate_exchanger R1: chevron_angle_deg must be in "
-            f"[{CHEVRON_MIN_DEG}, {CHEVRON_MAX_DEG}], got {chevron_value}"
+            f"({CHEVRON_MIN_DEG:g}, {CHEVRON_MAX_DEG:g}), got {chevron_value}"
         )
     width = _require_positive("plate_width_m", params.get("plate_width_m"))
     length = _require_positive("plate_length_m", params.get("plate_length_m"))
@@ -191,7 +194,9 @@ def plate_geometry(params: dict[str, Any]) -> PlateGeometry:
     g = fluids.geometry.PlateExchanger(
         amplitude,
         wavelength,
-        chevron_angle=int(chevron),
+        # float is semantically exact; fluids annotates int but stores it unused
+        # by every quantity we read (D_h, A_heat_transfer, channels).
+        chevron_angle=chevron,  # type: ignore[arg-type]
         width=width,
         length=length,
         d_port=port,

@@ -35,14 +35,14 @@ kg/m3 the spec notes instead of ~990).
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
 from ngdesign import registry
 from ngdesign.contracts import StreamState
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units._physics.heat_balance import TwoStreamSpec, two_stream
+from ngdesign.units._physics.heat_balance import TemperatureCross, TwoStreamSpec, two_stream
 from ngdesign.units.heat.plate_exchanger_r1 import (
     PlateCorrelationRangeError,
     PlateExchangerR1,
@@ -51,11 +51,18 @@ from ngdesign.units.heat.plate_exchanger_r1 import (
     channel_velocity,
     friction_kumar,
     friction_martin_vdi,
+    nusselt_kumar,
     nusselt_martin_vdi,
     overall_u,
     plate_geometry,
     port_dP,
     port_velocity,
+)
+from ngdesign.units.heat.rating import (
+    PropertyUnavailable,
+    RatingConvergenceError,
+    RatingError,
+    SinglePhaseRequired,
 )
 
 GEOMETRY_P1: dict[str, Any] = {
@@ -142,8 +149,14 @@ def test_overall_u() -> None:
 
 
 def test_kumar_switch_runs() -> None:
-    """The kumar switch routes friction and Nusselt to the book correlation."""
-    assert friction_kumar(1000.0, 45.0) > 0.0
+    """The kumar switch routes friction and Nusselt to the book correlation.
+
+    The pinned values are the library's own outputs at Re 1000, Pr 3.98095238
+    (the spec's case-1 water), 45 degrees: they pin the wiring so a silent
+    correlation swap fails the test.
+    """
+    assert friction_kumar(1000.0, 45.0) == pytest.approx(1.3890694890949535, rel=1e-12)
+    assert nusselt_kumar(1000.0, 4180.0 * 6.0e-4 / 0.63, 45.0) == pytest.approx(46.14418278403326, rel=1e-12)
     assert friction_martin_vdi(1000.0, 45.0) != friction_kumar(1000.0, 45.0)
 
 
@@ -165,6 +178,14 @@ def test_too_few_plates_refuses() -> None:
 def test_chevron_angle_out_of_range_refuses() -> None:
     with pytest.raises(PlateGeometryError, match="chevron_angle_deg"):
         plate_geometry({**GEOMETRY_P1, "chevron_angle_deg": 85.0})
+
+
+def test_chevron_angle_zero_refuses() -> None:
+    """phi = 0 degenerates Martin's Nusselt (sin 2phi = 0): refused, not a crash."""
+    with pytest.raises(PlateGeometryError, match="chevron_angle_deg"):
+        plate_geometry({**GEOMETRY_P1, "chevron_angle_deg": 0.0})
+    with pytest.raises(PlateGeometryError, match="chevron_angle_deg"):
+        plate_geometry({**GEOMETRY_P1, "chevron_angle_deg": 10.0})
 
 
 def test_bad_correlation_refuses() -> None:
@@ -247,14 +268,63 @@ def test_reduction_to_r0_identity() -> None:
 
 def test_zero_flow_refuses() -> None:
     thermo = _thermo("pr")
-    with pytest.raises(Exception, match="needs both streams flowing"):
+    with pytest.raises(RatingError, match="needs both streams flowing"):
         _solve(thermo, dict(GEOMETRY_P1), hot_in={"molar_flow": 0.0})
 
 
 def test_temperature_cross_refuses() -> None:
     thermo = _thermo("pr")
-    with pytest.raises(Exception, match="inlet temperatures"):
+    with pytest.raises(TemperatureCross, match="inlet temperatures"):
         _solve(thermo, dict(GEOMETRY_P1), hot_in={"T": 293.15})
+
+
+def test_two_phase_inlet_refuses() -> None:
+    """A two-phase hot inlet reaches SinglePhaseRequired, side named.
+
+    Rich gas below its dew point (the expander suite's two-phase recipe): the
+    phase check runs before the solve. ``_side_kind`` appends the side name.
+    """
+    thermo = _thermo("pr")
+    feeds, _ = PlateExchangerR1.example_case()
+    hot = thermo.flash_pt({"C1": 0.85, "C3": 0.10, "nC5": 0.05}, 240.0, 8.0e6, 100.0)
+    assert len(hot.phases) == 2  # precondition: the feed really is two-phase
+    cold_feed = feeds["cold_in"]
+    cold = thermo.flash_pt(cold_feed["composition"], cold_feed["T"], cold_feed["P"], cold_feed["molar_flow"])
+    with pytest.raises(SinglePhaseRequired, match="hot inlet"):
+        PlateExchangerR1().solve({"hot_in": hot, "cold_in": cold}, dict(GEOMETRY_P1), thermo)
+
+
+def test_property_unavailable_names_property_and_side() -> None:
+    """A package without transport properties is refused: property and side named."""
+
+    class _NoTransport:
+        def __init__(self, real: Thermo) -> None:
+            self._real = real
+
+        def phase_props(self, composition: dict[str, float], T: float, P: float, kind: Any) -> Any:
+            props = self._real.phase_props(composition, T, P, kind)
+            return props.model_copy(update={"viscosity": None})
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self._real, name)
+
+    thermo = _thermo("pr")
+    inlets = _inlets(thermo)
+    with pytest.raises(PropertyUnavailable, match="viscosity.*hot") as excinfo:
+        PlateExchangerR1().solve(inlets, dict(GEOMETRY_P1), cast(Thermo, _NoTransport(thermo)))
+    assert "hot side" in str(excinfo.value)
+
+
+def test_convergence_failure_is_typed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A brentq failure surfaces as RatingConvergenceError with the bracket."""
+
+    def boom(*a: Any, **k: Any) -> Any:
+        raise RuntimeError("mocked brentq failure")
+
+    _thermo("pr")
+    monkeypatch.setattr("ngdesign.units.heat.rating.brentq", boom)
+    with pytest.raises(RatingConvergenceError, match="did not converge"):
+        _solve(_thermo("pr"), dict(GEOMETRY_P1))
 
 
 def test_correlation_range_refuses() -> None:
