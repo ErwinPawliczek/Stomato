@@ -2,7 +2,7 @@
 
 Family: **column** · P&ID symbol: `T`
 
-Rigour ladder: R0 provisional, R2 planned, R3 planned
+Rigour ladder: R0 provisional, R2 provisional, R3 planned
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned, R3 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.column_shortcut.absorber:Absorber` | Kremser stage count (the kremser correlation plugin exists in sizing); two-feed split lets lean-solvent components strip |
-| R2 | planned | — | MESH zero-tear — today via the `column` row's absorber configuration |
+| R2 | provisional | `ngdesign.units.column_shortcut.absorber_r2:AbsorberR2` | zero-tear MESH via the column API (inside-out + NS fallback); duty_W = boundary energy residual |
 | R3 | planned | — | rate-based stages |
 
 ### R0 parameters
@@ -34,6 +34,30 @@ properties:
     type: object
 required:
 - N
+type: object
+```
+
+### R2 parameters
+
+```yaml
+additionalProperties: false
+properties:
+  n_stages:
+    description: equilibrium stages (top = 1)
+    minimum: 2
+    type: integer
+  pressure_profile:
+    description: stage pressures, Pa abs (scalar = uniform; list = per stage, top
+      to bottom); default gas_in.P
+    oneOf:
+    - exclusiveMinimum: 0
+      type: number
+    - items:
+        exclusiveMinimum: 0
+        type: number
+      type: array
+required:
+- n_stages
 type: object
 ```
 
