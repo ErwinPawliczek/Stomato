@@ -39,7 +39,15 @@ import pytest
 from ngdesign import registry
 from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 from ngdesign.units._physics.heat_balance import TemperatureCross
-from ngdesign.units.heat.rating import FilmProps, RatingError, SinglePhaseRequired, u_outside_tube
+from ngdesign.units.heat.rating import (
+    FilmProps,
+    RatingError,
+    SinglePhaseRequired,
+    duct_h,
+    film_props,
+    inlet_kind,
+    u_outside_tube,
+)
 from ngdesign.units.heat.shell_tube_r1 import (
     KernRangeError,
     ShellTubeGeometryError,
@@ -388,14 +396,7 @@ def test_geometry_refusal_rows() -> None:
         broken = {k: v for k, v in params.items() if k != drop}
         with pytest.raises(ShellTubeGeometryError, match=drop):
             ShellTubeR1().solve({"inlet": state}, broken, thermo)
-    for zero in (
-        "shell_ID_m",
-        "tube_OD_m",
-        "tube_ID_m",
-        "tube_length_m",
-        "pitch_m",
-        "baffle_spacing_m",
-    ):
+    for zero in ("shell_ID_m", "tube_OD_m", "tube_ID_m", "tube_length_m", "pitch_m", "baffle_spacing_m"):
         with pytest.raises(ShellTubeGeometryError, match=zero):
             ShellTubeR1().solve({"inlet": state}, {**params, zero: 0.0}, thermo)
     with pytest.raises(ShellTubeGeometryError, match="n_tubes"):
