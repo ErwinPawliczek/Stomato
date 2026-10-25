@@ -497,14 +497,14 @@ def test_rating_identity(thermo: Thermo) -> None:
 
 
 def test_rating_eqpercent_residual(thermo: Thermo) -> None:
-    """Plan's residual check: eq% rating at opening 0.6 solves kv_liquid(P2) = Kv_avail (1e-9)."""
+    """Plan's residual check: eq% rating at opening 0.8 solves kv_liquid(P2) = Kv_avail (1e-9)."""
     feeds, _ = ControlValveR1.example_case()
     inlet = flash_feed(thermo, feeds["inlet"])
     r = ControlValveR1().solve(
         {"inlet": inlet},
         {
             "Cv_rated": 125.0,
-            "opening": 0.6,
+            "opening": 0.8,
             "characteristic": "equal_percentage",
             "mu_liquid": 1.0371e-4,
         },
@@ -527,7 +527,7 @@ def test_rating_eqpercent_residual(thermo: Thermo) -> None:
             Fd=1.0,
         )["Kv"]
     )
-    Kv_avail = KV_PER_CV * 125.0 * cvr1_module.characteristic(0.6, "equal_percentage", 50.0)
+    Kv_avail = KV_PER_CV * 125.0 * cvr1_module.characteristic(0.8, "equal_percentage", 50.0)
     assert Kv == pytest.approx(Kv_avail, rel=1e-9)
 
 
