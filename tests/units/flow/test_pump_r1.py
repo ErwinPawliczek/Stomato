@@ -21,6 +21,7 @@ import pytest
 
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.flow.pump_r1 import (
+    PumpCavitationError,
     PumpCurveRangeError,
     PumpR1,
     PumpR1SpecError,
@@ -258,3 +259,73 @@ def test_curve_fraction(thermo: Thermo) -> None:
     result = _solve(thermo, {"curve": CURVE})
     _, Q, _ = _measured(thermo)
     assert result.info["curve_fraction"] == pytest.approx(Q / 8.0e-4, rel=1e-9)
+
+
+# --- NPSH (spec eqs. 6-8): the spec's measured P_v and NPSHa/NPSHr values. ---
+
+NPSHR_CURVE = {**CURVE, "npsh_required_m": [2.0, 2.5, 3.0, 3.5, 4.0]}
+
+
+def test_npsha_static_zero(thermo: Thermo) -> None:
+    """Static 0, friction 0: P_v 391351.429 Pa, NPSHa 103.679744 m (spec print).
+
+    Full-precision chain check at rel 1e-9 (like the closed-form tests); the
+    spec prints NPSHa to 8 significant digits, so the printed value is checked
+    at print precision.
+    """
+    result = _solve(thermo, {"curve": CURVE})
+    rho, _, inlet = _measured(thermo)
+    assert result.info["P_vapor_Pa"] == pytest.approx(391351.429, rel=1e-8)
+    npsha_chain = (inlet.P - result.info["P_vapor_Pa"]) / (rho * G_STD)
+    assert result.info["NPSHa_m"] == pytest.approx(npsha_chain, rel=1e-9)
+    assert result.info["NPSHa_m"] == pytest.approx(103.679744, rel=1e-8)
+
+
+def test_npsha_static_friction(thermo: Thermo) -> None:
+    """Static 3.0, friction 0.5: NPSHa 106.179744 m (spec print precision)."""
+    result = _solve(thermo, {"curve": CURVE, "static_head_m": 3.0, "friction_head_m": 0.5})
+    assert result.info["NPSHa_m"] == pytest.approx(106.179744, rel=1e-8)
+
+
+def test_npshr_and_margin(thermo: Thermo) -> None:
+    """NPSHr 2 + 2500*Q_eq at speed 1: 3.19902372 m; margin 100.48072 m (rel 1e-9)."""
+    result = _solve(thermo, {"curve": NPSHR_CURVE})
+    _, Q, _ = _measured(thermo)
+    npshr_exp = 2.0 + 2500.0 * Q
+    assert result.info["NPSHr_m"] == pytest.approx(npshr_exp, rel=1e-9)
+    assert result.info["NPSHr_m"] == pytest.approx(3.19902372, rel=1e-8)
+    assert result.info["NPSH_margin_m"] == pytest.approx(100.48072, rel=1e-8)
+
+
+def test_npshr_affinity_speed(thermo: Thermo) -> None:
+    """NPSHr(Q) = s^2 * NPSHr_c(Q_eq) — s^2 on the interpolant at the equivalent point."""
+    result = _solve(thermo, {"curve": NPSHR_CURVE, "speed_ratio": 1.1})
+    _, Q, _ = _measured(thermo)
+    s = 1.1
+    npshr_exp = s**2 * (2.0 + 2500.0 * Q / s)
+    assert result.info["NPSHr_m"] == pytest.approx(npshr_exp, rel=1e-9)
+
+
+def test_refuse_cavitation(thermo: Thermo) -> None:
+    """static_head_m -110: NPSHa -6.320256 m < NPSHr, refused with npsh_check refuse."""
+    with pytest.raises(PumpCavitationError, match="NPSHa"):
+        _solve(thermo, {"curve": NPSHR_CURVE, "static_head_m": -110.0})
+
+
+def test_report_cavitation(thermo: Thermo) -> None:
+    """npsh_check report: the negative margin is returned in info (-9.519280, rel 1e-6)."""
+    result = _solve(
+        thermo,
+        {"curve": NPSHR_CURVE, "static_head_m": -110.0, "npsh_check": "report"},
+    )
+    assert result.info["NPSH_margin_m"] == pytest.approx(-9.519280, rel=1e-6)
+
+
+def test_refuse_npsh_length(thermo: Thermo) -> None:
+    with pytest.raises(PumpR1SpecError, match="npsh_required_m"):
+        _solve(thermo, {"curve": {**CURVE, "npsh_required_m": [2.0, 2.5]}})
+
+
+def test_refuse_npsh_check_value(thermo: Thermo) -> None:
+    with pytest.raises(PumpR1SpecError, match="npsh_check"):
+        _solve(thermo, {"curve": CURVE, "npsh_check": "ignore"})
