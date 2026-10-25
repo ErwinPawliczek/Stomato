@@ -244,9 +244,10 @@ def _solve_column_full(
         feed_states.append(tb.pt(f.comp, f.T, f.P, f.flow))
     steam_states: list[StreamState] = []
     if strip_reports:
-        # Whole-unit boundary (spec S0-1, feature 2): stripping steam is an
-        # internal FEED of the unit. The injected stripper draws and vapour
-        # returns stay internal and are deliberately not counted.
+        # Whole-unit boundary (review item 2, PR #239): in = feeds + steam;
+        # out = D + B + side draws + stripper products + decant. The
+        # injected stripper draws and vapour returns stay internal and are
+        # deliberately not counted.
         for st in parsed.side_strippers:
             if st.steam_flow and st.steam_flow > 0.0:
                 steam_states.append(tb.pt({"H2O": 1.0}, st.steam_T, st.steam_P, st.steam_flow))
@@ -294,13 +295,27 @@ def _solve_column_full(
             side_draw = _zero_flow_state(bottoms.composition, prof.T[col.n - 1], col.pressures[col.n - 1])
 
         for rep in strip_reports:
-            internal[f"stripper:{rep.name}"] = tb.pt(
-                rep.product_comp, rep.product_T, rep.product_P, rep.product_flow
-            )
+            # Review item 2, PR #239: a stripper's bottoms is a boundary
+            # outlet of the whole unit - in: feeds + steam; out: D + B +
+            # side draws + stripper products + decant.
+            product = tb.pt(rep.product_comp, rep.product_T, rep.product_P, rep.product_flow)
+            out_states.append(product)
+            internal[f"stripper:{rep.name}"] = product
         if decant is not None:
             internal["water_decant"] = decant
 
-        _close_energy_balance(col, tb, prof, feed_states, out_states)
+        # Review item 2, PR #239: the whole-unit duty set is the main
+        # column's condenser and reboiler duties, the pumparound coolers'
+        # duties and the reboiled strippers' duties (steam strippers carry
+        # none; the steam itself is already a boundary feed).
+        _close_energy_balance(
+            col,
+            tb,
+            prof,
+            feed_states,
+            out_states,
+            stripper_reboiler_duty_W=sum(rep.reboiler_duty_W for rep in strip_reports),
+        )
     except ValueError as exc:
         # A converged profile should be physical; a degenerate edge (zero
         # distillate at an extreme tear) still must not leak a pydantic
@@ -356,10 +371,16 @@ def _solve_column_full(
         distillate=distillate,
         bottoms=bottoms,
         side_draw=side_draw,
-        # Net unit duty (review item 1, PR #238): physical reboiler duty
-        # plus the pumparound coolers' (negative) duties minus the
-        # condenser duty - closes the boundary stream table exactly.
-        duty_W=prof.qr - prof.qc + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0),
+        # Net unit duty (review item 1, PR #238; item 2, PR #239): every
+        # duty the unit exchanges with the world - main reboiler plus
+        # pumparound coolers' (negative) and reboiled strippers' duties
+        # in, condenser duty out - closes the boundary stream table exactly.
+        duty_W=(
+            prof.qr
+            - prof.qc
+            + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0)
+            + sum(rep.reboiler_duty_W for rep in strip_reports)
+        ),
         info=info,
         internal=internal,
     )

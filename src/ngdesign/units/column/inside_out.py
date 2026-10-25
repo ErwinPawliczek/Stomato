@@ -1530,21 +1530,26 @@ def _close_energy_balance(
     prof: _Profile,
     feed_states: list[StreamState],
     out_states: list[StreamState],
+    stripper_reboiler_duty_W: float = 0.0,
 ) -> None:
     """Exact overall closure over the real boundary streams.
 
-    ``prof.qr`` becomes the PHYSICAL reboiler duty: with pumparounds the
-    cooler duties fold in separately, ``ΣH_in + Q_reb + ΣQ_PA = ΣH_out +
-    Q_cond``, so ``Q_reb = ΣH_out − ΣH_in + qc − Σ pa_duty`` (review item 1,
-    PR #238). The pumparound duties stay visible per loop in ``info``
-    (``pa_<name>_duty_W``), and ``UnitResult.duty_W = qr − qc + Σ pa_duty``
-    is the net unit duty closing the stream table to machine precision; the
-    deviation of ``qr`` from the stage-balance reboiler duty is the converged
-    MESH residual, far below the duty magnitudes.
+    ``prof.qr`` becomes the PHYSICAL reboiler duty of the MAIN column: with
+    pumparounds the cooler duties fold in separately, ``ΣH_in + Q_reb +
+    ΣQ_PA + ΣQ_stripper_reb = ΣH_out + Q_cond``, so ``Q_reb = ΣH_out −
+    ΣH_in + qc − Σ pa_duty − ΣQ_stripper_reb`` (review item 1, PR #238;
+    whole-unit boundary with strippers, review item 2, PR #239). The
+    pumparound duties stay visible per loop in ``info``
+    (``pa_<name>_duty_W``) and each reboiled stripper's duty under
+    ``stripper_<name>_reboiler_duty_W``; ``UnitResult.duty_W = qr − qc +
+    Σ pa_duty + ΣQ_stripper_reb`` is the net unit duty closing the stream
+    table to machine precision; the deviation of ``qr`` from the
+    stage-balance reboiler duty is the converged MESH residual, far below
+    the duty magnitudes.
     """
     h_in = sum(s.enthalpy * s.molar_flow for s in feed_states)
     h_out = sum(s.enthalpy * s.molar_flow for s in out_states)
-    prof.qr = h_out - h_in + prof.qc - sum(rep["duty_W"] for rep in prof.pa_report)
+    prof.qr = h_out - h_in + prof.qc - sum(rep["duty_W"] for rep in prof.pa_report) - stripper_reboiler_duty_W
 
 
 def _check_pumparounds(col: _Column, prof: _Profile) -> None:
