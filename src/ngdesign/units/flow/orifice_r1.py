@@ -40,16 +40,27 @@ The gas expansibility enters the implicit equation for ``dp``; it is solved as
 a fixed point ``eps -> dp -> eps`` to ``|ddp| < 1e-12*dp`` (100-iteration cap),
 refusing ``P2/P1 < 0.75`` before every ``eps`` evaluation. C does not depend
 on ``dp``, so no iteration is needed for it.
+
+**Adapter** (:class:`OrificeR1`, below): rating mode (``bore_m``) and sizing
+mode (``dP_design_Pa``, scipy ``brentq`` over the ISO-feasible bore range),
+phase class as R0 with an explicit two-phase refusal, viscosity from the phase
+property else ``mu_Pa_s``, outlet flashed at ``P1 - permanent_loss``.
 """
 
 from __future__ import annotations
 
 import math
+import sys
+from typing import Any
 
 from fluids.flow_meter import C_Reader_Harris_Gallagher, orifice_expansibility
+from scipy.optimize import brentq
 
+from ngdesign.contracts import PhaseKind, StreamState, UnitResult
+from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.flow.orifice import (
     MIN_PRESSURE_RATIO,
+    R_IDEAL,
     OrificeSpecError,
     permanent_loss_ratio,
 )
@@ -175,3 +186,182 @@ def orifice_dp(
         "dP": dP,
         "permanent_loss": permanent_loss,
     }
+
+class OrificeR1:
+    """ISO 5167-2 orifice plate with the Reader-Harris/Gallagher coefficient.
+
+    Adapter over :func:`orifice_dp` (U-R2: the pure function owns every
+    number). Rating mode takes ``bore_m``; sizing mode takes
+    ``dP_design_Pa`` and finds the bore whose tap differential equals the
+    design target (``brentq`` over the ISO 5167-2 feasible bore range
+    ``[max(0.1*D, 12.5 mm), 0.75*D]``, ``xtol=1e-12``,
+    ``rtol=4*DBL_EPSILON``, maxiter 100). Params: ``D_m`` (required, m),
+    ``taps`` (default ``"flange"``), ``C_specified`` (R0 equivalence) and
+    ``mu_Pa_s`` (viscosity override; the phase viscosity is preferred, and
+    neither present is a refusal).
+    """
+
+    inlet_ports = ("inlet",)
+    outlet_ports = ("outlet",)
+
+    def solve(
+        self,
+        inlets: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> UnitResult:
+        inlet = inlets["inlet"]
+
+        if "D_m" not in params:
+            raise OrificeR1Error("D_m is required (pipe internal diameter, m)")
+        D_m = float(params["D_m"])
+        if D_m <= 0.0:
+            raise OrificeR1Error(f"D_m {D_m} must be > 0")
+
+        has_bore = "bore_m" in params and params["bore_m"] is not None
+        has_target = "dP_design_Pa" in params and params["dP_design_Pa"] is not None
+        if has_bore == has_target:
+            raise OrificeR1Error(
+                "exactly one of bore_m / dP_design_Pa must be given "
+                "(rating mode takes bore_m, sizing mode takes dP_design_Pa)"
+            )
+
+        taps = params.get("taps", "flange")
+        C_specified = params.get("C_specified")
+        C_specified_f = float(C_specified) if C_specified is not None else None
+
+        # Phase class as R0, plus the spec's explicit two-phase refusal.
+        vapor = next((p for p in inlet.phases if p.kind == PhaseKind.VAPOR), None)
+        if 0.001 < inlet.vapor_fraction < 0.999:
+            raise OrificeR1Error(
+                f"ISO 5167 requires single-phase flow; inlet vapor_fraction is {inlet.vapor_fraction:.4f}"
+            )
+        if inlet.vapor_fraction > 0.999 and vapor is not None:
+            dominant = vapor
+            is_gas = True
+        else:
+            dense = [p for p in inlet.phases if p.kind is not PhaseKind.VAPOR]
+            if not dense:
+                raise OrificeR1Error("inlet has no dense phase to meter")
+            dominant = max(dense, key=lambda p: p.mole_fraction)
+            is_gas = False
+
+        rho = dominant.density
+
+        kappa_or_None: float | None = None
+        if is_gas:
+            props = thermo.phase_props(dominant.composition, inlet.T, inlet.P, PhaseKind.VAPOR)
+            kappa_or_None = props.cp / (props.cp - R_IDEAL)
+
+        # Viscosity: phase property preferred, override second, refusal if neither.
+        mu_override = params.get("mu_Pa_s")
+        mu: float | None = float(mu_override) if mu_override is not None else None
+        if mu is not None and mu <= 0.0:
+            raise OrificeR1Error(f"mu_Pa_s {mu} must be > 0")
+        if mu is None:
+            props = thermo.phase_props(dominant.composition, inlet.T, inlet.P, dominant.kind)
+            mu = props.viscosity
+        if mu is None:
+            raise OrificeR1Error(
+                "mu_Pa_s is required: the property package reports no phase viscosity at the inlet state"
+            )
+
+        qm = inlet.mass_flow
+
+        if has_bore:
+            bore_m = float(params["bore_m"])
+            sizing = 0.0
+        else:
+            dP_design = float(params["dP_design_Pa"])
+            if dP_design <= 0.0:
+                raise OrificeR1Error(f"dP_design_Pa {dP_design} must be > 0")
+            bore_m = self._size_bore(qm, D_m, rho, mu, inlet.P, kappa_or_None, taps, C_specified_f, dP_design)
+            sizing = 1.0
+
+        r = orifice_dp(qm, D_m, bore_m, rho, mu, inlet.P, kappa_or_None, taps, C_specified_f)
+        beta = bore_m / D_m
+        E = 1.0 / math.sqrt(1.0 - beta**4)
+
+        outlet = thermo.flash_ph(
+            inlet.composition, inlet.P - r["permanent_loss"], inlet.enthalpy, inlet.molar_flow
+        )
+        return UnitResult(
+            outlets={"outlet": outlet},
+            duty_W=0.0,
+            power_W=0.0,
+            info={
+                "C": r["C"],
+                "expansibility": r["epsilon"],
+                "Re_D": r["Re_D"],
+                "beta": beta,
+                "bore_m": bore_m,
+                "dP_Pa": r["dP"],
+                "permanent_loss_Pa": r["permanent_loss"],
+                "velocity_approach": E,
+                "sizing": sizing,
+            },
+        )
+
+    @staticmethod
+    def _size_bore(
+        qm: float,
+        D_m: float,
+        rho: float,
+        mu: float,
+        P1: float,
+        kappa_or_None: float | None,
+        taps: str,
+        C_specified: float | None,
+        dP_design: float,
+    ) -> float:
+        """Bore whose tap differential equals ``dP_design`` (brentq on dP(d))."""
+        d_lo = max(0.1 * D_m, 0.0125)
+        d_hi = 0.75 * D_m
+
+        def dP_at(d: float) -> float:
+            return orifice_dp(qm, D_m, d, rho, mu, P1, kappa_or_None, taps, C_specified)["dP"]
+
+        # dP falls monotonically with bore. At small bores the pure function
+        # legitimately refuses (implied dP above the inlet pressure, gas
+        # expansibility below the pressure-ratio limit): scan up to the first
+        # valid bore; the interval [d_feas, d_hi] is valid throughout.
+        d_feas = d_lo
+        dP_lo: float | None = None
+        for _ in range(100):
+            try:
+                dP_lo = dP_at(d_feas)
+                break
+            except OrificeR1Error:
+                d_feas += (d_hi - d_lo) / 100.0
+        if dP_lo is None:
+            raise OrificeR1Error(
+                f"no bore within the ISO 5167-2 range gives dP_design {dP_design} Pa: "
+                f"every bore in ({d_lo:.6g}, {d_hi:.6g}) m is outside the pure-function "
+                f"validity (differential above the inlet pressure or gas pressure "
+                f"ratio below the limit)"
+            )
+        dP_hi = dP_at(d_hi)
+        if not dP_hi <= dP_design <= dP_lo:
+            raise OrificeR1Error(
+                f"no bore within the ISO 5167-2 range gives dP_design "
+                f"{dP_design} Pa (achievable range {dP_hi:.6g} to {dP_lo:.6g} Pa)"
+            )
+
+        def f(d: float) -> float:
+            return dP_at(d) - dP_design
+
+        try:
+            return float(brentq(f, d_feas, d_hi, xtol=1e-12, rtol=4 * sys.float_info.epsilon, maxiter=100))
+        except (RuntimeError, ValueError) as exc:
+            raise OrificeR1Error(f"sizing did not converge: {exc}") from exc
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """Condensate meter run basis: 50 mm pipe, 25 mm bore, flange taps."""
+        feed = {
+            "T": 293.15,
+            "P": 1.0e6,
+            "molar_flow": 25.0,
+            "composition": {"iC4": 0.392, "nC4": 0.248, "iC5": 0.157, "nC5": 0.203},
+        }
+        return {"inlet": feed}, {"D_m": 0.05, "bore_m": 0.025, "taps": "flange"}
