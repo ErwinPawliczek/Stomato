@@ -38,24 +38,6 @@ class ReliefValveR1Error(ReliefValveSpecError):
     """Typed refusal for the U-R1 omega-method extension."""
 
 
-def _flash_ps_two_phase(
-    thermo: Thermo, z: dict[str, float], P: float, s: float, molar_flow: float
-) -> StreamState:
-    """Isentropic flash to P via flash_ps, with a manual PVF fallback.
-
-    The registered PR package's flash_ps raises ZeroDivisionError when the
-    (P, S) target lands in the two-phase region for a pure fluid (thermo lib
-    flash_utils.py:961); the manual entropy balance over PVF flashes avoids it.
-    """
-    try:
-        return thermo.flash_ps(z, P, s, molar_flow)
-    except Exception:
-        s_l = thermo.flash_pvf(z, P, 0.0, molar_flow).entropy
-        s_v = thermo.flash_pvf(z, P, 1.0, molar_flow).entropy
-        x = (s - s_l) / (s_v - s_l) if s_v != s_l else 0.0
-        return thermo.flash_pvf(z, P, min(1.0, max(0.0, x)), molar_flow)
-
-
 # --- omega-method closed forms (Annex C eqs. 1-4) ----------------------------
 
 
@@ -353,7 +335,7 @@ class ReliefValveR1(ReliefValve):
         factors = self._factors(params, kd_default=0.85)
 
         v0 = mixture_v(inlet) if v0_override is None else v0_override
-        flashed = _flash_ps_two_phase(thermo, z, 0.9 * P0, inlet.entropy, inlet.molar_flow)
+        flashed = thermo.flash_ps(z, 0.9 * P0, inlet.entropy, inlet.molar_flow)
         omega = omega_two_phase(v0, mixture_v(flashed))
         G, critical = G_two_phase(P0, v0, omega, params["P_back"] / P0)
         return self._package(
@@ -384,19 +366,8 @@ class ReliefValveR1(ReliefValve):
         factors = self._factors(params, kd_default=0.65)
 
         s_sat = thermo.flash_tvf(z, inlet.T, 0.0, inlet.molar_flow).entropy
-        if len(z) < 2:
-            # The registered PR package cannot flash a pure fluid into the
-            # two-phase region: flash_ps raises ZeroDivisionError (thermo
-            # flash_utils.py:961) and its quality flashes clamp to the liquid
-            # root at the vf bounds (even at vf = 1 - 1e-9), so omega_s would
-            # collapse to a spurious ~0 and mis-classify the feed. Refuse.
-            raise ReliefValveR1Error(
-                "subcooled pure fluid cannot be flashed isentropically by the "
-                "thermo package's PS/quality flashes; use a mixture basis"
-            )
-        # Isentropic flash to 0.9*P_sat per spec step 5 (flash_ps), with the
-        # manual PVF entropy balance as fallback for mixtures.
-        flashed = _flash_ps_two_phase(thermo, z, 0.9 * P_sat, s_sat, inlet.molar_flow)
+        # Isentropic flash to 0.9*P_sat per spec step 5.
+        flashed = thermo.flash_ps(z, 0.9 * P_sat, s_sat, inlet.molar_flow)
         rho9 = 1.0 / mixture_v(flashed)
         omega_s = 9.0 * (rho_l0 / rho9 - 1.0)
         if omega_s <= 0:

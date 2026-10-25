@@ -138,6 +138,15 @@ def test_r2_pilot_no_limit(thermo: Thermo) -> None:
 # --- refusals ---------------------------------------------------------------
 
 
+def test_r2_refuses_failing_discharge_flash(thermo: Thermo) -> None:
+    """A tiny outlet line drives the mean line pressure far out of flash range:
+    a typed refusal naming the pressure, never inlet properties substituted."""
+    feeds, params = rv2.ReliefValveR2.example_case()
+    tiny = {**params, "L_out_m": 5.0, "D_out_m": 0.005}
+    with pytest.raises(rv2.ReliefValveR2Error, match="mean line pressure"):
+        _solve(thermo, feeds, tiny)
+
+
 def test_r2_refuses_missing_p_set(thermo: Thermo) -> None:
     feeds, _ = rv1.ReliefValveR1.example_case()
     with pytest.raises(rv2.ReliefValveR2Error, match="P_set"):

@@ -214,10 +214,8 @@ def test_r1_area_matches_eq5(thermo: Thermo) -> None:
 def test_r1_subcooled_propane_regimes(thermo: Thermo) -> None:
     """Subcooled propane-dominant liquid at T0 300 K, P0 = 2x bubble P: regime 3 or 4 by P_back.
 
-    The basis is 99.9 % C3 + 0.1 % nC4: the registered PR package cannot flash
-    a PURE fluid into the two-phase region (flash_ps crashes; quality flashes
-    clamp to the liquid root), which the adapter refuses. The near-pure mixture
-    keeps the spec's regime-classification check while staying computable.
+    A 99.9 % C3 + 0.1 % nC4 mixture, run alongside the pure-fluid test below:
+    both bases classify the same way through the omega-method subcooled path.
     """
     z = {"C3": 0.999, "nC4": 0.001}
     psat = thermo.bubble_point(z, T=300.0).P
@@ -230,15 +228,25 @@ def test_r1_subcooled_propane_regimes(thermo: Thermo) -> None:
     assert non_flashing.info["regime_code"] in (2, 4)
 
 
-def test_r1_refuses_pure_fluid_subcooled(thermo: Thermo) -> None:
-    """A single-component subcooled feed is refused: the registered PR package
-    cannot flash a pure fluid into the two-phase region (flash_ps crashes,
-    quality flashes clamp to the liquid root), so omega_s would be spurious."""
+def test_r1_pure_fluid_subcooled(thermo: Thermo) -> None:
+    """Pure subcooled propane (T0 300 K, P0 = 2x bubble P) runs the omega path.
+
+    The isentropic flash to 0.9 Psat lands in the two-phase dome (measured on
+    main after the thermo fix: T 295.867 K, vapour fraction 0.0330), so omega_s
+    is genuine; the choked branch (P_back 0.2 Psat) chokes at Ps and the
+    non-flashing branch (P_back 1.5 Psat) reads regime 4.
+    """
     z = {"C3": 1.0}
     psat = thermo.bubble_point(z, T=300.0).P
     inlet = flash_feed(thermo, {"T": 300.0, "P": 2.0 * psat, "molar_flow": 5000.0, "composition": z})
-    with pytest.raises(rv1.ReliefValveR1Error, match="pure fluid"):
-        rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 0.2 * psat}, thermo)
+    choked = rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 0.2 * psat}, thermo)
+    assert choked.info["regime_code"] == 3
+    assert choked.info["critical"] == 1
+    assert choked.info["omega"] > 0.0
+    non_flashing = rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 1.5 * psat}, thermo)
+    assert non_flashing.info["regime_code"] == 4
+    assert non_flashing.info["critical"] == 0
+    assert non_flashing.info["G_kg_m2s"] < choked.info["G_kg_m2s"]
 
 
 # --- refusals ---------------------------------------------------------------
@@ -280,5 +288,5 @@ def test_eta_c_refusal(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_r1_refuses_oversized_area(thermo: Thermo) -> None:
     """A required area above the API 526 T orifice is refused by R0's selector."""
     inlet = _two_phase_inlet(thermo, molar_flow=1.0e6)
-    with pytest.raises(r0.ReliefValveSpecError, match="API 526"):
+    with pytest.raises(r0.ReliefValveSpecError, match="exceeds the largest API 526 orifice"):
         rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 6.0e5}, thermo)

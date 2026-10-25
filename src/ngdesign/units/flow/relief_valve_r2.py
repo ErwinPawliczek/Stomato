@@ -7,9 +7,10 @@ the conventional / balanced-bellows / pilot limits of API 520 Part I §5.3.3.
 Line losses come from :func:`ngdesign.sizing.line_friction.darcy_colebrook`
 (the repo's one owner for incompressible Colebrook friction) plus the caller's
 Sigma-K form term; the discharge-line density is iterated at the line's mean
-pressure. Refusals follow the repo policy: impossible inputs raise the unit's
-typed error with a concrete message; conservation and flash errors surface as
-raised. Boundaries are closed: a loss exactly at the limit reads ok = 1.
+pressure, where a failed flash is a typed refusal naming the pressure.
+Refusals follow the repo policy: impossible inputs raise the unit's typed
+error with a concrete message. Boundaries are closed: a loss exactly at the
+limit reads ok = 1.
 """
 
 from __future__ import annotations
@@ -292,14 +293,13 @@ class ReliefValveR2(ReliefValveR1):
             P_mean = P_back + dP / 2.0
             try:
                 state = thermo.flash_ph(z, P_mean, inlet.enthalpy, inlet.molar_flow)
-                rho = 1.0 / mixture_v(state)
-                mu = mixture_viscosity(state, thermo)
-            except Exception:
-                # A wildly out-of-band dP (e.g. a tiny outlet line) can drive the
-                # mean pressure far beyond the flash's validity; the 10 % check
-                # is already decided there, so evaluate the loss at inlet props.
-                rho = 1.0 / mixture_v(inlet)
-                mu = mixture_viscosity(inlet, thermo)
+            except Exception as e:
+                raise ReliefValveR2Error(
+                    f"the discharge-line flash at the mean line pressure {P_mean} Pa "
+                    "failed; the outlet line drives the built-up check out of range"
+                ) from e
+            rho = 1.0 / mixture_v(state)
+            mu = mixture_viscosity(state, thermo)
             new = inlet_line_dP(W_rated, rho, mu, D_out, L_out, rough_out, K_out)["dP_Pa"]
             if abs(new - dP) <= 1e-8 * max(new, 1.0):
                 return new

@@ -305,11 +305,30 @@
           K_out: {type: number, description: 'discharge line sum-K'}
           roughness_out_m: {type: number, description: 'discharge roughness, m, default 4.57e-5 commercial steel'}
       note: rated-capacity inlet-loss and built-up back-pressure checks with bellows Kb/Kw re-sizing
+      end_state: true
       validation: []
   pid_symbol: PSV
   references:
   - docs/unit-catalogue-plan.md §2 U-B 7
-  notes: R0 gas PSV sizing per API 520 Part I with API 526 orifice selection. V1 gap (PR #217): the sizing layer is pinned by a unit test to the API worked example's printed inputs and published area (API RP 520 Part I Example 3.6.2.2, p. 44 — W 53500 lb/h, M 65, Z 0.84, k 1.09, T 627 R, P1 97.2 psia, Kd 0.975, Kb = Kc = 1.0, C = 326 from Table 8; published area 3179 mm2 = 4.93 in2, read from FluidFlow's results-verified reproduction of that example), but no feed in the installed packages reproduces the printed M/Z/k as a single-phase vapour (C4/C5/C6 composition search at the relieving point: M ~ 65 states are liquid or two-phase; all-vapour tops out near M 61, Z 0.854, k 1.069), so the adapter-level V1 case is withdrawn, not tuned. R1/R2 (PR #313) implement Leung omega two-phase and subcooled sizing and the API 520 inlet-loss and built-up back-pressure checks with bellows re-sizing; V1 gap: the API 520 Part I 10th ed. liquid example (fluids' "Example 5", printed result 3066 mm2 on inputs 6814 L/min, SG 0.9, set 1724 kPag, 10 percent overpressure, Kw 0.97) cannot be confirmed against the standard from this workspace, and a case-level feed would additionally need thermo density 899.1 kg/m3 at relieving conditions, so the printed arithmetic is pinned by closed-form tests (G = 52821.2752591226, A = 3.06594883829264e-3 m2) and validation ids are empty. The R1 adapter refuses single-component subcooled feeds: the registered pr package's flash_ps raises ZeroDivisionError in the two-phase region (thermo flash_utils.py:961) and its quality flashes clamp to the liquid root at vf bounds for pure fluids, so regime tests use a 99.9/0.1 C3/nC4 basis.
+  notes: >-
+    R0 gas PSV sizing per API 520 Part I with API 526 orifice selection. V1 gap (PR 217) - the
+    sizing layer is pinned by a unit test to the API worked example's printed inputs and
+    published area (API RP 520 Part I Example 3.6.2.2, p. 44 — W 53500 lb/h, M 65, Z 0.84, k
+    1.09, T 627 R, P1 97.2 psia, Kd 0.975, Kb = Kc = 1.0, C = 326 from Table 8; published area
+    3179 mm2 = 4.93 in2, read from FluidFlow's results-verified reproduction of that example),
+    but no feed in the installed packages reproduces the printed M/Z/k as a single-phase
+    vapour (C4/C5/C6 composition search at the relieving point - M ~ 65 states are liquid or
+    two-phase; all-vapour tops out near M 61, Z 0.854, k 1.069), so the adapter-level V1 case
+    is withdrawn, not tuned. R1/R2 (PR 313) implement Leung omega two-phase and subcooled
+    sizing and the API 520 inlet-loss and built-up back-pressure checks with bellows
+    re-sizing; V1 gap - the API 520 Part I 10th ed. liquid example (fluids' "Example 5",
+    printed result 3066 mm2 on inputs 6814 L/min, SG 0.9, set 1724 kPag, 10 percent
+    overpressure, Kw 0.97) cannot be confirmed against the standard from this workspace, and a
+    case-level feed would additionally need thermo density 899.1 kg/m3 at relieving
+    conditions, so the printed arithmetic is pinned by closed-form tests (G =
+    52821.2752591226, A = 3.06594883829264e-3 m2) and validation ids are empty. Pure-fluid
+    subcooled feeds run the omega path directly since the thermo two-phase PS/PH flash fix (PR
+    312); regime tests use pure propane.
 
 - id: pipe_segment
   name: Pipe segment
