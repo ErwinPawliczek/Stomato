@@ -102,6 +102,77 @@ def test_r1a_isothermal_first_order_closed_form(thermo: Thermo) -> None:
     assert result.duty_W < 0.0
 
 
+def _dimer_params(volume_m3: float = 0.5, **overrides: Any) -> dict[str, Any]:
+    """The R1-B parameter set: second-order 2 C2H4 -> 1-butene, delta n != 0."""
+    params: dict[str, Any] = {
+        "reaction_set": {
+            "id": "cstr_dimer_case",
+            "components": ["ethylene", "1-butene"],
+            "reactions": [
+                {
+                    "id": "dimer",
+                    "stoichiometry": {"ethylene": -2.0, "1-butene": 1.0},
+                    "base_component": "ethylene",
+                    "provenance": "ethylene dimerization to 1-butene, second-order "
+                    "gas-phase lump (units/cstr.md closed-form case R1-B)",
+                    "kinetics": {
+                        "rate_units": "mol/(m3·s)",
+                        "k0": 5.0e-3,
+                        "Ea": 0.0,
+                        "orders": {"ethylene": 2.0},
+                        "basis": "concentration",
+                    },
+                }
+            ],
+        },
+        "volume_m3": volume_m3,
+        "thermal": "isothermal",
+    }
+    params.update(overrides)
+    return params
+
+
+def _r1b_hand_extents() -> tuple[float, float]:
+    """The hand solution of 2·xi = V·k·(y_A·P/(R·T))^2 by brentq.
+
+    Returns (xi, c_tot) with c_tot = P/(R·T); y_A = (F0 - 2·xi)/(F0 - xi).
+    """
+
+    def f(xi: float) -> float:
+        y_a = (1.0 - 2.0 * xi) / (1.0 - xi)
+        return 2.0 * xi - 0.5 * 5.0e-3 * (y_a * 5.0e5 / (R * 600.0)) ** 2
+
+    c_tot = 5.0e5 / (R * 600.0)
+    return float(brentq(f, 1e-6, 0.499)), c_tot
+
+
+def test_r1b_isothermal_second_order_delta_n_closed_form(thermo: Thermo) -> None:
+    """R1-B: the adapter reproduces the brentq hand solution to 1e-9 relative."""
+    feed = {"T": 600.0, "P": 5.0e5, "molar_flow": 1.0, "composition": {"ethylene": 1.0}}
+    inlet = flash_feed(thermo, feed)
+
+    result = CstrR1().solve({"inlet": inlet}, _dimer_params(), thermo)
+    outlet = result.outlets["outlet"]
+
+    xi_hand, c_tot = _r1b_hand_extents()
+    # The spec's printed digits carry their own rounding (9 decimals):
+    # c_tot = 100.226963 mol/m3, xi = 0.447862522 mol/s, X = 0.895725045.
+    assert math.isclose(c_tot, 100.226963, abs_tol=5e-7)
+    assert math.isclose(xi_hand, 0.447862522, abs_tol=5e-10)
+
+    n_out = outlet.component_flows()
+    assert math.isclose(result.info["extent_dimer_mol_s"], xi_hand, rel_tol=1e-9)
+    assert math.isclose(result.info["conversion_ethylene_dimer"], 2.0 * xi_hand, rel_tol=1e-9)
+    assert math.isclose(n_out["ethylene"], 1.0 - 2.0 * xi_hand, rel_tol=1e-9)
+    assert math.isclose(n_out["ethylene"], 0.104274955, abs_tol=5e-10)
+    assert math.isclose(n_out["1-butene"], xi_hand, rel_tol=1e-9)
+    assert math.isclose(n_out["1-butene"], 0.447862522, abs_tol=5e-10)
+    # Isothermal: the outlet stays at the inlet temperature; single-phase vapour.
+    assert outlet.T == pytest.approx(600.0, rel=1e-12)
+    assert outlet.vapor_fraction == pytest.approx(1.0)
+    assert abs(result.info["T_closure_gap_K"]) < 1e-9
+
+
 # --- Step 2: adapter behaviours and refusals -------------------------------
 
 
