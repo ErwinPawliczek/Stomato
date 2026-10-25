@@ -153,18 +153,20 @@ def _r2_march(
     dP_hydro = 0.0
     n_bb = 0
     for _ in range(n):
-        k1, f1, g1 = _node_gradient(
+        grad1, f1, g1 = _node_gradient(
             P, states[-1], mdot, D, eps, angle_deg, h, mu_fallback, sigma
         )
+        k1 = -grad1
         P_star = P + h * k1
         if P_star <= 0:
             raise PipeSegmentR2Error(
                 f"pressure falls to zero along the segment (predictor {P_star} Pa)"
             )
         s_star = flash(P_star)
-        k2, f2, g2 = _node_gradient(
+        grad2, f2, g2 = _node_gradient(
             P_star, s_star, mdot, D, eps, angle_deg, h, mu_fallback, sigma
         )
+        k2 = -grad2
         P = P + h * (k1 + k2) / 2
         if P <= 0:
             raise PipeSegmentR2Error(
