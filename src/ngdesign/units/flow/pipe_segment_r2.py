@@ -55,11 +55,7 @@ def _mass_quality(state: StreamState) -> float:
     if not _is_two_phase(state):
         return 1.0 if state.vapor_fraction >= VF_MAX else 0.0
     m_total = sum(p.mole_fraction * p.molecular_weight for p in state.phases)
-    m_vap = sum(
-        p.mole_fraction * p.molecular_weight
-        for p in state.phases
-        if p.kind == PhaseKind.VAPOR
-    )
+    m_vap = sum(p.mole_fraction * p.molecular_weight for p in state.phases if p.kind == PhaseKind.VAPOR)
     return m_vap / m_total
 
 
@@ -113,9 +109,7 @@ def _node_gradient(
                 acceleration=True,
             )
         except ValueError as exc:
-            raise PipeSegmentR2Error(
-                f"Beggs-Brill regime map failed at P = {P} Pa: {exc}"
-            ) from exc
+            raise PipeSegmentR2Error(f"Beggs-Brill regime map failed at P = {P} Pa: {exc}") from exc
         return dP_seg / h, dP_seg / h, 0.0
     dominant = max(state.phases, key=lambda p: p.mole_fraction)
     rho = dominant.density
@@ -153,25 +147,17 @@ def _r2_march(
     dP_hydro = 0.0
     n_bb = 0
     for _ in range(n):
-        grad1, f1, g1 = _node_gradient(
-            P, states[-1], mdot, D, eps, angle_deg, h, mu_fallback, sigma
-        )
+        grad1, f1, g1 = _node_gradient(P, states[-1], mdot, D, eps, angle_deg, h, mu_fallback, sigma)
         k1 = -grad1
         P_star = P + h * k1
         if P_star <= 0:
-            raise PipeSegmentR2Error(
-                f"pressure falls to zero along the segment (predictor {P_star} Pa)"
-            )
+            raise PipeSegmentR2Error(f"pressure falls to zero along the segment (predictor {P_star} Pa)")
         s_star = flash(P_star)
-        grad2, f2, g2 = _node_gradient(
-            P_star, s_star, mdot, D, eps, angle_deg, h, mu_fallback, sigma
-        )
+        grad2, f2, g2 = _node_gradient(P_star, s_star, mdot, D, eps, angle_deg, h, mu_fallback, sigma)
         k2 = -grad2
         P = P + h * (k1 + k2) / 2
         if P <= 0:
-            raise PipeSegmentR2Error(
-                f"pressure falls to zero along the segment (corrector {P} Pa)"
-            )
+            raise PipeSegmentR2Error(f"pressure falls to zero along the segment (corrector {P} Pa)")
         states.append(flash(P))
         dP_friction += h * (f1 + f2) / 2
         dP_hydro += h * (g1 + g2) / 2
@@ -240,15 +226,11 @@ class PipeSegmentR2:
         def flash(P: float) -> StreamState:
             return thermo.flash_ph(z, P, h_in, molar_flow)
 
-        result = _r2_march(
-            inlet.P - dP_K, L_m, D_m, dz, eps, mdot, flash, mu_in, sigma, n
-        )
+        result = _r2_march(inlet.P - dP_K, L_m, D_m, dz, eps, mdot, flash, mu_in, sigma, n)
         P_out = result["P_out"]
         # One extra pass at N/2 so the discretisation error is visible.
         if n >= 2:
-            half = _r2_march(
-                inlet.P - dP_K, L_m, D_m, dz, eps, mdot, flash, mu_in, sigma, n // 2
-            )
+            half = _r2_march(inlet.P - dP_K, L_m, D_m, dz, eps, mdot, flash, mu_in, sigma, n // 2)
             P_half = half["P_out"]
         else:
             P_half = inlet.P - dP_K
@@ -282,11 +264,23 @@ class PipeSegmentR2:
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-        """A propane/n-pentane line that flashes part-way along 300 m of 4 in. pipe."""
+        """A propane/n-pentane line that flashes part-way along 1 km of 4 in. pipe.
+
+        A saturated-compressed liquid (1.3 MPa, 340 K) climbs an 80 m hill: the
+        flash-pressure floor is crossed about 150 m in, and the remaining ~850 m
+        run two-phase through Beggs-Brill (n_two_phase_segments 19 of 20).
+        """
         feed = {
             "T": 340.0,
-            "P": 2.0e6,
-            "molar_flow": 100.0,
+            "P": 1.3e6,
+            "molar_flow": 60.0,
             "composition": {"C3": 0.5, "nC5": 0.5},
         }
-        return {"inlet": feed}, {"L_m": 300.0, "D_m": 0.1023, "sigma_N_m": 0.01}
+        params = {
+            "L_m": 1000.0,
+            "D_m": 0.1023,
+            "sigma_N_m": 0.01,
+            "elevation_m": 80.0,
+            "n_segments": 20,
+        }
+        return {"inlet": feed}, params
