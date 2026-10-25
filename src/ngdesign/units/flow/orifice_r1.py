@@ -155,7 +155,7 @@ def orifice_dp(
     if kappa_or_None is None:
         dP = (qm / (C * E * A)) ** 2 / (2.0 * rho)
         if dP >= P1:
-            raise OrificeR1Error(f"implied dP {dP} Pa exceeds the inlet pressure {P1} Pa")
+            raise OrificeFeasibilityError(f"implied dP {dP} Pa exceeds the inlet pressure {P1} Pa")
         epsilon = 1.0
     else:
         dP = (qm / (C * E * A)) ** 2 / (2.0 * rho)
@@ -163,7 +163,7 @@ def orifice_dp(
         for _ in range(_MAX_FIXED_POINT_ITERATIONS):
             P2 = P1 - dP
             if P2 / P1 < MIN_PRESSURE_RATIO:
-                raise OrificeR1Error(
+                raise OrificeFeasibilityError(
                     f"P2/P1 = {P2 / P1:.6g} below the ISO 5167-2 validity limit "
                     f"{MIN_PRESSURE_RATIO} at this flow and bore"
                 )
@@ -323,16 +323,20 @@ class OrificeR1:
             return orifice_dp(qm, D_m, d, rho, mu, P1, kappa_or_None, taps, C_specified)["dP"]
 
         # dP falls monotonically with bore. At small bores the pure function
-        # legitimately refuses (implied dP above the inlet pressure, gas
-        # expansibility below the pressure-ratio limit): scan up to the first
-        # valid bore; the interval [d_feas, d_hi] is valid throughout.
+        # legitimately refuses on bore-dependent feasibility only (implied dP
+        # above the inlet pressure, gas expansibility below the pressure-ratio
+        # limit): catch exactly OrificeFeasibilityError and scan up to the
+        # first feasible bore; the interval [d_feas, d_hi] is valid
+        # throughout. Every other refusal (parameter errors, bore-independent
+        # validity) propagates with its own message rather than surfacing as
+        # "no bore".
         d_feas = d_lo
         dP_lo: float | None = None
         for _ in range(100):
             try:
                 dP_lo = dP_at(d_feas)
                 break
-            except OrificeR1Error:
+            except OrificeFeasibilityError:
                 d_feas += (d_hi - d_lo) / 100.0
         if dP_lo is None:
             raise OrificeR1Error(

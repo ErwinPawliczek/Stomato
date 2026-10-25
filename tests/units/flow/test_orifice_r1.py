@@ -444,6 +444,36 @@ def test_refuses_sizing_non_convergence(monkeypatch: pytest.MonkeyPatch) -> None
         )
 
 
+def test_sizing_refuses_bad_taps_with_its_own_message() -> None:
+    """A sizing-mode parameter refusal names taps, not 'no bore'."""
+    with pytest.raises(OrificeR1Error, match="taps"):
+        OrificeR1().solve(
+            {"inlet": _o1_inlet()},
+            {"D_m": 0.10226, "dP_design_Pa": 25000.0, "taps": "bogus"},
+            StaticThermo(998.0, 1e-3),
+        )
+
+
+def test_sizing_refuses_bad_c_specified_with_its_own_message() -> None:
+    """A sizing-mode C_specified refusal names C_specified, not 'no bore'."""
+    with pytest.raises(OrificeR1Error, match="C_specified"):
+        OrificeR1().solve(
+            {"inlet": _o1_inlet()},
+            {"D_m": 0.10226, "dP_design_Pa": 25000.0, "taps": "flange", "C_specified": 1.5},
+            StaticThermo(998.0, 1e-3),
+        )
+
+
+def test_sizing_refuses_undersized_pipe_with_its_own_message() -> None:
+    """A sizing-mode ISO pipe-diameter refusal names D_m, not 'no bore'."""
+    with pytest.raises(OrificeR1Error, match="D_m.*outside ISO 5167-2 validity"):
+        OrificeR1().solve(
+            {"inlet": _o1_inlet()},
+            {"D_m": 0.04, "dP_design_Pa": 25000.0, "taps": "flange"},
+            StaticThermo(998.0, 1e-3),
+        )
+
+
 def test_refuses_fixed_point_non_convergence(monkeypatch: pytest.MonkeyPatch) -> None:
     """A non-convergent expansibility hits the iteration cap and refuses."""
     import ngdesign.units.flow.orifice_r1 as pure
