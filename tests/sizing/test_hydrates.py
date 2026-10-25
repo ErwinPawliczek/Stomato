@@ -13,17 +13,18 @@ from ngdesign.sizing.hydrates import hammerschmidt_formation, nielsen_bucklin_su
 PA_PER_PSI = 6894.757293168
 
 
-def test_hammerschmidt_published_example() -> None:
-    """T = 8.9*P^0.285/(SG^0.249 - 0.28).
+def test_hammerschmidt_1934_closed_form_and_katz_chart() -> None:
+    """T[degF] = 8.9*P_psia**0.285 (Hammerschmidt 1934).
 
-    Published worked example, citing GPSA: P = 1000 psia, SG = 0.65 gives
-    ~102.6 degF with rounded hand arithmetic; the exact correlation value is
-    103.0859 degF = 312.6422 K. Asserting to correlation-level rounding, not
-    tighter than the source quote.
+    Closed form at 1000 psia: 8.9 * 1000**0.285 = 63.7368 degF. Independent
+    check: the Katz gas-gravity chart (GPSA Fig. 20-15) reads about 64 degF
+    for a 0.65-gravity gas at 1000 psia, and the Towler-Mokhatab (2005) fit of
+    that chart gives 63.1 degF; asserted to chart-reading precision (2 degF).
     """
     got = hammerschmidt_formation(P_Pa=1000.0 * PA_PER_PSI, gas_specific_gravity=0.65)
     T_F = got["T_hydrate_K"] * 9.0 / 5.0 - 459.67
-    assert abs(T_F - 102.6) < 1.0
+    assert T_F == pytest.approx(8.9 * 1000.0**0.285, rel=1e-12)
+    assert abs(T_F - 64.0) < 2.0
 
 
 def test_formation_increases_with_pressure() -> None:
@@ -58,7 +59,7 @@ def test_meg_inhibitor_runs_within_scope() -> None:
 def test_first_golden_formation_case() -> None:
     """Case 0 of data/golden/hammerschmidt_formation.yaml, input-for-input."""
     got = hammerschmidt_formation(P_Pa=6894757.293168, gas_specific_gravity=0.65)
-    assert math.isclose(got["T_hydrate_K"], 312.642189, rel_tol=1e-6)
+    assert math.isclose(got["T_hydrate_K"], (8.9 * 1000.0**0.285 + 459.67) / 1.8, rel_tol=1e-9)
 
 
 @pytest.mark.parametrize(
@@ -68,8 +69,6 @@ def test_first_golden_formation_case() -> None:
         {"P_Pa": -1000.0, "gas_specific_gravity": 0.65},
         {"P_Pa": 6894757.293168, "gas_specific_gravity": 0.0},
         {"P_Pa": 6894757.293168, "gas_specific_gravity": -0.65},
-        # SG so light that SG**0.249 - 0.28 vanishes (correlation undefined).
-        {"P_Pa": 6894757.293168, "gas_specific_gravity": 0.28 ** (1.0 / 0.249)},
     ],
 )
 def test_formation_invalid_inputs_raise(kwargs: dict[str, Any]) -> None:
