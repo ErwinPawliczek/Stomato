@@ -29,12 +29,13 @@ C2 -- isothermal ideal gas, horizontal, rho(P) = P*M/(R*T):
 from __future__ import annotations
 
 import math
+from typing import cast
 
 import pytest
 
+from ngdesign.units.flow.pipe_segment import PipeSegmentSpecError
 from ngdesign.units.flow.pipe_segment_r1 import (
     PipeSegmentR1Error,
-    PipeSegmentSpecError,
     dP_fittings_Pa,
     march,
     march_refined,
@@ -243,7 +244,7 @@ def test_r1_refuses_two_phase_inlet() -> None:
         phases=[liquid, vapor],
     )
     with pytest.raises(PipeSegmentR1Error, match="two-phase inlet; use R2"):
-        PipeSegmentR1().solve({"inlet": inlet}, {"L_m": 100.0, "D_m": 0.0779}, _NoFlashThermo())
+        PipeSegmentR1().solve({"inlet": inlet}, {"L_m": 100.0, "D_m": 0.0779}, cast(Thermo, _NoFlashThermo()))
 
 
 def test_r1_refuses_node_flashing_two_phase(thermo: Thermo) -> None:
@@ -294,7 +295,7 @@ def test_r1_refuses_missing_viscosity() -> None:
         phases=[phase],
     )
     with pytest.raises(PipeSegmentSpecError, match="mu_Pa_s"):
-        PipeSegmentR1().solve({"inlet": inlet}, {"L_m": 100.0, "D_m": 0.0779}, _NoFlashThermo())
+        PipeSegmentR1().solve({"inlet": inlet}, {"L_m": 100.0, "D_m": 0.0779}, cast(Thermo, _NoFlashThermo()))
 
 
 class _NoFlashThermo:

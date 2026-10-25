@@ -11,6 +11,8 @@ regression surface, they are not independent references.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from ngdesign.contracts.plugins import Thermo
@@ -33,7 +35,7 @@ TWO_PHASE_FEED = {
 TWO_PHASE_PARAMS = {"L_m": 1000.0, "D_m": 0.1023, "sigma_N_m": 0.01, "n_segments": 20}
 
 #: Liquid inlet climbing a hill: flashes at node 2, then 19 BB segments.
-HILL_FEED = {
+HILL_FEED: dict[str, Any] = {
     "T": 340.0,
     "P": 1.3e6,
     "molar_flow": 60.0,
