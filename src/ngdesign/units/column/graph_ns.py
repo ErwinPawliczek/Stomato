@@ -45,10 +45,10 @@ import scipy.sparse.linalg
 from .inside_out import (
     _Column,
     _Interlink,
-    _Profile,
-    _StageFeed,
     _pa_return_terms,
     _pa_stage_flows,
+    _Profile,
+    _StageFeed,
 )
 from .naphtali_sandholm import _NS_LM_TRIES
 from .spec import (
@@ -205,9 +205,7 @@ def _graph_model(col: _Column, kettle_free: bool = False) -> _GraphModel:
 
     draw_stage_of_link = [lk.from_stage for lk in draw_links]
     section_top_of_link = [lk.to_stage for lk in draw_links]
-    vapour_return_at = {
-        lk.to_stage: lk.from_stage for lk in col.interlinks if lk.phase == "vapour"
-    }
+    vapour_return_at = {lk.to_stage: lk.from_stage for lk in col.interlinks if lk.phase == "vapour"}
     draw_link_at_stage = {lk.from_stage: k for k, lk in enumerate(draw_links)}
     link_at_top = {lk.to_stage: k for k, lk in enumerate(draw_links)}
     section_duty_at: dict[int, float] = {}
@@ -217,11 +215,11 @@ def _graph_model(col: _Column, kettle_free: bool = False) -> _GraphModel:
     pa_out, pa_in = _pa_stage_flows(col)
     section_total_rows: list[tuple[int, int, int, float]] = []
     for k, link in enumerate(draw_links):
-        sec = next((sc for sc in col.sections if sc.draw_stage - 1 == link.from_stage), None)
-        assert sec is not None and sec.bottom_stage is not None
-        rate = sec.stripper.product_rate
+        sec_hit = next((sc for sc in col.sections if sc.draw_stage - 1 == link.from_stage), None)
+        assert sec_hit is not None and sec_hit.bottom_stage is not None
+        rate = sec_hit.stripper.product_rate
         assert rate is not None  # the parser requires a product rate per section
-        section_total_rows.append((k, link.to_stage, sec.bottom_stage - 1, rate))
+        section_total_rows.append((k, link.to_stage, sec_hit.bottom_stage - 1, rate))
     h_stages = frozenset(j for j in range(g) if j not in tears)
     return _GraphModel(
         col=col,
@@ -385,7 +383,6 @@ def _graph_residual_vector(
     col = model.col
     g = model.layout.n_graph
     nc = model.layout.nc
-    layout = model.layout
     liquid = _graph_liquid_profile(model, l0, vs, draw_flows)
     h_scale = max(col.f_total * 2e4, 1.0)
     links = _graph_interlink_terms(model, xs, draw_flows)
@@ -574,18 +571,14 @@ def _graph_unpack(
     draw_flows = [
         max(
             _FLOW_FLOOR,
-            vs[top]
-            + rate
-            - sum(model.feeds[s].total for s in range(top, bottom + 1)),
+            vs[top] + rate - sum(model.feeds[s].total for s in range(top, bottom + 1)),
         )
         for _k, top, bottom, rate in model.section_total_rows
     ]
     return xs, ts, vs, draw_flows
 
 
-def _graph_apply_state(
-    prof: _Profile, u: list[float], model: _GraphModel, t_bot_tear: float | None
-) -> None:
+def _graph_apply_state(prof: _Profile, u: list[float], model: _GraphModel, t_bot_tear: float | None) -> None:
     """Write a trial state back into the profile (dense `_apply_state` semantics)."""
     col = model.col
     xs, ts, vs, draw_flows = _graph_unpack(model, u, t_bot_tear)
@@ -808,7 +801,9 @@ def _extend_profile_to_graph(col: _Column, prof: _Profile) -> None:
     prof.draw_flows = [max(_FLOW_FLOOR, prof.L[lk.from_stage]) for lk in links]
 
 
-def _graph_naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None) -> _Profile:
+def _graph_naphtali_sandholm(
+    col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None
+) -> _Profile:
     """Graph Naphtali-Sandholm: damped Newton over the whole stage graph.
 
     Same unknown packing and residual algebra as the dense fallback, extended
@@ -882,7 +877,15 @@ def _graph_naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot
         k_harvest: list[dict[str, float] | None] = [None] * layout.n_graph
         scales = _graph_residual_scales(model, tb, l0, u, t_bot_tear)
 
-        def residuals(u_try: list[float]) -> list[float]:
+        def residuals(
+            u_try: list[float],
+            k_fallbacks: list[dict[str, float]] = k_fallbacks,
+            k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]] = k_cache,
+            k_misses: list[int] = k_misses,
+            h_evals: list[int] = h_evals,
+            scales: list[float] = scales,
+            k_harvest: list[dict[str, float] | None] = k_harvest,
+        ) -> list[float]:
             xs, ts, vs, draw_flows = _graph_unpack(model, u_try, t_bot_tear)
             return _graph_residual_vector(
                 model,
@@ -989,9 +992,7 @@ def _graph_naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot
     u = _graph_pack(prof, model)
     scales = _graph_residual_scales(model, tb, l0, u, t_bot_tear)
     xs, ts, vs, draw_flows = _graph_unpack(model, u, t_bot_tear)
-    r_final = _graph_residual_vector(
-        model, tb, l0, xs, ts, vs, draw_flows, scales=scales
-    )
+    r_final = _graph_residual_vector(model, tb, l0, xs, ts, vs, draw_flows, scales=scales)
     m_final = m_norm_of(r_final)
     h_final = h_norm_of(r_final)
     prof.ns_used = True

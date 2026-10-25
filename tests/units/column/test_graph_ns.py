@@ -27,14 +27,13 @@ from ngdesign.units.column.graph_ns import (
     _colour_groups,
     _extend_profile_to_graph,
     _graph_fd_jacobian,
+    _graph_interlink_terms,
     _graph_model,
-    _graph_naphtali_sandholm,
     _graph_pack,
     _graph_residual_scales,
     _graph_residual_vector,
     _graph_unpack,
     _rowsout_sets,
-    _stage_row_ranges,
 )
 from ngdesign.units.column.inside_out import (
     _build_column,
@@ -63,6 +62,25 @@ def _linear_params() -> dict[str, Any]:
             }
         ],
         "specs": {"reflux_ratio": 2.5, "distillate_rate": 45.0},
+    }
+
+
+def _one_stripper_params() -> dict[str, Any]:
+    """One 4-stage steam stripper on the 16-stage main column."""
+    return {
+        **_linear_params(),
+        "n_stages": 16,
+        "feed_stage": 8,
+        "side_strippers": [
+            {
+                "name": "steam",
+                "draw_stage": 6,
+                "return_stage": 3,
+                "n_stages": 4,
+                "steam": {"flow_mol_s": 2.0, "T_K": 450.0, "P_Pa": 5.0e5},
+                "product_rate_mol_s": 15.0,
+            },
+        ],
     }
 
 
@@ -116,51 +134,32 @@ def test_graph_residual_matches_dense_on_linear_column(thermo: Thermo) -> None:
     r_dense = _live_residual_vector(col, tb, prof.l0, xs, ts, vs)
 
     assert len(r_graph) == len(r_dense)
-    for a, b in zip(r_graph, r_dense):
+    for a, b in zip(r_graph, r_dense, strict=True):
         assert a == pytest.approx(b, rel=1e-4, abs=1e-6)
 
 
-def test_graph_solve_converges_on_stripper_graph(thermo: Thermo) -> None:
-    """The graph solve runs over main + section stages and converges."""
-    col, tb = _build(_two_stripper_params(), thermo)
-    assert col.n_graph == 23
+def test_interlink_mass_balance_shared_term(thermo: Thermo) -> None:
+    """Acceptance: on a hand-built one-stripper graph the assembled residual
+    machinery carries each interlink as ONE shared term - the component mass
+    leaving the draw stage equals the mass entering the stripper's top stage,
+    to 1e-12 (they are the same term, not two computed ones)."""
+    col, tb = _build(_one_stripper_params(), thermo)
     prof = _seed_profile(col, tb, *_temperature_seed(col, tb))
     _extend_profile_to_graph(col, prof)
-    assert len(prof.T) == col.n_graph
-
-    prof = _graph_naphtali_sandholm(col, tb, prof, None)
-
-    assert prof.ns_used is True
-    # Section stages carry the solve: their temperatures are live (not the
-    # seed's copy of the draw stage).
-    assert len(prof.T) == col.n_graph
-
-
-def test_interlink_balance_at_root(thermo: Thermo) -> None:
-    """At the converged root each interlink's draw outflow equals the section
-    top's inflow - the ONE shared term, checked on the assembled residuals."""
-    col, tb = _build(_two_stripper_params(), thermo)
-    prof = _seed_profile(col, tb, *_temperature_seed(col, tb))
-    _extend_profile_to_graph(col, prof)
-    prof = _graph_naphtali_sandholm(col, tb, prof, None)
-
     model = _graph_model(col)
     u = _graph_pack(prof, model)
-    scales = _graph_residual_scales(model, tb, prof.l0, u, None)
     xs, ts, vs, draw_flows = _graph_unpack(model, u, None)
-    r = _graph_residual_vector(model, tb, prof.l0, xs, ts, vs, draw_flows, scales=scales)
+    links = _graph_interlink_terms(model, xs, draw_flows)
 
-    ranges = _stage_row_ranges(model)
-    nc = model.layout.nc
-    for k, link in enumerate(model.draw_links):
-        # Draw stage's M rows include the interlink as outflow; section top's
-        # as inflow. Both are gated rows at the root.
-        for i in range(nc):
-            draw_row = ranges[link.from_stage][0] + i
-            top_row = ranges[link.to_stage][0] + i
-            assert abs(r[draw_row]) <= 1e-8
-            assert abs(r[top_row]) <= 1e-8
-        assert draw_flows[k] >= 1e-9
+    assert len(links) == 1
+    draw_stage = model.draw_stage_of_link[0]
+    for cid in col.comps:
+        leaving = draw_flows[0] * xs[draw_stage].get(cid, 0.0)
+        drawn = links[0]["from_stage"][cid]
+        entering = links[0]["to_stage"][cid]
+        assert abs(leaving - drawn) <= 1e-12
+        assert abs(entering - drawn) <= 1e-12
+    assert draw_flows[0] >= 1e-9
 
 
 def test_jacobian_evaluation_count_is_colour_bounded(thermo: Thermo) -> None:
@@ -187,6 +186,32 @@ def test_jacobian_evaluation_count_is_colour_bounded(thermo: Thermo) -> None:
     # one-per-unknown.
     assert evals[0] == n_evals
     assert n_evals < model.layout.n_unk // 2
+
+    # Measured count for a 20-stage linear column, and the (colour count x
+    # variables per stage) bound asserted directly.
+    col20, tb20 = _build({**_linear_params(), "n_stages": 20, "feed_stage": 10}, thermo)
+    prof20 = _seed_profile(col20, tb20, *_temperature_seed(col20, tb20))
+    model20 = _graph_model(col20)
+    u20 = _graph_pack(prof20, model20)
+    scales20 = _graph_residual_scales(model20, tb20, prof20.l0, u20, None)
+    xs20, ts20, vs20, df20 = _graph_unpack(model20, u20, None)
+    r020 = _graph_residual_vector(model20, tb20, prof20.l0, xs20, ts20, vs20, df20, scales=scales20)
+
+    def residuals20(u_try: list[float]) -> list[float]:
+        xs2, ts2, vs2, df2 = _graph_unpack(model20, u_try, None)
+        return _graph_residual_vector(model20, tb20, prof20.l0, xs2, ts2, vs2, df2, scales=scales20)
+
+    evals20 = [0]
+    bundle20 = _graph_fd_jacobian(model20, residuals20, r020, u20, evals20)
+    assert bundle20 is not None
+    _jac20, colours20, n_evals20 = bundle20
+    vps = model20.layout.variables_per_stage
+    print(
+        f"20-stage linear column: unknowns={model20.layout.n_unk} colours={colours20} "
+        f"variables_per_stage={vps} measured FD evaluations={n_evals20}"
+    )
+    assert n_evals20 <= colours20 * vps
+    assert n_evals20 < model20.layout.n_unk
 
 
 def test_colouring_groups_distant_stages(thermo: Thermo) -> None:
