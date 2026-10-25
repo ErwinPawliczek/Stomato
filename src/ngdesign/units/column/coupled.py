@@ -12,7 +12,13 @@ leaving at ``draw_stage``), then re-solve every stripper as a standalone
 zero/one-tear column on the main column's draw-stage liquid. The return
 state itself - flow, temperature and composition - is a tear vector of the
 SAME bounded secant that drives the specs, with one residual per injected
-quantity (``injected - recomputed``). An earlier draft iterated a damped
+quantity (``injected - recomputed``). The injection is ISENTHALPIC (PR #239
+review item 3): the overhead leaves the stripper at (T, p_draw) but the
+return stage sits above the draw, at the main column's lower pressure
+there, so the feed enters at the temperature whose enthalpy at that
+pressure equals the overhead's (``_isenthalpic_return_T``) - the let-down
+does no shaft work, and injecting at the overhead temperature itself would
+hand the main column enthalpy the stripper never delivered. An earlier draft iterated a damped
 fixed point on the return state inside every mesh evaluation and never
 converged: measured on the steam-stripper case, the coupling map amplifies a
 4e-5 input change into a 1.3e-2 output change (the steep C3/iC4 profile in
@@ -56,6 +62,13 @@ from .thermo_adapter import _ThermoBox
 
 #: Component id of the stripping steam (pure water).
 _STEAM_CID = "H2O"
+
+#: Iteration cap for the isenthalpic return-temperature inversion. The
+#: bracket expands geometrically and the bisection halves it; both terminate
+#: orders of magnitude earlier for any physical state. Exceeding the cap
+#: means the requested enthalpy is outside [1, 5000] K at the return
+#: pressure - a state no physical let-down realizes.
+_ISOTHALPIC_MAX = 100
 
 #: Per-driver stop tolerances, in the residual's own units. Rate specs stop
 #: on relative error. 1e-6 sits just above the MEASURED warm-start mesh
@@ -139,7 +152,63 @@ def _species(params: _Params) -> list[str]:
     return sorted(names)
 
 
+def _isenthalpic_return_T(
+    tb: _ThermoBox,
+    comp: dict[str, float],
+    h_target: float,
+    p_return: float,
+    t_seed: float,
+) -> float:
+    """Temperature at ``p_return`` whose enthalpy equals ``h_target`` (J/mol).
+
+    The stripper overhead leaves at (T, p_draw) and re-enters the main
+    column at the return-stage pressure ``p_return``. A pressure let-down
+    does no shaft work, so the injection is isenthalpic: the feed must carry
+    the overhead's enthalpy, not its temperature. The package's enthalpy
+    models are strictly increasing in T, so a bracketed bisection is
+    deterministic: the bracket grows geometrically around ``t_seed`` until
+    it contains the root, then halves to float resolution. An enthalpy no
+    temperature in [1, 5000] K realizes raises ``ColumnConvergenceError``.
+    """
+
+    def excess(t: float) -> float:
+        return tb.pt(comp, t, p_return, 1.0).enthalpy - h_target
+
+    step = 2.0
+    lo = 1.0
+    hi = 5000.0
+    bracketed = False
+    for _ in range(_ISOTHALPIC_MAX):
+        lo = max(t_seed - step, 1.0)
+        hi = min(t_seed + step, 5000.0)
+        if excess(lo) <= 0.0 <= excess(hi):
+            bracketed = True
+            break
+        if lo == 1.0 and hi == 5000.0:
+            break
+        step *= 2.0
+    if not bracketed:
+        raise ColumnConvergenceError(
+            "isenthalpic stripper return: no temperature in [1, 5000] K at the "
+            f"return pressure realizes the overhead enthalpy {h_target:.6g} J/mol"
+        )
+    for _ in range(_ISOTHALPIC_MAX):
+        mid = 0.5 * (lo + hi)
+        if mid <= lo or mid >= hi:
+            return mid  # float resolution reached; the residual is at rounding level
+        if excess(mid) < 0.0:
+            lo = mid
+        else:
+            hi = mid
+    # Unreachable: 100 halvings cross float resolution far before the cap
+    # (5000 K window halves to 1e-12 K after ~53).
+    raise ColumnConvergenceError(  # pragma: no cover
+        "isenthalpic stripper return: bisection did not converge"
+    )
+
+
 def _injected(
+    tb: _ThermoBox,
     params: _Params,
     strip_draws: dict[str, float],
     ret_states: dict[str, tuple[float, float, dict[str, float]]],
@@ -147,22 +216,33 @@ def _injected(
     """Copy params with the stripper couplings written in.
 
     Stripper draws leave the main column as liquid draws; stripper overhead
-    vapour re-enters as a feed at ``return_stage`` (at the main column's own
-    pressure there). Both are INTERNAL to the unit (the draw's material
-    returns as vapour plus product) - the facade counts only the original
-    feeds and the stripper products at the boundary.
+    vapour re-enters as a feed at ``return_stage``. Both are INTERNAL to the
+    unit (the draw's material returns as vapour plus product) - the facade
+    counts only the original feeds and the stripper products at the boundary.
+
+    The return feed is injected ISENTHALPICALLY (PR #239 review item 3): the
+    overhead leaves the stripper at (T_ov, p_draw) but the return stage sits
+    at the main column's higher pressure P_ret. Injecting at T_ov itself
+    would change the stream's enthalpy by h(T, p_draw) - h(T, P_ret) per
+    mole, breaking the whole-unit energy balance by exactly that term; the
+    injected temperature is instead the one at P_ret whose enthalpy equals
+    the overhead's at p_draw (``_isenthalpic_return_T``).
     """
     feeds = list(params.feeds)
     draws = list(params.draws)
     for st in params.side_strippers:
         draws.append(_stripper_draw(st, strip_draws[st.name]))
-        ret_flow, ret_T, ret_comp = ret_states[st.name]
+        ret_flow, ret_t, ret_comp = ret_states[st.name]
         if st.n_stages > 0 and ret_flow > _FLOW_FLOOR:
+            p_draw = params.pressures[st.draw_stage - 1]
+            p_ret = params.pressures[st.return_stage - 1]
+            h_overhead = tb.pt(ret_comp, ret_t, p_draw, 1.0).enthalpy
+            t_inj = _isenthalpic_return_T(tb, ret_comp, h_overhead, p_ret, ret_t)
             feeds.append(
                 _FeedSpec(
                     stage=st.return_stage,
-                    T=ret_T,
-                    P=params.pressures[st.return_stage - 1],
+                    T=t_inj,
+                    P=p_ret,
                     flow=ret_flow,
                     comp=dict(ret_comp),
                 )
@@ -300,7 +380,7 @@ def _eval_coupled(
     on the steam-stripper case) sets the coupling stop floors above. A
     failing main solve propagates to the secant's probe shrinking.
     """
-    parsed_full = _injected(params, strip_draws, ret_states)
+    parsed_full = _injected(tb, params, strip_draws, ret_states)
     col = _build_column(parsed_full, tb)
     prof = _solve_mesh(col, tb, t_top, t_bot, seed)
     reports = []
@@ -377,15 +457,15 @@ def _g_full(coupled: _Coupled, params: _Params, skip: set[str]) -> tuple[list[fl
         if st.n_stages < 2:
             continue  # no stages: nothing returns, so there is no return tear
         rep = next(r for r in coupled.reports if r.name == st.name)
-        inj_f, inj_t, inj_comp = coupled.ret_states[st.name]
-        g.append(inj_f - rep.overhead_flow)
+        ret_f, ret_t, ret_comp = coupled.ret_states[st.name]
+        g.append(ret_f - rep.overhead_flow)
         names.append(f"stripper:{st.name}.return_flow")
-        stops.append(_STOP_COUPLE_FLOW_REL * max(inj_f, 1.0))
-        g.append(inj_t - rep.overhead_T)
+        stops.append(_STOP_COUPLE_FLOW_REL * max(ret_f, 1.0))
+        g.append(ret_t - rep.overhead_T)
         names.append(f"stripper:{st.name}.return_T")
         stops.append(_STOP_COUPLE_T_K)
         for cid in _species(params)[:-1]:
-            g.append(inj_comp.get(cid, 0.0) - rep.overhead_comp.get(cid, 0.0))
+            g.append(ret_comp.get(cid, 0.0) - rep.overhead_comp.get(cid, 0.0))
             names.append(f"stripper:{st.name}.return_x[{cid}]")
             stops.append(_STOP_COUPLE_COMP)
     return g, stops, names
