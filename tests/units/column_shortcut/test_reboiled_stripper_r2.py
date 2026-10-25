@@ -182,9 +182,7 @@ def test_spec_achieved_component_recovery_within_gate(thermo: Thermo) -> None:
     The measured value comes from the outlet flows (B*x_B,NC4 over the feed's
     NC4), not from the column's info.
     """
-    spec: dict[str, Any] = {
-        "component_recovery": {"component": "NC4", "value": 0.9, "product": "bottoms"}
-    }
+    spec: dict[str, Any] = {"component_recovery": {"component": "NC4", "value": 0.9, "product": "bottoms"}}
     result = ReboiledStripperR2().solve({"feed": _feed(FEED)}, _params(spec=spec), thermo)
     assert abs(result.info["spec_achieved"] - 0.9) / 0.9 < _SPEC_TOL
     assert result.info["spec_name"] == 4.0
@@ -194,9 +192,7 @@ def test_spec_achieved_component_recovery_within_gate(thermo: Thermo) -> None:
 @pytest.mark.timeout(600)
 def test_rate_spec_bottoms_rate_converges(thermo: Thermo) -> None:
     """bottoms_rate passes through to the column; convergence blocked by #248."""
-    result = ReboiledStripperR2().solve(
-        {"feed": _feed(FEED)}, _params(spec={"bottoms_rate": 90.0}), thermo
-    )
+    result = ReboiledStripperR2().solve({"feed": _feed(FEED)}, _params(spec={"bottoms_rate": 90.0}), thermo)
     b = result.outlets["bottoms"].molar_flow
     assert abs(b - 90.0) / 90.0 < _SPEC_TOL
 
@@ -246,26 +242,18 @@ def test_refusal_spec_key_outside_allowed_set(thermo: Thermo) -> None:
         ReboiledStripperR2().solve({"feed": _feed(FEED)}, _params(spec={"reflux_ratio": 2.0}), thermo)
 
 
-def test_refusal_reboiler_duty_w_before_column_call(
-    thermo: Thermo, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_refusal_reboiler_duty_w_before_column_call(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) -> None:
     """reboiler_duty_W is refused before the column is ever called."""
     monkeypatch.setattr(
         Column, "solve", lambda *a, **k: pytest.fail("reboiler_duty_W must be refused pre-column")
     )
-    with pytest.raises(
-        ReboiledStripperR2Error, match="reboiler_duty_W.*singular|singular.*reboiler_duty_W"
-    ):
-        ReboiledStripperR2().solve(
-            {"feed": _feed(FEED)}, _params(spec={"reboiler_duty_W": 1e6}), thermo
-        )
+    with pytest.raises(ReboiledStripperR2Error, match="reboiler_duty_W.*singular|singular.*reboiler_duty_W"):
+        ReboiledStripperR2().solve({"feed": _feed(FEED)}, _params(spec={"reboiler_duty_W": 1e6}), thermo)
 
 
 def test_refusal_pressure_profile_wrong_length(thermo: Thermo) -> None:
     with pytest.raises(ReboiledStripperR2Error, match="pressure_profile"):
-        ReboiledStripperR2().solve(
-            {"feed": _feed(FEED)}, _params(pressure_profile=[2e6, 2e6, 2e6]), thermo
-        )
+        ReboiledStripperR2().solve({"feed": _feed(FEED)}, _params(pressure_profile=[2e6, 2e6, 2e6]), thermo)
 
 
 def test_refusal_pressure_profile_nonpositive(thermo: Thermo) -> None:
