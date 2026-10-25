@@ -24,11 +24,7 @@
 
 ## Scope limits (measured while writing this spec)
 1. **No Gibbs furnace.** S2, the dominant sulfur species above about 1000 K, has no formation enthalpy and no critical constants in the databank: `component_record("S2")` raises `TypeError` on `Tcs[0] = None`, and `formation_enthalpy_298("S2")` fails. A Gibbs furnace without S2 would be physically wrong. R2 therefore keeps R0's thermal-stage rule unchanged. A data-layer prerequisite (S2 JANAF ideal-gas data plus a thermo-compatible record) un-defers a furnace step later. Not in this spec.
-2. **No adiabatic converters.** `kinetics.enthalpy_with_formation` adds `formation_enthalpy(cid, T)` = ΔfH°298 + ∫Cp, while the package enthalpy already carries the sensible heat. Measured 298 → 500 K at 1 bar:
-   - SO2: package Δh = 8806.8 J/mol, the formation lift adds 8753.9, giving 17560.6 instead of about 8800;
-   - N2 (an element): 5916.9, correct.
-
-   An adiabatic outlet temperature computed on this basis would be wrong for every compound. R2 converters are therefore **isothermal at the given stage T**, as in R0, and their heat release shows in the unit duty. This is reported to the orchestrator as a core defect in the U-01b energy basis. Adiabatic beds become a follow-up once it is fixed.
+2. **No adiabatic converters — a stated modelling choice, not a defect.** The U-01b energy-basis defect (as measured when this spec was written) was fixed on main (#247/#252): `enthalpy_with_formation` now lifts by the constant ΔfH°298 on top of a package enthalpy that already carries the sensible heat from 298.15 K, and reaction enthalpies reproduce the databank heats of reaction. (Measured then, 298 → 500 K at 1 bar, the old lift read SO2 17560.6 J/mol where about 8800 is right; N2, an element, read 5916.9, correct.) R2 converters are **isothermal at the given stage T** because the plan scopes R2 to isothermal beds, as in R0; their heat release shows in the unit duty. Adiabatic beds remain a follow-up.
 3. **Condenser stays R0's complete condensation.** The PR package's sulfur saturation pressure is unusable: `pure_psat("S8", 717.8 K)` = 5.29e5 Pa, against the normal boiling point's 1.013e5 Pa, about 5.2 times too high. A PR flash of the converter gas at 420 K puts 9 mol% water into the liquid sulfur. So the R2 condenser removes all S6 and S8, as R0 removes S8, and flashes `sulfur_out` with its own S6/S8 composition.
 
 ## Method
@@ -51,7 +47,7 @@ Each catalytic converter i is at chemical equilibrium at T_eq,i = `T` + `approac
    - tail gas = the remaining gas, `flash_pt` at (T_condenser, P);
    - `sulfur_out` = `flash_pt({S6, S8} at their summed composition, T_condenser, P, total)`. The thermal-stage sulfur is S8 (R0), and the catalytic stages add S6 and S8.
    - A zero-flow sulfur outlet follows R0's pattern.
-5. **Duty:** `Σ enthalpy_with_formation(out) − Σ enthalpy_with_formation(in)`, R0's formula. It inherits the basis defect of scope limit 2, but is internally consistent with V0.
+5. **Duty:** `Σ enthalpy_with_formation(out) − Σ enthalpy_with_formation(in)`, R0's formula, on the corrected ΔfH°298 basis (#247/#252) and internally consistent with V0.
 6. **`info`:** R0's keys, plus the per-stage keys above, `sulfur_recovery_fraction` on S atoms (6·S6 + 8·S8 over the feed S), and `species_set_size`.
 
 ### Reduction to the lower level
@@ -140,6 +136,6 @@ params:
 - No `conversion` path at R2.
 - S6 is carried into `sulfur_out` and into the recovery fraction (6 and 8 atoms).
 - The furnace is unchanged from R0.
-- There is no adiabatic solve; the basis defect is cited in the module docstring.
+- There is no adiabatic solve; converters are isothermal by scope (see the module docstring) — a modelling choice, with adiabatic beds as a follow-up.
 - Stage T_eq = T + approach_K.
 - The species-override keyword stays internal; no public param is added for it.

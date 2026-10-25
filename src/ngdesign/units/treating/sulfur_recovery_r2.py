@@ -12,12 +12,14 @@ Scope limits carried over from the spec (measured there, cited here):
   has no formation enthalpy and no critical constants in the databank, so a
   Gibbs furnace without S2 would be physically wrong. The furnace keeps R0's
   burn-one-third + given-``thermal_conversion`` rule unchanged.
-- **No adiabatic converters.** ``kinetics.enthalpy_with_formation`` adds
-  ``formation_enthalpy(cid, T)`` on top of a package enthalpy that already
-  carries the sensible heat (the U-01b energy-basis defect: SO2 at 500 K reads
-  17560.6 J/mol where about 8800 is right). Converters are therefore
-  **isothermal** at the given stage ``T`` and their heat release shows in the
-  unit duty. Adiabatic beds are a follow-up once the basis is fixed.
+- **No adiabatic converters — a stated modelling choice, not a defect.** The
+  U-01b energy-basis defect is fixed on main (#247/#252):
+  ``enthalpy_with_formation`` lifts by the constant ΔfH°298 on top of a package
+  enthalpy that already carries the sensible heat from 298.15 K, so reaction
+  enthalpies reproduce the databank heats of reaction. Converters are
+  **isothermal** at the given stage ``T`` because the plan scopes R2 to
+  isothermal beds (as in R0); their heat release shows in the unit duty.
+  Adiabatic beds remain a follow-up.
 - **Complete sulfur condensation** (R0's shortcut): the package S8 saturation
   pressure is unusable (``pure_psat("S8", 717.8 K)`` = 5.29e5 Pa against a
   1.013e5 Pa normal boiling point), so the condenser removes all S6 and S8.
@@ -257,11 +259,12 @@ class SulfurRecoveryR2:
             s8_stage = n_out.get("S8", 0.0)
             s6_total += s6_stage
             s8_total += s8_stage
-            gas = {cid: n_out.get(cid, 0.0) for cid in gas if cid not in _SULFUR_SPECIES_R2}
+            gas = {cid: n for cid, n in n_out.items() if cid not in _SULFUR_SPECIES_R2}
             info[f"stage_{i}_H2S_conversion"] = 1.0 - n_out.get("H2S", 0.0) / h2s_in if h2s_in > 0.0 else 0.0
             info[f"stage_{i}_S6_mol_s"] = s6_stage
             info[f"stage_{i}_S8_mol_s"] = s8_stage
             info[f"stage_{i}_T_eq_K"] = T_eq
+            info[f"stage_{i}_species_set_size"] = float(len(species))
             species_set_size = float(len(species))
 
         if not gas:

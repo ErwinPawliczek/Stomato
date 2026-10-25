@@ -204,6 +204,68 @@ def test_adapter_closes_element_balances_over_the_ports() -> None:
         assert outlet.get(element, 0.0) == pytest.approx(inlet.get(element, 0.0), abs=1e-8), element
 
 
+def test_extra_species_reach_the_tail_gas_and_close_the_balances() -> None:
+    """V0 with extras (review of 9dbaccd): the converter's Gibbs products must
+    reach the tail gas -- the carry-over iterates ``n_out``, not the incoming
+    gas -- and every element closes in = out at 1e-8. One Gibbs stage (573.15
+    K), the review's measurement basis: measured mass rel 1.5e-16 and worst
+    element 1.9e-15 across the cases."""
+    cases = [["COS"], ["H2"], ["CO"], ["CS2"], ["COS", "CO", "H2"]]
+    for extra_species in cases:
+        feed, params = _r2_setup()
+        result = _solve(feed, {**params, "extra_species": extra_species})
+        tail = result.outlets["tail_gas_out"].composition
+        for cid in extra_species:
+            assert cid in tail, f"{cid} never reached the tail gas"
+        inlet = _elements(feed)
+        outlet = _elements(result.outlets["tail_gas_out"])
+        for element, amount in _elements(result.outlets["sulfur_out"]).items():
+            outlet[element] = outlet.get(element, 0.0) + amount
+        for element in sorted(set(inlet) | set(outlet)):
+            assert outlet.get(element, 0.0) == pytest.approx(inlet.get(element, 0.0), abs=1e-8), (
+                f"{element} with extra_species={extra_species}"
+            )
+
+
+@pytest.mark.parametrize("extra_species", [["COS"], ["CO"], ["CS2"]])
+def test_two_stage_extras_close_element_balances(extra_species: list[str]) -> None:
+    """V0 with extras over two Gibbs stages (573.15 K then 473.15 K): closure
+    holds once each stage's solve converges. Measured worst element 1.9e-11
+    (CS2), the rest below 6e-15."""
+    feed, params = _r2_setup()
+    result = _solve(feed, {**params, "extra_species": extra_species})
+    inlet = _elements(feed)
+    outlet = _elements(result.outlets["tail_gas_out"])
+    for element, amount in _elements(result.outlets["sulfur_out"]).items():
+        outlet[element] = outlet.get(element, 0.0) + amount
+    for element in sorted(set(inlet) | set(outlet)):
+        assert outlet.get(element, 0.0) == pytest.approx(inlet.get(element, 0.0), abs=1e-8), element
+
+
+@pytest.mark.parametrize(
+    "extra_species, residual_pattern",
+    [
+        (["H2"], r"flag 4, max residual 6\.000e\+01"),
+        (["COS", "CO", "H2"], r"flag 5, max residual 4\.000e\+01"),
+    ],
+)
+@pytest.mark.xfail(reason=(
+    "gibbs minimisation did not converge on the second stage (473.15 K) -- identical on the "
+    "pre-fix head 9dbaccd, so this is the element-potential solver's limit at low T with "
+    "hydrogen in the species set, not a balance defect; the same feeds close at 1.2e-15 "
+    "worst element on one stage (573.15 K)"
+), strict=True)
+def test_two_stage_h2_gibbs_nonconvergence_is_a_solver_limit(
+    extra_species: list[str], residual_pattern: str
+) -> None:
+    """Measured reason (review of 9dbaccd, item 1): hydrogen-bearing extras
+    fail the second-stage Gibbs solve; measured here so the limit stays
+    pinned while the solver is improved."""
+    feed, params = _r2_setup()
+    with pytest.raises(SulfurRecoveryError, match=residual_pattern):
+        _solve(feed, {**params, "extra_species": extra_species})
+
+
 def test_adapter_reports_stage_information_and_recovery() -> None:
     """info carries R0's keys plus the per-stage Gibbs keys; the recovery
     fraction counts S atoms through both allotropes (6 and 8)."""
