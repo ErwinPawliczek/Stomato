@@ -187,6 +187,7 @@ def orifice_dp(
         "permanent_loss": permanent_loss,
     }
 
+
 class OrificeR1:
     """ISO 5167-2 orifice plate with the Reader-Harris/Gallagher coefficient.
 

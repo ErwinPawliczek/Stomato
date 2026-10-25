@@ -172,8 +172,6 @@ def test_bad_c_specified_refused() -> None:
         orifice_dp(10.0, 0.10226, 0.05, 998.0, 1e-3, 5e5, None, "flange", 1.0)
 
 
-
-
 _LIQ = {"H2O": 1.0}
 _LIQ_MW = 18.0  # g/mol: StreamState.molecular_weight is g/mol, mass_flow divides by 1000
 
@@ -371,16 +369,12 @@ def test_example_case_solves(thermo: Thermo) -> None:
 
 def test_refuses_missing_D_m() -> None:
     with pytest.raises(OrificeR1Error, match="D_m"):
-        OrificeR1().solve(
-            {"inlet": _o1_inlet()}, {"bore_m": 0.05}, StaticThermo(998.0, 1e-3)
-        )
+        OrificeR1().solve({"inlet": _o1_inlet()}, {"bore_m": 0.05}, StaticThermo(998.0, 1e-3))
 
 
 def test_refuses_nonpositive_D_m() -> None:
     with pytest.raises(OrificeR1Error, match="D_m"):
-        OrificeR1().solve(
-            {"inlet": _o1_inlet()}, {"D_m": 0.0, "bore_m": 0.05}, StaticThermo(998.0, 1e-3)
-        )
+        OrificeR1().solve({"inlet": _o1_inlet()}, {"D_m": 0.0, "bore_m": 0.05}, StaticThermo(998.0, 1e-3))
 
 
 def test_refuses_bore_and_target_together() -> None:
@@ -394,9 +388,7 @@ def test_refuses_bore_and_target_together() -> None:
 
 def test_refuses_neither_bore_nor_target() -> None:
     with pytest.raises(OrificeR1Error, match="exactly one of bore_m / dP_design_Pa"):
-        OrificeR1().solve(
-            {"inlet": _o1_inlet()}, {"D_m": 0.10226}, StaticThermo(998.0, 1e-3)
-        )
+        OrificeR1().solve({"inlet": _o1_inlet()}, {"D_m": 0.10226}, StaticThermo(998.0, 1e-3))
 
 
 def test_refuses_unknown_taps() -> None:
