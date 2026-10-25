@@ -136,6 +136,7 @@ def test_refuses_bad_area_and_stage_cut_values() -> None:
     with pytest.raises(MembraneR1SpecError, match="stage_cut"):
         cross_flow(F=F, z=Z, Pi=PI, P_h=P_H, P_l=1e5, stage_cut=1.0)
 
+
 def test_ruling_stage_cut_reached_at_pressure_ratio_1p5() -> None:
     """Orchestrator ruling (PR #281): the boundary is pinned from both sides.
 
@@ -143,12 +144,11 @@ def test_ruling_stage_cut_reached_at_pressure_ratio_1p5() -> None:
     measured the event firing at A = 4587.6 m2 against A_hard = 6.59e5 m2 —
     so only the P_h/P_l = 1.001 side refuses.
     """
-    residue, permeate, area, theta = cross_flow(
-        F=F, z=Z, Pi=PI, P_h=P_H, P_l=P_H / 1.5, stage_cut=0.95
-    )
+    residue, permeate, area, theta = cross_flow(F=F, z=Z, Pi=PI, P_h=P_H, P_l=P_H / 1.5, stage_cut=0.95)
     assert theta == pytest.approx(0.95, rel=1e-9)
     assert area == pytest.approx(4587.6, rel=1e-5)
     assert sum(permeate.values()) == pytest.approx(0.95 * F, rel=1e-9)
+
 
 def test_refuses_local_root_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     """Refusal row 'did not converge': a failed local brentq raises the typed

@@ -75,6 +75,7 @@ def test_counter_current_validation_refusals() -> None:
     with pytest.raises(MembraneR1SpecError, match="stage_cut"):
         counter_current(F=F, z=Z, Pi=PI, P_h=P_H, P_l=1e5, stage_cut=1.0)
 
+
 def test_refuses_shooting_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     """Refusal row 'did not converge': a failed shooting root raises the typed
     error. Defensive — hybr converges on this smooth residual — reached by
