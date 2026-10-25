@@ -112,7 +112,7 @@ def _two_stripper_params() -> dict[str, Any]:
     }
 
 
-def _build(params: dict[str, Any], thermo: Thermo):
+def _build(params: dict[str, Any], thermo: Thermo) -> tuple[col_mod.inside_out._Column, _ThermoBox]:
     parsed = _parse_params(params, None)
     tb = _ThermoBox(thermo, min(parsed.pressures), max(parsed.pressures))
     return _build_column(parsed, tb), tb
