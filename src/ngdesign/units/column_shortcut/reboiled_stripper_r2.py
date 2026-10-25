@@ -136,8 +136,7 @@ class ReboiledStripperR2:
             )
         if spec_name not in _ALLOWED_SPECS:
             raise ReboiledStripperR2Error(
-                f"reboiled_stripper spec key {spec_name!r} is outside the allowed set "
-                f"{list(_ALLOWED_SPECS)}"
+                f"reboiled_stripper spec key {spec_name!r} is outside the allowed set {list(_ALLOWED_SPECS)}"
             )
 
         column_params: dict[str, Any] = {
