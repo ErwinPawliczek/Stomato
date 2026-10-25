@@ -89,7 +89,13 @@ def test_cf2_extended_langmuir() -> None:
 
 
 def test_cf3_geometry_lub_pure_functions() -> None:
-    """A3 bed mass from geometry, A4 stoichiometric time, A5 LUB breakthrough."""
+    """A3 bed mass from geometry, A4 stoichiometric time, A5 LUB breakthrough.
+
+    The spec's printed t_s/t_b for this basis are 1000x too large -- an
+    arithmetic error in the spec's CF3/CF4 prints, which dropped the division
+    by the 1000 mol/s adsorbate rate (SPEC ISSUE ruled on the PR); A4/A5 as
+    written give the values asserted below.
+    """
     m_bed = packed_bed_mass(700.0, 1.5, 4.0)
     assert m_bed == pytest.approx(4948.00843, rel=1e-9)
     q_star = equilibrium_loadings({"H2O": 12.0}, {"H2O": 5e-3}, {"H2O": 1e-3 * P_FEED})["H2O"]
