@@ -27,6 +27,11 @@ worked example at TS = 609 mm gives C_SB ≈ 0.10-0.11 m/s), and Souza et al.,
 I&EC Res. 64(4), 2256 (2025), tabulates the same 0.0105 / 8.127e-4 / 0.755 /
 1.463 / 0.842 constants for the Lygeros-Magoulas correlation.
 
+Corrections (plan eq. 3): ``C = F_ST·F_F·F_HA·C_SB`` with ``F_ST =
+(sigma/0.020)**0.2``, ``F_F`` the foaming factor and ``F_HA = 1`` at
+``Ah/Aa >= 0.10`` else ``5·(Ah/Aa) + 0.5`` (refusal below 0.06); ``F_HA`` is
+reported in ``info``.
+
 **Packing method** (``internals="packing"``) — Stichlmair, Bravo & Fair
 (1989, Gas Sep. Purif. 3, 19-28) through ``fluids.packed_tower``
 (``Stichlmair_dry``, ``Stichlmair_wet``, ``Stichlmair_flood``), plus the
@@ -67,6 +72,35 @@ _FRANCIS_SI = 1.84
 #: Surface-tension reference of the Fair correlation, N/m (Seader-Henley 3rd
 #: ed.: F_ST = (sigma / 20 dyn/cm)**0.2).
 _SIGMA_REF = 0.020
+
+#: Every accepted params key (the catalogue schema carries
+#: ``additionalProperties: false``); anything else is refused.
+_ALLOWED_KEYS = frozenset(
+    {
+        "internals",
+        "surface_tension_N_m",
+        "tray_spacing_m",
+        "diameter_m",
+        "design_flood_fraction",
+        "downcomer_area_frac",
+        "hole_area_frac",
+        "weir_height_m",
+        "weir_length_m",
+        "orifice_coefficient",
+        "aeration_factor",
+        "foaming_factor",
+        "column_diameter_m",
+        "packed_height_m",
+        "voidage",
+        "specific_area_m2_m3",
+        "stichlmair_C1",
+        "stichlmair_C2",
+        "stichlmair_C3",
+        "Fpd_per_ft",
+        "hetp_m",
+        "n_stages",
+    }
+)
 
 
 class ColumnInternalsError(ValueError):
@@ -172,9 +206,12 @@ def _solve_tray(traffic: _Traffic, params: dict[str, Any]) -> dict[str, float]:
     # 1-2. Fair capacity parameter via the Lygeros-Magoulas fit (TS in mm).
     f_lv = (liquid / big_g) * math.sqrt(rho_v / rho_l)
     c_sb = 0.0105 + 8.127e-4 * (tray_spacing * 1000.0) ** 0.755 * math.exp(-1.463 * f_lv**0.842)
-    # 3. Corrections.
+    # 3. Corrections (plan eq. 3, Seader-Henley-Roper §6.6): the hole-area
+    # factor is 1 at Ah/Aa >= 0.10, else 5*(Ah/Aa) + 0.5 on the [0.06, 0.10)
+    # window the refusal floor leaves.
     f_st = (sigma / _SIGMA_REF) ** 0.2
-    c = f_st * foaming * c_sb
+    f_ha = 1.0 if ah_aa >= 0.10 else 5.0 * ah_aa + 0.5
+    c = f_st * f_ha * foaming * c_sb
     # 4. Flooding velocity on the net area.
     u_flood = c * math.sqrt((rho_l - rho_v) / rho_v)
 
@@ -208,6 +245,7 @@ def _solve_tray(traffic: _Traffic, params: dict[str, Any]) -> dict[str, float]:
     return {
         "F_LV": f_lv,
         "C_SB_m_s": c_sb,
+        "F_HA": f_ha,
         "C_m_s": c,
         "U_flood_m_s": u_flood,
         "U_net_m_s": u_net,
@@ -357,6 +395,9 @@ class ColumnInternalsR1:
             raise ColumnInternalsError(
                 f"column_internals: internals must be 'sieve_tray' or 'packing', got {internals!r}"
             )
+        unknown = sorted(set(params) - _ALLOWED_KEYS)
+        if unknown:
+            raise ColumnInternalsError(f"column_internals: refuses unknown parameter(s) {unknown!r}")
         traffic = _traffic(inlet)
         if internals == "sieve_tray":
             info = _solve_tray(traffic, params)

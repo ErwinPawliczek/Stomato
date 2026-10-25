@@ -184,6 +184,33 @@ class TestTrayClosedForm:
         res = ColumnInternalsR1().solve({"inlet": _tray_inlet()}, params, thermo=thermo)
         assert abs(res.info["diameter_m"] - 0.769365893) / 0.769365893 <= 1e-8
 
+    def test_hole_area_correction(self, thermo: Thermo) -> None:
+        """F_HA at Ah/Aa = 0.08 (rel 1e-8; the closed-form case's traffic).
+
+        Plan eq. 3: C = F_ST·F_F·F_HA·C_SB with F_HA = 5·(Ah/Aa) + 0.5 for
+        0.06 <= Ah/Aa < 0.10. At Ah/Aa = 0.08, F_HA = 0.9, so relative to the
+        F_HA = 1 closed-form table (Ah/Aa = 0.10):
+        C = 0.9 x 0.0567378143 = 0.0510640329 m/s and
+        U_flood = 0.9 x 0.305542481 = 0.2749882329 m/s. U_net does not see the
+        hole area, so flood_fraction = 0.210461823 / 0.9 = 0.233846470. On the
+        hole side the areas shrink: A_h = 0.08 x 1.34303086 = 0.1074424688 m2,
+        u_hole = 1.25 x 0.744584529 = 0.930730661 m/s, h_dry scales with
+        u_hole^2 = 1.5625 x 0.00176811444 = 0.00276267881 m.
+        """
+        params = {**_TRAY_PARAMS, "hole_area_frac": 0.08}
+        res = ColumnInternalsR1().solve({"inlet": _tray_inlet()}, params, thermo=thermo)
+        base = ColumnInternalsR1().solve({"inlet": _tray_inlet()}, _TRAY_PARAMS, thermo=thermo)
+        assert res.info["F_HA"] == pytest.approx(0.9, rel=1e-12)
+        assert res.info["C_m_s"] == pytest.approx(0.9 * base.info["C_m_s"], rel=1e-12)
+        assert res.info["C_m_s"] == pytest.approx(0.0510640329, rel=1e-8)
+        assert res.info["U_flood_m_s"] == pytest.approx(0.9 * base.info["U_flood_m_s"], rel=1e-12)
+        assert res.info["U_flood_m_s"] == pytest.approx(0.2749882329, rel=1e-8)
+        assert res.info["U_net_m_s"] == pytest.approx(base.info["U_net_m_s"], rel=1e-12)
+        assert res.info["flood_fraction"] == pytest.approx(base.info["flood_fraction"] / 0.9, rel=1e-12)
+        assert res.info["flood_fraction"] == pytest.approx(0.23384647, rel=1e-8)
+        assert res.info["u_hole_m_s"] == pytest.approx(1.25 * base.info["u_hole_m_s"], rel=1e-12)
+        assert res.info["h_dry_m"] == pytest.approx(1.5625 * base.info["h_dry_m"], rel=1e-12)
+
 
 class TestPacking:
     """Stichlmair dry closed form, then the wet/flood/Robbins wiring."""
@@ -353,6 +380,16 @@ class TestRefusals:
     def test_hole_area_frac_low(self, thermo: Thermo) -> None:
         params = {**_TRAY_PARAMS, "hole_area_frac": 0.05}
         with pytest.raises(ColumnInternalsError, match="hole_area_frac"):
+            ColumnInternalsR1().solve({"inlet": _tray_inlet()}, params, thermo=thermo)
+
+    def test_hole_area_frac_high(self, thermo: Thermo) -> None:
+        params = {**_TRAY_PARAMS, "hole_area_frac": 0.21}
+        with pytest.raises(ColumnInternalsError, match="hole_area_frac"):
+            ColumnInternalsR1().solve({"inlet": _tray_inlet()}, params, thermo=thermo)
+
+    def test_unknown_param_refused(self, thermo: Thermo) -> None:
+        params = {**_TRAY_PARAMS, "frob_factor": 1.5}
+        with pytest.raises(ColumnInternalsError, match="unknown parameter"):
             ColumnInternalsR1().solve({"inlet": _tray_inlet()}, params, thermo=thermo)
 
     def test_downcomer_area_frac_out_of_range(self, thermo: Thermo) -> None:

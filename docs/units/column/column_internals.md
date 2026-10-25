@@ -20,6 +20,7 @@ Rigour ladder: R1 provisional
 ### R1 parameters
 
 ```yaml
+additionalProperties: false
 properties:
   Fpd_per_ft:
     description: packing factor, 1/ft (packing; Robbins dP is reported when given)
@@ -99,4 +100,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-E 11
 
-> R1 sieve-tray hydraulics (Seader-Henley-Roper 3rd ed. §6.6; the C_SB fit is Lygeros-Magoulas 1986 — 0.0105 + 8.127e-4·TS_mm^0.755·exp(−1.463·F_LV^0.842), verified against the Perry 8th ed. eq. 14-90 form and Souza et al., I&EC Res. 64(4), 2256, 2025) and packed-section Stichlmair dry/wet/flood plus optional Robbins dP through fluids 1.3.1, all anchored to closed-form tests. V1 gap — the spec's candidate (Seader-Henley-Roper §6.6 worked sieve-tray example) is not transcribed — no accessible printed page, and the book reads C_F from the Fair chart, where a fit-based reading would be an assessed value, so the case is withdrawn rather than tuned; the level ships provisional. dP_wet_Pa above the flood point is omitted (fluids.Stichlmair_wet does not converge there; dry dP, flood velocity and flood fraction are still reported — SPEC ISSUE on PR
+> R1 sieve-tray hydraulics (Seader-Henley-Roper 3rd ed. §6.6; the C_SB fit is Lygeros-Magoulas 1986 — 0.0105 + 8.127e-4·TS_mm^0.755·exp(−1.463·F_LV^0.842), verified against the Perry 8th ed. eq. 14-90 form and Souza et al., I&EC Res. 64(4), 2256, 2025) and packed-section Stichlmair dry/wet/flood plus optional Robbins dP through fluids 1.3.1, all anchored to closed-form tests. The hole-area correction is applied (plan eq. 3 — F_HA = 1 at Ah/Aa ≥ 0.10, else 5·(Ah/Aa) + 0.5, refusal below 0.06) and reported in info as F_HA; params reject unknown keys (strict params schema). V1 gap — the spec's candidate (Seader-Henley-Roper §6.6 worked sieve-tray example) is not transcribed — no accessible printed page, and the book reads C_F from the Fair chart, where a fit-based reading would be an assessed value, so the case is withdrawn rather than tuned; the level ships provisional. dP_wet_Pa above the flood point is omitted (fluids.Stichlmair_wet does not converge there; dry dP, flood velocity and flood fraction are still reported — SPEC ISSUE on PR
