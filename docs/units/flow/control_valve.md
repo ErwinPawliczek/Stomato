@@ -90,4 +90,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-B 6
 
-> R0 isenthalpic letdown; ISA liquid Cv is reported when the inlet is liquid and a viscosity is available (PR phase property or a mu_liquid param); IEC 60534 sizing and the choked-flow correlation remain roadmap.
+> R0 isenthalpic letdown; ISA liquid Cv is reported when the inlet is liquid and a viscosity is available (PR phase property or a mu_liquid param). R1 adds IEC 60534-2-1 sizing and rating with choked flow, piping-geometry factors and inherent characteristics.

@@ -247,10 +247,11 @@
         the printed state (nu 1.743e-5 m2/s, Z 0.988); search places were
         IEC 60534-2-1:2011 Annex D, the ISA-75.01.01-2007 Annex, and the
         Emerson Control Valve Handbook 5th ed. ch. 5.
+      end_state: true
   pid_symbol: CV
   references:
   - docs/unit-catalogue-plan.md §2 U-B 6
-  notes: R0 isenthalpic letdown; ISA liquid Cv is reported when the inlet is liquid and a viscosity is available (PR phase property or a mu_liquid param); IEC 60534 sizing and the choked-flow correlation remain roadmap.
+  notes: R0 isenthalpic letdown; ISA liquid Cv is reported when the inlet is liquid and a viscosity is available (PR phase property or a mu_liquid param). R1 adds IEC 60534-2-1 sizing and rating with choked flow, piping-geometry factors and inherent characteristics.
 
 - id: relief_valve
   name: Relief valve
