@@ -80,6 +80,18 @@ class OrificeR1Error(OrificeSpecError):
     """Typed refusal naming the parameter of a bad orifice R1 spec."""
 
 
+class OrificeFeasibilityError(OrificeR1Error):
+    """Bore-dependent feasibility refusal (a larger bore may still be valid).
+
+    Raised only where the refusal depends on the bore: the implied tap
+    differential exceeding the inlet pressure (liquid) and the gas
+    pressure ratio falling below the ISO 5167-2 limit. Sizing's bore scan
+    catches exactly this class, so every bore-independent refusal
+    (``taps``, ``C_specified``, the ISO pipe-diameter and Re_D floors)
+    propagates with its own message instead of being masked as "no bore".
+    """
+
+
 def _check_validity(D: float, d: float, beta: float, Re_D: float, taps: str) -> None:
     """ISO 5167-2:2003 §5.3.1 validity limits, refusing with the violated quantity."""
     if d < 0.0125:
