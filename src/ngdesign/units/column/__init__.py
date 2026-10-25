@@ -46,9 +46,12 @@ properties, so liquid/vapour phase enthalpies and heat capacities come from
 single ``thermo.phase_props`` builds at the stage state — no straddling
 flashes, no extrapolation across the phase boundary. The reboiler
 duty is finally defined by the exact overall energy balance over the real
-boundary streams given the condenser-duty balance, so the reported duty closes
-the stream table exactly (module users get a consistent UnitResult.duty_W; the
-Qc/Qr split is accurate to the converged stage-balance residual).
+boundary streams, with the pumparound cooler duties folded in separately: the
+reported ``reboiler_duty_W`` is the PHYSICAL reboiler duty, each pumparound
+loop's own duty is reported in info (``pa_<name>_duty_W``, negative = heat
+removed), and ``UnitResult.duty_W = Q_reb + Σ Q_pumparound − Q_cond`` is the
+net unit duty that closes the stream table exactly (the Qc/Qr split is
+accurate to the converged stage-balance residual).
 
 All SI: K, Pa abs, mol/s, J/mol, W. Pure functions; no I/O; no global state.
 """
@@ -63,6 +66,7 @@ from ngdesign.registry import register
 
 from .inside_out import (
     _build_column,
+    _check_pumparounds,
     _close_energy_balance,
     _exact_residuals,
     _seed_profile,
@@ -155,6 +159,10 @@ class Column:
         col = _build_column(parsed, tb)
 
         prof = _solve_specs(col, tb, parsed)
+        # Post-solve pumparound gates (review items 4/5, PR #238): run once on
+        # the final profile - an infeasible loop flow or a heating loop refuses
+        # the column instead of reporting a silently-wrong result.
+        _check_pumparounds(col, prof)
 
         # Boundary stream states (exact; these drive the reported energy balance).
         feed_states: list[StreamState] = []
@@ -174,11 +182,13 @@ class Column:
             out_states: list[StreamState] = [distillate, bottoms]
             if parsed.draws:
                 first = parsed.draws[0]
+                assert first.flow is not None  # parser rejects free-flow draws (S0-1 feature 4 pending)
                 j = first.stage - 1
                 comp = prof.y[j] if first.vapor else prof.x[j]
                 side_draw = tb.pt(comp, prof.T[j], col.pressures[j], first.flow)
                 out_states.append(side_draw)
                 for extra in parsed.draws[1:]:
+                    assert extra.flow is not None
                     je = extra.stage - 1
                     comp_e = prof.y[je] if extra.vapor else prof.x[je]
                     out_states.append(tb.pt(comp_e, prof.T[je], col.pressures[je], extra.flow))
@@ -206,6 +216,15 @@ class Column:
                 prof.V[col.n - 1] / max(prof.b, _FLOW_FLOOR) if col.reboiler == "kettle" else 0.0
             ),
         }
+        if col.pumparounds:
+            # Per-loop converged state (review item 1, PR #238): pa_report is
+            # always populated by _finalize_duties, so index it directly - a
+            # missing report must surface, not hide behind a 0.0 default.
+            for pa, rep in zip(col.pumparounds, prof.pa_report, strict=True):
+                info[f"pa_{pa.name}_flow_mol_s"] = rep["flow_mol_s"]
+                info[f"pa_{pa.name}_duty_W"] = rep["duty_W"]
+                info[f"pa_{pa.name}_draw_T_K"] = rep["draw_T_K"]
+                info[f"pa_{pa.name}_return_T_K"] = rep["return_T_K"]
         for j in range(col.n):
             info[f"stage_{j}_T_K"] = prof.T[j]
             info[f"stage_{j}_P_Pa"] = col.pressures[j]
@@ -218,7 +237,12 @@ class Column:
 
         return UnitResult(
             outlets={"distillate": distillate, "bottoms": bottoms, "side_draw": side_draw},
-            duty_W=prof.qr - prof.qc,
+            # Net unit duty (review item 1, PR #238): physical reboiler duty
+            # plus the pumparound coolers' (negative) duties minus the
+            # condenser duty - closes the boundary stream table exactly.
+            duty_W=prof.qr
+            - prof.qc
+            + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0),
             info=info,
         )
 

@@ -9,7 +9,8 @@ solver modules, and the two typed errors they raise.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 from typing import Any
 
 #: Iteration budgets. Non-convergence raises a typed error; it never hangs.
@@ -163,7 +164,30 @@ class _DrawSpec:
 
     stage: int  # 1-indexed
     vapor: bool
-    flow: float
+    flow: float | None  # None = free tear (a draw_rate spec drives it)
+    name: str | None = None
+
+
+@dataclass(frozen=True)
+class _Pumparound:
+    """One pumparound loop: liquid drawn at ``draw_stage``, cooled externally,
+    returned at ``return_stage`` (<= draw_stage, i.e. at or above) as a
+    subcooled liquid feed.
+
+    Exactly one of ``duty_W`` / ``return_T_K`` is the FIXED operating
+    variable (``duty_W = 0`` with ``return_stage == draw_stage`` is the
+    degenerate identity loop); the other is an outcome. Either the flow or
+    the fixed variable may instead be a free tear driven by a spec
+    (``pa_tear`` records which, empty when both are fixed).
+    """
+
+    name: str
+    draw_stage: int  # 1-indexed
+    return_stage: int  # 1-indexed, <= draw_stage
+    flow_mol_s: float | None  # None = free tear
+    duty_W: float | None  # fixed cooler duty, negative = heat removed
+    return_T_K: float | None  # fixed return temperature
+    tear: str = ""  # which variable is the free tear: "", "flow", "duty"
 
 
 @dataclass(frozen=True)
@@ -177,6 +201,7 @@ class _Params:
     draws: list[_DrawSpec]
     pressures: list[float]
     specs: dict[str, Any]
+    pumparounds: list[_Pumparound] = field(default_factory=list)
 
 
 def _positive(value: Any, name: str) -> float:
@@ -247,6 +272,16 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
     if reboiler not in _REBOILER_KINDS:
         raise ColumnSpecError(f"reboiler must be one of {_REBOILER_KINDS}, got {reboiler!r}")
 
+    # S0-1 features 2 and 3 are not implemented yet (review item 7, PR #238):
+    # refuse their keys explicitly instead of silently ignoring them and
+    # returning a plain column.
+    for key, feature in (
+        ("side_strippers", "S0-1 feature 2 (coupled side strippers)"),
+        ("condenser_water_decant", "S0-1 feature 3 (steam and free water)"),
+    ):
+        if key in params:
+            raise ColumnSpecError(f"params['{key}'] is not implemented yet: it lands with {feature} (#235)")
+
     feeds: list[_FeedSpec] = []
     if graph_feed is not None:
         feed_stage = _stage_index(params.get("feed_stage", max(1, n_stages // 2)), "feed_stage", n_stages)
@@ -288,14 +323,25 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
         phase = str(d.get("phase", "liquid"))
         if phase not in ("liquid", "vapor"):
             raise ColumnSpecError(f"draws[{k}].phase must be 'liquid' or 'vapor', got {phase!r}")
-        draws.append(
-            _DrawSpec(
-                stage=_stage_index(d.get("stage"), f"draws[{k}].stage", n_stages),
-                vapor=phase == "vapor",
-                flow=_positive(d.get("flow_mol_s"), f"draws[{k}].flow_mol_s"),
+        stage = _stage_index(d.get("stage"), f"draws[{k}].stage", n_stages)
+        flow = d.get("flow_mol_s")
+        if flow is not None:
+            flow = _positive(flow, f"draws[{k}].flow_mol_s")
+        name = d.get("name")
+        if name is not None and (not isinstance(name, str) or not name):
+            raise ColumnSpecError(f"draws[{k}].name must be a non-empty string")
+        if flow is None and name is None:
+            raise ColumnSpecError(
+                f"draws[{k}]: a draw without flow_mol_s needs a name (a draw_rate spec drives it)"
             )
-        )
-    total_draws = sum(d.flow for d in draws)
+        if flow is None:
+            # S0-1 feature 4 will wire draw_rate specs; until then a named
+            # free draw has no driver and would silently produce no draw.
+            raise ColumnSpecError(
+                f"draws[{k}]: flow_mol_s is required (draw_rate specs land with S0-1 feature 4)"
+            )
+        draws.append(_DrawSpec(stage=stage, vapor=phase == "vapor", flow=flow, name=name))
+    total_draws = sum(d.flow for d in draws if d.flow is not None)
     total_feeds = sum(f.flow for f in feeds)
     if total_draws >= total_feeds:
         raise ColumnSpecError(
@@ -360,4 +406,81 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
         draws=draws,
         pressures=_parse_pressure_profile(params.get("pressure_profile", params.get("P")), n_stages),
         specs=specs,
+        pumparounds=_parse_pumparounds(params, n_stages),
     )
+
+
+def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumparound]:
+    """Parse and validate ``params["pumparounds"]`` (list of pumparound loops)."""
+    raw = params.get("pumparounds", [])
+    if not isinstance(raw, (list, tuple)):
+        raise ColumnSpecError("pumparounds must be a list of pumparound dicts")
+    # The duty stages are excluded hardware (review item 2, PR #238): the
+    # condenser and kettle-reboiler stage balances define qc/qr and carry no
+    # pumparound terms, so a loop touching them would report silently wrong
+    # duties. With no such hardware the stage is an ordinary tray and allowed.
+    condenser = str(params.get("condenser", "total"))
+    reboiler = str(params.get("reboiler", "kettle"))
+    forbidden_stages: list[tuple[int, str]] = []
+    if condenser != "none":
+        forbidden_stages.append((1, "the condenser stage (the condenser's own balance defines qc)"))
+    if reboiler == "kettle":
+        forbidden_stages.append((n_stages, "the reboiler stage (the kettle's own balance defines qr)"))
+    pas: list[_Pumparound] = []
+    names: set[str] = set()
+    for k, item in enumerate(raw):
+        pa = dict(item)
+        draw_stage = _stage_index(pa.get("draw_stage"), f"pumparounds[{k}].draw_stage", n_stages)
+        return_stage = _stage_index(pa.get("return_stage"), f"pumparounds[{k}].return_stage", n_stages)
+        for stage, why in forbidden_stages:
+            if draw_stage == stage or return_stage == stage:
+                which = "draw_stage" if draw_stage == stage else "return_stage"
+                raise ColumnSpecError(
+                    f"pumparounds[{k}]: {which} {stage} is {why}; "
+                    f"pumparounds on duty stages would report wrong duties"
+                )
+        if return_stage > draw_stage:
+            raise ColumnSpecError(
+                f"pumparounds[{k}]: return_stage {return_stage} must be at or above "
+                f"draw_stage {draw_stage} (a pumparound returns cooled liquid higher in the tower)"
+            )
+        flow = pa.get("flow_mol_s")
+        if flow is None:
+            raise ColumnSpecError(
+                f"pumparounds[{k}]: flow_mol_s is required until S0-1 feature 4 wires pumparound tear specs"
+            )
+        flow = _positive(flow, f"pumparounds[{k}].flow_mol_s")
+        duty = pa.get("duty_W")
+        if duty is not None:
+            try:
+                duty = float(duty)
+            except (TypeError, ValueError) as exc:
+                raise ColumnSpecError(f"pumparounds[{k}].duty_W must be a number, got {duty!r}") from exc
+            if not math.isfinite(duty) or duty > 0.0:
+                raise ColumnSpecError(
+                    f"pumparounds[{k}].duty_W must be <= 0 (a pumparound cooler removes heat)"
+                )
+        return_t = pa.get("return_T_K")
+        if return_t is not None:
+            return_t = _positive(return_t, f"pumparounds[{k}].return_T_K")
+        if (duty is None) == (return_t is None):
+            raise ColumnSpecError(f"pumparounds[{k}]: exactly one of duty_W / return_T_K is required")
+        name = pa.get("name")
+        if name is None:
+            name = str(k + 1)  # info keys read pa_1_duty_W, not pa_pa_1_duty_W (review item 8)
+        if not isinstance(name, str) or not name:
+            raise ColumnSpecError(f"pumparounds[{k}].name must be a non-empty string")
+        if name in names:
+            raise ColumnSpecError(f"pumparounds: duplicate name {name!r}")
+        names.add(name)
+        pas.append(
+            _Pumparound(
+                name=name,
+                draw_stage=draw_stage,
+                return_stage=return_stage,
+                flow_mol_s=flow,
+                duty_W=duty,
+                return_T_K=return_t,
+            )
+        )
+    return pas
