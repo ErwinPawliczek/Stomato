@@ -35,13 +35,17 @@ rounding above; the assertions use rel=1e-8.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
 from fluids.geometry import AirCooledExchanger
 
+from ngdesign import registry
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.units._physics.heat_balance import TemperatureCross
 from ngdesign.units.heat.air_cooler_r1 import (
     AirCoolerGeometryError,
+    AirCoolerR1,
     BriggsYoungRangeError,
     air_side_h,
     build_geometry,
@@ -49,6 +53,12 @@ from ngdesign.units.heat.air_cooler_r1 import (
     esdu_dP,
     fan_power_W,
 )
+from ngdesign.units.heat.rating import (
+    PropertyUnavailable,
+    RatingConvergenceError,
+    SinglePhaseRequired,
+)
+from ngdesign.units.heat_exchange import HeatExchanger
 
 #: The spec's closed-form geometry (ht docstring example), corbels=True.
 GEO = AirCooledExchanger(
@@ -260,3 +270,136 @@ def test_bad_fan_efficiency_refuses() -> None:
 def test_bad_air_composition_refuses() -> None:
     with pytest.raises(AirCoolerGeometryError, match="air_composition"):
         build_geometry({**BASE, "air_composition": {"N2": 0.5, "O2": 0.4}})
+
+
+
+def _thermo() -> Thermo:
+    registry.discover()
+    impl: Thermo = registry.create("thermo", "pr")
+    return impl
+
+
+def _inlet(thermo: Thermo, **over: Any) -> Any:
+    feeds, _ = AirCoolerR1.example_case()
+    feed = {**feeds["inlet"], **over}
+    return thermo.flash_pt(feed["composition"], feed["T"], feed["P"], feed["molar_flow"])
+
+
+def _solve(thermo: Thermo, params: dict[str, Any] | None = None, **feed_over: Any) -> Any:
+    _, base_params = AirCoolerR1.example_case()
+    return AirCoolerR1().solve(
+        {"inlet": _inlet(thermo, **feed_over)}, params if params is not None else base_params, thermo
+    )
+
+
+def test_example_case_rates_with_spec_info_keys() -> None:
+    """The E-101 basis rates; duty convention, info keys and sanity ranges hold."""
+    thermo = _thermo()
+    result = _solve(thermo)
+    assert result.power_W == 0.0
+    assert float(result.duty_W) < 0.0  # cooling: the R0 duty convention
+    q = float(result.info["Q_W"])
+    assert q > 0.0
+    assert q == pytest.approx(-float(result.duty_W), rel=1e-6)
+    for key in (
+        "Q_W",
+        "U_bare_W_m2K",
+        "A_bare_m2",
+        "A_total_m2",
+        "F_t",
+        "LMTD_K",
+        "h_air_bare_W_m2K",
+        "fin_efficiency",
+        "Re_air",
+        "h_tube_W_m2K",
+        "Re_tube",
+        "dP_tube_Pa",
+        "dP_air_Pa",
+        "fan_power_W",
+        "air_T_out_K",
+        "briggs_young_in_range",
+        "passes_equal_rows_assumption",
+    ):
+        assert key in result.info
+    assert float(result.info["briggs_young_in_range"]) == 1.0
+    assert float(result.info["passes_equal_rows_assumption"]) == 0.0
+    assert 308.15 < float(result.info["air_T_out_K"]) < 322.15
+    assert 1000.0 < float(result.info["Re_air"]) < 8000.0
+    assert float(result.info["LMTD_K"]) > 0.0
+    assert 0.0 < float(result.info["F_t"]) <= 1.0
+    assert float(result.info["dP_air_Pa"]) > 0.0 and float(result.info["dP_tube_Pa"]) > 0.0
+    assert float(result.info["fan_power_W"]) > 0.0
+
+
+def test_reduction_to_r0_identity() -> None:
+    """R0 with R1's duty and tube dP reproduces R1's outlet to 1e-10 relative."""
+    thermo = _thermo()
+    result = _solve(thermo)
+    inlet = _inlet(thermo)
+    r0 = HeatExchanger().solve(
+        {"inlet": inlet},
+        {"duty_W": float(result.duty_W), "dP": float(result.info["dP_tube_Pa"])},
+        thermo,
+    )
+    r1_out = result.outlets["outlet"]
+    assert r1_out.T == pytest.approx(r0.outlets["outlet"].T, rel=1e-10)
+    assert r1_out.enthalpy == pytest.approx(r0.outlets["outlet"].enthalpy, rel=1e-10)
+
+
+def test_process_inlet_below_air_refuses() -> None:
+    """A process inlet at or below the air inlet temperature is a cross."""
+    with pytest.raises(TemperatureCross, match="air inlet"):
+        _solve(_thermo(), T=305.0)
+
+
+def test_two_phase_inlet_refuses() -> None:
+    """A two-phase inlet reaches SinglePhaseRequired (the phase check first)."""
+    thermo = _thermo()
+    two_phase = thermo.flash_pt({"C1": 0.85, "C3": 0.10, "nC5": 0.05}, 240.0, 8.0e6, 100.0)
+    assert len(two_phase.phases) == 2  # precondition: the feed really is two-phase
+    _, params = AirCoolerR1.example_case()
+    with pytest.raises(SinglePhaseRequired, match="R1 rates single-phase duty"):
+        AirCoolerR1().solve({"inlet": two_phase}, params, thermo)
+
+
+def test_property_unavailable_names_the_side() -> None:
+    """A thermo package without transport properties is refused."""
+
+    class _NoTransport:
+        def __init__(self, real: Thermo) -> None:
+            self._real = real
+
+        def phase_props(self, composition: dict[str, float], T: float, P: float, kind: Any) -> Any:
+            props = self._real.phase_props(composition, T, P, kind)
+            return props.model_copy(update={"viscosity": None})
+
+        def __getattr__(self, name: str) -> Any:
+            return getattr(self._real, name)
+
+    thermo = _thermo()
+    inlets = {"inlet": _inlet(thermo)}
+    _, params = AirCoolerR1.example_case()
+    with pytest.raises(PropertyUnavailable):
+        AirCoolerR1().solve(inlets, params, cast(Thermo, _NoTransport(thermo)))
+
+
+def test_convergence_failure_is_typed(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A brentq failure surfaces as RatingConvergenceError with the bracket."""
+
+    def boom(*a: Any, **k: Any) -> Any:
+        raise RuntimeError("mocked brentq failure")
+
+    _thermo()
+    monkeypatch.setattr("ngdesign.units.heat.air_cooler_r1.brentq", boom)
+    with pytest.raises(RatingConvergenceError, match="rating did not converge"):
+        _solve(_thermo())
+
+
+def test_re_range_refusal_and_extrapolation_flag() -> None:
+    """30 kg/s air leaves the Briggs-Young window: refused, then flagged."""
+    thermo = _thermo()
+    with pytest.raises(BriggsYoungRangeError, match="Re_air"):
+        _solve(thermo, air_mass_flow_kg_s=30.0)
+    _, params = AirCoolerR1.example_case()
+    extrap = _solve(thermo, {**params, "allow_extrapolation": True}, air_mass_flow_kg_s=30.0)
+    assert float(extrap.info["briggs_young_in_range"]) == 0.0

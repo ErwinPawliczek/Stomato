@@ -33,13 +33,32 @@ outside it the unit refuses (``BriggsYoungRangeError``) unless
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Any
 
 import ht
 from fluids.geometry import AirCooledExchanger
+from scipy.optimize import brentq
 
-from ngdesign.units.heat.rating import RatingError
+from ngdesign.contracts import StreamState, UnitResult
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.sizing.lmtd import lmtd_counter
+from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
+from ngdesign.units._physics.heat_balance import TemperatureCross
+from ngdesign.units.heat.rating import (
+    BRENTQ_MAXITER,
+    BRENTQ_XTOL_FRACTION,
+    Q_LO_FRACTION,
+    RatingConvergenceError,
+    RatingError,
+    SinglePhaseRequired,
+    darcy_dP,
+    duct_h,
+    film_props,
+    inlet_kind,
+    u_outside_tube,
+)
 
 #: Briggs-Young correlation validity window on the air-side Reynolds number.
 RE_AIR_MIN = 1000.0
@@ -400,3 +419,208 @@ def check_briggs_young_range(Re_air: float, allow_extrapolation: bool) -> bool:
         f"Re_air {Re_air} is outside the Briggs-Young validity range "
         f"({RE_AIR_MIN}, {RE_AIR_MAX}); set allow_extrapolation to rate anyway"
     )
+
+
+class AirCoolerR1:
+    """Air-cooled heat exchanger, R1: finned-bundle single-phase rating level.
+
+    One process port pair (``inlet`` -> ``outlet``); the ambient air side is
+    described by the params and reported in ``info`` - never a port.
+    """
+
+    inlet_ports = ("inlet",)
+    outlet_ports = ("outlet",)
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """The R0 slice air cooler E-101 basis: dry separator gas, 308.15 K air.
+
+        The R0 example feed (322.15 K, 7 MPa) cooled by 308.15 K ambient air
+        on the spec's 4-row bundle geometry (ht's ``AirCooledExchanger``
+        docstring example); air at 8 kg/s keeps the converged mean Re_air
+        inside the Briggs-Young window.
+        """
+        dry = {cid: x for cid, x in INLET_COMPOSITION.items() if cid != "H2O"}
+        total = sum(dry.values())
+        feed = {
+            "T": 322.15,
+            "P": 7.0e6,
+            "molar_flow": 50 * MMSCFD_TO_MOL_S,
+            "composition": {cid: x / total for cid, x in dry.items()},
+        }
+        params: dict[str, Any] = {
+            "tube_rows": 4,
+            "tube_passes": 4,
+            "tubes_per_row": 20,
+            "tube_length_m": 3.0,
+            "tube_OD_m": 0.0254,
+            "tube_wall_m": 0.0034,
+            "fin_thickness_m": 0.000406,
+            "fin_height_m": 0.0159,
+            "fin_density_per_m": 1.0 / 0.002309,
+            "pitch_parallel_m": 0.05207,
+            "pitch_normal_m": 0.06033,
+            "air_T_K": 308.15,
+            "air_mass_flow_kg_s": 8.0,
+            "fan_efficiency": 0.7,
+        }
+        return {"inlet": feed}, params
+
+    def solve(
+        self,
+        inlets: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> UnitResult:
+        """Rate the bundle at the R1 level; see the module docstring."""
+        proc = inlets["inlet"]
+        vp = build_geometry(params)
+        geo = vp.geo
+        do = geo.tube_diameter
+        if proc.mass_flow <= 0.0:
+            raise RatingError(f"R1 rating needs a flowing process stream: got {proc.mass_flow} kg/s")
+        # The phase check runs before the cross check (as in double_pipe R1).
+        kind_proc = inlet_kind(proc)
+        if proc.T <= vp.air_T_K:
+            raise TemperatureCross(
+                f"process inlet T={proc.T} K is at or below the air inlet T={vp.air_T_K} K"
+            )
+
+        # Air inlet state (Algorithm step 3): n_air from phase_props' molar mass.
+        air_z = vp.air_composition
+        air_state = thermo.flash_pt(air_z, vp.air_T_K, vp.air_P_Pa, 1.0)
+        kind_air = inlet_kind(air_state)
+        air_film_in = film_props(thermo, air_z, vp.air_T_K, vp.air_P_Pa, kind_air)
+        air_mw = thermo.phase_props(air_z, vp.air_T_K, vp.air_P_Pa, kind_air).molecular_weight
+        n_air = vp.air_mass_flow_kg_s / (air_mw / 1000.0)
+
+        # Pressure drops from INLET-state properties (Algorithm step 4),
+        # before the solve; no deltaP-property loop.
+        film_proc_in = film_props(thermo, proc.composition, proc.T, proc.P, kind_proc)
+        a_flow = geo.A_tube_flow * (geo.tubes / vp.tube_passes)
+        di = float(geo.Di)
+        duct_in = duct_h(proc.mass_flow, a_flow, di, film_proc_in, vp.roughness_m)
+        # dP_t = N_tp*f_D*(L/D_i)*rho*v^2/2 + 4*N_tp*rho*v^2/2 (Kern Ch. 7).
+        dP_tube = vp.tube_passes * (
+            darcy_dP(duct_in.fd, geo.tube_length, di, film_proc_in.rho_kg_m3, duct_in.v_m_s)
+            + 2.0 * film_proc_in.rho_kg_m3 * duct_in.v_m_s**2
+        )
+        P_out = proc.P - dP_tube
+        if P_out <= 0.0:
+            raise RatingError(
+                f"non-positive outlet pressure: the tube side drops to {P_out} Pa "
+                f"({dP_tube} Pa across this bundle)"
+            )
+        air_dp = esdu_dP(
+            vp.air_mass_flow_kg_s, geo, do, vp.tube_rows, air_film_in.rho_kg_m3, air_film_in.mu_Pa_s
+        )
+        w_fan = fan_power_W(
+            vp.air_mass_flow_kg_s, air_film_in.rho_kg_m3, air_dp.dP_air_Pa, vp.fan_efficiency
+        )
+
+        F = proc.molar_flow
+        # Q_max (Algorithm step 5): the smaller of the process enthalpy drop
+        # to the air inlet T and the air enthalpy rise to the process inlet T.
+        h_proc_airT = thermo.flash_pt(proc.composition, vp.air_T_K, P_out, F).enthalpy
+        h_air_Tproc = thermo.flash_pt(air_z, proc.T, vp.air_P_Pa, n_air).enthalpy
+        Q_max = min(F * (proc.enthalpy - h_proc_airT), n_air * (h_air_Tproc - air_state.enthalpy))
+
+        last: dict[str, Any] = {}
+
+        def evaluate(Q: float) -> float:
+            """g(Q) = U_b*A_b*F_t*LMTD - Q; a crossflow-infeasible point is -Q."""
+            proc_out = thermo.flash_ph(proc.composition, P_out, proc.enthalpy - Q / F, F)
+            if len(proc_out.phases) != 1 or abs(proc_out.vapor_fraction - proc.vapor_fraction) > 1e-6:
+                raise SinglePhaseRequired(
+                    f"R1 rates single-phase duty: the process outlet leaves the inlet's phase "
+                    f"(vapor fraction {proc_out.vapor_fraction} vs inlet {proc.vapor_fraction}) at Q={Q} W"
+                )
+            air_out = thermo.flash_ph(air_z, vp.air_P_Pa, air_state.enthalpy + Q / n_air, n_air)
+            # Films at the side bulk-mean states.
+            film_pm = film_props(
+                thermo, proc.composition, (proc.T + proc_out.T) / 2.0, (proc.P + P_out) / 2.0, kind_proc
+            )
+            film_am = film_props(thermo, air_z, (vp.air_T_K + air_out.T) / 2.0, vp.air_P_Pa, kind_air)
+            duct_m = duct_h(proc.mass_flow, a_flow, di, film_pm, vp.roughness_m)
+            air = air_side_h(
+                vp.air_mass_flow_kg_s,
+                geo,
+                do,
+                film_am.rho_kg_m3,
+                film_am.cp_J_kgK,
+                film_am.mu_Pa_s,
+                film_am.k_W_mK,
+                vp.k_fin_W_mK,
+            )
+            # Eq. 6 on the bare outside area: u_outside_tube with R_fo = 0 and
+            # h_o = h_bare - the bare basis, so neither A_increase nor the fin
+            # efficiency is applied twice.
+            u_bare = u_outside_tube(
+                h_i=duct_m.h_W_m2K,
+                h_o=air.h_bare_W_m2K,
+                Do=do,
+                Di=di,
+                k_wall=vp.k_wall_W_mK,
+                R_fi=vp.R_f_tube_m2K_W,
+                R_fo=0.0,
+            )
+            ft = ht.Ft_aircooler(
+                proc.T, proc_out.T, vp.air_T_K, air_out.T, Ntp=vp.tube_passes, rows=vp.tube_rows
+            )
+            lmtd: float | None = None
+            if math.isfinite(ft) and ft > 0.0:
+                try:
+                    lmtd = lmtd_counter(proc.T, proc_out.T, vp.air_T_K, air_out.T)
+                except ValueError:
+                    lmtd = None  # a terminal approach died: infeasible in crossflow
+            last["proc_out"], last["air_out"], last["duct"], last["air"] = proc_out, air_out, duct_m, air
+            last["u_bare"], last["ft"], last["lmtd"] = u_bare, float(ft), lmtd
+            if lmtd is None:
+                return -Q
+            return u_bare * geo.A_bare_tube * ft * lmtd - Q
+
+        Q_lo = Q_LO_FRACTION * Q_max
+        # Q_hi is pulled off Q_max so LMTD stays defined (Algorithm step 5).
+        Q_hi = Q_max * (1.0 - 1e-9)
+        try:
+            Q = float(
+                brentq(evaluate, Q_lo, Q_hi, xtol=BRENTQ_XTOL_FRACTION * Q_max, maxiter=BRENTQ_MAXITER)
+            )
+        except (RuntimeError, ValueError) as exc:
+            raise RatingConvergenceError(
+                f"air cooler rating did not converge: {exc}; duty bracket [{Q_lo}, {Q_hi}] W"
+            ) from exc
+        evaluate(Q)  # re-populate `last` at the converged duty
+
+        # Range check on the converged MEAN air state (Algorithm step 6).
+        air_final = last["air"]
+        in_range = check_briggs_young_range(air_final.Re, vp.allow_extrapolation)
+
+        proc_out: StreamState = last["proc_out"]
+        air_out: StreamState = last["air_out"]
+        duct_final = last["duct"]
+        lmtd_final = last["lmtd"]
+        if lmtd_final is None:  # pragma: no cover - brentq converged at a feasible point
+            raise RatingConvergenceError("air cooler rating did not converge: infeasible at the converged duty")
+        duty_W = F * (proc_out.enthalpy - proc.enthalpy)  # negative for cooling (R0 convention)
+        info: dict[str, Any] = {
+            "Q_W": Q,
+            "U_bare_W_m2K": last["u_bare"],
+            "A_bare_m2": geo.A_bare_tube,
+            "A_total_m2": geo.A,
+            "F_t": last["ft"],
+            "LMTD_K": lmtd_final,
+            "h_air_bare_W_m2K": air_final.h_bare_W_m2K,
+            "fin_efficiency": air_final.fin_efficiency,
+            "Re_air": air_final.Re,
+            "h_tube_W_m2K": duct_final.h_W_m2K,
+            "Re_tube": duct_final.Re,
+            "dP_tube_Pa": dP_tube,
+            "dP_air_Pa": air_dp.dP_air_Pa,
+            "fan_power_W": w_fan,
+            "air_T_out_K": air_out.T,
+            "briggs_young_in_range": 1.0 if in_range else 0.0,
+            "passes_equal_rows_assumption": 1.0 if vp.passes_equal_rows_over_four else 0.0,
+        }
+        return UnitResult(outlets={"outlet": proc_out}, duty_W=duty_W, power_W=0.0, info=info)
+
