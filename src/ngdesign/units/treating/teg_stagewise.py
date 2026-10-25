@@ -31,7 +31,9 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 
-__all__ = ["TEGStageError", "countercurrent_march"]
+from ngdesign.units.teg_activity import activity_equilibrium_slope
+
+__all__ = ["TEGStageError", "countercurrent_march", "teg_x_of_y"]
 
 #: Log-spaced bracket-scan bounds and resolution for the trial top-gas ratio Y_1.
 _Y1_MIN = 1.0e-14
@@ -46,6 +48,15 @@ _MAX_ITERATIONS = 300
 #: The true residual never reaches this value: it is bounded below by -Y_in
 #: whenever no stage goes negative (the overshoot condition fires first).
 _OVERSHOOT_SENTINEL = -1.0
+
+#: Pure-water mole-fraction ceiling for the TEG liquid-phase inverse.
+_X_WATER_MAX = 1.0 - 1.0e-12
+
+#: TEG stage-equilibrium inverse bisection: iteration cap and interval stop.
+#: The cap is defensive only: 200 halvings of [0, 1) always undercut the
+#: 1e-15 interval stop, so the cap refusal is unreachable in practice.
+_X_BISECTION_ITERATIONS = 200
+_X_BISECTION_TOL = 1.0e-15
 
 
 class TEGStageError(ValueError):
@@ -125,6 +136,58 @@ def countercurrent_march(
     return y_profile, x_profile
 
 
+def _ratio_to_fraction(r: float) -> float:
+    """Mole ratio [mol solute / mol carrier] -> wet mole fraction."""
+    return r / (1.0 + r)
+
+
+def _fraction_to_ratio(y: float) -> float:
+    """Wet mole fraction -> mole ratio [mol solute / mol carrier]."""
+    return y / (1.0 - y)
+
+
+def teg_x_of_y(T: float, P: float) -> Callable[[float], float]:
+    """Build the TEG stage-equilibrium inverse ``X(Y)`` at gas (T, P).
+
+    The one construction of the inverse ``X(Y_j)`` on the Parrish-Won-Baltatu
+    activity line (``m(T, P, x) * x = y`` with ``y = Y/(1 + Y)``), shared by
+    the R2 contactor and regenerator so the bisection constants and logic
+    live in exactly one place. Bisection runs on ``x`` in ``[0, 1 - 1e-12]``.
+
+    Returns:
+        The inverse. ``+inf`` beyond the pure-water limit (``y >= 1``) and for
+        non-finite or negative ratios, ``0.0`` at ``Y == 0`` exactly (dry gas:
+        the inverse of zero is zero), otherwise ``X = x/(1 - x)``.
+    """
+
+    def x_of_y(y_ratio: float) -> float:
+        if not math.isfinite(y_ratio) or y_ratio < 0.0:
+            return math.inf
+        if y_ratio == 0.0:
+            return 0.0
+        y = _ratio_to_fraction(y_ratio)
+        if y >= 1.0:
+            return math.inf
+        lo, hi = 0.0, _X_WATER_MAX
+        for _ in range(_X_BISECTION_ITERATIONS):
+            mid = 0.5 * (lo + hi)
+            if activity_equilibrium_slope(T, P, mid) * mid < y:
+                lo = mid
+            else:
+                hi = mid
+        # The interval stop fires first: 200 halvings of [0, 1) always
+        # undercut 1e-15, so the cap check below is defensive.
+        if hi - lo >= _X_BISECTION_TOL:
+            raise TEGStageError(
+                f"stage equilibrium inverse did not converge to "
+                f"|delta x| < {_X_BISECTION_TOL:g} in "
+                f"{_X_BISECTION_ITERATIONS} iterations"
+            )
+        return _fraction_to_ratio(0.5 * (lo + hi))
+
+    return x_of_y
+
+
 def _bracket(residual: Callable[[float], float]) -> tuple[float, float]:
     """Log-spaced scan for exactly one sign change of the residual.
 
@@ -173,7 +236,11 @@ def _bisect(residual: Callable[[float], float], lo: float, hi: float) -> float:
         lo, hi = hi, lo
     for _ in range(_MAX_ITERATIONS):
         mid = 0.5 * (lo + hi)
-        if math.log(hi) - math.log(lo) < _LN_TOL:
+        # abs(): a decreasing residual hands over a bracket whose lo > hi,
+        # so the plain log difference is negative and a signed stop test
+        # would fire on iteration one, returning the raw scan midpoint
+        # (up to half a scan step, ~6 % on the reviewer's measurement).
+        if abs(math.log(hi) - math.log(lo)) < _LN_TOL:
             return mid
         r = residual(mid)
         if r == _OVERSHOOT_SENTINEL or r < 0.0:
@@ -182,4 +249,5 @@ def _bisect(residual: Callable[[float], float], lo: float, hi: float) -> float:
             hi = mid
     raise TEGStageError(
         f"bisection cap: |delta ln Y_1| did not reach {_LN_TOL:g} in {_MAX_ITERATIONS} iterations"
-    )
+    )  # Defensive: a scan step is ~0.116 in ln Y, so ~44 halvings reach the
+    # 1e-14 stop; the 300-iteration cap is never the first failure.

@@ -85,6 +85,36 @@ def test_march_requires_positive_flows_and_stages() -> None:
         countercurrent_march(G, 0.0, X_LEAN, Y_IN, 1, _linear_x_of_y)
 
 
+def test_march_solves_a_decreasing_residual() -> None:
+    """A residual falling in Y_1 (the stripping-side orientation) converges.
+
+    G = S = 1, X_0 = 0, Y_in = 0.5, N = 1 with the injected inverse
+    ``x_of_y(y) = 2 - 4y``: the march residual ``r = Y_1 + x_of_y(Y_1) - Y_in
+    = 1.5 - 3 Y_1`` is decreasing, so the bracket arrives with
+    ``residual(lo) > 0`` and the bisection swaps its ends. Root Y_1 = 0.5.
+    The signed stop test used to fire on the first swapped iteration and
+    return the raw scan midpoint (~6 % off); the march must land at its own
+    |delta ln Y_1| < 1e-14 tolerance instead.
+    """
+    y, _ = countercurrent_march(1.0, 1.0, 0.0, 0.5, 1, lambda y: 2.0 - 4.0 * y)
+    assert y[0] == pytest.approx(0.5, rel=1e-13)
+
+
+def test_bisect_decreasing_residual_matches_root() -> None:
+    """Direct check on the reviewer's measurement: r(y) = 2e-3 - y.
+
+    Before the abs() stop-test fix this returned the scan midpoint with a
+    6.8e-3 relative error; the fixed bisection must reach its 1e-14 ln-space
+    tolerance, i.e. relative error far below 1e-12.
+    """
+    from ngdesign.units.treating.teg_stagewise import _bisect, _bracket
+
+    residual = lambda y: 2.0e-3 - y  # noqa: E731 -- falling in y by construction
+    lo, hi = _bracket(residual)
+    root = _bisect(residual, lo, hi)
+    assert root == pytest.approx(2.0e-3, rel=1e-12)
+
+
 def test_march_refuses_multiple_roots() -> None:
     """A constructed non-monotone equilibrium gives two sign changes.
 

@@ -255,4 +255,4 @@ class TEGContactor:
                 "composition": {"TEG": 0.985, "H2O": 0.015},
             },
         }
-        return feeds, {"n_stages": 3}
+        return feeds, {}

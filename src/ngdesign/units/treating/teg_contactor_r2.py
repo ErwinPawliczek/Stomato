@@ -42,14 +42,13 @@ reported through it, not modelled separately.
 
 from __future__ import annotations
 
-import math
 from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.teg_activity import activity_equilibrium_slope
 from ngdesign.units.teg_contactor import _water_content_lb_per_mmscf
-from ngdesign.units.treating.teg_stagewise import TEGStageError, countercurrent_march
+from ngdesign.units.treating.teg_stagewise import countercurrent_march, teg_x_of_y
 
 __all__ = ["TEGContactorR2", "TEGContactorR2Error"]
 
@@ -61,13 +60,6 @@ class TEGContactorR2Error(ValueError):
 #: The Parrish-Won-Baltatu activity correlation's fitted temperature range, K
 #: (the owner correlation's fit range, as the R0 regen flags it).
 _PARRISH_T_MIN, _PARRISH_T_MAX = 300.0, 380.0
-
-#: Pure-water mole-fraction ceiling for the liquid-phase inverse.
-_X_WATER_MAX = 1.0 - 1.0e-12
-
-#: Stage-equilibrium inverse bisection: iteration cap and interval stop.
-_X_BISECTION_ITERATIONS = 200
-_X_BISECTION_TOL = 1.0e-15
 
 
 def _ratio_to_fraction(r: float) -> float:
@@ -147,34 +139,9 @@ class TEGContactorR2:
         Y_in = _fraction_to_ratio(y_in)
         X_lean = _fraction_to_ratio(x_water_lean)
 
-        def x_of_y(y_ratio: float) -> float:
-            """Stage-equilibrium inverse ``X(Y)`` on the activity line.
-
-            Bisects ``x`` on [0, 1 - 1e-12] for ``m(T, P, x) * x = y`` with
-            ``y = Y/(1 + Y)``, then converts ``x -> X``. Beyond the pure-water
-            limit (``y >= 1``) returns +inf for the shooter.
-            """
-            if not math.isfinite(y_ratio) or y_ratio <= 0.0:
-                return math.inf
-            y = _ratio_to_fraction(y_ratio)
-            if y >= 1.0:
-                return math.inf
-            lo, hi = 0.0, _X_WATER_MAX
-            for _ in range(_X_BISECTION_ITERATIONS):
-                mid = 0.5 * (lo + hi)
-                if activity_equilibrium_slope(T, P, mid) * mid < y:
-                    lo = mid
-                else:
-                    hi = mid
-            if hi - lo >= _X_BISECTION_TOL:
-                raise TEGStageError(
-                    f"stage equilibrium inverse did not converge to "
-                    f"|delta x| < {_X_BISECTION_TOL:g} in "
-                    f"{_X_BISECTION_ITERATIONS} iterations"
-                )
-            return _fraction_to_ratio(0.5 * (lo + hi))
-
-        y_profile, x_profile = countercurrent_march(G, S, X_lean, Y_in, n_stages, x_of_y)
+        y_profile, x_profile = countercurrent_march(
+            G, S, X_lean, Y_in, n_stages, teg_x_of_y(T, P)
+        )
 
         water_removed = G * (Y_in - y_profile[0])
         # Negative water_removed is desorption (lean wetter than the gas

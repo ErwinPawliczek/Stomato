@@ -31,7 +31,6 @@ from ngdesign.registry import create
 from ngdesign.units.teg_activity import activity_equilibrium_slope, water_activity_coefficient
 from ngdesign.units.teg_contactor import LBMOL_PER_MMSCF, TEGContactor
 from ngdesign.units.treating.teg_contactor_r2 import TEGContactorR2, TEGContactorR2Error
-from ngdesign.units.treating.teg_stagewise import TEGStageError
 
 THERMO: Thermo = create("thermo", "pr")
 
@@ -190,8 +189,3 @@ def test_r0_round_trip_is_finite_and_dryer_than_the_inlet() -> None:
     outlet = r2.info["outlet_water_lb_per_mmscf"]
     assert outlet == outlet  # finite
     assert 0.0 < outlet < inlet_lb_per_mmscf
-
-
-def test_march_failure_propagates_as_teg_stage_error() -> None:
-    """A TEGStageError from the march surfaces unchanged (refusal table row)."""
-    assert issubclass(TEGStageError, ValueError)  # typed ValueError subclass
