@@ -450,7 +450,6 @@ class ReliefValveR1(ReliefValve):
             **extra_info,
             "regime_code": regime_code,
             "omega": omega,
-            "eta_c": eta_c_value,
             "critical": critical,
             "G_kg_m2s": G,
             "required_area_m2": area,
@@ -460,5 +459,9 @@ class ReliefValveR1(ReliefValve):
             "Kd_used": factors["Kd"],
             "v0_m3_kg": v0,
         }
+        if eta_c_value is not None:
+            # UnitResult.info is dict[str, float]; omit eta_c when the regime
+            # does not compute one (high-subcooling regimes 3/4).
+            info["eta_c"] = eta_c_value
         outlet = thermo.flash_ph(z, params["P_back"], inlet.enthalpy, inlet.molar_flow)
         return UnitResult(outlets={"outlet": outlet}, info=info)
