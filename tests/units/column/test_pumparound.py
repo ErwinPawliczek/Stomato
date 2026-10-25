@@ -228,11 +228,16 @@ def test_reboiler_stage_pumparound_refused() -> None:
 
 
 def test_unimplemented_feature_keys_refused() -> None:
-    """S0-1 features 2 and 3 refuse their keys instead of ignoring them (PR #238 review item 7)."""
-    with pytest.raises(ColumnSpecError, match="side_strippers.*not implemented"):
-        _parse_only({**_base_params(), "side_strippers": []})
-    with pytest.raises(ColumnSpecError, match="condenser_water_decant.*not implemented"):
-        _parse_only({**_base_params(), "condenser_water_decant": True})
+    """Unknown spec keys refuse instead of ignoring (PR #238 review item 7).
+
+    The S0-1 part-1 placeholder refusals for ``side_strippers`` /
+    ``condenser_water_decant`` were removed in part 2: both features are
+    implemented (specs/backend/S0-1-column-extensions.md features 2-3), so
+    their keys now parse. The unknown-key protection this test pinned lives
+    on in the ``specs`` dict refusal below.
+    """
+    with pytest.raises(ColumnSpecError, match="unknown spec keys"):
+        _parse_only({**_base_params(), "specs": {"no_such_spec": 1.0}})
 
 
 def test_pumparound_flow_exceeding_internal_liquid_refused() -> None:
