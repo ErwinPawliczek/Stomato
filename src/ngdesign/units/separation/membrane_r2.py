@@ -33,10 +33,15 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.optimize import brentq, root
 
+from ngdesign.contracts import StreamState, UnitResult
+from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.separation.membrane_r1 import (
-    _INTEGRATION_RTOL,
+    MembraneR1,
     MembraneR1SpecError,
+    _INTEGRATION_RTOL,
+    _adapter_params,
     _local_y,
+    _outlets_result,
     _validate_pure,
     cross_flow,
 )
@@ -148,3 +153,61 @@ def counter_current(
         )
     A = brentq(theta_error, 0.0, hi, xtol=1e-12 * hi, maxiter=100)
     return solve_at(A)
+
+class MembraneR2(MembraneR1):
+    """Counter-current membrane adapter (catalogue level R2, Pan 1983 shooting).
+
+    Same parameters, ports and isothermal outlet build as R1; the solve calls
+    `counter_current` and the info dict adds `shooting_nfev` (spec info keys).
+    """
+
+    def solve(
+        self,
+        inlets: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> UnitResult:
+        inlet = inlets["feed_in"]
+        P_l, permeances, area_f, stage_cut_f = _adapter_params(inlet, params)
+        residue_flows, permeate_flows, A, theta, nfev = counter_current(
+            F=float(inlet.molar_flow),
+            z=inlet.composition,
+            Pi=permeances,
+            P_h=float(inlet.P),
+            P_l=P_l,
+            area=area_f,
+            stage_cut=stage_cut_f,
+        )
+        return _outlets_result(
+            inlet,
+            thermo,
+            residue_flows,
+            permeate_flows,
+            P_l,
+            A,
+            theta,
+            extra_info={"shooting_nfev": float(nfev)},
+        )
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """The R0 example feed (Geankoplis Ex. 13.4-2 air basis) in rating mode.
+
+        Air (z_O2 = 0.209) at 2.533125e5 Pa with the permeate at 2.533125e4 Pa,
+        equal permeances 1e-9 mol/(m2 s Pa) for O2 and N2, area 50 m2. With
+        equal permeances the local permeate y_i = x_i, so the counter-current
+        module equals the cross-flow module (R1) and the R0 split at the same
+        stage cut (spec identities R2 -> R1 -> R0).
+        """
+        return {
+            "feed_in": {
+                "T": 298.15,
+                "P": 2.533125e5,
+                "molar_flow": 100.0,
+                "composition": {"O2": 0.209, "N2": 0.791},
+            }
+        }, {
+            "permeances_mol_m2_s_Pa": {"O2": 1e-9, "N2": 1e-9},
+            "P_permeate": 2.533125e4,
+            "area_m2": 50.0,
+        }

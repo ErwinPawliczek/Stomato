@@ -10,8 +10,11 @@ from __future__ import annotations
 
 import pytest
 
-from ngdesign.units.separation.membrane_r1 import MembraneR1SpecError, cross_flow
-from ngdesign.units.separation.membrane_r2 import counter_current
+from ngdesign.contracts import StreamState
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.units.separation.membrane_r1 import MembraneR1, MembraneR1SpecError, cross_flow
+from ngdesign.units.separation.membrane_r2 import MembraneR2, counter_current
+from tests.conftest import flash_feed
 
 Z = {"O2": 0.209, "N2": 0.791}
 PI = {"O2": 5e-9, "N2": 5e-10}
@@ -69,3 +72,86 @@ def test_counter_current_validation_refusals() -> None:
         counter_current(F=F, z=Z, Pi=PI, P_h=P_H, P_l=1e5)
     with pytest.raises(MembraneR1SpecError, match="stage_cut"):
         counter_current(F=F, z=Z, Pi=PI, P_h=P_H, P_l=1e5, stage_cut=1.0)
+
+def _air_feed(thermo: Thermo) -> StreamState:
+    """The R0 example feed: Geankoplis Ex. 13.4-2 air basis (100 mol/s)."""
+    return flash_feed(
+        thermo,
+        {"T": 298.15, "P": 2.533125e5, "molar_flow": 100.0, "composition": {"O2": 0.209, "N2": 0.791}},
+    )
+
+
+
+def test_adapter_r2_equals_r1_equal_permeances(thermo: Thermo) -> None:
+    """R2 -> R1: equal permeances make the local permeate y_i = x_i, so the
+    counter-current module equals the cross-flow module at the same area."""
+    inlet = _air_feed(thermo)
+    params = {
+        "permeances_mol_m2_s_Pa": {"O2": 1e-9, "N2": 1e-9},
+        "P_permeate": 2.533125e4,
+        "area_m2": 50.0,
+    }
+    r2 = MembraneR2().solve({"feed_in": inlet}, params, thermo)
+    r1 = MembraneR1().solve({"feed_in": inlet}, params, thermo)
+    for port in ("permeate", "residue"):
+        a, b = r2.outlets[port], r1.outlets[port]
+        assert a.P == pytest.approx(b.P)
+        assert a.T == pytest.approx(b.T)
+        assert a.molar_flow == pytest.approx(b.molar_flow, rel=1e-8)
+        for cid in ("O2", "N2"):
+            assert a.molar_flow * a.composition[cid] == pytest.approx(
+                b.molar_flow * b.composition[cid], rel=1e-8
+            )
+
+
+def test_adapter_r2_beats_r1_selective(thermo: Thermo) -> None:
+    """Unit-level: the counter-current module enriches more than cross-flow at
+    the same area (CF3 vs CF2 at adapter scale). Balances: moles 1e-12,
+    energy 1e-8 (U-R2 rule); info carries shooting_nfev."""
+    inlet = _air_feed(thermo)
+    params = {
+        "permeances_mol_m2_s_Pa": {"O2": 1e-8, "N2": 1e-9},
+        "P_permeate": 2.533125e4,
+        "area_m2": 200.0,
+    }
+    r2 = MembraneR2().solve({"feed_in": inlet}, params, thermo)
+    r1 = MembraneR1().solve({"feed_in": inlet}, params, thermo)
+    assert r2.info["permeate_y_O2"] > r1.info["permeate_y_O2"]
+    assert r2.info["shooting_nfev"] > 0
+    n_in = inlet.molar_flow
+    n_out = sum(s.molar_flow for s in r2.outlets.values())
+    assert n_out == pytest.approx(n_in, rel=1e-12)
+    h_in = inlet.enthalpy * inlet.molar_flow
+    h_out = sum(s.enthalpy * s.molar_flow for s in r2.outlets.values())
+    assert r2.duty_W == pytest.approx(h_out - h_in, rel=1e-8)
+    assert r2.power_W == 0.0
+
+
+def test_adapter_r2_stage_cut_design_mode(thermo: Thermo) -> None:
+    """Design mode through the adapter: brentq finds the area for theta = 0.1."""
+    inlet = _air_feed(thermo)
+    result = MembraneR2().solve(
+        {"feed_in": inlet},
+        {
+            "permeances_mol_m2_s_Pa": {"O2": 1e-8, "N2": 1e-9},
+            "P_permeate": 2.533125e4,
+            "stage_cut": 0.1,
+        },
+        thermo,
+    )
+    assert result.info["stage_cut"] == pytest.approx(0.1, rel=1e-6)
+    assert result.info["area_m2"] > 0.0
+    n_out = sum(s.molar_flow for s in result.outlets.values())
+    assert n_out == pytest.approx(inlet.molar_flow, rel=1e-12)
+
+
+def test_adapter_r2_refuses_bad_params(thermo: Thermo) -> None:
+    """The shared adapter refusals apply to R2."""
+    inlet = _air_feed(thermo)
+    base = {"permeances_mol_m2_s_Pa": {"O2": 1e-8, "N2": 1e-9}}
+    with pytest.raises(MembraneR1SpecError, match="P_permeate"):
+        MembraneR2().solve({"feed_in": inlet}, {**base, "P_permeate": 0.0, "area_m2": 50.0}, thermo)
+    with pytest.raises(MembraneR1SpecError, match="exactly one"):
+        MembraneR2().solve({"feed_in": inlet}, {**base, "P_permeate": 2.533125e4}, thermo)
+    with pytest.raises(MembraneR1SpecError, match="permeances_mol_m2_s_Pa"):
+        MembraneR2().solve({"feed_in": inlet}, {"P_permeate": 2.533125e4, "area_m2": 50.0}, thermo)

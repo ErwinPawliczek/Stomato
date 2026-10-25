@@ -325,10 +325,21 @@
         DOP853 at rtol 1e-11; stage-cut mode by a terminal event with the
         A_hard cap; isothermal outlets via split_by_component as in R0.
     R2:
-      status: planned
-      params: {}
-      note: counter-current module
-      end_state: true
+      status: provisional
+      adapter: ngdesign.units.separation.membrane_r2:MembraneR2
+      params:
+        type: object
+        required: [permeances_mol_m2_s_Pa, P_permeate]
+        properties:
+          permeances_mol_m2_s_Pa: {type: object, description: 'component id to permeance, mol/(m2 s Pa) (1 GPU = 3.348e-10); every feed component required'}
+          P_permeate: {type: number, exclusiveMinimum: 0, description: 'permeate-side absolute pressure, Pa'}
+          area_m2: {type: number, exclusiveMinimum: 0, description: 'membrane area, m2 (rating mode)'}
+          stage_cut: {type: number, exclusiveMinimum: 0, exclusiveMaximum: 1, description: 'target permeate/feed molar ratio (design mode; area is solved)'}
+      note: counter-current module, Pan 1983 shooting on the residue flows
+        (scipy root hybr, tol 1e-12) with the permeate plug flow dp_i/da = -J_i
+        toward the feed end, the M2 switch at Sum(p) <= 1e-12 F, and design
+        mode by brentq on theta_R2(A) - theta over [0, A_R1(theta)]; outlets
+        as in R0/R1.
   pid_symbol: M
   references:
   - docs/unit-catalogue-plan.md §2 U-D 8
