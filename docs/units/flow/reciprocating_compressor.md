@@ -16,7 +16,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.flow.reciprocating_compressor:ReciprocatingCompressor` | clearance-volume model, stages |
-| R1 | planned | — | rod load, capacity vs clearance |
+| R1 | provisional | `ngdesign.units.flow.reciprocating_compressor_r1:ReciprocatingCompressorR1` | per-stage cylinder capacity vs clearance (GPSA VE with Zs/Zd), clearance pocket, gas rod load |
 
 ## References
 
