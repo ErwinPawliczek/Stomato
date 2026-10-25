@@ -478,15 +478,24 @@ def _rating_outlet_P(
     Kv_choke = float(kv_at(P2_choke)["Kv"])
     if Kv_avail < Kv_choke * (1.0 - 1e-9):
         raise ChokedCapacityError(
-            f"required Kv {Kv_avail:.6g} at opening {opening} exceeds the choked capacity "
-            f"Kv {Kv_choke:.6g}; the valve cannot pass the flow even at that opening"
+            f"available Kv {Kv_avail:.6g} at opening {opening} is below the choked capacity "
+            f"Kv {Kv_choke:.6g}: the valve cannot pass this flow"
         )
 
     def residual(P2: float) -> float:
         return float(kv_at(P2)["Kv"]) - Kv_avail
 
     try:
-        return float(brentq(residual, P2_choke, P1 * (1.0 - 1e-9), xtol=1e-9 * P1, maxiter=200))
+        return float(
+            brentq(
+                residual,
+                P2_choke,
+                P1 * (1.0 - 1e-9),
+                xtol=1e-9 * P1,
+                rtol=4 * sys.float_info.epsilon,
+                maxiter=100,
+            )
+        )
     except (RuntimeError, ValueError) as e:
         raise ControlValveRatingError(
             f"rating solve did not converge for P1 {P1} Pa and available Kv {Kv_avail:.6g}: {e}"
