@@ -261,9 +261,27 @@
         Evidence gap — cake-resistance physics is R1, so no worked example
         validates a cake at R0 (V0 self-consistency only).
     R1:
-      status: planned
-      params: {}
-      note: cake resistance
+      status: provisional
+      adapter: ngdesign.units.separation.filter_r1:FilterR1
+      params:
+        type: object
+        required: [cake_fractions, dP, specific_cake_resistance_m_kg, t_filtration_s, solid_density_kg_m3]
+        properties:
+          cake_fractions:
+            type: object
+            description: 'component id to the fraction of its molar flow sent to the cake (the solids)'
+          dP: {type: number, exclusiveMinimum: 0, description: 'filtration pressure difference, Pa; applied to the filtrate'}
+          specific_cake_resistance_m_kg: {type: number, exclusiveMinimum: 0, description: 'specific cake resistance alpha, m/kg'}
+          medium_resistance_1_m: {type: number, minimum: 0, description: 'filter medium resistance Rm, 1/m; default 0'}
+          t_filtration_s: {type: number, exclusiveMinimum: 0, description: 'filtration time per cycle, s'}
+          t_down_s: {type: number, minimum: 0, description: 'washing/discharge downtime per cycle, s; default 0'}
+          solid_density_kg_m3: {type: number, exclusiveMinimum: 0, description: 'true solid density, kg/m3'}
+          cake_porosity: {type: number, minimum: 0, exclusiveMaximum: 1, description: 'cake void fraction; default 0 (dry cake)'}
+          area_m2: {type: number, exclusiveMinimum: 0, description: 'installed filter area, m2 (capacity ratio)'}
+          filtrate_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'filtrate viscosity override, Pa s'}
+      note: Ruth constant-pressure cake filtration over the R0 split — required
+        area, cake thickness and cake moisture (F1-F7); reduces exactly to R0
+        at zero porosity.
       end_state: true
   pid_symbol: FLT
   references:

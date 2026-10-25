@@ -30,7 +30,12 @@ import math
 
 import pytest
 
+from ngdesign.contracts import PhaseKind
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.units.separation.filter import Filter, FilterSpecError
 from ngdesign.units.separation.filter_r1 import (
+    FilterR1,
+    FilterR1SpecError,
     cake_thickness,
     capacity_ratio,
     concentration,
@@ -40,6 +45,7 @@ from ngdesign.units.separation.filter_r1 import (
     ruth_time,
     ruth_volume_per_area,
 )
+from tests.conftest import flash_feed
 
 _MU = 8.937e-4  # Pa s
 _ALPHA = 1e11  # m/kg
