@@ -266,9 +266,7 @@ class _NoViscosityThermo(Thermo):
     def k_values(self, z: dict[str, float], T: float, P: float) -> dict[str, float] | None:
         return self._inner.k_values(z, T, P)
 
-    def phase_props(
-        self, composition: dict[str, float], T: float, P: float, kind: PhaseKind
-    ) -> PhaseProps:
+    def phase_props(self, composition: dict[str, float], T: float, P: float, kind: PhaseKind) -> PhaseProps:
         return self._inner.phase_props(composition, T, P, kind)
 
     def derivatives(
@@ -316,7 +314,11 @@ class TestRefusals:
     def test_sizing_needs_both_phases(self, thermo: Thermo) -> None:
         # Pure water at 300 K, 1 bar flashes to a single liquid phase: R0's
         # gas outlet is zero-flow, so no sizing is possible.
-        inlets = {"inlet": flash_feed(thermo, {"T": 300.0, "P": 1.0e5, "molar_flow": 10.0, "composition": {"H2O": 1.0}})}
+        inlets = {
+            "inlet": flash_feed(
+                thermo, {"T": 300.0, "P": 1.0e5, "molar_flow": 10.0, "composition": {"H2O": 1.0}}
+            )
+        }
         with pytest.raises(ScrubberR1SpecError, match="both a gas and a liquid"):
             self._solve(thermo, {}, inlets)
 
@@ -325,7 +327,9 @@ class TestRefusals:
         # so its aqueous phase persists) and 6000 Pa = 0.870 psia is below the
         # York band's 1 psia floor, with no K_m_s given.
         inlets = {
-            "inlet": flash_feed(thermo, {"T": 293.15, "P": 6.0e3, "molar_flow": 10.0, "composition": {"C1": 0.5, "H2O": 0.5}})
+            "inlet": flash_feed(
+                thermo, {"T": 293.15, "P": 6.0e3, "molar_flow": 10.0, "composition": {"C1": 0.5, "H2O": 0.5}}
+            )
         }
         with pytest.raises(ScrubberR1SpecError, match="York"):
             self._solve(thermo, {}, inlets)
