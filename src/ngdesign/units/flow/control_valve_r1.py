@@ -40,16 +40,12 @@ import math
 from typing import Any, Final, Literal
 
 from fluids.control_valve import (
-    control_valve_choke_P_g,
-    control_valve_choke_P_l,
     size_control_valve_g,
     size_control_valve_l,
 )
-from scipy.optimize import brentq
 
-from ngdesign.contracts import PhaseKind, StreamState, UnitResult
+from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.data import components
 from ngdesign.units.flow.control_valve import ControlValveSpecError
 
 __all__ = [
@@ -77,21 +73,22 @@ CharacteristicKind = Literal["linear", "equal_percentage", "quick_opening"]
 _KINDS: Final[tuple[str, ...]] = ("linear", "equal_percentage", "quick_opening")
 
 
-def characteristic(l: float, kind: str, R: float = 50.0) -> float:
+def characteristic(travel: float, kind: str, R: float = 50.0) -> float:
     """Inherent flow characteristic ``phi(l) = Kv(l)/Kv_rated`` (IEC 60534-2-4).
 
     linear: ``phi = l``; equal percentage: ``phi = R**(l-1)``; quick opening:
-    ``phi = sqrt(l)``. Relative travel ``l`` in (0, 1].
+    ``phi = sqrt(l)``. Relative travel ``l`` in (0, 1]. (The first parameter is
+    named ``travel``; the standard's symbol is ``l``.)
     """
     if kind not in _KINDS:
         raise ControlValveSpecError(f"characteristic {kind!r} is not one of {list(_KINDS)}")
-    if not 0.0 < l <= 1.0:
-        raise ControlValveSpecError(f"opening {l} outside (0, 1]")
+    if not 0.0 < travel <= 1.0:
+        raise ControlValveSpecError(f"opening {travel} outside (0, 1]")
     if kind == "linear":
-        return l
+        return travel
     if kind == "equal_percentage":
-        return float(R) ** (l - 1.0)
-    return math.sqrt(l)
+        return float(float(R) ** (travel - 1.0))
+    return math.sqrt(travel)
 
 
 def characteristic_inverse(phi: float, kind: str, R: float = 50.0) -> float:
@@ -133,7 +130,7 @@ def kv_liquid(
     are applied by fluids when all three diameters are passed. Returns
     ``{Kv, choked, FR, FP}`` (``FR``/``FP`` 1.0 when no fittings apply).
     """
-    out = size_control_valve_l(
+    out: Any = size_control_valve_l(
         rho=rho,
         Psat=Psat,
         Pc=Pc,
@@ -183,7 +180,7 @@ def kv_gas(
     ``allow_laminar=True`` and ``full_output=True``. Returns
     ``{Kv, choked, FR, FP, Y}``.
     """
-    out = size_control_valve_g(
+    out: Any = size_control_valve_g(
         T=T,
         MW=MW,
         mu=mu,

@@ -76,8 +76,15 @@ def test_vmol_std_conversion() -> None:
 def test_liquid_non_choked_L1() -> None:
     """L1: eq. 1, far from choke."""
     d = kv_liquid(
-        Q_m3_s=L_Q, rho=L_RHO, mu=L_MU, Psat=L_PSAT, Pc=L_PC,
-        P1=L_P1, P2=220e3, FL=L_FL, Fd=L_FD,
+        Q_m3_s=L_Q,
+        rho=L_RHO,
+        mu=L_MU,
+        Psat=L_PSAT,
+        Pc=L_PC,
+        P1=L_P1,
+        P2=220e3,
+        FL=L_FL,
+        Fd=L_FD,
     )
     assert d["Kv"] == pytest.approx(164.995476370496, rel=REL)
     assert d["Kv"] / KV_PER_CV == pytest.approx(190.746215457220, rel=REL)
@@ -88,8 +95,15 @@ def test_liquid_non_choked_L1() -> None:
 def test_liquid_choked_L2() -> None:
     """L2: eq. 3, dP beyond the choked drop."""
     d = kv_liquid(
-        Q_m3_s=L_Q, rho=L_RHO, mu=L_MU, Psat=L_PSAT, Pc=L_PC,
-        P1=L_P1, P2=100e3, FL=L_FL, Fd=L_FD,
+        Q_m3_s=L_Q,
+        rho=L_RHO,
+        mu=L_MU,
+        Psat=L_PSAT,
+        Pc=L_PC,
+        P1=L_P1,
+        P2=100e3,
+        FL=L_FL,
+        Fd=L_FD,
     )
     assert d["Kv"] == pytest.approx(158.705448111403, rel=REL)
     assert d["choked"] == 1.0
@@ -98,8 +112,17 @@ def test_liquid_choked_L2() -> None:
 def test_gas_non_choked_G1() -> None:
     """G1: eqs. 8 and 10, x below Fgamma*xT."""
     d = kv_gas(
-        n_mol_s=G_N, MW=G_MW, mu=G_MU, gamma=G_GAMMA, Z=G_Z, T=G_T,
-        P1=G_P1, P2=450e3, xT=G_XT, FL=G_FL, Fd=G_FD,
+        n_mol_s=G_N,
+        MW=G_MW,
+        mu=G_MU,
+        gamma=G_GAMMA,
+        Z=G_Z,
+        T=G_T,
+        P1=G_P1,
+        P2=450e3,
+        xT=G_XT,
+        FL=G_FL,
+        Fd=G_FD,
     )
     assert d["Kv"] == pytest.approx(71.3395905795846, rel=REL)
     assert d["Y"] == pytest.approx(0.797637003519357, rel=REL)
@@ -109,8 +132,17 @@ def test_gas_non_choked_G1() -> None:
 def test_gas_choked_G2() -> None:
     """G2: x beyond Fgamma*xT; x replaced by Fgamma*xT, Y = 2/3."""
     d = kv_gas(
-        n_mol_s=G_N, MW=G_MW, mu=G_MU, gamma=G_GAMMA, Z=G_Z, T=G_T,
-        P1=G_P1, P2=200e3, xT=G_XT, FL=G_FL, Fd=G_FD,
+        n_mol_s=G_N,
+        MW=G_MW,
+        mu=G_MU,
+        gamma=G_GAMMA,
+        Z=G_Z,
+        T=G_T,
+        P1=G_P1,
+        P2=200e3,
+        xT=G_XT,
+        FL=G_FL,
+        Fd=G_FD,
     )
     assert d["Kv"] == pytest.approx(66.5048538035932, rel=REL)
     assert d["choked"] == 1.0
@@ -119,22 +151,14 @@ def test_gas_choked_G2() -> None:
 
 def test_characteristic_equal_percentage() -> None:
     """phi = R^(l-1) at the spec's printed points."""
-    assert characteristic(0.25, "equal_percentage", 50.0) == pytest.approx(
-        0.0531829589694499, rel=REL
-    )
-    assert characteristic(0.5, "equal_percentage", 50.0) == pytest.approx(
-        0.141421356237310, rel=REL
-    )
-    assert characteristic(0.8, "equal_percentage", 50.0) == pytest.approx(
-        0.457305051927326, rel=REL
-    )
+    assert characteristic(0.25, "equal_percentage", 50.0) == pytest.approx(0.0531829589694499, rel=REL)
+    assert characteristic(0.5, "equal_percentage", 50.0) == pytest.approx(0.141421356237310, rel=REL)
+    assert characteristic(0.8, "equal_percentage", 50.0) == pytest.approx(0.457305051927326, rel=REL)
 
 
 def test_characteristic_quick_opening() -> None:
     """phi = sqrt(l)."""
-    assert characteristic(0.5, "quick_opening") == pytest.approx(
-        0.707106781186548, rel=REL
-    )
+    assert characteristic(0.5, "quick_opening") == pytest.approx(0.707106781186548, rel=REL)
 
 
 def test_characteristic_linear() -> None:
@@ -144,23 +168,21 @@ def test_characteristic_linear() -> None:
 
 def test_characteristic_inverse_equal_percentage() -> None:
     """l = 1 + ln(phi)/ln(R) at the spec's printed point."""
-    assert characteristic_inverse(0.2, "equal_percentage", 50.0) == pytest.approx(
-        0.588591910067779, rel=REL
-    )
+    assert characteristic_inverse(0.2, "equal_percentage", 50.0) == pytest.approx(0.588591910067779, rel=REL)
 
 
 def test_characteristic_round_trip() -> None:
     """Each kind's inverse undoes its characteristic."""
     for kind in ("linear", "equal_percentage", "quick_opening"):
-        for l in (0.05, 0.4, 1.0):
-            assert characteristic_inverse(characteristic(l, kind, 50.0), kind, 50.0) == (
-                pytest.approx(l, rel=1e-12)
+        for travel in (0.05, 0.4, 1.0):
+            assert characteristic_inverse(characteristic(travel, kind, 50.0), kind, 50.0) == (
+                pytest.approx(travel, rel=1e-12)
             )
 
 
 def test_bad_characteristic_refused() -> None:
     with pytest.raises(ValueError, match="characteristic"):
-        characteristic(0.5, "equal-percentage")  # type: ignore[arg-type]
+        characteristic(0.5, "equal-percentage")
 
 
 def test_bad_travel_refused() -> None:
