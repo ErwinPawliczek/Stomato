@@ -1,9 +1,13 @@
 # cstr V1 cases (spec U-01d; validator scripts/validate_units.py).
 #
-# No V1 case yet: the spec's Fogler candidates need components absent from the
-# open registry (ethylene oxide / ethylene glycol; propylene oxide), and the
-# Ch. 4/5 summary-notes CSTR example (umich.edu/~elements companion site) is a
-# pure-A liquid at CA0 = 0.2 mol/dm3, a feed concentration no registry component
-# reproduces. The gap, with the searches and the printed numbers found, is
-# recorded on the row's notes in data/unit_models/reactors.yaml. R1 ships
+# No V1 case yet. CORRECTION (2026-10-25): the earlier header claimed the
+# Fogler components are absent from the open registry — they are not; all four
+# (ethylene oxide, ethylene glycol, propylene oxide, propylene glycol) resolve
+# in ngdesign.data.component_record with formation data. The printed Fogler
+# candidates are still not transcribable at R1, for the reasons recorded on
+# the row's notes in data/unit_models/reactors.yaml (constant-density
+# lbmol/ft3 basis with unprinted water molar flow and pressure; at 313 K the
+# pr flash two-phases the aqueous-EO feed below 10 bar and liquid-liquid-
+# splits it at all-liquid pressures, where the printed V does not converge;
+# the umich companion example is a pure-A liquid at 0.2 mol/dm3). R1 ships
 # provisional on its closed-form tests (R1-A, R1-B, identities, refusals).
