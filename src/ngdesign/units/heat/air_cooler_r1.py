@@ -516,9 +516,7 @@ class AirCoolerR1:
         air_dp = esdu_dP(
             vp.air_mass_flow_kg_s, geo, do, vp.tube_rows, air_film_in.rho_kg_m3, air_film_in.mu_Pa_s
         )
-        w_fan = fan_power_W(
-            vp.air_mass_flow_kg_s, air_film_in.rho_kg_m3, air_dp.dP_air_Pa, vp.fan_efficiency
-        )
+        w_fan = fan_power_W(vp.air_mass_flow_kg_s, air_film_in.rho_kg_m3, air_dp.dP_air_Pa, vp.fan_efficiency)
 
         F = proc.molar_flow
         # Q_max (Algorithm step 5): the smaller of the process enthalpy drop
@@ -585,9 +583,7 @@ class AirCoolerR1:
         # Q_hi is pulled off Q_max so LMTD stays defined (Algorithm step 5).
         Q_hi = Q_max * (1.0 - 1e-9)
         try:
-            Q = float(
-                brentq(evaluate, Q_lo, Q_hi, xtol=BRENTQ_XTOL_FRACTION * Q_max, maxiter=BRENTQ_MAXITER)
-            )
+            Q = float(brentq(evaluate, Q_lo, Q_hi, xtol=BRENTQ_XTOL_FRACTION * Q_max, maxiter=BRENTQ_MAXITER))
         except (RuntimeError, ValueError) as exc:
             raise RatingConvergenceError(
                 f"air cooler rating did not converge: {exc}; duty bracket [{Q_lo}, {Q_hi}] W"
@@ -603,7 +599,9 @@ class AirCoolerR1:
         duct_final = last["duct"]
         lmtd_final = last["lmtd"]
         if lmtd_final is None:  # pragma: no cover - brentq converged at a feasible point
-            raise RatingConvergenceError("air cooler rating did not converge: infeasible at the converged duty")
+            raise RatingConvergenceError(
+                "air cooler rating did not converge: infeasible at the converged duty"
+            )
         duty_W = F * (proc_out.enthalpy - proc.enthalpy)  # negative for cooling (R0 convention)
         info: dict[str, Any] = {
             "Q_W": Q,
@@ -625,4 +623,3 @@ class AirCoolerR1:
             "passes_equal_rows_assumption": 1.0 if vp.passes_equal_rows_over_four else 0.0,
         }
         return UnitResult(outlets={"outlet": proc_out}, duty_W=duty_W, power_W=0.0, info=info)
-

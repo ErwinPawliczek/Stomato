@@ -272,7 +272,6 @@ def test_bad_air_composition_refuses() -> None:
         build_geometry({**BASE, "air_composition": {"N2": 0.5, "O2": 0.4}})
 
 
-
 def _thermo() -> Thermo:
     registry.discover()
     impl: Thermo = registry.create("thermo", "pr")
@@ -347,9 +346,15 @@ def test_reduction_to_r0_identity() -> None:
 
 
 def test_process_inlet_below_air_refuses() -> None:
-    """A process inlet at or below the air inlet temperature is a cross."""
+    """A process inlet at or below the air inlet temperature is a cross.
+
+    The air side is raised above the E-101 feed (322.15 K, single-phase gas
+    at 7 MPa) instead of the feed being cooled: the dry separator gas
+    condenses near 305 K / 7 MPa, and the phase check must fire first.
+    """
+    _, params = AirCoolerR1.example_case()
     with pytest.raises(TemperatureCross, match="air inlet"):
-        _solve(_thermo(), T=305.0)
+        _solve(_thermo(), {**params, "air_T_K": 350.0})
 
 
 def test_two_phase_inlet_refuses() -> None:
@@ -396,10 +401,17 @@ def test_convergence_failure_is_typed(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_re_range_refusal_and_extrapolation_flag() -> None:
-    """30 kg/s air leaves the Briggs-Young window: refused, then flagged."""
+    """Air far above the Briggs-Young window: refused, then flagged.
+
+    Re_air scales roughly linearly with the air mass flow at fixed
+    geometry; the base case converges above Re 1000 (asserted in
+    ``test_example_case_rates_with_spec_info_keys``), so 120 kg/s (15x the
+    8 kg/s basis) lands well past Re 8000. The override goes through the
+    params dict: _solve routes keyword arguments to the feed, not params.
+    """
     thermo = _thermo()
-    with pytest.raises(BriggsYoungRangeError, match="Re_air"):
-        _solve(thermo, air_mass_flow_kg_s=30.0)
     _, params = AirCoolerR1.example_case()
-    extrap = _solve(thermo, {**params, "allow_extrapolation": True}, air_mass_flow_kg_s=30.0)
+    with pytest.raises(BriggsYoungRangeError, match="Re_air"):
+        _solve(thermo, {**params, "air_mass_flow_kg_s": 120.0})
+    extrap = _solve(thermo, {**params, "allow_extrapolation": True, "air_mass_flow_kg_s": 120.0})
     assert float(extrap.info["briggs_young_in_range"]) == 0.0
