@@ -166,13 +166,13 @@ CONDENSATE_FEED = {
 
 def test_r1_reduces_to_r0_on_a_horizontal_line(thermo: Thermo) -> None:
     """R1 to R0 identity: R0 in dP mode with dP = friction + fittings and no
-    elevation gives the identical outlet (P to 1e-10 relative, T to 1e-12 K)."""
+    elevation gives the identical outlet (P exact, T to 1e-12 K)."""
     params = {"L_m": 500.0, "D_m": 0.1023, "K_fittings": 1.2}
     inlets = {"inlet": flash_feed(thermo, CONDENSATE_FEED)}
     r1 = PipeSegmentR1().solve(inlets, params, thermo)
     dP = r1.info["dP_friction_Pa"] + r1.info["dP_fittings_Pa"]
     r0 = PipeSegment().solve(inlets, {"dP": dP, "elevation_m": 0.0}, thermo)
-    assert r0.outlets["outlet"].P == pytest.approx(r1.outlets["outlet"].P, rel=1e-10)
+    assert r0.outlets["outlet"].P == r1.outlets["outlet"].P
     assert r0.outlets["outlet"].T == pytest.approx(r1.outlets["outlet"].T, abs=1e-12)
 
 

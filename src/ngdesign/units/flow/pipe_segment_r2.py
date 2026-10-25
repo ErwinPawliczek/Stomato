@@ -93,7 +93,17 @@ def _node_gradient(
                 "sigma_N_m is required when any node is two-phase (the Thermo "
                 "protocol has no surface tension)"
             )
-        liq = _phase_of_kind(state, PhaseKind.HC_LIQUID)
+        # Beggs-Brill is strictly two-phase: take the (single) non-vapour
+        # phase as the liquid -- an aqueous flash gives AQUEOUS, not HC_LIQUID
+        # -- and refuse a genuinely three-phase node.
+        liquids = [p for p in state.phases if p.kind is not PhaseKind.VAPOR]
+        if len(liquids) > 1:
+            kinds = ", ".join(sorted({p.kind.name for p in liquids}))
+            raise PipeSegmentR2Error(
+                f"three-phase node ({kinds}) at P = {P} Pa: Beggs-Brill is a "
+                "two-phase correlation; three-phase flow is not modelled"
+            )
+        liq = liquids[0]
         vap = _phase_of_kind(state, PhaseKind.VAPOR)
         try:
             dP_seg = Beggs_Brill(

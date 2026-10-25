@@ -4,23 +4,35 @@ R2 has no closed-form reference: Beggs-Brill is an empirical holdup
 correlation, and the fluid path (fixed-enthalpy PH flashes of a
 propane/n-pentane mixture) comes from the PR package. The assertions
 therefore check structural invariants, bookkeeping identities, refusal
-behaviour, and regression pins of measured outputs. The example-basis
-numbers were measured on this head with ``thermo == 'pr'``; they pin the
-regression surface, they are not independent references.
+behaviour, and independent references: the R2-to-R1 identity on an
+all-liquid line, a bare-Beggs-Brill wiring check, and the shared validation
+refusals. No measured model output is pinned.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 import pytest
+from fluids import Beggs_Brill
 
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units.flow.pipe_segment_r1 import PipeSegmentR1
+from ngdesign.contracts.stream import PhaseKind, StreamState
+from ngdesign.units.flow.pipe_segment import PipeSegmentSpecError
+from ngdesign.units.flow.pipe_segment_r1 import (
+    DEFAULT_ROUGHNESS_M,
+    PipeSegmentR1,
+    PipeSegmentR1Error,
+    march,
+)
 from ngdesign.units.flow.pipe_segment_r2 import (
     R2_MAX_SEGMENTS,
+    VF_MAX,
+    VF_MIN,
     PipeSegmentR2,
     PipeSegmentR2Error,
+    _mass_quality,
+    _viscosity,
 )
 from tests.conftest import flash_feed
 
@@ -49,9 +61,39 @@ HILL_PARAMS = {
     "n_segments": 20,
 }
 
+#: Subcooled water at 0.5 MPa climbing 20 m of 3 in pipe: the fixed-enthalpy
+#: PH flash crosses the saturation floor part way up and the remaining nodes
+#: are AQUEOUS + VAPOR -- the pure-fluid liquid the R2 liquid-phase selection
+#: must handle.
+WATER_FEED = {
+    "T": 400.0,
+    "P": 0.5e6,
+    "molar_flow": 50.0,
+    "composition": {"H2O": 1.0},
+}
+WATER_PARAMS = {
+    "L_m": 100.0,
+    "D_m": 0.0779,
+    "sigma_N_m": 0.04,
+    "elevation_m": 20.0,
+    "n_segments": 10,
+}
+
 
 def _profile(info: dict[str, float], n: int, key: str) -> list[float]:
     return [info[f"profile_{i:03d}_{key}"] for i in range(n + 1)]
+
+
+def _node_phases(state: StreamState) -> tuple[Any, Any]:
+    """The (liquid, vapour) phase of a two-phase flashed node, as R2 picks them."""
+    liq = next(p for p in state.phases if p.kind is not PhaseKind.VAPOR)
+    vap = next(p for p in state.phases if p.kind is PhaseKind.VAPOR)
+    return liq, vap
+
+
+def _mu_in(thermo_inlet: StreamState) -> float:
+    dominant = max(thermo_inlet.phases, key=lambda p: p.mole_fraction)
+    return _viscosity(dominant, 0.0)
 
 
 def test_r2_marches_a_fully_two_phase_line(thermo: Thermo) -> None:
@@ -66,11 +108,9 @@ def test_r2_marches_a_fully_two_phase_line(thermo: Thermo) -> None:
     Ps = _profile(info, 20, "P_Pa")
     Ts = _profile(info, 20, "T_K")
     qs = _profile(info, 20, "quality")
-    assert Ps[-1] == pytest.approx(784294.0, rel=1e-5)
     assert all(a > b for a, b in zip(Ps, Ps[1:], strict=False))
     assert all(a > b for a, b in zip(Ts, Ts[1:], strict=False))
     assert all(b - a > -1e-12 for a, b in zip(qs, qs[1:], strict=False))
-    assert qs[-1] == pytest.approx(0.2854, abs=2e-4)
     assert info["dT_K"] < 0
 
 
@@ -86,18 +126,145 @@ def test_r2_liquid_line_flashes_part_way(thermo: Thermo) -> None:
     Ps = _profile(info, 20, "P_Pa")
     assert qs[0] == 0.0 and qs[1] == 0.0 and qs[2] > 0.0
     assert all(a > b for a, b in zip(Ps, Ps[1:], strict=False))
-    assert Ps[-1] == pytest.approx(957365.0, rel=1e-5)
 
 
-def test_r2_example_case_solves_and_pins_measured_values(thermo: Thermo) -> None:
-    """The shipped example basis reproduces the measured head values."""
+def test_r2_aqueous_two_phase_line_solves(thermo: Thermo) -> None:
+    """Pure water flashing AQUEOUS + VAPOR part way up: the liquid of a
+    two-phase node is the single non-vapour phase (not assumed HC_LIQUID),
+    so the line solves instead of crashing."""
+    inlets = {"inlet": flash_feed(thermo, WATER_FEED)}
+    inlet = inlets["inlet"]
+    assert inlet.vapor_fraction == 0.0
+    assert any(p.kind is PhaseKind.AQUEOUS for p in inlet.phases)
+    result = PipeSegmentR2().solve(inlets, WATER_PARAMS, thermo)
+    info = result.info
+    assert 1.0 <= info["n_two_phase_segments"] < 10.0
+    Ps = _profile(info, 10, "P_Pa")
+    qs = _profile(info, 10, "quality")
+    assert all(a > b for a, b in zip(Ps, Ps[1:], strict=False))
+    assert result.outlets["outlet"].P > 0
+    assert qs[-1] > 0.0
+
+
+def test_r2_refuses_three_phase_node(thermo: Thermo) -> None:
+    """A node with two liquid phases (HC + aqueous + vapour) is refused with
+    the typed three-phase refusal: Beggs-Brill is strictly two-phase."""
+
+    class _ThreePhaseThermo:
+        def flash_ph(
+            self, z: dict[str, float], P: float, H: float, molar_flow: float
+        ) -> StreamState:
+            state = thermo.flash_ph(z, P, H, molar_flow)
+            if not (VF_MIN < state.vapor_fraction < VF_MAX):
+                return state
+            liq, vap = _node_phases(state)
+            aqueous = liq.model_copy(update={"kind": PhaseKind.AQUEOUS})
+            return state.model_copy(update={"phases": [liq, aqueous, vap]})
+
+    inlets = {"inlet": flash_feed(thermo, TWO_PHASE_FEED)}
+    with pytest.raises(PipeSegmentR2Error, match="three-phase"):
+        PipeSegmentR2().solve(
+            inlets, TWO_PHASE_PARAMS, cast(Thermo, _ThreePhaseThermo())
+        )
+
+
+def test_r2_equals_r1_core_march_on_all_liquid_line(thermo: Thermo) -> None:
+    """R2 to R1 identity: on an all-liquid line R2 at n_segments = N is the
+    R1 core march(..., n=N) without refinement, to 1e-12 relative on P_out."""
+    feed = {"T": 293.15, "P": 1.0e6, "molar_flow": 50.0, "composition": {"nC4": 1.0}}
+    params = {"L_m": 200.0, "D_m": 0.0779, "n_segments": 20}
+    inlets = {"inlet": flash_feed(thermo, feed)}
+    inlet = inlets["inlet"]
+    assert inlet.vapor_fraction == 0.0
+    result = PipeSegmentR2().solve(inlets, params, thermo)
+    assert result.info["n_two_phase_segments"] == 0.0
+    dP_K = result.info["dP_fittings_Pa"]
+    z = dict(inlet.composition)
+    mu_in = _mu_in(inlet)
+
+    def props(P: float) -> tuple[float, float]:
+        state = thermo.flash_ph(z, P, inlet.enthalpy, inlet.molar_flow)
+        dominant = max(state.phases, key=lambda p: p.mole_fraction)
+        return dominant.density, _viscosity(dominant, mu_in)
+
+    P_core = march(
+        inlet.P - dP_K,
+        200.0,
+        0.0779,
+        0.0,
+        DEFAULT_ROUGHNESS_M,
+        inlet.mass_flow,
+        props,
+        20,
+    )
+    assert result.outlets["outlet"].P == pytest.approx(P_core, rel=1e-12)
+
+
+def test_r2_step_matches_bare_beggs_brill(thermo: Thermo) -> None:
+    """Wiring check: on a one-segment horizontal two-phase line the Heun step
+    is exactly two Beggs_Brill evaluations at the flashed node properties."""
+    params = {"L_m": 500.0, "D_m": 0.1023, "sigma_N_m": 0.01, "n_segments": 1}
+    inlets = {"inlet": flash_feed(thermo, TWO_PHASE_FEED)}
+    inlet = inlets["inlet"]
+    result = PipeSegmentR2().solve(inlets, params, thermo)
+    dP_K = result.info["dP_fittings_Pa"]
+    h = 500.0
+    P0 = inlet.P - dP_K
+    z = dict(inlet.composition)
+    mu_in = _mu_in(inlet)
+
+    def bb(P: float, state: StreamState) -> float:
+        liq, vap = _node_phases(state)
+        return Beggs_Brill(
+            m=inlet.mass_flow,
+            x=_mass_quality(state),
+            rhol=liq.density,
+            rhog=vap.density,
+            mul=_viscosity(liq, mu_in),
+            mug=_viscosity(vap, mu_in),
+            sigma=0.01,
+            P=P,
+            D=0.1023,
+            angle=0.0,
+            roughness=DEFAULT_ROUGHNESS_M,
+            L=h,
+            acceleration=True,
+        )
+
+    s0 = thermo.flash_ph(z, P0, inlet.enthalpy, inlet.molar_flow)
+    dP1 = bb(P0, s0)
+    s_star = thermo.flash_ph(z, P0 - dP1, inlet.enthalpy, inlet.molar_flow)
+    dP2 = bb(P0 - dP1, s_star)
+    assert result.outlets["outlet"].P == pytest.approx(P0 - (dP1 + dP2) / 2, rel=1e-12)
+
+
+def test_r2_wraps_beggs_brill_regime_error(
+    thermo: Thermo, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A ValueError from the correlation comes out as a typed
+    PipeSegmentR2Error naming Beggs-Brill."""
+    from ngdesign.units.flow import pipe_segment_r2 as mod
+
+    def boom(**_kwargs: Any) -> float:
+        raise ValueError("regime map: off the chart")
+
+    monkeypatch.setattr(mod, "Beggs_Brill", boom)
+    inlets = {"inlet": flash_feed(thermo, TWO_PHASE_FEED)}
+    with pytest.raises(PipeSegmentR2Error, match="Beggs-Brill"):
+        PipeSegmentR2().solve(inlets, TWO_PHASE_PARAMS, thermo)
+
+
+def test_r2_example_case_solves(thermo: Thermo) -> None:
+    """The shipped example basis solves with consistent bookkeeping."""
     feeds, params = PipeSegmentR2.example_case()
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
     result = PipeSegmentR2().solve(inlets, params, thermo)
     info = result.info
     assert result.outlets["outlet"].P > 0
     assert info["n_two_phase_segments"] >= 1
-    assert info["dP_total_Pa"] == pytest.approx(inlets["inlet"].P - result.outlets["outlet"].P, rel=1e-12)
+    assert info["dP_total_Pa"] == pytest.approx(
+        inlets["inlet"].P - result.outlets["outlet"].P, rel=1e-12
+    )
 
 
 def test_r2_dP_total_matches_inlet_minus_outlet(thermo: Thermo) -> None:
@@ -150,22 +317,25 @@ def test_r2_refuses_overdriven_flow(thermo: Thermo) -> None:
 
 
 def test_r2_refuses_bad_geometry(thermo: Thermo) -> None:
-    """Validation refusals name their parameter (shared with R1)."""
+    """Validation refusals are the typed spec error and name their parameter
+    (shared with R1)."""
     inlets = {"inlet": flash_feed(thermo, HILL_FEED)}
     base = dict(HILL_PARAMS)
-    with pytest.raises(Exception, match="L_m"):
+    with pytest.raises(PipeSegmentSpecError, match="L_m"):
         PipeSegmentR2().solve(inlets, dict(base, L_m=0.0), thermo)
-    with pytest.raises(Exception, match="n_segments"):
+    with pytest.raises(PipeSegmentSpecError, match="n_segments"):
         PipeSegmentR2().solve(inlets, dict(base, n_segments=0), thermo)
-    with pytest.raises(Exception, match="n_segments"):
-        PipeSegmentR2().solve(inlets, dict(base, n_segments=R2_MAX_SEGMENTS + 1), thermo)
+    with pytest.raises(PipeSegmentSpecError, match="n_segments"):
+        PipeSegmentR2().solve(
+            inlets, dict(base, n_segments=R2_MAX_SEGMENTS + 1), thermo
+        )
 
 
 def test_r1_refuses_what_r2_accepts(thermo: Thermo) -> None:
     """Level complement: the two-phase inlet R1 refuses ('use R2') is the
     case R2 exists to solve."""
     inlets = {"inlet": flash_feed(thermo, TWO_PHASE_FEED)}
-    with pytest.raises(Exception, match="two-phase inlet"):
+    with pytest.raises(PipeSegmentR1Error, match="two-phase inlet"):
         PipeSegmentR1().solve(
             inlets,
             {"L_m": TWO_PHASE_PARAMS["L_m"], "D_m": TWO_PHASE_PARAMS["D_m"]},
