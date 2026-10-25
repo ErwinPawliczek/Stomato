@@ -114,10 +114,7 @@ def equilibrium_loadings(
             "langmuir keys and feed partial pressures must cover the same adsorbate ids"
         )
     denom = 1.0 + sum(b_1_Pa[cid] * partial_pressures_Pa[cid] for cid in q_max_mol_kg)
-    return {
-        cid: q_max_mol_kg[cid] * b_1_Pa[cid] * partial_pressures_Pa[cid] / denom
-        for cid in q_max_mol_kg
-    }
+    return {cid: q_max_mol_kg[cid] * b_1_Pa[cid] * partial_pressures_Pa[cid] / denom for cid in q_max_mol_kg}
 
 
 def packed_bed_mass(
@@ -175,23 +172,17 @@ class AdsorptionBedR1:
         langmuir = params.get("langmuir")
         if not isinstance(langmuir, dict) or not langmuir:
             raise AdsorptionBedR1SpecError(
-                "langmuir is required: a non-empty map of adsorbate id to "
-                "{q_max_mol_kg, b_1_Pa}"
+                "langmuir is required: a non-empty map of adsorbate id to {q_max_mol_kg, b_1_Pa}"
             )
         removal = params.get("removal_fraction")
         if not isinstance(removal, dict) or not removal:
             raise AdsorptionBedR1SpecError(
-                "removal_fraction is required: a non-empty map of component id "
-                "to removed fraction"
+                "removal_fraction is required: a non-empty map of component id to removed fraction"
             )
         stray = [cid for cid in langmuir if cid not in removal]
         if stray:
-            raise AdsorptionBedR1SpecError(
-                f"langmuir names component(s) {stray} not in removal_fraction"
-            )
-        unadsorbed = [
-            cid for cid, x in removal.items() if float(x) > 0.0 and cid not in langmuir
-        ]
+            raise AdsorptionBedR1SpecError(f"langmuir names component(s) {stray} not in removal_fraction")
+        unadsorbed = [cid for cid, x in removal.items() if float(x) > 0.0 and cid not in langmuir]
         if unadsorbed:
             raise AdsorptionBedR1SpecError(
                 f"langmuir is missing component(s) {unadsorbed} with positive removal_fraction"
@@ -200,9 +191,7 @@ class AdsorptionBedR1:
         b_ref: dict[str, float] = {}
         for cid, entry in langmuir.items():
             if not isinstance(entry, dict) or "q_max_mol_kg" not in entry or "b_1_Pa" not in entry:
-                raise AdsorptionBedR1SpecError(
-                    f"langmuir[{cid!r}] needs q_max_mol_kg and b_1_Pa"
-                )
+                raise AdsorptionBedR1SpecError(f"langmuir[{cid!r}] needs q_max_mol_kg and b_1_Pa")
             q_m = float(entry["q_max_mol_kg"])
             b = float(entry["b_1_Pa"])
             if q_m <= 0.0:
@@ -213,10 +202,7 @@ class AdsorptionBedR1:
             b_ref[cid] = b
 
         bed_mass = params.get("bed_mass_kg")
-        geom = {
-            key: params.get(key)
-            for key in ("bed_density_kg_m3", "bed_diameter_m", "bed_length_m")
-        }
+        geom = {key: params.get(key) for key in ("bed_density_kg_m3", "bed_diameter_m", "bed_length_m")}
         given_geom = [key for key, value in geom.items() if value is not None]
         if bed_mass is not None and given_geom:
             raise AdsorptionBedR1SpecError(
@@ -252,16 +238,13 @@ class AdsorptionBedR1:
                     "lub_m > 0 needs bed_length_m (a LUB is meaningless without a bed length)"
                 )
             if lub_m >= bed_length_m:
-                raise AdsorptionBedR1SpecError(
-                    f"lub_m {lub_m} must be < bed_length_m {bed_length_m}"
-                )
+                raise AdsorptionBedR1SpecError(f"lub_m {lub_m} must be < bed_length_m {bed_length_m}")
 
         dH_ads = params.get("dH_ads_J_mol")
         T_ref = params.get("T_ref_K")
         if (dH_ads is None) != (T_ref is None):
             raise AdsorptionBedR1SpecError(
-                "dH_ads_J_mol and T_ref_K must be given together (the b values' "
-                "reference temperature)"
+                "dH_ads_J_mol and T_ref_K must be given together (the b values' reference temperature)"
             )
         if T_ref is not None and float(T_ref) <= 0.0:
             raise AdsorptionBedR1SpecError(f"T_ref_K {T_ref} must be > 0")
@@ -299,9 +282,7 @@ class AdsorptionBedR1:
             t_break[cid] = breakthrough_time(t_s, lub_m, bed_length_m)
 
         cycle_time = min(t_break.values()) if t_break else 0.0
-        limiting: str | None = (
-            min(t_break, key=lambda cid: t_break[cid]) if t_break else None
-        )
+        limiting: str | None = min(t_break, key=lambda cid: t_break[cid]) if t_break else None
         limiting_index = sorted_cids.index(limiting) if limiting is not None else -1
 
         info = dict(r0.info)

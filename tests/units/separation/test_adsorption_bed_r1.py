@@ -92,9 +92,7 @@ def test_cf3_geometry_lub_pure_functions() -> None:
     """A3 bed mass from geometry, A4 stoichiometric time, A5 LUB breakthrough."""
     m_bed = packed_bed_mass(700.0, 1.5, 4.0)
     assert m_bed == pytest.approx(4948.00843, rel=1e-9)
-    q_star = equilibrium_loadings(
-        {"H2O": 12.0}, {"H2O": 5e-3}, {"H2O": 1e-3 * P_FEED}
-    )["H2O"]
+    q_star = equilibrium_loadings({"H2O": 12.0}, {"H2O": 5e-3}, {"H2O": 1e-3 * P_FEED})["H2O"]
     t_s = stoichiometric_time(q_star, m_bed, 1000.0)
     assert t_s == pytest.approx(57.726765, rel=1e-8)
     t_b = breakthrough_time(t_s, 0.5, 4.0)
@@ -194,9 +192,7 @@ def test_outlets_identical_to_r0(thermo: Thermo) -> None:
     """R1 changes no stream: the outlets, duty and power equal R0's exactly."""
     inlets = example_inlets(thermo)
     r1 = AdsorptionBedR1().solve(inlets, r1_params(), thermo)
-    r0 = AdsorptionBed().solve(
-        inlets, {"removal_fraction": {"H2O": 0.95}, "bed_mass_kg": 500.0}, thermo
-    )
+    r0 = AdsorptionBed().solve(inlets, {"removal_fraction": {"H2O": 0.95}, "bed_mass_kg": 500.0}, thermo)
     assert r1.outlets == r0.outlets
     assert r1.duty_W == r0.duty_W
     assert r1.power_W == r0.power_W
@@ -206,9 +202,7 @@ def test_outlets_identical_to_r0(thermo: Thermo) -> None:
 
 def test_affinity_at_reference_temperature_is_unchanged() -> None:
     """A2 at T = T_ref reproduces b_ref exactly (the exp argument vanishes)."""
-    assert affinity_at_temperature(5e-3, -40000.0, 322.15, 322.15) == pytest.approx(
-        5e-3, rel=1e-15
-    )
+    assert affinity_at_temperature(5e-3, -40000.0, 322.15, 322.15) == pytest.approx(5e-3, rel=1e-15)
     # And the affinity falls with rising T for an exothermic dH.
     assert affinity_at_temperature(5e-3, -40000.0, 353.15, 322.15) < 5e-3
 
@@ -222,17 +216,13 @@ def test_refuse_langmuir_empty(thermo: Thermo) -> None:
 def test_refuse_langmuir_component_not_in_removal(thermo: Thermo) -> None:
     inlets = example_inlets(thermo)
     with pytest.raises(AdsorptionBedR1SpecError, match="langmuir"):
-        AdsorptionBedR1().solve(
-            inlets, r1_params(langmuir={"CO2": dict(LANGMUIR_H2O)}), thermo
-        )
+        AdsorptionBedR1().solve(inlets, r1_params(langmuir={"CO2": dict(LANGMUIR_H2O)}), thermo)
 
 
 def test_refuse_removal_without_langmuir(thermo: Thermo) -> None:
     inlets = example_inlets(thermo)
     with pytest.raises(AdsorptionBedR1SpecError, match="langmuir"):
-        AdsorptionBedR1().solve(
-            inlets, r1_params(removal_fraction={"H2O": 0.95, "CO2": 0.5}), thermo
-        )
+        AdsorptionBedR1().solve(inlets, r1_params(removal_fraction={"H2O": 0.95, "CO2": 0.5}), thermo)
 
 
 @pytest.mark.parametrize(
@@ -244,9 +234,7 @@ def test_refuse_removal_without_langmuir(thermo: Thermo) -> None:
         pytest.param({"q_max_mol_kg": 12.0, "b_1_Pa": -1e-3}, id="b_negative"),
     ],
 )
-def test_refuse_nonpositive_langmuir_parameters(
-    thermo: Thermo, entry: dict[str, float]
-) -> None:
+def test_refuse_nonpositive_langmuir_parameters(thermo: Thermo, entry: dict[str, float]) -> None:
     """q_m <= 0 or b <= 0 refuses, naming langmuir and the component id."""
     inlets = example_inlets(thermo)
     with pytest.raises(AdsorptionBedR1SpecError, match="langmuir.*H2O"):
@@ -317,9 +305,7 @@ def test_refuse_lub_without_bed_length(thermo: Thermo) -> None:
 def test_refuse_dH_without_T_ref(thermo: Thermo) -> None:
     inlets = example_inlets(thermo)
     with pytest.raises(AdsorptionBedR1SpecError, match="T_ref_K"):
-        AdsorptionBedR1().solve(
-            inlets, r1_params(dH_ads_J_mol={"H2O": -40000.0}), thermo
-        )
+        AdsorptionBedR1().solve(inlets, r1_params(dH_ads_J_mol={"H2O": -40000.0}), thermo)
 
 
 def test_refuse_T_ref_without_dH(thermo: Thermo) -> None:
