@@ -260,15 +260,7 @@ class PipeSegmentR1:
         calls = {"n": 0}
 
         def props(P: float) -> tuple[float, float]:
-            try:
-                state = thermo.flash_ph(z, P, h_in, molar_flow)
-            except Exception as exc:
-                # The registered PR package cannot converge a pure-component
-                # two-phase PH flash (thermo's flash_utils raises inside the
-                # solver); any flash failure inside the march means the line
-                # entered the two-phase region, which R1 refuses.
-                x = (calls["n"]) * (L_m / n_start) / 2
-                raise PipeSegmentR1Error(f"flashes to two-phase at x ~= {x:.1f} m; use R2") from exc
+            state = thermo.flash_ph(z, P, h_in, molar_flow)
             calls["n"] += 1
             if 0.001 < state.vapor_fraction < 0.999:
                 x = (calls["n"] - 1) * (L_m / n_start) / 2

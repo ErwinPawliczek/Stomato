@@ -5,7 +5,10 @@ whose node flashes two-phase (0.001 < vapour molar fraction < 0.999) take
 their step's dP from :func:`fluids.Beggs_Brill` -- the original 1973 holdup
 correlation with the Brill-Beggs regime-map interpolation, the original
 acceleration term, and **no Payne correction** (the Payne et al. holdup and
-friction corrections are not applied, as specified). Single-phase segments
+friction corrections are not applied, as specified). The liquid of a
+two-phase node is its single non-vapour phase (an aqueous flash gives
+AQUEOUS, not HC_LIQUID); a node with two liquid phases is refused -- a
+three-phase line is not modelled. Single-phase segments
 use the R1 Darcy-Colebrook step, so a line may flash part-way along.
 Integration is the same Heun predictor-corrector as R1 but at a fixed N
 (``n_segments``, default 20, cap 200): regime switches make the refinement
