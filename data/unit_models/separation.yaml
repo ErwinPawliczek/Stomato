@@ -340,10 +340,17 @@
         toward the feed end, the M2 switch at Sum(p) <= 1e-12 F, and design
         mode by brentq on theta_R2(A) - theta over [0, A_R1(theta)]; outlets
         as in R0/R1.
+      end_state: true
   pid_symbol: M
   references:
   - docs/unit-catalogue-plan.md §2 U-D 8
   notes: R0 split and stage-cut specs implemented; Geankoplis Ex. 13.4-2 example.
+      V1 gap — no printed cross-flow or counter-current worked example was found for
+      R1/R2 (searched Geankoplis §13.5 cross-flow worked example, Pan 1983, Baker
+      Ch. 8, and the plan's candidates); the R1/R2 oracle cases CF1–CF4 are
+      hand-computed (scratchpad/unit-specs/calc_membrane.py RK4/bisection — no
+      printed source), checked by the Rayleigh closed form and the R2 -> R1 -> R0
+      identities.
 
 - id: adsorption_bed
   name: Adsorption bed (TSA/PSA)

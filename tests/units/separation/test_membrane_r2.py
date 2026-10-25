@@ -8,6 +8,8 @@ and CF4 (R2 = R1 at P_l = 0, A = 100), rtol 1e-7.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from ngdesign.contracts import StreamState
@@ -72,6 +74,19 @@ def test_counter_current_validation_refusals() -> None:
         counter_current(F=F, z=Z, Pi=PI, P_h=P_H, P_l=1e5)
     with pytest.raises(MembraneR1SpecError, match="stage_cut"):
         counter_current(F=F, z=Z, Pi=PI, P_h=P_H, P_l=1e5, stage_cut=1.0)
+
+def test_refuses_shooting_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Refusal row 'did not converge': a failed shooting root raises the typed
+    error. Defensive — hybr converges on this smooth residual — reached by
+    monkeypatching the solver (review item 4)."""
+    import ngdesign.units.separation.membrane_r2 as r2mod
+
+    def fake_root(*args: object, **kwargs: object) -> SimpleNamespace:
+        return SimpleNamespace(success=False, x=[0.5, 0.5], fun=[1e-3, 1e-3], nfev=1)
+
+    monkeypatch.setattr(r2mod, "root", fake_root)
+    with pytest.raises(MembraneR1SpecError, match="did not converge"):
+        counter_current(F=F, z=Z, Pi=PI, P_h=P_H, P_l=1e5, area=100.0)
 
 
 def _air_feed(thermo: Thermo) -> StreamState:
