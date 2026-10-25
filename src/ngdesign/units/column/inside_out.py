@@ -85,6 +85,25 @@ class _StripperSection:
     bottom_stage: int | None
 
 
+@dataclass(frozen=True)
+class _Interlink:
+    """One stream link of the stage graph (S0-1c step 2).
+
+    Stages are 0-based graph indices (the records are consumed by the
+    solver's unknown packing, not by user-facing numbering). ``phase`` is
+    ``"liquid"`` for a stripper draw (main stage -> section top stage; its
+    flow is an unknown of the coupled solve, at ``flow_index``) or
+    ``"vapour"`` for the stripped overhead return (section top stage ->
+    main stage; its flow is the top stage's own vapour, so ``flow_index``
+    is None).
+    """
+
+    from_stage: int
+    to_stage: int
+    phase: str
+    flow_index: int | None
+
+
 @dataclass
 class _Column:
     """All static problem data for one solve. Stage index 0 = stage 1 (top)."""
@@ -150,6 +169,10 @@ class _Profile:
     #: S0-1: one dict per pumparound loop (in spec order): flow, duty, draw and
     #: return temperatures. Empty without pumparounds.
     pa_report: list[dict[str, float]] = field(default_factory=list)
+    #: S0-1c step 2: one live draw flow per liquid interlink, in record order
+    #: (empty without strippers) - the graph-NS unknown vector's draw block
+    #: round-trips through here, like V does for the stage vapour flows.
+    draw_flows: list[float] = field(default_factory=list)
     outer: int = 0
     inner: int = 0
     ns_used: bool = False
@@ -415,26 +438,6 @@ def _pa_return_terms(col: _Column) -> list[tuple[int, int, float]]:
     Empty without pumparounds; no-op loops (zero duty, draw = return) skipped.
     """
     return [(pa.return_stage - 1, pa.draw_stage - 1, col.pa_flows[idx]) for idx, pa in _live_pumparounds(col)]
-
-
-def _pa_stage_flows(col: _Column) -> tuple[list[float], list[float]]:
-    """Per-stage pumparound net liquid outflow (at the draw) and inflow (at the return).
-
-    Zeros everywhere without pumparounds. A pumparound with draw = return and
-    zero duty contributes equal in/out at one stage: an exact no-op.
-    """
-    pa_out = [0.0] * col.n
-    pa_in = [0.0] * col.n
-    for idx, pa in _live_pumparounds(col):
-        pa_out[pa.draw_stage - 1] += col.pa_flows[idx]
-        pa_in[pa.return_stage - 1] += col.pa_flows[idx]
-    return pa_out, pa_in
-
-
-def _l_profile(col: _Column, l0: float, v: list[float]) -> list[float]:
-    """Liquid profile from the stage-wise total balances, closed form:
-
-    L_j = L_0 + sum_{m<=j}(F_m - S_m) + V_{j+1} - V_1  (V_{N+1} = a.draw_stage - 1, col.pa_flows[idx]) for idx, pa in _live_pumparounds(col)]
 
 
 def _pa_stage_flows(col: _Column) -> tuple[list[float], list[float]]:
