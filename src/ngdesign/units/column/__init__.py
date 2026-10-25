@@ -62,8 +62,10 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.stream import PhaseKind
 from ngdesign.registry import register
 
+from .coupled import _needs_full, _solve_specs_full, _StripperReport
 from .inside_out import (
     _build_column,
     _check_pumparounds,
@@ -108,6 +110,41 @@ def _condensed_distillate(
     return tb.pt(y0_ready, t_bubble, p_cond, max(d, _FLOW_FLOOR))
 
 
+def _split_water_decant(tb: _ThermoBox, state: StreamState) -> tuple[StreamState, StreamState]:
+    """Split a condensed distillate into (hydrocarbon remainder, water decant).
+
+    Spec S0-1, feature 3: water the condensate holds as an AQUEOUS phase
+    leaves as a separate internal product. The package's single-liquid flash
+    classifies a liquid as AQUEOUS above a 0.5 water mole fraction (the S-01
+    rule); a condensate classified HC_LIQUID decants nothing - the zero-flow
+    case the spec explicitly anticipates.
+    """
+    aq = next(
+        (
+            ph
+            for ph in state.phases
+            if ph.kind == PhaseKind.AQUEOUS and ph.mole_fraction * state.molar_flow > _FLOW_FLOOR
+        ),
+        None,
+    )
+    if aq is None:
+        return state, _zero_flow_state(state.composition, state.T, state.P)
+    decant_flow = aq.mole_fraction * state.molar_flow
+    decant = tb.pt(aq.composition, state.T, state.P, decant_flow)
+    # The remainder: total moles minus the aqueous phase's share, renormalized.
+    rest: dict[str, float] = {}
+    for cid, frac in state.composition.items():
+        rest[cid] = max(frac * state.molar_flow - aq.composition.get(cid, 0.0) * decant_flow, 0.0)
+    total = sum(rest.values())
+    if total <= _FLOW_FLOOR:
+        # Degenerate: everything decanted. The HC remainder is the zero-flow
+        # edge; keep the original composition on a unit-normalized state.
+        rest = dict(state.composition)
+        total = 1.0
+    remainder = {cid: f / total for cid, f in rest.items()}
+    return tb.pt(remainder, state.T, state.P, state.molar_flow - decant_flow), decant
+
+
 def _zero_flow_state(comp: dict[str, float], t: float, p: float) -> StreamState:
     """Placeholder outlet for a port the configuration leaves unused."""
     return StreamState(
@@ -143,6 +180,23 @@ class Column:
         params: dict[str, Any],
         thermo: Thermo,
     ) -> UnitResult:
+        products = solve_column_full(inlets, params, thermo)
+        return UnitResult(
+            outlets={
+                "distillate": products.distillate,
+                "bottoms": products.bottoms,
+                "side_draw": products.side_draw,
+            },
+            duty_W=products.duty_W,
+            info=products.info,
+        )
+
+    @staticmethod
+    def _solve_products(
+        inlets: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> ColumnProducts:
         graph_feed = inlets.get("feed")
         graph_dict: dict[str, Any] | None = None
         if graph_feed is not None:
@@ -156,9 +210,20 @@ class Column:
             }
         parsed = _parse_params(params, graph_dict)
         tb = _ThermoBox(thermo, min(parsed.pressures), max(parsed.pressures))
-        col = _build_column(parsed, tb)
-
-        prof = _solve_specs(col, tb, parsed)
+        if _needs_full(parsed):
+            # S0-1 features 2/4: side strippers, free tears or refiner specs.
+            # The generalized coupled driver owns the solve (the legacy
+            # two-tear secant is locked by the distillation benchmarks); the
+            # returned column carries the converged tear values, so every
+            # downstream consumer reads live flows off ``col``.
+            coupled = _solve_specs_full(parsed, tb)
+            col = coupled.col
+            prof = coupled.prof
+            strip_reports: tuple[_StripperReport, ...] = coupled.reports
+        else:
+            col = _build_column(parsed, tb)
+            prof = _solve_specs(col, tb, parsed)
+            strip_reports = ()
         # Post-solve pumparound gates (review items 4/5, PR #238): run once on
         # the final profile - an infeasible loop flow or a heating loop refuses
         # the column instead of reporting a silently-wrong result.
@@ -172,22 +237,44 @@ class Column:
             if graph_feed is not None and f.comp == dict(graph_feed.composition) and f is parsed.feeds[0]:
                 continue  # the port feed is already counted
             feed_states.append(tb.pt(f.comp, f.T, f.P, f.flow))
+        if strip_reports:
+            # Whole-unit boundary (spec S0-1, feature 2): stripping steam is
+            # an internal FEED of the unit. The injected stripper draws and
+            # vapour returns stay internal and are deliberately not counted.
+            for st in parsed.side_strippers:
+                if st.steam_flow and st.steam_flow > 0.0:
+                    feed_states.append(tb.pt({"H2O": 1.0}, st.steam_T, st.steam_P, st.steam_flow))
 
         try:
+            extra_states: list[tuple[str, StreamState]] = []
+            decant_state: StreamState | None = None
             if col.condenser == "total":
                 distillate = _condensed_distillate(tb, prof.y[0], prof.T[0], col.pressures[0], prof.d)
             else:
                 distillate = tb.pt(prof.y[0], prof.T[0], col.pressures[0], prof.d)
             bottoms = tb.pt(prof.x[col.n - 1], prof.T[col.n - 1], col.pressures[col.n - 1], prof.b)
             out_states: list[StreamState] = [distillate, bottoms]
+            if col.condenser == "total" and parsed.condenser_water_decant:
+                # Condenser water decant (spec S0-1, feature 3): the aqueous
+                # portion of the condensate leaves as a separate internal
+                # product; the distillate carries only the hydrocarbon liquid.
+                distillate, decant = _split_water_decant(tb, distillate)
+                out_states[0] = distillate
+                out_states.append(decant)
+                decant_state = decant
             if parsed.draws:
-                first = parsed.draws[0]
-                assert first.flow is not None  # parser rejects free-flow draws (S0-1 feature 4 pending)
+                # Live flows: in the coupled path a free tear carries its
+                # converged value in ``col.draws``; the legacy path has the
+                # configured flows. Stripper draws appended by the coupled
+                # driver are internal and are cut off here.
+                orig_draws = col.draws[: len(parsed.draws)]
+                first = orig_draws[0]
+                assert first.flow is not None  # post-solve every free tear carries its converged flow
                 j = first.stage - 1
                 comp = prof.y[j] if first.vapor else prof.x[j]
                 side_draw = tb.pt(comp, prof.T[j], col.pressures[j], first.flow)
                 out_states.append(side_draw)
-                for extra in parsed.draws[1:]:
+                for extra in orig_draws[1:]:
                     assert extra.flow is not None
                     je = extra.stage - 1
                     comp_e = prof.y[je] if extra.vapor else prof.x[je]
@@ -225,6 +312,19 @@ class Column:
                 info[f"pa_{pa.name}_duty_W"] = rep["duty_W"]
                 info[f"pa_{pa.name}_draw_T_K"] = rep["draw_T_K"]
                 info[f"pa_{pa.name}_return_T_K"] = rep["return_T_K"]
+        for rep in strip_reports:
+            # Spec S0-1, feature 5: every internal product is reported.
+            info[f"stripper_{rep.name}_product_mol_s"] = rep.product_flow
+            info[f"stripper_{rep.name}_product_T_K"] = rep.product_T
+            info[f"stripper_{rep.name}_reboiler_duty_W"] = rep.reboiler_duty_W
+            info[f"stripper_{rep.name}_overhead_mol_s"] = rep.overhead_flow
+            info[f"stripper_{rep.name}_overhead_T_K"] = rep.overhead_T
+            for cid, frac in rep.product_comp.items():
+                info[f"stripper_{rep.name}_product_x_{cid}"] = frac
+        if parsed.condenser_water_decant:
+            # Spec S0-1, feature 5: the decant is reported even at zero flow.
+            info["water_decant_mol_s"] = decant.molar_flow
+            info["water_decant_T_K"] = decant.T
         for j in range(col.n):
             info[f"stage_{j}_T_K"] = prof.T[j]
             info[f"stage_{j}_P_Pa"] = col.pressures[j]

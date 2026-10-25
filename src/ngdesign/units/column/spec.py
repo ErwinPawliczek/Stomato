@@ -126,7 +126,21 @@ _SPEC_KEYS = (
     "product_purity",
     "condenser_duty_W",
     "reboiler_duty_W",
+    # S0-1 feature 4: refiner specs. Value shapes (validated in _parse_params):
+    #   draw_rate:            {"name": <draw or stripper name>, "value": mol/s}
+    #   stage_temperature:    {"stage": <1-indexed stage>, "value": K}
+    #   pumparound_duty:      {"name": <pumparound name>, "value": W}
+    #   pumparound_return_T:  {"name": <pumparound name>, "value": K}
+    "draw_rate",
+    "stage_temperature",
+    "pumparound_duty",
+    "pumparound_return_T",
 )
+#: Spec keys S0-1 feature 4 added. A params['specs'] dict holding any of these
+#: (or a column with free tears: pumparound flows, named free draws, stripper
+#: draws) solves on the generalized secant (``_solve_specs_full``), not the
+#: legacy two-tear path whose benchmarked mesh sequence is locked.
+_FULL_SPEC_KEYS = ("draw_rate", "stage_temperature", "pumparound_duty", "pumparound_return_T")
 
 
 class ColumnSpecError(ValueError):
@@ -191,6 +205,33 @@ class _Pumparound:
 
 
 @dataclass(frozen=True)
+class _SideStripper:
+    """A side stripper coupled to the main column (S0-1 feature 2).
+
+    Liquid is drawn from the main column at ``draw_stage``, flows down an
+    ``n_stages``-stage stripper section, and its stripped overhead vapour
+    returns to ``return_stage`` (at or above the draw). The stripping agent
+    is either bottom steam (``steam_flow``) or a kettle reboiler
+    (``reboiler_duty_W``); the stripper bottoms leave as an internal product.
+
+    The draw rate is not configured: it is a tear of the coupled solve,
+    driven by ``product_rate`` (the stripper bottoms rate) or by a
+    ``draw_rate`` spec naming this stripper. ``n_stages = 0`` is the
+    degenerate case: the entire draw leaves as product and nothing returns.
+    """
+
+    name: str
+    draw_stage: int
+    return_stage: int
+    n_stages: int
+    steam_flow: float | None  # steam option: bottom steam flow, mol/s (0 = none)
+    steam_T: float
+    steam_P: float
+    reboiler_duty_W: float | None  # reboiler option: kettle duty, W
+    product_rate: float | None  # stripper bottoms rate, mol/s, or free (draw_rate spec)
+
+
+@dataclass(frozen=True)
 class _Params:
     """Validated column parameters."""
 
@@ -202,6 +243,11 @@ class _Params:
     pressures: list[float]
     specs: dict[str, Any]
     pumparounds: list[_Pumparound] = field(default_factory=list)
+    side_strippers: list[_SideStripper] = field(default_factory=list)
+    #: S0-1 feature 3: water that the package reports as an AQUEOUS liquid
+    #: phase at a total condenser leaves as a separate internal product
+    #: (``water_decant``). Requires condenser == "total".
+    condenser_water_decant: bool = False
 
 
 def _positive(value: Any, name: str) -> float:
@@ -272,16 +318,6 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
     if reboiler not in _REBOILER_KINDS:
         raise ColumnSpecError(f"reboiler must be one of {_REBOILER_KINDS}, got {reboiler!r}")
 
-    # S0-1 features 2 and 3 are not implemented yet (review item 7, PR #238):
-    # refuse their keys explicitly instead of silently ignoring them and
-    # returning a plain column.
-    for key, feature in (
-        ("side_strippers", "S0-1 feature 2 (coupled side strippers)"),
-        ("condenser_water_decant", "S0-1 feature 3 (steam and free water)"),
-    ):
-        if key in params:
-            raise ColumnSpecError(f"params['{key}'] is not implemented yet: it lands with {feature} (#235)")
-
     feeds: list[_FeedSpec] = []
     if graph_feed is not None:
         feed_stage = _stage_index(params.get("feed_stage", max(1, n_stages // 2)), "feed_stage", n_stages)
@@ -334,12 +370,9 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
             raise ColumnSpecError(
                 f"draws[{k}]: a draw without flow_mol_s needs a name (a draw_rate spec drives it)"
             )
-        if flow is None:
-            # S0-1 feature 4 will wire draw_rate specs; until then a named
-            # free draw has no driver and would silently produce no draw.
-            raise ColumnSpecError(
-                f"draws[{k}]: flow_mol_s is required (draw_rate specs land with S0-1 feature 4)"
-            )
+        # A named draw without flow_mol_s is a free tear: a draw_rate spec
+        # (S0-1 feature 4) drives it, and the count rule in _tear_names
+        # refuses the config when no such spec exists.
         draws.append(_DrawSpec(stage=stage, vapor=phase == "vapor", flow=flow, name=name))
     total_draws = sum(d.flow for d in draws if d.flow is not None)
     total_feeds = sum(f.flow for f in feeds)
@@ -352,11 +385,28 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
     unknown = set(specs) - set(_SPEC_KEYS)
     if unknown:
         raise ColumnSpecError(f"unknown spec keys {sorted(unknown)}; allowed: {list(_SPEC_KEYS)}")
+    pumparounds = _parse_pumparounds(params, n_stages)
+    strippers = _parse_side_strippers(params, n_stages)
+    decant = _parse_decant(params, condenser)
+    _validate_full_specs(specs, pumparounds, draws, strippers, n_stages)
     n_tears = (1 if condenser != "none" else 0) + (1 if reboiler != "none" else 0)
-    if len(specs) != n_tears:
+    tear_list = _tear_names(condenser, reboiler, pumparounds, draws, strippers)
+    n_drivers = len(specs) + sum(1 for st in strippers if st.product_rate is not None)
+    if len(tear_list) != n_drivers:
+        legacy = (
+            not strippers
+            and not any(pa.flow_mol_s is None for pa in pumparounds)
+            and not any(d.flow is None for d in draws)
+            and not any(k in specs for k in _FULL_SPEC_KEYS)
+        )
+        if legacy:
+            raise ColumnSpecError(
+                f"this column has {n_tears} degrees of freedom ({condenser} condenser, "
+                f"{reboiler} reboiler) and needs exactly {n_tears} specs, got {len(specs)}"
+            )
         raise ColumnSpecError(
-            f"this column has {n_tears} degrees of freedom ({condenser} condenser, "
-            f"{reboiler} reboiler) and needs exactly {n_tears} specs, got {len(specs)}"
+            f"spec count ({n_drivers}: {sorted(_spec_driver_names(specs, strippers))}) must equal "
+            f"tear count ({len(tear_list)}: {tear_list}); every tear needs exactly one driver"
         )
     if condenser == "none" and ("reflux_ratio" in specs or "condenser_duty_W" in specs):
         raise ColumnSpecError("reflux_ratio/condenser_duty_W specs need a condenser (condenser='none')")
@@ -406,8 +456,17 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
         draws=draws,
         pressures=_parse_pressure_profile(params.get("pressure_profile", params.get("P")), n_stages),
         specs=specs,
-        pumparounds=_parse_pumparounds(params, n_stages),
+        pumparounds=pumparounds,
+        side_strippers=strippers,
+        condenser_water_decant=decant,
     )
+
+
+def _spec_driver_names(specs: dict[str, Any], strippers: list[_SideStripper]) -> list[str]:
+    """Both driver lists, for the count-mismatch refusal (S0-1: 'naming both lists')."""
+    names = list(specs)
+    names += [f"stripper:{st.name}.product_rate_mol_s" for st in strippers if st.product_rate is not None]
+    return names
 
 
 def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumparound]:
@@ -445,11 +504,11 @@ def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumpar
                 f"draw_stage {draw_stage} (a pumparound returns cooled liquid higher in the tower)"
             )
         flow = pa.get("flow_mol_s")
-        if flow is None:
-            raise ColumnSpecError(
-                f"pumparounds[{k}]: flow_mol_s is required until S0-1 feature 4 wires pumparound tear specs"
-            )
-        flow = _positive(flow, f"pumparounds[{k}].flow_mol_s")
+        if flow is not None:
+            flow = _positive(flow, f"pumparounds[{k}].flow_mol_s")
+        # A pumparound without flow_mol_s is a free tear: a pumparound_duty
+        # or pumparound_return_T spec (S0-1 feature 4) drives it, and the
+        # count rule refuses the config when no such spec exists.
         duty = pa.get("duty_W")
         if duty is not None:
             try:
@@ -481,6 +540,254 @@ def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumpar
                 flow_mol_s=flow,
                 duty_W=duty,
                 return_T_K=return_t,
+                tear="flow" if flow is None else "",
             )
         )
     return pas
+
+
+def _parse_side_strippers(params: Mapping[str, Any], n_stages: int) -> list[_SideStripper]:
+    """Parse and validate ``params["side_strippers"]`` (S0-1 feature 2)."""
+    raw = params.get("side_strippers", [])
+    if not isinstance(raw, (list, tuple)):
+        raise ColumnSpecError("side_strippers must be a list of side-stripper dicts")
+    # Like pumparounds, a stripper draw may not sit on a duty stage: the
+    # condenser and kettle balances define qc/qr and carry no draw terms.
+    condenser = str(params.get("condenser", "total"))
+    reboiler = str(params.get("reboiler", "kettle"))
+    forbidden_stages: list[tuple[int, str]] = []
+    if condenser != "none":
+        forbidden_stages.append((1, "the condenser stage (the condenser's own balance defines qc)"))
+    if reboiler == "kettle":
+        forbidden_stages.append((n_stages, "the reboiler stage (the kettle's own balance defines qr)"))
+    strippers: list[_SideStripper] = []
+    names: set[str] = set()
+    for k, item in enumerate(raw):
+        st = dict(item)
+        draw_stage = _stage_index(st.get("draw_stage"), f"side_strippers[{k}].draw_stage", n_stages)
+        return_stage = _stage_index(st.get("return_stage"), f"side_strippers[{k}].return_stage", n_stages)
+        for stage, why in forbidden_stages:
+            if draw_stage == stage:
+                raise ColumnSpecError(
+                    f"side_strippers[{k}]: draw_stage {stage} is {why}; "
+                    f"stripper draws on duty stages would report wrong duties"
+                )
+        if return_stage > draw_stage:
+            raise ColumnSpecError(
+                f"side_strippers[{k}]: return_stage {return_stage} must be at or above "
+                f"draw_stage {draw_stage} (the stripped overhead vapour returns above the draw)"
+            )
+        n = st.get("n_stages")
+        if n is None:
+            raise ColumnSpecError(f"side_strippers[{k}]: n_stages is required (0 = plain liquid draw)")
+        try:
+            n_strippers = int(n)  # type: ignore[arg-type]
+        except (TypeError, ValueError) as exc:
+            raise ColumnSpecError(f"side_strippers[{k}].n_stages must be an integer, got {n!r}") from exc
+        if n_strippers < 0:
+            raise ColumnSpecError(f"side_strippers[{k}].n_stages must be >= 0, got {n_strippers}")
+        if n_strippers == 1:
+            raise ColumnSpecError(
+                f"side_strippers[{k}].n_stages must be 0 (plain liquid draw) or >= 2 "
+                f"(the mesh solves at least 2 equilibrium stages; 1 is not solvable)"
+            )
+        steam = st.get("steam")
+        duty = st.get("reboiler_duty_W")
+        if (steam is None) == (duty is None):
+            raise ColumnSpecError(
+                f"side_strippers[{k}]: exactly one of steam (a dict) / reboiler_duty_W is required"
+            )
+        steam_flow = steam_T = steam_P = 0.0
+        if steam is not None:
+            s = dict(steam)
+            flow_raw = s.get("flow_mol_s", 0.0)
+            try:
+                steam_flow = float(flow_raw)  # type: ignore[arg-type]
+            except (TypeError, ValueError) as exc:
+                raise ColumnSpecError(
+                    f"side_strippers[{k}].steam.flow_mol_s must be a number, got {flow_raw!r}"
+                ) from exc
+            if not math.isfinite(steam_flow) or steam_flow < 0.0:
+                raise ColumnSpecError(
+                    f"side_strippers[{k}].steam.flow_mol_s must be >= 0 (0 = no steam), got {steam_flow!r}"
+                )
+            steam_T = _positive(s.get("T_K"), f"side_strippers[{k}].steam.T_K")
+            steam_P = _positive(s.get("P_Pa"), f"side_strippers[{k}].steam.P_Pa")
+        else:
+            try:
+                duty_val = float(duty)  # type: ignore[arg-type]
+            except (TypeError, ValueError) as exc:
+                raise ColumnSpecError(f"side_strippers[{k}].reboiler_duty_W must be a number, got {duty!r}") from exc
+            if not math.isfinite(duty_val) or duty_val < 0.0:
+                raise ColumnSpecError(
+                    f"side_strippers[{k}].reboiler_duty_W must be >= 0 (heat added), got {duty_val!r}"
+                )
+        rate_raw = st.get("product_rate_mol_s")
+        product_rate: float | None = None
+        if rate_raw is not None:
+            product_rate = _positive(rate_raw, f"side_strippers[{k}].product_rate_mol_s")
+        name = st.get("name")
+        if name is None:
+            name = str(k + 1)
+        if not isinstance(name, str) or not name:
+            raise ColumnSpecError(f"side_strippers[{k}].name must be a non-empty string")
+        if name in names:
+            raise ColumnSpecError(f"side_strippers: duplicate name {name!r}")
+        names.add(name)
+        strippers.append(
+            _SideStripper(
+                name=name,
+                draw_stage=draw_stage,
+                return_stage=return_stage,
+                n_stages=n_strippers,
+                steam_flow=steam_flow if steam is not None else None,
+                steam_T=steam_T,
+                steam_P=steam_P,
+                reboiler_duty_W=float(duty) if duty is not None else None,  # type: ignore[arg-type]
+                product_rate=product_rate,
+            )
+        )
+    draw_names = set()
+    for d in params.get("draws", []) or []:
+        if isinstance(d, Mapping) and d.get("name") is not None:
+            draw_names.add(str(d["name"]))
+    for st in strippers:
+        if st.name in draw_names:
+            raise ColumnSpecError(
+                f"side_strippers: name {st.name!r} collides with a named draw; info keys would overlap"
+            )
+    return strippers
+
+
+def _parse_decant(params: Mapping[str, Any], condenser: str) -> bool:
+    """Parse ``params["condenser_water_decant"]`` (S0-1 feature 3)."""
+    raw = params.get("condenser_water_decant", False)
+    if not isinstance(raw, bool):
+        raise ColumnSpecError(f"condenser_water_decant must be a bool, got {raw!r}")
+    if raw and condenser != "total":
+        raise ColumnSpecError(
+            "condenser_water_decant needs a total condenser: the decant lives at the "
+            f"condensate split, and condenser={condenser!r} has no condensate"
+        )
+    return raw
+
+
+def _parse_named_spec(spec: dict[str, Any], key: str) -> dict[str, Any]:
+    """Normalize a ``{name|stage, value}`` refiner spec (S0-1 feature 4)."""
+    if key == "stage_temperature":
+        raw_stage = spec.get("stage")
+        try:
+            stage = int(raw_stage)  # type: ignore[arg-type]
+        except (TypeError, ValueError) as exc:
+            raise ColumnSpecError(f"specs.stage_temperature.stage must be an integer, got {raw_stage!r}") from exc
+        return {"stage": stage, "value": _positive(spec.get("value"), "specs.stage_temperature.value")}
+    name = str(spec.get("name", ""))
+    if not name:
+        raise ColumnSpecError(f"specs.{key} needs a 'name' (the draw, stripper or pumparound it drives)")
+    if key == "pumparound_duty":
+        # Sign convention matches the reported pa_<name>_duty_W (negative =
+        # heat removed by the cooler); only finiteness and non-zero apply.
+        raw = spec.get("value")
+        try:
+            value = float(raw)  # type: ignore[arg-type]
+        except (TypeError, ValueError) as exc:
+            raise ColumnSpecError(f"specs.pumparound_duty.value must be a finite number, got {raw!r}") from exc
+        if not math.isfinite(value) or value == 0.0:
+            raise ColumnSpecError(f"specs.pumparound_duty.value must be a non-zero finite number, got {raw!r}")
+        return {"name": name, "value": value}
+    return {"name": name, "value": _positive(spec.get("value"), f"specs.{key}.value")}
+
+
+def _validate_full_specs(
+    specs: dict[str, Any],
+    pumparounds: list[_Pumparound],
+    draws: list[_DrawSpec],
+    strippers: list[_SideStripper],
+    n_stages: int,
+) -> None:
+    """Pair the S0-1 feature 4 specs with the tears they drive (parse time).
+
+    Every refusal here names the spec key, so an unsatisfiable configuration
+    fails before any solve, on an input the column could otherwise converge.
+    """
+    free_pas = {pa.name: pa for pa in pumparounds if pa.flow_mol_s is None}
+    free_draws = {d.name for d in draws if d.flow is None}
+    stripper_map = {st.name: st for st in strippers}
+    draw_rate_names: set[str] = set()
+    for key in _FULL_SPEC_KEYS:
+        if key not in specs:
+            continue
+        spec = specs[key] = _parse_named_spec(dict(specs[key]), key)
+        if key == "stage_temperature":
+            _stage_index(spec["stage"], "specs.stage_temperature.stage", n_stages)
+            continue
+        name = spec["name"]
+        if key == "draw_rate":
+            if name in draw_rate_names:
+                raise ColumnSpecError(f"specs.draw_rate: target {name!r} is driven twice")
+            if name in free_draws:
+                draw_rate_names.add(name)
+            elif name in stripper_map:
+                if stripper_map[name].product_rate is not None:
+                    raise ColumnSpecError(
+                        f"specs.draw_rate {name!r}: the stripper already has product_rate_mol_s; "
+                        f"give one driver, not both"
+                    )
+                draw_rate_names.add(name)
+            else:
+                raise ColumnSpecError(
+                    f"specs.draw_rate: no free draw or stripper named {name!r} "
+                    f"(free draws: {sorted(free_draws)}, strippers: {sorted(stripper_map)})"
+                )
+        elif key == "pumparound_duty":
+            pa = free_pas.get(name)
+            if pa is None:
+                raise ColumnSpecError(
+                    f"specs.pumparound_duty: no pumparound with a free flow_mol_s named {name!r} "
+                    f"(a duty spec drives the loop flow, so the flow must be unset and return_T_K fixed)"
+                )
+            if pa.return_T_K is None:
+                raise ColumnSpecError(
+                    f"specs.pumparound_duty {name!r}: duty_W must be unset (it is the quantity the spec drives)"
+                )
+        elif key == "pumparound_return_T":
+            pa = free_pas.get(name)
+            if pa is None:
+                raise ColumnSpecError(
+                    f"specs.pumparound_return_T: no pumparound with a free flow_mol_s named {name!r} "
+                    f"(a return-temperature spec drives the loop flow, so the flow must be unset and duty_W fixed)"
+                )
+            if pa.duty_W is None:
+                raise ColumnSpecError(
+                    f"specs.pumparound_return_T {name!r}: return_T_K must be unset (it is the quantity the spec drives)"
+                )
+    for st in strippers:
+        if st.product_rate is None and st.name not in draw_rate_names:
+            raise ColumnSpecError(
+                f"side_strippers[{st.name!r}]: the stripper draw has no driver; give "
+                f"product_rate_mol_s or a draw_rate spec naming it"
+            )
+
+
+def _tear_names(
+    condenser: str,
+    reboiler: str,
+    pumparounds: list[_Pumparound],
+    draws: list[_DrawSpec],
+    strippers: list[_SideStripper],
+) -> list[str]:
+    """The named free tears of the generalized solve (S0-1 feature 4).
+
+    Every stripper draw is a tear (driven by ``product_rate_mol_s`` or a
+    ``draw_rate`` spec); free pumparound flows and named free draws are tears
+    driven by their specs. The count rule: one driver per tear.
+    """
+    names: list[str] = []
+    if condenser != "none":
+        names.append("top")
+    if reboiler == "kettle":
+        names.append("boilup")
+    names += [f"pumparound:{pa.name}" for pa in pumparounds if pa.flow_mol_s is None]
+    names += [f"draw:{d.name}" for d in draws if d.flow is None]
+    names += [f"stripper:{st.name}" for st in strippers]
+    return names

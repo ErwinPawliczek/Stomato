@@ -186,8 +186,9 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
     col.pumparounds = list(col_params.pumparounds)
     pa_flows: list[float] = []
     for pa in col.pumparounds:
-        assert pa.flow_mol_s is not None  # parser rejects free PA tears (S0-1 feature 4 pending)
-        pa_flows.append(pa.flow_mol_s)
+        # A free pumparound tear (S0-1 feature 4) carries no flow until the
+        # generalized driver injects it; seed builds only read mass totals.
+        pa_flows.append(pa.flow_mol_s if pa.flow_mol_s is not None else 0.0)
     col.pa_flows = pa_flows
     col.draw_l, col.draw_v = _draw_flows(col)
     # Clamp the inner temperature walk to a window around the physical operating
