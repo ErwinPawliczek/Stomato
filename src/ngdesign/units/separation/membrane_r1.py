@@ -203,6 +203,95 @@ def cross_flow(
     return residue, permeate, A, theta
 
 
+def _adapter_params(
+    inlet: StreamState,
+    params: dict[str, Any],
+) -> tuple[float, dict[str, float], float | None, float | None]:
+    """Adapter-level parameter validation shared by the R1/R2 adapters.
+
+    Returns ``(P_l, permeances, area_f, stage_cut_f)``. Unlike the pure
+    functions, the adapter refuses `P_permeate <= 0` (a membrane with no
+    permeate-side pressure is not a physical adapter configuration).
+    """
+    P_permeate = params.get("P_permeate")
+    if not isinstance(P_permeate, (int, float)) or isinstance(P_permeate, bool):
+        raise MembraneR1SpecError("P_permeate is required: the permeate-side absolute pressure, Pa")
+    P_l = float(P_permeate)
+    if P_l <= 0.0 or P_l >= float(inlet.P):
+        raise MembraneR1SpecError(f"P_permeate {P_l} must be in (0, the feed pressure {inlet.P})")
+    permeances_raw = params.get("permeances_mol_m2_s_Pa")
+    if not isinstance(permeances_raw, Mapping) or not permeances_raw:
+        raise MembraneR1SpecError(
+            "permeances_mol_m2_s_Pa is required: component id to permeance, mol/(m2 s Pa)"
+        )
+    unknown = [cid for cid in permeances_raw if cid not in inlet.composition]
+    if unknown:
+        raise MembraneR1SpecError(f"permeances_mol_m2_s_Pa names component(s) {unknown} not in the feed")
+    missing = [cid for cid in inlet.composition if cid not in permeances_raw]
+    if missing:
+        raise MembraneR1SpecError(f"permeances_mol_m2_s_Pa is missing feed component(s) {missing}")
+    bad = {c: v for c, v in permeances_raw.items() if not isinstance(v, (int, float)) or float(v) <= 0.0}
+    if bad:
+        raise MembraneR1SpecError(f"permeances_mol_m2_s_Pa entries {bad} must be > 0")
+
+    area = params.get("area_m2")
+    stage_cut = params.get("stage_cut")
+    if (area is None) == (stage_cut is None):
+        raise MembraneR1SpecError("give exactly one of area_m2 and stage_cut, not both or neither")
+    area_f: float | None = None
+    stage_cut_f: float | None = None
+    if area is not None:
+        if not isinstance(area, (int, float)) or isinstance(area, bool) or float(area) <= 0.0:
+            raise MembraneR1SpecError(f"area_m2 {area} must be > 0")
+        area_f = float(area)
+    else:
+        if not isinstance(stage_cut, (int, float)) or isinstance(stage_cut, bool):
+            raise MembraneR1SpecError(f"stage_cut {stage_cut} must be a number in (0, 1)")
+        stage_cut_f = float(stage_cut)
+        if not 0.0 < stage_cut_f < 1.0:
+            raise MembraneR1SpecError(f"stage_cut {stage_cut_f} outside (0, 1)")
+    return P_l, {c: float(v) for c, v in permeances_raw.items()}, area_f, stage_cut_f
+
+
+def _outlets_result(
+    inlet: StreamState,
+    thermo: Thermo,
+    residue_flows: dict[str, float],
+    permeate_flows: dict[str, float],
+    P_l: float,
+    A: float,
+    theta: float,
+    extra_info: dict[str, float] | None = None,
+) -> UnitResult:
+    """Isothermal outlet build shared by the R1/R2 adapters (R0 pattern)."""
+    fractions = {
+        cid: permeate_flows[cid] / (float(inlet.molar_flow) * inlet.composition[cid])
+        for cid in inlet.composition
+    }
+    permeate, residue = split_by_component(
+        inlet,
+        fractions,
+        thermo,
+        outlet_P={"top": P_l, "bottom": float(inlet.P)},
+    )
+    n_permeate = float(sum(permeate_flows.values()))
+    n_residue = float(sum(residue_flows.values()))
+    info: dict[str, float] = {"area_m2": A, "stage_cut": theta}
+    if extra_info:
+        info.update(extra_info)
+    for cid in inlet.composition:
+        info[f"permeate_y_{cid}"] = permeate_flows[cid] / n_permeate
+        info[f"residue_x_{cid}"] = residue_flows[cid] / n_residue
+    h_in_W = inlet.enthalpy * inlet.molar_flow
+    h_out_W = sum(s.enthalpy * s.molar_flow for s in (permeate, residue))
+    return UnitResult(
+        outlets={"permeate": permeate, "residue": residue},
+        duty_W=h_out_W - h_in_W,
+        power_W=0.0,
+        info=info,
+    )
+
+
 class MembraneR1:
     """Cross-flow membrane adapter (catalogue level R1, solution-diffusion)."""
 
@@ -216,76 +305,17 @@ class MembraneR1:
         thermo: Thermo,
     ) -> UnitResult:
         inlet = inlets["feed_in"]
-        P_permeate = params.get("P_permeate")
-        if not isinstance(P_permeate, (int, float)) or isinstance(P_permeate, bool):
-            raise MembraneR1SpecError("P_permeate is required: the permeate-side absolute pressure, Pa")
-        P_l = float(P_permeate)
-        if P_l <= 0.0 or P_l >= float(inlet.P):
-            raise MembraneR1SpecError(f"P_permeate {P_l} must be in (0, the feed pressure {inlet.P})")
-        permeances = params.get("permeances_mol_m2_s_Pa")
-        if not isinstance(permeances, Mapping) or not permeances:
-            raise MembraneR1SpecError(
-                "permeances_mol_m2_s_Pa is required: component id to permeance, mol/(m2 s Pa)"
-            )
-        unknown = [cid for cid in permeances if cid not in inlet.composition]
-        if unknown:
-            raise MembraneR1SpecError(f"permeances_mol_m2_s_Pa names component(s) {unknown} not in the feed")
-        missing = [cid for cid in inlet.composition if cid not in permeances]
-        if missing:
-            raise MembraneR1SpecError(f"permeances_mol_m2_s_Pa is missing feed component(s) {missing}")
-        bad = {c: v for c, v in permeances.items() if not isinstance(v, (int, float)) or float(v) <= 0.0}
-        if bad:
-            raise MembraneR1SpecError(f"permeances_mol_m2_s_Pa entries {bad} must be > 0")
-
-        area = params.get("area_m2")
-        stage_cut = params.get("stage_cut")
-        if (area is None) == (stage_cut is None):
-            raise MembraneR1SpecError("give exactly one of area_m2 and stage_cut, not both or neither")
-        if area is not None:
-            if not isinstance(area, (int, float)) or isinstance(area, bool) or float(area) <= 0.0:
-                raise MembraneR1SpecError(f"area_m2 {area} must be > 0")
-            area_f: float | None = float(area)
-            stage_cut_f: float | None = None
-        else:
-            if not isinstance(stage_cut, (int, float)) or isinstance(stage_cut, bool):
-                raise MembraneR1SpecError(f"stage_cut {stage_cut} must be a number in (0, 1)")
-            stage_cut_f = float(stage_cut)
-            if not 0.0 < stage_cut_f < 1.0:
-                raise MembraneR1SpecError(f"stage_cut {stage_cut_f} outside (0, 1)")
-            area_f = None
-
+        P_l, permeances, area_f, stage_cut_f = _adapter_params(inlet, params)
         residue_flows, permeate_flows, A, theta = cross_flow(
             F=float(inlet.molar_flow),
             z=inlet.composition,
-            Pi={c: float(v) for c, v in permeances.items()},
+            Pi=permeances,
             P_h=float(inlet.P),
             P_l=P_l,
             area=area_f,
             stage_cut=stage_cut_f,
         )
-
-        F_in = float(inlet.molar_flow)
-        fractions = {cid: permeate_flows[cid] / (F_in * inlet.composition[cid]) for cid in inlet.composition}
-        permeate, residue = split_by_component(
-            inlet,
-            fractions,
-            thermo,
-            outlet_P={"top": P_l, "bottom": float(inlet.P)},
-        )
-        n_permeate = float(sum(permeate_flows.values()))
-        n_residue = float(sum(residue_flows.values()))
-        info: dict[str, float] = {"area_m2": A, "stage_cut": theta}
-        for cid in inlet.composition:
-            info[f"permeate_y_{cid}"] = permeate_flows[cid] / n_permeate
-            info[f"residue_x_{cid}"] = residue_flows[cid] / n_residue
-        h_in_W = inlet.enthalpy * inlet.molar_flow
-        h_out_W = sum(s.enthalpy * s.molar_flow for s in (permeate, residue))
-        return UnitResult(
-            outlets={"permeate": permeate, "residue": residue},
-            duty_W=h_out_W - h_in_W,
-            power_W=0.0,
-            info=info,
-        )
+        return _outlets_result(inlet, thermo, residue_flows, permeate_flows, P_l, A, theta)
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
