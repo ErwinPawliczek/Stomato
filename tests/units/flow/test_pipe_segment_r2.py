@@ -151,9 +151,7 @@ def test_r2_refuses_three_phase_node(thermo: Thermo) -> None:
     the typed three-phase refusal: Beggs-Brill is strictly two-phase."""
 
     class _ThreePhaseThermo:
-        def flash_ph(
-            self, z: dict[str, float], P: float, H: float, molar_flow: float
-        ) -> StreamState:
+        def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:
             state = thermo.flash_ph(z, P, H, molar_flow)
             if not (VF_MIN < state.vapor_fraction < VF_MAX):
                 return state
@@ -163,9 +161,7 @@ def test_r2_refuses_three_phase_node(thermo: Thermo) -> None:
 
     inlets = {"inlet": flash_feed(thermo, TWO_PHASE_FEED)}
     with pytest.raises(PipeSegmentR2Error, match="three-phase"):
-        PipeSegmentR2().solve(
-            inlets, TWO_PHASE_PARAMS, cast(Thermo, _ThreePhaseThermo())
-        )
+        PipeSegmentR2().solve(inlets, TWO_PHASE_PARAMS, cast(Thermo, _ThreePhaseThermo()))
 
 
 def test_r2_equals_r1_core_march_on_all_liquid_line(thermo: Thermo) -> None:
@@ -238,9 +234,7 @@ def test_r2_step_matches_bare_beggs_brill(thermo: Thermo) -> None:
     assert result.outlets["outlet"].P == pytest.approx(P0 - (dP1 + dP2) / 2, rel=1e-12)
 
 
-def test_r2_wraps_beggs_brill_regime_error(
-    thermo: Thermo, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_r2_wraps_beggs_brill_regime_error(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) -> None:
     """A ValueError from the correlation comes out as a typed
     PipeSegmentR2Error naming Beggs-Brill."""
     from ngdesign.units.flow import pipe_segment_r2 as mod
@@ -262,9 +256,7 @@ def test_r2_example_case_solves(thermo: Thermo) -> None:
     info = result.info
     assert result.outlets["outlet"].P > 0
     assert info["n_two_phase_segments"] >= 1
-    assert info["dP_total_Pa"] == pytest.approx(
-        inlets["inlet"].P - result.outlets["outlet"].P, rel=1e-12
-    )
+    assert info["dP_total_Pa"] == pytest.approx(inlets["inlet"].P - result.outlets["outlet"].P, rel=1e-12)
 
 
 def test_r2_dP_total_matches_inlet_minus_outlet(thermo: Thermo) -> None:
@@ -326,9 +318,7 @@ def test_r2_refuses_bad_geometry(thermo: Thermo) -> None:
     with pytest.raises(PipeSegmentSpecError, match="n_segments"):
         PipeSegmentR2().solve(inlets, dict(base, n_segments=0), thermo)
     with pytest.raises(PipeSegmentSpecError, match="n_segments"):
-        PipeSegmentR2().solve(
-            inlets, dict(base, n_segments=R2_MAX_SEGMENTS + 1), thermo
-        )
+        PipeSegmentR2().solve(inlets, dict(base, n_segments=R2_MAX_SEGMENTS + 1), thermo)
 
 
 def test_r1_refuses_what_r2_accepts(thermo: Thermo) -> None:
