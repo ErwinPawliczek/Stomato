@@ -156,3 +156,178 @@ def test_refuses_clearance_key_at_r1(
         r1_mod.ReciprocatingCompressorR1().solve(
             inlets, {**r1_params, "clearance": 0.05}, thermo
         )
+
+# --- Step 2: gas rod loads and the clearance pocket -------------------------
+
+
+def _r0_ratio(
+    thermo: Thermo, inlets: dict[str, Any], r1_params: dict[str, Any]
+) -> float:
+    """R0's pressure_ratio_per_stage (the ladder the re-traversal and rod loads use)."""
+    r0_params = {
+        key: value for key, value in r1_params.items() if key not in ("cylinders", "speed_rpm")
+    }
+    r0_params["clearance"] = r1_params["cylinders"][0]["clearance"]
+    r0 = r0_mod.ReciprocatingCompressor().solve(inlets, r0_params, thermo)
+    return float(r0.info["pressure_ratio_per_stage"])
+
+
+def _stage_pressures(inlets: dict[str, Any], ratio: float, n: int) -> list[float]:
+    """Stage boundary pressures: [P_s1, P_d1=P_s2, ..., P_dn]."""
+    p_in = float(inlets["inlet"].P)
+    return [p_in * ratio**i for i in range(n + 1)]
+
+
+def test_rod_loads_double_acting_closed_form(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """Stage-1 compression/tension loads match the hand-applied API 618 formula."""
+    inlets, _r0_params, r1_params = basis
+    result = r1_mod.ReciprocatingCompressorR1().solve(inlets, r1_params, thermo)
+    cyl1 = r1_params["cylinders"][0]
+    a_p = math.pi * cyl1["bore_m"] ** 2 / 4.0
+    a_r = math.pi * cyl1["rod_diameter_m"] ** 2 / 4.0
+    p_cc = 101325.0
+    ratio = _r0_ratio(thermo, inlets, r1_params)
+    p_s, p_d = _stage_pressures(inlets, ratio, int(r1_params["n_stages"]))[:2]
+    f_compression = p_d * a_p - p_s * (a_p - a_r) - p_cc * a_r
+    f_tension = -(p_s * a_p - p_d * (a_p - a_r) - p_cc * a_r)
+    assert result.info["rod_load_compression_stage1_N"] == pytest.approx(f_compression, rel=1e-12)
+    assert result.info["rod_load_tension_stage1_N"] == pytest.approx(f_tension, rel=1e-12)
+    # Tension load is negative (rod in tension) on a double-acting stage.
+    assert f_tension < 0.0
+
+
+def test_rod_loads_single_head_end_uses_crankcase(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """Single-acting head end: the crank-end pressure is the crankcase pressure."""
+    inlets, _r0_params, r1_params = basis
+    cylinders = [dict(c) for c in r1_params["cylinders"]]
+    # Single-acting halves stage-1 capacity, so add a second cylinder to keep
+    # it above the required suction flow (otherwise the capacity refusal fires
+    # before the rod loads are computed).
+    cylinders[0]["action"] = "single_head_end"
+    cylinders[0]["n_cylinders"] = 2
+    result = r1_mod.ReciprocatingCompressorR1().solve(
+        inlets, {**r1_params, "cylinders": cylinders}, thermo
+    )
+    cyl1 = cylinders[0]
+    a_p = math.pi * cyl1["bore_m"] ** 2 / 4.0
+    p_cc = 101325.0
+    ratio = _r0_ratio(thermo, inlets, r1_params)
+    p_s, p_d = _stage_pressures(inlets, ratio, int(r1_params["n_stages"]))[:2]
+    assert result.info["rod_load_compression_stage1_N"] == pytest.approx(
+        (p_d - p_cc) * a_p, rel=1e-12
+    )
+    assert result.info["rod_load_tension_stage1_N"] == pytest.approx(
+        -(p_s - p_cc) * a_p, rel=1e-12
+    )
+
+
+def test_rod_load_limit_refusal_compression(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """A compression allowable 5% below the computed load is refused."""
+    inlets, _r0_params, r1_params = basis
+    result = r1_mod.ReciprocatingCompressorR1().solve(inlets, r1_params, thermo)
+    load = result.info["rod_load_compression_stage2_N"]
+    with pytest.raises(r1_mod.RecipRodLoadError, match="compression"):
+        r1_mod.ReciprocatingCompressorR1().solve(
+            inlets, {**r1_params, "rod_load_limit_N": {"compression": 0.95 * load}}, thermo
+        )
+
+
+def test_rod_load_limit_refusal_tension(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """A tension allowable 5% below the computed load is refused."""
+    inlets, _r0_params, r1_params = basis
+    result = r1_mod.ReciprocatingCompressorR1().solve(inlets, r1_params, thermo)
+    load = result.info["rod_load_tension_stage2_N"]
+    with pytest.raises(r1_mod.RecipRodLoadError, match="tension"):
+        r1_mod.ReciprocatingCompressorR1().solve(
+            inlets, {**r1_params, "rod_load_limit_N": {"tension": 0.95 * load}}, thermo
+        )
+
+
+def test_rod_load_within_allowable_passes(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """Allowables 10% above both computed loads do not raise."""
+    inlets, _r0_params, r1_params = basis
+    result = r1_mod.ReciprocatingCompressorR1().solve(inlets, r1_params, thermo)
+    limits = {
+        "compression": 1.10
+        * max(
+            result.info["rod_load_compression_stage1_N"],
+            result.info["rod_load_compression_stage2_N"],
+        ),
+        "tension": 1.10
+        * abs(
+            min(
+                result.info["rod_load_tension_stage1_N"],
+                result.info["rod_load_tension_stage2_N"],
+            )
+        ),
+    }
+    r1 = r1_mod.ReciprocatingCompressorR1().solve(
+        inlets, {**r1_params, "rod_load_limit_N": limits}, thermo
+    )
+    assert (
+        r1.info["rod_load_compression_stage1_N"]
+        == result.info["rod_load_compression_stage1_N"]
+    )
+
+
+def test_clearance_pocket_matches_flow(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """Setting the clearance to the reported c_req drives capacity ratio to 1."""
+    inlets, _r0_params, r1_params = basis
+    first = r1_mod.ReciprocatingCompressorR1().solve(
+        inlets, {**r1_params, "capacity_control": "clearance_pocket"}, thermo
+    )
+    cylinders = [dict(c) for c in r1_params["cylinders"]]
+    for i in (1, 2):
+        cylinders[i - 1]["clearance"] = first.info[f"clearance_required_stage{i}"]
+    second = r1_mod.ReciprocatingCompressorR1().solve(
+        inlets, {**r1_params, "cylinders": cylinders}, thermo
+    )
+    assert second.info["capacity_ratio_stage1"] == pytest.approx(1.0, rel=1e-9)
+    assert second.info["capacity_ratio_stage2"] == pytest.approx(1.0, rel=1e-9)
+    # Outlets are unchanged: the pocket changes capacity, not the balances.
+    assert second.outlets["outlet"] == first.outlets["outlet"]
+
+
+def test_clearance_pocket_infeasible_refusal(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """Oversized cylinders need c_req >= 1: the pocket cannot trim that far."""
+    inlets, _r0_params, r1_params = basis
+    cylinders = [dict(c) for c in r1_params["cylinders"]]
+    for c in cylinders:
+        c["bore_m"] = 0.50
+        c["clearance"] = 0.0
+    with pytest.raises(r1_mod.RecipCapacityError, match="cannot be trimmed"):
+        r1_mod.ReciprocatingCompressorR1().solve(
+            inlets,
+            {
+                **r1_params,
+                "cylinders": cylinders,
+                "capacity_control": "clearance_pocket",
+            },
+            thermo,
+        )
+
+
+def test_refuses_rod_load_limit_shape(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """A non-mapping rod_load_limit_N is refused, naming the parameter."""
+    inlets, _r0_params, r1_params = basis
+    with pytest.raises(r1_mod.RecipR1SpecError, match="rod_load_limit_N"):
+        r1_mod.ReciprocatingCompressorR1().solve(
+            inlets, {**r1_params, "rod_load_limit_N": 1.0e6}, thermo
+        )
+

@@ -241,6 +241,42 @@ class ReciprocatingCompressorR1:
                     f"{where}: capacity {capacity:.6f} m3/s < required suction flow "
                     f"{q_s:.6f} m3/s; add cylinders or reduce the stage clearance"
                 )
+            # Gas rod load (API 618 §6.6): gas load only, no inertia loads.
+            p_s, p_d = float(s_i.P), float(d_i.P)
+            if cyl.action == "double":
+                load_compression = _rod_load(p_d, p_s, cyl)
+                load_tension = -_rod_load(p_s, p_d, cyl)
+            else:
+                load_compression = _rod_load(p_d, p_crankcase, cyl)
+                load_tension = -_rod_load(p_s, p_crankcase, cyl)
+            info[f"rod_load_compression_stage{i}_N"] = load_compression
+            info[f"rod_load_tension_stage{i}_N"] = load_tension
+            for kind, load, limit in (
+                ("compression", load_compression, limit_compression),
+                ("tension", load_tension, limit_tension),
+            ):
+                if limit is not None and load > limit:
+                    raise RecipRodLoadError(
+                        f"{where}: rod {kind} load {load:.1f} N exceeds the allowable "
+                        f"{limit:.1f} N (gas load only; inertia loads are out of scope at R1)"
+                    )
+            if capacity_control == "clearance_pocket":
+                # Closed form (E_v is linear in C). c_req < C cannot occur when
+                # Cap >= Q and K > 0, so that branch is a guard, not a refusal
+                # of a user error of its own kind.
+                kk = z_ratio * ratio ** (1.0 / k) - 1.0
+                c_req = (1.0 - loss - q_s / displacement) / kk if kk > 0.0 else float("inf")
+                if c_req < cyl.clearance:
+                    raise RecipCapacityError(
+                        f"{where}: required clearance {c_req:.6f} below the fixed "
+                        f"clearance {cyl.clearance} (capacity already sufficient; guard)"
+                    )
+                if c_req >= 1.0:
+                    raise RecipCapacityError(
+                        f"{where}: required clearance {c_req:.6f} >= 1; the cylinders "
+                        "cannot be trimmed to the required flow by a clearance pocket"
+                    )
+                info[f"clearance_required_stage{i}"] = c_req
 
         return UnitResult(
             outlets=r0.outlets,
