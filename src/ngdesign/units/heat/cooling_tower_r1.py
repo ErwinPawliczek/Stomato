@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from scipy.optimize import brentq
 
@@ -258,20 +258,16 @@ class CoolingTowerR1:
         characteristic_C = params.get("characteristic_C")
         characteristic_n = params.get("characteristic_n")
         given_approach = params.get("approach_K")
-        if (characteristic_C is None) != (characteristic_n is None):
-            raise CoolingTowerSpecError(
-                "cooling tower R1: characteristic_C and characteristic_n are given together "
-                "or not at all (rating mode takes approach_K alone)"
-            )
-        if characteristic_C is not None and given_approach is not None:
-            raise CoolingTowerSpecError(
-                "cooling tower R1: approach_K is solved at R1; give characteristic_C "
-                "and characteristic_n, or rate at a given approach_K without them"
-            )
         cycles = params.get("cycles_of_concentration")
         if cycles is not None and float(cycles) < 1.0:
             raise ValueError(f"cooling tower: cycles_of_concentration {cycles} must be >= 1")
-        if characteristic_C is None:
+        if characteristic_C is not None and characteristic_n is not None:
+            if given_approach is not None:
+                raise CoolingTowerSpecError(
+                    "cooling tower R1: approach_K is solved at R1; give characteristic_C "
+                    "and characteristic_n, or rate at a given approach_K without them"
+                )
+        elif characteristic_C is None and characteristic_n is None:
             # Rating mode: the approach is GIVEN and the Merkel number is
             # reported at it. This is what the locked per-row balance test
             # reaches through the LevelDispatch: the dispatch subclasses the
@@ -284,11 +280,16 @@ class CoolingTowerR1:
                     "cooling tower R1: give characteristic_C and characteristic_n to solve "
                     "the water outlet, or approach_K to rate the tower at a given approach"
                 )
-            given_approach = float(given_approach)
+            given_approach = float(cast(float, given_approach))
             if given_approach <= 0.0:
                 raise CoolingTowerSpecError(f"cooling tower R1: approach_K {given_approach} must be > 0")
             T_wb0 = wet_bulb(thermo, air)
             return self._close(inlets, T_wb0 + given_approach, given_approach, cycles, thermo, None)
+        else:
+            raise CoolingTowerSpecError(
+                "cooling tower R1: characteristic_C and characteristic_n are given together "
+                "or not at all (rating mode takes approach_K alone)"
+            )
         characteristic_C = float(characteristic_C)
         if characteristic_C <= 0.0:
             raise CoolingTowerSpecError(f"cooling tower R1: characteristic_C {characteristic_C} must be > 0")
