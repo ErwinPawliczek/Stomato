@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `HC`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.separation.hydrate_check:HydrateCheck` | adiabatic PH mix; hydrate_T from hammerschmidt_formation at the mixed P, dose from nielsen_bucklin_suppression at the operating T; the required inhibitor rate covers the aqueous phase only — GPSA's vapour and hydrocarbon-liquid methanol losses are excluded at R0 |
-| R1 | planned | — | Katz / van der Waals-Platteeuw (via thermo) |
+| R1 | provisional | `ngdesign.units.separation.hydrate_check_r1:HydrateCheckR1` | selectable hydrate T — Katz gas gravity (Towler-Mokhatab 2005 fit, enforced validity range 0.55 < gamma < 1.0, 1200-40000 kPa) or R0's Hammerschmidt; outlet, duty and dose bisection unchanged from R0; the vdWP route is out of scope because no thermo hydrate model exists |
 
 ### R0 parameters
 
@@ -33,6 +33,26 @@ properties:
 type: object
 ```
 
+### R1 parameters
+
+```yaml
+properties:
+  P:
+    description: mixed outlet pressure, Pa abs; default min inlet P (R0)
+    type: number
+  T_operating_K:
+    description: target operating temperature, K; drives the dose (R0)
+    type: number
+  hydrate_method:
+    description: hydrate-temperature correlation; default towler_mokhatab (Katz gas-gravity
+      fit)
+    enum:
+    - towler_mokhatab
+    - hammerschmidt
+    type: string
+type: object
+```
+
 ## V1 worked cases
 
 | case | level | quantity | expected | measured | tolerance | result |
@@ -45,4 +65,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-D 10
 
-> roadmap; S2 slice (plan §2b).
+> roadmap; S2 slice (plan §2b). R1 V1 gap (searched 2026-10-25): Towler & Mokhatab (2005) compare against experimental hydrate points but do not print the gas compositions the unit needs to compute gravity; Sloan & Koh, Clathrate Hydrates of Natural Gases 3rd ed. ch. 4, and GPSA Sect. 20 give gravity-chart readings only (figure-based). The R1 Katz fit is checked by closed-form tests on the transcribed coefficients; R0's GPSA 20-10 dose case still applies through the Hammerschmidt method.
