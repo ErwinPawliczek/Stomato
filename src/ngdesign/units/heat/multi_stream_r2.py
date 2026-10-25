@@ -477,6 +477,7 @@ class MultiStreamR2:
         iterations = 0
         T_out_previous: list[float] | None = None
         for _iterations in range(1, ZONE_MAX_ITERATIONS + 1):
+            iterations = _iterations
             # (b) cut the hot composite into n_zones equal-delta-H zones.
             hot_idx = [i for i, stream in enumerate(streams) if stream.is_hot]
             composite = np.sum([result.H[i] for i in hot_idx], axis=0)
