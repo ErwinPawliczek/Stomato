@@ -43,8 +43,18 @@ from ngdesign.contracts.plugins import Thermo
 from ngdesign.sizing.lmtd import lmtd_counter
 from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 from ngdesign.units._physics.heat_balance import TemperatureCross
-from ngdesign.units.heat.rating import DuctResult, FilmProps, RatingError, darcy_dP, duct_h
-from ngdesign.units.heat.rating import film_props, inlet_kind, rate_two_stream, u_outside_tube
+from ngdesign.units.heat.rating import (
+    DuctResult,
+    FilmProps,
+    RatingError,
+    SinglePhaseRequired,
+    darcy_dP,
+    duct_h,
+    film_props,
+    inlet_kind,
+    rate_two_stream,
+    u_outside_tube,
+)
 
 #: Allowed tube-pass counts (spec Params table).
 TUBE_PASSES = (1, 2, 4, 6, 8)
