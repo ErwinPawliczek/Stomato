@@ -15,7 +15,7 @@ Rigour ladder: R1 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R1 | provisional | `ngdesign.units.column_shortcut.column_internals_r1:ColumnInternalsR1` | sieve-tray flooding/diameter/pressure drop (Fair capacity via the Lygeros-Magoulas 1986 fit, Seader-Henley-Roper 3rd ed. §6.6) and packed-section Stichlmair dry/wet/flood plus optional Robbins dP via fluids 1.3.1; pass-through outlet, all hydraulics in info; dP_wet_Pa is reported only at or below the flood point (the irrigated correlation is undefined above it — flood_fraction > 1 flags the condition); HETP is not computed, hetp_m·n_stages is reported when both are given |
+| R1 | provisional | `ngdesign.units.column_shortcut.column_internals_r1:ColumnInternalsR1` | sieve-tray flooding/diameter/pressure drop (Fair capacity via the Lygeros-Magoulas 1986 fit, Seader-Henley-Roper 3rd ed. §6.6) and packed-section Stichlmair dry/wet/flood plus optional Robbins dP via fluids 1.3.1; pass-through outlet, all hydraulics in info; every result carries flooded = 1.0 when flood_fraction > 1, else 0.0 (the info contract carries floats), and dP_wet_Pa is reported only at or below the flood point (the irrigated correlation is undefined above it); HETP is not computed, hetp_m·n_stages is reported when both are given |
 
 ### R1 parameters
 
