@@ -194,8 +194,6 @@ def test_rod_loads_double_acting_closed_form(
     f_tension = -(p_s * a_p - p_d * (a_p - a_r) - p_cc * a_r)
     assert result.info["rod_load_compression_stage1_N"] == pytest.approx(f_compression, rel=1e-12)
     assert result.info["rod_load_tension_stage1_N"] == pytest.approx(f_tension, rel=1e-12)
-    # Tension load is negative (rod in tension) on a double-acting stage.
-    assert f_tension < 0.0
 
 
 def test_rod_loads_single_head_end_uses_crankcase(

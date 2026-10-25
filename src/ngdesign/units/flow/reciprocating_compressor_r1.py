@@ -160,6 +160,33 @@ class ReciprocatingCompressorR1:
             )
         z_ratio_correction = bool(params.get("z_ratio_correction", True))
         loss = float(params.get("loss_allowance", 0.0))
+        p_crankcase_raw = params.get("P_crankcase_Pa")
+        p_crankcase = float(p_crankcase_raw) if p_crankcase_raw is not None else 101325.0
+        if p_crankcase <= 0.0:
+            raise RecipR1SpecError(f"P_crankcase_Pa {p_crankcase} must be > 0")
+        rod_limit = params.get("rod_load_limit_N")
+        limit_compression: float | None = None
+        limit_tension: float | None = None
+        if rod_limit is not None:
+            if not isinstance(rod_limit, dict):
+                raise RecipR1SpecError("rod_load_limit_N must be a mapping")
+            limit_compression = (
+                float(rod_limit["compression"])
+                if rod_limit.get("compression") is not None
+                else None
+            )
+            limit_tension = (
+                float(rod_limit["tension"]) if rod_limit.get("tension") is not None else None
+            )
+            for name, value in (("compression", limit_compression), ("tension", limit_tension)):
+                if value is not None and value <= 0.0:
+                    raise RecipR1SpecError(f"rod_load_limit_N.{name} {value} must be > 0")
+
+        def _rod_load(p_head_end: float, p_crank_end: float, cyl: _Cylinder) -> float:
+            """Gas load on the rod (N), positive in compression (API 618 §6.6)."""
+            a_p = math.pi * cyl.bore_m**2 / 4.0
+            a_r = math.pi * cyl.rod_diameter_m**2 / 4.0
+            return p_head_end * a_p - p_crank_end * (a_p - a_r) - p_crankcase * a_r
 
         # R0 owns the balances: run it on the R0 keys, with stage 1's clearance.
         r0_params: dict[str, Any] = {
