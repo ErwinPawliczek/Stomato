@@ -269,7 +269,7 @@ def test_refuse_two_phase_head_evaluation(thermo: Thermo) -> None:
     assert len(two_phase.phases) == 2
 
     class _StubThermo:
-        def __getattr__(self, name: str):
+        def __getattr__(self, name: str) -> Any:
             return getattr(thermo, name)
 
         def flash_ps(self, *args: Any, **kwargs: Any) -> StreamState:
