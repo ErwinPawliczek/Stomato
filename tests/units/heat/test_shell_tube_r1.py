@@ -169,7 +169,7 @@ def test_effectiveness_tema_e_matches_spec_values() -> None:
 
 def test_F_fakheri_matches_spec_value() -> None:
     """Test 5: Fakheri F for 450/370 K hot, 300/340 K cold, one shell (rel 1e-8)."""
-    f = ht.F_LMTD_Fakheri(450.0, 370.0, 300.0, 340.0, shells=1)
+    f = ht.F_LMTD_Fakheri(450.0, 370.0, 300.0, 340.0, shells=1)  # type: ignore[arg-type]  # ht 1.2.0 mis-annotates Thi/Tci as int
     assert f == pytest.approx(0.926902303, rel=EPS_REL)
 
 

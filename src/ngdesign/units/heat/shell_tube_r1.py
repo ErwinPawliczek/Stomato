@@ -309,7 +309,7 @@ def eps_tema_e(NTU: float, Cr: float, tube_passes: int, n_shells: int) -> float:
     """
     if tube_passes == 1:
         return eps_counterflow(NTU, Cr)
-    return float(ht.effectiveness_from_NTU(NTU, Cr, subtype="S&T", n_shell_tube=n_shells))
+    return float(ht.effectiveness_from_NTU(NTU, Cr, subtype="S&T", n_shell_tube=n_shells))  # type: ignore[no-untyped-call]  # ht 1.2.0 ships this function unannotated
 
 
 class ShellTubeR1:
@@ -410,8 +410,12 @@ class ShellTubeR1:
             film_c = film_props(thermo, c_state.composition, cT, cP, kind_c)
             if geom.process_side == "tube":
                 tube = tube_duct(
-                    h_state.mass_flow, geom.n_tubes, geom.tube_passes, geom.tube_ID_m,
-                    film_h, geom.roughness_m,
+                    h_state.mass_flow,
+                    geom.n_tubes,
+                    geom.tube_passes,
+                    geom.tube_ID_m,
+                    film_h,
+                    geom.roughness_m,
                 )
                 gs = c_state.mass_flow / a_s
                 re_s = de * gs / film_c.mu_Pa_s
@@ -421,8 +425,12 @@ class ShellTubeR1:
                 re_s = de * gs / film_h.mu_Pa_s
                 h_shell = shell_h(film_h.k_W_mK, de, re_s, film_h.Pr)
                 tube = tube_duct(
-                    c_state.mass_flow, geom.n_tubes, geom.tube_passes, geom.tube_ID_m,
-                    film_c, geom.roughness_m,
+                    c_state.mass_flow,
+                    geom.n_tubes,
+                    geom.tube_passes,
+                    geom.tube_ID_m,
+                    film_c,
+                    geom.roughness_m,
                 )
             return tube, DuctResult(h_W_m2K=h_shell, Re=re_s, v_m_s=gs, fd=0.0)
 
@@ -433,16 +441,24 @@ class ShellTubeR1:
         f_in = shell_friction(shell_in.Re)
         if geom.process_side == "tube":
             dP_tube = tube_dP(
-                tube_in.fd, geom.tube_passes, geom.tube_length_m, geom.tube_ID_m,
-                film_hot_in.rho_kg_m3, tube_in.v_m_s,
+                tube_in.fd,
+                geom.tube_passes,
+                geom.tube_length_m,
+                geom.tube_ID_m,
+                film_hot_in.rho_kg_m3,
+                tube_in.v_m_s,
             )
             dP_shell = shell_dP(
                 f_in, shell_in.v_m_s, geom.n_baffles, geom.shell_ID_m, film_cold_in.rho_kg_m3, de
             )
         else:
             dP_tube = tube_dP(
-                tube_in.fd, geom.tube_passes, geom.tube_length_m, geom.tube_ID_m,
-                film_cold_in.rho_kg_m3, tube_in.v_m_s,
+                tube_in.fd,
+                geom.tube_passes,
+                geom.tube_length_m,
+                geom.tube_ID_m,
+                film_cold_in.rho_kg_m3,
+                tube_in.v_m_s,
             )
             dP_shell = shell_dP(
                 f_in, shell_in.v_m_s, geom.n_baffles, geom.shell_ID_m, film_hot_in.rho_kg_m3, de
@@ -505,7 +521,9 @@ class ShellTubeR1:
         process_out = hot_out if hot_is_process else cold_out
         utility_out = cold_out if hot_is_process else hot_out
         duty_W = process.molar_flow * (process_out.enthalpy - process.enthalpy)
-        f_lmtd = float(ht.F_LMTD_Fakheri(hot.T, hot_out.T, cold.T, cold_out.T, shells=geom.n_shells))
+        f_lmtd = float(  # type: ignore[arg-type]  # ht 1.2.0 mis-annotates Thi/Tci as int
+            ht.F_LMTD_Fakheri(hot.T, hot_out.T, cold.T, cold_out.T, shells=geom.n_shells)
+        )
         info: dict[str, Any] = {
             "Q_W": rated.duty_W,
             "U_W_m2K": rated.UA_W_K / a_o,
