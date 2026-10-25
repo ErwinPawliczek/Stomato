@@ -62,15 +62,32 @@
           eta_isentropic: {type: number, description: 'isentropic efficiency in (0, 1], default 0.75'}
       note: isentropic/polytropic efficiency; PS flash on the outlet
     R1:
-      status: planned
-      params: {}
-      note: performance map (head/efficiency vs flow, surge/stonewall), Schultz polytropic
+      status: provisional
+      adapter: ngdesign.units.flow.compressor_r1:CompressorR1
+      params:
+        type: object
+        required: [map]
+        properties:
+          map:
+            type: object
+            required: [flow_m3_s, head_J_kg, efficiency]
+            properties:
+              flow_m3_s: {type: array, items: {type: number}, description: 'actual inlet flow points at map speed, m3/s, strictly increasing'}
+              head_J_kg: {type: array, items: {type: number}, description: 'head at each point, J/kg (basis per efficiency_basis)'}
+              efficiency: {type: array, items: {type: number}, description: 'efficiency at each point, (0, 1]'}
+          efficiency_basis: {type: string, enum: [polytropic, isentropic], description: 'default polytropic'}
+          speed_ratio: {type: number, description: 'N / N_map (fan laws), default 1.0'}
+          surge_flow_m3_s: {type: number, description: 'surge flow at map speed, m3/s, default first map point'}
+          stonewall_flow_m3_s: {type: number, description: 'stonewall flow at map speed, m3/s, default last map point'}
+          max_pressure_ratio: {type: number, description: 'upper bracket for the discharge pressure solve, default 10'}
+      note: performance map (head/efficiency vs flow, fan laws, surge/stonewall), Schultz polytropic
+      validation: []
       end_state: true
   sizer: compressor
   pid_symbol: C
   references:
   - docs/unit-catalogue-plan.md §2 U-B 2
-  notes: multi-section compression with intercooling is its own flow row (compression_train), not a level of this row.
+  notes: multi-section compression with intercooling is its own flow row (compression_train), not a level of this row. V1 gap recorded in specs/backend/units/compressor.md — no printed Schultz polytropic example with reproducible inputs/results has been verified (ASME PTC 10-1997 appendix, Schultz 1962, Ludwig vol. 3 ch. 15, Perry's 9th ed. §10 all unexamined); R1 is anchored by closed-form tests against an independent bisection script instead.
 
 - id: reciprocating_compressor
   name: Reciprocating compressor
