@@ -164,18 +164,40 @@ class OrificeR1:
         d_lo = max(0.1 * D_m, 0.0125)
         d_hi = 0.75 * D_m
 
-        def f(d: float) -> float:
-            return orifice_dp(qm, D_m, d, rho, mu, P1, kappa_or_None, taps, C_specified)["dP"] - dP_design
+        def dP_at(d: float) -> float:
+            return orifice_dp(qm, D_m, d, rho, mu, P1, kappa_or_None, taps, C_specified)["dP"]
 
-        dP_lo = orifice_dp(qm, D_m, d_lo, rho, mu, P1, kappa_or_None, taps, C_specified)["dP"]
-        dP_hi = orifice_dp(qm, D_m, d_hi, rho, mu, P1, kappa_or_None, taps, C_specified)["dP"]
+        # dP falls monotonically with bore. At small bores the pure function
+        # legitimately refuses (implied dP above the inlet pressure, gas
+        # expansibility below the pressure-ratio limit): scan up to the first
+        # valid bore; the interval [d_feas, d_hi] is valid throughout.
+        d_feas = d_lo
+        dP_lo: float | None = None
+        for _ in range(100):
+            try:
+                dP_lo = dP_at(d_feas)
+                break
+            except OrificeR1Error:
+                d_feas += (d_hi - d_lo) / 100.0
+        if dP_lo is None:
+            raise OrificeR1Error(
+                f"no bore within the ISO 5167-2 range gives dP_design {dP_design} Pa: "
+                f"every bore in ({d_lo:.6g}, {d_hi:.6g}) m is outside the pure-function "
+                f"validity (differential above the inlet pressure or gas pressure "
+                f"ratio below the limit)"
+            )
+        dP_hi = dP_at(d_hi)
         if not dP_hi <= dP_design <= dP_lo:
             raise OrificeR1Error(
                 f"no bore within the ISO 5167-2 range gives dP_design "
                 f"{dP_design} Pa (achievable range {dP_hi:.6g} to {dP_lo:.6g} Pa)"
             )
+
+        def f(d: float) -> float:
+            return dP_at(d) - dP_design
+
         try:
-            return float(brentq(f, d_lo, d_hi, xtol=1e-12, rtol=4 * sys.float_info.epsilon, maxiter=100))
+            return float(brentq(f, d_feas, d_hi, xtol=1e-12, rtol=4 * sys.float_info.epsilon, maxiter=100))
         except (RuntimeError, ValueError) as exc:
             raise OrificeR1Error(f"sizing did not converge: {exc}") from exc
 

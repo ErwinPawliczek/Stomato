@@ -8,15 +8,15 @@ import pytest
 from fluids.flow_meter import C_Reader_Harris_Gallagher
 
 from ngdesign.contracts import PhaseKind, StreamState
-from ngdesign.contracts.plugins import PropertyDerivatives, SaturationPoint, Thermo
+from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import Phase
-from ngdesign.contracts.thermo import PhaseProps
+from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
 from ngdesign.units.flow import orifice, orifice_r1_adapter
 from ngdesign.units.flow.orifice_r1 import OrificeR1Error
 from tests.conftest import flash_feed
 
 _LIQ = {"H2O": 1.0}
-_LIQ_MW = 0.018  # kg/mol: StreamState molar masses are SI
+_LIQ_MW = 18.0  # g/mol: StreamState.molecular_weight is g/mol, mass_flow divides by 1000
 
 
 class StaticThermo:
@@ -101,7 +101,7 @@ def _o1_inlet() -> StreamState:
     return StreamState(
         T=293.15,
         P=5.0e5,
-        molar_flow=10.0 / _LIQ_MW,
+        molar_flow=10.0 / (_LIQ_MW / 1000.0),  # kg/s -> mol/s: MW is g/mol
         composition=dict(_LIQ),
         vapor_fraction=0.0,
         enthalpy=0.0,
@@ -318,7 +318,7 @@ def test_refuses_fixed_point_non_convergence(monkeypatch: pytest.MonkeyPatch) ->
                 mole_fraction=1.0,
                 composition={"H2O": 1.0},
                 density=40.0,
-                molecular_weight=0.018,
+                molecular_weight=18.0,
             )
         ],
     )
@@ -326,5 +326,5 @@ def test_refuses_fixed_point_non_convergence(monkeypatch: pytest.MonkeyPatch) ->
         orifice_r1_adapter.OrificeR1().solve(
             {"inlet": gas_inlet},
             {"D_m": 0.1, "bore_m": 0.06, "mu_Pa_s": 1.2e-5, "taps": "corner"},
-            StaticThermo(density=40.0, viscosity=1.2e-5, mw=0.018),
+            StaticThermo(density=40.0, viscosity=1.2e-5, mw=18.0),
         )
