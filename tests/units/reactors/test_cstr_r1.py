@@ -240,17 +240,20 @@ def test_r1_newton_cap_refusal(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) 
         CstrR1().solve({"inlet": inlet}, _isom_params(thermal="adiabatic"), thermo)
 
 
-def test_r1_singular_jacobian_refusal(thermo: Thermo) -> None:
-    """Two reactions with identical stoichiometry make the Jacobian singular."""
+def test_r1_singular_jacobian_refusal(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A singular Newton Jacobian is translated: LinAlgError becomes a
+    CstrConvergenceError naming the Jacobian (units/cstr.md step 4)."""
+    import numpy as np
+
+    def _singular(*_args: object, **_kwargs: object) -> None:
+        raise np.linalg.LinAlgError("Singular matrix")
+
+    monkeypatch.setattr(np.linalg, "solve", _singular)
     feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
     inlet = flash_feed(thermo, feed)
-    params = _isom_params()
-    twin = dict(params["reaction_set"]["reactions"][0])
-    twin["id"] = "isom_twin"
-    params["reaction_set"]["reactions"].append(twin)
 
     with pytest.raises(CstrConvergenceError, match="singular"):
-        CstrR1().solve({"inlet": inlet}, params, thermo)
+        CstrR1().solve({"inlet": inlet}, _isom_params(), thermo)
 
 
 def test_r1_example_case_roundtrip(thermo: Thermo) -> None:
