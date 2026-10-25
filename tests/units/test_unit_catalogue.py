@@ -174,25 +174,45 @@ def test_implemented_rows_register_a_dispatch(rows: dict[str, UnitRow]) -> None:
         assert entry().example_case() == adapters[default].example_case()
 
 
+def _single_inlet_row_with_a_planned_level() -> tuple[UnitRow, str]:
+    """A catalogue row with one inlet port, an implemented default level and a
+    planned level, chosen from the live catalogue so the test does not break
+    each time a level is implemented (the unit-level wave flips them one by one).
+    """
+    for row_id in sorted(ROWS := load_rows()):
+        row = ROWS[row_id]
+        adapters = dict(_row_adapters(row))
+        planned = [level for level in LEVEL_ORDER if level in row.levels and row.levels[level].planned]
+        if adapters and planned and len(next(iter(adapters.values())).inlet_ports) == 1:
+            return row, planned[0]
+    pytest.skip("no single-inlet row with a planned level remains")
+
+
 def test_planned_level_refuses_through_a_flowsheet_solve(thermo: Thermo) -> None:
-    """params={"model": "R1"} on pump (R1 planned) refuses in the solve path,
-    not only through resolve_level: the solver records the typed error."""
+    """params={"model": <planned level>} refuses in the solve path, not only
+    through resolve_level: the solver records the typed error."""
+    row, level = _single_inlet_row_with_a_planned_level()
+    default_adapter = next(iter(dict(_row_adapters(row)).values()))
+    feeds, _ = default_adapter.example_case()
+    (port, feed), *_ = feeds.items()
     fs = Flowsheet(
-        name="pump-R1-refusal",
-        units=[UnitSpec(tag="P-100", kind="pump", params={"model": "R1"})],
+        name=f"{row.id}-{level}-refusal",
+        units=[UnitSpec(tag="U-100", kind=row.id, params={"model": level})],
         streams=[
             StreamSpec(
                 id="F-001",
-                target=PortRef(unit="P-100", port="inlet"),
+                target=PortRef(unit="U-100", port=port),
                 service="PL",
-                feed=FeedSpec(T=293.15, P=1.0e6, molar_flow=10.0, composition={"H2O": 1.0}),
+                feed=FeedSpec(
+                    T=feed["T"], P=feed["P"], molar_flow=feed["molar_flow"], composition=feed["composition"]
+                ),
             )
         ],
     )
     solver = registry.create("solver", "sequential_modular")
     solved = solver.solve(fs, thermo)
-    unit_errors = [e for e in solved.errors if e.tag == "P-100"]
-    assert unit_errors, "the planned-level refusal never reached the solve path"
+    unit_errors = [e for e in solved.errors if e.tag == "U-100"]
+    assert unit_errors, f"{row.id}/{level}: the planned-level refusal never reached the solve path"
     error = unit_errors[0]
     assert error.error_type == "UnitLevelNotImplemented"
     assert error.stage == "solve"
