@@ -427,9 +427,7 @@ class ShellTubeR1:
 
         # The side (tube/shell) carries the stream named by process_side;
         # hot/cold is only the temperature ranking.
-        tube_state, shell_state = (
-            (process, utility) if geom.process_side == "tube" else (utility, process)
-        )
+        tube_state, shell_state = (process, utility) if geom.process_side == "tube" else (utility, process)
         # Pressure drops from INLET-state properties (spec Algorithm step 4).
         tube_in, shell_in = side_ducts(
             tube_state, shell_state, tube_state.T, shell_state.T, tube_state.P, shell_state.P
@@ -517,14 +515,14 @@ class ShellTubeR1:
         utility_out = cold_out if hot_is_process else hot_out
         duty_W = process.molar_flow * (process_out.enthalpy - process.enthalpy)
         # Pure counterflow (single tube pass, single shell) has F = 1 by
-    # definition; Fakheri's F assumes a 1-2 shell.
-    f_lmtd = (
-        1.0
-        if geom.tube_passes == 1
-        else float(
-            ht.F_LMTD_Fakheri(hot.T, hot_out.T, cold.T, cold_out.T, shells=geom.n_shells)  # type: ignore[arg-type]  # ht 1.2.0 mis-annotates Thi/Tci as int
+        # definition; Fakheri's F assumes a 1-2 shell.
+        f_lmtd = (
+            1.0
+            if geom.tube_passes == 1
+            else float(
+                ht.F_LMTD_Fakheri(hot.T, hot_out.T, cold.T, cold_out.T, shells=geom.n_shells)  # type: ignore[arg-type]  # ht 1.2.0 mis-annotates Thi/Tci as int
+            )
         )
-    )
         info: dict[str, Any] = {
             "Q_W": rated.duty_W,
             "U_W_m2K": rated.UA_W_K / a_o,

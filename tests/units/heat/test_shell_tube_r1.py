@@ -295,6 +295,7 @@ def test_info_keys_and_duty_convention() -> None:
 
 # --- Review blocking fixes (PR #317): side assignment by process_side -------
 
+
 def _heating_case(thermo: Any, process_side: str) -> tuple[Any, dict[str, Any]]:
     """Cold process N2 (280 K, 60 mol/s) against hot water (330 K, 1000 mol/s)."""
     feeds, params = ShellTubeR1.example_case()
@@ -321,9 +322,7 @@ def test_heating_duty_process_in_tubes_rates_the_process_stream() -> None:
     # Independent recompute of the tube side from the stream actually there
     # (dP from INLET-state film properties, spec Algorithm step 4).
     film_n2_in = film_props(thermo, n2.composition, n2.T, n2.P, inlet_kind(n2))
-    duct_in = duct_h(
-        n2.mass_flow, tube_flow_area(N_TUBES, N_PASSES, TUBE_ID), TUBE_ID, film_n2_in, 4.5e-5
-    )
+    duct_in = duct_h(n2.mass_flow, tube_flow_area(N_TUBES, N_PASSES, TUBE_ID), TUBE_ID, film_n2_in, 4.5e-5)
     assert float(result.info["dP_tube_Pa"]) == pytest.approx(
         tube_dP(duct_in.fd, N_PASSES, LENGTH, TUBE_ID, film_n2_in.rho_kg_m3, duct_in.v_m_s)
     )
@@ -366,9 +365,7 @@ def test_heating_duty_process_on_shell_rates_the_process_stream() -> None:
     # The tube side carries the water; its dP is the water-in-tubes dP.
     water = thermo.flash_pt({"H2O": 1.0}, 330.0, 4.0e5, 1000.0)
     film_w_in = film_props(thermo, water.composition, water.T, water.P, inlet_kind(water))
-    duct_in = duct_h(
-        water.mass_flow, tube_flow_area(N_TUBES, N_PASSES, TUBE_ID), TUBE_ID, film_w_in, 4.5e-5
-    )
+    duct_in = duct_h(water.mass_flow, tube_flow_area(N_TUBES, N_PASSES, TUBE_ID), TUBE_ID, film_w_in, 4.5e-5)
     assert float(result.info["dP_tube_Pa"]) == pytest.approx(
         tube_dP(duct_in.fd, N_PASSES, LENGTH, TUBE_ID, film_w_in.rho_kg_m3, duct_in.v_m_s)
     )
