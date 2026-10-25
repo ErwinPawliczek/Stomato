@@ -37,7 +37,7 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V1-hydrate-gpsa-20-10` | R0 | `info.required_inhibitor_mass_fraction` | 0.275 | 0.276272 | abs 0.005 | pass |
+| `V1-hydrate-gpsa-20-10` | R0 | `info.required_inhibitor_mass_fraction` | 0.275 | 0.276358 | abs 0.005 | pass |
 
 - `V1-hydrate-gpsa-20-10`: GPSA Engineering Data Book (SI), Sect. 20, Example 20-10 with the 2004 SI errata (K_H,MeOH = 1297; Hammerschmidt not to be used beyond 20-25 wt% MeOH, Nielsen-Bucklin preferred): a 14 degC hydrate-temperature depression needs 27.5 wt% MeOH in the free-water phase (Hammerschmidt gives 25.5). The case fixes T_operating_K at hydrate_T - 14.0 K (hydrate_T from the catalogue hammerschmidt_formation at the case pressure) so the required aqueous mass fraction reproduces exactly that scenario. The feed carries 15 % water and a 1.5 mol/s methanol trim so the PR package returns a distinct water-rich liquid phase at the target T; the dose anchor itself is correlation-only (the required fraction comes from the Nielsen-Bucklin bisection).
 
