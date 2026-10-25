@@ -38,7 +38,17 @@ too-small ``n_stages``; a ``pressure_profile`` list whose length differs from
 liquid top feed); any parameter other than ``n_stages`` or ``pressure_profile``.
 The catalogue's level-dispatch selector key (``model``) is consumed by
 ``LevelDispatch.solve`` itself and never reaches the adapter, so every key that
-does arrive outside the schema refuses. A
+does arrive outside the schema refuses.
+
+Example case (orchestrator ruling, PR #293): the P1-09 measurement basis
+(C1/nC4 gas into lean nC4, 300 K, 2 MPa) at N=4 — the R0 Example 5.3 feeds
+are withdrawn because their C6+ lean flashes largely to vapour, where the
+column core's converged per-stage M floor measured 7.6e-4 at N=4 (the
+#248 defect family, kept visible as a strict-xfail test). On the P1-09
+basis the adapter measures per-component closure 2.9e-12 (N=2, NC4),
+1.6e-8 (N=4, NC4), 1.2e-8 (N=20, NC4), inside the locked 1e-6 property
+gate; energy residual 7.3e-6 (N=2), 2.5e-5 (N=4), 4.0e-6 (N=20) against
+``_MESH_H_TOL = 1e-2``. A
 column convergence failure propagates as the column's own
 ``ColumnConvergenceError`` — never caught or converted here.
 
@@ -52,7 +62,6 @@ from typing import Any
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.column import Column
-from ngdesign.units.column_shortcut.absorber import Absorber
 
 #: Every params key :meth:`AbsorberR2.solve` accepts. The level-dispatch
 #: selector (``model``) is consumed by ``LevelDispatch.solve`` and never
@@ -177,7 +186,33 @@ class AbsorberR2:
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-        """R0's Seader-Henley-Roper Example 5.3 feeds (pp. 186-188), at
-        ``n_stages = 4`` on the column's own package K-values."""
-        feeds, _ = Absorber.example_case()
-        return feeds, {"n_stages": 4}
+        """The P1-09 measurement basis (C1/nC4 gas into lean nC4, 300 K,
+        2 MPa) at ``n_stages = 4`` on the column's own package K-values.
+
+        Orchestrator ruling on SPEC ISSUE #3 (PR #293): the former R0
+        Example 5.3 feeds are withdrawn as the example — their C6+ lean
+        flashes largely to vapour and the column core's converged
+        per-stage M floor on that basis measured 7.6e-4 at N=4 (column-core
+        defect, #248 family), which cannot meet the locked 1e-6 property
+        balance gate. On THIS basis the adapter measures per-component
+        closure 2.9e-12 (N=2, NC4), 1.6e-8 (N=4, NC4), 1.2e-8 (N=20, NC4)
+        — the 1e-6 gate passes honestly. The R0-basis defect stays visible
+        as a strict-xfail test (see the test module).
+        """
+        return (
+            {
+                "gas_in": {
+                    "T": 300.0,
+                    "P": 2e6,
+                    "molar_flow": 100.0,
+                    "composition": {"C1": 0.9, "NC4": 0.1},
+                },
+                "solvent_in": {
+                    "T": 300.0,
+                    "P": 2e6,
+                    "molar_flow": 30.0,
+                    "composition": {"NC4": 1.0},
+                },
+            },
+            {"n_stages": 4},
+        )

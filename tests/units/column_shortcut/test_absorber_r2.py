@@ -24,7 +24,9 @@ from ngdesign.units.column_shortcut.absorber_r2 import AbsorberR2, AbsorberR2Err
 
 
 def _example_inlets(thermo: Thermo) -> dict[str, StreamState]:
-    """The R0 example feeds, flashed into StreamStates (the R0 pattern)."""
+    """R0's Example 5.3 feeds (NOT the adapter's example_case basis, which
+    the orchestrator's SPEC ISSUE #3 ruling moved to the P1-09 basis),
+    flashed into StreamStates (the R0 pattern)."""
     feeds, _ = Absorber.example_case()
     return {
         port: thermo.flash_pt(feed["composition"], feed["T"], feed["P"], feed["molar_flow"])
@@ -270,12 +272,15 @@ def test_balance_per_component(thermo: Thermo, n: int) -> None:
 
 
 @pytest.mark.parametrize("n", [2, 4, 20])
-def test_balance_per_component_example_case_measured_floor(thermo: Thermo, n: int) -> None:
-    """The R0 example case (a C6+ lean that flashes largely vapour) carries a
-    looser stage-level M floor than the P1-09 basis. MEASURED on this branch
-    through the adapter: worst residual 1.5e-4 (N=2, C1), 7.6e-4 (N=4, C1),
-    5.4e-5 (N=20, C1) — the zero/one-tear correlation gate's own signature
-    (spec.py), not an adapter defect. Bound = 2x the worst measurement.
+def test_balance_per_component_r0_basis_measured_floor(thermo: Thermo, n: int) -> None:
+    """A MEASURED floor, not a requirement: R0's Example 5.3 basis (a C6+
+    lean that flashes largely vapour) carries a looser stage-level M floor
+    than the P1-09 basis. MEASURED through the adapter: worst residual
+    1.5e-4 (N=2, C1), 7.6e-4 (N=4, C1), 5.4e-5 (N=20, C1) — the
+    zero/one-tear correlation gate's own signature (spec.py), not an
+    adapter defect. Bound = 2x the worst measurement. The strict-xfail
+    test below asserts the 1e-6 requirement on this basis and flips
+    loudly when the column core is fixed (#248).
     """
     inlets = _example_inlets(thermo)
     res = AbsorberR2().solve(inlets, {"n_stages": n}, thermo)
@@ -289,6 +294,31 @@ def test_balance_per_component_example_case_measured_floor(thermo: Thermo, n: in
             fout[cid] = fout.get(cid, 0.0) + flow
     for cid in set(fin) | set(fout):
         assert abs(fout.get(cid, 0.0) - fin[cid]) / fin[cid] < 2e-3, cid
+
+
+@pytest.mark.xfail(strict=True, reason="column-core M floor on vapour-flashing solvents: #248")
+@pytest.mark.parametrize("n", [2, 4])
+def test_balance_per_component_r0_basis_1e6_xfail(thermo: Thermo, n: int) -> None:
+    """The locked property-test gate (per-component closure at 1e-6) on R0's
+    Example 5.3 basis. Column-core defect, not an adapter defect: the
+    converged per-stage M floor on this vapour-flashing-solvent basis
+    MEASURED 1.5e-4 (N=2, C1) and 7.6e-4 (N=4, C1) — see
+    test_balance_per_component_r0_basis_measured_floor. STRICT xfail per
+    the orchestrator's SPEC ISSUE #3 ruling: flips loudly (XPASS -> red)
+    when the column core is fixed (#248).
+    """
+    inlets = _example_inlets(thermo)
+    res = AbsorberR2().solve(inlets, {"n_stages": n}, thermo)
+    fin: dict[str, float] = {}
+    for s in inlets.values():
+        for cid, flow in s.component_flows().items():
+            fin[cid] = fin.get(cid, 0.0) + flow
+    fout: dict[str, float] = {}
+    for s in res.outlets.values():
+        for cid, flow in s.component_flows().items():
+            fout[cid] = fout.get(cid, 0.0) + flow
+    for cid in set(fin) | set(fout):
+        assert abs(fout.get(cid, 0.0) - fin[cid]) / fin[cid] < 1e-6, cid
 
 
 @pytest.mark.parametrize("n", [2, 4, 20])
