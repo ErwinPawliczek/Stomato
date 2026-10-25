@@ -181,6 +181,5 @@ def _bisect(residual: Callable[[float], float], lo: float, hi: float) -> float:
         else:
             hi = mid
     raise TEGStageError(
-        f"bisection cap: |delta ln Y_1| did not reach {_LN_TOL:g} "
-        f"in {_MAX_ITERATIONS} iterations"
+        f"bisection cap: |delta ln Y_1| did not reach {_LN_TOL:g} in {_MAX_ITERATIONS} iterations"
     )

@@ -10,14 +10,14 @@ to 1e-12 relative (spec allows the stated round-off; the bisection floor is far
 below the 4e-16 asserted here).
 
 Test basis (spec, R0 example flows): G = 99.95 mol/s dry gas, S = 0.197 mol/s
-TEG, X_0 = 0.015/0.985, Y_in = 5.0025e-4, m = 0.001, so A = 1.97099.
+TEG, X_0 = 0.015/0.985, Y_in = 0.0005/0.9995 (the exact ratio conversion of the
+R0 example y_H2O = 0.0005; the spec text's 5.0025e-4 is this value rounded),
+m = 0.001, so A = 1.97099.
 Reference march results printed in the spec: Y_1 = 1.78481225796e-4 (N=1),
 4.86491069546e-5 (N=3), 1.9339588953e-5 (N=6).
 """
 
 from __future__ import annotations
-
-import math
 
 import pytest
 
@@ -27,21 +27,17 @@ M = 0.001
 G = 99.95
 S = 0.197
 X_LEAN = 0.015 / 0.985
-Y_IN = 5.0025e-4
+Y_IN = 0.0005 / 0.9995
 A = S / (M * G)  # 1.97099...
 
 
 def _linear_x_of_y(y_ratio: float) -> float:
-    """Inverse of the linear equilibrium ``y = m x`` in mole-ratio space.
+    """Linear equilibrium ``Y* = m * X`` directly in mole-ratio space.
 
-    ``Y/(1+Y) = m X/(1+X)`` solves to ``X = Y / (m - (1 - m) Y)``; above the
-    pure-solute limit the denominator turns non-positive and the inverse
-    returns +inf (the pure-solute ceiling), as the TEG inverse does.
+    The classical Kremser line (Trebal, eq. with ``A = S / (m G)``) is linear
+    in solute-free ratios, so the injected inverse is simply ``X = Y / m``.
     """
-    denominator = M - (1.0 - M) * y_ratio
-    if denominator <= 0.0:
-        return math.inf
-    return y_ratio / denominator
+    return y_ratio / M
 
 
 def _kremser_y1(n_stages: int) -> float:
