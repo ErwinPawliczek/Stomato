@@ -21,12 +21,15 @@ from .spec import (
     _OUTER_DAMP,
     _SEED_SPAN_MAX,
     _V_TRAFFIC_CAP,
+    STEAM_COMPONENT,
     ColumnConvergenceError,
     ColumnSpecError,
     _DrawSpec,
+    _FeedSpec,
     _is_reactive_package,
     _Params,
     _Pumparound,
+    _SideStripper,
 )
 from .thermo_adapter import _flash_ready, _ThermoBox
 
@@ -57,6 +60,31 @@ class _StageFeed:
     t: float = 0.0  # feed temperature, flow-weighted over the stage's feeds (K)
 
 
+@dataclass(frozen=True)
+class _StripperSection:
+    """One side-stripper section of the stage graph (S0-1c step 1).
+
+    The section's stages are appended after the main stages, top to bottom,
+    and numbered globally over the whole graph (1-indexed, like the main
+    stages). Its two interlinks: liquid from main stage ``draw_stage`` down
+    to the section's top stage (flow an unknown of the coupled solve), and
+    all vapour from the section's top stage back to main stage
+    ``return_stage`` (isenthalpic pressure let-down, no extra term).
+    """
+
+    stripper: _SideStripper
+    #: Global stage indices of this section's stages, top to bottom
+    #: (empty for the degenerate n_stages = 0 plain-draw stripper).
+    stages: tuple[int, ...]
+    #: Global stage the liquid draw leaves the main column at.
+    draw_stage: int
+    #: Global stage the stripped overhead vapour returns to.
+    return_stage: int
+    #: Global stage carrying the steam feed / reboiler duty (the section's
+    #: bottom stage; None only for the degenerate n_stages = 0 case).
+    bottom_stage: int | None
+
+
 @dataclass
 class _Column:
     """All static problem data for one solve. Stage index 0 = stage 1 (top)."""
@@ -81,10 +109,20 @@ class _Column:
     #: in list order (it moves in feature 4's tear vector, fixed before that).
     pumparounds: list[_Pumparound] = field(default_factory=list)
     pa_flows: list[float] = field(default_factory=list)
+    #: S0-1c: side-stripper sections appended after the main stages (empty =
+    #: a plain column, built exactly as today). The interlinks live on the
+    #: sections; step 3 wires them into the balances.
+    strippers: list[_SideStripper] = field(default_factory=list)
+    sections: list[_StripperSection] = field(default_factory=list)
     # Two-phase operating window for the inner temperature walk, set from the
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
     t_band_hi: float = 600.0
+
+    @property
+    def n_graph(self) -> int:
+        """Total stages over the whole graph: main stages plus every section's."""
+        return self.n + sum(len(s.stages) for s in self.sections)
 
 
 @dataclass
@@ -118,10 +156,19 @@ class _Profile:
     ns_trace: list[str] = field(default_factory=list)
 
 
-def _flash_stage_feeds(col_params: _Params, tb: _ThermoBox) -> list[_StageFeed]:
-    """Flash every feed and split it into the vapour/liquid parts entering its stage."""
-    stage_feeds = [_StageFeed() for _ in range(col_params.n_stages)]
-    for f in col_params.feeds:
+def _flash_stage_feeds(
+    col_params: _Params, tb: _ThermoBox, extra: list[_FeedSpec] | None = None
+) -> list[_StageFeed]:
+    """Flash every feed and split it into the vapour/liquid parts entering its stage.
+
+    ``extra`` carries S0-1c steam feeds aimed at stripper-section stages
+    beyond the main column's ``n_stages``; without it the list covers the
+    main stages exactly, as before.
+    """
+    all_feeds = list(col_params.feeds) + (extra or [])
+    n_all = max([col_params.n_stages] + [f.stage for f in all_feeds])
+    stage_feeds = [_StageFeed() for _ in range(n_all)]
+    for f in all_feeds:
         state = tb.pt(f.comp, f.T, f.P, f.flow)
         part = stage_feeds[f.stage - 1]
         part.total += f.flow
@@ -159,12 +206,47 @@ def _flash_stage_feeds(col_params: _Params, tb: _ThermoBox) -> list[_StageFeed]:
     return stage_feeds
 
 
+def _steam_feed_specs(col_params: _Params) -> list[_FeedSpec]:
+    """Steam feeds for the stripper sections' bottom stages (S0-1c step 1).
+
+    Steam is an ordinary feed to the stripper's bottom stage (spec Design),
+    pure ``STEAM_COMPONENT`` at the parsed T/P. A zero-flow steam option
+    contributes no feed (a zero-flow flash is degenerate) but its component
+    still joins the fixed component list in ``_build_column``.
+    """
+    out: list[_FeedSpec] = []
+    offset = col_params.n_stages
+    for st in col_params.side_strippers:
+        bottom = offset + st.n_stages  # global stage index of the section's bottom
+        offset += st.n_stages
+        if st.steam_flow is None or st.n_stages == 0 or st.steam_flow <= _FLOW_FLOOR:
+            continue
+        out.append(
+            _FeedSpec(
+                stage=bottom,
+                T=st.steam_T,
+                P=st.steam_P,
+                flow=st.steam_flow,
+                comp={STEAM_COMPONENT: 1.0},
+            )
+        )
+    return out
+
+
 def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
-    feeds = _flash_stage_feeds(col_params, tb)
-    comps = sorted({cid for part in feeds for cid in part.y} | {cid for part in feeds for cid in part.x})
+    steam = _steam_feed_specs(col_params)
+    feeds = _flash_stage_feeds(col_params, tb, extra=steam)
+    comp_cids = {cid for part in feeds for cid in part.y} | {cid for part in feeds for cid in part.x}
+    # Fixed component list (S0-1c): water from stripper steam joins comps
+    # from the start - even at zero steam flow - so every evaluation of a
+    # graph column uses one component list.
+    for st in col_params.side_strippers:
+        if st.steam_flow is not None and st.n_stages > 0:
+            comp_cids.add(STEAM_COMPONENT)
+    comps = sorted(comp_cids)
     f_total = sum(part.total for part in feeds)
     moles: dict[str, float] = {}
-    for f in col_params.feeds:
+    for f in [*col_params.feeds, *steam]:
         for cid, frac in f.comp.items():
             moles[cid] = moles.get(cid, 0.0) + frac * f.flow
     z_total = {cid: n / f_total for cid, n in sorted(moles.items())}
@@ -183,6 +265,25 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         z_total=z_total,
         feed_comp=dict(z_total),
     )
+    # Stage graph (S0-1c step 1): each stripper's section is appended after
+    # the main stages, top to bottom, numbered globally over the graph. A
+    # column without strippers gets empty lists - today's _Column exactly.
+    col.strippers = list(col_params.side_strippers)
+    sections: list[_StripperSection] = []
+    offset = col_params.n_stages
+    for st in col.strippers:
+        stages = tuple(range(offset + 1, offset + st.n_stages + 1))
+        sections.append(
+            _StripperSection(
+                stripper=st,
+                stages=stages,
+                draw_stage=st.draw_stage,
+                return_stage=st.return_stage,
+                bottom_stage=stages[-1] if stages else None,
+            )
+        )
+        offset += st.n_stages
+    col.sections = sections
     col.pumparounds = list(col_params.pumparounds)
     pa_flows: list[float] = []
     for pa in col.pumparounds:

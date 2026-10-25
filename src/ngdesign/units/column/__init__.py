@@ -155,6 +155,19 @@ class Column:
                 "composition": dict(graph_feed.composition),
             }
         parsed = _parse_params(params, graph_dict)
+        if parsed.side_strippers:
+            # S0-1c step 1: parsing and the stage graph are wired; the
+            # simultaneous stripper solve lands in step 3. Refuse loudly
+            # instead of silently returning a plain column.
+            raise ColumnSpecError(
+                "side_strippers is parsed but the simultaneous stripper solve "
+                "is not implemented (S0-1c step 3)"
+            )
+        if parsed.condenser_water_decant:
+            raise ColumnSpecError(
+                "condenser_water_decant is parsed but the condenser free-water "
+                "decant is not implemented (S0-1c step 4)"
+            )
         tb = _ThermoBox(thermo, min(parsed.pressures), max(parsed.pressures))
         col = _build_column(parsed, tb)
 
