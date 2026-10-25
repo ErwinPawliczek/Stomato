@@ -20,7 +20,7 @@ from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import StreamState
 from ngdesign.units._physics.kinetics import apply_extents
 from ngdesign.units.reactors._shared import reaction_set_param, thermal_outlet
-from ngdesign.units.reactors.plug_flow import PlugFlowProfile, integrate_plug_flow
+from ngdesign.units.reactors.plug_flow import PlugFlowError, PlugFlowProfile, integrate_plug_flow
 
 #: Thermal modes R1 accepts (spec params table). ``{"T_out": K}`` is a
 #: conversion-reactor mode, not a kinetic one: a PFR cannot hold a stated
@@ -46,7 +46,7 @@ class PfrR1:
         thermal = params.get("thermal", "isothermal")
         if isinstance(thermal, str):
             if thermal not in _THERMAL_MODES:
-                raise ValueError(
+                raise PlugFlowError(
                     f"thermal mode {thermal!r} is not one of 'isothermal', 'adiabatic' or {{\"duty_W\": W}}"
                 )
             energy: str = thermal
@@ -55,7 +55,7 @@ class PfrR1:
             energy = "uniform_duty"
             duty = float(thermal["duty_W"])
         else:
-            raise ValueError(
+            raise PlugFlowError(
                 f"thermal mode {thermal!r} is not one of 'isothermal', 'adiabatic' or {{\"duty_W\": W}}"
             )
         bulk = params.get("bulk_density_kg_m3")

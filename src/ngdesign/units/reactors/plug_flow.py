@@ -23,8 +23,9 @@ The outlet temperature is **not** taken from the ODE: adapters close the
 energy balance exactly on the formation-enthalpy basis through
 ``_shared.thermal_outlet`` / ``_shared._solve_outlet_T``.  The ODE end
 temperature is reported next to the closure temperature as
-``T_closure_gap_K`` (the ideal-gas dH of the energy ODE against the
-package's residual enthalpy); it is reported, never forced to zero.
+``T_closure_gap_K`` (the residual difference between the ODE's
+package-consistent ΔrH(T) and the closure's flash-based solve); it is
+reported, never forced to zero.
 
 All SI: J, mol, K, Pa, s.
 """
@@ -40,7 +41,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.contracts.reactions import PowerLaw, Reaction, ReactionSet
+from ngdesign.contracts.reactions import Reaction, ReactionSet
 from ngdesign.contracts.stream import Phase, PhaseKind, StreamState
 from ngdesign.units._physics.kinetics import (
     R,
@@ -63,6 +64,9 @@ _PHASE_KIND: dict[str, PhaseKind] = {
     "vapor": PhaseKind.VAPOR,
     "liquid": PhaseKind.HC_LIQUID,
 }
+
+#: Reference temperature of the databank formation enthalpies, K.
+T_REF_FORMATION = 298.15
 
 
 class PlugFlowError(ValueError):
@@ -124,14 +128,28 @@ def _validate_reactions(rset: ReactionSet, bulk_density_kg_m3: float | None) -> 
     for reaction in rset.reactions:
         if reaction.kinetics is None:
             raise PlugFlowError(f"reaction '{reaction.id}' has no kinetics")
-        if isinstance(reaction.kinetics, PowerLaw) and reaction.equilibrium is not None:
-            raise PlugFlowError(
-                f"reaction '{reaction.id}': a PowerLaw with an equilibrium model but no "
-                "explicit reverse is refused: kinetics.rate would multiply by (1 - 1/K) "
-                "without the reaction quotient; give an explicit reverse"
-            )
         scales.append(_scale_j(reaction, bulk_density_kg_m3))
     return scales
+
+
+def _pkg_reaction_enthalpy(
+    reaction: Reaction, thermo: Thermo, t: float, p: float, kind: PhaseKind
+) -> float:
+    """Reaction enthalpy on the outlet-closure basis, J/mol extent (spec eq. 5).
+
+    The closure (``thermal_outlet`` / ``_solve_outlet_T``) balances the stream
+    enthalpy of :func:`kinetics.enthalpy_with_formation` — the package
+    enthalpy plus the databank ΔfH°298 lift.  The energy ODE must use the same
+    basis: ΔrH(T) = ΔrH°298 (databank, ``heat_of_reaction`` at 298.15 K) +
+    Σν·h_pkg,i(T, P), each h_pkg,i a pure-component ``thermo.phase_props``
+    enthalpy.  Using the databank's own Cp integral (``heat_of_reaction`` at
+    T) instead mixed two enthalpy bases and inflated T_closure_gap_K
+    (review of PR #311, blocking item 1).
+    """
+    return float(heat_of_reaction(reaction, T_REF_FORMATION)) + math.fsum(
+        float(nu) * float(thermo.phase_props({cid: 1.0}, t, p, kind).enthalpy)
+        for cid, nu in reaction.stoichiometry.items()
+    )
 
 
 def _flows(rset: ReactionSet, f0: Mapping[str, float], xi: Sequence[float]) -> dict[str, float]:
@@ -185,6 +203,10 @@ def integrate_plug_flow(
         raise PlugFlowError("energy='heat_model' requires a heat model")
     if n_output < 2:
         raise PlugFlowError("n_output must be >= 2")
+    if reacting_phase not in _PHASE_KIND:
+        raise PlugFlowError(
+            f"reacting_phase {reacting_phase!r} is not one of 'vapor' or 'liquid'"
+        )
 
     scales = _validate_reactions(rset, bulk_density_kg_m3)
     reactions = rset.reactions
@@ -254,7 +276,9 @@ def integrate_plug_flow(
             nu_base = float(reaction.stoichiometry[reaction.base_component])
             dxi[j] = scales[j] * multiplier * r_j / abs(nu_base)
             if energy != "isothermal":
-                d_h += float(heat_of_reaction(reaction, t)) * dxi[j]
+                d_h += _pkg_reaction_enthalpy(
+                    reaction, thermo, t, p, _PHASE_KIND[reacting_phase]
+                ) * dxi[j]
 
         q = q_v(v, t, extra)
         if energy == "isothermal":
