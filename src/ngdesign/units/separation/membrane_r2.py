@@ -118,11 +118,12 @@ def counter_current(
         shoot = root(residual, r0, method="hybr", tol=1e-12, options={"maxfev": 200})
         if not shoot.success or float(np.max(np.abs(shoot.fun))) > 1e-9 * F_f:
             raise MembraneR1SpecError("counter-current shooting did not converge")
-        end = integrate_to_feed_end(A, shoot.x)
-        n_end, p_end = end[:N], end[N:]
-        residue = {c: float(v) for c, v in zip(order, n_end, strict=True)}
-        permeate = {c: float(v) for c, v in zip(order, p_end, strict=True)}
-        theta = float(np.sum(p_end)) / F_f
+        # The residue is the shooting unknown r = n(A); the permeate product is
+        # p(0) = F z − r (n − p is constant along a since dn/da = dp/da = −J).
+        r_end = shoot.x
+        residue = {c: float(v) for c, v in zip(order, r_end, strict=True)}
+        permeate = {c: float(Fz[i] - r_end[i]) for i, c in enumerate(order)}
+        theta = float(sum(permeate.values())) / F_f
         return residue, permeate, float(A), theta, int(shoot.nfev)
 
     if area_f is not None:
