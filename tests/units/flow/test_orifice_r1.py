@@ -172,6 +172,15 @@ def test_bad_c_specified_refused() -> None:
         orifice_dp(10.0, 0.10226, 0.05, 998.0, 1e-3, 5e5, None, "flange", 1.0)
 
 
+
+
+_LIQ = {"H2O": 1.0}
+_LIQ_MW = 18.0  # g/mol: StreamState.molecular_weight is g/mol, mass_flow divides by 1000
+
+
+class StaticThermo:
+    """Minimal Thermo: one phase-property set, flash_ph echoes at the target P."""
+
     def __init__(self, density: float, viscosity: float | None, mw: float = _LIQ_MW):
         self._density = density
         self._viscosity = viscosity
