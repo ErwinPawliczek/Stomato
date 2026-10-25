@@ -36,7 +36,15 @@ import math
 from dataclasses import dataclass
 from typing import Any
 
+import ht
+
+from ngdesign.contracts import StreamState, UnitResult
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.sizing.lmtd import lmtd_counter
+from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
+from ngdesign.units._physics.heat_balance import TemperatureCross
 from ngdesign.units.heat.rating import DuctResult, FilmProps, RatingError, darcy_dP, duct_h
+from ngdesign.units.heat.rating import film_props, inlet_kind, rate_two_stream, u_outside_tube
 
 #: Allowed tube-pass counts (spec Params table).
 TUBE_PASSES = (1, 2, 4, 6, 8)
@@ -268,6 +276,254 @@ def geometry(params: dict[str, Any]) -> ShellGeometry:
     )
 
 
+def eps_counterflow(NTU: float, Cr: float) -> float:
+    """Counter-current effectiveness for a single pass in one shell.
+
+    ``[1 - exp(-NTU(1-Cr))] / [1 - Cr*exp(-NTU(1-Cr))]`` (Incropera
+    eqs. 11.29a/b), or ``NTU/(1 + NTU)`` at ``Cr = 1``.
+    """
+    if Cr >= 1.0 - 1e-12:
+        return NTU / (1.0 + NTU)
+    ex = math.exp(-NTU * (1.0 - Cr))
+    return (1.0 - ex) / (1.0 - Cr * ex)
+
+
+def eps_tema_e(NTU: float, Cr: float, tube_passes: int, n_shells: int) -> float:
+    """TEMA E effectiveness for ``tube_passes`` tube passes and ``n_shells`` shells.
+
+    A single tube pass in a single shell is pure counterflow
+    (:func:`eps_counterflow`); any multi-pass arrangement uses
+    ``ht.effectiveness_from_NTU(NTU, Cr, subtype='S&T', n_shell_tube=n_shells)``
+    (Incropera eqs. 11.31a/b), where each shell takes NTU/n. ``tube_passes = 1``
+    with several shells is refused by :func:`geometry`.
+    """
+    if tube_passes == 1:
+        return eps_counterflow(NTU, Cr)
+    return float(ht.effectiveness_from_NTU(NTU, Cr, subtype="S&T", n_shell_tube=n_shells))
+
+
+class ShellTubeR1:
+    """Shell-and-tube exchanger, R1: single-phase Kern-method rating level.
+
+    One process port pair (``inlet`` -> ``outlet``); the utility stream comes
+    from the ``utility_*`` params, is computed internally and is never a port.
+    """
+
+    inlet_ports = ("inlet",)
+    outlet_ports = ("outlet",)
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """The R0 vertical-slice gas cooled by cooling water on the shell side.
+
+        The dry separator gas of the R0 slice, at 3.0 MPa (the R0 7 MPa feed
+        condenses across the R1 full-duty bracket at 303.15 K, so the example
+        holds the composition and cools it at a lower pressure - same practice
+        as the double-pipe example's documented geometry substitution), in the
+        tubes of geometry G1, against cooling water (H2O, 303.15 K, 4 bar,
+        1000 mol/s) on the shell side - the water flow puts Kern's shell-side
+        Re_s inside the 2e3-1e6 correlation band.
+        """
+        dry = {cid: x for cid, x in INLET_COMPOSITION.items() if cid != "H2O"}
+        total = sum(dry.values())
+        feed = {
+            "T": 322.15,
+            "P": 3.0e6,
+            "molar_flow": 50 * MMSCFD_TO_MOL_S,
+            "composition": {cid: x / total for cid, x in dry.items()},
+        }
+        params: dict[str, Any] = {
+            "process_side": "tube",
+            "shell_ID_m": 0.489,
+            "n_tubes": 158,
+            "tube_OD_m": 0.01905,
+            "tube_ID_m": 0.01483,
+            "tube_length_m": 4.877,
+            "pitch_m": 0.02381,
+            "layout": "triangular30",
+            "baffle_spacing_m": 0.3048,
+            "n_baffles": 15,
+            "tube_passes": 2,
+            "utility_composition": {"H2O": 1.0},
+            "utility_T_K": 303.15,
+            "utility_P_Pa": 4.0e5,
+            "utility_molar_flow": 1000.0,
+        }
+        return {"inlet": feed}, params
+
+    def solve(
+        self,
+        inlets: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> UnitResult:
+        """Rate the exchanger at the R1 level; see the module docstring."""
+        geom = geometry(params)
+        process = inlets["inlet"]
+        utility = thermo.flash_pt(
+            geom.utility_composition, geom.utility_T_K, geom.utility_P_Pa, geom.utility_molar_flow
+        )
+
+        # Hot/cold assignment: the hotter inlet is "hot"; equal inlets refuse.
+        if abs(process.T - utility.T) <= 1e-9:
+            raise TemperatureCross(
+                f"shell_tube R1: inlet temperatures are equal (within 1e-9 K) at "
+                f"T = {process.T} K; no driving force"
+            )
+        hot, cold = (process, utility) if process.T > utility.T else (utility, process)
+        hot_is_process = hot is process
+
+        # Single-phase check on both inlets; a phase change goes to R2.
+        for side, state in (("process", process), ("utility", utility)):
+            try:
+                inlet_kind(state)
+            except SinglePhaseRequired as exc:
+                raise SinglePhaseRequired(f"{exc} ({side} inlet); use model R2") from exc
+
+        # Geometry scalars (Eq. S1, S2 and A_o = Nt*pi*Do*L).
+        a_s = shell_flow_area(geom.shell_ID_m, geom.pitch_m, geom.tube_OD_m, geom.baffle_spacing_m)
+        de = equiv_diameter(geom.pitch_m, geom.tube_OD_m, geom.layout)
+        a_o = geom.n_tubes * math.pi * geom.tube_OD_m * geom.tube_length_m
+
+        def side_ducts(
+            h_state: StreamState, c_state: StreamState, hT: float, cT: float, hP: float, cP: float
+        ) -> tuple[DuctResult, DuctResult]:
+            """Tube and shell duct results for (hot, cold) at the given mean states.
+
+            The shell DuctResult carries Re in ``Re`` and G_s in ``v_m_s``;
+            its ``fd`` is unused (the S3 friction fit replaces the Colebrook
+            root on the shell side).
+            """
+            kind_h = inlet_kind(h_state)
+            kind_c = inlet_kind(c_state)
+            film_h = film_props(thermo, h_state.composition, hT, hP, kind_h)
+            film_c = film_props(thermo, c_state.composition, cT, cP, kind_c)
+            if geom.process_side == "tube":
+                tube = tube_duct(
+                    h_state.mass_flow, geom.n_tubes, geom.tube_passes, geom.tube_ID_m,
+                    film_h, geom.roughness_m,
+                )
+                gs = c_state.mass_flow / a_s
+                re_s = de * gs / film_c.mu_Pa_s
+                h_shell = shell_h(film_c.k_W_mK, de, re_s, film_c.Pr)
+            else:
+                gs = h_state.mass_flow / a_s
+                re_s = de * gs / film_h.mu_Pa_s
+                h_shell = shell_h(film_h.k_W_mK, de, re_s, film_h.Pr)
+                tube = tube_duct(
+                    c_state.mass_flow, geom.n_tubes, geom.tube_passes, geom.tube_ID_m,
+                    film_c, geom.roughness_m,
+                )
+            return tube, DuctResult(h_W_m2K=h_shell, Re=re_s, v_m_s=gs, fd=0.0)
+
+        # Pressure drops from INLET-state properties (spec Algorithm step 4).
+        tube_in, shell_in = side_ducts(hot, cold, hot.T, cold.T, hot.P, cold.P)
+        film_hot_in = film_props(thermo, hot.composition, hot.T, hot.P, inlet_kind(hot))
+        film_cold_in = film_props(thermo, cold.composition, cold.T, cold.P, inlet_kind(cold))
+        f_in = shell_friction(shell_in.Re)
+        if geom.process_side == "tube":
+            dP_tube = tube_dP(
+                tube_in.fd, geom.tube_passes, geom.tube_length_m, geom.tube_ID_m,
+                film_hot_in.rho_kg_m3, tube_in.v_m_s,
+            )
+            dP_shell = shell_dP(
+                f_in, shell_in.v_m_s, geom.n_baffles, geom.shell_ID_m, film_cold_in.rho_kg_m3, de
+            )
+        else:
+            dP_tube = tube_dP(
+                tube_in.fd, geom.tube_passes, geom.tube_length_m, geom.tube_ID_m,
+                film_cold_in.rho_kg_m3, tube_in.v_m_s,
+            )
+            dP_shell = shell_dP(
+                f_in, shell_in.v_m_s, geom.n_baffles, geom.shell_ID_m, film_hot_in.rho_kg_m3, de
+            )
+        # The side (tube/shell) belongs to the stream named by process_side;
+        # hot/cold is only the temperature ranking.
+        dP_process = dP_tube if geom.process_side == "tube" else dP_shell
+        dP_utility = dP_shell if geom.process_side == "tube" else dP_tube
+        p_process_out = process.P - dP_process
+        p_utility_out = utility.P - dP_utility
+        for side, p_out in (("process", p_process_out), ("utility", p_utility_out)):
+            if p_out <= 0.0:
+                raise RatingError(
+                    f"non-positive outlet pressure: {side} side drops to {p_out} Pa across this geometry"
+                )
+        p_hot_out = p_process_out if hot_is_process else p_utility_out
+        p_cold_out = p_utility_out if hot_is_process else p_process_out
+
+        # UA at the bulk-mean film state of each side, re-evaluated at every
+        # g(Q) step; the last evaluation is the reported rating.
+        last: dict[str, DuctResult] = {}
+
+        def ua_of(hot_out: StreamState, cold_out: StreamState) -> float:
+            tube_m, shell_m = side_ducts(
+                hot,
+                cold,
+                (hot.T + hot_out.T) / 2.0,
+                (cold.T + cold_out.T) / 2.0,
+                (hot.P + p_hot_out) / 2.0,
+                (cold.P + p_cold_out) / 2.0,
+            )
+            last["tube"], last["shell"] = tube_m, shell_m
+            u_o = u_outside_tube(
+                h_i=tube_m.h_W_m2K,
+                h_o=shell_m.h_W_m2K,
+                Do=geom.tube_OD_m,
+                Di=geom.tube_ID_m,
+                k_wall=geom.k_wall_W_mK,
+                R_fi=geom.R_f_tube_m2K_W,
+                R_fo=geom.R_f_shell_m2K_W,
+            )
+            return u_o * a_o
+
+        def eps_of(NTU: float, Cr: float) -> float:
+            return eps_tema_e(NTU, Cr, geom.tube_passes, geom.n_shells)
+
+        rated = rate_two_stream(hot, cold, thermo, p_hot_out, p_cold_out, ua_of, eps_of)
+
+        # Kern's shell-side band, checked at mean properties before accepting
+        # the result (spec Algorithm step 6).
+        re_s_mean = last["shell"].Re
+        kern_in_range = KERN_RE_MIN < re_s_mean < KERN_RE_MAX
+        if not kern_in_range and not geom.allow_extrapolation:
+            raise KernRangeError(
+                f"shell-side Re_s = {re_s_mean} outside Kern's validity band "
+                f"[{KERN_RE_MIN}, {KERN_RE_MAX}]; raise the utility flow or set allow_extrapolation"
+            )
+
+        hot_out, cold_out = rated.hot_out, rated.cold_out
+        process_out = hot_out if hot_is_process else cold_out
+        utility_out = cold_out if hot_is_process else hot_out
+        duty_W = process.molar_flow * (process_out.enthalpy - process.enthalpy)
+        f_lmtd = float(ht.F_LMTD_Fakheri(hot.T, hot_out.T, cold.T, cold_out.T, shells=geom.n_shells))
+        info: dict[str, Any] = {
+            "Q_W": rated.duty_W,
+            "U_W_m2K": rated.UA_W_K / a_o,
+            "A_m2": a_o,
+            "UA_W_K": rated.UA_W_K,
+            "NTU": rated.NTU,
+            "effectiveness": rated.effectiveness,
+            "F_LMTD": f_lmtd,
+            "LMTD_K": lmtd_counter(hot.T, hot_out.T, cold.T, cold_out.T),
+            "h_tube_W_m2K": last["tube"].h_W_m2K,
+            "h_shell_W_m2K": last["shell"].h_W_m2K,
+            "Re_tube": last["tube"].Re,
+            "Re_shell": last["shell"].Re,
+            "dP_tube_Pa": dP_tube,
+            "dP_shell_Pa": dP_shell,
+            "utility_T_out_K": utility_out.T,
+            "utility_P_out_Pa": p_utility_out,
+            "utility_duty_W": rated.duty_W,
+            "kern_in_range": float(kern_in_range),
+        }
+        return UnitResult(
+            outlets={"outlet": process_out},
+            duty_W=duty_W,
+            power_W=0.0,
+            info=info,
+        )
+
+
 __all__ = [
     "FRICTION_RE_MIN",
     "KERN_RE_MAX",
@@ -277,7 +533,10 @@ __all__ = [
     "PROCESS_SIDES",
     "ShellGeometry",
     "ShellTubeGeometryError",
+    "ShellTubeR1",
     "TUBE_PASSES",
+    "eps_counterflow",
+    "eps_tema_e",
     "equiv_diameter",
     "geometry",
     "shell_dP",
