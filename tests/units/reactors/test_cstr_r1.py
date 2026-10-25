@@ -10,11 +10,17 @@ solution): nC4 -> iC4, k0 = 1.0e3 1/s, Ea = 5.0e4 J/mol, feed pure nC4 at
 with k(500 K) = k0·exp(-Ea/(R·500 K)) and c_tot = P/(R·T) = 48.11 mol/m3.
 Expected F_nC4 = 0.634800033 mol/s. Tolerance 1e-9 relative.
 
-R1-B — isothermal second order with delta n != 0 (2 C2H4 -> 1-butene) is
-NOT implemented: the databank has no ethylene or butene component, and
-pseudo-components carry no formula, so `formation_enthalpy_298` raises
-MissingFormationData and the energy closure through `thermal_outlet` cannot
-run. See the PR's SPEC ISSUE comment.
+R1-B — isothermal second order with delta n != 0: 2 C2H4 -> 1-butene, base
+C2H4 (nu = -2), k0 = 5.0e-3 m3/(mol s), Ea = 0, order 2 in C2H4,
+concentration basis. Feed pure C2H4 at 1.0 mol/s, 600 K, 5.0e5 Pa, V = 0.5
+m3 (units/cstr.md, tests). Component ids per the orchestrator's ruling on
+the SPEC ISSUE: `ethylene` and `1-butene` resolve in the databank
+(ngdesign.data.component_record) with formation data, so the energy closure
+runs. The hand equation is 2·xi = V·k·(y_A·P/(R·T))^2 with
+y_A = (F0 - 2·xi)/(F0 - xi), solved independently by brentq. Expected
+c_tot = P/(R·T) = 100.226963 mol/m3, xi = 0.447862522 mol/s
+(X = 0.895725045), F_C2H4 = 0.104274955, F_1-butene = 0.447862522.
+Tolerance 1e-9 relative.
 """
 
 from __future__ import annotations
