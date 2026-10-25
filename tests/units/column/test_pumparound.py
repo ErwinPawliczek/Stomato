@@ -227,12 +227,17 @@ def test_reboiler_stage_pumparound_refused() -> None:
             )
 
 
-def test_unimplemented_feature_keys_refused() -> None:
-    """S0-1 features 2 and 3 refuse their keys instead of ignoring them (PR #238 review item 7)."""
-    with pytest.raises(ColumnSpecError, match="side_strippers.*not implemented"):
-        _parse_only({**_base_params(), "side_strippers": []})
-    with pytest.raises(ColumnSpecError, match="condenser_water_decant.*not implemented"):
-        _parse_only({**_base_params(), "condenser_water_decant": True})
+def test_unimplemented_feature_keys_parse_then_refuse_at_solve() -> None:
+    """S0-1c step 1: the feature-2/3 keys now parse; the loud refusal moved
+    to solve time (test_unimplemented_refusals.py pins it).
+
+    An empty list / False still parse into a plain column - the parse-time
+    refusal of PR #238 review item 7 was for the unwired keys, and these
+    are wired now.
+    """
+    parsed_params = {**_base_params(), "side_strippers": []}
+    _parse_only(parsed_params)
+    _parse_only({**_base_params(), "condenser_water_decant": False})
 
 
 def test_pumparound_flow_exceeding_internal_liquid_refused() -> None:
