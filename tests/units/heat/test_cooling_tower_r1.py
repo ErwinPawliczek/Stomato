@@ -31,6 +31,7 @@ import math
 import pytest
 
 from ngdesign import registry
+from ngdesign.contracts import StreamState
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.heat.cooling_tower import CoolingTower
 from ngdesign.units.heat.cooling_tower_r1 import (
@@ -111,7 +112,7 @@ def _thermo() -> Thermo:
     return impl
 
 
-def _r1_feeds(thermo: Thermo) -> dict[str, object]:
+def _r1_feeds(thermo: Thermo) -> dict[str, StreamState]:
     """The R0 example feeds, flashed: water 313.15 K against humid 299.817 K air."""
     feeds, _params = CoolingTower.example_case()
     water = feeds["water_in"]
@@ -269,7 +270,9 @@ def test_refuses_approach_K_at_r1() -> None:
 def test_refuses_water_at_or_below_the_wet_bulb() -> None:
     """A saturated inlet air returns the dry bulb as its wet bulb; water below it is refused."""
     thermo = _thermo()
-    y_sat = thermo.pure_psat("H2O", 305.0) / P_ATM
+    psat = thermo.pure_psat("H2O", 305.0)
+    assert psat is not None
+    y_sat = psat / P_ATM
     feeds = {
         "water_in": thermo.flash_pt({"H2O": 1.0}, 300.0, P_ATM, 100.0),
         "air_in": thermo.flash_pt({"N2": 1.0 - y_sat, "H2O": y_sat}, 305.0, P_ATM, 3000.0),
