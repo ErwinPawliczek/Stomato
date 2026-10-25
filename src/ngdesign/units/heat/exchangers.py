@@ -85,4 +85,20 @@ class DoublePipeExchanger(_TwoStreamExchanger):
         """Syngas trim cooler: N2 500 -> 400 K against equal N2 flow at 320 K."""
         hot = {"T": 500.0, "P": 1.0e6, "molar_flow": 100.0, "composition": {"N2": 1.0}}
         cold = {"T": 320.0, "P": 1.0e6, "molar_flow": 100.0, "composition": {"N2": 1.0}}
-        return {"hot_in": hot, "cold_in": cold}, {"hot_T_out": 400.0, "dP_hot": 1.0e4, "dP_cold": 1.0e4}
+        # The R1 geometry rides on the shared example: the per-row
+        # LevelDispatch hands this example_case to every implemented level
+        # (the locked balance test dispatches R1 on it), R0 ignores the
+        # geometry keys and R1 requires them (spec U-R2, double_pipe).
+        return (
+            {"hot_in": hot, "cold_in": cold},
+            {
+                "hot_T_out": 400.0,
+                "dP_hot": 1.0e4,
+                "dP_cold": 1.0e4,
+                "inner_ID_m": 0.0266,
+                "inner_OD_m": 0.0334,
+                "outer_ID_m": 0.0525,
+                "length_m": 60.0,
+                "inner_side": "hot",
+            },
+        )
