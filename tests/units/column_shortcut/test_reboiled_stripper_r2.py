@@ -2,14 +2,14 @@
 
 Identity: the adapter's outlets equal a direct ``Column().solve`` with the
 mapped params (condenser "none", kettle reboiler, feed stage 1, the spec
-passed through) bit-for-bit — the R2 identity is to the column row, not to
+passed through) bit-for-bit -- the R2 identity is to the column row, not to
 the R0 Kremser level (no exact Kremser-vs-MESH reduction exists).
 
-Basis feed: C1/NC4 = 0.1/0.9, 300 K, 2 MPa, 100 mol/s, N = 4 — the P1-09/P1-10
+Basis feed: C1/NC4 = 0.1/0.9, 300 K, 2 MPa, 100 mol/s, N = 4 -- the P1-09/P1-10
 one-tear stripper anchor feed. The spec's original nC4/nC5 bench was withdrawn
 by the orchestrator's ruling on PR #292: the kettle-only column core does not
 converge its rate specs nor that bench feed (column-core rate-spec convergence
-defect, #248 — reported, not worked around here). Independent expected values
+defect, #248 -- reported, not worked around here). Independent expected values
 only, per the ruling:
 
 - the locked P1 anchors, ``tests/units/test_column_feed_determined.py``
@@ -21,7 +21,7 @@ only, per the ruling:
 
 Refusals: one test per row of the spec's refusal table. The
 ``reboiler_duty_W`` refusal fires before any column call (the kettle-only
-column core hits a singular Newton system for that spec — a core defect
+column core hits a singular Newton system for that spec -- a core defect
 reported to the orchestrator, not worked around here).
 
 Rate specs pass through to the column unchanged; today they do not converge
@@ -116,7 +116,7 @@ def test_locked_p1_anchor_products(boilup_case: UnitResult) -> None:
     Constant check: D = 10.4437 and B = 89.5563 mol/s, printed in the merged
     P1-10 acceptance test ``tests/units/test_column_feed_determined.py``
     (parametrize row ``(4, 0.5, 10.4437, 89.5563, ...)``). Tolerance matches
-    that test's own ``abs=5e-3`` gate — not widened.
+    that test's own ``abs=5e-3`` gate -- not widened.
     """
     d = boilup_case.outlets["overhead"].molar_flow
     b = boilup_case.outlets["bottoms"].molar_flow
@@ -141,7 +141,7 @@ def test_material_identity_mass_closure(boilup_case: UnitResult) -> None:
 
 @pytest.mark.timeout(600)
 def test_energy_closure(boilup_case: UnitResult) -> None:
-    """ΣnH in + duty_W = ΣnH out at 1e-8 (U-R1 energy rule; power_W = 0)."""
+    "nH_in + duty_W = nH_out at 1e-8 (U-R1 energy rule; power_W = 0)."
     feed = _feed(FEED)
     overhead = boilup_case.outlets["overhead"]
     bottoms = boilup_case.outlets["bottoms"]
@@ -154,7 +154,7 @@ def test_energy_closure(boilup_case: UnitResult) -> None:
 @pytest.mark.timeout(600)
 def test_phase_state_kettle_bubble_overhead_dew(boilup_case: UnitResult, thermo: Thermo) -> None:
     """The kettle bottoms is saturated liquid, the stage-1 overhead saturated
-    vapour — checked against thermo bubble/dew points, never column outputs."""
+    vapour -- checked against thermo bubble/dew points, never column outputs."""
     p = FEED["P"]
     bottoms = boilup_case.outlets["bottoms"]
     overhead = boilup_case.outlets["overhead"]
@@ -179,7 +179,7 @@ def test_spec_achieved_boilup_ratio_within_gate(boilup_case: UnitResult) -> None
 def test_spec_achieved_component_recovery_within_gate(thermo: Thermo) -> None:
     """NC4 recovery 0.9 to the bottoms, within the column's spec gate.
 
-    The measured value comes from the outlet flows (B·x_B,NC4 over the feed's
+    The measured value comes from the outlet flows (B*x_B,NC4 over the feed's
     NC4), not from the column's info.
     """
     spec: dict[str, Any] = {
@@ -286,7 +286,7 @@ def test_refusal_unknown_param_key(thermo: Thermo) -> None:
 
 def test_column_failure_reraised_unchanged(thermo: Thermo) -> None:
     """A column-level failure (component not in the feed support) propagates
-    unchanged — no except around the column call."""
+    unchanged -- no except around the column call."""
     bad_spec = {"component_recovery": {"component": "H2O", "value": 0.9, "product": "bottoms"}}
     with pytest.raises(ColumnSpecError):
         ReboiledStripperR2().solve({"feed": _feed(FEED)}, _params(spec=bad_spec), thermo)
