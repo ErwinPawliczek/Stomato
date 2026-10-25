@@ -481,9 +481,7 @@ def test_rating_identity(thermo: Thermo) -> None:
     """
     feeds, _ = ControlValveR1.example_case()
     inlet = flash_feed(thermo, feeds["inlet"])
-    sized = ControlValveR1().solve(
-        {"inlet": inlet}, {"P_out": 1.997411e6, "mu_liquid": 1.0371e-4}, thermo
-    )
+    sized = ControlValveR1().solve({"inlet": inlet}, {"P_out": 1.997411e6, "mu_liquid": 1.0371e-4}, thermo)
     r = ControlValveR1().solve(
         {"inlet": inlet},
         {
