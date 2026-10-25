@@ -19,14 +19,14 @@ import pytest
 
 from ngdesign.contracts import PhaseKind, StreamState
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.contracts.thermo import PhaseProps
 from ngdesign.contracts.stream import Phase
+from ngdesign.contracts.thermo import PhaseProps
 from ngdesign.units.heat.rating import (
-    rate_two_stream,
     FilmProps,
     darcy_dP,
     duct_h,
     nu_tube,
+    rate_two_stream,
     u_outside_tube,
 )
 
