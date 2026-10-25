@@ -155,9 +155,24 @@
           eta_isentropic: {type: number, description: 'isentropic efficiency in (0, 1], default 0.8'}
       note: isentropic expansion with power recovery
     R1:
-      status: planned
-      params: {}
-      note: performance map
+      status: provisional
+      adapter: ngdesign.units.flow.expander_r1:ExpanderR1
+      params:
+        type: object
+        required: [P_out, rotor_diameter_m, speed_rpm, map]
+        properties:
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+          rotor_diameter_m: {type: number, description: 'rotor tip diameter, m'}
+          speed_rpm: {type: number, description: 'shaft speed, rpm'}
+          map:
+            type: object
+            required: [velocity_ratio, efficiency]
+            properties:
+              velocity_ratio: {type: array, items: {type: number}, description: 'strictly increasing u/c0 points'}
+              efficiency: {type: array, items: {type: number}, description: 'isentropic efficiency in (0, 1] at each velocity_ratio'}
+          flow_min_m3_s: {type: number, description: 'flow-capacity lower limit, m3/s (optional)'}
+          flow_max_m3_s: {type: number, description: 'flow-capacity upper limit, m3/s (optional)'}
+      note: performance map (eta vs u/c0, PCHIP, no extrapolation) driving the R0 expansion
       end_state: true
   pid_symbol: T
   references:

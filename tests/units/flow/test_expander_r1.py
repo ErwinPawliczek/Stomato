@@ -213,7 +213,7 @@ def test_flow_capacity_range(thermo: Thermo) -> None:
     passed = ExpanderR1().solve(
         inlets, base_params(flow_min_m3_s=0.2, flow_max_m3_s=0.3), thermo
     )
-    assert passed.info["Q_actual_m3_s"] == pytest.approx(0.222477211, rel=1e-9)
+    assert passed.info["Q_actual_m3_s"] == pytest.approx(0.22247721127879216, rel=1e-9)
     # No limits given: Q is still reported, nothing is refused.
     unlimited = ExpanderR1().solve(inlets, base_params(), thermo)
     assert unlimited.info["Q_actual_m3_s"] == pytest.approx(0.222477211, rel=1e-9)

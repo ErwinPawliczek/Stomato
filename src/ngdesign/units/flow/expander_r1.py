@@ -70,6 +70,21 @@ class ExpanderR1:
     inlet_ports = ("gas_in",)
     outlet_ports = ("gas_out",)
 
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """R0's example feed rated at a mid-map point of the example machine."""
+        feeds, _ = Expander.example_case()
+        params: dict[str, Any] = {
+            "P_out": 2.0e6,
+            "rotor_diameter_m": 0.30,
+            "speed_rpm": 20000.0,
+            "map": {
+                "velocity_ratio": [0.40, 0.50, 0.60, 0.70, 0.80],
+                "efficiency": [0.58, 0.65, 0.72, 0.79, 0.86],
+            },
+        }
+        return feeds, params
+
     def solve(
         self,
         inlets: dict[str, StreamState],
