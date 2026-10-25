@@ -397,6 +397,9 @@ class _HotFlueThermo:
     def flash_ph(self, composition: Any, P: float, enthalpy: float, molar_flow: float) -> Any:
         return self._real.flash_ph(composition, P, enthalpy, molar_flow)
 
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._real, name)
+
 
 def test_ad_bracket_refused() -> None:
     """A thermo refusing enthalpies above 3500 K breaks the adiabatic bracket
@@ -450,6 +453,9 @@ class _AlternatingCrossoverThermo:
     def flash_ph(self, composition: Any, P: float, enthalpy: float, molar_flow: float) -> Any:
         self._hot = not self._hot
         return SimpleNamespace(T=900.0 if self._hot else 300.0)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._real, name)
 
 
 def test_tube_wall_fixed_point_refused() -> None:
