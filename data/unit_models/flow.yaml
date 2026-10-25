@@ -62,15 +62,32 @@
           eta_isentropic: {type: number, description: 'isentropic efficiency in (0, 1], default 0.75'}
       note: isentropic/polytropic efficiency; PS flash on the outlet
     R1:
-      status: planned
-      params: {}
-      note: performance map (head/efficiency vs flow, surge/stonewall), Schultz polytropic
+      status: provisional
+      adapter: ngdesign.units.flow.compressor_r1:CompressorR1
+      params:
+        type: object
+        required: [map]
+        properties:
+          map:
+            type: object
+            required: [flow_m3_s, head_J_kg, efficiency]
+            properties:
+              flow_m3_s: {type: array, items: {type: number}, description: 'actual inlet flow points at map speed, m3/s, strictly increasing'}
+              head_J_kg: {type: array, items: {type: number}, description: 'head at each point, J/kg (basis per efficiency_basis)'}
+              efficiency: {type: array, items: {type: number}, description: 'efficiency at each point, (0, 1]'}
+          efficiency_basis: {type: string, enum: [polytropic, isentropic], description: 'default polytropic'}
+          speed_ratio: {type: number, description: 'N / N_map (fan laws), default 1.0'}
+          surge_flow_m3_s: {type: number, description: 'surge flow at map speed, m3/s, default first map point'}
+          stonewall_flow_m3_s: {type: number, description: 'stonewall flow at map speed, m3/s, default last map point'}
+          max_pressure_ratio: {type: number, description: 'upper bracket for the discharge pressure solve, default 10'}
+      note: performance map (head/efficiency vs flow, fan laws, surge/stonewall), Schultz polytropic
+      validation: []
       end_state: true
   sizer: compressor
   pid_symbol: C
   references:
   - docs/unit-catalogue-plan.md §2 U-B 2
-  notes: multi-section compression with intercooling is its own flow row (compression_train), not a level of this row.
+  notes: multi-section compression with intercooling is its own flow row (compression_train), not a level of this row. V1 gap recorded in specs/backend/units/compressor.md — no printed Schultz polytropic example with reproducible inputs/results has been verified (ASME PTC 10-1997 appendix, Schultz 1962, Ludwig vol. 3 ch. 15, Perry's 9th ed. §10 all unexamined); R1 is anchored by closed-form tests against an independent bisection script instead.
 
 - id: reciprocating_compressor
   name: Reciprocating compressor
@@ -412,14 +429,29 @@
       params: {}
       note: entrainment ratio spec
     R1:
-      status: planned
-      params: {}
-      note: 1-D momentum (ESDU-style)
+      status: provisional
+      adapter: ngdesign.units.flow.ejector_r1:EjectorR1
+      params:
+        type: object
+        properties:
+          eta_nozzle: {type: number, description: 'motive nozzle isentropic efficiency, default 0.95'}
+          phi_mix: {type: number, description: 'mixing momentum coefficient, default 0.85'}
+          eta_diffuser: {type: number, description: 'diffuser isentropic efficiency, default 0.85'}
+          P_out_required: {type: number, description: 'optional required discharge pressure, Pa'}
+      validation: []
+      note: 'Keenan constant-pressure mixing with Huang efficiencies: achievable discharge pressure'
       end_state: true
   pid_symbol: EJ
   references:
   - docs/unit-catalogue-plan.md §2 U-B 10
-  notes: R0 momentum balance at a specified entrainment ratio. V1 gap (PR #217): the previous Graham 3:1 case was circular (both expectations restated the inputs) and is withdrawn; no open published ejector example with a printed outlet state was found (searched Graham Manufacturing ejector performance literature and Perry sect. 10 — operating points are entrainment ratios and curves, not outlet states). R0 mixing remains covered by closed-form unit tests. 1-D momentum design mode remains roadmap.
+  notes: >-
+    R0 momentum balance at a specified entrainment ratio.
+    V1 gap (PR #217): the previous Graham 3:1 case was circular (both expectations restated the inputs) and is withdrawn; no open published ejector example with a printed outlet state was found (searched Graham Manufacturing ejector performance literature and Perry sect. 10 — operating points are entrainment ratios and curves, not outlet states).
+    R0 mixing remains covered by closed-form unit tests.
+    1-D momentum design mode remains roadmap.
+    R1 V1 gap: no open-source source prints inputs and results for a full steam-ejector rating that the thermo can reproduce exactly.
+    Candidates assessed: Huang et al. 1999 Table 2/3 (R141b test data; R141b is not in the component set), Power, Steam Jet Ejectors for the Process Industries (McGraw-Hill, 1994) worked examples, and Perry's 9th ed. sect. 10 examples — none reproducible exactly.
+    R1 rests on the ideal-gas closed-form tests, the R0-reduction identity and the refusal tests.
 
 - id: fan
   name: Fan / blower
