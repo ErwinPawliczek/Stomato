@@ -140,9 +140,10 @@ def _r1b_hand_extents() -> tuple[float, float]:
 
     def f(xi: float) -> float:
         y_a = (1.0 - 2.0 * xi) / (1.0 - xi)
-        return 2.0 * xi - 0.5 * 5.0e-3 * (y_a * 5.0e5 / (R * 600.0)) ** 2
+        r_gas = float(R)
+        return 2.0 * xi - 0.5 * 5.0e-3 * (y_a * 5.0e5 / (r_gas * 600.0)) ** 2
 
-    c_tot = 5.0e5 / (R * 600.0)
+    c_tot = 5.0e5 / (float(R) * 600.0)
     return float(brentq(f, 1e-6, 0.499)), c_tot
 
 
