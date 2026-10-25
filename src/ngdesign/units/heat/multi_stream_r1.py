@@ -123,7 +123,7 @@ def solve_common_wall(
     def rhs(x: np.ndarray, y: np.ndarray) -> np.ndarray:
         temperatures = np.vstack([layer.T_of_H(y[i]) for i, layer in enumerate(layers)])
         wall = hA @ temperatures / hA.sum()
-        return (signs * hA)[:, None] * (temperatures - wall[None, :])
+        return np.asarray((signs * hA)[:, None] * (temperatures - wall[None, :]), dtype=float)
 
     def bc(ya: np.ndarray, yb: np.ndarray) -> np.ndarray:
         residuals = []
