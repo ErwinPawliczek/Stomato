@@ -34,8 +34,8 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import brentq, root
 
 from ngdesign.units.separation.membrane_r1 import (
-    MembraneR1SpecError,
     _INTEGRATION_RTOL,
+    MembraneR1SpecError,
     _local_y,
     _validate_pure,
     cross_flow,
@@ -100,7 +100,7 @@ def counter_current(
         )
         if not sol.success:
             raise MembraneR1SpecError("counter-current shooting did not converge")
-        return sol.y[:, -1]
+        return np.asarray(sol.y[:, -1], dtype=float)
 
     def solve_at(A: float) -> tuple[dict[str, float], dict[str, float], float, float, int]:
         """Shooting at a fixed area; returns outlets, theta and nfev."""
