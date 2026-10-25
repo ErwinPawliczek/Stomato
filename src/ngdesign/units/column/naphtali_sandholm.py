@@ -6,6 +6,7 @@ Moved unchanged from the former ``units/column.py`` god-file.
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import Any, Protocol
 
 from .inside_out import (
     _Column,
@@ -40,6 +41,11 @@ from .thermo_adapter import _flash_ready, _ThermoBox
 
 #: LM damping attempts per pass before the pass is abandoned.
 _NS_LM_TRIES = 6
+
+#: Line-search halvings per pass: full-step attempts before the LM fallback
+#: (one controller, both engines - the graph engine's former
+#: _GRAPH_LINE_SEARCH_TRIES was the same number).
+_NS_LINE_SEARCH_TRIES = 10
 
 
 def _reactive_trial_seeds(
@@ -179,12 +185,17 @@ def _ns_try_accept(
     ex_m: float,
     ex_h: float,
     prof: _Profile,
-    col: _Column,
-    tb: _ThermoBox,
-    v_free: list[int],
-    t_bot_tear: float | None,
+    apply: Callable[[_Profile, list[float]], None],
+    exact_norms: Callable[[_Profile], tuple[float, float]],
 ) -> tuple[bool, tuple[float, float], float]:
     """One trial state through the joint descent + exact-gate tests.
+
+    ``apply`` writes a trial state into the profile and ``exact_norms``
+    evaluates the exact (refreshed-thermo) norms - the TWO engine-specific
+    pieces here (dense `_apply_state` + `_refresh_y`/`_exact_residuals` vs
+    the graph engine's graph apply, whose live_norm is off so exact_norms is
+    never called); the acceptance policy is the shared controller's, one for
+    both engines.
 
     Returns (accepted, achieved norms, sum-of-squares of the trial residuals
     for the LM trust ratio). The trial norms and the exact double-check read
@@ -209,7 +220,7 @@ def _ns_try_accept(
     # recovered from).
     if max(trial_m, trial_h) >= max(m_current, h_current):
         return False, (trial_m, trial_h), ss_try
-    _apply_state(prof, u_try, col, v_free, t_bot_tear)
+    apply(prof, u_try)
     if not live_norm:
         return True, (trial_m, trial_h), ss_try
     # Live-norm acceptance: the frozen-row descent must also not worsen
@@ -218,14 +229,13 @@ def _ns_try_accept(
     # pre-step state restored (measured P1-09 stripper: frozen rows closed
     # to 6.9e-10 while refreshed exact M rose to 1.00 - the diverged trial
     # displaced a near-converged state the mesh could have kept).
-    _refresh_y(col, tb, prof)
     try:
-        ex_try_m, ex_try_h = _exact_residuals(col, tb, prof)
+        ex_try_m, ex_try_h = exact_norms(prof)
     except (ColumnConvergenceError, ValueError):
         ex_try_m, ex_try_h = float("inf"), float("inf")
     if max(ex_try_m, ex_try_h) < max(ex_m, ex_h):
         return True, (trial_m, trial_h), ss_try
-    _apply_state(prof, u, col, v_free, t_bot_tear)
+    apply(prof, u)
     return False, (trial_m, trial_h), ss_try
 
 
@@ -328,59 +338,246 @@ def _ns_residual_function(
     return residuals
 
 
-def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None) -> _Profile:
-    """Fallback: simultaneous damped Newton on (x, T, V).
+class _NSEngine(Protocol):
+    """The ONE Newton controller's engine interface.
 
-    Unknowns: the liquid mole fractions x_ij, the stage temperatures T_j and the
-    free vapour flows V_j. Equations: the M balances, the summations
-    sum_i x_ij = 1, and the H balances whose duty is not an output - square per
-    stage grouping (Naphtali & Sandholm 1971). The rows are the ONE shared live
-    residual (``_live_residual_vector``, P1-11 step 2 ruling on #153): K and the
-    package enthalpies are evaluated live at every state the walk visits, the
-    pass-frozen K models survive only as the last-resort fallback, and the FD
-    Jacobian, the LM damping and the line-search norms all read the exact
-    gate's own vector - with the per-row M scale frozen once per pass from the
-    pass's reference state (ruling (c) on #153; the gate freezes it from the
-    state it gates, the only frozen quantity that differs).
+    `_ns_controller` drives both Naphtali-Sandholm engines - the dense
+    fallback below and the stage-graph engine (``graph_ns.py``). An engine
+    differs ONLY in its residual builder (``begin_pass``'s closure), its
+    Jacobian builder (full one-column-at-a-time FD vs stage-coloured FD) and
+    its linear solve (dense Gaussian elimination vs ``scipy.sparse`` LU),
+    plus the graph-only per-pass temperature clamp behind ``cap_step`` (a
+    no-op for the dense engine, whose behaviour must stay byte-identical).
+    Everything else - the pass loop, the line search and acceptance through
+    ``_ns_try_accept`` with best-iterate tracking, the rho-based LM damping
+    adaptation, the pass budget and the final gate - is the controller's, by
+    construction.
     """
-    n = col.n
-    l0 = prof.l0
-    h_stages = _h_equation_stages(col)
-    v_free = _v_free_indices(col)
-    m_rows, h_rows = _residual_row_blocks(col, h_stages)
 
-    def m_norm_of(r: list[float]) -> float:
-        """Max scaled residual over the M rows (the exact-M gate's block)."""
-        return max(abs(r[i]) for i in m_rows)
+    prof: _Profile
+    live_norm: bool
+    ex_m: float
+    ex_h: float
 
-    def h_norm_of(r: list[float]) -> float:
-        """Max scaled residual over the H rows (the line-search's second block)."""
-        return max((abs(r[i]) for i in h_rows), default=0.0)
+    def begin_pass(self) -> tuple[list[float], Callable[[list[float]], list[float]]]: ...
 
-    ns_max = _NS_MAX if col.n_tears >= 2 else _NS_MAX_ZERO_ONE_TEAR
-    live_norm = col.n_tears < 2
-    best_u: list[float] | None = None
-    best_m = float("inf")
-    best_h = float("inf")
-    if col.n_tears >= 2:
-        m_tol = _MESH_M_TOL
-    elif _is_reactive_package(tb):
-        m_tol = _MESH_M_TOL_REACTIVE
-    else:
-        # Same gate the mesh accepts at (_MESH_M_TOL_ZERO_ONE_TEAR): the NS
-        # state hands off to _solve_mesh's inside-out polish, and the polish
-        # lifts the state further before the mesh's own acceptance decides.
-        # A tighter intermediate gate only discarded measurably converged
-        # states (measured P1-09 stripper: NS polished a warm-chained state
-        # to M=2.90e-7, H=4.46e-10 and the 1e-7 gate typed the tear failed).
-        m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
+    def m_norm_of(self, r: list[float]) -> float: ...
+
+    def h_norm_of(self, r: list[float]) -> float: ...
+
+    def norms(self, r: list[float]) -> tuple[float, float]: ...
+
+    def checkpoint(self, u: list[float], r0: list[float]) -> bool: ...
+
+    def jacobian(
+        self, residuals: Callable[[list[float]], list[float]], r0: list[float], u: list[float]
+    ) -> Any: ...
+
+    def solve_linear(self, jac: Any, r0: list[float]) -> list[float] | None: ...
+
+    def lm_step(self, jac: Any, r0: list[float], lam: float) -> list[float] | None: ...
+
+    def linear_prediction(self, jac: Any, r0: list[float], step: list[float]) -> list[float]: ...
+
+    def cap_step(self, step: list[float]) -> None: ...
+
+    def apply(self, prof: _Profile, u: list[float]) -> None: ...
+
+    def exact_norms(self, prof: _Profile) -> tuple[float, float]: ...
+
+    def trace_jacobian_failed(self) -> None: ...
+
+    def trace_solve_failed(self) -> None: ...
+
+    def trace_pass(
+        self,
+        r0: list[float],
+        jac: Any,
+        step: list[float],
+        lam: float,
+        lam_lm: float,
+        ach_m: float,
+        ach_h: float,
+        via: str,
+        accepted: bool,
+    ) -> None: ...
+
+    def exhausted(self) -> None: ...
+
+    def finish(self) -> None: ...
+
+
+def _ns_controller(eng: _NSEngine, ns_max: int) -> None:
+    """The ONE Naphtali-Sandholm damped-Newton controller, both engines.
+
+    Per pass: build the pass's reference state and residual closure
+    (``begin_pass``), evaluate it, run the pass gate (``checkpoint`` - the
+    dense engine's exact refreshed-thermo norms with best-iterate tracking,
+    the graph engine's graph-row norms with its polish target), then the ONE
+    shared step policy: the injected linear solve, the injected step cap, the
+    line search and the Levenberg-Marquardt fallback, all accepting through
+    ``_ns_try_accept``'s joint max-norm descent + exact-gate test, with the
+    damping adapted from the achieved-vs-predicted sum-of-squares ratio.
+    """
     for _ in range(ns_max):
+        prof = eng.prof
         prof.ns_passes += 1
+        u, residuals = eng.begin_pass()
+        r0 = residuals(u)
+        if eng.checkpoint(u, r0):
+            break
+        m_current, h_current = eng.norms(r0)
+        n_unk = len(u)
+        jac = eng.jacobian(residuals, r0, u)
+        if jac is None:
+            # A perturbed trial state the shared rows cannot evaluate: the
+            # pass ends with the line-search state intact for the polish.
+            eng.trace_jacobian_failed()
+            break
+        step = eng.solve_linear(jac, r0)
+        if step is None:
+            eng.trace_solve_failed()
+            break
+        # Graph-only safeguard (no-op for the dense engine): see the graph
+        # engine's cap_step.
+        eng.cap_step(step)
+
+        lam = 1.0
+        accepted = False
+        ach_m = ach_h = float("inf")
+        for _ in range(_NS_LINE_SEARCH_TRIES):
+            # svec semantics: the helper builds u_try = u + svec, so the
+            # lambda-scaled STEP goes in - not u + lam*step (measured
+            # absorber[8] bisect: passing the trial state doubled it and
+            # every trial read trial_m ~2600 against m_cur=218).
+            ok, ach, _ss = _ns_try_accept(
+                [lam * step[i] for i in range(n_unk)],
+                u,
+                n_unk,
+                residuals,
+                eng.m_norm_of,
+                eng.h_norm_of,
+                m_current,
+                h_current,
+                eng.live_norm,
+                eng.ex_m,
+                eng.ex_h,
+                prof,
+                eng.apply,
+                eng.exact_norms,
+            )
+            if ok:
+                accepted = True
+                ach_m, ach_h = ach
+                break
+            lam *= 0.5
+        via = "newton"
+        lam_lm = 0.0
+        if not accepted:
+            # Model-validity fallback (P1-11 step 2, ruling on #153): when the
+            # full step fails the shared-residual descent test, the linear
+            # model's validity radius is shorter than the step (measured on the
+            # reactive absorber: one full step predicted 8.3e-11 and achieved
+            # 2346.7). Damp with Levenberg-Marquardt on the SAME Jacobian, the
+            # damping adapted from the achieved-vs-predicted sum-of-squares
+            # ratio. Package-agnostic: one residual, one controller.
+            lam_lm = 1.0
+            ss0 = sum(rv * rv for rv in r0)
+            for _ in range(_NS_LM_TRIES):
+                d_step = eng.lm_step(jac, r0, lam_lm)
+                if d_step is None:
+                    break
+                lin_lm = eng.linear_prediction(jac, r0, d_step)
+                ss_lin = sum(rv * rv for rv in lin_lm)
+                ok, ach, ss_try = _ns_try_accept(
+                    d_step,
+                    u,
+                    n_unk,
+                    residuals,
+                    eng.m_norm_of,
+                    eng.h_norm_of,
+                    m_current,
+                    h_current,
+                    eng.live_norm,
+                    eng.ex_m,
+                    eng.ex_h,
+                    prof,
+                    eng.apply,
+                    eng.exact_norms,
+                )
+                denom = ss0 - ss_lin
+                rho = (ss0 - ss_try) / denom if denom > 0.0 else float("inf")
+                if ok:
+                    accepted = True
+                    ach_m, ach_h = ach
+                    via = "lm"
+                    break
+                # Damping adaptation: a rejected trial (rho <= 0) or a poor
+                # model match (rho < 0.25) means the step overreached even
+                # damped - raise lambda; a good match pre-acceptance would
+                # lower it, but a trial this good is accepted above.
+                lam_lm *= 4.0 if rho < 0.25 else 2.0
+        eng.trace_pass(r0, jac, step, lam, lam_lm, ach_m, ach_h, via, accepted)
+        if not accepted:
+            break
+    else:
+        eng.exhausted()
+    eng.finish()
+
+
+class _DenseNSEngine:
+    """The dense fallback's injected pieces for `_ns_controller`.
+
+    The residual closure is `_ns_residual_function`'s shared live residual,
+    the Jacobian the full one-column-at-a-time FD matrix (`_fd_jacobian`),
+    the linear solve dense Gaussian elimination (`_gauss`), and the pass gate
+    the exact (refreshed-thermo) norms with best-iterate tracking.
+    ``cap_step`` is a no-op: the dense path's behaviour must stay
+    byte-identical (bench and dispatch golden), so no graph-only safeguard
+    may touch its steps.
+    """
+
+    prof: _Profile
+    live_norm: bool
+    ex_m: float
+    ex_h: float
+
+    def __init__(self, col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None) -> None:
+        self._col = col
+        self._tb = tb
+        self.prof = prof
+        self._t_bot_tear = t_bot_tear
+        self._v_free = _v_free_indices(col)
+        self._m_rows, self._h_rows = _residual_row_blocks(col, _h_equation_stages(col))
+        self.live_norm = col.n_tears < 2
+        if col.n_tears >= 2:
+            self._m_tol = _MESH_M_TOL
+        elif _is_reactive_package(tb):
+            self._m_tol = _MESH_M_TOL_REACTIVE
+        else:
+            # Same gate the mesh accepts at (_MESH_M_TOL_ZERO_ONE_TEAR): the NS
+            # state hands off to _solve_mesh's inside-out polish, and the polish
+            # lifts the state further before the mesh's own acceptance decides.
+            # A tighter intermediate gate only discarded measurably converged
+            # states (measured P1-09 stripper: NS polished a warm-chained state
+            # to M=2.90e-7, H=4.46e-10 and the 1e-7 gate typed the tear failed).
+            self._m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
+        self._best_u: list[float] | None = None
+        self._best_m = float("inf")
+        self._best_h = float("inf")
+        self.ex_m = float("inf")
+        self.ex_h = float("inf")
+        self._k_misses = [0]
+        self._h_evals = [0]
+
+    def begin_pass(self) -> tuple[list[float], Callable[[list[float]], list[float]]]:
+        """One pass's reference state, residual closure and frozen quantities."""
+        col, tb, prof = self._col, self._tb, self.prof
         k_stages = [
             _stage_k_values(col, tb, j, prof.x[j], prof.y[j], prof.T[j], prof.L[j], prof.V[j])
             or tb.k_estimate(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j])
             or {cid: 1.0 for cid in col.comps}
-            for j in range(n)
+            for j in range(col.n)
         ]
         # Ruling (c) on #153: the per-row M scale is a function of the iterate
         # (a row divided by its own state-derived scale saturates at plus/minus
@@ -402,17 +599,17 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
         # converges this state in a few passes (main, measured). The two-tear
         # path keeps its 1e-8 gate and its measured-good semantics; ruling
         # (c)'s stall is a zero/one-tear physical-branch failure.
-        u = _pack_state(prof, col, v_free)
+        u = _pack_state(prof, col, self._v_free)
         k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]] = {}
-        k_misses = [0]
-        h_evals = [0]
+        self._k_misses = [0]
+        self._h_evals = [0]
         pass_scales: list[float] | None = None
         y_seeds: list[dict[str, float]] | None = None
         seed_cache: dict[
             tuple[tuple[tuple[str, float], ...], float, float, tuple[tuple[str, float], ...]],
             dict[str, float],
         ] = {}
-        if live_norm and _is_reactive_package(tb):
+        if self.live_norm and _is_reactive_package(tb):
             # P1-11 step 3 (ruling on #153): the exact gate reads its K surface
             # with the profile's refreshed y = K*x as the stage-K vapour seed,
             # while the NS rows passed empty seeds - on the reactive package the
@@ -429,34 +626,40 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
             # regression above).
             _refresh_y(col, tb, prof)
             y_seeds = list(prof.y)
-        if live_norm:
+        if self.live_norm:
             pass_scales = _residual_scales(
                 col,
                 tb,
-                l0,
+                prof.l0,
                 _unpack_x(u, col),
                 _unpack_t(u, col),
-                _unpack_v(u, col, v_free, t_bot_tear),
+                _unpack_v(u, col, self._v_free, self._t_bot_tear),
                 y_estimates=y_seeds,
                 k_fallbacks=k_stages,
                 k_cache=k_cache,
-                k_misses=k_misses,
+                k_misses=self._k_misses,
             )
         residuals = _ns_residual_function(
             col,
             tb,
-            l0,
+            prof.l0,
             k_stages,
-            t_bot_tear,
+            self._t_bot_tear,
             pass_scales,
             k_cache,
-            k_misses,
-            h_evals,
+            self._k_misses,
+            self._h_evals,
             y_estimates=y_seeds,
             y_reference=y_seeds,
             seed_cache=seed_cache if y_seeds is not None else None,
         )
-        r0 = residuals(u)
+        return u, residuals
+
+    def checkpoint(self, u: list[float], r0: list[float]) -> bool:
+        """The pass gate on the exact (refreshed-thermo) norms, with the
+        controller's best-iterate tracking on the live-norm path."""
+        _ = r0  # the gate reads the refreshed exact residual, not r0
+        _refresh_y(self._col, self._tb, self.prof)
         # The pass gate must carry exact-residual semantics, not the NS residual's.
         # The NS residual derives vapour compositions as K*x (equilibrium-consistent
         # by construction), so a state whose STORED y is stale reads as converged
@@ -464,8 +667,7 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
         # Measured P1-09 absorber, seed state (y = gas-feed composition, not K*x):
         # NS-internal M=6.3e-3 vs exact M=1.00 - the former gate broke before the
         # first Newton step and the fallback never ran for these columns.
-        _refresh_y(col, tb, prof)
-        ex_m, ex_h = _exact_residuals(col, tb, prof)
+        self.ex_m, self.ex_h = _exact_residuals(self._col, self._tb, self.prof)
         # Live-norm acceptance (zero/one-tear columns): keep the best exact state
         # across passes and restore it at exit. NS's finite-difference Newton can
         # walk PAST the near-converged state it started from into an unevaluable
@@ -473,133 +675,137 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
         # inside-out best M=2.2e-11/H=1.7e-1 or M=1.5e-2/H=3.4e-6, then NS's own
         # final state M=1.00 - a stage the thermo can no longer evaluate). The
         # best-exact state is what the inside-out polish in _solve_mesh needs.
-        if live_norm and ex_m + ex_h < best_m + best_h:
-            best_u, best_m, best_h = list(u), ex_m, ex_h
-        if ex_m < m_tol and ex_h < _MESH_H_TOL:
-            break
-        # Baseline norms for the line search's descent test (a descent proxy on
-        # the frozen models; acceptance is decided by the exact gate above on
-        # the NEXT pass, so a polished-but-not-exact state keeps iterating).
-        m_current = m_norm_of(r0)
-        h_current = h_norm_of(r0)
-        n_unk = len(u)
-        jac = _fd_jacobian(residuals, r0, u, n_unk)
-        if jac is None:
-            # A perturbed trial state the shared rows cannot evaluate: the
-            # pass ends with the line-search state intact for the polish.
-            prof.ns_trace.append(
-                f"pass {prof.ns_passes}: exact M={ex_m:.3e} H={ex_h:.3e} | FD unavailable "
-                f"| flashes(k+h)={k_misses[0] + h_evals[0]} via=fd-failed"
-            )
-            break
+        if self.live_norm and self.ex_m + self.ex_h < self._best_m + self._best_h:
+            self._best_u, self._best_m, self._best_h = list(u), self.ex_m, self.ex_h
+        return self.ex_m < self._m_tol and self.ex_h < _MESH_H_TOL
+
+    def m_norm_of(self, r: list[float]) -> float:
+        """Max scaled residual over the M rows (the exact-M gate's block)."""
+        return max(abs(r[i]) for i in self._m_rows)
+
+    def h_norm_of(self, r: list[float]) -> float:
+        """Max scaled residual over the H rows (the line-search's second block)."""
+        return max((abs(r[i]) for i in self._h_rows), default=0.0)
+
+    def norms(self, r: list[float]) -> tuple[float, float]:
+        return (self.m_norm_of(r), self.h_norm_of(r))
+
+    def jacobian(
+        self, residuals: Callable[[list[float]], list[float]], r0: list[float], u: list[float]
+    ) -> Any:
+        return _fd_jacobian(residuals, r0, u, len(u))
+
+    def solve_linear(self, jac: Any, r0: list[float]) -> list[float] | None:
         try:
-            step = _gauss(jac, [-r for r in r0])
+            return _gauss(jac, [-r for r in r0])
         except ColumnConvergenceError:
-            prof.ns_trace.append(
-                f"pass {prof.ns_passes}: exact M={ex_m:.3e} H={ex_h:.3e} | FD singular "
-                f"| flashes(k+h)={k_misses[0] + h_evals[0]} via=fd-failed"
-            )
-            break
+            return None
+
+    def lm_step(self, jac: Any, r0: list[float], lam: float) -> list[float] | None:
+        return _lm_damped_step(jac, r0, lam)
+
+    def linear_prediction(self, jac: Any, r0: list[float], step: list[float]) -> list[float]:
+        n_unk = len(step)
+        return [r0[i] + sum(jac[i][j] * step[j] for j in range(n_unk)) for i in range(len(r0))]
+
+    def cap_step(self, step: list[float]) -> None:
+        """No-op: the dense path's steps stay byte-identical (see class doc)."""
+        _ = step
+
+    def apply(self, prof: _Profile, u: list[float]) -> None:
+        _apply_state(prof, u, self._col, self._v_free, self._t_bot_tear)
+
+    def exact_norms(self, prof: _Profile) -> tuple[float, float]:
+        _refresh_y(self._col, self._tb, prof)
+        return _exact_residuals(self._col, self._tb, prof)
+
+    def trace_jacobian_failed(self) -> None:
+        self.prof.ns_trace.append(
+            f"pass {self.prof.ns_passes}: exact M={self.ex_m:.3e} H={self.ex_h:.3e} | FD unavailable "
+            f"| flashes(k+h)={self._k_misses[0] + self._h_evals[0]} via=fd-failed"
+        )
+
+    def trace_solve_failed(self) -> None:
+        self.prof.ns_trace.append(
+            f"pass {self.prof.ns_passes}: exact M={self.ex_m:.3e} H={self.ex_h:.3e} | FD singular "
+            f"| flashes(k+h)={self._k_misses[0] + self._h_evals[0]} via=fd-failed"
+        )
+
+    def trace_pass(
+        self,
+        r0: list[float],
+        jac: Any,
+        step: list[float],
+        lam: float,
+        lam_lm: float,
+        ach_m: float,
+        ach_h: float,
+        via: str,
+        accepted: bool,
+    ) -> None:
+        _ = accepted
         # Linear-model prediction of the full uncapped Newton step: the
         # denominator of the achieved-vs-predicted trust test in the trace.
         # Measured absorber probe: max|r| predicted 8.3e-11 vs 2346.7 achieved -
         # the 11-order validity gap that motivates the controller.
+        n_unk = len(step)
         lin = [r0[i] + sum(jac[i][j] * step[j] for j in range(n_unk)) for i in range(len(r0))]
-        pred_m = max(abs(lin[i]) for i in m_rows)
-        pred_h = max((abs(lin[i]) for i in h_rows), default=0.0)
-
-        # The hoisted trial-acceptance call's per-pass context (plain tuple: the
-        # values rebind every pass, so no closure over loop variables).
-        ns_ctx = (
-            u,
-            n_unk,
-            residuals,
-            m_norm_of,
-            h_norm_of,
-            m_current,
-            h_current,
-            live_norm,
-            ex_m,
-            ex_h,
-            prof,
-            col,
-            tb,
-            v_free,
-            t_bot_tear,
-        )
-
-        lam = 1.0
-        accepted = False
-        ach_m = ach_h = float("inf")
-        for _ in range(10):
-            # svec semantics: the helper builds u_try = u + svec, so the
-            # lambda-scaled STEP goes in - not u + lam*step (measured
-            # absorber[8] bisect: passing the trial state doubled it and
-            # every trial read trial_m ~2600 against m_cur=218).
-            ok, ach, _ss = _ns_try_accept([lam * step[i] for i in range(n_unk)], *ns_ctx)
-            if ok:
-                accepted = True
-                ach_m, ach_h = ach
-                break
-            lam *= 0.5
-        via = "newton"
-        lam_lm = 0.0
-        if not accepted:
-            # Model-validity fallback (P1-11 step 2, ruling on #153): when the
-            # full step fails the shared-residual descent test, the linear
-            # model's validity radius is shorter than the step (measured on the
-            # reactive absorber: one full step predicted 8.3e-11 and achieved
-            # 2346.7). Damp with Levenberg-Marquardt on the SAME Jacobian, the
-            # damping adapted from the achieved-vs-predicted sum-of-squares
-            # ratio. Package-agnostic: one residual, one controller.
-            lam_lm = 1.0
-            ss0 = sum(rv * rv for rv in r0)
-            for _ in range(_NS_LM_TRIES):
-                d_step = _lm_damped_step(jac, r0, lam_lm)
-                if d_step is None:
-                    break
-                lin_lm = [r0[i] + sum(jac[i][j] * d_step[j] for j in range(n_unk)) for i in range(len(r0))]
-                ss_lin = sum(rv * rv for rv in lin_lm)
-                ok, ach, ss_try = _ns_try_accept(d_step, *ns_ctx)
-                denom = ss0 - ss_lin
-                rho = (ss0 - ss_try) / denom if denom > 0.0 else float("inf")
-                if ok:
-                    accepted = True
-                    ach_m, ach_h = ach
-                    via = "lm"
-                    break
-                # Damping adaptation: a rejected trial (rho <= 0) or a poor
-                # model match (rho < 0.25) means the step overreached even
-                # damped - raise lambda; a good match pre-acceptance would
-                # lower it, but a trial this good is accepted above.
-                lam_lm *= 4.0 if rho < 0.25 else 2.0
-        prof.ns_trace.append(
-            f"pass {prof.ns_passes}: exact M={ex_m:.3e} H={ex_h:.3e} | lin-pred M={pred_m:.3e} "
+        pred_m = max(abs(lin[i]) for i in self._m_rows)
+        pred_h = max((abs(lin[i]) for i in self._h_rows), default=0.0)
+        self.prof.ns_trace.append(
+            f"pass {self.prof.ns_passes}: exact M={self.ex_m:.3e} H={self.ex_h:.3e} | lin-pred M={pred_m:.3e} "
             f"H={pred_h:.3e} | lam={lam:.3g} lam_lm={lam_lm:.3g} "
             f"achieved M={ach_m:.3e} H={ach_h:.3e} via={via} "
-            f"flashes(k+h)={k_misses[0] + h_evals[0]}"
+            f"flashes(k+h)={self._k_misses[0] + self._h_evals[0]}"
         )
-        if not accepted:
-            break
-    else:
-        if live_norm and best_u is not None:
-            _apply_state(prof, best_u, col, v_free, t_bot_tear)
+
+    def exhausted(self) -> None:
+        if self.live_norm and self._best_u is not None:
+            _apply_state(self.prof, self._best_u, self._col, self._v_free, self._t_bot_tear)
         raise ColumnConvergenceError("Naphtali-Sandholm fallback did not converge within budget")
-    if live_norm and best_u is not None:
-        _apply_state(prof, best_u, col, v_free, t_bot_tear)
-    _refresh_y(col, tb, prof)
-    m_res, h_res = _exact_residuals(col, tb, prof)
-    prof.ns_used = True
-    # Same tolerances as the inside-out acceptance gate: the enthalpy-line
-    # anchor floor sits around 1e-3-1e-4 relative, while mass closes to
-    # machine precision. Demanding 1e-6 on H here would reject a solution
-    # the mesh itself accepts.
-    if m_res > m_tol or h_res > _MESH_H_TOL:
-        raise ColumnConvergenceError(
-            f"Naphtali-Sandholm fallback stalled: max residuals M={m_res:.2e}, H={h_res:.2e}"
-            + (f" | {'; '.join(prof.ns_trace)}" if prof.ns_trace else "")
-        )
-    _finalize_duties(col, tb, prof)
+
+    def finish(self) -> None:
+        col, tb, prof = self._col, self._tb, self.prof
+        if self.live_norm and self._best_u is not None:
+            _apply_state(prof, self._best_u, col, self._v_free, self._t_bot_tear)
+        _refresh_y(col, tb, prof)
+        m_res, h_res = _exact_residuals(col, tb, prof)
+        prof.ns_used = True
+        # Same tolerances as the inside-out acceptance gate: the enthalpy-line
+        # anchor floor sits around 1e-3-1e-4 relative, while mass closes to
+        # machine precision. Demanding 1e-6 on H here would reject a solution
+        # the mesh itself accepts.
+        if m_res > self._m_tol or h_res > _MESH_H_TOL:
+            raise ColumnConvergenceError(
+                f"Naphtali-Sandholm fallback stalled: max residuals M={m_res:.2e}, H={h_res:.2e}"
+                + (f" | {'; '.join(prof.ns_trace)}" if prof.ns_trace else "")
+            )
+        _finalize_duties(col, tb, prof)
+
+
+def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None) -> _Profile:
+    """Fallback: simultaneous damped Newton on (x, T, V), the shared controller.
+
+    Unknowns: the liquid mole fractions x_ij, the stage temperatures T_j and the
+    free vapour flows V_j. Equations: the M balances, the summations
+    sum_i x_ij = 1, and the H balances whose duty is not an output - square per
+    stage grouping (Naphtali & Sandholm 1971). The rows are the ONE shared live
+    residual (``_live_residual_vector``, P1-11 step 2 ruling on #153): K and the
+    package enthalpies are evaluated live at every state the walk visits, the
+    pass-frozen K models survive only as the last-resort fallback, and the FD
+    Jacobian, the LM damping and the line-search norms all read the exact
+    gate's own vector - with the per-row M scale frozen once per pass from the
+    pass's reference state (ruling (c) on #153; the gate freezes it from the
+    state it gates, the only frozen quantity that differs).
+
+    The pass loop, the line search and acceptance, the LM damping adaptation
+    and the final gate are `_ns_controller`'s - the ONE Newton policy shared
+    with the stage-graph engine; the dense engine's injected pieces are the
+    dense residual closure, the full FD Jacobian and the Gaussian solve.
+    """
+    eng = _DenseNSEngine(col, tb, prof, t_bot_tear)
+    ns_max = _NS_MAX if col.n_tears >= 2 else _NS_MAX_ZERO_ONE_TEAR
+    _ns_controller(eng, ns_max)
     return prof
 
 

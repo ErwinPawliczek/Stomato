@@ -28,22 +28,29 @@ from ngdesign.units.column.graph_ns import (
     _extend_profile_to_graph,
     _graph_fd_jacobian,
     _graph_interlink_terms,
+    _graph_k_args,
+    _graph_liquid_profile,
     _graph_model,
     _graph_naphtali_sandholm,
     _graph_pack,
     _graph_residual_scales,
     _graph_residual_vector,
     _graph_unpack,
+    _graph_y_eq,
     _rowsout_sets,
+    _stage_row_ranges,
 )
 from ngdesign.units.column.inside_out import (
     _build_column,
     _live_residual_vector,
+    _Column,
+    _Profile,
     _seed_profile,
+    _stage_k_values,
     _temperature_seed,
 )
 from ngdesign.units.column.spec import _parse_params
-from ngdesign.units.column.thermo_adapter import _ThermoBox
+from ngdesign.units.column.thermo_adapter import _flash_ready, _ThermoBox
 
 
 def _linear_params() -> dict[str, Any]:
@@ -135,8 +142,10 @@ def test_graph_residual_matches_dense_on_linear_column(thermo: Thermo) -> None:
     r_dense = _live_residual_vector(col, tb, prof.l0, xs, ts, vs)
 
     assert len(r_graph) == len(r_dense)
-    for a, b in zip(r_graph, r_dense, strict=True):
-        assert a == pytest.approx(b, rel=1e-4, abs=1e-6)
+    for row, (a, b) in enumerate(zip(r_graph, r_dense, strict=True)):
+        # Measured difference: exactly 0.0 - assert equality so a future
+        # divergence is caught at the first ulp.
+        assert a == b, f"row {row}: graph {a!r} != dense {b!r}"
 
 
 def test_interlink_mass_balance_shared_term(thermo: Thermo) -> None:
@@ -260,21 +269,46 @@ def test_solve_routed_through_graph_ns_matches_dense_ns(
 ) -> None:
     """Solve-level parity (S0-1c step 2 acceptance): a one-tear kettle
     stripper routed through the graph NS by the test-only switch lands on the
-    dense NS result to 1e-10 relative on x, T and V at every stage. The
-    NS-first cold pass fires in both runs (no seed, one tear, kettle), so the
-    engines - not just the sweeps - are what is compared."""
+    dense NS result to 1e-10 relative on x, T and V at every stage. The dense
+    solve runs FIRST, unpatched; the graph run then switches the mesh's NS
+    entry point. Call counters prove exactly one dense and one graph NS call,
+    so the comparison is between the two engines - not the graph engine with
+    itself. The NS-first cold pass fires in both runs (no seed, one tear,
+    kettle), so the engines - not just the sweeps - are what is compared."""
     import ngdesign.units.column.specs as specs_mod
+
+    dense_calls = [0]
+    graph_calls = [0]
+    real_dense = specs_mod._naphtali_sandholm
+
+    def counting_dense(
+        col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None
+    ) -> _Profile:
+        dense_calls[0] += 1
+        return real_dense(col, tb, prof, t_bot_tear)
+
+    def counting_graph(
+        col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None
+    ) -> _Profile:
+        graph_calls[0] += 1
+        return _graph_naphtali_sandholm(col, tb, prof, t_bot_tear)
 
     col_dense, tb_dense = _build(_stripper_params(), thermo)
     col_graph, tb_graph = _build(_stripper_params(), thermo)
 
-    # The test-only switch: the mesh solve's NS entry point runs the graph
-    # engine instead of the dense one. Same column, same crude seed, same tear.
-    monkeypatch.setattr(specs_mod, "_naphtali_sandholm", _graph_naphtali_sandholm)
+    # Dense run FIRST, unpatched: the mesh solve's NS entry point is the real
+    # dense engine.
+    monkeypatch.setattr(specs_mod, "_naphtali_sandholm", counting_dense)
     prof_dense = col_mod._solve_mesh(col_dense, tb_dense, 45.0 * 2.5, 30.0, None)
     assert prof_dense.ns_used and prof_dense.ns_passes > 0
+    assert dense_calls[0] == 1 and graph_calls[0] == 0
+
+    # Then the graph run: same column, same crude seed, same tear - the graph
+    # engine instead.
+    monkeypatch.setattr(specs_mod, "_naphtali_sandholm", counting_graph)
     prof_graph = col_mod._solve_mesh(col_graph, tb_graph, 45.0 * 2.5, 30.0, None)
     assert prof_graph.ns_used and prof_graph.ns_passes > 0
+    assert dense_calls[0] == 1 and graph_calls[0] == 1
 
     worst = 0.0
     for j in range(col_dense.n):
@@ -289,4 +323,7 @@ def test_solve_routed_through_graph_ns_matches_dense_ns(
         rel_v = abs(prof_dense.V[j] - prof_graph.V[j]) / max(abs(prof_dense.V[j]), abs(prof_graph.V[j]))
         assert rel_v <= 1e-10, f"V[{j}] rel {rel_v:.3e}"
         worst = max(worst, rel_v)
-    print(f"solve parity: worst relative difference {worst:.3e} over x, T, V at {col_dense.n} stages")
+    print(
+        f"solve parity: worst relative difference {worst:.3e} over x, T, V at {col_dense.n} stages | "
+        f"NS passes dense={prof_dense.ns_passes} graph={prof_graph.ns_passes}"
+    )

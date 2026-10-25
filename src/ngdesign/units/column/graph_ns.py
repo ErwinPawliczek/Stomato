@@ -37,6 +37,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 import scipy.sparse
@@ -51,7 +52,7 @@ from .inside_out import (
     _stage_k_values,
     _StageFeed,
 )
-from .naphtali_sandholm import _NS_LM_TRIES
+from .naphtali_sandholm import _ns_controller
 from .spec import (
     _FLOW_FLOOR,
     _MESH_H_TOL,
@@ -69,14 +70,14 @@ from .thermo_adapter import _flash_ready, _ThermoBox
 #: Tightening - never widening - is allowed; the pass budget still caps it.
 _GRAPH_POLISH_TARGET = 1e-12
 
-#: Line-search halvings per pass (as in the dense fallback).
-_GRAPH_LINE_SEARCH_TRIES = 10
-
 #: Per-pass Newton temperature step bound (K). The unpack's band clamp is far
 #: too wide to stop a bad Jacobian from shooting a section bottom 100+ K in one
 #: accepted step (measured: T drifting to 480 K on a steam-stripper bottom,
 #: from which the line search never recovered). Real simulators bound dT per
-#: NS pass for the same reason.
+#: NS pass for the same reason. Applied ONLY on columns with stripper sections
+#: (the graph engine's cap_step): a linear column has no sections, the bound
+#: is inactive there, and the shared controller's steps reach the dense
+#: engine untouched.
 _NS_MAX_DT = 25.0
 
 
@@ -172,7 +173,7 @@ def _graph_model(col: _Column, kettle_free: bool = False) -> _GraphModel:
     if kettle_free:
         tears.discard(col.n - 1)
     v_free = [j for j in range(g) if j not in tears]
-    draw_links = [lk for lk in col.interlinks if lk.phase == "liquid" and lk.flow_index is not None]
+    draw_links = [lk for lk in col.interlinks if lk.phase == "liquid"]
     t_base = g * nc
     v_base = t_base + g
     d_base = v_base + len(v_free)
@@ -762,70 +763,76 @@ def _extend_profile_to_graph(col: _Column, prof: _Profile) -> None:
             prof.V.append(max(_FLOW_FLOOR, 0.3 * prof.V[d]))
             prof.L.append(max(_FLOW_FLOOR, prof.L[d]))
             prof.y.append(dict(prof.y[d]))
-    links = [lk for lk in col.interlinks if lk.phase == "liquid" and lk.flow_index is not None]
+    links = [lk for lk in col.interlinks if lk.phase == "liquid"]
     prof.draw_flows = [max(_FLOW_FLOOR, prof.L[lk.from_stage]) for lk in links]
 
 
-def _graph_naphtali_sandholm(
-    col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None
-) -> _Profile:
-    """Graph Naphtali-Sandholm: damped Newton over the whole stage graph.
+class _GraphNSEngine:
+    """The graph engine's injected pieces for the shared NS controller.
 
-    Same unknown packing and residual algebra as the dense fallback, extended
-    over the graph with the interlink terms and the per-section draw flows.
-    The Jacobian is stage-coloured (see module docstring) and the step solves
-    with scipy.sparse LU. Rows gate at the same mesh tolerance as the dense
-    path, then the solve polishes toward the 1e-12 target within the pass
-    budget - which is what makes a linear column routed through this solver
-    comparable to the dense result at 1e-10. Duties are NOT finalized here:
-    whole-unit boundary accounting over the graph is step 3.
+    The residual closure is the stage-graph residual
+    (`_graph_residual_vector`, interlinks included), the Jacobian the
+    stage-coloured FD approximation as a scipy.sparse matrix
+    (`_graph_fd_jacobian`), and the linear solve a ``scipy.sparse`` LU of the
+    block-sparse system. The pass loop, the line search and acceptance
+    (``_ns_try_accept``, live-norm off - the graph rows are the gate's own
+    surface, there is no separate exact residual), the best-iterate tracking
+    and the rho-based LM damping adaptation are the shared controller's.
+
+    The one graph-only safeguard is the per-pass temperature clamp
+    (``cap_step``): active ONLY on columns with stripper sections - a bad
+    Jacobian can shoot a section bottom 100+ K in one accepted step
+    (measured: T drifting to 480 K on a steam-stripper bottom, from which
+    the line search never recovered). A linear column has no sections, so
+    the clamp is a no-op there (asserted by the targeted test) and the graph
+    run lands on the dense result through the identical controller.
     """
-    model = _graph_model(col, kettle_free=t_bot_tear is None and col.reboiler == "kettle")
-    _extend_profile_to_graph(col, prof)
-    layout = model.layout
-    l0 = prof.l0
-    # Vapour tears are NOT Newton unknowns in strategy mode - dense NS pins
-    # them from the outer strategy loop. Standalone mode (no caller tear)
-    # instead frees the kettle boilup in the model above. Note: a partial
-    # condenser's top tear needs the same treatment in _graph_unpack - not
-    # exercised until that configuration is routed here.
-    m_tol = _MESH_M_TOL if col.n_tears >= 2 else _MESH_M_TOL_ZERO_ONE_TEAR
-    ns_max = _NS_MAX if col.n_tears >= 2 else _NS_MAX_ZERO_ONE_TEAR
 
-    def m_norm_of(r: list[float]) -> float:
-        nc = layout.nc
-        vals = []
-        pos = 0
-        for s in range(layout.n_graph):
-            for _ in range(nc):
-                vals.append(abs(r[pos]))
-                pos += 1
-            pos += 1
-            if s in model.h_stages:
-                pos += 1
-        return max(vals, default=0.0)
+    prof: _Profile
+    live_norm: bool
+    ex_m: float
+    ex_h: float
 
-    def h_norm_of(r: list[float]) -> float:
-        nc = layout.nc
-        vals = []
-        pos = 0
-        for s in range(layout.n_graph):
-            pos += nc + 1
-            if s in model.h_stages:
-                vals.append(abs(r[pos]))
-                pos += 1
-        return max(vals, default=0.0)
+    def __init__(
+        self,
+        col: _Column,
+        tb: _ThermoBox,
+        prof: _Profile,
+        t_bot_tear: float | None,
+        model: _GraphModel,
+        m_tol: float,
+    ) -> None:
+        self._col = col
+        self._tb = tb
+        self.prof = prof
+        self._t_bot_tear = t_bot_tear
+        self._model = model
+        self._m_tol = m_tol
+        self.live_norm = False
+        self.ex_m = float("inf")
+        self.ex_h = float("inf")
+        self._k_last: list[dict[str, float] | None] = [None] * model.layout.n_graph
+        self._best_u: list[float] | None = None
+        self._best_score = float("inf")
+        self._k_harvest: list[dict[str, float] | None] = []
+        self._m_current = float("inf")
+        self._h_current = float("inf")
+        self._colours = 0
+        self._n_evals = 0
 
-    ever_converged = False
-    # Last known-good per-stage K, persisted across passes. A stage whose flash
-    # fails mid-solve (section bottoms drift far from the seed first) must fall
-    # back to its last REAL K: a neutral K=1.0 fallback makes the summation row
-    # sum x (1 - K) identically zero, which is a zero Jacobian row - a singular
-    # solve (measured: MatrixRankWarning and a stalled Newton on the
-    # two-stripper case).
-    k_last: list[dict[str, float] | None] = [None] * layout.n_graph
-    for _pass in range(ns_max):
-        prof.ns_passes += 1
+    def begin_pass(self) -> tuple[list[float], Callable[[list[float]], list[float]]]:
+        """One pass's reference state, residual closure and frozen quantities.
+
+        Per-stage K fallbacks frozen from the pass's reference state, with
+        the last REAL K per stage persisted across passes: a stage whose
+        flash fails mid-solve (section bottoms drift far from the seed
+        first) must fall back to its last REAL K - a neutral K=1.0 fallback
+        makes the summation row sum x (1 - K) identically zero, a zero
+        Jacobian row and a singular solve (measured: MatrixRankWarning and a
+        stalled Newton on the two-stripper case).
+        """
+        col, tb, prof, model = self._col, self._tb, self.prof, self._model
+        layout = model.layout
         k_fallbacks: list[dict[str, float]] = []
         for s in range(layout.n_graph):
             feed_part, draw_total = _graph_k_args(model, s)
@@ -844,15 +851,16 @@ def _graph_naphtali_sandholm(
             if k is None:
                 k = tb.k_estimate(_flash_ready(prof.x[s], col.feed_comp), prof.T[s], col.pressures[s])
             if k is None:
-                k = k_last[s]
+                k = self._k_last[s]
             k_fallbacks.append(k or {cid: 1.0 for cid in col.comps})
 
         u = _graph_pack(prof, model)
         k_cache: dict[tuple[tuple[tuple[str, float], ...], float, float], dict[str, float]] = {}
         k_misses = [0]
         h_evals = [0]
-        k_harvest: list[dict[str, float] | None] = [None] * layout.n_graph
-        scales = _graph_residual_scales(model, tb, l0, u, t_bot_tear)
+        self._k_harvest = [None] * layout.n_graph
+        k_harvest = self._k_harvest
+        scales = _graph_residual_scales(model, tb, prof.l0, u, self._t_bot_tear)
 
         def residuals(
             u_try: list[float],
@@ -863,11 +871,11 @@ def _graph_naphtali_sandholm(
             scales: list[float] = scales,
             k_harvest: list[dict[str, float] | None] = k_harvest,
         ) -> list[float]:
-            xs, ts, vs, draw_flows = _graph_unpack(model, u_try, t_bot_tear)
+            xs, ts, vs, draw_flows = _graph_unpack(model, u_try, self._t_bot_tear)
             return _graph_residual_vector(
                 model,
                 tb,
-                l0,
+                prof.l0,
                 xs,
                 ts,
                 vs,
@@ -880,102 +888,190 @@ def _graph_naphtali_sandholm(
                 k_out=k_harvest,
             )
 
-        r0 = residuals(u)
-        # Persist this pass's last-evaluated real K values for later passes.
-        for s in range(layout.n_graph):
-            if k_harvest[s] is not None:
-                k_last[s] = k_harvest[s]
-        m_current = m_norm_of(r0)
-        h_current = h_norm_of(r0)
-        if max(m_current, h_current) < _GRAPH_POLISH_TARGET:
-            break
-        if max(m_current, h_current) < m_tol:
-            ever_converged = True
+        return u, residuals
 
+    def m_norm_of(self, r: list[float]) -> float:
+        """Max scaled residual over the graph's M rows (per stage block)."""
+        nc = self._model.layout.nc
+        vals = []
+        pos = 0
+        for s in range(self._model.layout.n_graph):
+            for _ in range(nc):
+                vals.append(abs(r[pos]))
+                pos += 1
+            pos += 1
+            if s in self._model.h_stages:
+                pos += 1
+        return max(vals, default=0.0)
+
+    def h_norm_of(self, r: list[float]) -> float:
+        """Max scaled residual over the graph's H rows."""
+        nc = self._model.layout.nc
+        vals = []
+        pos = 0
+        for s in range(self._model.layout.n_graph):
+            pos += nc + 1
+            if s in self._model.h_stages:
+                vals.append(abs(r[pos]))
+                pos += 1
+        return max(vals, default=0.0)
+
+    def norms(self, r: list[float]) -> tuple[float, float]:
+        return (self.m_norm_of(r), self.h_norm_of(r))
+
+    def checkpoint(self, u: list[float], r0: list[float]) -> bool:
+        """Persist the pass's evaluated real K values, track the best
+        pass-start iterate on the graph rows' own norms, and stop the loop at
+        the polish target (below the mesh gate, so a linear column routed
+        through this engine matches the dense engine's converged profile to
+        1e-10; tightening - never widening - is allowed, the pass budget
+        still caps it)."""
+        for s, k in enumerate(self._k_harvest):
+            if k is not None:
+                self._k_last[s] = k
+        self._m_current, self._h_current = self.norms(r0)
+        score = max(self._m_current, self._h_current)
+        if score < self._best_score:
+            self._best_u, self._best_score = list(u), score
+        return score < _GRAPH_POLISH_TARGET
+
+    def jacobian(
+        self, residuals: Callable[[list[float]], list[float]], r0: list[float], u: list[float]
+    ) -> Any:
         evals_counter = [0]
-        jac_bundle = _graph_fd_jacobian(model, residuals, r0, u, evals_counter)
-        if jac_bundle is None:
-            prof.ns_trace.append(
-                f"pass {prof.ns_passes}: M={m_current:.3e} H={h_current:.3e} | FD unavailable"
-            )
-            break
-        jac, colour_count, n_evals = jac_bundle
+        bundle = _graph_fd_jacobian(self._model, residuals, r0, u, evals_counter)
+        if bundle is None:
+            return None
+        jac, colour_count, n_evals = bundle
+        self._colours, self._n_evals = colour_count, n_evals
+        return jac
+
+    def solve_linear(self, jac: Any, r0: list[float]) -> list[float] | None:
         try:
             sol = scipy.sparse.linalg.spsolve(jac.tocsc(), -np.asarray(r0))
             if not np.all(np.isfinite(sol)):
-                raise ColumnConvergenceError("singular graph Newton system")
-        except Exception:  # noqa: BLE001 - singular sparse system ends the pass like the dense path
-            prof.ns_trace.append(
-                f"pass {prof.ns_passes}: M={m_current:.3e} H={h_current:.3e} | sparse LU singular"
-            )
-            break
-        step = [float(v) for v in sol]
+                return None
+        except Exception:  # noqa: BLE001 - a singular sparse system ends the pass like the dense path
+            return None
+        return [float(v) for v in sol]
 
-        # Per-pass temperature step bound (spec D's band clamp is too wide to
-        # stop a bad Jacobian from shooting a section 100+ K in one accepted
-        # step - measured: T drifting to 480 K on a steam-stripper bottom,
-        # from which the line search never recovered). Real simulators bound
-        # dT per NS pass for the same reason.
+    def lm_step(self, jac: Any, r0: list[float], lam: float) -> list[float] | None:
+        return _lm_damped_step_sparse(jac, r0, lam)
+
+    def linear_prediction(self, jac: Any, r0: list[float], step: list[float]) -> list[float]:
+        lin = np.asarray(r0) + jac @ np.asarray(step)
+        return [float(v) for v in lin]
+
+    def cap_step(self, step: list[float]) -> None:
+        """Per-pass temperature step bound (K) - stripper sections only.
+
+        The unpack's band clamp is far too wide to stop a bad Jacobian from
+        shooting a section bottom 100+ K in one accepted step (measured: T
+        drifting to 480 K on a steam-stripper bottom, from which the line
+        search never recovered). Real simulators bound dT per NS pass for
+        the same reason. A linear column has no sections, so the bound is
+        INACTIVE there - the targeted test asserts the no-op, and the
+        solve-level parity test shows the shared controller reproducing the
+        dense result on a linear column with the clamp present but not
+        firing.
+        """
+        if not self._model.col.sections:
+            return
+        layout = self._model.layout
         for s in range(layout.n_graph):
             step[layout.t_base + s] = max(-_NS_MAX_DT, min(_NS_MAX_DT, step[layout.t_base + s]))
 
-        accepted = False
-        lam = 1.0
-        for _try in range(_GRAPH_LINE_SEARCH_TRIES):
-            svec = [lam * v for v in step]
-            u_try = [u[i] + svec[i] for i in range(layout.n_unk)]
-            try:
-                r_try = residuals(u_try)
-                trial_m = m_norm_of(r_try)
-                trial_h = h_norm_of(r_try)
-            except (ColumnConvergenceError, ValueError):
-                lam *= 0.5
-                continue
-            if max(trial_m, trial_h) < max(m_current, h_current):
-                _graph_apply_state(prof, u_try, model, t_bot_tear)
-                accepted = True
-                break
-            lam *= 0.5
-        if not accepted:
-            lam_lm = 1.0
-            for _lm in range(_NS_LM_TRIES):
-                d_step = _lm_damped_step_sparse(jac, r0, lam_lm)
-                if d_step is None:
-                    break
-                u_try = [u[i] + d_step[i] for i in range(layout.n_unk)]
-                try:
-                    r_try = residuals(u_try)
-                    trial_m = m_norm_of(r_try)
-                    trial_h = h_norm_of(r_try)
-                except (ColumnConvergenceError, ValueError):
-                    lam_lm *= 4.0
-                    continue
-                if max(trial_m, trial_h) < max(m_current, h_current):
-                    _graph_apply_state(prof, u_try, model, t_bot_tear)
-                    accepted = True
-                    break
-                lam_lm *= 4.0
-        prof.ns_trace.append(
-            f"pass {prof.ns_passes}: M={m_current:.3e} H={h_current:.3e} | colours={colour_count} "
-            f"jac_evals={n_evals} lam={lam:.3g} accepted={accepted}"
-        )
-        if not accepted:
-            break
-    else:
-        if not ever_converged:
-            raise ColumnConvergenceError("graph Naphtali-Sandholm fallback did not converge within budget")
+    def apply(self, prof: _Profile, u: list[float]) -> None:
+        _graph_apply_state(prof, u, self._model, self._t_bot_tear)
 
-    # Final acceptance at the mesh gate on the graph's own rows.
-    u = _graph_pack(prof, model)
-    scales = _graph_residual_scales(model, tb, l0, u, t_bot_tear)
-    xs, ts, vs, draw_flows = _graph_unpack(model, u, t_bot_tear)
-    r_final = _graph_residual_vector(model, tb, l0, xs, ts, vs, draw_flows, scales=scales)
-    m_final = m_norm_of(r_final)
-    h_final = h_norm_of(r_final)
-    prof.ns_used = True
-    if m_final > m_tol or h_final > _MESH_H_TOL:
-        raise ColumnConvergenceError(
-            f"graph Naphtali-Sandholm stalled: max residuals M={m_final:.2e}, H={h_final:.2e}"
-            + (f" | {'; '.join(prof.ns_trace)}" if prof.ns_trace else "")
+    def exact_norms(self, prof: _Profile) -> tuple[float, float]:
+        """Never called (live_norm is off): the graph rows are the gate's own surface."""
+        _ = prof
+        return (float("inf"), float("inf"))
+
+    def trace_jacobian_failed(self) -> None:
+        self.prof.ns_trace.append(
+            f"pass {self.prof.ns_passes}: M={self._m_current:.3e} H={self._h_current:.3e} | FD unavailable"
         )
+
+    def trace_solve_failed(self) -> None:
+        self.prof.ns_trace.append(
+            f"pass {self.prof.ns_passes}: M={self._m_current:.3e} H={self._h_current:.3e} | sparse LU singular"
+        )
+
+    def trace_pass(
+        self,
+        r0: list[float],
+        jac: Any,
+        step: list[float],
+        lam: float,
+        lam_lm: float,
+        ach_m: float,
+        ach_h: float,
+        via: str,
+        accepted: bool,
+    ) -> None:
+        _ = r0, jac, step, lam_lm, ach_m, ach_h, via
+        self.prof.ns_trace.append(
+            f"pass {self.prof.ns_passes}: M={self._m_current:.3e} H={self._h_current:.3e} | colours={self._colours} "
+            f"jac_evals={self._n_evals} lam={lam:.3g} accepted={accepted}"
+        )
+
+    def exhausted(self) -> None:
+        # Budget exhausted: restore the best iterate and let the final gate
+        # decide - a state that reached the mesh gate at any pass must not be
+        # discarded by later polishing passes.
+        self._restore_best()
+
+    def finish(self) -> None:
+        """Final acceptance at the mesh gate on the graph's own rows, on the
+        best iterate across passes."""
+        self._restore_best()
+        model, tb, prof = self._model, self._tb, self.prof
+        u = _graph_pack(prof, model)
+        scales = _graph_residual_scales(model, tb, prof.l0, u, self._t_bot_tear)
+        xs, ts, vs, draw_flows = _graph_unpack(model, u, self._t_bot_tear)
+        r_final = _graph_residual_vector(model, tb, prof.l0, xs, ts, vs, draw_flows, scales=scales)
+        m_final = self.m_norm_of(r_final)
+        h_final = self.h_norm_of(r_final)
+        prof.ns_used = True
+        if m_final > self._m_tol or h_final > _MESH_H_TOL:
+            raise ColumnConvergenceError(
+                f"graph Naphtali-Sandholm stalled: max residuals M={m_final:.2e}, H={h_final:.2e}"
+                + (f" | {'; '.join(prof.ns_trace)}" if prof.ns_trace else "")
+            )
+
+    def _restore_best(self) -> None:
+        if self._best_u is not None:
+            _graph_apply_state(self.prof, self._best_u, self._model, self._t_bot_tear)
+
+
+def _graph_naphtali_sandholm(
+    col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None
+) -> _Profile:
+    """Graph Naphtali-Sandholm: damped Newton over the whole stage graph.
+
+    Same unknown packing and residual algebra as the dense fallback, extended
+    over the graph with the interlink terms and the derived per-section draw
+    flows. The Jacobian is stage-coloured (see module docstring) and the step
+    solves with scipy.sparse LU; the pass loop, the line search and
+    acceptance, the LM damping adaptation and the final gate are the shared
+    controller's (`_ns_controller`) - this engine differs only in the
+    injected residual and Jacobian builders and the sparse linear solve.
+    Rows gate at the same mesh tolerance as the dense path, then the solve
+    polishes toward the 1e-12 target within the pass budget - which is what
+    makes a linear column routed through this solver comparable to the dense
+    result at 1e-10. Duties are NOT finalized here: whole-unit boundary
+    accounting over the graph is step 3.
+    """
+    model = _graph_model(col, kettle_free=t_bot_tear is None and col.reboiler == "kettle")
+    _extend_profile_to_graph(col, prof)
+    # Vapour tears are NOT Newton unknowns in strategy mode - dense NS pins
+    # them from the outer strategy loop. Standalone mode (no caller tear)
+    # instead frees the kettle boilup in the model above. Note: a partial
+    # condenser's top tear needs the same treatment in _graph_unpack - not
+    # exercised until that configuration is routed here.
+    m_tol = _MESH_M_TOL if col.n_tears >= 2 else _MESH_M_TOL_ZERO_ONE_TEAR
+    ns_max = _NS_MAX if col.n_tears >= 2 else _NS_MAX_ZERO_ONE_TEAR
+    _ns_controller(_GraphNSEngine(col, tb, prof, t_bot_tear, model, m_tol), ns_max)
     return prof
