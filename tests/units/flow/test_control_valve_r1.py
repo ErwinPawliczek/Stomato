@@ -31,16 +31,24 @@ Hand computation (gas, eqs. 5/8/10/13, Q in m3/h, P in kPa, N9 = 24.6):
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import pytest
 
+from ngdesign.contracts import PhaseKind
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.units.flow.control_valve import ControlValve as ControlValveR0
+from ngdesign.units.flow.control_valve import ControlValveSpecError
 from ngdesign.units.flow.control_valve_r1 import (
     KV_PER_CV,
     VMOL_STD,
+    ControlValveR1,
     characteristic,
     characteristic_inverse,
     kv_gas,
     kv_liquid,
 )
+from tests.conftest import flash_feed
 
 REL = 1e-10
 
@@ -193,17 +201,6 @@ def test_bad_travel_refused() -> None:
 
 
 # --------------------------------------------------------------------------
-# Step 2: the ControlValveR1 adapter in sizing mode.
-# --------------------------------------------------------------------------
-from typing import Any, cast
-
-from ngdesign.contracts import PhaseKind
-from ngdesign.contracts.plugins import Thermo
-from ngdesign.units.flow.control_valve import ControlValve as ControlValveR0
-from ngdesign.units.flow.control_valve import ControlValveSpecError
-from ngdesign.units.flow.control_valve_r1 import ControlValveR1
-from tests.conftest import flash_feed
-
 R_UNIVERSAL = 8.31446261815324
 
 PROPANE_FEED = {
@@ -242,9 +239,7 @@ def test_adapter_example_case_solves(thermo: Thermo) -> None:
 def test_sizing_identity_to_r0(thermo: Thermo) -> None:
     """Sizing on an all-liquid inlet, no diameters, FL=0.9, Fd=1: R1 == R0."""
     inlets = {"inlet": _propane_liquid(thermo)}
-    r0 = ControlValveR0().solve(
-        inlets, {"P_out": 1.997411e6, "Fp": 1.0, "mu_liquid": 1.0371e-4}, thermo
-    )
+    r0 = ControlValveR0().solve(inlets, {"P_out": 1.997411e6, "Fp": 1.0, "mu_liquid": 1.0371e-4}, thermo)
     r1 = ControlValveR1().solve(inlets, dict(PROPANE_PARAMS), thermo)
     assert r1.info["Cv"] == pytest.approx(r0.info["Cv"], rel=1e-12)
     o0 = r0.outlets["outlet"]
@@ -255,9 +250,7 @@ def test_sizing_identity_to_r0(thermo: Thermo) -> None:
 def test_gas_sizing_wiring(thermo: Thermo) -> None:
     """Gas Kv equals kv_gas called with the unit's own reported properties."""
     inlet = flash_feed(thermo, METHANE_FEED)
-    result = ControlValveR1().solve(
-        {"inlet": inlet}, {"P_out": 3.0e6, "mu_gas": 1.2e-5}, thermo
-    )
+    result = ControlValveR1().solve({"inlet": inlet}, {"P_out": 3.0e6, "mu_gas": 1.2e-5}, thermo)
     vapor = next(p for p in inlet.phases if p.kind is PhaseKind.VAPOR)
     props = thermo.phase_props(vapor.composition, inlet.T, inlet.P, PhaseKind.VAPOR)
     gamma = props.cp / (props.cp - R_UNIVERSAL)
@@ -280,9 +273,7 @@ def test_gas_sizing_wiring(thermo: Thermo) -> None:
     assert result.info["Y"] == pytest.approx(kv["Y"], rel=1e-12)
     assert result.info["x"] == pytest.approx((inlet.P - 3.0e6) / inlet.P, rel=1e-12)
     # the Q_std conversion behind eq. 5
-    assert inlet.molar_flow * VMOL_STD == pytest.approx(
-        inlet.molar_flow * 0.0224139695450141, rel=1e-12
-    )
+    assert inlet.molar_flow * VMOL_STD == pytest.approx(inlet.molar_flow * 0.0224139695450141, rel=1e-12)
 
 
 def _refuse(thermo: Thermo, inlet: Any, params: dict[str, Any], match: str) -> None:
@@ -318,9 +309,7 @@ def test_refuse_rating_needs_params(thermo: Thermo) -> None:
 
 
 def test_refuse_opening_range(thermo: Thermo) -> None:
-    _refuse(
-        thermo, _propane_liquid(thermo), {"Cv_rated": 125.0, "opening": 1.5}, "opening"
-    )
+    _refuse(thermo, _propane_liquid(thermo), {"Cv_rated": 125.0, "opening": 1.5}, "opening")
 
 
 def test_refuse_characteristic(thermo: Thermo) -> None:
@@ -348,7 +337,9 @@ def test_refuse_factor_ranges(thermo: Thermo, name: str, value: float) -> None:
 
 def test_refuse_partial_diameters(thermo: Thermo) -> None:
     _refuse(
-        thermo, _propane_liquid(thermo), {"P_out": 1.997411e6, "D1_m": 0.15},
+        thermo,
+        _propane_liquid(thermo),
+        {"P_out": 1.997411e6, "D1_m": 0.15},
         "D1_m, D2_m, d_m",
     )
 
@@ -391,9 +382,7 @@ def test_mu_liquid_fallback_used(thermo: Thermo) -> None:
     inlet = _propane_liquid(thermo)
     dry = [p.model_copy(update={"viscosity": None}) for p in inlet.phases]
     inlet = inlet.model_copy(update={"phases": dry})
-    result = ControlValveR1().solve(
-        {"inlet": inlet}, {"P_out": 1.997411e6, "mu_liquid": 1.0371e-4}, thermo
-    )
+    result = ControlValveR1().solve({"inlet": inlet}, {"P_out": 1.997411e6, "mu_liquid": 1.0371e-4}, thermo)
     assert result.info["Cv"] > 0.0
 
 

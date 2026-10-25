@@ -256,9 +256,7 @@ class ControlValveR1:
                 raise ControlValveSpecError(f"{name} {v} outside (0, 1]")
         kind = str(params.get("characteristic", "linear"))
         if kind not in _KINDS:
-            raise ControlValveSpecError(
-                f"characteristic {kind!r} must be one of {', '.join(_KINDS)}"
-            )
+            raise ControlValveSpecError(f"characteristic {kind!r} must be one of {', '.join(_KINDS)}")
         rangeability = float(params.get("rangeability", 50.0))
         if rangeability <= 1.0:
             raise ControlValveSpecError(f"rangeability {rangeability} must be > 1")
@@ -275,9 +273,7 @@ class ControlValveR1:
         else:
             P2 = _outlet_pressure(inlet.P, params)
             if P2 >= inlet.P:
-                raise ControlValveSpecError(
-                    "zero pressure drop: Kv is unbounded (the valve does nothing)"
-                )
+                raise ControlValveSpecError("zero pressure drop: Kv is unbounded (the valve does nothing)")
 
         phase_code = _phase_code(inlet)
         P1 = inlet.P
@@ -293,8 +289,18 @@ class ControlValveR1:
             Pc = _average_Pc(inlet)
             Q_m3_s = inlet.mass_flow / rho
             kv = kv_liquid(
-                Q_m3_s=Q_m3_s, rho=rho, mu=mu, Psat=Psat, Pc=Pc,
-                P1=P1, P2=P2, FL=FL, Fd=Fd, D1_m=D1_m, D2_m=D2_m, d_m=d_m,
+                Q_m3_s=Q_m3_s,
+                rho=rho,
+                mu=mu,
+                Psat=Psat,
+                Pc=Pc,
+                P1=P1,
+                P2=P2,
+                FL=FL,
+                Fd=Fd,
+                D1_m=D1_m,
+                D2_m=D2_m,
+                d_m=d_m,
             )
             P2_choke = float(control_valve_choke_P_l(Psat=Psat, Pc=Pc, FL=FL, P1=P1))
         else:
@@ -315,8 +321,20 @@ class ControlValveR1:
             if not math.isfinite(gamma) or gamma <= 1.0:
                 raise ControlValveSpecError(f"gamma {gamma} must be > 1 (from cp {props.cp})")
             kv = kv_gas(
-                n_mol_s=inlet.molar_flow, MW=MW, mu=mu, gamma=gamma, Z=Z, T=inlet.T,
-                P1=P1, P2=P2, xT=xT, FL=FL, Fd=Fd, D1_m=D1_m, D2_m=D2_m, d_m=d_m,
+                n_mol_s=inlet.molar_flow,
+                MW=MW,
+                mu=mu,
+                gamma=gamma,
+                Z=Z,
+                T=inlet.T,
+                P1=P1,
+                P2=P2,
+                xT=xT,
+                FL=FL,
+                Fd=Fd,
+                D1_m=D1_m,
+                D2_m=D2_m,
+                d_m=d_m,
             )
             P2_choke = float(control_valve_choke_P_g(xT=xT, gamma=gamma, P1=P1))
 
@@ -342,9 +360,7 @@ class ControlValveR1:
             required_Cv = kv["Kv"] / KV_PER_CV
             phi = kv["Kv"] / (KV_PER_CV * Cv_rated)
             if phi > 1.0:
-                raise ControlValveSpecError(
-                    f"required Cv {required_Cv} exceeds Cv_rated {Cv_rated}"
-                )
+                raise ControlValveSpecError(f"required Cv {required_Cv} exceeds Cv_rated {Cv_rated}")
             info["travel"] = characteristic_inverse(phi, kind, rangeability)
         return UnitResult(outlets={"outlet": outlet}, duty_W=0.0, power_W=0.0, info=info)
 
