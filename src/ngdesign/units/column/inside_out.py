@@ -114,6 +114,10 @@ class _Column:
     #: sections; step 3 wires them into the balances.
     strippers: list[_SideStripper] = field(default_factory=list)
     sections: list[_StripperSection] = field(default_factory=list)
+    #: S0-1c step 2: the graph's stream links as explicit records, in section
+    #: order (liquid draw then vapour return per section). Empty for a linear
+    #: column - today's _Column exactly.
+    interlinks: list[_Interlink] = field(default_factory=list)
     # Two-phase operating window for the inner temperature walk, set from the
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
@@ -284,6 +288,18 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         )
         offset += st.n_stages
     col.sections = sections
+    # S0-1c step 2: explicit interlink records (review note 1, PR #241) and
+    # section-stage pressures. A plain column gets an empty list and exactly
+    # today's pressures - the byte-identical regression gate is the bench.
+    # The section pressure is the draw-stage pressure, uniform over the
+    # section (pressure let-down is isenthalpic; step 3 refines per-section
+    # parsed pressures - PR #241 review note 2).
+    if sections:
+        pad: list[float] = []
+        for sec in sections:
+            pad.extend([col.pressures[sec.draw_stage - 1]] * len(sec.stages))
+        col.pressures = col.pressures + pad
+    col.interlinks = _build_interlinks(col)
     col.pumparounds = list(col_params.pumparounds)
     pa_flows: list[float] = []
     for pa in col.pumparounds:
@@ -329,6 +345,43 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
     return col
 
 
+def _build_interlinks(col: _Column) -> list[_Interlink]:
+    """The graph's interlink records, in section order (S0-1c step 2).
+
+    The unknown-vector layout of the graph Naphtali-Sandholm solve is fixed
+    here: ``[x per graph stage][T per graph stage][V per free stage][one draw
+    flow per stripper section]`` - the x/T/V blocks mirror the dense packing
+    over ``n_graph`` stages, and each liquid draw link's ``flow_index`` points
+    at its slot in the appended draw block. The vapour return's flow is its
+    stage's own vapour, so its ``flow_index`` is None. A linear column has no
+    sections and no interlinks.
+    """
+    main_tears = (1 if col.condenser == "partial" else 0) + (1 if col.reboiler == "kettle" else 0)
+    draw_index = col.n_graph * len(col.comps) + col.n_graph + (col.n_graph - main_tears)
+    out: list[_Interlink] = []
+    for sec in col.sections:
+        if not sec.stages:
+            continue  # degenerate n_stages = 0 plain liquid draw: no section, no return
+        out.append(
+            _Interlink(
+                from_stage=sec.draw_stage - 1,
+                to_stage=sec.stages[0] - 1,
+                phase="liquid",
+                flow_index=draw_index,
+            )
+        )
+        draw_index += 1
+        out.append(
+            _Interlink(
+                from_stage=sec.stages[0] - 1,
+                to_stage=sec.return_stage - 1,
+                phase="vapour",
+                flow_index=None,
+            )
+        )
+    return out
+
+
 def _draw_flows(col: _Column) -> tuple[list[float], list[float]]:
     draw_l = [0.0] * col.n
     draw_v = [0.0] * col.n
@@ -362,6 +415,26 @@ def _pa_return_terms(col: _Column) -> list[tuple[int, int, float]]:
     Empty without pumparounds; no-op loops (zero duty, draw = return) skipped.
     """
     return [(pa.return_stage - 1, pa.draw_stage - 1, col.pa_flows[idx]) for idx, pa in _live_pumparounds(col)]
+
+
+def _pa_stage_flows(col: _Column) -> tuple[list[float], list[float]]:
+    """Per-stage pumparound net liquid outflow (at the draw) and inflow (at the return).
+
+    Zeros everywhere without pumparounds. A pumparound with draw = return and
+    zero duty contributes equal in/out at one stage: an exact no-op.
+    """
+    pa_out = [0.0] * col.n
+    pa_in = [0.0] * col.n
+    for idx, pa in _live_pumparounds(col):
+        pa_out[pa.draw_stage - 1] += col.pa_flows[idx]
+        pa_in[pa.return_stage - 1] += col.pa_flows[idx]
+    return pa_out, pa_in
+
+
+def _l_profile(col: _Column, l0: float, v: list[float]) -> list[float]:
+    """Liquid profile from the stage-wise total balances, closed form:
+
+    L_j = L_0 + sum_{m<=j}(F_m - S_m) + V_{j+1} - V_1  (V_{N+1} = a.draw_stage - 1, col.pa_flows[idx]) for idx, pa in _live_pumparounds(col)]
 
 
 def _pa_stage_flows(col: _Column) -> tuple[list[float], list[float]]:
