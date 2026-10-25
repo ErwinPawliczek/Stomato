@@ -89,9 +89,7 @@ class AbsorberR2:
             missing = "gas_in" if gas is None else "solvent_in"
             raise AbsorberR2Error(f"absorber R2 requires the {missing} inlet stream")
         if gas.molar_flow <= 0.0:
-            raise AbsorberR2Error(
-                f"absorber R2 refuses a zero-molar-flow gas_in (got {gas.molar_flow})"
-            )
+            raise AbsorberR2Error(f"absorber R2 refuses a zero-molar-flow gas_in (got {gas.molar_flow})")
         if solvent.molar_flow <= 0.0:
             raise AbsorberR2Error(
                 f"absorber R2 refuses a zero-molar-flow solvent_in (got {solvent.molar_flow})"
@@ -105,9 +103,7 @@ class AbsorberR2:
 
         n_stages = params.get("n_stages")
         if not isinstance(n_stages, int) or isinstance(n_stages, bool) or n_stages < 2:
-            raise AbsorberR2Error(
-                f"absorber R2 requires an integer n_stages >= 2, got {n_stages!r}"
-            )
+            raise AbsorberR2Error(f"absorber R2 requires an integer n_stages >= 2, got {n_stages!r}")
         for key in params:
             if key not in _ALLOWED_KEYS:
                 raise AbsorberR2Error(f"absorber R2 refuses unknown parameter {key!r}")
@@ -117,19 +113,14 @@ class AbsorberR2:
         if isinstance(profile, list):
             if len(profile) != n_stages:
                 raise AbsorberR2Error(
-                    f"absorber R2 pressure_profile must carry n_stages={n_stages} "
-                    f"entries, got {len(profile)}"
+                    f"absorber R2 pressure_profile must carry n_stages={n_stages} entries, got {len(profile)}"
                 )
             if not all(_is_real_number(v) and float(v) > 0.0 for v in profile):
-                raise AbsorberR2Error(
-                    "absorber R2 pressure_profile entries must all be positive"
-                )
+                raise AbsorberR2Error("absorber R2 pressure_profile entries must all be positive")
             pressure_profile = [float(v) for v in profile]
         elif _is_real_number(profile):
             if float(profile) <= 0.0:
-                raise AbsorberR2Error(
-                    f"absorber R2 pressure_profile must be positive, got {profile}"
-                )
+                raise AbsorberR2Error(f"absorber R2 pressure_profile must be positive, got {profile}")
             pressure_profile = float(profile)
         else:
             raise AbsorberR2Error(

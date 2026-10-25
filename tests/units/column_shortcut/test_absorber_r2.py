@@ -62,9 +62,7 @@ def test_identity_to_column_row(thermo: Thermo) -> None:
     """
     inlets = _example_inlets(thermo)
     res = AbsorberR2().solve(inlets, {"n_stages": 4}, thermo)
-    direct = Column().solve(
-        {"feed": inlets["gas_in"]}, _mapped_column_params(inlets, 4), thermo
-    )
+    direct = Column().solve({"feed": inlets["gas_in"]}, _mapped_column_params(inlets, 4), thermo)
 
     for out_port, col_port in (("gas_out", "distillate"), ("rich_out", "bottoms")):
         adapter_state = res.outlets[out_port]
@@ -126,27 +124,21 @@ def test_refusal_pressure_profile_wrong_length(thermo: Thermo) -> None:
 def test_refusal_pressure_profile_nonpositive_entry(thermo: Thermo) -> None:
     inlets = _example_inlets(thermo)
     with pytest.raises(AbsorberR2Error, match="pressure_profile"):
-        AbsorberR2().solve(
-            inlets, {"n_stages": 4, "pressure_profile": [2e6, 0.0, 2e6, 2e6]}, thermo
-        )
+        AbsorberR2().solve(inlets, {"n_stages": 4, "pressure_profile": [2e6, 0.0, 2e6, 2e6]}, thermo)
 
 
 def test_refusal_gas_in_zero_flow(thermo: Thermo) -> None:
     inlets = _example_inlets(thermo)
     dead_gas = inlets["gas_in"].model_copy(update={"molar_flow": 0.0})
     with pytest.raises(AbsorberR2Error, match="gas_in"):
-        AbsorberR2().solve(
-            {"gas_in": dead_gas, "solvent_in": inlets["solvent_in"]}, {"n_stages": 4}, thermo
-        )
+        AbsorberR2().solve({"gas_in": dead_gas, "solvent_in": inlets["solvent_in"]}, {"n_stages": 4}, thermo)
 
 
 def test_refusal_solvent_in_zero_flow(thermo: Thermo) -> None:
     inlets = _example_inlets(thermo)
     dead_solvent = inlets["solvent_in"].model_copy(update={"molar_flow": 0.0})
     with pytest.raises(AbsorberR2Error, match="solvent_in"):
-        AbsorberR2().solve(
-            {"gas_in": inlets["gas_in"], "solvent_in": dead_solvent}, {"n_stages": 4}, thermo
-        )
+        AbsorberR2().solve({"gas_in": inlets["gas_in"], "solvent_in": dead_solvent}, {"n_stages": 4}, thermo)
 
 
 def test_refusal_solvent_in_mostly_vapour(thermo: Thermo) -> None:
@@ -172,9 +164,7 @@ def test_column_convergence_error_propagates_unchanged(
 ) -> None:
     """The adapter never catches or converts ColumnConvergenceError."""
 
-    def _boom(
-        self: Column, inlets: dict[str, StreamState], params: dict[str, Any], t: Thermo
-    ) -> UnitResult:
+    def _boom(self: Column, inlets: dict[str, StreamState], params: dict[str, Any], t: Thermo) -> UnitResult:
         raise ColumnConvergenceError("column convergence failure (test stub)")
 
     monkeypatch.setattr(absorber_r2, "Column", type("StubColumn", (), {"solve": _boom}))
