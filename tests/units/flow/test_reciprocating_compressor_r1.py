@@ -268,6 +268,10 @@ def test_clearance_pocket_matches_flow(
     first = r1_mod.ReciprocatingCompressorR1().solve(
         inlets, {**r1_params, "capacity_control": "clearance_pocket"}, thermo
     )
+    # The plan's printed required clearances (calc_reciprocating_compressor.py,
+    # 9 significant digits), asserted at that rounding.
+    assert first.info["clearance_required_stage1"] == pytest.approx(0.154941454, rel=1e-8)
+    assert first.info["clearance_required_stage2"] == pytest.approx(0.310843318, rel=1e-8)
     cylinders = [dict(c) for c in r1_params["cylinders"]]
     for i in (1, 2):
         cylinders[i - 1]["clearance"] = first.info[f"clearance_required_stage{i}"]
