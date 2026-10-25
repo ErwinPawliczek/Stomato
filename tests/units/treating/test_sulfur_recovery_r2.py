@@ -18,7 +18,8 @@ import math
 import pytest
 
 from ngdesign.contracts.reactions import ReactionSet
-from ngdesign.units._physics.kinetics import ln_keq
+from ngdesign.units._physics.gibbs import GibbsError
+from ngdesign.units._physics.kinetics import apply_extents, ln_keq
 from ngdesign.units.treating.sulfur_recovery_r2 import _converter_equilibrium
 
 P = 1.3e5
@@ -129,3 +130,191 @@ def test_converter_equilibrium_is_deterministic() -> None:
     assert first.keys() == second.keys()
     for cid in first:
         assert math.isclose(first[cid], second[cid], rel_tol=0.0, abs_tol=0.0)
+
+
+# ---------------------------------------------------------------------------
+# Step 2: the SulfurRecoveryR2 adapter.
+# ---------------------------------------------------------------------------
+
+from typing import Any
+
+from ngdesign.registry import create
+from ngdesign.data.formation import atomic_composition
+from ngdesign.units.treating.sulfur_recovery import SulfurRecovery
+from ngdesign.units.treating.sulfur_recovery_r2 import SulfurRecoveryR2
+
+THERMO = create("thermo", "pr")
+
+
+def _r2_setup() -> tuple[Any, dict[str, Any]]:
+    """R0's example feed flashed, and R0's params with the stages replaced."""
+    feeds, params = SulfurRecovery.example_case()
+    f = feeds["acid_gas_in"]
+    feed = THERMO.flash_pt(f["composition"], f["T"], f["P"], f["molar_flow"])
+    return feed, dict(params)
+
+
+def _solve(feed: Any, params: dict[str, Any]) -> Any:
+    return SulfurRecoveryR2().solve({"acid_gas_in": feed}, params, THERMO)
+
+
+def _elements(state: Any) -> dict[str, float]:
+    totals: dict[str, float] = {}
+    for cid, frac in state.composition.items():
+        for element, count in atomic_composition(cid).items():
+            totals[element] = totals.get(element, 0.0) + count * frac * state.molar_flow
+    return totals
+
+
+def test_r2_reduces_to_r0_approach_mode() -> None:
+    """R0 identity (spec, rel 1e-10): with the species set restricted to R0's
+    (H2S, SO2, H2O, S8 + the inerts N2, CO2 riding as species), the R2 Gibbs
+    minimum over the gas {H2S 2, SO2 1, H2O 4, N2 10, CO2 1} at T_eq 503 K,
+    P 1.5e5 Pa equals R0's ``_approach_extent`` + ``apply_extents`` result.
+    The one Claus degree of freedom is the Gibbs minimum's only one."""
+    gas = {"H2S": 2.0, "SO2": 1.0, "H2O": 4.0, "N2": 10.0, "CO2": 1.0}
+    _, params = SulfurRecovery.example_case()
+    rset = ReactionSet.model_validate(params["reaction_set"])
+    xi, _ln_k = SulfurRecovery._approach_extent(gas, rset.reactions[1], 473.0, 30.0, 1.5e5)
+    n_r0 = apply_extents(gas, rset, [0.0, xi])
+    n_r2 = SulfurRecoveryR2()._run_converter(
+        gas, 503.0, 1.5e5, _species_override=["H2S", "SO2", "H2O", "S8", "N2", "CO2"]
+    )
+    for cid in ("H2S", "SO2", "H2O", "S8"):
+        assert n_r2[cid] == pytest.approx(n_r0[cid], rel=1e-10), cid
+    # Spec-printed anchor values for the same case (measured while writing it).
+    assert n_r2["H2S"] == pytest.approx(0.15518331468558655, rel=1e-10)
+    assert n_r2["SO2"] == pytest.approx(0.07759165734279327, rel=1e-10)
+    assert n_r2["H2O"] == pytest.approx(5.844816685314413, rel=1e-10)
+    assert n_r2["S8"] == pytest.approx(0.34590312849645255, rel=1e-10)
+
+
+def test_adapter_closes_element_balances_over_the_ports() -> None:
+    """V0: every element (S, H, O, N, C) closes in = out at 1e-8 across
+    acid_gas_in -> tail_gas_out + sulfur_out on a two-stage Gibbs run."""
+    feed, params = _r2_setup()
+    result = _solve(feed, {**params, "catalytic_stages": [{"T": 573.15}, {"T": 473.15}]})
+    inlet = _elements(feed)
+    outlet = _elements(result.outlets["tail_gas_out"])
+    for element, amount in _elements(result.outlets["sulfur_out"]).items():
+        outlet[element] = outlet.get(element, 0.0) + amount
+    for element in sorted(set(inlet) | set(outlet)):
+        assert outlet.get(element, 0.0) == pytest.approx(inlet.get(element, 0.0), abs=1e-8), element
+
+
+def test_adapter_reports_stage_information_and_recovery() -> None:
+    """info carries R0's keys plus the per-stage Gibbs keys; the recovery
+    fraction counts S atoms through both allotropes (6 and 8)."""
+    feed, params = _r2_setup()
+    result = _solve(feed, {**params, "catalytic_stages": [{"T": 573.15}, {"T": 473.15}]})
+    info = result.info
+    assert info["n_catalytic_stages"] == 2.0
+    assert 0.0 < info["stage_0_H2S_conversion"] < 1.0
+    assert info["stage_0_T_eq_K"] == 573.15
+    assert info["stage_1_S6_mol_s"] > 0.0
+    assert info["stage_1_S8_mol_s"] > 0.0
+    assert 0.0 < info["sulfur_recovery_fraction"] <= 1.0
+    # Sulfur atoms: 6*S6 + 8*S8 condensed; the feed carries 30 mol/s of S.
+    sulfur_atoms = 6.0 * info["stage_0_S6_mol_s"] + 8.0 * info["stage_0_S8_mol_s"]
+    assert info["sulfur_out_mol_s"] == pytest.approx(
+        info["stage_0_S6_mol_s"] + info["stage_0_S8_mol_s"], rel=1e-12
+    )
+    assert sulfur_atoms <= 30.0 + 1e-6
+
+
+def test_adapter_is_deterministic() -> None:
+    feed, params = _r2_setup()
+    stages = [{"T": 573.15}, {"T": 473.15, "approach_K": 0.0}]
+    first = _solve(feed, {**params, "catalytic_stages": stages})
+    second = _solve(feed, {**params, "catalytic_stages": stages})
+    assert first.info == second.info
+    assert first.duty_W == second.duty_W
+    for port in ("tail_gas_out", "sulfur_out"):
+        assert first.outlets[port] == second.outlets[port]
+
+
+def test_sulfur_out_flashes_the_s6_s8_mixture() -> None:
+    """sulfur_out carries both allotropes at their summed composition."""
+    feed, params = _r2_setup()
+    result = _solve(feed, {**params, "catalytic_stages": [{"T": 573.15}]})
+    sulfur = result.outlets["sulfur_out"]
+    assert set(sulfur.composition) == {"S6", "S8"}
+    assert sulfur.molar_flow > 0.0
+
+
+def _refuses(params: dict[str, Any], feed: Any, pattern: str) -> str:
+    with pytest.raises(SulfurRecoveryError, match=pattern) as excinfo:
+        _solve(feed, params)
+    return str(excinfo.value)
+
+
+def test_refusal_conversion_stage_is_rejected() -> None:
+    """R2 has no conversion path: a stage carrying 'conversion' is refused,
+    naming both the parameter and the level."""
+    feed, params = _r2_setup()
+    message = _refuses({**params, "catalytic_stages": [{"T": 573.15, "conversion": 0.5}]}, feed, "conversion")
+    assert "R2" in message
+
+
+def test_refusal_nonpositive_stage_temperature() -> None:
+    feed, params = _r2_setup()
+    _refuses({**params, "catalytic_stages": [{"T": 0.0}]}, feed, r"catalytic_stages\[0\]")
+
+
+def test_refusal_negative_approach() -> None:
+    feed, params = _r2_setup()
+    _refuses(
+        {**params, "catalytic_stages": [{"T": 573.15, "approach_K": -5.0}]},
+        feed,
+        r"catalytic_stages\[0\]",
+    )
+
+
+def test_refusal_extra_species_outside_the_enum() -> None:
+    feed, params = _r2_setup()
+    _refuses({**params, "extra_species": ["S2"]}, feed, "extra_species")
+
+
+def test_refusal_species_without_formation_data() -> None:
+    """A converter species without databank formation data is refused, naming
+    the species (internal function; the public enum keeps bad extras out)."""
+    with pytest.raises(SulfurRecoveryError, match="FOO"):
+        _converter_equilibrium(GAS, 550.0, P, [*SPECIES, "FOO"])
+
+
+def test_refusal_gibbs_failure_is_wrapped_with_the_stage_number(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A GibbsError from the solver surfaces as SulfurRecoveryError naming the
+    catalytic stage."""
+    import ngdesign.units.treating.sulfur_recovery_r2 as r2
+
+    def _boom(gas: Any, T: float, P_: float, species: Any) -> dict[str, float]:
+        raise GibbsError("synthetic solver failure")
+
+    monkeypatch.setattr(r2, "_converter_equilibrium", _boom)
+    feed, params = _r2_setup()
+    with pytest.raises(SulfurRecoveryError, match="catalytic stage 0"):
+        _solve(feed, {**params, "catalytic_stages": [{"T": 573.15}]})
+
+
+def test_refusal_oxygen_lean_feed() -> None:
+    """R0's own refusal, unchanged: the burner mixture must carry the air."""
+    feed, params = _r2_setup()
+    lean = THERMO.flash_pt({"H2S": 0.30, "O2": 0.05, "N2": 0.65}, 320.0, 1.5e5, 100.0)
+    _refuses({**params, "catalytic_stages": [{"T": 573.15}]}, lean, "O2")
+
+
+def test_refusal_feed_without_h2s() -> None:
+    feed, params = _r2_setup()
+    sour = THERMO.flash_pt({"CO2": 0.5, "N2": 0.5}, 320.0, 1.5e5, 100.0)
+    _refuses({**params, "catalytic_stages": [{"T": 573.15}]}, sour, "no H2S")
+
+
+def test_refusal_bad_reaction_set() -> None:
+    feed, params = _r2_setup()
+    single = {
+        **params,
+        "reaction_set": dict(params["reaction_set"], reactions=[params["reaction_set"]["reactions"][0]]),
+    }
+    _refuses(single, feed, "exactly 2 reactions")
