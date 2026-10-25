@@ -31,8 +31,8 @@ Method (double_pipe R1 spec, "Equations"):
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import fluids
 import ht
@@ -90,9 +90,7 @@ class FilmProps:
         return self.cp_J_kgK * self.mu_Pa_s / self.k_W_mK
 
 
-def film_props(
-    thermo: Thermo, z: dict[str, float], T: float, P: float, kind: PhaseKind
-) -> FilmProps:
+def film_props(thermo: Thermo, z: dict[str, float], T: float, P: float, kind: PhaseKind) -> FilmProps:
     """Film properties of one single phase at (composition, T, P).
 
     Raises:
@@ -204,13 +202,7 @@ def u_outside_tube(
     the fouling terms following Table 11.1's convention (R_fi is an inside
     resistance referred to the inside area, R_fo an outside one).
     """
-    resistance = (
-        1.0 / h_o
-        + R_fo
-        + Do * math.log(Do / Di) / (2.0 * k_wall)
-        + R_fi * Do / Di
-        + Do / (Di * h_i)
-    )
+    resistance = 1.0 / h_o + R_fo + Do * math.log(Do / Di) / (2.0 * k_wall) + R_fi * Do / Di + Do / (Di * h_i)
     return 1.0 / resistance
 
 
@@ -259,14 +251,9 @@ def rate_two_stream(
     """
     F_h, F_c = hot.molar_flow, cold.molar_flow
     if F_h <= 0.0 or F_c <= 0.0:
-        raise RatingError(
-            "R1 rating needs both streams flowing: got hot="
-            f"{F_h} mol/s, cold={F_c} mol/s"
-        )
+        raise RatingError(f"R1 rating needs both streams flowing: got hot={F_h} mol/s, cold={F_c} mol/s")
     if hot.T <= cold.T:
-        raise TemperatureCross(
-            f"inlet temperatures cross: hot T={hot.T} K <= cold T={cold.T} K"
-        )
+        raise TemperatureCross(f"inlet temperatures cross: hot T={hot.T} K <= cold T={cold.T} K")
     kind_h = _inlet_kind(hot, "hot")
     kind_c = _inlet_kind(cold, "cold")
     film_h = film_props(thermo, hot.composition, hot.T, hot.P, kind_h)
@@ -319,8 +306,7 @@ def rate_two_stream(
         )
     except (RuntimeError, ValueError) as exc:
         raise RatingConvergenceError(
-            f"rating did not converge: {exc}; last duty bracket [{Q_lo}, {Q_max}] W, "
-            f"g(Q_max)={g_max} W"
+            f"rating did not converge: {exc}; last duty bracket [{Q_lo}, {Q_max}] W, g(Q_max)={g_max} W"
         ) from exc
     _, hot_out, cold_out, UA, NTU, eps = evaluate(float(Q))
     return RatedTwoStream(hot_out, cold_out, float(Q), UA, NTU, eps, r.iterations)
