@@ -139,9 +139,7 @@ class TEGContactorR2:
         Y_in = _fraction_to_ratio(y_in)
         X_lean = _fraction_to_ratio(x_water_lean)
 
-        y_profile, x_profile = countercurrent_march(
-            G, S, X_lean, Y_in, n_stages, teg_x_of_y(T, P)
-        )
+        y_profile, x_profile = countercurrent_march(G, S, X_lean, Y_in, n_stages, teg_x_of_y(T, P))
 
         water_removed = G * (Y_in - y_profile[0])
         # Negative water_removed is desorption (lean wetter than the gas
