@@ -31,7 +31,6 @@ same error from ``ngdesign.units.heat.rating`` once double_pipe merges.
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass
 from typing import Any
 
@@ -105,6 +104,9 @@ class CommonWallResult:
     T_wall: np.ndarray  # (m,) wall temperature, K
     hA_W_K: tuple[float, ...]
     is_hot: tuple[bool, ...]
+    #: Per-stream conductance evaluated at every mesh node, W/K (piecewise
+    #: hA in the R2 zone model; None for the uniform-hA R1 solve).
+    hA_nodes: np.ndarray | None = None
 
     def outlet_enthalpy_flows(self) -> tuple[float, ...]:
         """H at each stream's OUTLET end: hot at x = 1, cold at x = 0."""
@@ -120,12 +122,38 @@ def _initial_guess(layers: tuple[StreamLayer, ...], x: np.ndarray) -> np.ndarray
     return y0
 
 
+def build_T_of_H_table(
+    state: StreamState, T_far: float, thermo: Thermo
+) -> tuple[PchipInterpolator, float, float]:
+    """Build one stream's monotone T(H) table (spec algorithm step 2).
+
+    40 ``flash_ph`` samples from the inlet enthalpy flow to the enthalpy flow
+    at ``T_far`` (the farthest opposite-stream inlet temperature), at the
+    inlet pressure. Returns ``(T_of_H, H_in_W, H_far_W)``.
+    """
+    H_in = state.molar_flow * state.enthalpy
+    H_far = state.molar_flow * thermo.flash_pt(state.composition, T_far, state.P, state.molar_flow).enthalpy
+    span = H_far - H_in
+    floor = 1e-6 * max(abs(H_in), 1.0)
+    if abs(span) < floor:  # keep the table strictly increasing for PCHIP
+        H_far = H_in + (floor if span >= 0.0 else -floor)
+    lo, hi = (H_in, H_far) if H_in <= H_far else (H_far, H_in)
+    flows = np.linspace(lo, hi, TABLE_POINTS)
+    temperatures = [
+        thermo.flash_ph(state.composition, state.P, float(H) / state.molar_flow, state.molar_flow).T
+        for H in flows
+    ]
+    return PchipInterpolator(flows, np.asarray(temperatures)), H_in, H_far
+
+
 def solve_common_wall(
     layers: tuple[StreamLayer, ...],
     *,
     tol: float = BVP_TOL,
     max_nodes: int = BVP_MAX_NODES,
     n_mesh: int = BVP_INITIAL_NODES,
+    hA_zones: np.ndarray | None = None,
+    y_init: np.ndarray | None = None,
 ) -> CommonWallResult:
     """Solve the common-wall BVP for the stream enthalpy flows H_i(x).
 
@@ -133,16 +161,30 @@ def solve_common_wall(
     (:meth:`CommonWallResult.outlet_enthalpy_flows`). Hot streams enter at
     x = 0, cold at x = 1. Raises :class:`RatingConvergenceError` when
     ``solve_bvp`` reports ``status != 0``.
+
+    ``hA_zones`` (R2): per-stream per-zone conductance, shape (n_streams,
+    n_zones), W/K per unit normalised length - piecewise-constant on equal
+    zones of x. ``y_init`` (R2 zone loop): warm-start profile from the
+    previous iteration.
     """
     if not layers:
         raise MultiStreamRatingError("at least one hot and one cold active stream are required")
     hA = np.array([layer.hA_W_K for layer in layers])
     signs = np.array([-1.0 if layer.is_hot else 1.0 for layer in layers])
+    n_zones = 1 if hA_zones is None else int(hA_zones.shape[1])
+
+    def conductance_at(x: np.ndarray) -> np.ndarray:
+        """Per-stream conductance at mesh x, shape (n_streams, x.size), W/K."""
+        if hA_zones is None:
+            return np.tile(hA[:, None], (1, x.size))
+        zone_index = np.clip((x * n_zones).astype(int), 0, n_zones - 1)
+        return hA_zones[:, zone_index]
 
     def rhs(x: np.ndarray, y: np.ndarray) -> np.ndarray:
         temperatures = np.vstack([layer.T_of_H(y[i]) for i, layer in enumerate(layers)])
-        wall = hA @ temperatures / hA.sum()
-        return np.asarray((signs * hA)[:, None] * (temperatures - wall[None, :]), dtype=float)
+        conductance = conductance_at(x)
+        wall = conductance @ temperatures / conductance.sum(axis=0)
+        return np.asarray((signs[:, None] * conductance) * (temperatures - wall[None, :]), dtype=float)
 
     def bc(ya: np.ndarray, yb: np.ndarray) -> np.ndarray:
         residuals = []
@@ -151,13 +193,15 @@ def solve_common_wall(
             residuals.append(edge_value - layer.H_in_W)
         return np.array(residuals)
 
-    x_init = np.linspace(0.0, 1.0, n_mesh)
-    solution = solve_bvp(rhs, bc, x_init, _initial_guess(layers, x_init), tol=tol, max_nodes=max_nodes)
+    x_init = np.linspace(0.0, 1.0, n_mesh) if hA_zones is None else np.linspace(0.0, 1.0, 2 * n_zones + 1)
+    guess = _initial_guess(layers, x_init) if y_init is None else y_init
+    solution = solve_bvp(rhs, bc, x_init, guess, tol=tol, max_nodes=max_nodes)
     if solution.status != 0:
         raise RatingConvergenceError(f"common-wall BVP did not converge: {solution.message}")
 
     temperatures = np.vstack([layer.T_of_H(solution.y[i]) for i, layer in enumerate(layers)])
-    wall = hA @ temperatures / hA.sum()
+    conductance_nodes = conductance_at(solution.x)
+    wall = conductance_nodes @ temperatures / conductance_nodes.sum(axis=0)
     return CommonWallResult(
         x=solution.x,
         H=solution.y,
@@ -165,6 +209,7 @@ def solve_common_wall(
         T_wall=wall,
         hA_W_K=tuple(layer.hA_W_K for layer in layers),
         is_hot=tuple(layer.is_hot for layer in layers),
+        hA_nodes=conductance_nodes,
     )
 
 
@@ -213,15 +258,14 @@ def wall_mediated_UA_W_K(result: CommonWallResult) -> float:
 
     which for two streams is exactly 1/(1/(hA)_h + 1/(hA)_c).
     """
-    hA = np.asarray(result.hA_W_K)
+    hA = (
+        np.asarray(result.hA_nodes)
+        if result.hA_nodes is not None
+        else np.tile(np.asarray(result.hA_W_K)[:, None], (1, result.x.size))
+    )
     hot = np.asarray(result.is_hot)
-    hA_hot = float(hA[hot].sum())
-    hA_cold = float(hA[~hot].sum())
-    hA_all = float(hA.sum())
-    # Mesh sum of the (uniform) per-node conductance: the trapezoidal integral
-    # over the normalised mesh equals the constant node value.
-    node_value = hA_hot * hA_cold / hA_all
-    return float(np.trapezoid(np.full(result.x.size, node_value), result.x))
+    node_value = hA[hot].sum(axis=0) * hA[~hot].sum(axis=0) / hA.sum(axis=0)
+    return float(np.trapezoid(node_value, result.x))
 
 
 class MultiStreamR1:
@@ -321,26 +365,12 @@ class MultiStreamR1:
         is_hot = port in _HOT_PORTS
         # Farthest opposite-stream inlet temperature sets the T(H) table span.
         T_far = cold_T_min if is_hot else hot_T_max
-        H_in = state.molar_flow * state.enthalpy
-        H_far = (
-            state.molar_flow * thermo.flash_pt(state.composition, T_far, state.P, state.molar_flow).enthalpy
-        )
-        span = H_far - H_in
-        floor = 1e-6 * max(abs(H_in), 1.0)
-        if abs(span) < floor:  # keep the table strictly increasing for PCHIP
-            direction = math.copysign(1.0, span) if span != 0.0 else (-1.0 if is_hot else 1.0)
-            H_far = H_in + direction * floor
-        lo, hi = (H_in, H_far) if H_in <= H_far else (H_far, H_in)
-        flows = np.linspace(lo, hi, TABLE_POINTS)
-        temperatures = [
-            thermo.flash_ph(state.composition, state.P, float(H) / state.molar_flow, state.molar_flow).T
-            for H in flows
-        ]
+        T_of_H, H_in, H_far = build_T_of_H_table(state, T_far, thermo)
         return StreamLayer(
             hA_W_K=hA_value,
             H_in_W=H_in,
             H_far_W=H_far,
-            T_of_H=PchipInterpolator(flows, np.asarray(temperatures)),
+            T_of_H=T_of_H,
             is_hot=is_hot,
         )
 
