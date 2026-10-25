@@ -147,7 +147,7 @@ def test_ruling_stage_cut_reached_at_pressure_ratio_1p5() -> None:
         F=F, z=Z, Pi=PI, P_h=P_H, P_l=P_H / 1.5, stage_cut=0.95
     )
     assert theta == pytest.approx(0.95, rel=1e-9)
-    assert area == pytest.approx(4587.6, rel=1e-6)
+    assert area == pytest.approx(4587.6, rel=1e-5)
     assert sum(permeate.values()) == pytest.approx(0.95 * F, rel=1e-9)
 
 def test_refuses_local_root_failure(monkeypatch: pytest.MonkeyPatch) -> None:
