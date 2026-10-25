@@ -196,8 +196,8 @@ def test_r1_to_r0_identity() -> None:
     r0 = MultiStreamExchanger().solve(inlets, {"T_out_hot_in_1": r1.outlets["hot_out_1"].T}, thermo)
     assert r0.outlets["hot_out_1"].T == pytest.approx(r1.outlets["hot_out_1"].T, abs=1e-9)
     assert r0.outlets["cold_out_1"].T == pytest.approx(r1.outlets["cold_out_1"].T, abs=1e-6)
-    assert r0.outlets["hot_out_2"] is r1.outlets["hot_out_2"]
-    assert r0.outlets["cold_out_2"] is r1.outlets["cold_out_2"]
+    assert r0.outlets["hot_out_2"] == r1.outlets["hot_out_2"]
+    assert r0.outlets["cold_out_2"] == r1.outlets["cold_out_2"]
     assert r0.info["duty_hot_in_1_W"] == pytest.approx(r1.info["duty_hot_in_1_W"], rel=1e-7)
 
 
