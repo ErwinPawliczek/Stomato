@@ -2,7 +2,7 @@
 
 Family: **column** · P&ID symbol: `T`
 
-Rigour ladder: R0 provisional, R2 planned, R3 planned
+Rigour ladder: R0 provisional, R2 provisional, R3 planned
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned, R3 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.column_shortcut.absorber:Absorber` | Kremser stage count (the kremser correlation plugin exists in sizing); two-feed split lets lean-solvent components strip |
-| R2 | planned | — | MESH zero-tear — today via the `column` row's absorber configuration |
+| R2 | provisional | `ngdesign.units.column_shortcut.absorber_r2:AbsorberR2` | zero-tear MESH via the column API (inside-out + NS fallback); duty_W = boundary energy residual |
 | R3 | planned | — | rate-based stages |
 
 ### R0 parameters
@@ -34,6 +34,30 @@ properties:
     type: object
 required:
 - N
+type: object
+```
+
+### R2 parameters
+
+```yaml
+additionalProperties: false
+properties:
+  n_stages:
+    description: equilibrium stages (top = 1)
+    minimum: 2
+    type: integer
+  pressure_profile:
+    description: stage pressures, Pa abs (scalar = uniform; list = per stage, top
+      to bottom); default gas_in.P
+    oneOf:
+    - exclusiveMinimum: 0
+      type: number
+    - items:
+        exclusiveMinimum: 0
+        type: number
+      type: array
+required:
+- n_stages
 type: object
 ```
 
@@ -56,4 +80,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-E 3
 
-> the amine-specific rows live in the treating family; this row is the generic solvent absorber.
+> the amine-specific rows live in the treating family; this row is the generic solvent absorber. R2 V1 gap — provisional without a case (searched data/validation/ and data/validation_units/column/ for absorber cases; the only absorber V1 case on main is R0's V1-kremser-absorber-seader53, whose printed fractions-not-absorbed are anchored to Example 5.3's 97.5 F chart-estimated K-values carried as Kremser k_overrides — a different thermodynamic basis from the package K-values R2 runs on — so the case is not transferable without re-deriving anchors, which the V1 conventions forbid). R2 is covered by closed-form identity and equilibrium-pair tests.
