@@ -176,9 +176,7 @@ class DoublePipeR1:
         hot, cold = inlets["hot_in"], inlets["cold_in"]
         for side, state in (("hot", hot), ("cold", cold)):
             if state.mass_flow <= 0.0:
-                raise RatingError(
-                    f"R1 rating needs both streams flowing: {side} side has zero flow"
-                )
+                raise RatingError(f"R1 rating needs both streams flowing: {side} side has zero flow")
         kind_h = _side_kind(hot, "hot")
         kind_c = _side_kind(cold, "cold")
         inner_hot = geom.inner_side == "hot"
@@ -222,7 +220,12 @@ class DoublePipeR1:
                 thermo, hot.composition, (hot.T + hot_out.T) / 2.0, (hot.P + P_h_out) / 2.0, kind_h, "hot"
             )
             film_cm = _side_film(
-                thermo, cold.composition, (cold.T + cold_out.T) / 2.0, (cold.P + P_c_out) / 2.0, kind_c, "cold"
+                thermo,
+                cold.composition,
+                (cold.T + cold_out.T) / 2.0,
+                (cold.P + P_c_out) / 2.0,
+                kind_c,
+                "cold",
             )
             if inner_hot:
                 d_i = duct_h(hot.mass_flow, a_inner, dh_inner, film_hm, geom.roughness_m)

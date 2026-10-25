@@ -95,9 +95,12 @@ class DoublePipeExchanger(_TwoStreamExchanger):
                 "hot_T_out": 400.0,
                 "dP_hot": 1.0e4,
                 "dP_cold": 1.0e4,
-                "inner_ID_m": 0.0266,
-                "inner_OD_m": 0.0334,
-                "outer_ID_m": 0.0525,
+                # Feasible for the gas feeds: the spec's 1-inch geometry
+                # (0.0266/0.0334/0.0525) runs the N2 example at ~750 m/s and
+                # a ~60 MPa drop - R1 refuses it (see double_pipe_r1).
+                "inner_ID_m": 0.10226,
+                "inner_OD_m": 0.1143,
+                "outer_ID_m": 0.15405,
                 "length_m": 60.0,
                 "inner_side": "hot",
             },

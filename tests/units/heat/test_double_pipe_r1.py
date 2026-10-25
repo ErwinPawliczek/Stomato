@@ -68,8 +68,7 @@ def _inlets(thermo: Thermo, **over: Any) -> dict[str, StreamState]:
     feeds, _ = DoublePipeR1.example_case()
     feeds = {port: {**f, **over.get(port, {})} for port, f in feeds.items()}
     return {
-        port: thermo.flash_pt(f["composition"], f["T"], f["P"], f["molar_flow"])
-        for port, f in feeds.items()
+        port: thermo.flash_pt(f["composition"], f["T"], f["P"], f["molar_flow"]) for port, f in feeds.items()
     }
 
 
