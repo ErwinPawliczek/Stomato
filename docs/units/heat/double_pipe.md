@@ -2,7 +2,7 @@
 
 Family: **heat** · P&ID symbol: `E`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.heat.exchangers:DoublePipeExchanger` | exactly one of duty_W / hot_T_out / cold_T_out; min-approach duty bisection, pinch check and LMTD/UA reported |
-| R1 | planned | — | rating |
+| R1 | provisional | `ngdesign.units.heat.double_pipe_r1:DoublePipeR1` | rating (Gnielinski tube and annulus, counterflow e-NTU on enthalpies) |
 
 ### R0 parameters
 
@@ -45,6 +45,49 @@ properties:
 type: object
 ```
 
+### R1 parameters
+
+```yaml
+properties:
+  R_f_inner_m2K_W:
+    description: inside fouling, m2 K/W, default 0
+    type: number
+  R_f_outer_m2K_W:
+    description: outside fouling, m2 K/W, default 0
+    type: number
+  inner_ID_m:
+    description: inner pipe inside diameter, m
+    type: number
+  inner_OD_m:
+    description: inner pipe outside diameter, m
+    type: number
+  inner_side:
+    description: stream in the inner pipe
+    enum:
+    - hot
+    - cold
+    type: string
+  k_wall_W_mK:
+    description: wall conductivity, W/(m K), default 45
+    type: number
+  length_m:
+    description: total effective exchange length, m
+    type: number
+  outer_ID_m:
+    description: outer pipe inside diameter, m
+    type: number
+  roughness_m:
+    description: absolute roughness, m, default 4.5e-5
+    type: number
+required:
+- inner_ID_m
+- inner_OD_m
+- outer_ID_m
+- length_m
+- inner_side
+type: object
+```
+
 ## V1 worked cases
 
 | case | level | quantity | expected | measured | tolerance | result |
@@ -59,4 +102,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-C 5
 
-> V2082 runs Kern Example 6.1's printed inputs (9,820 lb/h benzene, 6,330 lb/h toluene, 160 -> 100 F); measured duty 44,968 W (-8.1%) and benzene outlet +0.93 K are assessed against the book's chart cp values, not widened away.
+> V2082 runs Kern Example 6.1's printed inputs (9,820 lb/h benzene, 6,330 lb/h toluene, 160 -> 100 F); measured duty 44,968 W (-8.1%) and benzene outlet +0.93 K are assessed against the book's chart cp values, not widened away. R1 V1 gap: Kern 6.1's printed film coefficients and pressure drops (Sieder-Tate chart basis) would need a primary-text transcription; none is verified here, so no R1 V1 case is recorded - the closed-form correlation tests and the R0-reduction identity carry the R1 verification.
