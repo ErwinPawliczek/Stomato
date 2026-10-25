@@ -25,7 +25,8 @@ from typing import Any
 import pytest
 
 from ngdesign.contracts import PhaseKind, StreamState, UnitResult
-from ngdesign.contracts.plugins import PhaseProps, PropertyDerivatives, SaturationPoint, Thermo
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
 from ngdesign.units.separation.scrubber_r1 import (
     ScrubberR1,
     ScrubberR1SpecError,
