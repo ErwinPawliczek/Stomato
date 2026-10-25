@@ -373,10 +373,10 @@
       adapter: ngdesign.units.heat.cooling_tower_r1:CoolingTowerR1
       params:
         type: object
-        required: [characteristic_C, characteristic_n]
         properties:
-          characteristic_C: {type: number, exclusiveMinimum: 0, description: 'tower characteristic coefficient C in KaV/L = C (L/G)^-n'}
-          characteristic_n: {type: number, description: 'tower characteristic exponent n, >= 0'}
+          characteristic_C: {type: number, exclusiveMinimum: 0, description: 'tower characteristic coefficient C in KaV/L = C (L/G)^-n (solution mode, with characteristic_n)'}
+          characteristic_n: {type: number, description: 'tower characteristic exponent n, >= 0 (solution mode, with characteristic_C)'}
+          approach_K: {type: number, exclusiveMinimum: 0, description: 'rating mode: report KaV/L at this approach (when no characteristic params are given; refused together with them)'}
           cycles_of_concentration: {type: number, minimum: 1, description: 'cycles of concentration, >= 1 (default 3)'}
       note: >-
         Merkel number by 4-point Chebyshev (CTI ATC-105) against KaV/L = C

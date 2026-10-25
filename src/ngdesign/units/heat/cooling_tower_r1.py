@@ -224,12 +224,19 @@ def water_specific_heat(thermo: Thermo, T_in: float, T_out: float, P_water: floa
 class CoolingTowerR1:
     """Cooling tower R1: Merkel number against the tower characteristic.
 
-    The WATER OUTLET is solved from r(T_out) = KaV/L_Chebyshev(T_out) -
+    Two modes. SOLUTION mode (characteristic_C and characteristic_n given):
+    the WATER OUTLET is solved from r(T_out) = KaV/L_Chebyshev(T_out) -
     C (L/G)^-n by brentq on (T_wb + 1e-6, T_in - 1e-6); the approach is then
-    T_out - T_wb and the R0 adapter closes the balance at that approach, so
-    every outlet, the energy closure and the blowdown/makeup split are R0's
-    by construction (the identity: R1 equals R0 run at the solved approach,
-    bit for bit). L and G are MASS flows: water and dry air, kg/s.
+    T_out - T_wb. RATING mode (approach_K alone): the approach is given and
+    the attained Merkel number is reported at it -- the path the locked
+    per-row balance test reaches through the LevelDispatch, whose inherited
+    example_case is R0's (read-only for this spec). Both delegate to the R0
+    adapter (:class:`ngdesign.units.heat.cooling_tower.CoolingTower`) at the
+    approach, so every outlet, the energy closure and the blowdown/makeup
+    split are R0's by construction (solution mode: R1 equals R0 run at the
+    solved approach, bit for bit). L and G are MASS flows: water and dry
+    air, kg/s. Giving the characteristic params AND approach_K is a typed
+    refusal.
     """
 
     inlet_ports = ("water_in", "air_in")
@@ -249,29 +256,45 @@ class CoolingTowerR1:
             raise ValueError("cooling tower needs an air stream with positive flow")
 
         characteristic_C = params.get("characteristic_C")
-        if characteristic_C is None:
-            raise CoolingTowerSpecError(
-                "cooling tower R1: characteristic_C is required (C in KaV/L = C (L/G)^-n)"
-            )
-        characteristic_C = float(characteristic_C)
-        if characteristic_C <= 0.0:
-            raise CoolingTowerSpecError(f"cooling tower R1: characteristic_C {characteristic_C} must be > 0")
         characteristic_n = params.get("characteristic_n")
-        if characteristic_n is None:
+        given_approach = params.get("approach_K")
+        if (characteristic_C is None) != (characteristic_n is None):
             raise CoolingTowerSpecError(
-                "cooling tower R1: characteristic_n is required (n in KaV/L = C (L/G)^-n)"
+                "cooling tower R1: characteristic_C and characteristic_n are given together "
+                "or not at all (rating mode takes approach_K alone)"
             )
-        characteristic_n = float(characteristic_n)
-        if characteristic_n < 0.0:
-            raise CoolingTowerSpecError(f"cooling tower R1: characteristic_n {characteristic_n} must be >= 0")
-        if "approach_K" in params:
+        if characteristic_C is not None and given_approach is not None:
             raise CoolingTowerSpecError(
                 "cooling tower R1: approach_K is solved at R1; give characteristic_C "
-                "and characteristic_n instead"
+                "and characteristic_n, or rate at a given approach_K without them"
             )
         cycles = params.get("cycles_of_concentration")
         if cycles is not None and float(cycles) < 1.0:
             raise ValueError(f"cooling tower: cycles_of_concentration {cycles} must be >= 1")
+        if characteristic_C is None:
+            # Rating mode: the approach is GIVEN and the Merkel number is
+            # reported at it. This is what the locked per-row balance test
+            # reaches through the LevelDispatch: the dispatch subclasses the
+            # default (R0) adapter, so example_case() is R0's -- whose params
+            # carry approach_K -- and model: R1 lands here. R0's file is
+            # read-only for this spec, so R1 accepts its example params
+            # instead of the other way round.
+            if given_approach is None:
+                raise CoolingTowerSpecError(
+                    "cooling tower R1: give characteristic_C and characteristic_n to solve "
+                    "the water outlet, or approach_K to rate the tower at a given approach"
+                )
+            given_approach = float(given_approach)
+            if given_approach <= 0.0:
+                raise CoolingTowerSpecError(f"cooling tower R1: approach_K {given_approach} must be > 0")
+            T_wb0 = wet_bulb(thermo, air)
+            return self._close(inlets, T_wb0 + given_approach, given_approach, cycles, thermo, None)
+        characteristic_C = float(characteristic_C)
+        if characteristic_C <= 0.0:
+            raise CoolingTowerSpecError(f"cooling tower R1: characteristic_C {characteristic_C} must be > 0")
+        characteristic_n = float(characteristic_n)
+        if characteristic_n < 0.0:
+            raise CoolingTowerSpecError(f"cooling tower R1: characteristic_n {characteristic_n} must be >= 0")
 
         y1 = air.composition.get("H2O", 0.0)
         dry = {cid: x for cid, x in air.composition.items() if cid != "H2O"}
@@ -363,24 +386,53 @@ class CoolingTowerR1:
                 f"({lo:.4f}, {hi:.4f}) K or did not converge: {exc}"
             ) from exc
 
-        approach = T_out - T_wb
+        return self._close(inlets, T_out, T_out - T_wb, cycles, thermo, characteristic)
+
+    def _close(
+        self,
+        inlets: dict[str, StreamState],
+        T_out: float,
+        approach: float,
+        cycles: Any,
+        thermo: Thermo,
+        characteristic: float | None,
+    ) -> UnitResult:
+        """Delegate to R0 at the approach and assemble the R1 info block.
+
+        Shared by both modes: the characteristic mode arrives with the
+        brentq-solved water outlet, rating mode with T_wb + approach_K. The
+        outlets, duty and blowdown/makeup split are R0's by construction.
+        """
+        water = inlets["water_in"]
+        air = inlets["air_in"]
+        dry = {cid: x for cid, x in air.composition.items() if cid != "H2O"}
+        y1 = air.composition.get("H2O", 0.0)
+        mw_dry = _mean_molar_mass(dry)
+        L = water.molar_flow * _mean_molar_mass({"H2O": 1.0}) / 1000.0
+        G = air.molar_flow * (1.0 - y1) * mw_dry / 1000.0
+        h_a_in = humid_air_enthalpy(thermo, dry, air.T, air.P, y1)
+
+        def h_s(T: float) -> float:
+            return saturated_air_enthalpy(thermo, dry, T, air.P)
+
         r0_params: dict[str, Any] = {"approach_K": approach}
         if cycles is not None:
             r0_params["cycles_of_concentration"] = float(cycles)
         result = CoolingTower().solve(inlets, r0_params, thermo)
 
         c_pw = water_specific_heat(thermo, water.T, T_out, water.P)
-        merkel = merkel_number_chebyshev(water.T, T_out, L_over_G, c_pw, h_s, h_a_in)
+        merkel = merkel_number_chebyshev(water.T, T_out, L / G, c_pw, h_s, h_a_in)
         info = dict(result.info)
         info.update(
             {
                 "merkel_KaV_L": merkel,
-                "characteristic_KaV_L": characteristic,
-                "L_over_G": L_over_G,
+                "L_over_G": L / G,
                 "range_K": water.T - T_out,
                 "approach_K": approach,
             }
         )
+        if characteristic is not None:
+            info["characteristic_KaV_L"] = characteristic
         return UnitResult(
             outlets=result.outlets,
             duty_W=result.duty_W,

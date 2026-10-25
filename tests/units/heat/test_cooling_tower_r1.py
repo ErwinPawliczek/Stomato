@@ -215,6 +215,34 @@ def test_shifted_h_s_matches_the_hyland_wexler_closed_form() -> None:
         assert rel < 0.01, f"{T} K: package {h_pkg:.4f} vs closed form {h_ref:.4f} ({rel:.3%})"
 
 
+def test_rates_at_a_given_approach() -> None:
+    """Rating mode: R0's example params (approach_K alone) report the Merkel number.
+
+    The path the locked per-row balance test reaches through the
+    LevelDispatch: R0-inherited example_case, model R1. The outlets are R0's
+    at the given approach, the Merkel number is reported, and no
+    characteristic is claimed.
+    """
+    thermo = _thermo()
+    feeds = _r1_feeds(thermo)
+    result = CoolingTowerR1().solve(feeds, {"approach_K": 5.0, "cycles_of_concentration": 3.0}, thermo)
+    r0 = CoolingTower().solve(feeds, {"approach_K": 5.0, "cycles_of_concentration": 3.0}, thermo)
+    for port in ("water_out", "air_out"):
+        assert result.outlets[port].T == r0.outlets[port].T
+        assert result.outlets[port].molar_flow == r0.outlets[port].molar_flow
+    assert result.info["approach_K"] == 5.0
+    assert 0.0 < result.info["merkel_KaV_L"] < math.inf
+    assert "characteristic_KaV_L" not in result.info
+
+
+def test_refuses_characteristic_params_alone() -> None:
+    """characteristic_C without characteristic_n (or the reverse) is refused."""
+    thermo = _thermo()
+    feeds = _r1_feeds(thermo)
+    with pytest.raises(CoolingTowerSpecError, match="together"):
+        CoolingTowerR1().solve(feeds, {"characteristic_C": 1.0}, thermo)
+
+
 def test_refuses_nonpositive_characteristic_C() -> None:
     thermo = _thermo()
     feeds = _r1_feeds(thermo)
