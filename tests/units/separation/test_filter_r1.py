@@ -287,7 +287,7 @@ class TestRefusals:
 
     def test_no_cake_component_flows(self, thermo: Thermo) -> None:
         inlets = _inlets(thermo, {"composition": {"H2O": 1.0, "SiO2": 0.0}})
-        with pytest.raises((FilterSpecError, FilterR1SpecError), match="cake"):
+        with pytest.raises(FilterR1SpecError, match="cake_fractions"):
             FilterR1().solve(inlets, _default_params(cake_porosity=0.0), thermo)
 
     def test_viscosity_unavailable(self, thermo: Thermo) -> None:
@@ -299,5 +299,5 @@ class TestRefusals:
 
     def test_r0_spec_error_propagates(self, thermo: Thermo) -> None:
         inlets = _inlets(thermo)
-        with pytest.raises((FilterSpecError, FilterR1SpecError)):
+        with pytest.raises(FilterSpecError, match="not in the feed"):
             FilterR1().solve(inlets, _default_params(cake_fractions={"Nope": 1.0}), thermo)

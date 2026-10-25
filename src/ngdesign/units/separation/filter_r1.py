@@ -23,6 +23,10 @@ The adapter (:class:`FilterR1`) delegates the material split to the R0
 :class:`ngdesign.units.separation.filter.Filter`: first with the user's
 ``cake_fractions`` (the dry split), then with the moisture-adjusted
 fractions. The level reduces exactly to R0 at ``cake_porosity = 0``.
+
+A cake component sent only partly to the cake (fraction < 1) leaves its
+remainder in the filtrate untouched by the moisture move: ``f_m`` applies
+only to the non-cake components (spec step 4 of the algorithm).
 """
 
 from __future__ import annotations

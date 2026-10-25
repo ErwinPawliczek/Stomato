@@ -337,7 +337,23 @@
   pid_symbol: FLT
   references:
   - docs/unit-catalogue-plan.md §2 U-D 7
-  notes: roadmap.
+  notes: R1 V1 gap (PR 280) — provisional without a case. Searched the spec's
+    candidates and none prints a case for the batch constant-pressure Ruth
+    model with printed inputs only — Geankoplis 4th ed. sect. 14.2, Examples
+    14.2-1 and 14.2-2 evaluate alpha and Rm by regression on t-V data, so
+    there is no printed input/output pair to pin at the closed form, and
+    Example 14.2-4 folds the wet-cake moisture into Cs = rho*Cx/(1 - m*Cx)
+    with m = 2 kg wet cake per kg dry cake, a moisture model different from
+    R1's porosity-based cake, so reproducing its printed 6.66 m2 needs an
+    unprinted cake porosity; the FOSSEE open transcription of Geankoplis
+    ch. 14, whose regression prints differ from the book's graphical reads
+    (264.61 s vs the book's 269.7 s recovery time used in 14.2-3); and
+    McCabe, Smith and Harriott 7th ed., Mechanical Separations (fetched and
+    inspected), Example 30.2 being a least-squares regression of t-V data
+    for alpha and Rm and Example 30.3 a continuous rotary-drum design with
+    a compressible cake (alpha = alpha0/dP**0.26) and the moisture folded
+    into the slurry concentration. The level is covered by the closed-form
+    CF1-CF4 tests and the R0-reduction identity instead.
 
 - id: membrane
   name: Membrane (gas)
