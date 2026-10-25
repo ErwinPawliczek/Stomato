@@ -46,7 +46,7 @@ def C_iso_eq4(D: float, d: float, rho: float, mu: float, qm: float, taps: str) -
     else:  # D-D/2
         L1, L2p = 1.0, 0.47
     M2p = 2.0 * L2p / (1.0 - beta)
-    C = (
+    C: float = (
         0.5961
         + 0.0261 * beta**2
         - 0.216 * beta**8
