@@ -30,14 +30,20 @@ import math
 
 import pytest
 
+from ngdesign import registry
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.units.heat.cooling_tower import CoolingTower
 from ngdesign.units.heat.cooling_tower_r1 import (
     CHEBYSHEV_FRACTIONS,
+    CoolingTowerConvergenceError,
+    CoolingTowerSpecError,
+    CoolingTowerR1,
     merkel_number_chebyshev,
     operating_line,
     tower_characteristic,
 )
 
-P_ATM = 101325.0
+P_ATM = 1.01325e5
 
 # ASHRAE Fundamentals 2017 SI Ch. 1, eq. 6 (Hyland-Wexler, over liquid).
 _C8 = -5.8002206e3
@@ -92,3 +98,118 @@ def test_operating_line_touching_saturation_is_an_infinite_tower() -> None:
 def test_tower_characteristic() -> None:
     """KaV/L = C (L/G)^-n: 1.7 * 1.2^-0.6 = 1.52384282."""
     assert tower_characteristic(1.7, 0.6, 1.2) == pytest.approx(1.52384282, rel=1e-8)
+
+
+# --- Adapter (step 2) -----------------------------------------------------
+
+
+def _thermo() -> Thermo:
+    registry.discover()
+    impl: Thermo = registry.create("thermo", "pr")
+    return impl
+
+
+def _r1_feeds(thermo: Thermo) -> dict[str, object]:
+    """The R0 example feeds, flashed: water 313.15 K against humid 299.817 K air."""
+    feeds, _params = CoolingTower.example_case()
+    water = feeds["water_in"]
+    air = feeds["air_in"]
+    return {
+        "water_in": thermo.flash_pt(water["composition"], water["T"], water["P"], water["molar_flow"]),
+        "air_in": thermo.flash_pt(air["composition"], air["T"], air["P"], air["molar_flow"]),
+    }
+
+
+def test_r1_identity_reduces_to_r0() -> None:
+    """R1 equals R0 run at R1's solved approach, bit for bit, on the example feeds."""
+    thermo = _thermo()
+    feeds = _r1_feeds(thermo)
+    result = CoolingTowerR1().solve(
+        feeds,
+        {"characteristic_C": 1.7, "characteristic_n": 0.6, "cycles_of_concentration": 3.0},
+        thermo,
+    )
+    approach = result.info["approach_K"]
+    assert 1.0 <= approach <= 15.0
+
+    r0 = CoolingTower().solve(feeds, {"approach_K": approach, "cycles_of_concentration": 3.0}, thermo)
+    for port in ("water_out", "air_out"):
+        a, b = result.outlets[port], r0.outlets[port]
+        assert a.T == b.T
+        assert a.P == b.P
+        assert a.molar_flow == b.molar_flow
+        assert a.enthalpy == b.enthalpy
+        assert a.composition == b.composition
+
+
+def test_larger_C_gives_a_strictly_smaller_water_outlet() -> None:
+    """Monotonicity: a larger tower characteristic cools further (C in 1.0, 1.7, 2.5)."""
+    thermo = _thermo()
+    feeds = _r1_feeds(thermo)
+    T_out = [
+        CoolingTowerR1()
+        .solve(feeds, {"characteristic_C": C, "characteristic_n": 0.6}, thermo)
+        .outlets["water_out"]
+        .T
+        for C in (1.0, 1.7, 2.5)
+    ]
+    assert T_out[0] > T_out[1] > T_out[2]
+
+
+def test_refuses_nonpositive_characteristic_C() -> None:
+    thermo = _thermo()
+    feeds = _r1_feeds(thermo)
+    with pytest.raises(CoolingTowerSpecError, match="characteristic_C"):
+        CoolingTowerR1().solve(feeds, {"characteristic_C": 0.0, "characteristic_n": 0.6}, thermo)
+
+
+def test_refuses_negative_characteristic_n() -> None:
+    thermo = _thermo()
+    feeds = _r1_feeds(thermo)
+    with pytest.raises(CoolingTowerSpecError, match="characteristic_n"):
+        CoolingTowerR1().solve(feeds, {"characteristic_C": 1.7, "characteristic_n": -0.1}, thermo)
+
+
+def test_refuses_approach_K_at_r1() -> None:
+    thermo = _thermo()
+    feeds = _r1_feeds(thermo)
+    with pytest.raises(CoolingTowerSpecError, match="approach_K is solved at R1"):
+        CoolingTowerR1().solve(
+            feeds, {"characteristic_C": 1.7, "characteristic_n": 0.6, "approach_K": 5.0}, thermo
+        )
+
+
+def test_refuses_water_at_or_below_the_wet_bulb() -> None:
+    """A saturated inlet air returns the dry bulb as its wet bulb; water below it is refused."""
+    thermo = _thermo()
+    y_sat = thermo.pure_psat("H2O", 305.0) / P_ATM
+    feeds = {
+        "water_in": thermo.flash_pt({"H2O": 1.0}, 300.0, P_ATM, 100.0),
+        "air_in": thermo.flash_pt({"N2": 1.0 - y_sat, "H2O": y_sat}, 305.0, P_ATM, 3000.0),
+    }
+    with pytest.raises(CoolingTowerSpecError, match="wet bulb"):
+        CoolingTowerR1().solve(feeds, {"characteristic_C": 1.7, "characteristic_n": 0.6}, thermo)
+
+
+def test_refuses_zero_flow_water() -> None:
+    thermo = _thermo()
+    feeds = _r1_feeds(thermo)
+    feeds["water_in"] = thermo.flash_pt({"H2O": 1.0}, 313.15, P_ATM, 0.0)
+    with pytest.raises(ValueError, match="water"):
+        CoolingTowerR1().solve(feeds, {"characteristic_C": 1.7, "characteristic_n": 0.6}, thermo)
+
+
+def test_refuses_zero_flow_air() -> None:
+    thermo = _thermo()
+    feeds = _r1_feeds(thermo)
+    feeds["air_in"] = thermo.flash_pt({"N2": 0.98, "H2O": 0.02}, 299.817, P_ATM, 0.0)
+    with pytest.raises(ValueError, match="air"):
+        CoolingTowerR1().solve(feeds, {"characteristic_C": 1.7, "characteristic_n": 0.6}, thermo)
+
+
+def test_refuses_when_no_merkel_root_exists() -> None:
+    """A characteristic no real tower can meet leaves r < 0 over the whole bracket."""
+    thermo = _thermo()
+    feeds = _r1_feeds(thermo)
+    with pytest.raises(CoolingTowerConvergenceError, match="Merkel"):
+        CoolingTowerR1().solve(feeds, {"characteristic_C": 1.0e6, "characteristic_n": 0.0}, thermo)
