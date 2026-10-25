@@ -32,7 +32,9 @@ def test_balances(thermo: Thermo, name: str) -> None:
         pytest.skip("no unit plugins yet")
     row_id, level = name.split("/")
     unit = registry.create("unit", row_id)  # the per-row LevelDispatch entry
-    feeds, params = unit.example_case()
+    # Each level solves on its OWN example case: a higher level's params differ
+    # from the default level's, and level adapters refuse keys outside their schema.
+    feeds, params = type(unit)._adapters[level].example_case()
     assert set(feeds) == set(unit.inlet_ports), f"{name}: example_case must feed every inlet port"
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
     res = unit.solve(inlets, {**params, "model": level}, thermo)
