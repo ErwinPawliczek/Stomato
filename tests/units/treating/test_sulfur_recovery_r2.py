@@ -14,13 +14,22 @@ freedom, so the Gibbs result and the extent-space solve must agree to round-off.
 from __future__ import annotations
 
 import math
+from typing import Any
 
 import pytest
 
 from ngdesign.contracts.reactions import ReactionSet
+from ngdesign.data.formation import atomic_composition
+from ngdesign.registry import create
 from ngdesign.units._physics.gibbs import GibbsError
 from ngdesign.units._physics.kinetics import apply_extents, ln_keq
-from ngdesign.units.treating.sulfur_recovery_r2 import _converter_equilibrium
+from ngdesign.units.treating.sulfur_recovery import SulfurRecovery, SulfurRecoveryError
+from ngdesign.units.treating.sulfur_recovery_r2 import (
+    SulfurRecoveryR2,
+    _converter_equilibrium,
+)
+
+THERMO = create("thermo", "pr")
 
 P = 1.3e5
 GAS = {"H2S": 2.0, "SO2": 1.0, "H2O": 4.0, "N2": 10.0}
@@ -135,15 +144,6 @@ def test_converter_equilibrium_is_deterministic() -> None:
 # ---------------------------------------------------------------------------
 # Step 2: the SulfurRecoveryR2 adapter.
 # ---------------------------------------------------------------------------
-
-from typing import Any
-
-from ngdesign.registry import create
-from ngdesign.data.formation import atomic_composition
-from ngdesign.units.treating.sulfur_recovery import SulfurRecovery
-from ngdesign.units.treating.sulfur_recovery_r2 import SulfurRecoveryR2
-
-THERMO = create("thermo", "pr")
 
 
 def _r2_setup() -> tuple[Any, dict[str, Any]]:
