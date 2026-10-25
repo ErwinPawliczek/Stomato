@@ -52,9 +52,7 @@ class FilterR1SpecError(ValueError):
     """The filter R1 spec is bad; the message names the parameter."""
 
 
-def ruth_constants(
-    mu: float, alpha: float, c: float, dP: float, Rm: float
-) -> tuple[float, float]:
+def ruth_constants(mu: float, alpha: float, c: float, dP: float, Rm: float) -> tuple[float, float]:
     """The Ruth coefficients (F1): ``(a, b)`` in s/m^2 and s/m."""
     a = mu * alpha * c / (2.0 * dP)
     b = mu * Rm / dP
@@ -99,9 +97,7 @@ def concentration(mdot_s: float, Q_f: float) -> float:
     return mdot_s / Q_f
 
 
-def cake_thickness(
-    c: float, V_cycle: float, area: float, rho_s: float, porosity: float
-) -> float:
+def cake_thickness(c: float, V_cycle: float, area: float, rho_s: float, porosity: float) -> float:
     """F4: cake thickness (m), ``L = c*V_cycle/(A*rho_s*(1 - eps))``.
 
     ``c`` in kg/m3, ``V_cycle`` in m3, ``area`` in m2, ``rho_s`` in kg/m3,
@@ -180,9 +176,7 @@ class FilterR1:
 
         t_f = params.get("t_filtration_s")
         if t_f is None or float(t_f) <= 0.0:
-            raise FilterR1SpecError(
-                f"t_filtration_s {t_f} is required and must be > 0 (s per cycle)"
-            )
+            raise FilterR1SpecError(f"t_filtration_s {t_f} is required and must be > 0 (s per cycle)")
         t_f_f = float(t_f)
 
         t_down = params.get("t_down_s", 0.0)
@@ -200,9 +194,7 @@ class FilterR1:
 
         porosity = float(params.get("cake_porosity", 0.0))
         if not 0.0 <= porosity < 1.0:
-            raise FilterR1SpecError(
-                f"cake_porosity {porosity} must be in [0, 1) (cake void fraction)"
-            )
+            raise FilterR1SpecError(f"cake_porosity {porosity} must be in [0, 1) (cake void fraction)")
 
         area = params.get("area_m2")
         if area is not None and float(area) <= 0.0:
@@ -220,9 +212,7 @@ class FilterR1:
         # Dry split (R0): the cake's mass flow is the dry-solids rate, because
         # only cake components enter it. Unknown cake components are refused
         # by R0 itself (spec: delegate, don't duplicate).
-        r0 = Filter().solve(
-            inlets, {"cake_fractions": dry_fractions, "dP": dP_f}, thermo
-        )
+        r0 = Filter().solve(inlets, {"cake_fractions": dry_fractions, "dP": dP_f}, thermo)
         mdot_s = r0.outlets["cake"].mass_flow
         if mdot_s <= 0.0:
             raise FilterR1SpecError(
@@ -251,9 +241,7 @@ class FilterR1:
         n_filtrate_r0 = r0.outlets["filtrate"].molar_flow
         f_m = n_ret / n_filtrate_r0
         if f_m > 1.0:
-            raise FilterR1SpecError(
-                f"moisture: the cake cannot hold the retained liquid, f_m = {f_m} > 1"
-            )
+            raise FilterR1SpecError(f"moisture: the cake cannot hold the retained liquid, f_m = {f_m} > 1")
 
         # R1 split: the user's cake_fractions for the cake components, the same
         # moisture fraction f_m for every other component (shared composition).
@@ -279,9 +267,7 @@ class FilterR1:
         }
         if area_f is not None:
             info["capacity_ratio"] = capacity_ratio(area_f, area_required)
-        return UnitResult(
-            outlets=r1.outlets, duty_W=r1.duty_W, power_W=r1.power_W, info=info
-        )
+        return UnitResult(outlets=r1.outlets, duty_W=r1.duty_W, power_W=r1.power_W, info=info)
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:

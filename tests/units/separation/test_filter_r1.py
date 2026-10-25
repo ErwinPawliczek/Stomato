@@ -27,7 +27,7 @@ rounding (the spec's 9-digit prints sit ~3e-9 relative away from them).
 from __future__ import annotations
 
 import math
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -144,9 +144,7 @@ class _NoViscosityThermo:
 
 def _strip(state: Any) -> Any:
     return state.model_copy(
-        update={
-            "phases": [p.model_copy(update={"viscosity": None}) for p in state.phases]
-        }
+        update={"phases": [p.model_copy(update={"viscosity": None}) for p in state.phases]}
     )
 
 
@@ -172,9 +170,7 @@ class TestIdentity:
         inlets = _inlets(thermo)
         params = _default_params(cake_porosity=0.0)
         params.pop("filtrate_viscosity_Pa_s")  # not needed with no moisture
-        r0 = Filter().solve(
-            inlets, {"cake_fractions": {"SiO2": 1.0}, "dP": 3.0e4}, thermo
-        )
+        r0 = Filter().solve(inlets, {"cake_fractions": {"SiO2": 1.0}, "dP": 3.0e4}, thermo)
         r1 = FilterR1().solve(inlets, params, thermo)
         assert r1.outlets["filtrate"] == r0.outlets["filtrate"]
         assert r1.outlets["cake"] == r0.outlets["cake"]
@@ -189,9 +185,7 @@ class TestMoisture:
 
     def test_cake_flows_f_m_and_balances(self, thermo: Thermo) -> None:
         inlets = _inlets(thermo)
-        r0 = Filter().solve(
-            inlets, {"cake_fractions": {"SiO2": 1.0}, "dP": 3.0e4}, thermo
-        )
+        r0 = Filter().solve(inlets, {"cake_fractions": {"SiO2": 1.0}, "dP": 3.0e4}, thermo)
         r1 = FilterR1().solve(inlets, _default_params(), thermo)
 
         # f_m recomputed from the R0 outlets' properties (F5 and step 3 of
@@ -209,13 +203,9 @@ class TestMoisture:
         assert r1.info["moisture_fraction"] == pytest.approx(f_m, rel=1e-12)
         cake1, filt1 = r1.outlets["cake"], r1.outlets["filtrate"]
         h2o_f0 = filt0.component_flows()["H2O"]
-        assert cake1.component_flows()["H2O"] == pytest.approx(
-            f_m * h2o_f0, rel=1e-12
-        )
+        assert cake1.component_flows()["H2O"] == pytest.approx(f_m * h2o_f0, rel=1e-12)
         # The solids are untouched by the moisture move.
-        assert cake1.component_flows()["SiO2"] == pytest.approx(
-            cake0.component_flows()["SiO2"], rel=1e-12
-        )
+        assert cake1.component_flows()["SiO2"] == pytest.approx(cake0.component_flows()["SiO2"], rel=1e-12)
 
         # Balances: moles at 1e-12, energy at 1e-8.
         n_in = inlets["inlet"].molar_flow
@@ -305,11 +295,9 @@ class TestRefusals:
         params = _default_params()
         del params["filtrate_viscosity_Pa_s"]
         with pytest.raises(FilterR1SpecError, match="filtrate_viscosity_Pa_s"):
-            FilterR1().solve(inlets, params, _NoViscosityThermo(thermo))
+            FilterR1().solve(inlets, params, cast(Thermo, _NoViscosityThermo(thermo)))
 
     def test_r0_spec_error_propagates(self, thermo: Thermo) -> None:
         inlets = _inlets(thermo)
         with pytest.raises((FilterSpecError, FilterR1SpecError)):
-            FilterR1().solve(
-                inlets, _default_params(cake_fractions={"Nope": 1.0}), thermo
-            )
+            FilterR1().solve(inlets, _default_params(cake_fractions={"Nope": 1.0}), thermo)
