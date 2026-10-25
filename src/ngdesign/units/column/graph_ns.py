@@ -48,6 +48,7 @@ from .inside_out import (
     _pa_return_terms,
     _pa_stage_flows,
     _Profile,
+    _stage_k_values,
     _StageFeed,
 )
 from .naphtali_sandholm import _NS_LM_TRIES
@@ -275,61 +276,13 @@ def _graph_liquid_profile(
     return out
 
 
-def _graph_stage_overall(
-    model: _GraphModel,
-    s: int,
-    x_s: dict[str, float],
-    y_s: dict[str, float],
-    l_flow: float,
-    v_flow: float,
-) -> dict[str, float]:
-    """Stage overall composition (the `_stage_overall_from_flows` algebra, graph-aware).
-
-    Same four sources in the same order - the stage's own liquid and vapour and
-    the flashed feed parts - with the stage's main-column side draws subtracted
-    from the total (a stripper draw is cascade liquid, already excluded here).
-    """
+def _graph_k_args(model: _GraphModel, s: int) -> tuple[_StageFeed, float]:
+    """The graph-aware `_stage_k_values` arguments for graph stage s (S0-1c
+    step 2): the padded feed part, and the main-column draw total - zero past
+    the main column, where a stripper draw is cascade liquid already excluded
+    from the section cascade."""
     col = model.col
-    part = model.feeds[s]
-    total = l_flow + v_flow + part.total - (col.draw_l[s] + col.draw_v[s] if s < col.n else 0.0)
-    if total <= _FLOW_FLOOR:
-        return col.feed_comp
-    acc: dict[str, float] = {}
-    for src_comp, src_flow in (
-        (x_s, l_flow),
-        (y_s, v_flow),
-        (part.x, part.l_flow),
-        (part.y, part.v_flow),
-    ):
-        for cid, frac in src_comp.items():
-            acc[cid] = acc.get(cid, 0.0) + frac * src_flow
-    return {cid: v / total for cid, v in acc.items() if v > 0.0} or col.feed_comp
-
-
-def _graph_stage_k(
-    model: _GraphModel,
-    tb: _ThermoBox,
-    s: int,
-    x_s: dict[str, float],
-    t_s: float,
-    l_flow: float,
-    v_flow: float,
-) -> dict[str, float] | None:
-    """The stage-K evaluation for a graph stage (the `_stage_k_values` chain).
-
-    Same candidate chain - flashed liquid x, flashed stage overall, feed
-    composition - at the stage's pressure; None when none is evaluable.
-    """
-    col = model.col
-    return tb.k_values(
-        [
-            _flash_ready(x_s, col.feed_comp),
-            _flash_ready(_graph_stage_overall(model, s, x_s, {}, l_flow, v_flow), col.feed_comp),
-            col.feed_comp,
-        ],
-        t_s,
-        col.pressures[s],
-    )
+    return model.feeds[s], ((col.draw_l[s] + col.draw_v[s]) if s < col.n else 0.0)
 
 
 def _graph_y_eq(k: dict[str, float], x_s: dict[str, float]) -> dict[str, float]:
@@ -397,8 +350,20 @@ def _graph_residual_vector(
         if k is None:
             if k_misses is not None:
                 k_misses[0] += 1
+            feed_part, draw_total = _graph_k_args(model, s)
             k = (
-                _graph_stage_k(model, tb, s, xs[s], ts[s], liquid[s], vs[s])
+                _stage_k_values(
+                    col,
+                    tb,
+                    s,
+                    xs[s],
+                    {},
+                    ts[s],
+                    liquid[s],
+                    vs[s],
+                    feed_part=feed_part,
+                    draw_total=draw_total,
+                )
                 or tb.k_estimate(_flash_ready(xs[s], col.feed_comp), ts[s], col.pressures[s])
                 or (k_fallbacks[s] if k_fallbacks is not None else None)
             )
@@ -863,7 +828,19 @@ def _graph_naphtali_sandholm(
         prof.ns_passes += 1
         k_fallbacks: list[dict[str, float]] = []
         for s in range(layout.n_graph):
-            k = _graph_stage_k(model, tb, s, prof.x[s], prof.T[s], prof.L[s], prof.V[s])
+            feed_part, draw_total = _graph_k_args(model, s)
+            k = _stage_k_values(
+                col,
+                tb,
+                s,
+                prof.x[s],
+                prof.y[s],
+                prof.T[s],
+                prof.L[s],
+                prof.V[s],
+                feed_part=feed_part,
+                draw_total=draw_total,
+            )
             if k is None:
                 k = tb.k_estimate(_flash_ready(prof.x[s], col.feed_comp), prof.T[s], col.pressures[s])
             if k is None:

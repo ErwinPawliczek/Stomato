@@ -779,16 +779,30 @@ def _fit_ln_kb(hist: tuple[tuple[float, float], ...], b_default: float) -> tuple
 
 
 def _stage_overall_from_flows(
-    col: _Column, j: int, x_j: dict[str, float], y_j: dict[str, float], l_flow: float, v_flow: float
+    col: _Column,
+    j: int,
+    x_j: dict[str, float],
+    y_j: dict[str, float],
+    l_flow: float,
+    v_flow: float,
+    feed_part: _StageFeed | None = None,
+    draw_total: float | None = None,
 ) -> dict[str, float]:
     """Overall composition sitting on stage j: flows-weighted liquid, vapour and feed.
 
     The one overall construction behind ``_stage_overall`` and the stage-K
     evaluation - every caller weights the SAME four sources in the SAME order,
     so the gate and the Newton linearisation hand the package one composition.
+
+    The graph caller (S0-1c step 2) hands ``feed_part``/``draw_total`` for
+    stages past the main column: a section stage's feed part comes from the
+    graph model's padded feed list and its main-column draws are zero (a
+    stripper draw is cascade liquid, already excluded there). ``None`` keeps
+    exactly the plain-column behaviour: the stage's own feed part and draws.
     """
-    part = col.feeds[j]
-    total = l_flow + v_flow + part.total - col.draw_l[j] - col.draw_v[j]
+    part = feed_part if feed_part is not None else col.feeds[j]
+    draws = (col.draw_l[j] + col.draw_v[j]) if draw_total is None else draw_total
+    total = l_flow + v_flow + part.total - draws
     if total <= _FLOW_FLOOR:
         return col.feed_comp
     acc: dict[str, float] = {}
@@ -817,6 +831,8 @@ def _stage_k_values(
     t_j: float,
     l_flow: float,
     v_flow: float,
+    feed_part: _StageFeed | None = None,
+    draw_total: float | None = None,
 ) -> dict[str, float] | None:
     """THE stage-K evaluation (P1-11 ruling on issue #153): one owner, one surface.
 
@@ -835,11 +851,19 @@ def _stage_k_values(
     K*x from the live K themselves). Returns None when the stage's equilibrium
     is not evaluable from any candidate (liquid x, stage overall, feed);
     callers apply their documented fallbacks.
+
+    The graph caller (S0-1c step 2) passes ``feed_part``/``draw_total`` for
+    stages past the main column (see ``_stage_overall_from_flows``); the
+    candidate chain, the fallbacks and the plain-column behaviour are
+    identical either way.
     """
     return tb.k_values(
         [
             _flash_ready(x_j, col.feed_comp),
-            _flash_ready(_stage_overall_from_flows(col, j, x_j, y_j, l_flow, v_flow), col.feed_comp),
+            _flash_ready(
+                _stage_overall_from_flows(col, j, x_j, y_j, l_flow, v_flow, feed_part, draw_total),
+                col.feed_comp,
+            ),
             col.feed_comp,
         ],
         t_j,
