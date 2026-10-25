@@ -1,4 +1,4 @@
-"""Closed-form and geometry-refusal tests for plate_exchanger R1, step 1 (spec).
+"""Identity, refusal and closed-form tests for plate_exchanger R1 (spec).
 
 The closed-form numbers are the spec's test table 1-4, hand-computed from the
 spec's equations with geometry P1 (0.5 mm amplitude, 3.7 mm wavelength, 45 deg,
@@ -25,6 +25,12 @@ Case 3: friction spot values f(500,45) = 1.06688451, f(500,60) = 2.3862954,
   f(2500,45) = 0.867587711, f(2500,60) = 1.94223808.
 Case 4: U with both films h = 13180.3884, t_p = 0.6 mm, k_p = 16:
   U = 1/(2/13180.3884 + 0.0006/16) = 5284.2784 W/m2K.
+
+The identity test (spec: R1 -> R0 on example_case) runs the R0 example feeds
+(water 433.15 K / 303.15 K at 1 MPa, 100/150 mol/s) with geometry P1 on
+``pr-peneloux`` (a volume-translated package that returns mu and k; plain
+``pr`` returns the same transport properties here, with the density ~836-846
+kg/m3 the spec notes instead of ~990).
 """
 
 from __future__ import annotations
@@ -33,10 +39,17 @@ from typing import Any
 
 import pytest
 
+from ngdesign import registry
+from ngdesign.contracts import StreamState
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.units._physics.heat_balance import TwoStreamSpec, two_stream
 from ngdesign.units.heat.plate_exchanger_r1 import (
+    PlateCorrelationRangeError,
+    PlateExchangerR1,
     PlateGeometryError,
     channel_Re,
     channel_velocity,
+    friction_kumar,
     friction_martin_vdi,
     nusselt_martin_vdi,
     overall_u,
@@ -128,6 +141,12 @@ def test_overall_u() -> None:
     assert u == pytest.approx(5284.2784, rel=1e-8)
 
 
+def test_kumar_switch_runs() -> None:
+    """The kumar switch routes friction and Nusselt to the book correlation."""
+    assert friction_kumar(1000.0, 45.0) > 0.0
+    assert friction_martin_vdi(1000.0, 45.0) != friction_kumar(1000.0, 45.0)
+
+
 def test_missing_param_refuses() -> None:
     with pytest.raises(PlateGeometryError, match="amplitude_m"):
         plate_geometry({k: v for k, v in GEOMETRY_P1.items() if k != "amplitude_m"})
@@ -151,3 +170,98 @@ def test_chevron_angle_out_of_range_refuses() -> None:
 def test_bad_correlation_refuses() -> None:
     with pytest.raises(PlateGeometryError, match="correlation"):
         plate_geometry({**GEOMETRY_P1, "correlation": "taborek"})
+
+
+def _thermo(pid: str) -> Thermo:
+    registry.discover()
+    impl: Thermo = registry.create("thermo", pid)
+    return impl
+
+
+def _inlets(thermo: Thermo, **over: Any) -> dict[str, StreamState]:
+    feeds, _ = PlateExchangerR1.example_case()
+    feeds = {port: {**f, **over.get(port, {})} for port, f in feeds.items()}
+    return {
+        port: thermo.flash_pt(f["composition"], f["T"], f["P"], f["molar_flow"]) for port, f in feeds.items()
+    }
+
+
+def _solve(thermo: Thermo, params: dict[str, Any], **feed_over: Any) -> Any:
+    return PlateExchangerR1().solve(_inlets(thermo, **feed_over), params, thermo)
+
+
+def test_example_case_solves_and_info_keys() -> None:
+    """The example case rates on the default package with the spec's info keys."""
+    thermo = _thermo("pr")
+    result = _solve(thermo, dict(GEOMETRY_P1))
+    for key in (
+        "duty_W",
+        "U_W_m2K",
+        "A_m2",
+        "UA_W_K",
+        "NTU",
+        "effectiveness",
+        "LMTD_K",
+        "h_hot_W_m2K",
+        "h_cold_W_m2K",
+        "Re_hot",
+        "Re_cold",
+        "dP_hot_Pa",
+        "dP_cold_Pa",
+        "correlation_in_range",
+    ):
+        assert key in result.info
+    assert float(result.info["correlation_in_range"]) == 1.0
+    assert float(result.info["duty_W"]) > 0.0
+    # R0 convention: the unit-level duty_W is the round-off residual.
+    assert result.duty_W == pytest.approx(0.0, abs=1e-6 * float(result.info["duty_W"]))
+
+
+def test_reduction_to_r0_identity() -> None:
+    """R0 replay of the R1 duty reproduces the R1 outlets to 1e-10 relative.
+
+    The R0 solve runs ``two_stream`` with ``TwoStreamSpec(duty_W=Q_R1)`` and
+    R1's per-side pressure drops on the same inlets (spec identity, on
+    ``pr-peneloux``).
+    """
+    thermo = _thermo("pr-peneloux")
+    result = _solve(thermo, dict(GEOMETRY_P1))
+    inlets = _inlets(thermo)
+    r0 = two_stream(
+        inlets["hot_in"],
+        inlets["cold_in"],
+        TwoStreamSpec(duty_W=float(result.info["duty_W"])),
+        thermo,
+        dP_hot=float(result.info["dP_hot_Pa"]),
+        dP_cold=float(result.info["dP_cold_Pa"]),
+    )
+    hot1, cold1 = result.outlets["hot_out"], result.outlets["cold_out"]
+    for a, b in (
+        (hot1.T, r0.hot_out.T),
+        (hot1.enthalpy, r0.hot_out.enthalpy),
+        (cold1.T, r0.cold_out.T),
+        (cold1.enthalpy, r0.cold_out.enthalpy),
+    ):
+        assert a == pytest.approx(b, rel=1e-10)
+
+
+def test_zero_flow_refuses() -> None:
+    thermo = _thermo("pr")
+    with pytest.raises(Exception, match="needs both streams flowing"):
+        _solve(thermo, dict(GEOMETRY_P1), hot_in={"molar_flow": 0.0})
+
+
+def test_temperature_cross_refuses() -> None:
+    thermo = _thermo("pr")
+    with pytest.raises(Exception, match="inlet temperatures"):
+        _solve(thermo, dict(GEOMETRY_P1), hot_in={"T": 293.15})
+
+
+def test_correlation_range_refuses() -> None:
+    """Re outside [200, 1e4] refuses unless allow_extrapolation; then flags 0."""
+    thermo = _thermo("pr")
+    # 5 mol/s hot water: Re far below 200 on the hot side.
+    with pytest.raises(PlateCorrelationRangeError, match="Re"):
+        _solve(thermo, dict(GEOMETRY_P1), hot_in={"molar_flow": 5.0})
+    result = _solve(thermo, {**GEOMETRY_P1, "allow_extrapolation": True}, hot_in={"molar_flow": 5.0})
+    assert float(result.info["correlation_in_range"]) == 0.0
