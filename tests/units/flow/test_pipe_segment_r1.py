@@ -145,3 +145,188 @@ def test_march_refuses_pressure_collapse() -> None:
     props = lambda P: (P * 0.016043 / (R_GAS * 300.0), 1.1e-5)  # noqa: E731
     with pytest.raises(PipeSegmentR1Error, match="pressure falls to zero"):
         march(2.0e5, 5000.0, 0.1023, 0.0, 4.57e-5, 50.0, props, 10)
+
+
+# --- R1 adapter (spec step 2) -------------------------------------------------
+
+from ngdesign.contracts import StreamState  # noqa: E402
+from ngdesign.contracts.plugins import Thermo  # noqa: E402
+from ngdesign.units.flow.pipe_segment import PipeSegment  # noqa: E402
+from ngdesign.units.flow.pipe_segment_r1 import PipeSegmentR1  # noqa: E402
+from tests.conftest import flash_feed  # noqa: E402
+
+CONDENSATE_FEED = {
+    "T": 293.15,
+    "P": 1.0e6,
+    "molar_flow": 50.0,
+    "composition": {"iC4": 0.392, "nC4": 0.248, "iC5": 0.157, "nC5": 0.203},
+}
+
+
+def test_r1_reduces_to_r0_on_a_horizontal_line(thermo: Thermo) -> None:
+    """R1 to R0 identity: R0 in dP mode with dP = friction + fittings and no
+    elevation gives the identical outlet (P to 1e-10 relative, T to 1e-12 K)."""
+    params = {"L_m": 500.0, "D_m": 0.1023, "K_fittings": 1.2}
+    inlets = {"inlet": flash_feed(thermo, CONDENSATE_FEED)}
+    r1 = PipeSegmentR1().solve(inlets, params, thermo)
+    dP = r1.info["dP_friction_Pa"] + r1.info["dP_fittings_Pa"]
+    r0 = PipeSegment().solve(inlets, {"dP": dP, "elevation_m": 0.0}, thermo)
+    assert r0.outlets["outlet"].P == pytest.approx(r1.outlets["outlet"].P, rel=1e-10)
+    assert r0.outlets["outlet"].T == pytest.approx(r1.outlets["outlet"].T, abs=1e-12)
+
+
+def test_r1_n_butane_liquid_line_hydrostatic(thermo: Thermo) -> None:
+    """A 20 m rise books the integrated rho*g*dz: within 1e-3 relative of
+    rho_in*g*20 (the density varies slightly along the line)."""
+    feed = {"T": 293.15, "P": 1.0e6, "molar_flow": 100.0, "composition": {"nC4": 1.0}}
+    params = {"L_m": 100.0, "D_m": 0.0779, "elevation_m": 20.0}
+    inlets = {"inlet": flash_feed(thermo, feed)}
+    result = PipeSegmentR1().solve(inlets, params, thermo)
+    rho_in = max(inlets["inlet"].phases, key=lambda p: p.mole_fraction).density
+    assert result.info["hydrostatic_Pa"] == pytest.approx(rho_in * 9.80665 * 20.0, rel=1e-3)
+
+
+def test_r1_methane_gas_line_matches_z_corrected_analytic(thermo: Thermo) -> None:
+    """Methane at 5 MPa: dP_total agrees with the C2 analytic form evaluated
+    with the inlet-state Z-corrected density, to 2% (real-gas sanity bound)."""
+    feed = {"T": 300.0, "P": 5.0e6, "molar_flow": 124.7, "composition": {"C1": 1.0}}
+    params = {"L_m": 5000.0, "D_m": 0.1023}
+    inlets = {"inlet": flash_feed(thermo, feed)}
+    result = PipeSegmentR1().solve(inlets, params, thermo)
+    inlet = inlets["inlet"]
+    dom = max(inlet.phases, key=lambda p: p.mole_fraction)
+    G = inlet.mass_flow / (math.pi * 0.1023**2 / 4)
+    # rho_in is the real-gas density, so P/rho_in = ZRT/M directly (no Z factor).
+    dP_sq = result.info["darcy_f_in"] * G**2 * (inlet.P / dom.density) * 5000.0 / 0.1023
+    dP_analytic = 5.0e6 - math.sqrt(5.0e6**2 - dP_sq)
+    assert result.info["dP_total_Pa"] == pytest.approx(dP_analytic, rel=0.02)
+
+
+def test_r1_example_case_solves(thermo: Thermo) -> None:
+    feeds, params = PipeSegmentR1.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    result = PipeSegmentR1().solve(inlets, params, thermo)
+    assert result.outlets["outlet"].P > 0
+    assert result.info["n_segments_used"] >= 10
+
+
+def test_r1_refuses_two_phase_inlet() -> None:
+    # Hand-assembled two-phase state (a pure-component two-phase PT flash is
+    # not obtainable from the PR package): the refusal must fire on the inlet.
+    from ngdesign.contracts.stream import Phase, PhaseKind
+
+    comps = {"C1": 0.5, "nC4": 0.5}
+    liquid = Phase(
+        kind=PhaseKind.HC_LIQUID,
+        mole_fraction=0.5,
+        composition=comps,
+        density=600.0,
+        molecular_weight=44.0,
+        viscosity=3.0e-4,
+    )
+    vapor = Phase(
+        kind=PhaseKind.VAPOR,
+        mole_fraction=0.5,
+        composition=comps,
+        density=30.0,
+        molecular_weight=44.0,
+        viscosity=1.2e-5,
+    )
+    inlet = StreamState(
+        T=300.0,
+        P=2.0e6,
+        molar_flow=100.0,
+        composition=comps,
+        vapor_fraction=0.5,
+        enthalpy=0.0,
+        entropy=0.0,
+        phases=[liquid, vapor],
+    )
+    with pytest.raises(PipeSegmentR1Error, match="two-phase inlet; use R2"):
+        PipeSegmentR1().solve({"inlet": inlet}, {"L_m": 100.0, "D_m": 0.0779}, _NoFlashThermo())
+
+
+def test_r1_refuses_node_flashing_two_phase(thermo: Thermo) -> None:
+    # A near-saturation n-butane liquid line loses enough pressure to cross
+    # the bubble point part-way along.
+    feed = {"T": 295.0, "P": 3.0e5, "molar_flow": 200.0, "composition": {"nC4": 1.0}}
+    params = {"L_m": 500.0, "D_m": 0.1}
+    inlets = {"inlet": flash_feed(thermo, feed)}
+    with pytest.raises(PipeSegmentR1Error, match="flashes to two-phase at x"):
+        PipeSegmentR1().solve(inlets, params, thermo)
+
+
+def test_r1_refuses_vapour_pressure_ratio_below_half(thermo: Thermo) -> None:
+    feed = {"T": 300.0, "P": 5.0e6, "molar_flow": 210.0, "composition": {"C1": 1.0}}
+    params = {"L_m": 5000.0, "D_m": 0.1023}
+    inlets = {"inlet": flash_feed(thermo, feed)}
+    with pytest.raises(PipeSegmentR1Error, match="pressure ratio below 0.5"):
+        PipeSegmentR1().solve(inlets, params, thermo)
+
+
+def test_r1_refuses_pressure_falls_to_zero(thermo: Thermo) -> None:
+    feed = {"T": 300.0, "P": 2.0e5, "molar_flow": 12470.0, "composition": {"C1": 1.0}}
+    params = {"L_m": 5000.0, "D_m": 0.1023}
+    inlets = {"inlet": flash_feed(thermo, feed)}
+    with pytest.raises(PipeSegmentR1Error, match="pressure falls to zero"):
+        PipeSegmentR1().solve(inlets, params, thermo)
+
+
+def test_r1_refuses_missing_viscosity() -> None:
+    from ngdesign.contracts.stream import Phase, PhaseKind
+
+    phase = Phase(
+        kind=PhaseKind.VAPOR,
+        mole_fraction=1.0,
+        composition={"C1": 1.0},
+        density=30.0,
+        molecular_weight=16.043,
+        viscosity=None,
+    )
+    inlet = StreamState(
+        T=300.0,
+        P=5.0e6,
+        molar_flow=100.0,
+        composition={"C1": 1.0},
+        vapor_fraction=1.0,
+        enthalpy=0.0,
+        entropy=0.0,
+        phases=[phase],
+    )
+    with pytest.raises(PipeSegmentSpecError, match="mu_Pa_s"):
+        PipeSegmentR1().solve({"inlet": inlet}, {"L_m": 100.0, "D_m": 0.0779}, _NoFlashThermo())
+
+
+class _NoFlashThermo:
+    """Stub thermo; never reached — the viscosity refusal fires first."""
+
+    def flash_ph(
+        self, z: dict[str, float], P: float, H: float, molar_flow: float
+    ) -> StreamState:  # pragma: no cover
+        raise AssertionError("flash_ph must not be called before the viscosity refusal")
+
+
+def test_r1_refuses_zero_flow(thermo: Thermo) -> None:
+    inlet = flash_feed(thermo, CONDENSATE_FEED).model_copy(update={"molar_flow": 0.0})
+    with pytest.raises(PipeSegmentSpecError, match="molar_flow"):
+        PipeSegmentR1().solve({"inlet": inlet}, {"L_m": 100.0, "D_m": 0.0779}, thermo)
+
+
+def test_r1_refuses_bad_params(thermo: Thermo) -> None:
+    inlets = {"inlet": flash_feed(thermo, CONDENSATE_FEED)}
+    with pytest.raises(PipeSegmentSpecError, match="L_m"):
+        PipeSegmentR1().solve(inlets, {"D_m": 0.0779}, thermo)
+    with pytest.raises(PipeSegmentSpecError, match="L_m"):
+        PipeSegmentR1().solve(inlets, {"L_m": 0.0, "D_m": 0.0779}, thermo)
+    with pytest.raises(PipeSegmentSpecError, match="D_m"):
+        PipeSegmentR1().solve(inlets, {"L_m": 100.0, "D_m": -1.0}, thermo)
+    with pytest.raises(PipeSegmentSpecError, match="roughness_m"):
+        PipeSegmentR1().solve(inlets, {"L_m": 100.0, "D_m": 0.0779, "roughness_m": -1.0}, thermo)
+    with pytest.raises(PipeSegmentSpecError, match="K_fittings"):
+        PipeSegmentR1().solve(inlets, {"L_m": 100.0, "D_m": 0.0779, "K_fittings": -0.1}, thermo)
+    with pytest.raises(PipeSegmentSpecError, match="elevation_m"):
+        PipeSegmentR1().solve(inlets, {"L_m": 100.0, "D_m": 0.0779, "elevation_m": 200.0}, thermo)
+    with pytest.raises(PipeSegmentSpecError, match="n_segments"):
+        PipeSegmentR1().solve(inlets, {"L_m": 100.0, "D_m": 0.0779, "n_segments": 0}, thermo)
+    with pytest.raises(PipeSegmentR1Error, match="did not converge"):
+        PipeSegmentR1().solve(inlets, {"L_m": 100.0, "D_m": 0.0779, "n_segments": 1024}, thermo)
