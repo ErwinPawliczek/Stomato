@@ -413,9 +413,54 @@
         worked example of a split-spec adsorption bed with its printed outlet
         state was found; the row is checked by closed-form tests only
     R1:
-      status: planned
-      params: {}
-      note: Langmuir isotherm, LUB
+      status: provisional
+      adapter: ngdesign.units.separation.adsorption_bed_r1:AdsorptionBedR1
+      params:
+        type: object
+        required: [removal_fraction, langmuir]
+        properties:
+          removal_fraction:
+            type: object
+            description: 'component id -> fraction of its molar flow taken to the desorbate'
+          langmuir:
+            type: object
+            description: 'adsorbate id -> {q_max_mol_kg, b_1_Pa}; saturation capacity mol/kg and Langmuir affinity 1/Pa; extended Langmuir over all adsorbates'
+          bed_mass_kg: {type: number, minimum: 0, description: 'bed mass, kg; or the geometry form below, exactly one'}
+          bed_density_kg_m3: {type: number, minimum: 0, description: 'packed-bed density, kg/m3 (geometry form, all three required)'}
+          bed_diameter_m: {type: number, minimum: 0, description: 'bed inside diameter, m (geometry form)'}
+          bed_length_m: {type: number, minimum: 0, description: 'packed length, m (geometry form); required for a LUB'}
+          lub_m: {type: number, minimum: 0, description: 'length of unused bed, m; default 0'}
+          dH_ads_J_mol:
+            type: object
+            description: 'adsorbate id -> heat of adsorption, J/mol (negative); with T_ref_K, rescales b via van t Hoff'
+          T_ref_K: {type: number, minimum: 0, description: 'reference temperature of the given b values, K; with dH_ads_J_mol'}
+          product_P: {type: number, description: 'product outlet pressure, Pa abs; default feed P'}
+          regen_P: {type: number, description: 'desorbate outlet pressure, Pa abs; default feed P'}
+          product_T: {type: number, description: 'product outlet temperature, K; default feed T'}
+          regen_T: {type: number, description: 'desorbate outlet temperature, K; default feed T'}
+      note: >-
+        R0 outlets and duty unchanged; cycle_time_s from extended-Langmuir
+        equilibrium loading (feed-basis partial pressures, Langmuir 1918 /
+        Markham-Benton 1931), optional van 't Hoff affinity rescale (Ruthven
+        1984 Ch. 2), stoichiometric time on the removed rate and LUB
+        breakthrough (Collins 1967; McCabe-Smith-Harriott 7th ed. Ch. 25;
+        Geankoplis 4th ed. §12.3) — t_b = t_s·(1 − LUB/L), cycle = min over
+        adsorbates. capacity_kg_per_kg is refused at R1. The R0 equivalence
+        (capacity = q*·MW/1000 reproduces the same cycle time) holds to 1e-12.
+        Spec issue recorded on PR no. 295 — the spec's printed CF3/CF4 times
+        (57726.765 s / 50510.9194 s) are 1000× the A4 result for its own
+        stated inputs (the division by the 1000 mol/s adsorbate rate was
+        dropped); A4 is implemented as written. V1 gap — no printed worked
+        example with a verifiable breakthrough time was transcribed: the
+        verified FOSSEE transcription of Geankoplis Ch. 12
+        (tbc-python.fossee.in) contains only Ex. 12.3-1 (alcohol-in-air
+        scale-up), whose printed outputs are used/unused bed lengths
+        (10.23 / 3.77 cm) and a saturation capacity (0.124 g/g carbon);
+        the book's comparable time appears only as the Part B design input
+        (break point 6.0 hr), never as a printed result for a specified
+        bed, and no isotherm is stated to transcribe. The
+        McCabe-Smith-Harriott Ch. 25 candidate has no verified open
+        transcription. The row is checked by closed-form tests only
       end_state: true
   pid_symbol: X
   references:
