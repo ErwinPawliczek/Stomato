@@ -403,11 +403,28 @@
         inhibitor rate covers the aqueous phase only — GPSA's vapour and
         hydrocarbon-liquid methanol losses are excluded at R0
     R1:
-      status: planned
-      params: {}
-      note: Katz / van der Waals-Platteeuw (via thermo)
+      status: provisional
+      adapter: ngdesign.units.separation.hydrate_check_r1:HydrateCheckR1
+      params:
+        type: object
+        properties:
+          P: {type: number, description: 'mixed outlet pressure, Pa abs; default min inlet P (R0)'}
+          T_operating_K: {type: number, description: 'target operating temperature, K; drives the dose (R0)'}
+          hydrate_method: {type: string, enum: [towler_mokhatab, hammerschmidt], description: 'hydrate-temperature correlation; default towler_mokhatab (Katz gas-gravity fit)'}
+      note: >-
+        selectable hydrate T — Katz gas gravity (Towler-Mokhatab 2005 fit,
+        enforced validity range 0.55 < gamma < 1.0, 1200-40000 kPa) or R0's
+        Hammerschmidt; outlet, duty and dose bisection unchanged from R0; the
+        vdWP route is out of scope because no thermo hydrate model exists
       end_state: true
   pid_symbol: HC
   references:
   - docs/unit-catalogue-plan.md §2 U-D 10
-  notes: roadmap; S2 slice (plan §2b).
+  notes: >-
+    roadmap; S2 slice (plan §2b). R1 V1 gap (searched 2026-10-25): Towler &
+    Mokhatab (2005) compare against experimental hydrate points but do not
+    print the gas compositions the unit needs to compute gravity; Sloan & Koh,
+    Clathrate Hydrates of Natural Gases 3rd ed. ch. 4, and GPSA Sect. 20 give
+    gravity-chart readings only (figure-based). The R1 Katz fit is checked by
+    closed-form tests on the transcribed coefficients; R0's GPSA 20-10 dose
+    case still applies through the Hammerschmidt method.
