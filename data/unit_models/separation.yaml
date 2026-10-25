@@ -149,9 +149,23 @@
         Evidence gap — V0 self-consistency only — no cited worked example validates
         a decanter split at R0
     R1:
-      status: planned
-      params: {}
-      note: settling (Stokes)
+      status: provisional
+      adapter: ngdesign.units.separation.decanter_r1:DecanterR1
+      params:
+        type: object
+        required: [dispersed_phase, droplet_diameter_m]
+        properties:
+          dP: {type: number, minimum: 0, description: 'pressure drop, Pa; default 0'}
+          dispersed_phase: {type: string, enum: [light, heavy], description: 'phase forming the droplets'}
+          droplet_diameter_m: {type: number, exclusiveMinimum: 0, description: 'design droplet diameter, m'}
+          interface_area_m2: {type: number, exclusiveMinimum: 0, description: 'interface (settling) area, m2'}
+          diameter_m: {type: number, exclusiveMinimum: 0, description: 'horizontal vessel diameter, m (interface at the centre line)'}
+          length_m: {type: number, exclusiveMinimum: 0, description: 'horizontal vessel length, m'}
+          continuous_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'continuous-phase viscosity override, Pa s'}
+      note: Stokes settling with Richardson-Zaki hindered settling on the R0 split;
+        Hazen ideal-settler efficiency scales the dispersed outlet and reflashes
+        the continuous outlet with the entrained dispersed liquid; Re_t >= 1 is
+        refused (R1 is a Stokes model)
       end_state: true
   pid_symbol: V
   references:
@@ -221,14 +235,51 @@
         Evidence gap — Perry Sect. 18 cut-size sizing is R1, so no worked example
         validates a cut size at R0 (V0 self-consistency only).
     R1:
-      status: planned
-      params: {}
-      note: Lapple / Barth cut size
+      status: provisional
+      adapter: ngdesign.units.separation.hydrocyclone_r1:HydrocycloneR1
+      params:
+        type: object
+        required: [particle_components, particle_density_kg_m3, inlet_width_m, inlet_height_m]
+        properties:
+          particle_components:
+            type: array
+            items: {type: string}
+            minItems: 1
+            description: component ids forming the particles/droplets
+          particle_density_kg_m3: {type: number, exclusiveMinimum: 0, description: 'particle density, kg/m3'}
+          particle_diameter_m: {type: number, exclusiveMinimum: 0, description: 'monodisperse particle diameter, m'}
+          d_rr_m: {type: number, exclusiveMinimum: 0, description: 'Rosin-Rammler characteristic size, m'}
+          n_rr: {type: number, exclusiveMinimum: 0, description: 'Rosin-Rammler spread'}
+          inlet_width_m: {type: number, exclusiveMinimum: 0, description: 'inlet width W, m'}
+          inlet_height_m: {type: number, exclusiveMinimum: 0, description: 'inlet height H, m'}
+          body_length_m: {type: number, exclusiveMinimum: 0, description: 'cylinder length Lb, m'}
+          cone_length_m: {type: number, exclusiveMinimum: 0, description: 'cone length Lc, m'}
+          N_e: {type: number, exclusiveMinimum: 0, description: 'effective turns; default (Lb + Lc/2)/H'}
+          outlet_diameter_m: {type: number, exclusiveMinimum: 0, description: 'vortex finder diameter De, m'}
+          K_inlet: {type: number, exclusiveMinimum: 0, description: 'Shepherd-Lapple inlet constant; default 16 (tangential)'}
+          fluid_underflow_fraction: {type: number, minimum: 0, exclusiveMaximum: 1, description: 'fluid flow split to the underflow'}
+          dP: {type: number, minimum: 0, description: 'overflow pressure drop, Pa; default Shepherd-Lapple'}
+          fluid_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'fluid viscosity override, Pa s'}
+      note: Lapple cut size (H3), grade efficiency (H4), Rosin-Rammler overall
+        efficiency by 64-point Gauss-Legendre (H5) and Shepherd-Lapple pressure
+        drop (H6); the split is delegated to R0 with the computed fractions.
+        Barth's static-particle model is not part of R1 — the row names
+        "Lapple / Barth", R1 implements Lapple only. Q uses the slurry
+        approximation (total mass flow over the continuous-fluid density).
       end_state: true
   pid_symbol: CYC
   references:
   - docs/unit-catalogue-plan.md §2 U-D 6
   notes: R0 split spec implemented; deoiling example with 95 % water to the underflow.
+    R1 V1 gap — no verifiable printed copy of the candidate sources (Cooper & Alley,
+    Air Pollution Control, Ch. 4 Lapple worked example; Perry's 8th ed. Sect. 17
+    cyclone example) was found online. A Dartmouth ENGS-37 lecture adaptation of the
+    Cooper & Alley example (cushman.host.dartmouth.edu/courses/engs37/Cyclones.pdf,
+    p. 10) prints D, Q, rho_p, the size distribution, N = 6, v_i = 20 m/s,
+    d_pc = 5.79 um and the per-size efficiency table, but not the fluid viscosity or
+    air density the example used, so its d50 anchor cannot be transcribed without
+    reconstructing inputs. Searched 2026-10-25; R1 ships provisional on its
+    closed-form (CF1-CF5) and R0-identity tests.
 
 - id: filter
   name: Filter
@@ -362,9 +413,54 @@
         worked example of a split-spec adsorption bed with its printed outlet
         state was found; the row is checked by closed-form tests only
     R1:
-      status: planned
-      params: {}
-      note: Langmuir isotherm, LUB
+      status: provisional
+      adapter: ngdesign.units.separation.adsorption_bed_r1:AdsorptionBedR1
+      params:
+        type: object
+        required: [removal_fraction, langmuir]
+        properties:
+          removal_fraction:
+            type: object
+            description: 'component id -> fraction of its molar flow taken to the desorbate'
+          langmuir:
+            type: object
+            description: 'adsorbate id -> {q_max_mol_kg, b_1_Pa}; saturation capacity mol/kg and Langmuir affinity 1/Pa; extended Langmuir over all adsorbates'
+          bed_mass_kg: {type: number, minimum: 0, description: 'bed mass, kg; or the geometry form below, exactly one'}
+          bed_density_kg_m3: {type: number, minimum: 0, description: 'packed-bed density, kg/m3 (geometry form, all three required)'}
+          bed_diameter_m: {type: number, minimum: 0, description: 'bed inside diameter, m (geometry form)'}
+          bed_length_m: {type: number, minimum: 0, description: 'packed length, m (geometry form); required for a LUB'}
+          lub_m: {type: number, minimum: 0, description: 'length of unused bed, m; default 0'}
+          dH_ads_J_mol:
+            type: object
+            description: 'adsorbate id -> heat of adsorption, J/mol (negative); with T_ref_K, rescales b via van t Hoff'
+          T_ref_K: {type: number, minimum: 0, description: 'reference temperature of the given b values, K; with dH_ads_J_mol'}
+          product_P: {type: number, description: 'product outlet pressure, Pa abs; default feed P'}
+          regen_P: {type: number, description: 'desorbate outlet pressure, Pa abs; default feed P'}
+          product_T: {type: number, description: 'product outlet temperature, K; default feed T'}
+          regen_T: {type: number, description: 'desorbate outlet temperature, K; default feed T'}
+      note: >-
+        R0 outlets and duty unchanged; cycle_time_s from extended-Langmuir
+        equilibrium loading (feed-basis partial pressures, Langmuir 1918 /
+        Markham-Benton 1931), optional van 't Hoff affinity rescale (Ruthven
+        1984 Ch. 2), stoichiometric time on the removed rate and LUB
+        breakthrough (Collins 1967; McCabe-Smith-Harriott 7th ed. Ch. 25;
+        Geankoplis 4th ed. §12.3) — t_b = t_s·(1 − LUB/L), cycle = min over
+        adsorbates. capacity_kg_per_kg is refused at R1. The R0 equivalence
+        (capacity = q*·MW/1000 reproduces the same cycle time) holds to 1e-12.
+        Spec issue recorded on PR no. 295 — the spec's printed CF3/CF4 times
+        (57726.765 s / 50510.9194 s) are 1000× the A4 result for its own
+        stated inputs (the division by the 1000 mol/s adsorbate rate was
+        dropped); A4 is implemented as written. V1 gap — no printed worked
+        example with a verifiable breakthrough time was transcribed: the
+        verified FOSSEE transcription of Geankoplis Ch. 12
+        (tbc-python.fossee.in) contains only Ex. 12.3-1 (alcohol-in-air
+        scale-up), whose printed outputs are used/unused bed lengths
+        (10.23 / 3.77 cm) and a saturation capacity (0.124 g/g carbon);
+        the book's comparable time appears only as the Part B design input
+        (break point 6.0 hr), never as a printed result for a specified
+        bed, and no isotherm is stated to transcribe. The
+        McCabe-Smith-Harriott Ch. 25 candidate has no verified open
+        transcription. The row is checked by closed-form tests only
       end_state: true
   pid_symbol: X
   references:
@@ -403,11 +499,28 @@
         inhibitor rate covers the aqueous phase only — GPSA's vapour and
         hydrocarbon-liquid methanol losses are excluded at R0
     R1:
-      status: planned
-      params: {}
-      note: Katz / van der Waals-Platteeuw (via thermo)
+      status: provisional
+      adapter: ngdesign.units.separation.hydrate_check_r1:HydrateCheckR1
+      params:
+        type: object
+        properties:
+          P: {type: number, description: 'mixed outlet pressure, Pa abs; default min inlet P (R0)'}
+          T_operating_K: {type: number, description: 'target operating temperature, K; drives the dose (R0)'}
+          hydrate_method: {type: string, enum: [towler_mokhatab, hammerschmidt], description: 'hydrate-temperature correlation; default towler_mokhatab (Katz gas-gravity fit)'}
+      note: >-
+        selectable hydrate T — Katz gas gravity (Towler-Mokhatab 2005 fit,
+        enforced validity range 0.55 < gamma < 1.0, 1200-40000 kPa) or R0's
+        Hammerschmidt; outlet, duty and dose bisection unchanged from R0; the
+        vdWP route is out of scope because no thermo hydrate model exists
       end_state: true
   pid_symbol: HC
   references:
   - docs/unit-catalogue-plan.md §2 U-D 10
-  notes: roadmap; S2 slice (plan §2b).
+  notes: >-
+    roadmap; S2 slice (plan §2b). R1 V1 gap (searched 2026-10-25): Towler &
+    Mokhatab (2005) compare against experimental hydrate points but do not
+    print the gas compositions the unit needs to compute gravity; Sloan & Koh,
+    Clathrate Hydrates of Natural Gases 3rd ed. ch. 4, and GPSA Sect. 20 give
+    gravity-chart readings only (figure-based). The R1 Katz fit is checked by
+    closed-form tests on the transcribed coefficients; R0's GPSA 20-10 dose
+    case still applies through the Hammerschmidt method.
