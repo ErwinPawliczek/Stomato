@@ -198,14 +198,17 @@ def heat_of_reaction(reaction: Reaction, T: float) -> float:
 
 def enthalpy_with_formation(state: StreamState) -> float:
     """Stream enthalpy lifted to an element reference, J/s: molar flow times the
-    package enthalpy (sensible + residual) plus each species' formation enthalpy.
+    package enthalpy (sensible + residual) plus each species' formation enthalpy
+    at 298.15 K.
 
-    The package enthalpy reference sits near zero for elemental species at
-    298.15 K, so a reaction's product−reactant difference reproduces the
-    databank heat of reaction; this is the stream-side quantity reaction units
-    must balance against their heat duty.
+    The package enthalpy is zero for every species as an ideal gas at 298.15 K
+    and already carries the sensible heat from there to the stream state, so the
+    lift is the constant ΔfH°298. Lifting by ΔfH(T) = ΔfH°298 + ∫Cp dT counted
+    the sensible heat twice (spec U-R; issue #247). A reaction's product−reactant
+    difference then reproduces the databank heat of reaction; this is the
+    stream-side quantity reaction units must balance against their heat duty.
     """
-    lift = float(sum(y * formation_enthalpy(cid, state.T) for cid, y in state.composition.items()))
+    lift = float(sum(y * formation_enthalpy_298(cid) for cid, y in state.composition.items()))
     return float(state.molar_flow) * (float(state.enthalpy) + lift)
 
 
