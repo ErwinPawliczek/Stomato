@@ -357,9 +357,43 @@
         copy reachable (official GPSA workbook companion ends at the first converter), so it is
         a documented V1 gap and the level stays provisional
     R2:
-      status: planned
-      params: {}
-      note: Gibbs per stage
+      status: provisional
+      adapter: ngdesign.units.treating.sulfur_recovery_r2:SulfurRecoveryR2
+      params:
+        type: object
+        properties:
+          T_thermal:
+            type: number
+            description: thermal-stage (reaction-furnace) temperature, K
+          P:
+            type: number
+            description: process pressure, Pa abs
+          T_condenser:
+            type: number
+            description: sulfur condenser temperature, K
+          thermal_conversion:
+            type: number
+            description: >-
+              fraction of the post-burn H2S consumed by the Claus reaction in
+              the thermal stage (the R0 furnace rule)
+          catalytic_stages:
+            type: array
+            description: >-
+              one entry per catalytic Gibbs equilibrium stage, each with T (K)
+              and optional approach_K (K); conversion stages are refused
+          extra_species:
+            type: array
+            description: >-
+              additional converter species from the supported set
+              (CO, COS, CS2, H2)
+          reaction_set:
+            type: object
+            description: >-
+              flowsheet-owned reaction set (H2S burn + Claus reaction,
+              U-01b pattern (a))
+      validation: [V1202-sulfur-recovery-gpsa]
+      note: Gibbs equilibrium per catalytic converter (isothermal; S6/S8 ± COS/CS2); furnace
+        = R0 rule (S2 data missing); complete sulfur condensation (package S8 Psat unusable)
       end_state: true
   pid_symbol: SRU
   references:
