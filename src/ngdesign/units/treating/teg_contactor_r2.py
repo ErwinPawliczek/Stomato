@@ -47,6 +47,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.units.levels import MODEL_KEY
 from ngdesign.units.teg_activity import activity_equilibrium_slope
 from ngdesign.units.teg_contactor import _water_content_lb_per_mmscf
 from ngdesign.units.treating.teg_stagewise import TEGStageError, countercurrent_march
@@ -56,6 +57,11 @@ __all__ = ["TEGContactorR2", "TEGContactorR2Error"]
 
 class TEGContactorR2Error(ValueError):
     """A contactor feed or parameter set the R2 rating refuses."""
+
+
+#: The ``model`` key selects the catalogue level and is consumed by the level
+#: dispatch before the adapter sees params; it is not an adapter parameter.
+_RESERVED_KEYS = frozenset({MODEL_KEY})
 
 
 #: The Parrish-Won-Baltatu activity correlation's fitted temperature range, K
@@ -96,7 +102,7 @@ def _shift_water(state: StreamState, water_delta: float) -> tuple[dict[str, floa
 
 def _n_stages_param(params: dict[str, Any]) -> int:
     """Validate the ``n_stages`` parameter: present, a true integer, >= 1."""
-    extra = sorted(set(params) - {"n_stages"})
+    extra = sorted(set(params) - {"n_stages"} - _RESERVED_KEYS)
     if extra:
         raise TEGContactorR2Error(f"unknown parameter key(s): {', '.join(extra)}")
     if "n_stages" not in params:
