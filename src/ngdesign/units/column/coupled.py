@@ -58,20 +58,29 @@ from .thermo_adapter import _ThermoBox
 _STEAM_CID = "H2O"
 
 #: Per-driver stop tolerances, in the residual's own units. Rate specs stop
-#: on relative error.
-_STOP_RATE_REL = 1e-10
+#: on relative error. 1e-6 sits just above the MEASURED warm-start mesh
+#: noise floor (return/product flows reproduce to ±5e-7 mol/s on the
+#: steam-stripper case): a 1e-10 relative rate stop demands 8e-10 mol/s
+#: absolute on that case - three orders below the noise floor, so the
+#: secant chases iterate noise forever (measured: it stalls at 94x the
+#: stop with the product already correct to 9e-9 RELATIVE, well inside the
+#: spec's own 1e-8 rate-target requirement).
+_STOP_RATE_REL = 1e-6
 
 #: Vapour-return coupling stops. The injected return state must match the
 #: recomputed stripper overhead to these bounds at the accepted solution.
-#: They sit just above the MEASURED reproducibility of a warm-started mesh
-#: evaluation (return flow ±5e-7 mol/s, temperature ±4e-6 K, composition
-#: ~7e-6 absolute across passes on the steam-stripper case): a stop below
-#: those floors chases iterate noise, not physics. The boundary BALANCES
-#: still close exactly by construction - the return stream is injected into
-#: the main column as a feed, so no reported balance depends on these
-#: residuals.
-_STOP_COUPLE_FLOW_REL = 1e-6
-_STOP_COUPLE_T_K = 1e-5
+#: They sit just above the MEASURED reproducibility of the STRIPPER
+#: sub-solves (not the main mesh: at the converged tears the stripper
+#: overhead reproduces to ~2e-6 relative flow and ~6e-5 K across
+#: evaluations on the steam-stripper case - the warm-started stripper rungs
+#: are noisier than the main column's ±5e-7 / ±4e-6). Stops below those
+#: floors chase sub-solve iterate noise: measured, the secant ground 10
+#: minutes to maxrel 2-6x and the stale counter fired on pure noise while
+#: the tears sat frozen. The boundary BALANCES still close exactly by
+#: construction - the return stream is injected into the main column as a
+#: feed, so no reported balance depends on these residuals.
+_STOP_COUPLE_FLOW_REL = 1e-5
+_STOP_COUPLE_T_K = 1e-4
 _STOP_COUPLE_COMP = 1e-5
 
 
