@@ -198,12 +198,17 @@ def test_refuse_flow_limits_inconsistent(thermo: Thermo) -> None:
 
 
 def test_flow_capacity_range(thermo: Thermo) -> None:
-    """Q = 0.222477211 m3/s: above flow_max = 0.1 refuses; [0.2, 0.3] passes."""
+    """Q = 0.222477211 m3/s: above flow_max = 0.1 refuses; [0.2, 0.3] passes.
+
+    Q is asserted against the plan's printed 9-digit value at its own rounding
+    (half a unit in the last place, 5e-10), not against the model's full-precision
+    output.
+    """
     inlets = example_inlets(thermo)
     with pytest.raises(ExpanderFlowRangeError, match="flow"):
         ExpanderR1().solve(inlets, base_params(flow_max_m3_s=0.1), thermo)
     passed = ExpanderR1().solve(inlets, base_params(flow_min_m3_s=0.2, flow_max_m3_s=0.3), thermo)
-    assert passed.info["Q_actual_m3_s"] == pytest.approx(0.22247721127879216, rel=1e-9)
+    assert passed.info["Q_actual_m3_s"] == pytest.approx(0.222477211, abs=5e-10)
     # No limits given: Q is still reported, nothing is refused.
     unlimited = ExpanderR1().solve(inlets, base_params(), thermo)
-    assert unlimited.info["Q_actual_m3_s"] == pytest.approx(0.22247721127879216, rel=1e-9)
+    assert unlimited.info["Q_actual_m3_s"] == pytest.approx(0.222477211, abs=5e-10)
