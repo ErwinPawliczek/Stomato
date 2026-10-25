@@ -122,6 +122,11 @@ class HydrateCheckR1:
     inlet_ports: tuple[str, ...] = ("inlet", "inhibitor_in")
     outlet_ports: tuple[str, ...] = ("outlet",)
 
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """The R0 example feeds (wet slice gas + methanol trim at 7 MPa)."""
+        return HydrateCheck().example_case()
+
     def solve(
         self,
         inlets: dict[str, StreamState],
