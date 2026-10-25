@@ -334,7 +334,7 @@
   - docs/unit-catalogue-plan.md §2 U-C 7
   notes: V2083 checks the methane LHV against NBSIR 82-2401 (802.125 kJ/mol at
     288.15 K; package 802.584 kJ/mol on the 298.15 K formation basis, +0.057%).
-    R1 is anchored on Kern Example 19.1 (V2105): the solved radiant section closes
+    R1 is anchored on Kern Example 19.1 (V2105) — the solved radiant section closes
     within 1.5% of the printed 1700 F bridgewall, 0.75 efficiency, 37,050,000
     Btu/hr radiant duty and 12,280 Btu/(hr ft2) flux; fuel composition, coil
     fluid and convection UA are documented carriers.
