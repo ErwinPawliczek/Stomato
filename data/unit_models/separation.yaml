@@ -149,9 +149,23 @@
         Evidence gap — V0 self-consistency only — no cited worked example validates
         a decanter split at R0
     R1:
-      status: planned
-      params: {}
-      note: settling (Stokes)
+      status: provisional
+      adapter: ngdesign.units.separation.decanter_r1:DecanterR1
+      params:
+        type: object
+        required: [dispersed_phase, droplet_diameter_m]
+        properties:
+          dP: {type: number, minimum: 0, description: 'pressure drop, Pa; default 0'}
+          dispersed_phase: {type: string, enum: [light, heavy], description: 'phase forming the droplets'}
+          droplet_diameter_m: {type: number, exclusiveMinimum: 0, description: 'design droplet diameter, m'}
+          interface_area_m2: {type: number, exclusiveMinimum: 0, description: 'interface (settling) area, m2'}
+          diameter_m: {type: number, exclusiveMinimum: 0, description: 'horizontal vessel diameter, m (interface at the centre line)'}
+          length_m: {type: number, exclusiveMinimum: 0, description: 'horizontal vessel length, m'}
+          continuous_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'continuous-phase viscosity override, Pa s'}
+      note: Stokes settling with Richardson-Zaki hindered settling on the R0 split;
+        Hazen ideal-settler efficiency scales the dispersed outlet and reflashes
+        the continuous outlet with the entrained dispersed liquid; Re_t >= 1 is
+        refused (R1 is a Stokes model)
       end_state: true
   pid_symbol: V
   references:
