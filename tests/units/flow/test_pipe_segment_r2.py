@@ -61,7 +61,7 @@ HILL_PARAMS = {
     "n_segments": 20,
 }
 
-#: Subcooled water at 0.5 MPa climbing 20 m of 3 in pipe: the fixed-enthalpy
+#: Subcooled water at 0.5 MPa climbing 40 m of 3 in pipe: the fixed-enthalpy
 #: PH flash crosses the saturation floor part way up and the remaining nodes
 #: are AQUEOUS + VAPOR -- the pure-fluid liquid the R2 liquid-phase selection
 #: must handle.
@@ -75,7 +75,7 @@ WATER_PARAMS = {
     "L_m": 100.0,
     "D_m": 0.0779,
     "sigma_N_m": 0.04,
-    "elevation_m": 20.0,
+    "elevation_m": 40.0,
     "n_segments": 10,
 }
 
