@@ -28,6 +28,7 @@ closes the energy balance; ``power_W = 0``.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Any
 
 import numpy as np
 from scipy.integrate import solve_ivp
@@ -36,9 +37,9 @@ from scipy.optimize import brentq, root
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.separation.membrane_r1 import (
+    _INTEGRATION_RTOL,
     MembraneR1,
     MembraneR1SpecError,
-    _INTEGRATION_RTOL,
     _adapter_params,
     _local_y,
     _outlets_result,
@@ -153,6 +154,7 @@ def counter_current(
         )
     A = brentq(theta_error, 0.0, hi, xtol=1e-12 * hi, maxiter=100)
     return solve_at(A)
+
 
 class MembraneR2(MembraneR1):
     """Counter-current membrane adapter (catalogue level R2, Pan 1983 shooting).

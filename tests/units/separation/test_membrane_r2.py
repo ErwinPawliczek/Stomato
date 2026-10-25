@@ -73,13 +73,13 @@ def test_counter_current_validation_refusals() -> None:
     with pytest.raises(MembraneR1SpecError, match="stage_cut"):
         counter_current(F=F, z=Z, Pi=PI, P_h=P_H, P_l=1e5, stage_cut=1.0)
 
+
 def _air_feed(thermo: Thermo) -> StreamState:
     """The R0 example feed: Geankoplis Ex. 13.4-2 air basis (100 mol/s)."""
     return flash_feed(
         thermo,
         {"T": 298.15, "P": 2.533125e5, "molar_flow": 100.0, "composition": {"O2": 0.209, "N2": 0.791}},
     )
-
 
 
 def test_adapter_r2_equals_r1_equal_permeances(thermo: Thermo) -> None:
