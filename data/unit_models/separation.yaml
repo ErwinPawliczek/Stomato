@@ -312,14 +312,48 @@
         Evidence gap — cake-resistance physics is R1, so no worked example
         validates a cake at R0 (V0 self-consistency only).
     R1:
-      status: planned
-      params: {}
-      note: cake resistance
+      status: provisional
+      adapter: ngdesign.units.separation.filter_r1:FilterR1
+      params:
+        type: object
+        required: [cake_fractions, dP, specific_cake_resistance_m_kg, t_filtration_s, solid_density_kg_m3]
+        properties:
+          cake_fractions:
+            type: object
+            description: 'component id to the fraction of its molar flow sent to the cake (the solids)'
+          dP: {type: number, exclusiveMinimum: 0, description: 'filtration pressure difference, Pa; applied to the filtrate'}
+          specific_cake_resistance_m_kg: {type: number, exclusiveMinimum: 0, description: 'specific cake resistance alpha, m/kg'}
+          medium_resistance_1_m: {type: number, minimum: 0, description: 'filter medium resistance Rm, 1/m; default 0'}
+          t_filtration_s: {type: number, exclusiveMinimum: 0, description: 'filtration time per cycle, s'}
+          t_down_s: {type: number, minimum: 0, description: 'washing/discharge downtime per cycle, s; default 0'}
+          solid_density_kg_m3: {type: number, exclusiveMinimum: 0, description: 'true solid density, kg/m3'}
+          cake_porosity: {type: number, minimum: 0, exclusiveMaximum: 1, description: 'cake void fraction; default 0 (dry cake)'}
+          area_m2: {type: number, exclusiveMinimum: 0, description: 'installed filter area, m2 (capacity ratio)'}
+          filtrate_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'filtrate viscosity override, Pa s'}
+      note: Ruth constant-pressure cake filtration over the R0 split — required
+        area, cake thickness and cake moisture (F1-F7); reduces exactly to R0
+        at zero porosity.
       end_state: true
   pid_symbol: FLT
   references:
   - docs/unit-catalogue-plan.md §2 U-D 7
-  notes: roadmap.
+  notes: R1 V1 gap (PR 280) — provisional without a case. Searched the spec's
+    candidates and none prints a case for the batch constant-pressure Ruth
+    model with printed inputs only — Geankoplis 4th ed. sect. 14.2, Examples
+    14.2-1 and 14.2-2 evaluate alpha and Rm by regression on t-V data, so
+    there is no printed input/output pair to pin at the closed form, and
+    Example 14.2-4 folds the wet-cake moisture into Cs = rho*Cx/(1 - m*Cx)
+    with m = 2 kg wet cake per kg dry cake, a moisture model different from
+    R1's porosity-based cake, so reproducing its printed 6.66 m2 needs an
+    unprinted cake porosity; the FOSSEE open transcription of Geankoplis
+    ch. 14, whose regression prints differ from the book's graphical reads
+    (264.61 s vs the book's 269.7 s recovery time used in 14.2-3); and
+    McCabe, Smith and Harriott 7th ed., Mechanical Separations (fetched and
+    inspected), Example 30.2 being a least-squares regression of t-V data
+    for alpha and Rm and Example 30.3 a continuous rotary-drum design with
+    a compressible cake (alpha = alpha0/dP**0.26) and the moisture folded
+    into the slurry concentration. The level is covered by the closed-form
+    CF1-CF4 tests and the R0-reduction identity instead.
 
 - id: membrane
   name: Membrane (gas)
@@ -360,18 +394,48 @@
         x_O2 = 0.1345); the permeate_recovery path is a spec split with V0
         self-consistency only.
     R1:
-      status: planned
-      params: {}
-      note: solution-diffusion with permeances, cross-flow
+      status: provisional
+      adapter: ngdesign.units.separation.membrane_r1:MembraneR1
+      params:
+        type: object
+        required: [permeances_mol_m2_s_Pa, P_permeate]
+        properties:
+          permeances_mol_m2_s_Pa: {type: object, description: 'component id to permeance, mol/(m2 s Pa) (1 GPU = 3.348e-10); every feed component required'}
+          P_permeate: {type: number, exclusiveMinimum: 0, description: 'permeate-side absolute pressure, Pa'}
+          area_m2: {type: number, exclusiveMinimum: 0, description: 'membrane area, m2 (rating mode)'}
+          stage_cut: {type: number, exclusiveMinimum: 0, exclusiveMaximum: 1, description: 'target permeate/feed molar ratio (design mode; area is solved)'}
+      note: solution-diffusion with permeances, cross-flow (Weller-Steiner 1950,
+        Pan 1983) with the local permeate y_i = J_i/ΣJ from a bracketed brentq
+        (closed form at P_l = 0) and the feed side dn_i/da = -J_i integrated
+        DOP853 at rtol 1e-11; stage-cut mode by a terminal event with the
+        A_hard cap; isothermal outlets via split_by_component as in R0.
     R2:
-      status: planned
-      params: {}
-      note: counter-current module
+      status: provisional
+      adapter: ngdesign.units.separation.membrane_r2:MembraneR2
+      params:
+        type: object
+        required: [permeances_mol_m2_s_Pa, P_permeate]
+        properties:
+          permeances_mol_m2_s_Pa: {type: object, description: 'component id to permeance, mol/(m2 s Pa) (1 GPU = 3.348e-10); every feed component required'}
+          P_permeate: {type: number, exclusiveMinimum: 0, description: 'permeate-side absolute pressure, Pa'}
+          area_m2: {type: number, exclusiveMinimum: 0, description: 'membrane area, m2 (rating mode)'}
+          stage_cut: {type: number, exclusiveMinimum: 0, exclusiveMaximum: 1, description: 'target permeate/feed molar ratio (design mode; area is solved)'}
+      note: counter-current module, Pan 1983 shooting on the residue flows
+        (scipy root hybr, tol 1e-12) with the permeate plug flow dp_i/da = -J_i
+        toward the feed end, the M2 switch at Sum(p) <= 1e-12 F, and design
+        mode by brentq on theta_R2(A) - theta over [0, A_R1(theta)]; outlets
+        as in R0/R1.
       end_state: true
   pid_symbol: M
   references:
   - docs/unit-catalogue-plan.md §2 U-D 8
   notes: R0 split and stage-cut specs implemented; Geankoplis Ex. 13.4-2 example.
+      V1 gap — no printed cross-flow or counter-current worked example was found for
+      R1/R2 (searched Geankoplis §13.5 cross-flow worked example, Pan 1983, Baker
+      Ch. 8, and the plan's candidates); the R1/R2 oracle cases CF1–CF4 are
+      hand-computed (scratchpad/unit-specs/calc_membrane.py RK4/bisection — no
+      printed source), checked by the Rayleigh closed form and the R2 -> R1 -> R0
+      identities.
 
 - id: adsorption_bed
   name: Adsorption bed (TSA/PSA)
@@ -413,9 +477,54 @@
         worked example of a split-spec adsorption bed with its printed outlet
         state was found; the row is checked by closed-form tests only
     R1:
-      status: planned
-      params: {}
-      note: Langmuir isotherm, LUB
+      status: provisional
+      adapter: ngdesign.units.separation.adsorption_bed_r1:AdsorptionBedR1
+      params:
+        type: object
+        required: [removal_fraction, langmuir]
+        properties:
+          removal_fraction:
+            type: object
+            description: 'component id -> fraction of its molar flow taken to the desorbate'
+          langmuir:
+            type: object
+            description: 'adsorbate id -> {q_max_mol_kg, b_1_Pa}; saturation capacity mol/kg and Langmuir affinity 1/Pa; extended Langmuir over all adsorbates'
+          bed_mass_kg: {type: number, minimum: 0, description: 'bed mass, kg; or the geometry form below, exactly one'}
+          bed_density_kg_m3: {type: number, minimum: 0, description: 'packed-bed density, kg/m3 (geometry form, all three required)'}
+          bed_diameter_m: {type: number, minimum: 0, description: 'bed inside diameter, m (geometry form)'}
+          bed_length_m: {type: number, minimum: 0, description: 'packed length, m (geometry form); required for a LUB'}
+          lub_m: {type: number, minimum: 0, description: 'length of unused bed, m; default 0'}
+          dH_ads_J_mol:
+            type: object
+            description: 'adsorbate id -> heat of adsorption, J/mol (negative); with T_ref_K, rescales b via van t Hoff'
+          T_ref_K: {type: number, minimum: 0, description: 'reference temperature of the given b values, K; with dH_ads_J_mol'}
+          product_P: {type: number, description: 'product outlet pressure, Pa abs; default feed P'}
+          regen_P: {type: number, description: 'desorbate outlet pressure, Pa abs; default feed P'}
+          product_T: {type: number, description: 'product outlet temperature, K; default feed T'}
+          regen_T: {type: number, description: 'desorbate outlet temperature, K; default feed T'}
+      note: >-
+        R0 outlets and duty unchanged; cycle_time_s from extended-Langmuir
+        equilibrium loading (feed-basis partial pressures, Langmuir 1918 /
+        Markham-Benton 1931), optional van 't Hoff affinity rescale (Ruthven
+        1984 Ch. 2), stoichiometric time on the removed rate and LUB
+        breakthrough (Collins 1967; McCabe-Smith-Harriott 7th ed. Ch. 25;
+        Geankoplis 4th ed. §12.3) — t_b = t_s·(1 − LUB/L), cycle = min over
+        adsorbates. capacity_kg_per_kg is refused at R1. The R0 equivalence
+        (capacity = q*·MW/1000 reproduces the same cycle time) holds to 1e-12.
+        Spec issue recorded on PR no. 295 — the spec's printed CF3/CF4 times
+        (57726.765 s / 50510.9194 s) are 1000× the A4 result for its own
+        stated inputs (the division by the 1000 mol/s adsorbate rate was
+        dropped); A4 is implemented as written. V1 gap — no printed worked
+        example with a verifiable breakthrough time was transcribed: the
+        verified FOSSEE transcription of Geankoplis Ch. 12
+        (tbc-python.fossee.in) contains only Ex. 12.3-1 (alcohol-in-air
+        scale-up), whose printed outputs are used/unused bed lengths
+        (10.23 / 3.77 cm) and a saturation capacity (0.124 g/g carbon);
+        the book's comparable time appears only as the Part B design input
+        (break point 6.0 hr), never as a printed result for a specified
+        bed, and no isotherm is stated to transcribe. The
+        McCabe-Smith-Harriott Ch. 25 candidate has no verified open
+        transcription. The row is checked by closed-form tests only
       end_state: true
   pid_symbol: X
   references:
