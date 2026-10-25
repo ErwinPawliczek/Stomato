@@ -273,7 +273,8 @@ class ReliefValveR1(ReliefValve):
             vf = 0.0 if not any(p.kind is PhaseKind.VAPOR for p in phases) else 0.5
 
         if vf <= 0.001:
-            rho_l0 = thermo.liquid_density(z, inlet.T, P0)
+            liquid = next(p for p in phases if p.kind is not PhaseKind.VAPOR)
+            rho_l0 = liquid.density
             P_sat = thermo.bubble_point(z, T=inlet.T).P
             if P_sat >= P0 * (1.0 - 1e-9):
                 # saturated liquid: handled as two-phase with v0 = 1/rho_l0
@@ -399,7 +400,7 @@ class ReliefValveR1(ReliefValve):
             inlet.mass_flow, G, factors["Kd"], factors["Kb"], factors["Kc"],
             factors["Kv"], factors["Kw"],
         )
-        letter = _next_orifice(area / IN2_PER_M2)
+        letter = _next_orifice(area * IN2_PER_M2)
         area_in2 = _orifice_area_in2(letter)
         z = dict(inlet.composition)
         info: dict[str, Any] = {
@@ -411,7 +412,7 @@ class ReliefValveR1(ReliefValve):
             "G_kg_m2s": G,
             "required_area_m2": area,
             "required_area_mm2": area * MM2_PER_M2,
-            "required_area_in2": area / IN2_PER_M2,
+            "required_area_in2": area * IN2_PER_M2,
             "selected_orifice_area_in2": area_in2,
             "Kd_used": factors["Kd"],
             "v0_m3_kg": v0,
