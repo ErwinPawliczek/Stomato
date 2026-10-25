@@ -132,9 +132,7 @@ def _validate_reactions(rset: ReactionSet, bulk_density_kg_m3: float | None) -> 
     return scales
 
 
-def _pkg_reaction_enthalpy(
-    reaction: Reaction, thermo: Thermo, t: float, p: float, kind: PhaseKind
-) -> float:
+def _pkg_reaction_enthalpy(reaction: Reaction, thermo: Thermo, t: float, p: float, kind: PhaseKind) -> float:
     """Reaction enthalpy on the outlet-closure basis, J/mol extent (spec eq. 5).
 
     The closure (``thermal_outlet`` / ``_solve_outlet_T``) balances the stream
@@ -204,9 +202,7 @@ def integrate_plug_flow(
     if n_output < 2:
         raise PlugFlowError("n_output must be >= 2")
     if reacting_phase not in _PHASE_KIND:
-        raise PlugFlowError(
-            f"reacting_phase {reacting_phase!r} is not one of 'vapor' or 'liquid'"
-        )
+        raise PlugFlowError(f"reacting_phase {reacting_phase!r} is not one of 'vapor' or 'liquid'")
 
     scales = _validate_reactions(rset, bulk_density_kg_m3)
     reactions = rset.reactions
@@ -276,9 +272,7 @@ def integrate_plug_flow(
             nu_base = float(reaction.stoichiometry[reaction.base_component])
             dxi[j] = scales[j] * multiplier * r_j / abs(nu_base)
             if energy != "isothermal":
-                d_h += _pkg_reaction_enthalpy(
-                    reaction, thermo, t, p, _PHASE_KIND[reacting_phase]
-                ) * dxi[j]
+                d_h += _pkg_reaction_enthalpy(reaction, thermo, t, p, _PHASE_KIND[reacting_phase]) * dxi[j]
 
         q = q_v(v, t, extra)
         if energy == "isothermal":
