@@ -61,7 +61,7 @@ def rz_exponent(re_t: float) -> float:
 
 def hindered_velocity(u_t: float, phi: float, n: float) -> float:
     """Richardson-Zaki hindered settling velocity (D4): ``u_h = u_t·(1 − φ)^n``."""
-    return u_t * (1.0 - phi) ** n
+    return u_t * float((1.0 - phi) ** n)
 
 
 def settler_efficiency(u_h: float, area_m2: float, q_c: float) -> float:
