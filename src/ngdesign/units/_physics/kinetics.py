@@ -76,12 +76,42 @@ def _arrhenius_power(
     return value
 
 
+#: Standard-state pressure of the formation data (``ngdesign.data.formation``), Pa.
+P_STANDARD = 1.0e5
+
+
+def _equilibrium_limited(
+    reaction: Reaction, forward: float, T: float, P: float, z: Mapping[str, float]
+) -> float:
+    """forward * (1 - Q/K), with Q the ideal-gas activity quotient prod (z_i P / P°)^nu_i.
+
+    The rate vanishes at equilibrium (Q = K) and changes sign beyond it. A zero
+    forward rate stays zero (the form carries no separate reverse rate). A
+    reactant absent while the forward rate is nonzero makes Q infinite and is
+    refused: give that reaction an explicit ``reverse`` expression instead.
+    """
+    if forward == 0.0:
+        return 0.0
+    ln_q = 0.0
+    for cid, nu in reaction.stoichiometry.items():
+        y = z.get(cid, 0.0)
+        if y <= 0.0:
+            if nu < 0.0:
+                raise KineticsError(
+                    f"reaction {reaction.id!r}: reactant {cid!r} is absent but the forward rate is "
+                    "nonzero, so the activity quotient is infinite; give an explicit reverse expression"
+                )
+            return forward
+        ln_q += nu * math.log(y * P / P_STANDARD)
+    return forward * (1.0 - math.exp(ln_q - ln_keq(reaction, T)))
+
+
 def rate(reaction: Reaction, T: float, P: float, z: Mapping[str, float]) -> float:
     """Rate of one reaction on its base-component extent basis.
 
     No kinetics model gives 0.0. Power law: explicit reverse expression wins,
-    then equilibrium limitation when the reaction carries an equilibrium
-    model, otherwise the bare forward expression.
+    then equilibrium limitation forward * (1 - Q/K) when the reaction carries an
+    equilibrium model, otherwise the bare forward expression.
     """
     kinetics = reaction.kinetics
     if kinetics is None:
@@ -91,8 +121,7 @@ def rate(reaction: Reaction, T: float, P: float, z: Mapping[str, float]) -> floa
         if kinetics.reverse is not None:
             return forward - _power_law_rate(kinetics.reverse, T, P, z)
         if reaction.equilibrium is not None:
-            k_eq = equilibrium_constant(reaction, T)
-            return forward * (1.0 - 1.0 / k_eq)
+            return _equilibrium_limited(reaction, forward, T, P, z)
         return forward
     if isinstance(kinetics, LHHW):
         numerator = float(
