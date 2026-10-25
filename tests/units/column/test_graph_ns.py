@@ -48,6 +48,7 @@ from ngdesign.units.column.inside_out import (
     _stage_k_values,
     _temperature_seed,
 )
+from ngdesign.units.column.naphtali_sandholm import _naphtali_sandholm as _dense_ns_entry
 from ngdesign.units.column.spec import _parse_params
 from ngdesign.units.column.thermo_adapter import _flash_ready, _ThermoBox
 
@@ -350,7 +351,7 @@ def test_solve_routed_through_graph_ns_matches_dense_ns(
 
     dense_calls = [0]
     graph_calls = [0]
-    real_dense = specs_mod._naphtali_sandholm
+    real_dense = _dense_ns_entry
 
     def counting_dense(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None) -> _Profile:
         dense_calls[0] += 1

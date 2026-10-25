@@ -1000,7 +1000,7 @@ class _GraphNSEngine:
 
     def trace_solve_failed(self) -> None:
         self.prof.ns_trace.append(
-            f"pass {self.prof.ns_passes}: M={self._m_current:.3e} H={self._h_current:.3e} | sparse LU singular"
+            f"pass {self.prof.ns_passes}: M={self._m_current:.3e} H={self._h_current:.3e} | LU singular"
         )
 
     def trace_pass(
@@ -1017,8 +1017,8 @@ class _GraphNSEngine:
     ) -> None:
         _ = r0, jac, step, lam_lm, ach_m, ach_h, via
         self.prof.ns_trace.append(
-            f"pass {self.prof.ns_passes}: M={self._m_current:.3e} H={self._h_current:.3e} | colours={self._colours} "
-            f"jac_evals={self._n_evals} lam={lam:.3g} accepted={accepted}"
+            f"pass {self.prof.ns_passes}: M={self._m_current:.3e} H={self._h_current:.3e} "
+            f"| colours={self._colours} jac_evals={self._n_evals} lam={lam:.3g} accepted={accepted}"
         )
 
     def exhausted(self) -> None:

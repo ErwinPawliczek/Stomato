@@ -753,8 +753,8 @@ class _DenseNSEngine:
         pred_m = max(abs(lin[i]) for i in self._m_rows)
         pred_h = max((abs(lin[i]) for i in self._h_rows), default=0.0)
         self.prof.ns_trace.append(
-            f"pass {self.prof.ns_passes}: exact M={self.ex_m:.3e} H={self.ex_h:.3e} | lin-pred M={pred_m:.3e} "
-            f"H={pred_h:.3e} | lam={lam:.3g} lam_lm={lam_lm:.3g} "
+            f"pass {self.prof.ns_passes}: exact M={self.ex_m:.3e} H={self.ex_h:.3e} "
+            f"| lin-pred M={pred_m:.3e} H={pred_h:.3e} | lam={lam:.3g} lam_lm={lam_lm:.3g} "
             f"achieved M={ach_m:.3e} H={ach_h:.3e} via={via} "
             f"flashes(k+h)={self._k_misses[0] + self._h_evals[0]}"
         )
