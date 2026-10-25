@@ -80,4 +80,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-E 3
 
-> the amine-specific rows live in the treating family; this row is the generic solvent absorber.
+> the amine-specific rows live in the treating family; this row is the generic solvent absorber. R2 V1 gap — provisional without a case (searched data/validation/ and data/validation_units/column/ for absorber cases; the only absorber V1 case on main is R0's V1-kremser-absorber-seader53, whose printed fractions-not-absorbed are anchored to Example 5.3's 97.5 F chart-estimated K-values carried as Kremser k_overrides — a different thermodynamic basis from the package K-values R2 runs on — so the case is not transferable without re-deriving anchors, which the V1 conventions forbid). R2 is covered by closed-form identity and equilibrium-pair tests.
