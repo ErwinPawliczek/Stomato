@@ -30,7 +30,9 @@ from typing import Any
 
 import pytest
 
-from ngdesign.units.flow.ejector_r1 import ejector_core
+from ngdesign.units.flow.ejector import Ejector
+from ngdesign.units.flow.ejector_r1 import EjectorR1, EjectorR1Error, ejector_core
+from tests.conftest import flash_feed
 
 M_AIR = 0.0289647  # kg/mol
 KAPPA = 1.4
@@ -117,3 +119,107 @@ def test_monotonicity_in_phi_mix() -> None:
         s_at_PH_mix=s_at_PH_mix,
     )
     assert high["P_out_Pa"] > low["P_out_Pa"] > PS
+
+
+def _example_inlets(thermo: Any) -> tuple[dict[str, Any], dict[str, Any]]:
+    feeds, params = EjectorR1.example_case()
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    return inlets, params
+
+
+def test_example_case_rates(thermo: Any) -> None:
+    """The R0 basis rates to a discharge between the suction and motive pressures."""
+    inlets, params = _example_inlets(thermo)
+    result = EjectorR1().solve(inlets, params, thermo)
+    P_out = result.info["P_out_Pa"]
+    assert inlets["suction_in"].P < P_out < inlets["motive_in"].P
+    assert result.info["compression_ratio"] == pytest.approx(
+        P_out / inlets["suction_in"].P, rel=1e-12
+    )
+    assert result.info["entrainment_kg_kg"] == pytest.approx(
+        inlets["suction_in"].mass_flow / inlets["motive_in"].mass_flow, rel=1e-12
+    )
+    assert result.duty_W == 0.0 and result.power_W == 0.0
+    assert result.outlets["outlet"].molar_flow == pytest.approx(
+        inlets["motive_in"].molar_flow + inlets["suction_in"].molar_flow, rel=1e-12
+    )
+
+
+def test_identity_with_r0(thermo: Any) -> None:
+    """R0 run at R1's computed P_out and achieved entrainment gives the identical outlet."""
+    inlets, params = _example_inlets(thermo)
+    r1 = EjectorR1().solve(inlets, params, thermo)
+    P_out = r1.info["P_out_Pa"]
+    entrainment = inlets["suction_in"].mass_flow / inlets["motive_in"].mass_flow
+    r0 = Ejector().solve(inlets, {"P_out": P_out, "entrainment": entrainment}, thermo)
+    out_r1, out_r0 = r1.outlets["outlet"], r0.outlets["outlet"]
+    assert out_r1.T == out_r0.T
+    assert out_r1.P == out_r0.P
+    assert out_r1.enthalpy == pytest.approx(out_r0.enthalpy, rel=1e-12)
+
+
+def test_p_out_required_reporting(thermo: Any) -> None:
+    """P_out_required only reports: the outlet stays at the computed discharge."""
+    inlets, params = _example_inlets(thermo)
+    base = EjectorR1().solve(inlets, params, thermo)
+    P_out = base.info["P_out_Pa"]
+    assert "meets_discharge" not in base.info and "discharge_margin_Pa" not in base.info
+    below = EjectorR1().solve(inlets, {**params, "P_out_required": P_out * 0.9}, thermo)
+    assert below.info["meets_discharge"] == 1.0
+    assert below.info["discharge_margin_Pa"] == pytest.approx(0.1 * P_out, rel=1e-12)
+    above = EjectorR1().solve(inlets, {**params, "P_out_required": P_out * 1.1}, thermo)
+    assert above.info["meets_discharge"] == 0.0
+    assert above.info["discharge_margin_Pa"] == pytest.approx(-0.1 * P_out, rel=1e-12)
+    assert above.outlets["outlet"].P == base.outlets["outlet"].P
+
+
+def test_refuse_motive_not_above_suction(thermo: Any) -> None:
+    """Pp <= Ps is refused: the motive must expand to the suction pressure."""
+    feeds, params = EjectorR1.example_case()
+    feeds["motive_in"]["P"] = 2000.0
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    with pytest.raises(EjectorR1Error, match="motive pressure"):
+        EjectorR1().solve(inlets, params, thermo)
+
+
+@pytest.mark.parametrize("name", ["eta_nozzle", "phi_mix", "eta_diffuser"])
+def test_refuse_efficiency_out_of_range(thermo: Any, name: str) -> None:
+    """Each efficiency must lie in (0, 1]; zero is refused by name."""
+    inlets, params = _example_inlets(thermo)
+    with pytest.raises(EjectorR1Error, match=name):
+        EjectorR1().solve(inlets, {**params, name: 0.0}, thermo)
+
+
+def test_refuse_no_nozzle_drop(thermo: Any) -> None:
+    """A compressed-liquid motive has no enthalpy drop expanding to the suction pressure."""
+    feeds = {
+        "motive_in": {"T": 300.0, "P": 100.0e5, "molar_flow": 100.0, "composition": {"H2O": 1.0}},
+        "suction_in": {"T": 300.0, "P": 1.0e5, "molar_flow": 50.0, "composition": {"H2O": 1.0}},
+    }
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    with pytest.raises(EjectorR1Error, match="no nozzle enthalpy drop"):
+        EjectorR1().solve(inlets, {}, thermo)
+
+
+def test_refuse_discharge_above_motive(thermo: Any) -> None:
+    """With perfect efficiencies the example's kinetic energy would recompress above Pp."""
+    inlets, _ = _example_inlets(thermo)
+    perfect = {"eta_nozzle": 1.0, "phi_mix": 1.0, "eta_diffuser": 1.0}
+    with pytest.raises(EjectorR1Error, match="exceeds the motive pressure"):
+        EjectorR1().solve(inlets, perfect, thermo)
+
+
+def test_refuse_zero_molar_flow(thermo: Any) -> None:
+    """A zero-flow inlet is refused."""
+    feeds, params = EjectorR1.example_case()
+    feeds["suction_in"]["molar_flow"] = 0.0
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    with pytest.raises(EjectorR1Error, match="molar_flow"):
+        EjectorR1().solve(inlets, params, thermo)
+
+
+def test_refuse_bad_p_out_required(thermo: Any) -> None:
+    """A non-positive P_out_required is refused by name."""
+    inlets, params = _example_inlets(thermo)
+    with pytest.raises(EjectorR1Error, match="P_out_required"):
+        EjectorR1().solve(inlets, {**params, "P_out_required": -1.0}, thermo)

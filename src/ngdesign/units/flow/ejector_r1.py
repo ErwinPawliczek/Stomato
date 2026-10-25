@@ -40,9 +40,12 @@ from __future__ import annotations
 import sys
 from collections.abc import Callable
 from math import sqrt
+from typing import Any
 
 from scipy.optimize import brentq
 
+from ngdesign.contracts import StreamState, UnitResult
+from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.flow.ejector import EjectorSpecError
 
 #: ``h = h(P, s)`` for a composition: an isentropic (PS) flash enthalpy.
@@ -137,3 +140,105 @@ def ejector_core(
         "s_static_mix_J_molK": s_m,
         "MW_mix_kg_mol": MW_mix,
     }
+
+
+class EjectorR1:
+    """Rating-mode ejector: the achievable discharge pressure (R1).
+
+    Reads ``motive_in`` and ``suction_in`` and computes the discharge pressure
+    the streams can actually reach (eqs. 1-5), with the outlet a stagnation
+    (PH) flash at that pressure (eq. 6). R0 is recovered exactly by rating a
+    solve and re-running :class:`~ngdesign.units.flow.ejector.Ejector` at the
+    computed ``P_out`` (the identity test). Params: ``eta_nozzle`` (0.95),
+    ``phi_mix`` (0.85), ``eta_diffuser`` (0.85), and the optional
+    ``P_out_required`` (Pa) which only switches on the discharge check.
+    """
+
+    inlet_ports = ("motive_in", "suction_in")
+    outlet_ports = ("outlet",)
+
+    def solve(
+        self,
+        inlets: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> UnitResult:
+        motive = inlets["motive_in"]
+        suction = inlets["suction_in"]
+        eta_n = float(params.get("eta_nozzle", 0.95))
+        phi_m = float(params.get("phi_mix", 0.85))
+        eta_d = float(params.get("eta_diffuser", 0.85))
+        P_out_required = params.get("P_out_required")
+        if P_out_required is not None:
+            P_out_required = float(P_out_required)
+            if P_out_required <= 0.0:
+                raise EjectorR1Error(f"P_out_required {P_out_required} Pa must be > 0")
+
+        n_p, n_s = motive.molar_flow, suction.molar_flow
+        z_mix: dict[str, float] = {
+            cid: (n_p * motive.composition.get(cid, 0.0) + n_s * suction.composition.get(cid, 0.0))
+            / (n_p + n_s)
+            for cid in set(motive.composition) | set(suction.composition)
+        }
+
+        def h_at_PS_motive(P: float, s: float) -> float:
+            return thermo.flash_ps(motive.composition, P, s, n_p).enthalpy
+
+        def h_at_PS_mix(P: float, s: float) -> float:
+            return thermo.flash_ps(z_mix, P, s, n_p + n_s).enthalpy
+
+        def s_at_PH_mix(P: float, h: float) -> float:
+            return thermo.flash_ph(z_mix, P, h, n_p + n_s).entropy
+
+        info = ejector_core(
+            np=n_p,
+            ns=n_s,
+            MWp=motive.mass_flow / n_p,
+            MWs=suction.mass_flow / n_s,
+            hp=motive.enthalpy,
+            sp=motive.entropy,
+            hs=suction.enthalpy,
+            Pp=motive.P,
+            Ps=suction.P,
+            eta_n=eta_n,
+            phi_m=phi_m,
+            eta_d=eta_d,
+            h_at_PS_motive=h_at_PS_motive,
+            h_at_PS_mix=h_at_PS_mix,
+            s_at_PH_mix=s_at_PH_mix,
+            P_hi=motive.P,
+        )
+        P_out = info["P_out_Pa"]
+        # Eq. 6: the outlet is the stagnation state (h_0, exactly R0's h_mix).
+        outlet = thermo.flash_ph(z_mix, P_out, info["h_stag_mix_J_mol"], n_p + n_s)
+
+        result_info: dict[str, float] = {
+            "P_out_Pa": P_out,
+            "compression_ratio": P_out / suction.P,
+            "u_motive_m_s": info["u_motive_m_s"],
+            "u_mix_m_s": info["u_mix_m_s"],
+            "entrainment_kg_kg": suction.mass_flow / motive.mass_flow,
+            "h_static_mix_J_mol": info["h_static_mix_J_mol"],
+        }
+        if P_out_required is not None:
+            # R1 is a rating model: the outlet stays at the computed P_out.
+            result_info["meets_discharge"] = 1.0 if P_out >= P_out_required else 0.0
+            result_info["discharge_margin_Pa"] = P_out - P_out_required
+        return UnitResult(
+            outlets={"outlet": outlet},
+            duty_W=0.0,
+            power_W=0.0,
+            info=result_info,
+        )
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """R0's Graham-style basis without ``P_out``/``entrainment``: R1 rates it."""
+        motive = {"T": 500.0, "P": 1.0e6, "molar_flow": 146.873, "composition": {"H2O": 1.0}}
+        suction = {"T": 300.0, "P": 2000.0, "molar_flow": 48.958, "composition": {"H2O": 1.0}}
+        params: dict[str, Any] = {
+            "eta_nozzle": 0.95,
+            "phi_mix": 0.85,
+            "eta_diffuser": 0.85,
+        }
+        return {"motive_in": motive, "suction_in": suction}, params
