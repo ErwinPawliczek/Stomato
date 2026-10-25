@@ -10,7 +10,6 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-
 from fluids.safety_valve import API520_B
 
 from ngdesign.contracts.plugins import Thermo

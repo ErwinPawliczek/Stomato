@@ -257,6 +257,7 @@ class ReliefValveR2(ReliefValveR1):
                     "total back pressure is at or above 50 % of set gauge; "
                     "API 520 Part I Fig. 30 cannot be applied"
                 )
+            info["backpressure_ok"] = 1
             is_liquid = info["regime_code"] >= 2
             if is_liquid:
                 factor = float(API520_W(P_set, P_back_total))
@@ -289,9 +290,16 @@ class ReliefValveR2(ReliefValveR1):
         dP = 0.0
         for _ in range(_fixed_point_cap()):
             P_mean = P_back + dP / 2.0
-            state = thermo.flash_ph(z, P_mean, inlet.enthalpy, inlet.molar_flow)
-            rho = 1.0 / mixture_v(state)
-            mu = mixture_viscosity(state, thermo)
+            try:
+                state = thermo.flash_ph(z, P_mean, inlet.enthalpy, inlet.molar_flow)
+                rho = 1.0 / mixture_v(state)
+                mu = mixture_viscosity(state, thermo)
+            except Exception:
+                # A wildly out-of-band dP (e.g. a tiny outlet line) can drive the
+                # mean pressure far beyond the flash's validity; the 10 % check
+                # is already decided there, so evaluate the loss at inlet props.
+                rho = 1.0 / mixture_v(inlet)
+                mu = mixture_viscosity(inlet, thermo)
             new = inlet_line_dP(W_rated, rho, mu, D_out, L_out, rough_out, K_out)["dP_Pa"]
             if abs(new - dP) <= 1e-8 * max(new, 1.0):
                 return new
