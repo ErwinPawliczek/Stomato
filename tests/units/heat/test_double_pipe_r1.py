@@ -31,7 +31,25 @@ from ngdesign.units.heat.rating import (
     SinglePhaseRequired,
 )
 
+# The identity case runs on standard Sch 40 hairpin pipe (4-inch inner
+# tube inside a 6-inch shell). The spec's stated identity geometry
+# (inner_ID 0.0266 / inner_OD 0.0334 / outer_ID 0.0525, 60 m) refuses on
+# the R0 example feeds: 100 mol/s of N2 gas at 10 bar runs ~750 m/s in a
+# 1-inch pipe, a ~60 MPa drop - the spec's own refusal table rejects
+# non-positive outlet pressures before any duty is solved. The identities
+# under test (same flash_ph calls, 1e-10 agreement; UA within 1e-3) do
+# not depend on the geometry; the refusal that fires on the spec's
+# geometry is itself tested below (test_nonpositive_outlet_pressure_refuses).
 GEOMETRY: dict[str, Any] = {
+    "inner_ID_m": 0.10226,
+    "inner_OD_m": 0.1143,
+    "outer_ID_m": 0.15405,
+    "length_m": 60.0,
+    "inner_side": "hot",
+}
+
+# The spec's identity geometry, kept as the natural pressure-refusal case.
+SPEC_GEOMETRY: dict[str, Any] = {
     "inner_ID_m": 0.0266,
     "inner_OD_m": 0.0334,
     "outer_ID_m": 0.0525,
@@ -166,17 +184,30 @@ def test_temperature_cross_refuses() -> None:
 
 
 def test_two_phase_inlet_refuses() -> None:
-    """Water at its bubble point (two-phase) reaches SinglePhaseRequired."""
+    """A two-phase inlet reaches SinglePhaseRequired, side named.
+
+    Rich gas below its dew point (the expander suite's two-phase recipe):
+    the PR package does not honour a pure-water TVF request (see
+    tests/units/heat/test_heat_balance.py), so the two-phase state comes
+    from a mixture. The phase check runs before the solve's cross check.
+    """
     thermo = _thermo()
-    hot = thermo.flash_tvf({"H2O": 1.0}, 373.15, 0.5, 100.0)
-    assert len(hot.phases) == 2
-    cold = thermo.flash_pt({"N2": 1.0}, 320.0, 1.0e5, 100.0)
+    hot = thermo.flash_pt({"C1": 0.85, "C3": 0.10, "nC5": 0.05}, 240.0, 8.0e6, 100.0)
+    assert len(hot.phases) == 2  # precondition: the feed really is two-phase
+    cold = thermo.flash_pt({"N2": 1.0}, 320.0, 1.0e6, 100.0)
     with pytest.raises(SinglePhaseRequired, match="R1 rates single-phase duty"):
         DoublePipeR1().solve({"hot_in": hot, "cold_in": cold}, dict(GEOMETRY), thermo)
 
 
 def test_nonpositive_outlet_pressure_refuses() -> None:
-    """A 100 km hairpin drops the gas below atmospheric: refused, named."""
+    """The spec's 1-inch geometry on the example feeds: refused, named.
+
+    60 m of 1-inch pipe chokes the 2.8 kg/s N2 feed (v ~750 m/s): the
+    ~60 MPa drop exceeds the 1 MPa inlet pressure. A 100 km hairpin on
+    the feasible geometry refuses identically.
+    """
+    with pytest.raises(RatingError, match="non-positive outlet pressure"):
+        _solve(_thermo(), dict(SPEC_GEOMETRY))
     with pytest.raises(RatingError, match="non-positive outlet pressure"):
         _solve(_thermo(), {**GEOMETRY, "length_m": 1.0e5})
 

@@ -145,13 +145,21 @@ class DoublePipeR1:
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-        """The R0 syngas trim-cooler feeds plus the spec's rating geometry."""
+        """The R0 syngas trim-cooler feeds plus a rating geometry.
+
+        The spec's 1-inch / 60 m geometry (inner_ID 0.0266 m) refuses on
+        these feeds: 100 mol/s of N2 gas runs ~750 m/s in a 1-inch pipe, a
+        ~60 MPa drop on a 1 MPa feed - the refusal table's non-positive
+        outlet pressure. The example therefore uses standard Sch 40
+        hairpin pipe (4-inch inner in a 6-inch shell), hydraulically
+        feasible for the same duty and documented in the test file.
+        """
         hot = {"T": 500.0, "P": 1.0e6, "molar_flow": 100.0, "composition": {"N2": 1.0}}
         cold = {"T": 320.0, "P": 1.0e6, "molar_flow": 100.0, "composition": {"N2": 1.0}}
         params: dict[str, Any] = {
-            "inner_ID_m": 0.0266,
-            "inner_OD_m": 0.0334,
-            "outer_ID_m": 0.0525,
+            "inner_ID_m": 0.10226,
+            "inner_OD_m": 0.1143,
+            "outer_ID_m": 0.15405,
             "length_m": 60.0,
             "inner_side": "hot",
         }
