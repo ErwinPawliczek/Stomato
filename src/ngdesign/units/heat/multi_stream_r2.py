@@ -39,9 +39,10 @@ from typing import Any
 import ht
 import numpy as np
 
-from ngdesign.contracts import PhaseKind, StreamState, TemperatureCross, UnitResult
+from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import components
+from ngdesign.units._physics.heat_balance import TemperatureCross
 from ngdesign.units.heat.multi_stream import MultiStreamExchanger
 from ngdesign.units.heat.multi_stream_r1 import (
     _COLD_PORTS,
@@ -283,7 +284,7 @@ def _single_phase_h(geom: FinGeometry, Dh_m: float, G: float, props: FilmProps) 
     """Single-phase film coefficient from Manglik-Bergles j: h = j*G*cp*Pr^(-2/3)."""
     Re = G * Dh_m / props.mu_Pa_s
     j = manglik_bergles_j(Re, geom.alpha, geom.delta, geom.gamma)
-    return j * G * props.cp_J_kgK * props.Pr ** (-2.0 / 3.0)
+    return float(j * G * props.cp_J_kgK * props.Pr ** (-2.0 / 3.0))
 
 
 def _two_phase_h(
@@ -335,6 +336,7 @@ def _two_phase_h(
             liquid.cp_J_kgK,
             MW,
             P,
+            Pc,
             Te,
         )
     )
