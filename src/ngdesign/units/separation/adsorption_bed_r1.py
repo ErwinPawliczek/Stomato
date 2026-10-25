@@ -202,24 +202,29 @@ class AdsorptionBedR1:
             b_ref[cid] = b
 
         bed_mass = params.get("bed_mass_kg")
-        geom = {key: params.get(key) for key in ("bed_density_kg_m3", "bed_diameter_m", "bed_length_m")}
-        given_geom = [key for key, value in geom.items() if value is not None]
-        if bed_mass is not None and given_geom:
+        geom: dict[str, float] = {}
+        for key in ("bed_density_kg_m3", "bed_diameter_m", "bed_length_m"):
+            value = params.get(key)
+            if value is not None:
+                geom[key] = float(value)
+        if bed_mass is not None and geom:
             raise AdsorptionBedR1SpecError(
                 "bed_mass_kg and the geometry form (bed_density_kg_m3, bed_diameter_m, "
                 "bed_length_m) are mutually exclusive: give exactly one"
             )
         bed_length_m: float | None = None
         if bed_mass is None:
-            if len(given_geom) != 3:
-                missing = [key for key in geom if geom[key] is None]
+            if len(geom) != 3:
+                missing = [
+                    key for key in ("bed_density_kg_m3", "bed_diameter_m", "bed_length_m") if key not in geom
+                ]
                 raise AdsorptionBedR1SpecError(
                     "bed_mass_kg is required: give bed_mass_kg, or all of "
                     f"bed_density_kg_m3, bed_diameter_m, bed_length_m (missing: {missing})"
                 )
-            rho_b = float(geom["bed_density_kg_m3"])
-            D = float(geom["bed_diameter_m"])
-            L = float(geom["bed_length_m"])
+            rho_b = geom["bed_density_kg_m3"]
+            D = geom["bed_diameter_m"]
+            L = geom["bed_length_m"]
             if min(rho_b, D, L) <= 0.0:
                 raise AdsorptionBedR1SpecError(
                     f"bed_density_kg_m3 {rho_b}, bed_diameter_m {D} and bed_length_m {L} must be > 0"
