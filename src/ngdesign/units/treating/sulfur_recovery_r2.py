@@ -314,3 +314,57 @@ class SulfurRecoveryR2:
             duty_W=duty_W,
             info=info,
         )
+
+    @staticmethod
+    def example_case() -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """A 100 mol/s burner mixture over two catalytic Gibbs stages.
+
+        R0's feeds and thermal params; the given-conversion first converter is
+        replaced by a Gibbs equilibrium stage at 573 K (approach 0 K), and the
+        second stays at R0's 473.15 K with a 30 K equilibrium approach.
+        Feed: H2S 0.30, O2 0.15 (exactly the air the one-third burn needs:
+        1.5 * 0.30/3), CO2 0.05, N2 0.50, at 320 K and 1.5 bara. Thermal stage
+        at 1350 K (typical reaction-furnace temperature), 60 % thermal Claus
+        conversion, condensers at 423 K (150 C -- liquid sulfur).
+        Reactions: Kohl & Nielsen, Gas Purification, 5th ed., ch. 8.
+        """
+        reaction_set = {
+            "id": "claus",
+            "components": ["H2S", "O2", "SO2", "H2O", "S8", "N2", "CO2"],
+            "reactions": [
+                {
+                    "id": "h2s_burn",
+                    "stoichiometry": {"H2S": -1.0, "O2": -1.5, "SO2": 1.0, "H2O": 1.0},
+                    "base_component": "H2S",
+                    "provenance": "standard Claus thermal oxidation, Kohl & Nielsen, "
+                    "Gas Purification, 5th ed., ch. 8",
+                },
+                {
+                    "id": "claus_reaction",
+                    "stoichiometry": {"H2S": -2.0, "SO2": -1.0, "H2O": 2.0, "S8": 0.375},
+                    "base_component": "SO2",
+                    "provenance": "standard Claus reaction, Kohl & Nielsen, Gas Purification, 5th ed., ch. 8",
+                    "equilibrium": {"form": "from_gibbs"},
+                },
+            ],
+        }
+        feeds: dict[str, dict[str, Any]] = {
+            "acid_gas_in": {
+                "T": 320.0,
+                "P": 1.5e5,
+                "molar_flow": 100.0,
+                "composition": {"H2S": 0.30, "O2": 0.15, "CO2": 0.05, "N2": 0.50},
+            },
+        }
+        params: dict[str, Any] = {
+            "T_thermal": 1350.0,
+            "P": 1.2e5,
+            "T_condenser": 423.15,
+            "thermal_conversion": 0.6,
+            "catalytic_stages": [
+                {"T": 573.0, "approach_K": 0.0},
+                {"T": 473.15, "approach_K": 30.0},
+            ],
+            "reaction_set": reaction_set,
+        }
+        return feeds, params

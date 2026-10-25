@@ -325,7 +325,7 @@ class SulfurRecovery:
         H2S 0.30, O2 0.15 (exactly the air the one-third burn needs:
         1.5 * 0.30/3), CO2 0.05, N2 0.50, at 320 K and 1.5 bara. Thermal stage
         at 1350 K (typical reaction-furnace temperature), 60 % thermal Claus
-        conversion, two catalytic stages (573 K at equilibrium; 473 K at a
+        conversion, two catalytic stages (573 K at 70 % conversion; 473 K at a
         30 K equilibrium approach), condensers at 423 K (150 C -- liquid
         sulfur). Reactions: Kohl & Nielsen, Gas Purification, 5th ed., ch. 8.
         """
@@ -363,7 +363,7 @@ class SulfurRecovery:
             "T_condenser": 423.15,
             "thermal_conversion": 0.6,
             "catalytic_stages": [
-                {"T": 573.0, "approach_K": 0.0},
+                {"T": 573.15, "conversion": 0.7},
                 {"T": 473.15, "approach_K": 30.0},
             ],
             "reaction_set": reaction_set,
