@@ -521,8 +521,8 @@ class ShellTubeR1:
         process_out = hot_out if hot_is_process else cold_out
         utility_out = cold_out if hot_is_process else hot_out
         duty_W = process.molar_flow * (process_out.enthalpy - process.enthalpy)
-        f_lmtd = float(  # type: ignore[arg-type]  # ht 1.2.0 mis-annotates Thi/Tci as int
-            ht.F_LMTD_Fakheri(hot.T, hot_out.T, cold.T, cold_out.T, shells=geom.n_shells)
+        f_lmtd = float(
+            ht.F_LMTD_Fakheri(hot.T, hot_out.T, cold.T, cold_out.T, shells=geom.n_shells)  # type: ignore[arg-type]  # ht 1.2.0 mis-annotates Thi/Tci as int
         )
         info: dict[str, Any] = {
             "Q_W": rated.duty_W,
