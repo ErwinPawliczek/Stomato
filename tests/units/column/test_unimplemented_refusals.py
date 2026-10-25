@@ -23,7 +23,15 @@ def _base_params() -> dict[str, Any]:
         "reboiler": "kettle",
         "feed_stage": 8,
         "pressure_profile": 1.5e6,
-        "feeds": [{"stage": 8, "T": 330.0, "P": 1.5e6, "molar_flow": 100.0, "composition": {"C3": 0.5, "iC4": 0.5}}],
+        "feeds": [
+            {
+                "stage": 8,
+                "T": 330.0,
+                "P": 1.5e6,
+                "molar_flow": 100.0,
+                "composition": {"C3": 0.5, "iC4": 0.5},
+            }
+        ],
         "specs": {"reflux_ratio": 2.5, "distillate_rate": 45.0},
     }
 
