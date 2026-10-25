@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `M`
 
-Rigour ladder: R0 provisional, R1 planned, R2 planned
+Rigour ladder: R0 provisional, R1 provisional, R2 planned
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R1 planned, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.separation.membrane:Membrane` | exactly one of permeate_recovery (any components) and stage_cut with perm_ratio (binary Weller-Steiner complete mixing); the permeate leaves at P_permeate, the residue at P_in. Evidence gap — the stage-cut model is validated against Geankoplis Ex. 13.4-2 (air, y_O2 = 0.5068, reject x_O2 = 0.1345); the permeate_recovery path is a spec split with V0 self-consistency only. |
-| R1 | planned | — | solution-diffusion with permeances, cross-flow |
+| R1 | provisional | `ngdesign.units.separation.membrane_r1:MembraneR1` | solution-diffusion with permeances, cross-flow (Weller-Steiner 1950, Pan 1983) with the local permeate y_i = J_i/ΣJ from a bracketed brentq (closed form at P_l = 0) and the feed side dn_i/da = -J_i integrated DOP853 at rtol 1e-11; stage-cut mode by a terminal event with the A_hard cap; isothermal outlets via split_by_component as in R0. |
 | R2 | planned | — | counter-current module |
 
 ### R0 parameters
@@ -40,6 +40,33 @@ properties:
     maximum: 1
     minimum: 0
     type: number
+type: object
+```
+
+### R1 parameters
+
+```yaml
+properties:
+  P_permeate:
+    description: permeate-side absolute pressure, Pa
+    exclusiveMinimum: 0
+    type: number
+  area_m2:
+    description: membrane area, m2 (rating mode)
+    exclusiveMinimum: 0
+    type: number
+  permeances_mol_m2_s_Pa:
+    description: component id to permeance, mol/(m2 s Pa) (1 GPU = 3.348e-10); every
+      feed component required
+    type: object
+  stage_cut:
+    description: target permeate/feed molar ratio (design mode; area is solved)
+    exclusiveMaximum: 1
+    exclusiveMinimum: 0
+    type: number
+required:
+- permeances_mol_m2_s_Pa
+- P_permeate
 type: object
 ```
 
