@@ -69,9 +69,7 @@ _ANCHOR_B = 89.5563
 def _feed(thermo: Thermo, state: dict[str, Any]) -> StreamState:
     """Every test feed is flashed by the package -- never hand-built (U-R1) --
     so energy closure is checked against the true feed enthalpy."""
-    return thermo.flash_pt(
-        dict(state["composition"]), state["T"], state["P"], state["molar_flow"]
-    )
+    return thermo.flash_pt(dict(state["composition"]), state["T"], state["P"], state["molar_flow"])
 
 
 def _params(**over: Any) -> dict[str, Any]:
@@ -98,9 +96,7 @@ def test_identity_to_column_row(thermo: Thermo) -> None:
         "specs": {"boilup_ratio": 0.5},
     }
     direct = Column().solve({"feed": _feed(thermo, FEED)}, mapped, thermo)
-    via_adapter = ReboiledStripperR2().solve(
-        {"feed": _feed(thermo, FEED)}, _params(), thermo
-    )
+    via_adapter = ReboiledStripperR2().solve({"feed": _feed(thermo, FEED)}, _params(), thermo)
 
     assert via_adapter.outlets.keys() == {"overhead", "bottoms"}
     assert via_adapter.outlets["overhead"] == direct.outlets["distillate"]
@@ -193,12 +189,8 @@ def test_spec_achieved_component_recovery_within_gate(thermo: Thermo) -> None:
     The measured value comes from the outlet flows (B*x_B,NC4 over the feed's
     NC4), not from the column's info.
     """
-    spec: dict[str, Any] = {
-        "component_recovery": {"component": "NC4", "value": 0.9, "product": "bottoms"}
-    }
-    result = ReboiledStripperR2().solve(
-        {"feed": _feed(thermo, FEED)}, _params(spec=spec), thermo
-    )
+    spec: dict[str, Any] = {"component_recovery": {"component": "NC4", "value": 0.9, "product": "bottoms"}}
+    result = ReboiledStripperR2().solve({"feed": _feed(thermo, FEED)}, _params(spec=spec), thermo)
     assert abs(result.info["spec_achieved"] - 0.9) / 0.9 < _SPEC_TOL
     assert result.info["spec_name"] == 4.0
 
@@ -233,9 +225,7 @@ def test_rate_spec_distillate_rate_converges(thermo: Thermo) -> None:
 
 def test_refusal_n_stages_missing(thermo: Thermo) -> None:
     with pytest.raises(ReboiledStripperR2Error, match="n_stages"):
-        ReboiledStripperR2().solve(
-            {"feed": _feed(thermo, FEED)}, {"spec": {"boilup_ratio": 0.5}}, thermo
-        )
+        ReboiledStripperR2().solve({"feed": _feed(thermo, FEED)}, {"spec": {"boilup_ratio": 0.5}}, thermo)
 
 
 def test_refusal_n_stages_non_integer(thermo: Thermo) -> None:
@@ -264,9 +254,7 @@ def test_refusal_spec_two_keys(thermo: Thermo) -> None:
 
 def test_refusal_spec_key_outside_allowed_set(thermo: Thermo) -> None:
     with pytest.raises(ReboiledStripperR2Error, match="spec"):
-        ReboiledStripperR2().solve(
-            {"feed": _feed(thermo, FEED)}, _params(spec={"reflux_ratio": 2.0}), thermo
-        )
+        ReboiledStripperR2().solve({"feed": _feed(thermo, FEED)}, _params(spec={"reflux_ratio": 2.0}), thermo)
 
 
 def test_refusal_reboiler_duty_w_before_column_call(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -274,9 +262,7 @@ def test_refusal_reboiler_duty_w_before_column_call(thermo: Thermo, monkeypatch:
     monkeypatch.setattr(
         Column, "solve", lambda *a, **k: pytest.fail("reboiler_duty_W must be refused pre-column")
     )
-    with pytest.raises(
-        ReboiledStripperR2Error, match="reboiler_duty_W.*singular|singular.*reboiler_duty_W"
-    ):
+    with pytest.raises(ReboiledStripperR2Error, match="reboiler_duty_W.*singular|singular.*reboiler_duty_W"):
         ReboiledStripperR2().solve(
             {"feed": _feed(thermo, FEED)}, _params(spec={"reboiler_duty_W": 1e6}), thermo
         )
@@ -291,9 +277,7 @@ def test_refusal_pressure_profile_wrong_length(thermo: Thermo) -> None:
 
 def test_refusal_pressure_profile_nonpositive(thermo: Thermo) -> None:
     with pytest.raises(ReboiledStripperR2Error, match="pressure_profile"):
-        ReboiledStripperR2().solve(
-            {"feed": _feed(thermo, FEED)}, _params(pressure_profile=-1.0), thermo
-        )
+        ReboiledStripperR2().solve({"feed": _feed(thermo, FEED)}, _params(pressure_profile=-1.0), thermo)
 
 
 def test_refusal_feed_zero_flow(thermo: Thermo) -> None:
@@ -304,9 +288,7 @@ def test_refusal_feed_zero_flow(thermo: Thermo) -> None:
 
 def test_refusal_unknown_param_key(thermo: Thermo) -> None:
     with pytest.raises(ReboiledStripperR2Error, match="unknown"):
-        ReboiledStripperR2().solve(
-            {"feed": _feed(thermo, FEED)}, _params(vapour_flow=1.0), thermo
-        )
+        ReboiledStripperR2().solve({"feed": _feed(thermo, FEED)}, _params(vapour_flow=1.0), thermo)
 
 
 def test_column_failure_reraised_unchanged(thermo: Thermo) -> None:
