@@ -155,15 +155,40 @@
           eta_isentropic: {type: number, description: 'isentropic efficiency in (0, 1], default 0.8'}
       note: isentropic expansion with power recovery
     R1:
-      status: planned
-      params: {}
-      note: performance map
+      status: provisional
+      adapter: ngdesign.units.flow.expander_r1:ExpanderR1
+      params:
+        type: object
+        required: [P_out, rotor_diameter_m, speed_rpm, map]
+        properties:
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+          rotor_diameter_m: {type: number, description: 'rotor tip diameter, m'}
+          speed_rpm: {type: number, description: 'shaft speed, rpm'}
+          map:
+            type: object
+            required: [velocity_ratio, efficiency]
+            properties:
+              velocity_ratio: {type: array, items: {type: number}, description: 'strictly increasing u/c0 points'}
+              efficiency: {type: array, items: {type: number}, description: 'isentropic efficiency in (0, 1] at each velocity_ratio'}
+          flow_min_m3_s: {type: number, description: 'flow-capacity lower limit, m3/s (optional)'}
+          flow_max_m3_s: {type: number, description: 'flow-capacity upper limit, m3/s (optional)'}
+      note: performance map (eta vs u/c0, PCHIP, no extrapolation) driving the R0 expansion
+      validation: []
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-B 4
   notes: the hydraulic turbine / pressure-recovery line (plan U-B 12) is covered by this
-    row — isentropic expansion recovering shaft power — not a separate row.
+    row — isentropic expansion recovering shaft power — not a separate row. R1 V1 gap
+    (PR 297) — no accessible source prints a full u/c0 performance map together with the
+    inlet state and the resulting outlet; searched Whitfield & Baines, Design of Radial
+    Turbomachines (1990) ch. 7 (eta-vs-U/C0 is figure/curve data), Balje, Turbomachines
+    (1981) ch. 3, Perry's 9th ed. sect. 10 (expander sizing curves, no worked example
+    with a printed outlet state), GPSA Data Book sect. 13 (public GPA example
+    spreadsheets cover Example 13-1 compressor work, not a turboexpander with printed
+    map and states), and Campbell, Gas Conditioning and Processing vol. 2 (expander
+    chapter). The level ships provisional, covered by the closed-form, identity and
+    refusal tests.
 
 - id: jt_valve
   name: JT valve
@@ -363,11 +388,25 @@
       params: {}
       note: ΔP + efficiency
     R1:
-      status: planned
-      params: {}
-      note: performance curve
+      status: provisional
+      adapter: ngdesign.units.flow.fan_r1:FanR1
+      params:
+        type: object
+        required: [curve]
+        properties:
+          curve:
+            type: object
+            required: [flow_m3_s, pressure_rise_Pa, efficiency]
+            properties:
+              flow_m3_s: {type: array, items: {type: number}, description: 'actual inlet flow points, m3/s, strictly increasing'}
+              pressure_rise_Pa: {type: array, items: {type: number}, description: 'fan total pressure rise at each point, Pa'}
+              efficiency: {type: array, items: {type: number}, description: 'efficiency at each point, (0, 1]'}
+          speed_ratio: {type: number, description: 'N / N_curve (fan laws), default 1.0'}
+          curve_density_kg_m3: {type: number, description: 'rating density of the curve, kg/m3; omitted = operating density'}
+      note: performance curve (pressure rise/efficiency vs flow, PCHIP) with fan laws and density correction
+      validation: []
       end_state: true
   pid_symbol: FAN
   references:
   - docs/unit-catalogue-plan.md §2 U-B 11
-  notes: R0 fixed dP rise with efficiency; performance curves remain roadmap.
+  notes: R0 fixed dP rise with efficiency; R1 performance curve (PCHIP, no extrapolation) with fan laws (AMCA 201; ASHRAE Fans chapter) and density correction, delegating to R0. V1 gap (fan R1) - no open printed fan-law worked example qualified for the harness — searched AMCA 201 (its fan-selection example needs manufacturer data, not printed results), the openly accessible ASHRAE Handbook—Fundamentals ch. 21 speed-change example (its only printed input is a single curve point, so a case would need a synthesized curve and would restate the fan law — the circularity that withdrew the ejector case), ASHRAE HVAC Systems & Equipment Fans chapter (paywalled) and Perry's 9th ed. sect. 10 (no printed worked example found). Covered by closed-form tests instead.
