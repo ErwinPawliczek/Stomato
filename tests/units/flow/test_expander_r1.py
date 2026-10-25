@@ -78,9 +78,7 @@ def test_identity_delegates_exactly_to_r0(thermo: Thermo) -> None:
     """R1 == Expander().solve(...) with eta_isentropic = info['eta'], exactly."""
     inlets = example_inlets(thermo)
     r1 = ExpanderR1().solve(inlets, base_params(), thermo)
-    r0 = Expander().solve(
-        inlets, {"P_out": 2.0e6, "eta_isentropic": r1.info["eta"]}, thermo
-    )
+    r0 = Expander().solve(inlets, {"P_out": 2.0e6, "eta_isentropic": r1.info["eta"]}, thermo)
     assert r1.outlets["gas_out"] == r0.outlets["gas_out"]
     assert r1.power_W == r0.power_W
     assert r1.duty_W == r0.duty_W
@@ -170,9 +168,7 @@ def test_refuse_bad_map(thermo: Thermo, map_over: dict[str, Any]) -> None:
     map_params = {**MAP, **map_over}
     map_params = {k: v for k, v in map_params.items() if v is not None}
     with pytest.raises(ExpanderR1SpecError, match="map.velocity_ratio"):
-        ExpanderR1().solve(
-            example_inlets(thermo), base_params(map=map_params), thermo
-        )
+        ExpanderR1().solve(example_inlets(thermo), base_params(map=map_params), thermo)
 
 
 def test_refuse_efficiency_out_of_range(thermo: Thermo) -> None:
@@ -185,9 +181,7 @@ def test_refuse_efficiency_out_of_range(thermo: Thermo) -> None:
 def test_refuse_velocity_ratio_outside_map(thermo: Thermo) -> None:
     """speed_rpm = 10000 gives nu = 0.313 < 0.40, outside the map: typed refusal."""
     with pytest.raises(ExpanderMapRangeError, match="velocity ratio"):
-        ExpanderR1().solve(
-            example_inlets(thermo), base_params(speed_rpm=10000.0), thermo
-        )
+        ExpanderR1().solve(example_inlets(thermo), base_params(speed_rpm=10000.0), thermo)
 
 
 def test_refuse_flow_limits_inconsistent(thermo: Thermo) -> None:
@@ -200,9 +194,7 @@ def test_refuse_flow_limits_inconsistent(thermo: Thermo) -> None:
             thermo,
         )
     with pytest.raises(ExpanderR1SpecError, match="flow_min_m3_s"):
-        ExpanderR1().solve(
-            inlets, base_params(flow_min_m3_s=-0.1, flow_max_m3_s=0.3), thermo
-        )
+        ExpanderR1().solve(inlets, base_params(flow_min_m3_s=-0.1, flow_max_m3_s=0.3), thermo)
 
 
 def test_flow_capacity_range(thermo: Thermo) -> None:
@@ -210,10 +202,8 @@ def test_flow_capacity_range(thermo: Thermo) -> None:
     inlets = example_inlets(thermo)
     with pytest.raises(ExpanderFlowRangeError, match="flow"):
         ExpanderR1().solve(inlets, base_params(flow_max_m3_s=0.1), thermo)
-    passed = ExpanderR1().solve(
-        inlets, base_params(flow_min_m3_s=0.2, flow_max_m3_s=0.3), thermo
-    )
+    passed = ExpanderR1().solve(inlets, base_params(flow_min_m3_s=0.2, flow_max_m3_s=0.3), thermo)
     assert passed.info["Q_actual_m3_s"] == pytest.approx(0.22247721127879216, rel=1e-9)
     # No limits given: Q is still reported, nothing is refused.
     unlimited = ExpanderR1().solve(inlets, base_params(), thermo)
-    assert unlimited.info["Q_actual_m3_s"] == pytest.approx(0.222477211, rel=1e-9)
+    assert unlimited.info["Q_actual_m3_s"] == pytest.approx(0.22247721127879216, rel=1e-9)
