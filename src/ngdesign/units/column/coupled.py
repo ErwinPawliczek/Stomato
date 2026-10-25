@@ -33,9 +33,8 @@ enforced at parse time; here a mismatch is unreachable.
 
 from __future__ import annotations
 
-from typing import Any
-
 from dataclasses import dataclass, replace
+from typing import Any
 
 from .inside_out import _build_column, _Column, _Profile, _seed_profile, _temperature_seed
 from .linalg import _gauss
@@ -49,8 +48,8 @@ from .spec import (
     _DrawSpec,
     _FeedSpec,
     _Params,
-    _SideStripper,
     _parse_params,
+    _SideStripper,
 )
 from .specs import _check_spec_feasibility, _initial_tears, _solve_mesh, _solve_specs
 from .thermo_adapter import _ThermoBox
@@ -166,9 +165,7 @@ def _injected(
         for pa in params.pumparounds
     ]
     feeds = list(params.feeds)
-    draws = [
-        replace(d, flow=draw_flows[d.name]) if d.flow is None else d for d in params.draws
-    ]
+    draws = [replace(d, flow=draw_flows[d.name]) if d.flow is None else d for d in params.draws]
     for st in params.side_strippers:
         draws.append(_stripper_draw(st, strip_draws[st.name]))
         ret_flow, ret_T, ret_comp = ret_states[st.name]
@@ -353,9 +350,7 @@ def _fmt_residuals(g: list[float], names: list[str]) -> str:
     return "{" + ", ".join(f"{n}: {v:.6g}" for n, v in zip(names, g, strict=True)) + "}"
 
 
-def _g_full(
-    coupled: _Coupled, params: _Params, skip: set[str]
-) -> tuple[list[float], list[float], list[str]]:
+def _g_full(coupled: _Coupled, params: _Params, skip: set[str]) -> tuple[list[float], list[float], list[str]]:
     """Residuals, stop tolerances, and driver names for every active driver.
 
     Rows follow the params.specs insertion order, then one ``product_rate``
@@ -498,9 +493,14 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
     feed_t = params.feeds[0].T if params.feeds else 300.0
     feed_comp = params.feeds[0].comp if params.feeds else {}
 
-    def unpack(v: list[float]) -> tuple[
-        float | None, float | None,
-        dict[str, float], dict[str, float], dict[str, float],
+    def unpack(
+        v: list[float],
+    ) -> tuple[
+        float | None,
+        float | None,
+        dict[str, float],
+        dict[str, float],
+        dict[str, float],
         dict[str, tuple[float, float, dict[str, float]]],
     ]:
         """Map the free-tear vector onto concrete tear values.
@@ -568,13 +568,14 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
         for cid in species[:-1]:
             x.append(feed_comp.get(cid, 0.0) / max(sum(feed_comp.values()), 1e-12))
             tear_names.append(f"stripper:{st.name}.return_x[{cid}]")
+    globals()["_LAST_TEARS"] = list(tear_names)  # DEBUG: remove before commit
     if not x:  # pragma: no cover - the parse-time count rule refuses this
         raise ColumnSpecError("column specs cannot be driven: no free tear variables remain")
 
     seed_prof: _Profile | None = None
     strip_seeds: dict[str, _Profile] = {}
     flow_cap = 50.0 * col0.f_total
-    best_res = float("inf")
+    best_res2 = float("inf")
     stale = 0
     g: list[float] = []
     names: list[str] = []
@@ -583,6 +584,8 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
     # the accepted iterate is not solved a second time at the loop top.
     pending: tuple[list[float], Any] | None = None
     best_x: list[float] | None = None
+    _IN_BACKTRACK = False
+    globals()["_IN_BACKTRACK"] = _IN_BACKTRACK
     for _ in range(_SPEC_MAX):
         if pending is not None:
             x, coupled = pending
@@ -590,8 +593,16 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
         else:
             top, bot, pa_flows, draw_flows, strip_draws, ret_states = unpack(x)
             coupled = _eval_coupled(
-                params, tb, top, bot, pa_flows, draw_flows, strip_draws, ret_states,
-                seed_prof, strip_seeds,
+                params,
+                tb,
+                top,
+                bot,
+                pa_flows,
+                draw_flows,
+                strip_draws,
+                ret_states,
+                seed_prof,
+                strip_seeds,
             )
         seed_prof = coupled.prof
         strip_seeds = coupled.strip_profiles
@@ -600,8 +611,19 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
         if max(rel, default=0.0) < 1.0:
             return coupled
         res = max(rel)
-        if res < best_res - 1e-4 * best_res:
-            best_res, stale, best_x = res, 0, list(x)
+        # Best-iterate tracking on the L2 NORM of the scaled residuals, not
+        # their max: the steam-stripper case keeps one row (a spec residual
+        # early, the product_rate stop at rel ~1e7) orders of magnitude above
+        # the others, and a max-metric "improvement" test rejects any step
+        # that helps the remaining rows while nudging the dominant one -
+        # measured: return_flow froze at -1.180 for six consecutive secant
+        # iterations because every coupling-improving step was refused. The
+        # L2 norm still rejects true blowups (a step into a worse basin
+        # explodes it) but lets the secant trade a 1e-4 wobble on the
+        # dominant row for real progress on the rest.
+        res2 = sum(r * r for r in rel)
+        if res2 < best_res2 - 1e-4 * best_res2:
+            best_res2, stale, best_x = res2, 0, list(x)
         else:
             stale += 1
             if stale >= 6:
@@ -613,10 +635,14 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
         jac_cols = []
         for i in range(len(x)):
             is_flow = i < len(x) and tear_names[i].endswith(
-                ("top", "boilup", *[f"pumparound:{p.name}" for p in params.pumparounds],
-                 *[f"draw:{d.name}" for d in params.draws],
-                 *[f"stripper:{s.name}.draw" for s in params.side_strippers],
-                 *[f"stripper:{s.name}.return_flow" for s in params.side_strippers])
+                (
+                    "top",
+                    "boilup",
+                    *[f"pumparound:{p.name}" for p in params.pumparounds],
+                    *[f"draw:{d.name}" for d in params.draws],
+                    *[f"stripper:{s.name}.draw" for s in params.side_strippers],
+                    *[f"stripper:{s.name}.return_flow" for s in params.side_strippers],
+                )
             )
             if is_flow:
                 dx = max(0.02 * abs(x[i]), 1e-3 * col0.f_total)
@@ -629,9 +655,7 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
             for _shrink in range(3):
                 try:
                     t2, b2, pa2, dr2, sd2, rs2 = unpack(x2)
-                    coupled2 = _eval_coupled(
-                        params, tb, t2, b2, pa2, dr2, sd2, rs2, seed_prof, strip_seeds
-                    )
+                    coupled2 = _eval_coupled(params, tb, t2, b2, pa2, dr2, sd2, rs2, seed_prof, strip_seeds)
                     break
                 except ColumnConvergenceError as exc:
                     last_probe_err = exc
@@ -673,6 +697,22 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
                 step[i] = max(min(step[i], 0.5), -0.5)
             else:
                 cap = 0.5 * abs(x[i]) + 1e-3
+                if tear_names[i].endswith("return_flow"):
+                    # A value-relative cap freezes a return-flow tear seeded
+                    # near zero: its converged magnitude is the stripper
+                    # overhead (order the steam flow), and a 0.5*|x| + 1e-3
+                    # cap moves the tear only ~1e-3 per iteration (measured
+                    # on the steam-stripper case: the coupling residual
+                    # crawled from -1.584 to -1.572 mol/s over 15 secant
+                    # iterations - it can never reach 1.56 that way). Scale
+                    # the cap by the coupling residual instead: the step that
+                    # cancels a residual is of the residual's own magnitude,
+                    # so far from the solution the tear can move, and near it
+                    # the residual - hence the extra headroom - vanishes,
+                    # recovering the relative cap exactly where it matters.
+                    j = names.index(tear_names[i]) if tear_names[i] in names else -1
+                    if j >= 0:
+                        cap = max(cap, 0.25 * abs(g[j]))
                 step[i] = max(min(step[i], cap), -cap)
         # Damped update: a full secant step can overshoot into a worse basin
         # and the next iteration then linearises from THAT point (measured on
@@ -688,28 +728,30 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
         # exists yet does the full step stand.
         scale = 1.0
         accepted = False
-        for _bt in range(4):
-            x_try = [x[i] + scale * step[i] for i in range(nf)]
-            try:
-                top2, bot2, pa2, dr2, sd2, rs2 = unpack(x_try)
-                coupled_try = _eval_coupled(
-                    params, tb, top2, bot2, pa2, dr2, sd2, rs2, seed_prof, strip_seeds
-                )
-            except (ColumnConvergenceError, ValueError):
-                coupled_try = None
-            if coupled_try is not None:
-                g_try, stops_try, _ = _g_full(coupled_try, params, skip)
-                rel_try = max(
-                    abs(gi) / si for gi, si in zip(g_try, stops_try, strict=True)
-                )
-                if rel_try < res:
-                    x = x_try
-                    pending = (x_try, coupled_try)
-                    accepted = True
-                    break
-            scale /= 8.0
+        globals()["_IN_BACKTRACK"] = True
+        try:
+            for _bt in range(4):
+                x_try = [x[i] + scale * step[i] for i in range(nf)]
+                try:
+                    top2, bot2, pa2, dr2, sd2, rs2 = unpack(x_try)
+                    coupled_try = _eval_coupled(
+                        params, tb, top2, bot2, pa2, dr2, sd2, rs2, seed_prof, strip_seeds
+                    )
+                except (ColumnConvergenceError, ValueError):
+                    coupled_try = None
+                if coupled_try is not None:
+                    g_try, stops_try, _ = _g_full(coupled_try, params, skip)
+                    rel_try = [abs(gi) / si for gi, si in zip(g_try, stops_try, strict=True)]
+                    if sum(r * r for r in rel_try) < res2:
+                        x = x_try
+                        pending = (x_try, coupled_try)
+                        accepted = True
+                        break
+                scale /= 8.0
+        finally:
+            globals()["_IN_BACKTRACK"] = False
         if not accepted:
-            if best_x is not None and best_res < res:
+            if best_x is not None and best_res2 < res2:
                 x = list(best_x)
             else:
                 x = [x[i] + step[i] for i in range(nf)]
