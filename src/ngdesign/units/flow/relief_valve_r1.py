@@ -28,6 +28,7 @@ from ngdesign.units.flow.relief_valve import (
     ReliefValve,
     ReliefValveSpecError,
     _next_orifice,
+    _orifice_area_in2,
 )
 
 MM2_PER_M2 = 1.0e6
@@ -398,7 +399,8 @@ class ReliefValveR1(ReliefValve):
             inlet.mass_flow, G, factors["Kd"], factors["Kb"], factors["Kc"],
             factors["Kv"], factors["Kw"],
         )
-        _, area_in2 = _next_orifice(area / IN2_PER_M2)
+        letter = _next_orifice(area / IN2_PER_M2)
+        area_in2 = _orifice_area_in2(letter)
         z = dict(inlet.composition)
         info: dict[str, Any] = {
             **extra_info,
