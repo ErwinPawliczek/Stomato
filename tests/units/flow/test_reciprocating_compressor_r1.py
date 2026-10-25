@@ -65,15 +65,20 @@ def test_volumetric_efficiency_reduces_to_r0_without_z_correction(
 def test_piston_displacement_closed_form(
     thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
 ) -> None:
-    """Hand-computed PD (see module docstring): 0.536269866 m3/s, stage 1."""
+    """Hand-computed PD (see module docstring): 0.536269866 / 0.360968996 m3/s."""
     inlets, _r0_params, r1_params = basis
     result = r1_mod.ReciprocatingCompressorR1().solve(inlets, r1_params, thermo)
-    cyl1 = r1_params["cylinders"][0]
-    a_p = math.pi * cyl1["bore_m"] ** 2 / 4.0
+    cyl1, cyl2 = r1_params["cylinders"]
     a_r = math.pi * cyl1["rod_diameter_m"] ** 2 / 4.0
-    expected = (2.0 * a_p - a_r) * cyl1["stroke_m"] * r1_params["speed_rpm"] / 60.0
+    a_p1 = math.pi * cyl1["bore_m"] ** 2 / 4.0
+    a_p2 = math.pi * cyl2["bore_m"] ** 2 / 4.0
+    expected1 = (2.0 * a_p1 - a_r) * cyl1["stroke_m"] * r1_params["speed_rpm"] / 60.0
+    expected2 = (2.0 * a_p2 - a_r) * cyl2["stroke_m"] * r1_params["speed_rpm"] / 60.0
+    # Plan's printed values (geometric quantities, rel 1e-9).
     assert result.info["displacement_stage1_m3_s"] == pytest.approx(0.536269866, rel=1e-9)
-    assert result.info["displacement_stage1_m3_s"] == pytest.approx(expected, rel=1e-12)
+    assert result.info["displacement_stage2_m3_s"] == pytest.approx(0.360968996, rel=1e-9)
+    assert result.info["displacement_stage1_m3_s"] == pytest.approx(expected1, rel=1e-12)
+    assert result.info["displacement_stage2_m3_s"] == pytest.approx(expected2, rel=1e-12)
 
 
 def test_stage_table_thermo_quantities(
@@ -177,6 +182,11 @@ def test_rod_loads_double_acting_closed_form(
     f_tension = -(p_s * a_p - p_d * (a_p - a_r) - p_cc * a_r)
     assert result.info["rod_load_compression_stage1_N"] == pytest.approx(f_compression, rel=1e-12)
     assert result.info["rod_load_tension_stage1_N"] == pytest.approx(f_tension, rel=1e-12)
+    # The plan's printed rod loads (thermo-dependent, rel 1e-7), both stages.
+    assert result.info["rod_load_compression_stage1_N"] == pytest.approx(173274.417, rel=1e-7)
+    assert result.info["rod_load_tension_stage1_N"] == pytest.approx(149253.574, rel=1e-7)
+    assert result.info["rod_load_compression_stage2_N"] == pytest.approx(183813.856, rel=1e-7)
+    assert result.info["rod_load_tension_stage2_N"] == pytest.approx(146919.708, rel=1e-7)
 
 
 def test_rod_loads_single_head_end_uses_crankcase(
@@ -220,7 +230,7 @@ def test_rod_load_limit_refusal_tension(
     inlets, _r0_params, r1_params = basis
     result = r1_mod.ReciprocatingCompressorR1().solve(inlets, r1_params, thermo)
     load = result.info["rod_load_tension_stage2_N"]
-    with pytest.raises(r1_mod.RecipRodLoadError, match="tension"):
+    with pytest.raises(r1_mod.RecipRodLoadError, match=r"rod load \(tension\)"):
         r1_mod.ReciprocatingCompressorR1().solve(
             inlets, {**r1_params, "rod_load_limit_N": {"tension": 0.95 * load}}, thermo
         )
@@ -296,3 +306,105 @@ def test_refuses_rod_load_limit_shape(
     inlets, _r0_params, r1_params = basis
     with pytest.raises(r1_mod.RecipR1SpecError, match="rod_load_limit_N"):
         r1_mod.ReciprocatingCompressorR1().solve(inlets, {**r1_params, "rod_load_limit_N": 1.0e6}, thermo)
+
+
+# --- Review round 1: every plan refusal is reached by a test -----------------
+
+
+def test_refuses_speed_rpm_missing(thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]) -> None:
+    """speed_rpm is required at R1."""
+    inlets, _r0_params, r1_params = basis
+    params = {key: value for key, value in r1_params.items() if key != "speed_rpm"}
+    with pytest.raises(r1_mod.RecipR1SpecError, match="speed_rpm"):
+        r1_mod.ReciprocatingCompressorR1().solve(inlets, params, thermo)
+
+
+def test_refuses_speed_rpm_nonpositive(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """speed_rpm <= 0 is refused."""
+    inlets, _r0_params, r1_params = basis
+    with pytest.raises(r1_mod.RecipR1SpecError, match="speed_rpm"):
+        r1_mod.ReciprocatingCompressorR1().solve(inlets, {**r1_params, "speed_rpm": 0.0}, thermo)
+
+
+def test_refuses_bad_capacity_control(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """capacity_control outside {none, clearance_pocket} is refused."""
+    inlets, _r0_params, r1_params = basis
+    with pytest.raises(r1_mod.RecipR1SpecError, match="capacity_control"):
+        r1_mod.ReciprocatingCompressorR1().solve(
+            inlets, {**r1_params, "capacity_control": "starvation"}, thermo
+        )
+
+
+def test_refuses_nonpositive_volumetric_efficiency(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """Clearance near 1 on stage 2 with a large loss allowance drives E_v <= 0.
+
+    Stage-2 factor (Zs/Zd)*r^(1/k2) - 1 = 0.40283 (plan table stage-2 Zs/Zd
+    0.874642142/0.885541882, k2 = 1.20058113), so clearance 0.99 with loss
+    0.65 gives E_v = 1 - 0.65 - 0.99*0.40283 < 0. R0's own VE refusal only
+    sees stage 1's clearance (0.10), so this reaches R1's stage-2 check.
+    """
+    inlets, _r0_params, r1_params = basis
+    cylinders = [dict(c) for c in r1_params["cylinders"]]
+    cylinders[1]["clearance"] = 0.99
+    # Stage 1 must still deliver the flow at loss 0.65 (E_v1 = 1 - 0.65
+    # - 0.10*0.40937 = 0.309), so five example cylinders: 5*0.53627*0.309
+    # = 0.829 m3/s > Q_s1 0.4915 m3/s. Then stage 2's E_v goes negative.
+    cylinders[0]["n_cylinders"] = 5
+    with pytest.raises(r1_mod.RecipCapacityError, match="stage 2: volumetric efficiency"):
+        r1_mod.ReciprocatingCompressorR1().solve(
+            inlets, {**r1_params, "cylinders": cylinders, "loss_allowance": 0.65}, thermo
+        )
+
+
+@pytest.mark.parametrize(
+    ("stage_index", "field", "value"),
+    [
+        (0, "bore_m", 0.0),
+        (0, "stroke_m", 0.0),
+        (0, "n_cylinders", 0),
+        (0, "clearance", 1.0),
+        (1, "bore_m", 0.0),
+        (1, "clearance", -0.5),
+    ],
+)
+def test_refuses_bad_geometry_names_field_and_stage(
+    thermo: Thermo,
+    basis: tuple[dict[str, Any], Any, dict[str, Any]],
+    stage_index: int,
+    field: str,
+    value: float,
+) -> None:
+    """bore/stroke/n_cylinders <= 0 and clearance outside [0, 1) are refused,
+    each naming the field and the stage."""
+    inlets, _r0_params, r1_params = basis
+    cylinders = [dict(c) for c in r1_params["cylinders"]]
+    cylinders[stage_index][field] = value
+    with pytest.raises(r1_mod.RecipR1SpecError, match=rf"stage {stage_index + 1}: {field}"):
+        r1_mod.ReciprocatingCompressorR1().solve(inlets, {**r1_params, "cylinders": cylinders}, thermo)
+
+
+def test_missing_z_factor_refusal_is_defensive_on_pr(
+    thermo: Thermo, basis: tuple[dict[str, Any], Any, dict[str, Any]]
+) -> None:
+    """The missing-Z refusal cannot fire on the pr package: every vapour phase
+    it builds carries z_factor (thermo/_state.py computes z on every gas phase,
+    and the plan's table prints Z_s/Z_d for all four stage states). Asserted
+    here as the measured evidence that the branch is a defensive guard."""
+    inlets, _r0_params, r1_params = basis
+    result = r1_mod.ReciprocatingCompressorR1().solve(inlets, r1_params, thermo)
+    flashed = {
+        port: flash_feed(thermo, feed)
+        for port, feed in r1_mod.ReciprocatingCompressorR1.example_case()[0].items()
+    }
+    for port, state in {**inlets, **flashed}.items():
+        for phase in state.phases:
+            if phase.kind == "vapor":
+                assert phase.z_factor is not None, f"{port} vapour phase has no z_factor"
+    # And the solve itself succeeded with the correction on (default params).
+    assert result.outlets["outlet"].P > 0.0

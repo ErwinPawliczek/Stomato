@@ -35,6 +35,10 @@ Outlets, ``power_W`` and ``duty_W`` are R0's exactly: the module runs the R0
 adapter, re-traverses the identical stage sequence to expose the per-stage
 suction/discharge states, and asserts the re-run's final state equals R0's
 outlet (a mismatch is a bug, raised as ``RuntimeError``).
+
+``info`` keeps R0's single ``volumetric_efficiency`` key unchanged: it is
+R0's value, computed from stage 1's clearance without the Z correction. The
+Z-corrected per-stage values are the ``volumetric_efficiency_stage{i}`` keys.
 """
 
 from __future__ import annotations
@@ -278,7 +282,7 @@ class ReciprocatingCompressorR1:
             ):
                 if limit is not None and load > limit:
                     raise RecipRodLoadError(
-                        f"{where}: rod {kind} load {load:.1f} N exceeds the allowable "
+                        f"{where}: rod load ({kind}) {load:.1f} N exceeds the allowable "
                         f"{limit:.1f} N (gas load only; inertia loads are out of scope at R1)"
                     )
             if capacity_control == "clearance_pocket":
