@@ -113,4 +113,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-D 6
 
-> R0 split spec implemented; deoiling example with 95 % water to the underflow.
+> R0 split spec implemented; deoiling example with 95 % water to the underflow. R1 V1 gap — no verifiable printed copy of the candidate sources (Cooper & Alley, Air Pollution Control, Ch. 4 Lapple worked example; Perry's 8th ed. Sect. 17 cyclone example) was found online. A Dartmouth ENGS-37 lecture adaptation of the Cooper & Alley example (cushman.host.dartmouth.edu/courses/engs37/Cyclones.pdf, p. 10) prints D, Q, rho_p, the size distribution, N = 6, v_i = 20 m/s, d_pc = 5.79 um and the per-size efficiency table, but not the fluid viscosity or air density the example used, so its d50 anchor cannot be transcribed without reconstructing inputs. Searched 2026-10-25; R1 ships provisional on its closed-form (CF1-CF5) and R0-identity tests.
