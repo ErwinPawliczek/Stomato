@@ -249,6 +249,7 @@
       params: {}
       note: catalyst deactivation, pellet effectiveness
       end_state: true
+  balance: mass_elements
   pid_symbol: R
   references:
   - docs/unit-catalogue-plan.md §2 U-F 6
