@@ -232,16 +232,21 @@
           mu_liquid: {type: number, description: 'liquid viscosity, Pa.s, if the thermo reports none'}
           mu_gas: {type: number, description: 'gas viscosity, Pa.s, if the thermo reports none'}
       validation:
-      - V1-control-valve-iec60534-annexD-liquid
+      - V1-control-valve-iec60534-annexD-ex1-liquid
+      - V1-control-valve-iec60534-annexD-ex2-liquid-choked
       note: >-
         IEC 60534-2-1 sizing/rating, choked flow, inherent characteristic.
-        V1 gap (gas, Annex D Example 3, CO2 433 K): the standard is not accessible
-        and its printed gas Kv could not be transcribed; search places are
-        IEC 60534-2-1:2011 Annex D, the ISA-75.01.01-2007 Annex, and the Emerson
-        Control Valve Handbook 5th ed. ch. 5. The liquid case uses the Annex D
-        Example 1 printed inputs with the spec's closed-form anchor (the
-        standard's own printed Kv text was not accessible either; see the case
-        source).
+        V1 (liquid): expected Kv transcribed from the printed results of
+        ISA-75.01.01-2007 (IEC 60534-2-1 Mod) Annex E Examples 1 and 2 —
+        C = Kv = 165 and 238 m3/h, three significant figures, which the
+        0.5 percent tolerance reflects. V1 gap (gas, Annex D/E Example 3,
+        CO2 433 K): the printed no-fittings value 62.7 m3/h is an
+        intermediate first pass with FP = 1 assumed, and the final printed
+        72.1 m3/h embeds the FP/xTP fittings iteration, while the adapter
+        takes MW/Z/gamma/viscosity from the thermo and cannot be pinned to
+        the printed state (nu 1.743e-5 m2/s, Z 0.988); search places were
+        IEC 60534-2-1:2011 Annex D, the ISA-75.01.01-2007 Annex, and the
+        Emerson Control Valve Handbook 5th ed. ch. 5.
   pid_symbol: CV
   references:
   - docs/unit-catalogue-plan.md §2 U-B 6

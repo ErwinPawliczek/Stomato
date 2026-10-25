@@ -37,6 +37,7 @@ choked capacity and ``P1``).
 from __future__ import annotations
 
 import math
+import sys
 from collections.abc import Callable
 from typing import Any, Final, Literal
 

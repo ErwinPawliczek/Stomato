@@ -444,7 +444,7 @@ def test_rating_roundtrip(thermo: Thermo) -> None:
     sized = ControlValveR1().solve({"inlet": inlet}, params, thermo)
     opening = sized.info["travel"]
     r = ControlValveR1().solve({"inlet": inlet}, {"Cv_rated": 125.0, "opening": opening}, thermo)
-    assert r.info["P_out_Pa"] == pytest.approx(1.997411e6, rel=1e-6)
+    assert r.info["P_out_Pa"] == pytest.approx(1.997411e6, rel=1e-9)
     assert r.info["opening"] == pytest.approx(opening, rel=1e-9)
     assert r.info["choked"] == 0.0
     assert r.outlets["outlet"].P == pytest.approx(1.997411e6, rel=1e-9)
@@ -470,6 +470,67 @@ def test_rating_gas_roundtrip(thermo: Thermo) -> None:
     assert 3.0e6 < P2 < 3.3e6
     sized_back = ControlValveR1().solve({"inlet": inlet}, {"P_out": P2, "mu_gas": 1.2e-5}, thermo)
     assert sized_back.info["Cv"] == pytest.approx(Cv_rated, rel=1e-9)
+
+
+def test_rating_identity(thermo: Thermo) -> None:
+    """Plan's rating identity: rating at the sizing Cv, linear, opening 1.0 recovers P_out.
+
+    With Cv_rated equal to the sizing Cv and the linear characteristic at full
+    opening, the available Kv equals the sized Kv, so the solved P2 equals the
+    sizing P_out to 1e-8 relative.
+    """
+    feeds, _ = ControlValveR1.example_case()
+    inlet = flash_feed(thermo, feeds["inlet"])
+    sized = ControlValveR1().solve(
+        {"inlet": inlet}, {"P_out": 1.997411e6, "mu_liquid": 1.0371e-4}, thermo
+    )
+    r = ControlValveR1().solve(
+        {"inlet": inlet},
+        {
+            "Cv_rated": float(sized.info["Cv"]),
+            "opening": 1.0,
+            "characteristic": "linear",
+            "mu_liquid": 1.0371e-4,
+        },
+        thermo,
+    )
+    assert r.info["P_out_Pa"] == pytest.approx(1.997411e6, rel=1e-8)
+    assert r.info["opening"] == pytest.approx(1.0, rel=1e-9)
+
+
+def test_rating_eqpercent_residual(thermo: Thermo) -> None:
+    """Plan's residual check: eq% rating at opening 0.6 solves kv_liquid(P2) = Kv_avail (1e-9)."""
+    feeds, _ = ControlValveR1.example_case()
+    inlet = flash_feed(thermo, feeds["inlet"])
+    r = ControlValveR1().solve(
+        {"inlet": inlet},
+        {
+            "Cv_rated": 125.0,
+            "opening": 0.6,
+            "characteristic": "equal_percentage",
+            "mu_liquid": 1.0371e-4,
+        },
+        thermo,
+    )
+    P2 = float(r.info["P_out_Pa"])
+    liquid = cvr1_module._liquid_phase(inlet)
+    rho = float(liquid.density)
+    mu = liquid.viscosity if liquid.viscosity is not None else 1.0371e-4
+    Kv = float(
+        cvr1_module.kv_liquid(
+            inlet.mass_flow / rho,
+            rho,
+            mu,
+            cvr1_module._psat(inlet, thermo),
+            cvr1_module._average_Pc(inlet),
+            inlet.P,
+            P2,
+            FL=0.9,
+            Fd=1.0,
+        )["Kv"]
+    )
+    Kv_avail = KV_PER_CV * 125.0 * cvr1_module.characteristic(0.6, "equal_percentage", 50.0)
+    assert Kv == pytest.approx(Kv_avail, rel=1e-9)
 
 
 def test_rating_choked_capacity_refused(thermo: Thermo) -> None:
