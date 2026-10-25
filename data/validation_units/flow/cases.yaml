@@ -24,3 +24,23 @@
   expected:
   - {quantity: info.Cv, value: 113.2, tol_rel: 0.005}
   - {quantity: info.choked, value: 0.0, tol_abs: 0.0}
+
+- id: V1-control-valve-iec60534-annexD-liquid
+  unit: control_valve
+  level: R1
+  thermo: iapws_if97
+  source: "IEC 60534-2-1:2011 (= ANSI/ISA-75.01.01-2007) Annex D Example 1 (water, globe valve), printed inputs: rho1 965.4 kg/m3, P1 680 kPa, P2 220 kPa, Q 360 m3/h, T1 363 K, Psat 70.1 kPa, Pc 22120 kPa, nu 3.26e-7 m2/s (mu 3.1472e-4 Pa s), FL 0.9. Expected Kv transcribed from the spec's closed-form anchor (specs/backend/units/control_valve.md, hand-computed from the printed inputs to 1e-10; the standard's printed Kv text was not accessible)."
+  feeds:
+    inlet:
+      T: 363.15
+      P: 680000.0
+      molar_flow: 5359.3   # Q = 360 m3/h = 0.1 m3/s at rho1 965.4 -> 96.54 kg/s water
+      composition: {H2O: 1.0}
+  params:
+    P_out: 220000.0
+    Cv_rated: null   # strips the example-case default: the case stays in sizing mode
+    FL: 0.9
+    mu_liquid: 3.1472e-4
+  expected:
+  - {quantity: info.Kv_m3h_bar05, value: 164.995476370496, tol_rel: 0.005}
+  - {quantity: info.choked, value: 0.0, tol_abs: 0.0}

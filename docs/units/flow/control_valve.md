@@ -2,7 +2,7 @@
 
 Family: **flow** · P&ID symbol: `CV`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -16,7 +16,60 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.flow.control_valve:ControlValve` | Cv / outlet P spec, isenthalpic (the cv_liquid correlation plugin exists) |
-| R1 | planned | — | IEC 60534 sizing, choked flow, Cv curve |
+| R1 | provisional | `ngdesign.units.flow.control_valve_r1:ControlValveR1` | IEC 60534-2-1 sizing/rating, choked flow, inherent characteristic. V1 gap (gas, Annex D Example 3, CO2 433 K): the standard is not accessible and its printed gas Kv could not be transcribed; search places are IEC 60534-2-1:2011 Annex D, the ISA-75.01.01-2007 Annex, and the Emerson Control Valve Handbook 5th ed. ch. 5. The liquid case uses the Annex D Example 1 printed inputs with the spec's closed-form anchor (the standard's own printed Kv text was not accessible either; see the case source). |
+
+### R1 parameters
+
+```yaml
+properties:
+  Cv_rated:
+    description: rated full-travel Cv (US); required in rating mode
+    type: number
+  D1_m:
+    description: upstream pipe ID, m (sizing; all three or none)
+    type: number
+  D2_m:
+    description: downstream pipe ID, m
+    type: number
+  FL:
+    description: liquid pressure-recovery factor, default 0.9
+    type: number
+  Fd:
+    description: valve style modifier, default 1.0
+    type: number
+  P_out:
+    description: 'sizing mode: outlet pressure, Pa'
+    type: number
+  characteristic:
+    description: inherent characteristic, default linear
+    enum:
+    - linear
+    - equal_percentage
+    - quick_opening
+    type: string
+  dP:
+    description: 'sizing mode: pressure drop, Pa'
+    type: number
+  d_m:
+    description: valve size, m
+    type: number
+  mu_gas:
+    description: gas viscosity, Pa.s, if the thermo reports none
+    type: number
+  mu_liquid:
+    description: liquid viscosity, Pa.s, if the thermo reports none
+    type: number
+  opening:
+    description: 'rating mode: relative travel in (0, 1]'
+    type: number
+  rangeability:
+    description: equal-percentage rangeability R > 1, default 50
+    type: number
+  xT:
+    description: gas pressure-differential ratio factor, default 0.7
+    type: number
+type: object
+```
 
 ## V1 worked cases
 
@@ -24,8 +77,11 @@ Rigour ladder: R0 provisional, R1 planned
 |---|---|---|---|---|---|---|
 | `V-control-valve-emerson-propane` | R0 | `info.Cv` | 113.2 | 113.419 | rel 0.005 | pass |
 | `V-control-valve-emerson-propane` | R0 | `info.choked` | 0 | 0 | abs 0 | pass |
+| `V1-control-valve-iec60534-annexD-liquid` | R1 | `info.Kv_m3h_bar05` | 164.995 | 164.996 | rel 0.005 | pass |
+| `V1-control-valve-iec60534-annexD-liquid` | R1 | `info.choked` | 0 | 0 | abs 0 | pass |
 
 - `V-control-valve-emerson-propane`: Emerson control-valve sizing example, liquid propane: 800 gpm basis, SG 0.5, dP 25 psi, Fp 0.96, published Cv 117.9 (117.9 x 0.96 = 113.2 is the bare-valve Cv the adapter reports)
+- `V1-control-valve-iec60534-annexD-liquid`: IEC 60534-2-1:2011 (= ANSI/ISA-75.01.01-2007) Annex D Example 1 (water, globe valve), printed inputs: rho1 965.4 kg/m3, P1 680 kPa, P2 220 kPa, Q 360 m3/h, T1 363 K, Psat 70.1 kPa, Pc 22120 kPa, nu 3.26e-7 m2/s (mu 3.1472e-4 Pa s), FL 0.9. Expected Kv transcribed from the spec's closed-form anchor (specs/backend/units/control_valve.md, hand-computed from the printed inputs to 1e-10; the standard's printed Kv text was not accessible).
 
 ## References
 

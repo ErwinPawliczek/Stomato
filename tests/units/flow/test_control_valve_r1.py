@@ -473,10 +473,20 @@ def test_rating_gas_roundtrip(thermo: Thermo) -> None:
 
 
 def test_rating_choked_capacity_refused(thermo: Thermo) -> None:
-    """Below the choked capacity the refusal is typed, naming the fragment."""
-    inlet = _propane_liquid(thermo)
+    """Below the choked capacity the refusal is typed, naming the fragment.
+
+    The spec pins the construction: the L2-like liquid (water at the Annex D
+    printed basis, choked at P2 = 100 kPa) with Cv_rated set to 0.9 x the
+    choked Cv at opening 1.
+    """
+    inlet = flash_feed(
+        thermo,
+        {"T": 363.15, "P": 680e3, "molar_flow": 5359.3, "composition": {"H2O": 1.0}},
+    )
+    choked = ControlValveR1().solve({"inlet": inlet}, {"P_out": 100e3}, thermo)
+    Cv_rated = 0.9 * choked.info["Cv"]
     with pytest.raises(ChokedCapacityError, match="choked capacity"):
-        ControlValveR1().solve({"inlet": inlet}, {"Cv_rated": 10.0, "opening": 1.0}, thermo)
+        ControlValveR1().solve({"inlet": inlet}, {"Cv_rated": Cv_rated, "opening": 1.0}, thermo)
 
 
 def test_rating_convergence_refused(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) -> None:

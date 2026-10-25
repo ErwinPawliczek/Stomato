@@ -247,6 +247,9 @@ class ControlValveR1:
         params: dict[str, Any],
         thermo: Thermo,
     ) -> UnitResult:
+        # A None param value means "not given" (it strips the example-case
+        # default, which the validation harness lays case params over).
+        params = {k: v for k, v in params.items() if v is not None}
         inlet = inlets["inlet"]
         rating = not ("P_out" in params or "dP" in params)
 

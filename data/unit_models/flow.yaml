@@ -212,10 +212,36 @@
       params: {}
       note: Cv / outlet P spec, isenthalpic (the cv_liquid correlation plugin exists)
     R1:
-      status: planned
-      params: {}
-      note: IEC 60534 sizing, choked flow, Cv curve
-      end_state: true
+      status: provisional
+      adapter: ngdesign.units.flow.control_valve_r1:ControlValveR1
+      params:
+        type: object
+        properties:
+          P_out: {type: number, description: 'sizing mode: outlet pressure, Pa'}
+          dP: {type: number, description: 'sizing mode: pressure drop, Pa'}
+          Cv_rated: {type: number, description: 'rated full-travel Cv (US); required in rating mode'}
+          opening: {type: number, description: 'rating mode: relative travel in (0, 1]'}
+          characteristic: {type: string, enum: [linear, equal_percentage, quick_opening], description: 'inherent characteristic, default linear'}
+          rangeability: {type: number, description: 'equal-percentage rangeability R > 1, default 50'}
+          FL: {type: number, description: 'liquid pressure-recovery factor, default 0.9'}
+          Fd: {type: number, description: 'valve style modifier, default 1.0'}
+          xT: {type: number, description: 'gas pressure-differential ratio factor, default 0.7'}
+          D1_m: {type: number, description: 'upstream pipe ID, m (sizing; all three or none)'}
+          D2_m: {type: number, description: 'downstream pipe ID, m'}
+          d_m: {type: number, description: 'valve size, m'}
+          mu_liquid: {type: number, description: 'liquid viscosity, Pa.s, if the thermo reports none'}
+          mu_gas: {type: number, description: 'gas viscosity, Pa.s, if the thermo reports none'}
+      validation:
+      - V1-control-valve-iec60534-annexD-liquid
+      note: >-
+        IEC 60534-2-1 sizing/rating, choked flow, inherent characteristic.
+        V1 gap (gas, Annex D Example 3, CO2 433 K): the standard is not accessible
+        and its printed gas Kv could not be transcribed; search places are
+        IEC 60534-2-1:2011 Annex D, the ISA-75.01.01-2007 Annex, and the Emerson
+        Control Valve Handbook 5th ed. ch. 5. The liquid case uses the Annex D
+        Example 1 printed inputs with the spec's closed-form anchor (the
+        standard's own printed Kv text was not accessible either; see the case
+        source).
   pid_symbol: CV
   references:
   - docs/unit-catalogue-plan.md §2 U-B 6
