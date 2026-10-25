@@ -246,3 +246,26 @@ def test_refuse_bad_p_out_required(thermo: Any) -> None:
     inlets, params = _example_inlets(thermo)
     with pytest.raises(EjectorR1Error, match="P_out_required"):
         EjectorR1().solve(inlets, {**params, "P_out_required": -1.0}, thermo)
+
+
+def test_refuses_when_the_discharge_solve_fails() -> None:
+    """A flash failing inside the discharge-pressure bracket refuses as 'did not converge'.
+
+    The mixed-stream PS callable works at the bracket ends (so the motive-end
+    check passes) but raises inside (Ps, Pp), as a failing flash would; brentq's
+    interior evaluation then fails and the core refuses with its typed error.
+    """
+    h_at_PS_motive, h_at_PS_mix, s_at_PH_mix = _ideal_gas_callables()
+
+    def failing_inside(P: float, s: float) -> float:
+        if PS < P < PP:
+            raise ValueError("flash failed")
+        return float(h_at_PS_mix(P, s))
+
+    with pytest.raises(EjectorR1Error, match="did not converge"):
+        ejector_core(
+            **_ideal_gas_inputs(0.95, 0.85, 0.85),
+            h_at_PS_motive=h_at_PS_motive,
+            h_at_PS_mix=failing_inside,
+            s_at_PH_mix=s_at_PH_mix,
+        )
