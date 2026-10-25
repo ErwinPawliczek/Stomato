@@ -29,6 +29,7 @@ import math
 from typing import Any
 
 import pytest
+from scipy.optimize import brentq
 
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units._physics.kinetics import R, enthalpy_with_formation
