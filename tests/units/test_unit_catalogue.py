@@ -181,7 +181,7 @@ def _single_inlet_row_with_a_planned_level() -> tuple[UnitRow, str]:
     """
     for row_id in sorted(ROWS := load_rows()):
         row = ROWS[row_id]
-        adapters = dict(_row_adapters(row))
+        adapters: dict[str, Any] = dict(_row_adapters(row))
         planned = [level for level in LEVEL_ORDER if level in row.levels and row.levels[level].planned]
         if adapters and planned and len(next(iter(adapters.values())).inlet_ports) == 1:
             return row, planned[0]
@@ -192,7 +192,7 @@ def test_planned_level_refuses_through_a_flowsheet_solve(thermo: Thermo) -> None
     """params={"model": <planned level>} refuses in the solve path, not only
     through resolve_level: the solver records the typed error."""
     row, level = _single_inlet_row_with_a_planned_level()
-    default_adapter = next(iter(dict(_row_adapters(row)).values()))
+    default_adapter: Any = next(iter(dict(_row_adapters(row)).values()))
     feeds, _ = default_adapter.example_case()
     (port, feed), *_ = feeds.items()
     fs = Flowsheet(
