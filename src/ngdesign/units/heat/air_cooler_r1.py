@@ -497,6 +497,8 @@ class AirCoolerR1:
         # Pressure drops from INLET-state properties (Algorithm step 4),
         # before the solve; no deltaP-property loop.
         film_proc_in = film_props(thermo, proc.composition, proc.T, proc.P, kind_proc)
+        if geo.A_tube_flow is None or geo.Di is None:
+            raise RatingError("bundle geometry is missing the tube flow area or inner diameter")
         a_flow = geo.A_tube_flow * (geo.tubes / vp.tube_passes)
         di = float(geo.Di)
         duct_in = duct_h(proc.mass_flow, a_flow, di, film_proc_in, vp.roughness_m)
