@@ -175,6 +175,9 @@ class EjectorR1:
                 raise EjectorR1Error(f"P_out_required {P_out_required} Pa must be > 0")
 
         n_p, n_s = motive.molar_flow, suction.molar_flow
+        if n_p <= 0.0 or n_s <= 0.0:
+            # Validate before any division (MWs needs n_s) or flash call.
+            raise EjectorR1Error(f"molar_flow must be > 0 on both inlets (np={n_p}, ns={n_s})")
         z_mix: dict[str, float] = {
             cid: (n_p * motive.composition.get(cid, 0.0) + n_s * suction.composition.get(cid, 0.0))
             / (n_p + n_s)
