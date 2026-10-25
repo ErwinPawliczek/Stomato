@@ -139,9 +139,22 @@
       validation:
       - V1-kremser-absorber-seader53
     R2:
-      status: planned
-      params: {}
-      note: MESH zero-tear — today via the `column` row's absorber configuration
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.absorber_r2:AbsorberR2
+      params:
+        type: object
+        required: [n_stages]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, minimum: 2, description: equilibrium stages (top = 1)}
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar = uniform; list = per stage, top to bottom); default gas_in.P
+            oneOf:
+            - {type: number, exclusiveMinimum: 0}
+            - {type: array, items: {type: number, exclusiveMinimum: 0}}
+      note: zero-tear MESH via the column API (inside-out + NS fallback); duty_W = boundary
+        energy residual
+      validation: []
     R3:
       status: planned
       params: {}
