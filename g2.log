@@ -1,9 +1,0 @@
-Using CPython 3.13.14 interpreter at: /usr/local/bin/python3
-Creating virtual environment at: .venv
-   Building ngdesign @ file:///home/user/work/stomato-filter
-      Built ngdesign @ file:///home/user/work/stomato-filter
-Installed 64 packages in 37ms
-bringing up nodes...
-bringing up nodes...
-
-...........................PYTEST_EXIT=143
