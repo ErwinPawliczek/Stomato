@@ -69,13 +69,12 @@ class FanR1:
         curve = params.get("curve")
         if not isinstance(curve, dict):
             raise FanR1SpecError("curve is required (flow_m3_s, pressure_rise_Pa, efficiency)")
-        series = {key: curve.get(key) for key in _CURVE_KEYS}
-        for key, value in series.items():
-            if value is None:
+        for key in _CURVE_KEYS:
+            if curve.get(key) is None:
                 raise FanR1SpecError(f"curve.{key} is required")
-        flow = [float(x) for x in series["flow_m3_s"]]
-        dP_c = [float(x) for x in series["pressure_rise_Pa"]]
-        eta_c = [float(x) for x in series["efficiency"]]
+        flow = [float(x) for x in curve["flow_m3_s"]]
+        dP_c = [float(x) for x in curve["pressure_rise_Pa"]]
+        eta_c = [float(x) for x in curve["efficiency"]]
         if len(flow) != len(dP_c) or len(flow) != len(eta_c):
             raise FanR1SpecError(
                 "curve.flow_m3_s, curve.pressure_rise_Pa and curve.efficiency "
