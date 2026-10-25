@@ -28,13 +28,16 @@ from types import SimpleNamespace
 from typing import Any
 
 import pytest
+from scipy.optimize import brentq
 
 from ngdesign import registry
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.stream import PhaseKind
 from ngdesign.units.heat.fired_heater import FiredHeater, fuel_lhv
 from ngdesign.units.heat.fired_heater_r1 import (
     H_CONV_RADIANT_DEFAULT,
     FiredHeaterConvergenceError,
+    FiredHeaterDewPointError,
     FiredHeaterR1,
     FiredHeaterSpecError,
     btu_h_ft2_f_to_w_m2_k,
@@ -167,9 +170,12 @@ _EXAMPLE_GEOMETRY = {
 def _example_basis(**overrides: Any) -> tuple[Thermo, dict[str, Any]]:
     """The spec identity example: methane fuel heating natural gas 300 -> 600 K.
 
-    Measured with this geometry (alpha_Acp 8 m2, F 0.6, A_t 200 m2, UA_C
-    1200 W/K): efficiency_LHV 0.8253, Q = 1,317,508.1 W, T_g 936.5 K,
-    T_stack 463.3 K, T_ad 1964.8 K.
+    Measured on the vapour-phase reference (review round on e7c2531, item 1)
+    with this geometry (alpha_Acp 8 m2, F 0.6, A_t 200 m2, UA_C 1200 W/K):
+    efficiency_LHV 0.9366, Q = 1,317,508.1 W, T_g 941.4 K, T_stack 435.4 K,
+    T_ad 2126.9 K. (The earlier 0.8253/936.5/463.3/1964.8 figures were read on
+    a condensing flash_pt reference, which hid about 9.8 % of the fired heat in
+    the flue water latent heat.)
     """
     thermo = _thermo()
     inlet = thermo.flash_pt({"C1": 1.0}, 300.0, 5.0e5, 100.0)
@@ -213,18 +219,27 @@ def test_fuel_and_sections_self_consistent() -> None:
     assert basis["T_in_K"] < result["T_crossover_K"] < basis["T_out_K"]
     assert 298.15 < result["T_stack_K"] < result["T_bridgewall_K"] < result["T_adiabatic_K"]
     assert basis["T_in_K"] < result["T_tube_wall_K"] < basis["T_out_K"] + basis["tube_wall_excess_K"]
+    # Independent vapour-phase enthalpy build (review round on e7c2531, item 2):
+    # deliberately NOT the module mixture_enthalpy, so a condensing flue
+    # reference cannot pass this test by construction.
+    flue_total = sum(basis["flue_mol"].values())
+    z_flue = {cid: y / flue_total for cid, y in basis["flue_mol"].items() if y != 0.0}
+
+    def h_vap_flue(T: float) -> float:
+        return thermo.phase_props(z_flue, T, basis["box_P_Pa"], PhaseKind.VAPOR).enthalpy
+
     # Eq. 2 re-evaluated at the reported bridgewall temperature: with the air at
     # the 298.15 K reference its sensible term is zero, so the firebox balance is
-    # n_f*LHV = Q_radiant + n_fg*(h_fg(T_g) - h_fg(298.15)).
+    # n_f*LHV = Q_radiant + n_fg*(h_fg(T_g) - h_fg_vap(298.15)), water vapour.
     n_f = result["fuel_molar_flow"]
-    h_fg_ref = mixture_enthalpy(thermo, basis["flue_mol"], 298.15, basis["box_P_Pa"])
-    h_fg_g = mixture_enthalpy(thermo, basis["flue_mol"], result["T_bridgewall_K"], basis["box_P_Pa"])
+    h_fg_ref = h_vap_flue(298.15)
+    h_fg_g = h_vap_flue(result["T_bridgewall_K"])
     lhs = basis["lhv_J_per_mol"] * n_f
     rhs = result["Q_radiant_W"] + n_f * basis["nu_fg"] * (h_fg_g - h_fg_ref)
     assert lhs == pytest.approx(rhs, rel=1e-8)
     # Eq. 4 re-evaluated: the convection duty equals the flue sensible drop
     # between bridgewall and stack.
-    h_fg_s = mixture_enthalpy(thermo, basis["flue_mol"], result["T_stack_K"], basis["box_P_Pa"])
+    h_fg_s = h_vap_flue(result["T_stack_K"])
     assert result["Q_convection_W"] == pytest.approx(n_f * basis["nu_fg"] * (h_fg_g - h_fg_s), rel=1e-8)
 
 
@@ -321,9 +336,11 @@ def test_adapter_info_keys() -> None:
 
 def test_energy_self_consistency_with_losses() -> None:
     """Spec: fuel LHV*n_f + air sensible = Q + flue sensible at T_stack +
-    losses, to 1e-8 relative, re-evaluated independently in the test from the
-    reported info and flash_pt. air_T_K 400 K and radiant_loss_frac 0.05 make
-    both correction terms live."""
+    losses, to 1e-8 relative. Re-evaluated independently in the test from the
+    reported info with direct vapour-phase builds (review round on e7c2531,
+    item 2 - the flue reference must stay all-vapour or the flue water latent
+    heat leaks into the closure). air_T_K 400 K and radiant_loss_frac 0.05
+    make both correction terms live."""
     thermo = _thermo()
     params = _adapter_params(air_T_K=400.0, radiant_loss_frac=0.05)
     result = FiredHeaterR1().solve({"inlet": _adapter_inlet_state()}, params, thermo)
@@ -332,9 +349,15 @@ def test_energy_self_consistency_with_losses() -> None:
     n_f = info["fuel_molar_flow"]
     Q = result.duty_W
     air = {"N2": 0.79, "O2": 0.21}
-    h_air = mixture_enthalpy(thermo, air, 400.0, 101325.0) - mixture_enthalpy(thermo, air, 298.15, 101325.0)
-    h_stack = mixture_enthalpy(thermo, stoich["flue"], info["T_stack_K"], 101325.0)
-    h_ref = mixture_enthalpy(thermo, stoich["flue"], 298.15, 101325.0)
+    flue_total = sum(stoich["flue"].values())
+    z_flue = {cid: y / flue_total for cid, y in stoich["flue"].items() if y != 0.0}
+
+    def h_vap(z: dict[str, float], T: float) -> float:
+        return thermo.phase_props(z, T, 101325.0, PhaseKind.VAPOR).enthalpy
+
+    h_air = h_vap(air, 400.0) - h_vap(air, 298.15)
+    h_stack = h_vap(z_flue, info["T_stack_K"])
+    h_ref = h_vap(z_flue, 298.15)
     lhs = info["fuel_LHV_J_per_mol"] * n_f + n_f * stoich["nu_air"] * h_air
     rhs = (
         Q
@@ -342,6 +365,121 @@ def test_energy_self_consistency_with_losses() -> None:
         + params["radiant_loss_frac"] * info["fuel_LHV_J_per_mol"] * n_f
     )
     assert lhs == pytest.approx(rhs, rel=1e-8)
+
+
+def test_flue_reference_is_all_vapour() -> None:
+    """The flue reference enthalpy at 298.15 K must be the all-vapour build
+    (vf = 1), matching the fuel_lhv water-as-vapour basis (review round on
+    e7c2531, item 2). Measured (PR package): a flash_pt of the 15 % excess
+    methane flue at 298.15 K and 1 atm condenses (vf 0.8555) and its enthalpy
+    -6616.15 J/mol carries the condensed water latent heat, while the
+    vapour-phase build gives -18.92 J/mol - a 6597 J/mol of flue difference,
+    about 9.8 % of the methane LHV. mixture_enthalpy must return the vapour
+    value, and this test fails on the old flash_pt behaviour."""
+    thermo = _thermo()
+    stoich = combustion_stoichiometry({"C1": 1.0}, None, 0.15)
+    flue_total = sum(stoich["flue"].values())
+    z_flue = {cid: y / flue_total for cid, y in stoich["flue"].items() if y != 0.0}
+    flashed = thermo.flash_pt(z_flue, 298.15, 101325.0, 1.0)
+    assert flashed.vapor_fraction < 1.0  # a flash_pt reference condenses the flue water
+    assert flashed.enthalpy == pytest.approx(-6616.15, rel=1e-3)
+    h_vapour = thermo.phase_props(z_flue, 298.15, 101325.0, PhaseKind.VAPOR).enthalpy
+    assert mixture_enthalpy(thermo, stoich["flue"], 298.15, 101325.0) == pytest.approx(
+        h_vapour, rel=1e-12
+    )
+    assert h_vapour == pytest.approx(-18.92, rel=1e-2)
+    assert (h_vapour - flashed.enthalpy) * flue_total / fuel_lhv({"C1": 1.0}) == pytest.approx(
+        0.098, rel=1e-2
+    )
+
+
+def test_stack_below_flue_dew_point_refused() -> None:
+    """A wet stoichiometric methane flue (no excess air) at 10 bar box
+    pressure has a 391.56 K dew point; with UA_C = 1e4 W/K the rated stack
+    lands on it. The accepted solution must refuse rather than report a
+    condensing stack (review round on e7c2531, item 1):
+    FiredHeaterDewPointError naming the T_stack stage. The condensing regime
+    is HHV territory, outside the R1 LHV basis."""
+    thermo = _thermo()
+    inlet = thermo.flash_pt({"C1": 1.0}, 300.0, 5.0e5, 100.0)
+    out = thermo.flash_pt({"C1": 1.0}, 600.0, 4.9e5, 100.0)
+    Q = 100.0 * (out.enthalpy - inlet.enthalpy)
+    stoich = combustion_stoichiometry({"C1": 1.0}, None, 0.0)
+    with pytest.raises(FiredHeaterDewPointError, match="dew point"):
+        solve_fuel_and_sections(
+            thermo,
+            lhv_J_per_mol=fuel_lhv({"C1": 1.0}),
+            flue_mol=stoich["flue"],
+            air_fractions={"N2": 0.79, "O2": 0.21},
+            nu_air=stoich["nu_air"],
+            nu_fg=stoich["nu_fg"],
+            Q_W=Q,
+            F_mol_s=100.0,
+            h_in_J_per_mol=inlet.enthalpy,
+            T_in_K=inlet.T,
+            T_out_K=out.T,
+            P_out_Pa=4.9e5,
+            composition={"C1": 1.0},
+            air_T_K=298.15,
+            box_P_Pa=1.0e6,
+            alpha_Acp_m2=8.0,
+            exchange_factor=0.6,
+            tube_area_m2=200.0,
+            h_conv_W_m2K=11.3565267,
+            tube_wall_excess_K=100.0,
+            UA_convection_W_K=1.0e4,
+            radiant_loss_frac=0.0,
+        )
+
+
+def test_kern_19_1_radiant_section_documented() -> None:
+    """Kern, Process Heat Transfer (1950), Ch. 19, Example 19.1: a documented
+    comparison test of the radiant-section solve (NOT a V1 case - the example
+    fixes the 75 % LHV efficiency as a design input and prints no convection
+    UA, so it cannot anchor the R1 efficiency; review round on e7c2531,
+    item 3). The fuel rate is SET from the printed 75 % efficiency and the
+    50,000,000 Btu/hr absorbed duty, T_t is the printed 800 F average tube
+    temperature (699.82 K), and the geometry is the printed alpha*A_cp =
+    1500 ft2 = 139.3547 m2, F = 0.635, A_t = 3024 ft2 = 280.9391 m2, 25 %
+    excess air preheated to 533.15 K, 2 % setting loss. Measured on the
+    vapour-phase reference (PR package): T_g 1255.51 K vs the printed about
+    1700 F = 1199.26 K (+4.7 %), radiant duty 11.264 MW vs the printed
+    37,050,000 Btu/hr = 1.08562e7 W (+3.8 %), mean flux 40,095 W/m2 vs the
+    printed 12,280 Btu/(hr ft2) = 38,738.4 W/m2 (+3.5 %); asserted at rel
+    0.05. The residual gap is the 60 F chart reference vs the 298.15 K
+    water-vapour formation basis and the chart flue enthalpies vs the PR
+    package. The fuel carrier (nC10/C1 mix matching the printed flue
+    analysis, not the printed oil LHV) and the coil fluid are documented
+    carriers, as in the removed V2105 case."""
+    thermo = _thermo()
+    fuel = {"nC10": 0.625, "C1": 0.375}
+    lhv = fuel_lhv(fuel)
+    stoich = combustion_stoichiometry(fuel, None, 0.25)
+    q_duty = 50.0e6 * 1055.05585262 / 3600.0  # printed 50 MBtu/hr absorbed, in W
+    n_f = q_duty / (0.75 * lhv)  # the printed 75 % LHV efficiency is an input here
+    t_tube = (800.0 - 32.0) * 5.0 / 9.0 + 273.15
+    air = {"N2": 0.79, "O2": 0.21}
+    flue_total = sum(stoich["flue"].values())
+    z_flue = {cid: y / flue_total for cid, y in stoich["flue"].items() if y != 0.0}
+
+    def h_vap(z: dict[str, float], T: float) -> float:
+        return thermo.phase_props(z, T, 101325.0, PhaseKind.VAPOR).enthalpy
+
+    air_sensible = h_vap(air, 533.15) - h_vap(air, 298.15)
+    h_ref = h_vap(z_flue, 298.15)
+
+    def balance(T_g: float) -> float:
+        """Firebox balance, Eqs. 2 = 3 at the set n_f and T_t."""
+        flue_sensible = stoich["nu_fg"] * (h_vap(z_flue, T_g) - h_ref)
+        q_rad, _ = radiant_transfer_W(139.3547, 0.635, T_g, t_tube, 280.9391, 11.3565267)
+        return (1.0 - 0.02) * lhv + stoich["nu_air"] * air_sensible - flue_sensible - q_rad / n_f
+
+    t_g = brentq(balance, t_tube + 1e-6, 3000.0, xtol=1e-12)
+    q_rad, _ = radiant_transfer_W(139.3547, 0.635, t_g, t_tube, 280.9391, 11.3565267)
+    assert t_g == pytest.approx(1199.26, rel=0.05)  # printed about 1700 F
+    assert q_rad == pytest.approx(1.08562e7, rel=0.05)  # printed 37,050,000 Btu/hr
+    assert q_rad / 280.9391 == pytest.approx(38738.4, rel=0.05)  # printed 12,280 Btu/(hr ft2)
+    assert t_g > t_tube
 
 
 @pytest.mark.parametrize(
@@ -379,20 +517,22 @@ def test_adapter_no_firing_rate_refused() -> None:
 
 
 class _HotFlueThermo:
-    """flash_pt proxy refusing every enthalpy request above 3500 K, so the
+    """Proxy refusing every flue-enthalpy request above 3500 K, so the
     adiabatic bracket [T_air, 4000 K] cannot be evaluated at its upper end.
     (With the real thermo the bracket always brackets a root: measured by
     probe, air preheat up to 3000 K still solves or fails at the outer
     stage, because the flue absorbs the LHV below 4000 K for any hydrocarbon
-    fuel.)"""
+    fuel.) The enthalpy requests go through ``phase_props`` - the flue
+    reference is a vapour-phase build, not a flash (review round on
+    e7c2531, item 1) - so that is the method intercepted."""
 
     def __init__(self, real: Thermo) -> None:
         self._real = real
 
-    def flash_pt(self, composition: Any, T: float, P: float, molar_flow: float) -> Any:
+    def phase_props(self, composition: Any, T: float, P: float, kind: Any) -> Any:
         if T > 3500.0:
             raise ValueError("no flue enthalpy above 3500 K")
-        return self._real.flash_pt(composition, T, P, molar_flow)
+        return self._real.phase_props(composition, T, P, kind)
 
     def flash_ph(self, composition: Any, P: float, enthalpy: float, molar_flow: float) -> Any:
         return self._real.flash_ph(composition, P, enthalpy, molar_flow)
@@ -497,8 +637,10 @@ def test_tube_wall_fixed_point_refused() -> None:
 
 
 def test_example_case_solves() -> None:
-    """The example_case basis solves with the measured efficiency 0.8253 in
-    the 80-90 % band the spec identity section asks the geometry to give."""
+    """The example_case basis solves with the efficiency the corrected
+    vapour-phase reference gives (measured 0.9366; the earlier 0.8253 read on
+    the condensing flash_pt reference understated it by the flue water latent
+    heat, about 9.8 % of fired - review round on e7c2531, item 1)."""
     feeds, params = FiredHeaterR1.example_case()
     thermo = _thermo()
     inlet_feed = feeds["inlet"]
@@ -506,4 +648,4 @@ def test_example_case_solves() -> None:
         inlet_feed["composition"], inlet_feed["T"], inlet_feed["P"], inlet_feed["molar_flow"]
     )
     result = FiredHeaterR1().solve({"inlet": inlet}, params, thermo)
-    assert 0.80 < result.info["efficiency_LHV"] < 0.90
+    assert 0.90 < result.info["efficiency_LHV"] < 0.97

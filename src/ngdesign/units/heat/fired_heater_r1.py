@@ -22,6 +22,7 @@ from scipy.optimize import brentq
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.stream import PhaseKind
 from ngdesign.data.formation import atomic_composition
 from ngdesign.sizing.lmtd import lmtd_counter
 from ngdesign.units.heat.fired_heater import fuel_lhv
@@ -53,6 +54,12 @@ class FiredHeaterSpecError(ValueError):
 
 class FiredHeaterConvergenceError(ValueError):
     """A brentq bracket or the tube-wall fixed point failed; the stage is named."""
+
+
+class FiredHeaterDewPointError(FiredHeaterConvergenceError):
+    """A solved stack temperature sits below the flue dew point at box
+    pressure: the flue would condense water. The condensing regime is HHV
+    territory and outside R1 (the LHV basis assumes water leaves as vapour)."""
 
 
 def validate_params(params: dict[str, Any]) -> None:
@@ -183,7 +190,10 @@ def radiant_transfer_W(
 #: 298.15 K formation reference, matching ``fuel_lhv`` (water as vapour).
 T_REF_K = 298.15
 
-#: Brent caps (spec algorithm 3): 100 iterations, xtol 1e-12.
+#: Brent caps (spec algorithm 3): 100 iterations, xtol 1e-12. The xtol is
+#: ABSOLUTE (scipy brentq has no relative form): on the outer fuel bracket
+#: (n_f of order a few mol/s) that is ~5e-13 relative, and on the temperature
+#: brackets (hundreds of K) it is negligible.
 _BRENT_MAXITER = 100
 _BRENT_XTOL = 1e-12
 
@@ -195,13 +205,20 @@ _T_AD_MAX_K = 4000.0
 
 
 def mixture_enthalpy(thermo: Thermo, composition: dict[str, float], T: float, P: float) -> float:
-    """Molar enthalpy (J/mol) of a mixture from ``flash_pt`` at (T, P)."""
+    """Molar enthalpy (J/mol) of a mixture as ONE vapour phase.
+
+    Uses ``phase_props(..., PhaseKind.VAPOR)`` - a single-vapour-phase build,
+    never a flash. ``fuel_lhv`` is on the 298.15 K basis with water as vapour,
+    so the flue and air reference and sensible enthalpies must be vapour-phase
+    too: a ``flash_pt`` at 298.15 K would condense the flue water and slip its
+    latent heat (about 10 % of the LHV on a methane flue) into every
+    "sensible above reference" term.
+    """
     total = sum(composition.values())
     if total <= 0.0:
         raise ValueError("fired_heater R1: mixture composition sums to <= 0")
     z = {cid: y / total for cid, y in composition.items() if y != 0.0}
-    state = thermo.flash_pt(z, T, P, 1.0)
-    return state.enthalpy
+    return thermo.phase_props(z, T, P, PhaseKind.VAPOR).enthalpy
 
 
 def solve_fuel_and_sections(
@@ -239,6 +256,11 @@ def solve_fuel_and_sections(
     ``T_t = mean(T_cross, T_out) + tube_wall_excess_K`` moves < 1e-9 K (cap 50).
     The outer residual is ``UA_C*LMTD - Q_C``; a crossed convection section or
     an over-delivering radiant section short-circuits it to ``-Q`` / ``+Q``.
+    A stack-bracket failure is read as a crossed convection section (the flue
+    cannot carry ``Q_C`` down to the air temperature), i.e. fuel too low, and
+    short-circuits to ``-Q``; a solved ``T_stack`` below the flue dew point at
+    box pressure raises :class:`FiredHeaterDewPointError` (a condensing flue is
+    HHV territory, outside the LHV basis).
 
     Returns ``fuel_molar_flow``, ``T_adiabatic_K``, ``T_bridgewall_K``,
     ``T_stack_K``, ``T_crossover_K``, ``T_tube_wall_K``, ``Q_radiant_W``,
@@ -252,6 +274,14 @@ def solve_fuel_and_sections(
     )
     h_fg_ref = mixture_enthalpy(thermo, flue_mol, T_REF_K, box_P_Pa)
     h_fg_cache: dict[float, float] = {}
+    flue_total = sum(flue_mol.values())
+    flue_z = {cid: y / flue_total for cid, y in flue_mol.items() if y != 0.0}
+    try:
+        flue_dew_T: float | None = thermo.dew_point(flue_z, P=box_P_Pa).T
+    except ValueError:
+        # No two-phase region at box pressure (supercritical feed): the flue
+        # cannot condense, so no dew-point refusal applies.
+        flue_dew_T = None
 
     def q_flue_above_ref(T: float) -> float:
         h = h_fg_cache.get(T)
@@ -313,7 +343,7 @@ def solve_fuel_and_sections(
             return q_flue_above_ref(T_g) - q_flue_above_ref(T) - q_C_per_mol_fuel
 
         try:
-            return float(
+            T_stack = float(
                 brentq(
                     residual,
                     air_T_K,
@@ -326,9 +356,20 @@ def solve_fuel_and_sections(
             raise FiredHeaterConvergenceError(
                 f"fired_heater R1: stack temperature bracket failed (stage T_stack): {exc}"
             ) from exc
+        if flue_dew_T is not None and T_stack < flue_dew_T:
+            raise FiredHeaterDewPointError(
+                f"fired_heater R1: solved stack temperature {T_stack:.2f} K is below the "
+                f"flue dew point {flue_dew_T:.2f} K at box pressure (stage T_stack): a "
+                "condensing flue is HHV territory and outside R1 (LHV basis)"
+            )
+        return T_stack
 
-    def evaluate(n_f: float) -> dict[str, float]:
-        """Tube-wall fixed point at this fuel rate, with the outer residual."""
+    def evaluate(n_f: float, final: bool = False) -> dict[str, float]:
+        """Tube-wall fixed point at this fuel rate, with the outer residual.
+
+        ``final=True`` (the accepted solution) re-raises a dew-point crossing;
+        during bracket probing a crossing only means the fuel is too low.
+        """
         T_t = (T_in_K + T_out_K) / 2.0 + tube_wall_excess_K
         T_g = T_stack = T_cross = 0.0
         Q_C = 0.0
@@ -341,6 +382,12 @@ def solve_fuel_and_sections(
                 return {"residual_W": Q_W}
             try:
                 T_stack = solve_T_stack(T_g, Q_C / n_f)
+            except FiredHeaterDewPointError:
+                if final:
+                    raise  # the accepted solution condenses the flue: refuse
+                # A probe firing rate whose flue would condense cannot carry
+                # the convection duty on the LHV basis: fuel too low.
+                return {"residual_W": -Q_W}
             except FiredHeaterConvergenceError:
                 # The flue cannot carry Q_C down to the air temperature: the
                 # convection section is crossed, the fuel is too low.
@@ -401,7 +448,7 @@ def solve_fuel_and_sections(
             f"fired_heater R1: outer fuel bracket failed (stage outer): {exc}"
         ) from exc
 
-    final = evaluate(n_f)
+    final = evaluate(n_f, final=True)
     return {
         "fuel_molar_flow": n_f,
         "T_adiabatic_K": T_ad,
