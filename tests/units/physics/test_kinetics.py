@@ -293,3 +293,60 @@ def test_yield_shift_refuses_non_finite_yield_naming_the_product() -> None:
     # check (abs(NaN - 1) > 1e-9 is False), so it must be refused explicitly.
     with pytest.raises(KineticsError, match=r"mass yield for \['CO'\] is not finite"):
         yield_shift(n_in, feed_cids, [0.2, 0.7, float("nan"), 0.1], ["CH4", "H2O", "CO", "H2"])
+
+
+def _wgsr_limited() -> Reaction:
+    return Reaction(
+        id="wgsr_limited",
+        stoichiometry={"CO": -1.0, "H2O": -1.0, "CO2": 1.0, "H2": 1.0},
+        base_component="CO",
+        kinetics=PowerLaw(
+            rate_units="mol/(m3·s)",
+            k0=3.0,
+            Ea=50_000.0,
+            orders={"CO": 1.0},
+            basis="concentration",
+        ),
+        equilibrium=Equilibrium(form="from_gibbs"),
+        provenance="test-only equilibrium-limitation check",
+    )
+
+
+def test_equilibrium_limited_rate_is_forward_times_one_minus_q_over_k() -> None:
+    # rate = forward·(1 − Q/K), Q = Π(y_i·P/P°)^ν_i (P° = 1 bar); for the WGSR
+    # Δν = 0, so Q = y_CO2·y_H2/(y_CO·y_H2O) independent of P.
+    reaction = _wgsr_limited()
+    t, p = 700.0, 200_000.0
+    z = {"CO": 0.2, "H2O": 0.3, "CO2": 0.1, "H2": 0.4}
+    forward = 3.0 * math.exp(-50_000.0 / (R_CODATA * t)) * z["CO"] * p / (R_CODATA * t)
+    q = (0.1 * 0.4) / (0.2 * 0.3)
+    expected = forward * (1.0 - q / equilibrium_constant(reaction, t))
+    assert rate(reaction, t, p, z) == pytest.approx(expected, rel=1e-12)
+
+
+def test_equilibrium_limited_rate_vanishes_at_equilibrium_and_reverses_beyond() -> None:
+    reaction = _wgsr_limited()
+    t, p = 700.0, 200_000.0
+    k = equilibrium_constant(reaction, t)
+    # y_CO = y_H2O = a, y_CO2 = y_H2 = b with b²/a² = K and 2a + 2b = 1.
+    a = 0.5 / (1.0 + math.sqrt(k))
+    b = 0.5 - a
+    at_eq = {"CO": a, "H2O": a, "CO2": b, "H2": b}
+    forward = 3.0 * math.exp(-50_000.0 / (R_CODATA * t)) * a * p / (R_CODATA * t)
+    assert abs(rate(reaction, t, p, at_eq)) <= 1e-12 * forward
+    past_eq = {"CO": 0.5 * a, "H2O": 0.5 * a, "CO2": b + 0.5 * a, "H2": b + 0.5 * a}
+    assert rate(reaction, t, p, past_eq) < 0.0
+
+
+def test_equilibrium_limited_rate_with_absent_product_is_forward() -> None:
+    reaction = _wgsr_limited()
+    z = {"CO": 0.5, "H2O": 0.5}
+    t, p = 700.0, 200_000.0
+    forward = 3.0 * math.exp(-50_000.0 / (R_CODATA * t)) * 0.5 * p / (R_CODATA * t)
+    assert rate(reaction, t, p, z) == pytest.approx(forward, rel=1e-12)
+
+
+def test_equilibrium_limited_rate_refuses_absent_reactant_with_nonzero_forward() -> None:
+    reaction = _wgsr_limited()  # first order in CO only: forward ≠ 0 without H2O
+    with pytest.raises(KineticsError, match="reactant 'H2O' is absent"):
+        rate(reaction, 700.0, 200_000.0, {"CO": 0.5, "CO2": 0.25, "H2": 0.25})
