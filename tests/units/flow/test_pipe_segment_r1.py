@@ -80,10 +80,13 @@ class TestC1IncompressibleLiquid:
 
     @pytest.mark.parametrize("n", [1, 4, 10])
     def test_march_constant_props_exact(self, n: int) -> None:
+        # Heun is exact for a constant derivative, so every n gives the same
+        # dP to round-off; the printed reference carries 15-digit rounding, so
+        # the comparison is 1e-12 relative (tighter than 1e-10 absolute here).
         P_in = 1.0e6
         P_out = march(P_in, self.L_M, self.D_M, self.DZ, self.EPS, self.MDOT, self._props, n)
         dP = P_in - P_out
-        assert dP == pytest.approx(112036.249127719, abs=1e-10)
+        assert dP == pytest.approx(112036.249127719, rel=1e-12)
 
     def test_fittings_helper(self) -> None:
         dP_K = dP_fittings_Pa(self.K, self.D_M, self.MDOT, self.RHO)
