@@ -24,10 +24,13 @@ planned level declaration raises :class:`UnitLevelNotImplemented`. Over the
 current palette that is 21 implemented levels x 3 + 62 roadmap rows + 14
 planned declarations = **139 V0 checks**.
 
-**V1 worked cases** — ``data/validation_units/<family>/cases.yaml`` pairs a
-row/level with a cited reference result (spec U-01). One case::
+**V1 worked cases** — ``data/validation_units/<family>/cases.yaml`` and the
+per-unit files ``data/validation_units/<family>/cases/<unit_id>.yaml`` pair a
+row/level with a cited reference result (spec U-01). Units added in parallel
+each own their per-unit file, so no two implementers append to one list. One
+case::
 
-    - id: V-pump-perry-ex1          # V-prefixed, unique
+    - id: V1-pump-perry-ex1         # V-prefixed, unique
       unit: pump                    # catalogue row id
       level: R0                     # optional; default level otherwise
       source: "Perry 9th ed., Example 10-3, p. 10-31"   # mandatory citation
@@ -389,13 +392,16 @@ def _compare(solved: Solved, entry: dict[str, Any]) -> Comparison:
 def _load_cases() -> list[dict[str, Any]]:
     cases: list[dict[str, Any]] = []
     for family_dir in sorted(VALIDATION_DIR.iterdir()):
-        cases_path = family_dir / "cases.yaml"
-        if not cases_path.is_file():
+        if not family_dir.is_dir():
             continue
-        loaded = yaml.safe_load(cases_path.read_text()) or []
-        if not isinstance(loaded, list):
-            raise ValueError(f"{cases_path.relative_to(REPO_ROOT)} must be a YAML list")
-        cases.extend(loaded)
+        paths = [family_dir / "cases.yaml", *sorted((family_dir / "cases").glob("*.yaml"))]
+        for cases_path in paths:
+            if not cases_path.is_file():
+                continue
+            loaded = yaml.safe_load(cases_path.read_text()) or []
+            if not isinstance(loaded, list):
+                raise ValueError(f"{cases_path.relative_to(REPO_ROOT)} must be a YAML list")
+            cases.extend(loaded)
     return cases
 
 
