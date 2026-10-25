@@ -183,7 +183,7 @@ def solve_common_wall(
     def rhs(x: np.ndarray, y: np.ndarray) -> np.ndarray:
         temperatures = np.vstack([layer.T_of_H(y[i]) for i, layer in enumerate(layers)])
         conductance = conductance_at(x)
-        wall = conductance @ temperatures / conductance.sum(axis=0)
+        wall = (conductance * temperatures).sum(axis=0) / conductance.sum(axis=0)
         return np.asarray((signs[:, None] * conductance) * (temperatures - wall[None, :]), dtype=float)
 
     def bc(ya: np.ndarray, yb: np.ndarray) -> np.ndarray:
@@ -201,7 +201,7 @@ def solve_common_wall(
 
     temperatures = np.vstack([layer.T_of_H(solution.y[i]) for i, layer in enumerate(layers)])
     conductance_nodes = conductance_at(solution.x)
-    wall = conductance_nodes @ temperatures / conductance_nodes.sum(axis=0)
+    wall = (conductance_nodes * temperatures).sum(axis=0) / conductance_nodes.sum(axis=0)
     return CommonWallResult(
         x=solution.x,
         H=solution.y,
