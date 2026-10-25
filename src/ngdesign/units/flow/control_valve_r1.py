@@ -40,14 +40,13 @@ import math
 from collections.abc import Callable
 from typing import Any, Final, Literal
 
-from scipy.optimize import brentq
-
 from fluids.control_valve import (
     control_valve_choke_P_g,
     control_valve_choke_P_l,
     size_control_valve_g,
     size_control_valve_l,
 )
+from scipy.optimize import brentq
 
 from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
@@ -295,8 +294,18 @@ class ControlValveR1:
 
             def kv_at(P2: float) -> dict[str, float]:
                 return kv_liquid(
-                    Q_m3_s=Q_m3_s, rho=rho, mu=visc, Psat=Psat, Pc=Pc,
-                    P1=P1, P2=P2, FL=FL, Fd=Fd, D1_m=D1_m, D2_m=D2_m, d_m=d_m,
+                    Q_m3_s=Q_m3_s,
+                    rho=rho,
+                    mu=visc,
+                    Psat=Psat,
+                    Pc=Pc,
+                    P1=P1,
+                    P2=P2,
+                    FL=FL,
+                    Fd=Fd,
+                    D1_m=D1_m,
+                    D2_m=D2_m,
+                    d_m=d_m,
                 )
 
             P2_choke = float(control_valve_choke_P_l(Psat=Psat, Pc=Pc, FL=FL, P1=P1))
@@ -323,16 +332,26 @@ class ControlValveR1:
 
             def kv_at(P2: float) -> dict[str, float]:
                 return kv_gas(
-                    n_mol_s=n_mol_s, MW=MW, mu=visc, gamma=gamma, Z=z_gas, T=inlet.T,
-                    P1=P1, P2=P2, xT=xT, FL=FL, Fd=Fd, D1_m=D1_m, D2_m=D2_m, d_m=d_m,
+                    n_mol_s=n_mol_s,
+                    MW=MW,
+                    mu=visc,
+                    gamma=gamma,
+                    Z=z_gas,
+                    T=inlet.T,
+                    P1=P1,
+                    P2=P2,
+                    xT=xT,
+                    FL=FL,
+                    Fd=Fd,
+                    D1_m=D1_m,
+                    D2_m=D2_m,
+                    d_m=d_m,
                 )
 
             P2_choke = float(control_valve_choke_P_g(xT=xT, gamma=gamma, P1=P1))
 
         if rating:
-            P2 = _rating_outlet_P(
-                params, kv_at, P1, P2_choke, kind, rangeability, opening
-            )
+            P2 = _rating_outlet_P(params, kv_at, P1, P2_choke, kind, rangeability, opening)
         # else: P2 was already solved and zero-drop-checked above.
 
         kv = kv_at(P2)
@@ -463,9 +482,7 @@ def _rating_outlet_P(
         return float(kv_at(P2)["Kv"]) - Kv_avail
 
     try:
-        return float(
-            brentq(residual, P2_choke, P1 * (1.0 - 1e-9), xtol=1e-9 * P1, maxiter=200)
-        )
+        return float(brentq(residual, P2_choke, P1 * (1.0 - 1e-9), xtol=1e-9 * P1, maxiter=200))
     except (RuntimeError, ValueError) as e:
         raise ControlValveRatingError(
             f"rating solve did not converge for P1 {P1} Pa and available Kv {Kv_avail:.6g}: {e}"

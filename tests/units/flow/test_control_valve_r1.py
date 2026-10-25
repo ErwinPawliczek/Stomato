@@ -35,6 +35,7 @@ from typing import Any, cast
 
 import pytest
 
+import ngdesign.units.flow.control_valve_r1 as cvr1_module
 from ngdesign.contracts import PhaseKind
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.flow.control_valve import ControlValve as ControlValveR0
@@ -42,7 +43,9 @@ from ngdesign.units.flow.control_valve import ControlValveSpecError
 from ngdesign.units.flow.control_valve_r1 import (
     KV_PER_CV,
     VMOL_STD,
+    ChokedCapacityError,
     ControlValveR1,
+    ControlValveRatingError,
     characteristic,
     characteristic_inverse,
     kv_gas,
@@ -432,11 +435,6 @@ def test_refuse_cv_exceeds_rated(thermo: Thermo) -> None:
 # --------------------------------------------------------------------------
 # Step 3: rating mode (Cv_rated + opening -> solved outlet pressure).
 # --------------------------------------------------------------------------
-import ngdesign.units.flow.control_valve_r1 as cvr1_module
-from ngdesign.units.flow.control_valve_r1 import (
-    ChokedCapacityError,
-    ControlValveRatingError,
-)
 
 
 def test_rating_roundtrip(thermo: Thermo) -> None:
@@ -445,9 +443,7 @@ def test_rating_roundtrip(thermo: Thermo) -> None:
     inlet = flash_feed(thermo, feeds["inlet"])
     sized = ControlValveR1().solve({"inlet": inlet}, params, thermo)
     opening = sized.info["travel"]
-    r = ControlValveR1().solve(
-        {"inlet": inlet}, {"Cv_rated": 125.0, "opening": opening}, thermo
-    )
+    r = ControlValveR1().solve({"inlet": inlet}, {"Cv_rated": 125.0, "opening": opening}, thermo)
     assert r.info["P_out_Pa"] == pytest.approx(1.997411e6, rel=1e-6)
     assert r.info["opening"] == pytest.approx(opening, rel=1e-9)
     assert r.info["choked"] == 0.0
@@ -456,33 +452,34 @@ def test_rating_roundtrip(thermo: Thermo) -> None:
 
 
 def test_rating_gas_roundtrip(thermo: Thermo) -> None:
-    """Rating a gas valve with just enough capacity recovers its sized outlet."""
+    """Rating a gas valve with just enough capacity recovers a consistent outlet.
+
+    Capacity 1/0.99 above the requirement at 3.0 MPa throttles less, so the
+    solved outlet pressure sits above 3.0 MPa; sizing back at the solved
+    pressure must return exactly the rated capacity.
+    """
     inlet = flash_feed(thermo, METHANE_FEED)
-    sized = ControlValveR1().solve(
-        {"inlet": inlet}, {"P_out": 3.0e6, "mu_gas": 1.2e-5}, thermo
-    )
-    Cv_rated = sized.info["Cv"] / 0.99  # barely enough capacity at full opening
+    sized = ControlValveR1().solve({"inlet": inlet}, {"P_out": 3.0e6, "mu_gas": 1.2e-5}, thermo)
+    Cv_rated = sized.info["Cv"] / 0.99
     r = ControlValveR1().solve(
         {"inlet": inlet},
         {"Cv_rated": Cv_rated, "opening": 1.0, "mu_gas": 1.2e-5},
         thermo,
     )
-    assert r.info["P_out_Pa"] == pytest.approx(3.0e6, rel=2e-3)
-    assert 2.0e6 < r.info["P_out_Pa"] < 5.0e6
+    P2 = float(r.info["P_out_Pa"])
+    assert 3.0e6 < P2 < 3.3e6
+    sized_back = ControlValveR1().solve({"inlet": inlet}, {"P_out": P2, "mu_gas": 1.2e-5}, thermo)
+    assert sized_back.info["Cv"] == pytest.approx(Cv_rated, rel=1e-9)
 
 
 def test_rating_choked_capacity_refused(thermo: Thermo) -> None:
     """Below the choked capacity the refusal is typed, naming the fragment."""
     inlet = _propane_liquid(thermo)
     with pytest.raises(ChokedCapacityError, match="choked capacity"):
-        ControlValveR1().solve(
-            {"inlet": inlet}, {"Cv_rated": 10.0, "opening": 1.0}, thermo
-        )
+        ControlValveR1().solve({"inlet": inlet}, {"Cv_rated": 10.0, "opening": 1.0}, thermo)
 
 
-def test_rating_convergence_refused(
-    thermo: Thermo, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_rating_convergence_refused(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) -> None:
     """A failing root finder surfaces as ControlValveRatingError, not raw scipy."""
 
     def boom(*args: Any, **kwargs: Any) -> float:
@@ -491,9 +488,7 @@ def test_rating_convergence_refused(
     monkeypatch.setattr(cvr1_module, "brentq", boom)
     inlet = _propane_liquid(thermo)
     with pytest.raises(ControlValveRatingError, match="did not converge"):
-        ControlValveR1().solve(
-            {"inlet": inlet}, {"Cv_rated": 125.0, "opening": 0.9}, thermo
-        )
+        ControlValveR1().solve({"inlet": inlet}, {"Cv_rated": 125.0, "opening": 0.9}, thermo)
 
 
 def test_refuse_cv_rated_not_positive(thermo: Thermo) -> None:
