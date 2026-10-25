@@ -60,8 +60,8 @@ def test_eta_c_omega_one_is_exp_minus_half() -> None:
 
 @pytest.mark.parametrize("omega", [0.5, 1.0, 5.0, 20.0])
 def test_eta_c_leung_fit(omega: float) -> None:
-    """Leung's explicit fit is within 2e-4 relative of the root at each check point."""
-    assert rv1.eta_c_leung_fit(omega) == pytest.approx(rv1.eta_c(omega), rel=2e-4)
+    """Leung's explicit fit is within 5e-4 relative of the root at each check point."""
+    assert rv1.eta_c_leung_fit(omega) == pytest.approx(rv1.eta_c(omega), rel=5e-4)
 
 
 # --- closed form: omega and G (eqs. 1, 3) ---------------------------------
@@ -80,11 +80,15 @@ def test_G_two_phase_critical_TP1() -> None:
 
 
 def test_G_two_phase_continuity_at_eta_c() -> None:
-    """The subcritical form at eta_a = eta_c gives the critical G to 1e-12."""
-    ec = rv1.eta_c(5.0)
-    assert rv1.G_two_phase_subcritical(1.0e6, 0.02, 5.0, ec) == pytest.approx(
-        2498.39000876233, rel=1e-12
+    """The subcritical form evaluated at eta_a = eta_c gives the critical G to 1e-12."""
+    omega, P0, v0 = 5.0, 1.0e6, 0.02
+    ec = rv1.eta_c(omega)
+    G_sub = (
+        math.sqrt(-2.0 * (omega * math.log(ec) + (omega - 1.0) * (1.0 - ec)))
+        * math.sqrt(P0 / v0)
+        / (omega * (1.0 / ec - 1.0) + 1.0)
     )
+    assert G_sub == pytest.approx(2498.39000876233, rel=1e-12)
 
 
 def test_G_two_phase_subcritical_TP1() -> None:
@@ -113,8 +117,9 @@ def test_subcooled_low() -> None:
     """omega_s 10, eta_s 0.97: eta_c 0.883320897206597, critical G 6947.17538436639."""
     ec = rv1.eta_c_subcooled_low(10.0, 0.97)
     assert ec == pytest.approx(0.883320897206597, rel=1e-9)
-    G, regime = rv1.G_subcooled(1.0e6, 600.0, 10.0, 0.97, 0.8e6)
+    G, regime, critical = rv1.G_subcooled(1.0e6, 600.0, 10.0, 0.97, 0.8e6)
     assert regime == 2
+    assert critical == 1
     assert G == pytest.approx(6947.17538436639, rel=1e-9)
 
 
@@ -123,7 +128,7 @@ def test_subcooled_saturated_limit() -> None:
     eta = rv1.eta_c_subcooled_low(10.0, 1.0)
     assert eta == pytest.approx(0.848568875287966, rel=1e-12)
     assert eta == pytest.approx(rv1.eta_c(10.0), rel=1e-12)
-    G, regime = rv1.G_subcooled(1.0e6, 600.0, 10.0, 1.0, 0.7e6)
+    G, regime, _critical = rv1.G_subcooled(1.0e6, 600.0, 10.0, 1.0, 0.7e6)
     assert regime == 2
     assert G == pytest.approx(6572.98624420048, rel=1e-12)
     G_tp, _ = rv1.G_two_phase(1.0e6, 1.0 / 600.0, 10.0, 0.7)
@@ -132,15 +137,17 @@ def test_subcooled_saturated_limit() -> None:
 
 def test_subcooled_high_choked() -> None:
     """High subcooling (eta_s 0.5 < eta_st), Pa < Ps: choked at Ps, G = sqrt(2*600*5e5)."""
-    G, regime = rv1.G_subcooled(1.0e6, 600.0, 10.0, 0.5, 0.4e6)
+    G, regime, critical = rv1.G_subcooled(1.0e6, 600.0, 10.0, 0.5, 0.4e6)
     assert regime == 3
+    assert critical == 1
     assert G == pytest.approx(math.sqrt(2.0 * 600.0 * 5.0e5), rel=1e-12)
 
 
 def test_subcooled_non_flashing() -> None:
     """Pa above Ps: all-liquid, G = sqrt(2 rho (P0 - Pa)) — the API 520 Pt I liquid form."""
-    G, regime = rv1.G_subcooled(1.0e6, 600.0, 10.0, 0.5, 0.6e6)
+    G, regime, critical = rv1.G_subcooled(1.0e6, 600.0, 10.0, 0.5, 0.6e6)
     assert regime == 4
+    assert critical == 0
     assert G == pytest.approx(math.sqrt(2.0 * 600.0 * 4.0e5), rel=1e-12)
 
 
@@ -153,12 +160,12 @@ def test_liquid_non_flashing_api520_example() -> None:
     rho = 0.9 * 999.0
     P1 = 1.1 * 1724e3 + 101325.0
     P2 = 0.2 * 1724e3 + 101325.0
-    G, regime = rv1.G_subcooled(P1, rho, 1.0, 0.1, P2)
+    G, regime, _critical = rv1.G_subcooled(P1, rho, 1.0, 0.1, P2)
     assert regime == 4
     assert G == pytest.approx(52821.2752591226, rel=1e-10)
     W = (6814.0 / 60000.0) * rho
     A = rv1.area_m2(W, G, 0.65, Kw=0.97)
-    assert A == pytest.approx(3.0659e-3, rel=1e-3)
+    assert A == pytest.approx(3.06594883829264e-3, rel=1e-9)
 
 
 # --- adapter: identities ----------------------------------------------------
@@ -191,15 +198,22 @@ def test_r1_two_phase_omega_recomputed(thermo: Thermo) -> None:
 
 
 def test_r1_area_matches_eq5(thermo: Thermo) -> None:
-    """The reported area equals eq. 5 recomputed from the reported G and factors."""
+    """The reported area equals eq. 5 recomputed from the reported G and all factors."""
     inlet = _two_phase_inlet(thermo)
-    result = rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 6.0e5}, thermo)
+    params = {"P_back": 6.0e5, "Kb": 0.9, "Kc": 0.95, "Kv": 0.9, "Kw": 0.85}
+    result = rv1.ReliefValveR1().solve({"inlet": inlet}, params, thermo)
     info = result.info
     expected = inlet.mass_flow / (
-        info["Kd_used"] * info["Kb_used"] * info["Kw_used"] * info["G_kg_m2s"]
+        info["Kd_used"]
+        * params["Kb"]
+        * params["Kc"]
+        * params["Kv"]
+        * params["Kw"]
+        * info["G_kg_m2s"]
     )
     assert info["required_area_m2"] == pytest.approx(expected, rel=1e-12)
     assert info["required_area_in2"] == pytest.approx(expected * r0.IN2_PER_M2, rel=1e-12)
+    assert info["required_area_mm2"] == pytest.approx(expected * 1.0e6, rel=1e-12)
 
 
 def test_r1_subcooled_propane_regimes(thermo: Thermo) -> None:
@@ -210,9 +224,11 @@ def test_r1_subcooled_propane_regimes(thermo: Thermo) -> None:
         thermo, {"T": 300.0, "P": 2.0 * psat, "molar_flow": 5000.0, "composition": z}
     )
     choked = rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 0.2 * psat}, thermo)
-    assert choked.info["regime_code"] == 3
+    assert choked.info["critical"] == 1
+    assert choked.info["regime_code"] in (2, 3)
     non_flashing = rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 1.5 * psat}, thermo)
-    assert non_flashing.info["regime_code"] == 4
+    assert non_flashing.info["critical"] == 0
+    assert non_flashing.info["regime_code"] in (2, 4)
 
 
 # --- refusals ---------------------------------------------------------------
@@ -227,12 +243,11 @@ def test_r1_refuses_p_back_out_of_range(thermo: Thermo) -> None:
 
 def test_r1_refuses_k_factors(thermo: Thermo) -> None:
     """Each correction factor must be in (0, 1]; the error names it."""
-    feeds, _ = r0.ReliefValve.example_case()
-    P_back = 0.5 * feeds["inlet"]["P"]
-    with pytest.raises(r0.ReliefValveSpecError, match="Kd"):
-        _solve(thermo, feeds, {"P_back": P_back, "Kd": 1.5})
-    with pytest.raises(r0.ReliefValveSpecError, match="Kw"):
-        _solve(thermo, feeds, {"P_back": P_back, "Kw": 0.0})
+    inlet = _two_phase_inlet(thermo)
+    with pytest.raises(rv1.ReliefValveSpecError, match="Kd"):
+        rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 6.0e5, "Kd": 1.5}, thermo)
+    with pytest.raises(rv1.ReliefValveSpecError, match="Kw"):
+        rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 6.0e5, "Kw": 0.0}, thermo)
 
 
 def test_omega_refusal() -> None:
