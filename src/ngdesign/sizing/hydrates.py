@@ -2,11 +2,17 @@
 
 Two screening-grade correlations for gas hydrate management:
 
-1. Hammerschmidt (1934) hydrate-formation temperature from gas specific
-   gravity and pressure (Hammerschmidt, "Natural Gas Hydrates", Ind. Eng.
-   Chem. 26 (1934) / GPSA Engineering Data Book):
+1. Hammerschmidt (1934) hydrate-formation temperature from pressure
+   (Hammerschmidt, "Formation of Gas Hydrates in Natural Gas Transmission
+   Lines", Ind. Eng. Chem. 26 (1934) 851):
 
-       T_hyd [degF] = 8.9 * P_psia**0.285 / (SG**0.249 - 0.28)
+       T_hyd [degF] = 8.9 * P_psia**0.285
+
+   The equation was fitted to natural gases and carries no gravity term; the
+   gas specific gravity is accepted and validated for interface stability but
+   does not enter it. A former divisor (SG**0.249 - 0.28) had no source and put
+   the hydrate temperature about 22 K high (issue #244). Gravity-dependent
+   screening is the Katz-chart fit of the hydrate_check R1 level.
 
 2. Nielsen-Bucklin (1983) suppression for methanol, in terms of the methanol
    mole fraction x_M in the aqueous liquid phase (Nyvlt et al., "Solid-Liquid
@@ -47,7 +53,8 @@ def hammerschmidt_formation(P_Pa: float, gas_specific_gravity: float) -> dict[st
     Args:
         P_Pa: Absolute pressure [Pa].
         gas_specific_gravity: Specific gravity of the gas relative to air
-            (ratio of molecular weights) [dimensionless].
+            (ratio of molecular weights) [dimensionless]; validated, but the
+            1934 equation has no gravity term.
 
     Returns:
         dict with ``T_hydrate_K``.
@@ -61,13 +68,7 @@ def hammerschmidt_formation(P_Pa: float, gas_specific_gravity: float) -> dict[st
         raise ValueError(f"gas_specific_gravity must be positive, got {gas_specific_gravity}")
 
     P_psia = P_Pa * _PSIA_PER_PA
-    denom = gas_specific_gravity**0.249 - 0.28
-    if denom <= 0:
-        raise ValueError(
-            f"correlation undefined for gas_specific_gravity={gas_specific_gravity}: "
-            f"SG**0.249 - 0.28 = {denom} is not positive"
-        )
-    T_hydrate_F = 8.9 * P_psia**0.285 / denom
+    T_hydrate_F = 8.9 * P_psia**0.285
     T_hydrate_K = (T_hydrate_F + _F_TO_K_OFFSET_RANKINE) / (9.0 / 5.0)
     return {"T_hydrate_K": T_hydrate_K}
 
