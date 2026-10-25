@@ -31,13 +31,18 @@ same error from ``ngdesign.units.heat.rating`` once double_pipe merges.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
+from typing import Any
 
 import numpy as np
 from scipy.integrate import solve_bvp
 from scipy.interpolate import PchipInterpolator
 
+from ngdesign.contracts import StreamState, UnitResult
+from ngdesign.contracts.plugins import Thermo
 from ngdesign.units._physics.heat_balance import TemperatureCross
+from ngdesign.units.heat.multi_stream import MultiStreamExchanger
 
 #: BVP relative tolerance (spec algorithm step 2).
 BVP_TOL = 1e-8
@@ -50,6 +55,20 @@ BVP_INITIAL_NODES = 41
 
 #: Allowed wall-ordering violation, K (spec algorithm step 4).
 WALL_ORDER_EPS_K = 1e-9
+
+#: T(H) table sample count per stream (spec: 40 flash_ph samples).
+TABLE_POINTS = 40
+
+_HOT_PORTS = ("hot_in_1", "hot_in_2")
+_COLD_PORTS = ("cold_in_1", "cold_in_2")
+
+#: Inlet port -> positional outlet port (R0 convention: NOT mirrored names).
+_OUTLET_OF: dict[str, str] = {
+    "hot_in_1": "hot_out_1",
+    "hot_in_2": "hot_out_2",
+    "cold_in_1": "cold_out_1",
+    "cold_in_2": "cold_out_2",
+}
 
 
 class MultiStreamRatingError(ValueError):
@@ -203,3 +222,132 @@ def wall_mediated_UA_W_K(result: CommonWallResult) -> float:
     # over the normalised mesh equals the constant node value.
     node_value = hA_hot * hA_cold / hA_all
     return float(np.trapezoid(np.full(result.x.size, node_value), result.x))
+
+
+class MultiStreamR1:
+    """R1 multi-stream rating: the common-wall layer model with given hA.
+
+    Plugin kind "unit", name "multi_stream", catalogue level R1. Same ports and
+    zero-flow pass-through as R0 (:class:`ngdesign.units.heat.multi_stream.
+    MultiStreamExchanger`), but no T_out specs: every active stream carries
+    ``hA_<port>_W_K`` and the coupled energy balances decide all outlets. Hot
+    streams enter at x = 0, cold at x = 1; dH/dx signs follow the flow
+    direction (hot releases, cold absorbs - both positive as R0 duties).
+    """
+
+    inlet_ports = ("hot_in_1", "hot_in_2", "cold_in_1", "cold_in_2")
+    outlet_ports = ("hot_out_1", "hot_out_2", "cold_out_1", "cold_out_2")
+
+    def solve(
+        self,
+        inlets: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> UnitResult:
+        hot_active = [(p, inlets[p]) for p in _HOT_PORTS if inlets[p].molar_flow > 0.0]
+        cold_active = [(p, inlets[p]) for p in _COLD_PORTS if inlets[p].molar_flow > 0.0]
+        if not hot_active or not cold_active:
+            raise MultiStreamRatingError("at least one hot and one cold active stream are required")
+        hot_T_max = max(state.T for _, state in hot_active)
+        cold_T_min = min(state.T for _, state in cold_active)
+        hottest_cold = max(state.T for _, state in cold_active)
+        coldest_hot = min(state.T for _, state in hot_active)
+        if hottest_cold >= coldest_hot:
+            raise TemperatureCross(
+                f"inlet temperatures give no positive driving force anywhere: "
+                f"hottest cold inlet {hottest_cold:.6f} K >= coldest hot inlet "
+                f"{coldest_hot:.6f} K"
+            )
+
+        active: list[tuple[str, StreamState, bool]] = [(port, state, True) for port, state in hot_active] + [
+            (port, state, False) for port, state in cold_active
+        ]
+
+        layers = tuple(
+            self._layer(port, state, hot_T_max, cold_T_min, params, thermo) for port, state, _ in active
+        )
+        result = solve_common_wall(layers)
+        check_wall_order(result)
+        H_out = result.outlet_enthalpy_flows()
+
+        outlets: dict[str, StreamState] = {}
+        duty_by_port: dict[str, float] = {}
+        for i, (port, state, is_hot) in enumerate(active):
+            raw_dP = params.get(f"dP_{port}", 0.0)
+            p_out = state.P - float(raw_dP)
+            if p_out <= 0.0:
+                raise MultiStreamRatingError(
+                    f"port {port}: dP_{port} = {raw_dP} Pa gives a non-positive outlet pressure {p_out} Pa"
+                )
+            outlet = thermo.flash_ph(state.composition, p_out, H_out[i] / state.molar_flow, state.molar_flow)
+            outlets[_OUTLET_OF[port]] = outlet
+            duty_by_port[port] = state.molar_flow * (
+                (state.enthalpy - outlet.enthalpy) if is_hot else (outlet.enthalpy - state.enthalpy)
+            )
+        for port in (*_HOT_PORTS, *_COLD_PORTS):  # zero-flow ports pass through
+            if inlets[port].molar_flow <= 0.0:
+                outlets[_OUTLET_OF[port]] = inlets[port]
+
+        info: dict[str, Any] = {
+            "min_approach_K": min_approach_K(result),
+            "UA_total_W_K": wall_mediated_UA_W_K(result),
+            "bvp_nodes": int(result.x.size),
+        }
+        for port in (*_HOT_PORTS, *_COLD_PORTS):
+            if port in duty_by_port:  # R0 signs: released/absorbed, both positive
+                info[f"duty_{port}_W"] = duty_by_port[port]
+
+        h_in = sum(s.enthalpy * s.molar_flow for s in inlets.values())
+        h_out = sum(s.enthalpy * s.molar_flow for s in outlets.values())
+        return UnitResult(outlets=outlets, duty_W=h_out - h_in, power_W=0.0, info=info)
+
+    def _layer(
+        self,
+        port: str,
+        state: StreamState,
+        hot_T_max: float,
+        cold_T_min: float,
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> StreamLayer:
+        """Build one stream's T(H) table and layer (spec algorithm steps 1-2)."""
+        key = f"hA_{port}_W_K"
+        raw = params.get(key)
+        if raw is None:
+            raise MultiStreamRatingError(f"active stream {port}: required param {key} is missing")
+        hA_value = float(raw)
+        if hA_value <= 0.0:
+            raise MultiStreamRatingError(f"param {key} must be positive; got {hA_value}")
+        is_hot = port in _HOT_PORTS
+        # Farthest opposite-stream inlet temperature sets the T(H) table span.
+        T_far = cold_T_min if is_hot else hot_T_max
+        H_in = state.molar_flow * state.enthalpy
+        H_far = (
+            state.molar_flow * thermo.flash_pt(state.composition, T_far, state.P, state.molar_flow).enthalpy
+        )
+        span = H_far - H_in
+        floor = 1e-6 * max(abs(H_in), 1.0)
+        if abs(span) < floor:  # keep the table strictly increasing for PCHIP
+            direction = math.copysign(1.0, span) if span != 0.0 else (-1.0 if is_hot else 1.0)
+            H_far = H_in + direction * floor
+        lo, hi = (H_in, H_far) if H_in <= H_far else (H_far, H_in)
+        flows = np.linspace(lo, hi, TABLE_POINTS)
+        temperatures = [
+            thermo.flash_ph(state.composition, state.P, float(H) / state.molar_flow, state.molar_flow).T
+            for H in flows
+        ]
+        return StreamLayer(
+            hA_W_K=hA_value,
+            H_in_W=H_in,
+            H_far_W=H_far,
+            T_of_H=PchipInterpolator(flows, np.asarray(temperatures)),
+            is_hot=is_hot,
+        )
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """The R0 example feeds (Smith Table 16.2 streams 1 and 3 basis) plus
+        layer conductances for the two active streams; the second pair is
+        zero-flow and passes through."""
+        feeds, _ = MultiStreamExchanger.example_case()
+        return feeds, {"hA_hot_in_1_W_K": 60000.0, "hA_cold_in_1_W_K": 60000.0}
