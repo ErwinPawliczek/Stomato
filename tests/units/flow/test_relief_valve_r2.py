@@ -88,9 +88,15 @@ def test_r2_example_checks_pass(thermo: Thermo) -> None:
 
 
 def test_r2_conventional_over_limit_flags(thermo: Thermo) -> None:
-    """A long small-bore outlet line breaks the 10 % built-up limit: ok = 0."""
+    """A long small-bore outlet line breaks the 10 % built-up limit: ok = 0.
+
+    The bore (0.03 m) is small enough that the built-up pressure blows far past
+    the limit but large enough that the discharge-line flash at the mean line
+    pressure still converges: below that the unit refuses with a typed error
+    (see the discharge-flash refusal test), it does not report ok = 0.
+    """
     feeds, params = rv2.ReliefValveR2.example_case()
-    squeezed = {**params, "L_out_m": 200.0, "D_out_m": 0.02}
+    squeezed = {**params, "L_out_m": 200.0, "D_out_m": 0.03}
     result = _solve(thermo, feeds, squeezed)
     info = result.info
     assert info["dP_builtup_Pa"] > 0.10 * (params["P_set"] - 101325.0)
