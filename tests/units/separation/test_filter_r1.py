@@ -114,3 +114,201 @@ class TestF6Concentration:
     def test_concentration(self) -> None:
         assert concentration(_MDOT_S, _QF) == pytest.approx(50.0, rel=1e-12)
         assert math.isclose(concentration(0.3, 1.5), 0.2)
+
+
+# --- adapter (step 2) --------------------------------------------------------
+
+
+class _NoViscosityThermo:
+    """A Thermo that delegates, stripping phase viscosities (refusal test)."""
+
+    def __init__(self, inner: Thermo) -> None:
+        self._inner = inner
+
+    def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> Any:
+        return _strip(self._inner.flash_pt(z, T, P, molar_flow))
+
+    def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> Any:
+        return _strip(self._inner.flash_ph(z, P, H, molar_flow))
+
+    def flash_ps(self, z: dict[str, float], P: float, S: float, molar_flow: float) -> Any:
+        return _strip(self._inner.flash_ps(z, P, S, molar_flow))
+
+    def flash_tvf(self, z: dict[str, float], T: float, vf: float, molar_flow: float) -> Any:
+        return _strip(self._inner.flash_tvf(z, T, vf, molar_flow))
+
+    def flash_pvf(self, z: dict[str, float], P: float, vf: float, molar_flow: float) -> Any:
+        return _strip(self._inner.flash_pvf(z, P, vf, molar_flow))
+
+
+def _strip(state: Any) -> Any:
+    return state.model_copy(
+        update={
+            "phases": [p.model_copy(update={"viscosity": None}) for p in state.phases]
+        }
+    )
+
+
+def _inlets(
+    thermo: Thermo,
+    feed_overrides: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    feeds, _ = FilterR1.example_case()
+    if feed_overrides:
+        feeds["inlet"].update(feed_overrides)
+    return {"inlet": flash_feed(thermo, feeds["inlet"])}
+
+
+def _default_params(**overrides: Any) -> dict[str, Any]:
+    _, defaults = FilterR1.example_case()
+    return {**defaults, **overrides}
+
+
+class TestIdentity:
+    """cake_porosity = 0 gives exactly the R0 split with the user's fractions."""
+
+    def test_outlets_equal_r0(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        params = _default_params(cake_porosity=0.0)
+        params.pop("filtrate_viscosity_Pa_s")  # not needed with no moisture
+        r0 = Filter().solve(
+            inlets, {"cake_fractions": {"SiO2": 1.0}, "dP": 3.0e4}, thermo
+        )
+        r1 = FilterR1().solve(inlets, params, thermo)
+        assert r1.outlets["filtrate"] == r0.outlets["filtrate"]
+        assert r1.outlets["cake"] == r0.outlets["cake"]
+        assert r1.duty_W == r0.duty_W
+        # Sizing is still reported.
+        assert r1.info["A_required_m2"] > 0.0
+        assert r1.info["moisture_fraction"] == 0.0
+
+
+class TestMoisture:
+    """eps = 0.4: filtrate-composition liquid moves to the cake at f_m."""
+
+    def test_cake_flows_f_m_and_balances(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        r0 = Filter().solve(
+            inlets, {"cake_fractions": {"SiO2": 1.0}, "dP": 3.0e4}, thermo
+        )
+        r1 = FilterR1().solve(inlets, _default_params(), thermo)
+
+        # f_m recomputed from the R0 outlets' properties (F5 and step 3 of
+        # the spec's algorithm), independently of the adapter.
+        cake0, filt0 = r0.outlets["cake"], r0.outlets["filtrate"]
+        mdot_s = cake0.mass_flow
+        q_ret = 0.4 / 0.6 * mdot_s / 2650.0
+        liquid = max(
+            (p for p in filt0.phases if p.kind is not PhaseKind.VAPOR),
+            key=lambda p: p.mole_fraction * p.molecular_weight / p.density,
+        )
+        mw = sum(p.mole_fraction * p.molecular_weight for p in filt0.phases) / 1000.0
+        f_m = q_ret * liquid.density / mw / filt0.molar_flow
+
+        assert r1.info["moisture_fraction"] == pytest.approx(f_m, rel=1e-12)
+        cake1, filt1 = r1.outlets["cake"], r1.outlets["filtrate"]
+        h2o_f0 = filt0.component_flows()["H2O"]
+        assert cake1.component_flows()["H2O"] == pytest.approx(
+            f_m * h2o_f0, rel=1e-12
+        )
+        # The solids are untouched by the moisture move.
+        assert cake1.component_flows()["SiO2"] == pytest.approx(
+            cake0.component_flows()["SiO2"], rel=1e-12
+        )
+
+        # Balances: moles at 1e-12, energy at 1e-8.
+        n_in = inlets["inlet"].molar_flow
+        n_out = filt1.molar_flow + cake1.molar_flow
+        assert n_out == pytest.approx(n_in, rel=1e-12)
+        h_in = inlets["inlet"].enthalpy * inlets["inlet"].molar_flow
+        h_out = filt1.enthalpy * filt1.molar_flow + cake1.enthalpy * cake1.molar_flow
+        assert h_in + r1.duty_W == pytest.approx(h_out, rel=1e-8)
+
+    def test_capacity_ratio_reported_not_refused(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        result = FilterR1().solve(inlets, _default_params(area_m2=1.0e-3), thermo)
+        assert 0.0 < result.info["capacity_ratio"] < 1.0  # undersized, still solved
+
+
+class TestRefusals:
+    """One test per row of the spec's refusal table."""
+
+    def test_dp_missing_or_zero(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        params = _default_params()
+        del params["dP"]
+        with pytest.raises(FilterR1SpecError, match="dP"):
+            FilterR1().solve(inlets, params, thermo)
+        with pytest.raises(FilterR1SpecError, match="dP"):
+            FilterR1().solve(inlets, _default_params(dP=0.0), thermo)
+
+    def test_alpha_not_positive(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        zero = _default_params(specific_cake_resistance_m_kg=0.0)
+        with pytest.raises(FilterR1SpecError, match="specific_cake_resistance_m_kg"):
+            FilterR1().solve(inlets, zero, thermo)
+        params = _default_params()
+        del params["specific_cake_resistance_m_kg"]
+        with pytest.raises(FilterR1SpecError, match="specific_cake_resistance_m_kg"):
+            FilterR1().solve(inlets, params, thermo)
+
+    def test_medium_resistance_negative(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        with pytest.raises(FilterR1SpecError, match="medium_resistance_1_m"):
+            FilterR1().solve(inlets, _default_params(medium_resistance_1_m=-1.0), thermo)
+
+    def test_filtration_time_not_positive(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        with pytest.raises(FilterR1SpecError, match="t_filtration_s"):
+            FilterR1().solve(inlets, _default_params(t_filtration_s=0.0), thermo)
+
+    def test_downtime_negative(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        with pytest.raises(FilterR1SpecError, match="t_down_s"):
+            FilterR1().solve(inlets, _default_params(t_down_s=-1.0), thermo)
+
+    def test_solid_density_missing_or_not_positive(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        params = _default_params()
+        del params["solid_density_kg_m3"]
+        with pytest.raises(FilterR1SpecError, match="solid_density_kg_m3"):
+            FilterR1().solve(inlets, params, thermo)
+        with pytest.raises(FilterR1SpecError, match="solid_density_kg_m3"):
+            FilterR1().solve(inlets, _default_params(solid_density_kg_m3=0.0), thermo)
+
+    def test_porosity_outside_range(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        with pytest.raises(FilterR1SpecError, match="cake_porosity"):
+            FilterR1().solve(inlets, _default_params(cake_porosity=1.0), thermo)
+        with pytest.raises(FilterR1SpecError, match="cake_porosity"):
+            FilterR1().solve(inlets, _default_params(cake_porosity=-0.1), thermo)
+
+    def test_area_not_positive(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        with pytest.raises(FilterR1SpecError, match="area_m2"):
+            FilterR1().solve(inlets, _default_params(area_m2=0.0), thermo)
+
+    def test_moisture_over_capacity(self, thermo: Thermo) -> None:
+        """eps = 0.99 with a 50 mol % solids slurry: f_m > 1."""
+        inlets = _inlets(thermo, {"composition": {"H2O": 0.5, "SiO2": 0.5}})
+        with pytest.raises(FilterR1SpecError, match="moisture"):
+            FilterR1().solve(inlets, _default_params(cake_porosity=0.99), thermo)
+
+    def test_no_cake_component_flows(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo, {"composition": {"H2O": 1.0, "SiO2": 0.0}})
+        with pytest.raises((FilterSpecError, FilterR1SpecError), match="cake"):
+            FilterR1().solve(inlets, _default_params(cake_porosity=0.0), thermo)
+
+    def test_viscosity_unavailable(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        params = _default_params()
+        del params["filtrate_viscosity_Pa_s"]
+        with pytest.raises(FilterR1SpecError, match="filtrate_viscosity_Pa_s"):
+            FilterR1().solve(inlets, params, _NoViscosityThermo(thermo))
+
+    def test_r0_spec_error_propagates(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        with pytest.raises((FilterSpecError, FilterR1SpecError)):
+            FilterR1().solve(
+                inlets, _default_params(cake_fractions={"Nope": 1.0}), thermo
+            )

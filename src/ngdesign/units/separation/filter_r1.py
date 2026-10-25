@@ -218,12 +218,17 @@ class FilterR1:
         dry_fractions = {str(cid): float(f) for cid, f in cake_fractions.items()}
 
         # Dry split (R0): the cake's mass flow is the dry-solids rate, because
-        # only cake components enter it. Unknown cake components and a cake
-        # with no flow are refused by R0 itself (spec: delegate, don't duplicate).
+        # only cake components enter it. Unknown cake components are refused
+        # by R0 itself (spec: delegate, don't duplicate).
         r0 = Filter().solve(
             inlets, {"cake_fractions": dry_fractions, "dP": dP_f}, thermo
         )
         mdot_s = r0.outlets["cake"].mass_flow
+        if mdot_s <= 0.0:
+            raise FilterR1SpecError(
+                "cake_fractions: no cake component has positive flow, so there "
+                f"are no solids to form a cake (dry-solids rate {mdot_s} kg/s)"
+            )
         rho_L, mu_phase = _filtrate_liquid(r0.outlets["filtrate"])
         mu = params.get("filtrate_viscosity_Pa_s")
         if mu is None:
