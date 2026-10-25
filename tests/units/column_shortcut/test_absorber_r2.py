@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from ngdesign.contracts import StreamState, UnitResult
+from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.column import Column, ColumnConvergenceError
 from ngdesign.units.column_shortcut import absorber_r2
@@ -171,3 +171,132 @@ def test_column_convergence_error_propagates_unchanged(
     inlets = _example_inlets(thermo)
     with pytest.raises(ColumnConvergenceError, match="column convergence failure"):
         AbsorberR2().solve(inlets, {"n_stages": 4}, thermo)
+
+
+# ---------------------------------------------------------------------------
+# Closed form: the equilibrium-pair limit (spec step 2).
+# ---------------------------------------------------------------------------
+
+_EQUIL_Z = {"C1": 0.6, "C3": 0.2, "nC5": 0.2}
+
+
+def _equilibrium_pair_inlets(
+    thermo: Thermo,
+) -> tuple[dict[str, StreamState], float, float, dict[str, float]]:
+    """One PT flash split into its vapour and liquid phases as the two feeds.
+
+    Everything here comes from ``thermo.flash_pt`` — never from a column call
+    (the spec's closed-form construction). Returns the inlets plus the flash's
+    (V, L, y): the counter-current column then transfers nothing at any N, so
+    ``gas_out == gas_in`` and ``rich_out == solvent_in``.
+    """
+    z_flash = thermo.flash_pt(dict(_EQUIL_Z), 300.0, 2e6, 100.0)
+    v_flow = z_flash.vapor_fraction * 100.0
+    l_flow = (1.0 - z_flash.vapor_fraction) * 100.0
+    vapour = next(p for p in z_flash.phases if p.kind == PhaseKind.VAPOR)
+    liquid = next(p for p in z_flash.phases if p.kind != PhaseKind.VAPOR)
+    y = dict(vapour.composition)
+    x = dict(liquid.composition)
+    gas_in = thermo.flash_pt(y, 300.0, 2e6, v_flow)
+    solvent_in = thermo.flash_pt(x, 300.0, 2e6, l_flow)
+    return {"gas_in": gas_in, "solvent_in": solvent_in}, v_flow, l_flow, y
+
+
+@pytest.mark.parametrize("n", [2, 4, 8])
+def test_closed_form_equilibrium_pair_transfers_nothing(thermo: Thermo, n: int) -> None:
+    """gas_in and solvent_in are the two phases of ONE PT flash: at equilibrium
+    with the lean, the column transfers nothing at any N.
+
+    Expected values come from the test's own flash, never from the column.
+    Measured through the column directly on main (spec): dD/V = -2.45e-9 (N=2),
+    -2.65e-9 (N=4), -2.77e-9 (N=8); max |dy| 2.9e-9..3.4e-9; T_top - 300 =
+    -8e-7 K — all inside the asserted bands.
+    """
+    inlets, v_flow, _l_flow, y = _equilibrium_pair_inlets(thermo)
+    res = AbsorberR2().solve(inlets, {"n_stages": n}, thermo)
+    assert res.outlets["gas_out"].molar_flow == pytest.approx(v_flow, rel=1e-8)
+    for cid, yv in y.items():
+        assert res.outlets["gas_out"].composition[cid] == pytest.approx(yv, abs=1e-8)
+    # Top stage (stage 1 -> the column's stage index 0) sits at the 300 K feed T.
+    assert res.info["stage_0_T_K"] == pytest.approx(300.0, abs=1e-5)
+
+
+@pytest.mark.parametrize("n", [2, 4, 8])
+def test_closed_form_rich_out_unchanged(thermo: Thermo, n: int) -> None:
+    """rich_out stays the liquid feed (rel 1e-7 on its flow)."""
+    inlets, _v_flow, l_flow, _y = _equilibrium_pair_inlets(thermo)
+    res = AbsorberR2().solve(inlets, {"n_stages": n}, thermo)
+    assert res.outlets["rich_out"].molar_flow == pytest.approx(l_flow, rel=1e-7)
+
+
+# ---------------------------------------------------------------------------
+# Balances and the energy-residual bound (spec step 2).
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("n", [2, 4, 20])
+def test_balance_total_moles(thermo: Thermo, n: int) -> None:
+    """Total moles close at 1e-8 on the R0 example feeds."""
+    inlets = _example_inlets(thermo)
+    res = AbsorberR2().solve(inlets, {"n_stages": n}, thermo)
+    total_in = sum(s.molar_flow for s in inlets.values())
+    total_out = sum(s.molar_flow for s in res.outlets.values())
+    assert abs(total_out - total_in) / total_in < 1e-8
+
+
+@pytest.mark.parametrize("n", [2, 4, 20])
+def test_balance_per_component(thermo: Thermo, n: int) -> None:
+    """Per-component closure at the column's documented gate, on the P1-09
+    measurement basis (C1/nC4 gas into lean nC4 — the case P1-09 measured the
+    5e-8 gate on; N=8 is NOT asserted, its measured floor is 3.4e-2).
+
+    MEASURED on this branch through the adapter: worst component residual
+    2.9e-12 (N=2, NC4), 1.6e-8 (N=4, NC4), 1.2e-8 (N=20, NC4).
+    """
+    gas = thermo.flash_pt({"C1": 0.9, "NC4": 0.1}, 300.0, 2e6, 100.0)
+    lean = thermo.flash_pt({"NC4": 1.0}, 300.0, 2e6, 30.0)
+    inlets = {"gas_in": gas, "solvent_in": lean}
+    res = AbsorberR2().solve(inlets, {"n_stages": n}, thermo)
+    fin: dict[str, float] = {}
+    for s in inlets.values():
+        for cid, flow in s.component_flows().items():
+            fin[cid] = fin.get(cid, 0.0) + flow
+    fout: dict[str, float] = {}
+    for s in res.outlets.values():
+        for cid, flow in s.component_flows().items():
+            fout[cid] = fout.get(cid, 0.0) + flow
+    for cid in set(fin) | set(fout):
+        assert abs(fout.get(cid, 0.0) - fin[cid]) / fin[cid] < 5e-8, cid
+
+
+@pytest.mark.parametrize("n", [2, 4, 20])
+def test_balance_per_component_example_case_measured_floor(thermo: Thermo, n: int) -> None:
+    """The R0 example case (a C6+ lean that flashes largely vapour) carries a
+    looser stage-level M floor than the P1-09 basis. MEASURED on this branch
+    through the adapter: worst residual 1.5e-4 (N=2, C1), 7.6e-4 (N=4, C1),
+    5.4e-5 (N=20, C1) — the zero/one-tear correlation gate's own signature
+    (spec.py), not an adapter defect. Bound = 2x the worst measurement.
+    """
+    inlets = _example_inlets(thermo)
+    res = AbsorberR2().solve(inlets, {"n_stages": n}, thermo)
+    fin: dict[str, float] = {}
+    for s in inlets.values():
+        for cid, flow in s.component_flows().items():
+            fin[cid] = fin.get(cid, 0.0) + flow
+    fout: dict[str, float] = {}
+    for s in res.outlets.values():
+        for cid, flow in s.component_flows().items():
+            fout[cid] = fout.get(cid, 0.0) + flow
+    for cid in set(fin) | set(fout):
+        assert abs(fout.get(cid, 0.0) - fin[cid]) / fin[cid] < 2e-3, cid
+
+
+@pytest.mark.parametrize("n", [2, 4, 20])
+def test_energy_residual_within_mesh_gate(thermo: Thermo, n: int) -> None:
+    """|mesh_energy_residual_rel| <= 1e-2 (the column's _MESH_H_TOL).
+    MEASURED on this branch on the example feeds: 7.3e-6 (N=2), 2.5e-5 (N=4),
+    4.0e-6 (N=20).
+    """
+    inlets = _example_inlets(thermo)
+    res = AbsorberR2().solve(inlets, {"n_stages": n}, thermo)
+    assert abs(res.info["mesh_energy_residual_rel"]) <= 1e-2
