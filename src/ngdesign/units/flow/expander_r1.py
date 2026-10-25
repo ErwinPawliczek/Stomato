@@ -128,20 +128,15 @@ class ExpanderR1:
         if q_min is not None:
             q_min = float(q_min)
             if q_min <= 0 or (q_max is not None and q_min >= float(q_max)):
-                raise ExpanderR1SpecError(
-                    f"flow_min_m3_s {q_min} must be > 0 and below flow_max_m3_s"
-                )
+                raise ExpanderR1SpecError(f"flow_min_m3_s {q_min} must be > 0 and below flow_max_m3_s")
         if q_max is not None:
             q_max = float(q_max)
             if q_max <= 0:
                 raise ExpanderR1SpecError(f"flow_max_m3_s {q_max} must be > 0")
         q_actual = inlet.mass_flow / _inlet_density(inlet)  # m3/s
-        if (q_min is not None and q_actual < q_min) or (
-            q_max is not None and q_actual > q_max
-        ):
+        if (q_min is not None and q_actual < q_min) or (q_max is not None and q_actual > q_max):
             raise ExpanderFlowRangeError(
-                f"actual inlet flow {q_actual:.6f} m3/s outside the flow-capacity "
-                f"range [{q_min}, {q_max}]"
+                f"actual inlet flow {q_actual:.6f} m3/s outside the flow-capacity range [{q_min}, {q_max}]"
             )
 
         iso = thermo.flash_ps(inlet.composition, p_out, inlet.entropy, inlet.molar_flow)
@@ -157,8 +152,7 @@ class ExpanderR1:
         nu = u / c0
         if nu < velocity_ratio[0] or nu > velocity_ratio[-1]:
             raise ExpanderMapRangeError(
-                f"velocity ratio {nu:.6f} outside the map range "
-                f"[{velocity_ratio[0]}, {velocity_ratio[-1]}]"
+                f"velocity ratio {nu:.6f} outside the map range [{velocity_ratio[0]}, {velocity_ratio[-1]}]"
             )
         eta = float(self._efficiency(params)(nu))
         if not 0.0 < eta <= 1.0:
@@ -191,10 +185,8 @@ class ExpanderR1:
                 f"map.velocity_ratio needs >= 2 points, as many as map.efficiency "
                 f"(got {len(velocity_ratio)} vs {len(efficiency)})"
             )
-        if any(b <= a for a, b in zip(velocity_ratio, velocity_ratio[1:])):
-            raise ExpanderR1SpecError(
-                f"map.velocity_ratio {velocity_ratio} must be strictly increasing"
-            )
+        if any(b <= a for a, b in zip(velocity_ratio, velocity_ratio[1:], strict=False)):
+            raise ExpanderR1SpecError(f"map.velocity_ratio {velocity_ratio} must be strictly increasing")
         return velocity_ratio
 
     @staticmethod
