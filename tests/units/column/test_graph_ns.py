@@ -29,6 +29,7 @@ from ngdesign.units.column.graph_ns import (
     _graph_fd_jacobian,
     _graph_interlink_terms,
     _graph_model,
+    _graph_naphtali_sandholm,
     _graph_pack,
     _graph_residual_scales,
     _graph_residual_vector,
@@ -229,3 +230,63 @@ def test_colouring_groups_distant_stages(thermo: Thermo) -> None:
             for b in group:
                 if a != b:
                     assert rows_x[a].isdisjoint(rows_x[b])
+
+
+def _stripper_params() -> dict[str, Any]:
+    """A one-tear kettle stripper: no condenser, feed on the top stage, one
+    boilup_ratio spec - the case whose cold NS-first pass converges outright
+    (measured P1-10 E-NSCOLD at kettle tears V=24-48 mol/s)."""
+    return {
+        "n_stages": 8,
+        "condenser": "none",
+        "reboiler": "kettle",
+        "feed_stage": 0,
+        "pressure_profile": 1.5e6,
+        "feeds": [
+            {
+                "stage": 1,
+                "T": 330.0,
+                "P": 1.5e6,
+                "molar_flow": 100.0,
+                "composition": {"C3": 0.5, "iC4": 0.5},
+            }
+        ],
+        "specs": {"boilup_ratio": 1.5},
+    }
+
+
+def test_solve_routed_through_graph_ns_matches_dense_ns(
+    thermo: Thermo, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Solve-level parity (S0-1c step 2 acceptance): a one-tear kettle
+    stripper routed through the graph NS by the test-only switch lands on the
+    dense NS result to 1e-10 relative on x, T and V at every stage. The
+    NS-first cold pass fires in both runs (no seed, one tear, kettle), so the
+    engines - not just the sweeps - are what is compared."""
+    import ngdesign.units.column.specs as specs_mod
+
+    col_dense, tb_dense = _build(_stripper_params(), thermo)
+    col_graph, tb_graph = _build(_stripper_params(), thermo)
+
+    # The test-only switch: the mesh solve's NS entry point runs the graph
+    # engine instead of the dense one. Same column, same crude seed, same tear.
+    monkeypatch.setattr(specs_mod, "_naphtali_sandholm", _graph_naphtali_sandholm)
+    prof_dense = col_mod._solve_mesh(col_dense, tb_dense, 45.0 * 2.5, 30.0, None)
+    assert prof_dense.ns_used and prof_dense.ns_passes > 0
+    prof_graph = col_mod._solve_mesh(col_graph, tb_graph, 45.0 * 2.5, 30.0, None)
+    assert prof_graph.ns_used and prof_graph.ns_passes > 0
+
+    worst = 0.0
+    for j in range(col_dense.n):
+        for cid in col_dense.comps:
+            a, b = prof_dense.x[j][cid], prof_graph.x[j][cid]
+            rel = abs(a - b) / max(abs(a), abs(b))
+            assert rel <= 1e-10, f"x[{j}][{cid}] rel {rel:.3e}"
+            worst = max(worst, rel)
+        rel_t = abs(prof_dense.T[j] - prof_graph.T[j]) / max(abs(prof_dense.T[j]), abs(prof_graph.T[j]))
+        assert rel_t <= 1e-10, f"T[{j}] rel {rel_t:.3e}"
+        worst = max(worst, rel_t)
+        rel_v = abs(prof_dense.V[j] - prof_graph.V[j]) / max(abs(prof_dense.V[j]), abs(prof_graph.V[j]))
+        assert rel_v <= 1e-10, f"V[{j}] rel {rel_v:.3e}"
+        worst = max(worst, rel_v)
+    print(f"solve parity: worst relative difference {worst:.3e} over x, T, V at {col_dense.n} stages")
