@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `CYC`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.separation.hydrocyclone:Hydrocyclone` | per-component split spec — the underflow is the spec, not a correlation constant; the overflow leaves at P_in - dP, the underflow at P_in. Evidence gap — Perry Sect. 18 cut-size sizing is R1, so no worked example validates a cut size at R0 (V0 self-consistency only). |
-| R1 | planned | — | Lapple / Barth cut size |
+| R1 | provisional | `ngdesign.units.separation.hydrocyclone_r1:HydrocycloneR1` | Lapple cut size (H3), grade efficiency (H4), Rosin-Rammler overall efficiency by 64-point Gauss-Legendre (H5) and Shepherd-Lapple pressure drop (H6); the split is delegated to R0 with the computed fractions. Barth's static-particle model is not part of R1 — the row names "Lapple / Barth", R1 implements Lapple only. Q uses the slurry approximation (total mass flow over the continuous-fluid density). |
 
 ### R0 parameters
 
@@ -31,6 +31,81 @@ properties:
     description: component id to the fraction of its molar flow sent to the underflow;
       unnamed components go entirely to the overflow
     type: object
+type: object
+```
+
+### R1 parameters
+
+```yaml
+properties:
+  K_inlet:
+    description: Shepherd-Lapple inlet constant; default 16 (tangential)
+    exclusiveMinimum: 0
+    type: number
+  N_e:
+    description: effective turns; default (Lb + Lc/2)/H
+    exclusiveMinimum: 0
+    type: number
+  body_length_m:
+    description: cylinder length Lb, m
+    exclusiveMinimum: 0
+    type: number
+  cone_length_m:
+    description: cone length Lc, m
+    exclusiveMinimum: 0
+    type: number
+  dP:
+    description: overflow pressure drop, Pa; default Shepherd-Lapple
+    minimum: 0
+    type: number
+  d_rr_m:
+    description: Rosin-Rammler characteristic size, m
+    exclusiveMinimum: 0
+    type: number
+  fluid_underflow_fraction:
+    description: fluid flow split to the underflow
+    exclusiveMaximum: 1
+    minimum: 0
+    type: number
+  fluid_viscosity_Pa_s:
+    description: fluid viscosity override, Pa s
+    exclusiveMinimum: 0
+    type: number
+  inlet_height_m:
+    description: inlet height H, m
+    exclusiveMinimum: 0
+    type: number
+  inlet_width_m:
+    description: inlet width W, m
+    exclusiveMinimum: 0
+    type: number
+  n_rr:
+    description: Rosin-Rammler spread
+    exclusiveMinimum: 0
+    type: number
+  outlet_diameter_m:
+    description: vortex finder diameter De, m
+    exclusiveMinimum: 0
+    type: number
+  particle_components:
+    description: component ids forming the particles/droplets
+    items:
+      type: string
+    minItems: 1
+    type: array
+  particle_density_kg_m3:
+    description: particle density, kg/m3
+    exclusiveMinimum: 0
+    type: number
+  particle_diameter_m:
+    description: monodisperse particle diameter, m
+    exclusiveMinimum: 0
+    type: number
+required:
+- particle_components
+- particle_density_kg_m3
+- inlet_width_m
+- inlet_height_m
 type: object
 ```
 
