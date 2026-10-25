@@ -335,7 +335,9 @@ class TestRefusals:
         )
         with pytest.raises(ColumnInternalsError, match="viscosity"):
             ColumnInternalsR1().solve(
-                {"inlet": inlet}, _packing_params(diameter, Fpd_per_ft=24.0), thermo=thermo,
+                {"inlet": inlet},
+                _packing_params(diameter, Fpd_per_ft=24.0),
+                thermo=thermo,
             )
 
     def test_tray_neither_diameter_nor_fraction(self, thermo: Thermo) -> None:
