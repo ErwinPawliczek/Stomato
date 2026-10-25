@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 planned, R3 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.column_shortcut.stripper:ReboiledStripper` | Kremser on the stripping side |
-| R2 | planned | — | MESH one-tear (kettle only) — today via the `column` row's stripper configuration |
+| R2 | planned | — | MESH one-tear (kettle only) — today via the `column` row's stripper configuration; rate specs (boilup_ratio, bottoms_rate, distillate_rate) pass through to the column API. The nC4/nC5 bench feed is withdrawn per the PR 292 ruling — the kettle-only column core does not converge on it (tracked as issue 248). The component_recovery 0.9 NC4 case on the C1/NC4 anchor feed is infeasible on this core (residual stuck ~7.5e-3, above the spec gate) and is pinned xfail(strict=True) in the test file. |
 | R3 | planned | — | rate-based stages |
 
 ### R0 parameters
