@@ -420,4 +420,11 @@
   pid_symbol: HC
   references:
   - docs/unit-catalogue-plan.md §2 U-D 10
-  notes: roadmap; S2 slice (plan §2b).
+  notes: >-
+    roadmap; S2 slice (plan §2b). R1 V1 gap (searched 2026-10-25): Towler &
+    Mokhatab (2005) compare against experimental hydrate points but do not
+    print the gas compositions the unit needs to compute gravity; Sloan & Koh,
+    Clathrate Hydrates of Natural Gases 3rd ed. ch. 4, and GPSA Sect. 20 give
+    gravity-chart readings only (figure-based). The R1 Katz fit is checked by
+    closed-form tests on the transcribed coefficients; R0's GPSA 20-10 dose
+    case still applies through the Hammerschmidt method.
