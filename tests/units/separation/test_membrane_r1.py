@@ -234,9 +234,7 @@ def test_adapter_stage_cut_not_achievable(thermo: Thermo) -> None:
 def test_adapter_refuses_missing_or_bad_permeances(thermo: Thermo) -> None:
     inlet = _air_feed(thermo)
     with pytest.raises(MembraneR1SpecError, match="permeances_mol_m2_s_Pa"):
-        MembraneR1().solve(
-            {"feed_in": inlet}, {"P_permeate": 2.533125e4, "area_m2": 50.0}, thermo
-        )
+        MembraneR1().solve({"feed_in": inlet}, {"P_permeate": 2.533125e4, "area_m2": 50.0}, thermo)
     with pytest.raises(MembraneR1SpecError, match="permeances_mol_m2_s_Pa"):
         MembraneR1().solve(
             {"feed_in": inlet},
