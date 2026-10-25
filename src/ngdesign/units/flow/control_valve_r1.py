@@ -219,8 +219,15 @@ class ControlValveRatingError(ControlValveSpecError):
 class ControlValveR1:
     """IEC 60534-2-1 control valve with choked flow and a Cv curve (R1).
 
-    Step-1 scope: the module-level pure functions above. Sizing and rating
-    adapters follow in steps 2 and 3 of the spec.
+    Sizing mode (exactly one of ``P_out``/``dP``, optional ``Cv_rated``):
+    computes the required Kv at the spec pressure drop and, when ``Cv_rated``
+    is given, the relative travel that delivers it. Rating mode (``Cv_rated``
+    + ``opening``, neither ``P_out`` nor ``dP``): solves the outlet pressure
+    whose Kv equals the available capacity between the choked capacity and
+    ``P1`` (step 3 of the spec).
+
+    Isenthalpic (``flash_ph`` to ``P2``), so ``duty_W = power_W = 0`` and the
+    V0 balances close exactly, as at R0.
     """
 
     inlet_ports = ("inlet",)
@@ -232,4 +239,167 @@ class ControlValveR1:
         params: dict[str, Any],
         thermo: Thermo,
     ) -> UnitResult:
-        raise NotImplementedError("ControlValveR1 solve lands in spec steps 2-3")
+        inlet = inlets["inlet"]
+        rating = not ("P_out" in params or "dP" in params)
+
+        FL = float(params.get("FL", 0.9))
+        Fd = float(params.get("Fd", 1.0))
+        xT = float(params.get("xT", 0.7))
+        for name, v in (("FL", FL), ("Fd", Fd), ("xT", xT)):
+            if not 0.0 < v <= 1.0:
+                raise ControlValveSpecError(f"{name} {v} outside (0, 1]")
+        kind = str(params.get("characteristic", "linear"))
+        rangeability = float(params.get("rangeability", 50.0))
+        if rangeability <= 1.0:
+            raise ControlValveSpecError(f"rangeability {rangeability} must be > 1")
+
+        D1_m, D2_m, d_m = _pipe_diameters(params)
+        if rating:
+            if "Cv_rated" not in params or "opening" not in params:
+                raise ControlValveSpecError("rating mode needs Cv_rated and opening")
+            if D1_m is not None:
+                raise ControlValveSpecError("piping geometry factors are supported in sizing mode only")
+            opening = float(params["opening"])
+            if not 0.0 < opening <= 1.0:
+                raise ControlValveSpecError(f"opening {opening} outside (0, 1]")
+        else:
+            P2 = _outlet_pressure(inlet.P, params)
+            if P2 >= inlet.P:
+                raise ControlValveSpecError(
+                    "zero pressure drop: Kv is unbounded (the valve does nothing)"
+                )
+
+        phase_code = _phase_code(inlet)
+        P1 = inlet.P
+        if phase_code == 0:
+            liquid = _liquid_phase(inlet)
+            rho = liquid.density
+            mu = liquid.viscosity
+            if mu is None and params.get("mu_liquid") is not None:
+                mu = float(params["mu_liquid"])
+            if mu is None:
+                raise ControlValveSpecError("liquid viscosity unavailable; pass mu_liquid")
+            Psat = _psat(inlet, thermo)
+            Pc = _average_Pc(inlet)
+            Q_m3_s = inlet.mass_flow / rho
+            kv = kv_liquid(
+                Q_m3_s=Q_m3_s, rho=rho, mu=mu, Psat=Psat, Pc=Pc,
+                P1=P1, P2=P2, FL=FL, Fd=Fd, D1_m=D1_m, D2_m=D2_m, d_m=d_m,
+            )
+            P2_choke = float(control_valve_choke_P_l(Psat=Psat, Pc=Pc, FL=FL, P1=P1))
+        else:
+            vapor = next((p for p in inlet.phases if p.kind is PhaseKind.VAPOR), None)
+            if vapor is None:
+                raise ControlValveSpecError("inlet has no vapour phase to size")
+            MW = vapor.molecular_weight
+            Z = vapor.z_factor
+            if Z is None:
+                raise ControlValveSpecError("vapour z_factor unavailable; cannot size gas")
+            mu = vapor.viscosity
+            if mu is None and params.get("mu_gas") is not None:
+                mu = float(params["mu_gas"])
+            if mu is None:
+                raise ControlValveSpecError("gas viscosity unavailable; pass mu_gas")
+            props = thermo.phase_props(vapor.composition, inlet.T, inlet.P, PhaseKind.VAPOR)
+            gamma = props.cp / (props.cp - R_UNIVERSAL)
+            if not math.isfinite(gamma) or gamma <= 1.0:
+                raise ControlValveSpecError(f"gamma {gamma} must be > 1 (from cp {props.cp})")
+            kv = kv_gas(
+                n_mol_s=inlet.molar_flow, MW=MW, mu=mu, gamma=gamma, Z=Z, T=inlet.T,
+                P1=P1, P2=P2, xT=xT, FL=FL, Fd=Fd, D1_m=D1_m, D2_m=D2_m, d_m=d_m,
+            )
+            P2_choke = float(control_valve_choke_P_g(xT=xT, gamma=gamma, P1=P1))
+
+        outlet = thermo.flash_ph(inlet.composition, P2, inlet.enthalpy, inlet.molar_flow)
+        info: dict[str, float] = {
+            "Kv_m3h_bar05": kv["Kv"],
+            "Cv": kv["Kv"] / KV_PER_CV,
+            "choked": kv["choked"],
+            "dP_choke_Pa": P1 - P2_choke,
+            "FR": kv["FR"],
+            "FP": kv["FP"],
+            "P_out_Pa": P2,
+            "phase_code": float(phase_code),
+            "dT_K": outlet.T - inlet.T,
+        }
+        if phase_code == 1:
+            info["x"] = (P1 - P2) / P1
+            info["Y"] = kv["Y"]
+        if not rating and "Cv_rated" in params:
+            Cv_rated = float(params["Cv_rated"])
+            if Cv_rated <= 0:
+                raise ControlValveSpecError(f"Cv_rated {Cv_rated} must be > 0")
+            required_Cv = kv["Kv"] / KV_PER_CV
+            phi = kv["Kv"] / (KV_PER_CV * Cv_rated)
+            if phi > 1.0:
+                raise ControlValveSpecError(
+                    f"required Cv {required_Cv} exceeds Cv_rated {Cv_rated}"
+                )
+            info["travel"] = characteristic_inverse(phi, kind, rangeability)
+        return UnitResult(outlets={"outlet": outlet}, duty_W=0.0, power_W=0.0, info=info)
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """Propane letdown basis (the R0 example) plus a rated capacity."""
+        feed = {
+            "T": 294.261,
+            "P": 2.16978e6,
+            "molar_flow": 574.66,
+            "composition": {"C3": 1.0},
+        }
+        return {"inlet": feed}, {"P_out": 1.997411e6, "Cv_rated": 125.0, "mu_liquid": 1.0371e-4}
+
+
+def _phase_code(inlet: StreamState) -> int:
+    """0 liquid, 1 gas; refuse a two-phase inlet (IEC 60534-2-1 is single-phase)."""
+    if inlet.vapor_fraction <= 0.001:
+        return 0
+    if inlet.vapor_fraction >= 0.999:
+        return 1
+    raise ControlValveSpecError(
+        f"two-phase flow is outside IEC 60534-2-1 (inlet vapor_fraction {inlet.vapor_fraction:.4f})"
+    )
+
+
+def _liquid_phase(state: StreamState) -> Any:
+    """Dominant liquid phase of an all-liquid inlet (the R0 rule)."""
+    liquids = [p for p in state.phases if p.kind is not PhaseKind.VAPOR]
+    if not liquids:
+        raise ControlValveSpecError("inlet has no liquid phase to size")
+    return max(liquids, key=lambda p: p.mole_fraction)
+
+
+def _psat(inlet: StreamState, thermo: Thermo) -> float:
+    """Inlet vapour pressure: pure-component Psat, or the bubble point for a mixture."""
+    if len(inlet.composition) == 1:
+        cid = next(iter(inlet.composition))
+        psat = thermo.pure_psat(cid, inlet.T)
+        if psat is None:
+            raise ControlValveSpecError(f"pure_psat unavailable for {cid} at {inlet.T} K")
+        return float(psat)
+    return float(thermo.bubble_point(inlet.composition, T=inlet.T).P)
+
+
+def _average_Pc(inlet: StreamState) -> float:
+    """Molar average of the pure critical pressures (Kay's rule)."""
+    db = components()
+    return sum(x * float(db[cid]["pc_Pa"]) for cid, x in inlet.composition.items())
+
+
+def _pipe_diameters(params: dict[str, Any]) -> tuple[float | None, float | None, float | None]:
+    """Validated (D1_m, D2_m, d_m): all three or none, > 0, d <= min(D1, D2)."""
+    given = [name for name in ("D1_m", "D2_m", "d_m") if params.get(name) is not None]
+    if not given:
+        return None, None, None
+    if len(given) < 3:
+        raise ControlValveSpecError(
+            f"D1_m, D2_m, d_m must all be given or none (missing {set(('D1_m', 'D2_m', 'd_m')) - set(given)})"
+        )
+    D1_m, D2_m, d_m = (float(params[name]) for name in ("D1_m", "D2_m", "d_m"))
+    if D1_m <= 0 or D2_m <= 0 or d_m <= 0:
+        raise ControlValveSpecError(f"D1_m, D2_m, d_m must be > 0 (got {D1_m}, {D2_m}, {d_m})")
+    if d_m > min(D1_m, D2_m):
+        raise ControlValveSpecError(
+            f"D1_m, D2_m, d_m: valve d_m {d_m} exceeds the smaller pipe {min(D1_m, D2_m)}"
+        )
+    return D1_m, D2_m, d_m
