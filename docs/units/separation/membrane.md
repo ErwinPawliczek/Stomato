@@ -110,4 +110,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-D 8
 
-> R0 split and stage-cut specs implemented; Geankoplis Ex. 13.4-2 example.
+> R0 split and stage-cut specs implemented; Geankoplis Ex. 13.4-2 example. V1 gap — no printed cross-flow or counter-current worked example was found for R1/R2 (searched Geankoplis §13.5 cross-flow worked example, Pan 1983, Baker Ch. 8, and the plan's candidates); the R1/R2 oracle cases CF1–CF4 are hand-computed (scratchpad/unit-specs/calc_membrane.py RK4/bisection — no printed source), checked by the Rayleigh closed form and the R2 -> R1 -> R0 identities.
