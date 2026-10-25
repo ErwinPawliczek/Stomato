@@ -1,0 +1,61 @@
+# Fired-heater R1 V1 worked case (spec specs/backend/units/fired_heater.md;
+# validator scripts/validate_units.py). Exponent literals carry explicit
+# signs (1.0e+4) — bare 1.0e4 parses as a string in PyYAML.
+
+- id: V2105
+  unit: fired_heater
+  level: R1
+  source: >-
+    Kern, Process Heat Transfer, Example 19.1, "Calculation of a Furnace by
+    the Method of Lobo and Evans" (transcribed from the Internet Archive
+    full-text scan of the 1950 edition): a furnace designed for a total duty
+    of 50,000,000 Btu/hr at 75 per cent overall efficiency (lower heating
+    value basis); oil fuel of LHV 17,130 Btu/lb fired with 25 per cent
+    excess air (17.44 lb air/lb fuel), air preheated to 400 F; wall loss 2
+    per cent of the fired heat; 60 tubes of 5 in. OD on 8.5 in. centres with
+    38 ft 6 in. exposed length give A_t = 3024 ft2 and alpha*A_cp = 1500
+    ft2; the recomputed overall exchange factor is 0.635 and the average
+    tube temperature 800 F. The converged balance is struck "at about 1700
+    F", with radiant duty 37,050,000 Btu/hr and circumferential flux 12,280
+    Btu/(hr)(ft2).
+  thermo: pr
+  feeds:
+    inlet:
+      T: 600.0
+      P: 5.0e+5
+      molar_flow: 2641.0
+      composition: {C1: 1.0}
+  params:
+    T_out: 700.0
+    dP: 0.0
+    fuel_composition: {nC10: 0.625, C1: 0.375}
+    excess_air_frac: 0.25
+    air_T_K: 533.15
+    alpha_Acp_m2: 139.3547
+    exchange_factor: 0.635
+    tube_area_radiant_m2: 280.9391
+    tube_wall_excess_K: 36.25
+    UA_convection_W_K: 1.0e+4
+    radiant_loss_frac: 0.02
+  expected:
+  - {quantity: info.T_bridgewall_K, value: 1199.26, tol_rel: 0.02}
+  - {quantity: info.efficiency_LHV, value: 0.75, tol_rel: 0.03}
+  - {quantity: info.Q_radiant_W, value: 10856184.0, tol_rel: 0.03}
+  - {quantity: info.radiant_flux_W_m2, value: 38738.4, tol_rel: 0.03}
+  assessed: >-
+    Measured on the package: T_bridgewall 1199.5 K (printed "about 1700 F" =
+    1199.26 K, +0.02 per cent), efficiency_LHV 0.7404 (printed 0.75, -1.3),
+    Q_radiant 10.78 MW (printed 37,050,000 Btu/hr = 10.856 MW, -0.7), flux
+    38,356 W/m2 (printed 12,280 Btu/(hr ft2) = 38,738 W/m2, -1.0). Carriers,
+    not cited values: the fuel composition (Kern prints only the oil LHV,
+    17,130 Btu/lb = 39.85 kJ/g; the carrier nC10/C1 mix matches H/C = 2.302
+    implied by the printed flue analysis pCO2 0.1084 / pH2O 0.1248, but its
+    LHV is 44.9 kJ/g, so the fuel mass flow is not anchored), the process
+    coil stream (Example 19.1 is a design problem and names no coil fluid;
+    the C1 carrier 600 -> 700 K at 5 bar realizes the printed duty and the
+    800 F average tube temperature through tube_wall_excess_K), and
+    UA_convection (10,000 W/K; Example 19.1 sizes only the radiant section,
+    and the convection rating first appears in Example 19.2). Residual gaps
+    are chart flue enthalpies vs the PR package (Kern's flue gas at 476
+    Btu/lb for 1730 F) and the 60 F chart reference vs the 298.15 K
+    formation basis, both inside the tolerances above.
