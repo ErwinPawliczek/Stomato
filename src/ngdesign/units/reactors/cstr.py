@@ -9,6 +9,12 @@ The reaction-rate scale and the concentration-equivalent pressure are the
 pfr spec's equations 3 and 4, copied privately (units/cstr.md review
 checklist) so the two reactor threads never edit one shared file.
 
+The plan's refusal-table row "equilibrium without an explicit reverse
+expression" is superseded by #245: ``kinetics.rate`` gives
+``forward·(1 - Q/K)`` for a PowerLaw with an equilibrium model, so such a
+reaction set is valid CSTR kinetics. Only LHHW kinetics combined with an
+equilibrium model is refused (the LHHW evaluation ignores the equilibrium).
+
 All SI: J, mol, K, Pa, s. Plugin kind "unit", name "cstr", level R1.
 """
 
@@ -24,7 +30,7 @@ from numpy.linalg import LinAlgError
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.contracts.reactions import PowerLaw, Reaction, ReactionSet
+from ngdesign.contracts.reactions import LHHW, Reaction, ReactionSet
 from ngdesign.contracts.stream import PhaseKind
 from ngdesign.units._physics.kinetics import (
     R,
@@ -112,10 +118,13 @@ def _effective_pressure(stream: StreamState, T: float, P: float) -> float:
 def _validated_scales(rset: ReactionSet, bulk_density_kg_m3: float | None) -> list[float]:
     """Refuse every reaction the adapter cannot run; return the rate scales.
 
-    Refusals (units/cstr.md table): a reaction without kinetics; a PowerLaw
-    with an equilibrium model but no explicit ``reverse`` (``kinetics.rate``
-    would apply (1 - 1/K) with no reaction quotient); unknown ``rate_units``;
-    a catalyst basis without ``bulk_density_kg_m3``.
+    Refusals (units/cstr.md table): a reaction without kinetics; LHHW
+    kinetics combined with an equilibrium model (``rate`` evaluates the LHHW
+    driving force alone and ignores the equilibrium); unknown ``rate_units``;
+    a catalyst basis without ``bulk_density_kg_m3``. A PowerLaw with an
+    equilibrium model but no explicit ``reverse`` is valid since #245:
+    ``kinetics.rate`` then applies the equilibrium limitation
+    ``forward·(1 - Q/K)``, defined on both sides of equilibrium.
     """
     scales: list[float] = []
     for reaction in rset.reactions:
@@ -124,10 +133,10 @@ def _validated_scales(rset: ReactionSet, bulk_density_kg_m3: float | None) -> li
             raise CstrError(
                 f"reaction {reaction.id!r} has no kinetics; a kinetic CSTR needs a rate for every reaction"
             )
-        if isinstance(kinetics, PowerLaw) and kinetics.reverse is None and reaction.equilibrium is not None:
+        if reaction.equilibrium is not None and isinstance(kinetics, LHHW):
             raise CstrError(
-                f"reaction {reaction.id!r}: equilibrium without an explicit reverse expression "
-                "(the CSTR design equation needs a rate that is defined beyond equilibrium)"
+                f"reaction {reaction.id!r}: LHHW kinetics ignore the equilibrium model; "
+                "give the driving force explicitly"
             )
         scales.append(_rate_scale(reaction, bulk_density_kg_m3))
     return scales
@@ -147,6 +156,7 @@ class _NewtonResult:
 
     extents: tuple[float, ...]
     T_newton_K: float
+    T_start_K: float
     iterations: int
     residual_inf: float
 
@@ -246,8 +256,10 @@ def _solve_cstr(
             columns.append(column)
         return [[row[k] for row in columns] for k in range(len(columns[0]))]
 
+    guess_T = T_guess_K if T_guess_K is not None else inlet.T
+    T_start = T_fixed if T_fixed is not None else guess_T
     xi0: list[float] = [0.0] * m
-    u = xi0 if T_fixed is not None else [*xi0, T_guess_K if T_guess_K is not None else inlet.T]
+    u = xi0 if T_fixed is not None else [*xi0, T_start]
     first = evaluate(u)
     if first is None:  # unreachable at xi = 0, guarded for typing
         raise CstrConvergenceError("cstr: the inlet amounts are already negative")
@@ -289,7 +301,11 @@ def _solve_cstr(
         u, g = u_next, g_next
     T_newton = T_fixed if T_fixed is not None else u[m]
     return _NewtonResult(
-        extents=tuple(u[:m]), T_newton_K=T_newton, iterations=iterations, residual_inf=_norm_inf(g)
+        extents=tuple(u[:m]),
+        T_newton_K=T_newton,
+        T_start_K=T_start,
+        iterations=iterations,
+        residual_inf=_norm_inf(g),
     )
 
 
@@ -340,8 +356,8 @@ class CstrR1:
     'vapor'), ``bulk_density_kg_m3`` (per-kg_cat rates) and ``T_guess_K``
     (Newton start; selects the steady-state branch). ``info`` carries each
     reaction's extent and conversion, the Newton iteration count,
-    ``T_newton_K`` and ``T_closure_gap_K`` from the ``thermal_outlet``
-    energy closure.
+    ``T_newton_K``, ``T_start_K`` (the Newton temperature start) and
+    ``T_closure_gap_K`` from the ``thermal_outlet`` energy closure.
     """
 
     inlet_ports = ("inlet",)
@@ -354,14 +370,6 @@ class CstrR1:
         if reacting_phase not in ("vapor", "liquid"):
             raise CstrError(f"reacting_phase {reacting_phase!r} is not one of 'vapor', 'liquid' (level R1)")
         rset = reaction_set_param(params["reaction_set"])
-        for reaction in rset.reactions:
-            if reaction.equilibrium is not None and (
-                not isinstance(reaction.kinetics, PowerLaw) or reaction.kinetics.reverse is None
-            ):
-                raise CstrError(
-                    f"reaction {reaction.id!r}: an equilibrium model without an explicit "
-                    "reverse expression cannot leave the vessel at steady state; give an explicit reverse"
-                )
         bulk = params.get("bulk_density_kg_m3")
         bulk_density = float(bulk) if bulk is not None else None
         scales = _validated_scales(rset, bulk_density)
@@ -389,6 +397,7 @@ class CstrR1:
                 nu_base * xi_j / base_flow if base_flow > 0.0 else 0.0
             )
         info["newton_iterations"] = float(newton.iterations)
+        info["T_start_K"] = newton.T_start_K
         info["T_newton_K"] = newton.T_newton_K
         info["T_closure_gap_K"] = outlet.T - newton.T_newton_K
         return UnitResult(outlets={"outlet": outlet}, duty_W=duty, info=info)

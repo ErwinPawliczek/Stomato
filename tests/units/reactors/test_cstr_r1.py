@@ -208,6 +208,9 @@ def test_r1_adiabatic_energy_closure(thermo: Thermo) -> None:
     # The isomerization is exothermic: the adiabatic outlet heats up.
     assert outlet.T > 500.0
     assert 0.0 < result.info["conversion_nC4_isom"] < 1.0
+    # The Newton start is documented in info (plan §Algorithm step 3): the
+    # inlet temperature when no T_guess_K is given.
+    assert result.info["T_start_K"] == pytest.approx(500.0, rel=1e-12)
 
 
 def test_r1_duty_zero_matches_adiabatic(thermo: Thermo) -> None:
@@ -272,7 +275,7 @@ def test_r1_liquid_mode_vapor_refusal(thermo: Thermo) -> None:
 
 
 def test_r1_refusals(thermo: Thermo) -> None:
-    """The refusal table's first five rows, one case each."""
+    """The refusal-table rows, one case each."""
     feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
     inlet = flash_feed(thermo, feed)
     unit = CstrR1()
@@ -297,16 +300,46 @@ def test_r1_refusals(thermo: Thermo) -> None:
     with pytest.raises(CstrError, match="has no kinetics"):
         unit.solve({"inlet": inlet}, no_kin, thermo)
 
-    equil = _isom_params()
-    equil["reaction_set"]["reactions"][0]["equilibrium"] = {"form": "from_gibbs"}
-    with pytest.raises(CstrError, match="explicit reverse"):
-        unit.solve({"inlet": inlet}, equil, thermo)
+    lhhw = _isom_params()
+    lhhw["reaction_set"]["reactions"][0]["kinetics"] = {
+        "rate_units": "mol/(m3·s)",
+        "basis": "concentration",
+        "driving_force": [{"arrhenius": {"k0": 1.0e3, "Ea": 5.0e4}, "orders": {"nC4": 1.0}}],
+    }
+    lhhw["reaction_set"]["reactions"][0]["equilibrium"] = {"form": "from_gibbs"}
+    with pytest.raises(CstrError, match="ignore the equilibrium model"):
+        unit.solve({"inlet": inlet}, lhhw, thermo)
 
     with pytest.raises(ValueError, match="thermal mode"):
         unit.solve({"inlet": inlet}, _isom_params(thermal="geothermal"), thermo)
 
     with pytest.raises(CstrError, match="reacting_phase"):
         unit.solve({"inlet": inlet}, _isom_params(reacting_phase="plasma"), thermo)
+
+
+def test_r1_equilibrium_limited_powerlaw_reaches_equilibrium(thermo: Thermo) -> None:
+    """Since #245 a PowerLaw with an equilibrium model and no explicit reverse
+    is valid CSTR kinetics: rate = forward·(1 - Q/K). The outlet approaches
+    equilibrium: Q/K = 1 to 1e-6 and X -> K/(1+K) (review item 1)."""
+    feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    inlet = flash_feed(thermo, feed)
+    params = _isom_params(volume_m3=0.006)
+    params["reaction_set"]["reactions"][0]["kinetics"]["Ea"] = 0.0  # k = 1e3 1/s
+    params["reaction_set"]["reactions"][0]["equilibrium"] = {
+        "form": "polynomial",
+        "polynomial": {0: math.log(1.0e-4)},
+        "t_window": [300.0, 1000.0],
+    }
+
+    result = CstrR1().solve({"inlet": inlet}, params, thermo)
+    n_out = result.outlets["outlet"].component_flows()
+
+    # tau·k = V·c_tot·k/F_A0 = 0.006·48.11·1e3 = 288.7, so
+    # |1 - Q/K| = K/(K + tau·k) ~ 3.5e-7 < 1e-6: the outlet sits at
+    # equilibrium, X = K/(1+K) ~ 1e-4.
+    q_over_k = (n_out["iC4"] / n_out["nC4"]) / 1.0e-4
+    assert abs(q_over_k - 1.0) < 1e-6
+    assert 0.9e-4 < n_out["iC4"] < 1.1e-4
 
 
 def test_r1_newton_cap_refusal(thermo: Thermo, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -346,6 +379,7 @@ def test_r1_example_case_roundtrip(thermo: Thermo) -> None:
         "extent_isom_mol_s",
         "conversion_nC4_isom",
         "newton_iterations",
+        "T_start_K",
         "T_newton_K",
         "T_closure_gap_K",
     ):
