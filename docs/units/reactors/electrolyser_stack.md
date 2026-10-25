@@ -2,7 +2,7 @@
 
 Family: **reactors** · P&ID symbol: `FC`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.reactors.electrolyser:ElectrolyserStack` | Faraday's law n(H2) = η·I·N/(2F); power = V·I·N is electrical work |
-| R1 | planned | — | polarisation curve |
+| R1 | provisional | `ngdesign.units.reactors.electrolyser_r1:ElectrolyserStackR1` | Ulleberg (2003) eq. 4 cell voltage on the reversible voltage from ln_keq on H2O(g) -> H2 + 1/2 O2, the liquid-water p_sat correction (Poynting neglected) and the optional Nernst term, with the eq. 9 form Faradaic efficiency; delegation to R0 by composition. V1 gap, recorded with PR 305 — Ulleberg 2003 prints the polarisation curves mostly as figures and no printed (current, voltage, temperature) point with the stack area was found in the searched sources (Ulleberg 2003 Tables 1-2 and text; Ursua, Gandia & Sanchis, Proc. IEEE 100 (2012) 410-426; the LeRoy/Bowen/LeRoy 1980 alkaline data), so the polarisation closed form is covered by unit tests on printed test coefficients. The ulleberg2003 preset is added only when Table 1 is transcribed with page and equation numbers. |
 
 ### R0 parameters
 
@@ -37,6 +37,40 @@ properties:
   n_cells:
     description: cells in series
     type: number
+type: object
+```
+
+### R1 parameters
+
+```yaml
+properties:
+  T_K:
+    "K \u2014 must equal the inlet T (no silent re-heating)": null
+    description: operating temperature
+    type: number
+  area_m2:
+    description: electrode area per cell
+    m2: null
+    type: number
+  current_A:
+    A: null
+    description: stack current
+    type: number
+  faradaic:
+    description: 'optional {f1: A2/m4, f2}: Ulleberg eq. 9 form eta_F = f2*i^2/(f1
+      + i^2); default 1'
+  n_cells:
+    description: cells in series
+    type: number
+  polarisation:
+    description: 'Ulleberg (2003, Int. J. Hydrogen Energy 28:21-33) eq. 4 coefficients
+      {r1: Ohm m2, r2: Ohm m2/degC, s: V, t1: m2/A, t2: m2 degC/A, t3: m2 degC2/A};
+      i in A/m2, T in degC, log10. The named preset ''ulleberg2003'' is refused until
+      Table 1 is transcribed with page and equation numbers'
+  pressure_correction:
+    description: true adds the Nernst term (R*T/2F)*ln[(P/P0)^1.5] with P0 = 1e5 Pa;
+      default false
+    type: boolean
 type: object
 ```
 
