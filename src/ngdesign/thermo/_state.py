@@ -944,10 +944,12 @@ def _single_phase_object(
     zs = [float(z[cid]) for cid in ids]
     base = flasher.gas if kind == PhaseKind.VAPOR else flasher.liquids[0]
     phase = base.to(T=T, P=P, zs=zs)
-    if getattr(base, "constants", None) is not None and not hasattr(phase, "constants"):
-        # ``Phase.to`` copies HeatCapacityGases but not the component constants,
-        # which MW() needs; flash-built phases always carry them.
-        phase.constants = base.constants
+    # ``Phase.to`` copies HeatCapacityGases but neither the component constants
+    # (which MW() needs) nor the property correlations (which mu() and k() need);
+    # flash-built phases always carry both, so a directly built phase must too.
+    for attr in ("constants", "correlations"):
+        if getattr(base, attr, None) is not None and getattr(phase, attr, None) is None:
+            setattr(phase, attr, getattr(base, attr))
     return phase, ids, zs, tuple(z.keys())
 
 
