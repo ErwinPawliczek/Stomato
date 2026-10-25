@@ -81,9 +81,11 @@ def overall_efficiency(d50_m: float, d_rr_m: float, n_rr: float) -> float:
     ``leggauss`` nodes are strictly interior so ``1 - F`` stays positive.
     """
     nodes, weights = leggauss(_GL64_POINTS)
-    return sum(
-        0.5 * w * grade_efficiency(d50_m, rosin_rammler_diameter(d_rr_m, n_rr, 0.5 * (x + 1.0)))
-        for x, w in zip(nodes, weights, strict=True)
+    return float(
+        sum(
+            0.5 * w * grade_efficiency(d50_m, rosin_rammler_diameter(d_rr_m, n_rr, 0.5 * (x + 1.0)))
+            for x, w in zip(nodes, weights, strict=True)
+        )
     )
 
 
@@ -230,8 +232,12 @@ class HydrocycloneR1:
         d50 = lapple_cut_diameter(mu_f, W, N_e, v_i, rho_p, rho_f)
         if d_mono is not None:
             E = grade_efficiency(d50, float(d_mono))
-        else:
+        elif d_rr is not None and n_rr is not None:
             E = overall_efficiency(d50, float(d_rr), float(n_rr))
+        else:  # unreachable: the exactly-one-form check above refuses this
+            raise HydrocycloneR1SpecError(
+                "particle_diameter_m (monodisperse) or the pair (d_rr_m, n_rr) is required"
+            )
 
         light = rho_p < rho_f
         fractions: dict[str, float] = {}
