@@ -47,7 +47,7 @@ class CoolingTowerConvergenceError(ValueError):
 
 def tower_characteristic(C: float, n: float, L_over_G: float) -> float:
     """CTI tower characteristic KaV/L = C (L/G)^-n (dimensionless)."""
-    return C * L_over_G ** (-n)
+    return C * math.pow(L_over_G, -n)
 
 
 def operating_line(
@@ -326,10 +326,16 @@ class CoolingTowerR1:
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-        """The R0 example feeds with a Merkel characteristic: C = 1.7, n = 0.6."""
+        """The R0 example feeds with a Merkel characteristic: C = 0.6, n = 0.6.
+
+        The spec's C = 1.7 gives a characteristic of 6.02, above the maximum
+        attainable demand KaV/L ~ 4.65 (package) / 5.61 (pure ASHRAE basis)
+        on these feeds - no root exists (SPEC ISSUE on the PR). C = 0.6
+        gives 2.12, which solves at an approach of about 2 K.
+        """
         feeds, _params = CoolingTower.example_case()
         params: dict[str, Any] = {
-            "characteristic_C": 1.7,
+            "characteristic_C": 0.6,
             "characteristic_n": 0.6,
             "cycles_of_concentration": 3.0,
         }

@@ -126,7 +126,7 @@ def test_r1_identity_reduces_to_r0() -> None:
     feeds = _r1_feeds(thermo)
     result = CoolingTowerR1().solve(
         feeds,
-        {"characteristic_C": 1.7, "characteristic_n": 0.6, "cycles_of_concentration": 3.0},
+        {"characteristic_C": 0.6, "characteristic_n": 0.6, "cycles_of_concentration": 3.0},
         thermo,
     )
     approach = result.info["approach_K"]
@@ -143,7 +143,11 @@ def test_r1_identity_reduces_to_r0() -> None:
 
 
 def test_larger_C_gives_a_strictly_smaller_water_outlet() -> None:
-    """Monotonicity: a larger tower characteristic cools further (C in 1.0, 1.7, 2.5)."""
+    """Monotonicity: a larger tower characteristic cools further (C in 0.4, 0.6, 0.9).
+
+    The spec's C in {1.0, 1.7, 2.5} exceeds the maximum attainable demand on
+    the example feeds (SPEC ISSUE on the PR).
+    """
     thermo = _thermo()
     feeds = _r1_feeds(thermo)
     T_out = [
@@ -151,7 +155,7 @@ def test_larger_C_gives_a_strictly_smaller_water_outlet() -> None:
         .solve(feeds, {"characteristic_C": C, "characteristic_n": 0.6}, thermo)
         .outlets["water_out"]
         .T
-        for C in (1.0, 1.7, 2.5)
+        for C in (0.4, 0.6, 0.9)
     ]
     assert T_out[0] > T_out[1] > T_out[2]
 
