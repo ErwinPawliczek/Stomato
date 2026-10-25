@@ -384,15 +384,19 @@ class ReliefValveR1(ReliefValve):
         factors = self._factors(params, kd_default=0.65)
 
         s_sat = thermo.flash_tvf(z, inlet.T, 0.0, inlet.molar_flow).entropy
-        # Isentropic flash to 0.9*P_sat via a manual PVF entropy balance: the
-        # PR package's flash_ps can converge to a spurious all-liquid root for
-        # a pure fluid near saturation (no exception, wrong rho9), so the
-        # library path is not used here.
-        P9 = 0.9 * P_sat
-        s_l = thermo.flash_pvf(z, P9, 0.0, inlet.molar_flow).entropy
-        s_v = thermo.flash_pvf(z, P9, 1.0, inlet.molar_flow).entropy
-        x9 = (s_sat - s_l) / (s_v - s_l)
-        flashed = thermo.flash_pvf(z, P9, min(1.0, max(0.0, x9)), inlet.molar_flow)
+        if len(z) < 2:
+            # The registered PR package cannot flash a pure fluid into the
+            # two-phase region: flash_ps raises ZeroDivisionError (thermo
+            # flash_utils.py:961) and its quality flashes clamp to the liquid
+            # root at the vf bounds (even at vf = 1 - 1e-9), so omega_s would
+            # collapse to a spurious ~0 and mis-classify the feed. Refuse.
+            raise ReliefValveR1Error(
+                "subcooled pure fluid cannot be flashed isentropically by the "
+                "thermo package's PS/quality flashes; use a mixture basis"
+            )
+        # Isentropic flash to 0.9*P_sat per spec step 5 (flash_ps), with the
+        # manual PVF entropy balance as fallback for mixtures.
+        flashed = _flash_ps_two_phase(thermo, z, 0.9 * P_sat, s_sat, inlet.molar_flow)
         rho9 = 1.0 / mixture_v(flashed)
         omega_s = 9.0 * (rho_l0 / rho9 - 1.0)
         if omega_s <= 0:

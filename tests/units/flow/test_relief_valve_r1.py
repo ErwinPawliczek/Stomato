@@ -212,8 +212,14 @@ def test_r1_area_matches_eq5(thermo: Thermo) -> None:
 
 
 def test_r1_subcooled_propane_regimes(thermo: Thermo) -> None:
-    """Subcooled propane at T0 300 K, P0 = 2x bubble P: regime 3 or 4 by P_back."""
-    z = {"C3": 1.0}
+    """Subcooled propane-dominant liquid at T0 300 K, P0 = 2x bubble P: regime 3 or 4 by P_back.
+
+    The basis is 99.9 % C3 + 0.1 % nC4: the registered PR package cannot flash
+    a PURE fluid into the two-phase region (flash_ps crashes; quality flashes
+    clamp to the liquid root), which the adapter refuses. The near-pure mixture
+    keeps the spec's regime-classification check while staying computable.
+    """
+    z = {"C3": 0.999, "nC4": 0.001}
     psat = thermo.bubble_point(z, T=300.0).P
     inlet = flash_feed(thermo, {"T": 300.0, "P": 2.0 * psat, "molar_flow": 5000.0, "composition": z})
     choked = rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 0.2 * psat}, thermo)
@@ -222,6 +228,17 @@ def test_r1_subcooled_propane_regimes(thermo: Thermo) -> None:
     non_flashing = rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 1.5 * psat}, thermo)
     assert non_flashing.info["critical"] == 0
     assert non_flashing.info["regime_code"] in (2, 4)
+
+
+def test_r1_refuses_pure_fluid_subcooled(thermo: Thermo) -> None:
+    """A single-component subcooled feed is refused: the registered PR package
+    cannot flash a pure fluid into the two-phase region (flash_ps crashes,
+    quality flashes clamp to the liquid root), so omega_s would be spurious."""
+    z = {"C3": 1.0}
+    psat = thermo.bubble_point(z, T=300.0).P
+    inlet = flash_feed(thermo, {"T": 300.0, "P": 2.0 * psat, "molar_flow": 5000.0, "composition": z})
+    with pytest.raises(rv1.ReliefValveR1Error, match="pure fluid"):
+        rv1.ReliefValveR1().solve({"inlet": inlet}, {"P_back": 0.2 * psat}, thermo)
 
 
 # --- refusals ---------------------------------------------------------------
