@@ -37,7 +37,7 @@ from typing import Any
 
 from dataclasses import dataclass, replace
 
-from .inside_out import _build_column, _Column, _Profile
+from .inside_out import _build_column, _Column, _Profile, _seed_profile, _temperature_seed
 from .linalg import _gauss
 from .spec import (
     _FLOW_FLOOR,
@@ -248,19 +248,32 @@ def _solve_stripper(
     col2 = _build_column(parsed2, tb)
     if st.reboiler_duty_W is None:
         # Zero free tears: the feeds determine the column, so one mesh solve
-        # IS the answer (the legacy path's zero-tear branch). Cold first -
-        # deterministic, and the coupling stop floors were calibrated on the
-        # cold sub-solve's reproducibility; a warm start raises the stripper
-        # overhead's noise and the secant then chases it. The warm seed is
-        # the FALLBACK: the secant's probes sit a few percent from a good
-        # solution, where a cold 4-stage steam stripper can stall (measured
-        # M stuck at 3.8e-2 over 9 NS passes at draw 8.58 vs 9.0 mol/s).
+        # IS the answer (the legacy path's zero-tear branch). The ladder is
+        # deliberately DETERMINISTIC at every rung - the coupling stop floors
+        # (and the secant's ability to polish at all) were calibrated on a
+        # reproducible sub-solve: a history-warm stripper makes the overhead
+        # noisy at the 1e-3 level and the secant then chases that noise
+        # forever (measured: product residual plateaued at ~1e-3, jumped to
+        # 1.6e-1 at iteration 31). Rung 1: cold. Rung 2: NS-first from the
+        # crude hot-bottom seed - a zero-tear column cold runs the inside-out
+        # loop first, which wanders off (M closes while H drifts) and the NS
+        # fallback then stalls from the wandered state, but NS started from
+        # the crude seed itself converges at every neighbouring tear in
+        # ~0.2 s (measured, P1-10). Rung 3: the stripper's last converged
+        # profile - the only non-deterministic rung, kept as the last resort
+        # because the secant's probes sit a few percent from a good solution
+        # where both deterministic rungs can stall.
         try:
             prof2 = _solve_mesh(col2, tb, None, None, None)
         except ColumnConvergenceError:
-            if seed is None:
-                raise
-            prof2 = _solve_mesh(col2, tb, None, None, seed)
+            try:
+                t_top_seed, t_bot_seed = _temperature_seed(col2, tb)
+                crude = _seed_profile(col2, tb, t_top_seed, t_bot_seed, v_bot_tear=None)
+                prof2 = _solve_mesh(col2, tb, None, None, crude)
+            except ColumnConvergenceError:
+                if seed is None:
+                    raise
+                prof2 = _solve_mesh(col2, tb, None, None, seed)
     else:
         prof2 = _solve_specs(col2, tb, parsed2)
     rep = _StripperReport(
@@ -566,12 +579,20 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
     g: list[float] = []
     names: list[str] = []
     stops: list[float] = []
+    # A step already evaluated and accepted by backtracking is reused here, so
+    # the accepted iterate is not solved a second time at the loop top.
+    pending: tuple[list[float], Any] | None = None
+    best_x: list[float] | None = None
     for _ in range(_SPEC_MAX):
-        top, bot, pa_flows, draw_flows, strip_draws, ret_states = unpack(x)
-        coupled = _eval_coupled(
-            params, tb, top, bot, pa_flows, draw_flows, strip_draws, ret_states,
-            seed_prof, strip_seeds,
-        )
+        if pending is not None:
+            x, coupled = pending
+            pending = None
+        else:
+            top, bot, pa_flows, draw_flows, strip_draws, ret_states = unpack(x)
+            coupled = _eval_coupled(
+                params, tb, top, bot, pa_flows, draw_flows, strip_draws, ret_states,
+                seed_prof, strip_seeds,
+            )
         seed_prof = coupled.prof
         strip_seeds = coupled.strip_profiles
         g, stops, names = _g_full(coupled, params, skip)
@@ -580,7 +601,7 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
             return coupled
         res = max(rel)
         if res < best_res - 1e-4 * best_res:
-            best_res, stale = res, 0
+            best_res, stale, best_x = res, 0, list(x)
         else:
             stale += 1
             if stale >= 6:
@@ -641,7 +662,57 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
                 f"column specs are unsatisfiable (secant Jacobian singular); "
                 f"residuals {_fmt_residuals(g, names)}"
             )
-        x = [x[i] + step[i] for i in range(nf)]
+        # Trust-region caps: the coupled residual landscape has cliffs (a 2%
+        # draw move can change the stripper's zero-tear product by an order of
+        # magnitude), so an unbounded secant step in the stiff return-state
+        # tears throws the iterate into a worse basin it never leaves.
+        for i in range(nf):
+            if tear_names[i].endswith("return_T"):
+                step[i] = max(min(step[i], 100.0), -100.0)
+            elif ".return_x[" in tear_names[i]:
+                step[i] = max(min(step[i], 0.5), -0.5)
+            else:
+                cap = 0.5 * abs(x[i]) + 1e-3
+                step[i] = max(min(step[i], cap), -cap)
+        # Damped update: a full secant step can overshoot into a worse basin
+        # and the next iteration then linearises from THAT point (measured on
+        # the coupled steam stripper: the product residual sat at -1.9e-3 at
+        # draw 8.572, one full step landed at +1.7e-1 at draw 8.743, and the
+        # run never recovered). Backtrack while the max scaled residual
+        # worsens; each backtrack costs one coupled evaluation, an oscillating
+        # full step costs the whole run. If every backtracked step either
+        # fails to evaluate or worsens, REVERT to the best known iterate:
+        # intermediate shrunk steps frequently land in sub-solve stalls, so
+        # falling through to the full step (the old behavior) re-enters the
+        # bad basin the backtracking just rejected. Only when no best iterate
+        # exists yet does the full step stand.
+        scale = 1.0
+        accepted = False
+        for _bt in range(4):
+            x_try = [x[i] + scale * step[i] for i in range(nf)]
+            try:
+                top2, bot2, pa2, dr2, sd2, rs2 = unpack(x_try)
+                coupled_try = _eval_coupled(
+                    params, tb, top2, bot2, pa2, dr2, sd2, rs2, seed_prof, strip_seeds
+                )
+            except (ColumnConvergenceError, ValueError):
+                coupled_try = None
+            if coupled_try is not None:
+                g_try, stops_try, _ = _g_full(coupled_try, params, skip)
+                rel_try = max(
+                    abs(gi) / si for gi, si in zip(g_try, stops_try, strict=True)
+                )
+                if rel_try < res:
+                    x = x_try
+                    pending = (x_try, coupled_try)
+                    accepted = True
+                    break
+            scale /= 8.0
+        if not accepted:
+            if best_x is not None and best_res < res:
+                x = list(best_x)
+            else:
+                x = [x[i] + step[i] for i in range(nf)]
     raise ColumnSpecError(
         f"column specs could not be satisfied within {_SPEC_MAX} secant iterations; "
         f"residuals {_fmt_residuals(g, names)}"
