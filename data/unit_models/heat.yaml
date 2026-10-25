@@ -324,10 +324,12 @@
     every single-balance arrangement of the four streams crosses (verified by hand
     cascade). The Smith streams 1+3 two-stream balance is covered by the
     closed-form test in tests/units/heat/test_multi_stream.py; outlet ports are
-    positional, not mirrored inlet names. R1 has no printed worked rating either:
-    the evidence base is the closed-form constant-capacity-rate epsilon-NTU
-    reduction, the two-hot/one-cold printed reference, and the R0 identity test in
-    tests/units/heat/test_multi_stream_r1.py - the V1 evidence gap stands at R1.
+    positional, not mirrored inlet names. R1 V1 gap (searched 2026-10-25):
+    Haseler (1983), Shah & Sekulic, Fundamentals of Heat Exchanger Design (2003)
+    ch. 8-9, and the ALPEMA standards print no worked multi-stream rating. The R1
+    evidence is the constant-capacity-rate epsilon-NTU reduction, an independently
+    hand-computed two-hot/one-cold case (not a printed source), and the R0
+    identity test in tests/units/heat/test_multi_stream_r1.py.
 
 - id: fired_heater
   name: Fired heater
