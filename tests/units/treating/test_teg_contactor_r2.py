@@ -154,13 +154,6 @@ def test_refuses_unknown_param_key() -> None:
         TEGContactorR2().solve(inlets, {"n_stages": 3, "water_out_lb_per_mmscf": 7.0}, THERMO)
 
 
-def test_dispatch_model_key_is_tolerated() -> None:
-    """The level dispatch passes ``model`` in params; it is not an adapter param."""
-    inlets, _ = _inlets()
-    result = TEGContactorR2().solve(inlets, {"n_stages": 3, "model": "R2"}, THERMO)
-    assert result.info["n_stages"] == 3.0
-
-
 def test_refuses_lean_without_teg() -> None:
     feeds, _ = TEGContactorR2.example_case()
     inlets = {

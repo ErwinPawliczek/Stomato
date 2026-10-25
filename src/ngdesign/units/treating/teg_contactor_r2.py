@@ -102,7 +102,7 @@ def _shift_water(state: StreamState, water_delta: float) -> tuple[dict[str, floa
 
 def _n_stages_param(params: dict[str, Any]) -> int:
     """Validate the ``n_stages`` parameter: present, a true integer, >= 1."""
-    extra = sorted(set(params) - {"n_stages"} - _RESERVED_KEYS)
+    extra = sorted(set(params) - {"n_stages"})
     if extra:
         raise TEGContactorR2Error(f"unknown parameter key(s): {', '.join(extra)}")
     if "n_stages" not in params:
