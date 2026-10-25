@@ -126,21 +126,16 @@ _SPEC_KEYS = (
     "product_purity",
     "condenser_duty_W",
     "reboiler_duty_W",
-    # S0-1 feature 4: refiner specs. Value shapes (validated in _parse_params):
-    #   draw_rate:            {"name": <draw or stripper name>, "value": mol/s}
-    #   stage_temperature:    {"stage": <1-indexed stage>, "value": K}
-    #   pumparound_duty:      {"name": <pumparound name>, "value": W}
-    #   pumparound_return_T:  {"name": <pumparound name>, "value": K}
+)
+#: Spec keys S0-1 feature 4 (refiner specs) will add. Part 2a refuses them at
+#: parse with a typed "not implemented" error instead of ignoring them, so a
+#: caller cannot silently get a column that ignores its own spec.
+_NOT_IMPLEMENTED_SPEC_KEYS = (
     "draw_rate",
     "stage_temperature",
     "pumparound_duty",
     "pumparound_return_T",
 )
-#: Spec keys S0-1 feature 4 added. A params['specs'] dict holding any of these
-#: (or a column with free tears: pumparound flows, named free draws, stripper
-#: draws) solves on the generalized secant (``_solve_specs_full``), not the
-#: legacy two-tear path whose benchmarked mesh sequence is locked.
-_FULL_SPEC_KEYS = ("draw_rate", "stage_temperature", "pumparound_duty", "pumparound_return_T")
 
 
 class ColumnSpecError(ValueError):
@@ -178,7 +173,7 @@ class _DrawSpec:
 
     stage: int  # 1-indexed
     vapor: bool
-    flow: float | None  # None = free tear (a draw_rate spec drives it)
+    flow: float | None  # never None after parse: a free draw refuses (part 2b)
     name: str | None = None
 
 
@@ -190,18 +185,16 @@ class _Pumparound:
 
     Exactly one of ``duty_W`` / ``return_T_K`` is the FIXED operating
     variable (``duty_W = 0`` with ``return_stage == draw_stage`` is the
-    degenerate identity loop); the other is an outcome. Either the flow or
-    the fixed variable may instead be a free tear driven by a spec
-    (``pa_tear`` records which, empty when both are fixed).
+    degenerate identity loop); the other is an outcome. The flow is fixed
+    (part 2a: a free flow is a feature-4 tear and refuses at parse).
     """
 
     name: str
     draw_stage: int  # 1-indexed
     return_stage: int  # 1-indexed, <= draw_stage
-    flow_mol_s: float | None  # None = free tear
+    flow_mol_s: float
     duty_W: float | None  # fixed cooler duty, negative = heat removed
     return_T_K: float | None  # fixed return temperature
-    tear: str = ""  # which variable is the free tear: "", "flow", "duty"
 
 
 @dataclass(frozen=True)
@@ -215,9 +208,10 @@ class _SideStripper:
     (``reboiler_duty_W``); the stripper bottoms leave as an internal product.
 
     The draw rate is not configured: it is a tear of the coupled solve,
-    driven by ``product_rate`` (the stripper bottoms rate) or by a
-    ``draw_rate`` spec naming this stripper. ``n_stages = 0`` is the
-    degenerate case: the entire draw leaves as product and nothing returns.
+    driven by ``product_rate`` (the stripper bottoms rate). Part 2a: the
+    ``draw_rate`` spec is feature 4 (part 2b) and refuses at parse.
+    ``n_stages = 0`` is the degenerate case: the entire draw leaves as
+    product and nothing returns.
     """
 
     name: str
@@ -228,7 +222,7 @@ class _SideStripper:
     steam_T: float
     steam_P: float
     reboiler_duty_W: float | None  # reboiler option: kettle duty, W
-    product_rate: float | None  # stripper bottoms rate, mol/s, or free (draw_rate spec)
+    product_rate: float | None  # stripper bottoms rate, mol/s (parse requires one)
 
 
 @dataclass(frozen=True)
@@ -366,13 +360,13 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
         name = d.get("name")
         if name is not None and (not isinstance(name, str) or not name):
             raise ColumnSpecError(f"draws[{k}].name must be a non-empty string")
-        if flow is None and name is None:
+        if flow is None:
+            # S0-1 part 2a: a free draw is a tear of the feature-4 draw_rate
+            # spec; until part 2b there is no driver, so refuse instead of
+            # solving a column that ignores its own specification.
             raise ColumnSpecError(
-                f"draws[{k}]: a draw without flow_mol_s needs a name (a draw_rate spec drives it)"
+                f"draws[{k}]: a draw without flow_mol_s is not implemented (S0-1 part 2b: draw_rate specs)"
             )
-        # A named draw without flow_mol_s is a free tear: a draw_rate spec
-        # (S0-1 feature 4) drives it, and the count rule in _tear_names
-        # refuses the config when no such spec exists.
         draws.append(_DrawSpec(stage=stage, vapor=phase == "vapor", flow=flow, name=name))
     total_draws = sum(d.flow for d in draws if d.flow is not None)
     total_feeds = sum(f.flow for f in feeds)
@@ -385,20 +379,18 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
     unknown = set(specs) - set(_SPEC_KEYS)
     if unknown:
         raise ColumnSpecError(f"unknown spec keys {sorted(unknown)}; allowed: {list(_SPEC_KEYS)}")
+    not_impl = sorted(set(specs) & set(_NOT_IMPLEMENTED_SPEC_KEYS))
+    if not_impl:
+        raise ColumnSpecError(f"specs.{not_impl[0]}: not implemented (S0-1 part 2b: refiner specs)")
     pumparounds = _parse_pumparounds(params, n_stages)
     strippers = _parse_side_strippers(params, n_stages)
     decant = _parse_decant(params, condenser)
-    _validate_full_specs(specs, pumparounds, draws, strippers, n_stages)
+    _validate_stripper_drivers(specs, strippers)
     n_tears = (1 if condenser != "none" else 0) + (1 if reboiler != "none" else 0)
     tear_list = _tear_names(condenser, reboiler, pumparounds, draws, strippers)
     n_drivers = len(specs) + sum(1 for st in strippers if st.product_rate is not None)
     if len(tear_list) != n_drivers:
-        legacy = (
-            not strippers
-            and not any(pa.flow_mol_s is None for pa in pumparounds)
-            and not any(d.flow is None for d in draws)
-            and not any(k in specs for k in _FULL_SPEC_KEYS)
-        )
+        legacy = not strippers
         if legacy:
             raise ColumnSpecError(
                 f"this column has {n_tears} degrees of freedom ({condenser} condenser, "
@@ -504,11 +496,15 @@ def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumpar
                 f"draw_stage {draw_stage} (a pumparound returns cooled liquid higher in the tower)"
             )
         flow = pa.get("flow_mol_s")
-        if flow is not None:
-            flow = _positive(flow, f"pumparounds[{k}].flow_mol_s")
-        # A pumparound without flow_mol_s is a free tear: a pumparound_duty
-        # or pumparound_return_T spec (S0-1 feature 4) drives it, and the
-        # count rule refuses the config when no such spec exists.
+        if flow is None:
+            # S0-1 part 2a: a free pumparound flow is a tear of the feature-4
+            # pumparound_duty / pumparound_return_T specs; until part 2b there
+            # is no driver, so refuse instead of ignoring the loop.
+            raise ColumnSpecError(
+                f"pumparounds[{k}]: a pumparound without flow_mol_s is not implemented "
+                "(S0-1 part 2b: pumparound_duty/pumparound_return_T specs)"
+            )
+        flow = _positive(flow, f"pumparounds[{k}].flow_mol_s")
         duty = pa.get("duty_W")
         if duty is not None:
             try:
@@ -540,7 +536,6 @@ def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumpar
                 flow_mol_s=flow,
                 duty_W=duty,
                 return_T_K=return_t,
-                tear="flow" if flow is None else "",
             )
         )
     return pas
@@ -581,7 +576,7 @@ def _parse_side_strippers(params: Mapping[str, Any], n_stages: int) -> list[_Sid
         if n is None:
             raise ColumnSpecError(f"side_strippers[{k}]: n_stages is required (0 = plain liquid draw)")
         try:
-            n_strippers = int(n)  # type: ignore[arg-type]
+            n_strippers = int(n)
         except (TypeError, ValueError) as exc:
             raise ColumnSpecError(f"side_strippers[{k}].n_stages must be an integer, got {n!r}") from exc
         if n_strippers < 0:
@@ -602,7 +597,7 @@ def _parse_side_strippers(params: Mapping[str, Any], n_stages: int) -> list[_Sid
             s = dict(steam)
             flow_raw = s.get("flow_mol_s", 0.0)
             try:
-                steam_flow = float(flow_raw)  # type: ignore[arg-type]
+                steam_flow = float(flow_raw)
             except (TypeError, ValueError) as exc:
                 raise ColumnSpecError(
                     f"side_strippers[{k}].steam.flow_mol_s must be a number, got {flow_raw!r}"
@@ -614,10 +609,16 @@ def _parse_side_strippers(params: Mapping[str, Any], n_stages: int) -> list[_Sid
             steam_T = _positive(s.get("T_K"), f"side_strippers[{k}].steam.T_K")
             steam_P = _positive(s.get("P_Pa"), f"side_strippers[{k}].steam.P_Pa")
         else:
+            if duty is None:  # narrowed for mypy: the steam/duty gate above
+                raise ColumnSpecError(
+                    f"side_strippers[{k}]: exactly one of steam (a dict) / reboiler_duty_W is required"
+                )
             try:
-                duty_val = float(duty)  # type: ignore[arg-type]
+                duty_val = float(duty)
             except (TypeError, ValueError) as exc:
-                raise ColumnSpecError(f"side_strippers[{k}].reboiler_duty_W must be a number, got {duty!r}") from exc
+                raise ColumnSpecError(
+                    f"side_strippers[{k}].reboiler_duty_W must be a number, got {duty!r}"
+                ) from exc
             if not math.isfinite(duty_val) or duty_val < 0.0:
                 raise ColumnSpecError(
                     f"side_strippers[{k}].reboiler_duty_W must be >= 0 (heat added), got {duty_val!r}"
@@ -643,7 +644,7 @@ def _parse_side_strippers(params: Mapping[str, Any], n_stages: int) -> list[_Sid
                 steam_flow=steam_flow if steam is not None else None,
                 steam_T=steam_T,
                 steam_P=steam_P,
-                reboiler_duty_W=float(duty) if duty is not None else None,  # type: ignore[arg-type]
+                reboiler_duty_W=float(duty) if duty is not None else None,
                 product_rate=product_rate,
             )
         )
@@ -651,10 +652,10 @@ def _parse_side_strippers(params: Mapping[str, Any], n_stages: int) -> list[_Sid
     for d in params.get("draws", []) or []:
         if isinstance(d, Mapping) and d.get("name") is not None:
             draw_names.add(str(d["name"]))
-    for st in strippers:
-        if st.name in draw_names:
+    for stripper in strippers:
+        if stripper.name in draw_names:
             raise ColumnSpecError(
-                f"side_strippers: name {st.name!r} collides with a named draw; info keys would overlap"
+                f"side_strippers: name {stripper.name!r} collides with a named draw; info keys would overlap"
             )
     return strippers
 
@@ -672,100 +673,18 @@ def _parse_decant(params: Mapping[str, Any], condenser: str) -> bool:
     return raw
 
 
-def _parse_named_spec(spec: dict[str, Any], key: str) -> dict[str, Any]:
-    """Normalize a ``{name|stage, value}`` refiner spec (S0-1 feature 4)."""
-    if key == "stage_temperature":
-        raw_stage = spec.get("stage")
-        try:
-            stage = int(raw_stage)  # type: ignore[arg-type]
-        except (TypeError, ValueError) as exc:
-            raise ColumnSpecError(f"specs.stage_temperature.stage must be an integer, got {raw_stage!r}") from exc
-        return {"stage": stage, "value": _positive(spec.get("value"), "specs.stage_temperature.value")}
-    name = str(spec.get("name", ""))
-    if not name:
-        raise ColumnSpecError(f"specs.{key} needs a 'name' (the draw, stripper or pumparound it drives)")
-    if key == "pumparound_duty":
-        # Sign convention matches the reported pa_<name>_duty_W (negative =
-        # heat removed by the cooler); only finiteness and non-zero apply.
-        raw = spec.get("value")
-        try:
-            value = float(raw)  # type: ignore[arg-type]
-        except (TypeError, ValueError) as exc:
-            raise ColumnSpecError(f"specs.pumparound_duty.value must be a finite number, got {raw!r}") from exc
-        if not math.isfinite(value) or value == 0.0:
-            raise ColumnSpecError(f"specs.pumparound_duty.value must be a non-zero finite number, got {raw!r}")
-        return {"name": name, "value": value}
-    return {"name": name, "value": _positive(spec.get("value"), f"specs.{key}.value")}
+def _validate_stripper_drivers(specs: dict[str, Any], strippers: list[_SideStripper]) -> None:
+    """Every stripper's draw needs exactly one driver (parse time).
 
-
-def _validate_full_specs(
-    specs: dict[str, Any],
-    pumparounds: list[_Pumparound],
-    draws: list[_DrawSpec],
-    strippers: list[_SideStripper],
-    n_stages: int,
-) -> None:
-    """Pair the S0-1 feature 4 specs with the tears they drive (parse time).
-
-    Every refusal here names the spec key, so an unsatisfiable configuration
-    fails before any solve, on an input the column could otherwise converge.
+    Part 2a: ``product_rate_mol_s`` is the only driver; the ``draw_rate``
+    spec arrives with feature 4 (S0-1 part 2b) and refuses earlier in
+    ``_parse_params``.
     """
-    free_pas = {pa.name: pa for pa in pumparounds if pa.flow_mol_s is None}
-    free_draws = {d.name for d in draws if d.flow is None}
-    stripper_map = {st.name: st for st in strippers}
-    draw_rate_names: set[str] = set()
-    for key in _FULL_SPEC_KEYS:
-        if key not in specs:
-            continue
-        spec = specs[key] = _parse_named_spec(dict(specs[key]), key)
-        if key == "stage_temperature":
-            _stage_index(spec["stage"], "specs.stage_temperature.stage", n_stages)
-            continue
-        name = spec["name"]
-        if key == "draw_rate":
-            if name in draw_rate_names:
-                raise ColumnSpecError(f"specs.draw_rate: target {name!r} is driven twice")
-            if name in free_draws:
-                draw_rate_names.add(name)
-            elif name in stripper_map:
-                if stripper_map[name].product_rate is not None:
-                    raise ColumnSpecError(
-                        f"specs.draw_rate {name!r}: the stripper already has product_rate_mol_s; "
-                        f"give one driver, not both"
-                    )
-                draw_rate_names.add(name)
-            else:
-                raise ColumnSpecError(
-                    f"specs.draw_rate: no free draw or stripper named {name!r} "
-                    f"(free draws: {sorted(free_draws)}, strippers: {sorted(stripper_map)})"
-                )
-        elif key == "pumparound_duty":
-            pa = free_pas.get(name)
-            if pa is None:
-                raise ColumnSpecError(
-                    f"specs.pumparound_duty: no pumparound with a free flow_mol_s named {name!r} "
-                    f"(a duty spec drives the loop flow, so the flow must be unset and return_T_K fixed)"
-                )
-            if pa.return_T_K is None:
-                raise ColumnSpecError(
-                    f"specs.pumparound_duty {name!r}: duty_W must be unset (it is the quantity the spec drives)"
-                )
-        elif key == "pumparound_return_T":
-            pa = free_pas.get(name)
-            if pa is None:
-                raise ColumnSpecError(
-                    f"specs.pumparound_return_T: no pumparound with a free flow_mol_s named {name!r} "
-                    f"(a return-temperature spec drives the loop flow, so the flow must be unset and duty_W fixed)"
-                )
-            if pa.duty_W is None:
-                raise ColumnSpecError(
-                    f"specs.pumparound_return_T {name!r}: return_T_K must be unset (it is the quantity the spec drives)"
-                )
     for st in strippers:
-        if st.product_rate is None and st.name not in draw_rate_names:
+        if st.product_rate is None:
             raise ColumnSpecError(
                 f"side_strippers[{st.name!r}]: the stripper draw has no driver; give "
-                f"product_rate_mol_s or a draw_rate spec naming it"
+                f"product_rate_mol_s (a draw_rate spec is not implemented, S0-1 part 2b)"
             )
 
 
@@ -776,18 +695,17 @@ def _tear_names(
     draws: list[_DrawSpec],
     strippers: list[_SideStripper],
 ) -> list[str]:
-    """The named free tears of the generalized solve (S0-1 feature 4).
+    """The named free tears of the generalized solve (S0-1 feature 2).
 
-    Every stripper draw is a tear (driven by ``product_rate_mol_s`` or a
-    ``draw_rate`` spec); free pumparound flows and named free draws are tears
-    driven by their specs. The count rule: one driver per tear.
+    Every stripper draw is a tear, driven by ``product_rate_mol_s``. Part
+    2a adds no other tears: free pumparound flows and named free draws are
+    feature 4 (part 2b) and refuse at parse. The count rule: one driver per
+    tear.
     """
     names: list[str] = []
     if condenser != "none":
         names.append("top")
     if reboiler == "kettle":
         names.append("boilup")
-    names += [f"pumparound:{pa.name}" for pa in pumparounds if pa.flow_mol_s is None]
-    names += [f"draw:{d.name}" for d in draws if d.flow is None]
     names += [f"stripper:{st.name}" for st in strippers]
     return names

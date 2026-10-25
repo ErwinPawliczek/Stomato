@@ -19,16 +19,17 @@ converged: measured on the steam-stripper case, the coupling map amplifies a
 the main column's midsection), and no relaxation converges a gain-300 map.
 Newton-type secant iteration on the full residual vector does.
 
-**Spec/tear counting (feature 4):** every free tear - reflux/boilup, a free
-pumparound flow, a named free draw, a stripper draw - is driven by exactly
-one user-facing residual: the classic specs and the four refiner specs
-(``draw_rate``, ``stage_temperature``, ``pumparound_duty``,
-``pumparound_return_T``) from ``params['specs']`` plus one ``product_rate``
-row per configured stripper. The return-state tears add one coupling
-residual per injected quantity; they are internal auxiliaries of the
-vapour-return tear, not user specs, so the parse-time count rule (which
-pairs user specs with tears) does not count them. The count rule is
-enforced at parse time; here a mismatch is unreachable.
+**Spec/tear counting (part 2a scope):** every free tear - reflux/boilup, a
+stripper draw - is driven by exactly one user-facing residual: the classic
+column specs from ``params['specs']`` plus one ``product_rate`` row per
+configured stripper. The return-state tears add one coupling residual per
+injected quantity; they are internal auxiliaries of the vapour-return tear,
+not user specs, so the parse-time count rule (which pairs user specs with
+tears) does not count them. The count rule is enforced at parse time; here
+a mismatch is unreachable. The feature-4 refiner specs (``draw_rate``,
+``stage_temperature``, ``pumparound_duty``, ``pumparound_return_T``) and
+their free tears refuse at parse (S0-1 part 2b); this driver gains them
+then.
 """
 
 from __future__ import annotations
@@ -40,7 +41,6 @@ from .inside_out import _build_column, _Column, _Profile, _seed_profile, _temper
 from .linalg import _gauss
 from .spec import (
     _FLOW_FLOOR,
-    _FULL_SPEC_KEYS,
     _SPEC_MAX,
     _SPEC_TOL,
     ColumnConvergenceError,
@@ -57,16 +57,9 @@ from .thermo_adapter import _ThermoBox
 #: Component id of the stripping steam (pure water).
 _STEAM_CID = "H2O"
 
-#: Per-driver stop tolerances, in the residual's own units. Temperature specs
-#: and return-temperature targets stop on ABSOLUTE kelvin (the acceptance gate
-#: is 1e-6 K); rate specs stop on relative error. The duty stop (1e-7
-#: relative) sits just above the MEASURED mesh noise floor: the converged
-#: pumparound duty is reproducible to ~2.7e-8 relative (0.13 mW on a 5 kW
-#: loop, measured on the free-PA acceptance case), and a stop below that
-#: floor makes the secant chase mesh noise until the stale counter aborts.
-_STOP_TEMPERATURE_K = 1e-8
+#: Per-driver stop tolerances, in the residual's own units. Rate specs stop
+#: on relative error.
 _STOP_RATE_REL = 1e-10
-_STOP_DUTY_REL = 1e-7
 
 #: Vapour-return coupling stops. The injected return state must match the
 #: recomputed stripper overhead to these bounds at the accepted solution.
@@ -106,8 +99,6 @@ class _Coupled:
     col: _Column
     prof: _Profile
     reports: list[_StripperReport]
-    pa_flows: dict[str, float]
-    draw_flows: dict[str, float]
     strip_draws: dict[str, float]
     #: Injected return states, name -> (flow, T, composition). These are the
     #: tear values the main column consumed; the coupling residuals compare
@@ -123,13 +114,7 @@ class _Coupled:
 
 def _needs_full(params: _Params) -> bool:
     """True when the configuration must solve on the generalized driver."""
-    if params.side_strippers:
-        return True
-    if any(pa.flow_mol_s is None for pa in params.pumparounds):
-        return True
-    if any(d.flow is None for d in params.draws):
-        return True
-    return any(k in params.specs for k in _FULL_SPEC_KEYS)
+    return bool(params.side_strippers)
 
 
 def _species(params: _Params) -> list[str]:
@@ -147,12 +132,10 @@ def _species(params: _Params) -> list[str]:
 
 def _injected(
     params: _Params,
-    pa_flows: dict[str, float],
-    draw_flows: dict[str, float],
     strip_draws: dict[str, float],
     ret_states: dict[str, tuple[float, float, dict[str, float]]],
 ) -> _Params:
-    """Copy params with the live tear values and stripper couplings written in.
+    """Copy params with the stripper couplings written in.
 
     Stripper draws leave the main column as liquid draws; stripper overhead
     vapour re-enters as a feed at ``return_stage`` (at the main column's own
@@ -160,12 +143,8 @@ def _injected(
     returns as vapour plus product) - the facade counts only the original
     feeds and the stripper products at the boundary.
     """
-    pas = [
-        replace(pa, flow_mol_s=pa_flows[pa.name]) if pa.flow_mol_s is None else pa
-        for pa in params.pumparounds
-    ]
     feeds = list(params.feeds)
-    draws = [replace(d, flow=draw_flows[d.name]) if d.flow is None else d for d in params.draws]
+    draws = list(params.draws)
     for st in params.side_strippers:
         draws.append(_stripper_draw(st, strip_draws[st.name]))
         ret_flow, ret_T, ret_comp = ret_states[st.name]
@@ -179,7 +158,7 @@ def _injected(
                     comp=dict(ret_comp),
                 )
             )
-    return replace(params, feeds=feeds, draws=draws, pumparounds=pas)
+    return replace(params, feeds=feeds, draws=draws)
 
 
 def _stripper_draw(st: _SideStripper, flow: float) -> _DrawSpec:
@@ -194,30 +173,37 @@ def _solve_stripper(
     prof: _Profile,
     col: _Column,
     seed: _Profile | None,
-) -> _StripperReport:
+) -> tuple[_Column, _Profile, _StripperReport]:
     """Solve one stripper on the main column's draw-stage liquid state.
 
     A standalone zero/one-tear column (condenserless; kettle reboiler only
     under the duty option, then driven by a ``reboiler_duty_W`` spec through
     the legacy one-tear path). ``n_stages = 0`` is the plain-draw degenerate
-    case: everything drawn leaves as product, nothing returns.
+    case: everything drawn leaves as product, nothing returns. Returns the
+    stripper's own column and converged profile (the main column's when
+    ``n_stages = 0``, where no stripper hardware exists) plus the boundary
+    report; the profile only serves as the next evaluation's warm seed.
     """
     j = st.draw_stage - 1
     comp = dict(prof.x[j])
     t_draw = prof.T[j]
     p_draw = col.pressures[j]
     if st.n_stages == 0:
-        return _StripperReport(
-            name=st.name,
-            overhead_flow=0.0,
-            overhead_T=0.0,
-            overhead_P=0.0,
-            overhead_comp={},
-            product_flow=flow,
-            product_T=t_draw,
-            product_P=p_draw,
-            product_comp=comp,
-            reboiler_duty_W=0.0,
+        return (
+            col,
+            prof,
+            _StripperReport(
+                name=st.name,
+                overhead_flow=0.0,
+                overhead_T=0.0,
+                overhead_P=0.0,
+                overhead_comp={},
+                product_flow=flow,
+                product_T=t_draw,
+                product_P=p_draw,
+                product_comp=comp,
+                reboiler_duty_W=0.0,
+            ),
         )
     feeds: list[dict[str, Any]] = [
         {"stage": 1, "T": t_draw, "P": p_draw, "molar_flow": flow, "composition": comp}
@@ -293,8 +279,6 @@ def _eval_coupled(
     tb: _ThermoBox,
     t_top: float | None,
     t_bot: float | None,
-    pa_flows: dict[str, float],
-    draw_flows: dict[str, float],
     strip_draws: dict[str, float],
     ret_states: dict[str, tuple[float, float, dict[str, float]]],
     seed: _Profile | None,
@@ -307,7 +291,7 @@ def _eval_coupled(
     on the steam-stripper case) sets the coupling stop floors above. A
     failing main solve propagates to the secant's probe shrinking.
     """
-    parsed_full = _injected(params, pa_flows, draw_flows, strip_draws, ret_states)
+    parsed_full = _injected(params, strip_draws, ret_states)
     col = _build_column(parsed_full, tb)
     prof = _solve_mesh(col, tb, t_top, t_bot, seed)
     reports = []
@@ -323,27 +307,16 @@ def _eval_coupled(
         col=col,
         prof=prof,
         reports=reports,
-        pa_flows=dict(pa_flows),
-        draw_flows=dict(draw_flows),
         strip_draws=dict(strip_draws),
         ret_states={k: (f, t, dict(c)) for k, (f, t, c) in ret_states.items()},
         strip_profiles=strip_profiles,
     )
 
 
-def _pa_report(col: _Column, prof: _Profile, name: str) -> dict[str, float]:
-    """The converged report of the pumparound named ``name`` (index-aligned)."""
-    for pa, rep in zip(col.pumparounds, prof.pa_report, strict=True):
-        if pa.name == name:
-            return rep
-    raise ColumnSpecError(f"pumparound report for {name!r} missing from the converged profile")
-
-
 def _stripper_seed(st: _SideStripper, col: _Column) -> float:
     """Starting guess for a stripper's draw flow (mol/s)."""
-    if st.product_rate is not None:
-        return max(st.product_rate + (st.steam_flow or 0.0), _FLOW_FLOOR)
-    return 0.2 * col.f_total
+    assert st.product_rate is not None  # parse requires a driver (part 2a)
+    return max(st.product_rate + (st.steam_flow or 0.0), _FLOW_FLOOR)
 
 
 def _fmt_residuals(g: list[float], names: list[str]) -> str:
@@ -353,12 +326,13 @@ def _fmt_residuals(g: list[float], names: list[str]) -> str:
 def _g_full(coupled: _Coupled, params: _Params, skip: set[str]) -> tuple[list[float], list[float], list[str]]:
     """Residuals, stop tolerances, and driver names for every active driver.
 
-    Rows follow the params.specs insertion order, then one ``product_rate``
-    row per configured stripper, then the vapour-return coupling rows
-    (``injected - recomputed``) per stripper with stages. Each stop is in its
-    residual's own units, so ``|g| < stop`` means "satisfied"; the secant
-    drives ``g / stop`` to zero (dimensionless, O(1) at the gate - the same
-    scaling discipline the legacy loop applies with target scales).
+    Rows follow the params.specs insertion order (the classic column specs),
+    then one ``product_rate`` row per configured stripper, then the
+    vapour-return coupling rows (``injected - recomputed``) per stripper with
+    stages. Each stop is in its residual's own units, so ``|g| < stop`` means
+    "satisfied"; the secant drives ``g / stop`` to zero (dimensionless, O(1)
+    at the gate - the same scaling discipline the legacy loop applies with
+    target scales).
     """
     g: list[float] = []
     stops: list[float] = []
@@ -366,33 +340,6 @@ def _g_full(coupled: _Coupled, params: _Params, skip: set[str]) -> tuple[list[fl
     col, prof = coupled.col, coupled.prof
     for key, raw in params.specs.items():
         if key in skip:
-            continue
-        if key in _FULL_SPEC_KEYS:
-            target = float(raw["value"])
-            name = str(raw["name"])
-            if key == "draw_rate":
-                if any(st.name == name for st in params.side_strippers):
-                    rep = next(r for r in coupled.reports if r.name == name)
-                    g.append(rep.product_flow - target)
-                else:
-                    g.append(coupled.draw_flows[name] - target)
-                names.append(f"draw_rate[{name}]")
-                stops.append(_STOP_RATE_REL * max(abs(target), 1e-12))
-            elif key == "stage_temperature":
-                stage = int(raw["stage"])
-                g.append(prof.T[stage - 1] - target)
-                names.append(f"stage_temperature[{stage}]")
-                stops.append(_STOP_TEMPERATURE_K)
-            elif key == "pumparound_duty":
-                rep = _pa_report(col, prof, name)
-                g.append(rep["duty_W"] - target)
-                names.append(f"pumparound_duty[{name}]")
-                stops.append(_STOP_DUTY_REL * max(abs(target), 1e-12))
-            else:  # pumparound_return_T
-                rep = _pa_report(col, prof, name)
-                g.append(rep["return_T_K"] - target)
-                names.append(f"pumparound_return_T[{name}]")
-                stops.append(_STOP_TEMPERATURE_K)
             continue
         target_f = float(raw)
         if key == "reflux_ratio":
@@ -436,13 +383,12 @@ def _g_full(coupled: _Coupled, params: _Params, skip: set[str]) -> tuple[list[fl
 
 
 def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
-    """Generalized bounded secant over the named tears (S0-1 features 2 and 4).
+    """Generalized bounded secant over the named tears (S0-1 feature 2).
 
     Same pinning algebra as the legacy path for the classic ratio/rate pairs;
-    free pumparound flows, free draw flows, stripper draws and the
-    strippers' vapour-return states (flow, T, composition) join the tear
-    vector, and the four refiner specs, per-stripper ``product_rate`` rows
-    and the return-coupling residuals join the residual vector. Every
+    the stripper draws and the strippers' vapour-return states (flow, T,
+    composition) join the tear vector, and the per-stripper ``product_rate``
+    rows and the return-coupling residuals join the residual vector. Every
     residual names itself in errors.
     """
     _check_spec_feasibility(_build_column(params, tb), tb, params)
@@ -499,25 +445,18 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
         float | None,
         float | None,
         dict[str, float],
-        dict[str, float],
-        dict[str, float],
         dict[str, tuple[float, float, dict[str, float]]],
     ]:
         """Map the free-tear vector onto concrete tear values.
 
-        Flows are clamped to the physical range, temperatures to a wide
-        window, compositions renormalized over the species list; the stale
-        counter and _SPEC_MAX catch a run that only survives by clamping.
+        Stripper draw flows are clamped to the physical floor, return
+        temperatures to a wide window, compositions renormalized over the
+        species list; the stale counter and _SPEC_MAX catch a run that only
+        survives by clamping.
         """
         it = iter(v)
         top = next(it) if free_top else t_top_pinned
         bot = next(it) if free_bot else t_bot_pinned
-        pa_flows: dict[str, float] = {}
-        for pa in params.pumparounds:
-            pa_flows[pa.name] = pa.flow_mol_s if pa.flow_mol_s is not None else next(it)
-        draw_flows: dict[str, float] = {}
-        for d in params.draws:
-            draw_flows[d.name] = d.flow if d.flow is not None else next(it)
         strip_draws: dict[str, float] = {}
         ret_states: dict[str, tuple[float, float, dict[str, float]]] = {}
         for st in params.side_strippers:
@@ -535,7 +474,7 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
                 comp = {cid: feed_comp.get(cid, 0.0) for cid in species}
                 total = sum(comp.values()) or 1.0
             ret_states[st.name] = (ret_f, ret_t, {k: x / total for k, x in comp.items()})
-        return top, bot, pa_flows, draw_flows, strip_draws, ret_states
+        return top, bot, strip_draws, ret_states
 
     x: list[float] = []
     tear_names: list[str] = []
@@ -545,14 +484,6 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
     if free_bot and t_bot is not None:
         x.append(float(t_bot))
         tear_names.append("boilup")
-    for pa in params.pumparounds:
-        if pa.flow_mol_s is None:
-            x.append(0.3 * col0.f_total)
-            tear_names.append(f"pumparound:{pa.name}")
-    for d in params.draws:
-        if d.flow is None:
-            x.append(0.1 * col0.f_total)
-            tear_names.append(f"draw:{d.name}")
     for st in params.side_strippers:
         x.append(_stripper_seed(st, col0))
         tear_names.append(f"stripper:{st.name}.draw")
@@ -568,7 +499,6 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
         for cid in species[:-1]:
             x.append(feed_comp.get(cid, 0.0) / max(sum(feed_comp.values()), 1e-12))
             tear_names.append(f"stripper:{st.name}.return_x[{cid}]")
-    globals()["_LAST_TEARS"] = list(tear_names)  # DEBUG: remove before commit
     if not x:  # pragma: no cover - the parse-time count rule refuses this
         raise ColumnSpecError("column specs cannot be driven: no free tear variables remain")
 
@@ -582,23 +512,19 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
     stops: list[float] = []
     # A step already evaluated and accepted by backtracking is reused here, so
     # the accepted iterate is not solved a second time at the loop top.
-    pending: tuple[list[float], Any] | None = None
+    pending: tuple[list[float], _Coupled] | None = None
     best_x: list[float] | None = None
-    _IN_BACKTRACK = False
-    globals()["_IN_BACKTRACK"] = _IN_BACKTRACK
     for _ in range(_SPEC_MAX):
         if pending is not None:
             x, coupled = pending
             pending = None
         else:
-            top, bot, pa_flows, draw_flows, strip_draws, ret_states = unpack(x)
+            top, bot, strip_draws, ret_states = unpack(x)
             coupled = _eval_coupled(
                 params,
                 tb,
                 top,
                 bot,
-                pa_flows,
-                draw_flows,
                 strip_draws,
                 ret_states,
                 seed_prof,
@@ -634,12 +560,10 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
                 )
         jac_cols = []
         for i in range(len(x)):
-            is_flow = i < len(x) and tear_names[i].endswith(
+            is_flow = tear_names[i].endswith(
                 (
                     "top",
                     "boilup",
-                    *[f"pumparound:{p.name}" for p in params.pumparounds],
-                    *[f"draw:{d.name}" for d in params.draws],
                     *[f"stripper:{s.name}.draw" for s in params.side_strippers],
                     *[f"stripper:{s.name}.return_flow" for s in params.side_strippers],
                 )
@@ -654,8 +578,8 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
             last_probe_err: ColumnConvergenceError | None = None
             for _shrink in range(3):
                 try:
-                    t2, b2, pa2, dr2, sd2, rs2 = unpack(x2)
-                    coupled2 = _eval_coupled(params, tb, t2, b2, pa2, dr2, sd2, rs2, seed_prof, strip_seeds)
+                    t2, b2, sd2, rs2 = unpack(x2)
+                    coupled2 = _eval_coupled(params, tb, t2, b2, sd2, rs2, seed_prof, strip_seeds)
                     break
                 except ColumnConvergenceError as exc:
                     last_probe_err = exc
@@ -712,7 +636,7 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
                     # recovering the relative cap exactly where it matters.
                     j = names.index(tear_names[i]) if tear_names[i] in names else -1
                     if j >= 0:
-                        cap = max(cap, 0.25 * abs(g[j]))
+                        cap = max(cap, abs(g[j]))
                 step[i] = max(min(step[i], cap), -cap)
         # Damped update: a full secant step can overshoot into a worse basin
         # and the next iteration then linearises from THAT point (measured on
@@ -728,28 +652,22 @@ def _solve_specs_full(params: _Params, tb: _ThermoBox) -> _Coupled:
         # exists yet does the full step stand.
         scale = 1.0
         accepted = False
-        globals()["_IN_BACKTRACK"] = True
-        try:
-            for _bt in range(4):
-                x_try = [x[i] + scale * step[i] for i in range(nf)]
-                try:
-                    top2, bot2, pa2, dr2, sd2, rs2 = unpack(x_try)
-                    coupled_try = _eval_coupled(
-                        params, tb, top2, bot2, pa2, dr2, sd2, rs2, seed_prof, strip_seeds
-                    )
-                except (ColumnConvergenceError, ValueError):
-                    coupled_try = None
-                if coupled_try is not None:
-                    g_try, stops_try, _ = _g_full(coupled_try, params, skip)
-                    rel_try = [abs(gi) / si for gi, si in zip(g_try, stops_try, strict=True)]
-                    if sum(r * r for r in rel_try) < res2:
-                        x = x_try
-                        pending = (x_try, coupled_try)
-                        accepted = True
-                        break
-                scale /= 8.0
-        finally:
-            globals()["_IN_BACKTRACK"] = False
+        for _bt in range(4):
+            x_try = [x[i] + scale * step[i] for i in range(nf)]
+            try:
+                top2, bot2, sd2, rs2 = unpack(x_try)
+                coupled_try = _eval_coupled(params, tb, top2, bot2, sd2, rs2, seed_prof, strip_seeds)
+            except (ColumnConvergenceError, ValueError):
+                coupled_try = None
+            if coupled_try is not None:
+                g_try, stops_try, _ = _g_full(coupled_try, params, skip)
+                rel_try = [abs(gi) / si for gi, si in zip(g_try, stops_try, strict=True)]
+                if sum(r * r for r in rel_try) < res2:
+                    x = x_try
+                    pending = (x_try, coupled_try)
+                    accepted = True
+                    break
+            scale /= 8.0
         if not accepted:
             if best_x is not None and best_res2 < res2:
                 x = list(best_x)

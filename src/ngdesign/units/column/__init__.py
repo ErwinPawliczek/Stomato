@@ -82,9 +82,7 @@ from .thermo_adapter import _flash_ready, _ThermoBox
 __all__ = [
     "Column",
     "ColumnConvergenceError",
-    "ColumnProducts",
     "ColumnSpecError",
-    "solve_column_full",
     "_ThermoBox",
     "_build_column",
     "_exact_residuals",
@@ -164,15 +162,16 @@ def _zero_flow_state(comp: dict[str, float], t: float, p: float) -> StreamState:
 
 @dataclass(frozen=True)
 class ColumnProducts:
-    """Everything one column solve produces (spec S0-1, feature 5).
+    """Everything one column solve produces (S0-1 part 2a: internal carrier).
 
     ``distillate``/``bottoms``/``side_draw`` are the registered outlet ports
     (the flowsheet graph sees these only); ``internal`` carries every further
-    product the configuration creates - extra side draws under
-    ``side_draw:<name>``, each stripper's bottoms under ``stripper:<name>``,
-    and the condenser's aqueous decant under ``water_decant`` - so a later
-    adapter (S0-3) can map the full product set onto its own catalogue
-    ports. ``info`` reports the same set as scalars plus the stage profile.
+    product the configuration creates - each stripper's bottoms under
+    ``stripper:<name>`` and the condenser's aqueous decant under
+    ``water_decant``. Part 2a keeps this class private to the package; part
+    2b (feature 5) will publish it with ``solve_column_full`` for the S0-3
+    adapters. ``info`` reports the same set as scalars plus the stage
+    profile.
     """
 
     distillate: StreamState
@@ -190,9 +189,20 @@ def solve_column_full(
 ) -> ColumnProducts:
     """Engine entry point for the full product set (spec S0-1, feature 5).
 
-    S0-3's crude and vacuum column adapters call this directly; the
-    registered ``Column.solve`` wraps it and reports the three port outlets.
+    Not implemented in part 2a: the feature-5 surface refuses with a typed
+    error instead of silently returning the port-outlet-only result. The
+    registered ``Column.solve`` uses the same machinery internally
+    (:func:`_solve_column_full`); part 2b publishes this entry point.
     """
+    raise ColumnSpecError("solve_column_full: not implemented (S0-1 part 2b: feature 5)")
+
+
+def _solve_column_full(
+    inlets: dict[str, StreamState],
+    params: dict[str, Any],
+    thermo: Thermo,
+) -> ColumnProducts:
+    """Solve the column and assemble the full product set (part 2a)."""
     graph_feed = inlets.get("feed")
     graph_dict: dict[str, Any] | None = None
     if graph_feed is not None:
@@ -207,19 +217,18 @@ def solve_column_full(
     parsed = _parse_params(params, graph_dict)
     tb = _ThermoBox(thermo, min(parsed.pressures), max(parsed.pressures))
     if _needs_full(parsed):
-        # S0-1 features 2/4: side strippers, free tears or refiner specs.
-        # The generalized coupled driver owns the solve (the legacy
-        # two-tear secant is locked by the distillation benchmarks); the
-        # returned column carries the converged tear values, so every
-        # downstream consumer reads live flows off ``col``.
+        # S0-1 feature 2: side strippers. The generalized coupled driver owns
+        # the solve (the legacy two-tear secant is locked by the distillation
+        # benchmarks); the returned column carries the converged tear values,
+        # so every downstream consumer reads live flows off ``col``.
         coupled: _Coupled = _solve_specs_full(parsed, tb)
         col = coupled.col
         prof = coupled.prof
-        strip_reports: tuple[_StripperReport, ...] = coupled.reports
+        strip_reports: list[_StripperReport] = coupled.reports
     else:
         col = _build_column(parsed, tb)
         prof = _solve_specs(col, tb, parsed)
-        strip_reports = ()
+        strip_reports = []
     # Post-solve pumparound gates (review items 4/5, PR #238): run once on
     # the final profile - an infeasible loop flow or a heating loop refuses
     # the column instead of reporting a silently-wrong result.
@@ -274,9 +283,7 @@ def solve_column_full(
                 assert extra.flow is not None
                 je = extra.stage - 1
                 comp_e = prof.y[je] if extra.vapor else prof.x[je]
-                internal[f"side_draw:{extra.name}"] = tb.pt(
-                    comp_e, prof.T[je], col.pressures[je], extra.flow
-                )
+                internal[f"side_draw:{extra.name}"] = tb.pt(comp_e, prof.T[je], col.pressures[je], extra.flow)
         else:
             side_draw = _zero_flow_state(bottoms.composition, prof.T[col.n - 1], col.pressures[col.n - 1])
 
@@ -304,21 +311,19 @@ def solve_column_full(
         "inner_iterations": float(prof.inner),
         "ns_used": float(prof.ns_used),
         "reflux_ratio": prof.l0 / max(prof.d, _FLOW_FLOOR) if col.condenser == "total" else 0.0,
-        "boilup_ratio": (
-            prof.V[col.n - 1] / max(prof.b, _FLOW_FLOOR) if col.reboiler == "kettle" else 0.0
-        ),
+        "boilup_ratio": (prof.V[col.n - 1] / max(prof.b, _FLOW_FLOOR) if col.reboiler == "kettle" else 0.0),
     }
     if col.pumparounds:
         # Per-loop converged state (review item 1, PR #238): pa_report is
         # always populated by _finalize_duties, so index it directly - a
         # missing report must surface, not hide behind a 0.0 default.
-        for pa, rep in zip(col.pumparounds, prof.pa_report, strict=True):
-            info[f"pa_{pa.name}_flow_mol_s"] = rep["flow_mol_s"]
-            info[f"pa_{pa.name}_duty_W"] = rep["duty_W"]
-            info[f"pa_{pa.name}_draw_T_K"] = rep["draw_T_K"]
-            info[f"pa_{pa.name}_return_T_K"] = rep["return_T_K"]
+        for pa, pa_rep in zip(col.pumparounds, prof.pa_report, strict=True):
+            info[f"pa_{pa.name}_flow_mol_s"] = pa_rep["flow_mol_s"]
+            info[f"pa_{pa.name}_duty_W"] = pa_rep["duty_W"]
+            info[f"pa_{pa.name}_draw_T_K"] = pa_rep["draw_T_K"]
+            info[f"pa_{pa.name}_return_T_K"] = pa_rep["return_T_K"]
     for rep in strip_reports:
-        # Spec S0-1, feature 5: every internal product is reported.
+        # Spec S0-1 feature 2: the stripper boundary state is reported.
         info[f"stripper_{rep.name}_product_mol_s"] = rep.product_flow
         info[f"stripper_{rep.name}_product_T_K"] = rep.product_T
         info[f"stripper_{rep.name}_reboiler_duty_W"] = rep.reboiler_duty_W
@@ -348,9 +353,7 @@ def solve_column_full(
         # Net unit duty (review item 1, PR #238): physical reboiler duty
         # plus the pumparound coolers' (negative) duties minus the
         # condenser duty - closes the boundary stream table exactly.
-        duty_W=prof.qr
-        - prof.qc
-        + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0),
+        duty_W=prof.qr - prof.qc + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0),
         info=info,
         internal=internal,
     )
@@ -365,8 +368,7 @@ class Column:
     outlet (a zero-flow state when no draw is configured). Additional feeds on
     any stage and further draws are declared in params; their material stays
     inside the unit's own balance (reported in info) - the flowsheet graph sees
-    the three outlet ports only. The full internal product set (S0-1 feature 5)
-    is available through :func:`solve_column_full`.
+    the three outlet ports only.
     """
 
     inlet_ports = ("feed",)
@@ -378,7 +380,7 @@ class Column:
         params: dict[str, Any],
         thermo: Thermo,
     ) -> UnitResult:
-        products = solve_column_full(inlets, params, thermo)
+        products = _solve_column_full(inlets, params, thermo)
         return UnitResult(
             outlets={
                 "distillate": products.distillate,
