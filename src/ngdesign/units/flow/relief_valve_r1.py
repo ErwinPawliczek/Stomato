@@ -249,7 +249,7 @@ class ReliefValveR1(ReliefValve):
         """
         inlet = self._inlet(inlets)
         P0 = inlet.P
-        z = dict(inlet.mole_fractions)
+        z = dict(inlet.composition)
 
         P_back = params.get("P_back")
         if P_back is None:
@@ -337,7 +337,7 @@ class ReliefValveR1(ReliefValve):
     ) -> UnitResult:
         inlet = self._inlet(inlets)
         P0 = inlet.P
-        z = dict(inlet.mole_fractions)
+        z = dict(inlet.composition)
         factors = self._factors(params, kd_default=0.85)
 
         v0 = mixture_v(inlet) if v0_override is None else v0_override
@@ -360,7 +360,7 @@ class ReliefValveR1(ReliefValve):
     ) -> UnitResult:
         inlet = self._inlet(inlets)
         P0 = inlet.P
-        z = dict(inlet.mole_fractions)
+        z = dict(inlet.composition)
         factors = self._factors(params, kd_default=0.65)
 
         s_sat = thermo.flash_tvf(z, inlet.T, 0.0, inlet.molar_flow).entropy
@@ -399,7 +399,7 @@ class ReliefValveR1(ReliefValve):
             factors["Kv"], factors["Kw"],
         )
         _, area_in2 = _next_orifice(area / IN2_PER_M2)
-        z = dict(inlet.mole_fractions)
+        z = dict(inlet.composition)
         info: dict[str, Any] = {
             **extra_info,
             "regime_code": regime_code,
