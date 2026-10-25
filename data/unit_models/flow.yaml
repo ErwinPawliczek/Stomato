@@ -36,7 +36,7 @@
   pid_symbol: P
   references:
   - docs/unit-catalogue-plan.md §2 U-B 1
-  notes: shaft power currently inlined in the unit; the pump_power correlation plugin exists.
+  notes: shaft power currently inlined in the unit; the pump_power correlation plugin exists. V1 gap (pump R1) — no open worked example printing a full pump curve plus a fluid state and the resulting P_out or NPSHa was found in the spec's candidate sources (Perry 9th ed. sect. 10, Karassik et al. Pump Handbook 4th ed. ch. 2, Hydraulic Institute ANSI/HI 9.6.1 as citation only, Couper et al. Chemical Process Equipment 3rd ed. ch. 7), so no V1 validation case is supplied; the level is covered by closed-form tests pinned to the spec's printed values (specs/backend/units/pump.md Tests section).
 
 - id: compressor
   name: Centrifugal compressor
