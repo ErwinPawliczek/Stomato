@@ -249,12 +249,15 @@ def test_two_stage_extras_close_element_balances(extra_species: list[str]) -> No
         (["COS", "CO", "H2"], r"flag 5, max residual 4\.000e\+01"),
     ],
 )
-@pytest.mark.xfail(reason=(
-    "gibbs minimisation did not converge on the second stage (473.15 K) -- identical on the "
-    "pre-fix head 9dbaccd, so this is the element-potential solver's limit at low T with "
-    "hydrogen in the species set, not a balance defect; the same feeds close at 1.2e-15 "
-    "worst element on one stage (573.15 K)"
-), strict=True)
+@pytest.mark.xfail(
+    reason=(
+        "gibbs minimisation did not converge on the second stage (473.15 K) -- identical on the "
+        "pre-fix head 9dbaccd, so this is the element-potential solver's limit at low T with "
+        "hydrogen in the species set, not a balance defect; the same feeds close at 1.2e-15 "
+        "worst element on one stage (573.15 K)"
+    ),
+    strict=True,
+)
 def test_two_stage_h2_gibbs_nonconvergence_is_a_solver_limit(
     extra_species: list[str], residual_pattern: str
 ) -> None:
