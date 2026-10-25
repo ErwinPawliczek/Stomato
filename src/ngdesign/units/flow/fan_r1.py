@@ -83,7 +83,7 @@ class FanR1:
             )
         if len(flow) < 2:
             raise FanR1SpecError(f"curve.flow_m3_s needs at least 2 points (got {len(flow)})")
-        if any(b <= a for a, b in zip(flow, flow[1:], strict=True)):
+        if any(b <= a for a, b in zip(flow, flow[1:], strict=False)):
             raise FanR1SpecError("curve.flow_m3_s must be strictly increasing")
 
         speed_ratio = float(params.get("speed_ratio", 1.0))
