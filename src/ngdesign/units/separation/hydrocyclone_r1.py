@@ -17,7 +17,7 @@ continuous fluid in the residence-time derivation.
 
 from __future__ import annotations
 
-from math import log, pi, sqrt
+from math import log, pi, pow, sqrt
 from typing import Any
 
 from numpy.polynomial.legendre import leggauss
@@ -71,7 +71,7 @@ def grade_efficiency(d50_m: float, d_m: float) -> float:
 
 def rosin_rammler_diameter(d_rr_m: float, n_rr: float, F: float) -> float:
     """H5 inverse mass distribution: ``d(F) = d_RR * (-ln(1-F))**(1/n)``."""
-    return d_rr_m * (-log(1.0 - F)) ** (1.0 / n_rr)
+    return d_rr_m * pow(-(log(1.0 - F)), 1.0 / n_rr)
 
 
 def overall_efficiency(d50_m: float, d_rr_m: float, n_rr: float) -> float:
@@ -248,14 +248,16 @@ class HydrocycloneR1:
                 fractions[cid] = R_f
 
         # --- dP: the param if given, else H6 (N_H reported when computable) ---
-        N_H = None
+        N_H: float | None = None
         if dP_param is not None:
             dP = float(dP_param)
-        else:
+        elif d_e is not None:
             d_e_val = float(d_e)
             K = float(params.get("K_inlet", DEFAULT_K_INLET))
             N_H = shepherd_lapple_number(H, W, d_e_val, K)
             dP = shepherd_lapple_pressure_drop(rho_f, v_i, N_H)
+        else:  # unreachable: the missing-dP-and-De check above refuses this
+            raise HydrocycloneR1SpecError("outlet_diameter_m is required when dP is not given")
 
         result = Hydrocyclone().solve(inlets, {"underflow_fractions": fractions, "dP": dP}, thermo)
         info: dict[str, Any] = {
