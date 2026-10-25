@@ -108,14 +108,57 @@
       params: {}
       note: clearance-volume model, stages
     R1:
-      status: planned
-      params: {}
-      note: rod load, capacity vs clearance
+      status: provisional
+      adapter: ngdesign.units.flow.reciprocating_compressor_r1:ReciprocatingCompressorR1
+      params:
+        type: object
+        required: [P_out, cylinders, speed_rpm]
+        properties:
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+          n_stages: {type: integer, description: 'stages, default 1'}
+          eta_isentropic: {type: number, description: 'stage isentropic efficiency, default 0.75'}
+          T_intercool: {type: number, description: 'intercooler outlet temperature, K (optional)'}
+          loss_allowance: {type: number, description: 'valve-loss allowance L in E_v, default 0'}
+          cylinders:
+            type: array
+            description: 'one entry per stage'
+            items:
+              type: object
+              required: [bore_m, stroke_m, rod_diameter_m]
+              properties:
+                n_cylinders: {type: integer, description: 'parallel cylinders, default 1'}
+                bore_m: {type: number, description: 'bore, m'}
+                stroke_m: {type: number, description: 'stroke, m'}
+                rod_diameter_m: {type: number, description: 'rod diameter, m'}
+                action: {type: string, enum: [double, single_head_end], description: 'default double'}
+                clearance: {type: number, description: 'clearance fraction, default 0.10'}
+          speed_rpm: {type: number, description: 'crank speed, rpm'}
+          z_ratio_correction: {type: boolean, description: 'Zs/Zd in volumetric efficiency, default true'}
+          capacity_control: {type: string, enum: [none, clearance_pocket], description: 'default none'}
+          P_crankcase_Pa: {type: number, description: 'crankcase pressure, Pa, default 101325'}
+          rod_load_limit_N:
+            type: object
+            properties:
+              compression: {type: number, description: 'allowable gas rod load in compression, N'}
+              tension: {type: number, description: 'allowable gas rod load in tension, N'}
+      note: per-stage cylinder capacity vs clearance (GPSA VE with Zs/Zd), clearance pocket, gas rod load
+      validation: []
       end_state: true
   pid_symbol: RC
   references:
   - docs/unit-catalogue-plan.md §2 U-B 3
-  notes: R0 isentropic stages with intercooling and a clearance-volume volumetric-efficiency report; rod load and capacity-vs-clearance remain roadmap.
+  notes: >-
+    R0 isentropic stages with intercooling and a clearance-volume
+    volumetric-efficiency report. R1 adds per-stage cylinder capacity vs
+    clearance (GPSA 13th ed. §13 VE with Zs/Zd), the closed-form clearance
+    pocket and API 618 §6.6 gas rod loads. V1 gap: GPSA 13th ed. §13 worked
+    examples, Bloch & Hoefner (1996) ch. 2–3, Ludwig Applied Process Design
+    vol. 3 4th ed. ch. 15 and Perry's 9th ed. §10 are citation only. Searched
+    2026-10-25: the only accessible Section 13 reproduction (GPA Midstream
+    public "Data Book Calculations", 14th ed. rev. 0 2017, Examples
+    13-1..13-5) prints BHP, discharge temperature, bottle volumes and
+    chart-read power — no VE or rod-load case with printed geometry — so no
+    V1 case is filed (U-R2: never invent a number).
 
 - id: compression_train
   name: Compression train
