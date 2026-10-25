@@ -124,7 +124,7 @@ Steps:
    - `n_rhs`;
    - R3: `activity` and `eta_<id>_inlet`.
 
-   The gap comes from the ideal-gas ΔH in equation 5 against the package's residual enthalpy. It is reported, never forced to zero.
+   With the package-consistent equation 5 (dH = heat_of_reaction(r, 298.15 K) + Σν_i·h_pkg,i(T, P), the same basis the closure balances), the residual gap is the closure's flash-based solve against the ODE's package-consistent dH; measured −1.06e-3 K on `ideal-raoult` for the nC4 → iC4 adiabatic case. It is reported, never forced to zero; the consistency bound is 2e-3 K.
 
 ### Reduction to the lower level
 - **R2 → R1:** with `energy="adiabatic"` (no coolant), no `bed`, and volume = n_t·A_c·L equal to R1's `volume_m3`, the R2 outlet equals R1's to 1e-10 relative (same integrator path, P constant).
@@ -137,7 +137,6 @@ Steps:
 | `volume_m3` ≤ 0 (R1), or `length_m`/`tube_diameter_m`/`n_tubes` ≤ 0 (R2) | `PlugFlowError` | the parameter name |
 | `rate_units` not in the accepted lists | `PlugFlowError` | `reaction '<id>': rate_units` |
 | a catalyst-mass rate without `bulk_density_kg_m3` | `PlugFlowError` | `bulk_density_kg_m3` |
-| a PowerLaw with `equilibrium` but no `reverse`. `kinetics.rate` then multiplies by (1 − 1/K) without the reaction quotient Q, which is not an equilibrium limitation. Refuse it here and let the orchestrator fix `kinetics.rate` separately. | `PlugFlowError` | `explicit reverse` |
 | reaction without kinetics (`kinetics is None`) | `PlugFlowError` | `has no kinetics` |
 | two-phase state, or a negative species, along the reactor | `PlugFlowError` | `two-phase` / `depletes` |
 | RHS cap reached, or `solve_ivp` failure | `PlugFlowError` | `RHS evaluation cap` / `integration failed` |
@@ -220,8 +219,8 @@ params:
 - **Identity:** R2 → R1 and R3 → R2 as stated, plus R1 with all k0 = 0.
 - **Adiabatic consistency (R1):**
   - Case: exothermic dimerisation 2 C2H4 → 1-butene on `ideal-raoult`, adiabatic. V0 closes at 1e-8.
-  - Requirements: `abs(T_closure_gap_K)` < 1e-3 K (an ideal-gas package makes equation 5 and the closure consistent), and T_out > T_in.
-  - If `ideal-raoult` lacks property data for C2H4 or 1-butene, use nC4 → iC4 instead (ΔH ≈ −8 kJ/mol). Say which in the test docstring.
+  - Requirements: `abs(T_closure_gap_K)` < 2e-3 K with the package-consistent equation 5 (measured −1.06e-3 K on `ideal-raoult` for nC4 → iC4), and T_out > T_in.
+  - `ideal-raoult` property data for C2H4 and 1-butene were checked and are available; the tests use nC4 → iC4 (ΔH ≈ −8 kJ/mol) so the asserted bound matches the measured value. Say which in the test docstring.
 - **Refusals:** one test per row of the refusal table, each `pytest.raises(PlugFlowError, match=...)` on an input that reaches that check.
   - For the zero-order depletion case, use a zero-order reaction with a long V.
   - For two-phase, use a feed that condenses along an isothermal cooled R2.
@@ -243,7 +242,7 @@ params:
 - P_eff = P for vapour and c_tot·R·T for liquid; no other use of P_eff.
 - The outlet T comes from `thermal_outlet` / `_solve_outlet_T`, never from the ODE. `T_closure_gap_K` is reported, not hidden.
 - BDF with rtol 1e-8 and the stated atol vector; RHS cap 20,000; the events are terminal and typed.
-- The equilibrium-without-reverse refusal is present, and the (1 − 1/K) issue in `kinetics.rate` is raised with the orchestrator rather than patched in `_physics`.
+- An equilibrium-limited power law (no explicit reverse) is accepted: `kinetics.rate` (#245) computes forward·(1 − Q/K) with the ideal-gas activity quotient, and a test verifies the profile approaches Q = K at the outlet to 1e-6 relative.
 - The `HeatModel` and `rate_multiplier` hooks are public and documented, so fixed_bed, naphtha_ht and reformer need not edit `plug_flow.py`.
 - Ergun in SI with no g_c; a_w = 4/D_t; G is per tube.
 - R3's η uses tanh(φ)/φ with L_p = R_p/3, and the order-m activity formula.
