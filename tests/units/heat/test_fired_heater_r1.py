@@ -468,9 +468,9 @@ def test_kern_19_1_radiant_section_documented() -> None:
 
     def balance(T_g: float) -> float:
         """Firebox balance, Eqs. 2 = 3 at the set n_f and T_t."""
-        flue_sensible = stoich["nu_fg"] * (h_vap(z_flue, T_g) - h_ref)
+        flue_sensible = float(stoich["nu_fg"]) * (h_vap(z_flue, T_g) - h_ref)
         q_rad, _ = radiant_transfer_W(139.3547, 0.635, T_g, t_tube, 280.9391, 11.3565267)
-        return (1.0 - 0.02) * lhv + stoich["nu_air"] * air_sensible - flue_sensible - q_rad / n_f
+        return (1.0 - 0.02) * lhv + float(stoich["nu_air"]) * air_sensible - flue_sensible - q_rad / n_f
 
     t_g = brentq(balance, t_tube + 1e-6, 3000.0, xtol=1e-12)
     q_rad, _ = radiant_transfer_W(139.3547, 0.635, t_g, t_tube, 280.9391, 11.3565267)
