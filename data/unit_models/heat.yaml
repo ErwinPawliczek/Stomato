@@ -245,6 +245,10 @@
     V2082 runs Kern Example 6.1's printed inputs (9,820 lb/h benzene, 6,330 lb/h
     toluene, 160 -> 100 F); measured duty 44,968 W (-8.1%) and benzene outlet
     +0.93 K are assessed against the book's chart cp values, not widened away.
+    R1 V1 gap: Kern 6.1's printed film coefficients and pressure drops
+    (Sieder-Tate chart basis) would need a primary-text transcription; none is
+    verified here, so no R1 V1 case is recorded - the closed-form correlation
+    tests and the R0-reduction identity carry the R1 verification.
 
 - id: multi_stream
   name: Multi-stream exchanger (LNG cold box)
