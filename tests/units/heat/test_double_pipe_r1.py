@@ -18,7 +18,7 @@ import pytest
 from ngdesign import registry
 from ngdesign.contracts import StreamState
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units._physics.heat_balance import TwoStreamSpec, two_stream
+from ngdesign.units._physics.heat_balance import TemperatureCross, TwoStreamSpec, two_stream
 from ngdesign.units.heat.double_pipe_r1 import (
     DoublePipeGeometryError,
     DoublePipeR1,
@@ -178,7 +178,7 @@ def test_temperature_cross_refuses() -> None:
     feeds, params = DoublePipeR1.example_case()
     hot = thermo.flash_pt({"N2": 1.0}, 320.0, 1.0e6, 100.0)
     cold = thermo.flash_pt({"N2": 1.0}, 500.0, 1.0e6, 100.0)
-    with pytest.raises(Exception, match="inlet temperatures"):
+    with pytest.raises(TemperatureCross, match="inlet temperatures"):
         DoublePipeR1().solve({"hot_in": hot, "cold_in": cold}, params, thermo)
 
 
