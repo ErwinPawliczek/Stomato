@@ -16,11 +16,16 @@ from __future__ import annotations
 
 import pytest
 
+from ngdesign.contracts import StreamState
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.units.separation.membrane import Membrane
 from ngdesign.units.separation.membrane_r1 import (
+    MembraneR1,
     MembraneR1SpecError,
     cross_flow,
     local_permeate,
 )
+from tests.conftest import flash_feed
 
 Z = {"O2": 0.209, "N2": 0.791}
 PI = {"O2": 5e-9, "N2": 5e-10}
@@ -130,3 +135,157 @@ def test_refuses_bad_area_and_stage_cut_values() -> None:
         cross_flow(F=F, z=Z, Pi=PI, P_h=P_H, P_l=1e5, stage_cut=0.0)
     with pytest.raises(MembraneR1SpecError, match="stage_cut"):
         cross_flow(F=F, z=Z, Pi=PI, P_h=P_H, P_l=1e5, stage_cut=1.0)
+
+
+# --- Adapter (level R1) tests -------------------------------------------------
+
+
+def _air_feed(thermo: Thermo) -> StreamState:
+    """The R0 example feed: Geankoplis Ex. 13.4-2 air basis (100 mol/s)."""
+    return flash_feed(
+        thermo,
+        {"T": 298.15, "P": 2.533125e5, "molar_flow": 100.0, "composition": {"O2": 0.209, "N2": 0.791}},
+    )
+
+
+def test_adapter_identity_r0_equal_permeances(thermo: Thermo) -> None:
+    """R1 -> R0: equal permeances reduce R1 to the R0 permeate_recovery split.
+
+    With Pi_i equal the local permeate y_i = x_i (M2: S = Pi (P_h - P_l)), every
+    component recovers the same fraction theta = 1 - exp(-Pi (P_h-P_l) A/F), and
+    R1 must equal R0's split by component at that theta to 1e-9 relative.
+    """
+    inlet = _air_feed(thermo)
+    r1 = MembraneR1().solve(
+        {"feed_in": inlet},
+        {
+            "permeances_mol_m2_s_Pa": {"O2": 1e-9, "N2": 1e-9},
+            "P_permeate": 2.533125e4,
+            "area_m2": 50.0,
+        },
+        thermo,
+    )
+    theta = r1.info["stage_cut"]
+    r0 = Membrane().solve(
+        {"feed_in": inlet},
+        {"permeate_recovery": {"O2": theta, "N2": theta}, "P_permeate": 2.533125e4},
+        thermo,
+    )
+    for port in ("permeate", "residue"):
+        a, b = r1.outlets[port], r0.outlets[port]
+        assert a.P == pytest.approx(b.P)
+        assert a.T == pytest.approx(b.T)
+        assert a.molar_flow == pytest.approx(b.molar_flow, rel=1e-9)
+        for cid in ("O2", "N2"):
+            n_a = a.molar_flow * a.composition[cid]
+            n_b = b.molar_flow * b.composition[cid]
+            assert n_a == pytest.approx(n_b, rel=1e-9)
+
+
+def test_adapter_cross_flow_beats_complete_mixing(thermo: Thermo) -> None:
+    """Unit-level: R1's permeate y_O2 exceeds R0's complete-mixing 0.5068.
+
+    Geankoplis Ex. 13.4-2 basis (air, pressure ratio 10, stage cut 0.2,
+    alpha = 10): cross-flow beats complete mixing. Balances: moles 1e-12,
+    energy 1e-8 (U-R2 rule).
+    """
+    inlet = _air_feed(thermo)
+    result = MembraneR1().solve(
+        {"feed_in": inlet},
+        {
+            "permeances_mol_m2_s_Pa": {"O2": 1e-8, "N2": 1e-9},
+            "P_permeate": 2.533125e4,
+            "stage_cut": 0.2,
+        },
+        thermo,
+    )
+    assert result.info["permeate_y_O2"] > 0.5068
+    n_in = inlet.molar_flow
+    n_out = sum(s.molar_flow for s in result.outlets.values())
+    assert n_out == pytest.approx(n_in, rel=1e-12)
+    h_in = inlet.enthalpy * inlet.molar_flow
+    h_out = sum(s.enthalpy * s.molar_flow for s in result.outlets.values())
+    assert result.duty_W == pytest.approx(h_out - h_in, rel=1e-8)
+    assert result.power_W == 0.0
+
+
+def test_adapter_stage_cut_not_achievable(thermo: Thermo) -> None:
+    """Refusal 'not achievable': the terminal event does not fire by A_hard.
+
+    Spec scenario deviation: the spec's P_h/P_l = 1.5 cannot refuse — with
+    P_l > 0 both components keep permeating, any theta < 1 is reachable given
+    area, and the event fires at A = 4587.6 m2 against A_hard = 6.59e5 m2
+    (SPEC ISSUE evidence on the PR). The cap binds only near unity: at
+    P_h/P_l = 1.001 the required area exceeds A_hard and the typed refusal
+    fires, which is the behaviour the row tests.
+    """
+    with pytest.raises(MembraneR1SpecError, match="not achievable"):
+        MembraneR1().solve(
+            {"feed_in": flash_feed(thermo, {"T": 298.15, "P": 1e6, "molar_flow": 1.0, "composition": Z})},
+            {
+                "permeances_mol_m2_s_Pa": {"O2": 5e-9, "N2": 5e-10},
+                "P_permeate": 1e6 / 1.001,
+                "stage_cut": 0.95,
+            },
+            thermo,
+        )
+
+
+def test_adapter_refuses_missing_or_bad_permeances(thermo: Thermo) -> None:
+    inlet = _air_feed(thermo)
+    with pytest.raises(MembraneR1SpecError, match="permeances_mol_m2_s_Pa"):
+        MembraneR1().solve(
+            {"feed_in": inlet}, {"P_permeate": 2.533125e4, "area_m2": 50.0}, thermo
+        )
+    with pytest.raises(MembraneR1SpecError, match="permeances_mol_m2_s_Pa"):
+        MembraneR1().solve(
+            {"feed_in": inlet},
+            {
+                "permeances_mol_m2_s_Pa": {"O2": 1e-9},
+                "P_permeate": 2.533125e4,
+                "area_m2": 50.0,
+            },
+            thermo,
+        )
+    with pytest.raises(MembraneR1SpecError, match="permeances_mol_m2_s_Pa"):
+        MembraneR1().solve(
+            {"feed_in": inlet},
+            {
+                "permeances_mol_m2_s_Pa": {"O2": 1e-9, "N2": -1e-9},
+                "P_permeate": 2.533125e4,
+                "area_m2": 50.0,
+            },
+            thermo,
+        )
+
+
+def test_adapter_refuses_bad_P_permeate(thermo: Thermo) -> None:
+    inlet = _air_feed(thermo)
+    good = {"permeances_mol_m2_s_Pa": {"O2": 1e-9, "N2": 1e-9}, "area_m2": 50.0}
+    with pytest.raises(MembraneR1SpecError, match="P_permeate"):
+        MembraneR1().solve({"feed_in": inlet}, {**good, "P_permeate": 0.0}, thermo)
+    with pytest.raises(MembraneR1SpecError, match="P_permeate"):
+        MembraneR1().solve({"feed_in": inlet}, {**good, "P_permeate": 2.533125e5}, thermo)
+
+
+def test_adapter_refuses_both_or_neither_area_and_stage_cut(thermo: Thermo) -> None:
+    inlet = _air_feed(thermo)
+    base = {
+        "permeances_mol_m2_s_Pa": {"O2": 1e-9, "N2": 1e-9},
+        "P_permeate": 2.533125e4,
+    }
+    with pytest.raises(MembraneR1SpecError, match="area_m2"):
+        MembraneR1().solve({"feed_in": inlet}, {**base, "area_m2": 50.0, "stage_cut": 0.2}, thermo)
+    with pytest.raises(MembraneR1SpecError, match="area_m2"):
+        MembraneR1().solve({"feed_in": inlet}, dict(base), thermo)
+
+
+def test_adapter_refuses_bad_area_and_stage_cut_values(thermo: Thermo) -> None:
+    inlet = _air_feed(thermo)
+    base = {"permeances_mol_m2_s_Pa": {"O2": 1e-9, "N2": 1e-9}, "P_permeate": 2.533125e4}
+    with pytest.raises(MembraneR1SpecError, match="area_m2"):
+        MembraneR1().solve({"feed_in": inlet}, {**base, "area_m2": -1.0}, thermo)
+    with pytest.raises(MembraneR1SpecError, match="stage_cut"):
+        MembraneR1().solve({"feed_in": inlet}, {**base, "stage_cut": 1.0}, thermo)
+    with pytest.raises(MembraneR1SpecError, match="stage_cut"):
+        MembraneR1().solve({"feed_in": inlet}, {**base, "stage_cut": 0.0}, thermo)

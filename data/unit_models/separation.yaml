@@ -309,9 +309,21 @@
         x_O2 = 0.1345); the permeate_recovery path is a spec split with V0
         self-consistency only.
     R1:
-      status: planned
-      params: {}
-      note: solution-diffusion with permeances, cross-flow
+      status: provisional
+      adapter: ngdesign.units.separation.membrane_r1:MembraneR1
+      params:
+        type: object
+        required: [permeances_mol_m2_s_Pa, P_permeate]
+        properties:
+          permeances_mol_m2_s_Pa: {type: object, description: 'component id to permeance, mol/(m2 s Pa) (1 GPU = 3.348e-10); every feed component required'}
+          P_permeate: {type: number, exclusiveMinimum: 0, description: 'permeate-side absolute pressure, Pa'}
+          area_m2: {type: number, exclusiveMinimum: 0, description: 'membrane area, m2 (rating mode)'}
+          stage_cut: {type: number, exclusiveMinimum: 0, exclusiveMaximum: 1, description: 'target permeate/feed molar ratio (design mode; area is solved)'}
+      note: solution-diffusion with permeances, cross-flow (Weller-Steiner 1950,
+        Pan 1983) with the local permeate y_i = J_i/ΣJ from a bracketed brentq
+        (closed form at P_l = 0) and the feed side dn_i/da = -J_i integrated
+        DOP853 at rtol 1e-11; stage-cut mode by a terminal event with the
+        A_hard cap; isothermal outlets via split_by_component as in R0.
     R2:
       status: planned
       params: {}
