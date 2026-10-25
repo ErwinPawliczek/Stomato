@@ -114,9 +114,7 @@ def test_identity_r1_matches_r0_on_its_own_fractions(thermo: Thermo) -> None:
     inlets = _identity_inlets(thermo)
     r1 = HydrocycloneR1().solve(inlets, _identity_params(), thermo)
     fractions = {cid: r1.info[f"underflow_fraction_{cid}"] for cid in inlets["inlet"].composition}
-    r0 = Hydrocyclone().solve(
-        inlets, {"underflow_fractions": fractions, "dP": r1.info["dP_Pa"]}, thermo
-    )
+    r0 = Hydrocyclone().solve(inlets, {"underflow_fractions": fractions, "dP": r1.info["dP_Pa"]}, thermo)
     assert r1.outlets == r0.outlets
     assert r1.duty_W == r0.duty_W
 
@@ -210,7 +208,8 @@ def test_refuses_unavailable_fluid_viscosity(thermo: Thermo) -> None:
     inlets = {"inlet": inlet.model_copy(update={"phases": dry_phases})}
     p = _identity_params()
     p.pop("fluid_viscosity_Pa_s", None)
-    _refuse(thermo, p, "fluid_viscosity_Pa_s")
+    with pytest.raises(HydrocycloneR1SpecError, match="fluid_viscosity_Pa_s"):
+        HydrocycloneR1().solve(inlets, p, thermo)
 
 
 def test_k_inlet_default_is_16() -> None:
