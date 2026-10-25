@@ -344,8 +344,8 @@ def test_solve_routed_through_graph_ns_matches_dense_ns(
 ) -> None:
     """Solve-level parity (S0-1c step 2 acceptance): a one-tear kettle
     stripper routed through the graph NS by the test-only switch lands on the
-    dense NS result to the solver's exit scale (measured: x <= 2.4e-9,
-    T <= 1.1e-8, V[0] <= 5.3e-8 across stages - see the per-block notes). The dense
+    dense NS result to the solver's exit scale (measured: x <= 1.2e-8,
+    T <= 1.1e-8, V <= 6.9e-8 across stages - see the per-block notes). The dense
     solve runs FIRST, unpatched; the graph run then switches the mesh's NS
     entry point. Call counters prove exactly one dense and one graph NS call,
     so the comparison is between the two engines - not the graph engine with
@@ -387,7 +387,7 @@ def test_solve_routed_through_graph_ns_matches_dense_ns(
         for cid in col_dense.comps:
             a, b = prof_dense.x[j][cid], prof_graph.x[j][cid]
             rel = abs(a - b) / max(abs(a), abs(b))
-            # Measured spread across stages: 1.3e-10 to 2.4e-9 - the solver
+            # Measured spread across runs: 1.3e-10 to 1.2e-8 - the solver
             # exits at its own tolerance scale, so 1e-7 bounds the observed
             # distribution with margin without hiding an engine mismatch.
             assert rel <= 1e-7, f"x[{j}][{cid}] rel {rel:.3e}"
@@ -399,7 +399,7 @@ def test_solve_routed_through_graph_ns_matches_dense_ns(
         # V converges to the mesh polish's exit tolerance, not machine
         # precision: both runs exit their NS at a gate-level state and the
         # same inside-out polish terminates each at ITS OWN gate-tolerance
-        # fixed point (measured: worst V[0] rel 5.3e-8 with the shared
+        # fixed point (measured: worst V rel 6.9e-8 with the shared
         # controller, 6.9e-8 before it; x and T land near 1e-9 because
         # their rows are anchored by the summation closure the polish drives
         # to machine zero, while V rides the H row's anchor floor). The
