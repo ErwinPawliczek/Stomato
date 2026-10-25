@@ -325,9 +325,13 @@ class TestNaphthaHydrotreater:
                 _reaction("bzs", {"benzene": -1.0, "H2": -3.0, "cyclohexane": 1.0}, "benzene"),
             ),
         )
+        # ΔrH at the stream state = ΔrH°298 + Σν·H_pkg(T): the package enthalpy is
+        # zero for each species as an ideal gas at 298.15 K and carries the
+        # sensible heat itself, so the formation term is taken at 298.15 K
+        # (heat_of_reaction(r, T) would add ∫ΔrCp a second time; issue #247).
         duty_expected = 0.0
         for extent, reaction in extents:
-            delta_r_h = heat_of_reaction(reaction, T) + sum(
+            delta_r_h = heat_of_reaction(reaction, 298.15) + sum(
                 nu * h_pure[cid] for cid, nu in reaction.stoichiometry.items()
             )
             duty_expected += extent * delta_r_h
