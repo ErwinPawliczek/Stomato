@@ -52,6 +52,7 @@ __all__ = [
     "ScrubberR1SpecError",
     "carryover_mass_flow",
     "cut_diameter_m",
+    "liquid_density_kg_m3",
     "rosin_rammler_fines",
     "size_gas_section",
     "york_K_m_s",
@@ -224,16 +225,22 @@ def _mass_flow(stream: StreamState) -> float:
     return stream.molar_flow * sum(p.mole_fraction * p.molecular_weight for p in stream.phases) / 1000.0
 
 
-def _liquid_density(stream: StreamState) -> float:
-    """Mass-weighted volumetric mean liquid density [kg/m3] (spec step 3)."""
+def liquid_density_kg_m3(*streams: StreamState) -> float:
+    """Mass-weighted volumetric mean liquid density [kg/m3] (spec step 3).
+
+    Accepts one or more liquid streams: the weighting runs over every liquid
+    phase of every stream, so callers with several liquid outlets (flash_drum
+    R1) get the combined mean from this single owner instead of copying it.
+    """
     mass = 0.0
     volume = 0.0
-    for p in stream.phases:
-        if p.kind is PhaseKind.VAPOR:
-            continue
-        m_phase = p.mole_fraction * stream.molar_flow * p.molecular_weight / 1000.0
-        mass += m_phase
-        volume += m_phase / p.density
+    for stream in streams:
+        for p in stream.phases:
+            if p.kind is PhaseKind.VAPOR:
+                continue
+            m_phase = p.mole_fraction * stream.molar_flow * p.molecular_weight / 1000.0
+            mass += m_phase
+            volume += m_phase / p.density
     return mass / volume
 
 
@@ -312,7 +319,7 @@ class ScrubberR1:
         Q_G = _mass_flow(gas0) / rho_G
 
         # Step 3: mass-weighted volumetric mean liquid density.
-        rho_L = _liquid_density(liq0)
+        rho_L = liquid_density_kg_m3(liq0)
 
         # Step 4: K from the param or the York fit at the drum pressure.
         K = float(K_param) if K_param is not None else york_K_m_s(gas0.P)

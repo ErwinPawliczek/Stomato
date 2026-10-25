@@ -32,6 +32,7 @@ from ngdesign.units.separation.scrubber_r1 import (
     ScrubberR1SpecError,
     carryover_mass_flow,
     cut_diameter_m,
+    liquid_density_kg_m3,
     rosin_rammler_fines,
     size_gas_section,
     york_K_m_s,
@@ -150,6 +151,43 @@ class TestCF5Carryover:
         cut = cut_diameter_m(0.3183098861837907, 600.0, 30.0, 1.2e-5)
         F = rosin_rammler_fines(cut["d_cut_m"], 400e-6, 2.5)
         assert carryover_mass_flow(10.0, 0.02, F) == pytest.approx(0.0745033996, rel=1e-8)
+
+
+class TestLiquidDensityHelper:
+    """The public multi-stream liquid-density helper (orchestrator addendum).
+
+    flash_drum R1 imports this helper for the mass-weighted volumetric mean
+    over the liquid phases of TWO outlets, so it takes *streams and weights
+    across streams, not just within one.
+    """
+
+    @staticmethod
+    def _mass_kg_s(stream: StreamState) -> float:
+        return sum(p.mole_fraction * stream.molar_flow * p.molecular_weight for p in stream.phases) / 1000.0
+
+    def test_multi_stream_weights_across_streams(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        r0 = _r0(thermo, inlets)
+        a = r0.outlets["liquid_out"]
+        # A second liquid stream with a genuinely different density.
+        b = flash_feed(
+            thermo,
+            {"T": 293.15, "P": 3.447e6, "molar_flow": 500.0, "composition": {"nC10": 1.0}},
+        )
+        d_a = liquid_density_kg_m3(a)
+        d_b = liquid_density_kg_m3(b)
+        assert d_a > 0 and d_b > 0
+        m_a = self._mass_kg_s(a)
+        m_b = self._mass_kg_s(b)
+        combined = liquid_density_kg_m3(a, b)
+        assert combined == pytest.approx((m_a + m_b) / (m_a / d_a + m_b / d_b), rel=1e-12)
+
+    def test_single_stream_unchanged_by_variadic_form(self, thermo: Thermo) -> None:
+        inlets = _inlets(thermo)
+        r0 = _r0(thermo, inlets)
+        a = r0.outlets["liquid_out"]
+        doubled = a.model_copy(update={"molar_flow": 2.0 * a.molar_flow})
+        assert liquid_density_kg_m3(a, doubled) == pytest.approx(liquid_density_kg_m3(a), rel=1e-12)
 
 
 # --- adapter (spec steps 2, 8, 9) ------------------------------------------
