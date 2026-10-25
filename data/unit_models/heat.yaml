@@ -325,9 +325,32 @@
       note: process duty from a T_out/duty_W spec; fuel demand from the mixture LHV with
         water as vapour
     R1:
-      status: planned
-      params: {}
-      note: radiant/convective split (Lobo-Evans)
+      status: provisional
+      adapter: ngdesign.units.heat.fired_heater_r1:FiredHeaterR1
+      params:
+        type: object
+        required: [fuel_composition, excess_air_frac, alpha_Acp_m2, exchange_factor,
+                   tube_area_radiant_m2, tube_wall_excess_K, UA_convection_W_K]
+        properties:
+          T_out: {type: number, description: 'outlet temperature spec, K (one of T_out/duty_W)'}
+          duty_W: {type: number, description: 'duty spec, W (one of T_out/duty_W)'}
+          dP: {type: number, description: 'coil pressure drop, Pa'}
+          fuel_composition: {type: object, description: 'fuel component-id map; required at R1'}
+          excess_air_frac: {type: number, description: 'excess air fraction over stoichiometric'}
+          air_composition: {type: object, description: 'air mole fractions, default N2 0.79 / O2 0.21'}
+          air_T_K: {type: number, description: 'combustion air temperature, K, default 298.15'}
+          box_P_Pa: {type: number, description: 'firebox pressure, Pa, default 101325'}
+          alpha_Acp_m2: {type: number, description: 'Lobo-Evans alpha*A_cp, m2'}
+          exchange_factor: {type: number, description: 'Lobo-Evans overall exchange factor, (0, 1]'}
+          tube_area_radiant_m2: {type: number, description: 'radiant tube outside area, m2'}
+          h_conv_radiant_W_m2K: {type: number, description: 'radiant-section convection, W/(m2 K), default 11.3565267'}
+          tube_wall_excess_K: {type: number, description: 'tube wall above mean radiant process T, K'}
+          UA_convection_W_K: {type: number, description: 'convection-section UA, W/K'}
+          radiant_loss_frac: {type: number, description: 'setting loss fraction of fired heat, default 0'}
+      validation:
+      - V2105
+      note: radiant/convective split (Lobo-Evans) with the fuel and flue-gas balance
+        solved; bridgewall, stack and crossover temperatures reported
       end_state: true
   pid_symbol: FH
   references:
