@@ -148,28 +148,100 @@ def test_graph_residual_matches_dense_on_linear_column(thermo: Thermo) -> None:
         assert a == b, f"row {row}: graph {a!r} != dense {b!r}"
 
 
-def test_interlink_mass_balance_shared_term(thermo: Thermo) -> None:
-    """Acceptance: on a hand-built one-stripper graph the assembled residual
-    machinery carries each interlink as ONE shared term - the component mass
-    leaving the draw stage equals the mass entering the stripper's top stage,
-    to 1e-12 (they are the same term, not two computed ones)."""
-    col, tb = _build(_one_stripper_params(), thermo)
+def test_whole_unit_component_conservation_on_residual_rows(thermo: Thermo) -> None:
+    """Whole-unit component conservation on the ASSEMBLED residual rows
+    (S0-1c step 2 acceptance): at an arbitrary, NON-converged two-stripper
+    state, the sum of each component's unscaled M-balance rows over every
+    graph stage equals the external feeds (main column + section steam)
+    minus the external products, to 1e-12 relative - the distillate (the
+    total condenser's net overhead, V_top - reflux, at the top-stage
+    equilibrium composition), the main bottom liquid, and each section's
+    bottom liquid (its product). This proves the draw and vapour-return
+    terms cancel with the right signs and stages: every internal stream
+    (cascade liquid and vapour, the liquid interlinks, the vapour returns)
+    leaves the sum, so the check is on the assembled rows, not on a
+    recomputed term."""
+    col, tb = _build(_two_stripper_params(), thermo)
     prof = _seed_profile(col, tb, *_temperature_seed(col, tb))
     _extend_profile_to_graph(col, prof)
     model = _graph_model(col)
     u = _graph_pack(prof, model)
     xs, ts, vs, draw_flows = _graph_unpack(model, u, None)
-    links = _graph_interlink_terms(model, xs, draw_flows)
+    nc = len(col.comps)
+    g = model.layout.n_graph
 
-    assert len(links) == 1
-    draw_stage = model.draw_stage_of_link[0]
-    for cid in col.comps:
-        leaving = draw_flows[0] * xs[draw_stage].get(cid, 0.0)
-        drawn = links[0]["from_stage"][cid]
-        entering = links[0]["to_stage"][cid]
-        assert abs(leaving - drawn) <= 1e-12
-        assert abs(entering - drawn) <= 1e-12
-    assert draw_flows[0] >= 1e-9
+    # Unscaled M rows: unit per-M-row scales (the residual divides each M row
+    # by scales[s * nc + i]; H rows carry their own fixed scale, not summed).
+    r = _graph_residual_vector(model, tb, prof.l0, xs, ts, vs, draw_flows, scales=[1.0] * (g * nc))
+    ranges = _stage_row_ranges(model)
+    row_sums = [sum(r[ranges[s][0] + i] for s in range(g)) for i in range(nc)]
+
+    # External feeds, exactly as the rows read them (stage feed parts over
+    # the whole graph: main-column feeds + section steam).
+    feed = [0.0] * nc
+    for part in model.feeds:
+        for i, cid in enumerate(col.comps):
+            feed[i] += part.l_flow * part.x.get(cid, 0.0) + part.v_flow * part.y.get(cid, 0.0)
+
+    # External products. The distillate composition is the top stage's
+    # equilibrium y = K*x, read through the same candidate chain the rows
+    # use (stage K, then k_estimate) - the IDENTITY tested here is which
+    # streams, at which stages, with which signs, not the K model.
+    liquid = _graph_liquid_profile(model, prof.l0, vs, draw_flows)
+    feed_part, draw_total = _graph_k_args(model, 0)
+    k_top = _stage_k_values(
+        col, tb, 0, xs[0], {}, ts[0], liquid[0], vs[0], feed_part=feed_part, draw_total=draw_total
+    ) or tb.k_estimate(_flash_ready(xs[0], col.feed_comp), ts[0], col.pressures[0])
+    assert k_top is not None
+    y_top = _graph_y_eq(k_top, xs[0])
+    products = [0.0] * nc
+    for i, cid in enumerate(col.comps):
+        products[i] += (vs[0] - prof.l0) * y_top.get(cid, 0.0)  # distillate
+        products[i] += liquid[col.n - 1] * xs[col.n - 1].get(cid, 0.0)  # kettle bottom
+    for _k, _top, bottom, _rate in model.section_total_rows:
+        for i, cid in enumerate(col.comps):
+            products[i] += liquid[bottom] * xs[bottom].get(cid, 0.0)  # section product
+    # No other external draws in this fixture: the stripper draws are the
+    # interlinks themselves (internal to the graph).
+    assert not any(col.draw_l) and not any(col.draw_v)
+
+    feed_mag = max(abs(v) for v in feed) or 1.0
+    worst = 0.0
+    for i, cid in enumerate(col.comps):
+        expect = feed[i] - products[i]
+        rel = abs(row_sums[i] - expect) / max(abs(expect), feed_mag)
+        worst = max(worst, rel)
+        assert rel <= 1e-12, (
+            f"component {cid}: summed M rows {row_sums[i]:.3e} vs "
+            f"feeds - products {expect:.3e} (rel {rel:.3e})"
+        )
+    print(f"whole-unit component conservation: worst relative deviation {worst:.3e}")
+
+
+def test_graph_dt_clamp_inactive_on_linear_columns(thermo: Thermo) -> None:
+    """The graph-only per-pass dT clamp is a no-op on a linear column (no
+    sections) and active on the two-stripper graph - the shared controller's
+    one graph-only safeguard, gated so the dense-path steps stay untouched."""
+    from ngdesign.units.column.graph_ns import _GraphNSEngine, _NS_MAX_DT
+
+    col_lin, tb_lin = _build(_linear_params(), thermo)
+    prof_lin = _seed_profile(col_lin, tb_lin, *_temperature_seed(col_lin, tb_lin))
+    model_lin = _graph_model(col_lin)
+    eng_lin = _GraphNSEngine(col_lin, tb_lin, prof_lin, None, model_lin, 1e-7)
+    step = [0.0] * model_lin.layout.n_unk
+    step[model_lin.layout.t_base] = 1000.0 * _NS_MAX_DT
+    eng_lin.cap_step(step)
+    assert step[model_lin.layout.t_base] == 1000.0 * _NS_MAX_DT  # untouched
+
+    col_two, tb_two = _build(_two_stripper_params(), thermo)
+    prof_two = _seed_profile(col_two, tb_two, *_temperature_seed(col_two, tb_two))
+    _extend_profile_to_graph(col_two, prof_two)
+    model_two = _graph_model(col_two)
+    eng_two = _GraphNSEngine(col_two, tb_two, prof_two, None, model_two, 1e-7)
+    step_two = [0.0] * model_two.layout.n_unk
+    step_two[model_two.layout.t_base] = 1000.0 * _NS_MAX_DT
+    eng_two.cap_step(step_two)
+    assert step_two[model_two.layout.t_base] == _NS_MAX_DT  # clamped
 
 
 def test_jacobian_evaluation_count_is_colour_bounded(thermo: Thermo) -> None:

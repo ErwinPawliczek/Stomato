@@ -91,17 +91,20 @@ class _Interlink:
 
     Stages are 0-based graph indices (the records are consumed by the
     solver's unknown packing, not by user-facing numbering). ``phase`` is
-    ``"liquid"`` for a stripper draw (main stage -> section top stage; its
-    flow is an unknown of the coupled solve, at ``flow_index``) or
+    ``"liquid"`` for a stripper draw (main stage -> section top stage) or
     ``"vapour"`` for the stripped overhead return (section top stage ->
-    main stage; its flow is the top stage's own vapour, so ``flow_index``
-    is None).
+    main stage). Neither flow is a Newton unknown: the vapour return's flow
+    is the section top stage's own vapour, and a liquid draw is DERIVED from
+    its section's total balance (draw = returned vapour + product - section
+    feeds; the product-rate spec pins it exactly - see ``_GraphLayout`` and
+    ``_graph_unpack``). Should a future step add a stripper spec that is not
+    a product rate, the draw becomes a tear again and the layout grows a
+    draw block; the record then gains the slot index pointing at it.
     """
 
     from_stage: int
     to_stage: int
     phase: str
-    flow_index: int | None
 
 
 @dataclass
@@ -371,16 +374,15 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
 def _build_interlinks(col: _Column) -> list[_Interlink]:
     """The graph's interlink records, in section order (S0-1c step 2).
 
-    The unknown-vector layout of the graph Naphtali-Sandholm solve is fixed
-    here: ``[x per graph stage][T per graph stage][V per free stage][one draw
-    flow per stripper section]`` - the x/T/V blocks mirror the dense packing
-    over ``n_graph`` stages, and each liquid draw link's ``flow_index`` points
-    at its slot in the appended draw block. The vapour return's flow is its
-    stage's own vapour, so its ``flow_index`` is None. A linear column has no
-    sections and no interlinks.
+    The unknown-vector layout of the graph Naphtali-Sandholm solve is
+    ``[x per graph stage][T per graph stage][V per free stage]`` - the x/T/V
+    blocks mirror the dense packing over ``n_graph`` stages, with NO draw
+    block: a liquid draw is derived from its section's total balance (draw =
+    returned vapour + product - section feeds; the product-rate spec pins it
+    exactly), so no draw-flow unknown exists and no record points past the
+    unknown vector. The vapour return's flow is the section top stage's own
+    vapour. A linear column has no sections and no interlinks.
     """
-    main_tears = (1 if col.condenser == "partial" else 0) + (1 if col.reboiler == "kettle" else 0)
-    draw_index = col.n_graph * len(col.comps) + col.n_graph + (col.n_graph - main_tears)
     out: list[_Interlink] = []
     for sec in col.sections:
         if not sec.stages:
@@ -390,16 +392,13 @@ def _build_interlinks(col: _Column) -> list[_Interlink]:
                 from_stage=sec.draw_stage - 1,
                 to_stage=sec.stages[0] - 1,
                 phase="liquid",
-                flow_index=draw_index,
             )
         )
-        draw_index += 1
         out.append(
             _Interlink(
                 from_stage=sec.stages[0] - 1,
                 to_stage=sec.return_stage - 1,
                 phase="vapour",
-                flow_index=None,
             )
         )
     return out

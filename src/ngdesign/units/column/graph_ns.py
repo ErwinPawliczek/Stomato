@@ -3,9 +3,10 @@
 S0-1c step 2 (issue #235). The dense fallback in ``naphtali_sandholm.py`` keeps
 the linear columns byte-identical and is untouched; this module carries the same
 unknown packing (x, T, V per stage, with the kettle boilup pinned by the tear)
-extended over the whole graph (``col.n_graph`` stages) plus one draw-flow
-unknown per stripper section, whose slot each liquid interlink record
-(``_Interlink.flow_index``) points at. Rows are the same live residual algebra
+extended over the whole graph (``col.n_graph`` stages), with NO draw block:
+stripper draw flows are derived from their sections' total balances (draw =
+section-top vapour + product - section feeds; the product-rate spec pins
+each exactly). Rows are the same live residual algebra
 per stage - one M balance per component, the canonical NS summation row, an H
 row on every duty-bearing stage - with the interlink terms added: the draw
 leaves the main stage as an extra liquid outflow at the draw stage's
@@ -21,8 +22,10 @@ colour group at once. Within a cascade a stage's rows depend on its own and its
 neighbours' x and T, so stages three or more cascade links apart share a colour;
 interlink adjacency (draw stage, section top, return stage) is honoured the same
 way. Vapour-flow perturbations reach one stage further through the liquid
-recursion and are coloured separately. The draw-flow unknowns act on every row
-at and below their draw stage, so each is perturbed alone. The count of residual
+recursion and are coloured separately, and a section top's vapour flow
+carries its section's DERIVED draw with it (the draw is a function of that
+vapour flow), so its perturbation reach includes every row the draw feeds.
+The count of residual
 evaluations per Jacobian is therefore bounded by the colour count times the
 variables per stage - not by the unknown count. The step solves with a
 ``scipy.sparse`` LU factorisation of the (block-sparse) Jacobian.
@@ -99,7 +102,8 @@ class _GraphLayout:
     nc: int
     #: Graph stage indices whose vapour flow is a solve unknown (0-based).
     v_free: list[int]
-    #: Liquid interlinks in record order (the draw-flow unknown block).
+    #: Liquid interlinks in record order (the draw flows are DERIVED, not
+    #: unknowns - no draw block exists).
     draw_links: list[_Interlink]
     t_base: int
     v_base: int
