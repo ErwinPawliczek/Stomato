@@ -127,7 +127,6 @@ def _example_inlets(thermo: Any) -> tuple[dict[str, Any], dict[str, Any]]:
     return inlets, params
 
 
-@pytest.mark.xfail(strict=True, reason="flash_ps pure two-phase: #310")
 def test_example_case_rates(thermo: Any) -> None:
     """The R0 basis rates to a discharge between the suction and motive pressures."""
     inlets, params = _example_inlets(thermo)
@@ -144,7 +143,6 @@ def test_example_case_rates(thermo: Any) -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, reason="flash_ps pure two-phase: #310")
 def test_identity_with_r0(thermo: Any) -> None:
     """R0 run at R1's computed P_out and achieved entrainment gives the identical outlet."""
     inlets, params = _example_inlets(thermo)
@@ -158,7 +156,6 @@ def test_identity_with_r0(thermo: Any) -> None:
     assert out_r1.enthalpy == pytest.approx(out_r0.enthalpy, rel=1e-12)
 
 
-@pytest.mark.xfail(strict=True, reason="flash_ps pure two-phase: #310")
 def test_p_out_required_reporting(thermo: Any) -> None:
     """P_out_required only reports: the outlet stays at the computed discharge."""
     inlets, params = _example_inlets(thermo)
@@ -215,10 +212,21 @@ def test_refuse_no_nozzle_drop() -> None:
         )
 
 
-@pytest.mark.xfail(strict=True, reason="flash_ps pure two-phase: #310")
 def test_refuse_discharge_above_motive(thermo: Any) -> None:
-    """With perfect efficiencies the example's kinetic energy would recompress above Pp."""
-    inlets, _ = _example_inlets(thermo)
+    """With perfect efficiencies the kinetic energy would recompress above Pp.
+
+    Basis found by search: on R0's example basis even perfect efficiencies stay
+    below the motive pressure; a 5 MPa / 500 K motive on a 20 kPa suction is a
+    measured case where ``g(Pp) < 0`` and the refusal fires.
+    """
+    feeds = {
+        "motive_in": {"T": 500.0, "P": 5.0e6, "molar_flow": 146.873, "composition": {"H2O": 1.0}},
+        "suction_in": {"T": 300.0, "P": 2.0e4, "molar_flow": 48.958, "composition": {"H2O": 1.0}},
+    }
+    inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
+    defaults = {"eta_nozzle": 0.95, "phi_mix": 0.85, "eta_diffuser": 0.85}
+    rated = EjectorR1().solve(inlets, defaults, thermo)
+    assert inlets["suction_in"].P < rated.info["P_out_Pa"] < inlets["motive_in"].P
     perfect = {"eta_nozzle": 1.0, "phi_mix": 1.0, "eta_diffuser": 1.0}
     with pytest.raises(EjectorR1Error, match="exceeds the motive pressure"):
         EjectorR1().solve(inlets, perfect, thermo)
