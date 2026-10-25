@@ -49,7 +49,7 @@ def _phase_viscosity(stream: StreamState, i: int, thermo: Thermo) -> float:
     if phase.viscosity is not None:
         return phase.viscosity
     props = thermo.phase_props(
-        dict(stream.mole_fractions), stream.T, stream.P, phase.kind
+        dict(stream.composition), stream.T, stream.P, phase.kind
     )
     if props.viscosity is None:
         raise ReliefValveR2Error(
@@ -289,7 +289,7 @@ class ReliefValveR2(ReliefValveR1):
         enthalpy; the loss is evaluated at that state's density and viscosity.
         Converged when |delta| <= 1e-8 max(dP, 1 Pa); refused at 50 passes.
         """
-        z = dict(inlet.mole_fractions)
+        z = dict(inlet.composition)
         dP = 0.0
         for _ in range(_fixed_point_cap()):
             P_mean = P_back + dP / 2.0

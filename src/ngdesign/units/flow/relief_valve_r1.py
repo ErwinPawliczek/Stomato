@@ -223,16 +223,16 @@ class ReliefValveR1(ReliefValve):
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, Any], dict[str, Any]]:
-        """A two-phase propane/n-butane basis at 20 % vapour fraction."""
+        """A 50/50 C3/nC4 basis flashed inside its two-phase envelope at 300 K."""
         feeds = {
             "inlet": {
                 "composition": {"C3": 0.5, "nC4": 0.5},
                 "molar_flow": 100.0,
-                "vapour_fraction": 0.2,
-                "P": 2.0e6,
+                "T": 300.0,
+                "P": 5.0e5,
             }
         }
-        params: dict[str, Any] = {"P_back": 6.0e5}
+        params: dict[str, Any] = {"P_back": 2.5e5}
         return feeds, params
 
     def solve(
