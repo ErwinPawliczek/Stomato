@@ -279,11 +279,17 @@ def _solve_column_full(
             j = first.stage - 1
             comp = prof.y[j] if first.vapor else prof.x[j]
             side_draw = tb.pt(comp, prof.T[j], col.pressures[j], first.flow)
+            # Review item 1, PR #239: every boundary outlet takes part in the
+            # whole-unit energy balance. A draw left out of ``out_states``
+            # folds its enthalpy silently into ``prof.qr``.
+            out_states.append(side_draw)
             for extra in orig_draws[1:]:
                 assert extra.flow is not None
                 je = extra.stage - 1
                 comp_e = prof.y[je] if extra.vapor else prof.x[je]
-                internal[f"side_draw:{extra.name}"] = tb.pt(comp_e, prof.T[je], col.pressures[je], extra.flow)
+                extra_state = tb.pt(comp_e, prof.T[je], col.pressures[je], extra.flow)
+                out_states.append(extra_state)
+                internal[f"side_draw:{extra.name}"] = extra_state
         else:
             side_draw = _zero_flow_state(bottoms.composition, prof.T[col.n - 1], col.pressures[col.n - 1])
 
