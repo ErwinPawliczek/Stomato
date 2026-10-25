@@ -142,10 +142,16 @@ class ThermoSurfaceMixin:
 
     def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:
         """PH flash: solve T from pressure P (Pa abs) and enthalpy H (J/mol)."""
+        dome = _state.pure_fluid_dome(self, z, molar_flow, P, H=H)
+        if dome is not None:
+            return dome
         return _state.run_flash(self._flasher(z), z, molar_flow, P=P, H=H)
 
     def flash_ps(self, z: dict[str, float], P: float, S: float, molar_flow: float) -> StreamState:
         """PS flash: solve T from pressure P (Pa abs) and entropy S (J/(mol K))."""
+        dome = _state.pure_fluid_dome(self, z, molar_flow, P, S=S)
+        if dome is not None:
+            return dome
         return _state.run_flash(self._flasher(z), z, molar_flow, P=P, S=S)
 
     def flash_tvf(self, z: dict[str, float], T: float, vf: float, molar_flow: float) -> StreamState:
