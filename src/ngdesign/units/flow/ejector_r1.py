@@ -123,9 +123,7 @@ def ejector_core(
         return h_at_PS_mix(P, s_m) - target
 
     if g(P_hi) < 0.0:
-        raise EjectorR1Error(
-            f"computed discharge exceeds the motive pressure {P_hi} Pa; check efficiencies"
-        )
+        raise EjectorR1Error(f"computed discharge exceeds the motive pressure {P_hi} Pa; check efficiencies")
     try:
         P_out = brentq(g, Ps, P_hi, xtol=1e-9 * Ps, rtol=4 * sys.float_info.epsilon, maxiter=100)
     except (ValueError, RuntimeError) as exc:

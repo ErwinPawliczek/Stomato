@@ -134,9 +134,7 @@ def test_example_case_rates(thermo: Any) -> None:
     result = EjectorR1().solve(inlets, params, thermo)
     P_out = result.info["P_out_Pa"]
     assert inlets["suction_in"].P < P_out < inlets["motive_in"].P
-    assert result.info["compression_ratio"] == pytest.approx(
-        P_out / inlets["suction_in"].P, rel=1e-12
-    )
+    assert result.info["compression_ratio"] == pytest.approx(P_out / inlets["suction_in"].P, rel=1e-12)
     assert result.info["entrainment_kg_kg"] == pytest.approx(
         inlets["suction_in"].mass_flow / inlets["motive_in"].mass_flow, rel=1e-12
     )
