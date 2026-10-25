@@ -71,30 +71,27 @@ _STEAM_CID = "H2O"
 _ISOTHALPIC_MAX = 100
 
 #: Per-driver stop tolerances, in the residual's own units. Rate specs stop
-#: on relative error. 1e-6 sits just above the MEASURED warm-start mesh
-#: noise floor (return/product flows reproduce to ±5e-7 mol/s on the
-#: steam-stripper case): a 1e-10 relative rate stop demands 8e-10 mol/s
-#: absolute on that case - three orders below the noise floor, so the
-#: secant chases iterate noise forever (measured: it stalls at 94x the
-#: stop with the product already correct to 9e-9 RELATIVE, well inside the
-#: spec's own 1e-8 rate-target requirement).
-_STOP_RATE_REL = 1e-6
+#: on relative error. 1e-8 is the requirement the spec puts on a rate
+#: (part 2b's draw_rate acceptance hits its target to 1e-8 relative) - it
+#: is NOT set by the solver's noise. The sub-solves are made deterministic
+#: instead (one shared starting profile per secant iteration, review item
+#: 4): the ±5e-7 mol/s reproduction spread measured across warm-started
+#: evaluations was history noise from point-dependent rung selection, which
+#: a shared start removes.
+_STOP_RATE_REL = 1e-8
 
 #: Vapour-return coupling stops. The injected return state must match the
 #: recomputed stripper overhead to these bounds at the accepted solution.
-#: They sit just above the MEASURED reproducibility of the STRIPPER
-#: sub-solves (not the main mesh: at the converged tears the stripper
-#: overhead reproduces to ~2e-6 relative flow and ~6e-5 K across
-#: evaluations on the steam-stripper case - the warm-started stripper rungs
-#: are noisier than the main column's ±5e-7 / ±4e-6). Stops below those
-#: floors chase sub-solve iterate noise: measured, the secant ground 10
-#: minutes to maxrel 2-6x and the stale counter fired on pure noise while
-#: the tears sat frozen. The boundary BALANCES still close exactly by
-#: construction - the return stream is injected into the main column as a
-#: feed, so no reported balance depends on these residuals.
-_STOP_COUPLE_FLOW_REL = 1e-5
+#: 1e-9 relative on flow and composition is what the spec's 1e-8 WHOLE-UNIT
+#: mass and component closure needs: summing the main column's and the
+#: stripper's own balances, the unit is out of balance by exactly the
+#: coupling residual (injected - recomputed, per component) - it is NOT
+#: closed by construction (the earlier draft's claim here was wrong, PR
+#: #239 review item 4). If a stop cannot be met, the measured miss is
+#: reported on the PR, never loosened.
+_STOP_COUPLE_FLOW_REL = 1e-9
 _STOP_COUPLE_T_K = 1e-4
-_STOP_COUPLE_COMP = 1e-5
+_STOP_COUPLE_COMP = 1e-9
 
 
 @dataclass(frozen=True)
@@ -320,32 +317,29 @@ def _solve_stripper(
     col2 = _build_column(parsed2, tb)
     if st.reboiler_duty_W is None:
         # Zero free tears: the feeds determine the column, so one mesh solve
-        # IS the answer (the legacy path's zero-tear branch). The ladder is
-        # deliberately DETERMINISTIC at every rung - the coupling stop floors
-        # (and the secant's ability to polish at all) were calibrated on a
-        # reproducible sub-solve: a history-warm stripper makes the overhead
-        # noisy at the 1e-3 level and the secant then chases that noise
-        # forever (measured: product residual plateaued at ~1e-3, jumped to
-        # 1.6e-1 at iteration 31). Rung 1: cold. Rung 2: NS-first from the
-        # crude hot-bottom seed - a zero-tear column cold runs the inside-out
-        # loop first, which wanders off (M closes while H drifts) and the NS
-        # fallback then stalls from the wandered state, but NS started from
-        # the crude seed itself converges at every neighbouring tear in
-        # ~0.2 s (measured, P1-10). Rung 3: the stripper's last converged
-        # profile - the only non-deterministic rung, kept as the last resort
-        # because the secant's probes sit a few percent from a good solution
-        # where both deterministic rungs can stall.
-        try:
-            prof2 = _solve_mesh(col2, tb, None, None, None)
-        except ColumnConvergenceError:
+        # IS the answer (the legacy path's zero-tear branch). The starting
+        # profile is a function of the evaluation point's HISTORY ONLY, not
+        # of the point itself (review item 4): within one secant iteration
+        # every evaluation - the accepted iterate and every Jacobian probe -
+        # starts from the SAME profile, the last accepted iterate's
+        # stripper solve, so a probe's overhead carries no algorithmic
+        # history of its own and the finite-difference Jacobian measures the
+        # coupled map, not the rung selection. A probe point the shared seed
+        # cannot start from fails the evaluation and the caller's probe
+        # shrinking handles it. The no-seed case (the first evaluation of a
+        # driver run) keeps the deterministic cold rungs: a cold zero-tear
+        # column runs the inside-out loop first, which can wander off (M
+        # closes while H drifts); NS started from the crude hot-bottom seed
+        # converges at every neighbouring tear in ~0.2 s (measured, P1-10).
+        if seed is not None:
+            prof2 = _solve_mesh(col2, tb, None, None, seed)
+        else:
             try:
+                prof2 = _solve_mesh(col2, tb, None, None, None)
+            except ColumnConvergenceError:
                 t_top_seed, t_bot_seed = _temperature_seed(col2, tb)
                 crude = _seed_profile(col2, tb, t_top_seed, t_bot_seed, v_bot_tear=None)
                 prof2 = _solve_mesh(col2, tb, None, None, crude)
-            except ColumnConvergenceError:
-                if seed is None:
-                    raise
-                prof2 = _solve_mesh(col2, tb, None, None, seed)
     else:
         prof2 = _solve_specs(col2, tb, parsed2)
     rep = _StripperReport(
@@ -375,10 +369,12 @@ def _eval_coupled(
 ) -> _Coupled:
     """One evaluation of the coupled system at the given tear values.
 
-    The main mesh warm-starts from the previous evaluation's profile for
-    speed; its warm-start reproducibility (flow ±5e-7, T ±4e-6 K, measured
-    on the steam-stripper case) sets the coupling stop floors above. A
-    failing main solve propagates to the secant's probe shrinking.
+    The main mesh warm-starts from the previous accepted iteration's profile
+    for speed. Every evaluation within one secant iteration - the accepted
+    iterate and each Jacobian probe - starts from the SAME pair of profiles
+    (main and stripper), so the finite-difference Jacobian measures the
+    coupled map, not warm-start history (review item 4). A failing main
+    solve propagates to the secant's probe shrinking.
     """
     parsed_full = _injected(tb, params, strip_draws, ret_states)
     col = _build_column(parsed_full, tb)
