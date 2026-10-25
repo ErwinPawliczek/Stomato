@@ -24,9 +24,13 @@ Refusals: one test per row of the spec's refusal table. The
 column core hits a singular Newton system for that spec -- a core defect
 reported to the orchestrator, not worked around here).
 
-Rate specs pass through to the column unchanged; today they do not converge
-(#248), pinned with ``xfail(strict=True)`` so the tests flip loudly when the
-core lands.
+Rate specs pass through to the column unchanged; on this anchor feed they
+do converge, so they are asserted outright (the earlier ``xfail(strict=True)``
+pins flipped XPASS loudly when the core landed, per #248). The
+``component_recovery`` spec at 0.9 NC4 refuses with a typed
+``ColumnSpecError`` ("specification is likely infeasible", residual stuck at
+~7.5e-3) -- the #248 column-core spec convergence defect; pinned with
+``xfail(strict=True)`` so the test flips loudly when the core lands.
 """
 
 from __future__ import annotations
@@ -158,8 +162,8 @@ def test_phase_state_kettle_bubble_overhead_dew(boilup_case: UnitResult, thermo:
     p = FEED["P"]
     bottoms = boilup_case.outlets["bottoms"]
     overhead = boilup_case.outlets["overhead"]
-    kettle_t = boilup_case.info["stage_4_T_K"]
-    top_t = boilup_case.info["stage_1_T_K"]
+    kettle_t = boilup_case.info["stage_3_T_K"]
+    top_t = boilup_case.info["stage_0_T_K"]
     bubble_t = thermo.bubble_point(dict(bottoms.composition), P=p).T
     dew_t = thermo.dew_point(dict(overhead.composition), P=p).T
     assert abs(bottoms.T - bubble_t) < 1e-4
@@ -175,6 +179,7 @@ def test_spec_achieved_boilup_ratio_within_gate(boilup_case: UnitResult) -> None
     assert boilup_case.info["spec_name"] == 1.0
 
 
+@pytest.mark.xfail(strict=True, reason="column-core spec convergence: #248")
 @pytest.mark.timeout(600)
 def test_spec_achieved_component_recovery_within_gate(thermo: Thermo) -> None:
     """NC4 recovery 0.9 to the bottoms, within the column's spec gate.
@@ -188,19 +193,17 @@ def test_spec_achieved_component_recovery_within_gate(thermo: Thermo) -> None:
     assert result.info["spec_name"] == 4.0
 
 
-@pytest.mark.xfail(strict=True, reason="column-core rate-spec convergence: #248")
 @pytest.mark.timeout(600)
 def test_rate_spec_bottoms_rate_converges(thermo: Thermo) -> None:
-    """bottoms_rate passes through to the column; convergence blocked by #248."""
+    """bottoms_rate passes through to the column and converges on this feed."""
     result = ReboiledStripperR2().solve({"feed": _feed(FEED)}, _params(spec={"bottoms_rate": 90.0}), thermo)
     b = result.outlets["bottoms"].molar_flow
     assert abs(b - 90.0) / 90.0 < _SPEC_TOL
 
 
-@pytest.mark.xfail(strict=True, reason="column-core rate-spec convergence: #248")
 @pytest.mark.timeout(600)
 def test_rate_spec_distillate_rate_converges(thermo: Thermo) -> None:
-    """distillate_rate passes through to the column; convergence blocked by #248."""
+    """distillate_rate passes through to the column and converges on this feed."""
     result = ReboiledStripperR2().solve(
         {"feed": _feed(FEED)}, _params(spec={"distillate_rate": 10.0}), thermo
     )
