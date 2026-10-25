@@ -291,3 +291,137 @@ def test_info_keys_and_duty_convention() -> None:
     assert float(outlet.vapor_fraction) == pytest.approx(1.0)
     # The utility leaves hotter than it entered, below the process inlet.
     assert params["utility_T_K"] < float(result.info["utility_T_out_K"]) < state.T
+
+
+# --- Review blocking fixes (PR #317): side assignment by process_side -------
+
+def _heating_case(thermo: Any, process_side: str) -> tuple[Any, dict[str, Any]]:
+    """Cold process N2 (280 K, 60 mol/s) against hot water (330 K, 1000 mol/s)."""
+    feeds, params = ShellTubeR1.example_case()
+    heating = {
+        **params,
+        "process_side": process_side,
+        "utility_T_K": 330.0,
+        "utility_P_Pa": 4.0e5,
+        "utility_molar_flow": 1000.0,
+    }
+    n2 = thermo.flash_pt(feeds["inlet"]["composition"], 280.0, 3.0e6, 60.0)
+    return n2, heating
+
+
+def test_heating_duty_process_in_tubes_rates_the_process_stream() -> None:
+    """Blocking fix 1: with the process in the tubes, Re_tube/dP_tube come from N2.
+
+    The old temperature-rank assignment rated the tube side on the hotter
+    stream (the utility water): Re_tube ~4.0e4 water instead of the gas.
+    """
+    thermo = _thermo()
+    n2, heating = _heating_case(thermo, "tube")
+    result = ShellTubeR1().solve({"inlet": n2}, heating, thermo)
+    # Independent recompute of the tube side from the stream actually there
+    # (dP from INLET-state film properties, spec Algorithm step 4).
+    film_n2_in = film_props(thermo, n2.composition, n2.T, n2.P, inlet_kind(n2))
+    duct_in = duct_h(
+        n2.mass_flow, tube_flow_area(N_TUBES, N_PASSES, TUBE_ID), TUBE_ID, film_n2_in, 4.5e-5
+    )
+    assert float(result.info["dP_tube_Pa"]) == pytest.approx(
+        tube_dP(duct_in.fd, N_PASSES, LENGTH, TUBE_ID, film_n2_in.rho_kg_m3, duct_in.v_m_s)
+    )
+    out = result.outlets["outlet"]
+    film_n2_mean = film_props(
+        thermo, n2.composition, (n2.T + out.T) / 2.0, (n2.P + out.P) / 2.0, inlet_kind(n2)
+    )
+    duct_mean = duct_h(
+        n2.mass_flow, tube_flow_area(N_TUBES, N_PASSES, TUBE_ID), TUBE_ID, film_n2_mean, 4.5e-5
+    )
+    assert float(result.info["Re_tube"]) == pytest.approx(duct_mean.Re, rel=1e-9)
+    # ... and the shell side carries the water (mean-state Re_s recompute).
+    water = thermo.flash_pt({"H2O": 1.0}, 330.0, 4.0e5, 1000.0)
+    film_w_mean = film_props(
+        thermo,
+        water.composition,
+        (water.T + float(result.info["utility_T_out_K"])) / 2.0,
+        (water.P + float(result.info["utility_P_out_Pa"])) / 2.0,
+        inlet_kind(water),
+    )
+    de_tri = equiv_diameter(PITCH, TUBE_OD, "triangular30")
+    a_s = shell_flow_area(DS, PITCH, TUBE_OD, BAFFLE)
+    re_s_mean = de_tri * (water.mass_flow / a_s) / film_w_mean.mu_Pa_s
+    assert float(result.info["Re_shell"]) == pytest.approx(re_s_mean, rel=1e-9)
+
+
+def test_heating_duty_process_on_shell_rates_the_process_stream() -> None:
+    """Blocking fix 1: with the process on the shell, Re_shell comes from the N2."""
+    thermo = _thermo()
+    n2, heating = _heating_case(thermo, "shell")
+    result = ShellTubeR1().solve({"inlet": n2}, heating, thermo)
+    out = result.outlets["outlet"]
+    film_n2_mean = film_props(
+        thermo, n2.composition, (n2.T + out.T) / 2.0, (n2.P + out.P) / 2.0, inlet_kind(n2)
+    )
+    de_tri = equiv_diameter(PITCH, TUBE_OD, "triangular30")
+    a_s = shell_flow_area(DS, PITCH, TUBE_OD, BAFFLE)
+    re_s_mean = de_tri * (n2.mass_flow / a_s) / film_n2_mean.mu_Pa_s
+    assert float(result.info["Re_shell"]) == pytest.approx(re_s_mean, rel=1e-9)
+    # The tube side carries the water; its dP is the water-in-tubes dP.
+    water = thermo.flash_pt({"H2O": 1.0}, 330.0, 4.0e5, 1000.0)
+    film_w_in = film_props(thermo, water.composition, water.T, water.P, inlet_kind(water))
+    duct_in = duct_h(
+        water.mass_flow, tube_flow_area(N_TUBES, N_PASSES, TUBE_ID), TUBE_ID, film_w_in, 4.5e-5
+    )
+    assert float(result.info["dP_tube_Pa"]) == pytest.approx(
+        tube_dP(duct_in.fd, N_PASSES, LENGTH, TUBE_ID, film_w_in.rho_kg_m3, duct_in.v_m_s)
+    )
+
+
+def test_geometry_refusal_rows() -> None:
+    """Blocking fix 2: one ShellTubeGeometryError per geometry refusal row."""
+    thermo = _thermo()
+    state, params = _inlet(thermo)
+    for drop in (
+        "shell_ID_m",
+        "n_tubes",
+        "tube_OD_m",
+        "tube_ID_m",
+        "tube_length_m",
+        "pitch_m",
+        "baffle_spacing_m",
+        "n_baffles",
+    ):
+        broken = {k: v for k, v in params.items() if k != drop}
+        with pytest.raises(ShellTubeGeometryError, match=drop):
+            ShellTubeR1().solve({"inlet": state}, broken, thermo)
+    for zero in (
+        "shell_ID_m",
+        "tube_OD_m",
+        "tube_ID_m",
+        "tube_length_m",
+        "pitch_m",
+        "baffle_spacing_m",
+    ):
+        with pytest.raises(ShellTubeGeometryError, match=zero):
+            ShellTubeR1().solve({"inlet": state}, {**params, zero: 0.0}, thermo)
+    with pytest.raises(ShellTubeGeometryError, match="n_tubes"):
+        ShellTubeR1().solve({"inlet": state}, {**params, "n_tubes": 0}, thermo)
+    with pytest.raises(ShellTubeGeometryError, match="n_baffles"):
+        ShellTubeR1().solve({"inlet": state}, {**params, "n_baffles": 0}, thermo)
+    with pytest.raises(ShellTubeGeometryError, match="pitch_m"):
+        ShellTubeR1().solve({"inlet": state}, {**params, "pitch_m": TUBE_OD}, thermo)
+    with pytest.raises(ShellTubeGeometryError, match="tube_OD_m"):
+        ShellTubeR1().solve({"inlet": state}, {**params, "tube_OD_m": TUBE_ID}, thermo)
+    with pytest.raises(ShellTubeGeometryError, match="tube_passes"):
+        ShellTubeR1().solve({"inlet": state}, {**params, "tube_passes": 3}, thermo)
+    with pytest.raises(ShellTubeGeometryError, match="layout"):
+        ShellTubeR1().solve({"inlet": state}, {**params, "layout": "square45"}, thermo)
+    with pytest.raises(ShellTubeGeometryError, match="process_side"):
+        ShellTubeR1().solve({"inlet": state}, {**params, "process_side": "header"}, thermo)
+    with pytest.raises(ShellTubeGeometryError, match="n_shells"):
+        ShellTubeR1().solve({"inlet": state}, {**params, "tube_passes": 1, "n_shells": 2}, thermo)
+
+
+def test_single_pass_reports_counterflow_F() -> None:
+    """Non-blocking: N_tp = 1 is pure counterflow, so F_LMTD is 1.0."""
+    thermo = _thermo()
+    state, params = _inlet(thermo)
+    single = ShellTubeR1().solve({"inlet": state}, {**params, "tube_passes": 1}, thermo)
+    assert float(single.info["F_LMTD"]) == 1.0
