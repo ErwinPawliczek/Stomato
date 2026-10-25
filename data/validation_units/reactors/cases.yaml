@@ -75,16 +75,17 @@
   expected:
   - {quantity: outlet.outlet.T, value: 351.7, tol_abs: 0.5}
   assessed: >-
-    The temperature comparison misses: the book's constant-Cp correlation
-    T = 330 + 43.4·X gives 351.7 K (ΔT = 21.7 K), while the model measures
-    342.872 K (ΔT = 12.87 K) on the JANAF databank's ΔH°rx ≈ −9510 J/mol and PR
-    gas heat capacities. The book's slope combines ΔH°rx = −6900 J/mol with a
-    much smaller assumed lumped Cp (ΘCp ≈ 159 J/mol·K); the mixture Cp of the
-    actual book feed (nC4 + iC5 inert) measures 266.6 J/mol·K at the inlet state
-    (finite difference of the model's molar enthalpy), and PR's larger Cp more
-    than offsets the larger |ΔH°rx|, so the adiabatic rise is smaller. Data-source
-    and Cp-treatment differences, documented rather than tuned away; no tolerance
-    is widened to hide it.
+    The temperature comparison misses by 2.2 K: the book's constant-Cp
+    correlation T = 330 + 43.4·X gives 351.7 K (ΔT = 21.7 K), while the model
+    measures 349.543 K (ΔT = 19.54 K). The book's slope is ΔH°rx/ΘCp =
+    6900/159 = 43.4 K per unit conversion; the model's is the JANAF databank's
+    ΔH°rx ≈ −9510 J/mol over the measured mixture Cp of the book feed
+    (nC4 + iC5 inert, 266.6 J/mol·K at the inlet state, finite difference of
+    the model's molar enthalpy), about 35.7 K, so the adiabatic rise is
+    smaller. Data-source and Cp-treatment differences, documented rather than
+    tuned away; no tolerance is widened to hide it. (Before issue #247 the
+    formation-basis enthalpy counted sensible heat twice and this case measured
+    342.872 K.)
 
 - id: V1-SMR-YIELD
   unit: yield_reactor
