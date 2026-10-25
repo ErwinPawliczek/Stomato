@@ -329,3 +329,9 @@ def test_refuse_npsh_length(thermo: Thermo) -> None:
 def test_refuse_npsh_check_value(thermo: Thermo) -> None:
     with pytest.raises(PumpR1SpecError, match="npsh_check"):
         _solve(thermo, {"curve": CURVE, "npsh_check": "ignore"})
+
+
+def test_refuse_negative_friction_head(thermo: Thermo) -> None:
+    """friction_head_m < 0 is refused (documented extra guard, outside the plan table)."""
+    with pytest.raises(PumpR1SpecError, match="friction_head_m"):
+        _solve(thermo, {"curve": CURVE, "friction_head_m": -0.5})
