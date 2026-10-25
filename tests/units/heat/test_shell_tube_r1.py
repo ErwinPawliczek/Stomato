@@ -31,12 +31,21 @@ values are quoted to 9-10 significant figures).
 from __future__ import annotations
 
 import math
+from typing import Any
 
+import ht
 import pytest
 
-from ngdesign.units.heat.rating import FilmProps, u_outside_tube
+from ngdesign import registry
+from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
+from ngdesign.units._physics.heat_balance import TemperatureCross
+from ngdesign.units.heat.rating import FilmProps, RatingError, SinglePhaseRequired, u_outside_tube
 from ngdesign.units.heat.shell_tube_r1 import (
     KernRangeError,
+    ShellTubeGeometryError,
+    ShellTubeR1,
+    eps_counterflow,
+    eps_tema_e,
     equiv_diameter,
     shell_dP,
     shell_flow_area,
@@ -46,6 +55,7 @@ from ngdesign.units.heat.shell_tube_r1 import (
     tube_duct,
     tube_flow_area,
 )
+from ngdesign.units.heat_exchange import HeatExchanger
 
 #: Geometry G1 from the spec's Tests section.
 DS = 0.489
@@ -123,3 +133,161 @@ def test_shell_friction_below_fit_band_refuses() -> None:
     assert shell_friction(400.0 * (1.0 + 1e-12)) == pytest.approx(
         math.exp(0.576 - 0.19 * math.log(400.0 * (1.0 + 1e-12)))
     )
+
+
+# --- R1 adapter tests (spec Tests 4-6, identity and refusal rows) ------------
+
+EPS_REL = 1e-8
+
+
+def _thermo() -> Any:
+    registry.discover()
+    impl: Any = registry.create("thermo", "pr")
+    return impl
+
+
+def _inlet(thermo: Any, **over: Any) -> tuple[Any, dict[str, Any]]:
+    """The example case's process feed as a StreamState, plus the params."""
+    feeds, params = ShellTubeR1.example_case()
+    feed = {**feeds["inlet"], **over}
+    state = thermo.flash_pt(feed["composition"], feed["T"], feed["P"], feed["molar_flow"])
+    return state, params
+
+
+def test_effectiveness_tema_e_matches_spec_values() -> None:
+    """Test 4: S&T effectiveness values transcribed from the spec (rel 1e-8)."""
+    assert eps_tema_e(1.0, 0.5, 2, 1) == pytest.approx(0.539939556, rel=EPS_REL)
+    assert eps_tema_e(1.0, 0.5, 2, 2) == pytest.approx(0.558304442, rel=EPS_REL)
+    assert eps_tema_e(2.0, 0.8, 2, 1) == pytest.approx(0.606995080, rel=EPS_REL)
+    assert eps_tema_e(2.0, 0.8, 2, 2) == pytest.approx(0.679833500, rel=EPS_REL)
+    # Single tube pass in a single shell is pure counterflow (Incropera 11.29a/b).
+    assert eps_tema_e(1.0, 0.5, 1, 1) == pytest.approx(eps_counterflow(1.0, 0.5), rel=EPS_REL)
+    assert eps_counterflow(2.0, 0.8) == pytest.approx(
+        (1.0 - math.exp(-2.0 * 0.2)) / (1.0 - 0.8 * math.exp(-0.4)), rel=EPS_REL
+    )
+
+
+def test_F_fakheri_matches_spec_value() -> None:
+    """Test 5: Fakheri F for 450/370 K hot, 300/340 K cold, one shell (rel 1e-8)."""
+    f = ht.F_LMTD_Fakheri(450.0, 370.0, 300.0, 340.0, shells=1)
+    assert f == pytest.approx(0.926902303, rel=EPS_REL)
+
+
+def test_r0_replay_identity() -> None:
+    """Test 6: the R0 HeatExchanger replay of the R1 duty gives the R1 outlet.
+
+    HeatExchanger with duty_W = R1's process duty and dP = R1's process-side
+    (tube) pressure drop runs the same flash_ph chain, so the outlet state
+    must agree to 1e-10 relative.
+    """
+    thermo = _thermo()
+    state, params = _inlet(thermo)
+    result = ShellTubeR1().solve({"inlet": state}, params, thermo)
+    outlet = result.outlets["outlet"]
+    r0 = HeatExchanger().solve(
+        {"inlet": state},
+        {"duty_W": result.duty_W, "dP": state.P - outlet.P},
+        thermo,
+    )
+    r0_out = r0.outlets["outlet"]
+    assert outlet.T == pytest.approx(r0_out.T, rel=1e-10)
+    assert outlet.enthalpy == pytest.approx(r0_out.enthalpy, rel=1e-10)
+
+
+def test_missing_or_nonpositive_utility_params_refuse() -> None:
+    """Each required utility param is refused by name when missing or <= 0."""
+    thermo = _thermo()
+    state, params = _inlet(thermo)
+    for drop in ("utility_composition", "utility_T_K", "utility_P_Pa", "utility_molar_flow"):
+        broken = {k: v for k, v in params.items() if k != drop}
+        with pytest.raises(ShellTubeGeometryError, match=drop):
+            ShellTubeR1().solve({"inlet": state}, broken, thermo)
+    with pytest.raises(ShellTubeGeometryError, match="utility_molar_flow"):
+        ShellTubeR1().solve({"inlet": state}, {**params, "utility_molar_flow": 0.0}, thermo)
+
+
+def test_equal_inlet_temperatures_refuse() -> None:
+    """No driving force when the process and utility inlets are isothermal."""
+    thermo = _thermo()
+    state, params = _inlet(thermo)
+    with pytest.raises(TemperatureCross, match="no driving force"):
+        ShellTubeR1().solve({"inlet": state}, {**params, "utility_T_K": 322.15}, thermo)
+
+
+def test_two_phase_process_inlet_refuses_to_r2() -> None:
+    """A two-phase feed (the slice gas WITH its free water at 315 K) points at R2."""
+    thermo = _thermo()
+    _, params = _inlet(thermo)
+    wet = thermo.flash_pt(INLET_COMPOSITION, 315.0, 7.0e6, 50 * MMSCFD_TO_MOL_S)
+    assert float(wet.vapor_fraction) < 1.0
+    with pytest.raises(SinglePhaseRequired, match="use model R2"):
+        ShellTubeR1().solve({"inlet": wet}, params, thermo)
+
+
+def test_condensing_within_rating_refuses() -> None:
+    """A vapor feed that condenses across the rating bracket refuses mid-solve.
+
+    The R0 7 MPa dry gas is single-phase vapor at the inlet but its dew
+    envelope covers the full-duty bracket end (303.15 K), so the shared core's
+    Q_max evaluation raises SinglePhaseRequired before any iteration.
+    """
+    thermo = _thermo()
+    _, params = _inlet(thermo)
+    hot = thermo.flash_pt(INLET_COMPOSITION, 322.15, 7.0e6, 50 * MMSCFD_TO_MOL_S)
+    with pytest.raises(SinglePhaseRequired, match="leaves the inlet's phase"):
+        ShellTubeR1().solve({"inlet": hot}, params, thermo)
+
+
+def test_kern_band_refusal_and_extrapolation_flag() -> None:
+    """A starved utility leaves Kern's Re_s band; the flag waives it explicitly."""
+    thermo = _thermo()
+    state, params = _inlet(thermo)
+    starved = {**params, "utility_molar_flow": 100.0}
+    with pytest.raises(KernRangeError, match="validity band"):
+        ShellTubeR1().solve({"inlet": state}, starved, thermo)
+    waived = ShellTubeR1().solve({"inlet": state}, {**starved, "allow_extrapolation": True}, thermo)
+    assert float(waived.info["kern_in_range"]) == 0.0
+    inband = ShellTubeR1().solve({"inlet": state}, params, thermo)
+    assert float(inband.info["kern_in_range"]) == 1.0
+
+
+def test_nonpositive_outlet_pressure_refuses() -> None:
+    """The spec's refusal row: a dP larger than the inlet pressure refuses."""
+    thermo = _thermo()
+    state, params = _inlet(thermo, P=2.0e5)
+    with pytest.raises(RatingError, match="non-positive outlet pressure"):
+        ShellTubeR1().solve({"inlet": state}, params, thermo)
+
+
+def test_info_keys_and_duty_convention() -> None:
+    """The spec's info keys are present; the cooled process gives negative duty."""
+    thermo = _thermo()
+    state, params = _inlet(thermo)
+    result = ShellTubeR1().solve({"inlet": state}, params, thermo)
+    for key in (
+        "Q_W",
+        "U_W_m2K",
+        "A_m2",
+        "UA_W_K",
+        "NTU",
+        "effectiveness",
+        "F_LMTD",
+        "LMTD_K",
+        "h_tube_W_m2K",
+        "h_shell_W_m2K",
+        "Re_tube",
+        "Re_shell",
+        "dP_tube_Pa",
+        "dP_shell_Pa",
+        "utility_T_out_K",
+        "utility_P_out_Pa",
+        "utility_duty_W",
+        "kern_in_range",
+    ):
+        assert key in result.info
+    assert result.duty_W < 0.0
+    outlet = result.outlets["outlet"]
+    assert params["utility_T_K"] < outlet.T < state.T
+    assert float(outlet.vapor_fraction) == pytest.approx(1.0)
+    # The utility leaves hotter than it entered, below the process inlet.
+    assert params["utility_T_K"] < float(result.info["utility_T_out_K"]) < state.T
