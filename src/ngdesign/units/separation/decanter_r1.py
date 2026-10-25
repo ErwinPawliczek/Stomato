@@ -117,9 +117,7 @@ class DecanterR1:
     ) -> UnitResult:
         dispersed_phase = params.get("dispersed_phase")
         if dispersed_phase not in ("light", "heavy"):
-            raise DecanterR1SpecError(
-                f"dispersed_phase must be 'light' or 'heavy', got {dispersed_phase!r}"
-            )
+            raise DecanterR1SpecError(f"dispersed_phase must be 'light' or 'heavy', got {dispersed_phase!r}")
         droplet = _positive(params, "droplet_diameter_m")
 
         has_area = "interface_area_m2" in params
@@ -138,19 +136,13 @@ class DecanterR1:
 
         r0 = Decanter().solve(inlets, {"dP": params.get("dP", 0.0)}, thermo)
         dispersed_r0 = r0.outlets[f"{dispersed_phase}_out"]
-        continuous_r0 = r0.outlets[
-            "heavy_out" if dispersed_phase == "light" else "light_out"
-        ]
+        continuous_r0 = r0.outlets["heavy_out" if dispersed_phase == "light" else "light_out"]
 
         dispersed_liq = _liquid_phase(dispersed_r0)
         continuous_liq = _liquid_phase(continuous_r0)
         rho_d, rho_c = dispersed_liq.density, continuous_liq.density
         mu_override = params.get("continuous_viscosity_Pa_s")
-        mu_c = (
-            float(mu_override)
-            if mu_override is not None
-            else continuous_liq.viscosity
-        )
+        mu_c = float(mu_override) if mu_override is not None else continuous_liq.viscosity
         if mu_c is None or mu_c <= 0:
             raise DecanterR1SpecError(
                 "continuous_viscosity_Pa_s: the continuous outlet's phase has no "
