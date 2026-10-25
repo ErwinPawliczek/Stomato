@@ -351,7 +351,11 @@ def _dispatch_class(row: UnitRow, adapters: Mapping[str, type]) -> type:
 
     def solve(self: Any, inlets: Mapping[str, Any], params: Mapping[str, Any], thermo: Any) -> Any:
         level = resolve_level(row, params)
-        return adapters[level]().solve(inlets, params, thermo)
+        # ``model`` is this dispatch's own selector; the level adapter never sees it,
+        # so adapters can refuse every key outside their own schema. (``mode`` is a
+        # legacy parameter the R0 adapters still read, so it passes through.)
+        own = {key: value for key, value in params.items() if key != "model"}
+        return adapters[level]().solve(inlets, own, thermo)
 
     return type(
         f"LevelDispatch_{row.id}",

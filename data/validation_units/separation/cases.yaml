@@ -46,7 +46,9 @@
       P: 7.0e+6
       molar_flow: 1.5
       composition: {MeOH: 1.0}
-  params: {T_operating_K: 297.31}
+  # T_operating_K = hydrate_T(7.0 MPa) − 14.0 = 290.93 − 14.0 K (Hammerschmidt
+  # 1934; was 297.31 from the defective SG divisor, issue #244).
+  params: {T_operating_K: 276.93}
   expected:
   - {quantity: info.required_inhibitor_mass_fraction, value: 0.275, tol_abs: 0.005}
 - id: V1-flash-corripio-2013
