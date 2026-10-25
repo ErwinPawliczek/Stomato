@@ -326,7 +326,7 @@
         temperature) point with the stack area was found in the searched sources
         (Ulleberg 2003 Tables 1-2 and text; Ursua, Gandia & Sanchis, Proc. IEEE 100
         (2012) 410-426; the LeRoy/Bowen/LeRoy 1980 alkaline data), so the polarisation
-        closed form is covered by unit tests on printed test coefficients. The
+        closed form is covered by unit tests on hand-chosen test coefficients. The
         ulleberg2003 preset is added only when Table 1 is transcribed with page and
         equation numbers.
       end_state: true

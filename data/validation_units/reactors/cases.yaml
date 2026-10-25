@@ -17,14 +17,6 @@
 #
 # The yield case deliberately omits feeds/params to solve on the conversion
 # adapter's exact SMR example basis: the two outlets agree by construction.
-#
-# The electrolyser R1 polarisation case (PR #305) is a documented V1 gap in the
-# data/unit_models/reactors.yaml electrolyser_stack row notes: no printed
-# (current, voltage, temperature) point with the stack area was found in the
-# searched sources — Ulleberg 2003 (Tables 1-2 and text; the polarisation curves
-# are figures), Ursua, Gandia & Sanchis, Proc. IEEE 100 (2012) 410-426, and the
-# LeRoy/Bowen/LeRoy 1980 alkaline data — so the polarisation closed form is
-# covered by unit tests on printed test coefficients instead.
 
 - id: V1-WGS-EQ
   unit: equilibrium_reactor
