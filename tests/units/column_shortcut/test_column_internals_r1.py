@@ -175,6 +175,7 @@ class TestTrayClosedForm:
             worst = max(worst, rel)
             assert rel <= 1e-8, f"{key}: got {got!r}, want {want!r} (rel {rel:.2e})"
         assert res.info["diameter_m"] == 1.5
+        assert res.info["flooded"] == 0.0
         assert worst <= 1e-8
 
     def test_design_mode(self, thermo: Thermo) -> None:
@@ -225,6 +226,50 @@ class TestPacking:
             Robbins(0.0125 * 800.0, 0.2 * 5.0, 800.0, 5.0, 2e-3, 1.0, 24.0), rel=1e-12
         )
         assert res.info["packed_height_from_hetp_m"] == pytest.approx(3.0, rel=1e-12)
+
+
+class TestPackingFlooded:
+    """The flooded flag, both sides (orchestrator ruling on PR #288).
+
+    Hand check at Vg = 0.25 m/s, Vl = 0.0125 m/s (eps = 0.68, a = 260 m2/m3,
+    C1/C2/C3 = 32/7/1, rhoG = 5 kg/m3, rhoL = 800 kg/m3, muG = 5e-5 Pa s,
+    H = 1 m): ``fluids.Stichlmair_flood`` gives Vg_flood = 0.28232805949431117
+    m/s, so flood_fraction = 0.25/0.282328 = 0.8855 < 1 (not flooded) and the
+    irrigated correlation is defined: ``Stichlmair_wet(0.25, 0.0125, ...)`` =
+    544.8235414348013 Pa (the orchestrator's quoted regression value 544.82).
+    The spec's own state (Vg = 1.0 m/s at the same Vl) sits ~3.5x above the
+    flood point: flooded, with ``dP_wet_Pa`` omitted.
+
+    Encoding: the contract's ``info`` is ``dict[str, float]``, which coerces a
+    bool, so the ruling's ``True``/``False`` is carried as 1.0/0.0.
+    """
+
+    def test_above_flood(self, thermo: Thermo) -> None:
+        # The spec's dry closed-form state: Vg = 1.0 m/s, Vl = 0.0125 m/s.
+        diameter = math.sqrt(4.0 * 0.4 / math.pi)
+        inlet = _packing_inlet(diameter, g_kg_s=2.0, l_kg_s=4.0)
+        res = ColumnInternalsR1().solve({"inlet": inlet}, _packing_params(diameter), thermo=thermo)
+        assert res.info["flooded"] == 1.0
+        assert res.info["flood_fraction"] > 1.0
+        assert "dP_wet_Pa" not in res.info
+        assert res.info["dP_dry_Pa"] == pytest.approx(1270.397511660357, rel=1e-9)
+
+    def test_below_flood(self, thermo: Thermo) -> None:
+        # Vg = 0.25 m/s, Vl = 0.0125 m/s at A_t = 0.4 m2.
+        diameter = math.sqrt(4.0 * 0.4 / math.pi)
+        inlet = _packing_inlet(diameter, g_kg_s=0.25 * 5.0 * 0.4, l_kg_s=0.0125 * 800.0 * 0.4)
+        res = ColumnInternalsR1().solve({"inlet": inlet}, _packing_params(diameter), thermo=thermo)
+        from fluids.packed_tower import Stichlmair_wet
+
+        assert res.info["flooded"] == 0.0
+        assert res.info["flood_fraction"] == pytest.approx(0.25 / 0.28232805949431117, rel=1e-9)
+        # Regression value (the orchestrator's quoted measurement), and the
+        # wiring check against the direct library call at rel 1e-12.
+        assert res.info["dP_wet_Pa"] == pytest.approx(544.8235414348013, rel=1e-9)
+        assert res.info["dP_wet_Pa"] == pytest.approx(
+            Stichlmair_wet(0.25, 0.0125, 5.0, 800.0, 5e-5, 0.68, 260.0, 32.0, 7.0, 1.0, 1.0),
+            rel=1e-12,
+        )
 
 
 class TestPassThrough:

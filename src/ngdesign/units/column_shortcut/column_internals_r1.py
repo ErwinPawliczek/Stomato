@@ -34,6 +34,15 @@ optional Robbins (1991, Chem. Eng. Prog. 87(5), 87) pressure drop when
 ``Fpd_per_ft`` is given (Fpd in 1/ft, the library's unit). HETP is not
 computed; a user-supplied ``hetp_m``/``n_stages`` pair is only multiplied.
 
+**Flooding report** (orchestrator ruling on PR #288): a rating unit reports a
+flooded column rather than crashing, so every result carries
+``info['flooded'] = 1.0`` when ``flood_fraction > 1`` and ``0.0`` otherwise.
+(The contract's ``info`` is ``dict[str, float]``, which coerces a bool, so the
+ruling's ``True``/``False`` is carried as the floats 1.0/0.0 — flagged on the
+PR.) Above the flood point the irrigated (wet) Stichlmair correlation is
+undefined and ``dP_wet_Pa`` is omitted, while ``dP_dry_Pa``, ``Vg_flood_m_s``
+and ``flood_fraction`` (> 1) are still reported.
+
 Every refusal is a :class:`ColumnInternalsError` (a ``ValueError`` subclass)
 naming the offending parameter (U-R1 refusals rule).
 """
@@ -203,6 +212,7 @@ def _solve_tray(traffic: _Traffic, params: dict[str, Any]) -> dict[str, float]:
         "U_flood_m_s": u_flood,
         "U_net_m_s": u_net,
         "flood_fraction": flood_fraction,
+        "flooded": float(flood_fraction > 1.0),
         "diameter_m": diameter,
         "A_total_m2": a_total,
         "A_net_m2": a_net,
@@ -275,7 +285,9 @@ def _solve_packing(traffic: _Traffic, params: dict[str, Any]) -> dict[str, float
         ) from exc
     # Above the flood point the irrigated correlation is undefined and the
     # library's wet solve does not converge; the dry dP, the flood velocity and
-    # the flood fraction (which flags the condition, > 1) are still reported.
+    # the flood fraction (which flags the condition, > 1) are still reported,
+    # and the flooded state is reported explicitly as info['flooded'] (the
+    # orchestrator's ruling on PR #288) instead of an absent key.
     d_p_wet: float | None = None
     if vg <= vg_flood:
         try:
@@ -305,6 +317,7 @@ def _solve_packing(traffic: _Traffic, params: dict[str, Any]) -> dict[str, float
         "Vl_m_s": vl,
         "Vg_flood_m_s": vg_flood,
         "flood_fraction": vg / vg_flood,
+        "flooded": float(vg / vg_flood > 1.0),
         "dP_dry_Pa": d_p_dry,
     }
     if d_p_wet is not None:
