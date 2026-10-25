@@ -35,10 +35,10 @@ Refusals (typed :class:`AbsorberR2Error`, a ValueError): a missing/non-int/
 too-small ``n_stages``; a ``pressure_profile`` list whose length differs from
 ``n_stages`` or that carries a non-positive value; a zero-molar-flow inlet; a
 ``solvent_in`` vapour fraction above 0.5 (the zero-tear seed assumes a mainly
-liquid top feed); any parameter other than ``n_stages``, ``pressure_profile``
-and the level-dispatch selector ``model``. The ``model`` key is the
-catalogue's own level selector (``ngdesign.units.levels``) and passes through
-``LevelDispatch.solve`` unchanged, so it is not an absorber parameter. A
+liquid top feed); any parameter other than ``n_stages`` or ``pressure_profile``.
+The catalogue's level-dispatch selector key (``model``) is consumed by
+``LevelDispatch.solve`` itself and never reaches the adapter, so every key that
+does arrive outside the schema refuses. A
 column convergence failure propagates as the column's own
 ``ColumnConvergenceError`` — never caught or converted here.
 
@@ -54,12 +54,10 @@ from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.column import Column
 from ngdesign.units.column_shortcut.absorber import Absorber
 
-#: The level-dispatch selector key (``ngdesign.units.levels.MODEL_KEY``).
-#: It rides along on catalogue-driven calls and is not an absorber parameter.
-_MODEL_KEY = "model"
-
-#: Every params key :meth:`AbsorberR2.solve` accepts.
-_ALLOWED_KEYS = frozenset({"n_stages", "pressure_profile", _MODEL_KEY})
+#: Every params key :meth:`AbsorberR2.solve` accepts. The level-dispatch
+#: selector (``model``) is consumed by ``LevelDispatch.solve`` and never
+#: arrives here (catalogue.py, #309).
+_ALLOWED_KEYS = frozenset({"n_stages", "pressure_profile"})
 
 
 class AbsorberR2Error(ValueError):
