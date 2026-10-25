@@ -52,10 +52,6 @@ def _params(**over: Any) -> dict[str, Any]:
     map_data = {key: list(values) for key, values in MAP.items()}
     params: dict[str, Any] = {
         "map": map_data,
-        # 3.0 keeps the head bracket in the vapour region for the example
-        # feed; at the spec default 10 the isentropic head at b evaluates
-        # the dense region and turns negative -- see the PR comment.
-        "max_pressure_ratio": 3.0,
     }
     params.update(over)
     return params

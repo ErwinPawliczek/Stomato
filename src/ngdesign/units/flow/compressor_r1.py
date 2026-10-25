@@ -260,16 +260,11 @@ class CompressorR1:
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
         """The R0 example feed (dry gas, 322.15 K, 3.447 MPa, 691.7 mol/s) on the spec map."""
         feeds, _ = Compressor.example_case()
-        # max_pressure_ratio 3.0: the spec default 10 sends the head bracket
-        # into the dense region for this feed (the isentropic head at 10x
-        # evaluates below the map head), which would refuse the example --
-        # see the SPEC ISSUE comment on the PR.
         params: dict[str, Any] = {
             "map": {
                 "flow_m3_s": [0.30, 0.40, 0.50, 0.60, 0.70],
                 "head_J_kg": [72000.0, 66000.0, 60000.0, 54000.0, 48000.0],
                 "efficiency": [0.69, 0.72, 0.75, 0.78, 0.81],
             },
-            "max_pressure_ratio": 3.0,
         }
         return feeds, params
