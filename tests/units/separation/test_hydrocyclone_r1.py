@@ -29,9 +29,17 @@ spec's equations, not from the implementation):
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
+from ngdesign.contracts import StreamState
+from ngdesign.contracts.plugins import Thermo
+from ngdesign.units.separation.hydrocyclone import Hydrocyclone
 from ngdesign.units.separation.hydrocyclone_r1 import (
+    DEFAULT_K_INLET,
+    HydrocycloneR1,
+    HydrocycloneR1SpecError,
     effective_turns,
     grade_efficiency,
     inlet_velocity,
@@ -41,6 +49,7 @@ from ngdesign.units.separation.hydrocyclone_r1 import (
     shepherd_lapple_pressure_drop,
     underflow_fraction,
 )
+from tests.conftest import flash_feed
 
 _W, _H, _D_E, _L_B, _L_C = 0.125, 0.25, 0.25, 1.0, 1.0
 _Q, _RHO_F, _MU, _RHO_P = 0.5, 1.2, 1.8e-5, 2000.0
@@ -85,3 +94,124 @@ def test_cf5_particle_underflow_fraction_with_fluid_split() -> None:
 def test_light_particle_branch_reports_to_overflow() -> None:
     """H7 with rho_p < rho_f: underflow fraction (1 - E)*R_f; E = 0.6, R_f = 0.2."""
     assert underflow_fraction(0.6, 0.2, light_particle=True) == pytest.approx(0.08, rel=1e-12)
+
+
+# --- adapter: identity against R0, refusals --------------------------------
+
+
+def _identity_inlets(thermo: Thermo) -> dict[str, StreamState]:
+    """The R0 example basis: H2O 0.95 / nC5 0.05 at 323.15 K, 0.5 MPa."""
+    feeds, _ = Hydrocyclone().example_case()
+    return {port: flash_feed(thermo, f) for port, f in feeds.items()}
+
+
+def _identity_params() -> dict[str, Any]:
+    params: dict[str, Any] = dict(HydrocycloneR1.example_case()[1])
+    return params
+
+
+def test_identity_r1_matches_r0_on_its_own_fractions(thermo: Thermo) -> None:
+    inlets = _identity_inlets(thermo)
+    r1 = HydrocycloneR1().solve(inlets, _identity_params(), thermo)
+    fractions = {cid: r1.info[f"underflow_fraction_{cid}"] for cid in inlets["inlet"].composition}
+    r0 = Hydrocyclone().solve(
+        inlets, {"underflow_fractions": fractions, "dP": r1.info["dP_Pa"]}, thermo
+    )
+    assert r1.outlets == r0.outlets
+    assert r1.duty_W == r0.duty_W
+
+
+def test_r1_example_case_flows_end_to_end(thermo: Thermo) -> None:
+    """V0-style sanity on the R1 example: balances close via R0's split."""
+    inlets = _identity_inlets(thermo)
+    result = HydrocycloneR1().solve(inlets, _identity_params(), thermo)
+    total_out = sum(s.molar_flow for s in result.outlets.values())
+    assert total_out == pytest.approx(inlets["inlet"].molar_flow, rel=1e-9)
+    light = result.outlets["overflow"].composition["nC5"]
+    coarse = result.outlets["underflow"].composition["nC5"]
+    assert light > coarse  # oil droplets report to the overflow (H7 light branch)
+
+
+def _refuse(thermo: Thermo, params: dict[str, Any], match: str) -> None:
+    inlets = _identity_inlets(thermo)
+    with pytest.raises(HydrocycloneR1SpecError, match=match):
+        HydrocycloneR1().solve(inlets, params, thermo)
+
+
+def test_refuses_empty_or_unknown_particle_components(thermo: Thermo) -> None:
+    p = _identity_params()
+    p["particle_components"] = []
+    _refuse(thermo, p, "particle_components")
+    p["particle_components"] = ["SiO2"]
+    _refuse(thermo, p, "particle_components")
+
+
+def test_refuses_bad_particle_density(thermo: Thermo) -> None:
+    p = _identity_params()
+    del p["particle_density_kg_m3"]
+    _refuse(thermo, p, "particle_density_kg_m3")
+    p["particle_density_kg_m3"] = 0.0
+    _refuse(thermo, p, "particle_density_kg_m3")
+
+
+def test_refuses_zero_density_difference(thermo: Thermo) -> None:
+    inlets = _identity_inlets(thermo)
+    probe = HydrocycloneR1().solve(inlets, _identity_params(), thermo)
+    rho_f = float(probe.info["rho_fluid_kg_m3"])
+    p = _identity_params()
+    p["particle_density_kg_m3"] = rho_f
+    _refuse(thermo, p, "density difference")
+
+
+def test_refuses_missing_or_nonpositive_geometry(thermo: Thermo) -> None:
+    p = _identity_params()
+    del p["inlet_width_m"]
+    _refuse(thermo, p, "inlet_width_m")
+    p = _identity_params()
+    p["inlet_height_m"] = -1.0
+    _refuse(thermo, p, "inlet_height_m")
+    p = _identity_params()
+    del p["body_length_m"], p["cone_length_m"]
+    p.pop("N_e", None)
+    _refuse(thermo, p, "N_e")
+    p = _identity_params()
+    p["N_e"] = 0.0
+    _refuse(thermo, p, "N_e")
+
+
+def test_refuses_missing_or_doubled_particle_size_form(thermo: Thermo) -> None:
+    p = _identity_params()
+    del p["particle_diameter_m"]
+    _refuse(thermo, p, "particle_diameter_m")
+    p = _identity_params()
+    p["d_rr_m"], p["n_rr"] = 10e-6, 1.5
+    _refuse(thermo, p, "particle_diameter_m")
+
+
+def test_refuses_fluid_underflow_fraction_outside_range(thermo: Thermo) -> None:
+    p = _identity_params()
+    p["fluid_underflow_fraction"] = 1.0
+    _refuse(thermo, p, "fluid_underflow_fraction")
+    p["fluid_underflow_fraction"] = -0.1
+    _refuse(thermo, p, "fluid_underflow_fraction")
+
+
+def test_refuses_missing_dP_and_outlet_diameter(thermo: Thermo) -> None:
+    p = _identity_params()
+    del p["outlet_diameter_m"]
+    _refuse(thermo, p, "outlet_diameter_m")
+
+
+def test_refuses_unavailable_fluid_viscosity(thermo: Thermo) -> None:
+    """A continuous phase reporting no viscosity is refused unless overridden."""
+    inlets = _identity_inlets(thermo)
+    inlet = inlets["inlet"]
+    dry_phases = [ph.model_copy(update={"viscosity": None}) for ph in inlet.phases]
+    inlets = {"inlet": inlet.model_copy(update={"phases": dry_phases})}
+    p = _identity_params()
+    p.pop("fluid_viscosity_Pa_s", None)
+    _refuse(thermo, p, "fluid_viscosity_Pa_s")
+
+
+def test_k_inlet_default_is_16() -> None:
+    assert DEFAULT_K_INLET == 16.0

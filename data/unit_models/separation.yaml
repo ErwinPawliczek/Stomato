@@ -221,9 +221,37 @@
         Evidence gap — Perry Sect. 18 cut-size sizing is R1, so no worked example
         validates a cut size at R0 (V0 self-consistency only).
     R1:
-      status: planned
-      params: {}
-      note: Lapple / Barth cut size
+      status: provisional
+      adapter: ngdesign.units.separation.hydrocyclone_r1:HydrocycloneR1
+      params:
+        type: object
+        required: [particle_components, particle_density_kg_m3, inlet_width_m, inlet_height_m]
+        properties:
+          particle_components:
+            type: array
+            items: {type: string}
+            minItems: 1
+            description: component ids forming the particles/droplets
+          particle_density_kg_m3: {type: number, exclusiveMinimum: 0, description: 'particle density, kg/m3'}
+          particle_diameter_m: {type: number, exclusiveMinimum: 0, description: 'monodisperse particle diameter, m'}
+          d_rr_m: {type: number, exclusiveMinimum: 0, description: 'Rosin-Rammler characteristic size, m'}
+          n_rr: {type: number, exclusiveMinimum: 0, description: 'Rosin-Rammler spread'}
+          inlet_width_m: {type: number, exclusiveMinimum: 0, description: 'inlet width W, m'}
+          inlet_height_m: {type: number, exclusiveMinimum: 0, description: 'inlet height H, m'}
+          body_length_m: {type: number, exclusiveMinimum: 0, description: 'cylinder length Lb, m'}
+          cone_length_m: {type: number, exclusiveMinimum: 0, description: 'cone length Lc, m'}
+          N_e: {type: number, exclusiveMinimum: 0, description: 'effective turns; default (Lb + Lc/2)/H'}
+          outlet_diameter_m: {type: number, exclusiveMinimum: 0, description: 'vortex finder diameter De, m'}
+          K_inlet: {type: number, exclusiveMinimum: 0, description: 'Shepherd-Lapple inlet constant; default 16 (tangential)'}
+          fluid_underflow_fraction: {type: number, minimum: 0, exclusiveMaximum: 1, description: 'fluid flow split to the underflow'}
+          dP: {type: number, minimum: 0, description: 'overflow pressure drop, Pa; default Shepherd-Lapple'}
+          fluid_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'fluid viscosity override, Pa s'}
+      note: Lapple cut size (H3), grade efficiency (H4), Rosin-Rammler overall
+        efficiency by 64-point Gauss-Legendre (H5) and Shepherd-Lapple pressure
+        drop (H6); the split is delegated to R0 with the computed fractions.
+        Barth's static-particle model is not part of R1 — the row names
+        "Lapple / Barth", R1 implements Lapple only. Q uses the slurry
+        approximation (total mass flow over the continuous-fluid density).
       end_state: true
   pid_symbol: CYC
   references:

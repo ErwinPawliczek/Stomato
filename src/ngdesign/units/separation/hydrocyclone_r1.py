@@ -283,11 +283,11 @@ class HydrocycloneR1:
             "particle_components": ["nC5"],
             "particle_density_kg_m3": 700.0,
             "particle_diameter_m": 50.0e-6,
-            "inlet_width_m": 0.01,
-            "inlet_height_m": 0.02,
-            "body_length_m": 0.10,
-            "cone_length_m": 0.20,
-            "outlet_diameter_m": 0.02,
+            "inlet_width_m": 0.06,
+            "inlet_height_m": 0.06,
+            "body_length_m": 0.20,
+            "cone_length_m": 0.40,
+            "outlet_diameter_m": 0.04,
             "fluid_underflow_fraction": 0.9,
         }
 
