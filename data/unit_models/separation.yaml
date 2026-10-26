@@ -27,9 +27,41 @@
         properties: {}
       note: PT/PH/PVF flash with ΔP; gas and liquid leave at their flash states
     R1:
-      status: planned
-      params: {}
-      note: Souders-Brown sizing, carry-over at a given diameter (the souders_brown correlation plugin exists)
+      status: provisional
+      adapter: ngdesign.units.separation.scrubber_r1:ScrubberR1
+      params:
+        type: object
+        properties:
+          dP:
+            type: number
+            minimum: 0
+            description: pressure drop, Pa; default 0 (R0)
+          K_m_s:
+            type: number
+            exclusiveMinimum: 0
+            description: Souders-Brown K, m/s; default York demister fit at the drum pressure
+          diameter_m:
+            type: number
+            exclusiveMinimum: 0
+            description: vessel inside diameter, m; enables the carry-over calculation
+          inlet_entrained_fraction:
+            type: number
+            minimum: 0
+            maximum: 1
+            description: fraction of the liquid entering the gravity section as droplets
+          droplet_d_rr_m:
+            type: number
+            exclusiveMinimum: 0
+            description: Rosin-Rammler characteristic droplet size, m
+          droplet_n_rr:
+            type: number
+            exclusiveMinimum: 0
+            description: Rosin-Rammler spread parameter
+          gas_viscosity_Pa_s:
+            type: number
+            exclusiveMinimum: 0
+            description: gas viscosity override, Pa s
+      note: Souders-Brown sizing (York demister K) and droplet carry-over at a given diameter; reduces to R0 without diameter_m or at E = 0
       end_state: true
   sizer: scrubber
   pid_symbol: V
@@ -312,14 +344,48 @@
         Evidence gap — cake-resistance physics is R1, so no worked example
         validates a cake at R0 (V0 self-consistency only).
     R1:
-      status: planned
-      params: {}
-      note: cake resistance
+      status: provisional
+      adapter: ngdesign.units.separation.filter_r1:FilterR1
+      params:
+        type: object
+        required: [cake_fractions, dP, specific_cake_resistance_m_kg, t_filtration_s, solid_density_kg_m3]
+        properties:
+          cake_fractions:
+            type: object
+            description: 'component id to the fraction of its molar flow sent to the cake (the solids)'
+          dP: {type: number, exclusiveMinimum: 0, description: 'filtration pressure difference, Pa; applied to the filtrate'}
+          specific_cake_resistance_m_kg: {type: number, exclusiveMinimum: 0, description: 'specific cake resistance alpha, m/kg'}
+          medium_resistance_1_m: {type: number, minimum: 0, description: 'filter medium resistance Rm, 1/m; default 0'}
+          t_filtration_s: {type: number, exclusiveMinimum: 0, description: 'filtration time per cycle, s'}
+          t_down_s: {type: number, minimum: 0, description: 'washing/discharge downtime per cycle, s; default 0'}
+          solid_density_kg_m3: {type: number, exclusiveMinimum: 0, description: 'true solid density, kg/m3'}
+          cake_porosity: {type: number, minimum: 0, exclusiveMaximum: 1, description: 'cake void fraction; default 0 (dry cake)'}
+          area_m2: {type: number, exclusiveMinimum: 0, description: 'installed filter area, m2 (capacity ratio)'}
+          filtrate_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'filtrate viscosity override, Pa s'}
+      note: Ruth constant-pressure cake filtration over the R0 split — required
+        area, cake thickness and cake moisture (F1-F7); reduces exactly to R0
+        at zero porosity.
       end_state: true
   pid_symbol: FLT
   references:
   - docs/unit-catalogue-plan.md §2 U-D 7
-  notes: roadmap.
+  notes: R1 V1 gap (PR 280) — provisional without a case. Searched the spec's
+    candidates and none prints a case for the batch constant-pressure Ruth
+    model with printed inputs only — Geankoplis 4th ed. sect. 14.2, Examples
+    14.2-1 and 14.2-2 evaluate alpha and Rm by regression on t-V data, so
+    there is no printed input/output pair to pin at the closed form, and
+    Example 14.2-4 folds the wet-cake moisture into Cs = rho*Cx/(1 - m*Cx)
+    with m = 2 kg wet cake per kg dry cake, a moisture model different from
+    R1's porosity-based cake, so reproducing its printed 6.66 m2 needs an
+    unprinted cake porosity; the FOSSEE open transcription of Geankoplis
+    ch. 14, whose regression prints differ from the book's graphical reads
+    (264.61 s vs the book's 269.7 s recovery time used in 14.2-3); and
+    McCabe, Smith and Harriott 7th ed., Mechanical Separations (fetched and
+    inspected), Example 30.2 being a least-squares regression of t-V data
+    for alpha and Rm and Example 30.3 a continuous rotary-drum design with
+    a compressible cake (alpha = alpha0/dP**0.26) and the moisture folded
+    into the slurry concentration. The level is covered by the closed-form
+    CF1-CF4 tests and the R0-reduction identity instead.
 
 - id: membrane
   name: Membrane (gas)
