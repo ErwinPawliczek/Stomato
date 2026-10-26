@@ -343,18 +343,70 @@
       params: {}
       note: set pressure, orifice from API 520 (the psv_api520_gas correlation plugin exists)
     R1:
-      status: planned
-      params: {}
-      note: two-phase sizing (HEM/omega)
+      status: provisional
+      adapter: ngdesign.units.flow.relief_valve_r1:ReliefValveR1
+      params:
+        type: object
+        required: [P_back]
+        properties:
+          P_back: {type: number, description: 'superimposed back pressure, Pa abs'}
+          Kd: {type: number, description: 'discharge coefficient; default 0.975 gas / 0.85 two-phase / 0.65 liquid, chosen by regime'}
+          Kb: {type: number, description: 'back-pressure correction, default 1.0'}
+          Kc: {type: number, description: 'combination (rupture disk) correction, default 1.0'}
+          Kv: {type: number, description: 'viscosity correction (liquid), default 1.0'}
+          Kw: {type: number, description: 'liquid back-pressure correction (balanced bellows), default 1.0'}
+      note: Leung omega two-phase and subcooled sizing (eqs. 1-5), gas delegated to R0; Kd by regime
+      validation: []
     R2:
-      status: planned
-      params: {}
-      note: inlet/outlet loss checks
+      status: provisional
+      adapter: ngdesign.units.flow.relief_valve_r2:ReliefValveR2
+      params:
+        type: object
+        required: [P_back, P_set]
+        properties:
+          P_back: {type: number, description: 'superimposed back pressure, Pa abs'}
+          P_set: {type: number, description: 'set pressure, Pa abs'}
+          P_atm: {type: number, description: 'atmospheric pressure, Pa, default 101325'}
+          overpressure: {type: number, description: 'overpressure fraction, one of 0.10, 0.16, 0.21'}
+          Kd: {type: number, description: 'discharge coefficient; default 0.975 gas / 0.85 two-phase / 0.65 liquid'}
+          Kb: {type: number, description: 'back-pressure correction, default 1.0'}
+          Kc: {type: number, description: 'combination (rupture disk) correction, default 1.0'}
+          Kv: {type: number, description: 'viscosity correction (liquid), default 1.0'}
+          Kw: {type: number, description: 'liquid back-pressure correction (balanced bellows), default 1.0'}
+          valve_type: {type: string, description: 'conventional, balanced_bellows or pilot'}
+          L_in_m: {type: number, description: 'inlet line length, m'}
+          D_in_m: {type: number, description: 'inlet line ID, m'}
+          K_in: {type: number, description: 'inlet line sum-K'}
+          roughness_in_m: {type: number, description: 'inlet roughness, m, default 4.57e-5 commercial steel'}
+          L_out_m: {type: number, description: 'discharge line length, m'}
+          D_out_m: {type: number, description: 'discharge line ID, m'}
+          K_out: {type: number, description: 'discharge line sum-K'}
+          roughness_out_m: {type: number, description: 'discharge roughness, m, default 4.57e-5 commercial steel'}
+      note: rated-capacity inlet-loss and built-up back-pressure checks with bellows Kb/Kw re-sizing
       end_state: true
+      validation: []
   pid_symbol: PSV
   references:
   - docs/unit-catalogue-plan.md §2 U-B 7
-  notes: R0 gas PSV sizing per API 520 Part I with API 526 orifice selection. V1 gap (PR #217): the sizing layer is pinned by a unit test to the API worked example's printed inputs and published area (API RP 520 Part I Example 3.6.2.2, p. 44 — W 53500 lb/h, M 65, Z 0.84, k 1.09, T 627 R, P1 97.2 psia, Kd 0.975, Kb = Kc = 1.0, C = 326 from Table 8; published area 3179 mm2 = 4.93 in2, read from FluidFlow's results-verified reproduction of that example), but no feed in the installed packages reproduces the printed M/Z/k as a single-phase vapour (C4/C5/C6 composition search at the relieving point: M ~ 65 states are liquid or two-phase; all-vapour tops out near M 61, Z 0.854, k 1.069), so the adapter-level V1 case is withdrawn, not tuned. Two-phase sizing and relief-system loss checks remain roadmap.
+  notes: >-
+    R0 gas PSV sizing per API 520 Part I with API 526 orifice selection. V1 gap (PR 217) - the
+    sizing layer is pinned by a unit test to the API worked example's printed inputs and
+    published area (API RP 520 Part I Example 3.6.2.2, p. 44 — W 53500 lb/h, M 65, Z 0.84, k
+    1.09, T 627 R, P1 97.2 psia, Kd 0.975, Kb = Kc = 1.0, C = 326 from Table 8; published area
+    3179 mm2 = 4.93 in2, read from FluidFlow's results-verified reproduction of that example),
+    but no feed in the installed packages reproduces the printed M/Z/k as a single-phase
+    vapour (C4/C5/C6 composition search at the relieving point - M ~ 65 states are liquid or
+    two-phase; all-vapour tops out near M 61, Z 0.854, k 1.069), so the adapter-level V1 case
+    is withdrawn, not tuned. R1/R2 (PR 313) implement Leung omega two-phase and subcooled
+    sizing and the API 520 inlet-loss and built-up back-pressure checks with bellows
+    re-sizing; V1 gap - the API 520 Part I 10th ed. liquid example (fluids' "Example 5",
+    printed result 3066 mm2 on inputs 6814 L/min, SG 0.9, set 1724 kPag, 10 percent
+    overpressure, Kw 0.97) cannot be confirmed against the standard from this workspace, and a
+    case-level feed would additionally need thermo density 899.1 kg/m3 at relieving
+    conditions, so the printed arithmetic is pinned by closed-form tests (G =
+    52821.2752591226, A = 3.06594883829264e-3 m2) and validation ids are empty. Pure-fluid
+    subcooled feeds run the omega path directly since the thermo two-phase PS/PH flash fix (PR
+    312); regime tests use pure propane.
 
 - id: pipe_segment
   name: Pipe segment
@@ -375,18 +427,55 @@
       params: {}
       note: fixed ΔP spec; in dP mode an elevation rise subtracts rho*g*z from the outlet pressure, in P_out mode it is reported only
     R1:
-      status: planned
-      params: {}
-      note: single-phase Darcy (Colebrook) with elevation; the darcy_colebrook correlation plugin exists
+      status: provisional
+      adapter: ngdesign.units.flow.pipe_segment_r1:PipeSegmentR1
+      params:
+        type: object
+        required: [L_m, D_m]
+        properties:
+          L_m: {type: number, description: 'length, m'}
+          D_m: {type: number, description: 'internal diameter, m'}
+          roughness_m: {type: number, description: 'absolute roughness, m, default 4.57e-5'}
+          elevation_m: {type: number, description: 'outlet minus inlet elevation, m'}
+          K_fittings: {type: number, description: 'sum of fitting resistance coefficients'}
+          n_segments: {type: integer, description: 'starting segment count, default 10'}
+          mu_Pa_s: {type: number, description: 'viscosity override, Pa.s'}
+      note: single-phase Darcy-Colebrook march with elevation (Heun predictor-corrector,
+        refined to 1e-6 of dP); fittings K at the inlet; refuses a two-phase node
     R2:
-      status: planned
-      params: {}
-      note: two-phase Beggs-Brill / fluids multiphase, profile along the length
+      status: provisional
+      adapter: ngdesign.units.flow.pipe_segment_r2:PipeSegmentR2
+      params:
+        type: object
+        required: [L_m, D_m]
+        properties:
+          L_m: {type: number, description: 'length, m'}
+          D_m: {type: number, description: 'internal diameter, m'}
+          roughness_m: {type: number, description: 'absolute roughness, m, default 4.57e-5'}
+          elevation_m: {type: number, description: 'outlet minus inlet elevation, m'}
+          K_fittings: {type: number, description: 'sum of fitting resistance coefficients'}
+          n_segments: {type: integer, description: 'segment count, default 20 (max 200)'}
+          mu_Pa_s: {type: number, description: 'viscosity override, Pa.s'}
+          sigma_N_m: {type: number, description: 'surface tension, N/m; required if any node is two-phase'}
+      note: two-phase Beggs-Brill profile (no Payne correction) at a fixed N with the
+        N/2 discretisation check; single-phase segments use the R1 Darcy step, so a line
+        can flash part-way
       end_state: true
   pid_symbol: PIPE
   references:
   - docs/unit-catalogue-plan.md §2 U-B 8
-  notes: R0 fixed dP with optional hydrostatic head; Darcy friction and two-phase flowsheeting remain roadmap.
+  notes: R1/R2 provisional (PR 291) — R1 is a single-phase Darcy-Colebrook march with
+    elevation (Heun predictor-corrector, refined to 1e-6 of dP), R2 adds the Beggs-Brill
+    two-phase profile (fluids, original 1973 holdup, no Payne correction) at a fixed N with
+    the N/2 discretisation check, so a line can flash part-way. V1 gap — the spec's
+    candidate printed sources were searched and are not accessible as open printed-result
+    texts. Crane TP-410 (2013) ch. 4 and Darby & Chhabra (2017) ch. 6 worked examples exist
+    openly only as the fluids library's own "solved problems" reproductions (excluded —
+    library outputs, not the book's printed results), and the R2 candidates (Brill &
+    Mukherjee, SPE Monograph 17, ch. 4; Shoham 2006, ch. 4) are paywalled monograph texts
+    whose Beggs-Brill examples additionally need a black-oil/PVT basis the installed
+    packages do not provide. The levels are pinned by the closed-form C1/C2 tests and the
+    R0/R1/R2 identities instead.
 
 - id: orifice
   name: Orifice / flow element
@@ -407,14 +496,29 @@
       params: {}
       note: ΔP from a discharge coefficient
     R1:
-      status: planned
-      params: {}
-      note: ISO 5167 sizing
+      status: provisional
+      adapter: ngdesign.units.flow.orifice_r1:OrificeR1
+      params:
+        type: object
+        required: [D_m]
+        properties:
+          D_m: {type: number, description: 'pipe internal diameter, m (ISO 5167-2: 0.05 to 1.0)'}
+          bore_m: {type: number, description: 'rating mode: orifice bore, m (>= 12.5 mm, beta in [0.1, 0.75])'}
+          dP_design_Pa: {type: number, description: 'sizing mode: differential pressure at the stream flow, Pa'}
+          taps: {type: string, enum: [corner, flange, D-D/2], description: 'tap arrangement, default flange'}
+          C_specified: {type: number, description: 'fixed discharge coefficient instead of Reader-Harris/Gallagher'}
+          mu_Pa_s: {type: number, description: 'viscosity override, Pa.s'}
+      note: ISO 5167-2 RHG C, expansibility, permanent loss; rating and sizing
       end_state: true
   pid_symbol: FE
   references:
   - docs/unit-catalogue-plan.md §2 U-B 9
-  notes: R0 fixed-Cd dP read; ISO 5167 sizing remains roadmap.
+  notes: R0 fixed-Cd dP read; R1 ISO 5167-2 RHG C, expansibility and permanent loss
+    (rating and sizing). V1 gap - ISO 5167 has no normative worked example; the spec's
+    candidates (API MPMS Ch. 14.3 Part 4 / AGA Report No. 3 Part 4 1992 and 2019, Miller
+    3rd ed., Reader-Harris 2015) were searched 2026-10-25 - only front-matter sample PDFs
+    openly accessible (the AGA Part 4 sample carries no example numbers), the books paywalled,
+    so no printed inputs-plus-results case could be transcribed.
 
 - id: ejector
   name: Ejector

@@ -137,7 +137,7 @@ Steps:
 | `volume_m3` ≤ 0 (R1), or `length_m`/`tube_diameter_m`/`n_tubes` ≤ 0 (R2) | `PlugFlowError` | the parameter name |
 | `rate_units` not in the accepted lists | `PlugFlowError` | `reaction '<id>': rate_units` |
 | a catalyst-mass rate without `bulk_density_kg_m3` | `PlugFlowError` | `bulk_density_kg_m3` |
-| a PowerLaw with `equilibrium` but no `reverse`. `kinetics.rate` then multiplies by (1 − 1/K) without the reaction quotient Q, which is not an equilibrium limitation. Refuse it here and let the orchestrator fix `kinetics.rate` separately. | `PlugFlowError` | `explicit reverse` |
+| an LHHW reaction that also carries an `equilibrium` model (LHHW ignores it). A PowerLaw with `equilibrium` and no `reverse` is VALID: since #245 `kinetics.rate` applies forward·(1 − Q/K). | `PlugFlowError` | `LHHW` |
 | reaction without kinetics (`kinetics is None`) | `PlugFlowError` | `has no kinetics` |
 | two-phase state, or a negative species, along the reactor | `PlugFlowError` | `two-phase` / `depletes` |
 | RHS cap reached, or `solve_ivp` failure | `PlugFlowError` | `RHS evaluation cap` / `integration failed` |
@@ -243,7 +243,7 @@ params:
 - P_eff = P for vapour and c_tot·R·T for liquid; no other use of P_eff.
 - The outlet T comes from `thermal_outlet` / `_solve_outlet_T`, never from the ODE. `T_closure_gap_K` is reported, not hidden.
 - BDF with rtol 1e-8 and the stated atol vector; RHS cap 20,000; the events are terminal and typed.
-- The equilibrium-without-reverse refusal is present, and the (1 − 1/K) issue in `kinetics.rate` is raised with the orchestrator rather than patched in `_physics`.
+- No equilibrium-without-reverse refusal (#245 fixed `kinetics.rate` to forward·(1 − Q/K)); a test reaches Q/K → 1 at the outlet; LHHW + equilibrium is refused.
 - The `HeatModel` and `rate_multiplier` hooks are public and documented, so fixed_bed, naphtha_ht and reformer need not edit `plug_flow.py`.
 - Ergun in SI with no g_c; a_w = 4/D_t; G is per tube.
 - R3's η uses tanh(φ)/φ with L_p = R_p/3, and the order-m activity formula.

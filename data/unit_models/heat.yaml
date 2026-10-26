@@ -86,9 +86,46 @@
           dP: {type: number, description: 'pressure drop, Pa'}
       note: approach / duty with LMTD-F specification
     R1:
-      status: planned
-      params: {}
-      note: rating — U from ht film coefficients, TEMA type, F factor, ΔP both sides
+      status: provisional
+      adapter: ngdesign.units.heat.shell_tube_r1:ShellTubeR1
+      params:
+        type: object
+        required: [process_side, shell_ID_m, n_tubes, tube_OD_m, tube_ID_m, tube_length_m,
+          pitch_m, layout, baffle_spacing_m, n_baffles, tube_passes, utility_composition,
+          utility_T_K, utility_P_Pa, utility_molar_flow]
+        properties:
+          process_side: {type: string, enum: [tube, shell], description: 'side the
+              process stream flows on'}
+          shell_ID_m: {type: number, description: 'shell inside diameter Ds, m'}
+          n_tubes: {type: integer, description: 'total tube count Nt'}
+          tube_OD_m: {type: number, description: 'tube outside diameter, m'}
+          tube_ID_m: {type: number, description: 'tube inside diameter, m'}
+          tube_length_m: {type: number, description: 'tube length per pass, m'}
+          pitch_m: {type: number, description: 'tube pitch PT, m'}
+          layout: {type: string, enum: [triangular30, square90], description: 'tube
+              layout'}
+          baffle_spacing_m: {type: number, description: 'baffle spacing B, m'}
+          n_baffles: {type: integer, description: 'baffle count Nb'}
+          tube_passes: {type: integer, enum: [1, 2, 4, 6, 8], description: 'tube passes
+              per shell Ntp'}
+          n_shells: {type: integer, description: 'TEMA E shells in series, default
+              1'}
+          utility_composition: {type: object, description: 'utility stream mole fractions'}
+          utility_T_K: {type: number, description: 'utility inlet temperature, K'}
+          utility_P_Pa: {type: number, description: 'utility inlet pressure, Pa'}
+          utility_molar_flow: {type: number, description: 'utility inlet molar flow,
+              mol/s'}
+          k_wall_W_mK: {type: number, description: 'tube wall conductivity, W/(m K),
+              default 45'}
+          R_f_tube_m2K_W: {type: number, description: 'tube-side fouling, m2 K/W, default
+              0'}
+          R_f_shell_m2K_W: {type: number, description: 'shell-side fouling, m2 K/W,
+              default 0'}
+          roughness_m: {type: number, description: 'tube roughness, m, default 4.5e-5'}
+          allow_extrapolation: {type: boolean, description: 'permit Kern outside 2e3
+              < Re_s < 1e6, flagged in info'}
+      note: rating — Kern shell side (S1-S3) with D_e per layout, duct tube side with
+        4Ntp return heads, e-NTU S&T, F reported
     R2:
       status: planned
       params: {}
@@ -98,8 +135,14 @@
   pid_symbol: E
   references:
   - docs/unit-catalogue-plan.md §2 U-C 2
-  notes: the R0 row shares the HeatExchanger adapter; R1/R2 rating physics is the U-C
-    family thread's work on the shared _physics/heat_transfer store.
+  notes: >-
+    The R0 row shares the HeatExchanger adapter. R1 V1 gap - searched Kern 1950
+    Examples 7.3-7.4 and the Kakaç et al. 3rd ed. Ch. 8 Kern-method worked
+    examples for a complete printed input-and-result set (film coefficients,
+    U and pressure drops with printed inputs); only OCR'd full-text scans are
+    available and no set was verifiable to the U-R1 transcription standard
+    within the time box, so no R1 V1 case is recorded - the closed-form tests
+    and the R1-to-R0 and e-NTU identities carry R1 verification.
 
 - id: air_cooler
   name: Air cooler
@@ -169,9 +212,28 @@
       note: exactly one of duty_W / hot_T_out / cold_T_out; min-approach duty bisection, pinch
         check and LMTD/UA reported
     R1:
-      status: planned
-      params: {}
-      note: rating — chevron-correlation film coefficients
+      status: provisional
+      adapter: ngdesign.units.heat.plate_exchanger_r1:PlateExchangerR1
+      params:
+        type: object
+        required: [amplitude_m, wavelength_m, chevron_angle_deg, plate_width_m, plate_length_m, port_diameter_m, n_plates]
+        properties:
+          amplitude_m: {type: number, description: 'plate corrugation amplitude, m (half the channel gap)'}
+          wavelength_m: {type: number, description: 'chevron corrugation wavelength, m'}
+          chevron_angle_deg: {type: number, description: 'chevron angle from the flow axis, deg, in (10, 80)'}
+          plate_width_m: {type: number, description: 'single-plate width, m'}
+          plate_length_m: {type: number, description: 'single-plate effective length, m'}
+          port_diameter_m: {type: number, description: 'port (maldistribution) diameter, m'}
+          n_plates: {type: number, description: 'total plate count, integer >= 3 (both fluids flowing)'}
+          plate_thickness_m: {type: number, description: 'plate thickness, m, default 6e-4'}
+          k_plate_W_mK: {type: number, description: 'plate conductivity, W/(m K), default 16 (stainless)'}
+          R_f_hot_m2K_W: {type: number, description: 'hot-side fouling, m2 K/W, default 0'}
+          R_f_cold_m2K_W: {type: number, description: 'cold-side fouling, m2 K/W, default 0'}
+          correlation: {type: string, enum: [martin, kumar], description: 'film-correlation switch, default martin'}
+          allow_extrapolation: {type: boolean, description: 'rate outside Re 200-1e4 and flag correlation_in_range 0, default false'}
+      note: rating — Martin 1996 VDI Heat Atlas N6 chevron correlations (explicit
+        1/sqrt(f) with the Konakov branch, Nu = 0.122 Pr^1/3 (f Re^2 sin 2phi)^0.374),
+        1.4-velocity-head port loss, counterflow e-NTU on enthalpies
       end_state: true
   pid_symbol: PHE
   references:
@@ -184,6 +246,19 @@
     streams are covered by the closed-form CP*ΔT test in
     tests/units/heat/test_exchangers.py; a V1 case needs a printed example with
     both feeds, an outlet spec and a printed duty/outlet.
+    R1 V1 gap: the R1 verification is carried by the spec's closed-form anchors
+    (friction, Nusselt, h, ΔP and U to 1e-8 relative), the geometry refusals and
+    the R0-reduction identity (R0 replay of the R1 duty to 1e-10); no printed
+    plate-exchanger example with complete geometry, feeds and printed duty/outlet
+    was located, so no R1 V1 case is recorded. Sources searched: the spec's V1
+    candidate Kakaç, Liu & Pramuanjaroenkij, Heat Exchangers, 3rd ed., ch. 10
+    (their gasketed-plate rating examples are Kumar-correlation water-water cases
+    with plate geometry and h/U/duty printed, but the accessible copies carry
+    worked solutions as exercise answers or partial tables only); VDI Heat Atlas
+    2nd ed. N6 (no worked numerical example); Wang, Sundén & Manglik, Plate Heat
+    Exchangers (2007) (design charts, no end-to-end printed example). The VDI N6
+    equations are pinned by the anchors, which ht's variant='VDI' reproduces only
+    to ~5e-6 relative.
 
 - id: double_pipe
   name: Double-pipe / hairpin exchanger
@@ -342,15 +417,46 @@
       note: process duty from a T_out/duty_W spec; fuel demand from the mixture LHV with
         water as vapour
     R1:
-      status: planned
-      params: {}
-      note: radiant/convective split (Lobo-Evans)
+      status: provisional
+      adapter: ngdesign.units.heat.fired_heater_r1:FiredHeaterR1
+      params:
+        type: object
+        required: [fuel_composition, excess_air_frac, alpha_Acp_m2, exchange_factor,
+                   tube_area_radiant_m2, tube_wall_excess_K, UA_convection_W_K]
+        properties:
+          T_out: {type: number, description: 'outlet temperature spec, K (one of T_out/duty_W)'}
+          duty_W: {type: number, description: 'duty spec, W (one of T_out/duty_W)'}
+          dP: {type: number, description: 'coil pressure drop, Pa'}
+          fuel_composition: {type: object, description: 'fuel component-id map; required at R1'}
+          excess_air_frac: {type: number, description: 'excess air fraction over stoichiometric'}
+          air_composition: {type: object, description: 'air mole fractions, default N2 0.79 / O2 0.21'}
+          air_T_K: {type: number, description: 'combustion air temperature, K, default 298.15'}
+          box_P_Pa: {type: number, description: 'firebox pressure, Pa, default 101325'}
+          alpha_Acp_m2: {type: number, description: 'Lobo-Evans alpha*A_cp, m2'}
+          exchange_factor: {type: number, description: 'Lobo-Evans overall exchange factor, (0, 1]'}
+          tube_area_radiant_m2: {type: number, description: 'radiant tube outside area, m2'}
+          h_conv_radiant_W_m2K: {type: number, description: 'radiant-section convection, W/(m2 K), default 11.3565267'}
+          tube_wall_excess_K: {type: number, description: 'tube wall above mean radiant process T, K'}
+          UA_convection_W_K: {type: number, description: 'convection-section UA, W/K'}
+          radiant_loss_frac: {type: number, description: 'setting loss fraction of fired heat, default 0'}
+      note: radiant/convective split (Lobo-Evans) with the fuel and flue-gas balance
+        solved; bridgewall, stack and crossover temperatures reported
       end_state: true
   pid_symbol: FH
   references:
   - docs/unit-catalogue-plan.md §2 U-C 7
   notes: V2083 checks the methane LHV against NBSIR 82-2401 (802.125 kJ/mol at
     288.15 K; package 802.584 kJ/mol on the 298.15 K formation basis, +0.057%).
+    R1 has no V1 case — Kern Example 19.1 (Process Heat Transfer, 1950, Ch. 19)
+    fixes the 75 % LHV efficiency as a design input and sizes only the radiant
+    section, while R1 rates the efficiency from UA_convection_W_K, which the
+    example does not print, so a case asserting the solved efficiency against
+    0.75 would echo an input. Kern 1950 Ch. 19, Wimpress 1963 and API 560 were
+    searched for a printed-inputs to printed-outputs fired-heater case without
+    success; any future case id must follow V1-... . The radiant-section solve is
+    kept as a documented comparison test against Kern Example 19.1 in
+    tests/units/heat/test_fired_heater_r1.py (fuel composition, coil fluid and
+    convection UA there are documented carriers).
 
 - id: cooling_tower
   name: Cooling tower
