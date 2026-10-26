@@ -2,7 +2,7 @@
 
 Family: **treating** · P&ID symbol: `SRU`
 
-Rigour ladder: R0 provisional, R2 provisional
+Rigour ladder: R0 provisional, R2 planned
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 provisional
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.treating.sulfur_recovery:SulfurRecovery` | condenses S8 only (databank species with usable formula + formation data — recorded choice); hydrocarbons pass through unburned at R0; V1 case on GPSA EDB Sect. 22 Ex. 22-1 printed stage results — the example's printed overall recovery is not accessible in any copy reachable (official GPSA workbook companion ends at the first converter), so it is a documented V1 gap and the level stays provisional |
-| R2 | provisional | `ngdesign.units.treating.sulfur_recovery_r2:SulfurRecoveryR2` | Gibbs equilibrium per catalytic converter (isothermal; S6/S8 ± COS/CS2); furnace = R0 rule (S2 data missing); complete sulfur condensation (package S8 Psat unusable); V1 gap — no printed R2-level case found. The row's only printed Claus example (GPSA EDB Sect. 22 Ex. 22-1) is a plant material balance recorded at R0, and no reachable printed source transcribes per-stage converter equilibrium compositions with approach temperatures, so the level stays provisional |
+| R2 | planned | — | Gibbs per stage |
 
 ### R0 parameters
 
@@ -50,38 +50,6 @@ properties:
 type: object
 ```
 
-### R2 parameters
-
-```yaml
-properties:
-  P:
-    description: process pressure, Pa abs
-    type: number
-  T_condenser:
-    description: sulfur condenser temperature, K
-    type: number
-  T_thermal:
-    description: thermal-stage (reaction-furnace) temperature, K
-    type: number
-  catalytic_stages:
-    description: one entry per catalytic Gibbs equilibrium stage, each with T (K)
-      and optional approach_K (K); conversion stages are refused
-    type: array
-  extra_species:
-    description: additional converter species from the supported set (CO, COS, CS2,
-      H2)
-    type: array
-  reaction_set:
-    description: flowsheet-owned reaction set (H2S burn + Claus reaction, U-01b pattern
-      (a))
-    type: object
-  thermal_conversion:
-    description: fraction of the post-burn H2S consumed by the Claus reaction in the
-      thermal stage (the R0 furnace rule)
-    type: number
-type: object
-```
-
 ## V1 worked cases
 
 | case | level | quantity | expected | measured | tolerance | result |
@@ -95,4 +63,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-G 5
 
-> roadmap; S2 slice (plan §2b). Sour-water stripping is NOT a row here — it is a reboiled-stripper configuration on the electrolyte package (T-09, plan U-G 9). R2 V1 gap recorded in the R2 level note — searched GPSA Sect. 22 and the row's printed examples; Ex. 22-1 is the only Claus case and it is R0-level.
+> roadmap; S2 slice (plan §2b). Sour-water stripping is NOT a row here — it is a reboiled-stripper configuration on the electrolyte package (T-09, plan U-G 9).
