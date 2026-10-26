@@ -2,7 +2,7 @@
 
 Family: **heat** · P&ID symbol: `CT`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.heat.cooling_tower:CoolingTower` | water outlet FIXED at wet bulb + approach_K; the exit air, saturated at the exit-air temperature solved from the overall energy closure, carries the heat and the evaporation; blowdown/makeup from cycles of concentration |
-| R1 | planned | — | Merkel method |
+| R1 | provisional | `ngdesign.units.heat.cooling_tower_r1:CoolingTowerR1` | Merkel number by 4-point Chebyshev (CTI ATC-105) against KaV/L = C (L/G)^-n, water outlet solved by brentq, then the R0 balance at the solved approach; Merkel enthalpies from the ASHRAE Fundamentals Ch. 1 Hyland-Wexler closed form per the orchestrator ruling on PR #284 (the package's water latent heat is ~4% high, #249), the balance stays R0's through the thermo package; approach_K is solved at R1, not a parameter. A characteristic above the attainable Merkel number refuses typed with both numbers. |
 
 ### R0 parameters
 
@@ -29,6 +29,25 @@ properties:
     type: number
   cycles_of_concentration:
     description: cycles of concentration, >= 1 (default 3)
+    type: number
+type: object
+```
+
+### R1 parameters
+
+```yaml
+properties:
+  characteristic_C:
+    description: tower characteristic coefficient C in KaV/L = C (L/G)^-n (solution
+      mode, with characteristic_n)
+    exclusiveMinimum: 0
+    type: number
+  characteristic_n:
+    description: tower characteristic exponent n, >= 0 (solution mode, with characteristic_C)
+    type: number
+  cycles_of_concentration:
+    description: cycles of concentration, >= 1 (default 3)
+    minimum: 1
     type: number
 type: object
 ```
@@ -45,4 +64,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-C 8
 
-> V2085 checks the model wet bulb against ASHRAE Fundamentals 2021 SI Ch. 1 Example 1 (40 C dry-bulb / 20 C wet-bulb air; measured 292.989 K, -0.16 K).
+> V2085 checks the model wet bulb against ASHRAE Fundamentals 2021 SI Ch. 1 Example 1 (40 C dry-bulb / 20 C wet-bulb air; measured 292.989 K, -0.16 K). R1 V1 gap — searched ASHRAE HVAC S&E Ch. 40, Perry's 8th §12, Kern 1950 Ch. 17; the printed worked examples sit behind paywalls, the web reproduces the method but not the printed inputs/answers, so no printed-value case is constructed.
