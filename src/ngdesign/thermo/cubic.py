@@ -134,7 +134,7 @@ class ThermoSurfaceMixin:
 
     def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         """PT flash: full phase split at temperature T (K) and pressure P (Pa abs)."""
-        key = ("pt", *_state.cache_key(z, T, P), round(molar_flow, 9))
+        key = ("pt", *_state.cache_key(z, T, P), float(molar_flow))
         return cast(
             StreamState,
             self._cached(key, lambda: _state.run_flash(self._flasher(z), z, molar_flow, T=T, P=P)),
