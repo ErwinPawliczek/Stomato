@@ -37,7 +37,7 @@
    - If phase k is absent at a state, its rate is 0.
 
 ### Algorithm
-1. **Resolve inputs.** Resolve the set (`reaction_set_param`) and check rate units. Refuse PowerLaw + `equilibrium` without `reverse`, as in the pfr spec (`kinetics.rate` applies (1 − 1/K) with no reaction quotient).
+1. **Resolve inputs.** Resolve the set (`reaction_set_param`) and check rate units. A PowerLaw with `equilibrium` and no `reverse` is valid (`kinetics.rate` applies forward·(1 − Q/K) since #245); refuse only LHHW + `equilibrium`, as in the pfr spec.
 2. **Unknowns.** u = ξ (m values) for `"isothermal"` and `{"T_out": K}`, with T fixed at T_in or T_out. u = [ξ, T] for `"adiabatic"` and `{"duty_W": W}`. P is the inlet pressure throughout; the outlet has no pressure drop.
 3. **Start.** ξ⁰ = 0 and T⁰ = `T_guess_K` if given, else T_in. The `T_guess_K` param selects a branch when an exothermic adiabatic CSTR has multiple steady states. The returned state is the one reached from this start, and the start is documented in `info`.
 4. **Newton.**
@@ -61,7 +61,7 @@
 |---|---|---|
 | `volume_m3` ≤ 0 | `CstrError` (ValueError) | `volume_m3` |
 | unknown `rate_units`; catalyst basis without `bulk_density_kg_m3` | `CstrError` | `rate_units` / `bulk_density_kg_m3` |
-| reaction without kinetics; equilibrium without explicit reverse | `CstrError` | `has no kinetics` / `explicit reverse` |
+| reaction without kinetics; LHHW reaction carrying an equilibrium model | `CstrError` | `has no kinetics` / `LHHW` |
 | bad `thermal` mode | `ValueError`, raised by `thermal_outlet` | `thermal mode` |
 | Newton cap or singular Jacobian | `CstrConvergenceError` (CstrError) | `did not converge` / `singular` |
 | R1 two-phase vessel | `CstrPhaseError` (CstrError) | `use level R2` |
@@ -139,4 +139,4 @@ params:
 - Newton: FD steps, backtracking with non-negativity, the 100-iteration cap, typed errors and the `T_guess_K` start.
 - The energy closure goes through `thermal_outlet`; `T_closure_gap_K` is reported.
 - R2 holdup by phase volume fraction; an absent reacting phase gives rate 0; the identity holds at 1e-12.
-- The equilibrium-without-reverse refusal is present.
+- No equilibrium-without-reverse refusal (#245); a large-τk test reaches Q/K → 1; LHHW + equilibrium is refused.
