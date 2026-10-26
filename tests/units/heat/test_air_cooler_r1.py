@@ -384,7 +384,7 @@ def test_property_unavailable_names_the_side() -> None:
     thermo = _thermo()
     inlets = {"inlet": _inlet(thermo)}
     _, params = AirCoolerR1.example_case()
-    with pytest.raises(PropertyUnavailable):
+    with pytest.raises(PropertyUnavailable, match="viscosity"):
         AirCoolerR1().solve(inlets, params, cast(Thermo, _NoTransport(thermo)))
 
 
