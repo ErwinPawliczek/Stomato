@@ -297,18 +297,7 @@ class NaphthaHydrotreaterR1:
 
         # Algorithm step 5: the R0-identical gas/treated split.
         n_final = state.component_flows()
-        gas_cids = sorted(cid for cid in _GAS_CIDS if n_final.get(cid, 0.0) > 0.0)
-        if not gas_cids:
-            raise HdtKineticError(
-                "naphtha_ht: gas_out would carry no species (no H2 excess, no H2S/NH3 formed) — "
-                "give hydrogen excess or S/N removal"
-            )
-        treated_cids = sorted(cid for cid, n in n_final.items() if n > 0.0 and cid not in _GAS_CIDS)
-        outlets: dict[str, StreamState] = {}
-        for port, cids in (("treated_out", treated_cids), ("gas_out", gas_cids)):
-            total = math.fsum(n_final[c] for c in cids)
-            z = {c: n_final[c] / total for c in cids}
-            outlets[port] = thermo.flash_pt(z, state.T, state.P, total)
+        outlets = _split_outlets(n_final, state, thermo)
 
         # Algorithm step 6: duty on the formation basis + the R0 info keys.
         xi_hds = xi_last.get("hds_thiophene", 0.0)
