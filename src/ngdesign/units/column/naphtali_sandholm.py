@@ -193,8 +193,8 @@ def _ns_try_accept(
     ``apply`` writes a trial state into the profile and ``exact_norms``
     evaluates the exact (refreshed-thermo) norms - the TWO engine-specific
     pieces here (dense `_apply_state` + `_refresh_y`/`_exact_residuals` vs
-    the graph engine's graph apply, whose live_norm is off so exact_norms is
-    never called); the acceptance policy is the shared controller's, one for
+    the graph engine's graph apply + the same exact refreshed-thermo norms);
+    the acceptance policy is the shared controller's, one for
     both engines.
 
     Returns (accepted, achieved norms, sum-of-squares of the trial residuals
@@ -348,16 +348,20 @@ class _NSEngine(Protocol):
     its linear solve (dense Gaussian elimination vs ``scipy.sparse`` LU),
     plus the graph-only per-pass temperature clamp behind ``cap_step`` (a
     no-op for the dense engine, whose behaviour must stay byte-identical).
-    Everything else - the pass loop, the line search and acceptance through
-    ``_ns_try_accept`` with best-iterate tracking, the rho-based LM damping
-    adaptation, the pass budget and the final gate - is the controller's, by
-    construction.
+    Everything else - the pass loop, the pass gate, the line search and
+    acceptance through ``_ns_try_accept`` with best-iterate tracking, the
+    rho-based LM damping adaptation, the pass budget and the final gate - is
+    the controller's, by construction.
     """
 
     prof: _Profile
     live_norm: bool
     ex_m: float
     ex_h: float
+    m_tol: float
+    best_u: list[float] | None
+    best_m: float
+    best_h: float
 
     def begin_pass(self) -> tuple[list[float], Callable[[list[float]], list[float]]]: ...
 
@@ -366,8 +370,6 @@ class _NSEngine(Protocol):
     def h_norm_of(self, r: list[float]) -> float: ...
 
     def norms(self, r: list[float]) -> tuple[float, float]: ...
-
-    def checkpoint(self, u: list[float], r0: list[float]) -> bool: ...
 
     def jacobian(
         self, residuals: Callable[[list[float]], list[float]], r0: list[float], u: list[float]
@@ -411,20 +413,38 @@ def _ns_controller(eng: _NSEngine, ns_max: int) -> None:
     """The ONE Naphtali-Sandholm damped-Newton controller, both engines.
 
     Per pass: build the pass's reference state and residual closure
-    (``begin_pass``), evaluate it, run the pass gate (``checkpoint`` - the
-    dense engine's exact refreshed-thermo norms with best-iterate tracking,
-    the graph engine's graph-row norms with its polish target), then the ONE
-    shared step policy: the injected linear solve, the injected step cap, the
-    line search and the Levenberg-Marquardt fallback, all accepting through
-    ``_ns_try_accept``'s joint max-norm descent + exact-gate test, with the
-    damping adapted from the achieved-vs-predicted sum-of-squares ratio.
+    (``begin_pass``), evaluate it, run the ONE shared pass gate - refresh
+    y = K*x at the checkpoint, then the exact (refreshed-thermo) norms with
+    best-iterate tracking on the live-norm path, gated at the mesh
+    tolerances - then the ONE shared step policy: the injected linear solve,
+    the injected step cap, the line search and the Levenberg-Marquardt
+    fallback, all accepting through ``_ns_try_accept``'s joint max-norm
+    descent + exact-gate test, with the damping adapted from the
+    achieved-vs-predicted sum-of-squares ratio.
     """
     for _ in range(ns_max):
         prof = eng.prof
         prof.ns_passes += 1
         u, residuals = eng.begin_pass()
         r0 = residuals(u)
-        if eng.checkpoint(u, r0):
+        # The ONE shared pass gate, both engines: the dense engine's former
+        # checkpoint moved here verbatim (review round 2, item 1), so the
+        # dense behaviour is byte-identical. ``exact_norms`` refreshes
+        # y = K*x and reads the exact refreshed-thermo residual - the NS
+        # residual derives vapour compositions as K*x (equilibrium-consistent
+        # by construction), so a state whose STORED y is stale reads as
+        # converged internally while the exact check - which uses the stored
+        # y - is wide open (measured P1-09 absorber, seed state: NS-internal
+        # M=6.3e-3 vs exact M=1.00).
+        eng.ex_m, eng.ex_h = eng.exact_norms(eng.prof)
+        # Best-iterate tracking (zero/one-tear columns): keep the best exact
+        # state across passes and restore it at exit. NS's finite-difference
+        # Newton can walk PAST the near-converged state it started from into
+        # an unevaluable one; the best-exact state is what the inside-out
+        # polish in _solve_mesh needs.
+        if eng.live_norm and eng.ex_m + eng.ex_h < eng.best_m + eng.best_h:
+            eng.best_u, eng.best_m, eng.best_h = list(u), eng.ex_m, eng.ex_h
+        if eng.ex_m < eng.m_tol and eng.ex_h < _MESH_H_TOL:
             break
         m_current, h_current = eng.norms(r0)
         n_unk = len(u)
@@ -530,8 +550,10 @@ class _DenseNSEngine:
 
     The residual closure is `_ns_residual_function`'s shared live residual,
     the Jacobian the full one-column-at-a-time FD matrix (`_fd_jacobian`),
-    the linear solve dense Gaussian elimination (`_gauss`), and the pass gate
-    the exact (refreshed-thermo) norms with best-iterate tracking.
+    the linear solve dense Gaussian elimination (`_gauss`), and nothing
+    else: the pass gate - the exact (refreshed-thermo) norms with
+    best-iterate tracking and the mesh tolerances - lives in
+    `_ns_controller`.
     ``cap_step`` is a no-op: the dense path's behaviour must stay
     byte-identical (bench and dispatch golden), so no graph-only safeguard
     may touch its steps.
@@ -551,9 +573,9 @@ class _DenseNSEngine:
         self._m_rows, self._h_rows = _residual_row_blocks(col, _h_equation_stages(col))
         self.live_norm = col.n_tears < 2
         if col.n_tears >= 2:
-            self._m_tol = _MESH_M_TOL
+            self.m_tol = _MESH_M_TOL
         elif _is_reactive_package(tb):
-            self._m_tol = _MESH_M_TOL_REACTIVE
+            self.m_tol = _MESH_M_TOL_REACTIVE
         else:
             # Same gate the mesh accepts at (_MESH_M_TOL_ZERO_ONE_TEAR): the NS
             # state hands off to _solve_mesh's inside-out polish, and the polish
@@ -561,10 +583,10 @@ class _DenseNSEngine:
             # A tighter intermediate gate only discarded measurably converged
             # states (measured P1-09 stripper: NS polished a warm-chained state
             # to M=2.90e-7, H=4.46e-10 and the 1e-7 gate typed the tear failed).
-            self._m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
-        self._best_u: list[float] | None = None
-        self._best_m = float("inf")
-        self._best_h = float("inf")
+            self.m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
+        self.best_u: list[float] | None = None
+        self.best_m = float("inf")
+        self.best_h = float("inf")
         self.ex_m = float("inf")
         self.ex_h = float("inf")
         self._k_misses = [0]
@@ -655,30 +677,6 @@ class _DenseNSEngine:
         )
         return u, residuals
 
-    def checkpoint(self, u: list[float], r0: list[float]) -> bool:
-        """The pass gate on the exact (refreshed-thermo) norms, with the
-        controller's best-iterate tracking on the live-norm path."""
-        _ = r0  # the gate reads the refreshed exact residual, not r0
-        _refresh_y(self._col, self._tb, self.prof)
-        # The pass gate must carry exact-residual semantics, not the NS residual's.
-        # The NS residual derives vapour compositions as K*x (equilibrium-consistent
-        # by construction), so a state whose STORED y is stale reads as converged
-        # internally while the exact check - which uses the stored y - is wide open.
-        # Measured P1-09 absorber, seed state (y = gas-feed composition, not K*x):
-        # NS-internal M=6.3e-3 vs exact M=1.00 - the former gate broke before the
-        # first Newton step and the fallback never ran for these columns.
-        self.ex_m, self.ex_h = _exact_residuals(self._col, self._tb, self.prof)
-        # Live-norm acceptance (zero/one-tear columns): keep the best exact state
-        # across passes and restore it at exit. NS's finite-difference Newton can
-        # walk PAST the near-converged state it started from into an unevaluable
-        # one (measured P1-09 stripper, physical branch at boilup 20-50 mol/s:
-        # inside-out best M=2.2e-11/H=1.7e-1 or M=1.5e-2/H=3.4e-6, then NS's own
-        # final state M=1.00 - a stage the thermo can no longer evaluate). The
-        # best-exact state is what the inside-out polish in _solve_mesh needs.
-        if self.live_norm and self.ex_m + self.ex_h < self._best_m + self._best_h:
-            self._best_u, self._best_m, self._best_h = list(u), self.ex_m, self.ex_h
-        return self.ex_m < self._m_tol and self.ex_h < _MESH_H_TOL
-
     def m_norm_of(self, r: list[float]) -> float:
         """Max scaled residual over the M rows (the exact-M gate's block)."""
         return max(abs(r[i]) for i in self._m_rows)
@@ -760,14 +758,14 @@ class _DenseNSEngine:
         )
 
     def exhausted(self) -> None:
-        if self.live_norm and self._best_u is not None:
-            _apply_state(self.prof, self._best_u, self._col, self._v_free, self._t_bot_tear)
+        if self.live_norm and self.best_u is not None:
+            _apply_state(self.prof, self.best_u, self._col, self._v_free, self._t_bot_tear)
         raise ColumnConvergenceError("Naphtali-Sandholm fallback did not converge within budget")
 
     def finish(self) -> None:
         col, tb, prof = self._col, self._tb, self.prof
-        if self.live_norm and self._best_u is not None:
-            _apply_state(prof, self._best_u, col, self._v_free, self._t_bot_tear)
+        if self.live_norm and self.best_u is not None:
+            _apply_state(prof, self.best_u, col, self._v_free, self._t_bot_tear)
         _refresh_y(col, tb, prof)
         m_res, h_res = _exact_residuals(col, tb, prof)
         prof.ns_used = True
@@ -775,7 +773,7 @@ class _DenseNSEngine:
         # anchor floor sits around 1e-3-1e-4 relative, while mass closes to
         # machine precision. Demanding 1e-6 on H here would reject a solution
         # the mesh itself accepts.
-        if m_res > self._m_tol or h_res > _MESH_H_TOL:
+        if m_res > self.m_tol or h_res > _MESH_H_TOL:
             raise ColumnConvergenceError(
                 f"Naphtali-Sandholm fallback stalled: max residuals M={m_res:.2e}, H={h_res:.2e}"
                 + (f" | {'; '.join(prof.ns_trace)}" if prof.ns_trace else "")

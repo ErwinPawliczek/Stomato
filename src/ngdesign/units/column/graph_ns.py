@@ -48,6 +48,7 @@ import scipy.sparse.linalg
 
 from .inside_out import (
     _Column,
+    _exact_residuals,
     _Interlink,
     _pa_return_terms,
     _pa_stage_flows,
@@ -55,7 +56,7 @@ from .inside_out import (
     _stage_k_values,
     _StageFeed,
 )
-from .naphtali_sandholm import _ns_controller
+from .naphtali_sandholm import _ns_controller, _refresh_y
 from .spec import (
     _FLOW_FLOOR,
     _MESH_H_TOL,
@@ -66,12 +67,6 @@ from .spec import (
     ColumnConvergenceError,
 )
 from .thermo_adapter import _flash_ready, _ThermoBox
-
-#: Polish target for the graph solve: below the mesh gate, so a linear column
-#: routed through the graph solver and the same column through the dense solver
-#: (which stops at the mesh gate) agree on the converged profile to 1e-10.
-#: Tightening - never widening - is allowed; the pass budget still caps it.
-_GRAPH_POLISH_TARGET = 1e-12
 
 #: Per-pass Newton temperature step bound (K). The unpack's band clamp is far
 #: too wide to stop a bad Jacobian from shooting a section bottom 100+ K in one
@@ -778,10 +773,12 @@ class _GraphNSEngine:
     (`_graph_residual_vector`, interlinks included), the Jacobian the
     stage-coloured FD approximation as a scipy.sparse matrix
     (`_graph_fd_jacobian`), and the linear solve a ``scipy.sparse`` LU of the
-    block-sparse system. The pass loop, the line search and acceptance
-    (``_ns_try_accept``, live-norm off - the graph rows are the gate's own
-    surface, there is no separate exact residual), the best-iterate tracking
-    and the rho-based LM damping adaptation are the shared controller's.
+    block-sparse system. The pass loop, the pass gate (refreshed y = K*x,
+    the exact refreshed-thermo norms at the mesh tolerances, best-iterate
+    tracking - the dense engine's own gate, shared in `_ns_controller`),
+    the line search and acceptance (``_ns_try_accept``, live-norm on the
+    zero/one-tear path like the dense engine) and the rho-based LM damping
+    adaptation are the shared controller's.
 
     The one graph-only safeguard is the per-pass temperature clamp
     (``cap_step``): active ONLY on columns with stripper sections - a bad
@@ -811,16 +808,15 @@ class _GraphNSEngine:
         self.prof = prof
         self._t_bot_tear = t_bot_tear
         self._model = model
-        self._m_tol = m_tol
-        self.live_norm = False
+        self.m_tol = m_tol
+        self.live_norm = col.n_tears < 2
         self.ex_m = float("inf")
         self.ex_h = float("inf")
         self._k_last: list[dict[str, float] | None] = [None] * model.layout.n_graph
-        self._best_u: list[float] | None = None
-        self._best_score = float("inf")
+        self.best_u: list[float] | None = None
+        self.best_m = float("inf")
+        self.best_h = float("inf")
         self._k_harvest: list[dict[str, float] | None] = []
-        self._m_current = float("inf")
-        self._h_current = float("inf")
         self._colours = 0
         self._n_evals = 0
 
@@ -837,6 +833,12 @@ class _GraphNSEngine:
         """
         col, tb, prof, model = self._col, self._tb, self.prof, self._model
         layout = model.layout
+        # Persist the previous pass's real K evaluations (the harvest the old
+        # graph-row checkpoint applied): a stage whose flash fails mid-solve
+        # falls back to its last REAL K in the freeze below.
+        for s, k in enumerate(self._k_harvest):
+            if k is not None:
+                self._k_last[s] = k
         k_fallbacks: list[dict[str, float]] = []
         for s in range(layout.n_graph):
             feed_part, draw_total = _graph_k_args(model, s)
@@ -923,22 +925,6 @@ class _GraphNSEngine:
     def norms(self, r: list[float]) -> tuple[float, float]:
         return (self.m_norm_of(r), self.h_norm_of(r))
 
-    def checkpoint(self, u: list[float], r0: list[float]) -> bool:
-        """Persist the pass's evaluated real K values, track the best
-        pass-start iterate on the graph rows' own norms, and stop the loop at
-        the polish target (below the mesh gate, so a linear column routed
-        through this engine matches the dense engine's converged profile to
-        1e-10; tightening - never widening - is allowed, the pass budget
-        still caps it)."""
-        for s, k in enumerate(self._k_harvest):
-            if k is not None:
-                self._k_last[s] = k
-        self._m_current, self._h_current = self.norms(r0)
-        score = max(self._m_current, self._h_current)
-        if score < self._best_score:
-            self._best_u, self._best_score = list(u), score
-        return score < _GRAPH_POLISH_TARGET
-
     def jacobian(
         self, residuals: Callable[[list[float]], list[float]], r0: list[float], u: list[float]
     ) -> Any:
@@ -989,18 +975,24 @@ class _GraphNSEngine:
         _graph_apply_state(prof, u, self._model, self._t_bot_tear)
 
     def exact_norms(self, prof: _Profile) -> tuple[float, float]:
-        """Never called (live_norm is off): the graph rows are the gate's own surface."""
-        _ = prof
-        return (float("inf"), float("inf"))
+        """The exact refreshed-thermo norms - the shared gate's own surface.
+
+        Refreshes y = K*x first: the NS rows derive vapour compositions as
+        K*x, so a state whose STORED y lags the iterate reads as converged
+        internally while the exact residual - which uses the stored y - is
+        wide open (measured, review round 2: the two runs' stored y differed
+        by 0.219 at pass 2). The dense engine's exact_norms, verbatim."""
+        _refresh_y(self._col, self._tb, prof)
+        return _exact_residuals(self._col, self._tb, prof)
 
     def trace_jacobian_failed(self) -> None:
         self.prof.ns_trace.append(
-            f"pass {self.prof.ns_passes}: M={self._m_current:.3e} H={self._h_current:.3e} | FD unavailable"
+            f"pass {self.prof.ns_passes}: exact M={self.ex_m:.3e} H={self.ex_h:.3e} | FD unavailable"
         )
 
     def trace_solve_failed(self) -> None:
         self.prof.ns_trace.append(
-            f"pass {self.prof.ns_passes}: M={self._m_current:.3e} H={self._h_current:.3e} | LU singular"
+            f"pass {self.prof.ns_passes}: exact M={self.ex_m:.3e} H={self.ex_h:.3e} | LU singular"
         )
 
     def trace_pass(
@@ -1017,37 +1009,32 @@ class _GraphNSEngine:
     ) -> None:
         _ = r0, jac, step, lam_lm, ach_m, ach_h, via
         self.prof.ns_trace.append(
-            f"pass {self.prof.ns_passes}: M={self._m_current:.3e} H={self._h_current:.3e} "
+            f"pass {self.prof.ns_passes}: exact M={self.ex_m:.3e} H={self.ex_h:.3e} "
             f"| colours={self._colours} jac_evals={self._n_evals} lam={lam:.3g} accepted={accepted}"
         )
 
     def exhausted(self) -> None:
         # Budget exhausted: restore the best iterate and let the final gate
         # decide - a state that reached the mesh gate at any pass must not be
-        # discarded by later polishing passes.
-        self._restore_best()
+        # discarded by later passes.
+        if self.live_norm and self.best_u is not None:
+            self.apply(self.prof, self.best_u)
 
     def finish(self) -> None:
-        """Final acceptance at the mesh gate on the graph's own rows, on the
-        best iterate across passes."""
-        self._restore_best()
-        model, tb, prof = self._model, self._tb, self.prof
-        u = _graph_pack(prof, model)
-        scales = _graph_residual_scales(model, tb, prof.l0, u, self._t_bot_tear)
-        xs, ts, vs, draw_flows = _graph_unpack(model, u, self._t_bot_tear)
-        r_final = _graph_residual_vector(model, tb, prof.l0, xs, ts, vs, draw_flows, scales=scales)
-        m_final = self.m_norm_of(r_final)
-        h_final = self.h_norm_of(r_final)
+        """Final acceptance on the exact refreshed-thermo norms at the mesh
+        tolerances - the shared gate's own surface, on the best iterate
+        across passes. Identical semantics to the dense engine's finish."""
+        if self.live_norm and self.best_u is not None:
+            self.apply(self.prof, self.best_u)
+        col, tb, prof = self._col, self._tb, self.prof
+        _refresh_y(col, tb, prof)
+        m_res, h_res = _exact_residuals(col, tb, prof)
         prof.ns_used = True
-        if m_final > self._m_tol or h_final > _MESH_H_TOL:
+        if m_res > self.m_tol or h_res > _MESH_H_TOL:
             raise ColumnConvergenceError(
-                f"graph Naphtali-Sandholm stalled: max residuals M={m_final:.2e}, H={h_final:.2e}"
+                f"graph Naphtali-Sandholm stalled: max residuals M={m_res:.2e}, H={h_res:.2e}"
                 + (f" | {'; '.join(prof.ns_trace)}" if prof.ns_trace else "")
             )
-
-    def _restore_best(self) -> None:
-        if self._best_u is not None:
-            _graph_apply_state(self.prof, self._best_u, self._model, self._t_bot_tear)
 
 
 def _graph_naphtali_sandholm(
@@ -1058,14 +1045,12 @@ def _graph_naphtali_sandholm(
     Same unknown packing and residual algebra as the dense fallback, extended
     over the graph with the interlink terms and the derived per-section draw
     flows. The Jacobian is stage-coloured (see module docstring) and the step
-    solves with scipy.sparse LU; the pass loop, the line search and
-    acceptance, the LM damping adaptation and the final gate are the shared
-    controller's (`_ns_controller`) - this engine differs only in the
-    injected residual and Jacobian builders and the sparse linear solve.
-    Rows gate at the same mesh tolerance as the dense path, then the solve
-    polishes toward the 1e-12 target within the pass budget - which is what
-    makes a linear column routed through this solver comparable to the dense
-    result at 1e-10. Duties are NOT finalized here: whole-unit boundary
+    solves with scipy.sparse LU; the pass loop, the pass gate, the line
+    search and acceptance, the LM damping adaptation and the final gate are
+    the shared controller's (`_ns_controller`) - this engine differs only in
+    the injected residual and Jacobian builders and the sparse linear solve.
+    Both engines gate on the exact refreshed-thermo norms at the same mesh
+    tolerances. Duties are NOT finalized here: whole-unit boundary
     accounting over the graph is step 3.
     """
     model = _graph_model(col, kettle_free=t_bot_tear is None and col.reboiler == "kettle")
