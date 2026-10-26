@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `HT`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.reactors_hdt:NaphthaHydrotreater` | Fahim E12.2 model-compound stoichiometry (thiophene HDS, pyridine HDN, olefin/aromatic saturation) with declared removal fractions; duty sensible-only |
-| R1 | planned | — | lumped HDS/HDN kinetics in a PFR |
+| R1 | provisional | `ngdesign.units.refining.hdt_kinetic:NaphthaHydrotreaterR1` | first-order per-kg_cat HDS/HDN and olefin/aromatic saturation kinetics in adiabatic or isothermal PFR beds with per-bed inlet heaters; duty on the formation basis |
 
 ### R0 parameters
 
@@ -45,6 +45,24 @@ properties:
 type: object
 ```
 
+### R1 parameters
+
+```yaml
+properties:
+  beds:
+    description: beds in series; each takes catalyst_mass_kg, thermal (isothermal|
+      adiabatic) and optional inlet_T_K (K, heater before the bed)
+    type: array
+  bulk_density_kg_m3:
+    description: catalyst bulk density, kg/m3, default 800
+    type: number
+  kinetics:
+    description: per-kg_cat first-order kinetics per reaction (hds_thiophene, hdn_pyridine,
+      olefin_sat, arom_sat), each with k0, Ea, orders, basis
+    type: object
+type: object
+```
+
 ## V1 worked cases
 
 | case | level | quantity | expected | measured | tolerance | result |
@@ -61,4 +79,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-H 7
 
-> R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental characterization (issue #222).
+> R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental characterization (issue #222). R1 ships provisional WITHOUT a V1 case: no open, printed worked example found (searched Fahim et al. ch. 7, Ancheyta 2011, Satterfield & Roberts 1968); closed-form and R0-identity checks live in tests/units/refining/test_naphtha_ht_r1.py.
