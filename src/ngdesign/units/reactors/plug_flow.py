@@ -242,9 +242,13 @@ def integrate_plug_flow(
     See the module docstring for the method; the spec
     (``specs/backend/units/pfr.md``) owns the equations and the refusal
     table.  ``rate_multiplier(j, T, P, z)`` returns a*eta_j for reaction j
-    (R3); ``None`` means 1.0.  ``ergun`` is the R2 packed bed; ``None`` means
-    no pressure drop.
+    (R3); ``None`` means 1.0.  ``ergun`` is the R2 packed bed, not implemented
+    at R1: anything but ``None`` is refused, so a packed bed never silently
+    runs without its pressure drop. The parameter stays in the signature for
+    the callers the R2 step serves.
     """
+    if ergun is not None:
+        raise PlugFlowError("ergun pressure drop is R2 (not implemented)")
     if volume_m3 <= 0.0:
         raise PlugFlowError("volume_m3 must be > 0")
     if energy == "heat_model" and heat is None:
