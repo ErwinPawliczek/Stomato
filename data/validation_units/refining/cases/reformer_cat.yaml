@@ -1,0 +1,15 @@
+# reformer_cat V1 cases (spec U-01d; validator scripts/validate_units.py).
+#
+# No V1 case yet — the level ships provisional with the gap recorded on the
+# row's notes in data/unit_models/refining.yaml (2026-10-26). The spec's
+# candidate sources are not openly accessible: Smith, Chem. Eng. Prog. 55(6)
+# (1959) 76-80 is paywalled, and Rase, Chemical Reactor Design for Process
+# Plants, vol. 2 (1977), the catalytic-reforming case study, has no open copy
+# (searched Open Library, Google Books, publisher pages). Open secondary
+# reproductions of the Smith model exist (TSI-journals reactor-modeling paper;
+# Lid & Skogestad NTNU preprint), but the smith1959 preset gate requires a
+# page-cited transcription of Smith's k_i/K_i tables, which was not completed,
+# so no V1 numbers are asserted. The level's numerics are covered by the
+# closed-form tests in tests/units/refining/test_reformer_cat_r1.py (dehydro
+# equilibrium, _smith_to_contract conversion checks, k0 = 0 identity,
+# three-bed adiabatic V0).

@@ -360,7 +360,7 @@ class TestNaphthaHydrotreater:
 def test_planned_r1_levels_refuse_and_name_implemented_ones(thermo: Thermo) -> None:
     from ngdesign.units.levels import UnitLevelNotImplemented
 
-    for unit_id in ("naphtha_ht", "reformer_cat"):
+    for unit_id in ("naphtha_ht",):
         unit = registry.create("unit", unit_id)
         with pytest.raises(UnitLevelNotImplemented, match="R0"):
             unit.solve({}, {"model": "R1"}, thermo)
