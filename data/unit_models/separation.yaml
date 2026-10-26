@@ -142,9 +142,22 @@
         balancing duty is reported; gas, liquid and (when the package gives one)
         aqueous outlets at their flash states
     R1:
-      status: planned
-      params: {}
-      note: Souders-Brown sizing, carry-over at a given diameter (the souders_brown correlation plugin exists)
+      status: provisional
+      adapter: ngdesign.units.separation.flash_drum_r1:FlashDrumR1
+      params:
+        type: object
+        properties:
+          outlet_P: {type: number, description: 'outlet pressure, Pa abs; default min inlet P'}
+          duty_W: {type: number, description: 'heat added to the drum, W; PH flash with H_out = H_in + duty_W'}
+          vapor_fraction: {type: number, minimum: 0, maximum: 1, description: 'molar vapour fraction; PVF flash at outlet_P'}
+          K_m_s: {type: number, exclusiveMinimum: 0, description: 'Souders-Brown K, m/s; default York demister fit at the drum pressure'}
+          diameter_m: {type: number, exclusiveMinimum: 0, description: 'vessel inside diameter, m; enables the carry-over calculation'}
+          inlet_entrained_fraction: {type: number, minimum: 0, maximum: 1, description: 'fraction of the liquid entering the gravity section as droplets'}
+          droplet_d_rr_m: {type: number, exclusiveMinimum: 0, description: 'Rosin-Rammler characteristic droplet size, m'}
+          droplet_n_rr: {type: number, exclusiveMinimum: 0, description: 'Rosin-Rammler spread parameter'}
+          gas_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'gas viscosity override, Pa s'}
+      validation: []
+      note: Souders-Brown sizing (York demister K) and droplet carry-over at a given diameter over both liquid outlets; reduces to R0 without diameter_m or at E = 0
       end_state: true
   pid_symbol: V
   references:
