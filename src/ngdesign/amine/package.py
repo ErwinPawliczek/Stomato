@@ -704,7 +704,7 @@ class AmineReactivePackage(Thermo):
         """PT flash: reactive equilibrium at temperature T (K), pressure P (Pa abs)."""
         if self._reactive_domain(z) is None:
             return self._carrier.flash_pt(z, T, P, molar_flow)
-        key = ("pt", *_state.cache_key(z, T, P), round(molar_flow, 9))
+        key = ("pt", *_state.cache_key(z, T, P), float(molar_flow))
         return cast(StreamState, self._cached(key, lambda: self._build_state(z, T, P, molar_flow)))
 
     def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:

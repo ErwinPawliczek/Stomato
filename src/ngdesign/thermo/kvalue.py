@@ -1002,7 +1002,7 @@ class KValuePackage(ThermoSurfaceMixin):
     def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         """PT flash: Rachford-Rice split with successive-substitution K updates."""
         self._check_pressure(P)
-        key = ("pt", *_state_cache_key(z, T, P), round(molar_flow, 9))
+        key = ("pt", *_state_cache_key(z, T, P), float(molar_flow))
         return cast(StreamState, self._cached(key, lambda: self._flash_pt_compute(z, T, P, molar_flow)))
 
     def _flash_pt_compute(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
@@ -1387,7 +1387,7 @@ def _estimate_pressure(sup: _Support, zi: list[float], T: float) -> float:
 
 
 def _state_cache_key(z: dict[str, float], T: float, P: float) -> tuple[Any, ...]:
-    """Mirror of _state.cache_key (rounded composition/T/P) to key the property cache."""
+    """Mirror of _state.cache_key (exact composition/T/P) to key the property cache."""
     from ngdesign.thermo import _state
 
     return _state.cache_key(z, T, P)

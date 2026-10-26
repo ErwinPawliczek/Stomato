@@ -1061,7 +1061,7 @@ class TeqpPackage(ThermoSurfaceMixin):
 
     def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         """PT flash: pure feeds short-circuit on the model Psat; mixtures use root scan + RR."""
-        key = ("pt", *_state.cache_key(z, T, P), round(molar_flow, 9))
+        key = ("pt", *_state.cache_key(z, T, P), float(molar_flow))
         return cast(StreamState, self._cached(key, lambda: self._flash_pt_uncached(z, T, P, molar_flow)))
 
     def _flash_pt_uncached(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
