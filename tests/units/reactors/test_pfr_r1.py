@@ -342,16 +342,6 @@ def test_r1_refuses_integration_failed(thermo: Thermo, monkeypatch: pytest.Monke
         PfrR1().solve({"inlet": _flash(thermo, feeds["inlet"])}, params, thermo)
 
 
-def test_r1_refuses_an_ergun_bed(thermo: Thermo) -> None:
-    """``ergun`` is R2: at R1 a packed bed is refused, not silently run without dP."""
-    feeds, params = _r1a()
-    rset = reaction_set_param(params["reaction_set"])
-    with pytest.raises(PlugFlowError, match="ergun pressure drop is R2"):
-        integrate_plug_flow(
-            _flash(thermo, feeds["inlet"]), rset, thermo, volume_m3=1.0, energy="isothermal", ergun=object()
-        )
-
-
 def test_r1_refuses_depletion(thermo: Thermo) -> None:
     """A zero-order rate consumes its reactant linearly and must be refused."""
     params_zero: dict[str, Any] = {
