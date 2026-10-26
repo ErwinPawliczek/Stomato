@@ -792,6 +792,11 @@ class ShellTubeR2:
                 if strict:
                     raise
                 return _Zoning.diverged(process, utility)
+            except ShellTubeGeometryError:
+                # A geometry-param refusal (e.g. a missing tube_rows_vertical for
+                # a shell-side condensation zone) is a configuration error, not
+                # a non-physical trial: it recurs in every trial and must surface.
+                raise
             except (ValueError, ArithmeticError):
                 # Non-physical trial flash (e.g. an enthalpy the package cannot
                 # place): infinite demand, per the rating-solve contract.

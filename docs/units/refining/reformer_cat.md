@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `RF`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.reactors_reformer:CatalyticReformer` | Fahim Table 5.3 lumped yields vs reformate RON; duty sensible-only (flag heat_of_reaction_basis_sensible_only) |
-| R1 | planned | — | Smith (1959) lumped kinetics |
+| R1 | provisional | `ngdesign.units.refining.reformer_kinetic:CatalyticReformerR1` | Smith (1959) four-reaction lumped kinetics (n = 7: dehydro N<=>A+3H2, n_to_p N+H2<=>P, hc_n and hc_p hydrocracking to equal-molar C1-C5) over real C7 lumps (P = nC7, N = methylcyclohexane, A = toluene); adiabatic beds with fired interheaters on the pfr R1 integrator, isobaric per bed (no dP at R1), exact thermal_outlet closures, sharp reformate/H2 split; feed restricted to the real-species slate (issue #222) |
 
 ### R0 parameters
 
@@ -45,6 +45,31 @@ required:
 type: object
 ```
 
+### R1 parameters
+
+```yaml
+properties:
+  beds:
+    description: 'per bed, in flow order: {catalyst_mass_kg (> 0), inlet_T_K (> 0,
+      the fired interheater set point), thermal: "adiabatic" (default) | "isothermal"}'
+    type: array
+  bulk_density_kg_m3:
+    description: catalyst bulk density, kg/m3 (> 0); converts the per-catalyst-mass
+      rates (bed volume V_b = W_b / rho_b)
+    type: number
+  kinetics:
+    description: "{dehydro|n_to_p: {k0, Ea, A_K, B_K}, hc_n|hc_p: {k0, Ea}} Smith-form\
+      \ constants \u2014 k0 in lb-mol/(h\xB7lb_cat\xB7atm^\u03A3orders) (eq. 4 folds\
+      \ C_u and the bed P_atm into the contract k0'), Ea in J/mol, K = exp(A_K - B_K/T[K]);\
+      \ the \"smith1959\" preset is refused until Smith's constants are transcribed\
+      \ with page numbers"
+required:
+- beds
+- bulk_density_kg_m3
+- kinetics
+type: object
+```
+
 ## V1 worked cases
 
 | case | level | quantity | expected | measured | tolerance | result |
@@ -62,4 +87,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-H 8
 
-> R0 shipped by U-H2. The spec's "H2 and light ends as real components" is out of reach of the mass_elements balance (C/H atoms with no formula-bearing source from a pseudo naphtha); the offgas is a mass-only lump, species split in info. Pseudo-component elemental characterization - issue #222.
+> R0 shipped by U-H2. The spec's "H2 and light ends as real components" is out of reach of the mass_elements balance (C/H atoms with no formula-bearing source from a pseudo naphtha); the offgas is a mass-only lump, species split in info. Pseudo-component elemental characterization - issue #222. R1 implemented (U-R2 wave): Smith (1959) four-reaction kinetics over real C7 lumps (P = nC7, N = methylcyclohexane, A = toluene), adiabatic beds with interheaters on the pfr R1 integrator, sharp reformate/H2 split; the row has no identity with R0 (kinetics vs a yield correlation), so the R1 identity is all k0 = 0 (tests/units/refining/test_reformer_cat_r1.py). V1 gap (2026-10-26): Smith (1959) CEP 55(6) 76-80 is not openly accessible and Rase (Chemical Reactor Design for Process Plants, vol. 2, 1977) catalytic-reforming case study has no open copy (searched Open Library, Google Books, publisher pages); open secondary reproductions of the Smith model exist (a TSI-journals reactor-modeling paper, the Lid & Skogestad NTNU preprint) but printing a page-cited transcription of Smith's k_i/K_i tables was not completed in the time box, so the smith1959 preset stays refused and the level ships provisional on its closed-form tests (dehydro equilibrium at 1e-6 rel, _smith_to_contract conversion checks, k0 = 0 identity, three-bed adiabatic V0 at 1e-8).
