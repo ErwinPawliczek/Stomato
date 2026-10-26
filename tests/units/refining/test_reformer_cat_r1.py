@@ -14,6 +14,7 @@ from typing import Any
 import pytest
 
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.reactions import PowerLaw
 from ngdesign.units._physics.kinetics import enthalpy_with_formation
 from ngdesign.units.balance import mass_and_atoms
 from ngdesign.units.refining.reformer_kinetic import (
@@ -81,10 +82,10 @@ def test_reaction_set_builds_and_is_element_balanced() -> None:
         assert hc_p.stoichiometry[cid] == pytest.approx(7.0 / 15.0)
     # Forward + explicit reverse PowerLawRates on the mole-fraction basis,
     # per catalyst mass; the hydrocracking rates are irreversible.
-    assert rset.reactions[0].kinetics is not None and rset.reactions[0].kinetics.reverse is not None
-    assert rset.reactions[1].kinetics is not None and rset.reactions[1].kinetics.reverse is not None
-    assert rset.reactions[2].kinetics is not None and rset.reactions[2].kinetics.reverse is None
-    assert rset.reactions[3].kinetics is not None and rset.reactions[3].kinetics.reverse is None
+    for idx, want_reverse in ((0, True), (1, True), (2, False), (3, False)):
+        rk = rset.reactions[idx].kinetics
+        assert isinstance(rk, PowerLaw)
+        assert (rk.reverse is not None) is want_reverse
 
 
 def test_refuses_feed_species_outside_slate() -> None:
