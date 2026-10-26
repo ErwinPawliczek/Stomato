@@ -86,9 +86,46 @@
           dP: {type: number, description: 'pressure drop, Pa'}
       note: approach / duty with LMTD-F specification
     R1:
-      status: planned
-      params: {}
-      note: rating — U from ht film coefficients, TEMA type, F factor, ΔP both sides
+      status: provisional
+      adapter: ngdesign.units.heat.shell_tube_r1:ShellTubeR1
+      params:
+        type: object
+        required: [process_side, shell_ID_m, n_tubes, tube_OD_m, tube_ID_m, tube_length_m,
+          pitch_m, layout, baffle_spacing_m, n_baffles, tube_passes, utility_composition,
+          utility_T_K, utility_P_Pa, utility_molar_flow]
+        properties:
+          process_side: {type: string, enum: [tube, shell], description: 'side the
+              process stream flows on'}
+          shell_ID_m: {type: number, description: 'shell inside diameter Ds, m'}
+          n_tubes: {type: integer, description: 'total tube count Nt'}
+          tube_OD_m: {type: number, description: 'tube outside diameter, m'}
+          tube_ID_m: {type: number, description: 'tube inside diameter, m'}
+          tube_length_m: {type: number, description: 'tube length per pass, m'}
+          pitch_m: {type: number, description: 'tube pitch PT, m'}
+          layout: {type: string, enum: [triangular30, square90], description: 'tube
+              layout'}
+          baffle_spacing_m: {type: number, description: 'baffle spacing B, m'}
+          n_baffles: {type: integer, description: 'baffle count Nb'}
+          tube_passes: {type: integer, enum: [1, 2, 4, 6, 8], description: 'tube passes
+              per shell Ntp'}
+          n_shells: {type: integer, description: 'TEMA E shells in series, default
+              1'}
+          utility_composition: {type: object, description: 'utility stream mole fractions'}
+          utility_T_K: {type: number, description: 'utility inlet temperature, K'}
+          utility_P_Pa: {type: number, description: 'utility inlet pressure, Pa'}
+          utility_molar_flow: {type: number, description: 'utility inlet molar flow,
+              mol/s'}
+          k_wall_W_mK: {type: number, description: 'tube wall conductivity, W/(m K),
+              default 45'}
+          R_f_tube_m2K_W: {type: number, description: 'tube-side fouling, m2 K/W, default
+              0'}
+          R_f_shell_m2K_W: {type: number, description: 'shell-side fouling, m2 K/W,
+              default 0'}
+          roughness_m: {type: number, description: 'tube roughness, m, default 4.5e-5'}
+          allow_extrapolation: {type: boolean, description: 'permit Kern outside 2e3
+              < Re_s < 1e6, flagged in info'}
+      note: rating — Kern shell side (S1-S3) with D_e per layout, duct tube side with
+        4Ntp return heads, e-NTU S&T, F reported
     R2:
       status: planned
       params: {}
@@ -98,8 +135,14 @@
   pid_symbol: E
   references:
   - docs/unit-catalogue-plan.md §2 U-C 2
-  notes: the R0 row shares the HeatExchanger adapter; R1/R2 rating physics is the U-C
-    family thread's work on the shared _physics/heat_transfer store.
+  notes: >-
+    The R0 row shares the HeatExchanger adapter. R1 V1 gap - searched Kern 1950
+    Examples 7.3-7.4 and the Kakaç et al. 3rd ed. Ch. 8 Kern-method worked
+    examples for a complete printed input-and-result set (film coefficients,
+    U and pressure drops with printed inputs); only OCR'd full-text scans are
+    available and no set was verifiable to the U-R1 transcription standard
+    within the time box, so no R1 V1 case is recorded - the closed-form tests
+    and the R1-to-R0 and e-NTU identities carry R1 verification.
 
 - id: air_cooler
   name: Air cooler
@@ -125,15 +168,57 @@
           dP: {type: number, description: 'pressure drop, Pa'}
       note: approach / duty spec
     R1:
-      status: planned
-      params: {}
-      note: rating — bundle geometry, fan power, ht air-side correlation
+      status: provisional
+      adapter: ngdesign.units.heat.air_cooler_r1:AirCoolerR1
+      params:
+        type: object
+        required: [tube_rows, tube_passes, tubes_per_row, tube_length_m, tube_OD_m,
+          tube_wall_m, fin_thickness_m, fin_height_m, fin_density_per_m,
+          pitch_parallel_m, pitch_normal_m, air_T_K, air_mass_flow_kg_s, fan_efficiency]
+        properties:
+          tube_rows: {type: integer, description: 'tube rows deep'}
+          tube_passes: {type: integer, description: 'tube passes; supported pairs (1, 1-4),
+            (2, 2), (2, 4), (3, 3), (4, 4) and passes = rows > 4'}
+          tubes_per_row: {type: integer, description: 'tubes per row'}
+          tube_length_m: {type: number, description: 'bare tube length, m'}
+          tube_OD_m: {type: number, description: 'tube outside diameter, m'}
+          tube_wall_m: {type: number, description: 'tube wall thickness, m'}
+          fin_thickness_m: {type: number, description: 'fin thickness, m'}
+          fin_height_m: {type: number, description: 'fin height, m (alternative: fin_diameter_m)'}
+          fin_density_per_m: {type: number, description: 'fins per metre (alternative: fin_interval_m)'}
+          pitch_parallel_m: {type: number, description: 'staggered pitch parallel to flow, m
+            (alternative pitch spec: pitch_m with angle_deg)'}
+          pitch_normal_m: {type: number, description: 'staggered pitch normal to flow, m'}
+          air_T_K: {type: number, description: 'air inlet temperature, K'}
+          air_mass_flow_kg_s: {type: number, description: 'total air mass flow, kg/s'}
+          fan_efficiency: {type: number, description: 'fan efficiency in (0, 1]'}
+          air_P_Pa: {type: number, description: 'air-side pressure, Pa, default 101325'}
+          air_composition: {type: object, description: 'air mole fractions, default N2 0.79
+            / O2 0.21'}
+          parallel_bays: {type: integer, description: 'parallel bays, default 1'}
+          bundles_per_bay: {type: integer, description: 'bundles per bay, default 1'}
+          k_fin_W_mK: {type: number, description: 'fin conductivity, W/(m K), default 205'}
+          k_wall_W_mK: {type: number, description: 'tube wall conductivity, W/(m K), default 45'}
+          R_f_tube_m2K_W: {type: number, description: 'tube-side fouling resistance, m2 K/W,
+            default 0'}
+          roughness_m: {type: number, description: 'absolute roughness, m, default 4.5e-5'}
+          allow_extrapolation: {type: boolean, description: 'rate outside the Briggs-Young
+            Re window (1000, 8000), flagged briggs_young_in_range, default false'}
+      note: rating (Briggs-Young air side on the bare-area basis, ESDU 86022 air dP, duct_h
+        tube side, brentq duty solve with Ft_aircooler; fan power reported in info, the
+        air side is not a port)
       end_state: true
   sizer: air_cooler
   pid_symbol: AC
   references:
   - docs/unit-catalogue-plan.md §2 U-C 3
-  notes: roadmap R1 lands with the S1 natural-gas slice (plan §2b).
+  notes: >-
+    R1 is rated on the ht AirCooledExchanger docstring bundle basis (the S1
+    natural-gas slice E-101 geometry, plan §2b). V1 gap: searched GPSA EDB Sec. 10,
+    Serth 2nd ed. Ch. 12, Kern & Kraus 1972 Ch. 12 - no printed air-cooler rating
+    example with complete inputs was accessible, so the closed-form Briggs-Young,
+    ESDU and fan-power checks and the R0-reduction identity carry the R1
+    verification.
 
 - id: plate_exchanger
   name: Plate exchanger
@@ -449,15 +534,33 @@
         the exit-air temperature solved from the overall energy closure, carries
         the heat and the evaporation; blowdown/makeup from cycles of concentration
     R1:
-      status: planned
-      params: {}
-      note: Merkel method
+      status: provisional
+      adapter: ngdesign.units.heat.cooling_tower_r1:CoolingTowerR1
+      params:
+        type: object
+        properties:
+          characteristic_C: {type: number, exclusiveMinimum: 0, description: 'tower characteristic coefficient C in KaV/L = C (L/G)^-n (solution mode, with characteristic_n)'}
+          characteristic_n: {type: number, description: 'tower characteristic exponent n, >= 0 (solution mode, with characteristic_C)'}
+          cycles_of_concentration: {type: number, minimum: 1, description: 'cycles of concentration, >= 1 (default 3)'}
+      note: >-
+        Merkel number by 4-point Chebyshev (CTI ATC-105) against KaV/L = C
+        (L/G)^-n, water outlet solved by brentq, then the R0 balance at the
+        solved approach; Merkel enthalpies from the ASHRAE Fundamentals Ch. 1
+        Hyland-Wexler closed form per the orchestrator ruling on PR #284 (the
+        package's water latent heat is ~4% high, #249), the balance stays
+        R0's through the thermo package; approach_K is solved at R1, not a
+        parameter. A characteristic above the attainable Merkel number refuses
+        typed with both numbers.
       end_state: true
   pid_symbol: CT
   references:
   - docs/unit-catalogue-plan.md §2 U-C 8
   notes: V2085 checks the model wet bulb against ASHRAE Fundamentals 2021 SI Ch. 1
     Example 1 (40 C dry-bulb / 20 C wet-bulb air; measured 292.989 K, -0.16 K).
+    R1 V1 gap — searched ASHRAE HVAC S&E Ch. 40, Perry's 8th §12, Kern 1950
+    Ch. 17; the printed worked examples sit behind paywalls, the web reproduces
+    the method but not the printed inputs/answers, so no printed-value case is
+    constructed.
 
 - id: hen_block
   name: Heat exchanger network block (HEN)
