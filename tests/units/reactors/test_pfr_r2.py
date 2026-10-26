@@ -203,7 +203,7 @@ def test_r2b_wall_heat_closed_form(thermo: Thermo) -> None:
 
 def _r2b_params(**overrides: Any) -> dict[str, Any]:
     params: dict[str, Any] = {
-        "reaction_set": {"id": "r2b_inert", "components": ["N2"], "reactions": []},
+        "reaction_set": {"id": "r2b_inert", "components": ["nC4", "iC4"], "reactions": []},
         "tube_diameter_m": 0.05,
         "length_m": 5.0,
         "n_tubes": 1,
@@ -223,9 +223,7 @@ def test_r2_refuses_geometry_params(thermo: Thermo) -> None:
         ("n_tubes", 0),
     ):
         with pytest.raises(PlugFlowError, match=name):
-            PfrR2().solve(
-                {"inlet": _flash(thermo, _N2_FEED)}, _r2b_params(**{name: value}), thermo
-            )
+            PfrR2().solve({"inlet": _flash(thermo, _N2_FEED)}, _r2b_params(**{name: value}), thermo)
 
 
 def test_r2_refuses_bad_rate_units(thermo: Thermo) -> None:
@@ -234,14 +232,14 @@ def test_r2_refuses_bad_rate_units(thermo: Thermo) -> None:
     rset["reactions"] = [
         {
             "id": "bad_units",
-            "stoichiometry": {"N2": -1.0},
-            "base_component": "N2",
+            "stoichiometry": {"nC4": -1.0, "iC4": 1.0},
+            "base_component": "nC4",
             "provenance": "refusal test",
             "kinetics": {
                 "rate_units": "mol/(L*s)",
                 "k0": 1.0,
                 "Ea": 0.0,
-                "orders": {"N2": 1.0},
+                "orders": {"nC4": 1.0},
                 "basis": "concentration",
             },
         }
@@ -256,14 +254,14 @@ def test_r2_refuses_catalyst_rate_without_density(thermo: Thermo) -> None:
     rset["reactions"] = [
         {
             "id": "per_kg",
-            "stoichiometry": {"N2": -1.0},
-            "base_component": "N2",
+            "stoichiometry": {"nC4": -1.0, "iC4": 1.0},
+            "base_component": "nC4",
             "provenance": "refusal test",
             "kinetics": {
                 "rate_units": "mol/(kg_cat*s)",
                 "k0": 1.0,
                 "Ea": 0.0,
-                "orders": {"N2": 1.0},
+                "orders": {"nC4": 1.0},
                 "basis": "concentration",
             },
         }
@@ -278,8 +276,8 @@ def test_r2_refuses_lhhw_with_equilibrium(thermo: Thermo) -> None:
     rset["reactions"] = [
         {
             "id": "lhhw_eq",
-            "stoichiometry": {"N2": -1.0},
-            "base_component": "N2",
+            "stoichiometry": {"nC4": -1.0, "iC4": 1.0},
+            "base_component": "nC4",
             "provenance": "refusal test",
             "equilibrium": {
                 "form": "polynomial",
@@ -289,9 +287,7 @@ def test_r2_refuses_lhhw_with_equilibrium(thermo: Thermo) -> None:
             "kinetics": {
                 "rate_units": "mol/(m3*s)",
                 "basis": "concentration",
-                "driving_force": [
-                    {"arrhenius": {"k0": 1.0, "Ea": 0.0}, "orders": {"N2": 1.0}}
-                ],
+                "driving_force": [{"arrhenius": {"k0": 1.0, "Ea": 0.0}, "orders": {"nC4": 1.0}}],
                 "adsorption": [],
                 "adsorption_exponent": 1.0,
             },
@@ -307,8 +303,8 @@ def test_r2_refuses_reaction_without_kinetics(thermo: Thermo) -> None:
     rset["reactions"] = [
         {
             "id": "no_kin",
-            "stoichiometry": {"N2": -1.0},
-            "base_component": "N2",
+            "stoichiometry": {"nC4": -1.0, "iC4": 1.0},
+            "base_component": "nC4",
             "provenance": "refusal test",
         }
     ]
@@ -363,18 +359,24 @@ def test_r2_refuses_partial_thermal_dict(thermo: Thermo) -> None:
 def test_r2_refuses_two_phase_along_cooled_tube(thermo: Thermo) -> None:
     """A feed that condenses along a cooled R2 is refused.
 
-    nC10 at 2e5 Pa condenses far above 300 K: cooling the tube walls crosses
-    the dew point part-way along the reactor, so the single-phase requirement
-    (spec step 2) fires.  The rate is zero, so the refusal is purely
-    thermodynamic.
+    A 50/50 nC4/nC5 mixture at 2e5 Pa flashes strictly two-phase near
+    310-315 K (checked directly against ``ideal-raoult``); a 320 K feed with
+    a 310 K coolant walks the profile into that dome and holds it there, so
+    the single-phase requirement (spec step 2) fires.  The rate is zero, so
+    the refusal is purely thermodynamic.
     """
-    feed = {"T": 520.0, "P": 2.0e5, "molar_flow": 0.1, "composition": {"nC10": 1.0}}
+    feed = {
+        "T": 320.0,
+        "P": 2.0e5,
+        "molar_flow": 0.2,
+        "composition": {"nC4": 0.5, "nC5": 0.5},
+    }
     params: dict[str, Any] = {
-        "reaction_set": {"id": "r2c_inert", "components": ["nC10"], "reactions": []},
+        "reaction_set": {"id": "r2c_inert", "components": ["nC4", "nC5"], "reactions": []},
         "tube_diameter_m": 0.05,
-        "length_m": 5.0,
+        "length_m": 50.0,
         "n_tubes": 1,
-        "thermal": {"coolant_T_K": 300.0, "U_W_m2K": 5.0},
+        "thermal": {"coolant_T_K": 310.0, "U_W_m2K": 20.0},
     }
     with pytest.raises(PlugFlowError, match="two-phase"):
         PfrR2().solve({"inlet": _flash(thermo, feed)}, params, thermo)

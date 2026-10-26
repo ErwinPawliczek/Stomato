@@ -41,10 +41,9 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.contracts.reactions import Reaction, ReactionSet
+from ngdesign.contracts.reactions import LHHW, Reaction, ReactionSet
 from ngdesign.contracts.stream import Phase, PhaseKind, StreamState
 from ngdesign.units._physics.kinetics import (
-    LHHW,
     R,
     heat_of_reaction,
     rate,

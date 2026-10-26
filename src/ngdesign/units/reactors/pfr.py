@@ -270,7 +270,7 @@ class PfrR2:
             outlet = thermo.flash_pt(dict(z_out), t_out, p_out, total_out)
             duty_out = duty
         elif energy == "heat_model":  # fixed coolant T: duty = the accumulated Q
-            q_end = profile.Q_W[-1]
+            q_end = profile.Q_W
             t_out = _solve_outlet_T(thermo, z_out, total_out, p_out, t_in, h_in + q_end)
             outlet = thermo.flash_pt(dict(z_out), t_out, p_out, total_out)
             duty_out = q_end
