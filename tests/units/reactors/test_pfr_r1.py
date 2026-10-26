@@ -408,3 +408,27 @@ def test_r1_refuses_two_phase(thermo: Thermo) -> None:
     }
     with pytest.raises(PlugFlowError, match="two-phase"):
         PfrR1().solve({"inlet": _flash(thermo, feed)}, params_cool, thermo)
+
+
+@pytest.mark.parametrize(
+    ("key", "value"),
+    [
+        ("bed", {"particle_diameter_m": 0.003, "voidage": 0.4}),
+        ("tube_diameter_m", 0.05),
+        ("length_m", 5.0),
+        ("n_tubes", 4),
+        ("viscosity_Pa_s", 1.8e-5),
+    ],
+)
+def test_r1_refuses_r2_keys(thermo: Thermo, key: str, value: Any) -> None:
+    """R1 refuses the R2-only packed-bed keys, naming the key and the level.
+
+    Silently accepting an R2 key would run R1 with no pressure drop -- the
+    same silent hole R1's integrator refusal guards, reopened at the adapter.
+    """
+    feeds, params = _r1a()
+    params[key] = value
+    with pytest.raises(PlugFlowError) as excinfo:
+        PfrR1().solve({"inlet": _flash(thermo, feeds["inlet"])}, params, thermo)
+    assert key in str(excinfo.value)
+    assert "R2" in str(excinfo.value)

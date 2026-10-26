@@ -376,15 +376,13 @@ def integrate_plug_flow(
                 d_h += _pkg_reaction_enthalpy(reaction, h_bar) * dxi[j]
 
         q = q_v(v, t, extra)
-        if energy == "isothermal":
-            dt = 0.0
-        else:
-            dt = (-d_h + q) / (f_tot * cp_molar)
         dq = q if energy != "isothermal" else 0.0
         # R2 Ergun pressure drop per unit volume (spec equation 8): Fogler
-        # eq. 4-22 in SI, divided by the tube cross-section.  rho and mu come
-        # from the flash-free phase_props; viscosity_Pa_s overrides mu where
-        # the package has no correlation.
+        # eq. 4-22 in SI, divided by the TOTAL cross-section n_tubes *
+        # a_cross -- the integration variable is the total volume of all
+        # tubes, so dz = dV / (n_tubes * a_cross).  rho and mu come from the
+        # flash-free phase_props; viscosity_Pa_s overrides mu where the
+        # package has no correlation.
         if ergun is None:
             dp = 0.0
         else:
@@ -399,12 +397,27 @@ def integrate_plug_flow(
             phi_b = ergun.voidage
             d_p = ergun.particle_diameter_m
             dp = (
-                -(1.0 / a_cross)
+                -(1.0 / (n_tubes * a_cross))
                 * g_flux
                 * (1.0 - phi_b)
                 / (rho * d_p * phi_b**3)
                 * (150.0 * (1.0 - phi_b) * mu / d_p + 1.75 * g_flux)
             )
+        if energy == "isothermal":
+            dt = 0.0
+        else:
+            # With a bed the pressure moves, and a real-gas package's
+            # enthalpy carries the (dh/dP)_T dependence (Joule-Thomson-like
+            # cooling through the bed); a central finite difference of the
+            # phase enthalpy in P at the current state supplies the closure
+            # term.  An ideal-gas enthalpy is P-independent and it vanishes.
+            dh_dp = 0.0
+            if dp != 0.0:
+                dp_eps = 1.0e-4 * p
+                h_lo = float(thermo.phase_props(z, t, p - dp_eps, _PHASE_KIND[reacting_phase]).enthalpy)
+                h_hi = float(thermo.phase_props(z, t, p + dp_eps, _PHASE_KIND[reacting_phase]).enthalpy)
+                dh_dp = (h_hi - h_lo) / (2.0 * dp_eps)
+            dt = (-d_h + q - f_tot * dh_dp * dp) / (f_tot * cp_molar)
 
         out = np.zeros(m + 3 + n_extra)
         out[:m] = dxi

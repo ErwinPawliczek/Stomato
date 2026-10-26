@@ -41,6 +41,10 @@ from ngdesign.units.reactors.plug_flow import (
 #: outlet temperature, so it is refused here rather than silently mapped.
 _THERMAL_MODES = ("isothermal", "adiabatic")
 
+#: R2-only parameter keys (review item 3): an R1 solve refuses them instead
+#: of silently running with no pressure drop, naming the key and the level.
+_R2_ONLY_KEYS = ("bed", "tube_diameter_m", "length_m", "n_tubes", "viscosity_Pa_s")
+
 
 class PfrR1:
     """Kinetic plug-flow reactor, rigour level R1 (spec U-R2 wave)."""
@@ -57,6 +61,12 @@ class PfrR1:
         inlet = inlets["inlet"]
         rset = reaction_set_param(params["reaction_set"])
         volume = float(params["volume_m3"])
+        for key in _R2_ONLY_KEYS:
+            if key in params:
+                raise PlugFlowError(
+                    f"param {key!r} is an R2 packed-bed pressure-drop parameter; "
+                    "R1 has no pressure drop and refuses R2 keys"
+                )
         thermal = params.get("thermal", "isothermal")
         if isinstance(thermal, str):
             if thermal not in _THERMAL_MODES:

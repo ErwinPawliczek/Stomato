@@ -380,3 +380,70 @@ def test_r2_refuses_two_phase_along_cooled_tube(thermo: Thermo) -> None:
     }
     with pytest.raises(PlugFlowError, match="two-phase"):
         PfrR2().solve({"inlet": _flash(thermo, feed)}, params, thermo)
+
+
+def test_r2a_multitube_per_tube_flow_identity(thermo: Thermo) -> None:
+    """n tubes at the same per-tube flow reproduce the single-tube run at 1e-10.
+
+    1 tube, D_t = 0.05 m, L = 5 m at 0.1 mol/s (the R2-a case) against 4 such
+    tubes at 0.4 mol/s total: the per-tube flux and the tube length are
+    unchanged, so dP and the outlet state must be identical.  Before the
+    n_tubes fix the 4-tube case integrated dP n_tubes times too large and hit
+    the 90 % pressure-floor refusal (review item 1).
+    """
+    feeds1, params1 = _r2a()
+    one = PfrR2().solve({"inlet": _flash(thermo, feeds1["inlet"])}, params1, thermo)
+    feed4 = dict(feeds1["inlet"], molar_flow=0.4)
+    params4 = dict(params1, n_tubes=4)
+    four = PfrR2().solve({"inlet": _flash(thermo, feed4)}, params4, thermo)
+    assert four.info["P_out_Pa"] == pytest.approx(one.info["P_out_Pa"], rel=1e-10)
+    assert four.info["dP_Pa"] == pytest.approx(one.info["dP_Pa"], rel=1e-10)
+    out1, out4 = one.outlets["outlet"], four.outlets["outlet"]
+    assert out4.P == pytest.approx(out1.P, rel=1e-10)
+    assert out4.T == pytest.approx(out1.T, abs=1e-10)
+    assert out4.molar_flow == pytest.approx(0.4, rel=1e-12)
+    assert one.info["dP_Pa"] == pytest.approx(2.0e5 - P_OUT_R2A, abs=0.17)
+
+
+def test_r2_adiabatic_bed_closure_gap(thermo: Thermo) -> None:
+    """Adiabatic with a bed: the (dh/dP)_T closure term keeps the gap < 1e-3 K.
+
+    The review measurement on this geometry (R1-A reaction, adiabatic,
+    D_t = 0.5 m, V = 2 m3, dP 2.88 kPa) was a -1.30e-2 K gap without the
+    pressure-dependence term (review item 2).  Measured with it:
+    -9.40e-7 K (gap), dP 3732.1 Pa at T_out 535.964 K.
+    """
+    reaction_set = {
+        "id": "r1a_adiab_bed",
+        "components": ["nC4", "iC4"],
+        "reactions": [
+            {
+                "id": "isom",
+                "stoichiometry": {"nC4": -1.0, "iC4": 1.0},
+                "base_component": "nC4",
+                "provenance": "adiabatic-with-bed closure check (review item 2)",
+                "kinetics": {
+                    "rate_units": "mol/(m3·s)",
+                    "k0": 1.0e3,
+                    "Ea": 5.0e4,
+                    "orders": {"nC4": 1.0},
+                    "basis": "concentration",
+                },
+            }
+        ],
+    }
+    feed = {"T": 500.0, "P": 2.0e5, "molar_flow": 1.0, "composition": {"nC4": 1.0}}
+    params: dict[str, Any] = {
+        "reaction_set": reaction_set,
+        "tube_diameter_m": 0.5,
+        "length_m": 2.0 / (math.pi * 0.5**2 / 4.0),  # V = a_cross * L = 2 m3
+        "n_tubes": 1,
+        "thermal": "adiabatic",
+        "bed": {"particle_diameter_m": 0.003, "voidage": 0.4},
+        "viscosity_Pa_s": 1.8e-5,
+    }
+    result = PfrR2().solve({"inlet": _flash(thermo, feed)}, params, thermo)
+    # Measured dP on this head (the review quoted 2.88 kPa on its own run;
+    # the gap, not dP, is the assertion under review).
+    assert result.info["dP_Pa"] == pytest.approx(3732.1041567073844, rel=1e-6)
+    assert abs(result.info["T_closure_gap_K"]) < 1.0e-3
