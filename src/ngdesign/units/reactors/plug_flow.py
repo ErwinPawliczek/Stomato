@@ -9,8 +9,8 @@ balances are integrated over reactor volume V (m3) as an extents ODE,
 d(xi_j)/dV = s_j * a * eta_j * r_j / |nu_base,j| (Fogler, *Elements of CRE*,
 mole-balance design equation dF_A/dV = r_A written per reaction), together
 with the energy balance dT/dV = [-Sum_j dH_j(T) dxi_j/dV + q_V] / (Sum_i F_i
-cp,mix), the accumulated heat dQ/dV = q_V and (from R2) the Ergun bed
-pressure drop per unit volume.  ``r_j`` is
+cp,mix), the accumulated heat dQ/dV = q_V and the Ergun packed-bed pressure
+drop per unit volume (spec equation 8, R2).  ``r_j`` is
 :func:`ngdesign.units._physics.kinetics.rate` on its base-component extent
 basis; dividing by |nu_base,j| converts it to an extent rate.
 
@@ -41,7 +41,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.contracts.reactions import Reaction, ReactionSet
+from ngdesign.contracts.reactions import LHHW, Reaction, ReactionSet
 from ngdesign.contracts.stream import Phase, PhaseKind, StreamState
 from ngdesign.units._physics.kinetics import (
     R,
@@ -104,6 +104,18 @@ class PlugFlowProfile:
     n_rhs: int
 
 
+@dataclass(frozen=True)
+class ErgunBed:
+    """R2: packed bed for the Ergun pressure drop (spec equation 8).
+
+    ``particle_diameter_m`` is the effective particle diameter D_p (m) and
+    ``voidage`` the bed voidage phi, which must lie strictly between 0 and 1.
+    """
+
+    particle_diameter_m: float
+    voidage: float
+
+
 def _scale_j(reaction: Reaction, bulk_density_kg_m3: float | None) -> float:
     """The rate-basis scale s_j (spec equation 3)."""
     units = reaction.kinetics.rate_units  # type: ignore[union-attr]
@@ -128,6 +140,13 @@ def _validate_reactions(rset: ReactionSet, bulk_density_kg_m3: float | None) -> 
     for reaction in rset.reactions:
         if reaction.kinetics is None:
             raise PlugFlowError(f"reaction '{reaction.id}' has no kinetics")
+        if isinstance(reaction.kinetics, LHHW) and reaction.equilibrium is not None:
+            # LHHW is used directly as a forward rate and carries no equilibrium
+            # term; silently ignoring the model would mislead the caller.
+            raise PlugFlowError(
+                f"reaction '{reaction.id}': an LHHW rate ignores the equilibrium "
+                "model; drop the equilibrium model or use a PowerLaw with reverse"
+            )
         scales.append(_scale_j(reaction, bulk_density_kg_m3))
     return scales
 
@@ -233,7 +252,11 @@ def integrate_plug_flow(
     heat: HeatModel | None = None,
     reacting_phase: Literal["vapor", "liquid"] = "vapor",
     bulk_density_kg_m3: float | None = None,
-    ergun: object | None = None,  # R2: ErgunBed, owned by the R2 step
+    tube_diameter_m: float | None = None,  # R2 geometry, required with ergun
+    length_m: float | None = None,  # R2 geometry, required with ergun
+    n_tubes: int = 1,
+    viscosity_Pa_s: float | None = None,  # R2 Ergun viscosity override
+    ergun: ErgunBed | None = None,  # R2; None = no pressure drop
     rate_multiplier: Callable[[int, float, float, Mapping[str, float]], float] | None = None,
     n_output: int = 51,
 ) -> PlugFlowProfile:
@@ -242,13 +265,13 @@ def integrate_plug_flow(
     See the module docstring for the method; the spec
     (``specs/backend/units/pfr.md``) owns the equations and the refusal
     table.  ``rate_multiplier(j, T, P, z)`` returns a*eta_j for reaction j
-    (R3); ``None`` means 1.0.  ``ergun`` is the R2 packed bed, not implemented
-    at R1: anything but ``None`` is refused, so a packed bed never silently
-    runs without its pressure drop. The parameter stays in the signature for
-    the callers the R2 step serves.
+    (R3); ``None`` means 1.0.  ``ergun`` is the R2 packed bed (spec
+    equation 8): the pressure ODE dP/dV integrates the Ergun gradient with
+    the cross-section and superficial mass flux per tube, with rho and mu
+    from the flash at (z, T, P) — ``viscosity_Pa_s`` overrides mu where the
+    package has no correlation.  Without ``ergun`` (and at R1) the tube
+    carries no pressure drop: P stays at P_in.
     """
-    if ergun is not None:
-        raise PlugFlowError("ergun pressure drop is R2 (not implemented)")
     if volume_m3 <= 0.0:
         raise PlugFlowError("volume_m3 must be > 0")
     if energy == "heat_model" and heat is None:
@@ -257,6 +280,17 @@ def integrate_plug_flow(
         raise PlugFlowError("n_output must be >= 2")
     if reacting_phase not in _PHASE_KIND:
         raise PlugFlowError(f"reacting_phase {reacting_phase!r} is not one of 'vapor' or 'liquid'")
+    if ergun is not None:
+        if not 0.0 < ergun.voidage < 1.0:
+            raise PlugFlowError(f"bed voidage {ergun.voidage!r} is not in (0, 1)")
+        if ergun.particle_diameter_m <= 0.0:
+            raise PlugFlowError("particle_diameter_m must be > 0")
+        if tube_diameter_m is None or tube_diameter_m <= 0.0:
+            raise PlugFlowError("tube_diameter_m must be > 0 when an Ergun bed is given")
+        if length_m is None or length_m <= 0.0:
+            raise PlugFlowError("length_m must be > 0 when an Ergun bed is given")
+        if n_tubes < 1:
+            raise PlugFlowError("n_tubes must be >= 1")
 
     scales = _validate_reactions(rset, bulk_density_kg_m3)
     reactions = rset.reactions
@@ -281,6 +315,14 @@ def integrate_plug_flow(
     else:
         assert heat is not None
         q_v = heat.q_V
+
+    # R2 Ergun constants (spec equation 8): the cross-section and the
+    # superficial mass flux are per tube and constant along it.
+    if ergun is not None:
+        assert tube_diameter_m is not None
+        a_cross = math.pi * tube_diameter_m**2 / 4.0
+    else:
+        a_cross = 0.0
 
     n_rhs = 0
     n_extra = heat.n_extra if heat is not None else 0
@@ -334,12 +376,48 @@ def integrate_plug_flow(
                 d_h += _pkg_reaction_enthalpy(reaction, h_bar) * dxi[j]
 
         q = q_v(v, t, extra)
+        dq = q if energy != "isothermal" else 0.0
+        # R2 Ergun pressure drop per unit volume (spec equation 8): Fogler
+        # eq. 4-22 in SI, divided by the TOTAL cross-section n_tubes *
+        # a_cross -- the integration variable is the total volume of all
+        # tubes, so dz = dV / (n_tubes * a_cross).  rho and mu come from the
+        # flash-free phase_props; viscosity_Pa_s overrides mu where the
+        # package has no correlation.
+        if ergun is None:
+            dp = 0.0
+        else:
+            mu = viscosity_Pa_s if viscosity_Pa_s is not None else props.viscosity
+            if mu is None:
+                raise PlugFlowError(
+                    "the Ergun bed needs a viscosity but the package gives none at this state; "
+                    "give the param viscosity_Pa_s"
+                )
+            rho = float(props.density)
+            g_flux = (f_tot * float(props.molecular_weight) / 1000.0) / (n_tubes * a_cross)
+            phi_b = ergun.voidage
+            d_p = ergun.particle_diameter_m
+            dp = (
+                -(1.0 / (n_tubes * a_cross))
+                * g_flux
+                * (1.0 - phi_b)
+                / (rho * d_p * phi_b**3)
+                * (150.0 * (1.0 - phi_b) * mu / d_p + 1.75 * g_flux)
+            )
         if energy == "isothermal":
             dt = 0.0
         else:
-            dt = (-d_h + q) / (f_tot * cp_molar)
-        dq = q if energy != "isothermal" else 0.0
-        dp = 0.0  # R1 carries no pressure drop; the R2 step adds Ergun here.
+            # With a bed the pressure moves, and a real-gas package's
+            # enthalpy carries the (dh/dP)_T dependence (Joule-Thomson-like
+            # cooling through the bed); a central finite difference of the
+            # phase enthalpy in P at the current state supplies the closure
+            # term.  An ideal-gas enthalpy is P-independent and it vanishes.
+            dh_dp = 0.0
+            if dp != 0.0:
+                dp_eps = 1.0e-4 * p
+                h_lo = float(thermo.phase_props(z, t, p - dp_eps, _PHASE_KIND[reacting_phase]).enthalpy)
+                h_hi = float(thermo.phase_props(z, t, p + dp_eps, _PHASE_KIND[reacting_phase]).enthalpy)
+                dh_dp = (h_hi - h_lo) / (2.0 * dp_eps)
+            dt = (-d_h + q - f_tot * dh_dp * dp) / (f_tot * cp_molar)
 
         out = np.zeros(m + 3 + n_extra)
         out[:m] = dxi
@@ -448,10 +526,8 @@ def integrate_plug_flow(
             )
 
     y_end = sol.y[:, -1]
-    # Per output point, per reaction (mol/s): transpose the sol.y rows.
-    extents_rows = tuple(
-        tuple(float(xi) for xi in point) for point in zip(*(sol.y[j] for j in range(m)), strict=True)
-    )
+    # Per output point, per reaction (mol/s); m = 0 gives per-point empty rows.
+    extents_rows = tuple(tuple(float(sol.y[j, i]) for j in range(m)) for i in range(len(t_eval)))
     extra_rows: tuple[tuple[float, ...], ...] = (
         tuple(
             tuple(float(e) for e in point)

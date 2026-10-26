@@ -2,8 +2,9 @@
 
 ``PfrR1`` is the R1 adapter: the kinetic plug-flow reactor of the shared
 :func:`plug_flow.integrate_plug_flow` integrator, single phase, no pressure
-drop.  R2 (Ergun + wall heat) and R3 (effectiveness + deactivation) extend
-this module in their own steps.
+drop.  ``PfrR2`` adds tube geometry with the Ergun packed-bed pressure drop
+and the fixed-coolant wall heat transfer; R3 (effectiveness + deactivation)
+extends this module in its own step.
 
 The outlet state is closed exactly on the formation-enthalpy basis through
 ``_shared.thermal_outlet`` (spec algorithm step 4); the ODE's end
@@ -13,19 +14,36 @@ K, Pa, s.
 
 from __future__ import annotations
 
+import math
+from collections.abc import Mapping
 from typing import Any
 
 from ngdesign.contracts import UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import StreamState
-from ngdesign.units._physics.kinetics import apply_extents
-from ngdesign.units.reactors._shared import reaction_set_param, thermal_outlet
-from ngdesign.units.reactors.plug_flow import PlugFlowError, PlugFlowProfile, integrate_plug_flow
+from ngdesign.units._physics.kinetics import apply_extents, enthalpy_with_formation
+from ngdesign.units.reactors._shared import (
+    _solve_outlet_T,
+    reaction_set_param,
+    thermal_outlet,
+    z_from,
+)
+from ngdesign.units.reactors.plug_flow import (
+    ErgunBed,
+    HeatModel,
+    PlugFlowError,
+    PlugFlowProfile,
+    integrate_plug_flow,
+)
 
 #: Thermal modes R1 accepts (spec params table). ``{"T_out": K}`` is a
 #: conversion-reactor mode, not a kinetic one: a PFR cannot hold a stated
 #: outlet temperature, so it is refused here rather than silently mapped.
 _THERMAL_MODES = ("isothermal", "adiabatic")
+
+#: R2-only parameter keys (review item 3): an R1 solve refuses them instead
+#: of silently running with no pressure drop, naming the key and the level.
+_R2_ONLY_KEYS = ("bed", "tube_diameter_m", "length_m", "n_tubes", "viscosity_Pa_s")
 
 
 class PfrR1:
@@ -43,6 +61,12 @@ class PfrR1:
         inlet = inlets["inlet"]
         rset = reaction_set_param(params["reaction_set"])
         volume = float(params["volume_m3"])
+        for key in _R2_ONLY_KEYS:
+            if key in params:
+                raise PlugFlowError(
+                    f"param {key!r} is an R2 packed-bed pressure-drop parameter; "
+                    "R1 has no pressure drop and refuses R2 keys"
+                )
         thermal = params.get("thermal", "isothermal")
         if isinstance(thermal, str):
             if thermal not in _THERMAL_MODES:
@@ -129,3 +153,186 @@ class PfrR1:
             "thermal": "isothermal",
         }
         return {"inlet": feed}, params
+
+
+class PfrR2:
+    """Kinetic plug-flow reactor with tube geometry: Ergun dP and wall heat (R2).
+
+    The R1 kinetics integrator over the total volume ``n_tubes·A_c·L`` plus
+    the R2 physics: the Ergun pressure drop of a packed bed (spec equation 8)
+    and wall heat transfer to a coolant at fixed temperature (spec equation 7).
+    The outlet closes on the formation-enthalpy basis at ``P_out = P(V_end)``:
+    isothermal re-flashes at ``(T_in, P_out)`` with the duty carried;
+    adiabatic and coolant modes solve ``T_out`` from
+    ``H_in + Q = H_out(T_out, P_out)`` through
+    ``_shared._solve_outlet_T`` (spec algorithm step 4, R2 branch).
+    """
+
+    inlet_ports = ("inlet",)
+    outlet_ports = ("outlet",)
+
+    def solve(
+        self,
+        inlets: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> UnitResult:
+        inlet = inlets["inlet"]
+        rset = reaction_set_param(params["reaction_set"])
+        tube_diameter = float(params["tube_diameter_m"])
+        length = float(params["length_m"])
+        n_tubes = int(params.get("n_tubes", 1))
+        thermal = params.get("thermal", "isothermal")
+        bulk = params.get("bulk_density_kg_m3")
+        phase: str = params.get("reacting_phase", "vapor")
+        if tube_diameter <= 0.0:
+            raise PlugFlowError("tube_diameter_m must be > 0")
+        if length <= 0.0:
+            raise PlugFlowError("length_m must be > 0")
+        if n_tubes < 1:
+            raise PlugFlowError("n_tubes must be >= 1")
+
+        bed: ErgunBed | None = None
+        if params.get("bed") is not None:
+            bed_spec = params["bed"]
+            if bed_spec.get("particle_diameter_m") is None:
+                raise PlugFlowError("bed requires particle_diameter_m")
+            if bed_spec.get("voidage") is None:
+                raise PlugFlowError("bed requires voidage")
+            bed = ErgunBed(
+                particle_diameter_m=float(bed_spec["particle_diameter_m"]),
+                voidage=float(bed_spec["voidage"]),
+            )
+        visc = params.get("viscosity_Pa_s")
+
+        energy: str
+        duty = 0.0
+        heat_model: HeatModel | None = None
+        if isinstance(thermal, str):
+            if thermal not in _THERMAL_MODES:
+                raise PlugFlowError(
+                    f"thermal mode {thermal!r} is not one of 'isothermal', 'adiabatic', "
+                    '{"duty_W": W} or {"coolant_T_K": K, "U_W_m2K": W}'
+                )
+            energy = thermal
+        elif (
+            isinstance(thermal, Mapping)
+            and set(thermal) == {"duty_W"}
+            and isinstance(thermal["duty_W"], (int, float))
+        ):
+            energy = "uniform_duty"
+            duty = float(thermal["duty_W"])
+        elif (
+            isinstance(thermal, Mapping)
+            and set(thermal) == {"coolant_T_K", "U_W_m2K"}
+            and all(isinstance(thermal[k], (int, float)) for k in thermal)
+        ):
+            # R2 wall heat to a coolant at fixed temperature (spec equation 7):
+            # q_V = U * a_w * (T_c - T) with a_w = 4 / D_t per unit tube volume.
+            t_cool = float(thermal["coolant_T_K"])
+            u_wall = float(thermal["U_W_m2K"])
+            a_w = 4.0 / tube_diameter
+            heat_model = HeatModel(
+                n_extra=0,
+                y0_extra=(),
+                q_V=lambda _v, t, _extra: u_wall * a_w * (t_cool - t),
+                d_extra=lambda _v, _t, _extra: (),
+            )
+            energy = "heat_model"
+        else:
+            raise PlugFlowError(
+                f"thermal mode {thermal!r} is not one of 'isothermal', 'adiabatic', "
+                '{"duty_W": W} or {"coolant_T_K": K, "U_W_m2K": W}'
+            )
+
+        a_cross = math.pi * tube_diameter**2 / 4.0
+        volume = n_tubes * a_cross * length
+
+        profile: PlugFlowProfile = integrate_plug_flow(
+            inlet,
+            rset,
+            thermo,
+            volume_m3=volume,
+            energy=energy,  # type: ignore[arg-type]
+            duty_W=duty,
+            heat=heat_model,
+            reacting_phase=phase,  # type: ignore[arg-type]
+            bulk_density_kg_m3=None if bulk is None else float(bulk),
+            tube_diameter_m=tube_diameter,
+            length_m=length,
+            n_tubes=n_tubes,
+            viscosity_Pa_s=None if visc is None else float(visc),
+            ergun=bed,
+        )
+
+        xi_end = list(profile.extents[-1])
+        n_out = apply_extents(inlet.component_flows(), rset, xi_end)
+        p_out = profile.P_Pa[-1]
+        z_out = z_from(n_out)
+        total_out = math.fsum(n_out.values())
+        t_in = float(inlet.T)
+        h_in = enthalpy_with_formation(inlet)
+        if energy == "isothermal":
+            outlet = thermo.flash_pt(dict(z_out), t_in, p_out, total_out)
+            duty_out = enthalpy_with_formation(outlet) - h_in
+        elif energy == "uniform_duty":
+            t_out = _solve_outlet_T(thermo, z_out, total_out, p_out, t_in, h_in + duty)
+            outlet = thermo.flash_pt(dict(z_out), t_out, p_out, total_out)
+            duty_out = duty
+        elif energy == "heat_model":  # fixed coolant T: duty = the accumulated Q
+            q_end = profile.Q_W
+            t_out = _solve_outlet_T(thermo, z_out, total_out, p_out, t_in, h_in + q_end)
+            outlet = thermo.flash_pt(dict(z_out), t_out, p_out, total_out)
+            duty_out = q_end
+        else:  # adiabatic: Q = 0
+            t_out = _solve_outlet_T(thermo, z_out, total_out, p_out, t_in, h_in)
+            outlet = thermo.flash_pt(dict(z_out), t_out, p_out, total_out)
+            duty_out = 0.0
+
+        t_profile_out = profile.T_K[-1]
+        t_max = max(profile.T_K)
+        v_at_t_max = profile.V_m3[list(profile.T_K).index(t_max)]
+        info: dict[str, float] = {}
+        for reaction, xi in zip(rset.reactions, xi_end, strict=True):
+            info[f"extent_{reaction.id}_mol_s"] = float(xi)
+        info["T_profile_out_K"] = float(t_profile_out)
+        info["T_closure_gap_K"] = float(outlet.T) - float(t_profile_out)
+        info["T_max_K"] = float(t_max)
+        info["V_at_T_max_m3"] = float(v_at_t_max)
+        info["P_out_Pa"] = float(p_out)
+        info["dP_Pa"] = float(inlet.P) - float(p_out)
+        info["n_rhs"] = float(profile.n_rhs)
+        return UnitResult(outlets={"outlet": outlet}, duty_W=duty_out, info=info)
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """The R2-b closed-form case (spec tests): inert N2 with wall heat.
+
+        The R2-b feed (0.1 mol/s N2, 305 K, 2e5 Pa) in a 0.05 m tube, 5 m,
+        cooled by a coolant at 300 K with U = 5 W/(m2 K).  Closed form with
+        the package's N2 c_p at 302.5 K: T_out = 301.303674 K, Q =
+        -10.7981558 W.  Inert, so the mass/element balance the harness
+        checks closes exactly and the energy balance closes on the coolant
+        branch's own enthalpy solve.
+        """
+        return (
+            {
+                "inlet": {
+                    "T": 305.0,
+                    "P": 2.0e5,
+                    "molar_flow": 0.1,
+                    "composition": {"N2": 1.0},
+                }
+            },
+            {
+                "reaction_set": {
+                    "id": "r2b_inert",
+                    "components": ["N2"],
+                    "reactions": [],
+                },
+                "tube_diameter_m": 0.05,
+                "length_m": 5.0,
+                "n_tubes": 1,
+                "thermal": {"coolant_T_K": 300.0, "U_W_m2K": 5.0},
+            },
+        )
