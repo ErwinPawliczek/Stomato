@@ -127,8 +127,38 @@
       note: rating — Kern shell side (S1-S3) with D_e per layout, duct tube side with
         4Ntp return heads, e-NTU S&T, F reported
     R2:
-      status: planned
-      params: {}
+      status: provisional
+      adapter: ngdesign.units.heat.shell_tube_r2:ShellTubeR2
+      params:
+        type: object
+        required: [process_side, shell_ID_m, n_tubes, tube_OD_m, tube_ID_m, tube_length_m,
+          pitch_m, layout, baffle_spacing_m, n_baffles, tube_passes, utility_composition,
+          utility_T_K, utility_P_Pa, utility_molar_flow]
+        properties:
+          process_side: {type: string, enum: [tube, shell], description: 'side the process stream flows on'}
+          shell_ID_m: {type: number, description: 'shell inside diameter Ds, m'}
+          n_tubes: {type: integer, description: 'total tube count Nt'}
+          tube_OD_m: {type: number, description: 'tube outside diameter, m'}
+          tube_ID_m: {type: number, description: 'tube inside diameter, m'}
+          tube_length_m: {type: number, description: 'tube length per pass, m'}
+          pitch_m: {type: number, description: 'tube pitch PT, m'}
+          layout: {type: string, enum: [triangular30, square90], description: 'tube layout'}
+          baffle_spacing_m: {type: number, description: 'baffle spacing B, m'}
+          n_baffles: {type: integer, description: 'baffle count Nb'}
+          tube_passes: {type: integer, enum: [1, 2, 4, 6, 8], description: 'tube passes per shell Ntp'}
+          n_shells: {type: integer, description: 'TEMA E shells in series, default 1'}
+          utility_composition: {type: object, description: 'utility stream mole fractions'}
+          utility_T_K: {type: number, description: 'utility inlet temperature, K'}
+          utility_P_Pa: {type: number, description: 'utility inlet pressure, Pa'}
+          utility_molar_flow: {type: number, description: 'utility inlet molar flow, mol/s'}
+          k_wall_W_mK: {type: number, description: 'tube wall conductivity, W/(m K), default 45'}
+          R_f_tube_m2K_W: {type: number, description: 'tube-side fouling, m2 K/W, default 0'}
+          R_f_shell_m2K_W: {type: number, description: 'shell-side fouling, m2 K/W, default 0'}
+          roughness_m: {type: number, description: 'tube roughness, m, default 4.5e-5'}
+          allow_extrapolation: {type: boolean, description: 'permit Kern outside 2e3 < Re_s < 1e6, flagged in info'}
+          n_zones: {type: integer, description: 'equal-dH zones over the process enthalpy span, default 20'}
+          tube_rows_vertical: {type: integer, description: 'mean tubes per vertical row N_r for the Incropera eq. 10.47 bank correction; required when a shell-side condensation zone is evaluated'}
+          F_min: {type: number, description: 'minimum acceptable LMTD correction factor for multi-pass arrangements, default 0.75'}
       note: zoned (phase change), multi-pass with temperature cross
       end_state: true
   sizer: shell_tube
