@@ -27,20 +27,45 @@ from ngdesign.units.separation.flash_drum import FlashDrum, FlashDrumSpecError
 from ngdesign.units.separation.flash_drum_r1 import FlashDrumR1, FlashDrumR1SpecError
 from tests.conftest import flash_feed
 
-#: The spec's test case (Tests, "Closed form"): the R0 example feeds with
-#: duty_W 5e5, diameter_m 0.6, E 0.05, d_RR 3e-4 m, n_RR 2.5.
-_BALANCE_PARAMS: dict[str, Any] = {
-    "duty_W": 5.0e5,
+#: The spec's diameter/distribution params (Tests, "Closed form"), kept
+#: diameter-only: the spec's full case (R0 example feeds, duty_W 5e5,
+#: diameter_m 0.6) flashes ALL-VAPOUR at outlet_P 3 MPa (the 0.3 % water
+#: fits the vapour at 3 MPa and the feed carries no hydrocarbon liquid),
+#: so with a diameter_m it hits the spec's own "both a gas and a liquid"
+#: refusal. Diameter-given tests therefore run on a real three-phase
+#: basis (no mocks, spec Tests): see _three_phase_inlets. Deviation
+#: flagged in the PR.
+_D_PARAMS: dict[str, Any] = {
     "diameter_m": 0.6,
     "inlet_entrained_fraction": 0.05,
     "droplet_d_rr_m": 3e-4,
     "droplet_n_rr": 2.5,
 }
+_BALANCE_PARAMS: dict[str, Any] = {**_D_PARAMS, "duty_W": 5.0e5}
 
 
 def _inlets(thermo: Thermo) -> dict[str, StreamState]:
     feeds, _params = FlashDrumR1.example_case()
     return {port: flash_feed(thermo, f) for port, f in feeds.items()}
+
+
+def _three_phase_inlets(thermo: Thermo) -> dict[str, StreamState]:
+    """A basis the registered package flashes three-phase: N2/nC4/H2O
+    (0.1/0.4/0.5) at 300 kPa, 293 K gives gas, hydrocarbon liquid and
+    aqueous all non-zero — verified in this session. The spec's R0 example
+    basis cannot: at outlet_P 3 MPa it flashes all-vapour (see the module
+    note on _BALANCE_PARAMS), so every diameter_m-given test runs here."""
+    return {
+        "inlet": flash_feed(
+            thermo,
+            {
+                "T": 293.15,
+                "P": 3.0e5,
+                "molar_flow": 10.0,
+                "composition": {"N2": 0.1, "nC4": 0.4, "H2O": 0.5},
+            },
+        )
+    }
 
 
 def _r0(thermo: Thermo, inlets: dict[str, StreamState], params: dict[str, Any] | None = None) -> UnitResult:
@@ -78,10 +103,10 @@ class TestIdentity:
         assert r1.info["T_out_K"] == r0.info["T_out_K"]
 
     def test_zero_entrainment_with_diameter_reduces_to_r0(self, thermo: Thermo) -> None:
-        inlets = _inlets(thermo)
-        params = {**_BALANCE_PARAMS, "inlet_entrained_fraction": 0.0}
+        inlets = _three_phase_inlets(thermo)
+        params = {**_D_PARAMS, "inlet_entrained_fraction": 0.0}
         r1 = FlashDrumR1().solve(inlets, params, thermo)
-        r0 = _r0(thermo, inlets, {"duty_W": 5.0e5})
+        r0 = _r0(thermo, inlets)
         assert r1.outlets["gas_out"] == r0.outlets["gas_out"]
         assert r1.outlets["liquid_out"] == r0.outlets["liquid_out"]
         assert r1.outlets["aqueous_out"] == r0.outlets["aqueous_out"]
@@ -101,7 +126,7 @@ class TestClosedFormVelocity:
     """
 
     def test_velocity_relations_at_D_060(self, thermo: Thermo) -> None:
-        r1 = FlashDrumR1().solve(_inlets(thermo), dict(_BALANCE_PARAMS), thermo)
+        r1 = FlashDrumR1().solve(_three_phase_inlets(thermo), dict(_D_PARAMS), thermo)
         v_G = 4.0 * r1.info["Q_gas_m3_s"] / (math.pi * 0.6**2)
         assert r1.info["v_gas_m_s"] == pytest.approx(v_G, rel=1e-12)
         assert r1.info["v_ratio"] == pytest.approx(v_G / r1.info["v_max_m_s"], rel=1e-12)
@@ -175,7 +200,7 @@ class TestRefusals:
     def test_gas_viscosity_unavailable_needs_override(self, thermo: Thermo) -> None:
         stub = _NoViscosityThermo(thermo)
         with pytest.raises(FlashDrumR1SpecError, match="gas_viscosity_Pa_s"):
-            self._solve(stub, dict(_BALANCE_PARAMS))
+            self._solve(stub, dict(_D_PARAMS), _three_phase_inlets(stub))
 
     def test_r0_refusal_propagates_unchanged(self, thermo: Thermo) -> None:
         # R0 refuses both duty_W and vapor_fraction; its own error type passes

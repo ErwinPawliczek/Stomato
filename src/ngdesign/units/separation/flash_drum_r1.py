@@ -179,9 +179,7 @@ class FlashDrumR1:
             if mu_G is None:
                 override = params.get("gas_viscosity_Pa_s")
                 if override is None:
-                    raise FlashDrumR1SpecError(
-                        "the package gives no gas viscosity; pass gas_viscosity_Pa_s"
-                    )
+                    raise FlashDrumR1SpecError("the package gives no gas viscosity; pass gas_viscosity_Pa_s")
                 mu_G = float(override)
             info.update(
                 {
