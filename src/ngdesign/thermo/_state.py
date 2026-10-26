@@ -914,6 +914,60 @@ def flash_pvf(pkg: Any, z: dict[str, float], P: float, vf: float, molar_flow: fl
     return cast(StreamState, pkg.flash_pt(z, T, P, molar_flow))  # as in flash_tvf
 
 
+def pure_fluid_dome(
+    pkg: Any,
+    z: dict[str, float],
+    molar_flow: float,
+    P: float,
+    *,
+    H: float | None = None,
+    S: float | None = None,
+) -> StreamState | None:
+    """Pure-fluid PH or PS target inside the vapour dome; None outside it (issue #310).
+
+    A single component's two-phase state is fixed by Tsat(P) and the lever rule.
+    The thermo library gets it wrong: its PS solver divides by zero, its PH
+    solver returns one phase at Tsat carrying the full enthalpy, and its pure
+    P-VF flash disagrees with the databank saturation. So the state is built
+    here: Tsat from this module's saturation routine (the owner of saturation:
+    the databank vapour-pressure curve for a pure feed, as ``flash_pvf`` uses),
+    the saturated liquid and vapour phases at (Tsat, P), and
+    beta = (X - X_l)/(X_v - X_l) on the given property X (H or S). The target
+    property is returned exactly; the other is the lever-rule mixture. Targets
+    outside (X_l, X_v), mixtures, and pressures with no saturation (above the
+    critical point) return None, so the caller's existing route runs unchanged.
+    """
+    if (H is None) == (S is None):
+        raise ValueError("specify exactly one of H and S")
+    ids = support_ids(z)
+    if len(ids) != 1:
+        return None
+    try:
+        t_sat = _saturation(pkg._sat_flasher(ids), z, "bubble", P=P, pseudos=_pkg_pseudos(pkg)).T
+    except SaturationError:
+        return None
+    flasher = pkg._flasher(z)
+    liquid = _single_phase_object(flasher, z, t_sat, P, PhaseKind.HC_LIQUID)[0]
+    vapour = _single_phase_object(flasher, z, t_sat, P, PhaseKind.VAPOR)[0]
+    if not float(liquid.rho_mass()) > float(vapour.rho_mass()):
+        return None  # one EOS root only (near critical): no distinct saturated phases
+    h_l, h_v = float(liquid.H()), float(vapour.H())
+    s_l, s_v = float(liquid.S()), float(vapour.S())
+    if H is not None:
+        if not h_l < H < h_v:
+            return None
+        beta = (H - h_l) / (h_v - h_l)
+        enthalpy, entropy = H, (1.0 - beta) * s_l + beta * s_v
+    else:
+        assert S is not None
+        if not s_l < S < s_v:
+            return None
+        beta = (S - s_l) / (s_v - s_l)
+        enthalpy, entropy = (1.0 - beta) * h_l + beta * h_v, S
+    pairs: list[PhasePair] = [(liquid, 1.0 - beta), (vapour, beta)]
+    return _build_stream_state(z, molar_flow, t_sat, P, ids, pairs, enthalpy, entropy)
+
+
 # ------------------------------------------------------------------ K-values, phase props, derivatives
 
 
@@ -944,10 +998,12 @@ def _single_phase_object(
     zs = [float(z[cid]) for cid in ids]
     base = flasher.gas if kind == PhaseKind.VAPOR else flasher.liquids[0]
     phase = base.to(T=T, P=P, zs=zs)
-    if getattr(base, "constants", None) is not None and not hasattr(phase, "constants"):
-        # ``Phase.to`` copies HeatCapacityGases but not the component constants,
-        # which MW() needs; flash-built phases always carry them.
-        phase.constants = base.constants
+    # ``Phase.to`` copies HeatCapacityGases but neither the component constants
+    # (which MW() needs) nor the property correlations (which mu() and k() need);
+    # flash-built phases always carry both, so a directly built phase must too.
+    for attr in ("constants", "correlations"):
+        if getattr(base, attr, None) is not None and getattr(phase, attr, None) is None:
+            setattr(phase, attr, getattr(base, attr))
     return phase, ids, zs, tuple(z.keys())
 
 
