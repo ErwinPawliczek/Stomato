@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `V`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -19,7 +19,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.separation.flash_drum:FlashDrum` | PT / PH (duty_W) / PVF flash at the outlet pressure — exactly one of duty_W and vapor_fraction; the inlets are first adiabatically PH-mixed at the lowest inlet pressure (a single inlet passes through unchanged); the balancing duty is reported; gas, liquid and (when the package gives one) aqueous outlets at their flash states |
-| R1 | planned | — | Souders-Brown sizing, carry-over at a given diameter (the souders_brown correlation plugin exists) |
+| R1 | provisional | `ngdesign.units.separation.flash_drum_r1:FlashDrumR1` | Souders-Brown sizing (York demister K) and droplet carry-over at a given diameter over both liquid outlets; reduces to R0 without diameter_m or at E = 0 |
 
 ### R0 parameters
 
@@ -27,6 +27,49 @@ Rigour ladder: R0 provisional, R1 planned
 properties:
   duty_W:
     description: heat added to the drum, W; PH flash with H_out = H_in + duty_W
+    type: number
+  outlet_P:
+    description: outlet pressure, Pa abs; default min inlet P
+    type: number
+  vapor_fraction:
+    description: molar vapour fraction; PVF flash at outlet_P
+    maximum: 1
+    minimum: 0
+    type: number
+type: object
+```
+
+### R1 parameters
+
+```yaml
+properties:
+  K_m_s:
+    description: Souders-Brown K, m/s; default York demister fit at the drum pressure
+    exclusiveMinimum: 0
+    type: number
+  diameter_m:
+    description: vessel inside diameter, m; enables the carry-over calculation
+    exclusiveMinimum: 0
+    type: number
+  droplet_d_rr_m:
+    description: Rosin-Rammler characteristic droplet size, m
+    exclusiveMinimum: 0
+    type: number
+  droplet_n_rr:
+    description: Rosin-Rammler spread parameter
+    exclusiveMinimum: 0
+    type: number
+  duty_W:
+    description: heat added to the drum, W; PH flash with H_out = H_in + duty_W
+    type: number
+  gas_viscosity_Pa_s:
+    description: gas viscosity override, Pa s
+    exclusiveMinimum: 0
+    type: number
+  inlet_entrained_fraction:
+    description: fraction of the liquid entering the gravity section as droplets
+    maximum: 1
+    minimum: 0
     type: number
   outlet_P:
     description: outlet pressure, Pa abs; default min inlet P
