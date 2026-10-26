@@ -111,7 +111,9 @@ class TestRefusals:
     """One test per refusal-table row (spec Refusals): the scrubber R1 table
     plus the flash-drum row, each a typed FlashDrumR1SpecError."""
 
-    def _solve(self, thermo: Thermo, params: dict[str, Any], inlets: dict[str, StreamState] | None = None) -> UnitResult:
+    def _solve(
+        self, thermo: Thermo, params: dict[str, Any], inlets: dict[str, StreamState] | None = None
+    ) -> UnitResult:
         return FlashDrumR1().solve(inlets or _inlets(thermo), params, thermo)
 
     def test_diameter_m_must_be_positive(self, thermo: Thermo) -> None:
