@@ -6,6 +6,8 @@ G -> 0 march limit, and one test per refusal row of the spec's table.
 
 from __future__ import annotations
 
+import math
+
 from typing import Any
 
 import pytest
@@ -76,29 +78,25 @@ def test_zero_stripping_gas_delegates_to_r0_exactly() -> None:
 
 
 def test_g0_limit_march_recovers_the_boiling_line_ratio() -> None:
-    """As G -> 0 with N >= 1 the march itself stops stripping: X_N -> X_0.
+    """As G -> 0 with N >= 1 the march itself stops stripping: X_N -> X_0 as sqrt(G).
 
-    SPEC ISSUE (teg_regen R2, step 1): the spec claims "at G = 1e-9 mol/s,
-    X_lean matches X_0 to rel 1e-6"; the shared march's numerics do not
-    support that. Measured on this correlation (T = 477.15 K, S = 82 mol/s,
-    N = 2, dry gas): the residual-scan root Y_1 ~ sqrt(S/(G k)) grows as G
-    shrinks, and the liquid ratio gap falls only as sqrt(G) -- rel gap
-    2.042e-5 at G = 1e-9 and 6.456e-6 at G = 1e-10, while at G = 1e-11 the
-    scan (Y_1 in [1e-14, 1e6]) finds no bracket and the march raises
-    TEGStageError. The assertions below use the measured gap with one order
-    of headroom (rel 1e-4) and pin the singularity refusal at G = 1e-11.
+    With the top stage on the boiling line (y -> 1), the stage-1 vapour ratio
+    satisfies Y_1 ~ (S/(G k))**0.5, so the stripped water G*Y_1 ~ (G S / k)**0.5
+    and the lean-ratio gap (X_0 - X_N)/X_0 closes as sqrt(G), not G. The test
+    asserts that law: a tenfold drop in G shrinks the gap by sqrt(0.1) (2 %
+    allowance for the asymptotic regime), the gap is monotone, and past
+    G ~ 1e-11 the bracket scan refuses (the singular limit belongs to the
+    delegation path). No tolerance is taken from a measured gap.
     """
     T, P = DEFAULT_T_REBOILER, DEFAULT_P
     x_reb = _lean_water_mole_fraction(T, P)
     X_0 = x_reb / (1.0 - x_reb)
-    y_1e9, x_1e9 = countercurrent_march(1.0e-9, 82.0, X_0, 0.0, 2, teg_x_of_y(T, P))
-    assert x_1e9[-1] == pytest.approx(X_0, rel=1.0e-4)
-    y_1e10, x_1e10 = countercurrent_march(1.0e-10, 82.0, X_0, 0.0, 2, teg_x_of_y(T, P))
-    assert x_1e10[-1] == pytest.approx(X_0, rel=1.0e-4)
-    # The gap tightens as G falls (the sqrt(G) law), and past G ~ 1e-11 the
-    # shared march's bracket scan refuses: the singular limit belongs to the
-    # delegation path, not the march.
-    assert abs(X_0 - x_1e10[-1]) < abs(X_0 - x_1e9[-1])
+    _, x_1e9 = countercurrent_march(1.0e-9, 82.0, X_0, 0.0, 2, teg_x_of_y(T, P))
+    _, x_1e10 = countercurrent_march(1.0e-10, 82.0, X_0, 0.0, 2, teg_x_of_y(T, P))
+    gap_1e9 = (X_0 - x_1e9[-1]) / X_0
+    gap_1e10 = (X_0 - x_1e10[-1]) / X_0
+    assert 0.0 < gap_1e10 < gap_1e9
+    assert gap_1e10 / gap_1e9 == pytest.approx(math.sqrt(0.1), rel=0.02)
     with pytest.raises(TEGStageError, match="no bracket"):
         countercurrent_march(1.0e-11, 82.0, X_0, 0.0, 2, teg_x_of_y(T, P))
 
