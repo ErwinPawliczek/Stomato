@@ -18,10 +18,10 @@ import pytest
 from ngdesign import registry
 from ngdesign.units._physics.heat_balance import TemperatureCross
 from ngdesign.units.heat.rating import RatingConvergenceError
+from ngdesign.units.heat.shell_tube_r1 import ShellTubeGeometryError
 from ngdesign.units.heat.shell_tube_r2 import (
     GRAVITY,
     PhaseRegimeNotRated,
-    ShellTubeGeometryError,
     ShellTubeR2,
     h_prime_fg,
     nusselt_bank,
