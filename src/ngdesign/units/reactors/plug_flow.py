@@ -44,6 +44,7 @@ from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.reactions import Reaction, ReactionSet
 from ngdesign.contracts.stream import Phase, PhaseKind, StreamState
 from ngdesign.units._physics.kinetics import (
+    LHHW,
     R,
     heat_of_reaction,
     rate,
@@ -140,6 +141,13 @@ def _validate_reactions(rset: ReactionSet, bulk_density_kg_m3: float | None) -> 
     for reaction in rset.reactions:
         if reaction.kinetics is None:
             raise PlugFlowError(f"reaction '{reaction.id}' has no kinetics")
+        if isinstance(reaction.kinetics, LHHW) and reaction.equilibrium is not None:
+            # LHHW is used directly as a forward rate and carries no equilibrium
+            # term; silently ignoring the model would mislead the caller.
+            raise PlugFlowError(
+                f"reaction '{reaction.id}': an LHHW rate ignores the equilibrium "
+                "model; drop the equilibrium model or use a PowerLaw with reverse"
+            )
         scales.append(_scale_j(reaction, bulk_density_kg_m3))
     return scales
 

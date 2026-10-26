@@ -212,6 +212,23 @@ class PfrR2:
         ):
             energy = "uniform_duty"
             duty = float(thermal["duty_W"])
+        elif (
+            isinstance(thermal, Mapping)
+            and set(thermal) == {"coolant_T_K", "U_W_m2K"}
+            and all(isinstance(thermal[k], (int, float)) for k in thermal)
+        ):
+            # R2 wall heat to a coolant at fixed temperature (spec equation 7):
+            # q_V = U * a_w * (T_c - T) with a_w = 4 / D_t per unit tube volume.
+            t_cool = float(thermal["coolant_T_K"])
+            u_wall = float(thermal["U_W_m2K"])
+            a_w = 4.0 / tube_diameter
+            heat_model = HeatModel(
+                n_extra=0,
+                y0_extra=(),
+                q_V=lambda _v, t, _extra: u_wall * a_w * (t_cool - t),
+                d_extra=lambda _v, _t, _extra: (),
+            )
+            energy = "heat_model"
         else:
             raise PlugFlowError(
                 f"thermal mode {thermal!r} is not one of 'isothermal', 'adiabatic', "
@@ -252,6 +269,11 @@ class PfrR2:
             t_out = _solve_outlet_T(thermo, z_out, total_out, p_out, t_in, h_in + duty)
             outlet = thermo.flash_pt(dict(z_out), t_out, p_out, total_out)
             duty_out = duty
+        elif energy == "heat_model":  # fixed coolant T: duty = the accumulated Q
+            q_end = profile.Q_W[-1]
+            t_out = _solve_outlet_T(thermo, z_out, total_out, p_out, t_in, h_in + q_end)
+            outlet = thermo.flash_pt(dict(z_out), t_out, p_out, total_out)
+            duty_out = q_end
         else:  # adiabatic: Q = 0
             t_out = _solve_outlet_T(thermo, z_out, total_out, p_out, t_in, h_in)
             outlet = thermo.flash_pt(dict(z_out), t_out, p_out, total_out)
