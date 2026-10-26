@@ -32,8 +32,14 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from ngdesign.contracts import StreamState, UnitResult
+from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.reactions import PowerLaw, PowerLawRate, Reaction, ReactionSet
-from ngdesign.units._physics.kinetics import R
+from ngdesign.data import component_record
+from ngdesign.units._physics.kinetics import R, apply_extents, enthalpy_with_formation
+from ngdesign.units.balance import stream_enthalpy
+from ngdesign.units.reactors._shared import thermal_outlet, z_from
+from ngdesign.units.reactors.plug_flow import PlugFlowProfile, integrate_plug_flow
 
 #: The allowed feed slate (spec algorithm step 1). Anything else — a petroleum
 #: pseudo-component in particular — is refused, naming issue #222 and R0.
@@ -272,3 +278,172 @@ def build_reaction_set(kin: dict[str, dict[str, float]], p_atm: float) -> Reacti
         reactions=[dehydro, n_to_p, hc_n, hc_p],
         components=list(SLATE),
     )
+
+
+# ---------------------------------------------------------------------------
+# Step 2 — the adapter: bed validation, the interheater + bed loop, the
+# product split, duty accounting.  Spec algorithm steps 1–6 and the refusal
+# table.
+# ---------------------------------------------------------------------------
+
+
+def _validate_beds(beds: Any) -> list[dict[str, Any]]:
+    """Validate and normalize the ``beds`` parameter (spec algorithm step 2)."""
+    if not isinstance(beds, list) or not beds:
+        raise ReformerKineticError(
+            "reformer_cat R1: beds must be a non-empty array of bed parameter mappings"
+        )
+    out: list[dict[str, Any]] = []
+    for i, bed in enumerate(beds):
+        if not isinstance(bed, dict):
+            raise ReformerKineticError(f"reformer_cat R1: bed {i} must be a mapping")
+        w = bed.get("catalyst_mass_kg")
+        if not isinstance(w, (int, float)) or isinstance(w, bool) or float(w) <= 0.0:
+            raise ReformerKineticError(f"reformer_cat R1: bed {i} catalyst_mass_kg must be > 0")
+        t_in = bed.get("inlet_T_K")
+        if not isinstance(t_in, (int, float)) or isinstance(t_in, bool) or float(t_in) <= 0.0:
+            raise ReformerKineticError(f"reformer_cat R1: bed {i} inlet_T_K must be > 0")
+        thermal = bed.get("thermal", "isothermal")
+        if thermal not in ("isothermal", "adiabatic", "uniform_duty", "heat_model"):
+            raise ReformerKineticError(
+                f"reformer_cat R1: bed {i} thermal must be one of "
+                "'isothermal', 'adiabatic', 'uniform_duty', 'heat_model'"
+            )
+        out.append({"catalyst_mass_kg": float(w), "inlet_T_K": float(t_in), "thermal": thermal})
+        if "duty_W" in bed:
+            out[-1]["duty_W"] = float(bed["duty_W"])
+    return out
+
+
+#: The reformate group: everything but hydrogen leaves the reformate port
+#: (spec algorithm step 5); hydrogen alone leaves the H2 port.
+_REFORMATE_CIDS = frozenset(SLATE) - {"H2"}
+
+
+class CatalyticReformerR1:
+    """R1 adapter for the ``reformer_cat`` row (spec U-R2 wave, step 2).
+
+    Ports: ``naphtha_in`` (StreamState), ``reformate_out`` and ``h2_out``
+    (StreamState).  Adiabatic beds with interheaters between them; each
+    interheater restores the next bed's ``inlet_T_K`` exactly (the heater
+    duty is reported, not a parameter).  The reacting phase is vapor; the
+    bed is isobaric at R1 (no Ergun pressure drop — R2).
+    """
+
+    def ports(self) -> dict[str, tuple[str, ...]]:
+        return {
+            "naphtha_in": ("in",),
+            "reformate_out": ("out",),
+            "h2_out": ("out",),
+        }
+
+    def solve(
+        self,
+        inputs: dict[str, StreamState],
+        params: dict[str, Any],
+        thermo: Thermo,
+    ) -> UnitResult:
+        if set(inputs) != {"naphtha_in"}:
+            raise ReformerKineticError(
+                f"reformer_cat R1: expected exactly one input port 'naphtha_in', got {sorted(inputs)}"
+            )
+        inlet = inputs["naphtha_in"]
+
+        # Algorithm step 1: the feed must be real species from the slate.
+        n = {cid: float(x) * inlet.molar_flow for cid, x in inlet.composition.items() if x > 0.0}
+        if not n:
+            raise ReformerKineticError("reformer_cat R1: naphtha_in carries no components")
+        validate_slate(n)
+        # Trace seeds: the pfr integrator's z drops zero-flow species, so a
+        # feed without the products (toluene, nC7, light ends) would make the
+        # reverse rates' product orders raise (component outside the mixture)
+        # at t = 0. Seeding every missing slate species at 1e-12 of the total
+        # flow keeps the orders evaluable and sits four orders below the
+        # strictest V0 tolerance (1e-8 relative).
+        total_feed = math.fsum(n.values())
+        for cid in SLATE:
+            n.setdefault(cid, 1.0e-12 * total_feed)
+
+        beds = _validate_beds(params.get("beds"))
+        rho = params.get("bulk_density_kg_m3")
+        if not isinstance(rho, (int, float)) or isinstance(rho, bool) or float(rho) <= 0.0:
+            raise ReformerKineticError(
+                "reformer_cat R1: bulk_density_kg_m3 must be > 0 (it converts the per-catalyst-mass rates)"
+            )
+        rho_f = float(rho)
+        kin = kinetics_param(params.get("kinetics"))
+        rset = build_reaction_set(kin, inlet.P / 101325.0)
+
+        info: dict[str, Any] = {}
+        n_state = n
+        p = inlet.P
+        h_prev_out: float | None = None  # formation-basis enthalpy of the previous bed's outlet
+        inlet_state = inlet
+
+        # Algorithm step 4: per bed — interheater, the pfr integration, the
+        # extents, then the exact `thermal_outlet` closure (the ODE's energy
+        # profile only reports the gap). The heater feeding bed k (k >= 2)
+        # restores the bed's inlet_T_K from the previous bed's outlet state;
+        # heater_duty_b1 is zero at R1: the feed arrives at bed 1's inlet_T_K.
+        for k, bed in enumerate(beds, start=1):
+            t_feed = bed["inlet_T_K"]
+            heated = thermo.flash_pt(dict(z_from(n_state)), t_feed, p, math.fsum(n_state.values()))
+            if h_prev_out is not None:
+                info[f"heater_duty_b{k}_W"] = enthalpy_with_formation(heated) - h_prev_out
+            else:
+                info[f"heater_duty_b{k}_W"] = 0.0
+            h_prev_out = enthalpy_with_formation(heated)
+            profile: PlugFlowProfile = integrate_plug_flow(
+                heated,
+                rset,
+                thermo,
+                volume_m3=bed["catalyst_mass_kg"] / rho_f,
+                energy=bed["thermal"],
+                duty_W=float(bed.get("duty_W", 0.0)),
+                reacting_phase="vapor",
+                bulk_density_kg_m3=rho_f,
+            )
+            n_out = apply_extents(n_state, rset, profile.extents[-1])
+            out_state, _bed_duty = thermal_outlet(heated, n_out, bed["thermal"], thermo)
+            info[f"bed_dT_b{k}_K"] = out_state.T - t_feed
+            info[f"bed_T_out_b{k}_K"] = out_state.T
+            info[f"T_closure_gap_b{k}_K"] = out_state.T - profile.T_K[-1]
+            h_prev_out = enthalpy_with_formation(out_state)
+            n_state = n_out
+            for j, reaction in enumerate(rset.reactions):
+                info[f"extent_{reaction.id}_b{k}_mol_s"] = float(profile.extents[-1][j])
+
+        # Algorithm step 5: the sharp product split at the last bed's outlet
+        # state. The split is fictitious (both ports at the same T and P), so
+        # its enthalpy of mixing is booked, not hidden: duty closes as
+        # heaters + isothermal-bed duties + split_enthalpy_W.
+        t_last = float(info[f"bed_T_out_b{len(beds)}_K"])
+        reformate = {cid: n_state[cid] for cid in sorted(_REFORMATE_CIDS) if n_state[cid] > 0.0}
+        h2_flow = n_state["H2"]
+        out_reformate = thermo.flash_pt(dict(z_from(reformate)), t_last, p, math.fsum(reformate.values()))
+        out_h2 = thermo.flash_pt({"H2": 1.0}, t_last, p, h2_flow)
+        outlets = {"reformate_out": out_reformate, "h2_out": out_h2}
+        info["split_enthalpy_W"] = math.fsum(enthalpy_with_formation(s) for s in outlets.values()) - (
+            h_prev_out or 0.0
+        )
+
+        # Algorithm step 6: the duty closes on the formation-basis enthalpy
+        # across the unit's own ports; power_W = 0 at R1.
+        duty_W = stream_enthalpy(outlets.values(), "formation") - stream_enthalpy([inlet_state], "formation")
+
+        # Reported yields: H2 produced per feed mass (wt %) and the C6+
+        # aromatics mole fraction (toluene over the C7 lumps).
+        feed_mass_kg_s = math.fsum(
+            n_in * float(component_record(cid)["mw"]) for cid, n_in in n.items() if cid in n
+        )
+        mw_h2 = float(component_record("H2")["mw"])
+        h2_produced = h2_flow - n.get("H2", 0.0)
+        info["h2_yield_wt_pct"] = 100.0 * h2_produced * mw_h2 / feed_mass_kg_s
+        c6plus = math.fsum(n_state[cid] for cid in ("nC7", "methylcyclohexane", "toluene"))
+        info["aromatics_out_mol_frac_C6plus"] = n_state["toluene"] / c6plus if c6plus > 0.0 else 0.0
+
+        return UnitResult(
+            outlets=outlets,
+            duty_W=duty_W,
+            info=info,
+        )
