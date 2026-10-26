@@ -168,15 +168,57 @@
           dP: {type: number, description: 'pressure drop, Pa'}
       note: approach / duty spec
     R1:
-      status: planned
-      params: {}
-      note: rating — bundle geometry, fan power, ht air-side correlation
+      status: provisional
+      adapter: ngdesign.units.heat.air_cooler_r1:AirCoolerR1
+      params:
+        type: object
+        required: [tube_rows, tube_passes, tubes_per_row, tube_length_m, tube_OD_m,
+          tube_wall_m, fin_thickness_m, fin_height_m, fin_density_per_m,
+          pitch_parallel_m, pitch_normal_m, air_T_K, air_mass_flow_kg_s, fan_efficiency]
+        properties:
+          tube_rows: {type: integer, description: 'tube rows deep'}
+          tube_passes: {type: integer, description: 'tube passes; supported pairs (1, 1-4),
+            (2, 2), (2, 4), (3, 3), (4, 4) and passes = rows > 4'}
+          tubes_per_row: {type: integer, description: 'tubes per row'}
+          tube_length_m: {type: number, description: 'bare tube length, m'}
+          tube_OD_m: {type: number, description: 'tube outside diameter, m'}
+          tube_wall_m: {type: number, description: 'tube wall thickness, m'}
+          fin_thickness_m: {type: number, description: 'fin thickness, m'}
+          fin_height_m: {type: number, description: 'fin height, m (alternative: fin_diameter_m)'}
+          fin_density_per_m: {type: number, description: 'fins per metre (alternative: fin_interval_m)'}
+          pitch_parallel_m: {type: number, description: 'staggered pitch parallel to flow, m
+            (alternative pitch spec: pitch_m with angle_deg)'}
+          pitch_normal_m: {type: number, description: 'staggered pitch normal to flow, m'}
+          air_T_K: {type: number, description: 'air inlet temperature, K'}
+          air_mass_flow_kg_s: {type: number, description: 'total air mass flow, kg/s'}
+          fan_efficiency: {type: number, description: 'fan efficiency in (0, 1]'}
+          air_P_Pa: {type: number, description: 'air-side pressure, Pa, default 101325'}
+          air_composition: {type: object, description: 'air mole fractions, default N2 0.79
+            / O2 0.21'}
+          parallel_bays: {type: integer, description: 'parallel bays, default 1'}
+          bundles_per_bay: {type: integer, description: 'bundles per bay, default 1'}
+          k_fin_W_mK: {type: number, description: 'fin conductivity, W/(m K), default 205'}
+          k_wall_W_mK: {type: number, description: 'tube wall conductivity, W/(m K), default 45'}
+          R_f_tube_m2K_W: {type: number, description: 'tube-side fouling resistance, m2 K/W,
+            default 0'}
+          roughness_m: {type: number, description: 'absolute roughness, m, default 4.5e-5'}
+          allow_extrapolation: {type: boolean, description: 'rate outside the Briggs-Young
+            Re window (1000, 8000), flagged briggs_young_in_range, default false'}
+      note: rating (Briggs-Young air side on the bare-area basis, ESDU 86022 air dP, duct_h
+        tube side, brentq duty solve with Ft_aircooler; fan power reported in info, the
+        air side is not a port)
       end_state: true
   sizer: air_cooler
   pid_symbol: AC
   references:
   - docs/unit-catalogue-plan.md §2 U-C 3
-  notes: roadmap R1 lands with the S1 natural-gas slice (plan §2b).
+  notes: >-
+    R1 is rated on the ht AirCooledExchanger docstring bundle basis (the S1
+    natural-gas slice E-101 geometry, plan §2b). V1 gap: searched GPSA EDB Sec. 10,
+    Serth 2nd ed. Ch. 12, Kern & Kraus 1972 Ch. 12 - no printed air-cooler rating
+    example with complete inputs was accessible, so the closed-form Briggs-Young,
+    ESDU and fan-power checks and the R0-reduction identity carry the R1
+    verification.
 
 - id: plate_exchanger
   name: Plate exchanger
