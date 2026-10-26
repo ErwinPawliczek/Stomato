@@ -216,8 +216,8 @@
     ngdesign.data.component_record with formation data, dHf298 = -52680,
     -389420, -95351.4 and -429800 J/mol, verified this session). The true
     blockers for the spec's Fogler candidates: (a) the printed isothermal
-    ethylene-glycol CSTR (4th ed. Sec. 4.2, Example 4-2, pp. 142-145, numbers
-    read from a scanned copy this session: k = 0.311 min-1, stream A 7.67
+    ethylene-glycol CSTR (4th ed. Sec. 4.2, Example 4-2, pp. 142-145:
+    k = 0.311 min-1, stream A 7.67
     ft3/min at CA0 = 1 lbmol/ft3, stream B water 7.67 ft3/min, total 15.34
     ft3/min, X = 0.8, V = 197.3 ft3 = 1480 gal = 5.6 m3) works volumetrically
     on a constant-density liquid lbmol/ft3 basis: the water molar flow (hence
