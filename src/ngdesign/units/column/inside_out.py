@@ -85,6 +85,28 @@ class _StripperSection:
     bottom_stage: int | None
 
 
+@dataclass(frozen=True)
+class _Interlink:
+    """One stream link of the stage graph (S0-1c step 2).
+
+    Stages are 0-based graph indices (the records are consumed by the
+    solver's unknown packing, not by user-facing numbering). ``phase`` is
+    ``"liquid"`` for a stripper draw (main stage -> section top stage) or
+    ``"vapour"`` for the stripped overhead return (section top stage ->
+    main stage). Neither flow is a Newton unknown: the vapour return's flow
+    is the section top stage's own vapour, and a liquid draw is DERIVED from
+    its section's total balance (draw = returned vapour + product - section
+    feeds; the product-rate spec pins it exactly - see ``_GraphLayout`` and
+    ``_graph_unpack``). Should a future step add a stripper spec that is not
+    a product rate, the draw becomes a tear again and the layout grows a
+    draw block; the record then gains the slot index pointing at it.
+    """
+
+    from_stage: int
+    to_stage: int
+    phase: str
+
+
 @dataclass
 class _Column:
     """All static problem data for one solve. Stage index 0 = stage 1 (top)."""
@@ -114,6 +136,10 @@ class _Column:
     #: sections; step 3 wires them into the balances.
     strippers: list[_SideStripper] = field(default_factory=list)
     sections: list[_StripperSection] = field(default_factory=list)
+    #: S0-1c step 2: the graph's stream links as explicit records, in section
+    #: order (liquid draw then vapour return per section). Empty for a linear
+    #: column - today's _Column exactly.
+    interlinks: list[_Interlink] = field(default_factory=list)
     # Two-phase operating window for the inner temperature walk, set from the
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
@@ -146,6 +172,10 @@ class _Profile:
     #: S0-1: one dict per pumparound loop (in spec order): flow, duty, draw and
     #: return temperatures. Empty without pumparounds.
     pa_report: list[dict[str, float]] = field(default_factory=list)
+    #: S0-1c step 2: one live draw flow per liquid interlink, in record order
+    #: (empty without strippers) - the graph-NS unknown vector's draw block
+    #: round-trips through here, like V does for the stage vapour flows.
+    draw_flows: list[float] = field(default_factory=list)
     outer: int = 0
     inner: int = 0
     ns_used: bool = False
@@ -284,6 +314,18 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         )
         offset += st.n_stages
     col.sections = sections
+    # S0-1c step 2: explicit interlink records (review note 1, PR #241) and
+    # section-stage pressures. A plain column gets an empty list and exactly
+    # today's pressures - the byte-identical regression gate is the bench.
+    # The section pressure is the draw-stage pressure, uniform over the
+    # section (pressure let-down is isenthalpic; step 3 refines per-section
+    # parsed pressures - PR #241 review note 2).
+    if sections:
+        pad: list[float] = []
+        for sec in sections:
+            pad.extend([col.pressures[sec.draw_stage - 1]] * len(sec.stages))
+        col.pressures = col.pressures + pad
+    col.interlinks = _build_interlinks(col)
     col.pumparounds = list(col_params.pumparounds)
     pa_flows: list[float] = []
     for pa in col.pumparounds:
@@ -327,6 +369,39 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         col.t_band_lo = max(t_top - 30.0, 150.0)
         col.t_band_hi = min(t_bot + 30.0, 600.0)
     return col
+
+
+def _build_interlinks(col: _Column) -> list[_Interlink]:
+    """The graph's interlink records, in section order (S0-1c step 2).
+
+    The unknown-vector layout of the graph Naphtali-Sandholm solve is
+    ``[x per graph stage][T per graph stage][V per free stage]`` - the x/T/V
+    blocks mirror the dense packing over ``n_graph`` stages, with NO draw
+    block: a liquid draw is derived from its section's total balance (draw =
+    returned vapour + product - section feeds; the product-rate spec pins it
+    exactly), so no draw-flow unknown exists and no record points past the
+    unknown vector. The vapour return's flow is the section top stage's own
+    vapour. A linear column has no sections and no interlinks.
+    """
+    out: list[_Interlink] = []
+    for sec in col.sections:
+        if not sec.stages:
+            continue  # degenerate n_stages = 0 plain liquid draw: no section, no return
+        out.append(
+            _Interlink(
+                from_stage=sec.draw_stage - 1,
+                to_stage=sec.stages[0] - 1,
+                phase="liquid",
+            )
+        )
+        out.append(
+            _Interlink(
+                from_stage=sec.stages[0] - 1,
+                to_stage=sec.return_stage - 1,
+                phase="vapour",
+            )
+        )
+    return out
 
 
 def _draw_flows(col: _Column) -> tuple[list[float], list[float]]:
@@ -703,16 +778,30 @@ def _fit_ln_kb(hist: tuple[tuple[float, float], ...], b_default: float) -> tuple
 
 
 def _stage_overall_from_flows(
-    col: _Column, j: int, x_j: dict[str, float], y_j: dict[str, float], l_flow: float, v_flow: float
+    col: _Column,
+    j: int,
+    x_j: dict[str, float],
+    y_j: dict[str, float],
+    l_flow: float,
+    v_flow: float,
+    feed_part: _StageFeed | None = None,
+    draw_total: float | None = None,
 ) -> dict[str, float]:
     """Overall composition sitting on stage j: flows-weighted liquid, vapour and feed.
 
     The one overall construction behind ``_stage_overall`` and the stage-K
     evaluation - every caller weights the SAME four sources in the SAME order,
     so the gate and the Newton linearisation hand the package one composition.
+
+    The graph caller (S0-1c step 2) hands ``feed_part``/``draw_total`` for
+    stages past the main column: a section stage's feed part comes from the
+    graph model's padded feed list and its main-column draws are zero (a
+    stripper draw is cascade liquid, already excluded there). ``None`` keeps
+    exactly the plain-column behaviour: the stage's own feed part and draws.
     """
-    part = col.feeds[j]
-    total = l_flow + v_flow + part.total - col.draw_l[j] - col.draw_v[j]
+    part = feed_part if feed_part is not None else col.feeds[j]
+    draws = (col.draw_l[j] + col.draw_v[j]) if draw_total is None else draw_total
+    total = l_flow + v_flow + part.total - draws
     if total <= _FLOW_FLOOR:
         return col.feed_comp
     acc: dict[str, float] = {}
@@ -741,6 +830,8 @@ def _stage_k_values(
     t_j: float,
     l_flow: float,
     v_flow: float,
+    feed_part: _StageFeed | None = None,
+    draw_total: float | None = None,
 ) -> dict[str, float] | None:
     """THE stage-K evaluation (P1-11 ruling on issue #153): one owner, one surface.
 
@@ -759,11 +850,19 @@ def _stage_k_values(
     K*x from the live K themselves). Returns None when the stage's equilibrium
     is not evaluable from any candidate (liquid x, stage overall, feed);
     callers apply their documented fallbacks.
+
+    The graph caller (S0-1c step 2) passes ``feed_part``/``draw_total`` for
+    stages past the main column (see ``_stage_overall_from_flows``); the
+    candidate chain, the fallbacks and the plain-column behaviour are
+    identical either way.
     """
     return tb.k_values(
         [
             _flash_ready(x_j, col.feed_comp),
-            _flash_ready(_stage_overall_from_flows(col, j, x_j, y_j, l_flow, v_flow), col.feed_comp),
+            _flash_ready(
+                _stage_overall_from_flows(col, j, x_j, y_j, l_flow, v_flow, feed_part, draw_total),
+                col.feed_comp,
+            ),
             col.feed_comp,
         ],
         t_j,
