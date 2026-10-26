@@ -293,3 +293,36 @@ class PfrR2:
         info["dP_Pa"] = float(inlet.P) - float(p_out)
         info["n_rhs"] = float(profile.n_rhs)
         return UnitResult(outlets={"outlet": outlet}, duty_W=duty_out, info=info)
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """The R2-b closed-form case (spec tests): inert N2 with wall heat.
+
+        The R2-b feed (0.1 mol/s N2, 305 K, 2e5 Pa) in a 0.05 m tube, 5 m,
+        cooled by a coolant at 300 K with U = 5 W/(m2 K).  Closed form with
+        the package's N2 c_p at 302.5 K: T_out = 301.303674 K, Q =
+        -10.7981558 W.  Inert, so the mass/element balance the harness
+        checks closes exactly and the energy balance closes on the coolant
+        branch's own enthalpy solve.
+        """
+        return (
+            {
+                "inlet": {
+                    "T": 305.0,
+                    "P": 2.0e5,
+                    "molar_flow": 0.1,
+                    "composition": {"N2": 1.0},
+                }
+            },
+            {
+                "reaction_set": {
+                    "id": "r2b_inert",
+                    "components": ["N2"],
+                    "reactions": [],
+                },
+                "tube_diameter_m": 0.05,
+                "length_m": 5.0,
+                "n_tubes": 1,
+                "thermal": {"coolant_T_K": 300.0, "U_W_m2K": 5.0},
+            },
+        )
