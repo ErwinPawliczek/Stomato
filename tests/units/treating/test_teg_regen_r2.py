@@ -7,7 +7,6 @@ G -> 0 march limit, and one test per refusal row of the spec's table.
 from __future__ import annotations
 
 import math
-
 from typing import Any
 
 import pytest
