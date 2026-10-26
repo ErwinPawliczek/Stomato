@@ -426,12 +426,9 @@ def _ns_entry_state_parity(
         return real_dense(col, tb, prof, t_bot_tear)
 
     col0, tb0 = _build(_stripper_params(), thermo)
-    orig = getattr(specs_mod, "_naphtali_sandholm")
-    setattr(specs_mod, "_naphtali_sandholm", capturing_dense)
-    try:
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(specs_mod, "_naphtali_sandholm", capturing_dense)
         prof_mesh = col_mod._solve_mesh(col0, tb0, 45.0 * 2.5, 30.0, None)
-    finally:
-        setattr(specs_mod, "_naphtali_sandholm", orig)
     assert prof_mesh.ns_used and prof_mesh.ns_passes > 0, "the mesh run did not use NS"
     assert captured, "the NS entry was never captured"
 
