@@ -150,6 +150,23 @@ def test_zoned_profile_all_zones_equal_is_the_uniform_solve() -> None:
         assert zoned.T == pytest.approx(uniform.T, rel=1e-8)
 
 
+def test_r2_zone_solve_converges_on_example() -> None:
+    """The zoned R2 solve converges on the example case (orchestrator ruling
+    2026-10-25, second ruled test): the continuous piecewise-linear conductance
+    profile re-solves without the node-cap failure of the piecewise-constant
+    profile. Node count measured as a docstring fact, not an assertion bound:
+    on the default 20-zone example case the zone loop takes 6 iterations and
+    the final BVP mesh has 89 nodes (solve_bvp tol 1e-8, max_nodes 20000,
+    warm-started zone loop; ~1.3 s wall)."""
+    thermo = _thermo()
+    inlets = _inlets(thermo, _feeds())
+    result = MultiStreamR2().solve(inlets, MultiStreamR2.example_case()[1], thermo)
+
+    assert result.info["zone_iterations"] <= 30
+    assert result.info["bvp_nodes"] > 20
+    assert math.isfinite(result.outlets["hot_out_1"].T)
+
+
 def test_r2_to_r1_identity_single_zone() -> None:
     """R2 with one all-gas zone and R1 fed the same final hA agree on every
     outlet state (the BVP and tables are identical in that limit)."""
