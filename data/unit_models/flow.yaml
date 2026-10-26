@@ -409,18 +409,55 @@
       params: {}
       note: fixed ΔP spec; in dP mode an elevation rise subtracts rho*g*z from the outlet pressure, in P_out mode it is reported only
     R1:
-      status: planned
-      params: {}
-      note: single-phase Darcy (Colebrook) with elevation; the darcy_colebrook correlation plugin exists
+      status: provisional
+      adapter: ngdesign.units.flow.pipe_segment_r1:PipeSegmentR1
+      params:
+        type: object
+        required: [L_m, D_m]
+        properties:
+          L_m: {type: number, description: 'length, m'}
+          D_m: {type: number, description: 'internal diameter, m'}
+          roughness_m: {type: number, description: 'absolute roughness, m, default 4.57e-5'}
+          elevation_m: {type: number, description: 'outlet minus inlet elevation, m'}
+          K_fittings: {type: number, description: 'sum of fitting resistance coefficients'}
+          n_segments: {type: integer, description: 'starting segment count, default 10'}
+          mu_Pa_s: {type: number, description: 'viscosity override, Pa.s'}
+      note: single-phase Darcy-Colebrook march with elevation (Heun predictor-corrector,
+        refined to 1e-6 of dP); fittings K at the inlet; refuses a two-phase node
     R2:
-      status: planned
-      params: {}
-      note: two-phase Beggs-Brill / fluids multiphase, profile along the length
+      status: provisional
+      adapter: ngdesign.units.flow.pipe_segment_r2:PipeSegmentR2
+      params:
+        type: object
+        required: [L_m, D_m]
+        properties:
+          L_m: {type: number, description: 'length, m'}
+          D_m: {type: number, description: 'internal diameter, m'}
+          roughness_m: {type: number, description: 'absolute roughness, m, default 4.57e-5'}
+          elevation_m: {type: number, description: 'outlet minus inlet elevation, m'}
+          K_fittings: {type: number, description: 'sum of fitting resistance coefficients'}
+          n_segments: {type: integer, description: 'segment count, default 20 (max 200)'}
+          mu_Pa_s: {type: number, description: 'viscosity override, Pa.s'}
+          sigma_N_m: {type: number, description: 'surface tension, N/m; required if any node is two-phase'}
+      note: two-phase Beggs-Brill profile (no Payne correction) at a fixed N with the
+        N/2 discretisation check; single-phase segments use the R1 Darcy step, so a line
+        can flash part-way
       end_state: true
   pid_symbol: PIPE
   references:
   - docs/unit-catalogue-plan.md §2 U-B 8
-  notes: R0 fixed dP with optional hydrostatic head; Darcy friction and two-phase flowsheeting remain roadmap.
+  notes: R1/R2 provisional (PR 291) — R1 is a single-phase Darcy-Colebrook march with
+    elevation (Heun predictor-corrector, refined to 1e-6 of dP), R2 adds the Beggs-Brill
+    two-phase profile (fluids, original 1973 holdup, no Payne correction) at a fixed N with
+    the N/2 discretisation check, so a line can flash part-way. V1 gap — the spec's
+    candidate printed sources were searched and are not accessible as open printed-result
+    texts. Crane TP-410 (2013) ch. 4 and Darby & Chhabra (2017) ch. 6 worked examples exist
+    openly only as the fluids library's own "solved problems" reproductions (excluded —
+    library outputs, not the book's printed results), and the R2 candidates (Brill &
+    Mukherjee, SPE Monograph 17, ch. 4; Shoham 2006, ch. 4) are paywalled monograph texts
+    whose Beggs-Brill examples additionally need a black-oil/PVT basis the installed
+    packages do not provide. The levels are pinned by the closed-form C1/C2 tests and the
+    R0/R1/R2 identities instead.
 
 - id: orifice
   name: Orifice / flow element
