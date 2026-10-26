@@ -243,3 +243,32 @@ class TEGRegenR2:
         result.info["lean_teg_mass_fraction_boiling_line"] = result.info["lean_teg_mass_fraction"]
         result.info["purity_enhancement_wt_pct"] = 0.0
         return result
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """R0's feeds (rich TEG 97.5 wt% at 300 F / 1.5 bara, 100 mol/s) plus a
+        2 mol/s dry C1 stripping gas at the reboiler state, rated at 2 stages."""
+        wt_teg = 0.975
+        n_teg = wt_teg / _mw(_TEG)
+        n_water = (1.0 - wt_teg) / _mw(_WATER)
+        total = n_teg + n_water
+        feeds: dict[str, dict[str, Any]] = {
+            "rich_in": {
+                "T": 422.15,
+                "P": 1.5e5,
+                "molar_flow": 100.0,
+                "composition": {_TEG: n_teg / total, _WATER: n_water / total},
+            },
+            "stripping_gas_in": {
+                "T": DEFAULT_T_REBOILER,
+                "P": 1.5e5,
+                "molar_flow": 2.0,
+                "composition": {"C1": 1.0},
+            },
+        }
+        params: dict[str, Any] = {
+            "T_reboiler": DEFAULT_T_REBOILER,
+            "P": DEFAULT_P,
+            "n_stages": 2,
+        }
+        return feeds, params
