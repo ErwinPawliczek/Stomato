@@ -357,8 +357,20 @@ class MultiStreamR2:
     into ``n_zones`` equal-delta-H zones, recomputes every stream's film
     coefficient at the zone-mean state (single-phase Manglik-Bergles j, or
     the two-phase tube correlations through D_h), and re-solves the
-    common-wall BVP with piecewise-constant hA until the outlet temperatures
-    stop moving.
+    common-wall BVP with a zoned conductance profile until the outlet
+    temperatures stop moving.
+
+    **Zoned conductance profile (orchestrator ruling on the R2 SPEC ISSUE).**
+    Spec step (d) says "piecewise-constant hA_i(x) on the zone mesh", but
+    ``solve_bvp``'s collocation error estimate refines every hA discontinuity
+    until the node cap: measured on the R2 example case, ANY step in hA -
+    down to a single 0.4% two-zone jump - hits ``max_nodes`` at tol 1e-8 and
+    still at tol 1e-5, from every initial mesh tried (denser, warm-started,
+    zone-edge-seeded). The re-solve therefore uses a CONTINUOUS conductance
+    profile, piecewise-linear through the zone-centre values (spec option 1,
+    accepted 2026-10-25): same zone-mean h values, same equations, and the
+    more physical choice since the local film coefficients vary continuously
+    along the exchanger. ``solve_bvp`` stays at the spec's tol 1e-8.
 
     The two-phase treatment is a stated approximation: tube-side correlations
     (ht.Shah condensation, ht.Liu_Winterton boiling) applied to plate-fin
@@ -528,7 +540,9 @@ class MultiStreamR2:
                     for i, s in enumerate(streams)
                 ]
             )
-            # (d) re-solve with piecewise-constant hA on the zone mesh.
+            # (d) re-solve with the continuous zoned conductance profile -
+            # piecewise-linear through the zone-centre values (see the class
+            # docstring for why a piecewise-constant profile cannot converge).
             zone_mesh = np.linspace(0.0, 1.0, 2 * n_zones + 1)
             result = solve_common_wall(
                 tuple(s.layer for s in streams),

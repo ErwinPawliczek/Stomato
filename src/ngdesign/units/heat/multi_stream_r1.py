@@ -163,9 +163,11 @@ def solve_common_wall(
     ``solve_bvp`` reports ``status != 0``.
 
     ``hA_zones`` (R2): per-stream per-zone conductance, shape (n_streams,
-    n_zones), W/K per unit normalised length - piecewise-constant on equal
-    zones of x. ``y_init`` (R2 zone loop): warm-start profile from the
-    previous iteration.
+    n_zones), W/K per unit normalised length. The profile is CONTINUOUS:
+    piecewise-linear through the zone-centre values (a piecewise-constant
+    profile never converges - solve_bvp refines every discontinuity to the
+    node cap; see the note in ``conductance_at``). ``y_init`` (R2 zone loop):
+    warm-start profile from the previous iteration.
     """
     if not layers:
         raise MultiStreamRatingError("at least one hot and one cold active stream are required")
@@ -177,8 +179,16 @@ def solve_common_wall(
         """Per-stream conductance at mesh x, shape (n_streams, x.size), W/K."""
         if hA_zones is None:
             return np.tile(hA[:, None], (1, x.size))
-        zone_index = np.clip((x * n_zones).astype(int), 0, n_zones - 1)
-        return hA_zones[:, zone_index]
+        # Continuous piecewise-linear profile through the zone-centre values
+        # (orchestrator ruling on the R2 SPEC ISSUE): with a piecewise-constant
+        # hA, solve_bvp's collocation error estimate refines every zone edge
+        # until the node cap for ANY step size or tolerance (measured: node-cap
+        # at 0.4% jumps, at tol 1e-5..1e-8, from every initial mesh), so the
+        # zoned re-solve interpolates the per-zone conductances linearly
+        # between zone centres - continuous, same zone-mean h values. np.interp
+        # clamps to the first/last zone value at the two ends.
+        centers = (np.arange(n_zones, dtype=float) + 0.5) / n_zones
+        return np.array([np.interp(x, centers, row) for row in hA_zones])
 
     def rhs(x: np.ndarray, y: np.ndarray) -> np.ndarray:
         temperatures = np.vstack([layer.T_of_H(y[i]) for i, layer in enumerate(layers)])

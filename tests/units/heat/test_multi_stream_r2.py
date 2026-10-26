@@ -23,7 +23,9 @@ from __future__ import annotations
 import math
 from typing import Any
 
+import numpy as np
 import pytest
+from scipy.interpolate import PchipInterpolator
 
 from ngdesign import registry
 from ngdesign.contracts import StreamState
@@ -31,7 +33,12 @@ from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import components
 from ngdesign.units._physics.heat_balance import TemperatureCross
 from ngdesign.units.heat.multi_stream import MultiStreamExchanger
-from ngdesign.units.heat.multi_stream_r1 import MultiStreamR1, MultiStreamRatingError
+from ngdesign.units.heat.multi_stream_r1 import (
+    MultiStreamR1,
+    MultiStreamRatingError,
+    StreamLayer,
+    solve_common_wall,
+)
 from ngdesign.units.heat.multi_stream_r2 import (
     FinGeometry,
     MultiStreamR2,
@@ -114,6 +121,33 @@ def _inlets(thermo: Thermo, feeds: dict[str, dict[str, Any]]) -> dict[str, Strea
     return {
         port: thermo.flash_pt(f["composition"], f["T"], f["P"], f["molar_flow"]) for port, f in feeds.items()
     }
+
+
+def _constant_c_table(C: float) -> PchipInterpolator:
+    """T = H/C over a wide span (PCHIP through two points is linear)."""
+    return PchipInterpolator([-1.0e9, 1.0e9], [-1.0e9 / C, 1.0e9 / C])
+
+
+def test_zoned_profile_all_zones_equal_is_the_uniform_solve() -> None:
+    """A zoned conductance profile with every zone equal reproduces the
+    uniform-hA solve on every outlet (the R2->R1 reduction at the BVP-core
+    level, spec 'Reduction to the lower level'), including edge zones where
+    the piecewise-linear profile clamps to the first/last zone value."""
+    layers = (
+        StreamLayer(
+            hA_W_K=4000.0, H_in_W=1500.0 * 400.0, H_far_W=1500.0 * 300.0,
+            T_of_H=_constant_c_table(1500.0), is_hot=True,
+        ),
+        StreamLayer(
+            hA_W_K=4000.0, H_in_W=2500.0 * 300.0, H_far_W=2500.0 * 400.0,
+            T_of_H=_constant_c_table(2500.0), is_hot=False,
+        ),
+    )
+    uniform = solve_common_wall(layers)
+    for n_zones in (1, 4, 20):
+        zoned = solve_common_wall(layers, hA_zones=np.full((2, n_zones), 4000.0))
+        assert zoned.outlet_enthalpy_flows() == pytest.approx(uniform.outlet_enthalpy_flows(), rel=1e-8)
+        assert zoned.T == pytest.approx(uniform.T, rel=1e-8)
 
 
 def test_r2_to_r1_identity_single_zone() -> None:
