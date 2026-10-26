@@ -13,11 +13,9 @@ approach, so every outlet, the energy closure and the blowdown/makeup split
 are R0's by construction. Merkel's assumptions: evaporation loss neglected
 in L, and a Lewis factor of 1.
 
-Enthalpies are per kg of DRY AIR on the same ideal-saturated construction as
-R0's private ``_humid_enthalpy`` (re-implemented here): h(T, y) = [(1 - y)
-h_dry(T) + y h_vap(T)] / [(1 - y) MW_dry / 1000], with the saturation
-humidity y_s(T) = p_sat(T) / P from ``thermo.pure_psat("H2O", T)``. The
-integration is by the 4-point Chebyshev rule of CTI ATC-105 /
+Enthalpies are per kg of DRY AIR on the ASHRAE Fundamentals Ch. 1
+psychrometric closed form (see the rulings below; not the thermo package).
+The integration is by the 4-point Chebyshev rule of CTI ATC-105 /
 ASHRAE Ch. 40 with abscissae at 0.1, 0.4, 0.6, 0.9 of the range.
 
 ORCHESTRATOR RULINGS (PR #284, 2026-10-25) on the enthalpy basis and the
