@@ -330,12 +330,8 @@ class CatalyticReformerR1:
     bed is isobaric at R1 (no Ergun pressure drop — R2).
     """
 
-    def ports(self) -> dict[str, tuple[str, ...]]:
-        return {
-            "naphtha_in": ("in",),
-            "reformate_out": ("out",),
-            "h2_out": ("out",),
-        }
+    inlet_ports = ("naphtha_in",)
+    outlet_ports = ("reformate_out", "h2_out")
 
     def solve(
         self,
@@ -447,3 +443,46 @@ class CatalyticReformerR1:
             duty_W=duty_W,
             info=info,
         )
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """The three-bed adiabatic basis: MCH/nC7/toluene naphtha in recycle H2.
+
+        Three adiabatic beds, each re-heated to 770 K by its fired interheater,
+        at 20 atm (2.0265e6 Pa) on 100 mol/s of feed — methylcyclohexane 0.30,
+        nC7 0.40, toluene 0.10, H2 0.20 — with ``bulk_density_kg_m3`` 800
+        kg/m3 and 2.0 kg of catalyst per bed (V_b = 2.5e-3 m3).
+
+        The kinetics are **illustrative test constants, NOT Smith's**: the
+        1959 paper's k_i and K_i have not been transcribed with page numbers
+        (module docstring), so the ``smith1959`` preset is refused and this
+        case passes the explicit object. Smith's forms are exercised (dehydro
+        and n_to_p reversible, both hydrocracking rates), but the numbers carry
+        no published meaning.
+        """
+        feed = {
+            "T": 770.0,
+            "P": 2.0265e6,
+            "molar_flow": 100.0,
+            "composition": {
+                "methylcyclohexane": 0.30,
+                "nC7": 0.40,
+                "toluene": 0.10,
+                "H2": 0.20,
+            },
+        }
+        params = {
+            "beds": [
+                {"catalyst_mass_kg": 2.0, "inlet_T_K": 770.0, "thermal": "adiabatic"},
+                {"catalyst_mass_kg": 2.0, "inlet_T_K": 770.0, "thermal": "adiabatic"},
+                {"catalyst_mass_kg": 2.0, "inlet_T_K": 770.0, "thermal": "adiabatic"},
+            ],
+            "bulk_density_kg_m3": 800.0,
+            "kinetics": {
+                "dehydro": {"k0": 1.0, "Ea": 5.0e4, "A_K": 10.0, "B_K": 2500.0},
+                "n_to_p": {"k0": 1.0, "Ea": 5.0e4, "A_K": 10.0, "B_K": 2500.0},
+                "hc_n": {"k0": 0.2, "Ea": 6.0e4},
+                "hc_p": {"k0": 0.2, "Ea": 6.0e4},
+            },
+        }
+        return {"naphtha_in": feed}, params
