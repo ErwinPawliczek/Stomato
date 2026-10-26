@@ -137,8 +137,10 @@ def test_r1_identity_reduces_to_r0() -> None:
         thermo,
     )
     approach = result.info["approach_K"]
-    # Window: the ruling's C = 1.0 solves at a 0.69 K approach (measured),
-    # below the 1.0 K floor the original spec test assumed for C = 1.7.
+    # Window: the ruling's change of C (1.0, not the spec's 1.7) solves at a
+    # low approach -- 1.23 K measured on the ASHRAE closed-form basis (0.69 K
+    # on the old package basis) -- below the 1.0 K floor the original spec
+    # test assumed for C = 1.7; the window follows from the ruling.
     assert 0.5 <= approach <= 15.0
 
     r0 = CoolingTower().solve(feeds, {"approach_K": approach, "cycles_of_concentration": 3.0}, thermo)
@@ -156,7 +158,8 @@ def test_larger_C_gives_a_strictly_smaller_water_outlet() -> None:
 
     The ruling on PR #284 (2026-10-25) sets the sweep; the spec's
     {1.0, 1.7, 2.5} exceeds the attainable Merkel number on the example
-    feeds, and C = 1.7 is covered by the typed refusal test below.
+    feeds, and an unattainable characteristic is covered by the typed
+    refusal test below (C = 1.8 on the ASHRAE basis).
     """
     thermo = _thermo()
     feeds = _r1_feeds(thermo)
@@ -171,10 +174,14 @@ def test_larger_C_gives_a_strictly_smaller_water_outlet() -> None:
 
 
 def test_refuses_when_the_characteristic_exceeds_the_attainable_merkel_number() -> None:
-    """C = 1.7 (KaV/L = 6.14 at L/G = 0.1175, n = 0.6) is a TYPED refusal.
+    """C = 1.8 (KaV/L = 6.37 at L/G = 0.1215, n = 0.6) is a TYPED refusal.
 
-    The message carries both numbers per the ruling: the requested
-    characteristic and the attainable Merkel number for these flows.
+    Measured on the ASHRAE closed-form basis (orchestrator ruling, review
+    item 2): the attainable Merkel number on these feeds is 6.060, so the
+    spec's C = 1.7 (requested 6.022) is now ATTAINABLE and solves -- the
+    refusal case moves to C = 1.8 (requested 6.372). The message carries
+    both numbers per the ruling: the requested characteristic and the
+    attainable Merkel number for these flows.
     """
     thermo = _thermo()
     feeds = _r1_feeds(thermo)
@@ -182,58 +189,41 @@ def test_refuses_when_the_characteristic_exceeds_the_attainable_merkel_number() 
         CoolingTowerCharacteristicInfeasibleError,
         match="requested characteristic KaV/L = 6\.[0-9]+ exceeds the attainable Merkel number [0-9.]+",
     ):
-        CoolingTowerR1().solve(feeds, {"characteristic_C": 1.7, "characteristic_n": 0.6}, thermo)
+        CoolingTowerR1().solve(feeds, {"characteristic_C": 1.8, "characteristic_n": 0.6}, thermo)
 
 
-@pytest.mark.xfail(
-    reason="SPEC ISSUE (PR #284, 2026-10-25): the shifted package h_s misses the "
-    "Hyland-Wexler closed form by +3.22 % at 290 K (1 % band). Decomposition: "
-    "p_sat +0.02 %; dry-air cp +1.7 % (N2/CO2 basis vs ASHRAE 1.006, dry term only); "
-    "shifted vapour term (h_vap - h_w(273.15 K)) +4.0 % -- a CONSTANT +103.1 kJ/kg "
-    "offset with an exactly ASHRAE 1.86 kJ/(kg K) slope, i.e. the PR package's H2O "
-    "vapour departure enthalpy along the saturation dome, which the ruling's "
-    "reference shift cannot remove. Posted on the PR; un-xfail when the enthalpy "
-    "source is ruled on.",
-    strict=False,
-)
-def test_shifted_h_s_matches_the_hyland_wexler_closed_form() -> None:
-    """Shifted package h_s vs the ASHRAE closed form: within 1 % over 290-320 K.
+def test_saturated_air_enthalpy_matches_ashrae_table_2() -> None:
+    """The module's ASHRAE closed-form h_s against PRINTED Table 2 values.
 
-    Orchestrator ruling on PR #284 (2026-10-25): the reference-shifted
-    package saturated-air enthalpy must agree with the closed form
-    (Hyland-Wexler p_ws, eq. 6 of ASHRAE Fundamentals 2021 SI Ch. 1, with
-    h = 1.006 t + W_s (2501 + 1.86 t), W_s = 0.621945 p_ws / (P - p_ws))
-    within 1 % at 1 atm. The package's registered db has no O2/Ar, so the
-    dry gas is an N2/CO2 mixture mixed to the standard-air molar mass
-    (28.965 g/mol), keeping the mass humidity-ratio basis identical.
+    Orchestrator ruling on PR #284 (2026-10-25): the Merkel enthalpies come
+    from the ASHRAE Fundamentals Ch. 1 closed form implemented in the module,
+    pinned against the PRINTED psychrometric table (Table 2, saturated moist
+    air at 101.325 kPa, SI edn): h_s(20 C) = 57.558, h_s(25 C) = 76.503,
+    h_s(30 C) = 100.01, h_s(40 C) = 166.68 kJ/kg_da. The printed table is
+    real-gas (LibHuAirProp, RP-1485) while the module uses the chapter's
+    perfect-gas closed form, which the chapter itself bounds at < 0.7 % of
+    the tabulated properties (Kuehn et al. 1998); measured here: -0.24 %
+    (20 C), -0.26 % (25 C), -0.28 % (30 C), -0.33 % (40 C). The 0.5 % band
+    covers that model difference with rounding headroom while still catching
+    the +3 % package bias the previous xfail hid.
     """
-    thermo = _thermo()
-    dry = {"N2": 0.94051, "CO2": 0.05949}
-    for T in (290.0, 295.0, 300.0, 305.0, 310.0, 315.0, 320.0):
-        h_pkg = saturated_air_enthalpy(thermo, dry, T, P_ATM)
-        h_ref = _ashrae_h_s(T)
-        rel = abs(h_pkg - h_ref) / h_ref
-        assert rel < 0.01, f"{T} K: package {h_pkg:.4f} vs closed form {h_ref:.4f} ({rel:.3%})"
+    for t_c, h_printed in ((20.0, 57.558), (25.0, 76.503), (30.0, 100.01), (40.0, 166.68)):
+        h_mod = saturated_air_enthalpy(273.15 + t_c, P_ATM)
+        assert h_mod == pytest.approx(h_printed, rel=0.005), f"{t_c} C"
 
 
-def test_rates_at_a_given_approach() -> None:
-    """Rating mode: R0's example params (approach_K alone) report the Merkel number.
+def test_refuses_approach_K_alone() -> None:
+    """approach_K at R1 is refused UNCONDITIONALLY (orchestrator review item 1).
 
-    The path the locked per-row balance test reaches through the
-    LevelDispatch: R0-inherited example_case, model R1. The outlets are R0's
-    at the given approach, the Merkel number is reported, and no
-    characteristic is claimed.
+    The pre-#309 rating mode (approach_K alone reporting the Merkel number)
+    is gone: R1's own example_case carries the characteristic, so the locked
+    per-row balance test reaches solution mode directly, and the plan's
+    refusal table stands: approach_K is solved at R1, never a parameter.
     """
     thermo = _thermo()
     feeds = _r1_feeds(thermo)
-    result = CoolingTowerR1().solve(feeds, {"approach_K": 5.0, "cycles_of_concentration": 3.0}, thermo)
-    r0 = CoolingTower().solve(feeds, {"approach_K": 5.0, "cycles_of_concentration": 3.0}, thermo)
-    for port in ("water_out", "air_out"):
-        assert result.outlets[port].T == r0.outlets[port].T
-        assert result.outlets[port].molar_flow == r0.outlets[port].molar_flow
-    assert result.info["approach_K"] == 5.0
-    assert 0.0 < result.info["merkel_KaV_L"] < math.inf
-    assert "characteristic_KaV_L" not in result.info
+    with pytest.raises(CoolingTowerSpecError, match="approach_K is solved at R1"):
+        CoolingTowerR1().solve(feeds, {"approach_K": 5.0, "cycles_of_concentration": 3.0}, thermo)
 
 
 def test_refuses_characteristic_params_alone() -> None:

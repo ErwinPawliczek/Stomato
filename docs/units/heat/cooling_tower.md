@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R1 provisional
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.heat.cooling_tower:CoolingTower` | water outlet FIXED at wet bulb + approach_K; the exit air, saturated at the exit-air temperature solved from the overall energy closure, carries the heat and the evaporation; blowdown/makeup from cycles of concentration |
-| R1 | provisional | `ngdesign.units.heat.cooling_tower_r1:CoolingTowerR1` | Merkel number by 4-point Chebyshev (CTI ATC-105) against KaV/L = C (L/G)^-n, water outlet solved by brentq, then the R0 balance at the solved approach; enthalpies on the moist-air reference (dry air ideal gas + liquid water at 273.15 K) per the orchestrator ruling on PR #284. A characteristic above the attainable Merkel number refuses typed with both numbers. |
+| R1 | provisional | `ngdesign.units.heat.cooling_tower_r1:CoolingTowerR1` | Merkel number by 4-point Chebyshev (CTI ATC-105) against KaV/L = C (L/G)^-n, water outlet solved by brentq, then the R0 balance at the solved approach; Merkel enthalpies from the ASHRAE Fundamentals Ch. 1 Hyland-Wexler closed form per the orchestrator ruling on PR #284 (the package's water latent heat is ~4% high, #249), the balance stays R0's through the thermo package; approach_K is solved at R1, not a parameter. A characteristic above the attainable Merkel number refuses typed with both numbers. |
 
 ### R0 parameters
 
@@ -37,11 +37,6 @@ type: object
 
 ```yaml
 properties:
-  approach_K:
-    description: 'rating mode: report KaV/L at this approach (when no characteristic
-      params are given; refused together with them)'
-    exclusiveMinimum: 0
-    type: number
   characteristic_C:
     description: tower characteristic coefficient C in KaV/L = C (L/G)^-n (solution
       mode, with characteristic_n)

@@ -20,24 +20,34 @@ humidity y_s(T) = p_sat(T) / P from ``thermo.pure_psat("H2O", T)``. The
 integration is by the 4-point Chebyshev rule of CTI ATC-105 /
 ASHRAE Ch. 40 with abscissae at 0.1, 0.4, 0.6, 0.9 of the range.
 
-ORCHESTRATOR RULING (PR #284, 2026-10-25) on the enthalpy basis: Merkel's
-driving force (h_s - h_a) is defined on the MOIST-AIR convention -- dry air as
-ideal gas and LIQUID water at 273.15 K as the references (ASHRAE Fundamentals
-Ch. 1). :func:`humid_air_enthalpy` therefore shifts the package enthalpies by
-subtracting the package enthalpies of dry air (ideal gas) and of liquid water
-at 273.15 K per their amounts, and the closed-form agreement test
-``test_shifted_h_s_matches_the_hyland_wexler_closed_form`` (1 % over 290-320 K
-at 1 atm) pins the shift. Feasibility ruling: the identity test runs at C =
-1.0, the monotonicity sweep at C in {0.8, 1.0, 1.2}, and C = 1.7 is kept as a
-TYPED refusal (:class:`CoolingTowerCharacteristicInfeasibleError`) carrying
-the requested characteristic and the attainable Merkel number.
+ORCHESTRATOR RULINGS (PR #284, 2026-10-25) on the enthalpy basis and the
+rating mode. Review item 1: the rating mode is REMOVED and ``approach_K``
+is refused UNCONDITIONALLY -- R1's own example_case carries the
+characteristic (the ruling), so the locked per-row balance test reaches
+solution mode directly and no longer depends on the deleted mode. Review
+item 2: the Merkel enthalpies h_s and h_a do NOT come from the thermo
+package -- Peng-Robinson's water latent heat near 273.15 K is about 4 % high
+(the +3.2 % h_s bias measured in the deleted xfail test, recorded on #249) --
+but from the ASHRAE Fundamentals Ch. 1 psychrometric closed form:
+Hyland-Wexler p_ws (eq. 6), W_s = 0.621945 p_ws / (P - p_ws) and
+h = 1.006 t + W (2501 + 1.86 t) per kg of dry air. The R0 energy balance
+stays with R0 through the thermo package, unchanged, so V0 closure is
+unaffected. The closed form is pinned against printed ASHRAE Table 2 values
+by ``test_saturated_air_enthalpy_matches_ashrae_table_2``.
+Feasibility ruling: the identity test runs at C = 1.0, the monotonicity
+sweep at C in {0.8, 1.0, 1.2}, and an unattainable characteristic is kept
+as a TYPED refusal (:class:`CoolingTowerCharacteristicInfeasibleError`)
+carrying the requested characteristic and the attainable Merkel number.
+Measured on this basis the attainable number on the example feeds is 6.06,
+so the spec's C = 1.7 (requested 6.02) is now attainable and the refusal
+case moves to C = 1.8 (requested 6.37).
 """
 
 from __future__ import annotations
 
 import math
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any
 
 from scipy.optimize import brentq
 
@@ -147,12 +157,27 @@ def max_attainable_ka_v_l(
     return best
 
 
-def _psat(thermo: Thermo, T: float) -> float:
-    """Water saturation pressure (Pa); the protocol types it Optional."""
-    psat = thermo.pure_psat("H2O", T)
-    if psat is None:
-        raise ValueError(f"no water saturation pressure available at {T:.2f} K")
-    return psat
+#: Hyland-Wexler constants, ASHRAE Fundamentals 2017 SI Ch. 1, eq. 6:
+#: ln p_ws = C8/T + C9 + C10 T + C11 T^2 + C12 T^3 + C13 ln T
+#: (saturation pressure over liquid water, 273.15-473.15 K; p_ws in Pa, T in K).
+#: Checked against the printed ASHRAE Table 3 (4.2467 kPa at 30 C) in the tests.
+_HW_C8: float = -5.8002206e3
+_HW_C9: float = 1.3914993
+_HW_C10: float = -4.8640239e-2
+_HW_C11: float = 4.1764768e-5
+_HW_C12: float = -1.4452093e-8
+_HW_C13: float = 6.5459673
+
+
+def hyland_wexler_psat(T: float) -> float:
+    """Water saturation pressure over liquid water, Pa (ASHRAE Fund. 2017 Ch. 1, eq. 6).
+
+    Hyland-Wexler, valid 273.15-473.15 K; constants checked against printed
+    ASHRAE Table 3 in the tests (4.2467 kPa at 30 C).
+    """
+    return math.exp(
+        _HW_C8 / T + _HW_C9 + _HW_C10 * T + _HW_C11 * T**2 + _HW_C12 * T**3 + _HW_C13 * math.log(T)
+    )
 
 
 def _mean_molar_mass(composition: dict[str, float]) -> float:
@@ -166,46 +191,45 @@ def _mean_molar_mass(composition: dict[str, float]) -> float:
     return sum(x / total * float(db[cid]["mw"]) for cid, x in composition.items())
 
 
-def humid_air_enthalpy(
-    thermo: Thermo,
-    dry: dict[str, float],
-    T: float,
-    P: float,
-    y: float,
-) -> float:
-    """Ideal humid-air enthalpy per kg of dry air, kJ/kg_da, at humidity y.
+def psychrometric_enthalpy(T: float, W: float) -> float:
+    """Moist-air enthalpy per kg of dry air, kJ/kg_da (ASHRAE Fund. 2017 Ch. 1, eq. 32).
 
-    The MOIST-AIR convention of ASHRAE Fundamentals Ch. 1 per the
-    orchestrator ruling on PR #284 (2026-10-25): both h_s and h_a are per kg
-    of dry air with the reference states dry air (ideal gas) and liquid water
-    at 273.15 K, i.e. the package enthalpies of dry air and of liquid water
-    at 273.15 K are subtracted per their amounts
-    (h = 1.006 t + W (2501 + 1.86 t) on the standard-air basis). The same
-    construction as R0's private ``_humid_enthalpy`` (re-implemented; the R0
-    helpers are private), with the reference shift required by the ruling:
-    the Merkel driving force h_s(T_i) - h_a(T_i) compares states of DIFFERENT
-    humidity, so per-component reference offsets do not cancel without it
-    (measured: inlet-air enthalpy 1.50 kJ/kg_da on the raw scale vs 61.5
-    kJ/kg_da psychrometric). The shift is pinned by
-    ``test_shifted_h_s_matches_the_hyland_wexler_closed_form`` (1 % over
-    290-320 K at 1 atm, ASHRAE Fundamentals Ch. 1 eq. 6 closed form).
+    h = 1.006 t + W (2501 + 1.86 t), with t = T - 273.15 in deg C and W the
+    humidity ratio kg_w/kg_da; reference states: dry air and liquid water,
+    both 0 at 0 deg C.
     """
-    dry_sum = sum(dry.values())
-    if dry_sum <= 0.0:
-        raise ValueError("air composition is pure water vapour: no dry gas to humidify")
-    z_dry = {cid: x / dry_sum for cid, x in dry.items()}
-    h_dry = thermo.flash_pt(z_dry, T, P, 1.0).enthalpy
-    h_dry_ref = thermo.flash_pt(z_dry, 273.15, P, 1.0).enthalpy
-    h_vap = thermo.flash_pt({"H2O": 1.0}, T, 0.5 * _psat(thermo, T), 1.0).enthalpy
-    h_w_ref = thermo.flash_pt({"H2O": 1.0}, 273.15, P, 1.0).enthalpy
-    mw_dry = _mean_molar_mass(z_dry)
-    w = y / (1.0 - y)
-    return float((h_dry - h_dry_ref + w * (h_vap - h_w_ref)) / (mw_dry / 1000.0) / 1000.0)
+    t = T - 273.15
+    return 1.006 * t + W * (2501.0 + 1.86 * t)
 
 
-def saturated_air_enthalpy(thermo: Thermo, dry: dict[str, float], T: float, P: float) -> float:
-    """Enthalpy of air saturated at T, kJ/kg_da, with y_s = p_sat(T) / P."""
-    return humid_air_enthalpy(thermo, dry, T, P, _psat(thermo, T) / P)
+def saturated_air_enthalpy(T: float, P: float) -> float:
+    """Enthalpy of air saturated at T, kJ/kg_da, at total pressure P (Pa).
+
+    ASHRAE basis per the orchestrator ruling on PR #284 (2026-10-25): the
+    Merkel enthalpies do not come from the thermo package -- Peng-Robinson's
+    water latent heat near 273.15 K is about 4 % high (recorded on #249) --
+    but from the closed form: Hyland-Wexler p_ws (:func:`hyland_wexler_psat`,
+    eq. 6), W_s = 0.621945 p_ws / (P - p_ws) and
+    h = 1.006 t + W_s (2501 + 1.86 t). Pinned against printed ASHRAE
+    Table 2 values by ``test_saturated_air_enthalpy_matches_ashrae_table_2``.
+    """
+    p_ws = hyland_wexler_psat(T)
+    w_s = 0.621945 * p_ws / (P - p_ws)
+    return psychrometric_enthalpy(T, w_s)
+
+
+def inlet_air_enthalpy(T: float, y_water: float, mw_dry: float) -> float:
+    """Bulk-air enthalpy of the INLET air, kJ/kg_da, on the same ASHRAE basis.
+
+    The inlet humidity (H2O mole fraction y_water) is converted to the
+    humidity ratio W = MW_w y / ((1 - y) MW_da), then
+    h = 1.006 t + W (2501 + 1.86 t). The operating line is anchored here at
+    the air inlet (h_a,in), so the whole Merkel driving force lives on one
+    psychrometric basis independent of the property package.
+    """
+    mw_water = _mean_molar_mass({"H2O": 1.0})
+    w = mw_water * y_water / ((1.0 - y_water) * mw_dry)
+    return psychrometric_enthalpy(T, w)
 
 
 def water_specific_heat(thermo: Thermo, T_in: float, T_out: float, P_water: float) -> float:
@@ -224,19 +248,16 @@ def water_specific_heat(thermo: Thermo, T_in: float, T_out: float, P_water: floa
 class CoolingTowerR1:
     """Cooling tower R1: Merkel number against the tower characteristic.
 
-    Two modes. SOLUTION mode (characteristic_C and characteristic_n given):
-    the WATER OUTLET is solved from r(T_out) = KaV/L_Chebyshev(T_out) -
+    The WATER OUTLET is solved from r(T_out) = KaV/L_Chebyshev(T_out) -
     C (L/G)^-n by brentq on (T_wb + 1e-6, T_in - 1e-6); the approach is then
-    T_out - T_wb. RATING mode (approach_K alone): the approach is given and
-    the attained Merkel number is reported at it -- the path the locked
-    per-row balance test reaches through the LevelDispatch, whose inherited
-    example_case is R0's (read-only for this spec). Both delegate to the R0
-    adapter (:class:`ngdesign.units.heat.cooling_tower.CoolingTower`) at the
+    T_out - T_wb. ``approach_K`` is refused at R1 unconditionally (the plan's
+    refusal table: it is solved here; the pre-#309 rating mode is gone
+    because R1's own example_case carries the characteristic). The adapter
+    delegates to the R0 adapter
+    (:class:`ngdesign.units.heat.cooling_tower.CoolingTower`) at the solved
     approach, so every outlet, the energy closure and the blowdown/makeup
-    split are R0's by construction (solution mode: R1 equals R0 run at the
-    solved approach, bit for bit). L and G are MASS flows: water and dry
-    air, kg/s. Giving the characteristic params AND approach_K is a typed
-    refusal.
+    split are R0's by construction (R1 equals R0 run at the solved approach,
+    bit for bit). L and G are MASS flows: water and dry air, kg/s.
     """
 
     inlet_ports = ("water_in", "air_in")
@@ -257,38 +278,27 @@ class CoolingTowerR1:
 
         characteristic_C = params.get("characteristic_C")
         characteristic_n = params.get("characteristic_n")
-        given_approach = params.get("approach_K")
+        if params.get("approach_K") is not None:
+            # Plan refusal table: approach_K is solved at R1 and refused
+            # UNCONDITIONALLY (orchestrator review item 1, PR #284: the
+            # rating mode was a pre-#309 workaround; R1's own example_case
+            # carries the characteristic, so the locked balance test reaches
+            # solution mode directly).
+            raise CoolingTowerSpecError(
+                "cooling tower R1: approach_K is solved at R1; give characteristic_C "
+                "and characteristic_n to solve the water outlet"
+            )
         cycles = params.get("cycles_of_concentration")
         if cycles is not None and float(cycles) < 1.0:
             raise ValueError(f"cooling tower: cycles_of_concentration {cycles} must be >= 1")
-        if characteristic_C is not None and characteristic_n is not None:
-            if given_approach is not None:
-                raise CoolingTowerSpecError(
-                    "cooling tower R1: approach_K is solved at R1; give characteristic_C "
-                    "and characteristic_n, or rate at a given approach_K without them"
-                )
-        elif characteristic_C is None and characteristic_n is None:
-            # Rating mode: the approach is GIVEN and the Merkel number is
-            # reported at it. This is what the locked per-row balance test
-            # reaches through the LevelDispatch: the dispatch subclasses the
-            # default (R0) adapter, so example_case() is R0's -- whose params
-            # carry approach_K -- and model: R1 lands here. R0's file is
-            # read-only for this spec, so R1 accepts its example params
-            # instead of the other way round.
-            if given_approach is None:
-                raise CoolingTowerSpecError(
-                    "cooling tower R1: give characteristic_C and characteristic_n to solve "
-                    "the water outlet, or approach_K to rate the tower at a given approach"
-                )
-            given_approach = float(cast(float, given_approach))
-            if given_approach <= 0.0:
-                raise CoolingTowerSpecError(f"cooling tower R1: approach_K {given_approach} must be > 0")
-            T_wb0 = wet_bulb(thermo, air)
-            return self._close(inlets, T_wb0 + given_approach, given_approach, cycles, thermo, None)
-        else:
+        if characteristic_C is None and characteristic_n is None:
             raise CoolingTowerSpecError(
-                "cooling tower R1: characteristic_C and characteristic_n are given together "
-                "or not at all (rating mode takes approach_K alone)"
+                "cooling tower R1: give characteristic_C and characteristic_n to solve "
+                "the water outlet (approach_K is solved at R1, not a parameter)"
+            )
+        if characteristic_C is None or characteristic_n is None:
+            raise CoolingTowerSpecError(
+                "cooling tower R1: characteristic_C and characteristic_n are given together or not at all"
             )
         characteristic_C = float(characteristic_C)
         if characteristic_C <= 0.0:
@@ -317,10 +327,10 @@ class CoolingTowerR1:
                 f"inlet wet bulb {T_wb:.2f} K: no tower range exists"
             )
 
-        h_a_in = humid_air_enthalpy(thermo, dry, air.T, air.P, y1)
+        h_a_in = inlet_air_enthalpy(air.T, y1, mw_dry)
 
         def h_s(T: float) -> float:
-            return saturated_air_enthalpy(thermo, dry, T, air.P)
+            return saturated_air_enthalpy(T, air.P)
 
         def residual(T_out: float) -> float:
             """r(T_out) = KaV/L_Chebyshev(T_out) - C (L/G)^-n.
@@ -400,9 +410,8 @@ class CoolingTowerR1:
     ) -> UnitResult:
         """Delegate to R0 at the approach and assemble the R1 info block.
 
-        Shared by both modes: the characteristic mode arrives with the
-        brentq-solved water outlet, rating mode with T_wb + approach_K. The
-        outlets, duty and blowdown/makeup split are R0's by construction.
+        Reached with the brentq-solved water outlet; the outlets, duty and
+        blowdown/makeup split are R0's by construction.
         """
         water = inlets["water_in"]
         air = inlets["air_in"]
@@ -411,10 +420,10 @@ class CoolingTowerR1:
         mw_dry = _mean_molar_mass(dry)
         L = water.molar_flow * _mean_molar_mass({"H2O": 1.0}) / 1000.0
         G = air.molar_flow * (1.0 - y1) * mw_dry / 1000.0
-        h_a_in = humid_air_enthalpy(thermo, dry, air.T, air.P, y1)
+        h_a_in = inlet_air_enthalpy(air.T, y1, mw_dry)
 
         def h_s(T: float) -> float:
-            return saturated_air_enthalpy(thermo, dry, T, air.P)
+            return saturated_air_enthalpy(T, air.P)
 
         r0_params: dict[str, Any] = {"approach_K": approach}
         if cycles is not None:
@@ -446,10 +455,11 @@ class CoolingTowerR1:
         """The R0 example feeds with a Merkel characteristic: C = 1.0, n = 0.6.
 
         The orchestrator ruling on PR #284 (2026-10-25) sets the example
-        characteristic at C = 1.0 (KaV/L = 3.61 on these feeds): the spec's
-        C = 1.7 gives 6.14, above the attainable Merkel number on these feeds
-        (about 5.1 on the moist-air basis), and is kept as a TYPED refusal
-        instead. C = 1.0 solves at an approach of a few kelvin.
+        characteristic at C = 1.0 (KaV/L = 3.54 on these feeds): the spec's
+        C = 1.7 gives 6.02, which on the ASHRAE closed-form basis is BELOW
+        the attainable Merkel number on these feeds (measured 6.06), so it
+        solves; the typed refusal is exercised at C = 1.8 (requested 6.37)
+        instead. C = 1.0 solves at an approach of about 1.2 K (measured).
         """
         feeds, _params = CoolingTower.example_case()
         params: dict[str, Any] = {
