@@ -266,14 +266,25 @@
           water_out_lb_per_mmscf: {type: number, description: outlet water content spec, lb/MMscf}
       note: activity-based water spec (GPSA/Parrish water-activity model)
     R2:
-      status: planned
-      params: {}
-      note: staged with the TEG activity package — S1 slice (plan §2b)
+      status: provisional
+      adapter: ngdesign.units.treating.teg_contactor_r2:TEGContactorR2
+      params:
+        type: object
+        required: [n_stages]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, minimum: 1, description: equilibrium stages (isothermal at the gas inlet T and P)}
+      note: stage-wise isothermal water absorption on the Parrish-Won-Baltatu activity line (rating at N stages)
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-G 3
   notes: molecular-sieve dehydration (plan U-G 6) maps to separation's adsorption_bed row.
+    R2 V1 gap — the GPSA Eng. Data Book Sect. 20 glycol-contactor example works on
+    McCabe-Thiele/Kremser charts; no accessible page shows the printed inputs and a
+    printed outlet water together, so no V1 case (searched GPSA Sect. 20 worked
+    examples and open TEG-dehydration literature); chart reads are never presented
+    as printed numbers, so the level ships provisional.
 
 - id: teg_regen
   name: TEG regenerator + stripping gas
