@@ -315,3 +315,71 @@ def test_identity_r0_reduction(thermo: Thermo) -> None:
             v0 = n_r0.get(cid, 0.0)
             assert math.isclose(v1, v0, rel_tol=1e-9, abs_tol=1e-8), (port, cid, v1, v0)
     assert math.isclose(r1.duty_W, r0.duty_W, rel_tol=1e-6), (r1.duty_W, r0.duty_W)
+
+
+# ---------------------------------------------------------------------------
+# Adiabatic two-bed V0 case (spec tests)
+# ---------------------------------------------------------------------------
+
+
+def test_v0_adiabatic_two_bed(thermo: Thermo) -> None:
+    """Both beds adiabatic, a heater before bed 2, all four reactions active.
+
+    Bed 1's outlet T rises over its (mixed) inlet T — the slate is exothermic.
+    The info duties close the overall formation-basis duty: duty_W equals
+    split_enthalpy_W plus every heater and bed duty to 1e-9 relative. The
+    energy balance itself (mass_elements and formation basis at 1e-8) is the
+    validate_units harness V0 check on the example_case basis.
+    """
+    from ngdesign.units.refining.hdt_kinetic import _mix
+
+    states = {port: _flash(thermo, f) for port, f in _feeds().items()}
+    params = _params(
+        beds=[
+            {"catalyst_mass_kg": 300.0, "thermal": "adiabatic"},
+            {"catalyst_mass_kg": 300.0, "inlet_T_K": 620.0, "thermal": "adiabatic"},
+        ],
+        kinetics=_kinetics(
+            hds_thiophene={
+                "rate_units": "mol/(kg_cat·s)",
+                "k0": 0.5,
+                "Ea": 0.0,
+                "orders": {"thiophene": 1.0},
+                "basis": "mole_fraction",
+            },
+            hdn_pyridine={
+                "rate_units": "mol/(kg_cat·s)",
+                "k0": 0.5,
+                "Ea": 0.0,
+                "orders": {"pyridine": 1.0},
+                "basis": "mole_fraction",
+            },
+            olefin_sat={
+                "rate_units": "mol/(kg_cat·s)",
+                "k0": 0.5,
+                "Ea": 0.0,
+                "orders": {"1-pentene": 1.0},
+                "basis": "mole_fraction",
+            },
+            arom_sat={
+                "rate_units": "mol/(kg_cat·s)",
+                "k0": 0.2,
+                "Ea": 0.0,
+                "orders": {"benzene": 1.0},
+                "basis": "mole_fraction",
+            },
+        ),
+    )
+    res = NaphthaHydrotreaterR1().solve(states, params, thermo)
+    info = res.info
+
+    mixed_t = _mix(states, thermo).T
+    assert info["bed_T_out_b1_K"] > mixed_t  # exothermic, adiabatic bed
+    assert "heater_duty_b1_W" not in info
+    assert "heater_duty_b2_W" in info
+
+    duties = math.fsum(v for k, v in info.items() if k.startswith(("heater_duty_", "bed_duty_")))
+    assert math.isclose(res.duty_W, info["split_enthalpy_W"] + duties, rel_tol=1e-9), (
+        res.duty_W,
+        info["split_enthalpy_W"] + duties,
+    )
