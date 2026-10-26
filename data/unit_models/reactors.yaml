@@ -200,9 +200,26 @@
             the steady-state branch}
       note: kinetics (Arrhenius, LHHW, power-law), single phase
     R2:
-      status: planned
-      params: {}
-      note: multi-phase with VLE in the vessel
+      status: provisional
+      adapter: ngdesign.units.reactors.cstr:CstrR2
+      params:
+        type: object
+        required: [reaction_set, volume_m3]
+        properties:
+          reaction_set: {description: inline ReactionSet, or a string id resolved against
+            Flowsheet.reactions}
+          volume_m3: {type: number, description: reacting volume, m3}
+          thermal: {description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K};
+            default isothermal"}
+          reacting_phase: {type: string, enum: [vapor, hc_liquid, aqueous], description: phase
+            the reactions occur in; default hc_liquid}
+          bulk_density_kg_m3: {type: number, description: catalyst bulk density, kg/m3}
+          T_guess_K: {type: number, description: Newton start temperature, K; selects
+            the steady-state branch}
+          holdup_m3: {type: number, description: 'explicit reacting-phase volume, m3,
+            in (0, volume_m3]; default the phase-ratio holdup from the vessel flash'}
+      note: multi-phase with VLE in the vessel; phase-resolved rate on the reacting
+        phase holdup (Fogler ch. 8), holdup_m3 override, reduces to R1 single-phase
       end_state: true
   balance: mass_elements
   pid_symbol: R
