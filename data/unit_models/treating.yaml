@@ -320,14 +320,26 @@
         wt% vs the GPSA 98.8 wt% read (activity correlation extrapolated past its fitted range),
         so the level stays provisional until the purity model is defensible at reboiler conditions
     R2:
-      status: planned
-      params: {}
-      note: staged — S1 slice (plan §2b)
+      status: provisional
+      adapter: ngdesign.units.treating.teg_regen_r2:TEGRegenR2
+      params:
+        type: object
+        additionalProperties: false
+        properties:
+          T_reboiler: {type: number, description: "reboiler temperature (K), default 477.15"}
+          P: {type: number, description: "regenerator pressure (Pa abs), default 101325"}
+          n_stages: {type: integer, minimum: 0, description: "stripping-gas (Stahl) equilibrium stages below the reboiler; 0 = R0 boiling-line purity, default 2"}
+      note: boiling-line reboiler + N-stage stripping-gas section on the Parrish activity line (extrapolated above 380 K; flagged)
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-G 4
-  notes: roadmap.
+  notes: >-
+    R2 V1 gap — the stripping-gas enhancement is not citable in open numeric
+    form: searched the GPSA EDB Sect. 20 worked regeneration example and
+    Moshfeghian (Campbell Tip of the Month, May 2013), which prints simulation
+    results only, not a correlation; the R0 GPSA case V1201 carries the assessed
+    boiling-line miss and stays the row's V1 anchor.
 
 - id: sulfur_recovery
   name: Claus sulfur recovery

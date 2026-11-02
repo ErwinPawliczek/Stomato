@@ -2,7 +2,7 @@
 
 Family: **treating** · P&ID symbol: `T`
 
-Rigour ladder: R0 provisional, R2 planned
+Rigour ladder: R0 provisional, R2 provisional
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.treating.teg_regen:TEGRegen` | shortcut water split; lean purity on the TEG-water boiling line (teg_activity owner), stripping gas refused at R0 (uncited); info["activity_extrapolated"] flags reboilers outside the Parrish-Won-Baltatu 300-380 K fit range; V1 miss assessed — measured 99.27 wt% vs the GPSA 98.8 wt% read (activity correlation extrapolated past its fitted range), so the level stays provisional until the purity model is defensible at reboiler conditions |
-| R2 | planned | — | staged — S1 slice (plan §2b) |
+| R2 | provisional | `ngdesign.units.treating.teg_regen_r2:TEGRegenR2` | boiling-line reboiler + N-stage stripping-gas section on the Parrish activity line (extrapolated above 380 K; flagged) |
 
 ### R0 parameters
 
@@ -35,6 +35,25 @@ properties:
 type: object
 ```
 
+### R2 parameters
+
+```yaml
+additionalProperties: false
+properties:
+  P:
+    description: regenerator pressure (Pa abs), default 101325
+    type: number
+  T_reboiler:
+    description: reboiler temperature (K), default 477.15
+    type: number
+  n_stages:
+    description: stripping-gas (Stahl) equilibrium stages below the reboiler; 0 =
+      R0 boiling-line purity, default 2
+    minimum: 0
+    type: integer
+type: object
+```
+
 ## V1 worked cases
 
 | case | level | quantity | expected | measured | tolerance | result |
@@ -48,4 +67,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-G 4
 
-> roadmap.
+> R2 V1 gap — the stripping-gas enhancement is not citable in open numeric form: searched the GPSA EDB Sect. 20 worked regeneration example and Moshfeghian (Campbell Tip of the Month, May 2013), which prints simulation results only, not a correlation; the R0 GPSA case V1201 carries the assessed boiling-line miss and stays the row's V1 anchor.

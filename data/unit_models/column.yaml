@@ -195,9 +195,33 @@
       validation:
       - V1-kremser-stripper-seader98
     R2:
-      status: planned
-      params: {}
-      note: MESH one-tear (kettle only) — today via the `column` row's stripper configuration
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.reboiled_stripper_r2:ReboiledStripperR2
+      params:
+        type: object
+        required: [n_stages, spec]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, minimum: 2, description: stages including the kettle reboiler (stage N); feed on stage 1}
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar = uniform; list = per stage, top to bottom); default feed.P
+            oneOf:
+            - {type: number, exclusiveMinimum: 0}
+            - {type: array, items: {type: number, exclusiveMinimum: 0}}
+          spec:
+            type: object
+            description: exactly one of boilup_ratio, bottoms_rate (mol/s), distillate_rate (mol/s), component_recovery ({component, value, product})
+            minProperties: 1
+            maxProperties: 1
+      note: one-tear MESH (kettle only) via the column API; specs met to the column's
+        _SPEC_TOL — the loose column-core spec gate (tracked as issue 248; rate-spec
+        convergence there is a core defect; reboiler_duty_W refused — the kettle-only
+        core hits a singular Newton system for it). The nC4/nC5 bench feed is withdrawn
+        per the PR 292 ruling — the kettle-only column core does not converge on it
+        (tracked as issue 248). The component_recovery 0.9 NC4 case on the C1/NC4
+        anchor feed is infeasible on this core (residual stuck ~7.5e-3, above the spec
+        gate) and is pinned xfail(strict=True) in the test file.
+      validation: []
     R3:
       status: planned
       params: {}
@@ -207,7 +231,12 @@
   references:
   - docs/unit-catalogue-plan.md §2 U-E 4
   notes: sour-water stripping (plan U-G 9) is a reboiled-stripper configuration on an
-    electrolyte package (T-09) — no separate treating row.
+    electrolyte package (T-09) — no separate treating row. R2 V1 gap — provisional without a
+    case (searched Seader, Henley & Roper 3rd ed. rigorous-methods chapter and Kister,
+    Distillation Design (1992) stripper examples; no printed rigorous reboiled-stripper
+    example with its inputs and printed product flows or duties was found, so a V1 case
+    cannot be transcribed without reconstruction; R2 is covered by closed-form identity and
+    equilibrium-pair tests against the column row and thermo bubble/dew points).
 
 - id: refluxed_absorber
   name: Refluxed absorber / reboiled absorber

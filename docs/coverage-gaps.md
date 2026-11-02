@@ -9,10 +9,10 @@ registry implements. A level or method listed here is listed but not implemented
 | | listed | implemented | open |
 |---|---|---|---|
 | Unit rows | 84 | 74 | 10 |
-| Planned rigour levels on implemented units | | | 29 |
-| Property methods in the plan | 168 | 136 | 32 |
+| Planned rigour levels on implemented units | | | 26 |
+| Property methods in the plan | 168 | 147 | 21 |
 
-Catalogue rows by status: 9 experimental, 119 provisional, 9 validated.
+Catalogue rows by status: 8 experimental, 138 provisional, 9 validated.
 
 ## Unit rows with no implementation
 
@@ -36,7 +36,6 @@ Catalogue rows by status: 9 experimental, 119 provisional, 9 validated.
 | unit | level | note |
 |---|---|---|
 | `absorber` | R3 | rate-based stages |
-| `reboiled_stripper` | R2 | MESH one-tear (kettle only) — today via the `column` row's stripper configuration |
 | `reboiled_stripper` | R3 | rate-based stages |
 | `liquid_liquid_extractor` | R2 | MESH with LLE stages |
 | `pump` | R1 | curve (head/efficiency vs flow) and NPSHa check |
@@ -44,7 +43,6 @@ Catalogue rows by status: 9 experimental, 119 provisional, 9 validated.
 | `shell_tube` | R2 | zoned (phase change), multi-pass with temperature cross |
 | `multi_stream` | R1 | layer-wise UA distribution |
 | `multi_stream` | R2 | zoned with phase change |
-| `cooling_tower` | R1 | Merkel method |
 | `cstr` | R2 | multi-phase with VLE in the vessel |
 | `pfr` | R2 | integrated along length with heat transfer and pressure drop (Ergun) on the shared integrator (ngdesign.units.reactors.plug_flow) |
 | `pfr` | R3 | catalyst deactivation, pellet effectiveness |
@@ -62,7 +60,6 @@ Catalogue rows by status: 9 experimental, 119 provisional, 9 validated.
 | `mdea_regenerator` | R2 | reboiled stripper on the reactive package — blocked on P1-11 |
 | `mea_regenerator` | R2 | reboiled stripper on the reactive package — blocked on P1-11 |
 | `dea_regenerator` | R2 | reboiled stripper on the reactive package — blocked on P1-11 |
-| `teg_regen` | R2 | staged — S1 slice (plan §2b) |
 | `sulfur_recovery` | R2 | Gibbs per stage |
 
 ## Property methods listed but not closed
@@ -71,8 +68,6 @@ Catalogue rows by status: 9 experimental, 119 provisional, 9 validated.
 |---|---|---|
 | D Helmholtz / reference | EOS-CG | `eos_cg` is a refusal row |
 | F SAFT / CPA | soft-SAFT | `soft_saft` is a refusal row |
-| G electrolytes / reactive | eNRTL-RK | no catalogue row |
-| G electrolytes / reactive | Pitzer-Debye-Hückel | no catalogue row |
 | G electrolytes / reactive | physical solvents (Selexol-type) in gamma-phi | no catalogue row |
 | G electrolytes / reactive | glycol package (TEG/MEG dehydration, tuned PR) | no catalogue row |
 | H solids / polymers / special | Polymer SRK | no catalogue row |
@@ -80,27 +75,18 @@ Catalogue rows by status: 9 experimental, 119 provisional, 9 validated.
 | Parameter-form and databank variants | UNIQUAC two-parameter / T-dependent forms | no catalogue row |
 | Parameter-form and databank variants | Wilson two-parameter / T-dependent forms | no catalogue row |
 | Parameter-form and databank variants | Wilson liquid-reference (Wilson-LR, Wilson-GLR) | no catalogue row |
-| Parameter-form and databank variants | NRTL-SAC (segment activity) | no catalogue row |
 | Parameter-form and databank variants | COSMO-SAC (sigma profiles) | no catalogue row |
 | Parameter-form and databank variants | UNIFAC with Lyngby / Dortmund T-dependence switch | no catalogue row |
-| Parameter-form and databank variants | Van Laar / Margules three-suffix forms | no catalogue row |
 | Parameter-form and databank variants | PR / SRK with Rackett liquid density | no catalogue row |
 | Parameter-form and databank variants | PR / SRK with COSTALD liquid density | no catalogue row |
 | Parameter-form and databank variants | PR / SRK with API liquid density | no catalogue row |
 | Parameter-form and databank variants | Schwartzentruber-Renon (SR-POLAR) | no catalogue row |
 | Parameter-form and databank variants | Predictive SRK with Gmehling T-dependent groups | no catalogue row |
-| Parameter-form and databank variants | Steam tables selectable per water stream (free-water decant) | no catalogue row |
-| Parameter-form and databank variants | Water/hydrocarbon free-water method (Kabadi-Danner + NBS) | no catalogue row |
 | Parameter-form and databank variants | Grayson-Streed with Lee-Kesler enthalpies | no catalogue row |
 | Parameter-form and databank variants | Chao-Seader with Lee-Kesler enthalpies | no catalogue row |
-| Parameter-form and databank variants | BK10 with ideal enthalpies | no catalogue row |
-| Parameter-form and databank variants | ENRTL with Redlich-Kwong vapour | no catalogue row |
-| Parameter-form and databank variants | ENRTL with Hayden-O'Connell vapour | no catalogue row |
-| Parameter-form and databank variants | Pitzer with Hayden-O'Connell vapour | no catalogue row |
 | Parameter-form and databank variants | Amine package with physical-solvent co-absorption (Sulfolane) | no catalogue row |
 | Parameter-form and databank variants | Mixed amines (MDEA+PZ) | no catalogue row |
 | Parameter-form and databank variants | DEA / DGA / DIPA / AMP speciation sets | no catalogue row |
-| Parameter-form and databank variants | Electrolyte NRTL with crystallisation (solids) | no catalogue row |
 
 ## Implemented but still experimental
 
