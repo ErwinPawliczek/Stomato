@@ -144,7 +144,9 @@ class NaphthaHydrotreaterR1:
         duties = 0.0
         for k, bed in enumerate(beds):
             if "inlet_T_K" in bed:
-                heated = thermo.flash_pt(dict(state.composition), float(bed["inlet_T_K"]), state.P, state.molar_flow)
+                heated = thermo.flash_pt(
+                    dict(state.composition), float(bed["inlet_T_K"]), state.P, state.molar_flow
+                )
                 heat = (heated.enthalpy - state.enthalpy) * state.molar_flow
                 info[f"heater_duty_b{k}_W"] = heat
                 duties += heat
@@ -174,7 +176,9 @@ class NaphthaHydrotreaterR1:
         outlets: dict[str, StreamState] = {}
         for port, cids in (("treated_out", treated_cids), ("gas_out", gas_cids)):
             total = math.fsum(n_now[cid] for cid in cids)
-            outlets[port] = thermo.flash_pt({cid: n_now[cid] / total for cid in cids}, state.T, state.P, total)
+            outlets[port] = thermo.flash_pt(
+                {cid: n_now[cid] / total for cid in cids}, state.T, state.P, total
+            )
 
         mass = math.fsum(n * float(component_record(cid)["mw"]) for cid, n in feed_flows.items())
         info.update(

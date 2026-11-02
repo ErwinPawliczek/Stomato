@@ -84,4 +84,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-H 7
 
-> R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental characterization (issue #222).
+> R1 kinetics are required inputs, on real model compounds only; pseudo feeds stay at R0. R1 V1 gap - no printed naphtha HDT kinetic example with inputs and outlets was searched for; provisional on the closed-form W(X) with mole change and the reduction to R0. R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental characterization (issue #222).

@@ -66,8 +66,7 @@ def test_first_order_with_mole_change_closed_form(thermo: Thermo) -> None:
 
 
 def test_reduces_to_r0_at_full_conversion(thermo: Thermo) -> None:
-    """Spec reduction at k*W/F = 25: the spec's 60 would cross the integrator's terminal
-    depletion event (1e-14 of F), so conversion stops at 1 - 1.4e-11."""
+    """Spec reduction, k*W/F = 60: first-order reactants vanish, and R0 at full removal agrees."""
     feeds, _ = NaphthaHydrotreater.example_case()
     z = {"nC7": 0.97, "thiophene": 0.02, "pyridine": 0.01}
     inlets = {
@@ -78,7 +77,7 @@ def test_reduces_to_r0_at_full_conversion(thermo: Thermo) -> None:
     res1 = NaphthaHydrotreaterR1().solve(
         inlets,
         {
-            "beds": [_bed(25.0 * 4.0 / k * 1.02)],
+            "beds": [_bed(60.0 * 4.0 / k, inlet_T_K=620.0)],
             "bulk_density_kg_m3": 800.0,
             "kinetics": {"hds_thiophene": _law(k, "thiophene"), "hdn_pyridine": _law(k, "pyridine")},
         },
@@ -99,7 +98,7 @@ def test_reduces_to_r0_at_full_conversion(thermo: Thermo) -> None:
     a, b = _flows(res1), _flows(res0)
     for cid, n in b.items():
         if n > 1.0e-9:
-            assert a[cid] == pytest.approx(n, rel=1e-8), cid
+            assert a[cid] == pytest.approx(n, rel=1e-9), cid
     assert res1.duty_W == pytest.approx(res0.duty_W, rel=1e-6)
 
 
