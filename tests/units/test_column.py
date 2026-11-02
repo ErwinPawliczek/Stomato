@@ -207,8 +207,9 @@ def test_deethanizer_mesh_converges_under_50_sweeps(thermo: Thermo) -> None:
     prof = col_mod._seed_profile(col, tb, t_top, t_bot)
     prof = col_mod._solve_mesh(col, tb, 3.0 * 37.0, 3.0 * 37.0 + 20.0, prof)
     assert prof.outer < 50
-    m_norm, _h_norm = col_mod._exact_residuals(col, tb, prof)
-    assert m_norm <= 1e-5
+    m_norm, h_norm = col_mod._exact_residuals(col, tb, prof)
+    assert m_norm <= 1e-8  # the real two-tear gate, summation rows included
+    assert h_norm <= 1e-2
 
 
 def test_infeasible_spec_raises_typed_error_fast(thermo: Thermo) -> None:

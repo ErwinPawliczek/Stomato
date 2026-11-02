@@ -22,6 +22,11 @@ from .spec import _FLOW_FLOOR
 # --------------------------------------------------------------------------------------
 
 
+#: Mole-fraction floor for a fugacity evaluation: a species a stage has not yet
+#: seen still needs a coefficient (reaction products, trace keys).
+_K_TRACE = 1e-30
+
+
 class _ThermoBox:
     """Adapts the Thermo protocol for the column solvers (contract v2, spec P1-03).
 
@@ -47,6 +52,16 @@ class _ThermoBox:
         #: Three-phase stages: every liquid of a flash counts as THE stage
         #: liquid (see ``_liquid``). False keeps the first-liquid reading.
         self.pool_liquids = pool_liquids
+        #: Fugacity K and single-phase enthalpies (P1-13): every package but a
+        #: pooled column or a reactive amine package, whose K and liquid
+        #: enthalpy are flash results.
+        self.direct_phases = not pool_liquids and not getattr(thermo, "is_amine_reactive_package", False)
+        #: True inside an inside-out model refresh. The sweep is the globaliser
+        #: and keeps the flash surface it is calibrated on: its bubble update
+        #: needs a K that moves with T alone, and on the composition-dependent
+        #: fugacity K the 22-stage deethanizer's sweeps diverge (measured V =
+        #: 2533 mol/s by sweep 4). Newton and the gate read the exact surface.
+        self.sweeping = False
         self._pt_cache: dict[tuple[Any, ...], StreamState] = {}
         self._k_cache: dict[tuple[Any, ...], dict[str, float] | None] = {}
         self._bubble_cache: dict[tuple[Any, ...], float | None] = {}
@@ -67,6 +82,11 @@ class _ThermoBox:
             hit = self._thermo.flash_pt(z, T, P, flow)
             self._pt_cache[key] = hit
         return hit
+
+    @property
+    def exact_surface(self) -> bool:
+        """True where K and enthalpies are the single-phase fugacity surface."""
+        return self.direct_phases and not self.sweeping
 
     def _liquid(self, state: StreamState) -> tuple[dict[str, float], float, float] | None:
         """(composition, enthalpy, cp) of the state's liquid; None without one.
@@ -124,6 +144,32 @@ class _ThermoBox:
             else:
                 out[cid] = 1.0
         return out
+
+    def k_fugacity(
+        self, x: dict[str, float], y: dict[str, float], T: float, P: float
+    ) -> dict[str, float] | None:
+        """K_i = phi_i^L(x, T, P) / phi_i^V(y, T, P): equality of fugacity, no flash.
+
+        The MESH E equation as written (Naphtali & Sandholm 1971): defined at
+        every iterate, on or off the bubble point. A K read from a flash exists
+        only where that composition splits at (T, P), so an iterate crossing the
+        bubble surface jumps candidate and K with it, and Newton's full step
+        predicts 1e-16 and achieves 1e-1 (measured, P1-13). None when the
+        package has no per-phase ln phi; the caller keeps the flash chain.
+        """
+        floor = {cid: max(v, _K_TRACE) for cid, v in x.items()}
+        trace = {cid: max(y.get(cid, 0.0), _K_TRACE) for cid in x}
+        xs, ys = sum(floor.values()), sum(trace.values())
+        x_n = {cid: v / xs for cid, v in floor.items()}
+        y_n = {cid: v / ys for cid, v in trace.items()}
+        try:
+            liquid = self._thermo.phase_props(x_n, T, P, PhaseKind.HC_LIQUID).ln_phi
+            vapour = self._thermo.phase_props(y_n, T, P, PhaseKind.VAPOR).ln_phi
+        except ValueError:
+            return None
+        if not liquid or not vapour:
+            return None
+        return {cid: math.exp(liquid[cid] - vapour[cid]) for cid in x}
 
     def k_values(self, candidates: list[dict[str, float]], T: float, P: float) -> dict[str, float] | None:
         """K_i = y_i/x_i from the first two-phase candidate's cached PT flash.
@@ -301,6 +347,15 @@ class _ThermoBox:
         inside-out mesh early and the total-reflux/Fenske oracle columns then
         fail to converge; see the PR findings for both numbers.
         """
+        if self.exact_surface:
+            # The phase AT z: a flash of z hands back a phase of another
+            # composition, and which one jumps at the bubble surface. Falls
+            # through only for a package that refuses the single-phase build.
+            try:
+                built = self._thermo.phase_props(z, T, P, PhaseKind.VAPOR if vapor else PhaseKind.HC_LIQUID)
+                return built.enthalpy, built.cp, T
+            except ValueError:
+                pass
         state = self.pt(z, T, P)
         if vapor:
             phase = next((p for p in state.phases if p.kind == PhaseKind.VAPOR), None)

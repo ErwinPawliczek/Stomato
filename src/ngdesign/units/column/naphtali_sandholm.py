@@ -12,6 +12,7 @@ from .inside_out import (
     _Column,
     _exact_residuals,
     _finalize_duties,
+    _fugacity_k,
     _h_equation_stages,
     _l_profile,
     _live_residual_vector,
@@ -30,6 +31,7 @@ from .spec import (
     _MESH_M_TOL,
     _MESH_M_TOL_REACTIVE,
     _MESH_M_TOL_ZERO_ONE_TEAR,
+    _POLISH_M_TOL_ZERO_ONE_TEAR,
     _NS_MAX,
     _NS_MAX_ZERO_ONE_TEAR,
     ColumnConvergenceError,
@@ -576,7 +578,13 @@ class _DenseNSEngine:
         self._t_top_tear = prof.V[0] if 0 in _vapour_tear_stages(col) else None
         self._v_free = _v_free_indices(col)
         self._m_rows, self._h_rows = _residual_row_blocks(col, _h_equation_stages(col))
-        self.live_norm = col.n_tears < 2
+        # P1-13 change 2: exact-residual acceptance on every column. Pass-frozen
+        # M scales on every column on the smooth surface too: the two-tear
+        # regression recorded in begin_pass was measured on the flash surface,
+        # and per-evaluation scales saturate at +/-1 here (deethanizer: M = 1.0
+        # rows, every line-search trial rejected).
+        self.live_norm = True
+        self._frozen_scales = col.n_tears < 2 or tb.direct_phases
         if col.n_tears >= 2:
             self.m_tol = _MESH_M_TOL
         elif _is_reactive_package(tb):
@@ -588,7 +596,7 @@ class _DenseNSEngine:
             # A tighter intermediate gate only discarded measurably converged
             # states (measured P1-09 stripper: NS polished a warm-chained state
             # to M=2.90e-7, H=4.46e-10 and the 1e-7 gate typed the tear failed).
-            self.m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
+            self.m_tol = _POLISH_M_TOL_ZERO_ONE_TEAR if tb.direct_phases else _MESH_M_TOL_ZERO_ONE_TEAR
         self.best_u: list[float] | None = None
         self.best_m = float("inf")
         self.best_h = float("inf")
@@ -636,7 +644,7 @@ class _DenseNSEngine:
             tuple[tuple[tuple[str, float], ...], float, float, tuple[tuple[str, float], ...]],
             dict[str, float],
         ] = {}
-        if self.live_norm and (_is_reactive_package(tb) or tb.pool_liquids):
+        if _fugacity_k(col, tb) or (self._frozen_scales and (_is_reactive_package(tb) or tb.pool_liquids)):
             # P1-11 step 3 (ruling on #153): the exact gate reads its K surface
             # with the profile's refreshed y = K*x as the stage-K vapour seed,
             # while the NS rows passed empty seeds - on the reactive package the
@@ -652,9 +660,10 @@ class _DenseNSEngine:
             # two-tear path keeps its convention; see the deethanizer
             # regression above). Pooled-liquid stages join for the same reason:
             # their K is read at the stage contents, which carry the vapour seed.
+            # Fugacity K (P1-13) takes phi^V at this seed on every tear count.
             _refresh_y(col, tb, prof)
             y_seeds = list(prof.y)
-        if self.live_norm:
+        if self._frozen_scales:
             pass_scales = _residual_scales(
                 col,
                 tb,

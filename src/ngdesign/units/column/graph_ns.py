@@ -809,7 +809,7 @@ class _GraphNSEngine:
         self._t_bot_tear = t_bot_tear
         self._model = model
         self.m_tol = m_tol
-        self.live_norm = col.n_tears < 2
+        self.live_norm = True  # P1-13 change 2: every tear count
         self.ex_m = float("inf")
         self.ex_h = float("inf")
         self._k_last: list[dict[str, float] | None] = [None] * model.layout.n_graph

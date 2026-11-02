@@ -28,6 +28,8 @@ from .linalg import _gauss
 from .naphtali_sandholm import _naphtali_sandholm
 from .spec import (
     _BAND_LIMIT_EPS,
+    _DAMP_RATIO_BAND,
+    _DAMP_RATIO_RUNS,
     _FLOW_FLOOR,
     _MESH_H_TOL,
     _MESH_M_TOL,
@@ -43,6 +45,7 @@ from .spec import (
     _RX_STEP_GROW,
     _RX_STEP_MIN,
     _SPEC_MAX,
+    _SWEEP_SETTLED_K,
     _SPEC_TOL,
     _STAGNATION_MAX,
     _STAGNATION_MAX_ZERO_ONE_TEAR,
@@ -285,9 +288,12 @@ def _solve_mesh_at_heat(
         # inside-out loop is skipped entirely; the polish stage below still
         # runs and its gate decides acceptance.
         best_prof = _copy_profile(col, prof)
+    damp = _OUTER_DAMP
+    m_last = float("inf")
+    settled = 0
     for outer in range(1, 1 if (ns_direct or ns_floor) else _OUTER_MAX + 1):
         t_prev, v_prev = list(prof.T), list(prof.V)
-        model = _refresh_model(col, tb, prof, model)
+        model = _refresh_model(col, tb, prof, model, damp)
         prof.outer = outer
         _inner_solve(col, model, prof, t_bot)  # accumulates prof.inner itself
         if col.n_tears >= 2:
@@ -299,8 +305,8 @@ def _solve_mesh_at_heat(
             # (measured, P1-09: the 8-stage absorber froze at M=1.2e-3 over
             # 9 sweeps; undamped it closes at sweep 2 with M=8.8e-11).
             for j in range(col.n):
-                prof.T[j] = t_prev[j] + _OUTER_DAMP * (prof.T[j] - t_prev[j])
-                prof.V[j] = v_prev[j] + _OUTER_DAMP * (prof.V[j] - v_prev[j])
+                prof.T[j] = t_prev[j] + damp * (prof.T[j] - t_prev[j])
+                prof.V[j] = v_prev[j] + damp * (prof.V[j] - v_prev[j])
         elif _OUTER_DAMP_ZERO_ONE < 1.0:
             for j in range(col.n):
                 prof.T[j] = t_prev[j] + _OUTER_DAMP_ZERO_ONE * (prof.T[j] - t_prev[j])
@@ -311,6 +317,23 @@ def _solve_mesh_at_heat(
             _reject_band_limit(col, prof)
             _finalize_duties(col, tb, prof)
             return prof
+        # P1-13 change 1: the one damping decision (see spec.py).
+        if m_res > m_last:
+            damp, settled = _OUTER_DAMP, 0
+        elif abs(m_res / max(m_last, 1e-300) - _OUTER_DAMP) <= _DAMP_RATIO_BAND:
+            settled += 1
+            if settled >= _DAMP_RATIO_RUNS:
+                damp = 1.0
+        else:
+            settled = 0
+        m_last = m_res
+        if tb.direct_phases and not zero_one:
+            # The sweeps settle on the flash surface and the gate reads the
+            # exact one, so a gate residual that stops falling says nothing
+            # about the walk: hand to Newton when the profile has stopped.
+            if max(abs(a - b) for a, b in zip(prof.T, t_prev, strict=True)) < _SWEEP_SETTLED_K:
+                break
+            continue
         # Stagnation = NO improvement in either residual for 3 consecutive
         # sweeps. Early sweeps wobble in mass while enthalpy still improves
         # monotonically; a single combined metric misreads that as stagnation
@@ -351,7 +374,9 @@ def _solve_mesh_at_heat(
             # feed). Non-reactive zero/one-tear columns hand that state to the
             # polish below; everything else, and a genuinely stalled state
             # (measured stalls sit at M >= 1e-2), is a failure.
-            polishable = not _is_reactive_package(tb)
+            # P1-13 change 3: the floor bypass is a zero/one-tear rule; a
+            # two-tear column that misses its gate has not converged.
+            polishable = zero_one and not _is_reactive_package(tb)
             if not (polishable and _at_ns_floor(col, tb, prof)):
                 raise ColumnConvergenceError(
                     f"column did not converge in {_OUTER_MAX} inside-out sweeps and the "
@@ -359,7 +384,7 @@ def _solve_mesh_at_heat(
                     f"(best inside-out profile residuals M={best_m:.2e}, H={best_h:.2e} over "
                     f"{prof.outer} outer sweeps, {prof.inner} inner iterations)"
                 ) from exc
-    if zero_one and not _is_reactive_package(tb):
+    if zero_one and not _is_reactive_package(tb) and not tb.direct_phases:
         # NS globalizes; the inside-out polishes. NS's finite-difference Newton
         # floors at M=3.9e-8 (measured P1-09 absorber: passes 20-30 stagnant),
         # while the anchored-correlation inside-out closes to machine precision
@@ -692,6 +717,13 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         # every stage two-phase and the mesh converges robustly there; the warm-
         # started secant then walks the kettle tear down to the specification.
         t_bot = t_top + col.f_total * 0.2
+        if tb.direct_phases and d_spec is not None:
+            # On the exact gate a kettle driven dry is a failure, not a state to
+            # walk from (deethanizer: 131 mol/s boils the whole feed overhead).
+            # Overhead traffic R D + D less the vapour the feeds bring is the
+            # constant-molal boilup of this column.
+            vapour_fed = sum(part.v_flow for part in col.feeds)
+            t_bot = max(t_top + float(d_spec) - vapour_fed, 0.1 * col.f_total)
 
     state: dict[str, _Profile | None] = {"seed": None, "seed2": None}
 

@@ -506,8 +506,15 @@ def support_ids(z: dict[str, float]) -> tuple[str, ...]:
 
 
 def cache_key(z: dict[str, float], T: float, P: float) -> tuple[Any, ...]:
-    """Property-cache key: composition rounded to 1e-10, T to 1e-6, P to 1e-3."""
-    return (tuple(sorted((cid, round(x, 10)) for cid, x in z.items())), round(T, 6), round(P, 3))
+    """Property-cache key: the exact composition, T and P.
+
+    Keys are exact floats. Rounding them (formerly composition to 1e-10, T to
+    1e-6 K, P to 1e-3 Pa) made every rounding cell return whichever state was
+    computed first, so K values were piecewise constant and order-dependent and
+    finite-difference T derivatives were corrupted by up to ~3% (issue #332).
+    Identical inputs still hit the cache.
+    """
+    return (tuple(sorted((cid, float(x)) for cid, x in z.items())), float(T), float(P))
 
 
 def build_flasher_vl(

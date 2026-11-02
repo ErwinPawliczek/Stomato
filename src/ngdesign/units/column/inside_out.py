@@ -395,6 +395,15 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
     if t_bot > t_top + 20.0:
         col.t_band_lo = max(t_top - 30.0, 150.0)
         col.t_band_hi = min(t_bot + 30.0, 600.0)
+    if tb.direct_phases:
+        # The band is a trust region and must contain the column: the seed's
+        # T_bottom is an average split's, and a kettle pushed heavier sits
+        # above it (22-stage deethanizer: the seed band topped out at 363 K with
+        # n-butane boiling at 365 K, and Newton parked stages on the clamp).
+        ext = _extreme_seed(col, tb)
+        if ext is not None:
+            col.t_band_lo = min(col.t_band_lo, max(ext[0] - 10.0, 150.0))
+            col.t_band_hi = max(col.t_band_hi, ext[1] + 10.0)
     return col
 
 
@@ -884,6 +893,15 @@ def _stage_overall(col: _Column, prof: _Profile, j: int) -> dict[str, float]:
     return _stage_overall_from_flows(col, j, prof.x[j], prof.y[j], prof.L[j], prof.V[j])
 
 
+def _fugacity_k(col: _Column, tb: _ThermoBox) -> bool:
+    """True when stage K is the fugacity ratio: every package but the two exceptions.
+
+    A reactive amine package's K carries the speciation walk, and a pooled stage
+    has no single liquid to take a coefficient of: both read K from their flash.
+    """
+    return tb.exact_surface
+
+
 def _stage_k_values(
     col: _Column,
     tb: _ThermoBox,
@@ -919,6 +937,15 @@ def _stage_k_values(
     candidate chain, the fallbacks and the plain-column behaviour are
     identical either way.
     """
+    if _fugacity_k(col, tb):
+        x_flash = _flash_ready({cid: x_j.get(cid, 0.0) for cid in col.comps}, col.feed_comp)
+        # One fixed-point pass from the caller's vapour, so the K of a trial x
+        # answers to that x's own equilibrium vapour; deterministic in (x, y).
+        seed = y_j or x_flash
+        k0 = tb.k_fugacity(x_flash, seed, t_j, col.pressures[j])
+        if k0 is not None:
+            y1 = {cid: k0[cid] * x_flash[cid] for cid in col.comps}
+            return tb.k_fugacity(x_flash, y1, t_j, col.pressures[j])
     candidates = [
         _flash_ready(x_j, col.feed_comp),
         _flash_ready(
@@ -944,10 +971,27 @@ def _stage_k_values(
     )
 
 
-def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerModel | None) -> _InnerModel:
+def _refresh_model(
+    col: _Column,
+    tb: _ThermoBox,
+    prof: _Profile,
+    model: _InnerModel | None,
+    damp: float = _OUTER_DAMP,
+) -> _InnerModel:
     """One outer sweep: real K-values per stage, alpha against a column-wide reference
     component, the ln Kb = A + B/T correlation (least squares over the stage points),
     and per-stage linear enthalpy models (refitted only when temperatures moved)."""
+    tb.sweeping = True
+    try:
+        return _refresh_model_on_flash_surface(col, tb, prof, model, damp)
+    finally:
+        tb.sweeping = False
+
+
+def _refresh_model_on_flash_surface(
+    col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerModel | None, damp: float
+) -> _InnerModel:
+    """The sweep's K and enthalpy models, read from flashes (see ``_ThermoBox.sweeping``)."""
     n = col.n
     # Reaction terms are frozen across the inner loop with the other models.
     _refresh_reactions(col, prof.x, prof.T)
@@ -990,7 +1034,7 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
         corr_b = (n * s_xy - s_x * s_y) / det
         corr_a = (s_y - corr_b * s_x) / n
 
-    w = _OUTER_DAMP
+    w = damp
     if model is not None:
         # Feedback damping (Boston-Sullivan): blend the refreshed correlation and
         # relative volatility with the previous sweep's values. Without it the
@@ -1008,7 +1052,11 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
     # isothermal start every stage sits at the same T, the column-wide fit is
     # degenerate (no slope information), and its noise walks the stages out of
     # the two-phase window (measured on the 8/20-stage absorber: the walk never
-    # recovers). Gated on the configuration - the two-tear path is unchanged.
+    # recovers). Gated on the configuration: a two-tear column keeps the column-
+    # wide line for its sweeps (per-stage lines diverge on the 22-stage
+    # deethanizer); that line leaves stages off their bubble points, up to 1.5
+    # mol% in y on the plain 16-stage column, which is why Newton on the exact
+    # surface finishes every two-tear mesh (P1-13).
     corr_a_s: list[float] = []
     corr_b_s: list[float] = []
     kb_hist_new: list[tuple[tuple[float, float], ...]] = []
@@ -1048,9 +1096,13 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
     h_vap: list[tuple[float, float, float]] = []
     h_liq: list[tuple[float, float, float]] = []
     for j in range(n):
-        pair = tb.phase_enthalpy_pair(
-            tb.pt(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j]),
-            prof.T[j],
+        pair = (
+            None
+            if tb.exact_surface
+            else tb.phase_enthalpy_pair(
+                tb.pt(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j]),
+                prof.T[j],
+            )
         )
         if pair is None:
             pair = (
@@ -1634,6 +1686,20 @@ def _residual_row_blocks(col: _Column, h_stages: list[int]) -> tuple[list[int], 
     return m_idx, h_idx
 
 
+def _summation_norm(col: _Column, vec: list[float], h_idx: list[int]) -> float:
+    """Max |sum_i x_ij (1 - K_ij)| over the stages of a `_live_residual_vector`."""
+    nc = len(col.comps)
+    h_set = set(h_idx)
+    pos = 0
+    worst = 0.0
+    for _ in range(col.n):
+        worst = max(worst, abs(vec[pos + nc]))
+        pos += nc + 1
+        if pos in h_set:
+            pos += 1
+    return worst
+
+
 def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[float, float]:
     """Max relative MESH residuals with real thermo K-values and phase enthalpies.
 
@@ -1664,7 +1730,11 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
     """
     vec = _live_residual_vector(col, tb, prof.l0, prof.x, prof.T, prof.V, y_estimates=list(prof.y))
     m_idx, h_idx = _residual_row_blocks(col, _h_equation_stages(col))
+    # P1-13: the summation rows sum_i x_ij (1 - K_ij) sit under the M gate. They
+    # are what puts a stage ON its bubble point: y_eq is normalised, so without
+    # them a stage off equilibrium closes M with a y it does not have.
     max_m = max((abs(vec[i]) for i in m_idx), default=0.0)
+    max_m = max(max_m, _summation_norm(col, vec, h_idx))
     max_h = max((abs(vec[i]) for i in h_idx), default=0.0)
     return max_m, max_h
 
