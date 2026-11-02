@@ -322,8 +322,12 @@ def _graph_residual_vector(
     scales: list[float] | None = None,
     flow_mags: list[float] | None = None,
     k_out: list[dict[str, float] | None] | None = None,
+    y_seeds: list[dict[str, float]] | None = None,
 ) -> list[float]:
     """The live MESH residual over the whole graph, interlinks included.
+
+    ``y_seeds``: the pass-frozen stage vapours, for a K that reads the vapour's
+    fugacity (P1-13); None keeps the empty seed of the flash surface.
 
     Row order per stage (as in the dense `_live_residual_vector`): one M
     balance per component, the canonical NS summation row, and one H row on
@@ -357,7 +361,7 @@ def _graph_residual_vector(
                     tb,
                     s,
                     xs[s],
-                    {},
+                    y_seeds[s] if y_seeds is not None else {},
                     ts[s],
                     liquid[s],
                     vs[s],
@@ -867,6 +871,10 @@ class _GraphNSEngine:
         self._k_harvest = [None] * layout.n_graph
         k_harvest = self._k_harvest
         scales = _graph_residual_scales(model, tb, prof.l0, u, self._t_bot_tear)
+        y_seeds: list[dict[str, float]] | None = None
+        if tb.exact_surface:
+            _refresh_y(col, tb, prof)
+            y_seeds = [dict(y) for y in prof.y]
 
         def residuals(
             u_try: list[float],
@@ -892,6 +900,7 @@ class _GraphNSEngine:
                 h_evals=h_evals,
                 scales=scales,
                 k_out=k_harvest,
+                y_seeds=y_seeds,
             )
 
         return u, residuals

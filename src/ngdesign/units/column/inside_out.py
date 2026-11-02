@@ -400,9 +400,10 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         # T_bottom is an average split's, and a kettle pushed heavier sits
         # above it (22-stage deethanizer: the seed band topped out at 363 K with
         # n-butane boiling at 365 K, and Newton parked stages on the clamp).
+        # Only the ceiling: a floor at the lightest component's saturation
+        # (methane, ~175 K at 1.7 MPa) lets the sweeps dive and diverge.
         ext = _extreme_seed(col, tb)
         if ext is not None:
-            col.t_band_lo = min(col.t_band_lo, max(ext[0] - 10.0, 150.0))
             col.t_band_hi = max(col.t_band_hi, ext[1] + 10.0)
     return col
 
