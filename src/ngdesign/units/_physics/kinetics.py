@@ -21,7 +21,6 @@ from ngdesign.contracts.reactions import (
 )
 from ngdesign.data import component_record
 from ngdesign.data.formation import (
-    formation_enthalpy,
     formation_enthalpy_298,
     integral_cp,
     standard_entropy_298,
@@ -188,12 +187,21 @@ def equilibrium_constant(reaction: Reaction, T: float) -> float:
 
 
 def heat_of_reaction(reaction: Reaction, T: float) -> float:
-    """ΔH°(T) per extent of reaction, J/mol, from the databank formation enthalpies.
+    """ΔH°(T) per extent of reaction, J/mol: Σν·[ΔfH°298 + ∫Cp dT], the Kirchhoff sum.
 
-    Elemental species contribute exactly zero, so the sum is the reaction
-    enthalpy on the element reference.
+    Every stoichiometric species carries its sensible heat. An element has zero
+    formation enthalpy at 298.15 K, not zero enthalpy change to T, so summing
+    ``formation_enthalpy(cid, T)``, which is identically 0 for elements, drops H2
+    from the water-gas shift (-53.3 instead of JANAF's -35.8 kJ/mol at 900 K), the
+    same trap :func:`ln_keq` documents. At 298.15 K the integral vanishes, so every
+    caller on that basis is unchanged.
     """
-    return float(sum(nu * formation_enthalpy(cid, T) for cid, nu in reaction.stoichiometry.items()))
+    return float(
+        sum(
+            nu * (formation_enthalpy_298(cid) + integral_cp(cid, T, over_t=False))
+            for cid, nu in reaction.stoichiometry.items()
+        )
+    )
 
 
 def enthalpy_with_formation(state: StreamState) -> float:
