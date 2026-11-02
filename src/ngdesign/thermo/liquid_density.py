@@ -89,6 +89,13 @@ def costald_volume(
     return _real_volume(COSTALD_mixture_compressed, list(xs), T, list(tcs), list(vcs), list(omegas), P)
 
 
+def holds_liquid_root(phase: Any) -> bool:
+    """True when a CEOS phase reports a liquid root (see _state._holds_gas_root)."""
+    if isinstance(phase, CEOSGas):
+        return bool(phase.eos_mix.phase == "l")
+    return hasattr(phase.eos_mix, "V_l")
+
+
 class CorrelatedDensityPhase:
     """Mixin for CEOS phase classes: liquid roots take their volume from a correlation.
 
@@ -106,15 +113,9 @@ class CorrelatedDensityPhase:
     T: float
     P: float
 
-    def _holds_liquid_root(self) -> bool:
-        """True when this phase reports a liquid root (see _state._holds_gas_root)."""
-        if isinstance(self, CEOSGas):
-            return bool(self.eos_mix.phase == "l")
-        return hasattr(self.eos_mix, "V_l")
-
     def V(self) -> float:
         eos_volume = float(super().V())  # type: ignore[misc]
-        if not self._holds_liquid_root():
+        if not holds_liquid_root(self):
             return eos_volume
         eos = self.eos_mix
         if self.density_model == LiquidDensity.RACKETT:

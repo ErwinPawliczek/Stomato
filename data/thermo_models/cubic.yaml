@@ -1756,6 +1756,9 @@
     - L
     - VLL
   status: provisional
+  l4_excluded:
+    twu-pr: VLE is the pr row's, so the pair carries the pr / twu-pr slice dew gap declared on the twu-pr row (measured 717386 vs 597284 Pa, rel 0.201)
+    twu-srk: VLE is the pr row's, so the pair carries the pr / twu-srk slice dew gap declared on the twu-srk row (measured 717386 vs 596571 Pa, rel 0.203)
   validation: []
   references:
   - Spencer, C. F.; Danner, R. P. J. Chem. Eng. Data 1972, 17, 236; Yamada, T.; Gunn, R. D. J. Chem. Eng. Data 1973, 18, 234; Rackett, H. G. J. Chem. Eng. Data 1970, 15, 514
@@ -1794,6 +1797,8 @@
     - L
     - VLL
   status: provisional
+  l4_excluded:
+    zudkevitch-joffe-rk: VLE is the srk row's, so the pair carries the srk / zudkevitch-joffe-rk slice dew gap declared on that row (measured 614969 vs 872333 Pa, rel 0.295)
   validation: []
   references:
   - Spencer, C. F.; Danner, R. P. J. Chem. Eng. Data 1972, 17, 236; Yamada, T.; Gunn, R. D. J. Chem. Eng. Data 1973, 18, 234; Rackett, H. G. J. Chem. Eng. Data 1970, 15, 514
@@ -1832,6 +1837,9 @@
     - L
     - VLL
   status: provisional
+  l4_excluded:
+    twu-pr: VLE is the pr row's, so the pair carries the pr / twu-pr slice dew gap declared on the twu-pr row (measured 717386 vs 597284 Pa, rel 0.201)
+    twu-srk: VLE is the pr row's, so the pair carries the pr / twu-srk slice dew gap declared on the twu-srk row (measured 717386 vs 596571 Pa, rel 0.203)
   validation: []
   references:
   - Hankinson, R. W.; Thomson, G. H. AIChE J. 1979, 25, 653; Thomson, G. H.; Brobst, K. R.; Hankinson, R. W. AIChE J. 1982, 28, 671
@@ -1870,9 +1878,85 @@
     - L
     - VLL
   status: provisional
+  l4_excluded:
+    zudkevitch-joffe-rk: VLE is the srk row's, so the pair carries the srk / zudkevitch-joffe-rk slice dew gap declared on that row (measured 614969 vs 872333 Pa, rel 0.295)
   validation: []
   references:
   - Hankinson, R. W.; Thomson, G. H. AIChE J. 1979, 25, 653; Thomson, G. H.; Brobst, K. R.; Hankinson, R. W. AIChE J. 1982, 28, 671
   l0_note: VLE, enthalpy and entropy are the base row's; only the volume of liquid roots changes, so
     the L0 checks exercise the base row's surface. The reported liquid volume is a correlation and
     is not the pressure derivative of the EOS Gibbs energy.
+- id: pr-free-water
+  name: Steam tables selectable per water stream (free-water decant)
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrFreeWaterThermo
+  options:
+    eos: PRMIX
+    kij_table: ChemSep PR
+    free_water: iapws95
+  params:
+    source: thermo IPDB (ChemSep) for the EOS; chemicals.iapws for IAPWS-95
+    provenance: Peng-Robinson as the pr row for the hydrocarbon phases; the IAPWS-95 steam table for the free-water phase
+    free_water: water-rich liquid only (x_w > 0.5), Lewis-Randall on pure water from IAPWS-95 in fugacity, enthalpy, entropy and volume. The aqueous phase is what the flash finds, not forced pure; solutes keep their EOS fugacities
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 273.16
+    - 640.0
+    P_Pa:
+    - 1000.0
+    - 100000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  l4_excluded:
+    twu-pr: VLE is the pr row's, so the pair carries the pr / twu-pr slice dew gap declared on the twu-pr row (measured 717386 vs 597284 Pa, rel 0.201)
+    twu-srk: VLE is the pr row's, so the pair carries the pr / twu-srk slice dew gap declared on the twu-srk row (measured 717386 vs 596571 Pa, rel 0.203)
+  validation: []
+  references:
+  - Wagner, W.; Pruss, A. J. Phys. Chem. Ref. Data 2002, 31, 387
+  - Peng, D.-Y.; Robinson, D. B. Ind. Eng. Chem. Fundam. 1976, 15, 59
+- id: kabadi-danner-free-water
+  name: Water/hydrocarbon free-water method (Kabadi-Danner + NBS)
+  family: cubic
+  adapter: ngdesign.thermo.cubic:KabadiDannerFreeWaterThermo
+  options:
+    eos: SRKMIXKD
+    kij_table: ChemSep PR
+    free_water: iapws95
+    mixing: kabadi_danner
+  params:
+    source: thermo IPDB (ChemSep) for the EOS; chemicals.iapws for IAPWS-95
+    provenance: Kabadi-Danner SRK as the kabadi-danner-srk row. The free-water phase uses IAPWS-95, which superseded the NBS/NRC 1984 steam tables the plan names; the Haar-Gallagher-Kell formulation itself is not implemented
+    free_water: water-rich liquid only (x_w > 0.5), Lewis-Randall on pure water from IAPWS-95 in fugacity, enthalpy, entropy and volume. The aqueous phase is what the flash finds, not forced pure; solutes keep their EOS fugacities
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 273.16
+    - 640.0
+    P_Pa:
+    - 1000.0
+    - 100000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  validation: []
+  references:
+  - Wagner, W.; Pruss, A. J. Phys. Chem. Ref. Data 2002, 31, 387
+  - Kabadi, V. N.; Danner, R. P. Ind. Eng. Chem. Process Des. Dev. 1985, 24, 537

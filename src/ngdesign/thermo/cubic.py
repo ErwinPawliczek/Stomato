@@ -47,12 +47,14 @@ from ngdesign.contracts.components import ComponentSet, data_definitions
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.thermo import _state
+from ngdesign.thermo.free_water import FreeWaterPhase
 from ngdesign.thermo.liquid_density import CorrelatedDensityPhase
 from ngdesign.thermo.options import (
     CUBIC_OPTION_DEFAULTS,
     AlphaFunction,
     CubicOptionValues,
     EnthalpyMethod,
+    FreeWater,
     LiquidDensity,
     MixingRule,
     SourTerm,
@@ -1312,6 +1314,14 @@ def configure_options(
             },
         )
 
+    if options.free_water != FreeWater.NONE:
+        attrs: dict[str, Any] = {
+            "free_water_index": ids.index("H2O") if "H2O" in ids else -1,
+            "free_water_eos": "PR" if getattr(eos, "__name__", "").startswith("PR") else "SRK",
+        }
+        gas_cls = type("FreeWaterGas", (FreeWaterPhase, gas_cls), attrs)
+        liquid_cls = type("FreeWaterLiquid", (FreeWaterPhase, liquid_cls), attrs)
+
     if options.liquid_density != LiquidDensity.EOS:
         gas_cls, liquid_cls = _density_phase_classes(
             options.liquid_density, gas_cls, liquid_cls, records, constants
@@ -1573,3 +1583,17 @@ class SrkCostaldThermo(OptionCubicEOS):
 
     eos = SRKMIX
     options = CubicOptionValues(liquid_density=LiquidDensity.COSTALD)
+
+
+class PrFreeWaterThermo(OptionCubicEOS):
+    """PRMIX with IAPWS-95 pure water in the free-water phase."""
+
+    eos = PRMIX
+    options = CubicOptionValues(free_water=FreeWater.IAPWS95)
+
+
+class KabadiDannerFreeWaterThermo(OptionCubicEOS):
+    """Kabadi-Danner SRK with IAPWS-95 pure water in the free-water phase."""
+
+    eos = SRKMIXKD
+    options = CubicOptionValues(mixing=MixingRule.KABADI_DANNER, free_water=FreeWater.IAPWS95)
