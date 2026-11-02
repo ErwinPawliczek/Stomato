@@ -1,4 +1,4 @@
-"""Claus sulfur recovery R2: Gibbs equilibrium per catalytic converter (``specs/backend/units/sulfur_recovery.md``).
+"""Claus sulfur recovery R2: Gibbs equilibrium per catalytic converter (units/sulfur_recovery.md).
 
 Each converter is at chemical equilibrium at T_eq = T + approach_K, by Gibbs minimisation
 over the converter species set on the ideal-gas JANAF basis (``_physics.gibbs``): minimise
@@ -107,7 +107,9 @@ class SulfurRecoveryR2:
         total_tail = math.fsum(gas.values())
         tail = thermo.flash_pt({cid: n / total_tail for cid, n in gas.items()}, t_cond, pressure, total_tail)
         total_sulfur = sulfur["S6"] + sulfur["S8"]
-        z_sulfur = {cid: n / total_sulfur for cid, n in sulfur.items() if n > 0.0} if total_sulfur else {"S8": 1.0}
+        z_sulfur = (
+            {cid: n / total_sulfur for cid, n in sulfur.items() if n > 0.0} if total_sulfur else {"S8": 1.0}
+        )
         sulfur_out = thermo.flash_pt(z_sulfur, t_cond, pressure, total_sulfur)
 
         duty = enthalpy_with_formation(tail) + enthalpy_with_formation(sulfur_out)

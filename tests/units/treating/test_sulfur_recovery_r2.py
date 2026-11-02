@@ -1,37 +1,78 @@
 """sulfur_recovery R2 tests (``specs/backend/units/sulfur_recovery.md``).
 
-The table comes from the spec's calc_sulfur_recovery.py, an independent extent-space
-solve of 2 H2S + SO2 -> 2 H2O + (3/6) S6 and -> (3/8) S8 with scipy fsolve on ln K.
+The oracle is the spec's calc_sulfur_recovery.py method, run here so it stays on the
+current formation data: an extent-space solve of 2 H2S + SO2 -> 2 H2O + (3/6) S6 and
+-> (3/8) S8 on ln K, by a different route from the element-potential Gibbs solver.
 """
 
 from __future__ import annotations
 
+import math
 from copy import deepcopy
 from typing import Any
 
 import pytest
+from scipy.optimize import fsolve
 
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.contracts.reactions import Reaction
+from ngdesign.units._physics.kinetics import ln_keq
 from ngdesign.units.balance import mass_and_atoms
-from ngdesign.units.treating.sulfur_recovery import SulfurRecovery, SulfurRecoveryError
+from ngdesign.units.treating.sulfur_recovery import (
+    SulfurRecovery,
+    SulfurRecoveryError,
+    _approach_extent,
+)
 from ngdesign.units.treating.sulfur_recovery_r2 import SulfurRecoveryR2, _converter_equilibrium
 
 GAS = {"H2S": 2.0, "SO2": 1.0, "H2O": 4.0, "N2": 10.0}
 SPECIES = ["H2S", "SO2", "H2O", "S6", "S8", "N2"]
 
 
-@pytest.mark.parametrize(
-    ("t", "h2s", "so2", "h2o", "s6", "s8"),
-    [
-        (500.0, 0.1484047, 0.0742023499, 5.8515953, 0.0510661578, 0.3088745),
-        (550.0, 0.300279162, 0.150139581, 5.69972084, 0.0789358317, 0.259495783),
-        (600.0, 0.524034079, 0.26201704, 5.47596592, 0.103411603, 0.199184908),
-    ],
-)
-def test_converter_table(t: float, h2s: float, so2: float, h2o: float, s6: float, s8: float) -> None:
+def _claus(sulfur: str, nu: float) -> Reaction:
+    return Reaction(
+        id=f"claus_{sulfur}",
+        stoichiometry={"H2S": -2.0, "SO2": -1.0, "H2O": 2.0, sulfur: nu},
+        base_component="SO2",
+        provenance="Claus reaction, test oracle",
+        equilibrium={"form": "from_gibbs"},
+    )
+
+
+def _extent_space(t: float, p: float = 1.3e5) -> dict[str, float]:
+    """Solve ln Q = ln K for both Claus routes on ideal-gas activities, by hand."""
+    routes = (_claus("S6", 0.5), _claus("S8", 0.375))
+    ln_k = [ln_keq(r, t) for r in routes]
+
+    def flows(u: Any) -> dict[str, float]:
+        """Unknowns keep every trial positive: the logit of the SO2 consumed, and of its S6 share."""
+        consumed = 1.0 / (1.0 + math.exp(-u[0]))
+        share = 1.0 / (1.0 + math.exp(-u[1]))
+        out = dict(GAS)
+        for reaction, x in zip(routes, (consumed * share, consumed * (1.0 - share)), strict=True):
+            for cid, nu in reaction.stoichiometry.items():
+                out[cid] = out.get(cid, 0.0) + nu * x
+        return out
+
+    def residual(u: Any) -> list[float]:
+        n = flows(u)
+        total = sum(n.values())
+        return [
+            sum(nu * math.log(n[cid] / total * p / 1.0e5) for cid, nu in r.stoichiometry.items()) - k
+            for r, k in zip(routes, ln_k, strict=True)
+        ]
+
+    root, _, status, message = fsolve(residual, [1.0, 0.0], xtol=1e-13, full_output=True)
+    assert status == 1, message
+    return flows(root)
+
+
+@pytest.mark.parametrize("t", [500.0, 550.0, 600.0])
+def test_converter_matches_the_extent_space_solve(t: float) -> None:
+    expected = _extent_space(t)
     out = _converter_equilibrium(GAS, t, 1.3e5, SPECIES)
-    for cid, value in (("H2S", h2s), ("SO2", so2), ("H2O", h2o), ("S6", s6), ("S8", s8)):
-        assert out[cid] == pytest.approx(value, rel=1e-6), cid
+    for cid in ("H2S", "SO2", "H2O", "S6", "S8"):
+        assert out[cid] == pytest.approx(expected[cid], rel=1e-7), cid
     assert out["N2"] == pytest.approx(10.0, rel=1e-10)
 
 
@@ -41,16 +82,15 @@ def test_conversion_falls_with_temperature() -> None:
 
 
 def test_reduces_to_r0_on_its_species_set() -> None:
-    """One degree of freedom, the Claus extent: R0's approach result to 1e-10.
-
-    Spec values from R0's _approach_extent at 473 K + 30 K, 1.5e5 Pa.
-    """
+    """One degree of freedom, the Claus extent: R0's own approach bisection, to 1e-10."""
     gas = {"H2S": 2.0, "SO2": 1.0, "H2O": 4.0, "N2": 10.0, "CO2": 1.0}
+    claus = _claus("S8", 0.375)
+    xi, _ = _approach_extent(gas, claus, 473.0, 30.0, 1.5e5)
     out = _converter_equilibrium(gas, 503.0, 1.5e5, ["H2S", "SO2", "H2O", "S8", "N2", "CO2"])
-    assert out["H2S"] == pytest.approx(0.15518331468558655, rel=1e-10)
-    assert out["SO2"] == pytest.approx(0.07759165734279327, rel=1e-10)
-    assert out["H2O"] == pytest.approx(5.844816685314413, rel=1e-10)
-    assert out["S8"] == pytest.approx(0.34590312849645255, rel=1e-10)
+    assert out["H2S"] == pytest.approx(2.0 - 2.0 * xi, rel=1e-10)
+    assert out["SO2"] == pytest.approx(1.0 - xi, rel=1e-10)
+    assert out["H2O"] == pytest.approx(4.0 + 2.0 * xi, rel=1e-10)
+    assert out["S8"] == pytest.approx(0.375 * xi, rel=1e-10)
 
 
 def _inlets(thermo: Thermo) -> dict[str, Any]:
@@ -88,7 +128,9 @@ def test_no_stages_is_the_furnace_alone(thermo: Thermo) -> None:
     params = SulfurRecoveryR2.example_case()[1]
     r2 = SulfurRecoveryR2().solve(inlets, {**params, "catalytic_stages": []}, thermo)
     r0 = SulfurRecovery().solve(inlets, {**params, "catalytic_stages": []}, thermo)
-    assert r2.outlets["sulfur_out"].molar_flow == pytest.approx(r0.outlets["sulfur_out"].molar_flow, rel=1e-12)
+    assert r2.outlets["sulfur_out"].molar_flow == pytest.approx(
+        r0.outlets["sulfur_out"].molar_flow, rel=1e-12
+    )
     assert r2.duty_W == pytest.approx(r0.duty_W, rel=1e-9)
 
 

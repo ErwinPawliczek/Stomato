@@ -102,4 +102,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-G 5
 
-> roadmap; S2 slice (plan §2b). Sour-water stripping is NOT a row here — it is a reboiled-stripper configuration on the electrolyte package (T-09, plan U-G 9).
+> R2 ships provisional on an independent extent-space ln K solve and the reduction to R0; no V1 converter case was searched for. Sour-water stripping is NOT a row here — it is a reboiled-stripper configuration on the electrolyte package (T-09, plan U-G 9).
