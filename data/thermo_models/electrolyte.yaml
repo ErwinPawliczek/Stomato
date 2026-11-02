@@ -736,3 +736,63 @@
     gibbs_duhem: the aqueous ln_phi carries the electrolyte chemistry (f_w == a_w Psat), not a
       Gibbs-excess composition derivative; flash consistency is pinned by
       tests/thermo/test_electrolyte_variants.py instead
+- id: amine_ke_dga_amp
+  name: Kent-Eisenberg DGA and AMP speciation (CO2)
+  family: electrolyte
+  adapter: ngdesign.amine.package:AmineKEExtendedPackage
+  options: {}
+  params:
+    source: data/thermo_params/amine/ke_speciation.yaml
+    provenance: >-
+      Kam van 't Hoff slopes from Khalili et al. 2009, Table 7; DGA carbamate from Austgen 1989,
+      Table 6.6; one apparent kam_a per amine fitted to Al-Juaied 2004 (DGA) and Kundu et al. 2003
+      (AMP), held-out rms ln p about 0.33. AMP has no carbamate term. CO2 only, H2S refuses.
+      DIPA is not included: no carbamate constant and no tabulated VLE were found.
+  applicability:
+    component_classes:
+    - water
+    - amine
+    - acid_gas
+    polar: true
+    electrolyte: true
+    T_K:
+    - 296.0
+    - 333.0
+    P_Pa:
+    - 100000.0
+    - 8000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Kent, R. L. & Eisenberg, B., Hydrocarbon Process. 55(2), 87-90, 1976
+  - Khalili, F., Henni, A. & East, A. L. L., J. Chem. Eng. Data 54, 2914-2917, 2009
+  - Kundu, M., Mandal, B. P. & Bandyopadhyay, S. S., J. Chem. Eng. Data 48, 789-796, 2003
+  - Austgen, D. M., PhD dissertation, University of Texas at Austin, 1989
+  - Al-Juaied, M. A., PhD dissertation, University of Texas at Austin, 2004
+  l0:
+    single_liquid_limit:
+      z: {124-68-5: 0.09, H2O: 0.89, CO2: 0.02}
+      state: [313.15, 5000000.0]
+    round_trip:
+      z: {124-68-5: 0.09, H2O: 0.89, CO2: 0.02}
+      states: [[313.15, 5000000.0]]
+    determinism:
+      z: {124-68-5: 0.09, H2O: 0.89, CO2: 0.02}
+      state: [313.15, 5000000.0]
+  l0_excluded:
+    pure_psat_limit: applicability is the aqueous amine liquid; the pure-component saturation limits of
+      the molecular databank components are not this package's claimed surface (the amine feed carries
+      reactive acid-gas chemistry)
+    phase_identification: 'same basis: the single-liquid limit replaces the vapour-pressure bracket for
+      the reactive liquid (flash consistency y_i P == p_eq_i is pinned by the P1-04 amine tests)'
+    dhdT_cp: the reactive-liquid cp is the carrier's databank cp plus the fixed-loading heat of absorption;
+      its T-derivative is not part of the reported cp, so the dH/dT == Cp identity does not apply to this
+      phase
+    gibbs_duhem: the reactive liquid's ln_phi carries the speciation equilibrium (f_i == p_eq_i phi_i^V),
+      not a Gibbs-excess composition derivative; the Gibbs-Duhem identity at fixed T, P is not the composition-consistency
+      surface here — flash consistency is pinned by the P1-04 tests instead
+  l0_note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the
+    single-liquid limit run today

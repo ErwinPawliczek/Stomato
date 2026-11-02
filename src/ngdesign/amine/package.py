@@ -65,6 +65,7 @@ from ngdesign.amine.equilibrium import ENRTL, KENT_EISENBERG
 from ngdesign.amine.kent_eisenberg import (
     _MAX_LOADING,
     AMINES,
+    extended_amines,
 )
 from ngdesign.amine.kent_eisenberg import (
     equilibrium_loadings as _ke_loadings,
@@ -81,13 +82,15 @@ from ngdesign.contracts.thermo import (
     SaturationError,
     SaturationPoint,
 )
-from ngdesign.data import components
+from ngdesign.data import DATABANK_LOCK, component_record, components
 from ngdesign.registry import register
 from ngdesign.thermo import _state
+from ngdesign.thermo.gamma_phi import _constants_for
 from ngdesign.thermo.saturation import solve_saturation
 
 __all__ = [
     "AmineENRTLPackage",
+    "AmineKEExtendedPackage",
     "AmineKEPackage",
     "AmineReactivePackage",
 ]
@@ -197,13 +200,13 @@ def _sander_henry_table() -> dict[str, dict[str, float]]:
 @cache
 def _mw(cid: str) -> float:
     """Molecular weight of a databanked component, g/mol."""
-    return float(components()[cid]["mw"])
+    return float(_comp(cid)["mw"])
 
 
 @cache
 def _cas(cid: str) -> str:
     """CAS number of a databanked component id."""
-    return str(components()[cid]["cas"])
+    return str(_comp(cid)["cas"])
 
 
 #: Pure-component liquid densities at 298.15 K, kg/m3 (GPSA / handbook values;
@@ -223,9 +226,32 @@ _PURE_LIQUID_DENSITIES: dict[str, float] = {
 }
 
 
+def _comp(cid: str) -> dict[str, Any]:
+    """Curated component entry; an extended amine reads the open registry's record."""
+    curated = components().get(cid)
+    if curated is not None:
+        return dict(curated)
+    record = component_record(cid)
+    if record is None:
+        raise KeyError(cid)
+    return {**record, "tc_K": record["Tc"], "pc_Pa": record["Pc"]}
+
+
+def _databank_liquid_density(cas: str) -> float:
+    """Liquid density at 298.15 K from the thermo databank correlations."""
+    with DATABANK_LOCK:
+        constants, correlations = _constants_for((cas,))
+    volume = correlations.VolumeLiquids[0](298.15, 101325.0)
+    if volume is None:
+        raise ValueError(f"no liquid volume for {cas} at 298.15 K")
+    return float(constants.MWs[0]) / 1000.0 / float(volume)
+
+
 @cache
 def _pure_liquid_density(cid: str) -> float:
     """Pure-component liquid density (kg/m3) of the molarity-basis species."""
+    if cid in extended_amines():
+        return _databank_liquid_density(cid)
     try:
         return _PURE_LIQUID_DENSITIES[cid]
     except KeyError:
@@ -242,7 +268,7 @@ def _sander_henry(cas: str) -> dict[str, float] | None:
 
 def _wilson_psat(cid: str, T: float) -> float:
     """Wilson-correlation Psat estimate (Pa) from databank criticals (bracket helper)."""
-    comps = components()[cid]
+    comps = _comp(cid)
     return float(comps["pc_Pa"]) * math.exp(
         5.373 * (1.0 + float(comps["omega"])) * (1.0 - float(comps["tc_K"]) / T)
     )
@@ -250,7 +276,7 @@ def _wilson_psat(cid: str, T: float) -> float:
 
 def _wilson_T(cid: str, P: float) -> float | None:
     """Wilson-correlation saturation-temperature estimate (K); None when unusable."""
-    comps = components()[cid]
+    comps = _comp(cid)
     tc, pc, omega = float(comps["tc_K"]), float(comps["pc_Pa"]), float(comps["omega"])
     if P >= pc:
         return None
@@ -271,6 +297,9 @@ class AmineReactivePackage(Thermo):
 
     #: Speciation chemistry model (``ngdesign.amine.equilibrium`` names).
     model: str = KENT_EISENBERG
+
+    #: Component ids this package treats as its solvent amine.
+    supported_amines: frozenset[str] = frozenset(AMINES)
 
     #: Duck-typing marker the amine units probe (plain cubic packages lack it).
     is_amine_reactive_package = True
@@ -314,7 +343,7 @@ class AmineReactivePackage(Thermo):
 
     def _amine_id(self, ids: tuple[str, ...]) -> str | None:
         """The one supported amine, or None; multiple amines raise."""
-        present = [cid for cid in ids if cid in AMINES]
+        present = [cid for cid in ids if cid in self.supported_amines]
         if not present:
             return None
         if len(present) > 1:
@@ -1150,6 +1179,24 @@ def _phase(kind: PhaseKind, mole_fraction: float, composition: dict[str, float],
 @register("thermo", "amine_ke")
 class AmineKEPackage(AmineReactivePackage):
     """Amine reactive absorption on the Kent-Eisenberg chemistry (MDEA/MEA/DEA, CO2+H2S)."""
+
+
+class AmineKEExtendedPackage(AmineKEPackage):
+    """Kent-Eisenberg on DGA (929-06-6) and AMP (124-68-5), CO2 only.
+
+    Same chemistry and flash as amine_ke with the sets of
+    data/thermo_params/amine/ke_speciation.yaml. H2S refuses: no open data backs a
+    lumped H2S constant for either amine.
+    """
+
+    supported_amines = frozenset(extended_amines())
+
+    def _reactive_domain(self, z: dict[str, float]) -> str | None:
+        if z.get("H2S", 0.0) > 0.0 and any(cid in self.supported_amines for cid in z):
+            raise AmineChemistryError(
+                "no open H2S constant for DGA or AMP: amine_ke_dga_amp carries CO2 only"
+            )
+        return super()._reactive_domain(z)
 
 
 @register("thermo", "amine_enrtl")
