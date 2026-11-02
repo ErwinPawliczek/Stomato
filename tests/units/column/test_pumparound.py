@@ -16,7 +16,8 @@ import pytest
 
 from ngdesign import registry
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units.column.spec import ColumnConvergenceError, ColumnSpecError
+from ngdesign.contracts.stream import PhaseKind
+from ngdesign.units.column.spec import ColumnSpecError
 
 
 def _base_params() -> dict[str, Any]:
@@ -240,38 +241,49 @@ def test_unimplemented_feature_keys_parse_then_refuse_at_solve() -> None:
     _parse_only({**_base_params(), "condenser_water_decant": False})
 
 
-def test_pumparound_flow_exceeding_internal_liquid_refused() -> None:
-    """A pumparound flow far above the column's internal traffic fails loudly (PR #238 review item 4).
+def test_pumparound_flow_exceeding_internal_liquid_converges() -> None:
+    """A pumparound flow above the column's internal liquid is a real operating point.
 
-    500 mol/s recirculated through a column whose internal liquid is tens of
-    mol/s cannot run: the fixed-return-temperature loop pulls the draw stage
-    below its bubble regime and the solve raises ColumnConvergenceError from
-    the exact-residual gate instead of returning a column with a silently
-    clamped profile. That convergence failure IS the protection (the round-1
-    flow-vs-internal-liquid gate is unreachable - see _check_pumparounds), so
-    the narrowed assertion pins the typed convergence verdict, not a
-    spec-refusal class no input can reach.
+    Formerly ``..._refused`` (PR #238 review item 4): 500 mol/s drawn from
+    stage 12 and returned to stage 8 at 335 K was expected to fail. It is
+    feasible - the return feeds the stages between, so stages 8-11 carry
+    ~727 mol/s of liquid and the draw takes 500 of it back - and the old
+    failure was the solver's (P1-13: the rounded property cache and the
+    two-tear sweep line, not the physics). Independent checks: every stage
+    sits at its liquid's bubble point, every internal flow is positive, the
+    reported loop duty is the thermo's own liquid enthalpy change over the
+    loop, and the overall balance closes. Measured (P1-13): D = 44.9046,
+    draw T = 338.391 K, loop duty -271.83 kW.
     """
-    unit = registry.create("unit", "column")
     thermo = registry.create("thermo", "pr")
     feed = thermo.flash_pt(_feed()["composition"], 330.0, 1.5e6, 100.0)
-    with pytest.raises(ColumnConvergenceError, match="did not converge"):
-        unit.solve(
-            {"feed": feed},
-            {
-                **_base_params(),
-                "pumparounds": [
-                    {
-                        "name": "huge",
-                        "draw_stage": 12,
-                        "return_stage": 8,
-                        "flow_mol_s": 500.0,
-                        "return_T_K": 335.0,
-                    }
-                ],
-            },
-            thermo,
-        )
+    result = registry.create("unit", "column").solve(
+        {"feed": feed},
+        {
+            **_base_params(),
+            "pumparounds": [
+                {
+                    "name": "huge",
+                    "draw_stage": 12,
+                    "return_stage": 8,
+                    "flow_mol_s": 500.0,
+                    "return_T_K": 335.0,
+                }
+            ],
+        },
+        thermo,
+    )
+    info = result.info
+    for j in range(16):
+        x = {c: info[f"stage_{j}_x_{c}"] for c in ("C3", "iC4")}
+        assert thermo.bubble_point(x, P=1.5e6).T == pytest.approx(info[f"stage_{j}_T_K"], abs=1e-3), j
+        assert info[f"stage_{j}_L_mol_s"] > 0.0 and info[f"stage_{j}_V_mol_s"] > 0.0, j
+    assert max(info[f"stage_{j}_L_mol_s"] for j in range(16)) > 500.0
+    x_draw = {c: info[f"stage_11_x_{c}"] for c in ("C3", "iC4")}
+    h_draw = thermo.phase_props(x_draw, info["pa_huge_draw_T_K"], 1.5e6, PhaseKind.HC_LIQUID).enthalpy
+    h_ret = thermo.phase_props(x_draw, 335.0, 1.5e6, PhaseKind.HC_LIQUID).enthalpy
+    assert info["pa_huge_duty_W"] == pytest.approx(500.0 * (h_ret - h_draw), rel=1e-6)
+    assert info["distillate_mol_s"] + info["bottoms_mol_s"] == pytest.approx(100.0, rel=1e-10)
 
 
 # ---------------------------------------------------------------------------

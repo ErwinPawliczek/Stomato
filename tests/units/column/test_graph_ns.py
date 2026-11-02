@@ -465,21 +465,14 @@ def test_ns_engines_parity_from_one_entry_state(thermo: Thermo) -> None:
     assert dense_out.ns_used and graph_out.ns_used
 
 
-@pytest.mark.xfail(strict=True, reason="#332")
 def test_ns_engines_parity_within_1e_10_and_fd_floor(thermo: Thermo) -> None:
     """The numeric NS-exit parity claim: x/T at the spec's 1e-10, V at the
     measured coloured-vs-column FD floor.
 
-    xfail(strict=True) because the rounded first-seen property cache
-    (issue #332) is what blocks it while open - measured with the cache
-    open: x <= 9.24e-7, T <= 5.04e-8, V <= 4.38e-6; with exact cache keys:
-    x <= 2.87e-10, T <= 1.56e-11, V <= 1.37e-9. CAVEAT for the #332 ratchet:
-    with exact keys T and V meet 1e-10 / the ~1.4e-9 FD floor, but x sits at
-    2.87e-10 - the pass-1 coloured-vs-column FD difference the review
-    measured (3.5e-10 on |d|=13.3) - so after #332 merges this test is
-    expected to still fail on x: the FD floor, not the cache, is then the
-    binding constraint, and the x bound must be re-judged against it (not
-    silently widened).
+    Was xfail(strict=True) on the rounded first-seen property cache (issue
+    #332; measured with it: x <= 9.24e-7, T <= 5.04e-8, V <= 4.38e-6). With
+    exact cache keys and the fugacity K surface (P1-13) it passes at the
+    bounds below unchanged.
     """
     col, dense_out, graph_out = _ns_entry_state_parity(thermo)
     for j in range(col.n):

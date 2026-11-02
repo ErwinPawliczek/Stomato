@@ -25,6 +25,10 @@ from .spec import _FLOW_FLOOR
 #: Mole-fraction floor for a fugacity evaluation: a species a stage has not yet
 #: seen still needs a coefficient (reaction products, trace keys).
 _K_TRACE = 1e-30
+#: Vapour fixed point inside ``k_fugacity``: iteration cap and the largest
+#: mole-fraction move accepted as converged.
+_K_FIXED_POINT_MAX = 30
+_K_FIXED_POINT_TOL = 1e-14
 
 
 class _ThermoBox:
@@ -56,11 +60,9 @@ class _ThermoBox:
         #: pooled column or a reactive amine package, whose K and liquid
         #: enthalpy are flash results.
         self.direct_phases = not pool_liquids and not getattr(thermo, "is_amine_reactive_package", False)
-        #: True inside an inside-out model refresh. The sweep is the globaliser
-        #: and keeps the flash surface it is calibrated on: its bubble update
-        #: needs a K that moves with T alone, and on the composition-dependent
-        #: fugacity K the 22-stage deethanizer's sweeps diverge (measured V =
-        #: 2533 mol/s by sweep 4). Newton and the gate read the exact surface.
+        #: True inside a zero/one-tear inside-out model refresh, which reads
+        #: the flash surface (see ``_refresh_model``). Newton, the gate and
+        #: two-tear sweeps read ``exact_surface``.
         self.sweeping = False
         self._pt_cache: dict[tuple[Any, ...], StreamState] = {}
         self._k_cache: dict[tuple[Any, ...], dict[str, float] | None] = {}
@@ -87,6 +89,28 @@ class _ThermoBox:
     def exact_surface(self) -> bool:
         """True where K and enthalpies are the single-phase fugacity surface."""
         return self.direct_phases and not self.sweeping
+
+    @property
+    def pooled_exact(self) -> bool:
+        """A pooled column outside a sweep: its homogeneous stages read the exact surface.
+
+        A stage with one liquid IS a plain stage, so it takes the plain
+        column's K and enthalpies (P1-13); only a stage whose contents split
+        into two liquids keeps the pooled flash reading. Measured: a dry 8-stage
+        nC4/iC4 kettle stripper through the pooled path settled 0.05 K below
+        its top stage's bubble point on the flash K (whose phases are not the
+        stage's x), against the plain column's exact bubble point.
+        """
+        return (
+            self.pool_liquids
+            and not self.sweeping
+            and not getattr(self._thermo, "is_amine_reactive_package", False)
+        )
+
+    def heterogeneous(self, z: dict[str, float], T: float, P: float) -> bool:
+        """True when the memoized flash of z at (T, P) carries two or more liquids."""
+        state = self.pt(z, T, P)
+        return sum(1 for p in state.phases if p.kind != PhaseKind.VAPOR) >= 2
 
     def _liquid(self, state: StreamState) -> tuple[dict[str, float], float, float] | None:
         """(composition, enthalpy, cp) of the state's liquid; None without one.
@@ -164,12 +188,33 @@ class _ThermoBox:
         y_n = {cid: v / ys for cid, v in trace.items()}
         try:
             liquid = self._thermo.phase_props(x_n, T, P, PhaseKind.HC_LIQUID).ln_phi
-            vapour = self._thermo.phase_props(y_n, T, P, PhaseKind.VAPOR).ln_phi
         except ValueError:
             return None
-        if not liquid or not vapour:
+        if not liquid:
             return None
-        return {cid: math.exp(liquid[cid] - vapour[cid]) for cid in x}
+        # phi^V at the vapour this liquid is in equilibrium with: successive
+        # substitution y <- K x / sum(K x) to a fixed point, so K is a function
+        # of (x, T, P) alone and the caller's seed only picks the start. With
+        # a single pass from the seed, Newton's pass-frozen seed and the gate's
+        # refreshed one read two K surfaces (measured deethanizer at the spec
+        # tears: rows predicted M = 1.4e-2, the gate read 2.0e-2 every pass).
+        k: dict[str, float] = {}
+        for _ in range(_K_FIXED_POINT_MAX):
+            try:
+                vapour = self._thermo.phase_props(y_n, T, P, PhaseKind.VAPOR).ln_phi
+            except ValueError:
+                return None
+            if not vapour:
+                return None
+            k = {cid: math.exp(liquid[cid] - vapour[cid]) for cid in x}
+            kx = {cid: max(k[cid] * x_n[cid], _K_TRACE) for cid in x}
+            s = sum(kx.values())
+            y_new = {cid: v / s for cid, v in kx.items()}
+            moved = max(abs(y_new[cid] - y_n[cid]) for cid in x)
+            y_n = y_new
+            if moved <= _K_FIXED_POINT_TOL:
+                break
+        return k
 
     def k_values(self, candidates: list[dict[str, float]], T: float, P: float) -> dict[str, float] | None:
         """K_i = y_i/x_i from the first two-phase candidate's cached PT flash.
@@ -347,10 +392,11 @@ class _ThermoBox:
         inside-out mesh early and the total-reflux/Fenske oracle columns then
         fail to converge; see the PR findings for both numbers.
         """
-        if self.exact_surface:
+        if self.exact_surface or (self.pooled_exact and (vapor or not self.heterogeneous(z, T, P))):
             # The phase AT z: a flash of z hands back a phase of another
             # composition, and which one jumps at the bubble surface. Falls
             # through only for a package that refuses the single-phase build.
+            # A pooled liquid that splits keeps the pooled flash reading below.
             try:
                 built = self._thermo.phase_props(z, T, P, PhaseKind.VAPOR if vapor else PhaseKind.HC_LIQUID)
                 return built.enthalpy, built.cp, T

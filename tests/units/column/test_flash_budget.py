@@ -23,6 +23,13 @@ controller was measured to add zero flashes on this non-reactive case
 (6,508 identical with and without it). The bound below is re-pinned to the
 achieved level with regression headroom, on the same reasoning as the
 original 15 % → 50 % re-pin.
+
+P1-13 (measured): the stage K and enthalpies of plain columns are now the
+single-phase fugacity surface (``phase_props``), not flash results, so the
+case runs 22 flashes plus 30,812 ``phase_props`` builds (was 6,508 flashes
+plus 66 builds); total wall 7.2 s against 9.5 s. The bound below counts
+flashes only, so it no longer measures the column's thermo cost; the
+``props_calls`` column of ``bench/baseline.json`` does.
 """
 
 from __future__ import annotations

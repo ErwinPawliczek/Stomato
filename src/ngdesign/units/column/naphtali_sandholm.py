@@ -31,9 +31,9 @@ from .spec import (
     _MESH_M_TOL,
     _MESH_M_TOL_REACTIVE,
     _MESH_M_TOL_ZERO_ONE_TEAR,
-    _POLISH_M_TOL_ZERO_ONE_TEAR,
     _NS_MAX,
     _NS_MAX_ZERO_ONE_TEAR,
+    _POLISH_M_TOL_ZERO_ONE_TEAR,
     ColumnConvergenceError,
     _is_reactive_package,
 )

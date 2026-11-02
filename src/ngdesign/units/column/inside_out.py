@@ -395,16 +395,19 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
     if t_bot > t_top + 20.0:
         col.t_band_lo = max(t_top - 30.0, 150.0)
         col.t_band_hi = min(t_bot + 30.0, 600.0)
-    if tb.direct_phases:
-        # The band is a trust region and must contain the column: the seed's
-        # T_bottom is an average split's, and a kettle pushed heavier sits
-        # above it (22-stage deethanizer: the seed band topped out at 363 K with
-        # n-butane boiling at 365 K, and Newton parked stages on the clamp).
-        # Only the ceiling: a floor at the lightest component's saturation
-        # (methane, ~175 K at 1.7 MPa) lets the sweeps dive and diverge.
-        ext = _extreme_seed(col, tb)
-        if ext is not None:
-            col.t_band_hi = max(col.t_band_hi, ext[1] + 10.0)
+    # The band is a trust region and must contain the column (P1-13): the
+    # seed's T_bottom is an average split's, and a kettle pushed heavier sits
+    # above it. Measured 22-stage deethanizer at tears (111, 131): the seed band
+    # topped out at 363.09 K, nine bottom stages sat clamped there with bubble
+    # points up to 373.8 K, and the mesh "converged" on that clamped profile.
+    # The floor likewise: the deethanizer at R = 3, D = 37 has its top stage at
+    # 259.05 K, below the seed floor of 264.46 K, so no profile inside the old
+    # band could satisfy the spec. The band now spans the lightest to the
+    # heaviest component's saturation temperature, 10 K beyond each.
+    ext = _extreme_seed(col, tb)
+    if ext is not None:
+        col.t_band_hi = max(col.t_band_hi, ext[1] + 10.0)
+        col.t_band_lo = min(col.t_band_lo, ext[0] - 10.0)
     return col
 
 
@@ -808,9 +811,10 @@ def _seed_profile(
 class _InnerModel:
     """Frozen per-sweep models: raw K, alpha_ij, the ln Kb = A + B/T fit, enthalpy lines.
 
-    Zero/one-tear columns additionally carry per-stage correlation lines
-    (``corr_a_s``/``corr_b_s``) anchored on each stage's own (T, ln Kb) history
-    (``kb_hist``) - the Boston-Sullivan scheme - instead of the column-wide fit.
+    Every column carries per-stage correlation lines (``corr_a_s``/``corr_b_s``)
+    through each stage's own current (T, ln Kb) point - the Boston-Sullivan
+    scheme. Zero/one-tear columns fit the slope on the stage's history
+    (``kb_hist``); two-tear columns take the column-wide slope (P1-13).
     """
 
     k_raw: list[dict[str, float]]
@@ -822,8 +826,8 @@ class _InnerModel:
     h_liq: list[tuple[float, float, float]]  # per stage, liquid
     h_cond: tuple[float, float, float] | None  # condensate (total-condenser reflux) line
     fit_T: list[float]  # temperatures the enthalpy lines were fitted at
-    corr_a_s: list[float] = field(default_factory=list)  # per-stage intercepts (n_tears < 2)
-    corr_b_s: list[float] = field(default_factory=list)  # per-stage slopes (n_tears < 2)
+    corr_a_s: list[float] = field(default_factory=list)  # per-stage intercepts
+    corr_b_s: list[float] = field(default_factory=list)  # per-stage slopes
     kb_hist: tuple[tuple[tuple[float, float], ...], ...] = ()  # per-stage (T, ln Kb) points
 
 
@@ -938,15 +942,24 @@ def _stage_k_values(
     candidate chain, the fallbacks and the plain-column behaviour are
     identical either way.
     """
-    if _fugacity_k(col, tb):
+    contents: dict[str, float] | None = None
+    if tb.pool_liquids and y_j and l_flow + v_flow > _FLOW_FLOOR:
+        total = l_flow + v_flow
+        contents = {
+            cid: (l_flow * x_j.get(cid, 0.0) + v_flow * y_j.get(cid, 0.0)) / total for cid in col.comps
+        }
+    homogeneous_pooled = tb.pooled_exact and not tb.heterogeneous(
+        _flash_ready({c: v for c, v in (contents or x_j).items() if v > 0.0}, col.feed_comp),
+        t_j,
+        col.pressures[j],
+    )
+    if _fugacity_k(col, tb) or homogeneous_pooled:
         x_flash = _flash_ready({cid: x_j.get(cid, 0.0) for cid in col.comps}, col.feed_comp)
-        # One fixed-point pass from the caller's vapour, so the K of a trial x
-        # answers to that x's own equilibrium vapour; deterministic in (x, y).
-        seed = y_j or x_flash
-        k0 = tb.k_fugacity(x_flash, seed, t_j, col.pressures[j])
-        if k0 is not None:
-            y1 = {cid: k0[cid] * x_flash[cid] for cid in col.comps}
-            return tb.k_fugacity(x_flash, y1, t_j, col.pressures[j])
+        # The caller's vapour only seeds the fixed point inside k_fugacity:
+        # the K of a trial x answers to that x's own equilibrium vapour.
+        k_fug = tb.k_fugacity(x_flash, y_j or x_flash, t_j, col.pressures[j])
+        if k_fug is not None:
+            return k_fug
     candidates = [
         _flash_ready(x_j, col.feed_comp),
         _flash_ready(
@@ -955,15 +968,11 @@ def _stage_k_values(
         ),
         col.feed_comp,
     ]
-    if tb.pool_liquids and y_j and l_flow + v_flow > _FLOW_FLOOR:
+    if contents is not None:
         # A heterogeneous stage boils on a plateau: just above its bubble point
         # a flash of the liquid alone vaporises a large share and hands back a
         # pooled liquid that is not x_j. The stage's own contents L x + V y are
         # what flash back to (x_j, y_j) at the solution, so they go first.
-        total = l_flow + v_flow
-        contents = {
-            cid: (l_flow * x_j.get(cid, 0.0) + v_flow * y_j.get(cid, 0.0)) / total for cid in col.comps
-        }
         candidates.insert(0, _flash_ready({c: v for c, v in contents.items() if v > 0.0}, col.feed_comp))
     return tb.k_values(
         candidates,
@@ -981,18 +990,30 @@ def _refresh_model(
 ) -> _InnerModel:
     """One outer sweep: real K-values per stage, alpha against a column-wide reference
     component, the ln Kb = A + B/T correlation (least squares over the stage points),
-    and per-stage linear enthalpy models (refitted only when temperatures moved)."""
-    tb.sweeping = True
+    and per-stage linear enthalpy models (refitted only when temperatures moved).
+
+    Surface (P1-13): a two-tear sweep reads the K and enthalpies Newton and the
+    gate read (``exact_surface``). Measured 22-stage deethanizer at tears
+    (111, 131): its sweeps on the flash surface cycle at gate M ~ 0.7 for 40
+    sweeps, and Newton from there stalls; on the exact surface the best sweep
+    (M = 4.7e-2) hands Newton a state it closes quadratically in four passes
+    to M = 6.9e-15. A zero/one-tear sweep reads the flash surface: its gas-rich
+    absorber stages carry liquids with no physical liquid root, where the
+    single-phase liquid build degenerates toward K = 1 (measured 8-stage
+    C1/nC4 absorber: stages starved to V = 0 at the 270 K band floor, H
+    stalled at 2.2e-2). Its Newton polish and gate read the exact surface.
+    """
+    tb.sweeping = col.n_tears < 2
     try:
-        return _refresh_model_on_flash_surface(col, tb, prof, model, damp)
+        return _refresh_model_on_surface(col, tb, prof, model, damp)
     finally:
         tb.sweeping = False
 
 
-def _refresh_model_on_flash_surface(
+def _refresh_model_on_surface(
     col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerModel | None, damp: float
 ) -> _InnerModel:
-    """The sweep's K and enthalpy models, read from flashes (see ``_ThermoBox.sweeping``)."""
+    """The body of `_refresh_model`, on the surface it selected."""
     n = col.n
     # Reaction terms are frozen across the inner loop with the other models.
     _refresh_reactions(col, prof.x, prof.T)
@@ -1008,8 +1029,10 @@ def _refresh_model_on_flash_surface(
     weights = {
         cid: sum(k_stages[j].get(cid, 0.0) * prof.x[j].get(cid, 0.0) for j in range(n)) for cid in col.comps
     }
-    if model is not None and col.n_tears < 2:
+    if model is not None:
         # Boston-Sullivan: the reference component is FIXED for the whole solve.
+        # Two-tear columns too (P1-13): their per-stage anchored lines below
+        # need one reference component across sweeps.
         # Re-picking it every sweep from the x-weighted K sums flips Kb between
         # components as the compositions sharpen (measured P1-09 C1/nC4 absorber:
         # nC4 at sweep 1, C1 from sweep 2, because K_C1 ~ 8.5 >> K_nC4 ~ 0.15
@@ -1053,11 +1076,9 @@ def _refresh_model_on_flash_surface(
     # isothermal start every stage sits at the same T, the column-wide fit is
     # degenerate (no slope information), and its noise walks the stages out of
     # the two-phase window (measured on the 8/20-stage absorber: the walk never
-    # recovers). Gated on the configuration: a two-tear column keeps the column-
-    # wide line for its sweeps (per-stage lines diverge on the 22-stage
-    # deethanizer); that line leaves stages off their bubble points, up to 1.5
-    # mol% in y on the plain 16-stage column, which is why Newton on the exact
-    # surface finishes every two-tear mesh (P1-13).
+    # recovers). A two-tear column keeps the column-wide SLOPE (history slopes
+    # diverge on the 22-stage deethanizer) but anchors each stage's intercept
+    # on its own (T_j, ln Kb_j) below (P1-13).
     corr_a_s: list[float] = []
     corr_b_s: list[float] = []
     kb_hist_new: list[tuple[tuple[float, float], ...]] = []
@@ -1086,6 +1107,18 @@ def _refresh_model_on_flash_surface(
             corr_a_s.append(a_fit)
             corr_b_s.append(b_fit)
             kb_hist_new.append(hist)
+    else:
+        # The column-wide line ln Kb = A + B/T misses each stage's own point,
+        # so at the outer fixed point the model's bubble temperature is not
+        # the stage's: alpha_ij Kb_line(T_j) != K_ij and sum_i K_ij x_ij != 1.
+        # Measured on the 22-stage deethanizer: stages 0.5-1 K off their
+        # bubble points, which the gate (summation rows included) rejects.
+        # Anchored at (T_j, ln Kb_j) with the column-wide slope, the model
+        # reproduces the stage's real K at T_j, so the outer fixed point is the
+        # MESH solution itself.
+        for j in range(n):
+            corr_b_s.append(corr_b)
+            corr_a_s.append(math.log(kb[j]) - corr_b / prof.T[j])
 
     # Refit the enthalpy anchors every sweep: near convergence temperatures
     # barely move, so a refit-on-temperature-drift rule left the lines anchored
@@ -1367,7 +1400,7 @@ def _inner_solve(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: f
         t_new = []
         for j in range(n):
             corr_a_j, corr_b_j = (
-                (model.corr_a_s[j], model.corr_b_s[j]) if col.n_tears < 2 else (model.corr_a, model.corr_b)
+                (model.corr_a_s[j], model.corr_b_s[j]) if model.corr_a_s else (model.corr_a, model.corr_b)
             )
             denom = math.log(kb[j]) - corr_a_j
             t_corr = corr_b_j / denom if abs(denom) > 1e-12 else t_old[j]
