@@ -387,14 +387,39 @@
       description: bottoms
   levels:
     R2:
-      status: planned
-      params: {}
-      note: MESH + reaction set on the stage holdup (the reaction-set contract is U-R's)
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.reactive_stages:ReactiveStages
+      params:
+        type: object
+        required: [n_stages, condenser, reboiler, feed_stage, specs, reaction_set, reactive_holdup_m3]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, description: 'equilibrium stages, 1..N top to bottom'}
+          condenser: {type: string, description: 'total | partial | none'}
+          reboiler: {type: string, description: 'kettle | none'}
+          feed_stage: {type: integer, description: main feed stage}
+          pressure_profile: {type: number, description: 'top pressure or per-stage profile, Pa'}
+          specs: {type: object, description: 'one spec per tear, as the column row'}
+          reaction_set: {type: object, description: 'ReactionSet document; kinetics on the mole_fraction basis, reversible reactions by an explicit reverse rate'}
+          reactive_holdup_m3: {type: object, description: '{stage: liquid holdup, m3}; never on a condenser or kettle stage'}
+      note: MESH with kinetic source terms on the stage liquid holdup; equilibrium is the large-holdup limit, there is no chemical-equilibrium stage model; heat of reaction on the formation-enthalpy basis
+      validation: []
       end_state: true
+  balance: mass_elements
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 8
-  notes: amine chemistry lives in the property package, not the stage (plan note).
+  - Taylor & Krishna, Chem. Eng. Sci. 55 (2000) 5183
+  - Fogler, Elements of Chemical Reaction Engineering, Example 11-3 (example kinetics)
+  notes: >-
+    Amine chemistry lives in the property package, not the stage (plan note).
+    V1 gap — provisional without a case; checked by hand-evaluated stage rates,
+    the zero-holdup reduction to the plain column, and the large-holdup limit on
+    the book's K_C(T) (tests/units/column_shortcut/test_reactive_stages.py).
+    Measured limits: the two-tear path does not converge on the narrow nC4/iC4
+    split with or without reaction (1 MPa, 12 stages), and the ethylene oxide
+    hydration benchmark does not converge on PR on either path, also with or
+    without reaction; the example therefore uses a one-tear kettle column.
 
 - id: liquid_liquid_extractor
   name: Liquid-liquid extractor
