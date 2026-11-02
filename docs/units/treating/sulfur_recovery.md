@@ -2,7 +2,7 @@
 
 Family: **treating** · P&ID symbol: `SRU`
 
-Rigour ladder: R0 provisional, R2 planned
+Rigour ladder: R0 provisional, R2 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.treating.sulfur_recovery:SulfurRecovery` | condenses S8 only (databank species with usable formula + formation data — recorded choice); hydrocarbons pass through unburned at R0; V1 case on GPSA EDB Sect. 22 Ex. 22-1 printed stage results — the example's printed overall recovery is not accessible in any copy reachable (official GPSA workbook companion ends at the first converter), so it is a documented V1 gap and the level stays provisional |
-| R2 | planned | — | Gibbs per stage |
+| R2 | provisional | `ngdesign.units.treating.sulfur_recovery_r2:SulfurRecoveryR2` | Gibbs equilibrium per catalytic converter (isothermal; S6/S8, optionally COS/CS2); furnace = R0 rule (S2 data missing); complete sulfur condensation (package S8 Psat unusable) |
 
 ### R0 parameters
 
@@ -50,6 +50,45 @@ properties:
 type: object
 ```
 
+### R2 parameters
+
+```yaml
+properties:
+  P:
+    description: process pressure (Pa abs)
+    type: number
+  T_condenser:
+    description: sulfur condenser temperature (K); complete S6+S8 condensation
+    type: number
+  T_thermal:
+    description: reaction-furnace temperature (K); R0 thermal rule
+    type: number
+  catalytic_stages:
+    description: one {T, approach_K?} per converter; Gibbs equilibrium at T + approach_K,
+      isothermal
+    type: array
+  extra_species:
+    description: any of COS, CS2, CO, H2, added to every converter Gibbs set
+    type: array
+  reaction_set:
+    description: flowsheet-owned set for the thermal stage (H2S burn + Claus), as
+      at R0
+    type: object
+  thermal_conversion:
+    description: Claus conversion of the post-burn SO2 in the furnace (R0 rule)
+    maximum: 1
+    minimum: 0
+    type: number
+required:
+- T_thermal
+- P
+- T_condenser
+- thermal_conversion
+- catalytic_stages
+- reaction_set
+type: object
+```
+
 ## V1 worked cases
 
 | case | level | quantity | expected | measured | tolerance | result |
@@ -63,4 +102,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-G 5
 
-> roadmap; S2 slice (plan §2b). Sour-water stripping is NOT a row here — it is a reboiled-stripper configuration on the electrolyte package (T-09, plan U-G 9).
+> R2 ships provisional on an independent extent-space ln K solve and the reduction to R0; no V1 converter case was searched for. Sour-water stripping is NOT a row here — it is a reboiled-stripper configuration on the electrolyte package (T-09, plan U-G 9).

@@ -41,6 +41,9 @@ from chemicals.heat_capacity import (
     Poling,
     Poling_integral,
     Poling_integral_over_T,
+    Shomate,
+    Shomate_integral,
+    Shomate_integral_over_T,
     TRCCp,
     TRCCp_integral,
     TRCCp_integral_over_T,
@@ -271,8 +274,13 @@ class _SaturationCurve(_Curve):
         return float((self.hf + self.dh(T) - self._g(T)) / T)
 
 
-class _LiquidFitCurve(_Curve):
-    """Tabulated liquid Cp(T): Zabransky cubic splines or a DIPPR 100 polynomial."""
+class _CpFitCurve(_Curve):
+    """Tabulated Cp(T) anchored on S°298: Zabransky splines, DIPPR 100, or Shomate Cp pieces.
+
+    H and S integrate Cp from 298.15 K across piece boundaries; for Shomate pieces
+    without their F, G, H constants (the WebBook snapshot) this is how the curve is
+    anchored at all.
+    """
 
     def __init__(self, pieces: Sequence[Mapping[str, Any]], s298: float) -> None:
         self.pieces = sorted(pieces, key=lambda p: float(p["Tmin"]))
@@ -284,6 +292,14 @@ class _LiquidFitCurve(_Curve):
     @staticmethod
     def _antiderivatives(piece: Mapping[str, Any], T: float) -> tuple[float, float, float]:
         """(Cp, ∫Cp dT, ∫Cp/T dT) of one piece, up to its constants."""
+        if piece["form"] == "shomate_cp":
+            # the snapshot stores the Shomate form in kelvin, Cp = A + BT + CT² + DT³ + E/T²
+            A, B, C, D, E = (float(piece[k]) for k in "ABCDE")
+            return (
+                float(Shomate(T, A, B, C, D, E)),  # type: ignore[no-untyped-call]
+                float(Shomate_integral(T, A, B, C, D, E)),  # type: ignore[no-untyped-call]
+                float(Shomate_integral_over_T(T, A, B, C, D, E)),  # type: ignore[no-untyped-call]
+            )
         if piece["form"] == "dippr100":
             A, B, C, D, E = (float(piece[f"a{i}"]) / 1000.0 for i in range(5))  # per kmol to per mol
             return (
@@ -507,7 +523,7 @@ def species_thermo(query: str, phase: str = "gas", hf_source: str | None = None)
             hf = next(float(r["Hf"]) for r in janaf[0] if float(r["T"]) == T_REF)
             provenance["hf298"] = f"janaf [{chosen.grade}] JANAF table {janaf[1]}"
     else:
-        pieces = chemdb.shomate(species.cas, phase)
+        pieces = [row for row in chemdb.shomate(species.cas, phase) if row["F"] is not None]
         if pieces:
             curve = _ShomateCurve(pieces)
     if curve is None:
@@ -525,7 +541,11 @@ def species_thermo(query: str, phase: str = "gas", hf_source: str | None = None)
             if phase == "liquid":
                 pieces = _liquid_fit_pieces(species.cas)
                 if pieces:
-                    curve = _LiquidFitCurve(pieces, s298)
+                    curve = _CpFitCurve(pieces, s298)
+            if curve is None:
+                pieces = _shomate_cp_pieces(species.cas, phase)
+                if pieces:
+                    curve = _CpFitCurve(pieces, s298)
         if curve is None:
             cp = chemdb.maybe(species.cas, f"Cp_{phase}")
             if cp is None:
@@ -601,6 +621,18 @@ def _reference_state(query: str) -> SpeciesThermo:
 
 def _has_reference_table(cas: str) -> bool:
     return any(rows[0]["phase"] == "ref" for rows in chemdb.janaf(cas).values())
+
+
+def _shomate_cp_pieces(cas: str, phase: str) -> list[dict[str, Any]]:
+    """Snapshot Shomate pieces that reach 298.15 K, as Cp-only pieces."""
+    pieces = sorted(
+        ({**row, "form": "shomate_cp"} for row in chemdb.shomate(cas, phase) if row["F"] is None),
+        key=lambda r: float(r["Tmin"]),
+    )
+    if pieces and float(pieces[0]["Tmin"]) <= T_REF + 0.5:
+        pieces[0] = {**pieces[0], "Tmin": min(float(pieces[0]["Tmin"]), T_REF)}
+        return pieces
+    return []
 
 
 def _liquid_fit_pieces(cas: str) -> list[dict[str, Any]]:

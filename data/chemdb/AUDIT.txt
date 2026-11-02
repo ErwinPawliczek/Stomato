@@ -34,7 +34,7 @@ outvoted Tc 95-50-1: iupac_critical 729 set aside for psrk 697.3 K
 outvoted Pc 95-87-4: crc_critical 3.9e+06 set aside for psrk 4.8636e+06 Pa
 outvoted Tc 96-37-7: iupac_critical 553.8 set aside for crc_critical 532.78 K
 outvoted Hf_solid 148-24-3: crc_thermo 82100 set aside for nist_snapshot -82483.2 J/mol (below-the-gas test)
-outvoted Hf_solid 507-25-5: crc_thermo -392900 set aside for nist_snapshot 392200 J/mol (sign slip against the gas)
+outvoted Hf_solid 507-25-5: crc_thermo -392900 set aside for nist 392200 J/mol (sign slip against the gas)
 outvoted Hf_solid 75-47-8: crc_thermo -181100 set aside for nist_snapshot 181100 J/mol (sign slip against the gas)
 outvoted Tb 100-39-0: crc_constants 464.15 set aside for nist_snapshot 471.437 K (vapour-pressure test)
 outvoted Tb 100-44-7: crc_constants 447.15 set aside for nist_snapshot 452 K (vapour-pressure test)
@@ -67,11 +67,11 @@ outvoted Tb 55-21-0: crc_constants 579.15 set aside for nist_snapshot 561 K (vap
 outvoted Tb 565-60-6: crc_constants 415.15 set aside for nist_snapshot 407 K (vapour-pressure test)
 outvoted Tb 584-02-1: crc_constants 396.15 set aside for nist 388 K (vapour-pressure test)
 outvoted Tb 589-55-9: crc_constants 434.15 set aside for nist_snapshot 428 K (vapour-pressure test)
-outvoted Tb 594-15-0: crc_constants 431.65 set aside for nist_snapshot 377.45 K (vapour-pressure test)
+outvoted Tb 594-15-0: crc_constants 431.65 set aside for nist 377.45 K (vapour-pressure test)
 outvoted Tb 594-34-3: crc_constants 412.15 set aside for nist_snapshot 423.2 K (vapour-pressure test)
 outvoted Tb 594-70-7: crc_constants 406.55 set aside for nist_snapshot 400.363 K (vapour-pressure test)
 outvoted Tb 60-24-2: crc_constants 423.15 set aside for nist_snapshot 430.191 K (vapour-pressure test)
-outvoted Tb 624-72-6: crc_constants 299.15 set aside for nist_snapshot 283.65 K (vapour-pressure test)
+outvoted Tb 624-72-6: crc_constants 299.15 set aside for nist 283.65 K (vapour-pressure test)
 outvoted Tb 625-25-2: crc_constants 446.15 set aside for nist_snapshot 432 K (vapour-pressure test)
 outvoted Tb 7307-55-3: crc_constants 502.15 set aside for nist_snapshot 514.432 K (vapour-pressure test)
 outvoted Tb 762-49-2: crc_constants 331.15 set aside for nist_snapshot 345 K (vapour-pressure test)
@@ -81,6 +81,7 @@ outvoted Tb 90-15-3: crc_constants 561.15 set aside for nist_snapshot 552.377 K 
 outvoted Tb 95-80-7: crc_constants 565.15 set aside for nist_snapshot 561.086 K (vapour-pressure test)
 outvoted Tb 97-95-0: crc_constants 428.15 set aside for nist_snapshot 421 K (vapour-pressure test)
 outvoted Tb 98-15-7: crc_constants 399.15 set aside for nist_snapshot 410.703 K (vapour-pressure test)
+formula 13780-23-9: bank [1H]S vs NIST DS
 Pc 100-01-6: psrk 5.50195e+06 vs dippr_pina 4.42e+06 Pa
 Tc 100-01-6: psrk 870 vs dippr_pina 851 K
 Tb 100-07-2: crc_constants 535.65 vs nist_snapshot 417 K
@@ -470,9 +471,9 @@ Hf_solid 12034-57-0: janaf -419655 vs crc_thermo -405800 J/mol
 Hf_gas 12070-15-4: atct 828370 vs nist_snapshot 837740 J/mol
 Hf_gas 121-44-8: crc_thermo -92700 vs nist -134100 J/mol
 Hf_liquid 121-44-8: crc_thermo -127700 vs nist -169000 J/mol
-Hf_gas 121-46-0: atct 212500 vs nist_snapshot 240000 J/mol
-Hf_liquid 121-46-0: atct 179130 vs nist_snapshot 199276 J/mol
-Tm 121-46-0: crc_constants 254.15 vs nist_snapshot 248.794 K
+Hf_gas 121-46-0: atct 212500 vs nist 240000 J/mol
+Hf_liquid 121-46-0: atct 179130 vs nist 213800 J/mol
+Tm 121-46-0: crc_constants 254.15 vs nist 205.15 K
 Hf_gas 121-69-7: crc_thermo 100500 vs nist 84100 J/mol
 Hf_liquid 121-69-7: crc_thermo 46000 vs nist 34000 J/mol
 Tb 121-72-2: crc_constants 467.15 vs nist_snapshot 486.743 K
@@ -594,6 +595,7 @@ Gf_solid 13453-69-5: janaf -963070 vs crc_thermo -976100 J/mol
 Hf_solid 13453-69-5: janaf -1.01922e+06 vs crc_thermo -1.0322e+06 J/mol
 Gf_solid 13460-50-9: janaf -486201 vs crc_thermo -723400 J/mol
 Hf_solid 13460-50-9: janaf -802784 vs crc_thermo -794300 J/mol
+Hf_gas 13463-39-3: janaf -601576 vs nist_review -594800 J/mol
 Gf_liquid 13463-40-6: janaf -696975 vs crc_thermo -705300 J/mol
 Hf_liquid 13463-40-6: janaf -766090 vs crc_thermo -774000 J/mol
 Gf_solid 13566-17-1: janaf -1.26701e+06 vs crc_thermo -1.2526e+06 J/mol
@@ -752,7 +754,7 @@ Tc 2051-31-2: iupac_critical 663.7 vs nist_snapshot 655.306 K
 Tb 2051-49-2: crc_constants 540.15 vs nist_snapshot 520.197 K
 Tb 2051-62-9: crc_constants 566.15 vs nist_snapshot 560.015 K
 Tb 2051-90-3: crc_constants 572.15 vs nist_snapshot 578.2 K
-Hf_gas 2053-29-4: atct 88700 vs nist_snapshot 82022.4 J/mol
+Hf_gas 2053-29-4: atct 88700 vs nist 69000 J/mol
 Gf_solid 20548-54-3: janaf -468129 vs crc_thermo -477400 J/mol
 Hf_solid 20548-54-3: janaf -473210 vs crc_thermo -482400 J/mol
 Gf_gas 20583-55-5: janaf 112835 vs crc_thermo 120900 J/mol
@@ -798,7 +800,7 @@ Tc 2551-62-4: coolprop 318.723 vs nist 568.8 K
 Pc 25566-92-1: crc_critical 1.6e+06 vs nist_snapshot 1.55e+07 Pa
 Tb 2568-33-4: crc_constants 481.15 vs nist_snapshot 474.15 K
 Tm 2586-89-2: crc_constants 142.65 vs nist_snapshot 170 K
-Hf_gas 2597-43-5: atct -16100 vs nist_snapshot -9000 J/mol
+Hf_gas 2597-43-5: atct -16100 vs nist -9000 J/mol
 Tm 262-12-4: crc_constants 390.65 vs nist_snapshot 395.685 K
 Tb 2621-46-7: nist_snapshot 471.373 vs crc_constants 466.15 K
 Tb 2627-95-4: crc_constants 312.15 vs nist_snapshot 412 K
@@ -828,7 +830,7 @@ Pc 290-37-9: iupac_critical 6.7e+06 vs crc_critical 6.49e+06 Pa
 Tm 290-37-9: crc_constants 325.45 vs nist 320.15 K
 Tc 291-64-5: iupac_critical 604.2 vs passut_danner 589.261 K
 Tc 292-64-8: iupac_critical 647.2 vs passut_danner 618.15 K
-Hf_gas 2932-78-7: atct 351510 vs nist_snapshot 339000 J/mol
+Hf_gas 2932-78-7: atct 351510 vs nist 339000 J/mol
 Tb 2935-44-6: crc_constants 502.15 vs nist_snapshot 474.624 K
 Tb 300-62-9: crc_constants 471.15 vs nist_snapshot 476.2 K
 Hf_gas 302-01-2: atct 95510 vs nist 150000 J/mol
@@ -845,7 +847,7 @@ Gf_gas 3170-83-0: janaf 14430 vs crc_thermo 22600 J/mol
 Hf_gas 3170-83-0: atct 12270 vs janaf 2092 J/mol
 Tc 3178-22-1: crc_critical 652 vs passut_danner 659.261 K
 Tb 3178-29-8: nist_snapshot 430.784 vs crc_constants 440.15 K
-Hf_gas 32038-79-2: atct 92700 vs nist_snapshot 41600 J/mol
+Hf_gas 32038-79-2: atct 92700 vs nist 41600 J/mol
 Tb 3218-02-8: crc_constants 435.15 vs nist_snapshot 427.354 K
 Tb 324-74-3: crc_constants 526.15 vs nist_snapshot 583.1 K
 Tb 32665-23-9: crc_constants 420.15 vs nist_snapshot 141.8 K
@@ -867,7 +869,7 @@ Pc 355-02-2: iupac_critical 2.019e+06 vs psrk 2.33048e+06 Pa
 Tb 355-25-9: crc_constants 271.05 vs nist 277.2 K
 Hf_gas 355-68-0: crc_thermo -2.3704e+06 vs nist -2.471e+06 J/mol
 Tb 3586-12-7: crc_constants 588.15 vs nist_snapshot 593.847 K
-Hf_gas 359-11-5: atct -487800 vs nist_snapshot -474000 J/mol
+Hf_gas 359-11-5: atct -487800 vs nist -474000 J/mol
 Tb 360-89-4: crc_constants 267.25 vs nist_snapshot 274.3 K
 Tb 36653-82-4: crc_constants 598.15 vs nist 613.15 K
 Hf_gas 367-11-3: crc_thermo -293800 vs nist -283000 J/mol
@@ -877,6 +879,7 @@ Tc 367-11-3: iupac_critical 566 vs nist 557.3 K
 Tb 371-40-4: crc_constants 455.15 vs nist_snapshot 461 K
 Tm 371-40-4: crc_constants 271.25 vs nist_snapshot 276.393 K
 Tc 372-18-9: iupac_critical 548.4 vs psrk 543.1 K
+Hf_gas 373-91-1: janaf -764835 vs nist -770000 J/mol
 Pc 375-96-2: iupac_critical 1.56e+06 vs dippr_pina 1.296e+06 Pa
 Tc 3875-51-2: psrk 601 vs dippr_pina 593 K
 Tc 3877-15-4: dippr_pina 565 vs nist_snapshot 574.1 K
@@ -895,7 +898,7 @@ Tb 4100-80-5: crc_constants 494.15 vs nist_snapshot 512.2 K
 Tm 4164-28-7: crc_constants 329.15 vs nist_snapshot 345.45 K
 Pc 420-46-2: coolprop 3.76182e+06 vs nist 3.4116e+06 Pa
 Tm 4200-95-7: crc_constants 322.15 vs nist_snapshot 277.818 K
-Hf_gas 4222-21-3: atct 218000 vs nist_snapshot 237647 J/mol
+Hf_gas 4222-21-3: atct 218000 vs nist 233000 J/mol
 Tb 428-59-1: crc_constants 245.75 vs nist_snapshot 238.6 K
 Tb 4292-19-7: crc_constants 558.15 vs nist_snapshot 571.4 K
 Hf_gas 430-66-0: crc_thermo -730700 vs nist -691000 J/mol
@@ -911,12 +914,13 @@ Tc 4538-37-8: psrk 706.7 vs dippr_pina 724.3 K
 Tb 4549-31-9: crc_constants 520.15 vs nist_snapshot 530.699 K
 Tb 4549-33-1: crc_constants 542.15 vs nist_snapshot 559.35 K
 Tb 455-32-3: crc_constants 427.65 vs nist_snapshot 433.106 K
-Tm 460-12-8: crc_constants 238.15 vs nist_snapshot 255.126 K
+Tm 460-12-8: crc_constants 238.15 vs nist 263 K
 Hf_gas 460-19-5: atct 310100 vs nist 263000 J/mol
+Hf_gas 462-80-6: atct 460800 vs nist 440000 J/mol
 Tc 462-95-3: iupac_critical 531.7 vs dippr_pina 524 K
 Pc 463-49-0: iupac_critical 5.25e+06 vs crc_critical 6.5e+06 Pa
 Tm 463-49-0: crc_constants 136.75 vs nist 127 K
-Hf_gas 463-51-4: atct -48570 vs nist_snapshot -76905.5 J/mol
+Hf_gas 463-51-4: atct -48570 vs nist -87240 J/mol
 Pc 463-58-1: coolprop 6.3688e+06 vs mathews 5.87685e+06 Pa
 Hf_solid 471-46-5: crc_thermo -504400 vs nist_snapshot -480222 J/mol
 Tm 473-55-2: crc_constants 220.15 vs nist_snapshot 212.583 K
@@ -952,7 +956,7 @@ Tm 507-19-7: crc_constants 256.35 vs nist_snapshot 243.889 K
 Pc 507-20-0: crc_critical 3.7e+06 vs psrk 3.95168e+06 Pa
 Tc 507-20-0: iupac_critical 500 vs psrk 507 K
 Hf_gas 507-25-5: atct 336100 vs crc_thermo 474000 J/mol
-Hf_solid 507-25-5: nist_snapshot 392200 vs crc_thermo -392900 J/mol
+Hf_solid 507-25-5: nist 392200 vs crc_thermo -392900 J/mol
 Tc 513-35-9: iupac_critical 470 vs nist 481 K
 Pc 513-53-1: psrk 3.85e+06 vs dippr_pina 4.06e+06 Pa
 Tb 5137-45-1: crc_constants 361.15 vs nist_snapshot 376.389 K
@@ -977,7 +981,7 @@ Tm 538-56-7: crc_constants 409.15 vs nist_snapshot 370 K
 Tb 538-68-1: crc_constants 476.15 vs nist_snapshot 471 K
 Tc 538-93-2: iupac_critical 650 vs nist 657.87 K
 Tc 539-82-2: iupac_critical 593.3 vs nist 570.2 K
-Tb 540-51-2: crc_constants 415.15 vs nist_snapshot 423.4 K
+Tb 540-51-2: crc_constants 415.15 vs nist 423.4 K
 Tb 540-67-0: crc_constants 279.15 vs nist 312.1 K
 Tb 540-73-8: crc_constants 355.15 vs nist_snapshot 360.2 K
 Tm 541-02-6: crc_constants 236.15 vs nist_snapshot 226 K
@@ -996,7 +1000,7 @@ Tb 542-58-5: crc_constants 402.15 vs nist_snapshot 418.103 K
 Hf_gas 542-92-7: atct 101300 vs crc_thermo 134300 J/mol
 Pc 542-92-7: psrk 4.69996e+06 vs dippr_pina 5.15e+06 Pa
 Tc 542-92-7: psrk 500 vs dippr_pina 507 K
-Tm 542-92-7: crc_constants 176.61 vs nist_snapshot 183.685 K
+Tm 542-92-7: crc_constants 176.61 vs nist 183.15 K
 Tb 543-67-9: crc_constants 317.15 vs nist_snapshot 329.92 K
 Tb 544-02-5: crc_constants 484.15 vs nist 489.2 K
 Pc 544-10-5: crc_critical 3.3e+06 vs psrk 3.05292e+06 Pa
@@ -1099,13 +1103,13 @@ Tm 592-57-4: crc_constants 184.15 vs nist_snapshot 177.465 K
 Tb 593-45-3: crc_constants 589.15 vs nist 581 K
 Hf_gas 593-53-3: atct -236580 vs nist -247000 J/mol
 Hf_gas 593-60-2: atct 73680 vs crc_thermo 79200 J/mol
-Hf_gas 593-61-3: atct 275900 vs nist_snapshot 269000 J/mol
+Hf_gas 593-61-3: atct 275900 vs nist 269000 J/mol
 Hf_gas 593-63-5: atct 229000 vs janaf 213802 J/mol
 Hf_gas 593-74-8: crc_thermo 94400 vs nist_snapshot 118361 J/mol
 Hf_gas 593-95-3: atct -113530 vs crc_thermo -96200 J/mol
 Hf_liquid 593-95-3: atct -144260 vs crc_thermo -127200 J/mol
 Tb 593-96-4: crc_constants 374.15 vs nist_snapshot 356.2 K
-Tb 594-15-0: nist_snapshot 377.45 vs crc_constants 431.65 K
+Tb 594-15-0: nist 377.45 vs crc_constants 431.65 K
 Tb 594-34-3: nist_snapshot 423.2 vs crc_constants 412.15 K
 Tm 594-34-3: crc_constants 283.65 vs nist_snapshot 202.95 K
 Pc 594-56-9: psrk 2.8979e+06 vs dippr_pina 3.14e+06 Pa
@@ -1171,7 +1175,8 @@ Tb 624-24-8: crc_constants 400.51 vs nist 410 K
 Tc 624-24-8: iupac_critical 590 vs psrk 579 K
 Pc 624-29-3: psrk 2.93842e+06 vs crc_critical 3.44e+06 Pa
 Tc 624-29-3: crc_critical 603.2 vs psrk 598 K
-Tb 624-72-6: nist_snapshot 283.65 vs crc_constants 299.15 K
+Tb 624-72-6: nist 283.65 vs crc_constants 299.15 K
+Hf_gas 624-73-7: atct 73120 vs nist 66800 J/mol
 Hf_gas 624-79-3: crc_thermo 141700 vs nist_snapshot 132600 J/mol
 Hf_liquid 624-79-3: crc_thermo 108600 vs nist_snapshot 99600 J/mol
 Pc 624-89-5: iupac_critical 4.25e+06 vs crc_critical 4.62e+06 Pa
@@ -1245,7 +1250,7 @@ Pc 67-56-1: coolprop 8.21585e+06 vs crc_critical 8.01e+06 Pa
 Gf_gas 67-66-3: janaf -70357 vs crc_thermo 6000 J/mol
 Pc 67-68-5: psrk 5.7046e+06 vs crc_critical 4.6e+06 Pa
 Tc 67-68-5: crc_critical 707 vs psrk 720 K
-Hf_gas 67-72-1: janaf -134223 vs crc_thermo -143600 J/mol
+Hf_gas 67-72-1: janaf -134223 vs nist_review -148200 J/mol
 Hf_gas 670-54-2: crc_thermo 705000 vs nist_snapshot 699158 J/mol
 Hf_solid 670-54-2: crc_thermo 623800 vs nist_snapshot 618158 J/mol
 Tm 6709-39-3: crc_constants 203.15 vs nist_snapshot 170.5 K
@@ -1297,14 +1302,14 @@ Hf_gas 74-90-8: atct 129291 vs janaf 135143 J/mol
 Pc 74-95-3: psrk 6.5e+06 vs dippr_pina 7.17e+06 Pa
 Tc 74-95-3: psrk 583 vs dippr_pina 611 K
 Pc 74-96-4: iupac_critical 5.8e+06 vs crc_critical 6.2e+06 Pa
-Hf_gas 74-97-5: atct -44700 vs nist_snapshot -20000 J/mol
+Hf_gas 74-97-5: atct -44700 vs nist -20000 J/mol
 Pc 74-97-5: psrk 6.18082e+06 vs dippr_pina 6.47e+06 Pa
 Gf_gas 7440-03-1: janaf 688375 vs crc_thermo 681100 J/mol
 Hf_gas 7440-03-1: janaf 733037 vs crc_thermo 725900 J/mol
 Pc 7440-37-1: coolprop 4.863e+06 vs nist 489790 Pa
 Gf_gas 7440-42-8: janaf 515993 vs crc_thermo 521000 J/mol
 Gf_gas 7440-62-2: janaf 469744 vs crc_thermo 754400 J/mol
-Tm 7440-66-6: crc_constants 692.677 vs nist_snapshot 789.21 K
+Tm 7440-66-6: crc_constants 692.677 vs nist 965.74 K
 Hf_liquid 7443-55-2: crc_thermo -394400 vs nist_snapshot -421660 J/mol
 Gf_solid 7447-39-4: janaf -161680 vs crc_thermo -175700 J/mol
 Hf_solid 7447-39-4: janaf -205853 vs crc_thermo -220100 J/mol
@@ -1349,7 +1354,7 @@ Tc 75-33-2: psrk 512 vs nist_snapshot 517.3 K
 Hf_gas 75-34-3: atct -127400 vs nist_review -132500 J/mol
 Pc 75-35-4: psrk 4.68e+06 vs dippr_pina 5.19e+06 Pa
 Tc 75-35-4: psrk 489 vs dippr_pina 482 K
-Hf_gas 75-36-5: atct -241460 vs nist_snapshot -250915 J/mol
+Hf_gas 75-36-5: atct -241460 vs nist -251300 J/mol
 Hf_gas 75-38-7: atct -332900 vs nist -344000 J/mol
 Tb 75-45-6: crc_constants 232.35 vs nist 313.3 K
 Hf_gas 75-46-7: atct -695850 vs nist -690800 J/mol
@@ -1379,7 +1384,7 @@ Hf_gas 75-91-2: crc_thermo -245900 vs nist_snapshot -236215 J/mol
 Pc 75-97-8: iupac_critical 3.43e+06 vs crc_critical 3.67e+06 Pa
 Tc 75-97-8: iupac_critical 570.9 vs nist 562.9 K
 Hf_gas 7572-29-4: atct 233800 vs janaf 209618 J/mol
-Tm 7572-29-4: crc_constants 207.15 vs nist_snapshot 147.15 K
+Tm 7572-29-4: crc_constants 207.15 vs nist 147.15 K
 Hf_gas 76-01-7: crc_thermo -142000 vs nist_snapshot -155659 J/mol
 Hf_liquid 76-01-7: crc_thermo -187600 vs nist_snapshot -202734 J/mol
 Tc 76-01-7: psrk 646 vs dippr_pina 665 K
@@ -1405,6 +1410,7 @@ Hf_liquid 766-05-2: crc_thermo -47200 vs nist_snapshot -52909.5 J/mol
 Hf_solid 766-39-2: crc_thermo -581400 vs nist_snapshot -574500 J/mol
 Tb 766-51-8: crc_constants 474.95 vs nist_snapshot 468.7 K
 Tb 766-92-7: crc_constants 487.15 vs nist_snapshot 469.7 K
+Hf_aq 7664-41-7: nist_henry -79647.3 vs sander -72633.1 J/mol
 Tb 768-56-9: crc_constants 456.15 vs nist_snapshot 451 K
 Hf_gas 7688-21-3: crc_thermo -52300 vs nist -47000 J/mol
 Pc 77-73-6: psrk 3.7551e+06 vs dippr_pina 3.06e+06 Pa
@@ -1415,7 +1421,7 @@ Tb 77-78-1: crc_constants 459.15 vs nist_snapshot 469.976 K
 Pc 7704-34-9: mathews 1.17537e+07 vs nist 1.82081e+07 Pa
 Tc 771-56-2: iupac_critical 566.5 vs nist 548.6 K
 Tb 771-98-2: crc_constants 541.15 vs nist_snapshot 525.2 K
-Pc 7722-84-1: dippr_pina 2.17e+07 vs nist_snapshot 2.2e+07 Pa
+Pc 7722-84-1: dippr_pina 2.17e+07 vs nist 2.2e+07 Pa
 Hf_solid 7723-14-0: janaf -17460 vs crc_thermo 0 J/mol
 Tm 7726-95-6: crc_constants 265.95 vs nist 254.15 K
 Hf_gas 7727-15-3: janaf -410450 vs crc_thermo -425100 J/mol
@@ -1440,7 +1446,7 @@ Hf_solid 7789-28-8: janaf -705841 vs crc_thermo -711300 J/mol
 Hf_gas 7789-57-3: crc_thermo -317600 vs nist_snapshot -302920 J/mol
 Gf_gas 7789-60-8: janaf -169530 vs crc_thermo -162800 J/mol
 Hf_gas 7789-60-8: janaf -146022 vs crc_thermo -139300 J/mol
-Tb 7789-60-8: crc_constants 446.35 vs nist_snapshot 351.7 K
+Tb 7789-60-8: crc_constants 446.35 vs nist 351.7 K
 Hf_gas 7790-89-8: atct -55703 vs janaf -50292 J/mol
 Gf_gas 7791-21-1: janaf 105065 vs crc_thermo 97900 J/mol
 Hf_gas 7791-21-1: janaf 87864 vs crc_thermo 80300 J/mol

@@ -383,12 +383,25 @@
         copy reachable (official GPSA workbook companion ends at the first converter), so it is
         a documented V1 gap and the level stays provisional
     R2:
-      status: planned
-      params: {}
-      note: Gibbs per stage
+      status: provisional
+      adapter: ngdesign.units.treating.sulfur_recovery_r2:SulfurRecoveryR2
+      params:
+        type: object
+        required: [T_thermal, P, T_condenser, thermal_conversion, catalytic_stages, reaction_set]
+        properties:
+          T_thermal: {type: number, description: 'reaction-furnace temperature (K); R0 thermal rule'}
+          P: {type: number, description: 'process pressure (Pa abs)'}
+          T_condenser: {type: number, description: 'sulfur condenser temperature (K); complete S6+S8 condensation'}
+          thermal_conversion: {type: number, minimum: 0, maximum: 1, description: 'Claus conversion of the post-burn SO2 in the furnace (R0 rule)'}
+          catalytic_stages: {type: array, description: 'one {T, approach_K?} per converter; Gibbs equilibrium at T + approach_K, isothermal'}
+          extra_species: {type: array, description: 'any of COS, CS2, CO, H2, added to every converter Gibbs set'}
+          reaction_set: {type: object, description: 'flowsheet-owned set for the thermal stage (H2S burn + Claus), as at R0'}
+      note: Gibbs equilibrium per catalytic converter (isothermal; S6/S8, optionally COS/CS2); furnace
+        = R0 rule (S2 data missing); complete sulfur condensation (package S8 Psat unusable)
       end_state: true
   pid_symbol: SRU
   references:
   - docs/unit-catalogue-plan.md §2 U-G 5
-  notes: roadmap; S2 slice (plan §2b). Sour-water stripping is NOT a row here — it is a
+  notes: R2 ships provisional on an independent extent-space ln K solve and the reduction to R0;
+    no V1 converter case was searched for. Sour-water stripping is NOT a row here — it is a
     reboiled-stripper configuration on the electrolyte package (T-09, plan U-G 9).
