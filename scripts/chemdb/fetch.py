@@ -8,6 +8,7 @@ Nothing fetched is ever executed: pages are parsed as text by ``parse_nist.py``.
     python -I scripts/chemdb/fetch.py pubchem <seed.txt> <cache-dir>
     python -I scripts/chemdb/fetch.py janaf   <cache-dir>
     python -I scripts/chemdb/fetch.py henry   <seed.txt> <cache-dir>
+    python -I scripts/chemdb/fetch.py cea     <cache-dir>
 
 Rate limits honoured: NIST WebBook robots.txt ``Crawl-delay: 5``; PubChem PUG
 REST "no more than 5 requests per second" (one batched request every 0.4 s here).
@@ -103,6 +104,29 @@ def fetch_henry(seed: Path, cache: Path) -> int:
     return 0
 
 
+CEA_FILES = {
+    "thermo.inp": "https://raw.githubusercontent.com/nasa/cea/main/data/thermo.inp",
+    "LICENSE.txt": "https://raw.githubusercontent.com/nasa/cea/main/LICENSE.txt",
+    "NOTICE.txt": "https://raw.githubusercontent.com/nasa/cea/main/NOTICE.txt",
+}
+
+
+def fetch_cea(cache: Path) -> int:
+    """NASA CEA's thermodynamic database (Apache-2.0) and its licence notices."""
+    out = cache / "cea"
+    out.mkdir(parents=True, exist_ok=True)
+    for name, url in CEA_FILES.items():
+        target = out / name
+        if target.exists():
+            continue
+        status, body = _get(url)
+        if status != 200:
+            print(f"{name}: HTTP {status}", flush=True)
+            return 1
+        target.write_bytes(body)
+    return 0
+
+
 def fetch_pubchem(seed: Path, cache: Path) -> int:
     """Identity records: one batched POST-free GET per ``PUBCHEM_BATCH`` CIDs.
 
@@ -166,11 +190,13 @@ def fetch_janaf(cache: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("source", choices=("nist", "pubchem", "janaf", "henry"))
+    parser.add_argument("source", choices=("nist", "pubchem", "janaf", "henry", "cea"))
     parser.add_argument("paths", nargs="+", type=Path)
     args = parser.parse_args()
     if args.source == "janaf":
         return fetch_janaf(args.paths[0])
+    if args.source == "cea":
+        return fetch_cea(args.paths[0])
     if args.source == "nist":
         return fetch_nist(args.paths[0], args.paths[1])
     if args.source == "henry":

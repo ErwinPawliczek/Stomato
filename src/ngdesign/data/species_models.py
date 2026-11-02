@@ -274,6 +274,71 @@ class _SaturationCurve(_Curve):
         return float((self.hf + self.dh(T) - self._g(T)) / T)
 
 
+#: Latest opening temperature of a NASA 9 record that still defines 298.15 K, K.
+_NASA9_LATEST_START = 300.0
+
+
+class _Nasa9Curve(_Curve):
+    """NASA 9-coefficient polynomials (McBride, Zehe & Gordon, NASA/TP-2002-211556, eq. 4-6).
+
+    With R the gas constant:
+        Cp/R = a1/T² + a2/T + a3 + a4 T + a5 T² + a6 T³ + a7 T⁴
+        H/RT = −a1/T² + a2 ln(T)/T + a3 + a4 T/2 + a5 T²/3 + a6 T³/4 + a7 T⁴/5 + b1/T
+        S/R  = −a1/(2T²) − a2/T + a3 ln T + a4 T + a5 T²/2 + a6 T³/3 + a7 T⁴/4 + b2
+    H is on the ΔfH°298 basis and S absolute, both carried by the integration constants.
+    """
+
+    name = "nasa9"
+
+    def __init__(self, pieces: Sequence[Mapping[str, Any]]) -> None:
+        self.pieces = sorted(pieces, key=lambda p: float(p["Tmin"]))
+        # records opening at 300 K still define 298.15 K (NASA/TP-2002-211556 §2)
+        self.tmin = min(float(self.pieces[0]["Tmin"]), T_REF)
+        self.tmax = float(self.pieces[-1]["Tmax"])
+        self._h298 = self._absolute_h(T_REF)
+
+    def _piece(self, T: float) -> tuple[list[float], list[float]]:
+        piece = next((p for p in self.pieces if T <= float(p["Tmax"])), self.pieces[-1])
+        return [float(piece[f"a{i}"]) for i in range(1, 8)], [float(piece["b1"]), float(piece["b2"])]
+
+    def cp(self, T: float) -> float:
+        a, _ = self._piece(T)
+        return float(
+            _R * (a[0] / T**2 + a[1] / T + a[2] + a[3] * T + a[4] * T**2 + a[5] * T**3 + a[6] * T**4)
+        )
+
+    def _absolute_h(self, T: float) -> float:
+        a, b = self._piece(T)
+        reduced = (
+            -a[0] / T**2
+            + a[1] * math.log(T) / T
+            + a[2]
+            + a[3] * T / 2
+            + a[4] * T**2 / 3
+            + a[5] * T**3 / 4
+            + a[6] * T**4 / 5
+            + b[0] / T
+        )
+        return float(_R * T * reduced)
+
+    def dh(self, T: float) -> float:
+        return self._absolute_h(T) - self._h298
+
+    def s(self, T: float) -> float:
+        a, b = self._piece(T)
+        reduced = (
+            -a[0] / (2 * T**2)
+            - a[1] / T
+            + a[2] * math.log(T)
+            + a[3] * T
+            + a[4] * T**2 / 2
+            + a[5] * T**3 / 3
+            + a[6] * T**4 / 4
+            + b[1]
+        )
+        return float(_R * reduced)
+
+
 class _CpFitCurve(_Curve):
     """Tabulated Cp(T) anchored on S°298: Zabransky splines, DIPPR 100, or Shomate Cp pieces.
 
@@ -526,6 +591,12 @@ def species_thermo(query: str, phase: str = "gas", hf_source: str | None = None)
         pieces = [row for row in chemdb.shomate(species.cas, phase) if row["F"] is not None]
         if pieces:
             curve = _ShomateCurve(pieces)
+        else:
+            nasa = chemdb.nasa9(species.cas, phase)
+            if nasa and float(nasa[0]["Tmin"]) <= _NASA9_LATEST_START and float(nasa[-1]["Tmax"]) >= T_REF:
+                curve = _Nasa9Curve(nasa)
+                if chosen.source == "nasa_cea":
+                    hf = float(nasa[0]["hf298"])
     if curve is None:
         if phase == "liquid":
             curve = _saturation_curve(species.cas, hf)
