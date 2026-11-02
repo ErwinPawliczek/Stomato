@@ -169,7 +169,9 @@ def chapman_enskog(T: float, P: float, a: ComponentTransport, b: ComponentTransp
     sigma_ab = 0.5 * (a.sigma_lj + b.sigma_lj)
     eps_ab = math.sqrt(a.eps_k * b.eps_k)
     omega_d = collision_integral_Neufeld_Janzen_Aziz(T / eps_ab, 1, 1)
-    d_cm2 = _CE_CONSTANT * math.sqrt(T**3 * (1.0 / a.mw + 1.0 / b.mw)) / ((P / _ATM_PA) * sigma_ab**2 * omega_d)
+    d_cm2 = (
+        _CE_CONSTANT * math.sqrt(T**3 * (1.0 / a.mw + 1.0 / b.mw)) / ((P / _ATM_PA) * sigma_ab**2 * omega_d)
+    )
     return d_cm2 * 1e-4
 
 
@@ -210,7 +212,7 @@ def liquid_effective_diffusivities(
             phi_m = sum(c.phi * c.mw for c in others) / len(others)
         else:
             phi_m = sum(wk * c.phi * c.mw for wk, c in zip(w, others, strict=True)) / s
-        d_cm2 = _WILKE_CHANG * math.sqrt(phi_m) * T / (eta_cp * comps[i].v_nbp_cm3**0.6)
+        d_cm2 = _WILKE_CHANG * math.sqrt(phi_m) * T / (eta_cp * comps[i].v_nbp_cm3 ** 0.6)
         out.append(d_cm2 * 1e-4)
     return out
 
@@ -282,19 +284,23 @@ def onda_1968(
     k_liq = [pre_l * (mu_l / (rho_l * d)) ** -0.5 for d in d_liq]
     # eq. (3): k_G R T = C a_t D_G Re_G^0.7 Sc_G^(1/3) (a_t D_p)^-2
     c = _ONDA_KG_LARGE if d_p >= _ONDA_SMALL_PACKING_M else _ONDA_KG_SMALL
-    k_gas = [c * a_t * d * re_g**0.7 * (mu_g / (rho_g * d)) ** (1.0 / 3.0) * (a_t * d_p) ** -2.0 for d in d_gas]
+    k_gas = [
+        c * a_t * d * re_g**0.7 * (mu_g / (rho_g * d)) ** (1.0 / 3.0) * (a_t * d_p) ** -2.0 for d in d_gas
+    ]
     return OndaResult(a_w=a_w, k_gas=k_gas, k_liq=k_liq, re_l=re_l, re_g=re_g)
 
 
-def chilton_colburn_h(k_mean: float, c_molar: float, cp_molar: float, lam: float, rho: float,
-                      cp_mass: float, d_mean: float) -> float:
+def chilton_colburn_h(
+    k_mean: float, c_molar: float, cp_molar: float, lam: float, rho: float, cp_mass: float, d_mean: float
+) -> float:
     """Vapour film heat-transfer coefficient, W/m2 K: ``h = k c_t c_p Le^(2/3)``."""
     le = lam / (rho * cp_mass * d_mean)
-    return k_mean * c_molar * cp_molar * le ** (2.0 / 3.0)
+    return float(k_mean * c_molar * cp_molar * le ** (2.0 / 3.0))
 
 
-def penetration_h(k_mean: float, c_molar: float, cp_molar: float, lam: float, rho: float,
-                  cp_mass: float, d_mean: float) -> float:
+def penetration_h(
+    k_mean: float, c_molar: float, cp_molar: float, lam: float, rho: float, cp_mass: float, d_mean: float
+) -> float:
     """Liquid film heat-transfer coefficient (penetration model), W/m2 K:
     ``h = k c_t c_p Le^(1/2)``."""
     le = lam / (rho * cp_mass * d_mean)

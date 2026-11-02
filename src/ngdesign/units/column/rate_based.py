@@ -51,13 +51,18 @@ the film conductances and heat-transfer coefficients. The **inner** loop solves 
 whole column simultaneously by Newton (block-tridiagonal structure, finite-difference
 Jacobian by three-colour stage grouping) with those models frozen. Converged when the
 residual evaluated with freshly anchored models - i.e. the exact package K-values and
-enthalpies at the state - is below :data:`_TOL` (scaled: component rows by the total
-feed, energy rows by total feed x 1 kJ/mol).
+enthalpies at the state - is below :data:`_TOL` (scaled: balance rows by the total
+feed, energy balances by total feed x 1 kJ/mol; the film-rate rows and the rows
+carrying ``hA (T - T_I)`` by the larger of that and their own conductance, whose
+round-off floor grows with it). In the vapour/liquid/interface energy triple the
+liquid row is replaced by the equivalent total stage balance, which carries no
+``E`` and so closes to the absolute tolerance at any transfer rate.
 
 ``transfer_factor`` multiplies every film conductance and heat-transfer coefficient
 (the correction factor Perry's *Chemical Engineers' Handbook* 8th ed., Sec. 14, text
-after eq. 14-75, notes commercial rate-based software provides); as it grows the interface resistances vanish and the stage reduces to an
-equilibrium stage - the R2 column's model - which the tests check.
+after eq. 14-75, notes commercial rate-based software provides); as it grows the
+interface resistances vanish and the stage reduces to an equilibrium stage - the R2
+column's model - which the tests check.
 
 All SI: K, Pa abs, mol/s, J/mol, W, m. Pure functions; no I/O; no global state.
 """
@@ -175,7 +180,7 @@ class RateProfile:
 
     cids: tuple[str, ...]
     v: list[Vec]  # vapour component flows leaving each stage
-    l: list[Vec]  # liquid component flows leaving each stage
+    liq: list[Vec]  # liquid component flows leaving each stage
     tv: list[float]
     tl: list[float]
     ti: list[float]  # interface T (kettle: its T)
@@ -240,7 +245,9 @@ def _as_comp(cids: tuple[str, ...], z: Vec) -> dict[str, float]:
 # --------------------------------------------------------------------------------------
 
 
-def _partial_molar(thermo: Thermo, cids: tuple[str, ...], z: Vec, T: float, P: float, kind: PhaseKind) -> tuple[Vec, float, object]:
+def _partial_molar(
+    thermo: Thermo, cids: tuple[str, ...], z: Vec, T: float, P: float, kind: PhaseKind
+) -> tuple[Vec, float, object]:
     """Partial molar enthalpies (Euler-corrected), mixture cp and the base PhaseProps.
 
     ``Hbar_i = d(nH)/dn_i`` by a forward mole-number perturbation of ``phase_props``.
@@ -281,7 +288,7 @@ def _rate_model(
     spec: RateColumnSpec,
     comps: list[ComponentTransport],
     v: Vec,
-    l: Vec,
+    liq: Vec,
     yi: Vec,
     xi: Vec,
     tv: float,
@@ -292,9 +299,9 @@ def _rate_model(
     cids = spec.cids
     lnk, dlnk = _k_model(thermo, cids, xi, yi, ti, P)
     hv0, cpv, pv = _partial_molar(thermo, cids, v, tv, P, PhaseKind.VAPOR)
-    hl0, cpl, pl = _partial_molar(thermo, cids, l, tl, P, PhaseKind.HC_LIQUID)
+    hl0, cpl, pl = _partial_molar(thermo, cids, liq, tl, P, PhaseKind.HC_LIQUID)
     y = _norm(np.maximum(v, 0.0))
-    x = _norm(np.maximum(l, 0.0))
+    x = _norm(np.maximum(liq, 0.0))
     geom = spec.geometry
     area = geom.cross_section_m2
     mw_v, mw_l = pv.molecular_weight, pl.molecular_weight  # type: ignore[attr-defined]
@@ -307,10 +314,12 @@ def _rate_model(
             "package's phase_props; this package returns None"
         )
     big_g = float(np.sum(np.maximum(v, 0.0))) * mw_v / 1000.0 / area
-    big_l = float(np.sum(np.maximum(l, 0.0))) * mw_l / 1000.0 / area
+    big_l = float(np.sum(np.maximum(liq, 0.0))) * mw_l / 1000.0 / area
     d_v = vapour_effective_diffusivities(list(y), tv, P, comps)
     d_l = liquid_effective_diffusivities(list(x), tl, float(mu_l), comps)
-    onda = onda_1968(geom, big_g, big_l, rho_v, float(mu_v), rho_l, float(mu_l), spec.surface_tension_N_m, d_v, d_l)
+    onda = onda_1968(
+        geom, big_g, big_l, rho_v, float(mu_v), rho_l, float(mu_l), spec.surface_tension_N_m, d_v, d_l
+    )
     a_int = onda.a_w * area * geom.segment_height_m  # interfacial area of the segment, m2
     c_v = rho_v / (mw_v / 1000.0)
     c_l = rho_l / (mw_l / 1000.0)
@@ -340,15 +349,29 @@ def _rate_model(
         diag[f"DV_{cid}_m2_s"] = dg
         diag[f"DL_{cid}_m2_s"] = dli
     return _RateModel(
-        lnk0=lnk, dlnk=dlnk, ti0=ti, hv0=hv0, cpv=cpv, tv0=tv, hl0=hl0, cpl=cpl, tl0=tl,
-        gv=gv, gl=gl, hav=f * hv * a_int, hal=f * hl * a_int, diag=diag,
+        lnk0=lnk,
+        dlnk=dlnk,
+        ti0=ti,
+        hv0=hv0,
+        cpv=cpv,
+        tv0=tv,
+        hl0=hl0,
+        cpl=cpl,
+        tl0=tl,
+        gv=gv,
+        gl=gl,
+        hav=f * hv * a_int,
+        hal=f * hl * a_int,
+        diag=diag,
     )
 
 
-def _kettle_model(thermo: Thermo, cids: tuple[str, ...], v: Vec, l: Vec, T: float, P: float) -> _KettleModel:
-    lnk, dlnk = _k_model(thermo, cids, l, v, T, P)
+def _kettle_model(
+    thermo: Thermo, cids: tuple[str, ...], v: Vec, liq: Vec, T: float, P: float
+) -> _KettleModel:
+    lnk, dlnk = _k_model(thermo, cids, liq, v, T, P)
     hv0, cpv, _ = _partial_molar(thermo, cids, v, T, P, PhaseKind.VAPOR)
-    hl0, cpl, _ = _partial_molar(thermo, cids, l, T, P, PhaseKind.HC_LIQUID)
+    hl0, cpl, _ = _partial_molar(thermo, cids, liq, T, P, PhaseKind.HC_LIQUID)
     return _KettleModel(lnk0=lnk, dlnk=dlnk, t0=T, hv0=hv0, cpv=cpv, hl0=hl0, cpl=cpl)
 
 
@@ -360,7 +383,7 @@ def _kettle_model(thermo: Thermo, cids: tuple[str, ...], v: Vec, l: Vec, T: floa
 @dataclass(frozen=True)
 class _Unpacked:
     v: list[Vec]
-    l: list[Vec]
+    liq: list[Vec]
     t_v: list[float]  # vapour T per stage (kettle: T)
     t_l: list[float]
 
@@ -368,20 +391,20 @@ class _Unpacked:
 def _unpack(lay: _Layout, X: Vec) -> _Unpacked:
     c = lay.c
     v: list[Vec] = []
-    l: list[Vec] = []
+    liq: list[Vec] = []
     tv: list[float] = []
     tl: list[float] = []
     for j in range(lay.n_stages):
         o = lay.offsets[j]
         v.append(X[o : o + c])
-        l.append(X[o + c : o + 2 * c])
+        liq.append(X[o + c : o + 2 * c])
         if j < lay.n_rate:
             tv.append(float(X[o + 5 * c]))
             tl.append(float(X[o + 5 * c + 1]))
         else:
             tv.append(float(X[o + 2 * c]))
             tl.append(float(X[o + 2 * c]))
-    return _Unpacked(v, l, tv, tl)
+    return _Unpacked(v, liq, tv, tl)
 
 
 @dataclass(frozen=True)
@@ -414,10 +437,10 @@ def _hv(m: _RateModel | _KettleModel, v: Vec, T: float) -> float:
     return float(np.dot(v, m.hv0 + m.cpv * (T - m.t0)))
 
 
-def _hl(m: _RateModel | _KettleModel, l: Vec, T: float) -> float:
+def _hl(m: _RateModel | _KettleModel, liq: Vec, T: float) -> float:
     if isinstance(m, _RateModel):
-        return float(np.dot(l, m.hl0 + m.cpl * (T - m.tl0)))
-    return float(np.dot(l, m.hl0 + m.cpl * (T - m.t0)))
+        return float(np.dot(liq, m.hl0 + m.cpl * (T - m.tl0)))
+    return float(np.dot(liq, m.hl0 + m.cpl * (T - m.t0)))
 
 
 def _residual(
@@ -436,9 +459,9 @@ def _residual(
     for j in range(n):
         o = lay.offsets[j]
         m = models[j]
-        v, l = up.v[j], up.l[j]
+        v, liq = up.v[j], up.liq[j]
         v_in = up.v[j + 1] if j + 1 < n else np.zeros(c)
-        l_in = up.l[j - 1] if j > 0 else np.zeros(c)
+        l_in = up.liq[j - 1] if j > 0 else np.zeros(c)
         h_v_in = _hv(models[j + 1], v_in, up.t_v[j + 1]) if j + 1 < n else 0.0
         h_l_in = _hl(models[j - 1], l_in, up.t_l[j - 1]) if j > 0 else 0.0
         if isinstance(m, _RateModel):
@@ -446,15 +469,15 @@ def _residual(
             xi = X[o + 3 * c : o + 4 * c]
             nf = X[o + 4 * c : o + 5 * c]
             tv, tl, ti = X[o + 5 * c], X[o + 5 * c + 1], X[o + 5 * c + 2]
-            vt, lt = float(np.sum(v)), float(np.sum(l))
+            vt, lt = float(np.sum(v)), float(np.sum(liq))
             y = v / vt
-            x = l / lt
+            x = liq / lt
             nt = float(np.sum(nf))
             k = np.exp(m.lnk0 + m.dlnk * (ti - m.ti0))
             r = o
             out[r : r + c] = (v - v_in - feeds.fv[j] + nf) / fs
             r += c
-            out[r : r + c] = (l - l_in - feeds.fl[j] - nf) / fs
+            out[r : r + c] = (liq - l_in - feeds.fl[j] - nf) / fs
             r += c
             out[r : r + c] = yi - k * xi
             r += c
@@ -479,18 +502,18 @@ def _residual(
             # hA*(T - T_I) are scaled by hA*1 K: at large transfer factors their
             # round-off floor is hA*eps*T, not a stage-balance error.
             h_v_out = float(np.dot(v, hbar_v))
-            h_l_out = float(np.dot(l, hbar_l))
+            h_l_out = float(np.dot(liq, hbar_l))
             out[r] = (h_v_out - h_v_in - feeds.hfv[j] + e_v) / max(es, m.hav)
             out[r + 1] = (h_v_out + h_l_out - h_v_in - h_l_in - feeds.hfv[j] - feeds.hfl[j]) / es
             out[r + 2] = (e_v - e_l) / max(es, m.hav + m.hal)
         else:
             t = X[o + 2 * c]
-            vt, lt = float(np.sum(v)), float(np.sum(l))
+            vt, lt = float(np.sum(v)), float(np.sum(liq))
             k = np.exp(m.lnk0 + m.dlnk * (t - m.t0))
             r = o
-            out[r : r + c] = (v + l - l_in - feeds.fv[j] - feeds.fl[j]) / fs
+            out[r : r + c] = (v + liq - l_in - feeds.fv[j] - feeds.fl[j]) / fs
             r += c
-            out[r : r + c] = v / vt - k * l / lt
+            out[r : r + c] = v / vt - k * liq / lt
             r += c
             assert spec.kettle_spec is not None
             name, value = spec.kettle_spec
@@ -501,7 +524,7 @@ def _residual(
             elif name == "distillate_rate":
                 out[r] = (float(np.sum(up.v[0])) - value) / fs
             else:  # reboiler_duty_W
-                h_out = _hv(m, v, t) + _hl(m, l, t)
+                h_out = _hv(m, v, t) + _hl(m, liq, t)
                 out[r] = (h_out - h_l_in - feeds.hfv[j] - feeds.hfl[j] - value) / es
     return out
 
@@ -633,24 +656,28 @@ def _newton(
 # --------------------------------------------------------------------------------------
 
 
-def _interface_seed(thermo: Thermo, spec: RateColumnSpec, v: Vec, l: Vec, T: float, P: float) -> tuple[Vec, Vec]:
+def _interface_seed(
+    thermo: Thermo, spec: RateColumnSpec, v: Vec, liq: Vec, T: float, P: float
+) -> tuple[Vec, Vec]:
     """Interface seed: the phase compositions of a PT flash of the stage's combined
     material; when that is single-phase, the bulk liquid and ``K x`` normalised."""
     cids = spec.cids
-    z = _norm(v + l)
+    z = _norm(v + liq)
     state = thermo.flash_pt(_as_comp(cids, z), T, P, 1.0)
-    vap = next((p for p in state.phases if p.kind is PhaseKind.VAPOR), None)
-    liq = next((p for p in state.phases if p.kind is not PhaseKind.VAPOR), None)
-    if vap is not None and liq is not None and 1e-9 < state.vapor_fraction < 1.0 - 1e-9:
-        xi = np.array([liq.composition.get(cid, 0.0) for cid in cids])
-        yi = np.array([vap.composition.get(cid, 0.0) for cid in cids])
+    vap_ph = next((p for p in state.phases if p.kind is PhaseKind.VAPOR), None)
+    liq_ph = next((p for p in state.phases if p.kind is not PhaseKind.VAPOR), None)
+    if vap_ph is not None and liq_ph is not None and 1e-9 < state.vapor_fraction < 1.0 - 1e-9:
+        xi = np.array([liq_ph.composition.get(cid, 0.0) for cid in cids])
+        yi = np.array([vap_ph.composition.get(cid, 0.0) for cid in cids])
         return _norm(np.maximum(xi, 1e-12)), _norm(np.maximum(yi, 1e-12))
-    x = _norm(l)
+    x = _norm(liq)
     lnk, _ = _k_model(thermo, cids, x, _norm(v), T, P)
     return x, _norm(np.exp(lnk) * x)
 
 
-def _initial_state(thermo: Thermo, spec: RateColumnSpec, lay: _Layout, feeds: _FeedTable, feed_T: list[float]) -> Vec:
+def _initial_state(
+    thermo: Thermo, spec: RateColumnSpec, lay: _Layout, feeds: _FeedTable, feed_T: list[float]
+) -> Vec:
     c = lay.c
     n = lay.n_stages
     fs = feeds.total
@@ -723,23 +750,32 @@ def _initial_state(thermo: Thermo, spec: RateColumnSpec, lay: _Layout, feeds: _F
 # --------------------------------------------------------------------------------------
 
 
-def _models(thermo: Thermo, spec: RateColumnSpec, lay: _Layout, comps: list[ComponentTransport], X: Vec) -> list[_RateModel | _KettleModel]:
+def _models(
+    thermo: Thermo, spec: RateColumnSpec, lay: _Layout, comps: list[ComponentTransport], X: Vec
+) -> list[_RateModel | _KettleModel]:
     c = lay.c
     out: list[_RateModel | _KettleModel] = []
     for j in range(lay.n_stages):
         o = lay.offsets[j]
-        v, l = X[o : o + c], X[o + c : o + 2 * c]
+        v, liq = X[o : o + c], X[o + c : o + 2 * c]
         if j < lay.n_rate:
             out.append(
                 _rate_model(
-                    thermo, spec, comps, v, l,
-                    X[o + 2 * c : o + 3 * c], X[o + 3 * c : o + 4 * c],
-                    float(X[o + 5 * c]), float(X[o + 5 * c + 1]), float(X[o + 5 * c + 2]),
+                    thermo,
+                    spec,
+                    comps,
+                    v,
+                    liq,
+                    X[o + 2 * c : o + 3 * c],
+                    X[o + 3 * c : o + 4 * c],
+                    float(X[o + 5 * c]),
+                    float(X[o + 5 * c + 1]),
+                    float(X[o + 5 * c + 2]),
                     spec.pressures[j],
                 )
             )
         else:
-            out.append(_kettle_model(thermo, spec.cids, v, l, float(X[o + 2 * c]), spec.pressures[j]))
+            out.append(_kettle_model(thermo, spec.cids, v, liq, float(X[o + 2 * c]), spec.pressures[j]))
     return out
 
 
@@ -811,7 +847,7 @@ def _profile(
         else:
             ti.append(up.t_v[j])
     h_v = [_hv(models[j], up.v[j], up.t_v[j]) for j in range(lay.n_stages)]
-    h_l = [_hl(models[j], up.l[j], up.t_l[j]) for j in range(lay.n_stages)]
+    h_l = [_hl(models[j], up.liq[j], up.t_l[j]) for j in range(lay.n_stages)]
     q_reb = 0.0
     if spec.kettle:
         k = lay.n_stages - 1
@@ -819,7 +855,7 @@ def _profile(
     return RateProfile(
         cids=spec.cids,
         v=[a.copy() for a in up.v],
-        l=[a.copy() for a in up.l],
+        liq=[a.copy() for a in up.liq],
         tv=list(up.t_v),
         tl=list(up.t_l),
         ti=ti,
@@ -867,36 +903,31 @@ def split_feed(stage: int, cids: tuple[str, ...], state: StreamState) -> StageFe
     return StageFeed(stage=stage, vap=tuple(vap), liq=tuple(liq), h_vap_W=hv, h_liq_W=hl)
 
 
-def murphree_vapour(thermo: Thermo, prof: RateProfile, pressures: tuple[float, ...], y_entering_bottom: Vec | None, n_rate: int) -> list[dict[str, float]]:
+def murphree_vapour(thermo: Thermo, prof: RateProfile, spec: RateColumnSpec) -> list[dict[str, float]]:
     """Component Murphree vapour efficiencies per packed segment.
 
-    ``E_MV,ij = (y_ij - y_i,in) / (y*_ij - y_i,in)``, ``y*_ij = K_ij x_ij`` with ``K`` from
-    the package fugacity coefficients at the bulk liquid (x_j, T^L_j, P_j) and the
-    vapour at ``y*`` (fixed point, 20 sweeps). ``y_in`` is the vapour entering the
-    segment from below (``y_entering_bottom`` for the bottom segment of a column with no
-    stage below it). Components whose driving force ``|y* - y_in|`` is below 1e-9 are
-    omitted (the ratio is undefined).
+    ``E_MV,ij = (y_ij - y_i,in) / (y*_ij - y_i,in)`` (Murphree 1925): ``y_in`` the
+    vapour entering the segment (from the stage below plus any vapour feed to the
+    segment), ``y*`` the vapour in equilibrium with the liquid leaving the segment -
+    the incipient vapour of ``thermo.bubble_point(x_j, P_j)``. Components whose
+    driving force ``|y* - y_in|`` is below 1e-9 are omitted (the ratio is undefined),
+    as are segments with no entering vapour. In a multicomponent mixture a component
+    efficiency need not lie in [0, 1] (Toor 1957); the tests check the case examples.
     """
     cids = prof.cids
+    c = len(cids)
+    feeds = _feed_table(spec, len(prof.v))
     out: list[dict[str, float]] = []
-    for j in range(n_rate):
-        if j + 1 < len(prof.v):
-            y_in = _norm(prof.v[j + 1])
-        elif y_entering_bottom is not None:
-            y_in = y_entering_bottom
-        else:
+    for j in range(spec.n_rate):
+        v_in = (prof.v[j + 1] if j + 1 < len(prof.v) else np.zeros(c)) + feeds.fv[j]
+        if float(np.sum(v_in)) <= 0.0:
             out.append({})
             continue
-        x = _norm(prof.l[j])
-        y = _norm(prof.v[j])
-        ys = y.copy()
-        for _ in range(20):
-            lnk, _ = _k_model(thermo, cids, x, ys, prof.tl[j], pressures[j])
-            ys_new = np.exp(lnk) * x
-            if float(np.max(np.abs(ys_new - ys))) < 1e-13:
-                ys = ys_new
-                break
-            ys = ys_new
+        y_in = _norm(v_in)
+        x = _norm(np.maximum(prof.liq[j], 0.0))
+        y = _norm(np.maximum(prof.v[j], 0.0))
+        bub = thermo.bubble_point(_as_comp(cids, x), P=spec.pressures[j])
+        ys = np.array([bub.incipient_composition.get(cid, 0.0) for cid in cids])
         eff: dict[str, float] = {}
         for i, cid in enumerate(cids):
             den = float(ys[i] - y_in[i])

@@ -157,13 +157,41 @@
         energy residual
       validation: []
     R3:
-      status: planned
-      params: {}
-      note: rate-based stages
+      status: provisional
+      adapter: ngdesign.units.column.rate_based_units:AbsorberR3
+      params:
+        type: object
+        required: [n_stages, column_diameter_m, packed_height_m, nominal_size_m, specific_area_m2_m3, critical_surface_tension_N_m, surface_tension_N_m]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, minimum: 1, description: 'packed segments (rate-based stages), top = 1'}
+          column_diameter_m: {type: number, exclusiveMinimum: 0, description: packed-bed diameter, m}
+          packed_height_m: {type: number, exclusiveMinimum: 0, description: 'total packed height, m (split equally over the segments)'}
+          nominal_size_m: {type: number, exclusiveMinimum: 0, description: 'nominal packing size D_p, m (Onda kG constant 5.23 at >= 15 mm, 2.00 below)'}
+          specific_area_m2_m3: {type: number, exclusiveMinimum: 0, description: 'total packing area a_t, m2/m3'}
+          critical_surface_tension_N_m: {type: number, exclusiveMinimum: 0, description: 'critical surface tension of the packing material sigma_c, N/m'}
+          surface_tension_N_m: {type: number, exclusiveMinimum: 0, description: 'liquid surface tension, N/m (the thermo contract carries none)'}
+          transfer_factor: {type: number, exclusiveMinimum: 0, description: 'multiplier on every film conductance and heat-transfer coefficient (default 1); large values reduce each segment to an equilibrium stage'}
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar = uniform; list = per stage, top to bottom)
+            oneOf:
+            - {type: number, exclusiveMinimum: 0}
+            - {type: array, items: {type: number, exclusiveMinimum: 0}}
+      note: rate-based (Krishna-Taylor) packed segments - separate vapour/liquid balances,
+        interface equilibrium from the package fugacity coefficients, effective-diffusivity
+        film fluxes with Onda (1968) random-packing kG, kL and wetted area, Chapman-Enskog
+        and Wilke-Chang diffusivities, Chilton-Colburn/penetration heat transfer; reduces to
+        R2 as transfer_factor grows (measured 1.8e-7 relative on gas_out at 1e4); duty_W =
+        boundary energy residual. Random packing only - sieve-tray (AIChE 1958, Chan-Fair
+        1984) coefficients were not adopted because their constants could not be confirmed
+        from a fetched source
+      validation: []
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 3
+  - Taylor, Kooijman & Hung 1994, Comput. Chem. Eng. 18, 205-217
+  - Onda, Takeuchi & Okumoto 1968, J. Chem. Eng. Japan 1, 56-62
   notes: the amine-specific rows live in the treating family; this row is the generic solvent absorber. R2 V1 gap — provisional without a case (searched data/validation/ and data/validation_units/column/ for absorber cases; the only absorber V1 case on main is R0's V1-kremser-absorber-seader53, whose printed fractions-not-absorbed are anchored to Example 5.3's 97.5 F chart-estimated K-values carried as Kremser k_overrides — a different thermodynamic basis from the package K-values R2 runs on — so the case is not transferable without re-deriving anchors, which the V1 conventions forbid). R2 is covered by closed-form identity and equilibrium-pair tests.
 
 - id: reboiled_stripper
@@ -224,13 +252,43 @@
         gate) and is pinned xfail(strict=True) in the test file.
       validation: []
     R3:
-      status: planned
-      params: {}
-      note: rate-based stages
+      status: provisional
+      adapter: ngdesign.units.column.rate_based_units:ReboiledStripperR3
+      params:
+        type: object
+        required: [n_stages, spec, column_diameter_m, packed_height_m, nominal_size_m, specific_area_m2_m3, critical_surface_tension_N_m, surface_tension_N_m]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, minimum: 2, description: 'stages including the equilibrium kettle (stage N); N-1 packed segments above it, feed on segment 1'}
+          spec:
+            type: object
+            description: exactly one of boilup_ratio, bottoms_rate (mol/s), distillate_rate (mol/s), reboiler_duty_W
+            minProperties: 1
+            maxProperties: 1
+          column_diameter_m: {type: number, exclusiveMinimum: 0, description: packed-bed diameter, m}
+          packed_height_m: {type: number, exclusiveMinimum: 0, description: 'total packed height, m (split equally over the segments)'}
+          nominal_size_m: {type: number, exclusiveMinimum: 0, description: 'nominal packing size D_p, m (Onda kG constant 5.23 at >= 15 mm, 2.00 below)'}
+          specific_area_m2_m3: {type: number, exclusiveMinimum: 0, description: 'total packing area a_t, m2/m3'}
+          critical_surface_tension_N_m: {type: number, exclusiveMinimum: 0, description: 'critical surface tension of the packing material sigma_c, N/m'}
+          surface_tension_N_m: {type: number, exclusiveMinimum: 0, description: 'liquid surface tension, N/m (the thermo contract carries none)'}
+          transfer_factor: {type: number, exclusiveMinimum: 0, description: 'multiplier on every film conductance and heat-transfer coefficient (default 1); large values reduce each segment to an equilibrium stage'}
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar = uniform; list = per stage, top to bottom)
+            oneOf:
+            - {type: number, exclusiveMinimum: 0}
+            - {type: array, items: {type: number, exclusiveMinimum: 0}}
+      note: rate-based (Krishna-Taylor) packed segments over an equilibrium kettle, solved
+        simultaneously with the kettle spec (reboiler_duty_W included); same transport
+        models as the absorber R3; reduces to R2 as transfer_factor grows (measured 7e-7
+        relative on the overhead at 1e4 against R2 at R2's achieved boilup). Random packing
+        only (tray coefficients not adopted - constants unconfirmed)
+      validation: []
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 4
+  - Taylor, Kooijman & Hung 1994, Comput. Chem. Eng. 18, 205-217
+  - Onda, Takeuchi & Okumoto 1968, J. Chem. Eng. Japan 1, 56-62
   notes: sour-water stripping (plan U-G 9) is a reboiled-stripper configuration on an
     electrolyte package (T-09) — no separate treating row. R2 V1 gap — provisional without a
     case (searched Seader, Henley & Roper 3rd ed. rigorous-methods chapter and Kister,
