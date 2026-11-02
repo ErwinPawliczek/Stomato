@@ -1,8 +1,9 @@
 """Liquid solutions and aqueous speciation in the Gibbs solver.
 
 Oracles: Raoult's law on the cited fits; CRC-derived constants of the solver's own
-potentials; pure-water and strong-electrolyte limits; pKw, the textbook acid constants
-and solubility products, as sanity anchors, with their tolerance stated.
+potentials; pure-water and strong-electrolyte limits; pKw against the Bandura & Lvov
+(2006) table; the textbook acid constants and solubility products as sanity anchors, with
+their tolerance stated.
 """
 
 from __future__ import annotations
@@ -113,11 +114,24 @@ def test_pure_water_is_neutral() -> None:
     assert result.aqueous["H+(aq)"] == pytest.approx(result.aqueous["OH-(aq)"], rel=1e-8)
 
 
-def test_water_ionisation_follows_its_constant() -> None:
-    """pKw near 14 at 25 °C: Bandura & Lvov, J. Phys. Chem. Ref. Data 35, 15 (2006)."""
-    r = reaction_thermo("H2O(l) -> H+ + OH-", 298.15)
-    assert -r.lnK / math.log(10.0) == pytest.approx(14.0, abs=0.05)
-    assert reaction_thermo("H2O(l) -> H+ + OH-", 323.15).lnK > r.lnK  # endothermic
+#: pKw at 0.1 MPa, Bandura & Lvov, J. Phys. Chem. Ref. Data 35(1), 15-30 (2006), Table 4
+#: (Model II, Eq. 39); the 100 °C entry is at saturation pressure.
+BANDURA_LVOV_PKW = {25.0: 13.99, 50.0: 13.26, 75.0: 12.70, 100.0: 12.25}
+
+
+@pytest.mark.parametrize(("celsius", "pkw"), sorted(BANDURA_LVOV_PKW.items()))
+def test_water_ionisation_matches_the_reference_table(celsius: float, pkw: float) -> None:
+    """CRC ion data at 25 °C held with a constant Cp: measured +0.008 at 25 °C, +0.018 at 50,
+    +0.027 at 75 and +0.056 at 100 °C. The bound follows that drift, not a fit."""
+    r = reaction_thermo("H2O(l) -> H+ + OH-", 273.15 + celsius)
+    assert -r.lnK / math.log(10.0) == pytest.approx(pkw, abs=0.01 + 0.0007 * (celsius - 25.0))
+
+
+def test_water_ionisation_refuses_below_the_liquid_table() -> None:
+    from ngdesign.data.species_models import TemperatureRangeError
+
+    with pytest.raises(TemperatureRangeError):
+        reaction_thermo("H2O(l) -> H+ + OH-", 273.16)
 
 
 def test_strong_acid_and_base_set_the_ph() -> None:
