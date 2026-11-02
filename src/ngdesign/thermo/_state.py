@@ -614,9 +614,15 @@ def _vapor_fraction(pairs: list[PhasePair]) -> float:
     return sum(beta for phase, beta in pairs if _is_vapour_phase(phase))
 
 
-#: Weight fraction of a liquid phase whose pure-liquid conductivity may lie outside its
-#: correlation's range and be left out of the mixing rule; past it the property refuses.
+#: Weight fraction of a liquid phase that may be supercritical components, left out of
+#: the mixing rule; past it the property refuses.
 _K_LIQUID_OUT_OF_RANGE_LIMIT = 0.05
+#: Reduced temperature past which a pure-liquid fit's extrapolation is not used. Measured
+#: on the REFPROP fits: they decline smoothly through Tc (propane 0.063 W/(m K) at Tc)
+#: but methane is down to 0.0135 at 1.2 Tc and at its 1e-4 floor by 1.5 Tc.
+_K_LIQUID_TR_CUTOFF = 1.1
+#: W/(m K): below any liquid's conductivity, so a value under it is an extrapolation artefact.
+_K_LIQUID_FLOOR = 0.01
 
 
 def _thermal_conductivity(phase: Any) -> float | None:
@@ -636,9 +642,11 @@ def _liquid_thermal_conductivity(phase: Any) -> float | None:
     above its fit's range has no such value: methane's fit ends at 171.5 K, and at
     280 K it extrapolates to its 1e-4 W/(m K) floor, which the inverse square lets
     dominate (10 mol% methane in n-butane gave 5.8e-4 against about 0.11 W/(m K)).
-    Components outside their correlation's range are left out and the weight
-    fractions renormalised, an approximation stated here, while they stay dilute
-    (≤ 5 wt%); past that the property refuses.
+    Components well above their critical temperature (T ≥ 1.1 Tc), or whose extrapolated
+    value falls below any liquid's conductivity, are left out and the weight fractions
+    renormalised, an approximation stated here, while they stay dilute (≤ 5 wt%); past
+    that the property refuses. Near Tc a component keeps the library's extrapolated
+    value, as before: propane at 370 K in a butane mixture is still counted.
     """
     T = float(phase.T)
     correlations = phase.correlations.ThermalConductivityLiquids
@@ -646,13 +654,10 @@ def _liquid_thermal_conductivity(phase: Any) -> float | None:
     kept_weights: list[float] = []
     kept_k: list[float] = []
     excluded = 0.0
-    for correlation, weight in zip(correlations, weights, strict=True):
-        limits = correlation.T_limits.get(correlation.method) if correlation.method else None
-        if limits is None or not limits[0] <= T <= limits[1]:
-            excluded += weight
-            continue
-        value = correlation.T_dependent_property(T)
-        if value is None or value <= 0.0:
+    critical = [float(Tc) for Tc in phase.constants.Tcs]
+    for correlation, weight, Tc in zip(correlations, weights, critical, strict=True):
+        value = correlation.T_dependent_property(T) if T < _K_LIQUID_TR_CUTOFF * Tc else None
+        if value is None or value < _K_LIQUID_FLOOR:
             excluded += weight
             continue
         kept_weights.append(weight)
