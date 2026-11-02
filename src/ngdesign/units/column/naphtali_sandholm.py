@@ -15,10 +15,12 @@ from .inside_out import (
     _l_profile,
     _live_residual_vector,
     _Profile,
+    _refresh_reactions,
     _residual_row_blocks,
     _residual_scales,
     _stage_k_values,
     _v_free_indices,
+    _vapour_tear_stages,
 )
 from .linalg import _gauss
 from .spec import (
@@ -183,6 +185,7 @@ def _ns_try_accept(
     tb: _ThermoBox,
     v_free: list[int],
     t_bot_tear: float | None,
+    t_top_tear: float | None,
 ) -> tuple[bool, tuple[float, float], float]:
     """One trial state through the joint descent + exact-gate tests.
 
@@ -209,7 +212,7 @@ def _ns_try_accept(
     # recovered from).
     if max(trial_m, trial_h) >= max(m_current, h_current):
         return False, (trial_m, trial_h), ss_try
-    _apply_state(prof, u_try, col, v_free, t_bot_tear)
+    _apply_state(prof, u_try, col, v_free, t_bot_tear, t_top_tear)
     if not live_norm:
         return True, (trial_m, trial_h), ss_try
     # Live-norm acceptance: the frozen-row descent must also not worsen
@@ -225,7 +228,7 @@ def _ns_try_accept(
         ex_try_m, ex_try_h = float("inf"), float("inf")
     if max(ex_try_m, ex_try_h) < max(ex_m, ex_h):
         return True, (trial_m, trial_h), ss_try
-    _apply_state(prof, u, col, v_free, t_bot_tear)
+    _apply_state(prof, u, col, v_free, t_bot_tear, t_top_tear)
     return False, (trial_m, trial_h), ss_try
 
 
@@ -246,6 +249,7 @@ def _ns_residual_function(
         dict[str, float],
     ]
     | None = None,
+    t_top_tear: float | None = None,
 ) -> Callable[[list[float]], list[float]]:
     """Build the residual callable for one Newton pass (fresh closures per pass).
 
@@ -309,7 +313,7 @@ def _ns_residual_function(
     def residuals(u: list[float]) -> list[float]:
         xs = _unpack_x(u, col)
         ts = _unpack_t(u, col)
-        vs = _unpack_v(u, col, _v_free_indices(col), t_bot_tear)
+        vs = _unpack_v(u, col, _v_free_indices(col), t_bot_tear, t_top_tear)
         return _live_residual_vector(
             col,
             tb,
@@ -347,6 +351,8 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
     l0 = prof.l0
     h_stages = _h_equation_stages(col)
     v_free = _v_free_indices(col)
+    # A partial condenser's V_1 is a tear held fixed through the Newton walk.
+    t_top_tear = prof.V[0] if 0 in _vapour_tear_stages(col) else None
     m_rows, h_rows = _residual_row_blocks(col, h_stages)
 
     def m_norm_of(r: list[float]) -> float:
@@ -436,7 +442,7 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
                 l0,
                 _unpack_x(u, col),
                 _unpack_t(u, col),
-                _unpack_v(u, col, v_free, t_bot_tear),
+                _unpack_v(u, col, v_free, t_bot_tear, t_top_tear),
                 y_estimates=y_seeds,
                 k_fallbacks=k_stages,
                 k_cache=k_cache,
@@ -455,6 +461,7 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
             y_estimates=y_seeds,
             y_reference=y_seeds,
             seed_cache=seed_cache if y_seeds is not None else None,
+            t_top_tear=t_top_tear,
         )
         r0 = residuals(u)
         # The pass gate must carry exact-residual semantics, not the NS residual's.
@@ -526,6 +533,7 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
             tb,
             v_free,
             t_bot_tear,
+            t_top_tear,
         )
 
         lam = 1.0
@@ -583,10 +591,10 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
             break
     else:
         if live_norm and best_u is not None:
-            _apply_state(prof, best_u, col, v_free, t_bot_tear)
+            _apply_state(prof, best_u, col, v_free, t_bot_tear, t_top_tear)
         raise ColumnConvergenceError("Naphtali-Sandholm fallback did not converge within budget")
     if live_norm and best_u is not None:
-        _apply_state(prof, best_u, col, v_free, t_bot_tear)
+        _apply_state(prof, best_u, col, v_free, t_bot_tear, t_top_tear)
     _refresh_y(col, tb, prof)
     m_res, h_res = _exact_residuals(col, tb, prof)
     prof.ns_used = True
@@ -631,18 +639,37 @@ def _unpack_t(u: list[float], col: _Column) -> list[float]:
     return [min(max(u[base + j], col.t_band_lo), col.t_band_hi) for j in range(col.n)]
 
 
-def _unpack_v(u: list[float], col: _Column, v_free: list[int], t_bot_tear: float | None) -> list[float]:
+def _unpack_v(
+    u: list[float],
+    col: _Column,
+    v_free: list[int],
+    t_bot_tear: float | None,
+    t_top_tear: float | None = None,
+) -> list[float]:
+    """Full vapour profile from the packed unknowns plus the vapour tears.
+
+    ``t_top_tear`` is a partial condenser's V_1: a tear like the kettle boilup,
+    never a packed unknown, so it must be written back here or every trial
+    state runs with no overhead vapour at all.
+    """
     base = col.n * len(col.comps) + col.n
     full = [_FLOW_FLOOR] * col.n
     for idx, j in enumerate(v_free):
         full[j] = max(_FLOW_FLOOR, u[base + idx])
     if t_bot_tear is not None:
         full[col.n - 1] = t_bot_tear
+    if t_top_tear is not None:
+        full[0] = t_top_tear
     return full
 
 
 def _apply_state(
-    prof: _Profile, u: list[float], col: _Column, v_free: list[int], t_bot_tear: float | None
+    prof: _Profile,
+    u: list[float],
+    col: _Column,
+    v_free: list[int],
+    t_bot_tear: float | None,
+    t_top_tear: float | None = None,
 ) -> None:
     # _unpack_x clamps Newton trial values at zero without renormalizing (the
     # residual algebra needs the raw clamped values); the applied profile must
@@ -651,7 +678,8 @@ def _apply_state(
         _flash_ready({cid: max(v, 0.0) for cid, v in xs.items()}, col.feed_comp) for xs in _unpack_x(u, col)
     ]
     prof.T = _unpack_t(u, col)
-    prof.V = _unpack_v(u, col, v_free, t_bot_tear)
+    prof.V = _unpack_v(u, col, v_free, t_bot_tear, t_top_tear)
+    _refresh_reactions(col, prof.x, prof.T)
     prof.L = _l_profile(col, prof.l0, prof.V)
 
 
