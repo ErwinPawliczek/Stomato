@@ -127,16 +127,48 @@
       note: rating — Kern shell side (S1-S3) with D_e per layout, duct tube side with
         4Ntp return heads, e-NTU S&T, F reported
     R2:
-      status: planned
-      params: {}
-      note: zoned (phase change), multi-pass with temperature cross
-      end_state: true
+      status: provisional
+      adapter: ngdesign.units.heat.shell_tube_r2:ShellTubeR2
+      params:
+        type: object
+        required: [process_side, shell_ID_m, n_tubes, tube_OD_m, tube_ID_m, tube_length_m, pitch_m,
+          layout, baffle_spacing_m, n_baffles, tube_passes, utility_composition, utility_T_K,
+          utility_P_Pa, utility_molar_flow]
+        properties:
+          process_side: {type: string, enum: [tube, shell], description: 'side the process stream flows on'}
+          shell_ID_m: {type: number, description: 'shell inside diameter, m'}
+          n_tubes: {type: integer, description: 'total tube count'}
+          tube_OD_m: {type: number, description: 'tube outside diameter, m'}
+          tube_ID_m: {type: number, description: 'tube inside diameter, m'}
+          tube_length_m: {type: number, description: 'tube length per pass, m'}
+          pitch_m: {type: number, description: 'tube pitch, m'}
+          layout: {type: string, enum: [triangular30, square90], description: 'tube layout'}
+          baffle_spacing_m: {type: number, description: 'baffle spacing, m'}
+          n_baffles: {type: integer, description: 'baffle count'}
+          tube_passes: {type: integer, enum: [1, 2, 4, 6, 8], description: 'tube passes per shell'}
+          n_shells: {type: integer, description: 'TEMA E shells in series, default 1'}
+          utility_composition: {type: object, description: 'utility mole fractions'}
+          utility_T_K: {type: number, description: 'utility inlet temperature, K'}
+          utility_P_Pa: {type: number, description: 'utility inlet pressure, Pa'}
+          utility_molar_flow: {type: number, description: 'utility flow, mol/s'}
+          k_wall_W_mK: {type: number, description: 'tube wall conductivity, W/(m K), default 45'}
+          R_f_tube_m2K_W: {type: number, description: 'tube-side fouling, m2 K/W, default 0'}
+          R_f_shell_m2K_W: {type: number, description: 'shell-side fouling, m2 K/W, default 0'}
+          roughness_m: {type: number, description: 'tube roughness, m, default 4.5e-5'}
+          n_zones: {type: integer, description: 'equal-duty zones, 1-200, default 20'}
+          tube_rows_vertical: {type: integer, description: 'mean tubes in a vertical row; required for shell-side condensation'}
+          F_min: {type: number, description: 'minimum acceptable F, default 0.75'}
+      note: zone analysis with phase change (Nusselt bank on the shell, Shah and Liu-Winterton in the
+        tubes), one F from the terminal temperatures for multi-pass, F_min refusal naming the shells
+        required; shell-side boiling is refused; reduces to R1 in one single-phase zone
   sizer: shell_tube
   pid_symbol: E
   references:
   - docs/unit-catalogue-plan.md §2 U-C 2
   notes: >-
-    The R0 row shares the HeatExchanger adapter. R1 V1 gap - searched Kern 1950
+    R2 ships provisional on the Nusselt bank closed form and the one-zone reduction to R1 at 1 and 2
+    passes; the Kern ch. 12 condenser example was not consulted, so no R2 V1 case exists. The R0 row
+    shares the HeatExchanger adapter. R1 V1 gap - searched Kern 1950
     Examples 7.3-7.4 and the Kakaç et al. 3rd ed. Ch. 8 Kern-method worked
     examples for a complete printed input-and-result set (film coefficients,
     U and pressure drops with printed inputs); only OCR'd full-text scans are
