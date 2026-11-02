@@ -10,9 +10,9 @@ registry implements. A level or method listed here is listed but not implemented
 |---|---|---|---|
 | Unit rows | 84 | 81 | 3 |
 | Planned rigour levels on implemented units | | | 21 |
-| Property methods in the plan | 168 | 147 | 21 |
+| Property methods in the plan | 168 | 160 | 8 |
 
-Catalogue rows by status: 8 experimental, 138 provisional, 9 validated.
+Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
 
 ## Unit rows with no implementation
 
@@ -52,26 +52,13 @@ Catalogue rows by status: 8 experimental, 138 provisional, 9 validated.
 
 | plan section | method | state |
 |---|---|---|
-| D Helmholtz / reference | EOS-CG | `eos_cg` is a refusal row |
 | F SAFT / CPA | soft-SAFT | `soft_saft` is a refusal row |
-| G electrolytes / reactive | physical solvents (Selexol-type) in gamma-phi | no catalogue row |
-| G electrolytes / reactive | glycol package (TEG/MEG dehydration, tuned PR) | no catalogue row |
 | H solids / polymers / special | Polymer SRK | no catalogue row |
-| Parameter-form and databank variants | NRTL two-parameter / five-parameter (T-dependent) forms | no catalogue row |
-| Parameter-form and databank variants | UNIQUAC two-parameter / T-dependent forms | no catalogue row |
 | Parameter-form and databank variants | Wilson two-parameter / T-dependent forms | no catalogue row |
-| Parameter-form and databank variants | Wilson liquid-reference (Wilson-LR, Wilson-GLR) | no catalogue row |
 | Parameter-form and databank variants | COSMO-SAC (sigma profiles) | no catalogue row |
-| Parameter-form and databank variants | UNIFAC with Lyngby / Dortmund T-dependence switch | no catalogue row |
-| Parameter-form and databank variants | PR / SRK with Rackett liquid density | no catalogue row |
-| Parameter-form and databank variants | PR / SRK with COSTALD liquid density | no catalogue row |
 | Parameter-form and databank variants | PR / SRK with API liquid density | no catalogue row |
 | Parameter-form and databank variants | Schwartzentruber-Renon (SR-POLAR) | no catalogue row |
-| Parameter-form and databank variants | Predictive SRK with Gmehling T-dependent groups | no catalogue row |
-| Parameter-form and databank variants | Grayson-Streed with Lee-Kesler enthalpies | no catalogue row |
-| Parameter-form and databank variants | Chao-Seader with Lee-Kesler enthalpies | no catalogue row |
 | Parameter-form and databank variants | Amine package with physical-solvent co-absorption (Sulfolane) | no catalogue row |
-| Parameter-form and databank variants | Mixed amines (MDEA+PZ) | no catalogue row |
 | Parameter-form and databank variants | DEA / DGA / DIPA / AMP speciation sets | no catalogue row |
 
 ## Implemented but still experimental
