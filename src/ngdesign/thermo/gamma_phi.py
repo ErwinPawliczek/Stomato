@@ -71,7 +71,7 @@ from ngdesign.data import DATABANK_LOCK
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.thermo import _state, virial
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
-from ngdesign.thermo.ge_models import Margules, VanLaar
+from ngdesign.thermo.ge_models import Margules, VanLaar, WohlThreeSuffix
 
 # The ideal-gas vapour is not a CEOS class; without this registration the
 # shared state layer counts an all-ideal-gas state as liquid (vf stuck at 0).
@@ -95,6 +95,7 @@ _THREE_PHASE_LIQUIDS = frozenset({"nrtl", "uniquac", "unifac_lle"})
 _DISPLAY: dict[str, str] = {
     "vanlaar": "van Laar",
     "margules": "Margules",
+    "wohl3": "the three-suffix Wohl model",
     "regular_solution": "the regular-solution model",
 }
 
@@ -361,6 +362,20 @@ def _uniquac_rq(ids: tuple[str, ...], cas_list: list[str]) -> tuple[list[float],
     return rs, qs
 
 
+def _reference_liquid_volumes(ids: tuple[str, ...], cas_list: list[str], correlations: Any) -> list[float]:
+    """Pure liquid molar volumes at 298.15 K, 101325 Pa; a missing one raises naming it."""
+    volumes: list[float] = []
+    for i, (cid, cas) in enumerate(zip(ids, cas_list, strict=True)):
+        volume = correlations.VolumeLiquids[i](298.15, 101325.0)
+        if volume is None:
+            raise ValueError(
+                f"no liquid molar volume for {cid} ({cas}) at 298.15 K; refusing rather than "
+                "defaulting - select a model whose parameters cover this component support"
+            )
+        volumes.append(float(volume))
+    return volumes
+
+
 def _regular_solution_factory(ids: tuple[str, ...], cas_list: list[str], correlations: Any) -> Any:
     """Callable(xs) building one RegularSolution model over the support.
 
@@ -437,6 +452,20 @@ def _ge_model_factory(liquid: str, ids: tuple[str, ...], cas_list: list[str], co
 
         def make(xs: list[float]) -> GibbsExcess:
             return cls(xs=list(xs), T=298.15, A12=a12, A21=a21)
+
+        return make
+
+    if liquid == "wohl3":
+        # Same A12/A21 as the Margules rows (their infinite-dilution limits are
+        # the model's), plus the Scatchard-Hamer q_i = V_i at the reference state.
+        matrix = _fitted_only_matrix("margules", ids, cas_list)
+        a12 = matrix[0][1] if n > 1 else 0.0
+        a21 = matrix[1][0] if n > 1 else 0.0
+        q = _reference_liquid_volumes(ids, cas_list, correlations)
+        q1, q2 = q[0], q[-1]
+
+        def make(xs: list[float]) -> GibbsExcess:
+            return WohlThreeSuffix(xs=list(xs), T=298.15, A12=a12, A21=a21, q1=q1, q2=q2)
 
         return make
 

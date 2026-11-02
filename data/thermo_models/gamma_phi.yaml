@@ -3048,3 +3048,75 @@
   - Larsen, B. L., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Res. 26(11), 2274-2286, 1987
   l0: {}
   l0_excluded: {}
+- id: wohl3_ig
+  name: Van Laar / Margules three-suffix forms
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: wohl3
+    vapour: ideal
+  params:
+    source: A12/A21 from data/thermo_params/margules/pairs.yaml; q_i are databank liquid molar
+      volumes at 298.15 K, 101325 Pa
+    provenance: the Wohl three-suffix expansion both classic forms truncate, with the Scatchard-Hamer
+      choice q_i = V_i. It reduces to the Margules rows at q1 = q2 and to the van Laar rows at
+      q1/q2 = A12/A21; no parameter is added to the Margules rows' case-fitted pairs, which fix the
+      infinite-dilution limits only, so the interior of the curve is a prediction
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 250.0
+    - 600.0
+    P_Pa:
+    - 1000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Wohl, K., Trans. AIChE 42, 215-249, 1946
+  - Scatchard, G. & Hamer, W. J., J. Am. Chem. Soc. 57(10), 1805-1809, 1935
+  - Prausnitz, J. M., Lichtenthaler, R. N. & de Azevedo, E. G., Molecular Thermodynamics of
+    Fluid-Phase Equilibria, 3rd ed., Prentice Hall, 1999, sec. 6.10
+  l0:
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          EtOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+  l0_excluded: {}
