@@ -135,6 +135,7 @@ def _phase_basis(
     P: float,
     volume_m3: float,
     holdup_m3: float | None,
+    z: dict[str, float],
 ) -> tuple[float, float, dict[str, float]] | None:
     """R2 equation 4: (V_k, P_eff,k, x_k) of the reacting phase; None when absent."""
     kind = _R2_PHASES[reacting_phase]
@@ -143,6 +144,10 @@ def _phase_basis(
         return None
     phase = max(candidates, key=lambda p: p.mole_fraction)
     p_eff = P if kind is PhaseKind.VAPOR else 1000.0 * phase.density / phase.molecular_weight * R * T
+    if len(stream.phases) == 1:
+        # One phase is the vessel: V_k = V and x_k = z exactly, not through the flash's
+        # rounded phase fractions, so the residuals are R1's bit for bit.
+        return (holdup_m3 if holdup_m3 is not None else volume_m3), p_eff, z
     if holdup_m3 is not None:
         v_k = holdup_m3
     else:
@@ -251,7 +256,7 @@ def _solve_cstr(
         stream = thermo.flash_pt(z, T, inlet.P, total)
         vf = stream.vapor_fraction
         if phase_resolved:
-            basis = _phase_basis(stream, reacting_phase, T, inlet.P, volume_m3, holdup_m3)
+            basis = _phase_basis(stream, reacting_phase, T, inlet.P, volume_m3, holdup_m3, z)
             g = [nu_b * xi_j / total_in for nu_b, xi_j in zip(nu_base, xi, strict=True)]
             if basis is not None:
                 v_k, p_k, x_k = basis
