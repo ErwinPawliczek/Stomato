@@ -1,4 +1,4 @@
-"""Catalogue tests: the 83-row palette loads and matches the registry (U-00).
+"""Catalogue tests: the 84-row palette loads and matches the registry (U-00).
 
 The catalogue is data, so most tests walk every row. The palette counts and
 the registry equivalence are the load-bearing invariants: a family file edited

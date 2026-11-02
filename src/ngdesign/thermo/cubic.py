@@ -47,11 +47,15 @@ from ngdesign.contracts.components import ComponentSet, data_definitions
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.thermo import _state
+from ngdesign.thermo.free_water import FreeWaterPhase
+from ngdesign.thermo.liquid_density import CorrelatedDensityPhase
 from ngdesign.thermo.options import (
     CUBIC_OPTION_DEFAULTS,
     AlphaFunction,
     CubicOptionValues,
     EnthalpyMethod,
+    FreeWater,
+    LiquidDensity,
     MixingRule,
     SourTerm,
     VolumeTranslation,
@@ -1310,7 +1314,48 @@ def configure_options(
             },
         )
 
+    if options.free_water != FreeWater.NONE:
+        attrs: dict[str, Any] = {
+            "free_water_index": ids.index("H2O") if "H2O" in ids else -1,
+            "free_water_eos": "PR" if getattr(eos, "__name__", "").startswith("PR") else "SRK",
+        }
+        gas_cls = type("FreeWaterGas", (FreeWaterPhase, gas_cls), attrs)
+        liquid_cls = type("FreeWaterLiquid", (FreeWaterPhase, liquid_cls), attrs)
+
+    if options.liquid_density != LiquidDensity.EOS:
+        gas_cls, liquid_cls = _density_phase_classes(
+            options.liquid_density, gas_cls, liquid_cls, records, constants
+        )
+
     return eos, eos_kwargs, gas_cls, liquid_cls
+
+
+def _density_phase_classes(
+    model: LiquidDensity, gas_cls: Any, liquid_cls: Any, records: list[Any], constants: Any
+) -> tuple[Any, Any]:
+    """Phase classes reporting the correlation's liquid volume (LiquidDensity).
+
+    Both classes are wrapped: on a one-root liquid state `thermo` hands back the gas
+    wrapper holding the liquid root (see ``_state._holds_gas_root``). A correlation
+    with no constant for a component refuses, naming it, rather than dropping back
+    to the EOS volume the row exists to replace.
+    """
+    if model == LiquidDensity.COSTALD:
+        missing = [r.id for r, vc in zip(records, constants.Vcs, strict=True) if vc is None]
+        if missing:
+            raise ValueError(
+                f"COSTALD liquid density needs a characteristic volume; none for {missing}: "
+                "refusing rather than reporting the EOS volume under a COSTALD row"
+            )
+    attrs = {
+        "density_model": model,
+        "density_vcs": tuple(constants.Vcs),
+        "density_mws": tuple(constants.MWs),
+    }
+    return (
+        type(f"{model.value}Gas", (CorrelatedDensityPhase, gas_cls), attrs),
+        type(f"{model.value}Liquid", (CorrelatedDensityPhase, liquid_cls), attrs),
+    )
 
 
 # -- option-aware adapter and the T-02 row adapters (spec T-02) ---------------
@@ -1510,3 +1555,45 @@ class SrkLeeKeslerThermo(OptionCubicEOS):
 
     eos = SRKMIX
     options = CubicOptionValues(enthalpy=EnthalpyMethod.LEE_KESLER)
+
+
+class PrRackettThermo(OptionCubicEOS):
+    """PRMIX VLE with the Spencer-Danner Rackett liquid density."""
+
+    eos = PRMIX
+    options = CubicOptionValues(liquid_density=LiquidDensity.RACKETT)
+
+
+class SrkRackettThermo(OptionCubicEOS):
+    """SRKMIX VLE with the Spencer-Danner Rackett liquid density."""
+
+    eos = SRKMIX
+    options = CubicOptionValues(liquid_density=LiquidDensity.RACKETT)
+
+
+class PrCostaldThermo(OptionCubicEOS):
+    """PRMIX VLE with the COSTALD-Tait liquid density."""
+
+    eos = PRMIX
+    options = CubicOptionValues(liquid_density=LiquidDensity.COSTALD)
+
+
+class SrkCostaldThermo(OptionCubicEOS):
+    """SRKMIX VLE with the COSTALD-Tait liquid density."""
+
+    eos = SRKMIX
+    options = CubicOptionValues(liquid_density=LiquidDensity.COSTALD)
+
+
+class PrFreeWaterThermo(OptionCubicEOS):
+    """PRMIX with IAPWS-95 pure water in the free-water phase."""
+
+    eos = PRMIX
+    options = CubicOptionValues(free_water=FreeWater.IAPWS95)
+
+
+class KabadiDannerFreeWaterThermo(OptionCubicEOS):
+    """Kabadi-Danner SRK with IAPWS-95 pure water in the free-water phase."""
+
+    eos = SRKMIXKD
+    options = CubicOptionValues(mixing=MixingRule.KABADI_DANNER, free_water=FreeWater.IAPWS95)

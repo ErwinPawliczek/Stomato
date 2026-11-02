@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `RF`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.reactors_reformer:CatalyticReformer` | Fahim Table 5.3 lumped yields vs reformate RON; duty sensible-only (flag heat_of_reaction_basis_sensible_only) |
-| R1 | planned | — | Smith (1959) lumped kinetics |
+| R1 | provisional | `ngdesign.units.refining.reformer_kinetic:CatalyticReformerR1` | Smith (1959) four-reaction scheme on representative C7 species in adiabatic beds with interheaters, on the pfr integrator; the constants are required inputs |
 
 ### R0 parameters
 
@@ -42,6 +42,28 @@ required:
 - ron_reformate
 - naphthenes_vol_pct
 - aromatics_vol_pct
+type: object
+```
+
+### R1 parameters
+
+```yaml
+properties:
+  beds:
+    description: '[{catalyst_mass_kg, inlet_T_K (interheater set point), thermal:
+      adiabatic|isothermal}] in flow order'
+    type: array
+  bulk_density_kg_m3:
+    description: catalyst bulk density, kg/m3
+    type: number
+  kinetics:
+    description: 'required explicit {dehydro|n_to_p: {k0, Ea, A_K, B_K}, hc_n|hc_p:
+      {k0, Ea}}; k0 in mol/(kg_cat s atm^order), Ea J/mol, K = exp(A_K - B_K/T[K]);
+      the smith1959 preset is refused'
+required:
+- beds
+- bulk_density_kg_m3
+- kinetics
 type: object
 ```
 

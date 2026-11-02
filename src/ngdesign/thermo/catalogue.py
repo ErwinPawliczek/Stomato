@@ -39,6 +39,7 @@ from ngdesign.contracts.plugins import Thermo
 from ngdesign.thermo.options import (
     AlphaFunction,
     EnthalpyMethod,
+    FreeWater,
     GammaPhiOptions,
     KValueModel,
     LiquidDensity,
@@ -69,6 +70,7 @@ class CubicOptions(BaseModel):
     sour: SourTerm = SourTerm.NONE
     enthalpy: EnthalpyMethod = EnthalpyMethod.EOS
     mixing: MixingRule = MixingRule.NONE
+    free_water: FreeWater = FreeWater.NONE
 
     @property
     def is_default(self) -> bool:
@@ -80,6 +82,7 @@ class CubicOptions(BaseModel):
             and self.sour == SourTerm.NONE
             and self.enthalpy == EnthalpyMethod.EOS
             and self.mixing == MixingRule.NONE
+            and self.free_water == FreeWater.NONE
         )
 
 
@@ -203,6 +206,12 @@ def _validate_options(row: ModelRow, where: str) -> None:
                     f"{where}: options.k_model {kopts.k_model.value!r} does not match adapter "
                     f"{row.adapter!r} (pins {pinned!r})"
                 )
+            basis = getattr(adapter, "enthalpy_basis", None)
+            if basis != kopts.enthalpy:
+                raise CatalogueError(
+                    f"{where}: options.enthalpy {kopts.enthalpy.value!r} does not match adapter "
+                    f"{row.adapter!r} (pins {basis!r})"
+                )
         elif row.options:
             raise CatalogueError(
                 f"{where}: no typed options are declared for family {row.family!r} yet "
@@ -301,7 +310,8 @@ def build(row: ModelRow, *args: Any, **kwargs: Any) -> Thermo:
 
 
 _CUBIC_DEFAULTS: dict[
-    str, AlphaFunction | VolumeTranslation | EnthalpyMethod | SourTerm | MixingRule | LiquidDensity
+    str,
+    AlphaFunction | VolumeTranslation | EnthalpyMethod | SourTerm | MixingRule | LiquidDensity | FreeWater,
 ] = {
     "alpha": AlphaFunction.DEFAULT,
     "translation": VolumeTranslation.NONE,
@@ -309,6 +319,7 @@ _CUBIC_DEFAULTS: dict[
     "liquid_density": LiquidDensity.EOS,
     "sour": SourTerm.NONE,
     "mixing": MixingRule.NONE,
+    "free_water": FreeWater.NONE,
 }
 
 _HELMHOLTZ_DEFAULTS: dict[str, str] = {"formulation": "IAPWS95"}
@@ -318,10 +329,7 @@ def _has_nondefault_options(row: ModelRow) -> bool:
     """True when the row declares options other than the family defaults."""
     if row.family == "cubic":
         opts = CubicOptions(**row.options)
-        return any(
-            getattr(opts, field) != _CUBIC_DEFAULTS[field]
-            for field in ("alpha", "translation", "enthalpy", "liquid_density", "sour", "mixing")
-        )
+        return any(getattr(opts, field) != _CUBIC_DEFAULTS[field] for field in _CUBIC_DEFAULTS)
     if row.family == "helmholtz":
         hopts = HelmholtzOptions(**row.options)
         return bool(hopts.formulation != _HELMHOLTZ_DEFAULTS["formulation"])

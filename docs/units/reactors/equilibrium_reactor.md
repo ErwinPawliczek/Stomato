@@ -39,9 +39,9 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V1-WGS-EQ` | R0 | `info.extent_wgsr` | 0.498846 | 0.499071 | abs 0.001 | pass |
-| `V1-WGS-EQ` | R0 | `outlet.outlet.composition.CO` | 0.250577 | 0.250465 | abs 0.001 | pass |
-| `V1-WGS-EQ` | R0 | `outlet.outlet.composition.CO2` | 0.249423 | 0.249535 | abs 0.001 | pass |
+| `V1-WGS-EQ` | R0 | `info.extent_wgsr` | 0.498846 | 0.497968 | abs 0.001 | pass |
+| `V1-WGS-EQ` | R0 | `outlet.outlet.composition.CO` | 0.250577 | 0.251016 | abs 0.001 | pass |
+| `V1-WGS-EQ` | R0 | `outlet.outlet.composition.CO2` | 0.249423 | 0.248984 | abs 0.001 | pass |
 
 - `V1-WGS-EQ`: JANAF Thermochemical Tables (Chase 1998), printed log Kf at 1100 K: CO2 18.805, CO 9.928, H2O 8.881 (janaf.nist.gov C-095/C-093/H-064) -> log K(WGS) = -0.004; X = sqrt(K)/(1+sqrt(K)) = 0.498846
 

@@ -1,0 +1,23 @@
+# Temperature-dependent UNIQUAC binaries (row uniquac_tdep_ig): tau_ij = exp(a_ij + b_ij / T).
+# Each list is [pair[0] -> pair[1], pair[1] -> pair[0]].
+#
+# The thermo IPDB's ChemSep table is the two-parameter form (b_ij only).
+model: uniquac
+pairs:
+  etohh2o:
+    pair: [EtOH, H2O]
+    a: [-0.25, -0.04]
+    b: [22.0, -54.0]
+    citation: >-
+      Guevara Luna, M. A. et al., Tecciencia 13(24), 2018,
+      doi:10.18180/tecciencia.2018.24.3, Table 2, 'Low pressure parameters', regressed
+      in that paper from VLE at 13.15, 19.71 and 32.86 kPa; recommended range 298.14 to
+      373.15 K. The paper's table is printed to two figures. The text layer does not
+      resolve the paper's tau equation; the exponential form used here is the standard
+      one, and with it these numbers reproduce the 1-atm azeotrope to 0.1 K and 0.001
+      in y (measured, tests/thermo/test_gamma_phi_variants.py). The linear form does not.
+# Pure-component surface parameters of the same paper, Table 3 (its q; its q' is not used
+# because thermo's UNIQUAC has one q).
+components:
+  EtOH: {r: 2.10547, q: 1.9720}
+  H2O: {r: 0.9200, q: 1.4}

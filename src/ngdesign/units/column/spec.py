@@ -13,6 +13,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
+from ngdesign.contracts.reactions import PowerLaw, ReactionSet
+
 #: Iteration budgets. Non-convergence raises a typed error; it never hangs.
 _OUTER_MAX = 40
 _OUTER_DAMP = 0.5  # feedback damping on model and profile updates between sweeps
@@ -190,6 +192,33 @@ class _Pumparound:
     tear: str = ""  # which variable is the free tear: "", "flow", "duty"
 
 
+@dataclass(frozen=True)
+class _StageHeater:
+    """One inter-stage exchanger: a fixed duty on an ordinary tray.
+
+    ``duty_W`` is heat ADDED to the stage: positive for an inter-reboiler or
+    side heater, negative for an intercooler. The term enters that stage's
+    energy balance only (MESH H_j with Q_j != 0; Seader, Henley & Roper 3rd
+    ed., eq. 10-4); the heater carries no material.
+    """
+
+    stage: int  # 1-indexed
+    duty_W: float
+
+
+@dataclass(frozen=True)
+class _StageReactions:
+    """Liquid-phase kinetics on the column's reactive stages.
+
+    ``holdups`` maps 1-indexed stage -> reacting liquid holdup, m3. A stage's
+    extent of reaction r is holdup * rate_r(T_j, P_j, x_j), mol/s, from the
+    registered rate expressions (``units/_physics/kinetics.py``).
+    """
+
+    rset: ReactionSet
+    holdups: dict[int, float]
+
+
 #: Pure-water component id of stripper steam (S0-1c): steam enters the
 #: stripper's bottom stage as an ordinary pure-H2O feed.
 STEAM_COMPONENT = "H2O"
@@ -242,6 +271,10 @@ class _Params:
     #: phase at a total condenser leaves as a separate internal product
     #: (``water_decant``). Requires condenser == "total".
     condenser_water_decant: bool = False
+    #: Inter-stage heaters/coolers (empty = none, the plain column exactly).
+    stage_heaters: list[_StageHeater] = field(default_factory=list)
+    #: Kinetic stages (None = no reaction, the plain column exactly).
+    reactions: _StageReactions | None = None
 
 
 def _positive(value: Any, name: str) -> float:
@@ -385,6 +418,7 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
     pumparounds = _parse_pumparounds(params, n_stages)
     strippers = _parse_side_strippers(params, n_stages)
     decant = _parse_decant(params, condenser)
+    heaters = _parse_stage_heaters(params, n_stages)
     _validate_stripper_drivers(strippers)
     n_tears = (1 if condenser != "none" else 0) + (1 if reboiler != "none" else 0)
     tear_list = _tear_names(condenser, reboiler, strippers)
@@ -454,7 +488,92 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
         pumparounds=pumparounds,
         side_strippers=strippers,
         condenser_water_decant=decant,
+        stage_heaters=heaters,
+        reactions=_parse_reactions(params, n_stages),
     )
+
+
+def _duty_stages(params: Mapping[str, Any], n_stages: int) -> list[tuple[int, str]]:
+    """Stages whose balance DEFINES a duty, so they cannot carry another term."""
+    stages: list[tuple[int, str]] = []
+    if str(params.get("condenser", "total")) != "none":
+        stages.append((1, "the condenser stage (the condenser's own balance defines qc)"))
+    if str(params.get("reboiler", "kettle")) == "kettle":
+        stages.append((n_stages, "the reboiler stage (the kettle's own balance defines qr)"))
+    return stages
+
+
+def _parse_stage_heaters(params: Mapping[str, Any], n_stages: int) -> list[_StageHeater]:
+    """Parse ``params["stage_heaters"]``: fixed duties on ordinary trays."""
+    raw = params.get("stage_heaters", [])
+    if not isinstance(raw, (list, tuple)):
+        raise ColumnSpecError("stage_heaters must be a list of {stage, duty_W} dicts")
+    forbidden = dict(_duty_stages(params, n_stages))
+    heaters: list[_StageHeater] = []
+    seen: set[int] = set()
+    for k, item in enumerate(raw):
+        d = dict(item)
+        stage = _stage_index(d.get("stage"), f"stage_heaters[{k}].stage", n_stages)
+        if stage in forbidden:
+            raise ColumnSpecError(f"stage_heaters[{k}]: stage {stage} is {forbidden[stage]}")
+        if stage in seen:
+            raise ColumnSpecError(f"stage_heaters: duplicate stage {stage}")
+        seen.add(stage)
+        try:
+            duty = float(d.get("duty_W"))  # type: ignore[arg-type]
+        except (TypeError, ValueError) as exc:
+            raise ColumnSpecError(
+                f"stage_heaters[{k}].duty_W must be a number, got {d.get('duty_W')!r}"
+            ) from exc
+        if not math.isfinite(duty):
+            raise ColumnSpecError(f"stage_heaters[{k}].duty_W must be finite, got {duty!r}")
+        heaters.append(_StageHeater(stage=stage, duty_W=duty))
+    return heaters
+
+
+def _parse_reactions(params: Mapping[str, Any], n_stages: int) -> _StageReactions | None:
+    """Parse ``params["reaction_set"]`` + ``params["reactive_holdup_m3"]``.
+
+    The stage is a LIQUID reactor, which bounds what the shared rate
+    expressions may say. Mole-fraction driving forces only: the concentration
+    basis of ``kinetics`` is the ideal-gas c = yP/(RT). A reaction limited
+    through ``Reaction.equilibrium`` without an explicit reverse rate is
+    refused too, because that branch takes an ideal-gas activity quotient.
+    """
+    raw = params.get("reaction_set")
+    raw_holdups = params.get("reactive_holdup_m3")
+    if raw is None and raw_holdups is None:
+        return None
+    if raw is None or not raw_holdups:
+        raise ColumnSpecError("reaction_set and reactive_holdup_m3 must be given together")
+    if not isinstance(raw_holdups, Mapping):
+        raise ColumnSpecError("reactive_holdup_m3 must map stage -> holdup, m3")
+    try:
+        rset = raw if isinstance(raw, ReactionSet) else ReactionSet.model_validate(raw)
+    except ValueError as exc:
+        raise ColumnSpecError(f"reaction_set is invalid: {exc}") from exc
+    for reaction in rset.reactions:
+        kinetics = reaction.kinetics
+        if kinetics is None:
+            raise ColumnSpecError(f"reaction {reaction.id!r}: a reactive stage needs a kinetics model")
+        if kinetics.basis != "mole_fraction":
+            raise ColumnSpecError(
+                f"reaction {reaction.id!r}: basis {kinetics.basis!r} is an ideal-gas concentration; "
+                "liquid stages take the mole_fraction basis"
+            )
+        if reaction.equilibrium is not None and not (isinstance(kinetics, PowerLaw) and kinetics.reverse):
+            raise ColumnSpecError(
+                f"reaction {reaction.id!r}: equilibrium limitation uses an ideal-gas activity "
+                "quotient; give the liquid-phase reverse rate explicitly"
+            )
+    forbidden = dict(_duty_stages(params, n_stages))
+    holdups: dict[int, float] = {}
+    for key, value in raw_holdups.items():
+        stage = _stage_index(key, "reactive_holdup_m3 stage", n_stages)
+        if stage in forbidden:
+            raise ColumnSpecError(f"reactive_holdup_m3: stage {stage} is {forbidden[stage]}")
+        holdups[stage] = _positive(value, f"reactive_holdup_m3[{stage}]")
+    return _StageReactions(rset=rset, holdups=holdups)
 
 
 def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumparound]:

@@ -19,11 +19,13 @@ layers =
     ngdesign.flowsheets
     ngdesign.solver
     ngdesign.variables
+    ngdesign.chem
     ngdesign.units
     ngdesign.amine
     ngdesign.thermo
     ngdesign.contracts | ngdesign.registry
     ngdesign.data
+    ngdesign.uom
 
 [importlinter:contract:engineering-independent]
 name = Engineering deliverables never import the simulation engine

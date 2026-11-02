@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `HT`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.reactors_hdt:NaphthaHydrotreater` | Fahim E12.2 model-compound stoichiometry (thiophene HDS, pyridine HDN, olefin/aromatic saturation) with declared removal fractions; duty sensible-only |
-| R1 | planned | — | lumped HDS/HDN kinetics in a PFR |
+| R1 | provisional | `ngdesign.units.refining.hdt_kinetic:NaphthaHydrotreaterR1` | model-compound HDS, HDN and saturation kinetics in catalyst beds on the pfr integrator; real model compounds only, the kinetics are required user inputs |
 
 ### R0 parameters
 
@@ -42,6 +42,29 @@ properties:
   sulfur_removal_frac:
     description: feed sulfur removal fraction, in [0, 1], default 1.0
     type: number
+type: object
+```
+
+### R1 parameters
+
+```yaml
+properties:
+  beds:
+    description: '[{catalyst_mass_kg, inlet_T_K (optional heater set point), thermal:
+      adiabatic|isothermal}] in flow order'
+    type: array
+  bulk_density_kg_m3:
+    description: catalyst bulk density, kg/m3
+    type: number
+  kinetics:
+    description: 'required, no default: {hds_thiophene|hdn_pyridine|olefin_sat|arom_sat:
+      contract PowerLaw or LHHW, rate_units mol/(kg_cat s)}; omitted reactions are
+      inactive'
+    type: object
+required:
+- beds
+- bulk_density_kg_m3
+- kinetics
 type: object
 ```
 

@@ -1153,8 +1153,12 @@
       33-constant MBWR Lennard-Jones EOS, plus the soft-SAFT chain and
       association terms and a curated, citable parameter set. No open,
       consolidated soft-SAFT parameter table was identified within T-17 (only
-      the teqp factories above were checked). The row stays a registered
-      refusal; implementing it needs a dedicated spec.
+      the teqp factories above were checked). Rechecked 2026-11-01: Clapeyron.jl
+      (MIT) now implements soft-SAFT, so an engine exists to port, but its
+      softSAFT_like.csv has an empty source column and rows that break the
+      n-alkane trend (n-decane), and the primary parameter papers (Llovell's
+      thesis, the RSC supplement) could not be reached. No citable table, so the
+      row stays a registered refusal; implementing it needs a dedicated spec.
   applicability:
     component_classes:
     - hydrocarbon

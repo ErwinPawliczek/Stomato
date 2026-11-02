@@ -30,6 +30,11 @@ enthalpies/entropies (the ``EnthalpyMethod.LEE_KESLER`` basis, T-02's option
 group) evaluated at Plöcker pseudo-critical conditions over ideal-gas Cp from the
 component databank. Ideal-gas reference state for this family: H = S = 0 at
 298.15 K, 101325 Pa — internal to these rows, not comparable across packages.
+A row may pin ``enthalpy_basis = EnthalpyMethod.IDEAL`` instead (``braun-k10-ideal``):
+vapour H and S are the ideal-gas values and the liquid sits one databank heat of
+vaporisation below them, H_L = sum x_i (H_ig_i - dHvap_i) (Smith, Van Ness & Abbott,
+Introduction to Chemical Engineering Thermodynamics, ideal-solution enthalpy route),
+with the liquid entropy that makes ln phi_L = ln(Psat/P) hold.
 
 Parameter tables with per-table provenance live in ``data/thermo_params/kvalue/``.
 Gamma-phi rows refuse feeds containing components without regular-solution
@@ -63,6 +68,7 @@ from ngdesign.thermo._state import (
     support_ids,
 )
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
+from ngdesign.thermo.options import EnthalpyMethod
 
 #: Pressure above which the Braun K10 row refuses service: the charts' ideal-K
 #: asymptote is only valid well below the 10 MPa convergence pressure.
@@ -322,6 +328,7 @@ class _Support:
     cps: list[Any]  # ideal-gas heat capacity correlations
     vls: list[Any]  # saturated-liquid molar volume correlations
     vp: list[Any]  # vapour-pressure correlations (databank basis)
+    hvap: list[Any]  # enthalpy-of-vaporisation correlations
     antoine: list[dict[str, float] | None]  # WebBook Antoine constants per component
     henry: list[tuple[float, float] | None]  # (A, B) of H = A exp(B/T), Pa.m3/mol
     # regular-solution constants (gamma-phi rows only; None otherwise)
@@ -382,6 +389,7 @@ class _Support:
             cps=cps,
             vls=vls,
             vp=vps,
+            hvap=list(correlations.EnthalpyVaporizations),
             antoine=antoine,
             henry=henry,
             rs_omega_cs=rs_omega_cs,
@@ -396,6 +404,16 @@ class _Support:
     def databank_psat(self, i: int, T: float) -> float | None:
         prop = self.vp[i].T_dependent_property(T)
         return None if prop is None else float(prop)
+
+    def heat_of_vaporisation(self, i: int, T: float) -> float:
+        """Databank heat of vaporisation (J/mol); a component past its range refuses."""
+        value = self.hvap[i].T_dependent_property(T)
+        if value is None:
+            raise ValueError(
+                f"no heat of vaporisation for {self.ids[i]} at T={T} K (critical temperature "
+                f"{self.tcs[i]:.1f} K); the ideal-enthalpy liquid is undefined there"
+            )
+        return float(value)
 
     def antoine_psat(self, i: int, T: float) -> float | None:
         """WebBook Antoine pressure (Pa) when T is inside the correlation range."""
@@ -610,6 +628,7 @@ class KValuePackage(ThermoSurfaceMixin):
 
     k_model: ClassVar[str] = ""
     psat_basis: ClassVar[str] = "databank"
+    enthalpy_basis: ClassVar[EnthalpyMethod] = EnthalpyMethod.LEE_KESLER
 
     def __init__(self) -> None:
         super().__init__()
@@ -756,7 +775,11 @@ class KValuePackage(ThermoSurfaceMixin):
         return total - R_IDEAL * mixing
 
     def _h_res(self, sup: _Support, x: list[float], T: float, P: float, gas: bool) -> float:
-        """Lee-Kesler residual enthalpy (J/mol) at Plöcker pseudo-critical conditions."""
+        """Residual enthalpy (J/mol): Lee-Kesler at Plöcker pseudo-criticals, or the ideal basis."""
+        if self.enthalpy_basis == EnthalpyMethod.IDEAL:
+            if gas:
+                return 0.0
+            return -sum(xi * sup.heat_of_vaporisation(i, T) for i, xi in enumerate(x) if xi > 0.0)
         hres_rt = sup.lk_mixture_hres_rt(x, T, P, gas)
         if hres_rt is None:
             raise ValueError(
@@ -765,7 +788,13 @@ class KValuePackage(ThermoSurfaceMixin):
         return hres_rt * R_IDEAL * T
 
     def _s_res(self, sup: _Support, x: list[float], T: float, P: float, gas: bool) -> float:
-        """Lee-Kesler residual entropy: S_res/(R T) = H_res/(R T) - G_res/(R T)."""
+        """Residual entropy: Lee-Kesler S_res/R = H_res/(R T) - G_res/(R T), or the ideal basis.
+
+        Ideal liquid: S_res = sum x_i [R ln(P/Psat_i) - dHvap_i/T], the value for which
+        G_L - G_ig = sum x_i R T ln(Psat_i/P) reproduces the row's Raoult K.
+        """
+        if self.enthalpy_basis == EnthalpyMethod.IDEAL:
+            return 0.0 if gas else self._ideal_liquid_s_res(sup, x, T, P)
         hres_rt = sup.lk_mixture_hres_rt(x, T, P, gas)
         gres_rt = sup.lk_mixture_gtilde(x, T, P, gas)
         if hres_rt is None or gres_rt is None:
@@ -773,6 +802,17 @@ class KValuePackage(ThermoSurfaceMixin):
                 f"Lee-Kesler departure has no {'vapour' if gas else 'liquid'} root at T={T} K, P={P} Pa"
             )
         return (hres_rt - gres_rt) * R_IDEAL
+
+    def _ideal_liquid_s_res(self, sup: _Support, x: list[float], T: float, P: float) -> float:
+        total = 0.0
+        for i, xi in enumerate(x):
+            if xi <= 0.0:
+                continue
+            psat = self._psat_basis_value(sup, i, T)
+            if psat is None:
+                raise ValueError(f"no vapour pressure for {sup.ids[i]} at T={T} K on the row's basis")
+            total += xi * (R_IDEAL * math.log(P / psat) - sup.heat_of_vaporisation(i, T) / T)
+        return total
 
     # -- phase numbers ------------------------------------------------------
 
@@ -1418,6 +1458,12 @@ class BraunK10Thermo(KValuePackage):
     """Braun K10 low-pressure limit (ideal-K asymptote of the K10 charts); refuses P > 0.7 MPa."""
 
     k_model = "braun_k10"
+
+
+class BraunK10IdealThermo(BraunK10Thermo):
+    """Braun K10 low-pressure limit with ideal-gas / ideal-liquid enthalpies, not Lee-Kesler."""
+
+    enthalpy_basis = EnthalpyMethod.IDEAL
 
 
 class IdealRaoultThermo(KValuePackage):

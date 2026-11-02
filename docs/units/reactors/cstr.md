@@ -2,7 +2,7 @@
 
 Family: **reactors** · P&ID symbol: `R`
 
-Rigour ladder: R1 provisional, R2 planned
+Rigour ladder: R1 provisional, R2 provisional
 
 ## Ports
 
@@ -16,7 +16,7 @@ Rigour ladder: R1 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R1 | provisional | `ngdesign.units.reactors.cstr:CstrR1` | kinetics (Arrhenius, LHHW, power-law), single phase |
-| R2 | planned | — | multi-phase with VLE in the vessel |
+| R2 | provisional | `ngdesign.units.reactors.cstr:CstrR2` | multi-phase with VLE in the vessel; the rate runs in one phase at the outlet phase ratio with no slip, and is zero where that phase is absent; reduces to R1 in a single phase |
 
 ### R1 parameters
 
@@ -45,6 +45,41 @@ properties:
   volume_m3:
     description: reacting volume
     m3: null
+    type: number
+required:
+- reaction_set
+- volume_m3
+type: object
+```
+
+### R2 parameters
+
+```yaml
+properties:
+  T_guess_K:
+    description: Newton start temperature, K
+    type: number
+  bulk_density_kg_m3:
+    description: catalyst bulk density, kg/m3
+    type: number
+  holdup_m3:
+    description: reacting-phase volume, m3; default from the phase ratio
+    type: number
+  reacting_phase:
+    description: phase the reactions occur in; default hc_liquid
+    enum:
+    - vapor
+    - hc_liquid
+    - aqueous
+    type: string
+  reaction_set:
+    description: inline ReactionSet
+    or a string id resolved against Flowsheet.reactions: null
+  thermal:
+    description: '''isothermal'' | ''adiabatic'' | {duty_W: W} | {T_out: K}; default
+      isothermal'
+  volume_m3:
+    description: vessel volume, m3
     type: number
 required:
 - reaction_set

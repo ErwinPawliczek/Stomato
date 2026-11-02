@@ -1,0 +1,45 @@
+# NRTL-SAC segment parameters (row nrtl_sac_ig).
+#
+# Model: Chen, C.-C. & Song, Y., 'Solubility modeling with a nonrandom two-liquid
+# segment activity coefficient model', Ind. Eng. Chem. Res. 43 (2004) 8354-8362.
+#
+# Where the numbers were read (2026-11-01): the journal page returned HTTP 403, so
+# every value below is from the authors' own patent family, read from the rendered
+# page images because the text layer is corrupt:
+#   - binary: US 2010/0114542 A1, Table 2; the same values in ACS Omega 2025
+#     (PMC12242615), Table 5. The y-/y+ pair is tau = 0 (para. 0090). Para. 0087
+#     prints 10.950 for the x/z tau21 where the table prints 10.949; the table is used.
+#   - solvents: US 2010/0114542 A1, Table 3 ('Molecular Descriptors for Common
+#     Solvents'), page image checked; US 8,527,210 B2, Table 3 has the same rows.
+#     Water, n-hexane and acetonitrile are also in Valavi et al. 2016, Table 3. The
+#     other rows of that thesis are refits and must not be mixed with these.
+# Dimethyl sulfoxide is left out: para. 0095 calls its descriptors questionable.
+# Pairs below are [segment 1, segment 2]; tau12 is tau(1,2).
+binary:
+- {pair: [x, y-], tau12: 1.643, tau21: 1.834, alpha: 0.2}
+- {pair: [x, z], tau12: 6.547, tau21: 10.949, alpha: 0.2}
+- {pair: [y-, z], tau12: -2.000, tau21: 1.787, alpha: 0.3}
+- {pair: [y+, z], tau12: 2.000, tau21: 1.787, alpha: 0.3}
+- {pair: [x, y+], tau12: 1.643, tau21: 1.834, alpha: 0.2}
+- {pair: [y-, y+], tau12: 0.0, tau21: 0.0, alpha: 0.0}
+# Keyed by CAS. Blank cells of the table are 0.
+solvents:
+  7732-18-5: {name: water, x: 0.0, y-: 0.0, y+: 0.0, z: 1.000}
+  67-56-1: {name: methanol, x: 0.088, y-: 0.149, y+: 0.027, z: 0.562}
+  64-17-5: {name: ethanol, x: 0.256, y-: 0.081, y+: 0.0, z: 0.507}
+  71-23-8: {name: 1-propanol, x: 0.375, y-: 0.030, y+: 0.0, z: 0.511}
+  67-63-0: {name: 2-propanol, x: 0.351, y-: 0.070, y+: 0.003, z: 0.353}
+  71-36-3: {name: 1-butanol, x: 0.414, y-: 0.007, y+: 0.0, z: 0.485}
+  107-21-1: {name: ethylene glycol, x: 0.0, y-: 0.141, y+: 0.0, z: 0.338}
+  67-64-1: {name: acetone, x: 0.131, y-: 0.109, y+: 0.513, z: 0.0}
+  78-93-3: {name: methyl ethyl ketone, x: 0.247, y-: 0.036, y+: 0.480, z: 0.0}
+  109-66-0: {name: n-pentane, x: 0.898, y-: 0.0, y+: 0.0, z: 0.0}
+  110-54-3: {name: n-hexane, x: 1.000, y-: 0.0, y+: 0.0, z: 0.0}
+  142-82-5: {name: n-heptane, x: 1.340, y-: 0.0, y+: 0.0, z: 0.0}
+  110-82-7: {name: cyclohexane, x: 0.892, y-: 0.0, y+: 0.0, z: 0.0}
+  108-88-3: {name: toluene, x: 0.604, y-: 0.0, y+: 0.304, z: 0.0}
+  71-43-2: {name: benzene, x: 0.607, y-: 0.0, y+: 0.190, z: 0.0}
+  141-78-6: {name: ethyl acetate, x: 0.322, y-: 0.049, y+: 0.421, z: 0.0}
+  75-05-8: {name: acetonitrile, x: 0.018, y-: 0.131, y+: 0.883, z: 0.0}
+  64-19-7: {name: acetic acid, x: 0.045, y-: 0.164, y+: 0.157, z: 0.217}
+  109-99-9: {name: tetrahydrofuran, x: 0.235, y-: 0.040, y+: 0.320, z: 0.0}

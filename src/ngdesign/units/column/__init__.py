@@ -238,6 +238,14 @@ class Column:
                 info[f"pa_{pa.name}_duty_W"] = rep["duty_W"]
                 info[f"pa_{pa.name}_draw_T_K"] = rep["draw_T_K"]
                 info[f"pa_{pa.name}_return_T_K"] = rep["return_T_K"]
+        for heater in parsed.stage_heaters:
+            info[f"heater_{heater.stage}_duty_W"] = heater.duty_W
+        if col.reactions is not None:
+            info["reaction_heat_W"] = sum(col.rx_q)
+            for stage in col.reactions.holdups:
+                info[f"stage_{stage - 1}_net_generation_mol_s"] = col.rx_gen[stage - 1]
+                for cid, gen in col.rx_source[stage - 1].items():
+                    info[f"stage_{stage - 1}_generation_{cid}"] = gen
         for j in range(col.n):
             info[f"stage_{j}_T_K"] = prof.T[j]
             info[f"stage_{j}_P_Pa"] = col.pressures[j]
@@ -251,11 +259,13 @@ class Column:
         return UnitResult(
             outlets={"distillate": distillate, "bottoms": bottoms, "side_draw": side_draw},
             # Net unit duty (review item 1, PR #238): physical reboiler duty
-            # plus the pumparound coolers' (negative) duties minus the
-            # condenser duty - closes the boundary stream table exactly.
+            # plus the pumparound coolers' (negative) and the inter-stage
+            # heaters' duties minus the condenser duty - closes the boundary
+            # stream table exactly.
             duty_W=prof.qr
             - prof.qc
-            + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0),
+            + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0)
+            + sum(col.stage_q),
             info=info,
         )
 
