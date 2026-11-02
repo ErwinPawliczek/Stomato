@@ -8,16 +8,17 @@ supplies them; a missing value is a typed refusal.
 The lumps are representative real paraffins, the device of the reformer_cat
 spec: a real H2 feed consumed into formula-free pseudo products cannot close the
 element ledger (issue #222), while these close it exactly and give a real heat
-of reaction on the formation basis.  VGO = nC24, diesel = nC12, naphtha = nC6,
-gas = C3, and every scission halves the chain with one H2:
+of reaction on the formation basis.  VGO = nC20, the heaviest paraffin with cited
+formation data (nC24 has no Cp(T) in the databank), diesel = nC12, naphtha = nC6,
+gas = C3, each step an exact element balance:
 
-    nC24 + H2 -> 2 nC12      nC12 + H2 -> 2 nC6      nC6 + H2 -> 2 C3
+    nC20 + 2/3 H2 -> 5/3 nC12      nC12 + H2 -> 2 nC6      nC6 + H2 -> 2 C3
 
 with the three direct paths of the four-lump network (VGO, distillate, naphtha,
 gas: Sadighi, Ahmad & Rashidzadeh, Korean J. Chem. Eng. 27 (2010) 1099) as their
-sums: nC24 + 3 H2 -> 4 nC6, nC24 + 7 H2 -> 8 C3, nC12 + 3 H2 -> 4 C3.  Hydrogen
-consumption therefore counts scissions only: it omits the aromatic saturation
-and hydrotreating that dominate a real unit, and is a lower bound.
+sums: nC20 + 7/3 H2 -> 10/3 nC6, nC20 + 17/3 H2 -> 20/3 C3, nC12 + 3 H2 -> 4 C3.
+Hydrogen consumption therefore counts scissions only: it omits the aromatic
+saturation and hydrotreating that dominate a real unit, and is a lower bound.
 
 R0 reads conversion, diesel and naphtha mass yields from a user table (wt% on
 VGO, linear interpolation, no extrapolation); gas and hydrogen follow from the
@@ -47,14 +48,14 @@ from ngdesign.contracts.reactions import Reaction, ReactionSet
 from ngdesign.data import component_record
 from ngdesign.units._physics.kinetics import R, ReactionExtentError, apply_extents, enthalpy_with_formation
 
-VGO, DIESEL, NAPHTHA, GAS, HYDROGEN = "nC24", "nC12", "nC6", "C3", "H2"
+VGO, DIESEL, NAPHTHA, GAS, HYDROGEN = "nC20", "nC12", "nC6", "C3", "H2"
 _SLATE = [VGO, DIESEL, NAPHTHA, GAS, HYDROGEN]
 
 #: Reaction id, stoichiometry and base component of each network path.
 _PATHS: tuple[tuple[str, dict[str, float], str], ...] = (
-    ("vgo_to_diesel", {VGO: -1.0, HYDROGEN: -1.0, DIESEL: 2.0}, VGO),
-    ("vgo_to_naphtha", {VGO: -1.0, HYDROGEN: -3.0, NAPHTHA: 4.0}, VGO),
-    ("vgo_to_gas", {VGO: -1.0, HYDROGEN: -7.0, GAS: 8.0}, VGO),
+    ("vgo_to_diesel", {VGO: -1.0, HYDROGEN: -2.0 / 3.0, DIESEL: 5.0 / 3.0}, VGO),
+    ("vgo_to_naphtha", {VGO: -1.0, HYDROGEN: -7.0 / 3.0, NAPHTHA: 10.0 / 3.0}, VGO),
+    ("vgo_to_gas", {VGO: -1.0, HYDROGEN: -17.0 / 3.0, GAS: 20.0 / 3.0}, VGO),
     ("diesel_to_naphtha", {DIESEL: -1.0, HYDROGEN: -1.0, NAPHTHA: 2.0}, DIESEL),
     ("diesel_to_gas", {DIESEL: -1.0, HYDROGEN: -3.0, GAS: 4.0}, DIESEL),
     ("naphtha_to_gas", {NAPHTHA: -1.0, HYDROGEN: -1.0, GAS: 2.0}, NAPHTHA),
@@ -187,9 +188,9 @@ class HcuR0:
         naphtha = (
             float(np.interp(conversion, grid, table["naphtha_wt_pct"])) * mass_feed / 100.0 / _mw(NAPHTHA)
         )
-        # Chain extents from the stoichiometry: D = 2*xi1 - xi2, N = 2*xi2 - xi3.
+        # Chain extents from the stoichiometry: D = 5/3*xi1 - xi2, N = 2*xi2 - xi3.
         xi1 = flows[VGO] * conversion / 100.0
-        xi2 = 2.0 * xi1 - diesel
+        xi2 = 5.0 / 3.0 * xi1 - diesel
         xi3 = 2.0 * xi2 - naphtha
         if xi2 < 0.0 or xi3 < 0.0:
             raise HcuSpecError(

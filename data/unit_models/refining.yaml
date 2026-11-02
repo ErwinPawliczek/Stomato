@@ -105,14 +105,31 @@
       note: water/salt/BS&W split spec, wash-water mix (spec U-H1, component
         split at isothermal T with ΔP)
     R1:
-      status: planned
-      params: {}
-      note: efficiency vs wash rate and ΔT (cited correlation)
+      status: provisional
+      adapter: ngdesign.units.refining.desalter_r1:DesalterR1
+      params:
+        type: object
+        required: [T, settling_area_m2, d50_mixed_um, d50_fine_um, rosin_rammler_n, mixing_efficiency,
+          rho_oil_kg_m3, rho_water_kg_m3, mu_oil_Pa_s]
+        properties:
+          T: {type: number, description: 'desalter temperature (K), isothermal'}
+          dP: {type: number, description: 'pressure drop from the crude inlet (Pa, default 0)'}
+          settling_area_m2: {type: number, exclusiveMinimum: 0, description: 'horizontal area the oil rises through, m2'}
+          d50_mixed_um: {type: number, exclusiveMinimum: 0, description: 'volume-median drop diameter of the coalesced wash and brine water, micrometre'}
+          d50_fine_um: {type: number, exclusiveMinimum: 0, description: 'volume-median drop diameter of the uncontacted emulsion, micrometre'}
+          rosin_rammler_n: {type: number, exclusiveMinimum: 0, description: 'Rosin-Rammler spread exponent of both populations'}
+          mixing_efficiency: {type: number, minimum: 0, maximum: 1, description: 'fraction of the crude brine contacted by the wash water'}
+          rho_oil_kg_m3: {type: number, exclusiveMinimum: 0, description: 'oil density at T, kg/m3'}
+          rho_water_kg_m3: {type: number, exclusiveMinimum: 0, description: 'water density at T, kg/m3'}
+          mu_oil_Pa_s: {type: number, exclusiveMinimum: 0, description: 'oil viscosity at T, Pa s'}
+      note: Stokes cut (counter-current settling) plus Rosin-Rammler two-population carryover; splits
+        fed to R0. Temperature effect via user-supplied properties (spec option B)
       end_state: true
   pid_symbol: DS
   references:
   - docs/unit-catalogue-plan.md §2 U-H 2
-  notes: "V1 gap - provisional without a case. Searched PetroWiki 'Desalting' and
+  notes: "R1 takes oil and water densities and oil viscosity as required params (spec option B):
+    no package gives honest values for a pseudo crude. V1 gap - provisional without a case. Searched PetroWiki 'Desalting' and
     Wauquier (Petroleum Refining vol. 1, crude desalting): both state a
     0.1-0.2 vol% BS&W specification but print no worked case, so the former
     V2102 pin (which echoed its own input spec and the adapter's default salt
@@ -413,14 +430,26 @@
       note: Fahim E12.2 model-compound stoichiometry (thiophene HDS, pyridine HDN,
         olefin/aromatic saturation) with declared removal fractions; duty sensible-only
     R1:
-      status: planned
-      params: {}
-      note: lumped HDS/HDN kinetics in a PFR
+      status: provisional
+      adapter: ngdesign.units.refining.hdt_kinetic:NaphthaHydrotreaterR1
+      params:
+        type: object
+        required: [beds, bulk_density_kg_m3, kinetics]
+        properties:
+          beds: {type: array, description: "[{catalyst_mass_kg, inlet_T_K (optional heater set point),
+              thermal: adiabatic|isothermal}] in flow order"}
+          bulk_density_kg_m3: {type: number, description: 'catalyst bulk density, kg/m3'}
+          kinetics: {type: object, description: "required, no default: {hds_thiophene|hdn_pyridine|olefin_sat|arom_sat:
+              contract PowerLaw or LHHW, rate_units mol/(kg_cat s)}; omitted reactions are inactive"}
+      note: model-compound HDS, HDN and saturation kinetics in catalyst beds on the pfr integrator;
+        real model compounds only, the kinetics are required user inputs
       end_state: true
   pid_symbol: HT
   references:
   - docs/unit-catalogue-plan.md §2 U-H 7
-  notes: "R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real
+  notes: "R1 kinetics are required inputs, on real model compounds only; pseudo feeds stay at R0.
+    R1 V1 gap - no printed naphtha HDT kinetic example with inputs and outlets was searched for;
+    provisional on the closed-form W(X) with mole change and the reduction to R0. R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real
     H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental
     characterization (issue #222)."
 
@@ -459,14 +488,30 @@
       note: Fahim Table 5.3 lumped yields vs reformate RON; duty sensible-only (flag
         heat_of_reaction_basis_sensible_only)
     R1:
-      status: planned
-      params: {}
-      note: Smith (1959) lumped kinetics
+      status: provisional
+      adapter: ngdesign.units.refining.reformer_kinetic:CatalyticReformerR1
+      params:
+        type: object
+        required: [beds, bulk_density_kg_m3, kinetics]
+        properties:
+          beds: {type: array, description: "[{catalyst_mass_kg, inlet_T_K (interheater set point),
+              thermal: adiabatic|isothermal}] in flow order"}
+          bulk_density_kg_m3: {type: number, description: 'catalyst bulk density, kg/m3'}
+          kinetics: {description: "required explicit {dehydro|n_to_p: {k0, Ea, A_K, B_K}, hc_n|hc_p:
+              {k0, Ea}}; k0 in mol/(kg_cat s atm^order), Ea J/mol, K = exp(A_K - B_K/T[K]); the
+              smith1959 preset is refused"}
+      note: Smith (1959) four-reaction scheme on representative C7 species in adiabatic beds with
+        interheaters, on the pfr integrator; the constants are required inputs
       end_state: true
   pid_symbol: RF
   references:
   - docs/unit-catalogue-plan.md §2 U-H 8
-  notes: "R0 shipped by U-H2. The spec's \"H2 and light ends as real components\" is
+  notes: "R1 takes Smith's constants as a required explicit input and refuses the smith1959 preset -
+    Smith 1959 could not be read, and the open reproduction (Liang, Guo and Pan, J. Zhejiang Univ. Sci.
+    B 6(6) 2005 590-596, eqs. 9-17) prints k_p2 with a 9.87 prefactor against MPa-2 units that need
+    97.4. V1 gap - that paper omits catalyst masses, so its plant table cannot be reproduced;
+    provisional on the hand equilibrium of dehydro and the unit conversions. No R1 limit reproduces
+    R0 (a different model). R0 shipped by U-H2. The spec's \"H2 and light ends as real components\" is
     out of reach of the mass_elements balance (C/H atoms with no formula-bearing
     source from a pseudo naphtha); the offgas is a mass-only lump, species split
     in info. Pseudo-component elemental characterization - issue #222."
@@ -603,7 +648,7 @@
               gas and H2 follow from the element balance"
           T_out: {type: number, description: 'outlet temperature, K'}
           P_out: {type: number, description: 'outlet pressure, Pa'}
-      note: yield table vs conversion on representative real paraffins (nC24, nC12, nC6, C3); gas by
+      note: yield table vs conversion on representative real paraffins (nC20, nC12, nC6, C3); gas by
         element balance; H2 consumption counts scissions only, a lower bound
     R1:
       status: provisional

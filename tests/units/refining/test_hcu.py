@@ -41,17 +41,17 @@ def _chain(k1: float, k2: float, k3: float) -> dict[str, Any]:
 
 
 def test_r1_series_reactions_match_bateman(thermo: Thermo) -> None:
-    """A -> 2B -> 4C first order: n_B = 2*A0*k1/(k2 - k1)*(e1 - e2) by hand."""
+    """A -> 5/3 B -> 10/3 C first order: n_B = (5/3)*A0*k1/(k2 - k1)*(e1 - e2) by hand."""
     k1, k2 = 2.0e-4, 5.0e-4
     res = HcuR1().solve(_inlets(thermo), _chain(k1, k2, 0.0), thermo)
     tau = 3600.0
     e1, e2 = math.exp(-k1 * tau), math.exp(-k2 * tau)
     assert res.outlets["unconverted_out"].molar_flow == pytest.approx(e1, rel=1e-10)
-    diesel = 2.0 * k1 / (k2 - k1) * (e1 - e2)
+    diesel = 5.0 / 3.0 * k1 / (k2 - k1) * (e1 - e2)
     assert res.outlets["diesel_out"].molar_flow == pytest.approx(diesel, rel=1e-10)
-    # Conservation of chain carbon: 24*A + 12*B + 6*C = 24.
+    # Conservation of chain carbon: 20*A + 12*B + 6*C = 20.
     naphtha = res.outlets["naphtha_out"].molar_flow
-    assert 24.0 * e1 + 12.0 * diesel + 6.0 * naphtha == pytest.approx(24.0, rel=1e-10)
+    assert 20.0 * e1 + 12.0 * diesel + 6.0 * naphtha == pytest.approx(20.0, rel=1e-10)
 
 
 def test_r1_elements_and_mass_close_with_all_paths(thermo: Thermo) -> None:
@@ -102,16 +102,16 @@ def test_r1_arrhenius_and_lhsv(thermo: Thermo) -> None:
 
 
 def test_r0_chain_stoichiometry_by_hand(thermo: Thermo) -> None:
-    """70 wt%: xi1 = 0.7; 40 wt% diesel on 338.6538 g/mol VGO is 0.795 mol/s nC12."""
+    """70 wt%: xi1 = 0.7; 40 wt% diesel on 282.54748 g/mol VGO is 0.6635 mol/s nC12."""
     _, params = HcuR0.example_case()
     res = HcuR0().solve(_inlets(thermo), params, thermo)
-    diesel = 0.40 * 338.6538 / 170.33484
-    naphtha = 0.20 * 338.6538 / 86.17536
+    diesel = 0.40 * 282.54748 / 170.33484
+    naphtha = 0.20 * 282.54748 / 86.17536
     xi1 = 0.7
-    xi2 = 2.0 * xi1 - diesel
+    xi2 = 5.0 / 3.0 * xi1 - diesel
     xi3 = 2.0 * xi2 - naphtha
     assert res.outlets["diesel_out"].molar_flow == pytest.approx(diesel, rel=1e-10)
-    assert res.info["h2_consumed_mol_s"] == pytest.approx(xi1 + xi2 + xi3, rel=1e-10)
+    assert res.info["h2_consumed_mol_s"] == pytest.approx(2.0 / 3.0 * xi1 + xi2 + xi3, rel=1e-10)
     assert res.outlets["gas_out"].composition["C3"] * res.outlets["gas_out"].molar_flow == pytest.approx(
         2.0 * xi3, rel=1e-10
     )

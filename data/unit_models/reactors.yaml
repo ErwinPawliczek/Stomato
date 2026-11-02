@@ -200,16 +200,32 @@
             the steady-state branch}
       note: kinetics (Arrhenius, LHHW, power-law), single phase
     R2:
-      status: planned
-      params: {}
-      note: multi-phase with VLE in the vessel
+      status: provisional
+      adapter: ngdesign.units.reactors.cstr:CstrR2
+      params:
+        type: object
+        required: [reaction_set, volume_m3]
+        properties:
+          reaction_set: {description: inline ReactionSet, or a string id resolved against
+            Flowsheet.reactions}
+          volume_m3: {type: number, description: 'vessel volume, m3'}
+          thermal: {description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K};
+            default isothermal"}
+          reacting_phase: {type: string, enum: [vapor, hc_liquid, aqueous], description: 'phase
+            the reactions occur in; default hc_liquid'}
+          holdup_m3: {type: number, description: 'reacting-phase volume, m3; default from the phase ratio'}
+          bulk_density_kg_m3: {type: number, description: 'catalyst bulk density, kg/m3'}
+          T_guess_K: {type: number, description: 'Newton start temperature, K'}
+      note: multi-phase with VLE in the vessel; the rate runs in one phase at the outlet phase ratio
+        with no slip, and is zero where that phase is absent; reduces to R1 in a single phase
       end_state: true
   balance: mass_elements
   pid_symbol: R
   references:
   - docs/unit-catalogue-plan.md §2 U-F 5
   notes: >-
-    R1 implemented (U-R2): algebraic extents at outlet conditions, damped Newton,
+    R2 ships provisional on an independent recomputation of the rate from the outlet's own
+    phases and the reduction to R1; no V1 case was attempted. R1 implemented (U-R2): algebraic extents at outlet conditions, damped Newton,
     single phase in the vessel. V1 gap (2026-10-25; CORRECTION same day: an
     earlier version of this note wrongly blamed missing components — ethylene
     oxide, ethylene glycol, propylene oxide and propylene glycol all resolve in
