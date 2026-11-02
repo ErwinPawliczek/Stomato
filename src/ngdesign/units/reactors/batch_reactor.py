@@ -45,11 +45,13 @@ from ngdesign.units.reactors._shared import reaction_set_param, thermal_outlet, 
 from ngdesign.units.reactors.plug_flow import (
     _PHASE_KIND,
     RHS_CAP,
-    _flows,
     _partial_molar_enthalpies,
     _pkg_reaction_enthalpy,
     _validate_reactions,
     audit_single_phase,
+    clipped_flows,
+    noise_band,
+    project_extents,
 )
 
 #: Output points of the phase audit along the batch.
@@ -109,6 +111,7 @@ class BatchReactor:
         kind = _PHASE_KIND[phase]
         # Everything per mole charged: the trajectory is independent of batch size.
         f0 = {cid: float(y) for cid, y in inlet.composition.items()}
+        band = noise_band(rset, f0, 1.0)
         q_per_mol = duty_batch_w / n_charge
         n_rhs = 0
 
@@ -118,10 +121,9 @@ class BatchReactor:
             if n_rhs > RHS_CAP:
                 raise BatchReactorError("RHS evaluation cap")
             temperature = float(y[m])
-            f = _flows(rset, f0, y[:m].tolist())
-            negative = sorted(cid for cid, n in f.items() if n < 0.0)
-            if negative:
-                raise BatchReactorError(f"reaction set {rset.id!r} depletes component {negative[0]!r}")
+            f, depleted = clipped_flows(rset, f0, y[:m].tolist(), band)
+            if depleted:
+                raise BatchReactorError(f"reaction set {rset.id!r} depletes component {depleted[0]!r}")
             total = math.fsum(f.values())
             z = z_from(f)
             z_rate = {cid: n / total for cid, n in f.items()}
@@ -170,7 +172,7 @@ class BatchReactor:
         for i, time in enumerate(t_eval):
             audit_single_phase(
                 thermo,
-                _flows(rset, f0, sol.y[:m, i].tolist()),
+                clipped_flows(rset, f0, sol.y[:m, i].tolist(), band)[0],
                 float(sol.y[m, i]),
                 pressure,
                 phase,
@@ -178,7 +180,7 @@ class BatchReactor:
             )
 
         # Cycle-averaged extents (mol/s): the discharge over the cycle.
-        xi_per_mol = [float(x) for x in sol.y[:m, -1]]
+        xi_per_mol = project_extents(rset, f0, sol.y[:m, -1].tolist())
         xi_avg = [x * float(inlet.molar_flow) for x in xi_per_mol]
         n_out = apply_extents(inlet.component_flows(), rset, xi_avg)
         closure: Any = thermal

@@ -275,6 +275,56 @@ def _phase_of(state: StreamState, reacting_phase: Literal["vapor", "liquid"]) ->
     return None
 
 
+def noise_band(rset: ReactionSet, f0: Mapping[str, float], f_tot0: float) -> dict[str, float]:
+    """How far below zero a flow may sit as integration noise, per species.
+
+    Extents hold rtol*|xi| and atol, so a reactant's flow F_i = F_i0 - xi carries that
+    error however small F_i gets; and the finite-difference Jacobian probes xi on a
+    species that is absent.  Neither is depletion: a rate proportional to its reactant
+    relaxes to zero and cannot exhaust it.  The band is ten times the solver tolerances.
+    Flows inside it read as zero; only a flow past it, which a rate that does not
+    vanish with its reactant (zero order) reaches, is a refusal.
+    """
+    return {
+        cid: 1.0e-7 * float(f0.get(cid, 0.0)) + 1.0e-11 * f_tot0
+        for reaction in rset.reactions
+        for cid in reaction.stoichiometry
+    }
+
+
+def clipped_flows(
+    rset: ReactionSet, f0: Mapping[str, float], xi: Sequence[float], band: Mapping[str, float]
+) -> tuple[dict[str, float], list[str]]:
+    """Species flows with noise read as zero, and the species truly past the band."""
+    f = _flows(rset, f0, xi)
+    depleted = sorted(cid for cid, n in f.items() if n < -band.get(cid, 0.0))
+    return {cid: max(n, 0.0) for cid, n in f.items()}, depleted
+
+
+def project_extents(rset: ReactionSet, f0: Mapping[str, float], xi: Sequence[float]) -> list[float]:
+    """Extents with band-level noise removed, so ``apply_extents`` sees no negative flow.
+
+    A species at -e has its consuming extents cut in proportion to what they consume.
+    Stoichiometric, so the balances stay exact.  A no-op when no flow is negative.
+    """
+    out = [float(x) for x in xi]
+    for _ in range(len(rset.reactions) + 1):
+        f = _flows(rset, f0, out)
+        negative = [cid for cid, n in f.items() if n < 0.0]
+        if not negative:
+            break
+        for cid in negative:
+            consumption = [
+                -float(r.stoichiometry.get(cid, 0.0)) * x if r.stoichiometry.get(cid, 0.0) < 0.0 else 0.0
+                for r, x in zip(rset.reactions, out, strict=True)
+            ]
+            total = math.fsum(c for c in consumption if c > 0.0)
+            if total > 0.0:
+                cut = (1.0 + 1.0e-12) * -f[cid] / total
+                out = [x * (1.0 - cut) if c > 0.0 else x for x, c in zip(out, consumption, strict=True)]
+    return out
+
+
 def audit_single_phase(
     thermo: Thermo,
     f: Mapping[str, float],
@@ -334,6 +384,7 @@ def integrate_plug_flow(
     m = len(reactions)
     f0 = inlet.component_flows()
     f_tot0 = math.fsum(f0.values())
+    band = noise_band(rset, f0, f_tot0)
     t_in = float(inlet.T)
     p_in = float(inlet.P)
     mass_flow = float(inlet.mass_flow)
@@ -367,11 +418,10 @@ def integrate_plug_flow(
         p = float(y[m + 1])
         extra = tuple(float(e) for e in y[m + 3 :])
 
-        f = _flows(rset, f0, xi.tolist())
-        negative = sorted(cid for cid, n in f.items() if n < 0.0)
-        if negative:
+        f, depleted = clipped_flows(rset, f0, xi.tolist(), band)
+        if depleted:
             raise PlugFlowError(
-                f"reaction set {rset.id!r} depletes component {negative[0]!r} at V = {v:g} m3"
+                f"reaction set {rset.id!r} depletes component {depleted[0]!r} at V = {v:g} m3"
             )
         f_tot = math.fsum(f.values())
         z = z_from(f)
@@ -447,7 +497,7 @@ def integrate_plug_flow(
     if n_extra:
         atol[m + 3 :] = 1.0e-8
 
-    # Reactant depletion event: the smallest flow among the components that
+    # Reactant depletion event: the smallest band-shifted flow among the components that
     # start positive and are consumed by some reaction (nu < 0).  Products
     # start at zero and only grow, so the literal minimum over all species
     # would never see a depleting reactant cross the threshold.
@@ -465,7 +515,7 @@ def integrate_plug_flow(
         f = _flows(rset, f0, xi.tolist())
         if not reactants:
             return 1.0
-        return min(f[cid] for cid in reactants) - 1.0e-14 * f_tot0
+        return min(f[cid] + band[cid] for cid in reactants)
 
     depletion.terminal = True  # type: ignore[attr-defined]
     depletion.direction = -1.0  # type: ignore[attr-defined]
@@ -516,7 +566,7 @@ def integrate_plug_flow(
     for i, v_i in enumerate(t_eval):
         audit_single_phase(
             thermo,
-            _flows(rset, f0, sol.y[:m, i].tolist()),
+            clipped_flows(rset, f0, sol.y[:m, i].tolist(), band)[0],
             float(sol.y[m, i]),
             float(sol.y[m + 1, i]),
             reacting_phase,
@@ -525,7 +575,9 @@ def integrate_plug_flow(
 
     y_end = sol.y[:, -1]
     # Per output point, per reaction (mol/s): transpose the sol.y rows.
-    extents_rows = tuple(tuple(float(sol.y[j, i]) for j in range(m)) for i in range(sol.y.shape[1]))
+    extents_rows = tuple(
+        tuple(project_extents(rset, f0, sol.y[:m, i].tolist())) for i in range(sol.y.shape[1])
+    )
     extra_rows: tuple[tuple[float, ...], ...] = (
         tuple(
             tuple(float(e) for e in point)
