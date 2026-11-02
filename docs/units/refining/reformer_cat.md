@@ -84,4 +84,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-H 8
 
-> R0 shipped by U-H2. The spec's "H2 and light ends as real components" is out of reach of the mass_elements balance (C/H atoms with no formula-bearing source from a pseudo naphtha); the offgas is a mass-only lump, species split in info. Pseudo-component elemental characterization - issue #222.
+> R1 takes Smith's constants as a required explicit input and refuses the smith1959 preset - Smith 1959 could not be read, and the open reproduction (Liang, Guo and Pan, J. Zhejiang Univ. Sci. B 6(6) 2005 590-596, eqs. 9-17) prints k_p2 with a 9.87 prefactor against MPa-2 units that need 97.4. V1 gap - that paper omits catalyst masses, so its plant table cannot be reproduced; provisional on the hand equilibrium of dehydro and the unit conversions. No R1 limit reproduces R0 (a different model). R0 shipped by U-H2. The spec's "H2 and light ends as real components" is out of reach of the mass_elements balance (C/H atoms with no formula-bearing source from a pseudo naphtha); the offgas is a mass-only lump, species split in info. Pseudo-component elemental characterization - issue #222.

@@ -1,4 +1,4 @@
-"""Catalytic reformer R1: Smith four-reaction kinetics in adiabatic beds (``specs/backend/units/reformer_cat.md``).
+"""Catalytic reformer R1: Smith four-reaction kinetics in adiabatic beds (units/reformer_cat.md).
 
 Smith, Chem. Eng. Prog. 55(6) (1959) 76-80.  The lumps are representative real C7
 species, so every reaction is element-balanced with a real heat of reaction: P = nC7,
@@ -203,7 +203,9 @@ class CatalyticReformerR1:
         n_now = feed.component_flows()
         duties = 0.0
         for k, bed in enumerate(beds):
-            heated = thermo.flash_pt(dict(state.composition), float(bed["inlet_T_K"]), state.P, state.molar_flow)
+            heated = thermo.flash_pt(
+                dict(state.composition), float(bed["inlet_T_K"]), state.P, state.molar_flow
+            )
             heat = (heated.enthalpy - state.enthalpy) * state.molar_flow
             info[f"heater_duty_b{k}_W"] = heat
             duties += heat
