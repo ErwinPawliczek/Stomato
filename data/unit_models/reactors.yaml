@@ -1,4 +1,4 @@
-# U-F — Reactors (plan §2 U-F, 9 rows). Five R0 rows are implemented and
+# U-F — Reactors (plan §2 U-F, 9 rows, plus gibbs_multiphase from spec C-02). Five R0 rows are implemented and
 # registered through the catalogue (status provisional): conversion, yield,
 # equilibrium, Gibbs and the electrolyser stack. The remaining rows are
 # roadmap: kinetic reactors land with the S3 slice (plan §2b).
@@ -415,3 +415,45 @@
     measures 1.4895 V, +0.58 % against the printed 1.481 V (Züttel, Borgschulte &
     Schlapbach 2008, p. 5) — the databank miss is recorded, not tuned away, in the
     V1-ELECTROLYSER assessed note.
+
+- id: gibbs_multiphase
+  name: Multiphase Gibbs reactor
+  family: reactors
+  ports:
+    inlet:
+    - name: inlet
+      required: true
+      description: feed
+    outlet:
+    - name: vapor_out
+      required: true
+      description: equilibrium gas
+    - name: condensed_out
+      required: true
+      description: pure condensed species that formed (zero flow when none does)
+  levels:
+    R0:
+      status: provisional
+      adapter: ngdesign.units.reactors.gibbs_multiphase:GibbsMultiphase
+      params:
+        type: object
+        properties:
+          species:
+            type: array
+            description: "candidates: a bare id is the gas, 'C(s)' and 'H2O(l)' are pure condensed phases"
+          inerts:
+            type: array
+            description: fixed-amount gas spectators
+          thermal:
+            description: "'isothermal' | 'adiabatic' | {duty_W: W} | {T_out: K} (default isothermal)"
+      validation:
+      - V1-CRACK-GIBBS
+      note: Gibbs minimum over a gas and pure condensed phases on the cited species models; which phases
+        exist is an output
+      end_state: true
+  pid_symbol: R
+  references:
+  - Gordon, S. and McBride, B.J., NASA RP-1311, 1994
+  notes: added by spec C-02; the gas-only palette row is gibbs_reactor
+  balance: mass_elements
+

@@ -49,7 +49,7 @@
 #
 # Palette (plan §2, approved 2026-10-23): 83 units in 8 families —
 # logical 9, flow 12, heat 10, separation 10, column 12, reactors 9,
-# treating 9, refining 12. Round 0 ships the 21 existing registered units with
+# treating 9, refining 12; spec C-02 adds gibbs_multiphase to reactors. Round 0 ships the 21 existing registered units with
 # real adapters (status provisional); every other row is roadmap (planned).
 
 families:

@@ -69,7 +69,7 @@ PALETTE_COUNTS: dict[str, int] = {
     "heat": 10,
     "separation": 10,
     "column": 12,
-    "reactors": 9,
+    "reactors": 10,  # the plan's 9 plus gibbs_multiphase (spec C-02)
     "treating": 9,
     "refining": 12,
 }

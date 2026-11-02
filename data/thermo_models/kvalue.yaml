@@ -691,3 +691,62 @@
       degenerates to 0/0; there is no composition dependence to probe
   l0_note: 'the row shares the ideal-raoult adapter (databank Psat, K_i = Psat_i/P); the
     lee_kesler enthalpy declaration names the departure basis the plan assigns this row'
+- id: braun-k10-ideal
+  name: BK10 with ideal enthalpies
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:BraunK10IdealThermo
+  options:
+    k_model: braun_k10
+    enthalpy: ideal
+  params:
+    source: vapour pressures, heats of vaporisation and ideal-gas heat capacities from the ChemSep
+      databank; the row refuses service above 0.7 MPa by construction, as braun-k10 does
+    provenance: K-values as the braun-k10 row (Cajander, Hipkin & Lenoir 1960, low-pressure
+      asymptote K_i = Psat_i/P); enthalpy basis ideal-gas vapour and ideal liquid
+      H_L = sum x_i (H_ig_i - dHvap_i), no Lee-Kesler departure
+  applicability:
+    component_classes:
+    - hydrocarbon
+    polar: false
+    electrolyte: false
+    T_K: [200.0, 560.0]
+    P_Pa: [1000.0, 700000.0]
+    phases: [V, L, VLL]
+  status: provisional
+  validation: []
+  references:
+  - Cajander, B. C., Hipkin, H. G. & Lenoir, J. M., J. Chem. Eng. Data 5(3), 251-259, 1960
+  - Smith, J. M., Van Ness, H. C. & Abbott, M. M., Introduction to Chemical Engineering
+    Thermodynamics, 7th ed., McGraw-Hill, 2005 (ideal-solution model)
+  l0:
+    pure_psat_limit:
+      points:
+      - - C1
+        - 125.0
+      - - nC4
+        - 280.0
+    phase_identification:
+      points:
+      - - C1
+        - 125.0
+      - - nC4
+        - 280.0
+    round_trip:
+      z: {nC4: 0.5, nC5: 0.5}
+      states: [[350.0, 100000.0]]
+    dhdT_cp:
+      z: {nC4: 0.5, nC5: 0.5}
+      state: [350.0, 100000.0]
+      phase: vapor
+    single_liquid_limit:
+      z: {nC5: 1.0}
+      state: [300.0, 160000.0]
+    determinism:
+      z: {C1: 0.5, C3: 0.5}
+      state: [300.0, 100000.0]
+  l0_excluded:
+    gibbs_duhem: >-
+      the K10 asymptote is composition-independent, as for braun-k10: the Gibbs-Duhem residual
+      is identically zero and the check's normalisation degenerates to 0/0
+  l0_note: the round-trip and Cp points use a subcritical pair because the ideal liquid is undefined
+    for a component above its critical temperature (the braun-k10 row's C1/C3 point has C1 at 300 K)

@@ -412,3 +412,327 @@
     ppb84-phi-4.0m: "phi +3.68 % (1.1550 vs 1.114) - model-inherent fit quality, worst point, measured 2026-10-22"
     ppb84-phi-5.0m: "phi +2.41 % (1.2186 vs 1.190) - model-inherent fit quality, measured 2026-10-22"
     ppb84-saturation: "SLE solve 6.2358 vs 6.146 mol/kg (+1.5 %) - measured 2026-10-22"
+- id: enrtl_rk
+  name: ENRTL with Redlich-Kwong vapour
+  family: electrolyte
+  adapter: ngdesign.amine.electrolyte:ElectrolyteENRTLRK
+  options: {}
+  params:
+    source: data/thermo_params/electrolyte/enrtl.yaml (liquid); the rk row for the vapour
+    provenance: >-
+      The liquid is enrtl_nacl_water unchanged. The vapour is the catalogue's rk row (RKMIX, ChemSep critical constants), which supplies phi_V, density, enthalpy and entropy. Real-vapour water K-value: K_H2O = a_w Psat (phi_sat / phi_V) / P, Poynting term of the brine omitted. At 293-303 K the effect is of order 1e-4 on the bubble pressure, because water's Psat is small; the row exists for the vapour's fugacity and properties, not for a large VLE shift.
+  applicability:
+    component_classes:
+    - water
+    polar: true
+    electrolyte: true
+    T_K:
+    - 293.15
+    - 303.15
+    P_Pa:
+    - 2000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    notes: >-
+      NaCl-H2O at 20-30 C, liquid limits as enrtl_nacl_water.
+  status: provisional
+  validation: []
+  references:
+  - Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., AIChE J. 28(4), 588-596, 1982
+  - Chen, C.-C. & Evans, L. B., AIChE J. 32(3), 444-454, 1986
+  - Redlich, O. & Kwong, J. N. S., Chem. Rev. 44(1), 233-244, 1949
+
+  l0:
+    single_liquid_limit:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+    round_trip:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      states:
+      - - 298.15
+        - 5000000.0
+    determinism:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+  l0_excluded:
+    pure_psat_limit: applicability is the aqueous electrolyte liquid; the pure-component saturation
+      limits of the molecular databank components are not this package's claimed surface (the
+      involatile salt has no vapour pressure)
+    phase_identification: 'same basis: the single-liquid limit replaces the vapour-pressure bracket
+      for the electrolyte liquid (flash consistency is pinned by tests/thermo/test_electrolyte_variants.py)'
+    dhdT_cp: the aqueous cp is the carrier's (no reaction-enthalpy correction is implemented), so
+      the dH/dT == Cp identity rides the carrier surface unchanged
+    gibbs_duhem: the aqueous ln_phi carries the electrolyte chemistry (f_w == a_w Psat), not a
+      Gibbs-excess composition derivative; flash consistency is pinned by
+      tests/thermo/test_electrolyte_variants.py instead
+- id: enrtl_hoc
+  name: ENRTL with Hayden-O'Connell vapour
+  family: electrolyte
+  adapter: ngdesign.amine.electrolyte:ElectrolyteENRTLHOC
+  options: {}
+  params:
+    source: data/thermo_params/electrolyte/enrtl.yaml (liquid); data/thermo_params/virial/hoc_eta.yaml (vapour)
+    provenance: >-
+      The liquid is enrtl_nacl_water unchanged. The vapour is the in-house Hayden-O'Connell second-virial phase, the one the *_hoc gamma-phi rows use. Real-vapour water K-value: K_H2O = a_w Psat (phi_sat / phi_V) / P, Poynting term of the brine omitted. At 293-303 K the effect is of order 1e-4 on the bubble pressure, because water's Psat is small; the row exists for the vapour's fugacity and properties, not for a large VLE shift.
+  applicability:
+    component_classes:
+    - water
+    polar: true
+    electrolyte: true
+    T_K:
+    - 293.15
+    - 303.15
+    P_Pa:
+    - 2000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    notes: >-
+      NaCl-H2O at 20-30 C, liquid limits as enrtl_nacl_water.
+  status: provisional
+  validation: []
+  references:
+  - Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., AIChE J. 28(4), 588-596, 1982
+  - Chen, C.-C. & Evans, L. B., AIChE J. 32(3), 444-454, 1986
+  - Hayden, J. G. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 209-216, 1975
+
+  l0:
+    single_liquid_limit:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+    round_trip:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      states:
+      - - 298.15
+        - 5000000.0
+    determinism:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+  l0_excluded:
+    pure_psat_limit: applicability is the aqueous electrolyte liquid; the pure-component saturation
+      limits of the molecular databank components are not this package's claimed surface (the
+      involatile salt has no vapour pressure)
+    phase_identification: 'same basis: the single-liquid limit replaces the vapour-pressure bracket
+      for the electrolyte liquid (flash consistency is pinned by tests/thermo/test_electrolyte_variants.py)'
+    dhdT_cp: the aqueous cp is the carrier's (no reaction-enthalpy correction is implemented), so
+      the dH/dT == Cp identity rides the carrier surface unchanged
+    gibbs_duhem: the aqueous ln_phi carries the electrolyte chemistry (f_w == a_w Psat), not a
+      Gibbs-excess composition derivative; flash consistency is pinned by
+      tests/thermo/test_electrolyte_variants.py instead
+- id: pitzer_hoc
+  name: Pitzer with Hayden-O'Connell vapour
+  family: electrolyte
+  adapter: ngdesign.amine.electrolyte:ElectrolytePitzerHOC
+  options: {}
+  params:
+    source: data/thermo_params/electrolyte/pitzer.yaml (liquid); data/thermo_params/virial/hoc_eta.yaml (vapour)
+    provenance: >-
+      The liquid is pitzer_nacl_water unchanged. The vapour is the in-house Hayden-O'Connell second-virial phase, the one the *_hoc gamma-phi rows use. Real-vapour water K-value: K_H2O = a_w Psat (phi_sat / phi_V) / P, Poynting term of the brine omitted. At 293-303 K the effect is of order 1e-4 on the bubble pressure, because water's Psat is small; the row exists for the vapour's fugacity and properties, not for a large VLE shift.
+  applicability:
+    component_classes:
+    - water
+    polar: true
+    electrolyte: true
+    T_K:
+    - 293.15
+    - 303.15
+    P_Pa:
+    - 2000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    notes: >-
+      NaCl-H2O at 20-30 C, liquid limits as pitzer_nacl_water.
+  status: provisional
+  validation: []
+  references:
+  - Pitzer, K. S., Peiper, J. C. & Busey, R. H., J. Phys. Chem. Ref. Data 13(1), 1-102, 1984
+  - Hayden, J. G. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 209-216, 1975
+
+  l0:
+    single_liquid_limit:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+    round_trip:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      states:
+      - - 298.15
+        - 5000000.0
+    determinism:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+  l0_excluded:
+    pure_psat_limit: applicability is the aqueous electrolyte liquid; the pure-component saturation
+      limits of the molecular databank components are not this package's claimed surface (the
+      involatile salt has no vapour pressure)
+    phase_identification: 'same basis: the single-liquid limit replaces the vapour-pressure bracket
+      for the electrolyte liquid (flash consistency is pinned by tests/thermo/test_electrolyte_variants.py)'
+    dhdT_cp: the aqueous cp is the carrier's (no reaction-enthalpy correction is implemented), so
+      the dH/dT == Cp identity rides the carrier surface unchanged
+    gibbs_duhem: the aqueous ln_phi carries the electrolyte chemistry (f_w == a_w Psat), not a
+      Gibbs-excess composition derivative; flash consistency is pinned by
+      tests/thermo/test_electrolyte_variants.py instead
+- id: pitzer_debye_huckel
+  name: Pitzer-Debye-Hückel
+  family: electrolyte
+  adapter: ngdesign.amine.electrolyte:ElectrolytePDH
+  options: {}
+  params:
+    source: data/thermo_params/electrolyte/enrtl.yaml (aphi, rho only)
+    provenance: >-
+      The long-range term of enrtl_nacl_water with no short-range binary, A_phi = 0.392, rho = 14.9 (Pitzer 1980; Chen et al. 1982). No fitted parameters.
+  applicability:
+    component_classes:
+    - water
+    polar: true
+    electrolyte: true
+    T_K:
+    - 293.15
+    - 303.15
+    P_Pa:
+    - 2000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    notes: >-
+      Dilute NaCl-H2O only: the flash refuses a liquid above 0.2 mol/kg, where gamma+- is 3.5 % below Pitzer, Peiper & Busey Table A-8.
+  status: provisional
+  validation: []
+  references:
+  - Pitzer, K. S., J. Am. Chem. Soc. 102(9), 2902-2906, 1980
+  - Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., AIChE J. 28(4), 588-596, 1982
+  - Pitzer, K. S., Peiper, J. C. & Busey, R. H., J. Phys. Chem. Ref. Data 13(1), 1-102, 1984
+
+  l0:
+    single_liquid_limit:
+      z:
+        H2O: 0.998
+        NaCl: 0.002
+      state:
+      - 298.15
+      - 5000000.0
+    round_trip:
+      z:
+        H2O: 0.998
+        NaCl: 0.002
+      states:
+      - - 298.15
+        - 5000000.0
+    determinism:
+      z:
+        H2O: 0.998
+        NaCl: 0.002
+      state:
+      - 298.15
+      - 5000000.0
+  l0_excluded:
+    pure_psat_limit: applicability is the aqueous electrolyte liquid; the pure-component saturation
+      limits of the molecular databank components are not this package's claimed surface (the
+      involatile salt has no vapour pressure)
+    phase_identification: 'same basis: the single-liquid limit replaces the vapour-pressure bracket
+      for the electrolyte liquid (flash consistency is pinned by tests/thermo/test_electrolyte_variants.py)'
+    dhdT_cp: the aqueous cp is the carrier's (no reaction-enthalpy correction is implemented), so
+      the dH/dT == Cp identity rides the carrier surface unchanged
+    gibbs_duhem: the aqueous ln_phi carries the electrolyte chemistry (f_w == a_w Psat), not a
+      Gibbs-excess composition derivative; flash consistency is pinned by
+      tests/thermo/test_electrolyte_variants.py instead
+- id: enrtl_crystallisation
+  name: Electrolyte NRTL with crystallisation (solids)
+  family: electrolyte
+  adapter: ngdesign.amine.electrolyte:ElectrolyteENRTLCrystal
+  options: {}
+  params:
+    source: data/thermo_params/electrolyte/enrtl.yaml; solid NaCl volume and Cp from the chemicals databank
+    provenance: >-
+      The liquid is enrtl_nacl_water. Solubility product from the PPB84 anchor (6.146 mol/kg, gamma 1.0065, no fit); the eNRTL liquid then predicts 6.39 mol/kg at the 25 C set, +4 %. The solid's enthalpy and entropy are the carrier's values for NaCl: the heat of crystallisation is not represented, as the base rows carry no heat of solution.
+  applicability:
+    component_classes:
+    - water
+    polar: true
+    electrolyte: true
+    T_K:
+    - 293.15
+    - 303.15
+    P_Pa:
+    - 2000.0
+    - 10000000.0
+    phases:
+    - V
+    - L
+    notes: >-
+      NaCl-H2O at 20-30 C with a solid NaCl phase past the solubility limit; the solubility has no temperature dependence across the window (the 25 C parameter set).
+  status: provisional
+  validation: []
+  references:
+  - Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., AIChE J. 28(4), 588-596, 1982
+  - Chen, C.-C. & Evans, L. B., AIChE J. 32(3), 444-454, 1986
+  - Pitzer, K. S., Peiper, J. C. & Busey, R. H., J. Phys. Chem. Ref. Data 13(1), 1-102, 1984
+
+  l0:
+    single_liquid_limit:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+    round_trip:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      states:
+      - - 298.15
+        - 5000000.0
+    determinism:
+      z:
+        H2O: 0.95
+        NaCl: 0.05
+      state:
+      - 298.15
+      - 5000000.0
+  l0_excluded:
+    pure_psat_limit: applicability is the aqueous electrolyte liquid; the pure-component saturation
+      limits of the molecular databank components are not this package's claimed surface (the
+      involatile salt has no vapour pressure)
+    phase_identification: 'same basis: the single-liquid limit replaces the vapour-pressure bracket
+      for the electrolyte liquid (flash consistency is pinned by tests/thermo/test_electrolyte_variants.py)'
+    dhdT_cp: the aqueous cp is the carrier's (no reaction-enthalpy correction is implemented), so
+      the dH/dT == Cp identity rides the carrier surface unchanged
+    gibbs_duhem: the aqueous ln_phi carries the electrolyte chemistry (f_w == a_w Psat), not a
+      Gibbs-excess composition derivative; flash consistency is pinned by
+      tests/thermo/test_electrolyte_variants.py instead

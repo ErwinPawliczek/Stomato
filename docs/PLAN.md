@@ -190,7 +190,7 @@ a 6–9 month build with a fleet of agents, not a 10-year one. "All of Aspen" is
 Package by package, in dependency order. ✅ exists, 🟡 exists but must change, ❌ missing.
 
 **stomato-core**
-- ❌ Unit-of-measure layer (SI internally, typed quantities at the edges; display sets).
+- ✅ Unit-of-measure layer (SI internally, typed quantities at the edges; display sets): `ngdesign.uom`, spec C-01.
 - 🟡 `Component` record + **open component registry** (CAS-keyed, provenance per property,
   pseudo-components by Tb/SG, user components). Replaces the 18-tuple.
 - 🟡 `StreamState` v2: T, P, flow, overall z, per-phase {β, x, H, S, Cp, ρ, μ, k, σ, φ}.

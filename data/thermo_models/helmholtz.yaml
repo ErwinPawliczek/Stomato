@@ -328,29 +328,65 @@
     states) and C6+ is refused (no GERG-2008 C6+ mapping without teqp).
 
 - id: eos_cg
-  name: EOS-CG combustion-gas mixture model (placeholder)
+  name: EOS-CG combustion-gas mixture model (2016)
   family: helmholtz
-  adapter: ngdesign.thermo.helmholtz:UnavailablePackage
+  adapter: ngdesign.thermo.helmholtz:EosCgPackage
   options: {}
-  params: {}
+  params:
+    source: CoolProp 8.0.0 HEOS binary table (MIT), the pairs citing Gernert's 2013 thesis
+    provenance: >-
+      All 15 pairs of CO2, H2O, N2, O2, Ar and CO in the installed CoolProp cite Gernert-Thesis-2013,
+      with the departure functions CO2-H2O, GeneralizedAirWater and Ar-CO2, over the reference
+      pure-fluid equations; that is the Gernert & Span (2016) model. Checked 2026-11-01. The 2016
+      paper itself is paywalled; EOS-CG-2021 (Neumann et al. 2023, CC BY 4.0) is open but is a
+      different parameter set, which CoolProp does not carry yet (PR 3281 open when checked).
   applicability:
-    component_classes: [hydrocarbon, light_gas, inert, acid_gas]
+    component_classes: [light_gas, inert, acid_gas, water]
     polar: true
     electrolyte: false
-    T_K: [90.0, 2000.0]
+    T_K: [250.0, 1000.0]
     P_Pa: [1000.0, 100000000.0]
     phases: [V, L]
-  status: experimental
+  status: provisional
   validation: []
   references:
   - 'Gernert, J., Span, R., ''EOS-CG: A Helmholtz energy mixture model for humid combustion
-    gases'', J. Chem. Thermodyn. 93, 274-293, 2016 (the formulation paper; the parameter
-    tables live in its supplement, which is publisher-paywalled). no implementation in
-    this repo; the row is a catalogue placeholder and every property call raises
-    UnavailableBackend'
-  l0: {}
+    gases and CCS mixtures'', J. Chem. Thermodyn. 93, 274-293, 2016'
+  - Bell, I. H. et al., Ind. Eng. Chem. Res. 53(6), 2498-2508, 2014 (CoolProp)
+  l0:
+    pure_psat_limit:
+      points: [["CO2", 250.0], ["H2O", 350.0]]
+    phase_identification:
+      points: [["CO2", 250.0], ["H2O", 350.0]]
+    round_trip:
+      z: {CO2: 1.0}
+      states: [[350.0, 5000000.0]]
+    dhdT_cp:
+      z: {CO2: 0.9, N2: 0.1}
+      state: [350.0, 5000000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {CO2: 0.9, N2: 0.1}
+        T: 350.0
+        P: 5000000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {CO2: 0.9, N2: 0.1}
+      state: [250.0, 20000000.0]
+    determinism:
+      z: {CO2: 0.9, N2: 0.1}
+      state: [350.0, 5000000.0]
   l0_excluded: {}
-  l0_note: 'Refusal row: EOS-CG is not implemented - the formulation is open (Gernert & Span 2016, J. Chem. Thermodyn. 93, 274-293), but the complete fluid parameter and departure-function tables ship only in the publisher''s paywalled supplement, no open supplement was confirmed in the sources checked 2026-10-23, teqp does not ship EOS-CG fluid/departure files, and CoolProp issue #3277 requests exactly this missing support. What would change it: an openly redistributable parameter table or a licence that permits transcription of the full supplement.'
+  l4_excluded:
+    '*': the slate holds no hydrocarbons, so the L4 slice feed is refused by construction
+  l0_note: >-
+    The refusal this row used to carry said teqp and CoolProp ship no EOS-CG files; rechecking on
+    2026-11-01 found the 2016 pairs in both. On CO2, H2O and N2 the row computes what coolprop_heos
+    computes; it exists to admit O2, Ar and CO and to refuse everything else. The round trip runs on
+    pure CO2 because CoolProp's PQ solver fails on CO2 + N2 at the bubble-temperature step of the
+    shared PH/PS flash (measured at 350 K, 1 and 5 MPa), so mixture PH and PS flashes on this row
+    raise SaturationError instead of returning.
 
 - id: aga8_dc92
   name: AGA 8 DC92 detail equation of state (gas phase)

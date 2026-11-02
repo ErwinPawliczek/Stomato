@@ -109,6 +109,9 @@ _COOLPROP_NAMES: Final[dict[str, str]] = {
     "nC4": "n-Butane",
     "iC5": "Isopentane",
     "nC5": "n-Pentane",
+    "O2": "Oxygen",
+    "Ar": "Argon",
+    "CO": "CarbonMonoxide",
 }
 # C6+ is deliberately absent: it is a lumped pseudo-component, not a CoolProp
 # fluid. Mapping the cut to n-hexane fabricates dew points (the L4 slice-feed
@@ -458,7 +461,9 @@ class _HelmholtzSurface:
         for phase in ("liquid", "vapor"):
             try:
                 props = self._single_phase(ids, xs, T, P, phase)
-            except SaturationError:
+            except ComponentNotSupported:
+                raise
+            except (SaturationError, ValueError):  # no root of this phase at (T, P)
                 continue
             gibbs.append((props.enthalpy - T * props.entropy, phase))
         if not gibbs:
@@ -1120,6 +1125,18 @@ class GERGPackage(CoolPropPackage):
     """
 
     SUPPORTED: ClassVar[frozenset[str]] = _GERG_IDS
+
+
+class EosCgPackage(CoolPropPackage):
+    """EOS-CG (2016) over the six combustion-gas components it shares with CoolProp.
+
+    CoolProp's binary table carries the Gernert (2013) reducing and departure functions
+    for all 15 pairs of this slate, over the same reference pure-fluid equations, which
+    is the Gernert & Span (2016) model. Anything outside the slate refuses by name. This
+    is not EOS-CG-2021 (Neumann et al. 2023), which adds SO2, MEA, DEA and refits pairs.
+    """
+
+    SUPPORTED: ClassVar[frozenset[str]] = frozenset(("CO2", "H2O", "N2", "O2", "Ar", "CO"))
 
 
 # ---------------------------------------------------------------------------

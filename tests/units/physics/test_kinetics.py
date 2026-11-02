@@ -350,3 +350,15 @@ def test_equilibrium_limited_rate_refuses_absent_reactant_with_nonzero_forward()
     reaction = _wgsr_limited()  # first order in CO only: forward ≠ 0 without H2O
     with pytest.raises(KineticsError, match="reactant 'H2O' is absent"):
         rate(reaction, 700.0, 200_000.0, {"CO": 0.5, "CO2": 0.25, "H2": 0.25})
+
+
+def test_heat_of_reaction_keeps_the_sensible_heat_of_elements() -> None:
+    """Regression: H2's sensible heat was dropped at any T other than 298.15 K."""
+    reaction = Reaction(
+        id="wgs",
+        stoichiometry={"CO": -1.0, "H2O": -1.0, "CO2": 1.0, "H2": 1.0},
+        base_component="CO",
+        provenance="test",
+    )
+    # Σν·ΔfH° from the JANAF formation columns at 900 K (data/chemdb/janaf.csv); H2 is 0 there.
+    assert heat_of_reaction(reaction, 900.0) == pytest.approx(-394_405.0 + 111_418.0 + 247_185.0, rel=0.02)
