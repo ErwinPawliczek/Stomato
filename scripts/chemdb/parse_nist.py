@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import html
 import re
+import statistics
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -286,6 +287,28 @@ def parse_page(cas: str, page: str) -> Page:
         elif label == "Enthalpy of fusion":
             _hfus(out, body)
     return out
+
+
+def parse_henry(page: str) -> tuple[float, float, int] | None:
+    """(k°H in mol/(kg bar), d ln kH/d(1/T) in K, entries used) from a WebBook page.
+
+    The medians over the rows that state both; the page lists several evaluations
+    and none is marked preferred. None when no row states both.
+    """
+    pairs: list[tuple[float, float]] = []
+    for label, body in _TABLE.findall(page):
+        if not label.startswith("Henry's Law constant"):
+            continue
+        for row in _rows(body)[1:]:
+            if len(row) < 2:
+                continue
+            k = _VALUE.match(row[0])
+            slope = _VALUE.match(row[1])
+            if k is not None and slope is not None and float(k.group(1)) > 0.0:
+                pairs.append((float(k.group(1)), float(slope.group(1))))
+    if not pairs:
+        return None
+    return statistics.median(p[0] for p in pairs), statistics.median(p[1] for p in pairs), len(pairs)
 
 
 _JANAF_INDEX = re.compile(

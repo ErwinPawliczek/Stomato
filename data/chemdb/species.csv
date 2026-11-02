@@ -1686,6 +1686,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 117110-17-5,5-vinyl-2-norbornene,5-ethenylbicyclo[2.2.1]hept-2-ene,C9H12,120.19158,0,INYHZQLKOKTDAI-UHFFFAOYSA-N,C=CC1CC2CC1C=C2,18273,pubchem,0
 1174-72-7,tetraphenoxysilane,tetraphenyl silicate,C24H20O4Si,400.4987,0,ADLSSRLDGACTEX-UHFFFAOYSA-N,C1=CC=C(C=C1)O[Si](OC2=CC=CC=C2)(OC3=CC=CC=C3)OC4=CC=CC=C4,70896,pubchem,0
 1174-92-1,3-methoxycholest-5-ene,"3-methoxy-10,13-dimethyl-17-(6-methylheptan-2-yl)-2,3,4,7,8,9,11,12,14,15,16,17-dodecahydro-1H-cyclopenta[a]phenanthrene",C28H48O,400.68012,0,RCXPTZJNVLDKKV-UHFFFAOYSA-N,CC(C)CCCC(C)C1CCC2C1(CCC3C2CC=C4C3(CCC(C4)OC)C)C,79146,pubchem,0
+117412-24-5,Beryllium dioxide ion,,BeO2-2,41.011,-2,,,,crc_aqueous,0
 1176-74-5,tetrabromophenolphthalein ethyl ester,"ethyl 2-[(3,5-dibromo-4-hydroxyphenyl)-(3,5-dibromo-4-oxocyclohexa-2,5-dien-1-ylidene)methyl]benzoate",C22H14Br4O4,661.96016,0,SQFXATUXPUCFFO-UHFFFAOYSA-N,CCOC(=O)C1=CC=CC=C1C(=C2C=C(C(=O)C(=C2)Br)Br)C3=CC(=C(C(=C3)Br)O)Br,92873,pubchem,0
 118-08-1,hydrastine,"6,7-dimethoxy-3-(6-methyl-7,8-dihydro-5H-[1,3]dioxolo[4,5-g]isoquinolin-5-yl)-3H-2-benzofuran-1-one",C21H21NO6,383.39454,0,JZUTXVTYJDCMDU-UHFFFAOYSA-N,CN1CCC2=CC3=C(C=C2C1C4C5=C(C(=C(C=C5)OC)OC)C(=O)O4)OCO3,1309,pubchem,0
 118-10-5,cinchonan-9-ol,(5-ethenyl-1-azabicyclo[2.2.2]octan-2-yl)-quinolin-4-ylmethanol,C19H22N2O,294.39078,0,KMPWYEUPVWOPIM-UHFFFAOYSA-N,C=CC1CN2CCC1CC2C(C3=CC=NC4=CC=CC=C34)O,2757,pubchem,0
@@ -2261,6 +2262,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 12125-09-6,phosphonium iodide,phosphanium iodide,H4IP,161.909992,0,LSMAIBOZUPTNBR-UHFFFAOYSA-N,[PH4+].[I-],166618,pubchem,0
 12125-22-3,sulfanylidenepalladium,sulfanylidenepalladium,PdS,138.485,0,NRUVOKMCGYWODZ-UHFFFAOYSA-N,S=[Pd],82926,pubchem,0
 12125-25-6,lutetium nitride (LuN),azanylidynelutetium,LuN,188.9735,0,DPDGELPGCPPHSN-UHFFFAOYSA-N,N#[Lu],82927,pubchem,0
+12125-54-1,Nickel hydroxide ion,,NiOH+,75.7,1,,,,crc_aqueous,0
 12125-63-2,telluroxoiron,tellanylideneiron,FeTe,183.445,0,IKHZKATVXPFKTI-UHFFFAOYSA-N,[Fe]=[Te],82929,pubchem,0
 12125-87-0,agn-pc-00jawx,carbon monoxide;chromium(6+);methyl benzoate,C11H8CrO5+6,272.17432,6,NYMWOGMTHYLCEW-UHFFFAOYSA-N,COC(=O)C1=CC=CC=C1.[C-]#[O+].[C-]#[O+].[C-]#[O+].[Cr+6],57369538,pubchem,0
 12129-67-8,tricarbonyl(mesitylene)chromium(0),"carbon monoxide;chromium;1,3,5-trimethylbenzene",C12H12CrO3,256.21798,0,NIONDGZOEVKXEP-UHFFFAOYSA-N,CC1=CC(=CC(=C1)C)C.[C-]#[O+].[C-]#[O+].[C-]#[O+].[Cr],11107945,pubchem,0
@@ -2272,6 +2274,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 12134-02-0,cobalt phosphide (Co2P),phosphanylidynecobalt,CoP,89.906961,0,SIBIBHIFKSKVRR-UHFFFAOYSA-N,P#[Co],57466213,pubchem,0
 12134-75-7,gadolinium silicide,gadolinium(3+);silane,GdH8Si2+3,221.48452,3,AOLGUBMBPNHJFD-UHFFFAOYSA-N,[SiH4].[SiH4].[Gd+3],71434213,pubchem,0
 12134-77-9,gadolinium sulfide (Gd2S3),,GdS,189.315,,CHHGTOFGJMUJFT-UHFFFAOYSA-N,[Gd].[S],-1,chemicals_bank,0
+12135-07-8,Scandium hydroxide ion,,ScOH+2,61.963,2,,,,crc_aqueous,0
 12136-24-2,holmium silicide (HoSi2),,HoSi2,221.10132,0,GTFRJNSUXNKZCI-UHFFFAOYSA-N,[Si].[Si].[Ho],170843542,pubchem,0
 12136-42-4,iridium sulfide (Ir2S3),,IrS,224.282,,OIENHJCGDAGWEG-UHFFFAOYSA-N,[Ir].[S],-1,chemicals_bank,0
 12136-45-7,potassium oxide,dipotassium;oxygen(2-),K2O,94.196,0,CHWRSCGUEQEHOH-UHFFFAOYSA-N,[O-2].[K+].[K+],9989219,pubchem,0
@@ -2321,8 +2324,11 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 12167-74-7,durapatite,pentacalcium;hydroxide;triphosphate,Ca5HO13P3,502.311426,0,XYJRXVWERLGGKC-UHFFFAOYSA-D,[OH-].[O-]P(=O)([O-])[O-].[O-]P(=O)([O-])[O-].[O-]P(=O)([O-])[O-].[Ca+2].[Ca+2].[Ca+2].[Ca+2].[Ca+2],14781,pubchem,0
 121678-88-4,4-isopropylbenzylidene t-butylamine n-oxide,N-tert-butyl-1-(4-propan-2-ylphenyl)methanimine oxide,C14H21NO,219.32264,0,NWCMTMPBYSGWMZ-GDNBJRDFSA-N,CC(C)C1=CC=C(C=C1)C=[N+](C(C)(C)C)[O-],3036420,pubchem,0
 12168-52-4,iron- titanium hydrate(1:1:3),iron;titanium;trihydrate,FeH6O3Ti,157.75784,0,YDZQQRWRVYGNER-UHFFFAOYSA-N,O.O.O.[Ti].[Fe],159436,pubchem,0
+12168-64-8,Lead(II) hydroxide ion,,PbOH+,224.2,1,,,,crc_aqueous,0
 12168-85-3,natural alite,dicalcium;oxocalcium;silicate,Ca3O5Si,228.3165,0,BCAARMUWIRURQS-UHFFFAOYSA-N,[O-][Si]([O-])([O-])[O-].O=[Ca].[Ca+2].[Ca+2],25523,pubchem,0
 12177-67-2,calcium monohydroxide,calcium;hydride;hydroxide,CaH2O,58.09328,0,LOFSDXHUDXULTI-UHFFFAOYSA-M,[H-].[OH-].[Ca+2],139275,pubchem,0
+12179-03-2,Thorium(IV) hydroxide ion,,Th(OH)+3,249.045,3,,,,crc_aqueous,0
+12179-05-4,Thorium(IV) dihydroxide ion,,Th(OH)2+2,266.053,2,,,,crc_aqueous,0
 1218-34-4,n-acetyl-l-tryptophan,(2S)-2-acetamido-3-(1H-indol-3-yl)propanoic acid,C13H14N2O3,246.26186,0,DZTHIGRZJZPRDV-LBPRGKRZSA-N,CC(=O)NC(CC1=CNC2=CC=CC=C21)C(=O)O,700653,pubchem,0
 12182-83-1,cesium hydroxide,cesium hydroxide,CsHO,149.912792,0,HUCVOHYBFXVBRW-UHFFFAOYSA-M,[OH-].[Cs+],62750,pubchem,0
 12183-80-1,andalusite (al2o(sio4)),,Al2H2O6Si2-2,208.146357,-2,AACLGHIXRRMFAR-UHFFFAOYSA-N,O.[O-][Si](=O)O[Si](=O)[O-].[Al].[Al],6336556,pubchem,0
@@ -2404,6 +2410,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 12254-85-2,12254-85-2,arsanylidynechromium,AsCr,126.9177,0,OTJXRUHUGBSPCL-UHFFFAOYSA-N,[Cr]#[As],25147462,pubchem,0
 12255-48-0,yttrium arsenide (YAs),arsanylidyneyttrium,AsY,163.82745,0,PAEUXJLYHBSEMI-UHFFFAOYSA-N,[As]#[Y],83003,pubchem,0
 12256-04-1,cobalt arsenide (CoAs3),,As3Co,283.698,0,QLGPWAYMKGSMSU-UHFFFAOYSA-N,[Co].[As].[As].[As],170850447,pubchem,0
+12258-53-6,Tetraborate ion,,B4O7-2,155.24,-2,,,,crc_aqueous,0
 12258-95-6,12258-95-6,dicesium dichloride,Cl2Cs2,336.716904,0,VCRMDEZFONERTH-UHFFFAOYSA-L,[Cl-].[Cl-].[Cs+].[Cs+],6398978,pubchem,0
 12258-97-8,12258-97-8,dipotassium dichloride,Cl2K2,149.1026,0,PKRPQASGRXWUOJ-UHFFFAOYSA-L,[Cl-].[Cl-].[K+].[K+],6398979,pubchem,0
 12258-98-9,disodium dichloride,disodium dichloride,Cl2Na2,116.885539,0,OKBPCTLSPGDQBO-UHFFFAOYSA-L,[Na+].[Na+].[Cl-].[Cl-],6398980,pubchem,0
@@ -2422,6 +2429,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1229-12-5,etiocholanedione,"(5R,8R,9S,10S,13S,14S)-10,13-dimethyl-2,4,5,6,7,8,9,11,12,14,15,16-dodecahydro-1H-cyclopenta[a]phenanthrene-3,17-dione",C19H28O2,288.42442,0,RAJWOBJTTGJROA-QJISAEMRSA-N,CC12CCC(=O)CC1CCC3C2CCC4(C3CCC4=O)C,440114,pubchem,0
 12293-67-3,Silicon Nitride,,NSi2,,,,,,chemicals_bank,0
 12294-01-8,phosphanylidyneyttrium,phosphanylidyneyttrium,PY,119.879612,0,DWDQAMUKGDBIGM-UHFFFAOYSA-N,P#[Y],83012,pubchem,0
+12299-69-3,Iron(III) hydroxide ion,,FeOH+2,72.852,2,,,,crc_aqueous,0
 123-00-2,n-(3-aminopropyl)morpholine,3-morpholin-4-ylpropan-1-amine,C7H16N2O,144.21474,0,UIKUBYKUYUSRSM-UHFFFAOYSA-N,C1COCCN1CCCN,61055,pubchem,0
 123-01-3,dodecylbenzene,dodecylbenzene,C18H30,246.4308,0,KWKXNDCHNDYVRT-UHFFFAOYSA-N,CCCCCCCCCCCCC1=CC=CC=C1,31237,pubchem,0
 123-02-4,tridecylbenzene,tridecylbenzene,C19H32,260.45738,0,MCVUKOYZUCWLQQ-UHFFFAOYSA-N,CCCCCCCCCCCCCC1=CC=CC=C1,31238,pubchem,0
@@ -2487,6 +2495,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 12317-46-3,pdcl2(nbd),"bicyclo[2.2.1]hepta-2,5-diene;dichloropalladium",C7H8Cl2Pd,269.46442,0,BNCRZJHZZCMDNP-UHFFFAOYSA-L,C1C2C=CC1C=C2.Cl[Pd]Cl,11346242,pubchem,0
 12323-03-4,12323-03-4,sodium;barium(2+);niobium(5+);tetrakis(oxygen(2-)),BaNaNbO4,317.220749,0,OZJLXXSXDXTZAP-UHFFFAOYSA-N,[O-2].[O-2].[O-2].[O-2].[Na+].[Nb+5].[Ba+2],166687,pubchem,0
 12323-19-2,bismuth antimonide,,Bi2Sb2,661.4808,0,AEMQIQQWIVNHAU-UHFFFAOYSA-N,[Sb].[Sb].[Bi].[Bi],6914523,pubchem,0
+12325-02-9,Mercury(II) hydroxide ion,,HgOH+,217.6,1,,,,crc_aqueous,0
 12325-59-6,hafnium phosphide (HfP),,HfP,209.463761,,TUDWSEQKKUSFNR-UHFFFAOYSA-N,[Hf].[P],-1,chemicals_bank,0
 12326-85-1,Carbon Phosphide,,CP,,,,,,chemicals_bank,0
 1234-35-1,z-arg-oh,(2S)-5-(diaminomethylideneamino)-2-(phenylmethoxycarbonylamino)pentanoic acid,C14H20N4O4,308.333,0,SJSSFUMSAFMFNM-NSHDSACASA-N,C1=CC=C(C=C1)COC(=O)NC(CCCN=C(N)N)C(=O)O,71055,pubchem,0
@@ -2533,7 +2542,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 12401-56-8,hafnium silicide (HfSi2),,HfSi2,234.661,0,TWRSDLOICOIGRH-UHFFFAOYSA-N,[Si].[Si].[Hf],11230071,pubchem,0
 12401-70-6,Potassium Oxide,,KO,,,,,,chemicals_bank,0
 12401-86-4,sodium monoxide,,NaO,38.98917,,IVAOQJNBYYIDSI-UHFFFAOYSA-N,[Na].[O],-1,chemicals_bank,0
-12408-02-5,hydrogen ion,hydron,H+,1.00794,1,GPRLSGONYQIRFK-UHFFFAOYSA-N,[H+],1038,pubchem,0
+12408-02-5,Hydrogen ion,,H+,1.008,1,,,,crc_aqueous,0
 1241-94-7,2-ethylhexyl diphenyl phosphate,2-ethylhexyl diphenyl phosphate,C20H27O4P,362.399742,0,CGSLYBDCEGBZCG-UHFFFAOYSA-N,CCCCC(CC)COP(=O)(OC1=CC=CC=C1)OC2=CC=CC=C2,14716,pubchem,0
 12419-43-1,tin hexafluorozirconate,tin(2+);zirconium(4+);hexafluoride,F6SnZr,323.924419,0,OJECAVYUFGICLI-UHFFFAOYSA-H,[F-].[F-].[F-].[F-].[F-].[F-].[Zr+4].[Sn+2],71586953,pubchem,0
 12427-38-2,maneb,manganese(2+);N-[2-(sulfidocarbothioylamino)ethyl]carbamodithioate,C4H6MnN2S4,265.301885,0,YKSNLCVSTHTHJA-UHFFFAOYSA-L,C(CNC(=S)[S-])NC(=S)[S-].[Mn+2],3032581,pubchem,0
@@ -2542,6 +2551,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 12431-56-0,Sodium Bromide,,Br2Na2,,,,,,chemicals_bank,0
 12434-24-1,europium silicide (EuSi2),,EuSi2,208.135,0,HWWYYCDRYIYGQB-UHFFFAOYSA-N,[Si].[Si].[Eu],170843614,pubchem,0
 12440-00-5,phosphorus(iii) oxide,"2,4,6,8,9,10-hexaoxa-1,3,5,7-tetraphosphatricyclo[3.3.1.13,7]decane",O6P4,219.891448,0,VSAISIQCTGDGPU-UHFFFAOYSA-N,O1P2OP3OP1OP(O2)O3,123290,pubchem,0
+12447-33-5,Hydrogen tetraborate ion,,HB4O7-,156.248,-1,,,,crc_aqueous,0
 1247-08-1,triphenyl phenylethynyl tin,triphenyl(2-phenylethynyl)stannane,C26H20Sn,451.147,0,LQCOSCHQCHLTJW-UHFFFAOYSA-N,C1=CC=C(C=C1)C#C[Sn](C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4,136954,pubchem,0
 125-15-5,vomicine,"(1S,10S,22R,23R,24S)-15-hydroxy-4-methyl-9-oxa-4,13-diazahexacyclo[11.6.5.01,24.06,22.010,23.014,19]tetracosa-6,14(19),15,17-tetraene-12,20-dione",C22H24N2O4,380.43696,0,ZMTYENXGROJCEA-LNKPQSDASA-N,CN1CCC23C4C5C(CC2=O)C(=CCOC5CC(=O)N4C6=C3C=CC=C6O)C1,101595,pubchem,0
 125-20-2,thymolphthalein,"3,3-bis(4-hydroxy-2-methyl-5-propan-2-ylphenyl)-2-benzofuran-1-one",C28H30O4,430.5354,0,LDKDGDIWEUUXSH-UHFFFAOYSA-N,CC1=CC(=C(C=C1C2(C3=CC=CC=C3C(=O)O2)C4=CC(=C(C=C4C)O)C(C)C)C(C)C)O,31316,pubchem,0
@@ -2562,6 +2572,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 12588-30-6,"aluminum(1+), oxo-",,AlO+,42.980938,,AENDPCOLKHDBIA-UHFFFAOYSA-N,[Al+].[O],-1,chemicals_bank,0
 12595-82-3,"1,2,3,4-pentatetraene","penta-1,2,3,4-tetraene",C5H4,64.08526,0,UNSWNZFTRPSXHQ-UHFFFAOYSA-N,C=C=C=C=C,139338,pubchem,0
 12595-85-6,Calcium,,Ca2,,,,,,chemicals_bank,0
+12596-26-8,Mercury(I) (mercurous) ion,,Hg2+2,401.18,2,,,,crc_aqueous,0
 12596-80-4,trioxidane,,H2O3,50.01408,0,JSPLKZUTYZBBKA-UHFFFAOYSA-N,OOO,166717,pubchem,0
 12596-92-8,Lead,,Pb2,,,,,,chemicals_bank,0
 12597-03-4,trisulfur,bis(sulfanylidene)-lambda4-sulfane,S3,96.195,0,NVSDADJBGGUCLP-UHFFFAOYSA-N,S=S=S,139340,pubchem,0
@@ -2638,6 +2649,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1273-98-9,einecs 215-057-9,"tris(cyclopenta-1,3-diene);neodymium(3+)",C15H15Nd,339.5216,0,JQMGKZUFOXNIOS-UHFFFAOYSA-N,[CH-]1C=CC=C1.[CH-]1C=CC=C1.[CH-]1C=CC=C1.[Nd+3],102089,pubchem,0
 1274-07-3,"chromium, bis(1,3,5-trimethylbenzene)","chromium;1,3,5-trimethylbenzene;1,3,5-trimethylcyclohexane",C18H24Cr-6,292.37926,-6,MNSOCXKWAXLGOU-UHFFFAOYSA-N,C[C-]1[CH-][C-]([CH-][C-]([CH-]1)C)C.CC1=CC(=CC(=C1)C)C.[Cr],11984628,pubchem,0
 12758-12-2,aluminate (AlO1-),,AlO-,42.981,,,[Al-].[O],-1,chemicals_bank,0
+127622-32-6,Yttrium hydroxide ion,,Y(OH)+2,105.913,2,,,,crc_aqueous,0
 1277-43-6,kobaltocen [czech],"cobalt(2+);bis(cyclopenta-1,3-diene)",C10H10Co,189.119595,0,ILZSSCVGGYJLOG-UHFFFAOYSA-N,[CH-]1C=CC=C1.[CH-]1C=CC=C1.[Co+2],92884,pubchem,0
 1277-47-0,1277-47-0,"bis(cyclopenta-1,3-diene);vanadium(2+)",C10H10V,181.1279,0,KTKDULBCFYEWFV-UHFFFAOYSA-N,C1C=CC=[C-]1.C1C=CC=[C-]1.[V+2],18667909,pubchem,0
 12770-26-2,hafnium hydride (hfh2),hafnium;hydride,H2Hf-2,180.50588,-2,AYGFBBAXRCHZSC-UHFFFAOYSA-N,[H-].[H-].[Hf],159457,pubchem,0
@@ -2680,6 +2692,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1291-32-3,"zirconocene, dichloride","cyclopenta-1,3-diene;cyclopenta-1,3-diene;dichlorozirconium(2+)",C10H10Cl2Zr,292.3164,0,UAIZNGJUYAVXSY-UHFFFAOYSA-L,C1C=CC=[C-]1.[CH-]1C=CC=C1.Cl[Zr+2]Cl,22833502,pubchem,0
 1291-40-3,"molybdenum, bis(eta-2,4-cyclopentadien-1-yl)dihydro-","cyclopenta-1,3-diene;cyclopentane;molybdenum dihydride",C10H12Mo-6,228.16228,-6,QCRPIEJRQZHDSX-UHFFFAOYSA-N,[CH-]1[CH-][CH-][CH-][CH-]1.[CH-]1C=CC=C1.[MoH2],11984635,pubchem,0
 1294-07-1,einecs 215-069-4,"tris(cyclopenta-1,3-diene);yttrium(3+)",C15H15Y,284.18545,0,OLQIFTSPAVIXCQ-UHFFFAOYSA-N,[CH-]1C=CC=C1.[CH-]1C=CC=C1.[CH-]1C=CC=C1.[Y+3],102095,pubchem,0
+129466-35-9,Tellurium(IV) trihydroxide ion,,Te(OH)3+,178.62,1,,,,crc_aqueous,0
 1295-20-1,einecs 215-071-5,"tris(cyclopenta-1,3-diene);ytterbium(3+)",C15H15Yb,368.3336,0,JCWMQECJDTYOET-UHFFFAOYSA-N,[CH-]1C=CC=C1.[CH-]1C=CC=C1.[CH-]1C=CC=C1.[Yb+3],102096,pubchem,0
 1298-54-0,einecs 215-074-1,"tris(cyclopenta-1,3-diene);scandium(3+)",C15H15Sc,240.235512,0,DLIOSYYYCBMDCP-UHFFFAOYSA-N,[CH-]1C=CC=C1.[CH-]1C=CC=C1.[CH-]1C=CC=C1.[Sc+3],102098,pubchem,0
 129872-30-6,tetraspiro(2.0.0.0.2.1.1.1)undecane,tetraspiro[2.0.0.0.26.15.14.13]undecane,C11H14,146.22886,0,JISOCMQWQHEYKJ-UHFFFAOYSA-N,C1CC12CC23CC34CC45CC5,145601,pubchem,0
@@ -3032,6 +3045,8 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 13402-60-3,2-decanethiol,decane-2-thiol,C10H22S,174.34668,0,NWKXKAHGQAWFQP-UHFFFAOYSA-N,CCCCCCCCC(C)S,14475143,pubchem,0
 13403-37-7,epichlorohydrin,2-(chloromethyl)oxirane,C3H5ClO,92.5242,0,BRLQWZUYTZBJKN-UHFFFAOYSA-N,C1C(O1)CCl,7835,pubchem,0
 13408-29-2,hydroxylamine,hydroxylamine,H3NO,33.02992,0,AVXURJPOCDRRFD-UHFFFAOYSA-N,NO,787,pubchem,0
+13408-62-3,Ferricyanide ion,,Fe(CN)6-3,211.949,-3,,,,crc_aqueous,0
+13408-63-4,Ferrocyanide ion,,Fe(CN)6-4,211.949,-4,,,,crc_aqueous,0
 13417-08-8,n-methylhexadecylamine,N-methylhexadecan-1-amine,C17H37N,255.48238,0,IHFXMTOFDQKABX-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCNC,83422,pubchem,0
 13419-69-7,trans-2-hexenoic acid,(E)-hex-2-enoic acid,C6H10O2,114.1424,0,NIONDZDPPYHYKY-SNAWJCMRSA-N,CCCC=CC(=O)O,5282707,pubchem,0
 13423-15-9,3-methyltetrahydrofuran,3-methyloxolane,C5H10O,86.1323,0,LJPCNSSTRWGCMZ-UHFFFAOYSA-N,CC1CCOC1,98230,pubchem,0
@@ -3641,6 +3656,8 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 139-87-7,"ethanol, 2,2'-(ethylimino)bis-",2-[ethyl(2-hydroxyethyl)amino]ethanol,C6H15NO2,133.1888,0,AKNUHUCEWALCOI-UHFFFAOYSA-N,CCN(CCO)CCO,8769,pubchem,0
 139-89-9,trisodium HEDTA,,C10H18N2NaO7,301.24889,0,YGLFSZUZWXETOZ-UHFFFAOYSA-N,C(CN(CC(=O)O)CC(=O)O)N(CCO)CC(=O)O.[Na],45157660,pubchem,0
 13905-48-1,1-bromo-3-methylcyclohexane,1-bromo-3-methylcyclohexane,C7H13Br,177.08212,0,CAKVGNXMAZLDPV-UHFFFAOYSA-N,CC1CCCC(C1)Br,95431,pubchem,0
+13907-45-4,Chromate ion,,CrO4-2,115.994,-2,,,,crc_aqueous,0
+13907-47-6,Dichromate ion,,Cr2O7-2,215.988,-2,,,,crc_aqueous,0
 13909-73-4,"2',3',4'-trimethoxyacetophenone","1-(2,3,4-trimethoxyphenyl)ethanone",C11H14O4,210.22646,0,PKNAATJMQOUREZ-UHFFFAOYSA-N,CC(=O)C1=C(C(=C(C=C1)OC)OC)OC,83810,pubchem,0
 13912-77-1,octacaine,3-(diethylamino)-N-phenylbutanamide,C14H22N2O,234.33728,0,HKOURKRGAFKVFP-UHFFFAOYSA-N,CCN(CC)C(C)CC(=O)NC1=CC=CC=C1,26329,pubchem,0
 13918-22-4,manganese(2+) dioxido(dioxo)tungsten,dioxido(dioxo)tungsten;manganese(2+),MnO4W,302.775645,0,CRLHSBRULQUYOK-UHFFFAOYSA-N,[O-][W](=O)(=O)[O-].[Mn+2],84239,pubchem,0
@@ -3673,6 +3690,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 13972-68-4,cadmium molybdenum oxide (CdMoO4),cadmium;oxomolybdenum,CdMoO,224.3704,0,CNPUDRGIFHJXAR-UHFFFAOYSA-N,O=[Mo].[Cd],71359282,pubchem,0
 13973-87-0,bromine azide,,BrN3,121.9241,0,KFCUPNHUPHDVJC-UHFFFAOYSA-N,[N-]=[N+]=NBr,26364,pubchem,0
 13980-04-6,trinitrosotrimethylenetriamine,"1,3,5-trinitroso-1,3,5-triazinane",C3H6N6O3,174.11814,0,HFWOSHMLDRSIDN-UHFFFAOYSA-N,C1N(CN(CN1N=O)N=O)N=O,26368,pubchem,0
+13981-20-9,Metavanadate ion,,VO3-,98.94,-1,,,,crc_aqueous,0
 13981-95-8,tantalum hydride (tah),hydride;tantalum(5+),H5Ta,185.98758,0,IXLUAASAZOAMKH-UHFFFAOYSA-N,[H-].[H-].[H-].[H-].[H-].[Ta+5],166961,pubchem,0
 13983-20-5,deuterium hydride,deuterium monohydride,HD,3.022042,0,UFHFLCQGNIYNRP-OUBTZVSYSA-N,[HH],167583,pubchem,1
 13984-57-1,ethyl 5-oxohexanoate,ethyl 5-oxohexanoate,C8H14O3,158.19496,0,MGPSIDGTLFKDEY-UHFFFAOYSA-N,CCOC(=O)CCCC(=O)C,84130,pubchem,0
@@ -3707,6 +3725,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 140-87-4,cyanoacetohydrazide,2-cyanoacetohydrazide,C3H5N3O,99.0913,0,HPHBOJANXDKUQD-UHFFFAOYSA-N,C(C#N)C(=O)NN,8820,pubchem,0
 140-88-5,ethyl acrylate,ethyl prop-2-enoate,C5H8O2,100.11582,0,JIGUQPWFLRLWPJ-UHFFFAOYSA-N,CCOC(=O)C=C,8821,pubchem,0
 140-95-4,dimethylolurea,"1,3-bis(hydroxymethyl)urea",C3H8N2O3,120.10722,0,QUBQYFYWUJJAAK-UHFFFAOYSA-N,C(NC(=O)NCO)O,8827,pubchem,0
+14000-31-8,Pyrophosphate ion,,P2O7-4,173.943,-4,,,,crc_aqueous,0
 14002-21-2,dimethylaminomethanol,dimethylaminomethanol,C3H9NO,75.10966,0,XQKRYBXCYCKQLL-UHFFFAOYSA-N,CN(C)CO,84150,pubchem,0
 14002-51-8,4-phenylbenzoyl chloride,4-phenylbenzoyl chloride,C13H9ClO,216.66296,0,JPVUWCPKMYXOKW-UHFFFAOYSA-N,C1=CC=C(C=C1)C2=CC=C(C=C2)C(=O)Cl,84151,pubchem,0
 14013-15-1,manganese molybdenum oxide (MnMoO4),manganese;oxomolybdenum,MnMoO,166.897449,0,LWOJVCRSXHGDIJ-UHFFFAOYSA-N,O=[Mo].[Mn],71441990,pubchem,0
@@ -3726,6 +3745,8 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 14062-78-3,"n,n,4-trimethyl benzamide","N,N,4-trimethylbenzamide",C10H13NO,163.21632,0,ULKWBVNMJZUEBD-UHFFFAOYSA-N,CC1=CC=C(C=C1)C(=O)N(C)C,84179,pubchem,0
 14062-80-7,"4-chloro-n,n-dimethylbenzamide","4-chloro-N,N-dimethylbenzamide",C9H10ClNO,183.6348,0,FARSXMMESQDZMY-UHFFFAOYSA-N,CN(C)C(=O)C1=CC=C(C=C1)Cl,84180,pubchem,0
 14064-10-9,diethyl chloromalonate,diethyl 2-chloropropanedioate,C7H11ClO4,194.61284,0,WLWCQKMQYZFTDR-UHFFFAOYSA-N,CCOC(=O)C(C(=O)OCC)Cl,84182,pubchem,0
+14066-19-4,Hydrogen phosphate ion,,HPO4-2,95.979,-2,,,,crc_aqueous,0
+14066-20-7,Dihydrogen phosphate ion,,H2PO4-,96.987,-1,,,,crc_aqueous,0
 14067-02-8,iron,iron,Fe,55.845,0,XEEYBQQBJWHFJM-UHFFFAOYSA-N,[Fe],23925,pubchem,0
 14067-04-0,"titanium, ion (Ti1+)",,Ti+,47.867,,NWCHXEGXZIUQJS-UHFFFAOYSA-N,[Ti+],-1,chemicals_bank,0
 14068-53-2,"2-amino-5-ethyl-1,3,4-thiadiazole","5-ethyl-1,3,4-thiadiazol-2-amine",C4H7N3S,129.18348,0,QXTRPGAMVIONMK-UHFFFAOYSA-N,CCC1=NN=C(S1)N,26444,pubchem,0
@@ -3775,9 +3796,13 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 141-91-3,"2,6-dimethylmorpholine","2,6-dimethylmorpholine",C6H13NO,115.17352,0,HNVIQLPOGUDBSU-UHFFFAOYSA-N,CC1CNCC(O1)C,110862,pubchem,0
 141-93-5,m-diethylbenzene,"1,3-diethylbenzene",C10H14,134.21816,0,AFZZYIJIWUTJFO-UHFFFAOYSA-N,CCC1=CC(=CC=C1)CC,8864,pubchem,0
 141-97-9,ethyl acetoacetate,ethyl 3-oxobutanoate,C6H10O3,130.1418,0,XYIBRDXRRQCHLP-UHFFFAOYSA-N,CCOC(=O)CC(=O)C,8868,pubchem,0
-14100-65-3,borate (BO21-),oxido(oxo)borane,BO2-,42.8098,-1,VDLZIANVOYDKFH-UHFFFAOYSA-N,B(=O)[O-],3014963,pubchem,0
+14100-65-3,Metaborate ion,,BO2-,42.81,-1,,,,crc_aqueous,0
+14102-45-5,Hydrogen arsenite ion,,H2AsO3-,124.936,-1,,,,crc_aqueous,0
 14104-45-1,hydriodic acid-d,(2H)iodane,DI,128.918572,0,XMBWDFGMSWQBCA-DYCDLGHISA-N,I,518878,pubchem,0
 141227-99-8,"1h-1,2,4-triazol-5-amine, 1,1'-(5-nitro-4,6-pyrimidinediyl)bis[3-nitro-","2-[6-(5-amino-3-nitro-1,2,4-triazol-1-yl)-5-nitropyrimidin-4-yl]-5-nitro-1,2,4-triazol-3-amine",C8H5N13O6,379.2088,0,MMJGPDKTKKTQAF-UHFFFAOYSA-N,C1=NC(=C(C(=N1)N2C(=NC(=N2)[N+](=O)[O-])N)[N+](=O)[O-])N3C(=NC(=N3)[N+](=O)[O-])N,71343581,pubchem,0
+14124-67-5,Selenite ion,,SeO3-2,126.96,-2,,,,crc_aqueous,0
+14124-68-6,Selenate ion,,SeO4-2,142.96,-2,,,,crc_aqueous,0
+14127-61-8,Calcium ion,,Ca+2,40.078,2,,,,crc_aqueous,0
 14130-05-3,1-aminononadecane,nonadecan-1-amine,C19H41N,283.53554,0,INAMEDPXUAWNKL-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCN,106416,pubchem,0
 14130-06-4,1-docosanamine,docosan-1-amine,C22H47N,325.61528,0,VPNOHCYAOXWMAR-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCN,84218,pubchem,0
 14130-07-5,1-tricosanamine,tricosan-1-amine,C23H49N,339.64186,0,ASLXNOZOXWPTNG-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCN,14550479,pubchem,0
@@ -3846,11 +3871,15 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 14252-46-1,ctk4c3168,2-phenylsulfanylpropan-2-ylsulfanylbenzene,C15H16S2,260.41754,0,VMXYIOCIINRYCX-UHFFFAOYSA-N,CC(C)(SC1=CC=CC=C1)SC2=CC=CC=C2,11139867,pubchem,0
 14255-23-3,"2,4-dimethyl-2-hexene","2,4-dimethylhex-2-ene",C8H16,112.21264,0,IZSBIPQYBGDXJZ-UHFFFAOYSA-N,CCC(C)C=C(C)C,518909,pubchem,0
 14255-88-0,fenazaflor,"phenyl 5,6-dichloro-2-(trifluoromethyl)benzimidazole-1-carboxylate",C15H7Cl2F3N2O2,375.12949,0,ISVQSVPUDBVFFU-UHFFFAOYSA-N,C1=CC=C(C=C1)OC(=O)N2C3=CC(=C(C=C3N=C2C(F)(F)F)Cl)Cl,26597,pubchem,0
+14259-85-9,Molybdate ion,,MoO4-2,159.94,-2,,,,crc_aqueous,0
 14261-75-7,cloforex,ethyl N-[1-(4-chlorophenyl)-2-methylpropan-2-yl]carbamate,C13H18ClNO2,255.74052,0,TZWKUQDQKPYNLL-UHFFFAOYSA-N,CCOC(=O)NC(C)(C)CC1=CC=C(C=C1)Cl,26602,pubchem,0
+14265-44-2,Phosphate ion,,PO4-3,94.971,-3,,,,crc_aqueous,0
+14265-45-3,Sulfite ion,,SO3-2,80.063,-2,,,,crc_aqueous,0
 14267-92-6,5-chloro-1-pentyne,5-chloropent-1-yne,C5H7Cl,102.56208,0,UXFIKVWAAMKFQE-UHFFFAOYSA-N,C#CCCCCl,84308,pubchem,0
 14268-66-7,"1,3-benzodioxol-5-amine","1,3-benzodioxol-5-amine",C7H7NO2,137.13598,0,XGNXYCFREOZBOL-UHFFFAOYSA-N,C1OC2=C(O1)C=C(C=C2)N,84310,pubchem,0
 14272-47-0,3-ethylheptanoic acid,3-ethylheptanoic acid,C9H18O2,158.23802,0,MCLMZMISZCYBBG-UHFFFAOYSA-N,CCCCC(CC)CC(=O)O,139715,pubchem,0
-14280-30-9,hydroxide,hydroxide,HO-,17.00734,-1,XLYOFNOQVPJJNP-UHFFFAOYSA-M,[OH-],961,pubchem,0
+14280-30-9,Hydroxyl ion,,OH-,17.007,-1,,,,crc_aqueous,0
+14280-50-3,Lead ion,,Pb+2,207.2,2,,,,crc_aqueous,0
 14280-53-6,indium bromide (InBr),bromoindium,BrIn,194.722,0,KLRHPHDUDFIRKB-UHFFFAOYSA-M,Br[In],11084757,pubchem,0
 14284-90-3,einecs 238-189-9,tris((Z)-4-hydroxypent-3-en-2-one);molybdenum,C15H24MoO6,396.30746,0,YMQWYRWCGVORNA-LNTINUHCSA-N,CC(=CC(=O)C)O.CC(=CC(=O)C)O.CC(=CC(=O)C)O.[Mo],73357766,pubchem,0
 14290-92-7,tert-butyl ethyl sulfide,2-ethylsulfanyl-2-methylpropane,C6H14S,118.24036,0,GZJUDUMQICJSFJ-UHFFFAOYSA-N,CCSC(C)(C)C,139723,pubchem,0
@@ -3875,11 +3904,13 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 143-66-8,sodium tetraphenylborate,sodium tetraphenylboranuide,C24H20BNa,342.216369,0,HFSRCEJMTLMDLI-UHFFFAOYSA-N,[B-](C1=CC=CC=C1)(C2=CC=CC=C2)(C3=CC=CC=C3)C4=CC=CC=C4.[Na+],2723787,pubchem,0
 143-74-8,phenol red,"4-[3-(4-hydroxyphenyl)-1,1-dioxo-2,1lambda6-benzoxathiol-3-yl]phenol",C19H14O5S,354.37646,0,BELBBZDIHDAJOR-UHFFFAOYSA-N,C1=CC=C2C(=C1)C(OS2(=O)=O)(C3=CC=C(C=C3)O)C4=CC=C(C=C4)O,4766,pubchem,0
 1430-97-3,"9h-fluorene, 2-methyl-",2-methyl-9H-fluorene,C14H12,180.24508,0,RKJHJMAZNPASHY-UHFFFAOYSA-N,CC1=CC2=C(C=C1)C3=CC=CC=C3C2,15026,pubchem,0
+14302-87-5,Mercury(II) (mercuric) ion,,Hg+2,200.59,2,,,,crc_aqueous,0
 14307-33-6,calcium dichromate,calcium oxido-(oxido(dioxo)chromio)oxy-dioxochromium,CaCr2O7,256.066,0,RMISVBXFFXBNAD-UHFFFAOYSA-N,[O-][Cr](=O)(=O)O[Cr](=O)(=O)[O-].[Ca+2],61731,pubchem,0
 14307-35-8,lithium chromate,dilithium;dioxido(dioxo)chromium,CrLi2O4,129.8757,0,JQVALDCWTQRVQE-UHFFFAOYSA-N,[Li+].[Li+].[O-][Cr](=O)(=O)[O-],26627,pubchem,0
 14309-25-2,trityl azide,[azido(diphenyl)methyl]benzene,C19H15N3,285.3425,0,OZHQKHFCDZKWFC-UHFFFAOYSA-N,C1=CC=C(C=C1)C(C2=CC=CC=C2)(C3=CC=CC=C3)N=[N+]=[N-],84340,pubchem,0
 14309-32-1,"1,2-dimethyl cyclopropene","1,2-dimethylcyclopropene",C5H8,68.11702,0,QWKHRBFLFYXNDY-UHFFFAOYSA-N,CC1=C(C1)C,139726,pubchem,0
 14310-20-4,"benzene,1-methyl-4-(2-phenylethyl)-",1-methyl-4-(2-phenylethyl)benzene,C15H16,196.28754,0,CVFXRTRMJYAVJB-UHFFFAOYSA-N,CC1=CC=C(C=C1)CCC2=CC=CC=C2,139727,pubchem,0
+14311-52-5,Tungstate ion,,WO4-2,247.84,-2,,,,crc_aqueous,0
 14312-00-6,cadmium chromate,cadmium(2+);dioxido(dioxo)chromium,CdCrO4,228.4047,0,GLPMHULIKFGNIJ-UHFFFAOYSA-N,[O-][Cr](=O)(=O)[O-].[Cd+2],20065476,pubchem,0
 14321-05-2,"3,5-dichloro-2-(trichloromethyl)-4-pyridinamine","3,5-dichloro-2-(trichloromethyl)pyridin-4-amine",C6H3Cl5N2,280.36642,0,WEYZLTAYNCBWFI-UHFFFAOYSA-N,C1=C(C(=C(C(=N1)C(Cl)(Cl)Cl)Cl)N)Cl,139739,pubchem,0
 14321-27-8,n-ethylbenzylamine,N-benzylethanamine,C9H13N,135.20622,0,HVAAHUDGWQAAOJ-UHFFFAOYSA-N,CCNCC1=CC=CC=C1,84352,pubchem,0
@@ -3888,11 +3919,14 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 14332-28-6,nitroxyl,nitroxyl,HNO,31.01404,0,ODUCDPQEXGNKDN-UHFFFAOYSA-N,N=O,945,pubchem,0
 14332-53-7,magnesium hydride (MgH),magnesium monohydride,HMg,25.31294,0,RZCHRULKKYOSQS-UHFFFAOYSA-N,[MgH],5388910,pubchem,0
 14332-62-8,Magnesium Iodide,,IMg,,,,,,chemicals_bank,0
+14333-13-2,Permanganate ion,,MnO4-,118.936,-1,,,,crc_aqueous,0
+14333-14-3,Manganate ion,,MnO4-2,118.936,-2,,,,crc_aqueous,0
+14333-18-7,Vanadate ion,,VO4-3,114.94,-3,,,,crc_aqueous,0
 14333-26-7,hydrofluoric acid-d,(2H)fluorane,DF,21.012505,0,KRHYYFGTRYWZRS-DYCDLGHISA-N,F,6914122,pubchem,0
 14334-40-8,pramiverine,"4,4-diphenyl-N-propan-2-ylcyclohexan-1-amine",C21H27N,293.44578,0,SBEOBYJLAQKTQX-UHFFFAOYSA-N,CC(C)NC1CCC(CC1)(C2=CC=CC=C2)C3=CC=CC=C3,71681,pubchem,0
 14335-40-1,phosphorous chloride difluoride,chloro(difluoro)phosphane,ClF2P,104.423567,0,AENDXYYGTYFGOX-UHFFFAOYSA-N,FP(F)Cl,123342,pubchem,0
 14337-01-0,hydroxide,hydroxide,HO-,17.00734,-1,XLYOFNOQVPJJNP-UHFFFAOYSA-M,[OH-],961,pubchem,0
-14343-69-2,azide,azide,N3-,42.0201,-1,IVRMZWNICZWHMI-UHFFFAOYSA-N,[N-]=[N+]=[N-],33558,pubchem,0
+14343-69-2,Azide ion,,N3-,42.02,-1,,,,crc_aqueous,0
 1435-43-4,"1-chloro-3,5-difluorobenzene","1-chloro-3,5-difluorobenzene",C6H3ClF2,148.537826,0,RFKBODCWHNDUTJ-UHFFFAOYSA-N,C1=C(C=C(C=C1F)Cl)F,137000,pubchem,0
 1435-44-5,"1-chloro-2,4-difluorobenzene","1-chloro-2,4-difluorobenzene",C6H3ClF2,148.537826,0,AJCSNHQKXUSMMY-UHFFFAOYSA-N,C1=CC(=C(C=C1F)F)Cl,137001,pubchem,0
 1435-48-9,"2,4-dichloro-1-fluorobenzene","2,4-dichloro-1-fluorobenzene",C6H3Cl2F,164.992423,0,BDJZCCWUSOZUQG-UHFFFAOYSA-N,C1=CC(=C(C=C1Cl)Cl)F,123112,pubchem,0
@@ -3911,8 +3945,9 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 14371-10-9,trans-Cinnamaldehyde,(E)-3-phenylprop-2-enal,C9H8O,132.15922,0,KJPRLNWUNMBNBZ-QPJJXVBHSA-N,C1=CC=C(C=C1)C=CC=O,637511,pubchem,0
 1438-14-8,2-isopropyloxirane,2-propan-2-yloxirane,C5H10O,86.1323,0,REYZXWIIUPKFTI-UHFFFAOYSA-N,CC(C)C1CO1,102618,pubchem,0
 1438-16-0,n-aminorhodanine,"3-amino-2-sulfanylidene-1,3-thiazolidin-4-one",C3H4N2OS2,148.20666,0,ZBUUHLDYMKTVLT-UHFFFAOYSA-N,C1C(=O)N(C(=S)S1)N,74033,pubchem,0
-14380-61-1,hypochlorite,hypochlorite,ClO-,51.4524,-1,WQYVRQLZKVEZGA-UHFFFAOYSA-N,[O-]Cl,61739,pubchem,0
-14380-62-2,hypobromite,hypobromite,BrO-,95.9034,-1,JGJLWPGRMCADHB-UHFFFAOYSA-N,[O-]Br,5460626,pubchem,0
+14380-61-1,Hypochlorite ion,,ClO-,51.452,-1,,,,crc_aqueous,0
+14380-62-2,Hypobromite ion,,BrO-,95.903,-1,,,,crc_aqueous,0
+14383-50-7,Thiosulfate ion,,S2O3-2,112.128,-2,,,,crc_aqueous,0
 144-11-6,trihexyphenidyl,1-cyclohexyl-1-phenyl-3-piperidin-1-ylpropan-1-ol,C20H31NO,301.46624,0,HWHLPVGTWGOCJO-UHFFFAOYSA-N,C1CCC(CC1)C(CCN2CCCCC2)(C3=CC=CC=C3)O,5572,pubchem,0
 144-14-9,anileridine,ethyl 1-[2-(4-aminophenyl)ethyl]-4-phenylpiperidine-4-carboxylate,C22H28N2O2,352.46992,0,LKYQLAWMNBFNJT-UHFFFAOYSA-N,CCOC(=O)C1(CCN(CC1)CCC2=CC=C(C=C2)N)C3=CC=CC=C3,8944,pubchem,0
 144-19-4,"2,2,4-trimethyl-1,3-pentanediol","2,2,4-trimethylpentane-1,3-diol",C8H18O2,146.22732,0,JCTXKRPTIMZBJT-UHFFFAOYSA-N,CC(C)C(C(C)(C)CO)O,8946,pubchem,0
@@ -3969,6 +4004,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 14476-30-3,"1,2,2-tribromopropane","1,2,2-tribromopropane",C3H5Br3,280.7838,0,IELJYJRPJJILHQ-UHFFFAOYSA-N,CC(CBr)(Br)Br,84466,pubchem,0
 14476-37-0,4-undecanone,undecan-4-one,C11H22O,170.29178,0,NBSLHMOSERBUOV-UHFFFAOYSA-N,CCCCCCCC(=O)CCC,84467,pubchem,0
 14485-07-5,carbon dioxide,carbon dioxide,CO2,44.0095,0,CURLTUGMZLYLDI-UHFFFAOYSA-N,C(=O)=O,280,pubchem,0
+14485-39-3,Aluminum hydroxide ion,,Al(OH)4-,95.012,-1,,,,crc_aqueous,0
 14486-19-2,14486-19-2,cadmium(2+) ditetrafluoroborate,B2CdF8,286.020226,0,NXOFSPIMFJTFSE-UHFFFAOYSA-N,[B-](F)(F)(F)F.[B-](F)(F)(F)F.[Cd+2],12886773,pubchem,0
 1449-55-4,tetracyclohexylstannane,tetracyclohexylstannane,C24H44Sn,451.31616,0,JUISPCSEIXBMNI-UHFFFAOYSA-N,C1CCC(CC1)[Sn](C2CCCCC2)(C3CCCCC3)C4CCCCC4,74056,pubchem,0
 1449-65-6,methyl germane,methylgermane,CH6Ge,90.69834,0,FOTXTBSEOHNRCB-UHFFFAOYSA-N,C[GeH3],137011,pubchem,0
@@ -4035,6 +4071,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1462-12-0,diethyl ethylidenemalonate,diethyl 2-ethylidenepropanedioate,C9H14O4,186.20506,0,LBBAWVLUOZVYCC-UHFFFAOYSA-N,CCOC(=O)C(=CC)C(=O)OCC,73831,pubchem,0
 1462-84-6,"2,3,6-trimethylpyridine","2,3,6-trimethylpyridine",C8H11N,121.17964,0,UTBIMNXEDGNJFE-UHFFFAOYSA-N,CC1=C(N=C(C=C1)C)C,15100,pubchem,0
 1462-97-1,1-butylcyclopentanol,1-butylcyclopentan-1-ol,C9H18O,142.23862,0,GQTUSXZITATQAM-UHFFFAOYSA-N,CCCCC1(CCCC1)O,137019,pubchem,0
+14627-67-9,Thallium ion,,Tl+3,204.383,3,,,,crc_aqueous,0
 1463-10-1,5-Methyluridine,"1-[(2R,3R,4S,5R)-3,4-dihydroxy-5-(hydroxymethyl)oxolan-2-yl]-5-methylpyrimidine-2,4-dione",C10H14N2O6,258.22796,0,DWRXFEITVBNRMK-JXOAFFINSA-N,CC1=CN(C(=O)NC1=O)C2C(C(C(O2)CO)O)O,445408,pubchem,0
 1463-17-8,"2,8-dimethylquinoline","2,8-dimethylquinoline",C11H11N,157.21174,0,BELFSAVWJLQIBB-UHFFFAOYSA-N,CC1=C2C(=CC=C1)C=CC(=N2)C,15101,pubchem,0
 14630-40-1,bis(trimethylsilyl)acetylene,trimethyl(2-trimethylsilylethynyl)silane,C8H18Si2,170.39952,0,ZDWYFWIBTZJGOR-UHFFFAOYSA-N,C[Si](C)(C)C#C[Si](C)(C)C,84564,pubchem,0
@@ -4078,6 +4115,8 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1470-50-4,2-octenoic acid,oct-2-enoic acid,C8H14O2,142.19556,0,CWMPPVPFLSZGCY-UHFFFAOYSA-N,CCCCCC=CC(=O)O,73850,pubchem,0
 1470-61-7,silver diethyldithiocarbamate,"silver N,N-diethylcarbamodithioate",C5H10AgNS2,256.1378,0,NSVHDIYWJVLAGH-UHFFFAOYSA-M,CCN(CC)C(=S)[S-].[Ag+],3034078,pubchem,0
 1470-94-6,5-indanol,"2,3-dihydro-1H-inden-5-ol",C9H10O,134.1751,0,PEHSSTUGJUBZBI-UHFFFAOYSA-N,C1CC2=C(C1)C=C(C=C2)O,15118,pubchem,0
+14701-21-4,Silver ion,,Ag+,107.868,1,,,,crc_aqueous,0
+14701-22-5,Nickel ion,,Ni+2,58.693,2,,,,crc_aqueous,0
 14701-27-0,lead,lead,Pb,207.2,0,WABPQHHGFIMREM-UHFFFAOYSA-N,[Pb],5352425,pubchem,0
 14705-50-1,t-butyl isobutyl ketone,"2,2,5-trimethylhexan-3-one",C9H18O,142.23862,0,LXFHNTKYSUCXRB-UHFFFAOYSA-N,CC(C)CC(=O)C(C)(C)C,231584,pubchem,0
 1471-03-0,"1-propene, 3-propoxy-",1-prop-2-enoxypropane,C6H12O,100.15888,0,LWJHSQQHGRQCKO-UHFFFAOYSA-N,CCCOCC=C,15119,pubchem,0
@@ -4113,9 +4152,10 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 14791-57-2,Bromosilylidyne,,BrSi,,,,,,chemicals_bank,0
 14794-69-5,"desmotroposantonine, acetate","(3,6,9-trimethyl-2-oxo-3a,4,5,9b-tetrahydro-3H-benzo[g][1]benzofuran-8-yl) acetate",C17H20O4,288.3383,0,ZWPKGSNVVQTUMS-UHFFFAOYSA-N,CC1C2CCC3=C(C2OC1=O)C(=C(C=C3C)OC(=O)C)C,139832,pubchem,0
 14794-71-9,"desmotroposantonine, acetate","(3,6,9-trimethyl-2-oxo-3a,4,5,9b-tetrahydro-3H-benzo[g][1]benzofuran-8-yl) acetate",C17H20O4,288.3383,0,ZWPKGSNVVQTUMS-UHFFFAOYSA-N,CC1C2CCC3=C(C2OC1=O)C(=C(C=C3C)OC(=O)C)C,139832,pubchem,0
-14797-55-8,nitrate,nitrate,NO3-,62.0049,-1,NHNBFGGVMKEFGY-UHFFFAOYSA-N,[N+](=O)([O-])[O-],943,pubchem,0
-14797-65-0,nitrite,nitrite,NO2-,46.0055,-1,IOVCWXUNBOPUCH-UHFFFAOYSA-M,N(=O)[O-],946,pubchem,0
-14798-03-9,ammonium,azanium,H4N+,18.03846,1,QGZKDVFQNNGYKY-UHFFFAOYSA-O,[NH4+],223,pubchem,0
+14797-55-8,Nitrate ion,,NO3-,62.005,-1,,,,crc_aqueous,0
+14797-65-0,Nitrite ion,,NO2-,46.006,-1,,,,crc_aqueous,0
+14797-73-0,Perchlorate ion,,ClO4-,99.451,-1,,,,crc_aqueous,0
+14798-03-9,Ammonium ion,,NH4+,18.039,1,,,,crc_aqueous,0
 148-01-6,dinitolmide,"2-methyl-3,5-dinitrobenzamide",C8H7N3O5,225.15828,0,ZEFNOZRLAWVAQF-UHFFFAOYSA-N,CC1=C(C=C(C=C1[N+](=O)[O-])[N+](=O)[O-])C(=O)N,3092,pubchem,0
 148-18-5,sodium diethyldithiocarbamate,"sodium N,N-diethylcarbamodithioate",C5H10NNaS2,171.259369,0,IOEJYZSZYUROLN-UHFFFAOYSA-M,CCN(CC)C(=S)[S-].[Na+],533728,pubchem,0
 148-24-3,8-hydroxyquinoline,quinolin-8-ol,C9H7NO,145.15798,0,MCJGNVYPOGVAJF-UHFFFAOYSA-N,C1=CC2=C(C(=C1)O)N=CC=C2,1923,pubchem,0
@@ -4126,6 +4166,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1480-63-3,1-Fluorononadecane,1-fluorononadecane,C19H39F,286.511363,0,RSSSLIOVGJVPIX-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCF,17969926,pubchem,0
 14803-42-0,ac1l3fp4,5-methylbicyclo[2.2.2]oct-2-ene,C9H14,122.20746,0,XOGBWGJGWDPLQZ-UHFFFAOYSA-N,CC1CC2CCC1C=C2,139834,pubchem,0
 14808-60-7,quartz (SiO2),dioxosilane,O2Si,60.0843,0,VYPSYNLAJGMNEJ-UHFFFAOYSA-N,O=[Si]=O,24261,pubchem,0
+14808-79-8,Sulfate ion,,SO4-2,96.063,-2,,,,crc_aqueous,0
 1482-82-2,dibenzyl diselenide,(benzyldiselanyl)methylbenzene,C14H14Se2,340.18096,0,HYAVEDMFTNAZQE-UHFFFAOYSA-N,C1=CC=C(C=C1)C[Se][Se]CC2=CC=CC=C2,95955,pubchem,0
 1482-91-3,"1,3,5,7-octatetraene","octa-1,3,5,7-tetraene",C8H10,106.165,0,VXQUABLSXKFKLO-UHFFFAOYSA-N,C=CC=CC=CC=C,137023,pubchem,0
 14832-97-4,Barium Bromide,,BaBr,,,,,,chemicals_bank,0
@@ -4138,16 +4179,22 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1484-84-0,2-piperidineethanol,2-piperidin-2-ylethanol,C7H15NO,129.2001,0,PTHDBHDZSMGHKF-UHFFFAOYSA-N,C1CCNC(C1)CCO,15144,pubchem,0
 1484-85-1,homopiperonylamine,"2-(1,3-benzodioxol-5-yl)ethanamine",C9H11NO2,165.18914,0,RRIRDPSOCUCGBV-UHFFFAOYSA-N,C1OC2=C(O1)C=C(C=C2)CCN,73874,pubchem,0
 1484-87-3,"1-hexanol, 3,3,5-trimethyl-","3,3,5-trimethylhexan-1-ol",C9H20O,144.2545,0,HRXNWQMMTLLJJQ-UHFFFAOYSA-N,CC(C)CC(C)(C)CCO,14402330,pubchem,0
+14844-07-6,Dithionite ion,,S2O4-2,128.128,-2,,,,crc_aqueous,0
 14850-22-7,cis-3-octene,oct-3-ene,C8H16,112.21264,0,YCTDZYMMFQCTEO-UHFFFAOYSA-N,CCCCC=CCC,32935,pubchem,0
 14850-23-8,cis-4-octene,oct-4-ene,C8H16,112.21264,0,IRUCBBFNLDIMIK-UHFFFAOYSA-N,CCCC=CCCC,11621,pubchem,0
 14852-31-4,2-hexadecanol,hexadecan-2-ol,C16H34O,242.44056,0,FVDRFBGMOWJEOR-UHFFFAOYSA-N,CCCCCCCCCCCCCCC(C)O,85779,pubchem,0
 14857-34-2,dimethylethoxysilane,,C4H11OSi,103.21504,0,DRUOQOFQRYFQGB-UHFFFAOYSA-N,CCO[Si](C)C,6328550,pubchem,0
 1486-01-7,biphenyl-d10,"1,2,3,4,5-pentadeuterio-6-(2,3,4,5,6-pentadeuteriophenyl)benzene",C12D10,164.269418,0,ZUOUZKKEUPVFJK-LHNTUAQVSA-N,C1=CC=C(C=C1)C2=CC=CC=C2,137030,pubchem,0
 14861-06-4,vinyl but-2-enoate,ethenyl but-2-enoate,C6H8O2,112.12652,0,IYNRVIKPUTZSOR-UHFFFAOYSA-N,CC=CC(=O)OC=C,61774,pubchem,0
+14864-11-0,Indium ion,,In+,114.818,1,,,,crc_aqueous,0
+14866-68-3,Chlorate ion,,ClO3-,83.451,-1,,,,crc_aqueous,0
 14868-53-2,14868-53-2,bis(disilanyl)silane,H12Si5,152.52278,0,LUXIMSHPDKSEDK-UHFFFAOYSA-N,[SiH3][SiH2][SiH2][SiH2][SiH3],139840,pubchem,0
 1487-15-6,"2,3-dihydro-5-methylfuran","5-methyl-2,3-dihydrofuran",C5H8O,84.11642,0,BGCWDXXJMUHZHE-UHFFFAOYSA-N,CC1=CCCO1,15145,pubchem,0
 1487-18-9,vinylfuran,2-ethenylfuran,C6H6O,94.11124,0,QQBUHYQVKJQAOB-UHFFFAOYSA-N,C=CC1=CC=CO1,73881,pubchem,0
 14871-79-5,barium phosphinate,,BaO4P2,263.272124,0,OWESJVSXFRLVFC-UHFFFAOYSA-L,[O-]P=O.[O-]P=O.[Ba+2],167182,pubchem,0
+14874-70-5,Tetrafluoroborate ion,,BF4-,86.805,-1,,,,crc_aqueous,0
+14877-29-3,Gallium ion,,Ga+2,69.723,2,,,,crc_aqueous,0
+14877-30-6,Indium ion,,In+2,114.818,2,,,,crc_aqueous,0
 14877-32-8,dibromosilane,dibromosilane,Br2H2Si,189.90938,0,VJIYRPVGAZXYBD-UHFFFAOYSA-N,[SiH2](Br)Br,139586,pubchem,0
 14884-42-5,chromium fluoride (CrF5),pentafluorochromium,CrF5,146.988116,0,OMKYWARVLGERCK-UHFFFAOYSA-I,F[Cr](F)(F)(F)F,5460742,pubchem,0
 14885-60-0,tritium monohydride,tritium monohydride,HT,4.023989,0,UFHFLCQGNIYNRP-NJFSPNSNSA-N,[HH],119434,pubchem,0
@@ -4172,6 +4219,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 14903-34-5,nickel,nickel,Ni,58.6934,0,PXHVJJICTQNCMI-UHFFFAOYSA-N,[Ni],935,pubchem,0
 14906-26-4,14906-26-4,1-hydroperoxy-4-methylpent-3-en-1-yne,C6H8O2,112.12652,0,BNLZFLKZIPDLAQ-UHFFFAOYSA-N,CC(=CC#COO)C,53436511,pubchem,0
 1491-59-4,oxymetazoline,"6-tert-butyl-3-(4,5-dihydro-1H-imidazol-2-ylmethyl)-2,4-dimethylphenol",C16H24N2O,260.37456,0,WYWIFABBXFUGLM-UHFFFAOYSA-N,CC1=CC(=C(C(=C1CC2=NCCN2)C)O)C(C)(C)C,4636,pubchem,0
+14913-52-1,Neodymium ion,,Nd+3,144.242,3,,,,crc_aqueous,0
 14919-01-8,trans-3-octene,(E)-oct-3-ene,C8H16,112.21264,0,YCTDZYMMFQCTEO-FNORWQNLSA-N,CCCCC=CCC,638228,pubchem,0
 14920-89-9,"2,3-dimethylfuran","2,3-dimethylfuran",C6H8O,96.12712,0,FJSKXQVRKZTKSI-UHFFFAOYSA-N,CC1=C(OC=C1)C,34337,pubchem,0
 14924-53-9,ethyl cyclobutanecarboxylate,ethyl cyclobutanecarboxylate,C7H12O2,128.16898,0,SMVBADCAMQOTOV-UHFFFAOYSA-N,CCOC(=O)C1CCC1,84700,pubchem,0
@@ -4207,6 +4255,9 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 14989-34-5,Zirconium Chloride,,ClZr,,,,,,chemicals_bank,0
 1499-02-1,paraldehyde,"2,4,6-trimethyl-1,3,5-trioxane",C6H12O3,132.15768,0,SQYNKIJPMDEDEG-UHFFFAOYSA-N,CC1OC(OC(O1)C)C,31264,pubchem,0
 1499-10-1,"9,10-diphenylanthracene","9,10-diphenylanthracene",C26H18,330.42112,0,FCNCGHJSNVOIKE-UHFFFAOYSA-N,C1=CC=C(C=C1)C2=C3C=CC=CC3=C(C4=CC=CC=C42)C5=CC=CC=C5,15159,pubchem,0
+14996-02-2,Bisulfate ion,,HSO4-,97.071,-1,,,,crc_aqueous,0
+14998-27-7,Chlorite ion,,ClO2-,67.452,-1,,,,crc_aqueous,0
+14998-57-3,Biselenate ion,,HSeO4-,143.97,-1,,,,crc_aqueous,0
 150-13-0,4-aminobenzoic acid,4-aminobenzoic acid,C7H7NO2,137.13598,0,ALYNCZNDIQEVRV-UHFFFAOYSA-N,C1=CC(=CC=C1C(=O)O)N,978,pubchem,0
 150-19-6,3-methoxyphenol,3-methoxyphenol,C7H8O2,124.13722,0,ASHGTJPOSUFTGB-UHFFFAOYSA-N,COC1=CC=CC(=C1)O,9007,pubchem,0
 150-30-1,dl-phenylalanine,2-amino-3-phenylpropanoic acid,C9H11NO2,165.18914,0,COLNVLDHVKWLRT-UHFFFAOYSA-N,C1=CC=C(C=C1)CC(C(=O)O)N,994,pubchem,0
@@ -4234,15 +4285,19 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1502-22-3,2-(1-cyclohexenyl)cyclohexanone,2-(cyclohexen-1-yl)cyclohexan-1-one,C12H18O,178.27072,0,GVNVAWHJIKLAGL-UHFFFAOYSA-N,C1CCC(=CC1)C2CCCCC2=O,101175,pubchem,0
 1502-47-2,melem,"2,4,6,8,10,12,13-heptazatricyclo[7.3.1.05,13]trideca-1(12),2,4,6,8,10-hexaene-3,7,11-triamine",C6H6N10,218.17884,0,YSRVJVDFHZYRPA-UHFFFAOYSA-N,C1(=NC2=NC(=NC3=NC(=NC(=N1)N23)N)N)N,5462888,pubchem,0
 1503-53-3,bromoaspirin,2-acetyloxy-5-bromobenzoic acid,C9H7BrO4,259.05348,0,VRJBEVQGJOSGOX-UHFFFAOYSA-N,CC(=O)OC1=C(C=C(C=C1)Br)C(=O)O,73922,pubchem,0
+15035-72-0,Hydrosulfide ion,,SH-,33.073,-1,,,,crc_aqueous,0
 15036-31-4,15036-31-4,3-phenylprop-2-enoyl 3-phenylprop-2-eneperoxoate,C18H14O4,294.30136,0,YPWDLNYZZVNNKN-UHFFFAOYSA-N,C1=CC=C(C=C1)C=CC(=O)OOC(=O)C=CC2=CC=CC=C2,139875,pubchem,0
 1504-58-1,3-phenyl-2-propyn-1-ol,3-phenylprop-2-yn-1-ol,C9H8O,132.15922,0,NITUNGCLDSFVDL-UHFFFAOYSA-N,C1=CC=C(C=C1)C#CCO,123115,pubchem,0
 15042-59-8,"2,4-dimethyl-1,3-dioxane","2,4-dimethyl-1,3-dioxane",C6H12O2,116.15828,0,VREPYGYMOSZTKJ-UHFFFAOYSA-N,CC1CCOC(O1)C,13009,pubchem,0
 15042-60-1,"4,5-dimethyl-1,3-dioxane","4,5-dimethyl-1,3-dioxane",C6H12O2,116.15828,0,YMXZGCMNTIZHDC-UHFFFAOYSA-N,CC1COCOC1C,136888,pubchem,0
 15045-43-9,"2,2,5,5-tetramethyltetrahydrofuran","2,2,5,5-tetramethyloxolane",C8H16O,128.21204,0,BBLDTXFLAHKYFJ-UHFFFAOYSA-N,CC1(CCC(O1)(C)C)C,27010,pubchem,0
+15056-35-6,Periodate ion,,IO4-,190.902,-1,,,,crc_aqueous,0
 15060-62-5,"selenic acid, nickel(2+) salt (1:1)",nickel;selenic acid,H2NiO4Se,203.66688,0,WQTZVKFAQJMKRZ-UHFFFAOYSA-N,O[Se](=O)(=O)O.[Ni],74765631,pubchem,0
-15065-65-3,"hypoiodite (8CI,9CI)",hypoiodite,IO-,142.90387,-1,AAUNBWYUJICUKP-UHFFFAOYSA-N,[O-]I,5460636,pubchem,0
+15065-65-3,Hypoiodite ion,,IO-,142.903,-1,,,,crc_aqueous,0
 15067-26-2,acenaphthene-d10,"1,1,2,2,3,4,5,6,7,8-decadeuterioacenaphthylene",C12D10,164.269418,0,CWRYPZZKDGJXCA-WHUVPORUSA-N,C1CC2=CC=CC3=C2C1=CC=C3,177559,pubchem,0
 15091-79-9,gallium,gallium,Ga,69.723,0,GYHNNYVSQQEPJS-UHFFFAOYSA-N,[Ga],5360835,pubchem,0
+15092-05-4,Iron(II) hydroxide ion,,FeOH+,72.852,1,,,,crc_aqueous,0
+15092-81-6,Persulfate ion,,S2O8-2,192.125,-2,,,,crc_aqueous,0
 15096-52-3,cryolite,trisodium;hexafluoroaluminum(3-),AlF6Na3,209.941266,0,REHXRBDMVPYGJX-UHFFFAOYSA-H,F[Al-3](F)(F)(F)(F)F.[Na+].[Na+].[Na+],16693908,pubchem,0
 15098-87-0,15098-87-0,aluminum;trifluoride;trihydrate,AlF3H6O3,138.022588,0,BKLZIAYVINRQEJ-UHFFFAOYSA-K,O.O.O.[F-].[F-].[F-].[Al+3],22002992,pubchem,0
 151-01-9,xanthate,ethoxymethanedithioic acid,C3H6OS2,122.20914,0,ZOOODBUHSVUZEM-UHFFFAOYSA-N,CCOC(=S)S,8823,pubchem,0
@@ -4272,6 +4327,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1515-14-6,"1,1,1,3,3,3-hexafluoro-2-methylpropan-2-ol","1,1,1,3,3,3-hexafluoro-2-methylpropan-2-ol",C4H4F6O,182.064379,0,FQDXJYBXPOMIBX-UHFFFAOYSA-N,CC(C(F)(F)F)(C(F)(F)F)O,73936,pubchem,0
 1515-76-0,1515-76-0,"buta-1,3-dienyl acetate",C6H8O2,112.12652,0,NMQQBXHZBNUXGJ-UHFFFAOYSA-N,CC(=O)OC=CC=C,15195,pubchem,0
 1515-95-3,4-ethylanisole,1-ethyl-4-methoxybenzene,C9H12O,136.19098,0,HDNRAPAFJLXKBV-UHFFFAOYSA-N,CCC1=CC=C(C=C1)OC,73690,pubchem,0
+15158-11-9,Copper (cupric) ion,,Cu+2,63.546,2,,,,crc_aqueous,0
 1516-60-5,p-azidonitrobenzene,1-azido-4-nitrobenzene,C6H4N4O2,164.12156,0,CZZVSJPFJBUBDK-UHFFFAOYSA-N,C1=CC(=CC=C1N=[N+]=[N-])[N+](=O)[O-],137049,pubchem,0
 1516-80-9,triphenylethoxysilane,ethoxy(triphenyl)silane,C20H20OSi,304.4577,0,ZVJXKUWNRVOUTI-UHFFFAOYSA-N,CCO[Si](C1=CC=CC=C1)(C2=CC=CC=C2)C3=CC=CC=C3,73695,pubchem,0
 15164-44-0,4-iodobenzaldehyde,4-iodobenzaldehyde,C7H5IO,232.01847,0,NIEBHDXUIJSHSL-UHFFFAOYSA-N,C1=CC(=CC=C1C=O)I,96657,pubchem,0
@@ -4289,6 +4345,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1518-75-8,3-propylthiophene,3-propylthiophene,C7H10S,126.2193,0,QZNFRMXKQCIPQY-UHFFFAOYSA-N,CCCC1=CSC=C1,519073,pubchem,0
 1518-86-1,4-(2-aminopropyl)phenol,4-(2-aminopropyl)phenol,C9H13NO,151.20562,0,GIKNHHRFLCDOEU-UHFFFAOYSA-N,CC(CC1=CC=C(C=C1)O)N,3651,pubchem,0
 15181-11-0,"3,5-di-tert-butyltoluene","1,3-ditert-butyl-5-methylbenzene",C15H24,204.35106,0,WIXDSJRJFDWTNY-UHFFFAOYSA-N,CC1=CC(=CC(=C1)C(C)(C)C)C(C)(C)C,84819,pubchem,0
+15181-46-1,Bisulfite ion,,HSO3-,81.071,-1,,,,crc_aqueous,0
 1519-36-4,"1,4-dimethylanthraquinone","1,4-dimethylanthracene-9,10-dione",C16H12O2,236.26528,0,DVFAVJDEPNXAME-UHFFFAOYSA-N,CC1=C2C(=C(C=C1)C)C(=O)C3=CC=CC=C3C2=O,73698,pubchem,0
 15191-85-2,beryllium silicate,diberyllium;silicate,Be2O4Si,110.107464,0,QZVSYHUREAVHQG-UHFFFAOYSA-N,[Be+2].[Be+2].[O-][Si]([O-])([O-])[O-],27131,pubchem,0
 15192-26-4,"tellurium fluoride (TeF4), (T-4)-",,F4Te,203.593613,0,CRMPMTUAAUPLIK-UHFFFAOYSA-N,F[Te](F)(F)F,167258,pubchem,0
@@ -4322,6 +4379,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1524-88-5,flurandrenolide,"(1S,2S,4R,8S,9S,11S,12S,13R,19S)-19-fluoro-11-hydroxy-8-(2-hydroxyacetyl)-6,6,9,13-tetramethyl-5,7-dioxapentacyclo[10.8.0.02,9.04,8.013,18]icos-17-en-16-one",C24H33FO6,436.513623,0,POPFMWWJOGLOIF-XWCQMRHXSA-N,CC1(OC2CC3C4CC(C5=CC(=O)CCC5(C4C(CC3(C2(O1)C(=O)CO)C)O)C)F)C,15209,pubchem,0
 15243-33-1,triruthenium dodecacarbonyl,carbon monoxide;ruthenium,C12O12Ru3,639.3312,0,NQZFAUXPNWSLBI-UHFFFAOYSA-N,[C-]#[O+].[C-]#[O+].[C-]#[O+].[C-]#[O+].[C-]#[O+].[C-]#[O+].[C-]#[O+].[C-]#[O+].[C-]#[O+].[C-]#[O+].[C-]#[O+].[C-]#[O+].[Ru].[Ru].[Ru],519095,pubchem,0
 15244-35-6,"sulfuric acid, cadmium salt (1:1), hydrate",cadmium(2+);sulfate;octahydrate,CdH16O12S,352.59584,0,XPGCBFBTBOFJAE-UHFFFAOYSA-L,O.O.O.O.O.O.O.O.[O-]S(=O)(=O)[O-].[Cd+2],3084221,pubchem,0
+15251-42-0,Dihydrogen pyrophosphate ion,,H2P2O7-2,175.959,-2,,,,crc_aqueous,0
 15268-49-2,"propane, 2-methyl-1-propoxy-",2-methyl-1-propoxypropane,C7H16O,116.20134,0,NKBWHRMIYKMDDN-UHFFFAOYSA-N,CCCOCC(C)C,139920,pubchem,0
 15269-16-6,"4-methyl-2,5-diisopropylphenol","4-methyl-2,5-di(propan-2-yl)phenol",C13H20O,192.2973,0,UJBZHJNVIHOWFA-UHFFFAOYSA-N,CC1=CC(=C(C=C1C(C)C)O)C(C)C,139921,pubchem,0
 15269-17-7,"4-methyl-3,5-diisopropylphenol","4-methyl-3,5-di(propan-2-yl)phenol",C13H20O,192.2973,0,XIGWUCHSXAEESN-UHFFFAOYSA-N,CC1=C(C=C(C=C1C(C)C)O)C(C)C,139922,pubchem,0
@@ -4366,6 +4424,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 15385-57-6,15385-57-6,iodomercury,Hg2I2,654.98894,0,NDKKKEPYKOOXLG-UHFFFAOYSA-L,I[Hg].I[Hg],27243,pubchem,0
 15385-58-7,mercury bromide (hgbr),bromomercury,Br2Hg2,560.988,0,RVARJMCTILSHND-UHFFFAOYSA-L,Br[Hg].Br[Hg],24829,pubchem,0
 1539-42-0,bis(2-pyridylmethyl)amine,1-pyridin-2-yl-N-(pyridin-2-ylmethyl)methanamine,C12H13N3,199.25172,0,KXZQYLBVMZGIKC-UHFFFAOYSA-N,C1=CC=NC(=C1)CNCC2=CC=CC=N2,73759,pubchem,0
+15391-91-0,Thallium dihydroxide ion,,Tl(OH)2+,238.398,1,,,,crc_aqueous,0
 154-17-6,2-Deoxyglucose,"(3R,4S,5R)-3,4,5,6-tetrahydroxyhexanal",C6H12O5,164.15648,0,VRYALKFFQXWPIH-PBXRRBTRSA-N,C(C=O)C(C(C(CO)O)O)O,108223,pubchem,0
 154-41-6,demazin,"(1S,2R)-2-amino-1-phenylpropan-1-ol;hydrochloride",C9H14ClNO,187.66656,0,DYWNLSQWJMTVGJ-PRCZDLBKSA-N,CC(C(C1=CC=CC=C1)O)N.Cl,6433169,pubchem,0
 154-42-7,6-thioguanine,"2-amino-3,7-dihydropurine-6-thione",C5H5N5S,167.1917,0,WYWHKKSPHMUBEB-UHFFFAOYSA-N,C1=NC2=C(N1)C(=S)N=C(N2)N,2723601,pubchem,0
@@ -4382,9 +4441,11 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1541-09-9,"octane, 2-methoxy-",2-methoxyoctane,C9H20O,144.2545,0,DILJBLUOUOALOF-UHFFFAOYSA-N,CCCCCCC(C)OC,12444011,pubchem,0
 1541-23-7,"1,5-heptadiene","hepta-1,5-diene",C7H12,96.17018,0,ZGXMNEKDFYUNDQ-UHFFFAOYSA-N,CC=CCCC=C,137072,pubchem,0
 1541-33-9,"3-methyl-1,5-hexadiene","3-methylhexa-1,5-diene",C7H12,96.17018,0,JXENLILXUMZMFC-UHFFFAOYSA-N,CC(CC=C)C=C,137073,pubchem,0
+15438-31-0,Iron (ferrous) ion,,Fe+2,55.845,2,,,,crc_aqueous,0
 1544-68-9,4-fluorophenyl isothiocyanate,1-fluoro-4-isothiocyanatobenzene,C7H4FNS,153.176763,0,NFIUJHJMCQQYDL-UHFFFAOYSA-N,C1=CC(=CC=C1N=C=S)F,15241,pubchem,0
 15443-37-5,ac1l3fwj,"pentacyclo[5.3.0.02,5.03,9.04,8]decan-6-one",C10H10O,146.1858,0,KIOXQCAVQTVNCR-UHFFFAOYSA-N,C1C2C3C4C1C5C2C3C4C5=O,139937,pubchem,0
 1545-17-1,1-Fluoroheptadecane,1-fluoroheptadecane,C17H35F,258.458203,0,RPVBHMWDHUHXLY-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCF,17971427,pubchem,0
+15454-31-6,Iodate ion,,IO3-,174.902,-1,,,,crc_aqueous,0
 15457-05-3,fluorodifen,2-nitro-1-(4-nitrophenoxy)-4-(trifluoromethyl)benzene,C13H7F3N2O5,328.20029,0,HHMCAJWVGYGUEF-UHFFFAOYSA-N,C1=CC(=CC=C1[N+](=O)[O-])OC2=C(C=C(C=C2)C(F)(F)F)[N+](=O)[O-],27295,pubchem,0
 15468-32-3,quartz (SiO2),dioxosilane,O2Si,60.0843,0,VYPSYNLAJGMNEJ-UHFFFAOYSA-N,O=[Si]=O,24261,pubchem,0
 15469-38-2,15469-38-2,iron(3+);trifluoride;trihydrate,F3FeH6O3,166.88605,0,XILAUHRDSUSGOG-UHFFFAOYSA-K,O.O.O.[F-].[F-].[F-].[Fe+3],44717421,pubchem,0
@@ -4415,6 +4476,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1552-96-1,4-(dimethylamino)cinnamic acid,(E)-3-[4-(dimethylamino)phenyl]prop-2-enoic acid,C11H13NO2,191.22642,0,CQNPVMCASGWEHM-VMPITWQZSA-N,CN(C)C1=CC=C(C=C1)C=CC(=O)O,1540638,pubchem,0
 15520-84-0,cobalt(III) nitrate,cobalt;nitric acid,CoHNO3,121.94604,0,KTPIHRZQGZDLSN-UHFFFAOYSA-N,[N+](=O)(O)[O-].[Co],57375443,pubchem,0
 15521-18-3,2-(dimethylamino)propan-1-ol,2-(dimethylamino)propan-1-ol,C5H13NO,103.16282,0,PBKGYWLWIJLDGZ-UHFFFAOYSA-N,CC(CO)N(C)C,85865,pubchem,0
+15541-45-4,Bromate ion,,BrO3-,127.902,-1,,,,crc_aqueous,0
 15545-48-9,chlorotoluron,"3-(3-chloro-4-methylphenyl)-1,1-dimethylurea",C10H13ClN2O,212.67602,0,JXCGFZXSOMJFOA-UHFFFAOYSA-N,CC1=C(C=C(C=C1)NC(=O)N(C)C)Cl,27375,pubchem,0
 1555-17-5,"pentadecane, 1-fluoro-",1-fluoropentadecane,C15H31F,230.405043,0,DRKDLVHRJPXHJU-UHFFFAOYSA-N,CCCCCCCCCCCCCCCF,13196892,pubchem,0
 1555-80-2,(2-phenylacetyl) 2-phenylacetate,(2-phenylacetyl) 2-phenylacetate,C16H14O3,254.28056,0,JAUFWTSSYRTLLB-UHFFFAOYSA-N,C1=CC=C(C=C1)CC(=O)OC(=O)CC2=CC=CC=C2,316205,pubchem,0
@@ -4431,6 +4493,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1558-25-4,(chloromethyl)trichlorosilane,trichloro(chloromethyl)silane,CH2Cl4Si,183.92408,0,FYTPGBJPTDQJCG-UHFFFAOYSA-N,C([Si](Cl)(Cl)Cl)Cl,15258,pubchem,0
 1558-31-2,(dichloromethyl)methyldichlorosilane,dichloro-(dichloromethyl)-methylsilane,C2H4Cl4Si,197.95066,0,XMNYHTVOHRUIEH-UHFFFAOYSA-N,C[Si](C(Cl)Cl)(Cl)Cl,73787,pubchem,0
 1558-33-4,dichloro(chloromethyl)methylsilane,dichloro-(chloromethyl)-methylsilane,C2H5Cl3Si,163.5056,0,JAYBZWYBCUJLNQ-UHFFFAOYSA-N,C[Si](CCl)(Cl)Cl,73788,pubchem,0
+15584-04-0,Arsenate ion,,AsO4-3,138.92,-3,,,,crc_aqueous,0
 15587-72-1,15587-72-1,hydrogen sulfate;rubidium(1+),HO4RbS,182.53834,0,SCWZRXZHBXDDBE-UHFFFAOYSA-M,OS(=O)(=O)[O-].[Rb+],23689122,pubchem,0
 1559-02-0,"diethyl 1,1-cyclopropanedicarboxylate","diethyl cyclopropane-1,1-dicarboxylate",C9H14O4,186.20506,0,KYYUCZOHNYSLFV-UHFFFAOYSA-N,CCOC(=O)C1(CC1)C(=O)OCC,73790,pubchem,0
 1559-35-9,2-(2-ethylhexyloxy)ethanol,2-(2-ethylhexoxy)ethanol,C10H22O2,174.28048,0,OHJYHAOODFPJOD-UHFFFAOYSA-N,CCCCC(CC)COCCO,15260,pubchem,0
@@ -4529,6 +4592,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 15804-19-0,"2,3-dihydroxyquinoxaline","1,4-dihydroquinoxaline-2,3-dione",C8H6N2O2,162.14544,0,ABJFBJGGLJVMAQ-UHFFFAOYSA-N,C1=CC=C2C(=C1)NC(=O)C(=O)N2,27491,pubchem,0
 15806-20-9,1-benzyl-2-phenylhydrazine,1-benzyl-2-phenylhydrazine,C13H14N2,198.26366,0,ZEMCGIDMAMIJLF-UHFFFAOYSA-N,C1=CC=C(C=C1)CNNC2=CC=CC=C2,120302,pubchem,0
 1582-09-8,trifluralin,"2,6-dinitro-N,N-dipropyl-4-(trifluoromethyl)aniline",C13H16F3N3O4,335.27905,0,ZSDSQXJSNMTJDA-UHFFFAOYSA-N,CCCN(CCC)C1=C(C=C(C=C1[N+](=O)[O-])C(F)(F)F)[N+](=O)[O-],5569,pubchem,0
+15823-78-6,Thallium hydroxide ion,,TlOH+2,221.39,2,,,,crc_aqueous,0
 15825-70-4,mannitol hexanitrate,"[(2R,3R,4R,5R)-1,2,4,5,6-pentanitrooxyhexan-3-yl] nitrate",C6H8N6O18,452.15712,0,DGMJZELBSFOPHH-KVTDHHQDSA-N,C(C(C(C(C(CO[N+](=O)[O-])O[N+](=O)[O-])O[N+](=O)[O-])O[N+](=O)[O-])O[N+](=O)[O-])O[N+](=O)[O-],61818,pubchem,0
 15829-53-5,mercurous oxide,mercuriooxymercury,Hg2O,417.1794,0,RPZHFKHTXCZXQV-UHFFFAOYSA-N,O([Hg])[Hg],16683011,pubchem,0
 1584-03-8,perfluoro-2-methyl-2-pentene,"1,1,1,3,4,4,5,5,5-nonafluoro-2-(trifluoromethyl)pent-2-ene",C6F12,300.045038,0,FAEGGADNHFKDQX-UHFFFAOYSA-N,C(=C(C(C(F)(F)F)(F)F)F)(C(F)(F)F)C(F)(F)F,74105,pubchem,0
@@ -4622,6 +4686,9 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1606-49-1,"1,4,5,6-tetrahydropyrimidine","1,4,5,6-tetrahydropyrimidine",C4H8N2,84.11972,0,VBXZSFNZVNDOPB-UHFFFAOYSA-N,C1CNC=NC1,137105,pubchem,0
 1606-67-3,1-aminopyrene,pyren-1-amine,C16H11N,217.26524,0,YZVWKHVRBDQPMQ-UHFFFAOYSA-N,C1=CC2=C3C(=C1)C=CC4=C(C=CC(=C43)C=C2)N,15352,pubchem,0
 16063-24-4,"1,2-bis(difluoramino)isobutane","1-N,1-N,2-N,2-N-tetrafluoro-2-methylpropane-1,2-diamine",C4H8F4N2,160.113333,0,PIGMBPMRYUUGBD-UHFFFAOYSA-N,CC(C)(CN(F)F)N(F)F,85260,pubchem,0
+16065-88-6,Palladium ion,,Pd+2,106.42,2,,,,crc_aqueous,0
+16065-90-0,Cerium ion,,Ce+4,140.116,4,,,,crc_aqueous,0
+16065-92-2,Thorium ion,,Th+4,232.038,4,,,,crc_aqueous,0
 16066-09-4,"1,1,1,3,5,7,7,7-Octamethyltetrasiloxane",trimethyl-[methyl-[methyl(trimethylsilyloxy)silyl]oxysilyl]oxysilane,C8H26O3Si4,282.63224,0,LBPUHXCOWXUVCE-UHFFFAOYSA-N,C[SiH](O[SiH](C)O[Si](C)(C)C)O[Si](C)(C)C,85263,pubchem,0
 16068-96-5,Sulfur Fluoride,,FS,,,,,,chemicals_bank,0
 1608-26-0,hexamethylphosphorous triamide,N-[bis(dimethylamino)phosphanyl]-N-methylmethanamine,C6H18N3P,163.200982,0,XVDBWWRIXBMVJV-UHFFFAOYSA-N,CN(C)P(N(C)C)N(C)C,15355,pubchem,0
@@ -4629,11 +4696,13 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 16085-50-0,16085-50-0,"1,5-dimethyl-1,2,5,6-tetrahydro-[1,2,4]triazolo[1,2-a][1,2,4]triazole-3,7-dithione",C6H10N4S2,202.3004,0,STHDAFBSDYQXQG-UHFFFAOYSA-N,CC1NC(=S)N2N1C(=S)NC2C,2776768,pubchem,0
 16087-30-2,"butyrophenone, 3,3''-(ethylenedinitrilo)di-",3-[2-[(4-oxo-4-phenylbutan-2-ylidene)amino]ethylimino]-1-phenylbutan-1-one,C22H24N2O2,348.43816,0,CODOLTFDVSRVJU-UHFFFAOYSA-N,CC(=NCCN=C(C)CC(=O)C1=CC=CC=C1)CC(=O)C2=CC=CC=C2,140028,pubchem,0
 16088-62-3,(s)-(-)-propylene oxide,(2S)-2-methyloxirane,C3H6O,58.07914,0,GOOHAUXETOMSMM-VKHMYHEASA-N,CC1CO1,146262,pubchem,0
+16089-60-4,Uranium ion,,U+4,238.029,4,,,,crc_aqueous,0
 1609-19-4,diethylchlorosilane,,C4H10ClSi,121.6607,0,SOYVLBDERBHIME-UHFFFAOYSA-N,CC[Si](CC)Cl,6327320,pubchem,0
 1609-47-8,diethyl pyrocarbonate,ethoxycarbonyl ethyl carbonate,C6H10O5,162.1406,0,FFYPMLJYZAEMQB-UHFFFAOYSA-N,CCOC(=O)OC(=O)OCC,3051,pubchem,0
 1609-86-5,tert-butyl isocyanate,2-isocyanato-2-methylpropane,C5H9NO,99.13106,0,MGOLNIXAPIAKFM-UHFFFAOYSA-N,CC(C)(C)N=C=O,62412,pubchem,0
 16090-49-6,16090-49-6,dimethyl(sulfanylidene)germane,C2H6GeS,134.77404,0,FTOAATXNJIOWPY-UHFFFAOYSA-N,C[Ge](=S)C,27679,pubchem,0
 16096-32-5,4-methylindole,4-methyl-1H-indole,C9H9N,131.17446,0,PZOUSPYUWWUPPK-UHFFFAOYSA-N,CC1=C2C=CNC2=CC=C1,85282,pubchem,0
+16096-89-2,Lanthanum ion,,La+3,138.905,3,,,,crc_aqueous,0
 1610-18-0,prometon,"6-methoxy-2-N,4-N-di(propan-2-yl)-1,3,5-triazine-2,4-diamine",C10H19N5O,225.29076,0,ISEUFVQQFVOBCY-UHFFFAOYSA-N,CC(C)NC1=NC(=NC(=N1)OC)NC(C)C,4928,pubchem,0
 1610-23-7,"1,6-dicyclohexylhexane",6-cyclohexylhexylcyclohexane,C18H34,250.46256,0,VBQJFJRTZSWYPK-UHFFFAOYSA-N,C1CCC(CC1)CCCCCCC2CCCCC2,123123,pubchem,0
 1610-39-5,dodecahydrotriphenylene,"1,2,3,4,5,6,7,8,9,10,11,12-dodecahydrotriphenylene",C18H24,240.38316,0,ODHYDPYRIQKHCI-UHFFFAOYSA-N,C1CCC2=C3CCCCC3=C4CCCCC4=C2C1,95278,pubchem,0
@@ -4742,8 +4811,11 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1639-01-6,"2,3-dimethyl-2-butanethiol","2,3-dimethylbutane-2-thiol",C6H14S,118.24036,0,CRJLQECEGNIMNG-UHFFFAOYSA-N,CC(C)C(C)(C)S,137130,pubchem,0
 1639-04-9,"3-pentanethiol, 2-methyl-",2-methylpentane-3-thiol,C6H14S,118.24036,0,NTRKGRUMBHBCAM-UHFFFAOYSA-N,CCC(C(C)C)S,519263,pubchem,0
 1639-09-4,1-heptanethiol,heptane-1-thiol,C7H16S,132.26694,0,VPIAKHNXCOTPAY-UHFFFAOYSA-N,CCCCCCCS,15422,pubchem,0
+16396-66-0,Samarium ion,,Sm+2,150.36,2,,,,crc_aqueous,0
+16397-91-4,Manganese ion,,Mn+2,54.938,2,,,,crc_aqueous,0
 16399-77-2,ferrous chloride dihydrate,dichloroiron;dihydrate,Cl2FeH4O2,162.78156,0,LLQVGQZFZSRDAV-UHFFFAOYSA-L,O.O.Cl[Fe]Cl,129694154,pubchem,0
 1640-89-7,ethylcyclopentane,ethylcyclopentane,C7H14,98.18606,0,IFTRQJLVEBNKJK-UHFFFAOYSA-N,CCC1CCCC1,15431,pubchem,1
+16408-24-5,Iron(III) dihydroxide ion,,Fe(OH)2+,89.86,1,,,,crc_aqueous,0
 16409-44-2,"2,6-Octadien-1-ol, 3,7-dimethyl-, acetate","3,7-dimethylocta-2,6-dienyl acetate",C12H20O2,196.286,0,HIGQPQRQIQDZMP-UHFFFAOYSA-N,CC(=CCCC(=CCOC(=O)C)C)C,7780,pubchem,0
 16409-46-4,menthyl isovalerate,(5-methyl-2-propan-2-ylcyclohexyl) 3-methylbutanoate,C15H28O2,240.38162,0,VYQSSWZYPCCBRN-UHFFFAOYSA-N,CC1CCC(C(C1)OC(=O)CC(C)C)C(C)C,565690,pubchem,0
 1641-09-4,3-cyanothiophene,thiophene-3-carbonitrile,C5H3NS,109.14902,0,GSXCEVHRIVLFJV-UHFFFAOYSA-N,C1=CSC=C1C#N,74231,pubchem,0
@@ -4760,6 +4832,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 16432-53-4,"1,4-hexanediol","hexane-1,4-diol",C6H14O2,118.17416,0,QVTWBMUAJHVAIJ-UHFFFAOYSA-N,CCC(CCCO)O,10192564,pubchem,0
 16435-49-7,2-methyl-1-dodecene,2-methyldodec-1-ene,C13H26,182.34554,0,PWRBDKMPAZFCSV-UHFFFAOYSA-N,CCCCCCCCCCC(=C)C,519267,pubchem,0
 16456-33-0,bicyclo[4.2.1]non-3-ene,bicyclo[4.2.1]non-3-ene,C9H14,122.20746,0,VQBSXAZGFWSWHD-UHFFFAOYSA-N,C1CC2CC=CCC1C2,140076,pubchem,0
+16458-09-6,Aluminum hydroxide ion,,AlOH+2,43.989,2,,,,crc_aqueous,0
 1646-26-0,2-acetylbenzofuran,1-(1-benzofuran-2-yl)ethanone,C10H8O2,160.16932,0,YUTFQTAITWWGFH-UHFFFAOYSA-N,CC(=O)C1=CC2=CC=CC=C2O1,15435,pubchem,0
 1646-88-4,aldoxycarb,[(E)-(2-methyl-2-methylsulfonylpropylidene)amino] N-methylcarbamate,C7H14N2O4S,222.26206,0,YRRKLBAKDXSTNC-WEVVVXLNSA-N,CC(C)(C=NOC(=O)NC)S(=O)(=O)C,9570093,pubchem,0
 16469-16-2,praseodymium hydroxide,praseodymium(3+) trihydroxide,H3O3Pr,191.92967,0,ZLGIGTLMMBTXIY-UHFFFAOYSA-K,[OH-].[OH-].[OH-].[Pr+3],85432,pubchem,0
@@ -4767,6 +4840,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1647-16-1,"1,9-decadiene","deca-1,9-diene",C10H18,138.24992,0,NLDGJRWPPOSWLC-UHFFFAOYSA-N,C=CCCCCCCC=C,15439,pubchem,0
 1647-23-0,"1-bromo-3,3-dimethylbutane","1-bromo-3,3-dimethylbutane",C6H13Br,165.07142,0,ROKZAMCDHKVZIQ-UHFFFAOYSA-N,CC(C)(C)CCBr,137137,pubchem,0
 1647-26-3,2-cyclohexylethyl bromide,2-bromoethylcyclohexane,C8H15Br,191.1087,0,JRQAAYVLPPGEHT-UHFFFAOYSA-N,C1CCC(CC1)CCBr,15440,pubchem,0
+16474-32-1,Perbromate ion,,BrO4-,143.902,-1,,,,crc_aqueous,0
 16474-43-4,tert-butyl pivalate,"tert-butyl 2,2-dimethylpropanoate",C9H18O2,158.23802,0,VXHFNALHLRWIIU-UHFFFAOYSA-N,CC(C)(C)C(=O)OC(C)(C)C,519272,pubchem,0
 16480-60-7,16480-60-7,dichloroiron;tetrachloroiron,Cl6Fe2,324.408,0,DGACVIFWWARGLD-UHFFFAOYSA-H,Cl[Fe]Cl.Cl[Fe](Cl)(Cl)Cl,140089,pubchem,0
 16484-17-6,"2h-inden-2-one, octahydro-, cis-","1,3,3a,4,5,6,7,7a-octahydroinden-2-one",C9H14O,138.20686,0,HAMUKWWZXAKCAU-UHFFFAOYSA-N,C1CCC2CC(=O)CC2C1,138565,pubchem,0
@@ -4776,6 +4850,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 16493-80-4,4-ethyloctanoic acid,4-ethyloctanoic acid,C10H20O2,172.2646,0,PWKJMPFEQOHBAC-UHFFFAOYSA-N,CCCCC(CC)CCC(=O)O,61840,pubchem,0
 1651-34-9,ctk0a9057,"2,2,2-trifluoroethyl pentanoate",C7H11F3O2,184.15625,0,IIVHGFWOYZLPEQ-UHFFFAOYSA-N,CCCCC(=O)OCC(F)(F)F,12643287,pubchem,0
 16515-90-5,ctk0a9054,"triethyl ethane-1,1,1-tricarboxylate",C11H18O6,246.25702,0,CTFRGNLAGFUMHR-UHFFFAOYSA-N,CCOC(=O)C(C)(C(=O)OCC)C(=O)OCC,12721609,pubchem,0
+16518-47-1,Hydrogen arsenate ion,,H2AsO4-,140.936,-1,,,,crc_aqueous,0
 16518-62-0,"3-bromo-n,n-dimethylaniline","3-bromo-N,N-dimethylaniline",C8H10BrN,200.0757,0,USEXQPWLCGBYNT-UHFFFAOYSA-N,CN(C)C1=CC(=CC=C1)Br,140102,pubchem,0
 1652-81-9,"1,1,3-trichloro-1,2,2,3,3-pentafluoropropane","1,1,3-trichloro-1,2,2,3,3-pentafluoropropane",C3Cl3F5,237.383116,0,PSVOCRUYXNEMNE-UHFFFAOYSA-N,C(C(F)(F)Cl)(C(F)(Cl)Cl)(F)F,74244,pubchem,0
 16520-62-0,4-phenyl-1-butyne,but-3-ynylbenzene,C10H10,130.1864,0,QDEOKXOYHYUKMS-UHFFFAOYSA-N,C#CCCC1=CC=CC=C1,123360,pubchem,0
@@ -4823,6 +4898,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 16649-52-8,"diazene, 1,2-bis(1,1-dimethylethyl)-, 1-oxide",,C8H18N2O,158.24132,,YOGGJOULZPUAHF-KTKRTIGZSA-N,CC(C)(C)/N=[N+](\[O-])C(C)(C)C,-1,chemicals_bank,0
 1665-48-1,metaxalone,"5-[(3,5-dimethylphenoxy)methyl]-1,3-oxazolidin-2-one",C12H15NO3,221.2524,0,IMWZZHHPURKASS-UHFFFAOYSA-N,CC1=CC(=CC(=C1)OCC2CNC(=O)O2)C,15459,pubchem,0
 1666-13-3,diphenyl diselenide,(phenyldiselanyl)benzene,C12H10Se2,312.1278,0,YWWZCHLUQSHMCL-UHFFFAOYSA-N,C1=CC=C(C=C1)[Se][Se]C2=CC=CC=C2,15460,pubchem,0
+16661-43-1,Hydroselenide ion,,HSe-,79.97,-1,,,,crc_aqueous,0
 16666-42-5,cis-2-pentenoic acid,(Z)-pent-2-enoic acid,C5H8O2,100.11582,0,YIYBQIKDCADOSF-ARJAWSKDSA-N,CCC=CC(=O)O,643793,pubchem,0
 16668-67-0,(z)-hc.equiv.cch=chc.equiv.ch,"(Z)-hex-3-en-1,5-diyne",C6H4,76.09596,0,KIWAUQFHKHLABA-WAYWQWQTSA-N,C#CC=CC#C,5462927,pubchem,0
 1667-00-1,cyclopropylphenylmethane,cyclopropylmethylbenzene,C10H12,132.20228,0,GUGXBRGATQTAFP-UHFFFAOYSA-N,C1CC1CC2=CC=CC=C2,74274,pubchem,0
@@ -4849,6 +4925,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 16726-19-5,"acridine, tetradecahydro-","1,2,3,4,4a,5,6,7,8,8a,9,9a,10,10a-tetradecahydroacridine",C13H23N,193.32842,0,IXTPCSZJZAKJTO-UHFFFAOYSA-N,C1CCC2C(C1)CC3CCCCC3N2,140130,pubchem,0
 16727-91-6,"naphthalene, 1-isobutyl-",1-(2-methylpropyl)naphthalene,C14H16,184.27684,0,ZYFTVCJVNRKBCC-UHFFFAOYSA-N,CC(C)CC1=CC=CC2=CC=CC=C21,28017,pubchem,0
 16731-55-8,potassium metabisulfite,,K2O5S2,222.3236,0,RWPGFSMJFRPDDP-UHFFFAOYSA-L,[O-]S(=O)S(=O)(=O)[O-].[K+].[K+],28019,pubchem,0
+16734-12-6,Disulfide ion,,S2-2,64.13,-2,,,,crc_aqueous,0
 16736-42-8,"2,7-dimethyl-2,6-octadiene","2,7-dimethylocta-2,6-diene",C10H18,138.24992,0,PSOPUECGKNQIPH-UHFFFAOYSA-N,CC(=CCCC=C(C)C)C,519299,pubchem,0
 1674-10-8,"cyclohexene, 1,2-dimethyl-","1,2-dimethylcyclohexene",C8H14,110.19676,0,TXNWMICHNKMOBR-UHFFFAOYSA-N,CC1=C(CCCC1)C,15480,pubchem,0
 1674-30-2,2-chloro-1-phenylethanol,2-chloro-1-phenylethanol,C8H9ClO,156.60946,0,XWCQSILTDPAWDP-UHFFFAOYSA-N,C1=CC=C(C=C1)C(CCl)O,92898,pubchem,0
@@ -4874,6 +4951,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 16747-44-7,"pentane, 2,2,3,3,4-pentamethyl-","2,2,3,3,4-pentamethylpentane",C10H22,142.28168,0,WKQBIIUOSATALN-UHFFFAOYSA-N,CC(C)C(C)(C)C(C)(C)C,519302,pubchem,0
 16747-45-8,"pentane, 2,2,3,4,4-pentamethyl-","2,2,3,4,4-pentamethylpentane",C10H22,142.28168,0,OWFKEHICSVOVAC-UHFFFAOYSA-N,CC(C(C)(C)C)C(C)(C)C,519303,pubchem,0
 16747-50-5,1-ethyl-1-methylcyclopentane,1-ethyl-1-methylcyclopentane,C8H16,112.21264,0,LETYIFNDQBJGPJ-UHFFFAOYSA-N,CCC1(CCCC1)C,28030,pubchem,0
+16749-13-6,Phosphonium ion,,PH4+,35.006,1,,,,crc_aqueous,0
 1675-58-7,diphenylgermane,diphenylgermane,C12H12Ge,228.86368,0,RQAOPXAHIPYOBI-UHFFFAOYSA-N,C1=CC=C(C=C1)[GeH2]C2=CC=CC=C2,137148,pubchem,0
 1675-59-8,diethynyldiphenylgermane,diethynyl(diphenyl)germane,C16H12Ge,276.90648,0,KKMYEVIOFAXXRB-UHFFFAOYSA-N,C#C[Ge](C#C)(C1=CC=CC=C1)C2=CC=CC=C2,137149,pubchem,0
 16750-40-6,3-aminobutanenitrile,3-aminobutanenitrile,C4H8N2,84.11972,0,PPBSMPOYVPZOFM-UHFFFAOYSA-N,CC(CC#N)N,123366,pubchem,0
@@ -4926,7 +5004,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 16881-77-9,methyldimethoxysilane,,C3H9O2Si,105.18786,0,PKTOVQRKCNPVKY-UHFFFAOYSA-N,CO[Si](C)OC,6329250,pubchem,0
 16883-48-0,"1,2,4-trimethylcyclopentane","1,2,4-trimethylcyclopentane",C8H16,112.21264,0,PNUFYSGVPVMNRN-UHFFFAOYSA-N,CC1CC(C(C1)C)C,17779,pubchem,0
 16885-99-7,1-propan-2-ylindole,1-propan-2-ylindole,C11H13N,159.22762,0,JDFIJVJKRTZYCK-UHFFFAOYSA-N,CC(C)N1C=CC2=CC=CC=C21,4389257,pubchem,0
-16887-00-6,chloride,chloride,Cl-,35.453,-1,VEXZGXHMUGYJMC-UHFFFAOYSA-M,[Cl-],312,pubchem,0
+16887-00-6,Chloride ion,,Cl-,35.453,-1,,,,crc_aqueous,0
 1689-64-1,9-hydroxyfluorene,9H-fluoren-9-ol,C13H10O,182.2179,0,AFMVESZOYKHDBJ-UHFFFAOYSA-N,C1=CC=C2C(=C1)C(C3=CC=CC=C32)O,74318,pubchem,0
 1689-73-2,4-hydroxybenzalaniline,"4-(anilinomethylidene)cyclohexa-2,5-dien-1-one",C13H11NO,197.23254,0,VCZFRGSYWKUOPL-UHFFFAOYSA-N,C1=CC=C(C=C1)NC=C2C=CC(=O)C=C2,5355326,pubchem,0
 1689-78-7,2-tert-butylthiophene,2-tert-butylthiophene,C8H12S,140.24588,0,SWCDOJGIOCVXFM-UHFFFAOYSA-N,CC(C)(C)C1=CC=CS1,15528,pubchem,0
@@ -4942,6 +5020,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 16903-35-8,chloroauric acid,hydron;tetrachlorogold(1-),AuCl4H,339.78649,0,VDLSFRRYNGEBEJ-UHFFFAOYSA-K,[H+].Cl[Au-](Cl)(Cl)Cl,28133,pubchem,0
 16906-37-9,ac1l38xp,2-benzylsulfanylethenylsulfanylmethylbenzene,C16H16S2,272.42824,0,RZVCNFNSLCXUMM-UHFFFAOYSA-N,C1=CC=C(C=C1)CSC=CSCC2=CC=CC=C2,136628,pubchem,0
 1691-17-4,"1,1′-Oxybis[1,1-difluoromethane]",difluoromethoxy(difluoro)methane,C2H2F4O,118.030293,0,IOCGMLSHRBHNCM-UHFFFAOYSA-N,C(OC(F)F)(F)F,74321,pubchem,0
+16910-54-6,Europium ion,,Eu+2,151.964,2,,,,crc_aqueous,0
 16919-19-0,ammonium hexafluorosilicate,diazanium;hexafluorosilicon(2-),F6H8N2Si,178.152839,0,ITHIMUMYFVCXSL-UHFFFAOYSA-P,[NH4+].[NH4+].F[Si-2](F)(F)(F)(F)F,28145,pubchem,0
 16919-31-6,ammonium hexafluorozirconate,diazanium;hexafluorozirconium(2-),F6H8N2Zr,241.291339,0,LPFRXGDQGULMEN-UHFFFAOYSA-J,[NH4+].[NH4+].F[Zr-2](F)(F)(F)(F)F,46173004,pubchem,0
 16919-58-7,ammonium hexachloroplatinate(iv),diazanium;hexachloroplatinum(2-),Cl6H8N2Pt,443.87892,0,PCCGQTHFYHJATL-UHFFFAOYSA-J,[NH4+].[NH4+].Cl[Pt-2](Cl)(Cl)(Cl)(Cl)Cl,16211460,pubchem,0
@@ -4967,11 +5046,12 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 16957-70-3,trans-2-methyl-2-pentenoic acid,(E)-2-methylpent-2-enoic acid,C6H10O2,114.1424,0,JJYWRQLLQAKNAD-SNAWJCMRSA-N,CCC=C(C)C(=O)O,5365909,pubchem,0
 1696-20-4,4-acetylmorpholine,1-morpholin-4-ylethanone,C6H11NO2,129.15704,0,KYWXRBNOYGGPIZ-UHFFFAOYSA-N,CC(=O)N1CCOCC1,15543,pubchem,0
 16962-07-5,aluminum borohydride,,AlB3,59.414539,0,LBUKJFXEOJDHHL-UHFFFAOYSA-N,[B-].[B-].[B-].[Al+3],6328559,pubchem,0
+16971-29-2,Tetrahydroborate ion,,BH4-,14.843,-1,,,,crc_aqueous,0
 16974-10-0,16974-10-0,tetradec-7-enyl acetate,C16H30O2,254.4082,0,UEZQOSGCHCNWOE-UHFFFAOYSA-N,CCCCCCC=CCCCCCCOC(=O)C,86893,pubchem,0
 16974-11-1,(Z)-9-Dodecenyl acetate,[(Z)-dodec-9-enyl] acetate,C14H26O2,226.35504,0,MFFQOUCMBNXSBK-PLNGDYQASA-N,CCC=CCCCCCCCCOC(=O)C,5363405,pubchem,0
 1698-60-8,chloridazon,5-amino-4-chloro-2-phenylpyridazin-3-one,C10H8ClN3O,221.64302,0,WYKYKTKDBLFHCY-UHFFFAOYSA-N,C1=CC=C(C=C1)N2C(=O)C(=C(C=N2)N)Cl,15546,pubchem,0
 16980-85-1,1-pentacosene,pentacos-1-ene,C25H50,350.6645,0,BDWBGSCECOPTTH-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCC=C,528972,pubchem,0
-16984-48-8,fluoride,fluoride,F-,18.998403,-1,KRHYYFGTRYWZRS-UHFFFAOYSA-M,[F-],28179,pubchem,0
+16984-48-8,Fluoride ion,,F-,18.998,-1,,,,crc_aqueous,0
 16993-86-5,2-methyl-2-octene,2-methyloct-2-ene,C9H18,126.23922,0,YBOZNTGUYASNRA-UHFFFAOYSA-N,CCCCCC=C(C)C,140163,pubchem,0
 17000-00-9,"methanamine, conjugate acid (9CI)",methylazanium,CH6N+,32.06504,1,BAVYZALUXZFZLV-UHFFFAOYSA-O,C[NH3+],644041,pubchem,0
 17003-70-2,fluorodinitrophenylmethane,[fluoro(dinitro)methyl]benzene,C7H5FN2O4,200.124003,0,NPRRCIKUIFRPTB-UHFFFAOYSA-N,C1=CC=C(C=C1)C([N+](=O)[O-])([N+](=O)[O-])F,140165,pubchem,0
@@ -5098,6 +5178,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 17302-38-4,"3,3-dimethyldecane","3,3-dimethyldecane",C12H26,170.33484,0,URERYYDSQOIHQK-UHFFFAOYSA-N,CCCCCCCC(C)(C)CC,15930785,pubchem,0
 17302-39-5,3-methyl-3-ethylnonane,3-ethyl-3-methylnonane,C12H26,170.33484,0,MJZXPSBAAXOUJF-UHFFFAOYSA-N,CCCCCCC(C)(CC)CC,20329910,pubchem,0
 17302-40-8,"3,3-diethyloctane","3,3-diethyloctane",C12H26,170.33484,0,DGJISSKLLWWXTG-UHFFFAOYSA-N,CCCCCC(CC)(CC)CC,19980050,pubchem,0
+17306-35-3,Metaarsenite ion,,AsO2-,106.921,-1,,,,crc_aqueous,0
 1731-81-3,undecyl acetate,undecyl acetate,C13H26O2,214.34434,0,CKQGCFFDQIFZFA-UHFFFAOYSA-N,CCCCCCCCCCCOC(=O)C,15605,pubchem,0
 1731-84-6,methyl nonanoate,methyl nonanoate,C10H20O2,172.2646,0,IJXHLVMUNBOGRR-UHFFFAOYSA-N,CCCCCCCCC(=O)OC,15606,pubchem,0
 1731-86-8,methyl undecanoate,methyl undecanoate,C12H24O2,200.31776,0,XPQPWPZFBULGKT-UHFFFAOYSA-N,CCCCCCCCCCC(=O)OC,15607,pubchem,0
@@ -5132,8 +5213,8 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1732-13-4,"1,2,3,6,7,8-hexahydropyrene","1,2,3,6,7,8-hexahydropyrene",C16H16,208.29824,0,MBAIEZXRGAOPKH-UHFFFAOYSA-N,C1CC2=C3C(=CC=C4C3=C(CCC4)C=C2)C1,74417,pubchem,0
 1733-12-6,cresol red,"4-[3-(4-hydroxy-3-methylphenyl)-1,1-dioxo-2,1lambda6-benzoxathiol-3-yl]-2-methylphenol",C21H18O5S,382.42962,0,OBRMNDMBJQTZHV-UHFFFAOYSA-N,CC1=C(C=CC(=C1)C2(C3=CC=CC=C3S(=O)(=O)O2)C4=CC(=C(C=C4)O)C)O,73013,pubchem,0
 1734-79-8,4-nitrocinnamaldehyde,3-(4-nitrophenyl)prop-2-enal,C9H7NO3,177.15678,0,ALGQVMMYDWQDEC-UHFFFAOYSA-N,C1=CC(=CC=C1C=CC=O)[N+](=O)[O-],15614,pubchem,0
-17341-24-1,Li1+,lithium(1+),Li+,6.941,1,HBBGRARXTFLTSG-UHFFFAOYSA-N,[Li+],28486,pubchem,0
-17341-25-2,sodium ion,sodium(1+),Na+,22.98977,1,FKNQFGJONOIPTF-UHFFFAOYSA-N,[Na+],923,pubchem,0
+17341-24-1,Lithium ion,,Li+,6.941,1,,,,crc_aqueous,0
+17341-25-2,Sodium ion,,Na+,22.99,1,,,,crc_aqueous,0
 17341-93-4,"2,2,2-trichloroethyl chloroformate","2,2,2-trichloroethyl carbonochloridate",C3H2Cl4O2,211.85878,0,LJCZNYWLQZZIOS-UHFFFAOYSA-N,C(C(Cl)(Cl)Cl)OC(=O)Cl,87063,pubchem,0
 17347-61-4,"2,2-dimethylsuccinic anhydride","3,3-dimethyloxolane-2,5-dione",C6H8O3,128.12592,0,ACJPFLIEHGFXGP-UHFFFAOYSA-N,CC1(CC(=O)OC1=O)C,87067,pubchem,0
 17348-59-3,tert-butyl isopropyl ether,2-methyl-2-propan-2-yloxypropane,C7H16O,116.20134,0,HNFSPSWQNZVCTB-UHFFFAOYSA-N,CC(C)OC(C)(C)C,28488,pubchem,0
@@ -5177,7 +5258,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1747-60-0,2-amino-6-methoxybenzothiazole,"6-methoxy-1,3-benzothiazol-2-amine",C8H8N2OS,180.22692,0,KZHGPDSVHSDCMX-UHFFFAOYSA-N,COC1=CC2=C(C=C1)N=C(S2)N,15630,pubchem,0
 1748-15-8,"1,3-dithiane-2-thione","1,3-dithiane-2-thione",C4H6S3,150.28544,0,BVNLWJVULAZODX-UHFFFAOYSA-N,C1CSC(=S)SC1,137194,pubchem,0
 17484-36-5,4-methyl-3-nitroanisole,4-methoxy-1-methyl-2-nitrobenzene,C8H9NO3,167.16196,0,JBORNNNGTJSTLC-UHFFFAOYSA-N,CC1=C(C=C(C=C1)OC)[N+](=O)[O-],87137,pubchem,0
-17493-86-6,copper(1+),copper(1+),Cu+,63.546,1,VMQMZMRVKUZKQL-UHFFFAOYSA-N,[Cu+],104815,pubchem,0
+17493-86-6,Copper (cuprous) ion,,Cu+,63.546,1,,,,crc_aqueous,0
 17496-08-1,ammonium propionate,azanium propanoate,C3H9NO2,91.10906,0,XJMWHXZUIGHOBA-UHFFFAOYSA-N,CCC(=O)[O-].[NH4+],173965,pubchem,0
 17497-75-5,Titanium Fluoride Oxide,,FOTi,,,,,,chemicals_bank,0
 17498-71-4,(1-isopropylvinyl)benzene,3-methylbut-1-en-2-ylbenzene,C11H14,146.22886,0,POZGETMIPGBFGQ-UHFFFAOYSA-N,CC(C)C(=C)C1=CC=CC=C1,519430,pubchem,0
@@ -5323,7 +5404,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 181-15-7,spiro[5.6]dodecane,spiro[5.6]dodecane,C12H22,166.30308,0,ZDNANLAHKKNCTC-UHFFFAOYSA-N,C1CCCC2(CC1)CCCCC2,9097,pubchem,0
 18113-81-0,2-ethyl-5-methylpyridine,2-ethyl-5-methylpyridine,C8H11N,121.17964,0,COHDGTRFTKHYSJ-UHFFFAOYSA-N,CCC1=NC=C(C=C1)C,519519,pubchem,0
 1812-51-7,"biphenyl, 2-ethyl-",1-ethyl-2-phenylbenzene,C14H14,182.26096,0,DLMYHUARHITGIJ-UHFFFAOYSA-N,CCC1=CC=CC=C1C2=CC=CC=C2,15742,pubchem,0
-18130-74-0,fluoride (HF21-),fluoride hydrofluoride,F2H-,39.004746,-1,CUPFNGOKRMWUOO-UHFFFAOYSA-M,F.[F-],21864337,pubchem,0
+18130-74-0,Bifluoride ion,,HF2-,39.005,-1,,,,crc_aqueous,0
 18137-88-7,tetrahydrofurfuryl,2-methylideneoxolane,C5H8O,84.11642,0,GCQZRSVHYPEACN-UHFFFAOYSA-N,C=C1CCCO1,11083822,pubchem,0
 18139-03-2,"2-fluoro-n-(2-fluoro-2,2-dinitroethyl)-2,2-dinitro-ethylamine","2-fluoro-N-(2-fluoro-2,2-dinitroethyl)-2,2-dinitroethanamine",C4H5F2N5O8,289.108006,0,UOXCYHLFALVKNS-UHFFFAOYSA-N,C(C([N+](=O)[O-])([N+](=O)[O-])F)NCC([N+](=O)[O-])([N+](=O)[O-])F,140338,pubchem,0
 1814-88-6,"1,1,1,2,2-pentafluoropropane","1,1,1,2,2-pentafluoropropane",C3H3F5,134.047936,0,FDOPVENYMZRARC-UHFFFAOYSA-N,CC(C(F)(F)F)(F)F,15747,pubchem,0
@@ -5418,8 +5499,9 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 18444-79-6,18444-79-6,"6,10-dimethyl-3-propan-2-ylidenespiro[4.5]dec-9-en-8-one",C15H22O,218.33458,0,ISLOGSAEQNKPGG-UHFFFAOYSA-N,CC1CC(=O)C=C(C12CCC(=C(C)C)C2)C,86738,pubchem,0
 18448-47-0,18448-47-0,methyl cyclohexene-1-carboxylate,C8H12O2,140.17968,0,KXPWRCPEMHIZGU-UHFFFAOYSA-N,COC(=O)C1=CCCCC1,87647,pubchem,0
 1845-30-3,(s)-cis-verbenol,"(1S,2S,5S)-4,6,6-trimethylbicyclo[3.1.1]hept-3-en-2-ol",C10H16O,152.23344,0,WONIGEXYPVIKFS-YIZRAAEISA-N,CC1=CC(C2CC1C2(C)C)O,87839,pubchem,0
-18459-37-5,cesium(1+),cesium(1+),Cs+,132.90545,1,NCMHKCKGHRPLCM-UHFFFAOYSA-N,[Cs+],104967,pubchem,0
+18459-37-5,Cesium ion,,Cs+,132.905,1,,,,crc_aqueous,0
 1846-70-4,2-nonynoic acid,non-2-ynoic acid,C9H14O2,154.20626,0,ZAWLBSATNLQTON-UHFFFAOYSA-N,CCCCCCC#CC(=O)O,74611,pubchem,0
+18472-30-5,Erbium ion,,Er+3,167.259,3,,,,crc_aqueous,0
 18476-57-8,18476-57-8,"4,5-dimethylocta-2,6-diene",C10H18,138.24992,0,JASAKDWEYSDIHI-UHFFFAOYSA-N,CC=CC(C)C(C)C=CC,519579,pubchem,0
 18479-51-1,"3,7-dimethyloct-6-en-3-ol","3,7-dimethyloct-6-en-3-ol",C10H20O,156.2652,0,JRTBBCBDKSRRCY-UHFFFAOYSA-N,CCC(C)(CCC=C(C)C)O,86749,pubchem,0
 18479-57-7,"2,6-dimethyloctan-2-ol","2,6-dimethyloctan-2-ol",C10H22O,158.28108,0,WRFXXJKURVTLSY-UHFFFAOYSA-N,CCC(C)CCCC(C)(C)O,86751,pubchem,0
@@ -5427,10 +5509,12 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 18480-07-4,strontium hydroxide,strontium dihydroxide,H2O2Sr,121.63468,0,UUCCCPNEFXQJEL-UHFFFAOYSA-L,[OH-].[OH-].[Sr+2],87672,pubchem,0
 18492-37-0,fenchone,"1,3,3-trimethylbicyclo[2.2.1]heptan-2-one",C10H16O,152.23344,0,LHXDLQBQYFFVNW-UHFFFAOYSA-N,CC1(C2CCC(C2)(C1=O)C)C,14525,pubchem,0
 18495-30-2,"1,1,2,3-tetrachloropropane","1,1,2,3-tetrachloropropane",C3H4Cl4,181.87586,0,BUQMVYQMVLAYRU-UHFFFAOYSA-N,C(C(C(Cl)Cl)Cl)Cl,29108,pubchem,0
+18496-25-8,Sulfide ion,,S-2,32.065,-2,,,,crc_aqueous,0
 185-49-9,spiro[2.4]heptane,spiro[2.4]heptane,C7H12,96.17018,0,HEMCGZPSGYRIOL-UHFFFAOYSA-N,C1CCC2(C1)CC2,12657448,pubchem,0
 185-65-9,spiro(2.5)octane,spiro[2.5]octane,C8H14,110.19676,0,FOEYMRPOKBCNCR-UHFFFAOYSA-N,C1CCC2(CC1)CC2,135988,pubchem,0
 185-94-4,bicyclo[2.1.0]pentane,bicyclo[2.1.0]pentane,C5H8,68.11702,0,MHLPKAGDPWUOOT-UHFFFAOYSA-N,C1CC2C1C2,9101,pubchem,0
 1850-14-2,tetramethoxymethane,tetramethoxymethane,C5H12O4,136.14638,0,AHJWSRRHTXRLAQ-UHFFFAOYSA-N,COC(OC)(OC)OC,74613,pubchem,0
+18500-32-8,Hydrazinium ion,,N2H5+,33.053,1,,,,crc_aqueous,0
 1852-04-6,undecanedioic acid,undecanedioic acid,C11H20O4,216.2741,0,LWBHHRRTOZQPDM-UHFFFAOYSA-N,C(CCCCC(=O)O)CCCCC(=O)O,15816,pubchem,0
 1852-53-5,"5.alpha.-androstane-3.alpha.,17.beta.-diol","10,13-dimethyl-2,3,4,5,6,7,8,9,11,12,14,15,16,17-tetradecahydro-1H-cyclopenta[a]phenanthrene-3,17-diol",C19H32O2,292.45618,0,CBMYJHIOYJEBSB-UHFFFAOYSA-N,CC12CCC(CC1CCC3C2CCC4(C3CCC4O)C)O,11301,pubchem,0
 18530-30-8,angimuth,"4,7,7-trimethyl-3-oxobicyclo[2.2.1]heptane-2-carboxylic acid",C11H16O3,196.24294,0,XNMVAVGXJZFTEH-UHFFFAOYSA-N,CC1(C2CCC1(C(=O)C2C(=O)O)C)C,86758,pubchem,0
@@ -5457,6 +5541,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 18641-70-8,"2,4-dimethyl-3-hexanone","2,4-dimethylhexan-3-one",C8H16O,128.21204,0,PZAPVPGZDHJUTO-UHFFFAOYSA-N,CCC(C)C(=O)C(C)C,86770,pubchem,0
 18641-81-1,sec-butyl isopropyl ether,2-propan-2-yloxybutane,C7H16O,116.20134,0,QHJLNXCHSKDYHR-UHFFFAOYSA-N,CCC(C)OC(C)C,29179,pubchem,0
 18641-82-2,pentyl propyl ether,1-propoxypentane,C8H18O,130.22792,0,DMUSSSYUUUYJRM-UHFFFAOYSA-N,CCCCCOCCC,140408,pubchem,0
+186449-38-7,Indium hydroxide ion,,InOH+2,131.825,2,,,,crc_aqueous,0
 1866-15-5,acetylthiocholine iodide,2-acetylsulfanylethyl(trimethyl)azanium iodide,C7H16INOS,289.17751,0,NTBLZMAMTZXLBP-UHFFFAOYSA-M,CC(=O)SCC[N+](C)(C)C.[I-],74629,pubchem,0
 1866-31-5,allyl cinnamate,prop-2-enyl 3-phenylprop-2-enoate,C12H12O2,188.22248,0,KCMITHMNVLRGJU-UHFFFAOYSA-N,C=CCOC(=O)C=CC1=CC=CC=C1,15834,pubchem,0
 1866-39-3,4-methylcinnamic acid,(E)-3-(4-methylphenyl)prop-2-enoic acid,C10H10O2,162.1852,0,RURHILYUWQEGOS-VOTSOKGWSA-N,CC1=CC=C(C=C1)C=CC(=O)O,731767,pubchem,0
@@ -5542,10 +5627,13 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 18909-69-8,cesium;tetrafluoroborate,cesium tetrafluoroborate,BCsF4,219.710065,0,IBXRQPOVBVBECX-UHFFFAOYSA-N,[B-](F)(F)(F)F.[Cs+],23696895,pubchem,0
 1892-29-1,2-hydroxyethyl disulfide,2-(2-hydroxyethyldisulfanyl)ethanol,C4H10O2S2,154.251,0,KYNFOMQIXZUKRK-UHFFFAOYSA-N,C(CSSCCO)O,15906,pubchem,0
 1892-35-9,"4-benzyloxazolidine-2,5-dione","4-benzyl-1,3-oxazolidine-2,5-dione",C10H9NO3,191.18336,0,GQBIVYSGPXCELZ-UHFFFAOYSA-N,C1=CC=C(C=C1)CC2C(=O)OC(=O)N2,68501,pubchem,0
+18923-26-7,Cerium ion,,Ce+3,140.116,3,,,,crc_aqueous,0
+18923-27-8,Ytterbium ion,,Yb+3,173.04,3,,,,crc_aqueous,0
 18932-14-4,"2,2,4-trimethyloctane","2,2,4-trimethyloctane",C11H24,156.30826,0,IKMGZPRUMVFYBK-UHFFFAOYSA-N,CCCCC(C)CC(C)(C)C,519610,pubchem,0
 18933-05-6,manganese hydroxide (mn(oh)2),manganese;dihydrate,H4MnO2,90.968605,0,PMQJYWORJJEMQC-UHFFFAOYSA-N,O.O.[Mn],444991,pubchem,0
 18936-17-9,2-methylbutanenitrile,2-methylbutanenitrile,C5H9N,83.13166,0,RCEJCSULJQNRQQ-UHFFFAOYSA-N,CCC(C)C#N,29339,pubchem,0
 18937-79-6,methyl 2-hexynoate,methyl hex-2-ynoate,C7H10O2,126.1531,0,DHZPZBFOJDXEHS-UHFFFAOYSA-N,CCCC#CC(=O)OC,87860,pubchem,0
+18946-64-0,Lutetium fluoride ion,,LuF+2,193.965,2,,,,crc_aqueous,0
 1896-62-4,benzalacetone,(E)-4-phenylbut-3-en-2-one,C10H10O,146.1858,0,BWHOZHOGCMHOBV-BQYQJAHWSA-N,CC(=O)C=CC1=CC=CC=C1,637759,pubchem,0
 18963-00-3,"1,2,3-trichloro-2-(chloromethyl)propane","1,2,3-trichloro-2-(chloromethyl)propane",C4H6Cl4,195.90244,0,CFLWPMRPCYBIIS-UHFFFAOYSA-N,C(C(CCl)(CCl)Cl)Cl,251049,pubchem,0
 18963-01-4,"propane, 1,1,2,3-tetrachloro-2-methyl-","1,1,2,3-tetrachloro-2-methylpropane",C4H6Cl4,195.90244,0,WAURADWXPYHJJA-UHFFFAOYSA-N,CC(CCl)(C(Cl)Cl)Cl,519613,pubchem,0
@@ -5790,6 +5878,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 20062-22-0,20062-22-0,"1,3,5-trinitro-2-[2-(2,4,6-trinitrophenyl)ethenyl]benzene",C14H6N6O12,450.23044,0,YSIBQULRFXITSW-UHFFFAOYSA-N,C1=C(C=C(C(=C1[N+](=O)[O-])C=CC2=C(C=C(C=C2[N+](=O)[O-])[N+](=O)[O-])[N+](=O)[O-])[N+](=O)[O-])[N+](=O)[O-],253628,pubchem,0
 20063-92-7,(e)-non-3-ene,(E)-non-3-ene,C9H18,126.23922,0,YCBSHDKATAPNIA-FNORWQNLSA-N,CCCCCC=CCC,5364445,pubchem,0
 20063-97-2,(2E)-2-Decene,(E)-dec-2-ene,C10H20,140.2658,0,YKNMBTZOEVIJCM-HWKANZROSA-N,CCCCCCCC=CC,5364559,pubchem,0
+20074-52-6,Iron (ferric) ion,,Fe+3,55.845,3,,,,crc_aqueous,0
 2008-41-5,butylate,"S-ethyl N,N-bis(2-methylpropyl)carbamothioate",C11H23NOS,217.37142,0,BMTAFVWTTFSTOG-UHFFFAOYSA-N,CCSC(=O)N(CC(C)C)CC(C)C,16181,pubchem,0
 2008-58-4,"2,6-dichlorobenzamide","2,6-dichlorobenzamide",C7H5Cl2NO,190.0267,0,JHSPCUHPSIUQRB-UHFFFAOYSA-N,C1=CC(=C(C(=C1)Cl)C(=O)N)Cl,16183,pubchem,0
 2009-74-7,trans-6-methyl-3-hepten-2-one,6-methylhept-3-en-2-one,C8H14O,126.19616,0,RSNMTAYSENLHOW-UHFFFAOYSA-N,CC(C)CC=CC(=O)C,137281,pubchem,0
@@ -5902,7 +5991,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 2045-78-5,"1,3-bis(methylene)cyclobutane","1,3-dimethylidenecyclobutane",C6H8,80.12772,0,DTSPMBOMCCTXSG-UHFFFAOYSA-N,C=C1CC(=C)C1,137297,pubchem,0
 20454-81-3,"1,4-dimethyl-bicyclo(2.2.1)heptane","1,4-dimethylbicyclo[2.2.1]heptane",C9H16,124.22334,0,VOVKYFRBXIHZAA-UHFFFAOYSA-N,CC12CCC(C1)(CC2)C,140691,pubchem,0
 20455-01-0,bicyclo[6.2.0]decapentaene,"bicyclo[6.2.0]deca-1(8),2,4,6,9-pentaene",C10H8,128.17052,0,FPEVLUDJYTXDPD-UHFFFAOYSA-N,C1=CC=CC2=C(C=C1)C=C2,140692,pubchem,0
-20461-54-5,iodide,iodide,I-,126.90447,-1,XMBWDFGMSWQBCA-UHFFFAOYSA-M,[I-],30165,pubchem,0
+20461-54-5,Iodide ion,,I-,126.904,-1,,,,crc_aqueous,0
 20487-40-5,tert-butyl propionate,tert-butyl propanoate,C7H14O2,130.18486,0,JAELLLITIZHOGQ-UHFFFAOYSA-N,CCC(=O)OC(C)(C)C,88561,pubchem,0
 20488-34-0,2-methylhept-3-ene,2-methylhept-3-ene,C8H16,112.21264,0,CYEZJYAMLNTSKN-UHFFFAOYSA-N,CCCC=CC(C)C,69655,pubchem,0
 2049-67-4,diethyl glutaconate,diethyl pent-2-enedioate,C9H14O4,186.20506,0,JHCKGVJZNIWNJK-UHFFFAOYSA-N,CCOC(=O)CC=CC(=O)OCC,74898,pubchem,0
@@ -5970,6 +6059,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 2055-40-5,4-isopropyl styrene,1-ethenyl-4-propan-2-ylbenzene,C11H14,146.22886,0,QQHQTCGEZWTSEJ-UHFFFAOYSA-N,CC(C)C1=CC=C(C=C1)C=C,74928,pubchem,0
 2055-46-1,propylenethiourea,"1,3-diazinane-2-thione",C4H8N2S,116.18472,0,NVHNGVXBCWYLFA-UHFFFAOYSA-N,C1CNC(=S)NC1,2723785,pubchem,0
 20558-16-1,"trans-2,3-dimethyl-bicyclo(2.2.1)heptane","2,3-dimethylbicyclo[2.2.1]heptane",C9H16,124.22334,0,ADNHKZRYBOUYGM-UHFFFAOYSA-N,CC1C(C2CCC1C2)C,140711,pubchem,0
+20561-58-4,Rhenium ion,,Re+,186.207,1,,,,crc_aqueous,0
 20562-79-2,methyl perfluorobuten-3-oate,"methyl 2,2,3,4,4-pentafluorobut-3-enoate",C5H3F5O2,190.068136,0,AZKKPFXZCSUOGD-UHFFFAOYSA-N,COC(=O)C(C(=C(F)F)F)(F)F,140713,pubchem,0
 2057-43-4,2-(3-pentenyl)pyridine,2-pent-3-enylpyridine,C10H13N,147.21692,0,SKHYVKHUYKQNJE-UHFFFAOYSA-N,CC=CCCC1=CC=CC=N1,74935,pubchem,0
 2057-49-0,4-(3-phenylpropyl)pyridine,4-(3-phenylpropyl)pyridine,C14H15N,197.2756,0,AQIIVEISJBBUCR-UHFFFAOYSA-N,C1=CC=C(C=C1)CCCC2=CC=NC=C2,74937,pubchem,0
@@ -5986,9 +6076,10 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 20624-25-3,sodium diethyldithiocarbamate trihydrate,"sodium;N,N-diethylcarbamodithioate;trihydrate",C5H16NNaO3S2,225.305209,0,WWGXHTXOZKVJDN-UHFFFAOYSA-M,CCN(CC)C(=S)[S-].O.O.O.[Na+],517546,pubchem,0
 20627-73-0,1-(dimethoxymethyl)-2-nitrobenzene,1-(dimethoxymethyl)-2-nitrobenzene,C9H11NO4,197.18794,0,OAPZTGKQZKPVPF-UHFFFAOYSA-N,COC(C1=CC=CC=C1[N+](=O)[O-])OC,140718,pubchem,0
 20634-92-8,di-n-propylethylamine,N-ethyl-N-propylpropan-1-amine,C8H19N,129.24316,0,XWCCTMBMQUCLSI-UHFFFAOYSA-N,CCCN(CC)CCC,519799,pubchem,0
+20638-10-2,Biselenite ion,,HSeO3-,127.97,-1,,,,crc_aqueous,0
 2065-23-8,methyl phenoxyacetate,methyl 2-phenoxyacetate,C9H10O3,166.1739,0,BZCKRPHEZOHHBK-UHFFFAOYSA-N,COC(=O)COC1=CC=CC=C1,16365,pubchem,0
 2065-70-5,"2,6-dichloronaphthalene","2,6-dichloronaphthalene",C10H6Cl2,197.06064,0,YCFUHBHONRJFHI-UHFFFAOYSA-N,C1=CC2=C(C=CC(=C2)Cl)C=C1Cl,16366,pubchem,0
-20653-98-9,"aluminate (AlO21-) (8CI,9CI)",dioxoalumanuide,AlO2-,58.980338,-1,JCJPFGIYIKQMGX-UHFFFAOYSA-N,O=[Al-]=O,14178901,pubchem,0
+20653-98-9,Aluminate ion,,AlO2-,58.981,-1,,,,crc_aqueous,0
 20654-46-0,"2,2-Dimethylbutanenitrile","2,2-dimethylbutanenitrile",C6H11N,97.15824,0,OSEGNECCBMDWRB-UHFFFAOYSA-N,CCC(C)(C)C#N,12754184,pubchem,0
 20654-47-1,"2,2-dimethylvaleronitrile","2,2-dimethylpentanenitrile",C7H13N,111.18482,0,TZJQCUDHKUWEFU-UHFFFAOYSA-N,CCCC(C)(C)C#N,12754185,pubchem,0
 20661-21-6,indium trihydroxide,indium(3+) trihydroxide,H3InO3,165.84002,0,IGUXCTSQIGAGSV-UHFFFAOYSA-K,[OH-].[OH-].[OH-].[In+3],88636,pubchem,0
@@ -6071,6 +6162,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 2097-19-0,phenylsilatrane,"1-phenyl-2,8,9-trioxa-5-aza-1-silabicyclo[3.3.3]undecane",C12H17NO3Si,251.35378,0,IJOIPPSHQCEBDH-UHFFFAOYSA-N,C1CO[Si]2(OCCN1CCO2)C3=CC=CC=C3,16416,pubchem,0
 2097-60-1,methyl triethyltin,triethyl(methyl)stannane,C7H18Sn,220.92782,0,MCJQQYZNMQMKCL-UHFFFAOYSA-N,CC[Sn](C)(CC)CC,137429,pubchem,0
 20972-43-4,azoxybenzene,oxido-phenyl-phenyliminoazanium,C12H10N2O,198.2206,0,GAUZCKBSTZFWCT-UHFFFAOYSA-N,C1=CC=C(C=C1)N=[N+](C2=CC=CC=C2)[O-],10316,pubchem,0
+2099995000-00-0,Yttrium dihydroxide ion,,Y2(OH)2+4,211.827,4,,,,crc_aqueous,0
 2100-17-6,4-pentenal,pent-4-enal,C5H8O,84.11642,0,QUMSUJWRUHPEEJ-UHFFFAOYSA-N,C=CCCC=O,16418,pubchem,0
 2101-86-2,"toluene, p-azido-",1-azido-4-methylbenzene,C7H7N3,133.15058,0,YVXDRCDGBCOJHX-UHFFFAOYSA-N,CC1=CC=C(C=C1)N=[N+]=[N-],137430,pubchem,0
 21020-24-6,3-chloro-1-butyne,3-chlorobut-1-yne,C4H5Cl,88.5355,0,PZFBULOUMNPBFA-UHFFFAOYSA-N,CC(C#C)Cl,30443,pubchem,0
@@ -6428,12 +6520,45 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 22531-00-6,"cyclopentene,3-butyl-",3-butylcyclopentene,C9H16,124.22334,0,OCVYLEAVUIYGLL-UHFFFAOYSA-N,CCCCC1CCC=C1,140935,pubchem,0
 22537-15-1,atomic chlorine,chlorane,Cl,35.453,0,ZAMOUSCENKQFHK-UHFFFAOYSA-N,[Cl],5360523,pubchem,0
 22537-19-5,lawrencium,lawrencium,Lr,262.11,0,CNQCVBJFEGMYDW-UHFFFAOYSA-N,[Lr],31192,pubchem,0
-22537-38-8,rubidium(1+),rubidium(1+),Rb+,85.4678,1,NCCSSGKUIKYAJD-UHFFFAOYSA-N,[Rb+],105153,pubchem,0
+22537-20-8,Beryllium ion,,Be+2,9.012,2,,,,crc_aqueous,0
+22537-22-0,Magnesium ion,,Mg+2,24.305,2,,,,crc_aqueous,0
+22537-23-1,Aluminum ion,,Al+3,26.982,3,,,,crc_aqueous,0
+22537-29-7,Scandium ion,,Sc+3,44.956,3,,,,crc_aqueous,0
+22537-33-3,Gallium ion,,Ga+3,69.723,3,,,,crc_aqueous,0
+22537-38-8,Rubidium ion,,Rb+,85.468,1,,,,crc_aqueous,0
+22537-39-9,Strontium ion,,Sr+2,87.62,2,,,,crc_aqueous,0
+22537-40-2,Yttrium ion,,Y+3,88.906,3,,,,crc_aqueous,0
+22537-48-0,Cadmium ion,,Cd+2,112.411,2,,,,crc_aqueous,0
+22537-49-1,Indium ion,,In+3,114.818,3,,,,crc_aqueous,0
+22537-56-0,Thallium ion,,Tl+,204.383,1,,,,crc_aqueous,0
+22537-58-2,Polonium ion,,Po+2,209,2,,,,crc_aqueous,0
+22537-59-3,Protactinium ion,,Pa+4,231.036,4,,,,crc_aqueous,0
 22539-65-7,"1-isopropyl-2,3-dimethylbenzene","1,2-dimethyl-3-propan-2-ylbenzene",C11H16,148.24474,0,GDEQPEBFOWYWSA-UHFFFAOYSA-N,CC1=C(C(=CC=C1)C(C)C)C,519965,pubchem,0
 2254-94-6,2254-94-6,"3-methyl-1,3-benzothiazole-2-thione",C8H7NS2,181.27788,0,IRNRNPNZAKHEAW-UHFFFAOYSA-N,CN1C2=CC=CC=C2SC1=S,75264,pubchem,0
+22541-12-4,Barium ion,,Ba+2,137.327,2,,,,crc_aqueous,0
+22541-14-6,Praseodymium ion,,Pr+3,140.908,3,,,,crc_aqueous,0
+22541-17-9,Samarium ion,,Sm+3,150.36,3,,,,crc_aqueous,0
+22541-18-0,Europium ion,,Eu+3,151.964,3,,,,crc_aqueous,0
+22541-19-1,Gadolinium ion,,Gd+3,157.25,3,,,,crc_aqueous,0
+22541-20-4,Terbium ion,,Tb+3,158.925,3,,,,crc_aqueous,0
+22541-21-5,Dysprosium ion,,Dy+3,162.5,3,,,,crc_aqueous,0
+22541-22-6,Holmium ion,,Ho+3,164.93,3,,,,crc_aqueous,0
+22541-23-7,Thulium ion,,Tm+3,168.934,3,,,,crc_aqueous,0
+22541-24-8,Lutetium ion,,Lu+3,174.967,3,,,,crc_aqueous,0
+22541-34-0,Polonium ion,,Po+4,209,4,,,,crc_aqueous,0
+22541-36-2,Radium ion,,Ra+2,226,2,,,,crc_aqueous,0
+22541-48-6,Selenide ion,,Se-2,78.96,-2,,,,crc_aqueous,0
+22541-53-3,Cobalt (cobaltous) ion,,Co+2,58.933,2,,,,crc_aqueous,0
+22541-63-5,Cobalt (cobaltic) ion,,Co+3,58.933,3,,,,crc_aqueous,0
+22541-79-3,Chromium ion,,Cr+2,51.996,2,,,,crc_aqueous,0
+22541-90-8,Tin ion,,Sn+2,118.71,2,,,,crc_aqueous,0
+22541-96-4,Ytterbium ion,,Yb+2,173.04,2,,,,crc_aqueous,0
+22542-10-5,Platinum ion,,Pt+2,195.084,2,,,,crc_aqueous,0
 22542-11-6,mercury(1+),mercury(1+),Hg+,200.59,1,SHZVCTRRRIRFOC-UHFFFAOYSA-N,[Hg+],105133,pubchem,0
 22564-99-4,linalool,"3,7-dimethylocta-1,6-dien-3-ol",C10H18O,154.24932,0,CDOSHBSSFJOMGT-UHFFFAOYSA-N,CC(=CCCC(C)(C=C)O)C,6549,pubchem,0
+22569-48-8,Zinc hydroxide ion,,ZnOH+,82.416,1,,,,crc_aqueous,0
 2257-52-5,1-isopropylhydrazine,propan-2-ylhydrazine,C3H10N2,74.1249,0,KJAQRHMKLVGSCG-UHFFFAOYSA-N,CC(C)NN,52789,pubchem,0
+22578-81-0,Uranium ion,,U+3,238.029,3,,,,crc_aqueous,0
 22585-64-4,"bromyl fluoride(6ci,9ci)",,BrFO2,130.901203,0,MQCDGGKZTTYBRJ-UHFFFAOYSA-N,O=Br(=O)F,15799711,pubchem,0
 2259-96-3,cyclothiazide,"3-(2-bicyclo[2.2.1]hept-5-enyl)-6-chloro-1,1-dioxo-3,4-dihydro-2H-1lambda6,2,4-benzothiadiazine-7-sulfonamide",C14H16ClN3O4S2,389.87754,0,BOCUKUHCLICSIY-UHFFFAOYSA-N,C1C2CC(C1C=C2)C3NC4=CC(=C(C=C4S(=O)(=O)N3)S(=O)(=O)N)Cl,2910,pubchem,0
 22591-21-5,dichloropinacolin,"1,1-dichloro-3,3-dimethylbutan-2-one",C6H10Cl2O,169.049,0,UDWZXMQIEHAAQT-UHFFFAOYSA-N,CC(C)(C)C(=O)C(Cl)Cl,31432,pubchem,1
@@ -6622,6 +6747,8 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 2370-88-9,tetramethylcyclotetrasiloxane,,C4H12O4Si4,236.47768,0,WZJUBBHODHNQPW-UHFFFAOYSA-N,C[Si]1O[Si](O[Si](O[Si](O1)C)C)C,6327421,pubchem,0
 23708-56-7,6-undecanol,undecan-6-ol,C11H24O,172.30766,0,YBIXBBGRHOUVBB-UHFFFAOYSA-N,CCCCCC(CCCCC)O,32045,pubchem,0
 2371-19-9,3-methyl-2-heptanone,3-methylheptan-2-one,C8H16O,128.21204,0,UHRZLJZZZDOHEX-UHFFFAOYSA-N,CCCCC(C)C(=O)C,92927,pubchem,0
+23713-46-4,Bismuth ion,,Bi+3,208.98,3,,,,crc_aqueous,0
+23713-49-7,Zinc ion,,Zn+2,65.409,2,,,,crc_aqueous,0
 2373-51-5,chloromethyl methyl sulfide,chloro(methylsulfanyl)methane,C2H5ClS,96.5791,0,JWMLCCRPDOIBAV-UHFFFAOYSA-N,CSCCl,16916,pubchem,0
 2373-76-4,2373-76-4,(E)-3-(2-methylphenyl)prop-2-enoic acid,C10H10O2,162.1852,0,RSWBWHPZXKLUEX-VOTSOKGWSA-N,CC1=CC=CC=C1C=CC(=O)O,819020,pubchem,0
 2373-80-0,2373-80-0,"3-(1,3-benzodioxol-5-yl)prop-2-enoic acid",C10H8O4,192.16812,0,QFQYZMGOKIROEC-UHFFFAOYSA-N,C1OC2=C(O1)C=C(C=C2)C=CC(=O)O,16917,pubchem,0
@@ -6708,7 +6835,8 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 2417-04-1,2417-04-1,"4-(4-hydroxy-3,5-dimethylphenyl)-2,6-dimethylphenol",C16H18O2,242.31292,0,YGYPMFPGZQPETF-UHFFFAOYSA-N,CC1=CC(=CC(=C1O)C)C2=CC(=C(C(=C2)C)O)C,75490,pubchem,0
 2417-90-5,3-bromopropionitrile,3-bromopropanenitrile,C3H4BrN,133.97456,0,CQZIEDXCLQOOEH-UHFFFAOYSA-N,C(CBr)C#N,17020,pubchem,0
 2419-73-0,"1,4-dichlorobutane-2,3-diol","1,4-dichlorobutane-2,3-diol",C4H8Cl2O2,159.01112,0,SAUBRJOIKMVSRU-UHFFFAOYSA-N,C(C(C(CCl)O)O)Cl,102809,pubchem,0
-24203-36-9,potassium(1+),potassium(1+),K+,39.0983,1,NPYPAHLBTDXSSS-UHFFFAOYSA-N,[K+],813,pubchem,0
+24203-21-2,Rhenium anion,,Re-,186.207,-1,,,,crc_aqueous,0
+24203-36-9,Potassium ion,,K+,39.098,1,,,,crc_aqueous,0
 2421-28-5,2421-28-5,"5-(1,3-dioxo-2-benzofuran-5-carbonyl)-2-benzofuran-1,3-dione",C17H6O7,322.22534,0,VQVIHDPBMFABCQ-UHFFFAOYSA-N,C1=CC2=C(C=C1C(=O)C3=CC4=C(C=C3)C(=O)OC4=O)C(=O)OC2=O,75498,pubchem,0
 2422-79-9,12-methylbenzanthracene,12-methylbenzo[a]anthracene,C19H14,242.31446,0,ACYOLKMEHHTLAB-UHFFFAOYSA-N,CC1=C2C(=CC3=CC=CC=C13)C=CC4=CC=CC=C42,17026,pubchem,0
 2422-86-8,"bicyclo[3.2.0]hepta-2,6-diene","bicyclo[3.2.0]hepta-2,6-diene",C7H8,92.13842,0,PZWQRDVVVKIYLX-UHFFFAOYSA-N,C1C=CC2C1C=C2,137592,pubchem,0
@@ -6876,7 +7004,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 2495-27-4,hexadecyl methacrylate,hexadecyl 2-methylprop-2-enoate,C20H38O2,310.51452,0,ZNAOFAIBVOMLPV-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCOC(=O)C(=C)C,17235,pubchem,0
 2495-32-1,"4,4-Dimethyl-3-methylene-1-pentene","4,4-dimethyl-3-methylidenepent-1-ene",C8H14,110.19676,0,WAXBWZULOIZPKQ-UHFFFAOYSA-N,CC(C)(C)C(=C)C=C,11007845,pubchem,0
 2495-35-4,benzyl acrylate,benzyl prop-2-enoate,C10H10O2,162.1852,0,GCTPMLUUWLLESL-UHFFFAOYSA-N,C=CC(=O)OCC1=CC=CC=C1,75617,pubchem,0
-24959-67-9,bromide,bromide,Br-,79.904,-1,CPELXLSAUQHCOX-UHFFFAOYSA-M,[Br-],259,pubchem,0
+24959-67-9,Bromide ion,,Br-,79.904,-1,,,,crc_aqueous,0
 24964-64-5,3-cyanobenzaldehyde,3-formylbenzonitrile,C8H5NO,131.1314,0,HGZJJKZPPMFIBU-UHFFFAOYSA-N,C1=CC(=CC(=C1)C#N)C=O,90670,pubchem,0
 24965-84-2,2-methylcyclohexanone,2-methylcyclohexan-1-one,C7H12O,112.16958,0,LFSAPCRASZRSKS-UHFFFAOYSA-N,CC1CCCCC1=O,11419,pubchem,0
 24965-87-5,3-methylcyclohexanone,3-methylcyclohexan-1-one,C7H12O,112.16958,0,UJBOOUHRTQVGRU-UHFFFAOYSA-N,CC1CCCC(=O)C1,11567,pubchem,0
@@ -7271,6 +7399,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 2721-31-5,"3,3,5,5-tetramethyl-1-pyrazoline","3,3,5,5-tetramethyl-4H-pyrazole",C7H14N2,126.19946,0,NGDUXZPCAJWHOW-UHFFFAOYSA-N,CC1(CC(N=N1)(C)C)C,137693,pubchem,0
 2721-32-6,"2,3-diazabicyclo[2.2.1]hept-2-ene","2,3-diazabicyclo[2.2.1]hept-2-ene",C5H8N2,96.13042,0,IJDUBDHNOXAHCQ-UHFFFAOYSA-N,C1CC2CC1N=N2,137694,pubchem,0
 2721-38-2,"1,1-diethylcyclopentane","1,1-diethylcyclopentane",C9H18,126.23922,0,DPGQSDLGKGLNHC-UHFFFAOYSA-N,CCC1(CCCC1)CC,520297,pubchem,0
+27216-79-1,Tin(II) hydroxide ion,,SnOH+,135.717,1,,,,crc_aqueous,0
 27218-16-2,(chlorooxy)chlorane trioxide,chloro perchlorate,Cl2O4,134.9036,0,JRONPIZRZBBOBR-UHFFFAOYSA-N,O=Cl(=O)(=O)OCl,168667,pubchem,0
 2724-69-8,1-methyl-3-phenylthiourea,1-methyl-3-phenylthiourea,C8H10N2S,166.2434,0,IGEQFPWPMCIYDF-UHFFFAOYSA-N,CNC(=S)NC1=CC=CC=C1,698294,pubchem,0
 2725-82-8,1-bromo-3-ethylbenzene,1-bromo-3-ethylbenzene,C8H9Br,185.06106,0,ZRFJYAZQMFCUIX-UHFFFAOYSA-N,CCC1=CC(=CC=C1)Br,123170,pubchem,0
@@ -7731,6 +7860,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 3019-20-3,(isopropylthio)benzene,propan-2-ylsulfanylbenzene,C9H12S,152.25658,0,SNOAHAUUBQMVGW-UHFFFAOYSA-N,CC(C)SC1=CC=CC=C1,76397,pubchem,0
 3019-25-8,cyclobutyl methyl ketone,1-cyclobutylethanone,C6H10O,98.143,0,JPJOOTWNILDNAW-UHFFFAOYSA-N,CC(=O)C1CCC1,76398,pubchem,0
 302-01-2,hydrazine,hydrazine,H4N2,32.04516,0,OAKJQQAXSVQMHS-UHFFFAOYSA-N,NN,9321,pubchem,1
+302-04-5,Thiocyanate ion,,SCN-,58.083,-1,,,,crc_aqueous,0
 302-17-0,chloral hydrate,"2,2,2-trichloroethane-1,1-diol",C2H3Cl3O2,165.40302,0,RNFNDJAIBTYOQL-UHFFFAOYSA-N,C(C(Cl)(Cl)Cl)(O)O,2707,pubchem,0
 302-27-2,aconitine,"[8-acetyloxy-11-ethyl-5,7,14-trihydroxy-6,16,18-trimethoxy-13-(methoxymethyl)-11-azahexacyclo[7.7.2.12,5.01,10.03,8.013,17]nonadecan-4-yl] benzoate",C34H47NO11,645.73708,0,XFSBVAOIAHNAPC-UHFFFAOYSA-N,CCN1CC2(C(CC(C34C2C(C(C31)C5(C6C4CC(C6OC(=O)C7=CC=CC=C7)(C(C5O)OC)O)OC(=O)C)OC)OC)O)COC,2012,pubchem,0
 302-40-9,benactyzine,"2-(diethylamino)ethyl 2-hydroxy-2,2-diphenylacetate",C20H25NO3,327.4174,0,IVQOFBKHQCTVQV-UHFFFAOYSA-N,CCN(CC)CCOC(=O)C(C1=CC=CC=C1)(C2=CC=CC=C2)O,9330,pubchem,0
@@ -8240,6 +8370,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 3378-45-8,"azocyclohexane, dioxide",cyclohexyl-[cyclohexyl(oxido)amino]-oxoazanium,C12H22N2O2,226.31528,0,IQCWPIHWVLBCTQ-UHFFFAOYSA-N,C1CCC(CC1)N([N+](=O)C2CCCCC2)[O-],137913,pubchem,0
 338-65-8,"2-chloro-1,1-difluoroethane","2-chloro-1,1-difluoroethane",C2H3ClF2,100.495026,0,ATEBGNALLCMSGS-UHFFFAOYSA-N,C(C(F)F)Cl,2736499,pubchem,0
 338-69-2,d-alanine,(2R)-2-aminopropanoic acid,C3H7NO2,89.09318,0,QNAYBMKLOCPYGJ-UWTATZPHSA-N,CC(C(=O)O)N,71080,pubchem,0
+338-70-5,Oxalate ion,,C2O4-2,88.019,-2,,,,crc_aqueous,0
 338-75-0,"2,3-dichloro-1,1,1-trifluoropropane","2,3-dichloro-1,1,1-trifluoropropane",C3H3Cl2F3,166.95713,0,QJMGASHUZRHZBT-UHFFFAOYSA-N,C(C(C(F)(F)F)Cl)Cl,9561,pubchem,0
 338-83-0,perfluorotripropylamine,"1,1,2,2,3,3,3-heptafluoro-N,N-bis(1,1,2,2,3,3,3-heptafluoropropyl)propan-1-amine",C9F21N,521.069467,0,JAJLKEVKNDUJBG-UHFFFAOYSA-N,C(C(N(C(C(C(F)(F)F)(F)F)(F)F)C(C(C(F)(F)F)(F)F)(F)F)(F)F)(C(F)(F)F)(F)F,67645,pubchem,0
 3383-96-8,temephos,[4-(4-dimethoxyphosphinothioyloxyphenyl)sulfanylphenoxy]-dimethoxy-sulfanylidene-lambda5-phosphane,C16H20O6P2S3,466.468924,0,WWJZWCUNLNYYAU-UHFFFAOYSA-N,COP(=S)(OC)OC1=CC=C(C=C1)SC2=CC=C(C=C2)OP(=S)(OC)OC,5392,pubchem,0
@@ -8296,6 +8427,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 34067-75-9,3-propylcyclopentene,3-propylcyclopentene,C8H14,110.19676,0,RBEROAUIKMEYDR-UHFFFAOYSA-N,CCCC1CCC=C1,36671,pubchem,0
 3411-95-8,3411-95-8,"6-(3H-1,3-benzothiazol-2-ylidene)cyclohexa-2,4-dien-1-one",C13H9NOS,227.28166,0,NSDGEQWRYXOZLN-UHFFFAOYSA-N,C1=CC=C2C(=C1)NC(=C3C=CC=CC3=O)S2,5354275,pubchem,0
 3417-91-2,l-tyrosine methyl ester hydrochloride,methyl (2S)-2-amino-3-(4-hydroxyphenyl)propanoate;hydrochloride,C10H14ClNO3,231.67606,0,VXYFARNRGZWHTJ-FVGYRXGTSA-N,COC(=O)C(CC1=CC=C(C=C1)O)N.Cl,76956,pubchem,0
+34175-11-6,Hydrogen dithionite ion,,HS2O4-,129.136,-1,,,,crc_aqueous,0
 3419-71-4,"cyclohexene, 1,4,4-trimethyl-","1,4,4-trimethylcyclohexene",C9H16,124.22334,0,VUWMEDZMVLUYQB-UHFFFAOYSA-N,CC1=CCC(CC1)(C)C,137927,pubchem,0
 34237-88-2,n-(2-anilinophenyl)benzamide,N-(2-anilinophenyl)benzamide,C19H16N2O,288.34314,0,UZFYPOXSNSAIKK-UHFFFAOYSA-N,C1=CC=C(C=C1)C(=O)NC2=CC=CC=C2NC3=CC=CC=C3,141885,pubchem,0
 3424-05-3,brn 2215361,"1,2,3,3,5,5-hexachloro-4-(dichloromethylidene)cyclopentene",C6Cl8,355.6882,0,HSNOZNMQZFGXDR-UHFFFAOYSA-N,C1(=C(C(C(=C(Cl)Cl)C1(Cl)Cl)(Cl)Cl)Cl)Cl,123192,pubchem,0
@@ -8680,8 +8812,8 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 3680-02-2,methyl vinyl sulfone,1-methylsulfonylethene,C3H6O2S,106.14354,0,WUIJTQZXUURFQU-UHFFFAOYSA-N,CS(=O)(=O)C=C,19354,pubchem,0
 3681-71-8,3681-71-8,hex-3-enyl acetate,C8H14O2,142.19556,0,NPFVOOAXDOBMCE-UHFFFAOYSA-N,CCC=CCCOC(=O)C,15574,pubchem,0
 3681-78-5,propyl dodecanoate,propyl dodecanoate,C15H30O2,242.3975,0,FTBUKOLPOATXGV-UHFFFAOYSA-N,CCCCCCCCCCCC(=O)OCCC,77255,pubchem,0
-36812-31-4,"calcium(1+), hydroxy- (9CI)",calcium hydroxide,CaHO+,57.08534,1,ZLYHCTAZFNBBLQ-UHFFFAOYSA-M,[OH-].[Ca+2],3266381,pubchem,0
-36812-32-5,"strontium(1+), hydroxy- (9CI)",strontium hydroxide,HOSr+,104.62734,1,JEYJOIBINRMPSU-UHFFFAOYSA-M,[OH-].[Sr+2],14849121,pubchem,0
+36812-31-4,Calcium hydroxide ion,,CaOH+,57.085,1,,,,crc_aqueous,0
+36812-32-5,Strontium hydroxide ion,,SrOH+,104.63,1,,,,crc_aqueous,0
 3682-35-7,3682-35-7,"2,4,6-tripyridin-2-yl-1,3,5-triazine",C18H12N6,312.32808,0,KMVWNDHKTPHDMT-UHFFFAOYSA-N,C1=CC=NC(=C1)C2=NC(=NC(=N2)C3=CC=CC=N3)C4=CC=CC=N4,77258,pubchem,0
 36823-84-4,p-pentoxybenzoyl chloride,4-pentoxybenzoyl chloride,C12H15ClO2,226.6993,0,IBQDPNHVFRFCFK-UHFFFAOYSA-N,CCCCCOC1=CC=C(C=C1)C(=O)Cl,94910,pubchem,0
 3683-19-0,4-methylhex-2-ene,(E)-4-methylhex-2-ene,C7H14,98.18606,0,MBNDKEPQUVZHCM-GQCTYLIASA-N,CCC(C)C=CC,5357249,pubchem,0
@@ -8869,6 +9001,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 3810-26-2,3-phenylcyclopent-2-en-1-one,3-phenylcyclopent-2-en-1-one,C11H10O,158.1965,0,UHTNKICWCQWOBM-UHFFFAOYSA-N,C1CC(=O)C=C1C2=CC=CC=C2,77422,pubchem,0
 3811-04-9,potassium chlorate,potassium chlorate,ClKO3,122.5495,0,VKJKEPKFPUWCAS-UHFFFAOYSA-M,[O-]Cl(=O)=O.[K+],6426889,pubchem,0
 38118-83-1,"hydroperoxide, 4b,9-dihydro-4b,9,10-triphenylindeno[1,2,3-fg]naphthacen-9-yl","15-hydroperoxy-8,15,17-triphenylhexacyclo[14.7.1.02,7.08,24.09,14.018,23]tetracosa-1(24),2,4,6,9,11,13,16,18,20,22-undecaene",C42H28O2,564.67052,0,NWJJMDJVFPNNJT-UHFFFAOYSA-N,C1=CC=C(C=C1)C2=C3C4=C(C5=CC=CC=C52)C6=CC=CC=C6C4(C7=CC=CC=C7C3(C8=CC=CC=C8)OO)C9=CC=CC=C9,165343105,pubchem,0
+3812-32-6,Carbonate ion,,CO3-2,60.009,-2,,,,crc_aqueous,0
 38126-74-8,n-(butylideneamino)butan-1-amine,N-(butylideneamino)butan-1-amine,C8H18N2,142.24192,0,ZLYLHUZXJBEGBY-UHFFFAOYSA-N,CCCCNN=CCCC,142236,pubchem,0
 38136-29-7,4-methylvaleryl chloride,4-methylpentanoyl chloride,C6H11ClO,134.60394,0,SVWCVXFHTHCJJB-UHFFFAOYSA-N,CC(C)CCC(=O)Cl,170008,pubchem,0
 3814-34-4,3-(bromomethyl)pentane,3-(bromomethyl)pentane,C6H13Br,165.07142,0,KKGUMGWNFARLSL-UHFFFAOYSA-N,CCC(CC)CBr,77432,pubchem,0
@@ -9225,6 +9358,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 4160-72-9,1-methylthymine,"1,5-dimethylpyrimidine-2,4-dione",C6H8N2O2,140.13992,0,GKMIDMKPBOUSBQ-UHFFFAOYSA-N,CC1=CN(C(=O)NC1=O)C,95961,pubchem,0
 4160-82-1,"3,3-dimethylglutaric anhydride","4,4-dimethyloxane-2,6-dione",C7H10O3,142.1525,0,HIJQFTSZBHDYKW-UHFFFAOYSA-N,CC1(CC(=O)OC(=O)C1)C,77813,pubchem,0
 4161-60-8,4-hydroxypentan-2-one,4-hydroxypentan-2-one,C5H10O2,102.1317,0,PCYZZYAEGNVNMH-UHFFFAOYSA-N,CC(CC(=O)C)O,20112,pubchem,0
+41618-72-8,Bismuth hydroxide ion,,BiOH+2,225.987,2,,,,crc_aqueous,0
 4164-28-7,dimethylnitramine,"N,N-dimethylnitramide",C2H6N2O2,90.08124,0,XRWKADIRZXTTLH-UHFFFAOYSA-N,CN(C)[N+](=O)[O-],20120,pubchem,0
 4164-32-3,4-nitromorpholine,4-nitromorpholine,C4H8N2O3,132.11792,0,YZXKWVREBLYPID-UHFFFAOYSA-N,C1COCCN1[N+](=O)[O-],20122,pubchem,0
 4164-37-8,"n,n-dinitropiperazine","1,4-dinitropiperazine",C4H8N4O4,176.13072,0,GSUMZAMXDRIYCL-UHFFFAOYSA-N,C1CN(CCN1[N+](=O)[O-])[N+](=O)[O-],20124,pubchem,0
@@ -9346,6 +9480,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 4246-51-9,4246-51-9,3-[2-[2-(3-aminopropoxy)ethoxy]ethoxy]propan-1-amine,C10H24N2O3,220.30916,0,JCEZOHLWDIONSP-UHFFFAOYSA-N,C(CN)COCCOCCOCCCN,20239,pubchem,0
 42474-20-4,"1,3-dibromopentane","1,3-dibromopentane",C5H10Br2,229.9409,0,SOZLNIPBRVQUOG-UHFFFAOYSA-N,CCC(CCBr)Br,142606,pubchem,0
 42474-21-5,"1,2-dibromoheptane","1,2-dibromoheptane",C7H14Br2,257.99406,0,CKVJSNYSBIZAAE-UHFFFAOYSA-N,CCCCCC(CBr)Br,142607,pubchem,0
+42499-21-8,Hydrogen diphosphate ion,,HP2O7-3,174.951,-3,,,,crc_aqueous,0
 425-32-1,"(1,1,2,2-tetrafluoro-2-phenylethyl)benzene","(1,1,2,2-tetrafluoro-2-phenylethyl)benzene",C14H10F4,254.222813,0,OVEWNBYMFPGNRR-UHFFFAOYSA-N,C1=CC=C(C=C1)C(C(C2=CC=CC=C2)(F)F)(F)F,136269,pubchem,0
 425-75-2,ethyl trifluoromethanesulfonate,ethyl trifluoromethanesulfonate,C3H5F3O3S,178.13021,0,UVECLJDRPFNRRQ-UHFFFAOYSA-N,CCOS(=O)(=O)C(F)(F)F,67924,pubchem,0
 425-82-1,hexafluorooxetane,"2,2,3,3,4,4-hexafluorooxetane",C3F6O,166.021919,0,ILIKFPWSIPNAPS-UHFFFAOYSA-N,C1(C(OC1(F)F)(F)F)(F)F,67925,pubchem,0
@@ -9512,6 +9647,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 440-17-5,trifluoperazine dihydrochloride,10-[3-(4-methylpiperazin-1-yl)propyl]-2-(trifluoromethyl)phenothiazine;dihydrochloride,C21H26Cl2F3N3S,480.41745,0,BXDAOUXDMHXPDI-UHFFFAOYSA-N,CN1CCN(CC1)CCCN2C3=CC=CC=C3SC4=C2C=C(C=C4)C(F)(F)F.Cl.Cl,66064,pubchem,0
 440-60-8,"2,3,4,5,6-pentafluorobenzyl alcohol","(2,3,4,5,6-pentafluorophenyl)methanol",C7H3F5O,198.090136,0,PGJYYCIOYBZTPU-UHFFFAOYSA-N,C(C1=C(C(=C(C(=C1F)F)F)F)F)O,9923,pubchem,0
 4403-69-4,2-(aminomethyl)aniline,2-(aminomethyl)aniline,C7H10N2,122.1677,0,GVOYKJPMUUJXBS-UHFFFAOYSA-N,C1=CC=C(C(=C1)CN)N,178096,pubchem,0
+44030-61-7,Phosphorus trioxyfluoride ion,,HPO3F-,98.978,-1,,,,crc_aqueous,0
 4407-36-7,cinnamyl alcohol,(E)-3-phenylprop-2-en-1-ol,C9H10O,134.1751,0,OOCCDEMITAIZTP-QPJJXVBHSA-N,C1=CC=C(C=C1)C=CCO,5315892,pubchem,0
 4408-64-4,n-methyliminodiacetic acid,2-[carboxymethyl(methyl)amino]acetic acid,C5H9NO4,147.12926,0,XWSGEVNYFYKXCP-UHFFFAOYSA-N,CN(CC(=O)O)CC(=O)O,20441,pubchem,0
 4413-13-2,1-butoxy-2-ethoxyethane,1-(2-ethoxyethoxy)butane,C8H18O2,146.22732,0,ZWPUOFSQNASCII-UHFFFAOYSA-N,CCCCOCCOCC,20451,pubchem,0
@@ -10633,6 +10769,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 521-74-4,broxyquinoline,"5,7-dibromoquinolin-8-ol",C9H5Br2NO,302.9501,0,ZDASUJMDVPTNTF-UHFFFAOYSA-N,C1=CC2=C(C(=C(C=C2Br)Br)O)N=C1,2453,pubchem,0
 521-85-7,corycavamine,"(2R)-2,15-dimethyl-7,9,19,21-tetraoxa-15-azapentacyclo[15.7.0.04,12.06,10.018,22]tetracosa-1(17),4,6(10),11,18(22),23-hexaen-3-one",C21H21NO5,367.39514,0,WOLWLEQYUFDNTA-GFCCVEGCSA-N,CC1C2=C(CN(CCC3=CC4=C(C=C3C1=O)OCO4)C)C5=C(C=C2)OCO5,12304036,pubchem,0
 52112-25-1,2-pentadecyne,pentadec-2-yne,C15H28,208.38282,0,VWWAVTXUUYIIEE-UHFFFAOYSA-N,CCCCCCCCCCCCC#CC,19066238,pubchem,0
+52140-06-4,Gallium dihydroxide ion,,Ga(OH)2+,103.738,1,,,,crc_aqueous,0
 52152-71-3,2-iodobutane,2-iodobutane,C4H9I,184.01873,0,IQRUSQUYPCHEKN-UHFFFAOYSA-N,CCC(C)I,10559,pubchem,0
 5216-25-1,4-chlorobenzotrichloride,1-chloro-4-(trichloromethyl)benzene,C7H4Cl4,229.91866,0,LVZPKYYPPLUECL-UHFFFAOYSA-N,C1=CC(=CC=C1C(Cl)(Cl)Cl)Cl,21277,pubchem,0
 5217-05-0,1-methylcyclopentanecarboxylic acid,1-methylcyclopentane-1-carboxylic acid,C7H12O2,128.16898,0,MNIBBVOEXUQHFF-UHFFFAOYSA-N,CC1(CCCC1)C(=O)O,138436,pubchem,0
@@ -11518,6 +11655,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 5582-82-1,3-methyl-3-heptanol,3-methylheptan-3-ol,C8H18O,130.22792,0,PQOSNJHBSNZITJ-UHFFFAOYSA-N,CCCCC(C)(CC)O,11710,pubchem,0
 5586-15-2,2-naphthyl disulfide,2-(naphthalen-2-yldisulfanyl)naphthalene,C20H14S2,318.45516,0,SUPMWVVVBKKGEL-UHFFFAOYSA-N,C1=CC=C2C=C(C=CC2=C1)SSC3=CC4=CC=CC=C4C=C3,79697,pubchem,0
 5587-89-3,oragrafin,"3-[3-(dimethylaminomethylideneamino)-2,4,6-triiodophenyl]propanoic acid",C12H13I3N2O2,597.95723,0,YQNFBOJPTAXAKV-UHFFFAOYSA-N,CN(C)C=NC1=C(C=C(C(=C1I)CCC(=O)O)I)I,5241,pubchem,0
+55896-88-3,Indium dihydroxide ion,,In(OH)2+,148.833,1,,,,crc_aqueous,0
 559-40-0,octafluorocyclopentene,"1,2,3,3,4,4,5,5-octafluorocyclopentene",C5F8,212.040726,0,YBMDPYAEZDJWNY-UHFFFAOYSA-N,C1(=C(C(C(C1(F)F)(F)F)(F)F)F)F,11212,pubchem,0
 559-70-6,beta-amyrin,"(3S,4aR,6aR,6bS,8aR,12aR,14aR,14bR)-4,4,6a,6b,8a,11,11,14b-octamethyl-1,2,3,4a,5,6,7,8,9,10,12,12a,14,14a-tetradecahydropicen-3-ol",C30H50O,426.7174,0,JFSHUTJDVKUMTJ-QHPUVITPSA-N,CC1(CCC2(CCC3(C(=CCC4C3(CCC5C4(CCC(C5(C)C)O)C)C)C2C1)C)C)C,73145,pubchem,0
 5593-70-4,1-butanol,butan-1-ol,C4H10O,74.1216,0,LRHPLDYGYMQRHN-UHFFFAOYSA-N,CCCCO,263,pubchem,0
@@ -11691,7 +11829,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 57-08-9,6-acetamidohexanoic acid,6-acetamidohexanoic acid,C8H15NO3,173.2096,0,WDSCBUNMANHPFH-UHFFFAOYSA-N,CC(=O)NCCCCCC(=O)O,2005,pubchem,0
 57-10-3,palmitic acid,hexadecanoic acid,C16H32O2,256.42408,0,IPCSVZSSVZVIGE-UHFFFAOYSA-N,CCCCCCCCCCCCCCCC(=O)O,985,pubchem,1
 57-11-4,stearic acid,octadecanoic acid,C18H36O2,284.47724,0,QIQXTHQIDYTFRH-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCC(=O)O,5281,pubchem,1
-57-12-5,cyanide,cyanide,CN-,26.0174,-1,XFXPMWWXUTWYJX-UHFFFAOYSA-N,[C-]#N,5975,pubchem,0
+57-12-5,Cyanide ion,,CN-,26.018,-1,,,,crc_aqueous,0
 57-13-6,urea,urea,CH4N2O,60.05526,0,XSQUKJJJFZCRTK-UHFFFAOYSA-N,C(=O)(N)N,1176,pubchem,0
 57-14-7,"1,1-dimethylhydrazine","1,1-dimethylhydrazine",C2H8N2,60.09832,0,RHUYHJGZWVXEHW-UHFFFAOYSA-N,CN(C)N,5976,pubchem,0
 57-15-8,chlorobutanol,"1,1,1-trichloro-2-methylpropan-2-ol",C4H7Cl3O,177.45678,0,OSASVXMJTNOKOY-UHFFFAOYSA-N,CC(C)(C(Cl)(Cl)Cl)O,5977,pubchem,0
@@ -12370,6 +12508,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 59756-60-4,fluridone,1-methyl-3-phenyl-5-[3-(trifluoromethyl)phenyl]pyridin-4-one,C19H14F3NO,329.31577,0,YWBVHLJPRPCRSD-UHFFFAOYSA-N,CN1C=C(C(=O)C(=C1)C2=CC(=CC=C2)C(F)(F)F)C3=CC=CC=C3,43079,pubchem,0
 5976-47-6,2-chloro-2-propen-1-ol,2-chloroprop-2-en-1-ol,C3H5ClO,92.5242,0,OSCXYTRISGREIM-UHFFFAOYSA-N,C=C(CO)Cl,80076,pubchem,0
 5978-70-1,2-octanol,octan-2-ol,C8H18O,130.22792,0,SJWFXCIHNDVPSH-UHFFFAOYSA-N,CCCCCCC(C)O,20083,pubchem,0
+59792-78-8,Cadmium hydroxide ion,,CdOH+,129.418,1,,,,crc_aqueous,0
 598-01-6,4-methyl-4-heptanol,4-methylheptan-4-ol,C8H18O,130.22792,0,IQXKGRKRIRMQCQ-UHFFFAOYSA-N,CCCC(C)(CCC)O,136394,pubchem,0
 598-02-7,diethyl phosphate,diethyl hydrogen phosphate,C4H11O4P,154.101502,0,UCQFCFPECQILOL-UHFFFAOYSA-N,CCOP(=O)(O)OCC,654,pubchem,0
 598-03-8,propyl sulfone,1-propylsulfonylpropane,C6H14O2S,150.23916,0,JEXYCADTAFPULN-UHFFFAOYSA-N,CCCS(=O)(=O)CCC,11709,pubchem,0
@@ -12490,7 +12629,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 60148-93-8,hexahydropseudoionone,"6,10-dimethylundecan-2-one",C13H26O,198.34494,0,RBGLEUBCAJNCTR-UHFFFAOYSA-N,CC(C)CCCC(C)CCCC(=O)C,95495,pubchem,0
 60168-88-9,fenarimol,(2-chlorophenyl)-(4-chlorophenyl)-pyrimidin-5-ylmethanol,C17H12Cl2N2O,331.19598,0,NHOWDZOIZKMVAI-UHFFFAOYSA-N,C1=CC=C(C(=C1)C(C2=CC=C(C=C2)Cl)(C3=CN=CN=C3)O)Cl,43226,pubchem,0
 60172-46-5,Sodium Hexachloroaluminate,,AlCl6Na3,,,,,,chemicals_bank,0
-60172-61-4,"magnesium(1+), hydroxy- (9CI)",magnesium hydroxide,HMgO+,41.31234,1,SIERWFVYDSKSDJ-UHFFFAOYSA-M,[OH-].[Mg+2],21225543,pubchem,0
+60172-61-4,Magnesium hydroxide ion,,MgOH+,41.312,1,,,,crc_aqueous,0
 60175-01-1,magnesium chloride fluoride,magnesium;chloride;fluoride,ClFMg,78.756403,0,CFQHVABJRDZBGV-UHFFFAOYSA-L,[F-].[Mg+2].[Cl-],143684,pubchem,0
 6018-89-9,nickel(ii) acetate tetrahydrate,nickel(2+);diacetate;tetrahydrate,C4H14NiO8,248.84256,0,OINIXPNQKAZCRL-UHFFFAOYSA-L,CC(=O)[O-].CC(=O)[O-].O.O.O.O.[Ni+2],62601,pubchem,0
 60186-78-9,3-tridecyne,tridec-3-yne,C13H24,180.32966,0,HDLJOUCNTFYRPD-UHFFFAOYSA-N,CCCCCCCCCC#CCC,143685,pubchem,0
@@ -14522,6 +14661,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 66097-71-0,hydroxylaminium(1+) (9CI),hydroxyazanium,H4NO+,34.03786,1,RBLWMQWAHONKNC-UHFFFAOYSA-N,[NH3+]O,933,pubchem,0
 661-11-0,1-fluoroheptane,1-fluoroheptane,C7H15F,118.192403,0,BITLXSQYFZTQGC-UHFFFAOYSA-N,CCCCCCCF,12619,pubchem,0
 661-19-8,1-docosanol,docosan-1-ol,C22H46O,326.60004,0,NOPFSRXAKWQILS-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCO,12620,pubchem,0
+661-20-1,Cyanate ion,,OCN-,42.017,-1,,,,crc_aqueous,0
 661-53-0,2-fluoro-2-methylbutane,2-fluoro-2-methylbutane,C5H11F,90.139243,0,HLLCNVLEVVFTJB-UHFFFAOYSA-N,CCC(C)(C)F,13709961,pubchem,0
 661-54-1,"3,3,3-trifluoroprop-1-yne","3,3,3-trifluoroprop-1-yne",C3HF3,94.03525,0,PRDFNJUWGIQQBW-UHFFFAOYSA-N,C#CC(F)(F)F,69578,pubchem,0
 661-69-8,hexamethyldistannane,,C6H18Sn2,327.62712,0,CCRMAATUKBYMPA-UHFFFAOYSA-N,C[Sn](C)C.C[Sn](C)C,6327618,pubchem,0
@@ -14819,7 +14959,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 6812-78-8,rhodinol,"(3S)-3,7-dimethyloct-7-en-1-ol",C10H20O,156.2652,0,JGQFVRIQXUFPAH-JTQLQIEISA-N,CC(CCCC(=C)C)CCO,81263,pubchem,0
 68141-15-1,3-dodecenal,dodec-3-enal,C12H22O,182.30248,0,HBBONAOKVLYWBI-UHFFFAOYSA-N,CCCCCCCCC=CCC=O,106523,pubchem,0
 6816-17-7,cis-2-decene,dec-2-ene,C10H20,140.2658,0,YKNMBTZOEVIJCM-UHFFFAOYSA-N,CCCCCCCC=CC,32899,pubchem,0
-68193-67-9,"barium(1+), hydroxy- (9CI)",barium(2+) hydroxide,BaHO+,154.33434,1,XZGCPOSUWCQZEU-UHFFFAOYSA-M,[OH-].[Ba+2],14849122,pubchem,0
+68193-67-9,Barium hydroxide ion,,BaOH+,154.334,1,,,,crc_aqueous,0
 682-01-9,tetrapropyl orthosilicate,tetrapropyl silicate,C12H28O4Si,264.43382,0,ZQZCOBSUOFHDEE-UHFFFAOYSA-N,CCCO[Si](OCCC)(OCCC)OCCC,69627,pubchem,0
 682-30-4,diethyl vinylphosphonate,1-[ethenyl(ethoxy)phosphoryl]oxyethane,C6H13O3P,164.139382,0,DREPONDJUKIQLX-UHFFFAOYSA-N,CCOP(=O)(C=C)OCC,69629,pubchem,0
 68201-71-8,diethyl adipate,diethyl hexanedioate,C10H18O4,202.24752,0,VIZORQUEIQEFRT-UHFFFAOYSA-N,CCOC(=O)CCCCC(=O)OCC,8844,pubchem,0
@@ -15063,6 +15203,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 70116-68-6,3-methyl-2-butanol,3-methylbutan-2-ol,C5H12O,88.14818,0,MXLMTQWGSQIYOW-UHFFFAOYSA-N,CC(C)C(C)O,11732,pubchem,0
 70124-77-5,flucythrinate,[cyano-(3-phenoxyphenyl)methyl] 2-[4-(difluoromethoxy)phenyl]-3-methylbutanoate,C26H23F2NO4,451.461926,0,GBIHOLCMZGAKNG-UHFFFAOYSA-N,CC(C)C(C1=CC=C(C=C1)OC(F)F)C(=O)OC(C#N)C2=CC(=CC=C2)OC3=CC=CC=C3,50980,pubchem,0
 70138-31-7,"3,3,3-trimethoxypropionitrile","3,3,3-trimethoxypropanenitrile",C6H11NO3,145.15644,0,IPJDXQYLAATRJK-UHFFFAOYSA-N,COC(CC#N)(OC)OC,144381,pubchem,0
+70198-64-0,Gallium hydroxide ion,,GaOH+2,86.73,2,,,,crc_aqueous,0
 702-23-8,4-methoxyphenethyl alcohol,2-(4-methoxyphenyl)ethanol,C9H12O2,152.19038,0,AUWDOZOUJWEPBA-UHFFFAOYSA-N,COC1=CC=C(C=C1)CCO,69705,pubchem,0
 702-54-5,diethadione,"5,5-diethyl-1,3-oxazinane-2,4-dione",C8H13NO3,171.19372,0,ORTYMGHCFWKXHO-UHFFFAOYSA-N,CCC1(COC(=O)NC1=O)CC,12798,pubchem,0
 702-79-4,"1,3-dimethyladamantane","1,3-dimethyladamantane",C12H20,164.2872,0,CWNOIUTVJRWADX-UHFFFAOYSA-N,CC12CC3CC(C1)CC(C3)(C2)C,12800,pubchem,0
@@ -15124,7 +15265,9 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 71-41-0,1-pentanol,pentan-1-ol,C5H12O,88.14818,0,AMQJEAYHLZJPGS-UHFFFAOYSA-N,CCCCCO,6276,pubchem,1
 71-43-2,benzene,benzene,C6H6,78.11184,0,UHOVQNZJYSORNB-UHFFFAOYSA-N,C1=CC=CC=C1,241,pubchem,1
 71-44-3,spermine,"N,N'-bis(3-aminopropyl)butane-1,4-diamine",C10H26N4,202.34024,0,PFNFFQXMRSDOHW-UHFFFAOYSA-N,C(CCNCCCN)CNCCCN,1103,pubchem,0
-71-47-6,formate(1-),formate,CHO2-,45.01744,-1,BDAGIHXWWSANSR-UHFFFAOYSA-M,C(=O)[O-],283,pubchem,0
+71-47-6,Formate ion,,CHOO-,45.018,-1,,,,crc_aqueous,0
+71-50-1,Acetate ion,,CH3COO-,59.044,-1,,,,crc_aqueous,0
+71-52-3,Bicarbonate ion,,HCO3-,61.017,-1,,,,crc_aqueous,0
 71-55-6,"1,1,1-trichloroethane","1,1,1-trichloroethane",C2H3Cl3,133.40422,0,UOCLXMDMGBRAIB-UHFFFAOYSA-N,CC(Cl)(Cl)Cl,6278,pubchem,1
 71-62-5,veratridine,"(1,10,11,12,14,23-hexahydroxy-6,10,19-trimethyl-24-oxa-4-azaheptacyclo[12.12.0.02,11.04,9.015,25.018,23.019,25]hexacosan-22-yl) 3,4-dimethoxybenzoate",C36H51NO11,673.79024,0,FVECELJHCSPHKY-UHFFFAOYSA-N,CC1CCC2C(C3(C(CC4(C5CCC6C7(C5(CC4(C3CN2C1)O)OC6(C(CC7)OC(=O)C8=CC(=C(C=C8)OC)OC)O)C)O)O)O)(C)O,5657,pubchem,0
 71-63-6,cardidigin,"3-[3-[5-[5-(4,5-dihydroxy-6-methyloxan-2-yl)oxy-4-hydroxy-6-methyloxan-2-yl]oxy-4-hydroxy-6-methyloxan-2-yl]oxy-14-hydroxy-10,13-dimethyl-1,2,3,4,5,6,7,8,9,11,12,15,16,17-tetradecahydrocyclopenta[a]phenanthren-17-yl]-2H-furan-5-one",C41H64O13,764.93906,0,WDJUZGPOPHTGOT-UHFFFAOYSA-N,CC1C(C(CC(O1)OC2C(OC(CC2O)OC3C(OC(CC3O)OC4CCC5(C(C4)CCC6C5CCC7(C6(CCC7C8=CC(=O)OC8)O)C)C)C)C)O)O,3061,pubchem,0
@@ -17328,6 +17471,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 92-99-9,"n,n,2-trimethylquinolin-6-amine","N,N,2-trimethylquinolin-6-amine",C12H14N2,186.25296,0,JGRWYZQONRFIFH-UHFFFAOYSA-N,CC1=NC2=C(C=C1)C=C(C=C2)N(C)C,66725,pubchem,0
 920-37-6,2-chloroacrylonitrile,2-chloroprop-2-enenitrile,C3H2ClN,87.50768,0,OYUNTGBISCIYPW-UHFFFAOYSA-N,C=C(C#N)Cl,70198,pubchem,0
 920-46-7,methacryloyl chloride,2-methylprop-2-enoyl chloride,C4H5ClO,104.5349,0,VHRYZQNGTZXDNX-UHFFFAOYSA-N,CC(=C)C(=O)Cl,13528,pubchem,0
+920-52-5,Bioxalate ion,,C2O4H-,89.027,-1,,,,crc_aqueous,0
 920-66-1,"1,1,1,3,3,3-hexafluoro-2-propanol","1,1,1,3,3,3-hexafluoropropan-2-ol",C3H2F6O,168.037799,0,BYEAHWXPCBROCE-UHFFFAOYSA-N,C(C(F)(F)F)(C(F)(F)F)O,13529,pubchem,0
 921-03-9,"1,1,3-trichloroacetone","1,1,3-trichloropropan-2-one",C3H3Cl3O,161.41432,0,ZWILTCXCTVMANU-UHFFFAOYSA-N,C(C(=O)C(Cl)Cl)Cl,13530,pubchem,0
 921-04-0,"n,n-dimethyl-2-butanamine","N,N-dimethylbutan-2-amine",C6H15N,101.19,0,USSPHSVODLAWSA-UHFFFAOYSA-N,CCC(C)N(C)C,70200,pubchem,0
@@ -17695,6 +17839,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 95-95-4,"2,4,5-trichlorophenol","2,4,5-trichlorophenol",C6H3Cl3O,197.44642,0,LHJGJYXLEPZJPM-UHFFFAOYSA-N,C1=C(C(=CC(=C1Cl)Cl)Cl)O,7271,pubchem,0
 95-96-5,lactide,"3,6-dimethyl-1,4-dioxane-2,5-dione",C6H8O4,144.12532,0,JJTUDXZGHPGLLC-UHFFFAOYSA-N,CC1C(=O)OC(C(=O)O1)C,7272,pubchem,0
 950-37-8,methidathion,"3-(dimethoxyphosphinothioylsulfanylmethyl)-5-methoxy-1,3,4-thiadiazol-2-one",C6H11N2O4PS3,302.331302,0,MEBQXILRKZHVCX-UHFFFAOYSA-N,COC1=NN(C(=O)S1)CSP(=S)(OC)OC,13709,pubchem,0
+95118-37-9,Manganese hydroxide ion,,MnOH+,71.945,1,,,,crc_aqueous,0
 952-97-6,4-nitrodiphenyl sulfide,1-nitro-4-phenylsulfanylbenzene,C12H9NO2S,231.27036,0,RJCBYBQJVXVVKB-UHFFFAOYSA-N,C1=CC=C(C=C1)SC2=CC=C(C=C2)[N+](=O)[O-],13720,pubchem,0
 953-17-3,methyl carbophenothion,(4-chlorophenyl)sulfanylmethylsulfanyl-dimethoxy-sulfanylidene-lambda5-phosphane,C9H12ClO2PS3,314.812142,0,OUCCVXVYGFBXSV-UHFFFAOYSA-N,COP(=S)(OC)SCSC1=CC=C(C=C1)Cl,13721,pubchem,0
 955-83-9,"2,5-diphenylfuran","2,5-diphenylfuran",C16H12O,220.26588,0,VUPDHIIPAKIKAB-UHFFFAOYSA-N,C1=CC=C(C=C1)C2=CC=C(O2)C3=CC=CC=C3,70387,pubchem,0

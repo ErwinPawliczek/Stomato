@@ -61,6 +61,16 @@ sources:
     grade: B
     citation: "Haynes, W.M., Bruno, T.J. and Lide, D.R. (eds.), CRC Handbook of Chemistry and Physics, 95th ed., CRC Press, 2014: Physical Constants of Organic and Inorganic Compounds."
     access: tables shipped in chemicals
+  crc_aqueous:
+    grade: B
+    citation: "Haynes, W.M., Bruno, T.J. and Lide, D.R. (eds.), CRC Handbook of Chemistry and Physics, 95th ed., CRC Press, 2014: Thermodynamic Properties of Aqueous Ions (standard state 1 molal, H+ = 0 at all T)."
+    access: table shipped in chemicals (Electrolytes/CRC Thermodynamic Properties of Aqueous Ions.tsv)
+  nist_henry:
+    grade: B
+    citation: "Sander, R., Henry's Law Constants, in Linstrom, P.J. and Mallard, W.G. (eds.), NIST Chemistry WebBook, NIST Standard Reference Database 69; dissolved-gas aqueous standard states derived from those constants and the gas's selected values."
+    url: https://webbook.nist.gov/chemistry/
+    doi: 10.18434/T4D303
+    access: fetched page by page at the site's stated crawl delay; the row's `reference` records the median used
   poling:
     grade: B
     citation: "Poling, B.E., Prausnitz, J.M. and O'Connell, J.P., The Properties of Gases and Liquids, 5th ed., McGraw-Hill, 2000."

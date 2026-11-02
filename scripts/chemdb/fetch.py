@@ -7,6 +7,7 @@ Nothing fetched is ever executed: pages are parsed as text by ``parse_nist.py``.
     python -I scripts/chemdb/fetch.py nist    <seed.txt> <cache-dir>
     python -I scripts/chemdb/fetch.py pubchem <seed.txt> <cache-dir>
     python -I scripts/chemdb/fetch.py janaf   <cache-dir>
+    python -I scripts/chemdb/fetch.py henry   <seed.txt> <cache-dir>
 
 Rate limits honoured: NIST WebBook robots.txt ``Crawl-delay: 5``; PubChem PUG
 REST "no more than 5 requests per second" (one batched request every 0.4 s here).
@@ -82,6 +83,26 @@ def fetch_nist(seed: Path, cache: Path) -> int:
     return 0
 
 
+def fetch_henry(seed: Path, cache: Path) -> int:
+    """WebBook Henry's-law page per CAS (Mask=10)."""
+    out = cache / "henry"
+    out.mkdir(parents=True, exist_ok=True)
+    for cas in _seed(seed):
+        target = out / f"{cas}.html"
+        if target.exists():
+            continue
+        digits = cas.replace("-", "")
+        status, body = _get(f"https://webbook.nist.gov/cgi/cbook.cgi?ID=C{digits}&Units=SI&Mask=10")
+        if status != 200:
+            print(f"{cas}: HTTP {status}", flush=True)
+            if status in (403, 429, 503):
+                return 1
+        else:
+            target.write_bytes(body)
+        time.sleep(NIST_DELAY_S)
+    return 0
+
+
 def fetch_pubchem(seed: Path, cache: Path) -> int:
     """Identity records: one batched POST-free GET per ``PUBCHEM_BATCH`` CIDs.
 
@@ -145,13 +166,15 @@ def fetch_janaf(cache: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("source", choices=("nist", "pubchem", "janaf"))
+    parser.add_argument("source", choices=("nist", "pubchem", "janaf", "henry"))
     parser.add_argument("paths", nargs="+", type=Path)
     args = parser.parse_args()
     if args.source == "janaf":
         return fetch_janaf(args.paths[0])
     if args.source == "nist":
         return fetch_nist(args.paths[0], args.paths[1])
+    if args.source == "henry":
+        return fetch_henry(args.paths[0], args.paths[1])
     return fetch_pubchem(args.paths[0], args.paths[1])
 
 

@@ -20,9 +20,13 @@ source states, converted to SI.
 
 ## Properties
 
-`Hf_gas|liquid|solid`, `Gf_*`, `Hc_*` (formation and combustion, J/mol, 298.15 K, 1 bar), `S0_*`, `Cp_*` (J/(mol K)),
+`Hf_gas|liquid|solid|aq`, `Gf_*`, `Hc_*` (formation and combustion, J/mol, 298.15 K, 1 bar), `S0_*`, `Cp_*` (J/(mol K)),
 `Tb`, `Tm`, `Tt`, `Tc` (K), `Pt`, `Pc` (Pa), `Vc` (m3/mol), `Hvap` (at `T_K`),
 `Hvap_298`, `Hsub_298`, `Hfus` (J/mol), `rho_liquid` (kg/m3).
+
+`Hf_aq`, `Gf_aq`, `S0_aq`, `Cp_aq` use the 1 molal standard state with H+(aq) = 0. Ions come
+from the CRC table. Dissolved gases are derived, by definition and without estimation,
+from a gas's selected values and WebBook Henry's-law data; their rows say so in `reference`.
 
 ## Grades and selection
 

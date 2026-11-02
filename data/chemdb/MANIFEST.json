@@ -5,8 +5,8 @@
   "nist_pages_parsed": 696,
   "pubchem_records": 17239,
   "row_counts": {
-    "species": 17980,
-    "properties": 83181,
+    "species": 18125,
+    "properties": 83705,
     "shomate": 142,
     "antoine": 910,
     "wagner": 348,
@@ -14,15 +14,18 @@
     "janaf": 65036
   },
   "species_with_property": {
+    "Cp_aq": 35,
     "Cp_gas": 1197,
     "Cp_liquid": 771,
     "Cp_solid": 684,
+    "Gf_aq": 170,
     "Gf_gas": 840,
     "Gf_liquid": 280,
     "Gf_solid": 577,
     "Hc_gas": 48,
     "Hc_liquid": 371,
     "Hc_solid": 63,
+    "Hf_aq": 161,
     "Hf_gas": 6486,
     "Hf_liquid": 2277,
     "Hf_solid": 2694,
@@ -32,6 +35,7 @@
     "Hvap_298": 2733,
     "Pc": 965,
     "Pt": 39,
+    "S0_aq": 158,
     "S0_gas": 4591,
     "S0_liquid": 734,
     "S0_solid": 886,
@@ -45,6 +49,7 @@
   "rows_by_source": {
     "atct": 318,
     "coolprop": 250,
+    "crc_aqueous": 480,
     "crc_constants": 21424,
     "crc_critical": 2427,
     "crc_hfus": 1088,
@@ -53,6 +58,7 @@
     "iupac_critical": 1774,
     "janaf": 4832,
     "nist": 10154,
+    "nist_henry": 44,
     "nist_review": 242,
     "nist_snapshot": 23564,
     "poling": 589,
@@ -60,7 +66,7 @@
   },
   "rows_by_grade": {
     "A": 7416,
-    "B": 67462,
+    "B": 67986,
     "C": 8303
   },
   "audit": {

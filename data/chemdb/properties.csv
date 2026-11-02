@@ -802,6 +802,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10024-97-2,Cp_gas,38.64,J/(mol K),,298.15,poling,B,,0
 10024-97-2,Gf_gas,104179,J/mol,,,janaf,A,JANAF table N-026,1
 10024-97-2,Gf_gas,103700,J/mol,,,crc_thermo,B,,0
+10024-97-2,Hf_aq,60540.67406,J/mol,,,nist_henry,B,gas + Henry median of 4 (k 0.024; slope 2650 K),1
 10024-97-2,Hf_gas,82574,J/mol,97,,atct,A,ATcT 1.112,1
 10024-97-2,Hf_gas,82048,J/mol,,,janaf,A,JANAF table N-026,0
 10024-97-2,Hf_gas,82050,J/mol,,,nist_review,A,Chase; 1998,0
@@ -820,6 +821,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10024-97-2,Pt,87890,Pa,,,nist,B,Fonseca and Lobo; 1989,1
 10024-97-2,Pt,87910,Pa,,,nist,B,Calado; Rebelo; et al.; 1986,0
 10024-97-2,Pt,87899.097,Pa,,,nist_snapshot,B,,0
+10024-97-2,S0_aq,115.0463994,J/(mol K),,,nist_henry,B,gas + Henry median of 4 (k 0.024; slope 2650 K),1
 10024-97-2,S0_gas,219.957,J/(mol K),,,janaf,A,JANAF table N-026,1
 10024-97-2,S0_gas,219.96,J/(mol K),,,nist_review,A,Chase; 1998,0
 10024-97-2,S0_gas,220,J/(mol K),,,crc_thermo,B,,0
@@ -2087,6 +2089,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10102-43-9,Cp_gas,29.87,J/(mol K),,298.15,poling,B,,0
 10102-43-9,Gf_gas,86600,J/mol,,,janaf,A,JANAF table N-005,1
 10102-43-9,Gf_gas,87600,J/mol,,,crc_thermo,B,,0
+10102-43-9,Hf_aq,78617.30607,J/mol,,,nist_henry,B,gas + Henry median of 3 (k 0.0019; slope 1500 K),1
 10102-43-9,Hf_gas,91089,J/mol,64,,atct,A,ATcT 1.112,1
 10102-43-9,Hf_gas,90291,J/mol,,,janaf,A,JANAF table N-005,0
 10102-43-9,Hf_gas,90290,J/mol,,,nist_review,A,Chase; 1998,0
@@ -2096,6 +2099,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10102-43-9,Hfus,2300,J/mol,,,crc_hfus,B,,1
 10102-43-9,Hvap,13830,J/mol,,121.41,crc_hvap,B,,1
 10102-43-9,Hvap,13800,J/mol,,212,nist,B,Johnston and Giauque; 1929,0
+10102-43-9,S0_aq,116.8301307,J/(mol K),,,nist_henry,B,gas + Henry median of 3 (k 0.0019; slope 1500 K),1
 10102-43-9,S0_gas,210.758,J/(mol K),,,janaf,A,JANAF table N-005,1
 10102-43-9,S0_gas,210.76,J/(mol K),,,nist_review,A,Chase; 1998,0
 10102-43-9,S0_gas,210.8,J/(mol K),,,crc_thermo,B,,0
@@ -13858,6 +13862,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1174-72-7,Tm,322.15,K,,,crc_constants,B,,1
 1174-72-7,rho_liquid,1141.26,kg/m3,,,crc_constants,B,,1
 1174-92-1,Hf_solid,-652300,J/mol,,,nist_snapshot,B,,1
+117412-24-5,Gf_aq,-640100,J/mol,,,crc_aqueous,B,,1
+117412-24-5,Hf_aq,-790800,J/mol,,,crc_aqueous,B,,1
+117412-24-5,S0_aq,-159,J/(mol K),,,crc_aqueous,B,,1
 1176-74-5,Tm,483.15,K,,,crc_constants,B,,1
 118-08-1,Tm,405.15,K,,,crc_constants,B,,1
 118-10-5,Tm,538.15,K,,,crc_constants,B,,1
@@ -16181,6 +16188,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12125-22-3,S0_solid,46,J/(mol K),,,crc_thermo,B,,1
 12125-22-3,rho_liquid,6700,kg/m3,,,crc_constants,B,,1
 12125-25-6,rho_liquid,11600,kg/m3,,,crc_constants,B,,1
+12125-54-1,Gf_aq,-227600,J/mol,,,crc_aqueous,B,,1
+12125-54-1,Hf_aq,-287900,J/mol,,,crc_aqueous,B,,1
+12125-54-1,S0_aq,-71,J/(mol K),,,crc_aqueous,B,,1
 12125-63-2,Tm,1187.15,K,,,crc_constants,B,,1
 12125-63-2,rho_liquid,6800,kg/m3,,,crc_constants,B,,1
 12125-87-0,Hf_gas,-639300,J/mol,,,nist_snapshot,B,,1
@@ -16206,6 +16216,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12134-75-7,Tm,1813.15,K,,,crc_constants,B,,1
 12134-75-7,rho_liquid,5900,kg/m3,,,crc_constants,B,,1
 12134-77-9,rho_liquid,6100,kg/m3,,,crc_constants,B,,1
+12135-07-8,Gf_aq,-801200,J/mol,,,crc_aqueous,B,,1
+12135-07-8,Hf_aq,-861500,J/mol,,,crc_aqueous,B,,1
+12135-07-8,S0_aq,-134,J/(mol K),,,crc_aqueous,B,,1
 12136-24-2,rho_liquid,7100,kg/m3,,,crc_constants,B,,1
 12136-42-4,Hf_solid,-234000,J/mol,,,crc_thermo,B,,1
 12136-42-4,rho_liquid,10200,kg/m3,,,crc_constants,B,,1
@@ -16353,9 +16366,16 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 121678-88-4,Hsub_298,101800,J/mol,,,nist_snapshot,B,,1
 12168-52-4,Tm,1743.15,K,,,crc_constants,B,,1
 12168-52-4,rho_liquid,4720,kg/m3,,,crc_constants,B,,1
+12168-64-8,Gf_aq,-226300,J/mol,,,crc_aqueous,B,,1
 12168-85-3,Tm,2423.15,K,,,crc_constants,B,,1
 12177-67-2,Hf_gas,-193880,J/mol,,,nist_snapshot,B,,1
 12177-67-2,S0_gas,235.42,J/(mol K),,,nist_snapshot,B,,1
+12179-03-2,Gf_aq,-920500,J/mol,,,crc_aqueous,B,,1
+12179-03-2,Hf_aq,-1030100,J/mol,,,crc_aqueous,B,,1
+12179-03-2,S0_aq,-343,J/(mol K),,,crc_aqueous,B,,1
+12179-05-4,Gf_aq,-1140900,J/mol,,,crc_aqueous,B,,1
+12179-05-4,Hf_aq,-1282400,J/mol,,,crc_aqueous,B,,1
+12179-05-4,S0_aq,-218,J/(mol K),,,crc_aqueous,B,,1
 1218-34-4,Tm,462.65,K,,,crc_constants,B,,1
 12182-83-1,Hf_gas,-687850,J/mol,,,nist_snapshot,B,,1
 12182-83-1,S0_gas,360.74,J/(mol K),,,nist_snapshot,B,,1
@@ -16634,6 +16654,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12255-48-0,rho_liquid,5590,kg/m3,,,crc_constants,B,,1
 12256-04-1,Tm,1215.15,K,,,crc_constants,B,,1
 12256-04-1,rho_liquid,6840,kg/m3,,,crc_constants,B,,1
+12258-53-6,Gf_aq,-2604800,J/mol,,,crc_aqueous,B,,1
 12258-95-6,Cp_gas,81.617,J/(mol K),,298.15,janaf,A,JANAF table Cl-078,1
 12258-95-6,Gf_gas,-656856,J/mol,,,janaf,A,JANAF table Cl-078,1
 12258-95-6,Hf_gas,-659817,J/mol,,,janaf,A,JANAF table Cl-078,1
@@ -16708,6 +16729,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12293-67-3,S0_gas,256.487,J/(mol K),,,janaf,A,JANAF table N-013,1
 12293-67-3,S0_gas,256.48,J/(mol K),,,nist_snapshot,B,,0
 12294-01-8,rho_liquid,4400,kg/m3,,,crc_constants,B,,1
+12299-69-3,Gf_aq,-229400,J/mol,,,crc_aqueous,B,,1
+12299-69-3,Hf_aq,-290800,J/mol,,,crc_aqueous,B,,1
+12299-69-3,S0_aq,-142,J/(mol K),,,crc_aqueous,B,,1
 123-00-2,Tb,493.15,K,,,crc_constants,B,,1
 123-00-2,Tb,497.27977,K,,,nist_snapshot,B,,0
 123-00-2,Tm,258.15,K,,,crc_constants,B,,1
@@ -17430,6 +17454,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12323-03-4,Tm,1710.15,K,,,crc_constants,B,,1
 12323-03-4,rho_liquid,5400,kg/m3,,,crc_constants,B,,1
 12323-19-2,Tm,748.15,K,,,crc_constants,B,,1
+12325-02-9,Gf_aq,-52300,J/mol,,,crc_aqueous,B,,1
+12325-02-9,Hf_aq,-84500,J/mol,,,crc_aqueous,B,,1
+12325-02-9,S0_aq,71,J/(mol K),,,crc_aqueous,B,,1
 12325-59-6,rho_liquid,9780,kg/m3,,,crc_constants,B,,1
 12326-85-1,Cp_gas,29.91,J/(mol K),,298.15,janaf,A,JANAF table C-097,1
 12326-85-1,Gf_gas,399375,J/mol,,,janaf,A,JANAF table C-097,1
@@ -17807,6 +17834,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 124-38-9,Cp_gas,37.13,J/(mol K),,298.15,poling,B,,0
 124-38-9,Gf_gas,-394389,J/mol,,,janaf,A,JANAF table C-095,1
 124-38-9,Gf_gas,-394400,J/mol,,,crc_thermo,B,,0
+124-38-9,Hf_aq,-413428.7103,J/mol,,,nist_henry,B,gas + Henry median of 14 (k 0.034; slope 2400 K),1
 124-38-9,Hf_gas,-393474,J/mol,15,,atct,A,ATcT 1.112,1
 124-38-9,Hf_gas,-393522,J/mol,,,janaf,A,JANAF table C-095,0
 124-38-9,Hf_gas,-393510,J/mol,130,,nist_review,A,Cox; Wagman; et al.; 1984,0
@@ -17824,6 +17852,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 124-38-9,Pc,7367002.4,Pa,,,nist_snapshot,B,,0
 124-38-9,Pt,518500,Pa,,,nist,B,Angus; Armstrong; et al.; 1976,1
 124-38-9,Pt,518500,Pa,,,nist_snapshot,B,,0
+124-38-9,S0_aq,118.7520935,J/(mol K),,,nist_henry,B,gas + Henry median of 14 (k 0.034; slope 2400 K),1
 124-38-9,S0_gas,213.795,J/(mol K),,,janaf,A,JANAF table C-095,1
 124-38-9,S0_gas,213.785,J/(mol K),0.01,,nist_review,A,Cox; Wagman; et al.; 1984,0
 124-38-9,S0_gas,213.79,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -17972,7 +18001,11 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12401-86-4,Hf_gas,83680,J/mol,,,nist_snapshot,B,,0
 12401-86-4,S0_gas,229.133,J/(mol K),,,janaf,A,JANAF table Na-008,1
 12401-86-4,S0_gas,229.13,J/(mol K),,,nist_snapshot,B,,0
+12408-02-5,Cp_aq,0,J/(mol K),,298.15,crc_aqueous,B,,1
+12408-02-5,Gf_aq,0,J/mol,,,crc_aqueous,B,,1
+12408-02-5,Hf_aq,0,J/mol,,,crc_aqueous,B,,1
 12408-02-5,Hf_gas,1530047,J/mol,0,,atct,A,ATcT 1.112,1
+12408-02-5,S0_aq,0,J/(mol K),,,crc_aqueous,B,,1
 12408-02-5,S0_gas,108.95,J/(mol K),,,nist_snapshot,B,,1
 1241-94-7,rho_liquid,1090.25,kg/m3,,,crc_constants,B,,1
 12419-43-1,rho_liquid,4210,kg/m3,,,crc_constants,B,,1
@@ -17997,6 +18030,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12440-00-5,S0_gas,345.71,J/(mol K),,,yaws,C,,0
 12440-00-5,Tb,448.55,K,,,crc_constants,B,,1
 12440-00-5,Tm,296.95,K,,,crc_constants,B,,1
+12447-33-5,Gf_aq,-2685100,J/mol,,,crc_aqueous,B,,1
 1247-08-1,Hf_gas,736900,J/mol,,,nist_snapshot,B,,1
 1247-08-1,Hf_solid,599300,J/mol,,,nist_snapshot,B,,1
 1247-08-1,Hsub_298,137600,J/mol,,,nist_snapshot,B,,1
@@ -18059,6 +18093,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12595-85-6,Hf_gas,341640,J/mol,,,nist_snapshot,B,,0
 12595-85-6,S0_gas,257.183,J/(mol K),,,janaf,A,JANAF table Ca-033,1
 12595-85-6,S0_gas,257.19,J/(mol K),,,nist_snapshot,B,,0
+12596-26-8,Gf_aq,153500,J/mol,,,crc_aqueous,B,,1
+12596-26-8,Hf_aq,172400,J/mol,,,crc_aqueous,B,,1
+12596-26-8,S0_aq,84.5,J/(mol K),,,crc_aqueous,B,,1
 12596-80-4,Hf_gas,-60850,J/mol,210,,atct,A,ATcT 1.112,1
 12596-80-4,Hf_gas,-61130,J/mol,,,nist_snapshot,B,,0
 12596-92-8,Cp_gas,36.921,J/(mol K),,298.15,janaf,A,JANAF table Pb-012,1
@@ -18365,6 +18402,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1274-07-3,Hf_solid,-43200,J/mol,,,nist_snapshot,B,,1
 1274-07-3,Hsub_298,104000,J/mol,,,nist_snapshot,B,,1
 12758-12-2,S0_gas,212.75,J/(mol K),,,nist_snapshot,B,,1
+127622-32-6,Gf_aq,-879100,J/mol,,,crc_aqueous,B,,1
 1277-43-6,Hf_gas,293000,J/mol,,,nist_snapshot,B,,1
 1277-43-6,Hf_solid,221436.38,J/mol,,,nist_snapshot,B,,1
 1277-43-6,Hsub_298,71343.462,J/mol,,,nist_snapshot,B,,1
@@ -18473,6 +18511,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1294-07-1,Hf_solid,-45100,J/mol,,,nist_snapshot,B,,1
 1294-07-1,Hsub_298,111700,J/mol,,,nist_snapshot,B,,1
 1294-07-1,S0_solid,301.6,J/(mol K),,,nist_snapshot,B,,1
+129466-35-9,Gf_aq,-496100,J/mol,,,crc_aqueous,B,,1
+129466-35-9,Hf_aq,-608400,J/mol,,,crc_aqueous,B,,1
+129466-35-9,S0_aq,111.7,J/(mol K),,,crc_aqueous,B,,1
 1295-20-1,Hf_gas,138100,J/mol,,,nist_snapshot,B,,1
 1295-20-1,Hf_solid,29300,J/mol,,,nist_snapshot,B,,1
 1295-20-1,Hsub_298,108800,J/mol,,,nist_snapshot,B,,1
@@ -20272,6 +20313,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1333-74-0,Cp_gas,28.8,J/(mol K),,298.15,crc_thermo,B,,0
 1333-74-0,Cp_gas,28.84,J/(mol K),,298.15,poling,B,,0
 1333-74-0,Gf_gas,0,J/mol,,,janaf,A,JANAF table H-050,1
+1333-74-0,Hf_aq,-4157.231309,J/mol,,,nist_henry,B,gas + Henry median of 3 (k 0.00078; slope 500 K),1
 1333-74-0,Hf_gas,0,J/mol,0,,atct,A,ATcT 1.112,1
 1333-74-0,Hf_gas,0,J/mol,,,janaf,A,JANAF table H-050,0
 1333-74-0,Hf_gas,0,J/mol,,,crc_thermo,B,,0
@@ -20283,6 +20325,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1333-74-0,Pc,1300000,Pa,,,nist_snapshot,B,,0
 1333-74-0,Pt,7210,Pa,,,nist,B,Henning and Otto; 1936,1
 1333-74-0,Pt,68.345231,Pa,,,nist_snapshot,B,,0
+1333-74-0,S0_aq,57.23648214,J/(mol K),,,nist_henry,B,gas + Henry median of 3 (k 0.00078; slope 500 K),1
 1333-74-0,S0_gas,130.68,J/(mol K),,,janaf,A,JANAF table H-050,1
 1333-74-0,S0_gas,130.68,J/(mol K),0.003,,nist_review,A,Cox; Wagman; et al.; 1984,0
 1333-74-0,S0_gas,130.68,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -20483,6 +20526,12 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13403-37-7,Tm,247.15,K,,,crc_constants,B,,1
 13403-37-7,rho_liquid,1181.22,kg/m3,,,crc_constants,B,,1
 13408-29-2,Hf_gas,64730,J/mol,850,,atct,A,ATcT 1.112,1
+13408-62-3,Gf_aq,729400,J/mol,,,crc_aqueous,B,,1
+13408-62-3,Hf_aq,561900,J/mol,,,crc_aqueous,B,,1
+13408-62-3,S0_aq,270.3,J/(mol K),,,crc_aqueous,B,,1
+13408-63-4,Gf_aq,695100,J/mol,,,crc_aqueous,B,,1
+13408-63-4,Hf_aq,455600,J/mol,,,crc_aqueous,B,,1
+13408-63-4,S0_aq,95,J/(mol K),,,crc_aqueous,B,,1
 13417-08-8,Hf_gas,-340740,J/mol,,,yaws,C,,1
 13417-08-8,S0_gas,858.86,J/(mol K),,,yaws,C,,1
 13419-69-7,Tb,490.2,K,,,nist_snapshot,B,,1
@@ -23278,6 +23327,12 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 139-89-9,Tm,561.15,K,,,crc_constants,B,,1
 13905-48-1,Tb,454.15,K,,,crc_constants,B,,1
 13905-48-1,rho_liquid,1267.615,kg/m3,,,crc_constants,B,,1
+13907-45-4,Gf_aq,-727800,J/mol,,,crc_aqueous,B,,1
+13907-45-4,Hf_aq,-881200,J/mol,,,crc_aqueous,B,,1
+13907-45-4,S0_aq,50.2,J/(mol K),,,crc_aqueous,B,,1
+13907-47-6,Gf_aq,-1301100,J/mol,,,crc_aqueous,B,,1
+13907-47-6,Hf_aq,-1490300,J/mol,,,crc_aqueous,B,,1
+13907-47-6,S0_aq,261.9,J/(mol K),,,crc_aqueous,B,,1
 13909-73-4,Tb,569.2,K,,,nist_snapshot,B,,1
 13912-77-1,Tm,320.15,K,,,crc_constants,B,,1
 13918-22-4,rho_liquid,7200,kg/m3,,,crc_constants,B,,1
@@ -23447,6 +23502,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13980-04-6,Hf_solid,285960.81,J/mol,,,nist_snapshot,B,,1
 13980-04-6,Hsub_298,125097.88,J/mol,,,nist_snapshot,B,,1
 13980-04-6,Tm,376,K,,,nist_snapshot,B,,1
+13981-20-9,Gf_aq,-783600,J/mol,,,crc_aqueous,B,,1
+13981-20-9,Hf_aq,-888300,J/mol,,,crc_aqueous,B,,1
+13981-20-9,S0_aq,50,J/(mol K),,,crc_aqueous,B,,1
 13981-95-8,rho_liquid,15100,kg/m3,,,crc_constants,B,,1
 13983-20-5,Cp_gas,29.2,J/(mol K),,298.15,janaf,A,JANAF table D-005,1
 13983-20-5,Cp_gas,29.2,J/(mol K),,298.15,poling,B,,0
@@ -23578,6 +23636,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 140-88-5,rho_liquid,923.42,kg/m3,,,crc_constants,B,,1
 140-95-4,Hf_solid,-717000,J/mol,,,crc_thermo,B,,1
 140-95-4,Tm,411.15,K,,,crc_constants,B,,1
+14000-31-8,Gf_aq,-1919000,J/mol,,,crc_aqueous,B,,1
+14000-31-8,Hf_aq,-2271100,J/mol,,,crc_aqueous,B,,1
+14000-31-8,S0_aq,-117,J/(mol K),,,crc_aqueous,B,,1
 14002-21-2,Hf_gas,-203300,J/mol,,,nist_snapshot,B,,1
 14002-21-2,Hf_liquid,-253600,J/mol,,,nist_snapshot,B,,1
 14002-21-2,Hvap_298,50200,J/mol,,,nist_snapshot,B,,1
@@ -23673,6 +23734,12 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14062-80-7,Hsub_298,96000,J/mol,,,nist_snapshot,B,,1
 14064-10-9,Tb,495.15,K,,,crc_constants,B,,1
 14064-10-9,rho_liquid,1204.02,kg/m3,,,crc_constants,B,,1
+14066-19-4,Gf_aq,-1089200,J/mol,,,crc_aqueous,B,,1
+14066-19-4,Hf_aq,-1292100,J/mol,,,crc_aqueous,B,,1
+14066-19-4,S0_aq,-33.5,J/(mol K),,,crc_aqueous,B,,1
+14066-20-7,Gf_aq,-1130200,J/mol,,,crc_aqueous,B,,1
+14066-20-7,Hf_aq,-1296300,J/mol,,,crc_aqueous,B,,1
+14066-20-7,S0_aq,90.4,J/(mol K),,,crc_aqueous,B,,1
 14067-02-8,S0_gas,181.86,J/(mol K),,,nist_snapshot,B,,1
 14067-04-0,S0_gas,183.59,J/(mol K),,,nist_snapshot,B,,1
 14068-53-2,Tm,473.95,K,,,crc_constants,B,,1
@@ -24013,11 +24080,26 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 141-97-9,Tm,228.15,K,,,crc_constants,B,,1
 141-97-9,Tm,230.15,K,,,nist_snapshot,B,,0
 141-97-9,rho_liquid,1036.81,kg/m3,,,crc_constants,B,,1
+14100-65-3,Gf_aq,-678900,J/mol,,,crc_aqueous,B,,1
+14100-65-3,Hf_aq,-772400,J/mol,,,crc_aqueous,B,,1
+14100-65-3,S0_aq,-37.2,J/(mol K),,,crc_aqueous,B,,1
 14100-65-3,S0_gas,215.92,J/(mol K),,,nist_snapshot,B,,1
+14102-45-5,Gf_aq,-587100,J/mol,,,crc_aqueous,B,,1
+14102-45-5,Hf_aq,-714800,J/mol,,,crc_aqueous,B,,1
+14102-45-5,S0_aq,110.5,J/(mol K),,,crc_aqueous,B,,1
 14104-45-1,Cp_gas,29.36,J/(mol K),,298.15,poling,B,,1
 14104-45-1,Tb,236.95,K,,,crc_constants,B,,1
 14104-45-1,Tm,221.22,K,,,crc_constants,B,,1
 141227-99-8,Hf_solid,430000,J/mol,,,nist_snapshot,B,,1
+14124-67-5,Gf_aq,-369800,J/mol,,,crc_aqueous,B,,1
+14124-67-5,Hf_aq,-509200,J/mol,,,crc_aqueous,B,,1
+14124-67-5,S0_aq,13,J/(mol K),,,crc_aqueous,B,,1
+14124-68-6,Gf_aq,-441300,J/mol,,,crc_aqueous,B,,1
+14124-68-6,Hf_aq,-599100,J/mol,,,crc_aqueous,B,,1
+14124-68-6,S0_aq,54,J/(mol K),,,crc_aqueous,B,,1
+14127-61-8,Gf_aq,-553600,J/mol,,,crc_aqueous,B,,1
+14127-61-8,Hf_aq,-542800,J/mol,,,crc_aqueous,B,,1
+14127-61-8,S0_aq,-53.1,J/(mol K),,,crc_aqueous,B,,1
 14130-05-3,Hf_gas,-401200,J/mol,,,yaws,C,,1
 14130-05-3,S0_gas,954.24,J/(mol K),,,yaws,C,,1
 14130-05-3,Tb,633,K,,,nist_snapshot,B,,1
@@ -24503,12 +24585,28 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14255-23-3,S0_gas,441.32,J/(mol K),,,yaws,C,,1
 14255-23-3,Tb,384,K,,,nist_snapshot,B,,1
 14255-88-0,Tm,376.15,K,,,crc_constants,B,,1
+14259-85-9,Gf_aq,-836300,J/mol,,,crc_aqueous,B,,1
+14259-85-9,Hf_aq,-997900,J/mol,,,crc_aqueous,B,,1
+14259-85-9,S0_aq,27.2,J/(mol K),,,crc_aqueous,B,,1
 14261-75-7,Tm,325.95,K,,,crc_constants,B,,1
+14265-44-2,Gf_aq,-1018700,J/mol,,,crc_aqueous,B,,1
+14265-44-2,Hf_aq,-1277400,J/mol,,,crc_aqueous,B,,1
+14265-44-2,S0_aq,-220.5,J/(mol K),,,crc_aqueous,B,,1
+14265-45-3,Gf_aq,-486500,J/mol,,,crc_aqueous,B,,1
+14265-45-3,Hf_aq,-635500,J/mol,,,crc_aqueous,B,,1
+14265-45-3,S0_aq,-29,J/(mol K),,,crc_aqueous,B,,1
 14267-92-6,Tb,380.94927,K,,,nist_snapshot,B,,1
 14268-66-7,Tm,315.15,K,,,crc_constants,B,,1
 14272-47-0,Tb,509.15,K,,,nist_snapshot,B,,1
+14280-30-9,Cp_aq,-148.5,J/(mol K),,298.15,crc_aqueous,B,,1
+14280-30-9,Gf_aq,-157200,J/mol,,,crc_aqueous,B,,1
+14280-30-9,Hf_aq,-230000,J/mol,,,crc_aqueous,B,,1
 14280-30-9,Hf_gas,-139047,J/mol,27,,atct,A,ATcT 1.112,1
+14280-30-9,S0_aq,-10.8,J/(mol K),,,crc_aqueous,B,,1
 14280-30-9,S0_gas,172.47,J/(mol K),,,nist_snapshot,B,,1
+14280-50-3,Gf_aq,-24400,J/mol,,,crc_aqueous,B,,1
+14280-50-3,Hf_aq,-1700,J/mol,,,crc_aqueous,B,,1
+14280-50-3,S0_aq,10.5,J/(mol K),,,crc_aqueous,B,,1
 14280-53-6,Cp_gas,36.7,J/(mol K),,298.15,crc_thermo,B,,1
 14280-53-6,Gf_gas,-94300,J/mol,,,crc_thermo,B,,1
 14280-53-6,Gf_solid,-169000,J/mol,,,crc_thermo,B,,1
@@ -24701,6 +24799,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 143-66-8,Tm,573.15,K,,,crc_constants,B,,1
 143-74-8,Tm,573.15,K,,,crc_constants,B,,1
 1430-97-3,Tb,591.2,K,,,nist_snapshot,B,,1
+14302-87-5,Gf_aq,164400,J/mol,,,crc_aqueous,B,,1
+14302-87-5,Hf_aq,171100,J/mol,,,crc_aqueous,B,,1
+14302-87-5,S0_aq,-32.2,J/(mol K),,,crc_aqueous,B,,1
 14307-33-6,rho_liquid,2370,kg/m3,,,crc_constants,B,,1
 14307-35-8,Hfus,30500,J/mol,,,crc_hfus,B,,1
 14309-25-2,Hf_solid,486000,J/mol,,,nist_snapshot,B,,1
@@ -24710,6 +24811,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14310-20-4,S0_gas,533.49,J/(mol K),,,yaws,C,,1
 14310-20-4,Tb,559,K,,,nist_snapshot,B,,1
 14310-20-4,Tm,300,K,,,nist_snapshot,B,,1
+14311-52-5,Hf_aq,-1075700,J/mol,,,crc_aqueous,B,,1
 14312-00-6,rho_liquid,4500,kg/m3,,,crc_constants,B,,1
 14321-05-2,Hf_solid,-181500,J/mol,,,nist_snapshot,B,,1
 14321-27-8,Hf_liquid,-36000,J/mol,,,nist_snapshot,B,,1
@@ -24737,6 +24839,14 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14332-62-8,Hf_gas,24610,J/mol,,,nist_snapshot,B,,0
 14332-62-8,S0_gas,252.647,J/(mol K),,,janaf,A,JANAF table I-012,1
 14332-62-8,S0_gas,252.65,J/(mol K),,,nist_snapshot,B,,0
+14333-13-2,Cp_aq,-82,J/(mol K),,298.15,crc_aqueous,B,,1
+14333-13-2,Gf_aq,-447200,J/mol,,,crc_aqueous,B,,1
+14333-13-2,Hf_aq,-541400,J/mol,,,crc_aqueous,B,,1
+14333-13-2,S0_aq,191.2,J/(mol K),,,crc_aqueous,B,,1
+14333-14-3,Gf_aq,-500700,J/mol,,,crc_aqueous,B,,1
+14333-14-3,Hf_aq,-653000,J/mol,,,crc_aqueous,B,,1
+14333-14-3,S0_aq,59,J/(mol K),,,crc_aqueous,B,,1
+14333-18-7,Gf_aq,-899000,J/mol,,,crc_aqueous,B,,1
 14333-26-7,Cp_gas,29.137,J/(mol K),,298.15,janaf,A,JANAF table D-004,1
 14333-26-7,Gf_gas,-277254,J/mol,,,janaf,A,JANAF table D-004,1
 14333-26-7,Hf_gas,-275516,J/mol,,,janaf,A,JANAF table D-004,1
@@ -24752,9 +24862,12 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14337-01-0,Hf_gas,108300,J/mol,,,nist_snapshot,B,,0
 14337-01-0,S0_gas,157.79,J/(mol K),,,nist_snapshot,B,,1
 14343-69-2,Cp_gas,40.762,J/(mol K),,298.15,janaf,A,JANAF table N-034,1
+14343-69-2,Gf_aq,348200,J/mol,,,crc_aqueous,B,,1
 14343-69-2,Gf_gas,432387,J/mol,,,janaf,A,JANAF table N-034,1
+14343-69-2,Hf_aq,275100,J/mol,,,crc_aqueous,B,,1
 14343-69-2,Hf_gas,190600,J/mol,1100,,atct,A,ATcT 1.112,1
 14343-69-2,Hf_gas,414216,J/mol,,,janaf,A,JANAF table N-034,0
+14343-69-2,S0_aq,107.9,J/(mol K),,,crc_aqueous,B,,1
 14343-69-2,S0_gas,226.469,J/(mol K),,,janaf,A,JANAF table N-034,1
 1435-43-4,Pc,3900000,Pa,700000,,crc_critical,B,,1
 1435-43-4,Tc,592,K,,,iupac_critical,A,IUPAC ref 10,1
@@ -24797,8 +24910,17 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14371-10-9,rho_liquid,1049.72,kg/m3,,,crc_constants,B,,1
 1438-14-8,Tb,354.15,K,,,nist_snapshot,B,,1
 1438-16-0,Tm,374.65,K,,,crc_constants,B,,1
+14380-61-1,Gf_aq,-36800,J/mol,,,crc_aqueous,B,,1
+14380-61-1,Hf_aq,-107100,J/mol,,,crc_aqueous,B,,1
 14380-61-1,Hf_gas,-118340,J/mol,130,,atct,A,ATcT 1.112,1
+14380-61-1,S0_aq,42,J/(mol K),,,crc_aqueous,B,,1
+14380-62-2,Gf_aq,-33400,J/mol,,,crc_aqueous,B,,1
+14380-62-2,Hf_aq,-94100,J/mol,,,crc_aqueous,B,,1
 14380-62-2,Hf_gas,-103700,J/mol,550,,atct,A,ATcT 1.112,1
+14380-62-2,S0_aq,42,J/(mol K),,,crc_aqueous,B,,1
+14383-50-7,Gf_aq,-522500,J/mol,,,crc_aqueous,B,,1
+14383-50-7,Hf_aq,-652300,J/mol,,,crc_aqueous,B,,1
+14383-50-7,S0_aq,67,J/(mol K),,,crc_aqueous,B,,1
 144-11-6,Tm,387.15,K,,,crc_constants,B,,1
 144-14-9,Tm,356.15,K,,,crc_constants,B,,1
 144-19-4,Tb,503.25,K,,,crc_constants,B,,1
@@ -24989,6 +25111,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14476-37-0,Vc,0.00069444444,m3/mol,,,nist_snapshot,B,,0
 14485-07-5,Hf_gas,-339700,J/mol,2400,,atct,A,ATcT 1.112,1
 14485-07-5,S0_gas,240.65,J/(mol K),,,nist_snapshot,B,,1
+14485-39-3,Gf_aq,-1305300,J/mol,,,crc_aqueous,B,,1
+14485-39-3,Hf_aq,-1502500,J/mol,,,crc_aqueous,B,,1
+14485-39-3,S0_aq,102.9,J/(mol K),,,crc_aqueous,B,,1
 14486-19-2,rho_liquid,1600,kg/m3,,,crc_constants,B,,1
 1449-55-4,Hf_solid,-362000,J/mol,,,nist_snapshot,B,,1
 1449-65-6,Tb,250.15,K,,,crc_constants,B,,1
@@ -25196,6 +25321,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1462-84-6,Tc,654.5,K,,,nist_snapshot,B,,1
 1462-84-6,rho_liquid,922.025,kg/m3,,,crc_constants,B,,1
 1462-97-1,Tb,465.4,K,,,nist_snapshot,B,,1
+14627-67-9,Gf_aq,214600,J/mol,,,crc_aqueous,B,,1
+14627-67-9,Hf_aq,196600,J/mol,,,crc_aqueous,B,,1
+14627-67-9,S0_aq,-192,J/(mol K),,,crc_aqueous,B,,1
 1463-10-1,Tm,457.15,K,,,crc_constants,B,,1
 1463-17-8,Hf_gas,167080,J/mol,,,yaws,C,,1
 1463-17-8,S0_gas,369.52,J/(mol K),,,yaws,C,,1
@@ -25345,6 +25473,13 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1470-94-6,Tb,528.2,K,,,nist_snapshot,B,,0
 1470-94-6,Tm,331.15,K,,,crc_constants,B,,1
 1470-94-6,Tm,328,K,,,nist_snapshot,B,,0
+14701-21-4,Cp_aq,21.8,J/(mol K),,298.15,crc_aqueous,B,,1
+14701-21-4,Gf_aq,77100,J/mol,,,crc_aqueous,B,,1
+14701-21-4,Hf_aq,105600,J/mol,,,crc_aqueous,B,,1
+14701-21-4,S0_aq,72.7,J/(mol K),,,crc_aqueous,B,,1
+14701-22-5,Gf_aq,-45600,J/mol,,,crc_aqueous,B,,1
+14701-22-5,Hf_aq,-54000,J/mol,,,crc_aqueous,B,,1
+14701-22-5,S0_aq,-128.9,J/(mol K),,,crc_aqueous,B,,1
 14701-27-0,S0_gas,181.14,J/(mol K),,,nist_snapshot,B,,1
 14705-50-1,Tb,429.40683,K,,,nist_snapshot,B,,1
 1471-03-0,Tb,364.15,K,,,crc_constants,B,,1
@@ -25456,10 +25591,25 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14791-57-2,S0_gas,247.51,J/(mol K),,,nist_snapshot,B,,0
 14794-69-5,Hf_solid,-879300,J/mol,,,nist_snapshot,B,,1
 14794-71-9,Hf_solid,-870600,J/mol,,,nist_snapshot,B,,1
+14797-55-8,Cp_aq,-86.6,J/(mol K),,298.15,crc_aqueous,B,,1
+14797-55-8,Gf_aq,-111300,J/mol,,,crc_aqueous,B,,1
+14797-55-8,Hf_aq,-207400,J/mol,,,crc_aqueous,B,,1
 14797-55-8,Hf_gas,-306580,J/mol,610,,atct,A,ATcT 1.112,1
+14797-55-8,S0_aq,146.4,J/(mol K),,,crc_aqueous,B,,1
+14797-65-0,Cp_aq,-97.5,J/(mol K),,298.15,crc_aqueous,B,,1
+14797-65-0,Gf_aq,-32200,J/mol,,,crc_aqueous,B,,1
+14797-65-0,Hf_aq,-104600,J/mol,,,crc_aqueous,B,,1
 14797-65-0,Hf_gas,-185480,J/mol,460,,atct,A,ATcT 1.112,1
+14797-65-0,S0_aq,123,J/(mol K),,,crc_aqueous,B,,1
 14797-65-0,S0_gas,236.6,J/(mol K),,,nist_snapshot,B,,1
+14797-73-0,Gf_aq,-8500,J/mol,,,crc_aqueous,B,,1
+14797-73-0,Hf_aq,-129300,J/mol,,,crc_aqueous,B,,1
+14797-73-0,S0_aq,182,J/(mol K),,,crc_aqueous,B,,1
+14798-03-9,Cp_aq,79.9,J/(mol K),,298.15,crc_aqueous,B,,1
+14798-03-9,Gf_aq,-79300,J/mol,,,crc_aqueous,B,,1
+14798-03-9,Hf_aq,-132500,J/mol,,,crc_aqueous,B,,1
 14798-03-9,Hf_gas,631710,J/mol,210,,atct,A,ATcT 1.112,1
+14798-03-9,S0_aq,113.4,J/(mol K),,,crc_aqueous,B,,1
 148-01-6,Tm,454.15,K,,,crc_constants,B,,1
 148-18-5,Tm,368.15,K,,,crc_constants,B,,1
 148-24-3,Hf_gas,12557.975,J/mol,,,nist_snapshot,B,,1
@@ -25495,6 +25645,10 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14808-60-7,S0_solid,41.5,J/(mol K),,,crc_thermo,B,,0
 14808-60-7,Tb,3223.15,K,,,crc_constants,B,,1
 14808-60-7,rho_liquid,2648,kg/m3,,,crc_constants,B,,1
+14808-79-8,Cp_aq,-293,J/(mol K),,298.15,crc_aqueous,B,,1
+14808-79-8,Gf_aq,-744500,J/mol,,,crc_aqueous,B,,1
+14808-79-8,Hf_aq,-909300,J/mol,,,crc_aqueous,B,,1
+14808-79-8,S0_aq,20.1,J/(mol K),,,crc_aqueous,B,,1
 1482-82-2,Hf_gas,301000,J/mol,,,nist_snapshot,B,,1
 1482-82-2,Hf_solid,171000,J/mol,,,nist_snapshot,B,,1
 1482-91-3,Tb,400.15,K,,,crc_constants,B,,1
@@ -25538,6 +25692,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1484-85-1,rho_liquid,1225.2,kg/m3,,,crc_constants,B,,1
 1484-87-3,Hf_gas,-395350,J/mol,,,yaws,C,,1
 1484-87-3,S0_gas,509.07,J/(mol K),,,yaws,C,,1
+14844-07-6,Gf_aq,-600300,J/mol,,,crc_aqueous,B,,1
+14844-07-6,Hf_aq,-753500,J/mol,,,crc_aqueous,B,,1
+14844-07-6,S0_aq,92,J/(mol K),,,crc_aqueous,B,,1
 14850-22-7,Hf_gas,-89500,J/mol,,,yaws,C,,1
 14850-22-7,Hvap_298,39700,J/mol,,,nist_snapshot,B,,1
 14850-22-7,S0_gas,482.27,J/(mol K),,,yaws,C,,1
@@ -25564,6 +25721,10 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1486-01-7,Hvap_298,64900,J/mol,,,nist_snapshot,B,,1
 1486-01-7,S0_solid,230.88,J/(mol K),,,nist_snapshot,B,,1
 14861-06-4,Tb,406.7,K,,,nist_snapshot,B,,1
+14864-11-0,Gf_aq,-12100,J/mol,,,crc_aqueous,B,,1
+14866-68-3,Gf_aq,-8000,J/mol,,,crc_aqueous,B,,1
+14866-68-3,Hf_aq,-104000,J/mol,,,crc_aqueous,B,,1
+14866-68-3,S0_aq,162.3,J/(mol K),,,crc_aqueous,B,,1
 14868-53-2,Tb,426.35,K,,,crc_constants,B,,1
 14868-53-2,Tm,200.35,K,,,crc_constants,B,,1
 14868-53-2,rho_liquid,827,kg/m3,,,crc_constants,B,,1
@@ -25582,6 +25743,11 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1487-18-9,Tm,179.15,K,,,nist_snapshot,B,,0
 1487-18-9,rho_liquid,944.519,kg/m3,,,crc_constants,B,,1
 14871-79-5,rho_liquid,2900,kg/m3,,,crc_constants,B,,1
+14874-70-5,Gf_aq,-1486900,J/mol,,,crc_aqueous,B,,1
+14874-70-5,Hf_aq,-1574900,J/mol,,,crc_aqueous,B,,1
+14874-70-5,S0_aq,180,J/(mol K),,,crc_aqueous,B,,1
+14877-29-3,Gf_aq,-88000,J/mol,,,crc_aqueous,B,,1
+14877-30-6,Gf_aq,-50700,J/mol,,,crc_aqueous,B,,1
 14877-32-8,Hf_gas,-52300,J/mol,,,nist_snapshot,B,,1
 14877-32-8,S0_gas,305.19,J/(mol K),,,nist_snapshot,B,,1
 14884-42-5,Tb,390.15,K,,,crc_constants,B,,1
@@ -25669,6 +25835,10 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14906-26-4,Hf_liquid,63600,J/mol,,,nist_snapshot,B,,1
 14906-26-4,Hvap_298,63500,J/mol,,,nist_snapshot,B,,1
 1491-59-4,Tm,455.15,K,,,crc_constants,B,,1
+14913-52-1,Cp_aq,-21,J/(mol K),,298.15,crc_aqueous,B,,1
+14913-52-1,Gf_aq,-671600,J/mol,,,crc_aqueous,B,,1
+14913-52-1,Hf_aq,-696200,J/mol,,,crc_aqueous,B,,1
+14913-52-1,S0_aq,-206.7,J/(mol K),,,crc_aqueous,B,,1
 14919-01-8,Hf_gas,-94500,J/mol,,,yaws,C,,1
 14919-01-8,Hvap_298,40200,J/mol,,,nist_snapshot,B,,1
 14919-01-8,S0_gas,465.17,J/(mol K),,,yaws,C,,1
@@ -25831,6 +26001,16 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1499-10-1,Hf_solid,308700,J/mol,,,nist_snapshot,B,,0
 1499-10-1,Hsub_298,169600,J/mol,,,nist_snapshot,B,,1
 1499-10-1,Tm,510.15,K,,,crc_constants,B,,1
+14996-02-2,Cp_aq,-84,J/(mol K),,298.15,crc_aqueous,B,,1
+14996-02-2,Gf_aq,-755900,J/mol,,,crc_aqueous,B,,1
+14996-02-2,Hf_aq,-887300,J/mol,,,crc_aqueous,B,,1
+14996-02-2,S0_aq,131.8,J/(mol K),,,crc_aqueous,B,,1
+14998-27-7,Gf_aq,17200,J/mol,,,crc_aqueous,B,,1
+14998-27-7,Hf_aq,-66500,J/mol,,,crc_aqueous,B,,1
+14998-27-7,S0_aq,101.3,J/(mol K),,,crc_aqueous,B,,1
+14998-57-3,Gf_aq,-452200,J/mol,,,crc_aqueous,B,,1
+14998-57-3,Hf_aq,-581600,J/mol,,,crc_aqueous,B,,1
+14998-57-3,S0_aq,149.4,J/(mol K),,,crc_aqueous,B,,1
 150-13-0,Cp_solid,177.8,J/(mol K),,298.15,crc_thermo,B,,1
 150-13-0,Hf_gas,-296700,J/mol,,,crc_thermo,B,,1
 150-13-0,Hf_gas,-293900,J/mol,,,nist_snapshot,B,,0
@@ -25906,6 +26086,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1502-22-3,Hf_liquid,-288800,J/mol,,,nist_snapshot,B,,1
 1502-47-2,Hf_solid,15600,J/mol,,,nist_snapshot,B,,1
 1503-53-3,Tm,333.15,K,,,crc_constants,B,,1
+15035-72-0,Gf_aq,12100,J/mol,,,crc_aqueous,B,,1
+15035-72-0,Hf_aq,-17600,J/mol,,,crc_aqueous,B,,1
+15035-72-0,S0_aq,62.8,J/(mol K),,,crc_aqueous,B,,1
 15036-31-4,Hf_solid,-356100,J/mol,,,nist_snapshot,B,,1
 1504-58-1,Hf_liquid,79714.117,J/mol,,,nist_snapshot,B,,1
 1504-58-1,rho_liquid,1078.2,kg/m3,,,crc_constants,B,,1
@@ -25915,10 +26098,22 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 15042-59-8,Tb,390.65,K,,,nist_snapshot,B,,1
 15042-60-1,Tb,394.15,K,,,nist_snapshot,B,,1
 15045-43-9,Tb,384.2,K,,,nist_snapshot,B,,1
+15056-35-6,Gf_aq,-58500,J/mol,,,crc_aqueous,B,,1
+15056-35-6,Hf_aq,-151500,J/mol,,,crc_aqueous,B,,1
+15056-35-6,S0_aq,222,J/(mol K),,,crc_aqueous,B,,1
 15060-62-5,rho_liquid,2314,kg/m3,,,crc_constants,B,,1
+15065-65-3,Gf_aq,-38500,J/mol,,,crc_aqueous,B,,1
+15065-65-3,Hf_aq,-107500,J/mol,,,crc_aqueous,B,,1
 15065-65-3,Hf_gas,-104400,J/mol,1200,,atct,A,ATcT 1.112,1
+15065-65-3,S0_aq,-5.4,J/(mol K),,,crc_aqueous,B,,1
 15067-26-2,Hvap_298,67200,J/mol,,,nist_snapshot,B,,1
 15091-79-9,S0_gas,161.79,J/(mol K),,,nist_snapshot,B,,1
+15092-05-4,Gf_aq,-277400,J/mol,,,crc_aqueous,B,,1
+15092-05-4,Hf_aq,-324700,J/mol,,,crc_aqueous,B,,1
+15092-05-4,S0_aq,-29,J/(mol K),,,crc_aqueous,B,,1
+15092-81-6,Gf_aq,-1114900,J/mol,,,crc_aqueous,B,,1
+15092-81-6,Hf_aq,-1344700,J/mol,,,crc_aqueous,B,,1
+15092-81-6,S0_aq,244.3,J/(mol K),,,crc_aqueous,B,,1
 15096-52-3,Cp_liquid,215.727,J/(mol K),,298.15,janaf,A,JANAF table Al-054,1
 15096-52-3,Cp_solid,215.727,J/(mol K),,298.15,janaf,A,JANAF table Al-052,1
 15096-52-3,Gf_liquid,-3095921,J/mol,,,janaf,A,JANAF table Al-054,1
@@ -26085,6 +26280,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1515-95-3,Tb,469.15,K,,,crc_constants,B,,1
 1515-95-3,Tb,468.68646,K,,,nist_snapshot,B,,0
 1515-95-3,rho_liquid,962.415,kg/m3,,,crc_constants,B,,1
+15158-11-9,Gf_aq,65500,J/mol,,,crc_aqueous,B,,1
+15158-11-9,Hf_aq,64800,J/mol,,,crc_aqueous,B,,1
+15158-11-9,S0_aq,-99.6,J/(mol K),,,crc_aqueous,B,,1
 1516-60-5,Hf_gas,389700,J/mol,,,nist_snapshot,B,,1
 1516-60-5,Hf_solid,308700,J/mol,,,nist_snapshot,B,,1
 1516-60-5,Hsub_298,81000,J/mol,,,nist_snapshot,B,,1
@@ -26120,6 +26318,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 15181-11-0,Hvap_298,63300,J/mol,,,nist_snapshot,B,,1
 15181-11-0,Tb,517.2,K,,,nist_snapshot,B,,1
 15181-11-0,Tm,304.3,K,,,nist_snapshot,B,,1
+15181-46-1,Gf_aq,-527700,J/mol,,,crc_aqueous,B,,1
+15181-46-1,Hf_aq,-626200,J/mol,,,crc_aqueous,B,,1
+15181-46-1,S0_aq,139.7,J/(mol K),,,crc_aqueous,B,,1
 1519-36-4,Tm,413.65,K,,,crc_constants,B,,1
 15191-85-2,Cp_solid,95.563,J/(mol K),,298.15,janaf,A,JANAF table Be-060,1
 15191-85-2,Gf_solid,-2002794,J/mol,,,janaf,A,JANAF table Be-060,1
@@ -26211,6 +26412,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 15243-33-1,Hf_solid,-1912000,J/mol,,,nist_snapshot,B,,1
 15243-33-1,Hsub_298,105000,J/mol,,,nist_snapshot,B,,1
 15244-35-6,rho_liquid,3080,kg/m3,,,crc_constants,B,,1
+15251-42-0,Gf_aq,-2010200,J/mol,,,crc_aqueous,B,,1
+15251-42-0,Hf_aq,-2278600,J/mol,,,crc_aqueous,B,,1
+15251-42-0,S0_aq,163,J/(mol K),,,crc_aqueous,B,,1
 15268-49-2,Hvap_298,38250,J/mol,,,nist_snapshot,B,,1
 15268-49-2,Tb,381,K,,,nist_snapshot,B,,1
 15269-16-6,Hf_gas,-259900,J/mol,,,nist_snapshot,B,,1
@@ -26340,6 +26544,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 15385-58-7,S0_solid,218.73,J/(mol K),,,nist_snapshot,B,,0
 15385-58-7,rho_liquid,7307,kg/m3,,,crc_constants,B,,1
 1539-42-0,rho_liquid,1107.425,kg/m3,,,crc_constants,B,,1
+15391-91-0,Gf_aq,-244700,J/mol,,,crc_aqueous,B,,1
 154-17-6,Tm,419.65,K,,,crc_constants,B,,1
 154-41-6,Tm,467.15,K,,,crc_constants,B,,1
 154-42-7,Tm,633.15,K,,,crc_constants,B,,1
@@ -26364,11 +26569,17 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1541-09-9,Tb,437.31835,K,,,nist_snapshot,B,,1
 1541-23-7,Tb,367.15337,K,,,nist_snapshot,B,,1
 1541-33-9,Tb,353.21985,K,,,nist_snapshot,B,,1
+15438-31-0,Gf_aq,-78900,J/mol,,,crc_aqueous,B,,1
+15438-31-0,Hf_aq,-89100,J/mol,,,crc_aqueous,B,,1
+15438-31-0,S0_aq,-137.7,J/(mol K),,,crc_aqueous,B,,1
 1544-68-9,Tb,501.15,K,,,crc_constants,B,,1
 1544-68-9,Tm,300.15,K,,,crc_constants,B,,1
 15443-37-5,Hf_solid,52720,J/mol,,,nist_snapshot,B,,1
 1545-17-1,Hf_gas,-572600,J/mol,,,yaws,C,,1
 1545-17-1,S0_gas,860.52,J/(mol K),,,yaws,C,,1
+15454-31-6,Gf_aq,-128000,J/mol,,,crc_aqueous,B,,1
+15454-31-6,Hf_aq,-221300,J/mol,,,crc_aqueous,B,,1
+15454-31-6,S0_aq,118.4,J/(mol K),,,crc_aqueous,B,,1
 15457-05-3,Tm,364.85,K,,,crc_constants,B,,1
 15468-32-3,Tb,3223.15,K,,,crc_constants,B,,1
 15468-32-3,rho_liquid,2265,kg/m3,,,crc_constants,B,,1
@@ -26462,6 +26673,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 15520-84-0,rho_liquid,3000,kg/m3,,,crc_constants,B,,1
 15521-18-3,Tb,423.45,K,,,crc_constants,B,,1
 15521-18-3,rho_liquid,882.026,kg/m3,,,crc_constants,B,,1
+15541-45-4,Gf_aq,18600,J/mol,,,crc_aqueous,B,,1
+15541-45-4,Hf_aq,-67100,J/mol,,,crc_aqueous,B,,1
+15541-45-4,S0_aq,161.7,J/(mol K),,,crc_aqueous,B,,1
 15545-48-9,Tm,420.15,K,,,crc_constants,B,,1
 1555-17-5,Hf_gas,-531300,J/mol,,,yaws,C,,1
 1555-17-5,S0_gas,781.21,J/(mol K),,,yaws,C,,1
@@ -26514,6 +26728,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1558-31-2,rho_liquid,1411.62,kg/m3,,,crc_constants,B,,1
 1558-33-4,Tb,394.65,K,,,crc_constants,B,,1
 1558-33-4,rho_liquid,1285.82,kg/m3,,,crc_constants,B,,1
+15584-04-0,Gf_aq,-648400,J/mol,,,crc_aqueous,B,,1
+15584-04-0,Hf_aq,-888100,J/mol,,,crc_aqueous,B,,1
+15584-04-0,S0_aq,-162.8,J/(mol K),,,crc_aqueous,B,,1
 15587-72-1,Hf_solid,-1159000,J/mol,,,crc_thermo,B,,1
 15587-72-1,Tm,481.15,K,,,crc_constants,B,,1
 15587-72-1,rho_liquid,2900,kg/m3,,,crc_constants,B,,1
@@ -26896,6 +27113,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 15806-20-9,Tb,563,K,,,nist_snapshot,B,,1
 15806-20-9,Tm,308,K,,,nist_snapshot,B,,1
 1582-09-8,Tm,322.75,K,,,crc_constants,B,,1
+15823-78-6,Gf_aq,-15900,J/mol,,,crc_aqueous,B,,1
 15825-70-4,Tm,384.15,K,,,crc_constants,B,,1
 15825-70-4,rho_liquid,1820,kg/m3,,,crc_constants,B,,1
 15829-53-5,rho_liquid,9800,kg/m3,,,crc_constants,B,,1
@@ -27164,6 +27382,15 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1606-49-1,Hvap_298,75600,J/mol,,,nist_snapshot,B,,1
 1606-67-3,Tm,390.65,K,,,crc_constants,B,,1
 16063-24-4,Hf_liquid,-260300,J/mol,,,nist_snapshot,B,,1
+16065-88-6,Gf_aq,176500,J/mol,,,crc_aqueous,B,,1
+16065-88-6,Hf_aq,149000,J/mol,,,crc_aqueous,B,,1
+16065-88-6,S0_aq,-184,J/(mol K),,,crc_aqueous,B,,1
+16065-90-0,Gf_aq,-503800,J/mol,,,crc_aqueous,B,,1
+16065-90-0,Hf_aq,-537200,J/mol,,,crc_aqueous,B,,1
+16065-90-0,S0_aq,-301,J/(mol K),,,crc_aqueous,B,,1
+16065-92-2,Gf_aq,-705100,J/mol,,,crc_aqueous,B,,1
+16065-92-2,Hf_aq,-769000,J/mol,,,crc_aqueous,B,,1
+16065-92-2,S0_aq,-422.6,J/(mol K),,,crc_aqueous,B,,1
 16066-09-4,Tb,443.15,K,,,crc_constants,B,,1
 16066-09-4,rho_liquid,855.92,kg/m3,,,crc_constants,B,,1
 16068-96-5,Cp_gas,35.152,J/(mol K),,298.15,janaf,A,JANAF table F-045,1
@@ -27181,6 +27408,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 16087-30-2,Hf_solid,-303300,J/mol,,,nist_snapshot,B,,1
 16087-30-2,Hsub_298,198800,J/mol,,,nist_snapshot,B,,1
 16088-62-3,Tb,307.9,K,,,nist_snapshot,B,,1
+16089-60-4,Gf_aq,-531900,J/mol,,,crc_aqueous,B,,1
+16089-60-4,Hf_aq,-591200,J/mol,,,crc_aqueous,B,,1
+16089-60-4,S0_aq,-410,J/(mol K),,,crc_aqueous,B,,1
 1609-19-4,Tb,403,K,,,nist_snapshot,B,,1
 1609-47-8,rho_liquid,1120.2,kg/m3,,,crc_constants,B,,1
 1609-86-5,Tm,358.65,K,,,crc_constants,B,,1
@@ -27188,6 +27418,10 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 16090-49-6,Tb,575.15,K,,,crc_constants,B,,1
 16090-49-6,Tm,327.65,K,,,crc_constants,B,,1
 16096-32-5,Tb,540.2,K,,,nist_snapshot,B,,1
+16096-89-2,Cp_aq,-13,J/(mol K),,298.15,crc_aqueous,B,,1
+16096-89-2,Gf_aq,-683700,J/mol,,,crc_aqueous,B,,1
+16096-89-2,Hf_aq,-707100,J/mol,,,crc_aqueous,B,,1
+16096-89-2,S0_aq,-217.6,J/(mol K),,,crc_aqueous,B,,1
 1610-18-0,Tm,364.55,K,,,crc_constants,B,,1
 1610-23-7,Tb,613.7,K,,,nist_snapshot,B,,1
 1610-23-7,Tm,281.77405,K,,,nist_snapshot,B,,1
@@ -27605,6 +27839,11 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1639-09-4,Tm,229.8,K,,,nist_snapshot,B,,0
 1639-09-4,Tt,229.92163,K,,,nist_snapshot,B,,1
 1639-09-4,rho_liquid,842.72,kg/m3,,,crc_constants,B,,1
+16396-66-0,Gf_aq,-497500,J/mol,,,crc_aqueous,B,,1
+16397-91-4,Cp_aq,50,J/(mol K),,298.15,crc_aqueous,B,,1
+16397-91-4,Gf_aq,-228100,J/mol,,,crc_aqueous,B,,1
+16397-91-4,Hf_aq,-220800,J/mol,,,crc_aqueous,B,,1
+16397-91-4,S0_aq,-73.6,J/(mol K),,,crc_aqueous,B,,1
 16399-77-2,rho_liquid,2390,kg/m3,,,crc_constants,B,,1
 1640-89-7,Cp_gas,133.6,J/(mol K),,298.15,poling,B,,1
 1640-89-7,Cp_gas,133.6,J/(mol K),,298.15,nist,B,Thermodynamics Research Center; 1997,0
@@ -27660,6 +27899,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1640-89-7,Vc,0.0003745318352,m3/mol,5.610963823e-06,,nist,B,Daubert; 1996,0
 1640-89-7,Vc,0.000375,m3/mol,,,nist_snapshot,B,,0
 1640-89-7,rho_liquid,766.52,kg/m3,,,crc_constants,B,,1
+16408-24-5,Gf_aq,-438000,J/mol,,,crc_aqueous,B,,1
 16409-44-2,rho_liquid,916.315,kg/m3,,,crc_constants,B,,1
 16409-46-4,rho_liquid,908.15,kg/m3,,,crc_constants,B,,1
 1641-09-4,Hvap_298,51600,J/mol,,,nist_snapshot,B,,1
@@ -27685,6 +27925,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 16456-33-0,Hf_gas,3600,J/mol,,,nist_snapshot,B,,1
 16456-33-0,Hf_solid,-46100,J/mol,,,nist_snapshot,B,,1
 16456-33-0,Hsub_298,49700,J/mol,,,nist_snapshot,B,,1
+16458-09-6,Gf_aq,-694100,J/mol,,,crc_aqueous,B,,1
 1646-26-0,Tm,349.15,K,,,crc_constants,B,,1
 1646-88-4,Tm,414.15,K,,,crc_constants,B,,1
 16469-16-2,rho_liquid,3700,kg/m3,,,crc_constants,B,,1
@@ -27699,6 +27940,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1647-26-3,Tb,485.15,K,,,crc_constants,B,,1
 1647-26-3,Tm,216.15,K,,,crc_constants,B,,1
 1647-26-3,rho_liquid,1235.72,kg/m3,,,crc_constants,B,,1
+16474-32-1,Gf_aq,118100,J/mol,,,crc_aqueous,B,,1
+16474-32-1,Hf_aq,13000,J/mol,,,crc_aqueous,B,,1
+16474-32-1,S0_aq,199.6,J/(mol K),,,crc_aqueous,B,,1
 16474-43-4,Tb,438.15,K,,,nist_snapshot,B,,1
 16480-60-7,Cp_gas,173.663,J/(mol K),,298.15,janaf,A,JANAF table Cl-186,1
 16480-60-7,Gf_gas,-598641,J/mol,,,janaf,A,JANAF table Cl-186,1
@@ -27729,6 +27973,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 16515-90-5,Hf_gas,-1197400,J/mol,,,nist_snapshot,B,,1
 16515-90-5,Hf_liquid,-1271600,J/mol,,,nist_snapshot,B,,1
 16515-90-5,Hvap_298,74140,J/mol,,,nist_snapshot,B,,1
+16518-47-1,Gf_aq,-753200,J/mol,,,crc_aqueous,B,,1
+16518-47-1,Hf_aq,-909600,J/mol,,,crc_aqueous,B,,1
+16518-47-1,S0_aq,117,J/(mol K),,,crc_aqueous,B,,1
 16518-62-0,Tb,532.2,K,,,nist_snapshot,B,,1
 1652-81-9,Tb,345.7,K,,,nist_snapshot,B,,1
 16520-62-0,Hf_liquid,248294.57,J/mol,,,nist_snapshot,B,,1
@@ -27836,6 +28083,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1666-13-3,Hf_solid,120600,J/mol,,,nist_snapshot,B,,1
 1666-13-3,Tm,336.65,K,,,crc_constants,B,,1
 1666-13-3,rho_liquid,1557.8,kg/m3,,,crc_constants,B,,1
+16661-43-1,Gf_aq,44000,J/mol,,,crc_aqueous,B,,1
+16661-43-1,Hf_aq,15900,J/mol,,,crc_aqueous,B,,1
+16661-43-1,S0_aq,79,J/(mol K),,,crc_aqueous,B,,1
 16666-42-5,Hf_gas,-375300,J/mol,,,yaws,C,,1
 16666-42-5,Pc,4008380,Pa,,,nist_snapshot,B,,1
 16666-42-5,S0_gas,411.68,J/(mol K),,,yaws,C,,1
@@ -27885,6 +28135,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 16727-91-6,Tb,552.49,K,,,nist_snapshot,B,,1
 16727-91-6,Tm,257.395,K,,,nist_snapshot,B,,1
 16731-55-8,rho_liquid,2300,kg/m3,,,crc_constants,B,,1
+16734-12-6,Gf_aq,79500,J/mol,,,crc_aqueous,B,,1
+16734-12-6,Hf_aq,30100,J/mol,,,crc_aqueous,B,,1
+16734-12-6,S0_aq,28.5,J/(mol K),,,crc_aqueous,B,,1
 16736-42-8,Tb,439.88857,K,,,nist_snapshot,B,,1
 16736-42-8,Tm,198.8,K,,,nist_snapshot,B,,1
 1674-10-8,Tb,410.15,K,,,crc_constants,B,,1
@@ -28054,6 +28307,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 16747-50-5,Tm,129.35,K,,,crc_constants,B,,1
 16747-50-5,Tm,129.35,K,,,nist_snapshot,B,,0
 16747-50-5,rho_liquid,776.725,kg/m3,,,crc_constants,B,,1
+16749-13-6,Gf_aq,92100,J/mol,,,crc_aqueous,B,,1
 1675-58-7,Hf_liquid,237900,J/mol,,,nist_snapshot,B,,1
 1675-58-7,S0_liquid,337.9,J/(mol K),,,nist_snapshot,B,,1
 1675-58-7,Tm,240,K,,,nist_snapshot,B,,1
@@ -28391,7 +28645,11 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 16883-48-0,Tm,142.26421,K,,,nist_snapshot,B,,0
 16883-48-0,rho_liquid,743.025,kg/m3,,,crc_constants,B,,1
 16885-99-7,Tb,349.15,K,,,nist_snapshot,B,,1
+16887-00-6,Cp_aq,-136.4,J/(mol K),,298.15,crc_aqueous,B,,1
+16887-00-6,Gf_aq,-131200,J/mol,,,crc_aqueous,B,,1
+16887-00-6,Hf_aq,-167200,J/mol,,,crc_aqueous,B,,1
 16887-00-6,Hf_gas,-227346,J/mol,3,,atct,A,ATcT 1.112,1
+16887-00-6,S0_aq,56.5,J/(mol K),,,crc_aqueous,B,,1
 16887-00-6,S0_gas,153.36,J/(mol K),,,nist_snapshot,B,,1
 1689-64-1,Tm,427.15,K,,,crc_constants,B,,1
 1689-73-2,Tm,469.15,K,,,crc_constants,B,,1
@@ -28434,6 +28692,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1691-17-4,Vc,0.000223,m3/mol,1.3e-05,,crc_critical,B,,0
 1691-17-4,Vc,0.00022321429,m3/mol,,,nist_snapshot,B,,0
 1691-17-4,rho_liquid,1432,kg/m3,,,crc_constants,B,,1
+16910-54-6,Gf_aq,-540200,J/mol,,,crc_aqueous,B,,1
+16910-54-6,Hf_aq,-527000,J/mol,,,crc_aqueous,B,,1
+16910-54-6,S0_aq,-8,J/(mol K),,,crc_aqueous,B,,1
 16919-19-0,Cp_solid,228.1,J/(mol K),,298.15,crc_thermo,B,,1
 16919-19-0,Gf_solid,-2365300,J/mol,,,crc_thermo,B,,1
 16919-19-0,Hf_solid,-2681700,J/mol,,,crc_thermo,B,,1
@@ -28513,12 +28774,19 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 16962-07-5,S0_liquid,289.1,J/(mol K),,,crc_thermo,B,,1
 16962-07-5,Tb,317.65,K,,,crc_constants,B,,1
 16962-07-5,Tm,208.65,K,,,crc_constants,B,,1
+16971-29-2,Gf_aq,114400,J/mol,,,crc_aqueous,B,,1
+16971-29-2,Hf_aq,48200,J/mol,,,crc_aqueous,B,,1
+16971-29-2,S0_aq,110.5,J/(mol K),,,crc_aqueous,B,,1
 16974-10-0,Hvap_298,88400,J/mol,,,nist_snapshot,B,,1
 16974-11-1,Hvap_298,80700,J/mol,,,nist_snapshot,B,,1
 1698-60-8,Tm,479.95,K,,,crc_constants,B,,1
 16980-85-1,Hf_gas,-433900,J/mol,,,yaws,C,,1
 16980-85-1,S0_gas,1125.2,J/(mol K),,,yaws,C,,1
+16984-48-8,Cp_aq,-106.7,J/(mol K),,298.15,crc_aqueous,B,,1
+16984-48-8,Gf_aq,-278800,J/mol,,,crc_aqueous,B,,1
+16984-48-8,Hf_aq,-332600,J/mol,,,crc_aqueous,B,,1
 16984-48-8,Hf_gas,-249112,J/mol,57,,atct,A,ATcT 1.112,1
+16984-48-8,S0_aq,-13.8,J/(mol K),,,crc_aqueous,B,,1
 16984-48-8,S0_gas,145.58,J/(mol K),,,nist_snapshot,B,,1
 16993-86-5,Tb,418,K,,,nist_snapshot,B,,1
 17000-00-9,Hf_gas,609700,J/mol,2500,,atct,A,ATcT 1.112,1
@@ -28891,6 +29159,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 17302-40-8,Hf_gas,-292600,J/mol,,,yaws,C,,1
 17302-40-8,S0_gas,581.74,J/(mol K),,,yaws,C,,1
 17302-40-8,Tb,478,K,,,nist_snapshot,B,,1
+17306-35-3,Gf_aq,-350000,J/mol,,,crc_aqueous,B,,1
+17306-35-3,Hf_aq,-429000,J/mol,,,crc_aqueous,B,,1
+17306-35-3,S0_aq,40.6,J/(mol K),,,crc_aqueous,B,,1
 1731-81-3,Hf_gas,-630000,J/mol,,,yaws,C,,1
 1731-81-3,Hvap_298,75919.512,J/mol,,,nist_snapshot,B,,1
 1731-81-3,S0_gas,718.51,J/(mol K),,,yaws,C,,1
@@ -28989,7 +29260,15 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1732-13-4,Tt,407.63,K,,,nist_snapshot,B,,1
 1733-12-6,Tm,573.15,K,,,crc_constants,B,,1
 1734-79-8,Tm,414.65,K,,,crc_constants,B,,1
+17341-24-1,Cp_aq,68.6,J/(mol K),,298.15,crc_aqueous,B,,1
+17341-24-1,Gf_aq,-293300,J/mol,,,crc_aqueous,B,,1
+17341-24-1,Hf_aq,-278500,J/mol,,,crc_aqueous,B,,1
+17341-24-1,S0_aq,13.4,J/(mol K),,,crc_aqueous,B,,1
 17341-24-1,S0_gas,133.02,J/(mol K),,,nist_snapshot,B,,1
+17341-25-2,Cp_aq,46.4,J/(mol K),,298.15,crc_aqueous,B,,1
+17341-25-2,Gf_aq,-261900,J/mol,,,crc_aqueous,B,,1
+17341-25-2,Hf_aq,-240100,J/mol,,,crc_aqueous,B,,1
+17341-25-2,S0_aq,59,J/(mol K),,,crc_aqueous,B,,1
 17341-25-2,S0_gas,147.95,J/(mol K),,,nist_snapshot,B,,1
 17341-93-4,Tb,444.7,K,,,nist_snapshot,B,,1
 17347-61-4,Tb,492.7,K,,,nist_snapshot,B,,1
@@ -29105,6 +29384,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1748-15-8,Hsub_298,91400,J/mol,,,nist_snapshot,B,,1
 1748-15-8,Hvap_298,91000,J/mol,,,nist_snapshot,B,,1
 17484-36-5,Tb,539.7,K,,,nist_snapshot,B,,1
+17493-86-6,Gf_aq,50000,J/mol,,,crc_aqueous,B,,1
+17493-86-6,Hf_aq,71700,J/mol,,,crc_aqueous,B,,1
+17493-86-6,S0_aq,40.6,J/(mol K),,,crc_aqueous,B,,1
 17493-86-6,S0_gas,222.31,J/(mol K),,,nist_snapshot,B,,1
 17496-08-1,Tm,318.15,K,,,crc_constants,B,,1
 17497-75-5,Cp_gas,48.472,J/(mol K),,298.15,janaf,A,JANAF table F-038,1
@@ -29587,7 +29869,10 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1812-51-7,Tb,539.12,K,,,nist_snapshot,B,,1
 1812-51-7,Tm,272.31783,K,,,nist_snapshot,B,,1
 1812-51-7,Tt,267.07,K,,,nist_snapshot,B,,1
+18130-74-0,Gf_aq,-578100,J/mol,,,crc_aqueous,B,,1
+18130-74-0,Hf_aq,-649900,J/mol,,,crc_aqueous,B,,1
 18130-74-0,Hf_gas,-714200,J/mol,2400,,atct,A,ATcT 1.112,1
+18130-74-0,S0_aq,92.5,J/(mol K),,,crc_aqueous,B,,1
 18137-88-7,Tb,371.65,K,,,nist_snapshot,B,,1
 18139-03-2,Hf_solid,-538697.46,J/mol,,,nist_snapshot,B,,1
 1814-88-6,Hf_gas,-1103300,J/mol,,,yaws,C,,1
@@ -29813,9 +30098,17 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 18448-47-0,Tb,464.2,K,,,nist_snapshot,B,,1
 1845-30-3,Tm,288.65,K,,,crc_constants,B,,1
 1845-30-3,rho_liquid,968.425,kg/m3,,,crc_constants,B,,1
+18459-37-5,Cp_aq,-10.5,J/(mol K),,298.15,crc_aqueous,B,,1
+18459-37-5,Gf_aq,-292000,J/mol,,,crc_aqueous,B,,1
+18459-37-5,Hf_aq,-258300,J/mol,,,crc_aqueous,B,,1
+18459-37-5,S0_aq,133.1,J/(mol K),,,crc_aqueous,B,,1
 18459-37-5,S0_gas,169.84,J/(mol K),,,nist_snapshot,B,,1
 1846-70-4,Hf_liquid,-382562.24,J/mol,,,nist_snapshot,B,,1
 1846-70-4,Tm,265.15,K,,,nist_snapshot,B,,1
+18472-30-5,Cp_aq,21,J/(mol K),,298.15,crc_aqueous,B,,1
+18472-30-5,Gf_aq,-669100,J/mol,,,crc_aqueous,B,,1
+18472-30-5,Hf_aq,-705400,J/mol,,,crc_aqueous,B,,1
+18472-30-5,S0_aq,-244.3,J/(mol K),,,crc_aqueous,B,,1
 18476-57-8,Tb,426.5,K,,,nist_snapshot,B,,1
 18476-57-8,Tm,208.4,K,,,nist_snapshot,B,,1
 18479-51-1,rho_liquid,869.515,kg/m3,,,crc_constants,B,,1
@@ -29855,6 +30148,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 18495-30-2,Tb,454.15,K,,,crc_constants,B,,1
 18495-30-2,Tb,453.15,K,,,nist_snapshot,B,,0
 18495-30-2,rho_liquid,1513.17,kg/m3,,,crc_constants,B,,1
+18496-25-8,Gf_aq,85800,J/mol,,,crc_aqueous,B,,1
+18496-25-8,Hf_aq,33100,J/mol,,,crc_aqueous,B,,1
+18496-25-8,S0_aq,-14.6,J/(mol K),,,crc_aqueous,B,,1
 185-49-9,Tb,373.2,K,,,nist_snapshot,B,,1
 185-65-9,Tb,398.80832,K,,,nist_snapshot,B,,1
 185-65-9,Tm,187,K,,,nist_snapshot,B,,1
@@ -29868,6 +30164,10 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1850-14-2,Tb,387.2,K,,,nist_snapshot,B,,0
 1850-14-2,Tm,270.65,K,,,crc_constants,B,,1
 1850-14-2,rho_liquid,1023.25,kg/m3,,,crc_constants,B,,1
+18500-32-8,Cp_aq,70.3,J/(mol K),,298.15,crc_aqueous,B,,1
+18500-32-8,Gf_aq,82500,J/mol,,,crc_aqueous,B,,1
+18500-32-8,Hf_aq,-7500,J/mol,,,crc_aqueous,B,,1
+18500-32-8,S0_aq,151,J/(mol K),,,crc_aqueous,B,,1
 1852-04-6,Hsub_298,162500,J/mol,,,nist_snapshot,B,,1
 1852-04-6,Hvap_298,128200,J/mol,,,nist_snapshot,B,,1
 1852-04-6,Tm,385,K,,,nist_snapshot,B,,1
@@ -29929,6 +30229,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 18641-81-1,Tb,373.2,K,,,nist_snapshot,B,,1
 18641-82-2,Hvap_298,42810,J/mol,,,nist_snapshot,B,,1
 18641-82-2,Tb,405.2,K,,,nist_snapshot,B,,1
+186449-38-7,Gf_aq,-313000,J/mol,,,crc_aqueous,B,,1
+186449-38-7,Hf_aq,-370300,J/mol,,,crc_aqueous,B,,1
+186449-38-7,S0_aq,-88,J/(mol K),,,crc_aqueous,B,,1
 1866-15-5,Tm,478.15,K,,,crc_constants,B,,1
 1866-31-5,rho_liquid,1048.23,kg/m3,,,crc_constants,B,,1
 1866-39-3,Tm,471.65,K,,,crc_constants,B,,1
@@ -30158,6 +30461,13 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 18909-69-8,rho_liquid,3200,kg/m3,,,crc_constants,B,,1
 1892-29-1,Tm,299.15,K,,,crc_constants,B,,1
 1892-35-9,Hf_solid,-552400,J/mol,,,nist_snapshot,B,,1
+18923-26-7,Gf_aq,-672000,J/mol,,,crc_aqueous,B,,1
+18923-26-7,Hf_aq,-696200,J/mol,,,crc_aqueous,B,,1
+18923-26-7,S0_aq,-205,J/(mol K),,,crc_aqueous,B,,1
+18923-27-8,Cp_aq,25,J/(mol K),,298.15,crc_aqueous,B,,1
+18923-27-8,Gf_aq,-644000,J/mol,,,crc_aqueous,B,,1
+18923-27-8,Hf_aq,-674500,J/mol,,,crc_aqueous,B,,1
+18923-27-8,S0_aq,-238,J/(mol K),,,crc_aqueous,B,,1
 18932-14-4,Hf_gas,-284900,J/mol,,,yaws,C,,1
 18932-14-4,S0_gas,545.6,J/(mol K),,,yaws,C,,1
 18932-14-4,Tb,443.15834,K,,,nist_snapshot,B,,1
@@ -30172,6 +30482,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 18936-17-9,rho_liquid,791.315,kg/m3,,,crc_constants,B,,1
 18937-79-6,Hf_liquid,-242700,J/mol,,,crc_thermo,B,,1
 18937-79-6,rho_liquid,964.825,kg/m3,,,crc_constants,B,,1
+18946-64-0,Gf_aq,-931400,J/mol,,,crc_aqueous,B,,1
 1896-62-4,Tb,534.15,K,,,crc_constants,B,,1
 1896-62-4,Tb,535.2,K,,,nist_snapshot,B,,0
 1896-62-4,Tm,314.15,K,,,crc_constants,B,,1
@@ -30776,6 +31087,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 20062-22-0,Hf_solid,64567.497,J/mol,,,nist_snapshot,B,,1
 20063-92-7,Tb,420.7,K,,,nist_snapshot,B,,1
 20063-97-2,Tb,446.55,K,,,crc_constants,B,,1
+20074-52-6,Gf_aq,-4700,J/mol,,,crc_aqueous,B,,1
+20074-52-6,Hf_aq,-48500,J/mol,,,crc_aqueous,B,,1
+20074-52-6,S0_aq,-315.9,J/(mol K),,,crc_aqueous,B,,1
 2008-41-5,rho_liquid,940.225,kg/m3,,,crc_constants,B,,1
 2008-58-4,Tm,471.15,K,,,crc_constants,B,,1
 2009-74-7,Tb,452.2,K,,,nist_snapshot,B,,1
@@ -31131,7 +31445,11 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 20454-81-3,Hf_liquid,-167500,J/mol,,,nist_snapshot,B,,1
 20454-81-3,Hvap_298,39156.304,J/mol,,,nist_snapshot,B,,1
 20455-01-0,Hf_gas,514200,J/mol,,,nist_snapshot,B,,1
+20461-54-5,Cp_aq,-142.3,J/(mol K),,298.15,crc_aqueous,B,,1
+20461-54-5,Gf_aq,-51600,J/mol,,,crc_aqueous,B,,1
+20461-54-5,Hf_aq,-55200,J/mol,,,crc_aqueous,B,,1
 20461-54-5,Hf_gas,-188396,J/mol,2,,atct,A,ATcT 1.112,1
+20461-54-5,S0_aq,111.3,J/(mol K),,,crc_aqueous,B,,1
 20461-54-5,S0_gas,169.26,J/(mol K),,,nist_snapshot,B,,1
 20487-40-5,Hf_gas,-521700,J/mol,,,yaws,C,,1
 20487-40-5,S0_gas,479.9,J/(mol K),,,yaws,C,,1
@@ -31361,6 +31679,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 20558-16-1,Hf_gas,-107600,J/mol,,,nist_snapshot,B,,1
 20558-16-1,Hf_liquid,-150200,J/mol,,,nist_snapshot,B,,1
 20558-16-1,Hvap_298,42647.899,J/mol,,,nist_snapshot,B,,1
+20561-58-4,Gf_aq,-33000,J/mol,,,crc_aqueous,B,,1
 20562-79-2,Tb,367,K,,,nist_snapshot,B,,1
 2057-43-4,Tb,489.15,K,,,crc_constants,B,,1
 2057-43-4,rho_liquid,923.425,kg/m3,,,crc_constants,B,,1
@@ -31419,11 +31738,17 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 20624-25-3,Tm,368.15,K,,,crc_constants,B,,1
 20627-73-0,Tb,548.2,K,,,nist_snapshot,B,,1
 20634-92-8,Tb,403.72786,K,,,nist_snapshot,B,,1
+20638-10-2,Gf_aq,-411500,J/mol,,,crc_aqueous,B,,1
+20638-10-2,Hf_aq,-514600,J/mol,,,crc_aqueous,B,,1
+20638-10-2,S0_aq,135.1,J/(mol K),,,crc_aqueous,B,,1
 2065-23-8,Tb,518.15,K,,,crc_constants,B,,1
 2065-23-8,Tb,517.17157,K,,,nist_snapshot,B,,0
 2065-23-8,rho_liquid,1149.32,kg/m3,,,crc_constants,B,,1
 2065-70-5,Tb,558.15,K,,,crc_constants,B,,1
 2065-70-5,Tm,413.65,K,,,crc_constants,B,,1
+20653-98-9,Gf_aq,-830900,J/mol,,,crc_aqueous,B,,1
+20653-98-9,Hf_aq,-930900,J/mol,,,crc_aqueous,B,,1
+20653-98-9,S0_aq,-36.8,J/(mol K),,,crc_aqueous,B,,1
 20653-98-9,S0_gas,235.09,J/(mol K),,,nist_snapshot,B,,1
 20654-46-0,Hf_gas,-26200,J/mol,,,yaws,C,,1
 20654-46-0,S0_gas,379.76,J/(mol K),,,yaws,C,,1
@@ -31649,6 +31974,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 20972-43-4,Hfus,17900,J/mol,,,crc_hfus,B,,1
 20972-43-4,Tm,307.75,K,,,crc_constants,B,,1
 20972-43-4,rho_liquid,1159.026,kg/m3,,,crc_constants,B,,1
+2099995000-00-0,Gf_aq,-1780300,J/mol,,,crc_aqueous,B,,1
 2100-17-6,Tb,377.15,K,,,crc_constants,B,,1
 2100-17-6,rho_liquid,852.2,kg/m3,,,crc_constants,B,,1
 2101-86-2,Tm,244.15,K,,,crc_constants,B,,1
@@ -32752,16 +33078,110 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 22537-15-1,S0_gas,165.19,J/(mol K),,,nist_snapshot,B,,0
 22537-19-5,Hf_solid,0,J/mol,,,crc_thermo,B,,1
 22537-19-5,Tm,1900.15,K,,,crc_constants,B,,1
+22537-20-8,Gf_aq,-379700,J/mol,,,crc_aqueous,B,,1
+22537-20-8,Hf_aq,-382800,J/mol,,,crc_aqueous,B,,1
+22537-20-8,S0_aq,-129.7,J/(mol K),,,crc_aqueous,B,,1
+22537-22-0,Gf_aq,-454800,J/mol,,,crc_aqueous,B,,1
+22537-22-0,Hf_aq,-466900,J/mol,,,crc_aqueous,B,,1
+22537-22-0,S0_aq,-138.1,J/(mol K),,,crc_aqueous,B,,1
+22537-23-1,Gf_aq,-485000,J/mol,,,crc_aqueous,B,,1
+22537-23-1,Hf_aq,-531000,J/mol,,,crc_aqueous,B,,1
+22537-23-1,S0_aq,-321.7,J/(mol K),,,crc_aqueous,B,,1
+22537-29-7,Gf_aq,-586600,J/mol,,,crc_aqueous,B,,1
+22537-29-7,Hf_aq,-614200,J/mol,,,crc_aqueous,B,,1
+22537-29-7,S0_aq,-255,J/(mol K),,,crc_aqueous,B,,1
+22537-33-3,Gf_aq,-159000,J/mol,,,crc_aqueous,B,,1
+22537-33-3,Hf_aq,-211700,J/mol,,,crc_aqueous,B,,1
+22537-33-3,S0_aq,-331,J/(mol K),,,crc_aqueous,B,,1
+22537-38-8,Gf_aq,-284000,J/mol,,,crc_aqueous,B,,1
+22537-38-8,Hf_aq,-251200,J/mol,,,crc_aqueous,B,,1
+22537-38-8,S0_aq,121.5,J/(mol K),,,crc_aqueous,B,,1
 22537-38-8,S0_gas,164.33,J/(mol K),,,nist_snapshot,B,,1
+22537-39-9,Gf_aq,-559500,J/mol,,,crc_aqueous,B,,1
+22537-39-9,Hf_aq,-545800,J/mol,,,crc_aqueous,B,,1
+22537-39-9,S0_aq,-32.6,J/(mol K),,,crc_aqueous,B,,1
+22537-40-2,Gf_aq,-693800,J/mol,,,crc_aqueous,B,,1
+22537-40-2,Hf_aq,-723400,J/mol,,,crc_aqueous,B,,1
+22537-40-2,S0_aq,-251,J/(mol K),,,crc_aqueous,B,,1
+22537-48-0,Gf_aq,-77600,J/mol,,,crc_aqueous,B,,1
+22537-48-0,Hf_aq,-75900,J/mol,,,crc_aqueous,B,,1
+22537-48-0,S0_aq,-73.2,J/(mol K),,,crc_aqueous,B,,1
+22537-49-1,Gf_aq,-98000,J/mol,,,crc_aqueous,B,,1
+22537-49-1,Hf_aq,-105000,J/mol,,,crc_aqueous,B,,1
+22537-49-1,S0_aq,-151,J/(mol K),,,crc_aqueous,B,,1
+22537-56-0,Gf_aq,-32400,J/mol,,,crc_aqueous,B,,1
+22537-56-0,Hf_aq,5400,J/mol,,,crc_aqueous,B,,1
+22537-56-0,S0_aq,125.5,J/(mol K),,,crc_aqueous,B,,1
+22537-58-2,Gf_aq,71000,J/mol,,,crc_aqueous,B,,1
+22537-59-3,Hf_aq,-619000,J/mol,,,crc_aqueous,B,,1
 22539-65-7,Hf_gas,-49600,J/mol,,,yaws,C,,1
 22539-65-7,S0_gas,455.89,J/(mol K),,,yaws,C,,1
 22539-65-7,Tb,477.7,K,,,nist_snapshot,B,,1
 2254-94-6,Tb,608.15,K,,,crc_constants,B,,1
 2254-94-6,Tm,363.15,K,,,crc_constants,B,,1
+22541-12-4,Gf_aq,-560800,J/mol,,,crc_aqueous,B,,1
+22541-12-4,Hf_aq,-537600,J/mol,,,crc_aqueous,B,,1
+22541-12-4,S0_aq,9.6,J/(mol K),,,crc_aqueous,B,,1
+22541-14-6,Cp_aq,-29,J/(mol K),,298.15,crc_aqueous,B,,1
+22541-14-6,Gf_aq,-679100,J/mol,,,crc_aqueous,B,,1
+22541-14-6,Hf_aq,-704600,J/mol,,,crc_aqueous,B,,1
+22541-14-6,S0_aq,-209,J/(mol K),,,crc_aqueous,B,,1
+22541-17-9,Cp_aq,-21,J/(mol K),,298.15,crc_aqueous,B,,1
+22541-17-9,Gf_aq,-666600,J/mol,,,crc_aqueous,B,,1
+22541-17-9,Hf_aq,-691600,J/mol,,,crc_aqueous,B,,1
+22541-17-9,S0_aq,-211.7,J/(mol K),,,crc_aqueous,B,,1
+22541-18-0,Cp_aq,8,J/(mol K),,298.15,crc_aqueous,B,,1
+22541-18-0,Gf_aq,-574100,J/mol,,,crc_aqueous,B,,1
+22541-18-0,Hf_aq,-605000,J/mol,,,crc_aqueous,B,,1
+22541-18-0,S0_aq,-222,J/(mol K),,,crc_aqueous,B,,1
+22541-19-1,Gf_aq,-661000,J/mol,,,crc_aqueous,B,,1
+22541-19-1,Hf_aq,-686000,J/mol,,,crc_aqueous,B,,1
+22541-19-1,S0_aq,-205.9,J/(mol K),,,crc_aqueous,B,,1
+22541-20-4,Cp_aq,17,J/(mol K),,298.15,crc_aqueous,B,,1
+22541-20-4,Gf_aq,-651900,J/mol,,,crc_aqueous,B,,1
+22541-20-4,Hf_aq,-682800,J/mol,,,crc_aqueous,B,,1
+22541-20-4,S0_aq,-226,J/(mol K),,,crc_aqueous,B,,1
+22541-21-5,Cp_aq,21,J/(mol K),,298.15,crc_aqueous,B,,1
+22541-21-5,Gf_aq,-665000,J/mol,,,crc_aqueous,B,,1
+22541-21-5,Hf_aq,-699000,J/mol,,,crc_aqueous,B,,1
+22541-21-5,S0_aq,-231,J/(mol K),,,crc_aqueous,B,,1
+22541-22-6,Cp_aq,17,J/(mol K),,298.15,crc_aqueous,B,,1
+22541-22-6,Gf_aq,-673700,J/mol,,,crc_aqueous,B,,1
+22541-22-6,Hf_aq,-705000,J/mol,,,crc_aqueous,B,,1
+22541-22-6,S0_aq,-226.8,J/(mol K),,,crc_aqueous,B,,1
+22541-23-7,Cp_aq,25,J/(mol K),,298.15,crc_aqueous,B,,1
+22541-23-7,Gf_aq,-662000,J/mol,,,crc_aqueous,B,,1
+22541-23-7,Hf_aq,-697900,J/mol,,,crc_aqueous,B,,1
+22541-23-7,S0_aq,-243,J/(mol K),,,crc_aqueous,B,,1
+22541-24-8,Cp_aq,25,J/(mol K),,298.15,crc_aqueous,B,,1
+22541-24-8,Gf_aq,-628000,J/mol,,,crc_aqueous,B,,1
+22541-24-8,Hf_aq,-665000,J/mol,,,crc_aqueous,B,,1
+22541-24-8,S0_aq,-264,J/(mol K),,,crc_aqueous,B,,1
+22541-34-0,Gf_aq,293000,J/mol,,,crc_aqueous,B,,1
+22541-36-2,Gf_aq,-561500,J/mol,,,crc_aqueous,B,,1
+22541-36-2,Hf_aq,-527600,J/mol,,,crc_aqueous,B,,1
+22541-36-2,S0_aq,54,J/(mol K),,,crc_aqueous,B,,1
+22541-48-6,Gf_aq,129300,J/mol,,,crc_aqueous,B,,1
+22541-53-3,Gf_aq,-54400,J/mol,,,crc_aqueous,B,,1
+22541-53-3,Hf_aq,-58200,J/mol,,,crc_aqueous,B,,1
+22541-53-3,S0_aq,-113,J/(mol K),,,crc_aqueous,B,,1
+22541-63-5,Gf_aq,134000,J/mol,,,crc_aqueous,B,,1
+22541-63-5,Hf_aq,92000,J/mol,,,crc_aqueous,B,,1
+22541-63-5,S0_aq,-305,J/(mol K),,,crc_aqueous,B,,1
+22541-79-3,Hf_aq,-143500,J/mol,,,crc_aqueous,B,,1
+22541-90-8,Gf_aq,-27200,J/mol,,,crc_aqueous,B,,1
+22541-90-8,Hf_aq,-8800,J/mol,,,crc_aqueous,B,,1
+22541-90-8,S0_aq,-17,J/(mol K),,,crc_aqueous,B,,1
+22541-96-4,Gf_aq,-527000,J/mol,,,crc_aqueous,B,,1
+22542-10-5,Gf_aq,254800,J/mol,,,crc_aqueous,B,,1
 22542-11-6,S0_gas,224.62,J/(mol K),,,nist_snapshot,B,,1
 22564-99-4,Tb,471.15,K,,,crc_constants,B,,1
 22564-99-4,rho_liquid,870.15,kg/m3,,,crc_constants,B,,1
+22569-48-8,Gf_aq,-330100,J/mol,,,crc_aqueous,B,,1
 2257-52-5,Tb,380.15,K,,,crc_constants,B,,1
+22578-81-0,Gf_aq,-476200,J/mol,,,crc_aqueous,B,,1
+22578-81-0,Hf_aq,-489100,J/mol,,,crc_aqueous,B,,1
+22578-81-0,S0_aq,-188,J/(mol K),,,crc_aqueous,B,,1
 22585-64-4,Tm,264.15,K,,,crc_constants,B,,1
 2259-96-3,Tm,507.15,K,,,crc_constants,B,,1
 22591-21-5,Tm,321.2,K,,,nist,B,Vorontsova and Vlasov; 1987,1
@@ -33277,6 +33697,11 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 23708-56-7,Tb,439.55427,K,,,nist_snapshot,B,,1
 23708-56-7,Tm,295.66014,K,,,nist_snapshot,B,,1
 2371-19-9,Tb,431.89908,K,,,nist_snapshot,B,,1
+23713-46-4,Gf_aq,82800,J/mol,,,crc_aqueous,B,,1
+23713-49-7,Cp_aq,46,J/(mol K),,298.15,crc_aqueous,B,,1
+23713-49-7,Gf_aq,-147100,J/mol,,,crc_aqueous,B,,1
+23713-49-7,Hf_aq,-153900,J/mol,,,crc_aqueous,B,,1
+23713-49-7,S0_aq,-112.1,J/(mol K),,,crc_aqueous,B,,1
 2373-51-5,Tb,378.15,K,,,crc_constants,B,,1
 2373-51-5,Tb,378.2,K,,,nist_snapshot,B,,0
 2373-51-5,rho_liquid,1153.25,kg/m3,,,crc_constants,B,,1
@@ -33487,6 +33912,13 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 2417-04-1,Tm,494.95,K,,,crc_constants,B,,1
 2417-90-5,rho_liquid,1615.22,kg/m3,,,crc_constants,B,,1
 2419-73-0,Tm,399.65,K,,,crc_constants,B,,1
+24203-21-2,Gf_aq,10100,J/mol,,,crc_aqueous,B,,1
+24203-21-2,Hf_aq,46000,J/mol,,,crc_aqueous,B,,1
+24203-21-2,S0_aq,230,J/(mol K),,,crc_aqueous,B,,1
+24203-36-9,Cp_aq,21.8,J/(mol K),,298.15,crc_aqueous,B,,1
+24203-36-9,Gf_aq,-283300,J/mol,,,crc_aqueous,B,,1
+24203-36-9,Hf_aq,-252400,J/mol,,,crc_aqueous,B,,1
+24203-36-9,S0_aq,102.5,J/(mol K),,,crc_aqueous,B,,1
 24203-36-9,S0_gas,154.58,J/(mol K),,,nist_snapshot,B,,1
 2421-28-5,Tm,489.15,K,,,crc_constants,B,,1
 2422-79-9,Tm,423.65,K,,,crc_constants,B,,1
@@ -33933,7 +34365,11 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 2495-32-1,Tb,376.52738,K,,,nist_snapshot,B,,1
 2495-35-4,Tb,501.15,K,,,crc_constants,B,,1
 2495-35-4,rho_liquid,1057.32,kg/m3,,,crc_constants,B,,1
+24959-67-9,Cp_aq,-141.8,J/(mol K),,298.15,crc_aqueous,B,,1
+24959-67-9,Gf_aq,-104000,J/mol,,,crc_aqueous,B,,1
+24959-67-9,Hf_aq,-121600,J/mol,,,crc_aqueous,B,,1
 24959-67-9,Hf_gas,-212685,J/mol,56,,atct,A,ATcT 1.112,1
+24959-67-9,S0_aq,82.4,J/(mol K),,,crc_aqueous,B,,1
 24959-67-9,S0_gas,163.49,J/(mol K),,,nist_snapshot,B,,1
 24964-64-5,Tb,483.15,K,,,crc_constants,B,,1
 24964-64-5,Tb,483.2,K,,,nist_snapshot,B,,0
@@ -34999,6 +35435,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 2721-32-6,Hsub_298,48063.255,J/mol,,,nist_snapshot,B,,1
 2721-38-2,Hf_gas,-153370,J/mol,,,yaws,C,,1
 2721-38-2,S0_gas,525.68,J/(mol K),,,yaws,C,,1
+27216-79-1,Gf_aq,-254800,J/mol,,,crc_aqueous,B,,1
+27216-79-1,Hf_aq,-286200,J/mol,,,crc_aqueous,B,,1
+27216-79-1,S0_aq,50,J/(mol K),,,crc_aqueous,B,,1
 27218-16-2,Tm,156.15,K,,,crc_constants,B,,1
 27218-16-2,rho_liquid,1810,kg/m3,,,crc_constants,B,,1
 2724-69-8,Tm,385.65,K,,,crc_constants,B,,1
@@ -36577,6 +37016,10 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 302-01-2,Tt,274.69,K,,,nist,B,Scott; Oliver; et al.; 1949,0
 302-01-2,Tt,274.625,K,,,nist_snapshot,B,,0
 302-01-2,rho_liquid,1003.6,kg/m3,,,crc_constants,B,,1
+302-04-5,Cp_aq,-40.2,J/(mol K),,298.15,crc_aqueous,B,,1
+302-04-5,Gf_aq,92700,J/mol,,,crc_aqueous,B,,1
+302-04-5,Hf_aq,76400,J/mol,,,crc_aqueous,B,,1
+302-04-5,S0_aq,144.3,J/(mol K),,,crc_aqueous,B,,1
 302-17-0,Tm,325.15,K,,,crc_constants,B,,1
 302-17-0,rho_liquid,1908.12,kg/m3,,,crc_constants,B,,1
 302-27-2,Tm,477.15,K,,,crc_constants,B,,1
@@ -37966,6 +38409,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 338-69-2,Hf_solid,-561200,J/mol,,,crc_thermo,B,,1
 338-69-2,Hf_solid,-604802.02,J/mol,,,nist_snapshot,B,,0
 338-69-2,S0_solid,132.2,J/(mol K),,,nist_snapshot,B,,1
+338-70-5,Gf_aq,-673900,J/mol,,,crc_aqueous,B,,1
+338-70-5,Hf_aq,-825100,J/mol,,,crc_aqueous,B,,1
+338-70-5,S0_aq,45.6,J/(mol K),,,crc_aqueous,B,,1
 338-75-0,Tb,349.9,K,,,nist_snapshot,B,,1
 338-75-0,Tc,525,K,,,iupac_critical,A,IUPAC ref 10,1
 338-83-0,Hvap_298,46750,J/mol,,,nist_snapshot,B,,1
@@ -38119,6 +38565,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 34067-75-9,Tb,399.07422,K,,,nist_snapshot,B,,1
 3411-95-8,Tm,404.15,K,,,crc_constants,B,,1
 3417-91-2,Tm,464.15,K,,,crc_constants,B,,1
+34175-11-6,Gf_aq,-614500,J/mol,,,crc_aqueous,B,,1
 3419-71-4,Tb,413.2,K,,,nist_snapshot,B,,1
 34237-88-2,Hf_solid,-10000,J/mol,,,nist_snapshot,B,,1
 34237-88-2,S0_solid,340.7,J/(mol K),,,nist_snapshot,B,,1
@@ -39708,7 +40155,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 3680-02-2,rho_liquid,1211.72,kg/m3,,,crc_constants,B,,1
 3681-71-8,Tb,442,K,,,nist_snapshot,B,,1
 3681-78-5,Hvap_298,84700,J/mol,,,nist_snapshot,B,,1
+36812-31-4,Gf_aq,-718400,J/mol,,,crc_aqueous,B,,1
 36812-31-4,S0_gas,229.91,J/(mol K),,,nist_snapshot,B,,1
+36812-32-5,Gf_aq,-721300,J/mol,,,crc_aqueous,B,,1
 36812-32-5,S0_gas,241.06,J/(mol K),,,nist_snapshot,B,,1
 3682-35-7,Tm,483.15,K,,,crc_constants,B,,1
 36823-84-4,rho_liquid,1087.25,kg/m3,,,crc_constants,B,,1
@@ -40271,6 +40720,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 3811-04-9,Tm,630.15,K,,,crc_constants,B,,1
 3811-04-9,rho_liquid,2340,kg/m3,,,crc_constants,B,,1
 38118-83-1,Hf_solid,608000,J/mol,,,nist_snapshot,B,,1
+3812-32-6,Gf_aq,-527800,J/mol,,,crc_aqueous,B,,1
+3812-32-6,Hf_aq,-677100,J/mol,,,crc_aqueous,B,,1
+3812-32-6,S0_aq,-56.9,J/(mol K),,,crc_aqueous,B,,1
 38126-74-8,Hf_liquid,-43900,J/mol,,,nist_snapshot,B,,1
 38136-29-7,Tb,416.15,K,,,crc_constants,B,,1
 38136-29-7,rho_liquid,972.52,kg/m3,,,crc_constants,B,,1
@@ -41325,6 +41777,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 4160-72-9,Tm,568.15,K,,,crc_constants,B,,1
 4160-82-1,Tm,398.95,K,,,crc_constants,B,,1
 4161-60-8,Tb,450.15,K,,,nist_snapshot,B,,1
+41618-72-8,Gf_aq,-146400,J/mol,,,crc_aqueous,B,,1
 4164-28-7,Hf_gas,-5000,J/mol,,,nist_snapshot,B,,1
 4164-28-7,Hf_liquid,-71100,J/mol,,,nist_snapshot,B,,1
 4164-28-7,Hf_solid,-75000,J/mol,,,nist_snapshot,B,,1
@@ -41658,6 +42111,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 42474-21-5,Hf_liquid,-212300,J/mol,,,crc_thermo,B,,1
 42474-21-5,Tb,501.15,K,,,crc_constants,B,,1
 42474-21-5,rho_liquid,1508.62,kg/m3,,,crc_constants,B,,1
+42499-21-8,Gf_aq,-1972200,J/mol,,,crc_aqueous,B,,1
+42499-21-8,Hf_aq,-2274800,J/mol,,,crc_aqueous,B,,1
+42499-21-8,S0_aq,46,J/(mol K),,,crc_aqueous,B,,1
 425-32-1,Hf_gas,-689000,J/mol,,,nist_snapshot,B,,1
 425-32-1,Hf_solid,-790800,J/mol,,,nist_snapshot,B,,1
 425-32-1,Hsub_298,101800,J/mol,,,nist_snapshot,B,,1
@@ -42177,6 +42633,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 440-60-8,Tb,454.2,K,,,nist_snapshot,B,,1
 4403-69-4,Tb,542.15,K,,,crc_constants,B,,1
 4403-69-4,Tm,334.15,K,,,crc_constants,B,,1
+44030-61-7,Gf_aq,-1198200,J/mol,,,crc_aqueous,B,,1
 4407-36-7,Tb,532.15,K,,,crc_constants,B,,1
 4407-36-7,Tb,530.7,K,,,nist_snapshot,B,,0
 4407-36-7,Tm,307.95,K,,,crc_constants,B,,1
@@ -42932,6 +43389,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 463-58-1,Cp_gas,41.5,J/(mol K),,298.15,crc_thermo,B,,0
 463-58-1,Gf_gas,-165601,J/mol,,,janaf,A,JANAF table C-094,1
 463-58-1,Gf_gas,-169200,J/mol,,,crc_thermo,B,,0
+463-58-1,Hf_aq,-165844.7266,J/mol,,,nist_henry,B,gas + Henry median of 6 (k 0.021; slope 3300 K),1
 463-58-1,Hf_gas,-138407,J/mol,,,janaf,A,JANAF table C-094,1
 463-58-1,Hf_gas,-142000,J/mol,,,crc_thermo,B,,0
 463-58-1,Hf_gas,-138410.84,J/mol,,,nist_snapshot,B,,0
@@ -42939,6 +43397,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 463-58-1,Hfus,4730,J/mol,,,crc_hfus,B,,1
 463-58-1,Pc,6368799.94,Pa,,,coolprop,A,CoolProp CarbonylSulfide,1
 463-58-1,Pc,6349000,Pa,,,nist_snapshot,B,,0
+463-58-1,S0_aq,107.4337089,J/(mol K),,,nist_henry,B,gas + Henry median of 6 (k 0.021; slope 3300 K),1
 463-58-1,S0_gas,231.581,J/(mol K),,,janaf,A,JANAF table C-094,1
 463-58-1,S0_gas,231.6,J/(mol K),,,crc_thermo,B,,0
 463-58-1,S0_gas,231.57,J/(mol K),,,nist_snapshot,B,,0
@@ -45798,6 +46257,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 521-85-7,Tm,422.15,K,,,crc_constants,B,,1
 52112-25-1,Hf_gas,-80630,J/mol,,,yaws,C,,1
 52112-25-1,S0_gas,712.03,J/(mol K),,,yaws,C,,1
+52140-06-4,Gf_aq,-597400,J/mol,,,crc_aqueous,B,,1
 52152-71-3,Hvap,33270,J/mol,,393.25,crc_hvap,B,,1
 52152-71-3,Hvap_298,38460,J/mol,,298.15,crc_hvap,B,,1
 52152-71-3,Tb,391.15,K,,,crc_constants,B,,1
@@ -49052,6 +49512,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 5586-15-2,Tm,412.65,K,,,crc_constants,B,,1
 5586-15-2,rho_liquid,1144.145,kg/m3,,,crc_constants,B,,1
 5587-89-3,Tm,441.15,K,,,crc_constants,B,,1
+55896-88-3,Gf_aq,-525000,J/mol,,,crc_aqueous,B,,1
+55896-88-3,Hf_aq,-619000,J/mol,,,crc_aqueous,B,,1
+55896-88-3,S0_aq,25,J/(mol K),,,crc_aqueous,B,,1
 559-40-0,Tb,300.05864,K,,,nist_snapshot,B,,1
 559-70-6,Tm,470.15,K,,,crc_constants,B,,1
 5593-70-4,Hf_gas,-1567470.2,J/mol,,,nist_snapshot,B,,1
@@ -50229,7 +50692,10 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 57-11-4,Tt,342.45172,K,,,nist_snapshot,B,,0
 57-11-4,Vc,0.001251,m3/mol,2.7e-05,,crc_critical,B,,1
 57-11-4,rho_liquid,940.82,kg/m3,,,crc_constants,B,,1
+57-12-5,Gf_aq,172400,J/mol,,,crc_aqueous,B,,1
+57-12-5,Hf_aq,150600,J/mol,,,crc_aqueous,B,,1
 57-12-5,Hf_gas,67257,J/mol,99,,atct,A,ATcT 1.112,1
+57-12-5,S0_aq,94.1,J/(mol K),,,crc_aqueous,B,,1
 57-12-5,S0_gas,195.98,J/(mol K),,,nist_snapshot,B,,1
 57-13-6,Hf_gas,-245800,J/mol,,,crc_thermo,B,,1
 57-13-6,Hf_gas,-235500,J/mol,,,nist_snapshot,B,,0
@@ -53690,6 +54156,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 59756-60-4,Tm,428.15,K,,,crc_constants,B,,1
 5976-47-6,Tb,408.88603,K,,,nist_snapshot,B,,1
 5978-70-1,Tb,448.24584,K,,,nist_snapshot,B,,1
+59792-78-8,Gf_aq,-261100,J/mol,,,crc_aqueous,B,,1
 598-01-6,Hf_gas,-369430,J/mol,,,yaws,C,,1
 598-01-6,S0_gas,479.64,J/(mol K),,,yaws,C,,1
 598-01-6,Tb,439.15,K,,,crc_constants,B,,1
@@ -54302,6 +54769,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 60172-46-5,Hf_solid,-1979030,J/mol,,,nist_snapshot,B,,0
 60172-46-5,S0_solid,347.272,J/(mol K),,,janaf,A,JANAF table Al-032,1
 60172-46-5,S0_solid,347.23,J/(mol K),,,nist_snapshot,B,,0
+60172-61-4,Gf_aq,-626700,J/mol,,,crc_aqueous,B,,1
 60172-61-4,S0_gas,220.81,J/(mol K),,,nist_snapshot,B,,1
 60175-01-1,Cp_gas,49.911,J/(mol K),,298.15,janaf,A,JANAF table Cl-017,1
 60175-01-1,Gf_gas,-573383,J/mol,,,janaf,A,JANAF table Cl-017,1
@@ -60332,6 +60800,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 630-08-0,Cp_gas,29.14,J/(mol K),,298.15,poling,B,,0
 630-08-0,Gf_gas,-137163,J/mol,,,janaf,A,JANAF table C-093,1
 630-08-0,Gf_gas,-137200,J/mol,,,crc_thermo,B,,0
+630-08-0,Hf_aq,-121333.8014,J/mol,,,nist_henry,B,gas + Henry median of 3 (k 0.00095; slope 1300 K),1
 630-08-0,Hf_gas,-110525,J/mol,26,,atct,A,ATcT 1.112,1
 630-08-0,Hf_gas,-110527,J/mol,,,janaf,A,JANAF table C-093,0
 630-08-0,Hf_gas,-110530,J/mol,170,,nist_review,A,Cox; Wagman; et al.; 1984,0
@@ -60348,6 +60817,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 630-08-0,Pc,3498750,Pa,,,nist,B,Cardoso; 1915,0
 630-08-0,Pc,3498750,Pa,,,nist,B,Cardoso; 1915,0
 630-08-0,Pc,3511583.3,Pa,,,nist_snapshot,B,,0
+630-08-0,S0_aq,103.5393532,J/(mol K),,,nist_henry,B,gas + Henry median of 3 (k 0.00095; slope 1300 K),1
 630-08-0,S0_gas,197.653,J/(mol K),,,janaf,A,JANAF table C-093,1
 630-08-0,S0_gas,197.66,J/(mol K),0.004,,nist_review,A,Cox; Wagman; et al.; 1984,0
 630-08-0,S0_gas,197.66,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -61831,6 +62301,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 661-19-8,Tm,344.15,K,,,crc_constants,B,,1
 661-19-8,Tm,342.89891,K,,,nist_snapshot,B,,0
 661-19-8,Vc,0.001243,m3/mol,2e-05,,crc_critical,B,,1
+661-20-1,Gf_aq,-97400,J/mol,,,crc_aqueous,B,,1
+661-20-1,Hf_aq,-146000,J/mol,,,crc_aqueous,B,,1
+661-20-1,S0_aq,106.7,J/(mol K),,,crc_aqueous,B,,1
 661-53-0,Hf_gas,-351390,J/mol,,,yaws,C,,1
 661-53-0,S0_gas,343.59,J/(mol K),,,yaws,C,,1
 661-54-1,Tb,224.85,K,,,crc_constants,B,,1
@@ -63017,6 +63490,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 6812-78-8,rho_liquid,854.92,kg/m3,,,crc_constants,B,,1
 68141-15-1,Hvap_298,69600,J/mol,,,nist_snapshot,B,,1
 6816-17-7,Tb,444.2,K,,,nist_snapshot,B,,1
+68193-67-9,Gf_aq,-730500,J/mol,,,crc_aqueous,B,,1
 68193-67-9,S0_gas,247.28,J/(mol K),,,nist_snapshot,B,,1
 682-01-9,Hvap_298,49800,J/mol,,,nist_snapshot,B,,1
 682-01-9,Pc,1500000,Pa,,,iupac_critical,A,IUPAC ref 11,1
@@ -63898,6 +64372,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 70116-68-6,rho_liquid,818.02,kg/m3,,,crc_constants,B,,1
 70124-77-5,rho_liquid,1189.22,kg/m3,,,crc_constants,B,,1
 70138-31-7,Hvap_298,55900,J/mol,,,nist_snapshot,B,,1
+70198-64-0,Gf_aq,-380300,J/mol,,,crc_aqueous,B,,1
 702-23-8,Tb,608.15,K,,,crc_constants,B,,1
 702-23-8,Tb,608.2,K,,,nist_snapshot,B,,0
 702-23-8,Tm,302.15,K,,,crc_constants,B,,1
@@ -64343,7 +64818,18 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 71-43-2,Vc,0.00025,m3/mol,,,nist_snapshot,B,,0
 71-43-2,rho_liquid,876.52,kg/m3,,,crc_constants,B,,1
 71-44-3,Tm,302.15,K,,,crc_constants,B,,1
+71-47-6,Cp_aq,-87.9,J/(mol K),,298.15,crc_aqueous,B,,1
+71-47-6,Gf_aq,-351000,J/mol,,,crc_aqueous,B,,1
+71-47-6,Hf_aq,-425600,J/mol,,,crc_aqueous,B,,1
 71-47-6,Hf_gas,-465850,J/mol,770,,atct,A,ATcT 1.112,1
+71-47-6,S0_aq,92,J/(mol K),,,crc_aqueous,B,,1
+71-50-1,Cp_aq,-6.3,J/(mol K),,298.15,crc_aqueous,B,,1
+71-50-1,Gf_aq,-369300,J/mol,,,crc_aqueous,B,,1
+71-50-1,Hf_aq,-486000,J/mol,,,crc_aqueous,B,,1
+71-50-1,S0_aq,86.6,J/(mol K),,,crc_aqueous,B,,1
+71-52-3,Gf_aq,-586800,J/mol,,,crc_aqueous,B,,1
+71-52-3,Hf_aq,-692000,J/mol,,,crc_aqueous,B,,1
+71-52-3,S0_aq,91.2,J/(mol K),,,crc_aqueous,B,,1
 71-55-6,Cp_gas,93.3,J/(mol K),,298.15,crc_thermo,B,,1
 71-55-6,Cp_liquid,144.3,J/(mol K),,298.15,crc_thermo,B,,1
 71-55-6,Cp_liquid,144.4,J/(mol K),,298.15,nist,B,Andon; Counsell; et al.; 1973,0
@@ -64968,6 +65454,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-82-8,Gf_gas,-50500,J/mol,,,crc_thermo,B,,0
 74-82-8,Hc_gas,-890350,J/mol,300,,nist,B,Prosen and Rossini; 1945,1
 74-82-8,Hc_gas,-890700,J/mol,400,,nist,B,Pittam and Pilcher; 1972,0
+74-82-8,Hf_aq,-89084.30958,J/mol,,,nist_henry,B,gas + Henry median of 4 (k 0.00135; slope 1750 K),1
 74-82-8,Hf_gas,-74534,J/mol,57,,atct,A,ATcT 1.112,1
 74-82-8,Hf_gas,-74873,J/mol,,,janaf,A,JANAF table C-067,0
 74-82-8,Hf_gas,-74870,J/mol,,,nist_review,A,Chase; 1998,0
@@ -64989,6 +65476,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-82-8,Pc,4610000,Pa,,,nist_snapshot,B,,0
 74-82-8,Pt,11690,Pa,60,,nist,B,AVG,1
 74-82-8,Pt,11690,Pa,,,nist_snapshot,B,,0
+74-82-8,S0_aq,82.50995791,J/(mol K),,,nist_henry,B,gas + Henry median of 4 (k 0.00135; slope 1750 K),1
 74-82-8,S0_gas,186.251,J/(mol K),,,janaf,A,JANAF table C-067,1
 74-82-8,S0_gas,186.25,J/(mol K),,,nist_review,A,Chase; 1998,0
 74-82-8,S0_gas,186.3,J/(mol K),,,crc_thermo,B,,0
@@ -65044,6 +65532,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-84-0,Gf_gas,-32000,J/mol,,,crc_thermo,B,,1
 74-84-0,Hc_gas,-1560700,J/mol,300,,nist,B,Pittam and Pilcher; 1972,1
 74-84-0,Hc_gas,-1559900,J/mol,460,,nist,B,Prosen and Rossini; 1945,0
+74-84-0,Hf_aq,-103318.9872,J/mol,,,nist_henry,B,gas + Henry median of 2 (k 0.00185; slope 2350 K),1
 74-84-0,Hf_gas,-83780,J/mol,170,,atct,A,ATcT 1.112,1
 74-84-0,Hf_gas,-84000,J/mol,400,,nist_review,A,Manion; 2002,0
 74-84-0,Hf_gas,-84000,J/mol,,,crc_thermo,B,,0
@@ -65068,6 +65557,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-84-0,Pc,4900000,Pa,,,nist_snapshot,B,,0
 74-84-0,Pt,1.1,Pa,,,nist,B,Younglove and Ely; 1987,1
 74-84-0,Pt,1.1,Pa,,,nist_snapshot,B,,0
+74-84-0,S0_aq,111.3465809,J/(mol K),,,nist_henry,B,gas + Henry median of 2 (k 0.00185; slope 2350 K),1
 74-84-0,S0_gas,229.2,J/(mol K),,,crc_thermo,B,,1
 74-84-0,S0_gas,229.45,J/(mol K),,,yaws,C,,0
 74-84-0,S0_liquid,126.7,J/(mol K),,,nist,B,Witt and Kemp; 1937,1
@@ -65100,6 +65590,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-85-1,Gf_gas,68421,J/mol,,,janaf,A,JANAF table C-128,1
 74-85-1,Gf_gas,68400,J/mol,,,crc_thermo,B,,0
 74-85-1,Hc_gas,-1411200,J/mol,300,,nist,B,Rossini and Knowlton; 1937,1
+74-85-1,Hf_aq,37593.96729,J/mol,,,nist_henry,B,gas + Henry median of 1 (k 0.0047; slope 1800 K),1
 74-85-1,Hf_gas,52560,J/mol,150,,atct,A,ATcT 1.112,1
 74-85-1,Hf_gas,52467,J/mol,,,janaf,A,JANAF table C-128,0
 74-85-1,Hf_gas,52470,J/mol,,,nist_review,A,Chase; 1998,0
@@ -65122,6 +65613,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-85-1,Pt,120,Pa,,,nist,B,Jahangiri; Jacobsen; et al.; 1986,1
 74-85-1,Pt,120,Pa,,,nist,B,Jahangiri; 1984,0
 74-85-1,Pt,120,Pa,,,nist_snapshot,B,,0
+74-85-1,S0_aq,124.5665579,J/(mol K),,,nist_henry,B,gas + Henry median of 1 (k 0.0047; slope 1800 K),1
 74-85-1,S0_gas,219.33,J/(mol K),,,janaf,A,JANAF table C-128,1
 74-85-1,S0_gas,219.32,J/(mol K),,,nist_review,A,Chase; 1998,0
 74-85-1,S0_gas,219.3,J/(mol K),,,crc_thermo,B,,0
@@ -65155,6 +65647,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-86-2,Cp_gas,44.17,J/(mol K),,300,nist,B,Gurvich; Veyts; et al.; 1989,0
 74-86-2,Gf_gas,209200,J/mol,,,janaf,A,JANAF table C-127,1
 74-86-2,Gf_gas,209900,J/mol,,,crc_thermo,B,,0
+74-86-2,Hf_aq,213353.9673,J/mol,,,nist_henry,B,gas + Henry median of 1 (k 0.041; slope 1800 K),1
 74-86-2,Hf_gas,228320,J/mol,150,,atct,A,ATcT 1.112,1
 74-86-2,Hf_gas,226731,J/mol,,,janaf,A,JANAF table C-127,0
 74-86-2,Hf_gas,226730,J/mol,,,nist_review,A,Chase; 1998,0
@@ -65173,6 +65666,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-86-2,Pc,6138000,Pa,,,nist_snapshot,B,,0
 74-86-2,Pt,128250,Pa,,,nist,B,Clark and Din; 1950,1
 74-86-2,Pt,128250,Pa,,,nist_snapshot,B,,0
+74-86-2,S0_aq,124.2037634,J/(mol K),,,nist_henry,B,gas + Henry median of 1 (k 0.041; slope 1800 K),1
 74-86-2,S0_gas,200.958,J/(mol K),,,janaf,A,JANAF table C-127,1
 74-86-2,S0_gas,200.93,J/(mol K),,,nist_review,A,Chase; 1998,0
 74-86-2,S0_gas,200.9,J/(mol K),,,crc_thermo,B,,0
@@ -65345,6 +65839,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-90-8,Gf_gas,124725,J/mol,,,janaf,A,JANAF table C-052,1
 74-90-8,Gf_gas,124700,J/mol,,,crc_thermo,B,,0
 74-90-8,Gf_liquid,125000,J/mol,,,crc_thermo,B,,1
+74-90-8,Hf_aq,87718.68691,J/mol,,,nist_henry,B,gas + Henry median of 1 (k 12; slope 5000 K),1
 74-90-8,Hf_gas,129291,J/mol,95,,atct,A,ATcT 1.112,1
 74-90-8,Hf_gas,135143,J/mol,,,janaf,A,JANAF table C-052,0
 74-90-8,Hf_gas,135140,J/mol,,,nist_review,A,Chase; 1998,0
@@ -65358,6 +65853,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-90-8,Hvap,27800,J/mol,,313,nist,B,Stephenson and Malanowski; 1987,0
 74-90-8,Hvap,28100,J/mol,,272,nist,B,Iwasaki and Date; 1975,0
 74-90-8,Pc,5400000,Pa,,,iupac_critical,A,IUPAC ref 9,1
+74-90-8,S0_aq,83.05444212,J/(mol K),,,nist_henry,B,gas + Henry median of 1 (k 12; slope 5000 K),1
 74-90-8,S0_gas,201.828,J/(mol K),,,janaf,A,JANAF table C-052,1
 74-90-8,S0_gas,201.82,J/(mol K),,,nist_review,A,Chase; 1998,0
 74-90-8,S0_gas,201.8,J/(mol K),,,crc_thermo,B,,0
@@ -65515,6 +66011,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-98-6,Gf_gas,-23400,J/mol,,,crc_thermo,B,,1
 74-98-6,Hc_gas,-2219200,J/mol,460,,nist,B,Pittam and Pilcher; 1972,1
 74-98-6,Hc_gas,-2204000,J/mol,540,,nist,B,Prosen and Rossini; 1945,0
+74-98-6,Hf_aq,-126839.0491,J/mol,,,nist_henry,B,gas + Henry median of 2 (k 0.0015; slope 2700 K),1
 74-98-6,Hf_gas,-104390,J/mol,290,,atct,A,ATcT 1.112,1
 74-98-6,Hf_gas,-103800,J/mol,,,crc_thermo,B,,0
 74-98-6,Hf_gas,-104700,J/mol,500,,nist,B,Pittam and Pilcher; 1972,0
@@ -65540,6 +66037,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-98-6,Pc,4250000,Pa,10000,,nist,B,AVG,0
 74-98-6,Pc,4250000,Pa,,,nist_snapshot,B,,0
 74-98-6,Pt,0.00016868796,Pa,,,nist_snapshot,B,,1
+74-98-6,S0_aq,140.9424719,J/(mol K),,,nist_henry,B,gas + Henry median of 2 (k 0.0015; slope 2700 K),1
 74-98-6,S0_gas,270.3,J/(mol K),,,crc_thermo,B,,1
 74-98-6,S0_gas,270.28,J/(mol K),,,yaws,C,,0
 74-98-6,S0_liquid,171,J/(mol K),,,nist,B,Kemp and Egan; 1938,1
@@ -65743,6 +66241,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7439-90-9,Cp_gas,20.8,J/(mol K),,298.15,crc_thermo,B,,0
 7439-90-9,Cp_gas,20.79,J/(mol K),,298.15,poling,B,,0
 7439-90-9,Gf_gas,0,J/mol,,,janaf,A,JANAF table Kr-001,1
+7439-90-9,Hf_aq,-14134.58645,J/mol,,,nist_henry,B,gas + Henry median of 2 (k 0.00245; slope 1700 K),1
 7439-90-9,Hf_gas,0,J/mol,0,,atct,A,ATcT 1.112,1
 7439-90-9,Hf_gas,0,J/mol,,,janaf,A,JANAF table Kr-001,0
 7439-90-9,Hf_gas,0,J/mol,,,crc_thermo,B,,0
@@ -65754,6 +66253,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7439-90-9,Pc,5520190,Pa,,,nist_snapshot,B,,0
 7439-90-9,Pt,73150,Pa,,,nist,B,Ziegler; Yarbrough; et al.; 1964,1
 7439-90-9,Pt,73150,Pa,,,nist_snapshot,B,,0
+7439-90-9,S0_aq,66.69258209,J/(mol K),,,nist_henry,B,gas + Henry median of 2 (k 0.00245; slope 1700 K),1
 7439-90-9,S0_gas,164.084,J/(mol K),,,janaf,A,JANAF table Kr-001,1
 7439-90-9,S0_gas,164.085,J/(mol K),0.003,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7439-90-9,S0_gas,164.08,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -66617,6 +67117,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7440-37-1,Cp_gas,20.8,J/(mol K),,298.15,crc_thermo,B,,0
 7440-37-1,Cp_gas,20.79,J/(mol K),,298.15,poling,B,,0
 7440-37-1,Gf_gas,0,J/mol,,,janaf,A,JANAF table Ar-001,1
+7440-37-1,Hf_aq,-10808.8014,J/mol,,,nist_henry,B,gas + Henry median of 2 (k 0.0014; slope 1300 K),1
 7440-37-1,Hf_gas,0,J/mol,0,,atct,A,ATcT 1.112,1
 7440-37-1,Hf_gas,0,J/mol,,,janaf,A,JANAF table Ar-001,0
 7440-37-1,Hf_gas,0,J/mol,,,crc_thermo,B,,0
@@ -66630,6 +67131,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7440-37-1,Pt,68900,Pa,,,nist,B,Gosman; McCarty; et al.; 1969,1
 7440-37-1,Pt,68900,Pa,,,nist,B,Ziegler; Mullins; et al.; 1962,0
 7440-37-1,Pt,68889.068,Pa,,,nist_snapshot,B,,0
+7440-37-1,S0_aq,63.95541524,J/(mol K),,,nist_henry,B,gas + Henry median of 2 (k 0.0014; slope 1300 K),1
 7440-37-1,S0_gas,154.845,J/(mol K),,,janaf,A,JANAF table Ar-001,1
 7440-37-1,S0_gas,154.846,J/(mol K),0.003,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7440-37-1,S0_gas,154.84,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -67068,6 +67570,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7440-59-7,Cp_gas,20.8,J/(mol K),,298.15,crc_thermo,B,,0
 7440-59-7,Cp_gas,20.79,J/(mol K),,298.15,poling,B,,0
 7440-59-7,Gf_gas,0,J/mol,,,janaf,A,JANAF table He-001,1
+7440-59-7,Hf_aq,-1879.068552,J/mol,,,nist_henry,B,gas + Henry median of 2 (k 0.000375; slope 226 K),1
 7440-59-7,Hf_gas,0,J/mol,0,,atct,A,ATcT 1.112,1
 7440-59-7,Hf_gas,0,J/mol,,,janaf,A,JANAF table He-001,0
 7440-59-7,Hf_gas,0,J/mol,,,crc_thermo,B,,0
@@ -67076,6 +67579,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7440-59-7,Pc,228322.7892,Pa,,,coolprop,A,CoolProp Helium,1
 7440-59-7,Pc,227400,Pa,,,nist,B,Angus; de Reuck; et al.; 1977,0
 7440-59-7,Pc,227400,Pa,,,nist_snapshot,B,,0
+7440-59-7,S0_aq,54.26023199,J/(mol K),,,nist_henry,B,gas + Henry median of 2 (k 0.000375; slope 226 K),1
 7440-59-7,S0_gas,126.152,J/(mol K),,,janaf,A,JANAF table He-001,1
 7440-59-7,S0_gas,126.153,J/(mol K),0.002,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7440-59-7,S0_gas,126.15,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -67372,6 +67876,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7446-09-5,Cp_gas,40.05,J/(mol K),,298.15,poling,B,,0
 7446-09-5,Gf_gas,-300125,J/mol,,,janaf,A,JANAF table O-034,1
 7446-09-5,Gf_gas,-300100,J/mol,,,crc_thermo,B,,0
+7446-09-5,Hf_aq,-322616.8341,J/mol,,,nist_henry,B,gas + Henry median of 14 (k 1.2; slope 3100 K),1
 7446-09-5,Hf_gas,-296842,J/mol,,,janaf,A,JANAF table O-034,1
 7446-09-5,Hf_gas,-296810,J/mol,200,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7446-09-5,Hf_gas,-296840,J/mol,,,nist_review,A,Chase; 1998,0
@@ -67386,6 +67891,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7446-09-5,Pc,7886578.977,Pa,,,coolprop,A,CoolProp SulfurDioxide,1
 7446-09-5,Pt,1670,Pa,,,nist,B,Giauque and Stephenson; 1938,1
 7446-09-5,Pt,1670,Pa,,,nist_snapshot,B,,0
+7446-09-5,S0_aq,163.2786885,J/(mol K),,,nist_henry,B,gas + Henry median of 14 (k 1.2; slope 3100 K),1
 7446-09-5,S0_gas,248.212,J/(mol K),,,janaf,A,JANAF table O-034,1
 7446-09-5,S0_gas,248.223,J/(mol K),0.05,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7446-09-5,S0_gas,248.21,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -68209,6 +68715,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-15-0,Gf_gas,66816,J/mol,,,janaf,A,JANAF table C-099,1
 75-15-0,Gf_gas,67100,J/mol,,,crc_thermo,B,,0
 75-15-0,Gf_liquid,64600,J/mol,,,crc_thermo,B,,1
+75-15-0,Hf_aq,88673.8271,J/mol,,,nist_henry,B,gas + Henry median of 4 (k 0.0555; slope 3400 K),1
 75-15-0,Hf_gas,116943,J/mol,,,janaf,A,JANAF table C-099,1
 75-15-0,Hf_gas,116700,J/mol,,,crc_thermo,B,,0
 75-15-0,Hf_gas,116949.73,J/mol,,,nist_snapshot,B,,0
@@ -68219,6 +68726,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-15-0,Hvap,26740,J/mol,,319.15,crc_hvap,B,,1
 75-15-0,Hvap_298,27510,J/mol,,298.15,crc_hvap,B,,1
 75-15-0,Hvap_298,27500,J/mol,,,nist_snapshot,B,,0
+75-15-0,S0_aq,119.1215229,J/(mol K),,,nist_henry,B,gas + Henry median of 4 (k 0.0555; slope 3400 K),1
 75-15-0,S0_gas,237.977,J/(mol K),,,janaf,A,JANAF table C-099,1
 75-15-0,S0_gas,237.8,J/(mol K),,,crc_thermo,B,,0
 75-15-0,S0_gas,237.98,J/(mol K),,,nist_snapshot,B,,0
@@ -71594,6 +72102,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7664-41-7,Cp_liquid,83,J/(mol K),,298.15,poling,B,,1
 7664-41-7,Gf_gas,-16367,J/mol,,,janaf,A,JANAF table H-083,1
 7664-41-7,Gf_gas,-16400,J/mol,,,crc_thermo,B,,0
+7664-41-7,Hf_aq,-79647.29673,J/mol,,,nist_henry,B,gas + Henry median of 12 (k 58; slope 4100 K),1
 7664-41-7,Hf_gas,-45558,J/mol,30,,atct,A,ATcT 1.112,1
 7664-41-7,Hf_gas,-45898,J/mol,,,janaf,A,JANAF table H-083,0
 7664-41-7,Hf_gas,-45940,J/mol,350,,nist_review,A,Cox; Wagman; et al.; 1984,0
@@ -71612,6 +72121,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7664-41-7,Pc,11300000,Pa,,,nist_snapshot,B,,0
 7664-41-7,Pt,6060,Pa,,,nist,B,Fonseca and Lobo; 1989,1
 7664-41-7,Pt,6060,Pa,,,nist_snapshot,B,,0
+7664-41-7,S0_aq,112.1983401,J/(mol K),,,nist_henry,B,gas + Henry median of 12 (k 58; slope 4100 K),1
 7664-41-7,S0_gas,192.774,J/(mol K),,,janaf,A,JANAF table H-083,1
 7664-41-7,S0_gas,192.77,J/(mol K),0.05,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7664-41-7,S0_gas,192.77,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -72707,6 +73217,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7727-37-9,Cp_gas,29.1,J/(mol K),,298.15,crc_thermo,B,,0
 7727-37-9,Cp_gas,29.12,J/(mol K),,298.15,poling,B,,0
 7727-37-9,Gf_gas,0,J/mol,,,janaf,A,JANAF table N-023,1
+7727-37-9,Hf_aq,-10808.8014,J/mol,,,nist_henry,B,gas + Henry median of 2 (k 0.000625; slope 1300 K),1
 7727-37-9,Hf_gas,0,J/mol,0,,atct,A,ATcT 1.112,1
 7727-37-9,Hf_gas,0,J/mol,,,janaf,A,JANAF table N-023,0
 7727-37-9,Hf_gas,0,J/mol,,,crc_thermo,B,,0
@@ -72722,6 +73233,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7727-37-9,Pt,12520,Pa,,,nist,B,Jacobsen; Stewart; et al.; 1986,1
 7727-37-9,Pt,12530,Pa,,,nist,B,Angus; de Reuck; et al.; 1979,0
 7727-37-9,Pt,12520.347,Pa,,,nist_snapshot,B,,0
+7727-37-9,S0_aq,94.0140018,J/(mol K),,,nist_henry,B,gas + Henry median of 2 (k 0.000625; slope 1300 K),1
 7727-37-9,S0_gas,191.609,J/(mol K),,,janaf,A,JANAF table N-023,1
 7727-37-9,S0_gas,191.609,J/(mol K),0.004,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7727-37-9,S0_gas,191.61,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -73356,6 +73868,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7782-44-7,Cp_gas,29.4,J/(mol K),,298.15,crc_thermo,B,,0
 7782-44-7,Cp_gas,29.38,J/(mol K),,298.15,poling,B,,0
 7782-44-7,Gf_gas,0,J/mol,,,janaf,A,JANAF table O-029,1
+7782-44-7,Hf_aq,-14134.58645,J/mol,,,nist_henry,B,gas + Henry median of 6 (k 0.0013; slope 1700 K),1
 7782-44-7,Hf_gas,0,J/mol,0,,atct,A,ATcT 1.112,1
 7782-44-7,Hf_gas,0,J/mol,,,janaf,A,JANAF table O-029,0
 7782-44-7,Hf_gas,0,J/mol,,,crc_thermo,B,,0
@@ -73366,6 +73879,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7782-44-7,Pc,5043000,Pa,,,nist,B,Wagner; Ewers; et al.; 1976,0
 7782-44-7,Pc,5003430,Pa,,,nist,B,Cardoso; 1915,0
 7782-44-7,Pc,5042873.5,Pa,,,nist_snapshot,B,,0
+7782-44-7,S0_aq,102.4865096,J/(mol K),,,nist_henry,B,gas + Henry median of 6 (k 0.0013; slope 1700 K),1
 7782-44-7,S0_gas,205.147,J/(mol K),,,janaf,A,JANAF table O-029,1
 7782-44-7,S0_gas,205.152,J/(mol K),0.005,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7782-44-7,S0_gas,205.15,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -73411,6 +73925,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7782-50-5,Cp_gas,33.9,J/(mol K),,298.15,crc_thermo,B,,0
 7782-50-5,Cp_gas,29.14,J/(mol K),,298.15,poling,B,,0
 7782-50-5,Gf_gas,0,J/mol,,,janaf,A,JANAF table Cl-073,1
+7782-50-5,Hf_aq,-21201.87968,J/mol,,,nist_henry,B,gas + Henry median of 6 (k 0.088; slope 2550 K),1
 7782-50-5,Hf_gas,0,J/mol,0,,atct,A,ATcT 1.112,1
 7782-50-5,Hf_gas,0,J/mol,,,janaf,A,JANAF table Cl-073,0
 7782-50-5,Hf_gas,0,J/mol,,,crc_thermo,B,,0
@@ -73424,6 +73939,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7782-50-5,Pc,7985389.3,Pa,,,nist_snapshot,B,,0
 7782-50-5,Pt,1392,Pa,3,,nist,B,Angus; Armstrong; et al.; 1984,1
 7782-50-5,Pt,1392,Pa,,,nist_snapshot,B,,0
+7782-50-5,S0_aq,131.7599237,J/(mol K),,,nist_henry,B,gas + Henry median of 6 (k 0.088; slope 2550 K),1
 7782-50-5,S0_gas,223.079,J/(mol K),,,janaf,A,JANAF table Cl-073,1
 7782-50-5,S0_gas,223.081,J/(mol K),0.01,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7782-50-5,S0_gas,223.08,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -73528,6 +74044,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7783-06-4,Cp_liquid,74.68,J/(mol K),,298.15,poling,B,,1
 7783-06-4,Gf_gas,-33329,J/mol,,,janaf,A,JANAF table H-080,1
 7783-06-4,Gf_gas,-33400,J/mol,,,crc_thermo,B,,0
+7783-06-4,Hf_aq,-38378.09463,J/mol,,,nist_henry,B,gas + Henry median of 8 (k 0.1; slope 2150 K),1
 7783-06-4,Hf_gas,-20502,J/mol,,,janaf,A,JANAF table H-080,1
 7783-06-4,Hf_gas,-20600,J/mol,500,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7783-06-4,Hf_gas,-20500,J/mol,,,nist_review,A,Chase; 1998,0
@@ -73546,6 +74063,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7783-06-4,Pc,8966915.4,Pa,,,nist_snapshot,B,,0
 7783-06-4,Pt,23200,Pa,,,nist,B,Goodwin; 1983,1
 7783-06-4,Pt,23200,Pa,,,nist_snapshot,B,,0
+7783-06-4,S0_aq,126.6555271,J/(mol K),,,nist_henry,B,gas + Henry median of 8 (k 0.1; slope 2150 K),1
 7783-06-4,S0_gas,205.757,J/(mol K),,,janaf,A,JANAF table H-080,1
 7783-06-4,S0_gas,205.81,J/(mol K),0.05,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7783-06-4,S0_gas,205.77,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -80010,6 +80528,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 920-46-7,Tb,369.2,K,,,nist_snapshot,B,,0
 920-46-7,Tm,213.15,K,,,crc_constants,B,,1
 920-46-7,rho_liquid,1087.12,kg/m3,,,crc_constants,B,,1
+920-52-5,Gf_aq,-698300,J/mol,,,crc_aqueous,B,,1
+920-52-5,Hf_aq,-818400,J/mol,,,crc_aqueous,B,,1
+920-52-5,S0_aq,149.4,J/(mol K),,,crc_aqueous,B,,1
 920-66-1,Hvap_298,41590,J/mol,,,nist_snapshot,B,,1
 920-66-1,Tb,332.15,K,,,crc_constants,B,,1
 920-66-1,Tb,331.58294,K,,,nist_snapshot,B,,0
@@ -81605,6 +82126,9 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 95-95-4,Tm,341.55,K,,,crc_constants,B,,1
 95-96-5,Hf_solid,-792100,J/mol,,,nist_snapshot,B,,1
 950-37-8,Tm,315.65,K,,,crc_constants,B,,1
+95118-37-9,Gf_aq,-405000,J/mol,,,crc_aqueous,B,,1
+95118-37-9,Hf_aq,-450600,J/mol,,,crc_aqueous,B,,1
+95118-37-9,S0_aq,-17,J/(mol K),,,crc_aqueous,B,,1
 952-97-6,Tm,329.15,K,,,crc_constants,B,,1
 953-17-3,Tm,255.15,K,,,crc_constants,B,,1
 955-83-9,Tb,617.15,K,,,crc_constants,B,,1

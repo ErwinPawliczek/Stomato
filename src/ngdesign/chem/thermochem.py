@@ -13,11 +13,12 @@ from dataclasses import dataclass, replace
 import scipy.constants as sc
 from scipy.optimize import brentq
 
-from ngdesign.chem.formula import parse_formula
 from ngdesign.chem.stoichiometry import Equation, Term, as_written, balance
 from ngdesign.data import chemdb
 from ngdesign.data.chemdb import MissingPropertyError
+from ngdesign.data.formula import parse_formula
 from ngdesign.data.species_models import (
+    AQUEOUS,
     PHASES,
     REFERENCE,
     T_REF,
@@ -38,7 +39,14 @@ P_STANDARD = 1.0e5
 def _term_thermo(term: Term, T: float, hf_source: str | None) -> SpeciesThermo:
     query = term.species_query
     if query is None:
-        raise ThermochemError(f"{term.key!r}: ions have no standard-state model here")
+        raise ThermochemError(f"{term.key!r} has no species identity")
+    if term.formula.charge and term.phase is None:
+        term = replace(term, phase=AQUEOUS)  # an ion exists here only in water
+    if term.phase == AQUEOUS:
+        try:
+            return species_thermo(query, AQUEOUS)
+        except MissingPropertyError as exc:
+            raise ThermochemError(f"{term.key!r}: {exc}") from exc
     if term.phase is None and _has_reference_table(chemdb.find(query).cas):
         return _reference_state(query)  # an element left unqualified means its standard state
     phase = term.phase if term.phase in PHASES else stable_phase(query, T) if term.phase is None else None

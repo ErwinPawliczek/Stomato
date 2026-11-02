@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ngdesign.chem.formula import FormulaError, parse_formula
+from ngdesign.data.formula import FormulaError, parse_formula
 
 
 @pytest.mark.parametrize(
@@ -78,6 +78,7 @@ def test_not_a_formula(bad: str) -> None:
         ("NH4+", {"N": 1, "H": 4}, 1),
         ("NO3-", {"N": 1, "O": 3}, -1),
         ("MnO4-", {"Mn": 1, "O": 4}, -1),
+        ("Al(OH)4-", {"Al": 1, "O": 4, "H": 4}, -1),
     ],
 )
 def test_a_digit_before_a_sign_is_read_by_context(token: str, atoms: dict[str, int], charge: int) -> None:

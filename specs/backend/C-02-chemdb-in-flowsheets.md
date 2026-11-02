@@ -24,3 +24,12 @@ Formation numbers move to ATcT and JANAF:
 - [x] `tests/e2e/test_slice.py` and the bench byte-identity tests unchanged
 - [x] `gibbs_minimum`, `reaction_thermo` and `ln_keq` agree to 1e-9 on shared data
 - [x] `gibbs_multiphase`: V1-CRACK-GIBBS within tolerance; energy closes on every thermal mode
+
+## Liquid solutions and aqueous species
+`gibbs_phases` carries several mixture phases, each with its own row and total: gas, one
+liquid solution, and water with solutes. Non-ideal terms are frozen per pass and re-evaluated.
+Aqueous data: CRC ions, plus dissolved gases derived from WebBook Henry's-law constants.
+
+- [x] Ideal solution reproduces Raoult's law on the cited fits to 1e-6
+- [x] pKw, carbonic and ammonium constants, CaCO3 solubility and CO2-saturated pH near accepted values
+- [x] Electroneutrality holds to 1e-9 of the positive charge

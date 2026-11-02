@@ -1,5 +1,7 @@
 """Chemical formula parsing: atoms, charge, phase and hydrate handling.
 
+Lives in the data layer because the database resolves ions through it.
+
 Element counting is delegated to ``chemicals.elements.nested_formula_parser`` and
 charge reading to ``charge_from_formula``. This module adds what they do not take:
 the phase suffix ``(g)``/``(l)``/``(s)``/``(aq)``, hydrate dots ``CuSO4·5H2O``,
@@ -77,10 +79,11 @@ def _split_charge(body: str) -> tuple[str, int]:
     """Strip a trailing charge from a formula body: ``(body-without-charge, charge)``.
 
     ``NH4+`` and ``Fe3+`` have the same shape and opposite meanings, so a digit before
-    a final sign is read by what precedes it. After a bracket it is the charge
-    (``[Fe(CN)6]3-``). After a lone metal it is the charge (``Fe3+``). After a lone
-    H, N, O or halogen it could be either (``O2-``), so it is refused, as is a two-digit
-    run on a polyatomic (``SO42-``). Otherwise it is a subscript (``NO3-``, ``NH4+``).
+    a final sign is read by what precedes it. After ``]`` it is the charge
+    (``[Fe(CN)6]3-``); after ``)`` a subscript (``Al(OH)4-``). After a lone metal it is
+    the charge (``Fe3+``). After a lone H, N, O or halogen it could be either (``O2-``),
+    so it is refused, as is a two-digit run on a polyatomic (``SO42-``). Otherwise it is
+    a subscript (``NO3-``, ``NH4+``).
     The caret and sign-first spellings (``SO4^2-``, ``Fe+3``) are never ambiguous.
     """
     if "^" in body or body.endswith("}"):
@@ -96,7 +99,7 @@ def _split_charge(body: str) -> tuple[str, int]:
     if trailing is not None:
         head, digits, sign = trailing.groups()
         magnitude = int(digits[-1]) * (1 if sign == "+" else -1)
-        if head.endswith(("]", ")")) and len(digits) == 1:
+        if head.endswith("]") and len(digits) == 1:
             return head, magnitude
         lone = _LONE_ELEMENT.fullmatch(head)
         if lone is not None and len(digits) == 1:

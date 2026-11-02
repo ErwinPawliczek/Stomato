@@ -33,6 +33,7 @@ from functools import lru_cache
 from typing import Any
 
 import numpy as np
+import scipy.constants as sc
 from chemicals.heat_capacity import (
     Poling,
     Poling_integral,
@@ -42,11 +43,16 @@ from chemicals.heat_capacity import (
     TRCCp_integral_over_T,
 )
 
-from ngdesign.data import chemdb
+from ngdesign.data import chemdb, vapour_pressure
 from ngdesign.data.chemdb import MissingPropertyError
 
 T_REF = 298.15
+_R = sc.R
+_P_STANDARD = 1.0e5
 PHASES = ("gas", "liquid", "solid")
+AQUEOUS = "aqueous"  # 1 molal standard state, H+(aq) = 0; temperature range below
+#: Window the aqueous fallback is used in: 298.15 K data, liquid water around it.
+_AQUEOUS_RANGE = (273.15, 373.15)
 REFERENCE = "reference"  # an element's reference state, whatever phase it is in at T
 
 
@@ -212,6 +218,53 @@ class _PolyCurve(_Curve):
         return self.s298 + self._s(T) - self._s(T_REF)
 
 
+class _SaturationCurve(_Curve):
+    """Liquid from its vapour: μ°(l, T) = μ°(g, T) + R·T·ln(Psat(T)/P°).
+
+    The ideal-vapour, negligible-Poynting limit of equal fugacities at saturation.
+    It holds the liquid to the cited vapour-pressure fit, so VLE built on these
+    potentials reproduces that fit where a constant Cp would drift (benzene at 365 K:
+    116 kPa against 144 kPa). G comes from that identity on the absolute scale; H is
+    the Gibbs-Helmholtz derivative, stated relative to 298.15 K, so the stated ΔfH°(l)
+    still anchors heats of reaction at 298.15 K. The two scales disagree by
+    the gap between the stated ΔfH°(l) and ΔfH°(g) − ΔHvap, which ``s`` absorbs.
+    """
+
+    name = "saturation"
+    _STEP = 0.05
+
+    def __init__(self, gas: SpeciesThermo, query: str, hf: float) -> None:
+        self.gas = gas
+        self.query = query
+        self.hf = hf
+        windows = [fit.window for fit in vapour_pressure.fits(query)]
+        self.tmin = max(min(w[0] for w in windows), gas.t_range[0])
+        self.tmax = min(max(w[1] for w in windows), gas.t_range[1])
+
+    def _g(self, T: float) -> float:
+        fit = vapour_pressure.fit_at(self.query, T)
+        if fit is None:
+            raise TemperatureRangeError(f"{self.query}: no vapour-pressure fit holds {T} K")
+        return float(self.gas.g(T) + _R * T * math.log(fit.pressure(T) / _P_STANDARD))
+
+    def _h(self, T: float) -> float:
+        """H = G − T·dG/dT, with the slope taken inside the fit window."""
+        low = max(T - self._STEP, self.tmin)
+        high = min(T + self._STEP, self.tmax)
+        return self._g(T) - T * (self._g(high) - self._g(low)) / (high - low)
+
+    def dh(self, T: float) -> float:
+        return self._h(T) - self._h(T_REF)
+
+    def cp(self, T: float) -> float:
+        low = max(T - 1.0, self.tmin)
+        high = min(T + 1.0, self.tmax)
+        return float((self._h(high) - self._h(low)) / (high - low))
+
+    def s(self, T: float) -> float:
+        return float((self.hf + self.dh(T) - self._g(T)) / T)
+
+
 class _ConstantCpCurve(_Curve):
     """Constant Cp between stated limits: the coarse condensed-phase fallback."""
 
@@ -368,6 +421,8 @@ def species_thermo(query: str, phase: str = "gas", hf_source: str | None = None)
     """
     if phase == REFERENCE:
         return _reference_state(query)
+    if phase == AQUEOUS:
+        return _aqueous_model(query)
     if phase not in PHASES:
         raise ThermochemError(f"phase must be one of {PHASES}, got {phase!r}")
     species = chemdb.find(query)
@@ -394,6 +449,9 @@ def species_thermo(query: str, phase: str = "gas", hf_source: str | None = None)
         if pieces:
             curve = _ShomateCurve(pieces)
     if curve is None:
+        if phase == "liquid":
+            curve = _saturation_curve(species.cas, hf)
+    if curve is None:
         s298, s_source = _standard_entropy(species.cas, phase, hf)
         provenance["s298"] = s_source
         if phase == "gas":
@@ -409,13 +467,52 @@ def species_thermo(query: str, phase: str = "gas", hf_source: str | None = None)
                 tmin, tmax = T_REF, T_REF + 100.0
             elif phase == "liquid":
                 tmin = chemdb.maybe(species.cas, "Tm") or 200.0
-                tmax = chemdb.maybe(species.cas, "Tb") or T_REF + 100.0
+                # a liquid under pressure outlives its normal boiling point, not its critical point
+                critical = chemdb.maybe(species.cas, "Tc")
+                tmax = 0.9 * critical if critical else chemdb.maybe(species.cas, "Tb") or T_REF + 100.0
             else:
                 tmin = 100.0
                 tmax = chemdb.maybe(species.cas, "Tm") or T_REF + 100.0
             curve = _ConstantCpCurve(cp, s298, min(tmin, T_REF), max(tmax, T_REF))
     provenance["shape"] = curve.name
     return SpeciesThermo(species.cas, species.name, phase, hf, curve, provenance)
+
+
+def _aqueous_model(query: str) -> SpeciesThermo:
+    """A solute at 1 molal: 298.15 K values with Cp held constant over liquid water.
+
+    The stated Cp°(aq) when a source gives one, else zero (ΔH independent of T, the
+    van 't Hoff form), which the model name says. S° comes from ΔfH° and ΔfG° when
+    only those are stated, with the charge term of the H+ convention.
+    """
+    species = chemdb.find(query)
+    rows = chemdb.values(species.cas, "Hf_aq")
+    if not rows:
+        raise MissingPropertyError(f"no aqueous ΔfH° for {species.name}")
+    chosen = next(r for r in rows if r.selected)
+    stated = chemdb.maybe(species.cas, "S0_aq")
+    s298 = stated if stated is not None else _aqueous_entropy(species, chosen.value)
+    cp = chemdb.maybe(species.cas, "Cp_aq")
+    curve = _ConstantCpCurve(cp or 0.0, s298, *_AQUEOUS_RANGE)
+    curve.name = "constant_cp" if cp is not None else "vant_hoff"
+    provenance = {
+        "hf298": f"{chosen.source} [{chosen.grade}] {chosen.reference}".strip(),
+        "shape": curve.name,
+    }
+    return SpeciesThermo(species.cas, species.name, AQUEOUS, chosen.value, curve, provenance)
+
+
+def _aqueous_entropy(species: chemdb.Species, hf: float) -> float:
+    """S°(aq) = ΔfS° + Σ S°(elements) − (z/2)·S°(H2), from X + z H+ = ion + (z/2) H2."""
+    gibbs = chemdb.maybe(species.cas, "Gf_aq")
+    if gibbs is None:
+        raise MissingPropertyError(f"no source states S° or ΔfG° of {species.name} in water")
+    total = (hf - gibbs) / T_REF
+    for element, count in chemdb.composition(species.cas).items():
+        reference = _element_reference(element)
+        total += count / reference.atoms_per_molecule * reference.thermo.s(T_REF)
+    hydrogen = _element_reference("H")
+    return total - species.charge / 2.0 * hydrogen.thermo.s(T_REF)
 
 
 def _reference_state(query: str) -> SpeciesThermo:
@@ -437,6 +534,16 @@ def _reference_state(query: str) -> SpeciesThermo:
 
 def _has_reference_table(cas: str) -> bool:
     return any(rows[0]["phase"] == "ref" for rows in chemdb.janaf(cas).values())
+
+
+def _saturation_curve(cas: str, hf: float) -> _Curve | None:
+    """The saturation model, when there is a gas model and a fit reaching 298.15 K."""
+    if vapour_pressure.fit_at(cas, T_REF) is None:
+        return None
+    try:
+        return _SaturationCurve(species_thermo(cas, "gas"), cas, hf)
+    except MissingPropertyError:
+        return None
 
 
 def stable_phase(query: str, T: float) -> str:

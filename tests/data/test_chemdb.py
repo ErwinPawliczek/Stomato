@@ -11,8 +11,8 @@ from collections import Counter, defaultdict
 import CoolProp.CoolProp as CP
 import pytest
 
-from ngdesign.chem.formula import FormulaError, parse_formula
 from ngdesign.data import DATA_DIR, chemdb, components
+from ngdesign.data.formula import FormulaError, parse_formula
 from ngdesign.uom.quantity import convert
 from ngdesign.uom.units import parse_unit
 

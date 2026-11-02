@@ -6,8 +6,7 @@ work for every species with a fit, and **rigorous** diagrams that take any
 registered :class:`~ngdesign.contracts.plugins.Thermo` package, so the activity and
 EOS models of ``ngdesign.thermo`` supply the physics and this module the sweep.
 
-Vapour-pressure forms: Wagner 2.5-5 and 1.5-3-6 via ``chemicals.vapor_pressure``;
-Antoine log10(P/bar) = A − B/(T + C). A temperature outside every fit is refused.
+A temperature outside every vapour-pressure fit is refused.
 """
 
 from __future__ import annotations
@@ -18,13 +17,12 @@ from dataclasses import dataclass
 
 import numpy as np
 from chemicals.rachford_rice import flash_inner_loop
-from chemicals.vapor_pressure import Wagner, Wagner_original
 from scipy.optimize import brentq, minimize_scalar
 
 from ngdesign.chem.thermochem import R
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.thermo import SaturationError
-from ngdesign.data import chemdb
+from ngdesign.data import chemdb, vapour_pressure
 from ngdesign.data.chemdb import MissingPropertyError
 from ngdesign.uom.quantity import si_arguments
 
@@ -46,55 +44,30 @@ class VapourPressure:
     window: tuple[float, float]  # K
 
 
-def _fits(query: str) -> list[tuple[str, str, tuple[float, float], dict[str, float]]]:
-    """Vapour-pressure fits of a species, most trusted first."""
-    species = chemdb.find(query)
-    fits: list[tuple[str, str, tuple[float, float], dict[str, float]]] = []
-    for row in sorted(chemdb.wagner(species.cas), key=lambda r: r["form"] != "2.5-5"):
-        fits.append((f"wagner {row['form']}", row["source"], (row["Tmin"], row["Tmax"]), row))
-    for row in sorted(chemdb.antoine(species.cas), key=lambda r: r["source"] != "poling"):
-        if row["Tmin"] is not None and row["Tmax"] is not None:
-            fits.append(("antoine", row["source"], (row["Tmin"], row["Tmax"]), row))
-    return fits
-
-
-def _evaluate(form: str, row: Mapping[str, float], T: float) -> float:
-    if form == "wagner 2.5-5":
-        return float(Wagner(T, row["Tc"], row["Pc"], row["A"], row["B"], row["C"], row["D"]))
-    if form == "wagner 1.5-3-6":
-        return float(Wagner_original(T, row["Tc"], row["Pc"], row["A"], row["B"], row["C"], row["D"]))
-    return float(1e5 * 10.0 ** (row["A"] - row["B"] / (T + row["C"])))
-
-
 @si_arguments(T="temperature")
 def psat(query: str, T: float) -> VapourPressure:
     """Saturation pressure at T from the most trusted fit whose window holds T."""
-    fits = _fits(query)
-    if not fits:
+    fit = vapour_pressure.fit_at(query, T)
+    if fit is not None:
+        return VapourPressure(fit.pressure(T), fit.form, fit.source, fit.window)
+    available = vapour_pressure.fits(query)
+    if not available:
         raise MissingPropertyError(f"no vapour-pressure fit for {query!r}")
-    for form, source, window, row in fits:
-        if window[0] <= T <= window[1]:
-            return VapourPressure(_evaluate(form, row, T), form, source, window)
-    low = min(f[2][0] for f in fits)
-    high = max(f[2][1] for f in fits)
+    low = min(f.window[0] for f in available)
+    high = max(f.window[1] for f in available)
     raise PhaseError(f"{query}: no vapour-pressure fit holds {T} K (data span {low}-{high} K)")
-
-
-def _saturation_residual(T: float, form: str, row: Mapping[str, float], P: float) -> float:
-    return _evaluate(form, row, T) - P
 
 
 @si_arguments(P="pressure")
 def tsat(query: str, P: float) -> float:
     """Saturation temperature at P, K, inverted on the fits."""
-    fits = _fits(query)
-    if not fits:
+    available = vapour_pressure.fits(query)
+    if not available:
         raise MissingPropertyError(f"no vapour-pressure fit for {query!r}")
-    for form, _source, window, row in fits:
-        low = _evaluate(form, row, window[0])
-        high = _evaluate(form, row, window[1])
-        if low <= P <= high:
-            return float(brentq(_saturation_residual, *window, args=(form, row, P), xtol=1e-9))
+    for fit in available:
+        T = vapour_pressure.temperature_at(fit, P)
+        if T is not None:
+            return T
     raise PhaseError(f"{query}: no vapour-pressure fit reaches {P} Pa")
 
 

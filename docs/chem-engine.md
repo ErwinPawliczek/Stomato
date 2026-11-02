@@ -84,8 +84,9 @@ heating_value("methane").lhv_mass
 adiabatic_flame_temperature("propane", phi=0.8)
 ```
 
-Species models, best first: NIST-JANAF table (Hermite-interpolated), NIST Shomate, gas Cp
-fit (TRC, Poling), constant Cp (condensed only, and named so). A temperature outside the
+Species models, best first: NIST-JANAF table (Hermite-interpolated), NIST Shomate, then for a
+liquid the saturation model μ°(l) = μ°(g) + RT ln(Psat/P°), which holds it to its cited
+vapour-pressure fit; gas Cp fit (TRC, Poling); constant Cp (condensed only, and named so). A temperature outside the
 model's range is refused. Standard states: 1 bar ideal gas; pure condensed phase. With no
 phase given, a term takes its stable phase at T, so `2 H2 + O2 -> 2 H2O` forms liquid
 water at 298 K and steam at 500 K; `(g)`/`(l)`/`(s)` overrides that. An unqualified element
@@ -105,9 +106,25 @@ adiabatic_equilibrium({"CH4": 1, "O2": 2, "N2": 7.52}, [...])                  #
 reaction_equilibrium(["CO + H2O -> CO2 + H2"], feed, 900)                     # only listed reactions run
 ```
 
-The Gibbs solver covers an ideal-gas mixture plus pure condensed species, with fugacity
-coefficients from any registered package. It does not model liquid solutions: a condensing
-mixture of two organics is outside it.
+Candidates name their phase: `CO2` is a gas, `C(s)` and `H2O(l)` are pure condensed phases,
+`EtOH(sln)` is a member of the liquid solution and `Na+(aq)` is a solute, with `H2O(aq)` as
+the solvent. Which phases exist is an output.
+
+```python
+gibbs_equilibrium({"EtOH": .1, "H2O": .9}, ["EtOH", "H2O", "EtOH(sln)", "H2O(sln)"], 363.15,
+                  activity=registry.create("thermo", "wilson_ig"))     # VLE with activity coefficients
+r = gibbs_equilibrium({"H2O": 55.5, "CO2": 10}, ["H2O(aq)", "H+(aq)", "OH-(aq)", "CO2(aq)",
+                      "HCO3-(aq)", "CO3-2(aq)", "CO2", "H2O"], "25 degC")   # carbonated water
+r.pH, r.molality("CO2(aq)"), r.ionic_strength
+```
+
+- **Liquid solution:** pure-liquid standard state, ideal unless `activity=` names a package;
+  ln γ is ln φ(x) − ln φ(pure) of that package, so any registered row works.
+- **Aqueous:** 1 molal standard state with H+ = 0; charge is conserved as a pseudo-element;
+  Davies activity coefficients, refused above I = 0.5 mol/kg, so brines are out of range.
+- Solutes hold 25 °C data with a constant Cp (or none, which the model name says), over
+  liquid water only: expect their K to degrade away from 25 °C.
+- Only one liquid solution: no liquid-liquid split.
 
 ## Kinetics
 

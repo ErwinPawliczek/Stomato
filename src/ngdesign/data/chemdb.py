@@ -25,6 +25,7 @@ from chemicals.elements import atoms_to_Hill, nested_formula_parser
 from chemicals.identifiers import CAS_from_any
 
 from ngdesign.data import DATA_DIR, _curated_table
+from ngdesign.data.formula import FormulaError, parse_formula
 
 _DIR = DATA_DIR / "chemdb"
 
@@ -178,6 +179,35 @@ def _hill(formula: str) -> str | None:
         return None
 
 
+@cache
+def _ion_index() -> dict[tuple[str, int], str]:
+    """(Hill formula of the atoms, charge) -> CAS."""
+    index: dict[tuple[str, int], str] = {}
+    ions = (s for s in _species().values() if s.charge != 0)
+    for species in sorted(
+        ions, key=lambda s: (s.identity_source != "crc_aqueous", -_data_rows(s.cas), s.cas)
+    ):
+        try:
+            index.setdefault((parse_formula(species.formula).hill, species.charge), species.cas)
+        except FormulaError:
+            continue
+    return index
+
+
+def _ion(query: str) -> Species | None:
+    """The ion a charged formula names; a charge is never dropped to reach a neutral."""
+    try:
+        parsed = parse_formula(query)
+    except FormulaError:
+        return None
+    if parsed.charge == 0:
+        return None
+    cas = _ion_index().get((parsed.hill, parsed.charge))
+    if cas is None:
+        raise UnknownSpeciesError(f"no aqueous ion matches {query!r}")
+    return _species()[cas]
+
+
 def find(query: str) -> Species:
     """Resolve a query to one species.
 
@@ -197,6 +227,9 @@ def find(query: str) -> Species:
     named = _name_index().get(query.lower())
     if named is not None:
         return table[named]
+    ion = _ion(query)
+    if ion is not None:
+        return ion
     hill = _hill(query)
     matches = _formula_index().get(hill, ()) if hill is not None else ()
     neutral = tuple(c for c in matches if table[c].charge == 0)
@@ -223,7 +256,7 @@ def find(query: str) -> Species:
 def composition(query: str) -> dict[str, int]:
     """Element counts of a species' formula; a fractional formula is refused."""
     formula = find(query).formula
-    atoms = nested_formula_parser(formula)
+    atoms = nested_formula_parser(formula)  # the parser reads past a charge
     if any(float(count) != int(count) for count in atoms.values()):
         raise ChemDbError(f"{formula} is non-stoichiometric")
     return {element: int(count) for element, count in atoms.items()}

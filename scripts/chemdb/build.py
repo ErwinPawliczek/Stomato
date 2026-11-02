@@ -28,12 +28,15 @@ from typing import Any
 
 import chemicals
 import CoolProp.CoolProp as CP
+import scipy.constants as sc
 import thermo
+from chemicals.elements import charge_from_formula
 from chemicals.identifiers import search_chemical
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from parse_nist import (  # noqa: E402
     Page,
+    parse_henry,
     parse_janaf_index,
     parse_janaf_table,
     parse_page,
@@ -59,6 +62,8 @@ SOURCE_RANK: dict[str, int] = {
     "nist": 9,
     "nist_snapshot": 10,
     "yaws": 11,
+    "crc_aqueous": 5,
+    "nist_henry": 9,
 }
 
 GRADES: dict[str, str] = {
@@ -76,6 +81,8 @@ GRADES: dict[str, str] = {
     "nist": "B",
     "nist_snapshot": "B",
     "yaws": "C",
+    "crc_aqueous": "B",
+    "nist_henry": "B",
 }
 
 UNITS = {
@@ -286,6 +293,80 @@ def _collect_janaf(rows: Rows, table_rows: list[dict[str, Any]]) -> None:
         rows.add(row["cas"], f"Gf_{phase}", row.get("Gf"), "janaf", reference=reference)
         rows.add(row["cas"], f"S0_{phase}", row["S"], "janaf", reference=reference)
         rows.add(row["cas"], f"Cp_{phase}", row["Cp"], "janaf", T=298.15, reference=reference)
+
+
+ION_TABLE = "Electrolytes/CRC Thermodynamic Properties of Aqueous Ions.tsv"
+
+
+def _collect_ions(rows: Rows) -> dict[str, dict[str, Any]]:
+    """CRC aqueous-ion values (H+ = 0 convention) and the ions' identities."""
+    identity: dict[str, dict[str, Any]] = {}
+    for row in _tsv(ION_TABLE):
+        cas = row["CAS"]
+        for head, prop in (("Hf(aq)", "Hf_aq"), ("Gf(aq)", "Gf_aq"), ("S(aq)", "S0_aq"), ("Cp(aq)", "Cp_aq")):
+            value = _num(row[head])
+            if value is not None:
+                rows.rows.append(
+                    {
+                        "cas": cas,
+                        "property": prop,
+                        "value": value,
+                        "unit": _unit(prop),
+                        "uncertainty": None,
+                        "T_K": 298.15 if prop == "Cp_aq" else None,
+                        "source": "crc_aqueous",
+                        "grade": GRADES["crc_aqueous"],
+                        "reference": "",
+                    }
+                )
+        identity[cas] = {
+            "cas": cas,
+            "name": row["Name"],
+            "formula": row["Formula"],
+            "mw": _num(row["MW"]),
+            "inchikey": "",
+            "smiles": "",
+            "pubchem_cid": None,
+            "charge": _ion_charge(row["Formula"]),
+        }
+    return identity
+
+
+def _ion_charge(formula: str) -> int:
+    return int(charge_from_formula(formula))
+
+
+def _best(rows: list[dict[str, Any]], cas: str, prop: str) -> float | None:
+    found = [r for r in rows if r["cas"] == cas and r["property"] == prop]
+    return min(found, key=lambda r: SOURCE_RANK[r["source"]])["value"] if found else None
+
+
+def _collect_henry(rows: Rows, cache: Path) -> None:
+    """Aqueous standard states of dissolved gases, from WebBook Henry's-law data.
+
+    For X(g) = X(aq) with k°H in mol/(kg bar), the 1 molal, 1 bar equilibrium constant
+    is k°H itself: ΔG°soln = −RT ln k°H and ΔH°soln = −R·d ln kH/d(1/T). The aqueous
+    values are those added to the gas's selected ΔfH°, ΔfG° and S°, so these are stated
+    numbers combined by definition, and each row's reference says so.
+    """
+    index: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for row in rows.rows:
+        if row["property"] in ("Hf_gas", "S0_gas"):
+            index[(row["cas"], row["property"])].append(row)
+    for path in sorted((cache / "henry").glob("*.html")):
+        parsed = parse_henry(path.read_text(encoding="utf8", errors="replace"))
+        cas = path.stem
+        hf_rows, s_rows = index.get((cas, "Hf_gas")), index.get((cas, "S0_gas"))
+        if parsed is None or not hf_rows or not s_rows:
+            continue
+        k, slope, entries = parsed
+        hf = min(hf_rows, key=lambda r: SOURCE_RANK[r["source"]])["value"]
+        s0 = min(s_rows, key=lambda r: SOURCE_RANK[r["source"]])["value"]
+        dh = -sc.R * slope
+        dg = -sc.R * 298.15 * math.log(k)
+        note = f"gas + Henry median of {entries} (k {k:.4g}; slope {slope:.4g} K)"
+        rows.add(cas, "Hf_aq", hf + dh, "nist_henry", reference=note)
+        rows.add(cas, "S0_aq", s0 + (dh - dg) / 298.15, "nist_henry", reference=note)
 
 
 def _collect_coolprop(rows: Rows) -> None:
@@ -553,13 +634,15 @@ def _collect_all(cache: Path) -> dict[str, Any]:
     names = _collect_bundled(rows)
     _collect_coolprop(rows)
     _constants(rows)
+    _collect_henry(rows, cache)
+    ions = _collect_ions(rows)
     nist = {p.cas: p for p in pages}
     species: dict[str, dict[str, Any]] = {}
     for cas in _species_cas(rows.rows):
         if not _check_digit_valid(cas):
             DROPPED["species_with_invalid_cas"] += 1  # placeholder ids, none of them real registry numbers
             continue
-        record = _identity(cas, nist, janaf_identity, names)
+        record = ions.get(cas) or _identity(cas, nist, janaf_identity, names)
         if record is not None and record.get("formula"):
             species[cas] = record
     return {"rows": rows.rows, "pages": pages, "janaf": janaf_rows, "species": species}
@@ -739,6 +822,10 @@ def tables(cache: Path, out: Path) -> int:
     pages: dict[str, Page] = {p.cas: p for p in collected["pages"]}
     for cas, record in species.items():
         cid = record.get("pubchem_cid")
+        if int(record.get("charge") or 0) != 0:
+            record["identity_source"] = "crc_aqueous"
+            record["live_nist"] = 0
+            continue
         remote = pubchem.get(int(cid)) if cid else None
         isotopologue = re.search(r"[DT]|\[\d", str(record["formula"])) is not None
         if (

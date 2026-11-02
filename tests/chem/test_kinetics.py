@@ -12,11 +12,11 @@ from hypothesis import strategies as st
 from scipy.integrate import solve_ivp
 
 from ngdesign.chem import kinetics as K
-from ngdesign.chem.formula import Formula
 from ngdesign.chem.kinetics import ArrheniusLaw, Mechanism, Step
 from ngdesign.chem.stoichiometry import Equation, Term
 from ngdesign.chem.thermochem import R
 from ngdesign.contracts.reactions import PowerLaw, Reaction, ReactionSet
+from ngdesign.data.formula import Formula
 from ngdesign.uom.dimension import DimensionError
 
 

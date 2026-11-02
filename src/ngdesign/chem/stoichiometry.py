@@ -21,9 +21,9 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from functools import reduce
 
-from ngdesign.chem.formula import Formula, FormulaError, parse_formula
 from ngdesign.contracts.reactions import Reaction
 from ngdesign.data import chemdb
+from ngdesign.data.formula import Formula, FormulaError, parse_formula
 from ngdesign.data.rational import rref
 
 
@@ -136,7 +136,7 @@ def resolve_term(token: str) -> Term:
             raise EquationSyntaxError(f"{token!r} is neither a formula nor a known species: {exc}") from exc
         formula = parse_formula(species.formula)
         return Term(phase_free, formula, species.cas, _phase_of(tail))
-    return Term(formula.text, formula, formula.text if not formula.charge else None, formula.phase)
+    return Term(formula.text, formula, formula.text, formula.phase)
 
 
 def _phase_of(tail: re.Match[str] | None) -> str | None:
