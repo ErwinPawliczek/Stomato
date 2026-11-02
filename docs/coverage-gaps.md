@@ -8,7 +8,7 @@ registry implements. A level or method listed here is listed but not implemented
 
 | | listed | implemented | open |
 |---|---|---|---|
-| Unit rows | 83 | 73 | 10 |
+| Unit rows | 84 | 74 | 10 |
 | Planned rigour levels on implemented units | | | 29 |
 | Property methods in the plan | 168 | 136 | 32 |
 

@@ -11,7 +11,7 @@ All SI: J, mol, K, Pa, s.
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from scipy.optimize import brentq
@@ -143,6 +143,51 @@ def _solve_outlet_T(
             raise ValueError(f"reactor outlet temperature exceeds {_T_MAX} K closing the heat balance")
         hi = min(_T_MAX, hi + 1000.0)
     return float(brentq(f, lo, hi, xtol=1e-9, maxiter=200))
+
+
+def close_thermal(
+    enthalpy_at: Callable[[float], float],
+    T_in: float,
+    h_in_W: float,
+    thermal: Any,
+) -> tuple[float, float]:
+    """(T_out, duty) of a reactor whose outlet composition itself depends on T.
+
+    ``enthalpy_at(T)`` is the total outlet enthalpy, W, with the composition re-solved
+    at T. Modes as :func:`thermal_outlet`: isothermal, adiabatic, ``{"duty_W": q}``,
+    ``{"T_out": K}``.
+    """
+    if isinstance(thermal, Mapping) and set(thermal) == {"T_out"}:
+        T_out = float(thermal["T_out"])
+        return T_out, enthalpy_at(T_out) - h_in_W
+    if isinstance(thermal, str) and thermal == "isothermal":
+        return T_in, enthalpy_at(T_in) - h_in_W
+    if (isinstance(thermal, str) and thermal == "adiabatic") or (
+        isinstance(thermal, Mapping) and set(thermal) == {"duty_W"}
+    ):
+        duty = 0.0 if isinstance(thermal, str) else float(thermal["duty_W"])
+        target = h_in_W + duty
+
+        def f(T: float) -> float:
+            return enthalpy_at(T) - target
+
+        lo, hi = T_in - 400.0, T_in + 2000.0
+        while f(lo) > 0.0 and lo > _T_MIN:
+            lo = max(_T_MIN, lo - 500.0)
+        if f(lo) > 0.0:
+            raise ValueError(
+                "heat balance is infeasible: even at 1 K the outlet enthalpy exceeds "
+                "the inlet enthalpy (the reaction heat exceeds all available sensible heat)"
+            )
+        while f(hi) < 0.0:
+            if hi >= _T_MAX:
+                raise ValueError(f"reactor outlet temperature exceeds {_T_MAX} K closing the heat balance")
+            hi = min(_T_MAX, hi + 1000.0)
+        return float(brentq(f, lo, hi, xtol=1e-8, maxiter=100)), duty
+    raise ValueError(
+        f"thermal mode {thermal!r} is not one of 'isothermal', 'adiabatic', "
+        '{"duty_W": W} or {"T_out": K}'
+    )
 
 
 def thermal_outlet(

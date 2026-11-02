@@ -96,6 +96,26 @@ def formation_enthalpy_298(cid: str) -> float:
     return 0.0 if is_element(cid) else gas_model(cid).hf298
 
 
+def enthalpy_datum(cid: str) -> float:
+    """J/mol added to a stream's package enthalpy to reach the element reference.
+
+    The gas ΔfH°298 for anything with a gas model, which is every species a package
+    can flash. A species that exists here only as a condensed phase (CaCO3, Fe2O3) has
+    no gas datum, so it takes its stable condensed ΔfH°298; a stream carrying it states
+    its enthalpy against that value.
+    """
+    try:
+        return formation_enthalpy_298(cid)
+    except MissingFormationData:
+        record = _record(cid)
+        if record.get("cas"):
+            for phase in ("solid", "liquid"):
+                value = chemdb.maybe(str(record["cas"]), f"Hf_{phase}")
+                if value is not None:
+                    return value
+        raise
+
+
 def integral_cp(cid: str, T: float, over_t: bool) -> float:
     """∫Cp dT (``over_t`` False) or ∫Cp/T dT (True) from 298.15 K to T, SI."""
     model = gas_model(cid)

@@ -21,6 +21,7 @@ from ngdesign.contracts.reactions import (
 )
 from ngdesign.data import component_record
 from ngdesign.data.formation import (
+    enthalpy_datum,
     formation_enthalpy_298,
     integral_cp,
     standard_entropy_298,
@@ -216,7 +217,7 @@ def enthalpy_with_formation(state: StreamState) -> float:
     difference then reproduces the databank heat of reaction; this is the
     stream-side quantity reaction units must balance against their heat duty.
     """
-    lift = float(sum(y * formation_enthalpy_298(cid) for cid, y in state.composition.items()))
+    lift = float(sum(y * enthalpy_datum(cid) for cid, y in state.composition.items()))
     return float(state.molar_flow) * (float(state.enthalpy) + lift)
 
 
