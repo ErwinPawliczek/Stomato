@@ -99,7 +99,7 @@ class ErgunBed:
     tube and constant along it, and dP/dV over the total reacting volume is
     (dP/dL)/(n_t*A_c).  ``viscosity_Pa_s`` overrides the package viscosity.
     The bed equation itself is ``fluids.packed_bed.Ergun`` (Ergun 1952,
-    Chem. Eng. Prog. 48(2) 89-94), called per unit length.
+    Chem. Eng. Prog. 48, 89-94), called per unit length.
     """
 
     tube_diameter_m: float
@@ -375,6 +375,9 @@ def integrate_plug_flow(
             )
         f_tot = math.fsum(f.values())
         z = z_from(f)
+        # The rate sees every reacting species, a product still at zero included:
+        # a reverse order on it is 0, not a species outside the mixture.
+        z_rate = {cid: n / f_tot for cid, n in f.items()}
         # Flash-free RHS (the O(1)-in-V flash budget): single-phase
         # properties come from phase_props, which never runs a phase split.
         # Two-phase and phase-absence are refused by the audit after the
@@ -398,8 +401,8 @@ def integrate_plug_flow(
         )
         for j, reaction in enumerate(reactions):
             assert reaction.kinetics is not None
-            r_j = rate(reaction, t, p_eff, z)
-            multiplier = 1.0 if rate_multiplier is None else rate_multiplier(j, t, p_eff, z)
+            r_j = rate(reaction, t, p_eff, z_rate)
+            multiplier = 1.0 if rate_multiplier is None else rate_multiplier(j, t, p_eff, z_rate)
             nu_base = float(reaction.stoichiometry[reaction.base_component])
             dxi[j] = scales[j] * multiplier * r_j / abs(nu_base)
             if energy != "isothermal":

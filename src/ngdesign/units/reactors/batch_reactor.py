@@ -124,6 +124,7 @@ class BatchReactor:
                 raise BatchReactorError(f"reaction set {rset.id!r} depletes component {negative[0]!r}")
             total = math.fsum(f.values())
             z = z_from(f)
+            z_rate = {cid: n / total for cid, n in f.items()}
             props = thermo.phase_props(z, temperature, pressure, kind)
             if phase == "vapor":
                 p_eff = pressure
@@ -136,7 +137,7 @@ class BatchReactor:
             dxi = np.array(
                 [
                     scales[j]
-                    * rate(reaction, temperature, p_eff, z)
+                    * rate(reaction, temperature, p_eff, z_rate)
                     * volume
                     / abs(float(reaction.stoichiometry[reaction.base_component]))
                     for j, reaction in enumerate(reactions)

@@ -2,8 +2,13 @@
 
 Continuous stirred-tank reactor with kinetic rates evaluated at the outlet
 (well-mixed) conditions and algebraic extents solved by a damped Newton
-iteration. Level R1 demands a single phase in the vessel; level R2 (a later
-PR, after R1 merges) carries VLE in the vessel and a phase-resolved rate.
+iteration. Level R1 demands a single phase in the vessel. Level R2 carries VLE
+in the vessel: the reactions run in one phase k, with the holdup at the outlet
+phase ratio and no slip (Fogler ch. 8 multiphase CSTR assumption),
+
+    V_k = V_r*(n_k*MW_k/rho_k)/Sum_p(n_p*MW_p/rho_p),  r_j,vessel = V_k*r_j(T, P_eff,k, x_k)
+
+with ``holdup_m3`` overriding V_k, and rate 0 where phase k is absent.
 
 The reaction-rate scale and the concentration-equivalent pressure are the
 pfr spec's equations 3 and 4, copied privately (units/cstr.md review
@@ -15,7 +20,7 @@ expression" is superseded by #245: ``kinetics.rate`` gives
 reaction set is valid CSTR kinetics. Only LHHW kinetics combined with an
 equilibrium model is refused (the LHHW evaluation ignores the equilibrium).
 
-All SI: J, mol, K, Pa, s. Plugin kind "unit", name "cstr", level R1.
+All SI: J, mol, K, Pa, s. Plugin kind "unit", name "cstr", levels R1 and R2.
 """
 
 from __future__ import annotations
@@ -41,7 +46,7 @@ from ngdesign.units._physics.kinetics import (
 )
 from ngdesign.units.reactors._shared import reaction_set_param, thermal_outlet, z_from
 
-__all__ = ["CstrConvergenceError", "CstrError", "CstrPhaseError", "CstrR1"]
+__all__ = ["CstrConvergenceError", "CstrError", "CstrPhaseError", "CstrR1", "CstrR2"]
 
 
 class CstrError(ValueError):
@@ -115,6 +120,37 @@ def _effective_pressure(stream: StreamState, T: float, P: float) -> float:
     return P
 
 
+#: R2 reacting-phase name -> contract phase kind.
+_R2_PHASES: dict[str, PhaseKind] = {
+    "vapor": PhaseKind.VAPOR,
+    "hc_liquid": PhaseKind.HC_LIQUID,
+    "aqueous": PhaseKind.AQUEOUS,
+}
+
+
+def _phase_basis(
+    stream: StreamState,
+    reacting_phase: str,
+    T: float,
+    P: float,
+    volume_m3: float,
+    holdup_m3: float | None,
+) -> tuple[float, float, dict[str, float]] | None:
+    """R2 equation 4: (V_k, P_eff,k, x_k) of the reacting phase; None when absent."""
+    kind = _R2_PHASES[reacting_phase]
+    candidates = [p for p in stream.phases if p.kind is kind]
+    if not candidates:
+        return None
+    phase = max(candidates, key=lambda p: p.mole_fraction)
+    p_eff = P if kind is PhaseKind.VAPOR else 1000.0 * phase.density / phase.molecular_weight * R * T
+    if holdup_m3 is not None:
+        v_k = holdup_m3
+    else:
+        total = math.fsum(p.mole_fraction * p.molecular_weight / p.density for p in stream.phases)
+        v_k = volume_m3 * (phase.mole_fraction * phase.molecular_weight / phase.density) / total
+    return v_k, p_eff, dict(phase.composition)
+
+
 def _validated_scales(rset: ReactionSet, bulk_density_kg_m3: float | None) -> list[float]:
     """Refuse every reaction the adapter cannot run; return the rate scales.
 
@@ -172,6 +208,8 @@ def _solve_cstr(
     duty_W: float | None,
     T_fixed: float | None,
     T_guess_K: float | None,
+    phase_resolved: bool = False,
+    holdup_m3: float | None = None,
 ) -> _NewtonResult:
     """The private Newton solver (units/cstr.md step 4).
 
@@ -212,6 +250,16 @@ def _solve_cstr(
         total = math.fsum(n_out.values())
         stream = thermo.flash_pt(z, T, inlet.P, total)
         vf = stream.vapor_fraction
+        if phase_resolved:
+            basis = _phase_basis(stream, reacting_phase, T, inlet.P, volume_m3, holdup_m3)
+            g = [nu_b * xi_j / total_in for nu_b, xi_j in zip(nu_base, xi, strict=True)]
+            if basis is not None:
+                v_k, p_k, x_k = basis
+                for j, reaction in enumerate(rset.reactions):
+                    g[j] -= scales[j] * v_k * rate(reaction, T, p_k, x_k) / total_in
+            if duty_W is not None:
+                g.append((enthalpy_with_formation(stream) - h_in_W - duty_W) / (total_in * _CP_NOMINAL))
+            return g, stream
         if reacting_phase == "vapor":
             if vf < 1.0 - _VF_TOL:
                 raise CstrPhaseError(
@@ -363,12 +411,17 @@ class CstrR1:
     inlet_ports = ("inlet",)
     outlet_ports = ("outlet",)
 
-    def solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> UnitResult:
-        inlet = inlets["inlet"]
-        volume_m3 = _positive(params, "volume_m3")
+    def _phase_options(self, params: Mapping[str, Any], volume_m3: float) -> tuple[str, float | None, bool]:
+        """Level R1: one declared phase, refused when the vessel splits."""
         reacting_phase = str(params.get("reacting_phase", "vapor"))
         if reacting_phase not in ("vapor", "liquid"):
             raise CstrError(f"reacting_phase {reacting_phase!r} is not one of 'vapor', 'liquid' (level R1)")
+        return reacting_phase, None, False
+
+    def solve(self, inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo) -> UnitResult:
+        inlet = inlets["inlet"]
+        volume_m3 = _positive(params, "volume_m3")
+        reacting_phase, holdup_m3, phase_resolved = self._phase_options(params, volume_m3)
         rset = reaction_set_param(params["reaction_set"])
         bulk = params.get("bulk_density_kg_m3")
         bulk_density = float(bulk) if bulk is not None else None
@@ -385,6 +438,8 @@ class CstrR1:
             duty_W=duty_W,
             T_fixed=T_fixed,
             T_guess_K=float(guess) if guess is not None else None,
+            phase_resolved=phase_resolved,
+            holdup_m3=holdup_m3,
         )
         n_out = apply_extents(inlet.component_flows(), rset, list(newton.extents))
         outlet, duty = thermal_outlet(inlet, n_out, params.get("thermal", "isothermal"), thermo)
@@ -434,6 +489,60 @@ class CstrR1:
                 ],
             },
             "volume_m3": 2.0,
+            "thermal": "isothermal",
+        }
+        return {"inlet": feed}, params
+
+
+class CstrR2(CstrR1):
+    """Kinetic CSTR with VLE in the vessel, level R2: the rate runs in one phase."""
+
+    def _phase_options(self, params: Mapping[str, Any], volume_m3: float) -> tuple[str, float | None, bool]:
+        reacting_phase = str(params.get("reacting_phase", "hc_liquid"))
+        if reacting_phase not in _R2_PHASES:
+            raise CstrError(f"reacting_phase {reacting_phase!r} is not one of {sorted(_R2_PHASES)}")
+        holdup = params.get("holdup_m3")
+        if holdup is None:
+            return reacting_phase, None, True
+        holdup_m3 = float(holdup)
+        if not 0.0 < holdup_m3 <= volume_m3:
+            raise CstrError(f"holdup_m3 {holdup_m3} must lie in (0, volume_m3]")
+        return reacting_phase, holdup_m3, True
+
+    @classmethod
+    def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """Liquid-phase nC5 -> iC5 in a boiling vessel, with C3 and nC8 widening the dome.
+
+        Illustrative first-order test kinetics, not a published rate.
+        """
+        feed = {
+            "T": 330.0,
+            "P": 3.0e5,
+            "molar_flow": 10.0,
+            "composition": {"C3": 0.2, "nC5": 0.5, "iC5": 0.1, "nC8": 0.2},
+        }
+        params = {
+            "reaction_set": {
+                "id": "nc5_isom",
+                "components": ["nC5", "iC5"],
+                "reactions": [
+                    {
+                        "id": "isom",
+                        "stoichiometry": {"nC5": -1.0, "iC5": 1.0},
+                        "base_component": "nC5",
+                        "provenance": "illustrative first-order test kinetics, not a published rate",
+                        "kinetics": {
+                            "rate_units": "mol/(m3·s)",
+                            "k0": 1.0e-3,
+                            "Ea": 0.0,
+                            "orders": {"nC5": 1.0},
+                            "basis": "concentration",
+                        },
+                    }
+                ],
+            },
+            "volume_m3": 2.0,
+            "reacting_phase": "hc_liquid",
             "thermal": "isothermal",
         }
         return {"inlet": feed}, params
