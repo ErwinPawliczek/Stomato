@@ -231,9 +231,26 @@
         units/_physics/shortcut.kremser_fraction (S_i = K_i V/L, K from
         thermo.k_values at the stripper T, P) (spec U-H1)
     R2:
-      status: planned
-      params: {}
-      note: MESH stage section coupled to the main column
+      status: provisional
+      adapter: ngdesign.units.refining.side_strip_r2:SideStripR2
+      validation: []
+      params:
+        type: object
+        additionalProperties: false
+        required:
+        - n_stages
+        properties:
+          n_stages:
+            type: integer
+            minimum: 2
+            description: equilibrium stages, draw on 1, steam on N
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar or per-stage list);
+              default draw_in.P
+      note: zero-tear MESH of the stripper section alone (draw and steam are
+        inlets); couples to a main column only through a flowsheet recycle on
+        overhead_out, the simultaneous solve of spec S0-1c is not implemented;
+        free water on a stage is refused
       end_state: true
   pid_symbol: SS
   references:

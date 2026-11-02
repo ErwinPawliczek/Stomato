@@ -45,7 +45,7 @@ class ThreePhaseStagesError(ValueError):
     """Refusal: the three-phase column spec is invalid."""
 
 
-def _split_report(info: dict[str, float], comps: list[str], thermo: Thermo) -> dict[str, float]:
+def split_report(info: dict[str, float], comps: list[str], thermo: Thermo) -> dict[str, float]:
     """Flash every stage's contents: the liquid split report and the equilibrium gate."""
     report: dict[str, float] = {}
     two_liquid = 0
@@ -101,7 +101,7 @@ class ThreePhaseStages:
             if key not in _ALLOWED_KEYS:
                 raise ThreePhaseStagesError(f"three_phase_stages refuses unknown parameter {key!r}")
         result = Column().solve({"feed": feed}, {**params, "pool_liquids": True}, thermo)
-        info = {**result.info, **_split_report(result.info, sorted(feed.composition), thermo)}
+        info = {**result.info, **split_report(result.info, sorted(feed.composition), thermo)}
         return UnitResult(
             outlets={"distillate": result.outlets["distillate"], "bottoms": result.outlets["bottoms"]},
             duty_W=result.duty_W,

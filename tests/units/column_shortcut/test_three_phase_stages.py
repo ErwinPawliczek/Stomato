@@ -23,7 +23,7 @@ from ngdesign.units.column import ColumnConvergenceError
 from ngdesign.units.column_shortcut.three_phase_stages import (
     ThreePhaseStages,
     ThreePhaseStagesError,
-    _split_report,
+    split_report,
 )
 from tests.conftest import flash_feed
 from tests.units.column.stage_audit import material_residuals, read_stages
@@ -124,7 +124,7 @@ def test_gate_refuses_a_profile_off_equilibrium(solved: Any) -> None:
     bad["stage_0_y_nC6"] += 0.1
     bad["stage_0_y_nC7"] -= 0.1
     with pytest.raises(ColumnConvergenceError, match="not at phase equilibrium"):
-        _split_report(bad, COMPS, thermo)
+        split_report(bad, COMPS, thermo)
 
 
 def test_unknown_parameter_refused(thermo: Thermo) -> None:
