@@ -88,6 +88,7 @@ class KValueModel(StrEnum):
     LEE_KESLER_PLOCKER = "lee_kesler_plocker"
     IDEAL = "ideal"
     HENRY_IDEAL = "henry_ideal"
+    PHYSICAL_SOLVENT = "physical_solvent"
 
 
 class LiquidDensity(StrEnum):
@@ -111,6 +112,7 @@ class MixingRule(StrEnum):
 
     NONE = "none"
     KABADI_DANNER = "kabadi_danner"
+    GLYCOL_TUNED = "glycol_tuned"
 
 
 class EnthalpyMethod(StrEnum):

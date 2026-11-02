@@ -1,0 +1,18 @@
+# Tuned Peng-Robinson for triethylene glycol + water (row glycol_pr).
+#
+# Gironi, F., Maschietti, M. & Piemonte, V., 'Modelling triethylene glycol - water
+# system for natural gas dehydration', 8th Int. Conf. on Chemical and Process
+# Engineering (ICheaP-8), 2007, fetched 2026-11-01 from
+# https://skoge.folk.ntnu.no/prost/proceedings/icheap8-pres07/icheap8webpapers/112%20Gironi.pdf
+#
+# k12 is linear in T, eq. 5 (regressed on Herskowitz + Parrish data; water activity AAD
+# about 2.6 %). The authors fit it with Ambrose-estimated TEG constants, so those
+# replace the databank's: Tb and the kij belong together.
+kij_teg_water:
+  intercept: -0.3935
+  slope_per_K: 0.000482
+teg:
+  cas: 112-27-6
+  Tc_K: 806.3
+  Pc_Pa: 3958000.0
+  omega: 0.563
