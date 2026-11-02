@@ -181,7 +181,7 @@
         interface equilibrium from the package fugacity coefficients, effective-diffusivity
         film fluxes with Onda (1968) random-packing kG, kL and wetted area, Chapman-Enskog
         and Wilke-Chang diffusivities, Chilton-Colburn/penetration heat transfer; reduces to
-        R2 as transfer_factor grows (measured 1.8e-7 relative on gas_out at 1e4); duty_W =
+        R2 as transfer_factor grows (measured 5.6e-7 max outlet deviation at 1e4); duty_W =
         boundary energy residual. Random packing only - sieve-tray (AIChE 1958, Chan-Fair
         1984) coefficients were not adopted because their constants could not be confirmed
         from a fetched source

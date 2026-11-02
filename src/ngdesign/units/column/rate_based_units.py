@@ -222,7 +222,7 @@ class AbsorberR3:
         segments of a 1.0 m x 4 m bed. Packing inputs are illustrative, not catalogue
         data: 25 mm rings, a_t = 200 m2/m3, sigma_c = 0.061 N/m (ceramic); liquid
         surface tension 0.008 N/m. At this traffic the Onda Reynolds numbers sit
-        inside the paper's data span (measured Re_G ~ 1.2e3, Re_L ~ 90)."""
+        inside the paper's data span (measured Re_G ~ 1.4e3, Re_L ~ 88)."""
         return (
             {
                 "gas_in": {"T": 300.0, "P": 2e6, "molar_flow": 100.0, "composition": {"C1": 0.9, "NC4": 0.1}},

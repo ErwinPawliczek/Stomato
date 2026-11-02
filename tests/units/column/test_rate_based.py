@@ -63,7 +63,7 @@ def test_absorber_reduces_to_r2_as_transfer_grows(thermo: Thermo) -> None:
                 dev = max(dev, abs(a.composition[cid] - frac))
             assert abs(a.T - b.T) < (0.5 if factor < 1e3 else 0.01)
         devs.append(dev)
-    # measured: 2e-4 at 1e2, 1.8e-7 at 1e4 (flows and mole fractions)
+    # measured: 2.0e-3 at 1, 1.7e-5 at 1e2, 5.6e-7 at 1e4 (flows and mole fractions)
     assert devs[1] < 1e-5
     assert devs[1] < devs[0]
 
