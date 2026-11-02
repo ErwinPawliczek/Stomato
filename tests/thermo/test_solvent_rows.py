@@ -15,6 +15,7 @@ import yaml
 
 from ngdesign import registry
 from ngdesign.amine.kent_eisenberg import equilibrium_partial_pressures
+from ngdesign.amine.mdea_pz import mdea_pz_p_co2
 from ngdesign.amine.package import AmineChemistryError
 from ngdesign.data import DATA_DIR
 
@@ -116,3 +117,31 @@ def test_depg_refuses_outside_its_data() -> None:
         pkg.flash_pt({DEPG: 0.9, "CO2": 0.1}, 330.0, 1e6, 1.0)
     with pytest.raises(ValueError, match="no DEPG solubility"):
         pkg.flash_pt({DEPG: 0.9, "C3": 0.1}, 298.15, 1e6, 1.0)
+
+
+def _blend_moles(c_mdea: float, c_pz: float, loading: float) -> tuple[float, float, float, float]:
+    """(water, MDEA, PZ, CO2) mol per litre at the 1030 kg/m3 the molarities imply."""
+    water = (1030.0 - c_mdea * 119.16 - c_pz * 86.14) / 18.015
+    return water, c_mdea, c_pz, loading * (c_mdea + c_pz)
+
+
+def test_mdea_pz_tracks_bishnoi_table_5_7_within_the_recorded_band() -> None:
+    table = yaml.safe_load((DATA_DIR / "thermo_params" / "amine" / "mdea_pz.yaml").read_text())
+    pairs = [(mdea_pz_p_co2(t, *_blend_moles(4.0, 0.6, a)), p) for t, a, p in table["anchors"]]
+    assert _rms(pairs) < 0.8
+    assert all(0.2 < got / p < 3.0 for got, p in pairs)
+
+
+def test_piperazine_lowers_co2_pressure_at_the_same_co2_content() -> None:
+    water, mdea, pz, co2 = _blend_moles(4.0, 0.6, 0.1)
+    assert mdea_pz_p_co2(313.0, water, mdea, pz, co2) < 0.5 * mdea_pz_p_co2(313.0, water, mdea, 0.0, co2)
+
+
+def test_mdea_pz_row_differs_from_amine_ke_and_refuses_h2s() -> None:
+    pz = "110-85-0"
+    z = {"MDEA": 0.07, pz: 0.01, "H2O": 0.90, "CO2": 0.02}
+    p_row = _pkg("amine_mdea_pz").bubble_point(z, T=313.15).P
+    base = {"MDEA": 0.08, "H2O": 0.90, "CO2": 0.02}
+    assert p_row < _pkg("amine_ke").bubble_point(base, T=313.15).P
+    with pytest.raises(AmineChemistryError, match="CO2 only"):
+        _pkg("amine_mdea_pz").flash_pt({"MDEA": 0.1, "H2O": 0.88, "H2S": 0.02}, 313.15, 1e6, 1.0)

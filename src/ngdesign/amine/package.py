@@ -73,6 +73,7 @@ from ngdesign.amine.kent_eisenberg import (
 from ngdesign.amine.kent_eisenberg import (
     equilibrium_partial_pressures as _ke_pressures,
 )
+from ngdesign.amine.mdea_pz import mdea_pz_p_co2
 from ngdesign.amine.roots import brent_root
 from ngdesign.contracts import Phase, PhaseKind, StreamState
 from ngdesign.contracts.plugins import Thermo
@@ -91,9 +92,13 @@ from ngdesign.thermo.saturation import solve_saturation
 __all__ = [
     "AmineENRTLPackage",
     "AmineKEExtendedPackage",
+    "AmineMdeaPzPackage",
     "AmineKEPackage",
     "AmineReactivePackage",
 ]
+
+#: Piperazine's component id (its CAS, in the open registry).
+_PIPERAZINE_ID = "110-85-0"
 
 #: Acid gases handled by the speciation chemistry.
 _ACID_GAS_IDS: tuple[str, ...] = ("CO2", "H2S")
@@ -1197,6 +1202,40 @@ class AmineKEExtendedPackage(AmineKEPackage):
                 "no open H2S constant for DGA or AMP: amine_ke_dga_amp carries CO2 only"
             )
         return super()._reactive_domain(z)
+
+
+class AmineMdeaPzPackage(AmineKEPackage):
+    """Aqueous MDEA + piperazine, CO2 only (``ngdesign.amine.mdea_pz``).
+
+    The flash is amine_ke's, with MDEA as the solvent key: loadings stay per mole of
+    MDEA in that machinery, and the pressure comes from the blend's own speciation
+    over the liquid's mole amounts. Piperazine takes its databank Psat, as the amine
+    does. A feed without piperazine still runs this chemistry, with Bishnoi's
+    constants rather than amine_ke's.
+    """
+
+    supported_amines = frozenset({"MDEA"})
+
+    def _reactive_domain(self, z: dict[str, float]) -> str | None:
+        if z.get("H2S", 0.0) > 0.0 and z.get("MDEA", 0.0) > 0.0:
+            raise AmineChemistryError("no MDEA + PZ H2S constants: amine_mdea_pz carries CO2 only")
+        return super()._reactive_domain(z)
+
+    def _liquid_chemistry(
+        self, x: dict[str, float], T: float, P: float
+    ) -> tuple[str, float, float, float, float, float]:
+        amine_id = self._amine_id(self._support(x))
+        if amine_id is None:  # pragma: no cover - callers gate on amine presence
+            raise ValueError("no amine in the liquid composition")
+        pz = x.get(_PIPERAZINE_ID, 0.0)
+        co2 = min(max(x.get("CO2", 0.0), 0.0), _MAX_LOADING * (x[amine_id] + pz))
+        try:
+            p_co2 = mdea_pz_p_co2(T, x.get(_WATER_ID, 0.0), x[amine_id], pz, co2)
+        except ValueError as exc:
+            raise AmineChemistryError(
+                f"MDEA + PZ speciation left its chemistry window at T={T} K ({exc})"
+            ) from exc
+        return amine_id, self._amine_molarity(x, amine_id), co2 / x[amine_id], 0.0, p_co2, 0.0
 
 
 @register("thermo", "amine_enrtl")

@@ -1,0 +1,34 @@
+# MDEA + piperazine CO2 chemistry (row amine_mdea_pz).
+#
+# Bishnoi, S., PhD dissertation, University of Texas at Austin, 2000,
+# https://sites.utexas.edu/rochelle/wp-content/uploads/sites/3310/2015/02/Bishnoi_Dissertation_2000.pdf
+# fetched 2026-11-01 (a scan; tables read from the page images). Table 5.5, mole-fraction
+# ln Kx = A + B/T + C ln T: [A, B, C]. Regressed at 298-343 K on an electrolyte-NRTL
+# liquid; the row applies them with unit activity coefficients. Sources in the table:
+# Posey 1996 (hco3, co3, water), Pagano 1961 (pzh), Austgen 1989 (mdeah), this work (rest).
+reactions:
+  hco3: [231.4, -12092.0, -36.78]
+  co3: [216.0, -12432.0, -35.48]
+  water: [132.9, -13446.0, -22.48]
+  pzh: [4.964, -9714.2, 0.0]
+  pzcoo: [-41.583, 9288.2, 0.0]
+  hpzcoo: [-13.041, -3961.6, 0.0]
+  dicarbamate: [-44.7, 9288.2, 0.0]
+  mdeah: [-9.4165, -4234.98, 0.0]
+# Table 5.4b, Pa per mole fraction: ln Hx = A + B/T + C ln T + D T.
+henry_co2: [170.7126, -8477.711, -21.95743, 0.005781]
+# Table 5.7, 0.6 M PZ + 4 M MDEA, [T K, loading mol CO2 / mol (MDEA + PZ), P*CO2 Pa];
+# the source gives +/-30 % in pressure and +/-5 % in loading.
+anchors:
+- [313.0, 0.027, 33.0]
+- [313.0, 0.061, 115.0]
+- [313.0, 0.073, 236.0]
+- [313.0, 0.089, 367.0]
+- [313.0, 0.140, 1140.0]
+- [313.0, 0.188, 2550.0]
+- [313.0, 0.285, 7480.0]
+- [343.0, 0.006, 34.0]
+- [343.0, 0.014, 241.0]
+- [343.0, 0.020, 491.0]
+- [343.0, 0.046, 780.0]
+- [343.0, 0.093, 3600.0]

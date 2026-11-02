@@ -281,3 +281,22 @@ Budget: ~16 Obvious threads, most 2–6 h of agent time; the data sweeps are the
 - **Numerical robustness across models** (tonight's pure-phase bug): L0 round-trip and phase-identification tests run on every adapter, not just cubics; the column, saturation solver and tear loops consume only the `Thermo` protocol, so a new package needs no solver change.
 - **Performance:** the cache, the VL fast path and the slate-scoped flashers are in the mixin; adapters inherit them. The bench records flash counts and wall time per case per package.
 - **Scope creep:** the catalogue is data; a method without an adapter row and a validation set does not exist in the registry, whatever the marketing list says.
+
+## 6. Methods still open, and what was checked (2026-11-01)
+
+Each stays open because a parameter or definition could not be sourced openly; no row was
+written around the gap.
+
+- **soft-SAFT**: Clapeyron.jl (MIT) implements it, but `softSAFT_like.csv` has an empty source column and rows that break the n-alkane trend; Llovell's thesis and the RSC supplement were unreachable.
+- **COSMO-SAC**: `profiles/UD` forbids redistribution; `profiles/VT2005` has no stated licence (needs NIST's word); Clapeyron's five profiles have no provenance. LVPP `sigma` is MIT, but holds raw segments for its own CS25 variant, whose equations are not in the fetched text, and no benchmark exists for it.
+- **PR / SRK with API liquid density**: for real components the method is Rackett with ideal mixing (Aspen 10.1, p. 3-92), which `pr-rackett` covers. The pseudo-component branch is a fit to API TDB Figure 6A3.5 that is not published.
+- **SR-POLAR**: equations are in the Aspen documentation, but no citable polar-parameter table was found. Schwartzentruber et al. 1989 is closed; NeqSim's columns are uncited.
+- **Polymer SRK**: no model equations or pure-polymer parameters were obtained; Orbey & Sandler 1994 was not reachable.
+- **Wilson T-dependent forms**: no open Wilson a + b/T table was found. The two-parameter half is `wilson_ig`.
+- **Sulfolane co-absorption**: Jalili et al. 2015 raw data fix CO2 and H2S Henry constants in sulfolane, but no fetched source gives a mixed-solvent rule, and the OSTI Sulfinol report gives conditions without data points.
+- **DEA / DGA / DIPA / AMP speciation sets**: DEA is `amine_ke`, DGA and AMP are `amine_ke_dga_amp`. DIPA has a pKa but no carbamate constant and no tabulated VLE anchor, so the item stays open.
+
+Partial closures: `glycol_pr` is TEG only (MEG's open values carry no primary citation);
+`depg_henry` is 25 C only with tetraglyme as proxy (Xu et al. 1992 was unreachable);
+`kabadi-danner-free-water` uses IAPWS-95, not NBS/NRC 1984; `amine_mdea_pz` runs Bishnoi's
+constants with unit activity coefficients, 0.23 to 2.7 times his measured pressures.
