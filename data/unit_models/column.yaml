@@ -476,14 +476,29 @@
       validation:
       - V1-kremser-extractor-seader52
     R2:
-      status: planned
-      params: {}
-      note: MESH with LLE stages
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.extractor_r2:ExtractorR2
+      params:
+        type: object
+        required: [n_stages]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, minimum: 1, description: 'equilibrium stages; feed on 1, solvent on N'}
+          T: {type: number, description: 'uniform column temperature, K (default the flow-weighted inlet T)'}
+          P: {type: number, description: 'column pressure, Pa abs (default the lower inlet P)'}
+      note: LLE stages by the isothermal sum-rates method with tie lines from the package flash; isothermal, duty_W holds T
+      validation: []
       end_state: true
   pid_symbol: X
   references:
   - docs/unit-catalogue-plan.md §2 U-E 9
-  notes: roadmap.
+  - Tsuboka & Katayama, J. Chem. Eng. Japan 9 (1976) 40
+  - Seader, Henley & Roper 3rd ed., Sect. 10.5
+  notes: >-
+    V1 gap — provisional without a case. Checked by the one-stage reduction to a
+    flash, stage balances, isofugacity from single-phase builds, and the dilute
+    Kremser limit (tests/units/column_shortcut/test_extractor_r2.py). The stage
+    energy balance is not solved (isothermal).
 
 - id: divided_wall
   name: Divided-wall / Petlyuk column
