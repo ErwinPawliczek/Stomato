@@ -71,6 +71,50 @@ sources:
     url: https://webbook.nist.gov/chemistry/
     doi: 10.18434/T4D303
     access: fetched page by page at the site's stated crawl delay; the row's `reference` records the median used
+  psrk:
+    grade: B
+    citation: "Horstmann, S., Jablonieca, A., Noll, J.R. and Gmehling, J., PSRK Group Contribution Equation of State: Comprehensive Revision and Extension IV, Fluid Phase Equilib. 227(2), 2005, 157-164: appendix of pure-component data."
+    doi: 10.1016/j.fluid.2004.11.002
+    access: table shipped in chemicals (Critical Properties/Appendix to PSRK Revision 4.tsv)
+  passut_danner:
+    grade: B
+    citation: "Passut, C.A. and Danner, R.P., Acentric Factor. A Valuable Correlating Parameter for the Properties of Hydrocarbons, Ind. Eng. Chem. Process Des. Dev. 12(3), 1973, 365-368."
+    doi: 10.1021/i260047a026
+    access: table shipped in chemicals (Critical Properties/PassutDanner1973.tsv)
+  dippr_pina:
+    grade: B
+    citation: "DIPPR critical constants as tabulated in Pina-Martinez, A., Privat, R. and Jaubert, J.-N., Use of 300,000 Pseudo-Experimental Data over 1800 Pure Fluids to Assess the Performance of Four Cubic Equations of State: SRK, PR, Tc-RK, and Tc-PR, AIChE J., e17518."
+    access: table shipped in chemicals (Critical Properties/DIPPRPinaMartines.tsv)
+  mathews:
+    grade: B
+    citation: "Mathews, J.F., Critical Constants of Inorganic Substances, Chem. Rev. 72(1), 1972, 71-100."
+    doi: 10.1021/cr60275a004
+    access: table shipped in chemicals (Critical Properties/Mathews1972InorganicCriticalProps.tsv)
+  omega_definition:
+    grade: B
+    citation: "Pitzer's definition, omega = -log10(Psat(0.7 Tc)/Pc) - 1, evaluated on this database's selected Tc and Pc and its vapour-pressure fits; the fit is in the row's `reference`."
+    access: computed at build time from cited values; no correlation is used
+  landolt:
+    grade: B
+    citation: "Hall, K.R., Vapor Pressure and Antoine Constants for Hydrocarbons, and S, Se, Te, and Halogen Containing Organic Compounds, Springer, 1999; Dykyj, J. and Hall, K.R., Vapor Pressure and Antoine Constants for Oxygen Containing Organic Compounds, 2000; Hall, K.R., Vapor Pressure and Antoine Constants for Nitrogen Containing Organic Compounds, Springer, 2001 (Landolt-Bornstein, New Series IV/20)."
+    access: table shipped in chemicals (Vapor Pressure/Landolt_antoine_V20.tsv), natural-log Pa form, normalised here
+  vdi:
+    grade: B
+    citation: "Gesellschaft, V.D.I. (ed.), VDI Heat Atlas, 2nd ed., Springer, 2010: PPDS vapour-pressure coefficients."
+    access: table shipped in chemicals
+  perry:
+    grade: B
+    citation: "Green, D. and Perry, R., Perry's Chemical Engineers' Handbook, 8th ed., McGraw-Hill, 2007: Tables 2-8 (vapour pressure, DIPPR 101) and 2-153 (liquid Cp, DIPPR 100)."
+    access: tables shipped in chemicals
+  alcock:
+    grade: B
+    citation: "Alcock, C.B., Itkin, V.P. and Horrigan, M.K., Vapour Pressure Equations for the Metallic Elements: 298-2500K, Canadian Metallurgical Quarterly 23(3), 1984, 309-313."
+    doi: 10.1179/cmq.1984.23.3.309
+    access: table shipped in chemicals
+  zabransky:
+    grade: B
+    citation: "Zabransky, M., Ruzicka, V., Majer, V. and Domalski, E.S., Heat Capacity of Liquids: Critical Review and Recommended Values, J. Phys. Chem. Ref. Data, Monograph 6, 1996."
+    access: table shipped in chemicals (Heat Capacity/Zabransky.tsv)
   poling:
     grade: B
     citation: "Poling, B.E., Prausnitz, J.M. and O'Connell, J.P., The Properties of Gases and Liquids, 5th ed., McGraw-Hill, 2000."

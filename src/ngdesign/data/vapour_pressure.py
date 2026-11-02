@@ -10,10 +10,14 @@ from __future__ import annotations
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from chemicals.dippr import EQ101
 from chemicals.vapor_pressure import Wagner, Wagner_original
 from scipy.optimize import brentq
 
 from ngdesign.data import chemdb
+
+#: Reviewed collections before the WebBook's many narrow single-study fits.
+_ANTOINE_ORDER = {"poling": 0, "landolt": 1, "nist": 2}
 
 
 @dataclass(frozen=True)
@@ -32,6 +36,9 @@ class Fit:
             return float(Wagner(T, row["Tc"], row["Pc"], row["A"], row["B"], row["C"], row["D"]))
         if self.form == "wagner 1.5-3-6":
             return float(Wagner_original(T, row["Tc"], row["Pc"], row["A"], row["B"], row["C"], row["D"]))
+        if self.form == "dippr101":
+            a, b, c, d, e = (row[f"a{i}"] for i in range(5))
+            return float(EQ101(T, a, b, c, d, e))  # type: ignore[no-untyped-call]
         return float(1e5 * 10.0 ** (row["A"] - row["B"] / (T + row["C"])))
 
 
@@ -41,10 +48,11 @@ def fits(query: str) -> list[Fit]:
     found: list[Fit] = []
     for row in sorted(chemdb.wagner(species.cas), key=lambda r: r["form"] != "2.5-5"):
         found.append(Fit(f"wagner {row['form']}", row["source"], (row["Tmin"], row["Tmax"]), row))
-    for row in sorted(chemdb.antoine(species.cas), key=lambda r: r["source"] != "poling"):
-        if row["Tmin"] is not None and row["Tmax"] is not None:
-            found.append(Fit("antoine", row["source"], (row["Tmin"], row["Tmax"]), row))
-    return found
+    for row in chemdb.dippr101(species.cas):
+        found.append(Fit("dippr101", row["source"], (row["Tmin"], row["Tmax"]), row))
+    for row in sorted(chemdb.antoine(species.cas), key=lambda r: _ANTOINE_ORDER.get(r["source"], 9)):
+        found.append(Fit("antoine", row["source"], (row["Tmin"], row["Tmax"]), row))
+    return [fit for fit in found if None not in fit.window]
 
 
 def fit_at(query: str, T: float) -> Fit | None:

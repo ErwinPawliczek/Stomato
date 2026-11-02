@@ -46,6 +46,11 @@ logged at the top of `AUDIT.txt`. This is not hypothetical: the bundled IUPAC ta
 exchanges cyclohexane and methylcyclopentane. Both rows stay in `properties.csv`,
 unselected. A polymorph-rich species keeps the JANAF table with the lowest G°298.
 
+Two physical tests then catch what no vote can. A condensed phase must lie below its gas
+by a plausible phase-change enthalpy, which catches sign slips in a source (the CRC table's
+CI4 and CHI3 solids), and a stated Tb must agree with a vapour-pressure fit at 1 atm. A
+failing selection moves to the best-ranked row that passes, and the move is logged.
+
 ## Rebuilding
 
 Downloads go to a cache directory outside the repo, and only parsed numbers are

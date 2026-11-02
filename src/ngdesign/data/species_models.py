@@ -15,7 +15,9 @@ Models, best first, chosen per species and phase:
    S = A ln t + Bt + Ct²/2 + Dt³/3 − E/(2t²) + G.
 3. **Gas Cp fits**: TRC eight-term or Poling polynomial (evaluated with their
    ``chemicals`` integrals) on the selected S°298.
-4. **Constant Cp** at the tabulated 298 K value, for condensed species only. The
+4. **Liquid Cp fits**: Zabransky splines or DIPPR 100 polynomials, after a saturation
+   model μ°(l) = μ°(g) + RT ln(Psat/P°) wherever a vapour-pressure fit reaches 298.15 K.
+5. **Constant Cp** at the tabulated 298 K value, within a narrow range for a gas. The
    result names itself ``constant_cp`` so the coarser model stays visible.
 
 A temperature outside a model's range is refused, never extrapolated.
@@ -34,6 +36,7 @@ from typing import Any
 
 import numpy as np
 import scipy.constants as sc
+from chemicals.dippr import EQ100
 from chemicals.heat_capacity import (
     Poling,
     Poling_integral,
@@ -41,6 +44,9 @@ from chemicals.heat_capacity import (
     TRCCp,
     TRCCp_integral,
     TRCCp_integral_over_T,
+    Zabransky_cubic,
+    Zabransky_cubic_integral,
+    Zabransky_cubic_integral_over_T,
 )
 
 from ngdesign.data import chemdb, vapour_pressure
@@ -265,6 +271,62 @@ class _SaturationCurve(_Curve):
         return float((self.hf + self.dh(T) - self._g(T)) / T)
 
 
+class _LiquidFitCurve(_Curve):
+    """Tabulated liquid Cp(T): Zabransky cubic splines or a DIPPR 100 polynomial."""
+
+    def __init__(self, pieces: Sequence[Mapping[str, Any]], s298: float) -> None:
+        self.pieces = sorted(pieces, key=lambda p: float(p["Tmin"]))
+        self.tmin = float(self.pieces[0]["Tmin"])
+        self.tmax = float(self.pieces[-1]["Tmax"])
+        self.s298 = s298
+        self.name = f"cp_fit:{self.pieces[0]['source']}"
+
+    @staticmethod
+    def _antiderivatives(piece: Mapping[str, Any], T: float) -> tuple[float, float, float]:
+        """(Cp, ∫Cp dT, ∫Cp/T dT) of one piece, up to its constants."""
+        if piece["form"] == "dippr100":
+            A, B, C, D, E = (float(piece[f"a{i}"]) / 1000.0 for i in range(5))  # per kmol to per mol
+            return (
+                float(EQ100(T, A, B, C, D, E)),
+                float(EQ100(T, A, B, C, D, E, order=-1)),
+                float(EQ100(T, A, B, C, D, E, order=-1j)),
+            )
+        a = [float(piece[f"a{i}"]) for i in range(4)]
+        return (
+            float(Zabransky_cubic(T, *a)),
+            float(Zabransky_cubic_integral(T, *a)),
+            float(Zabransky_cubic_integral_over_T(T, *a)),
+        )
+
+    def _piece(self, T: float) -> Mapping[str, Any]:
+        for piece in self.pieces:
+            if T <= float(piece["Tmax"]):
+                return piece
+        return self.pieces[-1]
+
+    def _integrate(self, T: float, column: int) -> float:
+        """∫ from 298.15 K to T, across piece boundaries."""
+        sign, low, high = (1.0, T_REF, T) if T >= T_REF else (-1.0, T, T_REF)
+        total = 0.0
+        for piece in self.pieces:
+            left = max(low, float(piece["Tmin"]))
+            right = min(high, float(piece["Tmax"]))
+            if right > left:
+                total += (
+                    self._antiderivatives(piece, right)[column] - self._antiderivatives(piece, left)[column]
+                )
+        return sign * total
+
+    def cp(self, T: float) -> float:
+        return self._antiderivatives(self._piece(T), T)[0]
+
+    def dh(self, T: float) -> float:
+        return self._integrate(T, 1)
+
+    def s(self, T: float) -> float:
+        return self.s298 + self._integrate(T, 2)
+
+
 class _ConstantCpCurve(_Curve):
     """Constant Cp between stated limits: the coarse condensed-phase fallback."""
 
@@ -460,6 +522,11 @@ def species_thermo(query: str, phase: str = "gas", hf_source: str | None = None)
             if fit is not None:
                 curve = _PolyCurve(fit, s298)
         if curve is None:
+            if phase == "liquid":
+                pieces = _liquid_fit_pieces(species.cas)
+                if pieces:
+                    curve = _LiquidFitCurve(pieces, s298)
+        if curve is None:
             cp = chemdb.maybe(species.cas, f"Cp_{phase}")
             if cp is None:
                 raise MissingPropertyError(f"no Cp(T) data for {species.name} ({phase})")
@@ -534,6 +601,22 @@ def _reference_state(query: str) -> SpeciesThermo:
 
 def _has_reference_table(cas: str) -> bool:
     return any(rows[0]["phase"] == "ref" for rows in chemdb.janaf(cas).values())
+
+
+def _liquid_fit_pieces(cas: str) -> list[dict[str, Any]]:
+    """Contiguous Cp pieces around 298.15 K of the best family: a reviewed spline first."""
+    rows = chemdb.cp_liquid(cas)
+    for form in ("zabransky_sat", "zabransky_p", "dippr100"):
+        pieces = sorted((r for r in rows if r["form"] == form), key=lambda r: float(r["Tmin"]))
+        if pieces and float(pieces[0]["Tmin"]) <= T_REF <= float(pieces[-1]["Tmax"]):
+            joined = [pieces[0]]
+            for piece in pieces[1:]:
+                if float(piece["Tmin"]) > float(joined[-1]["Tmax"]) + 0.5:
+                    break
+                joined.append(piece)
+            if float(joined[-1]["Tmax"]) >= T_REF:
+                return joined
+    return []
 
 
 def _saturation_curve(cas: str, hf: float) -> _Curve | None:

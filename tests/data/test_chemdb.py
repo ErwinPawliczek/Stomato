@@ -297,3 +297,94 @@ def test_every_reference_eos_fluid_keeps_its_critical_point() -> None:
 def test_a_swapped_source_row_is_outvoted_but_kept() -> None:
     assert chemdb.value("cyclohexane", "Tc").source == "coolprop"
     assert 532.0 < min(r.value for r in chemdb.values("cyclohexane", "Tc")) < 533.0
+
+
+@pytest.mark.parametrize(("name", "prop"), [("CI4", "Hf_solid"), ("iodoform", "Hf_solid")])
+def test_a_source_sign_slip_is_caught_by_the_gas(name: str, prop: str) -> None:
+    """Regression: the CRC table prints these with the wrong sign, grade B, selected."""
+    assert chemdb.value(name, prop).value > 0.0
+    assert any(r.value < 0.0 and not r.selected for r in chemdb.values(name, prop))
+
+
+def test_an_ionic_solid_keeps_its_large_gap_below_the_gas() -> None:
+    """MgO sits over 600 kJ/mol below its gas: real, and not a reason to move the selection."""
+    gas, solid = chemdb.value("MgO", "Hf_gas").value, chemdb.value("MgO", "Hf_solid")
+    assert solid.source == "janaf"
+    assert gas - solid.value > 500_000.0
+
+
+def test_condensed_phases_lie_below_their_gas() -> None:
+    """Selected ΔfH° across phases, on the species that have a row to choose from."""
+    wrong = []
+    for species in chemdb.all_species():
+        gas = chemdb.maybe(species.cas, "Hf_gas")
+        for prop in ("Hf_liquid", "Hf_solid"):
+            value = chemdb.maybe(species.cas, prop)
+            if gas is None or value is None or len(chemdb.values(species.cas, prop)) < 2:
+                continue
+            if not gas - value > 0.0:
+                wrong.append((species.name, prop, gas, value))
+    assert len(wrong) < 40, wrong[:10]
+
+
+def test_fixed_points_are_ordered_for_almost_every_species() -> None:
+    wrong = []
+    for species in chemdb.all_species():
+        tm, tb, tc = (chemdb.maybe(species.cas, p) for p in ("Tm", "Tb", "Tc"))
+        if tb is not None and tc is not None and tb >= tc:
+            wrong.append((species.name, "Tb>Tc", tb, tc))
+        if tm is not None and tb is not None and tm >= tb and chemdb.value(species.cas, "Tb").grade != "C":
+            wrong.append((species.name, "Tm>Tb", tm, tb))
+    assert len(wrong) < 0.01 * len(chemdb.all_species()), wrong[:10]
+
+
+@pytest.mark.parametrize(
+    ("species", "fluid"),
+    [
+        ("water", "Water"),
+        ("benzene", "Benzene"),
+        ("n-hexane", "n-Hexane"),
+        ("ammonia", "Ammonia"),
+        ("CO2", "CO2"),
+    ],
+)
+def test_acentric_factor_matches_the_reference_eos(species: str, fluid: str) -> None:
+    assert chemdb.value(species, "omega").value == pytest.approx(CP.PropsSI("acentric", fluid), abs=0.01)
+
+
+def test_omega_from_its_definition_agrees_with_stated_values() -> None:
+    """The derived row, where a stated row exists to judge it, on a broad sample."""
+    differences = []
+    for species in chemdb.all_species():
+        rows = {r.source: r.value for r in chemdb.values(species.cas, "omega")}
+        if "omega_definition" in rows and "psrk" in rows:
+            differences.append(abs(rows["omega_definition"] - rows["psrk"]))
+    assert len(differences) > 100
+    differences.sort()
+    assert differences[len(differences) // 2] < 0.02
+
+
+@pytest.mark.parametrize(
+    ("query", "fluid", "T"),
+    [("n-octane", "n-Octane", 350.0), ("acetone", "Acetone", 320.0), ("1-butene", "1-Butene", 280.0)],
+)
+def test_broader_vapour_pressure_coverage_matches_the_reference_eos(query: str, fluid: str, T: float) -> None:
+    from ngdesign.data import vapour_pressure
+
+    fit = vapour_pressure.fit_at(query, T)
+    assert fit is not None
+    assert fit.pressure(T) == pytest.approx(CP.PropsSI("P", "T", T, "Q", 0, fluid), rel=0.02)
+
+
+def test_liquid_fit_model_tracks_the_reference_cp() -> None:
+    from ngdesign.data.species_models import _liquid_fit_pieces, _LiquidFitCurve
+
+    pieces = _liquid_fit_pieces("71-43-2")
+    assert pieces
+    curve = _LiquidFitCurve(pieces, 0.0)
+    assert curve.cp(330.0) == pytest.approx(CP.PropsSI("CPMOLAR", "T", 330.0, "Q", 0, "Benzene"), rel=0.02)
+    h = 0.5
+    assert (curve.dh(330.0 + h) - curve.dh(330.0 - h)) / (2 * h) == pytest.approx(curve.cp(330.0), rel=1e-4)
+    assert (curve.s(330.0 + h) - curve.s(330.0 - h)) / (2 * h) == pytest.approx(
+        curve.cp(330.0) / 330.0, rel=1e-4
+    )

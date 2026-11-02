@@ -33,6 +33,8 @@ import thermo
 from chemicals.elements import charge_from_formula
 from chemicals.identifiers import search_chemical
 
+from ngdesign.data import chemdb, vapour_pressure  # noqa: E402
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from parse_nist import (  # noqa: E402
     Page,
@@ -64,6 +66,11 @@ SOURCE_RANK: dict[str, int] = {
     "yaws": 11,
     "crc_aqueous": 5,
     "nist_henry": 9,
+    "psrk": 5,
+    "dippr_pina": 5,
+    "passut_danner": 8,
+    "mathews": 8,
+    "omega_definition": 9,
 }
 
 GRADES: dict[str, str] = {
@@ -83,6 +90,11 @@ GRADES: dict[str, str] = {
     "yaws": "C",
     "crc_aqueous": "B",
     "nist_henry": "B",
+    "psrk": "B",
+    "dippr_pina": "B",
+    "passut_danner": "B",
+    "mathews": "B",
+    "omega_definition": "B",
 }
 
 UNITS = {
@@ -93,6 +105,7 @@ UNITS = {
     "Cp": "J/(mol K)",
     "Hv": "J/mol",
     "Hs": "J/mol",
+    "om": "1",
     "Tb": "K",
     "Tm": "K",
     "Tt": "K",
@@ -376,11 +389,31 @@ def _collect_coolprop(rows: Rows) -> None:
         reference = f"CoolProp {fluid}"
         rows.add(cas, "Tc", float(CP.PropsSI("Tcrit", fluid)), "coolprop", reference=reference)
         rows.add(cas, "Pc", float(CP.PropsSI("pcrit", fluid)), "coolprop", reference=reference)
+        omega = float(CP.PropsSI("acentric", fluid))
+        if math.isfinite(omega) and abs(omega) < 5.0:
+            rows.add(cas, "omega", omega, "coolprop", reference=reference)
+
+
+def _collect_critical(rows: Rows, names: dict[str, str]) -> None:
+    """The critical-property collections beyond the IUPAC and CRC tables."""
+    for relative, source, keys in (
+        ("Critical Properties/Appendix to PSRK Revision 4.tsv", "psrk", ("Tc", "Pc", "Vc", "omega")),
+        ("Critical Properties/PassutDanner1973.tsv", "passut_danner", ("Tc", "Pc", "omega")),
+        ("Critical Properties/DIPPRPinaMartines.tsv", "dippr_pina", ("Tc", "Pc", "Vc")),
+        ("Critical Properties/Mathews1972InorganicCriticalProps.tsv", "mathews", ("Tc", "Pc", "Vc")),
+        ("Critical Properties/Yaws Collection.tsv", "yaws", ("Tc", "Pc", "Vc", "omega")),
+    ):
+        for row in _tsv(relative):
+            if row.get("Chemical"):
+                names.setdefault(row["CAS"], row["Chemical"].strip())
+            for key in keys:
+                rows.add(row["CAS"], key, _num(row[key]), source)
 
 
 def _collect_bundled(rows: Rows) -> dict[str, str]:
     """The primary tables shipped in ``chemicals``; returns cas -> name when stated."""
     names: dict[str, str] = {}
+    _collect_critical(rows, names)
     for row in _tsv("Reactions/ATcT 1.112 (g).tsv"):
         rows.add(
             row["CAS"],
@@ -473,6 +506,7 @@ def _constants(rows: Rows) -> None:
 
 #: Relative distance from the sources' median beyond which a value is set aside.
 CONSENSUS_LIMIT = {"Tc": 0.03, "Pc": 0.10}
+NON_VOTING = ("nist_snapshot", "yaws")
 #: Lines describing every top-ranked value that lost to the other sources.
 OUTVOTED: list[str] = []
 
@@ -484,28 +518,29 @@ def _consensus_choice(group: list[dict[str, Any]], prop: str) -> dict[str, Any]:
     swaps cyclohexane and methylcyclopentane, so grade A does not make a row right.
     The reference EOS is not put to a vote: it is the check on the others. The WebBook
     snapshot gets no vote and cannot win one, since it restates (and sometimes averages)
-    rows of the same pages. Tb and Tm stay out of this: three thin sources outvoted good
-    CRC values there (R22, anisole).
+    rows of the same pages, and neither does Yaws, which mixes in estimates. Tb and Tm
+    stay out of this: three thin sources outvoted good CRC values there (R22, anisole).
     """
     limit = CONSENSUS_LIMIT.get(prop)
     if limit is None or group[0]["source"] == "coolprop":
         return group[0]
     per_source: dict[str, list[float]] = defaultdict(list)
     for row in group:
-        if row["source"] != "nist_snapshot":
+        if row["source"] not in NON_VOTING:
             per_source[row["source"]].append(float(row["value"]))
     if len(per_source) < 3:
         return group[0]
     medians = sorted(statistics.median(values) for values in per_source.values())
     centre = statistics.median(medians)
     for row in group:
-        if row["source"] != "nist_snapshot" and abs(float(row["value"]) - centre) <= limit * centre:
+        if row["source"] not in NON_VOTING and abs(float(row["value"]) - centre) <= limit * centre:
             return row
     return group[0]
 
 
 def _select(rows: list[dict[str, Any]]) -> None:
     """Mark the winning row per (cas, property), and sort deterministically."""
+    OUTVOTED.clear()
     groups: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         groups[(row["cas"], row["property"])].append(row)
@@ -679,6 +714,23 @@ def _correlations(collected: dict[str, Any], kept: set[str]) -> dict[str, list[d
             shomate.append({"cas": page.cas, "source": "nist", **row})
         for row in page.antoine:
             antoine.append({"cas": page.cas, "source": "nist", **row})
+    for row in _tsv("Vapor Pressure/Landolt_antoine_V20.tsv"):
+        if row["CAS"] in kept:
+            a, b, c = _num(row["A"]), _num(row["B"]), _num(row["C"])
+            if a is None or b is None or c is None:
+                continue
+            antoine.append(
+                {
+                    "cas": row["CAS"],
+                    "source": "landolt",
+                    "Tmin": _num(row["Tmin"]),
+                    "Tmax": _num(row["Tmax"]),
+                    "A": a / math.log(10.0) - 5.0,
+                    "B": b / math.log(10.0),
+                    "C": c,
+                    "reference": "Landolt-Bornstein IV/20 (from ln Pa to log10 bar)",
+                }
+            )
     for row in _tsv("Vapor Pressure/Antoine Collection Poling.tsv"):
         if row["CAS"] in kept:
             a, b, c = _num(row["A"]), _num(row["B"]), _num(row["C"])
@@ -731,6 +783,69 @@ def _correlations(collected: dict[str, Any], kept: set[str]) -> dict[str, list[d
                     "Tmax": _num(row["Tc"]),
                 }
             )
+    for row in _tsv("Vapor Pressure/VDI PPDS Boiling temperatures at different pressures.tsv"):
+        if row["CAS"] in kept and row["A"].strip():
+            wagner.append(
+                {
+                    "cas": row["CAS"],
+                    "source": "vdi",
+                    "form": "2.5-5",
+                    "A": _num(row["A"]),
+                    "B": _num(row["B"]),
+                    "C": _num(row["C"]),
+                    "D": _num(row["D"]),
+                    "Tc": _num(row["Tc"]),
+                    "Pc": _num(row["Pc"]),
+                    "Tmin": _num(row["Tm"]),
+                    "Tmax": _num(row["Tc"]),
+                }
+            )
+    dippr: list[dict[str, Any]] = []
+    for relative, source, labels in (
+        (
+            "Vapor Pressure/Table 2-8 Vapor Pressure of Inorganic and Organic Liquids.tsv",
+            "perry",
+            ("C1", "C2", "C3", "C4", "C5"),
+        ),
+        ("Vapor Pressure/Alcock_Itkin_Horrigan_metalic_elements.tsv", "alcock", ("A", "B", "C", "D", "E")),
+    ):
+        for row in _tsv(relative):
+            if row["CAS"] in kept:
+                dippr.append(
+                    {
+                        "cas": row["CAS"],
+                        "source": source,
+                        "Tmin": _num(row["Tmin"]),
+                        "Tmax": _num(row["Tmax"]),
+                        **{f"a{i}": _num(row[label]) for i, label in enumerate(labels)},
+                    }
+                )
+    cp_liquid: list[dict[str, Any]] = []
+    for row in _tsv("Heat Capacity/Perry_Table_2-153_DIPPR_100.tsv"):
+        if row["CAS"] in kept:
+            cp_liquid.append(
+                {
+                    "cas": row["CAS"],
+                    "form": "dippr100",
+                    "source": "perry",
+                    "Tmin": _num(row["Tmin"]),
+                    "Tmax": _num(row["Tmax"]),
+                    **{f"a{i}": _num(row[label]) for i, label in enumerate("ABCDE")},
+                }
+            )
+    for row in _tsv("Heat Capacity/Zabransky.tsv"):
+        spline = [_num(row[f"A{i}-spline"]) for i in (1, 2, 3, 4)]
+        if row["CASRN"] in kept and row["Data Type"] in ("p", "sat") and any(spline):
+            cp_liquid.append(
+                {
+                    "cas": row["CASRN"],
+                    "form": f"zabransky_{row['Data Type']}",
+                    "source": "zabransky",
+                    "Tmin": _num(row["Tmin"]),
+                    "Tmax": _num(row["Tmax"]),
+                    **{f"a{i}": value for i, value in enumerate(spline)},
+                }
+            )
     poly: list[dict[str, Any]] = []
     for row in _tsv("Heat Capacity/PolingDatabank.tsv"):
         if row["CAS"] in kept and row["a0"].strip():
@@ -756,7 +871,16 @@ def _correlations(collected: dict[str, Any], kept: set[str]) -> dict[str, list[d
                     **{f"a{i}": _num(row[f"a{i}"]) for i in range(8)},
                 }
             )
-    return {"shomate": shomate, "antoine": antoine, "wagner": wagner, "cp_gas": poly}
+    # a fit whose window has no width states nothing
+    antoine = [r for r in antoine if r["Tmin"] is None or r["Tmax"] is None or r["Tmin"] < r["Tmax"]]
+    return {
+        "shomate": shomate,
+        "antoine": antoine,
+        "wagner": wagner,
+        "cp_gas": poly,
+        "dippr101": dippr,
+        "cp_liquid": cp_liquid,
+    }
 
 
 def _audit(
@@ -815,6 +939,127 @@ def _audit(
     return lines, counts
 
 
+def _write_properties(out: Path, rows: list[dict[str, Any]]) -> int:
+    return _write_csv(
+        out / "properties.csv",
+        [
+            "cas",
+            "property",
+            "value",
+            "unit",
+            "uncertainty",
+            "T_K",
+            "source",
+            "grade",
+            "reference",
+            "selected",
+        ],
+        rows,
+    )
+
+
+#: Past this gap below the gas, J/mol, a condensed ΔfH° is looked at for a sign slip.
+SIGN_SLIP_GAP = 300_000.0
+#: Agreement required of a stated Tb with the vapour-pressure fits, K.
+TB_FIT_LIMIT = 5.0
+
+
+def _reselect(group: list[dict[str, Any]], chosen: dict[str, Any], why: str) -> None:
+    held = next(r for r in group if r["selected"])
+    OUTVOTED.append(
+        f"outvoted {held['property']} {held['cas']}: {held['source']} {held['value']:.6g} set aside for "
+        f"{chosen['source']} {chosen['value']:.6g} {chosen['unit']} ({why})"
+    )
+    for row in group:
+        row["selected"] = 1 if row is chosen else 0
+
+
+def _physical_checks(rows: list[dict[str, Any]], out: Path) -> None:
+    """Move a selection that fails a check no source rank can see.
+
+    Selection by rank cannot notice a value its source got wrong: the CRC table prints
+    CI4(s) and CHI3(s) with the wrong sign. Two tests are independent of the rows they
+    judge. A condensed phase lies below the gas, by an amount a sign slip cannot explain
+    away. And a stated Tb agrees with the saturation temperature of a vapour-pressure fit at 1 atm.
+    A failing selection moves to the best-ranked row that passes; with none, it stays
+    and the audit shows it.
+    """
+    groups: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        groups[(row["cas"], row["property"])].append(row)
+    for (cas, prop), group in groups.items():
+        if prop not in ("Hf_liquid", "Hf_solid"):
+            continue
+        gas = next((float(r["value"]) for r in groups.get((cas, "Hf_gas"), []) if r["selected"]), None)
+        if gas is None:
+            continue
+        held = next(r for r in group if r["selected"])
+        value = float(held["value"])
+        if gas - value <= 0.0:  # a condensed phase above its own gas
+            passes = [r for r in group if gas - float(r["value"]) > 0.0]
+            if passes:
+                _reselect(group, passes[0], "below-the-gas test")
+        elif gas - value >= SIGN_SLIP_GAP:
+            # Ionic solids really do sit this far below their gas (MgO: 660 kJ), so the gap
+            # alone proves nothing. It takes a row of the same size and opposite sign.
+            twin = [r for r in group if abs(float(r["value"]) + value) < 0.02 * abs(value)]
+            if twin:
+                _reselect(group, twin[0], "sign slip against the gas")
+    if out.resolve() != (chemdb.DATA_DIR / "chemdb").resolve():
+        return
+    for (cas, prop), group in groups.items():
+        if prop != "Tb":
+            continue
+        held = next(r for r in group if r["selected"])
+        predicted = next(
+            (
+                t
+                for t in (vapour_pressure.temperature_at(f, 101325.0) for f in vapour_pressure.fits(cas))
+                if t
+            ),
+            None,
+        )
+        if predicted is None or abs(float(held["value"]) - predicted) <= TB_FIT_LIMIT:
+            continue
+        passes = [r for r in group if abs(float(r["value"]) - predicted) <= TB_FIT_LIMIT]
+        if passes:
+            _reselect(group, passes[0], "vapour-pressure test")
+
+
+def _derive_omega(rows: list[dict[str, Any]], out: Path) -> None:
+    """Pitzer's acentric factor from its definition, ω = −log10(Psat(0.7 Tc)/Pc) − 1.
+
+    Run on the tables just written, so it reads the selected Tc and Pc and the same
+    vapour-pressure fits the engine uses. Only a fit whose window holds 0.7 Tc counts.
+    """
+    if out.resolve() != (chemdb.DATA_DIR / "chemdb").resolve():
+        return
+    selected = {(r["cas"], r["property"]): r["value"] for r in rows if r["selected"]}
+    for (cas, prop), Tc in list(selected.items()):
+        Pc = selected.get((cas, "Pc"))
+        if prop != "Tc" or Pc is None:
+            continue
+        fit = vapour_pressure.fit_at(cas, 0.7 * float(Tc))
+        if fit is None:
+            continue
+        omega = -math.log10(fit.pressure(0.7 * float(Tc)) / float(Pc)) - 1.0
+        if -1.0 < omega < 3.0:
+            rows.append(
+                {
+                    "cas": cas,
+                    "property": "omega",
+                    "value": omega,
+                    "unit": "1",
+                    "uncertainty": None,
+                    "T_K": None,
+                    "source": "omega_definition",
+                    "grade": GRADES["omega_definition"],
+                    "reference": f"{fit.form} {fit.source} at 0.7 Tc",
+                }
+            )
+    _select(rows)
+
+
 def tables(cache: Path, out: Path) -> int:
     collected = _collect_all(cache)
     species: dict[str, dict[str, Any]] = collected["species"]
@@ -871,22 +1116,7 @@ def tables(cache: Path, out: Path) -> int:
         ],
         (species[c] for c in sorted(species)),
     )
-    counts["properties"] = _write_csv(
-        out / "properties.csv",
-        [
-            "cas",
-            "property",
-            "value",
-            "unit",
-            "uncertainty",
-            "T_K",
-            "source",
-            "grade",
-            "reference",
-            "selected",
-        ],
-        rows,
-    )
+    counts["properties"] = _write_properties(out, rows)
     correlations = _correlations(collected, kept)
     counts["shomate"] = _write_csv(
         out / "shomate.csv",
@@ -903,6 +1133,16 @@ def tables(cache: Path, out: Path) -> int:
         ["cas", "form", "A", "B", "C", "D", "Tc", "Pc", "Tmin", "Tmax", "source"],
         sorted(correlations["wagner"], key=lambda r: (r["cas"], r["form"])),
     )
+    counts["dippr101"] = _write_csv(
+        out / "dippr101.csv",
+        ["cas", "Tmin", "Tmax", "a0", "a1", "a2", "a3", "a4", "source"],
+        sorted(correlations["dippr101"], key=lambda r: (r["cas"], r["source"])),
+    )
+    counts["cp_liquid"] = _write_csv(
+        out / "cp_liquid.csv",
+        ["cas", "form", "Tmin", "Tmax", "a0", "a1", "a2", "a3", "a4", "source"],
+        sorted(correlations["cp_liquid"], key=lambda r: (r["cas"], r["form"], r["Tmin"])),
+    )
     counts["cp_gas"] = _write_csv(
         out / "cp_gas.csv",
         ["cas", "form", "Tmin", "Tmax", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "source"],
@@ -915,6 +1155,9 @@ def tables(cache: Path, out: Path) -> int:
             (r for r in collected["janaf"] if r["cas"] in kept), key=lambda r: (r["cas"], r["table"], r["T"])
         ),
     )
+    _derive_omega(rows, out)  # first: it re-selects, and the checks below must stand last
+    _physical_checks(rows, out)
+    counts["properties"] = _write_properties(out, rows)
     audit_lines, audit_counts = _audit(rows, species, pubchem, collected["pages"])
     (out / "AUDIT.txt").write_text(
         "Cross-source disagreements found at build time (grade C sources excluded).\n"

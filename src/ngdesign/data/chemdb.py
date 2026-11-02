@@ -331,6 +331,16 @@ def wagner(query: str) -> list[dict[str, Any]]:
     return list(_grouped("wagner.csv").get(find(query).cas, []))
 
 
+def dippr101(query: str) -> list[dict[str, Any]]:
+    """DIPPR 101 vapour-pressure fits: ln(P/Pa) = a0 + a1/T + a2 ln T + a3 T^a4."""
+    return list(_grouped("dippr101.csv").get(find(query).cas, []))
+
+
+def cp_liquid(query: str) -> list[dict[str, Any]]:
+    """Liquid Cp fits: ``dippr100`` polynomial in J/(kmol K), ``zabransky_*`` cubic splines."""
+    return list(_grouped("cp_liquid.csv").get(find(query).cas, []))
+
+
 def cp_gas(query: str) -> list[dict[str, Any]]:
     """Ideal-gas Cp fits (``form`` "poling": Cp/R polynomial; "trc": TRC eight-term)."""
     return list(_grouped("cp_gas.csv").get(find(query).cas, []))
