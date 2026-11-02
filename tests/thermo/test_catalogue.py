@@ -26,9 +26,9 @@ from ngdesign.thermo.helmholtz import (
     ASMESteamPackage,
     BWRSPackage,
     CoolPropPackage,
+    EosCgPackage,
     GERGPackage,
     IAPWSPackage,
-    UnavailablePackage,
 )
 from ngdesign.thermo.kvalue import (
     AntoineIdealKThermo,
@@ -187,6 +187,13 @@ def test_rows_load_and_build() -> None:
     ]
     # coverage-gap rows: density, enthalpy, free-water and vapour pairings of existing families
     catalogue_gap_ids: list[str] = [
+        "nrtl_tdep_hoc",
+        "uniquac_tdep_ig",
+        "nrtl_sac_ig",
+        "wilson_lr_ig",
+        "wilson_glr_ig",
+        "pr-free-water",
+        "kabadi-danner-free-water",
         "enrtl_rk",
         "enrtl_hoc",
         "pitzer_hoc",
@@ -211,7 +218,7 @@ def test_rows_load_and_build() -> None:
         + mixing_ids
         + catalogue_gap_ids
     )
-    assert len(expected) == 148
+    assert len(expected) == 155
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
@@ -228,7 +235,7 @@ def test_rows_load_and_build() -> None:
         "gerg2008": GERGPackage,
         "bwrs": BWRSPackage,
         "asme_steam": ASMESteamPackage,
-        "eos_cg": UnavailablePackage,
+        "eos_cg": EosCgPackage,
         "aga8_dc92": Aga8Dc92Package,
         "mbwr": MBWR32Package,
         "bwr_ls": BWRLeeStarlingPackage,
