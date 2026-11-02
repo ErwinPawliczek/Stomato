@@ -74,12 +74,12 @@ def test_gibbs_energy_is_a_minimum() -> None:
 
 
 def test_cross_check_with_the_reactor_units_gibbs_minimiser() -> None:
-    """On one and the same potentials, the two independent solvers must agree."""
+    """The flowsheet path and this one share a solver and data, so they agree exactly."""
     species = ["CO", "H2O", "CO2", "H2"]
     n_in = {"CO": 1.0, "H2O": 1.0}
     T, P = 1000.0, 1e5
     theirs = unit_gibbs.gibbs_minimum(species, [], n_in, T, P)
-    # the reaction's K from their potentials must then hold for our solver's output on our data
+    # and the equilibrium reactor's ln K holds at the Gibbs reactor's composition
     reaction = Reaction(
         id="wgs",
         stoichiometry={"CO": -1.0, "H2O": -1.0, "CO2": 1.0, "H2": 1.0},
@@ -91,7 +91,17 @@ def test_cross_check_with_the_reactor_units_gibbs_minimiser() -> None:
         math.exp(unit_kinetics.ln_keq(reaction, T)), rel=1e-6
     )
     ours = eq.gibbs_equilibrium(n_in, species, T, P)
-    assert ours.gas["H2"] == pytest.approx(theirs["H2"], abs=0.02)
+    assert ours.gas["H2"] == pytest.approx(theirs["H2"], rel=1e-12)
+
+
+def test_inerts_dilute_but_do_not_react() -> None:
+    """They carry no atoms: an inert that shares elements with the species stays put."""
+    species = ["CH4", "H2O", "CO", "CO2", "H2"]
+    plain = unit_gibbs.gibbs_minimum(species, [], {"CH4": 1.0, "H2O": 1.0}, 900.0, 1e5)
+    diluted = unit_gibbs.gibbs_minimum(species, ["N2"], {"CH4": 1.0, "H2O": 1.0, "N2": 5.0}, 900.0, 1e5)
+    assert diluted["CH4"] < plain["CH4"]  # a mole-increasing reaction gains from dilution
+    by_species = eq.gibbs_equilibrium({"CH4": 1.0, "H2O": 1.0, "N2": 5.0}, [*species, "N2"], 900.0, 1e5)
+    assert diluted["H2"] == pytest.approx(by_species.gas["H2"], rel=1e-9)
 
 
 def test_le_chatelier_pressure() -> None:

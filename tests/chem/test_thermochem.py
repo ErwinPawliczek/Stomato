@@ -250,7 +250,7 @@ def test_crossover_temperature_of_the_water_gas_shift() -> None:
 
 
 def test_cross_check_with_the_reactor_units_databank_path() -> None:
-    """The flowsheet's ln_keq (chemicals bank) and this engine (JANAF/ATcT) should agree."""
+    """The flowsheet's ln_keq and this engine read one set of species models."""
     reaction = Reaction(
         id="wgs",
         stoichiometry={"CO": -1.0, "H2O": -1.0, "CO2": 1.0, "H2": 1.0},
@@ -262,8 +262,8 @@ def test_cross_check_with_the_reactor_units_databank_path() -> None:
     here = tc.reaction_thermo(
         "CO + H2O -> CO2 + H2", T, phases={k: "gas" for k in ("CO", "H2O", "CO2", "H2")}
     )
-    assert here.lnK == pytest.approx(unit_kinetics.ln_keq(reaction, T), abs=0.05)
-    assert here.dH == pytest.approx(unit_kinetics.heat_of_reaction(reaction, T), rel=0.05)
+    assert here.lnK == pytest.approx(unit_kinetics.ln_keq(reaction, T), rel=1e-9)
+    assert here.dH == pytest.approx(unit_kinetics.heat_of_reaction(reaction, T), rel=1e-9)
 
 
 def test_sulfur_above_boiling_means_its_reference_vapour_not_atomic_gas() -> None:

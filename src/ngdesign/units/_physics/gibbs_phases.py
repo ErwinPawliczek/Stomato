@@ -57,12 +57,17 @@ class Candidate:
     """One species-in-a-phase the solver may use."""
 
     key: str
-    thermo: SpeciesThermo
+    thermo: SpeciesThermo | None  # None for a fixed-amount inert: it has no potential to minimise
     atoms: dict[str, int]
 
     @property
     def condensed(self) -> bool:
-        return self.thermo.phase != "gas"
+        return self.thermo is not None and self.thermo.phase != "gas"
+
+
+def _in_range(candidate: Candidate, T: float) -> bool:
+    thermo = candidate.thermo
+    return thermo is None or thermo.t_range[0] <= T <= thermo.t_range[1]
 
 
 @dataclass(frozen=True)
@@ -90,6 +95,20 @@ class EquilibriumResult:
         """Gas-phase mole fractions."""
         total = self.gas_total
         return {key: n / total for key, n in self.gas.items()} if total > 0.0 else {}
+
+
+def phase_of(token: str) -> str:
+    """The phase a candidate token names: gas unless suffixed."""
+    text = token.strip()
+    for suffix, name in (("(l)", "liquid"), ("(s)", "solid"), ("(cr)", "solid")):
+        if text.endswith(suffix):
+            return name
+    return "gas"
+
+
+def species_of(token: str) -> str:
+    """A candidate token without its phase suffix."""
+    return _strip_phase(token)
 
 
 def _candidate(token: str) -> Candidate:
@@ -312,6 +331,7 @@ def gibbs_equilibrium(
     P: float = 101325.0,
     *,
     thermo: Thermo | None = None,
+    inerts: Mapping[str, float] | None = None,
 ) -> EquilibriumResult:
     """Equilibrium composition at fixed T and P.
 
@@ -321,22 +341,33 @@ def gibbs_equilibrium(
     ``thermo`` adds vapour fugacity coefficients from a registered package. A condensed
     candidate whose table does not reach T (a solid above its melting point) cannot
     exist there: it is set aside and named in ``excluded``. A gas out of range raises.
+    ``inerts`` (mol by id) are gas spectators: they dilute but do not react, and they
+    need no data, because each holds a private element of its own. They appear in
+    ``gas`` and carry no enthalpy here. They cannot be combined with ``thermo``.
     """
+    if inerts and thermo is not None:
+        raise EquilibriumError("inerts have no identity for a fugacity model; list them as species")
     candidates = [_candidate(token) for token in species]
     keys = [c.key for c in candidates]
+    spectators = dict(inerts or {})
     if len(keys) != len(set(keys)):
         raise EquilibriumError("duplicate candidates")
     gas = [c for c in candidates if not c.condensed]
     pool = [c for c in candidates if c.condensed]
     elements, b = _element_table(candidates, feed)
     gas = [c for c in gas if set(c.atoms) <= set(elements)]
+    for key, amount in spectators.items():
+        private = f"@{key}"
+        gas.append(Candidate(key, None, {private: 1}))
+        elements = [*elements, private]
+        b = np.append(b, float(amount))
     pool = [c for c in pool if set(c.atoms) <= set(elements)]
-    unavailable = tuple(c.key for c in pool if not c.thermo.t_range[0] <= T <= c.thermo.t_range[1])
+    unavailable = tuple(c.key for c in pool if not _in_range(c, T))
     pool = [c for c in pool if c.key not in unavailable]
     if not gas and not pool:
         raise EquilibriumError("no candidate is made of the feed's elements")
 
-    g0 = np.array([c.thermo.g(T) / (R * T) for c in gas])
+    g0 = np.array([c.thermo.g(T) / (R * T) if c.thermo is not None else 0.0 for c in gas])
     ln_p = math.log(P / P_STANDARD)
     ln_phi = np.zeros(len(gas))
     fugacity_iterations = 0
@@ -361,8 +392,9 @@ def gibbs_equilibrium(
     for i, c in enumerate(gas):
         if n[i] > 0.0:
             gibbs += float(n[i]) * R * T * (g0[i] + ln_phi[i] + math.log(n[i] / total) + ln_p)
-        enthalpy += float(n[i]) * c.thermo.h(T)
+        enthalpy += float(n[i]) * (c.thermo.h(T) if c.thermo is not None else 0.0)
     for c, mi in zip(active, m, strict=True):
+        assert c.thermo is not None
         gibbs += float(mi) * c.thermo.g(T)
         enthalpy += float(mi) * c.thermo.h(T)
     return EquilibriumResult(
@@ -372,7 +404,7 @@ def gibbs_equilibrium(
         condensed,
         gibbs,
         enthalpy,
-        dict(zip(elements, (float(p) for p in pi), strict=True)),
+        {e: float(p) for e, p in zip(elements, pi, strict=True) if e[0] != "@"},
         iterations,
         fugacity_iterations,
         {c.key: float(v) for c, v in zip(gas, ln_phi, strict=True)} if thermo is not None else {},
@@ -390,7 +422,7 @@ def _vapour_ln_phi(
     """
     y = np.maximum(n / n.sum(), 1e-12)
     y = y / y.sum()
-    cas = {c.key: c.thermo.cas for c in gas}
+    cas = {c.key: c.thermo.cas for c in gas if c.thermo is not None}
     composition = {cas[c.key]: float(yi) for c, yi in zip(gas, y, strict=True)}
     props = thermo.phase_props(composition, T, P, PhaseKind.VAPOR)
     return np.array([float(props.ln_phi.get(cas[c.key], 0.0)) for c in gas])
@@ -473,7 +505,7 @@ def _phase_search(
     active: list[Candidate] = []
     n = np.full(len(gas), max(float(b.sum()), 1e-12) / max(len(gas), 1))
     total_iterations = 0
-    gcond = {c.key: c.thermo.g(T) / (R * T) for c in pool}
+    gcond = {c.key: c.thermo.g(T) / (R * T) for c in pool if c.thermo is not None}
     tried: set[tuple[str, ...]] = set()
     m = np.zeros(0)
     rejected: set[str] = set()
