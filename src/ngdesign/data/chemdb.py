@@ -220,6 +220,15 @@ def find(query: str) -> Species:
     raise UnknownSpeciesError(f"{query!r} resolves to CAS {cas}, which is not in the chemical database")
 
 
+def composition(query: str) -> dict[str, int]:
+    """Element counts of a species' formula; a fractional formula is refused."""
+    formula = find(query).formula
+    atoms = nested_formula_parser(formula)
+    if any(float(count) != int(count) for count in atoms.values()):
+        raise ChemDbError(f"{formula} is non-stoichiometric")
+    return {element: int(count) for element, count in atoms.items()}
+
+
 def search(text: str, limit: int = 20) -> list[Species]:
     """Species whose name, IUPAC name or formula contains ``text`` (case-insensitive)."""
     needle = text.lower()

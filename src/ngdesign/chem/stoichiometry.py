@@ -24,6 +24,7 @@ from functools import reduce
 from ngdesign.chem.formula import Formula, FormulaError, parse_formula
 from ngdesign.contracts.reactions import Reaction
 from ngdesign.data import chemdb
+from ngdesign.data.rational import rref
 
 
 class StoichiometryError(ValueError):
@@ -194,32 +195,9 @@ def composition_matrix(formulas: Sequence[Formula]) -> tuple[list[str], list[lis
     return elements, rows
 
 
-def _rref(matrix: list[list[Fraction]], n_columns: int) -> tuple[list[list[Fraction]], list[int]]:
-    """Reduced row echelon form over Q, with the pivot columns."""
-    rows = [list(row) for row in matrix]
-    pivots: list[int] = []
-    row_index = 0
-    for column in range(n_columns):
-        pivot = next((r for r in range(row_index, len(rows)) if rows[r][column] != 0), None)
-        if pivot is None:
-            continue
-        rows[row_index], rows[pivot] = rows[pivot], rows[row_index]
-        head = rows[row_index][column]
-        rows[row_index] = [value / head for value in rows[row_index]]
-        for r in range(len(rows)):
-            if r != row_index and rows[r][column] != 0:
-                factor = rows[r][column]
-                rows[r] = [a - factor * b for a, b in zip(rows[r], rows[row_index], strict=True)]
-        pivots.append(column)
-        row_index += 1
-        if row_index == len(rows):
-            break
-    return rows, pivots
-
-
 def null_space(matrix: list[list[Fraction]], n_columns: int) -> list[list[Fraction]]:
     """Exact basis of {ν : A·ν = 0}: one vector per free column, integer-scaled."""
-    reduced, pivots = _rref(matrix, n_columns)
+    reduced, pivots = rref(matrix, n_columns)
     free = [c for c in range(n_columns) if c not in pivots]
     basis: list[list[Fraction]] = []
     for column in free:
@@ -300,7 +278,7 @@ def reaction_space(species: Sequence[str]) -> ReactionSpace:
     """Rank and a basis of independent reactions among ``species`` (C − rank of them)."""
     terms = [resolve_term(token) for token in species]
     labels, matrix = composition_matrix([term.formula for term in terms])
-    _, pivots = _rref(matrix, len(terms))
+    _, pivots = rref(matrix, len(terms))
     equations = []
     for vector in null_space(matrix, len(terms)):
         pairs = [(t, v) for t, v in zip(terms, vector, strict=True) if v != 0]
