@@ -9,7 +9,7 @@ registry implements. A level or method listed here is listed but not implemented
 | | listed | implemented | open |
 |---|---|---|---|
 | Unit rows | 84 | 83 | 1 |
-| Planned rigour levels on implemented units | | | 11 |
+| Planned rigour levels on implemented units | | | 9 |
 | Property methods in the plan | 168 | 160 | 8 |
 
 Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
@@ -24,8 +24,6 @@ Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
 
 | unit | level | note |
 |---|---|---|
-| `absorber` | R3 | rate-based stages |
-| `reboiled_stripper` | R3 | rate-based stages |
 | `crude_column` | R2 | MESH with side strippers, pumparounds, stripping steam, overflash; blocked on spec S0-1c steps 2-4 (the simultaneous stripper solve; the column refuses side_strippers), P1-13, and pseudo-component cost (the dense NS does not finish a 5-stage 48-species column in 560 s) |
 | `vacuum_column` | R2 | MESH with pumparounds, no condenser, wash zone; a zero-tear 6-stage column on the 19-pseudo example feed does not finish in 280 s (dense NS), which the sparse solver of S0-1c step 2 is meant to fix |
 | `preflash` | R2 | short MESH; a 5-stage partial-condenser column on the 48-species example feed does not finish in 560 s (dense NS, spec S0-1c step 2) |

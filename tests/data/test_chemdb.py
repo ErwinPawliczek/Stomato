@@ -418,3 +418,71 @@ def test_snapshot_shomate_gives_solids_a_heat_capacity() -> None:
             assert (model.h(T + h) - model.h(T - h)) / (2 * h) == pytest.approx(model.cp(T), rel=1e-6)
             assert 0.0 < model.cp(T) < 2000.0  # a units slip shows here first (it did: -2.9e6)
     assert modelled > 0
+
+
+def test_ammonia_solubility_follows_the_reviewed_compilation_value() -> None:
+    """The NH3 flag: the packaged Sander set gives 42.7 mol/(kg bar), the WebBook median 58.
+
+    Sander's compilation itself, version 5.0.0 (Atmos. Chem. Phys. 23, 10901, 2023;
+    https://www.henrys-law.org/henry/casrn/7664-41-7, retrieved 2026-11-02), lists its
+    literature-review ("L") entries at Hscp = 0.59 mol/(m3 Pa), 4200 K: 59 mol/(kg bar)
+    with water at 997 kg/m3. The packaged 42.7 matches none of them, so the WebBook value
+    stays selected and the solubility it gives must sit near the reviewed one.
+    """
+    from ngdesign.chem.thermochem import reaction_thermo
+
+    k = reaction_thermo("NH3(g) -> NH3(aq)").K  # mol/(kg bar) on the 1 molal, 1 bar standard states
+    assert k == pytest.approx(0.59 * 1e5 / 997.05, rel=0.05)
+    assert chemdb.value("NH3", "Hf_aq").source == "nist_henry"
+
+
+def test_nasa9_polynomials_reproduce_janaf_where_both_exist() -> None:
+    """A check of the reader on species whose CEA and JANAF data are the same generation.
+
+    CH4 is left out on purpose: CEA follows Gurvich (1991) and JANAF a 1961 review, and
+    they part by 2.6 % in Cp at 1000 K (73.68 against 71.80 J/(mol K)), a real difference
+    between evaluations rather than a reading error.
+    """
+    from ngdesign.data.species_models import _Nasa9Curve
+
+    for query in ("CO2", "H2O", "N2", "O2"):
+        pieces = chemdb.nasa9(query, "gas")
+        assert pieces, query
+        janaf = next(t for t in chemdb.janaf(query).values() if t[0]["phase_298"] == "gas")  # N2, O2: "ref"
+        curve = _Nasa9Curve(pieces)
+        for row in janaf:
+            if row["T"] in (500.0, 1000.0, 1500.0):
+                assert curve.cp(row["T"]) == pytest.approx(row["Cp"], rel=1e-2), (query, row["T"])
+                assert curve.s(row["T"]) == pytest.approx(row["S"], abs=0.5), (query, row["T"])
+
+
+def test_nasa9_is_internally_consistent() -> None:
+    from ngdesign.data.species_models import _Nasa9Curve
+
+    curve = _Nasa9Curve(chemdb.nasa9("Fe2O3", "solid"))
+    T, h = 450.0, 0.5  # inside a piece: 600 K is a piece boundary
+    assert (curve.dh(T + h) - curve.dh(T - h)) / (2 * h) == pytest.approx(curve.cp(T), rel=1e-6)
+    assert (curve.s(T + h) - curve.s(T - h)) / (2 * h) == pytest.approx(curve.cp(T) / T, rel=1e-6)
+    assert curve.dh(298.15) == pytest.approx(0.0, abs=1e-6)
+
+
+def test_nasa9_header_enthalpy_is_the_polynomial_value_at_298() -> None:
+    """The reading of thermo.inp the build relies on, checked on every record kept."""
+    from ngdesign.data.species_models import _Nasa9Curve
+
+    checked = 0
+    with (_DIR / "nasa9.csv").open(encoding="utf8", newline="") as handle:
+        by_key: dict[tuple[str, str], list[dict[str, str]]] = defaultdict(list)
+        for row in csv.DictReader(handle):
+            by_key[(row["cas"], row["phase"])].append(row)
+    for rows in by_key.values():
+        pieces = [
+            {k: (float(v) if k not in ("cas", "phase", "reference") else v) for k, v in r.items()}
+            for r in rows
+        ]
+        curve = _Nasa9Curve(pieces)
+        # fit residual of the polynomials at 298.15 K, measured over 406 records:
+        # median 2.6, 99th percentile 15, maximum 25.7 J/mol
+        assert curve._absolute_h(298.15) == pytest.approx(float(rows[0]["hf298"]), abs=30.0), rows[0]["cas"]
+        checked += 1
+    assert checked > 500

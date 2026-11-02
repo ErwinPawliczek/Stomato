@@ -120,6 +120,11 @@ sources:
     citation: "Sander, R., Compilation of Henry's law constants for water as solvent, Atmos. Chem. Phys., as converted to the mole-fraction pressure form and shipped in thermo 0.6.1 (Interaction Parameters/Sander_henry_T_dep.json); the package does not state which version of the compilation."
     url: https://www.henrys-law.org/
     access: table shipped in thermo; dissolved-gas aqueous standard states derived from it and the gas's selected values
+  nasa_cea:
+    grade: B
+    citation: "McBride, B.J., Zehe, M.J. and Gordon, S., NASA Glenn Coefficients for Calculating Thermodynamic Properties of Individual Species, NASA/TP-2002-211556, 2002, as distributed in NASA CEA (data/thermo.inp), Copyright 2025 United States Government as represented by the Administrator of NASA, Apache License 2.0; each row's `reference` keeps the record's own sources."
+    url: https://github.com/nasa/cea
+    access: thermo.inp fetched from the nasa/cea repository with its LICENSE and NOTICE; 9-coefficient polynomials in nasa9.csv
   poling:
     grade: B
     citation: "Poling, B.E., Prausnitz, J.M. and O'Connell, J.P., The Properties of Gases and Liquids, 5th ed., McGraw-Hill, 2000."

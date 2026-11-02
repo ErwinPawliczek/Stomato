@@ -6,10 +6,11 @@
   "pubchem_records": 18157,
   "row_counts": {
     "species": 19179,
-    "properties": 123345,
+    "properties": 124118,
     "shomate": 1854,
     "antoine": 4593,
     "wagner": 623,
+    "nasa9": 1656,
     "dippr101": 382,
     "cp_liquid": 855,
     "cp_gas": 1726,
@@ -28,9 +29,9 @@
     "Hc_liquid": 381,
     "Hc_solid": 70,
     "Hf_aq": 579,
-    "Hf_gas": 6486,
+    "Hf_gas": 6542,
     "Hf_liquid": 2277,
-    "Hf_solid": 2694,
+    "Hf_solid": 2705,
     "Hfus": 1184,
     "Hsub_298": 1110,
     "Hvap": 968,
@@ -62,6 +63,7 @@
     "iupac_critical": 1774,
     "janaf": 4832,
     "mathews": 258,
+    "nasa_cea": 773,
     "nist": 10753,
     "nist_henry": 44,
     "nist_review": 2006,
@@ -75,7 +77,7 @@
   },
   "rows_by_grade": {
     "A": 9305,
-    "B": 81378,
+    "B": 82151,
     "C": 32662
   },
   "audit": {
@@ -83,9 +85,9 @@
     "conflict_Gf_liquid": 1,
     "conflict_Gf_solid": 22,
     "conflict_Hf_aq": 1,
-    "conflict_Hf_gas": 266,
+    "conflict_Hf_gas": 400,
     "conflict_Hf_liquid": 106,
-    "conflict_Hf_solid": 88,
+    "conflict_Hf_solid": 119,
     "conflict_Pc": 241,
     "conflict_Tb": 365,
     "conflict_Tc": 264,
@@ -93,6 +95,9 @@
     "formula_conflict_nist": 1
   },
   "dropped_at_build": {
+    "cea_formula_differs": 25,
+    "cea_record_not_at_298": 220,
+    "cea_unmatched": 695,
     "janaf_table_formula_differs_from_cas": 120,
     "nist_page_formula_differs_from_cas": 82,
     "nonpositive_Cp_gas": 3,

@@ -27,6 +27,10 @@ source states, converted to SI.
 `Hf_aq`, `Gf_aq`, `S0_aq`, `Cp_aq` use the 1 molal standard state with H+(aq) = 0. Ions come
 from the CRC table. Dissolved gases are derived, by definition and without estimation,
 from a gas's selected values and WebBook Henry's-law data; their rows say so in `reference`.
+Sander's compilation as packaged in `thermo` (rank below the WebBook) disagrees for ammonia:
+42.7 mol/(kg bar) against the WebBook median 58. The compilation's own reviewed entries
+(v5.0.0, 2023: 0.59 mol/(m3 Pa), about 59 mol/(kg bar)) side with the WebBook, and a test
+holds the selection to them.
 
 ## Grades and selection
 

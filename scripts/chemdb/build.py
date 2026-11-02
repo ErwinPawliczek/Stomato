@@ -34,8 +34,10 @@ from chemicals.elements import charge_from_formula
 from chemicals.identifiers import search_chemical
 
 from ngdesign.data import chemdb, vapour_pressure  # noqa: E402
+from ngdesign.data.formula import FormulaError, parse_formula  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from parse_cea import parse_thermo_inp  # noqa: E402
 from parse_nist import (  # noqa: E402
     Page,
     parse_henry,
@@ -73,6 +75,7 @@ SOURCE_RANK: dict[str, int] = {
     "mathews": 8,
     "omega_definition": 9,
     "sander": 10,
+    "nasa_cea": 4,
 }
 
 GRADES: dict[str, str] = {
@@ -98,6 +101,7 @@ GRADES: dict[str, str] = {
     "mathews": "B",
     "omega_definition": "B",
     "sander": "B",
+    "nasa_cea": "B",
 }
 
 UNITS = {
@@ -464,6 +468,79 @@ def _snapshot_shomate(kept: set[str]) -> list[dict[str, Any]]:
     return out
 
 
+_CEA_PHASE_TAG = re.compile(r"^(.*?)(\([^()]*\))?$")
+
+
+def _cea_records(cache: Path) -> dict[tuple[str, str], dict[str, Any]]:
+    """NASA CEA 9-coefficient records mapped to a CAS and a phase.
+
+    A record is named by formula, with an isomer name after a comma
+    ("C4H10,n-butane"). The isomer name is tried first, then the formula, and the match
+    must have the record's formula. An ambiguous formula is skipped, never guessed, and
+    so are ions and the "Inert" copies.
+    """
+    path = cache / "cea" / "thermo.inp"
+    if not path.exists():
+        return {}
+    mapped: dict[tuple[str, str], dict[str, Any]] = {}
+    for record in parse_thermo_inp(path.read_text(encoding="utf8", errors="replace")):
+        name = record["name"]
+        base, _, alias = name.partition(",")
+        match = _CEA_PHASE_TAG.match(base)
+        formula = match.group(1) if match else base
+        if name.startswith("Inert") or re.search(r"[+-]$", formula) or name == "e-":
+            continue
+        phase = "gas" if record["phase_flag"] == 0 else ("liquid" if "(L)" in base else "solid")
+        species = None
+        if alias:
+            try:
+                species = chemdb.find(alias)
+            except chemdb.ChemDbError:
+                species = None
+        try:
+            if species is None:
+                species = chemdb.find(formula)
+            if parse_formula(species.formula).hill != parse_formula(formula).hill:
+                DROPPED["cea_formula_differs"] += 1
+                continue
+        except (chemdb.ChemDbError, FormulaError):
+            DROPPED["cea_unmatched"] += 1
+            continue
+        held = mapped.get((species.cas, phase))
+        if held is None:
+            mapped[(species.cas, phase)] = {**record, "pieces": list(record["pieces"])}
+        elif abs(held["pieces"][-1]["Tmax"] - record["pieces"][0]["Tmin"]) < 1e-6:
+            # one phase split across records at a transition (iron's lambda point): join them
+            held["pieces"] += record["pieces"]
+    return mapped
+
+
+#: The latest opening temperature at which a CEA record still speaks for 298.15 K.
+CEA_LOWEST_START = 300.0
+
+
+def _covers_298(record: dict[str, Any]) -> bool:
+    """Whether a record's polynomials reach 298.15 K.
+
+    Only then is its header enthalpy ΔfH°298. For a phase that cannot exist at 298.15 K
+    the header holds an assigned value instead: ice (200-273.15 K) carries -299.1 kJ/mol
+    while its polynomial gives -293.7 kJ/mol at 273.15 K, liquid water less the enthalpy
+    of fusion.
+    """
+    # Most records open at 300 K, not 298.15 K, yet define the header as ΔfH°298; their
+    # 1.85 K extrapolation is negligible. A record that ends below 298.15 K cannot.
+    return bool(record["pieces"][0]["Tmin"] <= CEA_LOWEST_START and record["pieces"][-1]["Tmax"] >= 298.15)
+
+
+def _collect_cea(rows: Rows, cea: dict[tuple[str, str], dict[str, Any]]) -> None:
+    """ΔfH°298 as CEA states it, with its reference text, where the record reaches 298.15 K."""
+    for (cas, phase), record in cea.items():
+        if _covers_298(record):
+            rows.add(cas, f"Hf_{phase}", record["hf298"], "nasa_cea", reference=record["reference"])
+        else:
+            DROPPED["cea_record_not_at_298"] += 1
+
+
 def _collect_coolprop(rows: Rows) -> None:
     """Critical points of the reference equations of state in CoolProp."""
     for fluid in CP.get_global_param_string("fluids_list").split(","):
@@ -748,6 +825,8 @@ def _collect_all(cache: Path) -> dict[str, Any]:
     _collect_nist(rows, pages)
     janaf_rows, janaf_identity = _janaf(cache)
     _collect_janaf(rows, janaf_rows)
+    cea = _cea_records(cache)
+    _collect_cea(rows, cea)
     names = _collect_bundled(rows)
     _collect_coolprop(rows)
     _constants(rows)
@@ -763,7 +842,7 @@ def _collect_all(cache: Path) -> dict[str, Any]:
         record = ions.get(cas) or _identity(cas, nist, janaf_identity, names)
         if record is not None and record.get("formula"):
             species[cas] = record
-    return {"rows": rows.rows, "pages": pages, "janaf": janaf_rows, "species": species}
+    return {"rows": rows.rows, "pages": pages, "janaf": janaf_rows, "species": species, "cea": cea}
 
 
 def seed(cache: Path) -> int:
@@ -1024,6 +1103,29 @@ def _audit(
     return lines, counts
 
 
+def _cea_rows(cea: dict[tuple[str, str], dict[str, Any]], kept: set[str]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for (cas, phase), record in sorted(cea.items()):
+        if cas not in kept or not _covers_298(record):
+            continue
+        for piece in record["pieces"]:
+            a, b = piece["a"], piece["b"]
+            out.append(
+                {
+                    "cas": cas,
+                    "phase": phase,
+                    "Tmin": piece["Tmin"],
+                    "Tmax": piece["Tmax"],
+                    **{f"a{i + 1}": a[i] for i in range(7)},
+                    "b1": b[0],
+                    "b2": b[1],
+                    "hf298": record["hf298"],
+                    "reference": record["reference"].replace(",", ";")[:80],
+                }
+            )
+    return out
+
+
 def _write_properties(out: Path, rows: list[dict[str, Any]]) -> int:
     return _write_csv(
         out / "properties.csv",
@@ -1217,6 +1319,27 @@ def tables(cache: Path, out: Path) -> int:
         out / "wagner.csv",
         ["cas", "form", "A", "B", "C", "D", "Tc", "Pc", "Tmin", "Tmax", "source"],
         sorted(correlations["wagner"], key=lambda r: (r["cas"], r["form"])),
+    )
+    counts["nasa9"] = _write_csv(
+        out / "nasa9.csv",
+        [
+            "cas",
+            "phase",
+            "Tmin",
+            "Tmax",
+            "a1",
+            "a2",
+            "a3",
+            "a4",
+            "a5",
+            "a6",
+            "a7",
+            "b1",
+            "b2",
+            "hf298",
+            "reference",
+        ],
+        _cea_rows(collected["cea"], kept),
     )
     counts["dippr101"] = _write_csv(
         out / "dippr101.csv",

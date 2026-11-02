@@ -331,6 +331,12 @@ def wagner(query: str) -> list[dict[str, Any]]:
     return list(_grouped("wagner.csv").get(find(query).cas, []))
 
 
+def nasa9(query: str, phase: str = "gas") -> list[dict[str, Any]]:
+    """NASA 9-coefficient pieces (McBride et al. 2002) of one phase, ascending in T."""
+    rows = [row for row in _grouped("nasa9.csv").get(find(query).cas, []) if row["phase"] == phase]
+    return sorted(rows, key=lambda row: float(row["Tmin"]))
+
+
 def dippr101(query: str) -> list[dict[str, Any]]:
     """DIPPR 101 vapour-pressure fits: ln(P/Pa) = a0 + a1/T + a2 ln T + a3 T^a4."""
     return list(_grouped("dippr101.csv").get(find(query).cas, []))
