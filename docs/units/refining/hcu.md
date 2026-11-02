@@ -19,7 +19,7 @@ Rigour ladder: R0 provisional, R1 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.refining.hcu:HcuR0` | yield table vs conversion on representative real paraffins (nC24, nC12, nC6, C3); gas by element balance; H2 consumption counts scissions only, a lower bound |
+| R0 | provisional | `ngdesign.units.refining.hcu:HcuR0` | yield table vs conversion on representative real paraffins (nC20, nC12, nC6, C3); gas by element balance; H2 consumption counts scissions only, a lower bound |
 | R1 | provisional | `ngdesign.units.refining.hcu:HcuR1` | discrete four-lump six-path first-order kinetics (Sadighi et al. 2010 network form) on representative paraffins, isothermal bed, hydrogen in excess; continuous lumping as such is not implemented |
 
 ### R0 parameters

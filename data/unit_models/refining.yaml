@@ -128,7 +128,8 @@
   pid_symbol: DS
   references:
   - docs/unit-catalogue-plan.md §2 U-H 2
-  notes: "V1 gap - provisional without a case. Searched PetroWiki 'Desalting' and
+  notes: "R1 takes oil and water densities and oil viscosity as required params (spec option B):
+    no package gives honest values for a pseudo crude. V1 gap - provisional without a case. Searched PetroWiki 'Desalting' and
     Wauquier (Petroleum Refining vol. 1, crude desalting): both state a
     0.1-0.2 vol% BS&W specification but print no worked case, so the former
     V2102 pin (which echoed its own input spec and the adapter's default salt
@@ -424,7 +425,9 @@
   pid_symbol: HT
   references:
   - docs/unit-catalogue-plan.md §2 U-H 7
-  notes: "R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real
+  notes: "R1 kinetics are required inputs, on real model compounds only; pseudo feeds stay at R0.
+    R1 V1 gap - no printed naphtha HDT kinetic example with inputs and outlets was searched for;
+    provisional on the closed-form W(X) with mole change and the reduction to R0. R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real
     H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental
     characterization (issue #222)."
 
@@ -481,7 +484,12 @@
   pid_symbol: RF
   references:
   - docs/unit-catalogue-plan.md §2 U-H 8
-  notes: "R0 shipped by U-H2. The spec's \"H2 and light ends as real components\" is
+  notes: "R1 takes Smith's constants as a required explicit input and refuses the smith1959 preset -
+    Smith 1959 could not be read, and the open reproduction (Liang, Guo and Pan, J. Zhejiang Univ. Sci.
+    B 6(6) 2005 590-596, eqs. 9-17) prints k_p2 with a 9.87 prefactor against MPa-2 units that need
+    97.4. V1 gap - that paper omits catalyst masses, so its plant table cannot be reproduced;
+    provisional on the hand equilibrium of dehydro and the unit conversions. No R1 limit reproduces
+    R0 (a different model). R0 shipped by U-H2. The spec's \"H2 and light ends as real components\" is
     out of reach of the mass_elements balance (C/H atoms with no formula-bearing
     source from a pseudo naphtha); the offgas is a mass-only lump, species split
     in info. Pseudo-component elemental characterization - issue #222."
@@ -618,7 +626,7 @@
               gas and H2 follow from the element balance"
           T_out: {type: number, description: 'outlet temperature, K'}
           P_out: {type: number, description: 'outlet pressure, Pa'}
-      note: yield table vs conversion on representative real paraffins (nC24, nC12, nC6, C3); gas by
+      note: yield table vs conversion on representative real paraffins (nC20, nC12, nC6, C3); gas by
         element balance; H2 consumption counts scissions only, a lower bound
     R1:
       status: provisional
