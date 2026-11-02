@@ -33,6 +33,7 @@ from typing import Any, Literal, cast
 
 from chemicals.elements import similarity_variable
 from chemicals.exceptions import PhaseCountReducedError
+from chemicals.thermal_conductivity import DIPPR9H
 from thermo import (
     CEOSGas,
     CEOSLiquid,
@@ -613,12 +614,55 @@ def _vapor_fraction(pairs: list[PhasePair]) -> float:
     return sum(beta for phase, beta in pairs if _is_vapour_phase(phase))
 
 
+#: Weight fraction of a liquid phase whose pure-liquid conductivity may lie outside its
+#: correlation's range and be left out of the mixing rule; past it the property refuses.
+_K_LIQUID_OUT_OF_RANGE_LIMIT = 0.05
+
+
 def _thermal_conductivity(phase: Any) -> float | None:
     """Thermal conductivity in W/(m K), None where thermo has no correlation."""
     try:
+        if not _is_vapour_phase(phase):
+            return _liquid_thermal_conductivity(phase)
         return float(phase.k())
     except Exception:
         return None
+
+
+def _liquid_thermal_conductivity(phase: Any) -> float | None:
+    """Liquid-mixture conductivity by DIPPR procedure 9H, k = (Σ w_i k_i^-2)^-1/2.
+
+    9H takes each component's pure-liquid k at the phase temperature. A dissolved gas
+    above its fit's range has no such value: methane's fit ends at 171.5 K, and at
+    280 K it extrapolates to its 1e-4 W/(m K) floor, which the inverse square lets
+    dominate (10 mol% methane in n-butane gave 5.8e-4 against about 0.11 W/(m K)).
+    Components outside their correlation's range are left out and the weight
+    fractions renormalised, an approximation stated here, while they stay dilute
+    (≤ 5 wt%); past that the property refuses.
+    """
+    T = float(phase.T)
+    correlations = phase.correlations.ThermalConductivityLiquids
+    weights = [float(w) for w in phase.ws()]
+    kept_weights: list[float] = []
+    kept_k: list[float] = []
+    excluded = 0.0
+    for correlation, weight in zip(correlations, weights, strict=True):
+        limits = correlation.T_limits.get(correlation.method) if correlation.method else None
+        if limits is None or not limits[0] <= T <= limits[1]:
+            excluded += weight
+            continue
+        value = correlation.T_dependent_property(T)
+        if value is None or value <= 0.0:
+            excluded += weight
+            continue
+        kept_weights.append(weight)
+        kept_k.append(float(value))
+    if excluded == 0.0:
+        return float(phase.k())
+    if excluded > _K_LIQUID_OUT_OF_RANGE_LIMIT or not kept_weights:
+        return None
+    total = sum(kept_weights)
+    return float(DIPPR9H([w / total for w in kept_weights], kept_k))
 
 
 # ------------------------------------------------------------------ pure Psat
