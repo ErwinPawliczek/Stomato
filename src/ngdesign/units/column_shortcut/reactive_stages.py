@@ -15,6 +15,11 @@ params onto the core (``_refresh_reactions`` in ``units/column/inside_out.py``)
 and drops the zero-flow draw port. Chemical equilibrium is reached as the large
 holdup limit of a reversible rate, tested against K_C(T).
 
+A cold reactive mesh is a continuation in the holdup from the plain column
+(``_solve_reactive_mesh``), so a spec the column reaches in one mesh solve,
+``boilup_rate`` on a kettle-only column, costs a few seconds; a ratio or purity
+spec repeats that ladder at every secant point.
+
 A liquid stage bounds the rate forms: the mole-fraction basis only, and an
 explicit reverse rate rather than ``Reaction.equilibrium``, whose quotient is
 ideal-gas (typed ``ColumnSpecError`` from the column parser). Holdups sit on
@@ -137,7 +142,7 @@ class ReactiveStages:
             "reboiler": "kettle",
             "feed_stage": 1,
             "pressure_profile": 1.0e6,
-            "specs": {"boilup_ratio": 1.0},
+            "specs": {"boilup_rate": 50.0},
             "reaction_set": fogler_isomerization_set(),
             "reactive_holdup_m3": {str(stage): 0.05 for stage in range(1, 8)},
         }

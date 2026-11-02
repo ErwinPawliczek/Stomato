@@ -38,6 +38,10 @@ from .spec import (
     _OUTER_DAMP_ZERO_ONE,
     _OUTER_MAX,
     _POLISH_M_TOL_ZERO_ONE_TEAR,
+    _RX_STEP_CUT,
+    _RX_STEP_FIRST,
+    _RX_STEP_GROW,
+    _RX_STEP_MIN,
     _SPEC_MAX,
     _SPEC_TOL,
     _STAGNATION_MAX,
@@ -129,6 +133,8 @@ def _solve_mesh(
     two-tear columns, packages without the capability) solves directly at the
     current scale, byte-identical to the un-continued path.
     """
+    if col.reactions is not None and seed is None:
+        return _solve_reactive_mesh(col, tb, t_top, t_bot, allow_fallback)
     thermo = getattr(tb, "_thermo", tb)
     if col.n_tears < 2 and seed is None and _is_reactive_package(tb) and hasattr(thermo, "_heat_scale"):
         original = thermo._heat_scale
@@ -142,6 +148,41 @@ def _solve_mesh(
         finally:
             thermo._heat_scale = original
     return _solve_mesh_at_heat(col, tb, t_top, t_bot, seed, allow_fallback)
+
+
+def _solve_reactive_mesh(
+    col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None, allow_fallback: bool
+) -> _Profile:
+    """Cold reactive mesh: warm-chain from the plain column up the holdup scale.
+
+    The inside-out sweep freezes the reaction source, so a large Damkohler
+    number oscillates, and Newton from the crude cold seed sits outside its
+    basin (measured Fogler isomerization, 8 stages, 1 m3 per stage: cold, the
+    mesh fails outright at every boilup tried). The profile of a converged
+    rung IS inside the next rung's basin, so the source is walked up from zero,
+    growing the step after a success and cutting it after a failure. Every rung
+    is a full mesh solve; only the last, at scale 1, is reported.
+    """
+    scale = 0.0
+    step = _RX_STEP_FIRST
+    col.rx_scale = 0.0
+    try:
+        prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, None, allow_fallback)
+        while scale < 1.0:
+            trial = min(scale + step, 1.0)
+            col.rx_scale = trial
+            try:
+                prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, prof, allow_fallback)
+            except ColumnConvergenceError:
+                step *= _RX_STEP_CUT
+                if step < _RX_STEP_MIN:
+                    raise
+                continue
+            scale = trial
+            step *= _RX_STEP_GROW
+        return prof
+    finally:
+        col.rx_scale = 1.0
 
 
 def _solve_mesh_at_heat(
@@ -575,6 +616,8 @@ def _spec_g(col: _Column, params: _Params, prof: _Profile, skip: set[str]) -> tu
             g.append(prof.l0 / max(prof.d, _FLOW_FLOOR) - target)
         elif key == "boilup_ratio":
             g.append(prof.V[col.n - 1] / max(prof.b, _FLOW_FLOOR) - target)
+        elif key == "boilup_rate":
+            g.append(prof.V[col.n - 1] - target)
         elif key == "distillate_rate":
             g.append(prof.d - target)
         elif key == "bottoms_rate":
@@ -626,6 +669,10 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         t_bot = float(vb_spec) * float(b_spec)
         pin_bot = True
         skip.add("boilup_ratio")
+    if col.reboiler == "kettle" and "boilup_rate" in specs:
+        t_bot = float(specs["boilup_rate"])
+        pin_bot = True
+        skip.add("boilup_rate")
     if col.condenser == "partial" and d_spec is not None:
         t_top = float(d_spec)
         pin_top = True

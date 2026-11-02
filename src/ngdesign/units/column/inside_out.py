@@ -127,6 +127,8 @@ class _Column:
     rx_source: list[dict[str, float]] = field(default_factory=list)
     rx_gen: list[float] = field(default_factory=list)
     rx_q: list[float] = field(default_factory=list)
+    #: Continuation multiplier on the holdups (1 = the specified column).
+    rx_scale: float = 1.0
     # Two-phase operating window for the inner temperature walk, set from the
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
@@ -390,7 +392,7 @@ def _refresh_reactions(col: _Column, xs: list[dict[str, float]], ts: list[float]
         x = {cid: max(xs[j].get(cid, 0.0), 0.0) for cid in col.comps}
         source: dict[str, float] = {}
         for reaction in rx.rset.reactions:
-            extent = holdup * rate(reaction, ts[j], col.pressures[j], x)
+            extent = col.rx_scale * holdup * rate(reaction, ts[j], col.pressures[j], x)
             for cid, nu in reaction.stoichiometry.items():
                 source[cid] = source.get(cid, 0.0) + nu * extent
         col.rx_source[j] = source

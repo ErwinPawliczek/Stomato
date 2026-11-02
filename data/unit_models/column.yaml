@@ -84,7 +84,7 @@
           reboiler: {type: string, description: 'kettle | none (none = absorber/rectifier configuration)'}
           feed_stage: {type: integer, description: main feed stage}
           pressure_profile: {type: number, description: 'top pressure or per-stage profile, Pa'}
-          specs: {type: object, description: 'two specs for two tears (reflux_ratio, distillate_rate, boilup, ...); one for one-tear; none for an absorber'}
+          specs: {type: object, description: 'two specs for two tears (reflux_ratio, distillate_rate, boilup_ratio, boilup_rate, ...); one for one-tear; none for an absorber'}
           feeds: {type: object, description: additional feeds by stage}
           side_draws: {type: object, description: additional draws by stage}
           stage_heaters: {type: array, description: '[{stage, duty_W}] fixed heat added to an ordinary tray, W (< 0 cools)'}
@@ -416,10 +416,13 @@
     V1 gap — provisional without a case; checked by hand-evaluated stage rates,
     the zero-holdup reduction to the plain column, and the large-holdup limit on
     the book's K_C(T) (tests/units/column_shortcut/test_reactive_stages.py).
-    Measured limits: the two-tear path does not converge on the narrow nC4/iC4
-    split with or without reaction (1 MPa, 12 stages), and the ethylene oxide
-    hydration benchmark does not converge on PR on either path, also with or
-    without reaction; the example therefore uses a one-tear kettle column.
+    A cold reactive mesh walks the holdup up from the plain column. Measured
+    limits: the two-tear path does not converge on the narrow nC4/iC4 split with
+    or without reaction (1 MPa, 12 stages), and the ethylene oxide hydration
+    benchmark does not converge on PR on either path, also with or without
+    reaction; the example therefore uses a one-tear kettle column with boilup_rate.
+    A strongly displaced feed stalls the ladder (x_iC4 = 0.1, 1 m3 per stage at
+    50 mol/s boilup stops at 0.42 of the holdup).
 
 - id: liquid_liquid_extractor
   name: Liquid-liquid extractor
