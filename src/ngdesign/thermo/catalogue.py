@@ -203,6 +203,12 @@ def _validate_options(row: ModelRow, where: str) -> None:
                     f"{where}: options.k_model {kopts.k_model.value!r} does not match adapter "
                     f"{row.adapter!r} (pins {pinned!r})"
                 )
+            basis = getattr(adapter, "enthalpy_basis", None)
+            if basis != kopts.enthalpy:
+                raise CatalogueError(
+                    f"{where}: options.enthalpy {kopts.enthalpy.value!r} does not match adapter "
+                    f"{row.adapter!r} (pins {basis!r})"
+                )
         elif row.options:
             raise CatalogueError(
                 f"{where}: no typed options are declared for family {row.family!r} yet "
