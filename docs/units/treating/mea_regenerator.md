@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.mdea_regenerator:MeaRegenerator` | shortcut stripping to lean-loading specifications |
-| R2 | planned | — | P1-11 is merged, but the kettle column on the amine package does not converge (MDEA, 6 stages, 1.9 bar, boilup 20 mol/s - M=5.5e-2, H=2.1e-1); no adapter ships until it does |
+| R2 | planned | — | measured on the P1-13 tree (6-stage kettle stripper on amine_ke, 1.9 bar, rich feed at 370 K, boilup 20 mol/s) - MEA does not converge (NS stalls at M=52, 28 s); the MDEA row's R2 adapter (amine_regenerator_r2) is not shipped for MEA until it does |
 
 ### R0 parameters
 

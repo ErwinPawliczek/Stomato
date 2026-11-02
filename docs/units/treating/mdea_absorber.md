@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.mdea_absorber:MdeaAbsorber` | single-stage shortcut with Kent-Eisenberg equilibrium |
-| R2 | planned | — | P1-11 is merged and the 20-stage MDEA column converges (tests/units/test_column_amine.py), but in ~120 s, over the locked per-test limit; the short columns that fit miss the locked balance (5 stages closes components to 1.4e-4 under the reactive 1e-3 gate) or fail (8 stages does not converge), so no adapter ships |
+| R2 | planned | — | re-measured on the P1-13 tree (zero-tear column on amine_ke, example feeds) - 5 stages fails (NS stalls at M=2.3e-3 against the reactive 1e-3 gate, 53 s), 8 stages fails (M=9.2e-3, 118 s); the 20-stage column converges (tests/units/test_column_amine.py) but its solve takes 150-190 s under parallel load, over the locked per-test limit, so no adapter ships |
 
 ### R0 parameters
 
