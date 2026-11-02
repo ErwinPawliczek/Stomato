@@ -1918,8 +1918,12 @@
     - VLL
   status: provisional
   l4_excluded:
-    twu-pr: VLE is the pr row's, so the pair carries the pr / twu-pr slice dew gap declared on the twu-pr row (measured 717386 vs 597284 Pa, rel 0.201)
-    twu-srk: VLE is the pr row's, so the pair carries the pr / twu-srk slice dew gap declared on the twu-srk row (measured 717386 vs 596571 Pa, rel 0.203)
+    '*': >-
+      The L4 slice feed carries 0.3 % water, so its dew point at 293.15 K is the water dew point,
+      which is what the free-water method moves: with the steam-table water fugacity the row's water
+      dew lands at 874943 Pa against 615000-724000 Pa for the rows on EOS water, outside the 20 % band by
+      construction. Measured on methane + 0.3 % water at 293.15 K, pr gives 709 kPa and pr-free-water
+      862 kPa, with an ideal-gas estimate of 780 kPa. The row still carries the EOS vapour phi of water.
   validation: []
   references:
   - Wagner, W.; Pruss, A. J. Phys. Chem. Ref. Data 2002, 31, 387
@@ -1956,6 +1960,13 @@
     - L
     - VLL
   status: provisional
+  l4_excluded:
+    '*': >-
+      The L4 slice feed carries 0.3 % water, so its dew point at 293.15 K is the water dew point,
+      which is what the free-water method moves: with the steam-table water fugacity the row's water
+      dew lands at 933084 Pa against 615000-724000 Pa for the rows on EOS water, outside the 20 % band by
+      construction. Measured on methane + 0.3 % water at 293.15 K, pr gives 709 kPa and pr-free-water
+      862 kPa, with an ideal-gas estimate of 780 kPa. The row still carries the EOS vapour phi of water.
   validation: []
   references:
   - Wagner, W.; Pruss, A. J. Phys. Chem. Ref. Data 2002, 31, 387
