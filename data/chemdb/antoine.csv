@@ -1,0 +1,911 @@
+cas,Tmin,Tmax,A,B,C,source,reference
+100-41-4,329.74,410.27,4.07488,1419.315,-60.539,nist,"Williamham, Taylor, et al., 1945"
+100-41-4,420,600,4.40536,1695.026,-23.698,nist,"Ambrose, Broderick, et al., 1967"
+100-41-4,306.32,436.63,4.06861,1415.77,-60.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+100-42-5,303.07,417.92,4.21948,1525.059,-56.379,nist,"Dreyer, Martin, et al., 1955"
+100-42-5,305.6,355.34,4.0593,1459.909,-59.551,nist,"Chaiyavech and Van Winkle, 1959"
+100-47-0,301.4,463.8,4.85401,2110.572,-28.331,nist,"Stull, 1947"
+100-51-6,395.67,478.56,4.47713,1738.9,-89.559,nist,"Dreisbach and Shrader, 1949"
+100-52-7,273.14,322.06,5.21496,2337.539,-5.103,nist,"De Maré, Lehman, et al., 1973"
+100-52-7,299.4,452,3.87652,1380.729,-94.98,nist,"Stull, 1947"
+100-61-8,323,472.76,4.99409,2226.576,-22.456,nist,"Nelson and Wales, 1925"
+100-66-3,383.03,437.26,4.17726,1489.756,-69.607,nist,"Collerson, Counsell, et al., 1965, 2"
+10022-50-1,151,214.12,3.9583,654.55,-35.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+10024-97-2,129.8,187.7,4.37799,621.077,-44.659,nist,"Stull, 1947"
+10024-97-2,180.82,196.91,4.12884,654.26,-25.99,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+10028-15-6,92.8,162,4.23637,712.487,6.982,nist,"Stull, 1947"
+10028-15-6,120,173.07,3.962,552.5,-22.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+10034-85-2,149.8,238.1,4.26854,939.994,-18.012,nist,"Stull, 1947"
+10034-85-2,217.9,256.12,2.69803,405.33,-87.02,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+10035-10-6,134.3,206.7,4.02419,695.466,-33.542,nist,"Stull, 1947"
+10035-10-6,206.7,343.8,4.15585,754.969,-25.086,nist,"Stull, 1947"
+10035-10-6,185.1,221.53,3.41243,540.82,-47.71,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+10043-92-2,129,211.8,3.1908,558.293,-36.803,nist,"Stull, 1947"
+10043-92-2,158,222.9,4.6204,884.41,-18.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+101-81-5,408.2,571.7,4.1806,1862.64,-91.5,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+101-84-8,477.36,544.09,4.13678,1800.415,-95.324,nist,"Collerson, Counsell, et al., 1965, 2"
+10102-43-9,106.94,127.56,5.8679,682.9386,-4.88,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+102-71-6,525.9,578.8,7.19251,4543.902,24.749,nist,"McDonald, Shrader, et al., 1959, 2"
+103-65-1,348.97,433.39,4.07584,1490.963,-66,nist,"Forziati, Norris, et al., 1949, 2"
+103-65-1,324.19,461.01,4.07664,1491.8,-65.9,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+103-69-5,323,479.9,5.64275,2809.017,20.856,nist,"Nelson and Wales, 1925"
+103-73-1,390.58,453.8,4.1447,1507.267,-78.793,nist,"Collerson, Counsell, et al., 1965, 2"
+104-51-8,369.38,457.48,4.10808,1577.965,-71.772,nist,"Forziati, Norris, et al., 1949, 2"
+104-51-8,343.5,486.2,4.10345,1575.47,-71.95,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+104-72-3,476.14,570.9,4.17104,1912.506,-111.891,nist,"Camin, Forziati, et al., 1954"
+104-76-7,347.22,456.7,4.01389,1325.949,-126.68,nist,"Dykyj, Seprakova, et al., 1961"
+105-05-5,369.97,457.97,4.12544,1589.273,-71.131,nist,"Forziati, Norris, et al., 1949, 2"
+105-05-5,343.95,486.6,4.12958,1592.59,-70.71,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+105-30-6,298,423,6.198,2625.143,3.181,nist,"Hovorka, Lankelma, et al., 1938"
+105-30-6,298,423,6.1979,2625.143,3.18,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+105-37-3,306.93,371.46,4.14526,1274.735,-64.218,nist,"Polák and Mertl, 1965"
+105-37-3,282.4,395.85,4.144,1274.7,-64.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+105-54-4,254.8,394,4.33187,1509.443,-45.284,nist,"Stull, 1947"
+105-54-4,298,422.69,3.27456,921.56,-112.77,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+105-57-7,250,375.3,4.7498,1573.964,-43.681,nist,"Stull, 1947"
+105-57-7,273,343,4.04522,1272.727,-61.87,nist,"Nicolini and Laffitte, 1949, 2"
+105-66-8,316,445.04,3.40455,1019.49,-116.55,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+105-67-9,417.53,485.47,4.19167,1595.54,-102.913,nist,"Andon, Biddiscombe, et al., 1960"
+105-67-9,373.76,513.04,4.18688,1592.78,-103.146,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+10544-72-6,254.17,320.69,4.50989,1185.722,-38.97,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+106-27-4,342,480.28,4.50447,1805.08,-50.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+106-36-5,299.2,420.4,4.4489,1545.3,-47.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+106-42-3,286.43,452.38,4.14553,1474.403,-55.377,nist,"Osborn and Douslin, 1974"
+106-42-3,298,333,4.44889,1644.214,-40.229,nist,"Pitzer and Scott, 1943"
+106-42-3,331.44,412.44,4.11138,1450.688,-58.16,nist,"Williamham, Taylor, et al., 1945"
+106-42-3,420,600,4.50944,1788.91,-13.902,nist,"Ambrose, Broderick, et al., 1967"
+106-42-3,307.81,438.88,4.10494,1446.832,-58.523,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+106-44-5,401.2,475.03,4.14093,1498.579,-112.6,nist,"Dreisbach and Shrader, 1949"
+106-46-7,341.12,447.21,4.123,1575.11,-64.637,nist,"McDonald, Shrader, et al., 1959"
+106-49-0,315,473.6,4.71884,1961.716,-57,nist,"Stull, 1947"
+106-93-4,246,404.7,7.36914,4101.146,153.034,nist,"Stull, 1947"
+106-94-5,220,344,4.16256,1259.836,-41.108,nist,"Stull, 1947"
+106-97-8,135.42,212.89,4.70812,1200.475,-13.013,nist,"Carruth and Kobayashi, 1973"
+106-97-8,195.11,272.81,3.85002,909.65,-36.146,nist,"Aston and Messerly, 1940"
+106-97-8,272.66,425,4.35576,1175.581,-2.071,nist,"Das, Reed, et al., 1973"
+106-97-8,200.5,292.03,3.93266,935.773,-34.361,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+106-98-9,195.7,269.4,4.24696,1099.207,-8.256,nist,"Coffin and Maass, 1928, 2"
+106-98-9,196.41,285.88,3.9178,908.8,-34.61,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+106-99-0,197.7,271.7,3.99798,941.662,-32.753,nist,"Heisig, 1933"
+106-99-0,198,287.49,3.9664,927.21,-34.52,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+1066-40-6,291,357.8,5.44591,1767.766,-44.888,nist,"Grubb and Osthoff, 1953"
+1067-08-9,249.3,391.5,4.04817,1380.13,-49.963,nist,"Stull, 1947"
+1067-08-9,290.1,418.46,3.9895,1345.92,-53.566,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+107-00-6,194.39,282.7,4.2402,1046.879,-33.951,nist,"Aston, Mastrangelo, et al., 1950"
+107-00-6,210.35,299.83,4.16676,1014.45,-37.41,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+107-03-9,297.42,375.24,4.05353,1183.392,-48.516,nist,"Pennington, Scott, et al., 1956"
+107-05-1,286.4,317.1,2.24083,365.121,-154.919,nist,"Joffe and Jampolskaja, 1944"
+107-06-2,242.33,372.6,4.58518,1521.789,-24.67,nist,"Pearce and Peters, 1929"
+107-06-2,267.4,379.91,4.28356,1341.37,-43.1,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+107-10-8,296.12,350.74,4.05136,1044.028,-62.314,nist,"Osborn and Douslin, 1968"
+107-10-8,321.7,487.7,4.34275,1227.09,-38.78,nist,"Stull, 1947"
+107-10-8,258.31,340.36,4.3444,1186.39,-46.94,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+107-12-0,308.7,370.5,3.61732,1036.424,-83.76,nist,"Dreisbach and Shrader, 1949"
+107-13-1,222,351,4.06661,1255.939,-41.853,nist,"Sevrugova, Sokorskii, et al., 1964, 2"
+107-13-1,293,343,2.69607,621.275,-121.929,nist,"Gubkov, Fermor, et al., 1964, 2"
+107-15-3,299.66,390.6,4.22368,1302.256,-81.788,nist,"Hieber and Woerner, 1934"
+107-18-6,294,370.23,8.78252,4510.213,143.647,nist,"Ewert, 1936"
+107-18-6,294,370.23,8.78252,4510.213,143.647,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+107-21-1,323,473,4.97012,1914.951,-84.996,nist,"Jones and Tamplin, 1952, 2"
+107-31-3,294,304.9,0.25097,6.524,-278.54,nist,"Nelson, 1928"
+107-31-3,230.3,324.29,4.29529,1125.2,-42.59,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+107-46-0,309.4,411.56,3.90199,1203.916,-64.673,nist,"Scott, Messerly, et al., 1961"
+107-83-5,285.91,334.22,3.964,1135.41,-46.578,nist,"Williamham, Taylor, et al., 1945"
+107-83-5,246.9,356.5,3.98332,1145.8,-45.335,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+107-87-9,329.8,384.8,4.14243,1311.145,-58.457,nist,"Collerson, Counsell, et al., 1965, 2"
+107-87-9,334.87,394.57,4.14899,1311.315,-58.934,nist,"Nickerson, Kobe, et al., 1961"
+107-87-9,282.84,399.74,4.1514,1316.73,-57.77,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+107-88-0,295.4,479.7,8.58087,6105.167,230.59,nist,"Stull, 1947"
+107-92-6,293,423,6.10954,2634.471,-3.471,nist,"Jasper and Miller, 1955"
+107-92-6,364.07,436.4,4.90904,1793.898,-70.564,nist,"Dreisbach and Shrader, 1949"
+107-92-6,342.7,460.12,4.8234,1731.708,-77.195,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+1070-87-7,316.11,396.42,3.92962,1329.863,-56.52,nist,"Forziati, Norris, et al., 1949, 2"
+1070-87-7,292.79,423.04,3.92055,1324.65,-57.07,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+1071-26-7,303,433,3.9553,1346.1,-65.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+1071-81-4,307.68,438.06,4.00614,1377.98,-66.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-05-4,294.98,345.19,4.34032,1299.069,-46.183,nist,"Capková and Fried, 1963"
+108-05-4,340,355,5.22841,1807.332,0.726,nist,"Swamy and Van Winkle, 1965"
+108-08-7,286.86,354.52,3.9612,1197.608,-50.877,nist,"Forziati, Norris, et al., 1949, 2"
+108-08-7,262.4,378.01,3.95442,1193.612,-51.343,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-10-1,294.9,389.3,3.95298,1254.095,-71.537,nist,"Fuge, Bowden, et al., 1952"
+108-10-1,293.4,415.85,3.8222,1190.6904,-77.7,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-11-2,298,406,7.57343,3831.194,101.679,nist,"Hovorka, Lankelma, et al., 1938"
+108-11-2,315,427.65,4.6618,1566.76,-68.36,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-20-3,296.7,340.36,3.96649,1135.034,-54.92,nist,"Cidlinský and Polák, 1969"
+108-21-4,234.9,362,4.55172,1490.877,-34.098,nist,"Stull, 1947"
+108-24-7,335.99,412.57,4.24655,1427.77,-75.113,nist,"McDonald, Shrader, et al., 1959"
+108-38-3,273,333,5.09199,1996.545,-14.772,nist,"Pitzer and Scott, 1943"
+108-38-3,332.4,413.19,4.13607,1463.218,-57.991,nist,"Williamham, Taylor, et al., 1945"
+108-38-3,308.54,439.56,4.14051,1468.703,-57.03,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-39-4,422.7,474.3,4.60157,1833.137,-76.414,nist,"Goldblum, Martin, et al., 1947"
+108-39-4,368.8,503.28,4.2153,1556.83,-105.55,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-44-1,394.92,476.49,4.19983,1618.386,-90.631,nist,"Dreisbach and Shrader, 1949"
+108-46-3,424.7,549.7,5.52248,2687.152,-62.164,nist,"von Terres, Gebert, et al., 1955"
+108-47-4,423.54,432.97,12.53922,13550.483,649.591,nist,"Coulson, Cox, et al., 1959, 2"
+108-47-4,325.65,459.28,4.20962,1542.94,-64.52,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-48-5,352.44,417.5,4.18785,1474.239,-64.685,nist,"Herington and Martin, 1953, 2"
+108-48-5,315.34,443.79,4.08748,1407.25,-72.149,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-64-5,267.1,407.5,4.65963,1711.933,-39.809,nist,"Stull, 1947"
+108-67-8,354.64,438.87,4.19927,1569.622,-63.572,nist,"Forziati, Norris, et al., 1949, 2"
+108-67-8,330.06,466.1,4.22541,1581.36,-63.14,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-68-9,427.87,496.47,4.258,1641.603,-108.79,nist,"Andon, Biddiscombe, et al., 1960"
+108-68-9,384.32,523.67,4.26229,1645.27,-108.329,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-86-1,329.22,427.39,4.07202,1495.044,-61.508,nist,"Dreyer, Martin, et al., 1955"
+108-87-2,276.68,400.13,3.98232,1290.968,-49.449,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-88-3,273,323,4.14157,1377.578,-50.507,nist,"Pitzer and Scott, 1943"
+108-88-3,273.13,297.89,4.23679,1426.448,-45.957,nist,"Besley and Bottomley, 1974"
+108-88-3,303,343,4.08245,1346.382,-53.508,nist,"Gaw and Swinton, 1968, 2"
+108-88-3,308.52,384.66,4.07827,1343.943,-53.773,nist,"Williamham, Taylor, et al., 1945"
+108-88-3,420,580,4.54436,1738.123,0.394,nist,"Ambrose, Broderick, et al., 1967"
+108-88-3,286.44,409.61,4.05043,1327.62,-55.525,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-89-4,348.2,459.07,4.1698,1482.84,-62.407,nist,"Osborn and Douslin, 1968"
+108-89-4,350.06,418.61,4.17238,1484.484,-62.229,nist,"Herington and Martin, 1953, 2"
+108-89-4,315.05,445.68,4.1675,1481.571,-62.5,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-90-7,335.19,404.88,4.11083,1435.675,-55.124,nist,"Brown, 1952, 2"
+108-90-7,302.5,432.18,4.02012,1378.79,-61.45,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-91-8,333.87,401.52,4.06885,1380.225,-67.285,nist,"Novák, Matous, et al., 1960"
+108-93-0,366.88,433.9,3.08077,777.363,-182.037,nist,"Novak, Matous, et al., 1960"
+108-95-2,380.3,454.9,4.24688,1509.677,-98.949,nist,"Dreisbach and Shrader, 1949"
+108-95-2,353,481.62,4.2696,1523.42,-97.75,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+108-99-6,347.19,457.72,4.17879,1484.307,-61.606,nist,"Osborn and Douslin, 1968"
+108-99-6,314.03,444.37,4.1893,1492.13,-60.62,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+109-06-8,352.94,441.51,4.13613,1401.681,-63.162,nist,"Scott, Hubbard, et al., 1963"
+109-06-8,303.19,428.63,4.1555,1415.41,-61.42,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+109-52-4,345.6,446.9,3.2075,879.771,-172.237,nist,"Kahlbaum, 1883"
+109-52-4,361,484.78,4.1692,1405.8,-121.35,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+109-60-4,312.22,374.03,4.14386,1283.861,-64.378,nist,"Polák and Mertl, 1965"
+109-60-4,284.4,398.6,4.05548,1233.46,-70.07,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+109-66-0,268.8,341.37,3.9892,1070.617,-40.454,nist,"Osborn and Douslin, 1974"
+109-66-0,228.71,330.75,3.97786,1064.84,-41.136,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+109-67-1,285.98,303.87,3.91058,1014.294,-43.367,nist,"Forziati, Camin, et al., 1950, 2"
+109-67-1,223.89,324.32,3.96914,1044.01,-39.7,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+109-69-3,256.4,351.7,3.99588,1182.903,-54.885,nist,"Kemme and Kreps, 1969"
+109-73-9,265.2,371.32,4.3077,1276.87,-52.63,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+109-79-5,324.6,408.82,4.05244,1281.018,-55,nist,"Osborn and Douslin, 1966"
+109-86-4,329.3,396.7,5.06386,1853.556,-30.838,nist,"Pick, Fried, et al., 1956, 2"
+109-87-5,273,308,4.03675,1068.35,-50.409,nist,"Nicolini and Laffitte, 1949, 2"
+109-89-7,304.6,333.73,2.86193,559.071,-132.974,nist,"Bittrich and Kauer, 1962, 2"
+109-94-4,247.8,348.6,4.07899,1101,-57.17,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+109-97-7,333.4,373.5,5.32091,2074.447,-9.186,nist,"Eon, Pommier, et al., 1971"
+109-97-7,338.82,439.26,4.42765,1506.877,-62.155,nist,"Osborn and Douslin, 1968"
+109-99-9,296.29,372.8,4.12118,1202.942,-46.818,nist,"Scott D.W., 1970"
+109-99-9,253.5,361.71,4.12142,1203.11,-46.795,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+110-00-9,275.7,334.58,4.10003,1060.801,-45.416,nist,"Guthrie, Scott, et al., 1952, 2"
+110-01-0,333.4,373.5,5.00861,1979.981,2.346,nist,"Eon, Pommier, et al., 1971"
+110-01-0,344.33,433.6,4.1203,1401.939,-53.543,nist,"Osborn and Douslin, 1966"
+110-02-1,312.21,392.94,4.07358,1239.578,-52.585,nist,"Waddington, Knowlton, et al., 1949"
+110-02-1,333.4,373.5,5.06716,1790.319,-2.805,nist,"Eon, Pommier, et al., 1971"
+110-02-1,267.2,381.16,4.08416,1246.02,-51.8,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+110-19-0,252,391,4.53676,1625.875,-32.494,nist,"Stull, 1947"
+110-19-0,295,414.22,4.3546,1462.4,-53.45,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+110-43-0,292.4,423.4,7.24794,3331.738,36.682,nist,"Stull, 1947"
+110-45-2,300,422.66,4.2488,1439.4,-58.05,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+110-49-6,343,417,4.40619,1545.712,-66.676,nist,"Dykyj, Seprakova, et al., 1957, 2"
+110-54-3,177.7,264.93,3.45604,1044.038,-53.893,nist,"Carruth and Kobayashi, 1973"
+110-54-3,286.18,342.69,4.00266,1171.53,-48.784,nist,"Williamham, Taylor, et al., 1945"
+110-54-3,254.24,365.25,4.00139,1170.875,-48.833,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+110-59-8,342.22,414.4,4.19214,1495.126,-57.288,nist,"Dreisbach and Shrader, 1949"
+110-71-4,225,366,3.83775,1260.52,-37.322,nist,"Stull, 1947"
+110-74-7,299.4,355.5,4.03395,1159.609,-65.815,nist,"Nelson, 1928"
+110-74-7,268.9,377.68,3.97008,1132.3,-69.07,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+110-81-6,273,353,4.3176,1605.244,-53.643,nist,"Scott, Finke, et al., 1952"
+110-81-6,373.71,434.03,4.09997,1485.97,-64.192,nist,"Osborn and Douslin, 1966"
+110-82-7,293.06,354.73,3.96988,1203.526,-50.287,nist,"Williamham, Taylor, et al., 1945"
+110-82-7,303,343,3.992,1216.93,-48.621,nist,"Gaw and Swinton, 1968, 2"
+110-82-7,315.7,353.9,3.17125,780.637,-107.29,nist,"Marinichev and Susarev, 1965, 2"
+110-82-7,323,523,4.13983,1316.554,-35.581,nist,"Kerns, Anthony, et al., 1974"
+110-82-7,282.11,378.46,3.93002,1182.774,-52.532,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+110-86-1,340.5,426.04,4.16272,1371.358,-58.496,nist,"McCullough, Douslin, et al., 1957"
+110-86-1,292.51,413.57,4.16749,1373.026,-58.46,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+110-89-4,315.51,416.76,3.98189,1239.577,-67.622,nist,"Osborn and Douslin, 1968"
+110-94-1,428.7,576,7.67973,4140.732,-36.41,nist,"Stull, 1947"
+110-96-3,268.1,412.7,4.63706,1747.385,-35.357,nist,"Stull, 1947"
+111-13-7,296.8,446.1,4.9448,2004.031,-40.324,nist,"Stull, 1947"
+111-14-8,351,494.7,4.30691,1536.114,-137.446,nist,"Stull, 1947"
+111-14-8,385.8,422.7,1.99576,532.776,-248.713,nist,"Kahlbaum, 1894"
+111-20-6,456,625.4,10.98636,9061.541,198.202,nist,"Stull, 1947"
+111-27-3,325.4,430.5,4.41271,1422.031,-107.706,nist,"Kemme and Kreps, 1969"
+111-27-3,334.1,381.7,5.64356,2117.967,-51.988,nist,"Rose and Supina, 1961"
+111-27-3,340.8,453.83,4.18948,1295.59,-120.64,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+111-42-2,464,582.4,5.26458,2328.56,-98.751,nist,"McDonald, Shrader, et al., 1959, 2"
+111-42-2,466.93,514.47,5.19445,2273.949,-103.362,nist,"McDonald, Shrader, et al., 1959, 2"
+111-43-3,299.74,361.8,4.06951,1254.781,-54.33,nist,"Cidlinský and Polák, 1969"
+111-65-9,216.59,297.1,5.2012,1936.281,-20.143,nist,"Carruth and Kobayashi, 1973"
+111-65-9,326.08,399.72,4.04867,1355.126,-63.633,nist,"Williamham, Taylor, et al., 1945"
+111-65-9,299.42,425.23,4.05075,1356.36,-63.515,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+111-66-0,318.04,395.37,4.05752,1353.486,-60.386,nist,"Forziati, Camin, et al., 1950, 2"
+111-66-0,295.47,420.71,4.05985,1355.46,-60.1,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+111-70-6,336.8,449.6,3.9794,1256.783,-133.487,nist,"Kemme and Kreps, 1969"
+111-70-6,355.1,475.03,4.01991,1274.89,-132.21,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+111-71-7,285,428,2.60077,686.453,-161.333,nist,"Stull, 1947"
+111-76-2,365.8,443.4,4.25626,1511.414,-88.815,nist,"Dykyj, Seprakova, et al., 1957, 2"
+111-77-3,385.5,466,4.81869,1946.184,-62.374,nist,"Dykyj, Seprakova, et al., 1957, 2"
+111-82-0,373,439,4.81707,2303.546,-61.592,nist,"Althouse and Triebold, 1944"
+111-84-2,219.7,307.73,3.82489,1492.928,-55.895,nist,"Carruth and Kobayashi, 1973"
+111-84-2,343.49,424.94,4.06245,1430.377,-71.355,nist,"Forziati, Norris, et al., 1949, 2"
+111-84-2,319.57,451.64,4.07356,1438.03,-70.456,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+111-85-3,327.3,457.3,3.968,1469.829,-85.993,nist,"Kemme and Kreps, 1969"
+111-87-5,293,353,6.47682,2603.359,-48.799,nist,"Geiseler, Fruwert, et al., 1966"
+111-87-5,328.02,387,4.80915,1753.525,-99,nist,"Ambrose, Ellender, et al., 1974"
+111-87-5,352.1,468.5,3.74844,1196.639,-149.043,nist,"Kemme and Kreps, 1969"
+111-87-5,386.42,479.27,3.90279,1274.261,-141.328,nist,"Ambrose and Sprake, 1970"
+111-87-5,502.19,553.99,3.96451,1350.263,-129.565,nist,"Ambrose, Sprake, et al., 1975"
+111-87-5,368.8,495.15,3.90225,1274.8,-141.16,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+111-90-0,313.6,424,4.35405,1667.952,-91.268,nist,"Gardner and Brewer, 1937"
+111-90-0,318.4,475.1,5.75422,2708.472,-4.207,nist,"Stull, 1947"
+111-96-6,286,433,4.87223,1922.137,-38.063,nist,"Stull, 1947"
+112-05-0,410,450,2.54659,773.594,-235.239,nist,"Kahlbaum, 1894"
+112-27-6,387,551.4,6.7568,3715.222,-1.299,nist,"Stull, 1947"
+112-30-1,349.37,406.18,4.53321,1742.392,-115.236,nist,"Ambrose, Ellender, et al., 1974"
+112-30-1,378,504,3.51869,1180.306,-168.829,nist,"Kemme and Kreps, 1969"
+112-30-1,400.41,528.32,3.85752,1373.019,-147.727,nist,"Ambrose and Sprake, 1970"
+112-30-1,394.8,533.92,3.84905,1369,-148.072,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+112-34-5,323.4,426.1,3.67536,1379.086,-133.841,nist,"Gardner and Brewer, 1937"
+112-40-3,399.53,490.49,4.10549,1625.928,-92.839,nist,"Williamham, Taylor, et al., 1945"
+112-40-3,372.89,520.24,4.12285,1639.27,-91.31,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+112-41-4,396.8,487.62,4.10012,1619.862,-90.879,nist,"Forziati, Camin, et al., 1950, 2"
+112-53-8,376.54,437.61,4.84691,2057.697,-105.421,nist,"Ambrose, Ellender, et al., 1974"
+112-53-8,399.7,538.6,3.81152,1454.635,-155.915,nist,"Kemme and Kreps, 1969"
+112-53-8,425.72,549.67,3.88499,1499.764,-151.106,nist,"Ambrose and Sprake, 1970"
+112-60-7,427.1,580.9,8.19953,4837.367,9.636,nist,"Stull, 1947"
+112-72-1,424.8,569.1,3.60897,1412.907,-177.782,nist,"Kemme and Kreps, 1969"
+112-95-8,481.1,652,4.2771,2032.7,-141.05,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+1120-21-4,377.61,470.42,4.10164,1572.477,-85.128,nist,"Camin and Rossini, 1955"
+1120-21-4,356.25,499,4.0971,1569.57,-85.45,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+115-07-1,165.81,225.98,3.97488,795.819,-24.884,nist,"Powell and Giauque, 1939"
+115-07-1,165.2,241.61,3.95606,789.624,-25.57,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+115-10-6,194.93,248.24,4.11475,894.669,-30.604,nist,"Kennedy, Sagenkahn, et al., 1941"
+115-10-6,184.1,264.8,4.44136,1025.56,-17.1,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+115-11-7,216.4,273,3.64709,799.055,-46.615,nist,"Lamb and Roper, 1940"
+115-11-7,195.77,285.41,3.80956,866.25,-38.51,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+115-25-3,233,388.37,4.254,1007.399,-30.205,nist,"Kletskii and Petric, 1967"
+116-14-3,141.99,208.4,4.02877,686.188,-26.945,nist,"Furukawa, McCoskey, et al., 1953"
+1186-53-4,325.18,407.17,3.95975,1376.496,-58.063,nist,"Forziati, Norris, et al., 1949, 2"
+1186-53-4,301.4,434.2,3.95552,1373.79,-58.37,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+119-36-8,352,493.7,4.02455,1585.874,-99.173,nist,"Matthews, Sumner, et al., 1950"
+119-61-9,473.7,579.3,4.36238,2116.372,-93.43,nist,"Dreisbach and Shrader, 1949"
+119-64-2,367,479.4,4.12671,1690.912,-70.229,nist,"Herz and Schuftan, 1922"
+119-65-3,439.93,516.9,3.99506,1693.807,-91.852,nist,"Malanowski, 1961, 2"
+120-12-7,496.4,613.8,4.72997,2759.53,-30.753,nist,"Mortimer and Murphy, 1923"
+120-12-7,460,653,4.79891,2819.63,-26.13,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+120-92-3,273.09,298.79,1.08305,376.418,-168.499,nist,"Benson and Kistiakowsky, 1942"
+121-43-7,304.4,340.6,4.74371,1476.192,-29,nist,"Christopher and Shilman, 1967"
+121-44-8,323,367.8,2.98368,695.814,-128.271,nist,"Bittrich and Kauer, 1962"
+121-69-7,302.7,466.3,4.83003,2117.236,-27.606,nist,"Stull, 1947"
+121-69-7,344.17,469.93,4.84718,2132.497,-26.116,nist,"Nelson and Wales, 1925"
+12125-02-9,494,640.5,6.4806,3703.7,-41.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+123-07-9,444.9,502.29,4.14009,1550.369,-116.136,nist,"Biddiscombe, Handley, et al., 1963"
+123-07-9,381.67,520.01,4.13227,1545.23999,-116.682,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+123-19-3,296,416.9,5.94977,2199.856,-46.879,nist,"Stull, 1947"
+123-51-3,321.9,425.34,4.07851,1128.19,-126.68,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+123-72-8,303.86,347.18,3.59112,952.851,-82.569,nist,"Seprakova, Paulech, et al., 1959, 2"
+123-75-1,316.31,394.1,4.04953,1180.043,-67.895,nist,"McCullough, Douslin, et al., 1959"
+123-86-4,332.89,399.24,4.26803,1440.231,-61.362,nist,"Kliment, Fried, et al., 1964"
+123-86-4,301,424.11,4.5,1596.7,-43.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+123-91-1,293,378,4.58135,1570.093,-31.297,nist,"Crenshaw, Cope, et al., 1938"
+123-92-2,313.8,367.7,5.08047,1932.043,-28.698,nist,"Usanovich and Dembitskii, 1959"
+123-96-6,354,480.72,3.5137,1060.4,-150.65,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+123-99-9,451.5,629.7,6.10311,3396.636,-73.11,nist,"Stull, 1947"
+124-04-9,432.7,610.7,5.47306,2813.066,-95.951,nist,"Stull, 1947"
+124-07-2,403.3,479.5,4.25235,1530.446,-150.12,nist,"Rose, Acciarri, et al., 1957"
+124-11-8,316.02,447.59,4.0792,1436.2,-67.46,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+124-12-9,316,477.7,3.8968,1482.244,-97.013,nist,"Stull, 1947"
+124-18-5,243.49,310.59,0.21021,440.616,-156.896,nist,"Carruth and Kobayashi, 1973"
+124-18-5,367.63,448.27,4.07857,1501.268,-78.67,nist,"Williamham, Taylor, et al., 1945"
+124-18-5,338.53,476.15,4.06853,1495.17,-79.292,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+124-38-9,154.26,195.89,6.81228,1301.679,-3.494,nist,"Giauque and Egan, 1937"
+124-40-3,201.38,280.01,4.29371,995.445,-47.869,nist,"Aston, Eidinoff, et al., 1939"
+127-18-4,301.03,380.84,4.18056,1440.819,-49.171,nist,"Polak, Murakami, et al., 1970"
+1333-74-0,21.01,32.27,3.54314,99.395,7.726,nist,"van Itterbeek, Verbeke, et al., 1964"
+1333-74-0,10.25,22.82,2.93954,66.7954,2.5,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13465-07-1,256,367.55,4.055,1199,-48.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13475-81-5,322.38,463.2,3.96928,1464.03,-64.09,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13536-59-9,185.2,221.89,3.28728,505.68,-52.55,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13550-49-7,195.75,256.46,4.61234,966.226,-32.35,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13637-63-3,194,297.9,3.76103,798.006,-46.838,nist,"Pilipovich, Maya, et al., 1967"
+13637-63-3,194.8,277.68,3.39423,653.06,-66.55,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+137-32-6,298.12,393.7,4.48266,1360.367,-99.93,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13845-23-3,328,473.96,3.932,1488,-64.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13845-24-4,426,591.88,4.445,2104,-84.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13845-25-5,384,547.3,4.07,1772,-77.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13983-20-5,15.73,24.69,3.14102,77.1349,2.47,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+141-32-2,272.7,420.6,4.42683,1658.03,-45.561,nist,"Stull, 1947"
+141-43-5,338.6,444.1,4.29252,1408.873,-116.093,nist,"Matthews, Sumner, et al., 1950, 2"
+141-78-6,288.73,348.98,4.22809,1245.702,-55.189,nist,"Polák and Mertl, 1965"
+141-78-6,265.5,372.51,4.13361,1195.13,-60.68,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+141-79-7,287,403.1,4.19353,1434.631,-60.088,nist,"Fuge, Bowden, et al., 1952"
+14104-45-1,217.8,256.03,2.72964,414.68,-85.28,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+142-62-1,371.3,452.3,4.34853,1512.718,-129.255,nist,"Rose, Acciarri, et al., 1957"
+142-82-5,185.29,295.6,4.81803,1635.409,-27.338,nist,"Carruth and Kobayashi, 1973"
+142-82-5,299.07,372.43,4.02832,1268.636,-56.199,nist,"Williamham, Taylor, et al., 1945"
+142-82-5,277.71,396.53,4.02023,1263.909,-56.718,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+142-96-1,362.29,413.21,3.93018,1302.768,-81.481,nist,"Cidlinský and Polák, 1969"
+143-07-7,379.52,449,5.55523,2510.999,-106.676,nist,"Hammer and Lydersen, 1957"
+143-08-8,364.8,486.8,3.96157,1373.417,-139.182,nist,"Kemme and Kreps, 1969"
+143-08-8,382.1,515.58,3.83303,1297.75,-148.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+14762-55-1,1.12,4.41,1.3975,5.594,0.69,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+151-67-7,222.5,328.5,3.82525,1016.075,-57.581,nist,"Bottomley and Seiflow, 1963"
+151-67-7,240.92,344.91,4.20682,1199.262,-37.86,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+1511-62-2,194.5,275.65,3.4003,640.32,-69.05,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+156-59-2,273.91,356.78,4.069,1163.729,-47.174,nist,"Ketelaar, van Velden, et al., 1947"
+156-60-5,234.96,357.99,3.94214,1064.346,-50.344,nist,"Ketelaar, van Velden, et al., 1947"
+1569-69-3,356.89,475.79,4.01199,1476.958,-63.293,nist,"Osborn and Douslin, 1966"
+1613-51-0,351.43,414.9,4.027,1420.424,-61.672,nist,"McCullough, Finke, et al., 1954, 2"
+1640-89-7,301.93,377.54,4.02284,1305.001,-51.755,nist,"Forziati, Norris, et al., 1949, 2"
+1640-89-7,279.88,402.39,4.00408,1293.712,-53.03,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+16747-38-9,332.16,415.72,3.99656,1425.254,-57.568,nist,"Forziati, Norris, et al., 1949, 2"
+16747-38-9,307.81,443.27,3.99105,1422.03,-57.894,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+1678-92-8,345.84,430.89,4.01356,1461.715,-65.16,nist,"Forziati, Norris, et al., 1949, 2"
+1717-00-6,226.71,326.09,4.03117,1062.074,-41.351,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+1759-58-6,291,364.82,3.97303,1243.686,-50.438,nist,"Forziati, Norris, et al., 1949, 2"
+1759-58-6,269.74,389.15,3.95279,1232.161,-51.73,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+20291-95-6,318,452,4.00345,1417.4,-69.35,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+2207-04-7,321.75,458.51,4.02425,1457.08,-67.16,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+2437-56-1,415.8,505.81,4.11053,1674.741,-97.936,nist,"Camin and Rossini, 1955"
+2532-58-3,299.13,365.78,3.96767,1242.676,-51.222,nist,"Forziati, Norris, et al., 1949, 2"
+2532-58-3,270.52,389.83,4.00405,1259.821,-49.62,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+2551-62-4,162,220.4,5.5409,1096.5,-11.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+2696-92-6,213,266.8,4.63068,1151.544,-17.863,nist,"Stull, 1947"
+2696-92-6,209.4,285.01,4.48644,1094.73,-23.45,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+2837-89-0,222,286,4.0536,900.49,-38.761,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+287-23-0,213.22,285.34,4.07143,1038.009,-30.334,nist,"Rathjens and Gwinn, 1953"
+287-23-0,210.2,305.67,4.04436,1025.5,-31.72,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+287-92-3,225.9,287.39,4.24714,1235.305,-30.666,nist,"Aston, Fink, et al., 1943"
+287-92-3,288.86,323.18,4.00288,1119.208,-42.412,nist,"Williamham, Taylor, et al., 1945"
+287-92-3,238.5,344.62,4.06783,1152.574,-38.64,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+291-64-5,341.3,432.17,3.9771,1330.402,-56.946,nist,"Finke, Scott, et al., 1956"
+291-64-5,291.4,418.89,3.9633,1322.21997,-57.853,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+292-64-8,369.86,467.6,3.98805,1438.687,-63.024,nist,"Finke, Scott, et al., 1956"
+292-64-8,316,453.27,3.98125,1434.67,-63.438,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+302-01-2,288,343,5.01105,1724.782,-41.833,nist,"Scott, Oliver, et al., 1949, 2"
+302-01-2,298.9,408.43,4.9268,1679.07,-45.45,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+306-83-2,223.16,321.15,4.21161,1132.447,-31.56,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+3221-61-2,313,444,4.0366,1399.9,-69.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+334-48-5,426,460.3,2.4645,733.581,-256.708,nist,"Kahlbaum, 1894"
+335-57-9,271.26,379.18,4.08511,1193.572,-63.06,nist,"Oliver and Grisard, 1951, 3"
+344-07-0,308.73,417.28,4.19266,1388.461,-59.485,nist,"Ambrose, 1968, 2"
+344-07-0,403.44,546.44,4.73059,1850.097,2.664,nist,"Evans and Tiley, 1966, 2"
+352-32-9,340.83,428.36,4.11897,1373.934,-55.766,nist,"Scott, Messerly, et al., 1962"
+352-93-2,233.6,361,4.66583,1560.523,-26.557,nist,"Stull, 1947"
+352-93-2,319.07,395.58,4.05326,1257.833,-54.488,nist,"Osborn and Douslin, 1966"
+352-93-2,361,536,4.41669,1541.596,-11.154,nist,"Stull, 1947"
+352-93-2,273.1,389.71,4.05326,1257.833,-54.488,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+3522-94-9,238,303,4.2515,1471.761,-48.948,nist,"Osborn and Douslin, 1974"
+3522-94-9,319.29,398.2,3.97027,1330.147,-61.722,nist,"Forziati, Norris, et al., 1949, 2"
+3522-94-9,296.3,424.25,3.97372,1332.86,-61.34,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+353-36-6,156,241,3.72414,724.931,-46.296,nist,"Stull, 1947"
+353-36-6,169.54,375.3,4.34159,950.397,-16.492,nist,"Vidaurri, 1975"
+353-36-6,174.1,251.47,4.21998,897.368,-22.49,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+353-59-3,177.82,283.04,3.964,936.27,-32.659,nist,"Glew, 1960"
+353-59-3,198,288.26,3.9585,933.04,-33.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+353-85-5,141.76,205.56,3.33743,513.875,-51.741,nist,"Pace and Bobka, 1961"
+354-06-3,246.15,348.14,3.48366,841.141,-83.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+354-25-6,193.6,279.06,4.2571,1006.84,-24.55,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+354-33-6,168.36,240.01,4.13392,800.869,-31.06,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+354-51-8,272.65,392.37,3.84523,1166.348,-63.28,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+355-02-2,305.77,384.24,3.94685,1132.558,-62.077,nist,"Good, Douslin, et al., 1959"
+355-25-9,233.22,259.94,3.79136,820.058,-54.311,nist,"Simons and Mausteller, 1952, 2"
+355-25-9,233.27,269.24,4.1425,982.586,-33.624,nist,"Brown and Mears, 1958, 2"
+355-68-0,292.96,394.5,3.18702,605.954,-135.245,nist,"Rowlinson and Thacker, 1957"
+355-68-0,350.32,451.01,4.20584,1212.323,-34.221,nist,"Crowder, Taylor, et al., 1967"
+359-35-3,190.05,269.75,4.12013,885.597,-37.25,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+363-72-4,321.88,367.5,4.16086,1253.674,-57.179,nist,"Ambrose, 1968, 2"
+363-72-4,373.36,529.53,4.6363,1635.174,-3.684,nist,"Evans and Tiley, 1966, 3"
+36653-82-4,415.44,487.32,4.05752,1803.451,-152.831,nist,"Ambrose, Ellender, et al., 1974"
+36653-82-4,445.3,598.3,4.16673,1880.126,-146.027,nist,"Kemme and Kreps, 1969"
+36653-82-4,498.46,569.1,4.11528,1845.188,-148.524,nist,"Ambrose and Sprake, 1970"
+367-11-3,304.31,403.4,4.14521,1310.271,-50.563,nist,"Scott, Messerly, et al., 1963"
+374-07-2,206.04,295.73,3.83243,875.938,-47.69,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+392-56-3,277.89,321,3.98751,1153.509,-64.352,nist,"Findlay, 1969"
+392-56-3,278.4,387.19,4.16054,1229.449,-57.503,nist,"Douslin and Osborn, 1965"
+392-56-3,310.4,361.94,4.14356,1220.117,-58.543,nist,"Counsell, Green, et al., 1965"
+392-56-3,353.4,516.67,4.63127,1563.21,-15.19,nist,"Douslin, Harrison, et al., 1969, 2"
+420-46-2,173.6,225.78,4.02423,786.645,-30.093,nist,"Russell, Golding, et al., 1944"
+420-46-2,167.55,241.33,4.068,801.34,-28.6,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+430-66-0,211.07,294.19,4.13152,928.177,-51.88,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+460-19-5,252,391.3,4.51661,1041.518,-21.288,nist,"Stull, 1947"
+462-06-6,255.3,357,4.36225,1409.848,-34.792,nist,"Young, 1889, 2"
+462-95-3,273,348,4.11063,1270.167,-51.891,nist,"Nicolini and Laffitte, 1949"
+463-49-0,152.5,238,3.79809,755.286,-39.159,nist,"Stull, 1947"
+463-49-0,178,257,2.8386,458.06,-77.08,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+463-82-1,205.7,293.16,3.28533,695.152,-70.679,nist,"Hopfner, Parekh, et al., 1975"
+463-82-1,268.02,313.2,3.86373,950.318,-36.329,nist,"Osborn and Douslin, 1974"
+463-82-1,343,433,4.61616,1478.868,41.256,nist,"Dawson, Silberberg, et al., 1973"
+463-82-1,259.33,303.08,3.83916,938.234,-37.901,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+464-06-2,285.7,354.92,3.9222,1203.362,-46.776,nist,"Forziati, Norris, et al., 1949, 2"
+464-06-2,260.9,379.04,3.91555,1199.397,-47.242,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+493-01-6,373.03,469.53,4.00047,1594.687,-69.731,nist,"Camin and Rossini, 1955"
+493-01-6,349.53,500.79,4.00019,1594.46,-69.758,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+493-02-7,365.51,461.02,3.99304,1572.899,-65.947,nist,"Camin and Rossini, 1955"
+493-02-7,342.33,492,3.98171,1564.683,-66.891,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+503-74-2,359.8,377.3,-0.26585,50.172,-320.762,nist,"Kahlbaum, 1894, 2"
+503-74-2,350,474.97,4.5847,1676.3,-83.65,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+504-63-2,332.6,487.4,6.29523,3105.018,6.101,nist,"Stull, 1947"
+507-20-0,254,324,4.24201,1281.242,-21.795,nist,"Stull, 1947"
+507-20-0,295,319.71,1.0542,110.567,-221.514,nist,"Calero, Valle, et al., 1969, 2"
+513-35-9,276.19,343.74,4.04727,1098.619,-39.889,nist,"Scott, Waddington, et al., 1949"
+513-35-9,230.69,333.14,4.09149,1124.33,-36.52,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+526-73-8,363.48,450.28,4.16572,1593.958,-66.072,nist,"Forziati, Norris, et al., 1949, 2"
+526-73-8,337.8,478.5,4.1711,1598.241,-65.53,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+526-75-0,357,492,4.65079,2147.312,-28.347,nist,"von Terres, Gebert, et al., 1955"
+526-75-0,422.5,491.62,2.40468,582.758,-247.5,nist,"Andon, Biddiscombe, et al., 1960"
+526-75-0,377.86,519.64,4.12202,1576.78,-106.977,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+534-22-5,253.3,361.13,3.7041,991.2,-69.86,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+538-93-2,359.79,446.96,4.05523,1526.384,-68.979,nist,"Forziati, Norris, et al., 1949, 2"
+538-93-2,334.19,475.5,4.05978,1529.96,-68.51,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+540-42-1,321.6,436.3,3.5618,1042.3,-116.65,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+540-54-5,204.9,319.6,4.13254,1155.007,-39.991,nist,"Stull, 1947"
+540-54-5,238.09,341.29,4.07655,1125.009,-43.29,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+540-67-0,182,280.7,4.03302,952.618,-44.189,nist,"Stull, 1947"
+540-67-0,280.7,433,3.45499,600.134,-108.534,nist,"Stull, 1947"
+540-67-0,232,298.85,3.00683,504.49,-112.4,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+540-84-1,194.64,298.44,3.94736,1282.332,-48.444,nist,"Milazzo, 1956, 2"
+540-84-1,297.51,373.28,3.93679,1257.84,-52.415,nist,"Williamham, Taylor, et al., 1945"
+540-84-1,275.5,398.38,3.93646,1257.85,-52.383,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+541-31-1,324.1,430.77,4.03981,1342.509,-58.704,nist,"Osborn and Douslin, 1966"
+541-31-1,292.6,417.78,4.03981,1342.509,-58.704,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+541-73-1,363.87,446,4.19754,1629.812,-57.328,nist,"Dreisbach and Shrader, 1949"
+542-55-2,288,395.32,3.9845,1195.9,-70.65,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+543-59-9,283.72,407.81,3.93641,1271.16,-58.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+544-02-5,283,353,-6.17216,915.744,-574.249,nist,"Bauer and Burschkies, 1935"
+544-40-1,283,313,4.05564,1292.103,-47.066,nist,"Bauer and Burschkies, 1935"
+544-63-8,385.03,465.1,1.44788,685.976,-262.3,nist,"Hammer and Lydersen, 1957"
+544-76-3,463.2,559.9,4.17312,1845.672,-117.054,nist,"Camin, Forziati, et al., 1954"
+544-76-3,431.47,593.8,4.15357,1830.51,-118.7,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+553-90-2,293,436.5,5.04585,1994.334,-41.204,nist,"Stull, 1947"
+554-12-1,293.74,351.9,4.03986,1155.987,-65.979,nist,"Polák and Mertl, 1965"
+554-12-1,267.5,375.32,3.98745,1129.57,-68.91,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+557-17-5,272.6,312.49,3.6875,903.588,-66.691,nist,"Bingham, 1910, 2"
+558-37-2,263.69,314.66,3.90266,1062.207,-41.84,nist,"Baghdoyan, Malik, et al., 1971"
+56-23-5,293.03,350.86,4.02291,1221.781,-45.739,nist,"Hildenbrand and McDonald, 1959, 2"
+56-23-5,259,373.76,4.10445,1265.632,-41.002,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+56-81-5,456.4,533.6,3.93737,1411.531,-200.566,nist,"Richardson, 1886, 2"
+560-21-4,287,414.91,3.96421,1325.81,-52.989,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+562-49-2,286.63,360.11,3.95568,1230.986,-47.568,nist,"Forziati, Norris, et al., 1949, 2"
+562-49-2,265.2,384.36,3.94912,1227.02,-48.029,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+563-16-6,247.4,385,3.85939,1243.387,-62.655,nist,"Stull, 1947"
+563-16-6,286.1,411.59,3.97403,1306.96,-55.774,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+563-45-1,273.37,324.29,3.95126,1013.575,-36.32,nist,"Scott and Waddington, 1950"
+563-45-1,215.73,221.5,3.94945,1012.37,-36.503,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+563-79-1,289.48,347,3.70468,1021.564,-70.242,nist,"Baghdoyan, Malik, et al., 1971"
+563-79-1,302.18,346.36,4.09587,1224.926,-46.812,nist,"Scott, Finke, et al., 1955"
+563-80-4,253.3,362.1,5.62559,1806.925,-40.618,nist,"Stull, 1947"
+563-80-4,276.4,393.31,3.46583,955.43,-91.42,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+564-02-3,283.9,409.56,3.94826,1293.94,-54.795,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+565-59-3,290.67,363.83,3.98682,1242.609,-50.806,nist,"Forziati, Norris, et al., 1949, 2"
+565-59-3,281.56,387.89,3.98066,1238.986,-51.208,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+565-75-3,222.83,426.32,4.15631,1420.71,-44.618,nist,"Osborn and Douslin, 1974"
+565-75-3,309.72,387.53,3.97886,1315.084,-55.624,nist,"Williamham, Taylor, et al., 1945"
+565-75-3,300.19,413.19,3.977,1314.31,-55.669,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+57-10-3,426.8,626.9,5.35728,3061.422,-55.077,nist,"Stull, 1947"
+57-11-4,446.9,643,5.72544,3348.131,-57.825,nist,"Stull, 1947"
+57-55-6,318.7,461.4,6.07936,2692.187,-17.94,nist,"Stull, 1947"
+576-26-1,418,476.67,4.20945,1638.455,-84.416,nist,"Andon, Biddiscombe, et al., 1960"
+576-26-1,361.76,503.66,4.19336,1627.23,-85.603,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+583-48-2,251.1,390.8,4.09815,1382.877,-52.831,nist,"Stull, 1947"
+583-48-2,291.4,417.4,4.0031,1329.4,-58.314,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+583-58-4,446.3,453.5,4.20691,1618.466,-67.044,nist,"Coulson, Cox, et al., 1959, 2"
+583-58-4,341.1,481.43,4.1892,1605.14,-68.6,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+584-94-1,250,388.8,4.05921,1351.645,-55.257,nist,"Stull, 1947"
+584-94-1,290,415.13,3.99236,1314.29,-59.091,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+589-34-4,271.9,389.82,3.99571,1242.018,-53.715,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+589-38-8,348.76,406.51,4.12573,1365.798,-65.143,nist,"Collerson, Counsell, et al., 1965, 2"
+589-38-8,299.6,422.25,4.11658,1359.88,-65.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+589-43-5,246.3,382.6,3.98854,1292.707,-57.97,nist,"Stull, 1947"
+589-43-5,285.2,408.63,3.97399,1285.85,-58.55,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+589-53-7,252.8,390.8,4.06023,1347.236,-58.539,nist,"Stull, 1947"
+589-53-7,292.5,417.05,4.02214,1325.704,-60.783,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+589-62-8,283,353,5.08522,1816.393,-83.13,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+589-81-1,238,288,4.51248,1568.919,-40.686,nist,"Osborn and Douslin, 1974"
+589-81-1,315.82,392.96,4.02435,1331.53,-60.555,nist,"Williamham, Taylor, et al., 1945"
+589-81-1,306.32,418.36,4.01533,1326.14,-61.337,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+589-93-5,358.3,430.5,4.25936,1574.069,-60.039,nist,"Herington and Martin, 1953, 2"
+589-93-5,324.2,457.87,4.20857,1541.78,-63.3,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+590-18-1,203.06,295.91,3.98744,957.06,-36.504,nist,"Scott, Ferguson, et al., 1944"
+590-18-1,204.73,296.11,4.00958,967.32,-35.277,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+590-35-2,288.47,353.2,3.93999,1190.298,-49.807,nist,"Williamham, Taylor, et al., 1945"
+590-35-2,260.9,376.84,3.94392,1191.959,-49.652,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+590-36-3,309.5,419.12,3.27663,811.05,-146.55,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+590-73-8,243.5,380,4.1328,1367.457,-48.436,nist,"Stull, 1947"
+590-73-8,283,405.96,3.95748,1271.18,-58.32,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+591-22-0,436,445.88,4.37224,1716.267,-52.008,nist,"Coulson, Cox, et al., 1959, 2"
+591-22-0,335.73,473.68,4.2129,1595.15,-65.91,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+591-76-4,291.68,364.09,4.00653,1240.869,-53.047,nist,"Forziati, Norris, et al., 1949, 2"
+591-76-4,270.55,387.88,3.99739,1235.52,-53.653,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+591-78-6,280.9,400.7,5.66715,2011.668,-45.364,nist,"Stull, 1947"
+591-78-6,302.68,426.5,4.1533,1395.8,-64.17,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+592-13-2,246.5,382.3,3.98021,1284.664,-59.032,nist,"Stull, 1947"
+592-13-2,285.2,408.2,3.98112,1285.47,-58.902,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+592-27-8,233,283,4.84562,1718.531,-29.682,nist,"Osborn and Douslin, 1974"
+592-27-8,314.86,391.69,4.04227,1337.468,-59.457,nist,"Williamham, Taylor, et al., 1945"
+592-27-8,299.81,416.95,4.03877,1335.22,-59.735,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+592-41-6,289.04,337.46,3.99063,1152.971,-47.301,nist,"Forziati, Camin, et al., 1950, 2"
+592-41-6,249.98,359.8,3.9826,1148.62,-47.81,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+592-42-7,273.19,332.4,3.68822,1008.139,-58.987,nist,"Cummings and McLaughlin, 1955"
+592-76-7,273.19,361.89,4.21811,1400.674,-34.193,nist,"Bent, Cuthbertson, et al., 1936"
+592-76-7,273.62,391.59,4.02677,1258.34,-53.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+593-45-3,447.7,590,4.33209,2068.963,-111.927,nist,"Krafft, 1882"
+593-45-3,455,625,4.1271,1894.3,-129.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+593-53-3,164.26,216.77,3.0514,395.889,-64.151,nist,"Michels and Wassenaar, 1948"
+593-53-3,144.17,208.17,4.19421,734.222,-19.58,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+594-27-4,221.9,351,4.09893,1286.161,-37.304,nist,"Stull, 1947"
+594-82-1,273,338,5.08335,1724.764,-38.383,nist,"Scott, Douslin, et al., 1952, 3"
+594-82-1,375.2,406,3.9042,1270.1,-53.65,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+60-12-8,331.4,492.7,5.36689,2479.574,-30.51,nist,"Stull, 1947"
+60-12-8,406.2,492.1,3.74729,1318.142,-139.694,nist,"Dreisbach and Shrader, 1949"
+60-29-7,212.4,293.02,4.13377,1102.878,-40.46,nist,"Taylor and Smith, 1922"
+60-29-7,250.04,328.57,4.022,1062.64,-44.93,nist,"Ambrose, Sprake, et al., 1972"
+60-29-7,350.14,466.73,4.46988,1354.913,-5.537,nist,"Ambrose, Sprake, et al., 1972"
+60-29-7,229.71,328.31,4.10962,1090.64,-41.95,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+6032-29-7,298.12,383.34,4.42349,1291.212,-100.017,nist,"Butler, Ramchandani, et al., 1935, 2"
+6032-29-7,298.12,383.34,4.42349,1291.212,-100.02,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+609-26-7,289.5,415.31,3.9861,1317.05,-57.921,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+617-78-7,294.28,367.52,4.00453,1254.119,-53.004,nist,"Forziati, Norris, et al., 1949"
+617-78-7,272.9,391.62,4.00449,1254.055,-53.014,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+619-99-8,253,391.7,4.04,1339.865,-59.479,nist,"Stull, 1947"
+619-99-8,292.9,418.01,4.01533,1327.93,-60.505,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+62-53-3,304,457,4.34541,1661.858,-74.048,nist,"Hatton, Hildenbrand, et al., 1962"
+62-53-3,349.86,484.81,4.4087,1692.77,-72.71,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+620-17-7,370.3,491.4,2.78216,849.051,-189.088,nist,"von Terres, Gebert, et al., 1955"
+620-17-7,445.22,502.74,4.16397,1570.423,-113.901,nist,"Biddiscombe, Handley, et al., 1963"
+620-17-7,381.72,520.46,4.16568,1572.26,-113.62601,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+622-96-8,351.46,436.16,4.12291,1527.113,-64.229,nist,"Forziati, Norris, et al., 1949, 2"
+622-96-8,326.56,463.82,4.10862,1517.577,-65.25,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+623-37-0,298,411,6.1625,2662.265,23.47,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+623-42-7,246.4,375.5,4.58499,1528.058,-41.606,nist,"Stull, 1947"
+623-42-7,375.5,545,4.72086,1758.314,-2.421,nist,"Stull, 1947"
+623-42-7,284.9,399.96,4.10641,1271.06,-65.94,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+624-64-6,201.7,274.13,4.0436,982.166,-30.775,nist,"Guttman and Pitzer, 1945"
+624-64-6,201.83,293.29,4.00827,967.5,-32.31,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+624-89-5,296.58,373.97,4.06339,1182.562,-48.366,nist,"Osborn and Douslin, 1966"
+624-89-5,253.5,362.68,4.06339,1182.562,-48.366,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+624-92-0,273,333,4.19593,1397.604,-49.163,nist,"Scott, Finke, et al., 1950"
+624-92-0,334.56,401.76,4.0886,1337.656,-55.267,nist,"Scott, Finke, et al., 1950"
+626-89-1,336.4,448.19,4.17605,1273.35,-119.59,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+626-93-7,324.5,434.97,4.93223,1696.19,-68.72,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+627-19-0,233,334,4.0026,1068.1,-46.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+627-20-3,274.74,342.03,3.99984,1069.229,-42.393,nist,"Scott and Waddington, 1950"
+627-20-3,229.4,331.46,3.96798,1052.44,-44.457,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+628-28-4,296.11,342.1,4.00878,1160.272,-53.444,nist,"Cidlinský and Polák, 1969"
+628-32-0,293.53,335.66,4.12138,1194.642,-46.015,nist,"Cidlinský and Polák, 1969"
+628-32-0,252.4,359.96,3.83648,1052.47,-62.27,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+629-14-1,239.7,392.7,3.67171,1270.934,-45.586,nist,"Stull, 1947"
+629-50-5,412.5,509.21,4.12829,1689.093,-98.866,nist,"Camin and Rossini, 1955"
+629-50-5,388.85,540.19,4.13246,1690.67,-98.93,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+629-59-4,403.69,559.15,4.1379,1740.88,-105.43,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+629-62-9,417.8,576.9,4.14849,1789.95,-111.77,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+629-73-2,461.3,557.92,4.16208,1837.811,-115.859,nist,"Camin, Forziati, et al., 1954"
+629-78-7,443.5,610,4.1392,1865.1,-123.95,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+629-92-5,466.5,639,4.1402,1932.8,-135.55,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+630-08-0,69.73,88.08,3.81912,291.743,-5.154,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+631-36-7,272,426,4.35089,1682.102,-39.324,nist,"Stull, 1947"
+64-17-5,273,351.7,5.37229,1670.409,-40.191,nist,"Kretschmer and Wiebe, 1949"
+64-17-5,292.77,366.63,5.24677,1598.673,-46.424,nist,"Ambrose and Sprake, 1970"
+64-17-5,364.8,513.91,4.92531,1432.526,-61.819,nist,"Ambrose, Sprake, et al., 1975"
+64-17-5,276.5,369.54,5.33675,1648.22,-42.232,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+64-18-6,273.7,307.4,2.00121,515,-139.408,nist,"Kahlbaum, 1894, 2"
+64-19-7,290.26,391.01,4.68206,1642.54,-39.764,nist,"McDonald, Shrader, et al., 1959"
+64-19-7,297.58,414.97,4.54456,1555.12,-48.5,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+67-56-1,288.1,356.83,5.20409,1581.341,-33.5,nist,"Ambrose and Sprake, 1970"
+67-56-1,353,483,5.31301,1676.569,-21.728,nist,"Hirata and Suda, 1967"
+67-56-1,353.5,512.63,5.15853,1569.613,-34.846,nist,"Ambrose, Sprake, et al., 1975"
+67-56-1,262.59,356,5.20277,1580.08,-33.65,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+67-63-0,329.92,362.41,4.861,1357.427,-75.814,nist,"Biddiscombe, Collerson, et al., 1963, 2"
+67-63-0,395.1,508.24,4.57795,1221.423,-87.474,nist,"Ambrose and Townsend, 1963, 3"
+67-63-0,281.28,373.46,5.24268,1580.92,-53.54,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+67-64-1,259.16,507.6,4.42448,1312.253,-32.445,nist,"Ambrose, Sprake, et al., 1974"
+67-64-1,247.38,350.65,4.2184,1197.01,-45.09,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+67-66-3,215,334.4,4.20772,1233.129,-40.953,nist,"Stull, 1947"
+67-66-3,334.4,527,4.56992,1486.455,-8.612,nist,"Stull, 1947"
+67-66-3,250.1,356.89,3.96288,1106.904,-54.598,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+67-68-5,293,323,5.23039,2239.161,-29.215,nist,"Douglas, 1948, 3"
+67-68-5,325.49,442.09,4.49107,1807.002,-60.995,nist,"Jakli and van Hook, 1972"
+68-12-2,303,363,3.93068,1337.716,-82.648,nist,"Gopal and Rizvi, 1968, 2"
+691-37-2,241.6,349.9,3.96019,1121.302,-43.463,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+71-23-8,292.4,370.5,5.31384,1690.864,-51.804,nist,"Kemme and Kreps, 1969"
+71-23-8,333.32,377.72,4.87601,1441.629,-74.299,nist,"Ambrose and Sprake, 1970"
+71-23-8,405.46,536.71,4.59871,1300.491,-86.364,nist,"Ambrose and Townsend, 1963, 2"
+71-23-8,293.19,389.32,4.99991,1512.94,-67.343,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+71-36-3,295.8,391,4.54607,1351.555,-93.34,nist,"Kemme and Kreps, 1969"
+71-36-3,362.36,398.84,4.50393,1313.878,-98.789,nist,"Biddiscombe, Collerson, et al., 1963, 2"
+71-36-3,391,479,4.39031,1254.502,-105.246,nist,"Hessel and Geiseler, 1965"
+71-36-3,419.34,562.98,4.42921,1305.001,-94.676,nist,"Ambrose and Townsend, 1963, 2"
+71-36-3,310.18,411.26,4.6493,1395.14,-90.411,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+71-41-0,307.1,411,4.68277,1492.549,-91.621,nist,"Kemme and Kreps, 1969"
+71-41-0,347.91,429.13,4.32418,1297.689,-110.669,nist,"Ambrose and Sprake, 1970"
+71-41-0,437.79,513.79,3.97383,1106.11,-134.578,nist,"Ambrose, Sprake, et al., 1975"
+71-41-0,326.01,433.05,4.39646,1336.01,-106.83,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+71-43-2,287.7,354.07,4.01814,1203.835,-53.226,nist,"Williamham, Taylor, et al., 1945"
+71-43-2,297.9,318,0.14591,39.165,-261.236,nist,"Deshpande and Pandya, 1967"
+71-43-2,333.4,373.5,4.72583,1660.652,-1.461,nist,"Eon, Pommier, et al., 1971"
+71-43-2,421.56,554.8,4.60362,1701.073,20.806,nist,"Kalafati, Rasskazov, et al., 1967"
+71-43-2,279.64,377.06,3.98523,1184.24,-55.578,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+71-55-6,267.79,290.07,5.88607,2210.179,34.902,nist,"Rubin, Levedahl, et al., 1944"
+7154-79-2,330.98,414.44,3.95674,1399.478,-59.218,nist,"Forziati, Norris, et al., 1949, 2"
+7154-79-2,306.6,442,3.95319,1397.69,-59.37,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7154-80-5,320,458,3.98014,1435.43,-67.66,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+74-82-8,90.99,189.99,3.9895,443.028,-0.49,nist,"Prydz and Goodwin, 1972"
+74-82-8,93.04,107.84,3.80235,403.106,-5.479,nist,"Cutler and Morrison, 1965"
+74-82-8,96.89,110.19,2.00253,125.819,-48.823,nist,"Regnier, 1972"
+74-82-8,110,190.5,4.22061,516.689,11.223,nist,"Hestermans and White, 1961"
+74-82-8,92.64,120.59,3.7687,395.744,-6.469,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+74-84-0,91.33,144.13,4.50706,791.3,-6.422,nist,"Carruth and Kobayashi, 1973"
+74-84-0,135.74,199.91,3.93835,659.739,-16.719,nist,"Loomis and Walters, 1926"
+74-84-0,133.8,198.16,3.95405,663.72,-16.469,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+74-85-1,149.37,188.57,3.87261,584.146,-18.307,nist,"Michels and Wassenaar, 1950"
+74-85-1,123.06,181.9,3.91382,596.526,-16.78,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+74-86-2,192.59,206.3,4.19598,699.53,-21.47,nist,"Ambrose, 1956, 2"
+74-86-2,214.64,308.33,4.66141,909.079,7.947,nist,"Ambrose and Townsend, 1964, 2"
+74-86-2,191.44,201.11,3.67374,528.67,-44.36,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+74-87-3,183,249.4,4.15454,916.223,-28.466,nist,"Beersmans and Jungers, 1947"
+74-87-3,198,278,4.22507,951.561,-23.468,nist,"Ganeff and Jungers, 1948"
+74-87-3,303,416.3,4.91858,1427.529,45.137,nist,"Hsu and McKetta, 1964"
+74-87-3,184.6,265.87,4.16533,920.86,-27.57,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+74-89-5,190.06,266.92,4.52,1034.977,-37.574,nist,"Aston, Siller, et al., 1937, 2"
+74-89-5,203.61,282.93,4.5442,1050.66,-35.32,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+74-90-8,256.73,319.38,4.67417,1340.791,-11.592,nist,"Sinozaki, Hara, et al., 1926"
+74-93-1,221.87,279.13,4.19201,1031.431,-32.72,nist,"Russell, Osborne, et al., 1942"
+74-93-1,279.9,458,4.35381,1122.494,-21.748,nist,"Stull, 1947"
+74-93-1,207.8,297.85,4.15653,1015.547,-34.444,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+74-96-4,301.29,348.51,4.11241,1121.371,-38.478,nist,"Zmaczynski, 1930, 2"
+74-96-4,231.35,332.8,4.04485,1090.811,-41.44,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+74-98-6,166.02,231.41,4.01158,834.26,-22.763,nist,"Kemp and Egan, 1938"
+74-98-6,230.6,320.7,3.98292,819.296,-24.417,nist,"Rips, 1963"
+74-98-6,277.6,360.8,4.53678,1149.36,24.906,nist,"Helgeson and Sage, 1967"
+74-98-6,168.9,247.76,3.92828,803.997,-26.11,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+74-99-7,161.5,254.27,4.95219,1226.123,-1.926,nist,"van Hook, 1967"
+74-99-7,249.9,398,4.03069,818.384,-46.457,nist,"Stull, 1947"
+74-99-7,186.87,266.63,4.24555,935.09,-29.57,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7439-90-9,126.68,208,4.2064,539.004,8.855,nist,"Theeuwes and Bearman, 1970, 2"
+7439-90-9,111.34,129.23,3.7556,416.38,-8.7,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7440-01-9,15.9,27,3.75641,95.599,-1.503,nist,"Stull, 1947"
+7440-01-9,24.33,29.55,3.20934,78.38,-2.6,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7440-37-1,83.78,150.72,3.29555,215.24,-22.233,nist,"Drii and Rabinovich, 1966"
+7440-37-1,90.94,101.48,3.73479,302.683,-6.083,nist,"Clark, Din, et al., 1951, 2"
+7440-37-1,114.4,150.31,4.46903,481.012,22.156,nist,"McCain and Ziegler, 1967"
+7440-37-1,129.33,147.4,4.97171,658.982,49.819,nist,"van Itterbeek, Verbeke, et al., 1963"
+7440-37-1,82.59,94.26,3.74141,304.227,-5.83,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7440-59-7,1.85,5.34,1.6836,8.1548,0.56,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7440-63-3,161.43,162.63,2.83881,326.595,-49.796,nist,"Chen, Lim, et al., 1975"
+7440-63-3,161.7,184.7,3.80675,577.661,-13,nist,"Michels and Wassenaar, 1950"
+7440-63-3,156.43,177.84,3.76779,566.282,-14.49,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7446-09-5,177.7,263,3.48586,668.225,-72.252,nist,"Stull, 1947"
+7446-09-5,263,414.9,4.37798,966.575,-42.071,nist,"Stull, 1947"
+7446-09-5,199.71,279.47,4.4072,999.9,-35.96,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7446-11-9,333,483,4.20515,892.175,-103.564,nist,"Abercromby and Tiley, 1963, 2"
+7446-11-9,284.5,332.04,6.17575,1735.31,-36.65,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-00-3,217.21,285.66,4.16181,1052.821,-32.078,nist,"Gordon and Giauque, 1948"
+75-00-3,211.86,304.89,4.09088,1020.63,-35.58,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-01-4,165.3,259.4,3.98598,892.757,-35.051,nist,"McDonald, Shrader, et al., 1959, 2"
+75-02-5,123.8,201,3.46439,593.551,-30.039,nist,"Stull, 1947"
+75-04-7,190.8,289.8,4.45586,1121.445,-37.854,nist,"Stull, 1947"
+75-04-7,289.8,449,4.53013,1203.822,-23.716,nist,"Stull, 1947"
+75-04-7,220.53,307.55,4.434,1102.88,-40.7,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-05-8,280.41,300.53,5.93296,2345.829,43.815,nist,"Putnam, McEachern, et al., 1965"
+75-05-8,288.3,362.3,4.27873,1355.374,-37.853,nist,"Dojcansky and Heinrich, 1974, 2"
+75-07-0,272.9,307.6,5.1883,1637.083,22.317,nist,"Coles and Popper, 1950"
+75-07-0,293.4,377.5,3.68639,822.894,-69.899,nist,"Bull, Seregrennaja, et al., 1963, 2"
+75-08-1,273.6,339.26,4.07696,1084.531,-41.765,nist,"Osborn and Douslin, 1966"
+75-08-1,308,493,4.44583,1330.977,-8.272,nist,"Stull, 1947"
+75-08-1,229.5,328.99,4.07696,1084.531,-41.765,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-09-2,233,313,4.53691,1327.016,-20.474,nist,"Ganeff and Jungers, 1948"
+75-09-2,303.14,313.14,3.97323,1016.865,-56.623,nist,"Mueller and Ignatowski, 1960, 2"
+75-09-2,235.2,333.36,4.07622,1070.07,-49.91,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-10-5,191.19,241.33,4.26224,821.092,-28.554,nist,"Malbrunot, Meunier, et al., 1968"
+75-10-5,166.23,235.78,4.29712,833.137,-27.29,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-18-3,250.6,293.24,4.28713,1201.134,-29.906,nist,"Osborne, Doescher, et al., 1942, 2"
+75-18-3,231.3,331.47,4.07369,1090.755,-42.351,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-19-4,183.12,241.07,4.05015,870.393,-25.063,nist,"Ruehrwein and Powell, 1946, 3"
+75-19-4,176.3,257.37,4.03084,866.15,-25.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-21-8,182.59,283.59,4.386,1115.1,-29.015,nist,"McDonald, Shrader, et al., 1959, 2"
+75-21-8,273.4,304.9,5.84696,2022.83,62.656,nist,"Coles and Popper, 1950"
+75-25-2,303,374,3.91541,1363.237,-73.148,nist,"Simnikov, 1941"
+75-28-5,188.06,261.54,3.94417,912.141,-29.808,nist,"Aston, Kennedy, et al., 1940"
+75-28-5,261.31,408.12,4.3281,1132.108,0.918,nist,"Das, Reed, et al., 1973"
+75-28-5,190.4,280.25,4.00272,947.54,-24.28,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-29-6,194.3,309.7,3.81944,1022.222,-41.619,nist,"Stull, 1947"
+75-29-6,273,303,4.9762,1631.7,19.836,nist,"Rex, 1906, 2"
+75-31-0,277.07,334.13,4.01507,985.65,-59.079,nist,"Osborn and Douslin, 1968"
+75-31-0,231.38,324.47,4.0553,1005.49,-56.64,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-34-3,212.5,330.6,4.22153,1229.158,-39.204,nist,"Stull, 1947"
+75-34-3,234.38,290.76,4.19431,1215.342,-40.26,nist,"Li and Pitzer, 1956"
+75-34-3,246.6,352.49,4.1678,1201.05,-41.88,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-37-6,160.7,246.7,4.23406,896.171,-34.714,nist,"Stull, 1947"
+75-37-6,187.74,265.89,3.75231,735.16,-52.88,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-43-4,181.8,282.1,4.10065,996.267,-38.978,nist,"Stull, 1947"
+75-43-4,282.1,450.7,4.29721,1105.42,-24.479,nist,"Stull, 1947"
+75-43-4,210.83,300.91,4.02473,959.934,-43.12,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-45-6,229.6,236.4,4.17693,857.673,-26.667,nist,"Kletskii, 1964, 2"
+75-45-6,232.4,358.5,4.36567,947.577,-14.964,nist,"Stull, 1947"
+75-45-6,173.13,247.74,4.13253,835.462,-29.69,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-46-7,145.36,191.19,4.25548,718.089,-22.013,nist,"Valentine, Brodale, et al., 1962"
+75-46-7,142.79,203.75,4.2214,707.396,-23.31,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-50-3,192.84,276.6,4.01613,970.297,-34.06,nist,"Aston, Sagenkahn, et al., 1944"
+75-52-5,328.86,409.6,4.40542,1446.196,-45.633,nist,"McCullough, Scott, et al., 1954"
+75-52-5,405,476,4.1135,1229.574,-76.221,nist,"Berman and West, 1967"
+75-61-6,184.46,295.94,4.28461,1185.48,-18.886,nist,"McDonald, Shrader, et al., 1959, 2"
+75-61-6,217.8,316.42,4.1878,1127.43,-26.35,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-63-8,129.5,215.4,4.58552,1018.31,7.086,nist,"McDonald, Shrader, et al., 1959, 2"
+75-63-8,158.1,230.85,3.8964,731.31,-27.45,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-64-9,292.47,348.36,3.90694,992.719,-62.727,nist,"Osborn and Douslin, 1968"
+75-65-0,312.66,355.56,4.49774,1174.869,-93.92,nist,"Brown, Fock, et al., 1969"
+75-65-0,330.6,363,4.59323,1225.649,-88.316,nist,"Beynon and McKetta, 1963"
+75-65-0,333.93,362.71,4.33258,1095.084,-102.409,nist,"Biddiscombe, Collerson, et al., 1963"
+75-65-0,376.42,506,4.26383,1075.578,-102.588,nist,"Ambrose and Townsend, 1963, 3"
+75-65-0,283,374.1,4.44484,1154.48,-95.5,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-68-3,195.98,282.13,4.05053,928.645,-34.46,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-69-4,236.48,293.04,4.02808,1051.836,-35.287,nist,"Osborne, Garner, et al., 1941"
+75-69-4,243.5,334.3,4.01447,1043.303,-36.602,nist,"Benning and McHarness, 1940, 2"
+75-69-4,218.98,317.57,4.00905,1043.313,-36.2,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-71-8,154.7,243.4,3.81109,782.072,-37.773,nist,"Stull, 1947"
+75-71-8,178.77,260.7,4.01171,868.076,-26.76,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-72-9,123.7,192,3.47599,522.061,-41.473,nist,"Stull, 1947"
+75-72-9,192,325.9,3.37678,500.154,-43.532,nist,"Stull, 1947"
+75-72-9,140.61,205.48,3.90353,654.656,-23.76,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-73-0,89.71,101.46,0.63481,103.578,-61.461,nist,"Smith and Pace, 1969"
+75-73-0,92.51,145.87,4.1682,556.616,-11.43,nist,"Menzel and Mohry, 1933"
+75-73-0,121.59,135.39,3.32027,376.716,-31.901,nist,"Regnier, 1972"
+75-73-0,106.2,155.54,3.95894,510.595,-15.95,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-76-3,208.93,293.64,3.97703,1047.272,-36.057,nist,"Aston, Kennedy, et al., 1941"
+75-77-4,274.3,326.03,3.9656,1123.68,-47.171,nist,"Capková and Fried, 1964"
+75-77-4,275.8,328.8,4.07544,1191,-38,nist,"Jenkins and Chambers, 1954"
+75-79-6,286.9,337.5,3.99703,1167,-47,nist,"Jenkins and Chambers, 1954"
+75-83-2,210.99,289.38,3.7382,1022.204,-49.529,nist,"Kilpatrick and Pitzer, 1946"
+75-83-2,288.53,323.68,3.87973,1081.176,-43.807,nist,"Williamham, Taylor, et al., 1945"
+75-83-2,237.4,345.89,3.8959,1090.16,-42.633,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-85-4,298.12,363.98,4.4667,1261.658,-91.953,nist,"Butler, Ramchandani, et al., 1935, 2"
+75-85-4,299,396.11,3.6442,863.4,-137.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+75-89-8,272.8,298.6,3.56946,855.921,-111.932,nist,"Meeks and Goldfarb, 1967, 2"
+7553-56-2,311.9,456,3.36429,1039.159,-146.589,nist,"Stull, 1947"
+7553-56-2,392.49,487.51,4.1431,1611.9,-67.97,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+76-02-8,305.32,392.58,4.10932,1386.68,-53.447,nist,"McDonald, Shrader, et al., 1959, 2"
+76-05-1,285,344.8,3.34534,1267.252,-52.958,nist,"Kreglewski, 1962, 2"
+76-13-1,247.67,356.5,4.02936,1112.856,-44.119,nist,"Benning and McHarness, 1940, 2"
+76-13-1,237.83,342.87,4.00134,1107.71,-43.51,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+76-14-2,177.8,276.7,3.99574,942.336,-40.518,nist,"Stull, 1947"
+76-14-2,276.7,414.1,4.15162,1031.026,-27.911,nist,"Stull, 1947"
+76-14-2,204.93,295.83,3.93549,930.734,-39.74,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+76-15-3,172.89,250.52,3.93652,795.212,-31.78,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+76-16-4,179.96,195.21,3.98013,677.112,-24.506,nist,"Pace and Aston, 1948"
+76-16-4,175.65,208.8,3.68388,572.733,-39.5,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+76-19-7,193.78,236.81,4.08856,842.613,-30.023,nist,"Pace and Plaush, 1967"
+7616-94-6,167.8,242.15,4.02009,791.727,-29.27,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7647-01-0,122.3,188.3,3.60765,535.172,-39.847,nist,"Stull, 1947"
+7647-01-0,188.3,309.4,4.57389,868.358,1.754,nist,"Stull, 1947"
+7647-01-0,159.97,201,4.2949,745.78,-14.27,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7664-39-3,198.5,292.9,4.16129,1142.985,-17.993,nist,"Stull, 1947"
+7664-39-3,273.17,303.09,4.9148,1556.559,24.199,nist,"Sheft, Perkins, et al., 1973"
+7664-39-3,212.1,312.83,4.80588,1475.6,14.73,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7664-41-7,164,239.6,3.18757,506.713,-80.78,nist,"Stull, 1947"
+7664-41-7,239.6,371.5,4.86886,1113.928,-10.409,nist,"Stull, 1947"
+7664-41-7,193.03,254.31,4.4854,926.132,-32.98,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7698-05-7,160.44,201.37,4.06086,668.2,-23.651,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7704-34-9,527.98,768.55,3.96853,2500.12,-86.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+771-56-2,312.31,411.37,4.217,1396.766,-58.974,nist,"Ambrose, 1968, 2"
+771-61-9,378.6,428.11,4.18813,1377.38,-89.447,nist,"Ambrose, 1968, 2"
+7726-95-6,224.5,331.4,2.94529,638.258,-115.144,nist,"Stull, 1947"
+7726-95-6,343,383,4.70827,1562.264,0.628,nist,"Blair and Ihle, 1973"
+7726-95-6,266,354.25,4.0027,1119.68,-51.77,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7727-37-9,63.14,78,3.63792,257.877,-6.344,nist,"Moussa, Muijlwijk, et al., 1966"
+7727-37-9,63.14,126,3.7362,264.651,-6.788,nist,"Edejer and Thodos, 1967"
+7727-37-9,60.81,83.65,3.61947,255.68,-6.6,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7732-18-5,255.9,373,4.6543,1435.264,-64.848,nist,"Stull, 1947"
+7732-18-5,273,303,5.40221,1838.675,-31.737,nist,"Bridgeman and Aldrich, 1964"
+7732-18-5,293,343,6.20963,2354.731,7.559,nist,"Gubkov, Fermor, et al., 1964"
+7732-18-5,304,333,5.20389,1733.926,-39.485,nist,"Bridgeman and Aldrich, 1964"
+7732-18-5,334,363,5.0768,1659.793,-45.854,nist,"Bridgeman and Aldrich, 1964"
+7732-18-5,344,373,5.08354,1663.125,-45.622,nist,"Bridgeman and Aldrich, 1964"
+7732-18-5,379,573,3.55959,643.748,-198.043,nist,"Liu and Lindsay, 1970"
+7732-18-5,273.2,473.2,5.11564,1687.537,-42.98,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7782-39-0,15.2,18.97,3.14102,77.1349,2.47,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7782-41-4,50,85.3,4.62315,417.961,5.415,nist,"Stull, 1947"
+7782-41-4,53.99,143.99,4.02355,322.067,-4.748,nist,"Straty and Prydz, 1970"
+7782-41-4,61,91.39,3.89078,304.35,-6.61,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7782-44-7,54.36,100.16,3.85845,325.675,-5.667,nist,"Brower and Thodos, 1968"
+7782-44-7,54.36,154.33,3.9523,340.024,-4.144,nist,"Brower and Thodos, 1968"
+7782-44-7,64.29,97.2,3.81634,319.013,-6.45,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7782-49-2,629,953,6.33714,6588.125,86.633,nist,"Stull, 1947"
+7782-49-2,724,1017,4.7565,4213,-71.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7782-50-5,155,239.4,3.0213,530.591,-64.639,nist,"Stull, 1947"
+7782-50-5,239.4,400.3,4.28814,969.992,-12.791,nist,"Stull, 1947"
+7782-50-5,176.31,255.79,4.0628,861.34,-26.82,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7783-06-4,138.8,212.8,4.43681,829.439,-25.412,nist,"Stull, 1947"
+7783-06-4,212.8,349.5,4.52887,958.587,-0.539,nist,"Stull, 1947"
+7783-06-4,185.51,227.2,4.22882,806.933,-21.76,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7783-07-5,157.8,232.1,3.61665,596.484,-66.353,nist,"Stull, 1947"
+7783-07-5,177,213,4.7603,927.6,-33.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7783-41-7,77,128.5,5.26568,758.401,15.742,nist,"Stull, 1947"
+7783-41-7,93.1,137.4,4.36109,545.05,-3.24,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7783-54-2,146.72,196.43,3.90456,501.913,-57.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7783-60-0,160.8,224,3.86848,706.12,-53.207,nist,"Brown and Robinson, 1955, 2"
+7783-60-0,170,249.92,3.9644,823.4,-25.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7787-71-5,309.09,421.28,4.85464,1673.95,-53.67,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7789-20-0,379,573,5.15107,1700.073,-44.013,nist,"Liu and Lindsay, 1970"
+7789-20-0,335.17,394.54,5.04327,1616.76,-53.61,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7789-30-2,203.8,313.6,4.79777,1411.692,-19.763,nist,"Stull, 1947"
+7789-30-2,236.8,334.31,4.39858,1219.28,-36.75,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+78-10-4,289,441.7,4.17312,1561.277,-67.572,nist,"Stull, 1947"
+78-78-4,190.3,300.9,3.90935,1018.516,-40.081,nist,"Stull, 1947"
+78-78-4,289.44,301.74,3.91457,1020.012,-40.053,nist,"Williamham, Taylor, et al., 1945"
+78-78-4,300.9,453.5,3.97183,1021.864,-43.231,nist,"Stull, 1947"
+78-78-4,221.72,322.32,3.92023,1022.88,-39.69,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+78-81-9,223,341.8,4.41304,1317.873,-42.421,nist,"Stull, 1947"
+78-81-9,258.31,363.04,3.9007,1055.56,-69.8,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+78-83-1,353.36,388.77,4.43126,1236.991,-101.528,nist,"Biddiscombe, Collerson, et al., 1963, 2"
+78-83-1,422.64,547.71,4.40062,1260.453,-92.588,nist,"Ambrose and Townsend, 1963, 3"
+78-83-1,303.4,400.84,4.34504,1190.38,-106.48,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+78-84-2,286.08,336,3.87395,1060.141,-63.196,nist,"Seprakova, Paulech, et al., 1959"
+78-86-4,252.6,364.62,4.1222,1245.2,-38.75,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+78-92-2,345.54,380.3,4.32943,1158.672,-104.683,nist,"Biddiscombe, Collerson, et al., 1963, 2"
+78-92-2,422.11,535.9,4.19827,1094.254,-111.603,nist,"Ambrose and Townsend, 1963, 2"
+78-93-3,314.6,370.6,3.9894,1150.207,-63.904,nist,"Nickerson, Kobe, et al., 1961"
+78-93-3,265.62,375.66,4.1386,1232.63,-54.46,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7803-51-2,143.8,185.7,4.02591,702.651,-11.065,nist,"Stull, 1947"
+7803-51-2,137.44,199.46,3.84049,645.512,-17.08,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+79-09-4,345.54,401.49,4.74558,1679.869,-59.832,nist,"Dreisbach and Shrader, 1949"
+79-09-4,321.72,437.41,4.75466,1662.582,-64.104,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+79-20-9,274.91,328.99,4.20364,1164.426,-52.69,nist,"Polák and Mertl, 1965"
+79-20-9,249.9,351.11,4.18621,1156.43,-53.46,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+79-29-8,287.41,331.94,3.93473,1127.187,-44.2,nist,"Williamham, Taylor, et al., 1945"
+79-29-8,244.2,354.43,3.93486,1127.4,-44.184,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+79-31-2,330.7,425,2.23908,459.215,-220.378,nist,"Kahlbaum, 1883"
+79-31-2,334,453.31,3.71153,1097.83,-131.41,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+79-38-9,206.33,262.28,4.02636,850.498,-33.246,nist,"Oliver, Grisard, et al., 1951"
+80-62-6,312.4,362.3,5.37785,1945.56,-7.569,nist,"Brockhaus and Jenckel, 1956"
+811-97-2,186.41,263.04,4.11874,850.881,-40.16,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+821-55-6,305.3,468,4.72392,2030.504,-37.948,nist,"Stull, 1947"
+84-66-2,382,567,5.45,2916.977,-31.406,nist,"Stull, 1947"
+84-74-2,398.8,475.2,4.30568,2083.175,-131.7,nist,"Hammer and Lydersen, 1957"
+85-01-8,373,423,4.51922,2428.448,-70.96,nist,"Osborn and Douslin, 1975, 2"
+85-01-8,476.8,619.9,4.6894,2673.32,-40.7,nist,"Mortimer and Murphy, 1923"
+85-01-8,461.6,650,4.37081,2329.54,-77.87,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+872-05-9,359.92,444.8,4.08526,1501.872,-75.572,nist,"Forziati, Camin, et al., 1950, 2"
+89-83-8,337.5,505,5.29395,2522.332,-28.575,nist,"Stull, 1947"
+90-00-6,359,480.7,5.32312,2469.434,-16.292,nist,"von Terres, Gebert, et al., 1955, 2"
+90-00-6,423.57,491.19,4.13274,1549.245,-102.272,nist,"Biddiscombe, Handley, et al., 1963, 2"
+90-00-6,367.9,506.61,4.13365,1550.44,-102.076,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+90-12-0,415.29,518.48,4.16082,1826.948,-78.148,nist,"Camin and Rossini, 1955"
+90-12-0,389.93,551.4,4.16082,1826.948,-78.148,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+91-20-3,353.48,452.3,4.27117,1831.571,-61.329,nist,"Fowler, Trump, et al., 1968"
+91-20-3,399.47,491.79,3.97067,1606.529,-85.923,nist,"Camin and Rossini, 1955"
+91-20-3,368.44,523.4,4.13555,1733.71,-71.291,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+91-22-5,437.82,511.09,3.94043,1667.104,-87.085,nist,"Malanowski, 1961, 2"
+91-22-5,385.18,543.11,4.1949,1812.25,-77.7,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+91-57-6,412.34,514.91,4.1934,1840.268,-74.755,nist,"Camin and Rossini, 1955"
+91-57-6,387.07,547.5,4.1934,1840.268,-74.755,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+92-52-4,342.3,544.3,4.35685,1987.623,-71.556,nist,"Cunningham, 1930, 2"
+92-52-4,400.77,561.6,4.1887,1841.48,-88,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+93-58-3,384.03,472.3,1.95374,474.908,-232.81,nist,"Dreisbach and Shrader, 1949"
+93-89-0,317,486.6,4.76503,2139.509,-37.032,nist,"Stull, 1947"
+95-47-6,273,323,4.93755,1901.373,-26.268,nist,"Pitzer and Scott, 1943"
+95-47-6,336.61,418.52,4.12928,1478.244,-59.076,nist,"Williamham, Taylor, et al., 1945"
+95-47-6,312.75,445.3,4.09789,1458.706,-61.109,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+95-48-7,393.37,464.1,3.96775,1391.332,-112.974,nist,"Dreisbach and Shrader, 1949"
+95-48-7,357.8,492.11,4.1834,1534.54,-96.85,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+95-50-1,293.14,453.57,4.19518,1649.55,-59.836,nist,"McDonald, Shrader, et al., 1959"
+95-53-4,391.61,473.5,4.19168,1617.232,-87.126,nist,"Dreisbach and Shrader, 1949"
+95-63-6,358,443.53,4.16873,1573.267,-64.586,nist,"Forziati, Norris, et al., 1949, 2"
+95-63-6,332.64,471.34,4.17692,1579.353,-63.86,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+95-65-8,445.08,502.1,4.17211,1598.887,-116.356,nist,"Andon, Biddiscombe, et al., 1960"
+95-65-8,388.5,529.34,4.21183,1627.78,-113.109,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+95-87-4,417.07,484.89,4.1285,1558.233,-106.33,nist,"Andon, Biddiscombe, et al., 1960"
+95-87-4,373.66,513.46,4.13449,1563.14,-105.697,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+95-92-1,320.6,458.9,5.98158,2537.141,-34.06,nist,"Stull, 1947"
+95-93-2,318,469.1,2.9204,908.263,-160.447,nist,"Stull, 1947"
+95-93-2,354.8,500.2,4.18329,1660.56,-72.51,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+96-14-0,288.44,337.23,3.97377,1152.368,-46.021,nist,"Williamham, Taylor, et al., 1945"
+96-14-0,249,359.72,3.99283,1162.37,-44.864,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+96-22-0,309.51,374.8,2.86542,716.17,-125.978,nist,"Dreisbach and Shrader, 1949"
+96-22-0,329.69,384.5,4.14917,1309.653,-59.032,nist,"Collerson, Counsell, et al., 1965, 2"
+96-22-0,281.9,399.12,4.42708,1481.17,-40.14,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+96-37-7,288.18,345.78,3.98773,1186.059,-47.108,nist,"Williamham, Taylor, et al., 1945"
+96-37-7,255.06,368.58,4.18199,1295.543,-34.76,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+96-47-9,263.44,377.49,3.95009,1175.51,-55.348,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+97-85-8,277.3,420.7,4.76033,1806.356,-40.698,nist,"Stull, 1947"
+98-01-1,329.02,433.9,4.09355,1430.133,-84.449,nist,"Matthews, Sumner, et al., 1950, 2"
+98-06-6,357.03,443.31,4.0454,1504.572,-69.822,nist,"Forziati, Norris, et al., 1949, 2"
+98-82-8,343.17,426.52,4.05419,1455.811,-65.948,nist,"Williamham, Taylor, et al., 1945"
+98-82-8,318.92,453.81,4.06112,1460.766,-65.32,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+98-86-2,310.3,475.6,4.64896,2006.397,-43.472,nist,"Stull, 1947"
+99-87-6,380.19,451.57,4.16214,1599.29,-65.491,nist,"McDonald, Shrader, et al., 1959"
+99-87-6,338.28,479.6,4.17215,1606.89,-64.58,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
