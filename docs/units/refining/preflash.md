@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.preflash:Preflash` | flash drum on the assay stream (spec U-H1 PT flash at the drum conditions; vapour to vapor_out, pooled liquid to liquid_out) |
-| R2 | planned | — | short MESH |
+| R2 | planned | — | short MESH; a 5-stage partial-condenser column on the 48-species example feed does not finish in 560 s (dense NS, spec S0-1c step 2) |
 
 ### R0 parameters
 

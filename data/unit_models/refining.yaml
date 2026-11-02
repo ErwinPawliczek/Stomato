@@ -176,8 +176,10 @@
     R2:
       status: planned
       params: {}
-      note: MESH with side strippers, pumparounds, stripping steam, overflash
-        (U-E 6 extensions; needs column_extensions, P1-11)
+      note: MESH with side strippers, pumparounds, stripping steam, overflash;
+        blocked on spec S0-1c steps 2-4 (the simultaneous stripper solve; the
+        column refuses side_strippers), P1-13, and pseudo-component cost (the dense
+        NS does not finish a 5-stage 48-species column in 560 s)
       end_state: true
   pid_symbol: T
   references:
@@ -311,7 +313,9 @@
     R2:
       status: planned
       params: {}
-      note: MESH with pumparounds, no condenser, wash zone
+      note: MESH with pumparounds, no condenser, wash zone; a zero-tear
+        6-stage column on the 19-pseudo example feed does not finish in 280 s
+        (dense NS), which the sparse solver of S0-1c step 2 is meant to fix
       end_state: true
   pid_symbol: T
   references:
@@ -355,7 +359,8 @@
     R2:
       status: planned
       params: {}
-      note: short MESH
+      note: short MESH; a 5-stage partial-condenser column on the 48-species
+        example feed does not finish in 560 s (dense NS, spec S0-1c step 2)
       end_state: true
   pid_symbol: FL
   references:

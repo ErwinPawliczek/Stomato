@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.vacuum_column:VacuumColumn` | cut-point fractionation at flash-zone P (spec U-H1 sharp cut on the reduced-crude feed; single VGO draw, the row's three ports) |
-| R2 | planned | — | MESH with pumparounds, no condenser, wash zone |
+| R2 | planned | — | MESH with pumparounds, no condenser, wash zone; a zero-tear 6-stage column on the 19-pseudo example feed does not finish in 280 s (dense NS), which the sparse solver of S0-1c step 2 is meant to fix |
 
 ### R0 parameters
 
