@@ -67,6 +67,8 @@ PLAN_TO_ID = {
     "Predictive SRK with Gmehling T-dependent groups": "psrk",
     "Grayson-Streed with Lee-Kesler enthalpies": "grayson-streed",
     "Chao-Seader with Lee-Kesler enthalpies": "chao-seader",
+    "physical solvents (Selexol-type) in gamma-phi": "depg_henry",
+    "glycol package (TEG/MEG dehydration, tuned PR)": "glycol_pr",
 }
 _VAPOUR = {
     "ideal gas": "ig",

@@ -1,0 +1,27 @@
+# Gas solubility in DEPG (Selexol-type solvent) at 25 C (row depg_henry).
+#
+# Burr, B. & Lyddon, L., 'A Comparison of Physical Solvents for Acid Gas Removal',
+# Bryan Research & Engineering (GPA paper, revised), Tables 1-3, the measured data of
+# Bucklin & Schendel (1984), https://www.bre.com/PDF/A-Comparison-of-Physical-Solvents-
+# for-Acid-Gas-Removal-REVISED.pdf, fetched 2026-11-01. DEPG: molar mass 280 g/mol,
+# density 1030 kg/m3.
+#
+# Only 25 C exists openly: Xu, Schutte & Hepler (25-70 C) was found by citation only.
+# The row therefore has no temperature dependence and a +/- 5 K window. relative_to_co2
+# is the source's relative solubility; co2_vv its CO2 solubility, volume of gas per
+# volume of solvent at 25 C, 1 atm.
+#
+# DEPG is a mixture (n = 2-9). The stream component is tetraglyme, CAS 143-24-8, as a
+# proxy: 222 g/mol against the source's 280. The Henry constants below stay on the
+# 280 g/mol DEPG mole basis the data defines.
+solvent_cas: 143-24-8
+solvent_molar_volume_m3_mol: 2.718e-4  # 0.280 kg/mol / 1030 kg/m3
+gas_molar_volume_m3_mol: 0.024465  # ideal gas, 25 C, 1 atm; the source does not state its basis
+co2_vv: 3.63
+relative_to_co2:
+  CO2: 1.0
+  H2S: 8.82
+  C1: 0.066
+  CO: 0.028
+  H2: 0.013
+  N2: 0.020

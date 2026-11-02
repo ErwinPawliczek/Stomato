@@ -750,3 +750,49 @@
       is identically zero and the check's normalisation degenerates to 0/0
   l0_note: the round-trip and Cp points use a subcritical pair because the ideal liquid is undefined
     for a component above its critical temperature (the braun-k10 row's C1/C3 point has C1 at 300 K)
+- id: depg_henry
+  name: Physical solvent (DEPG Selexol-type) Henry solubility at 25 C
+  family: kvalue
+  adapter: ngdesign.thermo.kvalue:DepgHenryThermo
+  options:
+    k_model: physical_solvent
+    enthalpy: ideal
+  params:
+    source: data/thermo_params/kvalue/depg.yaml
+    provenance: Burr & Lyddon solubilities of CO2, H2S, CH4, CO, H2 and N2 in DEPG (Bucklin & Schendel
+      1984 data) at 25 C and 1 atm, read as Henry constants; gamma = 1. Tetraglyme is the stream
+      component standing in for the DEPG mixture. No temperature dependence is available openly,
+      so the flash refuses outside 293.15-303.15 K
+  applicability:
+    component_classes:
+    - acid_gas
+    - light_gas
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K: [293.15, 303.15]
+    P_Pa: [10000.0, 10000000.0]
+    phases: [V, L]
+  status: provisional
+  validation: []
+  references:
+  - Burr, B. & Lyddon, L., A Comparison of Physical Solvents for Acid Gas Removal, Bryan Research
+    & Engineering
+  l0:
+    round_trip:
+      z: {143-24-8: 0.95, CO2: 0.05}
+      states: [[298.15, 2000000.0]]
+    dhdT_cp:
+      z: {143-24-8: 0.5, CO2: 0.5}
+      state: [298.15, 100000.0]
+      phase: vapor
+    single_liquid_limit:
+      z: {143-24-8: 0.95, CO2: 0.05}
+      state: [298.15, 2000000.0]
+    determinism:
+      z: {143-24-8: 0.9, CO2: 0.1}
+      state: [298.15, 1000000.0]
+  l0_excluded:
+    pure_psat_limit: the row refuses a feed with no gas solubility data and the solvent's Psat is about 0.1 Pa, below its pressure window; the claimed surface is gas in solvent
+    phase_identification: same basis as pure_psat_limit
+    gibbs_duhem: the K-values are composition-independent, so the residual is identically zero and the check's normalisation degenerates to 0/0, as for braun-k10
