@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / "docs" / "coverage-gaps.md"
 
 #: Rows that register but refuse at first use: listed, not implemented.
-REFUSAL_ROWS = {"eos_cg", "soft_saft"}
+REFUSAL_ROWS = {"soft_saft"}
 
 #: Plan names that are not a normalised form of a row name or id.
 PLAN_TO_ID = {
@@ -58,6 +58,15 @@ PLAN_TO_ID = {
     "PR with Boston-Mathias extrapolation above Tc": "pr-boston-mathias",
     "SRK with Boston-Mathias extrapolation above Tc": "srk-boston-mathias",
     "Ideal + Henry for dilute gases in water": "henry-sander",
+    "NRTL two-parameter / five-parameter (T-dependent) forms": "nrtl_tdep_hoc",
+    "UNIQUAC two-parameter / T-dependent forms": "uniquac_tdep_ig",
+    "Wilson liquid-reference (Wilson-LR, Wilson-GLR)": "wilson_lr_ig",
+    "UNIFAC with Lyngby / Dortmund T-dependence switch": "unifac_lyngby_ig",
+    "PR / SRK with Rackett liquid density": "pr-rackett",
+    "PR / SRK with COSTALD liquid density": "pr-costald",
+    "Predictive SRK with Gmehling T-dependent groups": "psrk",
+    "Grayson-Streed with Lee-Kesler enthalpies": "grayson-streed",
+    "Chao-Seader with Lee-Kesler enthalpies": "chao-seader",
 }
 _VAPOUR = {
     "ideal gas": "ig",
