@@ -361,14 +361,34 @@
       description: bottoms
   levels:
     R2:
-      status: planned
-      params: {}
-      note: MESH with two liquids per stage
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.three_phase_stages:ThreePhaseStages
+      params:
+        type: object
+        required: [n_stages, condenser, reboiler, feed_stage, specs]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, description: 'equilibrium stages, 1..N top to bottom'}
+          condenser: {type: string, description: 'total | partial | none'}
+          reboiler: {type: string, description: 'kettle | none'}
+          feed_stage: {type: integer, description: feed stage}
+          pressure_profile: {type: number, description: 'top pressure or per-stage profile, Pa'}
+          specs: {type: object, description: 'one spec per tear, as the column row'}
+      note: MESH on the overall (pooled) stage liquid with K = y/xbar from the stage VLLE flash; the split is reported per stage and a re-flash gate refuses stages off equilibrium; no decanter, both liquids flow down together
+      validation: []
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 7
-  notes: roadmap.
+  - Block & Hegner, AIChE J. 22 (1976) 582
+  - Cairns & Furzer, I&EC Res. 29 (1990) 1349
+  notes: >-
+    V1 gap — provisional without a case; checked by isofugacity of the
+    three reported phases, a stage audit on fresh three-phase flashes, and the
+    single-liquid reduction
+    (tests/units/column_shortcut/test_three_phase_stages.py). Measured limit: a
+    two-tear wet nC6/nC7 column with a total condenser does not converge
+    (M = 1 from the cold seed), so the example is a one-tear kettle column.
 
 - id: reactive_stages
   name: Reactive stages (equilibrium / kinetic)

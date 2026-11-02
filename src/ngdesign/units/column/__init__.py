@@ -168,7 +168,9 @@ class Column:
                 "condenser_water_decant is parsed but the condenser free-water "
                 "decant is not implemented (S0-1c step 4)"
             )
-        tb = _ThermoBox(thermo, min(parsed.pressures), max(parsed.pressures))
+        tb = _ThermoBox(
+            thermo, min(parsed.pressures), max(parsed.pressures), pool_liquids=parsed.pool_liquids
+        )
         col = _build_column(parsed, tb)
 
         prof = _solve_specs(col, tb, parsed)

@@ -40,8 +40,13 @@ class _ThermoBox:
     callers keep the previous K or the CC estimate in that case.
     """
 
-    def __init__(self, thermo: Thermo, p_anchor_lo: float, p_anchor_hi: float) -> None:
+    def __init__(
+        self, thermo: Thermo, p_anchor_lo: float, p_anchor_hi: float, pool_liquids: bool = False
+    ) -> None:
         self._thermo = thermo
+        #: Three-phase stages: every liquid of a flash counts as THE stage
+        #: liquid (see ``_liquid``). False keeps the first-liquid reading.
+        self.pool_liquids = pool_liquids
         self._pt_cache: dict[tuple[Any, ...], StreamState] = {}
         self._k_cache: dict[tuple[Any, ...], dict[str, float] | None] = {}
         self._bubble_cache: dict[tuple[Any, ...], float | None] = {}
@@ -63,6 +68,33 @@ class _ThermoBox:
             self._pt_cache[key] = hit
         return hit
 
+    def _liquid(self, state: StreamState) -> tuple[dict[str, float], float, float] | None:
+        """(composition, enthalpy, cp) of the state's liquid; None without one.
+
+        Plain columns read the first liquid phase. With ``pool_liquids`` every
+        liquid is pooled by its phase fraction into one pseudo-liquid, the
+        MESH-with-overall-liquid formulation of three-phase columns (Block &
+        Hegner, AIChE J. 22 (1976) 582; Cairns & Furzer, I&EC Res. 29 (1990)
+        1349): K_i = y_i / xbar_i, where xbar is what the stage cascade carries
+        and the split between the liquids is a stage-local flash result. The
+        pooled enthalpy is the mole-weighted phase enthalpy, and the cp is
+        weighted likewise: it is only the slope of the frozen inner line.
+        """
+        liquids = [p for p in state.phases if p.kind != PhaseKind.VAPOR]
+        if not liquids:
+            return None
+        if not self.pool_liquids or len(liquids) == 1:
+            first = liquids[0]
+            return first.composition, first.enthalpy, first.cp
+        total = sum(p.mole_fraction for p in liquids)
+        comp: dict[str, float] = {}
+        for p in liquids:
+            for cid, frac in p.composition.items():
+                comp[cid] = comp.get(cid, 0.0) + frac * p.mole_fraction / total
+        h = sum(p.enthalpy * p.mole_fraction for p in liquids) / total
+        cp = sum(p.cp * p.mole_fraction for p in liquids) / total
+        return comp, h, cp
+
     def _k_from_state(self, state: StreamState) -> dict[str, float] | None:
         """K_i = y_i/x_i from a flashed state's phases; None when single-phase.
 
@@ -75,13 +107,14 @@ class _ThermoBox:
         if not 1e-6 < state.vapor_fraction < 1.0 - 1e-6:
             return None
         vap = next((p for p in state.phases if p.kind == PhaseKind.VAPOR), None)
-        liq = next((p for p in state.phases if p.kind != PhaseKind.VAPOR), None)
+        liq = self._liquid(state)
         if vap is None or liq is None:
             return None
+        liq_comp = liq[0]
         out: dict[str, float] = {}
         for cid in state.composition:
             y = vap.composition.get(cid, 0.0)
-            x = liq.composition.get(cid, 0.0)
+            x = liq_comp.get(cid, 0.0)
             if x > 0.0 and y > 0.0:
                 out[cid] = max(y / x, 1e-12)
             elif y > 0.0:
@@ -128,10 +161,10 @@ class _ThermoBox:
         if not 1e-6 < state.vapor_fraction < 1.0 - 1e-6:
             return None
         vap = next((p for p in state.phases if p.kind == PhaseKind.VAPOR), None)
-        liq = next((p for p in state.phases if p.kind != PhaseKind.VAPOR), None)
+        liq = self._liquid(state)
         if vap is None or liq is None:
             return None
-        return (vap.enthalpy, vap.cp, T), (liq.enthalpy, liq.cp, T)
+        return (vap.enthalpy, vap.cp, T), (liq[1], liq[2], T)
 
     def pure_psat(self, cid: str, T: float) -> float | None:
         """Pure-component vapour pressure (Pa) at T (K); None at or above Tc."""
@@ -271,10 +304,12 @@ class _ThermoBox:
         state = self.pt(z, T, P)
         if vapor:
             phase = next((p for p in state.phases if p.kind == PhaseKind.VAPOR), None)
+            if phase is not None:
+                return phase.enthalpy, phase.cp, T
         else:
-            phase = next((p for p in state.phases if p.kind != PhaseKind.VAPOR), None)
-        if phase is not None:
-            return phase.enthalpy, phase.cp, T
+            liquid = self._liquid(state)
+            if liquid is not None:
+                return liquid[1], liquid[2], T
         kind = PhaseKind.VAPOR if vapor else PhaseKind.HC_LIQUID
         props = self._thermo.phase_props(z, T, P, kind)
         return props.enthalpy, props.cp, T

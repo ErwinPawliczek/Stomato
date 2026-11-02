@@ -283,6 +283,9 @@ class _Params:
     stage_heaters: list[_StageHeater] = field(default_factory=list)
     #: Kinetic stages (None = no reaction, the plain column exactly).
     reactions: _StageReactions | None = None
+    #: Two liquids per stage, carried as one pooled liquid (False = first
+    #: liquid only, the plain column exactly).
+    pool_liquids: bool = False
 
 
 def _positive(value: Any, name: str) -> float:
@@ -501,7 +504,15 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
         condenser_water_decant=decant,
         stage_heaters=heaters,
         reactions=_parse_reactions(params, n_stages),
+        pool_liquids=_parse_pool_liquids(params),
     )
+
+
+def _parse_pool_liquids(params: Mapping[str, Any]) -> bool:
+    raw = params.get("pool_liquids", False)
+    if not isinstance(raw, bool):
+        raise ColumnSpecError(f"pool_liquids must be a bool, got {raw!r}")
+    return raw
 
 
 def _duty_stages(params: Mapping[str, Any], n_stages: int) -> list[tuple[int, str]]:
