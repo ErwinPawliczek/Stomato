@@ -3120,3 +3120,431 @@
         EtOH: 0.5
         H2O: 0.5
   l0_excluded: {}
+- id: nrtl_tdep_hoc
+  name: NRTL T-dependent form + Hayden-O'Connell vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: nrtl_tdep
+    vapour: hoc
+  params:
+    source: data/thermo_params/nrtl/tdep_pairs.yaml
+    provenance: tau_ij = a_ij + b_ij / T from the IUPAC 2011-037-2-100 preliminary methanol + water selection, with per-entry provenance in the file; the only pair the row covers, any other refuses
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    polar: true
+    electrolyte: false
+    T_K:
+    - 300.0
+    - 420.0
+    P_Pa:
+    - 1000.0
+    - 1000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Renon, H. & Prausnitz, J. M., AIChE J. 14(1), 135-144, 1968
+  - IUPAC Project 2011-037-2-100, Supporting Information 1 (VLE), preliminary selection
+
+  l0:
+    pure_psat_limit:
+      points:
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 350.0
+    phase_identification:
+      points:
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 400.0
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    single_liquid_limit:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 298.15
+      - 100000.0
+  l0_excluded: {}
+- id: uniquac_tdep_ig
+  name: UNIQUAC T-dependent form + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: uniquac_tdep
+    vapour: ideal
+  params:
+    source: data/thermo_params/uniquac/tdep_pairs.yaml
+    provenance: tau_ij = exp(a_ij + b_ij / T) and r, q from Guevara Luna et al. 2018, with per-entry provenance in the file; the only pair the row covers, any other refuses
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    polar: true
+    electrolyte: false
+    T_K:
+    - 298.15
+    - 373.15
+    P_Pa:
+    - 1000.0
+    - 1000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Abrams, D. S. & Prausnitz, J. M., AIChE J. 21(1), 116-128, 1975
+  - Guevara Luna, M. A. et al., Tecciencia 13(24), 2018, doi 10.18180/tecciencia.2018.24.3
+
+  l0:
+    pure_psat_limit:
+      points:
+      - - EtOH
+        - 350.0
+      - - H2O
+        - 350.0
+    phase_identification:
+      points:
+      - - EtOH
+        - 350.0
+      - - H2O
+        - 400.0
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          EtOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+    single_liquid_limit:
+      z:
+        EtOH: 0.5
+        H2O: 0.5
+      state:
+      - 298.15
+      - 100000.0
+  l0_excluded: {}
+- id: nrtl_sac_ig
+  name: NRTL-SAC (segment activity)
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: nrtl_sac
+    vapour: ideal
+  params:
+    source: data/thermo_params/nrtl_sac/segments.yaml
+    provenance: segment binaries and solvent segment numbers from the authors' patent family (Chen & Song, US 2010/0114542 A1 Tables 2-3, US 8,527,210 B2 Table 3); the journal paper was unreachable. Per-entry provenance in the file. The Flory-Huggins combinatorial term is printed differently across secondary sources; the form used is the one that gives 1 - r_I / rbar. A screening model, not a correlation of the binary
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 273.15
+    - 450.0
+    P_Pa:
+    - 1000.0
+    - 1000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Chen, C.-C. & Song, Y., Ind. Eng. Chem. Res. 43(26), 8354-8362, 2004
+  - Chen, C.-C. & Song, Y., US Patent 8,527,210 B2
+
+  l0:
+    pure_psat_limit:
+      points:
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 350.0
+    phase_identification:
+      points:
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 400.0
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    single_liquid_limit:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 298.15
+      - 100000.0
+  l0_excluded: {}
+- id: wilson_lr_ig
+  name: Wilson liquid-reference (Wilson-LR)
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: wilson
+    vapour: ideal
+    caloric: liquid_reference
+  params:
+    source: ChemSep Wilson table as wilson_ig; databank liquid heat capacities
+    provenance: K-values as wilson_ig. Liquid H and S integrate the databank liquid heat capacity from 298.15 K, where they meet the wilson_ig values, instead of following the Psat route
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 273.15
+    - 500.0
+    P_Pa:
+    - 1000.0
+    - 1000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Aspen Technology, Aspen Physical Property System, Physical Property Methods and Models 10.1, 1999, pp. 3-119 to 3-123 (method definition only; no parameters taken)
+  - Wilson, G. M., J. Am. Chem. Soc. 86(2), 127-130, 1964
+
+  l0:
+    pure_psat_limit:
+      points:
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 350.0
+    phase_identification:
+      points:
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 400.0
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    single_liquid_limit:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 298.15
+      - 100000.0
+  l0_excluded: {}
+- id: wilson_glr_ig
+  name: Wilson gas-liquid reference (Wilson-GLR)
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: wilson
+    vapour: ideal
+    caloric: gas_liquid_reference
+  params:
+    source: ChemSep Wilson table as wilson_ig; databank liquid heat capacities
+    provenance: K-values as wilson_ig. Components boiling at or above 298.15 K take the Wilson-LR liquid route, lighter ones keep the wilson_ig route, following the manual's RSTATE split
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 273.15
+    - 500.0
+    P_Pa:
+    - 1000.0
+    - 1000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Aspen Technology, Aspen Physical Property System, Physical Property Methods and Models 10.1, 1999, pp. 3-119 to 3-123 (method definition only; no parameters taken)
+  - Wilson, G. M., J. Am. Chem. Soc. 86(2), 127-130, 1964
+
+  l0:
+    pure_psat_limit:
+      points:
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 350.0
+    phase_identification:
+      points:
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 400.0
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    single_liquid_limit:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 298.15
+      - 100000.0
+  l0_excluded: {}

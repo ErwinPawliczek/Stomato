@@ -23,6 +23,12 @@ assignment for the variant raises naming the component; pseudo-components raise
 naming them; a correlation returning None (regular solution) raises naming the
 component. A missing parameter is an error, not an ideal gas.
 
+The extended liquids: ``wohl3`` (three-suffix Wohl on the Margules pairs),
+``nrtl_tdep`` and ``uniquac_tdep`` (tau_ij with a_ij + b_ij/T from cited tables in
+data/thermo_params/<model>/tdep_pairs.yaml) and ``nrtl_sac`` (segment activity,
+data/thermo_params/nrtl_sac/segments.yaml). The ``caloric`` option moves the liquid
+enthalpy route without touching the K-values (:class:`LiquidReferenceLiquid`).
+
 Three liquid phases (VLLE) are wired for the models whose parameterizations
 support liquid-liquid splits (NRTL, UNIQUAC, UNIFAC-LLE); the remaining models
 flash two-phase (VLE) through the same saturation path.
@@ -71,7 +77,8 @@ from ngdesign.data import DATABANK_LOCK
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.thermo import _state, virial
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
-from ngdesign.thermo.ge_models import Margules, VanLaar, WohlThreeSuffix
+from ngdesign.thermo.ge_models import NRTL_SAC_SEGMENTS, Margules, NrtlSac, VanLaar, WohlThreeSuffix
+from ngdesign.thermo.options import GammaPhiCaloric
 
 # The ideal-gas vapour is not a CEOS class; without this registration the
 # shared state layer counts an all-ideal-gas state as liquid (vf stuck at 0).
@@ -96,6 +103,9 @@ _DISPLAY: dict[str, str] = {
     "vanlaar": "van Laar",
     "margules": "Margules",
     "wohl3": "the three-suffix Wohl model",
+    "nrtl_tdep": "T-dependent NRTL",
+    "uniquac_tdep": "T-dependent UNIQUAC",
+    "nrtl_sac": "NRTL-SAC",
     "regular_solution": "the regular-solution model",
 }
 
@@ -376,6 +386,64 @@ def _reference_liquid_volumes(ids: tuple[str, ...], cas_list: list[str], correla
     return volumes
 
 
+@cache
+def _tdep_config(model: str) -> dict[str, Any]:
+    """Parsed data/thermo_params/<model>/tdep_pairs.yaml."""
+    parsed: dict[str, Any] = yaml.safe_load((PARAMS_DIR / model / "tdep_pairs.yaml").read_text())
+    return parsed
+
+
+def _tdep_matrices(
+    model: str, keys: tuple[str, ...], ids: tuple[str, ...], cas_list: list[str]
+) -> list[list[list[float]]]:
+    """One N x N matrix per named coefficient; a pair with no entry raises naming it."""
+    n = len(ids)
+    out = [[[0.0] * n for _ in range(n)] for _ in keys]
+    pairs = _tdep_config(model)["pairs"]
+    for i in range(n):
+        for j in range(i + 1, n):
+            entry = next((e for e in pairs.values() if set(e["pair"]) == {ids[i], ids[j]}), None)
+            if entry is None:
+                raise ValueError(
+                    f"no temperature-dependent {model} parameters for pair {ids[i]} ({cas_list[i]}) / "
+                    f"{ids[j]} ({cas_list[j]}) in data/thermo_params/{model}/tdep_pairs.yaml; refusing "
+                    "to flash a zero-filled (ideal) pair matrix"
+                )
+            forward = entry["pair"][0] == ids[i]
+            for matrix, key in zip(out, keys, strict=True):
+                first, second = entry[key]
+                matrix[i][j], matrix[j][i] = (first, second) if forward else (second, first)
+    return out
+
+
+def _nrtl_sac_factory(ids: tuple[str, ...], cas_list: list[str]) -> Any:
+    """Callable(xs) building one NRTL-SAC model; a solvent with no segments raises naming it."""
+    table = yaml.safe_load((PARAMS_DIR / "nrtl_sac" / "segments.yaml").read_text())
+    solvents = table["solvents"]
+    segments: list[list[float]] = []
+    for cid, cas in zip(ids, cas_list, strict=True):
+        entry = solvents.get(cas)
+        if entry is None:
+            raise ValueError(
+                f"no NRTL-SAC segment numbers for {cid} ({cas}) in "
+                "data/thermo_params/nrtl_sac/segments.yaml; refusing to predict"
+            )
+        segments.append([float(entry[name]) for name in NRTL_SAC_SEGMENTS])
+    order = {name: i for i, name in enumerate(NRTL_SAC_SEGMENTS)}
+    n_seg = len(NRTL_SAC_SEGMENTS)
+    tau = [[0.0] * n_seg for _ in range(n_seg)]
+    alpha = [[0.0] * n_seg for _ in range(n_seg)]
+    for row in table["binary"]:
+        a, b = order[row["pair"][0]], order[row["pair"][1]]
+        tau[a][b], tau[b][a] = float(row["tau12"]), float(row["tau21"])
+        alpha[a][b] = alpha[b][a] = float(row["alpha"])
+
+    def make(xs: list[float]) -> GibbsExcess:
+        return NrtlSac(xs=list(xs), T=298.15, segments=segments, tau=tau, alpha=alpha)
+
+    return make
+
+
 def _regular_solution_factory(ids: tuple[str, ...], cas_list: list[str], correlations: Any) -> Any:
     """Callable(xs) building one RegularSolution model over the support.
 
@@ -469,6 +537,31 @@ def _ge_model_factory(liquid: str, ids: tuple[str, ...], cas_list: list[str], co
 
         return make
 
+    if liquid == "nrtl_tdep":
+        tau_as, tau_bs, alpha_cs = _tdep_matrices("nrtl", ("a", "b", "alpha"), ids, cas_list)
+
+        def make(xs: list[float]) -> GibbsExcess:
+            return NRTL(xs=list(xs), T=298.15, tau_as=tau_as, tau_bs=tau_bs, alpha_cs=alpha_cs)
+
+        return make
+
+    if liquid == "uniquac_tdep":
+        tau_as, tau_bs = _tdep_matrices("uniquac", ("a", "b"), ids, cas_list)
+        surface = _tdep_config("uniquac")["components"]
+        missing = [cid for cid in ids if cid not in surface]
+        if missing:
+            raise ValueError(f"no r, q for {missing} in data/thermo_params/uniquac/tdep_pairs.yaml")
+        rs = [float(surface[cid]["r"]) for cid in ids]
+        qs = [float(surface[cid]["q"]) for cid in ids]
+
+        def make(xs: list[float]) -> GibbsExcess:
+            return UNIQUAC(xs=list(xs), rs=rs, qs=qs, T=298.15, tau_as=tau_as, tau_bs=tau_bs)
+
+        return make
+
+    if liquid == "nrtl_sac":
+        return _nrtl_sac_factory(ids, cas_list)
+
     if liquid == "regular_solution":
         return _regular_solution_factory(ids, cas_list, correlations)
 
@@ -519,12 +612,97 @@ def _constants_for(cas_list: tuple[str, ...]) -> tuple[Any, Any]:
     return cast("tuple[Any, Any]", ChemicalConstantsPackage.from_IDs(list(cas_list)))
 
 
+#: Aspen's split for WILS-GLR: components boiling below this keep the vapour route.
+_GLR_TB_SPLIT = 298.15
+
+
+class LiquidReferenceLiquid(GibbsExcessLiquid):  # type: ignore[misc]
+    """Activity-coefficient liquid on a saturated-liquid enthalpy reference.
+
+    Plain activity-coefficient rows reach the liquid from the ideal gas at T, so the
+    liquid heat capacity is whatever d(H_ig - dHvap)/dT gives. The Wilson-LR route
+    integrates the measured liquid heat capacity from a liquid reference instead:
+
+        H_i(T) = H_i(T_ref) + int_T_ref^T Cp_L,i dT,   S_i likewise over Cp_L,i / T
+
+    (Aspen Physical Property Methods and Models 10.1, pp. 3-119 to 3-123). The
+    reference value here is the plain route's own at 298.15 K, so the two rows agree
+    there. ``liquid_reference`` holds the components that take this route: all of them
+    for Wilson-LR; for Wilson-GLR, those boiling above 298.15 K. T-dependent terms are
+    replaced per mole of component on top of the parent's H, S and Cp, so the excess
+    terms and pressure terms stay the parent's. Psat keeps the equilibrium basis:
+    the K-values are the base row's. Class attributes survive thermo's phase clones.
+    """
+
+    liquid_reference: tuple[bool, ...] = ()
+
+    def _plain_route(self, i: int, T: float) -> tuple[float, float, float]:
+        """(h, s, cp) per mole of pure i on the parent's Psat route, P terms left out."""
+        vapour_pressure = self.VaporPressures[i]
+        psat = vapour_pressure.T_dependent_property(T)
+        d1 = vapour_pressure.T_dependent_property_derivative(T, order=1) / psat
+        d2 = vapour_pressure.T_dependent_property_derivative(T, order=2) / psat - d1 * d1
+        cpig = self.HeatCapacityGases[i]
+        r = 8.31446261815324
+        h = -r * T * T * d1 + cpig.T_dependent_property_integral(_LR_T_REF, T)
+        s = -r * (T * d1 + math.log(psat)) + cpig.T_dependent_property_integral_over_T(_LR_T_REF, T)
+        cp = -2.0 * r * T * d1 - r * T * T * d2 + cpig.T_dependent_property(T)
+        return h, s, cp
+
+    def _liquid_route(self, i: int, T: float) -> tuple[float, float, float]:
+        """(h, s, cp) gained from T_ref along the liquid heat capacity, as _plain_route."""
+        cpl = self.HeatCapacityLiquids[i]
+        return (
+            cpl.T_dependent_property_integral(_LR_T_REF, T),
+            cpl.T_dependent_property_integral_over_T(_LR_T_REF, T),
+            cpl.T_dependent_property(T),
+        )
+
+    def _corrections(self) -> tuple[float, float, float]:
+        d_h = d_s = d_cp = 0.0
+        for i, on in enumerate(self.liquid_reference):
+            z = self.zs[i]
+            if not on or z <= 0.0:
+                continue
+            h, s, cp = self._plain_route(i, self.T)
+            h0, s0, _ = self._plain_route(i, _LR_T_REF)
+            hl, sl, cpl = self._liquid_route(i, self.T)
+            d_h += z * (hl - (h - h0))
+            d_s += z * (sl - (s - s0))
+            d_cp += z * (cpl - cp)
+        return d_h, d_s, d_cp
+
+    def H(self) -> float:
+        return float(super().H()) + self._corrections()[0]
+
+    def S(self) -> float:
+        return float(super().S()) + self._corrections()[1]
+
+    def Cp(self) -> float:
+        return float(super().Cp()) + self._corrections()[2]
+
+
+_LR_T_REF = 298.15
+
+
+def _liquid_phase_class(caloric: str, records: list[Any]) -> Any:
+    """The liquid phase class of the caloric route; plain rows keep thermo's own."""
+    if caloric == GammaPhiCaloric.VAPOUR_ROUTE:
+        return GibbsExcessLiquid
+    if caloric == GammaPhiCaloric.LIQUID_REFERENCE:
+        mask = tuple(True for _ in records)
+    else:
+        mask = tuple(_state._required_tb(r) >= _GLR_TB_SPLIT for r in records)
+    return type("ConfiguredLiquidReference", (LiquidReferenceLiquid,), {"liquid_reference": mask})
+
+
 def _build_flasher_inner(
     liquid: str,
     vapour: str,
     ids: tuple[str, ...],
     three_phase: bool,
     pseudos: tuple[DataPseudoDefinition, ...] = (),
+    caloric: str = GammaPhiCaloric.VAPOUR_ROUTE,
 ) -> Any:
     """Build a (liquid, vapour) flasher over exactly this sorted component set.
 
@@ -550,11 +728,12 @@ def _build_flasher_inner(
         constants, correlations = _constants_for(tuple(cas_list))
         make_ge = _ge_model_factory(liquid, ids, cas_list, correlations)
         gas = _gas_phase(vapour, cas_list, constants, correlations)
+        liquid_class = _liquid_phase_class(caloric, records)
 
         def ge_liquid() -> Any:
             """One liquid phase; each gets its own gE instance (the model carries T/xs state)."""
             model = make_ge([1.0 / len(ids)] * len(ids))
-            return GibbsExcessLiquid(
+            return liquid_class(
                 VaporPressures=correlations.VaporPressures,
                 HeatCapacityGases=correlations.HeatCapacityGases,
                 HeatCapacityLiquids=correlations.HeatCapacityLiquids,
@@ -575,6 +754,7 @@ def _flasher_outcome(
     ids: tuple[str, ...],
     three_phase: bool,
     pseudos: tuple[DataPseudoDefinition, ...],
+    caloric: str = GammaPhiCaloric.VAPOUR_ROUTE,
 ) -> tuple[bool, Any]:
     """Build the flasher, or memoize the provenance refusal message.
 
@@ -584,7 +764,7 @@ def _flasher_outcome(
     build only to raise the same provenance error again.
     """
     try:
-        return True, _build_flasher_inner(liquid, vapour, ids, three_phase, pseudos)
+        return True, _build_flasher_inner(liquid, vapour, ids, three_phase, pseudos, caloric)
     except ValueError as exc:
         return False, str(exc)
 
@@ -594,6 +774,7 @@ def _flasher_for(
     vapour: str,
     ids: tuple[str, ...],
     pseudos: tuple[DataPseudoDefinition, ...] = (),
+    caloric: str = GammaPhiCaloric.VAPOUR_ROUTE,
 ) -> Any:
     """Build (and cache) the full flasher over this sorted support.
 
@@ -603,7 +784,7 @@ def _flasher_for(
     phases are wired only for the models whose parameterizations support
     liquid-liquid splits.
     """
-    ok, got = _flasher_outcome(liquid, vapour, ids, liquid in _THREE_PHASE_LIQUIDS, pseudos)
+    ok, got = _flasher_outcome(liquid, vapour, ids, liquid in _THREE_PHASE_LIQUIDS, pseudos, caloric)
     if ok:
         return got
     raise ValueError(got)
@@ -614,9 +795,10 @@ def _flasher_vl_for(
     vapour: str,
     ids: tuple[str, ...],
     pseudos: tuple[DataPseudoDefinition, ...] = (),
+    caloric: str = GammaPhiCaloric.VAPOUR_ROUTE,
 ) -> Any:
     """Build (and cache) the two-phase FlashVL saturation fast path."""
-    ok, got = _flasher_outcome(liquid, vapour, ids, False, pseudos)
+    ok, got = _flasher_outcome(liquid, vapour, ids, False, pseudos, caloric)
     if ok:
         return got
     raise ValueError(got)
@@ -659,6 +841,7 @@ class GammaPhiPackage(ThermoSurfaceMixin):
         liquid: str,
         vapour: str,
         components: tuple[str, ...] | None = None,
+        caloric: str = GammaPhiCaloric.VAPOUR_ROUTE,
     ) -> None:
         """Build the package; `components` runs the provenance checks eagerly.
 
@@ -670,15 +853,17 @@ class GammaPhiPackage(ThermoSurfaceMixin):
         """
         self.liquid = liquid
         self.vapour = vapour
+        self.caloric = GammaPhiCaloric(caloric)
         super().__init__()
         if components:
-            _flasher_for(liquid, vapour, tuple(sorted(components)))
+            _flasher_for(liquid, vapour, tuple(sorted(components)), caloric=self.caloric)
 
     def _cached(self, key: tuple[Any, ...], compute: Callable[[], Any]) -> Any:
-        return _shared_cached((self.liquid, self.vapour, self._slate_pseudos), key, compute)
+        identity = (self.liquid, self.vapour, self.caloric, self._slate_pseudos)
+        return _shared_cached(identity, key, compute)
 
     def _build_flasher(self, ids: tuple[str, ...]) -> Any:
-        return _flasher_for(self.liquid, self.vapour, ids, self._slate_pseudos)
+        return _flasher_for(self.liquid, self.vapour, ids, self._slate_pseudos, self.caloric)
 
     def _build_flasher_vl(self, ids: tuple[str, ...]) -> Any:
-        return _flasher_vl_for(self.liquid, self.vapour, ids, self._slate_pseudos)
+        return _flasher_vl_for(self.liquid, self.vapour, ids, self._slate_pseudos, self.caloric)

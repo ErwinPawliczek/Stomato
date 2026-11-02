@@ -37,6 +37,8 @@ Implemented value -> mechanism (spec T-02):
 - ``LiquidDensity``: ``RACKETT`` and ``COSTALD`` are the correlations in
   ``ngdesign.thermo.liquid_density``, replacing the volume of liquid roots only
   (VLE and enthalpy stay the EOS's). No row declares ``API``.
+- ``FreeWater.IAPWS95``: the water-rich liquid takes pure water from IAPWS-95 in
+  fugacity, enthalpy, entropy and volume (``ngdesign.thermo.free_water``).
 - ``SourTerm.SOUR``: in-house Wilson API-955-style sour-water ionisation
   correction on the aqueous liquid phase (API Publication 955 / EPA-600/2-80-067).
 - ``EnthalpyMethod.LEE_KESLER``: in-house Lee-Kesler (1975) corresponding-states
@@ -119,6 +121,21 @@ class EnthalpyMethod(StrEnum):
     IDEAL = "ideal"
 
 
+class FreeWater(StrEnum):
+    """Free-water treatment group of the cubic adapter."""
+
+    NONE = "none"
+    IAPWS95 = "iapws95"
+
+
+class GammaPhiCaloric(StrEnum):
+    """Liquid enthalpy route of the gamma-phi adapter (Aspen WILS-LR / WILS-GLR)."""
+
+    VAPOUR_ROUTE = "vapour_route"
+    LIQUID_REFERENCE = "liquid_reference"
+    GAS_LIQUID_REFERENCE = "gas_liquid_reference"
+
+
 class GammaPhiLiquid(StrEnum):
     """Liquid-phase model group of the gamma-phi adapter (spec T-03)."""
 
@@ -128,6 +145,9 @@ class GammaPhiLiquid(StrEnum):
     VANLAAR = "vanlaar"
     MARGULES = "margules"
     WOHL3 = "wohl3"
+    NRTL_TDEP = "nrtl_tdep"
+    UNIQUAC_TDEP = "uniquac_tdep"
+    NRTL_SAC = "nrtl_sac"
     REGULAR_SOLUTION = "regular_solution"
     UNIFAC = "unifac"
     UNIFAC_DORTMUND = "unifac_dortmund"
@@ -159,6 +179,7 @@ class GammaPhiOptions(BaseModel):
 
     liquid: GammaPhiLiquid
     vapour: GammaPhiVapour
+    caloric: GammaPhiCaloric = GammaPhiCaloric.VAPOUR_ROUTE
 
 
 @dataclass(frozen=True)
@@ -175,6 +196,7 @@ class CubicOptionValues:
     sour: SourTerm = SourTerm.NONE
     enthalpy: EnthalpyMethod = EnthalpyMethod.EOS
     mixing: MixingRule = MixingRule.NONE
+    free_water: FreeWater = FreeWater.NONE
 
     @property
     def is_default(self) -> bool:
