@@ -418,7 +418,7 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
             tuple[tuple[tuple[str, float], ...], float, float, tuple[tuple[str, float], ...]],
             dict[str, float],
         ] = {}
-        if live_norm and _is_reactive_package(tb):
+        if live_norm and (_is_reactive_package(tb) or tb.pool_liquids):
             # P1-11 step 3 (ruling on #153): the exact gate reads its K surface
             # with the profile's refreshed y = K*x as the stage-K vapour seed,
             # while the NS rows passed empty seeds - on the reactive package the
@@ -432,7 +432,8 @@ def _naphtali_sandholm(col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear:
             # package (passing seeds on non-reactive columns measurably moved
             # the Kremser oracle outcomes) and to the live-norm path (the warm
             # two-tear path keeps its convention; see the deethanizer
-            # regression above).
+            # regression above). Pooled-liquid stages join for the same reason:
+            # their K is read at the stage contents, which carry the vapour seed.
             _refresh_y(col, tb, prof)
             y_seeds = list(prof.y)
         if live_norm:

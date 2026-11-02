@@ -50,6 +50,11 @@ _SPECS = {
 }
 
 
+#: Refluxed configuration: largest closure residual as a share of the inlet
+#: enthalpy flows (the column's own stage-H gate, _MESH_H_TOL).
+_MESH_ENERGY_GATE = 1e-2
+
+
 class RefluxedAbsorberError(ValueError):
     """Refusal: the refluxed-absorber spec is invalid."""
 
@@ -136,7 +141,17 @@ class RefluxedAbsorber:
             info["mesh_energy_residual_W"] = 0.0
         else:
             info["condenser_duty_W"] = result.info["condenser_duty_W"]
-            info["mesh_energy_residual_W"] = result.info["reboiler_duty_W"]
+            residual = result.info["reboiler_duty_W"]
+            # This unit has no reboiler, so the column's closure value is the
+            # MESH residual. Large means the gate passed estimated K-values on
+            # a state with no real vapour-liquid equilibrium, never a duty.
+            throughput = abs(gas.enthalpy * gas.molar_flow) + abs(solvent.enthalpy * solvent.molar_flow)
+            if abs(residual) > _MESH_ENERGY_GATE * max(throughput, 1.0):
+                raise RefluxedAbsorberError(
+                    f"column closed with an energy residual of {residual:.4g} W on a unit with "
+                    f"no reboiler: not a converged stage solve (throughput {throughput:.4g} W)"
+                )
+            info["mesh_energy_residual_W"] = residual
         return UnitResult(
             outlets={"gas_out": result.outlets["distillate"], "rich_out": result.outlets["bottoms"]},
             duty_W=result.duty_W,

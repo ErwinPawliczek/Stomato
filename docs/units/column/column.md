@@ -45,8 +45,8 @@ properties:
     description: additional draws by stage
     type: object
   specs:
-    description: two specs for two tears (reflux_ratio, distillate_rate, boilup, ...);
-      one for one-tear; none for an absorber
+    description: two specs for two tears (reflux_ratio, distillate_rate, boilup_ratio,
+      boilup_rate, ...); one for one-tear; none for an absorber
     type: object
   stage_heaters:
     description: '[{stage, duty_W}] fixed heat added to an ordinary tray, W (< 0 cools)'

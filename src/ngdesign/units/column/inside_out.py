@@ -127,6 +127,8 @@ class _Column:
     rx_source: list[dict[str, float]] = field(default_factory=list)
     rx_gen: list[float] = field(default_factory=list)
     rx_q: list[float] = field(default_factory=list)
+    #: Continuation multiplier on the holdups (1 = the specified column).
+    rx_scale: float = 1.0
     # Two-phase operating window for the inner temperature walk, set from the
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
@@ -390,7 +392,7 @@ def _refresh_reactions(col: _Column, xs: list[dict[str, float]], ts: list[float]
         x = {cid: max(xs[j].get(cid, 0.0), 0.0) for cid in col.comps}
         source: dict[str, float] = {}
         for reaction in rx.rset.reactions:
-            extent = holdup * rate(reaction, ts[j], col.pressures[j], x)
+            extent = col.rx_scale * holdup * rate(reaction, ts[j], col.pressures[j], x)
             for cid, nu in reaction.stoichiometry.items():
                 source[cid] = source.get(cid, 0.0) + nu * extent
         col.rx_source[j] = source
@@ -821,12 +823,23 @@ def _stage_k_values(
     is not evaluable from any candidate (liquid x, stage overall, feed);
     callers apply their documented fallbacks.
     """
+    candidates = [
+        _flash_ready(x_j, col.feed_comp),
+        _flash_ready(_stage_overall_from_flows(col, j, x_j, y_j, l_flow, v_flow), col.feed_comp),
+        col.feed_comp,
+    ]
+    if tb.pool_liquids and y_j and l_flow + v_flow > _FLOW_FLOOR:
+        # A heterogeneous stage boils on a plateau: just above its bubble point
+        # a flash of the liquid alone vaporises a large share and hands back a
+        # pooled liquid that is not x_j. The stage's own contents L x + V y are
+        # what flash back to (x_j, y_j) at the solution, so they go first.
+        total = l_flow + v_flow
+        contents = {
+            cid: (l_flow * x_j.get(cid, 0.0) + v_flow * y_j.get(cid, 0.0)) / total for cid in col.comps
+        }
+        candidates.insert(0, _flash_ready({c: v for c, v in contents.items() if v > 0.0}, col.feed_comp))
     return tb.k_values(
-        [
-            _flash_ready(x_j, col.feed_comp),
-            _flash_ready(_stage_overall_from_flows(col, j, x_j, y_j, l_flow, v_flow), col.feed_comp),
-            col.feed_comp,
-        ],
+        candidates,
         t_j,
         col.pressures[j],
     )
@@ -1726,7 +1739,15 @@ def _close_energy_balance(
     h_in = sum(s.enthalpy * s.molar_flow for s in feed_states)
     h_out = sum(s.enthalpy * s.molar_flow for s in out_states)
     prof.qr = h_out - h_in + prof.qc - sum(rep["duty_W"] for rep in prof.pa_report) - sum(col.stage_q)
-    prof.qr -= sum(col.rx_q)
+    if col.reactions is not None:
+        # The heat of reaction over the BOUNDARY amounts: integrated stage
+        # rates differ from out - in by the converged M residual, and this
+        # closure must close the stream table exactly on the formation basis.
+        made: dict[str, float] = {}
+        for s, sign in [(st, 1.0) for st in out_states] + [(st, -1.0) for st in feed_states]:
+            for cid, frac in s.composition.items():
+                made[cid] = made.get(cid, 0.0) + sign * frac * s.molar_flow
+        prof.qr += sum(n * formation_enthalpy_298(cid) for cid, n in made.items())
 
 
 def _check_pumparounds(col: _Column, prof: _Profile) -> None:

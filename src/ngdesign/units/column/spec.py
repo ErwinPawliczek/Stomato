@@ -85,6 +85,13 @@ def _is_reactive_package(tb: object) -> bool:
     return bool(getattr(getattr(tb, "_thermo", tb), "is_amine_reactive_package", False))
 
 
+#: Reaction-source continuation (reactive stages): first step from the
+#: non-reactive column, step growth after a converged rung, step cut after a
+#: failed one, and the smallest step tried before the mesh is declared failed.
+_RX_STEP_FIRST = 0.25
+_RX_STEP_GROW = 2.0
+_RX_STEP_CUT = 0.25
+_RX_STEP_MIN = 1e-3
 #: Consecutive sweeps without any residual improvement before the inside-out
 #: loop hands its best profile to the Naphtali-Sandholm fallback. Zero/one-tear
 #: columns get a longer patience (measured in the P1-09 PR): their sweeps wobble
@@ -122,6 +129,7 @@ _REBOILER_KINDS = ("kettle", "none")
 _SPEC_KEYS = (
     "reflux_ratio",
     "boilup_ratio",
+    "boilup_rate",
     "distillate_rate",
     "bottoms_rate",
     "component_recovery",
@@ -275,6 +283,9 @@ class _Params:
     stage_heaters: list[_StageHeater] = field(default_factory=list)
     #: Kinetic stages (None = no reaction, the plain column exactly).
     reactions: _StageReactions | None = None
+    #: Two liquids per stage, carried as one pooled liquid (False = first
+    #: liquid only, the plain column exactly).
+    pool_liquids: bool = False
 
 
 def _positive(value: Any, name: str) -> float:
@@ -445,8 +456,10 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
             "directly and carries no reflux tear for condenser='partial'); use distillate_rate "
             "with a duty or purity/recovery spec instead"
         )
-    if reboiler == "none" and ("boilup_ratio" in specs or "reboiler_duty_W" in specs):
-        raise ColumnSpecError("boilup_ratio/reboiler_duty_W specs need a reboiler (reboiler='none')")
+    if reboiler == "none" and ({"boilup_ratio", "boilup_rate", "reboiler_duty_W"} & set(specs)):
+        raise ColumnSpecError("boilup/reboiler_duty_W specs need a reboiler (reboiler='none')")
+    if "boilup_ratio" in specs and "boilup_rate" in specs:
+        raise ColumnSpecError("boilup_ratio and boilup_rate both fix the kettle tear; give one")
     if "distillate_rate" in specs and "bottoms_rate" in specs:
         raise ColumnSpecError(
             "distillate_rate + bottoms_rate do not determine a column: D + B = F is forced while "
@@ -465,6 +478,7 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
     for key in (
         "reflux_ratio",
         "boilup_ratio",
+        "boilup_rate",
         "distillate_rate",
         "bottoms_rate",
         "condenser_duty_W",
@@ -490,7 +504,15 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
         condenser_water_decant=decant,
         stage_heaters=heaters,
         reactions=_parse_reactions(params, n_stages),
+        pool_liquids=_parse_pool_liquids(params),
     )
+
+
+def _parse_pool_liquids(params: Mapping[str, Any]) -> bool:
+    raw = params.get("pool_liquids", False)
+    if not isinstance(raw, bool):
+        raise ColumnSpecError(f"pool_liquids must be a bool, got {raw!r}")
+    return raw
 
 
 def _duty_stages(params: Mapping[str, Any], n_stages: int) -> list[tuple[int, str]]:

@@ -2,7 +2,7 @@
 
 Family: **column** · P&ID symbol: `X`
 
-Rigour ladder: R0 provisional, R2 planned
+Rigour ladder: R0 provisional, R2 provisional
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.column_shortcut.extractor:LiquidLiquidExtractor` | stage count from Kremser; nonsolutes immiscible at R0 (each stays with its inlet phase) |
-| R2 | planned | — | MESH with LLE stages |
+| R2 | provisional | `ngdesign.units.column_shortcut.extractor_r2:ExtractorR2` | LLE stages by the isothermal sum-rates method with tie lines from the package flash; isothermal, duty_W holds T |
 
 ### R0 parameters
 
@@ -36,6 +36,26 @@ required:
 type: object
 ```
 
+### R2 parameters
+
+```yaml
+additionalProperties: false
+properties:
+  P:
+    description: column pressure, Pa abs (default the lower inlet P)
+    type: number
+  T:
+    description: uniform column temperature, K (default the flow-weighted inlet T)
+    type: number
+  n_stages:
+    description: equilibrium stages; feed on 1, solvent on N
+    minimum: 1
+    type: integer
+required:
+- n_stages
+type: object
+```
+
 ## V1 worked cases
 
 | case | level | quantity | expected | measured | tolerance | result |
@@ -47,5 +67,7 @@ type: object
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-E 9
+- Tsuboka & Katayama, J. Chem. Eng. Japan 9 (1976) 40
+- Seader, Henley & Roper 3rd ed., Sect. 10.5
 
-> roadmap.
+> V1 gap — provisional without a case. Checked by the one-stage reduction to a flash, stage balances, isofugacity from single-phase builds, and the dilute Kremser limit (tests/units/column_shortcut/test_extractor_r2.py). The stage energy balance is not solved (isothermal).
