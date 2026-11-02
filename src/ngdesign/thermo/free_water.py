@@ -47,14 +47,12 @@ from chemicals.iapws import (
 )
 from thermo.eos import PR, SRK
 
+from ngdesign.thermo._state import AQUEOUS_WATER_FRACTION
 from ngdesign.thermo.liquid_density import holds_liquid_root
 
 #: The window the correction applies in (K): IAPWS-95's triple point, and short of
 #: the critical point, where a "free water" liquid stops meaning anything.
 _T_MAX = 640.0
-
-#: The aqueous test of the state layer (``_state.AQUEOUS_WATER_FRACTION``).
-_WATER_RICH = 0.5
 
 #: Half step (K) of the numeric Cp offset.
 _CP_D_T = 0.05
@@ -132,7 +130,7 @@ class FreeWaterPhase:
 
     def _offset_at(self, T: float) -> PureWaterOffset | None:
         i = self.free_water_index
-        if i < 0 or self.zs[i] <= _WATER_RICH or not iapws95_Tt <= T <= _T_MAX:
+        if i < 0 or self.zs[i] <= AQUEOUS_WATER_FRACTION or not iapws95_Tt <= T <= _T_MAX:
             return None
         if not holds_liquid_root(self):
             return None

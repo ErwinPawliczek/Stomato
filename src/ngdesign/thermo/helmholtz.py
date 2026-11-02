@@ -461,6 +461,8 @@ class _HelmholtzSurface:
         for phase in ("liquid", "vapor"):
             try:
                 props = self._single_phase(ids, xs, T, P, phase)
+            except ComponentNotSupported:
+                raise
             except (SaturationError, ValueError):  # no root of this phase at (T, P)
                 continue
             gibbs.append((props.enthalpy - T * props.entropy, phase))
