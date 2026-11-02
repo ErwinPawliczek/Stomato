@@ -275,6 +275,23 @@ def _phase_of(state: StreamState, reacting_phase: Literal["vapor", "liquid"]) ->
     return None
 
 
+def audit_single_phase(
+    thermo: Thermo,
+    f: Mapping[str, float],
+    t: float,
+    p: float,
+    reacting_phase: Literal["vapor", "liquid"],
+    where: str,
+) -> None:
+    """One flash at (T, P): refuse a two-phase state or a missing reacting phase."""
+    state = thermo.flash_pt(z_from(f), t, p, math.fsum(f.values()))
+    vf = float(state.vapor_fraction)
+    if 1.0e-9 < vf < 1.0 - 1.0e-9:
+        raise PlugFlowError(f"{where} is single-phase but the state is two-phase (vapour fraction {vf:.6f})")
+    if _phase_of(state, reacting_phase) is None:
+        raise PlugFlowError(f"reacting phase {reacting_phase!r} is absent from {where}")
+
+
 def integrate_plug_flow(
     inlet: StreamState,
     rset: ReactionSet,
@@ -494,20 +511,14 @@ def integrate_plug_flow(
     # the flash budget must not scale with V). Refuses a two-phase state or
     # a missing reacting phase anywhere along the profile.
     for i, v_i in enumerate(t_eval):
-        f_i = _flows(rset, f0, sol.y[:m, i].tolist())
-        t_i = float(sol.y[m, i])
-        p_i = float(sol.y[m + 1, i])
-        state_i = thermo.flash_pt(z_from(f_i), t_i, p_i, math.fsum(f_i.values()))
-        vf_i = float(state_i.vapor_fraction)
-        if 1.0e-9 < vf_i < 1.0 - 1.0e-9:
-            raise PlugFlowError(
-                f"the PFR is single-phase but the state at V = {v_i:g} m3 is two-phase "
-                f"(vapour fraction {vf_i:.6f})"
-            )
-        if _phase_of(state_i, reacting_phase) is None:
-            raise PlugFlowError(
-                f"reacting phase {reacting_phase!r} is absent from the single-phase state at V = {v_i:g} m3"
-            )
+        audit_single_phase(
+            thermo,
+            _flows(rset, f0, sol.y[:m, i].tolist()),
+            float(sol.y[m, i]),
+            float(sol.y[m + 1, i]),
+            reacting_phase,
+            f"the PFR at V = {v_i:g} m3",
+        )
 
     y_end = sol.y[:, -1]
     # Per output point, per reaction (mol/s): transpose the sol.y rows.

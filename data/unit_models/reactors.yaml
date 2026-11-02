@@ -361,14 +361,34 @@
       description: vessel contents at the end of the batch
   levels:
     R3:
-      status: planned
-      params: {}
-      note: dynamic — a separate axis and plan (steady-state catalogue excludes it)
+      status: provisional
+      adapter: ngdesign.units.reactors.batch_reactor:BatchReactor
+      params:
+        type: object
+        required: [reaction_set, batch_time_s]
+        properties:
+          reaction_set: {description: inline ReactionSet, or a string id resolved against
+            Flowsheet.reactions}
+          batch_time_s: {type: number, description: reaction time of one batch, s}
+          turnaround_s: {type: number, description: 'fill, empty and clean time per cycle, s, default 0'}
+          thermal: {description: "'isothermal' | 'adiabatic' | {duty_W: W, while reacting}; default
+              isothermal"}
+          reacting_phase: {type: string, enum: [vapor, liquid], description: the single phase
+              of the vessel; default vapor}
+          bulk_density_kg_m3: {type: number, description: catalyst bulk density, kg/m3}
+      note: one isobaric single-phase batch cycle integrated in time; the inlet is the cycle-averaged
+        charge rate and the outlet the discharge averaged over the cycle. Constant-volume gas
+        batches, semi-batch feeding and a two-phase vessel are not modelled; flowsheet dynamics stay
+        a separate axis
       end_state: true
+  balance: mass_elements
   pid_symbol: R
   references:
   - docs/unit-catalogue-plan.md §2 U-F 7
-  notes: roadmap; out of the steady-state scope (plan §0 decision 4).
+  notes: A batch cycle over kinetics.rate, not dynamic mode (plan §0 decision 4 still holds for
+    flowsheet dynamics). Provisional on closed-form tests (first-order and second-order with a
+    mole change) and the equivalence to the isobaric PFR; no V1 case was attempted. The semi-batch
+    half of the row name is not implemented.
 
 - id: fixed_bed_tubular
   name: Fixed-bed multi-tubular reactor
@@ -384,14 +404,36 @@
       description: tube-side effluent
   levels:
     R2:
-      status: planned
-      params: {}
-      note: PFR with shell-side coolant
+      status: provisional
+      adapter: ngdesign.units.reactors.fixed_bed_tubular:FixedBedTubularR2
+      params:
+        type: object
+        required: [reaction_set, n_tubes, tube_diameter_m, length_m, U_W_m2K, coolant]
+        properties:
+          reaction_set: {description: inline ReactionSet, or a string id resolved against
+            Flowsheet.reactions}
+          n_tubes: {type: integer, description: identical parallel tubes}
+          tube_diameter_m: {type: number, description: tube inside diameter, m}
+          length_m: {type: number, description: packed tube length, m}
+          U_W_m2K: {type: number, description: overall heat-transfer coefficient on the tube
+              inside area, W/(m2 K)}
+          coolant: {type: object, description: "{mass_flow_kg_s, cp_J_kgK, T_in_K, flow: co|counter};
+              constant-cp shell-side coolant"}
+          bed: {type: object, description: "{particle_diameter_m, voidage}; Ergun pressure drop"}
+          bulk_density_kg_m3: {type: number, description: catalyst bulk density, kg/m3}
+          viscosity_Pa_s: {type: number, description: 'Ergun viscosity override, Pa s'}
+          reacting_phase: {type: string, enum: [vapor, liquid]}
+      note: pfr R2 tube model with a shell-side coolant balance, co-current or counter-current by
+        shooting on the coolant outlet temperature
       end_state: true
+  balance: mass_elements
   pid_symbol: R
   references:
   - docs/unit-catalogue-plan.md §2 U-F 8
-  notes: roadmap.
+  notes: The coolant is described by params; the row has no coolant ports. V1 gap - the spec's
+    candidate (Froment, Bischoff & De Wilde 3rd ed. ch. 11, o-xylene to phthalic anhydride) prints
+    its profiles mainly as figures, and figure readings are not valid V1; no copy was consulted.
+    Provisional on the epsilon-NTU closed forms and the reduction to pfr R2.
 
 - id: electrolyser_stack
   name: Electrolyser / fuel cell stack
