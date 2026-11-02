@@ -1971,3 +1971,42 @@
   references:
   - Wagner, W.; Pruss, A. J. Phys. Chem. Ref. Data 2002, 31, 387
   - Kabadi, V. N.; Danner, R. P. Ind. Eng. Chem. Process Des. Dev. 1985, 24, 537
+- id: glycol_pr
+  name: Glycol package (TEG dehydration, tuned PR)
+  family: cubic
+  adapter: ngdesign.thermo.cubic:GlycolPrThermo
+  options:
+    eos: PRMIXGlycol
+    kij_table: ChemSep PR
+    mixing: glycol_tuned
+  params:
+    source: data/thermo_params/glycol/teg_water_pr.yaml
+    provenance: Gironi, Maschietti & Piemonte 2007, k12(T) linear in T and their Ambrose TEG constants,
+      with per-entry provenance in the file. MEG refuses, its open CPA and k_ij values carry no
+      primary citation; other pairs keep the ChemSep PR table
+  applicability:
+    component_classes:
+    - water
+    - glycol
+    - light_gas
+    - hydrocarbon
+    polar: true
+    electrolyte: false
+    T_K:
+    - 283.15
+    - 480.0
+    P_Pa:
+    - 10000.0
+    - 15000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Gironi, F.; Maschietti, M.; Piemonte, V. Modelling triethylene glycol - water system for natural
+    gas dehydration. ICheaP-8, 2007
+  l0_note: The derivatives contract's dlnphi_dT and dlnphi_dP stay plain PR's and omit the tuned k_ij.
+    Dry streams flash as pr does.
+  l4_excluded:
+    '*': the TEG constants replace the databank's only for TEG and the slice feed carries no glycol, so the row's slice point is the pr row's and adds no independent L4 information

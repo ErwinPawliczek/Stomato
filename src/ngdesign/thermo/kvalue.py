@@ -74,6 +74,10 @@ from ngdesign.thermo.options import EnthalpyMethod
 #: asymptote is only valid well below the 10 MPa convergence pressure.
 _BRAUN_MAX_PA = 7.0e5
 
+#: Vapour-pressure floor (Pa) of the DEPG row's nonvolatile solvent, where the databank
+#: correlation underflows to zero on the PH/PS brackets' cold end.
+_SOLVENT_PSAT_FLOOR = 1e-12
+
 #: Perturbation for the composition derivatives of the LKP residual Gibbs surface.
 _LKP_FD_EPS = 1.0e-5
 
@@ -677,9 +681,34 @@ class KValuePackage(ThermoSurfaceMixin):
         c_liquid = 1.0 / float(v_water)  # mol/m3 of the aqueous phase
         return h * c_liquid / P
 
+    def _depg_k(self, sup: _Support, T: float, P: float) -> list[float]:
+        """K_i = H_i / P for the gases, Psat / P for the solvent (depg.yaml)."""
+        table = _load_yaml("depg.yaml")
+        k: list[float] = []
+        for i, cid in enumerate(sup.ids):
+            if cid == table["solvent_cas"]:
+                psat = sup.databank_psat(i, T)
+                if psat is None:
+                    raise ValueError(f"no vapour pressure for the solvent {cid} at T={T} K")
+                k.append(max(psat, _SOLVENT_PSAT_FLOOR) / P)
+                continue
+            relative = table["relative_to_co2"].get(cid)
+            if relative is None:
+                raise ValueError(
+                    f"no DEPG solubility for {cid} in data/thermo_params/kvalue/depg.yaml; "
+                    "refusing rather than defaulting"
+                )
+            vv = float(table["co2_vv"]) * float(relative)
+            volumes = float(table["solvent_molar_volume_m3_mol"]) / float(table["gas_molar_volume_m3_mol"])
+            mole_ratio = vv * volumes  # gas per solvent, pure gas at 1 atm
+            k.append(_REF_P * (1.0 + mole_ratio) / mole_ratio / P)
+        return k
+
     def _model_k(self, sup: _Support, x: list[float], y: list[float], T: float, P: float) -> list[float]:
         """The row's K-values at (composition x liquid / y vapour, T, P)."""
         n = len(x)
+        if self.k_model == "physical_solvent":
+            return self._depg_k(sup, T, P)
         if self.k_model in ("chao_seader", "grayson_streed"):
             assert sup.rs_omega_cs is not None and sup.rs_v is not None and sup.rs_delta is not None
             _z_vap, ln_phi_v = _rk_vapour(sup, y, T, P)
@@ -1464,6 +1493,69 @@ class BraunK10IdealThermo(BraunK10Thermo):
     """Braun K10 low-pressure limit with ideal-gas / ideal-liquid enthalpies, not Lee-Kesler."""
 
     enthalpy_basis = EnthalpyMethod.IDEAL
+
+
+class DepgHenryThermo(KValuePackage):
+    """Henry's law for gases in DEPG at 25 C, with tetraglyme as the solvent component.
+
+    r_i = (v/v)_i V_solvent / V_gas is the mole ratio of gas to solvent at 1 atm of pure
+    gas, so H_i = P0 (1 + r_i) / r_i with gamma = 1 and K = H_i / P (Burr & Lyddon). Only
+    25 C data is open, so the flash refuses outside 293.15-303.15 K and the Henry
+    constants do not move with T.
+    """
+
+    k_model = "physical_solvent"
+    enthalpy_basis = EnthalpyMethod.IDEAL
+    _searching = False  # the PH/PS brackets may explore outside the window
+
+    def _h_res(self, sup: _Support, x: list[float], T: float, P: float, gas: bool) -> float:
+        """Ideal vapour; in the liquid the solvent sits one Hvap down, the gases at no heat
+        of absorption: no open value backs one, so the row carries none."""
+        if gas:
+            return 0.0
+        solvent = sup.ids.index(_load_yaml("depg.yaml")["solvent_cas"])
+        return -x[solvent] * sup.heat_of_vaporisation(solvent, T)
+
+    def _s_res(self, sup: _Support, x: list[float], T: float, P: float, gas: bool) -> float:
+        """S_res = sum x_i [R ln(1/K_i)] - x_solvent Hvap/T: keeps G consistent with K."""
+        if gas:
+            return 0.0
+        solvent = sup.ids.index(_load_yaml("depg.yaml")["solvent_cas"])
+        k = self._depg_k(sup, T, P)
+        total = sum(-R_IDEAL * xi * math.log(k[i]) for i, xi in enumerate(x) if xi > 0.0)
+        return total - x[solvent] * sup.heat_of_vaporisation(solvent, T) / T
+
+    @staticmethod
+    def _require_window(T: float) -> None:
+        if not 293.15 <= T <= 303.15:
+            raise ValueError(f"depg_henry has 25 C data only; T={T} K is outside 293.15-303.15 K")
+
+    def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
+        if not self._searching:
+            self._require_window(T)
+        known = {_load_yaml("depg.yaml")["solvent_cas"], *_load_yaml("depg.yaml")["relative_to_co2"]}
+        unknown = sorted(cid for cid, fraction in z.items() if fraction > 0.0 and cid not in known)
+        if unknown:
+            raise ValueError(f"no DEPG solubility for {unknown} in data/thermo_params/kvalue/depg.yaml")
+        return super().flash_pt(z, T, P, molar_flow)
+
+    def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:
+        self._searching = True
+        try:
+            state = super().flash_ph(z, P, H, molar_flow)
+        finally:
+            self._searching = False
+        self._require_window(state.T)
+        return state
+
+    def flash_ps(self, z: dict[str, float], P: float, S: float, molar_flow: float) -> StreamState:
+        self._searching = True
+        try:
+            state = super().flash_ps(z, P, S, molar_flow)
+        finally:
+            self._searching = False
+        self._require_window(state.T)
+        return state
 
 
 class IdealRaoultThermo(KValuePackage):

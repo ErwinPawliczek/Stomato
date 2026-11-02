@@ -187,6 +187,10 @@ def test_rows_load_and_build() -> None:
     ]
     # coverage-gap rows: density, enthalpy, free-water and vapour pairings of existing families
     catalogue_gap_ids: list[str] = [
+        "amine_mdea_pz",
+        "amine_ke_dga_amp",
+        "glycol_pr",
+        "depg_henry",
         "nrtl_tdep_hoc",
         "uniquac_tdep_ig",
         "nrtl_sac_ig",
@@ -218,7 +222,7 @@ def test_rows_load_and_build() -> None:
         + mixing_ids
         + catalogue_gap_ids
     )
-    assert len(expected) == 155
+    assert len(expected) == 159
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
