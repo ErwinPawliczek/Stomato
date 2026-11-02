@@ -58,3 +58,13 @@ def test_formation_data_come_from_the_cited_database() -> None:
 def test_nothing_is_estimated_for_a_species_without_a_gas_model() -> None:
     with pytest.raises(MissingFormationData):
         formation_enthalpy("sodium chloride dihydrate", 298.15)
+
+
+def test_formation_enthalpy_needs_no_heat_capacity_model() -> None:
+    """Regression: n-C24 states ΔfH° but has no Cp(T); only T-dependent calls need one."""
+    from ngdesign.data import chemdb
+    from ngdesign.data.formation import formation_enthalpy_298
+
+    assert formation_enthalpy_298("nC24") == chemdb.value("nC24", "Hf_gas").value
+    with pytest.raises(MissingFormationData):
+        formation_enthalpy("nC24", 600.0)

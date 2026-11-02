@@ -55,6 +55,17 @@ def gas_model(cid: str) -> SpeciesThermo:
         raise MissingFormationData(f"component {cid!r}: {exc}") from exc
 
 
+def _stated_hf298(cid: str) -> float:
+    """The selected ΔfH°298 of the gas, which needs no Cp(T) behind it."""
+    record = _record(cid)
+    if not record.get("formula") or not record.get("cas"):
+        raise MissingFormationData(f"component {cid!r} has no formation data (no formula)")
+    try:
+        return chemdb.value(str(record["cas"]), "Hf_gas").value
+    except chemdb.ChemDbError as exc:
+        raise MissingFormationData(f"component {cid!r}: {exc}") from exc
+
+
 def _element_entropy(atoms: dict[str, int]) -> float:
     """Σ ν_el·S°(element) over a formula, on the JANAF reference states."""
     total = 0.0
@@ -76,11 +87,9 @@ def _formation_gibbs_298(cid: str) -> float:
 def is_element(cid: str) -> bool:
     """True when the component is an element in its standard state (ΔfH = 0)."""
     try:
-        model = gas_model(cid)
-        atoms = atomic_composition(cid)
+        return _stated_hf298(cid) == 0.0 and len(atomic_composition(cid)) == 1
     except MissingFormationData:
         return False
-    return model.hf298 == 0.0 and len(atoms) == 1
 
 
 def standard_entropy_298(cid: str) -> float:
@@ -93,7 +102,7 @@ def formation_enthalpy_298(cid: str) -> float:
 
     Used to anchor the reaction-path ΔrG°(T) assembly (see kinetics.ln_keq).
     """
-    return 0.0 if is_element(cid) else gas_model(cid).hf298
+    return 0.0 if is_element(cid) else _stated_hf298(cid)
 
 
 def enthalpy_datum(cid: str) -> float:
@@ -126,6 +135,8 @@ def integral_cp(cid: str, T: float, over_t: bool) -> float:
 
 def formation_enthalpy(cid: str, T: float) -> float:
     """ΔfH°(cid, T), J/mol, ideal gas; identically 0 for elemental species."""
+    if T == T_REF:
+        return formation_enthalpy_298(cid)  # needs no Cp(T)
     return 0.0 if is_element(cid) else gas_model(cid).h(T)
 
 

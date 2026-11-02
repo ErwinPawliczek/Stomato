@@ -8,8 +8,8 @@ registry implements. A level or method listed here is listed but not implemented
 
 | | listed | implemented | open |
 |---|---|---|---|
-| Unit rows | 84 | 74 | 10 |
-| Planned rigour levels on implemented units | | | 26 |
+| Unit rows | 84 | 81 | 3 |
+| Planned rigour levels on implemented units | | | 21 |
 | Property methods in the plan | 168 | 147 | 21 |
 
 Catalogue rows by status: 8 experimental, 138 provisional, 9 validated.
@@ -18,18 +18,9 @@ Catalogue rows by status: 8 experimental, 138 provisional, 9 validated.
 
 | unit | family | level | note |
 |---|---|---|---|
-| `refluxed_absorber` | column | R2 | MESH with one end exchanger (the configurations exist; tests are missing) |
-| `column_extensions` | column | R2 | side draws (exist), pumparounds (missing), multiple feeds, inter-stage heaters |
 | `three_phase_stages` | column | R2 | MESH with two liquids per stage |
 | `reactive_stages` | column | R2 | MESH + reaction set on the stage holdup (the reaction-set contract is U-R's) |
 | `divided_wall` | column | R2 | two coupled MESH sections |
-| `batch_distillation` | column | R3 | dynamic — a separate axis and plan (steady-state catalogue excludes it) |
-| `batch_reactor` | reactors | R3 | dynamic — a separate axis and plan (steady-state catalogue excludes it) |
-| `fixed_bed_tubular` | reactors | R2 | PFR with shell-side coolant |
-| `fcc` | refining | R0 | yield table vs conversion |
-| `fcc` | refining | R1 | Weekman 3/4-lump kinetics with heat balance |
-| `hcu` | refining | R0 | yield table vs conversion |
-| `hcu` | refining | R1 | lumped (continuous-lumping) kinetics |
 
 ## Planned levels on implemented units
 
@@ -38,14 +29,10 @@ Catalogue rows by status: 8 experimental, 138 provisional, 9 validated.
 | `absorber` | R3 | rate-based stages |
 | `reboiled_stripper` | R3 | rate-based stages |
 | `liquid_liquid_extractor` | R2 | MESH with LLE stages |
-| `pump` | R1 | curve (head/efficiency vs flow) and NPSHa check |
-| `control_valve` | R1 | IEC 60534 sizing, choked flow, Cv curve |
 | `shell_tube` | R2 | zoned (phase change), multi-pass with temperature cross |
 | `multi_stream` | R1 | layer-wise UA distribution |
 | `multi_stream` | R2 | zoned with phase change |
 | `cstr` | R2 | multi-phase with VLE in the vessel |
-| `pfr` | R2 | integrated along length with heat transfer and pressure drop (Ergun) on the shared integrator (ngdesign.units.reactors.plug_flow) |
-| `pfr` | R3 | catalyst deactivation, pellet effectiveness |
 | `desalter` | R1 | efficiency vs wash rate and ΔT (cited correlation) |
 | `crude_column` | R2 | MESH with side strippers, pumparounds, stripping steam, overflash (U-E 6 extensions; needs column_extensions, P1-11) |
 | `side_strip` | R2 | MESH stage section coupled to the main column |
@@ -53,7 +40,6 @@ Catalogue rows by status: 8 experimental, 138 provisional, 9 validated.
 | `preflash` | R2 | short MESH |
 | `naphtha_ht` | R1 | lumped HDS/HDN kinetics in a PFR |
 | `reformer_cat` | R1 | Smith (1959) lumped kinetics |
-| `flash_drum` | R1 | Souders-Brown sizing, carry-over at a given diameter (the souders_brown correlation plugin exists) |
 | `mdea_absorber` | R2 | staged on the reactive package — blocked on P1-11 |
 | `mea_absorber` | R2 | staged on the reactive package — blocked on P1-11 |
 | `dea_absorber` | R2 | staged on the reactive package — blocked on P1-11 |

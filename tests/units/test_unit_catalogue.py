@@ -216,7 +216,8 @@ def test_planned_level_refuses_through_a_flowsheet_solve(thermo: Thermo) -> None
     error = unit_errors[0]
     assert error.error_type == "UnitLevelNotImplemented"
     assert error.stage == "solve"
-    assert "R0" in error.message  # names the levels the unit CAN do
+    implemented = [name for name, spec in row.levels.items() if not spec.planned]
+    assert implemented[0] in error.message  # names the levels the unit CAN do
 
 
 def _fixture_catalogue(tmp_path: Path) -> Path:
