@@ -48,6 +48,9 @@ properties:
     description: two specs for two tears (reflux_ratio, distillate_rate, boilup, ...);
       one for one-tear; none for an absorber
     type: object
+  stage_heaters:
+    description: '[{stage, duty_W}] fixed heat added to an ordinary tray, W (< 0 cools)'
+    type: array
 required:
 - n_stages
 - condenser
@@ -65,4 +68,4 @@ Mode map: `distillation` → `R2`, `absorber` → `R2`, `stripper` → `R2`, `re
 - Naphtali & Sandholm 1971, AIChE J. 17(1), 148-153
 - docs/unit-catalogue-plan.md §2 U-E 2
 
-> covers plan U-E 2 and the R2 of U-E 3 (feed-determined absorber, zero-tear) and U-E 4 (reboiled stripper, one-tear) as configurations; rate-based stages (plan's R3 column) are a later round on their own ladder. Side draws exist (side_draw port); pumparounds and multiple feeds beyond the params hooks are the column_extensions row.
+> covers plan U-E 2 and the R2 of U-E 3 (feed-determined absorber, zero-tear) and U-E 4 (reboiled stripper, one-tear) as configurations; rate-based stages (plan's R3 column) are a later round on their own ladder. Side draws exist (side_draw port); the graph-visible second feed and the extended composite are the column_extensions row.
