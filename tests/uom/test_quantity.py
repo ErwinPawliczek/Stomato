@@ -132,3 +132,24 @@ def test_from_si_round_trips_engine_output() -> None:
     q = Quantity.from_si(4.5e5, "pressure").to("bar")
     assert q.magnitude() == pytest.approx(4.5)
     assert q.isclose(Q("450 kPa"))
+
+
+def test_a_difference_has_no_reading_on_an_offset_scale() -> None:
+    """Regression: a 50 K difference read as -369.67 degF."""
+    difference = Q(70, "degC") - Q(20, "degC")
+    assert difference.magnitude("delta_degF") == pytest.approx(90.0)
+    with pytest.raises(OffsetUnitError):
+        difference.to("degF")
+    with pytest.raises(OffsetUnitError):
+        Q(5, "delta_degC").magnitude("degC")
+
+
+def test_kelvin_still_reads_on_celsius() -> None:
+    assert Q(300, "K").magnitude("degC") == pytest.approx(26.85)
+
+
+def test_a_scale_point_is_not_a_temperature_difference() -> None:
+    assert coerce("10 K", "temperature_difference") == 10.0
+    assert coerce("10 delta_degC", "temperature_difference") == 10.0
+    with pytest.raises(OffsetUnitError):
+        coerce("10 degC", "temperature_difference")

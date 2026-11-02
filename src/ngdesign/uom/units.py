@@ -8,18 +8,18 @@ defines them, with the definition stated. A unit converts to SI as
 
 Grammar of a unit expression::
 
-    expr   := group (('*' | '·' | '/') group)*
-    group  := term ((' ' | '-') term)*
+    expr   := group (('*' | '/') group)*
+    group  := term ((' ' | '-' | '·') term)*
     term   := '(' expr ')' power? | name power? | number
     power  := ('^' | '**') signed-number | signed-integer-suffix | superscript
 
 so ``J/(mol K)``, ``J/mol/K``, ``kg·m/s²``, ``m3/h``, ``mol L-1 s-1`` and
 ``Btu/lb-degF`` all parse. Four decisions worth stating:
 
-- **A space or hyphen binds tighter than ``/``**, as engineers read it:
-  ``Btu/lb-degF`` and ``W/m2 K`` are heat capacity and heat-transfer units, with
-  everything after the slash in the denominator. ``*`` is left-associative with
-  ``/``, as in code.
+- **A space, hyphen or middle dot binds tighter than ``/``**, as engineers read it:
+  ``Btu/lb-degF``, ``W/m2 K`` and ``J/kg·K`` keep everything after the slash in the
+  denominator. ``*`` before a ``/`` is fine, but after one it is refused: it means
+  opposite things in code and in print.
 - **Offset scales** (``degC``, ``degF``, ``barg``, ``psig``) are points on a
   shifted scale only when they stand alone. Inside a compound they mean an
   interval, which is the only meaning a compound can have: ``Btu/lb-degF`` is a
@@ -272,7 +272,7 @@ _SUPERSCRIPTS = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻", "0123456789-")
 _TOKEN = re.compile(
     r"""\s*(?:
         (?P<open>\()|(?P<close>\))|
-        (?P<power>\*\*|\^)|(?P<mul>[*·⋅])|(?P<div>/|÷)|
+        (?P<power>\*\*|\^)|(?P<mul>\*)|(?P<dot>[·⋅])|(?P<div>/|÷)|
         (?P<sup>[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+)|
         (?P<num>[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?(?![A-Za-z]))|
         (?P<name>[%A-Za-z°µμΩ_][A-Za-z0-9°µμΩ_%]*(?:-mol)?)|
@@ -347,12 +347,19 @@ class _Parser:
     def _expression(self) -> tuple[Unit, int]:
         unit = self._group()
         terms = 1
+        divided = False
         while True:
             kind = self._peek()
             if kind == "div":
                 self._take()
                 unit = unit / self._group()
+                divided = True
             elif kind == "mul":
+                if divided:
+                    raise UnknownUnitError(
+                        f"{self.text!r} is ambiguous: '*' after '/' means a/b*c in code and a/(b c) in "
+                        "print; use parentheses"
+                    )
                 self._take()
                 unit = unit * self._group()
             else:
@@ -364,11 +371,13 @@ class _Parser:
         unit = self._term()
         while True:
             kind = self._peek()
-            if kind == "dash":
+            if kind in ("dash", "dot"):
                 self._take()
                 unit = unit * self._term()
-            elif kind in ("name", "open", "num"):
+            elif kind in ("name", "open"):
                 unit = unit * self._term()
+            elif kind == "num":
+                raise UnknownUnitError(f"a bare number inside unit expression {self.text!r}")
             else:
                 return unit
 
@@ -381,9 +390,9 @@ class _Parser:
             if self._peek() != "close":
                 raise UnknownUnitError(f"unbalanced parentheses in unit expression {self.text!r}")
             self._take()
-            return self._power(inner)
+            return self._power(inner, after_group=True)
         if kind == "num":
-            return self._power(Unit(float(value), DIMENSIONLESS))
+            return Unit(float(value), DIMENSIONLESS)
         if kind == "name":
             unit, exponent = _atom(value)
             if exponent != 1:
@@ -391,7 +400,7 @@ class _Parser:
             return self._power(unit)
         raise UnknownUnitError(f"unexpected {value!r} in unit expression {self.text!r}")
 
-    def _power(self, unit: Unit) -> Unit:
+    def _power(self, unit: Unit, *, after_group: bool = False) -> Unit:
         kind = self._peek()
         if kind == "power":
             self._take()
@@ -402,20 +411,30 @@ class _Parser:
             if self._peek() != "num":
                 raise UnknownUnitError(f"exponent expected in unit expression {self.text!r}")
             value = self._take()[1]
-            return unit ** (sign * Fraction(value).limit_denominator(1000))
+            exponent = sign * Fraction(value).limit_denominator(1000)
+            if self._peek() == "div" and self._next_is_number():  # m^1/2
+                self._take()
+                exponent /= Fraction(self._take()[1])
+            return unit**exponent
         if kind == "sup":
             return unit ** Fraction(self._take()[1].translate(_SUPERSCRIPTS))
-        if kind == "num" and self._take_signed_suffix():
-            return unit ** Fraction(self.tokens[self.position - 1][1])
+        if kind == "num" and (self.tokens[self.position][1][0] in "+-" or after_group):
+            # s-1, s-1.5 and (m/s)2: a number directly on a unit or a group is its exponent
+            return unit ** Fraction(self._take()[1]).limit_denominator(1000)
         return unit
 
-    def _take_signed_suffix(self) -> bool:
-        """``s -1`` style trailing exponents: a signed integer right after a unit."""
-        value = self.tokens[self.position][1]
-        if value[0] in "+-" and re.fullmatch(r"[-+]\d+", value):
-            self.position += 1
-            return True
-        return False
+    def _next_is_number(self) -> bool:
+        return self.position + 1 < len(self.tokens) and self.tokens[self.position + 1][0] == "num"
+
+
+def _enclosing(text: str) -> bool:
+    """True when the first parenthesis closes on the last character."""
+    depth = 0
+    for i, char in enumerate(text):
+        depth += (char == "(") - (char == ")")
+        if depth == 0:
+            return i == len(text) - 1
+    return False
 
 
 @lru_cache(maxsize=2048)
@@ -427,6 +446,8 @@ def parse_unit(expression: str) -> Unit:
     :class:`~ngdesign.uom.dimension.UnknownUnitError`.
     """
     text = expression.strip()
+    while text.startswith("(") and text.endswith(")") and _enclosing(text):
+        text = text[1:-1].strip()
     if not text:
         return Unit(1.0, DIMENSIONLESS, symbol="1")
     named = _lookup(text)

@@ -138,3 +138,32 @@ def test_temperature_round_trip(value: float, a: str, b: str) -> None:
 @given(_finite)
 def test_quantity_string_form_matches_constructor(value: float) -> None:
     assert Q(f"{value!r} kPa").si == pytest.approx(Q(value, "kPa").si)
+
+
+@pytest.mark.parametrize(
+    ("value", "source", "target", "expected"),
+    [
+        (1.0, "Btu/lb·degF", "kJ/(kg K)", 4.1868),
+        (1.0, "W/m²·K", "W/(m2 K)", 1.0),
+        (1.0, "J/kg·K", "J/(kg K)", 1.0),
+        (1.0, "m/s-1.5", "m s^1.5", 1.0),
+        (4.0, "m^1/2", "(m)^0.5", 4.0),
+        (1.0, "(m/s)2", "m2/s2", 1.0),
+    ],
+)
+def test_review_regressions(value: float, source: str, target: str, expected: float) -> None:
+    assert convert(value, source, target) == pytest.approx(expected, rel=1e-12)
+
+
+def test_star_after_a_slash_is_refused_as_ambiguous() -> None:
+    with pytest.raises(UnknownUnitError, match="ambiguous"):
+        parse_unit("J/mol*K")
+
+
+def test_a_bare_number_inside_a_unit_is_refused() -> None:
+    with pytest.raises(UnknownUnitError):
+        parse_unit("kg 2 m")
+
+
+def test_parenthesised_offset_unit_stays_a_scale() -> None:
+    assert convert(25.0, "(degC)", "K") == pytest.approx(298.15)

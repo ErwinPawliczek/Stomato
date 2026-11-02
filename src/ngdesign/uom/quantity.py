@@ -56,13 +56,14 @@ class Quantity:
     ``Quantity(25, "degC")``, ``Quantity("500 psia")``, ``Quantity([1, 2], "m/s")``.
     """
 
-    __slots__ = ("si", "dimension", "unit", "is_point")
+    __slots__ = ("si", "dimension", "unit", "is_point", "is_interval")
     __array_ufunc__ = None  # ndarray * Quantity defers to __rmul__
 
     si: Magnitude
     dimension: Dimension
     unit: str
     is_point: bool
+    is_interval: bool  # a known difference: it has no reading on an offset scale
 
     def __init__(self, value: Any, unit: str | None = None) -> None:
         if isinstance(value, str):
@@ -78,17 +79,21 @@ class Quantity:
         object.__setattr__(self, "dimension", parsed.dimension)
         object.__setattr__(self, "unit", parsed.symbol)
         object.__setattr__(self, "is_point", parsed.is_offset)
+        object.__setattr__(self, "is_interval", parsed.symbol.startswith("delta_"))
 
     def __setattr__(self, name: str, value: Any) -> None:
         raise AttributeError("Quantity is immutable")
 
     @classmethod
-    def _make(cls, si: Magnitude, dimension: Dimension, unit: str = "", point: bool = False) -> Quantity:
+    def _make(
+        cls, si: Magnitude, dimension: Dimension, unit: str = "", point: bool = False, interval: bool = False
+    ) -> Quantity:
         out = cls.__new__(cls)
         object.__setattr__(out, "si", si)
         object.__setattr__(out, "dimension", dimension)
         object.__setattr__(out, "unit", unit)
         object.__setattr__(out, "is_point", point)
+        object.__setattr__(out, "is_interval", interval)
         return out
 
     @classmethod
@@ -105,13 +110,19 @@ class Quantity:
             return self.si
         parsed = parse_unit(target)
         self._check(parsed.dimension, f"cannot express {self.si!r} (SI) in {target!r}")
+        self._refuse_interval_on_scale(parsed, target)
         return (self.si - parsed.offset) / parsed.factor
 
     def to(self, unit: str, *, mw: Any = None, rho: Any = None) -> Quantity:
         """The same physical value displayed in ``unit`` (see :func:`convert` for mw/rho)."""
         parsed = parse_unit(unit)
+        self._refuse_interval_on_scale(parsed, unit)
         si = _rebased(self.si, self.dimension, parsed.dimension, mw, rho)
-        return Quantity._make(si, parsed.dimension, parsed.symbol, parsed.is_offset)
+        return Quantity._make(si, parsed.dimension, parsed.symbol, parsed.is_offset, self.is_interval)
+
+    def _refuse_interval_on_scale(self, target: Unit, name: str) -> None:
+        if self.is_interval and target.is_offset:
+            raise OffsetUnitError(f"a difference has no reading on the {name!r} scale; use delta_ units or K")
 
     def require(self, kind: str) -> Quantity:
         """Self, or :class:`DimensionError` when the dimension is not that of ``kind``."""
@@ -143,7 +154,8 @@ class Quantity:
         rhs = self._same(other, "subtract")
         if rhs.is_point and not self.is_point:
             raise OffsetUnitError(f"cannot subtract a point from an interval: {self} - {rhs}")
-        return Quantity._make(self.si - rhs.si, self.dimension, "", self.is_point and not rhs.is_point)
+        point = self.is_point and not rhs.is_point
+        return Quantity._make(self.si - rhs.si, self.dimension, "", point, self.is_point and rhs.is_point)
 
     def __rsub__(self, other: Any) -> Quantity:
         return _coerce_operand(other) - self
@@ -288,10 +300,11 @@ def coerce(value: Any, kind: str) -> float:
     Accepts a :class:`Quantity`, a string (``"25 degC"``) or a bare number, which
     the engine's convention already defines as SI.
     """
-    if isinstance(value, Quantity):
-        return float(cast(float, value.require(kind).si))
-    if isinstance(value, str):
-        return float(cast(float, Quantity(value).require(kind).si))
+    if isinstance(value, Quantity | str):
+        quantity = value if isinstance(value, Quantity) else Quantity(value)
+        if kind == "temperature_difference" and quantity.is_point:
+            raise OffsetUnitError(f"{quantity} is a point on a scale, not a difference; use K or delta_degC")
+        return float(cast(float, quantity.require(kind).si))
     kind_dimension(kind)
     return float(value)
 
