@@ -8,8 +8,8 @@ registry implements. A level or method listed here is listed but not implemented
 
 | | listed | implemented | open |
 |---|---|---|---|
-| Unit rows | 84 | 81 | 3 |
-| Planned rigour levels on implemented units | | | 21 |
+| Unit rows | 84 | 83 | 1 |
+| Planned rigour levels on implemented units | | | 11 |
 | Property methods in the plan | 168 | 160 | 8 |
 
 Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
@@ -18,9 +18,7 @@ Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
 
 | unit | family | level | note |
 |---|---|---|---|
-| `three_phase_stages` | column | R2 | MESH with two liquids per stage |
-| `reactive_stages` | column | R2 | MESH + reaction set on the stage holdup (the reaction-set contract is U-R's) |
-| `divided_wall` | column | R2 | two coupled MESH sections |
+| `divided_wall` | column | R2 | two coupled MESH sections; blocked on the column core, the plain two-tear side-draw column does not converge on nC4/nC5/nC6 at 3 bar (11 stages, M=1.4e-2, NS stalls; spec P1-13) and a section tear loop is the design S0-1c rejected. Needs the graph solver of S0-1c (unmerged branch s0-1c/2-graph-ns) extended to two parallel sections |
 
 ## Planned levels on implemented units
 
@@ -28,25 +26,15 @@ Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
 |---|---|---|
 | `absorber` | R3 | rate-based stages |
 | `reboiled_stripper` | R3 | rate-based stages |
-| `liquid_liquid_extractor` | R2 | MESH with LLE stages |
-| `shell_tube` | R2 | zoned (phase change), multi-pass with temperature cross |
-| `multi_stream` | R1 | layer-wise UA distribution |
-| `multi_stream` | R2 | zoned with phase change |
-| `cstr` | R2 | multi-phase with VLE in the vessel |
-| `desalter` | R1 | efficiency vs wash rate and ΔT (cited correlation) |
-| `crude_column` | R2 | MESH with side strippers, pumparounds, stripping steam, overflash (U-E 6 extensions; needs column_extensions, P1-11) |
-| `side_strip` | R2 | MESH stage section coupled to the main column |
-| `vacuum_column` | R2 | MESH with pumparounds, no condenser, wash zone |
-| `preflash` | R2 | short MESH |
-| `naphtha_ht` | R1 | lumped HDS/HDN kinetics in a PFR |
-| `reformer_cat` | R1 | Smith (1959) lumped kinetics |
-| `mdea_absorber` | R2 | staged on the reactive package — blocked on P1-11 |
-| `mea_absorber` | R2 | staged on the reactive package — blocked on P1-11 |
-| `dea_absorber` | R2 | staged on the reactive package — blocked on P1-11 |
-| `mdea_regenerator` | R2 | reboiled stripper on the reactive package — blocked on P1-11 |
-| `mea_regenerator` | R2 | reboiled stripper on the reactive package — blocked on P1-11 |
-| `dea_regenerator` | R2 | reboiled stripper on the reactive package — blocked on P1-11 |
-| `sulfur_recovery` | R2 | Gibbs per stage |
+| `crude_column` | R2 | MESH with side strippers, pumparounds, stripping steam, overflash; blocked on spec S0-1c steps 2-4 (the simultaneous stripper solve; the column refuses side_strippers), P1-13, and pseudo-component cost (the dense NS does not finish a 5-stage 48-species column in 560 s) |
+| `vacuum_column` | R2 | MESH with pumparounds, no condenser, wash zone; a zero-tear 6-stage column on the 19-pseudo example feed does not finish in 280 s (dense NS), which the sparse solver of S0-1c step 2 is meant to fix |
+| `preflash` | R2 | short MESH; a 5-stage partial-condenser column on the 48-species example feed does not finish in 560 s (dense NS, spec S0-1c step 2) |
+| `mdea_absorber` | R2 | P1-11 is merged and the 20-stage MDEA column converges (tests/units/test_column_amine.py), but in ~120 s, over the locked per-test limit; the short columns that fit miss the locked balance (5 stages closes components to 1.4e-4 under the reactive 1e-3 gate) or fail (8 stages does not converge), so no adapter ships |
+| `mea_absorber` | R2 | P1-11 is merged, but the zero-tear column on this row's example feed leaves the package domain at 5 stages (speciation pressure vanished for CO2, measured on MEA); no adapter ships until that closes |
+| `dea_absorber` | R2 | P1-11 is merged, but the zero-tear column on this row's example feed leaves the package domain at 5 stages (speciation pressure vanished for CO2, measured on MEA); no adapter ships until that closes |
+| `mdea_regenerator` | R2 | P1-11 is merged, but the kettle column on the amine package does not converge (MDEA, 6 stages, 1.9 bar, boilup 20 mol/s - M=5.5e-2, H=2.1e-1); no adapter ships until it does |
+| `mea_regenerator` | R2 | P1-11 is merged, but the kettle column on the amine package does not converge (MDEA, 6 stages, 1.9 bar, boilup 20 mol/s - M=5.5e-2, H=2.1e-1); no adapter ships until it does |
+| `dea_regenerator` | R2 | P1-11 is merged, but the kettle column on the amine package does not converge (MDEA, 6 stages, 1.9 bar, boilup 20 mol/s - M=5.5e-2, H=2.1e-1); no adapter ships until it does |
 
 ## Property methods listed but not closed
 
