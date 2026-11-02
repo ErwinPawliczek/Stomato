@@ -24,6 +24,7 @@ layers =
     ngdesign.thermo
     ngdesign.contracts | ngdesign.registry
     ngdesign.data
+    ngdesign.uom
 
 [importlinter:contract:engineering-independent]
 name = Engineering deliverables never import the simulation engine
