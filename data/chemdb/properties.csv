@@ -2767,6 +2767,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 101-90-6,rho_liquid,1218.33,kg/m3,,,crc_constants,B,,1
 101-91-7,Tm,412.65,K,,,crc_constants,B,,1
 101-92-8,Tm,405.15,K,,,crc_constants,B,,1
+101-96-2,Hvap,70300,J/mol,,385,nist,B,Stephenson and Malanowski; 1987,1
 101-97-3,Hvap_298,62313.374,J/mol,,,nist_snapshot,B,,1
 101-97-3,Pc,2853000,Pa,,,dippr_pina,B,,1
 101-97-3,Tb,501.15,K,,,crc_constants,B,,1
@@ -34861,6 +34862,8 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14609-79-1,Vc,0.0005305,m3/mol,,,yaws,C,,1
 14609-79-1,omega,0.646878664,1,,,omega_definition,B,antoine landolt at 0.7 Tc,1
 14609-79-1,omega,0.651,1,,,yaws,C,,0
+1461-22-9,Hfus,11430,J/mol,,260.2,nist,B,Utschick; Bachmann; et al.; 1974,1
+1461-22-9,Tm,260,K,,,nist,B,Utschick; Bachmann; et al.; 1974,1
 1461-25-2,Hf_gas,-229854.64,J/mol,,,nist_snapshot,B,,1
 1461-25-2,Hf_liquid,-312701.81,J/mol,,,nist_snapshot,B,,1
 1461-25-2,Hvap_298,82800,J/mol,,,nist_snapshot,B,,1
@@ -43161,6 +43164,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1928-30-9,omega,0.8299722041,1,,,omega_definition,B,antoine landolt at 0.7 Tc,1
 1928-30-9,omega,0.71,1,,,yaws,C,,0
 1928-38-7,Tm,392.15,K,,,crc_constants,B,,1
+1928-43-4,Hvap,83000,J/mol,,475,nist,B,Stephenson and Malanowski; 1987,1
 19287-45-7,Cp_gas,58.1,J/(mol K),,298.15,janaf,A,JANAF table B-091,1
 19287-45-7,Cp_gas,56.7,J/(mol K),,298.15,crc_thermo,B,,0
 19287-45-7,Gf_gas,91849,J/mol,,,janaf,A,JANAF table B-091,1
@@ -44364,6 +44368,8 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 20291-95-6,Vc,0.000559,m3/mol,,,yaws,C,,1
 20291-95-6,omega,0.3910201583,1,,,omega_definition,B,antoine poling at 0.7 Tc,1
 20291-95-6,omega,0.389,1,,,yaws,C,,0
+20292-08-4,Hvap,91400,J/mol,,386,nist,B,Based on data from 371. to 452. K.,1
+20292-08-4,Hvap_298,104500,J/mol,,,nist,B,Krop; Velzen; et al.; 1997,1
 20294-76-2,Hf_gas,-724590,J/mol,,,yaws,C,,1
 20294-76-2,Pc,1318000,Pa,,,yaws,C,,1
 20294-76-2,S0_gas,949.4,J/(mol K),,,yaws,C,,1
@@ -49639,6 +49645,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 2548-87-0,Tc,630,K,,,yaws,C,,1
 2548-87-0,Vc,0.000405,m3/mol,,,yaws,C,,1
 2548-87-0,rho_liquid,846,kg/m3,,,crc_constants,B,,1
+2549-53-3,Hvap,69100,J/mol,,478,nist,B,Stephenson and Malanowski; 1987,1
 25498-49-1,Pc,2180000,Pa,,,dippr_pina,B,,1
 25498-49-1,Pc,2180000,Pa,,,yaws,C,,0
 25498-49-1,Tc,657,K,,,dippr_pina,B,,1
@@ -51182,6 +51189,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 27761-61-1,Hsub_298,74230,J/mol,,,nist_snapshot,B,,1
 27763-54-8,Tb,388,K,,,nist_snapshot,B,,1
 27779-29-9,Tb,492.2,K,,,nist_snapshot,B,,1
+2778-42-9,Hvap,65200,J/mol,,361,nist,B,Achorn; Haseltine; et al.; 1986,1
 2778-96-3,Tm,333.15,K,,,crc_constants,B,,1
 278-06-8,Hf_gas,324581.25,J/mol,,,nist_snapshot,B,,1
 278-06-8,Hf_liquid,266595.83,J/mol,,,nist_snapshot,B,,1
@@ -52297,6 +52305,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 289-95-2,Vc,0.000274,m3/mol,,,yaws,C,,0
 289-95-2,omega,0.211,1,,,yaws,C,,1
 289-95-2,rho_liquid,1079.225,kg/m3,,,crc_constants,B,,1
+28908-00-1,Hfus,17020,J/mol,,351.1,nist,B,Wang; Tan; et al.; 2005,1
 28911-01-5,Tm,507.15,K,,,crc_constants,B,,1
 2892-18-4,Tm,316.15,K,,,crc_constants,B,,1
 2892-18-4,rho_liquid,950.946,kg/m3,,,crc_constants,B,,1
@@ -60214,6 +60223,13 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 4079-52-1,Tm,281.15,K,,,crc_constants,B,,1
 4079-52-1,rho_liquid,1089.72,kg/m3,,,crc_constants,B,,1
 4079-68-9,Tb,393.15,K,,,crc_constants,B,,1
+408-35-5,Cp_solid,449.4,J/(mol K),,298.15,nist,B,Wirth; Droege; et al.; 1959,1
+408-35-5,Cp_solid,495,J/(mol K),,298.15,nist,B,Wirth; Droege; et al.; 1959,0
+408-35-5,Cp_solid,462.8,J/(mol K),,298.15,nist,B,Wirth; Droege; et al.; 1959,0
+408-35-5,Cp_solid,481.2,J/(mol K),,298.15,nist,B,Wirth; Droege; et al.; 1959,0
+408-35-5,Cp_solid,476.6,J/(mol K),,298.15,nist,B,Wirth; Droege; et al.; 1959,0
+408-35-5,Cp_solid,501.7,J/(mol K),,298.15,nist,B,Wirth; Droege; et al.; 1959,0
+408-35-5,S0_solid,490,J/(mol K),30,,nist,B,AVG,1
 408-38-8,Hf_gas,-552000,J/mol,,,yaws,C,,1
 408-38-8,Pc,1230000,Pa,,,yaws,C,,1
 408-38-8,S0_gas,820.69,J/(mol K),,,yaws,C,,1
@@ -71147,6 +71163,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 54897-33-5,Hf_gas,-59800,J/mol,,,nist_snapshot,B,,1
 54897-33-5,Hf_solid,-176000,J/mol,,,nist_snapshot,B,,1
 54897-33-5,Hsub_298,116000,J/mol,,,nist_snapshot,B,,1
+549-18-8,Tm,468.5,K,,,nist,B,Chauvet and Masse; 1983,1
 54934-90-6,Pc,1979000,Pa,,,yaws,C,,1
 54934-90-6,Tb,559.4,K,,,nist_snapshot,B,,1
 54934-90-6,Tc,766.86,K,,,yaws,C,,1
@@ -71370,6 +71387,8 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 552-89-6,Tm,312.77885,K,,,nist_snapshot,B,,0
 552-89-6,rho_liquid,1284.42,kg/m3,,,crc_constants,B,,1
 552-94-3,Tm,420.15,K,,,crc_constants,B,,1
+55219-65-3,Hfus,24470,J/mol,,377.8,nist,B,Donnelly; Drewes; et al.; 1990; 2,1
+55219-65-3,Tm,380.99,K,,,nist,B,Donnelly; Drewes; et al.; 1990,1
 5522-43-0,Tm,425.15,K,,,crc_constants,B,,1
 55230-25-6,Tb,375.7,K,,,nist_snapshot,B,,1
 5524-05-0,Tb,494.65,K,,,crc_constants,B,,1
@@ -75438,6 +75457,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 585-84-2,Hf_solid,-1224400,J/mol,,,crc_thermo,B,,1
 585-84-2,Hf_solid,-1218588.2,J/mol,,,nist_snapshot,B,,0
 585-84-2,Tm,398.15,K,,,crc_constants,B,,1
+585-88-6,Hfus,55070,J/mol,,420,nist,B,Lebrun and van Miltenburg; 2001,1
 58505-78-5,Hf_solid,-244000,J/mol,,,nist_snapshot,B,,1
 5852-45-9,Tb,290.6,K,,,nist_snapshot,B,,1
 5852-45-9,Tm,194.65,K,,,nist_snapshot,B,,1
@@ -92197,6 +92217,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 64919-20-6,Tc,798.63,K,,,yaws,C,,1
 64919-20-6,Vc,0.0010415,m3/mol,,,yaws,C,,1
 64919-20-6,omega,0.774,1,,,yaws,C,,1
+6493-05-6,Hfus,36600,J/mol,,376.8,nist,B,DSC,1
 6493-77-2,Tb,454.15,K,,,crc_constants,B,,1
 6493-77-2,rho_liquid,1013.02,kg/m3,,,crc_constants,B,,1
 65-19-0,Tm,575.15,K,,,crc_constants,B,,1
