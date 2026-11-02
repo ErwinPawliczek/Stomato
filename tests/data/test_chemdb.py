@@ -377,14 +377,44 @@ def test_broader_vapour_pressure_coverage_matches_the_reference_eos(query: str, 
 
 
 def test_liquid_fit_model_tracks_the_reference_cp() -> None:
-    from ngdesign.data.species_models import _liquid_fit_pieces, _LiquidFitCurve
+    from ngdesign.data.species_models import _CpFitCurve, _liquid_fit_pieces
 
     pieces = _liquid_fit_pieces("71-43-2")
     assert pieces
-    curve = _LiquidFitCurve(pieces, 0.0)
+    curve = _CpFitCurve(pieces, 0.0)
     assert curve.cp(330.0) == pytest.approx(CP.PropsSI("CPMOLAR", "T", 330.0, "Q", 0, "Benzene"), rel=0.02)
     h = 0.5
     assert (curve.dh(330.0 + h) - curve.dh(330.0 - h)) / (2 * h) == pytest.approx(curve.cp(330.0), rel=1e-4)
     assert (curve.s(330.0 + h) - curve.s(330.0 - h)) / (2 * h) == pytest.approx(
         curve.cp(330.0) / 330.0, rel=1e-4
     )
+
+
+def test_dissolved_gas_sources_agree_where_both_exist() -> None:
+    """Sander's compilation and the WebBook Henry medians are separate routes to S°(aq)."""
+    for gas in ("CO2", "H2S", "methane", "oxygen"):
+        rows = {r.source: r.value for r in chemdb.values(gas, "Hf_aq")}
+        assert {"nist_henry", "sander"} <= set(rows), gas
+        assert rows["nist_henry"] == pytest.approx(rows["sander"], abs=1500.0), gas
+
+
+def test_snapshot_shomate_gives_solids_a_heat_capacity() -> None:
+    from ngdesign.data.species_models import species_thermo
+
+    solids = [
+        s for s in chemdb.all_species()[:4000] if any(r["F"] is None for r in chemdb.shomate(s.cas, "solid"))
+    ]
+    assert solids
+    modelled = 0
+    for species in solids[:40]:
+        try:
+            model = species_thermo(species.cas, "solid")
+        except chemdb.ChemDbError:
+            continue
+        if model.model == "cp_fit:nist_snapshot":
+            modelled += 1
+            h = 0.5
+            T = 500.0 if model.t_range[1] > 501 else (model.t_range[0] + model.t_range[1]) / 2
+            assert (model.h(T + h) - model.h(T - h)) / (2 * h) == pytest.approx(model.cp(T), rel=1e-6)
+            assert 0.0 < model.cp(T) < 2000.0  # a units slip shows here first (it did: -2.9e6)
+    assert modelled > 0

@@ -115,6 +115,11 @@ sources:
     grade: B
     citation: "Zabransky, M., Ruzicka, V., Majer, V. and Domalski, E.S., Heat Capacity of Liquids: Critical Review and Recommended Values, J. Phys. Chem. Ref. Data, Monograph 6, 1996."
     access: table shipped in chemicals (Heat Capacity/Zabransky.tsv)
+  sander:
+    grade: B
+    citation: "Sander, R., Compilation of Henry's law constants for water as solvent, Atmos. Chem. Phys., as converted to the mole-fraction pressure form and shipped in thermo 0.6.1 (Interaction Parameters/Sander_henry_T_dep.json); the package does not state which version of the compilation."
+    url: https://www.henrys-law.org/
+    access: table shipped in thermo; dissolved-gas aqueous standard states derived from it and the gas's selected values
   poling:
     grade: B
     citation: "Poling, B.E., Prausnitz, J.M. and O'Connell, J.P., The Properties of Gases and Liquids, 5th ed., McGraw-Hill, 2000."

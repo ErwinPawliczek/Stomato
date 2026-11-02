@@ -376,6 +376,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 1070-87-7,293,423,3.92055,1324.65,-57.07,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 1070-87-7,316.11,396.42,3.92962,1329.863,-56.52,nist,"Forziati, Norris, et al., 1949, 2"
 1070-87-7,292.79,423.04,3.92055,1324.65,-57.07,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+1071-22-3,342,442,3.29199,1172.73,-133.61,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 1071-26-7,303,433,3.9553,1346.1,-65.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 1071-26-7,303,433,3.9553,1346.1,-65.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 1071-81-4,308,438,4.00614,1377.98,-66.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -1021,6 +1022,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 124-70-9,294,366,4.2192,1383,-38.95,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 124-73-2,298,483,3.9189,1065.061,-48.185,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 12440-00-5,335,479,3.84127,1412.8,-80.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+125-12-2,405,450,2.63183,811.531,-198.026,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 126-30-7,402,437,7.1244,3367.422,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 126-33-0,364,529,5.44817,3155.935,22.975,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 126-68-1,305,335,11.1259,4570,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -1035,6 +1037,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 127-18-4,310,393,4.11547,1394.842,-54.787,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 127-18-4,301.03,380.84,4.18056,1440.819,-49.171,nist,"Polak, Murakami, et al., 1970"
 127-19-5,303,363,6.8458,3273.8,61.34,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+127-51-5,288,333,3.81457,1785.319,-92.329,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 127-91-3,293,439,3.95949,1472.102,-67.014,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 128-37-0,404,541,3.88873,1611.318,-124.823,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 128-39-2,387,485,-2.13893,62.272,-311.805,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -1050,8 +1053,11 @@ cas,Tmin,Tmax,A,B,C,source,reference
 131-57-7,337,413,6.075,3900,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 131-58-8,435,478,5.93233,3398.719,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 131-89-5,405,565,6.58962,3417.8,-45.016,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+1310-58-3,992,1600,4.02783,5854.906,-144.113,nist,"Stull, 1947"
 13116-53-5,335,415,4.15949,1573.24,-59.344,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+1313-27-5,1007,1424,2.6317,2137.407,-616.484,nist,"Stull, 1947"
 13138-51-7,349,463,2.70324,802.855,-167.788,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+1314-11-0,2341,2683,4.7945,9937.521,-1045.447,nist,"Stull, 1947"
 13151-04-7,289,412,4.03099,1321.5,-58.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13151-05-8,288,412,4.03286,1320.1,-58.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13151-17-2,270,387,4.01314,1240.3,-53.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -1081,6 +1087,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 13402-60-3,380,534,3.8949,1544,-104.45,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13432-25-2,343,436,5.3427,2314,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13444-90-1,193,244,2.4972,395.4,-99.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+13463-39-3,250,315.7,4.63735,1409.037,-11.637,nist,"Stull, 1947"
 13463-40-6,313,364,3.95,1183.6,-78.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13465-07-1,256,367,4.055,1199,-48.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13465-07-1,256,367.55,4.055,1199,-48.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
@@ -1103,6 +1110,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 13536-95-3,202,246,4.0909,787.67,-38.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13550-49-7,196,256,4.61234,966.226,-32.35,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13550-49-7,195.75,256.46,4.61234,966.226,-32.35,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13598-42-0,220,318.6,3.97143,1124.537,-36.171,nist,"Stull, 1947"
 136-60-7,374,475,3.53741,1347.688,-142.92,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 136-77-6,427,506,3.5522,1523.715,-190.17,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13637-63-3,195,278,3.39423,653.06,-66.55,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -1117,10 +1125,13 @@ cas,Tmin,Tmax,A,B,C,source,reference
 137-32-6,298.12,393.7,4.48266,1360.367,-99.93,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 13709-54-1,166,240,4.1967,840.3,-24.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13757-43-2,297,391,6.29,2631.1,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+13768-94-0,212.3,343.7,4.11547,1312.752,-24.478,nist,"Stull, 1947"
 13769-75-0,207,294,4.0515,946.96,-42.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13769-76-1,243,348,4.20955,1201.86,-40.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+13777-25-8,480,630,9.04199,5549.895,-15.075,nist,"Stull, 1947"
 13779-41-4,283,418,3.8602,1342.9,-41.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 138-22-7,313,460,4.22458,1531.982,-97.274,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+13824-36-7,126.5,195.3,3.98197,657.142,-30.551,nist,"Stull, 1947"
 13838-16-9,267,351,4.06044,1084.071,-62.598,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13845-23-3,328,474,3.932,1488,-64.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13845-23-3,328,473.96,3.932,1488,-64.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
@@ -1132,6 +1143,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 13927-77-0,438,562,9.8599,7134,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13952-84-6,300,335,4.01761,1105.542,-60.301,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 13983-20-5,15.73,24.69,3.14102,77.1349,2.47,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+13986-26-0,537,704,8.46456,5536.748,-49.261,nist,"Stull, 1947"
 13991-37-2,376,476,4.7973,1773,-103.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 140-10-3,431,573,6.48613,3655.944,-8.93,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 140-11-4,319,489,4.20255,1677.813,-89.669,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -1236,6 +1248,8 @@ cas,Tmin,Tmax,A,B,C,source,reference
 1493-13-6,354,435,5.73233,2492.152,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 14938-35-3,401,525,5.01361,2298.525,-66.809,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 1495-50-7,196,227,5.1549,1169.2,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+1495-50-7,196.8,226.4,3.84021,677.148,-50.579,nist,"Fawcett and Lipscomb, 1964"
+14965-52-7,180.5,285.4,3.92532,974.232,-37.139,nist,"Stull, 1947"
 14979-39-6,325,434,5.34,2282.9,-0.65,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 150-19-6,399,518,3.75536,1335.71,-161.975,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 150-46-9,302,382,4.63603,1641.65,-36.87,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -1517,6 +1531,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 19269-28-4,315,417,4.43631,1642.744,-46.717,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 1928-30-9,417,659,4.3503,2191.4,-154.95,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 1928-38-7,403,548,4.92535,2566.43,-62.49,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+19287-45-7,118.3,180.8,3.78156,598.39,-22.175,nist,"Ditter, Perrine, et al., 1961, 2"
 1929-73-3,357,455,5.14462,2780.979,-87.473,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 19340-91-1,283,326,5.6835,3070,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 19398-77-7,327,466,4.00837,1473.2,-68.95,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -1998,6 +2013,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 353-36-6,174.1,251.47,4.21998,897.368,-22.49,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 353-49-1,158,228,5.13747,1168.126,-0.178,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 353-50-4,162,190,4.14446,613.984,-40.266,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+353-50-4,163.6,189.17,3.996,572.866,-45.011,nist,"Pace and Reno, 1968"
 353-54-8,320,380,4.715,1790.4,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 353-55-9,270,360,4.799,1697.4,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 353-58-2,245,330,4.674,1515.7,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -2093,6 +2109,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 373-74-0,213,243,5.1001,1238.1,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 373-80-8,205,262,4.00208,862.572,-36.932,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 373-91-1,144,194,3.99804,627.091,-21.057,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+373-91-1,417.9,467.1,4.01236,630.837,-293.801,nist,"Kellogg and Cady, 1948"
 3730-60-7,337,428,3.6317,1006,-148.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 374-01-6,292,333,4.8491,1334.24,-73.51,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 374-07-2,220,298,3.83243,875.938,-47.69,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -2138,6 +2155,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 3978-81-2,283,304,5.91798,2711.242,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 39782-43-9,282,402,4.04833,1290,-58.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 3982-67-0,361,469,4.12698,1649.123,-83.21,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+3982-91-0,254.9,397,4.35678,1553.827,-39.972,nist,"Stull, 1947"
 401-80-9,313,411,4.13218,1305.236,-57.418,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 4016-14-2,285,311,8.7084,2306,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 402-31-3,275,354,4.43033,1483.205,-52.679,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -2173,6 +2191,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 4181-95-7,517,795,4.5962,2735.8,-199.05,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 420-04-2,310,318,6.915,3580,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 420-05-3,273,303,4.33213,1085.704,-45.736,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+420-05-3,196.88,267.21,4.69,1252.195,-29.167,nist,"Linhard, 1938"
 420-12-2,292,361,4.15066,1187.297,-41.608,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 420-24-6,282,350,4.4048,1285.6,-57.35,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 420-26-8,194,280,4.604,1165.4,-9.65,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -2209,6 +2228,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 430-66-0,211,294,4.13152,928.177,-51.88,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 430-66-0,211.07,294.19,4.13152,928.177,-51.88,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 431-03-8,273,348,4.07279,1162.494,-74.275,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+431-03-8,273.16,348.16,3.53918,927.108,-98.949,nist,"Neely and Hall, 1972"
 433-19-2,288,390,4.15621,1348.001,-64.619,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 434-45-7,342,425,5.32581,2266.017,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 434-64-0,291,378,4.21271,1327.581,-62.136,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -2243,6 +2263,8 @@ cas,Tmin,Tmax,A,B,C,source,reference
 459-72-3,273,333,5.5452,2188.9,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 4597-87-9,308,323,4.4014,2308.349,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 460-12-8,237,283,3.33975,707.254,-71.198,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+460-12-8,190.7,282.9,3.05288,570.271,-95.334,nist,"Stull, 1947"
+460-12-8,195,273,2.64407,460.684,-108.556,nist,"Straus and Kollek, 1926, 2"
 460-13-9,201,289,4.0782,965.18,-33.65,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 460-19-5,245,399,4.4585,1007.146,-25.714,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 460-19-5,252,391.3,4.51661,1041.518,-21.288,nist,"Stull, 1947"
@@ -2260,8 +2282,10 @@ cas,Tmin,Tmax,A,B,C,source,reference
 463-49-0,152.5,238,3.79809,755.286,-39.159,nist,"Stull, 1947"
 463-49-0,178,257,2.8386,458.06,-77.08,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 463-51-4,153,223,4.09675,803.547,-27.031,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+463-51-4,159.3,223.8,3.97722,766.685,-30.609,nist,"Reuben, 1969, 2"
 463-56-9,163,176,-2.0328,0.68,-185.7,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 463-58-1,161,284,4.02168,801.563,-23.427,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+463-58-1,161.8,223.84,4.0436,808.49,-22.72,nist,"Kemp and Giauque, 1937"
 463-82-1,259,298,3.83916,938.234,-37.901,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 463-82-1,205.7,293.16,3.28533,695.152,-70.679,nist,"Hopfner, Parekh, et al., 1975"
 463-82-1,268.02,313.2,3.86373,950.318,-36.329,nist,"Osborn and Douslin, 1974"
@@ -2330,6 +2354,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 498-66-8,301,350,3.34144,939.519,-87.051,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 499-75-2,344,521,4.76489,2090.671,-70.833,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 50-00-0,190,271,4.281,957.24,-30.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+50-00-0,163.76,250.86,4.28176,959.43,-29.758,nist,"Spence and Wild, 1935, 3"
 500-28-7,283,409,8.2115,4807.8,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 5008-69-5,288,411,4.0563,1336.3,-55.75,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 5008-72-0,304,434,4.06029,1399.88,-61.55,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -2358,6 +2383,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 504-63-2,387,510,6.5959,3212,-0.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 504-63-2,332.6,487.4,6.29523,3105.018,6.101,nist,"Stull, 1947"
 504-64-3,160,249,4.31391,1100.94,-24,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+504-64-3,160.96,248.78,4.5833,1207.884,-14.911,nist,"McDougall and Kilpatrick, 1965, 2"
 50422-80-5,288,411,4.03232,1316.7,-58.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 505-22-6,1,377,4.905,1869,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 505-29-3,389,437,2.35802,656.048,-198.778,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -2369,8 +2395,11 @@ cas,Tmin,Tmax,A,B,C,source,reference
 506-33-2,483,656,6.73807,3885.351,-78.607,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 506-51-4,543,633,2.57964,1135.78,-280.11,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 506-59-2,439,533,8.5159,4994.8,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+506-68-3,273.01,313.09,3.53667,727.385,-130.052,nist,"Lord and Woolf, 1954"
 506-77-4,267,286,3.73223,496.23,-111.959,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+506-77-4,196.5,286.3,4.66177,1074.1,-54.458,nist,"Stull, 1947"
 506-78-5,419,426,4.895,2090.1,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+506-78-5,298.4,414.3,7.78435,3335.292,14.533,nist,"Stull, 1947"
 506-80-9,290,337,3.49711,1226.782,-58.302,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 506-96-7,275,334,2.99411,824.016,-80.53,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 507-02-8,276,302,1.00167,285.36,-177.53,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -2553,6 +2582,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 542-85-8,284,404,5.23698,2136.895,4.502,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 542-90-5,358,422,4.258,1439.9,-78.36,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 542-92-7,276,314,1.5581,183.257,-195.613,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+542-92-7,271.3,314,2.65373,531.826,-113.863,nist,"Lesteva, Ogoradnikov, et al., 1967"
 54268-02-9,418,580,4.50736,1990.803,-80.936,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 543-20-4,312,466,5.17103,2213.854,-36.924,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 543-28-2,357,480,5.71548,2540.197,-34.886,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -2642,6 +2672,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 557-98-2,229,327,4.04108,1038.576,-38.411,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 557-99-3,195,294,2.5241,735.239,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 558-13-4,370,497,2.89693,873.53,-160.55,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+558-13-4,369.5,462.7,3.4003,1152.616,-123.007,nist,"Stull, 1947"
 558-17-8,235,294,2.8314,1007.717,-60.428,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 558-30-5,204,329,3.73105,1066.088,-42.771,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 558-37-2,232,337,3.80241,1010.52,-48.241,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -2839,6 +2870,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 591-48-0,318,376,4.00449,1276.897,-56.656,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 591-49-1,310,383,4.00942,1310.346,-56.145,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 591-50-4,305,462,4.40176,1823.994,-46.071,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+591-50-4,302.4,461.4,4.3712,1803.466,-47.933,nist,"Young, 1889"
 591-76-4,270,378,3.99739,1235.52,-53.653,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 591-76-4,291.68,364.09,4.00653,1240.869,-53.047,nist,"Forziati, Norris, et al., 1949, 2"
 591-76-4,270.55,387.88,3.99739,1235.52,-53.653,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
@@ -2885,6 +2917,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 593-53-3,144,200,4.19421,734.222,-19.58,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 593-53-3,164.26,216.77,3.0514,395.889,-64.151,nist,"Michels and Wassenaar, 1948"
 593-53-3,144.17,208.17,4.19421,734.222,-19.58,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+593-60-2,185.7,289,4.36869,1219.308,-9.129,nist,"Guyer, Sch«65533»tze, et al., 1937"
 593-61-3,214,272,4.16471,1017.107,-32.819,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 593-63-5,205,238,3.67668,717.766,-45.838,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 593-70-4,195,283,3.851,864.85,-39.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -3440,6 +3473,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 67-68-5,325.49,442.09,4.49107,1807.002,-60.995,nist,"Jakli and van Hook, 1972"
 67-71-0,387,523,4.749,2241,-50.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 67-72-1,464,488,3.0016,842.3,-176.35,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+67-72-1,305.9,458.8,4.21123,1626.945,-76.102,nist,"Stull, 1947"
 6703-80-6,491,529,7.26761,4834.704,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 6703-82-8,499,537,7.16545,4857.463,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 6703-98-6,645,935,4.5012,3200,-269.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -3603,6 +3637,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 74-82-8,110,190.5,4.22061,516.689,11.223,nist,"Hestermans and White, 1961"
 74-82-8,92.64,120.59,3.7687,395.744,-6.469,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 74-83-9,205,295,4.21313,1044.42,-28.47,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+74-83-9,203,276.8,4.26874,1069.708,-25.771,nist,"Beersmans and Jungers, 1947"
 74-84-0,133,198,3.95405,663.72,-16.469,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 74-84-0,91.33,144.13,4.50706,791.3,-6.422,nist,"Carruth and Kobayashi, 1973"
 74-84-0,135.74,199.91,3.93835,659.739,-16.719,nist,"Loomis and Walters, 1926"
@@ -3620,6 +3655,9 @@ cas,Tmin,Tmax,A,B,C,source,reference
 74-87-3,303,416.3,4.91858,1427.529,45.137,nist,"Hsu and McKetta, 1964"
 74-87-3,184.6,265.87,4.16533,920.86,-27.57,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 74-88-4,234,337,4.09731,1138.29,-37.38,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+74-88-4,218,315.6,4.1554,1177.78,-32.058,nist,"Stull, 1947"
+74-88-4,273.3,307.6,5.14281,1755.986,26.111,nist,"Thompson and Linnett, 1936"
+74-88-4,315.6,521,4.14897,1223.831,-20.179,nist,"Stull, 1947"
 74-89-5,203,288,4.5442,1050.66,-35.32,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 74-89-5,190.06,266.92,4.52,1034.977,-37.574,nist,"Aston, Siller, et al., 1937, 2"
 74-89-5,203.61,282.93,4.5442,1050.66,-35.32,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
@@ -3630,10 +3668,12 @@ cas,Tmin,Tmax,A,B,C,source,reference
 74-93-1,279.9,458,4.35381,1122.494,-21.748,nist,"Stull, 1947"
 74-93-1,207.8,297.85,4.15653,1015.547,-34.444,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 74-95-3,277,394,4.31535,1405.83,-43.88,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+74-95-3,238.1,371.8,4.51734,1546.096,-28.977,nist,"Stull, 1947"
 74-96-4,231,333,4.04485,1090.81,-41.44,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 74-96-4,301.29,348.51,4.11241,1121.371,-38.478,nist,"Zmaczynski, 1930, 2"
 74-96-4,231.35,332.8,4.04485,1090.811,-41.44,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 74-97-5,270,350,3.6809,970.62,-77.05,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+74-97-5,226.6,341,3.52077,895.556,-86.447,nist,"McDonald, Shrader, et al., 1959, 2"
 74-98-6,248,270,3.92828,803.997,-26.11,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 74-98-6,166.02,231.41,4.01158,834.26,-22.763,nist,"Kemp and Egan, 1938"
 74-98-6,230.6,320.7,3.98292,819.296,-24.417,nist,"Rips, 1963"
@@ -3647,26 +3687,40 @@ cas,Tmin,Tmax,A,B,C,source,reference
 7423-69-0,282,402,4.0474,1289.3,-58.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7425-80-1,436,529,5.42719,2379.08,-105,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7429-37-0,273,417,6.31522,3240.096,31.729,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7429-90-5,1557,2329,5.73623,13204.109,-24.306,nist,"Stull, 1947"
 7433-56-9,398,444,3.5759,1145.105,-122.728,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7433-78-5,397,444,4.09253,1512.698,-73.434,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7439-90-9,126.68,208,4.2064,539.004,8.855,nist,"Theeuwes and Bearman, 1970, 2"
 7439-90-9,111.34,129.23,3.7556,416.38,-8.7,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7439-93-2,298.14,1599.99,4.98831,7918.984,-9.52,nist,"Hicks, 1963"
+7439-93-2,1204,1353,1.58992,1603.966,-711.088,nist,"Hartmann and Schneider, 1929"
+7439-97-6,298.14,749.99,4.85767,3007.129,-10.001,nist,"Hicks, 1963"
 7440-01-9,15.9,27,3.75641,95.599,-1.503,nist,"Stull, 1947"
 7440-01-9,24.33,29.55,3.20934,78.38,-2.6,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7440-02-0,2083,3005,5.98183,16808.435,-188.717,nist,"Stull, 1947"
+7440-09-7,679.4,1033,4.45718,4691.58,24.195,nist,"Fiock and Rodebush, 1926"
+7440-21-3,1997,2560,9.56436,23308.848,-123.133,nist,"Stull, 1947"
+7440-23-5,924,1118,2.46077,1873.728,-416.372,nist,"Rodebush and Walters, 1930"
 7440-37-1,83.78,150.72,3.29555,215.24,-22.233,nist,"Drii and Rabinovich, 1966"
 7440-37-1,90.94,101.48,3.73479,302.683,-6.083,nist,"Clark, Din, et al., 1951, 2"
 7440-37-1,114.4,150.31,4.46903,481.012,22.156,nist,"McCain and Ziegler, 1967"
 7440-37-1,129.33,147.4,4.97171,658.982,49.819,nist,"van Itterbeek, Verbeke, et al., 1963"
 7440-37-1,82.59,94.26,3.74141,304.227,-5.83,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7440-39-3,1257,1911,4.08188,7599.352,-45.737,nist,"Stull, 1947"
+7440-46-2,552,963,3.69576,3453.122,-26.829,nist,"Stull, 1947"
+7440-47-3,1889,2755,6.02371,16064.989,-83.86,nist,"Stull, 1947"
 7440-59-7,1.85,5.34,1.6836,8.1548,0.56,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 7440-63-3,161.43,162.63,2.83881,326.595,-49.796,nist,"Chen, Lim, et al., 1975"
 7440-63-3,161.7,184.7,3.80675,577.661,-13,nist,"Michels and Wassenaar, 1950"
 7440-63-3,156.43,177.84,3.76779,566.282,-14.49,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7440-70-2,1254,1712,2.78473,3121.368,-594.591,nist,"Hartmann and Schneider, 1929"
 7446-09-5,177.7,263,3.48586,668.225,-72.252,nist,"Stull, 1947"
 7446-09-5,263,414.9,4.37798,966.575,-42.071,nist,"Stull, 1947"
 7446-09-5,199.71,279.47,4.4072,999.9,-35.96,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 7446-11-9,333,483,4.20515,892.175,-103.564,nist,"Abercromby and Tiley, 1963, 2"
 7446-11-9,284.5,332.04,6.17575,1735.31,-36.65,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7447-40-7,1094,1680,4.78236,7440.691,-122.709,nist,"Stull, 1947"
+7447-40-7,1170,1466,4.61668,6910.833,-176.083,nist,"Barchuk and Dubovoi, 1973"
 75-00-3,211,305,4.09088,1020.63,-35.58,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 75-00-3,217.21,285.66,4.16181,1052.821,-32.078,nist,"Gordon and Giauque, 1948"
 75-00-3,211.86,304.89,4.09088,1020.63,-35.58,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
@@ -3675,6 +3729,8 @@ cas,Tmin,Tmax,A,B,C,source,reference
 75-02-5,245,328,5.43117,1649.942,115.526,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 75-02-5,123.8,201,3.46439,593.551,-30.039,nist,"Stull, 1947"
 75-03-6,256,369,3.95688,1175.71,-47.89,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+75-03-6,218.8,345.6,4.08511,1247.135,-39.612,nist,"Stull, 1947"
+75-03-6,303,333,4.01326,1192.892,-48.095,nist,"Smyth and Engel, 1929"
 75-04-7,220,308,4.434,1102.88,-40.7,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 75-04-7,190.8,289.8,4.45586,1121.445,-37.854,nist,"Stull, 1947"
 75-04-7,289.8,449,4.53013,1203.822,-23.716,nist,"Stull, 1947"
@@ -3699,6 +3755,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 75-11-6,341,485,4.291,1715.7,-54.95,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 75-12-7,391,466,5.12417,2290.48,-44.106,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 75-15-0,255,354,4.05183,1160.637,-32.498,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+75-15-0,276.74,353.08,4.06683,1168.62,-31.616,nist,"Waddington, Smith, et al., 1962"
 75-18-3,231,331,4.07369,1090.76,-42.351,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 75-18-3,250.6,293.24,4.28713,1201.134,-29.906,nist,"Osborne, Doescher, et al., 1942, 2"
 75-18-3,231.3,331.47,4.07369,1090.755,-42.351,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
@@ -3729,6 +3786,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 75-34-3,246.6,352.49,4.1678,1201.05,-41.88,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 75-35-4,240,305,4.1324,1103.643,-37.276,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 75-36-5,210,324,3.96559,1062.147,-55.675,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+75-36-5,266.86,324.2,3.96568,1062.86,-55.531,nist,"McDonald, Shrader, et al., 1959, 2"
 75-37-6,188,260,3.75231,735.16,-52.88,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 75-37-6,160.7,246.7,4.23406,896.171,-34.714,nist,"Stull, 1947"
 75-37-6,187.74,265.89,3.75231,735.16,-52.88,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
@@ -3738,6 +3796,9 @@ cas,Tmin,Tmax,A,B,C,source,reference
 75-43-4,282.1,450.7,4.29721,1105.42,-24.479,nist,"Stull, 1947"
 75-43-4,210.83,300.91,4.02473,959.934,-43.12,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 75-44-5,338,410,4.37325,1143.27,-19.537,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+75-44-5,180.3,281.4,3.94888,945.332,-41.715,nist,"Stull, 1947"
+75-44-5,215.53,281,4.05103,978.937,-38.717,nist,"Giauque and Jones, 1948"
+75-44-5,281.4,447,4.27105,1072.71,-29.855,nist,"Stull, 1947"
 75-45-6,180,240,4.13253,835.462,-29.69,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 75-45-6,229.6,236.4,4.17693,857.673,-26.667,nist,"Kletskii, 1964, 2"
 75-45-6,232.4,358.5,4.36567,947.577,-14.964,nist,"Stull, 1947"
@@ -3818,6 +3879,8 @@ cas,Tmin,Tmax,A,B,C,source,reference
 753-59-3,174,236,4.955,1220,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 753-89-9,278,395,4.07519,1249.154,-50.477,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 754-10-9,288,306,7.34799,3196.016,-47.393,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7550-35-8,1021,1583,4.72068,6978.079,-102.451,nist,"Stull, 1947"
+7550-45-0,249.93,423,4.84969,1990.235,2,nist,"Luchinskii, 1966, 2"
 7553-56-2,392,487,4.1431,1611.9,-67.97,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7553-56-2,311.9,456,3.36429,1039.159,-146.589,nist,"Stull, 1947"
 7553-56-2,392.49,487.51,4.1431,1611.9,-67.97,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
@@ -3869,6 +3932,8 @@ cas,Tmin,Tmax,A,B,C,source,reference
 763-29-1,249,358,3.9752,1138.52,-48.446,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 763-32-6,329,403,2.80184,603.556,-188.086,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 763-69-9,316,473,6.15552,2990.411,41.924,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7631-86-9,2005,2500,7.82064,20008.568,58.883,nist,"Stull, 1947"
+7637-07-2,118.5,172.5,4.68215,663.463,-30.795,nist,"Stull, 1947"
 764-35-2,300,358,3.94854,1146.825,-66.716,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 764-93-2,401,447,4.02929,1455.01,-85.359,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 764-96-5,333,466,4.09257,1561.758,-83.024,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -3877,10 +3942,13 @@ cas,Tmin,Tmax,A,B,C,source,reference
 7642-09-3,252,363,4.00344,1164.13,-48.401,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7642-10-6,274,394,4.00159,1261.7,-53.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7642-15-1,353,395,4.04737,1354.001,-60.651,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7646-79-9,1043,1323,4.11842,4838.145,-146.305,nist,"Stull, 1947"
 7647-01-0,160,201,4.2949,745.8,-14.268,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7647-01-0,122.3,188.3,3.60765,535.172,-39.847,nist,"Stull, 1947"
 7647-01-0,188.3,309.4,4.57389,868.358,1.754,nist,"Stull, 1947"
 7647-01-0,159.97,201,4.2949,745.78,-14.27,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7647-14-5,859.99,1239.99,3.56682,5200.904,-317.409,nist,"Ewing and Stern, 1974"
+7647-14-5,1138,1738,5.07184,8388.497,-82.638,nist,"Stull, 1947"
 7647-19-0,182,201,4.0393,647.21,-28.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 765-03-7,439,489,4.08074,1598.011,-96.528,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 765-09-3,434,598,4.511,2143,-89.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -3910,6 +3978,8 @@ cas,Tmin,Tmax,A,B,C,source,reference
 7667-86-9,616,933,4.6198,3144.9,-251.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7667-88-1,624,945,4.5999,3165,-256.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 768-33-2,302,467,4.26422,1703.69,-66.48,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7681-11-0,1018,1597,4.40221,6421.797,-136.338,nist,"Stull, 1947"
+7681-82-5,1040,1577,5.03702,7405.912,-104.186,nist,"Stull, 1947"
 7688-21-3,254,365,4.16295,1258.57,-39.299,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 769-25-5,363,481,4.26105,1741.14,-72.771,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7697-37-2,274,376,4.6368,1406,-52.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -3933,6 +4003,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 771-61-9,378.6,428.11,4.18813,1377.38,-89.447,nist,"Ambrose, 1968, 2"
 7719-09-7,257,372,4.41235,1446.7,-20.45,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7719-12-2,258,374,3.9516,1196,-46.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7719-12-2,221.6,347.3,4.19505,1304.47,-36.965,nist,"Stull, 1947"
 7719-79-1,563,857,4.6511,2947.5,-222.55,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7719-80-4,566,861,4.6528,2960.9,-224.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7719-83-7,591,895,4.6534,3059.2,-237.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -3944,6 +4015,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 7719-93-9,607,919,4.6364,3118.4,-246.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7719-95-1,626,905,4.5912,3172,-257.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7722-84-1,330,446,5.09407,1886.76,-52.55,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7723-14-0,349.8,553,5.04162,2819.239,6.399,nist,"Stull, 1947"
 7726-95-6,266,354,4.0027,1119.68,-51.77,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7726-95-6,224.5,331.4,2.94529,638.258,-115.144,nist,"Stull, 1947"
 7726-95-6,343,383,4.70827,1562.264,0.628,nist,"Blair and Ihle, 1973"
@@ -3961,6 +4033,10 @@ cas,Tmin,Tmax,A,B,C,source,reference
 7732-18-5,344,373,5.08354,1663.125,-45.622,nist,"Bridgeman and Aldrich, 1964"
 7732-18-5,379,573,3.55959,643.748,-198.043,nist,"Liu and Lindsay, 1970"
 7732-18-5,273.2,473.2,5.11564,1687.537,-42.98,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7757-82-6,1073,1223,1.93334,7517.522,-375.044,nist,"Fryxell, Trythall, et al., 1973"
+7758-02-3,1068,1656,4.57146,6940.81,-136.349,nist,"Stull, 1947"
+7758-95-4,820,1227,4.63732,4896.563,-168.921,nist,"Stull, 1947"
+7758-95-4,931,1154,4.42067,4564.909,-194.347,nist,"Barchuk and Dubovoi, 1973"
 776-35-2,417,453,5.86088,3341.4,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7764-50-3,319,496,4.66941,2154.24,-34.24,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 777-22-0,361,392,6.33643,3215.816,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -3992,6 +4068,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 7783-41-7,77,128.5,5.26568,758.401,15.742,nist,"Stull, 1947"
 7783-41-7,93.1,137.4,4.36109,545.05,-3.24,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 7783-42-8,173,244,4.08396,775.48,-39.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7783-42-8,174.42,229.1,3.80303,676.1,-50.852,nist,"Pace and Turnbull, 1965"
 7783-43-9,316,420,4.545,1380,-95.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7783-44-0,158,183,3.90392,756.39,-22.99,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7783-54-2,105,154,3.90456,501.913,-15.36,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -4000,17 +4077,24 @@ cas,Tmin,Tmax,A,B,C,source,reference
 7783-60-0,170,250,3.9644,823.4,-25.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7783-60-0,160.8,224,3.86848,706.12,-53.207,nist,"Brown and Robinson, 1955, 2"
 7783-60-0,170,249.92,3.9644,823.4,-25.15,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7783-61-1,129,178.3,7.10978,1220.564,-6.884,nist,"Stull, 1947"
+7783-61-1,163.16,186.91,8.37766,1643.698,18.344,nist,"Pace and Mosser, 1963"
 7783-66-6,288,401,4.3659,1387,-59.53,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7783-80-4,236,252,3.8737,807,-26.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7783-82-6,201.5,290.4,4.55569,1021.208,-64.7,nist,"Stull, 1947"
+7784-18-1,1511,1810,7.13005,7298.239,-784.204,nist,"Stull, 1947"
+7784-23-8,451,658.7,3.77771,1821.269,-176.725,nist,"Stull, 1947"
 7785-26-4,291,441,4.04993,1520.15,-62.75,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7785-70-8,292,433,3.92666,1414.16,-68.64,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7786-34-7,293,383,6.6307,3560,0,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7787-49-7,1145.6,1372,6.14199,7577.291,-211.665,nist,"Cantor, 1965"
 7787-71-5,309,421,4.85464,1673.95,-53.67,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7787-71-5,309.09,421.28,4.85464,1673.95,-53.67,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 7789-20-0,335,394,5.04327,1616.76,-53.61,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7789-20-0,379,573,5.15107,1700.073,-44.013,nist,"Liu and Lindsay, 1970"
 7789-20-0,335.17,394.54,5.04327,1616.76,-53.61,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 7789-21-1,343,459,4.5244,1521,-99.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7789-23-3,1158,1775,4.76463,7770.106,-141.602,nist,"Stull, 1947"
 7789-25-5,163,227,3.5684,556.13,-57.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7789-26-6,165,246,3.79076,769.5,-25.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7789-30-2,237,334,4.39858,1219.28,-36.75,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -4018,14 +4102,18 @@ cas,Tmin,Tmax,A,B,C,source,reference
 7789-30-2,236.8,334.31,4.39858,1219.28,-36.75,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
 7789-59-5,351,495,4.1327,1609.2,-75.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7789-60-8,329,477,4.0404,1590.5,-52.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7789-60-8,280.9,448.5,4.15129,1694.636,-39.741,nist,"Stull, 1947"
 7789-69-7,379,409,4.073,1320,-59.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7789-89-1,244,382,4.23357,1430.918,-43.046,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 779-02-2,423,588,4.68327,2959.682,-5.782,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7790-89-8,134,196,4.114,682.1,-17.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7790-89-8,129.8,172.7,6.03113,983.517,-9.791,nist,"Stull, 1947"
 7790-91-2,218,302,4.49175,1096.28,-40.52,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7790-91-2,192.8,284.7,4.31282,1182.409,-10.335,nist,"Stull, 1947"
 7790-94-5,324,454,4.174,1480,-72.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7790-99-0,289,391,4.82236,1515.4,-56.35,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7791-21-1,206,293,4.25758,1021.56,-34.99,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+7791-21-1,174.7,275.4,4.821,1295,-6.436,nist,"Stull, 1947"
 7791-23-3,352,476,3.3822,970.87,-161.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7791-25-5,257,365,4.1266,1209,-49.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7791-27-7,325,450,4.144,1460,-71.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -4072,6 +4160,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 78-99-9,270,385,4.107,1273,-50.85,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 7803-51-2,143.8,185.7,4.02591,702.651,-11.065,nist,"Stull, 1947"
 7803-51-2,137.44,199.46,3.84049,645.512,-17.08,poling,Poling 5th ed. (A shifted from log10 Pa to bar)
+7803-62-5,93.8,161.7,4.22228,703.987,5.352,nist,"Stull, 1947"
 79-00-5,291,412,4.10301,1332.6,-61.77,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 79-01-6,229,369,4.27434,1380.13,-36.672,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 79-04-9,252,382,4.24018,1322.692,-66.802,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
@@ -4154,6 +4243,7 @@ cas,Tmin,Tmax,A,B,C,source,reference
 822-23-1,341,398,5.03635,2767.682,-87.572,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 822-27-5,479,656,4.0828,1935.6,-144.15,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 822-35-5,197,276,4.51606,1207.012,-7.966,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
+822-35-5,196,275.1,4.08259,1009.32,-28.164,nist,"Heisig, 1941"
 822-38-8,294,303,2.56109,1407.842,-128.118,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 822-50-4,271,390,3.95744,1235.88,-52.25,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)
 822-86-6,344,463,4.1189,1651.614,-60.619,landolt,Landolt-Bornstein IV/20 (from ln Pa to log10 bar)

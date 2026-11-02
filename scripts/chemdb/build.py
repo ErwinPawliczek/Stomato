@@ -46,6 +46,7 @@ from parse_nist import (  # noqa: E402
 )
 
 BANK = Path(chemicals.__file__).resolve().parent
+THERMO = Path(thermo.__file__).resolve().parent
 
 #: Lower rank wins when several sources state one property. Evaluated/critically
 #: reviewed sources first, handbook compilations next, unreferenced collections last.
@@ -71,6 +72,7 @@ SOURCE_RANK: dict[str, int] = {
     "passut_danner": 8,
     "mathews": 8,
     "omega_definition": 9,
+    "sander": 10,
 }
 
 GRADES: dict[str, str] = {
@@ -95,6 +97,7 @@ GRADES: dict[str, str] = {
     "passut_danner": "B",
     "mathews": "B",
     "omega_definition": "B",
+    "sander": "B",
 }
 
 UNITS = {
@@ -380,6 +383,85 @@ def _collect_henry(rows: Rows, cache: Path) -> None:
         note = f"gas + Henry median of {entries} (k {k:.4g}; slope {slope:.4g} K)"
         rows.add(cas, "Hf_aq", hf + dh, "nist_henry", reference=note)
         rows.add(cas, "S0_aq", s0 + (dh - dg) / 298.15, "nist_henry", reference=note)
+
+
+SANDER_TABLE = "Interaction Parameters/Sander_henry_T_dep.json"
+WATER_KG_PER_MOL = 0.018015268  # IAPWS-95 molar mass of water
+
+
+def _collect_sander(rows: Rows) -> None:
+    """Dissolved-gas standard states from Sander's compilation, as shipped in ``thermo``.
+
+    H in Pa on the mole-fraction scale, ln H = A + B/T + C ln T + D T + E/T² + F T²
+    (``chemicals.solubility.Henry_pressure``). For dilute solute, k°H = 1e5/(H·M_w) in
+    mol/(kg bar); ΔG°soln = −RT ln k°H and ΔH°soln = R·d ln H/d(1/T) at 298.15 K, then
+    added to the gas's selected values as for the WebBook Henry data. Only the
+    temperature-dependent sets are used: a solution enthalpy is needed for S°.
+    """
+    table = json.loads((THERMO / SANDER_TABLE).read_text())["data"]
+    gas_rows: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for row in rows.rows:
+        if row["property"] in ("Hf_gas", "S0_gas"):
+            gas_rows[(row["cas"], row["property"])].append(row)
+    T = 298.15
+    for pair, p in sorted(table.items()):
+        cas, solvent = pair.split()
+        if solvent != "7732-18-5":
+            continue
+        hf_rows, s_rows = gas_rows.get((cas, "Hf_gas")), gas_rows.get((cas, "S0_gas"))
+        if not hf_rows or not s_rows:
+            continue
+        ln_h = p["A"] + p["B"] / T + p["C"] * math.log(T) + p["D"] * T + p["E"] / T**2 + p["F"] * T**2
+        # d ln H / d(1/T) at T, from the same expression
+        slope = p["B"] - p["C"] * T - p["D"] * T**2 - 2.0 * p["E"] / T + 2.0 * p["F"] * T**3
+        k = 1e5 / (math.exp(ln_h) * WATER_KG_PER_MOL)
+        dh = sc.R * slope
+        dg = -sc.R * T * math.log(k)
+        hf = min(hf_rows, key=lambda r: SOURCE_RANK[r["source"]])["value"]
+        s0 = min(s_rows, key=lambda r: SOURCE_RANK[r["source"]])["value"]
+        note = f"gas + Sander (k {k:.4g} mol/(kg bar); dlnH/d(1/T) {slope:.4g} K)"
+        rows.add(cas, "Hf_aq", hf + dh, "sander", reference=note)
+        rows.add(cas, "S0_aq", s0 + (dh - dg) / T, "sander", reference=note)
+
+
+SHOMATE_SNAPSHOT = "Heat Capacity/webbook_shomate_coefficients.json"
+
+
+def _snapshot_shomate(kept: set[str]) -> list[dict[str, Any]]:
+    """Shomate Cp pieces of the WebBook snapshot: A-E only, in [solid, liquid, gas] order.
+
+    ``chemicals`` stores them converted to T in kelvin (``chemicals.heat_capacity.Shomate``),
+    not in the WebBook's t = T/1000, so they evaluate through that function.
+
+    The snapshot keeps no F, G, H, so H and S are anchored at runtime on the selected
+    S°298 by integrating Cp, the way the liquid Cp fits are.
+    """
+    out: list[dict[str, Any]] = []
+    for cas, phases in json.loads((BANK / SHOMATE_SNAPSHOT).read_text()).items():
+        if cas not in kept:
+            continue
+        for phase, pieces in zip(("solid", "liquid", "gas"), phases, strict=True):
+            for piece in pieces or []:
+                Tmin, Tmax, A, B, C, D, E = piece
+                out.append(
+                    {
+                        "cas": cas,
+                        "phase": phase,
+                        "Tmin": Tmin,
+                        "Tmax": Tmax,
+                        "A": A,
+                        "B": B,
+                        "C": C,
+                        "D": D,
+                        "E": E,
+                        "F": None,
+                        "G": None,
+                        "H": None,
+                        "source": "nist_snapshot",
+                        "reference": "WebBook Shomate Cp (snapshot)",
+                    }
+                )
+    return out
 
 
 def _collect_coolprop(rows: Rows) -> None:
@@ -670,6 +752,7 @@ def _collect_all(cache: Path) -> dict[str, Any]:
     _collect_coolprop(rows)
     _constants(rows)
     _collect_henry(rows, cache)
+    _collect_sander(rows)
     ions = _collect_ions(rows)
     nist = {p.cas: p for p in pages}
     species: dict[str, dict[str, Any]] = {}
@@ -714,6 +797,8 @@ def _correlations(collected: dict[str, Any], kept: set[str]) -> dict[str, list[d
             shomate.append({"cas": page.cas, "source": "nist", **row})
         for row in page.antoine:
             antoine.append({"cas": page.cas, "source": "nist", **row})
+    crawled = {(row["cas"], row["phase"]) for row in shomate}
+    shomate += [row for row in _snapshot_shomate(kept) if (row["cas"], row["phase"]) not in crawled]
     for row in _tsv("Vapor Pressure/Landolt_antoine_V20.tsv"):
         if row["CAS"] in kept:
             a, b, c = _num(row["A"]), _num(row["B"]), _num(row["C"])
