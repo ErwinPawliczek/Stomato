@@ -459,16 +459,51 @@
       note: common-wall layer model (Haseler 1983) solved as a BVP over monotone T(H) tables, on
         given layer conductances; reduces to R0 at its own outlet temperatures
     R2:
-      status: planned
-      params: {}
-      note: zoned with phase change
+      status: provisional
+      adapter: ngdesign.units.heat.multi_stream_r2:MultiStreamR2
+      params:
+        type: object
+        required: [layer_width_m, length_m]
+        properties:
+          layer_width_m: {type: number, description: 'layer width, m'}
+          length_m: {type: number, description: 'core flow length, m'}
+          k_fin_W_mK: {type: number, description: 'fin conductivity, W/(m K), default 180 (aluminium alloy)'}
+          n_zones: {type: integer, description: 'equal-duty zones, default 20'}
+          n_layers_hot_in_1: {type: integer, description: 'layers of hot_in_1'}
+          fin_height_hot_in_1_m: {type: number, description: 'offset-strip fin height, m'}
+          fin_spacing_hot_in_1_m: {type: number, description: 'fin spacing, m'}
+          fin_thickness_hot_in_1_m: {type: number, description: 'fin thickness, m'}
+          strip_length_hot_in_1_m: {type: number, description: 'offset strip length, m'}
+          dP_hot_in_1: {type: number, description: 'pressure drop, Pa, default 0'}
+          n_layers_hot_in_2: {type: integer, description: 'layers of hot_in_2'}
+          fin_height_hot_in_2_m: {type: number, description: 'offset-strip fin height, m'}
+          fin_spacing_hot_in_2_m: {type: number, description: 'fin spacing, m'}
+          fin_thickness_hot_in_2_m: {type: number, description: 'fin thickness, m'}
+          strip_length_hot_in_2_m: {type: number, description: 'offset strip length, m'}
+          dP_hot_in_2: {type: number, description: 'pressure drop, Pa, default 0'}
+          n_layers_cold_in_1: {type: integer, description: 'layers of cold_in_1'}
+          fin_height_cold_in_1_m: {type: number, description: 'offset-strip fin height, m'}
+          fin_spacing_cold_in_1_m: {type: number, description: 'fin spacing, m'}
+          fin_thickness_cold_in_1_m: {type: number, description: 'fin thickness, m'}
+          strip_length_cold_in_1_m: {type: number, description: 'offset strip length, m'}
+          dP_cold_in_1: {type: number, description: 'pressure drop, Pa, default 0'}
+          n_layers_cold_in_2: {type: integer, description: 'layers of cold_in_2'}
+          fin_height_cold_in_2_m: {type: number, description: 'offset-strip fin height, m'}
+          fin_spacing_cold_in_2_m: {type: number, description: 'fin spacing, m'}
+          fin_thickness_cold_in_2_m: {type: number, description: 'fin thickness, m'}
+          strip_length_cold_in_2_m: {type: number, description: 'offset strip length, m'}
+          dP_cold_in_2: {type: number, description: 'pressure drop, Pa, default 0'}
+      note: zoned plate-fin rating on the R1 common-wall BVP; Manglik and Bergles 1995 single phase,
+        Shah and Liu-Winterton two phase through the channel hydraulic diameter (a tube-correlation
+        approximation); piecewise hA(x); reduces to R1 in one zone at R2's own conductances
       end_state: true
   pid_symbol: MS
   references:
   - docs/unit-catalogue-plan.md §2 U-C 6
   notes: >-
     R1 ships provisional on the spec's independent MS1 and MS2 and the reduction to R0; no printed
-    multi-stream rating example was searched for. No R0 V1 worked case: Smith Table 16.2 (the four-stream LNG-cold-box basis)
+    multi-stream rating example was searched for. R2 ships provisional on the spec's Manglik-Bergles, D_h and fin-efficiency
+    values and the reduction to R1; no plate-fin V1 case was searched for. No R0 V1 worked case: Smith Table 16.2 (the four-stream LNG-cold-box basis)
     needs 7.5 MW of hot utility that the utility-free R0 unit does not model, and
     every single-balance arrangement of the four streams crosses (verified by hand
     cascade). The Smith streams 1+3 two-stream balance is covered by the
