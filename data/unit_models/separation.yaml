@@ -142,16 +142,32 @@
         balancing duty is reported; gas, liquid and (when the package gives one)
         aqueous outlets at their flash states
     R1:
-      status: planned
-      params: {}
-      note: Souders-Brown sizing, carry-over at a given diameter (the souders_brown correlation plugin exists)
+      status: provisional
+      adapter: ngdesign.units.separation.flash_drum_r1:FlashDrumR1
+      params:
+        type: object
+        properties:
+          outlet_P: {type: number, description: 'outlet pressure, Pa abs; default min inlet P'}
+          duty_W: {type: number, description: 'heat added to the drum, W'}
+          vapor_fraction: {type: number, minimum: 0, maximum: 1, description: 'molar vapour fraction; PVF flash'}
+          K_m_s: {type: number, exclusiveMinimum: 0, description: 'Souders-Brown K, m/s; default York demister fit'}
+          diameter_m: {type: number, exclusiveMinimum: 0, description: 'vessel inside diameter, m; enables carry-over'}
+          inlet_entrained_fraction: {type: number, minimum: 0, maximum: 1, description: 'fraction of the liquid entering the gravity section as droplets'}
+          droplet_d_rr_m: {type: number, exclusiveMinimum: 0, description: 'Rosin-Rammler characteristic droplet size, m'}
+          droplet_n_rr: {type: number, exclusiveMinimum: 0, description: 'Rosin-Rammler spread parameter'}
+          gas_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'gas viscosity override, Pa s'}
+      note: Souders-Brown sizing and droplet carry-over at a given diameter through the scrubber R1
+        helpers; carry-over leaves both liquids in proportion to mass
+      validation: []
       end_state: true
   pid_symbol: V
   references:
   - docs/unit-catalogue-plan.md §2 U-D 3
   notes: R0 PT/PH/PVF flash implemented with an optional mixed second inlet; the
     flash family is validated by V1-flash-corripio-2013 (assessed PR-vs-ideal-K
-    miss) and V0 self-consistency; Souders-Brown sizing is R1.
+    miss) and V0 self-consistency. R1 reuses the scrubber R1 helpers; no flash-drum
+    worked example was searched for, so R1 is provisional on the R0 reductions and
+    the mass-proportional carry-over test.
 
 - id: decanter
   name: Decanter

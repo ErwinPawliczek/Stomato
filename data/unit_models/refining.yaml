@@ -473,26 +473,73 @@
     - name: slurry_out
       required: true
       description: slurry/slops
+    - name: coke_out
+      required: true
+      description: coke on spent catalyst, to the regenerator
+  balance: mass_elements
   levels:
     R0:
-      status: planned
-      params: {}
-      note: yield table vs conversion
+      status: provisional
+      adapter: ngdesign.units.refining.fcc:FccR0
+      params:
+        type: object
+        required: [conversion_wt_pct, yield_table, T_out, P_out]
+        properties:
+          conversion_wt_pct: {type: number, description: 'operating conversion, wt% on feed (100 - LCO - slurry)'}
+          yield_table:
+            type: object
+            description: "user table, no default: {conversion_wt_pct, dry_gas_wt_pct, lpg_wt_pct,
+              gasoline_wt_pct, lco_wt_pct, slurry_wt_pct, coke_wt_pct}, equal-length arrays; each row
+              sums to 100 and LCO + slurry = 100 - conversion"
+          T_out: {type: number, description: 'outlet temperature, K'}
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+      note: mass yields linearly interpolated from a required user table against conversion, no
+        extrapolation; mass-only lumps, duty sensible-only
     R1:
-      status: planned
-      params: {}
-      note: Weekman 3/4-lump kinetics with heat balance
+      status: provisional
+      adapter: ngdesign.units.refining.fcc:FccR1
+      params:
+        type: object
+        required: [kinetics, contact_time_s, deactivation_alpha_per_s, dry_gas_fraction, lco_fraction, P_out]
+        properties:
+          kinetics:
+            type: object
+            description: "required, no default: {gasoil_to_gasoline, gasoil_to_gases, gasoil_to_coke,
+              gasoline_to_gases, gasoline_to_coke}, each {k0_per_s, Ea_J_mol}; on the operating
+              catalyst-to-oil basis"
+          contact_time_s: {type: number, description: riser contact time, s}
+          deactivation_alpha_per_s: {type: number, description: 'Weekman decay phi = exp(-alpha t), 1/s'}
+          dry_gas_fraction: {type: number, description: dry-gas share of the gases lump}
+          lco_fraction: {type: number, description: LCO share of the unconverted gas-oil lump}
+          P_out: {type: number, description: 'riser pressure, Pa'}
+          isothermal_T_K: {type: number, description: 'isothermal riser temperature, K; replaces the
+              heat balance'}
+          catalyst_to_oil: {type: number, description: catalyst-to-oil mass ratio; heat balance}
+          cp_cat_J_kgK: {type: number, description: catalyst heat capacity; heat balance}
+          T_regen_K: {type: number, description: regenerated catalyst temperature (an input, the
+              regenerator is not solved); heat balance}
+          heat_of_cracking_J_kg: {type: number, description: endothermic heat per kg converted; heat balance}
+          coke_heat_of_combustion_J_kg: {type: number, description: for the reported regenerator residual}
+      note: Lee et al. four-lump form of the Weekman gas-oil lump over riser contact time with
+        exp(-alpha t) decay and an adiabatic riser fed by regenerated catalyst; all constants are
+        required user inputs. The regenerator is reported, not solved
       end_state: true
   pid_symbol: FC
   references:
   - docs/unit-catalogue-plan.md §2 U-H 9
-  notes: roadmap; nothing above R1 is planned (plan §2 U-H preamble). R0 record of
-    what was searched (U-H2 review) - the published FCC yield correlations are
+  notes: Nothing above R1 is planned (plan §2 U-H preamble). R0 record of
+    what was searched (U-H2 review, still true) - the published FCC yield correlations are
     chart/figure-based (Gary, Handwerk & Kaiser, Petroleum Refining, 5th ed. 2007,
     §6.12 Yield Estimation, pp. 143-144, points at Figures 6.17-6.28) and the U-R1
     conventions forbid digitising figures; no equation-based R0 correlation was
-    found in the open sources searched, so the row stays planned rather than
-    shipping a figure-transcription.
+    found in the open sources searched. R0 and R1 therefore ship with no numbers of
+    their own - the table and the rate constants are required user inputs and absent
+    ones refuse - so no figure is transcribed. The original Weekman & Nace (1970) and
+    Lee et al. (1989) constants could not be read from an open copy (searched
+    2026-11-01; secondary quotations conflict in values and units), so none is a
+    preset. The coke_out port was added at R0 so mass closes. V1 gap - provisional on
+    the closed-form Weekman second-order solution, the first-order gasoline
+    integral by quadrature, and refusals.
 
 - id: hcu
   name: Hydrocracker
@@ -515,25 +562,61 @@
     - name: unconverted_out
       required: true
       description: unconverted oil recycle
+    - name: gas_out
+      required: true
+      description: light gases and unreacted hydrogen
+  balance: mass_elements
   levels:
     R0:
-      status: planned
-      params: {}
-      note: yield table vs conversion
+      status: provisional
+      adapter: ngdesign.units.refining.hcu:HcuR0
+      params:
+        type: object
+        required: [conversion_wt_pct, yield_table, T_out, P_out]
+        properties:
+          conversion_wt_pct: {type: number, description: 'operating conversion, wt% on VGO'}
+          yield_table:
+            type: object
+            description: "user table, no default: {conversion_wt_pct, diesel_wt_pct, naphtha_wt_pct};
+              gas and H2 follow from the element balance"
+          T_out: {type: number, description: 'outlet temperature, K'}
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+      note: yield table vs conversion on representative real paraffins (nC24, nC12, nC6, C3); gas by
+        element balance; H2 consumption counts scissions only, a lower bound
     R1:
-      status: planned
-      params: {}
-      note: lumped (continuous-lumping) kinetics
+      status: provisional
+      adapter: ngdesign.units.refining.hcu:HcuR1
+      params:
+        type: object
+        required: [kinetics, T_bed_K, lhsv_per_h, T_out, P_out]
+        properties:
+          kinetics:
+            type: object
+            description: "required, no default: {vgo_to_diesel, vgo_to_naphtha, vgo_to_gas,
+              diesel_to_naphtha, diesel_to_gas, naphtha_to_gas}, each {k0_per_s, Ea_J_mol}"
+          T_bed_K: {type: number, description: 'isothermal bed temperature, K'}
+          lhsv_per_h: {type: number, description: 'liquid hourly space velocity, 1/h; contact time 1/LHSV'}
+          T_out: {type: number, description: 'outlet temperature, K'}
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+      note: discrete four-lump six-path first-order kinetics (Sadighi et al. 2010 network form) on
+        representative paraffins, isothermal bed, hydrogen in excess; continuous lumping as such is
+        not implemented
       end_state: true
   pid_symbol: HC
   references:
   - docs/unit-catalogue-plan.md §2 U-H 10
-  notes: roadmap. R0 record of what was searched (U-H2 review) - published hydrocracker
+  notes: R0 record of what was searched (U-H2 review) - published hydrocracker
     yield correlations are chart/figure-based (Gary, Handwerk & Kaiser, Petroleum
     Refining, 5th ed. 2007, §7.6 Hydrocracking Yields, pp. 170-172, reads
     Figure 7.4 / Figure 7.6 curves; its Table 7.3 is fixed-feed vol% tables, not a
-    correlation) and the U-R1 conventions forbid digitising figures, so the row
-    stays planned rather than shipping a figure-transcription.
+    correlation) and the U-R1 conventions forbid digitising figures. R0 and R1 therefore
+    ship with no numbers of their own - the table and the rate constants are required
+    user inputs and absent ones refuse. The gas_out port was added at R0 so excess H2
+    and light gases close the mass balance. Pseudo VGO is refused (issue 222); real H2
+    consumed into formula-free lumps cannot close the element ledger. V1 gap - Faraji et
+    al., ACS Omega 2020 Table 2 prints k1-k6 at 663.15 K, but the open text does not map
+    each constant to a path, so it is not used; provisional on the series-reaction
+    closed form and the reduction of R1 to R0.
 
 - id: coker
   name: Delayed coker / visbreaker

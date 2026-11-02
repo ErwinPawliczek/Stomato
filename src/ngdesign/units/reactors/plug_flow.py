@@ -10,7 +10,7 @@ d(xi_j)/dV = s_j * a * eta_j * r_j / |nu_base,j| (Fogler, *Elements of CRE*,
 mole-balance design equation dF_A/dV = r_A written per reaction), together
 with the energy balance dT/dV = [-Sum_j dH_j(T) dxi_j/dV + q_V] / (Sum_i F_i
 cp,mix), the accumulated heat dQ/dV = q_V and (from R2) the Ergun bed
-pressure drop per unit volume.  ``r_j`` is
+pressure drop per unit volume (:class:`ErgunBed`).  ``r_j`` is
 :func:`ngdesign.units._physics.kinetics.rate` on its base-component extent
 basis; dividing by |nu_base,j| converts it to an extent rate.
 
@@ -38,6 +38,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 import numpy as np
+from fluids.packed_bed import Ergun
 from scipy.integrate import solve_ivp
 
 from ngdesign.contracts.plugins import Thermo
@@ -90,6 +91,58 @@ class HeatModel:
 
 
 @dataclass(frozen=True)
+class ErgunBed:
+    """R2: packed-bed geometry for the Ergun pressure drop (spec equation 8).
+
+    ``n_tubes`` identical tubes of inside diameter ``tube_diameter_m`` share
+    the flow equally, so the superficial mass flux G = m_dot/(n_t*A_c) is per
+    tube and constant along it, and dP/dV over the total reacting volume is
+    (dP/dL)/(n_t*A_c).  ``viscosity_Pa_s`` overrides the package viscosity.
+    The bed equation itself is ``fluids.packed_bed.Ergun`` (Ergun 1952,
+    Chem. Eng. Prog. 48(2) 89-94), called per unit length.
+    """
+
+    tube_diameter_m: float
+    particle_diameter_m: float
+    voidage: float
+    n_tubes: int = 1
+    viscosity_Pa_s: float | None = None
+
+    def __post_init__(self) -> None:
+        if self.tube_diameter_m <= 0.0:
+            raise PlugFlowError("tube_diameter_m must be > 0")
+        if self.n_tubes < 1:
+            raise PlugFlowError("n_tubes must be >= 1")
+        if self.particle_diameter_m <= 0.0:
+            raise PlugFlowError("particle_diameter_m must be > 0")
+        if not 0.0 < self.voidage < 1.0:
+            raise PlugFlowError(f"voidage {self.voidage} must lie in (0, 1)")
+        if self.viscosity_Pa_s is not None and self.viscosity_Pa_s <= 0.0:
+            raise PlugFlowError("viscosity_Pa_s must be > 0")
+
+    @property
+    def flow_area_m2(self) -> float:
+        """Total open-tube cross-section n_t*A_c, m2."""
+        return self.n_tubes * math.pi * self.tube_diameter_m**2 / 4.0
+
+    def dp_dv(self, mass_flow_kg_s: float, density: float, viscosity: float) -> float:
+        """dP/dV over the total reacting volume, Pa/m3 (negative)."""
+        area = self.flow_area_m2
+        superficial = mass_flow_kg_s / (area * density)
+        dp_dl = float(
+            Ergun(
+                dp=self.particle_diameter_m,
+                voidage=self.voidage,
+                vs=superficial,
+                rho=density,
+                mu=viscosity,
+                L=1.0,
+            )
+        )
+        return -dp_dl / area
+
+
+@dataclass(frozen=True)
 class PlugFlowProfile:
     """The integrated plug-flow solution, per output point."""
 
@@ -104,7 +157,7 @@ class PlugFlowProfile:
     n_rhs: int
 
 
-def _scale_j(reaction: Reaction, bulk_density_kg_m3: float | None) -> float:
+def rate_basis_scale(reaction: Reaction, bulk_density_kg_m3: float | None) -> float:
     """The rate-basis scale s_j (spec equation 3)."""
     units = reaction.kinetics.rate_units  # type: ignore[union-attr]
     if units in _VOLUME_RATE_UNITS:
@@ -128,7 +181,7 @@ def _validate_reactions(rset: ReactionSet, bulk_density_kg_m3: float | None) -> 
     for reaction in rset.reactions:
         if reaction.kinetics is None:
             raise PlugFlowError(f"reaction '{reaction.id}' has no kinetics")
-        scales.append(_scale_j(reaction, bulk_density_kg_m3))
+        scales.append(rate_basis_scale(reaction, bulk_density_kg_m3))
     return scales
 
 
@@ -222,6 +275,23 @@ def _phase_of(state: StreamState, reacting_phase: Literal["vapor", "liquid"]) ->
     return None
 
 
+def audit_single_phase(
+    thermo: Thermo,
+    f: Mapping[str, float],
+    t: float,
+    p: float,
+    reacting_phase: Literal["vapor", "liquid"],
+    where: str,
+) -> None:
+    """One flash at (T, P): refuse a two-phase state or a missing reacting phase."""
+    state = thermo.flash_pt(z_from(f), t, p, math.fsum(f.values()))
+    vf = float(state.vapor_fraction)
+    if 1.0e-9 < vf < 1.0 - 1.0e-9:
+        raise PlugFlowError(f"{where} is single-phase but the state is two-phase (vapour fraction {vf:.6f})")
+    if _phase_of(state, reacting_phase) is None:
+        raise PlugFlowError(f"reacting phase {reacting_phase!r} is absent from {where}")
+
+
 def integrate_plug_flow(
     inlet: StreamState,
     rset: ReactionSet,
@@ -233,7 +303,7 @@ def integrate_plug_flow(
     heat: HeatModel | None = None,
     reacting_phase: Literal["vapor", "liquid"] = "vapor",
     bulk_density_kg_m3: float | None = None,
-    ergun: object | None = None,  # R2: ErgunBed, owned by the R2 step
+    ergun: object | None = None,
     rate_multiplier: Callable[[int, float, float, Mapping[str, float]], float] | None = None,
     n_output: int = 51,
 ) -> PlugFlowProfile:
@@ -242,13 +312,14 @@ def integrate_plug_flow(
     See the module docstring for the method; the spec
     (``specs/backend/units/pfr.md``) owns the equations and the refusal
     table.  ``rate_multiplier(j, T, P, z)`` returns a*eta_j for reaction j
-    (R3); ``None`` means 1.0.  ``ergun`` is the R2 packed bed, not implemented
-    at R1: anything but ``None`` is refused, so a packed bed never silently
-    runs without its pressure drop. The parameter stays in the signature for
-    the callers the R2 step serves.
+    (R3); ``None`` means 1.0.  ``ergun`` is the R2 packed bed; ``None`` is an
+    empty tube with no pressure drop; anything that is not an
+    :class:`ErgunBed` is refused, so a packed bed never silently runs without
+    its pressure drop.
     """
-    if ergun is not None:
-        raise PlugFlowError("ergun pressure drop is R2 (not implemented)")
+    if ergun is not None and not isinstance(ergun, ErgunBed):
+        raise PlugFlowError(f"ergun pressure drop is R2 and takes an ErgunBed, got {type(ergun).__name__}")
+    bed: ErgunBed | None = ergun
     if volume_m3 <= 0.0:
         raise PlugFlowError("volume_m3 must be > 0")
     if energy == "heat_model" and heat is None:
@@ -265,6 +336,7 @@ def integrate_plug_flow(
     f_tot0 = math.fsum(f0.values())
     t_in = float(inlet.T)
     p_in = float(inlet.P)
+    mass_flow = float(inlet.mass_flow)
 
     # Concentration-equivalent pressure (spec equation 4): the vapour phase
     # uses the contract's ideal-gas definition unchanged.
@@ -339,7 +411,14 @@ def integrate_plug_flow(
         else:
             dt = (-d_h + q) / (f_tot * cp_molar)
         dq = q if energy != "isothermal" else 0.0
-        dp = 0.0  # R1 carries no pressure drop; the R2 step adds Ergun here.
+        dp = 0.0
+        if bed is not None:
+            mu = bed.viscosity_Pa_s if bed.viscosity_Pa_s is not None else props.viscosity
+            if mu is None:
+                raise PlugFlowError(
+                    "the Ergun pressure drop needs a viscosity: the package reports none, pass viscosity_Pa_s"
+                )
+            dp = bed.dp_dv(mass_flow, float(props.density), float(mu))
 
         out = np.zeros(m + 3 + n_extra)
         out[:m] = dxi
@@ -432,26 +511,18 @@ def integrate_plug_flow(
     # the flash budget must not scale with V). Refuses a two-phase state or
     # a missing reacting phase anywhere along the profile.
     for i, v_i in enumerate(t_eval):
-        f_i = _flows(rset, f0, sol.y[:m, i].tolist())
-        t_i = float(sol.y[m, i])
-        p_i = float(sol.y[m + 1, i])
-        state_i = thermo.flash_pt(z_from(f_i), t_i, p_i, math.fsum(f_i.values()))
-        vf_i = float(state_i.vapor_fraction)
-        if 1.0e-9 < vf_i < 1.0 - 1.0e-9:
-            raise PlugFlowError(
-                f"the PFR is single-phase but the state at V = {v_i:g} m3 is two-phase "
-                f"(vapour fraction {vf_i:.6f})"
-            )
-        if _phase_of(state_i, reacting_phase) is None:
-            raise PlugFlowError(
-                f"reacting phase {reacting_phase!r} is absent from the single-phase state at V = {v_i:g} m3"
-            )
+        audit_single_phase(
+            thermo,
+            _flows(rset, f0, sol.y[:m, i].tolist()),
+            float(sol.y[m, i]),
+            float(sol.y[m + 1, i]),
+            reacting_phase,
+            f"the PFR at V = {v_i:g} m3",
+        )
 
     y_end = sol.y[:, -1]
     # Per output point, per reaction (mol/s): transpose the sol.y rows.
-    extents_rows = tuple(
-        tuple(float(xi) for xi in point) for point in zip(*(sol.y[j] for j in range(m)), strict=True)
-    )
+    extents_rows = tuple(tuple(float(sol.y[j, i]) for j in range(m)) for i in range(sol.y.shape[1]))
     extra_rows: tuple[tuple[float, ...], ...] = (
         tuple(
             tuple(float(e) for e in point)
