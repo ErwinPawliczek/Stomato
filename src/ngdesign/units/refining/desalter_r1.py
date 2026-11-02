@@ -88,7 +88,9 @@ class DesalterR1:
         rho_w = _positive(params, "rho_water_kg_m3")
         mu_o = _positive(params, "mu_oil_Pa_s")
         if rho_w <= rho_o:
-            raise RefiningSpecError(f"rho_water_kg_m3 {rho_w} is not above rho_oil_kg_m3 {rho_o}: density, no settling")
+            raise RefiningSpecError(
+                f"rho_water_kg_m3 {rho_w} is not above rho_oil_kg_m3 {rho_o}: density, no settling"
+            )
 
         crude, wash = inlets["crude_in"], inlets["wash_in"]
         flows = crude.component_flows()

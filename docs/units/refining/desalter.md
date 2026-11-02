@@ -104,4 +104,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-H 2
 
-> V1 gap - provisional without a case. Searched PetroWiki 'Desalting' and Wauquier (Petroleum Refining vol. 1, crude desalting): both state a 0.1-0.2 vol% BS&W specification but print no worked case, so the former V2102 pin (which echoed its own input spec and the adapter's default salt removal) was withdrawn at re-review. The water/salt/BS&W split is covered by closed-form tests in tests/units/refining/test_separation.py.
+> R1 takes oil and water densities and oil viscosity as required params (spec option B): no package gives honest values for a pseudo crude. V1 gap - provisional without a case. Searched PetroWiki 'Desalting' and Wauquier (Petroleum Refining vol. 1, crude desalting): both state a 0.1-0.2 vol% BS&W specification but print no worked case, so the former V2102 pin (which echoed its own input spec and the adapter's default salt removal) was withdrawn at re-review. The water/salt/BS&W split is covered by closed-form tests in tests/units/refining/test_separation.py.

@@ -65,7 +65,15 @@ def test_thinner_oil_carries_less(thermo: Thermo) -> None:
 
 
 def test_infinite_area_limit() -> None:
-    _, _, _, _, carry, salt = _splits(0.1, 1.0e9, 850.0, 935.0, 2.0e-3, 300e-6, 20e-6, 2.5, 0.9, 10.0, 50.0)
+    """d_c falls as A**-0.5, so carryover falls as A**-1.25: hand-checked at 1e9, then in the limit.
+
+    At A = 1e9: U = 1e-10, d_c = 6.57e-8 m, c_f = 4.27e-7, c_m = 4.95e-10, so the carryover is
+    (c_m*59 + c_f*1)/60 = 7.63e-9.  The spec's 1e-12 at A = 1e9 is out of reach of its own
+    equations; the same bound holds at A = 1e13.
+    """
+    args = (850.0, 935.0, 2.0e-3, 300e-6, 20e-6, 2.5, 0.9, 10.0, 50.0)
+    assert _splits(0.1, 1.0e9, *args)[4] == pytest.approx(7.634e-9, rel=1e-3)
+    _, _, _, _, carry, salt = _splits(0.1, 1.0e13, *args)
     assert carry < 1e-12
     assert salt > 1.0 - 1e-12
 
