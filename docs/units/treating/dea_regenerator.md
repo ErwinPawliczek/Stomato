@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.mdea_regenerator:DeaRegenerator` | shortcut stripping to lean-loading specifications |
-| R2 | planned | — | reboiled stripper on the reactive package — blocked on P1-11 |
+| R2 | planned | — | P1-11 is merged, but the kettle column on the amine package does not converge (MDEA, 6 stages, 1.9 bar, boilup 20 mol/s - M=5.5e-2, H=2.1e-1); no adapter ships until it does |
 
 ### R0 parameters
 

@@ -7,6 +7,8 @@ J/mol, temperature-independent):
 
 - van Laar:  G^E = A12 A21 x1 x2 / (A12 x1 + A21 x2)
 - Margules:  G^E = A12 x1 x2^2 + A21 x1^2 x2
+- Wohl three-suffix (Scatchard-Hamer):
+  G^E = x1 x2 (A12 q2^2 x2 + A21 q1^2 x1) / (q1 x1 + q2 x2)^2
 
 giving ln gamma_1^inf = A12/(RT) and ln gamma_2^inf = A21/(RT). All GE
 derivatives are analytic; the unit tests cross-check every one of them against
@@ -20,6 +22,7 @@ no silent extension to an unverified multicomponent form.
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from thermo.activity import GibbsExcess
@@ -177,6 +180,262 @@ class Margules(GibbsExcess):  # type: ignore[misc]  # thermo ships no stubs for 
 
     def __repr__(self) -> str:
         return f"Margules(T={self.T!r}, xs={self.xs!r}, A12={self.A12!r}, A21={self.A21!r})"
+
+
+class WohlThreeSuffix(GibbsExcess):  # type: ignore[misc]  # thermo ships no stubs for GibbsExcess
+    # See VanLaar.model_id.
+    model_id = 700
+    """Wohl (1946) three-suffix binary gE model, energy form (A12, A21 in J/mol).
+
+    The general form both classic two-parameter models truncate, with the effective
+    volume fractions z_i = q_i x_i / (q1 x1 + q2 x2):
+
+        G^E = (q1 x1 + q2 x2) z1 z2 (A12 z2 / q1 + A21 z1 / q2)
+
+    ln gamma_1 = z2^2 [A + 2 z1 (B q1/q2 - A)] with A = A12/(RT), B = A21/(RT), and
+    the same with the indices exchanged (Wohl, Trans. AIChE 42 (1946) 215; Prausnitz,
+    Lichtenthaler & de Azevedo, Molecular Thermodynamics, 3rd ed., sec. 6.10).
+    q1 = q2 is the three-suffix Margules equation, q1/q2 = A12/A21 is van Laar's; the
+    catalogue row takes q_i = V_i, the Scatchard-Hamer (1935) choice, so the volume
+    ratio carries the information neither special case has and the infinite-dilution
+    limits stay exactly A12/(RT) and A21/(RT).
+    """
+
+    __slots__ = ("A12", "A21", "q1", "q2", "T", "xs", "N", "vectorized")
+
+    def __init__(
+        self, *, xs: list[float], T: float = 298.15, A12: float, A21: float, q1: float, q2: float
+    ) -> None:
+        _check_xs("Wohl three-suffix", list(xs))
+        self.A12 = float(A12)
+        self.A21 = float(A21)
+        self.q1 = float(q1)
+        self.q2 = float(q2)
+        self.T = T
+        self.xs = list(xs)
+        self.N = len(xs)
+        self.vectorized = False
+
+    def to_T_xs(self, T: float, xs: list[float]) -> WohlThreeSuffix:
+        return WohlThreeSuffix(xs=list(xs), T=T, A12=self.A12, A21=self.A21, q1=self.q1, q2=self.q2)
+
+    def _terms(self) -> tuple[float, float, float]:
+        """(a, b, s) of G^E = x1 x2 (a x2 + b x1) / s^2."""
+        x1, x2 = self.xs
+        return self.A12 * self.q2**2, self.A21 * self.q1**2, self.q1 * x1 + self.q2 * x2
+
+    def GE(self) -> float:
+        if self.N < 2:
+            return 0.0
+        x1, x2 = self.xs
+        a, b, s = self._terms()
+        return x1 * x2 * (a * x2 + b * x1) / s**2
+
+    def dGE_dxs(self) -> list[float]:
+        if self.N < 2:
+            return [0.0] * self.N
+        x1, x2 = self.xs
+        a, b, s = self._terms()
+        n = x1 * x2 * (a * x2 + b * x1)
+        n_i = (a * x2**2 + 2.0 * b * x1 * x2, 2.0 * a * x1 * x2 + b * x1**2)
+        q = (self.q1, self.q2)
+        return [n_i[i] / s**2 - 2.0 * n * q[i] / s**3 for i in range(2)]
+
+    def d2GE_dxixjs(self) -> list[list[float]]:
+        if self.N < 2:
+            return [[0.0] * self.N for _ in range(self.N)]
+        x1, x2 = self.xs
+        a, b, s = self._terms()
+        n = x1 * x2 * (a * x2 + b * x1)
+        n_i = (a * x2**2 + 2.0 * b * x1 * x2, 2.0 * a * x1 * x2 + b * x1**2)
+        n_12 = 2.0 * a * x2 + 2.0 * b * x1
+        n_ij = ((2.0 * b * x2, n_12), (n_12, 2.0 * a * x1))
+        q = (self.q1, self.q2)
+        return [
+            [
+                n_ij[i][j] / s**2
+                - 2.0 * (n_i[i] * q[j] + n_i[j] * q[i]) / s**3
+                + 6.0 * n * q[i] * q[j] / s**4
+                for j in range(2)
+            ]
+            for i in range(2)
+        ]
+
+    def d3GE_dxixjxks(self) -> list[list[list[float]]]:
+        if self.N < 2:
+            return [[[0.0] * self.N for _ in range(self.N)] for _ in range(self.N)]
+        x1, x2 = self.xs
+        a, b, s = self._terms()
+        n = x1 * x2 * (a * x2 + b * x1)
+        n_i = (a * x2**2 + 2.0 * b * x1 * x2, 2.0 * a * x1 * x2 + b * x1**2)
+        n_12 = 2.0 * a * x2 + 2.0 * b * x1
+        n_ij = ((2.0 * b * x2, n_12), (n_12, 2.0 * a * x1))
+
+        def n_ijk(i: int, j: int, k: int) -> float:
+            ones = (i, j, k).count(0)
+            return 2.0 * b if ones == 2 else 2.0 * a if ones == 1 else 0.0
+
+        q = (self.q1, self.q2)
+        return [
+            [
+                [
+                    n_ijk(i, j, k) / s**2
+                    - 2.0 * (n_ij[i][j] * q[k] + n_ij[i][k] * q[j] + n_ij[j][k] * q[i]) / s**3
+                    + 6.0 * (n_i[i] * q[j] * q[k] + n_i[j] * q[i] * q[k] + n_i[k] * q[i] * q[j]) / s**4
+                    - 24.0 * n * q[i] * q[j] * q[k] / s**5
+                    for k in range(2)
+                ]
+                for j in range(2)
+            ]
+            for i in range(2)
+        ]
+
+    def dGE_dT(self) -> float:
+        return 0.0
+
+    def d2GE_dT2(self) -> float:
+        return 0.0
+
+    def d3GE_dT3(self) -> float:
+        return 0.0
+
+    def d2GE_dTdxs(self) -> list[float]:
+        return [0.0] * self.N
+
+    def __repr__(self) -> str:
+        return (
+            f"WohlThreeSuffix(T={self.T!r}, xs={self.xs!r}, A12={self.A12!r}, A21={self.A21!r}, "
+            f"q1={self.q1!r}, q2={self.q2!r})"
+        )
+
+
+#: Conceptual segments in the order of NrtlSac's matrices.
+NRTL_SAC_SEGMENTS: tuple[str, ...] = ("x", "y-", "y+", "z")
+
+
+class NrtlSac(GibbsExcess):  # type: ignore[misc]  # thermo ships no stubs for GibbsExcess
+    # See VanLaar.model_id.
+    model_id = 800
+    """NRTL segment activity coefficient model (Chen & Song 2004).
+
+    ln gamma_I = ln gamma_I^C + sum_m r_m,I [ln Gamma_m^lc - ln Gamma_m^lc,I]
+
+    with the Flory-Huggins combinatorial term and the segment-based NRTL local term
+
+    ln Gamma_m^lc = sum_j x_j G_jm tau_jm / sum_k x_k G_km
+        + sum_m' (x_m' G_mm' / sum_k x_k G_km')
+          (tau_mm' - sum_j x_j G_jm' tau_jm' / sum_k x_k G_km')
+
+    evaluated over the segment fractions of the mixture and of pure I, G = exp(-alpha
+    tau) (US 8,527,210, eqs. 14-19, the authors' own statement of the model). tau is a
+    constant, so ln gamma has no temperature dependence and G^E is proportional to T.
+
+    ``dGE_dxs`` returns the partial molar excess Gibbs energies, RT ln gamma_i, which
+    the base class's gamma route reduces to ln gamma_i exactly; ``d2GE_dxixjs`` is a
+    central difference of them along x_j at fixed x_k, adequate for the flash's
+    Jacobian use, with no analytic form published.
+    """
+
+    __slots__ = ("segments", "tau", "alpha", "T", "xs", "N", "vectorized", "_lngammas")
+
+    def __init__(
+        self,
+        *,
+        xs: list[float],
+        T: float = 298.15,
+        segments: list[list[float]],
+        tau: list[list[float]],
+        alpha: list[list[float]],
+    ) -> None:
+        self.segments = segments
+        self.tau = tau
+        self.alpha = alpha
+        self.T = T
+        self.xs = list(xs)
+        self.N = len(xs)
+        self.vectorized = False
+        self._lngammas: list[float] | None = None
+
+    def to_T_xs(self, T: float, xs: list[float]) -> NrtlSac:
+        return NrtlSac(xs=list(xs), T=T, segments=self.segments, tau=self.tau, alpha=self.alpha)
+
+    def _ln_gamma_lc(self, seg_x: list[float]) -> list[float]:
+        """ln Gamma_m^lc over one set of segment mole fractions."""
+        n = len(seg_x)
+        tau = self.tau
+        g = [[math.exp(-self.alpha[j][m] * tau[j][m]) for m in range(n)] for j in range(n)]
+        denominator = [sum(seg_x[k] * g[k][m] for k in range(n)) for m in range(n)]
+        mean = [
+            sum(seg_x[j] * g[j][m] * tau[j][m] for j in range(n)) / denominator[m] if denominator[m] else 0.0
+            for m in range(n)
+        ]
+        return [
+            mean[m]
+            + sum(
+                seg_x[mp] * g[m][mp] / denominator[mp] * (tau[m][mp] - mean[mp])
+                for mp in range(n)
+                if denominator[mp]
+            )
+            for m in range(n)
+        ]
+
+    def ln_gammas(self) -> list[float]:
+        """ln gamma_I of the current composition (combinatorial plus segment terms)."""
+        if self._lngammas is not None:
+            return self._lngammas
+        xs, r = self.xs, self.segments
+        n_seg = len(NRTL_SAC_SEGMENTS)
+        totals = [sum(row) for row in r]
+        mean_r = sum(x * t for x, t in zip(xs, totals, strict=True))
+        mix = [sum(xs[i] * r[i][m] for i in range(self.N)) / mean_r for m in range(n_seg)]
+        lc_mix = self._ln_gamma_lc(mix)
+        out = []
+        for i in range(self.N):
+            ratio = totals[i] / mean_r
+            pure = self._ln_gamma_lc([v / totals[i] for v in r[i]])
+            residual = sum(r[i][m] * (lc_mix[m] - pure[m]) for m in range(n_seg))
+            out.append(math.log(ratio) + 1.0 - ratio + residual)
+        self._lngammas = out
+        return out
+
+    def _rt(self) -> float:
+        return 8.31446261815324 * self.T
+
+    def GE(self) -> float:
+        return self._rt() * sum(x * lg for x, lg in zip(self.xs, self.ln_gammas(), strict=True))
+
+    def dGE_dxs(self) -> list[float]:
+        return [self._rt() * lg for lg in self.ln_gammas()]
+
+    def d2GE_dxixjs(self) -> list[list[float]]:
+        step = 1e-5
+        rows: list[list[float]] = [[0.0] * self.N for _ in range(self.N)]
+        for j in range(self.N):
+            up = list(self.xs)
+            dn = list(self.xs)
+            up[j] += step
+            dn[j] -= step
+            total_up, total_dn = sum(up), sum(dn)
+            hi = self.to_T_xs(self.T, [x / total_up for x in up]).dGE_dxs()
+            lo = self.to_T_xs(self.T, [x / total_dn for x in dn]).dGE_dxs()
+            for i in range(self.N):
+                rows[i][j] = (hi[i] - lo[i]) / (2.0 * step)
+        return rows
+
+    def dGE_dT(self) -> float:
+        return self.GE() / self.T
+
+    def d2GE_dT2(self) -> float:
+        return 0.0
+
+    def d3GE_dT3(self) -> float:
+        return 0.0
+
+    def d2GE_dTdxs(self) -> list[float]:
+        return [v / self.T for v in self.dGE_dxs()]
+
+    def __repr__(self) -> str:
+        return f"NrtlSac(T={self.T!r}, xs={self.xs!r}, segments={self.segments!r})"
 
 
 def gammas_from_ge(model: Any) -> list[float]:

@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `V`
 
-Rigour ladder: R0 provisional, R1 planned
+Rigour ladder: R0 provisional, R1 provisional
 
 ## Ports
 
@@ -19,7 +19,7 @@ Rigour ladder: R0 provisional, R1 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.separation.flash_drum:FlashDrum` | PT / PH (duty_W) / PVF flash at the outlet pressure — exactly one of duty_W and vapor_fraction; the inlets are first adiabatically PH-mixed at the lowest inlet pressure (a single inlet passes through unchanged); the balancing duty is reported; gas, liquid and (when the package gives one) aqueous outlets at their flash states |
-| R1 | planned | — | Souders-Brown sizing, carry-over at a given diameter (the souders_brown correlation plugin exists) |
+| R1 | provisional | `ngdesign.units.separation.flash_drum_r1:FlashDrumR1` | Souders-Brown sizing and droplet carry-over at a given diameter through the scrubber R1 helpers; carry-over leaves both liquids in proportion to mass |
 
 ### R0 parameters
 
@@ -39,6 +39,49 @@ properties:
 type: object
 ```
 
+### R1 parameters
+
+```yaml
+properties:
+  K_m_s:
+    description: Souders-Brown K, m/s; default York demister fit
+    exclusiveMinimum: 0
+    type: number
+  diameter_m:
+    description: vessel inside diameter, m; enables carry-over
+    exclusiveMinimum: 0
+    type: number
+  droplet_d_rr_m:
+    description: Rosin-Rammler characteristic droplet size, m
+    exclusiveMinimum: 0
+    type: number
+  droplet_n_rr:
+    description: Rosin-Rammler spread parameter
+    exclusiveMinimum: 0
+    type: number
+  duty_W:
+    description: heat added to the drum, W
+    type: number
+  gas_viscosity_Pa_s:
+    description: gas viscosity override, Pa s
+    exclusiveMinimum: 0
+    type: number
+  inlet_entrained_fraction:
+    description: fraction of the liquid entering the gravity section as droplets
+    maximum: 1
+    minimum: 0
+    type: number
+  outlet_P:
+    description: outlet pressure, Pa abs; default min inlet P
+    type: number
+  vapor_fraction:
+    description: molar vapour fraction; PVF flash
+    maximum: 1
+    minimum: 0
+    type: number
+type: object
+```
+
 ## V1 worked cases
 
 | case | level | quantity | expected | measured | tolerance | result |
@@ -52,4 +95,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-D 3
 
-> R0 PT/PH/PVF flash implemented with an optional mixed second inlet; the flash family is validated by V1-flash-corripio-2013 (assessed PR-vs-ideal-K miss) and V0 self-consistency; Souders-Brown sizing is R1.
+> R0 PT/PH/PVF flash implemented with an optional mixed second inlet; the flash family is validated by V1-flash-corripio-2013 (assessed PR-vs-ideal-K miss) and V0 self-consistency. R1 reuses the scrubber R1 helpers; no flash-drum worked example was searched for, so R1 is provisional on the R0 reductions and the mass-proportional carry-over test.

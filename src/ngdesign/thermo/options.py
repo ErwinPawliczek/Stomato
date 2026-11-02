@@ -34,15 +34,19 @@ Implemented value -> mechanism (spec T-02):
 - ``VolumeTranslation.PENELOUX``: the library's translated classes
   (``PRMIXTranslated`` / ``SRKMIXTranslated``) fed in-house Rackett ``cs``
   (Peneloux et al. 1982); shifts density, never VLE.
-- ``LiquidDensity``: vocabulary per the spec; only ``EOS`` (the plain EOS
-  density) has an implementation. No family-A row declares a non-default
-  value, so the others stay declaration-only and ``catalogue.build`` rejects
-  them until a row needs one.
+- ``LiquidDensity``: ``RACKETT`` and ``COSTALD`` are the correlations in
+  ``ngdesign.thermo.liquid_density``, replacing the volume of liquid roots only
+  (VLE and enthalpy stay the EOS's). No row declares ``API``.
+- ``FreeWater.IAPWS95``: the water-rich liquid takes pure water from IAPWS-95 in
+  fugacity, enthalpy, entropy and volume (``ngdesign.thermo.free_water``).
 - ``SourTerm.SOUR``: in-house Wilson API-955-style sour-water ionisation
   correction on the aqueous liquid phase (API Publication 955 / EPA-600/2-80-067).
 - ``EnthalpyMethod.LEE_KESLER``: in-house Lee-Kesler (1975) corresponding-states
   enthalpy departures replacing the cubic EOS departure on the phase objects
   (enthalpy only, never VLE).
+- ``EnthalpyMethod.IDEAL``: K-value rows only (``KValuePackage``): an ideal-gas
+  vapour and an ideal liquid one heat of vaporisation below it, no pressure
+  departure. Cubic rows do not declare it.
 
 An option value outside its group's vocabulary never loads: the catalogue
 validates row options against these declarations at load time
@@ -84,6 +88,7 @@ class KValueModel(StrEnum):
     LEE_KESLER_PLOCKER = "lee_kesler_plocker"
     IDEAL = "ideal"
     HENRY_IDEAL = "henry_ideal"
+    PHYSICAL_SOLVENT = "physical_solvent"
 
 
 class LiquidDensity(StrEnum):
@@ -107,6 +112,7 @@ class MixingRule(StrEnum):
 
     NONE = "none"
     KABADI_DANNER = "kabadi_danner"
+    GLYCOL_TUNED = "glycol_tuned"
 
 
 class EnthalpyMethod(StrEnum):
@@ -114,6 +120,22 @@ class EnthalpyMethod(StrEnum):
 
     EOS = "eos"
     LEE_KESLER = "lee_kesler"
+    IDEAL = "ideal"
+
+
+class FreeWater(StrEnum):
+    """Free-water treatment group of the cubic adapter."""
+
+    NONE = "none"
+    IAPWS95 = "iapws95"
+
+
+class GammaPhiCaloric(StrEnum):
+    """Liquid enthalpy route of the gamma-phi adapter (Aspen WILS-LR / WILS-GLR)."""
+
+    VAPOUR_ROUTE = "vapour_route"
+    LIQUID_REFERENCE = "liquid_reference"
+    GAS_LIQUID_REFERENCE = "gas_liquid_reference"
 
 
 class GammaPhiLiquid(StrEnum):
@@ -124,6 +146,10 @@ class GammaPhiLiquid(StrEnum):
     WILSON = "wilson"
     VANLAAR = "vanlaar"
     MARGULES = "margules"
+    WOHL3 = "wohl3"
+    NRTL_TDEP = "nrtl_tdep"
+    UNIQUAC_TDEP = "uniquac_tdep"
+    NRTL_SAC = "nrtl_sac"
     REGULAR_SOLUTION = "regular_solution"
     UNIFAC = "unifac"
     UNIFAC_DORTMUND = "unifac_dortmund"
@@ -155,6 +181,7 @@ class GammaPhiOptions(BaseModel):
 
     liquid: GammaPhiLiquid
     vapour: GammaPhiVapour
+    caloric: GammaPhiCaloric = GammaPhiCaloric.VAPOUR_ROUTE
 
 
 @dataclass(frozen=True)
@@ -171,6 +198,7 @@ class CubicOptionValues:
     sour: SourTerm = SourTerm.NONE
     enthalpy: EnthalpyMethod = EnthalpyMethod.EOS
     mixing: MixingRule = MixingRule.NONE
+    free_water: FreeWater = FreeWater.NONE
 
     @property
     def is_default(self) -> bool:

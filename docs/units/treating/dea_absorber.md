@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.mdea_absorber:DeaAbsorber` | single-stage shortcut with Kent-Eisenberg equilibrium |
-| R2 | planned | — | staged on the reactive package — blocked on P1-11 |
+| R2 | planned | — | P1-11 is merged, but the zero-tear column on this row's example feed leaves the package domain at 5 stages (speciation pressure vanished for CO2, measured on MEA); no adapter ships until that closes |
 
 ### R0 parameters
 

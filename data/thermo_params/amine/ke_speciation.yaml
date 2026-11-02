@@ -1,0 +1,58 @@
+# Kent-Eisenberg speciation sets beyond MDEA/MEA/DEA (row amine_ke_dga_amp).
+# Keyed by CAS, the components' ids in the open registry. CO2 only: no open H2S data
+# was found for either amine, so the row refuses H2S.
+#
+# Kam = exp(kam_a - kam_b / T), mol/L; Kc = exp(a + b / T), mol/L, for
+# AmineCOO- + H2O <=> Amine + HCO3-, the forms of ngdesign.amine.kent_eisenberg.
+#
+# kam_b is dH/R from Khalili, Henni & East, J. Chem. Eng. Data 54 (2009) 2914, Table 7:
+# DGA 50.2 kJ/mol, AMP 52.2 kJ/mol (R = 8.314 J/mol/K).
+#
+# kam_a is apparent, as for the three amines in the module: its thermodynamic value
+# from the same table's pKa (DGA -1.44, AMP -1.23) misses the VLE data by e^0.69 and
+# e^0.51 in p_CO2. It is fitted in-house, one number per amine, on the points marked
+# below and checked on the others. Fetched 2026-11-01.
+amines:
+  929-06-6:
+    name: DGA
+    kam_a: -2.20
+    kam_b: 6038.0
+    # Austgen dissertation (1989), Table 6.6, Km mol/L: 0.0822 (25 C), 0.141 (40 C),
+    # 0.856 (100 C). ln Kc = 9.18 - 3485/T is an in-house fit of those three, within 1 %.
+    carbamate: [9.18, -3485.0]
+    citation: >-
+      Al-Juaied, M. A., PhD dissertation, University of Texas at Austin, 2004, Table
+      4.5, 65 wt% DGA; pressures in Pa as the thesis states (NIST ThermoML labels them
+      kPa, wrongly). Fit on the 38.9-41.2 C points, rms ln p 0.11; held out 24 and 60 C,
+      rms ln p 0.33.
+    molarity_mol_L: 6.5  # 65 wt% at about 1050 kg/m3, the basis of the fit
+    # [T degC, CO2 loading, P*CO2 Pa]
+    anchors:
+      fit:
+      - [41.2, 0.10, 10.0]
+      - [39.5, 0.23, 75.0]
+      - [38.9, 0.42, 2120.0]
+      held_out:
+      - [24.2, 0.23, 15.0]
+      - [23.8, 0.43, 735.0]
+      - [58.5, 0.11, 145.0]
+      - [60.2, 0.24, 795.0]
+      - [59.6, 0.42, 14750.0]
+  124-68-5:
+    name: AMP
+    kam_a: -1.87
+    kam_b: 6278.0
+    # Severely hindered: no carbamate term (Sartori & Savage 1983, as discussed in
+    # Cullinane, PhD dissertation, UT Austin, 2005). No open Kc vs T was found either.
+    carbamate: null
+    citation: >-
+      Kundu, M., Mandal, B. P. & Bandyopadhyay, S. S., J. Chem. Eng. Data 48 (2003)
+      789, 51 points through NIST ThermoML doi 10.1021/je0201626. Fit on the 15 points
+      at 313 K, rms ln p 0.23; held out the 36 points at 303 and 323 K, rms ln p 0.34.
+    # [T K, molarity mol/L, P*CO2 Pa, CO2 loading], a sample of the held-out points
+    anchors:
+      held_out:
+      - [303.0, 2.0, 4410.0, 0.674]
+      - [303.0, 2.0, 90100.0, 0.966]
+      - [323.0, 2.8, 4620.0, 0.43]
+      - [323.0, 2.8, 91100.0, 0.841]

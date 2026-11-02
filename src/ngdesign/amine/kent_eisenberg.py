@@ -135,12 +135,16 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import partial
+from functools import cache, partial
+
+import yaml
 
 from ngdesign.amine.roots import brent_root
+from ngdesign.data import DATA_DIR
 
 __all__ = [
     "AMINES",
+    "extended_amines",
     "AmineChemistry",
     "Speciation",
     "equilibrium_loadings",
@@ -202,9 +206,31 @@ AMINES: dict[str, AmineChemistry] = {
 }
 
 
+@cache
+def extended_amines() -> dict[str, AmineChemistry]:
+    """The CO2-only sets of data/thermo_params/amine/ke_speciation.yaml, keyed by CAS.
+
+    Separate from ``AMINES``, which names the stream's component ids the units and
+    the amine_ke row select on. The H2S constant is NaN: no open data backs one, and
+    NaN makes any H2S use visible rather than quietly zero.
+    """
+    table = yaml.safe_load((DATA_DIR / "thermo_params" / "amine" / "ke_speciation.yaml").read_text())
+    return {
+        cas: AmineChemistry(
+            name=cas,
+            kam_a=float(row["kam_a"]),
+            kam_b=float(row["kam_b"]),
+            carbamate=tuple(row["carbamate"]) if row["carbamate"] else None,
+            lambda_ref=math.nan,
+            vant_hoff_b=0.0,
+        )
+        for cas, row in table["amines"].items()
+    }
+
+
 def _chemistry(amine: str) -> AmineChemistry:
     """Look up a supported amine chemistry by component name."""
-    chem = AMINES.get(amine)
+    chem = AMINES.get(amine) or extended_amines().get(amine)
     if chem is None:
         supported = ", ".join(sorted(AMINES))
         raise ValueError(f"unsupported amine {amine!r}; supported amines: {supported}")

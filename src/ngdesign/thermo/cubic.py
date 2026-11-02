@@ -26,6 +26,7 @@ from functools import cache
 from itertools import pairwise
 from typing import Any, cast
 
+import yaml
 from thermo.eos_mix import (
     APISRKMIX,
     GCEOSMIX,
@@ -45,13 +46,18 @@ from thermo.phases import CEOSGas, CEOSLiquid
 from ngdesign.contracts import StreamState
 from ngdesign.contracts.components import ComponentSet, data_definitions
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
+from ngdesign.data import DATA_DIR
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.thermo import _state
+from ngdesign.thermo.free_water import FreeWaterPhase
+from ngdesign.thermo.liquid_density import CorrelatedDensityPhase
 from ngdesign.thermo.options import (
     CUBIC_OPTION_DEFAULTS,
     AlphaFunction,
     CubicOptionValues,
     EnthalpyMethod,
+    FreeWater,
+    LiquidDensity,
     MixingRule,
     SourTerm,
     VolumeTranslation,
@@ -835,6 +841,79 @@ class SRKMIXKD(SRKMIX):  # type: ignore[misc]
         return lnphis
 
 
+@cache
+def _glycol_table() -> dict[str, Any]:
+    """Parsed data/thermo_params/glycol/teg_water_pr.yaml."""
+    parsed: dict[str, Any] = yaml.safe_load(
+        (DATA_DIR / "thermo_params" / "glycol" / "teg_water_pr.yaml").read_text()
+    )
+    return parsed
+
+
+class PRMIXGlycol(PRMIX):  # type: ignore[misc]
+    """PR with Gironi et al. (2007)'s temperature-dependent TEG-water k_ij.
+
+    The IPDB has no such pair, so k_ij = k(T) = k0 + k1 T acts as a correction on top of
+    the table's mixing rule: a gains -2 x_w x_t k(T) sqrt(a_w a_t), and each of the two
+    components' row sum gains the matching term in ln phi. thermo clones EOS states
+    through a whitelist, so the pair is recovered from the (Tc, Pc) identity.
+    ``dlnphis_dT`` and ``dlnphis_dP`` stay the parent's and leave this k_ij out.
+    """
+
+    def _teg_water(self) -> tuple[int, int] | None:
+        cids = _cids_from_criticals(self)
+        tc = float(_glycol_table()["teg"]["Tc_K"])
+        teg = next((i for i, value in enumerate(self.Tcs) if value == tc), -1)
+        if "H2O" not in cids or teg < 0:
+            return None
+        return cids.index("H2O"), teg
+
+    @staticmethod
+    def _k(T: float) -> float:
+        k = _glycol_table()["kij_teg_water"]
+        return float(k["intercept"]) + float(k["slope_per_K"]) * T
+
+    def _pair_term(self, T: float, pair: tuple[int, int]) -> float:
+        """k(T) sqrt(a_w(T) a_t(T))."""
+        alphas = self.a_alphas_vectorized(T)
+        return self._k(T) * math.sqrt(alphas[pair[0]] * alphas[pair[1]])
+
+    def a_alpha_and_derivatives(
+        self, T: float, full: bool = True, quick: bool = True, pure_a_alphas: bool = True
+    ) -> Any:
+        vals = super().a_alpha_and_derivatives(T, full=full, quick=quick, pure_a_alphas=pure_a_alphas)
+        pair = self._teg_water()
+        if pair is None:
+            return vals
+        weight = -2.0 * self.zs[pair[0]] * self.zs[pair[1]]
+        if weight == 0.0:
+            return vals
+        h = 1e-4
+        mid, up, dn = (self._pair_term(t, pair) for t in (T, T + h, T - h))
+        a_mix, da_mix, d2a_mix = vals
+        return (
+            a_mix + weight * mid,
+            da_mix + weight * (up - dn) / (2.0 * h),
+            d2a_mix + weight * (up - 2.0 * mid + dn) / (h * h),
+        )
+
+    def fugacity_coefficients(self, Z: float) -> Any:
+        """PR ln phi plus -d_row_i / (sqrt(2) R T b) ln[(Z + (1+r2)B) / (Z + (1-r2)B)]."""
+        lnphis = super().fugacity_coefficients(Z)
+        pair = self._teg_water()
+        if pair is None:
+            return lnphis
+        i_w, i_t = pair
+        term = self._pair_term(self.T, pair)
+        r2 = math.sqrt(2.0)
+        big_b = self.b * self.P / (_R * self.T)
+        log_term = math.log((Z + (1.0 + r2) * big_b) / (Z + (1.0 - r2) * big_b))
+        factor = log_term / (r2 * _R * self.T * self.b)
+        lnphis[i_w] += term * self.zs[i_t] * factor
+        lnphis[i_t] += term * self.zs[i_w] * factor
+        return lnphis
+
+
 _ZJ_CONSTANTS: dict[str, tuple[float, float]] = {}  # cid -> (a_c, b)
 
 
@@ -1289,6 +1368,19 @@ def configure_options(
         eos_kwargs["kd_water_index"] = ids.index("H2O") if "H2O" in ids else -1
         eos_kwargs["kd_groups"] = groups
 
+    if options.mixing == MixingRule.GLYCOL_TUNED:
+        teg = _glycol_table()["teg"]
+        other = [r.id for r in records if r.cas == "107-21-1"]
+        if other:
+            raise ValueError(f"glycol_pr carries TEG-water only: no citable tuned parameters for {other}")
+        tcs, pcs, omegas = list(constants.Tcs), list(constants.Pcs), list(constants.omegas)
+        for i, r in enumerate(records):
+            if r.cas == teg["cas"]:
+                tcs[i], pcs[i], omegas[i] = float(teg["Tc_K"]), float(teg["Pc_Pa"]), float(teg["omega"])
+        for cid, tc, pc in zip(ids, tcs, pcs, strict=True):
+            _CID_BY_CRITICALS[(tc, pc)] = cid
+        eos_kwargs.update(Tcs=tcs, Pcs=pcs, omegas=omegas)
+
     if options.enthalpy == EnthalpyMethod.LEE_KESLER:
         gas_cls, liquid_cls = LKCEOSGas, LKCEOSLiquid
 
@@ -1310,7 +1402,48 @@ def configure_options(
             },
         )
 
+    if options.free_water != FreeWater.NONE:
+        attrs: dict[str, Any] = {
+            "free_water_index": ids.index("H2O") if "H2O" in ids else -1,
+            "free_water_eos": "PR" if getattr(eos, "__name__", "").startswith("PR") else "SRK",
+        }
+        gas_cls = type("FreeWaterGas", (FreeWaterPhase, gas_cls), attrs)
+        liquid_cls = type("FreeWaterLiquid", (FreeWaterPhase, liquid_cls), attrs)
+
+    if options.liquid_density != LiquidDensity.EOS:
+        gas_cls, liquid_cls = _density_phase_classes(
+            options.liquid_density, gas_cls, liquid_cls, records, constants
+        )
+
     return eos, eos_kwargs, gas_cls, liquid_cls
+
+
+def _density_phase_classes(
+    model: LiquidDensity, gas_cls: Any, liquid_cls: Any, records: list[Any], constants: Any
+) -> tuple[Any, Any]:
+    """Phase classes reporting the correlation's liquid volume (LiquidDensity).
+
+    Both classes are wrapped: on a one-root liquid state `thermo` hands back the gas
+    wrapper holding the liquid root (see ``_state._holds_gas_root``). A correlation
+    with no constant for a component refuses, naming it, rather than dropping back
+    to the EOS volume the row exists to replace.
+    """
+    if model == LiquidDensity.COSTALD:
+        missing = [r.id for r, vc in zip(records, constants.Vcs, strict=True) if vc is None]
+        if missing:
+            raise ValueError(
+                f"COSTALD liquid density needs a characteristic volume; none for {missing}: "
+                "refusing rather than reporting the EOS volume under a COSTALD row"
+            )
+    attrs = {
+        "density_model": model,
+        "density_vcs": tuple(constants.Vcs),
+        "density_mws": tuple(constants.MWs),
+    }
+    return (
+        type(f"{model.value}Gas", (CorrelatedDensityPhase, gas_cls), attrs),
+        type(f"{model.value}Liquid", (CorrelatedDensityPhase, liquid_cls), attrs),
+    )
 
 
 # -- option-aware adapter and the T-02 row adapters (spec T-02) ---------------
@@ -1510,3 +1643,52 @@ class SrkLeeKeslerThermo(OptionCubicEOS):
 
     eos = SRKMIX
     options = CubicOptionValues(enthalpy=EnthalpyMethod.LEE_KESLER)
+
+
+class PrRackettThermo(OptionCubicEOS):
+    """PRMIX VLE with the Spencer-Danner Rackett liquid density."""
+
+    eos = PRMIX
+    options = CubicOptionValues(liquid_density=LiquidDensity.RACKETT)
+
+
+class SrkRackettThermo(OptionCubicEOS):
+    """SRKMIX VLE with the Spencer-Danner Rackett liquid density."""
+
+    eos = SRKMIX
+    options = CubicOptionValues(liquid_density=LiquidDensity.RACKETT)
+
+
+class PrCostaldThermo(OptionCubicEOS):
+    """PRMIX VLE with the COSTALD-Tait liquid density."""
+
+    eos = PRMIX
+    options = CubicOptionValues(liquid_density=LiquidDensity.COSTALD)
+
+
+class SrkCostaldThermo(OptionCubicEOS):
+    """SRKMIX VLE with the COSTALD-Tait liquid density."""
+
+    eos = SRKMIX
+    options = CubicOptionValues(liquid_density=LiquidDensity.COSTALD)
+
+
+class PrFreeWaterThermo(OptionCubicEOS):
+    """PRMIX with IAPWS-95 pure water in the free-water phase."""
+
+    eos = PRMIX
+    options = CubicOptionValues(free_water=FreeWater.IAPWS95)
+
+
+class KabadiDannerFreeWaterThermo(OptionCubicEOS):
+    """Kabadi-Danner SRK with IAPWS-95 pure water in the free-water phase."""
+
+    eos = SRKMIXKD
+    options = CubicOptionValues(mixing=MixingRule.KABADI_DANNER, free_water=FreeWater.IAPWS95)
+
+
+class GlycolPrThermo(OptionCubicEOS):
+    """PR tuned for TEG-water dehydration (Gironi et al. 2007 k_ij and TEG constants)."""
+
+    eos = PRMIXGlycol
+    options = CubicOptionValues(mixing=MixingRule.GLYCOL_TUNED)

@@ -174,5 +174,7 @@ Round 1 (palette R0, one thread per family U-A..U-H) after U-00 and U-R merge; r
 | T-18 | teqp-backed rows to provisional: SAFT-VR Mie, multifluid, multifluid pure, GERG-2008 teqp | T-07, T-15c, #178 | merged #201 (63e576c) 2026-10-23: saft_vr_mie, multifluid, multifluid_pure, gerg2008_teqp provisional (teqp library runtime-only); issue #188 |
 | T-19 | Special family to provisional: solids, polymers, HOC dimer, HF hexamer | T-10, T-03b, T-15 | merged #200 (542c6fc) 2026-10-23: ideal_solid checks, hoc_dimer rebound to Ritter & Simons, polymer rows stay experimental (no open data); issue #190 |
 | T-11..T-14 | Validation data sweeps per family (cubic, gamma-phi, Helmholtz/K-value, electrolytes): literature cases with citations, data-only PRs | T-01 | all merged: T-11 #131, T-12 #132, T-13 #135, T-14 #147 (2026-10-21) |
+| C-01 | Chemistry engine: units of measure, cited database, reaction and phase depth | 5 | U-R, T-01 |
+| C-02 | Chemical database in the flowsheet path, multiphase Gibbs reactor | 5 | C-01 |
 
 Dispatch: T-01 alone; then T-02, T-03, T-04, T-05, T-07, T-11, T-12, T-13 in parallel (disjoint files); then T-06, T-08, T-09, T-14; then T-10; then the catalogue freeze (status audit).

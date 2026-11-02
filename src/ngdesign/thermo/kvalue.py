@@ -30,6 +30,11 @@ enthalpies/entropies (the ``EnthalpyMethod.LEE_KESLER`` basis, T-02's option
 group) evaluated at Plöcker pseudo-critical conditions over ideal-gas Cp from the
 component databank. Ideal-gas reference state for this family: H = S = 0 at
 298.15 K, 101325 Pa — internal to these rows, not comparable across packages.
+A row may pin ``enthalpy_basis = EnthalpyMethod.IDEAL`` instead (``braun-k10-ideal``):
+vapour H and S are the ideal-gas values and the liquid sits one databank heat of
+vaporisation below them, H_L = sum x_i (H_ig_i - dHvap_i) (Smith, Van Ness & Abbott,
+Introduction to Chemical Engineering Thermodynamics, ideal-solution enthalpy route),
+with the liquid entropy that makes ln phi_L = ln(Psat/P) hold.
 
 Parameter tables with per-table provenance live in ``data/thermo_params/kvalue/``.
 Gamma-phi rows refuse feeds containing components without regular-solution
@@ -63,10 +68,15 @@ from ngdesign.thermo._state import (
     support_ids,
 )
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
+from ngdesign.thermo.options import EnthalpyMethod
 
 #: Pressure above which the Braun K10 row refuses service: the charts' ideal-K
 #: asymptote is only valid well below the 10 MPa convergence pressure.
 _BRAUN_MAX_PA = 7.0e5
+
+#: Vapour-pressure floor (Pa) of the DEPG row's nonvolatile solvent, where the databank
+#: correlation underflows to zero on the PH/PS brackets' cold end.
+_SOLVENT_PSAT_FLOOR = 1e-12
 
 #: Perturbation for the composition derivatives of the LKP residual Gibbs surface.
 _LKP_FD_EPS = 1.0e-5
@@ -322,6 +332,7 @@ class _Support:
     cps: list[Any]  # ideal-gas heat capacity correlations
     vls: list[Any]  # saturated-liquid molar volume correlations
     vp: list[Any]  # vapour-pressure correlations (databank basis)
+    hvap: list[Any]  # enthalpy-of-vaporisation correlations
     antoine: list[dict[str, float] | None]  # WebBook Antoine constants per component
     henry: list[tuple[float, float] | None]  # (A, B) of H = A exp(B/T), Pa.m3/mol
     # regular-solution constants (gamma-phi rows only; None otherwise)
@@ -382,6 +393,7 @@ class _Support:
             cps=cps,
             vls=vls,
             vp=vps,
+            hvap=list(correlations.EnthalpyVaporizations),
             antoine=antoine,
             henry=henry,
             rs_omega_cs=rs_omega_cs,
@@ -396,6 +408,16 @@ class _Support:
     def databank_psat(self, i: int, T: float) -> float | None:
         prop = self.vp[i].T_dependent_property(T)
         return None if prop is None else float(prop)
+
+    def heat_of_vaporisation(self, i: int, T: float) -> float:
+        """Databank heat of vaporisation (J/mol); a component past its range refuses."""
+        value = self.hvap[i].T_dependent_property(T)
+        if value is None:
+            raise ValueError(
+                f"no heat of vaporisation for {self.ids[i]} at T={T} K (critical temperature "
+                f"{self.tcs[i]:.1f} K); the ideal-enthalpy liquid is undefined there"
+            )
+        return float(value)
 
     def antoine_psat(self, i: int, T: float) -> float | None:
         """WebBook Antoine pressure (Pa) when T is inside the correlation range."""
@@ -610,6 +632,7 @@ class KValuePackage(ThermoSurfaceMixin):
 
     k_model: ClassVar[str] = ""
     psat_basis: ClassVar[str] = "databank"
+    enthalpy_basis: ClassVar[EnthalpyMethod] = EnthalpyMethod.LEE_KESLER
 
     def __init__(self) -> None:
         super().__init__()
@@ -658,9 +681,34 @@ class KValuePackage(ThermoSurfaceMixin):
         c_liquid = 1.0 / float(v_water)  # mol/m3 of the aqueous phase
         return h * c_liquid / P
 
+    def _depg_k(self, sup: _Support, T: float, P: float) -> list[float]:
+        """K_i = H_i / P for the gases, Psat / P for the solvent (depg.yaml)."""
+        table = _load_yaml("depg.yaml")
+        k: list[float] = []
+        for i, cid in enumerate(sup.ids):
+            if cid == table["solvent_cas"]:
+                psat = sup.databank_psat(i, T)
+                if psat is None:
+                    raise ValueError(f"no vapour pressure for the solvent {cid} at T={T} K")
+                k.append(max(psat, _SOLVENT_PSAT_FLOOR) / P)
+                continue
+            relative = table["relative_to_co2"].get(cid)
+            if relative is None:
+                raise ValueError(
+                    f"no DEPG solubility for {cid} in data/thermo_params/kvalue/depg.yaml; "
+                    "refusing rather than defaulting"
+                )
+            vv = float(table["co2_vv"]) * float(relative)
+            volumes = float(table["solvent_molar_volume_m3_mol"]) / float(table["gas_molar_volume_m3_mol"])
+            mole_ratio = vv * volumes  # gas per solvent, pure gas at 1 atm
+            k.append(_REF_P * (1.0 + mole_ratio) / mole_ratio / P)
+        return k
+
     def _model_k(self, sup: _Support, x: list[float], y: list[float], T: float, P: float) -> list[float]:
         """The row's K-values at (composition x liquid / y vapour, T, P)."""
         n = len(x)
+        if self.k_model == "physical_solvent":
+            return self._depg_k(sup, T, P)
         if self.k_model in ("chao_seader", "grayson_streed"):
             assert sup.rs_omega_cs is not None and sup.rs_v is not None and sup.rs_delta is not None
             _z_vap, ln_phi_v = _rk_vapour(sup, y, T, P)
@@ -756,7 +804,11 @@ class KValuePackage(ThermoSurfaceMixin):
         return total - R_IDEAL * mixing
 
     def _h_res(self, sup: _Support, x: list[float], T: float, P: float, gas: bool) -> float:
-        """Lee-Kesler residual enthalpy (J/mol) at Plöcker pseudo-critical conditions."""
+        """Residual enthalpy (J/mol): Lee-Kesler at Plöcker pseudo-criticals, or the ideal basis."""
+        if self.enthalpy_basis == EnthalpyMethod.IDEAL:
+            if gas:
+                return 0.0
+            return -sum(xi * sup.heat_of_vaporisation(i, T) for i, xi in enumerate(x) if xi > 0.0)
         hres_rt = sup.lk_mixture_hres_rt(x, T, P, gas)
         if hres_rt is None:
             raise ValueError(
@@ -765,7 +817,13 @@ class KValuePackage(ThermoSurfaceMixin):
         return hres_rt * R_IDEAL * T
 
     def _s_res(self, sup: _Support, x: list[float], T: float, P: float, gas: bool) -> float:
-        """Lee-Kesler residual entropy: S_res/(R T) = H_res/(R T) - G_res/(R T)."""
+        """Residual entropy: Lee-Kesler S_res/R = H_res/(R T) - G_res/(R T), or the ideal basis.
+
+        Ideal liquid: S_res = sum x_i [R ln(P/Psat_i) - dHvap_i/T], the value for which
+        G_L - G_ig = sum x_i R T ln(Psat_i/P) reproduces the row's Raoult K.
+        """
+        if self.enthalpy_basis == EnthalpyMethod.IDEAL:
+            return 0.0 if gas else self._ideal_liquid_s_res(sup, x, T, P)
         hres_rt = sup.lk_mixture_hres_rt(x, T, P, gas)
         gres_rt = sup.lk_mixture_gtilde(x, T, P, gas)
         if hres_rt is None or gres_rt is None:
@@ -773,6 +831,17 @@ class KValuePackage(ThermoSurfaceMixin):
                 f"Lee-Kesler departure has no {'vapour' if gas else 'liquid'} root at T={T} K, P={P} Pa"
             )
         return (hres_rt - gres_rt) * R_IDEAL
+
+    def _ideal_liquid_s_res(self, sup: _Support, x: list[float], T: float, P: float) -> float:
+        total = 0.0
+        for i, xi in enumerate(x):
+            if xi <= 0.0:
+                continue
+            psat = self._psat_basis_value(sup, i, T)
+            if psat is None:
+                raise ValueError(f"no vapour pressure for {sup.ids[i]} at T={T} K on the row's basis")
+            total += xi * (R_IDEAL * math.log(P / psat) - sup.heat_of_vaporisation(i, T) / T)
+        return total
 
     # -- phase numbers ------------------------------------------------------
 
@@ -1418,6 +1487,75 @@ class BraunK10Thermo(KValuePackage):
     """Braun K10 low-pressure limit (ideal-K asymptote of the K10 charts); refuses P > 0.7 MPa."""
 
     k_model = "braun_k10"
+
+
+class BraunK10IdealThermo(BraunK10Thermo):
+    """Braun K10 low-pressure limit with ideal-gas / ideal-liquid enthalpies, not Lee-Kesler."""
+
+    enthalpy_basis = EnthalpyMethod.IDEAL
+
+
+class DepgHenryThermo(KValuePackage):
+    """Henry's law for gases in DEPG at 25 C, with tetraglyme as the solvent component.
+
+    r_i = (v/v)_i V_solvent / V_gas is the mole ratio of gas to solvent at 1 atm of pure
+    gas, so H_i = P0 (1 + r_i) / r_i with gamma = 1 and K = H_i / P (Burr & Lyddon). Only
+    25 C data is open, so the flash refuses outside 293.15-303.15 K and the Henry
+    constants do not move with T.
+    """
+
+    k_model = "physical_solvent"
+    enthalpy_basis = EnthalpyMethod.IDEAL
+    _searching = False  # the PH/PS brackets may explore outside the window
+
+    def _h_res(self, sup: _Support, x: list[float], T: float, P: float, gas: bool) -> float:
+        """Ideal vapour; in the liquid the solvent sits one Hvap down, the gases at no heat
+        of absorption: no open value backs one, so the row carries none."""
+        if gas:
+            return 0.0
+        solvent = sup.ids.index(_load_yaml("depg.yaml")["solvent_cas"])
+        return -x[solvent] * sup.heat_of_vaporisation(solvent, T)
+
+    def _s_res(self, sup: _Support, x: list[float], T: float, P: float, gas: bool) -> float:
+        """S_res = sum x_i [R ln(1/K_i)] - x_solvent Hvap/T: keeps G consistent with K."""
+        if gas:
+            return 0.0
+        solvent = sup.ids.index(_load_yaml("depg.yaml")["solvent_cas"])
+        k = self._depg_k(sup, T, P)
+        total = sum(-R_IDEAL * xi * math.log(k[i]) for i, xi in enumerate(x) if xi > 0.0)
+        return total - x[solvent] * sup.heat_of_vaporisation(solvent, T) / T
+
+    @staticmethod
+    def _require_window(T: float) -> None:
+        if not 293.15 <= T <= 303.15:
+            raise ValueError(f"depg_henry has 25 C data only; T={T} K is outside 293.15-303.15 K")
+
+    def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
+        if not self._searching:
+            self._require_window(T)
+        known = {_load_yaml("depg.yaml")["solvent_cas"], *_load_yaml("depg.yaml")["relative_to_co2"]}
+        unknown = sorted(cid for cid, fraction in z.items() if fraction > 0.0 and cid not in known)
+        if unknown:
+            raise ValueError(f"no DEPG solubility for {unknown} in data/thermo_params/kvalue/depg.yaml")
+        return super().flash_pt(z, T, P, molar_flow)
+
+    def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:
+        self._searching = True
+        try:
+            state = super().flash_ph(z, P, H, molar_flow)
+        finally:
+            self._searching = False
+        self._require_window(state.T)
+        return state
+
+    def flash_ps(self, z: dict[str, float], P: float, S: float, molar_flow: float) -> StreamState:
+        self._searching = True
+        try:
+            state = super().flash_ps(z, P, S, molar_flow)
+        finally:
+            self._searching = False
+        self._require_window(state.T)
+        return state
 
 
 class IdealRaoultThermo(KValuePackage):

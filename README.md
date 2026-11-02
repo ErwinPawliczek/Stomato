@@ -78,10 +78,13 @@ class Compressor: ...
 
 Plugin packages live under `src/ngdesign/`: `thermo`, `units`, `sizing`, `solver`, `pid_rules`, `piping` and `render`. Drop a decorated class in any of them and the registry finds it — no imports to add, no list to edit.
 
+Next to the flowsheet engine sits a general chemistry layer (spec C-01): a cited database of about 18,000 species with per-value sources, a unit-of-measure layer with dimensional checking, and exact stoichiometry, reaction thermochemistry, multiphase Gibbs equilibrium, stiff kinetics and phase behaviour. Try `ngdesign chem lookup methane` or `ngdesign chem balance "C3H8 + O2 -> CO2 + H2O"`, and see **[docs/chem-engine.md](docs/chem-engine.md)**.
+
 Around the engine: the data model (flowsheets, solved results, P&IDs) lives in `src/ngdesign/contracts/`, reference data (ASME B36.10, B16.5, pipe classes, component constants) in `data/`, and a FastAPI wrapper of the engine in `src/ngdesign/api/`.
 
 - Architecture and rules for contributors (human or agent): `AGENTS.md`
 - Contracts between layers: `src/ngdesign/contracts/`
 - Work queue: `specs/backend/`
 - Reference data (ASME B36.10, B16.5, pipe classes, component constants): `data/`
+- Chemical database: `data/chemdb/` ([README](data/chemdb/README.md))
 - Demo target: `tests/e2e/test_slice.py`

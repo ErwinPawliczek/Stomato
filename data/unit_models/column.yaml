@@ -84,9 +84,10 @@
           reboiler: {type: string, description: 'kettle | none (none = absorber/rectifier configuration)'}
           feed_stage: {type: integer, description: main feed stage}
           pressure_profile: {type: number, description: 'top pressure or per-stage profile, Pa'}
-          specs: {type: object, description: 'two specs for two tears (reflux_ratio, distillate_rate, boilup, ...); one for one-tear; none for an absorber'}
+          specs: {type: object, description: 'two specs for two tears (reflux_ratio, distillate_rate, boilup_ratio, boilup_rate, ...); one for one-tear; none for an absorber'}
           feeds: {type: object, description: additional feeds by stage}
           side_draws: {type: object, description: additional draws by stage}
+          stage_heaters: {type: array, description: '[{stage, duty_W}] fixed heat added to an ordinary tray, W (< 0 cools)'}
       note: MESH on the inside-out (Boston-Sullivan) solver with Naphtali-Sandholm fallback;
         configurations (absorber zero-tear, stripper/rectifier one-tear, two-tear distillation)
         select themselves from the condenser/reboiler kinds
@@ -105,7 +106,7 @@
   notes: covers plan U-E 2 and the R2 of U-E 3 (feed-determined absorber, zero-tear) and
     U-E 4 (reboiled stripper, one-tear) as configurations; rate-based stages (plan's R3
     column) are a later round on their own ladder. Side draws exist (side_draw port);
-    pumparounds and multiple feeds beyond the params hooks are the column_extensions row.
+    the graph-visible second feed and the extended composite are the column_extensions row.
 
 - id: absorber
   name: Absorber (feed-determined)
@@ -258,14 +259,37 @@
       description: rich solvent
   levels:
     R2:
-      status: planned
-      params: {}
-      note: MESH with one end exchanger (the configurations exist; tests are missing)
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.refluxed_absorber:RefluxedAbsorber
+      params:
+        type: object
+        required: [n_stages, spec]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, minimum: 3, description: 'equilibrium stages, top = 1 (a partial condenser is stage 1, a kettle is stage N)'}
+          configuration: {type: string, description: 'reboiled (default; kettle, no condenser) | refluxed (partial condenser, no reboiler)'}
+          gas_stage: {type: integer, description: 'feed-gas stage (default mid-column reboiled, stage N refluxed)'}
+          solvent_stage: {type: integer, description: 'lean-solvent stage (default 1 reboiled, mid-column refluxed); never below gas_stage'}
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar or per-stage list); default gas_in.P
+          spec:
+            type: object
+            description: exactly one spec. reboiled = boilup_ratio | bottoms_rate | component_recovery; refluxed = distillate_rate (the gas_out flow)
+      note: one-tear MESH with one end exchanger via the column API; partial condenser only (gas_out is a vapour); total condenser refused
+      validation: []
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 5
-  notes: roadmap.
+  - Seader, Henley & Roper 3rd ed., Table 10.1 (reboiled absorber; refluxed absorber)
+  notes: >-
+    V1 gap — provisional without a case: no printed example with its inputs and
+    product flows was at hand. Covered by a stage-by-stage MESH audit and the
+    zero-duty comparison with absorber R2 (tests/units/column_shortcut/test_refluxed_absorber.py).
+    Measured limits: on the C1/NC4 basis the reboiled bottoms_rate and
+    component_recovery specs do not converge (column core; the boilup_ratio
+    spec does), and the refluxed distillate_rate spec has a narrow window
+    (C2/C3 into NC4: 60 mol/s converges, 75 mol/s does not).
 
 - id: column_extensions
   name: Column extensions (draws, pumparounds, multiple feeds)
@@ -275,6 +299,9 @@
     - name: feed
       required: true
       description: main feed
+    - name: feed_2
+      required: false
+      description: second feed (stage from feed_2_stage)
     outlet:
     - name: distillate
       required: true
@@ -282,16 +309,40 @@
     - name: bottoms
       required: true
       description: bottoms product
+    - name: side_draw
+      required: false
+      description: side draw (zero-flow state when none is configured)
   levels:
     R2:
-      status: planned
-      params: {}
-      note: side draws (exist), pumparounds (missing), multiple feeds, inter-stage heaters
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.column_extensions:ColumnExtensions
+      params:
+        type: object
+        required: [n_stages, condenser, reboiler, feed_stage, specs]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, description: 'equilibrium stages, 1..N top to bottom'}
+          condenser: {type: string, description: 'total | partial | none'}
+          reboiler: {type: string, description: 'kettle | none'}
+          feed_stage: {type: integer, description: main feed stage}
+          feed_2_stage: {type: integer, description: 'second feed stage (required when feed_2 is connected)'}
+          pressure_profile: {type: number, description: 'top pressure or per-stage profile, Pa'}
+          specs: {type: object, description: 'one spec per tear, as the column row'}
+          side_draw: {type: object, description: '{stage, phase (liquid|vapor), flow_mol_s}; one draw, one port'}
+          pumparounds: {type: array, description: '[{name, draw_stage, return_stage, flow_mol_s, duty_W | return_T_K}]'}
+          stage_heaters: {type: array, description: '[{stage, duty_W}], duty_W > 0 heats the stage, < 0 cools it; never on a condenser or kettle stage'}
+      note: the column row's MESH with a second feed port, one draw port, fixed pumparounds and fixed-duty inter-stage heaters/coolers in the same stage equations; free (spec-driven) draw and pumparound rates are not implemented
+      validation: []
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 6
-  notes: the MESH extensions the S0 crude column builds on (plan §2b, after P1-11).
+  - Seader, Henley & Roper 3rd ed., eq. 10-4 (stage heat duty Q_j)
+  notes: >-
+    The MESH extensions the S0 crude column builds on (plan §2b). V1 gap —
+    provisional without a case; covered by a stage-by-stage audit and reductions
+    to the plain column (tests/units/column_shortcut/test_column_extensions.py).
+    Side strippers and the condenser decant are not here: the column refuses them.
 
 - id: three_phase_stages
   name: Three-phase (VLLE) stages
@@ -310,14 +361,34 @@
       description: bottoms
   levels:
     R2:
-      status: planned
-      params: {}
-      note: MESH with two liquids per stage
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.three_phase_stages:ThreePhaseStages
+      params:
+        type: object
+        required: [n_stages, condenser, reboiler, feed_stage, specs]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, description: 'equilibrium stages, 1..N top to bottom'}
+          condenser: {type: string, description: 'total | partial | none'}
+          reboiler: {type: string, description: 'kettle | none'}
+          feed_stage: {type: integer, description: feed stage}
+          pressure_profile: {type: number, description: 'top pressure or per-stage profile, Pa'}
+          specs: {type: object, description: 'one spec per tear, as the column row'}
+      note: MESH on the overall (pooled) stage liquid with K = y/xbar from the stage VLLE flash; the split is reported per stage and a re-flash gate refuses stages off equilibrium; no decanter, both liquids flow down together
+      validation: []
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 7
-  notes: roadmap.
+  - Block & Hegner, AIChE J. 22 (1976) 582
+  - Cairns & Furzer, I&EC Res. 29 (1990) 1349
+  notes: >-
+    V1 gap — provisional without a case; checked by isofugacity of the
+    three reported phases, a stage audit on fresh three-phase flashes, and the
+    single-liquid reduction
+    (tests/units/column_shortcut/test_three_phase_stages.py). Measured limit: a
+    two-tear wet nC6/nC7 column with a total condenser does not converge
+    (M = 1 from the cold seed), so the example is a one-tear kettle column.
 
 - id: reactive_stages
   name: Reactive stages (equilibrium / kinetic)
@@ -336,14 +407,42 @@
       description: bottoms
   levels:
     R2:
-      status: planned
-      params: {}
-      note: MESH + reaction set on the stage holdup (the reaction-set contract is U-R's)
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.reactive_stages:ReactiveStages
+      params:
+        type: object
+        required: [n_stages, condenser, reboiler, feed_stage, specs, reaction_set, reactive_holdup_m3]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, description: 'equilibrium stages, 1..N top to bottom'}
+          condenser: {type: string, description: 'total | partial | none'}
+          reboiler: {type: string, description: 'kettle | none'}
+          feed_stage: {type: integer, description: main feed stage}
+          pressure_profile: {type: number, description: 'top pressure or per-stage profile, Pa'}
+          specs: {type: object, description: 'one spec per tear, as the column row'}
+          reaction_set: {type: object, description: 'ReactionSet document; kinetics on the mole_fraction basis, reversible reactions by an explicit reverse rate'}
+          reactive_holdup_m3: {type: object, description: '{stage: liquid holdup, m3}; never on a condenser or kettle stage'}
+      note: MESH with kinetic source terms on the stage liquid holdup; equilibrium is the large-holdup limit, there is no chemical-equilibrium stage model; heat of reaction on the formation-enthalpy basis
+      validation: []
       end_state: true
+  balance: mass_elements
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 8
-  notes: amine chemistry lives in the property package, not the stage (plan note).
+  - Taylor & Krishna, Chem. Eng. Sci. 55 (2000) 5183
+  - Fogler, Elements of Chemical Reaction Engineering, Example 11-3 (example kinetics)
+  notes: >-
+    Amine chemistry lives in the property package, not the stage (plan note).
+    V1 gap — provisional without a case; checked by hand-evaluated stage rates,
+    the zero-holdup reduction to the plain column, and the large-holdup limit on
+    the book's K_C(T) (tests/units/column_shortcut/test_reactive_stages.py).
+    A cold reactive mesh walks the holdup up from the plain column. Measured
+    limits: the two-tear path does not converge on the narrow nC4/iC4 split with
+    or without reaction (1 MPa, 12 stages), and the ethylene oxide hydration
+    benchmark does not converge on PR on either path, also with or without
+    reaction; the example therefore uses a one-tear kettle column with boilup_rate.
+    A strongly displaced feed stalls the ladder (x_iC4 = 0.1, 1 m3 per stage at
+    50 mol/s boilup stops at 0.42 of the holdup).
 
 - id: liquid_liquid_extractor
   name: Liquid-liquid extractor
@@ -377,14 +476,29 @@
       validation:
       - V1-kremser-extractor-seader52
     R2:
-      status: planned
-      params: {}
-      note: MESH with LLE stages
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.extractor_r2:ExtractorR2
+      params:
+        type: object
+        required: [n_stages]
+        additionalProperties: false
+        properties:
+          n_stages: {type: integer, minimum: 1, description: 'equilibrium stages; feed on 1, solvent on N'}
+          T: {type: number, description: 'uniform column temperature, K (default the flow-weighted inlet T)'}
+          P: {type: number, description: 'column pressure, Pa abs (default the lower inlet P)'}
+      note: LLE stages by the isothermal sum-rates method with tie lines from the package flash; isothermal, duty_W holds T
+      validation: []
       end_state: true
   pid_symbol: X
   references:
   - docs/unit-catalogue-plan.md §2 U-E 9
-  notes: roadmap.
+  - Tsuboka & Katayama, J. Chem. Eng. Japan 9 (1976) 40
+  - Seader, Henley & Roper 3rd ed., Sect. 10.5
+  notes: >-
+    V1 gap — provisional without a case. Checked by the one-stage reduction to a
+    flash, stage balances, isofugacity from single-phase builds, and the dilute
+    Kremser limit (tests/units/column_shortcut/test_extractor_r2.py). The stage
+    energy balance is not solved (isothermal).
 
 - id: divided_wall
   name: Divided-wall / Petlyuk column
@@ -408,7 +522,11 @@
     R2:
       status: planned
       params: {}
-      note: two coupled MESH sections
+      note: two coupled MESH sections; blocked on the column core, the plain two-tear
+        side-draw column does not converge on nC4/nC5/nC6 at 3 bar (11 stages, M=1.4e-2,
+        NS stalls; spec P1-13) and a section tear loop is the design S0-1c rejected.
+        Needs the graph solver of S0-1c (unmerged branch s0-1c/2-graph-ns) extended to
+        two parallel sections
       end_state: true
   pid_symbol: T
   references:
@@ -482,11 +600,25 @@
       description: pot residue
   levels:
     R3:
-      status: planned
-      params: {}
-      note: dynamic — a separate axis and plan (steady-state catalogue excludes it)
+      status: provisional
+      adapter: ngdesign.units.column_shortcut.batch_distillation:BatchDistillation
+      params:
+        type: object
+        required: [fraction_distilled]
+        additionalProperties: false
+        properties:
+          fraction_distilled: {type: number, exclusiveMinimum: 0, exclusiveMaximum: 1, description: 'stop condition: moles boiled off per mole charged'}
+          P: {type: number, exclusiveMinimum: 0, description: 'pot pressure, Pa abs (default charge P)'}
+      note: Rayleigh differential distillation over thermo.bubble_point (one pot, no rectification, no holdup); cumulative distillate and residue; the charge flow is a campaign average, no batch time is modelled
+      validation: []
       end_state: true
   pid_symbol: T
   references:
   - docs/unit-catalogue-plan.md §2 U-E 12
-  notes: roadmap; out of the steady-state scope (plan §0 decision 4).
+  - Rayleigh, Phil. Mag. 4 (1902) 521
+  - Doherty & Perkins, Chem. Eng. Sci. 33 (1978) 281
+  notes: >-
+    The dynamic axis of plan §0 decision 4 is not built: this level is the
+    integrated Rayleigh balance, not a holdup simulation. V1 gap — provisional
+    without a case; the level is anchored to the closed-form constant-alpha
+    Rayleigh equation through a stub saturation surface (tests/units/column_shortcut/test_batch_distillation.py).
