@@ -418,3 +418,19 @@ def test_snapshot_shomate_gives_solids_a_heat_capacity() -> None:
             assert (model.h(T + h) - model.h(T - h)) / (2 * h) == pytest.approx(model.cp(T), rel=1e-6)
             assert 0.0 < model.cp(T) < 2000.0  # a units slip shows here first (it did: -2.9e6)
     assert modelled > 0
+
+
+def test_ammonia_solubility_follows_the_reviewed_compilation_value() -> None:
+    """The NH3 flag: the packaged Sander set gives 42.7 mol/(kg bar), the WebBook median 58.
+
+    Sander's compilation itself, version 5.0.0 (Atmos. Chem. Phys. 23, 10901, 2023;
+    https://www.henrys-law.org/henry/casrn/7664-41-7, retrieved 2026-11-02), lists its
+    literature-review ("L") entries at Hscp = 0.59 mol/(m3 Pa), 4200 K: 59 mol/(kg bar)
+    with water at 997 kg/m3. The packaged 42.7 matches none of them, so the WebBook value
+    stays selected and the solubility it gives must sit near the reviewed one.
+    """
+    from ngdesign.chem.thermochem import reaction_thermo
+
+    k = reaction_thermo("NH3(g) -> NH3(aq)").K  # mol/(kg bar) on the 1 molal, 1 bar standard states
+    assert k == pytest.approx(0.59 * 1e5 / 997.05, rel=0.05)
+    assert chemdb.value("NH3", "Hf_aq").source == "nist_henry"
