@@ -14,6 +14,7 @@ from ngdesign.units.heat.shell_tube_r2 import (
     PhaseRegimeNotRated,
     ShellTubeR2,
     fixed_point_wall,
+    latent_heat_J_kg,
     nusselt_bank_h,
 )
 
@@ -78,6 +79,14 @@ def test_zones_refine_a_single_phase_duty_only_slightly(thermo: Thermo) -> None:
     one = ShellTubeR2().solve(inlets, {**params, "n_zones": 1}, thermo)
     many = ShellTubeR2().solve(inlets, {**params, "n_zones": 8}, thermo)
     assert many.info["Q_W"] == pytest.approx(one.info["Q_W"], rel=2e-2)
+
+
+def test_latent_heat_of_a_pure_component(thermo: Thermo) -> None:
+    """Regression: flash_pvf gives a pure component's bubble liquid at any vf, so h_fg read 0.
+
+    Propane at 1 MPa: the enthalpy step across T_sat, above 2e5 J/kg by a wide margin.
+    """
+    assert latent_heat_J_kg(thermo, {"C3": 1.0}, 1.0e6) > 2.0e5
 
 
 def test_condenser_closes_area_and_changes_phase(thermo: Thermo) -> None:

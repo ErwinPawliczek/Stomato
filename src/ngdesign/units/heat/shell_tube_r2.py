@@ -104,6 +104,21 @@ def fixed_point_wall(h_of_wall: Any, t_sat: float, t_other: float, u_of: Any) ->
     raise RatingConvergenceError(f"wall-temperature fixed point did not converge at T_sat = {t_sat} K")
 
 
+def latent_heat_J_kg(thermo: Thermo, z: dict[str, float], p: float) -> float:
+    """h_fg, the vapour at the dew point less the liquid at the bubble point, per kg.
+
+    From ``phase_props``, which names the phase and runs no split.  Not ``flash_pvf``: on
+    the cubic packages it ignores vf for a pure component and returns the bubble liquid at
+    both ends, which reads as a zero latent heat.
+    """
+    vapour = thermo.phase_props(z, float(thermo.dew_point(z, P=p).T), p, PhaseKind.VAPOR)
+    liquid = thermo.phase_props(z, float(thermo.bubble_point(z, P=p).T), p, PhaseKind.HC_LIQUID)
+    latent = float((vapour.enthalpy - liquid.enthalpy) * 1000.0 / liquid.molecular_weight)
+    if latent <= 0.0:
+        raise RatingError(f"latent heat {latent} J/kg at P = {p} Pa is not positive")
+    return latent
+
+
 @dataclass(frozen=True)
 class _Side:
     """One stream of the exchanger with its place in the geometry."""
@@ -439,10 +454,7 @@ class _Rater:
         return film_props(self.thermo, dict(liquid.composition), state.T, state.P, liquid.kind)
 
     def _latent_J_kg(self, side: _Side, p: float) -> float:
-        z = dict(side.inlet.composition)
-        vapour = self.thermo.flash_pvf(z, p, 1.0, 1.0)
-        liquid = self.thermo.flash_pvf(z, p, 0.0, 1.0)
-        return float((vapour.enthalpy - liquid.enthalpy) / (side.inlet.mass_flow / side.inlet.molar_flow))
+        return latent_heat_J_kg(self.thermo, dict(side.inlet.composition), p)
 
     def _pc(self, state: StreamState) -> float:
         return math.fsum(x * float(self.db[cid]["pc_Pa"]) for cid, x in state.composition.items())
