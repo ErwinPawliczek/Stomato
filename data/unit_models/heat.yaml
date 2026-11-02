@@ -411,9 +411,21 @@
       note: every active side carries a T_out spec except exactly one balance stream, which
         absorbs the residual duty; zoned composite pinch check, per-port duties
     R1:
-      status: planned
-      params: {}
-      note: layer-wise UA distribution
+      status: provisional
+      adapter: ngdesign.units.heat.multi_stream_r1:MultiStreamR1
+      params:
+        type: object
+        properties:
+          hA_hot_in_1_W_K: {type: number, description: 'layer conductance of hot_in_1, W/K'}
+          hA_hot_in_2_W_K: {type: number, description: 'layer conductance of hot_in_2, W/K'}
+          hA_cold_in_1_W_K: {type: number, description: 'layer conductance of cold_in_1, W/K'}
+          hA_cold_in_2_W_K: {type: number, description: 'layer conductance of cold_in_2, W/K'}
+          dP_hot_in_1: {type: number, description: 'pressure drop, Pa, default 0'}
+          dP_hot_in_2: {type: number, description: 'pressure drop, Pa, default 0'}
+          dP_cold_in_1: {type: number, description: 'pressure drop, Pa, default 0'}
+          dP_cold_in_2: {type: number, description: 'pressure drop, Pa, default 0'}
+      note: common-wall layer model (Haseler 1983) solved as a BVP over monotone T(H) tables, on
+        given layer conductances; reduces to R0 at its own outlet temperatures
     R2:
       status: planned
       params: {}
@@ -423,7 +435,8 @@
   references:
   - docs/unit-catalogue-plan.md §2 U-C 6
   notes: >-
-    No V1 worked case: Smith Table 16.2 (the four-stream LNG-cold-box basis)
+    R1 ships provisional on the spec's independent MS1 and MS2 and the reduction to R0; no printed
+    multi-stream rating example was searched for. No R0 V1 worked case: Smith Table 16.2 (the four-stream LNG-cold-box basis)
     needs 7.5 MW of hot utility that the utility-free R0 unit does not model, and
     every single-balance arrangement of the four streams crosses (verified by hand
     cascade). The Smith streams 1+3 two-stream balance is covered by the
