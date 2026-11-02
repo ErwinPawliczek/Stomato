@@ -34,15 +34,17 @@ Implemented value -> mechanism (spec T-02):
 - ``VolumeTranslation.PENELOUX``: the library's translated classes
   (``PRMIXTranslated`` / ``SRKMIXTranslated``) fed in-house Rackett ``cs``
   (Peneloux et al. 1982); shifts density, never VLE.
-- ``LiquidDensity``: vocabulary per the spec; only ``EOS`` (the plain EOS
-  density) has an implementation. No family-A row declares a non-default
-  value, so the others stay declaration-only and ``catalogue.build`` rejects
-  them until a row needs one.
+- ``LiquidDensity``: ``RACKETT`` and ``COSTALD`` are the correlations in
+  ``ngdesign.thermo.liquid_density``, replacing the volume of liquid roots only
+  (VLE and enthalpy stay the EOS's). No row declares ``API``.
 - ``SourTerm.SOUR``: in-house Wilson API-955-style sour-water ionisation
   correction on the aqueous liquid phase (API Publication 955 / EPA-600/2-80-067).
 - ``EnthalpyMethod.LEE_KESLER``: in-house Lee-Kesler (1975) corresponding-states
   enthalpy departures replacing the cubic EOS departure on the phase objects
   (enthalpy only, never VLE).
+- ``EnthalpyMethod.IDEAL``: K-value rows only (``KValuePackage``): an ideal-gas
+  vapour and an ideal liquid one heat of vaporisation below it, no pressure
+  departure. Cubic rows do not declare it.
 
 An option value outside its group's vocabulary never loads: the catalogue
 validates row options against these declarations at load time
@@ -114,6 +116,7 @@ class EnthalpyMethod(StrEnum):
 
     EOS = "eos"
     LEE_KESLER = "lee_kesler"
+    IDEAL = "ideal"
 
 
 class GammaPhiLiquid(StrEnum):
@@ -124,6 +127,7 @@ class GammaPhiLiquid(StrEnum):
     WILSON = "wilson"
     VANLAAR = "vanlaar"
     MARGULES = "margules"
+    WOHL3 = "wohl3"
     REGULAR_SOLUTION = "regular_solution"
     UNIFAC = "unifac"
     UNIFAC_DORTMUND = "unifac_dortmund"
