@@ -267,8 +267,16 @@ def _render(svc: ProjectService, *, view: str) -> dict[str, Any]:
     layout = project.layout.pfd if view == "pfd" else project.layout.pid
     svc.engine.render_view(solved, layout, view)  # proves the view renders with the stored placements
     pid = pipeline.build_pid(solved.model_copy(deep=True), k_gas=pipeline.DEFAULT_K_GAS)
+    # A stored project (DbProjectStore) is addressed by id; the unscoped legacy
+    # URL draws the owner's default project, not necessarily this one.
+    project_id = getattr(svc.store, "project_id", None)
+    url = (
+        f"/api/views/{view}.svg"
+        if project_id is None
+        else f"/api/v1/projects/{project_id}/exports/{view}.svg"
+    )
     return {
-        "url": f"/api/views/{view}.svg",
+        "url": url,
         "units": len(pid.equipment),
         "lines": len(pid.lines),
         "instruments": len(pid.instruments),

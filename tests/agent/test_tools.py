@@ -202,6 +202,19 @@ def test_render_returns_url_and_counts() -> None:
     assert pid["url"] == "/api/views/pid.svg"
 
 
+def test_render_url_of_a_stored_project_is_project_scoped() -> None:
+    """A store bound to a stored project (the API's DbProjectStore) gets that
+    project's v1 export URL, not the legacy default-project route."""
+
+    class _BoundStore(_Store):
+        project_id = "p-42"
+
+    store = _BoundStore(Project(name="slice", flowsheet=slice_fs.build()))
+    _run(store, "solve")
+    assert _run(store, "render", view="pfd")["url"] == "/api/v1/projects/p-42/exports/pfd.svg"
+    assert _run(store, "render", view="pid")["url"] == "/api/v1/projects/p-42/exports/pid.svg"
+
+
 def test_list_tools_report_registry_and_slate() -> None:
     store = _store()
     kinds = _run(store, "list_unit_kinds")["kinds"]
