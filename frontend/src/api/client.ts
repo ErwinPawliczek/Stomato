@@ -7,6 +7,7 @@ import { mockPfdSvg } from "../../mocks/pfdSvg";
 import { mockPidSvg } from "../../mocks/pidSvg";
 import { mockPlotSvg } from "../../mocks/plotSvg";
 import mockAgentEvents from "../../mocks/agent-events.json";
+import { findOutput, upstream, type TraceGraph, type TraceTarget } from "../trace";
 
 export type Project = components["schemas"]["Project"];
 export type XY = components["schemas"]["XY"];
@@ -17,6 +18,11 @@ export type Meta = {
 export type SolvedFlowsheet = components["schemas"]["SolvedFlowsheet"];
 export type Vec3 = components["schemas"]["Vec3"];
 export type PipingNetwork = components["schemas"]["PipingNetwork"];
+export type ProjectInfo = components["schemas"]["ProjectInfo"];
+export type Citation = components["schemas"]["Citation"];
+export type AuditReport = components["schemas"]["AuditReport"];
+export type AuditFinding = components["schemas"]["AuditFinding"];
+export type { TraceGraph, TraceTarget, ValueNode, OpNode, TraceEdge } from "../trace";
 
 // Mirror of GET /api/meta (routes_meta.py): every @register(kind, name) in
 // src/ngdesign, read from source at the current commit. Lets the thermo
@@ -120,6 +126,32 @@ function parseSseFrame(frame: string, onEvent: (e: AgentEvent) => void): void {
     const data = line.slice(5).trim();
     if (data) onEvent(JSON.parse(data) as AgentEvent);
   }
+}
+
+/** Name of the owner's default project (store/projects.py DEFAULT_PROJECT_NAME): the
+ * project the unscoped /api/project routes edit, so the one the Trace view traces. */
+const DEFAULT_PROJECT_NAME = "default";
+let defaultProjectId: Promise<string> | null = null;
+
+/** Id of the default project, resolved once from GET /api/projects. */
+function projectId(): Promise<string> {
+  defaultProjectId ??= http<{ [key: string]: ProjectInfo[] }>("/api/projects")
+    .then((r) => {
+      const row = (r.projects ?? []).find((p) => p.name === DEFAULT_PROJECT_NAME);
+      if (!row) throw new ApiError("GET /api/projects: no default project", 404);
+      return row.id;
+    })
+    .catch((e: unknown) => {
+      defaultProjectId = null; // retry on the next call
+      throw e;
+    });
+  return defaultProjectId;
+}
+
+// The trace mocks are large (the full slice graph): load them on first use so they stay
+// out of the main bundle.
+async function mockTrace(): Promise<TraceGraph> {
+  return structuredClone((await import("../../mocks/trace.json")).default) as TraceGraph;
 }
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -237,6 +269,32 @@ export const api = {
   async solve(): Promise<SolvedFlowsheet> {
     if (MOCK) return structuredClone(mockSolved) as SolvedFlowsheet;
     return http<SolvedFlowsheet>("/api/solve", { method: "POST" });
+  },
+  /** Provenance graph of the solved default project (GET /api/projects/{id}/trace); with a
+   * target, only the upstream subgraph of that one value (meta.focus = its node id).
+   * 404 when the value was not traced. */
+  async trace(target?: TraceTarget): Promise<TraceGraph> {
+    if (MOCK) {
+      const full = await mockTrace();
+      if (!target) return full;
+      const node = findOutput(full, target);
+      const of = "stream" in target ? target.stream : target.unit;
+      if (!node) throw new ApiError(`GET trace: 404 no traced value '${target.prop}' for '${of}'`, 404);
+      return upstream(full, node.id);
+    }
+    const id = encodeURIComponent(await projectId());
+    let query = "";
+    if (target) {
+      const q = new URLSearchParams("stream" in target ? { stream: target.stream } : { unit: target.unit });
+      q.set("prop", target.prop);
+      query = `?${q.toString()}`;
+    }
+    return http<TraceGraph>(`/api/projects/${id}/trace${query}`);
+  },
+  /** Outputs that depend on an uncited leaf, an estimate, or an unreferenced method. */
+  async traceAudit(): Promise<AuditReport> {
+    if (MOCK) return structuredClone((await import("../../mocks/trace-audit.json")).default) as AuditReport;
+    return http<AuditReport>(`/api/projects/${encodeURIComponent(await projectId())}/trace/audit`);
   },
   _resetMock() {
     mockState = structuredClone(mockProject) as Project;
