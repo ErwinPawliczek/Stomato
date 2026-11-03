@@ -361,6 +361,17 @@ def cp0_eos(query: str) -> list[dict[str, Any]]:
     return list(_grouped("cp0_eos.csv").get(find(query).cas, []))
 
 
+def cp_gas_points(query: str) -> dict[tuple[str, str], list[dict[str, Any]]]:
+    """Tabulated ideal-gas Cp(T) points (``cp_gas_points.csv``) by (source, reference), ascending in T.
+
+    Each group is one stated table: a WebBook gas Cp table or one ThermoML data set.
+    """
+    tables: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
+    for row in _grouped("cp_gas_points.csv").get(find(query).cas, []):
+        tables[(row["source"], row["reference"])].append(row)
+    return {key: sorted(rows, key=lambda r: float(r["T"])) for key, rows in tables.items()}
+
+
 def janaf(query: str) -> dict[str, list[dict[str, Any]]]:
     """NIST-JANAF rows of one species by table id, ascending in T."""
     tables: dict[str, list[dict[str, Any]]] = defaultdict(list)

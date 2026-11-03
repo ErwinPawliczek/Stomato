@@ -46,6 +46,7 @@ from parse_nist import (  # noqa: E402
     parse_page,
     reference_phase_298,
 )
+from parse_thermoml import iter_archive  # noqa: E402
 
 BANK = Path(chemicals.__file__).resolve().parent
 THERMO = Path(thermo.__file__).resolve().parent
@@ -77,6 +78,7 @@ SOURCE_RANK: dict[str, int] = {
     "sander": 10,
     "nasa_cea": 4,
     "coolprop_ig": 4,  # ideal-gas Cp0 of reference EOS (cp0_eos.csv; ranks no property row)
+    "thermoml": 9,  # ideal-gas Cp(T) points (cp_gas_points.csv; ranks no property row)
 }
 
 GRADES: dict[str, str] = {
@@ -104,6 +106,7 @@ GRADES: dict[str, str] = {
     "sander": "B",
     "nasa_cea": "B",
     "coolprop_ig": "B",
+    "thermoml": "B",
 }
 
 UNITS = {
@@ -1192,6 +1195,58 @@ def _correlations(collected: dict[str, Any], kept: set[str]) -> dict[str, list[d
     }
 
 
+THERMOML_ARCHIVE = "thermoml/ThermoML.v2020-09-30.tgz"
+
+
+def _cp_gas_points(
+    cache: Path, pages: list[Page], species: dict[str, dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Tabulated ideal-gas Cp(T): WebBook gas tables and ThermoML ideal-gas points.
+
+    One row per stated point. WebBook rows keep the page's reference for the table;
+    ThermoML rows are matched to a species by standard InChIKey and cite the article
+    (first author, year, DOI) and the method the archive records.
+    """
+    points: list[dict[str, Any]] = []
+    for page in pages:
+        if page.cas not in species:
+            continue
+        for point in page.cp_points:
+            if point["phase"] == "gas":
+                points.append(
+                    {
+                        "cas": page.cas,
+                        "T": point["T"],
+                        "Cp": point["value"],
+                        "source": "nist",
+                        "reference": point["reference"],
+                    }
+                )
+    archive = cache / THERMOML_ARCHIVE
+    if archive.exists():
+        by_key: dict[str, list[str]] = defaultdict(list)
+        for cas, record in species.items():
+            if record.get("inchikey"):
+                by_key[str(record["inchikey"])].append(cas)
+        for point in iter_archive(archive):
+            matches = by_key.get(point["inchikey"], [])
+            if not matches:
+                DROPPED["thermoml_point_without_species"] += 1
+            for cas in matches:
+                points.append(
+                    {
+                        "cas": cas,
+                        "T": point["T"],
+                        "Cp": point["Cp"],
+                        "uncertainty": point["uncertainty"],
+                        "source": "thermoml",
+                        "reference": f"{point['first_author']} {point['year']}; doi:{point['doi']}; "
+                        f"{point['method']} (ThermoML)",
+                    }
+                )
+    return sorted(points, key=lambda r: (r["cas"], r["source"], r["reference"], r["T"]))
+
+
 def _audit(
     rows: list[dict[str, Any]],
     species: dict[str, dict[str, Any]],
@@ -1437,6 +1492,53 @@ def _audit_cp0(out: Path) -> tuple[list[str], Counter[str]]:
     return lines, counts
 
 
+#: Window in which a tabulated gas Cp(T) is held against the gas model's own source:
+#: the range every fit in this database is made for (TRC fits misbehave below it).
+CP_TABLE_AUDIT_WINDOW = (298.15, 1000.0)
+
+
+def _audit_cp_tables(out: Path) -> tuple[list[str], Counter[str]]:
+    """Each tabulated gas Cp(T) (cp_gas_points.csv) against the species' selected gas model.
+
+    Run on the tables just written, like :func:`_audit_cp0`. A table is the gas shape only
+    where no other Cp source exists, so a disagreement changes no selection. Every node
+    inside :data:`CP_TABLE_AUDIT_WINDOW` and the model's range is compared; the worst one
+    beyond :data:`CP0_AUDIT_LIMIT` is listed. Species whose model is the table itself, or
+    that have no gas model, are skipped.
+    """
+    lines: list[str] = []
+    counts: Counter[str] = Counter()
+    if out.resolve() != (chemdb.DATA_DIR / "chemdb").resolve():
+        return lines, counts
+    for cached in (chemdb._grouped, chemdb._properties, chemdb._species):  # noqa: SLF001
+        cached.cache_clear()
+    from ngdesign.data import species_models  # noqa: PLC0415 - reads the tables just written
+
+    for cas in sorted({r["cas"] for r in chemdb._rows("cp_gas_points.csv")}):  # noqa: SLF001
+        try:
+            model = species_models.species_thermo(cas, "gas")
+        except chemdb.MissingPropertyError:
+            continue
+        if model.curve.name.startswith("cp_table") or model.curve.name == "constant_cp":
+            continue
+        lo = max(model.curve.tmin, CP_TABLE_AUDIT_WINDOW[0])
+        hi = min(model.curve.tmax, CP_TABLE_AUDIT_WINDOW[1])
+        for (source, reference), points in chemdb.cp_gas_points(cas).items():
+            compared = [(float(p["T"]), float(p["Cp"])) for p in points if lo <= float(p["T"]) <= hi]
+            if not compared:
+                continue
+            counts["cp_table_compared"] += 1
+            T, cp = max(compared, key=lambda tc: abs(tc[1] / model.curve.cp(tc[0]) - 1.0))
+            ratio = cp / model.curve.cp(T) - 1.0
+            if abs(ratio) > CP0_AUDIT_LIMIT:
+                counts["conflict_Cp_table"] += 1
+                lines.append(
+                    f"Cp_gas(T) {cas}: {model.curve.name} {model.curve.cp(T):.4g} vs {source} table "
+                    f"({reference}) {cp:.4g} J/(mol K) at {T:g} K ({100.0 * ratio:+.1f} %)"
+                )
+    return lines, counts
+
+
 def tables(cache: Path, out: Path) -> int:
     collected = _collect_all(cache)
     species: dict[str, dict[str, Any]] = collected["species"]
@@ -1546,6 +1648,11 @@ def tables(cache: Path, out: Path) -> int:
         ["cas", "form", "Tmin", "Tmax", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "source"],
         sorted(correlations["cp_gas"], key=lambda r: (r["cas"], r["form"])),
     )
+    counts["cp_gas_points"] = _write_csv(
+        out / "cp_gas_points.csv",
+        ["cas", "T", "Cp", "uncertainty", "source", "reference"],
+        _cp_gas_points(cache, collected["pages"], species),
+    )
     counts["cp0_eos"] = _write_csv(
         out / "cp0_eos.csv",
         ["cas", "term", "a", "b", "R", "Tmin", "Tmax", "source", "reference"],
@@ -1565,13 +1672,18 @@ def tables(cache: Path, out: Path) -> int:
     cp0_lines, cp0_counts = _audit_cp0(out)
     audit_lines += cp0_lines
     audit_counts.update(cp0_counts)
+    table_lines, table_counts = _audit_cp_tables(out)
+    audit_lines += table_lines
+    audit_counts.update(table_counts)
     (out / "AUDIT.txt").write_text(
         "Cross-source disagreements found at build time (grade C sources excluded).\n"
         "A line here is not an error in the database: it names a property where two\n"
         "non-estimated sources differ by more than the audit limit; the selected value\n"
         "is the first one listed. Limits: 5 kJ/mol (Hf, Gf), 5 K (Tb, Tm, Tc), 2 bar (Pc),\n"
-        "2 % (reference-EOS ideal-gas Cp0 against the gas model's own Cp source, which\n"
-        "stays the selected shape).\n\n" + "\n".join(OUTVOTED + audit_lines) + "\n"
+        "2 % (reference-EOS ideal-gas Cp0, and tabulated gas Cp(T) between 298.15 and\n"
+        "1000 K, against the gas model's own Cp source, which stays the selected shape).\n\n"
+        + "\n".join(OUTVOTED + audit_lines)
+        + "\n"
     )
     selected = Counter(r["property"] for r in rows if r["selected"])
     manifest = {

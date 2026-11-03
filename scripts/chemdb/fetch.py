@@ -9,6 +9,7 @@ Nothing fetched is ever executed: pages are parsed as text by ``parse_nist.py``.
     python -I scripts/chemdb/fetch.py janaf   <cache-dir>
     python -I scripts/chemdb/fetch.py henry   <seed.txt> <cache-dir>
     python -I scripts/chemdb/fetch.py cea     <cache-dir>
+    python -I scripts/chemdb/fetch.py thermoml <cache-dir>
 
 Rate limits honoured: NIST WebBook robots.txt ``Crawl-delay: 5``; PubChem PUG
 REST "no more than 5 requests per second" (one batched request every 0.4 s here).
@@ -17,6 +18,7 @@ REST "no more than 5 requests per second" (one batched request every 0.4 s here)
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -127,6 +129,32 @@ def fetch_cea(cache: Path) -> int:
     return 0
 
 
+THERMOML_URL = "https://data.nist.gov/od/ds/mds2-2422/ThermoML.v2020-09-30.tgz"
+
+
+def fetch_thermoml(cache: Path) -> int:
+    """NIST ThermoML/Data Archive (doi:10.18434/mds2-2422), checked against its published SHA-256."""
+    out = cache / "thermoml"
+    out.mkdir(parents=True, exist_ok=True)
+    target = out / THERMOML_URL.rsplit("/", 1)[1]
+    status, digest = _get(THERMOML_URL + ".sha256")
+    if status != 200:
+        print(f"sha256: HTTP {status}", flush=True)
+        return 1
+    expected = digest.decode().split()[0].strip().lower()
+    if not target.exists():
+        status, body = _get(THERMOML_URL, timeout=600.0)
+        if status != 200:
+            print(f"archive: HTTP {status}", flush=True)
+            return 1
+        target.write_bytes(body)
+    if hashlib.sha256(target.read_bytes()).hexdigest() != expected:
+        print("archive: SHA-256 mismatch; removed", flush=True)
+        target.unlink()
+        return 1
+    return 0
+
+
 def fetch_pubchem(seed: Path, cache: Path) -> int:
     """Identity records: one batched POST-free GET per ``PUBCHEM_BATCH`` CIDs.
 
@@ -190,13 +218,15 @@ def fetch_janaf(cache: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("source", choices=("nist", "pubchem", "janaf", "henry", "cea"))
+    parser.add_argument("source", choices=("nist", "pubchem", "janaf", "henry", "cea", "thermoml"))
     parser.add_argument("paths", nargs="+", type=Path)
     args = parser.parse_args()
     if args.source == "janaf":
         return fetch_janaf(args.paths[0])
     if args.source == "cea":
         return fetch_cea(args.paths[0])
+    if args.source == "thermoml":
+        return fetch_thermoml(args.paths[0])
     if args.source == "nist":
         return fetch_nist(args.paths[0], args.paths[1])
     if args.source == "henry":

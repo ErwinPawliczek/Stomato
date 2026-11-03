@@ -48,7 +48,7 @@ def test_every_row_cites_a_known_source_with_its_grade() -> None:
 
 def test_every_correlation_table_cites_a_known_source() -> None:
     sources = chemdb.sources()
-    for name in ("shomate.csv", "antoine.csv", "wagner.csv", "cp_gas.csv"):
+    for name in ("shomate.csv", "antoine.csv", "wagner.csv", "cp_gas.csv", "cp_gas_points.csv"):
         with (_DIR / name).open(encoding="utf8", newline="") as handle:
             for row in csv.DictReader(handle):
                 assert row["source"] in sources, f"{name}: {row['source']}"
@@ -541,3 +541,104 @@ def test_cp0_eos_gives_a_gas_model_where_no_other_cp_source_exists() -> None:
     assert model.curve.name == "cp0_eos:coolprop_ig"
     assert model.curve.cp(298.15) == pytest.approx(238.5, rel=0.01)
     assert model.curve.cp(500.0) > model.curve.cp(298.15)
+
+
+def test_tabulated_gas_cp_reproduces_its_table_and_integrates_consistently() -> None:
+    """Every gas model built on a stated Cp(T) table returns the table at its nodes,
+    holds S°298 there, and its dH, dS are the integrals of its Cp."""
+    from ngdesign.data.species_models import _cp_table, species_thermo
+
+    cases = sorted({r["cas"] for r in chemdb._rows("cp_gas_points.csv")})  # noqa: SLF001
+    checked = 0
+    for cas in cases:
+        try:
+            model = species_thermo(cas, "gas")
+        except chemdb.MissingPropertyError:
+            continue
+        if not model.curve.name.startswith("cp_table"):
+            continue
+        table = _cp_table(cas)
+        assert table is not None
+        for row in table:
+            assert model.cp(float(row["T"])) == pytest.approx(float(row["Cp"]), rel=1e-12), cas
+        assert model.s(298.15) == pytest.approx(chemdb.value(cas, "S0_gas").value, rel=1e-12), cas
+        assert model.h(298.15) == pytest.approx(model.hf298, abs=1e-9), cas
+        nodes = [float(row["T"]) for row in table]
+        for T in (0.5 * (a + b) for a, b in zip(nodes, nodes[1:], strict=False)):  # Cp has kinks at nodes
+            h = 1e-4 * T
+            assert (model.h(T + h) - model.h(T - h)) / (2 * h) == pytest.approx(model.cp(T), rel=1e-6), cas
+            assert (model.s(T + h) - model.s(T - h)) / (2 * h) == pytest.approx(model.cp(T) / T, rel=1e-6), (
+                cas
+            )
+        checked += 1
+    assert checked >= 3
+
+
+def test_thermoml_points_are_stated_values_with_their_article() -> None:
+    """ThermoML rows cite a DOI and are never the archive's predictions (the
+    decamethylcyclopentasiloxane set, recorded as 'Predicted', stays out)."""
+    with (_DIR / "cp_gas_points.csv").open(encoding="utf8", newline="") as handle:
+        rows = [r for r in csv.DictReader(handle) if r["source"] == "thermoml"]
+    assert len(rows) >= 100
+    assert all("doi:10." in r["reference"] for r in rows)
+    assert not any("predict" in r["reference"].lower() for r in rows)
+    assert not any(r["cas"] == "541-02-6" for r in rows)
+
+
+@pytest.mark.parametrize("T", [298.15, 400.0, 500.0, 700.0, 1000.0])
+def test_thermoml_ideal_gas_cp_agrees_with_an_independent_source(T: float) -> None:
+    """Benzene: the ThermoML statistical-thermodynamic table (Ruzicka et al. 2014)
+    against the TRC eight-term fit, an independent evaluation, within 1 %."""
+    from ngdesign.data.species_models import _TabulatedCpCurve, species_thermo
+
+    table = next(
+        rows for (source, _), rows in chemdb.cp_gas_points("benzene").items() if source == "thermoml"
+    )
+    model = species_thermo("benzene", "gas")
+    assert model.curve.name == "cp_fit:trc"
+    assert _TabulatedCpCurve(table, 0.0).cp(T) == pytest.approx(model.cp(T), rel=0.01)
+
+
+@pytest.mark.parametrize(
+    ("query", "shape", "cp298"),
+    [
+        ("141-43-5", "cp_table:thermoml", 84.38),  # 2-aminoethanol, Ruzicka et al. 2015
+        ("872-50-4", "cp_table:thermoml", 115.26),  # N-methyl-2-pyrrolidone, Ruzicka et al. 2015
+        ("132-64-9", "cp_table:nist", 163.05),  # dibenzofuran, Klots 1996 (WebBook)
+        ("503-30-0", "cp_table:nist", 61.5),  # oxetane, Dorofeeva 1992 (WebBook)
+        ("646-06-0", "cp_table:nist", 71.0),  # 1,3-dioxolane, Dorofeeva 1992 (WebBook)
+    ],
+)
+def test_a_stated_cp_table_gives_a_gas_model_where_no_fit_exists(
+    query: str, shape: str, cp298: float
+) -> None:
+    """These species state ΔfH° and S° for the gas but have no Cp fit; a stated table now
+    carries the shape over its own range, and nothing beyond it."""
+    from ngdesign.data.species_models import TemperatureRangeError, species_thermo
+
+    model = species_thermo(query, "gas")
+    assert model.curve.name == shape
+    assert model.cp(298.15) == pytest.approx(cp298, rel=1e-12)
+    assert model.cp(500.0) > model.cp(298.15)
+    with pytest.raises(TemperatureRangeError):
+        model.cp(model.t_range[1] + 1.0)
+
+
+@pytest.mark.parametrize(
+    ("query", "source", "cp298", "rel"),
+    [
+        ("503-30-0", "Hossenlopp", 61.2, 0.01),  # oxetane: Hossenlopp 1981 measurement (WebBook)
+        ("79-14-1", "crc_thermo", 87.1, 0.03),  # glycolic acid: CRC Handbook 298 K value
+    ],
+)
+def test_a_stated_cp_table_agrees_with_an_independent_298_k_value(
+    query: str, source: str, cp298: float, rel: float
+) -> None:
+    """Cross-check of a table-based gas model against a separate source's 298 K Cp."""
+    from ngdesign.data.species_models import species_thermo
+
+    stated = [
+        v for v in chemdb.values(query, "Cp_gas") if source in (v.source, v.reference.split(";")[0][:10])
+    ]
+    assert stated and stated[0].value == pytest.approx(cp298)
+    assert species_thermo(query, "gas").cp(298.15) == pytest.approx(cp298, rel=rel)
