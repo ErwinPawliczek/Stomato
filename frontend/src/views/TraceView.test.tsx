@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { vi } from "vitest";
-import { api } from "../api/client";
+import { api, type ProjectInfo } from "../api/client";
 import mockTrace from "../../mocks/trace.json";
 import { findOutput, upstream, type TraceGraph } from "../trace";
 import mockAudit from "../../mocks/trace-audit.json";
@@ -110,7 +110,7 @@ test("a project selector traces another stored project", async () => {
   const list = vi.spyOn(api, "listProjects").mockResolvedValue([
     { id: "p-default", name: "default" },
     { id: "p-demo", name: "Trace demo: gas processing" },
-  ]);
+  ] as ProjectInfo[]);
   const trace = vi.spyOn(api, "trace");
   const audit = vi.spyOn(api, "traceAudit");
   try {

@@ -273,13 +273,14 @@ export interface paths {
         };
         /**
          * Projects
-         * @description The caller's projects (the token's owner; open mode: 'local').
+         * @description The caller's projects (the token's owner; open mode: 'local'), oldest first.
          */
         get: operations["projects_api_projects_get"];
         put?: never;
         /**
          * Create Project Route
-         * @description Create a project; 409 when the owner already has one with this name.
+         * @description Create a project (blank, from a template, as a copy, or from a body);
+         *     409 when the owner already has one with this name.
          */
         post: operations["create_project_route_api_projects_post"];
         delete?: never;
@@ -313,7 +314,11 @@ export interface paths {
         delete: operations["delete_project_route_api_projects__project_id__delete"];
         options?: never;
         head?: never;
-        patch?: never;
+        /**
+         * Rename Project Route
+         * @description Rename a project (row and body); 409 when the name is taken.
+         */
+        patch: operations["rename_project_route_api_projects__project_id__patch"];
         trace?: never;
     };
     "/api/projects/{project_id}/agent": {
@@ -459,6 +464,26 @@ export interface paths {
          */
         put: operations["place_project_api_projects__project_id__layout__view___tag__put"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open Project Route
+         * @description Open a project: stamp ``opened_at`` and return it (version unchanged).
+         */
+        post: operations["open_project_route_api_projects__project_id__open_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -721,6 +746,26 @@ export interface paths {
          * @description Run the parameter grid against the current project's flowsheet.
          */
         post: operations["study_case_api_study_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Templates Route
+         * @description The new-project catalogue: blank first, then the sample flowsheets.
+         */
+        get: operations["templates_route_api_templates_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1595,16 +1640,22 @@ export interface components {
         };
         /**
          * ProjectCreate
-         * @description POST /api/projects body.
+         * @description POST /api/projects body: a name plus at most one source — an explicit
+         *     ``project`` body (import), a catalogue ``template`` id, or ``from_project``
+         *     (the id of another of the caller's projects to copy). No source: blank.
          */
         ProjectCreate: {
+            /** From Project */
+            from_project?: string | null;
             /** Name */
             name: string;
-            project: components["schemas"]["Project"];
+            project?: components["schemas"]["Project"] | null;
+            /** Template */
+            template?: string | null;
         };
         /**
          * ProjectInfo
-         * @description A stored project: identity, audit stamp, version, and the body.
+         * @description A stored project: identity, audit stamp, version, origin and the body.
          */
         ProjectInfo: {
             /**
@@ -1616,9 +1667,13 @@ export interface components {
             id: string;
             /** Name */
             name: string;
+            /** Opened At */
+            opened_at?: string | null;
             /** Owner */
             owner: string;
             project: components["schemas"]["Project"];
+            /** Template */
+            template?: string | null;
             /**
              * Updated At
              * Format: date-time
@@ -1626,6 +1681,14 @@ export interface components {
             updated_at: string;
             /** Version */
             version: number;
+        };
+        /**
+         * ProjectRename
+         * @description PATCH /api/projects/{id} body.
+         */
+        ProjectRename: {
+            /** Name */
+            name: string;
         };
         /**
          * PseudoDefinition
@@ -1933,6 +1996,22 @@ export interface components {
             };
             /** Stream Id */
             stream_id: string;
+        };
+        /**
+         * TemplateInfo
+         * @description One new-project template: catalogue id, display text and its size.
+         */
+        TemplateInfo: {
+            /** Description */
+            description: string;
+            /** Id */
+            id: string;
+            /** Streams */
+            streams: number;
+            /** Title */
+            title: string;
+            /** Units */
+            units: number;
         };
         /** TitleBlock */
         TitleBlock: {
@@ -2736,6 +2815,41 @@ export interface operations {
             };
         };
     };
+    rename_project_route_api_projects__project_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectRename"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     agent_conversations_project_api_projects__project_id__agent_get: {
         parameters: {
             query?: never;
@@ -3033,6 +3147,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Layout"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_project_route_api_projects__project_id__open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectInfo"];
                 };
             };
             /** @description Validation Error */
@@ -3434,6 +3579,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    templates_route_api_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["TemplateInfo"][];
+                    };
                 };
             };
         };

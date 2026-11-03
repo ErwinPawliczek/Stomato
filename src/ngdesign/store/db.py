@@ -1,4 +1,4 @@
-"""Database engine and sessions (spec P3-01).
+"""Database engine, sessions and in-place schema migration (spec P3-01).
 
 The engine is a process-global built lazily from ``STOMATO_DATABASE_URL``
 (default ``sqlite:///./stomato.db``; Postgres via ``postgresql+psycopg://`` —
@@ -20,10 +20,11 @@ import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from sqlalchemy.engine import Engine, make_url
+from sqlalchemy import inspect, text
+from sqlalchemy.engine import Connection, Engine, make_url
 from sqlmodel import Session, SQLModel, create_engine, select
 
-from ngdesign.store.models import SCHEMA_VERSION, SchemaVersionRow, utcnow
+from ngdesign.store.models import SCHEMA_VERSION, ProjectRow, SchemaVersionRow, utcnow
 
 logger = logging.getLogger("ngdesign.store")
 
@@ -77,18 +78,54 @@ def reset_engine() -> None:
         _initialized = False
 
 
+#: Columns schema v2 added to ``projects`` (all nullable, so existing rows
+#: stay valid with NULL): the in-place v1 -> v2 migration adds exactly these.
+_V2_PROJECT_COLUMNS = ("template", "opened_at")
+
+
+def _migrate(conn: Connection) -> list[str]:
+    """Bring an older database's tables up to the current models in place.
+
+    ``create_all`` creates missing tables but never alters existing ones, so a
+    v1 ``projects`` table lacks the v2 columns. Each missing one is added with
+    ``ALTER TABLE ... ADD COLUMN`` (its type compiled for the connected
+    dialect); rows are untouched, so every existing project — the legacy
+    ``default`` one included — survives. Idempotent: present columns are
+    skipped. Returns the columns added.
+    """
+    present = {col["name"] for col in inspect(conn).get_columns(ProjectRow.__tablename__)}
+    table = ProjectRow.__table__  # type: ignore[attr-defined]
+    added: list[str] = []
+    for name in _V2_PROJECT_COLUMNS:
+        if name in present:
+            continue
+        col_type = table.c[name].type.compile(dialect=conn.dialect)
+        conn.execute(text(f"ALTER TABLE {ProjectRow.__tablename__} ADD COLUMN {name} {col_type}"))
+        added.append(name)
+    return added
+
+
 def init_db() -> None:
-    """Create every table and stamp the schema version (idempotent)."""
+    """Create every table, migrate an older schema in place, and stamp the
+    schema version (idempotent)."""
     engine = get_engine()
     with _lock:
         SQLModel.metadata.create_all(engine)
+        with engine.begin() as conn:
+            added = _migrate(conn)
+        if added:
+            logger.info("migrated store schema: added projects.%s", ", projects.".join(added))
         with Session(engine) as session:
             row = session.exec(select(SchemaVersionRow).where(SchemaVersionRow.id == 1)).first()
             if row is None:
                 session.add(SchemaVersionRow(id=1, version=SCHEMA_VERSION, applied_at=utcnow()))
-            elif row.version != SCHEMA_VERSION:
+            elif row.version < SCHEMA_VERSION:
+                row.version = SCHEMA_VERSION
+                row.applied_at = utcnow()
+                session.add(row)
+            elif row.version > SCHEMA_VERSION:
                 logger.warning(
-                    "database schema version %s != code schema version %s; run 'ngdesign db upgrade'",
+                    "database schema version %s is newer than this code's schema version %s",
                     row.version,
                     SCHEMA_VERSION,
                 )

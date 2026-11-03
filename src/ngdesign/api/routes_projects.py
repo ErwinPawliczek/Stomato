@@ -5,6 +5,11 @@ alias bound to the ``default`` project, and each ``*_core`` in the route modules
 is the single implementation both call. The store dependency (deps.py) does the
 owner check: a foreign project is 403 before any handler runs.
 
+Multi-project (Home view): GET /api/templates is the new-project catalogue;
+POST /api/projects creates blank, from a template, as a copy of another of the
+owner's projects, or from an explicit body (import); PATCH renames (row and
+body together); POST .../open stamps the recency the Home list sorts by.
+
 PUT /api/projects/{id} carries ``expected_version`` as a query parameter (the
 body is the locked ``Project`` contract, so the version rides outside it): a
 stale version answers 409 via the ProjectConflict handler in app.py. GET
@@ -18,7 +23,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, StringConstraints, model_validator
 
 from ngdesign.api.auth import current_owner
 from ngdesign.api.deps import project_store
@@ -36,6 +41,7 @@ from ngdesign.api.routes_plot import plot_svg_core, route_core
 from ngdesign.api.routes_solve import solve_core
 from ngdesign.api.routes_views import pfd_svg_core
 from ngdesign.contracts import XY, IsoSheet, Layout, PipingNetwork, Project, SolvedFlowsheet, Vec3
+from ngdesign.flowsheets.templates import BLANK, template, templates
 from ngdesign.store import DbProjectStore, ProjectExists, ProjectRow, create_project, list_projects
 
 router = APIRouter()
@@ -43,8 +49,11 @@ router = APIRouter()
 _SVG_RESPONSES: dict[int | str, dict[str, object]] = {200: {"content": {"image/svg+xml": {}}}}
 
 
+ProjectName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
+
+
 class ProjectInfo(BaseModel):
-    """A stored project: identity, audit stamp, version, and the body."""
+    """A stored project: identity, audit stamp, version, origin and the body."""
 
     id: str
     name: str
@@ -52,6 +61,8 @@ class ProjectInfo(BaseModel):
     version: int
     created_at: datetime
     updated_at: datetime
+    template: str | None = None
+    opened_at: datetime | None = None
     project: Project
 
 
@@ -63,28 +74,93 @@ def _info(row: ProjectRow) -> ProjectInfo:
         version=row.version,
         created_at=row.created_at,
         updated_at=row.updated_at,
+        template=row.template,
+        opened_at=row.opened_at,
         project=Project.model_validate_json(row.body_json),
     )
 
 
-class ProjectCreate(BaseModel):
-    """POST /api/projects body."""
+class TemplateInfo(BaseModel):
+    """One new-project template: catalogue id, display text and its size."""
 
-    name: str = Field(min_length=1)
-    project: Project
+    id: str
+    title: str
+    description: str
+    units: int
+    streams: int
+
+
+class ProjectCreate(BaseModel):
+    """POST /api/projects body: a name plus at most one source — an explicit
+    ``project`` body (import), a catalogue ``template`` id, or ``from_project``
+    (the id of another of the caller's projects to copy). No source: blank."""
+
+    name: ProjectName
+    project: Project | None = None
+    template: str | None = None
+    from_project: str | None = None
+
+    @model_validator(mode="after")
+    def _one_source(self) -> ProjectCreate:
+        given = [k for k in ("project", "template", "from_project") if getattr(self, k) is not None]
+        if len(given) > 1:
+            raise ValueError(f"give at most one of project, template, from_project (got {', '.join(given)})")
+        return self
+
+
+class ProjectRename(BaseModel):
+    """PATCH /api/projects/{id} body."""
+
+    name: ProjectName
+
+
+@router.get("/api/templates")
+def templates_route() -> dict[str, list[TemplateInfo]]:
+    """The new-project catalogue: blank first, then the sample flowsheets."""
+    out = []
+    for t in templates():
+        flowsheet = t.build()
+        out.append(
+            TemplateInfo(
+                id=t.id,
+                title=t.title,
+                description=t.description,
+                units=len(flowsheet.units),
+                streams=len(flowsheet.streams),
+            )
+        )
+    return {"templates": out}
 
 
 @router.get("/api/projects")
 def projects(owner: Annotated[str, Depends(current_owner)]) -> dict[str, list[ProjectInfo]]:
-    """The caller's projects (the token's owner; open mode: 'local')."""
+    """The caller's projects (the token's owner; open mode: 'local'), oldest first."""
     return {"projects": [_info(row) for row in list_projects(owner)]}
+
+
+def _source(body: ProjectCreate, owner: str) -> tuple[Project, str | None]:
+    """The new project's body and template id from the create request."""
+    if body.project is not None:
+        return body.project, None
+    if body.from_project is not None:
+        source = project_store(body.from_project, owner)  # 404 unknown, 403 foreign
+        row = source.row()
+        return source.get().model_copy(update={"name": body.name}), row.template
+    template_id = body.template if body.template is not None else BLANK
+    chosen = template(template_id)
+    if chosen is None:
+        known = ", ".join(t.id for t in templates())
+        raise HTTPException(status_code=422, detail=f"unknown template {template_id!r}; known: {known}")
+    return Project(name=body.name, flowsheet=chosen.build()), chosen.id
 
 
 @router.post("/api/projects", status_code=201)
 def create_project_route(body: ProjectCreate, owner: Annotated[str, Depends(current_owner)]) -> ProjectInfo:
-    """Create a project; 409 when the owner already has one with this name."""
+    """Create a project (blank, from a template, as a copy, or from a body);
+    409 when the owner already has one with this name."""
+    project, template_id = _source(body, owner)
     try:
-        row = create_project(name=body.name, owner=owner, project=body.project)
+        row = create_project(name=body.name, owner=owner, project=project, template=template_id)
     except ProjectExists as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return _info(row)
@@ -110,6 +186,23 @@ def put_project_route(
     except ProjectConflict as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return _info(store.row())
+
+
+@router.patch("/api/projects/{project_id}")
+def rename_project_route(
+    body: ProjectRename, store: Annotated[DbProjectStore, Depends(project_store)]
+) -> ProjectInfo:
+    """Rename a project (row and body); 409 when the name is taken."""
+    try:
+        return _info(store.rename(body.name))
+    except ProjectExists as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post("/api/projects/{project_id}/open")
+def open_project_route(store: Annotated[DbProjectStore, Depends(project_store)]) -> ProjectInfo:
+    """Open a project: stamp ``opened_at`` and return it (version unchanged)."""
+    return _info(store.mark_opened())
 
 
 @router.delete("/api/projects/{project_id}")

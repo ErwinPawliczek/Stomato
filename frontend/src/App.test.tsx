@@ -9,7 +9,8 @@ test("opens the project from Home and shows every tab and the slice units from t
   }
   expect(screen.getByRole("heading", { name: "Projects" })).toBeTruthy();
 
-  fireEvent.click(await screen.findByRole("button", { name: /slice/i }));
+  fireEvent.click(await screen.findByRole("button", { name: "Open slice" }));
+  expect(await screen.findByRole("tab", { name: "Flowsheet" })).toBeTruthy();
   for (const label of ["Flowsheet", "Results", "Drawings"]) {
     expect(screen.getByRole("tab", { name: label })).toBeTruthy();
   }
@@ -29,8 +30,8 @@ test("opens the project from Home and shows every tab and the slice units from t
 
 test("clicking a number in Results opens the Trace tab focused on that value", async () => {
   render(<App />);
-  fireEvent.click(await screen.findByRole("button", { name: /slice/i }));
-  fireEvent.click(screen.getByRole("tab", { name: "Results" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Open slice" }));
+  fireEvent.click(await screen.findByRole("tab", { name: "Results" }));
   fireEvent.click(screen.getByRole("button", { name: "Solve" }));
   await screen.findByText("K-101");
   // K-101 power: 1505837 W in mocks/solved.json -> 1505.84 kW.
