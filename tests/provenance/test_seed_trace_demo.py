@@ -27,8 +27,8 @@ def test_seeded_demo_loads_traces_and_audits_clean(tmp_path: Path) -> None:
     seed = _script()
     assert seed.main([url, "--trace-out", str(trace_file)]) == 0
     assert trace_file.stat().st_size > 0
-    assert seed.main([url]) == 0  # idempotent: an existing project is left alone
-    assert seed.main([url, "--replace"]) == 0
+    assert seed.main([url]) == 0  # idempotent: an existing project is left alone, not re-solved
+    assert seed.main([url, "--replace"]) == 0  # same project hash: the traced solve is reused
 
     from ngdesign.api.app import app
 
@@ -37,13 +37,13 @@ def test_seeded_demo_loads_traces_and_audits_clean(tmp_path: Path) -> None:
     assert len(rows) == 1
     pid = rows[0]["id"]
 
-    solved = c.post(f"/api/projects/{pid}/solve").json()
-    assert solved["converged"] and not solved["errors"]
-
     graph = c.get(f"/api/projects/{pid}/trace", params={"unit": "K-101", "prop": "power_W"}).json()
     assert graph["meta"]["focus"]
     methods = {o["method"] for o in graph["ops"]}
     assert {"shaft_power", "isentropic_compression", "flash_ph", "tear_wegstein"} <= methods
+
+    column = c.get(f"/api/projects/{pid}/trace", params={"stream": "S-018", "prop": "molar_flow"}).json()
+    assert "column_shortcut" in {o["method"] for o in column["ops"]}
 
     report = c.get(f"/api/projects/{pid}/trace/audit").json()
     assert report["outputs"] > 200

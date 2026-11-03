@@ -43,8 +43,14 @@ def main(argv: list[str] | None = None) -> int:
     reset_engine()
     init_db()
 
+    existing = find_project(name=trace_demo.NAME, owner=args.owner)
+    if existing is not None and not args.replace:
+        print(f"project {trace_demo.NAME!r} already exists (id {existing.id}); use --replace")
+        return 0
+
     project = Project(name=trace_demo.NAME, flowsheet=trace_demo.build())
-    solved, graph = engine.trace_project(project, cache={})
+    # The engine's trace cache: an API served from this process reuses this solve.
+    solved, graph = engine.trace_project(project)
     if not solved.converged or solved.errors:
         print(f"refusing to seed: the solve did not converge cleanly: {solved.errors}", file=sys.stderr)
         return 1
@@ -63,11 +69,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.trace_out is not None:
         args.trace_out.write_text(graph.model_dump_json(indent=1), encoding="utf8")
 
-    existing = find_project(name=trace_demo.NAME, owner=args.owner)
     if existing is not None:
-        if not args.replace:
-            print(f"project {trace_demo.NAME!r} already exists (id {existing.id}); use --replace")
-            return 0
         DbProjectStore(existing.id).put(project)
         print(f"replaced {trace_demo.NAME!r} (id {existing.id})")
         return 0

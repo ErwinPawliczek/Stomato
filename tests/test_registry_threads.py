@@ -13,9 +13,9 @@ from typing import Any
 
 import pytest
 
+import ngdesign.thermo.catalogue as thermo_catalogue
+import ngdesign.units.catalogue as unit_catalogue
 from ngdesign import registry
-from ngdesign.thermo import catalogue as thermo_catalogue
-from ngdesign.units import catalogue as unit_catalogue
 
 
 def test_concurrent_first_discovery_runs_the_catalogue_hooks_once(monkeypatch: pytest.MonkeyPatch) -> None:

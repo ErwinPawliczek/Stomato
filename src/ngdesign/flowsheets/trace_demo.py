@@ -1,14 +1,16 @@
 """'Trace demo: gas processing' - a small gas-plant front end for provenance review.
 
-Inlet cooling, a two-inlet flash drum, an NGL pump and heater on the hydrocarbon
-liquid, and a compressor with aftercooler and anti-surge recycle (splitter -> JT
-valve -> suction mixer) on the vapour:
+Inlet cooling, a two-inlet flash drum, an NGL pump, heater, let-down valve and
+shortcut deethanizer on the hydrocarbon liquid, and a compressor with aftercooler
+and anti-surge recycle (splitter -> JT valve -> suction mixer) on the vapour:
 
 - S-001 well gas -> E-101 cooler -> S-003 -> V-101 flash drum (inlet_2: S-002 condensate)
 - V-101 gas S-004 -> M-101 mixer (also S-007 lean gas, S-014 recycle) -> S-008
 - S-008 -> K-101 compressor -> S-009 -> E-102 air cooler -> S-010 -> X-101 splitter
 - X-101 -> S-011 sales gas; X-101 -> S-012 -> V-102 JT valve -> S-014 recycle to M-101
-- V-101 HC liquid S-005 -> P-101 pump -> S-015 -> E-103 heater -> S-013 NGL
+- V-101 HC liquid S-005 -> P-101 pump -> S-015 -> E-103 heater -> S-013
+- S-013 -> V-103 let-down valve -> S-016 -> T-101 deethanizer (shortcut FUG column,
+  keys C2/C3) -> S-017 overhead, S-018 C3+ NGL
 - V-101 water S-006 (product)
 
 Every component (N2, CO2, C1-C5, n-hexane for C6+, water) takes its EOS constants
@@ -69,6 +71,21 @@ def build() -> Flowsheet:
         UnitSpec(tag="V-102", kind="jt_valve", params={"P_out": 5.9e6}),
         UnitSpec(tag="P-101", kind="pump", params={"P_out": 7.0e6, "eta": 0.70}),
         UnitSpec(tag="E-103", kind="heater", params={"T_out": 313.15, "dP": 20e3}),
+        UnitSpec(tag="V-103", kind="jt_valve", params={"P_out": 2.6e6}),
+        UnitSpec(
+            tag="T-101",
+            kind="shortcut_distillation",
+            params={
+                "light_key": "C2",
+                "heavy_key": "C3",
+                "recovery_LK_D": 0.98,
+                "recovery_HK_B": 0.98,
+                "R_over_Rmin": 1.3,
+                "P_top": 2.6e6,
+                "P_bottom": 2.65e6,
+                "condenser": "partial",
+            },
+        ),
     ]
     streams = [
         StreamSpec(
@@ -100,6 +117,9 @@ def build() -> Flowsheet:
         StreamSpec(id="S-012", source=_p("X-101", "outlet_2"), target=_p("V-102", "inlet"), service="PG"),
         StreamSpec(id="S-014", source=_p("V-102", "outlet"), target=_p("M-101", "inlet_3"), service="PG"),
         StreamSpec(id="S-015", source=_p("P-101", "outlet"), target=_p("E-103", "inlet"), service="PL"),
-        StreamSpec(id="S-013", source=_p("E-103", "outlet"), service="PL"),
+        StreamSpec(id="S-013", source=_p("E-103", "outlet"), target=_p("V-103", "inlet"), service="PL"),
+        StreamSpec(id="S-016", source=_p("V-103", "outlet"), target=_p("T-101", "feed"), service="PL"),
+        StreamSpec(id="S-017", source=_p("T-101", "distillate"), service="PG"),
+        StreamSpec(id="S-018", source=_p("T-101", "bottoms"), service="PL"),
     ]
     return Flowsheet(name=NAME, units=units, streams=streams, thermo="pr")
