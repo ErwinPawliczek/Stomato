@@ -81,6 +81,7 @@ gas model beyond a narrow constant-Cp window. These sources were checked:
 | NIST-JANAF, NIST Shomate (crawled and snapshot), TRC, Poling | used; they do not cover these species |
 | NASA CEA, NASA/TP-2002-211556 (Apache-2.0) | used; mostly combustion species, adds 67 gas models here |
 | WebBook tabulated gas Cp(T) | 10 of these species; most tables start at 380-600 K with no 298 K point to anchor on |
+| WebBook pages not yet crawled (2,649 of them) | a random sample of 60, fetched 2026-11-02, carried no gas Shomate fit and no gas Cp table, so the rest were not crawled |
 | Burcat & Ruscic, ANL-05/20 | refused: its terms forbid inclusion in non-free software, and this repository is proprietary |
 | psi4 characteristic temperatures in `chemicals` (2022a) | refused: computed inside that library, with no external publication to cite |
 | Joback group contributions | refused: an estimation method, not stated data |
