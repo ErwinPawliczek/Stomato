@@ -7595,6 +7595,18 @@
             }
           },
           {
+            "description": "The latest `limit` changes (still oldest first)",
+            "in": "query",
+            "name": "newest",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "The latest `limit` changes (still oldest first)",
+              "title": "Newest",
+              "type": "boolean"
+            }
+          },
+          {
             "in": "header",
             "name": "x-stomato-actor",
             "required": false,

@@ -489,9 +489,10 @@ def changes(
     svc: Svc,
     after: Annotated[int, Query(ge=0, description="Only changes with seq > after")] = 0,
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
+    newest: Annotated[bool, Query(description="The latest `limit` changes (still oldest first)")] = False,
 ) -> ChangeList:
     """The change log, oldest first, each with its actor and structured diff."""
-    return ChangeList.model_validate(svc.changes(after=after, limit=limit))
+    return ChangeList.model_validate(svc.changes(after=after, limit=limit, newest=newest))
 
 
 def _change_frames(store: DbProjectStore, after: int, follow: bool, seconds: float) -> Iterator[str]:

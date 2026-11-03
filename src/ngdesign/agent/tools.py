@@ -375,7 +375,8 @@ def _redo(svc: ProjectService) -> dict[str, Any]:
 
 
 def _list_changes(svc: ProjectService, *, after: int | None, limit: int | None) -> dict[str, Any]:
-    return svc.changes(after=after or 0, limit=limit or 20)
+    # No 'after': the latest changes (an agent asks "what changed recently").
+    return svc.changes(after=after or 0, limit=limit or 20, newest=after is None)
 
 
 #: The tool registry (spec B-08). Order is fixed: byte-stable prompt caching.
@@ -732,7 +733,7 @@ TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec(
         "list_changes",
         "The project's change history, oldest first: seq, actor, summary and the "
-        "structured diff of each change after seq 'after' (null: 0), at most limit (null: 20).",
+        "structured diff of each change after seq 'after' (null: the latest ones), at most limit (null: 20).",
         _schema({"after": {"type": ["integer", "null"]}, "limit": {"type": ["integer", "null"]}}),
         _list_changes,
     ),

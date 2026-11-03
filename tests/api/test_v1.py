@@ -364,3 +364,10 @@ def test_change_stream_defaults_to_live_and_actor_binds_legacy_writes(pid: str) 
     assert r.status_code == 400 and r.json() == {
         "detail": "X-Stomato-Actor must be 1-64 chars of letters, digits and :_.-"
     }
+
+
+def test_changes_newest(pid: str) -> None:
+    for i in range(3):
+        c.put(f"{V1}/projects/{pid}/cells/E-101.params.dP", json={"value": 1000.0 * (i + 1)})
+    latest = c.get(f"{V1}/projects/{pid}/changes", params={"newest": True, "limit": 2}).json()["changes"]
+    assert [x["seq"] for x in latest] == [2, 3]

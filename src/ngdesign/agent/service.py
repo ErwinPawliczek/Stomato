@@ -107,7 +107,7 @@ class ChangeLog(Protocol):
     ) -> Any: ...
     def undo(self, *, actor: str) -> Any: ...
     def redo(self, *, actor: str) -> Any: ...
-    def changes(self, *, after: int = 0, limit: int = 100) -> list[Any]: ...
+    def changes(self, *, after: int = 0, limit: int = 100, newest: bool = False) -> list[Any]: ...
 
 
 def change_payload(change: Any) -> dict[str, Any]:
@@ -1058,10 +1058,16 @@ class ProjectService:
     def redo(self) -> dict[str, Any]:
         return self._move(self._log().redo, "redo")
 
-    def changes(self, after: int = 0, limit: int = 100) -> dict[str, Any]:
+    def changes(self, after: int = 0, limit: int = 100, newest: bool = False) -> dict[str, Any]:
+        """The change log oldest first; ``newest``: only the latest ``limit``."""
         if limit < 1 or limit > 500:
             raise OpError("invalid_value", "limit must be in 1..500")
-        rows = self._log().changes(after=after, limit=limit)
+        log = self._log()
+        rows = (
+            list(reversed(log.changes(after=after, limit=limit, newest=True)))
+            if newest
+            else log.changes(after=after, limit=limit)
+        )
         return {"changes": [change_payload(c) for c in rows]}
 
 
