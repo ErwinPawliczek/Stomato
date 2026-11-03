@@ -6,11 +6,11 @@
   "pubchem_records": 18157,
   "row_counts": {
     "species": 19179,
-    "properties": 128614,
+    "properties": 129629,
     "shomate": 1853,
     "antoine": 4733,
     "wagner": 623,
-    "nasa9": 1656,
+    "nasa9": 1894,
     "dippr101": 382,
     "cp_liquid": 855,
     "cp_gas": 1726,
@@ -30,8 +30,8 @@
     "Hc_gas": 62,
     "Hc_liquid": 625,
     "Hc_solid": 224,
-    "Hf_aq": 579,
-    "Hf_gas": 6542,
+    "Hf_aq": 580,
+    "Hf_gas": 6543,
     "Hf_liquid": 2277,
     "Hf_solid": 2705,
     "Hfus": 1301,
@@ -40,10 +40,10 @@
     "Hvap_298": 2735,
     "Pc": 6854,
     "Pt": 39,
-    "S0_aq": 576,
-    "S0_gas": 4591,
+    "S0_aq": 577,
+    "S0_gas": 4657,
     "S0_liquid": 734,
-    "S0_solid": 888,
+    "S0_solid": 907,
     "Tb": 7539,
     "Tc": 6921,
     "Tm": 9226,
@@ -65,7 +65,7 @@
     "iupac_critical": 1774,
     "janaf": 4832,
     "mathews": 258,
-    "nasa_cea": 773,
+    "nasa_cea": 1786,
     "nist": 15159,
     "nist_henry": 44,
     "nist_review": 2091,
@@ -74,12 +74,12 @@
     "passut_danner": 573,
     "poling": 589,
     "psrk": 3898,
-    "sander": 880,
+    "sander": 882,
     "yaws": 32662
   },
   "rows_by_grade": {
     "A": 9390,
-    "B": 86562,
+    "B": 87577,
     "C": 32662
   },
   "audit": {
@@ -89,8 +89,8 @@
     "conflict_Gf_liquid": 1,
     "conflict_Gf_solid": 22,
     "conflict_Hf_aq": 1,
-    "conflict_Hf_gas": 421,
-    "conflict_Hf_liquid": 118,
+    "conflict_Hf_gas": 447,
+    "conflict_Hf_liquid": 119,
     "conflict_Hf_solid": 137,
     "conflict_Pc": 242,
     "conflict_Tb": 371,
@@ -101,9 +101,9 @@
     "formula_conflict_nist": 1
   },
   "dropped_at_build": {
-    "cea_formula_differs": 25,
+    "cea_isomer_mixture": 7,
     "cea_record_not_at_298": 220,
-    "cea_unmatched": 695,
+    "cea_unmatched": 593,
     "coolprop_cp0_check_failed": 1,
     "coolprop_cp0_unhandled_term": 1,
     "janaf_table_formula_differs_from_cas": 120,
@@ -118,5 +118,6 @@
     "species_with_invalid_cas": 8,
     "thermoml_point_without_species": 73
   },
-  "selections_outvoted": 80
+  "selections_outvoted": 93,
+  "liquid_sets_inconsistent": 68
 }

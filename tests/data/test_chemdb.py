@@ -642,3 +642,82 @@ def test_a_stated_cp_table_agrees_with_an_independent_298_k_value(
     ]
     assert stated and stated[0].value == pytest.approx(cp298)
     assert species_thermo(query, "gas").cp(298.15) == pytest.approx(cp298, rel=rel)
+
+
+@pytest.mark.parametrize(
+    ("query", "reference", "crc_cp298", "crc_s298"),
+    [
+        ("10038-98-9", "Gurvich", 96.1, 347.7),  # GeCl4: CEA record "GeCL4"
+        ("7646-78-8", "Gurvich", 98.3, 365.8),  # SnCl4: CEA record "SnCL4"
+        ("7632-51-1", "Nagarajan", 96.2, 362.4),  # VCl4: CEA record "VCL4"
+        ("79-08-3", "Dorofeeva", 80.5, 337.0),  # bromoacetic acid: CEA record "CH2Br-COOH"
+    ],
+)
+def test_cea_records_matched_by_elemental_formula_agree_with_the_crc(
+    query: str, reference: str, crc_cp298: float, crc_s298: float
+) -> None:
+    """CEA names write chlorine as ``CL``; these records are matched by their own elemental
+    formula, corroborated by the WebBook page. The CRC Handbook's 298 K Cp° and S° are
+    the independent check (Cp within 0.5 %, S° within 1.2 %)."""
+    from ngdesign.data.species_models import TemperatureRangeError, species_thermo
+
+    model = species_thermo(query, "gas")
+    assert model.curve.name == "nasa9"
+    assert reference in chemdb.nasa9(query)[0]["reference"]
+    assert model.cp(298.15) == pytest.approx(crc_cp298, rel=0.005)
+    assert model.s(298.15) == pytest.approx(crc_s298, rel=0.012)
+    with pytest.raises(TemperatureRangeError):
+        model.cp(model.t_range[1] + 1.0)
+
+
+def test_cea_formula_fallback_refuses_an_identity_the_webbook_contradicts() -> None:
+    """13596-11-7 is AlOCl (WebBook), but its PubChem formula here is AlClHO, the formula
+    of CEA's HOAlCl record. Formula alone would attach HOAlCl to it; the WebBook check
+    refuses, and isomer-mixture records (C2F2Cl2, C2HClF2) never stand for one species."""
+    assert not chemdb.nasa9("13596-11-7")
+    assert not chemdb.nasa9("79-35-6")
+    assert not chemdb.nasa9("359-10-4")
+
+
+#: S°298 a condensed model may miss its selected stated S°: the build's liquid-set limit,
+#: 1.5 kJ/mol over 298.15 K (5.03 J/(mol K)), plus 0.07 for a gas shape's own S° (CEA, JANAF)
+#: against the stated gas S° the build judges with.
+CONDENSED_S298_TOLERANCE = 5.1
+#: ΔfH°298 a condensed model may miss its selected stated value, J/mol: Shomate fits
+#: reproduce their own ΔfH° to a few J/mol (NaCN(s), 6 J/mol).
+CONDENSED_H298_TOLERANCE = 10.0
+
+
+def test_condensed_models_carry_their_selected_stated_s298_and_hf298() -> None:
+    """Every liquid and solid that states S° and ΔfH° gets a model that reproduces both at 298.15 K.
+
+    The one exception the build names: a saturation liquid whose stated gas and liquid
+    ΔfH°, S° and vapour pressure admit no consistent choice, listed in AUDIT.txt as
+    ``liquid set``. That list may not grow silently.
+    """
+    from ngdesign.data.species_models import species_thermo
+
+    audit = (DATA_DIR / "chemdb" / "AUDIT.txt").read_text()
+    listed = set(re.findall(r"^liquid set (\S+):", audit, re.M))
+    manifest = json.loads((DATA_DIR / "chemdb" / "MANIFEST.json").read_text())
+    assert len(listed) == manifest["liquid_sets_inconsistent"] <= 68
+    checked = 0
+    missed: list[str] = []
+    for species in chemdb.all_species():
+        for phase in ("liquid", "solid"):
+            s0 = next((v for v in chemdb.values(species.cas, f"S0_{phase}") if v.selected), None)
+            hf = next((v for v in chemdb.values(species.cas, f"Hf_{phase}") if v.selected), None)
+            if s0 is None or hf is None:
+                continue
+            try:
+                model = species_thermo(species.cas, phase)
+            except chemdb.MissingPropertyError:
+                continue
+            checked += 1
+            assert model.h(298.15) == pytest.approx(hf.value, abs=CONDENSED_H298_TOLERANCE), species.cas
+            off = abs(model.s(298.15) - s0.value) > CONDENSED_S298_TOLERANCE
+            exempt = phase == "liquid" and model.model == "saturation" and species.cas in listed
+            if off and not exempt:
+                missed.append(f"{species.cas} {phase} {model.model} {model.s(298.15):.2f} vs {s0.value}")
+    assert checked > 1000
+    assert not missed, missed
