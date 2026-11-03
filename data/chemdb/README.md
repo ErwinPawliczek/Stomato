@@ -16,6 +16,7 @@ source states, converted to SI.
 | `wagner.csv` | Wagner vapour-pressure fits (forms 2.5-5 and 1.5-3-6) |
 | `cp_gas.csv` | Ideal-gas Cp fits (Poling polynomial, TRC eight-term) |
 | `cp0_eos.csv` | Ideal-gas Cp0 of CoolProp's reference equations of state, one row per term (constant, Planck-Einstein, Aly-Lee cosh, power), each row citing its EOS paper |
+| `cp_gas_points.csv` | Stated gas Cp(T) points: WebBook gas heat-capacity tables (`nist`, the table's reference per row) and pure-compound ideal-gas Cp from the NIST ThermoML archive (`thermoml`, article and method per row) |
 | `sources.yaml` | Full citation for every `source` key |
 | `AUDIT.txt` | Where non-estimated sources disagree beyond the audit limits |
 
@@ -64,6 +65,7 @@ committed. The fetcher honours the WebBook's `Crawl-delay: 5` and PubChem's rate
 ```bash
 python -I scripts/chemdb/fetch.py nist    seed.txt  CACHE    # seed: one CAS per line
 python -I scripts/chemdb/fetch.py janaf   CACHE
+python -I scripts/chemdb/fetch.py thermoml CACHE           # 190 MB, SHA-256 checked
 python -I scripts/chemdb/build.py seed    CACHE              # writes CACHE/cids.tsv
 python -I scripts/chemdb/fetch.py pubchem CACHE/cids.tsv CACHE
 python -I scripts/chemdb/build.py tables  CACHE data/chemdb
