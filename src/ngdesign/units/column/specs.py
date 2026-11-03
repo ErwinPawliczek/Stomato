@@ -491,7 +491,7 @@ def _graph_mesh_once(
     # or the warm seed's earlier passes are not this mesh's).
     prof.ns_trace, prof.ns_passes = [], 0
     _apply_tears(col, prof, t_top, t_bot)
-    if seed is None and col.relaxation:
+    if seed is None and col.relaxation and col.wall is None:
         # ``initialization: relaxation``: relax the sequential seed over the
         # whole graph - the sections' draw-state seed is what the graph
         # Newton could not leave on a wide-boiling column (relaxation.py).
@@ -552,7 +552,7 @@ def _solve_graph_reflux_distillate(
     )
     try:
         prof = _seed_sections(col, _solve_specs(main, tb, main_params))
-        if col.relaxation:
+        if col.relaxation and col.wall is None:
             # The draw-state section seed relaxed over the whole graph at the
             # main solve's reflux and boilup (relaxation.py); the top-vapour
             # walk then moves V_1 onto L_0 + D + W from there.
