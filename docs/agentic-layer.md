@@ -1,6 +1,6 @@
 # The agentic layer
 
-Status: design (written before the code; kept in sync with it).
+Status: implemented. Written as the design before the code, then updated to match what shipped.
 
 Goal: agents can drive Stomato's chemical process simulation as well as the web app can.
 There are three ways in: a **versioned public REST API**, an **MCP server** (`stomato-mcp`)
@@ -74,8 +74,8 @@ them, and nothing else mutates a project:
 Rules:
 
 * **Errors are typed.** Each `OpError(code, message, status, details)` carries a stable `code`, e.g.
-  `unknown_unit`, `unknown_kind`, `bad_port`, `port_in_use`, `invalid_project`, `unit_mismatch`,
-  `nothing_to_undo`, `conflict`. The message always says how to fix the input (nearest valid names). REST maps
+  `unknown_unit`, `unknown_kind`, `bad_port`, `duplicate_tag`, `invalid_project` (contract validation, e.g. a
+  port connected twice), `unit_mismatch`, `unknown_address`, `not_traced`, `nothing_to_undo`, `conflict`. The message always says how to fix the input (nearest valid names). REST maps
   `status`; tools return `{"error": message, "code": code}` to the model.
 * **One commit path.** A mutating operation builds the new `Project` through the pydantic contracts and calls
   `store.commit(project, op=…, actor=…, summary=…, args=…)`. The returned `ChangeRecord` carries the structured
@@ -87,8 +87,8 @@ Rules:
   Nothing is invented.
 * **Grid positions.** The flowsheet canvas is a flat-top hex lattice (`frontend/src/hexGrid.ts`, circumradius
   40 layout units). `place_unit(…, grid={q, r})` maps to the cell centre with the same formula, so an agent
-  can say "next to V-101" in grid terms. `position={x, y}` places freely. With neither, the unit goes to the
-  first free cell right of the existing units.
+  can say "next to V-101" in grid terms. `position={x, y}` places freely. With neither, the unit stays unplaced and
+  auto-layout positions it, as it does for any unplaced unit.
 
 ## 3. Change log, undo, live UI
 
@@ -103,14 +103,16 @@ before_json, after_json, state (applied|undone|dropped), target_seq, created_at`
   change. A new edit marks every `undone` row `dropped`, as a linear history should.
 * The diff (`agent/diff.py`, pure) is computed from before/after: units added/removed/changed (param-level
   `from → to`), streams added/removed/changed, thermo, components, design specs, layout moves.
-* **Live UI.** `GET /api/v1/projects/{id}/changes?after=seq` lists changes, and
-  `GET /api/v1/projects/{id}/changes/stream` is an SSE stream of the same records (it polls the DB, so changes
+* **Live UI.** `GET /api/v1/projects/{id}/changes?after=seq` lists changes (`newest=true` gives the latest
+  `limit`), and `GET /api/v1/projects/{id}/changes/stream` is an SSE stream of the same records. Without
+  `after` it starts at the latest change, and `Last-Event-ID` resumes after a reconnect (it polls the DB, so changes
   from another process, such as the MCP server on the same database, appear too). The UI subscribes, raises
   its existing `notifyProjectChanged()` signal and shows the change in the Agent panel's history with
   Undo/Redo.
 
-Actors: `api` (REST), `ui` (sent by the web client as `X-Stomato-Actor: ui`), `agent:<conversation>` (in-app),
-`mcp` (MCP server, with the client name when it is known).
+Actors: `api` (REST default), `ui:<tab>` (the web client sends `X-Stomato-Actor: ui:<random tab id>` on every
+request, legacy routes included, so a tab can skip its own echoes on the stream), `agent:<conversation>`
+(in-app), `mcp:<client name>` (MCP server). Any client can set `X-Stomato-Actor`.
 
 ## 4. Public REST API v1
 
@@ -171,8 +173,9 @@ stomato-mcp                      # stdio (Claude Desktop, Cursor, Claude Code)
 stomato-mcp --transport http --port 8765   # streamable HTTP at /mcp
 ```
 
-* Project selection: `project_id` argument → the session's `open_project` choice → `STOMATO_MCP_PROJECT`
-  → the owner's `default` project (created from the sample slice like the legacy routes).
+* Project selection: `project_id` argument → the owner's current project (`open_project` / `create_project`;
+  remembered per owner, because on the 2026-07-28 protocol no session object survives between requests) →
+  `STOMATO_MCP_PROJECT` → the owner's `default` project (created from the sample slice like the legacy routes).
 * Owner: `STOMATO_MCP_OWNER` (default `local`, the open-mode owner the web app uses). Over HTTP with
   `STOMATO_API_TOKENS` set, the bearer token maps to the owner exactly as in the REST API.
 * Database: `STOMATO_DATABASE_URL`, the same store as the web app. Changes made through MCP appear live in the
