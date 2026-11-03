@@ -40,6 +40,7 @@ routes and the `/api/projects/{id}/...` routes.
 | Import Aspen HYSYS / Aspen Plus / DWSIM (`views/HomeView.tsx`) | Disabled options marked "planned" | An importer endpoint (e.g. POST `/api/import/{format}` returning `Project`) | **Missing**: no importer in `src/ngdesign` |
 | Sheet page (`views/SheetView.tsx`) | Plain grid; values in memory only; "formulas and saving come with the sheet engine (F-07)" | Sheet engine: formula evaluation over model variables and persistence | **Partial**: GET `/api/export/sheet?format=csv\|html` exports; no evaluate or save endpoint |
 | Equipment page (`equipmentCatalog.ts`) | Ports, params, descriptions and sizers per kind are hand-copied from the plugin sources; only names come from `/api/meta` | Per-kind metadata (ports, params with units and defaults, sizer) | **Missing**: `/api/meta` returns names only |
+| Unit palette, canvas (`unitCatalogue.ts`, `unitPalette.ts`) | Name, family, P&ID symbol and summary for all 84 catalogue units are a generated frontend mirror of `data/unit_models/*.yaml`, guarded by a drift test; `/api/meta` decides `available` | Unit-catalogue endpoint (e.g. GET `/api/units/catalogue` serving the YAML rows) | **Missing**: no route exposes `data/unit_models` |
 | Add-unit defaults (`unitDefaults.ts`) | Default params per kind hard-coded "until /api/meta drops param defaults" | Per-kind defaults (each plugin's `example_case()` params) | **Missing** (same endpoint as the row above) |
 | Agent event types (`api/client.ts` `AgentEvent`) | Typed by hand because `schema.d.ts` has no SSE event schema | SSE event schema in `openapi.json` | **Works at runtime**; `POST /api/agent` declares no response schema |
 | Agent history (`views/AgentView.tsx`) | Conversation lost on reload; no list, reopen or delete | GET `/api/agent`, GET/DELETE `/api/agent/{conversation_id}` | **Exists**; frontend not wired |
@@ -77,3 +78,9 @@ in one PR).
    receive `{"detail": "unit E-901 has no connected streams to size from"}`.
    They show the raw `ApiError` text. A friendlier "wire E-901 first" message
    is a frontend nicety, not a contract gap.
+6. **Placing unsaved units only works on the legacy route.** The Flowsheet
+   canvas calls `api.place("pfd", tag, …)` for units added since the last
+   save. The legacy PUT `/api/project/layout/pfd/{tag}` accepts any tag. Its
+   project-scoped twin returns 409 for a tag not in the stored project. When
+   the frontend moves to `/api/projects/{id}` (multi-project, in progress
+   elsewhere), it must save the unit before placing it.
