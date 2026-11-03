@@ -98,3 +98,44 @@ def test_refusals(thermo: Thermo, params: dict[str, Any], match: str) -> None:
     rich = flash_feed(thermo, feeds["rich_amine_in"])
     with pytest.raises(AmineRegeneratorR2Error, match=match):
         MdeaRegeneratorR2().solve({"rich_amine_in": rich}, params, thermo)
+
+
+@pytest.fixture(name="mea_low", scope="module")
+def mea_low_fixture() -> tuple[StreamState, UnitResult, UnitResult]:
+    """MEA at boilup 30 mol/s, where the cold heat-of-reaction ladder stalls
+    (scale-0 NS, M = 5.9): the column solves it cold at the 60 mol/s anchor and
+    walks the kettle tear down warm (specs._boilup_continuation). Measured
+    32 s; the example (40 mol/s) is solved alongside for the trend."""
+    thermo: Thermo = registry.create("thermo", "pr")
+    rich, low = _solve(MeaRegeneratorR2, thermo, boilup_rate=30.0)
+    _, example = _solve(MeaRegeneratorR2, thermo)
+    return rich, low, example
+
+
+def test_mea_low_boilup_converges(mea_low: tuple[StreamState, UnitResult, UnitResult]) -> None:
+    """The continuation's answer is a converged column at exactly the requested boilup."""
+    rich, res, _ = mea_low
+    for cid, z in rich.composition.items():
+        out = sum(s.molar_flow * s.composition.get(cid, 0.0) for s in res.outlets.values())
+        assert out == pytest.approx(rich.molar_flow * z, rel=1e-9), cid
+    package = registry.create("thermo", "amine_ke")
+    comps = sorted(rich.composition)
+    feed = package.flash_pt(dict(rich.composition), DEFAULT_FEED_T, DEFAULT_REGENERATOR_P, rich.molar_flow)
+    stages = read_stages(res.info, comps)
+    assert stages[-1].V == pytest.approx(30.0, rel=1e-12)
+    assert max(material_residuals(stages, comps, {0: [feed]})) < 1e-9
+    assert max(equilibrium_residuals(package, stages)) < 1e-6
+    assert res.outlets["acid_gas_out"].vapor_fraction == pytest.approx(1.0)
+
+
+def test_mea_low_boilup_strips_less(mea_low: tuple[StreamState, UnitResult, UnitResult]) -> None:
+    """Less boilup strips less: leaner duty, richer lean solvent, a cooler kettle.
+
+    Measured 30 mol/s: lean CO2 0.057 (above the 0.1 x rich = 0.040 bound the
+    example meets - MEA needs about 36 mol/s for it), H2S 0.011, 1.35 MW.
+    """
+    _, low, example = mea_low
+    assert example.info["lean_co2_loading"] < low.info["lean_co2_loading"] < low.info["rich_co2_loading"]
+    assert example.info["lean_h2s_loading"] < low.info["lean_h2s_loading"] < low.info["rich_h2s_loading"]
+    assert low.info["reboiler_duty_W"] < example.info["reboiler_duty_W"]
+    assert low.info["reboiler_T_K"] < example.info["reboiler_T_K"]

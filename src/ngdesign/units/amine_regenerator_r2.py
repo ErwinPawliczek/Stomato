@@ -25,9 +25,12 @@ Measured (6 stages, 1.9 bar, 100 mol/s rich solvent at 370 K, stage K and
 enthalpies on the package's direct surface): components close to 1e-12 or
 better; the stage audit (reported-profile material balances, package re-flash
 of each stage's contents) passes below 1e-9 / 1e-6. MDEA at boilup 15/20/30 and
-DEA at 15/20/30 mol/s converge in 2-8 s; MEA converges at 40/50 mol/s (6-8 s)
-but not at 20/30 (NS stalls, M = 0.8-5.9, ~250 s). A rich feed left at 303 K
-was measured not to converge (170 s, M = 0.53, P1-13 tree).
+DEA at 10-30 mol/s converge cold in 2-16 s; MEA converges cold at 35-60 mol/s
+(6-14 s). Below that the cold heat-of-reaction ladder stalls (MEA at 30 mol/s:
+scale-0 NS at M = 5.9 after 25 s) and the column core's boilup continuation
+solves a 2x / 4x anchor cold and walks the kettle tear down warm: MEA at
+30/25/20/15/10 mol/s in 32/35/45/74/87 s, components closed to 1e-13. A rich
+feed left at 303 K was measured not to converge (170 s, M = 0.53, P1-13 tree).
 
 All SI: K, Pa abs, mol/s, J/mol, W. Pure functions; no I/O; no global state.
 """
@@ -151,8 +154,10 @@ class MeaRegeneratorR2(MdeaRegeneratorR2):
     """MEA regenerator R2: the reboiled MESH stripper on aqueous MEA.
 
     Example boilup 40 mol/s: the primary amine binds CO2 as carbamate and needs
-    more stripping vapour (measured: boilup 40 / 50 mol/s converge in 6-8 s; 20
-    and 30 mol/s do not, NS stalls at M = 0.8 - 5.9).
+    more stripping vapour. Lower boilups converge (via the boilup continuation
+    below 35 mol/s) but strip less than the shared physics check's lean CO2
+    bound of 0.1 x rich = 0.040: measured lean CO2 0.0400 at 36, 0.0421 at 35,
+    0.057 at 30 and 0.104 at 20 mol/s; 0.0366 at 38 and 0.0338 at 40.
     """
 
     AMINE = "MEA"

@@ -154,40 +154,86 @@ def _solve_mesh(
         return _solve_reactive_mesh(col, tb, t_top, t_bot, allow_fallback)
     thermo = getattr(tb, "_thermo", tb)
     if col.n_tears < 2 and seed is None and _is_reactive_package(tb) and hasattr(thermo, "_heat_scale"):
-        original = thermo._heat_scale
         try:
-            # The ladder's rungs, each seeded by the secant predictor through
-            # the last two converged rungs, with a failed rung bisected from
-            # the last converged one. On the direct reactive surface the
-            # absorber's exotherm bulge steepens toward scale 1 (measured
-            # 8-stage MDEA absorber: max T 320 / 328.5 / 339.6 / 342.2 K at
-            # scales 0.5 / 0.75 / 0.969 / 1.0), and a rung NS cannot reach
-            # from the previous profile crawls its pass budget at lam
-            # 0.03-0.25. Below _HEAT_MIN_STEP the last mesh error stands.
-            thermo._heat_scale = _CONTINUATION_SCALES[0]
-            prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, None, allow_fallback)
-            scale = _CONTINUATION_SCALES[0]
-            prev: tuple[float, _Profile] | None = None
-            for target in _CONTINUATION_SCALES[1:]:
-                step = target - scale
-                while scale < target:
-                    trial = min(scale + step, target)
-                    thermo._heat_scale = trial
-                    seed_prof = prof
-                    if prev is not None:
-                        seed_prof = _secant_profile(col, prev[1], prof, (trial - scale) / (scale - prev[0]))
-                    try:
-                        nxt = _solve_mesh_at_heat(col, tb, t_top, t_bot, seed_prof, allow_fallback)
-                    except ColumnConvergenceError:
-                        step = 0.5 * (trial - scale)
-                        if step < _HEAT_MIN_STEP:
-                            raise
-                        continue
-                    prev, prof, scale = (scale, prof), nxt, trial
-            return prof
-        finally:
-            thermo._heat_scale = original
+            return _heat_ladder(col, tb, t_top, t_bot, allow_fallback)
+        except ColumnConvergenceError:
+            if not (allow_fallback and col.reboiler == "kettle" and t_bot is not None):
+                raise
+            walked = _boilup_continuation(col, tb, t_top, t_bot)
+            if walked is None:
+                raise
+            return walked
     return _solve_mesh_at_heat(col, tb, t_top, t_bot, seed, allow_fallback)
+
+
+#: Kettle-tear anchors of the boilup continuation, as multiples of the
+#: requested boilup: each is tried cold (the heat ladder) until one converges.
+_BOILUP_ANCHORS: tuple[float, ...] = (2.0, 4.0)
+
+
+def _heat_ladder(
+    col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None, allow_fallback: bool
+) -> _Profile:
+    """Cold reactive zero/one-tear mesh: walk the thermo's ``_heat_scale`` up
+    ``_CONTINUATION_SCALES``, warm-chaining each converged rung into the next.
+
+    The ladder's rungs, each seeded by the secant predictor through the last
+    two converged rungs, with a failed rung bisected from the last converged
+    one. On the direct reactive surface the absorber's exotherm bulge steepens
+    toward scale 1 (measured 8-stage MDEA absorber: max T 320 / 328.5 / 339.6 /
+    342.2 K at scales 0.5 / 0.75 / 0.969 / 1.0), and a rung NS cannot reach
+    from the previous profile crawls its pass budget at lam 0.03-0.25. Below
+    _HEAT_MIN_STEP the last mesh error stands.
+    """
+    thermo: Any = getattr(tb, "_thermo", tb)
+    original = thermo._heat_scale
+    try:
+        thermo._heat_scale = _CONTINUATION_SCALES[0]
+        prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, None, allow_fallback)
+        scale = _CONTINUATION_SCALES[0]
+        prev: tuple[float, _Profile] | None = None
+        for target in _CONTINUATION_SCALES[1:]:
+            step = target - scale
+            while scale < target:
+                trial = min(scale + step, target)
+                thermo._heat_scale = trial
+                seed_prof = prof
+                if prev is not None:
+                    seed_prof = _secant_profile(col, prev[1], prof, (trial - scale) / (scale - prev[0]))
+                try:
+                    nxt = _solve_mesh_at_heat(col, tb, t_top, t_bot, seed_prof, allow_fallback)
+                except ColumnConvergenceError:
+                    step = 0.5 * (trial - scale)
+                    if step < _HEAT_MIN_STEP:
+                        raise
+                    continue
+                prev, prof, scale = (scale, prof), nxt, trial
+        return prof
+    finally:
+        thermo._heat_scale = original
+
+
+def _boilup_continuation(col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float) -> _Profile | None:
+    """Cold reactive kettle column the heat ladder could not close at ``t_bot``:
+    solve it cold at a higher boilup anchor, then walk the kettle tear down to
+    ``t_bot`` warm (``_continuation``: every sub-step a full mesh solve, so the
+    returned profile is converged at exactly the requested tears).
+
+    The cold seed's basin shrinks with the stripping vapour while the warm
+    basin does not (measured 6-stage MEA regenerator, 100 mol/s rich solvent at
+    1.9 bar: cold, scale-0 NS stalls at boilup 30 mol/s, M = 5.9, after 25 s;
+    from the cold V = 40 profile warm NS converges at 35/30/25/20/15 mol/s in
+    0.3 s each, and in one step at 12 mol/s). The anchors are multiples of the
+    request (``_BOILUP_ANCHORS``); None when no anchor converges cold, so the
+    caller's ladder error stands. A walk that stalls raises its own error.
+    """
+    for factor in _BOILUP_ANCHORS:
+        try:
+            anchor = _heat_ladder(col, tb, t_top, factor * t_bot, True)
+        except (ColumnConvergenceError, ValueError):
+            continue
+        return _continuation(col, tb, anchor, t_top, t_bot)
+    return None
 
 
 def _solve_reactive_mesh(
