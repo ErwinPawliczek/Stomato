@@ -605,6 +605,8 @@ def test_thermoml_ideal_gas_cp_agrees_with_an_independent_source(T: float) -> No
         ("141-43-5", "cp_table:thermoml", 84.38),  # 2-aminoethanol, Ruzicka et al. 2015
         ("872-50-4", "cp_table:thermoml", 115.26),  # N-methyl-2-pyrrolidone, Ruzicka et al. 2015
         ("132-64-9", "cp_table:nist", 163.05),  # dibenzofuran, Klots 1996 (WebBook)
+        ("503-30-0", "cp_table:nist", 61.5),  # oxetane, Dorofeeva 1992 (WebBook)
+        ("646-06-0", "cp_table:nist", 71.0),  # 1,3-dioxolane, Dorofeeva 1992 (WebBook)
     ],
 )
 def test_a_stated_cp_table_gives_a_gas_model_where_no_fit_exists(
@@ -620,3 +622,23 @@ def test_a_stated_cp_table_gives_a_gas_model_where_no_fit_exists(
     assert model.cp(500.0) > model.cp(298.15)
     with pytest.raises(TemperatureRangeError):
         model.cp(model.t_range[1] + 1.0)
+
+
+@pytest.mark.parametrize(
+    ("query", "source", "cp298", "rel"),
+    [
+        ("503-30-0", "Hossenlopp", 61.2, 0.01),  # oxetane: Hossenlopp 1981 measurement (WebBook)
+        ("79-14-1", "crc_thermo", 87.1, 0.03),  # glycolic acid: CRC Handbook 298 K value
+    ],
+)
+def test_a_stated_cp_table_agrees_with_an_independent_298_k_value(
+    query: str, source: str, cp298: float, rel: float
+) -> None:
+    """Cross-check of a table-based gas model against a separate source's 298 K Cp."""
+    from ngdesign.data.species_models import species_thermo
+
+    stated = [
+        v for v in chemdb.values(query, "Cp_gas") if source in (v.source, v.reference.split(";")[0][:10])
+    ]
+    assert stated and stated[0].value == pytest.approx(cp298)
+    assert species_thermo(query, "gas").cp(298.15) == pytest.approx(cp298, rel=rel)
