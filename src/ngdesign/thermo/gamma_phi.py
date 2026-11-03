@@ -24,7 +24,8 @@ naming them; a correlation returning None (regular solution) raises naming the
 component. A missing parameter is an error, not an ideal gas.
 
 The extended liquids: ``wohl3`` (three-suffix Wohl on the Margules pairs),
-``nrtl_tdep`` and ``uniquac_tdep`` (tau_ij with a_ij + b_ij/T from cited tables in
+``nrtl_tdep``, ``uniquac_tdep`` and ``wilson_tdep`` (tau_ij or ln Lambda_ij = a_ij + b_ij/T,
+from cited tables in
 data/thermo_params/<model>/tdep_pairs.yaml) and ``nrtl_sac`` (segment activity,
 data/thermo_params/nrtl_sac/segments.yaml). The ``caloric`` option moves the liquid
 enthalpy route without touching the K-values (:class:`LiquidReferenceLiquid`).
@@ -105,6 +106,7 @@ _DISPLAY: dict[str, str] = {
     "wohl3": "the three-suffix Wohl model",
     "nrtl_tdep": "T-dependent NRTL",
     "uniquac_tdep": "T-dependent UNIQUAC",
+    "wilson_tdep": "T-dependent Wilson",
     "nrtl_sac": "NRTL-SAC",
     "regular_solution": "the regular-solution model",
 }
@@ -396,20 +398,31 @@ def _tdep_config(model: str) -> dict[str, Any]:
 def _tdep_matrices(
     model: str, keys: tuple[str, ...], ids: tuple[str, ...], cas_list: list[str]
 ) -> list[list[list[float]]]:
-    """One N x N matrix per named coefficient; a pair with no entry raises naming it."""
+    """One N x N matrix per named coefficient; a pair with no entry raises naming it.
+
+    A pair is keyed by component ids or by CAS numbers (``pair: [591-78-6, 95-47-6]``),
+    so a table keyed by CAS serves whatever id a flowsheet gives the component.
+    """
     n = len(ids)
     out = [[[0.0] * n for _ in range(n)] for _ in keys]
     pairs = _tdep_config(model)["pairs"]
     for i in range(n):
         for j in range(i + 1, n):
-            entry = next((e for e in pairs.values() if set(e["pair"]) == {ids[i], ids[j]}), None)
+            entry = next(
+                (
+                    e
+                    for e in pairs.values()
+                    if set(e["pair"]) in ({ids[i], ids[j]}, {cas_list[i], cas_list[j]})
+                ),
+                None,
+            )
             if entry is None:
                 raise ValueError(
                     f"no temperature-dependent {model} parameters for pair {ids[i]} ({cas_list[i]}) / "
                     f"{ids[j]} ({cas_list[j]}) in data/thermo_params/{model}/tdep_pairs.yaml; refusing "
                     "to flash a zero-filled (ideal) pair matrix"
                 )
-            forward = entry["pair"][0] == ids[i]
+            forward = entry["pair"][0] in (ids[i], cas_list[i])
             for matrix, key in zip(out, keys, strict=True):
                 first, second = entry[key]
                 matrix[i][j], matrix[j][i] = (first, second) if forward else (second, first)
@@ -542,6 +555,16 @@ def _ge_model_factory(liquid: str, ids: tuple[str, ...], cas_list: list[str], co
 
         def make(xs: list[float]) -> GibbsExcess:
             return NRTL(xs=list(xs), T=298.15, tau_as=tau_as, tau_bs=tau_bs, alpha_cs=alpha_cs)
+
+        return make
+
+    if liquid == "wilson_tdep":
+        # ln Lambda_ij = a_ij + b_ij / T, the same form thermo's Wilson takes as
+        # lambda_as / lambda_bs (Siimer et al. 2002, eqs 3-4; Kirss et al. 2002, eqs 2-3).
+        lambda_as, lambda_bs = _tdep_matrices("wilson", ("a", "b"), ids, cas_list)
+
+        def make(xs: list[float]) -> GibbsExcess:
+            return Wilson(xs=list(xs), T=298.15, lambda_as=lambda_as, lambda_bs=lambda_bs)
 
         return make
 

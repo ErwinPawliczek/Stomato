@@ -149,6 +149,7 @@ class GammaPhiLiquid(StrEnum):
     WOHL3 = "wohl3"
     NRTL_TDEP = "nrtl_tdep"
     UNIQUAC_TDEP = "uniquac_tdep"
+    WILSON_TDEP = "wilson_tdep"
     NRTL_SAC = "nrtl_sac"
     REGULAR_SOLUTION = "regular_solution"
     UNIFAC = "unifac"

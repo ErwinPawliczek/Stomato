@@ -164,3 +164,65 @@ def test_wilson_glr_leaves_light_components_on_the_plain_route() -> None:
     water = {"MeOH": 0.5, "H2O": 0.5}
     a = _pkg("wilson_lr_ig").phase_props(water, T, 1e5, PhaseKind.AQUEOUS).enthalpy
     assert _pkg("wilson_glr_ig").phase_props(water, T, 1e5, PhaseKind.AQUEOUS).enthalpy == pytest.approx(a)
+
+
+# Siimer et al. 2002 (doi:10.3176/chem.2002.1.02) Table 3 and Kirss et al. 2002
+# (doi:10.3176/chem.2002.4.03) Table 7: the papers' own activity coefficients from their
+# Table 4 Wilson coefficients, (x1, x2, T, gamma1, gamma2, gamma3). Siimer's gammas are
+# at Tcalc, Kirss's at the experimental T (pressure column computed there).
+_SIIMER = (
+    ("2-hexanone", "o-xylene", "nonane"),
+    1e-3,
+    [
+        (0.333, 0.334, 365.39, 1.218, 1.022, 1.227),
+        (0.756, 0.122, 360.66, 1.028, 1.074, 1.776),
+        (0.125, 0.750, 413.58, 1.169, 1.004, 1.222),
+        (0.250, 0.250, 410.12, 1.287, 1.043, 1.082),
+    ],
+)
+_KIRSS = (
+    ("toluene", "p-xylene", "1,2-dichloroethane"),
+    5e-5,
+    [
+        (0.289, 0.289, 333.92, 0.9946, 0.9811, 1.0076),
+        (0.553, 0.277, 343.22, 0.9958, 0.9703, 1.0075),
+        (0.133, 0.734, 394.83, 0.9631, 0.9950, 0.9352),
+    ],
+)
+
+
+@pytest.mark.parametrize("table", [_SIIMER, _KIRSS])
+def test_wilson_tdep_reproduces_the_papers_own_activity_coefficients(table: Any) -> None:
+    """With the standard (x_i + Lambda_ij x_j) form; the papers' Eq. 1 prints a minus."""
+    names, digits, rows = table  # printed last digit; Siimer 1e-3 also absorbs its rounded Tcalc
+    ids = tuple(sorted(names))
+    model = _flasher_for("wilson_tdep", "ideal", ids).liquid.GibbsExcessModel
+    for x1, x2, T, *gammas in rows:
+        x = dict(zip(names, (x1, x2, 1.0 - x1 - x2), strict=True))
+        got = dict(zip(ids, model.to_T_xs(T, [x[c] for c in ids]).gammas(), strict=True))
+        for name, expected in zip(names, gammas, strict=True):
+            assert got[name] == pytest.approx(expected, abs=digits), (name, x1, x2, T)
+
+
+@pytest.mark.parametrize(
+    ("z", "P", "T_exp"),
+    [
+        ({"2-hexanone": 0.522, "o-xylene": 0.478}, 101320.0, 406.23),
+        ({"2-hexanone": 0.503, "nonane": 0.497}, 26660.0, 362.18),
+        ({"toluene": 0.499, "p-xylene": 0.501}, 101320.0, 395.64),
+        ({"toluene": 0.475, "1,2-dichloroethane": 0.525}, 101320.0, 366.49),
+        ({"2-hexanone": 0.333, "o-xylene": 0.334, "nonane": 0.333}, 101320.0, 408.03),
+    ],
+)
+def test_wilson_tdep_bubble_point_lands_on_the_measured_boiling_point(
+    z: dict[str, float], P: float, T_exp: float
+) -> None:
+    """Measured T-x points (Siimer Tables 2-3, Kirss Table 2) through the package, with the
+    databank vapour pressures instead of the papers' Antoine fits: within 0.3 K (measured
+    -0.11 to +0.26 K). The ternary point is a prediction from the three binaries."""
+    assert _pkg("wilson_tdep_ig").bubble_point(z, P=P).T == pytest.approx(T_exp, abs=0.3)
+
+
+def test_wilson_tdep_refuses_a_pair_outside_its_table() -> None:
+    with pytest.raises(ValueError, match="tdep_pairs.yaml"):
+        _pkg("wilson_tdep_ig").bubble_point({"toluene": 0.5, "nonane": 0.5}, P=101325.0)
