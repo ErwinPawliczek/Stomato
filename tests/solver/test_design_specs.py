@@ -119,6 +119,7 @@ def test_warm_start_reproduces_the_same_converged_sheet() -> None:
     assert again == first
 
 
+@pytest.mark.timeout(600)  # 73 s measured on a loaded runner; the 120 s default is load sensitive
 def test_warm_start_skips_the_recycle_iterations() -> None:
     """Cyclic sheet: tears seeded from a converged solve are already converged.
 

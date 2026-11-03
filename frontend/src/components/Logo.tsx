@@ -1,13 +1,16 @@
 import type { CSSProperties } from "react";
-import logoA from "../assets/logo-a.png";
-import logoB from "../assets/logo-b.png";
+import logoPermian from "../assets/logo-permian.svg";
+import logoBlueprint from "../assets/logo-blueprint.svg";
+import logoGraphite from "../assets/logo-graphite.svg";
 
-/** The Stomato mark: two masked halves, each tinted from the active palette. */
+/** The Stomato mantis shrimp mark. Permian is the main logo; the active palette
+ *  (html[data-palette]) picks its matching colourway in kit.css. */
 export function Logo({ width = 40 }: { width?: number }) {
   return (
     <span className="mark" style={{ "--mw": `${width}px` } as CSSProperties} aria-hidden="true">
-      <i className="a" style={{ "--m": `url(${logoA})` } as CSSProperties} />
-      <i className="b" style={{ "--m": `url(${logoB})` } as CSSProperties} />
+      <img className="permian" src={logoPermian} alt="" />
+      <img className="blueprint" src={logoBlueprint} alt="" />
+      <img className="graphite" src={logoGraphite} alt="" />
     </span>
   );
 }
