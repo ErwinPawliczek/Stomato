@@ -472,7 +472,9 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
             # vacuum column fed at 653 K with a 450 K top pumparound - the
             # feed-based floor of 623 K clamped the top stage on the band).
             # Relaxation columns only: the standard path's band is unchanged.
-            returns = [pa.return_T_K for pa in col.pumparounds if pa.return_T_K is not None]
+            # Live loops only: an idle loop must leave the band (and so the
+            # solve) exactly as the column without it.
+            returns = [pa.return_T_K for _, pa in _live_pumparounds(col) if pa.return_T_K is not None]
             if returns:
                 col.t_band_lo = min(col.t_band_lo, min(returns) - 30.0)
         return col
@@ -574,13 +576,14 @@ def _refresh_reactions(col: _Column, xs: list[dict[str, float]], ts: list[float]
 
 
 def _pa_is_noop(pa: _Pumparound) -> bool:
-    """A zero-duty loop returning where it drew is an exact no-op (spec identity).
+    """A zero-duty loop returning where it drew, or an idle (zero-flow) loop,
+    is an exact no-op (spec identity).
 
     Skipping it keeps the solve bit-identical to the column without the loop:
     the terms cancel algebraically but not in floating point, and the ulp-level
     perturbation moves the inside-out path off the 1e-10 identity gate.
     """
-    return pa.duty_W == 0.0 and pa.draw_stage == pa.return_stage
+    return pa.flow_mol_s == 0.0 or (pa.duty_W == 0.0 and pa.draw_stage == pa.return_stage)
 
 
 def _live_pumparounds(col: _Column) -> list[tuple[int, _Pumparound]]:
@@ -2014,6 +2017,9 @@ def _pa_reports(col: _Column, tb: _ThermoBox, prof: _Profile) -> list[dict[str, 
         if pa.return_T_K is not None:
             t_return = pa.return_T_K
             h_return = tb.h_liquid(comp, t_return, p)
+        elif flow == 0.0:
+            # An idle loop (zero flow, zero duty by the parser) returns nothing.
+            t_return, h_return = t_draw, h_draw
         else:
             h_return = h_draw + (pa.duty_W if pa.duty_W is not None else 0.0) / flow
             t_return = _pa_return_temperature(

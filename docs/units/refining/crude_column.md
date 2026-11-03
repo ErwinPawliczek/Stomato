@@ -21,7 +21,7 @@ Rigour ladder: R0 provisional, R2 provisional
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.crude_column:CrudeColumn` | cut-point fractionation (TBP cut points, gap/overlap spec) — spec U-H1 sharp cut, light ends and water to the overhead; optional stripping_steam inlet carries its water to the overhead at R0 (one net duty) |
-| R2 | provisional | `ngdesign.units.refining.crude_column_r2:CrudeColumnR2` | MESH over the stage graph (main column plus three steam side strippers as one Newton system), partial condenser, no reboiler, stripping steam under the bottom stage and into each stripper, overflash reported. Pooled stage liquids - the slate's heaviest pseudos split off a second liquid on the flash-zone and bottom stages - read the pooled liquid's own liquid-liquid split (no flash per stage K); relaxation cold start. Example (16-cut slate, 12 stages, 3-stage strippers) converges in ~45 s with a 1 mW closure residual. No pumparounds at this level |
+| R2 | provisional | `ngdesign.units.refining.crude_column_r2:CrudeColumnR2` | MESH over the stage graph (main column plus three steam side strippers as one Newton system), partial condenser, no reboiler, stripping steam under the bottom stage and into each stripper, overflash reported. Pooled stage liquids - the slate's heaviest pseudos split off a second liquid on the flash-zone and bottom stages - read the pooled liquid's own liquid-liquid split (no flash per stage K); relaxation cold start. Example (16-cut slate, 12 stages, 3-stage strippers) converges in ~30 s (relaxation-started graph, no main-only pre-solve) with a 1 mW closure residual. Pumparounds enter the stage energy balances (tested with a top and a diesel loop, 17.2 MW in the loops, condenser 69.0 -> 52.0 MW). An overhead past the zero-overflash point is refused before the solve; on the example overflash 31.8 mol/s at 430 mol/s, 14.2 at 440, 5.93 at 445 (converges, slowly near the limit), zero at 448.72 mol/s (the former stall at >= 455 mol/s) |
 
 ### R0 parameters
 
@@ -63,6 +63,11 @@ properties:
     type: integer
   pressure_profile:
     description: stage pressures, Pa abs (scalar or per-stage list); default crude_in.P
+  pumparounds:
+    description: the column core's fixed pumparound loops, each {name, draw_stage,
+      return_stage, flow_mol_s, return_T_K or duty_W}, drawn above the flash zone
+      and returned at or above the draw; flow 0 is an idle loop
+    type: array
   strippers:
     description: per side port (kero_out, diesel_out, ago_out) a steam side stripper
       {draw_stage, return_stage, n_stages, steam_mol_s, product_rate_mol_s}; its product
