@@ -3,7 +3,7 @@ import type { Project } from "../api/client";
 import { PfdView } from "./PfdView";
 import { PidView } from "./PidView";
 import { PlotView } from "./PlotView";
-import { Placeholder } from "./Placeholder";
+import { IsoView } from "./IsoView";
 
 // One sub-tab per drawing. Add a drawing by adding an entry here plus a view file.
 export const DRAWINGS = [
@@ -35,7 +35,7 @@ export function DrawingsView({ project }: { project: Project }) {
         {d === "pfd" && <PfdView project={project} />}
         {d === "pid" && <PidView project={project} />}
         {d === "plot" && <PlotView project={project} />}
-        {d === "iso" && <Placeholder layer="L6" what="Isometrics" />}
+        {d === "iso" && <IsoView />}
       </section>
     </section>
   );

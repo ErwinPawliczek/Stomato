@@ -6,6 +6,7 @@ import mockSolved from "../../mocks/solved.json";
 import { mockPfdSvg } from "../../mocks/pfdSvg";
 import { mockPidSvg } from "../../mocks/pidSvg";
 import { mockPlotSvg } from "../../mocks/plotSvg";
+import { MOCK_ISO_SHEETS } from "../../mocks/iso";
 import mockAgentEvents from "../../mocks/agent-events.json";
 import mockChanges from "../../mocks/changes.json";
 import { findOutput, upstream, type TraceGraph, type TraceTarget } from "../trace";
@@ -473,6 +474,26 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(pos),
     });
+  },
+  // --- Isometrics (spec B-06): one fabrication sheet per routed line. Line
+  // numbers carry inch marks (8"-PG-1001-B1), so they are always URL-encoded.
+  // A project the P&ID builder cannot draw answers 422 {"detail": reason}.
+  async isoLines(): Promise<string[]> {
+    if (MOCK) return Object.keys(MOCK_ISO_SHEETS);
+    return http<string[]>(scoped("/api/views/iso", "/views/iso"));
+  },
+  async isoSvg(line: string): Promise<string> {
+    if (MOCK) return (await api.isoSheet(line)).svg;
+    return httpText(scoped("/api/views/iso", "/views/iso") + `/${encodeURIComponent(line)}.svg`);
+  },
+  /** Title block, BOM, cut list, weld count and total pipe length of one line. */
+  async isoSheet(line: string): Promise<components["schemas"]["IsoSheet"]> {
+    if (MOCK) {
+      const sheet = MOCK_ISO_SHEETS[line];
+      if (!sheet) throw new ApiError(`GET /api/views/iso/${line}.json: 404 {"detail":"no routed line '${line}'"}`, 404);
+      return structuredClone(sheet);
+    }
+    return http(scoped("/api/views/iso", "/views/iso") + `/${encodeURIComponent(line)}.json`);
   },
   async route(): Promise<PipingNetwork> {
     // Explicit re-route (POST /api/route). The SVG views route implicitly on
