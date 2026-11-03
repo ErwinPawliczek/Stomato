@@ -273,7 +273,15 @@ export const api = {
   /** Provenance graph of the solved default project (GET /api/projects/{id}/trace); with a
    * target, only the upstream subgraph of that one value (meta.focus = its node id).
    * 404 when the value was not traced. */
-  async trace(target?: TraceTarget): Promise<TraceGraph> {
+  /** Stored projects (GET /api/projects): id and name, oldest first. In mock mode the one
+   * mock project. */
+  async listProjects(): Promise<{ id: string; name: string }[]> {
+    if (MOCK) return [{ id: "mock", name: DEFAULT_PROJECT_NAME }];
+    const r = await http<{ [key: string]: ProjectInfo[] }>("/api/projects");
+    return (r.projects ?? []).map((p) => ({ id: p.id, name: p.name }));
+  },
+  /** ``project`` is a stored project id; omitted = the default (open) project. */
+  async trace(target?: TraceTarget, project?: string): Promise<TraceGraph> {
     if (MOCK) {
       const full = await mockTrace();
       if (!target) return full;
@@ -282,7 +290,7 @@ export const api = {
       if (!node) throw new ApiError(`GET trace: 404 no traced value '${target.prop}' for '${of}'`, 404);
       return upstream(full, node.id);
     }
-    const id = encodeURIComponent(await projectId());
+    const id = encodeURIComponent(project ?? (await projectId()));
     let query = "";
     if (target) {
       const q = new URLSearchParams("stream" in target ? { stream: target.stream } : { unit: target.unit });
@@ -292,9 +300,10 @@ export const api = {
     return http<TraceGraph>(`/api/projects/${id}/trace${query}`);
   },
   /** Outputs that depend on an uncited leaf, an estimate, or an unreferenced method. */
-  async traceAudit(): Promise<AuditReport> {
+  async traceAudit(project?: string): Promise<AuditReport> {
     if (MOCK) return structuredClone((await import("../../mocks/trace-audit.json")).default) as AuditReport;
-    return http<AuditReport>(`/api/projects/${encodeURIComponent(await projectId())}/trace/audit`);
+    const id = encodeURIComponent(project ?? (await projectId()));
+    return http<AuditReport>(`/api/projects/${id}/trace/audit`);
   },
   _resetMock() {
     mockState = structuredClone(mockProject) as Project;

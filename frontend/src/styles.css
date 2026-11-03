@@ -234,3 +234,10 @@
 /* Results numbers that open the Trace view: read as numbers, act as buttons. */
 .page.panel button.tracelink:not(.btn):not(.stab), .tracelink { all: unset; cursor: pointer; border-bottom: 1px dotted var(--muted) }
 .page.panel button.tracelink:not(.btn):not(.stab):hover, .page.panel button.tracelink:not(.btn):not(.stab):focus-visible { color: var(--accentText); border-bottom-color: currentColor }
+
+.tr-more { font-weight: 700; font-size: 15px; fill: var(--ink, currentColor); }
+.tr-node.trunc .tr-dot, .tr-node.trunc rect { stroke-dasharray: 3 2; }
+.tr-links { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 2px; }
+.tr-link { all: unset; cursor: pointer; display: block; padding: 2px 4px; border-radius: 4px; font-size: 12px; line-height: 1.35; }
+.tr-link:hover, .tr-link:focus-visible { background: rgba(0, 0, 0, 0.06); outline: 1px solid currentColor; }
+.tr-link code { font-weight: 700; margin-right: 2px; }

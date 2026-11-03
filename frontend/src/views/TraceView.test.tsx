@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { vi } from "vitest";
 import { api } from "../api/client";
 import mockTrace from "../../mocks/trace.json";
 import { findOutput, upstream, type TraceGraph } from "../trace";
@@ -62,15 +63,67 @@ test("clicking a value node shows its quality and full citation with a DOI link"
   expect(doi.getAttribute("href")).toBe("https://doi.org/10.1021/acs.iecr.2c01427");
 });
 
-test("an uncited value stands out with a ring and says it has no citation", async () => {
-  render(<TraceView target={{ unit: "K-101", prop: "power_W" }} />);
-  const svg = await graph();
-  // The compressor's power output itself carries no citation in the slice trace.
-  const h = await within(svg).findByRole("button", { name: "K-101 power_W (output, uncited)" });
-  expect(h.classList.contains("q-uncited")).toBe(true);
-  expect(h.querySelector(".tr-ring")).not.toBeNull();
-  fireEvent.click(h);
-  expect(screen.getByLabelText("Value detail").textContent).toContain("No citation");
+// A graph with one uncited leaf: the audit flags the output resting on it.
+const uncitedGraph: TraceGraph = {
+  values: [
+    { id: "a", label: "X-1 k (unattributed)", value: 2.5, unit: "1", kind: "intermediate", quality: "uncited" },
+    { id: "u", label: "X-1 F (spec)", value: 4, unit: "mol/s", kind: "input", quality: "user", stream: "S-1", prop: "spec.molar_flow",
+      citation: { source: "user", citation: "User input: feed S-1 molar_flow" } },
+    { id: "y", label: "X-1 duty_W", value: 10, unit: "W", kind: "output", quality: "derived", unit_tag: "X-1", prop: "duty_W" },
+  ],
+  ops: [{ id: "o", label: "X-1 (demo) model", method: "unit_model:demo", name: "unit_model:demo", references: [] }],
+  edges: [
+    { source: "a", target: "o", role: "k", feedback: false },
+    { source: "u", target: "o", role: "F", feedback: false },
+    { source: "o", target: "y", role: "duty_W", feedback: false },
+  ],
+  meta: {},
+} as unknown as TraceGraph;
+
+test("an uncited value stands out with a ring, says it has no citation, and the audit lists it", async () => {
+  const trace = vi.spyOn(api, "trace").mockImplementation(async (t) =>
+    t ? { ...uncitedGraph, meta: { focus: "y" } } : uncitedGraph,
+  );
+  const audit = vi.spyOn(api, "traceAudit").mockResolvedValue({
+    outputs: 1,
+    clean: 0,
+    findings: [
+      { node: "y", label: "X-1 duty_W", severity: "error", reasons: ["uncited value: X-1 k (unattributed)"], culprits: ["a", "o"] },
+    ],
+  });
+  try {
+    render(<TraceView target={{ unit: "X-1", prop: "duty_W" }} />);
+    const svg = await graph();
+    const h = await within(svg).findByRole("button", { name: "X-1 k (unattributed) (intermediate, uncited)" });
+    expect(h.classList.contains("q-uncited")).toBe(true);
+    expect(h.querySelector(".tr-ring")).not.toBeNull();
+    fireEvent.click(h);
+    expect(screen.getByLabelText("Value detail").textContent).toContain("No citation");
+    expect((await screen.findByText(/uncited value: X-1 k/)).textContent).toContain("uncited value");
+  } finally {
+    trace.mockRestore();
+    audit.mockRestore();
+  }
+});
+
+test("a project selector traces another stored project", async () => {
+  const list = vi.spyOn(api, "listProjects").mockResolvedValue([
+    { id: "p-default", name: "default" },
+    { id: "p-demo", name: "Trace demo: gas processing" },
+  ]);
+  const trace = vi.spyOn(api, "trace");
+  const audit = vi.spyOn(api, "traceAudit");
+  try {
+    render(<TraceView />);
+    const select = (await screen.findByLabelText("Project")) as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: "p-demo" } });
+    await waitFor(() => expect(audit).toHaveBeenCalledWith("p-demo"));
+    await waitFor(() => expect(trace.mock.calls.some((c) => c[1] === "p-demo")).toBe(true));
+  } finally {
+    list.mockRestore();
+    trace.mockRestore();
+    audit.mockRestore();
+  }
 });
 
 test("clicking an operation shows its equation rendered with KaTeX and every reference", async () => {
@@ -144,4 +197,38 @@ test("clicking a number in Results asks to trace exactly that value", async () =
   const s1 = screen.getAllByRole("row").find((r) => r.getAttribute("data-stream") === "S-001")!;
   fireEvent.click(within(s1).getByRole("button", { name: "20" }));
   expect(onTrace).toHaveBeenLastCalledWith({ stream: "S-001", prop: "T" });
+});
+
+test("depth limits the drawing and 'Show inputs' opens one hidden branch", async () => {
+  render(<TraceView target={{ stream: "S-003", prop: "T" }} />);
+  const svg = await graph();
+  await within(svg).findByRole("button", { name: /^S-003 T \(output/ });
+  const count = () => svg.querySelectorAll("[data-node]").length;
+  const atFour = count();
+  fireEvent.change(screen.getByLabelText("Depth"), { target: { value: "all" } });
+  await waitFor(() => expect(count()).toBeGreaterThanOrEqual(atFour));
+  // At two steps some inputs are hidden; selecting such a node offers to show them.
+  fireEvent.change(screen.getByLabelText("Depth"), { target: { value: "2" } });
+  await waitFor(() => expect(count()).toBeLessThan(atFour));
+  const atTwo = count();
+  const hidden = svg.querySelector(".tr-node.trunc") as Element;
+  expect(hidden).not.toBeNull();
+  fireEvent.click(hidden);
+  fireEvent.click(screen.getByRole("button", { name: "Show inputs of the selected node" }));
+  await waitFor(() => expect(count()).toBeGreaterThan(atTwo));
+});
+
+test("an operation's detail lists its inputs; following one selects that value", async () => {
+  render(<TraceView target={{ unit: "K-101", prop: "power_W" }} />);
+  const svg = await graph();
+  fireEvent.click(await within(svg).findByRole("button", { name: "operation Shaft power from enthalpy change" }));
+  const inputs = screen.getByRole("list", { name: "Inputs" });
+  const links = within(inputs).getAllByRole("button");
+  expect(links.map((b) => b.textContent)).toEqual(
+    expect.arrayContaining([expect.stringMatching(/^F /), expect.stringMatching(/^h_in /), expect.stringMatching(/^h_out /)]),
+  );
+  fireEvent.click(links.find((b) => b.textContent!.startsWith("h_in "))!);
+  const detail = screen.getByLabelText("Value detail");
+  expect(detail.textContent).toContain("enthalpy");
+  expect(within(detail).getByRole("list", { name: "Used by" })).toBeTruthy();
 });

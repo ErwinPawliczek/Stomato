@@ -2,7 +2,7 @@ import katex from "katex";
 import "katex/dist/katex.min.css";
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { api, type AuditFinding, type AuditReport, type Citation, type OpNode, type TraceGraph, type TraceTarget, type ValueNode } from "../api/client";
-import { layoutTrace, makeTarget, sourceKey, targetOf, traceSources, OP_LABEL_CHARS, VALUE_LABEL_CHARS, VALUE_R, type LaidEdge, type LaidNode } from "../trace";
+import { layoutTrace, limitDepth, makeTarget, sourceKey, targetOf, traceSources, OP_LABEL_CHARS, VALUE_LABEL_CHARS, VALUE_R, type LaidEdge, type LaidNode } from "../trace";
 import { formatNumber, toDegC, toKmolH, toKPaG, toKw } from "../units";
 
 const QUALITIES = ["cited", "user", "estimated", "derived", "uncited"] as const;
@@ -124,7 +124,7 @@ function CitationBlock({ c }: { c: Citation }) {
   );
 }
 
-function ValueDetail({ v }: { v: ValueNode }) {
+function ValueDetail({ v, graph, onSelect }: { v: ValueNode; graph: TraceGraph; onSelect: (id: string) => void }) {
   return (
     <div className="tr-detail" aria-label="Value detail">
       <span className="tg">value · {v.kind}</span>
@@ -148,6 +148,8 @@ function ValueDetail({ v }: { v: ValueNode }) {
       ) : (
         <p className="chip bad">No citation</p>
       )}
+      <Connections title="Produced by" id={v.id} side="in" graph={graph} onSelect={onSelect} />
+      <Connections title="Used by" id={v.id} side="out" graph={graph} onSelect={onSelect} />
       {v.note && (
         <>
           <h4>Note</h4>
@@ -164,13 +166,56 @@ function Equation({ latex }: { latex: string }) {
   return <div className="tr-eq" data-latex={latex} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
-function OpDetail({ o }: { o: OpNode }) {
+/** The edges of one node in the focused trace, as a clickable list (role, node, value). */
+function Connections({
+  title,
+  id,
+  side,
+  graph,
+  onSelect,
+}: {
+  title: string;
+  id: string;
+  side: "in" | "out";
+  graph: TraceGraph;
+  onSelect: (id: string) => void;
+}) {
+  const edges = graph.edges.filter((e) => (side === "in" ? e.target === id : e.source === id));
+  if (!edges.length) return null;
+  const values = new Map(graph.values.map((v) => [v.id, v]));
+  const ops = new Map(graph.ops.map((o) => [o.id, o]));
+  return (
+    <>
+      <h4>{title}</h4>
+      <ul className="tr-links" aria-label={title}>
+        {edges.map((e, i) => {
+          const other = side === "in" ? e.source : e.target;
+          const v = values.get(other);
+          const o = ops.get(other);
+          return (
+            <li key={`${other}-${i}`}>
+              <button type="button" className="tr-link" onClick={() => onSelect(other)}>
+                {e.role && <code>{e.role}</code>} {v ? v.label : o?.name ?? other}
+                {v && <span className={`tr-q q-${v.quality}`}> · {formatTraceValue(v)} · {v.quality}</span>}
+                {e.feedback && <span className="muted"> · feedback</span>}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </>
+  );
+}
+
+function OpDetail({ o, graph, onSelect }: { o: OpNode; graph: TraceGraph; onSelect: (id: string) => void }) {
   return (
     <div className="tr-detail" aria-label="Operation detail">
       <span className="tg">operation · {o.method}</span>
       <h3>{o.name}</h3>
       <p className="muted">{o.label}</p>
       {o.latex ? <Equation latex={o.latex} /> : <p className="muted">No equation recorded.</p>}
+      <Connections title="Inputs" id={o.id} side="in" graph={graph} onSelect={onSelect} />
+      <Connections title="Outputs" id={o.id} side="out" graph={graph} onSelect={onSelect} />
       <dl className="kv ocols">
         {o.unit_tag && (
           <>
@@ -303,12 +348,13 @@ interface GraphProps {
   zoom: number;
   selected: string | null;
   culprits: ReadonlySet<string>;
+  truncated: ReadonlySet<string>;
   onSelect: (id: string) => void;
   onHover: (id: string | null) => void;
 }
 
-function TraceSvg({ graph, svgRef, zoom, selected, culprits, onSelect, onHover }: GraphProps) {
-  const lay = useMemo(() => layoutTrace(graph), [graph]);
+function TraceSvg({ graph, svgRef, zoom, selected, culprits, truncated, onSelect, onHover }: GraphProps) {
+  const lay = useMemo(() => layoutTrace(graph, 4, graph.meta.focus ? "sink" : "sources"), [graph]);
   const values = useMemo(() => new Map(graph.values.map((v) => [v.id, v])), [graph]);
   const ops = useMemo(() => new Map(graph.ops.map((o) => [o.id, o])), [graph]);
   const focus = graph.meta.focus;
@@ -332,7 +378,15 @@ function TraceSvg({ graph, svgRef, zoom, selected, culprits, onSelect, onHover }
     onFocus: () => onHover(n.id),
     onBlur: () => onHover(null),
   });
-  const flags = (id: string) => `${id === focus ? " focus" : ""}${id === selected ? " sel" : ""}${culprits.has(id) ? " culprit" : ""}`;
+  const flags = (id: string) =>
+    `${id === focus ? " focus" : ""}${id === selected ? " sel" : ""}${culprits.has(id) ? " culprit" : ""}${truncated.has(id) ? " trunc" : ""}`;
+  // Hidden inputs: a small "+" on the node's input side (select it, then "Show inputs").
+  const more = (n: LaidNode) =>
+    truncated.has(n.id) ? (
+      <text className="tr-more" x={-(values.has(n.id) ? VALUE_R : n.w / 2) - 10} dy="0.35em" textAnchor="middle" aria-hidden="true">
+        +
+      </text>
+    ) : null;
   return (
     <svg
       ref={svgRef}
@@ -375,6 +429,7 @@ function TraceSvg({ graph, svgRef, zoom, selected, culprits, onSelect, onHover }
                 <title>{`${v.label}\n${formatTraceValue(v)}\n${v.kind} · ${v.quality}`}</title>
                 {(v.quality === "uncited" || culprits.has(n.id) || n.id === focus) && <circle className="tr-ring" r={VALUE_R + 5} />}
                 <circle className="tr-dot" r={VALUE_R} />
+                {more(n)}
                 <text className="tr-kind" textAnchor="middle" dy="0.35em">
                   {v.quality === "uncited" ? "!" : v.kind[0].toUpperCase()}
                 </text>
@@ -389,6 +444,7 @@ function TraceSvg({ graph, svgRef, zoom, selected, culprits, onSelect, onHover }
             <g key={n.id} className={`tr-node tr-op${o.references.length ? "" : " noref"}${flags(n.id)}`} {...nodeProps(n, `operation ${o.name}`)}>
               <title>{`${o.name}\n${o.label}`}</title>
               <rect x={-n.w / 2} y={-n.h / 2} width={n.w} height={n.h} rx={9} />
+              {more(n)}
               <text textAnchor="middle" dy="0.35em">
                 {clip(o.name || o.label, OP_LABEL_CHARS)}
               </text>
@@ -446,8 +502,25 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
   const [hovered, setHovered] = useState<string | null>(null);
   const [finding, setFinding] = useState<AuditFinding | null>(null);
   const [zoom, setZoom] = useState(1);
+  // Review in steps: show `depth` operations upstream of the focus; expand branches on demand.
+  const [depth, setDepth] = useState(4);
+  const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  // Stored projects to trace; null = the open (default) project.
+  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
+  const [project, setProject] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    let live = true;
+    api
+      .listProjects()
+      .then((ps) => live && setProjects(ps))
+      .catch(() => live && setProjects([]));
+    return () => {
+      live = false;
+    };
+  }, []);
 
   // A click-through from another view (Results) re-targets an open Trace view.
   useEffect(() => {
@@ -459,13 +532,14 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
 
   useEffect(() => {
     let live = true;
-    Promise.all([api.trace(), api.traceAudit()])
+    const p = project ?? undefined;
+    Promise.all([api.trace(undefined, p), api.traceAudit(p)])
       .then(([g, a]) => {
         if (!live) return;
         setFull(g);
         setAudit(a);
         setTarget((t) => {
-          if (t) return t;
+          if (t && traceSources(g).some((s) => s.key === sourceKey(t))) return t;
           const first = traceSources(g)[0];
           return first ? makeTarget(first, first.props[0]) : null;
         });
@@ -474,17 +548,18 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
     return () => {
       live = false;
     };
-  }, []);
+  }, [project]);
 
   useEffect(() => {
     if (!target) return;
     let live = true;
     setError(null);
     api
-      .trace(target)
+      .trace(target, project ?? undefined)
       .then((g) => {
         if (!live) return;
         setGraph(g);
+        setExpanded(new Set());
         setSelected(g.meta.focus ?? null);
       })
       .catch((e: Error) => {
@@ -495,7 +570,19 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
     return () => {
       live = false;
     };
-  }, [target]);
+  }, [target, project]);
+
+  const limited = useMemo(() => (graph ? limitDepth(graph, depth, expanded) : null), [graph, depth, expanded]);
+  const shownGraph = limited?.graph ?? null;
+  const truncated = limited?.truncated ?? NO_IDS;
+
+  // Bring the focused value into view whenever a new trace is drawn.
+  useEffect(() => {
+    const focus = graph?.meta.focus;
+    if (!focus) return;
+    const el = svgRef.current?.querySelector(`[data-node="${focus}"]`);
+    el?.scrollIntoView?.({ block: "center", inline: "center" });
+  }, [graph]);
 
   const sources = useMemo(() => (full ? traceSources(full) : []), [full]);
   const source = target ? sources.find((s) => s.key === sourceKey(target)) : undefined;
@@ -507,6 +594,17 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
   }, [graph]);
   const shown = nodes.get(hovered ?? "") ?? nodes.get(selected ?? "");
   const culprits = finding && graph?.meta.focus === finding.node ? new Set(finding.culprits) : NO_IDS;
+
+  // Follow a link in the detail panel: select that node, revealing it if the depth hid it
+  // (the node we came from gets its inputs shown).
+  const follow = (id: string) => {
+    if (shownGraph && selected && !shownGraph.values.some((v) => v.id === id) && !shownGraph.ops.some((o) => o.id === id)) {
+      const from = selected;
+      setExpanded((s) => new Set([...s, from]));
+    }
+    setHovered(null);
+    setSelected(id);
+  };
 
   const retarget = (t: TraceTarget) => {
     setFinding(null);
@@ -521,6 +619,7 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
     const t = v && targetOf(v);
     if (!t) return;
     setFinding(f);
+    setDepth(Infinity); // the culprits may sit anywhere upstream
     setTarget(t);
   };
 
@@ -530,6 +629,26 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
   return (
     <div className="trace">
       <div className="tr-bar" role="group" aria-label="Value to trace">
+        {projects.length > 1 && (
+          <label className="field">
+            Project
+            <select
+              value={project ?? ""}
+              onChange={(e) => {
+                setFinding(null);
+                setGraph(null);
+                setProject(e.target.value || null);
+              }}
+            >
+              <option value="">open project</option>
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="field">
           Stream or unit
           <select value={source?.key ?? ""} onChange={(e) => pickSource(e.target.value)} disabled={!sources.length}>
@@ -555,6 +674,15 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
                 {p}
               </option>
             ))}
+          </select>
+        </label>
+        <label className="field">
+          Depth
+          <select value={Number.isFinite(depth) ? String(depth) : "all"} onChange={(e) => setDepth(e.target.value === "all" ? Infinity : Number(e.target.value))}>
+            <option value="2">2 steps</option>
+            <option value="4">4 steps</option>
+            <option value="8">8 steps</option>
+            <option value="all">all (to cited base data)</option>
           </select>
         </label>
         <span className="grow" />
@@ -588,9 +716,10 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
             {q}
           </span>
         ))}
-        {graph && (
+        {graph && shownGraph && (
           <span className="muted">
-            {graph.values.length} values · {graph.ops.length} operations
+            {shownGraph.values.length} of {graph.values.length} values · {shownGraph.ops.length} of {graph.ops.length} operations
+            {truncated.size > 0 && " · + = inputs hidden"}
           </span>
         )}
       </div>
@@ -602,15 +731,29 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
       <div className="tr-grid">
         <div className="tr-canvas">
           {graph ? (
-            <TraceSvg graph={graph} svgRef={svgRef} zoom={zoom} selected={selected} culprits={culprits} onSelect={setSelected} onHover={setHovered} />
+            <TraceSvg
+              graph={shownGraph ?? graph}
+              svgRef={svgRef}
+              zoom={zoom}
+              selected={selected}
+              culprits={culprits}
+              truncated={truncated}
+              onSelect={setSelected}
+              onHover={setHovered}
+            />
           ) : (
             !error && <p className="placeholder">Loading trace…</p>
           )}
         </div>
         <aside className="tr-side">
-          {shown?.value && <ValueDetail v={shown.value} />}
-          {shown?.op && <OpDetail o={shown.op} />}
+          {graph && shown?.value && <ValueDetail v={shown.value} graph={graph} onSelect={follow} />}
+          {graph && shown?.op && <OpDetail o={shown.op} graph={graph} onSelect={follow} />}
           {!shown && <p className="placeholder">Click a value or an operation for its detail.</p>}
+          {selected && truncated.has(selected) && (
+            <button type="button" className="btn ob" onClick={() => setExpanded((s) => new Set([...s, selected]))}>
+              Show inputs of the selected node
+            </button>
+          )}
           {audit && <AuditPanel audit={audit} active={finding?.node ?? null} onPick={pickFinding} />}
         </aside>
       </div>

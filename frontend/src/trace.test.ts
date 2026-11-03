@@ -1,5 +1,5 @@
 import mockTrace from "../mocks/trace.json";
-import { findOutput, layerNodes, layoutTrace, traceSources, upstream, type TraceGraph } from "./trace";
+import { limitDepth, findOutput, layerNodes, layoutTrace, traceSources, upstream, type TraceGraph } from "./trace";
 
 const full = mockTrace as TraceGraph;
 
@@ -78,4 +78,43 @@ test("picker sources list streams and units with base props first", () => {
   const k = sources.find((s) => s.key === "unit:K-101")!;
   expect(k.props).toContain("power_W");
   expect(k.props).toContain("info.pressure_ratio");
+});
+
+describe("limitDepth", () => {
+  // y <- f(x, p); x <- g(a); a <- h(c). Feedback y -> g must not be followed.
+  const v = (id: string) => ({ id, label: id, value: 1, unit: "", kind: "intermediate", quality: "derived" });
+  const o = (id: string) => ({ id, label: id, method: "m", name: id, references: [] });
+  const e = (source: string, target: string, feedback = false) => ({ source, target, role: "", feedback });
+  const g = {
+    values: ["y", "x", "p", "a", "c"].map(v),
+    ops: ["f", "g", "h"].map(o),
+    edges: [e("x", "f"), e("p", "f"), e("f", "y"), e("a", "g"), e("g", "x"), e("c", "h"), e("h", "a"), e("y", "g", true)],
+    meta: { focus: "y" },
+  } as unknown as TraceGraph;
+  const ids = (r: { graph: TraceGraph }) => [...r.graph.values.map((x) => x.id), ...r.graph.ops.map((x) => x.id)].sort();
+
+  test("counts one level per operation and marks nodes with hidden inputs", () => {
+    const one = limitDepth(g, 1);
+    expect(ids(one)).toEqual(["f", "p", "x", "y"]);
+    expect([...one.truncated]).toEqual(["x"]);
+    expect(one.graph.edges.every((x) => !x.feedback)).toBe(true);
+    expect(ids(limitDepth(g, 2))).toEqual(["a", "f", "g", "p", "x", "y"]);
+    expect(ids(limitDepth(g, Infinity))).toEqual(ids({ graph: g }));
+  });
+
+  test("an expanded node gets a fresh budget", () => {
+    const r = limitDepth(g, 1, new Set(["x"]));
+    expect(ids(r)).toEqual(["a", "f", "g", "p", "x", "y"]);
+    expect([...r.truncated]).toEqual(["a"]);
+  });
+});
+
+test("sink-anchored layers keep edges left to right and inputs next to their operation", () => {
+  const sub = upstream(full, findOutput(full, { unit: "K-101", prop: "power_W" })!.id);
+  const lay = layoutTrace(sub, 4, "sink");
+  const x = new Map(lay.nodes.map((n) => [n.id, n.x]));
+  for (const e of sub.edges) if (!e.feedback) expect(x.get(e.source)!).toBeLessThan(x.get(e.target)!);
+  // the focus is the right-most column
+  const focus = sub.meta.focus!;
+  expect(Math.max(...lay.nodes.map((n) => n.x))).toBe(x.get(focus));
 });

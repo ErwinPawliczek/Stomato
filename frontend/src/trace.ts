@@ -58,6 +58,59 @@ export function upstream(graph: TraceGraph, nodeId: string): TraceGraph {
   };
 }
 
+/** The part of a focused trace within `depth` operations upstream of its focus.
+ *
+ * Each step back through an operation costs one level; feedback edges (recycle and
+ * design-spec loops) are not followed. Nodes in `expanded` get a fresh budget, so a
+ * reviewer can open one branch at a time. `truncated` holds the shown nodes some of
+ * whose inputs are hidden. `depth = Infinity` returns the whole graph. */
+export function limitDepth(
+  graph: TraceGraph,
+  depth: number,
+  expanded: ReadonlySet<string> = new Set(),
+): { graph: TraceGraph; truncated: Set<string> } {
+  const focus = graph.meta.focus;
+  if (!focus || !Number.isFinite(depth)) return { graph, truncated: new Set() };
+  const isOp = new Set(graph.ops.map((o) => o.id));
+  const into = new Map<string, TraceEdge[]>();
+  for (const e of graph.edges) {
+    if (e.feedback) continue;
+    const list = into.get(e.target);
+    if (list) list.push(e);
+    else into.set(e.target, [e]);
+  }
+  // Best (largest) remaining budget per node; a node is re-walked when reached with more.
+  const budget = new Map<string, number>([[focus, depth]]);
+  const queue = [focus];
+  while (queue.length) {
+    const id = queue.shift()!;
+    const left = expanded.has(id) ? Math.max(budget.get(id)!, depth) : budget.get(id)!;
+    for (const e of into.get(id) ?? []) {
+      const cost = isOp.has(e.target) ? 0 : 1; // entering an operation from its output costs a level
+      const next = left - cost;
+      if (next < 0) continue;
+      if ((budget.get(e.source) ?? -1) < next) {
+        budget.set(e.source, next);
+        queue.push(e.source);
+      }
+    }
+  }
+  const shown = new Set(budget.keys());
+  const truncated = new Set<string>();
+  for (const id of shown) {
+    if ((into.get(id) ?? []).some((e) => !shown.has(e.source))) truncated.add(id);
+  }
+  return {
+    graph: {
+      values: graph.values.filter((v) => shown.has(v.id)),
+      ops: graph.ops.filter((o) => shown.has(o.id)),
+      edges: graph.edges.filter((e) => shown.has(e.source) && shown.has(e.target)),
+      meta: graph.meta,
+    },
+    truncated,
+  };
+}
+
 /** Picker choices: every source (stream or unit) with the props it reports, sorted. */
 export interface TraceSource {
   key: string; // "stream:S-001" | "unit:K-101"
@@ -189,10 +242,20 @@ export function layerNodes(ids: string[], edges: TraceEdge[]): Map<string, numbe
  * Layered left-to-right layout: columns from `layerNodes`, then a few barycentre sweeps
  * (down using predecessors, up using successors) to reduce edge crossings.
  */
-export function layoutTrace(graph: TraceGraph, sweeps = 4): TraceLayout {
+/** Columns anchored at the sink: a node's column is its longest path back from the
+ * focus, mirrored so edges still run left to right. Inputs land next to the operation
+ * that consumes them instead of far left with the leaves. */
+export function layerFromSink(ids: string[], edges: TraceEdge[]): Map<string, number> {
+  const reversed = edges.map((e) => ({ ...e, source: e.target, target: e.source }));
+  const back = layerNodes(ids, reversed);
+  const max = Math.max(0, ...back.values());
+  return new Map([...back].map(([id, l]) => [id, max - l]));
+}
+
+export function layoutTrace(graph: TraceGraph, sweeps = 4, anchor: "sources" | "sink" = "sources"): TraceLayout {
   const ids = [...graph.values.map((v) => v.id), ...graph.ops.map((o) => o.id)];
   const opLabel = new Map(graph.ops.map((o) => [o.id, o.name || o.label]));
-  const layer = layerNodes(ids, graph.edges);
+  const layer = anchor === "sink" ? layerFromSink(ids, graph.edges) : layerNodes(ids, graph.edges);
   const nLayers = ids.length ? Math.max(...ids.map((id) => layer.get(id)!)) + 1 : 0;
   const cols: string[][] = Array.from({ length: nLayers }, () => []);
   for (const id of ids) cols[layer.get(id)!].push(id);
