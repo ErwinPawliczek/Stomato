@@ -34,7 +34,7 @@ from typing import Any, Literal, cast
 from chemicals.elements import similarity_variable
 from chemicals.exceptions import PhaseCountReducedError, TrivialSolutionError
 from chemicals.thermal_conductivity import DIPPR9H
-from fluids.numerics import UnconvergedError
+from fluids.numerics import OscillationError, UnconvergedError, trunc_log
 from thermo import (
     CEOSGas,
     CEOSLiquid,
@@ -44,6 +44,7 @@ from thermo import (
     FlashVLN,
     PropertyCorrelationsPackage,
 )
+from thermo.flash.flash_utils import stability_iteration_Michelsen
 from thermo.heat_capacity import HeatCapacityGas
 from thermo.interaction_parameters import IPDB
 from thermo.vapor_pressure import VaporPressure
@@ -1125,6 +1126,185 @@ def k_values(flasher: Any, z: dict[str, float], T: float, P: float) -> dict[str,
     for cid, xl in liquid.composition.items():
         yl = max(vapor.composition.get(cid, 0.0), 0.0)
         out[cid] = yl / xl if xl > 0.0 else 0.0
+    return out
+
+
+#: A liquid-liquid split whose two liquids differ by less than this (mean
+#: absolute mole-fraction difference) is the trivial solution: one liquid.
+_LL_TRIVIAL_DIFF = 1e-6
+
+
+def _liquid_rooted(phase_obj: Any) -> bool:
+    """True when a CEOS phase object has a liquid root (``eos_mix.phase`` "l" or "l/g").
+
+    A composition whose EOS has the gas root only cannot form a liquid at
+    (T, P): a stability trial converging there is an incipient VAPOUR, which
+    the liquid-liquid split does not report (the column carries its vapour
+    through the summation equation). Non-CEOS phases carry no root and count
+    as liquid.
+    """
+    eos = getattr(phase_obj, "eos_mix", None)
+    if eos is None:
+        return True
+    return str(getattr(eos, "phase", "l")) != "g"
+
+
+def _ll_stability(
+    flasher: Any, ref: Any, zs: list[float], T: float, P: float, trials: list[list[float]]
+) -> tuple[list[float], list[float], float] | None:
+    """Michelsen tangent-plane test of a liquid against liquid trial phases.
+
+    Michelsen, Fluid Phase Equilib. 9 (1982) 1, the stationary-point iteration
+    ln W_i = ln z_i + ln phi_i(z) - ln phi_i(W) - thermo's own
+    ``stability_iteration_Michelsen`` with the reference liquid's LIQUID-root
+    fugacities (``ref.fugacities()``; the vapour-liquid test reads the lowest-
+    Gibbs root instead) and the second liquid object's ln phi for the trial.
+    ``trials`` run first (warm starts), then thermo's incipient guesses in
+    thermo's own order (``expect_liquid``). The first trial that converges to
+    a non-trivial, liquid-rooted stationary point inside the split range
+    (0 < beta < 1, thermo's acceptance criteria) decides: returns
+    (trial_zs, appearing_zs, beta_guess); None when every trial is stable.
+    """
+    test = flasher.liquids[1].to_TP_zs(T=T, P=P, zs=zs)
+    fugacities = ref.fugacities()
+
+    def test_lnphis(ws: list[float]) -> Any:
+        return test.lnphis_at_zs(ws, most_stable=True)
+
+    def guesses() -> Any:
+        yield from trials
+        yield from flasher.stab.incipient_guesses(T, P, zs, expect_liquid=True)
+
+    n = len(zs)
+    for trial in guesses():
+        try:
+            sln = stability_iteration_Michelsen(
+                T=T,
+                P=P,
+                zs_trial=zs,
+                fugacities_trial=fugacities,
+                zs_test=trial,
+                test_phase=test_lnphis,
+                maxiter=flasher.PT_STABILITY_MAXITER,
+                xtol=flasher.PT_STABILITY_XTOL,
+            )
+        except UnconvergedError:
+            continue
+        sum_zs_test, ks, _zs_test, beta, trial_zs, appearing_zs, _dg = sln
+        if zs == trial_zs:
+            continue
+        ln_k2 = sum(trunc_log(k) ** 2 for k in ks)  # type: ignore[no-untyped-call]
+        sum_criteria = abs(sum_zs_test - 1.0)
+        if sum_criteria < 1e-9 or ln_k2 < 1e-7 or sum_criteria > 1e20 or math.isinf(ln_k2):
+            continue
+        if not -1e-6 <= beta <= 1.0 + 1e-6:
+            continue
+        if sum(abs(a - b) for a, b in zip(zs, appearing_zs, strict=True)) / n < _LL_TRIVIAL_DIFF:
+            continue
+        if not _liquid_rooted(test.to_TP_zs(T=T, P=P, zs=appearing_zs)):
+            continue
+        return list(trial_zs), list(appearing_zs), float(beta)
+    return None
+
+
+def _phase_props_of(phase: Any, ids: tuple[str, ...], full_keys: tuple[str, ...], beta: float) -> PhaseProps:
+    """PhaseProps of one built liquid phase object, at phase fraction ``beta``."""
+    zs = [float(v) for v in phase.zs]
+    density = float(phase.rho_mass())
+    mw = float(phase.MW())
+    v_molar = (mw / 1000.0) / density
+    ln_phi = {cid: 0.0 for cid in full_keys}
+    ln_phi.update(zip(ids, (float(v) for v in phase.lnphis()), strict=True))
+    return PhaseProps.deferred(
+        _deferred_transport(phase, conductivity=True),
+        kind=PhaseKind.HC_LIQUID,
+        mole_fraction=beta,
+        composition=_composition(zs, ids, full_keys),
+        molecular_weight=mw,
+        density=density,
+        enthalpy=float(phase.H()),
+        entropy=float(phase.S()),
+        cp=float(phase.Cp()),
+        gibbs=float(phase.G()),
+        z_factor=float(phase.P) * v_molar / (R_IDEAL * float(phase.T)),
+        ln_phi=ln_phi,
+    )
+
+
+def liquid_split(
+    flasher: Any,
+    z: dict[str, float],
+    T: float,
+    P: float,
+    seed: list[dict[str, float]] | None = None,
+    stability: bool = True,
+) -> list[PhaseProps]:
+    """The liquid-liquid equilibrium of a liquid z at (T, P): one or two liquids.
+
+    The pooled stage liquid of a three-phase column (Block & Hegner, AIChE J.
+    22 (1976) 582) splits into the liquids that minimise its Gibbs energy at
+    the stage (T, P); the vapour is not part of this split. Method: Michelsen
+    (1982) tangent-plane stability of z on its liquid root against liquid
+    trials (``_ll_stability``), then thermo's two-phase successive
+    substitution between the two liquid objects (the liquid-liquid branch of
+    FlashVLN's own PT flash) from the stability solution.
+
+    ``seed``: the compositions of a previous split of a nearby state. With
+    ``stability`` the seeds are only the stability test's first trials - the
+    answer is the full test's. Without it (a fixed-phase-set evaluation, e.g.
+    a finite-difference perturbation of a state whose split is known) the
+    successive substitution starts from the seed split directly and no
+    stability test runs; a collapse to the trivial solution reads as one
+    liquid. Returns the liquids' PhaseProps with ``mole_fraction`` = their
+    share of z (one entry, the single liquid at fraction 1, when z is stable).
+    """
+    ids = support_ids(z)
+    full_keys = tuple(z.keys())
+    zs = [float(z[cid]) for cid in ids]
+    liquid = flasher.liquids[0].to_TP_zs(T=T, P=P, zs=zs)
+    for attr in ("constants", "correlations"):
+        if getattr(flasher, attr, None) is not None and getattr(liquid, attr, None) is None:
+            setattr(liquid, attr, getattr(flasher, attr))
+    single = [_phase_props_of(liquid, ids, full_keys, 1.0)]
+    if len(ids) < 2:
+        return single
+    seeds = [[max(float(s.get(cid, 0.0)), 1e-300) for cid in ids] for s in (seed or [])]
+    seeds = [[v / sum(s) for v in s] for s in seeds]
+    if stability:
+        found = _ll_stability(flasher, liquid, zs, T, P, seeds[::-1])
+        if found is None:
+            return single
+        xs_guess, ys_guess, beta_guess = found
+    elif len(seeds) == 2:
+        xs_guess, ys_guess, beta_guess = seeds[0], seeds[1], None
+    else:
+        return single
+    try:
+        beta, xs, ys, l_obj, g_obj, _it, _err = flasher.sequential_substitution_2P(
+            T,
+            P,
+            zs,
+            xs_guess,
+            ys_guess,
+            flasher.liquids[0],
+            flasher.liquids[1],
+            beta_guess,
+            flasher.PT_SS_MAXITER,
+            flasher.PT_SS_TOL,
+        )
+    except (UnconvergedError, TrivialSolutionError, PhaseCountReducedError, OscillationError):
+        return single
+    n = len(zs)
+    if not 0.0 < beta < 1.0 or sum(abs(a - b) for a, b in zip(xs, ys, strict=True)) / n < _LL_TRIVIAL_DIFF:
+        return single
+    if not (_liquid_rooted(l_obj) and _liquid_rooted(g_obj)):
+        return single
+    out: list[PhaseProps] = []
+    for phase, frac in ((l_obj, 1.0 - float(beta)), (g_obj, float(beta))):
+        for attr in ("constants", "correlations"):
+            if getattr(flasher, attr, None) is not None and getattr(phase, attr, None) is None:
+                setattr(phase, attr, getattr(flasher, attr))
+        out.append(_phase_props_of(phase, ids, full_keys, frac))
     return out
 
 

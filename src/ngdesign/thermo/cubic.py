@@ -225,6 +225,22 @@ class CubicEOS(ThermoSurfaceMixin):
     def _build_flasher_vl(self, ids: tuple[str, ...]) -> Any:
         return _flasher_vl_for(self.eos, _CHEMSEP_CUBIC_TABLE, ids, self._slate_pseudos)
 
+    def liquid_split(
+        self,
+        z: dict[str, float],
+        T: float,
+        P: float,
+        seed: list[dict[str, float]] | None = None,
+        stability: bool = True,
+    ) -> list[PhaseProps]:
+        """The liquid-liquid equilibrium of the liquid z at (T, P) (one or two liquids).
+
+        No vapour: the pooled stage liquid of a three-phase column is split
+        into its equilibrium liquids (see ``_state.liquid_split``). Not cached
+        (the column adapter memoizes per solve).
+        """
+        return _state.liquid_split(self._flasher(z), z, T, P, seed=seed, stability=stability)
+
 
 @cache
 def _flasher_for(
