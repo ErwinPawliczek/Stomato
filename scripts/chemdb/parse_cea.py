@@ -26,6 +26,26 @@ def _floats(text: str, width: int = 16) -> list[float]:
     return values
 
 
+def _elements(second: str) -> str | None:
+    """The record's own elemental formula, columns 11-50 of its second line: 5(A2, F6.2).
+
+    Symbols are upper case there (``CL``, ``BR``); they are written back in element case.
+    None when a count is fractional or the record holds electrons (``E``), so ions never
+    pass for neutrals.
+    """
+    parts = []
+    for k in range(5):
+        field = second[10 + 8 * k : 18 + 8 * k]
+        symbol, count = field[:2].strip(), field[2:].strip()
+        if not symbol or not count or float(count) == 0.0:
+            continue
+        if symbol == "E" or float(count) != int(float(count)):
+            return None
+        n = int(float(count))
+        parts.append(symbol.capitalize() + (str(n) if n != 1 else ""))
+    return "".join(parts) or None
+
+
 def parse_thermo_inp(text: str) -> list[dict[str, Any]]:
     """Every species record with at least one temperature interval."""
     lines = [line.rstrip("\n") for line in text.splitlines()]
@@ -73,6 +93,7 @@ def parse_thermo_inp(text: str) -> list[dict[str, Any]]:
                     "phase_flag": phase_flag,
                     "molar_mass": molar_mass,
                     "hf298": hf298,
+                    "elements": _elements(second),
                     "pieces": pieces,
                 }
             )
