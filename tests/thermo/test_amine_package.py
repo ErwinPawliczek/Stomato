@@ -155,3 +155,34 @@ def test_single_phase_hydrocarbon_vapour_is_carrier_pure(ke: AmineReactivePackag
     assert len(state.phases) == 1
     assert state.phases[0].kind == PhaseKind.VAPOR
     assert math.isfinite(state.enthalpy)
+
+
+#: A DEA regenerator's top vapour (6 stages, 1.9 bar, boilup 24 mol/s on the
+#: 100 mol/s example rich solvent) at its own stage temperature: it sits on its
+#: dew point, DEA 9e-5 with CO2/amine ~ 5700 - far beyond the 1.5 window.
+_TOP_VAPOUR = {
+    "CO2": 0.5117215020819729,
+    "DEA": 8.937551129088015e-05,
+    "H2O": 0.3309141003805654,
+    "H2S": 0.15727502202617089,
+}
+
+
+def test_gas_beyond_loading_window_is_not_a_liquid(ke: AmineReactivePackage) -> None:
+    """A liquid verdict needs the overall's own loadings inside the chemistry window.
+
+    Beyond it p_eq is read at the clamped loading (a lower bound), and sum z K
+    read 0.93: the top vapour was reported liquid, 11 kJ/mol below its vapour
+    enthalpy. Measured now: vapour from 370 K up, a vanishing amine-rich liquid
+    below (vf 0.99987 at 369 K, 0.9878 at 360 K), the enthalpy continuous.
+    """
+    top = ke.flash_pt(_TOP_VAPOUR, 371.54122627856856, 1.9e5, 1.0)
+    assert top.vapor_fraction == 1.0
+    temps = (360.0, 365.0, 369.0, 370.0, 371.0, 373.0, 380.0)
+    states = [ke.flash_pt(_TOP_VAPOUR, t, 1.9e5, 1.0) for t in temps]
+    assert [s.vapor_fraction for s in states] == sorted(s.vapor_fraction for s in states)
+    assert 0.98 < states[0].vapor_fraction < 1.0
+    for a, b, t_a, t_b in zip(states, states[1:], temps, temps[1:], strict=False):
+        # Enthalpy rises with T at a rate bounded by a modest heat capacity plus
+        # the condensing liquid's latent share: no 11 kJ/mol phase jump.
+        assert 0.0 < (b.enthalpy - a.enthalpy) / (t_b - t_a) < 200.0
