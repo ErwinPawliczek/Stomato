@@ -26,6 +26,7 @@ from fastapi import APIRouter, Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from ngdesign import pipeline
 from ngdesign.api import auth
 from ngdesign.api.deps import default_project_store, slice_project
 from ngdesign.api.routes_agent import router as agent_router
@@ -147,6 +148,15 @@ def create_app() -> FastAPI:
     @application.exception_handler(ProjectConflict)
     def _conflict(_: Request, exc: ProjectConflict) -> JSONResponse:
         return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+    # Every drawing route (pid/plot/iso views, route, export, legacy and
+    # project-scoped) goes through pipeline.build_pid: a project the solver
+    # accepts but the sizers/P&ID builder cannot draw (e.g. a unit added from
+    # the palette and not wired yet) is client input, 422 like the solve's
+    # InvalidProjectError — never a 500.
+    @application.exception_handler(pipeline.UndrawableProjectError)
+    def _undrawable(_: Request, exc: pipeline.UndrawableProjectError) -> JSONResponse:
+        return JSONResponse(status_code=422, content={"detail": str(exc)})
 
     application.openapi_schema = _merge_openapi_mode_copies(application.openapi())
     return application
