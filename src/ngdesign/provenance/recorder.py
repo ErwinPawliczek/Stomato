@@ -22,7 +22,7 @@ are never forced: properties are read from the instance ``__dict__`` only.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
@@ -492,6 +492,39 @@ class Recorder:
         self._index(self._scope, value, nid)
         return ValueRef(nid, value)
 
+    def cited(
+        self,
+        name: str,
+        value: Any,
+        unit: str,
+        citation: Citation | None,
+        *,
+        quality: Quality = "cited",
+        note: str | None = None,
+    ) -> ValueRef:
+        """A data value the code read from a cited record (e.g. a chemdb row).
+
+        ``citation=None`` records the value as ``uncited`` so the audit sees it.
+        Identical (name, value, citation source) leaves are shared across scopes.
+        """
+        lk = ("cited", name, repr(_plain(value)), citation.source if citation else None)
+        nid = self._leaf_cache.get(lk)
+        if nid is None or nid not in self.values:
+            nid = self._add_value(
+                name,
+                value,
+                unit,
+                "constant",
+                quality if citation is not None else "uncited",
+                citation=citation,
+                prop=name,
+                note=note,
+                owner="model",
+            )
+            self._leaf_cache[lk] = nid
+        self._index(self._scope, value, nid)
+        return ValueRef(nid, _plain(value))
+
     # ------------------------------------------------------------ thermo calls
 
     def note_convergence(self, info: Mapping[str, Any] | None) -> None:
@@ -848,6 +881,61 @@ class Recorder:
             self._index(sc, value, nid)
         return ValueRef(nid, _plain(value))
 
+    def results(
+        self,
+        method: str,
+        outputs: Mapping[str, Any],
+        inputs: Mapping[str, InputSpec],
+        *,
+        states: Sequence[Any] = (),
+        label: str | None = None,
+        note: str | None = None,
+        iterations: int | None = None,
+        residual: float | None = None,
+    ) -> dict[str, ValueRef]:
+        """Record one operation with several results (a converged column, a reactor solve).
+
+        ``outputs`` maps result names to numbers (nested mappings and numeric lists are
+        flattened to ``a.b`` / ``a[0]``, the names the unit's ``info`` binds by); each
+        becomes an intermediate of the operation. ``states`` are outlet stream states the
+        operation produced directly (their flashes, if any, are not shown separately).
+        Use this for iterative solvers whose internals are not traced: the operation
+        carries the iteration count and residual instead.
+        """
+        sc = self._scope
+        tag = sc.unit_tag if sc else None
+        op = self._add_op(method, label, unit_tag=tag, note=note)
+        if iterations is not None:
+            self.ops[op].iterations = iterations
+            self.ops[op].converged = True
+        if residual is not None:
+            self.ops[op].residual = residual
+        for role, spec in inputs.items():
+            src = self._resolve(spec, sc, role=role)
+            if src is not None:
+                self._edge(src, op, role)
+        refs: dict[str, ValueRef] = {}
+        for name, value in _flatten(outputs):
+            nid = self._add_value(
+                f"{tag + ' ' if tag else ''}{name}",
+                value,
+                _unit_of(name),
+                "intermediate",
+                "derived",
+                unit_tag=tag,
+                prop=name,
+            )
+            self._edge(op, nid, name)
+            if sc is not None:
+                sc.named[name] = nid
+                self._index(sc, value, nid)
+            refs[name] = ValueRef(nid, _plain(value))
+        if sc is not None:
+            for state in states:
+                if id(state) not in self._state_nodes:
+                    self._index_state(sc, state, self._materialize_state(state, producer=op))
+        return refs
+
     # ------------------------------------------------------------ unit results
 
     def bind_unit_result(self, tag: str, kind: str, result: Any) -> None:
@@ -1097,6 +1185,32 @@ def _result_props(result: Any) -> list[tuple[str, Any]]:
     return []
 
 
+#: Name-suffix -> SI unit, for results named like ``duty_reboiler_W`` or ``A_m2``.
+_SUFFIX_UNITS: tuple[tuple[str, str], ...] = (
+    ("_W_m2K", "W/(m2 K)"),
+    ("_W_K", "W/K"),
+    ("_mol_s", "mol/s"),
+    ("_kg_s", "kg/s"),
+    ("_m3_s", "m3/s"),
+    ("_kW", "kW"),
+    ("_W", "W"),
+    ("_K", "K"),
+    ("_Pa", "Pa"),
+    ("_m2", "m2"),
+    ("_m3", "m3"),
+    ("_m", "m"),
+    ("_s", "s"),
+)
+
+
+def _unit_of(name: str) -> str:
+    """SI unit of a named result: a known name, else its suffix, else dimensionless."""
+    leaf = name.rsplit(".", 1)[-1].split("[", 1)[0]
+    if leaf in _UNITS_BY_NAME:
+        return _UNITS_BY_NAME[leaf]
+    return next((unit for suffix, unit in _SUFFIX_UNITS if leaf.endswith(suffix)), "")
+
+
 def _flatten(params: Mapping[str, Any], prefix: str = "") -> list[tuple[str, Any]]:
     out: list[tuple[str, Any]] = []
     for k, v in params.items():
@@ -1111,6 +1225,10 @@ def _flatten(params: Mapping[str, Any], prefix: str = "") -> list[tuple[str, Any
             and all(isinstance(x, int | float) and not isinstance(x, bool) for x in v)
         ):
             out.extend((f"{path}[{i}]", float(x)) for i, x in enumerate(v))
+        elif isinstance(v, list | tuple) and v and all(isinstance(x, Mapping) for x in v):
+            # e.g. a reaction set's reactions: their kinetic constants are user inputs too
+            for i, x in enumerate(v):
+                out.extend(_flatten(x, f"{path}[{i}]."))
         elif isinstance(v, Mapping):
             if (
                 v

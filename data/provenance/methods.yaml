@@ -320,6 +320,46 @@ yield_shift:
   name: Specified product yields
   latex: 'F_{i,\mathrm{out}} = Y_i\,F_\mathrm{basis}'
   structural: true
+component_flows:
+  name: Component molar flows
+  latex: 'n_i = F\,z_i'
+  structural: true
+mole_fractions:
+  name: Mole fractions from component flows
+  latex: 'F = \sum_i n_i,\quad z_i = n_i / F'
+  structural: true
+reaction_stoichiometry:
+  name: Component balance with reaction extents
+  latex: 'n_{i,\mathrm{out}} = n_{i,\mathrm{in}} + \sum_j \nu_{ij}\,\xi_j'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (balances on reactive systems, extent of reaction)."
+formation_enthalpy_basis:
+  name: Stream enthalpy on the element (heat-of-formation) reference
+  latex: '\dot H = F\left(h + \sum_i z_i\,\Delta_f H^\circ_{i,298}\right)'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 9 (balances on reactive processes, heat-of-formation method)."
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 4 (heat effects; standard heat of formation)."
+reaction_energy_balance:
+  name: Reactor energy balance (heat-of-formation method)
+  latex: '\dot Q = \dot H_\mathrm{out} - \dot H_\mathrm{in} - \dot W'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 9 (balances on reactive processes, heat-of-formation method)."
+reactor_outlet_temperature:
+  name: Reactor outlet temperature from the energy balance
+  latex: '\dot H_\mathrm{out}(T_\mathrm{out}) = \dot H_\mathrm{in} + \dot Q + \dot W\ \text{solved for}\ T_\mathrm{out}'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 9 (balances on reactive processes; adiabatic reaction temperature)."
+reaction_equilibrium_extents:
+  name: Equilibrium extents (ideal-gas mass-action law)
+  latex: '\prod_i \left(\frac{y_i(\boldsymbol\xi)\,P}{P^\circ}\right)^{\nu_{ij}} = K_j(T)\quad \forall j'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 13 (chemical-reaction equilibria; multireaction equilibria)."
 
 # ---------------------------------------------------------------- columns
 column_inside_out:
