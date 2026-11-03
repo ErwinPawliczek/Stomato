@@ -330,6 +330,7 @@ written around the gap.
   - **Young, Pessoa & Ahon 2016** (Ind. Eng. Chem. Res. 55, 6506): only the CC BY-NC supplement is open. Its "SRW" SC1-SC3 values for 56 compounds are Peng-Robinson-based, and the closed main text holds their formula.
   - **NIST TDE help page:** prints the PR-SRW alpha but no values.
   - **2026-11-03 (later):** a web search for an open table of Schwartzentruber-Renon polar parameters found nothing new.
+  - **2026-11-03 (third pass):** a further search for the p1-p3 polar parameters returned no chemical-engineering source.
 - **Polymer SRK**: no model equations or pure-polymer parameters were obtained; Orbey & Sandler 1994 was not reachable. Rechecked 2026-11-03:
   - **Orbey, Bokis & Chen 1998** (Ind. Eng. Chem. Res. 37, 4481) is closed (OpenAlex).
   - **The only open trace** is a third-party seminar deck (Korea Univ.; pdfs.semanticscholar.org/7970/1dfc...). It scans Table 1: LDPE segment c1 1.0, c2 0, c3 0; ethylene c1 0.656855, c2 -0.362904, c3 0.676711. It retypes the polymer Tc/Pc rules, (Tc - 1300)/(Tc,m - 1300) = D_P^-0.25 and (Pc - 5)/(Pc,m - 5) = 1/D_P. These are secondary and unlicensed. The deck leaves the reference state "m" and the gE model undefined, and omits the separator pressures and chi needed to rerun the paper's Table 2c flash.
@@ -343,6 +344,7 @@ written around the gap.
   - **MacGregor 1988** (Univ. of Alberta thesis, ERA) has DIPA and Sulfinol data, but its terms say "solely for non-commercial purposes ... may not otherwise be copied or reproduced". Refused: none of its constants or data ship.
   - **A DIPA pKa** can be converted from the delta-G and delta-H values cited in the secondary Hamborg report, but the carbamate constant is still missing. No partial DIPA speciation model is built; one without carbamate formation would misstate CO2 loading.
   - **NIST ThermoML files** ship under the NIST open licence "with permission of the journal publishers". They are acceptable as validation anchors, with the DOI cited, once a full model exists.
+  - **2026-11-03 (third pass):** a search for an openly licensed DIPA carbamate stability constant found Gupta & Svendsen 2020 (Int. J. Greenh. Gas Control, modelled carbamate constants, licence not shown) and Lee et al. 2024 (J. Mol. Liq., DIPA + AMP solubility, no open file). Neither is usable: the first models rather than states the constant, and the second is not open.
 
 Closed 2026-11-03:
 
