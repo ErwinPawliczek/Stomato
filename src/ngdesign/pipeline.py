@@ -26,6 +26,18 @@ MAX_RULE_PASSES = 5
 DEFAULT_K_GAS = 1.24
 
 
+class UndrawableProjectError(ValueError):
+    """The solved project cannot be sized or drawn as a P&ID.
+
+    Raised by :func:`build_pid` when a sizer or the P&ID builder rejects the
+    solved flowsheet as input, e.g. a unit just added from the palette with no
+    connected streams yet (no design conditions to size or draw it from). It
+    is client input the solver accepts but the drawing chain cannot use, so
+    the API maps it to 422 with this message, never a 500. Still a
+    ``ValueError``: callers that already stop on sizer errors keep working.
+    """
+
+
 def run_sizers(solved: SolvedFlowsheet) -> SolvedFlowsheet:
     """Run the registered sizer per unit kind and attach the datasheets.
 
@@ -68,9 +80,18 @@ def apply_rules(pid: PID, rules: list[PidRule]) -> PID:
 
 
 def build_pid(solved: SolvedFlowsheet, *, k_gas: float) -> PID:
-    """Sizers -> S-33 builder -> every rule to a fixed point: the full P&ID."""
-    sized = run_sizers(solved)
-    pid = registry.create("pid_builder", "default").build(sized)
+    """Sizers -> S-33 builder -> every rule to a fixed point: the full P&ID.
+
+    Raises :class:`UndrawableProjectError` when a sizer or the builder rejects
+    the solved flowsheet (input error, e.g. an unconnected unit).
+    """
+    try:
+        sized = run_sizers(solved)
+        pid = registry.create("pid_builder", "default").build(sized)
+    except UndrawableProjectError:
+        raise
+    except ValueError as exc:
+        raise UndrawableProjectError(str(exc)) from exc
     return apply_rules(pid, rule_set(sized, k_gas=k_gas))
 
 

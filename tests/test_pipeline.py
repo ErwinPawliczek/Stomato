@@ -7,7 +7,10 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from ngdesign import cli, pipeline, registry
+from ngdesign.contracts import UnitSpec
 
 
 def test_deliverables_matches_cli_stage_by_stage(tmp_path: Path) -> None:
@@ -42,3 +45,14 @@ def test_deliverables_matches_cli_stage_by_stage(tmp_path: Path) -> None:
     for i, line in enumerate(d.network.lines, start=1):
         stem = cli._iso_stem(i, line.line_number)
         assert iso.render(line, d.pid).svg == (tmp_path / f"{stem}.svg").read_text(encoding="utf-8")
+
+
+def test_build_pid_rejects_unconnected_unit_as_undrawable() -> None:
+    """A unit with no connected streams (just added from the palette) solves,
+    but cannot be sized or drawn: build_pid raises the typed
+    UndrawableProjectError (still a ValueError) the API maps to 422."""
+    solved = cli._solve_slice()
+    solved.flowsheet.units.append(UnitSpec(tag="E-901", kind="cooler", params={}))
+    with pytest.raises(pipeline.UndrawableProjectError, match="E-901"):
+        pipeline.build_pid(solved, k_gas=pipeline.DEFAULT_K_GAS)
+    assert issubclass(pipeline.UndrawableProjectError, ValueError)
