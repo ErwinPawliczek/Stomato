@@ -70,3 +70,20 @@ python -I scripts/chemdb/build.py tables  CACHE data/chemdb
 
 NIST data are © U.S. Secretary of Commerce and used here with citation; PubChem and
 the bundled tables are cited in `sources.yaml`.
+
+## Known gap: ideal-gas Cp(T) for large organics
+
+About 2,850 species state ΔfH° and S° for the gas but have no cited Cp(T), so they have no
+gas model beyond a narrow constant-Cp window. These sources were checked:
+
+| Source | Outcome |
+|---|---|
+| NIST-JANAF, NIST Shomate (crawled and snapshot), TRC, Poling | used; they do not cover these species |
+| NASA CEA, NASA/TP-2002-211556 (Apache-2.0) | used; mostly combustion species, adds 67 gas models here |
+| WebBook tabulated gas Cp(T) | 10 of these species; most tables start at 380-600 K with no 298 K point to anchor on |
+| Burcat & Ruscic, ANL-05/20 | refused: its terms forbid inclusion in non-free software, and this repository is proprietary |
+| psi4 characteristic temperatures in `chemicals` (2022a) | refused: computed inside that library, with no external publication to cite |
+| Joback group contributions | refused: an estimation method, not stated data |
+
+Closing the gap needs a licensable evaluated compilation (DIPPR 801, TRC Thermodynamic Tables)
+or published measurements per species.
