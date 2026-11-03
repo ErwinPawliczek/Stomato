@@ -95,8 +95,11 @@ class DbProjectStore:
     """A ``ProjectStore`` over one stored project row (the API and agent's
     injected seam; spec B-08's protocol, spec P3-01's database behind it)."""
 
-    def __init__(self, project_id: str) -> None:
+    def __init__(self, project_id: str, *, actor: str = "api") -> None:
         self._id = project_id
+        #: Who plain ``put`` writes are attributed to in the change log (the API
+        #: binds the request's ``X-Stomato-Actor``; default ``api``).
+        self.actor = actor
 
     @property
     def project_id(self) -> str:
@@ -120,13 +123,19 @@ class DbProjectStore:
         """The stored contract, validated on read."""
         return Project.model_validate_json(self.row().body_json)
 
-    def put(self, project: Project, *, expected_version: int | None = None, actor: str = "api") -> Project:
+    def put(
+        self, project: Project, *, expected_version: int | None = None, actor: str | None = None
+    ) -> Project:
         """Store ``project``: new body JSON, ``version`` bumped, ``updated_at``
         stamped, and the write logged as an undoable ``put`` change. With
         ``expected_version``, a row that moved since the caller read it raises
         :class:`ProjectConflict` instead."""
         self.commit(
-            project, op="put", actor=actor, summary="Replaced the project", expected_version=expected_version
+            project,
+            op="put",
+            actor=actor or self.actor,
+            summary="Replaced the project",
+            expected_version=expected_version,
         )
         return project
 
@@ -187,10 +196,11 @@ class DbProjectStore:
             db.refresh(change)
             return changes.record(change)
 
-    def changes(self, *, after: int = 0, limit: int = 100) -> list[ChangeRecord]:
-        """The change log with ``seq > after``, oldest first."""
+    def changes(self, *, after: int = 0, limit: int = 100, newest: bool = False) -> list[ChangeRecord]:
+        """The change log with ``seq > after``, oldest first (``newest``: latest first)."""
         with session() as db:
-            return [changes.record(r) for r in changes.list_changes(db, self._id, after=after, limit=limit)]
+            rows = changes.list_changes(db, self._id, after=after, limit=limit, newest=newest)
+            return [changes.record(r) for r in rows]
 
     def rename(self, name: str) -> ProjectRow:
         """Rename the project: the row name (unique per owner) and the body's

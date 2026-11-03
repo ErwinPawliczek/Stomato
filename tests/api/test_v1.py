@@ -347,3 +347,20 @@ def test_openapi_documents_v1_with_examples_and_envelope() -> None:
     for name in ("UnitCreate", "CellSet", "StreamCreate", "DesignSpecIn", "ThermoSet"):
         assert schema["components"]["schemas"][name].get("examples"), name
     assert "ErrorEnvelope" in schema["components"]["schemas"]
+
+
+def test_change_stream_defaults_to_live_and_actor_binds_legacy_writes(pid: str) -> None:
+    c.post(f"{V1}/projects/{pid}/units", json={"kind": "cooler", "tag": "E-201"})
+    # No `after`: only changes newer than the latest one at connect time.
+    text = c.get(f"{V1}/projects/{pid}/changes/stream", params={"follow": False}).text
+    assert "data: " not in text
+    # A legacy write carries the caller's X-Stomato-Actor into the log.
+    project = c.get(f"{V1}/projects/{pid}/exports/project.json").json()
+    project["flowsheet"]["thermo"] = "srk"
+    c.put(f"/api/projects/{pid}", json=project, headers={"X-Stomato-Actor": "ui:tab-1"})
+    last = c.get(f"{V1}/projects/{pid}/changes", params={"after": 1}).json()["changes"][0]
+    assert last["op"] == "put" and last["actor"] == "ui:tab-1"
+    r = c.put(f"/api/projects/{pid}", json=project, headers={"X-Stomato-Actor": "no spaces"})
+    assert r.status_code == 400 and r.json() == {
+        "detail": "X-Stomato-Actor must be 1-64 chars of letters, digits and :_.-"
+    }

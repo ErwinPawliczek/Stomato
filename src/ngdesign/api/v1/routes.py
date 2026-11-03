@@ -10,7 +10,6 @@ header (``ui``, a client name, ...) attributes changes; default ``api``.
 from __future__ import annotations
 
 import json
-import re
 import time
 from collections.abc import Iterator
 from typing import Annotated, Any, Literal
@@ -31,7 +30,7 @@ from ngdesign.agent.service import (
 from ngdesign.agent.tools import TOOLS, TOOLS_BY_NAME, run_tool
 from ngdesign.api import routes_jobs, routes_trace
 from ngdesign.api.auth import current_owner
-from ngdesign.api.deps import project_store
+from ngdesign.api.deps import project_store, request_actor
 from ngdesign.api.routes_agent import AgentRequest, agent_conversations_core, agent_message_core
 from ngdesign.api.routes_export import export_sheet_core
 from ngdesign.api.routes_pid import pid_svg_core
@@ -63,7 +62,6 @@ from ngdesign.store import DbProjectStore, ProjectExists, create_project, list_p
 PREFIX = "/api/v1"
 router = APIRouter(prefix=PREFIX, responses=ERROR_RESPONSES)
 
-_ACTOR_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9:_.\-]{0,63}")
 _SVG: dict[int | str, dict[str, Any]] = {200: {"content": {"image/svg+xml": {}}}}
 
 #: Seconds between change-log polls in the change stream, and the default
@@ -72,15 +70,9 @@ CHANGE_POLL_SECONDS = 0.5
 CHANGE_STREAM_SECONDS = 300.0
 
 
-def actor(x_stomato_actor: Annotated[str | None, Header()] = None) -> str:
-    """The change attribution for this request (default ``api``)."""
-    if x_stomato_actor is None:
-        return "api"
-    if not _ACTOR_RE.fullmatch(x_stomato_actor):
-        raise OpError(
-            "bad_actor", "X-Stomato-Actor must be 1-64 chars of letters, digits and :_.-", status=400
-        )
-    return x_stomato_actor
+def actor(who: Annotated[str, Depends(request_actor)]) -> str:
+    """The change attribution for this request (``X-Stomato-Actor``, default ``api``)."""
+    return who
 
 
 Store = Annotated[DbProjectStore, Depends(project_store)]
@@ -519,7 +511,9 @@ def _change_frames(store: DbProjectStore, after: int, follow: bool, seconds: flo
 @router.get("/projects/{project_id}/changes/stream", tags=["history"])
 def change_stream(
     store: Store,
-    after: Annotated[int, Query(ge=0)] = 0,
+    after: Annotated[
+        int | None, Query(ge=0, description="Send changes with seq > after; omitted: only new ones")
+    ] = None,
     follow: Annotated[bool, Query(description="false: send the backlog and close")] = True,
     seconds: Annotated[float, Query(gt=0, le=3600)] = CHANGE_STREAM_SECONDS,
     last_event_id: Annotated[str | None, Header()] = None,
@@ -527,7 +521,10 @@ def change_stream(
     """SSE: one ``change`` frame per new change from any actor (UI, agent, MCP, API).
     Reads the database, so changes made by another process appear too."""
     if last_event_id is not None and last_event_id.isdigit():
-        after = max(after, int(last_event_id))
+        after = max(after or 0, int(last_event_id))
+    if after is None:
+        latest = store.changes(after=0, limit=1, newest=True)
+        after = latest[0].seq if latest else 0
     return StreamingResponse(
         _change_frames(store, after, follow, seconds),
         media_type="text/event-stream",

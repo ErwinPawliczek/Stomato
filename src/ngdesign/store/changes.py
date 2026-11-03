@@ -216,12 +216,16 @@ def move(db: Session, row: ProjectRow, *, direction: str, actor: str) -> ChangeR
     )
 
 
-def list_changes(db: Session, project_id: str, *, after: int = 0, limit: int = 100) -> list[ChangeRow]:
-    """Changes with ``seq > after``, oldest first, at most ``limit``."""
+def list_changes(
+    db: Session, project_id: str, *, after: int = 0, limit: int = 100, newest: bool = False
+) -> list[ChangeRow]:
+    """Changes with ``seq > after``, oldest first, at most ``limit`` (with
+    ``newest``: the latest ``limit`` of them, newest first)."""
+    order = col(ChangeRow.seq).desc() if newest else col(ChangeRow.seq)
     rows = db.exec(
         select(ChangeRow)
         .where(ChangeRow.project_id == project_id, ChangeRow.seq > after)
-        .order_by(col(ChangeRow.seq))
+        .order_by(order)
         .limit(limit)
     ).all()
     return list(rows)

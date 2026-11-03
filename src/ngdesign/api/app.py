@@ -33,7 +33,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from ngdesign import pipeline
 from ngdesign.agent.service import OpError
 from ngdesign.api import auth
-from ngdesign.api.deps import default_project_store, slice_project
+from ngdesign.api.deps import BadActor, default_project_store, slice_project
 from ngdesign.api.routes_agent import router as agent_router
 from ngdesign.api.routes_export import router as export_router
 from ngdesign.api.routes_iso import router as iso_router
@@ -209,6 +209,10 @@ def create_app() -> FastAPI:
     @application.exception_handler(pipeline.UndrawableProjectError)
     def _undrawable(request: Request, exc: pipeline.UndrawableProjectError) -> JSONResponse:
         return error_response(request, 422, str(exc), code="undrawable")
+
+    @application.exception_handler(BadActor)
+    def _bad_actor(request: Request, exc: BadActor) -> JSONResponse:
+        return error_response(request, 400, str(exc), code="bad_actor")
 
     # The agentic operations' typed errors (v1 envelope; docs/agentic-layer.md).
     @application.exception_handler(OpError)
