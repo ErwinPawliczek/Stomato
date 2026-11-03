@@ -22,11 +22,11 @@ button, input, select, textarea { font: inherit; color: inherit }
 .ob::before { inset: 0; background: var(--obLine); clip-path: var(--oct) }
 .ob::after { inset: var(--bw); background: var(--obFill); clip-path: var(--octIn) }
 
-/* logo: two masked halves recoloured from the palette */
-.mark { position: relative; display: inline-block; width: var(--mw, 40px); aspect-ratio: 325 / 240; flex: none }
-.mark i { position: absolute; inset: 0; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat }
-.mark .a { background: var(--logoA) }
-.mark .b { background: var(--logoB) }
+/* logo: mantis shrimp mark, one colourway per palette (Permian is the default) */
+.mark { position: relative; display: inline-block; width: var(--mw, 40px); aspect-ratio: 1; flex: none }
+.mark img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; display: none }
+.mark .permian, [data-palette="permian"] .mark .permian, [data-palette="blueprint"] .mark .blueprint, [data-palette="graphite"] .mark .graphite { display: block }
+[data-palette="blueprint"] .mark .permian, [data-palette="graphite"] .mark .permian { display: none }
 
 h1, h2, h3 { font-family: var(--f-display); font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; margin: 0 }
 .num, code { font-family: var(--f-mono); font-variant-numeric: tabular-nums }
