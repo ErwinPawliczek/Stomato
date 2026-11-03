@@ -23,10 +23,15 @@ from contextlib import asynccontextmanager
 from typing import Annotated, Any, Literal, cast
 
 from fastapi import APIRouter, Depends, FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exception_handlers import http_exception_handler, request_validation_exception_handler
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ngdesign import pipeline
+from ngdesign.agent.service import OpError
 from ngdesign.api import auth
 from ngdesign.api.deps import default_project_store, slice_project
 from ngdesign.api.routes_agent import router as agent_router
@@ -41,6 +46,8 @@ from ngdesign.api.routes_solve import router as solve_router
 from ngdesign.api.routes_study import router as study_router
 from ngdesign.api.routes_trace import router as trace_router
 from ngdesign.api.routes_views import router as views_router
+from ngdesign.api.v1.errors import STATUS_CODES, envelope, error_response, is_v1
+from ngdesign.api.v1.routes import router as v1_router
 from ngdesign.contracts import XY, Layout, Project, Vec3
 from ngdesign.store import (
     DbProjectStore,
@@ -64,6 +71,45 @@ def cors_origins() -> list[str]:
         raise ValueError(f"{CORS_ORIGINS_ENV} must list explicit origins; '*' is not allowed")
     return origins
 
+
+API_DESCRIPTION = """\
+Stomato: an open steady-state chemical process simulator and the engineering
+deliverables (PFD, P&ID, piping, isometrics) generated from one model.
+
+**Public API v1** lives under `/api/v1` (tags below). It covers the catalogue,
+projects, thermo package and components, units (place/move/configure/delete),
+streams, cells (any writable variable, with units), design specs, solve (sync
+and queued jobs), results, provenance (trace and explain), exports, the change
+history (undo/redo and a live SSE change stream) and the agent tools. Every
+mutation answers `{result, change}` where `change` carries the actor and a
+structured diff; every error answers
+`{"error": {"code", "message", "details"}}`.
+
+Auth: `Authorization: Bearer <token>` when the server sets `STOMATO_API_TOKENS`
+(open in local development). `X-Stomato-Actor` attributes your changes.
+
+The unversioned `/api/...` routes serve the web app and are kept stable but are
+not part of the public contract. Agents can use the same tools over MCP:
+`stomato-mcp` (see docs/mcp.md).
+"""
+
+OPENAPI_TAGS = [
+    {"name": "meta", "description": "API entry point and the agent tool catalogue."},
+    {"name": "catalogue", "description": "Unit kinds, components and thermo packages."},
+    {"name": "projects", "description": "Create, list, rename, delete projects."},
+    {"name": "thermo", "description": "Property package and component slate."},
+    {"name": "units", "description": "Place, move, configure and delete unit operations."},
+    {"name": "streams", "description": "Feeds, connections and products."},
+    {"name": "cells", "description": "Every writable variable, with unit conversion."},
+    {"name": "design-specs", "description": "Targets the solver drives by a manipulated variable."},
+    {"name": "solve", "description": "Synchronous solve and queued solve jobs."},
+    {"name": "results", "description": "Solved values, optionally converted to a unit."},
+    {"name": "provenance", "description": "Calculation trace, explanations, citation audit."},
+    {"name": "exports", "description": "Project document, sheets and drawings."},
+    {"name": "history", "description": "Change log, live change stream, undo and redo."},
+    {"name": "tools", "description": "Run any agent tool by name (same handler as MCP)."},
+    {"name": "agent", "description": "The in-app engineering agent (SSE)."},
+]
 
 #: The legacy unscoped routes (deprecated aliases bound to the default project).
 legacy_router = APIRouter()
@@ -112,8 +158,10 @@ def create_app() -> FastAPI:
         yield
 
     application = FastAPI(
-        title="ngdesign",
-        version="0.1.0",
+        title="Stomato API",
+        description=API_DESCRIPTION,
+        version="1.0.0",
+        openapi_tags=OPENAPI_TAGS,
         lifespan=lifespan,
         # Every /api route is owner-checked; auth.py exempts /api/health itself.
         dependencies=[Depends(auth.current_owner)],
@@ -122,6 +170,8 @@ def create_app() -> FastAPI:
         CORSMiddleware, allow_origins=cors_origins(), allow_methods=["*"], allow_headers=["*"]
     )
 
+    # The public versioned API (docs/agentic-layer.md section 4).
+    application.include_router(v1_router)
     application.include_router(projects_router)
     application.include_router(plot_router)
     application.include_router(pid_router)
@@ -140,16 +190,16 @@ def create_app() -> FastAPI:
     application.include_router(legacy_router)
 
     @application.exception_handler(ProjectNotFound)
-    def _not_found(_: Request, exc: ProjectNotFound) -> JSONResponse:
-        return JSONResponse(status_code=404, content={"detail": str(exc)})
+    def _not_found(request: Request, exc: ProjectNotFound) -> JSONResponse:
+        return error_response(request, 404, str(exc), code="unknown_project")
 
     @application.exception_handler(ProjectForbidden)
-    def _forbidden(_: Request, exc: ProjectForbidden) -> JSONResponse:
-        return JSONResponse(status_code=403, content={"detail": str(exc)})
+    def _forbidden(request: Request, exc: ProjectForbidden) -> JSONResponse:
+        return error_response(request, 403, str(exc), code="forbidden")
 
     @application.exception_handler(ProjectConflict)
-    def _conflict(_: Request, exc: ProjectConflict) -> JSONResponse:
-        return JSONResponse(status_code=409, content={"detail": str(exc)})
+    def _conflict(request: Request, exc: ProjectConflict) -> JSONResponse:
+        return error_response(request, 409, str(exc), code="conflict")
 
     # Every drawing route (pid/plot/iso views, route, export, legacy and
     # project-scoped) goes through pipeline.build_pid: a project the solver
@@ -157,8 +207,32 @@ def create_app() -> FastAPI:
     # the palette and not wired yet) is client input, 422 like the solve's
     # InvalidProjectError — never a 500.
     @application.exception_handler(pipeline.UndrawableProjectError)
-    def _undrawable(_: Request, exc: pipeline.UndrawableProjectError) -> JSONResponse:
-        return JSONResponse(status_code=422, content={"detail": str(exc)})
+    def _undrawable(request: Request, exc: pipeline.UndrawableProjectError) -> JSONResponse:
+        return error_response(request, 422, str(exc), code="undrawable")
+
+    # The agentic operations' typed errors (v1 envelope; docs/agentic-layer.md).
+    @application.exception_handler(OpError)
+    def _op_error(request: Request, exc: OpError) -> JSONResponse:
+        return error_response(request, exc.status, exc.message, code=exc.code, details=exc.details)
+
+    # Under /api/v1 the framework's own errors use the envelope too; legacy
+    # routes keep FastAPI's default bodies byte-for-byte.
+    @application.exception_handler(StarletteHTTPException)
+    async def _http_error(request: Request, exc: StarletteHTTPException) -> Response:
+        if not is_v1(request):
+            return await http_exception_handler(request, exc)
+        response = envelope(exc.status_code, STATUS_CODES.get(exc.status_code, "error"), str(exc.detail))
+        if exc.headers:
+            response.headers.update(exc.headers)
+        return response
+
+    @application.exception_handler(RequestValidationError)
+    async def _validation_error(request: Request, exc: RequestValidationError) -> JSONResponse:
+        if not is_v1(request):
+            return await request_validation_exception_handler(request, exc)
+        errors = jsonable_encoder(exc.errors())
+        where = "; ".join(f"{'.'.join(str(p) for p in e.get('loc', []))}: {e.get('msg')}" for e in errors[:5])
+        return envelope(422, "validation_error", f"request validation failed: {where}", {"errors": errors})
 
     application.openapi_schema = _merge_openapi_mode_copies(application.openapi())
     return application
