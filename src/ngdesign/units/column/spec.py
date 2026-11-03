@@ -18,6 +18,15 @@ from ngdesign.contracts.reactions import PowerLaw, ReactionSet
 #: Iteration budgets. Non-convergence raises a typed error; it never hangs.
 _OUTER_MAX = 40
 _OUTER_DAMP = 0.5  # feedback damping on model and profile updates between sweeps
+#: Adaptive outer damping (P1-13 change 1): the damped sweep contracts at the
+#: damping factor itself, so once the residual ratio sits within this band of
+#: it for this many sweeps running, the damping is what limits convergence and
+#: the refresh goes undamped. A sweep that raises M restores the damping.
+_DAMP_RATIO_BAND = 0.05
+_DAMP_RATIO_RUNS = 3
+#: Two-tear tear continuation (P1-13): smallest step, as a fraction of the
+#: path from the seed's tears to the requested ones, before the walk gives up.
+_CONTINUATION_MIN_STEP = 1.0 / 32.0
 
 #: Between-sweep profile damping for zero/one-tear columns. 1.0 = undamped
 #: (measured, P1-09): the feed-traffic seed sits close enough to the operating

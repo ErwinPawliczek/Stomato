@@ -28,6 +28,9 @@ from .linalg import _gauss
 from .naphtali_sandholm import _naphtali_sandholm
 from .spec import (
     _BAND_LIMIT_EPS,
+    _CONTINUATION_MIN_STEP,
+    _DAMP_RATIO_BAND,
+    _DAMP_RATIO_RUNS,
     _FLOW_FLOOR,
     _MESH_H_TOL,
     _MESH_M_TOL,
@@ -87,11 +90,8 @@ def _reject_band_limit(col: _Column, prof: _Profile) -> None:
     pin unphysical columns into the results. Raises the typed error naming the
     stages so the spec layer treats it like any other non-convergence.
     """
-    if col.n_tears >= 2:
-        # Two-tear columns keep their benchmarked behaviour untouched (the
-        # deethanizer mesh test rides the band at fixed tears today); extending
-        # the guard there is measured under spec P1-10, not here.
-        return
+    # Every column (P1-13): the two-tear exemption let the deethanizer's
+    # fixed-tear mesh "converge" with nine stages on the 363.09 K ceiling.
     pinned = [
         j + 1
         for j, t in enumerate(prof.T)
@@ -285,9 +285,12 @@ def _solve_mesh_at_heat(
         # inside-out loop is skipped entirely; the polish stage below still
         # runs and its gate decides acceptance.
         best_prof = _copy_profile(col, prof)
+    damp = _OUTER_DAMP
+    m_last = float("inf")
+    settled = 0
     for outer in range(1, 1 if (ns_direct or ns_floor) else _OUTER_MAX + 1):
         t_prev, v_prev = list(prof.T), list(prof.V)
-        model = _refresh_model(col, tb, prof, model)
+        model = _refresh_model(col, tb, prof, model, damp)
         prof.outer = outer
         _inner_solve(col, model, prof, t_bot)  # accumulates prof.inner itself
         if col.n_tears >= 2:
@@ -299,8 +302,8 @@ def _solve_mesh_at_heat(
             # (measured, P1-09: the 8-stage absorber froze at M=1.2e-3 over
             # 9 sweeps; undamped it closes at sweep 2 with M=8.8e-11).
             for j in range(col.n):
-                prof.T[j] = t_prev[j] + _OUTER_DAMP * (prof.T[j] - t_prev[j])
-                prof.V[j] = v_prev[j] + _OUTER_DAMP * (prof.V[j] - v_prev[j])
+                prof.T[j] = t_prev[j] + damp * (prof.T[j] - t_prev[j])
+                prof.V[j] = v_prev[j] + damp * (prof.V[j] - v_prev[j])
         elif _OUTER_DAMP_ZERO_ONE < 1.0:
             for j in range(col.n):
                 prof.T[j] = t_prev[j] + _OUTER_DAMP_ZERO_ONE * (prof.T[j] - t_prev[j])
@@ -311,6 +314,16 @@ def _solve_mesh_at_heat(
             _reject_band_limit(col, prof)
             _finalize_duties(col, tb, prof)
             return prof
+        # P1-13 change 1: the one damping decision (see spec.py).
+        if m_res > m_last:
+            damp, settled = _OUTER_DAMP, 0
+        elif abs(m_res / max(m_last, 1e-300) - _OUTER_DAMP) <= _DAMP_RATIO_BAND:
+            settled += 1
+            if settled >= _DAMP_RATIO_RUNS:
+                damp = 1.0
+        else:
+            settled = 0
+        m_last = m_res
         # Stagnation = NO improvement in either residual for 3 consecutive
         # sweeps. Early sweeps wobble in mass while enthalpy still improves
         # monotonically; a single combined metric misreads that as stagnation
@@ -351,7 +364,9 @@ def _solve_mesh_at_heat(
             # feed). Non-reactive zero/one-tear columns hand that state to the
             # polish below; everything else, and a genuinely stalled state
             # (measured stalls sit at M >= 1e-2), is a failure.
-            polishable = not _is_reactive_package(tb)
+            # P1-13 change 3: the floor bypass is a zero/one-tear rule; a
+            # two-tear column that misses its gate has not converged.
+            polishable = zero_one and not _is_reactive_package(tb)
             if not (polishable and _at_ns_floor(col, tb, prof)):
                 raise ColumnConvergenceError(
                     f"column did not converge in {_OUTER_MAX} inside-out sweeps and the "
@@ -359,7 +374,7 @@ def _solve_mesh_at_heat(
                     f"(best inside-out profile residuals M={best_m:.2e}, H={best_h:.2e} over "
                     f"{prof.outer} outer sweeps, {prof.inner} inner iterations)"
                 ) from exc
-    if zero_one and not _is_reactive_package(tb):
+    if zero_one and not _is_reactive_package(tb) and not tb.direct_phases:
         # NS globalizes; the inside-out polishes. NS's finite-difference Newton
         # floors at M=3.9e-8 (measured P1-09 absorber: passes 20-30 stagnant),
         # while the anchored-correlation inside-out closes to machine precision
@@ -395,6 +410,39 @@ def _solve_mesh_at_heat(
     _reject_band_limit(col, prof)
     _finalize_duties(col, tb, prof)
     return prof
+
+
+def _continuation(
+    col: _Column, tb: _ThermoBox, seed: _Profile, top: float | None, bot: float | None
+) -> _Profile:
+    """Walk a two-tear mesh from the seed's tears to (top, bot), warm-chaining each step.
+
+    The step along the straight tear path starts at half the distance, doubles
+    after a converged sub-step and halves after a failed one; below
+    ``_CONTINUATION_MIN_STEP`` of the path the walk raises the last mesh error.
+    Every sub-step is a full mesh solve, so the returned profile is converged
+    at exactly (top, bot).
+    """
+    s_top = seed.l0 if col.condenser == "total" else seed.V[0]
+    s_bot = seed.V[col.n - 1]
+    done, step = 0.0, 0.5
+    current = seed
+    while done < 1.0:
+        f = min(1.0, done + step)
+        t_try = None if top is None else s_top + f * (top - s_top)
+        b_try = None if bot is None else s_bot + f * (bot - s_bot)
+        try:
+            current = _solve_mesh(col, tb, t_try, b_try, current)
+        except (ColumnConvergenceError, ValueError) as exc:
+            step *= 0.5
+            if step < _CONTINUATION_MIN_STEP:
+                raise ColumnConvergenceError(
+                    f"tear continuation stalled {done:.3f} of the way to {(top, bot)}: {exc}"
+                ) from exc
+            continue
+        done = f
+        step = min(2.0 * step, 1.0)
+    return current
 
 
 def _at_ns_floor(col: _Column, tb: _ThermoBox, prof: _Profile) -> bool:
@@ -827,6 +875,17 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
             seed = state["seed"]
             if seed is None:
                 break
+            if not cold:
+                # Two-tear columns: continuation from the seed's own tears to the
+                # requested ones, warm-chaining every converged sub-step and
+                # halving the step on a failure (P1-13). The former backtracking
+                # moved the TARGET toward the seed and returned a profile at
+                # tears the secant had not asked for. Measured 22-stage
+                # deethanizer: warm from V_N = 131 the mesh at 68 fails, while
+                # 10 mol/s steps chain down to 66 in ~5 s each.
+                prof = _continuation(col, tb, seed, top, bot)
+                promote(prof)
+                return solved_tears(prof)
             if top is not None:
                 # Backtrack toward the seed value of the SAME tear quantity:
                 # the reflux L_0 for a total condenser, the stage-1 vapour V_1

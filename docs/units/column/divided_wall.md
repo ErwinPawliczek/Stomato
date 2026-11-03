@@ -17,7 +17,7 @@ Rigour ladder: R2 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R2 | planned | — | two coupled MESH sections; blocked on the column core, the plain two-tear side-draw column does not converge on nC4/nC5/nC6 at 3 bar (11 stages, M=1.4e-2, NS stalls; spec P1-13) and a section tear loop is the design S0-1c rejected. Needs the graph solver of S0-1c (unmerged branch s0-1c/2-graph-ns) extended to two parallel sections |
+| R2 | planned | — | two coupled MESH sections; P1-13 (the two-tear column core) and the S0-1c step 2 graph Newton (units/column/graph_ns.py) are in, but the stage graph only appends side-stripper sections fed by a liquid draw and returning their top vapour; a dividing wall needs two parallel sections that split both the liquid and the vapour traffic and rejoin above and below the wall, which neither the graph builder nor the inside-out sweep handles. Not attempted on this tree |
 
 ## References
 
