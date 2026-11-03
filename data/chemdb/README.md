@@ -76,15 +76,24 @@ the bundled tables are cited in `sources.yaml`.
 
 ## Known gap: ideal-gas Cp(T) for large organics
 
-About 2,850 species state ΔfH° and S° for the gas but have no cited Cp(T), so they have no
-gas model beyond a narrow constant-Cp window. These sources were checked:
+Of the 6,542 species with a gas ΔfH°, 4,607 also state S°. Of those, 2,797 had no cited
+Cp(T) on 2026-11-03 before the work below (2,671 with no gas Cp at all, 126 with only a 298 K
+value and a narrow constant-Cp window), and 1,810 had a gas model with Cp(T). After the
+WebBook tables, the ThermoML archive and the targeted crawl below, 2,781 remain (2,657 + 124)
+and 1,826 have a gas model with Cp(T): 16 gained. About 2,310 of the remaining species have
+only Yaws values (grade C) for ΔfH° and S°: long-chain, branched and halogenated organics that
+no open source tabulates. These sources were checked:
 
 | Source | Outcome |
 |---|---|
 | NIST-JANAF, NIST Shomate (crawled and snapshot), TRC, Poling | used; they do not cover these species |
 | NASA CEA, NASA/TP-2002-211556 (Apache-2.0) | used; mostly combustion species, adds 67 gas models here |
-| WebBook tabulated gas Cp(T) | 10 of these species; most tables start at 380-600 K with no 298 K point to anchor on |
-| WebBook pages not yet crawled (2,649 of them) | a random sample of 60, fetched 2026-11-02, carried no gas Shomate fit and no gas Cp table, so the rest were not crawled |
+| WebBook tabulated gas Cp(T) | used, 2026-11-03: every WebBook gas Cp table goes to `cp_gas_points.csv`. Only its 298 K point had been used before. A table with three or more points spanning 298.15 K is now the gas shape where no fit exists: linear in T between the stated nodes, anchored on S°298, with no extrapolation beyond the table. The tables that span 298 K are statistical-thermodynamic evaluations (Dorofeeva, TRC 1997, Klots, Boyd and others); flow-calorimetry tables start above the boiling point and are never chosen. 14 species gained, listed below. Most other gap species' tables start at 380-600 K and stay unused |
+| WebBook pages not yet crawled | a random sample of 60 (2026-11-02) carried nothing. On 2026-11-03 a targeted crawl fetched the 642 uncrawled pages of gap species whose ΔfH° is not Yaws-only, plus species with a CRC, ATcT or NASA ΔfH° and no S°. 630 pages existed. 13 of the 14 WebBook-table species came from these pages, and no species gained S°. The other page data entered through the normal build (Hf, Tb, Hvap and others; 828 selected values moved under the unchanged ranking, 91 by more than 1 %). The 2,230 uncrawled Yaws-only species were not crawled, since the sample of 60 found nothing |
+| NIST ThermoML/Data Archive, v2020-09-30 (doi:10.18434/mds2-2422; NIST open licence: no US copyright, redistribution and modification allowed with acknowledgement of NIST and a change notice) | used, 2026-11-03: 175 pure-compound ideal-gas Cp points for 12 compounds from 7 articles (statistical thermodynamics; the archive holds no ideal-gas Cp in phase "Gas"). Points recorded as "Predicted" (decamethylcyclopentasiloxane, Nannan et al. 2007) are refused. 73 points have no species here (glucose, an adamantyltetrazole, Cs2IOH, a verbenone). The set gives gas models to 2-aminoethanol and N-methyl-2-pyrrolidone (Ruzicka et al., Fluid Phase Equilib. 406, 2015, 34). Its benzene table (Ruzicka et al. 2014) agrees with TRC within 1 % from 298 to 1000 K. The live ThermoML API (trc.nist.gov/ThermoML-API) held no ideal-gas entries newer than 2019 |
+| NIST "Ideal-Gas Thermodynamic Properties for Organic Compounds Containing Up to 7 C, O, or N Atoms" (doi:10.18434/mds2-2561, NIST open licence) | refused: rigid-rotor harmonic-oscillator values on ab initio structures, which NIST publishes as an estimation protocol (Paulechka & Kazakov 2017, 2018). That is computed, not measured or spectroscopic, data |
+| Wikidata, heat capacity (P2056) | not used: 64 items in all, 8 with a temperature, phase and reference, each a single value. No Cp(T) |
+| `thermo`/`chemicals` gas-Cp methods besides those above | not used. VDI_TABULAR is the VDI Heat Atlas's saturated-vapour Cp, not ideal gas. HEOS_FIT and JANAF_FIT are the package author's own fits to CoolProp and JANAF, which are already used directly. LASTOVKA_SHAW is an estimation method, and Perry's Table 2-151 is Kelley's condensed-phase table |
 | Burcat & Ruscic, ANL-05/20 | refused: its terms forbid inclusion in non-free software, and this repository is proprietary |
 | psi4 characteristic temperatures in `chemicals` (2022a) | refused: computed inside that library, with no external publication to cite |
 | Joback group contributions | refused: an estimation method, not stated data |
@@ -92,5 +101,35 @@ gas model beyond a narrow constant-Cp window. These sources were checked:
 | ATcT 1.222 (Argonne; DOE PuRe resource) | not added: atct.anl.gov sits behind a Cloudflare challenge that blocks scripted fetches, and its Wayback copies were offline on 2026-11-03. ATcT 1.112 already enters through `chemicals` |
 | NIST CCCBDB (SRD 101) | not pursued: its experimental Cp is a single 298.15 K value per species, and its species are the small molecules JANAF and TRC already cover |
 
-Closing the gap needs a licensable evaluated compilation (DIPPR 801, TRC Thermodynamic Tables)
-or published measurements per species.
+Gained on 2026-11-03 (shape source): 2-aminoethanol and N-methyl-2-pyrrolidone (ThermoML, Ruzicka
+et al. 2015); dibenzofuran (Klots 1996); 4-vinylcyclohexene (Lenz 1990); maleic anhydride
+(Caminati 1985); di-tert-butyl peroxide (Diogo 1995); 1,5-cyclooctadiene (Dorofeeva 1986);
+bicyclo[2.2.2]octane (Boyd 1971); 1,3,5,7-tetroxocane, oxetane, 1,3-dioxolane (Dorofeeva 1992);
+glycolic acid (Dorofeeva 1997); ethylcyclobutane, 1,8-dimethylnaphthalene, 2-hexyne,
+3,3-dimethyl-1-butyne (TRC 1997, WebBook). Independent checks: oxetane's table is within 0.5 % of
+Hossenlopp's 1981 measurement at 298 K, and glycolic acid's is within 2.4 % of the CRC value.
+Thirteen of the sixteen still take S° from Yaws (grade C).
+
+**AUDIT, tabulated gas Cp.** Of 222 WebBook and ThermoML tables that overlap another gas model
+between 298.15 and 1000 K, 195 agree within 2 %. The 27 that do not are listed in `AUDIT.txt`.
+None belongs to a species whose gas model is a table, so no selection depends on them:
+
+- **Single measured points near the boiling point (13):** Stromsoe 1970 (methanol, 1-propanol,
+  1-butanol, 1-pentanol, 2-methyl-2-butanol), Bier 1974 (propene), Scott 1955 and 1962
+  (2,3-dimethyl-2-butene, toluene), Montgomery 1942 (cyclohexene), Counsell 1972 (propanal),
+  Andon 1974 (diisopropyl ether), Chao 1976 (acetone, 428 K) and Todd 1978 (benzene, 463 K).
+  They lie 2.3-4.7 % off, at 325-465 K. These are vapour flow-calorimetry points. The WebBook
+  table does not say whether each was extrapolated to zero pressure. Gas imperfection and
+  alcohol association would raise Cp, which fits the alcohols but not the negative deviations
+  (methanol, propanal, 2,3-dimethyl-2-butene, benzene). Cause not resolved.
+- **Tables against TRC, NASA or JANAF (14; statistical-thermodynamic except Colgate 1990, whose method the WebBook does not state):** Kabo 1988 and 1995
+  (cyclohexanol +4.0 %, cyclohexanone +4.2 %, cyclopentanol −6.8 %), Draeger 1985 (methylbenzenes,
+  +2.6 to +2.8 %, −3.4 %, and hexamethylbenzene −15.6 % at 700 K), Chao 1986 (methyl formate
+  −4.9 %, propanal +6.3 % at 1000 K), Yeh 1994 (ethylene glycol −9.0 % at 1000 K), Dorofeeva 1997
+  (oxalic acid +2.2 %), Colgate 1990 (ethylcyclohexane −7.3 %), TRC 1997 (2-methylnaphthalene
+  −3.3 %) and Gurvich 1989 (methane +2.7 % at 1000 K against JANAF C-067). The tables differ in
+  how they treat conformers and internal rotation. Which treatment is right per species was not
+  resolved here, and the fitted source stays selected.
+
+Closing the rest of the gap needs a licensable evaluated compilation (DIPPR 801, TRC Thermodynamic
+Tables) or published measurements per species.
