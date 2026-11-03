@@ -14,6 +14,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
+import numpy as np
+
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import PhaseKind, StreamState
 from ngdesign.contracts.thermo import PhaseProps
@@ -240,16 +242,20 @@ class _ThermoBox:
     def _nearest_split(
         self, keys: tuple[str, ...], vals: tuple[float, ...], T: float, P: float
     ) -> tuple[float, float, list[PhaseProps]] | None:
-        """(max |dx|, |dT|, split) of the closest fully tested state at (keys, P)."""
-        best: tuple[float, float, list[PhaseProps]] | None = None
-        for r_keys, r_vals, r_t, r_p, split in self._split_refs:
-            if r_keys != keys or r_p != P:
-                continue
-            dx = max(abs(a - b) for a, b in zip(vals, r_vals, strict=True))
-            dt = abs(T - r_t)
-            if best is None or dx + dt * 1e-3 < best[0] + best[1] * 1e-3:
-                best = (dx, dt, split)
-        return best
+        """(max |dx|, |dT|, split) of the closest fully tested state at (keys, P).
+
+        Closest by max |dx| + 1e-3 |dT|, the first in insertion order on a
+        tie. Vectorised over the remembered states (the same IEEE operations
+        elementwise, ``argmin`` keeping the first minimum): the per-element
+        Python scan was ~10 % of a 21-stage pooled crude column's solve.
+        """
+        refs = [ref for ref in self._split_refs if ref[0] == keys and ref[3] == P]
+        if not refs:
+            return None
+        dxs = np.abs(np.array([ref[1] for ref in refs]) - np.array(vals)).max(axis=1)
+        dts = np.abs(T - np.array([ref[2] for ref in refs]))
+        i = int(np.argmin(dxs + dts * 1e-3))
+        return float(dxs[i]), float(dts[i]), refs[i][4]
 
     def pooled_split(self, x: dict[str, float], T: float, P: float) -> list[PhaseProps]:
         """The liquid-liquid split of a pooled stage liquid x at (T, P), memoized.

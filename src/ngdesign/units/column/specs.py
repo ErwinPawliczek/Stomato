@@ -305,11 +305,7 @@ def _solve_mesh_at_heat(
         # relaxation of the standard seed (relaxation.py), and the mesh runs
         # warm from it - the relaxed profile is a physical, near-converged
         # state, exactly what the warm path is built for.
-        t_top_seed, t_bot_seed = _temperature_seed(col, tb)
-        start = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot, mixed_flash=False)
-        _apply_tears(col, start, t_top, t_bot)
-        start.L = _l_profile(col, start.l0, start.V)
-        seed = _relaxation_profile(col, tb, start)
+        seed = _relaxation_profile(col, tb, _relaxation_start(col, tb, t_top, t_bot))
     if seed is None:
         t_top_seed, t_bot_seed = _temperature_seed(col, tb)
         prof = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot)
@@ -573,15 +569,44 @@ def _graph_mesh_once(
     simultaneous engine and one gate. ``ns_max`` overrides the Newton pass
     budget (None = the column's own).
     """
+    relax = seed is None and col.relaxation and col.wall is None
+    if relax:
+        # ``initialization: relaxation``: the graph relaxation IS the start,
+        # so the main column only needs the standard seed it relaxes from -
+        # the converged main-only mesh the sequential initializer otherwise
+        # solves first is relaxed away (measured on the crude_column R2
+        # example: same root to 1e-8, solve 44 -> 28 s). Should the graph
+        # Newton stall from there, the full sequential start below runs.
+        try:
+            start = _sequential_seed(col, tb, t_top, t_bot, _relaxation_start)
+            return _graph_newton(col, tb, start, t_top, t_bot, top_vapour, ns_max, relax=True)
+        except (ColumnConvergenceError, ValueError):
+            pass
     if seed is None:
         prof = _sequential_seed(col, tb, t_top, t_bot, _seed_main_mesh)
     else:
         prof = _copy_profile(col, seed)
+    return _graph_newton(col, tb, prof, t_top, t_bot, top_vapour, ns_max, relax=relax)
+
+
+def _graph_newton(
+    col: _Column,
+    tb: _ThermoBox,
+    prof: _Profile,
+    t_top: float | None,
+    t_bot: float | None,
+    top_vapour: float | None,
+    ns_max: int | None,
+    *,
+    relax: bool,
+) -> _Profile:
+    """The graph Newton from a seeded profile (``_graph_mesh_once``), relaxed
+    first over the whole graph when ``relax``."""
     # The graph Newton's own trace and pass count (the seed's linear solve
     # or the warm seed's earlier passes are not this mesh's).
     prof.ns_trace, prof.ns_passes = [], 0
     _apply_tears(col, prof, t_top, t_bot)
-    if seed is None and col.relaxation and col.wall is None:
+    if relax:
         # ``initialization: relaxation``: relax the sequential seed over the
         # whole graph - the sections' draw-state seed is what the graph
         # Newton could not leave on a wide-boiling column (relaxation.py).
@@ -693,6 +718,15 @@ _DECANT_PIN_MAX = 8
 _DECANT_PIN_TOL = 1e-9
 #: Floor of the relaxation start's boilup estimate, as a fraction of the total feed.
 _RELAX_BOILUP_FLOOR = 0.05
+
+
+def _relaxation_start(col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None) -> _Profile:
+    """The standard seed the relaxation start relaxes from, at the given tears."""
+    t_top_seed, t_bot_seed = _temperature_seed(col, tb)
+    start = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot, mixed_flash=False)
+    _apply_tears(col, start, t_top, t_bot)
+    start.L = _l_profile(col, start.l0, start.V)
+    return start
 
 
 def _seed_main_mesh(main: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None) -> _Profile:
