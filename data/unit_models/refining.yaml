@@ -331,12 +331,46 @@
       note: cut-point fractionation at flash-zone P (spec U-H1 sharp cut on the
         reduced-crude feed; single VGO draw, the row's three ports)
     R2:
-      status: planned
-      params: {}
-      note: MESH with pumparounds, no condenser, wash zone; re-measured on the P1-13
-        tree - a zero-tear 6-stage column on the 19-pseudo example feed (40 mmHg, a
-        450 K wash of the same oil on stage 1) now finishes, but does not converge
-        (65 s; the sweeps sit at M ~ 1.0 with H ~ 10, NS stalls at M = 1.0, H = 0.43)
+      status: provisional
+      adapter: ngdesign.units.refining.vacuum_column_r2:VacuumColumnR2
+      validation: []
+      params:
+        type: object
+        additionalProperties: false
+        required:
+        - n_stages
+        - vgo_rate_mol_s
+        - pumparound_flow_mol_s
+        - pumparound_return_T_K
+        properties:
+          n_stages:
+            type: integer
+            minimum: 3
+            description: equilibrium stages, feed on the bottom stage N
+          vgo_stage:
+            type: integer
+            minimum: 2
+            description: stage of the VGO draw and the pumparound draw (default 2)
+          vgo_rate_mol_s:
+            type: number
+            exclusiveMinimum: 0
+            description: VGO liquid draw, mol/s
+          pumparound_flow_mol_s:
+            type: number
+            exclusiveMinimum: 0
+            description: top pumparound flow, drawn at vgo_stage, returned to stage 1
+          pumparound_return_T_K:
+            type: number
+            exclusiveMinimum: 0
+            description: pumparound return temperature, K
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar or per-stage list);
+              default feed_in.P
+      note: zero-tear MESH, no condenser and no reboiler - a top pumparound
+        (fixed return T) condenses the gas oil, VGO a liquid draw on the
+        pumparound stage; relaxation cold start (initialization relaxation,
+        the standard start stalls at M ~ 1.0 on the 19-pseudo example feed).
+        No separate wash-oil zone; one pumparound
       end_state: true
   pid_symbol: T
   references:
@@ -378,18 +412,34 @@
       note: flash drum on the assay stream (spec U-H1 PT flash at the drum
         conditions; vapour to vapor_out, pooled liquid to liquid_out)
     R2:
-      status: planned
-      params: {}
-      note: short MESH; re-measured on the P1-13 tree - a PT flash of the 48-species
-        example feed costs ~2 s on the PR package (Michelsen stability tests dominate),
-        so one flash-surface sweep of a 5-stage partial-condenser column (D = 150 mol/s)
-        takes ~260 s; on the fugacity surface the sweeps take ~0.1 s but diverge
-        (M ~ 1.5, H ~ 1.3) and Naphtali-Sandholm stalls at M = 1.0 after 25 passes.
-        Re-measured after S0-1c on coarser cuts of the same assay (5 stages, partial
-        condenser, no reboiler, D = 15 of 100 mol/s at 505 K, 2.5 bar) - with 14 species the
-        plain mesh stalls at M = 1.0 (10 s) and the stage-graph Newton from a Fenske-shaped
-        seed at M = 2.6 (17 s); with 22 species the graph Newton at M = 3.7 (46 s). The blocker
-        is a cold start for wide-boiling feeds, not the per-flash cost alone
+      status: provisional
+      adapter: ngdesign.units.refining.preflash_r2:PreflashR2
+      validation: []
+      params:
+        type: object
+        additionalProperties: false
+        required:
+        - n_stages
+        - distillate_rate_mol_s
+        properties:
+          n_stages:
+            type: integer
+            minimum: 2
+            description: equilibrium stages, partial condenser on 1, feed on N
+          distillate_rate_mol_s:
+            type: number
+            exclusiveMinimum: 0
+            description: condenser vapour product (vapor_out), mol/s
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar or per-stage list);
+              default feed_in.P
+      note: one-tear MESH rectifier (partial condenser, no reboiler, feed on the
+        bottom stage), stage liquid pooled (pool_liquids - the PR package splits a
+        heavy-end second liquid off the crude slate, 3 % on the bottom stage).
+        Converges since the condenser band reaches below the feed (top stage ~150 K
+        under it). The example cuts the R0 crude into 16 pseudos (22 species, ~13 s);
+        on the 48-species default slate each saturated product's PT flash alone
+        spends ~45 s in Michelsen stability tests
       end_state: true
   pid_symbol: FL
   references:
