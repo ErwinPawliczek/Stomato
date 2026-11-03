@@ -49,3 +49,16 @@ test("getMeta mirrors GET /api/meta's registry inventory", async () => {
     ]),
   );
 });
+
+test("mock projects keep their own state across open/switch", async () => {
+  api._resetMock();
+  const other = await api.createProject("Other", { template: "blank" });
+  await api.openProject("p-1");
+  await api.place("pfd", "V-101", { x: 7, y: 8 });
+  await api.openProject(other.id);
+  expect((await api.getProject()).flowsheet.units).toEqual([]);
+  expect((await api.getProject()).layout?.pfd).toEqual({});
+  await api.openProject("p-1");
+  expect((await api.getProject()).layout?.pfd?.["V-101"]).toEqual({ x: 7, y: 8 });
+  api._resetMock();
+});

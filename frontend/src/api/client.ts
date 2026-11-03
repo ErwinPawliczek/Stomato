@@ -17,6 +17,10 @@ export type Meta = {
 export type SolvedFlowsheet = components["schemas"]["SolvedFlowsheet"];
 export type Vec3 = components["schemas"]["Vec3"];
 export type PipingNetwork = components["schemas"]["PipingNetwork"];
+export type ProjectInfo = components["schemas"]["ProjectInfo"];
+export type TemplateInfo = components["schemas"]["TemplateInfo"];
+/** POST /api/projects: a name plus at most one source; none means blank. */
+export type ProjectSource = { template: string } | { from_project: string } | { project: Project } | Record<string, never>;
 
 // Mirror of GET /api/meta (routes_meta.py): every @register(kind, name) in
 // src/ngdesign, read from source at the current commit. Lets the thermo
@@ -73,6 +77,8 @@ const MOCK_META: Meta = {
   ],
 };
 
+const MOCK = import.meta.env.VITE_MOCK === "1" || import.meta.env.MODE === "test";
+
 /** HTTP failure with its status, so callers can react to codes like 501. */
 export class ApiError extends Error {
   constructor(
@@ -84,9 +90,63 @@ export class ApiError extends Error {
   }
 }
 
-const MOCK = import.meta.env.VITE_MOCK === "1" || import.meta.env.MODE === "test";
 
 let mockState: Project = structuredClone(mockProject) as Project;
+
+// --- Open project ---
+// Once Home opens a project, every project call goes to its scoped twin
+// (/api/projects/{id}/...). With none open the legacy unscoped routes stay in
+// use (they are bound to the backend's `default` project).
+let openId: string | null = null;
+
+/** Base of the project-scoped routes: the open project, else the legacy root. */
+const scoped = (legacy: string, suffix: string) =>
+  openId === null ? legacy : `/api/projects/${encodeURIComponent(openId)}${suffix}`;
+
+// Mock multi-project store (VITE_MOCK / tests): the open project's body lives in
+// mockState like the single-project mock did; it is written back on close/switch.
+const MOCK_TEMPLATES: TemplateInfo[] = [
+  { id: "blank", title: "Blank flowsheet", description: "An empty flowsheet: add units and streams yourself.", units: 0, streams: 0 },
+  {
+    id: "slice",
+    title: "Gas dehydration slice",
+    description: "Inlet 3-phase separator, compressor, air cooler and TEG contactor; condensate pump and heater.",
+    units: mockProject.flowsheet.units.length,
+    streams: mockProject.flowsheet.streams.length,
+  },
+];
+const MOCK_T0 = "2026-01-01T00:00:00";
+const mockInfo = (id: string, name: string, project: Project, template: string | null): ProjectInfo => ({
+  id,
+  name,
+  owner: "local",
+  version: 1,
+  created_at: MOCK_T0,
+  updated_at: MOCK_T0,
+  template,
+  opened_at: null,
+  project,
+});
+const freshMockProjects = () => [mockInfo("p-1", mockProject.name, structuredClone(mockProject) as Project, "slice")];
+let mockProjects: ProjectInfo[] = freshMockProjects();
+let mockSeq = 1;
+const mockStamp = () => new Date(Date.UTC(2026, 0, 1, 0, 0, ++mockSeq)).toISOString().slice(0, 19);
+
+function mockFind(id: string): ProjectInfo {
+  const info = mockProjects.find((p) => p.id === id);
+  if (!info) throw new ApiError(`unknown project '${id}'`, 404);
+  return info;
+}
+function mockSyncOpen(): void {
+  if (openId !== null) {
+    const info = mockProjects.find((p) => p.id === openId);
+    if (info) info.project = structuredClone(mockState);
+  }
+}
+function mockNameFree(name: string, except?: string): void {
+  if (mockProjects.some((p) => p.name === name && p.id !== except))
+    throw new ApiError(`a project named '${name}' already exists`, 409);
+}
 
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
   const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
@@ -137,12 +197,13 @@ const agent = {
       }
       return;
     }
-    const r = await fetch("/api/agent", {
+    const path = scoped("/api/agent", "/agent");
+    const r = await fetch(path, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message, conversation_id: conversationId }),
     });
-    if (!r.ok || !r.body) throw new ApiError(`POST /api/agent: ${r.status} ${await r.text()}`, r.status);
+    if (!r.ok || !r.body) throw new ApiError(`POST ${path}: ${r.status} ${await r.text()}`, r.status);
     const reader = r.body.getReader();
     const decoder = new TextDecoder();
     let buf = "";
@@ -170,20 +231,113 @@ export const api = {
     if (MOCK) return structuredClone(MOCK_META);
     return http<Meta>("/api/meta");
   },
+  /** The new-project catalogue (GET /api/templates): blank first. */
+  async listTemplates(): Promise<TemplateInfo[]> {
+    if (MOCK) return structuredClone(MOCK_TEMPLATES);
+    return (await http<{ templates: TemplateInfo[] }>("/api/templates")).templates;
+  },
+  /** The caller's projects, oldest first. */
+  async listProjects(): Promise<ProjectInfo[]> {
+    if (MOCK) {
+      mockSyncOpen();
+      return structuredClone(mockProjects);
+    }
+    return (await http<{ projects: ProjectInfo[] }>("/api/projects")).projects;
+  },
+  /** Create a project: blank, from a template, a copy of another, or a body (import). */
+  async createProject(name: string, source: ProjectSource = {}): Promise<ProjectInfo> {
+    if (MOCK) {
+      const trimmed = name.trim();
+      if (!trimmed) throw new ApiError("name must not be blank", 422);
+      mockNameFree(trimmed);
+      mockSyncOpen();
+      let project: Project;
+      let template: string | null = null;
+      if ("project" in source) project = structuredClone(source.project);
+      else if ("from_project" in source) {
+        const from = mockFind(source.from_project);
+        project = { ...structuredClone(from.project), name: trimmed };
+        template = from.template ?? null;
+      } else {
+        template = "template" in source ? source.template : "blank";
+        if (template === "slice") project = { ...(structuredClone(mockProject) as Project), name: trimmed };
+        else if (template === "blank")
+          project = {
+            name: trimmed,
+            flowsheet: { ...(structuredClone(mockProject.flowsheet) as Project["flowsheet"]), name: "blank", units: [], streams: [], components: [] },
+            layout: { pfd: {}, pid: {}, plot: {} },
+          };
+        else throw new ApiError(`unknown template '${template}'`, 422);
+      }
+      const info = mockInfo(`p-${++mockSeq}`, trimmed, project, template);
+      info.created_at = info.updated_at = mockStamp();
+      mockProjects.push(info);
+      return structuredClone(info);
+    }
+    return http<ProjectInfo>("/api/projects", { method: "POST", body: JSON.stringify({ name, ...source }) });
+  },
+  /** Open a project: later project calls go to its scoped routes. Stamps opened_at. */
+  async openProject(id: string): Promise<ProjectInfo> {
+    if (MOCK) {
+      mockSyncOpen();
+      const info = mockFind(id);
+      info.opened_at = mockStamp();
+      openId = id;
+      mockState = structuredClone(info.project);
+      return structuredClone(info);
+    }
+    const info = await http<ProjectInfo>(`/api/projects/${encodeURIComponent(id)}/open`, { method: "POST" });
+    openId = id;
+    return info;
+  },
+  /** Close the open project (back to Home). */
+  closeProject(): void {
+    if (MOCK) mockSyncOpen();
+    openId = null;
+  },
+  /** The open project's id, or null. */
+  openProjectId(): string | null {
+    return openId;
+  },
+  async renameProject(id: string, name: string): Promise<ProjectInfo> {
+    if (MOCK) {
+      const trimmed = name.trim();
+      if (!trimmed) throw new ApiError("name must not be blank", 422);
+      mockSyncOpen();
+      const info = mockFind(id);
+      mockNameFree(trimmed, id);
+      info.name = trimmed;
+      info.project.name = trimmed;
+      info.version += 1;
+      info.updated_at = mockStamp();
+      if (id === openId) mockState.name = trimmed;
+      return structuredClone(info);
+    }
+    return http<ProjectInfo>(`/api/projects/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ name }) });
+  },
+  async deleteProject(id: string): Promise<void> {
+    if (MOCK) {
+      mockFind(id);
+      mockProjects = mockProjects.filter((p) => p.id !== id);
+    } else await http<{ deleted: boolean }>(`/api/projects/${encodeURIComponent(id)}`, { method: "DELETE" });
+    if (id === openId) openId = null;
+  },
   async getProject(): Promise<Project> {
-    return MOCK ? structuredClone(mockState) : http<Project>("/api/project");
+    if (MOCK) return structuredClone(mockState);
+    if (openId === null) return http<Project>("/api/project");
+    return (await http<ProjectInfo>(scoped("/api/project", ""))).project;
   },
   async pfdSvg(): Promise<string> {
     // Mock honours the backend contract: a stored layout.pfd position is the
     // unit box's centre (spec B-03), so saved placements survive re-fetch.
     if (MOCK) return mockPfdSvg(mockState.layout?.pfd ?? {});
-    return httpText("/api/views/pfd.svg");
+    return httpText(scoped("/api/views/pfd.svg", "/views/pfd.svg"));
   },
   async pidSvg(): Promise<string> {
     // Mock honours the backend contract: a stored layout.pid position is the
     // equipment box's top-left corner (spec B-04), so saved placements survive.
     if (MOCK) return mockPidSvg(mockState.layout?.pid ?? {});
-    return httpText("/api/views/pid.svg");
+    return httpText(scoped("/api/views/pid.svg", "/views/pid.svg"));
   },
   async plotSvg(): Promise<string> {
     // Mock honours the backend contract: a stored layout.plot position is the
@@ -191,7 +345,7 @@ export const api = {
     // re-routes through the stored placements — so the plot view re-renders
     // the fresh routing after each placement save.
     if (MOCK) return mockPlotSvg(mockState.layout?.plot ?? {});
-    return httpText("/api/views/plot.svg");
+    return httpText(scoped("/api/views/plot.svg", "/views/plot.svg"));
   },
   async placePlot(tag: string, pos: Vec3): Promise<Layout> {
     // The plot plan has its own PUT taking a full Vec3 (x, y in mm on the
@@ -201,7 +355,7 @@ export const api = {
       (layout.plot ??= {})[tag] = pos;
       return structuredClone(layout);
     }
-    return http<Layout>(`/api/project/layout/plot/${encodeURIComponent(tag)}`, {
+    return http<Layout>(scoped("/api/project", "") + `/layout/plot/${encodeURIComponent(tag)}`, {
       method: "PUT",
       body: JSON.stringify(pos),
     });
@@ -211,7 +365,7 @@ export const api = {
     // every fetch; the JSON call surfaces routing problems as a 501/422
     // before the view re-renders.
     if (MOCK) return { equipment: [], lines: [], rack_elevation_mm: 6000 };
-    return http<PipingNetwork>("/api/route", { method: "POST" });
+    return http<PipingNetwork>(scoped("/api/route", "/route"), { method: "POST" });
   },
   async place(view: "pfd" | "pid", tag: string, pos: XY): Promise<Layout> {
     if (MOCK) {
@@ -219,7 +373,7 @@ export const api = {
       (layout[view] ??= {})[tag] = pos;
       return structuredClone(layout);
     }
-    return http<Layout>(`/api/project/layout/${view}/${encodeURIComponent(tag)}`, {
+    return http<Layout>(scoped("/api/project", "") + `/layout/${view}/${encodeURIComponent(tag)}`, {
       method: "PUT",
       body: JSON.stringify(pos),
     });
@@ -229,16 +383,22 @@ export const api = {
       mockState = structuredClone(project);
       return structuredClone(mockState);
     }
-    return http<Project>("/api/project", {
-      method: "PUT",
-      body: JSON.stringify(project),
-    });
+    if (openId === null)
+      return http<Project>("/api/project", {
+        method: "PUT",
+        body: JSON.stringify(project),
+      });
+    const info = await http<ProjectInfo>(scoped("/api/project", ""), { method: "PUT", body: JSON.stringify(project) });
+    return info.project;
   },
   async solve(): Promise<SolvedFlowsheet> {
     if (MOCK) return structuredClone(mockSolved) as SolvedFlowsheet;
-    return http<SolvedFlowsheet>("/api/solve", { method: "POST" });
+    return http<SolvedFlowsheet>(scoped("/api/solve", "/solve"), { method: "POST" });
   },
   _resetMock() {
     mockState = structuredClone(mockProject) as Project;
+    mockProjects = freshMockProjects();
+    mockSeq = 1;
+    openId = null;
   },
 };
