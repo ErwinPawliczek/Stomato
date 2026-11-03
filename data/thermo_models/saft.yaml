@@ -1155,6 +1155,11 @@
       Johnson, Muller & Gubbins (1994) contact-value fit, the equations of the thesis
       (eqs 2.2-2.7, A.20-A.26). Unlike pairs use Lorentz-Berthelot with eta = xi = 1
       (teqp exposes no binary parameter for this kind); no association.
+      LICENCE NOT VERIFIED (orchestrator, 2026-11-03): the thesis PDF carries no rights
+      statement and tdx.cat refused automated access (HTTP 403), so the TDX terms of use
+      were not read; TDX theses are commonly limited to private research and teaching
+      use. The Table 4.1 set is also the published Pamies & Vega (2001) set. Review the
+      licence before this row ships in a commercial build.
   applicability:
     component_classes:
     - hydrocarbon
