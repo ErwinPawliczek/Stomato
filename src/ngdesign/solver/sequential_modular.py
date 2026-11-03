@@ -947,6 +947,7 @@ class SequentialModular:
         if rec is not None:
             rec.begin_solve()
             rec.meta.setdefault("flowsheet", fs.name)
+            rec.meta.setdefault("thermo", fs.thermo)
         for s in fs.streams:
             if s.source is None:
                 if rec is None or s.feed is None:

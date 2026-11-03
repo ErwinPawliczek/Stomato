@@ -51,6 +51,7 @@ from typing import Any, ClassVar, Final, Literal
 
 from ngdesign.contracts import Phase, PhaseKind, StreamState
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationError, SaturationPoint
+from ngdesign.provenance.thermo_hook import TracedThermo
 from ngdesign.thermo._state import R_IDEAL, _constants_package, _records
 
 __all__ = [
@@ -167,7 +168,7 @@ class _SinglePhase:
 # ---------------------------------------------------------------------------
 
 
-class _HelmholtzSurface:
+class _HelmholtzSurface(TracedThermo):
     """The Thermo protocol over two primitives: ``_single_phase`` and ``_psat``.
 
     Flashes are root problems on the fugacity surface: bubble/dew pressures from

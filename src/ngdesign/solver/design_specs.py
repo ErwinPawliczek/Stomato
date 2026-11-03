@@ -37,6 +37,7 @@ from ngdesign.contracts.components import resolve_set
 from ngdesign.contracts.diagnostics import TearRecord
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.specs import DesignSpec, DesignSpecResult
+from ngdesign.provenance.recorder import active
 from ngdesign.registry import register
 from ngdesign.solver.lowering import lower_logical_nodes
 from ngdesign.solver.sequential_modular import SequentialModular, _tear_vector
@@ -153,7 +154,22 @@ class _Outer:
             self._single(self.specs[0], flags)
         else:
             self._multi(flags)
-        return self._assemble(flags)
+        solved = self._assemble(flags)
+        rec = active()
+        if rec is not None:  # provenance (docs/provenance.md 3.2): the loop set the manipulated values
+            method = "design_spec_secant" if len(self.specs) == 1 else "design_spec_broyden"
+            for spec, result in zip(self.specs, solved.design_spec_results, strict=True):
+                rec.design_spec(
+                    spec.id,
+                    manipulated=spec.manipulated,
+                    target=spec.target,
+                    value=spec.value,
+                    achieved=result.achieved,
+                    iterations=result.iterations,
+                    converged=result.converged,
+                    method=method,
+                )
+        return solved
 
     # ------------------------------------------------------------- one spec
 

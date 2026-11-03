@@ -40,8 +40,48 @@ def methods() -> dict[str, MethodEntry]:
 
 
 def method(key: str) -> MethodEntry | None:
-    """One catalogue entry, or None for an unknown key (the audit flags those)."""
+    """One catalogue entry, or None for an unknown key (the audit flags those).
+
+    ``thermo_model:<id>`` keys resolve to the property-method row of that id in
+    ``data/thermo_models/*.yaml`` (its name and literature ``references``).
+    """
+    if key.startswith("thermo_model:"):
+        return thermo_models().get(key.removeprefix("thermo_model:"))
     return methods().get(key)
+
+
+@cache
+def thermo_models() -> dict[str, MethodEntry]:
+    """Thermo catalogue rows (data/thermo_models) as method entries, by row id."""
+    rows: dict[str, MethodEntry] = {}
+    for path in sorted((DATA_DIR / "thermo_models").glob("*.yaml")):
+        if path.name.startswith("_"):
+            continue
+        for row in yaml.safe_load(path.read_text(encoding="utf8")) or []:
+            refs = tuple(
+                Citation(source=f"thermo_model:{row['id']}", citation=" ".join(str(r).split()))
+                for r in row.get("references") or ()
+            )
+            rows[str(row["id"])] = MethodEntry(
+                key=f"thermo_model:{row['id']}",
+                name=str(row.get("name", row["id"])),
+                latex=None,
+                references=refs,
+                structural=False,
+            )
+    return rows
+
+
+@cache
+def thermo_row_for_adapter(adapter: str) -> str | None:
+    """The first thermo catalogue row id whose adapter is ``module:ClassName``."""
+    for path in sorted((DATA_DIR / "thermo_models").glob("*.yaml")):
+        if path.name.startswith("_"):
+            continue
+        for row in yaml.safe_load(path.read_text(encoding="utf8")) or []:
+            if row.get("adapter") == adapter:
+                return str(row["id"])
+    return None
 
 
 @cache

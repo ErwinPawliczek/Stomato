@@ -211,7 +211,36 @@ Hover/click shows the value with units, the citation, or the equation rendered w
 and its reference. Export the shown graph as SVG or JSON. The audit list is shown beside the
 graph.
 
-## 9. Overhead and guarantees
+## 9. Instrumenting a unit
+
+1. `rec = active()` once in `solve`; everything below sits in `if rec is not None:`.
+2. Record each intermediate **before** the thermo call that consumes it (inputs are matched
+   in event order), with the value the code already computed:
+   `rec.equation("P_out", P_out, "Pa", "pressure_drop", {"P_in": (inlet, "P"), "dP": dP})`.
+3. Inputs: `(state, "attr")` (`"enthalpy"`, `"composition"`, `"vapor.density"`), a `ValueRef`
+   returned by an earlier call, or the plain number/dict the code holds (matched by object
+   identity first - the earliest holder of an object is its origin - then by exact value).
+4. Outlets that are not flash results: `rec.derived_state(outlet, "phase_split", {...})`.
+5. Name equations after the result they explain (`duty_W`, `power_W`, `info` keys); they bind
+   by name. Zero duty/power of units without that effect bind automatically.
+6. Defaults the code applies: `rec.default("eta", eta, "1", "why")`; hard-coded constants:
+   `rec.constant("g_n", G_STD, "m/s2", "bipm_si")` (a key of `data/provenance/sources.yaml`).
+7. Add the method key to `data/provenance/methods.yaml` with LaTeX and a reference you can
+   verify; `tests/provenance/test_trace.py` fails on an unknown key.
+
+## 10. Status
+
+Instrumented: thermo protocol calls of every package (cubic packages also report cited
+Tc/Pc/omega/MW/Cp_ig/k_ij/R/reference state; other packages add an explicit *not traced*
+parameter leaf the audit flags), feeds, tears, design specs, heater/cooler/air cooler/shell &
+tube (outlet spec), separators/scrubber, flash drum, mixer, splitter, pump, compressor, expander,
+JT valve, TEG contactor. Every other unit still traces (flashes, outlets) but its results come
+from a flagged `unit_model:<kind>` operation until it records its equations.
+
+Model citations: cubic EOS packages use the vetted entries in `methods.yaml`; every other package
+cites the `references` of its row in `data/thermo_models/*.yaml`.
+
+## 11. Overhead and guarantees
 
 - Off: one `ContextVar.get` per thermo protocol call and per instrumented unit; no
   allocations. Benchmarked against `bench/` before merge.

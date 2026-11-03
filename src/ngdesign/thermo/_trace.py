@@ -53,6 +53,21 @@ def _leaf(
     }
 
 
+def untraced_leaf(package: str) -> dict[str, Any]:
+    """An explicit uncited leaf for model parameters a package does not report yet."""
+    return _leaf(
+        ("untraced", package),
+        f"{package} model-specific parameters (not traced)",
+        "binary/model parameters",
+        "",
+        None,
+        "uncited",
+        kind="parameter",
+        role="model parameters",
+        note="The package's own parameters (activity, SAFT, K-value ...) are not reported yet.",
+    )
+
+
 def _pseudo_citation(record: Any, prop: str) -> tuple[Citation | None, str]:
     """A pseudo-component constant: its record's provenance note (correlation or user)."""
     note = record.provenance.get(prop)

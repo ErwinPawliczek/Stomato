@@ -41,6 +41,7 @@ from dataclasses import dataclass
 
 from ngdesign.contracts.stream import Phase, PhaseKind, StreamState
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
+from ngdesign.provenance.thermo_hook import TracedThermo
 
 __all__ = [
     "Aga8Dc92Error",
@@ -646,7 +647,7 @@ def aga8_dc92_properties(composition: Mapping[str, float], T: float, P: float) -
     )
 
 
-class Aga8Dc92Package:
+class Aga8Dc92Package(TracedThermo):
     """AGA 8 DC92 gas-phase property package (kind ``thermo``).
 
     Vapour-only adapter over :func:`aga8_dc92_properties`: a single vapour phase
