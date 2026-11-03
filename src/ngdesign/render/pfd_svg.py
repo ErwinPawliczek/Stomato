@@ -77,8 +77,9 @@ def _layout(flowsheet: Flowsheet, overrides: dict[str, XY] | None = None) -> dic
     ]
     layers = topological_layers(tags, edges)
     sizes = {u.tag: _unit_size(u.kind) for u in flowsheet.units}
-    cell_w = max(sizes.values(), key=lambda s: s[0])[0] + H_GAP
-    cell_h = max(sizes.values(), key=lambda s: s[1])[1] + V_GAP
+    # An empty flowsheet (a new blank project) has no sizes: draw an empty sheet.
+    cell_w = max((w for w, _ in sizes.values()), default=0.0) + H_GAP
+    cell_h = max((h for _, h in sizes.values()), default=0.0) + V_GAP
 
     rows: dict[int, list[str]] = {}
     for u in flowsheet.units:

@@ -96,8 +96,17 @@ def build_pid(solved: SolvedFlowsheet, *, k_gas: float) -> PID:
 
 
 def route(pid: PID, layout: dict[str, Any]) -> PipingNetwork:
-    """The S-21 orthogonal router over the built P&ID and the given placements."""
-    net: PipingNetwork = registry.create("router", "orthogonal").route(pid, layout)
+    """The S-21 orthogonal router over the built P&ID and the given placements.
+
+    Raises :class:`UndrawableProjectError` when the router rejects the P&ID as
+    input (e.g. a flowsheet with no equipment has nothing to route between).
+    """
+    try:
+        net: PipingNetwork = registry.create("router", "orthogonal").route(pid, layout)
+    except UndrawableProjectError:
+        raise
+    except ValueError as exc:
+        raise UndrawableProjectError(str(exc)) from exc
     return net
 
 
