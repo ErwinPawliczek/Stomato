@@ -77,11 +77,21 @@ def test_relaxation_meets_the_example_specs(thermo: Thermo) -> None:
     "extra, match",
     [
         ({"initialization": "fast"}, "initialization must be one of"),
-        ({"initialization": "relaxation", "pool_liquids": True}, "pool_liquids"),
+        ({"initialization": "relaxation", "reaction_set": "reactive"}, "reactive stages are refused"),
     ],
 )
 def test_relaxation_refusals(thermo: Thermo, extra: dict[str, Any], match: str) -> None:
     feed, params = _example(thermo)
+    if extra.get("reaction_set") == "reactive":
+        # A valid reaction set (the column parser reads it before the
+        # initialization), so the refusal is the relaxation's own.
+        from ngdesign.units.column_shortcut.reactive_stages import ReactiveStages
+
+        extra = {
+            **extra,
+            "reaction_set": ReactiveStages.example_case()[1]["reaction_set"],
+            "reactive_holdup_m3": {"8": 0.05},
+        }
     with pytest.raises(ColumnSpecError, match=match):
         Column().solve({"feed": feed}, {**params, **extra}, thermo)
 
@@ -209,3 +219,36 @@ def test_steam_stripped_graph_column_converges_from_relaxation(thermo: Thermo) -
     h_in = sum(s.molar_flow * s.enthalpy for s in inlets)
     h_out = sum(s.molar_flow * s.enthalpy for s in outlets)
     assert abs(h_in + res.duty_W - h_out) <= 1e-8 * abs(h_in)
+
+
+def test_pooled_liquid_column_converges_from_relaxation(thermo: Thermo) -> None:
+    """``pool_liquids`` with the relaxation start: the preflash R2 example (the
+    16-cut crude slate at 505.37 K, 2.5 bar; 5 stages, partial condenser, 150
+    of 1000 mol/s as vapour), whose heaviest pseudos split off a second liquid
+    on the PR package. The relaxation runs on one-liquid stage models (the
+    pooled liquid's own fugacity coefficients) and the mesh converges on the
+    pooled surface: the same root as the standard start, which the preflash
+    R2 adapter uses."""
+    from ngdesign.units.refining.preflash_r2 import PreflashR2
+
+    feeds, unit_params = PreflashR2.example_case()
+    f = feeds["feed_in"]
+    feed = thermo.flash_pt(f["composition"], f["T"], f["P"], f["molar_flow"])
+    params = {
+        "n_stages": unit_params["n_stages"],
+        "condenser": "partial",
+        "reboiler": "none",
+        "feed_stage": unit_params["n_stages"],
+        "pressure_profile": feed.P,
+        "specs": {"distillate_rate": unit_params["distillate_rate_mol_s"]},
+        "pool_liquids": True,
+    }
+    std = Column().solve({"feed": feed}, params, thermo)
+    rel = Column().solve({"feed": feed}, {**params, "initialization": "relaxation"}, thermo)
+    assert rel.info["distillate_mol_s"] == pytest.approx(150.0, rel=1e-12)
+    assert rel.duty_W == pytest.approx(std.duty_W, rel=1e-6)
+    for j in range(unit_params["n_stages"]):
+        assert rel.info[f"stage_{j}_T_K"] == pytest.approx(std.info[f"stage_{j}_T_K"], abs=1e-4)
+    vap = rel.outlets["distillate"]
+    for cid, frac in std.outlets["distillate"].composition.items():
+        assert vap.composition[cid] == pytest.approx(frac, rel=1e-5, abs=1e-12), cid

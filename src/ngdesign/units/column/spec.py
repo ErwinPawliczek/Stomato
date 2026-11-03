@@ -534,17 +534,16 @@ _INITIALIZATIONS = ("standard", "relaxation")
 def _parse_initialization(params: Mapping[str, Any]) -> bool:
     """True for ``initialization: relaxation``; refuses what the relaxation cannot carry.
 
-    The relaxation flashes one liquid per stage and carries no reaction
-    source, so pooled-liquid and kinetic columns keep the standard start.
+    The relaxation carries no reaction source, so kinetic columns keep the
+    standard start. A pooled-liquid column relaxes on one-liquid stage models
+    (the pooled liquid's own fugacity coefficients; see relaxation.py): the
+    start only has to lie in the Newton basin, and the mesh then converges on
+    the pooled surface under the column's exact gate.
     """
     raw = params.get("initialization", "standard")
     if raw not in _INITIALIZATIONS:
         raise ColumnSpecError(f"initialization must be one of {_INITIALIZATIONS}, got {raw!r}")
-    if raw == "relaxation" and params.get("pool_liquids", False):
-        raise ColumnSpecError(
-            "initialization 'relaxation' flashes one liquid per stage; pool_liquids is refused"
-        )
-    if raw == "relaxation" and params.get("reactions"):
+    if raw == "relaxation" and params.get("reaction_set") is not None:
         raise ColumnSpecError(
             "initialization 'relaxation' carries no reaction source; reactive stages are refused"
         )
