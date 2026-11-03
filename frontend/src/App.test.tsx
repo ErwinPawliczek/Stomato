@@ -9,7 +9,8 @@ test("opens the project from Home and shows every tab and the slice units from t
   }
   expect(screen.getByRole("heading", { name: "Projects" })).toBeTruthy();
 
-  fireEvent.click(await screen.findByRole("button", { name: /slice/i }));
+  fireEvent.click(await screen.findByRole("button", { name: "Open slice" }));
+  expect(await screen.findByRole("tab", { name: "Flowsheet" })).toBeTruthy();
   for (const label of ["Flowsheet", "Results", "Drawings"]) {
     expect(screen.getByRole("tab", { name: label })).toBeTruthy();
   }

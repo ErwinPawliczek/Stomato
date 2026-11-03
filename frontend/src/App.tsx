@@ -33,7 +33,9 @@ export default function App() {
   // fresh project state fetched here.
   const [refresh, setRefresh] = useState(0);
 
+  // Re-fetch the open project when the agent signals a change (Home owns the list).
   useEffect(() => {
+    if (refresh === 0 || api.openProjectId() === null) return;
     api.getProject().then(setProject).catch((e: Error) => setError(e.message));
   }, [refresh]);
 
@@ -45,8 +47,25 @@ export default function App() {
     setPalette(id);
     savePalette(id);
   };
-  const importProject = async (p: Project) => {
-    setProject(await api.putProject(p));
+  const openProject = (id: string) => {
+    setError(null);
+    api
+      .openProject(id)
+      .then((info) => {
+        setProject(info.project);
+        setTab("flowsheet");
+        setPage("project");
+      })
+      .catch((e: Error) => setError(e.message));
+  };
+  const closeProject = () => {
+    api.closeProject();
+    setProject(null);
+    setPage("home");
+  };
+  const projectDeleted = () => {
+    // Deleting the open project closes it (the client already dropped its id).
+    if (api.openProjectId() === null) setProject(null);
   };
 
   return (
@@ -58,7 +77,7 @@ export default function App() {
             Backend error: {error}
           </p>
         )}
-        {page === "home" && <HomeView project={project} onOpen={() => setPage("project")} onImport={importProject} />}
+        {page === "home" && <HomeView onOpen={openProject} onDeleted={projectDeleted} />}
         {page === "equipment" && <EquipmentView />}
         {page === "sheet" && <SheetView />}
         {page === "agent" && <AgentView />}
@@ -73,7 +92,7 @@ export default function App() {
                   </small>
                 </div>
                 <span className="grow" />
-                <button type="button" className="btn ob" onClick={() => setPage("home")}>
+                <button type="button" className="btn ob" onClick={closeProject}>
                   Close
                 </button>
               </div>
