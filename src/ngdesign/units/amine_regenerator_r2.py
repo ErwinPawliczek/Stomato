@@ -129,10 +129,32 @@ class MdeaRegeneratorR2:
             info=info,
         )
 
+    #: Example kettle vapour, mol/s per 100 mol/s of rich solvent.
+    EXAMPLE_BOILUP = 20.0
+
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
-        """R0's rich solvent (CO2 0.40 / H2S 0.15 mol per mol amine), 6 stages, 20 mol/s boilup."""
-        from ngdesign.units.mdea_regenerator import MdeaRegenerator
+        """R0's rich solvent (CO2 0.40 / H2S 0.15 mol per mol amine), 6 stages, the class's boilup."""
+        from ngdesign.units.mdea_regenerator import DeaRegenerator, MdeaRegenerator, MeaRegenerator
 
-        feeds, _ = MdeaRegenerator.example_case()
-        return feeds, {"n_stages": 6, "boilup_rate": 20.0}
+        r0 = {"MDEA": MdeaRegenerator, "MEA": MeaRegenerator, "DEA": DeaRegenerator}[cls.AMINE]
+        feeds, _ = r0.example_case()
+        return feeds, {"n_stages": 6, "boilup_rate": cls.EXAMPLE_BOILUP}
+
+
+class MeaRegeneratorR2(MdeaRegeneratorR2):
+    """MEA regenerator R2: the reboiled MESH stripper on aqueous MEA.
+
+    Example boilup 40 mol/s: the primary amine binds CO2 as carbamate and needs
+    more stripping vapour (measured: boilup 40 / 50 mol/s converge in 6-8 s; 20
+    and 30 mol/s do not, NS stalls at M = 0.8 - 5.9).
+    """
+
+    AMINE = "MEA"
+    EXAMPLE_BOILUP = 40.0
+
+
+class DeaRegeneratorR2(MdeaRegeneratorR2):
+    """DEA regenerator R2: the reboiled MESH stripper on aqueous DEA."""
+
+    AMINE = "DEA"
