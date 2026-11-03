@@ -13,6 +13,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.registry import register
 
 _FRACTION_TOL = 1e-9
@@ -48,6 +49,22 @@ class Splitter:
                 update={"molar_flow": inlet.molar_flow * f2, "composition": dict(inlet.composition)}
             ),
         }
+        rec = active()
+        if rec is not None:
+            for port, frac in (("outlet_1", f1), ("outlet_2", f2)):
+                rec.derived_state(
+                    outlets[port],
+                    "split_fraction",
+                    {
+                        "F_in": (inlet, "molar_flow"),
+                        "s": frac,
+                        "T": (inlet, "T"),
+                        "P": (inlet, "P"),
+                        "z": (inlet, "composition"),
+                        "h": (inlet, "enthalpy"),
+                    },
+                    note="Outlet = inlet state with flow scaled by its fraction.",
+                )
         return UnitResult(outlets=outlets, duty_W=0.0, power_W=0.0, info={})
 
     @classmethod

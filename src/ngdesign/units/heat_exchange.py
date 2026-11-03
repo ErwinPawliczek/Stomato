@@ -16,6 +16,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.registry import register
 from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 
@@ -43,6 +44,11 @@ class HeatExchanger:
         P_out = inlet.P - dP
         if P_out <= 0:
             raise ValueError(f"dP {dP} leaves a non-positive outlet pressure")
+        rec = active()
+        if rec is not None:
+            if "dP" not in params:
+                rec.default("dP", dP, "Pa", "no pressure drop unless dP is given (spec S-26)")
+            rec.equation("P_out", P_out, "Pa", "pressure_drop", {"P_in": (inlet, "P"), "dP": dP})
 
         z, flow, h_in = inlet.composition, inlet.molar_flow, inlet.enthalpy
         has_T = "T_out" in params
@@ -59,9 +65,26 @@ class HeatExchanger:
             duty_spec = float(params["duty_W"])
             if flow <= 0:
                 raise ValueError("duty_W spec needs a positive inlet flow")
-            outlet = thermo.flash_ph(z, P_out, h_in + duty_spec / flow, flow)
+            h_target = h_in + duty_spec / flow
+            if rec is not None:
+                rec.equation(
+                    "h_out_spec",
+                    h_target,
+                    "J/mol",
+                    "enthalpy_from_duty",
+                    {"h_in": (inlet, "enthalpy"), "Q": duty_spec, "F": (inlet, "molar_flow")},
+                )
+            outlet = thermo.flash_ph(z, P_out, h_target, flow)
 
         duty_W = flow * (outlet.enthalpy - h_in)
+        if rec is not None:
+            rec.equation(
+                "duty_W",
+                duty_W,
+                "W",
+                "steady_flow_energy_balance",
+                {"F": (inlet, "molar_flow"), "h_out": (outlet, "enthalpy"), "h_in": (inlet, "enthalpy")},
+            )
         return UnitResult(
             outlets={"outlet": outlet},
             duty_W=duty_W,

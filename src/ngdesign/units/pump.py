@@ -16,6 +16,7 @@ from typing import Any
 
 from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.registry import register
 
 #: Standard gravity used for head, m (ISO 80000).
@@ -57,7 +58,40 @@ class Pump:
         shaft_W = Q * dP / eta
 
         z, flow = inlet.composition, inlet.molar_flow
-        outlet = thermo.flash_ph(z, P_out, inlet.enthalpy + shaft_W / flow, flow)
+        h_out = inlet.enthalpy + shaft_W / flow
+        rec = active()
+        if rec is not None:
+            if "eta" not in params:
+                rec.default("eta", eta, "1", "pump efficiency 0.65 when eta is not given (spec S-27)")
+            m = rec.equation(
+                "mass_flow",
+                inlet.mass_flow,
+                "kg/s",
+                "mass_flow",
+                {
+                    "F": (inlet, "molar_flow"),
+                    **{f"beta[{p.kind}]": (inlet, f"{p.kind}.mole_fraction") for p in inlet.phases},
+                    **{f"M[{p.kind}]": (inlet, f"{p.kind}.molecular_weight") for p in inlet.phases},
+                },
+            )
+            rec.equation("Q_m3_s", Q, "m3/s", "volumetric_flow", {"m": m, "rho": rho})
+            rec.equation("dP", dP, "Pa", "pressure_drop", {"P_out": P_out, "P_in": (inlet, "P")})
+            rec.equation("power_W", shaft_W, "W", "pump_hydraulic_power", {"Q": Q, "dP": dP, "eta": eta})
+            rec.equation(
+                "h_out",
+                h_out,
+                "J/mol",
+                "enthalpy_from_duty",
+                {"h_in": (inlet, "enthalpy"), "W": shaft_W, "F": flow},
+            )
+            rec.equation(
+                "head_m",
+                dP / (rho * G_STD),
+                "m",
+                "pump_head",
+                {"dP": dP, "rho": rho, "g_n": rec.constant("g_n", G_STD, "m/s2", "bipm_si")},
+            )
+        outlet = thermo.flash_ph(z, P_out, h_out, flow)
         return UnitResult(
             outlets={"outlet": outlet},
             duty_W=0.0,

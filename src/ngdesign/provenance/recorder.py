@@ -85,6 +85,16 @@ _UNITS_BY_NAME: dict[str, str] = {
     "power_W": "W",
     "z": "1",
     "composition": "1",
+    "T_out": "K",
+    "P_out": "Pa",
+    "outlet_P": "Pa",
+    "dP": "Pa",
+    "eta": "1",
+    "eta_isentropic": "1",
+    "vapor_fraction": "1",
+    "fractions": "1",
+    "duty_kW": "kW",
+    "dT_K": "K",
 }
 
 #: (inverse applied to the reported value, forward check, from-unit, to-unit label)
@@ -175,6 +185,11 @@ class _Scope:
     named: dict[str, str] = field(default_factory=dict)  # equation name -> node id
     # value key -> [(event time, call, prop)] for not-yet-materialized thermo results
     lazy: dict[Any, list[tuple[int, _ThermoCall, str]]] = field(default_factory=dict)
+    # id(object) -> [(event time, node id | None, call | None, prop, object)]: identity
+    # matches; the object is kept so its id stays unique while the scope lives
+    ident: dict[int, list[tuple[int, str | None, _ThermoCall | None, str, Any]]] = field(default_factory=dict)
+    # exact float -> input node (params, defaults): the only place 0.0 / +-1.0 may match
+    inputs_by_value: dict[float, str] = field(default_factory=dict)
     calls: list[_ThermoCall] = field(default_factory=list)
     by_obj: dict[int, _ThermoCall] = field(default_factory=dict)
     n_calls: int = 0
@@ -285,8 +300,27 @@ class Recorder:
         if scope is None:
             return
         key = _key(value)
+        when = self._tick() if t is None else t
         if key is not None:
-            scope.table.setdefault(key, []).append((self._tick() if t is None else t, nid))
+            scope.table.setdefault(key, []).append((when, nid))
+        if isinstance(value, float | Mapping) and not isinstance(value, bool):
+            scope.ident.setdefault(id(value), []).append((when, nid, None, "", value))
+
+    def _lookup_identity(self, scope: _Scope, obj: Any, before: int) -> str | None:
+        """The earliest holder of this very object before ``before`` (its origin)."""
+        for t, nid, call, prop, held in scope.ident.get(id(obj), ()):
+            if t >= before or held is not obj:
+                continue
+            if nid is not None:
+                if nid in self.values:
+                    return nid
+                continue
+            if call is not None:
+                self._materialize_call(call, scope)
+                found = self._state_nodes.get(id(call.result), {}).get(prop)
+                if found is not None:
+                    return found
+        return None
 
     def _lookup(self, scope: _Scope, key: Any, before: int) -> str | None:
         """The most recent node (recorded or lazily materialized) with this value before ``before``."""
@@ -399,14 +433,12 @@ class Recorder:
             return
         sc.inlets = dict(inlets)
         for state in inlets.values():
-            nodes = self._materialize_state(state)
-            for prop, nid in nodes.items():
-                self._index(sc, self.values[nid].value if prop != "composition" else state.composition, nid)
+            self._index_state(sc, state, self._materialize_state(state))
         for path, value in _flatten(params):
             nid = self._add_value(
                 f"{tag} {path}",
                 value,
-                _UNITS_BY_NAME.get(path.rsplit(".", 1)[-1], ""),
+                _UNITS_BY_NAME.get(path.rsplit(".", 1)[-1].split("[", 1)[0], ""),
                 "input",
                 "user",
                 citation=self._user_citation(f"unit {tag} parameter {path}"),
@@ -415,6 +447,8 @@ class Recorder:
             )
             sc.params[path] = nid
             self._index(sc, value, nid)
+            if isinstance(value, float):
+                sc.inputs_by_value[value] = nid
 
     def default(self, name: str, value: float, unit: str, note: str) -> ValueRef:
         """A model default the unit applied because the user gave no value."""
@@ -435,6 +469,27 @@ class Recorder:
         if sc is not None:
             sc.named[name] = nid
             self._index(sc, value, nid)
+            sc.inputs_by_value[float(value)] = nid
+        return ValueRef(nid, value)
+
+    def constant(self, name: str, value: float, unit: str, source: str) -> ValueRef:
+        """A physical constant the code uses, cited by a source key (data/provenance/sources.yaml)."""
+        cit = catalogue.source_citation(source)
+        lk = ("constant", name, repr(value), source)
+        nid = self._leaf_cache.get(lk)
+        if nid is None or nid not in self.values:
+            nid = self._add_value(
+                name,
+                value,
+                unit,
+                "constant",
+                "cited" if cit else "uncited",
+                citation=cit,
+                prop=name,
+                owner="model",
+            )
+            self._leaf_cache[lk] = nid
+        self._index(self._scope, value, nid)
         return ValueRef(nid, value)
 
     # ------------------------------------------------------------ thermo calls
@@ -467,10 +522,17 @@ class Recorder:
             sc.lazy = {
                 k: kept for k, hits in sc.lazy.items() if (kept := [h for h in hits if id(h[1]) in keep_ids])
             }
+            sc.ident = {
+                k: kept_ident
+                for k, hits in sc.ident.items()
+                if (kept_ident := [h for h in hits if h[2] is None or id(h[2]) in keep_ids])
+            }
         for prop, value in _result_props(result):
             key = _key(value)
             if key is not None:
                 sc.lazy.setdefault(key, []).append((call.seq, call, prop))
+            if isinstance(value, float | Mapping) and not isinstance(value, bool):
+                sc.ident.setdefault(id(value), []).append((call.seq, None, call, prop, value))
 
     def _params_node(self, package: Any, ids: tuple[str, ...]) -> str | None:
         """The (cached) model-parameter-set node for a package over a component support."""
@@ -609,9 +671,10 @@ class Recorder:
         if producer is None:
             producer = self._add_op("unrecorded", "unrecorded state", unit_tag=tag, owner=owner)
         nodes: dict[str, str] = {}
+        where = self.ops[producer].label
         for prop, value in _state_values(state):
             nid = self._add_value(
-                f"{prop}",
+                f"{where}: {prop}",
                 value,
                 _UNITS_BY_NAME.get(prop.rsplit(".", 1)[-1], ""),
                 "intermediate",
@@ -650,9 +713,15 @@ class Recorder:
             src = self._resolve(spec, sc, role=role)
             if src is not None:
                 self._edge(src, op, role)
-        nodes = self._materialize_state(state, producer=op)
-        for prop, nid in nodes.items():
-            self._index(sc, self.values[nid].value if prop != "composition" else state.composition, nid)
+        self._index_state(sc, state, self._materialize_state(state, producer=op))
+
+    def _index_state(self, sc: _Scope, state: Any, nodes: Mapping[str, str]) -> None:
+        """Register a state's raw property objects (identity and value) in a scope."""
+        t = self._tick()
+        for prop, raw in _state_values(state):
+            nid = nodes.get(prop)
+            if nid is not None:
+                self._index(sc, raw, nid, t)
 
     def bind_stream(self, stream_id: str, state: Any) -> None:
         """Name a state's nodes after the stream the solver stored it as (outputs)."""
@@ -702,8 +771,14 @@ class Recorder:
         if spec is None or isinstance(spec, str | bool):
             return None
         key = _key(spec)
-        if key is not None and scope is not None:
-            nid = self._lookup(scope, key, self._clock + 1 if before is None else before)
+        if scope is not None and isinstance(spec, float | Mapping):
+            limit = self._clock + 1 if before is None else before
+            nid = self._lookup_identity(scope, spec, limit)
+            if nid is None and key is not None:
+                nid = self._lookup(scope, key, limit)
+            if nid is None and key is None and isinstance(spec, float):
+                found = scope.inputs_by_value.get(spec)
+                nid = found if found in self.values else None
             if nid is not None:
                 return nid
             # an inlet-stream / upstream value referenced directly
@@ -856,7 +931,10 @@ class Recorder:
 
     def _resolve_lazy(self, value: float, sc: _Scope) -> str | None:
         key = _key(value)
-        return None if key is None else self._lookup(sc, key, self._clock + 1)
+        if key is None:
+            return None
+        limit = self._clock + 1
+        return self._lookup_identity(sc, value, limit) or self._lookup(sc, key, limit)
 
     def _conversion(self, value: float, sc: _Scope) -> tuple[str, str] | None:
         for expr, inverse, forward in _CONVERSIONS:
@@ -1027,13 +1105,19 @@ def _flatten(params: Mapping[str, Any], prefix: str = "") -> list[tuple[str, Any
             continue
         if isinstance(v, int | float):
             out.append((path, float(v)))
+        elif (
+            isinstance(v, list | tuple)
+            and v
+            and all(isinstance(x, int | float) and not isinstance(x, bool) for x in v)
+        ):
+            out.extend((f"{path}[{i}]", float(x)) for i, x in enumerate(v))
         elif isinstance(v, Mapping):
             if (
                 v
                 and all(isinstance(x, int | float) and not isinstance(x, bool) for x in v.values())
                 and _looks_like_composition(v)
             ):
-                out.append((path, {str(a): float(b) for a, b in v.items()}))
+                out.append((path, v))  # the mapping itself: identity matching needs the object
             else:
                 out.extend(_flatten(v, f"{path}."))
     return out

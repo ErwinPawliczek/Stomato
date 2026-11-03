@@ -21,6 +21,7 @@ from typing import Any
 
 from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active as recorder
 from ngdesign.units.separation._util import combined_liquid, phase_outlet
 
 
@@ -87,8 +88,42 @@ class FlashDrum:
             # scales each phase by reference.molar_flow.
             reference = feed.model_copy(update={"molar_flow": n_in, "composition": z_mix})
 
+        rec = recorder()
+        if rec is not None and len(active_inlets := active) > 1:
+            flows = {f"F[{i}]": (st, "molar_flow") for i, st in enumerate(active_inlets)}
+            rec.equation("F_mix", n_in, "mol/s", "mole_balance_mixing", flows)
+            rec.equation(
+                "z_mix",
+                z_mix,
+                "1",
+                "mole_balance_mixing",
+                {**flows, **{f"z[{i}]": (st, "composition") for i, st in enumerate(active_inlets)}},
+            )
+            rec.equation(
+                "P_mix",
+                P_mix,
+                "Pa",
+                "mixer_pressure",
+                {f"P[{i}]": (st, "P") for i, st in enumerate(active_inlets)},
+            )
+            rec.equation(
+                "h_mix",
+                h_mix0,
+                "J/mol",
+                "adiabatic_mixing",
+                {**flows, **{f"h[{i}]": (st, "enthalpy") for i, st in enumerate(active_inlets)}},
+            )
         if duty_W is not None:
-            flashed = thermo.flash_ph(z_mix, P_out, h_mix0 + float(duty_W) / n_in, n_in)
+            h_target = h_mix0 + float(duty_W) / n_in
+            if rec is not None:
+                rec.equation(
+                    "h_out_spec",
+                    h_target,
+                    "J/mol",
+                    "enthalpy_from_duty",
+                    {"h_in": h_mix0, "Q": float(duty_W), "F": n_in},
+                )
+            flashed = thermo.flash_ph(z_mix, P_out, h_target, n_in)
         elif vapor_fraction is not None:
             flashed = thermo.flash_pvf(z_mix, P_out, float(vapor_fraction), n_in)
         else:
@@ -110,6 +145,13 @@ class FlashDrum:
             "aqueous_out": phase_outlet(thermo, reference, flashed.T, P_out, aqueous),
         }
         h_out_W = sum(s.enthalpy * s.molar_flow for s in outlets.values())
+        if rec is not None:
+            balance: dict[str, object] = {f"F_in[{i}]": (st, "molar_flow") for i, st in enumerate(active)}
+            balance.update({f"h_in[{i}]": (st, "enthalpy") for i, st in enumerate(active)})
+            for port, st in outlets.items():
+                balance[f"F[{port}]"] = (st, "molar_flow")
+                balance[f"h[{port}]"] = (st, "enthalpy")
+            rec.equation("duty_W", h_out_W - h_in_W, "W", "multi_stream_energy_balance", balance)
         return UnitResult(
             outlets=outlets,
             duty_W=h_out_W - h_in_W,

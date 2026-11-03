@@ -344,3 +344,71 @@ column_shortcut:
     - source: gilliland_1940
       citation: "Gilliland, E.R., Multicomponent Rectification: Estimation of the Number of Theoretical Plates as a Function of the Reflux Ratio, Ind. Eng. Chem. 32(9), 1940, 1220-1223."
       doi: 10.1021/ie50369a035
+
+# ---------------------------------------------------------------- unit-specific helpers
+polytropic_head_avg_z:
+  name: Polytropic head (average-Z approximation)
+  latex: 'H_p = \bar Z\,\frac{R\,\bar T}{\bar M}\,\ln\frac{P_\mathrm{out}}{P_\mathrm{in}}'
+  references:
+    - source: schultz_1962
+      citation: "Schultz, J.M., The Polytropic Analysis of Centrifugal Compressors, J. Eng. Power 84(1), 1962, 69-82."
+      doi: 10.1115/1.3673381
+mass_flow:
+  name: Mass flow from molar flow
+  latex: '\dot m = F \sum_k \beta_k M_k / 1000'
+  structural: true
+component_fraction:
+  name: Component mole fraction
+  latex: 'y_i = z_i'
+  structural: true
+mole_ratio:
+  name: Mole fraction to mole ratio
+  latex: 'r = y / (1 - y)'
+  structural: true
+dry_gas_flow:
+  name: Dry-gas molar flow
+  latex: 'F_\mathrm{dry} = F\,(1 - y_\mathrm{H_2O})'
+  structural: true
+gas_water_content:
+  name: Gas water content (GPSA standard-volume convention)
+  latex: 'W = r\,M_\mathrm{H_2O}\,\frac{10^6}{379.49}\ \mathrm{lb/MMscf}'
+  references:
+    - source: gpsa_water_content
+      citation: "GPSA Engineering Data Book (Gas Processors Suppliers Association), water content of natural gas in lb per MMscf at the 379.49 scf/lbmol standard volume (60 F, 14.696 psia), as adopted by spec S-29; the edition is not recorded in the code."
+teg_water_activity:
+  name: TEG water activity (Parrish-Won-Baltatu)
+  latex: 'm = \gamma_w(T, x_w)\,P^{sat}_\mathrm{H_2O}(T) / P,\quad a_w = \gamma_w x_w'
+  references:
+    - source: parrish_won_baltatu_1986
+      citation: "Parrish, W.R., Won, K.W. and Baltatu, M.E., Phase Behavior of the Triethylene Glycol-Water System and Dehydration/Regeneration Design for Extremely Low Dew Point Requirements, Proc. 65th GPA Annual Convention, 1986."
+    - source: filep_2022
+      citation: "Filep, A., Todinca, T. and Dumitrel, A., Chem. Biochem. Eng. Q. 36(1), 2022, 25-38, eqs. 12-17 (parameterization used)."
+    - source: iapws95
+      citation: "Wagner, W. and Pruss, A., The IAPWS Formulation 1995 for the Thermodynamic Properties of Ordinary Water Substance for General and Scientific Use, J. Phys. Chem. Ref. Data 31(2), 2002, 387-535 (water saturation pressure via chemicals)."
+      doi: 10.1063/1.1461829
+equilibrium_water_fraction:
+  name: Equilibrium gas water fraction at the lean end
+  latex: 'y^* = m\,x_w'
+  structural: true
+water_removal:
+  name: Water removed (dry-basis balance)
+  latex: '\dot n_\mathrm{H_2O} = F_\mathrm{dry}\,(r_\mathrm{in} - r_\mathrm{out})'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (material balances)."
+component_transfer:
+  name: Component balance with one transferred species
+  latex: 'n_{\mathrm{H_2O},\mathrm{out}} = n_{\mathrm{H_2O},\mathrm{in}} \pm \dot n,\quad z_i = n_i / \sum_j n_j'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (material balances)."
+solvent_circulation:
+  name: Solvent circulation per unit water removed
+  latex: 'c = \frac{F_\mathrm{TEG} M / \rho}{\dot m_\mathrm{H_2O}}'
+  structural: true
+kremser:
+  name: Kremser equation (stage count)
+  latex: 'N = \frac{\ln\left[\frac{y_\mathrm{in} - m x_\mathrm{top}}{y_\mathrm{out} - m x_\mathrm{top}}\left(1 - \frac1A\right) + \frac1A\right]}{\ln A},\quad A = \frac{L}{m G}'
+  references:
+    - source: treybal_1980
+      citation: "Treybal, R.E., Mass-Transfer Operations, 3rd ed., McGraw-Hill, 1980, sec. 5 (Kremser equation), as cited in ngdesign.sizing.kremser."

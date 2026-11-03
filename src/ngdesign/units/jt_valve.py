@@ -12,6 +12,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.registry import register
 from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 
@@ -49,6 +50,15 @@ class JTValve:
 
         z, flow, h_in = inlet.composition, inlet.molar_flow, inlet.enthalpy
         outlet = thermo.flash_ph(z, P_out, h_in, flow)
+        rec = active()
+        if rec is not None:
+            rec.equation(
+                "dT_K",
+                outlet.T - inlet.T,
+                "K",
+                "temperature_difference",
+                {"T_out": (outlet, "T"), "T_in": (inlet, "T")},
+            )
         return UnitResult(
             outlets={"outlet": outlet},
             duty_W=0.0,

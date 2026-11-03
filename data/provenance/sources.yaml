@@ -159,6 +159,13 @@ sources:
     grade: C
     citation: "ChemSep NRTL binary parameter table (Kooijman, H.A. and Taylor, R., ChemSep), as shipped in thermo 0.6.1 (Interaction Parameters/ChemSep/nrtl.json, IPDB table 'ChemSep NRTL')."
     url: https://github.com/CalebBell/thermo
+  bipm_si:
+    grade: A
+    citation: "Bureau International des Poids et Mesures, The International System of Units (SI), 9th ed., 2019 (standard acceleration of gravity g_n = 9.80665 m/s2, conventional value adopted by the 3rd CGPM, 1901)."
+    url: https://www.bipm.org/en/publications/si-brochure
+  gpsa_std_volume:
+    grade: C
+    citation: "GPSA Engineering Data Book (Gas Processors Suppliers Association): standard gas volume 379.49 scf/lbmol at 60 F and 14.696 psia, as adopted by spec S-29; the edition is not recorded in the code."
   codata2018:
     grade: A
     citation: "Tiesinga, E., Mohr, P.J., Newell, D.B. and Taylor, B.N., CODATA recommended values of the fundamental physical constants: 2018, Rev. Mod. Phys. 93, 2021, 025010."
