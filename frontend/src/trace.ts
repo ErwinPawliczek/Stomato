@@ -127,14 +127,26 @@ export interface TraceLayout {
 }
 
 export const VALUE_R = 13;
+/** Characters of a value label drawn under its circle (the rest is in the tooltip). */
+export const VALUE_LABEL_CHARS = 30;
+/** Characters of an operation name drawn in its box. */
+export const OP_LABEL_CHARS = 32;
 const OP_H = 30;
-const COL_GAP = 120;
-const ROW_H = 64;
+const COL_GAP = 110;
+const SUB_GAP = 24;
+const ROW_H = 58;
 const PAD = 40;
+/** A layer taller than this wraps into side-by-side sub-columns (leaf constants can be 60+). */
+const MAX_ROWS = 18;
 
 /** Width of an operation box for its label (text ~6.4 px/char at 11 px, clamped). */
 export function opWidth(label: string): number {
-  return Math.min(220, Math.max(90, Math.round(Math.min(label.length, 32) * 6.4 + 22)));
+  return Math.min(220, Math.max(90, Math.round(Math.min(label.length, OP_LABEL_CHARS) * 6.4 + 22)));
+}
+
+/** Width a value's label needs under its circle (~5.8 px/char at 10.5 px). */
+function valueLabelWidth(label: string): number {
+  return Math.round(Math.min(label.length, VALUE_LABEL_CHARS) * 5.8);
 }
 
 /**
@@ -214,32 +226,45 @@ export function layoutTrace(graph: TraceGraph, sweeps = 4): TraceLayout {
     }
   }
 
-  const widthOf = (id: string) => (opLabel.has(id) ? opWidth(opLabel.get(id)!) : 2 * VALUE_R);
-  const colW = cols.map((col) => Math.max(2 * VALUE_R, ...col.map(widthOf)));
-  const tallest = Math.max(0, ...cols.map((c) => c.length));
+  // Shape width (where edges attach) vs. the width the node needs in its column (label).
+  const valueLabel = new Map(graph.values.map((v) => [v.id, v.label]));
+  const shapeW = (id: string) => (opLabel.has(id) ? opWidth(opLabel.get(id)!) : 2 * VALUE_R);
+  const spanW = (id: string) => Math.max(shapeW(id), valueLabelWidth(valueLabel.get(id) ?? ""));
+  // A tall layer wraps into k sub-columns of `rows` nodes, keeping the barycentre order
+  // top-to-bottom within each; all sub-columns stay in the same layer.
+  const wrapped = cols.map((col) => {
+    const k = Math.max(1, Math.ceil(col.length / MAX_ROWS));
+    const rows = Math.ceil(col.length / k);
+    return Array.from({ length: k }, (_, j) => col.slice(j * rows, (j + 1) * rows));
+  });
+  const tallest = Math.max(0, ...wrapped.flatMap((subs) => subs.map((c) => c.length)));
   const height = Math.max(1, tallest) * ROW_H + 2 * PAD;
   const nodes: LaidNode[] = [];
   const byId = new Map<string, LaidNode>();
   let x = PAD;
-  cols.forEach((col, l) => {
-    const cx = x + colW[l] / 2;
-    const top = PAD + ((tallest - col.length) * ROW_H) / 2;
-    col.forEach((id, i) => {
-      const isOp = opLabel.has(id);
-      const n: LaidNode = {
-        id,
-        type: isOp ? "op" : "value",
-        layer: l,
-        order: i,
-        x: cx,
-        y: top + i * ROW_H + ROW_H / 2,
-        w: widthOf(id),
-        h: isOp ? OP_H : 2 * VALUE_R,
-      };
-      nodes.push(n);
-      byId.set(id, n);
+  wrapped.forEach((subs, l) => {
+    let order = 0;
+    subs.forEach((col, j) => {
+      const w = Math.max(2 * VALUE_R, ...col.map(spanW));
+      const cx = x + w / 2;
+      const top = PAD + ((tallest - col.length) * ROW_H) / 2;
+      col.forEach((id, i) => {
+        const isOp = opLabel.has(id);
+        const n: LaidNode = {
+          id,
+          type: isOp ? "op" : "value",
+          layer: l,
+          order: order++,
+          x: cx,
+          y: top + i * ROW_H + ROW_H / 2,
+          w: shapeW(id),
+          h: isOp ? OP_H : 2 * VALUE_R,
+        };
+        nodes.push(n);
+        byId.set(id, n);
+      });
+      x += w + (j < subs.length - 1 ? SUB_GAP : COL_GAP);
     });
-    x += colW[l] + COL_GAP;
   });
   const width = Math.max(x - COL_GAP + PAD, 2 * PAD);
   const edges: LaidEdge[] = graph.edges

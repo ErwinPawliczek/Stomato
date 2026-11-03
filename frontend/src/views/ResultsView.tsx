@@ -1,9 +1,22 @@
 import { useState } from "react";
-import { ApiError, api, type SolvedFlowsheet } from "../api/client";
+import type { ReactNode } from "react";
+import { ApiError, api, type SolvedFlowsheet, type TraceTarget } from "../api/client";
 import { formatNumber, toDegC, toKPaG, toKmolH, toKw, toVaporFraction } from "../units";
 
-/** Layer 2: solve the slice and show stream states plus unit duty/power. */
-export function ResultsView() {
+/** A result number; with `onTrace` it is a button that opens the Trace view on that value. */
+function Traced({ target, onTrace, children }: { target: TraceTarget; onTrace?: (t: TraceTarget) => void; children: ReactNode }) {
+  if (!onTrace) return <>{children}</>;
+  const of = "stream" in target ? target.stream : target.unit;
+  return (
+    <button type="button" className="tracelink" title={`Trace ${of} ${target.prop}`} onClick={() => onTrace(target)}>
+      {children}
+    </button>
+  );
+}
+
+/** Layer 2: solve the slice and show stream states plus unit duty/power. Clicking a number
+ * calls `onTrace` with the value it shows (stream + prop, or unit + prop). */
+export function ResultsView({ onTrace }: { onTrace?: (t: TraceTarget) => void } = {}) {
   const [result, setResult] = useState<SolvedFlowsheet | null>(null);
   const [solving, setSolving] = useState(false);
   const [solverUnavailable, setSolverUnavailable] = useState(false);
@@ -65,10 +78,26 @@ export function ResultsView() {
                 {streams.map(([id, st]) => (
                   <tr key={id} data-stream={id}>
                     <td>{id}</td>
-                    <td>{toDegC(st.T)}</td>
-                    <td>{toKPaG(st.P)}</td>
-                    <td>{toKmolH(st.molar_flow)}</td>
-                    <td>{toVaporFraction(st.vapor_fraction)}</td>
+                    <td>
+                      <Traced target={{ stream: id, prop: "T" }} onTrace={onTrace}>
+                        {toDegC(st.T)}
+                      </Traced>
+                    </td>
+                    <td>
+                      <Traced target={{ stream: id, prop: "P" }} onTrace={onTrace}>
+                        {toKPaG(st.P)}
+                      </Traced>
+                    </td>
+                    <td>
+                      <Traced target={{ stream: id, prop: "molar_flow" }} onTrace={onTrace}>
+                        {toKmolH(st.molar_flow)}
+                      </Traced>
+                    </td>
+                    <td>
+                      <Traced target={{ stream: id, prop: "vapor_fraction" }} onTrace={onTrace}>
+                        {toVaporFraction(st.vapor_fraction)}
+                      </Traced>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -89,8 +118,16 @@ export function ResultsView() {
                 {units.map(([tag, ur]) => (
                   <tr key={tag} data-tag={tag}>
                     <td>{tag}</td>
-                    <td>{toKw(ur.duty_W)}</td>
-                    <td>{toKw(ur.power_W)}</td>
+                    <td>
+                      <Traced target={{ unit: tag, prop: "duty_W" }} onTrace={onTrace}>
+                        {toKw(ur.duty_W)}
+                      </Traced>
+                    </td>
+                    <td>
+                      <Traced target={{ unit: tag, prop: "power_W" }} onTrace={onTrace}>
+                        {toKw(ur.power_W)}
+                      </Traced>
+                    </td>
                     <td>
                       {/* Plugin-authored readouts (hydrate margins, MDEA loadings,
                           per-stage pressures) rendered generically: key=value. */}
@@ -99,7 +136,9 @@ export function ResultsView() {
                       ) : (
                         Object.entries(ur.info).map(([k, v]) => (
                           <span key={k} className="muted" data-info-key={k}>
-                            {k}={formatNumber(v)}{" "}
+                            <Traced target={{ unit: tag, prop: `info.${k}` }} onTrace={onTrace}>
+                              {k}={formatNumber(v)}
+                            </Traced>{" "}
                           </span>
                         ))
                       )}
