@@ -24,10 +24,13 @@ from ngdesign.provenance.model import TraceGraph
 from ngdesign.provenance.recorder import recording
 
 #: (catalogue row, level) pairs whose unit records its own equations.
-INSTRUMENTED = [
+REACTORS = [
     "conversion_reactor/R0",
     "yield_reactor/R0",
 ]
+COLUMNS: list[str] = []
+EXCHANGERS: list[str] = []
+INSTRUMENTED = REACTORS + COLUMNS + EXCHANGERS
 
 _TAG = "U-101"
 

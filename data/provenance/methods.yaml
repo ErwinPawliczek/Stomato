@@ -452,3 +452,7 @@ kremser:
   references:
     - source: treybal_1980
       citation: "Treybal, R.E., Mass-Transfer Operations, 3rd ed., McGraw-Hill, 1980, sec. 5 (Kremser equation), as cited in ngdesign.sizing.kremser."
+
+# ---------------------------------------------------------------- columns (unit instrumentation)
+
+# ---------------------------------------------------------------- heat exchangers (unit instrumentation)
