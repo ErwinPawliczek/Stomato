@@ -358,10 +358,10 @@ class TestNaphthaHydrotreater:
 
 
 def test_planned_levels_refuse_and_name_implemented_ones(thermo: Thermo) -> None:
-    """naphtha_ht and reformer_cat R1 are implemented now; these rows still plan R2."""
+    """naphtha_ht, reformer_cat R1 and vacuum_column R2 are implemented; crude_column plans R2."""
     from ngdesign.units.levels import UnitLevelNotImplemented
 
-    for unit_id in ("crude_column", "vacuum_column"):
+    for unit_id in ("crude_column",):
         unit = registry.create("unit", unit_id)
         with pytest.raises(UnitLevelNotImplemented, match="R0"):
             unit.solve({}, {"model": "R2"}, thermo)

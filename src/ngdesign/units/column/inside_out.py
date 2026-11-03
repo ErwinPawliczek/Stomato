@@ -198,6 +198,9 @@ class _Column:
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
     t_band_hi: float = 600.0
+    #: Cold start by relaxation (``initialization: relaxation``); False keeps
+    #: the standard feed-flash seed exactly.
+    relaxation: bool = False
 
     @property
     def is_graph(self) -> bool:
@@ -413,6 +416,7 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         col.stage_q = [0.0] * col.n
         for heater in col_params.stage_heaters:
             col.stage_q[heater.stage - 1] = heater.duty_W
+    col.relaxation = col_params.relaxation
     if col_params.reactions is not None:
         col.reactions = col_params.reactions
         col.rx_source = [{} for _ in range(col.n)]
@@ -448,6 +452,29 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
             t_kettle = tb.bubble_temperature(_flash_ready(xb, col.feed_comp), col.pressures[-1])
             if t_kettle is not None:
                 col.t_band_hi = max(col.t_band_hi, t_kettle + 15.0)
+        if col.condenser != "none":
+            # A condenser sits BELOW every feed temperature by its own
+            # separation, not by a fixed 30 K: a wide-boiling feed's condenser
+            # can run 100 K and more under the feed (measured: a 5-stage
+            # partial-condenser preflash of a 14-species crude slate at 2.5 bar,
+            # feed 505 K - the converged top stage sits at 383 K, so the
+            # feed-based floor of 475 K held every stage on the band and the
+            # mesh could only stall at M = 1.0). The floor extends the way the
+            # two-tear band's does: to the lightest component's saturation
+            # temperature at the top pressure, 10 K beyond.
+            ext = _extreme_seed(col, tb)
+            if ext is not None:
+                col.t_band_lo = min(col.t_band_lo, ext[0] - 10.0)
+        if col.relaxation:
+            # A pumparound returns subcooled liquid: its fixed return
+            # temperature is a cold inlet like a feed's, and the stage it
+            # lands on can sit far under every feed (measured: a 6-stage
+            # vacuum column fed at 653 K with a 450 K top pumparound - the
+            # feed-based floor of 623 K clamped the top stage on the band).
+            # Relaxation columns only: the standard path's band is unchanged.
+            returns = [pa.return_T_K for pa in col.pumparounds if pa.return_T_K is not None]
+            if returns:
+                col.t_band_lo = min(col.t_band_lo, min(returns) - 30.0)
         return col
     t_top, t_bot = _temperature_seed(col, tb)
     if t_bot > t_top + 20.0:
@@ -773,7 +800,12 @@ def _nearest_feed_phase(col: _Column, j: int, vapor: bool) -> dict[str, float]:
 
 
 def _seed_profile(
-    col: _Column, tb: _ThermoBox, t_top: float, t_bot: float, v_bot_tear: float | None = None
+    col: _Column,
+    tb: _ThermoBox,
+    t_top: float,
+    t_bot: float,
+    v_bot_tear: float | None = None,
+    mixed_flash: bool = True,
 ) -> _Profile:
     """Starting profile: feed-traffic seed for zero/one-tear columns (spec C),
     the distillation-shaped seed for two-tear columns (unchanged).
@@ -783,6 +815,11 @@ def _seed_profile(
     every stage, so it belongs in every stage's vapour-traffic sum - without it
     the stages above the kettle seed at the flow floor and the first sweeps
     solve from a degenerate column.
+
+    ``mixed_flash=False`` skips the adiabatic mixed-feed flash of zero/one-tear
+    columns (the nearest-feed phases seed x and y instead): the relaxation
+    start relaxes whatever it is given, and on a 48-species crude slate that
+    flash's 40-step bisection costs ~80 s of Michelsen stability tests.
     """
     n = col.n
     if col.n_tears < 2:
@@ -795,7 +832,7 @@ def _seed_profile(
         l0 = max(0.5 * vapour[0], _FLOW_FLOOR) if col.condenser == "total" else 0.0
         temps = [t_top + (t_bot - t_top) * (j / max(n - 1, 1)) for j in range(n)]
         mixed = None
-        if not _is_reactive_package(tb):
+        if mixed_flash and not _is_reactive_package(tb):
             # Multi-feed columns seed each stage's x from the nearest feed's
             # flashed phase. When those phases bracket the band - a lean
             # solvent flashing as near-pure liquid (bubble point above the

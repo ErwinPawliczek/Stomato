@@ -300,6 +300,9 @@ class _Params:
     #: Two liquids per stage, carried as one pooled liquid (False = first
     #: liquid only, the plain column exactly).
     pool_liquids: bool = False
+    #: Cold start by relaxation (``initialization: relaxation``; False = the
+    #: standard feed-flash seed, the plain column exactly).
+    relaxation: bool = False
 
 
 def _positive(value: Any, name: str) -> float:
@@ -519,7 +522,33 @@ def _parse_params(params: dict[str, Any], graph_feed: dict[str, Any] | None) -> 
         stage_heaters=heaters,
         reactions=_parse_reactions(params, n_stages),
         pool_liquids=_parse_pool_liquids(params),
+        relaxation=_parse_initialization(params),
     )
+
+
+#: Cold-start choices (``initialization``): the feed-flash seed, or the
+#: relaxation start for wide-boiling columns (``relaxation.py``).
+_INITIALIZATIONS = ("standard", "relaxation")
+
+
+def _parse_initialization(params: Mapping[str, Any]) -> bool:
+    """True for ``initialization: relaxation``; refuses what the relaxation cannot carry.
+
+    The relaxation flashes one liquid per stage and carries no reaction
+    source, so pooled-liquid and kinetic columns keep the standard start.
+    """
+    raw = params.get("initialization", "standard")
+    if raw not in _INITIALIZATIONS:
+        raise ColumnSpecError(f"initialization must be one of {_INITIALIZATIONS}, got {raw!r}")
+    if raw == "relaxation" and params.get("pool_liquids", False):
+        raise ColumnSpecError(
+            "initialization 'relaxation' flashes one liquid per stage; pool_liquids is refused"
+        )
+    if raw == "relaxation" and params.get("reactions"):
+        raise ColumnSpecError(
+            "initialization 'relaxation' carries no reaction source; reactive stages are refused"
+        )
+    return bool(raw == "relaxation")
 
 
 def _parse_pool_liquids(params: Mapping[str, Any]) -> bool:

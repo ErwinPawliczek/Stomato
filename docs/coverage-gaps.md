@@ -9,7 +9,7 @@ registry implements. A level or method listed here is listed but not implemented
 | | listed | implemented | open |
 |---|---|---|---|
 | Unit rows | 84 | 84 | 0 |
-| Planned rigour levels on implemented units | | | 3 |
+| Planned rigour levels on implemented units | | | 1 |
 | Property methods in the plan | 168 | 160 | 8 |
 
 Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
@@ -22,9 +22,7 @@ None.
 
 | unit | level | note |
 |---|---|---|
-| `crude_column` | R2 | MESH with side strippers, pumparounds, stripping steam, overflash; S0-1c steps 3-4 are in (side_strippers and condenser_water_decant solve simultaneously on the stage graph), but the cold start of a wide-boiling two-tear column is not - measured on a 10-stage nC5/nC8/nC11/nC14 total condenser column with a 3-stage steam stripper at 1.5 bar, the plain mesh and the graph Newton from a Fenske-shaped seed both stall at M 0.86-1.0 (36-78 s); and on pseudo-component cost (see the preflash row) |
-| `vacuum_column` | R2 | MESH with pumparounds, no condenser, wash zone; re-measured on the P1-13 tree - a zero-tear 6-stage column on the 19-pseudo example feed (40 mmHg, a 450 K wash of the same oil on stage 1) now finishes, but does not converge (65 s; the sweeps sit at M ~ 1.0 with H ~ 10, NS stalls at M = 1.0, H = 0.43) |
-| `preflash` | R2 | short MESH; re-measured on the P1-13 tree - a PT flash of the 48-species example feed costs ~2 s on the PR package (Michelsen stability tests dominate), so one flash-surface sweep of a 5-stage partial-condenser column (D = 150 mol/s) takes ~260 s; on the fugacity surface the sweeps take ~0.1 s but diverge (M ~ 1.5, H ~ 1.3) and Naphtali-Sandholm stalls at M = 1.0 after 25 passes. Re-measured after S0-1c on coarser cuts of the same assay (5 stages, partial condenser, no reboiler, D = 15 of 100 mol/s at 505 K, 2.5 bar) - with 14 species the plain mesh stalls at M = 1.0 (10 s) and the stage-graph Newton from a Fenske-shaped seed at M = 2.6 (17 s); with 22 species the graph Newton at M = 3.7 (46 s). The blocker is a cold start for wide-boiling feeds, not the per-flash cost alone |
+| `crude_column` | R2 | MESH with side strippers, pumparounds, stripping steam, overflash; the column's relaxation start (initialization relaxation, over the whole stage graph) now converges a crude-shaped graph - 10 stages nC5/nC8/nC11/nC14 at 1.5 bar, partial condenser, no reboiler, bottom steam, one 3-stage steam stripper (11 s; the standard start lands on a free-water branch, 42 s). Blocker re-measured on the R0 crude cut into 16 pseudos (22 species, 12 stages, kero/diesel/AGO strippers at the R0 cut-point rates, 631.75 K, 2 bar) - after Newton from the relaxed main column stalls, the inside-out fallback dies inside the PR package's PT flash (UnconvergedError, End of SS without convergence, 37 s); and the slate's heavy-end second liquid (see preflash R2) needs pooled stage liquids, which the relaxation start does not carry |
 
 ## Property methods listed but not closed
 

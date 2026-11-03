@@ -28,6 +28,7 @@ from .inside_out import (
 )
 from .linalg import _gauss
 from .naphtali_sandholm import _naphtali_sandholm
+from .relaxation import _relaxation_profile
 from .spec import (
     _BAND_LIMIT_EPS,
     _CONTINUATION_MIN_STEP,
@@ -253,6 +254,16 @@ def _solve_mesh_at_heat(
         m_tol = _MESH_M_TOL
     patience = _STAGNATION_MAX_ZERO_ONE_TEAR if zero_one else _STAGNATION_MAX
     prof: _Profile | None = None
+    if seed is None and col.relaxation and not _is_reactive_package(tb):
+        # ``initialization: relaxation``: the cold start is the stage-flash
+        # relaxation of the standard seed (relaxation.py), and the mesh runs
+        # warm from it - the relaxed profile is a physical, near-converged
+        # state, exactly what the warm path is built for.
+        t_top_seed, t_bot_seed = _temperature_seed(col, tb)
+        start = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot, mixed_flash=False)
+        _apply_tears(col, start, t_top, t_bot)
+        start.L = _l_profile(col, start.l0, start.V)
+        seed = _relaxation_profile(col, tb, start)
     if seed is None:
         t_top_seed, t_bot_seed = _temperature_seed(col, tb)
         prof = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot)
@@ -519,6 +530,11 @@ def _graph_mesh_once(
     # or the warm seed's earlier passes are not this mesh's).
     prof.ns_trace, prof.ns_passes = [], 0
     _apply_tears(col, prof, t_top, t_bot)
+    if seed is None and col.relaxation and col.wall is None:
+        # ``initialization: relaxation``: relax the sequential seed over the
+        # whole graph - the sections' draw-state seed is what the graph
+        # Newton could not leave on a wide-boiling column (relaxation.py).
+        prof = _relaxation_profile(col, tb, prof)
     try:
         _graph_naphtali_sandholm(
             col, tb, prof, t_bot if col.reboiler == "kettle" else None, top_vapour, ns_max=ns_max
@@ -575,6 +591,11 @@ def _solve_graph_reflux_distillate(
     )
     try:
         prof = _seed_sections(col, _solve_specs(main, tb, main_params))
+        if col.relaxation and col.wall is None:
+            # The draw-state section seed relaxed over the whole graph at the
+            # main solve's reflux and boilup (relaxation.py); the top-vapour
+            # walk then moves V_1 onto L_0 + D + W from there.
+            prof = _relaxation_profile(col, tb, prof)
     except (ColumnConvergenceError, ColumnSpecError, ValueError):
         prof = _solve_graph_mesh(col, tb, l0, l0 + 0.2 * col.f_total, None)
     w = 0.0
@@ -619,6 +640,8 @@ def _walk_top_vapour(col: _Column, tb: _ThermoBox, start: _Profile, l0: float, t
 _DECANT_PIN_MAX = 8
 #: Settled when W moves by less than this fraction of D between re-solves.
 _DECANT_PIN_TOL = 1e-9
+#: Floor of the relaxation start's boilup estimate, as a fraction of the total feed.
+_RELAX_BOILUP_FLOOR = 0.05
 
 
 def _seed_main_mesh(main: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None) -> _Profile:
@@ -989,6 +1012,16 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         # every stage two-phase and the mesh converges robustly there; the warm-
         # started secant then walks the kettle tear down to the specification.
         t_bot = t_top + col.f_total * 0.2
+        if col.relaxation and d_spec is not None:
+            # Relaxation start: the boilup the pinned top vapour implies under
+            # constant molar overflow, V_N = L_0 + D - (feed vapour), floored.
+            # The high-traffic guess above is no seed for a wide-boiling feed
+            # that arrives largely vaporised: measured on a 10-stage
+            # nC5-nC14 column at 1.5 bar (R = 2, D = 20 of 100 mol/s), the
+            # guess V_N = 60 leaves the kettle no liquid (V_1 ~ 141, D ~ 100)
+            # and no mesh exists there to converge to.
+            f_vap = sum(part.v_flow for part in col.feeds[: col.n])
+            t_bot = max(t_top + float(d_spec) - f_vap, _RELAX_BOILUP_FLOOR * col.f_total)
 
     state: dict[str, _Profile | None] = {"seed": None, "seed2": None}
 
