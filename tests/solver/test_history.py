@@ -22,6 +22,8 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Callable
 
+import pytest
+
 from ngdesign import registry
 from ngdesign.contracts import Flowsheet, SolvedFlowsheet
 from ngdesign.contracts.diagnostics import BlockRecord, TearRecord
@@ -40,6 +42,7 @@ def _torn_block(solved: SolvedFlowsheet) -> BlockRecord:
     return blocks[0]
 
 
+@pytest.mark.timeout(600)  # 82 s measured on a loaded runner; the 120 s default is load sensitive
 def test_recycle_bench_history() -> None:
     solved = _solve(recycle_bench.build)
     assert solved.converged is True
