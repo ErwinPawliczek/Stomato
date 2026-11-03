@@ -790,6 +790,14 @@ def _parse_side_strippers(params: Mapping[str, Any], n_stages: int) -> list[_Sid
                 product_rate=product_rate,
             )
         )
+    seen_draws: dict[int, str] = {}
+    for stripper in strippers:
+        if stripper.draw_stage in seen_draws:
+            raise ColumnSpecError(
+                f"side_strippers: {seen_draws[stripper.draw_stage]!r} and {stripper.name!r} both draw "
+                f"from stage {stripper.draw_stage}; give each stripper its own draw tray"
+            )
+        seen_draws[stripper.draw_stage] = stripper.name
     draw_names = set()
     for d in params.get("draws", []) or []:
         if isinstance(d, Mapping) and d.get("name") is not None:

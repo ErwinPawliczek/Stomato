@@ -10,8 +10,8 @@ profile, which R0 cannot see, sets the K-values.
 
 **This is the section alone.** The draw and the steam are inlets. It couples to a
 main column only through the flowsheet's recycle on ``overhead_out``; the
-simultaneous stripper solve of spec S0-1c is a different thing and the column
-still refuses it. A stage holding free water is refused
+simultaneous stripper solve of spec S0-1c (the column's ``side_strippers``) is a
+different thing. A stage holding free water is refused
 (:class:`SideStripR2Error`): the stage liquid here is one hydrocarbon liquid, and
 reporting free water as dissolved is what S0-1c forbids. ``three_phase_stages``
 models that case.

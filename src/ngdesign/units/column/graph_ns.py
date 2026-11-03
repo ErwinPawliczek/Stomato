@@ -46,10 +46,12 @@ import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
 
+from .decant import decant_split
 from .inside_out import (
     _Column,
     _exact_residuals,
     _Interlink,
+    _live_pumparounds,
     _pa_return_terms,
     _pa_stage_flows,
     _Profile,
@@ -129,9 +131,9 @@ class _GraphModel:
     draw_stage_of_link: list[int]
     #: Section top stage (0-based) that each liquid interlink feeds.
     section_top_of_link: list[int]
-    #: Main return stage (0-based) -> section top stage (0-based) whose vapour
-    #: lands there.
-    vapour_return_at: dict[int, int]
+    #: Main return stage (0-based) -> section top stages (0-based) whose vapour
+    #: lands there (several strippers may return to one stage).
+    vapour_return_at: dict[int, tuple[int, ...]]
     #: Main draw stage (0-based) -> liquid interlink position.
     draw_link_at_stage: dict[int, int]
     #: Section top stage (0-based) -> liquid interlink position.
@@ -150,9 +152,11 @@ class _GraphModel:
     #: Stages carrying an H row: every graph stage except the main tear stages
     #: (a partial condenser's and a kettle's balances define qc/qr instead).
     h_stages: frozenset[int]
+    #: A partial condenser's pinned top vapour (the top tear), None otherwise.
+    v_top_pin: float | None = None
 
 
-def _graph_model(col: _Column, kettle_free: bool = False) -> _GraphModel:
+def _graph_model(col: _Column, kettle_free: bool = False, v_top_pin: float | None = None) -> _GraphModel:
     """Build the static graph structure and unknown layout for one solve.
 
     ``kettle_free`` (standalone mode): with no caller tear the kettle boilup
@@ -171,6 +175,17 @@ def _graph_model(col: _Column, kettle_free: bool = False) -> _GraphModel:
     }
     if kettle_free:
         tears.discard(col.n - 1)
+    # Stages whose balance defines a duty (no H row): the tear stages, except
+    # in the total condenser's top-vapour mode below.
+    duty_stages = set(tears)
+    if v_top_pin is not None and col.condenser == "total":
+        # Top-vapour mode (S0-1c): V_1 = L_0 + D is pinned - the distillate
+        # fixed exactly, as a partial condenser's top tear fixes it - and the
+        # kettle boilup is a Newton unknown. Stage 1 keeps its H row (a
+        # total condenser's stage 1 is an ordinary tray) and the kettle's
+        # balance still defines qr.
+        tears = {0}
+        duty_stages = {col.n - 1} if col.reboiler == "kettle" else set()
     v_free = [j for j in range(g) if j not in tears]
     draw_links = [lk for lk in col.interlinks if lk.phase == "liquid"]
     t_base = g * nc
@@ -206,7 +221,10 @@ def _graph_model(col: _Column, kettle_free: bool = False) -> _GraphModel:
 
     draw_stage_of_link = [lk.from_stage for lk in draw_links]
     section_top_of_link = [lk.to_stage for lk in draw_links]
-    vapour_return_at = {lk.to_stage: lk.from_stage for lk in col.interlinks if lk.phase == "vapour"}
+    vapour_return_at: dict[int, tuple[int, ...]] = {}
+    for lk in col.interlinks:
+        if lk.phase == "vapour":
+            vapour_return_at[lk.to_stage] = (*vapour_return_at.get(lk.to_stage, ()), lk.from_stage)
     draw_link_at_stage = {lk.from_stage: k for k, lk in enumerate(draw_links)}
     link_at_top = {lk.to_stage: k for k, lk in enumerate(draw_links)}
     section_duty_at: dict[int, float] = {}
@@ -221,7 +239,7 @@ def _graph_model(col: _Column, kettle_free: bool = False) -> _GraphModel:
         rate = sec_hit.stripper.product_rate
         assert rate is not None  # the parser requires a product rate per section
         section_total_rows.append((k, link.to_stage, sec_hit.bottom_stage - 1, rate))
-    h_stages = frozenset(j for j in range(g) if j not in tears)
+    h_stages = frozenset(j for j in range(g) if j not in duty_stages)
     return _GraphModel(
         col=col,
         layout=layout,
@@ -238,6 +256,7 @@ def _graph_model(col: _Column, kettle_free: bool = False) -> _GraphModel:
         pa_in=pa_in,
         section_total_rows=section_total_rows,
         h_stages=h_stages,
+        v_top_pin=v_top_pin if col.condenser in ("partial", "total") else None,
     )
 
 
@@ -258,6 +277,12 @@ def _graph_liquid_profile(
     cum = 0.0
     for j in range(col.n):
         cum += model.feeds[j].total - col.draw_l[j] - col.draw_v[j] - draw_out.get(j, 0.0)
+        if j in model.vapour_return_at:
+            # The section's returned top vapour is an inflow to the return
+            # stage's total balance like a feed: without it every main liquid
+            # at and below the return stage misses that vapour and the return
+            # stage's M rows cannot close (S0-1c step 3).
+            cum += sum(vs[top] for top in model.vapour_return_at[j])
         if col.pumparounds:
             cum += model.pa_in[j] - model.pa_out[j]
         v_above = vs[j + 1] if j + 1 < col.n else 0.0
@@ -274,6 +299,24 @@ def _graph_liquid_profile(
             v_below = vs[s + 1] if pos + 1 < len(chain) else 0.0
             out.append(max(draw_flows[link] + cum_s + v_below - vs[top], _FLOW_FLOOR))
     return out
+
+
+def _reflux_split(
+    col: _Column, tb: _ThermoBox, y0: dict[str, float], t0: float
+) -> tuple[dict[str, float], float]:
+    """The total condenser's (reflux liquid composition, free-water fraction
+    of V_1) - the decant split (``decant.decant_split``) when the column
+    decants, else (y_1, 0) exactly. Memoized per solve on (y_1, T_1, P_1)."""
+    if not col.water_decant:
+        return y0, 0.0
+    key = (tuple(sorted(y0.items())), t0, col.pressures[0])
+    hit = col.decant_memo.get(key)
+    if hit is None:
+        # The split is taken at the stage-1 temperature, the state the total
+        # condenser returns its reflux at (see ``decant``).
+        hit = decant_split(tb, _flash_ready(y0, col.feed_comp), t0, col.pressures[0])
+        col.decant_memo[key] = hit
+    return hit
 
 
 def _graph_k_args(model: _GraphModel, s: int) -> tuple[_StageFeed, float]:
@@ -400,18 +443,21 @@ def _graph_residual_vector(
         donor = model.liquid_donor[s]
         vap_donor = model.vapour_donor[s]
         link_in = model.link_at_top.get(s)
+        x_reflux = y_eq[0]
+        if s == 0 and col.condenser == "total" and col.water_decant:
+            # S0-1c step 4: the reflux is the decanted hydrocarbon liquid.
+            x_reflux, _phi = _reflux_split(col, tb, y_eq[0], ts[0])
         for i, cid in enumerate(col.comps):
             inflow = 0.0
             if s == 0 and col.condenser == "total":
-                inflow = l0 * y_eq[0].get(cid, 0.0)
+                inflow = l0 * x_reflux.get(cid, 0.0)
             elif donor is not None:
                 inflow = liquid[donor] * xs[donor].get(cid, 0.0)
             if link_in is not None:
                 inflow = links[link_in]["to_stage"][cid]
             if vap_donor is not None:
                 inflow += vs[vap_donor] * y_eq[vap_donor].get(cid, 0.0)
-            if s in model.vapour_return_at:
-                ret_top = model.vapour_return_at[s]
+            for ret_top in model.vapour_return_at.get(s, ()):
                 inflow += vs[ret_top] * y_eq[ret_top].get(cid, 0.0)
             inflow += part.l_flow * part.x.get(cid, 0.0) + part.v_flow * part.y.get(cid, 0.0)
             for ret_j, draw_j, pa_flow in pa_ret:
@@ -422,7 +468,7 @@ def _graph_residual_vector(
                 liquid[s]
                 + (col.draw_l[s] if s < col.n else 0.0)
                 + own_draw
-                + (model.pa_out[s] if col.pumparounds else 0.0)
+                + (model.pa_out[s] if col.pumparounds and s < col.n else 0.0)
             ) * xs[s].get(cid, 0.0)
             outflow += (vs[s] + (col.draw_v[s] if s < col.n else 0.0)) * y_eq[s].get(cid, 0.0)
             if scales is not None:
@@ -452,23 +498,34 @@ def _graph_residual_vector(
             h_in += draw_flows[link_in] * tb.h_liquid(
                 _flash_ready(xs[d], col.feed_comp), ts[d], col.pressures[d]
             )
-        if s in model.vapour_return_at:
-            ret_top = model.vapour_return_at[s]
+        for ret_top in model.vapour_return_at.get(s, ()):
             h_in += vs[ret_top] * tb.h_vapor(
                 _flash_ready(y_eq[ret_top], col.feed_comp), ts[ret_top], col.pressures[ret_top]
             )
         h_in += part.h_flow
         if s == 0 and col.condenser == "total":
-            h_in += l0 * tb.h_liquid(_flash_ready(y_eq[0], col.feed_comp), ts[0], col.pressures[0])
+            h_in += l0 * tb.h_liquid(_flash_ready(x_reflux, col.feed_comp), ts[0], col.pressures[0])
         h_in += model.section_duty_at.get(s, 0.0)
         if col.pumparounds:
-            for ret_j, draw_j, pa_flow in pa_ret:
-                if ret_j == s:
-                    h_in += pa_flow * tb.h_liquid(
-                        _flash_ready(xs[draw_j], col.feed_comp),
-                        ts[draw_j],
-                        col.pressures[draw_j],
+            # The dense residual's pumparound algebra: the return carries the
+            # draw liquid's enthalpy shifted by the cooler duty (or taken at
+            # the fixed return temperature), at the draw-stage pressure.
+            for idx, pa in _live_pumparounds(col):
+                if pa.return_stage - 1 != s:
+                    continue
+                d_idx = pa.draw_stage - 1
+                x_d = _flash_ready(xs[d_idx], col.feed_comp)
+                flow = col.pa_flows[idx]
+                if pa.return_T_K is not None:
+                    h_ret = tb.h_liquid(x_d, pa.return_T_K, col.pressures[d_idx])
+                else:
+                    h_ret = (
+                        tb.h_liquid(x_d, ts[d_idx], col.pressures[d_idx])
+                        + (pa.duty_W if pa.duty_W is not None else 0.0) / flow
                     )
+                h_in += flow * h_ret
+        if col.stage_q and s < col.n:
+            h_in += col.stage_q[s]
         own_draw = draw_flows[model.draw_link_at_stage[s]] if s in model.draw_link_at_stage else 0.0
         h_out = (vs[s] + (col.draw_v[s] if s < col.n else 0.0)) * tb.h_vapor(
             _flash_ready(y_eq[s], col.feed_comp), ts[s], col.pressures[s]
@@ -476,7 +533,7 @@ def _graph_residual_vector(
             liquid[s]
             + (col.draw_l[s] if s < col.n else 0.0)
             + own_draw
-            + (model.pa_out[s] if col.pumparounds else 0.0)
+            + (model.pa_out[s] if col.pumparounds and s < col.n else 0.0)
         ) * tb.h_liquid(_flash_ready(xs[s], col.feed_comp), ts[s], col.pressures[s])
         if h_evals is not None:
             h_evals[0] += 4
@@ -534,6 +591,8 @@ def _graph_unpack(
         vs[s] = max(_FLOW_FLOOR, u[layout.v_base + pos])
     if t_bot_tear is not None:
         vs[col.n - 1] = t_bot_tear
+    if model.v_top_pin is not None:
+        vs[0] = model.v_top_pin
     # Stripper draw flows are derived, not unknowns: each section's total
     # balance pins its draw to the returned vapour, the product rate and the
     # section feeds (the product-rate spec is exact by construction).
@@ -556,6 +615,77 @@ def _graph_apply_state(prof: _Profile, u: list[float], model: _GraphModel, t_bot
     prof.V = vs
     prof.draw_flows = draw_flows
     prof.L = _graph_liquid_profile(model, prof.l0, vs, draw_flows)
+
+
+def _graph_gate_model(col: _Column, prof: _Profile) -> _GraphModel:
+    """The graph model the exact gate reads: every column tear pinned at the
+    profile's own value (kettle boilup and a partial condenser's top vapour),
+    so the gate checks exactly the state the profile holds."""
+    return _graph_model(col, v_top_pin=prof.V[0] if col.condenser == "partial" else None)
+
+
+def _graph_state(
+    col: _Column, prof: _Profile
+) -> tuple[_GraphModel, list[dict[str, float]], list[float], list[float], list[float]]:
+    """(model, xs, ts, vs, draw_flows) of a graph profile, through the solve's
+    own pack/unpack - the draw flows DERIVED from the section balances, so
+    the product-rate specs hold exactly in every gated state."""
+    model = _graph_gate_model(col, prof)
+    u = _graph_pack(prof, model)
+    t_bot = prof.V[col.n - 1] if col.reboiler == "kettle" else None
+    xs, ts, vs, draw_flows = _graph_unpack(model, u, t_bot)
+    return model, xs, ts, vs, draw_flows
+
+
+def _graph_exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[float, float]:
+    """The exact gate over the whole stage graph (S0-1c step 3).
+
+    `_exact_residuals`' semantics extended over the graph: the live
+    residual `_graph_residual_vector` - interlink terms included - at the
+    profile state, with the profile's refreshed y as the stage-K vapour
+    estimates and NO frozen fallbacks (an unevaluable stage reads 1.0, not
+    converged), per-row scales derived from the gated state. M is the max
+    over the component balances AND the summation rows (the bubble-point
+    condition), H the max over the enthalpy rows. The dense gate only sees
+    the main stages and none of the draw/return terms, so a graph column
+    must never be gated by it.
+    """
+    model, xs, ts, vs, draw_flows = _graph_state(col, prof)
+    r = _graph_residual_vector(model, tb, prof.l0, xs, ts, vs, draw_flows, y_seeds=[dict(y) for y in prof.y])
+    nc = model.layout.nc
+    max_m = 0.0
+    max_h = 0.0
+    for s, (start, stop) in enumerate(_stage_row_ranges(model)):
+        for row in range(start, start + nc + 1):  # M rows and the summation row
+            max_m = max(max_m, abs(r[row]))
+        if s in model.h_stages:
+            max_h = max(max_h, abs(r[stop - 1]))
+    return max_m, max_h
+
+
+def _graph_refresh_y(col: _Column, tb: _ThermoBox, prof: _Profile) -> None:
+    """y = K(T, P) x on every graph stage (the dense `_refresh_y` over the
+    graph, with the graph stage-K arguments for section stages)."""
+    model = _graph_gate_model(col, prof)
+    for s in range(col.n_graph):
+        feed_part, draw_total = _graph_k_args(model, s)
+        k = _stage_k_values(
+            col,
+            tb,
+            s,
+            prof.x[s],
+            prof.y[s],
+            prof.T[s],
+            prof.L[s],
+            prof.V[s],
+            feed_part=feed_part,
+            draw_total=draw_total,
+        )
+        if k is None:
+            k = tb.k_estimate(_flash_ready(prof.x[s], col.feed_comp), prof.T[s], col.pressures[s])
+        if k is None:
+            k = {cid: 1.0 for cid in col.comps}
+        prof.y[s] = _graph_y_eq(k, prof.x[s])
 
 
 def _stage_row_ranges(model: _GraphModel) -> list[tuple[int, int]]:
@@ -593,7 +723,7 @@ def _rowsout_sets(model: _GraphModel) -> tuple[list[frozenset[int]], list[frozen
 
     rows_x: list[frozenset[int]] = []
     rows_v: list[frozenset[int]] = []
-    return_of_top = {top: ret for ret, top in model.vapour_return_at.items()}
+    return_of_top = {top: ret for ret, tops in model.vapour_return_at.items() for top in tops}
     for s in range(g):
         nx = set(block(s))
         nv = set(block(s))
@@ -606,9 +736,9 @@ def _rowsout_sets(model: _GraphModel) -> tuple[list[frozenset[int]], list[frozen
             nx |= block(vap)
         if s in model.draw_link_at_stage:
             nx |= block(model.section_top_of_link[model.draw_link_at_stage[s]])
-        if s in model.vapour_return_at:
-            nx |= block(model.vapour_return_at[s])
-            nv |= block(model.vapour_return_at[s])
+        for ret_top in model.vapour_return_at.get(s, ()):
+            nx |= block(ret_top)
+            nv |= block(ret_top)
         if s in model.link_at_top:
             nx |= block(return_of_top[s])  # its x/T ride the return link out
             nv |= block(return_of_top[s])  # the return stage's rows read vs[s]
@@ -629,10 +759,12 @@ def _rowsout_sets(model: _GraphModel) -> tuple[list[frozenset[int]], list[frozen
     # A section top's V now carries its DERIVED draw flow with it: the draw
     # feeds the main column's liquid cascade at and below the draw stage and
     # the section's own cascade, so one perturbation reaches all of it.
+    # Its V also enters the main cascade's total balance at the return stage
+    # (the returned vapour), so every main liquid from there down moves too.
     for k in range(len(model.layout.draw_links)):
         top = model.section_top_of_link[k]
         draw_stage = model.draw_stage_of_link[k]
-        for q in range(draw_stage, g):
+        for q in range(min(draw_stage, return_of_top[top]), g):
             rows_v[top] = rows_v[top] | block(q)
     return rows_x, rows_v
 
@@ -873,7 +1005,10 @@ class _GraphNSEngine:
         scales = _graph_residual_scales(model, tb, prof.l0, u, self._t_bot_tear)
         y_seeds: list[dict[str, float]] | None = None
         if tb.exact_surface:
-            _refresh_y(col, tb, prof)
+            if col.is_graph:
+                _graph_refresh_y(col, tb, prof)
+            else:
+                _refresh_y(col, tb, prof)
             y_seeds = [dict(y) for y in prof.y]
 
         def residuals(
@@ -974,7 +1109,7 @@ class _GraphNSEngine:
         dense result on a linear column with the clamp present but not
         firing.
         """
-        if not self._model.col.sections:
+        if not self._model.col.is_graph:
             return
         layout = self._model.layout
         for s in range(layout.n_graph):
@@ -991,6 +1126,9 @@ class _GraphNSEngine:
         internally while the exact residual - which uses the stored y - is
         wide open (measured, review round 2: the two runs' stored y differed
         by 0.219 at pass 2). The dense engine's exact_norms, verbatim."""
+        if self._col.is_graph:
+            _graph_refresh_y(self._col, self._tb, prof)
+            return _graph_exact_residuals(self._col, self._tb, prof)
         _refresh_y(self._col, self._tb, prof)
         return _exact_residuals(self._col, self._tb, prof)
 
@@ -1035,9 +1173,8 @@ class _GraphNSEngine:
         across passes. Identical semantics to the dense engine's finish."""
         if self.live_norm and self.best_u is not None:
             self.apply(self.prof, self.best_u)
-        col, tb, prof = self._col, self._tb, self.prof
-        _refresh_y(col, tb, prof)
-        m_res, h_res = _exact_residuals(col, tb, prof)
+        prof = self.prof
+        m_res, h_res = self.exact_norms(prof)
         prof.ns_used = True
         if m_res > self.m_tol or h_res > _MESH_H_TOL:
             raise ColumnConvergenceError(
@@ -1047,7 +1184,7 @@ class _GraphNSEngine:
 
 
 def _graph_naphtali_sandholm(
-    col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None
+    col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None, top_vapour: float | None = None
 ) -> _Profile:
     """Graph Naphtali-Sandholm: damped Newton over the whole stage graph.
 
@@ -1062,7 +1199,17 @@ def _graph_naphtali_sandholm(
     tolerances. Duties are NOT finalized here: whole-unit boundary
     accounting over the graph is step 3.
     """
-    model = _graph_model(col, kettle_free=t_bot_tear is None and col.reboiler == "kettle")
+    if top_vapour is not None and col.condenser == "total":
+        # Top-vapour mode: V_1 pinned, the kettle boilup an unknown.
+        t_bot_tear = None
+        prof.V[0] = top_vapour
+        model = _graph_model(col, v_top_pin=top_vapour)
+    else:
+        model = _graph_model(
+            col,
+            kettle_free=t_bot_tear is None and col.reboiler == "kettle",
+            v_top_pin=prof.V[0] if col.condenser == "partial" else None,
+        )
     _extend_profile_to_graph(col, prof)
     # Vapour tears are NOT Newton unknowns in strategy mode - dense NS pins
     # them from the outer strategy loop. Standalone mode (no caller tear)

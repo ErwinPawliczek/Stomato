@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 provisional
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.side_strip:SideStrip` | steam-stripped draw, per-pseudo Kremser stripping via units/_physics/shortcut.kremser_fraction (S_i = K_i V/L, K from thermo.k_values at the stripper T, P) (spec U-H1) |
-| R2 | provisional | `ngdesign.units.refining.side_strip_r2:SideStripR2` | zero-tear MESH of the stripper section alone (draw and steam are inlets); couples to a main column only through a flowsheet recycle on overhead_out, the simultaneous solve of spec S0-1c is not implemented; free water on a stage is refused |
+| R2 | provisional | `ngdesign.units.refining.side_strip_r2:SideStripR2` | zero-tear MESH of the stripper section alone (draw and steam are inlets); couples to a main column only through a flowsheet recycle on overhead_out (the simultaneous solve is the column's side_strippers, spec S0-1c); free water on a stage is refused |
 
 ### R0 parameters
 

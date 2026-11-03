@@ -7,9 +7,11 @@ report duties, and drive the column specs onto their targets.
 
 from __future__ import annotations
 
+import dataclasses
 import math
 from typing import Any
 
+from .graph_ns import _graph_naphtali_sandholm
 from .inside_out import (
     _Column,
     _exact_residuals,
@@ -51,8 +53,16 @@ from .spec import (
     _STAGNATION_MAX_ZERO_ONE_TEAR,
     ColumnConvergenceError,
     ColumnSpecError,
+    _DrawSpec,
     _is_reactive_package,
     _Params,
+)
+from .strippers import (
+    _check_free_water,
+    _finalize_graph_duties,
+    _main_only_column,
+    _seed_sections,
+    _sequential_seed,
 )
 from .thermo_adapter import _flash_ready, _ThermoBox
 
@@ -133,6 +143,8 @@ def _solve_mesh(
     two-tear columns, packages without the capability) solves directly at the
     current scale, byte-identical to the un-continued path.
     """
+    if col.is_graph:
+        return _solve_graph_mesh(col, tb, t_top, t_bot, seed)
     if col.reactions is not None and seed is None:
         return _solve_reactive_mesh(col, tb, t_top, t_bot, allow_fallback)
     thermo = getattr(tb, "_thermo", tb)
@@ -412,6 +424,165 @@ def _solve_mesh_at_heat(
     return prof
 
 
+def _solve_graph_mesh(
+    col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None, seed: _Profile | None
+) -> _Profile:
+    """Graph mesh at given tears: warm from ``seed`` when given, and cold
+    (the sequential initializer) when there is no seed or the warm start
+    stalls - a converged profile at a distant tear can sit outside the
+    Newton basin where the cold start is inside it (measured: a 10-stage
+    total-condenser column warm-walked from boilup 107 to 41 mol/s through
+    a 4-level continuation in 430 s and still stalled)."""
+    if seed is not None:
+        try:
+            return _graph_mesh_once(col, tb, t_top, t_bot, seed)
+        except ColumnConvergenceError:
+            pass
+    return _graph_mesh_once(col, tb, t_top, t_bot, None)
+
+
+def _graph_mesh_once(
+    col: _Column,
+    tb: _ThermoBox,
+    t_top: float | None,
+    t_bot: float | None,
+    seed: _Profile | None,
+    top_vapour: float | None = None,
+) -> _Profile:
+    """Converge the MESH over the whole stage graph at given tears (S0-1c step 3).
+
+    Side-stripper sections and the main column are ONE equation system: the
+    graph Naphtali-Sandholm Newton (``graph_ns``) solves every stage of every
+    section together with the main stages, linked by the draw and vapour-return
+    interlinks, under one exact gate (``_graph_exact_residuals``: component,
+    summation and enthalpy rows over the graph at the mesh tolerances) - no
+    tears between the sections (Russell 1983, "A flexible and reliable method
+    solves single-tower and crude-distillation-column problems", Comput. Chem.
+    Eng. 7, 571-578; the RadFrac/PetroFrac formulation).
+
+    Cold (no seed), the sequential-section initializer gives the starting
+    profile: the main column with each stripper as a plain liquid side draw,
+    converged by the ordinary linear-column mesh (inside-out with its NS
+    fallback), then each section seeded from its draw. Warm, the caller's
+    converged graph profile is re-teared. Inside-out sweeps over the graph
+    itself are NOT used: the graph Newton converges quadratically from the
+    sequential seed (measured, nC6-nC12 at 2 bar with a 4-stage steam
+    stripper: exact M 1.0 -> 6.4e-8 in five passes, 3.8 s), so there is one
+    simultaneous engine and one gate.
+    """
+    if seed is None:
+        prof = _sequential_seed(col, tb, t_top, t_bot, _seed_main_mesh)
+    else:
+        prof = _copy_profile(col, seed)
+    # The graph Newton's own trace and pass count (the seed's linear solve
+    # or the warm seed's earlier passes are not this mesh's).
+    prof.ns_trace, prof.ns_passes = [], 0
+    _apply_tears(col, prof, t_top, t_bot)
+    try:
+        _graph_naphtali_sandholm(col, tb, prof, t_bot if col.reboiler == "kettle" else None, top_vapour)
+    except ColumnConvergenceError as exc:
+        # A stalled graph Newton whose best iterate already carries free
+        # water has a physical reason, not a solver one: the one-liquid stage
+        # model has no solution there. Refuse with that reason (typed
+        # ColumnSpecError, which ends the spec loop at once) instead of
+        # retrying every tear neighbourhood to the same stall.
+        _check_free_water(
+            col, tb, prof, skip_condenser=col.water_decant, where=f" (best Newton iterate; {str(exc)[:120]})"
+        )
+        raise
+    _reject_band_limit(col, prof)
+    _finalize_graph_duties(col, tb, prof)
+    return prof
+
+
+def _solve_graph_reflux_distillate(
+    col: _Column, tb: _ThermoBox, params: _Params, r_spec: float, d_spec: float
+) -> _Profile:
+    """A total-condenser + kettle stage-graph column on reflux_ratio +
+    distillate_rate: one graph mesh in top-vapour mode, no tear secant.
+
+    The pair fixes the reflux L_0 = R D and the top vapour V_1 = L_0 + D (+ the
+    decanted free water W), so V_1 is pinned exactly like a partial
+    condenser's top tear and the kettle boilup becomes a Newton unknown - the
+    formulation the partial-condenser graph columns converge robustly in. The
+    secant over the boilup is gone: on wide-boiling feeds it walked tears the
+    cold start could not reach (measured 430-805 s, then a stall). With a
+    decant, W is an outcome of V_1, so V_1 = L_0 + D + W is a fixed point
+    met by warm re-solves (``_DECANT_PIN_MAX``, to ``_DECANT_PIN_TOL`` of D).
+    """
+    l0 = r_spec * d_spec
+    # Seed: the main column alone (each stripper a plain side draw of its
+    # product rate) on the SAME reflux and distillate specs, through the
+    # plain column's own spec loop - its V_1 is already L_0 + D, so the graph
+    # Newton only has to add the strippers. Should that plain solve fail, a
+    # converged graph column at a guessed boilup stands in, and its top
+    # vapour is walked to L_0 + D: each step a warm graph mesh in top-vapour
+    # mode, the step halved on a stall and doubled after a success.
+    main = _main_only_column(col)
+    main_params = dataclasses.replace(
+        params,
+        side_strippers=[],
+        condenser_water_decant=False,
+        draws=list(params.draws)
+        + [
+            _DrawSpec(stage=st.draw_stage, vapor=False, flow=st.product_rate)
+            for st in params.side_strippers
+            if st.n_stages > 0 and st.product_rate is not None
+        ],
+    )
+    try:
+        prof = _seed_sections(col, _solve_specs(main, tb, main_params))
+    except (ColumnConvergenceError, ColumnSpecError, ValueError):
+        prof = _solve_graph_mesh(col, tb, l0, l0 + 0.2 * col.f_total, None)
+    w = 0.0
+    for _ in range(_DECANT_PIN_MAX):
+        prof = _walk_top_vapour(col, tb, prof, l0, l0 + d_spec + w)
+        if not col.water_decant or abs(prof.decant - w) <= _DECANT_PIN_TOL * d_spec:
+            return prof
+        w = prof.decant
+    raise ColumnConvergenceError(
+        f"decant pin did not settle in {_DECANT_PIN_MAX} re-solves: "
+        f"W moved {w:.6g} -> {prof.decant:.6g} mol/s"
+    )
+
+
+def _walk_top_vapour(col: _Column, tb: _ThermoBox, start: _Profile, l0: float, target: float) -> _Profile:
+    """Walk a converged graph profile's top vapour to ``target`` (top-vapour
+    mode), warm-chaining converged steps; below ``_CONTINUATION_MIN_STEP`` of
+    the path the walk raises the last stall."""
+    v_start = start.V[0]
+    done, step = 0.0, 1.0
+    current = start
+    while done < 1.0:
+        f = min(1.0, done + step)
+        try:
+            v_top = v_start + f * (target - v_start)
+            current = _graph_mesh_once(col, tb, l0, None, current, top_vapour=v_top)
+        except ColumnConvergenceError as exc:
+            step *= 0.5
+            if step < _CONTINUATION_MIN_STEP:
+                raise ColumnConvergenceError(
+                    f"top-vapour walk stalled {done:.3f} of the way from V_1 = {v_start:.6g} "
+                    f"to {target:.6g}: {exc}"
+                ) from exc
+            continue
+        done = f
+        step = min(2.0 * step, 1.0)
+    return current
+
+
+#: Re-solves of the top-vapour pin V_1 = L_0 + D + W on a decanting column
+#: (W is a smooth, small function of V_1: two or three settle it).
+_DECANT_PIN_MAX = 8
+#: Settled when W moves by less than this fraction of D between re-solves.
+_DECANT_PIN_TOL = 1e-9
+
+
+def _seed_main_mesh(main: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None) -> _Profile:
+    """The sequential initializer's main-column solve: the plain mesh, cold."""
+    return _solve_mesh(main, tb, t_top, t_bot, None)
+
+
 def _continuation(
     col: _Column, tb: _ThermoBox, seed: _Profile, top: float | None, bot: float | None
 ) -> _Profile:
@@ -475,6 +646,7 @@ def _copy_profile(col: _Column, src: _Profile) -> _Profile:
         ns_used=src.ns_used,
         ns_passes=src.ns_passes,
         ns_trace=list(src.ns_trace),
+        draw_flows=list(src.draw_flows),
     )
 
 
@@ -649,7 +821,8 @@ def _spec_g(col: _Column, params: _Params, prof: _Profile, skip: set[str]) -> tu
             comp = str(target_d["component"])
             value = float(target_d["value"])
             is_dist = str(target_d.get("product", "distillate")) == "distillate"
-            out_frac = (prof.y[0] if is_dist else prof.x[col.n - 1]).get(comp, 0.0)
+            dist_comp = prof.reflux_x or prof.y[0]  # the decanted liquid when decanting
+            out_frac = (dist_comp if is_dist else prof.x[col.n - 1]).get(comp, 0.0)
             if key == "product_purity":
                 g.append(out_frac - value)
             else:
@@ -697,7 +870,18 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
     b_spec = specs.get("bottoms_rate")
     r_spec = specs.get("reflux_ratio")
     vb_spec = specs.get("boilup_ratio")
+    if (
+        col.is_graph
+        and col.condenser == "total"
+        and col.reboiler == "kettle"
+        and r_spec is not None
+        and d_spec is not None
+    ):
+        return _solve_graph_reflux_distillate(col, tb, params, float(r_spec), float(d_spec))
     draw_total = sum(dr.flow for dr in params.draws if dr.flow is not None)
+    # Stripper products leave the unit like draws (S0-1c): B = F - D - draws
+    # - products by the overall balance (steam is in f_total).
+    draw_total += sum(st.product_rate or 0.0 for st in params.side_strippers)
     pin_top = False
     pin_bot = False
     skip: set[str] = set()
@@ -709,7 +893,9 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         t_top = float(r_spec) * max(col.f_total - float(b_spec) - draw_total, _FLOW_FLOOR)
         pin_top = True
         skip.add("reflux_ratio")
-    if col.reboiler == "kettle" and vb_spec is not None and d_spec is not None:
+    if col.reboiler == "kettle" and vb_spec is not None and d_spec is not None and not col.water_decant:
+        # (With a decant the bottoms is F - D - W and W is an outcome, so the
+        # ratio cannot pin the boilup; the secant drives it instead.)
         t_bot = float(vb_spec) * max(col.f_total - float(d_spec) - draw_total, _FLOW_FLOOR)
         pin_bot = True
         skip.add("boilup_ratio")
@@ -874,6 +1060,12 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                         continue
             seed = state["seed"]
             if seed is None:
+                break
+            if not cold and col.is_graph:
+                # Graph meshes already fall back to the cold sequential start
+                # (``_solve_graph_mesh``); a warm-chained continuation walk
+                # costs one graph Newton per sub-step and stalls where the
+                # cold start does (measured 430 s on a 10-stage column).
                 break
             if not cold:
                 # Two-tear columns: continuation from the seed's own tears to the
@@ -1092,8 +1284,9 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                     flee = 0
             else:
                 flee = 0
-        if col.n_tears < 2:
-            # Damped Newton on the tear update, one-tear columns only: the
+        if col.n_tears < 2 or col.is_graph:
+            # Damped Newton on the tear update, one-tear and stage-graph
+            # columns (the graph meshes are not in the bench sequence): the
             # ratio/boilup curve is flat near the seed (measured P1-09 stripper:
             # ratio 0.593 at boilup 8.0) so the linear secant step lands far
             # outside the narrow mesh-convergent tear window (the undamped step

@@ -21,7 +21,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.crude_column:CrudeColumn` | cut-point fractionation (TBP cut points, gap/overlap spec) — spec U-H1 sharp cut, light ends and water to the overhead; optional stripping_steam inlet carries its water to the overhead at R0 (one net duty) |
-| R2 | planned | — | MESH with side strippers, pumparounds, stripping steam, overflash; P1-13 is in, but still blocked on spec S0-1c steps 3-4 (the simultaneous stripper solve and the condenser decant; the column refuses side_strippers) and on pseudo-component cost (one 48-species PT flash ~2 s; see the preflash row) |
+| R2 | planned | — | MESH with side strippers, pumparounds, stripping steam, overflash; S0-1c steps 3-4 are in (side_strippers and condenser_water_decant solve simultaneously on the stage graph), but the cold start of a wide-boiling two-tear column is not - measured on a 10-stage nC5/nC8/nC11/nC14 total condenser column with a 3-stage steam stripper at 1.5 bar, the plain mesh and the graph Newton from a Fenske-shaped seed both stall at M 0.86-1.0 (36-78 s); and on pseudo-component cost (see the preflash row) |
 
 ### R0 parameters
 
