@@ -297,6 +297,7 @@ article.proj { cursor: default }
 .unitbox:hover rect, .unitbox:focus-visible rect, .unitbox.dragging rect { stroke: var(--accent) }
 .unitbox:focus-visible rect { fill: color-mix(in srgb, var(--focus) 14%, var(--eqFill)) }
 .unitbox.dragging { cursor: grabbing; opacity: .85 }
+.unitbox.selected rect { stroke: var(--accent); fill: color-mix(in srgb, var(--accent) 12%, var(--eqFill)) }
 .unitbox text { text-anchor: middle; fill: var(--ink); pointer-events: none }
 .unitbox .utag { font: 600 13px var(--f-mono) }
 .unitbox .ukind { font: 400 11px var(--f-body); fill: var(--muted) }
@@ -313,3 +314,10 @@ article.proj { cursor: default }
 .history-head { display: flex; align-items: center; gap: 8px }
 .history-head h2 { font-size: 14px; margin: 0 }
 .history-list { margin: 6px 0 0; padding-left: 0; list-style: none; display: grid; gap: 2px }
+/* Flowsheet: selected unit panel and the connect-stream form */
+.selunit, .connect { margin-top: 10px; padding: 10px 12px; display: grid; gap: 8px }
+.selunit .ports { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+.selunit ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 4px }
+.connect .row { flex-wrap: wrap; align-items: end }
+.connect .field.grow { flex: 1 1 260px }
+.connect .field.grow input { width: 100% }

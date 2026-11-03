@@ -55,12 +55,18 @@ export function FlowsheetCanvas({
   links,
   onDropUnit,
   onMoveUnit,
+  onSelectUnit,
+  selected = null,
   centreRef,
 }: {
   units: CanvasUnit[];
   links: CanvasLink[];
   onDropUnit: (kind: string, pos: XY) => void;
   onMoveUnit: (tag: string, pos: XY) => void;
+  /** A unit was clicked (pressed and released without moving) or Enter/Space on it. */
+  onSelectUnit?: (tag: string) => void;
+  /** Tag drawn highlighted. */
+  selected?: string | null;
   /** Written with the world point at the centre of the view (click-to-add target). */
   centreRef?: { current: XY };
 }) {
@@ -149,11 +155,16 @@ export function FlowsheetCanvas({
     if (g.type === "move" && g.moved && drag) {
       const to = place(drag.pos);
       if (to.x !== g.origin.x || to.y !== g.origin.y) onMoveUnit(g.tag, to);
-    }
+    } else if (g.type === "move" && !g.moved) onSelectUnit?.(g.tag);
     setDrag(null);
   }
 
   function onKeyUnit(e: React.KeyboardEvent, u: CanvasUnit): void {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onSelectUnit?.(u.tag);
+      return;
+    }
     const step = grid ? HEX_SIZE * Math.sqrt(3) : NUDGE; // one cell down/up; ±1.5 s across
     const across = grid ? HEX_SIZE * 1.5 : NUDGE;
     const d: Record<string, XY> = {
@@ -273,11 +284,12 @@ export function FlowsheetCanvas({
               data-tag={u.tag}
               data-x={p.x}
               data-y={p.y}
-              className={`unitbox${drag?.tag === u.tag ? " dragging" : ""}`}
+              className={`unitbox${drag?.tag === u.tag ? " dragging" : ""}${selected === u.tag ? " selected" : ""}`}
+              aria-pressed={selected === u.tag}
               transform={`translate(${p.x} ${p.y})`}
               tabIndex={0}
               role="button"
-              aria-label={`${u.tag} ${u.name}: arrow keys move it`}
+              aria-label={`${u.tag} ${u.name}: Enter selects, arrow keys move it`}
               onKeyDown={(e) => onKeyUnit(e, u)}
             >
               <title>{`${u.tag} · ${u.name}`}</title>

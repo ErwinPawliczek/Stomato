@@ -119,7 +119,7 @@ export default function App() {
             </header>
             {tab === "flowsheet" && (
               <section className="page panel ob">
-                <FlowsheetView project={project} />
+                <FlowsheetView project={project} onSaved={setProject} />
               </section>
             )}
             {tab === "results" && (

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import App from "./App";
 
 test("opens the project from Home and shows every tab and the slice units from the mock", async () => {
@@ -55,4 +55,16 @@ test("rail switches pages and the palette", () => {
   expect(document.documentElement.dataset.palette).toBe("blueprint");
   expect(document.documentElement.style.getPropertyValue("--bg")).toBe("#0F3D6E");
   expect(screen.getByRole("button", { name: "Blueprint palette" }).getAttribute("aria-pressed")).toBe("true");
+});
+
+test("saving the flowsheet updates the project header counts", async () => {
+  render(<App />);
+  fireEvent.click(await screen.findByRole("button", { name: "Open slice" }));
+  await screen.findByRole("tab", { name: "Flowsheet" });
+  const header = () => document.querySelector(".crumb small")?.textContent ?? "";
+  const [units, streams] = (header().match(/\d+/g) ?? []).map(Number);
+  // E-102 carries two streams (S-009 in, S-010 out).
+  fireEvent.click(screen.getByRole("button", { name: "Delete E-102" }));
+  fireEvent.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() => expect(header()).toBe(`${units - 1} units · ${streams - 2} streams`));
 });
