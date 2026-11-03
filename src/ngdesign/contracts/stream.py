@@ -8,7 +8,7 @@ from pydantic import ConfigDict, field_validator, model_validator
 
 from ngdesign.data import components
 
-from .common import Model
+from .common import DeferredModel, Model
 
 DEFAULT_SLATE: tuple[str, ...] = (
     "N2",
@@ -56,7 +56,7 @@ class PhaseKind(StrEnum):
     SOLID = "solid"  # T-10 contract change: solid-liquid equilibrium streams
 
 
-class Phase(Model):
+class Phase(DeferredModel):
     #: Frozen (spec P1-01): property packages cache and share these objects.
     model_config = ConfigDict(frozen=True)
 

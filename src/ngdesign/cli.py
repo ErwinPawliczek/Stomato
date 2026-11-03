@@ -29,6 +29,7 @@ from typing import Any
 import numpy as np
 
 from ngdesign import pipeline, registry
+from ngdesign.chem import cli as chem_cli
 from ngdesign.contracts import PID, Project, SolvedFlowsheet
 from ngdesign.export import _cell, _port
 from ngdesign.flowsheets import slice as slice_fs
@@ -219,6 +220,7 @@ def main(argv: list[str] | None = None) -> int:
     worker.add_argument(
         "--once", action="store_true", help="process at most one job (or exit when none is queued), then exit"
     )
+    chem_cli.add_parser(sub)
     study_cmd = sub.add_parser(
         "study", help="run a case study over a project JSON file and print the table (spec P2-04)"
     )
@@ -241,6 +243,8 @@ def main(argv: list[str] | None = None) -> int:
     study_cmd.add_argument("--csv", default=None, help="also write the table as CSV to this path")
     args = parser.parse_args(argv)
 
+    if args.command == "chem":
+        return chem_cli.run(args)
     if args.command == "study":
         return _study(args)
     if args.command == "db-init":

@@ -16,16 +16,13 @@ and duty modes solve the outlet temperature around the minimisation
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from typing import Any
-
-from scipy.optimize import brentq
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units._physics.gibbs import gibbs_minimum
 from ngdesign.units._physics.kinetics import enthalpy_with_formation
-from ngdesign.units.reactors._shared import _T_MAX, _T_MIN, z_from
+from ngdesign.units.reactors._shared import close_thermal, z_from
 
 
 class GibbsReactor:
@@ -59,45 +56,8 @@ class GibbsReactor:
             amounts = {**n_out, **{cid: n_in[cid] for cid in inerts}}
             return thermo.flash_pt(z_from(amounts), T, inlet.P, sum(amounts.values()))
 
-        if isinstance(thermal, Mapping) and set(thermal) == {"T_out"}:
-            outlet = state_at(float(thermal["T_out"]))
-            duty = enthalpy_with_formation(outlet) - h_in_W
-        elif isinstance(thermal, str) and thermal == "isothermal":
-            outlet = state_at(inlet.T)
-            duty = enthalpy_with_formation(outlet) - h_in_W
-        elif (
-            isinstance(thermal, str)
-            and thermal == "adiabatic"
-            or (isinstance(thermal, Mapping) and set(thermal) == {"duty_W"})
-        ):
-            duty = 0.0 if isinstance(thermal, str) else float(thermal["duty_W"])
-            target = h_in_W + duty
-
-            def f(T: float) -> float:
-                return enthalpy_with_formation(state_at(T)) - target
-
-            lo, hi = inlet.T - 400.0, inlet.T + 2000.0
-            while f(lo) > 0.0 and lo > _T_MIN:
-                lo = max(_T_MIN, lo - 500.0)
-            if f(lo) > 0.0:
-                raise ValueError(
-                    "heat balance is infeasible: even at 1 K the outlet enthalpy exceeds "
-                    "the inlet enthalpy (the reaction heat exceeds all available sensible heat)"
-                )
-            while f(hi) < 0.0:
-                if hi >= _T_MAX:
-                    raise ValueError(
-                        f"reactor outlet temperature exceeds {_T_MAX} K closing the heat balance"
-                    )
-                hi = min(_T_MAX, hi + 1000.0)
-            T_out = float(brentq(f, lo, hi, xtol=1e-8, maxiter=100))
-            outlet = state_at(T_out)
-        else:
-            raise ValueError(
-                f"thermal mode {thermal!r} is not one of 'isothermal', 'adiabatic', "
-                '{"duty_W": W} or {"T_out": K}'
-            )
-        return UnitResult(outlets={"outlet": outlet}, duty_W=duty)
+        T_out, duty = close_thermal(lambda T: enthalpy_with_formation(state_at(T)), inlet.T, h_in_W, thermal)
+        return UnitResult(outlets={"outlet": state_at(T_out)}, duty_W=duty)
 
     @classmethod
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:

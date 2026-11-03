@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import field_validator
 
-from .common import Model
+from .common import DeferredModel, Model
 from .stream import PhaseKind, _check_composition
 
 
@@ -22,7 +22,7 @@ class SaturationError(ValueError):
     """
 
 
-class PhaseProps(Model):
+class PhaseProps(DeferredModel):
     """Properties of ONE phase at (composition, T, P), built without flashing."""
 
     kind: PhaseKind

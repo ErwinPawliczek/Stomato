@@ -10,16 +10,35 @@ super-critical feeds.
 from __future__ import annotations
 
 import math
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import Any
 
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import PhaseKind, StreamState
+from ngdesign.contracts.thermo import PhaseProps
 
 from .spec import _FLOW_FLOOR
 
 # --------------------------------------------------------------------------------------
 # Thermo adapter: K / per-phase enthalpy / bubble-temperature helpers per solve
 # --------------------------------------------------------------------------------------
+
+
+#: Mole-fraction floor for a fugacity evaluation: a species a stage has not yet
+#: seen still needs a coefficient (reaction products, trace keys).
+_K_TRACE = 1e-30
+#: Vapour fixed point inside ``k_fugacity``: iteration cap and the largest
+#: mole-fraction move accepted as converged.
+_K_FIXED_POINT_MAX = 30
+_K_FIXED_POINT_TOL = 1e-14
+#: ``fixed_phase_sets`` window: a pooled liquid within this max mole-fraction
+#: move and temperature move (K) of a fully tested state keeps its phase set.
+#: Covers the FD Jacobian's perturbations (1e-7 relative, ~6e-5 K at 600 K).
+_SPLIT_WINDOW_X = 1e-6
+_SPLIT_WINDOW_T = 1e-3
+#: Fully tested pooled-liquid states remembered for seeds and the window.
+_SPLIT_REFS_MAX = 256
 
 
 class _ThermoBox:
@@ -38,13 +57,45 @@ class _ThermoBox:
     The K chain (stage liquid composition, then stage overall composition, then
     feed composition) returns None when every candidate comes back single-phase;
     callers keep the previous K or the CC estimate in that case.
+
+    Outside an inside-out sweep, plain columns read the fugacity surface at the
+    stage liquid (``k_fugacity``), and pooled-liquid columns on a package with
+    ``liquid_split`` read the pooled liquid's own split (``k_pooled``,
+    ``pooled_split``) - no flash per stage K on either.
     """
 
-    def __init__(self, thermo: Thermo, p_anchor_lo: float, p_anchor_hi: float) -> None:
+    def __init__(
+        self, thermo: Thermo, p_anchor_lo: float, p_anchor_hi: float, pool_liquids: bool = False
+    ) -> None:
         self._thermo = thermo
+        #: Three-phase stages: every liquid of a flash counts as THE stage
+        #: liquid (see ``_liquid``). False keeps the first-liquid reading.
+        self.pool_liquids = pool_liquids
+        #: Fugacity K and single-phase enthalpies (P1-13): every package but a
+        #: pooled column or a reactive amine package, whose K and liquid
+        #: enthalpy are flash results.
+        self.direct_phases = not pool_liquids and not getattr(thermo, "is_amine_reactive_package", False)
+        #: A pooled column whose package splits a liquid without a flash
+        #: (``liquid_split``): its stage K and liquid enthalpy are fugacity
+        #: functions of the stage liquid (``k_pooled``) - the smooth surface
+        #: the plain column's ``direct_phases`` reads.
+        self.pooled_fugacity = (
+            pool_liquids
+            and getattr(thermo, "liquid_split", None) is not None
+            and not getattr(thermo, "is_amine_reactive_package", False)
+        )
+        #: True inside a zero/one-tear inside-out model refresh, which reads
+        #: the flash surface (see ``_refresh_model``). Newton, the gate and
+        #: two-tear sweeps read ``exact_surface``.
+        self.sweeping = False
         self._pt_cache: dict[tuple[Any, ...], StreamState] = {}
         self._k_cache: dict[tuple[Any, ...], dict[str, float] | None] = {}
+        self._k_liquid_cache: dict[tuple[Any, ...], dict[str, float] | None] = {}
         self._bubble_cache: dict[tuple[Any, ...], float | None] = {}
+        self._split_cache: dict[tuple[Any, ...], list[PhaseProps]] = {}
+        self._split_refs: list[tuple[tuple[str, ...], tuple[float, ...], float, float, list[PhaseProps]]] = []
+        #: (max mole-fraction move, temperature move) of ``fixed_phase_sets``; None outside it.
+        self._fixed_sets: tuple[float, float] | None = None
         self._p_lo = p_anchor_lo
         self._p_hi = p_anchor_hi
         self._cc: dict[str, tuple[float, float, float]] = {}  # cid -> (D, T_ref, ln P_ref)
@@ -56,12 +107,75 @@ class _ThermoBox:
         the K chain, both enthalpy models, the exact-residual gate and the
         duty-path enthalpy wrappers at the same stage state — share one flash.
         """
-        key = (tuple(sorted(z.items())), T, P, flow)
+        # A reactive package's heat-of-reaction continuation scale changes the
+        # flashed enthalpies on the same instance, so it is part of the key.
+        key = (tuple(sorted(z.items())), T, P, flow, getattr(self._thermo, "_heat_scale", None))
         hit = self._pt_cache.get(key)
         if hit is None:
             hit = self._thermo.flash_pt(z, T, P, flow)
             self._pt_cache[key] = hit
         return hit
+
+    @property
+    def reactive_direct(self) -> bool:
+        """True where a reactive package's K and phase enthalpies are read at the
+        stage compositions themselves (outside an inside-out sweep, as
+        ``exact_surface``)."""
+        return not self.sweeping and hasattr(self._thermo, "liquid_k_values")
+
+    @property
+    def exact_surface(self) -> bool:
+        """True where K and enthalpies are the single-phase fugacity surface."""
+        return self.direct_phases and not self.sweeping
+
+    @property
+    def pooled_exact(self) -> bool:
+        """A pooled column outside a sweep: its homogeneous stages read the exact surface.
+
+        A stage with one liquid IS a plain stage, so it takes the plain
+        column's K and enthalpies (P1-13); only a stage whose contents split
+        into two liquids keeps the pooled flash reading. Measured: a dry 8-stage
+        nC4/iC4 kettle stripper through the pooled path settled 0.05 K below
+        its top stage's bubble point on the flash K (whose phases are not the
+        stage's x), against the plain column's exact bubble point.
+        """
+        return (
+            self.pool_liquids
+            and not self.sweeping
+            and not getattr(self._thermo, "is_amine_reactive_package", False)
+        )
+
+    def heterogeneous(self, z: dict[str, float], T: float, P: float) -> bool:
+        """True when the memoized flash of z at (T, P) carries two or more liquids."""
+        state = self.pt(z, T, P)
+        return sum(1 for p in state.phases if p.kind != PhaseKind.VAPOR) >= 2
+
+    def _liquid(self, state: StreamState) -> tuple[dict[str, float], float, float] | None:
+        """(composition, enthalpy, cp) of the state's liquid; None without one.
+
+        Plain columns read the first liquid phase. With ``pool_liquids`` every
+        liquid is pooled by its phase fraction into one pseudo-liquid, the
+        MESH-with-overall-liquid formulation of three-phase columns (Block &
+        Hegner, AIChE J. 22 (1976) 582; Cairns & Furzer, I&EC Res. 29 (1990)
+        1349): K_i = y_i / xbar_i, where xbar is what the stage cascade carries
+        and the split between the liquids is a stage-local flash result. The
+        pooled enthalpy is the mole-weighted phase enthalpy, and the cp is
+        weighted likewise: it is only the slope of the frozen inner line.
+        """
+        liquids = [p for p in state.phases if p.kind != PhaseKind.VAPOR]
+        if not liquids:
+            return None
+        if not self.pool_liquids or len(liquids) == 1:
+            first = liquids[0]
+            return first.composition, first.enthalpy, first.cp
+        total = sum(p.mole_fraction for p in liquids)
+        comp: dict[str, float] = {}
+        for p in liquids:
+            for cid, frac in p.composition.items():
+                comp[cid] = comp.get(cid, 0.0) + frac * p.mole_fraction / total
+        h = sum(p.enthalpy * p.mole_fraction for p in liquids) / total
+        cp = sum(p.cp * p.mole_fraction for p in liquids) / total
+        return comp, h, cp
 
     def _k_from_state(self, state: StreamState) -> dict[str, float] | None:
         """K_i = y_i/x_i from a flashed state's phases; None when single-phase.
@@ -75,13 +189,14 @@ class _ThermoBox:
         if not 1e-6 < state.vapor_fraction < 1.0 - 1e-6:
             return None
         vap = next((p for p in state.phases if p.kind == PhaseKind.VAPOR), None)
-        liq = next((p for p in state.phases if p.kind != PhaseKind.VAPOR), None)
+        liq = self._liquid(state)
         if vap is None or liq is None:
             return None
+        liq_comp = liq[0]
         out: dict[str, float] = {}
         for cid in state.composition:
             y = vap.composition.get(cid, 0.0)
-            x = liq.composition.get(cid, 0.0)
+            x = liq_comp.get(cid, 0.0)
             if x > 0.0 and y > 0.0:
                 out[cid] = max(y / x, 1e-12)
             elif y > 0.0:
@@ -91,6 +206,188 @@ class _ThermoBox:
             else:
                 out[cid] = 1.0
         return out
+
+    @property
+    def splits_liquid(self) -> bool:
+        """True when a pooled column reads its stage liquid's own liquid-liquid split.
+
+        ``pooled_fugacity`` outside an inside-out sweep (which keeps reading
+        the flash surface). Packages without ``liquid_split`` keep the flash
+        reading of a heterogeneous stage.
+        """
+        return self.pooled_fugacity and not self.sweeping
+
+    @contextmanager
+    def fixed_phase_sets(self) -> Iterator[None]:
+        """Within: a pooled stage liquid keeps the phase set of its reference state.
+
+        For the finite-difference Jacobian (Naphtali & Sandholm 1971 linearise
+        at fixed phase identity): a perturbed liquid within ``_SPLIT_WINDOW_X``
+        (max mole-fraction move) and ``_SPLIT_WINDOW_T`` (K) of a state whose
+        split was decided by the full stability test keeps that decision - one
+        liquid stays one liquid (no test), two liquids re-split by successive
+        substitution from the reference split. Values off the window, and
+        every residual, gate and line-search evaluation outside this context,
+        run the full test, so the converged state is the full test's.
+        """
+        saved = self._fixed_sets
+        self._fixed_sets = (_SPLIT_WINDOW_X, _SPLIT_WINDOW_T)
+        try:
+            yield
+        finally:
+            self._fixed_sets = saved
+
+    def _nearest_split(
+        self, keys: tuple[str, ...], vals: tuple[float, ...], T: float, P: float
+    ) -> tuple[float, float, list[PhaseProps]] | None:
+        """(max |dx|, |dT|, split) of the closest fully tested state at (keys, P)."""
+        best: tuple[float, float, list[PhaseProps]] | None = None
+        for r_keys, r_vals, r_t, r_p, split in self._split_refs:
+            if r_keys != keys or r_p != P:
+                continue
+            dx = max(abs(a - b) for a, b in zip(vals, r_vals, strict=True))
+            dt = abs(T - r_t)
+            if best is None or dx + dt * 1e-3 < best[0] + best[1] * 1e-3:
+                best = (dx, dt, split)
+        return best
+
+    def pooled_split(self, x: dict[str, float], T: float, P: float) -> list[PhaseProps]:
+        """The liquid-liquid split of a pooled stage liquid x at (T, P), memoized.
+
+        The pooled liquid (Block & Hegner 1976) is what the stage cascade
+        carries; its split into equilibrium liquids is a function of (x, T, P)
+        alone, read from the package's ``liquid_split`` (Michelsen 1982
+        stability test plus a liquid-liquid successive substitution). The
+        stability test is seeded with the nearest tested state's liquids
+        (the answer is still the full test's); inside ``fixed_phase_sets``
+        a state within the window of a tested one keeps its phase set.
+        """
+        keys = tuple(sorted(x))
+        vals = tuple(x[cid] for cid in keys)
+        key = (keys, vals, T, P)
+        hit = self._split_cache.get(key)
+        if hit is not None:
+            return hit
+        splitter = self._thermo.liquid_split  # type: ignore[attr-defined]
+        near = self._nearest_split(keys, vals, T, P)
+        seed = [p.composition for p in near[2]] if near is not None and len(near[2]) == 2 else None
+        result: list[PhaseProps]
+        window = self._fixed_sets
+        if window is not None and near is not None and near[0] <= window[0] and near[1] <= window[1]:
+            # One liquid stays one liquid (empty: the caller reads the plain
+            # single-phase build); two re-split from the reference's liquids.
+            result = splitter(x, T, P, seed=seed, stability=False) if seed is not None else []
+        else:
+            result = splitter(x, T, P, seed=seed)
+            self._split_refs.append((keys, vals, T, P, result))
+            if len(self._split_refs) > _SPLIT_REFS_MAX:
+                del self._split_refs[0]
+        self._split_cache[key] = result
+        return result
+
+    @staticmethod
+    def _trace_normalized(x: dict[str, float]) -> dict[str, float]:
+        """x floored at the trace fraction and renormalized (the fugacity-K liquid)."""
+        floor = {cid: max(v, _K_TRACE) for cid, v in x.items()}
+        xs = sum(floor.values())
+        return {cid: v / xs for cid, v in floor.items()}
+
+    def k_pooled(
+        self, x: dict[str, float], y: dict[str, float], T: float, P: float
+    ) -> dict[str, float] | None:
+        """Fugacity K of a pooled stage liquid: K_i = fhat_i^L / (xbar_i phi_i^V P).
+
+        The pooled liquid xbar splits into its equilibrium liquids k
+        (``pooled_split``); their common fugacity is
+        fhat_i / P = sum_k beta_k x_ki phi_ki (equal in every liquid at the
+        split's solution), and K_i = y_i / xbar_i with y_i phi_i^V = fhat_i / P
+        - the pooled-liquid E equation of Block & Hegner (1976), a function of
+        (xbar, T, P) alone like ``k_fugacity``. A liquid that does not split
+        IS the plain stage liquid and takes ``k_fugacity`` itself.
+        """
+        x_n = self._trace_normalized(x)
+        split = self.pooled_split(x_n, T, P)
+        if len(split) < 2:
+            return self.k_fugacity(x, y, T, P)
+        return self._k_fixed_point(x, x_n, y, _pooled_ln_phi(split, x_n), T, P)
+
+    def k_fugacity(
+        self, x: dict[str, float], y: dict[str, float], T: float, P: float
+    ) -> dict[str, float] | None:
+        """K_i = phi_i^L(x, T, P) / phi_i^V(y, T, P): equality of fugacity, no flash.
+
+        The MESH E equation as written (Naphtali & Sandholm 1971): defined at
+        every iterate, on or off the bubble point. A K read from a flash exists
+        only where that composition splits at (T, P), so an iterate crossing the
+        bubble surface jumps candidate and K with it, and Newton's full step
+        predicts 1e-16 and achieves 1e-1 (measured, P1-13). None when the
+        package has no per-phase ln phi; the caller keeps the flash chain.
+        """
+        x_n = self._trace_normalized(x)
+        try:
+            liquid = self._thermo.phase_props(x_n, T, P, PhaseKind.HC_LIQUID).ln_phi
+        except ValueError:
+            return None
+        if not liquid:
+            return None
+        return self._k_fixed_point(x, x_n, y, liquid, T, P)
+
+    def _k_fixed_point(
+        self,
+        x: dict[str, float],
+        x_n: dict[str, float],
+        y: dict[str, float],
+        liquid: dict[str, float],
+        T: float,
+        P: float,
+    ) -> dict[str, float] | None:
+        """K_i = exp(ln phi_i^L - ln phi_i^V(y)) at the vapour's fixed point y = K x / sum(K x)."""
+        trace = {cid: max(y.get(cid, 0.0), _K_TRACE) for cid in x}
+        ys = sum(trace.values())
+        y_n = {cid: v / ys for cid, v in trace.items()}
+        # phi^V at the vapour this liquid is in equilibrium with: successive
+        # substitution y <- K x / sum(K x) to a fixed point, so K is a function
+        # of (x, T, P) alone and the caller's seed only picks the start. With
+        # a single pass from the seed, Newton's pass-frozen seed and the gate's
+        # refreshed one read two K surfaces (measured deethanizer at the spec
+        # tears: rows predicted M = 1.4e-2, the gate read 2.0e-2 every pass).
+        k: dict[str, float] = {}
+        for _ in range(_K_FIXED_POINT_MAX):
+            try:
+                vapour = self._thermo.phase_props(y_n, T, P, PhaseKind.VAPOR).ln_phi
+            except ValueError:
+                return None
+            if not vapour:
+                return None
+            k = {cid: math.exp(liquid[cid] - vapour[cid]) for cid in x}
+            kx = {cid: max(k[cid] * x_n[cid], _K_TRACE) for cid in x}
+            s = sum(kx.values())
+            y_new = {cid: v / s for cid, v in kx.items()}
+            moved = max(abs(y_new[cid] - y_n[cid]) for cid in x)
+            y_n = y_new
+            if moved <= _K_FIXED_POINT_TOL:
+                break
+        return k
+
+    def k_liquid(self, x: dict[str, float], T: float, P: float) -> dict[str, float] | None:
+        """K at the stage liquid itself, for a package whose K is a function of x alone.
+
+        A reactive amine package's K_i(T, P, x) needs no flash (its
+        ``liquid_k_values``); the flash chain in ``k_values`` returns K at the
+        FLASH liquid instead, and a stage liquid on its bubble point flashes on
+        the single-phase edge, so the chain jumps candidates between Newton
+        trial states and the finite-difference Jacobian differentiates the
+        jump. None for every other package, and inside an inside-out sweep,
+        which keeps reading the flash surface (as ``exact_surface`` does).
+        """
+        direct = getattr(self._thermo, "liquid_k_values", None)
+        if direct is None or not self.reactive_direct:
+            return None
+        key = (tuple(sorted(x.items())), T, P)
+        if key not in self._k_liquid_cache:
+            self._k_liquid_cache[key] = direct(x, T, P)
+        k = self._k_liquid_cache[key]
+        return dict(k) if k is not None else None
 
     def k_values(self, candidates: list[dict[str, float]], T: float, P: float) -> dict[str, float] | None:
         """K_i = y_i/x_i from the first two-phase candidate's cached PT flash.
@@ -128,10 +425,10 @@ class _ThermoBox:
         if not 1e-6 < state.vapor_fraction < 1.0 - 1e-6:
             return None
         vap = next((p for p in state.phases if p.kind == PhaseKind.VAPOR), None)
-        liq = next((p for p in state.phases if p.kind != PhaseKind.VAPOR), None)
+        liq = self._liquid(state)
         if vap is None or liq is None:
             return None
-        return (vap.enthalpy, vap.cp, T), (liq.enthalpy, liq.cp, T)
+        return (vap.enthalpy, vap.cp, T), (liq[1], liq[2], T)
 
     def pure_psat(self, cid: str, T: float) -> float | None:
         """Pure-component vapour pressure (Pa) at T (K); None at or above Tc."""
@@ -268,16 +565,57 @@ class _ThermoBox:
         inside-out mesh early and the total-reflux/Fenske oracle columns then
         fail to converge; see the PR findings for both numbers.
         """
+        if not vapor and self.splits_liquid:
+            # The pooled liquid's own split (see ``k_pooled``): the
+            # mole-weighted enthalpy and cp of its equilibrium liquids; a
+            # liquid that does not split takes the single-phase build below.
+            split = self.pooled_split(self._trace_normalized(z), T, P)
+            if len(split) >= 2:
+                h = sum(p.mole_fraction * p.enthalpy for p in split)
+                cp = sum(p.mole_fraction * p.cp for p in split)
+                return h, cp, T
+            homogeneous = True
+        else:
+            homogeneous = vapor or (self.pooled_exact and not self.heterogeneous(z, T, P))
+        if self.exact_surface or (self.pooled_exact and homogeneous):
+            # The phase AT z: a flash of z hands back a phase of another
+            # composition, and which one jumps at the bubble surface. Falls
+            # through only for a package that refuses the single-phase build.
+            # A pooled liquid that splits keeps the pooled flash reading below.
+            try:
+                built = self._thermo.phase_props(z, T, P, PhaseKind.VAPOR if vapor else PhaseKind.HC_LIQUID)
+                return built.enthalpy, built.cp, T
+            except ValueError:
+                pass
+        if self.reactive_direct:
+            # The reactive package's phases at z itself, as its K (``k_liquid``):
+            # the aqueous build carries the heat of absorption at z's loading,
+            # the vapour is the carrier's - the same builds its flash reports.
+            built = self._thermo.phase_props(z, T, P, PhaseKind.VAPOR if vapor else PhaseKind.AQUEOUS)
+            return built.enthalpy, built.cp, T
         state = self.pt(z, T, P)
         if vapor:
             phase = next((p for p in state.phases if p.kind == PhaseKind.VAPOR), None)
+            if phase is not None:
+                return phase.enthalpy, phase.cp, T
         else:
-            phase = next((p for p in state.phases if p.kind != PhaseKind.VAPOR), None)
-        if phase is not None:
-            return phase.enthalpy, phase.cp, T
+            liquid = self._liquid(state)
+            if liquid is not None:
+                return liquid[1], liquid[2], T
         kind = PhaseKind.VAPOR if vapor else PhaseKind.HC_LIQUID
         props = self._thermo.phase_props(z, T, P, kind)
         return props.enthalpy, props.cp, T
+
+    def phase_state(self, z: dict[str, float], T: float, P: float, vapor: bool) -> PhaseProps:
+        """One single-phase build of z at (T, P): fugacity coefficients, enthalpy, cp.
+
+        Raises ValueError when the package refuses the build (callers keep
+        their previous model then).
+        """
+        props = self._thermo.phase_props(z, T, P, PhaseKind.VAPOR if vapor else PhaseKind.HC_LIQUID)
+        if not props.ln_phi:
+            raise ValueError("package returns no fugacity coefficients for this phase build")
+        return props
 
     def h_vapor(self, z: dict[str, float], T: float, P: float) -> float:
         h0, cp, t_ref = self.phase_enthalpy_model(z, T, P, vapor=True)
@@ -286,6 +624,21 @@ class _ThermoBox:
     def h_liquid(self, z: dict[str, float], T: float, P: float) -> float:
         h0, cp, t_ref = self.phase_enthalpy_model(z, T, P, vapor=False)
         return h0 + cp * (T - t_ref)
+
+
+def _pooled_ln_phi(split: list[PhaseProps], x_n: dict[str, float]) -> dict[str, float]:
+    """Effective ln phi_i of a split pooled liquid: ln(fhat_i / P) - ln xbar_i.
+
+    fhat_i / P = sum_k beta_k x_ki phi_ki over the equilibrium liquids k (equal
+    to x_ki phi_ki in each at the split's solution; the beta-weighted mean is
+    symmetric in the liquids). Michelsen & Mollerup, Thermodynamic Models
+    (2007), ch. 10: the liquid fugacities are equal in every coexisting phase.
+    """
+    return {
+        cid: math.log(sum(p.mole_fraction * p.composition[cid] * math.exp(p.ln_phi[cid]) for p in split))
+        - math.log(x_n[cid])
+        for cid in x_n
+    }
 
 
 def _flash_ready(z: dict[str, float], fallback: dict[str, float]) -> dict[str, float]:

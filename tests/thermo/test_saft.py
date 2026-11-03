@@ -30,10 +30,8 @@ SAFT_IDS = (
     "saft_vr_mie",
     "soft_saft",
 )
-# Rows teqp 0.23.2 cannot serve; each refuses to build with the engine named (spec
-# requirement). Their l0 declarations are empty and the refusal reason is recorded in
-# the row's l0_excluded.
-REFUSING_IDS = ("soft_saft",)
+# Every saft row builds: soft_saft, the last refusal, runs on teqp's SoftSAFT kind
+# since 2026-11-03 (tests/thermo/test_soft_saft.py).
 BUILDABLE_IDS = (
     "cpa_pr",
     "cpa_srk",
@@ -44,6 +42,7 @@ BUILDABLE_IDS = (
     "pc_saft_assoc",
     "pc_saft_polar",
     "saft_vr_mie",
+    "soft_saft",
 )
 
 
@@ -67,6 +66,7 @@ def test_saft_rows_register_with_status() -> None:
         "multifluid",
         "multifluid_pure",
         "gerg2008_teqp",
+        "soft_saft",
     )
     for rid in provisional:
         assert rows[rid].status == "provisional", f"{rid}: row must stay provisional"
@@ -92,16 +92,6 @@ def test_saft_packages_require_the_extra_at_first_use(monkeypatch: pytest.Monkey
         pkg.pure_psat("C1", 150.0)
 
 
-def test_refusing_rows_raise_at_first_use_naming_the_engine() -> None:
-    """Rows teqp cannot serve construct, then refuse at the first call with the engine named."""
-    from ngdesign import registry
-
-    for rid in REFUSING_IDS:
-        pkg = registry.create("thermo", rid)
-        with pytest.raises(NotImplementedError, match="teqp"):
-            pkg.pure_psat("H2O", 373.15)
-
-
 class TestConstructionContract:
     """Construction behaviour with the optional backend installed."""
 
@@ -116,6 +106,7 @@ class TestConstructionContract:
             MultifluidThermo,
             PCSaftThermo,
             SaftVrMieThermo,
+            SoftSaftThermo,
         )
 
         expected = {
@@ -126,6 +117,7 @@ class TestConstructionContract:
             "multifluid": MultifluidThermo,
             "multifluid_pure": MultifluidPureThermo,
             "gerg2008_teqp": Gerg2008TeqpThermo,
+            "soft_saft": SoftSaftThermo,
         }
         for rid, cls in expected.items():
             assert type(registry.create("thermo", rid)) is cls, rid

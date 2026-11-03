@@ -9,7 +9,14 @@ Textbook oracle (test_textbook_fenske_at_total_reflux): the Fenske relation
 (Fenske, Ind. Eng. Chem. 24:482, 1932; textbook treatment in Seader, Henley &
 Roper, "Separation Process Principles", ch. 9) is exact at total reflux. The
 comparison runs in log space, where the relation is derived: the relative gap
-between ln(separation) and sum(ln alpha_j) must be under 2%. Measured 1.4%.
+between ln(separation) and sum(ln alpha_j) must be under 2%. It is applied to
+the rectifying section (distillate to the feed-stage liquid), the section
+that runs at total reflux: with D = 1 and a 100 mol/s liquid feed the
+stripping section carries L/V ~ 2, where Fenske does not apply. Measured
+(P1-13): 1.1% at R = 100, 4.9% at R = 25. The former whole-column form
+matched only because its PT re-flash K came back single-phase on four of the
+ten saturated stages, which it then skipped (whole column: ln S = 3.893
+against sum ln alpha = 6.470).
 A published McCabe-Thiele product-composition match for a rigorous PR
 propane/isobutane case does not exist in usable form (searched this session);
 PR-ladder constructions disagreed by 3-6% in mole fraction, and that record
@@ -29,6 +36,7 @@ from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units import column as col_mod
 from ngdesign.units.column import ColumnConvergenceError, ColumnSpecError, _ThermoBox
+from ngdesign.units.column.spec import _MESH_H_TOL, _MESH_M_TOL
 from tests.conftest import flash_feed
 
 # Binary propane/isobutane example: 10 stages, 1.5 MPa, subcooled-liquid feed.
@@ -57,19 +65,35 @@ def _separation(result_stream_pair: tuple[StreamState, StreamState]) -> float:
     return (xd.composition["C3"] / xb.composition["C3"]) * (xb.composition["iC4"] / xd.composition["iC4"])
 
 
-def _fenske_log_sum(thermo: Thermo, result: UnitResult, n_stages: int, pressure: float) -> float:
-    """sum_j ln(alpha_j) over the converged profile from the result info scalars."""
+def _ratio(x: dict[str, float]) -> float:
+    """Light-to-heavy key ratio x_C3 / x_iC4."""
+    return x["C3"] / x["iC4"]
+
+
+def _rectifying_log_separation(result: UnitResult, feed_stage: int) -> float:
+    """ln[(xD_LK/xD_HK) / (x_f_LK/x_f_HK)]: distillate against the feed-stage liquid."""
     info = result.info
-    comps = ("C3", "iC4")
-    ref = {c: FEED["composition"][c] for c in comps}
-    tb = _ThermoBox(thermo, pressure, pressure)
+    x_f = {c: float(info[f"stage_{feed_stage - 1}_x_{c}"]) for c in ("C3", "iC4")}
+    return math.log(_ratio(result.outlets["distillate"].composition) / _ratio(x_f))
+
+
+def _fenske_log_sum(thermo: Thermo, result: UnitResult, feed_stage: int, pressure: float) -> float:
+    """sum_j ln(alpha_j) over the rectifying stages 1..feed_stage of the converged profile.
+
+    At total reflux y_(j+1) = x_j, so the distillate-to-feed-stage ratio is the
+    product of the stage alphas, the feed stage's included. alpha_j comes from
+    a bubble-point calculation on the reported stage liquid (P1-13): the
+    liquid is saturated, so a PT re-flash at its own stage T sits on the phase
+    boundary and comes back single-phase. The bubble T must be the reported
+    stage T (the equilibrium check).
+    """
+    info = result.info
     total = 0.0
-    for j in range(n_stages):
-        x = {c: float(info[f"stage_{j}_x_{c}"]) for c in comps}
-        k = tb.k_values([col_mod._flash_ready(x, ref)], float(info[f"stage_{j}_T_K"]), pressure)
-        if k is None or k.get("C3", 0.0) <= 1e-14 or k.get("iC4", 0.0) <= 1e-14:
-            continue
-        total += math.log(k["C3"] / k["iC4"])
+    for j in range(feed_stage):
+        x = {c: float(info[f"stage_{j}_x_{c}"]) for c in ("C3", "iC4")}
+        bubble = thermo.bubble_point(x, P=pressure)
+        assert bubble.T == pytest.approx(float(info[f"stage_{j}_T_K"]), abs=1e-3), j
+        total += math.log(_ratio(bubble.incipient_composition) / _ratio(x))
     return total
 
 
@@ -83,10 +107,10 @@ def _solve(params: dict[str, Any], feed: dict[str, Any], thermo: Thermo) -> Unit
 class _Run:
     """One solved column case plus the thermo used for it."""
 
-    def __init__(self, result: UnitResult, thermo: Thermo, n_stages: int, pressure: float) -> None:
+    def __init__(self, result: UnitResult, thermo: Thermo, feed_stage: int, pressure: float) -> None:
         self.result = result
         self.thermo = thermo
-        self.n_stages = n_stages
+        self.feed_stage = feed_stage
         self.pressure = pressure
 
     @property
@@ -94,25 +118,29 @@ class _Run:
         return _separation((self.result.outlets["distillate"], self.result.outlets["bottoms"]))
 
     @property
+    def rectifying_log_separation(self) -> float:
+        return _rectifying_log_separation(self.result, self.feed_stage)
+
+    @property
     def fenske_log_sum(self) -> float:
-        return _fenske_log_sum(self.thermo, self.result, self.n_stages, self.pressure)
+        return _fenske_log_sum(self.thermo, self.result, self.feed_stage, self.pressure)
 
 
 @pytest.fixture(name="example", scope="module")
 def _example(thermo: Thermo) -> _Run:
-    return _Run(_solve(EXAMPLE_PARAMS, FEED, thermo), thermo, 10, 1.5e6)
+    return _Run(_solve(EXAMPLE_PARAMS, FEED, thermo), thermo, 5, 1.5e6)
 
 
 @pytest.fixture(name="total_reflux", scope="module")
 def _total_reflux(thermo: Thermo) -> _Run:
     params = dict(EXAMPLE_PARAMS, specs={"reflux_ratio": 100.0, "distillate_rate": 1.0})
-    return _Run(_solve(params, FEED_SATURATED, thermo), thermo, 10, 1.5e6)
+    return _Run(_solve(params, FEED_SATURATED, thermo), thermo, 5, 1.5e6)
 
 
 @pytest.fixture(name="high_reflux", scope="module")
 def _high_reflux(thermo: Thermo) -> _Run:
     params = dict(EXAMPLE_PARAMS, specs={"reflux_ratio": 25.0, "distillate_rate": 1.0})
-    return _Run(_solve(params, FEED_SATURATED, thermo), thermo, 10, 1.5e6)
+    return _Run(_solve(params, FEED_SATURATED, thermo), thermo, 5, 1.5e6)
 
 
 def test_mass_balance_closes_to_1e_8(example: _Run) -> None:
@@ -156,10 +184,11 @@ def test_specs_are_met(example: _Run) -> None:
 def test_textbook_fenske_at_total_reflux(total_reflux: _Run) -> None:
     """At total reflux ln S equals sum ln(alpha_j) exactly (Fenske 1932).
 
-    The relative log-space gap must stay under 2%; R=100 with a 1% draw
-    approximates total reflux. Measured 1.4% at calibration time.
+    The relative log-space gap over the rectifying section must stay under 2%;
+    R=100 with a 1% draw approximates total reflux there (L/V = 0.97-0.99).
+    Measured 1.1% (P1-13: ln S 3.3567 against sum ln alpha 3.3946).
     """
-    log_separation = math.log(total_reflux.separation)
+    log_separation = total_reflux.rectifying_log_separation
     log_sum = total_reflux.fenske_log_sum
     assert abs(log_separation - log_sum) / abs(log_sum) <= 0.02
 
@@ -173,18 +202,22 @@ def test_total_reflux_limiting_behaviour(total_reflux: _Run, high_reflux: _Run) 
     must be below the R=100 value.
     """
     assert high_reflux.separation < total_reflux.separation
-    gap_high = abs(math.log(high_reflux.separation) - high_reflux.fenske_log_sum)
-    gap_total = abs(math.log(total_reflux.separation) - total_reflux.fenske_log_sum)
+    gap_high = abs(high_reflux.rectifying_log_separation - high_reflux.fenske_log_sum)
+    gap_total = abs(total_reflux.rectifying_log_separation - total_reflux.fenske_log_sum)
     assert gap_total < gap_high
 
 
 def test_deethanizer_mesh_converges_under_50_sweeps(thermo: Thermo) -> None:
     """C1-C5 NGL deethanizer (22 stages, 1.7 MPa) inside-out convergence budget.
 
-    The full spec solve at this size walks ~10 warm secant meshes and exceeds
-    the per-test time cap; the convergence-budget criterion (<50 outer
+    The full spec solve at this size exceeds the per-test time cap (measured
+    149 s under P1-13); the convergence-budget criterion (<50 outer
     iterations) is asserted on the fixed-tear mesh that the spec loop warm
-    starts from. Calibrated: 20 sweeps at production damping 0.5.
+    starts from, at the real two-tear gate (P1-13). Measured: the best sweep
+    is sweep 12 (gate M = 4.7e-2), Newton closes it in four passes to
+    M = 6.9e-15, H = 1.0e-14, and every stage sits at its bubble point. The
+    former assertion (M <= 1e-5) passed on a false convergence: nine bottom
+    stages clamped at the 363.09 K band ceiling.
     """
     params: dict[str, Any] = {
         "n_stages": 22,
@@ -207,8 +240,13 @@ def test_deethanizer_mesh_converges_under_50_sweeps(thermo: Thermo) -> None:
     prof = col_mod._seed_profile(col, tb, t_top, t_bot)
     prof = col_mod._solve_mesh(col, tb, 3.0 * 37.0, 3.0 * 37.0 + 20.0, prof)
     assert prof.outer < 50
-    m_norm, _h_norm = col_mod._exact_residuals(col, tb, prof)
-    assert m_norm <= 1e-5
+    m_norm, h_norm = col_mod._exact_residuals(col, tb, prof)
+    assert m_norm <= _MESH_M_TOL  # the real two-tear gate, summation rows included
+    assert h_norm <= _MESH_H_TOL
+    # Independent equilibrium check: every stage sits at its liquid's bubble point.
+    for j in range(col.n):
+        x = {c: prof.x[j][c] for c in col.comps}
+        assert thermo.bubble_point(x, P=1.7e6).T == pytest.approx(prof.T[j], abs=1e-3), j
 
 
 def test_infeasible_spec_raises_typed_error_fast(thermo: Thermo) -> None:

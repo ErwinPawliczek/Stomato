@@ -7,9 +7,11 @@ report duties, and drive the column specs onto their targets.
 
 from __future__ import annotations
 
+import dataclasses
 import math
 from typing import Any
 
+from .graph_ns import _graph_naphtali_sandholm
 from .inside_out import (
     _Column,
     _exact_residuals,
@@ -26,10 +28,15 @@ from .inside_out import (
 )
 from .linalg import _gauss
 from .naphtali_sandholm import _naphtali_sandholm
+from .relaxation import _relaxation_profile
 from .spec import (
     _BAND_LIMIT_EPS,
+    _CONTINUATION_MIN_STEP,
+    _DAMP_RATIO_BAND,
+    _DAMP_RATIO_RUNS,
     _FLOW_FLOOR,
     _MESH_H_TOL,
+    _MESH_H_TOL_REACTIVE,
     _MESH_M_TOL,
     _MESH_M_TOL_REACTIVE,
     _MESH_M_TOL_ZERO_ONE_TEAR,
@@ -38,14 +45,26 @@ from .spec import (
     _OUTER_DAMP_ZERO_ONE,
     _OUTER_MAX,
     _POLISH_M_TOL_ZERO_ONE_TEAR,
+    _RX_STEP_CUT,
+    _RX_STEP_FIRST,
+    _RX_STEP_GROW,
+    _RX_STEP_MIN,
     _SPEC_MAX,
     _SPEC_TOL,
     _STAGNATION_MAX,
     _STAGNATION_MAX_ZERO_ONE_TEAR,
     ColumnConvergenceError,
     ColumnSpecError,
+    _DrawSpec,
     _is_reactive_package,
     _Params,
+)
+from .strippers import (
+    _check_free_water,
+    _finalize_graph_duties,
+    _main_only_column,
+    _seed_sections,
+    _sequential_seed,
 )
 from .thermo_adapter import _flash_ready, _ThermoBox
 
@@ -83,11 +102,8 @@ def _reject_band_limit(col: _Column, prof: _Profile) -> None:
     pin unphysical columns into the results. Raises the typed error naming the
     stages so the spec layer treats it like any other non-convergence.
     """
-    if col.n_tears >= 2:
-        # Two-tear columns keep their benchmarked behaviour untouched (the
-        # deethanizer mesh test rides the band at fixed tears today); extending
-        # the guard there is measured under spec P1-10, not here.
-        return
+    # Every column (P1-13): the two-tear exemption let the deethanizer's
+    # fixed-tear mesh "converge" with nine stages on the 363.09 K ceiling.
     pinned = [
         j + 1
         for j, t in enumerate(prof.T)
@@ -111,6 +127,9 @@ def _reject_band_limit(col: _Column, prof: _Profile) -> None:
 #: NS's measured warm-descent reach.  Generic: it drives whatever heat-scale
 #: capability the thermo instance exposes and is a no-op without one.
 _CONTINUATION_SCALES: tuple[float, ...] = (0.0, 0.25, 0.5, 0.75, 1.0)
+#: Smallest heat-scale step a failed rung is bisected to before the mesh error
+#: stands (a step doubles back toward the rung spacing after each success).
+_HEAT_MIN_STEP = 1.0 / 512.0
 
 
 def _solve_mesh(
@@ -129,19 +148,127 @@ def _solve_mesh(
     two-tear columns, packages without the capability) solves directly at the
     current scale, byte-identical to the un-continued path.
     """
+    if col.is_graph:
+        return _solve_graph_mesh(col, tb, t_top, t_bot, seed)
+    if col.reactions is not None and seed is None:
+        return _solve_reactive_mesh(col, tb, t_top, t_bot, allow_fallback)
     thermo = getattr(tb, "_thermo", tb)
     if col.n_tears < 2 and seed is None and _is_reactive_package(tb) and hasattr(thermo, "_heat_scale"):
-        original = thermo._heat_scale
-        prof: _Profile | None = None
         try:
-            for scale in _CONTINUATION_SCALES:
-                thermo._heat_scale = scale
-                prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, prof, allow_fallback)
-            assert prof is not None
-            return prof
-        finally:
-            thermo._heat_scale = original
+            return _heat_ladder(col, tb, t_top, t_bot, allow_fallback)
+        except ColumnConvergenceError:
+            if not (allow_fallback and col.reboiler == "kettle" and t_bot is not None):
+                raise
+            walked = _boilup_continuation(col, tb, t_top, t_bot)
+            if walked is None:
+                raise
+            return walked
     return _solve_mesh_at_heat(col, tb, t_top, t_bot, seed, allow_fallback)
+
+
+#: Kettle-tear anchors of the boilup continuation, as multiples of the
+#: requested boilup: each is tried cold (the heat ladder) until one converges.
+_BOILUP_ANCHORS: tuple[float, ...] = (2.0, 4.0)
+
+
+def _heat_ladder(
+    col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None, allow_fallback: bool
+) -> _Profile:
+    """Cold reactive zero/one-tear mesh: walk the thermo's ``_heat_scale`` up
+    ``_CONTINUATION_SCALES``, warm-chaining each converged rung into the next.
+
+    The ladder's rungs, each seeded by the secant predictor through the last
+    two converged rungs, with a failed rung bisected from the last converged
+    one. On the direct reactive surface the absorber's exotherm bulge steepens
+    toward scale 1 (measured 8-stage MDEA absorber: max T 320 / 328.5 / 339.6 /
+    342.2 K at scales 0.5 / 0.75 / 0.969 / 1.0), and a rung NS cannot reach
+    from the previous profile crawls its pass budget at lam 0.03-0.25. Below
+    _HEAT_MIN_STEP the last mesh error stands.
+    """
+    thermo: Any = getattr(tb, "_thermo", tb)
+    original = thermo._heat_scale
+    try:
+        thermo._heat_scale = _CONTINUATION_SCALES[0]
+        prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, None, allow_fallback)
+        scale = _CONTINUATION_SCALES[0]
+        prev: tuple[float, _Profile] | None = None
+        for target in _CONTINUATION_SCALES[1:]:
+            step = target - scale
+            while scale < target:
+                trial = min(scale + step, target)
+                thermo._heat_scale = trial
+                seed_prof = prof
+                if prev is not None:
+                    seed_prof = _secant_profile(col, prev[1], prof, (trial - scale) / (scale - prev[0]))
+                try:
+                    nxt = _solve_mesh_at_heat(col, tb, t_top, t_bot, seed_prof, allow_fallback)
+                except ColumnConvergenceError:
+                    step = 0.5 * (trial - scale)
+                    if step < _HEAT_MIN_STEP:
+                        raise
+                    continue
+                prev, prof, scale = (scale, prof), nxt, trial
+        return prof
+    finally:
+        thermo._heat_scale = original
+
+
+def _boilup_continuation(col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float) -> _Profile | None:
+    """Cold reactive kettle column the heat ladder could not close at ``t_bot``:
+    solve it cold at a higher boilup anchor, then walk the kettle tear down to
+    ``t_bot`` warm (``_continuation``: every sub-step a full mesh solve, so the
+    returned profile is converged at exactly the requested tears).
+
+    The cold seed's basin shrinks with the stripping vapour while the warm
+    basin does not (measured 6-stage MEA regenerator, 100 mol/s rich solvent at
+    1.9 bar: cold, scale-0 NS stalls at boilup 30 mol/s, M = 5.9, after 25 s;
+    from the cold V = 40 profile warm NS converges at 35/30/25/20/15 mol/s in
+    0.3 s each, and in one step at 12 mol/s). The anchors are multiples of the
+    request (``_BOILUP_ANCHORS``); None when no anchor converges cold, so the
+    caller's ladder error stands. A walk that stalls raises its own error.
+    """
+    for factor in _BOILUP_ANCHORS:
+        try:
+            anchor = _heat_ladder(col, tb, t_top, factor * t_bot, True)
+        except (ColumnConvergenceError, ValueError):
+            continue
+        return _continuation(col, tb, anchor, t_top, t_bot)
+    return None
+
+
+def _solve_reactive_mesh(
+    col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None, allow_fallback: bool
+) -> _Profile:
+    """Cold reactive mesh: warm-chain from the plain column up the holdup scale.
+
+    The inside-out sweep freezes the reaction source, so a large Damkohler
+    number oscillates, and Newton from the crude cold seed sits outside its
+    basin (measured Fogler isomerization, 8 stages, 1 m3 per stage: cold, the
+    mesh fails outright at every boilup tried). The profile of a converged
+    rung IS inside the next rung's basin, so the source is walked up from zero,
+    growing the step after a success and cutting it after a failure. Every rung
+    is a full mesh solve; only the last, at scale 1, is reported.
+    """
+    scale = 0.0
+    step = _RX_STEP_FIRST
+    col.rx_scale = 0.0
+    try:
+        prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, None, allow_fallback)
+        while scale < 1.0:
+            trial = min(scale + step, 1.0)
+            col.rx_scale = trial
+            try:
+                prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, prof, allow_fallback)
+            except ColumnConvergenceError:
+                step *= _RX_STEP_CUT
+                if step < _RX_STEP_MIN:
+                    raise
+                continue
+            scale = trial
+            step *= _RX_STEP_GROW
+        return prof
+    finally:
+        col.rx_scale = 1.0
 
 
 def _solve_mesh_at_heat(
@@ -163,14 +290,26 @@ def _solve_mesh_at_heat(
     correlation's noise.
     """
     zero_one = col.n_tears < 2
+    h_tol = _MESH_H_TOL
     if zero_one and _is_reactive_package(tb):
         m_tol = _MESH_M_TOL_REACTIVE
+        h_tol = _MESH_H_TOL_REACTIVE
     elif zero_one:
         m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
     else:
         m_tol = _MESH_M_TOL
     patience = _STAGNATION_MAX_ZERO_ONE_TEAR if zero_one else _STAGNATION_MAX
     prof: _Profile | None = None
+    if seed is None and col.relaxation and not _is_reactive_package(tb):
+        # ``initialization: relaxation``: the cold start is the stage-flash
+        # relaxation of the standard seed (relaxation.py), and the mesh runs
+        # warm from it - the relaxed profile is a physical, near-converged
+        # state, exactly what the warm path is built for.
+        t_top_seed, t_bot_seed = _temperature_seed(col, tb)
+        start = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot, mixed_flash=False)
+        _apply_tears(col, start, t_top, t_bot)
+        start.L = _l_profile(col, start.l0, start.V)
+        seed = _relaxation_profile(col, tb, start)
     if seed is None:
         t_top_seed, t_bot_seed = _temperature_seed(col, tb)
         prof = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot)
@@ -199,11 +338,8 @@ def _solve_mesh_at_heat(
         best_prof = _copy_profile(col, prof)
     ns_direct = False
     ns_floor = False
-    if (
-        zero_one
-        and not _is_reactive_package(tb)
-        and (seed is not None or (col.n_tears == 1 and col.reboiler == "kettle"))
-    ):
+    reactive = _is_reactive_package(tb)
+    if zero_one and (seed is not None or (not reactive and col.n_tears == 1 and col.reboiler == "kettle")):
         # Naphtali-Sandholm FIRST for non-reactive zero/one-tear columns:
         # - warm (a promoted seed exists): NS from the re-teared seed converges
         #   in ~0.2 s at every neighbouring kettle tear (measured P1-10, V=24-76
@@ -220,6 +356,12 @@ def _solve_mesh_at_heat(
         #   sequence is locked, and NS is measurably worse there on reactive
         #   packages. Two-tear columns keep the original loop untouched: their
         #   benchmarked mesh sequence is locked (bench 4,959).
+        # - warm on a reactive package too, once its stage K and enthalpies
+        #   read the direct surface (spec.py, _MESH_M_TOL_REACTIVE): from the
+        #   previous heat-of-reaction rung NS converges in 3-5 quadratic passes,
+        #   while the sweeps re-flash every stage through the loading walk
+        #   (measured 5-stage MDEA absorber: 54 of 143 s in the sweeps' model
+        #   refreshes). Its state must meet the gate: no floor hand-off.
         try:
             _naphtali_sandholm(col, tb, prof, t_bot)
             ns_direct = True
@@ -230,6 +372,13 @@ def _solve_mesh_at_heat(
             # closed at D + B = 100.00000000 on a 100 mol/s feed; a stalled
             # state sits at 1e-2 or worse). Keep that state for the polish
             # stage below; otherwise restart from the untouched seed.
+            if reactive:
+                # The warm reactive state did not reach the gate from the
+                # previous rung: the caller's continuation bisects the rung
+                # (measured: the sweeps and a second NS from the same seed
+                # never rescued one on the 5-stage MDEA absorber, at ~2x the
+                # cost of the failed NS).
+                raise
             if _at_ns_floor(col, tb, prof):
                 ns_floor = True
             elif seed is None:
@@ -244,9 +393,12 @@ def _solve_mesh_at_heat(
         # inside-out loop is skipped entirely; the polish stage below still
         # runs and its gate decides acceptance.
         best_prof = _copy_profile(col, prof)
+    damp = _OUTER_DAMP
+    m_last = float("inf")
+    settled = 0
     for outer in range(1, 1 if (ns_direct or ns_floor) else _OUTER_MAX + 1):
         t_prev, v_prev = list(prof.T), list(prof.V)
-        model = _refresh_model(col, tb, prof, model)
+        model = _refresh_model(col, tb, prof, model, damp)
         prof.outer = outer
         _inner_solve(col, model, prof, t_bot)  # accumulates prof.inner itself
         if col.n_tears >= 2:
@@ -258,18 +410,28 @@ def _solve_mesh_at_heat(
             # (measured, P1-09: the 8-stage absorber froze at M=1.2e-3 over
             # 9 sweeps; undamped it closes at sweep 2 with M=8.8e-11).
             for j in range(col.n):
-                prof.T[j] = t_prev[j] + _OUTER_DAMP * (prof.T[j] - t_prev[j])
-                prof.V[j] = v_prev[j] + _OUTER_DAMP * (prof.V[j] - v_prev[j])
+                prof.T[j] = t_prev[j] + damp * (prof.T[j] - t_prev[j])
+                prof.V[j] = v_prev[j] + damp * (prof.V[j] - v_prev[j])
         elif _OUTER_DAMP_ZERO_ONE < 1.0:
             for j in range(col.n):
                 prof.T[j] = t_prev[j] + _OUTER_DAMP_ZERO_ONE * (prof.T[j] - t_prev[j])
                 prof.V[j] = v_prev[j] + _OUTER_DAMP_ZERO_ONE * (prof.V[j] - v_prev[j])
         prof.L = _l_profile(col, prof.l0, prof.V)
         m_res, h_res = _exact_residuals(col, tb, prof)
-        if m_res < m_tol and h_res < _MESH_H_TOL:
+        if m_res < m_tol and h_res < h_tol:
             _reject_band_limit(col, prof)
             _finalize_duties(col, tb, prof)
             return prof
+        # P1-13 change 1: the one damping decision (see spec.py).
+        if m_res > m_last:
+            damp, settled = _OUTER_DAMP, 0
+        elif abs(m_res / max(m_last, 1e-300) - _OUTER_DAMP) <= _DAMP_RATIO_BAND:
+            settled += 1
+            if settled >= _DAMP_RATIO_RUNS:
+                damp = 1.0
+        else:
+            settled = 0
+        m_last = m_res
         # Stagnation = NO improvement in either residual for 3 consecutive
         # sweeps. Early sweeps wobble in mass while enthalpy still improves
         # monotonically; a single combined metric misreads that as stagnation
@@ -310,7 +472,9 @@ def _solve_mesh_at_heat(
             # feed). Non-reactive zero/one-tear columns hand that state to the
             # polish below; everything else, and a genuinely stalled state
             # (measured stalls sit at M >= 1e-2), is a failure.
-            polishable = not _is_reactive_package(tb)
+            # P1-13 change 3: the floor bypass is a zero/one-tear rule; a
+            # two-tear column that misses its gate has not converged.
+            polishable = zero_one and not _is_reactive_package(tb)
             if not (polishable and _at_ns_floor(col, tb, prof)):
                 raise ColumnConvergenceError(
                     f"column did not converge in {_OUTER_MAX} inside-out sweeps and the "
@@ -318,12 +482,17 @@ def _solve_mesh_at_heat(
                     f"(best inside-out profile residuals M={best_m:.2e}, H={best_h:.2e} over "
                     f"{prof.outer} outer sweeps, {prof.inner} inner iterations)"
                 ) from exc
-    if zero_one and not _is_reactive_package(tb):
+    if zero_one and not _is_reactive_package(tb) and not (tb.direct_phases or tb.pooled_fugacity):
         # NS globalizes; the inside-out polishes. NS's finite-difference Newton
         # floors at M=3.9e-8 (measured P1-09 absorber: passes 20-30 stagnant),
         # while the anchored-correlation inside-out closes to machine precision
         # from a near-converged state (measured N=2/N=4: M ~ 1e-10). Warm-start
         # sweeps lift the solution the last two decades onto the strict gate.
+        # A column on the smooth fugacity surface (plain ``direct_phases``, or
+        # pooled liquids split without a flash) gates its NS at the polish
+        # tolerance itself; the sweeps here would read the flash surface
+        # (measured on the pooled crude main column: 8 refreshes, 47 s of full
+        # 22-species PT flashes after a 6 s NS).
         model = None
         stalled = 0
         m_ns, h_ns = _exact_residuals(col, tb, prof)
@@ -356,6 +525,214 @@ def _solve_mesh_at_heat(
     return prof
 
 
+def _solve_graph_mesh(
+    col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None, seed: _Profile | None
+) -> _Profile:
+    """Graph mesh at given tears: warm from ``seed`` when given, and cold
+    (the sequential initializer) when there is no seed or the warm start
+    stalls - a converged profile at a distant tear can sit outside the
+    Newton basin where the cold start is inside it (measured: a 10-stage
+    total-condenser column warm-walked from boilup 107 to 41 mol/s through
+    a 4-level continuation in 430 s and still stalled)."""
+    if seed is not None:
+        try:
+            return _graph_mesh_once(col, tb, t_top, t_bot, seed)
+        except ColumnConvergenceError:
+            pass
+    return _graph_mesh_once(col, tb, t_top, t_bot, None)
+
+
+def _graph_mesh_once(
+    col: _Column,
+    tb: _ThermoBox,
+    t_top: float | None,
+    t_bot: float | None,
+    seed: _Profile | None,
+    top_vapour: float | None = None,
+    ns_max: int | None = None,
+) -> _Profile:
+    """Converge the MESH over the whole stage graph at given tears (S0-1c step 3).
+
+    Side-stripper sections and the main column are ONE equation system: the
+    graph Naphtali-Sandholm Newton (``graph_ns``) solves every stage of every
+    section together with the main stages, linked by the draw and vapour-return
+    interlinks, under one exact gate (``_graph_exact_residuals``: component,
+    summation and enthalpy rows over the graph at the mesh tolerances) - no
+    tears between the sections (Russell 1983, "A flexible and reliable method
+    solves single-tower and crude-distillation-column problems", Comput. Chem.
+    Eng. 7, 571-578; the RadFrac/PetroFrac formulation).
+
+    Cold (no seed), the sequential-section initializer gives the starting
+    profile: the main column with each stripper as a plain liquid side draw,
+    converged by the ordinary linear-column mesh (inside-out with its NS
+    fallback), then each section seeded from its draw. Warm, the caller's
+    converged graph profile is re-teared. Inside-out sweeps over the graph
+    itself are NOT used: the graph Newton converges quadratically from the
+    sequential seed (measured, nC6-nC12 at 2 bar with a 4-stage steam
+    stripper: exact M 1.0 -> 6.4e-8 in five passes, 3.8 s), so there is one
+    simultaneous engine and one gate. ``ns_max`` overrides the Newton pass
+    budget (None = the column's own).
+    """
+    if seed is None:
+        prof = _sequential_seed(col, tb, t_top, t_bot, _seed_main_mesh)
+    else:
+        prof = _copy_profile(col, seed)
+    # The graph Newton's own trace and pass count (the seed's linear solve
+    # or the warm seed's earlier passes are not this mesh's).
+    prof.ns_trace, prof.ns_passes = [], 0
+    _apply_tears(col, prof, t_top, t_bot)
+    if seed is None and col.relaxation and col.wall is None:
+        # ``initialization: relaxation``: relax the sequential seed over the
+        # whole graph - the sections' draw-state seed is what the graph
+        # Newton could not leave on a wide-boiling column (relaxation.py).
+        prof = _relaxation_profile(col, tb, prof)
+    try:
+        _graph_naphtali_sandholm(
+            col, tb, prof, t_bot if col.reboiler == "kettle" else None, top_vapour, ns_max=ns_max
+        )
+    except ColumnConvergenceError as exc:
+        # A stalled graph Newton whose best iterate already carries free
+        # water has a physical reason, not a solver one: the one-liquid stage
+        # model has no solution there. Refuse with that reason (typed
+        # ColumnSpecError, which ends the spec loop at once) instead of
+        # retrying every tear neighbourhood to the same stall.
+        _check_free_water(
+            col, tb, prof, skip_condenser=col.water_decant, where=f" (best Newton iterate; {str(exc)[:120]})"
+        )
+        raise
+    _reject_band_limit(col, prof)
+    _finalize_graph_duties(col, tb, prof)
+    return prof
+
+
+def _solve_graph_reflux_distillate(
+    col: _Column, tb: _ThermoBox, params: _Params, r_spec: float, d_spec: float
+) -> _Profile:
+    """A total-condenser + kettle stage-graph column on reflux_ratio +
+    distillate_rate: one graph mesh in top-vapour mode, no tear secant.
+
+    The pair fixes the reflux L_0 = R D and the top vapour V_1 = L_0 + D (+ the
+    decanted free water W), so V_1 is pinned exactly like a partial
+    condenser's top tear and the kettle boilup becomes a Newton unknown - the
+    formulation the partial-condenser graph columns converge robustly in. The
+    secant over the boilup is gone: on wide-boiling feeds it walked tears the
+    cold start could not reach (measured 430-805 s, then a stall). With a
+    decant, W is an outcome of V_1, so V_1 = L_0 + D + W is a fixed point
+    met by warm re-solves (``_DECANT_PIN_MAX``, to ``_DECANT_PIN_TOL`` of D).
+    """
+    l0 = r_spec * d_spec
+    # Seed: the main column alone (each stripper a plain side draw of its
+    # product rate) on the SAME reflux and distillate specs, through the
+    # plain column's own spec loop - its V_1 is already L_0 + D, so the graph
+    # Newton only has to add the strippers. Should that plain solve fail, a
+    # converged graph column at a guessed boilup stands in, and its top
+    # vapour is walked to L_0 + D: each step a warm graph mesh in top-vapour
+    # mode, the step halved on a stall and doubled after a success.
+    main = _main_only_column(col)
+    main_params = dataclasses.replace(
+        params,
+        side_strippers=[],
+        condenser_water_decant=False,
+        draws=list(params.draws)
+        + [
+            _DrawSpec(stage=st.draw_stage, vapor=False, flow=st.product_rate)
+            for st in params.side_strippers
+            if st.n_stages > 0 and st.product_rate is not None
+        ],
+    )
+    try:
+        prof = _seed_sections(col, _solve_specs(main, tb, main_params))
+        if col.relaxation and col.wall is None:
+            # The draw-state section seed relaxed over the whole graph at the
+            # main solve's reflux and boilup (relaxation.py); the top-vapour
+            # walk then moves V_1 onto L_0 + D + W from there.
+            prof = _relaxation_profile(col, tb, prof)
+    except (ColumnConvergenceError, ColumnSpecError, ValueError):
+        prof = _solve_graph_mesh(col, tb, l0, l0 + 0.2 * col.f_total, None)
+    w = 0.0
+    for _ in range(_DECANT_PIN_MAX):
+        prof = _walk_top_vapour(col, tb, prof, l0, l0 + d_spec + w)
+        if not col.water_decant or abs(prof.decant - w) <= _DECANT_PIN_TOL * d_spec:
+            return prof
+        w = prof.decant
+    raise ColumnConvergenceError(
+        f"decant pin did not settle in {_DECANT_PIN_MAX} re-solves: "
+        f"W moved {w:.6g} -> {prof.decant:.6g} mol/s"
+    )
+
+
+def _walk_top_vapour(col: _Column, tb: _ThermoBox, start: _Profile, l0: float, target: float) -> _Profile:
+    """Walk a converged graph profile's top vapour to ``target`` (top-vapour
+    mode), warm-chaining converged steps; below ``_CONTINUATION_MIN_STEP`` of
+    the path the walk raises the last stall."""
+    v_start = start.V[0]
+    done, step = 0.0, 1.0
+    current = start
+    while done < 1.0:
+        f = min(1.0, done + step)
+        try:
+            v_top = v_start + f * (target - v_start)
+            current = _graph_mesh_once(col, tb, l0, None, current, top_vapour=v_top)
+        except ColumnConvergenceError as exc:
+            step *= 0.5
+            if step < _CONTINUATION_MIN_STEP:
+                raise ColumnConvergenceError(
+                    f"top-vapour walk stalled {done:.3f} of the way from V_1 = {v_start:.6g} "
+                    f"to {target:.6g}: {exc}"
+                ) from exc
+            continue
+        done = f
+        step = min(2.0 * step, 1.0)
+    return current
+
+
+#: Re-solves of the top-vapour pin V_1 = L_0 + D + W on a decanting column
+#: (W is a smooth, small function of V_1: two or three settle it).
+_DECANT_PIN_MAX = 8
+#: Settled when W moves by less than this fraction of D between re-solves.
+_DECANT_PIN_TOL = 1e-9
+#: Floor of the relaxation start's boilup estimate, as a fraction of the total feed.
+_RELAX_BOILUP_FLOOR = 0.05
+
+
+def _seed_main_mesh(main: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None) -> _Profile:
+    """The sequential initializer's main-column solve: the plain mesh, cold."""
+    return _solve_mesh(main, tb, t_top, t_bot, None)
+
+
+def _continuation(
+    col: _Column, tb: _ThermoBox, seed: _Profile, top: float | None, bot: float | None
+) -> _Profile:
+    """Walk a two-tear mesh from the seed's tears to (top, bot), warm-chaining each step.
+
+    The step along the straight tear path starts at half the distance, doubles
+    after a converged sub-step and halves after a failed one; below
+    ``_CONTINUATION_MIN_STEP`` of the path the walk raises the last mesh error.
+    Every sub-step is a full mesh solve, so the returned profile is converged
+    at exactly (top, bot).
+    """
+    s_top = seed.l0 if col.condenser == "total" else seed.V[0]
+    s_bot = seed.V[col.n - 1]
+    done, step = 0.0, 0.5
+    current = seed
+    while done < 1.0:
+        f = min(1.0, done + step)
+        t_try = None if top is None else s_top + f * (top - s_top)
+        b_try = None if bot is None else s_bot + f * (bot - s_bot)
+        try:
+            current = _solve_mesh(col, tb, t_try, b_try, current)
+        except (ColumnConvergenceError, ValueError) as exc:
+            step *= 0.5
+            if step < _CONTINUATION_MIN_STEP:
+                raise ColumnConvergenceError(
+                    f"tear continuation stalled {done:.3f} of the way to {(top, bot)}: {exc}"
+                ) from exc
+            continue
+        done = f
+        step = min(2.0 * step, 1.0)
+    return current
+
+
 def _at_ns_floor(col: _Column, tb: _ThermoBox, prof: _Profile) -> bool:
     """True when a Naphtali-Sandholm exit left a physically converged state.
 
@@ -366,6 +743,26 @@ def _at_ns_floor(col: _Column, tb: _ThermoBox, prof: _Profile) -> bool:
     """
     m_ns, h_ns = _exact_residuals(col, tb, prof)
     return m_ns < _NS_FLOOR_M and h_ns < _MESH_H_TOL
+
+
+def _secant_profile(col: _Column, prev: _Profile, cur: _Profile, ratio: float) -> _Profile:
+    """Secant (first-order) predictor: cur + ratio * (cur - prev), stage by stage.
+
+    The natural-parameter continuation predictor (Allgower & Georg, Numerical
+    Continuation Methods, 1990, ch. 2): temperatures, flows and compositions
+    extrapolated along the last converged step; flows floored, compositions
+    floored at zero and renormalised.
+    """
+    out = _copy_profile(col, cur)
+    for j in range(col.n):
+        out.T[j] = cur.T[j] + ratio * (cur.T[j] - prev.T[j])
+        out.V[j] = max(cur.V[j] + ratio * (cur.V[j] - prev.V[j]), _FLOW_FLOOR)
+        out.L[j] = max(cur.L[j] + ratio * (cur.L[j] - prev.L[j]), _FLOW_FLOOR)
+        for comps, a, b in ((out.x, prev.x, cur.x), (out.y, prev.y, cur.y)):
+            moved = {cid: max(v + ratio * (v - a[j].get(cid, 0.0)), 0.0) for cid, v in b[j].items()}
+            total = sum(moved.values())
+            comps[j] = {cid: v / total for cid, v in moved.items()} if total > 0.0 else dict(b[j])
+    return out
 
 
 def _copy_profile(col: _Column, src: _Profile) -> _Profile:
@@ -386,6 +783,7 @@ def _copy_profile(col: _Column, src: _Profile) -> _Profile:
         ns_used=src.ns_used,
         ns_passes=src.ns_passes,
         ns_trace=list(src.ns_trace),
+        draw_flows=list(src.draw_flows),
     )
 
 
@@ -560,7 +958,8 @@ def _spec_g(col: _Column, params: _Params, prof: _Profile, skip: set[str]) -> tu
             comp = str(target_d["component"])
             value = float(target_d["value"])
             is_dist = str(target_d.get("product", "distillate")) == "distillate"
-            out_frac = (prof.y[0] if is_dist else prof.x[col.n - 1]).get(comp, 0.0)
+            dist_comp = prof.reflux_x or prof.y[0]  # the decanted liquid when decanting
+            out_frac = (dist_comp if is_dist else prof.x[col.n - 1]).get(comp, 0.0)
             if key == "product_purity":
                 g.append(out_frac - value)
             else:
@@ -575,6 +974,8 @@ def _spec_g(col: _Column, params: _Params, prof: _Profile, skip: set[str]) -> tu
             g.append(prof.l0 / max(prof.d, _FLOW_FLOOR) - target)
         elif key == "boilup_ratio":
             g.append(prof.V[col.n - 1] / max(prof.b, _FLOW_FLOOR) - target)
+        elif key == "boilup_rate":
+            g.append(prof.V[col.n - 1] - target)
         elif key == "distillate_rate":
             g.append(prof.d - target)
         elif key == "bottoms_rate":
@@ -606,7 +1007,18 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
     b_spec = specs.get("bottoms_rate")
     r_spec = specs.get("reflux_ratio")
     vb_spec = specs.get("boilup_ratio")
+    if (
+        col.is_graph
+        and col.condenser == "total"
+        and col.reboiler == "kettle"
+        and r_spec is not None
+        and d_spec is not None
+    ):
+        return _solve_graph_reflux_distillate(col, tb, params, float(r_spec), float(d_spec))
     draw_total = sum(dr.flow for dr in params.draws if dr.flow is not None)
+    # Stripper products leave the unit like draws (S0-1c): B = F - D - draws
+    # - products by the overall balance (steam is in f_total).
+    draw_total += sum(st.product_rate or 0.0 for st in params.side_strippers)
     pin_top = False
     pin_bot = False
     skip: set[str] = set()
@@ -618,7 +1030,9 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         t_top = float(r_spec) * max(col.f_total - float(b_spec) - draw_total, _FLOW_FLOOR)
         pin_top = True
         skip.add("reflux_ratio")
-    if col.reboiler == "kettle" and vb_spec is not None and d_spec is not None:
+    if col.reboiler == "kettle" and vb_spec is not None and d_spec is not None and not col.water_decant:
+        # (With a decant the bottoms is F - D - W and W is an outcome, so the
+        # ratio cannot pin the boilup; the secant drives it instead.)
         t_bot = float(vb_spec) * max(col.f_total - float(d_spec) - draw_total, _FLOW_FLOOR)
         pin_bot = True
         skip.add("boilup_ratio")
@@ -626,6 +1040,10 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         t_bot = float(vb_spec) * float(b_spec)
         pin_bot = True
         skip.add("boilup_ratio")
+    if col.reboiler == "kettle" and "boilup_rate" in specs:
+        t_bot = float(specs["boilup_rate"])
+        pin_bot = True
+        skip.add("boilup_rate")
     if col.condenser == "partial" and d_spec is not None:
         t_top = float(d_spec)
         pin_top = True
@@ -645,6 +1063,16 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         # every stage two-phase and the mesh converges robustly there; the warm-
         # started secant then walks the kettle tear down to the specification.
         t_bot = t_top + col.f_total * 0.2
+        if col.relaxation and d_spec is not None:
+            # Relaxation start: the boilup the pinned top vapour implies under
+            # constant molar overflow, V_N = L_0 + D - (feed vapour), floored.
+            # The high-traffic guess above is no seed for a wide-boiling feed
+            # that arrives largely vaporised: measured on a 10-stage
+            # nC5-nC14 column at 1.5 bar (R = 2, D = 20 of 100 mol/s), the
+            # guess V_N = 60 leaves the kettle no liquid (V_1 ~ 141, D ~ 100)
+            # and no mesh exists there to converge to.
+            f_vap = sum(part.v_flow for part in col.feeds[: col.n])
+            t_bot = max(t_top + float(d_spec) - f_vap, _RELAX_BOILUP_FLOOR * col.f_total)
 
     state: dict[str, _Profile | None] = {"seed": None, "seed2": None}
 
@@ -780,7 +1208,24 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
             seed = state["seed"]
             if seed is None:
                 break
-            if top is not None:
+            if not cold and col.is_graph:
+                # Graph meshes already fall back to the cold sequential start
+                # (``_solve_graph_mesh``); a warm-chained continuation walk
+                # costs one graph Newton per sub-step and stalls where the
+                # cold start does (measured 430 s on a 10-stage column).
+                break
+            if not cold:
+                # Two-tear columns: continuation from the seed's own tears to the
+                # requested ones, warm-chaining every converged sub-step and
+                # halving the step on a failure (P1-13). The former backtracking
+                # moved the TARGET toward the seed and returned a profile at
+                # tears the secant had not asked for. Measured 22-stage
+                # deethanizer: warm from V_N = 131 the mesh at 68 fails, while
+                # 10 mol/s steps chain down to 66 in ~5 s each.
+                prof = _continuation(col, tb, seed, top, bot)
+                promote(prof)
+                return solved_tears(prof)
+            if top is not None and free_top:
                 # Backtrack toward the seed value of the SAME tear quantity:
                 # the reflux L_0 for a total condenser, the stage-1 vapour V_1
                 # for a partial condenser (its distillate draw is the tear),
@@ -788,14 +1233,20 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                 # hardware has no tear there, so nothing to backtrack (spec B).
                 target = seed.l0 if col.condenser == "total" else seed.V[0]
                 top = top + 0.5 * (target - top)
-            if bot is not None:
+            if bot is not None and free_bot:
                 bot = bot + 0.5 * (seed.V[col.n - 1] - bot)
-        if col.n_tears < 2:
+        if col.n_tears < 2 and (free_top or free_bot):
+            # A pinned tear (a distillate-rate spec on a partial condenser, a
+            # boilup-rate spec on a kettle) is the spec itself: it is never
+            # retreated or backtracked, since the spec residuals skip it and
+            # a profile solved at a moved pinned tear would be reported as
+            # meeting a spec it misses (measured: a 12-stage crude column
+            # pinned at D = 474.64 mol/s "converged" at 0.8 D = 379.71).
             for frac in (0.8, 0.64, 0.512, 0.41, 0.328, 0.262):
                 try:
                     prof = mesh_at(
-                        None if start_top is None else start_top * frac,
-                        None if start_bot is None else start_bot * frac,
+                        None if start_top is None else start_top * (frac if free_top else 1.0),
+                        None if start_bot is None else start_bot * (frac if free_bot else 1.0),
                         probe=True,
                     )
                     return prof
@@ -986,8 +1437,9 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                     flee = 0
             else:
                 flee = 0
-        if col.n_tears < 2:
-            # Damped Newton on the tear update, one-tear columns only: the
+        if col.n_tears < 2 or col.is_graph:
+            # Damped Newton on the tear update, one-tear and stage-graph
+            # columns (the graph meshes are not in the bench sequence): the
             # ratio/boilup curve is flat near the seed (measured P1-09 stripper:
             # ratio 0.593 at boilup 8.0) so the linear secant step lands far
             # outside the narrow mesh-convergent tear window (the undamped step

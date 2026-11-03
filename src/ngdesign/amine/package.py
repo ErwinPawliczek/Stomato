@@ -65,6 +65,7 @@ from ngdesign.amine.equilibrium import ENRTL, KENT_EISENBERG
 from ngdesign.amine.kent_eisenberg import (
     _MAX_LOADING,
     AMINES,
+    extended_amines,
 )
 from ngdesign.amine.kent_eisenberg import (
     equilibrium_loadings as _ke_loadings,
@@ -72,6 +73,7 @@ from ngdesign.amine.kent_eisenberg import (
 from ngdesign.amine.kent_eisenberg import (
     equilibrium_partial_pressures as _ke_pressures,
 )
+from ngdesign.amine.mdea_pz import mdea_pz_p_co2
 from ngdesign.amine.roots import brent_root
 from ngdesign.contracts import Phase, PhaseKind, StreamState
 from ngdesign.contracts.plugins import Thermo
@@ -81,16 +83,22 @@ from ngdesign.contracts.thermo import (
     SaturationError,
     SaturationPoint,
 )
-from ngdesign.data import components
+from ngdesign.data import DATABANK_LOCK, component_record, components
 from ngdesign.registry import register
 from ngdesign.thermo import _state
+from ngdesign.thermo.gamma_phi import _constants_for
 from ngdesign.thermo.saturation import solve_saturation
 
 __all__ = [
     "AmineENRTLPackage",
+    "AmineKEExtendedPackage",
+    "AmineMdeaPzPackage",
     "AmineKEPackage",
     "AmineReactivePackage",
 ]
+
+#: Piperazine's component id (its CAS, in the open registry).
+_PIPERAZINE_ID = "110-85-0"
 
 #: Acid gases handled by the speciation chemistry.
 _ACID_GAS_IDS: tuple[str, ...] = ("CO2", "H2S")
@@ -169,6 +177,40 @@ def _wegstein_w(a_used: list[float], a_raws: list[float]) -> float:
     return min(max(1.0 / (1.0 - slope), 0.05), 1.0)
 
 
+def _basis_drift(x: dict[str, float], x_new: dict[str, float]) -> float:
+    """Max change of the non-acid-gas liquid mole fractions between two liquids.
+
+    The K-values of a loading-walk iterate are read at ``x``; the returned state
+    is consistent (y_i == K_i(x_new) x_new_i) only when x_new carries the same
+    solvent, piperazine and dissolved-inert fractions as x, not just the same
+    loadings.
+    """
+    return max(
+        (
+            abs(x_new.get(cid, 0.0) - x.get(cid, 0.0))
+            for cid in set(x) | set(x_new)
+            if cid not in _ACID_GAS_IDS
+        ),
+        default=0.0,
+    )
+
+
+def _with_loadings(x: dict[str, float], amine_id: str, a: tuple[float, float]) -> dict[str, float]:
+    """The liquid x with its acid gases reset to loadings ``a`` (CO2, H2S per amine), normalised."""
+    out = dict(x)
+    x_a = x[amine_id]
+    out["CO2"] = a[0] * x_a
+    out["H2S"] = a[1] * x_a
+    total = sum(out.values())
+    return {cid: v / total for cid, v in out.items()}
+
+
+def _beyond_window(z: dict[str, float], amine_id: str) -> bool:
+    """True when z's own CO2 or H2S loading (per mol amine) exceeds _MAX_LOADING."""
+    cap = _MAX_LOADING * z.get(amine_id, 0.0)
+    return z.get("CO2", 0.0) > cap or z.get("H2S", 0.0) > cap
+
+
 class AmineChemistryError(ValueError):
     """The amine speciation left its fitted chemistry window.
 
@@ -197,13 +239,13 @@ def _sander_henry_table() -> dict[str, dict[str, float]]:
 @cache
 def _mw(cid: str) -> float:
     """Molecular weight of a databanked component, g/mol."""
-    return float(components()[cid]["mw"])
+    return float(_comp(cid)["mw"])
 
 
 @cache
 def _cas(cid: str) -> str:
     """CAS number of a databanked component id."""
-    return str(components()[cid]["cas"])
+    return str(_comp(cid)["cas"])
 
 
 #: Pure-component liquid densities at 298.15 K, kg/m3 (GPSA / handbook values;
@@ -223,9 +265,32 @@ _PURE_LIQUID_DENSITIES: dict[str, float] = {
 }
 
 
+def _comp(cid: str) -> dict[str, Any]:
+    """Curated component entry; an extended amine reads the open registry's record."""
+    curated = components().get(cid)
+    if curated is not None:
+        return dict(curated)
+    record = component_record(cid)
+    if record is None:
+        raise KeyError(cid)
+    return {**record, "tc_K": record["Tc"], "pc_Pa": record["Pc"]}
+
+
+def _databank_liquid_density(cas: str) -> float:
+    """Liquid density at 298.15 K from the thermo databank correlations."""
+    with DATABANK_LOCK:
+        constants, correlations = _constants_for((cas,))
+    volume = correlations.VolumeLiquids[0](298.15, 101325.0)
+    if volume is None:
+        raise ValueError(f"no liquid volume for {cas} at 298.15 K")
+    return float(constants.MWs[0]) / 1000.0 / float(volume)
+
+
 @cache
 def _pure_liquid_density(cid: str) -> float:
     """Pure-component liquid density (kg/m3) of the molarity-basis species."""
+    if cid in extended_amines():
+        return _databank_liquid_density(cid)
     try:
         return _PURE_LIQUID_DENSITIES[cid]
     except KeyError:
@@ -242,7 +307,7 @@ def _sander_henry(cas: str) -> dict[str, float] | None:
 
 def _wilson_psat(cid: str, T: float) -> float:
     """Wilson-correlation Psat estimate (Pa) from databank criticals (bracket helper)."""
-    comps = components()[cid]
+    comps = _comp(cid)
     return float(comps["pc_Pa"]) * math.exp(
         5.373 * (1.0 + float(comps["omega"])) * (1.0 - float(comps["tc_K"]) / T)
     )
@@ -250,7 +315,7 @@ def _wilson_psat(cid: str, T: float) -> float:
 
 def _wilson_T(cid: str, P: float) -> float | None:
     """Wilson-correlation saturation-temperature estimate (K); None when unusable."""
-    comps = components()[cid]
+    comps = _comp(cid)
     tc, pc, omega = float(comps["tc_K"]), float(comps["pc_Pa"]), float(comps["omega"])
     if P >= pc:
         return None
@@ -271,6 +336,9 @@ class AmineReactivePackage(Thermo):
 
     #: Speciation chemistry model (``ngdesign.amine.equilibrium`` names).
     model: str = KENT_EISENBERG
+
+    #: Component ids this package treats as its solvent amine.
+    supported_amines: frozenset[str] = frozenset(AMINES)
 
     #: Duck-typing marker the amine units probe (plain cubic packages lack it).
     is_amine_reactive_package = True
@@ -296,7 +364,15 @@ class AmineReactivePackage(Thermo):
     # -- plumbing -------------------------------------------------------------
 
     def _cached(self, key: tuple[Any, ...], compute: Callable[[], Any]) -> Any:
-        """Per-package LRU property cache (P1-01's semantics)."""
+        """Per-package LRU property cache (P1-01's semantics).
+
+        The heat-of-reaction scale is part of every key: the liquid enthalpy
+        depends on it, and the mesh's continuation walks it 0 -> 1 on ONE
+        instance, so a state built at a lower rung must not answer at scale 1
+        (measured: a 5-stage MDEA absorber's bottoms liquid read -46564 J/mol
+        from a stale entry against -48936 J/mol rebuilt at scale 1).
+        """
+        key = (self._heat_scale, *key)
         cache_ = self._lru_cache
         hit = cache_.get(key)
         if hit is not None:
@@ -314,7 +390,7 @@ class AmineReactivePackage(Thermo):
 
     def _amine_id(self, ids: tuple[str, ...]) -> str | None:
         """The one supported amine, or None; multiple amines raise."""
-        present = [cid for cid in ids if cid in AMINES]
+        present = [cid for cid in ids if cid in self.supported_amines]
         if not present:
             return None
         if len(present) > 1:
@@ -485,14 +561,34 @@ class AmineReactivePackage(Thermo):
             # change on [0, _MAX_LOADING] -- then polish the walk from the
             # solved state.  A non-converged "best" iterate is never returned:
             # it was a hidden ~1e-4 loading discontinuity in the FD Jacobian.
-            a_use, x = self._bracketed_loadings(z, T, P, x, amine_id, a_use)
-            result = self._loading_walk(z, T, P, x, amine_id, a_use, _LOADING_POLISH_ITER)
-            if result is None and self._loading_residual(z, T, P, x, amine_id, a_use) <= _BRACKET_RESIDUAL:
-                # The substitution map's fixed point is repelling here (measured
-                # P1-11: a bounded ~1e-5 loading limit cycle at T 295 K); the
-                # bracketed state itself satisfies the flash identity y_i * P ==
-                # p_eq_i(loading) to _BRACKET_RESIDUAL.
-                result = self._rr_split(z, T, P, x)
+            try:
+                a_br, x_br = self._bracketed_loadings(z, T, P, x, amine_id, a_use)
+            except ValueError:
+                if not _beyond_window(z, amine_id):
+                    raise
+                # No loading in [0, _MAX_LOADING] leaves a liquid (the map reads
+                # vapour at both bracket ends) for an overall the chemistry
+                # cannot hold as one liquid: walk from the seed rebuilt AT the
+                # clamped loadings, whose K are the chemistry's own (measured: a
+                # DEA regenerator's top vapour at its own stage T, 371.5 K /
+                # 1.9 bar, DEA 9e-5, CO2/amine 5700: vapour).
+                result = self._loading_walk(
+                    z, T, P, _with_loadings(x, amine_id, a_use), amine_id, a_use, _LOADING_MAX_ITER
+                )
+            else:
+                a_use, x = a_br, x_br
+                result = self._loading_walk(z, T, P, x, amine_id, a_use, _LOADING_POLISH_ITER)
+                if (
+                    result is None
+                    and self._loading_residual(z, T, P, x, amine_id, a_use) <= _BRACKET_RESIDUAL
+                ):
+                    # The substitution map's fixed point is repelling here (measured
+                    # P1-11: a bounded ~1e-5 loading limit cycle at T 295 K); the
+                    # bracketed state itself satisfies the flash identity y_i * P ==
+                    # p_eq_i(loading) to _BRACKET_RESIDUAL.
+                    result = self._rr_split(z, T, P, x)
+                    if not self._edge_holds(result[0], z, T, P, x):
+                        result = None
         if result is not None:
             return result
         z_str = ", ".join(f"{cid}: {v:.6g}" for cid, v in sorted(z.items()))
@@ -500,6 +596,37 @@ class AmineReactivePackage(Thermo):
             f"the amine loading fixed point did not converge at T={T} K, P={P} Pa, z={{{z_str}}} "
             f"({_LOADING_MAX_ITER} walk iterations + bracketed solve)"
         )
+
+    def _edge_holds(self, state: str, z: dict[str, float], T: float, P: float, x: dict[str, float]) -> bool:
+        """False when a single-liquid verdict was read at a liquid other than z.
+
+        ``_rr_split`` tests the liquid edge sum_i z_i K_i(x) <= 1 at the walk's
+        CURRENT liquid x, but a single liquid IS the overall composition, so the
+        verdict holds only at K evaluated on x = z: the bubble-point criterion
+        sum_i z_i K_i(z) <= 1 (the incipient vapour y_i = K_i(z) z_i sums below
+        one; Michelsen & Mollerup, Thermodynamic Models, 2nd ed., ch. 10, with
+        the reactive K a function of the liquid alone). The raw substitution
+        step from the solvent-basis seed overshoots: K read at the seed's full
+        loading strips the RR liquid to near-zero loading, and the edge test at
+        that iterate reads a false liquid (measured: a regenerator top stage
+        overall, DEA, 348 K / 1.9 bar, z carrying 12.8 % vapour on the column
+        profile - sum z K(x_iterate) = 0.15 while sum z K(z) = 31.0).
+        """
+        if state != "liquid":
+            return True
+        amine_id = self._amine_id(self._support(z))
+        if amine_id is not None and _beyond_window(z, amine_id):
+            # A liquid of composition z would carry acid gas beyond the
+            # chemistry window, where p_eq is read at the clamped loading - a
+            # lower bound - so sum z K <= 1 certifies nothing (measured: a DEA
+            # regenerator's top vapour, DEA 9e-5 and CO2/amine 5700 at its own
+            # stage T 371.5 K / 1.9 bar, read sum z K(z) = 0.93 and was
+            # reported liquid, 11 kJ/mol below its vapour enthalpy).
+            return False
+        if x == z:
+            return True
+        k = self._k_values_internal(z, T, P, z)
+        return sum(f * k[cid] for cid, f in z.items()) <= 1.0
 
     def _rr_split(
         self, z: dict[str, float], T: float, P: float, x: dict[str, float]
@@ -532,6 +659,14 @@ class AmineReactivePackage(Thermo):
         def rr(beta: float, k: dict[str, float] = k) -> float:
             return sum(f * (k[cid] - 1.0) / ((1.0 - beta) + beta * k[cid]) for cid, f in z.items())
 
+        # On the bubble or dew surface itself the edge sums above and the RR
+        # ends can round to opposite sides (measured: sum z K = 1 + 2e-16 beside
+        # rr(0) = -3e-18 at a converged absorber stage liquid at its bubble
+        # point); the RR ends' own signs decide the edge then.
+        if rr(0.0) <= 0.0:
+            return "liquid", 0.0, dict(z), dict(z)
+        if rr(1.0) >= 0.0:
+            return "vapor", 1.0, dict(z), dict(z)
         beta = brent_root(rr, 0.0, 1.0)
         y_raw: dict[str, float] = {}
         x_new: dict[str, float] = {}
@@ -585,10 +720,14 @@ class AmineReactivePackage(Thermo):
         for _ in range(max_iter):
             state, beta, x_new, y = self._rr_split(z, T, P, x)
             if state != "two_phase":
+                if not self._edge_holds(state, z, T, P, x):
+                    # A liquid verdict read at an overshot iterate, not at the
+                    # liquid itself: the bracketed solve takes over.
+                    return None
                 return state, beta, x_new, y
             a_raw = self._loadings_of(x_new, amine_id)
             residual = max(abs(a_raw[0] - a_use[0]), abs(a_raw[1] - a_use[1]))
-            if residual <= _LOADING_TOL:
+            if residual <= _LOADING_TOL and _basis_drift(x, x_new) <= _LOADING_TOL:
                 return "two_phase", beta, x_new, y
             hist.append((a_use, a_raw))
             w_co2 = _wegstein_w([h[0][0] for h in hist], [h[1][0] for h in hist])
@@ -678,6 +817,14 @@ class AmineReactivePackage(Thermo):
 
         for _ in range(_BRACKET_OUTER_MAX):
             a_sol, x_work = frozen_solve(x_work, a_sol)
+            state, _beta, x_rr, _y = self._rr_split(z, T, P, x_work)
+            if state == "two_phase" and _basis_drift(x_work, x_rr) > _LOADING_TOL:
+                # The basis follows the RR liquid: rebuild it there at the solved
+                # loadings (the seed's solvent basis carries no piperazine,
+                # hydrocarbons or inerts, and K read on it is not K of the liquid
+                # returned).
+                x_work = _with_loadings(x_rr, amine_id, a_sol)
+                continue
             if self._loading_residual(z, T, P, x_work, amine_id, a_sol) <= _BRACKET_RESIDUAL:
                 break
         return a_sol, x_work
@@ -704,7 +851,7 @@ class AmineReactivePackage(Thermo):
         """PT flash: reactive equilibrium at temperature T (K), pressure P (Pa abs)."""
         if self._reactive_domain(z) is None:
             return self._carrier.flash_pt(z, T, P, molar_flow)
-        key = ("pt", *_state.cache_key(z, T, P), round(molar_flow, 9))
+        key = ("pt", *_state.cache_key(z, T, P), float(molar_flow))
         return cast(StreamState, self._cached(key, lambda: self._build_state(z, T, P, molar_flow)))
 
     def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:
@@ -864,6 +1011,22 @@ class AmineReactivePackage(Thermo):
         if state != "two_phase":
             return None
         return {cid: (y[cid] / x[cid] if x[cid] > 0.0 else 0.0) for cid in z}
+
+    def liquid_k_values(self, x: dict[str, float], T: float, P: float) -> dict[str, float] | None:
+        """K_i = y_i / x_i in equilibrium with the liquid ``x`` itself, no flash.
+
+        The reactive K is a function of the liquid alone (``_k_values_internal``:
+        acid gases K_i = p_eq_i(T, loading of x) / (P x_i) from the speciation
+        model, water and amine Raoult, volatiles Henry), so a MESH stage's
+        E equation y_ij = K_ij(T_j, x_j) x_ij reads it at the stage liquid as
+        written (Naphtali & Sandholm 1971). ``k_values`` instead flashes a
+        composition and returns K at the flash's own liquid - at a stage
+        liquid on its bubble point that flash sits on the single-phase edge.
+        None outside the reactive domain (trace or no amine).
+        """
+        if self._reactive_domain(x) is None:
+            return None
+        return self._k_values_internal(x, T, P, x)
 
     def pure_psat(self, cid: str, T: float) -> float | None:
         """Pure-component vapour pressure (Pa) at T (K); None at or above Tc."""
@@ -1121,13 +1284,17 @@ def _registry_get(kind: str, name: str) -> Any:
 
 
 def _phase(kind: PhaseKind, mole_fraction: float, composition: dict[str, float], props: PhaseProps) -> Phase:
-    """Contract-v2 Phase from a PhaseProps build (P1-01's state assembly)."""
-    return Phase(
+    """Contract-v2 Phase from a PhaseProps build (P1-01's state assembly).
+
+    The viscosity stays deferred: it is read from ``props`` only if something
+    reads it from the phase (stage loops never do).
+    """
+    return Phase.deferred(
+        {"viscosity": lambda: props.viscosity},
         kind=kind,
         mole_fraction=mole_fraction,
         composition=dict(composition),
         density=props.density,
-        viscosity=props.viscosity,
         z_factor=props.z_factor,
         molecular_weight=props.molecular_weight,
         enthalpy=props.enthalpy,
@@ -1150,6 +1317,58 @@ def _phase(kind: PhaseKind, mole_fraction: float, composition: dict[str, float],
 @register("thermo", "amine_ke")
 class AmineKEPackage(AmineReactivePackage):
     """Amine reactive absorption on the Kent-Eisenberg chemistry (MDEA/MEA/DEA, CO2+H2S)."""
+
+
+class AmineKEExtendedPackage(AmineKEPackage):
+    """Kent-Eisenberg on DGA (929-06-6) and AMP (124-68-5), CO2 only.
+
+    Same chemistry and flash as amine_ke with the sets of
+    data/thermo_params/amine/ke_speciation.yaml. H2S refuses: no open data backs a
+    lumped H2S constant for either amine.
+    """
+
+    supported_amines = frozenset(extended_amines())
+
+    def _reactive_domain(self, z: dict[str, float]) -> str | None:
+        if z.get("H2S", 0.0) > 0.0 and any(cid in self.supported_amines for cid in z):
+            raise AmineChemistryError(
+                "no open H2S constant for DGA or AMP: amine_ke_dga_amp carries CO2 only"
+            )
+        return super()._reactive_domain(z)
+
+
+class AmineMdeaPzPackage(AmineKEPackage):
+    """Aqueous MDEA + piperazine, CO2 only (``ngdesign.amine.mdea_pz``).
+
+    The flash is amine_ke's, with MDEA as the solvent key: loadings stay per mole of
+    MDEA in that machinery, and the pressure comes from the blend's own speciation
+    over the liquid's mole amounts. Piperazine takes its databank Psat, as the amine
+    does. A feed without piperazine still runs this chemistry, with Bishnoi's
+    constants rather than amine_ke's.
+    """
+
+    supported_amines = frozenset({"MDEA"})
+
+    def _reactive_domain(self, z: dict[str, float]) -> str | None:
+        if z.get("H2S", 0.0) > 0.0 and z.get("MDEA", 0.0) > 0.0:
+            raise AmineChemistryError("no MDEA + PZ H2S constants: amine_mdea_pz carries CO2 only")
+        return super()._reactive_domain(z)
+
+    def _liquid_chemistry(
+        self, x: dict[str, float], T: float, P: float
+    ) -> tuple[str, float, float, float, float, float]:
+        amine_id = self._amine_id(self._support(x))
+        if amine_id is None:  # pragma: no cover - callers gate on amine presence
+            raise ValueError("no amine in the liquid composition")
+        pz = x.get(_PIPERAZINE_ID, 0.0)
+        co2 = min(max(x.get("CO2", 0.0), 0.0), _MAX_LOADING * (x[amine_id] + pz))
+        try:
+            p_co2 = mdea_pz_p_co2(T, x.get(_WATER_ID, 0.0), x[amine_id], pz, co2)
+        except ValueError as exc:
+            raise AmineChemistryError(
+                f"MDEA + PZ speciation left its chemistry window at T={T} K ({exc})"
+            ) from exc
+        return amine_id, self._amine_molarity(x, amine_id), co2 / x[amine_id], 0.0, p_co2, 0.0
 
 
 @register("thermo", "amine_enrtl")

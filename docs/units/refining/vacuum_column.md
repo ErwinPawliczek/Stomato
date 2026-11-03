@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `T`
 
-Rigour ladder: R0 provisional, R2 planned
+Rigour ladder: R0 provisional, R2 provisional
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.vacuum_column:VacuumColumn` | cut-point fractionation at flash-zone P (spec U-H1 sharp cut on the reduced-crude feed; single VGO draw, the row's three ports) |
-| R2 | planned | — | MESH with pumparounds, no condenser, wash zone |
+| R2 | provisional | `ngdesign.units.refining.vacuum_column_r2:VacuumColumnR2` | zero-tear MESH, no condenser and no reboiler - a top pumparound (fixed return T) condenses the gas oil, VGO a liquid draw on the pumparound stage; relaxation cold start (initialization relaxation, the standard start stalls at M ~ 1.0 on the 19-pseudo example feed). No separate wash-oil zone; one pumparound |
 
 ### R0 parameters
 
@@ -37,6 +37,41 @@ properties:
     type: number
 required:
 - cut_points_K
+type: object
+```
+
+### R2 parameters
+
+```yaml
+additionalProperties: false
+properties:
+  n_stages:
+    description: equilibrium stages, feed on the bottom stage N
+    minimum: 3
+    type: integer
+  pressure_profile:
+    description: stage pressures, Pa abs (scalar or per-stage list); default feed_in.P
+  pumparound_flow_mol_s:
+    description: top pumparound flow, drawn at vgo_stage, returned to stage 1
+    exclusiveMinimum: 0
+    type: number
+  pumparound_return_T_K:
+    description: pumparound return temperature, K
+    exclusiveMinimum: 0
+    type: number
+  vgo_rate_mol_s:
+    description: VGO liquid draw, mol/s
+    exclusiveMinimum: 0
+    type: number
+  vgo_stage:
+    description: stage of the VGO draw and the pumparound draw (default 2)
+    minimum: 2
+    type: integer
+required:
+- n_stages
+- vgo_rate_mol_s
+- pumparound_flow_mol_s
+- pumparound_return_T_K
 type: object
 ```
 

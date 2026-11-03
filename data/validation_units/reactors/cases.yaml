@@ -54,6 +54,19 @@
   - {quantity: outlet.outlet.composition.CO2, value: 0.249423, tol_abs: 0.001}
   - {quantity: outlet.outlet.composition.H2, value: 0.249423, tol_abs: 0.001}
 
+- id: V1-CRACK-GIBBS
+  unit: gibbs_multiphase
+  level: R0
+  source: "JANAF Thermochemical Tables (Chase 1998), printed log Kf of CH4 at 1200 K: -1.807 (janaf.nist.gov C-067, formation from graphite and H2) -> K = y_CH4/y_H2^2 at 1 bar, y_H2 = (-1 + sqrt(1 + 4K))/(2K) = 0.984873"
+  feeds:
+    inlet: {T: 1200.0, P: 100000.0, molar_flow: 1.0, composition: {CH4: 1.0}}
+  params:
+    species: [CH4, H2, C(s)]
+    thermal: isothermal
+  expected:
+  - {quantity: outlet.vapor_out.composition.H2, value: 0.984873, tol_abs: 0.001}
+  - {quantity: outlet.vapor_out.composition.CH4, value: 0.015127, tol_abs: 0.001}
+
 - id: V1-FOGLER-CONV
   unit: conversion_reactor
   level: R0

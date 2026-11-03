@@ -29,10 +29,9 @@ The last two family-F rows (T-07 follow-up, issue #164): ``gerg2008_teqp`` runs 
 GERG-2008 natural-gas mixture through teqp's multi-fluid machinery with the Kunz &
 Wagner (2012) reducing/departure parameters as distributed in teqp 0.23.2's bundled
 fluid library (the exact-backend cross-check the T-04 ``gerg2008`` row defers to);
-``soft_saft`` (Blas & Vega 1997) has no engine — teqp 0.23.2 ships no soft-SAFT kernel
-(its only SAFT factories are the PC-SAFT and SAFT-VR-Mie explicit-coefficient engines;
-measured this session) — so the row constructs and refuses at first use naming the
-missing engine, never invented physics.
+``soft_saft`` (Blas & Vega 1997; reference fluid Johnson, Zollweg & Gubbins 1993) runs
+on teqp 0.23.2's ``SoftSAFT`` kind (non-associating, van der Waals one-fluid mixing
+with Lorentz-Berthelot rules) with the Pamies (2003) thesis parameter tables.
 
 Registered through the thermo catalogue (data/thermo_models/saft.yaml); the adapter
 classes carry no ``@register`` decorator (catalogue how-to, section 1).
@@ -310,6 +309,75 @@ class _TeqpKernel(_Kernel):
             except RuntimeError:
                 pass  # SAFT kinds carry the attribute but raise on call
         return 3.0e4
+
+
+class _SoftSaftKernel(_TeqpKernel):
+    """teqp ``SoftSAFT`` with a density cap inside the reference fluid's fitted range.
+
+    teqp's soft-SAFT kind exposes neither ``max_rhoN`` nor a reducing density, so
+    the root scan is capped at the largest reduced segment density of the
+    Johnson, Zollweg & Gubbins (1993) MBWR fit, rho* = rho_seg sigma^3 = 1.25
+    (Mol. Phys. 78, 591, p. 594: "densities ranged from 0.1 <= rho* <= 1.25 at
+    the highest temperature"). At low T* the MBWR turns over below that density
+    (methane at 114 K: the pressure peaks near rho* = 1.14 and goes negative by
+    1.25), so the cap stops at the first pressure maximum on the compressed-liquid
+    branch; past it the fit is extrapolating and its roots are not physical.
+    sigma^3 and the segment count follow the van der Waals one-fluid rules of the
+    kernel (Pamies 2003 thesis eqs 2.2 and 2.4; sigma_ij arithmetic mean).
+    """
+
+    #: Highest reduced segment density in the JZG (1993) simulation data set.
+    RHO_STAR_MAX = 1.25
+    #: Start of the compressed-liquid scan, reduced segment density.
+    _RHO_STAR_SCAN = 0.7
+    _SCAN_POINTS = 56
+
+    def __init__(self, name: str, model: Any, params: list[dict[str, Any]]) -> None:
+        super().__init__(name, model)
+        self._m = np.array([float(p["m"]) for p in params])
+        self._sigma = np.array([float(p["sigma_Angstrom"]) * 1e-10 for p in params])
+        self._cap_cache: dict[tuple[float, bytes], float] = {}
+
+    def _segment_scale(self, z: np.ndarray) -> float:
+        """Molar density per unit reduced segment density, 1/(m_mix sigma_mix^3 N_A)."""
+        mz = self._m * z
+        pair = ((self._sigma[:, None] + self._sigma[None, :]) / 2.0) ** 3
+        sig3 = float(mz @ pair @ mz) / float(mz.sum()) ** 2
+        return 1.0 / (float(mz.sum()) * sig3 * 6.02214076e23)
+
+    def ln_phi(self, T: float, rho: float, z: np.ndarray) -> np.ndarray:
+        """Exact ln phi from teqp's automatic-differentiation fugacity coefficients.
+
+        The finite-difference mixture path of the base class carries ~4e-8 noise,
+        which fails the 1e-6 Gibbs-Duhem L0 bar on dense liquids (measured 1.3e-4
+        on C3/nC6 at 300 K, 5 MPa); teqp's ``get_fugacity_coefficients`` is exact
+        and finite for this kind (it NaNs only for the CPA-type engines).
+        """
+        if z.size == 1:
+            return super().ln_phi(T, rho, z)
+        Z = 1.0 + float(self.model.get_Ar01(T, rho, z))
+        if Z <= 0.0:
+            raise _NonPhysicalZ(f"Z={Z:.6g} at T={T} K, rho={rho:.6g}")
+        phi = np.asarray(self.model.get_fugacity_coefficients(T, rho * z / float(z.sum())), dtype=float)
+        return np.log(phi)
+
+    def max_density(self, T: float, z: np.ndarray) -> float:
+        key = (round(T, 9), z.tobytes())
+        hit = self._cap_cache.get(key)
+        if hit is not None:
+            return hit
+        scale = self._segment_scale(z)
+        grid = np.linspace(self._RHO_STAR_SCAN, self.RHO_STAR_MAX, self._SCAN_POINTS) * scale
+        cap = float(grid[-1])
+        prev = self.pressure(T, float(grid[0]), z)
+        for k in range(1, grid.size):
+            cur = self.pressure(T, float(grid[k]), z)
+            if prev > 0.0 and cur < prev:
+                cap = float(grid[k - 1])
+                break
+            prev = cur
+        self._cap_cache[key] = cap
+        return cap
 
 
 class _CpaKernel(_Kernel):
@@ -623,6 +691,20 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
             for cid in cids
         ]
         return _TeqpKernel(kind, _teqp().make_model({"kind": "SAFT-VR-Mie", "model": {"coeffs": coeffs}}))
+    if kind == "soft_saft":
+        block = _require_params("soft_saft", cids)
+        params = [block[cid] for cid in cids]
+        model = _teqp().make_model(
+            {
+                "kind": "SoftSAFT",
+                "model": {
+                    "m": [float(p["m"]) for p in params],
+                    "sigma / m": [float(p["sigma_Angstrom"]) * 1e-10 for p in params],
+                    "epsilon/kB / K": [float(p["epsilon_over_k"]) for p in params],
+                },
+            }
+        )
+        return _SoftSaftKernel(kind, model, params)
     if kind in ("multifluid", "multifluid_pure", "gerg2008_teqp"):
         # Kind-keyed: the mixture row excludes H2O (no water interaction data in
         # teqp's bundled pair library), the pure row keeps it, and the GERG-2008
@@ -713,18 +795,9 @@ class TeqpPackage(ThermoSurfaceMixin):
 
         pc_saft_polar refuses per-component from _require_params inside
         _build_kernel (the pc_saft_assoc pattern), so it has no kind-level
-        branch here.
+        branch here. No row refuses at kind level today; the hook stays so a
+        future engine-less row refuses at first use rather than at load.
         """
-        if self.model_kind == "soft_saft":
-            raise NotImplementedError(
-                "saft row 'soft_saft' is not implemented: no soft-SAFT engine exists — "
-                "teqp 0.23.2 (the family's only optional backend) ships no soft-SAFT "
-                "kernel (its SAFT factories are the explicit-coefficient PC-SAFT and "
-                "SAFT-VR-Mie engines; there is no soft-SAFT model kind and no teqp.saft "
-                "module — measured against the installed teqp 0.23.2), and the T-07 "
-                "spec forbids writing SAFT by hand. Blas & Vega's (1997) soft-SAFT "
-                "stays outside the catalogue rather than being approximated"
-            )
 
     # -- kernel plumbing -------------------------------------------------------
 
@@ -1061,7 +1134,7 @@ class TeqpPackage(ThermoSurfaceMixin):
 
     def flash_pt(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         """PT flash: pure feeds short-circuit on the model Psat; mixtures use root scan + RR."""
-        key = ("pt", *_state.cache_key(z, T, P), round(molar_flow, 9))
+        key = ("pt", *_state.cache_key(z, T, P), float(molar_flow))
         return cast(StreamState, self._cached(key, lambda: self._flash_pt_uncached(z, T, P, molar_flow)))
 
     def _flash_pt_uncached(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
@@ -1116,7 +1189,10 @@ class TeqpPackage(ThermoSurfaceMixin):
         if len(roots) < 2:
             if not roots:
                 raise SaturationError(f"no density root at T={T} K, P={P:.6g} Pa")
-            kind = PhaseKind.VAPOR if roots[0] * R_GAS * T > P else self._liquid_kind(ids, feed)
+            # Same Z > 0.5 rule as the pure-feed path above: Z < 1 alone is not a
+            # vapour test (a compressed liquid's single root has Z ~ 0.1-0.3).
+            z_factor = P / (roots[0] * R_GAS * T)
+            kind = PhaseKind.VAPOR if z_factor > 0.5 else self._liquid_kind(ids, feed)
             return self._single_phase_at(kernel, ig, ids, feed, z, T, P, molar_flow, kind)
         rho_v, rho_l = roots[0], roots[-1]
         x = feed.copy()
@@ -1727,12 +1803,12 @@ class Gerg2008TeqpThermo(TeqpPackage):
 
 
 class SoftSaftThermo(TeqpPackage):
-    """Registered refusal: no soft-SAFT engine exists (row ``soft_saft``).
+    """soft-SAFT over teqp's ``SoftSAFT`` kind (row ``soft_saft``).
 
-    Blas & Vega's (1997) soft-SAFT has no implementation here — teqp 0.23.2 ships
-    no soft-SAFT kernel and hand-rolling SAFT is invented physics (T-07 forbids
-    it). The row constructs so the registry and contract tests can instantiate
-    it, then refuses at first use via :meth:`TeqpPackage._validate_kind`.
+    Blas & Vega (1997) soft-SAFT, non-associating: Johnson, Zollweg & Gubbins (1993)
+    Lennard-Jones MBWR reference plus the Wertheim TPT1 chain term with the Johnson,
+    Muller & Gubbins (1994) contact-value fit (Pamies 2003 thesis, eqs 2.2-2.7 and
+    A.20-A.26). Parameters: Pamies (2003) Tables 4.1, 4.6 and 4.10.
     """
 
     model_kind = "soft_saft"

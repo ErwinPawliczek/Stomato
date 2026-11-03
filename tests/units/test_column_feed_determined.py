@@ -178,7 +178,13 @@ def test_kremser_oracle_c3_nc5(n: int) -> None:
     v_mid = res.info[f"stage_{mid}_V_mol_s"]
     t_mid = res.info[f"stage_{mid}_T_K"]
     x_mid = {c: res.info[f"stage_{mid}_x_{c}"] for c in ("C1", "C3", "nC5")}
-    k_c3 = thermo.k_values(x_mid, t_mid, 2e6)["C3"]
+    # K from a bubble-point calculation on the reported liquid (P1-13): a
+    # saturated liquid re-flashed at its own stage T sits on the phase
+    # boundary and may come back single-phase. The bubble point is also the
+    # equilibrium check: the reported stage T is the liquid's bubble T.
+    bubble = thermo.bubble_point(x_mid, P=2e6)
+    assert bubble.T == pytest.approx(t_mid, abs=1e-3)
+    k_c3 = bubble.incipient_composition["C3"] / x_mid["C3"]
     a = l_mid / (k_c3 * v_mid)
     frac_kremser = (a ** (n + 1) - a) / (a ** (n + 1) - 1.0)
     assert frac_absorbed == pytest.approx(frac_kremser, abs=0.10)
@@ -190,7 +196,7 @@ def test_kremser_oracle_c3_nc5(n: int) -> None:
     [
         (4, 0.3, 9.2119, 90.7881, (300.5, 305.3, 332.2, 370.7)),
         (4, 0.5, 10.4437, 89.5563, (301.8, 314.4, 351.2, 377.8)),
-        (4, 0.8, 11.8241, 88.1759, (307.7, 337.7, 370.7, 383.2)),
+        (4, 0.8, 11.8433, 88.1567, (307.8, 338.0, 370.9, 383.2)),
         (10, 0.5, 10.3387, 89.6613, (300.0, 300.0, 300.0, 300.0, 300.0, 300.2, 302.0, 314.7, 351.3, 377.9)),
     ],
     ids=["N4-r0.3", "N4-r0.5", "N4-r0.8", "N10-r0.5"],
@@ -211,6 +217,12 @@ def test_stripper_boilup_ratio_spec(
     Every stage temperature is above the feed temperature and below the kettle
     temperature, and no stage touches either band limit (floor 270.0 K = feed
     300 - 30; ceiling ~400.7 K = estimated kettle bubble 385.7 + 15).
+
+    Repinned N4-r0.8 (P1-13): the boilup-ratio secant now exits at r = 0.80357
+    (formerly 0.80055), both inside its 5e-3 spec tolerance; D moves along the
+    r-D curve (dD/dr ~ 5.5 mol/s) from 11.8267 to 11.8433, and stage 2 from
+    337.73 to 338.03 K. Every stage of the new solve sits at its liquid's
+    bubble point (|T - T_bub| < 1e-4 K, measured).
     """
     res = _COL.solve(
         {"feed": _port(300.0, 2e6, 100.0, {"C1": 0.1, "NC4": 0.9})},
@@ -339,17 +351,13 @@ def test_mesh_rejects_band_floor_profile() -> None:
 
 
 @pytest.mark.timeout(600)  # one deterministic MESH spec solve; 120 s default is runner-load sensitive
-@pytest.mark.xfail(
-    strict=True,
-    reason="P1-11 step 3 (ruling on #153): the honest equilibrium-consistent gate rejects the "
-    "state this test was tuned on - the spec secant stalls at residual 0.04428 because RR=0.25 "
-    "lies in a cold-solve basin gap (measured map: l0=20.62 -> RR=0.2458 with V0~104.5, "
-    "l0=20.92 -> RR=0.2611 with V0~101.1; pinned at the old accepted state's l0=20.4732 the "
-    "honest mesh lands RR=0.2437 - the old root does not exist under the honest gate). "
-    "Warm-chained tear continuation inside the spec secant is P1-12 (#157); no re-tuning here.",
-)
 def test_rectifier_reflux_ratio_spec() -> None:
-    """Spec test 4: a six-stage rectifier with one reflux_ratio spec converges."""
+    """Spec test 4: a six-stage rectifier with one reflux_ratio spec converges.
+
+    Formerly a strict xfail (P1-11 step 3): the RR = 0.25 root sat in a
+    cold-solve basin gap (#157). The gap was the rounded first-seen property
+    cache; with exact keys (P1-13) the spec secant converges.
+    """
     thermo = get("thermo", "pr")()
     z = {"C1": 0.1, "NC4": 0.9}
     tdew = _dew_point(thermo, z, 2e6)
@@ -369,19 +377,13 @@ def test_rectifier_reflux_ratio_spec() -> None:
     assert res.info["distillate_mol_s"] + res.info["bottoms_mol_s"] == pytest.approx(100.0, rel=1e-8)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="P1-11 step 3 (ruling on #153): same rectifier, same basin gap - the honest gate "
-    "rejects the under-converged state the distillate-rate root was tuned on (basin map: "
-    "l0=20.62 -> RR=0.2458, l0=20.92 -> RR=0.2611, old l0=20.4732 -> RR=0.2437; the RR=0.25 "
-    "neighbourhood the d=60 spec's secant rides sits in the gap). Warm-chained tear "
-    "continuation is P1-12 (#157); no re-tuning here.",
-)
+@pytest.mark.timeout(600)  # one deterministic MESH spec solve; 120 s default is runner-load sensitive
 def test_rectifier_distillate_rate_spec() -> None:
     """Spec test 4: the same rectifier with one distillate_rate spec converges.
 
-    A total condenser's distillate spec drives the reflux tear (d = V0 - l0);
-    measured d=60.1196 against the 60 mol/s target.
+    A total condenser's distillate spec drives the reflux tear (d = V0 - l0).
+    Formerly a strict xfail on the same basin gap as the reflux-ratio test
+    (#157), closed by exact property keys (P1-13).
     """
     thermo = get("thermo", "pr")()
     z = {"C1": 0.1, "NC4": 0.9}

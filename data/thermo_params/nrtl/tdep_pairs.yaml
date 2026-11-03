@@ -1,0 +1,22 @@
+# Temperature-dependent NRTL binaries (row nrtl_tdep_hoc): tau_ij = a_ij + b_ij / T,
+# alpha constant. Each list is [pair[0] -> pair[1], pair[1] -> pair[0]].
+#
+# The thermo IPDB's ChemSep table is the two-parameter form (b_ij only); these rows
+# are the T-dependent form, for the one pair an open source gives. No open table was
+# found for the extended e ln T + f T terms or alpha = c + d T, so those stay zero.
+model: nrtl
+pairs:
+  meohh2o:
+    pair: [MeOH, H2O]
+    a: [-5.70743, 9.23811]
+    b: [1538.74, -2432.61]
+    alpha: [0.1, 0.1]
+    citation: >-
+      IUPAC Project 2011-037-2-100, Supporting Information 1 (VLE), 'Preliminary
+      selection for VLE (without azeotrope), methanol + water', NRTL/HOC, form A + B/T,
+      non-randomness 0.1, https://iupac.org/wp-content/uploads/2017/09/
+      2011-037-2-100_SupportingInfo1-VLE.pdf, fetched 2026-11-01. The source prints the
+      sets as '1' and '2' without stating which pair direction each is, and marks the
+      selection preliminary. Orientation chosen by test: this one lands on the Gao
+      (2012) 101.325 kPa data (tests/thermo/test_gamma_phi_variants.py), the reverse
+      does not. Regression source of the parameters is not stated.

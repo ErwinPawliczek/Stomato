@@ -1724,3 +1724,289 @@
     srk-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1151892 vs 1040000 Pa, 3 % tolerance) - the asymmetric C1/C2/nC5 dew points run 10-35 % above the Morch et al. (2006) cooled-mirror measurements under databank/zero k_ij; VLE and density are the cubic EOS's (the Lee-Kesler path serves enthalpy only) and the same case assesses the shipped packages (issue #130) (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
     srk-lee-kesler-enthalpy-pure-C3-300K: "rho_L -8.4% (448.204 vs 489.447 kg/m3, 8 % tolerance, marginal) - SRK liquid density at 300 K, the cubic liquid-density weakness (the srk-peneloux row is its volume-translation correction); the Lee-Kesler enthalpy path checks clean on this case: Cp -1.4% (119.068 vs 120.805 J/mol/K) (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
     srk-lee-kesler-enthalpy-pure-CO2-265K: "rho_L -11.8% (857.989 vs 973.254 kg/m3, 8 % tolerance) and Cp -7.2% (95.667 vs 103.056 J/mol/K, 5 % tolerance) - SRK liquid density near the CO2 critical region plus the Lee-Kesler correlation's own CO2 sat-liquid Cp accuracy (Tr=0.87); the implementation reproduces the published Lee-Kesler form (max 3.3e-8 deviation from the analytic Helmholtz derivative over a 224-state sweep) and the published tables (simple-fluid liquid-branch (Cp-Cp0)/R at Tr=0.65/Pr=0.06: 3.053 vs Reid-Prausnitz-Sherwood 1977 Table 5-8 3.047-3.051, within 0.2 %, issue #162), so the residual is the correlation's, not a coding error (measured 2026-10-22 after the D-term fix, PR #161 table)"
+- id: pr-rackett
+  name: Peng-Robinson, Rackett liquid density
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrRackettThermo
+  options:
+    eos: PRMIX
+    kij_table: ChemSep PR
+    liquid_density: rackett
+  params:
+    source: thermo IPDB (ChemSep) for VLE; the correlation is generalised and carries no fitted parameters
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants, critical volumes and acentric
+      factors from the ChemSep pure-component database; binary interaction parameters from the
+      'ChemSep PR' table, 0 where the table has no pair
+    liquid_density: Spencer-Danner mixture Rackett with Yamada-Gunn Z_RA from omega (chemicals.volume); a saturated-liquid volume with no pressure term; the EOS volume stands at or above the mixture pseudo-critical temperature
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  l4_excluded:
+    twu-pr: VLE is the pr row's, so the pair carries the pr / twu-pr slice dew gap declared on the twu-pr row (measured 717386 vs 597284 Pa, rel 0.201)
+    twu-srk: VLE is the pr row's, so the pair carries the pr / twu-srk slice dew gap declared on the twu-srk row (measured 717386 vs 596571 Pa, rel 0.203)
+  validation: []
+  references:
+  - Spencer, C. F.; Danner, R. P. J. Chem. Eng. Data 1972, 17, 236; Yamada, T.; Gunn, R. D. J. Chem. Eng. Data 1973, 18, 234; Rackett, H. G. J. Chem. Eng. Data 1970, 15, 514
+  l0_note: VLE, enthalpy and entropy are the base row's; only the volume of liquid roots changes, so
+    the L0 checks exercise the base row's surface. The reported liquid volume is a correlation and
+    is not the pressure derivative of the EOS Gibbs energy.
+- id: srk-rackett
+  name: Soave-Redlich-Kwong, Rackett liquid density
+  family: cubic
+  adapter: ngdesign.thermo.cubic:SrkRackettThermo
+  options:
+    eos: SRKMIX
+    kij_table: ChemSep PR
+    liquid_density: rackett
+  params:
+    source: thermo IPDB (ChemSep) for VLE; the correlation is generalised and carries no fitted parameters
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants, critical volumes and acentric
+      factors from the ChemSep pure-component database; binary interaction parameters from the
+      'ChemSep PR' table, 0 where the table has no pair
+    liquid_density: Spencer-Danner mixture Rackett with Yamada-Gunn Z_RA from omega (chemicals.volume); a saturated-liquid volume with no pressure term; the EOS volume stands at or above the mixture pseudo-critical temperature
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  l4_excluded:
+    zudkevitch-joffe-rk: VLE is the srk row's, so the pair carries the srk / zudkevitch-joffe-rk slice dew gap declared on that row (measured 614969 vs 872333 Pa, rel 0.295)
+  validation: []
+  references:
+  - Spencer, C. F.; Danner, R. P. J. Chem. Eng. Data 1972, 17, 236; Yamada, T.; Gunn, R. D. J. Chem. Eng. Data 1973, 18, 234; Rackett, H. G. J. Chem. Eng. Data 1970, 15, 514
+  l0_note: VLE, enthalpy and entropy are the base row's; only the volume of liquid roots changes, so
+    the L0 checks exercise the base row's surface. The reported liquid volume is a correlation and
+    is not the pressure derivative of the EOS Gibbs energy.
+- id: pr-costald
+  name: Peng-Robinson, COSTALD liquid density
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrCostaldThermo
+  options:
+    eos: PRMIX
+    kij_table: ChemSep PR
+    liquid_density: costald
+  params:
+    source: thermo IPDB (ChemSep) for VLE; the correlation is generalised and carries no fitted parameters
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants, critical volumes and acentric
+      factors from the ChemSep pure-component database; binary interaction parameters from the
+      'ChemSep PR' table, 0 where the table has no pair
+    liquid_density: COSTALD saturated volume with the Tait compression (API TDB 6A3.2/6A3.4, via chemicals.volume); the databank Vc stands in for the fitted characteristic volume V*; the EOS volume stands at or above the mixture pseudo-critical temperature
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  l4_excluded:
+    twu-pr: VLE is the pr row's, so the pair carries the pr / twu-pr slice dew gap declared on the twu-pr row (measured 717386 vs 597284 Pa, rel 0.201)
+    twu-srk: VLE is the pr row's, so the pair carries the pr / twu-srk slice dew gap declared on the twu-srk row (measured 717386 vs 596571 Pa, rel 0.203)
+  validation: []
+  references:
+  - Hankinson, R. W.; Thomson, G. H. AIChE J. 1979, 25, 653; Thomson, G. H.; Brobst, K. R.; Hankinson, R. W. AIChE J. 1982, 28, 671
+  l0_note: VLE, enthalpy and entropy are the base row's; only the volume of liquid roots changes, so
+    the L0 checks exercise the base row's surface. The reported liquid volume is a correlation and
+    is not the pressure derivative of the EOS Gibbs energy.
+- id: srk-costald
+  name: Soave-Redlich-Kwong, COSTALD liquid density
+  family: cubic
+  adapter: ngdesign.thermo.cubic:SrkCostaldThermo
+  options:
+    eos: SRKMIX
+    kij_table: ChemSep PR
+    liquid_density: costald
+  params:
+    source: thermo IPDB (ChemSep) for VLE; the correlation is generalised and carries no fitted parameters
+    provenance: Kooijman & Taylor, ChemSep IPDB; critical constants, critical volumes and acentric
+      factors from the ChemSep pure-component database; binary interaction parameters from the
+      'ChemSep PR' table, 0 where the table has no pair
+    liquid_density: COSTALD saturated volume with the Tait compression (API TDB 6A3.2/6A3.4, via chemicals.volume); the databank Vc stands in for the fitted characteristic volume V*; the EOS volume stands at or above the mixture pseudo-critical temperature
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  l4_excluded:
+    zudkevitch-joffe-rk: VLE is the srk row's, so the pair carries the srk / zudkevitch-joffe-rk slice dew gap declared on that row (measured 614969 vs 872333 Pa, rel 0.295)
+  validation: []
+  references:
+  - Hankinson, R. W.; Thomson, G. H. AIChE J. 1979, 25, 653; Thomson, G. H.; Brobst, K. R.; Hankinson, R. W. AIChE J. 1982, 28, 671
+  l0_note: VLE, enthalpy and entropy are the base row's; only the volume of liquid roots changes, so
+    the L0 checks exercise the base row's surface. The reported liquid volume is a correlation and
+    is not the pressure derivative of the EOS Gibbs energy.
+- id: pr-free-water
+  name: Steam tables selectable per water stream (free-water decant)
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrFreeWaterThermo
+  options:
+    eos: PRMIX
+    kij_table: ChemSep PR
+    free_water: iapws95
+  params:
+    source: thermo IPDB (ChemSep) for the EOS; chemicals.iapws for IAPWS-95
+    provenance: Peng-Robinson as the pr row for the hydrocarbon phases; the IAPWS-95 steam table for the free-water phase
+    free_water: water-rich liquid only (x_w > 0.5), Lewis-Randall on pure water from IAPWS-95 in fugacity, enthalpy, entropy and volume. The aqueous phase is what the flash finds, not forced pure; solutes keep their EOS fugacities
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 273.16
+    - 640.0
+    P_Pa:
+    - 1000.0
+    - 100000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  l4_excluded:
+    '*': >-
+      The L4 slice feed carries 0.3 % water, so its dew point at 293.15 K is the water dew point,
+      which is what the free-water method moves: with the steam-table water fugacity the row's water
+      dew lands at 874943 Pa against 615000-724000 Pa for the rows on EOS water, outside the 20 % band by
+      construction. Measured on methane + 0.3 % water at 293.15 K, pr gives 709 kPa and pr-free-water
+      862 kPa, with an ideal-gas estimate of 780 kPa. The row still carries the EOS vapour phi of water.
+  validation: []
+  references:
+  - Wagner, W.; Pruss, A. J. Phys. Chem. Ref. Data 2002, 31, 387
+  - Peng, D.-Y.; Robinson, D. B. Ind. Eng. Chem. Fundam. 1976, 15, 59
+- id: kabadi-danner-free-water
+  name: Water/hydrocarbon free-water method (Kabadi-Danner + NBS)
+  family: cubic
+  adapter: ngdesign.thermo.cubic:KabadiDannerFreeWaterThermo
+  options:
+    eos: SRKMIXKD
+    kij_table: ChemSep PR
+    free_water: iapws95
+    mixing: kabadi_danner
+  params:
+    source: thermo IPDB (ChemSep) for the EOS; chemicals.iapws for IAPWS-95
+    provenance: Kabadi-Danner SRK as the kabadi-danner-srk row. The free-water phase uses IAPWS-95, which superseded the NBS/NRC 1984 steam tables the plan names; the Haar-Gallagher-Kell formulation itself is not implemented
+    free_water: water-rich liquid only (x_w > 0.5), Lewis-Randall on pure water from IAPWS-95 in fugacity, enthalpy, entropy and volume. The aqueous phase is what the flash finds, not forced pure; solutes keep their EOS fugacities
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    - water
+    polar: false
+    electrolyte: false
+    T_K:
+    - 273.16
+    - 640.0
+    P_Pa:
+    - 1000.0
+    - 100000000.0
+    phases:
+    - V
+    - L
+    - VLL
+  status: provisional
+  l4_excluded:
+    '*': >-
+      The L4 slice feed carries 0.3 % water, so its dew point at 293.15 K is the water dew point,
+      which is what the free-water method moves: with the steam-table water fugacity the row's water
+      dew lands at 933084 Pa against 615000-724000 Pa for the rows on EOS water, outside the 20 % band by
+      construction. Measured on methane + 0.3 % water at 293.15 K, pr gives 709 kPa and pr-free-water
+      862 kPa, with an ideal-gas estimate of 780 kPa. The row still carries the EOS vapour phi of water.
+  validation: []
+  references:
+  - Wagner, W.; Pruss, A. J. Phys. Chem. Ref. Data 2002, 31, 387
+  - Kabadi, V. N.; Danner, R. P. Ind. Eng. Chem. Process Des. Dev. 1985, 24, 537
+- id: glycol_pr
+  name: Glycol package (TEG dehydration, tuned PR)
+  family: cubic
+  adapter: ngdesign.thermo.cubic:GlycolPrThermo
+  options:
+    eos: PRMIXGlycol
+    kij_table: ChemSep PR
+    mixing: glycol_tuned
+  params:
+    source: data/thermo_params/glycol/teg_water_pr.yaml
+    provenance: Gironi, Maschietti & Piemonte 2007, k12(T) linear in T and their Ambrose TEG constants,
+      with per-entry provenance in the file. MEG refuses, its open CPA and k_ij values carry no
+      primary citation; other pairs keep the ChemSep PR table
+  applicability:
+    component_classes:
+    - water
+    - glycol
+    - light_gas
+    - hydrocarbon
+    polar: true
+    electrolyte: false
+    T_K:
+    - 283.15
+    - 480.0
+    P_Pa:
+    - 10000.0
+    - 15000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Gironi, F.; Maschietti, M.; Piemonte, V. Modelling triethylene glycol - water system for natural
+    gas dehydration. ICheaP-8, 2007
+  l0_note: The derivatives contract's dlnphi_dT and dlnphi_dP stay plain PR's and omit the tuned k_ij.
+    Dry streams flash as pr does.
+  l4_excluded:
+    '*': the TEG constants replace the databank's only for TEG and the slice feed carries no glycol, so the row's slice point is the pr row's and adds no independent L4 information

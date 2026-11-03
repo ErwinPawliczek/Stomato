@@ -54,13 +54,33 @@ def test_unknown_model_raises_value_error(rows: dict[str, UnitRow]) -> None:
 def test_planned_level_refuses_and_names_the_implemented_levels(
     rows: dict[str, UnitRow],
 ) -> None:
+    # any row with both kinds of level, so closing a level cannot break this test;
+    # once every such row is implemented, a live row with two implemented levels
+    # has its top level re-declared planned (resolve_level reads only the levels).
+    row = next(
+        (
+            r
+            for r in rows.values()
+            if any(spec.planned for spec in r.levels.values())
+            and not all(s.planned for s in r.levels.values())
+        ),
+        None,
+    )
+    if row is None:
+        base = next(r for r in rows.values() if len(implemented_levels(r)) >= 2)
+        top = implemented_levels(base)[-1]
+        levels = dict(base.levels)
+        levels[top] = levels[top].model_copy(update={"status": "planned", "adapter": None})
+        row = base.model_copy(update={"levels": levels})
+    planned = next(level for level, spec in row.levels.items() if spec.planned)
+    implemented = tuple(level for level, spec in row.levels.items() if not spec.planned)
     with pytest.raises(UnitLevelNotImplemented) as excinfo:
-        resolve_level(rows["pump"], {"model": "R1"})
+        resolve_level(row, {"model": planned})
     error = excinfo.value
-    assert error.unit_id == "pump"
-    assert error.requested == "R1"
-    assert error.implemented == ("R0",)
-    assert "R0" in str(error)
+    assert error.unit_id == row.id
+    assert error.requested == planned
+    assert error.implemented == implemented
+    assert implemented[0] in str(error)
 
 
 def test_end_state_only_on_the_highest_declared_level(rows: dict[str, UnitRow]) -> None:

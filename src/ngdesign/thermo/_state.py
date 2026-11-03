@@ -32,7 +32,9 @@ from functools import cache
 from typing import Any, Literal, cast
 
 from chemicals.elements import similarity_variable
-from chemicals.exceptions import PhaseCountReducedError
+from chemicals.exceptions import PhaseCountReducedError, TrivialSolutionError
+from chemicals.thermal_conductivity import DIPPR9H
+from fluids.numerics import OscillationError, UnconvergedError, trunc_log
 from thermo import (
     CEOSGas,
     CEOSLiquid,
@@ -42,6 +44,7 @@ from thermo import (
     FlashVLN,
     PropertyCorrelationsPackage,
 )
+from thermo.flash.flash_utils import stability_iteration_Michelsen
 from thermo.heat_capacity import HeatCapacityGas
 from thermo.interaction_parameters import IPDB
 from thermo.vapor_pressure import VaporPressure
@@ -268,7 +271,63 @@ def build_flasher(
             liquid_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps),
             liquid_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps),
         ]
-        return FlashVLN(constants, correlations, liquids=liquids, gas=gas)
+        return _FlashVLN(constants, correlations, liquids=liquids, gas=gas)
+
+
+class _FlashVLN(FlashVLN):  # type: ignore[misc]
+    """thermo's FlashVLN whose liquid-liquid refinements cannot sink the whole flash.
+
+    FlashVLN refines a liquid-liquid split by the same two-phase successive
+    substitution as a vapour-liquid one, between two liquid-class phase
+    objects. On a vapour at its dew point (the vapour leaving an equilibrium
+    stage, flashed at the stage temperature) the VL solve finds the incipient
+    liquid (measured on a 22-species crude-slate stage vapour at 631.68 K,
+    2 bar: liquid fraction 2.8e-10), the three-phase check that follows fails,
+    and the liquid-liquid retry from its stability trial runs between two
+    liquid-class objects that both sit on the EOS's gas root, from a split
+    fraction of -1.4e-9. That retry exhausts its 1000-iteration polish budget
+    (measured: it converges at 1,726 iterations, to a split fraction of
+    -8.6e-20 - no split), and thermo's handler around it lists
+    TrivialSolutionError, OscillationError and PhaseCountReducedError but not
+    UnconvergedError, so the whole flash raised "End of SS without
+    convergence" instead of returning the VL solution it already held.
+
+    Here an LL refinement (neither phase argument a vapour class) that does
+    not converge raises TrivialSolutionError: the Michelsen convention this
+    module already applies to collapsed trial splits (a non-converged trial
+    split is stable), and a signal every thermo caller of the refinement
+    handles by keeping the solution it had. VL refinements, and every LL
+    refinement that converges, are untouched; a flash that used to return is
+    byte-identical.
+    """
+
+    def sequential_substitution_2P(
+        self,
+        T: float,
+        P: float,
+        zs: list[float],
+        xs_guess: list[float],
+        ys_guess: list[float],
+        liquid_phase: Any,
+        gas_phase: Any,
+        V_over_F_guess: float | None,
+        maxiter: int,
+        tol: float,
+    ) -> Any:
+        vapour_classes = tuple(_VAPOUR_PHASE_CLASSES)
+        args = (T, P, zs, xs_guess, ys_guess, liquid_phase, gas_phase, V_over_F_guess, maxiter, tol)
+        if isinstance(liquid_phase, vapour_classes) or isinstance(gas_phase, vapour_classes):
+            return super().sequential_substitution_2P(*args)
+        try:
+            return super().sequential_substitution_2P(*args)
+        except UnconvergedError as exc:
+            raise _trivial(f"liquid-liquid refinement did not converge: {exc}") from exc
+
+
+def _trivial(message: str) -> Exception:
+    """thermo's no-split signal (``chemicals.exceptions.TrivialSolutionError``)."""
+    error: Exception = TrivialSolutionError(message)  # type: ignore[no-untyped-call]
+    return error
 
 
 def _holds_gas_root(phase_obj: Any) -> bool:
@@ -335,6 +394,31 @@ def _composition(zs: list[float], ids: tuple[str, ...], full_keys: tuple[str, ..
     if total <= 0.0:
         raise ValueError(f"phase composition collapsed to zero for ids {ids}")
     return {cid: v / total for cid, v in out.items()}
+
+
+def _once(fn: Callable[[], float | None]) -> Callable[[], float | None]:
+    """A thunk that computes ``fn()`` once; copies of a deferred record share it."""
+    box: list[float | None] = []
+
+    def thunk() -> float | None:
+        if not box:
+            box.append(fn())
+        return box[0]
+
+    return thunk
+
+
+def _deferred_transport(phase: Any, *, conductivity: bool) -> dict[str, Callable[[], float | None]]:
+    """Transport properties of one thermo phase object, computed on first read.
+
+    Viscosity and thermal conductivity cost more than the rest of a property
+    build (measured on the 20-stage MDEA absorber: ~53 s of a 226 s solve) and
+    stage loops never read them; the record still reads the same values.
+    """
+    out: dict[str, Callable[[], float | None]] = {"viscosity": _once(lambda: _viscosity(phase))}
+    if conductivity:
+        out["thermal_conductivity"] = _once(lambda: _thermal_conductivity(phase))
+    return out
 
 
 def _viscosity(phase: Any) -> float | None:
@@ -420,12 +504,12 @@ def _build_stream_state(
             z_factor = P / (rho_molar * R_IDEAL * T)
             vapor_fraction += beta
         built.append(
-            Phase(
+            Phase.deferred(
+                _deferred_transport(phase_obj, conductivity=False),
                 kind=kind,
                 mole_fraction=beta,
                 composition=_composition(zs, ids, full_keys),
                 density=density,
-                viscosity=_viscosity(phase_obj),
                 z_factor=z_factor,
                 molecular_weight=mw,
                 enthalpy=float(phase_obj.H()),  # J/mol (spec P1-01)
@@ -506,8 +590,15 @@ def support_ids(z: dict[str, float]) -> tuple[str, ...]:
 
 
 def cache_key(z: dict[str, float], T: float, P: float) -> tuple[Any, ...]:
-    """Property-cache key: composition rounded to 1e-10, T to 1e-6, P to 1e-3."""
-    return (tuple(sorted((cid, round(x, 10)) for cid, x in z.items())), round(T, 6), round(P, 3))
+    """Property-cache key: the exact composition, T and P.
+
+    Keys are exact floats. Rounding them (formerly composition to 1e-10, T to
+    1e-6 K, P to 1e-3 Pa) made every rounding cell return whichever state was
+    computed first, so K values were piecewise constant and order-dependent and
+    finite-difference T derivatives were corrupted by up to ~3% (issue #332).
+    Identical inputs still hit the cache.
+    """
+    return (tuple(sorted((cid, float(x)) for cid, x in z.items())), float(T), float(P))
 
 
 def build_flasher_vl(
@@ -613,12 +704,60 @@ def _vapor_fraction(pairs: list[PhasePair]) -> float:
     return sum(beta for phase, beta in pairs if _is_vapour_phase(phase))
 
 
+#: Weight fraction of a liquid phase that may be supercritical components, left out of
+#: the mixing rule; past it the property refuses.
+_K_LIQUID_OUT_OF_RANGE_LIMIT = 0.05
+#: Reduced temperature past which a pure-liquid fit's extrapolation is not used. Measured
+#: on the REFPROP fits: they decline smoothly through Tc (propane 0.063 W/(m K) at Tc)
+#: but methane is down to 0.0135 at 1.2 Tc and at its 1e-4 floor by 1.5 Tc.
+_K_LIQUID_TR_CUTOFF = 1.1
+#: W/(m K): below any liquid's conductivity, so a value under it is an extrapolation artefact.
+_K_LIQUID_FLOOR = 0.01
+
+
 def _thermal_conductivity(phase: Any) -> float | None:
     """Thermal conductivity in W/(m K), None where thermo has no correlation."""
     try:
+        if not _is_vapour_phase(phase):
+            return _liquid_thermal_conductivity(phase)
         return float(phase.k())
     except Exception:
         return None
+
+
+def _liquid_thermal_conductivity(phase: Any) -> float | None:
+    """Liquid-mixture conductivity by DIPPR procedure 9H, k = (Σ w_i k_i^-2)^-1/2.
+
+    9H takes each component's pure-liquid k at the phase temperature. A dissolved gas
+    above its fit's range has no such value: methane's fit ends at 171.5 K, and at
+    280 K it extrapolates to its 1e-4 W/(m K) floor, which the inverse square lets
+    dominate (10 mol% methane in n-butane gave 5.8e-4 against about 0.11 W/(m K)).
+    Components well above their critical temperature (T ≥ 1.1 Tc), or whose extrapolated
+    value falls below any liquid's conductivity, are left out and the weight fractions
+    renormalised, an approximation stated here, while they stay dilute (≤ 5 wt%); past
+    that the property refuses. Near Tc a component keeps the library's extrapolated
+    value, as before: propane at 370 K in a butane mixture is still counted.
+    """
+    T = float(phase.T)
+    correlations = phase.correlations.ThermalConductivityLiquids
+    weights = [float(w) for w in phase.ws()]
+    kept_weights: list[float] = []
+    kept_k: list[float] = []
+    excluded = 0.0
+    critical = [float(Tc) for Tc in phase.constants.Tcs]
+    for correlation, weight, Tc in zip(correlations, weights, critical, strict=True):
+        value = correlation.T_dependent_property(T) if T < _K_LIQUID_TR_CUTOFF * Tc else None
+        if value is None or value < _K_LIQUID_FLOOR:
+            excluded += weight
+            continue
+        kept_weights.append(weight)
+        kept_k.append(float(value))
+    if excluded == 0.0:
+        return float(phase.k())
+    if excluded > _K_LIQUID_OUT_OF_RANGE_LIMIT or not kept_weights:
+        return None
+    total = sum(kept_weights)
+    return float(DIPPR9H([w / total for w in kept_weights], kept_k))
 
 
 # ------------------------------------------------------------------ pure Psat
@@ -990,6 +1129,185 @@ def k_values(flasher: Any, z: dict[str, float], T: float, P: float) -> dict[str,
     return out
 
 
+#: A liquid-liquid split whose two liquids differ by less than this (mean
+#: absolute mole-fraction difference) is the trivial solution: one liquid.
+_LL_TRIVIAL_DIFF = 1e-6
+
+
+def _liquid_rooted(phase_obj: Any) -> bool:
+    """True when a CEOS phase object has a liquid root (``eos_mix.phase`` "l" or "l/g").
+
+    A composition whose EOS has the gas root only cannot form a liquid at
+    (T, P): a stability trial converging there is an incipient VAPOUR, which
+    the liquid-liquid split does not report (the column carries its vapour
+    through the summation equation). Non-CEOS phases carry no root and count
+    as liquid.
+    """
+    eos = getattr(phase_obj, "eos_mix", None)
+    if eos is None:
+        return True
+    return str(getattr(eos, "phase", "l")) != "g"
+
+
+def _ll_stability(
+    flasher: Any, ref: Any, zs: list[float], T: float, P: float, trials: list[list[float]]
+) -> tuple[list[float], list[float], float] | None:
+    """Michelsen tangent-plane test of a liquid against liquid trial phases.
+
+    Michelsen, Fluid Phase Equilib. 9 (1982) 1, the stationary-point iteration
+    ln W_i = ln z_i + ln phi_i(z) - ln phi_i(W) - thermo's own
+    ``stability_iteration_Michelsen`` with the reference liquid's LIQUID-root
+    fugacities (``ref.fugacities()``; the vapour-liquid test reads the lowest-
+    Gibbs root instead) and the second liquid object's ln phi for the trial.
+    ``trials`` run first (warm starts), then thermo's incipient guesses in
+    thermo's own order (``expect_liquid``). The first trial that converges to
+    a non-trivial, liquid-rooted stationary point inside the split range
+    (0 < beta < 1, thermo's acceptance criteria) decides: returns
+    (trial_zs, appearing_zs, beta_guess); None when every trial is stable.
+    """
+    test = flasher.liquids[1].to_TP_zs(T=T, P=P, zs=zs)
+    fugacities = ref.fugacities()
+
+    def test_lnphis(ws: list[float]) -> Any:
+        return test.lnphis_at_zs(ws, most_stable=True)
+
+    def guesses() -> Any:
+        yield from trials
+        yield from flasher.stab.incipient_guesses(T, P, zs, expect_liquid=True)
+
+    n = len(zs)
+    for trial in guesses():
+        try:
+            sln = stability_iteration_Michelsen(
+                T=T,
+                P=P,
+                zs_trial=zs,
+                fugacities_trial=fugacities,
+                zs_test=trial,
+                test_phase=test_lnphis,
+                maxiter=flasher.PT_STABILITY_MAXITER,
+                xtol=flasher.PT_STABILITY_XTOL,
+            )
+        except UnconvergedError:
+            continue
+        sum_zs_test, ks, _zs_test, beta, trial_zs, appearing_zs, _dg = sln
+        if zs == trial_zs:
+            continue
+        ln_k2 = sum(trunc_log(k) ** 2 for k in ks)  # type: ignore[no-untyped-call]
+        sum_criteria = abs(sum_zs_test - 1.0)
+        if sum_criteria < 1e-9 or ln_k2 < 1e-7 or sum_criteria > 1e20 or math.isinf(ln_k2):
+            continue
+        if not -1e-6 <= beta <= 1.0 + 1e-6:
+            continue
+        if sum(abs(a - b) for a, b in zip(zs, appearing_zs, strict=True)) / n < _LL_TRIVIAL_DIFF:
+            continue
+        if not _liquid_rooted(test.to_TP_zs(T=T, P=P, zs=appearing_zs)):
+            continue
+        return list(trial_zs), list(appearing_zs), float(beta)
+    return None
+
+
+def _phase_props_of(phase: Any, ids: tuple[str, ...], full_keys: tuple[str, ...], beta: float) -> PhaseProps:
+    """PhaseProps of one built liquid phase object, at phase fraction ``beta``."""
+    zs = [float(v) for v in phase.zs]
+    density = float(phase.rho_mass())
+    mw = float(phase.MW())
+    v_molar = (mw / 1000.0) / density
+    ln_phi = {cid: 0.0 for cid in full_keys}
+    ln_phi.update(zip(ids, (float(v) for v in phase.lnphis()), strict=True))
+    return PhaseProps.deferred(
+        _deferred_transport(phase, conductivity=True),
+        kind=PhaseKind.HC_LIQUID,
+        mole_fraction=beta,
+        composition=_composition(zs, ids, full_keys),
+        molecular_weight=mw,
+        density=density,
+        enthalpy=float(phase.H()),
+        entropy=float(phase.S()),
+        cp=float(phase.Cp()),
+        gibbs=float(phase.G()),
+        z_factor=float(phase.P) * v_molar / (R_IDEAL * float(phase.T)),
+        ln_phi=ln_phi,
+    )
+
+
+def liquid_split(
+    flasher: Any,
+    z: dict[str, float],
+    T: float,
+    P: float,
+    seed: list[dict[str, float]] | None = None,
+    stability: bool = True,
+) -> list[PhaseProps]:
+    """The liquid-liquid equilibrium of a liquid z at (T, P): one or two liquids.
+
+    The pooled stage liquid of a three-phase column (Block & Hegner, AIChE J.
+    22 (1976) 582) splits into the liquids that minimise its Gibbs energy at
+    the stage (T, P); the vapour is not part of this split. Method: Michelsen
+    (1982) tangent-plane stability of z on its liquid root against liquid
+    trials (``_ll_stability``), then thermo's two-phase successive
+    substitution between the two liquid objects (the liquid-liquid branch of
+    FlashVLN's own PT flash) from the stability solution.
+
+    ``seed``: the compositions of a previous split of a nearby state. With
+    ``stability`` the seeds are only the stability test's first trials - the
+    answer is the full test's. Without it (a fixed-phase-set evaluation, e.g.
+    a finite-difference perturbation of a state whose split is known) the
+    successive substitution starts from the seed split directly and no
+    stability test runs; a collapse to the trivial solution reads as one
+    liquid. Returns the liquids' PhaseProps with ``mole_fraction`` = their
+    share of z (one entry, the single liquid at fraction 1, when z is stable).
+    """
+    ids = support_ids(z)
+    full_keys = tuple(z.keys())
+    zs = [float(z[cid]) for cid in ids]
+    liquid = flasher.liquids[0].to_TP_zs(T=T, P=P, zs=zs)
+    for attr in ("constants", "correlations"):
+        if getattr(flasher, attr, None) is not None and getattr(liquid, attr, None) is None:
+            setattr(liquid, attr, getattr(flasher, attr))
+    single = [_phase_props_of(liquid, ids, full_keys, 1.0)]
+    if len(ids) < 2:
+        return single
+    seeds = [[max(float(s.get(cid, 0.0)), 1e-300) for cid in ids] for s in (seed or [])]
+    seeds = [[v / sum(s) for v in s] for s in seeds]
+    if stability:
+        found = _ll_stability(flasher, liquid, zs, T, P, seeds[::-1])
+        if found is None:
+            return single
+        xs_guess, ys_guess, beta_guess = found
+    elif len(seeds) == 2:
+        xs_guess, ys_guess, beta_guess = seeds[0], seeds[1], None
+    else:
+        return single
+    try:
+        beta, xs, ys, l_obj, g_obj, _it, _err = flasher.sequential_substitution_2P(
+            T,
+            P,
+            zs,
+            xs_guess,
+            ys_guess,
+            flasher.liquids[0],
+            flasher.liquids[1],
+            beta_guess,
+            flasher.PT_SS_MAXITER,
+            flasher.PT_SS_TOL,
+        )
+    except (UnconvergedError, TrivialSolutionError, PhaseCountReducedError, OscillationError):
+        return single
+    n = len(zs)
+    if not 0.0 < beta < 1.0 or sum(abs(a - b) for a, b in zip(xs, ys, strict=True)) / n < _LL_TRIVIAL_DIFF:
+        return single
+    if not (_liquid_rooted(l_obj) and _liquid_rooted(g_obj)):
+        return single
+    out: list[PhaseProps] = []
+    for phase, frac in ((l_obj, 1.0 - float(beta)), (g_obj, float(beta))):
+        for attr in ("constants", "correlations"):
+            if getattr(flasher, attr, None) is not None and getattr(phase, attr, None) is None:
+                setattr(phase, attr, getattr(flasher, attr))
+        out.append(_phase_props_of(phase, ids, full_keys, frac))
+    return out
+
+
 def _single_phase_object(
     flasher: Any, z: dict[str, float], T: float, P: float, kind: PhaseKind
 ) -> tuple[Any, tuple[str, ...], list[float], tuple[str, ...]]:
@@ -1015,7 +1333,8 @@ def phase_props(flasher: Any, z: dict[str, float], T: float, P: float, kind: Pha
     v_molar = (mw / 1000.0) / density  # m3/mol
     ln_phi = {cid: 0.0 for cid in full_keys}
     ln_phi.update(zip(ids, (float(v) for v in phase.lnphis()), strict=True))
-    return PhaseProps(
+    return PhaseProps.deferred(
+        _deferred_transport(phase, conductivity=True),
         kind=kind,
         mole_fraction=1.0,
         composition=_composition(zs, ids, full_keys),
@@ -1026,8 +1345,6 @@ def phase_props(flasher: Any, z: dict[str, float], T: float, P: float, kind: Pha
         cp=float(phase.Cp()),
         gibbs=float(phase.G()),
         z_factor=P * v_molar / (R_IDEAL * T),
-        viscosity=_viscosity(phase),
-        thermal_conductivity=_thermal_conductivity(phase),
         ln_phi=ln_phi,
     )
 

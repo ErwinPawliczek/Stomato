@@ -9,7 +9,10 @@ growths.
 Measured on the real pr thermo plugin (deterministic -- the solver's float ops
 are the golden oracles' own):
 
-- ``mea_amine_loop``: Wegstein 6 passes, Broyden 4, direct substitution 46.
+- ``mea_amine_loop``: Wegstein 6 passes, Broyden 5 (4 before the exact
+  property-cache keys of #333/P1-13: the rounded cache returned first-seen
+  states, and the exact amine flashes move the Broyden walk by one pass),
+  direct substitution 46.
   The stiff loop is where the spec's bet lands: Broyden takes fewer passes and
   lands on the same sheet -- worst relative difference across all streams
   2.2e-12 on flows/T/P, 1.1e-11 on compositions (both far inside RTOL).
@@ -82,7 +85,7 @@ def test_mea_amine_loop_broyden_fewer_passes_same_sheet() -> None:
     w_block = [b for b in wegstein.history if b.tears][0]
     b_block = [b for b in broyden.history if b.tears][0]
     assert w_block.iterations == 6
-    assert b_block.iterations == 4
+    assert b_block.iterations == 5  # 4 with the rounded property cache (#333 repin)
     assert b_block.iterations < w_block.iterations
     # Same converged sheet, inside the solver's own tolerance.
     worst_rel, worst_comp = _worst_diffs(wegstein, broyden)

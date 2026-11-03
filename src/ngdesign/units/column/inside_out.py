@@ -12,6 +12,8 @@ import math
 from dataclasses import dataclass, field
 
 from ngdesign.contracts import PhaseKind, StreamState
+from ngdesign.data.formation import formation_enthalpy_298
+from ngdesign.units._physics.kinetics import rate
 
 from .linalg import _gauss, _thomas
 from .spec import (
@@ -30,6 +32,7 @@ from .spec import (
     _Params,
     _Pumparound,
     _SideStripper,
+    _StageReactions,
 )
 from .thermo_adapter import _flash_ready, _ThermoBox
 
@@ -85,6 +88,60 @@ class _StripperSection:
     bottom_stage: int | None
 
 
+@dataclass(frozen=True)
+class _WallSection:
+    """The prefractionator of a dividing-wall column (stage graph).
+
+    The main cascade runs condenser-side common section, the MAIN side of
+    the wall (the side-draw side), common stripping section. The
+    prefractionator (the feed side) is appended after the main stages, top to
+    bottom. All indices are 0-based graph indices. Four streams link it:
+
+    - the liquid leaving main stage ``above`` splits: ``liquid_split`` of it
+      enters the prefractionator top, the rest the main side below;
+    - the prefractionator's whole top vapour returns to stage ``above``;
+    - the prefractionator's bottom liquid joins main stage ``below``;
+    - the vapour leaving main stage ``below`` splits: a fraction beta enters
+      the prefractionator bottom, the rest the main side above. beta is
+      ``vapour_split`` when given, else a Newton unknown closed by the equal
+      pressure-drop row (``graph_ns._wall_dp_residual``) with the
+      prefractionator taking ``area_fraction`` of the column cross-section.
+    """
+
+    above: int
+    below: int
+    stages: tuple[int, ...]
+    liquid_split: float
+    vapour_split: float | None
+    area_fraction: float
+
+
+@dataclass(frozen=True)
+class _Interlink:
+    """One stream link of the stage graph (S0-1c step 2).
+
+    Stages are 0-based graph indices (the records are consumed by the
+    solver's unknown packing, not by user-facing numbering). ``phase`` is
+    ``"liquid"`` for a stripper draw (main stage -> section top stage) or
+    ``"vapour"`` for the stripped overhead return (section top stage ->
+    main stage). Neither flow is a Newton unknown: the vapour return's flow
+    is the section top stage's own vapour, and a liquid draw is DERIVED from
+    its section's total balance (draw = returned vapour + product - section
+    feeds; the product-rate spec pins it exactly - see ``_GraphLayout`` and
+    ``_graph_unpack``). Should a future step add a stripper spec that is not
+    a product rate, the draw becomes a tear again and the layout grows a
+    draw block; the record then gains the slot index pointing at it.
+    """
+
+    from_stage: int
+    to_stage: int
+    phase: str
+
+
+#: Memo key of the condenser decant split: (y_1 items, T_1, P_1).
+_DecantKey = tuple[tuple[tuple[str, float], ...], float, float]
+
+
 @dataclass
 class _Column:
     """All static problem data for one solve. Stage index 0 = stage 1 (top)."""
@@ -114,15 +171,50 @@ class _Column:
     #: sections; step 3 wires them into the balances.
     strippers: list[_SideStripper] = field(default_factory=list)
     sections: list[_StripperSection] = field(default_factory=list)
+    #: Fixed heat added per stage, W (inter-stage heaters/coolers). Empty =
+    #: none: the balances then carry no extra term, the plain column exactly.
+    stage_q: list[float] = field(default_factory=list)
+    #: Kinetic stages (None = no reaction). ``rx_source`` (mol/s per stage and
+    #: component), ``rx_gen`` (net mol/s per stage) and ``rx_q`` (W per stage)
+    #: are the rates AT THE LAST EVALUATED STATE, owned by _refresh_reactions.
+    reactions: _StageReactions | None = None
+    rx_source: list[dict[str, float]] = field(default_factory=list)
+    rx_gen: list[float] = field(default_factory=list)
+    rx_q: list[float] = field(default_factory=list)
+    #: Continuation multiplier on the holdups (1 = the specified column).
+    rx_scale: float = 1.0
+    #: S0-1c step 2: the graph's stream links as explicit records, in section
+    #: order (liquid draw then vapour return per section). Empty for a linear
+    #: column - today's _Column exactly.
+    interlinks: list[_Interlink] = field(default_factory=list)
+    #: S0-1c step 4: the total condenser decants free water (only when water
+    #: is in the component list; False = the plain total condenser exactly).
+    water_decant: bool = False
+    #: Per-solve memo of the decant split, keyed on (y_1, T_1, P_1).
+    decant_memo: dict[_DecantKey, tuple[dict[str, float], float]] = field(default_factory=dict)
+    #: A dividing wall's prefractionator (None = no wall, today's _Column).
+    wall: _WallSection | None = None
     # Two-phase operating window for the inner temperature walk, set from the
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
     t_band_hi: float = 600.0
+    #: Cold start by relaxation (``initialization: relaxation``); False keeps
+    #: the standard feed-flash seed exactly.
+    relaxation: bool = False
+
+    @property
+    def is_graph(self) -> bool:
+        """True when the column solves on the stage graph (S0-1c): it has
+        side-stripper sections, its total condenser decants free water, or it
+        carries a dividing wall."""
+        return bool(self.interlinks) or self.water_decant or self.wall is not None
 
     @property
     def n_graph(self) -> int:
-        """Total stages over the whole graph: main stages plus every section's."""
-        return self.n + sum(len(s.stages) for s in self.sections)
+        """Total stages over the whole graph: main stages plus every section's
+        (and a dividing wall's prefractionator)."""
+        wall = len(self.wall.stages) if self.wall is not None else 0
+        return self.n + sum(len(s.stages) for s in self.sections) + wall
 
 
 @dataclass
@@ -146,6 +238,10 @@ class _Profile:
     #: S0-1: one dict per pumparound loop (in spec order): flow, duty, draw and
     #: return temperatures. Empty without pumparounds.
     pa_report: list[dict[str, float]] = field(default_factory=list)
+    #: S0-1c step 2: one live draw flow per liquid interlink, in record order
+    #: (empty without strippers) - the graph-NS unknown vector's draw block
+    #: round-trips through here, like V does for the stage vapour flows.
+    draw_flows: list[float] = field(default_factory=list)
     outer: int = 0
     inner: int = 0
     ns_used: bool = False
@@ -154,6 +250,10 @@ class _Profile:
     #: pass - exact residuals, linear-model prediction, cap hits, damping and
     #: achieved reduction. Diagnostics only; never read for control flow.
     ns_trace: list[str] = field(default_factory=list)
+    #: S0-1c step 4: the decanted reflux/distillate liquid composition and the
+    #: free-water decant flow, mol/s (empty / 0.0 without a decant).
+    reflux_x: dict[str, float] = field(default_factory=dict)
+    decant: float = 0.0
 
 
 def _flash_stage_feeds(
@@ -243,6 +343,9 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
     for st in col_params.side_strippers:
         if st.steam_flow is not None and st.n_stages > 0:
             comp_cids.add(STEAM_COMPONENT)
+    if col_params.reactions is not None:
+        # Products exist on the stages though no feed carries them.
+        comp_cids |= set(col_params.reactions.rset.components)
     comps = sorted(comp_cids)
     f_total = sum(part.total for part in feeds)
     moles: dict[str, float] = {}
@@ -284,6 +387,19 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         )
         offset += st.n_stages
     col.sections = sections
+    # S0-1c step 2: explicit interlink records (review note 1, PR #241) and
+    # section-stage pressures. A plain column gets an empty list and exactly
+    # today's pressures - the byte-identical regression gate is the bench.
+    # The section pressure is the draw-stage pressure, uniform over the
+    # section (pressure let-down is isenthalpic; step 3 refines per-section
+    # parsed pressures - PR #241 review note 2).
+    if sections:
+        pad: list[float] = []
+        for sec in sections:
+            pad.extend([col.pressures[sec.draw_stage - 1]] * len(sec.stages))
+        col.pressures = col.pressures + pad
+    col.interlinks = _build_interlinks(col)
+    col.water_decant = col_params.condenser_water_decant and STEAM_COMPONENT in comps
     col.pumparounds = list(col_params.pumparounds)
     pa_flows: list[float] = []
     for pa in col.pumparounds:
@@ -291,6 +407,21 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         pa_flows.append(pa.flow_mol_s)
     col.pa_flows = pa_flows
     col.draw_l, col.draw_v = _draw_flows(col)
+    for st in col.strippers:
+        if st.n_stages == 0 and st.product_rate is not None:
+            # The degenerate 0-stage stripper IS a plain liquid side draw of
+            # its product rate (S0-1c step 3 identity): no section, no link.
+            col.draw_l[st.draw_stage - 1] += st.product_rate
+    if col_params.stage_heaters:
+        col.stage_q = [0.0] * col.n
+        for heater in col_params.stage_heaters:
+            col.stage_q[heater.stage - 1] = heater.duty_W
+    col.relaxation = col_params.relaxation
+    if col_params.reactions is not None:
+        col.reactions = col_params.reactions
+        col.rx_source = [{} for _ in range(col.n)]
+        col.rx_gen = [0.0] * col.n
+        col.rx_q = [0.0] * col.n
     # Clamp the inner temperature walk to a window around the physical operating
     # range: the seed estimates the distillate/bottoms temperatures, and stages
     # wandering far outside that range sit in single-phase states where the
@@ -321,12 +452,81 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
             t_kettle = tb.bubble_temperature(_flash_ready(xb, col.feed_comp), col.pressures[-1])
             if t_kettle is not None:
                 col.t_band_hi = max(col.t_band_hi, t_kettle + 15.0)
+        if col.condenser != "none":
+            # A condenser sits BELOW every feed temperature by its own
+            # separation, not by a fixed 30 K: a wide-boiling feed's condenser
+            # can run 100 K and more under the feed (measured: a 5-stage
+            # partial-condenser preflash of a 14-species crude slate at 2.5 bar,
+            # feed 505 K - the converged top stage sits at 383 K, so the
+            # feed-based floor of 475 K held every stage on the band and the
+            # mesh could only stall at M = 1.0). The floor extends the way the
+            # two-tear band's does: to the lightest component's saturation
+            # temperature at the top pressure, 10 K beyond.
+            ext = _extreme_seed(col, tb)
+            if ext is not None:
+                col.t_band_lo = min(col.t_band_lo, ext[0] - 10.0)
+        if col.relaxation:
+            # A pumparound returns subcooled liquid: its fixed return
+            # temperature is a cold inlet like a feed's, and the stage it
+            # lands on can sit far under every feed (measured: a 6-stage
+            # vacuum column fed at 653 K with a 450 K top pumparound - the
+            # feed-based floor of 623 K clamped the top stage on the band).
+            # Relaxation columns only: the standard path's band is unchanged.
+            returns = [pa.return_T_K for pa in col.pumparounds if pa.return_T_K is not None]
+            if returns:
+                col.t_band_lo = min(col.t_band_lo, min(returns) - 30.0)
         return col
     t_top, t_bot = _temperature_seed(col, tb)
     if t_bot > t_top + 20.0:
         col.t_band_lo = max(t_top - 30.0, 150.0)
         col.t_band_hi = min(t_bot + 30.0, 600.0)
+    # The band is a trust region and must contain the column (P1-13): the
+    # seed's T_bottom is an average split's, and a kettle pushed heavier sits
+    # above it. Measured 22-stage deethanizer at tears (111, 131): the seed band
+    # topped out at 363.09 K, nine bottom stages sat clamped there with bubble
+    # points up to 373.8 K, and the mesh "converged" on that clamped profile.
+    # The floor likewise: the deethanizer at R = 3, D = 37 has its top stage at
+    # 259.05 K, below the seed floor of 264.46 K, so no profile inside the old
+    # band could satisfy the spec. The band now spans the lightest to the
+    # heaviest component's saturation temperature, 10 K beyond each.
+    ext = _extreme_seed(col, tb)
+    if ext is not None:
+        col.t_band_hi = max(col.t_band_hi, ext[1] + 10.0)
+        col.t_band_lo = min(col.t_band_lo, ext[0] - 10.0)
     return col
+
+
+def _build_interlinks(col: _Column) -> list[_Interlink]:
+    """The graph's interlink records, in section order (S0-1c step 2).
+
+    The unknown-vector layout of the graph Naphtali-Sandholm solve is
+    ``[x per graph stage][T per graph stage][V per free stage]`` - the x/T/V
+    blocks mirror the dense packing over ``n_graph`` stages, with NO draw
+    block: a liquid draw is derived from its section's total balance (draw =
+    returned vapour + product - section feeds; the product-rate spec pins it
+    exactly), so no draw-flow unknown exists and no record points past the
+    unknown vector. The vapour return's flow is the section top stage's own
+    vapour. A linear column has no sections and no interlinks.
+    """
+    out: list[_Interlink] = []
+    for sec in col.sections:
+        if not sec.stages:
+            continue  # degenerate n_stages = 0 plain liquid draw: no section, no return
+        out.append(
+            _Interlink(
+                from_stage=sec.draw_stage - 1,
+                to_stage=sec.stages[0] - 1,
+                phase="liquid",
+            )
+        )
+        out.append(
+            _Interlink(
+                from_stage=sec.stages[0] - 1,
+                to_stage=sec.return_stage - 1,
+                phase="vapour",
+            )
+        )
+    return out
 
 
 def _draw_flows(col: _Column) -> tuple[list[float], list[float]]:
@@ -340,6 +540,37 @@ def _draw_flows(col: _Column) -> tuple[list[float], list[float]]:
         else:
             draw_l[d.stage - 1] += d.flow
     return draw_l, draw_v
+
+
+def _refresh_reactions(col: _Column, xs: list[dict[str, float]], ts: list[float]) -> None:
+    """Stage reaction terms at a stage state: the one owner of the source terms.
+
+    S_ij = sum_r nu_ir xi_rj, xi_rj = H_j r_r(T_j, P_j, x_j), with H_j the
+    liquid holdup (the reactive MESH M_ij of Taylor & Krishna, Chem. Eng. Sci.
+    55 (2000) 5183). The energy term is written on the package's enthalpy
+    reference (ideal gas at 298.15 K for every species), so the heat a stage
+    gains from reaction is
+
+        Q_rx,j = -sum_i S_ij dHf°298,i
+
+    the difference ``enthalpy_with_formation`` puts on the streams: the stage
+    balance on the package basis plus this term IS the balance on the
+    element-reference basis. The sensible heat stays in the package enthalpies.
+    """
+    rx = col.reactions
+    if rx is None:
+        return
+    for stage, holdup in rx.holdups.items():
+        j = stage - 1
+        x = {cid: max(xs[j].get(cid, 0.0), 0.0) for cid in col.comps}
+        source: dict[str, float] = {}
+        for reaction in rx.rset.reactions:
+            extent = col.rx_scale * holdup * rate(reaction, ts[j], col.pressures[j], x)
+            for cid, nu in reaction.stoichiometry.items():
+                source[cid] = source.get(cid, 0.0) + nu * extent
+        col.rx_source[j] = source
+        col.rx_gen[j] = sum(source.values())
+        col.rx_q[j] = -sum(s * formation_enthalpy_298(cid) for cid, s in source.items())
 
 
 def _pa_is_noop(pa: _Pumparound) -> bool:
@@ -396,11 +627,15 @@ def _l_profile(col: _Column, l0: float, v: list[float]) -> list[float]:
         for j in range(col.n):
             cum += col.feeds[j].total - col.draw_l[j] - col.draw_v[j]
             cum += pa_in[j] - pa_out[j]
+            if col.rx_gen:
+                cum += col.rx_gen[j]
             v_above = v[j + 1] if j + 1 < col.n else 0.0
             out.append(max(l0 + cum + v_above - v1, _FLOW_FLOOR))
         return out
     for j in range(col.n):
         cum += col.feeds[j].total - col.draw_l[j] - col.draw_v[j]
+        if col.rx_gen:
+            cum += col.rx_gen[j]
         v_above = v[j + 1] if j + 1 < col.n else 0.0
         out.append(max(l0 + cum + v_above - v1, _FLOW_FLOOR))
     return out
@@ -466,7 +701,8 @@ def _extreme_seed(col: _Column, tb: _ThermoBox) -> tuple[float, float] | None:
     """Coldest / hottest pure-component saturation temperatures, if flasheable."""
     sats_top: list[float] = []
     sats_bot: list[float] = []
-    for cid in col.feed_comp:
+    # A reactive column's heavy end can be a product no feed carries.
+    for cid in col.comps if col.reactions is not None else col.feed_comp:
         pure = {cid: 1.0}
         t_sat = tb.bubble_temperature(pure, col.pressures[0])
         if t_sat is not None:
@@ -564,7 +800,12 @@ def _nearest_feed_phase(col: _Column, j: int, vapor: bool) -> dict[str, float]:
 
 
 def _seed_profile(
-    col: _Column, tb: _ThermoBox, t_top: float, t_bot: float, v_bot_tear: float | None = None
+    col: _Column,
+    tb: _ThermoBox,
+    t_top: float,
+    t_bot: float,
+    v_bot_tear: float | None = None,
+    mixed_flash: bool = True,
 ) -> _Profile:
     """Starting profile: feed-traffic seed for zero/one-tear columns (spec C),
     the distillation-shaped seed for two-tear columns (unchanged).
@@ -574,6 +815,11 @@ def _seed_profile(
     every stage, so it belongs in every stage's vapour-traffic sum - without it
     the stages above the kettle seed at the flow floor and the first sweeps
     solve from a degenerate column.
+
+    ``mixed_flash=False`` skips the adiabatic mixed-feed flash of zero/one-tear
+    columns (the nearest-feed phases seed x and y instead): the relaxation
+    start relaxes whatever it is given, and on a 48-species crude slate that
+    flash's 40-step bisection costs ~80 s of Michelsen stability tests.
     """
     n = col.n
     if col.n_tears < 2:
@@ -586,7 +832,7 @@ def _seed_profile(
         l0 = max(0.5 * vapour[0], _FLOW_FLOOR) if col.condenser == "total" else 0.0
         temps = [t_top + (t_bot - t_top) * (j / max(n - 1, 1)) for j in range(n)]
         mixed = None
-        if not _is_reactive_package(tb):
+        if mixed_flash and not _is_reactive_package(tb):
             # Multi-feed columns seed each stage's x from the nearest feed's
             # flashed phase. When those phases bracket the band - a lean
             # solvent flashing as near-pure liquid (bubble point above the
@@ -660,9 +906,10 @@ def _seed_profile(
 class _InnerModel:
     """Frozen per-sweep models: raw K, alpha_ij, the ln Kb = A + B/T fit, enthalpy lines.
 
-    Zero/one-tear columns additionally carry per-stage correlation lines
-    (``corr_a_s``/``corr_b_s``) anchored on each stage's own (T, ln Kb) history
-    (``kb_hist``) - the Boston-Sullivan scheme - instead of the column-wide fit.
+    Every column carries per-stage correlation lines (``corr_a_s``/``corr_b_s``)
+    through each stage's own current (T, ln Kb) point - the Boston-Sullivan
+    scheme. Zero/one-tear columns fit the slope on the stage's history
+    (``kb_hist``); two-tear columns take the column-wide slope (P1-13).
     """
 
     k_raw: list[dict[str, float]]
@@ -674,8 +921,8 @@ class _InnerModel:
     h_liq: list[tuple[float, float, float]]  # per stage, liquid
     h_cond: tuple[float, float, float] | None  # condensate (total-condenser reflux) line
     fit_T: list[float]  # temperatures the enthalpy lines were fitted at
-    corr_a_s: list[float] = field(default_factory=list)  # per-stage intercepts (n_tears < 2)
-    corr_b_s: list[float] = field(default_factory=list)  # per-stage slopes (n_tears < 2)
+    corr_a_s: list[float] = field(default_factory=list)  # per-stage intercepts
+    corr_b_s: list[float] = field(default_factory=list)  # per-stage slopes
     kb_hist: tuple[tuple[tuple[float, float], ...], ...] = ()  # per-stage (T, ln Kb) points
 
 
@@ -703,16 +950,30 @@ def _fit_ln_kb(hist: tuple[tuple[float, float], ...], b_default: float) -> tuple
 
 
 def _stage_overall_from_flows(
-    col: _Column, j: int, x_j: dict[str, float], y_j: dict[str, float], l_flow: float, v_flow: float
+    col: _Column,
+    j: int,
+    x_j: dict[str, float],
+    y_j: dict[str, float],
+    l_flow: float,
+    v_flow: float,
+    feed_part: _StageFeed | None = None,
+    draw_total: float | None = None,
 ) -> dict[str, float]:
     """Overall composition sitting on stage j: flows-weighted liquid, vapour and feed.
 
     The one overall construction behind ``_stage_overall`` and the stage-K
     evaluation - every caller weights the SAME four sources in the SAME order,
     so the gate and the Newton linearisation hand the package one composition.
+
+    The graph caller (S0-1c step 2) hands ``feed_part``/``draw_total`` for
+    stages past the main column: a section stage's feed part comes from the
+    graph model's padded feed list and its main-column draws are zero (a
+    stripper draw is cascade liquid, already excluded there). ``None`` keeps
+    exactly the plain-column behaviour: the stage's own feed part and draws.
     """
-    part = col.feeds[j]
-    total = l_flow + v_flow + part.total - col.draw_l[j] - col.draw_v[j]
+    part = feed_part if feed_part is not None else col.feeds[j]
+    draws = (col.draw_l[j] + col.draw_v[j]) if draw_total is None else draw_total
+    total = l_flow + v_flow + part.total - draws
     if total <= _FLOW_FLOOR:
         return col.feed_comp
     acc: dict[str, float] = {}
@@ -732,6 +993,15 @@ def _stage_overall(col: _Column, prof: _Profile, j: int) -> dict[str, float]:
     return _stage_overall_from_flows(col, j, prof.x[j], prof.y[j], prof.L[j], prof.V[j])
 
 
+def _fugacity_k(col: _Column, tb: _ThermoBox) -> bool:
+    """True when stage K is the fugacity ratio: every package but the two exceptions.
+
+    A reactive amine package's K carries the speciation walk, and a pooled stage
+    has no single liquid to take a coefficient of: both read K from their flash.
+    """
+    return tb.exact_surface
+
+
 def _stage_k_values(
     col: _Column,
     tb: _ThermoBox,
@@ -741,6 +1011,8 @@ def _stage_k_values(
     t_j: float,
     l_flow: float,
     v_flow: float,
+    feed_part: _StageFeed | None = None,
+    draw_total: float | None = None,
 ) -> dict[str, float] | None:
     """THE stage-K evaluation (P1-11 ruling on issue #153): one owner, one surface.
 
@@ -759,23 +1031,104 @@ def _stage_k_values(
     K*x from the live K themselves). Returns None when the stage's equilibrium
     is not evaluable from any candidate (liquid x, stage overall, feed);
     callers apply their documented fallbacks.
+
+    The graph caller (S0-1c step 2) passes ``feed_part``/``draw_total`` for
+    stages past the main column (see ``_stage_overall_from_flows``); the
+    candidate chain, the fallbacks and the plain-column behaviour are
+    identical either way.
     """
-    return tb.k_values(
-        [
-            _flash_ready(x_j, col.feed_comp),
-            _flash_ready(_stage_overall_from_flows(col, j, x_j, y_j, l_flow, v_flow), col.feed_comp),
+    contents: dict[str, float] | None = None
+    if tb.pool_liquids and y_j and l_flow + v_flow > _FLOW_FLOOR:
+        total = l_flow + v_flow
+        contents = {
+            cid: (l_flow * x_j.get(cid, 0.0) + v_flow * y_j.get(cid, 0.0)) / total for cid in col.comps
+        }
+    if tb.splits_liquid:
+        # The pooled liquid's own E equation (``k_pooled``): K at x_j, its
+        # liquid-liquid split and the vapour in equilibrium with it, a
+        # function of (x_j, T_j, P_j) alone like the plain column's fugacity
+        # K - Newton, the gate and the y refresh read one surface whether or
+        # not the caller hands a vapour estimate.
+        x_flash = _flash_ready({cid: x_j.get(cid, 0.0) for cid in col.comps}, col.feed_comp)
+        k_pool = tb.k_pooled(x_flash, y_j or x_flash, t_j, col.pressures[j])
+        if k_pool is not None:
+            return k_pool
+    homogeneous_pooled = (
+        tb.pooled_exact
+        and not tb.splits_liquid
+        and not tb.heterogeneous(
+            _flash_ready({c: v for c, v in (contents or x_j).items() if v > 0.0}, col.feed_comp),
+            t_j,
+            col.pressures[j],
+        )
+    )
+    if _fugacity_k(col, tb) or homogeneous_pooled:
+        x_flash = _flash_ready({cid: x_j.get(cid, 0.0) for cid in col.comps}, col.feed_comp)
+        # The caller's vapour only seeds the fixed point inside k_fugacity:
+        # the K of a trial x answers to that x's own equilibrium vapour.
+        k_fug = tb.k_fugacity(x_flash, y_j or x_flash, t_j, col.pressures[j])
+        if k_fug is not None:
+            return k_fug
+    k_liq = tb.k_liquid(_flash_ready(x_j, col.feed_comp), t_j, col.pressures[j])
+    if k_liq is not None:
+        return k_liq
+    candidates = [
+        _flash_ready(x_j, col.feed_comp),
+        _flash_ready(
+            _stage_overall_from_flows(col, j, x_j, y_j, l_flow, v_flow, feed_part, draw_total),
             col.feed_comp,
-        ],
+        ),
+        col.feed_comp,
+    ]
+    if contents is not None:
+        # A heterogeneous stage boils on a plateau: just above its bubble point
+        # a flash of the liquid alone vaporises a large share and hands back a
+        # pooled liquid that is not x_j. The stage's own contents L x + V y are
+        # what flash back to (x_j, y_j) at the solution, so they go first.
+        candidates.insert(0, _flash_ready({c: v for c, v in contents.items() if v > 0.0}, col.feed_comp))
+    return tb.k_values(
+        candidates,
         t_j,
         col.pressures[j],
     )
 
 
-def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerModel | None) -> _InnerModel:
+def _refresh_model(
+    col: _Column,
+    tb: _ThermoBox,
+    prof: _Profile,
+    model: _InnerModel | None,
+    damp: float = _OUTER_DAMP,
+) -> _InnerModel:
     """One outer sweep: real K-values per stage, alpha against a column-wide reference
     component, the ln Kb = A + B/T correlation (least squares over the stage points),
-    and per-stage linear enthalpy models (refitted only when temperatures moved)."""
+    and per-stage linear enthalpy models (refitted only when temperatures moved).
+
+    Surface (P1-13): a two-tear sweep reads the K and enthalpies Newton and the
+    gate read (``exact_surface``). Measured 22-stage deethanizer at tears
+    (111, 131): its sweeps on the flash surface cycle at gate M ~ 0.7 for 40
+    sweeps, and Newton from there stalls; on the exact surface the best sweep
+    (M = 4.7e-2) hands Newton a state it closes quadratically in four passes
+    to M = 6.9e-15. A zero/one-tear sweep reads the flash surface: its gas-rich
+    absorber stages carry liquids with no physical liquid root, where the
+    single-phase liquid build degenerates toward K = 1 (measured 8-stage
+    C1/nC4 absorber: stages starved to V = 0 at the 270 K band floor, H
+    stalled at 2.2e-2). Its Newton polish and gate read the exact surface.
+    """
+    tb.sweeping = col.n_tears < 2
+    try:
+        return _refresh_model_on_surface(col, tb, prof, model, damp)
+    finally:
+        tb.sweeping = False
+
+
+def _refresh_model_on_surface(
+    col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerModel | None, damp: float
+) -> _InnerModel:
+    """The body of `_refresh_model`, on the surface it selected."""
     n = col.n
+    # Reaction terms are frozen across the inner loop with the other models.
+    _refresh_reactions(col, prof.x, prof.T)
     k_stages: list[dict[str, float]] = []
     for j in range(n):
         k = _stage_k_values(col, tb, j, prof.x[j], prof.y[j], prof.T[j], prof.L[j], prof.V[j])
@@ -788,8 +1141,10 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
     weights = {
         cid: sum(k_stages[j].get(cid, 0.0) * prof.x[j].get(cid, 0.0) for j in range(n)) for cid in col.comps
     }
-    if model is not None and col.n_tears < 2:
+    if model is not None:
         # Boston-Sullivan: the reference component is FIXED for the whole solve.
+        # Two-tear columns too (P1-13): their per-stage anchored lines below
+        # need one reference component across sweeps.
         # Re-picking it every sweep from the x-weighted K sums flips Kb between
         # components as the compositions sharpen (measured P1-09 C1/nC4 absorber:
         # nC4 at sweep 1, C1 from sweep 2, because K_C1 ~ 8.5 >> K_nC4 ~ 0.15
@@ -815,7 +1170,7 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
         corr_b = (n * s_xy - s_x * s_y) / det
         corr_a = (s_y - corr_b * s_x) / n
 
-    w = _OUTER_DAMP
+    w = damp
     if model is not None:
         # Feedback damping (Boston-Sullivan): blend the refreshed correlation and
         # relative volatility with the previous sweep's values. Without it the
@@ -833,7 +1188,9 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
     # isothermal start every stage sits at the same T, the column-wide fit is
     # degenerate (no slope information), and its noise walks the stages out of
     # the two-phase window (measured on the 8/20-stage absorber: the walk never
-    # recovers). Gated on the configuration - the two-tear path is unchanged.
+    # recovers). A two-tear column keeps the column-wide SLOPE (history slopes
+    # diverge on the 22-stage deethanizer) but anchors each stage's intercept
+    # on its own (T_j, ln Kb_j) below (P1-13).
     corr_a_s: list[float] = []
     corr_b_s: list[float] = []
     kb_hist_new: list[tuple[tuple[float, float], ...]] = []
@@ -862,6 +1219,18 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
             corr_a_s.append(a_fit)
             corr_b_s.append(b_fit)
             kb_hist_new.append(hist)
+    else:
+        # The column-wide line ln Kb = A + B/T misses each stage's own point,
+        # so at the outer fixed point the model's bubble temperature is not
+        # the stage's: alpha_ij Kb_line(T_j) != K_ij and sum_i K_ij x_ij != 1.
+        # Measured on the 22-stage deethanizer: stages 0.5-1 K off their
+        # bubble points, which the gate (summation rows included) rejects.
+        # Anchored at (T_j, ln Kb_j) with the column-wide slope, the model
+        # reproduces the stage's real K at T_j, so the outer fixed point is the
+        # MESH solution itself.
+        for j in range(n):
+            corr_b_s.append(corr_b)
+            corr_a_s.append(math.log(kb[j]) - corr_b / prof.T[j])
 
     # Refit the enthalpy anchors every sweep: near convergence temperatures
     # barely move, so a refit-on-temperature-drift rule left the lines anchored
@@ -873,9 +1242,13 @@ def _refresh_model(col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerMo
     h_vap: list[tuple[float, float, float]] = []
     h_liq: list[tuple[float, float, float]] = []
     for j in range(n):
-        pair = tb.phase_enthalpy_pair(
-            tb.pt(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j]),
-            prof.T[j],
+        pair = (
+            None
+            if tb.exact_surface
+            else tb.phase_enthalpy_pair(
+                tb.pt(_flash_ready(prof.x[j], col.feed_comp), prof.T[j], col.pressures[j]),
+                prof.T[j],
+            )
         )
         if pair is None:
             pair = (
@@ -949,6 +1322,8 @@ def _mesh_x(col: _Column, model: _InnerModel, prof: _Profile, kb: list[float]) -
             if j < n - 1:
                 up[j] = prof.V[j + 1] * k[j + 1].get(cid, 1.0)
             rhs[j] = -(part.l_flow * part.x.get(cid, 0.0) + part.v_flow * part.y.get(cid, 0.0))
+            if col.rx_source:
+                rhs[j] -= col.rx_source[j].get(cid, 0.0)
             for ret_j, draw_j, flow in pa_return_terms:
                 if ret_j == j:
                     rhs[j] -= flow * prof.x[draw_j].get(cid, 0.0)
@@ -1047,6 +1422,10 @@ def _mesh_v(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: float 
             if pa_h_in or pa_h_out:
                 h_in += pa_h_in.get(j, 0.0)
                 h_out += pa_h_out.get(j, 0.0)
+            if col.stage_q:
+                h_in += col.stage_q[j]
+            if col.rx_q:
+                h_in += col.rx_q[j]
             out.append(h_in - h_out)
         return out
 
@@ -1133,7 +1512,7 @@ def _inner_solve(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: f
         t_new = []
         for j in range(n):
             corr_a_j, corr_b_j = (
-                (model.corr_a_s[j], model.corr_b_s[j]) if col.n_tears < 2 else (model.corr_a, model.corr_b)
+                (model.corr_a_s[j], model.corr_b_s[j]) if model.corr_a_s else (model.corr_a, model.corr_b)
             )
             denom = math.log(kb[j]) - corr_a_j
             t_corr = corr_b_j / denom if abs(denom) > 1e-12 else t_old[j]
@@ -1240,6 +1619,8 @@ def _m_row_flows(
             inflow += part.l_flow * part.x.get(cid, 0.0) + part.v_flow * part.y.get(cid, 0.0)
             for draw_j, flow in pa_ret:
                 inflow += flow * xs[draw_j].get(cid, 0.0)
+            if col.rx_source:
+                inflow += col.rx_source[j].get(cid, 0.0)
             outflow = (liquid[j] + col.draw_l[j]) * xs[j].get(cid, 0.0) + (vs[j] + col.draw_v[j]) * y_eq[
                 j
             ].get(cid, 0.0)
@@ -1282,6 +1663,7 @@ def _residual_scales(
     path only: the warm two-tear path keeps per-evaluation scales - measured
     regression there (see `_naphtali_sandholm`).
     """
+    _refresh_reactions(col, xs, ts)
     k_stages, y_eq = _stage_equilibrium(col, tb, l0, xs, ts, vs, y_estimates, k_fallbacks, k_cache, k_misses)
     flows = _m_row_flows(col, l0, xs, vs, y_eq)
     return [max(abs(inflow), abs(outflow), col.f_total * 1e-6) for inflow, outflow in flows]
@@ -1337,6 +1719,7 @@ def _live_residual_vector(
     scale from the state it gates, the only place a frozen quantity differs.
     """
     n = col.n
+    _refresh_reactions(col, xs, ts)
     liquid = _l_profile(col, l0, vs)
     h_scale = max(col.f_total * 2e4, 1.0)
     h_stage_set = set(_h_equation_stages(col))
@@ -1417,6 +1800,10 @@ def _live_residual_vector(
         if col.pumparounds:
             h_in += pa_h_in.get(j, 0.0)
             h_out += pa_h_out.get(j, 0.0)
+        if col.stage_q:
+            h_in += col.stage_q[j]
+        if col.rx_q:
+            h_in += col.rx_q[j]
         if h_evals is not None:
             h_evals[0] += 4
         out.append((h_in - h_out) / h_scale)
@@ -1443,6 +1830,20 @@ def _residual_row_blocks(col: _Column, h_stages: list[int]) -> tuple[list[int], 
             h_idx.append(pos)
             pos += 1
     return m_idx, h_idx
+
+
+def _summation_norm(col: _Column, vec: list[float], h_idx: list[int]) -> float:
+    """Max |sum_i x_ij (1 - K_ij)| over the stages of a `_live_residual_vector`."""
+    nc = len(col.comps)
+    h_set = set(h_idx)
+    pos = 0
+    worst = 0.0
+    for _ in range(col.n):
+        worst = max(worst, abs(vec[pos + nc]))
+        pos += nc + 1
+        if pos in h_set:
+            pos += 1
+    return worst
 
 
 def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[float, float]:
@@ -1475,7 +1876,11 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
     """
     vec = _live_residual_vector(col, tb, prof.l0, prof.x, prof.T, prof.V, y_estimates=list(prof.y))
     m_idx, h_idx = _residual_row_blocks(col, _h_equation_stages(col))
+    # P1-13: the summation rows sum_i x_ij (1 - K_ij) sit under the M gate. They
+    # are what puts a stage ON its bubble point: y_eq is normalised, so without
+    # them a stage off equilibrium closes M with a y it does not have.
     max_m = max((abs(vec[i]) for i in m_idx), default=0.0)
+    max_m = max(max_m, _summation_norm(col, vec, h_idx))
     max_h = max((abs(vec[i]) for i in h_idx), default=0.0)
     return max_m, max_h
 
@@ -1501,6 +1906,7 @@ def _finalize_duties(col: _Column, tb: _ThermoBox, prof: _Profile) -> None:
             if total > _FLOW_FLOOR and abs(total - 1.0) > 1e-12:
                 for cid in comp:
                     comp[cid] /= total
+    _refresh_reactions(col, prof.x, prof.T)
     liquid = _l_profile(col, prof.l0, prof.V)
     prof.d, prof.b = _d_and_b(col, prof.l0, prof.V, liquid)
     if col.condenser == "total":
@@ -1624,6 +2030,11 @@ def _pa_reports(col: _Column, tb: _ThermoBox, prof: _Profile) -> list[dict[str, 
     return reports
 
 
+def _section_duty_total(col: _Column) -> float:
+    """Total fixed stripper reboiler duty, W (heat added; 0.0 without strippers)."""
+    return sum(sec.stripper.reboiler_duty_W or 0.0 for sec in col.sections if sec.stages)
+
+
 def _close_energy_balance(
     col: _Column,
     tb: _ThermoBox,
@@ -1640,11 +2051,25 @@ def _close_energy_balance(
     (``pa_<name>_duty_W``), and ``UnitResult.duty_W = qr − qc + Σ pa_duty``
     is the net unit duty closing the stream table to machine precision; the
     deviation of ``qr`` from the stage-balance reboiler duty is the converged
-    MESH residual, far below the duty magnitudes.
+    MESH residual, far below the duty magnitudes. Inter-stage heater duties
+    fold in exactly like the pumparound duties, and so does the reaction heat
+    of a reactive column (it is not a duty, so it never reaches ``duty_W``
+    directly: that closes the stream table on the element-reference basis).
     """
     h_in = sum(s.enthalpy * s.molar_flow for s in feed_states)
     h_out = sum(s.enthalpy * s.molar_flow for s in out_states)
-    prof.qr = h_out - h_in + prof.qc - sum(rep["duty_W"] for rep in prof.pa_report)
+    prof.qr = h_out - h_in + prof.qc - sum(rep["duty_W"] for rep in prof.pa_report) - sum(col.stage_q)
+    # S0-1c: the fixed stripper reboiler duties fold in like the heaters.
+    prof.qr -= _section_duty_total(col)
+    if col.reactions is not None:
+        # The heat of reaction over the BOUNDARY amounts: integrated stage
+        # rates differ from out - in by the converged M residual, and this
+        # closure must close the stream table exactly on the formation basis.
+        made: dict[str, float] = {}
+        for s, sign in [(st, 1.0) for st in out_states] + [(st, -1.0) for st in feed_states]:
+            for cid, frac in s.composition.items():
+                made[cid] = made.get(cid, 0.0) + sign * frac * s.molar_flow
+        prof.qr += sum(n * formation_enthalpy_298(cid) for cid, n in made.items())
 
 
 def _check_pumparounds(col: _Column, prof: _Profile) -> None:

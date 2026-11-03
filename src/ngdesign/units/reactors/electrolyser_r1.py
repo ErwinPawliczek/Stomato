@@ -300,8 +300,8 @@ class ElectrolyserStackR1:
         """R0's water feed on the spec's test polarisation coefficients.
 
         100-cell stack, 2000 A on 0.25 m² active area per cell (i = 8000
-        A/m²), liquid water at 298.15 K: U_rev,l = 1.22874 V, ohmic 0.59 V,
-        activation 0.68512 V, so U_cell ≈ 2.50386 V, and η_F = 0.95963 from
+        A/m²), liquid water at 298.15 K: U_rev,l = 1.22886 V, ohmic 0.59 V,
+        activation 0.68512 V, so U_cell ≈ 2.50398 V, and η_F = 0.95963 from
         f1 = 2.5e4 A²/m⁴, f2 = 0.96.
         """
         feed = {

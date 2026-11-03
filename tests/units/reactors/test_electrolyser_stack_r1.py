@@ -3,24 +3,24 @@
 Hand-computed from the spec's equations (``specs/backend/units/electrolyser_stack.md``),
 never from model output:
 
-**Reversible voltage at 298.15 K.** The databank formation data (verified in
-this session against ``ngdesign.data.formation``) are H2O(g)
-ΔfH°298 = −241822 J/mol and S°298 = 188.8 J/(mol·K); H2 S°298 = 130.7;
-O2 S°298 = 205.2 J/(mol·K). For H2O(g) → H2 + ½O2 at 298.15 K the
+**Reversible voltage at 298.15 K.** The cited formation data
+(``data/chemdb``) are H2O(g) ΔfH°298 = −241822 J/mol (ATcT 1.112) and
+S°298 = 188.834 J/(mol·K); H2 S°298 = 130.680; O2 S°298 = 205.147 J/(mol·K)
+(NIST-JANAF H-064, H-050, O-029). For H2O(g) → H2 + ½O2 at 298.15 K the
 ``from_gibbs`` ∫ΔCp terms vanish (T = 298.15 K is the formation reference),
 so
 
-    ΔS° = 130.7 + 205.2/2 − 188.8 = 44.5 J/(mol·K)
-    ΔG° = 241822 − 298.15·44.5 = 228554.325 J/mol
-    U_rev,g = ΔG°/(2F) = 228554.325/192970.66424 = 1.18439933 V
+    ΔS° = 130.680 + 205.147/2 − 188.834 = 44.4195 J/(mol·K)
+    ΔG° = 241822 − 298.15·44.4195 = 228578.326 J/mol
+    U_rev,g = ΔG°/(2F) = 228578.326/192970.66424 = 1.18452370 V
 
 (the JANAF printed textbook value 1.229 V is the liquid-water number below,
 not this vapour value; it is a sanity check, not the assertion). With the
 saturation correction, p_sat(H2O, 298.15 K) = 3169.92934 Pa read from the
 thermo package in the test as an input:
 
-    ΔG_l = ΔG° − R·T·ln(p_sat/P°) = 237110.348 J/mol
-    U_rev,l = 1.22873779 V
+    ΔG_l = ΔG° − R·T·ln(p_sat/P°) = 237134.349 J/mol
+    U_rev,l = 1.22886217 V
 
 **Polarisation (test coefficients, not data).** r1 = 8.0e-5 Ω·m²,
 r2 = −2.5e-7 Ω·m²/°C, s = 0.185 V, t1 = −0.1 m²/A, t2 = 8.4 m²·°C/A,
@@ -30,12 +30,12 @@ feed at 298.15 K (T_C = 25 °C): i = 8000 A/m²,
     ohmic  = (8.0e-5 − 2.5e-7·25)·8000 = 0.59 V
     act arg = (−0.1 + 8.4/25 + 247.0/625)·8000 + 1 = 5050.6
     activation = 0.185·log10(5050.6) = 0.68511845 V
-    U_cell = 1.22873779 + 0.59 + 0.68511845 = 2.50385624 V
+    U_cell = 1.22886217 + 0.59 + 0.68511845 = 2.50398062 V
 
 and with f1 = 2.5e4 A²/m⁴, f2 = 0.96 (Ulleberg eq. 9 form):
 
     η_F = 0.96·8000²/(2.5e4 + 8000²) = 0.959625146
-    n_H2 = η_F·I·N/(2F) = 0.0994581379 mol/s,  P_el = U_cell·I·N = 50077.1249 W
+    n_H2 = η_F·I·N/(2F) = 0.0994581379 mol/s,  P_el = U_cell·I·N = 50079.6124 W
 
 Printed 9-digit literals are rounded past 1e-9 relative, so each carries a
 1e-8 sanity assertion while the closed-form expressions carry the 1e-9
@@ -66,7 +66,7 @@ from ngdesign.units.reactors.electrolyser_r1 import (
 THERMO = PengRobinsonThermo()
 
 #: Databank printed values behind the closed form (see module docstring).
-DELTA_G_298 = 241822.0 - 298.15 * 44.5  # = 228554.325 J/mol, exact on those inputs
+DELTA_G_298 = 241822.0 - 298.15 * (130.680 + 205.147 / 2.0 - 188.834)  # = 228578.326 J/mol
 
 TEST_POLARISATION = {
     "r1": 8.0e-5,
@@ -102,11 +102,11 @@ def flash_feed(feed: dict[str, Any]) -> StreamState:
 
 
 def test_reversible_voltage_vapour_closed_form() -> None:
-    # ΔG°/(2F) from the printed databank numbers; U_rev,g = 1.18439933 V.
+    # ΔG°/(2F) from the cited formation numbers; U_rev,g = 1.18452370 V.
     expected = DELTA_G_298 / (2.0 * FARADAY)
     got = reversible_voltage_gibbs(298.15)
     assert math.isclose(got, expected, rel_tol=1e-9)
-    assert math.isclose(got, 1.18439933, rel_tol=1e-8)  # printed sanity value
+    assert math.isclose(got, 1.18452370, rel_tol=1e-8)  # printed sanity value
 
 
 def test_reversible_voltage_liquid_closed_form() -> None:
@@ -118,7 +118,7 @@ def test_reversible_voltage_liquid_closed_form() -> None:
     expected = delta_g_liquid / (2.0 * FARADAY)
     got = reversible_voltage(THERMO, 298.15, 3.0e6, liquid_reactant=True)
     assert math.isclose(got, expected, rel_tol=1e-9)
-    assert math.isclose(got, 1.22873779, rel_tol=1e-8)  # printed sanity value
+    assert math.isclose(got, 1.22886217, rel_tol=1e-8)  # printed sanity value
 
 
 def test_polarisation_closed_form() -> None:
@@ -130,7 +130,7 @@ def test_polarisation_closed_form() -> None:
     arg = (-0.1 + 8.4 / 25.0 + 247.0 / 25.0**2) * i + 1.0
     assert math.isclose(activation, 0.185 * math.log10(arg), rel_tol=1e-9)
     assert math.isclose(activation, 0.68511845, rel_tol=1e-8)
-    # U_cell = U_rev,l + ohmic + activation = 2.50385624 V, expected computed
+    # U_cell = U_rev,l + ohmic + activation = 2.50398062 V, expected computed
     # end to end from the printed inputs.
     p_sat = THERMO.pure_psat("H2O", 298.15)
     assert p_sat is not None
@@ -139,7 +139,7 @@ def test_polarisation_closed_form() -> None:
     u_rev_l = reversible_voltage(THERMO, 298.15, 3.0e6, liquid_reactant=True)
     u_cell = u_rev_l + ohmic + activation
     assert math.isclose(u_cell, u_cell_expected, rel_tol=1e-9)
-    assert math.isclose(u_cell, 2.50385624, rel_tol=1e-8)
+    assert math.isclose(u_cell, 2.50398062, rel_tol=1e-8)
 
 
 def test_faradaic_efficiency_closed_form() -> None:
@@ -165,8 +165,8 @@ def test_log_base_is_ten() -> None:
 
 def test_adapter_closed_form_solve() -> None:
     # The spec's polarisation closed form through the full adapter, N = 10:
-    # U_cell = 2.50385624 V, eta_F = 0.959625146, n_H2 = 0.0994581379 mol/s,
-    # P_el = 50077.1249 W.
+    # U_cell = 2.50398062 V, eta_F = 0.959625146, n_H2 = 0.0994581379 mol/s,
+    # P_el = 50079.6124 W.
     inlet = flash_feed(EXAMPLE_FEED)
     result = ElectrolyserStackR1().solve(
         {"inlet": inlet},
@@ -180,16 +180,16 @@ def test_adapter_closed_form_solve() -> None:
         THERMO,
     )
     info = result.info
-    assert math.isclose(info["U_rev_V"], 1.22873779, rel_tol=1e-8)
+    assert math.isclose(info["U_rev_V"], 1.22886217, rel_tol=1e-8)
     assert math.isclose(info["eta_ohmic_V"], 0.59, rel_tol=1e-9)
     assert math.isclose(info["eta_activation_V"], 0.68511845, rel_tol=1e-8)
-    assert math.isclose(info["cell_voltage_V"], 2.50385624, rel_tol=1e-8)
+    assert math.isclose(info["cell_voltage_V"], 2.50398062, rel_tol=1e-8)
     assert math.isclose(info["current_density_A_m2"], 8000.0, rel_tol=1e-12)
     assert math.isclose(info["faradaic_efficiency"], 0.959625146, rel_tol=1e-9)
     expected_n_h2 = 0.959625146 * 2000.0 * 10.0 / (2.0 * FARADAY)
     assert math.isclose(info["h2_production_mol_s"], expected_n_h2, rel_tol=1e-9)
     assert math.isclose(info["h2_production_mol_s"], 0.0994581379, rel_tol=1e-8)
-    assert math.isclose(result.power_W, 50077.1249, rel_tol=1e-8)
+    assert math.isclose(result.power_W, 50079.6124, rel_tol=1e-8)
     # efficiency_HHV is the thermoneutral voltage R0 reports over U_cell.
     assert info["efficiency_HHV"] == pytest.approx(
         info["thermoneutral_voltage_V"] / info["cell_voltage_V"], rel=1e-12

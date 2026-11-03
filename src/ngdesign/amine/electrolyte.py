@@ -22,6 +22,13 @@ packages (``ngdesign.amine.package``):
   Rasmussen 1999 parameter set; formulation, infinite-dilution and
   molality-scale conventions per Leal et al. 2025).  See
   ``data/thermo_params/electrolyte/ext_uniquac.yaml``.
+* ``pitzer_debye_huckel`` -- the long-range term of ``enrtl_nacl_water`` alone (no
+  short-range binary), a dilute-solution model refused above its molality cap.
+* ``enrtl_rk``, ``enrtl_hoc``, ``pitzer_hoc`` -- the same brine liquids with a real
+  water vapour: the Redlich-Kwong or Hayden-O'Connell fugacity coefficient enters
+  the water K-value, and the vapour properties come from that model.
+* ``enrtl_crystallisation`` -- ``enrtl_nacl_water`` with a solid NaCl phase instead of
+  the refusal/supersaturated liquid past the solubility limit.
 
 Streams stay molecular (ionic species never leave this module): the brine
 model takes (H2O, NaCl), the sour-water model (H2O, NH3, H2S); anything else
@@ -47,7 +54,7 @@ import yaml
 
 from ngdesign.amine.package import _phase, _registry_get
 from ngdesign.amine.roots import brent_root
-from ngdesign.contracts import PhaseKind, StreamState
+from ngdesign.contracts import Phase, PhaseKind, StreamState
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.thermo import (
     PhaseProps,
@@ -55,21 +62,28 @@ from ngdesign.contracts.thermo import (
     SaturationError,
     SaturationPoint,
 )
-from ngdesign.data import DATA_DIR, component_record
+from ngdesign.data import DATA_DIR, DATABANK_LOCK, component_record
 from ngdesign.registry import register
 from ngdesign.thermo import _state
+from ngdesign.thermo.gamma_phi import GammaPhiPackage, _constants_for
 from ngdesign.thermo.saturation import solve_saturation
 
 __all__ = [
     "ElectrolyteChemistryError",
+    "ElectrolyteENRTLCrystal",
+    "ElectrolyteENRTLHOC",
     "ElectrolyteENRTLNaCl",
+    "ElectrolyteENRTLRK",
     "ElectrolyteExtUNIQUAC",
+    "ElectrolytePDH",
+    "ElectrolytePitzerHOC",
     "ElectrolytePitzerNaCl",
     "ElectrolyteSourWater",
     "SWEQConstants",
     "SWHenry",
     "SourWaterSpeciation",
     "enrtl_mean_gamma",
+    "enrtl_crystallisation_molality",
     "enrtl_osmotic",
     "enrtl_saturation_molality",
     "enrtl_water_activity",
@@ -81,6 +95,8 @@ __all__ = [
     "pitzer_osmotic",
     "pitzer_saturation_molality",
     "pitzer_water_activity",
+    "pdh_mean_gamma",
+    "pdh_water_activity",
     "sour_water_partial_pressures",
     "sour_water_speciation",
     "sweq_constants",
@@ -122,6 +138,11 @@ _PSIA_TO_PA = 6894.757293168
 #: amine packages' loading-clamp precedent).
 _MAX_MOLALITY = 6.15
 
+#: The Pitzer-Debye-Hueckel term alone has no short-range physics: it is a dilute-
+#: solution model: gamma+- is 3.5 % below the PPB84 value at this molality and 8 % at
+#: 0.5 mol/kg (measured in tests/thermo/test_electrolyte_variants.py).
+_PDH_MAX_MOLALITY = 0.2
+
 #: Water molar mass on the molality basis the electrolyte anchor tables use
 #: (kg/mol; mol water per kg solvent below), and its reciprocal.
 _MW_WATER_KG = 0.018015268
@@ -133,6 +154,7 @@ _NW = 1.0 / _MW_WATER_KG
 _MODEL_WINDOWS: dict[str, tuple[float, float]] = {
     "pitzer": (293.15, 303.15),
     "enrtl": (293.15, 303.15),
+    "pdh": (293.15, 303.15),
     "ext_uniquac": (293.15, 303.15),
     "sour_water": (293.15, 373.15),
 }
@@ -141,13 +163,14 @@ _MODEL_WINDOWS: dict[str, tuple[float, float]] = {
 _MODEL_SUPPORTS: dict[str, frozenset[str]] = {
     "pitzer": frozenset({"H2O", "NaCl"}),
     "enrtl": frozenset({"H2O", "NaCl"}),
+    "pdh": frozenset({"H2O", "NaCl"}),
     "ext_uniquac": frozenset({"H2O", "NaCl"}),
     "sour_water": frozenset({"H2O", "NH3", "H2S"}),
 }
 
 #: Brine models (involatile-salt paths).  Everything else with a window is
 #: the sour-water chemistry.
-_BRINE_MODELS: tuple[str, ...] = ("pitzer", "enrtl", "ext_uniquac")
+_BRINE_MODELS: tuple[str, ...] = ("pitzer", "enrtl", "pdh", "ext_uniquac")
 
 #: First-use refusals: models whose open parameter bases are not verifiable
 #: (the T-07 precedent: refuse, never silently idealize).  T-09b replaced the
@@ -254,30 +277,40 @@ def _enrtl() -> dict[str, Any]:
     return cast(dict[str, Any], data)
 
 
+def _pdh_gE_rt(xi: float) -> float:
+    """Pitzer-Debye-Hueckel G^E/RT per total mole, mole-fraction basis, 1:1 salt.
+
+    -(4 A_phi I_x / rho) sqrt(1000/M_w) ln(1 + rho sqrt(I_x)), with A_phi = 0.392 and
+    the closest-approach rho = 14.9 (Pitzer, J. Am. Chem. Soc. 102 (1980) 2902; Chen,
+    Britt, Boston & Evans, AIChE J. 28 (1982) 588); I_x = xi for |z| = 1 ions.
+    """
+    p = _enrtl()
+    aphi, rho = float(p["aphi"]), float(p["rho"])
+    return -4.0 * aphi / math.sqrt(_MW_WATER_KG) * (xi / rho) * math.log1p(rho * math.sqrt(xi))
+
+
 def _enrtl_gE_rt(xw: float, xi: float) -> float:
     """G^E/RT per total mole on the effective-fraction basis (xw + 2*xi = 1).
 
-    Long range: Pitzer-Debye-Hueckel on the mole-fraction basis (Chen, Britt,
-    Boston & Evans 1982), A_phi = 0.392, closest-approach rho = 14.9.  Short
-    range: the single-salt local-composition reduction of the Chen & Evans
-    1986 binary (tau_CA,w = -4.5916, tau_w,CA = 9.0234, alpha = 0.2, G =
+    Long range: :func:`_pdh_gE_rt`.  Short range: the single-salt local-composition
+    reduction of the Chen & Evans 1986 binary (tau_CA,w = -4.5916, tau_w,CA = 9.0234, alpha = 0.2, G =
     exp(-alpha*tau)): a molecule cell and one ion cell per ion, X_CA = 2*xi,
     X_i = xi (derived from Kwaterski & Herri eq 25; the salt-side composition
     derivative of n*G^E returns ln gamma_Na + ln gamma_Cl for the 1:1 salt).
     """
     p = _enrtl()
-    aphi, rho, alpha = float(p["aphi"]), float(p["rho"]), float(p["alpha"])
-    ix = xi  # mole-fraction ionic strength (|z| = 1 for both ions)
-    g_pdh = -4.0 * aphi / math.sqrt(_MW_WATER_KG) * (ix / rho) * math.log1p(rho * math.sqrt(ix))
+    alpha = float(p["alpha"])
     tau_caw, tau_wca = float(p["tau_ca_w"]), float(p["tau_w_ca"])
     g_c = math.exp(-alpha * tau_caw)
     g_w = math.exp(-alpha * tau_wca)
     x_ca = 2.0 * xi
     g_lc = xw * x_ca * g_c * tau_caw / (xw + x_ca * g_c) + x_ca * xw * g_w * tau_wca / (xw * g_w + xi)
-    return g_pdh + g_lc
+    return _pdh_gE_rt(xi) + g_lc
 
 
-def _enrtl_ln_props(molality: float) -> tuple[float, float]:
+def _enrtl_ln_props(
+    molality: float, ge_rt: Callable[[float, float], float] = _enrtl_gE_rt
+) -> tuple[float, float]:
     """(ln gamma+-(m), ln a_w) of NaCl(aq) at the 25 C parameter set.
 
     The composition derivatives of n*G^E/RT are numeric central differences
@@ -293,7 +326,7 @@ def _enrtl_ln_props(molality: float) -> tuple[float, float]:
 
     def total(ms: float, mw: float = _NW) -> float:
         n = mw + 2.0 * ms
-        return n * _enrtl_gE_rt(mw / n, ms / n)
+        return n * ge_rt(mw / n, ms / n)
 
     d_salt = (total(molality + h) - total(molality - h)) / (2.0 * h)
     d0 = (total(h) - total(0.0)) / h  # infinite-dilution reference (unsymmetric normalisation)
@@ -322,6 +355,34 @@ def enrtl_water_activity(molality: float) -> float:
 def enrtl_osmotic(molality: float) -> float:
     """Osmotic coefficient phi = -ln a_w / (nu * m * M_w), eNRTL 25 C parameter set."""
     return -_enrtl_ln_props(molality)[1] / (2.0 * molality * _MW_WATER_KG)
+
+
+def pdh_mean_gamma(molality: float) -> float:
+    """Mean ionic activity coefficient of NaCl(aq) from the long-range term alone."""
+    return math.exp(_enrtl_ln_props(molality, lambda _xw, xi: _pdh_gE_rt(xi))[0])
+
+
+def pdh_water_activity(molality: float) -> float:
+    """Water activity of NaCl(aq) from the long-range term alone (a_w = gamma_w * x_w)."""
+    return math.exp(_enrtl_ln_props(molality, lambda _xw, xi: _pdh_gE_rt(xi))[1])
+
+
+@cache
+def enrtl_crystallisation_molality() -> float:
+    """NaCl solubility (mol/kg) of the eNRTL liquid against the solid's solubility product.
+
+    SLE for NaCl(s) = Na+ + Cl-: (m gamma+-)^2 = K_sp, a_w absent for the anhydrous
+    solid. K_sp comes from the model-independent anchor (6.146 mol/kg at gamma 1.0065,
+    Pitzer, Peiper & Busey 1984), so the molality this returns is what the eNRTL
+    liquid predicts for that solid, with the liquid model's own error in it.
+    """
+    p = _enrtl()["saturation"]
+    product = float(p["solubility_molality"]) * float(p["mean_gamma"])
+
+    def residual(m: float) -> float:
+        return m * enrtl_mean_gamma(m) - product
+
+    return brent_root(residual, 4.0, 10.0)
 
 
 def enrtl_saturation_molality() -> float:
@@ -668,12 +729,12 @@ def _mw(cid: str) -> float:
     return float(_record(cid)["mw"])
 
 
-def _molality_nacl(x_nacl: float, x_w: float) -> float:
+def _molality_nacl(x_nacl: float, x_w: float, cap: float = _MAX_MOLALITY) -> float:
     """NaCl molality (mol/kg water) from liquid mole fractions, clamped to the fitted domain."""
     if x_w <= 0.0:
         raise ElectrolyteChemistryError("the brine liquid carries no water (molality undefined)")
     m = 1000.0 * x_nacl / (_mw("H2O") * x_w)
-    return min(m, _MAX_MOLALITY)
+    return min(m, cap)
 
 
 def _solution_molalities(x: dict[str, float]) -> tuple[float, float]:
@@ -698,6 +759,7 @@ def _psat_or_wilson(cid: str, t_k: float) -> float:
 _WATER_ACTIVITY: dict[str, Callable[[float], float]] = {
     "pitzer": pitzer_water_activity,
     "enrtl": enrtl_water_activity,
+    "pdh": pdh_water_activity,
     "ext_uniquac": ext_uniquac_water_activity,
 }
 
@@ -718,10 +780,24 @@ class ElectrolytePackage(Thermo):
     #: Electrolyte model key (``_MODEL_WINDOWS``/``_MODEL_SUPPORTS`` keys).
     model: str = ""
 
+    #: Vapour model: None keeps the ideal-vapour K_H2O = a_w Psat / P with the
+    #: carrier's vapour properties; "rk" and "hoc" put a real water vapour in both.
+    vapour_model: str | None = None
+
+    #: Top of the liquid's molality range: the saturated solution for this row.
+    def _molality_cap(self) -> float:
+        return _MAX_MOLALITY
+
     def __init__(self, model: str | None = None) -> None:
         self._model = model or type(self).model
         carrier_cls = cast(type[Thermo], _registry_get("thermo", "pr"))
         self._carrier: Thermo = carrier_cls()
+        self._vapour: Thermo = self._carrier
+        if self.vapour_model == "rk":
+            self._vapour = cast(type[Thermo], _registry_get("thermo", "rk"))()
+        elif self.vapour_model == "hoc":
+            # Only the vapour half is used: pure water has no NRTL pair to look up.
+            self._vapour = cast(Thermo, GammaPhiPackage("nrtl", "hoc"))
         self._lru_cache: OrderedDict[tuple[Any, ...], Any] = OrderedDict()
 
     # -- plumbing -------------------------------------------------------------
@@ -746,6 +822,23 @@ class ElectrolytePackage(Thermo):
     def _water_activity(self, molality: float) -> float:
         """This model's water-activity surface a_w(m) (the brine chemistry driver)."""
         return _WATER_ACTIVITY[self._model](molality)
+
+    def _water_vapour_ln_phi(self, t_k: float, p: float) -> float:
+        """ln phi of pure water vapour on this package's vapour model."""
+        return self._vapour.phase_props({"H2O": 1.0}, t_k, p, PhaseKind.VAPOR).ln_phi["H2O"]
+
+    def _water_fugacity_ratio(self, t_k: float, p: float) -> float:
+        """phi_sat(T) / phi_V(T, P) of water: the real-vapour factor on K_H2O.
+
+        Equal water fugacities a_w Psat phi_sat = y P phi_V, the Poynting term of a
+        brine at these pressures left out.  1.0 on the ideal-vapour rows, and at or
+        above Psat, where no water vapour exists to evaluate (a brine's bubble
+        pressure is below Psat, so such a state is a liquid regardless).
+        """
+        psat = _psat_or_wilson("H2O", t_k)
+        if self.vapour_model is None or p >= psat:
+            return 1.0
+        return math.exp(self._water_vapour_ln_phi(t_k, psat) - self._water_vapour_ln_phi(t_k, p))
 
     def _refuse_if_needed(self) -> None:
         """First-use refusals (the T-07 idiom: construction never raises)."""
@@ -808,8 +901,9 @@ class ElectrolytePackage(Thermo):
         window by design; the solved point is what must be inside it (checked
         in :meth:`_boundary`).
         """
-        m = _molality_nacl(x.get("NaCl", 0.0), x.get("H2O", 0.0))
-        k_h2o = self._water_activity(m) * _psat_or_wilson("H2O", t_k) / p
+        m = _molality_nacl(x.get("NaCl", 0.0), x.get("H2O", 0.0), self._molality_cap())
+        psat = _psat_or_wilson("H2O", t_k) * self._water_fugacity_ratio(t_k, p)
+        k_h2o = self._water_activity(m) * psat / p
         return {cid: (k_h2o if cid == "H2O" else _NONVOLATILE_K) for cid in z}
 
     def _k_sour_water(
@@ -897,13 +991,14 @@ class ElectrolytePackage(Thermo):
         feed molality; below the saturated-solution pressure the salt would
         precipitate, which the model refuses (it carries no solid phase).
         """
+        psat = _psat_or_wilson("H2O", t_k)
         if z.get("NaCl", 0.0) <= 0.0:
-            psat = _psat_or_wilson("H2O", t_k)
             if p >= psat:
                 return "liquid", 0.0, dict(z), dict(z)
             return "vapor", 1.0, dict(z), dict(z)
-        m_feed = _molality_nacl(z["NaCl"], z.get("H2O", 0.0))
-        psat = _psat_or_wilson("H2O", t_k)
+        cap = self._molality_cap()
+        m_feed = _molality_nacl(z["NaCl"], z.get("H2O", 0.0), cap)
+        psat *= self._water_fugacity_ratio(t_k, p)
         if p >= self._water_activity(m_feed) * psat:
             return "liquid", 0.0, dict(z), dict(z)
         # Below the feed's bubble pressure the boiling liquid concentrates,
@@ -916,15 +1011,15 @@ class ElectrolytePackage(Thermo):
         # state (_build_state checks the solved liquid's molality).
 
         def excess(m: float) -> float:
-            return pitzer_water_activity(m) * psat - p
+            return self._water_activity(m) * psat - p
 
         # excess starts positive at m_feed (the state is above its bubble)
         # and decreases with m (a_w falls); the root exists inside the
         # bracket exactly when the saturated-solution end has gone negative.
-        if excess(_MAX_MOLALITY) < 0.0:
-            m_star = brent_root(excess, m_feed, _MAX_MOLALITY)
+        if excess(cap) < 0.0:
+            m_star = brent_root(excess, m_feed, cap)
         else:
-            m_star = _MAX_MOLALITY
+            m_star = cap
         mw_water = _mw("H2O") / 1000.0  # kg/mol, to match the molality basis
         x_salt = m_star * mw_water / (1.0 + m_star * mw_water)
         beta = min(1.0 - z["NaCl"] / x_salt, 1.0)
@@ -968,7 +1063,7 @@ class ElectrolytePackage(Thermo):
         if not self._electrolyte_domain(z):
             return self._carrier.flash_pt(z, T, P, molar_flow)
         self._require_window(T)
-        key = ("pt", *_state.cache_key(z, T, P), round(molar_flow, 9))
+        key = ("pt", *_state.cache_key(z, T, P), float(molar_flow))
         return cast(StreamState, self._cached(key, lambda: self._build_state(z, T, P, molar_flow)))
 
     def flash_ph(self, z: dict[str, float], P: float, H: float, molar_flow: float) -> StreamState:
@@ -1173,7 +1268,10 @@ class ElectrolytePackage(Thermo):
         for cid, f_i in self._fugacities(composition, T, P).items():
             if f_i is None or f_i <= 0.0:
                 continue
-            phi_v = self._carrier.phase_props({cid: 1.0}, T, f_i, PhaseKind.VAPOR).ln_phi[cid]
+            # A real-vapour row refers the water fugacity to phi_sat, the reference
+            # its K-value uses; the other rows keep the amine packages' form.
+            p_ref = _psat_or_wilson("H2O", T) if self.vapour_model and cid == "H2O" else f_i
+            phi_v = self._vapour.phase_props({cid: 1.0}, T, p_ref, PhaseKind.VAPOR).ln_phi[cid]
             ln_phi[cid] = math.log(f_i * math.exp(phi_v) / P)
         return base.model_copy(update={"ln_phi": ln_phi})
 
@@ -1185,7 +1283,7 @@ class ElectrolytePackage(Thermo):
         pressures.  Absent components return None.
         """
         if self._model != "sour_water":
-            m = _molality_nacl(x.get("NaCl", 0.0), x.get("H2O", 0.0))
+            m = _molality_nacl(x.get("NaCl", 0.0), x.get("H2O", 0.0), self._molality_cap())
             a_w = self._water_activity(m)
             return {cid: (a_w * _psat_or_wilson("H2O", T) if cid == "H2O" else None) for cid in x}
         m_nh3, m_h2s = _solution_molalities(x)
@@ -1221,16 +1319,24 @@ class ElectrolytePackage(Thermo):
 
     def _build_state(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         state, beta, x, y = self._equilibrium_internal(z, T, P)
+        if self._model == "pdh" and x.get("H2O", 0.0) > 0.0:
+            m_liq = 1000.0 * x.get("NaCl", 0.0) / (_mw("H2O") * x["H2O"])
+            if m_liq > _PDH_MAX_MOLALITY:
+                raise ElectrolyteChemistryError(
+                    f"the Pitzer-Debye-Hueckel term alone is a dilute-solution model: liquid "
+                    f"molality {m_liq:.3g} mol/kg at T={T} K, P={P} Pa is above its "
+                    f"{_PDH_MAX_MOLALITY} mol/kg cap - use enrtl_nacl_water or pitzer_nacl_water"
+                )
         if state == "two_phase" and self._model in _BRINE_MODELS and x.get("H2O", 0.0) > 0.0:
             m_liq = 1000.0 * x.get("NaCl", 0.0) / (_mw("H2O") * x["H2O"])
-            if m_liq >= _MAX_MOLALITY:
+            if m_liq >= self._molality_cap():
                 raise ElectrolyteChemistryError(
                     f"the brine flash at T={T} K, P={P} Pa needs more than the "
-                    f"saturated-solution molality ({_MAX_MOLALITY} mol/kg): NaCl would "
+                    f"saturated-solution molality ({self._molality_cap()} mol/kg): NaCl would "
                     "precipitate, which the model does not represent"
                 )
         if state == "vapor":
-            props = self._carrier.phase_props(z, T, P, PhaseKind.VAPOR)
+            props = self._vapour.phase_props(z, T, P, PhaseKind.VAPOR)
             phase = _phase(PhaseKind.VAPOR, 1.0, z, props)
             return StreamState(
                 T=T,
@@ -1255,7 +1361,7 @@ class ElectrolytePackage(Thermo):
                 entropy=liquid_props.entropy,
                 phases=[liquid],
             )
-        vapor_props = self._carrier.phase_props(y, T, P, PhaseKind.VAPOR)
+        vapor_props = self._vapour.phase_props(y, T, P, PhaseKind.VAPOR)
         vapor = _phase(PhaseKind.VAPOR, beta, y, vapor_props)
         return StreamState(
             T=T,
@@ -1295,3 +1401,98 @@ class ElectrolyteExtUNIQUAC(ElectrolytePackage):
     """Extended UNIQUAC NaCl(aq): Thomsen & Rasmussen 1999 parameter set."""
 
     model = "ext_uniquac"
+
+
+class ElectrolytePDH(ElectrolytePackage):
+    """The Pitzer-Debye-Hueckel long-range term alone, NaCl(aq) below 0.2 mol/kg."""
+
+    model = "pdh"
+
+
+class ElectrolyteENRTLRK(ElectrolyteENRTLNaCl):
+    """eNRTL NaCl(aq) liquid with a Redlich-Kwong water vapour."""
+
+    vapour_model = "rk"
+
+
+class ElectrolyteENRTLHOC(ElectrolyteENRTLNaCl):
+    """eNRTL NaCl(aq) liquid with a Hayden-O'Connell water vapour."""
+
+    vapour_model = "hoc"
+
+
+class ElectrolytePitzerHOC(ElectrolytePitzerNaCl):
+    """Pitzer NaCl(aq) liquid with a Hayden-O'Connell water vapour."""
+
+    vapour_model = "hoc"
+
+
+class ElectrolyteENRTLCrystal(ElectrolyteENRTLNaCl):
+    """eNRTL NaCl(aq) with solid NaCl past the solubility limit.
+
+    The solubility is :func:`enrtl_crystallisation_molality`, m_sat. Regions at (T, P),
+    with P* = a_w(m_sat) Psat the saturated solution's bubble pressure:
+
+    - P < P*: vapour plus solid: all the water boils off the salt;
+    - feed at or below m_sat, P >= P*: the base row's liquid or vapour + liquid;
+    - feed above m_sat, P >= P*: saturated liquid plus solid.
+
+    The solid's volume and heat capacity are the databank's. Its enthalpy and entropy
+    are the carrier's values for NaCl: the heat of crystallisation is not represented,
+    as the base rows carry no heat of solution.
+    """
+
+    def _molality_cap(self) -> float:
+        return enrtl_crystallisation_molality()
+
+    def _build_state(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
+        salt, water = z.get("NaCl", 0.0), z.get("H2O", 0.0)
+        if salt <= 0.0 or water <= 0.0:
+            return super()._build_state(z, T, P, molar_flow)
+        m_sat = self._molality_cap()
+        p_star = self._water_activity(m_sat) * _psat_or_wilson("H2O", T)
+        mw_water = _mw("H2O") / 1000.0  # kg/mol
+        if P >= p_star and salt / (water * mw_water) <= m_sat:
+            return super()._build_state(z, T, P, molar_flow)
+        solid_pure = {cid: (1.0 if cid == "NaCl" else 0.0) for cid in z}
+        if P < p_star:
+            y = {cid: (1.0 if cid == "H2O" else 0.0) for cid in z}
+            fluid = _phase(PhaseKind.VAPOR, water, y, self._vapour.phase_props(y, T, P, PhaseKind.VAPOR))
+        else:
+            x_salt = m_sat * mw_water / (1.0 + m_sat * mw_water)
+            x = {cid: (x_salt if cid == "NaCl" else 1.0 - x_salt) for cid in z}
+            props = self.phase_props(x, T, P, PhaseKind.AQUEOUS)
+            fluid = _phase(PhaseKind.AQUEOUS, water / (1.0 - x_salt), x, props)
+        solid = self._solid_phase(1.0 - fluid.mole_fraction, solid_pure, T, P)
+        return StreamState(
+            T=T,
+            P=P,
+            molar_flow=molar_flow,
+            composition=dict(z),
+            vapor_fraction=fluid.mole_fraction if fluid.kind == PhaseKind.VAPOR else 0.0,
+            enthalpy=fluid.mole_fraction * fluid.enthalpy + solid.mole_fraction * solid.enthalpy,
+            entropy=fluid.mole_fraction * fluid.entropy + solid.mole_fraction * solid.entropy,
+            phases=[fluid, solid],
+        )
+
+    def _solid_phase(self, fraction: float, composition: dict[str, float], T: float, P: float) -> Phase:
+        """The NaCl(s) phase; a databank with no solid volume or Cp refuses."""
+        record = _record("NaCl")
+        with DATABANK_LOCK:
+            _constants, correlations = _constants_for((str(record["cas"]),))
+        volume = correlations.VolumeSolids[0](T)
+        cp = correlations.HeatCapacitySolids[0](T)
+        if volume is None or cp is None:
+            raise ElectrolyteChemistryError(f"no solid NaCl volume or Cp in the databank at T={T} K")
+        carrier = self._carrier.phase_props({"NaCl": 1.0}, T, P, PhaseKind.HC_LIQUID)
+        mw = _mw("NaCl")
+        return Phase(
+            kind=PhaseKind.SOLID,
+            mole_fraction=fraction,
+            composition=composition,
+            density=mw / 1000.0 / float(volume),
+            molecular_weight=mw,
+            enthalpy=carrier.enthalpy,
+            entropy=carrier.entropy,
+            cp=float(cp),
+        )

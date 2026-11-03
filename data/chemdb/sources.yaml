@@ -1,0 +1,165 @@
+# Citation for every `source` key in data/chemdb/*.csv. Values in those files are
+# as stated by these sources, converted to SI; `grade` is assigned per source.
+# Citations of tables bundled in the `chemicals` package follow that package's own
+# reference lists (`chemicals.reaction`, `.critical`, `.phase_change`, `.vapor_pressure`,
+# `.heat_capacity`).
+sources:
+  janaf:
+    grade: A
+    citation: "Chase, M.W., Jr., NIST-JANAF Thermochemical Tables, Fourth Edition, J. Phys. Chem. Ref. Data, Monograph 9, 1998, 1-1951."
+    url: https://janaf.nist.gov/
+    access: fetched table by table; the table id is in each row
+  coolprop:
+    grade: A
+    citation: "Bell, I.H., Wronski, J., Quoilin, S. and Lemort, V., Pure and Pseudo-pure Fluid Thermophysical Property Evaluation and the Open-Source Thermophysical Property Library CoolProp, Ind. Eng. Chem. Res. 53(6), 2014, 2498-2508: critical points of its reference equations of state."
+    url: http://www.coolprop.org/
+    access: read from the installed CoolProp package at build time
+  atct:
+    grade: A
+    citation: "Ruscic, B. et al., Active Thermochemical Tables: Thermochemistry for the 21st Century, J. Phys.: Conf. Ser. 16(1); values of ATcT version 1.112."
+    url: https://atct.anl.gov/
+    access: table shipped in chemicals (Reactions/ATcT 1.112 (g).tsv, (l).tsv)
+  iupac_critical:
+    grade: A
+    citation: "Vapor-Liquid Critical Properties of Elements and Compounds (IUPAC series; Ambrose, D. and Young, C.L., part 1, J. Chem. Eng. Data 41(1), 1996, and later parts); the part is in the row's `reference` number."
+    access: table shipped in chemicals (Critical Properties/IUPACOrganicCriticalProps.tsv)
+  nist_review:
+    grade: A
+    citation: "Linstrom, P.J. and Mallard, W.G. (eds.), NIST Chemistry WebBook, NIST Standard Reference Database 69; rows whose WebBook method is 'Review'."
+    url: https://webbook.nist.gov/chemistry/
+    doi: 10.18434/T4D303
+    access: fetched page by page at the site's stated crawl delay; the row's `reference` is the WebBook citation
+  nist:
+    grade: B
+    citation: "Linstrom, P.J. and Mallard, W.G. (eds.), NIST Chemistry WebBook, NIST Standard Reference Database 69; individual measurements and TRC averages ('AVG')."
+    url: https://webbook.nist.gov/chemistry/
+    doi: 10.18434/T4D303
+    access: fetched page by page at the site's stated crawl delay; the row's `reference` is the WebBook citation
+  nist_snapshot:
+    grade: B
+    citation: "NIST Chemistry WebBook, NIST Standard Reference Database 69, as collected in the webbook_constants table of the chemicals package."
+    url: https://webbook.nist.gov/chemistry/
+    doi: 10.18434/T4D303
+    access: table shipped in chemicals (Misc/webbook_constants.tsv); no per-value literature reference survives there
+  crc_thermo:
+    grade: B
+    citation: "Haynes, W.M., Bruno, T.J. and Lide, D.R. (eds.), CRC Handbook of Chemistry and Physics, 95th ed., CRC Press, 2014: Standard Thermodynamic Properties of Chemical Substances."
+    access: table shipped in chemicals
+  crc_critical:
+    grade: B
+    citation: "Haynes, W.M., Bruno, T.J. and Lide, D.R. (eds.), CRC Handbook of Chemistry and Physics, 95th ed., CRC Press, 2014: Critical Constants of Organic Compounds."
+    access: table shipped in chemicals
+  crc_hvap:
+    grade: B
+    citation: "Haynes, W.M., Bruno, T.J. and Lide, D.R. (eds.), CRC Handbook of Chemistry and Physics, 95th ed., CRC Press, 2014: Enthalpy of Vaporization."
+    access: table shipped in chemicals
+  crc_hfus:
+    grade: B
+    citation: "Haynes, W.M., Bruno, T.J. and Lide, D.R. (eds.), CRC Handbook of Chemistry and Physics, 95th ed., CRC Press, 2014: Enthalpy of Fusion."
+    access: table shipped in chemicals
+  crc_constants:
+    grade: B
+    citation: "Haynes, W.M., Bruno, T.J. and Lide, D.R. (eds.), CRC Handbook of Chemistry and Physics, 95th ed., CRC Press, 2014: Physical Constants of Organic and Inorganic Compounds."
+    access: tables shipped in chemicals
+  crc_aqueous:
+    grade: B
+    citation: "Haynes, W.M., Bruno, T.J. and Lide, D.R. (eds.), CRC Handbook of Chemistry and Physics, 95th ed., CRC Press, 2014: Thermodynamic Properties of Aqueous Ions (standard state 1 molal, H+ = 0 at all T)."
+    access: table shipped in chemicals (Electrolytes/CRC Thermodynamic Properties of Aqueous Ions.tsv)
+  nist_henry:
+    grade: B
+    citation: "Sander, R., Henry's Law Constants, in Linstrom, P.J. and Mallard, W.G. (eds.), NIST Chemistry WebBook, NIST Standard Reference Database 69; dissolved-gas aqueous standard states derived from those constants and the gas's selected values."
+    url: https://webbook.nist.gov/chemistry/
+    doi: 10.18434/T4D303
+    access: fetched page by page at the site's stated crawl delay; the row's `reference` records the median used
+  psrk:
+    grade: B
+    citation: "Horstmann, S., Jablonieca, A., Noll, J.R. and Gmehling, J., PSRK Group Contribution Equation of State: Comprehensive Revision and Extension IV, Fluid Phase Equilib. 227(2), 2005, 157-164: appendix of pure-component data."
+    doi: 10.1016/j.fluid.2004.11.002
+    access: table shipped in chemicals (Critical Properties/Appendix to PSRK Revision 4.tsv)
+  passut_danner:
+    grade: B
+    citation: "Passut, C.A. and Danner, R.P., Acentric Factor. A Valuable Correlating Parameter for the Properties of Hydrocarbons, Ind. Eng. Chem. Process Des. Dev. 12(3), 1973, 365-368."
+    doi: 10.1021/i260047a026
+    access: table shipped in chemicals (Critical Properties/PassutDanner1973.tsv)
+  dippr_pina:
+    grade: B
+    citation: "DIPPR critical constants as tabulated in Pina-Martinez, A., Privat, R. and Jaubert, J.-N., Use of 300,000 Pseudo-Experimental Data over 1800 Pure Fluids to Assess the Performance of Four Cubic Equations of State: SRK, PR, Tc-RK, and Tc-PR, AIChE J., e17518."
+    access: table shipped in chemicals (Critical Properties/DIPPRPinaMartines.tsv)
+  mathews:
+    grade: B
+    citation: "Mathews, J.F., Critical Constants of Inorganic Substances, Chem. Rev. 72(1), 1972, 71-100."
+    doi: 10.1021/cr60275a004
+    access: table shipped in chemicals (Critical Properties/Mathews1972InorganicCriticalProps.tsv)
+  omega_definition:
+    grade: B
+    citation: "Pitzer's definition, omega = -log10(Psat(0.7 Tc)/Pc) - 1, evaluated on this database's selected Tc and Pc and its vapour-pressure fits; the fit is in the row's `reference`."
+    access: computed at build time from cited values; no correlation is used
+  landolt:
+    grade: B
+    citation: "Hall, K.R., Vapor Pressure and Antoine Constants for Hydrocarbons, and S, Se, Te, and Halogen Containing Organic Compounds, Springer, 1999; Dykyj, J. and Hall, K.R., Vapor Pressure and Antoine Constants for Oxygen Containing Organic Compounds, 2000; Hall, K.R., Vapor Pressure and Antoine Constants for Nitrogen Containing Organic Compounds, Springer, 2001 (Landolt-Bornstein, New Series IV/20)."
+    access: table shipped in chemicals (Vapor Pressure/Landolt_antoine_V20.tsv), natural-log Pa form, normalised here
+  vdi:
+    grade: B
+    citation: "Gesellschaft, V.D.I. (ed.), VDI Heat Atlas, 2nd ed., Springer, 2010: PPDS vapour-pressure coefficients."
+    access: table shipped in chemicals
+  perry:
+    grade: B
+    citation: "Green, D. and Perry, R., Perry's Chemical Engineers' Handbook, 8th ed., McGraw-Hill, 2007: Tables 2-8 (vapour pressure, DIPPR 101) and 2-153 (liquid Cp, DIPPR 100)."
+    access: tables shipped in chemicals
+  alcock:
+    grade: B
+    citation: "Alcock, C.B., Itkin, V.P. and Horrigan, M.K., Vapour Pressure Equations for the Metallic Elements: 298-2500K, Canadian Metallurgical Quarterly 23(3), 1984, 309-313."
+    doi: 10.1179/cmq.1984.23.3.309
+    access: table shipped in chemicals
+  zabransky:
+    grade: B
+    citation: "Zabransky, M., Ruzicka, V., Majer, V. and Domalski, E.S., Heat Capacity of Liquids: Critical Review and Recommended Values, J. Phys. Chem. Ref. Data, Monograph 6, 1996."
+    access: table shipped in chemicals (Heat Capacity/Zabransky.tsv)
+  sander:
+    grade: B
+    citation: "Sander, R., Compilation of Henry's law constants for water as solvent, Atmos. Chem. Phys., as converted to the mole-fraction pressure form and shipped in thermo 0.6.1 (Interaction Parameters/Sander_henry_T_dep.json); the package does not state which version of the compilation."
+    url: https://www.henrys-law.org/
+    access: table shipped in thermo; dissolved-gas aqueous standard states derived from it and the gas's selected values
+  nasa_cea:
+    grade: B
+    citation: "McBride, B.J., Zehe, M.J. and Gordon, S., NASA Glenn Coefficients for Calculating Thermodynamic Properties of Individual Species, NASA/TP-2002-211556, 2002, as distributed in NASA CEA (data/thermo.inp), Copyright 2025 United States Government as represented by the Administrator of NASA, Apache License 2.0; each row's `reference` keeps the record's own sources."
+    url: https://github.com/nasa/cea
+    access: thermo.inp fetched from the nasa/cea repository with its LICENSE and NOTICE; 9-coefficient polynomials in nasa9.csv
+  coolprop_ig:
+    grade: B
+    citation: "Ideal-gas parts of the reference equations of state carried by CoolProp 8.0.0 (Bell, I.H., Wronski, J., Quoilin, S. and Lemort, V., Ind. Eng. Chem. Res. 53(6), 2014, 2498-2508; MIT licence): each fluid's Cp0 correlation as published in its own EOS paper, cited per row in `reference` from CoolProp's CoolPropBibTeXLibrary.bib. Some of those papers fit Cp0 to measurements and some to spectroscopic or ab initio values, so the set is graded B, not A."
+    url: https://github.com/CoolProp/CoolProp
+    access: read from the installed CoolProp package at build time (fluid JSON alpha0 terms); each reconstruction is checked against CoolProp's own cp0molar to 1e-9 at up to five temperatures, and one term per row is written to cp0_eos.csv
+  thermoml:
+    grade: B
+    citation: "Riccardi, D. et al., ThermoML/Data Archive, National Institute of Standards and Technology, version 2020-09-30, doi:10.18434/mds2-2422: data extracted by NIST/TRC from articles in J. Chem. Eng. Data, J. Chem. Thermodyn., Fluid Phase Equilib., Thermochim. Acta and Int. J. Thermophys. Used here: pure-compound ideal-gas Cp(T) points; each row's `reference` names the article (first author, year, DOI) and the method the archive records. Methods recorded as predictions are refused. The values are the articles' statistical-thermodynamic calculations (experimental and calculated vibrational frequencies, per the articles), so the set is graded B."
+    url: https://data.nist.gov/od/id/mds2-2422
+    licence: "NIST open licence (https://www.nist.gov/open/license): NIST data are not subject to copyright in the United States, may be redistributed and modified with acknowledgement of NIST as the source and a notice of changes; the cp_gas_points.csv rows are an extract (ideal-gas Cp points only, converted to rows), not the archive."
+    access: ThermoML.v2020-09-30.tgz fetched from data.nist.gov and checked against its published SHA-256; read in place by scripts/chemdb/parse_thermoml.py; rows in cp_gas_points.csv
+  poling:
+    grade: B
+    citation: "Poling, B.E., Prausnitz, J.M. and O'Connell, J.P., The Properties of Gases and Liquids, 5th ed., McGraw-Hill, 2000."
+    access: tables shipped in chemicals (Antoine, Wagner, ideal-gas Cp polynomials)
+  mcgarry:
+    grade: B
+    citation: "McGarry, J., Correlation and Prediction of the Vapor Pressures of Pure Liquids over Large Pressure Ranges, Ind. Eng. Chem. Process Des. Dev. 22(2), 1983, 313-322."
+    doi: 10.1021/i200021a023
+    access: table shipped in chemicals (Vapor Pressure/Wagner Original McGarry.tsv)
+  trc:
+    grade: B
+    citation: "Frenkel, M.L., Thermodynamics of Organic Compounds in the Gas State, College Station, TX: Thermodynamics Research Center, 1994."
+    access: table shipped in chemicals (Heat Capacity/TRC Thermodynamics of Organic Compounds in the Gas State.tsv)
+  yaws:
+    grade: C
+    citation: "Yaws, C.L., Thermophysical Properties of Chemicals and Hydrocarbons, 2nd ed., Gulf Professional Publishing, 2014."
+    access: table shipped in chemicals (Reactions/Yaws Hf S0 (g).tsv); a compilation that does not cite each value, so it never outranks a referenced one
+  pubchem:
+    grade: identity
+    citation: "Kim, S. et al., PubChem, National Center for Biotechnology Information; PUG REST compound properties (formula, InChIKey, connectivity SMILES, IUPAC name, charge)."
+    url: https://pubchem.ncbi.nlm.nih.gov/
+    access: fetched in batches by CID
+  chemicals_bank:
+    grade: identity
+    citation: "Bell, C. and contributors, chemicals: Chemical properties component of Chemical Engineering Design Library (ChEDL)."
+    url: https://github.com/CalebBell/chemicals
+    access: identifier bank used for CAS-to-formula, MW and CID lookup

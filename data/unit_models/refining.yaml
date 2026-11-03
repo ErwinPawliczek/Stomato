@@ -105,14 +105,31 @@
       note: water/salt/BS&W split spec, wash-water mix (spec U-H1, component
         split at isothermal T with ΔP)
     R1:
-      status: planned
-      params: {}
-      note: efficiency vs wash rate and ΔT (cited correlation)
+      status: provisional
+      adapter: ngdesign.units.refining.desalter_r1:DesalterR1
+      params:
+        type: object
+        required: [T, settling_area_m2, d50_mixed_um, d50_fine_um, rosin_rammler_n, mixing_efficiency,
+          rho_oil_kg_m3, rho_water_kg_m3, mu_oil_Pa_s]
+        properties:
+          T: {type: number, description: 'desalter temperature (K), isothermal'}
+          dP: {type: number, description: 'pressure drop from the crude inlet (Pa, default 0)'}
+          settling_area_m2: {type: number, exclusiveMinimum: 0, description: 'horizontal area the oil rises through, m2'}
+          d50_mixed_um: {type: number, exclusiveMinimum: 0, description: 'volume-median drop diameter of the coalesced wash and brine water, micrometre'}
+          d50_fine_um: {type: number, exclusiveMinimum: 0, description: 'volume-median drop diameter of the uncontacted emulsion, micrometre'}
+          rosin_rammler_n: {type: number, exclusiveMinimum: 0, description: 'Rosin-Rammler spread exponent of both populations'}
+          mixing_efficiency: {type: number, minimum: 0, maximum: 1, description: 'fraction of the crude brine contacted by the wash water'}
+          rho_oil_kg_m3: {type: number, exclusiveMinimum: 0, description: 'oil density at T, kg/m3'}
+          rho_water_kg_m3: {type: number, exclusiveMinimum: 0, description: 'water density at T, kg/m3'}
+          mu_oil_Pa_s: {type: number, exclusiveMinimum: 0, description: 'oil viscosity at T, Pa s'}
+      note: Stokes cut (counter-current settling) plus Rosin-Rammler two-population carryover; splits
+        fed to R0. Temperature effect via user-supplied properties (spec option B)
       end_state: true
   pid_symbol: DS
   references:
   - docs/unit-catalogue-plan.md §2 U-H 2
-  notes: "V1 gap - provisional without a case. Searched PetroWiki 'Desalting' and
+  notes: "R1 takes oil and water densities and oil viscosity as required params (spec option B):
+    no package gives honest values for a pseudo crude. V1 gap - provisional without a case. Searched PetroWiki 'Desalting' and
     Wauquier (Petroleum Refining vol. 1, crude desalting): both state a
     0.1-0.2 vol% BS&W specification but print no worked case, so the former
     V2102 pin (which echoed its own input spec and the adapter's default salt
@@ -174,10 +191,50 @@
         stripping_steam inlet carries its water to the overhead at R0
         (one net duty)
     R2:
-      status: planned
-      params: {}
-      note: MESH with side strippers, pumparounds, stripping steam, overflash
-        (U-E 6 extensions; needs column_extensions, P1-11)
+      status: provisional
+      adapter: ngdesign.units.refining.crude_column_r2:CrudeColumnR2
+      validation: []
+      params:
+        type: object
+        additionalProperties: false
+        required:
+        - n_stages
+        - feed_stage
+        - distillate_rate_mol_s
+        - strippers
+        properties:
+          n_stages:
+            type: integer
+            minimum: 4
+            description: main-column equilibrium stages, stage 1 the partial
+              condenser
+          feed_stage:
+            type: integer
+            minimum: 3
+            description: flash-zone stage the crude enters; the stripping steam
+              not taken by the strippers enters under stage n_stages
+          distillate_rate_mol_s:
+            type: number
+            exclusiveMinimum: 0
+            description: overhead vapour rate, mol/s (the condenser's degree of
+              freedom)
+          strippers:
+            type: object
+            description: per side port (kero_out, diesel_out, ago_out) a steam
+              side stripper {draw_stage, return_stage, n_stages, steam_mol_s,
+              product_rate_mol_s}; its product rate fixes it, the draw is its
+              outcome
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar or per-stage list);
+              default crude_in.P
+      note: MESH over the stage graph (main column plus three steam side
+        strippers as one Newton system), partial condenser, no reboiler,
+        stripping steam under the bottom stage and into each stripper, overflash
+        reported. Pooled stage liquids - the slate's heaviest pseudos split off
+        a second liquid on the flash-zone and bottom stages - read the pooled
+        liquid's own liquid-liquid split (no flash per stage K); relaxation cold
+        start. Example (16-cut slate, 12 stages, 3-stage strippers) converges in
+        ~45 s with a 1 mW closure residual. No pumparounds at this level
       end_state: true
   pid_symbol: T
   references:
@@ -231,9 +288,26 @@
         units/_physics/shortcut.kremser_fraction (S_i = K_i V/L, K from
         thermo.k_values at the stripper T, P) (spec U-H1)
     R2:
-      status: planned
-      params: {}
-      note: MESH stage section coupled to the main column
+      status: provisional
+      adapter: ngdesign.units.refining.side_strip_r2:SideStripR2
+      validation: []
+      params:
+        type: object
+        additionalProperties: false
+        required:
+        - n_stages
+        properties:
+          n_stages:
+            type: integer
+            minimum: 2
+            description: equilibrium stages, draw on 1, steam on N
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar or per-stage list);
+              default draw_in.P
+      note: zero-tear MESH of the stripper section alone (draw and steam are
+        inlets); couples to a main column only through a flowsheet recycle on
+        overhead_out (the simultaneous solve is the column's side_strippers,
+        spec S0-1c); free water on a stage is refused
       end_state: true
   pid_symbol: SS
   references:
@@ -292,9 +366,46 @@
       note: cut-point fractionation at flash-zone P (spec U-H1 sharp cut on the
         reduced-crude feed; single VGO draw, the row's three ports)
     R2:
-      status: planned
-      params: {}
-      note: MESH with pumparounds, no condenser, wash zone
+      status: provisional
+      adapter: ngdesign.units.refining.vacuum_column_r2:VacuumColumnR2
+      validation: []
+      params:
+        type: object
+        additionalProperties: false
+        required:
+        - n_stages
+        - vgo_rate_mol_s
+        - pumparound_flow_mol_s
+        - pumparound_return_T_K
+        properties:
+          n_stages:
+            type: integer
+            minimum: 3
+            description: equilibrium stages, feed on the bottom stage N
+          vgo_stage:
+            type: integer
+            minimum: 2
+            description: stage of the VGO draw and the pumparound draw (default 2)
+          vgo_rate_mol_s:
+            type: number
+            exclusiveMinimum: 0
+            description: VGO liquid draw, mol/s
+          pumparound_flow_mol_s:
+            type: number
+            exclusiveMinimum: 0
+            description: top pumparound flow, drawn at vgo_stage, returned to stage 1
+          pumparound_return_T_K:
+            type: number
+            exclusiveMinimum: 0
+            description: pumparound return temperature, K
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar or per-stage list);
+              default feed_in.P
+      note: zero-tear MESH, no condenser and no reboiler - a top pumparound
+        (fixed return T) condenses the gas oil, VGO a liquid draw on the
+        pumparound stage; relaxation cold start (initialization relaxation,
+        the standard start stalls at M ~ 1.0 on the 19-pseudo example feed).
+        No separate wash-oil zone; one pumparound
       end_state: true
   pid_symbol: T
   references:
@@ -336,9 +447,34 @@
       note: flash drum on the assay stream (spec U-H1 PT flash at the drum
         conditions; vapour to vapor_out, pooled liquid to liquid_out)
     R2:
-      status: planned
-      params: {}
-      note: short MESH
+      status: provisional
+      adapter: ngdesign.units.refining.preflash_r2:PreflashR2
+      validation: []
+      params:
+        type: object
+        additionalProperties: false
+        required:
+        - n_stages
+        - distillate_rate_mol_s
+        properties:
+          n_stages:
+            type: integer
+            minimum: 2
+            description: equilibrium stages, partial condenser on 1, feed on N
+          distillate_rate_mol_s:
+            type: number
+            exclusiveMinimum: 0
+            description: condenser vapour product (vapor_out), mol/s
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar or per-stage list);
+              default feed_in.P
+      note: one-tear MESH rectifier (partial condenser, no reboiler, feed on the
+        bottom stage), stage liquid pooled (pool_liquids - the PR package splits a
+        heavy-end second liquid off the crude slate, 3 % on the bottom stage).
+        Converges since the condenser band reaches below the feed (top stage ~150 K
+        under it). The example cuts the R0 crude into 16 pseudos (22 species, ~13 s);
+        on the 48-species default slate each saturated product's PT flash alone
+        spends ~45 s in Michelsen stability tests
       end_state: true
   pid_symbol: FL
   references:
@@ -391,14 +527,26 @@
       note: Fahim E12.2 model-compound stoichiometry (thiophene HDS, pyridine HDN,
         olefin/aromatic saturation) with declared removal fractions; duty sensible-only
     R1:
-      status: planned
-      params: {}
-      note: lumped HDS/HDN kinetics in a PFR
+      status: provisional
+      adapter: ngdesign.units.refining.hdt_kinetic:NaphthaHydrotreaterR1
+      params:
+        type: object
+        required: [beds, bulk_density_kg_m3, kinetics]
+        properties:
+          beds: {type: array, description: "[{catalyst_mass_kg, inlet_T_K (optional heater set point),
+              thermal: adiabatic|isothermal}] in flow order"}
+          bulk_density_kg_m3: {type: number, description: 'catalyst bulk density, kg/m3'}
+          kinetics: {type: object, description: "required, no default: {hds_thiophene|hdn_pyridine|olefin_sat|arom_sat:
+              contract PowerLaw or LHHW, rate_units mol/(kg_cat s)}; omitted reactions are inactive"}
+      note: model-compound HDS, HDN and saturation kinetics in catalyst beds on the pfr integrator;
+        real model compounds only, the kinetics are required user inputs
       end_state: true
   pid_symbol: HT
   references:
   - docs/unit-catalogue-plan.md §2 U-H 7
-  notes: "R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real
+  notes: "R1 kinetics are required inputs, on real model compounds only; pseudo feeds stay at R0.
+    R1 V1 gap - no printed naphtha HDT kinetic example with inputs and outlets was searched for;
+    provisional on the closed-form W(X) with mole change and the reduction to R0. R0 shipped by U-H2. Sulfur rides on thiophene, nitrogen on pyridine; real
     H2/H2S/NH3 products from pseudo-lump feeds need pseudo-component elemental
     characterization (issue #222)."
 
@@ -437,14 +585,30 @@
       note: Fahim Table 5.3 lumped yields vs reformate RON; duty sensible-only (flag
         heat_of_reaction_basis_sensible_only)
     R1:
-      status: planned
-      params: {}
-      note: Smith (1959) lumped kinetics
+      status: provisional
+      adapter: ngdesign.units.refining.reformer_kinetic:CatalyticReformerR1
+      params:
+        type: object
+        required: [beds, bulk_density_kg_m3, kinetics]
+        properties:
+          beds: {type: array, description: "[{catalyst_mass_kg, inlet_T_K (interheater set point),
+              thermal: adiabatic|isothermal}] in flow order"}
+          bulk_density_kg_m3: {type: number, description: 'catalyst bulk density, kg/m3'}
+          kinetics: {description: "required explicit {dehydro|n_to_p: {k0, Ea, A_K, B_K}, hc_n|hc_p:
+              {k0, Ea}}; k0 in mol/(kg_cat s atm^order), Ea J/mol, K = exp(A_K - B_K/T[K]); the
+              smith1959 preset is refused"}
+      note: Smith (1959) four-reaction scheme on representative C7 species in adiabatic beds with
+        interheaters, on the pfr integrator; the constants are required inputs
       end_state: true
   pid_symbol: RF
   references:
   - docs/unit-catalogue-plan.md §2 U-H 8
-  notes: "R0 shipped by U-H2. The spec's \"H2 and light ends as real components\" is
+  notes: "R1 takes Smith's constants as a required explicit input and refuses the smith1959 preset -
+    Smith 1959 could not be read, and the open reproduction (Liang, Guo and Pan, J. Zhejiang Univ. Sci.
+    B 6(6) 2005 590-596, eqs. 9-17) prints k_p2 with a 9.87 prefactor against MPa-2 units that need
+    97.4. V1 gap - that paper omits catalyst masses, so its plant table cannot be reproduced;
+    provisional on the hand equilibrium of dehydro and the unit conversions. No R1 limit reproduces
+    R0 (a different model). R0 shipped by U-H2. The spec's \"H2 and light ends as real components\" is
     out of reach of the mass_elements balance (C/H atoms with no formula-bearing
     source from a pseudo naphtha); the offgas is a mass-only lump, species split
     in info. Pseudo-component elemental characterization - issue #222."
@@ -473,26 +637,73 @@
     - name: slurry_out
       required: true
       description: slurry/slops
+    - name: coke_out
+      required: true
+      description: coke on spent catalyst, to the regenerator
+  balance: mass_elements
   levels:
     R0:
-      status: planned
-      params: {}
-      note: yield table vs conversion
+      status: provisional
+      adapter: ngdesign.units.refining.fcc:FccR0
+      params:
+        type: object
+        required: [conversion_wt_pct, yield_table, T_out, P_out]
+        properties:
+          conversion_wt_pct: {type: number, description: 'operating conversion, wt% on feed (100 - LCO - slurry)'}
+          yield_table:
+            type: object
+            description: "user table, no default: {conversion_wt_pct, dry_gas_wt_pct, lpg_wt_pct,
+              gasoline_wt_pct, lco_wt_pct, slurry_wt_pct, coke_wt_pct}, equal-length arrays; each row
+              sums to 100 and LCO + slurry = 100 - conversion"
+          T_out: {type: number, description: 'outlet temperature, K'}
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+      note: mass yields linearly interpolated from a required user table against conversion, no
+        extrapolation; mass-only lumps, duty sensible-only
     R1:
-      status: planned
-      params: {}
-      note: Weekman 3/4-lump kinetics with heat balance
+      status: provisional
+      adapter: ngdesign.units.refining.fcc:FccR1
+      params:
+        type: object
+        required: [kinetics, contact_time_s, deactivation_alpha_per_s, dry_gas_fraction, lco_fraction, P_out]
+        properties:
+          kinetics:
+            type: object
+            description: "required, no default: {gasoil_to_gasoline, gasoil_to_gases, gasoil_to_coke,
+              gasoline_to_gases, gasoline_to_coke}, each {k0_per_s, Ea_J_mol}; on the operating
+              catalyst-to-oil basis"
+          contact_time_s: {type: number, description: riser contact time, s}
+          deactivation_alpha_per_s: {type: number, description: 'Weekman decay phi = exp(-alpha t), 1/s'}
+          dry_gas_fraction: {type: number, description: dry-gas share of the gases lump}
+          lco_fraction: {type: number, description: LCO share of the unconverted gas-oil lump}
+          P_out: {type: number, description: 'riser pressure, Pa'}
+          isothermal_T_K: {type: number, description: 'isothermal riser temperature, K; replaces the
+              heat balance'}
+          catalyst_to_oil: {type: number, description: catalyst-to-oil mass ratio; heat balance}
+          cp_cat_J_kgK: {type: number, description: catalyst heat capacity; heat balance}
+          T_regen_K: {type: number, description: regenerated catalyst temperature (an input, the
+              regenerator is not solved); heat balance}
+          heat_of_cracking_J_kg: {type: number, description: endothermic heat per kg converted; heat balance}
+          coke_heat_of_combustion_J_kg: {type: number, description: for the reported regenerator residual}
+      note: Lee et al. four-lump form of the Weekman gas-oil lump over riser contact time with
+        exp(-alpha t) decay and an adiabatic riser fed by regenerated catalyst; all constants are
+        required user inputs. The regenerator is reported, not solved
       end_state: true
   pid_symbol: FC
   references:
   - docs/unit-catalogue-plan.md §2 U-H 9
-  notes: roadmap; nothing above R1 is planned (plan §2 U-H preamble). R0 record of
-    what was searched (U-H2 review) - the published FCC yield correlations are
+  notes: Nothing above R1 is planned (plan §2 U-H preamble). R0 record of
+    what was searched (U-H2 review, still true) - the published FCC yield correlations are
     chart/figure-based (Gary, Handwerk & Kaiser, Petroleum Refining, 5th ed. 2007,
     §6.12 Yield Estimation, pp. 143-144, points at Figures 6.17-6.28) and the U-R1
     conventions forbid digitising figures; no equation-based R0 correlation was
-    found in the open sources searched, so the row stays planned rather than
-    shipping a figure-transcription.
+    found in the open sources searched. R0 and R1 therefore ship with no numbers of
+    their own - the table and the rate constants are required user inputs and absent
+    ones refuse - so no figure is transcribed. The original Weekman & Nace (1970) and
+    Lee et al. (1989) constants could not be read from an open copy (searched
+    2026-11-01; secondary quotations conflict in values and units), so none is a
+    preset. The coke_out port was added at R0 so mass closes. V1 gap - provisional on
+    the closed-form Weekman second-order solution, the first-order gasoline
+    integral by quadrature, and refusals.
 
 - id: hcu
   name: Hydrocracker
@@ -515,25 +726,61 @@
     - name: unconverted_out
       required: true
       description: unconverted oil recycle
+    - name: gas_out
+      required: true
+      description: light gases and unreacted hydrogen
+  balance: mass_elements
   levels:
     R0:
-      status: planned
-      params: {}
-      note: yield table vs conversion
+      status: provisional
+      adapter: ngdesign.units.refining.hcu:HcuR0
+      params:
+        type: object
+        required: [conversion_wt_pct, yield_table, T_out, P_out]
+        properties:
+          conversion_wt_pct: {type: number, description: 'operating conversion, wt% on VGO'}
+          yield_table:
+            type: object
+            description: "user table, no default: {conversion_wt_pct, diesel_wt_pct, naphtha_wt_pct};
+              gas and H2 follow from the element balance"
+          T_out: {type: number, description: 'outlet temperature, K'}
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+      note: yield table vs conversion on representative real paraffins (nC20, nC12, nC6, C3); gas by
+        element balance; H2 consumption counts scissions only, a lower bound
     R1:
-      status: planned
-      params: {}
-      note: lumped (continuous-lumping) kinetics
+      status: provisional
+      adapter: ngdesign.units.refining.hcu:HcuR1
+      params:
+        type: object
+        required: [kinetics, T_bed_K, lhsv_per_h, T_out, P_out]
+        properties:
+          kinetics:
+            type: object
+            description: "required, no default: {vgo_to_diesel, vgo_to_naphtha, vgo_to_gas,
+              diesel_to_naphtha, diesel_to_gas, naphtha_to_gas}, each {k0_per_s, Ea_J_mol}"
+          T_bed_K: {type: number, description: 'isothermal bed temperature, K'}
+          lhsv_per_h: {type: number, description: 'liquid hourly space velocity, 1/h; contact time 1/LHSV'}
+          T_out: {type: number, description: 'outlet temperature, K'}
+          P_out: {type: number, description: 'outlet pressure, Pa'}
+      note: discrete four-lump six-path first-order kinetics (Sadighi et al. 2010 network form) on
+        representative paraffins, isothermal bed, hydrogen in excess; continuous lumping as such is
+        not implemented
       end_state: true
   pid_symbol: HC
   references:
   - docs/unit-catalogue-plan.md §2 U-H 10
-  notes: roadmap. R0 record of what was searched (U-H2 review) - published hydrocracker
+  notes: R0 record of what was searched (U-H2 review) - published hydrocracker
     yield correlations are chart/figure-based (Gary, Handwerk & Kaiser, Petroleum
     Refining, 5th ed. 2007, §7.6 Hydrocracking Yields, pp. 170-172, reads
     Figure 7.4 / Figure 7.6 curves; its Table 7.3 is fixed-feed vol% tables, not a
-    correlation) and the U-R1 conventions forbid digitising figures, so the row
-    stays planned rather than shipping a figure-transcription.
+    correlation) and the U-R1 conventions forbid digitising figures. R0 and R1 therefore
+    ship with no numbers of their own - the table and the rate constants are required
+    user inputs and absent ones refuse. The gas_out port was added at R0 so excess H2
+    and light gases close the mass balance. Pseudo VGO is refused (issue 222); real H2
+    consumed into formula-free lumps cannot close the element ledger. V1 gap - Faraji et
+    al., ACS Omega 2020 Table 2 prints k1-k6 at 663.15 K, but the open text does not map
+    each constant to a path, so it is not used; provisional on the series-reaction
+    closed form and the reduction of R1 to R0.
 
 - id: coker
   name: Delayed coker / visbreaker

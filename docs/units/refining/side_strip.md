@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `SS`
 
-Rigour ladder: R0 provisional, R2 planned
+Rigour ladder: R0 provisional, R2 provisional
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.refining.side_strip:SideStrip` | steam-stripped draw, per-pseudo Kremser stripping via units/_physics/shortcut.kremser_fraction (S_i = K_i V/L, K from thermo.k_values at the stripper T, P) (spec U-H1) |
-| R2 | planned | — | MESH stage section coupled to the main column |
+| R2 | provisional | `ngdesign.units.refining.side_strip_r2:SideStripR2` | zero-tear MESH of the stripper section alone (draw and steam are inlets); couples to a main column only through a flowsheet recycle on overhead_out (the simultaneous solve is the column's side_strippers, spec S0-1c); free water on a stage is refused |
 
 ### R0 parameters
 
@@ -36,6 +36,22 @@ properties:
 required:
 - T
 - N
+type: object
+```
+
+### R2 parameters
+
+```yaml
+additionalProperties: false
+properties:
+  n_stages:
+    description: equilibrium stages, draw on 1, steam on N
+    minimum: 2
+    type: integer
+  pressure_profile:
+    description: stage pressures, Pa abs (scalar or per-stage list); default draw_in.P
+required:
+- n_stages
 type: object
 ```
 
