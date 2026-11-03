@@ -194,9 +194,9 @@
       status: planned
       params: {}
       note: MESH with side strippers, pumparounds, stripping steam, overflash;
-        blocked on spec S0-1c steps 2-4 (the simultaneous stripper solve; the
-        column refuses side_strippers), P1-13, and pseudo-component cost (the dense
-        NS does not finish a 5-stage 48-species column in 560 s)
+        P1-13 is in, but still blocked on spec S0-1c steps 3-4 (the simultaneous
+        stripper solve and the condenser decant; the column refuses side_strippers)
+        and on pseudo-component cost (one 48-species PT flash ~2 s; see the preflash row)
       end_state: true
   pid_symbol: T
   references:
@@ -330,9 +330,10 @@
     R2:
       status: planned
       params: {}
-      note: MESH with pumparounds, no condenser, wash zone; a zero-tear
-        6-stage column on the 19-pseudo example feed does not finish in 280 s
-        (dense NS), which the sparse solver of S0-1c step 2 is meant to fix
+      note: MESH with pumparounds, no condenser, wash zone; re-measured on the P1-13
+        tree - a zero-tear 6-stage column on the 19-pseudo example feed (40 mmHg, a
+        450 K wash of the same oil on stage 1) now finishes, but does not converge
+        (65 s; the sweeps sit at M ~ 1.0 with H ~ 10, NS stalls at M = 1.0, H = 0.43)
       end_state: true
   pid_symbol: T
   references:
@@ -376,8 +377,11 @@
     R2:
       status: planned
       params: {}
-      note: short MESH; a 5-stage partial-condenser column on the 48-species
-        example feed does not finish in 560 s (dense NS, spec S0-1c step 2)
+      note: short MESH; re-measured on the P1-13 tree - a PT flash of the 48-species
+        example feed costs ~2 s on the PR package (Michelsen stability tests dominate),
+        so one flash-surface sweep of a 5-stage partial-condenser column (D = 150 mol/s)
+        takes ~260 s; on the fugacity surface the sweeps take ~0.1 s but diverge
+        (M ~ 1.5, H ~ 1.3) and Naphtali-Sandholm stalls at M = 1.0 after 25 passes
       end_state: true
   pid_symbol: FL
   references:
