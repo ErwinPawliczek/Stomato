@@ -15,17 +15,19 @@ boils ``boilup_rate`` of vapour up the column. There is no overhead condenser:
 drum downstream return the water.
 
 Energy: ``duty_W`` = (enthalpy out) - (enthalpy in) over the boundary streams
-as given; ``info`` splits it into the feed preheat (inlet basis to the
-package's feed state) and the reboiler duty, whose kettle balance closes the
+as given; ``info`` splits it into the basis shift (the rich inlet re-read on
+the package at its own T and P - the package's aqueous phase carries the bound
+acid-gas heat a non-reactive package does not), the feed preheat (package, inlet
+state to ``feed_T``) and the reboiler duty, whose kettle balance closes the
 column.
 
-Measured (P1-13 tree, 6 stages, 1.9 bar, 100 mol/s rich solvent at 370 K):
-components close to 1e-11 at boilup 15/20/30 mol/s in 2-6 s; the stage audit
-(material balances from the reported profile, and a re-flash of each stage's
-contents on the package) reads 1.6e-12 and 1.7e-4 at worst. Not shipped:
-a rich feed left at 303 K (170 s, M = 0.53); DEA, whose top stage contents
-re-flash single-phase on the package (audit 1.0) although the column closes;
-MEA, which does not converge (M = 52).
+Measured (6 stages, 1.9 bar, 100 mol/s rich solvent at 370 K, stage K and
+enthalpies on the package's direct surface): components close to 1e-12 or
+better; the stage audit (reported-profile material balances, package re-flash
+of each stage's contents) passes below 1e-9 / 1e-6. MDEA at boilup 15/20/30 and
+DEA at 15/20/30 mol/s converge in 2-8 s; MEA converges at 40/50 mol/s (6-8 s)
+but not at 20/30 (NS stalls, M = 0.8-5.9, ~250 s). A rich feed left at 303 K
+was measured not to converge (170 s, M = 0.53, P1-13 tree).
 
 All SI: K, Pa abs, mol/s, J/mol, W. Pure functions; no I/O; no global state.
 """
@@ -102,7 +104,9 @@ class MdeaRegeneratorR2:
         lean, acid = result.outlets["bottoms"], result.outlets["distillate"]
         h_in = rich.molar_flow * rich.enthalpy
         h_out = lean.molar_flow * lean.enthalpy + acid.molar_flow * acid.enthalpy
-        preheat = feed.molar_flow * feed.enthalpy - h_in
+        rich_on_package = package.flash_pt(dict(rich.composition), rich.T, rich.P, rich.molar_flow)
+        basis_shift = rich_on_package.molar_flow * rich_on_package.enthalpy - h_in
+        preheat = feed.molar_flow * feed.enthalpy - rich_on_package.molar_flow * rich_on_package.enthalpy
         reboiler = float(result.info["reboiler_duty_W"])
 
         def loading(state: StreamState, cid: str) -> float:
@@ -115,6 +119,7 @@ class MdeaRegeneratorR2:
             boilup_mol_s=boilup,
             reboiler_duty_W=reboiler,
             preheat_duty_W=preheat,
+            basis_shift_W=basis_shift,
             rich_co2_loading=loading(rich, "CO2"),
             rich_h2s_loading=loading(rich, "H2S"),
             lean_co2_loading=loading(lean, "CO2"),
@@ -158,3 +163,4 @@ class DeaRegeneratorR2(MdeaRegeneratorR2):
     """DEA regenerator R2: the reboiled MESH stripper on aqueous DEA."""
 
     AMINE = "DEA"
+    EXAMPLE_BOILUP = 30.0
