@@ -203,13 +203,26 @@ obvious: cite the data, or instrument the unit.
 
 ## 8. UI
 
-The Trace tab (`frontend/src/views/TraceView.tsx`): pick a result (stream property or unit
-result; also reachable by clicking a number in the Results view) and see its upstream graph
-laid out left to right in layers (longest path from the leaves, feedback edges ignored):
-circles for values (colour by quality), rounded boxes for operations, labelled edges.
-Hover/click shows the value with units, the citation, or the equation rendered with KaTeX
-and its reference. Export the shown graph as SVG or JSON. The audit list is shown beside the
-graph.
+The Trace tab (`frontend/src/views/TraceView.tsx`; layout and depth logic in
+`frontend/src/trace.ts`):
+
+- Pick a project (any stored project, e.g. the seeded demo), then a stream property or unit
+  result - or click a number in the Results view. The upstream graph is drawn left to right,
+  columns anchored at the focused value (feedback edges ignored): circles for values coloured
+  by quality (uncited ones ringed in red), rounded boxes for operations (dashed when
+  unreferenced), edges labelled with the symbol the input plays in the equation.
+- Depth: 2/4/8 operations upstream or all the way to the cited base data; nodes with hidden
+  inputs carry a `+` and can be expanded one at a time.
+- Click a value: value in user and SI units, kind, quality, full citation (source, DOI link,
+  URL, table, row reference, grade), what produced it and what uses it. Click an operation:
+  the equation in KaTeX, its inputs and outputs (clickable), iterations/residual, references.
+- The audit panel counts outputs/clean/errors/warnings and lists findings; clicking one
+  focuses that output with its culprits highlighted.
+- Export the drawn graph as SVG, the focused trace as JSON.
+
+Review project: `uv run python scripts/seed_trace_demo.py <database-url>` seeds
+"Trace demo: gas processing" (`ngdesign.flowsheets.trace_demo`), refusing to seed if its traced
+solve has any audit error.
 
 ## 9. Instrumenting a unit
 
@@ -230,12 +243,28 @@ graph.
 
 ## 10. Status
 
-Instrumented: thermo protocol calls of every package (cubic packages also report cited
-Tc/Pc/omega/MW/Cp_ig/k_ij/R/reference state; other packages add an explicit *not traced*
-parameter leaf the audit flags), feeds, tears, design specs, heater/cooler/air cooler/shell &
-tube (outlet spec), separators/scrubber, flash drum, mixer, splitter, pump, compressor, expander,
-JT valve, TEG contactor. Every other unit still traces (flashes, outlets) but its results come
-from a flagged `unit_model:<kind>` operation until it records its equations.
+Instrumented (results come from recorded, referenced equations):
+
+- thermo protocol calls of every package; cubic packages also report cited Tc/Pc/omega/MW/
+  Cp_ig/k_ij/R/reference state; other packages add an explicit *not traced* parameter leaf the
+  audit flags;
+- feeds, tears (converged iterate with iterations and residual), design specs;
+- heater/cooler/air cooler/shell & tube (outlet-spec models), separators/scrubber, flash drum,
+  mixer, splitter, pump, compressor, expander, JT valve, TEG contactor;
+- reactors: conversion, yield, equilibrium, Gibbs, CSTR (R1/R2), PFR (R1-R3); formation
+  properties cite the selected chemdb row, H(T)/S(T) shapes their JANAF/Shomate/NASA source;
+- columns: rigorous column (R2), absorber R0/R2, reboiled stripper R0/R2, refluxed absorber R2,
+  column extensions R2, reactive stages R2, shortcut distillation R0 (one operation each, with
+  iterations; per-stage internals are not recorded);
+- exchangers: shell_tube R0, air_cooler R0, plate exchanger R0/R1, double pipe R0/R1,
+  multi-stream R0.
+
+Still flagged (results from a `unit_model:<kind>` operation): exchangers shell_tube R1/R2,
+air_cooler R1, multi_stream R1/R2; columns absorber R3, reboiled stripper R3,
+three_phase_stages, divided_wall, liquid_liquid_extractor; reactors batch, fixed bed,
+electrolyser, multiphase Gibbs; flow units other than pump/compressor/expander/JT valve; amine,
+refining and logical units. Data that is estimated rather than cited (e.g. TEG and MDEA ideal-gas
+Cp from Joback in the `thermo` databank) is reported as a warning.
 
 Model citations: cubic EOS packages use the vetted entries in `methods.yaml`; every other package
 cites the `references` of its row in `data/thermo_models/*.yaml`.
