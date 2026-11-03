@@ -86,6 +86,38 @@ def test_zero_duty_identity_loop_equals_plain_column(thermo: Thermo) -> None:
     assert pa_info["pa_identity_duty_W"] == pytest.approx(0.0, abs=1e-10)
 
 
+def test_idle_loop_is_bitwise_the_plain_column(thermo: Thermo) -> None:
+    """A zero-flow loop (here a real draw-below-return loop with a 300 K
+    return) carries nothing: the column is bit-identical to the plain one."""
+    pa = {"name": "idle", "draw_stage": 12, "return_stage": 8, "flow_mol_s": 0.0, "return_T_K": 300.0}
+    plain_out, plain_info = _solve(thermo, _base_params())
+    pa_out, pa_info = _solve(thermo, {**_base_params(), "pumparounds": [pa]})
+    assert _flatten(pa_out) == _flatten(plain_out)
+    assert _without_pa(pa_info) == plain_info
+    assert pa_info["pa_idle_flow_mol_s"] == 0.0
+    assert pa_info["pa_idle_duty_W"] == 0.0
+
+
+def test_idle_loop_with_a_duty_refused() -> None:
+    with pytest.raises(ColumnSpecError, match="idle loop"):
+        _parse_only(
+            {
+                **_base_params(),
+                "pumparounds": [{"draw_stage": 12, "return_stage": 8, "flow_mol_s": 0.0, "duty_W": -1.0e3}],
+            }
+        )
+
+
+def test_negative_loop_flow_refused() -> None:
+    with pytest.raises(ColumnSpecError, match=">= 0"):
+        _parse_only(
+            {
+                **_base_params(),
+                "pumparounds": [{"draw_stage": 12, "return_stage": 8, "flow_mol_s": -1.0, "return_T_K": 300.0}],
+            }
+        )
+
+
 def test_fixed_return_temperature_loop(thermo: Thermo) -> None:
     """A subcooled return (return_T_K below the draw T) converges and reports state."""
     pa = {

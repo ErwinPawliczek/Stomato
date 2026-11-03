@@ -679,7 +679,14 @@ def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumpar
             raise ColumnSpecError(
                 f"pumparounds[{k}]: flow_mol_s is required until S0-1 feature 4 wires pumparound tear specs"
             )
-        flow = _positive(flow, f"pumparounds[{k}].flow_mol_s")
+        try:
+            flow = float(flow)
+        except (TypeError, ValueError) as exc:
+            raise ColumnSpecError(f"pumparounds[{k}].flow_mol_s must be a number, got {flow!r}") from exc
+        if not math.isfinite(flow) or flow < 0.0:
+            raise ColumnSpecError(
+                f"pumparounds[{k}].flow_mol_s must be >= 0 (0 = an idle loop), got {flow!r}"
+            )
         duty = pa.get("duty_W")
         if duty is not None:
             try:
@@ -695,6 +702,10 @@ def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumpar
             return_t = _positive(return_t, f"pumparounds[{k}].return_T_K")
         if (duty is None) == (return_t is None):
             raise ColumnSpecError(f"pumparounds[{k}]: exactly one of duty_W / return_T_K is required")
+        if flow == 0.0 and duty is not None and duty != 0.0:
+            raise ColumnSpecError(
+                f"pumparounds[{k}]: an idle loop (flow_mol_s = 0) carries no cooler duty, got duty_W = {duty!r}"
+            )
         name = pa.get("name")
         if name is None:
             name = str(k + 1)  # info keys read pa_1_duty_W, not pa_pa_1_duty_W (review item 8)
