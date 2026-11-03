@@ -338,6 +338,31 @@ def _composition(zs: list[float], ids: tuple[str, ...], full_keys: tuple[str, ..
     return {cid: v / total for cid, v in out.items()}
 
 
+def _once(fn: Callable[[], float | None]) -> Callable[[], float | None]:
+    """A thunk that computes ``fn()`` once; copies of a deferred record share it."""
+    box: list[float | None] = []
+
+    def thunk() -> float | None:
+        if not box:
+            box.append(fn())
+        return box[0]
+
+    return thunk
+
+
+def _deferred_transport(phase: Any, *, conductivity: bool) -> dict[str, Callable[[], float | None]]:
+    """Transport properties of one thermo phase object, computed on first read.
+
+    Viscosity and thermal conductivity cost more than the rest of a property
+    build (measured on the 20-stage MDEA absorber: ~53 s of a 226 s solve) and
+    stage loops never read them; the record still reads the same values.
+    """
+    out: dict[str, Callable[[], float | None]] = {"viscosity": _once(lambda: _viscosity(phase))}
+    if conductivity:
+        out["thermal_conductivity"] = _once(lambda: _thermal_conductivity(phase))
+    return out
+
+
 def _viscosity(phase: Any) -> float | None:
     """Dynamic viscosity in Pa.s, None where thermo has no correlation.
 
@@ -421,12 +446,12 @@ def _build_stream_state(
             z_factor = P / (rho_molar * R_IDEAL * T)
             vapor_fraction += beta
         built.append(
-            Phase(
+            Phase.deferred(
+                _deferred_transport(phase_obj, conductivity=False),
                 kind=kind,
                 mole_fraction=beta,
                 composition=_composition(zs, ids, full_keys),
                 density=density,
-                viscosity=_viscosity(phase_obj),
                 z_factor=z_factor,
                 molecular_weight=mw,
                 enthalpy=float(phase_obj.H()),  # J/mol (spec P1-01)
@@ -1071,7 +1096,8 @@ def phase_props(flasher: Any, z: dict[str, float], T: float, P: float, kind: Pha
     v_molar = (mw / 1000.0) / density  # m3/mol
     ln_phi = {cid: 0.0 for cid in full_keys}
     ln_phi.update(zip(ids, (float(v) for v in phase.lnphis()), strict=True))
-    return PhaseProps(
+    return PhaseProps.deferred(
+        _deferred_transport(phase, conductivity=True),
         kind=kind,
         mole_fraction=1.0,
         composition=_composition(zs, ids, full_keys),
@@ -1082,8 +1108,6 @@ def phase_props(flasher: Any, z: dict[str, float], T: float, P: float, kind: Pha
         cp=float(phase.Cp()),
         gibbs=float(phase.G()),
         z_factor=P * v_molar / (R_IDEAL * T),
-        viscosity=_viscosity(phase),
-        thermal_conductivity=_thermal_conductivity(phase),
         ln_phi=ln_phi,
     )
 

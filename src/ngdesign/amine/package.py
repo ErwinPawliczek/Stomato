@@ -1155,13 +1155,17 @@ def _registry_get(kind: str, name: str) -> Any:
 
 
 def _phase(kind: PhaseKind, mole_fraction: float, composition: dict[str, float], props: PhaseProps) -> Phase:
-    """Contract-v2 Phase from a PhaseProps build (P1-01's state assembly)."""
-    return Phase(
+    """Contract-v2 Phase from a PhaseProps build (P1-01's state assembly).
+
+    The viscosity stays deferred: it is read from ``props`` only if something
+    reads it from the phase (stage loops never do).
+    """
+    return Phase.deferred(
+        {"viscosity": lambda: props.viscosity},
         kind=kind,
         mole_fraction=mole_fraction,
         composition=dict(composition),
         density=props.density,
-        viscosity=props.viscosity,
         z_factor=props.z_factor,
         molecular_weight=props.molecular_weight,
         enthalpy=props.enthalpy,
