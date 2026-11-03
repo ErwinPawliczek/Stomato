@@ -15,6 +15,9 @@ Models, best first, chosen per species and phase:
    S = A ln t + Bt + Ct²/2 + Dt³/3 − E/(2t²) + G.
 3. **Gas Cp fits**: TRC eight-term or Poling polynomial (evaluated with their
    ``chemicals`` integrals) on the selected S°298.
+   Failing those, the ideal-gas part of a reference equation of state as carried by
+   CoolProp (Planck-Einstein, Aly-Lee and power terms, cited per fluid; analytic
+   integrals in ``_Cp0EosCurve``).
 4. **Liquid Cp fits**: Zabransky splines or DIPPR 100 polynomials, after a saturation
    model μ°(l) = μ°(g) + RT ln(Psat/P°) wherever a vapour-pressure fit reaches 298.15 K.
 5. **Constant Cp** at the tabulated 298 K value, within a narrow range for a gas. The
@@ -408,6 +411,57 @@ class _CpFitCurve(_Curve):
         return self.s298 + self._integrate(T, 2)
 
 
+class _Cp0EosCurve(_Curve):
+    """Ideal-gas Cp0 of a reference EOS, anchored on S°298 (``chemdb.cp0_eos`` terms).
+
+    With y = b/T, the term antiderivatives (Cp, ∫Cp dT, ∫Cp/T dT), in units of R:
+    const a: a, aT, a ln T; pe: a y²eʸ/(eʸ−1)², ab/(eʸ−1), a[y/(eʸ−1) − ln(1−e⁻ʸ)];
+    cosh: a(y/cosh y)², −ab tanh y, −a[y tanh y − ln cosh y];
+    power a T^b (b ≠ 0): aT^b, aT^(b+1)/(b+1) (a ln T at b = −1), aT^b/b.
+    """
+
+    def __init__(self, terms: Sequence[Mapping[str, Any]], s298: float) -> None:
+        self.terms = tuple((str(t["term"]), float(t["a"]), float(t["b"])) for t in terms)
+        self.R = float(terms[0]["R"])
+        self.tmin = float(terms[0]["Tmin"])
+        self.tmax = float(terms[0]["Tmax"])
+        self.s298 = s298
+        self.name = f"cp0_eos:{terms[0]['source']}"
+
+    def _antiderivatives(self, T: float) -> tuple[float, float, float]:
+        cp = h = s = 0.0
+        for kind, a, b in self.terms:
+            if kind == "const":
+                cp, h, s = cp + a, h + a * T, s + a * math.log(T)
+            elif kind == "pe":
+                y = b / T
+                em1 = math.expm1(y)
+                cp += a * y * y * math.exp(y) / em1**2
+                h += a * b / em1
+                s += a * (y / em1 - math.log(-math.expm1(-y)))
+            elif kind == "cosh":
+                y = b / T
+                cp += a * (y / math.cosh(y)) ** 2
+                h -= a * b * math.tanh(y)
+                s -= a * (y * math.tanh(y) - math.log(math.cosh(y)))
+            elif kind == "power":
+                cp += a * T**b
+                h += a * math.log(T) if b == -1.0 else a * T ** (b + 1.0) / (b + 1.0)
+                s += a * T**b / b
+            else:
+                raise ThermochemError(f"unknown cp0_eos term {kind!r}")
+        return self.R * cp, self.R * h, self.R * s
+
+    def cp(self, T: float) -> float:
+        return self._antiderivatives(T)[0]
+
+    def dh(self, T: float) -> float:
+        return self._antiderivatives(T)[1] - self._antiderivatives(T_REF)[1]
+
+    def s(self, T: float) -> float:
+        return self.s298 + self._antiderivatives(T)[2] - self._antiderivatives(T_REF)[2]
+
+
 class _ConstantCpCurve(_Curve):
     """Constant Cp between stated limits: the coarse condensed-phase fallback."""
 
@@ -608,6 +662,10 @@ def species_thermo(query: str, phase: str = "gas", hf_source: str | None = None)
             fit = next((f for f in fits if f["form"] == "trc"), fits[0] if fits else None)
             if fit is not None:
                 curve = _PolyCurve(fit, s298)
+            else:
+                terms = chemdb.cp0_eos(species.cas)
+                if terms and float(terms[0]["Tmin"]) <= T_REF <= float(terms[0]["Tmax"]):
+                    curve = _Cp0EosCurve(terms, s298)
         if curve is None:
             if phase == "liquid":
                 pieces = _liquid_fit_pieces(species.cas)

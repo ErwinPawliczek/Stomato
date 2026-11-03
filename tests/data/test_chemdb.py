@@ -486,3 +486,58 @@ def test_nasa9_header_enthalpy_is_the_polynomial_value_at_298() -> None:
         assert curve._absolute_h(298.15) == pytest.approx(float(rows[0]["hf298"]), abs=30.0), rows[0]["cas"]
         checked += 1
     assert checked > 500
+
+
+def test_cp0_eos_terms_reproduce_coolprop_and_integrate_consistently() -> None:
+    """cp0_eos.csv against CoolProp's own ideal-gas Cp0, and the curve's dH, dS against Cp."""
+    from ngdesign.data.species_models import _Cp0EosCurve
+
+    with (_DIR / "cp0_eos.csv").open(encoding="utf8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    assert {r["source"] for r in rows} == {"coolprop_ig"}
+    assert "coolprop_ig" in chemdb.sources()
+    fluids = {
+        CP.get_fluid_param_string(f, "CAS"): f for f in CP.get_global_param_string("fluids_list").split(",")
+    }
+    checked = 0
+    for cas in sorted({r["cas"] for r in rows}):
+        terms = chemdb.cp0_eos(cas)
+        assert "CoolProp key" in terms[0]["reference"], cas
+        curve = _Cp0EosCurve(terms, 0.0)
+        state = CP.AbstractState("HEOS", fluids[cas])
+        T = 0.5 * (curve.tmin + curve.tmax)
+        state.update(CP.DmolarT_INPUTS, 1e-6, T)
+        assert curve.cp(T) == pytest.approx(state.cp0molar(), rel=1e-9), cas
+        h = 1e-3 * T
+        assert (curve.dh(T + h) - curve.dh(T - h)) / (2 * h) == pytest.approx(curve.cp(T), rel=1e-6), cas
+        assert (curve.s(T + h) - curve.s(T - h)) / (2 * h) == pytest.approx(curve.cp(T) / T, rel=1e-6), cas
+        checked += 1
+    assert checked >= 100
+
+
+@pytest.mark.parametrize(
+    ("query", "T"),
+    [("propane", 300.0), ("propane", 500.0), ("benzene", 400.0), ("isobutane", 300.0), ("CO2", 500.0)],
+)
+def test_cp0_eos_agrees_with_an_independent_gas_source(query: str, T: float) -> None:
+    """Independent cross-check: a reference EOS's ideal-gas part against the species'
+    own gas Cp source (JANAF, NASA or TRC), within the 2 % AUDIT limit. The four
+    species past it are listed in AUDIT.txt."""
+    from ngdesign.data.species_models import _Cp0EosCurve, species_thermo
+
+    model = species_thermo(query, "gas")
+    assert not model.curve.name.startswith("cp0_eos")
+    eos = _Cp0EosCurve(chemdb.cp0_eos(query), 0.0)
+    assert eos.cp(T) == pytest.approx(model.curve.cp(T), rel=0.02)
+
+
+def test_cp0_eos_gives_a_gas_model_where_no_other_cp_source_exists() -> None:
+    """Hexamethyldisiloxane: CRC states Hf, S and Cp(298) for the gas but no Cp(T); the
+    reference-EOS ideal-gas part now carries the shape, and agrees with the CRC 298 K
+    heat capacity (238.5 J/(mol K), an independent source) to 1 %."""
+    from ngdesign.data.species_models import species_thermo
+
+    model = species_thermo("107-46-0", "gas")
+    assert model.curve.name == "cp0_eos:coolprop_ig"
+    assert model.curve.cp(298.15) == pytest.approx(238.5, rel=0.01)
+    assert model.curve.cp(500.0) > model.curve.cp(298.15)

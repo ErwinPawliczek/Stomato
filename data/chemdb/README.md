@@ -15,6 +15,7 @@ source states, converted to SI.
 | `antoine.csv` | Antoine fits, normalised to log10(P/bar) = A − B/(T/K + C), with T windows |
 | `wagner.csv` | Wagner vapour-pressure fits (forms 2.5-5 and 1.5-3-6) |
 | `cp_gas.csv` | Ideal-gas Cp fits (Poling polynomial, TRC eight-term) |
+| `cp0_eos.csv` | Ideal-gas Cp0 of CoolProp's reference equations of state, one row per term (constant, Planck-Einstein, Aly-Lee cosh, power), each row citing its EOS paper |
 | `sources.yaml` | Full citation for every `source` key |
 | `AUDIT.txt` | Where non-estimated sources disagree beyond the audit limits |
 
@@ -85,6 +86,9 @@ gas model beyond a narrow constant-Cp window. These sources were checked:
 | Burcat & Ruscic, ANL-05/20 | refused: its terms forbid inclusion in non-free software, and this repository is proprietary |
 | psi4 characteristic temperatures in `chemicals` (2022a) | refused: computed inside that library, with no external publication to cite |
 | Joback group contributions | refused: an estimation method, not stated data |
+| Ideal-gas parts of CoolProp's reference EOS (MIT; each EOS paper cited per row) | used, 2026-11-03: Cp0(T) for 124 species in `cp0_eos.csv`. It is the gas shape only where no JANAF, Shomate, NASA or TRC/Poling fit exists. That completes the gas model of 7 species: hexamethyldisiloxane, methyl oleate, propylene glycol, R236ea, R236fa, R245ca, R245fa. Another 26 (siloxanes, methyl esters, HFOs, dimethyl carbonate) now have Cp0 but still no ΔfH°. Of the 91 species that have both, 87 agree within 2 %. The 4 that do not (1,2-dichloroethane +6.1 %, CF3I −5.5 %, perfluorobutane +7.8 %, dimethyl ether +2.2 %, all relative to TRC or JANAF) are listed in `AUDIT.txt`. Their tabulated source stays the selected shape, and the cause was not resolved here |
+| ATcT 1.222 (Argonne; DOE PuRe resource) | not added: atct.anl.gov sits behind a Cloudflare challenge that blocks scripted fetches, and its Wayback copies were offline on 2026-11-03. ATcT 1.112 already enters through `chemicals` |
+| NIST CCCBDB (SRD 101) | not pursued: its experimental Cp is a single 298.15 K value per species, and its species are the small molecules JANAF and TRC already cover |
 
 Closing the gap needs a licensable evaluated compilation (DIPPR 801, TRC Thermodynamic Tables)
 or published measurements per species.
