@@ -57,6 +57,30 @@ by a plausible phase-change enthalpy, which catches sign slips in a source (the 
 CI4 and CHI3 solids), and a stated Tb must agree with a vapour-pressure fit at 1 atm. A
 failing selection moves to the best-ranked row that passes, and the move is logged.
 
+A third test keeps a liquid model consistent with its own stated values. A liquid without a
+table of its own is modelled from its vapour, μ°(l) = μ°(g) + RT ln(Psat/P°), anchored on the
+selected ΔfH°(l), so its S°298 is whatever the selected ΔfH°(g), ΔfH°(l), S°(g) and the vapour
+pressure imply. Rank picks those one property at a time, often from different sources. Where
+the implied S°(l) misses the stated one by more than 1.5 kJ/mol over 298.15 K (5 J/(mol K)),
+the best-ranked stated alternative that meets it is chosen: another ΔfH°(l), another S°(l),
+another ΔfH°(g), or the gas and liquid ΔfH° of one reference together. No choice moves a
+grade-A selection, moves ΔfH°(g) except between grade-B rows, uses a grade-C row, or takes
+ΔfH°(g) − ΔfH°(l) more than 5 kJ/mol from a stated ΔvapH°298. When nothing meets the limit,
+a single choice that closes more than 1.5 kJ/mol of the gap without moving ΔfH°(g) − ΔfH°(l)
+off ΔvapH°298 is taken. Every species still missing is listed in `AUDIT.txt` as `liquid set`
+(68 on 2026-11-03), and `tests/data/test_chemdb.py` holds every other liquid and solid model to
+its selected stated S°298 (5.1 J/(mol K)) and ΔfH°298 (10 J/mol). Rebuilt 2026-11-03: 13
+selections moved; of the 1,241 condensed models stating both values, 54 came nearer their
+stated S°, 1,185 did not move, and 2 moved by 0.02 and 0.29 J/(mol K) (vinyl chloride and
+chlorotrifluoroethylene, both listed: their gas S° is now CEA's). Models beyond 5.1 J/(mol K)
+fell from 59 to 53 liquids and from 6 to 0 solids. Of the 135 species whose ΔfH°(g) − ΔfH°(l) misses a stated ΔvapH°298 by
+more than 4 kJ/mol, 1 was resolved (ethylene glycol), the other 134 did not move, and none
+was made worse.
+
+CEA records also enter `properties.csv` with their S°298 (the record's polynomial and b2
+constant at 298.15 K, NASA/TP-2002-211556 eq. 6), so a phase modelled by a CEA polynomial
+selects the entropy that model carries (SnCl4 liquid: CEA 265.0 against the CRC 258.6).
+
 ## Rebuilding
 
 Downloads go to a cache directory outside the repo, and only parsed numbers are
@@ -81,14 +105,15 @@ Cp(T) on 2026-11-03 before the work below (2,671 with no gas Cp at all, 126 with
 value and a narrow constant-Cp window), and 1,810 had a gas model with Cp(T). After the
 WebBook tables, the ThermoML archive and the targeted crawl below, 2,781 remain (2,657 + 124)
 and 1,826 have a gas model with Cp(T): 16 gained. A later pass the same day (NASA CEA records
-matched by their elemental formula, below) brought this to 2,777 (2,657 + 120) and 1,830. About 2,310 of the remaining species have
+matched by their elemental formula, below) brought this to 2,777 (2,657 + 120) and 1,833 (1,830,
+plus InCl, InCl3 and Al2O3(g), whose S° now comes from their CEA records). About 2,310 of the remaining species have
 only Yaws values (grade C) for ΔfH° and S°: long-chain, branched and halogenated organics that
 no open source tabulates. These sources were checked:
 
 | Source | Outcome |
 |---|---|
 | NIST-JANAF, NIST Shomate (crawled and snapshot), TRC, Poling | used; they do not cover these species |
-| NASA CEA, NASA/TP-2002-211556 (Apache-2.0) | used; mostly combustion species, adds 67 gas models here. On 2026-11-03 (later) the matcher was found to drop every record named with CEA's upper-case `CL`/`AL` and every structural name (`CH2Br-COOH`): 695 records unmatched. A record whose name does not resolve is now matched by its own elemental formula (record line 2, `5(A2,F6.2)`), only when one neutral species here carries that formula, no other CEA record of that phase does, and the species' WebBook page states the same formula. The page check is needed: 13596-11-7 (AlOCl on the WebBook) is filed here with PubChem's AlClHO, the formula of CEA's HOAlCl, and formula alone would have joined them. Records describing an equilibrium mixture of isomers (C2F2Cl2, C2HClF2) are refused. 120 more records match (593 still unmatched). Gap species gained, with NASA 9 shapes: GeCl4, SnCl4, VCl4 (Gurvich 1991; Nagarajan 1963) and bromoacetic acid (Dorofeeva 2001), each within 0.5 % of the CRC Cp°298 and 1.2 % of the CRC S°298. InCl, InCl3 and Al2O3(g), which state no S° here, also gain gas models. Side effects, all by the unchanged rank (NASA CEA above CRC and TRC): 12 halomethanes and halo-ethenes move from a TRC fit to the CEA shape (Cp°298 within 0.3 %; S°298 within 0.3 % except bromochlorofluoromethane, +2.1 % against the CRC 304.3), and the selected gas ΔfH° of GeCl4, SnCl4, VCl4, InCl, InCl3 and chlorotrifluoroethylene moves to CEA's (0.3-3.8 %). For GeCl4 and chlorotrifluoroethylene that pairs a CEA gas ΔfH° with a CRC liquid ΔfH°, and the saturation liquid's S°298 moves off the stated value (GeCl4 244.6 → 259.4, stated 245.6; C2ClF3 248.7 → 281.5, stated 220.7 J/(mol K)). The same cross-source pairing already affects 135 species whose ΔfH°(g) − ΔfH°(l) misses the stated ΔvapH°298 by more than 4 kJ/mol; a selection rule for it is not part of this change |
+| NASA CEA, NASA/TP-2002-211556 (Apache-2.0) | used; mostly combustion species, adds 67 gas models here. On 2026-11-03 (later) the matcher was found to drop every record named with CEA's upper-case `CL`/`AL` and every structural name (`CH2Br-COOH`): 695 records unmatched. A record whose name does not resolve is now matched by its own elemental formula (record line 2, `5(A2,F6.2)`), only when one neutral species here carries that formula, no other CEA record of that phase does, and the species' WebBook page states the same formula. The page check is needed: 13596-11-7 (AlOCl on the WebBook) is filed here with PubChem's AlClHO, the formula of CEA's HOAlCl, and formula alone would have joined them. Records describing an equilibrium mixture of isomers (C2F2Cl2, C2HClF2) are refused. 120 more records match (593 still unmatched). Gap species gained, with NASA 9 shapes: GeCl4, SnCl4, VCl4 (Gurvich 1991; Nagarajan 1963) and bromoacetic acid (Dorofeeva 2001), each within 0.5 % of the CRC Cp°298 and 1.2 % of the CRC S°298. InCl, InCl3 and Al2O3(g), which stated no S° here, also gain gas models. Side effects, all by the unchanged rank (NASA CEA above CRC and TRC): 12 halomethanes and halo-ethenes move from a TRC fit to the CEA shape (Cp°298 within 0.3 %; S°298 within 0.3 % except bromochlorofluoromethane, +2.1 % against the CRC 304.3), and the selected gas ΔfH° of SnCl4, VCl4, InCl and InCl3 moves to CEA's (0.3-3.8 %). For GeCl4 and chlorotrifluoroethylene the liquid-set test (above) keeps the CRC gas ΔfH° and the Erastov 1982 gas and liquid pair, so their liquids stay on a consistent gas value |
 | CEA reference-text names (`Acetonitrile.`, `Cyclohexane.`) | not used for matching: tried 2026-11-03, they would match 21 more organic records, none of them a gap species, and would move common species (cyclohexane, ethylbenzene, naphthalene, acetic acid) from their TRC fits to CEA shapes |
 | WebBook tabulated gas Cp(T) | used, 2026-11-03: every WebBook gas Cp table goes to `cp_gas_points.csv`. Only its 298 K point had been used before. A table with three or more points spanning 298.15 K is now the gas shape where no fit exists: linear in T between the stated nodes, anchored on S°298, with no extrapolation beyond the table. The tables that span 298 K are statistical-thermodynamic evaluations (Dorofeeva, TRC 1997, Klots, Boyd and others); flow-calorimetry tables start above the boiling point and are never chosen. 14 species gained, listed below. Most other gap species' tables start at 380-600 K and stay unused |
 | WebBook pages not yet crawled | a random sample of 60 (2026-11-02) carried nothing. On 2026-11-03 a targeted crawl fetched the 642 uncrawled pages of gap species whose ΔfH° is not Yaws-only, plus species with a CRC, ATcT or NASA ΔfH° and no S°. 630 pages existed. 13 of the 14 WebBook-table species came from these pages, and no species gained S°. The other page data entered through the normal build (Hf, Tb, Hvap and others; 828 selected values moved under the unchanged ranking, 91 by more than 1 %). The 2,230 uncrawled Yaws-only species were not crawled, since the sample of 60 found nothing |
@@ -142,9 +167,9 @@ selected (AlO2, AlN, Al2, AlH, ClCO, BClF, Be2Cl4, PbCl4, Cs2Cl2, Al2O2, CaCl2, 
 POCl3, the phosphoryl fluoride chlorides, CCl2, ClF3; and the bromochloro- and chlorofluoromethanes against ATcT).
 These are the same JANAF-against-Gurvich differences as the earlier CEA lines: the two
 evaluations chose different spectroscopic constants or reaction data, which this build does not
-judge. Three lines put CEA on top: SnCl4 gas and liquid and chlorotrifluoroethylene now list CEA
-against the CRC row it replaced, and the 1963 bomb-calorimetry value for C2ClF3
-(−564.8 kJ/mol) no longer leads its line.
+judge. Two lines put CEA on top: SnCl4 gas and liquid, a consistent
+CEA pair, now list CEA against the CRC rows it replaced. Chlorotrifluoroethylene's line now
+sets the selected Erastov 1982 value (−505.5 kJ/mol) against CEA's −515.2.
 
 Closing the rest of the gap needs a licensable evaluated compilation (DIPPR 801, TRC Thermodynamic
 Tables) or published measurements per species.
