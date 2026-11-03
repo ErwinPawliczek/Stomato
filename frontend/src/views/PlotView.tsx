@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApiError, api, type Project, type Vec3, type XY } from "../api/client";
+import { ApiError, api, drawingError, errorReason, type Project, type Vec3, type XY } from "../api/client";
 
 /** Client pixels → SVG user units; 1:1 when the drawing is not CSS-scaled. */
 export function userUnitsPerClientPx(viewBoxWidth: number, renderedWidth: number): number {
@@ -126,7 +126,7 @@ export function PlotView({ project }: { project: Project }) {
       setSvg(await api.plotSvg());
     } catch (e) {
       if (e instanceof ApiError && e.status === 501) setUnavailable(true);
-      else setError(e instanceof Error ? e.message : String(e));
+      else setError(drawingError("Plot plan", e));
     } finally {
       setLoading(false);
     }
@@ -147,7 +147,7 @@ export function PlotView({ project }: { project: Project }) {
       return true;
     } catch (e) {
       if (e instanceof ApiError && e.status === 501) setUnavailable(true);
-      else setError(e instanceof Error ? e.message : String(e));
+      else setError(`Plot plan failed: ${errorReason(e)}`);
       return false;
     } finally {
       setSaving(false);
@@ -165,7 +165,7 @@ export function PlotView({ project }: { project: Project }) {
       setSvg(await api.plotSvg());
     } catch (e) {
       if (e instanceof ApiError && e.status === 501) setUnavailable(true);
-      else setError(e instanceof Error ? e.message : String(e));
+      else setError(drawingError("Plot plan", e));
     } finally {
       setRouting(false);
     }
@@ -307,7 +307,7 @@ export function PlotView({ project }: { project: Project }) {
       </div>
       {loading && !svg && <p>Loading plot plan…</p>}
       {unavailable && <p role="alert">Plot routing not available yet</p>}
-      {error && <p role="alert">Plot plan failed: {error}</p>}
+      {error && <p role="alert">{error}</p>}
       <div
         ref={containerRef}
         className="pfd plot"

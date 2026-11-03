@@ -137,6 +137,14 @@ export function errorReason(e: unknown): string {
   return e.message;
 }
 
+/** `<What> failed: <reason>`, or for a 422 (the project cannot be drawn yet, e.g.
+ * an unwired unit or no equipment) `<What> cannot be drawn yet: <reason>`. */
+export function drawingError(what: string, e: unknown): string {
+  return e instanceof ApiError && e.status === 422
+    ? `${what} cannot be drawn yet: ${errorReason(e)}`
+    : `${what} failed: ${errorReason(e)}`;
+}
+
 let mockState: Project = structuredClone(mockProject) as Project;
 
 // --- Open project ---

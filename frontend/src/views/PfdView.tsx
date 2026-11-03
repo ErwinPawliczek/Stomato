@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApiError, api, type Project, type XY } from "../api/client";
+import { ApiError, api, drawingError, errorReason, type Project, type XY } from "../api/client";
 
 /** Client pixels → SVG user units; 1:1 when the drawing is not CSS-scaled. */
 export function userUnitsPerClientPx(viewBoxWidth: number, renderedWidth: number): number {
@@ -56,7 +56,7 @@ export function PfdView({ project }: { project: Project }) {
       setSvg(await api.pfdSvg());
     } catch (e) {
       if (e instanceof ApiError && e.status === 501) setUnavailable(true);
-      else setError(e instanceof Error ? e.message : String(e));
+      else setError(drawingError("PFD", e));
     } finally {
       setLoading(false);
     }
@@ -75,7 +75,7 @@ export function PfdView({ project }: { project: Project }) {
       return true;
     } catch (e) {
       if (e instanceof ApiError && e.status === 501) setUnavailable(true);
-      else setError(e instanceof Error ? e.message : String(e));
+      else setError(`PFD failed: ${errorReason(e)}`);
       return false;
     } finally {
       setSaving(false);
@@ -176,7 +176,7 @@ export function PfdView({ project }: { project: Project }) {
       </div>
       {loading && !svg && <p>Loading PFD…</p>}
       {unavailable && <p role="alert">PFD renderer not available yet</p>}
-      {error && <p role="alert">PFD failed: {error}</p>}
+      {error && <p role="alert">{error}</p>}
       <div
         ref={containerRef}
         className="pfd"

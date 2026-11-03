@@ -185,3 +185,13 @@ test("arrow keys nudge a focused equipment item and save the moved position", as
   fireEvent.keyDown(box, { key: "ArrowRight" });
   await waitFor(() => expect(place).toHaveBeenCalledWith("pid", "V-101", { x: 55, y: 70 }));
 });
+
+test("a project the backend cannot draw shows its reason, not the raw HTTP error", async () => {
+  const spy = vi
+    .spyOn(api, "pidSvg")
+    .mockRejectedValueOnce(new ApiError('GET /api/projects/x/views/pid.svg: 422 {"detail":"unit E-901 has no connected streams to size from"}', 422));
+  render(<PidView project={structuredClone(mockProject) as Project} />);
+  const alert = await screen.findByRole("alert");
+  expect(alert.textContent).toBe("P&ID cannot be drawn yet: unit E-901 has no connected streams to size from");
+  spy.mockRestore();
+});

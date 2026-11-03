@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApiError, api, type Project, type XY } from "../api/client";
+import { ApiError, api, drawingError, errorReason, type Project, type XY } from "../api/client";
 
 /** Pure: where the equipment box's top-left corner lands after dragging delta
  *  from original. layout.pid stores the TOP-LEFT (spec B-04), unlike the PFD's
@@ -163,7 +163,7 @@ export function PidView({ project }: { project: Project }) {
       setPfdSvg(pfd);
     } catch (e) {
       if (e instanceof ApiError && e.status === 501) setUnavailable(true);
-      else setError(e instanceof Error ? e.message : String(e));
+      else setError(drawingError("P&ID", e));
     } finally {
       setLoading(false);
     }
@@ -182,7 +182,7 @@ export function PidView({ project }: { project: Project }) {
       return true;
     } catch (e) {
       if (e instanceof ApiError && e.status === 501) setUnavailable(true);
-      else setError(e instanceof Error ? e.message : String(e));
+      else setError(`P&ID failed: ${errorReason(e)}`);
       return false;
     } finally {
       setSaving(false);
@@ -315,7 +315,7 @@ export function PidView({ project }: { project: Project }) {
       </div>
       {loading && !pidSvg && <p>Loading P&amp;ID…</p>}
       {unavailable && <p role="alert">P&amp;ID renderer not available yet</p>}
-      {error && <p role="alert">P&amp;ID failed: {error}</p>}
+      {error && <p role="alert">{error}</p>}
       <div className="pid-panels">
         <section>
           <h2>P&amp;ID</h2>
