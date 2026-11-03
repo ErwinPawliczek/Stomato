@@ -28,6 +28,7 @@ from ngdesign.units.column import (
     _parse_params,
     _solve_mesh,
     _ThermoBox,
+    solve_column_full,
 )
 from ngdesign.units.column.inside_out import _Profile
 from ngdesign.units.column.spec import _SPEC_TOL
@@ -150,3 +151,61 @@ def test_registry_column_accepts_the_option(thermo: Thermo) -> None:
     unit = registry.create("unit", "column")
     res = unit.solve({"feed": feed}, {**params, "initialization": "relaxation"}, thermo)
     assert res.info["distillate_mol_s"] == pytest.approx(45.0, rel=_SPEC_TOL)
+
+
+def _steam_stripped() -> dict[str, Any]:
+    p = 1.5e5
+    return {
+        "n_stages": 10,
+        "condenser": "partial",
+        "reboiler": "none",
+        "pressure_profile": p,
+        "feeds": [
+            {
+                "stage": 9,
+                "T": 560.0,
+                "P": p,
+                "molar_flow": 100.0,
+                "composition": {"nC5": 0.25, "nC8": 0.25, "nC11": 0.25, "nC14": 0.25},
+            },
+            {"stage": 10, "T": 500.0, "P": p, "molar_flow": 2.0, "composition": {"H2O": 1.0}},
+        ],
+        "specs": {"distillate_rate": 45.0},
+        "side_strippers": [
+            {
+                "name": "s1",
+                "draw_stage": 4,
+                "return_stage": 3,
+                "n_stages": 3,
+                "steam": {"flow_mol_s": 2.0, "T_K": 500.0, "P_Pa": p},
+                "product_rate_mol_s": 20.0,
+            }
+        ],
+        "initialization": "relaxation",
+    }
+
+
+def test_steam_stripped_graph_column_converges_from_relaxation(thermo: Thermo) -> None:
+    """A crude-column-shaped stage graph: 10 stages, partial condenser, no
+    reboiler, bottom stripping steam and a 3-stage steam side stripper, on a
+    wide-boiling nC5-nC14 feed at 560 K. The relaxation runs over the whole
+    graph, stripper section included. Measured: converged in 11 s; the
+    standard start lands on a branch with free water on stage 1 and is refused
+    (42 s). Checked from the result: the specs and the whole-unit component
+    and energy closure, the stripper product included."""
+    params = _steam_stripped()
+    res, internal = solve_column_full({}, params, thermo)
+    assert res.info["distillate_mol_s"] == pytest.approx(45.0, rel=1e-9)
+    product = internal["s1"]
+    assert product.molar_flow == pytest.approx(20.0, rel=1e-9)
+    inlets = [thermo.flash_pt(f["composition"], f["T"], f["P"], f["molar_flow"]) for f in params["feeds"]]
+    inlets.append(thermo.flash_pt({"H2O": 1.0}, 500.0, 1.5e5, 2.0))
+    outlets = [res.outlets["distillate"], res.outlets["bottoms"], product]
+    total = sum(s.molar_flow for s in inlets)
+    for cid in ("nC5", "nC8", "nC11", "nC14", "H2O"):
+        n_in = sum(s.molar_flow * s.composition.get(cid, 0.0) for s in inlets)
+        n_out = sum(s.molar_flow * s.composition.get(cid, 0.0) for s in outlets)
+        assert abs(n_in - n_out) <= 1e-8 * total, cid
+    h_in = sum(s.molar_flow * s.enthalpy for s in inlets)
+    h_out = sum(s.molar_flow * s.enthalpy for s in outlets)
+    assert abs(h_in + res.duty_W - h_out) <= 1e-8 * abs(h_in)

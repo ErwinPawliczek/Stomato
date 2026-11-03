@@ -193,13 +193,17 @@
     R2:
       status: planned
       params: {}
-      note: MESH with side strippers, pumparounds, stripping steam, overflash;
-        S0-1c steps 3-4 are in (side_strippers and condenser_water_decant solve
-        simultaneously on the stage graph), but the cold start of a wide-boiling
-        two-tear column is not - measured on a 10-stage nC5/nC8/nC11/nC14 total
-        condenser column with a 3-stage steam stripper at 1.5 bar, the plain mesh
-        and the graph Newton from a Fenske-shaped seed both stall at M 0.86-1.0
-        (36-78 s); and on pseudo-component cost (see the preflash row)
+      note: MESH with side strippers, pumparounds, stripping steam, overflash; the
+        column's relaxation start (initialization relaxation, over the whole stage
+        graph) now converges a crude-shaped graph - 10 stages nC5/nC8/nC11/nC14 at
+        1.5 bar, partial condenser, no reboiler, bottom steam, one 3-stage steam
+        stripper (11 s; the standard start lands on a free-water branch, 42 s).
+        Blocker re-measured on the R0 crude cut into 16 pseudos (22 species, 12
+        stages, kero/diesel/AGO strippers at the R0 cut-point rates, 631.75 K, 2 bar)
+        - after Newton from the relaxed main column stalls, the inside-out fallback
+        dies inside the PR package's PT flash (UnconvergedError, End of SS without
+        convergence, 37 s); and the slate's heavy-end second liquid (see preflash R2)
+        needs pooled stage liquids, which the relaxation start does not carry
       end_state: true
   pid_symbol: T
   references:
