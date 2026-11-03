@@ -244,7 +244,8 @@
         balances (tested with a top and a diesel loop, 17.2 MW in the loops, condenser
         69.0 -> 52.0 MW). An overhead past the zero-overflash point is refused before
         the solve; on the example overflash 31.8 mol/s at 430 mol/s, 14.2 at
-        440, zero at 448.72 mol/s (the former stall at >= 455 mol/s)
+        440, 5.93 at 445 (converges, slowly near the limit), zero at 448.72
+        mol/s (the former stall at >= 455 mol/s)
       end_state: true
   pid_symbol: T
   references:

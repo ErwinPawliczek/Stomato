@@ -47,7 +47,7 @@ The overhead is bounded by the flash zone: with no reboiler, the products
 above it are crude vaporised by the feed's heat and the bottom steam, and
 an overhead past the zero-overflash point is refused (``_check_overflash``)
 before the column solve. Measured on the example: overflash 31.8 mol/s at
-430 mol/s overhead, 14.2 at 440, zero at 448.72; the former "stall" at
+430 mol/s overhead, 14.2 at 440, 5.93 at 445, zero at 448.72; the former "stall" at
 >= 455 mol/s was this physical limit (the solve hunted for a column with
 negative overflash, then failed inside the thermo).
 
