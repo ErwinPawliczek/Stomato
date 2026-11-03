@@ -415,6 +415,19 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
             t_kettle = tb.bubble_temperature(_flash_ready(xb, col.feed_comp), col.pressures[-1])
             if t_kettle is not None:
                 col.t_band_hi = max(col.t_band_hi, t_kettle + 15.0)
+        if col.condenser != "none":
+            # A condenser sits BELOW every feed temperature by its own
+            # separation, not by a fixed 30 K: a wide-boiling feed's condenser
+            # can run 100 K and more under the feed (measured: a 5-stage
+            # partial-condenser preflash of a 14-species crude slate at 2.5 bar,
+            # feed 505 K - the converged top stage sits at 383 K, so the
+            # feed-based floor of 475 K held every stage on the band and the
+            # mesh could only stall at M = 1.0). The floor extends the way the
+            # two-tear band's does: to the lightest component's saturation
+            # temperature at the top pressure, 10 K beyond.
+            ext = _extreme_seed(col, tb)
+            if ext is not None:
+                col.t_band_lo = min(col.t_band_lo, ext[0] - 10.0)
         return col
     t_top, t_bot = _temperature_seed(col, tb)
     if t_bot > t_top + 20.0:
