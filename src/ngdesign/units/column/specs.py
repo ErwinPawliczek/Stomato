@@ -482,12 +482,17 @@ def _solve_mesh_at_heat(
                     f"(best inside-out profile residuals M={best_m:.2e}, H={best_h:.2e} over "
                     f"{prof.outer} outer sweeps, {prof.inner} inner iterations)"
                 ) from exc
-    if zero_one and not _is_reactive_package(tb) and not tb.direct_phases:
+    if zero_one and not _is_reactive_package(tb) and not (tb.direct_phases or tb.pooled_fugacity):
         # NS globalizes; the inside-out polishes. NS's finite-difference Newton
         # floors at M=3.9e-8 (measured P1-09 absorber: passes 20-30 stagnant),
         # while the anchored-correlation inside-out closes to machine precision
         # from a near-converged state (measured N=2/N=4: M ~ 1e-10). Warm-start
         # sweeps lift the solution the last two decades onto the strict gate.
+        # A column on the smooth fugacity surface (plain ``direct_phases``, or
+        # pooled liquids split without a flash) gates its NS at the polish
+        # tolerance itself; the sweeps here would read the flash surface
+        # (measured on the pooled crude main column: 8 refreshes, 47 s of full
+        # 22-species PT flashes after a 6 s NS).
         model = None
         stalled = 0
         m_ns, h_ns = _exact_residuals(col, tb, prof)

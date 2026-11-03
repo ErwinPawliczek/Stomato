@@ -599,7 +599,8 @@ class _DenseNSEngine:
             # A tighter intermediate gate only discarded measurably converged
             # states (measured P1-09 stripper: NS polished a warm-chained state
             # to M=2.90e-7, H=4.46e-10 and the 1e-7 gate typed the tear failed).
-            self.m_tol = _POLISH_M_TOL_ZERO_ONE_TEAR if tb.direct_phases else _MESH_M_TOL_ZERO_ONE_TEAR
+            smooth = tb.direct_phases or tb.pooled_fugacity
+            self.m_tol = _POLISH_M_TOL_ZERO_ONE_TEAR if smooth else _MESH_M_TOL_ZERO_ONE_TEAR
         self.best_u: list[float] | None = None
         self.best_m = float("inf")
         self.best_h = float("inf")
@@ -710,7 +711,10 @@ class _DenseNSEngine:
     def jacobian(
         self, residuals: Callable[[list[float]], list[float]], r0: list[float], u: list[float]
     ) -> Any:
-        return _fd_jacobian(residuals, r0, u, len(u))
+        # Pooled liquids keep the reference state's phase sets across the
+        # perturbations (``_ThermoBox.fixed_phase_sets``); a no-op elsewhere.
+        with self._tb.fixed_phase_sets():
+            return _fd_jacobian(residuals, r0, u, len(u))
 
     def solve_linear(self, jac: Any, r0: list[float]) -> list[float] | None:
         try:

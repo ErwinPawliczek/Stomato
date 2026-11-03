@@ -1043,10 +1043,24 @@ def _stage_k_values(
         contents = {
             cid: (l_flow * x_j.get(cid, 0.0) + v_flow * y_j.get(cid, 0.0)) / total for cid in col.comps
         }
-    homogeneous_pooled = tb.pooled_exact and not tb.heterogeneous(
-        _flash_ready({c: v for c, v in (contents or x_j).items() if v > 0.0}, col.feed_comp),
-        t_j,
-        col.pressures[j],
+    if tb.splits_liquid:
+        # The pooled liquid's own E equation (``k_pooled``): K at x_j, its
+        # liquid-liquid split and the vapour in equilibrium with it, a
+        # function of (x_j, T_j, P_j) alone like the plain column's fugacity
+        # K - Newton, the gate and the y refresh read one surface whether or
+        # not the caller hands a vapour estimate.
+        x_flash = _flash_ready({cid: x_j.get(cid, 0.0) for cid in col.comps}, col.feed_comp)
+        k_pool = tb.k_pooled(x_flash, y_j or x_flash, t_j, col.pressures[j])
+        if k_pool is not None:
+            return k_pool
+    homogeneous_pooled = (
+        tb.pooled_exact
+        and not tb.splits_liquid
+        and not tb.heterogeneous(
+            _flash_ready({c: v for c, v in (contents or x_j).items() if v > 0.0}, col.feed_comp),
+            t_j,
+            col.pressures[j],
+        )
     )
     if _fugacity_k(col, tb) or homogeneous_pooled:
         x_flash = _flash_ready({cid: x_j.get(cid, 0.0) for cid in col.comps}, col.feed_comp)
