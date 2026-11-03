@@ -487,6 +487,7 @@ def _graph_mesh_once(
     t_bot: float | None,
     seed: _Profile | None,
     top_vapour: float | None = None,
+    ns_max: int | None = None,
 ) -> _Profile:
     """Converge the MESH over the whole stage graph at given tears (S0-1c step 3).
 
@@ -507,7 +508,8 @@ def _graph_mesh_once(
     itself are NOT used: the graph Newton converges quadratically from the
     sequential seed (measured, nC6-nC12 at 2 bar with a 4-stage steam
     stripper: exact M 1.0 -> 6.4e-8 in five passes, 3.8 s), so there is one
-    simultaneous engine and one gate.
+    simultaneous engine and one gate. ``ns_max`` overrides the Newton pass
+    budget (None = the column's own).
     """
     if seed is None:
         prof = _sequential_seed(col, tb, t_top, t_bot, _seed_main_mesh)
@@ -518,7 +520,9 @@ def _graph_mesh_once(
     prof.ns_trace, prof.ns_passes = [], 0
     _apply_tears(col, prof, t_top, t_bot)
     try:
-        _graph_naphtali_sandholm(col, tb, prof, t_bot if col.reboiler == "kettle" else None, top_vapour)
+        _graph_naphtali_sandholm(
+            col, tb, prof, t_bot if col.reboiler == "kettle" else None, top_vapour, ns_max=ns_max
+        )
     except ColumnConvergenceError as exc:
         # A stalled graph Newton whose best iterate already carries free
         # water has a physical reason, not a solver one: the one-liquid stage

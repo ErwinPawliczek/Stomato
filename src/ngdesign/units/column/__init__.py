@@ -68,12 +68,14 @@ from .inside_out import (
     _build_column,
     _check_pumparounds,
     _close_energy_balance,
+    _Column,
     _exact_residuals,
+    _Profile,
     _section_duty_total,
     _seed_profile,
     _temperature_seed,
 )
-from .spec import _FLOW_FLOOR, ColumnConvergenceError, ColumnSpecError, _parse_params
+from .spec import _FLOW_FLOOR, ColumnConvergenceError, ColumnSpecError, _Params, _parse_params
 from .specs import _solve_mesh, _solve_specs
 from .strippers import _check_free_water, _decant_state, _steam_states, _stripper_products
 from .thermo_adapter import _flash_ready, _ThermoBox
@@ -210,6 +212,15 @@ def solve_column_full(
     col = _build_column(parsed, tb)
 
     prof = _solve_specs(col, tb, parsed)
+    return _column_result(col, tb, parsed, prof, graph_feed)
+
+
+def _column_result(
+    col: _Column, tb: _ThermoBox, parsed: _Params, prof: _Profile, graph_feed: StreamState | None
+) -> tuple[UnitResult, dict[str, StreamState]]:
+    """The post-solve gates and the boundary report of a solved column: the
+    ``solve_column_full`` result and its internal products (shared by the
+    dividing-wall column, which builds and solves its own stage graph)."""
     # Post-solve pumparound gates (review items 4/5, PR #238): run once on
     # the final profile - an infeasible loop flow or a heating loop refuses
     # the column instead of reporting a silently-wrong result.
