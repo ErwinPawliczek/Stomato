@@ -41,7 +41,10 @@ import ht
 
 from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active, param_inputs
 from ngdesign.sizing.lmtd import lmtd_counter
+from ngdesign.units._physics.heat_balance import terminal_inputs
+from ngdesign.units.heat.exchangers import trace_internal_duty
 from ngdesign.units.heat.rating import (
     FilmProps,
     PropertyUnavailable,
@@ -117,6 +120,15 @@ def friction_kumar(Re: float, chevron_angle_deg: float) -> float:
 def nusselt_kumar(Re: float, Pr: float, chevron_angle_deg: float) -> float:
     """Nusselt number, Kumar's correlation (``ht.Nu_plate_Kumar``)."""
     return float(ht.Nu_plate_Kumar(Re, Pr, chevron_angle_deg))
+
+
+#: Params :func:`plate_geometry` defaults when absent: (name, value, unit, note) - traced.
+_DEFAULTS: tuple[tuple[str, float, str, str], ...] = (
+    ("plate_thickness_m", 6.0e-4, "m", "0.6 mm plate unless plate_thickness_m is given"),
+    ("k_plate_W_mK", 16.0, "W/(m K)", "stainless-steel plate conductivity unless k_plate_W_mK is given"),
+    ("R_f_hot_m2K_W", 0.0, "m2 K/W", "clean hot-side surface unless R_f_hot_m2K_W is given"),
+    ("R_f_cold_m2K_W", 0.0, "m2 K/W", "clean cold-side surface unless R_f_cold_m2K_W is given"),
+)
 
 
 @dataclass(frozen=True)
@@ -356,6 +368,29 @@ class PlateExchangerR1:
         rate_h = _side_rating(geom, hot.mass_flow, film_h, "hot", geom.allow_extrapolation)
         rate_c = _side_rating(geom, cold.mass_flow, film_c, "cold", geom.allow_extrapolation)
         P_h_out, P_c_out = hot.P - rate_h.dP_Pa, cold.P - rate_c.dP_Pa
+        rec = active()
+        geometry_inputs: dict[str, Any] = {}
+        if rec is not None:
+            geometry_inputs = param_inputs(params, skip=("model",))
+            for name, value, unit, note in _DEFAULTS:
+                if name not in params:
+                    geometry_inputs[name] = rec.default(name, value, unit, note)
+            drops = rec.results(
+                "plate_pressure_drop",
+                {"dP_hot_Pa": rate_h.dP_Pa, "dP_cold_Pa": rate_c.dP_Pa},
+                {
+                    **geometry_inputs,
+                    **{f"{k}_hot": (hot, k) for k in ("T", "P", "molar_flow", "composition")},
+                    **{f"{k}_cold": (cold, k) for k in ("T", "P", "molar_flow", "composition")},
+                },
+                note=f"{geom.correlation} friction factor on inlet-state properties plus the port loss",
+            )
+            rec.equation(
+                "P_hot_out", P_h_out, "Pa", "pressure_drop", {"P_in": (hot, "P"), "dP": drops["dP_hot_Pa"]}
+            )
+            rec.equation(
+                "P_cold_out", P_c_out, "Pa", "pressure_drop", {"P_in": (cold, "P"), "dP": drops["dP_cold_Pa"]}
+            )
         for side, p_out, drop in (("hot", P_h_out, rate_h.dP_Pa), ("cold", P_c_out, rate_c.dP_Pa)):
             if p_out <= 0.0:
                 raise RatingError(
@@ -398,11 +433,63 @@ class PlateExchangerR1:
                 * geom.A_heat_m2
             )
 
-        rated = rate_two_stream(hot, cold, thermo, P_h_out, P_c_out, ua_of, eps_counterflow)
+        rated = rate_two_stream(
+            hot, cold, thermo, P_h_out, P_c_out, ua_of, eps_counterflow, trace_inputs=geometry_inputs
+        )
 
         h_in = hot.enthalpy * hot.molar_flow + cold.enthalpy * cold.molar_flow
         h_out = rated.hot_out.enthalpy * rated.hot_out.molar_flow
         h_out += rated.cold_out.enthalpy * rated.cold_out.molar_flow
+        lmtd = lmtd_counter(hot.T, rated.hot_out.T, cold.T, rated.cold_out.T)
+        if rec is not None:
+            ends = terminal_inputs(hot, rated.hot_out, cold, rated.cold_out)
+            films = rec.results(
+                "plate_film_coefficients",
+                {
+                    "h_hot_W_m2K": last["hot"].h_W_m2K,
+                    "h_cold_W_m2K": last["cold"].h_W_m2K,
+                    "Re_hot": last["hot"].Re,
+                    "Re_cold": last["cold"].Re,
+                    "correlation_in_range": 1.0 if all(range_flags) else 0.0,
+                },
+                {**geometry_inputs, **ends, "P_hot_out": P_h_out, "P_cold_out": P_c_out},
+                note=f"{geom.correlation} chevron-plate correlation at each side's bulk-mean state",
+            )
+            area = rec.equation(
+                "A_m2",
+                geom.A_heat_m2,
+                "m2",
+                "plate_heat_transfer_area",
+                param_inputs(params, skip=("model",)),
+            )
+            ua = rec.equation(
+                "UA_W_K",
+                rated.UA_W_K,
+                "W/K",
+                "overall_conductance_plate",
+                {
+                    "h_hot": films["h_hot_W_m2K"],
+                    "h_cold": films["h_cold_W_m2K"],
+                    "A": area,
+                    "t": geometry_inputs["plate_thickness_m"],
+                    "k": geometry_inputs["k_plate_W_mK"],
+                    "R_f_hot": geometry_inputs["R_f_hot_m2K_W"],
+                    "R_f_cold": geometry_inputs["R_f_cold_m2K_W"],
+                },
+            )
+            rec.equation(
+                "U_W_m2K", rated.UA_W_K / geom.A_heat_m2, "W/(m2 K)", "ua_per_area", {"UA": ua, "A": area}
+            )
+            rec.results(
+                "effectiveness_ntu",
+                {"NTU": rated.NTU, "effectiveness": rated.effectiveness},
+                {"UA": ua, "Q": rated.duty_W, **ends},
+                label="counter-current NTU and effectiveness at the converged duty",
+            )
+            rec.equation("LMTD_K", lmtd, "K", "lmtd", ends)
+            trace_internal_duty(
+                rec, h_out - h_in, inlets, {"hot_out": rated.hot_out, "cold_out": rated.cold_out}
+            )
         info: dict[str, Any] = {
             "duty_W": rated.duty_W,
             "U_W_m2K": rated.UA_W_K / geom.A_heat_m2,
@@ -410,7 +497,7 @@ class PlateExchangerR1:
             "UA_W_K": rated.UA_W_K,
             "NTU": rated.NTU,
             "effectiveness": rated.effectiveness,
-            "LMTD_K": lmtd_counter(hot.T, rated.hot_out.T, cold.T, rated.cold_out.T),
+            "LMTD_K": lmtd,
             "h_hot_W_m2K": last["hot"].h_W_m2K,
             "h_cold_W_m2K": last["cold"].h_W_m2K,
             "Re_hot": last["hot"].Re,

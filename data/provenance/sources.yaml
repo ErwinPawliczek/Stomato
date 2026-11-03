@@ -1,0 +1,176 @@
+# Citations for the method keys of the `chemicals` and `thermo` packages, used to cite the
+# constants and correlations a property package actually consumed (docs/provenance.md 3.3).
+#
+# Each method key either points at a source of data/chemdb/sources.yaml (`chemdb:`) or
+# carries its own citation here. The text is transcribed from the docstrings shipped with
+# the installed packages (chemicals 1.5.2: critical.py, acentric.py, elements.py;
+# thermo 0.6.1: heat_capacity.py, vapor_pressure.py, interaction_parameters.py) - nothing
+# is cited from memory. `quality: estimated` marks estimation methods (group contribution,
+# corresponding states): cited, but not data.
+
+# chemicals Tc / Pc / Vc / omega method keys
+constants:
+  HEOS:
+    source: refprop
+  IUPAC:
+    chemdb: iupac_critical
+    table: IUPACOrganicCriticalProps.tsv
+  MATTHEWS:
+    chemdb: mathews
+    table: Mathews1972InorganicCriticalProps.tsv
+  CRC:
+    chemdb: crc_critical
+  PD:
+    chemdb: passut_danner
+    table: PassutDanner1973.tsv
+  WEBBOOK:
+    chemdb: nist_snapshot
+  PSRK:
+    chemdb: psrk
+    table: Appendix to PSRK Revision 4.tsv
+  PINAMARTINES:
+    chemdb: dippr_pina
+    table: DIPPRPinaMartines.tsv
+  YAWS:
+    chemdb: yaws
+  JOBACK:
+    source: joback
+    quality: estimated
+  WILSON_JASPERSON:
+    source: wilson_jasperson
+    quality: estimated
+  ACENTRIC_DEFINITION:
+    source: pitzer_acentric
+    quality: estimated
+
+# thermo HeatCapacityGas method keys
+heat_capacity_gas:
+  HEOS_FIT:
+    source: thermo_heos_fit
+  COOLPROP:
+    chemdb: coolprop_ig
+  TRCIG:
+    chemdb: trc
+  WEBBOOK_SHOMATE:
+    source: webbook_shomate
+  POLING_POLY:
+    chemdb: poling
+  POLING_CONST:
+    chemdb: poling
+  CRCSTD:
+    chemdb: crc_thermo
+  VDI_TABULAR:
+    chemdb: vdi
+  JANAF_FIT:
+    chemdb: janaf
+  LASTOVKA_SHAW:
+    source: lastovka_shaw
+    quality: estimated
+  JOBACK:
+    source: joback
+    quality: estimated
+
+# thermo VaporPressure method keys
+vapor_pressure:
+  HEOS_FIT:
+    source: thermo_heos_fit
+  IAPWS_PSAT:
+    source: iapws95
+  WAGNER_MCGARRY:
+    chemdb: mcgarry
+  WAGNER_POLING:
+    chemdb: poling
+  ANTOINE_EXTENDED_POLING:
+    chemdb: poling
+  ANTOINE_POLING:
+    chemdb: poling
+  ANTOINE_WEBBOOK:
+    source: webbook_antoine
+  DIPPR_PERRY_8E:
+    chemdb: perry
+  VDI_PPDS:
+    chemdb: vdi
+  VDI_TABULAR:
+    chemdb: vdi
+  ALCOCK_ELEMENTS:
+    chemdb: alcock
+  LANDOLT:
+    chemdb: landolt
+  COOLPROP:
+    chemdb: coolprop
+  LEE_KESLER_PSAT:
+    source: lee_kesler_psat
+    quality: estimated
+  AMBROSE_WALTON:
+    source: ambrose_walton
+    quality: estimated
+
+sources:
+  refprop:
+    grade: A
+    citation: "Huber, M.L., Lemmon, E.W., Bell, I.H. and McLinden, M.O., The NIST REFPROP Database for Highly Accurate Properties of Industrially Important Fluids, Ind. Eng. Chem. Res. 61(42), 2022, 15449-15472: critical constants and acentric factors of the reference equations of state, as tabulated in chemicals (method 'HEOS')."
+    doi: 10.1021/acs.iecr.2c01427
+  thermo_heos_fit:
+    grade: B
+    citation: "Bell, C. et al., thermo 0.6.1 (Chemical Engineering Design Library), method 'HEOS_FIT': higher-order polynomial fits to results of the fundamental Helmholtz equations of state as calculated with REFPROP (Huber, Lemmon, Bell and McLinden, Ind. Eng. Chem. Res. 61(42), 2022, 15449-15472)."
+    url: https://github.com/CalebBell/thermo
+  webbook_shomate:
+    grade: B
+    citation: "Shen, V.K., Siderius, D.W., Krekelberg, W.P. and Hatch, H.W. (eds.), NIST Chemistry WebBook: Shomate-form gas heat-capacity coefficients, as shipped in thermo 0.6.1 (method 'WEBBOOK_SHOMATE')."
+    doi: 10.18434/T4M88Q
+  webbook_antoine:
+    grade: B
+    citation: "Shen, V.K., Siderius, D.W., Krekelberg, W.P. and Hatch, H.W. (eds.), NIST Chemistry WebBook: Antoine coefficients, converted to Pa and K, as shipped in thermo 0.6.1 (method 'ANTOINE_WEBBOOK')."
+    doi: 10.18434/T4M88Q
+  iapws95:
+    grade: A
+    citation: "Wagner, W. and Pruss, A., The IAPWS Formulation 1995 for the Thermodynamic Properties of Ordinary Water Substance for General and Scientific Use, J. Phys. Chem. Ref. Data 31(2), 2002, 387-535 (saturation pressure via chemicals.iapws.iapws95_Psat)."
+    doi: 10.1063/1.1461829
+  joback:
+    grade: estimate
+    citation: "Joback, K.G. and Reid, R.C., Estimation of Pure-Component Properties from Group-Contributions, Chem. Eng. Commun. 57(1-6), 1987, 233-243 (group-contribution estimate)."
+    doi: 10.1080/00986448708960487
+  wilson_jasperson:
+    grade: estimate
+    citation: "Wilson, G.M. and Jasperson, L.V., Critical Constants Tc, Pc, Estimation Based on Zero, First and Second Order Methods, Proceedings of the AIChE Spring Meeting, 1996 (estimate)."
+  lastovka_shaw:
+    grade: estimate
+    citation: "Lastovka, V. and Shaw, J.M., Predictive Correlations for Ideal Gas Heat Capacities of Pure Hydrocarbons and Petroleum Fractions, Fluid Phase Equilib. 356, 2013, 338-370 (similarity-variable estimate)."
+    doi: 10.1016/j.fluid.2013.07.023
+  pitzer_acentric:
+    grade: estimate
+    citation: "Acentric factor computed by chemicals from its definition, omega = -log10(Psat(0.7 Tc)/Pc) - 1 (Pitzer, K.S. et al., J. Am. Chem. Soc. 77(13), 1955, 3433-3440), on its own Tc, Pc and Psat correlations."
+  lee_kesler_psat:
+    grade: estimate
+    citation: "Lee-Kesler corresponding-states vapour pressure (chemicals.vapor_pressure.Lee_Kesler): Lee, B.I. and Kesler, M.G., AIChE J. 21(3), 1975, 510-527."
+    doi: 10.1002/aic.690210313
+  ambrose_walton:
+    grade: estimate
+    citation: "Ambrose-Walton corresponding-states vapour pressure (chemicals.vapor_pressure.Ambrose_Walton)."
+  openbabel_elements:
+    grade: B
+    citation: "Molecular weight from the formula and the element atomic weights of the Open Babel element table shipped in chemicals 1.5.2 (chemicals.elements): O'Boyle, N.M., Banck, M., James, C.A., Morley, C., Vandermeersch, T. and Hutchison, G.R., Open Babel: An open chemical toolbox, J. Cheminf. 3, 2011, 33."
+    doi: 10.1186/1758-2946-3-33
+  chemsep_pr_kij:
+    grade: C
+    citation: "ChemSep Peng-Robinson binary interaction parameter table (Kooijman, H.A. and Taylor, R., ChemSep), as shipped in thermo 0.6.1 (Interaction Parameters/ChemSep/pr.json, IPDB table 'ChemSep PR'); each pair carries the page number the table records. Pairs absent from the table are 0."
+    url: https://github.com/CalebBell/thermo
+  chemsep_nrtl:
+    grade: C
+    citation: "ChemSep NRTL binary parameter table (Kooijman, H.A. and Taylor, R., ChemSep), as shipped in thermo 0.6.1 (Interaction Parameters/ChemSep/nrtl.json, IPDB table 'ChemSep NRTL')."
+    url: https://github.com/CalebBell/thermo
+  bipm_si:
+    grade: A
+    citation: "Bureau International des Poids et Mesures, The International System of Units (SI), 9th ed., 2019 (standard acceleration of gravity g_n = 9.80665 m/s2, conventional value adopted by the 3rd CGPM, 1901)."
+    url: https://www.bipm.org/en/publications/si-brochure
+  gpsa_std_volume:
+    grade: C
+    citation: "GPSA Engineering Data Book (Gas Processors Suppliers Association): standard gas volume 379.49 scf/lbmol at 60 F and 14.696 psia, as adopted by spec S-29; the edition is not recorded in the code."
+  codata2018:
+    grade: A
+    citation: "Tiesinga, E., Mohr, P.J., Newell, D.B. and Taylor, B.N., CODATA recommended values of the fundamental physical constants: 2018, Rev. Mod. Phys. 93, 2021, 025010."
+    doi: 10.1103/RevModPhys.93.025010
+  thermo_reference_state:
+    grade: convention
+    citation: "Enthalpy and entropy reference state of thermo 0.6.1 phases: ideal gas at T_ref = 298.15 K and P_ref = 101325 Pa with H = 0 and S = 0 (Bell, C. et al., thermo, Chemical Engineering Design Library)."
+    url: https://github.com/CalebBell/thermo

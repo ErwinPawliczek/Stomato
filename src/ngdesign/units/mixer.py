@@ -13,6 +13,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active as recorder
 from ngdesign.registry import register
 from ngdesign.units.jt_valve import dry_gas_feed
 
@@ -47,6 +48,27 @@ class Mixer:
                 z[cid] = z.get(cid, 0.0) + x * s.molar_flow
         composition = {cid: n / total for cid, n in z.items()}
         h_mix = sum(s.enthalpy * s.molar_flow for s in active) / total
+        rec = recorder()
+        if rec is not None:
+            flows = {f"F[{i}]": (s, "molar_flow") for i, s in enumerate(active)}
+            rec.equation("F_out", total, "mol/s", "mole_balance_mixing", flows)
+            rec.equation(
+                "z_out",
+                composition,
+                "1",
+                "mole_balance_mixing",
+                {**flows, **{f"z[{i}]": (s, "composition") for i, s in enumerate(active)}},
+            )
+            rec.equation(
+                "P_out", P_out, "Pa", "mixer_pressure", {f"P[{i}]": (s, "P") for i, s in enumerate(active)}
+            )
+            rec.equation(
+                "h_mix",
+                h_mix,
+                "J/mol",
+                "adiabatic_mixing",
+                {**flows, **{f"h[{i}]": (s, "enthalpy") for i, s in enumerate(active)}},
+            )
 
         outlet = thermo.flash_ph(composition, P_out, h_mix, total)
         return UnitResult(

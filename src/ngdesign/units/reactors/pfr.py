@@ -31,8 +31,21 @@ from ngdesign.contracts import UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.reactions import PowerLaw, Reaction, ReactionSet
 from ngdesign.contracts.stream import StreamState
+from ngdesign.provenance.recorder import Recorder, ValueRef, active, param_inputs
 from ngdesign.units._physics.kinetics import R, apply_extents, enthalpy_with_formation, rate
-from ngdesign.units.reactors._shared import _solve_outlet_T, reaction_set_param, thermal_outlet, z_from
+from ngdesign.units.reactors._shared import (
+    _solve_outlet_T,
+    kinetic_inputs,
+    reaction_set_param,
+    thermal_outlet,
+    trace_amounts,
+    trace_component_flows,
+    trace_extents_applied,
+    trace_formation_enthalpy,
+    trace_outlet_T,
+    trace_reaction_duty,
+    z_from,
+)
 from ngdesign.units.reactors.plug_flow import (
     ErgunBed,
     HeatModel,
@@ -95,7 +108,12 @@ class PfrR1:
         )
 
         xi_end = list(profile.extents[-1])
-        n_out = apply_extents(inlet.component_flows(), rset, xi_end)
+        n_in = inlet.component_flows()
+        n_out = apply_extents(n_in, rset, xi_end)
+        rec = active()
+        solved: dict[str, ValueRef] = {}
+        if rec is not None:
+            solved = _trace_profile(rec, "pfr_design", inlet, n_in, n_out, rset, profile, params, {})
         outlet, duty_out = thermal_outlet(inlet, n_out, thermal, thermo)
 
         t_profile_out = profile.T_K[-1]
@@ -109,6 +127,8 @@ class PfrR1:
         info["T_max_K"] = float(t_max)
         info["V_at_T_max_m3"] = float(v_at_t_max)
         info["n_rhs"] = float(profile.n_rhs)
+        if rec is not None:
+            _trace_closure(rec, info, inlet, outlet, solved)
         return UnitResult(outlets={"outlet": outlet}, duty_W=duty_out, info=info)
 
     @classmethod
@@ -153,6 +173,77 @@ class PfrR1:
         return {"inlet": feed}, params
 
 
+def _trace_profile(
+    rec: Recorder,
+    method: str,
+    inlet: StreamState,
+    n_in: Mapping[str, float],
+    n_out: Mapping[str, float],
+    rset: ReactionSet,
+    profile: PlugFlowProfile,
+    params: Mapping[str, Any],
+    extra_inputs: Mapping[str, Any],
+) -> dict[str, ValueRef]:
+    """Record the integrated plug-flow ODE as one operation (tracing on only).
+
+    Its results are the end extents and the profile summary; the ODE internals (each
+    right-hand-side evaluation) are not traced, the evaluation count is a result.
+    """
+    n_in_ref = trace_component_flows(rec, inlet, n_in)
+    t_max = max(profile.T_K)
+    outputs: dict[str, float] = {
+        f"extent_{r.id}_mol_s": float(xi) for r, xi in zip(rset.reactions, profile.extents[-1], strict=True)
+    }
+    outputs["T_profile_out_K"] = float(profile.T_K[-1])
+    outputs["T_max_K"] = float(t_max)
+    outputs["V_at_T_max_m3"] = float(profile.V_m3[list(profile.T_K).index(t_max)])
+    outputs["P_out_Pa"] = float(profile.P_Pa[-1])
+    outputs["Q_W"] = profile.Q_W
+    outputs["n_rhs"] = float(profile.n_rhs)
+    solved = rec.results(
+        method,
+        outputs,
+        {
+            "n_in": n_in_ref,
+            "T_in": (inlet, "T"),
+            "P_in": (inlet, "P"),
+            **param_inputs(params, skip=("reaction_set", "model")),
+            **kinetic_inputs(rec, rset),
+            **extra_inputs,
+        },
+        note=f"ODE integrated over the reactor volume ({profile.n_rhs} right-hand-side evaluations)",
+    )
+    trace_extents_applied(
+        rec, n_out, n_in_ref, {f"ξ[{r.id}]": solved[f"extent_{r.id}_mol_s"] for r in rset.reactions}
+    )
+    return solved
+
+
+def _trace_closure(
+    rec: Recorder,
+    info: Mapping[str, float],
+    inlet: StreamState,
+    outlet: StreamState,
+    solved: Mapping[str, ValueRef],
+) -> None:
+    """Record the reported gaps between the closed outlet and the ODE end point."""
+    rec.equation(
+        "T_closure_gap_K",
+        info["T_closure_gap_K"],
+        "K",
+        "temperature_difference",
+        {"T_out": (outlet, "T"), "T_profile": solved["T_profile_out_K"]},
+    )
+    if "dP_Pa" in info:
+        rec.equation(
+            "dP_Pa",
+            info["dP_Pa"],
+            "Pa",
+            "pressure_difference",
+            {"P_in": (inlet, "P"), "P_out": solved["P_out_Pa"]},
+        )
+
+
 def wall_heat_model(coolant_T_K: float, U_W_m2K: float, tube_diameter_m: float) -> HeatModel:
     """Wall heat transfer to a fixed coolant temperature (spec equation 7)."""
     a_w = 4.0 / tube_diameter_m
@@ -177,6 +268,11 @@ def outlet_at_pressure(
     total = math.fsum(n_out.values())
     h_in = enthalpy_with_formation(inlet)
     t_out = _solve_outlet_T(thermo, z, total, P_out, float(inlet.T), h_in + heat_W)
+    rec = active()
+    if rec is not None:
+        trace_amounts(rec, n_out, z, total)
+        h_in_ref = trace_formation_enthalpy(rec, "H_in", h_in, inlet)
+        trace_outlet_T(rec, t_out, h_in_ref, z, total, inlet, duty_W=heat_W, extra={"P": P_out})
     return thermo.flash_pt(z, t_out, P_out, total)
 
 
@@ -296,16 +392,46 @@ class PfrR2:
             rate_multiplier=multiplier,
         )
         xi_end = list(profile.extents[-1])
-        n_out = apply_extents(inlet.component_flows(), rset, xi_end)
+        n_in = inlet.component_flows()
+        n_out = apply_extents(n_in, rset, xi_end)
         p_out = profile.P_Pa[-1]
+        rec = active()
+        solved: dict[str, ValueRef] = {}
+        if rec is not None:
+            extra: dict[str, Any] = {}
+            if "activity" in extra_info:
+                if params.get("deactivation") is None:
+                    extra["a"] = rec.default("activity", extra_info["activity"], "1", "no catalyst decay")
+                else:
+                    extra["a"] = rec.equation(
+                        "activity",
+                        extra_info["activity"],
+                        "1",
+                        "catalyst_decay",
+                        param_inputs(params["deactivation"]),
+                    )
+            method = (
+                "pfr_catalytic_bed"
+                if "activity" in extra_info
+                else ("pfr_packed_bed" if bed is not None else "pfr_design")
+            )
+            solved = _trace_profile(rec, method, inlet, n_in, n_out, rset, profile, params, extra)
         if energy == "isothermal":
-            outlet = thermo.flash_pt(z_from(n_out), float(inlet.T), p_out, math.fsum(n_out.values()))
-            duty_out = enthalpy_with_formation(outlet) - enthalpy_with_formation(inlet)
+            z, total = z_from(n_out), math.fsum(n_out.values())
+            if rec is not None:
+                trace_amounts(rec, n_out, z, total)
+            outlet = thermo.flash_pt(z, float(inlet.T), p_out, total)
+            h_in = enthalpy_with_formation(inlet)
+            duty_out = enthalpy_with_formation(outlet) - h_in
+            if rec is not None:
+                trace_reaction_duty(rec, duty_out, outlet, trace_formation_enthalpy(rec, "H_in", h_in, inlet))
         else:
             duty_out = profile.Q_W
             outlet = outlet_at_pressure(inlet, n_out, p_out, duty_out, thermo)
         info = plug_flow_info(rset, xi_end, profile, outlet, float(inlet.P))
         info.update(extra_info)
+        if rec is not None:
+            _trace_closure(rec, info, inlet, outlet, solved)
         return UnitResult(outlets={"outlet": outlet}, duty_W=duty_out, info=info)
 
     @classmethod

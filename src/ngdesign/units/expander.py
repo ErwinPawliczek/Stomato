@@ -23,6 +23,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.registry import register
 from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 
@@ -55,9 +56,29 @@ class Expander:
         z, flow = inlet.composition, inlet.molar_flow
         isentropic = thermo.flash_ps(z, P_out, inlet.entropy, flow)
         h_out = inlet.enthalpy - eta * (inlet.enthalpy - isentropic.enthalpy)
+        rec = active()
+        if rec is not None:
+            if "eta_isentropic" not in params:
+                rec.default("eta_isentropic", eta, "1", "isentropic efficiency 0.80 when not given")
+            rec.equation(
+                "h_out",
+                h_out,
+                "J/mol",
+                "isentropic_expansion",
+                {"h_in": (inlet, "enthalpy"), "h_s": (isentropic, "enthalpy"), "eta_s": eta},
+            )
         outlet = thermo.flash_ph(z, P_out, h_out, flow)
 
         power_W = flow * (outlet.enthalpy - inlet.enthalpy)  # negative: shaft power out
+        if rec is not None:
+            w = rec.equation(
+                "power_W",
+                power_W,
+                "W",
+                "shaft_power",
+                {"F": (inlet, "molar_flow"), "h_out": (outlet, "enthalpy"), "h_in": (inlet, "enthalpy")},
+            )
+            rec.equation("power_recovered_w", -power_W, "W", "unit_conversion", {"W": w})
         info: dict[str, float] = {
             "power_recovered_w": -power_W,
             "T_out": outlet.T,

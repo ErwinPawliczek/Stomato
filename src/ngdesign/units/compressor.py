@@ -18,6 +18,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.registry import register
 from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 
@@ -74,9 +75,54 @@ class Compressor:
         z, flow = inlet.composition, inlet.molar_flow
         isentropic = thermo.flash_ps(z, P_out, inlet.entropy, flow)
         h_out = inlet.enthalpy + (isentropic.enthalpy - inlet.enthalpy) / eta
+        rec = active()
+        if rec is not None:
+            if "eta_isentropic" not in params:
+                rec.default(
+                    "eta_isentropic", eta, "1", "isentropic efficiency 0.75 when not given (spec S-25)"
+                )
+            rec.equation(
+                "h_out",
+                h_out,
+                "J/mol",
+                "isentropic_compression",
+                {"h_in": (inlet, "enthalpy"), "h_s": (isentropic, "enthalpy"), "eta_s": eta},
+            )
         outlet = thermo.flash_ph(z, P_out, h_out, flow)
 
         power_W = flow * (outlet.enthalpy - inlet.enthalpy)
+        if rec is not None:
+            rec.equation(
+                "power_W",
+                power_W,
+                "W",
+                "shaft_power",
+                {"F": (inlet, "molar_flow"), "h_out": (outlet, "enthalpy"), "h_in": (inlet, "enthalpy")},
+            )
+            rec.equation(
+                "pressure_ratio",
+                P_out / inlet.P,
+                "1",
+                "pressure_ratio",
+                {"P_out": P_out, "P_in": (inlet, "P")},
+            )
+            rec.equation(
+                "polytropic_head_J_kg",
+                _polytropic_head(inlet, outlet),
+                "J/kg",
+                "polytropic_head_avg_z",
+                {
+                    "Z_in": (inlet, "vapor.z_factor"),
+                    "Z_out": (outlet, "vapor.z_factor"),
+                    "T_in": (inlet, "T"),
+                    "T_out": (outlet, "T"),
+                    "M_in": (inlet, "vapor.molecular_weight"),
+                    "M_out": (outlet, "vapor.molecular_weight"),
+                    "P_out": (outlet, "P"),
+                    "P_in": (inlet, "P"),
+                    "R": rec.constant("R", R_IDEAL, "J/(mol K)", "codata2018"),
+                },
+            )
         return UnitResult(
             outlets={"outlet": outlet},
             duty_W=0.0,

@@ -63,6 +63,7 @@ from ngdesign.contracts.thermo import (
     SaturationPoint,
 )
 from ngdesign.data import DATA_DIR, DATABANK_LOCK, component_record
+from ngdesign.provenance.thermo_hook import TracedThermo
 from ngdesign.registry import register
 from ngdesign.thermo import _state
 from ngdesign.thermo.gamma_phi import GammaPhiPackage, _constants_for
@@ -764,7 +765,7 @@ _WATER_ACTIVITY: dict[str, Callable[[float], float]] = {
 }
 
 
-class ElectrolytePackage(Thermo):
+class ElectrolytePackage(TracedThermo, Thermo):
     """Electrolyte property package over a plain-cubic carrier.
 
     Subclasses pin the model (a ``_BRINE_MODELS`` brine or ``sour_water``)

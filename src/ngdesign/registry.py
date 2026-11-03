@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import importlib
 import pkgutil
+import threading
 from collections.abc import Callable
 from typing import Any, TypeVar
 
@@ -43,6 +44,7 @@ PLUGIN_PACKAGES = (
 
 _REGISTRY: dict[str, dict[str, type]] = {k: {} for k in KINDS}
 _discovered = False
+_DISCOVER_LOCK = threading.RLock()
 
 T = TypeVar("T", bound=type)
 
@@ -72,6 +74,17 @@ def discover() -> None:
     ignore_imports lines are not allowed. The hook is the one registry-side
     seam the T-01 spec grants.
     """
+    if _discovered:
+        return
+    # Thread-safe: API handlers run in a thread pool, and two first requests racing
+    # here used to register the thermo catalogue twice - the duplicate error reset the
+    # flag and every later request failed the same way. Re-entrant: the catalogue
+    # hooks below call available() -> discover() on this thread.
+    with _DISCOVER_LOCK:
+        _discover_locked()
+
+
+def _discover_locked() -> None:
     global _discovered
     if _discovered:
         return

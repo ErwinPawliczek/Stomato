@@ -21,6 +21,7 @@ from typing import Any
 
 from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active as recorder
 from ngdesign.units.separation._util import combined_liquid, phase_outlet
 
 
@@ -82,13 +83,33 @@ class FlashDrum:
                     z_mix[cid] = z_mix.get(cid, 0.0) + x * s.molar_flow
             z_mix = {cid: x / n_in for cid, x in z_mix.items()}
             h_mix0 = h_in_W / n_in
+            mix_rec = recorder()
+            if mix_rec is not None:  # provenance: record the mix before the flash that uses it
+                _record_mix(mix_rec, active, n_in, z_mix, P_mix, h_mix0)
             T_mix = thermo.flash_ph(z_mix, P_mix, h_mix0, n_in).T
             # The outlet template must carry the MIXED flow: phase_outlet
             # scales each phase by reference.molar_flow.
             reference = feed.model_copy(update={"molar_flow": n_in, "composition": z_mix})
+            if mix_rec is not None:
+                mix_rec.derived_state(
+                    reference,
+                    "mole_balance_mixing",
+                    {"F": n_in, "z": z_mix},
+                    note="Outlet template: only its mixed flow and composition are used.",
+                )
 
+        rec = recorder()
         if duty_W is not None:
-            flashed = thermo.flash_ph(z_mix, P_out, h_mix0 + float(duty_W) / n_in, n_in)
+            h_target = h_mix0 + float(duty_W) / n_in
+            if rec is not None:
+                rec.equation(
+                    "h_out_spec",
+                    h_target,
+                    "J/mol",
+                    "enthalpy_from_duty",
+                    {"h_in": h_mix0, "Q": float(duty_W), "F": n_in},
+                )
+            flashed = thermo.flash_ph(z_mix, P_out, h_target, n_in)
         elif vapor_fraction is not None:
             flashed = thermo.flash_pvf(z_mix, P_out, float(vapor_fraction), n_in)
         else:
@@ -110,6 +131,13 @@ class FlashDrum:
             "aqueous_out": phase_outlet(thermo, reference, flashed.T, P_out, aqueous),
         }
         h_out_W = sum(s.enthalpy * s.molar_flow for s in outlets.values())
+        if rec is not None:
+            balance: dict[str, object] = {f"F_in[{i}]": (st, "molar_flow") for i, st in enumerate(active)}
+            balance.update({f"h_in[{i}]": (st, "enthalpy") for i, st in enumerate(active)})
+            for port, st in outlets.items():
+                balance[f"F[{port}]"] = (st, "molar_flow")
+                balance[f"h[{port}]"] = (st, "enthalpy")
+            rec.equation("duty_W", h_out_W - h_in_W, "W", "multi_stream_energy_balance", balance)
         return UnitResult(
             outlets=outlets,
             duty_W=h_out_W - h_in_W,
@@ -136,3 +164,28 @@ class FlashDrum:
         # exercises the multi-inlet mix (every inlet port must be fed).
         feed_2 = {**feed, "P": 5.0e6, "molar_flow": 10 * MMSCFD_TO_MOL_S}
         return {"inlet": feed, "inlet_2": feed_2}, {"outlet_P": 3.0e6, "duty_W": 5.0e5}
+
+
+def _record_mix(
+    rec: Any, active: list[StreamState], n_in: float, z_mix: dict[str, float], P_mix: float, h_mix: float
+) -> None:
+    """Provenance of the adiabatic mix of several inlets (tracing only)."""
+    flows = {f"F[{i}]": (st, "molar_flow") for i, st in enumerate(active)}
+    rec.equation("F_mix", n_in, "mol/s", "mole_balance_mixing", flows)
+    rec.equation(
+        "z_mix",
+        z_mix,
+        "1",
+        "mole_balance_mixing",
+        {**flows, **{f"z[{i}]": (st, "composition") for i, st in enumerate(active)}},
+    )
+    rec.equation(
+        "P_mix", P_mix, "Pa", "mixer_pressure", {f"P[{i}]": (st, "P") for i, st in enumerate(active)}
+    )
+    rec.equation(
+        "h_mix",
+        h_mix,
+        "J/mol",
+        "adiabatic_mixing",
+        {**flows, **{f"h[{i}]": (st, "enthalpy") for i, st in enumerate(active)}},
+    )

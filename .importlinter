@@ -24,6 +24,7 @@ layers =
     ngdesign.amine
     ngdesign.thermo
     ngdesign.contracts | ngdesign.registry
+    ngdesign.provenance
     ngdesign.data
     ngdesign.uom
 

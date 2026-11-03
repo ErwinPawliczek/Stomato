@@ -18,7 +18,27 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import Recorder, active
 from ngdesign.units._physics.heat_balance import TwoStreamSpec, two_stream
+
+
+def trace_dp_defaults(rec: Recorder, params: dict[str, Any], names: tuple[str, ...]) -> None:
+    """Record the zero pressure drops a two-stream exchanger assumes when none is given."""
+    for name in names:
+        if name not in params:
+            rec.default(name, 0.0, "Pa", f"no pressure drop unless {name} is given (spec U-C)")
+
+
+def trace_internal_duty(
+    rec: Recorder, duty: float, inlets: dict[str, StreamState], outlets: dict[str, StreamState]
+) -> None:
+    """Record the unit-level duty of an internal exchanger: the enthalpy residual
+    ``sum F_out h_out - sum F_in h_in`` (zero to round-off; the transferred heat is in info)."""
+    inputs: dict[str, Any] = {}
+    for port, state in (*inlets.items(), *outlets.items()):
+        inputs[f"F[{port}]"] = (state, "molar_flow")
+        inputs[f"h[{port}]"] = (state, "enthalpy")
+    rec.equation("duty_W", duty, "W", "multi_stream_energy_balance", inputs)
 
 
 class _TwoStreamExchanger:
@@ -33,6 +53,9 @@ class _TwoStreamExchanger:
         params: dict[str, Any],
         thermo: Thermo,
     ) -> UnitResult:
+        rec = active()
+        if rec is not None:
+            trace_dp_defaults(rec, params, ("dP_hot", "dP_cold"))
         spec = TwoStreamSpec(
             duty_W=params.get("duty_W"),
             hot_T_out=params.get("hot_T_out"),
@@ -52,6 +75,10 @@ class _TwoStreamExchanger:
         h_in = sum(s.enthalpy * s.molar_flow for s in inlets.values())
         h_out = result.hot_out.enthalpy * result.hot_out.molar_flow
         h_out += result.cold_out.enthalpy * result.cold_out.molar_flow
+        if rec is not None:
+            trace_internal_duty(
+                rec, h_out - h_in, inlets, {"hot_out": result.hot_out, "cold_out": result.cold_out}
+            )
         return UnitResult(
             outlets={"hot_out": result.hot_out, "cold_out": result.cold_out},
             duty_W=h_out - h_in,

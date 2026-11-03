@@ -1,0 +1,446 @@
+{
+ "outputs": 228,
+ "clean": 188,
+ "findings": [
+  {
+   "node": "v108",
+   "label": "S-006 T",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v109",
+   "label": "S-006 P",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v110",
+   "label": "S-006 molar_flow",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v111",
+   "label": "S-006 vapor_fraction",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v112",
+   "label": "S-006 enthalpy",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v113",
+   "label": "S-006 entropy",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v114",
+   "label": "S-006 composition",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v115",
+   "label": "S-006 hc_liquid.mole_fraction",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v116",
+   "label": "S-006 hc_liquid.density",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v117",
+   "label": "S-006 hc_liquid.molecular_weight",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v118",
+   "label": "S-006 hc_liquid.enthalpy",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v119",
+   "label": "S-006 hc_liquid.entropy",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v120",
+   "label": "S-006 hc_liquid.cp",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v121",
+   "label": "S-006 hc_liquid.composition",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v332",
+   "label": "T-101 info.equilibrium_floor_lb_per_mmscf",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v365",
+   "label": "S-007 T",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v366",
+   "label": "S-007 P",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v367",
+   "label": "S-007 molar_flow",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v368",
+   "label": "S-007 vapor_fraction",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v369",
+   "label": "S-007 enthalpy",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v370",
+   "label": "S-007 entropy",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v371",
+   "label": "S-007 composition",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v372",
+   "label": "S-007 hc_liquid.mole_fraction",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v373",
+   "label": "S-007 hc_liquid.density",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v374",
+   "label": "S-007 hc_liquid.molecular_weight",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v375",
+   "label": "S-007 hc_liquid.enthalpy",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v376",
+   "label": "S-007 hc_liquid.entropy",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v377",
+   "label": "S-007 hc_liquid.cp",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v378",
+   "label": "S-007 hc_liquid.composition",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v379",
+   "label": "S-007 aqueous.mole_fraction",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v380",
+   "label": "S-007 aqueous.density",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v381",
+   "label": "S-007 aqueous.molecular_weight",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v382",
+   "label": "S-007 aqueous.enthalpy",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v383",
+   "label": "S-007 aqueous.entropy",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v384",
+   "label": "S-007 aqueous.cp",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v385",
+   "label": "S-007 aqueous.composition",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v386",
+   "label": "T-101 duty_W",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v390",
+   "label": "T-101 info.teg_circulation_L_per_kg_water",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v396",
+   "label": "T-101 info.N_stages",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  },
+  {
+   "node": "v398",
+   "label": "T-101 info.lean_teg_water_activity",
+   "severity": "warning",
+   "reasons": [
+    "estimated value: TEG Cp_ig(T) [JOBACK]"
+   ],
+   "culprits": [
+    "v106"
+   ]
+  }
+ ]
+}

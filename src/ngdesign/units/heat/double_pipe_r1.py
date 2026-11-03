@@ -23,7 +23,10 @@ from typing import Any
 
 from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.sizing.lmtd import lmtd_counter
+from ngdesign.units._physics.heat_balance import terminal_inputs
+from ngdesign.units.heat.exchangers import trace_internal_duty
 from ngdesign.units.heat.rating import (
     DuctResult,
     FilmProps,
@@ -68,6 +71,20 @@ class _Geometry:
     R_f_inner_m2K_W: float
     R_f_outer_m2K_W: float
     roughness_m: float
+
+
+#: Geometry params the R1 model defaults when absent: (name, value, unit, note).
+_DEFAULTS: tuple[tuple[str, float, str, str], ...] = (
+    (
+        "k_wall_W_mK",
+        45.0,
+        "W/(m K)",
+        "carbon-steel wall conductivity unless k_wall_W_mK is given (spec U-R2)",
+    ),
+    ("R_f_inner_m2K_W", 0.0, "m2 K/W", "clean inner surface unless R_f_inner_m2K_W is given (spec U-R2)"),
+    ("R_f_outer_m2K_W", 0.0, "m2 K/W", "clean outer surface unless R_f_outer_m2K_W is given (spec U-R2)"),
+    ("roughness_m", 4.5e-5, "m", "commercial-steel roughness unless roughness_m is given (spec U-R2)"),
+)
 
 
 def _geometry(params: dict[str, Any]) -> _Geometry:
@@ -174,6 +191,19 @@ class DoublePipeR1:
         """Rate the exchanger at the R1 level; see the module docstring."""
         geom = _geometry(params)
         hot, cold = inlets["hot_in"], inlets["cold_in"]
+        rec = active()
+        geometry_inputs: dict[str, Any] = {}
+        if rec is not None:
+            defaulted = {
+                name: rec.default(name, value, unit, note)
+                for name, value, unit, note in _DEFAULTS
+                if name not in params
+            }
+            geometry_inputs = {
+                name: defaulted.get(name, getattr(geom, name))
+                for name in _Geometry.__dataclass_fields__
+                if name != "inner_side"
+            }
         for side, state in (("hot", hot), ("cold", cold)):
             if state.mass_flow <= 0.0:
                 raise RatingError(f"R1 rating needs both streams flowing: {side} side has zero flow")
@@ -204,6 +234,32 @@ class DoublePipeR1:
             dp_annulus = darcy_dP(d_ann.fd, geom.length_m, dh_annulus, film_h.rho_kg_m3, d_ann.v_m_s)
         dp_h, dp_c = (dp_inner, dp_annulus) if inner_hot else (dp_annulus, dp_inner)
         P_h_out, P_c_out = hot.P - dp_h, cold.P - dp_c
+        if rec is not None:
+            drops = rec.results(
+                "darcy_weisbach_duct",
+                {"dP_inner_Pa": dp_inner, "dP_annulus_Pa": dp_annulus},
+                {
+                    **geometry_inputs,
+                    "T_hot_in": (hot, "T"),
+                    "P_hot_in": (hot, "P"),
+                    "z_hot": (hot, "composition"),
+                    "F_hot": (hot, "molar_flow"),
+                    "T_cold_in": (cold, "T"),
+                    "P_cold_in": (cold, "P"),
+                    "z_cold": (cold, "composition"),
+                    "F_cold": (cold, "molar_flow"),
+                },
+                note="inlet-state film properties; Colebrook friction factor (64/Re laminar)",
+            )
+            hot_key, cold_key = (
+                ("dP_inner_Pa", "dP_annulus_Pa") if inner_hot else ("dP_annulus_Pa", "dP_inner_Pa")
+            )
+            rec.equation(
+                "P_hot_out", P_h_out, "Pa", "pressure_drop", {"P_in": (hot, "P"), "dP": drops[hot_key]}
+            )
+            rec.equation(
+                "P_cold_out", P_c_out, "Pa", "pressure_drop", {"P_in": (cold, "P"), "dP": drops[cold_key]}
+            )
         for side, p_out, drop in (("hot", P_h_out, dp_h), ("cold", P_c_out, dp_c)):
             if p_out <= 0.0:
                 raise RatingError(
@@ -245,12 +301,57 @@ class DoublePipeR1:
             )
             return u_outer * math.pi * geom.inner_OD_m * geom.length_m
 
-        rated = rate_two_stream(hot, cold, thermo, P_h_out, P_c_out, ua_of, eps_counterflow)
+        rated = rate_two_stream(
+            hot, cold, thermo, P_h_out, P_c_out, ua_of, eps_counterflow, trace_inputs=geometry_inputs
+        )
 
         a_outer = math.pi * geom.inner_OD_m * geom.length_m
         h_in = hot.enthalpy * hot.molar_flow + cold.enthalpy * cold.molar_flow
         h_out = rated.hot_out.enthalpy * rated.hot_out.molar_flow
         h_out += rated.cold_out.enthalpy * rated.cold_out.molar_flow
+        lmtd = lmtd_counter(hot.T, rated.hot_out.T, cold.T, rated.cold_out.T)
+        if rec is not None:
+            ends = terminal_inputs(hot, rated.hot_out, cold, rated.cold_out)
+            films = rec.results(
+                "gnielinski_duct_film",
+                {
+                    "h_inner_W_m2K": last["inner"].h_W_m2K,
+                    "h_annulus_W_m2K": last["annulus"].h_W_m2K,
+                    "Re_inner": last["inner"].Re,
+                    "Re_annulus": last["annulus"].Re,
+                },
+                {**geometry_inputs, **ends, "P_hot_out": P_h_out, "P_cold_out": P_c_out},
+                note="bulk-mean film properties of each side at the converged outlets",
+            )
+            area = rec.equation(
+                "A_m2", a_outer, "m2", "tube_outside_area", {"Do": geom.inner_OD_m, "L": geom.length_m}
+            )
+            ua = rec.equation(
+                "UA_W_K",
+                rated.UA_W_K,
+                "W/K",
+                "overall_conductance_tube_wall",
+                {
+                    "h_i": films["h_inner_W_m2K"],
+                    "h_o": films["h_annulus_W_m2K"],
+                    "A_o": area,
+                    "Di": geom.inner_ID_m,
+                    "k_wall": geometry_inputs["k_wall_W_mK"],
+                    "R_fi": geometry_inputs["R_f_inner_m2K_W"],
+                    "R_fo": geometry_inputs["R_f_outer_m2K_W"],
+                },
+            )
+            rec.equation("U_W_m2K", rated.UA_W_K / a_outer, "W/(m2 K)", "ua_per_area", {"UA": ua, "A": area})
+            rec.results(
+                "effectiveness_ntu",
+                {"NTU": rated.NTU, "effectiveness": rated.effectiveness},
+                {"UA": ua, "Q": rated.duty_W, **ends},
+                label="counter-current NTU and effectiveness at the converged duty",
+            )
+            rec.equation("LMTD_K", lmtd, "K", "lmtd", ends)
+            trace_internal_duty(
+                rec, h_out - h_in, inlets, {"hot_out": rated.hot_out, "cold_out": rated.cold_out}
+            )
         info: dict[str, Any] = {
             "duty_W": rated.duty_W,
             "U_W_m2K": rated.UA_W_K / a_outer,
@@ -258,7 +359,7 @@ class DoublePipeR1:
             "UA_W_K": rated.UA_W_K,
             "NTU": rated.NTU,
             "effectiveness": rated.effectiveness,
-            "LMTD_K": lmtd_counter(hot.T, rated.hot_out.T, cold.T, rated.cold_out.T),
+            "LMTD_K": lmtd,
             "h_inner_W_m2K": last["inner"].h_W_m2K,
             "h_annulus_W_m2K": last["annulus"].h_W_m2K,
             "Re_inner": last["inner"].Re,

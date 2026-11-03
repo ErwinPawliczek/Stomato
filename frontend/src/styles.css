@@ -176,6 +176,71 @@
 .badge.on { background: color-mix(in srgb, var(--ok) 20%, var(--surface)); color: color-mix(in srgb, var(--ok) 70%, var(--ink)) }
 .badge.off { background: color-mix(in srgb, var(--bad) 18%, var(--surface)); color: color-mix(in srgb, var(--bad) 70%, var(--ink)) }
 
+/* Trace view (docs/provenance.md section 8). Quality colours come from the palette so the
+   graph follows the theme; uncited stands out with a thick --bad ring. */
+.trace { display: grid; gap: 10px; min-width: 0 }
+.tr-bar { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center }
+.tr-bar .grow { flex: 1 }
+.tr-bar .btn { padding: 5px 12px }
+.tr-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: center; font-size: .85em }
+.tr-legend .tr-q { display: inline-flex; align-items: center; gap: 5px }
+.tr-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 16px; align-items: start }
+@media (max-width: 1100px) { .tr-grid { grid-template-columns: minmax(0, 1fr) } }
+.tr-canvas { --c: 10px; clip-path: var(--oct); overflow: auto; max-height: calc(100dvh - 260px); min-height: 320px; background: var(--paper) }
+.tr-svg { display: block; font-family: var(--f-body) }
+.tr-edge path { fill: none; stroke: var(--inLine); stroke-width: 1.2; opacity: .75 }
+.tr-edge text { fill: var(--muted); font-size: 9.5px; font-family: var(--f-mono); paint-order: stroke; stroke: var(--paper); stroke-width: 3px }
+.tr-edge.feedback path { stroke-dasharray: 5 4 }
+.tr-edge.on path { stroke: var(--accent2); stroke-width: 2.2; opacity: 1 }
+.tr-edge.on text { fill: var(--ink) }
+.tr-arrowhead { fill: var(--inLine) }
+.tr-node { cursor: pointer; outline: none }
+.tr-node .tr-label { fill: var(--ink); font-size: 10.5px; paint-order: stroke; stroke: var(--paper); stroke-width: 3px }
+.tr-dot { stroke: var(--ink); stroke-width: 1.2 }
+.q-cited .tr-dot { fill: var(--ok) }
+.q-user .tr-dot { fill: var(--accent2) }
+.q-estimated .tr-dot { fill: var(--warn) }
+.q-derived .tr-dot { fill: var(--surface2); stroke: var(--muted) }
+.q-uncited .tr-dot { fill: var(--surface); stroke: var(--bad); stroke-width: 3 }
+.tr-value .tr-kind { fill: var(--ink); font-size: 10px; font-weight: 700; pointer-events: none }
+.tr-value.q-uncited .tr-kind { fill: var(--bad) }
+.tr-ring { fill: none; stroke: var(--accent2); stroke-width: 2 }
+.tr-value.q-uncited .tr-ring { stroke: var(--bad); stroke-width: 3 }
+.tr-node.culprit .tr-ring { stroke: var(--bad); stroke-width: 3; stroke-dasharray: 4 3 }
+.tr-op rect { fill: var(--surface); stroke: var(--ink); stroke-width: 1.4 }
+.tr-op text { fill: var(--ink); font-size: 11px; font-weight: 600 }
+.tr-op.noref rect { stroke-dasharray: 4 3 }
+.tr-op.culprit rect { stroke: var(--bad); stroke-width: 3 }
+.tr-op.focus rect { stroke: var(--accent2); stroke-width: 2.5 }
+.tr-node.sel .tr-dot, .tr-op.sel rect { stroke: var(--accent); stroke-width: 3.5 }
+.tr-node:hover .tr-dot, .tr-op:hover rect, .tr-node:focus-visible .tr-dot, .tr-op:focus-visible rect { stroke: var(--focus); stroke-width: 3 }
+.tr-side { display: grid; gap: 16px; align-content: start; min-width: 0 }
+.tr-detail { display: grid; gap: 6px; min-width: 0; overflow-wrap: anywhere }
+.tr-detail h3 { font-size: 17px; margin: 0 }
+.tr-detail h4 { font-size: 13px; margin: 6px 0 0; color: var(--muted) }
+.tr-detail p { margin: 0 }
+.tr-big { font-family: var(--f-mono); font-size: 15px }
+.tr-scroll { max-height: 180px; overflow: auto }
+.tr-cite { --c: 6px; clip-path: var(--oct); background: var(--surface2); padding: 8px 12px; font-size: 13px }
+.tr-cite a { color: var(--accentText) }
+.tr-eq { --c: 6px; clip-path: var(--oct); background: var(--surface2); padding: 4px 10px; overflow-x: auto }
+.tr-audit { display: grid; gap: 8px }
+.tr-audit h2 { font-size: 16px }
+.tr-findings { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 420px; overflow-y: auto }
+.page.panel button.tr-finding:not(.btn):not(.stab), .tr-finding { --c: 6px; clip-path: var(--oct); display: grid; gap: 2px; width: 100%; text-align: left; padding: 6px 10px; border: 0; background: var(--surface2); color: var(--ink); font: inherit; font-size: 13px; cursor: pointer }
+.page.panel button.tr-finding[aria-pressed="true"]:not(.btn):not(.stab), .tr-finding[aria-pressed="true"] { background: color-mix(in srgb, var(--accent2) 22%, var(--surface2)) }
+.tr-finding .chip { justify-self: start; font-size: .75em; padding: 1px 8px }
+.tr-finding small { color: var(--muted) }
+/* Results numbers that open the Trace view: read as numbers, act as buttons. */
+.page.panel button.tracelink:not(.btn):not(.stab), .tracelink { all: unset; cursor: pointer; border-bottom: 1px dotted var(--muted) }
+.page.panel button.tracelink:not(.btn):not(.stab):hover, .page.panel button.tracelink:not(.btn):not(.stab):focus-visible { color: var(--accentText); border-bottom-color: currentColor }
+
+.tr-more { font-weight: 700; font-size: 15px; fill: var(--ink, currentColor); }
+.tr-node.trunc .tr-dot, .tr-node.trunc rect { stroke-dasharray: 3 2; }
+.tr-links { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 2px; }
+.tr-link { all: unset; cursor: pointer; display: block; padding: 2px 4px; border-radius: 4px; font-size: 12px; line-height: 1.35; }
+.tr-link:hover, .tr-link:focus-visible { background: rgba(0, 0, 0, 0.06); outline: 1px solid currentColor; }
+.tr-link code { font-weight: 700; margin-right: 2px; }
 /* flowsheet editor: add-equipment palette + hex-grid canvas (specs/frontend/design .fsgrid) */
 .grid > .fsgrid { grid-column: 1 / -1; overflow: visible }
 .fsgrid { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 16px; align-items: start }

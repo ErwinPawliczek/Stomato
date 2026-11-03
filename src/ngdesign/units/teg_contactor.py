@@ -49,6 +49,7 @@ from typing import Any
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import components
+from ngdesign.provenance.recorder import active
 from ngdesign.registry import register
 from ngdesign.sizing.kremser import kremser
 from ngdesign.units.teg_activity import activity_equilibrium_slope, water_activity
@@ -156,9 +157,27 @@ class TEGContactor:
         P = gas_in.P
 
         gas_comp, gas_flow = _shift_water(gas_in, -water_removed)
-        gas_out = thermo.flash_pt(gas_comp, T, P, gas_flow)
-
         rich_comp, rich_flow = _shift_water(lean_teg_in, water_removed)
+        rec = active()
+        if rec is not None:
+            _record_removal(
+                rec,
+                params,
+                gas_in,
+                lean_teg_in,
+                water_out_spec=water_out_spec,
+                y_in=y_in,
+                water_in_content=water_in_content,
+                x_water_lean=x_water_lean,
+                y_star_top=y_star_top,
+                equilibrium_floor=equilibrium_floor,
+                dry_flow=dry_flow,
+                r_in=r_in,
+                r_out=r_out,
+                water_removed=water_removed,
+                shifted=((gas_comp, gas_flow), (rich_comp, rich_flow)),
+            )
+        gas_out = thermo.flash_pt(gas_comp, T, P, gas_flow)
         rich_teg_out = thermo.flash_pt(rich_comp, T, P, rich_flow)
 
         duty_W = (
@@ -167,6 +186,23 @@ class TEGContactor:
             - gas_in.enthalpy * gas_in.molar_flow
             - lean_teg_in.enthalpy * lean_teg_in.molar_flow
         )
+        if rec is not None:
+            rec.equation(
+                "duty_W",
+                duty_W,
+                "W",
+                "multi_stream_energy_balance",
+                {
+                    "F[gas_out]": (gas_out, "molar_flow"),
+                    "h[gas_out]": (gas_out, "enthalpy"),
+                    "F[rich_teg_out]": (rich_teg_out, "molar_flow"),
+                    "h[rich_teg_out]": (rich_teg_out, "enthalpy"),
+                    "F[gas_in]": (gas_in, "molar_flow"),
+                    "h[gas_in]": (gas_in, "enthalpy"),
+                    "F[lean_teg_in]": (lean_teg_in, "molar_flow"),
+                    "h[lean_teg_in]": (lean_teg_in, "enthalpy"),
+                },
+            )
 
         return UnitResult(
             outlets={"gas_out": gas_out, "rich_teg_out": rich_teg_out},
@@ -219,6 +255,55 @@ class TEGContactor:
             x_top=x_water_lean,
         )["N_stages"]
 
+        rec = active()
+        if rec is not None:
+            mw = rec.constant("M_H2O", mw_h2o, "g/mol", "openbabel_elements")
+            rec.equation(
+                "water_removed_kg_h", water_removed_kg_h, "kg/h", "mass_flow", {"n": water_removed, "M": mw}
+            )
+            rec.equation(
+                "teg_circulation_L_per_kg_water",
+                circulation,
+                "L/kg",
+                "solvent_circulation",
+                {
+                    "F_TEG": (lean_teg_in, "molar_flow"),
+                    "M": (lean_teg_in, f"{solvent.kind}.molecular_weight"),
+                    "rho": (lean_teg_in, f"{solvent.kind}.density"),
+                    "n_H2O": water_removed,
+                    "M_H2O": mw,
+                },
+            )
+            m_ref = rec.equation(
+                "m",
+                m,
+                "1",
+                "teg_water_activity",
+                {"T": (gas_in, "T"), "P": (gas_in, "P"), "x_w": x_water_lean},
+            )
+            A_ref = rec.equation(
+                "A", A, "1", "kremser", {"L": (lean_teg_in, "molar_flow"), "m": m_ref, "G": dry_flow}
+            )
+            rec.equation(
+                "N_stages",
+                stages,
+                "1",
+                "kremser",
+                {
+                    "A": A_ref,
+                    "y_in": (gas_in, "composition"),
+                    "y_out": (gas_out, "composition"),
+                    "m": m_ref,
+                    "x_top": x_water_lean,
+                },
+            )
+            rec.equation(
+                "lean_teg_water_activity",
+                water_activity(gas_in.T, x_water_lean),
+                "1",
+                "teg_water_activity",
+                {"T": (gas_in, "T"), "x_w": x_water_lean},
+            )
         return {
             "water_removed_kg_h": water_removed_kg_h,
             "teg_circulation_L_per_kg_water": circulation,
@@ -256,3 +341,59 @@ class TEGContactor:
             },
         }
         return feeds, {}
+
+
+def _record_removal(
+    rec: Any, params: dict[str, Any], gas_in: StreamState, lean: StreamState, **v: Any
+) -> None:
+    """Provenance of the water-removal arithmetic (docs/provenance.md; tracing only)."""
+    spec = v["water_out_spec"]
+    if "water_out_lb_per_mmscf" not in params:
+        rec.default(
+            "water_out_lb_per_mmscf", spec, "lb/MMscf", "7 lb/MMscf outlet water when not given (spec S-29)"
+        )
+    mw = rec.constant("M_H2O", _water_mw(), "g/mol", "openbabel_elements")
+    std = rec.constant("lbmol_per_MMscf", LBMOL_PER_MMSCF, "lbmol/MMscf", "gpsa_std_volume")
+    y = rec.equation("y_in_H2O", v["y_in"], "1", "component_fraction", {"z": (gas_in, "composition")})
+    r_in = rec.equation("r_in", v["r_in"], "1", "mole_ratio", {"y": y})
+    rec.equation(
+        "inlet_water_lb_per_mmscf",
+        v["water_in_content"],
+        "lb/MMscf",
+        "gas_water_content",
+        {"r": r_in, "M": mw, "n_std": std},
+    )
+    x = rec.equation("x_w_lean", v["x_water_lean"], "1", "component_fraction", {"z": (lean, "composition")})
+    y_star = rec.equation(
+        "y_star_top",
+        v["y_star_top"],
+        "1",
+        "equilibrium_water_fraction",
+        {"x_w": x, "T": (gas_in, "T"), "P": (gas_in, "P")},
+    )
+    rec.equation(
+        "equilibrium_floor_lb_per_mmscf",
+        v["equilibrium_floor"],
+        "lb/MMscf",
+        "gas_water_content",
+        {"y": y_star, "M": mw, "n_std": std},
+    )
+    dry = rec.equation(
+        "dry_flow", v["dry_flow"], "mol/s", "dry_gas_flow", {"F": (gas_in, "molar_flow"), "y": y}
+    )
+    r_out = rec.equation("r_out", v["r_out"], "1", "gas_water_content", {"W": spec, "M": mw, "n_std": std})
+    removed = rec.equation(
+        "water_removed",
+        v["water_removed"],
+        "mol/s",
+        "water_removal",
+        {"F_dry": dry, "r_in": r_in, "r_out": r_out},
+    )
+    (gas_comp, gas_flow), (rich_comp, rich_flow) = v["shifted"]
+    for name, comp, flow, src in (
+        ("gas", gas_comp, gas_flow, gas_in),
+        ("rich_teg", rich_comp, rich_flow, lean),
+    ):
+        inputs = {"z": (src, "composition"), "F": (src, "molar_flow"), "n_H2O": removed}
+        rec.equation(f"{name}_out_flow", flow, "mol/s", "component_transfer", inputs)
+        rec.equation(f"{name}_out_composition", comp, "1", "component_transfer", inputs)

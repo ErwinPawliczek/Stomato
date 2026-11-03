@@ -20,8 +20,15 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.units._physics.kinetics import apply_extents
-from ngdesign.units.reactors._shared import extents_from_conversion, reaction_set_param, thermal_outlet
+from ngdesign.units.reactors._shared import (
+    extents_from_conversion,
+    reaction_set_param,
+    thermal_outlet,
+    trace_component_flows,
+    trace_extents_applied,
+)
 
 
 class ConversionReactor:
@@ -43,6 +50,25 @@ class ConversionReactor:
             rset, n_in, params["conversion"], sequential=bool(params.get("sequential", False))
         )
         n_out = apply_extents(n_in, rset, extents)
+        rec = active()
+        if rec is not None:
+            n_in_ref = trace_component_flows(rec, inlet, n_in)
+            conversion = params["conversion"]
+            sequential = bool(params.get("sequential", False))
+            refs = {
+                f"ξ[{r.id}]": rec.equation(
+                    f"extent_{r.id}",
+                    xi,
+                    "mol/s",
+                    "reaction_extent",
+                    {"X": conversion[r.id], "n_in": n_in_ref},
+                    note="conversions applied in sequence on the running amounts"
+                    if sequential
+                    else "conversion on the inlet amount of the base component",
+                )
+                for r, xi in zip(rset.reactions, extents, strict=True)
+            }
+            trace_extents_applied(rec, n_out, n_in_ref, refs)
         outlet, duty = thermal_outlet(inlet, n_out, params.get("thermal", "isothermal"), thermo)
         info = {f"extent_{reaction.id}": xi for reaction, xi in zip(rset.reactions, extents, strict=True)}
         return UnitResult(outlets={"outlet": outlet}, duty_W=duty, info=info)

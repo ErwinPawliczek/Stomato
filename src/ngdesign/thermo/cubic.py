@@ -48,6 +48,7 @@ from ngdesign.contracts.components import ComponentSet, data_definitions
 from ngdesign.contracts.thermo import PhaseProps, PropertyDerivatives, SaturationPoint
 from ngdesign.data import DATA_DIR
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
+from ngdesign.provenance.thermo_hook import TracedThermo
 from ngdesign.thermo import _state
 from ngdesign.thermo.free_water import FreeWaterPhase
 from ngdesign.thermo.liquid_density import CorrelatedDensityPhase
@@ -67,7 +68,7 @@ from ngdesign.thermo.options import (
 _CHEMSEP_CUBIC_TABLE = "ChemSep PR"
 
 
-class ThermoSurfaceMixin:
+class ThermoSurfaceMixin(TracedThermo):
     """The Thermo-protocol v2 surface shared by every property package (spec P1-01).
 
     Implements the flashes, saturation points, K-values, single-phase
@@ -112,6 +113,31 @@ class ThermoSurfaceMixin:
 
     def _flasher(self, z: dict[str, float]) -> Any:
         return self._build_flasher(_state.support_ids(z))
+
+    # -- provenance (docs/provenance.md 3.3; only called while tracing) -------
+
+    #: IPDB k_ij table the package's flasher uses (None = no binary table).
+    _trace_kij_table: str | None = None
+
+    def trace_model(self) -> str | None:
+        """Method-catalogue key of the package's model (EOS class name lookup)."""
+        from ngdesign.thermo._trace import EOS_METHOD_KEYS
+
+        eos = getattr(self, "eos", None)
+        name = getattr(eos, "__name__", None)
+        return EOS_METHOD_KEYS.get(name) if name else None
+
+    def trace_parameters(self, ids: tuple[str, ...]) -> dict[str, Any]:
+        """Cited constants and correlations of the flasher over this support."""
+        from ngdesign.thermo._trace import describe_flasher_parameters, untraced_leaf
+
+        described = describe_flasher_parameters(
+            self._build_flasher(ids), ids, self.trace_model(), self._trace_kij_table, self._slate_pseudos
+        )
+        if not isinstance(self, CubicEOS):
+            # activity-model / SAFT / K-value parameters are not reported yet: say so
+            described["leaves"].append(untraced_leaf(type(self).__name__))
+        return described
 
     def _sat_flasher(self, ids: tuple[str, ...]) -> Any:
         """FlashVL fast path when no second liquid can exist (no water in the feed)."""
@@ -218,6 +244,7 @@ class CubicEOS(ThermoSurfaceMixin):
 
     #: `thermo`-library mixture EOS class (PRMIX, SRKMIX, PR78MIX).
     eos: Any
+    _trace_kij_table = _CHEMSEP_CUBIC_TABLE
 
     def _build_flasher(self, ids: tuple[str, ...]) -> Any:
         return _flasher_for(self.eos, _CHEMSEP_CUBIC_TABLE, ids, self._slate_pseudos)

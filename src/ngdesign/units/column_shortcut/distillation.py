@@ -35,6 +35,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.units._physics.shortcut import (
     fenske_nmin,
     gilliland,
@@ -165,7 +166,9 @@ class ShortcutDistillation:
         # first pass, say) miss K in that phase's incipient composition, so
         # every K map is seeded with the feed K-values before each use.
         nmin = 0.0
+        sweeps = 0
         for _ in range(200):
+            sweeps += 1
             total_d = d_lk + d_hk + sum(d.values())
             total_b = f_total - total_d
             d_map = {**d, lk: d_lk, hk: d_hk}
@@ -215,6 +218,48 @@ class ShortcutDistillation:
         stages = gilliland(reflux, rmin, nmin)
         kr = kirkbride(z_feed[hk], z_feed[lk], xb[lk], xd[hk], total_b / total_d)
         feed_stage = kr / (1.0 + kr) * stages
+        rec = active()
+        if rec is not None:
+            # One FUG operation (Fenske fixed point on the non-key split, Underwood,
+            # Gilliland, Kirkbride); the product compositions it fixes feed the
+            # saturation-point flashes below.
+            q_ref = rec.equation("q", q, "1", "feed_quality", {"vf": (feed, "vapor_fraction")})
+            fug_inputs: dict[str, Any] = {
+                "F": (feed, "molar_flow"),
+                "z": (feed, "composition"),
+                "T_F": (feed, "T"),
+                "P_F": (feed, "P"),
+                "q": q_ref,
+                "rec_LK_D": recovery_lk,
+                "rec_HK_B": recovery_hk,
+                "P_top": p_top,
+                "P_bottom": p_bottom,
+            }
+            if params.get("R") is None:
+                fug_inputs["R_over_Rmin"] = float(params["R_over_Rmin"])
+            else:
+                fug_inputs["R"] = reflux
+            rec.results(
+                "column_shortcut",
+                {
+                    "Nmin": nmin,
+                    "theta": theta,
+                    "Rmin": rmin,
+                    "R": reflux,
+                    "N": stages,
+                    "feed_stage": feed_stage,
+                    "kirkbride_ratio": kr,
+                    "D_molar_flow": total_d,
+                    "B_molar_flow": total_b,
+                    "x_D": xd,
+                    "x_B": xb,
+                },
+                fug_inputs,
+                iterations=sweeps,
+                note="relative volatilities from the package's bubble/dew-point K-values "
+                f"(geometric mean of top and bottom); non-key split by Fenske at Nmin, {sweeps} sweeps",
+            )
+            rec.equation("F_basis", 1.0, "mol/s", "unit_basis", {})
 
         # 5. Outlets and duties.
         t_sat_vap, _ = _dew_k(thermo, xd, p_top)
@@ -230,6 +275,38 @@ class ShortcutDistillation:
         h_in = feed.molar_flow * feed.enthalpy
         h_out = total_d * distillate.enthalpy + total_b * bottoms.enthalpy
         duty_reboiler_w = (h_out - h_in) + duty_condenser_w
+        if rec is not None:
+            q_c = rec.equation(
+                "duty_condenser_W",
+                duty_condenser_w,
+                "W",
+                "condenser_duty",
+                {
+                    "h_V": h_top_vap,
+                    "h_L": h_top_liq,
+                    "R": reflux,
+                    "D": total_d,
+                },
+                note=f"{condenser} condenser",
+            )
+            q_r = rec.equation(
+                "duty_reboiler_W",
+                duty_reboiler_w,
+                "W",
+                "column_energy_balance",
+                {
+                    "F": (feed, "molar_flow"),
+                    "h_F": (feed, "enthalpy"),
+                    "D": (distillate, "molar_flow"),
+                    "h_D": (distillate, "enthalpy"),
+                    "B": (bottoms, "molar_flow"),
+                    "h_B": (bottoms, "enthalpy"),
+                    "Q_C": q_c,
+                },
+            )
+            rec.equation(
+                "duty_W", duty_reboiler_w - duty_condenser_w, "W", "column_net_duty", {"Q_R": q_r, "Q_C": q_c}
+            )
         info = {
             "Nmin": nmin,
             "Rmin": rmin,

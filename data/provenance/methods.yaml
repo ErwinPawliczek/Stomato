@@ -1,0 +1,644 @@
+# Method catalogue for calculation provenance (docs/provenance.md section 4).
+#
+# Every operation node in a trace names one of these keys. `references` is the literature
+# for the method (first = the defining one); `structural: true` marks bookkeeping
+# operations (copying a value, assembling a parameter set) that need no reference.
+# An operation whose key is missing here, or that has no reference and is not
+# structural, is flagged by the audit.
+
+# ---------------------------------------------------------------- structural
+identity:
+  name: Reported value
+  latex: 'y = x'
+  structural: true
+parameter_set:
+  name: Model parameter set
+  structural: true
+tear_stream:
+  name: Tear stream guess
+  structural: true
+not_applicable:
+  name: Not applicable to this unit model
+  latex: '0'
+  structural: true
+unrecorded:
+  name: Unrecorded calculation
+  # deliberately no reference: the audit flags every value this produces
+
+unit_conversion:
+  name: Unit conversion
+  latex: 'y = c\,x + d'
+  references:
+    - source: bipm_si
+      citation: "Bureau International des Poids et Mesures, The International System of Units (SI), 9th ed., 2019."
+      url: https://www.bipm.org/en/publications/si-brochure
+
+# ---------------------------------------------------------------- equations of state
+peng_robinson_1976:
+  name: Peng-Robinson EOS
+  latex: 'P = \frac{RT}{v-b} - \frac{a\,\alpha(T)}{v(v+b)+b(v-b)},\quad \alpha = \left[1+\kappa\left(1-\sqrt{T/T_c}\right)\right]^2'
+  references:
+    - source: peng_robinson_1976
+      citation: "Peng, D.-Y. and Robinson, D.B., A New Two-Constant Equation of State, Ind. Eng. Chem. Fundam. 15(1), 1976, 59-64."
+      doi: 10.1021/i160057a011
+peng_robinson_1978:
+  name: Peng-Robinson 1978 EOS
+  latex: 'P = \frac{RT}{v-b} - \frac{a\,\alpha(T)}{v(v+b)+b(v-b)},\quad \kappa_{\omega>0.491} = 0.379642 + 1.48503\,\omega - 0.164423\,\omega^2 + 0.016666\,\omega^3'
+  references:
+    - source: robinson_peng_1978
+      citation: "Robinson, D.B. and Peng, D.-Y., The Characterization of the Heptanes and Heavier Fractions for the GPA Peng-Robinson Programs, GPA Research Report RR-28, 1978."
+    - source: peng_robinson_1976
+      citation: "Peng, D.-Y. and Robinson, D.B., A New Two-Constant Equation of State, Ind. Eng. Chem. Fundam. 15(1), 1976, 59-64."
+      doi: 10.1021/i160057a011
+soave_redlich_kwong_1972:
+  name: Soave-Redlich-Kwong EOS
+  latex: 'P = \frac{RT}{v-b} - \frac{a\,\alpha(T)}{v(v+b)}'
+  references:
+    - source: soave_1972
+      citation: "Soave, G., Equilibrium Constants from a Modified Redlich-Kwong Equation of State, Chem. Eng. Sci. 27(6), 1972, 1197-1203."
+      doi: 10.1016/0009-2509(72)80096-4
+nrtl_1968:
+  name: NRTL activity model
+  latex: '\frac{G^E}{RT} = \sum_i x_i \frac{\sum_j \tau_{ji} G_{ji} x_j}{\sum_k G_{ki} x_k},\quad G_{ji} = e^{-\alpha_{ji}\tau_{ji}}'
+  references:
+    - source: renon_prausnitz_1968
+      citation: "Renon, H. and Prausnitz, J.M., Local Compositions in Thermodynamic Excess Functions for Liquid Mixtures, AIChE J. 14(1), 1968, 135-144."
+      doi: 10.1002/aic.690140124
+
+# ---------------------------------------------------------------- flash and property calls
+flash_pt:
+  name: PT flash
+  latex: '\sum_i \frac{z_i (K_i - 1)}{1 + \beta (K_i - 1)} = 0,\quad K_i = \hat\varphi_i^L/\hat\varphi_i^V'
+  references:
+    - source: michelsen_1982b
+      citation: "Michelsen, M.L., The Isothermal Flash Problem. Part II. Phase-Split Calculation, Fluid Phase Equilib. 9(1), 1982, 21-40."
+      doi: 10.1016/0378-3812(82)85002-4
+    - source: michelsen_1982a
+      citation: "Michelsen, M.L., The Isothermal Flash Problem. Part I. Stability, Fluid Phase Equilib. 9(1), 1982, 1-19."
+      doi: 10.1016/0378-3812(82)85001-2
+    - source: rachford_rice_1952
+      citation: "Rachford, H.H. and Rice, J.D., Procedure for Use of Electronic Digital Computers in Calculating Flash Vaporization Hydrocarbon Equilibrium, J. Pet. Technol. 4(10), 1952, 19-3."
+      doi: 10.2118/952327-G
+flash_ph:
+  name: PH flash
+  latex: 'h(T, P, \mathbf{z}) = h_\mathrm{spec}\ \text{solved for}\ T'
+  references:
+    - source: michelsen_1999
+      citation: "Michelsen, M.L., State Function Based Flash Specifications, Fluid Phase Equilib. 158-160, 1999, 617-626."
+      doi: 10.1016/S0378-3812(99)00092-8
+    - source: michelsen_1982b
+      citation: "Michelsen, M.L., The Isothermal Flash Problem. Part II. Phase-Split Calculation, Fluid Phase Equilib. 9(1), 1982, 21-40."
+      doi: 10.1016/0378-3812(82)85002-4
+flash_ps:
+  name: PS flash
+  latex: 's(T, P, \mathbf{z}) = s_\mathrm{spec}\ \text{solved for}\ T'
+  references:
+    - source: michelsen_1999
+      citation: "Michelsen, M.L., State Function Based Flash Specifications, Fluid Phase Equilib. 158-160, 1999, 617-626."
+      doi: 10.1016/S0378-3812(99)00092-8
+flash_tvf:
+  name: T-vapour-fraction flash
+  latex: '\beta(T, P, \mathbf{z}) = \beta_\mathrm{spec}\ \text{solved for}\ P'
+  references:
+    - source: michelsen_1980
+      citation: "Michelsen, M.L., Calculation of Phase Envelopes and Critical Points for Multicomponent Mixtures, Fluid Phase Equilib. 4(1-2), 1980, 1-10."
+      doi: 10.1016/0378-3812(80)80001-X
+flash_pvf:
+  name: P-vapour-fraction flash
+  latex: '\beta(T, P, \mathbf{z}) = \beta_\mathrm{spec}\ \text{solved for}\ T'
+  references:
+    - source: michelsen_1980
+      citation: "Michelsen, M.L., Calculation of Phase Envelopes and Critical Points for Multicomponent Mixtures, Fluid Phase Equilib. 4(1-2), 1980, 1-10."
+      doi: 10.1016/0378-3812(80)80001-X
+bubble_point:
+  name: Bubble point
+  latex: '\sum_i z_i K_i = 1'
+  references:
+    - source: michelsen_1980
+      citation: "Michelsen, M.L., Calculation of Phase Envelopes and Critical Points for Multicomponent Mixtures, Fluid Phase Equilib. 4(1-2), 1980, 1-10."
+      doi: 10.1016/0378-3812(80)80001-X
+dew_point:
+  name: Dew point
+  latex: '\sum_i z_i / K_i = 1'
+  references:
+    - source: michelsen_1980
+      citation: "Michelsen, M.L., Calculation of Phase Envelopes and Critical Points for Multicomponent Mixtures, Fluid Phase Equilib. 4(1-2), 1980, 1-10."
+      doi: 10.1016/0378-3812(80)80001-X
+k_values:
+  name: K-values from a PT flash
+  latex: 'K_i = y_i / x_i'
+  references:
+    - source: michelsen_1982b
+      citation: "Michelsen, M.L., The Isothermal Flash Problem. Part II. Phase-Split Calculation, Fluid Phase Equilib. 9(1), 1982, 21-40."
+      doi: 10.1016/0378-3812(82)85002-4
+phase_props:
+  name: Single-phase properties
+  latex: 'h = h^{ig}(T) + h^{dep}(T, P, \mathbf{x})'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 6 (residual properties)."
+derivatives:
+  name: Fugacity-coefficient derivatives
+  latex: '\partial \ln\hat\varphi_i / \partial T,\ \partial \ln\hat\varphi_i / \partial P'
+  references:
+    - source: michelsen_mollerup_2007
+      citation: "Michelsen, M.L. and Mollerup, J.M., Thermodynamic Models: Fundamentals and Computational Aspects, 2nd ed., Tie-Line Publications, 2007."
+pure_psat:
+  name: Pure-component vapour pressure
+  latex: 'P^{sat}_i(T)'
+  structural: true  # the cited correlation is the parameter leaf feeding this operation
+
+# ---------------------------------------------------------------- flowsheet solving
+tear_wegstein:
+  name: Tear stream converged (bounded Wegstein)
+  latex: 'x_{k+1} = q\,x_k + (1-q)\,g(x_k),\quad q = \frac{s}{s-1},\ s = \frac{g(x_k)-g(x_{k-1})}{x_k - x_{k-1}}'
+  references:
+    - source: wegstein_1958
+      citation: "Wegstein, J.H., Accelerating Convergence of Iterative Processes, Commun. ACM 1(6), 1958, 9-13."
+      doi: 10.1145/368861.368871
+tear_broyden:
+  name: Tear stream converged (Broyden)
+  latex: 'x_{k+1} = x_k - H_k\,f(x_k),\quad f(x) = g(x) - x'
+  references:
+    - source: broyden_1965
+      citation: "Broyden, C.G., A Class of Methods for Solving Nonlinear Simultaneous Equations, Math. Comp. 19(92), 1965, 577-593."
+      doi: 10.1090/S0025-5718-1965-0198670-6
+tear_direct:
+  name: Tear stream converged (direct substitution)
+  latex: 'x_{k+1} = g(x_k)'
+  references:
+    - source: westerberg_1979
+      citation: "Westerberg, A.W., Hutchison, H.P., Motard, R.L. and Winter, P., Process Flowsheeting, Cambridge University Press, 1979."
+
+# ---------------------------------------------------------------- balances (unit operations)
+steady_flow_energy_balance:
+  name: Steady-flow energy balance
+  latex: '\dot Q = F\,(h_\mathrm{out} - h_\mathrm{in})'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 2 (energy balances for steady-state flow processes)."
+multi_stream_energy_balance:
+  name: Steady-flow energy balance (several outlets)
+  latex: '\dot Q = \sum_j F_j h_j - F_\mathrm{in} h_\mathrm{in}'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 2 (energy balances for steady-state flow processes)."
+enthalpy_from_duty:
+  name: Outlet enthalpy from specified duty
+  latex: 'h_\mathrm{out} = h_\mathrm{in} + \dot Q / F'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 2 (energy balances for steady-state flow processes)."
+adiabatic_mixing:
+  name: Adiabatic mixing (energy balance)
+  latex: 'h_\mathrm{mix} = \frac{\sum_i F_i h_i}{\sum_i F_i}'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 2 (energy balances for steady-state flow processes)."
+mole_balance_mixing:
+  name: Component mole balance (mixing)
+  latex: 'F = \sum_i F_i,\quad z_j = \frac{\sum_i F_i z_{ij}}{F}'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (material balances)."
+mixer_pressure:
+  name: Mixer outlet pressure = lowest inlet pressure
+  latex: 'P_\mathrm{out} = \min_i P_i'
+  structural: true
+split_fraction:
+  name: Stream split
+  latex: 'F_k = s_k\,F_\mathrm{in}'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (material balances)."
+pressure_drop:
+  name: Specified pressure drop
+  latex: 'P_\mathrm{out} = P_\mathrm{in} - \Delta P'
+  structural: true
+phase_split:
+  name: Equilibrium phase split into outlets
+  latex: 'F_k = \beta_k F,\quad \mathbf{x}_k = \mathbf{x}^{(k)}'
+  references:
+    - source: michelsen_1982b
+      citation: "Michelsen, M.L., The Isothermal Flash Problem. Part II. Phase-Split Calculation, Fluid Phase Equilib. 9(1), 1982, 21-40."
+      doi: 10.1016/0378-3812(82)85002-4
+isentropic_compression:
+  name: Isentropic efficiency (compressor)
+  latex: 'h_\mathrm{out} = h_\mathrm{in} + \frac{h_s(P_\mathrm{out}, s_\mathrm{in}) - h_\mathrm{in}}{\eta_s}'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 7 (compression processes)."
+isentropic_expansion:
+  name: Isentropic efficiency (expander/turbine)
+  latex: 'h_\mathrm{out} = h_\mathrm{in} + \eta_s\,\left(h_s(P_\mathrm{out}, s_\mathrm{in}) - h_\mathrm{in}\right)'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 7 (turbines/expanders)."
+shaft_power:
+  name: Shaft power from enthalpy change
+  latex: '\dot W = F\,(h_\mathrm{out} - h_\mathrm{in})'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 7 (compression processes)."
+pump_hydraulic_power:
+  name: Pump shaft power (incompressible liquid)
+  latex: '\dot W = \frac{Q\,\Delta P}{\eta},\quad Q = \dot m / \rho'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 7 (pumps)."
+volumetric_flow:
+  name: Volumetric flow
+  latex: 'Q = \dot m / \rho'
+  structural: true
+pump_head:
+  name: Pump head
+  latex: 'H = \frac{\Delta P}{\rho\,g_n}'
+  references:
+    - source: bipm_si
+      citation: "Bureau International des Poids et Mesures, The International System of Units (SI), 9th ed., 2019 (standard acceleration of gravity g_n = 9.80665 m/s2)."
+      url: https://www.bipm.org/en/publications/si-brochure
+pressure_ratio:
+  name: Pressure ratio
+  latex: 'r = P_\mathrm{out} / P_\mathrm{in}'
+  structural: true
+isenthalpic_expansion:
+  name: Isenthalpic (Joule-Thomson) expansion
+  latex: 'h_\mathrm{out} = h_\mathrm{in}'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 7 (throttling processes)."
+temperature_difference:
+  name: Temperature change
+  latex: '\Delta T = T_\mathrm{out} - T_\mathrm{in}'
+  structural: true
+lmtd:
+  name: Log-mean temperature difference
+  latex: '\Delta T_\mathrm{lm} = \frac{\Delta T_1 - \Delta T_2}{\ln(\Delta T_1/\Delta T_2)}'
+  references:
+    - source: kern_1950
+      citation: "Kern, D.Q., Process Heat Transfer, McGraw-Hill, 1950, ch. 5."
+ua_from_duty:
+  name: Overall conductance from duty
+  latex: 'UA = \dot Q / (F_t\,\Delta T_\mathrm{lm})'
+  references:
+    - source: kern_1950
+      citation: "Kern, D.Q., Process Heat Transfer, McGraw-Hill, 1950, ch. 5."
+
+# ---------------------------------------------------------------- reactions
+reaction_extent:
+  name: Reaction extent from conversion
+  latex: '\xi = X\,F_{\mathrm{key,in}} / |\nu_\mathrm{key}|,\quad F_{i,\mathrm{out}} = F_{i,\mathrm{in}} + \sum_r \nu_{ir}\,\xi_r'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006, ch. 2-3 (conversion and stoichiometry)."
+gibbs_minimization:
+  name: Gibbs energy minimization
+  latex: '\min_{\mathbf{n}} G = \sum_i n_i \mu_i\ \ \text{s.t.}\ \ A\mathbf{n} = \mathbf{b}'
+  references:
+    - source: white_johnson_dantzig_1958
+      citation: "White, W.B., Johnson, S.M. and Dantzig, G.B., Chemical Equilibrium in Complex Mixtures, J. Chem. Phys. 28(5), 1958, 751-755."
+      doi: 10.1063/1.1744264
+equilibrium_constant:
+  name: Equilibrium constant from Gibbs energy of reaction
+  latex: 'K = \exp\left(-\Delta_r G^\circ / RT\right)'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 13 (chemical-reaction equilibria)."
+cstr_design:
+  name: CSTR design equation
+  latex: 'F_{i,\mathrm{out}} = F_{i,\mathrm{in}} + V\sum_r \nu_{ir} r_r(\mathbf{c}_\mathrm{out}, T)'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006, ch. 1-2 (mole balances)."
+pfr_design:
+  name: PFR design equation
+  latex: '\frac{dF_i}{dV} = \sum_r \nu_{ir} r_r'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006, ch. 1-2 (mole balances)."
+yield_shift:
+  name: Specified product yields
+  latex: 'F_{i,\mathrm{out}} = Y_i\,F_\mathrm{basis}'
+  structural: true
+component_flows:
+  name: Component molar flows
+  latex: 'n_i = F\,z_i'
+  structural: true
+mole_fractions:
+  name: Mole fractions from component flows
+  latex: 'F = \sum_i n_i,\quad z_i = n_i / F'
+  structural: true
+reaction_stoichiometry:
+  name: Component balance with reaction extents
+  latex: 'n_{i,\mathrm{out}} = n_{i,\mathrm{in}} + \sum_j \nu_{ij}\,\xi_j'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (balances on reactive systems, extent of reaction)."
+formation_enthalpy_basis:
+  name: Stream enthalpy on the element (heat-of-formation) reference
+  latex: '\dot H = F\left(h + \sum_i z_i\,\Delta_f H^\circ_{i,298}\right)'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 9 (balances on reactive processes, heat-of-formation method)."
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 4 (heat effects; standard heat of formation)."
+reaction_energy_balance:
+  name: Reactor energy balance (heat-of-formation method)
+  latex: '\dot Q = \dot H_\mathrm{out} - \dot H_\mathrm{in} - \dot W'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 9 (balances on reactive processes, heat-of-formation method)."
+reactor_outlet_temperature:
+  name: Reactor outlet temperature from the energy balance
+  latex: '\dot H_\mathrm{out}(T_\mathrm{out}) = \dot H_\mathrm{in} + \dot Q + \dot W\ \text{solved for}\ T_\mathrm{out}'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 9 (balances on reactive processes; adiabatic reaction temperature)."
+reaction_equilibrium_extents:
+  name: Equilibrium extents (ideal-gas mass-action law)
+  latex: '\prod_i \left(\frac{y_i(\boldsymbol\xi)\,P}{P^\circ}\right)^{\nu_{ij}} = K_j(T)\quad \forall j'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 13 (chemical-reaction equilibria; multireaction equilibria)."
+conversion_from_extent:
+  name: Fractional conversion of the base component
+  latex: 'X = |\nu_\mathrm{base}|\,\xi / n_\mathrm{base,in}'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (fractional conversion and extent of reaction)."
+pfr_packed_bed:
+  name: Packed-bed PFR (mole, energy and Ergun momentum balances)
+  latex: '\frac{dF_i}{dV} = \sum_r \nu_{ir} r_r,\quad \frac{dP}{dz} = -\frac{G}{\rho D_p}\frac{1-\phi}{\phi^3}\left[\frac{150(1-\phi)\mu}{D_p} + 1.75\,G\right]'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006 (packed-bed reactors: mole balance, Ergun pressure drop, heat exchange)."
+    - source: ergun_1952
+      citation: "Ergun, S., Fluid Flow through Packed Columns, Chem. Eng. Prog. 48(2), 1952, 89-94."
+pfr_catalytic_bed:
+  name: Packed-bed PFR with pellet effectiveness and catalyst activity
+  latex: '\frac{dF_i}{dV} = a\sum_r \nu_{ir}\,\eta_r\,r_r,\quad \eta = \frac{\tanh\phi}{\phi}'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006 (packed-bed reactors, internal effectiveness factor, catalyst deactivation)."
+    - source: thiele_1939
+      citation: "Thiele, E.W., Relation between Catalytic Activity and Size of Particle, Ind. Eng. Chem. 31(7), 1939, 916-920."
+    - source: ergun_1952
+      citation: "Ergun, S., Fluid Flow through Packed Columns, Chem. Eng. Prog. 48(2), 1952, 89-94."
+catalyst_decay:
+  name: Catalyst activity (power-law decay)
+  latex: '\frac{da}{dt} = -k_d\,a^m \Rightarrow a = \left[1 + (m-1)k_d t\right]^{1/(1-m)}\ (m \neq 1),\ a = e^{-k_d t}\ (m = 1)'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006 (catalyst deactivation, separable kinetics)."
+pressure_difference:
+  name: Pressure difference
+  latex: '\Delta P = P_\mathrm{in} - P_\mathrm{out}'
+  structural: true
+equilibrium_approach:
+  name: Temperature approach to equilibrium
+  latex: 'T_\mathrm{eq} = T_\mathrm{out} - \Delta T_\mathrm{approach}'
+  structural: true
+equilibrium_polynomial:
+  name: User equilibrium-constant polynomial
+  latex: '\ln K = \sum_k a_k\,T^k'
+  structural: true  # the coefficients are the user's reaction-set inputs
+
+# ---------------------------------------------------------------- columns
+column_inside_out:
+  name: Rigorous column (inside-out)
+  latex: '\text{MESH: } L_j x_{ij} + V_j y_{ij} = \ldots,\ y_{ij} = K_{ij} x_{ij},\ \sum x = \sum y = 1,\ H_j\ \text{balance}'
+  references:
+    - source: boston_sullivan_1974
+      citation: "Boston, J.F. and Sullivan, S.L., A New Class of Solution Methods for Multicomponent, Multistage Separation Processes, Can. J. Chem. Eng. 52(1), 1974, 52-63."
+      doi: 10.1002/cjce.5450520108
+    - source: naphtali_sandholm_1971
+      citation: "Naphtali, L.M. and Sandholm, D.P., Multicomponent Separation Calculations by Linearization, AIChE J. 17(1), 1971, 148-153."
+      doi: 10.1002/aic.690170130
+column_shortcut:
+  name: Shortcut column (Fenske-Underwood-Gilliland)
+  latex: 'N_\mathrm{min} = \frac{\ln\left[(x_{LK}/x_{HK})_D (x_{HK}/x_{LK})_B\right]}{\ln \alpha_{LK,HK}}'
+  references:
+    - source: fenske_1932
+      citation: "Fenske, M.R., Fractionation of Straight-Run Pennsylvania Gasoline, Ind. Eng. Chem. 24(5), 1932, 482-485."
+      doi: 10.1021/ie50269a003
+    - source: underwood_1948
+      citation: "Underwood, A.J.V., Fractional Distillation of Multicomponent Mixtures, Chem. Eng. Prog. 44(8), 1948, 603-614."
+    - source: gilliland_1940
+      citation: "Gilliland, E.R., Multicomponent Rectification: Estimation of the Number of Theoretical Plates as a Function of the Reflux Ratio, Ind. Eng. Chem. 32(9), 1940, 1220-1223."
+      doi: 10.1021/ie50369a035
+
+# ---------------------------------------------------------------- unit-specific helpers
+polytropic_head_avg_z:
+  name: Polytropic head (average-Z approximation)
+  latex: 'H_p = \bar Z\,\frac{R\,\bar T}{\bar M}\,\ln\frac{P_\mathrm{out}}{P_\mathrm{in}}'
+  references:
+    - source: schultz_1962
+      citation: "Schultz, J.M., The Polytropic Analysis of Centrifugal Compressors, J. Eng. Power 84(1), 1962, 69-82."
+      doi: 10.1115/1.3673381
+mass_flow:
+  name: Mass flow from molar flow
+  latex: '\dot m = F \sum_k \beta_k M_k / 1000'
+  structural: true
+component_fraction:
+  name: Component mole fraction
+  latex: 'y_i = z_i'
+  structural: true
+mole_ratio:
+  name: Mole fraction to mole ratio
+  latex: 'r = y / (1 - y)'
+  structural: true
+dry_gas_flow:
+  name: Dry-gas molar flow
+  latex: 'F_\mathrm{dry} = F\,(1 - y_\mathrm{H_2O})'
+  structural: true
+gas_water_content:
+  name: Gas water content (GPSA standard-volume convention)
+  latex: 'W = r\,M_\mathrm{H_2O}\,\frac{10^6}{379.49}\ \mathrm{lb/MMscf}'
+  references:
+    - source: gpsa_water_content
+      citation: "GPSA Engineering Data Book (Gas Processors Suppliers Association), water content of natural gas in lb per MMscf at the 379.49 scf/lbmol standard volume (60 F, 14.696 psia), as adopted by spec S-29; the edition is not recorded in the code."
+teg_water_activity:
+  name: TEG water activity (Parrish-Won-Baltatu)
+  latex: 'm = \gamma_w(T, x_w)\,P^{sat}_\mathrm{H_2O}(T) / P,\quad a_w = \gamma_w x_w'
+  references:
+    - source: parrish_won_baltatu_1986
+      citation: "Parrish, W.R., Won, K.W. and Baltatu, M.E., Phase Behavior of the Triethylene Glycol-Water System and Dehydration/Regeneration Design for Extremely Low Dew Point Requirements, Proc. 65th GPA Annual Convention, 1986."
+    - source: filep_2022
+      citation: "Filep, A., Todinca, T. and Dumitrel, A., Chem. Biochem. Eng. Q. 36(1), 2022, 25-38, eqs. 12-17 (parameterization used)."
+    - source: iapws95
+      citation: "Wagner, W. and Pruss, A., The IAPWS Formulation 1995 for the Thermodynamic Properties of Ordinary Water Substance for General and Scientific Use, J. Phys. Chem. Ref. Data 31(2), 2002, 387-535 (water saturation pressure via chemicals)."
+      doi: 10.1063/1.1461829
+equilibrium_water_fraction:
+  name: Equilibrium gas water fraction at the lean end
+  latex: 'y^* = m\,x_w'
+  structural: true
+water_removal:
+  name: Water removed (dry-basis balance)
+  latex: '\dot n_\mathrm{H_2O} = F_\mathrm{dry}\,(r_\mathrm{in} - r_\mathrm{out})'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (material balances)."
+component_transfer:
+  name: Component balance with one transferred species
+  latex: 'n_{\mathrm{H_2O},\mathrm{out}} = n_{\mathrm{H_2O},\mathrm{in}} \pm \dot n,\quad z_i = n_i / \sum_j n_j'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (material balances)."
+solvent_circulation:
+  name: Solvent circulation per unit water removed
+  latex: 'c = \frac{F_\mathrm{TEG} M / \rho}{\dot m_\mathrm{H_2O}}'
+  structural: true
+kremser:
+  name: Kremser equation (stage count)
+  latex: 'N = \frac{\ln\left[\frac{y_\mathrm{in} - m x_\mathrm{top}}{y_\mathrm{out} - m x_\mathrm{top}}\left(1 - \frac1A\right) + \frac1A\right]}{\ln A},\quad A = \frac{L}{m G}'
+  references:
+    - source: treybal_1980
+      citation: "Treybal, R.E., Mass-Transfer Operations, 3rd ed., McGraw-Hill, 1980, sec. 5 (Kremser equation), as cited in ngdesign.sizing.kremser."
+design_spec_secant:
+  name: Design specification (bounded secant / Brent)
+  latex: 'u_{k+1} = u_k - f(u_k)\,\frac{u_k - u_{k-1}}{f(u_k) - f(u_{k-1})},\quad f(u) = y(u) - y_\mathrm{spec}'
+  references:
+    - source: biegler_1997
+      citation: "Biegler, L.T., Grossmann, I.E. and Westerberg, A.W., Systematic Methods of Chemical Process Design, Prentice Hall, 1997, ch. 8 (design specifications)."
+    - source: brent_1973
+      citation: "Brent, R.P., Algorithms for Minimization without Derivatives, Prentice-Hall, 1973."
+design_spec_broyden:
+  name: Design specifications (bounded Broyden)
+  latex: '\mathbf{u}_{k+1} = \mathbf{u}_k - J_k^{-1}\,\mathbf{f}(\mathbf{u}_k)'
+  references:
+    - source: biegler_1997
+      citation: "Biegler, L.T., Grossmann, I.E. and Westerberg, A.W., Systematic Methods of Chemical Process Design, Prentice Hall, 1997, ch. 8 (design specifications)."
+    - source: broyden_1965
+      citation: "Broyden, C.G., A Class of Methods for Solving Nonlinear Simultaneous Equations, Math. Comp. 19(92), 1965, 577-593."
+      doi: 10.1090/S0025-5718-1965-0198670-6
+
+# ---------------------------------------------------------------- columns (unit instrumentation)
+column_energy_balance:
+  name: Column overall energy balance (reboiler duty)
+  latex: '\dot Q_R = \sum_\mathrm{out} F h - \sum_\mathrm{in} F h + \dot Q_C - \sum \dot Q_\mathrm{aux}'
+  references:
+    - source: seader_henley_roper_2011
+      citation: "Seader, J.D., Henley, E.J. and Roper, D.K., Separation Process Principles, 3rd ed., Wiley, 2011 (overall column energy balance)."
+column_net_duty:
+  name: Net column duty
+  latex: '\dot Q = \dot Q_R - \dot Q_C + \sum \dot Q_\mathrm{aux}'
+  structural: true
+condenser_duty:
+  name: Condenser duty from condensing the overhead vapour
+  latex: '\dot Q_C = (h_V - h_L)\,V,\quad V = (R + 1)\,D\ \text{(total)},\ R\,D\ \text{(partial)}'
+  references:
+    - source: seader_henley_roper_2011
+      citation: "Seader, J.D., Henley, E.J. and Roper, D.K., Separation Process Principles, 3rd ed., Wiley, 2011 (condenser and reboiler duties)."
+feed_quality:
+  name: Feed thermal condition
+  latex: 'q = 1 - \beta_F'
+  structural: true
+unit_basis:
+  name: Per-mole calculation basis
+  latex: 'F = 1\ \mathrm{mol/s}'
+  structural: true
+spec_code:
+  name: Specification identifier (categorical code)
+  structural: true
+component_recovery:
+  name: Component recovery in a product
+  latex: 'r_i = \frac{F_\mathrm{out}\,z_{i,\mathrm{out}}}{F\,z_i}'
+  structural: true
+relative_residual:
+  name: Relative residual
+  latex: '\epsilon = |r| / \max(|a|, |b|, 1)'
+  structural: true
+kremser_split:
+  name: Kremser group method (two-feed split per component)
+  latex: '\phi(A, N) = \frac{A^{N+1} - A}{A^{N+1} - 1},\quad A_i = \frac{L}{K_i V},\ S_i = \frac{K_i V}{L},\quad v_{i,\mathrm{out}} = g_i\left[1 - \phi(A_i)\right] + l_i\,\phi(S_i)'
+  references:
+    - source: seader_henley_roper_2011
+      citation: "Seader, J.D., Henley, E.J. and Roper, D.K., Separation Process Principles, 3rd ed., Wiley, 2011, eqs. (5-48), (5-50), (5-54), (5-55), as cited in ngdesign.units.column_shortcut._kremser."
+    - source: treybal_1980
+      citation: "Treybal, R.E., Mass-Transfer Operations, 3rd ed., McGraw-Hill, 1980, sec. 5 (Kremser equation), as cited in ngdesign.sizing.kremser."
+average_condition:
+  name: Arithmetic mean of the inlet conditions
+  latex: '\bar x = (x_1 + x_2)/2'
+  structural: true
+
+# ---------------------------------------------------------------- heat exchangers (unit instrumentation)
+composite_curve_approach:
+  name: Minimum internal temperature approach (zoned composite curves)
+  latex: '\Delta T_\mathrm{min} = \min_Q \left[T_\mathrm{hot}(Q) - T_\mathrm{cold}(Q)\right]'
+  references:
+    - source: kemp_2007
+      citation: "Kemp, I.C., Pinch Analysis and Process Integration: A User Guide on Process Integration for the Efficient Use of Energy, 2nd ed., Butterworth-Heinemann, 2007 (composite curves and the minimum approach temperature)."
+min_approach_duty:
+  name: Duty at a specified minimum approach
+  latex: '\dot Q:\ \Delta T_\mathrm{min}(\dot Q) = \Delta T_\mathrm{spec}\ \text{(bisection)}'
+  references:
+    - source: kemp_2007
+      citation: "Kemp, I.C., Pinch Analysis and Process Integration: A User Guide on Process Integration for the Efficient Use of Energy, 2nd ed., Butterworth-Heinemann, 2007 (composite curves and the minimum approach temperature)."
+effectiveness_ntu:
+  name: Effectiveness-NTU rating (counter-current)
+  latex: '\dot Q = \varepsilon(\mathrm{NTU}, C_r)\,C_\mathrm{min}\,(T_{h,\mathrm{in}} - T_{c,\mathrm{in}}),\quad \mathrm{NTU} = UA / C_\mathrm{min}'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, ch. 11 (the effectiveness-NTU method)."
+darcy_weisbach_duct:
+  name: Duct pressure drop (Darcy-Weisbach, Colebrook friction factor)
+  latex: '\Delta P = f_D\,\frac{L}{D_h}\,\frac{\rho v^2}{2},\quad f_D = 64/\mathrm{Re}\ (\mathrm{Re} < 2300),\ \frac{1}{\sqrt{f_D}} = -2\log_{10}\left(\frac{\epsilon/D_h}{3.7} + \frac{2.51}{\mathrm{Re}\sqrt{f_D}}\right)'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, eqs. 8.19 and 8.20 (as cited in ngdesign.units.heat.rating)."
+    - source: colebrook_1939
+      citation: "Colebrook, C.F., Turbulent Flow in Pipes, with Particular Reference to the Transition Region between the Smooth and Rough Pipe Laws, J. Inst. Civ. Eng. 11(4), 1939, 133-156."
+gnielinski_duct_film:
+  name: Duct film coefficient (Gnielinski; laminar Nu = 3.66)
+  latex: '\mathrm{Nu} = \frac{(f_D/8)(\mathrm{Re} - 1000)\mathrm{Pr}}{1 + 12.7\sqrt{f_D/8}\,(\mathrm{Pr}^{2/3} - 1)},\quad h = \mathrm{Nu}\,k / D_h'
+  references:
+    - source: gnielinski_1976
+      citation: "Gnielinski, V., New Equations for Heat and Mass Transfer in Turbulent Pipe and Channel Flow, Int. Chem. Eng. 16(2), 1976, 359-368."
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, eqs. 8.55 and 8.62 (as cited in ngdesign.units.heat.rating)."
+tube_outside_area:
+  name: Tube outside area
+  latex: 'A_o = \pi D_o L'
+  structural: true
+overall_conductance_tube_wall:
+  name: Overall conductance through a tube wall with fouling
+  latex: '\frac{1}{UA} = \frac{1}{h_i A_i} + \frac{R_{f,i}}{A_i} + \frac{\ln(D_o/D_i)}{2\pi k L} + \frac{R_{f,o}}{A_o} + \frac{1}{h_o A_o}'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, ch. 11 (overall heat transfer coefficient, fouling factors)."
+ua_per_area:
+  name: Overall coefficient per area
+  latex: 'U = UA / A'
+  structural: true
+plate_pressure_drop:
+  name: Chevron-plate channel and port pressure drop
+  latex: '\Delta P = f\,\frac{L}{D_h}\,\frac{\rho v^2}{2} + 1.4\,\frac{\rho v_\mathrm{port}^2}{2}'
+  references:
+    - source: martin_1996
+      citation: "Martin, H., A Theoretical Approach to Predict the Performance of Chevron-Type Plate Heat Exchangers, Chem. Eng. Process. 35(4), 1996, 301-310."
+    - source: vdi_heat_atlas_2010
+      citation: "VDI Heat Atlas, 2nd ed., Springer, 2010, section N6 (as cited in ngdesign.units.heat.plate_exchanger_r1)."
+    - source: kakac_heat_exchangers
+      citation: "Kakac, S., Liu, H. and Pramuanjaroenkij, A., Heat Exchangers: Selection, Rating, and Thermal Design, 3rd ed., CRC Press, ch. 10 (port pressure loss; as cited in ngdesign.units.heat.plate_exchanger_r1)."
+plate_film_coefficients:
+  name: Chevron-plate film coefficients (Martin / VDI N6)
+  latex: '\mathrm{Nu} = 0.122\,\mathrm{Pr}^{1/3}\left(\mu/\mu_w\right)^{1/6}\left[f\,\mathrm{Re}^2 \sin 2\varphi\right]^{0.374}'
+  references:
+    - source: martin_1996
+      citation: "Martin, H., A Theoretical Approach to Predict the Performance of Chevron-Type Plate Heat Exchangers, Chem. Eng. Process. 35(4), 1996, 301-310."
+    - source: vdi_heat_atlas_2010
+      citation: "VDI Heat Atlas, 2nd ed., Springer, 2010, section N6 (as cited in ngdesign.units.heat.plate_exchanger_r1)."
+plate_heat_transfer_area:
+  name: Plate heat-transfer area from the plate geometry
+  latex: 'A = A_\mathrm{ht}(N_\mathrm{plates}, W, L, \lambda, \hat a)'
+  structural: true  # fluids.geometry.PlateExchanger.A_heat_transfer from the user's geometry
+overall_conductance_plate:
+  name: Overall conductance through a plate with fouling
+  latex: '\frac{1}{U} = \frac{1}{h_h} + R_{f,h} + \frac{t}{k} + R_{f,c} + \frac{1}{h_c},\quad UA = U A'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, ch. 11 (overall heat transfer coefficient, fouling factors)."
+single_phase_check:
+  name: No phase change along either side (LMTD validity flag)
+  latex: '\mathbb{1}\left[\beta(h) = \beta_\mathrm{in}\ \forall\ \text{samples}\right]'
+  structural: true

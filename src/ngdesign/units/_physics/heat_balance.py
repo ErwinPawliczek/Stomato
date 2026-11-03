@@ -42,9 +42,11 @@ adapter keep exactly these signs.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import StreamState
+from ngdesign.provenance.recorder import Recorder, active
 from ngdesign.sizing.lmtd import lmtd_counter
 
 #: PH-flash sample count per stream span for the zoned pinch check (spec: >= 20).
@@ -343,6 +345,11 @@ def two_stream(
     if P_c_out <= 0:
         raise ValueError(f"dP_cold {dP_cold} leaves a non-positive cold outlet pressure")
 
+    rec = active()
+    if rec is not None:
+        rec.equation("P_hot_out", P_h_out, "Pa", "pressure_drop", {"P_in": (hot, "P"), "dP": dP_hot})
+        rec.equation("P_cold_out", P_c_out, "Pa", "pressure_drop", {"P_in": (cold, "P"), "dP": dP_cold})
+
     F_h, F_c = hot.molar_flow, cold.molar_flow
     if F_h <= 0.0 or F_c <= 0.0:
         # No heat transfer is possible: both sides pass through (the zero-flow
@@ -392,6 +399,32 @@ def two_stream(
 
     lmtd = lmtd_counter(hot.T, hot_out.T, cold.T, cold_out.T)
     lmtd_valid = hot_side.phase_change_free() and cold_side.phase_change_free()
+    if rec is not None:
+        terminals = terminal_inputs(hot, hot_out, cold, cold_out)
+        rec.equation(
+            "min_approach_K",
+            min_approach,
+            "K",
+            "composite_curve_approach",
+            {
+                **terminals,
+                "h_hot_in": (hot, "enthalpy"),
+                "h_hot_out": (hot_out, "enthalpy"),
+                "h_cold_in": (cold, "enthalpy"),
+                "h_cold_out": (cold_out, "enthalpy"),
+            },
+            note=f"{N_ZONE_SAMPLES} PH-flash samples per side; "
+            f"pinch at hot {pinch_T_hot} K / cold {pinch_T_cold} K",
+        )
+        lmtd_ref = rec.equation("LMTD_K", lmtd, "K", "lmtd", terminals)
+        rec.equation(
+            "lmtd_valid",
+            1.0 if lmtd_valid else 0.0,
+            "1",
+            "single_phase_check",
+            {"vf_hot_in": (hot, "vapor_fraction"), "vf_cold_in": (cold, "vapor_fraction")},
+        )
+        rec.equation("UA_W_K", duty_W / lmtd, "W/K", "ua_from_duty", {"Q": duty_W, "LMTD": lmtd_ref})
     return TwoStreamResult(
         hot_out=hot_out,
         cold_out=cold_out,
@@ -405,6 +438,43 @@ def two_stream(
     )
 
 
+def terminal_inputs(
+    hot: StreamState, hot_out: StreamState, cold: StreamState, cold_out: StreamState
+) -> dict[str, Any]:
+    """Trace inputs: the four terminal temperatures of a two-stream exchanger."""
+    return {
+        "T_hot_in": (hot, "T"),
+        "T_hot_out": (hot_out, "T"),
+        "T_cold_in": (cold, "T"),
+        "T_cold_out": (cold_out, "T"),
+    }
+
+
+def trace_enthalpy_target(
+    rec: Recorder, name: str, h: float, state: StreamState, duty: Any, sign: str
+) -> None:
+    """Record an outlet enthalpy ``h = h_in +- Q/F`` before the PH flash that consumes it."""
+    rec.equation(
+        name,
+        h,
+        "J/mol",
+        "enthalpy_from_duty",
+        {"h_in": (state, "enthalpy"), "Q": duty, "F": (state, "molar_flow")},
+        note=f"h_out = h_in {sign} Q/F",
+    )
+
+
+def trace_side_duty(rec: Recorder, name: str, duty: float, inlet: StreamState, outlet: StreamState) -> Any:
+    """Record one side's steady-flow energy balance ``Q = F |h_out - h_in|``."""
+    return rec.equation(
+        name,
+        duty,
+        "W",
+        "steady_flow_energy_balance",
+        {"F": (inlet, "molar_flow"), "h_in": (inlet, "enthalpy"), "h_out": (outlet, "enthalpy")},
+    )
+
+
 def _two_stream_outlets(
     hot: StreamState,
     cold: StreamState,
@@ -415,9 +485,13 @@ def _two_stream_outlets(
 ) -> tuple[StreamState, StreamState, float]:
     """Solve both outlet states for the active spec; returns (hot, cold, duty)."""
     F_h, F_c = hot.molar_flow, cold.molar_flow
+    rec = active()
     match spec.name:
         case "duty_W":
             duty = float(spec.duty_W)  # type: ignore[arg-type]
+            if rec is not None:
+                trace_enthalpy_target(rec, "h_hot_out", hot.enthalpy - duty / F_h, hot, duty, "-")
+                trace_enthalpy_target(rec, "h_cold_out", cold.enthalpy + duty / F_c, cold, duty, "+")
             hot_out = thermo.flash_ph(hot.composition, P_h_out, hot.enthalpy - duty / F_h, F_h)
             cold_out = thermo.flash_ph(cold.composition, P_c_out, cold.enthalpy + duty / F_c, F_c)
             return hot_out, cold_out, duty
@@ -427,6 +501,9 @@ def _two_stream_outlets(
                 raise ValueError(f"hot_T_out {T_out} K must be > 0")
             hot_out = thermo.flash_pt(hot.composition, T_out, P_h_out, F_h)
             duty = F_h * (hot.enthalpy - hot_out.enthalpy)
+            if rec is not None:
+                q = trace_side_duty(rec, "Q_transferred_W", duty, hot, hot_out)
+                trace_enthalpy_target(rec, "h_cold_out", cold.enthalpy + duty / F_c, cold, q, "+")
             cold_out = thermo.flash_ph(cold.composition, P_c_out, cold.enthalpy + duty / F_c, F_c)
             return hot_out, cold_out, duty
         case "cold_T_out":
@@ -435,6 +512,9 @@ def _two_stream_outlets(
                 raise ValueError(f"cold_T_out {T_out} K must be > 0")
             cold_out = thermo.flash_pt(cold.composition, T_out, P_c_out, F_c)
             duty = F_c * (cold_out.enthalpy - cold.enthalpy)
+            if rec is not None:
+                q = trace_side_duty(rec, "Q_transferred_W", duty, cold, cold_out)
+                trace_enthalpy_target(rec, "h_hot_out", hot.enthalpy - duty / F_h, hot, q, "-")
             hot_out = thermo.flash_ph(hot.composition, P_h_out, hot.enthalpy - duty / F_h, F_h)
             return hot_out, cold_out, duty
         case _:
@@ -485,6 +565,26 @@ def _two_stream_min_approach(
         if q_hi - q_lo <= _BISECT_RTOL * max(abs(q_lo), abs(q_hi), 1.0):
             break
     duty = q_lo
+    rec = active()
+    if rec is not None:
+        q = rec.equation(
+            "Q_transferred_W",
+            duty,
+            "W",
+            "min_approach_duty",
+            {
+                "dT_min": target,
+                "T_hot_in": (hot, "T"),
+                "T_cold_in": (cold, "T"),
+                "h_hot_in": (hot, "enthalpy"),
+                "h_cold_in": (cold, "enthalpy"),
+                "F_hot": (hot, "molar_flow"),
+                "F_cold": (cold, "molar_flow"),
+            },
+            note="duty bisected until the zoned minimum approach meets the target",
+        )
+        trace_enthalpy_target(rec, "h_hot_out", hot.enthalpy - duty / F_h, hot, q, "-")
+        trace_enthalpy_target(rec, "h_cold_out", cold.enthalpy + duty / F_c, cold, q, "+")
     hot_out = thermo.flash_ph(hot.composition, P_h_out, hot.enthalpy - duty / F_h, F_h)
     cold_out = thermo.flash_ph(cold.composition, P_c_out, cold.enthalpy + duty / F_c, F_c)
     return hot_out, cold_out, duty
@@ -524,8 +624,10 @@ def multi_stream(
             if side.dP < 0:
                 raise ValueError("side dP must be >= 0")
 
+    rec = active()
     hot_outs: list[StreamState] = [side.state for side in hots]
     cold_outs: list[StreamState] = [side.state for side in colds]
+    duty_refs: dict[str, Any] = {}
     residual_W = 0.0  # duty the balance stream must absorb (sign: into the stream)
     hot_duties: dict[int, float] = {}
     cold_duties: dict[int, float] = {}
@@ -537,8 +639,16 @@ def multi_stream(
             P_out = state.P - side.dP
             if P_out <= 0:
                 raise ValueError(f"side dP {side.dP} leaves a non-positive outlet pressure")
+            if rec is not None and side.dP != 0.0:
+                rec.equation(
+                    f"P_out_{kind}_{i}", P_out, "Pa", "pressure_drop", {"P_in": (state, "P"), "dP": side.dP}
+                )
             out = thermo.flash_pt(state.composition, float(side.T_out), P_out, state.molar_flow)  # type: ignore[arg-type]
             duty = state.molar_flow * (out.enthalpy - state.enthalpy)
+            if rec is not None:
+                duty_refs[f"Q[{kind}_{i}]"] = trace_side_duty(
+                    rec, f"Q_{kind}_{i}", -duty if kind == "hot" else duty, state, out
+                )
             if kind == "hot":
                 hot_outs[i] = out
                 hot_duties[i] = -duty  # released
@@ -553,8 +663,24 @@ def multi_stream(
     if P_b_out <= 0:
         raise ValueError(f"balance side dP {side_b.dP} leaves a non-positive outlet pressure")
     F_b = b_state.molar_flow  # positive: balance sides come from the active lists
+    if rec is not None:
+        if side_b.dP != 0.0:
+            rec.equation(
+                "P_out_balance", P_b_out, "Pa", "pressure_drop", {"P_in": (b_state, "P"), "dP": side_b.dP}
+            )
+        q_res = rec.equation(
+            "Q_balance_W",
+            residual_W,
+            "W",
+            "multi_stream_energy_balance",
+            duty_refs,
+            note="duty the balance stream absorbs so the exchanger closes at zero net duty",
+        )
+        trace_enthalpy_target(rec, "h_balance_out", b_state.enthalpy + residual_W / F_b, b_state, q_res, "+")
     b_out = thermo.flash_ph(b_state.composition, P_b_out, b_state.enthalpy + residual_W / F_b, F_b)
     b_duty = F_b * (b_out.enthalpy - b_state.enthalpy)
+    if rec is not None:
+        trace_side_duty(rec, f"Q_{kind_b}_{i_b}", -b_duty if kind_b == "hot" else b_duty, b_state, b_out)
     if kind_b == "hot":
         hot_outs[i_b] = b_out
         hot_duties[i_b] = -b_duty
@@ -603,6 +729,28 @@ def multi_stream(
         cold_outs[i] if i in cold_duties or (kind_b == "cold" and i == i_b) else side.state.model_copy()
         for i, side in enumerate(colds)
     )
+    if rec is not None:
+        terminals: dict[str, Any] = {}
+        for t_kind, t_sides, outs in (("hot", hots, final_hot), ("cold", colds, final_cold)):
+            for t_i, t_side in enumerate(t_sides):
+                if t_side.state.molar_flow > 0.0:
+                    terminals[f"T_in[{t_kind}_{t_i}]"] = (t_side.state, "T")
+                    terminals[f"T_out[{t_kind}_{t_i}]"] = (outs[t_i], "T")
+                    terminals[f"h_in[{t_kind}_{t_i}]"] = (t_side.state, "enthalpy")
+                    terminals[f"h_out[{t_kind}_{t_i}]"] = (outs[t_i], "enthalpy")
+                else:
+                    rec.derived_state(
+                        outs[t_i],
+                        "identity",
+                        {p: (t_side.state, p) for p in ("T", "P", "molar_flow", "composition")},
+                        note="zero-flow side passes through as a copy of its inlet",
+                    )
+        rec.results(
+            "composite_curve_approach",
+            {"min_approach_K": min_approach, "pinch_T_hot_K": pinch_T_hot, "pinch_T_cold_K": pinch_T_cold},
+            terminals,
+            note=f"{N_ZONE_SAMPLES} PH-flash samples per active side",
+        )
     return MultiStreamResult(
         hot_outs=final_hot,
         cold_outs=final_cold,

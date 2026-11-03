@@ -27,6 +27,22 @@ test("opens the project from Home and shows every tab and the slice units from t
   expect(screen.getByRole("heading", { name: "Projects" })).toBeTruthy();
 });
 
+test("clicking a number in Results opens the Trace tab focused on that value", async () => {
+  render(<App />);
+  fireEvent.click(await screen.findByRole("button", { name: /slice/i }));
+  fireEvent.click(screen.getByRole("tab", { name: "Results" }));
+  fireEvent.click(screen.getByRole("button", { name: "Solve" }));
+  await screen.findByText("K-101");
+  // K-101 power: 1505837 W in mocks/solved.json -> 1505.84 kW.
+  fireEvent.click(screen.getByRole("button", { name: "1505.84" }));
+  expect(screen.getByRole("tab", { name: "Trace" }).getAttribute("aria-selected")).toBe("true");
+  const svg = await screen.findByRole("group", { name: "Trace graph" });
+  const focus = await within(svg).findByRole("button", { name: /^K-101 power_W \(output/ });
+  expect(focus.classList.contains("focus")).toBe(true);
+  expect((screen.getByLabelText("Stream or unit") as HTMLSelectElement).value).toBe("unit:K-101");
+  expect((screen.getByLabelText("Property") as HTMLSelectElement).value).toBe("power_W");
+});
+
 test("rail switches pages and the palette", () => {
   render(<App />);
   const nav = screen.getByRole("navigation", { name: "Main" });

@@ -69,6 +69,7 @@ from __future__ import annotations
 import heapq
 import time
 from collections.abc import Callable
+from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass
 from typing import Any, NamedTuple
 
@@ -87,6 +88,7 @@ from ngdesign.contracts.diagnostics import BlockRecord, SolveAcceleration, TearR
 from ngdesign.contracts.flowsheet import SolverOptions
 from ngdesign.contracts.plugins import Thermo, UnitModel
 from ngdesign.contracts.reactions import ReactionSet
+from ngdesign.provenance.recorder import Recorder, active
 
 #: The pre-P2-03 solver constants (spec S-30) are the ``SolverOptions`` defaults:
 #: one source of truth, read from the flowsheet's options at solve time.
@@ -141,6 +143,9 @@ class _Context:
     # Spec P3-02: optional progress sink, called with every TearRecord as it is
     # appended. Purely observational - no numeric change, None by default.
     on_progress: Callable[[TearRecord], None] | None = None
+    # Calculation provenance (docs/provenance.md): the active recorder, or None
+    # (tracing off - every hook below is skipped and the solve is unchanged).
+    recorder: Recorder | None = None
 
 
 def _stream_edges(fs: Flowsheet) -> list[_Edge]:
@@ -669,40 +674,53 @@ def _run_units(ctx: _Context, order: list[str]) -> bool:
             ok = False
             ctx.errors.append(blocked)
             continue
-        try:
-            params = _resolve_reaction_params(spec.params, ctx.fs.reactions)
-            result = unit.solve(inlets, params, ctx.thermo)
-        except Exception as exc:  # the failure IS the result (spec P2-02)
-            ok = False
-            ctx.errors.append(
-                UnitError(
-                    tag=tag,
-                    kind=spec.kind,
-                    error_type=type(exc).__name__,
-                    message=str(exc),
-                    stage="solve",
-                )
-            )
-            continue
-        ctx.results[tag] = result
-        for stream in ctx.fs.outlets(tag):
-            source = stream.source
-            if source is None or source.port not in result.outlets:
+        rec = ctx.recorder
+        scope: AbstractContextManager[object] = (
+            nullcontext() if rec is None else rec.scope(f"unit:{tag}", unit_tag=tag, kind=spec.kind)
+        )
+        with scope:
+            if rec is not None:
+                rec.unit_inputs(tag, ctx.fs.name, inlets, spec.params)
+            try:
+                params = _resolve_reaction_params(spec.params, ctx.fs.reactions)
+                result = unit.solve(inlets, params, ctx.thermo)
+            except Exception as exc:  # the failure IS the result (spec P2-02)
                 ok = False
                 ctx.errors.append(
                     UnitError(
                         tag=tag,
                         kind=spec.kind,
-                        error_type="ValueError",
-                        message=(
-                            f"unit {tag} returned no state for outlet port "
-                            f"{source.port if source else '?'!r} (stream {stream.id})"
-                        ),
-                        stage="outlet_missing",
+                        error_type=type(exc).__name__,
+                        message=str(exc),
+                        stage="solve",
                     )
                 )
                 continue
-            ctx.states[stream.id] = result.outlets[source.port]
+            ctx.results[tag] = result
+            if rec is not None:
+                rec.unit_outlets(tag, spec.kind, result.outlets)
+            for stream in ctx.fs.outlets(tag):
+                source = stream.source
+                if source is None or source.port not in result.outlets:
+                    ok = False
+                    ctx.errors.append(
+                        UnitError(
+                            tag=tag,
+                            kind=spec.kind,
+                            error_type="ValueError",
+                            message=(
+                                f"unit {tag} returned no state for outlet port "
+                                f"{source.port if source else '?'!r} (stream {stream.id})"
+                            ),
+                            stage="outlet_missing",
+                        )
+                    )
+                    continue
+                ctx.states[stream.id] = result.outlets[source.port]
+                if rec is not None:
+                    rec.bind_stream(stream.id, result.outlets[source.port])
+            if rec is not None:
+                rec.bind_unit_result(tag, spec.kind, result)
     return ok
 
 
@@ -783,10 +801,19 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
     records: list[TearRecord] = []
     segment = len(ctx.components) + 2
     broyden = _Broyden(segment * len(torn)) if opts.tear_acceleration == "broyden" else None
+    injected_states: dict[str, StreamState] = {}  # tracing only: the guess each tear was injected as
     for iteration in range(1, cap + 1):
         iterations = iteration
         for t in torn:
-            ctx.states[t.stream_id] = _inject_tear(t.x, ctx.components, fallback_composition, ctx.thermo)
+            if ctx.recorder is None:
+                ctx.states[t.stream_id] = _inject_tear(t.x, ctx.components, fallback_composition, ctx.thermo)
+            else:
+                with ctx.recorder.scope(f"tear:{t.stream_id}"):
+                    ctx.recorder.tear_scope_op(t.stream_id)
+                    ctx.states[t.stream_id] = _inject_tear(
+                        t.x, ctx.components, fallback_composition, ctx.thermo
+                    )
+                injected_states[t.stream_id] = ctx.states[t.stream_id]
         if not _run_units(ctx, order):
             break  # a unit failed this pass: stop iterating, converged stays False
         stable = (
@@ -813,6 +840,15 @@ def _converge_block(ctx: _Context, order: list[str], tears: list[str]) -> tuple[
                 )
                 records.append(record)
                 _emit_progress(ctx, record)
+                if ctx.recorder is not None and t.stream_id in injected_states:
+                    ctx.recorder.close_tear(
+                        t.stream_id,
+                        injected_states[t.stream_id],
+                        ctx.states[t.stream_id],
+                        method=f"tear_{opts.tear_acceleration}",
+                        iterations=iteration,
+                        residual=record.residual_max,
+                    )
             break
         if broyden is not None:
             injected = [v for t in torn for v in t.x]
@@ -907,9 +943,20 @@ class SequentialModular:
             warm_start=warm_start,
         )
         ctx.on_progress = on_progress
+        rec = ctx.recorder = active()
+        if rec is not None:
+            rec.begin_solve()
+            rec.meta.setdefault("flowsheet", fs.name)
+            rec.meta.setdefault("thermo", fs.thermo)
         for s in fs.streams:
             if s.source is None:
-                ctx.states[s.id] = _flash_feed(s, thermo)
+                if rec is None or s.feed is None:
+                    ctx.states[s.id] = _flash_feed(s, thermo)
+                    continue
+                with rec.scope(f"feed:{s.id}"):
+                    rec.feed(s.id, s.feed.T, s.feed.P, s.feed.molar_flow, s.feed.composition)
+                    ctx.states[s.id] = _flash_feed(s, thermo)
+                    rec.bind_stream(s.id, ctx.states[s.id])
         tags = sorted(u.tag for u in fs.units)
         converged = True
         iterations = 0

@@ -15,6 +15,7 @@ from typing import Any
 
 from ngdesign.contracts import Phase, PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.registry import register
 from ngdesign.units._examples import INLET_COMPOSITION, MMSCFD_TO_MOL_S
 
@@ -87,6 +88,11 @@ class _SeparatorBase:
         if P <= 0:
             raise ValueError(f"dP {dP} leaves a non-positive outlet pressure")
 
+        rec = active()
+        if rec is not None:
+            if "dP" not in params:
+                rec.default("dP", dP, "Pa", "no pressure drop unless dP is given (spec S-24)")
+            rec.equation("P_out", P, "Pa", "pressure_drop", {"P_in": (inlet, "P"), "dP": dP})
         flashed = thermo.flash_pt(inlet.composition, T, P, inlet.molar_flow)
 
         outlets: dict[str, StreamState] = {}
@@ -96,9 +102,30 @@ class _SeparatorBase:
             else:
                 phases = [p for p in flashed.phases if p.kind is kind]
             outlets[port] = _phase_outlet(inlet, T, P, phases)
+            if rec is not None:
+                inputs: dict[str, object] = {
+                    "F": (inlet, "molar_flow"),
+                    "T": (flashed, "T"),
+                    "P": (flashed, "P"),
+                }
+                for ph in phases:
+                    for prop in ("mole_fraction", "composition", "enthalpy", "entropy"):
+                        inputs[f"{prop}[{ph.kind}]"] = (flashed, f"{ph.kind}.{prop}")
+                rec.derived_state(
+                    outlets[port],
+                    "phase_split",
+                    inputs,
+                    note="Outlet carries the equilibrium phase(s) of the flash, renormalised to the outlet.",
+                )
 
         h_in_W = inlet.enthalpy * inlet.molar_flow
         h_out_W = sum(s.enthalpy * s.molar_flow for s in outlets.values())
+        if rec is not None:
+            balance: dict[str, object] = {"F_in": (inlet, "molar_flow"), "h_in": (inlet, "enthalpy")}
+            for port, s in outlets.items():
+                balance[f"F[{port}]"] = (s, "molar_flow")
+                balance[f"h[{port}]"] = (s, "enthalpy")
+            rec.equation("duty_W", h_out_W - h_in_W, "W", "multi_stream_energy_balance", balance)
         return UnitResult(
             outlets=outlets,
             duty_W=h_out_W - h_in_W,

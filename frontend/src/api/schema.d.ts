@@ -505,6 +505,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/projects/{project_id}/trace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trace Project
+         * @description The provenance graph of the solved project, or of one value with stream/unit + prop.
+         */
+        get: operations["trace_project_api_projects__project_id__trace_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/projects/{project_id}/trace/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trace Audit
+         * @description Outputs reachable from an uncited leaf or an unreferenced method.
+         */
+        get: operations["trace_audit_api_projects__project_id__trace_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/projects/{project_id}/views/iso": {
         parameters: {
             query?: never;
@@ -877,6 +917,31 @@ export interface components {
             /** K0 */
             k0: number;
         };
+        /** AuditFinding */
+        AuditFinding: {
+            /** Culprits */
+            culprits: string[];
+            /** Label */
+            label: string;
+            /** Node */
+            node: string;
+            /** Reasons */
+            reasons: string[];
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "error" | "warning";
+        };
+        /** AuditReport */
+        AuditReport: {
+            /** Clean */
+            clean: number;
+            /** Findings */
+            findings: components["schemas"]["AuditFinding"][];
+            /** Outputs */
+            outputs: number;
+        };
         /**
          * Axis
          * @description One swept address and the values it takes; every combination with the
@@ -941,6 +1006,26 @@ export interface components {
             inputs: components["schemas"]["Axis"][];
             /** Outputs */
             outputs: string[];
+        };
+        /**
+         * Citation
+         * @description Where a number or a method comes from.
+         */
+        Citation: {
+            /** Citation */
+            citation: string;
+            /** Doi */
+            doi?: string | null;
+            /** Grade */
+            grade?: string | null;
+            /** Reference */
+            reference?: string | null;
+            /** Source */
+            source: string;
+            /** Table */
+            table?: string | null;
+            /** Url */
+            url?: string | null;
         };
         /**
          * Component
@@ -1104,6 +1189,23 @@ export interface components {
             orders: {
                 [key: string]: number;
             };
+        };
+        /** Edge */
+        Edge: {
+            /**
+             * Feedback
+             * @default false
+             */
+            feedback: boolean;
+            /**
+             * Role
+             * @default
+             */
+            role: string;
+            /** Source */
+            source: string;
+            /** Target */
+            target: string;
         };
         /**
          * EndType
@@ -1317,6 +1419,36 @@ export interface components {
             position_mm: components["schemas"]["Vec3"];
             /** Service */
             service: string;
+        };
+        /** OpNode */
+        OpNode: {
+            /** Calls */
+            calls?: number | null;
+            /** Converged */
+            converged?: boolean | null;
+            /** Id */
+            id: string;
+            /** Iterations */
+            iterations?: number | null;
+            /** Label */
+            label: string;
+            /** Latex */
+            latex?: string | null;
+            /** Method */
+            method: string;
+            /** Name */
+            name: string;
+            /** Note */
+            note?: string | null;
+            /**
+             * References
+             * @default []
+             */
+            references: components["schemas"]["Citation"][];
+            /** Residual */
+            residual?: number | null;
+            /** Unit Tag */
+            unit_tag?: string | null;
         };
         /** Phase */
         Phase: {
@@ -1825,6 +1957,31 @@ export interface components {
             /** Test Pressure Kpag */
             test_pressure_kPag: number;
         };
+        /** TraceGraph */
+        TraceGraph: {
+            /**
+             * Edges
+             * @default []
+             */
+            edges: components["schemas"]["Edge"][];
+            /**
+             * Meta
+             * @default {}
+             */
+            meta: {
+                [key: string]: string;
+            };
+            /**
+             * Ops
+             * @default []
+             */
+            ops: components["schemas"]["OpNode"][];
+            /**
+             * Values
+             * @default []
+             */
+            values: components["schemas"]["ValueNode"][];
+        };
         /**
          * UnitError
          * @description One unit's failure or skip, as data instead of an aborting exception.
@@ -1906,6 +2063,38 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** ValueNode */
+        ValueNode: {
+            citation?: components["schemas"]["Citation"] | null;
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "input" | "constant" | "parameter" | "intermediate" | "output";
+            /** Label */
+            label: string;
+            /** Note */
+            note?: string | null;
+            /** Prop */
+            prop?: string | null;
+            /**
+             * Quality
+             * @enum {string}
+             */
+            quality: "cited" | "user" | "estimated" | "derived" | "uncited";
+            /** Stream */
+            stream?: string | null;
+            /** Unit */
+            unit: string;
+            /** Unit Tag */
+            unit_tag?: string | null;
+            /** Value */
+            value: number | {
+                [key: string]: number;
+            } | number[][] | string | null;
         };
         /**
          * Vec3
@@ -2906,6 +3095,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SolvedFlowsheet"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trace_project_api_projects__project_id__trace_get: {
+        parameters: {
+            query?: {
+                /** @description Stream id, e.g. S-002 */
+                stream?: string | null;
+                /** @description Unit tag, e.g. E-101 */
+                unit?: string | null;
+                /** @description Property: T, P, molar_flow, enthalpy, duty_W, ... */
+                prop?: string | null;
+            };
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TraceGraph"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trace_audit_api_projects__project_id__trace_audit_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditReport"];
                 };
             };
             /** @description Validation Error */

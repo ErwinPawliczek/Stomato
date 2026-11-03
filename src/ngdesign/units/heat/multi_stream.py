@@ -20,7 +20,9 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.units._physics.heat_balance import MultiStreamSide, multi_stream
+from ngdesign.units.heat.exchangers import trace_internal_duty
 
 
 class MultiStreamExchanger:
@@ -59,13 +61,17 @@ class MultiStreamExchanger:
 
         h_in = sum(s.enthalpy * s.molar_flow for s in inlets.values())
         h_out = sum(s.enthalpy * s.molar_flow for s in (*result.hot_outs, *result.cold_outs))
+        outlets = {
+            "hot_out_1": result.hot_outs[0],
+            "hot_out_2": result.hot_outs[1],
+            "cold_out_1": result.cold_outs[0],
+            "cold_out_2": result.cold_outs[1],
+        }
+        rec = active()
+        if rec is not None:
+            trace_internal_duty(rec, h_out - h_in, inlets, outlets)
         return UnitResult(
-            outlets={
-                "hot_out_1": result.hot_outs[0],
-                "hot_out_2": result.hot_outs[1],
-                "cold_out_1": result.cold_outs[0],
-                "cold_out_2": result.cold_outs[1],
-            },
+            outlets=outlets,
             duty_W=h_out - h_in,
             power_W=0.0,
             info=info,
