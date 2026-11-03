@@ -89,3 +89,51 @@ def cite_correlation(family: str, method_key: str | None) -> tuple[Citation | No
 
 def cite_mw() -> Citation | None:
     return catalogue.source_citation("openbabel_elements")
+
+
+def cite_chemdb(query: str, prop: str) -> Citation | None:
+    """Citation of the selected ``data/chemdb/properties.csv`` row of one property.
+
+    The row's source key resolves to its ``data/chemdb/sources.yaml`` record; the row's
+    own ``reference`` (data-set version, table entry) is carried as the row reference.
+    None when chemdb states no value for the property.
+    """
+    from ngdesign.data import chemdb
+
+    try:
+        row = chemdb.value(query, prop)
+    except chemdb.ChemDbError:
+        return None
+    cit = catalogue.source_citation(row.source, reference=row.reference or None)
+    if cit is None:
+        return None
+    return cit.model_copy(update={"grade": cit.grade or row.grade or None})
+
+
+def cite_species_model(model: Any) -> Citation | None:
+    """Citation of the H°(T)/S°(T) shape of a :class:`ngdesign.data.species_models.SpeciesThermo`.
+
+    The shape is named by the model's curve (``janaf:<table>``, ``shomate``, ``nasa9``,
+    ``cp_fit:<form or source>``, ``cp0_eos:<source>``, ``cp_table:<source>``,
+    ``constant_cp``); each maps to the chemdb source of the rows it was built from
+    (``cp_fit:trc`` / ``cp_fit:poling`` rows carry the source of the same name). None
+    when the source cannot be named, so the caller records the value as uncited.
+    """
+    curve = model.curve
+    kind, _, rest = str(curve.name).partition(":")
+    pieces = getattr(curve, "pieces", None)
+    source: str | None = None
+    table: str | None = None
+    reference: str | None = None
+    if kind == "janaf":
+        source, table = "janaf", rest or None
+    elif kind in ("shomate", "nasa9") and pieces:
+        source = pieces[0].get("source") or ("nasa_cea" if kind == "nasa9" else None)
+        reference = pieces[0].get("reference") or None
+    elif kind in ("cp_fit", "cp0_eos", "cp_table"):
+        source = rest or None
+    elif kind == "constant_cp":
+        return cite_chemdb(str(model.cas), f"Cp_{model.phase}")
+    if not source:
+        return None
+    return catalogue.source_citation(str(source), table=table, reference=reference)

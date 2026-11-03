@@ -320,6 +320,88 @@ yield_shift:
   name: Specified product yields
   latex: 'F_{i,\mathrm{out}} = Y_i\,F_\mathrm{basis}'
   structural: true
+component_flows:
+  name: Component molar flows
+  latex: 'n_i = F\,z_i'
+  structural: true
+mole_fractions:
+  name: Mole fractions from component flows
+  latex: 'F = \sum_i n_i,\quad z_i = n_i / F'
+  structural: true
+reaction_stoichiometry:
+  name: Component balance with reaction extents
+  latex: 'n_{i,\mathrm{out}} = n_{i,\mathrm{in}} + \sum_j \nu_{ij}\,\xi_j'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (balances on reactive systems, extent of reaction)."
+formation_enthalpy_basis:
+  name: Stream enthalpy on the element (heat-of-formation) reference
+  latex: '\dot H = F\left(h + \sum_i z_i\,\Delta_f H^\circ_{i,298}\right)'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 9 (balances on reactive processes, heat-of-formation method)."
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 4 (heat effects; standard heat of formation)."
+reaction_energy_balance:
+  name: Reactor energy balance (heat-of-formation method)
+  latex: '\dot Q = \dot H_\mathrm{out} - \dot H_\mathrm{in} - \dot W'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 9 (balances on reactive processes, heat-of-formation method)."
+reactor_outlet_temperature:
+  name: Reactor outlet temperature from the energy balance
+  latex: '\dot H_\mathrm{out}(T_\mathrm{out}) = \dot H_\mathrm{in} + \dot Q + \dot W\ \text{solved for}\ T_\mathrm{out}'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 9 (balances on reactive processes; adiabatic reaction temperature)."
+reaction_equilibrium_extents:
+  name: Equilibrium extents (ideal-gas mass-action law)
+  latex: '\prod_i \left(\frac{y_i(\boldsymbol\xi)\,P}{P^\circ}\right)^{\nu_{ij}} = K_j(T)\quad \forall j'
+  references:
+    - source: svna_2005
+      citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 13 (chemical-reaction equilibria; multireaction equilibria)."
+conversion_from_extent:
+  name: Fractional conversion of the base component
+  latex: 'X = |\nu_\mathrm{base}|\,\xi / n_\mathrm{base,in}'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (fractional conversion and extent of reaction)."
+pfr_packed_bed:
+  name: Packed-bed PFR (mole, energy and Ergun momentum balances)
+  latex: '\frac{dF_i}{dV} = \sum_r \nu_{ir} r_r,\quad \frac{dP}{dz} = -\frac{G}{\rho D_p}\frac{1-\phi}{\phi^3}\left[\frac{150(1-\phi)\mu}{D_p} + 1.75\,G\right]'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006 (packed-bed reactors: mole balance, Ergun pressure drop, heat exchange)."
+    - source: ergun_1952
+      citation: "Ergun, S., Fluid Flow through Packed Columns, Chem. Eng. Prog. 48(2), 1952, 89-94."
+pfr_catalytic_bed:
+  name: Packed-bed PFR with pellet effectiveness and catalyst activity
+  latex: '\frac{dF_i}{dV} = a\sum_r \nu_{ir}\,\eta_r\,r_r,\quad \eta = \frac{\tanh\phi}{\phi}'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006 (packed-bed reactors, internal effectiveness factor, catalyst deactivation)."
+    - source: thiele_1939
+      citation: "Thiele, E.W., Relation between Catalytic Activity and Size of Particle, Ind. Eng. Chem. 31(7), 1939, 916-920."
+    - source: ergun_1952
+      citation: "Ergun, S., Fluid Flow through Packed Columns, Chem. Eng. Prog. 48(2), 1952, 89-94."
+catalyst_decay:
+  name: Catalyst activity (power-law decay)
+  latex: '\frac{da}{dt} = -k_d\,a^m \Rightarrow a = \left[1 + (m-1)k_d t\right]^{1/(1-m)}\ (m \neq 1),\ a = e^{-k_d t}\ (m = 1)'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006 (catalyst deactivation, separable kinetics)."
+pressure_difference:
+  name: Pressure difference
+  latex: '\Delta P = P_\mathrm{in} - P_\mathrm{out}'
+  structural: true
+equilibrium_approach:
+  name: Temperature approach to equilibrium
+  latex: 'T_\mathrm{eq} = T_\mathrm{out} - \Delta T_\mathrm{approach}'
+  structural: true
+equilibrium_polynomial:
+  name: User equilibrium-constant polynomial
+  latex: '\ln K = \sum_k a_k\,T^k'
+  structural: true  # the coefficients are the user's reaction-set inputs
 
 # ---------------------------------------------------------------- columns
 column_inside_out:
@@ -429,3 +511,134 @@ design_spec_broyden:
     - source: broyden_1965
       citation: "Broyden, C.G., A Class of Methods for Solving Nonlinear Simultaneous Equations, Math. Comp. 19(92), 1965, 577-593."
       doi: 10.1090/S0025-5718-1965-0198670-6
+
+# ---------------------------------------------------------------- columns (unit instrumentation)
+column_energy_balance:
+  name: Column overall energy balance (reboiler duty)
+  latex: '\dot Q_R = \sum_\mathrm{out} F h - \sum_\mathrm{in} F h + \dot Q_C - \sum \dot Q_\mathrm{aux}'
+  references:
+    - source: seader_henley_roper_2011
+      citation: "Seader, J.D., Henley, E.J. and Roper, D.K., Separation Process Principles, 3rd ed., Wiley, 2011 (overall column energy balance)."
+column_net_duty:
+  name: Net column duty
+  latex: '\dot Q = \dot Q_R - \dot Q_C + \sum \dot Q_\mathrm{aux}'
+  structural: true
+condenser_duty:
+  name: Condenser duty from condensing the overhead vapour
+  latex: '\dot Q_C = (h_V - h_L)\,V,\quad V = (R + 1)\,D\ \text{(total)},\ R\,D\ \text{(partial)}'
+  references:
+    - source: seader_henley_roper_2011
+      citation: "Seader, J.D., Henley, E.J. and Roper, D.K., Separation Process Principles, 3rd ed., Wiley, 2011 (condenser and reboiler duties)."
+feed_quality:
+  name: Feed thermal condition
+  latex: 'q = 1 - \beta_F'
+  structural: true
+unit_basis:
+  name: Per-mole calculation basis
+  latex: 'F = 1\ \mathrm{mol/s}'
+  structural: true
+spec_code:
+  name: Specification identifier (categorical code)
+  structural: true
+component_recovery:
+  name: Component recovery in a product
+  latex: 'r_i = \frac{F_\mathrm{out}\,z_{i,\mathrm{out}}}{F\,z_i}'
+  structural: true
+relative_residual:
+  name: Relative residual
+  latex: '\epsilon = |r| / \max(|a|, |b|, 1)'
+  structural: true
+kremser_split:
+  name: Kremser group method (two-feed split per component)
+  latex: '\phi(A, N) = \frac{A^{N+1} - A}{A^{N+1} - 1},\quad A_i = \frac{L}{K_i V},\ S_i = \frac{K_i V}{L},\quad v_{i,\mathrm{out}} = g_i\left[1 - \phi(A_i)\right] + l_i\,\phi(S_i)'
+  references:
+    - source: seader_henley_roper_2011
+      citation: "Seader, J.D., Henley, E.J. and Roper, D.K., Separation Process Principles, 3rd ed., Wiley, 2011, eqs. (5-48), (5-50), (5-54), (5-55), as cited in ngdesign.units.column_shortcut._kremser."
+    - source: treybal_1980
+      citation: "Treybal, R.E., Mass-Transfer Operations, 3rd ed., McGraw-Hill, 1980, sec. 5 (Kremser equation), as cited in ngdesign.sizing.kremser."
+average_condition:
+  name: Arithmetic mean of the inlet conditions
+  latex: '\bar x = (x_1 + x_2)/2'
+  structural: true
+
+# ---------------------------------------------------------------- heat exchangers (unit instrumentation)
+composite_curve_approach:
+  name: Minimum internal temperature approach (zoned composite curves)
+  latex: '\Delta T_\mathrm{min} = \min_Q \left[T_\mathrm{hot}(Q) - T_\mathrm{cold}(Q)\right]'
+  references:
+    - source: kemp_2007
+      citation: "Kemp, I.C., Pinch Analysis and Process Integration: A User Guide on Process Integration for the Efficient Use of Energy, 2nd ed., Butterworth-Heinemann, 2007 (composite curves and the minimum approach temperature)."
+min_approach_duty:
+  name: Duty at a specified minimum approach
+  latex: '\dot Q:\ \Delta T_\mathrm{min}(\dot Q) = \Delta T_\mathrm{spec}\ \text{(bisection)}'
+  references:
+    - source: kemp_2007
+      citation: "Kemp, I.C., Pinch Analysis and Process Integration: A User Guide on Process Integration for the Efficient Use of Energy, 2nd ed., Butterworth-Heinemann, 2007 (composite curves and the minimum approach temperature)."
+effectiveness_ntu:
+  name: Effectiveness-NTU rating (counter-current)
+  latex: '\dot Q = \varepsilon(\mathrm{NTU}, C_r)\,C_\mathrm{min}\,(T_{h,\mathrm{in}} - T_{c,\mathrm{in}}),\quad \mathrm{NTU} = UA / C_\mathrm{min}'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, ch. 11 (the effectiveness-NTU method)."
+darcy_weisbach_duct:
+  name: Duct pressure drop (Darcy-Weisbach, Colebrook friction factor)
+  latex: '\Delta P = f_D\,\frac{L}{D_h}\,\frac{\rho v^2}{2},\quad f_D = 64/\mathrm{Re}\ (\mathrm{Re} < 2300),\ \frac{1}{\sqrt{f_D}} = -2\log_{10}\left(\frac{\epsilon/D_h}{3.7} + \frac{2.51}{\mathrm{Re}\sqrt{f_D}}\right)'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, eqs. 8.19 and 8.20 (as cited in ngdesign.units.heat.rating)."
+    - source: colebrook_1939
+      citation: "Colebrook, C.F., Turbulent Flow in Pipes, with Particular Reference to the Transition Region between the Smooth and Rough Pipe Laws, J. Inst. Civ. Eng. 11(4), 1939, 133-156."
+gnielinski_duct_film:
+  name: Duct film coefficient (Gnielinski; laminar Nu = 3.66)
+  latex: '\mathrm{Nu} = \frac{(f_D/8)(\mathrm{Re} - 1000)\mathrm{Pr}}{1 + 12.7\sqrt{f_D/8}\,(\mathrm{Pr}^{2/3} - 1)},\quad h = \mathrm{Nu}\,k / D_h'
+  references:
+    - source: gnielinski_1976
+      citation: "Gnielinski, V., New Equations for Heat and Mass Transfer in Turbulent Pipe and Channel Flow, Int. Chem. Eng. 16(2), 1976, 359-368."
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, eqs. 8.55 and 8.62 (as cited in ngdesign.units.heat.rating)."
+tube_outside_area:
+  name: Tube outside area
+  latex: 'A_o = \pi D_o L'
+  structural: true
+overall_conductance_tube_wall:
+  name: Overall conductance through a tube wall with fouling
+  latex: '\frac{1}{UA} = \frac{1}{h_i A_i} + \frac{R_{f,i}}{A_i} + \frac{\ln(D_o/D_i)}{2\pi k L} + \frac{R_{f,o}}{A_o} + \frac{1}{h_o A_o}'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, ch. 11 (overall heat transfer coefficient, fouling factors)."
+ua_per_area:
+  name: Overall coefficient per area
+  latex: 'U = UA / A'
+  structural: true
+plate_pressure_drop:
+  name: Chevron-plate channel and port pressure drop
+  latex: '\Delta P = f\,\frac{L}{D_h}\,\frac{\rho v^2}{2} + 1.4\,\frac{\rho v_\mathrm{port}^2}{2}'
+  references:
+    - source: martin_1996
+      citation: "Martin, H., A Theoretical Approach to Predict the Performance of Chevron-Type Plate Heat Exchangers, Chem. Eng. Process. 35(4), 1996, 301-310."
+    - source: vdi_heat_atlas_2010
+      citation: "VDI Heat Atlas, 2nd ed., Springer, 2010, section N6 (as cited in ngdesign.units.heat.plate_exchanger_r1)."
+    - source: kakac_heat_exchangers
+      citation: "Kakac, S., Liu, H. and Pramuanjaroenkij, A., Heat Exchangers: Selection, Rating, and Thermal Design, 3rd ed., CRC Press, ch. 10 (port pressure loss; as cited in ngdesign.units.heat.plate_exchanger_r1)."
+plate_film_coefficients:
+  name: Chevron-plate film coefficients (Martin / VDI N6)
+  latex: '\mathrm{Nu} = 0.122\,\mathrm{Pr}^{1/3}\left(\mu/\mu_w\right)^{1/6}\left[f\,\mathrm{Re}^2 \sin 2\varphi\right]^{0.374}'
+  references:
+    - source: martin_1996
+      citation: "Martin, H., A Theoretical Approach to Predict the Performance of Chevron-Type Plate Heat Exchangers, Chem. Eng. Process. 35(4), 1996, 301-310."
+    - source: vdi_heat_atlas_2010
+      citation: "VDI Heat Atlas, 2nd ed., Springer, 2010, section N6 (as cited in ngdesign.units.heat.plate_exchanger_r1)."
+plate_heat_transfer_area:
+  name: Plate heat-transfer area from the plate geometry
+  latex: 'A = A_\mathrm{ht}(N_\mathrm{plates}, W, L, \lambda, \hat a)'
+  structural: true  # fluids.geometry.PlateExchanger.A_heat_transfer from the user's geometry
+overall_conductance_plate:
+  name: Overall conductance through a plate with fouling
+  latex: '\frac{1}{U} = \frac{1}{h_h} + R_{f,h} + \frac{t}{k} + R_{f,c} + \frac{1}{h_c},\quad UA = U A'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, ch. 11 (overall heat transfer coefficient, fouling factors)."
+single_phase_check:
+  name: No phase change along either side (LMTD validity flag)
+  latex: '\mathbb{1}\left[\beta(h) = \beta_\mathrm{in}\ \forall\ \text{samples}\right]'
+  structural: true

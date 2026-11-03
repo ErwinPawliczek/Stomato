@@ -19,8 +19,9 @@ from typing import Any
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.data import component_record
+from ngdesign.provenance.recorder import active
 from ngdesign.units._physics.kinetics import yield_shift
-from ngdesign.units.reactors._shared import thermal_outlet
+from ngdesign.units.reactors._shared import thermal_outlet, trace_component_flows, trace_mw
 
 
 class YieldReactor:
@@ -36,12 +37,17 @@ class YieldReactor:
         thermo: Thermo,
     ) -> UnitResult:
         inlet = inlets["inlet"]
-        n_out = yield_shift(
-            inlet.component_flows(),
-            feed_cids=list(params["feed_components"]),
-            yields_mass=[float(y) for y in params["yields_mass"]],
-            products=list(params["products"]),
-        )
+        n_in = inlet.component_flows()
+        feed_cids = list(params["feed_components"])
+        yields_mass = [float(y) for y in params["yields_mass"]]
+        products = list(params["products"])
+        n_out = yield_shift(n_in, feed_cids=feed_cids, yields_mass=yields_mass, products=products)
+        rec = active()
+        if rec is not None:
+            inputs: dict[str, Any] = {"n_in": trace_component_flows(rec, inlet, n_in)}
+            inputs.update({f"Y[{cid}]": y for cid, y in zip(products, yields_mass, strict=True)})
+            inputs.update({f"M[{cid}]": trace_mw(rec, cid) for cid in dict.fromkeys([*feed_cids, *products])})
+            rec.equation("n_out", n_out, "mol/s", "yield_shift", inputs)
         outlet, duty = thermal_outlet(inlet, n_out, params.get("thermal", "isothermal"), thermo)
         return UnitResult(outlets={"outlet": outlet}, duty_W=duty)
 
