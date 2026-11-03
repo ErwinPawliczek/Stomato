@@ -1,6 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import { api, type Meta, type Project } from "../api/client";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { api, type Meta, type Project, type XY } from "../api/client";
+import { FlowsheetCanvas, type CanvasLink, type CanvasUnit } from "../components/FlowsheetCanvas";
+import { UnitPalette } from "../components/UnitPalette";
+import { nearestFreeCell, snapToHex } from "../hexGrid";
 import { defaultParamsFor } from "../unitDefaults";
+import { catalogueEntry, nextTag, paletteItems } from "../unitPalette";
 import {
   celsiusToKelvin,
   formatNumber,
@@ -112,6 +116,12 @@ export function applyDrafts(project: Project, fields: Field[], drafts: Drafts): 
   };
 }
 
+/** Where a unit without a stored layout.pfd position is drawn: rows of five,
+ *  on the lattice. Display only; dragging it stores a real position. */
+export function autoPosition(index: number): XY {
+  return snapToHex({ x: 180 * (index % 5), y: 140 * Math.floor(index / 5) });
+}
+
 /** Layer 1: edit unit params and stream feed conditions; Save PUTs the whole Project. */
 export function FlowsheetView({ project }: { project: Project }) {
   const [current, setCurrent] = useState(project);
@@ -120,9 +130,12 @@ export function FlowsheetView({ project }: { project: Project }) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [metaError, setMetaError] = useState<string | null>(null);
-  const [newKind, setNewKind] = useState("");
-  const [newTag, setNewTag] = useState("");
   const [addError, setAddError] = useState<string | null>(null);
+  const [added, setAdded] = useState<string | null>(null);
+  // Tags the backend knows: their moves go straight to the layout API. Units
+  // added since the last save ride in current.layout.pfd until Save PUTs them.
+  const [savedTags, setSavedTags] = useState(() => new Set(project.flowsheet.units.map((u) => u.tag)));
+  const centreRef = useRef<XY>({ x: 0, y: 0 });
 
   // Registry inventory for the thermo selector and the add-unit palette.
   useEffect(() => {
@@ -140,7 +153,7 @@ export function FlowsheetView({ project }: { project: Project }) {
     };
   }, []);
 
-  const unitKinds = useMemo(() => [...(meta?.unit ?? [])].sort(), [meta]);
+  const palette = useMemo(() => paletteItems(meta?.unit), [meta]);
   // Always include the flowsheet's current model so the select can never show a
   // value it does not offer (e.g. while /api/meta is loading or mid-refresh).
   const thermoOptions = useMemo(
@@ -155,7 +168,27 @@ export function FlowsheetView({ project }: { project: Project }) {
   );
 
   // Sync when the parent hands us a different (reloaded) project.
-  useEffect(() => setCurrent(project), [project]);
+  useEffect(() => {
+    setCurrent(project);
+    setSavedTags(new Set(project.flowsheet.units.map((u) => u.tag)));
+  }, [project]);
+
+  const canvasUnits: CanvasUnit[] = useMemo(() => {
+    const placed = current.layout?.pfd ?? {};
+    return current.flowsheet.units.map((u, i) => ({
+      tag: u.tag,
+      kind: u.kind,
+      name: catalogueEntry(u.kind)?.name ?? u.kind,
+      pos: placed[u.tag] ?? autoPosition(i),
+    }));
+  }, [current]);
+  const canvasLinks: CanvasLink[] = useMemo(
+    () =>
+      current.flowsheet.streams.flatMap((s) =>
+        s.source && s.target ? [{ id: s.id, from: s.source.unit, to: s.target.unit }] : [],
+      ),
+    [current],
+  );
 
   const invalidKeys = new Set(
     fields
@@ -172,32 +205,58 @@ export function FlowsheetView({ project }: { project: Project }) {
     setDrafts((d) => ({ ...d, [key]: text }));
   }
 
-  /** Palette insert: append a UnitSpec with the registry kind and
-   * example_case()-shaped default params. Persisted by the existing Save
-   * button — one PUT path, like every other edit in this view. */
-  function addUnit(): void {
-    const tag = newTag.trim();
-    if (tag === "") {
-      setAddError("Enter a tag for the new unit.");
+  /** Palette insert: append a UnitSpec with the registry kind, example_case()-
+   * shaped default params and an auto tag (P&ID symbol + first free number),
+   * at `pos` on the canvas. Persisted by Save — one PUT path, like every other
+   * edit in this view. */
+  function addUnit(kind: string, pos: XY): void {
+    const known = palette.find((p) => p.kind === kind);
+    if (!known?.available) {
+      setAddError(`${kind} is not a registered unit kind.`);
       return;
     }
-    if (current.flowsheet.units.some((u) => u.tag === tag)) {
-      setAddError(`Tag ${tag} already exists in the flowsheet.`);
-      return;
-    }
-    if (newKind === "") {
-      setAddError("Pick a unit kind first.");
-      return;
-    }
+    const tag = nextTag(known.pidSymbol, current.flowsheet.units.map((u) => u.tag));
+    const layout = current.layout ?? { pfd: {}, pid: {}, plot: {} };
     setCurrent({
       ...current,
       flowsheet: {
         ...current.flowsheet,
-        units: [...current.flowsheet.units, { tag, kind: newKind, params: defaultParamsFor(newKind) }],
+        units: [...current.flowsheet.units, { tag, kind, params: defaultParamsFor(kind) }],
       },
+      layout: { ...layout, pfd: { ...(layout.pfd ?? {}), [tag]: pos } },
     });
-    setNewTag("");
     setAddError(null);
+    setAdded(`Added ${tag} (${known.name}). Save persists it.`);
+  }
+
+  /** Keyboard / click path: nearest free cell to the middle of the view. */
+  function addAtCentre(kind: string): void {
+    addUnit(kind, nearestFreeCell(centreRef.current, canvasUnits.map((u) => u.pos)));
+  }
+
+  function setPfdPosition(tag: string, pos: XY): void {
+    setCurrent((c) => {
+      const layout = c.layout ?? { pfd: {}, pid: {}, plot: {} };
+      return { ...c, layout: { ...layout, pfd: { ...(layout.pfd ?? {}), [tag]: pos } } };
+    });
+  }
+
+  /** Saved units: store via the layout API, then take its pfd layout (keeping
+   *  pending positions of unsaved units). Unsaved ones wait for Save. */
+  async function moveUnit(tag: string, pos: XY): Promise<void> {
+    setPfdPosition(tag, pos);
+    if (!savedTags.has(tag)) return;
+    try {
+      const layout = await api.place("pfd", tag, pos);
+      setCurrent((c) => {
+        const pending = Object.fromEntries(
+          Object.entries(c.layout?.pfd ?? {}).filter(([t]) => !savedTags.has(t)),
+        );
+        return { ...c, layout: { ...layout, pfd: { ...(layout.pfd ?? {}), ...pending } } };
+      });
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : String(e));
+    }
   }
 
   async function save(): Promise<void> {
@@ -207,6 +266,8 @@ export function FlowsheetView({ project }: { project: Project }) {
       const saved = await api.putProject(applyDrafts(current, fields, drafts));
       setDrafts({});
       setCurrent(saved);
+      setSavedTags(new Set(saved.flowsheet.units.map((u) => u.tag)));
+      setAdded(null);
     } catch (e) {
       setSaveError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -277,6 +338,25 @@ export function FlowsheetView({ project }: { project: Project }) {
           </select>
         </label>
       </div>
+      <div className="fsgrid">
+        <UnitPalette items={palette} onAdd={addAtCentre} />
+        <div className="fscol">
+          <FlowsheetCanvas
+            units={canvasUnits}
+            links={canvasLinks}
+            onDropUnit={addUnit}
+            onMoveUnit={(tag, pos) => void moveUnit(tag, pos)}
+            centreRef={centreRef}
+          />
+          {metaError && <p role="alert">Registry unavailable: {metaError}</p>}
+          {addError && <p role="alert">{addError}</p>}
+          {added && (
+            <p role="status" className="muted small">
+              {added}
+            </p>
+          )}
+        </div>
+      </div>
       <section>
         <h2>Units</h2>
         <table>
@@ -307,51 +387,6 @@ export function FlowsheetView({ project }: { project: Project }) {
             ))}
           </tbody>
         </table>
-      </section>
-      <section>
-        <h2>Add unit</h2>
-        {metaError && <p role="alert">Registry unavailable: {metaError}</p>}
-        {meta && (
-          <div className="toolbar">
-            <label className="field">
-              <span>Kind</span>
-              <select
-                aria-label="New unit kind"
-                value={newKind}
-                onChange={(e) => {
-                  setNewKind(e.target.value);
-                  setAddError(null);
-                }}
-              >
-                <option value="" disabled>
-                  Pick a kind…
-                </option>
-                {unitKinds.map((k) => (
-                  <option key={k} value={k}>
-                    {k}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              <span>Tag</span>
-              <input
-                type="text"
-                aria-label="New unit tag"
-                value={newTag}
-                onChange={(e) => {
-                  setNewTag(e.target.value);
-                  setAddError(null);
-                }}
-              />
-            </label>
-            <button type="button" disabled={newKind === ""} onClick={addUnit}>
-              Add unit
-            </button>
-            {addError && <span role="alert">{addError}</span>}
-            <span className="muted">Inserted with example params (SI); Save persists it.</span>
-          </div>
-        )}
       </section>
       <section>
         <h2>Feed conditions</h2>

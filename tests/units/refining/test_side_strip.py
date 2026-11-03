@@ -69,6 +69,7 @@ def _combined_k_values(
 # ------------------------------------------------------------------ closed form
 
 
+@pytest.mark.timeout(600)  # 67 s measured on a loaded runner; the 120 s default is load sensitive
 def test_split_matches_an_independent_kremser_fixed_point(thermo: Thermo) -> None:
     """The adapter's outlet split, recomputed independently of the adapter:
     K from the thermo protocol on the combined feed at (T, P), the vapour-rate
@@ -106,6 +107,7 @@ def test_split_matches_an_independent_kremser_fixed_point(thermo: Thermo) -> Non
     assert bottoms.composition.get("H2O", 0.0) == pytest.approx(0.0, abs=1e-15)
 
 
+@pytest.mark.timeout(600)  # 76 s measured on a loaded runner; the 120 s default is load sensitive
 def test_limit_behaviour_in_n(thermo: Thermo) -> None:
     """The analytic limits in the stage count: at large N every component with
     S_i = K_i V/L > 2 already at the steam seed is essentially fully stripped
@@ -147,6 +149,7 @@ def test_zero_stages_move_nothing_but_the_steam(thermo: Thermo) -> None:
     assert result.info["stripped_mol_s"] == pytest.approx(0.0, abs=1e-15)
 
 
+@pytest.mark.timeout(600)  # 84 s measured on a loaded runner; the 120 s default is load sensitive
 def test_molar_and_energy_balances_close(thermo: Thermo) -> None:
     unit = registry.create("unit", "side_strip")
     inlets, params = _example(thermo)

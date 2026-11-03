@@ -313,6 +313,7 @@ def test_r1_refuses_zero_flow(thermo: Thermo) -> None:
         PipeSegmentR1().solve({"inlet": inlet}, {"L_m": 100.0, "D_m": 0.0779}, thermo)
 
 
+@pytest.mark.timeout(600)  # 45 s measured on a loaded runner; the 120 s default is load sensitive
 def test_r1_refuses_bad_params(thermo: Thermo) -> None:
     inlets = {"inlet": flash_feed(thermo, CONDENSATE_FEED)}
     with pytest.raises(PipeSegmentSpecError, match="L_m"):

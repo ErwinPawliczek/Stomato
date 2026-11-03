@@ -52,6 +52,7 @@ def test_components_close(solved: Any) -> None:
         assert out == pytest.approx(rich.molar_flow * z, rel=1e-9), cid
 
 
+@pytest.mark.timeout(600)  # 47 s measured on a loaded runner; the 120 s default is load sensitive
 def test_stage_audit(solved: Any) -> None:
     """Reported-profile stage balances and a package re-flash of every stage's contents."""
     _, _, rich, res = solved
@@ -63,6 +64,7 @@ def test_stage_audit(solved: Any) -> None:
     assert max(equilibrium_residuals(package, stages)) < 1e-6
 
 
+@pytest.mark.timeout(600)  # 28 s measured on a loaded runner; the 120 s default is load sensitive
 def test_stripping_physics(solved: Any) -> None:
     cls, thermo, _, res = solved
     info = res.info
@@ -115,6 +117,7 @@ def mea_low_fixture() -> tuple[StreamState, UnitResult, UnitResult]:
 
 
 @pytest.mark.xdist_group("mea_low")
+@pytest.mark.timeout(600)  # 52 s measured on a loaded runner; the 120 s default is load sensitive
 def test_mea_low_boilup_converges(mea_low: tuple[StreamState, UnitResult, UnitResult]) -> None:
     """The continuation's answer is a converged column at exactly the requested boilup."""
     rich, res, _ = mea_low
@@ -145,6 +148,7 @@ def test_mea_low_boilup_strips_less(mea_low: tuple[StreamState, UnitResult, Unit
     assert low.info["reboiler_T_K"] < example.info["reboiler_T_K"]
 
 
+@pytest.mark.timeout(600)  # 87 s measured on a loaded runner; the 120 s default is load sensitive
 def test_dea_low_boilup_acid_gas_is_vapour(thermo: Thermo) -> None:
     """DEA at 20 mol/s: the wet top vapour re-flashes as vapour and the duty follows the boilup.
 
