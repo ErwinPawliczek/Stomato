@@ -130,6 +130,12 @@ sources:
     citation: "Ideal-gas parts of the reference equations of state carried by CoolProp 8.0.0 (Bell, I.H., Wronski, J., Quoilin, S. and Lemort, V., Ind. Eng. Chem. Res. 53(6), 2014, 2498-2508; MIT licence): each fluid's Cp0 correlation as published in its own EOS paper, cited per row in `reference` from CoolProp's CoolPropBibTeXLibrary.bib. Some of those papers fit Cp0 to measurements and some to spectroscopic or ab initio values, so the set is graded B, not A."
     url: https://github.com/CoolProp/CoolProp
     access: read from the installed CoolProp package at build time (fluid JSON alpha0 terms); each reconstruction is checked against CoolProp's own cp0molar to 1e-9 at up to five temperatures, and one term per row is written to cp0_eos.csv
+  thermoml:
+    grade: B
+    citation: "Riccardi, D. et al., ThermoML/Data Archive, National Institute of Standards and Technology, version 2020-09-30, doi:10.18434/mds2-2422: data extracted by NIST/TRC from articles in J. Chem. Eng. Data, J. Chem. Thermodyn., Fluid Phase Equilib., Thermochim. Acta and Int. J. Thermophys. Used here: pure-compound ideal-gas Cp(T) points; each row's `reference` names the article (first author, year, DOI) and the method the archive records. Methods recorded as predictions are refused. The values are the articles' statistical-thermodynamic calculations (experimental and calculated vibrational frequencies, per the articles), so the set is graded B."
+    url: https://data.nist.gov/od/id/mds2-2422
+    licence: "NIST open licence (https://www.nist.gov/open/license): NIST data are not subject to copyright in the United States, may be redistributed and modified with acknowledgement of NIST as the source and a notice of changes; the cp_gas_points.csv rows are an extract (ideal-gas Cp points only, converted to rows), not the archive."
+    access: ThermoML.v2020-09-30.tgz fetched from data.nist.gov and checked against its published SHA-256; read in place by scripts/chemdb/parse_thermoml.py; rows in cp_gas_points.csv
   poling:
     grade: B
     citation: "Poling, B.E., Prausnitz, J.M. and O'Connell, J.P., The Properties of Gases and Liquids, 5th ed., McGraw-Hill, 2000."

@@ -2,8 +2,8 @@ Cross-source disagreements found at build time (grade C sources excluded).
 A line here is not an error in the database: it names a property where two
 non-estimated sources differ by more than the audit limit; the selected value
 is the first one listed. Limits: 5 kJ/mol (Hf, Gf), 5 K (Tb, Tm, Tc), 2 bar (Pc),
-2 % (reference-EOS ideal-gas Cp0 against the gas model's own Cp source, which
-stays the selected shape).
+2 % (reference-EOS ideal-gas Cp0, and tabulated gas Cp(T) between 298.15 and
+1000 K, against the gas model's own Cp source, which stays the selected shape).
 
 outvoted Tc 102-69-2: iupac_critical 637.9 set aside for psrk 600 K
 outvoted Pc 105-67-9: crc_critical 3.5e+06 set aside for psrk 4.35698e+06 Pa
@@ -1829,3 +1829,30 @@ Cp_gas(T) 107-06-2: cp_fit:trc 77.58 vs coolprop_ig 82.29 J/(mol K) at 300 K (+6
 Cp_gas(T) 115-10-6: cp_fit:trc 91.29 vs coolprop_ig 93.33 J/(mol K) at 500 K (+2.2 %)
 Cp_gas(T) 2314-97-8: janaf:C-039 71.14 vs coolprop_ig 67.22 J/(mol K) at 300 K (-5.5 %)
 Cp_gas(T) 355-25-9: cp_fit:trc 190.7 vs coolprop_ig 205.5 J/(mol K) at 300 K (+7.8 %)
+Cp_gas(T) 107-21-1: cp_fit:trc 171.9 vs nist table (Yeh T.-S., 1994) 156.4 J/(mol K) at 1000 K (-9.0 %)
+Cp_gas(T) 107-31-3: cp_fit:trc 81.55 vs nist table (Chao J., 1986) 77.56 J/(mol K) at 400 K (-4.9 %)
+Cp_gas(T) 108-20-3: cp_fit:trc 214.2 vs nist table (Andon R.J.L., 1974) 219.1 J/(mol K) at 449.98 K (+2.3 %)
+Cp_gas(T) 108-88-3: cp_fit:trc 136.3 vs nist table (Scott D.W., 1962) 140.2 J/(mol K) at 390 K (+2.8 %)
+Cp_gas(T) 108-93-0: cp_fit:trc 128.4 vs nist table (Kabo G.J., 1988) 133.5 J/(mol K) at 300 K (+4.0 %)
+Cp_gas(T) 108-94-1: cp_fit:trc 117 vs nist table (Kabo G.J., 1988) 121.9 J/(mol K) at 300 K (+4.2 %)
+Cp_gas(T) 110-83-8: cp_fit:trc 135.8 vs nist table (Montgomery J.B., 1942) 141.4 J/(mol K) at 390 K (+4.2 %)
+Cp_gas(T) 115-07-1: nasa9 77.12 vs nist table (Bier K., 1974) 79.85 J/(mol K) at 378.15 K (+3.5 %)
+Cp_gas(T) 123-38-6: nasa9 165.8 vs nist table (Chao J., 1986) 176.3 J/(mol K) at 1000 K (+6.3 %)
+Cp_gas(T) 123-38-6: nasa9 88.73 vs nist table (Counsell J.F., 1972) 84.53 J/(mol K) at 325.04 K (-4.7 %)
+Cp_gas(T) 144-62-7: nasa9 146.6 vs nist table (Dorofeeva O.V., 1997) 149.8 J/(mol K) at 1000 K (+2.2 %)
+Cp_gas(T) 1678-91-7: cp_fit:trc 164.2 vs nist table (Colgate S.O., 1990) 152.2 J/(mol K) at 298.15 K (-7.3 %)
+Cp_gas(T) 526-73-8: cp_fit:trc 155.1 vs nist table (Draeger, 1985) 159.1 J/(mol K) at 298.15 K (+2.6 %)
+Cp_gas(T) 563-79-1: cp_fit:trc 147.1 vs nist table (Scott D.W., 1955) 142 J/(mol K) at 355.25 K (-3.4 %)
+Cp_gas(T) 67-56-1: nasa9 48.31 vs nist table (Stromsoe E., 1970) 46.7 J/(mol K) at 358.15 K (-3.3 %)
+Cp_gas(T) 67-64-1: nasa9 96.25 vs nist table (Chao J., 1976) 99.4 J/(mol K) at 428 K (+3.3 %)
+Cp_gas(T) 71-23-8: cp_fit:trc 102.7 vs nist table (Stromsoe E., 1970) 107.3 J/(mol K) at 375.45 K (+4.4 %)
+Cp_gas(T) 71-36-3: cp_fit:trc 136.5 vs nist table (Stromsoe E., 1970) 140.9 J/(mol K) at 395.25 K (+3.2 %)
+Cp_gas(T) 71-41-0: cp_fit:trc 173.8 vs nist table (Stromsoe E., 1970) 177.7 J/(mol K) at 418.95 K (+2.3 %)
+Cp_gas(T) 71-43-2: cp_fit:trc 130.2 vs nist table (Todd S.S., 1978) 126.8 J/(mol K) at 463 K (-2.6 %)
+Cp_gas(T) 74-82-8: janaf:C-067 71.8 vs nist table (Gurvich, Veyts, et al., 1989) 73.75 J/(mol K) at 1000 K (+2.7 %)
+Cp_gas(T) 75-85-4: cp_fit:trc 160.8 vs nist table (Stromsoe E., 1970) 167.7 J/(mol K) at 381.35 K (+4.3 %)
+Cp_gas(T) 87-85-4: cp_fit:trc 511.8 vs nist table (Draeger, 1985) 432.1 J/(mol K) at 700 K (-15.6 %)
+Cp_gas(T) 91-57-6: cp_fit:trc 159.8 vs nist table (Thermodynamics Research Center, 1997) 154.6 J/(mol K) at 298.15 K (-3.3 %)
+Cp_gas(T) 95-63-6: cp_fit:trc 150.8 vs nist table (Draeger, 1985) 155 J/(mol K) at 300 K (+2.8 %)
+Cp_gas(T) 95-93-2: cp_fit:trc 189.6 vs nist table (Draeger, 1985) 183.1 J/(mol K) at 298.15 K (-3.4 %)
+Cp_gas(T) 96-41-3: cp_fit:trc 113.1 vs nist table (Kabo G.J., 1995) 105.4 J/(mol K) at 298.15 K (-6.8 %)

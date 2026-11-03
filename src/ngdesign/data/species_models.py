@@ -17,7 +17,9 @@ Models, best first, chosen per species and phase:
    ``chemicals`` integrals) on the selected S°298.
    Failing those, the ideal-gas part of a reference equation of state as carried by
    CoolProp (Planck-Einstein, Aly-Lee and power terms, cited per fluid; analytic
-   integrals in ``_Cp0EosCurve``).
+   integrals in ``_Cp0EosCurve``). After those and the snapshot Shomate Cp pieces, a
+   stated gas Cp(T) table (WebBook or ThermoML, ``chemdb.cp_gas_points``) spanning
+   298.15 K, linear in T between its nodes (``_TabulatedCpCurve``).
 4. **Liquid Cp fits**: Zabransky splines or DIPPR 100 polynomials, after a saturation
    model μ°(l) = μ°(g) + RT ln(Psat/P°) wherever a vapour-pressure fit reaches 298.15 K.
 5. **Constant Cp** at the tabulated 298 K value, within a narrow range for a gas. The
@@ -32,6 +34,7 @@ This sits in the data layer so the flowsheet's reaction physics (below
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -462,6 +465,83 @@ class _Cp0EosCurve(_Curve):
         return self.s298 + self._antiderivatives(T)[2] - self._antiderivatives(T_REF)[2]
 
 
+class _TabulatedCpCurve(_Curve):
+    """A stated ideal-gas Cp(T) table, linear in T between its nodes, anchored on S°298.
+
+    On a node interval Cp = a + bT, so ∫Cp dT = a ΔT + b Δ(T²)/2 and
+    ∫Cp/T dT = a ln(T/T₀) + b ΔT, exactly. Every tabulated point is reproduced; nothing
+    is fitted, and the range is the table's own.
+    """
+
+    def __init__(self, rows: Sequence[Mapping[str, Any]], s298: float) -> None:
+        self.t = [float(r["T"]) for r in rows]
+        self.c = [float(r["Cp"]) for r in rows]
+        self.tmin, self.tmax = self.t[0], self.t[-1]
+        self.s298 = s298
+        self.name = f"cp_table:{rows[0]['source']}"
+        self._h0 = [0.0]
+        self._s0 = [0.0]
+        for i in range(len(self.t) - 1):
+            h, s = self._piece(i, self.t[i + 1])
+            self._h0.append(self._h0[-1] + h)
+            self._s0.append(self._s0[-1] + s)
+        self._h_ref, self._s_ref = self._integrals(T_REF)
+
+    def _interval(self, T: float) -> int:
+        return max(0, min(int(np.searchsorted(self.t, T, side="right")) - 1, len(self.t) - 2))
+
+    def _piece(self, i: int, T: float) -> tuple[float, float]:
+        """∫Cp dT and ∫Cp/T dT from node i to T."""
+        t0, t1, c0, c1 = self.t[i], self.t[i + 1], self.c[i], self.c[i + 1]
+        b = (c1 - c0) / (t1 - t0)
+        a = c0 - b * t0
+        return a * (T - t0) + 0.5 * b * (T * T - t0 * t0), a * math.log(T / t0) + b * (T - t0)
+
+    def _integrals(self, T: float) -> tuple[float, float]:
+        i = self._interval(T)
+        h, s = self._piece(i, T)
+        return self._h0[i] + h, self._s0[i] + s
+
+    def cp(self, T: float) -> float:
+        i = self._interval(T)
+        u = (T - self.t[i]) / (self.t[i + 1] - self.t[i])
+        return self.c[i] + u * (self.c[i + 1] - self.c[i])
+
+    def dh(self, T: float) -> float:
+        return self._integrals(T)[0] - self._h_ref
+
+    def s(self, T: float) -> float:
+        return self.s298 + self._integrals(T)[1] - self._s_ref
+
+
+#: Preference among tabulated gas Cp(T) sources (``chemdb.cp_gas_points``).
+_CP_TABLE_SOURCES = ("nist", "thermoml")
+
+
+def _cp_table(cas: str) -> list[dict[str, Any]] | None:
+    """The tabulated gas Cp(T) table to use: one stated table spanning 298.15 K.
+
+    A table needs three or more distinct temperatures with 298.15 K inside them.
+    Preferred: the WebBook over ThermoML, then the widest range, then the newest year.
+    """
+    candidates = []
+    for (source, reference), rows in chemdb.cp_gas_points(cas).items():
+        temperatures = [float(r["T"]) for r in rows]
+        if (
+            source in _CP_TABLE_SOURCES
+            and len(set(temperatures)) == len(temperatures) >= 3
+            and temperatures[0] <= T_REF <= temperatures[-1]
+        ):
+            years = [int(y) for y in re.findall(r"(?:19|20)\d\d", reference)]
+            rank = (
+                _CP_TABLE_SOURCES.index(source),
+                -(temperatures[-1] - temperatures[0]),
+                -max(years, default=0),
+            )
+            candidates.append((rank, reference, rows))
+    return min(candidates, key=lambda c: (c[0], c[1]))[2] if candidates else None
+
+
 class _ConstantCpCurve(_Curve):
     """Constant Cp between stated limits: the coarse condensed-phase fallback."""
 
@@ -675,6 +755,10 @@ def species_thermo(query: str, phase: str = "gas", hf_source: str | None = None)
                 pieces = _shomate_cp_pieces(species.cas, phase)
                 if pieces:
                     curve = _CpFitCurve(pieces, s298)
+            if curve is None and phase == "gas":
+                table = _cp_table(species.cas)
+                if table is not None:
+                    curve = _TabulatedCpCurve(table, s298)
         if curve is None:
             cp = chemdb.maybe(species.cas, f"Cp_{phase}")
             if cp is None:

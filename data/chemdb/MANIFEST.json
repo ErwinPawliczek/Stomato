@@ -14,6 +14,7 @@
     "dippr101": 382,
     "cp_liquid": 855,
     "cp_gas": 1726,
+    "cp_gas_points": 3724,
     "cp0_eos": 684,
     "janaf": 65036
   },
@@ -83,6 +84,7 @@
   },
   "audit": {
     "conflict_Cp0": 4,
+    "conflict_Cp_table": 27,
     "conflict_Gf_gas": 38,
     "conflict_Gf_liquid": 1,
     "conflict_Gf_solid": 22,
@@ -95,6 +97,7 @@
     "conflict_Tc": 264,
     "conflict_Tm": 185,
     "cp0_compared": 91,
+    "cp_table_compared": 222,
     "formula_conflict_nist": 1
   },
   "dropped_at_build": {
@@ -112,7 +115,8 @@
     "nonpositive_Tc": 6,
     "nonpositive_Tt": 1,
     "pubchem_record_is_another_formula": 1,
-    "species_with_invalid_cas": 8
+    "species_with_invalid_cas": 8,
+    "thermoml_point_without_species": 73
   },
   "selections_outvoted": 78
 }
