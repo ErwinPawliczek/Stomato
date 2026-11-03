@@ -35,7 +35,17 @@ REACTORS = [
     "pfr/R2",
     "pfr/R3",
 ]
-COLUMNS: list[str] = []
+COLUMNS = [
+    "shortcut_distillation/R0",
+    "column/R2",
+    "absorber/R0",
+    "absorber/R2",
+    "reboiled_stripper/R0",
+    "reboiled_stripper/R2",
+    "refluxed_absorber/R2",
+    "column_extensions/R2",
+    "reactive_stages/R2",
+]
 EXCHANGERS: list[str] = []
 INSTRUMENTED = REACTORS + COLUMNS + EXCHANGERS
 

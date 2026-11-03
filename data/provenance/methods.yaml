@@ -548,6 +548,18 @@ relative_residual:
   name: Relative residual
   latex: '\epsilon = |r| / \max(|a|, |b|, 1)'
   structural: true
+kremser_split:
+  name: Kremser group method (two-feed split per component)
+  latex: '\phi(A, N) = \frac{A^{N+1} - A}{A^{N+1} - 1},\quad A_i = \frac{L}{K_i V},\ S_i = \frac{K_i V}{L},\quad v_{i,\mathrm{out}} = g_i\left[1 - \phi(A_i)\right] + l_i\,\phi(S_i)'
+  references:
+    - source: seader_henley_roper_2011
+      citation: "Seader, J.D., Henley, E.J. and Roper, D.K., Separation Process Principles, 3rd ed., Wiley, 2011, eqs. (5-48), (5-50), (5-54), (5-55), as cited in ngdesign.units.column_shortcut._kremser."
+    - source: treybal_1980
+      citation: "Treybal, R.E., Mass-Transfer Operations, 3rd ed., McGraw-Hill, 1980, sec. 5 (Kremser equation), as cited in ngdesign.sizing.kremser."
+average_condition:
+  name: Arithmetic mean of the inlet conditions
+  latex: '\bar x = (x_1 + x_2)/2'
+  structural: true
 
 # ---------------------------------------------------------------- heat exchangers (unit instrumentation)
 composite_curve_approach:

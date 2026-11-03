@@ -23,8 +23,14 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.units._physics.shortcut import kremser_fraction
-from ngdesign.units.column_shortcut._kremser import two_feed_split
+from ngdesign.units.column_shortcut._kremser import (
+    trace_average_condition,
+    trace_kremser_split,
+    trace_two_feed_duty,
+    two_feed_split,
+)
 
 #: Components of the Seader-Henley Example 5.3 basis (pp. 186-188), used as
 #: the adapter's example case: 800 lbmol/h rich gas at 105 F / 400 psia,
@@ -71,6 +77,9 @@ class Absorber:
 
         t_avg = 0.5 * (gas.T + solvent.T)
         p_avg = 0.5 * (gas.P + solvent.P)
+        rec = active()
+        if rec is not None and not overrides:
+            trace_average_condition(rec, gas, solvent, t_avg, p_avg)
         k_map: dict[str, float]
         if overrides:
             k_map = {str(cid): float(k) for cid, k in overrides.items()}
@@ -96,6 +105,26 @@ class Absorber:
         total_rich_out = sum(out_rich.values())
         z_gas = {cid: n / total_gas_out for cid, n in out_gas.items()}
         z_rich = {cid: n / total_rich_out for cid, n in out_rich.items()}
+        if rec is not None:
+            extra: dict[str, float] = {}
+            for cid in sorted(set(gas_flows) | set(liquid_flows)):
+                a_i = solvent.molar_flow / (k_map[cid] * gas.molar_flow)
+                s_i = k_map[cid] * gas.molar_flow / solvent.molar_flow
+                extra[f"f_not_absorbed_{cid}"] = 1.0 - kremser_fraction(a_i, stages)
+                extra[f"f_not_stripped_{cid}"] = 1.0 - kremser_fraction(s_i, stages)
+            trace_kremser_split(
+                rec,
+                {
+                    "V": (gas, "molar_flow"),
+                    "y_in": (gas, "composition"),
+                    "L": (solvent, "molar_flow"),
+                    "x_in": (solvent, "composition"),
+                    "N": stages,
+                },
+                k_map,
+                [("out_gas", out_gas, z_gas, total_gas_out), ("rich", out_rich, z_rich, total_rich_out)],
+                extra,
+            )
         gas_out = thermo.flash_pt(z_gas, gas.T, gas.P, total_gas_out)
         rich_out = thermo.flash_pt(z_rich, solvent.T, solvent.P, total_rich_out)
 
@@ -108,6 +137,8 @@ class Absorber:
             info[f"f_not_absorbed_{cid}"] = 1.0 - kremser_fraction(a_i, stages)
             info[f"f_not_stripped_{cid}"] = 1.0 - kremser_fraction(s_i, stages)
         duty_w = _enthalpy_flow(gas_out, rich_out) - _enthalpy_flow(gas, solvent)
+        if rec is not None:
+            trace_two_feed_duty(rec, duty_w, (gas, solvent), (gas_out, rich_out))
         return UnitResult(
             outlets={"gas_out": gas_out, "rich_out": rich_out},
             duty_W=duty_w,

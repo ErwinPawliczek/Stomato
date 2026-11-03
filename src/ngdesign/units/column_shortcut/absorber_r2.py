@@ -61,6 +61,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.units.column import Column
 
 #: Every params key :meth:`AbsorberR2.solve` accepts. The level-dispatch
@@ -166,6 +167,28 @@ class AbsorberR2:
         h_out = gas_out.molar_flow * gas_out.enthalpy + rich_out.molar_flow * rich_out.enthalpy
         q_res = h_out - h_in
         scale = max(abs(h_in), abs(h_out), 1.0)
+        rec = active()
+        if rec is not None:
+            res_ref = rec.equation(
+                "mesh_energy_residual_W",
+                q_res,
+                "W",
+                "multi_stream_energy_balance",
+                {
+                    "F_gas": (gas, "molar_flow"),
+                    "h_gas": (gas, "enthalpy"),
+                    "F_solvent": (solvent, "molar_flow"),
+                    "h_solvent": (solvent, "enthalpy"),
+                    "F_gas_out": (gas_out, "molar_flow"),
+                    "h_gas_out": (gas_out, "enthalpy"),
+                    "F_rich": (rich_out, "molar_flow"),
+                    "h_rich": (rich_out, "enthalpy"),
+                },
+                note="boundary energy residual of the zero-hardware column, reported as its duty",
+            )
+            rec.equation(
+                "mesh_energy_residual_rel", abs(q_res) / scale, "1", "relative_residual", {"r": res_ref}
+            )
 
         info: dict[str, float] = {
             key: value for key, value in result.info.items() if key.startswith("stage_")

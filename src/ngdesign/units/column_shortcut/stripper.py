@@ -23,7 +23,8 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units.column_shortcut._kremser import two_feed_split
+from ngdesign.provenance.recorder import active
+from ngdesign.units.column_shortcut._kremser import trace_kremser_split, trace_two_feed_duty, two_feed_split
 
 #: Seader-Henley Example 9.8 basis (pp. 371-372), used as the adapter's
 #: example case: 120 lbmol/h of a rich solvent (SO2, butadiene isomers and a
@@ -100,18 +101,22 @@ class ReboiledStripper:
         )
         total_overhead = sum(overhead_flows.values())
         total_bottoms = sum(bottoms_flows.values())
-        overhead = thermo.flash_pt(
-            {cid: n / total_overhead for cid, n in overhead_flows.items()},
-            feed.T,
-            feed.P,
-            total_overhead,
-        )
-        bottoms = thermo.flash_pt(
-            {cid: n / total_bottoms for cid, n in bottoms_flows.items()},
-            feed.T,
-            feed.P,
-            total_bottoms,
-        )
+        z_overhead = {cid: n / total_overhead for cid, n in overhead_flows.items()}
+        z_bottoms = {cid: n / total_bottoms for cid, n in bottoms_flows.items()}
+        rec = active()
+        if rec is not None:
+            trace_kremser_split(
+                rec,
+                {"L": (feed, "molar_flow"), "x_in": (feed, "composition"), "V": vapour, "N": stages},
+                k_map,
+                [
+                    ("overhead", overhead_flows, z_overhead, total_overhead),
+                    ("bottoms", bottoms_flows, z_bottoms, total_bottoms),
+                ],
+                {},
+            )
+        overhead = thermo.flash_pt(z_overhead, feed.T, feed.P, total_overhead)
+        bottoms = thermo.flash_pt(z_bottoms, feed.T, feed.P, total_bottoms)
 
         info: dict[str, float] = {}
         for cid in sorted(liquid_flows):
@@ -122,6 +127,9 @@ class ReboiledStripper:
             + total_bottoms * bottoms.enthalpy
             - feed.molar_flow * feed.enthalpy
         )
+        if rec is not None:
+            # the stripping vapour is a flow spec without a state: it carries no enthalpy here
+            trace_two_feed_duty(rec, duty_w, (feed,), (overhead, bottoms))
         return UnitResult(
             outlets={"overhead": overhead, "bottoms": bottoms},
             duty_W=duty_w,

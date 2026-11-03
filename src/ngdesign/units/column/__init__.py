@@ -62,6 +62,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import Recorder, active
 from ngdesign.registry import register
 
 from .inside_out import (
@@ -323,16 +324,100 @@ def _column_result(
         for cid, frac in prof.y[j].items():
             info[f"stage_{j}_y_{cid}"] = frac
 
-    return UnitResult(
-        outlets={"distillate": distillate, "bottoms": bottoms, "side_draw": side_draw},
-        # Net unit duty (review item 1, PR #238): physical reboiler duty
-        # plus the pumparound coolers' (negative) and the inter-stage
-        # heaters' duties minus the condenser duty - closes the boundary
-        # stream table exactly.
-        duty_W=prof.qr
+    # Net unit duty (review item 1, PR #238): physical reboiler duty
+    # plus the pumparound coolers' (negative) and the inter-stage
+    # heaters' duties minus the condenser duty - closes the boundary
+    # stream table exactly.
+    duty_W = (
+        prof.qr
         - prof.qc
         + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0)
         + sum(col.stage_q)
-        + _section_duty_total(col),
+        + _section_duty_total(col)
+    )
+    rec = active()
+    if rec is not None:
+        _trace_column(rec, col, parsed, prof, info, feed_states, out_states, side_draw, duty_W)
+    return UnitResult(
+        outlets={"distillate": distillate, "bottoms": bottoms, "side_draw": side_draw},
+        duty_W=duty_W,
         info=info,
     ), stripper_states
+
+
+def _trace_column(
+    rec: Recorder,
+    col: _Column,
+    parsed: _Params,
+    prof: _Profile,
+    info: dict[str, float],
+    feed_states: list[StreamState],
+    out_states: list[StreamState],
+    side_draw: StreamState,
+    duty_W: float,
+) -> None:
+    """Provenance (tracing on only): the converged column as one operation.
+
+    The MESH solution - stage profiles, product flows, condenser duty, iteration
+    counts - is one ``column_inside_out`` result whose inputs are the feeds and the
+    design numbers; the product states are its outputs (their boundary flashes are
+    not shown separately). The reboiler duty is the exact overall energy balance
+    over the boundary streams (``_close_energy_balance``) and the net duty its sum
+    with the condenser and auxiliary duties; both are recorded as such.
+    """
+    inputs: dict[str, Any] = {}
+    for k, state in enumerate(feed_states):
+        for prop in ("T", "P", "molar_flow", "composition", "enthalpy"):
+            inputs[f"feed{k}.{prop}"] = (state, prop)
+    inputs["N"] = float(parsed.n_stages)
+    pressures = sorted(set(parsed.pressures))
+    if len(pressures) == 1:
+        inputs["P"] = pressures[0]
+    else:
+        inputs["P_top"] = parsed.pressures[0]
+        inputs["P_bottom"] = parsed.pressures[-1]
+    for key, spec in parsed.specs.items():
+        if isinstance(spec, int | float) and not isinstance(spec, bool):
+            inputs[f"spec.{key}"] = float(spec)
+        elif isinstance(spec, dict):
+            for sub, value in spec.items():
+                if isinstance(value, int | float) and not isinstance(value, bool):
+                    inputs[f"spec.{key}.{sub}"] = float(value)
+    for draw in parsed.draws:
+        if draw.flow is not None:
+            inputs[f"draw.{draw.stage}"] = draw.flow
+    balance_keys = {"reboiler_duty_W"} | {k for k in info if k.startswith("heater_")}
+    refs = rec.results(
+        "column_inside_out",
+        {k: v for k, v in info.items() if k not in balance_keys},
+        inputs,
+        states=[*out_states, side_draw],
+        iterations=prof.outer,
+        note=(
+            f"{prof.outer} outer / {prof.inner} inner inside-out iterations"
+            + (f"; Naphtali-Sandholm Newton fallback, {prof.ns_passes} passes" if prof.ns_used else "")
+        ),
+    )
+    balance: dict[str, Any] = {}
+    for k, state in enumerate(feed_states):
+        balance[f"F_in{k}"] = (state, "molar_flow")
+        balance[f"h_in{k}"] = (state, "enthalpy")
+    for k, state in enumerate(out_states):
+        balance[f"F_out{k}"] = (state, "molar_flow")
+        balance[f"h_out{k}"] = (state, "enthalpy")
+    balance["Q_C"] = refs["condenser_duty_W"]
+    for pa, rep in zip(col.pumparounds, prof.pa_report, strict=False):
+        balance[f"Q_PA[{pa.name}]"] = refs.get(f"pa_{pa.name}_duty_W", rep["duty_W"])
+    for heater in parsed.stage_heaters:
+        balance[f"Q_heater[{heater.stage}]"] = heater.duty_W
+    q_r = rec.equation(
+        "reboiler_duty_W",
+        prof.qr,
+        "W",
+        "column_energy_balance",
+        balance,
+        note="reaction heat over the boundary amounts included" if col.reactions is not None else None,
+    )
+    net: dict[str, Any] = {"Q_R": q_r, "Q_C": refs["condenser_duty_W"]}
+    net.update({k: v for k, v in balance.items() if k.startswith(("Q_PA", "Q_heater"))})
+    rec.equation("duty_W", duty_W, "W", "column_net_duty", net)

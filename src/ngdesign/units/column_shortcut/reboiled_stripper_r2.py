@@ -33,6 +33,7 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
+from ngdesign.provenance.recorder import active
 from ngdesign.units.column import Column
 
 #: The allowed single spec keys and their float info codes.
@@ -160,6 +161,31 @@ class ReboiledStripperR2:
                 info[key] = value
         info["spec_name"] = _SPEC_CODES[spec_name]
         info["spec_achieved"] = _measured_spec(raw_spec, spec_name, feed, overhead, bottoms, result)
+        rec = active()
+        if rec is not None:
+            rec.equation("spec_name", info["spec_name"], "", "spec_code", {}, note=f"spec: {spec_name}")
+            measures: dict[str, dict[str, Any]] = {
+                "boilup_ratio": {"x": result.info["boilup_ratio"]},
+                "bottoms_rate": {"x": (bottoms, "molar_flow")},
+                "distillate_rate": {"x": (overhead, "molar_flow")},
+            }
+            measured = measures.get(spec_name)
+            if measured is None:
+                product = overhead if str(raw_spec.get("product", "distillate")) == "distillate" else bottoms
+                measured = {
+                    "F": (feed, "molar_flow"),
+                    "z": (feed, "composition"),
+                    "F_out": (product, "molar_flow"),
+                    "z_out": (product, "composition"),
+                }
+            rec.equation(
+                "spec_achieved",
+                info["spec_achieved"],
+                "",
+                "identity" if spec_name != "component_recovery" else "component_recovery",
+                measured,
+                note=f"measured {spec_name}",
+            )
 
         return UnitResult(
             outlets={"overhead": overhead, "bottoms": bottoms},
