@@ -9,7 +9,7 @@ registry implements. A level or method listed here is listed but not implemented
 | | listed | implemented | open |
 |---|---|---|---|
 | Unit rows | 84 | 83 | 1 |
-| Planned rigour levels on implemented units | | | 9 |
+| Planned rigour levels on implemented units | | | 8 |
 | Property methods in the plan | 168 | 160 | 8 |
 
 Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
@@ -18,21 +18,20 @@ Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
 
 | unit | family | level | note |
 |---|---|---|---|
-| `divided_wall` | column | R2 | two coupled MESH sections; blocked on the column core, the plain two-tear side-draw column does not converge on nC4/nC5/nC6 at 3 bar (11 stages, M=1.4e-2, NS stalls; spec P1-13) and a section tear loop is the design S0-1c rejected. Needs the graph solver of S0-1c (unmerged branch s0-1c/2-graph-ns) extended to two parallel sections |
+| `divided_wall` | column | R2 | two coupled MESH sections; P1-13 (the two-tear column core) and the S0-1c step 2 graph Newton (units/column/graph_ns.py) are in, but the stage graph only appends side-stripper sections fed by a liquid draw and returning their top vapour; a dividing wall needs two parallel sections that split both the liquid and the vapour traffic and rejoin above and below the wall, which neither the graph builder nor the inside-out sweep handles. Not attempted on this tree |
 
 ## Planned levels on implemented units
 
 | unit | level | note |
 |---|---|---|
-| `crude_column` | R2 | MESH with side strippers, pumparounds, stripping steam, overflash; blocked on spec S0-1c steps 2-4 (the simultaneous stripper solve; the column refuses side_strippers), P1-13, and pseudo-component cost (the dense NS does not finish a 5-stage 48-species column in 560 s) |
-| `vacuum_column` | R2 | MESH with pumparounds, no condenser, wash zone; a zero-tear 6-stage column on the 19-pseudo example feed does not finish in 280 s (dense NS), which the sparse solver of S0-1c step 2 is meant to fix |
-| `preflash` | R2 | short MESH; a 5-stage partial-condenser column on the 48-species example feed does not finish in 560 s (dense NS, spec S0-1c step 2) |
-| `mdea_absorber` | R2 | P1-11 is merged and the 20-stage MDEA column converges (tests/units/test_column_amine.py), but in ~120 s, over the locked per-test limit; the short columns that fit miss the locked balance (5 stages closes components to 1.4e-4 under the reactive 1e-3 gate) or fail (8 stages does not converge), so no adapter ships |
-| `mea_absorber` | R2 | P1-11 is merged, but the zero-tear column on this row's example feed leaves the package domain at 5 stages (speciation pressure vanished for CO2, measured on MEA); no adapter ships until that closes |
-| `dea_absorber` | R2 | P1-11 is merged, but the zero-tear column on this row's example feed leaves the package domain at 5 stages (speciation pressure vanished for CO2, measured on MEA); no adapter ships until that closes |
-| `mdea_regenerator` | R2 | P1-11 is merged, but the kettle column on the amine package does not converge (MDEA, 6 stages, 1.9 bar, boilup 20 mol/s - M=5.5e-2, H=2.1e-1); no adapter ships until it does |
-| `mea_regenerator` | R2 | P1-11 is merged, but the kettle column on the amine package does not converge (MDEA, 6 stages, 1.9 bar, boilup 20 mol/s - M=5.5e-2, H=2.1e-1); no adapter ships until it does |
-| `dea_regenerator` | R2 | P1-11 is merged, but the kettle column on the amine package does not converge (MDEA, 6 stages, 1.9 bar, boilup 20 mol/s - M=5.5e-2, H=2.1e-1); no adapter ships until it does |
+| `crude_column` | R2 | MESH with side strippers, pumparounds, stripping steam, overflash; P1-13 is in, but still blocked on spec S0-1c steps 3-4 (the simultaneous stripper solve and the condenser decant; the column refuses side_strippers) and on pseudo-component cost (one 48-species PT flash ~2 s; see the preflash row) |
+| `vacuum_column` | R2 | MESH with pumparounds, no condenser, wash zone; re-measured on the P1-13 tree - a zero-tear 6-stage column on the 19-pseudo example feed (40 mmHg, a 450 K wash of the same oil on stage 1) now finishes, but does not converge (65 s; the sweeps sit at M ~ 1.0 with H ~ 10, NS stalls at M = 1.0, H = 0.43) |
+| `preflash` | R2 | short MESH; re-measured on the P1-13 tree - a PT flash of the 48-species example feed costs ~2 s on the PR package (Michelsen stability tests dominate), so one flash-surface sweep of a 5-stage partial-condenser column (D = 150 mol/s) takes ~260 s; on the fugacity surface the sweeps take ~0.1 s but diverge (M ~ 1.5, H ~ 1.3) and Naphtali-Sandholm stalls at M = 1.0 after 25 passes |
+| `mdea_absorber` | R2 | re-measured on the P1-13 tree (zero-tear column on amine_ke, example feeds) - 5 stages fails (NS stalls at M=2.3e-3 against the reactive 1e-3 gate, 53 s), 8 stages fails (M=9.2e-3, 118 s); the 20-stage column converges (tests/units/test_column_amine.py) but its solve takes 150-190 s under parallel load, over the locked per-test limit, so no adapter ships |
+| `mea_absorber` | R2 | re-measured on the P1-13 tree - the zero-tear column on this row's example feed leaves the package domain at 5 stages (speciation pressure vanished for CO2 at 335.4 K, 1.4 s); no adapter ships until that closes |
+| `dea_absorber` | R2 | re-measured on the P1-13 tree (zero-tear column on amine_ke, example feeds) - 3, 5 and 8 stages converge (13, 20, 83 s) but close components only to 1.1e-4, 2.1e-11 and 1.4e-3 (the reactive 1e-3 stage gate), and 4 stages fails (M=1.03e-3); not reliable against the locked 1e-6 balance, so no adapter ships |
+| `mea_regenerator` | R2 | measured on the P1-13 tree (6-stage kettle stripper on amine_ke, 1.9 bar, rich feed at 370 K, boilup 20 mol/s) - MEA does not converge (NS stalls at M=52, 28 s); the MDEA row's R2 adapter (amine_regenerator_r2) is not shipped for MEA until it does |
+| `dea_regenerator` | R2 | measured on the P1-13 tree (6-stage kettle stripper on amine_ke, 1.9 bar, rich feed at 370 K) - the column converges and closes components (1.8e-6 at boilup 20, 2.6e-10 at 30 mol/s), but the independent stage audit fails - the top stage's L+V contents re-flash single-phase on the package (equilibrium residual 1.0), so no adapter ships |
 
 ## Property methods listed but not closed
 
