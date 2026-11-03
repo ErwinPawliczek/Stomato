@@ -205,6 +205,12 @@ def _with_loadings(x: dict[str, float], amine_id: str, a: tuple[float, float]) -
     return {cid: v / total for cid, v in out.items()}
 
 
+def _beyond_window(z: dict[str, float], amine_id: str) -> bool:
+    """True when z's own CO2 or H2S loading (per mol amine) exceeds _MAX_LOADING."""
+    cap = _MAX_LOADING * z.get(amine_id, 0.0)
+    return z.get("CO2", 0.0) > cap or z.get("H2S", 0.0) > cap
+
+
 class AmineChemistryError(ValueError):
     """The amine speciation left its fitted chemistry window.
 
@@ -555,16 +561,34 @@ class AmineReactivePackage(Thermo):
             # change on [0, _MAX_LOADING] -- then polish the walk from the
             # solved state.  A non-converged "best" iterate is never returned:
             # it was a hidden ~1e-4 loading discontinuity in the FD Jacobian.
-            a_use, x = self._bracketed_loadings(z, T, P, x, amine_id, a_use)
-            result = self._loading_walk(z, T, P, x, amine_id, a_use, _LOADING_POLISH_ITER)
-            if result is None and self._loading_residual(z, T, P, x, amine_id, a_use) <= _BRACKET_RESIDUAL:
-                # The substitution map's fixed point is repelling here (measured
-                # P1-11: a bounded ~1e-5 loading limit cycle at T 295 K); the
-                # bracketed state itself satisfies the flash identity y_i * P ==
-                # p_eq_i(loading) to _BRACKET_RESIDUAL.
-                result = self._rr_split(z, T, P, x)
-                if not self._edge_holds(result[0], z, T, P, x):
-                    result = None
+            try:
+                a_br, x_br = self._bracketed_loadings(z, T, P, x, amine_id, a_use)
+            except ValueError:
+                if not _beyond_window(z, amine_id):
+                    raise
+                # No loading in [0, _MAX_LOADING] leaves a liquid (the map reads
+                # vapour at both bracket ends) for an overall the chemistry
+                # cannot hold as one liquid: walk from the seed rebuilt AT the
+                # clamped loadings, whose K are the chemistry's own (measured: a
+                # DEA regenerator's top vapour at its own stage T, 371.5 K /
+                # 1.9 bar, DEA 9e-5, CO2/amine 5700: vapour).
+                result = self._loading_walk(
+                    z, T, P, _with_loadings(x, amine_id, a_use), amine_id, a_use, _LOADING_MAX_ITER
+                )
+            else:
+                a_use, x = a_br, x_br
+                result = self._loading_walk(z, T, P, x, amine_id, a_use, _LOADING_POLISH_ITER)
+                if (
+                    result is None
+                    and self._loading_residual(z, T, P, x, amine_id, a_use) <= _BRACKET_RESIDUAL
+                ):
+                    # The substitution map's fixed point is repelling here (measured
+                    # P1-11: a bounded ~1e-5 loading limit cycle at T 295 K); the
+                    # bracketed state itself satisfies the flash identity y_i * P ==
+                    # p_eq_i(loading) to _BRACKET_RESIDUAL.
+                    result = self._rr_split(z, T, P, x)
+                    if not self._edge_holds(result[0], z, T, P, x):
+                        result = None
         if result is not None:
             return result
         z_str = ", ".join(f"{cid}: {v:.6g}" for cid, v in sorted(z.items()))
@@ -588,7 +612,18 @@ class AmineReactivePackage(Thermo):
         overall, DEA, 348 K / 1.9 bar, z carrying 12.8 % vapour on the column
         profile - sum z K(x_iterate) = 0.15 while sum z K(z) = 31.0).
         """
-        if state != "liquid" or x == z:
+        if state != "liquid":
+            return True
+        amine_id = self._amine_id(self._support(z))
+        if amine_id is not None and _beyond_window(z, amine_id):
+            # A liquid of composition z would carry acid gas beyond the
+            # chemistry window, where p_eq is read at the clamped loading - a
+            # lower bound - so sum z K <= 1 certifies nothing (measured: a DEA
+            # regenerator's top vapour, DEA 9e-5 and CO2/amine 5700 at its own
+            # stage T 371.5 K / 1.9 bar, read sum z K(z) = 0.93 and was
+            # reported liquid, 11 kJ/mol below its vapour enthalpy).
+            return False
+        if x == z:
             return True
         k = self._k_values_internal(z, T, P, z)
         return sum(f * k[cid] for cid, f in z.items()) <= 1.0
