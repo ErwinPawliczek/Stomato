@@ -109,6 +109,8 @@ def _sequential_seed(
     main = _main_only_column(col)
     try:
         prof = solve_main(main, tb, t_top, t_bot)
+    except ColumnSpecError:
+        raise
     except (ColumnConvergenceError, ValueError):
         # The plain mesh's own cold seed (a feed-composition, linear-T
         # profile) is outside its basin on wide-boiling feeds. Start the main
@@ -120,6 +122,15 @@ def _sequential_seed(
             _graph_naphtali_sandholm(main, tb, prof, t_bot if main.reboiler == "kettle" else None)
         except ColumnConvergenceError:
             pass
+    return _seed_sections(col, prof)
+
+
+def _seed_sections(col: _Column, prof: _Profile) -> _Profile:
+    """Extend a converged main-column profile over the stripper sections
+    (step 2 of ``_sequential_seed``). Measured: seeding each steam section
+    from its own standalone solve instead (the draw on stage 1, the steam at
+    the bottom) made the pumparound + three-stripper case stall at M = 0.49
+    where this draw-state seed converges, so the draw-state seed stays."""
     n = col.n
     prof.x = [dict(prof.x[j]) for j in range(n)]
     prof.y = [dict(prof.y[j]) for j in range(n)]
@@ -201,15 +212,16 @@ def _check_free_water(
                 f"one-liquid stage model cannot carry{where}"
             )
     if col.condenser == "total" and not skip_condenser:
+        # The condensate at the stage-1 temperature: the state the decant
+        # splits it at (``decant``), so "free water here" and "a decant
+        # would draw water" are one test.
         y0 = _flash_ready(prof.y[0], col.feed_comp)
-        t_cond = tb.bubble_temperature(y0, col.pressures[0])
-        if t_cond is None:
-            return
+        t_cond = prof.T[0]
         excess = _free_water_excess(tb, y0, t_cond, col.pressures[0])
         if excess is not None and excess > _FREE_WATER_MARGIN:
             raise ColumnSpecError(
                 f"free water in the total condenser: the condensate's water fugacity exceeds that of "
-                f"pure liquid water at its bubble point {t_cond:.2f} K by "
+                f"pure liquid water at the stage-1 temperature {t_cond:.2f} K by "
                 f"{100.0 * math.expm1(excess):.3g} % - turn condenser_water_decant on to draw the "
                 f"aqueous phase off, or raise the condenser temperature{where}"
             )
@@ -386,8 +398,8 @@ def _fenske_profile(col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: fl
             vapour[j] = boil + sum(col.feeds[m].v_flow for m in range(j, stop))
     if col.condenser == "partial" and t_top is not None:
         vapour[0] = t_top
-    vapour = [max(v, _FLOW_FLOOR) for v in vapour]
     l0 = t_top if (col.condenser == "total" and t_top is not None) else 0.0
+    vapour = [max(v, _FLOW_FLOOR) for v in vapour]
     liquid = _l_profile(col, l0, vapour)
     d = vapour[0] - l0 if col.condenser == "total" else vapour[0]
     feed_moles = dict.fromkeys(nc_ids, 0.0)

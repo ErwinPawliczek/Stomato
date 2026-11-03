@@ -268,8 +268,8 @@
               default draw_in.P
       note: zero-tear MESH of the stripper section alone (draw and steam are
         inlets); couples to a main column only through a flowsheet recycle on
-        overhead_out, the simultaneous solve of spec S0-1c is not implemented;
-        free water on a stage is refused
+        overhead_out (the simultaneous solve is the column's side_strippers,
+        spec S0-1c); free water on a stage is refused
       end_state: true
   pid_symbol: SS
   references:

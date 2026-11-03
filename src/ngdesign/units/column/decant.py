@@ -23,14 +23,23 @@ plain total condenser bit for bit. Otherwise the free-water fraction of the
 condensate is phi = (y_w - x_w*) / (1 - x_w*), from the water and
 hydrocarbon balances of the split.
 
-The split is taken at the stage-1 temperature, the same state the plain total
-condenser's reflux enthalpy is read at (``inside_out``), so decant on with no
-free water reduces to decant off exactly.
+The split is taken at the stage-1 temperature: the plain total condenser
+returns its reflux at that state (``inside_out``), so the decanted reflux is
+read on the same convention and decant on with no free water there reduces
+to decant off exactly (the reflux is y_1 itself). A subcooled drum, which
+would decant more water, is not modelled; the free-water refusal of a column
+without the decant (``strippers._check_free_water``) tests the condensate at
+the same temperature, so the two agree on when free water exists. Measured:
+splitting at the condensate's bubble temperature instead cost one
+``bubble_point`` (0.26 s) per Jacobian column touching stage 1 - 22 of the
+26 s of a 14-stage decanting mesh.
 """
 
 from __future__ import annotations
 
 import math
+
+import scipy.optimize
 
 from ngdesign.contracts import PhaseKind
 
@@ -39,10 +48,13 @@ from .thermo_adapter import _ThermoBox
 
 #: Dilute end of the saturation scan (mole fraction of water).
 _XW_LO = 1e-10
-#: Scan points (log-spaced in x_w) bracketing the first root of g, and the
-#: bisection steps on ln x_w that refine it (2^-50 of the bracket width).
+#: Scan points (log-spaced in x_w) bracketing the first root of g; Brent's
+#: method then refines ln x_w* to an absolute 1e-13 (relative 1e-13 in x_w*)
+#: within a bounded iteration count.
 _XW_SCAN = 24
-_XW_BISECT = 50
+_XW_LN_TOL = 1e-13
+_XW_BRENT_MAX = 100
+_EPS = 2.220446049250313e-16
 #: Upper end of the scan: past it the liquid is water-rich, and a root there
 #: is the pure-water end (g(1) = 0 by construction), not a hydrocarbon-liquid
 #: saturation.
@@ -95,16 +107,18 @@ def water_saturation(tb: _ThermoBox, hc: dict[str, float], t: float, p: float) -
         lo = point
     if hi is None:
         return None
-    for _ in range(_XW_BISECT):
-        mid = 0.5 * (lo + hi)
-        g_mid = _g(tb, hc, math.exp(mid), t, p, ln_phi0)
-        if g_mid is None:
-            return None
-        if g_mid >= 0.0:
-            hi = mid
-        else:
-            lo = mid
-    return math.exp(0.5 * (lo + hi))
+
+    def g_ln(ln_xw: float) -> float:
+        val = _g(tb, hc, math.exp(ln_xw), t, p, ln_phi0)
+        if val is None:
+            raise ValueError("water fugacity not evaluable inside the saturation bracket")
+        return val
+
+    try:
+        root = scipy.optimize.brentq(g_ln, lo, hi, xtol=_XW_LN_TOL, rtol=4.0 * _EPS, maxiter=_XW_BRENT_MAX)
+    except (ValueError, RuntimeError):
+        return None
+    return math.exp(float(root))
 
 
 def decant_split(tb: _ThermoBox, y0: dict[str, float], t: float, p: float) -> tuple[dict[str, float], float]:

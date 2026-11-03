@@ -80,6 +80,7 @@ from .thermo_adapter import _flash_ready, _ThermoBox
 
 __all__ = [
     "Column",
+    "solve_column_full",
     "ColumnConvergenceError",
     "ColumnSpecError",
     "_ThermoBox",
@@ -145,151 +146,7 @@ class Column:
         params: dict[str, Any],
         thermo: Thermo,
     ) -> UnitResult:
-        graph_feed = inlets.get("feed")
-        graph_dict: dict[str, Any] | None = None
-        if graph_feed is not None:
-            if graph_feed.molar_flow <= 0.0:
-                raise ColumnSpecError("feed port stream has zero molar flow")
-            graph_dict = {
-                "T": graph_feed.T,
-                "P": graph_feed.P,
-                "molar_flow": graph_feed.molar_flow,
-                "composition": dict(graph_feed.composition),
-            }
-        parsed = _parse_params(params, graph_dict)
-        if parsed.side_strippers and parsed.reactions is not None:
-            raise ColumnSpecError(
-                "side_strippers on a reactive column are not supported: the stage-graph "
-                "residual carries no reaction source terms"
-            )
-        if parsed.condenser_water_decant and parsed.reactions is not None:
-            raise ColumnSpecError(
-                "condenser_water_decant on a reactive column is not supported: the stage-graph "
-                "residual carries no reaction source terms"
-            )
-        tb = _ThermoBox(
-            thermo, min(parsed.pressures), max(parsed.pressures), pool_liquids=parsed.pool_liquids
-        )
-        col = _build_column(parsed, tb)
-
-        prof = _solve_specs(col, tb, parsed)
-        # Post-solve pumparound gates (review items 4/5, PR #238): run once on
-        # the final profile - an infeasible loop flow or a heating loop refuses
-        # the column instead of reporting a silently-wrong result.
-        _check_pumparounds(col, prof)
-        if col.is_graph:
-            # S0-1c: a one-liquid stage carrying free water is refused, never
-            # reported (the stage liquid would hold water as a solute).
-            _check_free_water(col, tb, prof, skip_condenser=col.water_decant)
-
-        # Boundary stream states (exact; these drive the reported energy balance).
-        feed_states: list[StreamState] = []
-        if graph_feed is not None:
-            feed_states.append(graph_feed)
-        for f in parsed.feeds:
-            if graph_feed is not None and f.comp == dict(graph_feed.composition) and f is parsed.feeds[0]:
-                continue  # the port feed is already counted
-            feed_states.append(tb.pt(f.comp, f.T, f.P, f.flow))
-        feed_states.extend(_steam_states(col, tb))
-
-        try:
-            if col.condenser == "total":
-                distillate = _condensed_distillate(
-                    tb, prof.reflux_x or prof.y[0], prof.T[0], col.pressures[0], prof.d
-                )
-            else:
-                distillate = tb.pt(prof.y[0], prof.T[0], col.pressures[0], prof.d)
-            bottoms = tb.pt(prof.x[col.n - 1], prof.T[col.n - 1], col.pressures[col.n - 1], prof.b)
-            out_states: list[StreamState] = [distillate, bottoms]
-            if parsed.draws:
-                first = parsed.draws[0]
-                assert first.flow is not None  # parser rejects free-flow draws (S0-1 feature 4 pending)
-                j = first.stage - 1
-                comp = prof.y[j] if first.vapor else prof.x[j]
-                side_draw = tb.pt(comp, prof.T[j], col.pressures[j], first.flow)
-                out_states.append(side_draw)
-                for extra in parsed.draws[1:]:
-                    assert extra.flow is not None
-                    je = extra.stage - 1
-                    comp_e = prof.y[je] if extra.vapor else prof.x[je]
-                    out_states.append(tb.pt(comp_e, prof.T[je], col.pressures[je], extra.flow))
-            else:
-                side_draw = _zero_flow_state(bottoms.composition, prof.T[col.n - 1], col.pressures[col.n - 1])
-            stripper_states: dict[str, StreamState] = {}
-            stripper_info: dict[str, float] = {}
-            if col.sections:
-                stripper_states, stripper_info = _stripper_products(col, tb, prof)
-                out_states.extend(stripper_states.values())
-            if col.water_decant:
-                decant_state = _decant_state(tb, distillate, prof.decant)
-                stripper_states["water_decant"] = decant_state
-                stripper_info["water_decant_mol_s"] = prof.decant
-                out_states.append(decant_state)
-
-            _close_energy_balance(col, tb, prof, feed_states, out_states)
-        except ValueError as exc:
-            # A converged profile should be physical; a degenerate edge (zero
-            # distillate at an extreme tear) still must not leak a pydantic
-            # error past the plugin contract.
-            raise ColumnConvergenceError(f"converged column state left the physical domain: {exc}") from exc
-
-        info: dict[str, float] = {
-            "n_stages": float(col.n),
-            "condenser_duty_W": prof.qc,
-            "reboiler_duty_W": prof.qr,
-            "distillate_mol_s": prof.d,
-            "bottoms_mol_s": prof.b,
-            "outer_iterations": float(prof.outer),
-            "inner_iterations": float(prof.inner),
-            "ns_used": float(prof.ns_used),
-            "reflux_ratio": prof.l0 / max(prof.d, _FLOW_FLOOR) if col.condenser == "total" else 0.0,
-            "boilup_ratio": (
-                prof.V[col.n - 1] / max(prof.b, _FLOW_FLOOR) if col.reboiler == "kettle" else 0.0
-            ),
-        }
-        if col.pumparounds:
-            # Per-loop converged state (review item 1, PR #238): pa_report is
-            # always populated by _finalize_duties, so index it directly - a
-            # missing report must surface, not hide behind a 0.0 default.
-            for pa, rep in zip(col.pumparounds, prof.pa_report, strict=True):
-                info[f"pa_{pa.name}_flow_mol_s"] = rep["flow_mol_s"]
-                info[f"pa_{pa.name}_duty_W"] = rep["duty_W"]
-                info[f"pa_{pa.name}_draw_T_K"] = rep["draw_T_K"]
-                info[f"pa_{pa.name}_return_T_K"] = rep["return_T_K"]
-        for heater in parsed.stage_heaters:
-            info[f"heater_{heater.stage}_duty_W"] = heater.duty_W
-        if col.reactions is not None:
-            info["reaction_heat_W"] = sum(col.rx_q)
-            for stage in col.reactions.holdups:
-                info[f"stage_{stage - 1}_net_generation_mol_s"] = col.rx_gen[stage - 1]
-                for cid, gen in col.rx_source[stage - 1].items():
-                    info[f"stage_{stage - 1}_generation_{cid}"] = gen
-        info.update(stripper_info)
-        if col.sections:
-            info["n_graph_stages"] = float(col.n_graph)
-        for j in range(col.n_graph):
-            info[f"stage_{j}_T_K"] = prof.T[j]
-            info[f"stage_{j}_P_Pa"] = col.pressures[j]
-            info[f"stage_{j}_L_mol_s"] = prof.L[j]
-            info[f"stage_{j}_V_mol_s"] = prof.V[j]
-            for cid, frac in prof.x[j].items():
-                info[f"stage_{j}_x_{cid}"] = frac
-            for cid, frac in prof.y[j].items():
-                info[f"stage_{j}_y_{cid}"] = frac
-
-        return UnitResult(
-            outlets={"distillate": distillate, "bottoms": bottoms, "side_draw": side_draw},
-            # Net unit duty (review item 1, PR #238): physical reboiler duty
-            # plus the pumparound coolers' (negative) and the inter-stage
-            # heaters' duties minus the condenser duty - closes the boundary
-            # stream table exactly.
-            duty_W=prof.qr
-            - prof.qc
-            + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0)
-            + sum(col.stage_q)
-            + _section_duty_total(col),
-            info=info,
-        )
+        return solve_column_full(inlets, params, thermo)[0]
 
     @staticmethod
     def example_case() -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
@@ -313,3 +170,158 @@ class Column:
             "specs": {"reflux_ratio": 2.5, "distillate_rate": 45.0},
         }
         return {"feed": feed}, params
+
+
+def solve_column_full(
+    inlets: dict[str, StreamState], params: dict[str, Any], thermo: Thermo
+) -> tuple[UnitResult, dict[str, StreamState]]:
+    """The column solve plus its internal products (S0-1c).
+
+    Returns the ``Column`` result and the boundary streams the three fixed
+    ports cannot carry: each side stripper's bottoms product by stripper
+    name, and ``water_decant`` when the condenser decants. Their material and
+    enthalpy are already in the result's balance (``duty_W`` closes the
+    stream table including them); adapters that give them ports read them
+    here. Empty for a plain column.
+    """
+    graph_feed = inlets.get("feed")
+    graph_dict: dict[str, Any] | None = None
+    if graph_feed is not None:
+        if graph_feed.molar_flow <= 0.0:
+            raise ColumnSpecError("feed port stream has zero molar flow")
+        graph_dict = {
+            "T": graph_feed.T,
+            "P": graph_feed.P,
+            "molar_flow": graph_feed.molar_flow,
+            "composition": dict(graph_feed.composition),
+        }
+    parsed = _parse_params(params, graph_dict)
+    if parsed.side_strippers and parsed.reactions is not None:
+        raise ColumnSpecError(
+            "side_strippers on a reactive column are not supported: the stage-graph "
+            "residual carries no reaction source terms"
+        )
+    if parsed.condenser_water_decant and parsed.reactions is not None:
+        raise ColumnSpecError(
+            "condenser_water_decant on a reactive column is not supported: the stage-graph "
+            "residual carries no reaction source terms"
+        )
+    tb = _ThermoBox(thermo, min(parsed.pressures), max(parsed.pressures), pool_liquids=parsed.pool_liquids)
+    col = _build_column(parsed, tb)
+
+    prof = _solve_specs(col, tb, parsed)
+    # Post-solve pumparound gates (review items 4/5, PR #238): run once on
+    # the final profile - an infeasible loop flow or a heating loop refuses
+    # the column instead of reporting a silently-wrong result.
+    _check_pumparounds(col, prof)
+    if col.is_graph:
+        # S0-1c: a one-liquid stage carrying free water is refused, never
+        # reported (the stage liquid would hold water as a solute).
+        _check_free_water(col, tb, prof, skip_condenser=col.water_decant)
+
+    # Boundary stream states (exact; these drive the reported energy balance).
+    feed_states: list[StreamState] = []
+    if graph_feed is not None:
+        feed_states.append(graph_feed)
+    for f in parsed.feeds:
+        if graph_feed is not None and f.comp == dict(graph_feed.composition) and f is parsed.feeds[0]:
+            continue  # the port feed is already counted
+        feed_states.append(tb.pt(f.comp, f.T, f.P, f.flow))
+    feed_states.extend(_steam_states(col, tb))
+
+    try:
+        if col.condenser == "total":
+            distillate = _condensed_distillate(
+                tb, prof.reflux_x or prof.y[0], prof.T[0], col.pressures[0], prof.d
+            )
+        else:
+            distillate = tb.pt(prof.y[0], prof.T[0], col.pressures[0], prof.d)
+        bottoms = tb.pt(prof.x[col.n - 1], prof.T[col.n - 1], col.pressures[col.n - 1], prof.b)
+        out_states: list[StreamState] = [distillate, bottoms]
+        if parsed.draws:
+            first = parsed.draws[0]
+            assert first.flow is not None  # parser rejects free-flow draws (S0-1 feature 4 pending)
+            j = first.stage - 1
+            comp = prof.y[j] if first.vapor else prof.x[j]
+            side_draw = tb.pt(comp, prof.T[j], col.pressures[j], first.flow)
+            out_states.append(side_draw)
+            for extra in parsed.draws[1:]:
+                assert extra.flow is not None
+                je = extra.stage - 1
+                comp_e = prof.y[je] if extra.vapor else prof.x[je]
+                out_states.append(tb.pt(comp_e, prof.T[je], col.pressures[je], extra.flow))
+        else:
+            side_draw = _zero_flow_state(bottoms.composition, prof.T[col.n - 1], col.pressures[col.n - 1])
+        stripper_states: dict[str, StreamState] = {}
+        stripper_info: dict[str, float] = {}
+        if col.sections:
+            stripper_states, stripper_info = _stripper_products(col, tb, prof)
+            out_states.extend(stripper_states.values())
+        if col.water_decant:
+            decant_state = _decant_state(tb, distillate, prof.decant)
+            stripper_states["water_decant"] = decant_state
+            stripper_info["water_decant_mol_s"] = prof.decant
+            out_states.append(decant_state)
+
+        _close_energy_balance(col, tb, prof, feed_states, out_states)
+    except ValueError as exc:
+        # A converged profile should be physical; a degenerate edge (zero
+        # distillate at an extreme tear) still must not leak a pydantic
+        # error past the plugin contract.
+        raise ColumnConvergenceError(f"converged column state left the physical domain: {exc}") from exc
+
+    info: dict[str, float] = {
+        "n_stages": float(col.n),
+        "condenser_duty_W": prof.qc,
+        "reboiler_duty_W": prof.qr,
+        "distillate_mol_s": prof.d,
+        "bottoms_mol_s": prof.b,
+        "outer_iterations": float(prof.outer),
+        "inner_iterations": float(prof.inner),
+        "ns_used": float(prof.ns_used),
+        "reflux_ratio": prof.l0 / max(prof.d, _FLOW_FLOOR) if col.condenser == "total" else 0.0,
+        "boilup_ratio": (prof.V[col.n - 1] / max(prof.b, _FLOW_FLOOR) if col.reboiler == "kettle" else 0.0),
+    }
+    if col.pumparounds:
+        # Per-loop converged state (review item 1, PR #238): pa_report is
+        # always populated by _finalize_duties, so index it directly - a
+        # missing report must surface, not hide behind a 0.0 default.
+        for pa, rep in zip(col.pumparounds, prof.pa_report, strict=True):
+            info[f"pa_{pa.name}_flow_mol_s"] = rep["flow_mol_s"]
+            info[f"pa_{pa.name}_duty_W"] = rep["duty_W"]
+            info[f"pa_{pa.name}_draw_T_K"] = rep["draw_T_K"]
+            info[f"pa_{pa.name}_return_T_K"] = rep["return_T_K"]
+    for heater in parsed.stage_heaters:
+        info[f"heater_{heater.stage}_duty_W"] = heater.duty_W
+    if col.reactions is not None:
+        info["reaction_heat_W"] = sum(col.rx_q)
+        for stage in col.reactions.holdups:
+            info[f"stage_{stage - 1}_net_generation_mol_s"] = col.rx_gen[stage - 1]
+            for cid, gen in col.rx_source[stage - 1].items():
+                info[f"stage_{stage - 1}_generation_{cid}"] = gen
+    info.update(stripper_info)
+    if col.sections:
+        info["n_graph_stages"] = float(col.n_graph)
+    for j in range(col.n_graph):
+        info[f"stage_{j}_T_K"] = prof.T[j]
+        info[f"stage_{j}_P_Pa"] = col.pressures[j]
+        info[f"stage_{j}_L_mol_s"] = prof.L[j]
+        info[f"stage_{j}_V_mol_s"] = prof.V[j]
+        for cid, frac in prof.x[j].items():
+            info[f"stage_{j}_x_{cid}"] = frac
+        for cid, frac in prof.y[j].items():
+            info[f"stage_{j}_y_{cid}"] = frac
+
+    return UnitResult(
+        outlets={"distillate": distillate, "bottoms": bottoms, "side_draw": side_draw},
+        # Net unit duty (review item 1, PR #238): physical reboiler duty
+        # plus the pumparound coolers' (negative) and the inter-stage
+        # heaters' duties minus the condenser duty - closes the boundary
+        # stream table exactly.
+        duty_W=prof.qr
+        - prof.qc
+        + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0)
+        + sum(col.stage_q)
+        + _section_duty_total(col),
+        info=info,
+    ), stripper_states

@@ -175,6 +175,17 @@ def _graph_model(col: _Column, kettle_free: bool = False, v_top_pin: float | Non
     }
     if kettle_free:
         tears.discard(col.n - 1)
+    # Stages whose balance defines a duty (no H row): the tear stages, except
+    # in the total condenser's top-vapour mode below.
+    duty_stages = set(tears)
+    if v_top_pin is not None and col.condenser == "total":
+        # Top-vapour mode (S0-1c): V_1 = L_0 + D is pinned - the distillate
+        # fixed exactly, as a partial condenser's top tear fixes it - and the
+        # kettle boilup is a Newton unknown. Stage 1 keeps its H row (a
+        # total condenser's stage 1 is an ordinary tray) and the kettle's
+        # balance still defines qr.
+        tears = {0}
+        duty_stages = {col.n - 1} if col.reboiler == "kettle" else set()
     v_free = [j for j in range(g) if j not in tears]
     draw_links = [lk for lk in col.interlinks if lk.phase == "liquid"]
     t_base = g * nc
@@ -228,7 +239,7 @@ def _graph_model(col: _Column, kettle_free: bool = False, v_top_pin: float | Non
         rate = sec_hit.stripper.product_rate
         assert rate is not None  # the parser requires a product rate per section
         section_total_rows.append((k, link.to_stage, sec_hit.bottom_stage - 1, rate))
-    h_stages = frozenset(j for j in range(g) if j not in tears)
+    h_stages = frozenset(j for j in range(g) if j not in duty_stages)
     return _GraphModel(
         col=col,
         layout=layout,
@@ -245,7 +256,7 @@ def _graph_model(col: _Column, kettle_free: bool = False, v_top_pin: float | Non
         pa_in=pa_in,
         section_total_rows=section_total_rows,
         h_stages=h_stages,
-        v_top_pin=v_top_pin if col.condenser == "partial" else None,
+        v_top_pin=v_top_pin if col.condenser in ("partial", "total") else None,
     )
 
 
@@ -301,6 +312,8 @@ def _reflux_split(
     key = (tuple(sorted(y0.items())), t0, col.pressures[0])
     hit = col.decant_memo.get(key)
     if hit is None:
+        # The split is taken at the stage-1 temperature, the state the total
+        # condenser returns its reflux at (see ``decant``).
         hit = decant_split(tb, _flash_ready(y0, col.feed_comp), t0, col.pressures[0])
         col.decant_memo[key] = hit
     return hit
@@ -1171,7 +1184,7 @@ class _GraphNSEngine:
 
 
 def _graph_naphtali_sandholm(
-    col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None
+    col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None, top_vapour: float | None = None
 ) -> _Profile:
     """Graph Naphtali-Sandholm: damped Newton over the whole stage graph.
 
@@ -1186,11 +1199,17 @@ def _graph_naphtali_sandholm(
     tolerances. Duties are NOT finalized here: whole-unit boundary
     accounting over the graph is step 3.
     """
-    model = _graph_model(
-        col,
-        kettle_free=t_bot_tear is None and col.reboiler == "kettle",
-        v_top_pin=prof.V[0] if col.condenser == "partial" else None,
-    )
+    if top_vapour is not None and col.condenser == "total":
+        # Top-vapour mode: V_1 pinned, the kettle boilup an unknown.
+        t_bot_tear = None
+        prof.V[0] = top_vapour
+        model = _graph_model(col, v_top_pin=top_vapour)
+    else:
+        model = _graph_model(
+            col,
+            kettle_free=t_bot_tear is None and col.reboiler == "kettle",
+            v_top_pin=prof.V[0] if col.condenser == "partial" else None,
+        )
     _extend_profile_to_graph(col, prof)
     # Vapour tears are NOT Newton unknowns in strategy mode - dense NS pins
     # them from the outer strategy loop. Standalone mode (no caller tear)
