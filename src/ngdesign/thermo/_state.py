@@ -58,6 +58,7 @@ from ngdesign.contracts.thermo import (
 )
 from ngdesign.data import DATABANK_LOCK
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
+from ngdesign.provenance.thermo_hook import note_convergence
 from ngdesign.thermo.saturation import _solve_saturation, interior_vf_solve
 
 #: CODATA 2018 molar gas constant, J/(mol.K).
@@ -552,6 +553,7 @@ def run_flash(flasher: Any, z: dict[str, float], molar_flow: float, **spec: floa
         state = _flash_tp_with_stability_fallback(flasher, zs, float(spec["T"]), float(spec["P"]))
     else:
         state = flasher.flash(zs=zs, **spec)
+    note_convergence(getattr(state, "flash_convergence", None))
     T, P = float(state.T), float(state.P)
     phase_pairs: list[PhasePair] = [(p, float(p.beta)) for p in state.phases]
     enthalpy, entropy = float(state.H()), float(state.S())

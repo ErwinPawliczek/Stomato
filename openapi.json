@@ -46,6 +46,77 @@
         "title": "Arrhenius",
         "type": "object"
       },
+      "AuditFinding": {
+        "additionalProperties": false,
+        "properties": {
+          "culprits": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Culprits",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "node": {
+            "title": "Node",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning"
+            ],
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "node",
+          "label",
+          "severity",
+          "reasons",
+          "culprits"
+        ],
+        "title": "AuditFinding",
+        "type": "object"
+      },
+      "AuditReport": {
+        "additionalProperties": false,
+        "properties": {
+          "clean": {
+            "title": "Clean",
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/AuditFinding"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "outputs": {
+            "title": "Outputs",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "outputs",
+          "clean",
+          "findings"
+        ],
+        "title": "AuditReport",
+        "type": "object"
+      },
       "Axis": {
         "additionalProperties": false,
         "description": "One swept address and the values it takes; every combination with the\nother axes (the full grid) becomes one case.",
@@ -186,6 +257,81 @@
           "outputs"
         ],
         "title": "CaseStudyRequest",
+        "type": "object"
+      },
+      "Citation": {
+        "additionalProperties": false,
+        "description": "Where a number or a method comes from.",
+        "properties": {
+          "citation": {
+            "title": "Citation",
+            "type": "string"
+          },
+          "doi": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Doi"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "table": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Table"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "source",
+          "citation"
+        ],
+        "title": "Citation",
         "type": "object"
       },
       "Component": {
@@ -540,6 +686,35 @@
           "arrhenius"
         ],
         "title": "DrivingForceTerm",
+        "type": "object"
+      },
+      "Edge": {
+        "additionalProperties": false,
+        "properties": {
+          "feedback": {
+            "default": false,
+            "title": "Feedback",
+            "type": "boolean"
+          },
+          "role": {
+            "default": "",
+            "title": "Role",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "target"
+        ],
+        "title": "Edge",
         "type": "object"
       },
       "EndType": {
@@ -1015,6 +1190,120 @@
           "facing"
         ],
         "title": "Nozzle",
+        "type": "object"
+      },
+      "OpNode": {
+        "additionalProperties": false,
+        "properties": {
+          "calls": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Calls"
+          },
+          "converged": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Converged"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "iterations": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Iterations"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "latex": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latex"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "references": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Citation"
+            },
+            "title": "References",
+            "type": "array"
+          },
+          "residual": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Residual"
+          },
+          "unit_tag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Tag"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "method",
+          "name"
+        ],
+        "title": "OpNode",
         "type": "object"
       },
       "Phase": {
@@ -1970,6 +2259,45 @@
         "title": "TitleBlock",
         "type": "object"
       },
+      "TraceGraph": {
+        "additionalProperties": false,
+        "properties": {
+          "edges": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/Edge"
+            },
+            "title": "Edges",
+            "type": "array"
+          },
+          "meta": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {},
+            "title": "Meta",
+            "type": "object"
+          },
+          "ops": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/OpNode"
+            },
+            "title": "Ops",
+            "type": "array"
+          },
+          "values": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/ValueNode"
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "title": "TraceGraph",
+        "type": "object"
+      },
       "UnitError": {
         "additionalProperties": false,
         "description": "One unit's failure or skip, as data instead of an aborting exception.\n\n``error_type`` is the exception class name; it is ``\"\"`` for an upstream\nskip, where no exception occurred - the unit was skipped because an inlet\nstream had no state (its source unit failed or was skipped).",
@@ -2114,6 +2442,138 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "ValueNode": {
+        "additionalProperties": false,
+        "properties": {
+          "citation": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Citation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "input",
+              "constant",
+              "parameter",
+              "intermediate",
+              "output"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "prop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prop"
+          },
+          "quality": {
+            "enum": [
+              "cited",
+              "user",
+              "estimated",
+              "derived",
+              "uncited"
+            ],
+            "title": "Quality",
+            "type": "string"
+          },
+          "stream": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stream"
+          },
+          "unit": {
+            "title": "Unit",
+            "type": "string"
+          },
+          "unit_tag": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit Tag"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "items": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "value",
+          "unit",
+          "kind",
+          "quality"
+        ],
+        "title": "ValueNode",
         "type": "object"
       },
       "Vec3": {
@@ -3546,6 +4006,140 @@
           }
         },
         "summary": "Solve Project Route"
+      }
+    },
+    "/api/projects/{project_id}/trace": {
+      "get": {
+        "description": "The provenance graph of the solved project, or of one value with stream/unit + prop.",
+        "operationId": "trace_project_api_projects__project_id__trace_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Stream id, e.g. S-002",
+            "in": "query",
+            "name": "stream",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Stream id, e.g. S-002",
+              "title": "Stream"
+            }
+          },
+          {
+            "description": "Unit tag, e.g. E-101",
+            "in": "query",
+            "name": "unit",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Unit tag, e.g. E-101",
+              "title": "Unit"
+            }
+          },
+          {
+            "description": "Property: T, P, molar_flow, enthalpy, duty_W, ...",
+            "in": "query",
+            "name": "prop",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Property: T, P, molar_flow, enthalpy, duty_W, ...",
+              "title": "Prop"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TraceGraph"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Trace Project"
+      }
+    },
+    "/api/projects/{project_id}/trace/audit": {
+      "get": {
+        "description": "Outputs reachable from an uncited leaf or an unreferenced method.",
+        "operationId": "trace_audit_api_projects__project_id__trace_audit_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Trace Audit"
       }
     },
     "/api/projects/{project_id}/views/iso": {

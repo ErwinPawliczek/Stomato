@@ -21,12 +21,19 @@ from dataclasses import dataclass
 from ngdesign import pipeline, registry
 from ngdesign.contracts import XY, Flowsheet, Project, SolvedFlowsheet, StreamSpec, UnitSpec
 from ngdesign.contracts.diagnostics import TearRecord
+from ngdesign.provenance.model import TraceGraph
+from ngdesign.provenance.recorder import recording
 from ngdesign.render.pfd_svg import render_pfd_svg
 from ngdesign.render.pid_svg import render_pid_svg
 
 #: project hash -> solved result (spec B-02: "cache by project hash"; moved here
 #: from api/routes_solve.py by B-08 so both callers share one cache).
 _cache: dict[str, SolvedFlowsheet] = {}
+
+#: project hash -> (solved result, provenance trace) of a traced solve
+#: (docs/provenance.md 6). Separate from ``_cache``: the plain solve path never
+#: records, and a traced solve is bit-identical to it.
+_trace_cache: dict[str, tuple[SolvedFlowsheet, TraceGraph]] = {}
 
 
 class UnknownPluginError(ValueError):
@@ -102,6 +109,24 @@ def solve_project(
             # solve time (e.g. a stream naming a port the unit does not have).
             # That is client error (422), never a 500.
             raise InvalidProjectError(str(exc)) from exc
+    return store[key]
+
+
+def trace_project(
+    project: Project, *, cache: dict[str, tuple[SolvedFlowsheet, TraceGraph]] | None = None
+) -> tuple[SolvedFlowsheet, TraceGraph]:
+    """Solve the project with calculation provenance recorded (docs/provenance.md).
+
+    Same plugins, errors and numbers as :func:`solve_project`; the solve runs
+    inside :func:`~ngdesign.provenance.recorder.recording`, uncached by the plain
+    solve cache, and the (solved, trace) pair is cached by project hash.
+    """
+    store = _trace_cache if cache is None else cache
+    key = project_hash(project)
+    if key not in store:
+        with recording(flowsheet=project.flowsheet.name, thermo=project.flowsheet.thermo) as rec:
+            solved = solve_project(project, cache={})
+        store[key] = (solved, rec.graph())
     return store[key]
 
 
