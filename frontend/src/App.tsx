@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, type Project } from "./api/client";
+import { api, type Project, type TraceTarget } from "./api/client";
 import { onProjectChanged } from "./api/refresh";
 import { Rail, type GlobalPage } from "./components/Rail";
 import { applyPalette, loadPalette, savePalette, type PaletteId } from "./theme/palettes";
@@ -10,6 +10,7 @@ import { FlowsheetView } from "./views/FlowsheetView";
 import { HomeView } from "./views/HomeView";
 import { ResultsView } from "./views/ResultsView";
 import { SheetView } from "./views/SheetView";
+import { TraceView } from "./views/TraceView";
 
 // Project tabs, shown once a project is open. Add a view by adding an entry here plus a
 // file in src/views/. Drawings (PFD, P&ID, plot plan, isometrics) are sub-tabs, see
@@ -17,6 +18,7 @@ import { SheetView } from "./views/SheetView";
 const TABS = [
   { id: "flowsheet", label: "Flowsheet", layer: "L1" },
   { id: "results", label: "Results", layer: "L2" },
+  { id: "trace", label: "Trace", layer: "L2" },
   { id: "drawings", label: "Drawings", layer: "L3" },
 ] as const;
 type TabId = (typeof TABS)[number]["id"];
@@ -32,6 +34,12 @@ export default function App() {
   // Drawings remount (re-fetching their data); Flowsheet re-renders from the
   // fresh project state fetched here.
   const [refresh, setRefresh] = useState(0);
+  // The value the Trace tab focuses; set by clicking a number in Results.
+  const [traceTarget, setTraceTarget] = useState<TraceTarget | null>(null);
+  const openTrace = (t: TraceTarget) => {
+    setTraceTarget(t);
+    setTab("trace");
+  };
 
   useEffect(() => {
     api.getProject().then(setProject).catch((e: Error) => setError(e.message));
@@ -92,7 +100,12 @@ export default function App() {
             )}
             {tab === "results" && (
               <section className="page panel ob">
-                <ResultsView key={refresh} />
+                <ResultsView key={refresh} onTrace={openTrace} />
+              </section>
+            )}
+            {tab === "trace" && (
+              <section className="page panel ob">
+                <TraceView key={refresh} target={traceTarget} />
               </section>
             )}
             {tab === "drawings" && <DrawingsView key={refresh} project={project} />}
