@@ -2,7 +2,7 @@
 
 Family: **treating** · P&ID symbol: `T`
 
-Rigour ladder: R0 provisional, R2 planned
+Rigour ladder: R0 provisional, R2 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.mdea_regenerator:MeaRegenerator` | shortcut stripping to lean-loading specifications |
-| R2 | planned | — | measured on the P1-13 tree (6-stage kettle stripper on amine_ke, 1.9 bar, rich feed at 370 K, boilup 20 mol/s) - MEA does not converge (NS stalls at M=52, 28 s); the MDEA row's R2 adapter (amine_regenerator_r2) is not shipped for MEA until it does |
+| R2 | provisional | `ngdesign.units.amine_regenerator_r2:MeaRegeneratorR2` | reboiled MESH stripper on the reactive amine package (amine_ke when the flowsheet package is not reactive), no overhead condenser - acid_gas_out is the wet top vapour. Measured (6 stages, 1.9 bar, 370 K feed) components close to 4e-11 at boilup 40/50 mol/s in 6-8 s, stage audit below 1e-9 / 1e-6; boilup 20 and 30 mol/s do not converge (NS stalls at M=0.8-5.9 after ~250 s) - the example runs at 40 mol/s |
 
 ### R0 parameters
 
@@ -42,6 +42,30 @@ properties:
     Pa: null
     description: regenerator pressure
     type: number
+type: object
+```
+
+### R2 parameters
+
+```yaml
+additionalProperties: false
+properties:
+  boilup_rate:
+    description: kettle vapour, mol/s
+    type: number
+  feed_T:
+    description: rich solvent temperature after the lean/rich exchanger, K (default
+      370)
+    type: number
+  n_stages:
+    description: equilibrium stages, rich feed on 1, kettle on N (default 6)
+    minimum: 2
+    type: integer
+  regenerator_P:
+    description: column pressure, Pa abs (default 1.9e5)
+    type: number
+required:
+- boilup_rate
 type: object
 ```
 
