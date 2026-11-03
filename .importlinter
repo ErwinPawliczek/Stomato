@@ -8,7 +8,7 @@ root_package = ngdesign
 name = Layered architecture
 type = layers
 layers =
-    ngdesign.cli
+    ngdesign.cli | ngdesign.mcp
     ngdesign.api
     ngdesign.jobs
     ngdesign.store

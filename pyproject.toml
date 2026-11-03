@@ -51,6 +51,7 @@ dev = [
 
 [project.scripts]
 ngdesign = "ngdesign.cli:main"
+stomato-mcp = "ngdesign.mcp.server:main"
 
 [build-system]
 requires = ["hatchling"]
