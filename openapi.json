@@ -1278,26 +1278,55 @@
         "type": "object"
       },
       "ProjectCreate": {
-        "description": "POST /api/projects body.",
+        "description": "POST /api/projects body: a name plus at most one source \u2014 an explicit\n``project`` body (import), a catalogue ``template`` id, or ``from_project``\n(the id of another of the caller's projects to copy). No source: blank.",
         "properties": {
+          "from_project": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Project"
+          },
           "name": {
+            "maxLength": 200,
             "minLength": 1,
             "title": "Name",
             "type": "string"
           },
           "project": {
-            "$ref": "#/components/schemas/Project"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Project"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template"
           }
         },
         "required": [
-          "name",
-          "project"
+          "name"
         ],
         "title": "ProjectCreate",
         "type": "object"
       },
       "ProjectInfo": {
-        "description": "A stored project: identity, audit stamp, version, and the body.",
+        "description": "A stored project: identity, audit stamp, version, origin and the body.",
         "properties": {
           "created_at": {
             "format": "date-time",
@@ -1312,12 +1341,35 @@
             "title": "Name",
             "type": "string"
           },
+          "opened_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opened At"
+          },
           "owner": {
             "title": "Owner",
             "type": "string"
           },
           "project": {
             "$ref": "#/components/schemas/Project"
+          },
+          "template": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template"
           },
           "updated_at": {
             "format": "date-time",
@@ -1339,6 +1391,22 @@
           "project"
         ],
         "title": "ProjectInfo",
+        "type": "object"
+      },
+      "ProjectRename": {
+        "description": "PATCH /api/projects/{id} body.",
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProjectRename",
         "type": "object"
       },
       "PseudoDefinition": {
@@ -1924,6 +1992,40 @@
           "acceleration"
         ],
         "title": "TearRecord",
+        "type": "object"
+      },
+      "TemplateInfo": {
+        "description": "One new-project template: catalogue id, display text and its size.",
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "streams": {
+            "title": "Streams",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "units": {
+            "title": "Units",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "units",
+          "streams"
+        ],
+        "title": "TemplateInfo",
         "type": "object"
       },
       "TitleBlock": {
@@ -2780,7 +2882,7 @@
     },
     "/api/projects": {
       "get": {
-        "description": "The caller's projects (the token's owner; open mode: 'local').",
+        "description": "The caller's projects (the token's owner; open mode: 'local'), oldest first.",
         "operationId": "projects_api_projects_get",
         "responses": {
           "200": {
@@ -2804,7 +2906,7 @@
         "summary": "Projects"
       },
       "post": {
-        "description": "Create a project; 409 when the owner already has one with this name.",
+        "description": "Create a project (blank, from a template, as a copy, or from a body);\n409 when the owner already has one with this name.",
         "operationId": "create_project_route_api_projects_post",
         "requestBody": {
           "content": {
@@ -2921,6 +3023,54 @@
           }
         },
         "summary": "Get Project Route"
+      },
+      "patch": {
+        "description": "Rename a project (row and body); 409 when the name is taken.",
+        "operationId": "rename_project_route_api_projects__project_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectRename"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rename Project Route"
       },
       "put": {
         "description": "Replace a project's body; 409 when expected_version is stale.",
@@ -3468,6 +3618,46 @@
         "summary": "Place Project"
       }
     },
+    "/api/projects/{project_id}/open": {
+      "post": {
+        "description": "Open a project: stamp ``opened_at`` and return it (version unchanged).",
+        "operationId": "open_project_route_api_projects__project_id__open_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectInfo"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Open Project Route"
+      }
+    },
     "/api/projects/{project_id}/route": {
       "post": {
         "description": "Route the project's P&ID through its layout.plot placements.",
@@ -3871,6 +4061,32 @@
           }
         },
         "summary": "Study Case"
+      }
+    },
+    "/api/templates": {
+      "get": {
+        "description": "The new-project catalogue: blank first, then the sample flowsheets.",
+        "operationId": "templates_route_api_templates_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "items": {
+                      "$ref": "#/components/schemas/TemplateInfo"
+                    },
+                    "type": "array"
+                  },
+                  "title": "Response Templates Route Api Templates Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Templates Route"
       }
     },
     "/api/thermo/models": {
