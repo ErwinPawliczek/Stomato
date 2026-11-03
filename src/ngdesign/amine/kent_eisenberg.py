@@ -154,6 +154,13 @@ __all__ = [
 _MAX_LOADING = 1.5
 _LN_H_LO = -34.0
 _LN_H_HI = 16.0
+#: Total CO2 (mol/L) at and below which the carbamate carbon balance is solved
+#: in ln(hco3): the linear Brent's absolute tolerance (~5e-13 mol/L) is then no
+#: longer small against the root. Above it the linear solve is kept exactly.
+_TRACE_CO2_MOL_L = 1e-6
+#: Lower end of the ln(hco3) bracket below ln(C_co2): exp(-600) of the total,
+#: where every carbon sink is negligible and the residual is -C_co2.
+_TRACE_LN_SPAN = 600.0
 
 
 @dataclass(frozen=True)
@@ -310,7 +317,23 @@ def _carbon_balance_at_h(
         carbamate = amine * hco3 / kc
         return hco3 * h_over_a1 + hco3 + hco3 * a2_over_h + carbamate - C_co2
 
-    hco3 = brent_root(carbon_residual, 0.0, C_co2)
+    if C_co2 > _TRACE_CO2_MOL_L or C_co2 <= 0.0:
+        hco3 = brent_root(carbon_residual, 0.0, C_co2)
+    else:
+        # Trace CO2: the root lies below brent_root's absolute tolerance
+        # (tol = 2e-12 |b| + 5e-13 mol/L), which returned hco3 = 0 exactly and
+        # with it p_CO2 = 0 - measured on the 5-stage MEA absorber: CO2 loading
+        # 1.9e-14 beside H2S loading 0.44 at 335.4 K left the package domain
+        # ("speciation pressure vanished"). Solved in ln(hco3) instead, where
+        # the same tolerance is relative; the residual is monotone in hco3 and
+        # so in its logarithm, and -C_co2 < 0 at the lower end.
+        hco3 = math.exp(
+            brent_root(
+                lambda ln_hco3: carbon_residual(math.exp(ln_hco3)),
+                math.log(C_co2) - _TRACE_LN_SPAN,
+                math.log(C_co2),
+            )
+        )
     co2 = hco3 * h_over_a1
     co3 = hco3 * a2_over_h
     amine = C_A / (1.0 + h / aam + hco3 / kc)

@@ -17,7 +17,7 @@ Rigour ladder: R2 planned
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R2 | planned | — | two coupled MESH sections; P1-13 (the two-tear column core) and the S0-1c step 2 graph Newton (units/column/graph_ns.py) are in, but the stage graph only appends side-stripper sections fed by a liquid draw and returning their top vapour; a dividing wall needs two parallel sections that split both the liquid and the vapour traffic and rejoin above and below the wall, which neither the graph builder nor the inside-out sweep handles. Not attempted on this tree |
+| R2 | planned | — | two coupled MESH sections; P1-13 (the two-tear column core) and S0-1c steps 3-4 (side strippers solved simultaneously on the stage graph, units/column/strippers.py) are in, but the stage graph only appends side-stripper sections fed by a liquid draw and returning their top vapour; a dividing wall needs two parallel sections that split both the liquid and the vapour traffic (a vapour split is a new unknown with its own pressure-balance equation) and rejoin above and below the wall. Not attempted on this tree |
 
 ## References
 

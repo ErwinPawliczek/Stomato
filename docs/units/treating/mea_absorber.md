@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.mdea_absorber:MeaAbsorber` | single-stage shortcut with Kent-Eisenberg equilibrium |
-| R2 | planned | — | re-measured on the P1-13 tree - the zero-tear column on this row's example feed leaves the package domain at 5 stages (speciation pressure vanished for CO2 at 335.4 K, 1.4 s); no adapter ships until that closes |
+| R2 | planned | — | the domain exit is fixed at its root (the Kent-Eisenberg carbamate balance returned hco3 = 0 below its Brent tolerance at a trace CO2 loading of 1.9e-14 beside H2S 0.44; trace CO2 is now solved in ln hco3). Re-measured - the zero-tear 5-stage column on this row's example feed now converges (31 s) but closes components only to 4.7e-4 relative per component (the reactive 1e-3 stage gate), short of the locked 1e-6 balance, so no adapter ships |
 
 ### R0 parameters
 
