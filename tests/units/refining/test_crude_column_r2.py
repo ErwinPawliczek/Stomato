@@ -23,8 +23,8 @@ from tests.conftest import flash_feed
 pytestmark = pytest.mark.xdist_group("crude_column_r2")
 
 #: Any test that may run a solve (the module fixtures' or its own): one
-#: crude-column solve measured 50 s alone, 58-81 s as a fixture setup on a
-#: loaded host, past the 120 s default there.
+#: crude-column solve measured ~30 s alone and 37-44 s as a fixture setup
+#: under -n 6 (before 15ce74c: 50 s, 58-81 s); a loaded host still varies 2x.
 _SOLVES = pytest.mark.timeout(600)
 
 #: Closure tolerance (relative to the condenser duty / the feed flow).
