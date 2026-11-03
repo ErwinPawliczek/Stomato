@@ -357,11 +357,12 @@ class TestNaphthaHydrotreater:
             _solve(thermo, "naphtha_ht", feeds, {})
 
 
-def test_planned_levels_refuse_and_name_implemented_ones(thermo: Thermo) -> None:
-    """naphtha_ht, reformer_cat R1 and vacuum_column R2 are implemented; crude_column plans R2."""
-    from ngdesign.units.levels import UnitLevelNotImplemented
+def test_r2_levels_dispatch_to_their_adapters(thermo: Thermo) -> None:
+    """vacuum_column and crude_column R2 are implemented: the dispatch reaches the
+    adapter, whose own input check refuses an empty inlet set."""
+    from ngdesign.units.refining._cuts import RefiningSpecError
 
-    for unit_id in ("crude_column",):
+    for unit_id in ("vacuum_column", "crude_column"):
         unit = registry.create("unit", unit_id)
-        with pytest.raises(UnitLevelNotImplemented, match="R0"):
+        with pytest.raises(RefiningSpecError, match="inlet stream"):
             unit.solve({}, {"model": "R2"}, thermo)

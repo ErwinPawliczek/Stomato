@@ -191,27 +191,50 @@
         stripping_steam inlet carries its water to the overhead at R0
         (one net duty)
     R2:
-      status: planned
-      params: {}
-      note: MESH with side strippers, pumparounds, stripping steam, overflash. Re-measured
-        on the R0 crude cut into 16 pseudos (22 species, 12 stages, flash zone on
-        stage 10 at 631.75 K and 2 bar, kero/diesel/AGO steam strippers of 3 stages
-        at the R0 cut-point rates, 500 K steam). The former blocker - the PR
-        package's PT flash raising UnconvergedError - was thermo's FlashVLN
-        liquid-liquid retry on the flash-zone vapour at its own dew point (fixed in
-        the thermo layer); the 0.8 x distillate the column then reported was the
-        mesh retreat moving the pinned tear (fixed). With one-liquid stages the
-        graph now converges from the relaxation start (overhead 400 mol/s in 23 s,
-        430 in 30 s with 3 % overflash; 455 and above stall), but the slate's
-        heaviest pseudos split off a second liquid on the flash-zone and bottom
-        stages (9 % of the bottom-stage liquid), which leaves a -66 kW closure
-        residual reported as reboiler duty on a column without a reboiler. Pooled
-        liquids (now accepted by the relaxation start) are the honest stage model
-        but cost one full 22-species PT flash per stage K (70-400 ms against 0.4 ms
-        for a phase build) - the pooled main column alone takes 177-241 s and the
-        pooled graph Newton stalls (M 6.8e-3 after 109 s, warm from the converged
-        one-liquid profile) - beyond the 120 s test budget. Blocker - the cost of
-        pooled-liquid stage K on the wide slate
+      status: provisional
+      adapter: ngdesign.units.refining.crude_column_r2:CrudeColumnR2
+      validation: []
+      params:
+        type: object
+        additionalProperties: false
+        required:
+        - n_stages
+        - feed_stage
+        - distillate_rate_mol_s
+        - strippers
+        properties:
+          n_stages:
+            type: integer
+            minimum: 4
+            description: main-column equilibrium stages, stage 1 the partial
+              condenser
+          feed_stage:
+            type: integer
+            minimum: 3
+            description: flash-zone stage the crude enters; the stripping steam
+              not taken by the strippers enters under stage n_stages
+          distillate_rate_mol_s:
+            type: number
+            exclusiveMinimum: 0
+            description: overhead vapour rate, mol/s (the condenser's degree of
+              freedom)
+          strippers:
+            type: object
+            description: per side port (kero_out, diesel_out, ago_out) a steam
+              side stripper {draw_stage, return_stage, n_stages, steam_mol_s,
+              product_rate_mol_s}; its product rate fixes it, the draw is its
+              outcome
+          pressure_profile:
+            description: stage pressures, Pa abs (scalar or per-stage list);
+              default crude_in.P
+      note: MESH over the stage graph (main column plus three steam side
+        strippers as one Newton system), partial condenser, no reboiler,
+        stripping steam under the bottom stage and into each stripper, overflash
+        reported. Pooled stage liquids - the slate's heaviest pseudos split off
+        a second liquid on the flash-zone and bottom stages - read the pooled
+        liquid's own liquid-liquid split (no flash per stage K); relaxation cold
+        start. Example (16-cut slate, 12 stages, 3-stage strippers) converges in
+        ~45 s with a 1 mW closure residual. No pumparounds at this level
       end_state: true
   pid_symbol: T
   references:

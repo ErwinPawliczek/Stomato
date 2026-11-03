@@ -8,6 +8,7 @@ import { mockPidSvg } from "../../mocks/pidSvg";
 import { mockPlotSvg } from "../../mocks/plotSvg";
 import mockAgentEvents from "../../mocks/agent-events.json";
 import { findOutput, upstream, type TraceGraph, type TraceTarget } from "../trace";
+import { UNIT_CATALOGUE } from "../unitCatalogue";
 
 export type Project = components["schemas"]["Project"];
 export type XY = components["schemas"]["XY"];
@@ -59,24 +60,8 @@ const MOCK_META: Meta = {
   sizer: ["air_cooler", "compressor", "pump", "scrubber", "separator_3phase", "shell_tube", "teg_contactor"],
   solver: ["sequential_modular"],
   thermo: ["nrtl", "pr", "pr78", "srk"],
-  unit: [
-    "air_cooler",
-    "compression_train",
-    "compressor",
-    "cooler",
-    "expander",
-    "heater",
-    "jt_valve",
-    "mdea_absorber",
-    "mdea_regenerator",
-    "mixer",
-    "pump",
-    "scrubber",
-    "separator_3phase",
-    "shell_tube",
-    "splitter",
-    "teg_contactor",
-  ],
+  // Every catalogue row has an implemented level, so all 84 register (units/catalogue.py).
+  unit: UNIT_CATALOGUE.map((u) => u.id),
 };
 
 /** HTTP failure with its status, so callers can react to codes like 501. */

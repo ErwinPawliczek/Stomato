@@ -13,7 +13,9 @@ test("opens the project from Home and shows every tab and the slice units from t
   for (const label of ["Flowsheet", "Results", "Drawings"]) {
     expect(screen.getByRole("tab", { name: label })).toBeTruthy();
   }
-  expect(await screen.findByText("V-101")).toBeTruthy();
+  // V-101 shows on the flowsheet canvas and in the units table.
+  expect(await screen.findByRole("button", { name: /^V-101 / })).toBeTruthy();
+  expect(screen.getAllByRole("row").some((r) => r.getAttribute("data-tag") === "V-101")).toBe(true);
   expect(screen.getAllByText("S-001").length).toBeGreaterThan(0);
 
   fireEvent.click(screen.getByRole("tab", { name: "Drawings" }));
