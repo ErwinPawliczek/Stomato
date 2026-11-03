@@ -1,9 +1,9 @@
-"""Typed refusals for side strippers and condenser water decant (S0-1c step 1).
+"""Typed refusals for side strippers and condenser water decant (S0-1c).
 
-Step 1 wires the parsing and the stage graph; the simultaneous stripper
-solve is step 3 and the condenser decant is step 4. Every parse-time
-refusal fires in ``_parse_params``; every solve-time refusal fires in
-``Column.solve`` before any thermo work.
+Every parse-time refusal fires in ``_parse_params``. The two step-1
+"not implemented" solve refusals were rewritten when steps 3-4 landed: the
+same inputs now get their physical verdicts (a free-water refusal, and the
+inert decant on a water-free feed).
 """
 
 from __future__ import annotations
@@ -82,22 +82,34 @@ def test_parse_accepts_reboiled_stripper() -> None:
     assert parsed.side_strippers[0].reboiler_duty_W == 5.0e3
 
 
-def test_solve_with_strippers_refused_step3(thermo: Thermo) -> None:
-    """A solve requesting strippers refuses: not implemented (S0-1c step 3)."""
+def test_steam_into_a_15_bar_light_ends_column_refused_as_free_water(thermo: Thermo) -> None:
+    """Was the step-1 "not implemented (S0-1c step 3)" refusal; the solve now
+    exists, so the case gets its physical verdict. Steam stripping a 15 bar
+    C3/iC4 column at ~330 K condenses the steam (water saturates at 471 K at
+    15 bar): the stripper bottom would carry free water (measured: water
+    fugacity 201 % above pure liquid water on graph stage 20), which the
+    one-liquid stage model cannot represent - a typed refusal naming the
+    stage, reached after the first tears converge and the next mesh stalls
+    on that state. Measured ~20 s."""
     params = {**_base_params(), "side_strippers": [_steam_stripper()]}
     unit = registry.create("unit", "column")
     feed = thermo.flash_pt(_base_params()["feeds"][0]["composition"], 330.0, 1.5e6, 100.0)
-    with pytest.raises(ColumnSpecError, match="not implemented \\(S0-1c step 3\\)"):
+    with pytest.raises(ColumnSpecError, match="free water on stage"):
         unit.solve({"feed": feed}, params, thermo)
 
 
-def test_solve_with_decant_refused_step4(thermo: Thermo) -> None:
-    """A solve requesting decant refuses: not implemented (S0-1c step 4)."""
-    params = {**_base_params(), "condenser_water_decant": True}
+def test_decant_on_a_water_free_feed_is_the_plain_column(thermo: Thermo) -> None:
+    """Was the step-1 "not implemented (S0-1c step 4)" refusal. A water-free
+    feed has nothing to decant: the column is the plain total-condenser
+    column bit for bit (the decant is inert without water in the component
+    list) and reports no decant stream."""
     unit = registry.create("unit", "column")
     feed = thermo.flash_pt(_base_params()["feeds"][0]["composition"], 330.0, 1.5e6, 100.0)
-    with pytest.raises(ColumnSpecError, match="not implemented \\(S0-1c step 4\\)"):
-        unit.solve({"feed": feed}, params, thermo)
+    plain = unit.solve({"feed": feed}, _base_params(), thermo)
+    decant = unit.solve({"feed": feed}, {**_base_params(), "condenser_water_decant": True}, thermo)
+    assert decant.outlets == plain.outlets
+    assert decant.info == plain.info
+    assert decant.duty_W == plain.duty_W
 
 
 def test_return_stage_below_draw_required() -> None:

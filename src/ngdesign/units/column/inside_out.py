@@ -110,6 +110,10 @@ class _Interlink:
     phase: str
 
 
+#: Memo key of the condenser decant split: (y_1 items, T_1, P_1).
+_DecantKey = tuple[tuple[tuple[str, float], ...], float, float]
+
+
 @dataclass
 class _Column:
     """All static problem data for one solve. Stage index 0 = stage 1 (top)."""
@@ -155,10 +159,21 @@ class _Column:
     #: order (liquid draw then vapour return per section). Empty for a linear
     #: column - today's _Column exactly.
     interlinks: list[_Interlink] = field(default_factory=list)
+    #: S0-1c step 4: the total condenser decants free water (only when water
+    #: is in the component list; False = the plain total condenser exactly).
+    water_decant: bool = False
+    #: Per-solve memo of the decant split, keyed on (y_1, T_1, P_1).
+    decant_memo: dict[_DecantKey, tuple[dict[str, float], float]] = field(default_factory=dict)
     # Two-phase operating window for the inner temperature walk, set from the
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
     t_band_hi: float = 600.0
+
+    @property
+    def is_graph(self) -> bool:
+        """True when the column solves on the stage graph (S0-1c): it has
+        side-stripper sections, or its total condenser decants free water."""
+        return bool(self.interlinks) or self.water_decant
 
     @property
     def n_graph(self) -> int:
@@ -199,6 +214,10 @@ class _Profile:
     #: pass - exact residuals, linear-model prediction, cap hits, damping and
     #: achieved reduction. Diagnostics only; never read for control flow.
     ns_trace: list[str] = field(default_factory=list)
+    #: S0-1c step 4: the decanted reflux/distillate liquid composition and the
+    #: free-water decant flow, mol/s (empty / 0.0 without a decant).
+    reflux_x: dict[str, float] = field(default_factory=dict)
+    decant: float = 0.0
 
 
 def _flash_stage_feeds(
@@ -344,6 +363,7 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
             pad.extend([col.pressures[sec.draw_stage - 1]] * len(sec.stages))
         col.pressures = col.pressures + pad
     col.interlinks = _build_interlinks(col)
+    col.water_decant = col_params.condenser_water_decant and STEAM_COMPONENT in comps
     col.pumparounds = list(col_params.pumparounds)
     pa_flows: list[float] = []
     for pa in col.pumparounds:
@@ -351,6 +371,11 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         pa_flows.append(pa.flow_mol_s)
     col.pa_flows = pa_flows
     col.draw_l, col.draw_v = _draw_flows(col)
+    for st in col.strippers:
+        if st.n_stages == 0 and st.product_rate is not None:
+            # The degenerate 0-stage stripper IS a plain liquid side draw of
+            # its product rate (S0-1c step 3 identity): no section, no link.
+            col.draw_l[st.draw_stage - 1] += st.product_rate
     if col_params.stage_heaters:
         col.stage_q = [0.0] * col.n
         for heater in col_params.stage_heaters:
@@ -1918,6 +1943,11 @@ def _pa_reports(col: _Column, tb: _ThermoBox, prof: _Profile) -> list[dict[str, 
     return reports
 
 
+def _section_duty_total(col: _Column) -> float:
+    """Total fixed stripper reboiler duty, W (heat added; 0.0 without strippers)."""
+    return sum(sec.stripper.reboiler_duty_W or 0.0 for sec in col.sections if sec.stages)
+
+
 def _close_energy_balance(
     col: _Column,
     tb: _ThermoBox,
@@ -1942,6 +1972,8 @@ def _close_energy_balance(
     h_in = sum(s.enthalpy * s.molar_flow for s in feed_states)
     h_out = sum(s.enthalpy * s.molar_flow for s in out_states)
     prof.qr = h_out - h_in + prof.qc - sum(rep["duty_W"] for rep in prof.pa_report) - sum(col.stage_q)
+    # S0-1c: the fixed stripper reboiler duties fold in like the heaters.
+    prof.qr -= _section_duty_total(col)
     if col.reactions is not None:
         # The heat of reaction over the BOUNDARY amounts: integrated stage
         # rates differ from out - in by the converged M residual, and this

@@ -10,6 +10,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from .graph_ns import _graph_naphtali_sandholm
 from .inside_out import (
     _Column,
     _exact_residuals,
@@ -54,6 +55,7 @@ from .spec import (
     _is_reactive_package,
     _Params,
 )
+from .strippers import _check_free_water, _finalize_graph_duties, _sequential_seed
 from .thermo_adapter import _flash_ready, _ThermoBox
 
 # --------------------------------------------------------------------------------------
@@ -133,6 +135,8 @@ def _solve_mesh(
     two-tear columns, packages without the capability) solves directly at the
     current scale, byte-identical to the un-continued path.
     """
+    if col.is_graph:
+        return _solve_graph_mesh(col, tb, t_top, t_bot, seed)
     if col.reactions is not None and seed is None:
         return _solve_reactive_mesh(col, tb, t_top, t_bot, allow_fallback)
     thermo = getattr(tb, "_thermo", tb)
@@ -412,6 +416,60 @@ def _solve_mesh_at_heat(
     return prof
 
 
+def _solve_graph_mesh(
+    col: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None, seed: _Profile | None
+) -> _Profile:
+    """Converge the MESH over the whole stage graph at given tears (S0-1c step 3).
+
+    Side-stripper sections and the main column are ONE equation system: the
+    graph Naphtali-Sandholm Newton (``graph_ns``) solves every stage of every
+    section together with the main stages, linked by the draw and vapour-return
+    interlinks, under one exact gate (``_graph_exact_residuals``: component,
+    summation and enthalpy rows over the graph at the mesh tolerances) - no
+    tears between the sections (Russell 1983, "A flexible and reliable method
+    solves single-tower and crude-distillation-column problems", Comput. Chem.
+    Eng. 7, 571-578; the RadFrac/PetroFrac formulation).
+
+    Cold (no seed), the sequential-section initializer gives the starting
+    profile: the main column with each stripper as a plain liquid side draw,
+    converged by the ordinary linear-column mesh (inside-out with its NS
+    fallback), then each section seeded from its draw. Warm, the caller's
+    converged graph profile is re-teared. Inside-out sweeps over the graph
+    itself are NOT used: the graph Newton converges quadratically from the
+    sequential seed (measured, nC6-nC12 at 2 bar with a 4-stage steam
+    stripper: exact M 1.0 -> 6.4e-8 in five passes, 3.8 s), so there is one
+    simultaneous engine and one gate.
+    """
+    if seed is None:
+        prof = _sequential_seed(col, tb, t_top, t_bot, _seed_main_mesh)
+    else:
+        prof = _copy_profile(col, seed)
+    # The graph Newton's own trace and pass count (the seed's linear solve
+    # or the warm seed's earlier passes are not this mesh's).
+    prof.ns_trace, prof.ns_passes = [], 0
+    _apply_tears(col, prof, t_top, t_bot)
+    try:
+        _graph_naphtali_sandholm(col, tb, prof, t_bot if col.reboiler == "kettle" else None)
+    except ColumnConvergenceError as exc:
+        # A stalled graph Newton whose best iterate already carries free
+        # water has a physical reason, not a solver one: the one-liquid stage
+        # model has no solution there. Refuse with that reason (typed
+        # ColumnSpecError, which ends the spec loop at once) instead of
+        # retrying every tear neighbourhood to the same stall.
+        _check_free_water(
+            col, tb, prof, skip_condenser=col.water_decant, where=f" (best Newton iterate; {str(exc)[:120]})"
+        )
+        raise
+    _reject_band_limit(col, prof)
+    _finalize_graph_duties(col, tb, prof)
+    return prof
+
+
+def _seed_main_mesh(main: _Column, tb: _ThermoBox, t_top: float | None, t_bot: float | None) -> _Profile:
+    """The sequential initializer's main-column solve: the plain mesh, cold."""
+    return _solve_mesh(main, tb, t_top, t_bot, None)
+
+
 def _continuation(
     col: _Column, tb: _ThermoBox, seed: _Profile, top: float | None, bot: float | None
 ) -> _Profile:
@@ -475,6 +533,7 @@ def _copy_profile(col: _Column, src: _Profile) -> _Profile:
         ns_used=src.ns_used,
         ns_passes=src.ns_passes,
         ns_trace=list(src.ns_trace),
+        draw_flows=list(src.draw_flows),
     )
 
 
@@ -649,7 +708,8 @@ def _spec_g(col: _Column, params: _Params, prof: _Profile, skip: set[str]) -> tu
             comp = str(target_d["component"])
             value = float(target_d["value"])
             is_dist = str(target_d.get("product", "distillate")) == "distillate"
-            out_frac = (prof.y[0] if is_dist else prof.x[col.n - 1]).get(comp, 0.0)
+            dist_comp = prof.reflux_x or prof.y[0]  # the decanted liquid when decanting
+            out_frac = (dist_comp if is_dist else prof.x[col.n - 1]).get(comp, 0.0)
             if key == "product_purity":
                 g.append(out_frac - value)
             else:
@@ -698,6 +758,9 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
     r_spec = specs.get("reflux_ratio")
     vb_spec = specs.get("boilup_ratio")
     draw_total = sum(dr.flow for dr in params.draws if dr.flow is not None)
+    # Stripper products leave the unit like draws (S0-1c): B = F - D - draws
+    # - products by the overall balance (steam is in f_total).
+    draw_total += sum(st.product_rate or 0.0 for st in params.side_strippers)
     pin_top = False
     pin_bot = False
     skip: set[str] = set()
@@ -709,7 +772,9 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
         t_top = float(r_spec) * max(col.f_total - float(b_spec) - draw_total, _FLOW_FLOOR)
         pin_top = True
         skip.add("reflux_ratio")
-    if col.reboiler == "kettle" and vb_spec is not None and d_spec is not None:
+    if col.reboiler == "kettle" and vb_spec is not None and d_spec is not None and not col.water_decant:
+        # (With a decant the bottoms is F - D - W and W is an outcome, so the
+        # ratio cannot pin the boilup; the secant drives it instead.)
         t_bot = float(vb_spec) * max(col.f_total - float(d_spec) - draw_total, _FLOW_FLOOR)
         pin_bot = True
         skip.add("boilup_ratio")

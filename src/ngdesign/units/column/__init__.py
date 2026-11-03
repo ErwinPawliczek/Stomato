@@ -69,11 +69,13 @@ from .inside_out import (
     _check_pumparounds,
     _close_energy_balance,
     _exact_residuals,
+    _section_duty_total,
     _seed_profile,
     _temperature_seed,
 )
 from .spec import _FLOW_FLOOR, ColumnConvergenceError, ColumnSpecError, _parse_params
 from .specs import _solve_mesh, _solve_specs
+from .strippers import _check_free_water, _decant_state, _steam_states, _stripper_products
 from .thermo_adapter import _flash_ready, _ThermoBox
 
 __all__ = [
@@ -155,18 +157,15 @@ class Column:
                 "composition": dict(graph_feed.composition),
             }
         parsed = _parse_params(params, graph_dict)
-        if parsed.side_strippers:
-            # S0-1c step 1: parsing and the stage graph are wired; the
-            # simultaneous stripper solve lands in step 3. Refuse loudly
-            # instead of silently returning a plain column.
+        if parsed.side_strippers and parsed.reactions is not None:
             raise ColumnSpecError(
-                "side_strippers is parsed but the simultaneous stripper solve "
-                "is not implemented (S0-1c step 3)"
+                "side_strippers on a reactive column are not supported: the stage-graph "
+                "residual carries no reaction source terms"
             )
-        if parsed.condenser_water_decant:
+        if parsed.condenser_water_decant and parsed.reactions is not None:
             raise ColumnSpecError(
-                "condenser_water_decant is parsed but the condenser free-water "
-                "decant is not implemented (S0-1c step 4)"
+                "condenser_water_decant on a reactive column is not supported: the stage-graph "
+                "residual carries no reaction source terms"
             )
         tb = _ThermoBox(
             thermo, min(parsed.pressures), max(parsed.pressures), pool_liquids=parsed.pool_liquids
@@ -178,6 +177,10 @@ class Column:
         # the final profile - an infeasible loop flow or a heating loop refuses
         # the column instead of reporting a silently-wrong result.
         _check_pumparounds(col, prof)
+        if col.is_graph:
+            # S0-1c: a one-liquid stage carrying free water is refused, never
+            # reported (the stage liquid would hold water as a solute).
+            _check_free_water(col, tb, prof, skip_condenser=col.water_decant)
 
         # Boundary stream states (exact; these drive the reported energy balance).
         feed_states: list[StreamState] = []
@@ -187,10 +190,13 @@ class Column:
             if graph_feed is not None and f.comp == dict(graph_feed.composition) and f is parsed.feeds[0]:
                 continue  # the port feed is already counted
             feed_states.append(tb.pt(f.comp, f.T, f.P, f.flow))
+        feed_states.extend(_steam_states(col, tb))
 
         try:
             if col.condenser == "total":
-                distillate = _condensed_distillate(tb, prof.y[0], prof.T[0], col.pressures[0], prof.d)
+                distillate = _condensed_distillate(
+                    tb, prof.reflux_x or prof.y[0], prof.T[0], col.pressures[0], prof.d
+                )
             else:
                 distillate = tb.pt(prof.y[0], prof.T[0], col.pressures[0], prof.d)
             bottoms = tb.pt(prof.x[col.n - 1], prof.T[col.n - 1], col.pressures[col.n - 1], prof.b)
@@ -209,6 +215,16 @@ class Column:
                     out_states.append(tb.pt(comp_e, prof.T[je], col.pressures[je], extra.flow))
             else:
                 side_draw = _zero_flow_state(bottoms.composition, prof.T[col.n - 1], col.pressures[col.n - 1])
+            stripper_states: dict[str, StreamState] = {}
+            stripper_info: dict[str, float] = {}
+            if col.sections:
+                stripper_states, stripper_info = _stripper_products(col, tb, prof)
+                out_states.extend(stripper_states.values())
+            if col.water_decant:
+                decant_state = _decant_state(tb, distillate, prof.decant)
+                stripper_states["water_decant"] = decant_state
+                stripper_info["water_decant_mol_s"] = prof.decant
+                out_states.append(decant_state)
 
             _close_energy_balance(col, tb, prof, feed_states, out_states)
         except ValueError as exc:
@@ -248,7 +264,10 @@ class Column:
                 info[f"stage_{stage - 1}_net_generation_mol_s"] = col.rx_gen[stage - 1]
                 for cid, gen in col.rx_source[stage - 1].items():
                     info[f"stage_{stage - 1}_generation_{cid}"] = gen
-        for j in range(col.n):
+        info.update(stripper_info)
+        if col.sections:
+            info["n_graph_stages"] = float(col.n_graph)
+        for j in range(col.n_graph):
             info[f"stage_{j}_T_K"] = prof.T[j]
             info[f"stage_{j}_P_Pa"] = col.pressures[j]
             info[f"stage_{j}_L_mol_s"] = prof.L[j]
@@ -267,7 +286,8 @@ class Column:
             duty_W=prof.qr
             - prof.qc
             + (sum(rep["duty_W"] for rep in prof.pa_report) if col.pumparounds else 0.0)
-            + sum(col.stage_q),
+            + sum(col.stage_q)
+            + _section_duty_total(col),
             info=info,
         )
 
