@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { api, type Project, type TraceTarget } from "./api/client";
+import { api, type Project, type SolvedFlowsheet, type TraceTarget } from "./api/client";
 import { followProjectChanges, onProjectChanged } from "./api/refresh";
 import { Rail, type GlobalPage } from "./components/Rail";
 import { applyPalette, loadPalette, savePalette, type PaletteId } from "./theme/palettes";
@@ -36,6 +36,9 @@ export default function App() {
   const [refresh, setRefresh] = useState(0);
   // The value the Trace tab focuses; set by clicking a number in Results.
   const [traceTarget, setTraceTarget] = useState<TraceTarget | null>(null);
+  // The open project's last solve, kept across tab switches; any change to the
+  // project (save, agent, another client) makes it stale, so it is dropped.
+  const [solved, setSolved] = useState<SolvedFlowsheet | null>(null);
   const openTrace = (t: TraceTarget) => {
     setTraceTarget(t);
     setTab("trace");
@@ -43,6 +46,7 @@ export default function App() {
 
   // Re-fetch the open project when the agent signals a change (Home owns the list).
   useEffect(() => {
+    setSolved(null);
     if (refresh === 0 || api.openProjectId() === null) return;
     api.getProject().then(setProject).catch((e: Error) => setError(e.message));
   }, [refresh]);
@@ -66,6 +70,7 @@ export default function App() {
       .openProject(id)
       .then((info) => {
         setProject(info.project);
+        setSolved(null);
         setTab("flowsheet");
         setPage("project");
       })
@@ -119,12 +124,18 @@ export default function App() {
             </header>
             {tab === "flowsheet" && (
               <section className="page panel ob">
-                <FlowsheetView project={project} onSaved={setProject} />
+                <FlowsheetView
+                  project={project}
+                  onSaved={(p) => {
+                    setProject(p);
+                    setSolved(null);
+                  }}
+                />
               </section>
             )}
             {tab === "results" && (
               <section className="page panel ob">
-                <ResultsView key={refresh} onTrace={openTrace} />
+                <ResultsView key={refresh} onTrace={openTrace} result={solved} onResult={setSolved} />
               </section>
             )}
             {tab === "trace" && (

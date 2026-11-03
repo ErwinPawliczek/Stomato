@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { ApiError, api, type SolvedFlowsheet, type TraceTarget } from "../api/client";
+import { ApiError, api, errorReason, type SolvedFlowsheet, type TraceTarget } from "../api/client";
 import { formatNumber, toDegC, toKPaG, toKmolH, toKw, toVaporFraction } from "../units";
 
 /** A result number; with `onTrace` it is a button that opens the Trace view on that value. */
@@ -14,10 +14,22 @@ function Traced({ target, onTrace, children }: { target: TraceTarget; onTrace?: 
   );
 }
 
-/** Layer 2: solve the slice and show stream states plus unit duty/power. Clicking a number
- * calls `onTrace` with the value it shows (stream + prop, or unit + prop). */
-export function ResultsView({ onTrace }: { onTrace?: (t: TraceTarget) => void } = {}) {
-  const [result, setResult] = useState<SolvedFlowsheet | null>(null);
+/** Layer 2: solve the open project and show stream states plus unit duty/power, the
+ * solve status with each failed unit's reason, and design-spec outcomes. Clicking a
+ * number calls `onTrace` with the value it shows (stream + prop, or unit + prop).
+ * `result`/`onResult` let the parent keep the last solve across tab switches. */
+export function ResultsView({
+  onTrace,
+  result: kept,
+  onResult,
+}: {
+  onTrace?: (t: TraceTarget) => void;
+  result?: SolvedFlowsheet | null;
+  onResult?: (r: SolvedFlowsheet | null) => void;
+} = {}) {
+  const [own, setOwn] = useState<SolvedFlowsheet | null>(null);
+  const result = kept !== undefined ? kept : own;
+  const setResult = onResult ?? setOwn;
   const [solving, setSolving] = useState(false);
   const [solverUnavailable, setSolverUnavailable] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,8 +42,7 @@ export function ResultsView({ onTrace }: { onTrace?: (t: TraceTarget) => void } 
       setResult(await api.solve());
     } catch (e) {
       if (e instanceof ApiError && e.status === 501) setSolverUnavailable(true);
-      else if (e instanceof Error) setError(e.message);
-      else setError(String(e));
+      else setError(errorReason(e));
     } finally {
       setSolving(false);
     }
@@ -47,13 +58,72 @@ export function ResultsView({ onTrace }: { onTrace?: (t: TraceTarget) => void } 
           {solving ? "Solving…" : "Solve"}
         </button>
         {result && (
-          <span className={result.converged ? "" : "muted"}>
+          <span className={result.status === "converged" ? "" : "chip bad"} role="status">
             {" "}
-            {result.converged ? "Converged" : "Did not converge"} in {result.iterations} iteration
-            {result.iterations === 1 ? "" : "s"}
+            {result.status === "failed"
+              ? `Solve failed: ${result.errors?.length ?? 0} unit${result.errors?.length === 1 ? "" : "s"} could not be calculated`
+              : `${result.converged ? "Converged" : "Did not converge"} in ${result.iterations} iteration${result.iterations === 1 ? "" : "s"}`}
           </span>
         )}
       </p>
+      {result && result.flowsheet.units.length === 0 && (
+        <p className="muted">Nothing to solve yet: add units and connect streams on the Flowsheet tab.</p>
+      )}
+      {result && (result.errors?.length ?? 0) > 0 && (
+        <section aria-label="Solve errors">
+          <h2>Errors</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Unit</th>
+                <th>Kind</th>
+                <th>Stage</th>
+                <th>Reason</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.errors!.map((e) => (
+                <tr key={`${e.tag}:${e.stage}`} data-error-tag={e.tag}>
+                  <td>{e.tag}</td>
+                  <td>{e.kind}</td>
+                  <td>{e.stage}</td>
+                  <td>
+                    {e.upstream ? <span className="muted">(upstream failure) </span> : null}
+                    {e.error_type}: {e.message}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
+      {result && (result.design_spec_results?.length ?? 0) > 0 && (
+        <section aria-label="Design specs">
+          <h2>Design specs</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Spec</th>
+                <th>Status</th>
+                <th>Achieved</th>
+                <th>Manipulated value</th>
+                <th>Iterations</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.design_spec_results!.map((d) => (
+                <tr key={d.id} data-spec={d.id}>
+                  <td>{d.id}</td>
+                  <td>{d.converged ? "met" : "not met"}</td>
+                  <td>{formatNumber(d.achieved)}</td>
+                  <td>{formatNumber(d.manipulated_value)}</td>
+                  <td>{d.iterations}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      )}
       {solverUnavailable && (
         <p role="alert">
           Solver not available yet

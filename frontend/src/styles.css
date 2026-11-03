@@ -160,8 +160,8 @@ article.proj { cursor: default }
 .panel table { min-width: 0 }
 .placeholder { color: var(--muted) }
 .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 8px }
-.toolbar button, .tag-inventory button, .page.panel button:not(.btn):not(.stab):not(.ut):not(.ugh):not(.tool) { --c: 7px; clip-path: var(--oct); background: var(--primaryBg); color: var(--onAccent); border: 0; padding: 6px 16px; font-weight: 600; cursor: pointer }
-.toolbar button:disabled, .page.panel button:not(.ut):not(.ugh):not(.tool):disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed }
+.toolbar button, .tag-inventory button, .page.panel button:not(.btn):not(.stab):not(.ut):not(.ugh):not(.tool):not(.tracelink):not(.tr-finding) { --c: 7px; clip-path: var(--oct); background: var(--primaryBg); color: var(--onAccent); border: 0; padding: 6px 16px; font-weight: 600; cursor: pointer }
+.toolbar button:disabled, .page.panel button:not(.ut):not(.ugh):not(.tool):not(.tracelink):not(.tr-finding):disabled { background: var(--surface2); color: var(--muted); cursor: not-allowed }
 .field { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; color: var(--muted); font-size: .92em }
 .field input, .field select { --c: 5px; clip-path: var(--oct); width: 110px; padding: 4px 8px; border: 0; background: var(--surface2); color: var(--ink); font-family: var(--f-mono); outline: none }
 .field select { width: auto; font-family: var(--f-body) }

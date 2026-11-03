@@ -68,3 +68,14 @@ test("saving the flowsheet updates the project header counts", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
   await waitFor(() => expect(header()).toBe(`${units - 1} units · ${streams - 2} streams`));
 });
+
+test("the last solve survives switching tabs", async () => {
+  render(<App />);
+  fireEvent.click(await screen.findByRole("button", { name: "Open slice" }));
+  fireEvent.click(await screen.findByRole("tab", { name: "Results" }));
+  fireEvent.click(screen.getByRole("button", { name: "Solve" }));
+  await screen.findByText("S-011");
+  fireEvent.click(screen.getByRole("tab", { name: "Flowsheet" }));
+  fireEvent.click(screen.getByRole("tab", { name: "Results" }));
+  expect(screen.getByText("S-011")).toBeTruthy();
+});
