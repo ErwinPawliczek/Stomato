@@ -322,7 +322,6 @@ Budget: ~16 Obvious threads, most 2–6 h of agent time; the data sweeps are the
 Each stays open because a parameter or definition could not be sourced openly; no row was
 written around the gap.
 
-- **soft-SAFT**: Clapeyron.jl (MIT) implements it, but `softSAFT_like.csv` has an empty source column and rows that break the n-alkane trend; Llovell's thesis and the RSC supplement were unreachable.
 - **COSMO-SAC**: `profiles/UD` forbids redistribution; `profiles/VT2005` has no stated licence (needs NIST's word); Clapeyron's five profiles have no provenance. LVPP `sigma` is MIT, but holds raw segments for its own CS25 variant, whose equations are not in the fetched text, and no benchmark exists for it.
 - **PR / SRK with API liquid density**: for real components the method is Rackett with ideal mixing (Aspen 10.1, p. 3-92), which `pr-rackett` covers. The pseudo-component branch is a fit to API TDB Figure 6A3.5 that is not published.
 - **SR-POLAR**: equations are in the Aspen documentation, but no citable polar-parameter table was found. Schwartzentruber et al. 1989 is closed; NeqSim's columns are uncited.
@@ -330,6 +329,21 @@ written around the gap.
 - **Wilson T-dependent forms**: no open Wilson a + b/T table was found. The two-parameter half is `wilson_ig`.
 - **Sulfolane co-absorption**: Jalili et al. 2015 raw data fix CO2 and H2S Henry constants in sulfolane, but no fetched source gives a mixed-solvent rule, and the OSTI Sulfinol report gives conditions without data points.
 - **DEA / DGA / DIPA / AMP speciation sets**: DEA is `amine_ke`, DGA and AMP are `amine_ke_dga_amp`. DIPA has a pKa but no carbamate constant and no tabulated VLE anchor, so the item stays open.
+
+Closed 2026-11-03:
+
+- **soft-SAFT** (`soft_saft`, provisional): the earlier "no engine" finding was wrong; teqp
+  0.23.2 ships a `SoftSAFT` kind (Johnson-Zollweg-Gubbins 1993 LJ reference, TPT1 chain with the
+  Johnson-Muller-Gubbins 1994 contact value, vdW-1f mixing, no association). Its JZG constants match
+  the paper's Table 10 and reproduce the paper's imposed critical point (T* 1.313, rho* 0.310).
+  Parameters come from the open-access Pamies thesis (URV 2003, repositori.urv.cat TDX:304), Tables
+  4.1 (PV set, C1-nC8), 4.6 (H2, nC10, nC16) and 4.10 (CO2). Validation (tests/thermo/test_soft_saft.py):
+  the kernel reproduces the thesis's own soft-SAFT critical temperatures (Table 4.4, n-C12 to n-C48,
+  within 0.35 K) and critical densities (Table 4.5, within 1 kg/m3). Measured deviations: Table 4.4
+  Pc is 1-4 % high with the rounded PVrP correlation; C1-C3 Psat is 5-25 % high (density-weighted
+  fit); nC4-nC8 Psat is within 5 % and rho_L within 2.5 %. No L1/L2 case is bound, because binding
+  needs a new file under the locked `data/validation/`. Binary parameters (eta, xi) are not exposed
+  by teqp, so mixtures run Lorentz-Berthelot.
 
 Partial closures: `glycol_pr` is TEG only (MEG's open values carry no primary citation);
 `depg_henry` is 25 C only with tetraglyme as proxy (Xu et al. 1992 was unreachable);

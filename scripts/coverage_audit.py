@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / "docs" / "coverage-gaps.md"
 
 #: Rows that register but refuse at first use: listed, not implemented.
-REFUSAL_ROWS = {"soft_saft"}
+REFUSAL_ROWS: set[str] = set()
 
 #: Plan names that are not a normalised form of a row name or id.
 PLAN_TO_ID = {

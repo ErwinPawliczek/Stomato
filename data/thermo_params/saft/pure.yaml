@@ -255,3 +255,35 @@ gerg2008_teqp:
     "C6+": n-Hexane
     N2: Nitrogen
     CO2: CarbonDioxide
+
+# --- soft-SAFT (row soft_saft) -------------------------------------------------
+# Source: J. C. Pamies, "Bulk and interfacial properties of chain fluids: a
+# molecular modelling approach", PhD thesis, Universitat Rovira i Virgili (2003),
+# open access at https://repositori.urv.cat/repositori/getDocument/TDX%3A304?ds=Memoria&mime=application/pdf
+# (also TDX handle 10803/8522), retrieved 2026-11-03:
+#   - Table 4.1, p. 34 (the "PV" set; also Pamies & Vega, Ind. Eng. Chem. Res. 40
+#     (2001) 2532, doi:10.1021/ie000944x): methane .. n-octane;
+#   - Table 4.6, p. 70 (Pamies, Vega et al., AIChE J. solubility of H2 in heavy
+#     n-alkanes): H2 (fitted), n-C10 and n-C16 (from the PV correlation);
+#   - Table 4.10, p. 102: CO2 (non-associating; the alkanol rows carry
+#     association sites the teqp soft-SAFT kernel does not implement, so they
+#     are not shipped).
+# Units: sigma in Angstrom, epsilon_over_k in K, m segments. Clapeyron.jl's
+# (MIT) softSAFT_like.csv carries the same methane..n-hexane digits, an
+# independent transcription check. Reference fluid: Johnson, Zollweg & Gubbins
+# (1993) LJ MBWR EOS as compiled into teqp 0.23.2 (kind "SoftSAFT"); unlike
+# pairs use the Lorentz-Berthelot rules with eta = xi = 1 (teqp exposes no
+# binary parameters for this kind).
+soft_saft:
+  C1: {m: 1.000, sigma_Angstrom: 3.728, epsilon_over_k: 147.2}
+  C2: {m: 1.392, sigma_Angstrom: 3.756, epsilon_over_k: 202.5}
+  C3: {m: 1.776, sigma_Angstrom: 3.811, epsilon_over_k: 219.5}
+  nC4: {m: 2.134, sigma_Angstrom: 3.871, epsilon_over_k: 237.7}
+  nC5: {m: 2.497, sigma_Angstrom: 3.901, epsilon_over_k: 246.6}
+  nC6: {m: 2.832, sigma_Angstrom: 3.929, epsilon_over_k: 254.4}
+  nC7: {m: 3.169, sigma_Angstrom: 3.960, epsilon_over_k: 260.3}
+  nC8: {m: 3.522, sigma_Angstrom: 3.970, epsilon_over_k: 264.4}
+  nC10: {m: 4.259, sigma_Angstrom: 3.983, epsilon_over_k: 272.7}
+  nC16: {m: 6.407, sigma_Angstrom: 4.015, epsilon_over_k: 285.0}
+  H2: {m: 0.4874, sigma_Angstrom: 4.244, epsilon_over_k: 33.85}
+  CO2: {m: 2.681, sigma_Angstrom: 2.534, epsilon_over_k: 153.4}
