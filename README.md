@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/assets/stomato-mark.png" alt="Stomato brand mark" width="240"></p>
+<p align="center"><img src="docs/assets/stomato-mark.svg" alt="Stomato brand mark" width="240"></p>
 
 # Stomato
 
