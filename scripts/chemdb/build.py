@@ -576,11 +576,40 @@ def _covers_298(record: dict[str, Any]) -> bool:
     return bool(record["pieces"][0]["Tmin"] <= CEA_LOWEST_START and record["pieces"][-1]["Tmax"] >= 298.15)
 
 
+def _cea_s298(record: dict[str, Any]) -> float:
+    """S°(298.15 K) of a CEA record, J/(mol K): its own polynomial and b2 constant.
+
+    S/R = −a1/(2T²) − a2/T + a3 ln T + a4 T + a5 T²/2 + a6 T³/3 + a7 T⁴/4 + b2
+    (NASA/TP-2002-211556 eq. 6), on the interval holding 298.15 K, as the engine's
+    ``_Nasa9Curve`` evaluates it. The record states S° through b2; nothing is fitted.
+    """
+    T = 298.15
+    piece = next((p for p in record["pieces"] if p["Tmax"] >= T), record["pieces"][-1])
+    a, b2 = piece["a"], piece["b"][1]
+    reduced = (
+        -a[0] / (2 * T * T)
+        - a[1] / T
+        + a[2] * math.log(T)
+        + a[3] * T
+        + a[4] * T**2 / 2
+        + a[5] * T**3 / 3
+        + a[6] * T**4 / 4
+        + b2
+    )
+    return float(sc.R * reduced)
+
+
 def _collect_cea(rows: Rows, cea: dict[tuple[str, str], dict[str, Any]]) -> None:
-    """ΔfH°298 as CEA states it, with its reference text, where the record reaches 298.15 K."""
+    """ΔfH°298 and S°298 as CEA states them, with the reference text, where the record reaches 298.15 K.
+
+    S°298 is listed so that a phase whose model is the CEA polynomial can select the
+    entropy that model carries, instead of another source's (the CRC's SnCl4 liquid,
+    259 against CEA's 265 J/(mol K)).
+    """
     for (cas, phase), record in cea.items():
         if _covers_298(record):
             rows.add(cas, f"Hf_{phase}", record["hf298"], "nasa_cea", reference=record["reference"])
+            rows.add(cas, f"S0_{phase}", _cea_s298(record), "nasa_cea", reference=record["reference"])
         else:
             DROPPED["cea_record_not_at_298"] += 1
 
@@ -1450,6 +1479,138 @@ def _physical_checks(rows: list[dict[str, Any]], out: Path) -> None:
         passes = [r for r in group if abs(float(r["value"]) - predicted) <= TB_FIT_LIMIT]
         if passes:
             _reselect(group, passes[0], "vapour-pressure test")
+    _liquid_set_check(groups)
+
+
+#: Largest miss of the stated liquid set on the saturation identity, J/mol (5 J/(mol K) at 298.15 K).
+LIQUID_SET_LIMIT = 1500.0
+#: Furthest a liquid-set choice may take ΔfH°(g) − ΔfH°(l) from a stated ΔvapH°298, J/mol
+#: (the audit's ΔfH limit).
+HVAP_SET_LIMIT = 5000.0
+#: Species whose stated gas and liquid ΔfH°, S° and vapour pressure admit no consistent choice.
+INCONSISTENT: list[str] = []
+
+
+def _liquid_set_gap(hg: float, hl: float, sg: float, sl: float, psat: float) -> float:
+    """ΔfH°(g) − ΔfH°(l) − [T(S°g − S°l) − RT ln(Psat/P°)] at 298.15 K, J/mol.
+
+    Zero when the four stated values and the vapour-pressure fit obey μ°(l) = μ°(g) +
+    RT ln(Psat/P°), the identity the engine's saturation liquid is built on. Its S°(l)
+    then misses the stated S°(l) by this gap over 298.15 K.
+    """
+    T = 298.15
+    return (hg - hl) - (T * (sg - sl) - sc.R * T * math.log(psat / 1e5))
+
+
+def _set_values(row: dict[str, dict[str, Any]]) -> tuple[float, float, float, float]:
+    """ΔfH°(g), ΔfH°(l), S°(g), S°(l) of one choice of rows."""
+    return (
+        float(row["Hf_gas"]["value"]),
+        float(row["Hf_liquid"]["value"]),
+        float(row["S0_gas"]["value"]),
+        float(row["S0_liquid"]["value"]),
+    )
+
+
+def _liquid_set_check(groups: dict[tuple[str, str], list[dict[str, Any]]]) -> None:
+    """Choose stated gas and liquid values that agree with each other through the vapour pressure.
+
+    A liquid with no table of its own (JANAF, CEA) is modelled from its vapour as
+    μ°(l) = μ°(g) + RT ln(Psat/P°), anchored on the selected ΔfH°(l). Rank picks the gas and
+    liquid values one property at a time, often from different sources (CEA's GeCl4 gas
+    with the CRC's liquid), and then the model's S°(l) cannot meet the stated one. Where
+    the selected set misses by more than :data:`LIQUID_SET_LIMIT`, the best-ranked
+    alternative that meets it is chosen, in this order: another ΔfH°(l); another S°(l);
+    another ΔfH°(g); the gas and liquid ΔfH° of one reference together. An evaluated
+    (grade A) selection is never moved, and ΔfH°(g) moves only between grade-B rows,
+    since it anchors every gas-phase reaction. Grade C rows neither judge nor get
+    chosen (a set holding one is only audited), and no choice may take ΔfH°(g) − ΔfH°(l) further than
+    :data:`HVAP_SET_LIMIT` from a stated ΔvapH°298 (or further than it already was).
+    When nothing meets the limit, the single choice that closes the gap by more than the
+    limit is taken; either way the audit lists the species.
+    """
+    INCONSISTENT.clear()
+    for (cas, prop), liquid_h in groups.items():
+        if prop != "Hf_liquid" or any(r["source"] in ("janaf", "nasa_cea") for r in liquid_h):
+            continue
+        sets = {p: groups.get((cas, p), []) for p in ("Hf_gas", "S0_gas", "S0_liquid")}
+        sets["Hf_liquid"] = liquid_h
+        if not all(sets.values()):
+            continue
+        held = {p: next(r for r in rows if r["selected"]) for p, rows in sets.items()}
+        # a grade-C value in the held set cannot judge the others: the set is audited, not moved
+        judged = all(r["grade"] != "C" for r in held.values())
+        fit = vapour_pressure.fit_at(cas, 298.15)
+        if fit is None:
+            continue
+        psat = fit.pressure(298.15)
+        hvap_rows = groups.get((cas, "Hvap_298"), [])
+        hvap = next((float(r["value"]) for r in hvap_rows if r["selected"] and r["grade"] != "C"), None)
+
+        def gap(
+            swap: dict[str, dict[str, Any]], held: dict[str, dict[str, Any]] = held, psat: float = psat
+        ) -> float:
+            return _liquid_set_gap(*_set_values({**held, **swap}), psat)
+
+        def hvap_miss(
+            swap: dict[str, dict[str, Any]], held: dict[str, dict[str, Any]] = held, hvap: float | None = hvap
+        ) -> float:
+            hg, hl, _, _ = _set_values({**held, **swap})
+            return 0.0 if hvap is None else abs(hg - hl - hvap)
+
+        if abs(gap({})) <= LIQUID_SET_LIMIT:
+            continue
+        hvap_bound = max(hvap_miss({}), HVAP_SET_LIMIT)
+        gas_b = [r for r in sets["Hf_gas"] if held["Hf_gas"]["grade"] == r["grade"] == "B"]
+        pairs = [
+            {"Hf_gas": g, "Hf_liquid": li}
+            for g in gas_b
+            for li in liquid_h
+            if (g["source"], g["reference"]) == (li["source"], li["reference"])
+            and not (g["selected"] and li["selected"])
+        ]
+        options: list[list[dict[str, dict[str, Any]]]] = [
+            [{"Hf_liquid": r} for r in liquid_h],
+            [{"S0_liquid": r} for r in sets["S0_liquid"]],
+            [{"Hf_gas": r} for r in gas_b],
+            pairs,
+        ]
+        allowed = [
+            [
+                swap
+                for swap in level
+                if all(r["grade"] != "C" for r in swap.values())
+                and not all(r["selected"] for r in swap.values())
+                and all(held[name]["grade"] != "A" for name in swap)
+                and hvap_miss(swap) <= hvap_bound
+            ]
+            for level in (options if judged else [])
+        ]
+        chosen = next(
+            (swap for level in allowed for swap in level if abs(gap(swap)) <= LIQUID_SET_LIMIT), None
+        )
+        why = "liquid-set test"
+        if chosen is None:
+            # the fallback trades nothing away: it may not move ΔfH°(g) − ΔfH°(l) off ΔvapH°298 at all
+            ranked = sorted(
+                (abs(gap(swap)), i, j)
+                for i, level in enumerate(allowed)
+                for j, swap in enumerate(level)
+                if hvap_miss(swap) <= hvap_miss({})
+            )
+            if ranked and ranked[0][0] < abs(gap({})) - LIQUID_SET_LIMIT:
+                chosen = allowed[ranked[0][1]][ranked[0][2]]
+                why = "liquid-set test, nearest stated set"
+        if chosen is not None:
+            for prop_name, row in chosen.items():
+                _reselect(sets[prop_name], row, why)
+            held.update(chosen)
+            if abs(gap({})) <= LIQUID_SET_LIMIT:
+                continue
+        INCONSISTENT.append(
+            f"liquid set {cas}: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss "
+            f"μ°(l) = μ°(g) + RT ln(Psat/P°) by {gap({}):.0f} J/mol; no stated alternative meets it"
+        )
 
 
 def _derive_omega(rows: list[dict[str, Any]], out: Path) -> None:
@@ -1721,7 +1882,7 @@ def tables(cache: Path, out: Path) -> int:
         "is the first one listed. Limits: 5 kJ/mol (Hf, Gf), 5 K (Tb, Tm, Tc), 2 bar (Pc),\n"
         "2 % (reference-EOS ideal-gas Cp0, and tabulated gas Cp(T) between 298.15 and\n"
         "1000 K, against the gas model's own Cp source, which stays the selected shape).\n\n"
-        + "\n".join(OUTVOTED + audit_lines)
+        + "\n".join(OUTVOTED + INCONSISTENT + audit_lines)
         + "\n"
     )
     selected = Counter(r["property"] for r in rows if r["selected"])
@@ -1738,6 +1899,7 @@ def tables(cache: Path, out: Path) -> int:
         "audit": dict(sorted(audit_counts.items())),
         "dropped_at_build": dict(sorted(DROPPED.items())),
         "selections_outvoted": len(OUTVOTED),
+        "liquid_sets_inconsistent": len(INCONSISTENT),
     }
     (out / "MANIFEST.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(json.dumps(manifest, indent=2))

@@ -85,6 +85,87 @@ outvoted Tb 90-15-3: crc_constants 561.15 set aside for nist 552.2 K (vapour-pre
 outvoted Tb 95-80-7: crc_constants 565.15 set aside for nist_snapshot 561.086 K (vapour-pressure test)
 outvoted Tb 97-95-0: crc_constants 428.15 set aside for nist_snapshot 421 K (vapour-pressure test)
 outvoted Tb 98-15-7: crc_constants 399.15 set aside for nist_snapshot 410.703 K (vapour-pressure test)
+outvoted Hf_gas 10038-98-9: nasa_cea -500000 set aside for crc_thermo -495800 J/mol (liquid-set test)
+outvoted Hf_liquid 107-21-1: crc_thermo -460000 set aside for nist -455600 J/mol (liquid-set test, nearest stated set)
+outvoted S0_liquid 111-71-7: crc_thermo 335.4 set aside for nist 348.5 J/(mol K) (liquid-set test)
+outvoted Hf_gas 123-63-7: crc_thermo -631700 set aside for nist -636000 J/mol (liquid-set test)
+outvoted S0_liquid 123-91-1: crc_thermo 270.2 set aside for nist 196.6 J/(mol K) (liquid-set test)
+outvoted S0_liquid 127-18-4: crc_thermo 266.9 set aside for nist 240.6 J/(mol K) (liquid-set test, nearest stated set)
+outvoted Hf_liquid 142-29-0: crc_thermo 4300 set aside for nist 4850 J/mol (liquid-set test)
+outvoted S0_liquid 544-76-3: nist 586.18 set aside for nist 626.8 J/(mol K) (liquid-set test, nearest stated set)
+outvoted Hf_gas 589-38-8: crc_thermo -277600 set aside for nist -278250 J/mol (liquid-set test)
+outvoted Hf_liquid 592-41-6: crc_thermo -74200 set aside for nist -73000 J/mol (liquid-set test)
+outvoted S0_liquid 75-00-3: crc_thermo 190.8 set aside for nist 186.27 J/(mol K) (liquid-set test)
+outvoted Hf_gas 79-38-9: nasa_cea -515200 set aside for nist -505500 J/mol (liquid-set test, nearest stated set)
+outvoted Hf_liquid 79-38-9: crc_thermo -522700 set aside for nist -522700 J/mol (liquid-set test, nearest stated set)
+liquid set 100-47-0: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 1508 J/mol; no stated alternative meets it
+liquid set 100-51-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -6541 J/mol; no stated alternative meets it
+liquid set 10025-78-2: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 16838 J/mol; no stated alternative meets it
+liquid set 10026-04-7: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -5816 J/mol; no stated alternative meets it
+liquid set 102-76-1: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 5792 J/mol; no stated alternative meets it
+liquid set 10544-72-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 2413 J/mol; no stated alternative meets it
+liquid set 106-88-7: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 27537 J/mol; no stated alternative meets it
+liquid set 107-00-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -2096 J/mol; no stated alternative meets it
+liquid set 107-06-2: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 1770 J/mol; no stated alternative meets it
+liquid set 107-21-1: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 1801 J/mol; no stated alternative meets it
+liquid set 107-40-4: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -3061 J/mol; no stated alternative meets it
+liquid set 107-92-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 1733 J/mol; no stated alternative meets it
+liquid set 108-39-4: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -2507 J/mol; no stated alternative meets it
+liquid set 108-90-7: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -3883 J/mol; no stated alternative meets it
+liquid set 108-98-5: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -1965 J/mol; no stated alternative meets it
+liquid set 109-52-4: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -7169 J/mol; no stated alternative meets it
+liquid set 109-65-9: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 16574 J/mol; no stated alternative meets it
+liquid set 110-81-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -4765 J/mol; no stated alternative meets it
+liquid set 110-89-4: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -6412 J/mol; no stated alternative meets it
+liquid set 111-14-8: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 3436 J/mol; no stated alternative meets it
+liquid set 111-96-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -24369 J/mol; no stated alternative meets it
+liquid set 115-10-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -12038 J/mol; no stated alternative meets it
+liquid set 115-11-7: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -6932 J/mol; no stated alternative meets it
+liquid set 119-64-2: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 2119 J/mol; no stated alternative meets it
+liquid set 127-18-4: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 11744 J/mol; no stated alternative meets it
+liquid set 1712-64-7: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -1970 J/mol; no stated alternative meets it
+liquid set 287-23-0: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -1663 J/mol; no stated alternative meets it
+liquid set 460-19-5: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -2102 J/mol; no stated alternative meets it
+liquid set 463-82-1: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -3053 J/mol; no stated alternative meets it
+liquid set 488-23-3: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -3127 J/mol; no stated alternative meets it
+liquid set 542-92-7: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -33269 J/mol; no stated alternative meets it
+liquid set 544-76-3: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 3666 J/mol; no stated alternative meets it
+liquid set 558-37-2: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -30010 J/mol; no stated alternative meets it
+liquid set 56-81-5: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -3078 J/mol; no stated alternative meets it
+liquid set 565-59-3: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -6716 J/mol; no stated alternative meets it
+liquid set 565-80-0: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -9298 J/mol; no stated alternative meets it
+liquid set 589-34-4: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -5866 J/mol; no stated alternative meets it
+liquid set 591-50-4: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -9994 J/mol; no stated alternative meets it
+liquid set 598-58-3: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 3953 J/mol; no stated alternative meets it
+liquid set 624-64-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -15416 J/mol; no stated alternative meets it
+liquid set 624-89-5: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 38117 J/mol; no stated alternative meets it
+liquid set 64-18-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 3524 J/mol; no stated alternative meets it
+liquid set 64-19-7: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 4894 J/mol; no stated alternative meets it
+liquid set 646-06-0: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 21588 J/mol; no stated alternative meets it
+liquid set 67-68-5: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 24391 J/mol; no stated alternative meets it
+liquid set 74-83-9: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -1805 J/mol; no stated alternative meets it
+liquid set 74-87-3: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -3898 J/mol; no stated alternative meets it
+liquid set 74-90-8: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -6181 J/mol; no stated alternative meets it
+liquid set 74-98-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -7514 J/mol; no stated alternative meets it
+liquid set 75-01-4: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -18970 J/mol; no stated alternative meets it
+liquid set 75-07-0: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -3635 J/mol; no stated alternative meets it
+liquid set 75-19-4: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -5007 J/mol; no stated alternative meets it
+liquid set 75-28-5: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -6284 J/mol; no stated alternative meets it
+liquid set 75-34-3: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 5119 J/mol; no stated alternative meets it
+liquid set 75-46-7: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -14389 J/mol; no stated alternative meets it
+liquid set 75-52-5: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -8876 J/mol; no stated alternative meets it
+liquid set 75-69-4: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -14392 J/mol; no stated alternative meets it
+liquid set 76-13-1: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -2858 J/mol; no stated alternative meets it
+liquid set 7719-12-2: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -1704 J/mol; no stated alternative meets it
+liquid set 7782-79-8: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -2553 J/mol; no stated alternative meets it
+liquid set 7789-60-8: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -7470 J/mol; no stated alternative meets it
+liquid set 78-92-2: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -2681 J/mol; no stated alternative meets it
+liquid set 79-29-8: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 3118 J/mol; no stated alternative meets it
+liquid set 79-38-9: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -8453 J/mol; no stated alternative meets it
+liquid set 80-62-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -7782 J/mol; no stated alternative meets it
+liquid set 95-13-6: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 1611 J/mol; no stated alternative meets it
+liquid set 96-33-3: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by -13948 J/mol; no stated alternative meets it
+liquid set 98-01-1: stated ΔfH°(g), ΔfH°(l), S°(g), S°(l) and Psat(298.15 K) miss μ°(l) = μ°(g) + RT ln(Psat/P°) by 1732 J/mol; no stated alternative meets it
 formula 13780-23-9: bank [1H]S vs NIST DS
 Pc 100-01-6: psrk 5.50195e+06 vs dippr_pina 4.42e+06 Pa
 Tc 100-01-6: psrk 870 vs dippr_pina 851 K
@@ -1736,7 +1817,7 @@ Hf_gas 79-34-5: crc_thermo -149200 vs nist_snapshot -156676 J/mol
 Hf_liquid 79-34-5: crc_thermo -195000 vs nist_snapshot -202245 J/mol
 Pc 79-34-5: psrk 5.12704e+06 vs dippr_pina 4.09e+06 Pa
 Tc 79-34-5: psrk 650 vs nist_snapshot 644.5 K
-Hf_gas 79-38-9: nasa_cea -515200 vs crc_thermo -505500 J/mol
+Hf_gas 79-38-9: nist -505500 vs nasa_cea -515200 J/mol
 Pc 79-38-9: iupac_critical 4.02e+06 vs nist 2.6e+07 Pa
 Pc 79-41-4: psrk 4.70047e+06 vs nist 4.90521e+06 Pa
 Tb 79-55-0: crc_constants 420.15 vs nist_snapshot 441.026 K

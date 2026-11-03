@@ -677,3 +677,47 @@ def test_cea_formula_fallback_refuses_an_identity_the_webbook_contradicts() -> N
     assert not chemdb.nasa9("13596-11-7")
     assert not chemdb.nasa9("79-35-6")
     assert not chemdb.nasa9("359-10-4")
+
+
+#: S°298 a condensed model may miss its selected stated S°: the build's liquid-set limit,
+#: 1.5 kJ/mol over 298.15 K (5.03 J/(mol K)), plus 0.07 for a gas shape's own S° (CEA, JANAF)
+#: against the stated gas S° the build judges with.
+CONDENSED_S298_TOLERANCE = 5.1
+#: ΔfH°298 a condensed model may miss its selected stated value, J/mol: Shomate fits
+#: reproduce their own ΔfH° to a few J/mol (NaCN(s), 6 J/mol).
+CONDENSED_H298_TOLERANCE = 10.0
+
+
+def test_condensed_models_carry_their_selected_stated_s298_and_hf298() -> None:
+    """Every liquid and solid that states S° and ΔfH° gets a model that reproduces both at 298.15 K.
+
+    The one exception the build names: a saturation liquid whose stated gas and liquid
+    ΔfH°, S° and vapour pressure admit no consistent choice, listed in AUDIT.txt as
+    ``liquid set``. That list may not grow silently.
+    """
+    from ngdesign.data.species_models import species_thermo
+
+    audit = (DATA_DIR / "chemdb" / "AUDIT.txt").read_text()
+    listed = set(re.findall(r"^liquid set (\S+):", audit, re.M))
+    manifest = json.loads((DATA_DIR / "chemdb" / "MANIFEST.json").read_text())
+    assert len(listed) == manifest["liquid_sets_inconsistent"] <= 68
+    checked = 0
+    missed: list[str] = []
+    for species in chemdb.all_species():
+        for phase in ("liquid", "solid"):
+            s0 = next((v for v in chemdb.values(species.cas, f"S0_{phase}") if v.selected), None)
+            hf = next((v for v in chemdb.values(species.cas, f"Hf_{phase}") if v.selected), None)
+            if s0 is None or hf is None:
+                continue
+            try:
+                model = species_thermo(species.cas, phase)
+            except chemdb.MissingPropertyError:
+                continue
+            checked += 1
+            assert model.h(298.15) == pytest.approx(hf.value, abs=CONDENSED_H298_TOLERANCE), species.cas
+            off = abs(model.s(298.15) - s0.value) > CONDENSED_S298_TOLERANCE
+            exempt = phase == "liquid" and model.model == "saturation" and species.cas in listed
+            if off and not exempt:
+                missed.append(f"{species.cas} {phase} {model.model} {model.s(298.15):.2f} vs {s0.value}")
+    assert checked > 1000
+    assert not missed, missed

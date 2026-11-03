@@ -6,7 +6,7 @@
   "pubchem_records": 18157,
   "row_counts": {
     "species": 19179,
-    "properties": 128734,
+    "properties": 129629,
     "shomate": 1853,
     "antoine": 4733,
     "wagner": 623,
@@ -30,7 +30,7 @@
     "Hc_gas": 62,
     "Hc_liquid": 625,
     "Hc_solid": 224,
-    "Hf_aq": 579,
+    "Hf_aq": 580,
     "Hf_gas": 6543,
     "Hf_liquid": 2277,
     "Hf_solid": 2705,
@@ -40,10 +40,10 @@
     "Hvap_298": 2735,
     "Pc": 6854,
     "Pt": 39,
-    "S0_aq": 576,
-    "S0_gas": 4591,
+    "S0_aq": 577,
+    "S0_gas": 4657,
     "S0_liquid": 734,
-    "S0_solid": 888,
+    "S0_solid": 907,
     "Tb": 7539,
     "Tc": 6921,
     "Tm": 9226,
@@ -65,7 +65,7 @@
     "iupac_critical": 1774,
     "janaf": 4832,
     "mathews": 258,
-    "nasa_cea": 893,
+    "nasa_cea": 1786,
     "nist": 15159,
     "nist_henry": 44,
     "nist_review": 2091,
@@ -74,12 +74,12 @@
     "passut_danner": 573,
     "poling": 589,
     "psrk": 3898,
-    "sander": 880,
+    "sander": 882,
     "yaws": 32662
   },
   "rows_by_grade": {
     "A": 9390,
-    "B": 86682,
+    "B": 87577,
     "C": 32662
   },
   "audit": {
@@ -118,5 +118,6 @@
     "species_with_invalid_cas": 8,
     "thermoml_point_without_species": 73
   },
-  "selections_outvoted": 80
+  "selections_outvoted": 93,
+  "liquid_sets_inconsistent": 68
 }
