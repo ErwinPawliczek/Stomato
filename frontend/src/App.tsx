@@ -64,7 +64,8 @@ export default function App() {
     setPalette(id);
     savePalette(id);
   };
-  const openProject = (id: string) => {
+  /** Open a project; `stay` keeps the current page (the Agent page's picker). */
+  const openProject = (id: string, stay = false) => {
     setError(null);
     api
       .openProject(id)
@@ -72,7 +73,7 @@ export default function App() {
         setProject(info.project);
         setSolved(null);
         setTab("flowsheet");
-        setPage("project");
+        if (!stay) setPage("project");
       })
       .catch((e: Error) => setError(e.message));
   };
@@ -98,7 +99,13 @@ export default function App() {
         {page === "home" && <HomeView onOpen={openProject} onDeleted={projectDeleted} />}
         {page === "equipment" && <EquipmentView />}
         {page === "sheet" && <SheetView />}
-        {page === "agent" && <AgentView />}
+        {page === "agent" && (
+          <AgentView
+            key={project ? api.openProjectId() ?? "" : ""}
+            projectName={project ? project.name : null}
+            onOpenProject={(id) => openProject(id, true)}
+          />
+        )}
         {page === "project" && project && (
           <>
             <header className="topbar ob">

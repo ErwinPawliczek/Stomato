@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { AgentView } from "./AgentView";
+import { AgentView, foldEvent, transcriptToMsgs } from "./AgentView";
 import { followProjectChanges, onProjectChanged } from "../api/refresh";
-import { api, TAB_ACTOR, type ChangeSource } from "../api/client";
+import { ApiError, api, TAB_ACTOR, type ChangeSource } from "../api/client";
 
 test("empty state shows the composer hint and a disabled Send", () => {
   render(<AgentView />);
@@ -128,4 +128,80 @@ test("followProjectChanges raises the refresh signal for other actors' changes, 
     api.history._setSource(null);
   }
   expect(sources[0].src.close).toHaveBeenCalled();
+});
+
+test("text written between tool calls stays between them, in order", () => {
+  let parts = foldEvent([], { type: "text_delta", text: "Solving " });
+  parts = foldEvent(parts, { type: "text_delta", text: "first." });
+  parts = foldEvent(parts, { type: "tool_call", id: "t1", name: "solve", input: {} });
+  parts = foldEvent(parts, { type: "tool_result", id: "t1", ok: true, summary: "converged" });
+  parts = foldEvent(parts, { type: "text_delta", text: "Now reading." });
+  expect(parts.map((p) => (p.kind === "text" ? p.text : `${p.call.label}:${p.call.summary}`))).toEqual([
+    "Solving first.",
+    "solve():converged",
+    "Now reading.",
+  ]);
+});
+
+test("a stored transcript becomes the same chat, tool results on their calls", () => {
+  const msgs = transcriptToMsgs([
+    { role: "user", content: "What is in the flowsheet?" },
+    { role: "assistant", content: [{ type: "text", text: "Solving." }, { type: "tool_use", id: "d1", name: "solve", input: {} }] },
+    { role: "user", content: [{ type: "tool_result", tool_use_id: "d1", content: '{"converged": true}' }] },
+    { role: "assistant", content: [{ type: "text", text: "Done." }] },
+  ]);
+  expect(msgs.map((m) => m.who)).toEqual(["You", "Agent"]);
+  const parts = msgs[1].parts;
+  expect(parts[0]).toEqual({ kind: "text", text: "Solving." });
+  expect(parts[1].kind === "call" && parts[1].call.result).toEqual({ converged: true });
+  expect(parts[1].kind === "call" && parts[1].call.ok).toBe(true);
+  expect(parts[2]).toEqual({ kind: "text", text: "Done." });
+});
+
+test("with no project open the Agent page offers the projects and opens the chosen one", async () => {
+  api._resetMock();
+  const onOpen = vi.fn();
+  render(<AgentView projectName={null} onOpenProject={onOpen} />);
+  expect(screen.queryByRole("textbox", { name: "Message" })).toBeNull();
+  fireEvent.click(await screen.findByRole("button", { name: "Open slice" }));
+  expect(onOpen).toHaveBeenCalledWith("p-1");
+});
+
+test("the project's last conversation reopens; another can be picked; New clears", async () => {
+  api._resetMock();
+  api.agent._setMockConversations({
+    c1: [{ role: "user", content: "older question" }, { role: "assistant", content: [{ type: "text", text: "older answer" }] }],
+    c2: [{ role: "user", content: "latest question" }, { role: "assistant", content: [{ type: "text", text: "latest answer" }] }],
+  });
+  render(<AgentView projectName="slice" />);
+  expect(await screen.findByText("latest answer")).toBeTruthy();
+  const picker = screen.getByRole("combobox", { name: "Conversation" }) as HTMLSelectElement;
+  expect(picker.value).toBe("c2");
+  fireEvent.change(picker, { target: { value: "c1" } });
+  expect(await screen.findByText("older answer")).toBeTruthy();
+  fireEvent.change(picker, { target: { value: "" } });
+  await waitFor(() => expect(screen.getByText(/Start the conversation/)).toBeTruthy());
+  // Delete is only for an open conversation.
+  expect((screen.getByRole("button", { name: "Delete conversation" }) as HTMLButtonElement).disabled).toBe(true);
+});
+
+test("a 404 for a stale conversation starts a new one instead of failing every send", async () => {
+  api._resetMock();
+  api.agent._setMockConversations({ gone: [{ role: "user", content: "hi" }] });
+  const sent: (string | undefined)[] = [];
+  const spy = vi.spyOn(api.agent, "send").mockImplementation(async (_text, id, onEvent) => {
+    sent.push(id);
+    if (id === "gone") throw new ApiError('POST /api/agent: 404 {"detail":"unknown conversation"}', 404);
+    onEvent({ type: "text_delta", text: "fresh reply" });
+    onEvent({ type: "done", conversation_id: "new-1", stop_reason: "end_turn" });
+  });
+  render(<AgentView projectName="slice" />);
+  await waitFor(() => expect((screen.getByRole("combobox", { name: "Conversation" }) as HTMLSelectElement).value).toBe("gone"));
+  fireEvent.change(screen.getByRole("textbox", { name: "Message" }), { target: { value: "again" } });
+  fireEvent.keyDown(screen.getByRole("textbox", { name: "Message" }), { key: "Enter", shiftKey: false });
+  expect(await screen.findByText("fresh reply")).toBeTruthy();
+  expect(screen.getByText(/no longer exists on the server/)).toBeTruthy();
+  expect(sent).toEqual(["gone", undefined]);
+  expect(screen.queryByRole("alert")).toBeNull();
+  spy.mockRestore();
 });

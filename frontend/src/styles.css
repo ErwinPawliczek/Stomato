@@ -321,3 +321,5 @@ article.proj { cursor: default }
 .connect .row { flex-wrap: wrap; align-items: end }
 .connect .field.grow { flex: 1 1 260px }
 .connect .field.grow input { width: 100% }
+.msg .msg-text { margin: 0; white-space: pre-wrap }
+.pick-projects { list-style: none; padding: 0; display: grid; gap: 8px }
