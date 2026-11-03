@@ -8,7 +8,7 @@ registry implements. A level or method listed here is listed but not implemented
 
 | | listed | implemented | open |
 |---|---|---|---|
-| Unit rows | 84 | 83 | 1 |
+| Unit rows | 84 | 84 | 0 |
 | Planned rigour levels on implemented units | | | 8 |
 | Property methods in the plan | 168 | 160 | 8 |
 
@@ -16,9 +16,7 @@ Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
 
 ## Unit rows with no implementation
 
-| unit | family | level | note |
-|---|---|---|---|
-| `divided_wall` | column | R2 | two coupled MESH sections; P1-13 (the two-tear column core) and S0-1c steps 3-4 (side strippers solved simultaneously on the stage graph, units/column/strippers.py) are in, but the stage graph only appends side-stripper sections fed by a liquid draw and returning their top vapour; a dividing wall needs two parallel sections that split both the liquid and the vapour traffic (a vapour split is a new unknown with its own pressure-balance equation) and rejoin above and below the wall. Not attempted on this tree |
+None.
 
 ## Planned levels on implemented units
 
