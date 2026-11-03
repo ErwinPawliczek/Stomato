@@ -231,7 +231,7 @@ def _solve_mesh_at_heat(
         # warm from it - the relaxed profile is a physical, near-converged
         # state, exactly what the warm path is built for.
         t_top_seed, t_bot_seed = _temperature_seed(col, tb)
-        start = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot)
+        start = _seed_profile(col, tb, t_top_seed, t_bot_seed, v_bot_tear=t_bot, mixed_flash=False)
         _apply_tears(col, start, t_top, t_bot)
         start.L = _l_profile(col, start.l0, start.V)
         seed = _relaxation_profile(col, tb, start)

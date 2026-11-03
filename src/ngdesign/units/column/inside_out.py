@@ -767,7 +767,12 @@ def _nearest_feed_phase(col: _Column, j: int, vapor: bool) -> dict[str, float]:
 
 
 def _seed_profile(
-    col: _Column, tb: _ThermoBox, t_top: float, t_bot: float, v_bot_tear: float | None = None
+    col: _Column,
+    tb: _ThermoBox,
+    t_top: float,
+    t_bot: float,
+    v_bot_tear: float | None = None,
+    mixed_flash: bool = True,
 ) -> _Profile:
     """Starting profile: feed-traffic seed for zero/one-tear columns (spec C),
     the distillation-shaped seed for two-tear columns (unchanged).
@@ -777,6 +782,11 @@ def _seed_profile(
     every stage, so it belongs in every stage's vapour-traffic sum - without it
     the stages above the kettle seed at the flow floor and the first sweeps
     solve from a degenerate column.
+
+    ``mixed_flash=False`` skips the adiabatic mixed-feed flash of zero/one-tear
+    columns (the nearest-feed phases seed x and y instead): the relaxation
+    start relaxes whatever it is given, and on a 48-species crude slate that
+    flash's 40-step bisection costs ~80 s of Michelsen stability tests.
     """
     n = col.n
     if col.n_tears < 2:
@@ -789,7 +799,7 @@ def _seed_profile(
         l0 = max(0.5 * vapour[0], _FLOW_FLOOR) if col.condenser == "total" else 0.0
         temps = [t_top + (t_bot - t_top) * (j / max(n - 1, 1)) for j in range(n)]
         mixed = None
-        if not _is_reactive_package(tb):
+        if mixed_flash and not _is_reactive_package(tb):
             # Multi-feed columns seed each stage's x from the nearest feed's
             # flashed phase. When those phases bracket the band - a lean
             # solvent flashing as near-pure liquid (bubble point above the
