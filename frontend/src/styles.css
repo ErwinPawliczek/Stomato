@@ -57,6 +57,7 @@
 .proj .thumb { --c: 10px; clip-path: var(--oct); background: var(--surface2); display: block; padding: 10px }
 .proj .thumb svg { display: block; width: 100%; height: auto; fill: var(--eqFill); stroke: var(--svgInk); stroke-width: 1.6 }
 .proj .thumb path { fill: none }
+.proj .thumb .thumb-empty { fill: var(--muted, currentColor); stroke: none; font-size: 9px }
 .proj.new { place-content: center; justify-items: center; text-align: center }
 .proj.new .plus { --c: 12px; width: 54px; height: 54px; clip-path: var(--oct); background: var(--surface2); display: grid; place-items: center; font-size: 28px; color: var(--accentText) }
 .stats { display: flex; flex-wrap: wrap; gap: 6px }

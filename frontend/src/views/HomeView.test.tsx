@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { beforeEach, expect, test, vi } from "vitest";
 import App from "../App";
 import { api } from "../api/client";
-import { HomeView, uniqueName } from "./HomeView";
+import { HomeView, thumbnail, uniqueName } from "./HomeView";
 
 beforeEach(() => api._resetMock());
 
@@ -102,4 +102,60 @@ test("opening a project from Home scopes the project and Close returns to the li
   fireEvent.click(screen.getByRole("button", { name: "Close" }));
   expect(api.openProjectId()).toBeNull();
   expect(await screen.findByRole("button", { name: "Open Blank one" })).toBeTruthy();
+});
+
+test("thumbnail draws each project's own units and connected streams", async () => {
+  const [slice] = await api.listProjects();
+  const t = thumbnail(slice.project);
+  expect(t.boxes.map((b) => b.tag).sort()).toEqual(slice.project.flowsheet.units.map((u) => u.tag).sort());
+  const connected = slice.project.flowsheet.streams.filter((s) => s.source && s.target).length;
+  expect(t.links).toHaveLength(connected);
+  for (const b of t.boxes) {
+    expect(b.x).toBeGreaterThanOrEqual(10);
+    expect(b.x).toBeLessThanOrEqual(150);
+    expect(b.y).toBeGreaterThanOrEqual(10);
+    expect(b.y).toBeLessThanOrEqual(60);
+  }
+  const blank = await api.createProject("Empty", { template: "blank" });
+  expect(thumbnail(blank.project)).toEqual({ boxes: [], links: [] });
+  render(<HomeView onOpen={() => {}} />);
+  const card = await screen.findByRole("article", { name: "Empty" });
+  expect(card.textContent).toContain("empty flowsheet");
+});
+
+test("Export downloads the project body that Import reads back", async () => {
+  const created = vi.fn(() => "blob:x");
+  const revoked = vi.fn();
+  vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: created, revokeObjectURL: revoked }));
+  const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+  render(<HomeView onOpen={() => {}} />);
+  fireEvent.click(await screen.findByRole("button", { name: "Export slice" }));
+  expect(click).toHaveBeenCalledOnce();
+  const blob = (created.mock.calls[0] as unknown as [Blob])[0];
+  const text = await new Promise<string>((resolve) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.readAsText(blob);
+  });
+  const body = JSON.parse(text) as { name: string; flowsheet: { units: unknown[] } };
+  expect(body.name).toBe("slice");
+  expect(body.flowsheet.units.length).toBeGreaterThan(0);
+  expect(revoked).toHaveBeenCalledWith("blob:x");
+  click.mockRestore();
+  vi.unstubAllGlobals();
+});
+
+test("New project form says templates are loading and still creates a blank project", async () => {
+  vi.spyOn(api, "listTemplates").mockReturnValue(new Promise(() => {}));
+  const onOpen = vi.fn();
+  render(<HomeView onOpen={onOpen} />);
+  await screen.findByRole("button", { name: "Open slice" });
+  fireEvent.click(screen.getByRole("button", { name: /New project/ }));
+  const form = screen.getByRole("form", { name: "New project" });
+  expect(within(form).getByRole("status").textContent).toMatch(/Loading templates/);
+  fireEvent.click(within(form).getByRole("button", { name: "Create" }));
+  await waitFor(() => expect(onOpen).toHaveBeenCalled());
+  const made = (await api.listProjects()).find((p) => p.name === "Untitled project");
+  expect(made?.template).toBe("blank");
+  vi.restoreAllMocks();
 });

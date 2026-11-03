@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { api, ApiError, type Project, type ProjectInfo, type ProjectSource, type TemplateInfo } from "../api/client";
 import { Dropdown } from "../components/Dropdown";
+import { autoPosition } from "./FlowsheetView";
 
 const IMPORTS = [
   { value: "json", label: "Stomato project", meta: ".json" },
@@ -29,6 +30,65 @@ const message = (e: unknown) => {
 };
 
 const day = (iso: string) => iso.slice(0, 10);
+
+/** Pure: the project's flowsheet as thumbnail geometry in a 160 x 70 box — unit
+ * boxes at their stored PFD positions (else the canvas auto-layout) and one line
+ * per connected stream. Empty flowsheet: no shapes. */
+export function thumbnail(project: Project): { boxes: { tag: string; x: number; y: number }[]; links: [number, number, number, number][] } {
+  const placed = project.layout?.pfd ?? {};
+  const pos = new Map(project.flowsheet.units.map((u, i) => [u.tag, placed[u.tag] ?? autoPosition(i)]));
+  if (pos.size === 0) return { boxes: [], links: [] };
+  const xs = [...pos.values()].map((p) => p.x);
+  const ys = [...pos.values()].map((p) => p.y);
+  const [x0, y0] = [Math.min(...xs), Math.min(...ys)];
+  const w = Math.max(...xs) - x0 || 1;
+  const h = Math.max(...ys) - y0 || 1;
+  // Fit into the 140 x 50 inner box, keeping the aspect ratio; centre a single row/column.
+  const k = Math.min(140 / w, 50 / h);
+  const ox = 10 + (140 - w * k) / 2;
+  const oy = 10 + (50 - h * k) / 2;
+  const at = (p: { x: number; y: number }) => ({ x: ox + (p.x - x0) * k, y: oy + (p.y - y0) * k });
+  const boxes = [...pos.entries()].map(([tag, p]) => ({ tag, ...at(p) }));
+  const links: [number, number, number, number][] = [];
+  for (const st of project.flowsheet.streams) {
+    const a = st.source && pos.get(st.source.unit);
+    const b = st.target && pos.get(st.target.unit);
+    if (a && b) {
+      const [pa, pb] = [at(a), at(b)];
+      links.push([pa.x, pa.y, pb.x, pb.y]);
+    }
+  }
+  return { boxes, links };
+}
+
+function Thumb({ project }: { project: Project }) {
+  const { boxes, links } = thumbnail(project);
+  return (
+    <svg viewBox="0 0 160 70">
+      {links.map(([x1, y1, x2, y2], i) => (
+        <path key={i} d={`M${x1} ${y1}L${x2} ${y2}`} />
+      ))}
+      {boxes.map((b) => (
+        <rect key={b.tag} x={b.x - 5} y={b.y - 4} width="10" height="8" rx="1.5" />
+      ))}
+      {boxes.length === 0 && (
+        <text x="80" y="39" textAnchor="middle" className="thumb-empty">
+          empty flowsheet
+        </text>
+      )}
+    </svg>
+  );
+}
+
+/** Save a project body as `<name>.json` — the file Import reads back. */
+function download(name: string, project: Project): void {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(project, null, 2)], { type: "application/json" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${name.replace(/[^\w.-]+/g, "_")}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 /** Projects: every project of the caller, newest first, plus New project (blank or
  * from a template), Import, and per-card Open / Rename / Duplicate / Delete. */
@@ -163,11 +223,7 @@ export function HomeView({ onOpen, onDeleted }: { onOpen: (id: string) => void; 
           <article key={p.id} className="proj ob" aria-label={p.name}>
             <button type="button" className="open" aria-label={`Open ${p.name}`} onClick={() => onOpen(p.id)}>
               <span className="thumb" aria-hidden="true">
-                <svg viewBox="0 0 160 70">
-                  <path d="M10 35h30M70 35h30M130 35h20" />
-                  <rect x="40" y="20" width="30" height="30" rx="15" />
-                  <polygon points="100,22 130,28 130,42 100,48" />
-                </svg>
+                <Thumb project={p.project} />
               </span>
               <h3>{p.name}</h3>
               <span className="stats">
@@ -233,6 +289,9 @@ export function HomeView({ onOpen, onDeleted }: { onOpen: (id: string) => void; 
                 >
                   Duplicate
                 </button>
+                <button type="button" className="btn ob" aria-label={`Export ${p.name}`} onClick={() => download(p.name, p.project)}>
+                  Export
+                </button>
                 <button type="button" className="btn ob" aria-label={`Delete ${p.name}`} onClick={() => setDeleting(p.id)}>
                   Delete
                 </button>
@@ -276,6 +335,11 @@ function NewProjectForm({
       </label>
       <fieldset>
         <legend>Start from</legend>
+        {templates.length === 0 && (
+          <p className="small muted" role="status">
+            Loading templates… (Create now starts a blank flowsheet.)
+          </p>
+        )}
         {templates.map((t) => (
           <label key={t.id} className="tpl">
             <input type="radio" name="template" value={t.id} checked={choice === t.id} onChange={() => setChoice(t.id)} />
