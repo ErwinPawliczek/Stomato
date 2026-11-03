@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 provisional
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.mdea_regenerator:DeaRegenerator` | shortcut stripping to lean-loading specifications |
-| R2 | provisional | `ngdesign.units.amine_regenerator_r2:DeaRegeneratorR2` | reboiled MESH stripper on the reactive amine package (amine_ke when the flowsheet package is not reactive), no overhead condenser - acid_gas_out is the wet top vapour. Measured (6 stages, 1.9 bar, 370 K feed) components close to 1e-10 at boilup 15/20/30 mol/s in 4-7 s, stage audit below 1e-9 / 1e-6 (the former single-phase re-flash of the top stage was a false liquid verdict in the package flash, fixed); the example runs at 30 mol/s |
+| R2 | provisional | `ngdesign.units.amine_regenerator_r2:DeaRegeneratorR2` | reboiled MESH stripper on the reactive amine package (amine_ke when the flowsheet package is not reactive), no overhead condenser - acid_gas_out is the wet top vapour. Measured (6 stages, 1.9 bar, 370 K feed) components close to 3e-9 at boilup 10-30 mol/s in 3-16 s, stage audit below 1e-9 / 1e-6; below 26 mol/s the wet top vapour used to re-flash as a false liquid (package liquid verdict beyond the 1.5 loading window, fixed; it understated the kettle duty ~215 kW). The example runs at 25 mol/s (lean H2S 0.0271, 1.01 MW) - the 0.2 x rich lean-H2S bound (0.030) holds down to 24 mol/s (0.0289) and is missed at 22 (0.0321) and 20 (0.0345) |
 
 ### R0 parameters
 

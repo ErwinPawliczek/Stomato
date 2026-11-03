@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 provisional
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.mdea_regenerator:MeaRegenerator` | shortcut stripping to lean-loading specifications |
-| R2 | provisional | `ngdesign.units.amine_regenerator_r2:MeaRegeneratorR2` | reboiled MESH stripper on the reactive amine package (amine_ke when the flowsheet package is not reactive), no overhead condenser - acid_gas_out is the wet top vapour. Measured (6 stages, 1.9 bar, 370 K feed) components close to 4e-11 at boilup 40/50 mol/s in 6-8 s, stage audit below 1e-9 / 1e-6; boilup 20 and 30 mol/s do not converge (NS stalls at M=0.8-5.9 after ~250 s) - the example runs at 40 mol/s |
+| R2 | provisional | `ngdesign.units.amine_regenerator_r2:MeaRegeneratorR2` | reboiled MESH stripper on the reactive amine package (amine_ke when the flowsheet package is not reactive), no overhead condenser - acid_gas_out is the wet top vapour. Measured (6 stages, 1.9 bar, 370 K feed) components close to 3e-10 at boilup 35-60 mol/s in 6-14 s (cold), stage audit below 1e-9 / 1e-6; below 35 mol/s the cold heat-of-reaction ladder stalls and the column's boilup continuation (cold 2x/4x anchor, warm walk down) converges 30/25/20/15/10 mol/s in 32/35/45/74/87 s, components to 1e-13. The example stays at 40 mol/s - lean CO2 meets the 0.1 x rich bound (0.040) only from ~36 mol/s (0.0400 at 36, 0.057 at 30, 0.104 at 20) |
 
 ### R0 parameters
 
