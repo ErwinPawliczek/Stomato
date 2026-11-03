@@ -57,6 +57,11 @@ class _ThermoBox:
     The K chain (stage liquid composition, then stage overall composition, then
     feed composition) returns None when every candidate comes back single-phase;
     callers keep the previous K or the CC estimate in that case.
+
+    Outside an inside-out sweep, plain columns read the fugacity surface at the
+    stage liquid (``k_fugacity``), and pooled-liquid columns on a package with
+    ``liquid_split`` read the pooled liquid's own split (``k_pooled``,
+    ``pooled_split``) - no flash per stage K on either.
     """
 
     def __init__(
