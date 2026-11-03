@@ -59,17 +59,22 @@ _MESH_H_TOL = 1e-2
 #: overall balances closed far below it. 1e-6 sits just above the measured
 #: floor band; the boundary balances (what users read) close exactly regardless.
 _MESH_M_TOL_ZERO_ONE_TEAR = 1e-6
-#: Stage-level M gate for zero/one-tear columns on a REACTIVE amine package
-#: only. Measured P1-09 (20-stage MDEA absorber, amine_ke): the corrected
-#: inside-out converges in 3 sweeps to a physical solution (temperature bulge
-#: 281 -> 314 K, rich loading 0.502) and then stagnates at M = 5.2e-3 over
-#: sweeps 3-8 - the ln Kb = A + B/T correlation tracks the reactive acid-gas
-#: K-values' temperature dependence but not their composition dependence. The
-#: Naphtali-Sandholm fallback is WORSE on this package: its finite-difference
-#: Newton walks M uphill (measured 5.2e-3 -> 4.1e-1 over 30 passes while H
-#: closed to 3e-9 - the reactive K evaluation is too noisy for FD derivatives),
-#: so the inside-out floor IS the reactive floor. Gate sits just above it.
-_MESH_M_TOL_REACTIVE = 1e-3
+#: Stage-level M and H gates for zero/one-tear columns on a REACTIVE amine
+#: package. History: P1-09 set M at 1e-3 because the reactive K read from the
+#: flash chain was "too noisy for FD derivatives" (NS walked M uphill, measured
+#: 5.2e-3 -> 4.1e-1 on the 20-stage MDEA absorber). The noise was the K surface,
+#: not the chemistry: a flash of a stage liquid on its bubble point sits on the
+#: single-phase edge, so the chain jumped candidates between trial states. The
+#: stage now reads K_i(T, x) and the phase enthalpies at its own compositions
+#: (``_ThermoBox.k_liquid`` / ``reactive_direct``), and Newton converges
+#: quadratically - measured on the amine_ke absorbers (MDEA/MEA/DEA, 5 and 8
+#: stages) and the kettle regenerators: M 1.7e-2 -> 8.1e-4 -> 5.7e-8 -> 4.8e-15
+#: in three passes. The 1e-3 gate had let the absorbers out with boundary
+#: component closures of 1e-4 to 1e-6 (MEA, N2: 4.7e-4 relative), and the
+#: 1e-2 H gate let a heat-of-reaction continuation rung pass on the previous
+#: rung's unchanged profile. Both gates sit at the polish target.
+_MESH_M_TOL_REACTIVE = 1e-8
+_MESH_H_TOL_REACTIVE = 1e-8
 #: Loose bound separating a Naphtali-Sandholm state that reached its
 #: finite-difference Newton floor from a genuinely stalled one (spec P1-10).
 #: Measured P1-10 stripper on the physical branch at kettle vapour 50-76 mol/s:

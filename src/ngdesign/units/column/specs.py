@@ -35,6 +35,7 @@ from .spec import (
     _DAMP_RATIO_RUNS,
     _FLOW_FLOOR,
     _MESH_H_TOL,
+    _MESH_H_TOL_REACTIVE,
     _MESH_M_TOL,
     _MESH_M_TOL_REACTIVE,
     _MESH_M_TOL_ZERO_ONE_TEAR,
@@ -125,6 +126,9 @@ def _reject_band_limit(col: _Column, prof: _Profile) -> None:
 #: NS's measured warm-descent reach.  Generic: it drives whatever heat-scale
 #: capability the thermo instance exposes and is a no-op without one.
 _CONTINUATION_SCALES: tuple[float, ...] = (0.0, 0.25, 0.5, 0.75, 1.0)
+#: Smallest heat-scale step a failed rung is bisected to before the mesh error
+#: stands (a step doubles back toward the rung spacing after each success).
+_HEAT_MIN_STEP = 1.0 / 512.0
 
 
 def _solve_mesh(
@@ -150,12 +154,35 @@ def _solve_mesh(
     thermo = getattr(tb, "_thermo", tb)
     if col.n_tears < 2 and seed is None and _is_reactive_package(tb) and hasattr(thermo, "_heat_scale"):
         original = thermo._heat_scale
-        prof: _Profile | None = None
         try:
-            for scale in _CONTINUATION_SCALES:
-                thermo._heat_scale = scale
-                prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, prof, allow_fallback)
-            assert prof is not None
+            # The ladder's rungs, each seeded by the secant predictor through
+            # the last two converged rungs, with a failed rung bisected from
+            # the last converged one. On the direct reactive surface the
+            # absorber's exotherm bulge steepens toward scale 1 (measured
+            # 8-stage MDEA absorber: max T 320 / 328.5 / 339.6 / 342.2 K at
+            # scales 0.5 / 0.75 / 0.969 / 1.0), and a rung NS cannot reach
+            # from the previous profile crawls its pass budget at lam
+            # 0.03-0.25. Below _HEAT_MIN_STEP the last mesh error stands.
+            thermo._heat_scale = _CONTINUATION_SCALES[0]
+            prof = _solve_mesh_at_heat(col, tb, t_top, t_bot, None, allow_fallback)
+            scale = _CONTINUATION_SCALES[0]
+            prev: tuple[float, _Profile] | None = None
+            for target in _CONTINUATION_SCALES[1:]:
+                step = target - scale
+                while scale < target:
+                    trial = min(scale + step, target)
+                    thermo._heat_scale = trial
+                    seed_prof = prof
+                    if prev is not None:
+                        seed_prof = _secant_profile(col, prev[1], prof, (trial - scale) / (scale - prev[0]))
+                    try:
+                        nxt = _solve_mesh_at_heat(col, tb, t_top, t_bot, seed_prof, allow_fallback)
+                    except ColumnConvergenceError:
+                        step = 0.5 * (trial - scale)
+                        if step < _HEAT_MIN_STEP:
+                            raise
+                        continue
+                    prev, prof, scale = (scale, prof), nxt, trial
             return prof
         finally:
             thermo._heat_scale = original
@@ -216,8 +243,10 @@ def _solve_mesh_at_heat(
     correlation's noise.
     """
     zero_one = col.n_tears < 2
+    h_tol = _MESH_H_TOL
     if zero_one and _is_reactive_package(tb):
         m_tol = _MESH_M_TOL_REACTIVE
+        h_tol = _MESH_H_TOL_REACTIVE
     elif zero_one:
         m_tol = _MESH_M_TOL_ZERO_ONE_TEAR
     else:
@@ -252,11 +281,8 @@ def _solve_mesh_at_heat(
         best_prof = _copy_profile(col, prof)
     ns_direct = False
     ns_floor = False
-    if (
-        zero_one
-        and not _is_reactive_package(tb)
-        and (seed is not None or (col.n_tears == 1 and col.reboiler == "kettle"))
-    ):
+    reactive = _is_reactive_package(tb)
+    if zero_one and (seed is not None or (not reactive and col.n_tears == 1 and col.reboiler == "kettle")):
         # Naphtali-Sandholm FIRST for non-reactive zero/one-tear columns:
         # - warm (a promoted seed exists): NS from the re-teared seed converges
         #   in ~0.2 s at every neighbouring kettle tear (measured P1-10, V=24-76
@@ -273,6 +299,12 @@ def _solve_mesh_at_heat(
         #   sequence is locked, and NS is measurably worse there on reactive
         #   packages. Two-tear columns keep the original loop untouched: their
         #   benchmarked mesh sequence is locked (bench 4,959).
+        # - warm on a reactive package too, once its stage K and enthalpies
+        #   read the direct surface (spec.py, _MESH_M_TOL_REACTIVE): from the
+        #   previous heat-of-reaction rung NS converges in 3-5 quadratic passes,
+        #   while the sweeps re-flash every stage through the loading walk
+        #   (measured 5-stage MDEA absorber: 54 of 143 s in the sweeps' model
+        #   refreshes). Its state must meet the gate: no floor hand-off.
         try:
             _naphtali_sandholm(col, tb, prof, t_bot)
             ns_direct = True
@@ -283,6 +315,13 @@ def _solve_mesh_at_heat(
             # closed at D + B = 100.00000000 on a 100 mol/s feed; a stalled
             # state sits at 1e-2 or worse). Keep that state for the polish
             # stage below; otherwise restart from the untouched seed.
+            if reactive:
+                # The warm reactive state did not reach the gate from the
+                # previous rung: the caller's continuation bisects the rung
+                # (measured: the sweeps and a second NS from the same seed
+                # never rescued one on the 5-stage MDEA absorber, at ~2x the
+                # cost of the failed NS).
+                raise
             if _at_ns_floor(col, tb, prof):
                 ns_floor = True
             elif seed is None:
@@ -322,7 +361,7 @@ def _solve_mesh_at_heat(
                 prof.V[j] = v_prev[j] + _OUTER_DAMP_ZERO_ONE * (prof.V[j] - v_prev[j])
         prof.L = _l_profile(col, prof.l0, prof.V)
         m_res, h_res = _exact_residuals(col, tb, prof)
-        if m_res < m_tol and h_res < _MESH_H_TOL:
+        if m_res < m_tol and h_res < h_tol:
             _reject_band_limit(col, prof)
             _finalize_duties(col, tb, prof)
             return prof
@@ -626,6 +665,26 @@ def _at_ns_floor(col: _Column, tb: _ThermoBox, prof: _Profile) -> bool:
     """
     m_ns, h_ns = _exact_residuals(col, tb, prof)
     return m_ns < _NS_FLOOR_M and h_ns < _MESH_H_TOL
+
+
+def _secant_profile(col: _Column, prev: _Profile, cur: _Profile, ratio: float) -> _Profile:
+    """Secant (first-order) predictor: cur + ratio * (cur - prev), stage by stage.
+
+    The natural-parameter continuation predictor (Allgower & Georg, Numerical
+    Continuation Methods, 1990, ch. 2): temperatures, flows and compositions
+    extrapolated along the last converged step; flows floored, compositions
+    floored at zero and renormalised.
+    """
+    out = _copy_profile(col, cur)
+    for j in range(col.n):
+        out.T[j] = cur.T[j] + ratio * (cur.T[j] - prev.T[j])
+        out.V[j] = max(cur.V[j] + ratio * (cur.V[j] - prev.V[j]), _FLOW_FLOOR)
+        out.L[j] = max(cur.L[j] + ratio * (cur.L[j] - prev.L[j]), _FLOW_FLOOR)
+        for comps, a, b in ((out.x, prev.x, cur.x), (out.y, prev.y, cur.y)):
+            moved = {cid: max(v + ratio * (v - a[j].get(cid, 0.0)), 0.0) for cid, v in b[j].items()}
+            total = sum(moved.values())
+            comps[j] = {cid: v / total for cid, v in moved.items()} if total > 0.0 else dict(b[j])
+    return out
 
 
 def _copy_profile(col: _Column, src: _Profile) -> _Profile:
