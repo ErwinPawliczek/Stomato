@@ -30,6 +30,17 @@ evaluations per Jacobian is therefore bounded by the colour count times the
 variables per stage - not by the unknown count. The step solves with a
 ``scipy.sparse`` LU factorisation of the (block-sparse) Jacobian.
 
+A dividing wall (``col.wall``, unit ``divided_wall``) adds one section whose
+links split both phases: the liquid leaving the stage above the wall (a
+specified fraction to the prefractionator top), the vapour leaving the stage
+below it (fraction beta to the prefractionator bottom), with the
+prefractionator's top vapour returning above and its bottom liquid joining
+below. beta rides as the trailing ``draw_flows`` entry (as the split vapour
+flow); when it is not specified it is one more unknown, after the V block,
+closed by one more row after the stage blocks - equal pressure drop across
+the two wall sides (``_wall_dp_residual``) - and its Jacobian column is one
+extra residual evaluation.
+
 The linear-column path of this module is exercised only through tests (the
 public solve dispatches nothing here until step 3): on a column without
 sections the graph residual is the dense residual's algebra, and the graph solve
@@ -46,6 +57,8 @@ import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
 
+from ngdesign.contracts import PhaseKind
+
 from .decant import decant_split
 from .inside_out import (
     _Column,
@@ -57,6 +70,7 @@ from .inside_out import (
     _Profile,
     _stage_k_values,
     _StageFeed,
+    _WallSection,
 )
 from .naphtali_sandholm import _ns_controller, _refresh_y
 from .spec import (
@@ -79,6 +93,10 @@ from .thermo_adapter import _flash_ready, _ThermoBox
 #: is inactive there, and the shared controller's steps reach the dense
 #: engine untouched.
 _NS_MAX_DT = 25.0
+#: Per-pass Newton step bound on a dividing wall's vapour split fraction, and
+#: the split's distance from 0 and 1 (each wall side keeps some vapour).
+_NS_MAX_DBETA = 0.05
+_BETA_MIN = 1e-4
 
 
 @dataclass(frozen=True)
@@ -106,6 +124,9 @@ class _GraphLayout:
     v_base: int
     d_base: int
     n_unk: int
+    #: Dividing wall: the slot of the vapour split fraction beta when it is a
+    #: Newton unknown (the equal pressure-drop row closes it), else None.
+    beta_index: int | None = None
 
     @property
     def variables_per_stage(self) -> int:
@@ -154,6 +175,8 @@ class _GraphModel:
     h_stages: frozenset[int]
     #: A partial condenser's pinned top vapour (the top tear), None otherwise.
     v_top_pin: float | None = None
+    #: A dividing wall's prefractionator (None without a wall).
+    wall: _WallSection | None = None
 
 
 def _graph_model(col: _Column, kettle_free: bool = False, v_top_pin: float | None = None) -> _GraphModel:
@@ -191,6 +214,8 @@ def _graph_model(col: _Column, kettle_free: bool = False, v_top_pin: float | Non
     t_base = g * nc
     v_base = t_base + g
     d_base = v_base + len(v_free)
+    wall = col.wall
+    beta_free = wall is not None and wall.vapour_split is None
     layout = _GraphLayout(
         n_graph=g,
         nc=nc,
@@ -199,7 +224,8 @@ def _graph_model(col: _Column, kettle_free: bool = False, v_top_pin: float | Non
         t_base=t_base,
         v_base=v_base,
         d_base=d_base,
-        n_unk=d_base,
+        n_unk=d_base + (1 if beta_free else 0),
+        beta_index=d_base if beta_free else None,
     )
 
     feeds = list(col.feeds) + [_StageFeed() for _ in range(g - len(col.feeds))]
@@ -209,6 +235,11 @@ def _graph_model(col: _Column, kettle_free: bool = False, v_top_pin: float | Non
     for sec in col.sections:
         for s in sec.stages:
             section_of[s - 1] = tuple(j - 1 for j in sec.stages)
+    if wall is not None:
+        # The prefractionator is its own cascade: its top takes the split
+        # liquid and its bottom the split vapour (wall terms in the residual).
+        for s in wall.stages:
+            section_of[s] = wall.stages
     for s in range(g):
         if s in section_of:
             chain = section_of[s]
@@ -225,6 +256,10 @@ def _graph_model(col: _Column, kettle_free: bool = False, v_top_pin: float | Non
     for lk in col.interlinks:
         if lk.phase == "vapour":
             vapour_return_at[lk.to_stage] = (*vapour_return_at.get(lk.to_stage, ()), lk.from_stage)
+    if wall is not None:
+        # The prefractionator's whole top vapour returns above the wall,
+        # exactly like a stripper's overhead return.
+        vapour_return_at[wall.above] = (*vapour_return_at.get(wall.above, ()), wall.stages[0])
     draw_link_at_stage = {lk.from_stage: k for k, lk in enumerate(draw_links)}
     link_at_top = {lk.to_stage: k for k, lk in enumerate(draw_links)}
     section_duty_at: dict[int, float] = {}
@@ -257,22 +292,46 @@ def _graph_model(col: _Column, kettle_free: bool = False, v_top_pin: float | Non
         section_total_rows=section_total_rows,
         h_stages=h_stages,
         v_top_pin=v_top_pin if col.condenser in ("partial", "total") else None,
+        wall=wall,
     )
 
 
 def _graph_liquid_profile(
     model: _GraphModel, l0: float, vs: list[float], draw_flows: list[float]
 ) -> list[float]:
-    """Liquid flows over the whole graph from the stage total balances.
+    """Liquid flows over the whole graph from the stage total balances
+    (``_graph_flows`` without the wall's liquid split)."""
+    return _graph_flows(model, l0, vs, draw_flows)[0]
+
+
+def _graph_flows(
+    model: _GraphModel, l0: float, vs: list[float], draw_flows: list[float]
+) -> tuple[list[float], float]:
+    """(liquid flows over the whole graph, the wall's split liquid flow).
 
     Main stages: the dense telescoped recursion (``_l_profile``) with the
     stripper draws subtracted like any side draw. Each section restarts the
     cascade at its draw flow (the interlink IS the section's liquid inflow) and
     telescopes over its own stages; the section's top-stage vapour leaves
     entirely (the return link), the bottom stage's liquid is the product.
+
+    Dividing wall (``model.wall``; the split vapour flow is the trailing
+    ``draw_flows`` entry): the liquid leaving stage ``above`` is
+    ``L_tot = l0 + cum + V_in - V_1`` from the envelope over the stages above
+    it, of which ``liquid_split * L_tot`` enters the prefractionator top and
+    the rest stays in the main cascade. The main side's bottom stage receives
+    only the unsplit vapour ``V_below - V_split``. Stage ``below`` gains the
+    prefractionator bottom liquid less the split vapour, which by the
+    prefractionator's total balance is ``L_wall + F_pre - V_pre,top``. The
+    prefractionator telescopes from its top like a section, its bottom stage
+    fed from below by ``V_split``. Without a wall the split flow is 0.0.
     """
     col = model.col
-    draw_out = {model.draw_stage_of_link[k]: draw_flows[k] for k in range(len(draw_flows))}
+    wall = model.wall
+    n_links = len(model.draw_stage_of_link)
+    draw_out = {model.draw_stage_of_link[k]: draw_flows[k] for k in range(n_links)}
+    v_split = draw_flows[-1] if wall is not None else 0.0
+    l_wall = 0.0
     out: list[float] = []
     cum = 0.0
     for j in range(col.n):
@@ -286,7 +345,19 @@ def _graph_liquid_profile(
         if col.pumparounds:
             cum += model.pa_in[j] - model.pa_out[j]
         v_above = vs[j + 1] if j + 1 < col.n else 0.0
-        out.append(max(l0 + cum + v_above - vs[0], _FLOW_FLOOR))
+        if wall is None:
+            out.append(max(l0 + cum + v_above - vs[0], _FLOW_FLOOR))
+            continue
+        if j == wall.below:
+            cum += l_wall + sum(model.feeds[s].total for s in wall.stages) - vs[wall.stages[0]]
+        if j == wall.below - 1:
+            v_above = vs[wall.below] - v_split
+        liquid = l0 + cum + v_above - vs[0]
+        if j == wall.above:
+            l_wall = wall.liquid_split * max(liquid, 0.0)
+            cum -= l_wall
+            liquid -= l_wall
+        out.append(max(liquid, _FLOW_FLOOR))
     for sec in col.sections:
         chain = [s - 1 for s in sec.stages]
         if not chain:
@@ -298,7 +369,14 @@ def _graph_liquid_profile(
             cum_s += model.feeds[s].total
             v_below = vs[s + 1] if pos + 1 < len(chain) else 0.0
             out.append(max(draw_flows[link] + cum_s + v_below - vs[top], _FLOW_FLOOR))
-    return out
+    if wall is not None:
+        top = wall.stages[0]
+        cum_s = 0.0
+        for pos, s in enumerate(wall.stages):
+            cum_s += model.feeds[s].total
+            v_below = vs[s + 1] if pos + 1 < len(wall.stages) else v_split
+            out.append(max(l_wall + cum_s + v_below - vs[top], _FLOW_FLOOR))
+    return out, l_wall
 
 
 def _reflux_split(
@@ -383,7 +461,8 @@ def _graph_residual_vector(
     col = model.col
     g = model.layout.n_graph
     nc = model.layout.nc
-    liquid = _graph_liquid_profile(model, l0, vs, draw_flows)
+    liquid, l_wall = _graph_flows(model, l0, vs, draw_flows)
+    wall = model.wall
     h_scale = max(col.f_total * 2e4, 1.0)
     links = _graph_interlink_terms(model, xs, draw_flows)
 
@@ -456,7 +535,9 @@ def _graph_residual_vector(
             if link_in is not None:
                 inflow = links[link_in]["to_stage"][cid]
             if vap_donor is not None:
-                inflow += vs[vap_donor] * y_eq[vap_donor].get(cid, 0.0)
+                inflow += _vapour_in(model, vs, draw_flows, s, vap_donor) * y_eq[vap_donor].get(cid, 0.0)
+            if wall is not None:
+                inflow += _wall_m_in(wall, liquid, l_wall, xs, y_eq, draw_flows, s, cid)
             for ret_top in model.vapour_return_at.get(s, ()):
                 inflow += vs[ret_top] * y_eq[ret_top].get(cid, 0.0)
             inflow += part.l_flow * part.x.get(cid, 0.0) + part.v_flow * part.y.get(cid, 0.0)
@@ -464,6 +545,8 @@ def _graph_residual_vector(
                 if ret_j == s:
                     inflow += pa_flow * xs[draw_j].get(cid, 0.0)
             own_draw = draw_flows[model.draw_link_at_stage[s]] if s in model.draw_link_at_stage else 0.0
+            if wall is not None and s == wall.above:
+                own_draw = l_wall
             outflow = (
                 liquid[s]
                 + (col.draw_l[s] if s < col.n else 0.0)
@@ -486,7 +569,7 @@ def _graph_residual_vector(
             continue
         h_in = 0.0
         if vap_donor is not None:
-            h_in += vs[vap_donor] * tb.h_vapor(
+            h_in += _vapour_in(model, vs, draw_flows, s, vap_donor) * tb.h_vapor(
                 _flash_ready(y_eq[vap_donor], col.feed_comp), ts[vap_donor], col.pressures[vap_donor]
             )
         if donor is not None and link_in is None:
@@ -502,6 +585,8 @@ def _graph_residual_vector(
             h_in += vs[ret_top] * tb.h_vapor(
                 _flash_ready(y_eq[ret_top], col.feed_comp), ts[ret_top], col.pressures[ret_top]
             )
+        if wall is not None:
+            h_in += _wall_h_in(model, tb, liquid, l_wall, xs, ts, y_eq, draw_flows, s)
         h_in += part.h_flow
         if s == 0 and col.condenser == "total":
             h_in += l0 * tb.h_liquid(_flash_ready(x_reflux, col.feed_comp), ts[0], col.pressures[0])
@@ -527,6 +612,8 @@ def _graph_residual_vector(
         if col.stage_q and s < col.n:
             h_in += col.stage_q[s]
         own_draw = draw_flows[model.draw_link_at_stage[s]] if s in model.draw_link_at_stage else 0.0
+        if wall is not None and s == wall.above:
+            own_draw = l_wall
         h_out = (vs[s] + (col.draw_v[s] if s < col.n else 0.0)) * tb.h_vapor(
             _flash_ready(y_eq[s], col.feed_comp), ts[s], col.pressures[s]
         ) + (
@@ -540,7 +627,141 @@ def _graph_residual_vector(
         if flow_mags is not None:
             flow_mags.append(h_scale)
         out.append((h_in - h_out) / h_scale)
+    if model.layout.beta_index is not None:
+        if flow_mags is not None:
+            flow_mags.append(1.0)
+        out.append(_wall_dp_residual(model, tb, ts, vs, y_eq))
     return out
+
+
+def _vapour_in(model: _GraphModel, vs: list[float], draw_flows: list[float], s: int, donor: int) -> float:
+    """The cascade vapour flow entering stage s from its donor below: all of
+    the donor's vapour, except on the main side's bottom stage of a dividing
+    wall, which receives what the prefractionator does not take."""
+    wall = model.wall
+    if wall is not None and s == wall.below - 1:
+        return vs[donor] - draw_flows[-1]
+    return vs[donor]
+
+
+def _wall_m_in(
+    wall: _WallSection,
+    liquid: list[float],
+    l_wall: float,
+    xs: list[dict[str, float]],
+    y_eq: list[dict[str, float]],
+    draw_flows: list[float],
+    s: int,
+    cid: str,
+) -> float:
+    """Component inflow over the wall links into stage s (mol/s): the split
+    liquid into the prefractionator top (at the composition of the stage
+    above the wall), the split vapour into its bottom (at the composition of
+    the stage below), and its bottom liquid into the stage below the wall.
+    The prefractionator top vapour's return is a ``vapour_return_at`` term."""
+    flow = 0.0
+    if s == wall.stages[0]:
+        flow += l_wall * xs[wall.above].get(cid, 0.0)
+    if s == wall.stages[-1]:
+        flow += draw_flows[-1] * y_eq[wall.below].get(cid, 0.0)
+    if s == wall.below:
+        bottom = wall.stages[-1]
+        flow += liquid[bottom] * xs[bottom].get(cid, 0.0)
+    return flow
+
+
+def _wall_h_in(
+    model: _GraphModel,
+    tb: _ThermoBox,
+    liquid: list[float],
+    l_wall: float,
+    xs: list[dict[str, float]],
+    ts: list[float],
+    y_eq: list[dict[str, float]],
+    draw_flows: list[float],
+    s: int,
+) -> float:
+    """Enthalpy inflow over the wall links into stage s (W), the energy
+    counterpart of ``_wall_m_in``: each stream at its source stage's state."""
+    wall = model.wall
+    assert wall is not None
+    col = model.col
+    h = 0.0
+    if s == wall.stages[0]:
+        a = wall.above
+        h += l_wall * tb.h_liquid(_flash_ready(xs[a], col.feed_comp), ts[a], col.pressures[a])
+    if s == wall.stages[-1]:
+        b = wall.below
+        h += draw_flows[-1] * tb.h_vapor(_flash_ready(y_eq[b], col.feed_comp), ts[b], col.pressures[b])
+    if s == wall.below:
+        q = wall.stages[-1]
+        h += liquid[q] * tb.h_liquid(_flash_ready(xs[q], col.feed_comp), ts[q], col.pressures[q])
+    return h
+
+
+def _wall_side_stages(wall: _WallSection) -> tuple[tuple[int, ...], tuple[int, ...]]:
+    """(prefractionator stages, main-side wall stages), 0-based graph indices."""
+    return wall.stages, tuple(range(wall.above + 1, wall.below))
+
+
+def _wall_side_loads(
+    model: _GraphModel, tb: _ThermoBox, ts: list[float], vs: list[float], y_eq: list[dict[str, float]]
+) -> tuple[float, float] | None:
+    """(prefractionator, main side) hydraulic loads of the wall sections:
+    each side's sum over its stages of m_V^2 / rho_V divided by its
+    cross-section squared (relative areas: ``area_fraction`` and its
+    complement). That is each side's pressure drop up to one common factor
+    (see ``_wall_dp_residual``). None when a stage vapour is not evaluable."""
+    wall = model.wall
+    assert wall is not None
+    col = model.col
+    loads: list[float] = []
+    areas = (wall.area_fraction, 1.0 - wall.area_fraction)
+    for side, area in zip(_wall_side_stages(wall), areas, strict=True):
+        total = 0.0
+        for s in side:
+            if not y_eq[s]:
+                return None
+            try:
+                props = tb._thermo.phase_props(
+                    _flash_ready(y_eq[s], col.feed_comp), ts[s], col.pressures[s], PhaseKind.VAPOR
+                )
+            except ValueError:
+                return None
+            mass = vs[s] * props.molecular_weight / 1000.0  # kg/s
+            total += mass * mass / props.density
+        loads.append(total / (area * area))
+    return loads[0], loads[1]
+
+
+def _wall_dp_residual(
+    model: _GraphModel, tb: _ThermoBox, ts: list[float], vs: list[float], y_eq: list[dict[str, float]]
+) -> float:
+    """The vapour-split row: equal pressure drop across the two wall sides.
+
+    Both sides of the wall run between the same two stages (above and below
+    the wall), so in operation the vapour divides until their pressure drops
+    are equal; the split is set by the wall position, not controlled
+    (Dejanovic, Matijasevic & Olujic, Chem. Eng. Process. 49 (2010) 559-580,
+    sect. 4). Each stage's pressure drop is taken in the turbulent dry-bed
+    form dP = xi rho_V u^2 / 2 (the high-Reynolds limit f0 -> C3 of
+    Stichlmair, Bravo & Fair, Gas Sep. Purif. 3 (1989) 19-28, dry bed), with
+    u = m_V / (rho_V A): with the same internals and stage height on both
+    sides, xi and the stage height cancel and
+
+        sum_pre m_V^2 / (rho_V A_pre^2) = sum_main m_V^2 / (rho_V A_main^2).
+
+    The vapour leaving each wall stage is the load through its segment, at
+    the stage's real-gas density from the package. The row is that
+    difference over the sum (dimensionless, in [-1, 1]); an unevaluable
+    vapour reads 1.0 (not converged). The liquid load's contribution to the
+    irrigated pressure drop is neglected (the dry-bed approximation).
+    """
+    loads = _wall_side_loads(model, tb, ts, vs, y_eq)
+    if loads is None:
+        return 1.0
+    pre, main = loads
+    return (pre - main) / max(pre + main, 1e-300)
 
 
 def _graph_residual_scales(
@@ -571,6 +792,9 @@ def _graph_pack(prof: _Profile, model: _GraphModel) -> list[float]:
     u = [prof.x[s].get(cid, 0.0) for s in range(layout.n_graph) for cid in col.comps]
     u.extend(prof.T)
     u.extend(prof.V[j] for j in layout.v_free)
+    if layout.beta_index is not None:
+        assert model.wall is not None
+        u.append(prof.draw_flows[-1] / max(prof.V[model.wall.below], _FLOW_FLOOR))
     return u
 
 
@@ -603,6 +827,15 @@ def _graph_unpack(
         )
         for _k, top, bottom, rate in model.section_total_rows
     ]
+    wall = model.wall
+    if wall is not None:
+        # The wall's split vapour flow rides as the trailing entry: the
+        # specified fraction, or the Newton unknown beta, of V_below.
+        beta = wall.vapour_split
+        if layout.beta_index is not None:
+            beta = min(max(u[layout.beta_index], _BETA_MIN), 1.0 - _BETA_MIN)
+        assert beta is not None
+        draw_flows.append(beta * vs[wall.below])
     return xs, ts, vs, draw_flows
 
 
@@ -660,6 +893,8 @@ def _graph_exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tupl
             max_m = max(max_m, abs(r[row]))
         if s in model.h_stages:
             max_h = max(max_h, abs(r[stop - 1]))
+    if model.layout.beta_index is not None:
+        max_m = max(max_m, abs(r[-1]))  # the wall's pressure-drop row
     return max_m, max_h
 
 
@@ -766,7 +1001,51 @@ def _rowsout_sets(model: _GraphModel) -> tuple[list[frozenset[int]], list[frozen
         draw_stage = model.draw_stage_of_link[k]
         for q in range(min(draw_stage, return_of_top[top]), g):
             rows_v[top] = rows_v[top] | block(q)
+    if model.wall is not None:
+        _wall_rowsout(model, block, rows_x, rows_v)
     return rows_x, rows_v
+
+
+def _wall_rowsout(
+    model: _GraphModel,
+    block: Callable[[int], frozenset[int]],
+    rows_x: list[frozenset[int]],
+    rows_v: list[frozenset[int]],
+) -> None:
+    """Add a dividing wall's couplings to the per-stage affected-row sets.
+
+    x/T: the prefractionator top's vapour returns above the wall, the stage
+    below the wall sends vapour to the prefractionator bottom, whose liquid
+    comes back to it. V: the split liquid is a share of the liquid leaving
+    the stage above the wall, which carries V_1, V_above+1 and the
+    prefractionator top vapour - those reach every main stage from there down
+    and the whole prefractionator; V_below carries the split vapour into the
+    prefractionator bottom. Every wall-side stage's x, T and V enter the
+    pressure-drop row (when beta is an unknown).
+    """
+    wall = model.wall
+    assert wall is not None
+    col = model.col
+    a, b, top, bottom = wall.above, wall.below, wall.stages[0], wall.stages[-1]
+    pre = frozenset().union(*(block(s) for s in wall.stages))
+    down = frozenset().union(*(block(q) for q in range(a, col.n))) | pre
+    rows_x[top] = rows_x[top] | block(a)
+    rows_x[b] = rows_x[b] | block(bottom)
+    rows_x[bottom] = rows_x[bottom] | block(b)
+    rows_v[b] = rows_v[b] | block(bottom) | block(b - 1)
+    for s in (0, a + 1, top):
+        rows_v[s] = rows_v[s] | down | block(a)
+    if model.layout.beta_index is not None:
+        dp_row = frozenset({_stage_row_ranges(model)[-1][1]})
+        for s in (*wall.stages, *range(a + 1, b)):
+            rows_x[s] = rows_x[s] | dp_row
+            rows_v[s] = rows_v[s] | dp_row
+
+
+def _rowsout_block(model: _GraphModel, stages: tuple[int, ...]) -> frozenset[int]:
+    """Every residual row of the given stages."""
+    rows = _stage_row_ranges(model)
+    return frozenset(r for s in stages for r in range(rows[s][0], rows[s][1]))
 
 
 def _colour_groups(domain: list[int], rowsout: list[frozenset[int]]) -> list[list[int]]:
@@ -854,6 +1133,18 @@ def _graph_fd_jacobian(
             idx = layout.v_base + layout.v_free.index(s)
             delta = max(abs(u[idx]) * 1e-7, 1e-9)
             record(s, idx, delta, r1, rows_v[s])
+
+    if layout.beta_index is not None and model.wall is not None:
+        # The wall's vapour split: one column of its own. It moves the
+        # vapour into both wall-side bottoms and the liquids around them.
+        idx = layout.beta_index
+        delta = max(abs(u[idx]) * 1e-7, 1e-9)
+        r1 = perturb([(idx, delta)])
+        if r1 is None:
+            return None
+        wall = model.wall
+        rows = _rowsout_block(model, (wall.below - 1, wall.below, wall.stages[-1]))
+        record(wall.below, idx, delta, r1, rows | {n_rows - 1})
 
     if not entries:
         return None
@@ -1052,6 +1343,8 @@ class _GraphNSEngine:
             pos += 1
             if s in self._model.h_stages:
                 pos += 1
+        if self._model.layout.beta_index is not None:
+            vals.append(abs(r[-1]))  # the wall's pressure-drop row
         return max(vals, default=0.0)
 
     def h_norm_of(self, r: list[float]) -> float:
@@ -1114,6 +1407,9 @@ class _GraphNSEngine:
         layout = self._model.layout
         for s in range(layout.n_graph):
             step[layout.t_base + s] = max(-_NS_MAX_DT, min(_NS_MAX_DT, step[layout.t_base + s]))
+        if layout.beta_index is not None:
+            k = layout.beta_index
+            step[k] = max(-_NS_MAX_DBETA, min(_NS_MAX_DBETA, step[k]))
 
     def apply(self, prof: _Profile, u: list[float]) -> None:
         _graph_apply_state(prof, u, self._model, self._t_bot_tear)
@@ -1184,7 +1480,12 @@ class _GraphNSEngine:
 
 
 def _graph_naphtali_sandholm(
-    col: _Column, tb: _ThermoBox, prof: _Profile, t_bot_tear: float | None, top_vapour: float | None = None
+    col: _Column,
+    tb: _ThermoBox,
+    prof: _Profile,
+    t_bot_tear: float | None,
+    top_vapour: float | None = None,
+    ns_max: int | None = None,
 ) -> _Profile:
     """Graph Naphtali-Sandholm: damped Newton over the whole stage graph.
 
@@ -1197,7 +1498,8 @@ def _graph_naphtali_sandholm(
     the injected residual and Jacobian builders and the sparse linear solve.
     Both engines gate on the exact refreshed-thermo norms at the same mesh
     tolerances. Duties are NOT finalized here: whole-unit boundary
-    accounting over the graph is step 3.
+    accounting over the graph is step 3. ``ns_max`` overrides the pass
+    budget (None = the column's own, by tear count).
     """
     if top_vapour is not None and col.condenser == "total":
         # Top-vapour mode: V_1 pinned, the kettle boilup an unknown.
@@ -1217,6 +1519,7 @@ def _graph_naphtali_sandholm(
     # condenser's top tear needs the same treatment in _graph_unpack - not
     # exercised until that configuration is routed here.
     m_tol = _MESH_M_TOL if col.n_tears >= 2 else _MESH_M_TOL_ZERO_ONE_TEAR
-    ns_max = _NS_MAX if col.n_tears >= 2 else _NS_MAX_ZERO_ONE_TEAR
+    if ns_max is None:
+        ns_max = _NS_MAX if col.n_tears >= 2 else _NS_MAX_ZERO_ONE_TEAR
     _ns_controller(_GraphNSEngine(col, tb, prof, t_bot_tear, model, m_tol), ns_max)
     return prof

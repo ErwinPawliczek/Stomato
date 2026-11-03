@@ -89,6 +89,34 @@ class _StripperSection:
 
 
 @dataclass(frozen=True)
+class _WallSection:
+    """The prefractionator of a dividing-wall column (stage graph).
+
+    The main cascade runs condenser-side common section, the MAIN side of
+    the wall (the side-draw side), common stripping section. The
+    prefractionator (the feed side) is appended after the main stages, top to
+    bottom. All indices are 0-based graph indices. Four streams link it:
+
+    - the liquid leaving main stage ``above`` splits: ``liquid_split`` of it
+      enters the prefractionator top, the rest the main side below;
+    - the prefractionator's whole top vapour returns to stage ``above``;
+    - the prefractionator's bottom liquid joins main stage ``below``;
+    - the vapour leaving main stage ``below`` splits: a fraction beta enters
+      the prefractionator bottom, the rest the main side above. beta is
+      ``vapour_split`` when given, else a Newton unknown closed by the equal
+      pressure-drop row (``graph_ns._wall_dp_residual``) with the
+      prefractionator taking ``area_fraction`` of the column cross-section.
+    """
+
+    above: int
+    below: int
+    stages: tuple[int, ...]
+    liquid_split: float
+    vapour_split: float | None
+    area_fraction: float
+
+
+@dataclass(frozen=True)
 class _Interlink:
     """One stream link of the stage graph (S0-1c step 2).
 
@@ -164,6 +192,8 @@ class _Column:
     water_decant: bool = False
     #: Per-solve memo of the decant split, keyed on (y_1, T_1, P_1).
     decant_memo: dict[_DecantKey, tuple[dict[str, float], float]] = field(default_factory=dict)
+    #: A dividing wall's prefractionator (None = no wall, today's _Column).
+    wall: _WallSection | None = None
     # Two-phase operating window for the inner temperature walk, set from the
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
@@ -175,13 +205,16 @@ class _Column:
     @property
     def is_graph(self) -> bool:
         """True when the column solves on the stage graph (S0-1c): it has
-        side-stripper sections, or its total condenser decants free water."""
-        return bool(self.interlinks) or self.water_decant
+        side-stripper sections, its total condenser decants free water, or it
+        carries a dividing wall."""
+        return bool(self.interlinks) or self.water_decant or self.wall is not None
 
     @property
     def n_graph(self) -> int:
-        """Total stages over the whole graph: main stages plus every section's."""
-        return self.n + sum(len(s.stages) for s in self.sections)
+        """Total stages over the whole graph: main stages plus every section's
+        (and a dividing wall's prefractionator)."""
+        wall = len(self.wall.stages) if self.wall is not None else 0
+        return self.n + sum(len(s.stages) for s in self.sections) + wall
 
 
 @dataclass
