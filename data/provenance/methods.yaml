@@ -452,6 +452,23 @@ kremser:
   references:
     - source: treybal_1980
       citation: "Treybal, R.E., Mass-Transfer Operations, 3rd ed., McGraw-Hill, 1980, sec. 5 (Kremser equation), as cited in ngdesign.sizing.kremser."
+design_spec_secant:
+  name: Design specification (bounded secant / Brent)
+  latex: 'u_{k+1} = u_k - f(u_k)\,\frac{u_k - u_{k-1}}{f(u_k) - f(u_{k-1})},\quad f(u) = y(u) - y_\mathrm{spec}'
+  references:
+    - source: biegler_1997
+      citation: "Biegler, L.T., Grossmann, I.E. and Westerberg, A.W., Systematic Methods of Chemical Process Design, Prentice Hall, 1997, ch. 8 (design specifications)."
+    - source: brent_1973
+      citation: "Brent, R.P., Algorithms for Minimization without Derivatives, Prentice-Hall, 1973."
+design_spec_broyden:
+  name: Design specifications (bounded Broyden)
+  latex: '\mathbf{u}_{k+1} = \mathbf{u}_k - J_k^{-1}\,\mathbf{f}(\mathbf{u}_k)'
+  references:
+    - source: biegler_1997
+      citation: "Biegler, L.T., Grossmann, I.E. and Westerberg, A.W., Systematic Methods of Chemical Process Design, Prentice Hall, 1997, ch. 8 (design specifications)."
+    - source: broyden_1965
+      citation: "Broyden, C.G., A Class of Methods for Solving Nonlinear Simultaneous Equations, Math. Comp. 19(92), 1965, 577-593."
+      doi: 10.1090/S0025-5718-1965-0198670-6
 
 # ---------------------------------------------------------------- columns (unit instrumentation)
 

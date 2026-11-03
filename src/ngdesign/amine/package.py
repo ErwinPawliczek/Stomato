@@ -84,6 +84,7 @@ from ngdesign.contracts.thermo import (
     SaturationPoint,
 )
 from ngdesign.data import DATABANK_LOCK, component_record, components
+from ngdesign.provenance.thermo_hook import TracedThermo
 from ngdesign.registry import register
 from ngdesign.thermo import _state
 from ngdesign.thermo.gamma_phi import _constants_for
@@ -325,7 +326,7 @@ def _wilson_T(cid: str, P: float) -> float | None:
     return tc / denom
 
 
-class AmineReactivePackage(Thermo):
+class AmineReactivePackage(TracedThermo, Thermo):
     """Amine reactive absorption property package over a plain-cubic carrier.
 
     Subclasses pin the speciation model via the ``model`` class attribute

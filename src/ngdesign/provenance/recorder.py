@@ -567,15 +567,40 @@ class Recorder:
             if isinstance(value, float | Mapping) and not isinstance(value, bool):
                 sc.ident.setdefault(id(value), []).append((call.seq, None, call, prop, value))
 
+    def _model_entry(self, package: Any) -> catalogue.MethodEntry | None:
+        """The package's model: its vetted EOS key, else its thermo catalogue row."""
+        model = getattr(package, "trace_model", lambda: None)()
+        entry = catalogue.method(model) if model else None
+        if entry is not None:
+            return entry
+        cls = type(package)
+        row = catalogue.thermo_row_for_adapter(f"{cls.__module__}:{cls.__name__}") or self.meta.get("thermo")
+        return catalogue.method(f"thermo_model:{row}") if row else None
+
     def _params_node(self, package: Any, ids: tuple[str, ...]) -> str | None:
         """The (cached) model-parameter-set node for a package over a component support."""
         ck = (id(package), ids)
         if ck in self._params_cache and self._params_cache[ck] in self.values:
             return self._params_cache[ck]
         describe = getattr(package, "trace_parameters", None)
-        if describe is None:
-            return None
-        spec = describe(ids)
+        spec: dict[str, Any] = (
+            describe(ids)
+            if describe is not None
+            else {
+                "model": type(package).__name__,
+                "leaves": [
+                    {
+                        "key": ("untraced", type(package).__name__),
+                        "label": f"{type(package).__name__} parameters (not traced)",
+                        "value": "model parameters",
+                        "quality": "uncited",
+                        "kind": "parameter",
+                        "role": "parameters",
+                        "note": "This property package does not report its parameters yet.",
+                    }
+                ],
+            }
+        )
         model_name = spec.get("model", type(package).__name__)
         set_id = self._add_value(
             f"{model_name} parameters ({', '.join(ids)})",
@@ -622,18 +647,13 @@ class Recorder:
         if scope.tear_op is not None:
             op = scope.tear_op
         else:
-            model = getattr(call.package, "trace_model", lambda: None)()
-            method_key = f"{call.method}"
-            op = self._add_op(method_key, unit_tag=scope.unit_tag, owner=owner)
+            op = self._add_op(call.method, unit_tag=scope.unit_tag, owner=owner)
             node = self.ops[op]
-            if model is not None:
-                entry = catalogue.method(model)
-                if entry is not None:
-                    node.name = f"{node.name} · {entry.name}"
-                    node.references = [*entry.references, *node.references]
-                    node.latex = entry.latex
-                else:
-                    node.name = f"{node.name} · {model}"
+            entry = self._model_entry(call.package)
+            if entry is not None:
+                node.name = f"{node.name} · {entry.name}"
+                node.references = [*entry.references, *node.references]
+                node.latex = entry.latex or node.latex
             node.label = f"{call.method} ({scope.unit_tag or scope.key})"
             call.op_id = op
             if call.convergence:
@@ -1132,6 +1152,84 @@ class Recorder:
                     self._edge(comp[prop], op.id, prop, feedback=True)
         finally:
             self._scope = outer
+
+    # ------------------------------------------------------------ design specs
+
+    def _address_node(self, address: str, *, write: bool) -> str | None:
+        """The value node of a variable address (ngdesign.variables grammar), if traced."""
+        head, *rest = address.split(".")
+        if write:
+            if rest[:1] == ["params"]:
+                prop, unit_tag, stream = "param." + ".".join(rest[1:]), head, None
+            elif rest[:1] == ["feed"]:
+                field_ = "composition" if rest[1:2] == ["composition"] else ".".join(rest[1:])
+                prop, unit_tag, stream = f"spec.{field_}", None, head
+            else:
+                return None
+        elif rest[:1] == ["x"]:
+            prop, unit_tag, stream = "composition", head, head
+        else:
+            prop, unit_tag, stream = ".".join(rest), head, head
+        for v in self.values.values():
+            if v.prop != prop:
+                continue
+            if write and (
+                (stream is not None and v.stream == stream) or (unit_tag and v.unit_tag == unit_tag)
+            ):
+                return v.id
+            if (
+                not write
+                and v.kind == "output"
+                and (v.stream == stream or (v.stream is None and v.unit_tag == unit_tag))
+            ):
+                return v.id
+        return None
+
+    def design_spec(
+        self,
+        spec_id: str,
+        *,
+        manipulated: str,
+        target: str,
+        value: float,
+        achieved: float,
+        iterations: int,
+        converged: bool,
+        method: str,
+    ) -> None:
+        """The manipulated variable was set by a design-spec loop, not by the user."""
+        mnode = self._address_node(manipulated, write=True)
+        if mnode is None:
+            return
+        op = self._add_op(method, f"design spec {spec_id}", owner="design_spec")
+        node = self.ops[op]
+        node.iterations = iterations
+        node.converged = converged
+        node.residual = abs(achieved - value) / max(abs(value), 1e-300)
+        node.note = f"Drives {target} to {value!r} by adjusting {manipulated}."
+        goal = self._add_value(
+            f"{spec_id} target {target}",
+            value,
+            "",
+            "input",
+            "user",
+            citation=self._user_citation(f"design spec {spec_id} target value"),
+            prop=f"design_spec.{spec_id}",
+            owner="design_spec",
+        )
+        self.edges.append(Edge(source=goal, target=op, role="target"))
+        self._edge_owner.append("design_spec")
+        tnode = self._address_node(target, write=False)
+        if tnode is not None:
+            self.edges.append(Edge(source=tnode, target=op, role="achieved", feedback=True))
+            self._edge_owner.append("design_spec")
+        self.edges.append(Edge(source=op, target=mnode, role=manipulated))
+        self._edge_owner.append("design_spec")
+        m = self.values[mnode]
+        m.kind = "intermediate"
+        m.quality = "derived"
+        m.citation = None
+        m.note = f"Set by design spec {spec_id} (the flowsheet's value is only the start point)."
 
     # ------------------------------------------------------------ export
 

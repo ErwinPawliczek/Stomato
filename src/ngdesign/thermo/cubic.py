@@ -129,11 +129,15 @@ class ThermoSurfaceMixin(TracedThermo):
 
     def trace_parameters(self, ids: tuple[str, ...]) -> dict[str, Any]:
         """Cited constants and correlations of the flasher over this support."""
-        from ngdesign.thermo._trace import describe_flasher_parameters
+        from ngdesign.thermo._trace import describe_flasher_parameters, untraced_leaf
 
-        return describe_flasher_parameters(
+        described = describe_flasher_parameters(
             self._build_flasher(ids), ids, self.trace_model(), self._trace_kij_table, self._slate_pseudos
         )
+        if not isinstance(self, CubicEOS):
+            # activity-model / SAFT / K-value parameters are not reported yet: say so
+            described["leaves"].append(untraced_leaf(type(self).__name__))
+        return described
 
     def _sat_flasher(self, ids: tuple[str, ...]) -> Any:
         """FlashVL fast path when no second liquid can exist (no water in the feed)."""

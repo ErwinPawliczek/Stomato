@@ -368,3 +368,44 @@ def test_method_key_sources_resolve() -> None:
             cit, quality = catalogue.method_key_citation(family, key)
             assert cit is not None, (family, key)
             assert quality in ("cited", "estimated")
+
+
+def test_design_spec_sets_the_manipulated_value() -> None:
+    """A design-spec loop's manipulated param is produced by the spec, fed back from its target."""
+    base = _simple()
+    at_7 = _solve(
+        Flowsheet(
+            **{
+                **base.model_dump(),
+                "units": [
+                    u.model_copy(update={"params": {**u.params, "P_out": 7.0e6}}) if u.tag == "K-101" else u
+                    for u in base.units
+                ],
+            }
+        )
+    )
+    goal = at_7.units["K-101"].power_W
+    spec = {
+        "id": "DS-001",
+        "target": "K-101.power_W",
+        "value": goal,
+        "manipulated": "K-101.params.P_out",
+        "lower": 6.0e6,
+        "upper": 9.0e6,
+    }
+    fs = Flowsheet(**{**base.model_dump(), "design_specs": [spec]})
+    plain = _solve(fs)
+    solved, graph = _traced(fs)
+    assert _numbers(solved) == _numbers(plain)
+    assert solved.design_spec_results[0].converged
+
+    op = next(o for o in graph.ops if o.method == "design_spec_secant")
+    assert op.references and op.iterations == solved.design_spec_results[0].iterations
+    into = [e for e in graph.edges if e.target == op.id]
+    assert {e.role for e in into} == {"target", "achieved"}
+    assert next(e for e in into if e.role == "achieved").feedback
+    param = next(v for v in graph.values if v.prop == "param.P_out" and v.unit_tag == "K-101")
+    assert param.kind == "intermediate" and param.quality == "derived"
+    assert param.value == solved.flowsheet.unit("K-101").params["P_out"]
+    assert any(e.source == op.id and e.target == param.id for e in graph.edges)
+    assert audit(graph).findings == []
