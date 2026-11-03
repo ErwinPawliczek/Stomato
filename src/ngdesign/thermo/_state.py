@@ -32,8 +32,9 @@ from functools import cache
 from typing import Any, Literal, cast
 
 from chemicals.elements import similarity_variable
-from chemicals.exceptions import PhaseCountReducedError
+from chemicals.exceptions import PhaseCountReducedError, TrivialSolutionError
 from chemicals.thermal_conductivity import DIPPR9H
+from fluids.numerics import UnconvergedError
 from thermo import (
     CEOSGas,
     CEOSLiquid,
@@ -269,7 +270,63 @@ def build_flasher(
             liquid_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps),
             liquid_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps),
         ]
-        return FlashVLN(constants, correlations, liquids=liquids, gas=gas)
+        return _FlashVLN(constants, correlations, liquids=liquids, gas=gas)
+
+
+class _FlashVLN(FlashVLN):  # type: ignore[misc]
+    """thermo's FlashVLN whose liquid-liquid refinements cannot sink the whole flash.
+
+    FlashVLN refines a liquid-liquid split by the same two-phase successive
+    substitution as a vapour-liquid one, between two liquid-class phase
+    objects. On a vapour at its dew point (the vapour leaving an equilibrium
+    stage, flashed at the stage temperature) the VL solve finds the incipient
+    liquid (measured on a 22-species crude-slate stage vapour at 631.68 K,
+    2 bar: liquid fraction 2.8e-10), the three-phase check that follows fails,
+    and the liquid-liquid retry from its stability trial runs between two
+    liquid-class objects that both sit on the EOS's gas root, from a split
+    fraction of -1.4e-9. That retry exhausts its 1000-iteration polish budget
+    (measured: it converges at 1,726 iterations, to a split fraction of
+    -8.6e-20 - no split), and thermo's handler around it lists
+    TrivialSolutionError, OscillationError and PhaseCountReducedError but not
+    UnconvergedError, so the whole flash raised "End of SS without
+    convergence" instead of returning the VL solution it already held.
+
+    Here an LL refinement (neither phase argument a vapour class) that does
+    not converge raises TrivialSolutionError: the Michelsen convention this
+    module already applies to collapsed trial splits (a non-converged trial
+    split is stable), and a signal every thermo caller of the refinement
+    handles by keeping the solution it had. VL refinements, and every LL
+    refinement that converges, are untouched; a flash that used to return is
+    byte-identical.
+    """
+
+    def sequential_substitution_2P(
+        self,
+        T: float,
+        P: float,
+        zs: list[float],
+        xs_guess: list[float],
+        ys_guess: list[float],
+        liquid_phase: Any,
+        gas_phase: Any,
+        V_over_F_guess: float | None,
+        maxiter: int,
+        tol: float,
+    ) -> Any:
+        vapour_classes = tuple(_VAPOUR_PHASE_CLASSES)
+        args = (T, P, zs, xs_guess, ys_guess, liquid_phase, gas_phase, V_over_F_guess, maxiter, tol)
+        if isinstance(liquid_phase, vapour_classes) or isinstance(gas_phase, vapour_classes):
+            return super().sequential_substitution_2P(*args)
+        try:
+            return super().sequential_substitution_2P(*args)
+        except UnconvergedError as exc:
+            raise _trivial(f"liquid-liquid refinement did not converge: {exc}") from exc
+
+
+def _trivial(message: str) -> Exception:
+    """thermo's no-split signal (``chemicals.exceptions.TrivialSolutionError``)."""
+    error: Exception = TrivialSolutionError(message)  # type: ignore[no-untyped-call]
+    return error
 
 
 def _holds_gas_root(phase_obj: Any) -> bool:
