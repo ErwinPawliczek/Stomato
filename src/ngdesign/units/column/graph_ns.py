@@ -30,6 +30,17 @@ evaluations per Jacobian is therefore bounded by the colour count times the
 variables per stage - not by the unknown count. The step solves with a
 ``scipy.sparse`` LU factorisation of the (block-sparse) Jacobian.
 
+A dividing wall (``col.wall``, unit ``divided_wall``) adds one section whose
+links split both phases: the liquid leaving the stage above the wall (a
+specified fraction to the prefractionator top), the vapour leaving the stage
+below it (fraction beta to the prefractionator bottom), with the
+prefractionator's top vapour returning above and its bottom liquid joining
+below. beta rides as the trailing ``draw_flows`` entry (as the split vapour
+flow); when it is not specified it is one more unknown, after the V block,
+closed by one more row after the stage blocks - equal pressure drop across
+the two wall sides (``_wall_dp_residual``) - and its Jacobian column is one
+extra residual evaluation.
+
 The linear-column path of this module is exercised only through tests (the
 public solve dispatches nothing here until step 3): on a column without
 sections the graph residual is the dense residual's algebra, and the graph solve
