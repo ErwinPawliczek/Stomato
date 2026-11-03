@@ -15,6 +15,7 @@ cache — no I/O, no clock, no randomness.
 from __future__ import annotations
 
 import hashlib
+import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -34,6 +35,7 @@ _cache: dict[str, SolvedFlowsheet] = {}
 #: (docs/provenance.md 6). Separate from ``_cache``: the plain solve path never
 #: records, and a traced solve is bit-identical to it.
 _trace_cache: dict[str, tuple[SolvedFlowsheet, TraceGraph]] = {}
+_TRACE_LOCK = threading.Lock()
 
 
 class UnknownPluginError(ValueError):
@@ -123,11 +125,15 @@ def trace_project(
     """
     store = _trace_cache if cache is None else cache
     key = project_hash(project)
-    if key not in store:
-        with recording(flowsheet=project.flowsheet.name, thermo=project.flowsheet.thermo) as rec:
-            solved = solve_project(project, cache={})
-        store[key] = (solved, rec.graph())
-    return store[key]
+    # One traced solve at a time: concurrent requests for the same project (the UI asks
+    # for the graph and the audit together) wait for the first instead of solving twice,
+    # and first-use plugin discovery never runs in two threads at once.
+    with _TRACE_LOCK:
+        if key not in store:
+            with recording(flowsheet=project.flowsheet.name, thermo=project.flowsheet.thermo) as rec:
+                solved = solve_project(project, cache={})
+            store[key] = (solved, rec.graph())
+        return store[key]
 
 
 def render_view(solved: SolvedFlowsheet, layout: dict[str, XY], view: str) -> bytes:
