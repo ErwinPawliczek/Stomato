@@ -1295,7 +1295,12 @@ class _GraphNSEngine:
         k_harvest = self._k_harvest
         scales = _graph_residual_scales(model, tb, prof.l0, u, self._t_bot_tear)
         y_seeds: list[dict[str, float]] | None = None
-        if tb.exact_surface:
+        if tb.exact_surface or tb.splits_liquid:
+            # A pooled liquid's K (``k_pooled``) reads phi^V at the vapour fixed
+            # point too, and a heavy flash-zone liquid seeded with y = x stays
+            # on the trivial branch (K ~ 1: the vapour build of the liquid's
+            # own composition sits on its liquid root) - the dense engine
+            # seeds pooled columns the same way.
             if col.is_graph:
                 _graph_refresh_y(col, tb, prof)
             else:
@@ -1366,7 +1371,10 @@ class _GraphNSEngine:
         self, residuals: Callable[[list[float]], list[float]], r0: list[float], u: list[float]
     ) -> Any:
         evals_counter = [0]
-        bundle = _graph_fd_jacobian(self._model, residuals, r0, u, evals_counter)
+        # Pooled liquids keep the reference state's phase sets across the
+        # perturbations (``_ThermoBox.fixed_phase_sets``); a no-op elsewhere.
+        with self._tb.fixed_phase_sets():
+            bundle = _graph_fd_jacobian(self._model, residuals, r0, u, evals_counter)
         if bundle is None:
             return None
         jac, colour_count, n_evals = bundle
