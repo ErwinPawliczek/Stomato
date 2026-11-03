@@ -14,6 +14,7 @@ from typing import Any
 
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import PhaseKind, StreamState
+from ngdesign.contracts.thermo import PhaseProps
 
 from .spec import _FLOW_FLOOR
 
@@ -414,6 +415,17 @@ class _ThermoBox:
         kind = PhaseKind.VAPOR if vapor else PhaseKind.HC_LIQUID
         props = self._thermo.phase_props(z, T, P, kind)
         return props.enthalpy, props.cp, T
+
+    def phase_state(self, z: dict[str, float], T: float, P: float, vapor: bool) -> PhaseProps:
+        """One single-phase build of z at (T, P): fugacity coefficients, enthalpy, cp.
+
+        Raises ValueError when the package refuses the build (callers keep
+        their previous model then).
+        """
+        props = self._thermo.phase_props(z, T, P, PhaseKind.VAPOR if vapor else PhaseKind.HC_LIQUID)
+        if not props.ln_phi:
+            raise ValueError("package returns no fugacity coefficients for this phase build")
+        return props
 
     def h_vapor(self, z: dict[str, float], T: float, P: float) -> float:
         h0, cp, t_ref = self.phase_enthalpy_model(z, T, P, vapor=True)

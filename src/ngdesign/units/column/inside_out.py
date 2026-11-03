@@ -168,6 +168,9 @@ class _Column:
     # temperature seed in _build_column.
     t_band_lo: float = 150.0
     t_band_hi: float = 600.0
+    #: Cold start by relaxation (``initialization: relaxation``); False keeps
+    #: the standard feed-flash seed exactly.
+    relaxation: bool = False
 
     @property
     def is_graph(self) -> bool:
@@ -380,6 +383,7 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
         col.stage_q = [0.0] * col.n
         for heater in col_params.stage_heaters:
             col.stage_q[heater.stage - 1] = heater.duty_W
+    col.relaxation = col_params.relaxation
     if col_params.reactions is not None:
         col.reactions = col_params.reactions
         col.rx_source = [{} for _ in range(col.n)]
@@ -428,6 +432,16 @@ def _build_column(col_params: _Params, tb: _ThermoBox) -> _Column:
             ext = _extreme_seed(col, tb)
             if ext is not None:
                 col.t_band_lo = min(col.t_band_lo, ext[0] - 10.0)
+        if col.relaxation:
+            # A pumparound returns subcooled liquid: its fixed return
+            # temperature is a cold inlet like a feed's, and the stage it
+            # lands on can sit far under every feed (measured: a 6-stage
+            # vacuum column fed at 653 K with a 450 K top pumparound - the
+            # feed-based floor of 623 K clamped the top stage on the band).
+            # Relaxation columns only: the standard path's band is unchanged.
+            returns = [pa.return_T_K for pa in col.pumparounds if pa.return_T_K is not None]
+            if returns:
+                col.t_band_lo = min(col.t_band_lo, min(returns) - 30.0)
         return col
     t_top, t_bot = _temperature_seed(col, tb)
     if t_bot > t_top + 20.0:
