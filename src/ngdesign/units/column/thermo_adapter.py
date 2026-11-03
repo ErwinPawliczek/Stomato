@@ -66,6 +66,7 @@ class _ThermoBox:
         self.sweeping = False
         self._pt_cache: dict[tuple[Any, ...], StreamState] = {}
         self._k_cache: dict[tuple[Any, ...], dict[str, float] | None] = {}
+        self._k_liquid_cache: dict[tuple[Any, ...], dict[str, float] | None] = {}
         self._bubble_cache: dict[tuple[Any, ...], float | None] = {}
         self._p_lo = p_anchor_lo
         self._p_hi = p_anchor_hi
@@ -78,12 +79,21 @@ class _ThermoBox:
         the K chain, both enthalpy models, the exact-residual gate and the
         duty-path enthalpy wrappers at the same stage state — share one flash.
         """
-        key = (tuple(sorted(z.items())), T, P, flow)
+        # A reactive package's heat-of-reaction continuation scale changes the
+        # flashed enthalpies on the same instance, so it is part of the key.
+        key = (tuple(sorted(z.items())), T, P, flow, getattr(self._thermo, "_heat_scale", None))
         hit = self._pt_cache.get(key)
         if hit is None:
             hit = self._thermo.flash_pt(z, T, P, flow)
             self._pt_cache[key] = hit
         return hit
+
+    @property
+    def reactive_direct(self) -> bool:
+        """True where a reactive package's K and phase enthalpies are read at the
+        stage compositions themselves (outside an inside-out sweep, as
+        ``exact_surface``)."""
+        return not self.sweeping and hasattr(self._thermo, "liquid_k_values")
 
     @property
     def exact_surface(self) -> bool:
@@ -215,6 +225,26 @@ class _ThermoBox:
             if moved <= _K_FIXED_POINT_TOL:
                 break
         return k
+
+    def k_liquid(self, x: dict[str, float], T: float, P: float) -> dict[str, float] | None:
+        """K at the stage liquid itself, for a package whose K is a function of x alone.
+
+        A reactive amine package's K_i(T, P, x) needs no flash (its
+        ``liquid_k_values``); the flash chain in ``k_values`` returns K at the
+        FLASH liquid instead, and a stage liquid on its bubble point flashes on
+        the single-phase edge, so the chain jumps candidates between Newton
+        trial states and the finite-difference Jacobian differentiates the
+        jump. None for every other package, and inside an inside-out sweep,
+        which keeps reading the flash surface (as ``exact_surface`` does).
+        """
+        direct = getattr(self._thermo, "liquid_k_values", None)
+        if direct is None or not self.reactive_direct:
+            return None
+        key = (tuple(sorted(x.items())), T, P)
+        if key not in self._k_liquid_cache:
+            self._k_liquid_cache[key] = direct(x, T, P)
+        k = self._k_liquid_cache[key]
+        return dict(k) if k is not None else None
 
     def k_values(self, candidates: list[dict[str, float]], T: float, P: float) -> dict[str, float] | None:
         """K_i = y_i/x_i from the first two-phase candidate's cached PT flash.
@@ -402,6 +432,12 @@ class _ThermoBox:
                 return built.enthalpy, built.cp, T
             except ValueError:
                 pass
+        if self.reactive_direct:
+            # The reactive package's phases at z itself, as its K (``k_liquid``):
+            # the aqueous build carries the heat of absorption at z's loading,
+            # the vapour is the carrier's - the same builds its flash reports.
+            built = self._thermo.phase_props(z, T, P, PhaseKind.VAPOR if vapor else PhaseKind.AQUEOUS)
+            return built.enthalpy, built.cp, T
         state = self.pt(z, T, P)
         if vapor:
             phase = next((p for p in state.phases if p.kind == PhaseKind.VAPOR), None)

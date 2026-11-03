@@ -2,7 +2,7 @@
 
 Family: **treating** · P&ID symbol: `T`
 
-Rigour ladder: R0 provisional, R2 planned
+Rigour ladder: R0 provisional, R2 provisional
 
 ## Ports
 
@@ -18,7 +18,7 @@ Rigour ladder: R0 provisional, R2 planned
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.mdea_absorber:DeaAbsorber` | single-stage shortcut with Kent-Eisenberg equilibrium |
-| R2 | planned | — | re-measured on the P1-13 tree (zero-tear column on amine_ke, example feeds) - 3, 5 and 8 stages converge (13, 20, 83 s) but close components only to 1.1e-4, 2.1e-11 and 1.4e-3 (the reactive 1e-3 stage gate), and 4 stages fails (M=1.03e-3); not reliable against the locked 1e-6 balance, so no adapter ships |
+| R2 | provisional | `ngdesign.units.amine_absorber_r2:DeaAbsorberR2` | countercurrent MESH absorber on the reactive amine package (amine_ke when the flowsheet package is not reactive), adiabatic, at the gas pressure; stage K_i(T, x) and phase enthalpies (heat of absorption included) read at the stage compositions. Measured (example feeds) components close to 1e-12 relative or better at 3/4/5/8/12/20 stages in 2-23 s; example-case stage audit below 1e-9 / 1e-6, column closure under 1 W |
 
 ### R0 parameters
 
@@ -35,6 +35,18 @@ properties:
     description: treated-gas H2S spec
     ppmv: null
     type: number
+type: object
+```
+
+### R2 parameters
+
+```yaml
+additionalProperties: false
+properties:
+  n_stages:
+    description: equilibrium stages, lean solvent on 1, gas on N (default 8)
+    minimum: 2
+    type: integer
 type: object
 ```
 

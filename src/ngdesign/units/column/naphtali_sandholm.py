@@ -28,6 +28,7 @@ from .linalg import _gauss
 from .spec import (
     _FLOW_FLOOR,
     _MESH_H_TOL,
+    _MESH_H_TOL_REACTIVE,
     _MESH_M_TOL,
     _MESH_M_TOL_REACTIVE,
     _MESH_M_TOL_ZERO_ONE_TEAR,
@@ -449,7 +450,7 @@ def _ns_controller(eng: _NSEngine, ns_max: int) -> None:
         # polish in _solve_mesh needs.
         if eng.live_norm and eng.ex_m + eng.ex_h < eng.best_m + eng.best_h:
             eng.best_u, eng.best_m, eng.best_h = list(u), eng.ex_m, eng.ex_h
-        if eng.ex_m < eng.m_tol and eng.ex_h < _MESH_H_TOL:
+        if eng.ex_m < eng.m_tol and eng.ex_h < getattr(eng, "h_tol", _MESH_H_TOL):
             break
         m_current, h_current = eng.norms(r0)
         n_unk = len(u)
@@ -585,10 +586,12 @@ class _DenseNSEngine:
         # rows, every line-search trial rejected).
         self.live_norm = True
         self._frozen_scales = col.n_tears < 2 or tb.direct_phases
+        self.h_tol = _MESH_H_TOL
         if col.n_tears >= 2:
             self.m_tol = _MESH_M_TOL
         elif _is_reactive_package(tb):
             self.m_tol = _MESH_M_TOL_REACTIVE
+            self.h_tol = _MESH_H_TOL_REACTIVE
         else:
             # Same gate the mesh accepts at (_MESH_M_TOL_ZERO_ONE_TEAR): the NS
             # state hands off to _solve_mesh's inside-out polish, and the polish
@@ -789,7 +792,7 @@ class _DenseNSEngine:
         # anchor floor sits around 1e-3-1e-4 relative, while mass closes to
         # machine precision. Demanding 1e-6 on H here would reject a solution
         # the mesh itself accepts.
-        if m_res > self.m_tol or h_res > _MESH_H_TOL:
+        if m_res > self.m_tol or h_res > self.h_tol:
             raise ColumnConvergenceError(
                 f"Naphtali-Sandholm fallback stalled: max residuals M={m_res:.2e}, H={h_res:.2e}"
                 + (f" | {'; '.join(prof.ns_trace)}" if prof.ns_trace else "")

@@ -1018,6 +1018,9 @@ def _stage_k_values(
         k_fug = tb.k_fugacity(x_flash, y_j or x_flash, t_j, col.pressures[j])
         if k_fug is not None:
             return k_fug
+    k_liq = tb.k_liquid(_flash_ready(x_j, col.feed_comp), t_j, col.pressures[j])
+    if k_liq is not None:
+        return k_liq
     candidates = [
         _flash_ready(x_j, col.feed_comp),
         _flash_ready(
