@@ -23,6 +23,16 @@ test("unknown and alias kinds from the registry still get a tile", () => {
   expect(items[2].name).toBe("Brand new unit");
 });
 
+test("kinds without a hand-written entry take name, category, summary and ports from the catalogue", () => {
+  const ports = new Map([["cstr", { inlet_ports: ["inlet"], outlet_ports: ["outlet"] }]]);
+  const [cstr] = catalogFor(["cstr"], ports);
+  expect(cstr.name).not.toBe("Cstr");
+  expect(cstr.name).toMatch(/CSTR|stirred/i);
+  expect(cstr.group).toBe("Reactors");
+  expect(cstr.description).not.toMatch(/No description yet/);
+  expect([cstr.inlets, cstr.outlets]).toEqual([["inlet"], ["outlet"]]);
+});
+
 test("diagonal layout: tiles never overlap, the row fills the width, the big octagon pushes others aside", () => {
   const n = CATALOG.length;
   const octNorm = (dx: number, dy: number) => Math.max(Math.abs(dx), Math.abs(dy), (Math.abs(dx) + Math.abs(dy)) / Math.SQRT2);

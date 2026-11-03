@@ -135,9 +135,9 @@ export function EquipmentView() {
 
   useEffect(() => {
     let live = true;
-    api
-      .getMeta()
-      .then((m) => live && m.unit && setItems(catalogFor(m.unit)))
+    // Registered kinds from /api/meta; ports from the unit catalogue (best effort).
+    Promise.all([api.getMeta(), api.unitKinds().catch(() => [])])
+      .then(([m, rows]) => live && m.unit && setItems(catalogFor(m.unit, new Map(rows.map((r) => [r.kind, r])))))
       .catch(() => undefined);
     return () => {
       live = false;

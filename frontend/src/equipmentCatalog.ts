@@ -1,3 +1,4 @@
+import { CATEGORIES, catalogueEntry, categoryOf } from "./unitPalette";
 // What the Equipment page says about each registered unit kind. Ports, params and
 // defaults mirror the plugin sources in src/ngdesign/units/*.py; sizers mirror
 // src/ngdesign/sizing/. Kinds GET /api/meta lists that are not here still get a tile.
@@ -187,7 +188,7 @@ const ALIASES: Record<string, [base: string, name: string]> = {
 const BY_KIND = new Map(CATALOG.map((e) => [e.kind, e]));
 
 /** Catalog entries for the registered unit kinds, in catalog order; unknown kinds last. */
-export function catalogFor(kinds: string[] | undefined): EquipmentInfo[] {
+export function catalogFor(kinds: string[] | undefined, ports?: ReadonlyMap<string, { inlet_ports: string[]; outlet_ports: string[] }>): EquipmentInfo[] {
   if (!kinds) return CATALOG;
   const known = CATALOG.filter((e) => kinds.includes(e.kind));
   const extra = kinds
@@ -196,10 +197,15 @@ export function catalogFor(kinds: string[] | undefined): EquipmentInfo[] {
       const alias = ALIASES[k];
       const base = alias && BY_KIND.get(alias[0]);
       if (base) return { ...base, kind: k, name: alias[1] };
+      // Not described here: name, category and summary from the catalogue mirror
+      // (data/unit_models), ports from GET /api/v1/catalogue/units when given.
+      const row = catalogueEntry(k);
+      const group = row ? CATEGORIES.find((c) => c.id === categoryOf(row))?.label ?? "Other" : "Other";
       return {
-        kind: k, name: k.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()), group: "Other",
+        kind: k, name: row?.name ?? k.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase()), group,
         symbol: '<rect x="40" y="22" width="80" height="60" rx="8"/><path d="M8 52h32M120 52h32"/>',
-        description: "Registered in the engine. No description yet.", inlets: [], outlets: [], inputs: [],
+        description: row?.summary ?? "Registered in the engine. No description yet.",
+        inlets: ports?.get(k)?.inlet_ports ?? [], outlets: ports?.get(k)?.outlet_ports ?? [], inputs: [],
         calculates: "See the plugin source", sizer: null, pid: [],
       };
     });
