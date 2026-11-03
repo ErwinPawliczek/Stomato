@@ -71,6 +71,37 @@ class SolveRow(SQLModel, table=True):
     created_at: NaiveDatetime
 
 
+class ChangeRow(SQLModel, table=True):
+    """One recorded project change (docs/agentic-layer.md section 3).
+
+    Every body write goes through :meth:`DbProjectStore.commit` and lands here
+    with the full before/after bodies, so any edit (REST, UI, in-app agent,
+    MCP) is undoable and the change feed can show who changed what. ``kind``:
+    ``edit`` (a body write), ``undo``/``redo`` (history moves, which point at the
+    edit they moved through ``target_seq``). ``state`` applies to edits:
+    ``applied``, ``undone`` (redo-able) or ``dropped`` (a later edit discarded
+    the redo branch); undo/redo rows are ``record``.
+    """
+
+    __tablename__ = "changes"
+    __table_args__ = (UniqueConstraint("project_id", "seq", name="uq_changes_project_seq"),)
+
+    id: str = Field(primary_key=True)
+    project_id: str = Field(foreign_key="projects.id", index=True)
+    seq: int = Field(index=True)
+    kind: str  # edit | undo | redo
+    op: str  # the operation name, e.g. "place_unit", "put", "set_cell"
+    actor: str  # api | ui | agent:<conversation> | mcp[:client]
+    summary: str
+    args_json: str
+    before_json: str
+    after_json: str
+    state: str  # applied | undone | dropped | record
+    target_seq: int | None = None
+    version: int  # the project version after this change
+    created_at: NaiveDatetime
+
+
 class SchemaVersionRow(SQLModel, table=True):
     """Single-row schema-version marker (``ngdesign db upgrade`` stamps it) so
     a later Alembic migration can take over from ``create_all``."""
@@ -84,5 +115,6 @@ class SchemaVersionRow(SQLModel, table=True):
 
 #: Current store schema version, bumped when a spec changes the tables above.
 #: v1: P3-01 tables. v2: ``projects.template`` and ``projects.opened_at``
-#: (nullable; ``db.init_db`` adds them to a v1 database in place).
-SCHEMA_VERSION = 2
+#: (nullable; ``db.init_db`` adds them to a v1 database in place). v3: the
+#: ``changes`` table (agentic layer: undoable change log; ``create_all`` adds it).
+SCHEMA_VERSION = 3

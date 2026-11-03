@@ -8,9 +8,10 @@ structurally without importing it). The store itself imports only the
 contracts and SQLModel — no agent, no API, no flowsheets.
 """
 
+from ngdesign.store.changes import ChangeRecord, NothingToMove
 from ngdesign.store.conversations import ConversationStore, delete_all_conversations
 from ngdesign.store.db import database_url, database_url_log_safe, init_db, reset_engine, session
-from ngdesign.store.models import ConversationRow, ProjectRow, SchemaVersionRow, SolveRow
+from ngdesign.store.models import ChangeRow, ConversationRow, ProjectRow, SchemaVersionRow, SolveRow
 from ngdesign.store.projects import (
     DEFAULT_PROJECT_NAME,
     DbProjectStore,
@@ -25,6 +26,9 @@ from ngdesign.store.projects import (
 
 __all__ = [
     "DEFAULT_PROJECT_NAME",
+    "ChangeRecord",
+    "ChangeRow",
+    "NothingToMove",
     "ConversationRow",
     "ConversationStore",
     "DbProjectStore",

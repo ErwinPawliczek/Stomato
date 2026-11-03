@@ -17,10 +17,13 @@ that to 409).
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 from sqlmodel import select
 
 from ngdesign.contracts import Project
+from ngdesign.store import changes
+from ngdesign.store.changes import ChangeRecord
 from ngdesign.store.conversations import ConversationStore
 from ngdesign.store.db import session
 from ngdesign.store.models import ConversationRow, ProjectRow, utcnow
@@ -116,10 +119,30 @@ class DbProjectStore:
         """The stored contract, validated on read."""
         return Project.model_validate_json(self.row().body_json)
 
-    def put(self, project: Project, *, expected_version: int | None = None) -> Project:
+    def put(self, project: Project, *, expected_version: int | None = None, actor: str = "api") -> Project:
         """Store ``project``: new body JSON, ``version`` bumped, ``updated_at``
-        stamped. With ``expected_version``, a row that moved since the caller
-        read it raises :class:`ProjectConflict` instead."""
+        stamped, and the write logged as an undoable ``put`` change. With
+        ``expected_version``, a row that moved since the caller read it raises
+        :class:`ProjectConflict` instead."""
+        self.commit(
+            project, op="put", actor=actor, summary="Replaced the project", expected_version=expected_version
+        )
+        return project
+
+    def commit(
+        self,
+        project: Project,
+        *,
+        op: str,
+        actor: str,
+        summary: str,
+        args: dict[str, Any] | None = None,
+        expected_version: int | None = None,
+    ) -> ChangeRecord | None:
+        """Store ``project`` and log the write as one change, in one transaction
+        (docs/agentic-layer.md section 3). Returns the change, or ``None`` when
+        the body is unchanged — a no-op write still bumps ``version`` (the
+        P3-01 contract) but records nothing to undo."""
         with session() as db:
             row = db.get(ProjectRow, self._id)
             if row is None:
@@ -129,13 +152,44 @@ class DbProjectStore:
                     f"project {self._id!r} was modified concurrently "
                     f"(stored version {row.version} != expected {expected_version})"
                 )
-            row.body_json = project.model_dump_json()
-            row.version += 1
-            row.updated_at = utcnow()
-            db.add(row)
+            body = project.model_dump_json()
+            if body == row.body_json:
+                row.version += 1
+                row.updated_at = utcnow()
+                db.add(row)
+                db.commit()
+                return None
+            change = changes.write_edit(db, row, body, op=op, actor=actor, summary=summary, args=args)
             db.commit()
-            db.refresh(row)
-            return project
+            db.refresh(change)
+            return changes.record(change)
+
+    def undo(self, *, actor: str) -> ChangeRecord:
+        """Revert the latest applied change; :class:`NothingToMove` when there is
+        none, :class:`ProjectConflict` when the body moved outside the log."""
+        return self._move("undo", actor)
+
+    def redo(self, *, actor: str) -> ChangeRecord:
+        """Re-apply the most recently undone change (see :meth:`undo`)."""
+        return self._move("redo", actor)
+
+    def _move(self, direction: str, actor: str) -> ChangeRecord:
+        with session() as db:
+            row = db.get(ProjectRow, self._id)
+            if row is None:
+                raise ProjectNotFound(f"unknown project {self._id!r}")
+            try:
+                change = changes.move(db, row, direction=direction, actor=actor)
+            except ValueError as exc:
+                raise ProjectConflict(str(exc)) from exc
+            db.commit()
+            db.refresh(change)
+            return changes.record(change)
+
+    def changes(self, *, after: int = 0, limit: int = 100) -> list[ChangeRecord]:
+        """The change log with ``seq > after``, oldest first."""
+        with session() as db:
+            return [changes.record(r) for r in changes.list_changes(db, self._id, after=after, limit=limit)]
 
     def rename(self, name: str) -> ProjectRow:
         """Rename the project: the row name (unique per owner) and the body's
@@ -154,11 +208,17 @@ class DbProjectStore:
             if clash is not None:
                 raise ProjectExists(f"a project named {name!r} already exists")
             body = Project.model_validate_json(row.body_json)
-            row.body_json = body.model_copy(update={"name": name}).model_dump_json()
+            old_name = row.name
             row.name = name
-            row.version += 1
-            row.updated_at = utcnow()
-            db.add(row)
+            changes.write_edit(
+                db,
+                row,
+                body.model_copy(update={"name": name}).model_dump_json(),
+                op="rename",
+                actor="api",
+                summary=f"Renamed the project {old_name!r} -> {name!r}",
+                args={"name": name},
+            )
             db.commit()
             db.refresh(row)
             return row
@@ -186,5 +246,6 @@ class DbProjectStore:
                 select(ConversationRow).where(ConversationRow.project_id == self._id)
             ).all():
                 db.delete(conversation)
+            changes.delete_changes(db, self._id)
             db.delete(row)
             db.commit()

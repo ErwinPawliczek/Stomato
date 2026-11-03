@@ -71,7 +71,7 @@ def test_v1_database_migrates_in_place_and_keeps_the_project(v1_db: tuple[Path, 
     assert conversations == [("c1", "p1")]
     with session() as db:
         stamp = db.get(SchemaVersionRow, 1)
-        assert stamp is not None and stamp.version == SCHEMA_VERSION == 2
+        assert stamp is not None and stamp.version == SCHEMA_VERSION == 3
 
 
 def test_migration_is_idempotent(v1_db: tuple[Path, str]) -> None:
