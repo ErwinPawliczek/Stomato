@@ -142,6 +142,17 @@ def test_mdea_pz_row_differs_from_amine_ke_and_refuses_h2s() -> None:
     z = {"MDEA": 0.07, pz: 0.01, "H2O": 0.90, "CO2": 0.02}
     p_row = _pkg("amine_mdea_pz").bubble_point(z, T=313.15).P
     base = {"MDEA": 0.08, "H2O": 0.90, "CO2": 0.02}
-    assert p_row < _pkg("amine_ke").bubble_point(base, T=313.15).P
+    p_ke = _pkg("amine_ke").bubble_point(base, T=313.15).P
+    # Each bubble point is the liquid's own: sum_i z_i K_i(x = z) = 1 (the
+    # incipient vapour of the liquid z). Measured 14291.7 Pa (MDEA + PZ, the
+    # Bishnoi set with unit activity coefficients) against 11907.6 Pa (amine_ke).
+    # An earlier "p_row < p_ke" read a bubble point the flash placed by a false
+    # single-liquid verdict at an overshot loading iterate (and a K read on a
+    # piperazine-free seed liquid); the model row carries no data that orders
+    # the two, so only the difference is asserted.
+    for row, comp, p in (("amine_mdea_pz", z, p_row), ("amine_ke", base, p_ke)):
+        k = _pkg(row)._k_values_internal(comp, 313.15, p, comp)
+        assert sum(comp[c] * k[c] for c in comp) == pytest.approx(1.0, abs=1e-6)
+    assert abs(p_row - p_ke) > 0.1 * p_ke
     with pytest.raises(AmineChemistryError, match="CO2 only"):
         _pkg("amine_mdea_pz").flash_pt({"MDEA": 0.1, "H2O": 0.88, "H2S": 0.02}, 313.15, 1e6, 1.0)

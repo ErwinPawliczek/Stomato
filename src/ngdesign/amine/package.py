@@ -177,6 +177,34 @@ def _wegstein_w(a_used: list[float], a_raws: list[float]) -> float:
     return min(max(1.0 / (1.0 - slope), 0.05), 1.0)
 
 
+def _basis_drift(x: dict[str, float], x_new: dict[str, float]) -> float:
+    """Max change of the non-acid-gas liquid mole fractions between two liquids.
+
+    The K-values of a loading-walk iterate are read at ``x``; the returned state
+    is consistent (y_i == K_i(x_new) x_new_i) only when x_new carries the same
+    solvent, piperazine and dissolved-inert fractions as x, not just the same
+    loadings.
+    """
+    return max(
+        (
+            abs(x_new.get(cid, 0.0) - x.get(cid, 0.0))
+            for cid in set(x) | set(x_new)
+            if cid not in _ACID_GAS_IDS
+        ),
+        default=0.0,
+    )
+
+
+def _with_loadings(x: dict[str, float], amine_id: str, a: tuple[float, float]) -> dict[str, float]:
+    """The liquid x with its acid gases reset to loadings ``a`` (CO2, H2S per amine), normalised."""
+    out = dict(x)
+    x_a = x[amine_id]
+    out["CO2"] = a[0] * x_a
+    out["H2S"] = a[1] * x_a
+    total = sum(out.values())
+    return {cid: v / total for cid, v in out.items()}
+
+
 class AmineChemistryError(ValueError):
     """The amine speciation left its fitted chemistry window.
 
@@ -330,7 +358,15 @@ class AmineReactivePackage(Thermo):
     # -- plumbing -------------------------------------------------------------
 
     def _cached(self, key: tuple[Any, ...], compute: Callable[[], Any]) -> Any:
-        """Per-package LRU property cache (P1-01's semantics)."""
+        """Per-package LRU property cache (P1-01's semantics).
+
+        The heat-of-reaction scale is part of every key: the liquid enthalpy
+        depends on it, and the mesh's continuation walks it 0 -> 1 on ONE
+        instance, so a state built at a lower rung must not answer at scale 1
+        (measured: a 5-stage MDEA absorber's bottoms liquid read -46564 J/mol
+        from a stale entry against -48936 J/mol rebuilt at scale 1).
+        """
+        key = (self._heat_scale, *key)
         cache_ = self._lru_cache
         hit = cache_.get(key)
         if hit is not None:
@@ -527,6 +563,8 @@ class AmineReactivePackage(Thermo):
                 # bracketed state itself satisfies the flash identity y_i * P ==
                 # p_eq_i(loading) to _BRACKET_RESIDUAL.
                 result = self._rr_split(z, T, P, x)
+                if not self._edge_holds(result[0], z, T, P, x):
+                    result = None
         if result is not None:
             return result
         z_str = ", ".join(f"{cid}: {v:.6g}" for cid, v in sorted(z.items()))
@@ -534,6 +572,26 @@ class AmineReactivePackage(Thermo):
             f"the amine loading fixed point did not converge at T={T} K, P={P} Pa, z={{{z_str}}} "
             f"({_LOADING_MAX_ITER} walk iterations + bracketed solve)"
         )
+
+    def _edge_holds(self, state: str, z: dict[str, float], T: float, P: float, x: dict[str, float]) -> bool:
+        """False when a single-liquid verdict was read at a liquid other than z.
+
+        ``_rr_split`` tests the liquid edge sum_i z_i K_i(x) <= 1 at the walk's
+        CURRENT liquid x, but a single liquid IS the overall composition, so the
+        verdict holds only at K evaluated on x = z: the bubble-point criterion
+        sum_i z_i K_i(z) <= 1 (the incipient vapour y_i = K_i(z) z_i sums below
+        one; Michelsen & Mollerup, Thermodynamic Models, 2nd ed., ch. 10, with
+        the reactive K a function of the liquid alone). The raw substitution
+        step from the solvent-basis seed overshoots: K read at the seed's full
+        loading strips the RR liquid to near-zero loading, and the edge test at
+        that iterate reads a false liquid (measured: a regenerator top stage
+        overall, DEA, 348 K / 1.9 bar, z carrying 12.8 % vapour on the column
+        profile - sum z K(x_iterate) = 0.15 while sum z K(z) = 31.0).
+        """
+        if state != "liquid" or x == z:
+            return True
+        k = self._k_values_internal(z, T, P, z)
+        return sum(f * k[cid] for cid, f in z.items()) <= 1.0
 
     def _rr_split(
         self, z: dict[str, float], T: float, P: float, x: dict[str, float]
@@ -566,6 +624,14 @@ class AmineReactivePackage(Thermo):
         def rr(beta: float, k: dict[str, float] = k) -> float:
             return sum(f * (k[cid] - 1.0) / ((1.0 - beta) + beta * k[cid]) for cid, f in z.items())
 
+        # On the bubble or dew surface itself the edge sums above and the RR
+        # ends can round to opposite sides (measured: sum z K = 1 + 2e-16 beside
+        # rr(0) = -3e-18 at a converged absorber stage liquid at its bubble
+        # point); the RR ends' own signs decide the edge then.
+        if rr(0.0) <= 0.0:
+            return "liquid", 0.0, dict(z), dict(z)
+        if rr(1.0) >= 0.0:
+            return "vapor", 1.0, dict(z), dict(z)
         beta = brent_root(rr, 0.0, 1.0)
         y_raw: dict[str, float] = {}
         x_new: dict[str, float] = {}
@@ -619,10 +685,14 @@ class AmineReactivePackage(Thermo):
         for _ in range(max_iter):
             state, beta, x_new, y = self._rr_split(z, T, P, x)
             if state != "two_phase":
+                if not self._edge_holds(state, z, T, P, x):
+                    # A liquid verdict read at an overshot iterate, not at the
+                    # liquid itself: the bracketed solve takes over.
+                    return None
                 return state, beta, x_new, y
             a_raw = self._loadings_of(x_new, amine_id)
             residual = max(abs(a_raw[0] - a_use[0]), abs(a_raw[1] - a_use[1]))
-            if residual <= _LOADING_TOL:
+            if residual <= _LOADING_TOL and _basis_drift(x, x_new) <= _LOADING_TOL:
                 return "two_phase", beta, x_new, y
             hist.append((a_use, a_raw))
             w_co2 = _wegstein_w([h[0][0] for h in hist], [h[1][0] for h in hist])
@@ -712,6 +782,14 @@ class AmineReactivePackage(Thermo):
 
         for _ in range(_BRACKET_OUTER_MAX):
             a_sol, x_work = frozen_solve(x_work, a_sol)
+            state, _beta, x_rr, _y = self._rr_split(z, T, P, x_work)
+            if state == "two_phase" and _basis_drift(x_work, x_rr) > _LOADING_TOL:
+                # The basis follows the RR liquid: rebuild it there at the solved
+                # loadings (the seed's solvent basis carries no piperazine,
+                # hydrocarbons or inerts, and K read on it is not K of the liquid
+                # returned).
+                x_work = _with_loadings(x_rr, amine_id, a_sol)
+                continue
             if self._loading_residual(z, T, P, x_work, amine_id, a_sol) <= _BRACKET_RESIDUAL:
                 break
         return a_sol, x_work
@@ -898,6 +976,22 @@ class AmineReactivePackage(Thermo):
         if state != "two_phase":
             return None
         return {cid: (y[cid] / x[cid] if x[cid] > 0.0 else 0.0) for cid in z}
+
+    def liquid_k_values(self, x: dict[str, float], T: float, P: float) -> dict[str, float] | None:
+        """K_i = y_i / x_i in equilibrium with the liquid ``x`` itself, no flash.
+
+        The reactive K is a function of the liquid alone (``_k_values_internal``:
+        acid gases K_i = p_eq_i(T, loading of x) / (P x_i) from the speciation
+        model, water and amine Raoult, volatiles Henry), so a MESH stage's
+        E equation y_ij = K_ij(T_j, x_j) x_ij reads it at the stage liquid as
+        written (Naphtali & Sandholm 1971). ``k_values`` instead flashes a
+        composition and returns K at the flash's own liquid - at a stage
+        liquid on its bubble point that flash sits on the single-phase edge.
+        None outside the reactive domain (trace or no amine).
+        """
+        if self._reactive_domain(x) is None:
+            return None
+        return self._k_values_internal(x, T, P, x)
 
     def pure_psat(self, cid: str, T: float) -> float | None:
         """Pure-component vapour pressure (Pa) at T (K); None at or above Tc."""
