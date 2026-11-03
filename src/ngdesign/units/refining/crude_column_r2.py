@@ -34,14 +34,26 @@ reboiler duty on a column without a reboiler; pooled, the stage K and
 liquid enthalpy are the pooled liquid's own split (``_ThermoBox.k_pooled``)
 and the boundary closure agrees with the stage balances. The column
 cold-starts by relaxation (``initialization: relaxation``; Rose, Sweeny &
-Schrodt 1958; Ketchum 1979). No pumparounds at this level: the condenser
-takes the whole heat removal. Measured on the example: overhead 430 mol/s
-converges in ~45 s; 455 mol/s (less overlap with the kerosene) still stalls,
-as it did with one-liquid stages - the spec range the relaxation start
-reaches, not the stage model.
+Schrodt 1958; Ketchum 1979).
 
-``duty_W`` is the column's net duty, the (negative) condenser duty; the
-stream table closes on it. All SI: K, Pa abs, mol/s, J/mol, W.
+Optional ``pumparounds`` are the column core's fixed loops (spec S0-1:
+``name``, ``draw_stage``, ``return_stage`` at or above it, ``flow_mol_s``,
+and one of ``return_T_K`` / ``duty_W``), drawn above the flash zone. Their
+cooler duties enter the return stages' energy balances and take heat the
+condenser would otherwise remove; each is reported as ``pa_<name>_*``. A
+zero-flow loop is an exact no-op.
+
+The overhead is bounded by the flash zone: with no reboiler, the products
+above it are crude vaporised by the feed's heat and the bottom steam, and
+an overhead past the zero-overflash point is refused (``_check_overflash``)
+before the column solve. Measured on the example: overflash 31.8 mol/s at
+430 mol/s overhead, 14.2 at 440, zero at 448.72; the former "stall" at
+>= 455 mol/s was this physical limit (the solve hunted for a column with
+negative overflash, then failed inside the thermo).
+
+``duty_W`` is the column's net duty: the (negative) condenser duty plus the
+pumparound coolers'; the stream table closes on it. All SI: K, Pa abs,
+mol/s, J/mol, W.
 """
 
 from __future__ import annotations
@@ -50,14 +62,15 @@ from typing import Any
 
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units.column import solve_column_full
+from ngdesign.units.column import ColumnConvergenceError, solve_column_full
+from ngdesign.units.column.spec import _parse_pressure_profile, _parse_pumparounds
 from ngdesign.units.refining._cuts import RefiningSpecError
 
 #: Side-product ports, top to bottom, and the stripper name each carries in
 #: the column's info keys.
 _SIDE_PORTS = {"kero_out": "kero", "diesel_out": "diesel", "ago_out": "ago"}
 _ALLOWED_KEYS = frozenset(
-    {"n_stages", "feed_stage", "distillate_rate_mol_s", "strippers", "pressure_profile"}
+    {"n_stages", "feed_stage", "distillate_rate_mol_s", "strippers", "pressure_profile", "pumparounds"}
 )
 _STRIPPER_KEYS = frozenset({"draw_stage", "return_stage", "n_stages", "steam_mol_s", "product_rate_mol_s"})
 #: Water mole fraction the steam header must carry (pure water).
@@ -165,6 +178,17 @@ class CrudeColumnR2:
             "pool_liquids": True,
             "initialization": "relaxation",
         }
+        if "pumparounds" in params:
+            # The column core's pumparound loops (spec S0-1), parsed and
+            # validated there (ColumnSpecError on a bad loop); here they must
+            # sit above the flash zone, whose envelope bounds the overhead.
+            column_params["pumparounds"] = params["pumparounds"]
+            for pa in _parse_pumparounds(column_params, n_stages):
+                if pa.draw_stage >= feed_stage:
+                    raise RefiningSpecError(
+                        f"pumparounds: loop {pa.name!r} draws on stage {pa.draw_stage}; a crude-column "
+                        f"pumparound draws above the flash zone (stage {feed_stage})"
+                    )
         if steam is not None and bottom_steam > 0.0:
             column_params["feeds"] = [
                 {
@@ -175,6 +199,10 @@ class CrudeColumnR2:
                     "composition": {"H2O": 1.0},
                 }
             ]
+        pressures = _parse_pressure_profile(column_params["pressure_profile"], n_stages)
+        products_above = rate + sum(st["product_rate_mol_s"] for st in strippers)
+        envelope = pressures[feed_stage - 1 :]
+        _check_overflash(feed, steam, bottom_steam, steam_flow, products_above, envelope, thermo)
         result, products = solve_column_full({"feed": feed}, column_params, thermo)
         outlets = {"overhead": result.outlets["distillate"], "bottoms": result.outlets["bottoms"]}
         for port, name in _SIDE_PORTS.items():
@@ -182,7 +210,7 @@ class CrudeColumnR2:
         info = {
             key: value
             for key, value in result.info.items()
-            if key.startswith(("stage_", "stripper_")) or key == "n_graph_stages"
+            if key.startswith(("stage_", "stripper_", "pa_")) or key == "n_graph_stages"
         }
         # The liquid falling into the flash zone from the stage above it.
         overflash = result.info[f"stage_{feed_stage - 2}_L_mol_s"]
@@ -241,3 +269,78 @@ def _strippers(
             }
         )
     return out, total_steam
+
+
+def _check_overflash(
+    feed: StreamState,
+    steam: StreamState | None,
+    bottom_steam: float,
+    steam_flow: float,
+    products_above: float,
+    pressures: list[float],
+    thermo: Thermo,
+) -> None:
+    """Refuse products above the flash zone that the crude cannot vaporise.
+
+    The column has no reboiler: everything leaving above the flash zone (the
+    overhead and the side products) is crude vaporised by the feed's own heat
+    and the bottom steam. The flash zone and the stages under it form an
+    envelope fed by the crude, the bottom steam and the overflash L_o (the
+    liquid falling in from the stage above). At L_o = 0 the envelope is
+    decoupled from the column above it, so solved alone (the same stages,
+    pressures and pooled-liquid stage model; no condenser, no reboiler) it
+    leaves exactly the bottoms B_0 the full column has at zero overflash.
+    The overall balance B = F + S - D - sum(P) then bounds the products
+    above the flash zone by F + S - B_0; more needs L_o < 0, a column with
+    no solution. Measured on the example: the limit is D = 448.72 mol/s, and
+    the overflash falls 1.76 mol/s per mol/s of overhead towards it (31.8 at
+    D = 430, 14.2 at 440).
+
+    Inconclusive when the envelope itself does not converge: the full solve
+    then stands on its own gates.
+    """
+    if len(pressures) == 1:
+        # The flash zone is the bottom stage: the envelope is one adiabatic
+        # flash of the crude and the bottom steam.
+        total = feed.molar_flow + bottom_steam
+        z = {cid: frac * feed.molar_flow / total for cid, frac in feed.composition.items()}
+        h = feed.enthalpy * feed.molar_flow
+        if steam is not None and bottom_steam > 0.0:
+            z["H2O"] = z.get("H2O", 0.0) + bottom_steam / total
+            h += steam.enthalpy * bottom_steam
+        b0 = (1.0 - thermo.flash_ph(z, pressures[0], h / total, total).vapor_fraction) * total
+    else:
+        env: dict[str, Any] = {
+            "n_stages": len(pressures),
+            "condenser": "none",
+            "reboiler": "none",
+            "feed_stage": 1,
+            "pressure_profile": pressures,
+            "specs": {},
+            "pool_liquids": True,
+            "initialization": "relaxation",
+        }
+        if steam is not None and bottom_steam > 0.0:
+            env["feeds"] = [
+                {
+                    "stage": len(pressures),
+                    "T": steam.T,
+                    "P": steam.P,
+                    "molar_flow": bottom_steam,
+                    "composition": {"H2O": 1.0},
+                }
+            ]
+        try:
+            result, _ = solve_column_full({"feed": feed}, env, thermo)
+        except (ColumnConvergenceError, ValueError):
+            return
+        b0 = result.outlets["bottoms"].molar_flow
+    limit = feed.molar_flow + steam_flow - b0
+    if products_above > limit:
+        raise RefiningSpecError(
+            f"negative overflash: the overhead and side products take {products_above:.6g} mol/s, but "
+            f"with no liquid falling into the flash zone (zero overflash) the crude and bottom steam "
+            f"vaporise only enough for {limit:.6g} mol/s above it (bottoms {b0:.6g} mol/s). The column "
+            f"has no reboiler: lower distillate_rate_mol_s or the side-product rates by "
+            f"{products_above - limit:.6g} mol/s, or heat the crude or add bottom steam"
+        )

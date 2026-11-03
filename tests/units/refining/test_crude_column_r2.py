@@ -37,10 +37,8 @@ def solved() -> tuple[Any, dict[str, Any], Any]:
     return thermo, inlets, result
 
 
-def test_example_closes_components_and_energy_without_a_phantom_duty(
-    solved: tuple[Any, dict[str, Any], Any],
-) -> None:
-    _, inlets, result = solved
+def _assert_closes(inlets: dict[str, Any], result: Any) -> None:
+    """Whole-unit component and energy closure, and no phantom reboiler duty."""
     flow_in: dict[str, float] = {}
     for s in inlets.values():
         for c, n in s.component_flows().items():
@@ -59,7 +57,16 @@ def test_example_closes_components_and_energy_without_a_phantom_duty(
     # No reboiler: the stage balances and the boundary closure agree (the
     # one-liquid model reported -66 kW here).
     assert abs(result.info["closure_residual_W"]) < _CLOSE * abs(condenser)
-    assert result.duty_W == pytest.approx(-condenser, abs=_CLOSE * abs(condenser))
+    # The net duty is the condenser's plus every pumparound cooler's.
+    coolers = sum(v for k, v in result.info.items() if k.startswith("pa_") and k.endswith("_duty_W"))
+    assert result.duty_W == pytest.approx(coolers - condenser, abs=_CLOSE * abs(condenser))
+
+
+def test_example_closes_components_and_energy_without_a_phantom_duty(
+    solved: tuple[Any, dict[str, Any], Any],
+) -> None:
+    _, inlets, result = solved
+    _assert_closes(inlets, result)
 
 
 def test_products_meet_their_specs_and_order_by_volatility(solved: tuple[Any, dict[str, Any], Any]) -> None:
@@ -113,8 +120,8 @@ def _example() -> tuple[dict[str, Any], dict[str, Any], Any]:
 
 def test_refuses_unknown_parameters() -> None:
     inlets, params, thermo = _example()
-    with pytest.raises(RefiningSpecError, match="pumparounds"):
-        CrudeColumnR2().solve(inlets, {**params, "pumparounds": []}, thermo)
+    with pytest.raises(RefiningSpecError, match="reboiler"):
+        CrudeColumnR2().solve(inlets, {**params, "reboiler": "kettle"}, thermo)
 
 
 def test_refuses_a_missing_stripper() -> None:
@@ -146,3 +153,103 @@ def test_refuses_impure_steam() -> None:
     )
     with pytest.raises(RefiningSpecError, match="pure water"):
         CrudeColumnR2().solve({**inlets, "stripping_steam": wet}, params, thermo)
+
+
+#: The usual two heat-removal loops of an atmospheric column: a top
+#: pumparound under the condenser and a diesel pumparound off the diesel
+#: draw tray, each returned one stage up as subcooled liquid.
+_PUMPAROUNDS: list[dict[str, Any]] = [
+    {"name": "top", "draw_stage": 3, "return_stage": 2, "flow_mol_s": 300.0, "return_T_K": 380.0},
+    {"name": "diesel", "draw_stage": 7, "return_stage": 6, "flow_mol_s": 100.0, "return_T_K": 450.0},
+]
+#: The pumparound case's own worker (one solve for its tests).
+_PA_GROUP = pytest.mark.xdist_group("pa")
+
+
+def _solve_pa(pumparounds: list[dict[str, Any]]) -> tuple[Any, dict[str, Any], Any]:
+    inlets, params, thermo = _example()
+    return thermo, inlets, CrudeColumnR2().solve(inlets, {**params, "pumparounds": pumparounds}, thermo)
+
+
+def _snapshot(result: Any) -> dict[str, Any]:
+    """Every reported number of a result, for exact comparisons."""
+    out: dict[str, Any] = {"duty_W": result.duty_W, "info": dict(result.info)}
+    for port, s in result.outlets.items():
+        out[port] = (s.T, s.P, s.molar_flow, s.enthalpy, dict(s.composition))
+    return out
+
+
+@pytest.fixture(scope="module")
+def solved_pa() -> tuple[Any, dict[str, Any], Any]:
+    return _solve_pa(_PUMPAROUNDS)
+
+
+@_PA_GROUP
+def test_pumparound_case_closes_components_and_energy(solved_pa: tuple[Any, dict[str, Any], Any]) -> None:
+    _, inlets, result = solved_pa
+    _assert_closes(inlets, result)
+    for pa in _PUMPAROUNDS:
+        assert result.info[f"pa_{pa['name']}_duty_W"] < 0.0
+        assert result.info[f"pa_{pa['name']}_return_T_K"] == pa["return_T_K"]
+    # The products still meet their specs with the loops in.
+    assert result.outlets["overhead"].molar_flow == pytest.approx(430.0, rel=1e-9)
+    assert result.outlets["diesel_out"].molar_flow == pytest.approx(98.15, rel=1e-9)
+
+
+@_PA_GROUP
+def test_pumparound_duty_is_the_loop_liquids_enthalpy_change(
+    solved_pa: tuple[Any, dict[str, Any], Any],
+) -> None:
+    """Each cooler duty is flow x (h(return T) - h(draw T)) of the drawn
+    liquid, recomputed on a fresh package instance from the reported draw
+    stage state; the subcooled return is one homogeneous liquid there."""
+    _, _, result = solved_pa
+    info = result.info
+    fresh = registry.create("thermo", "pr")
+    for pa in _PUMPAROUNDS:
+        j = pa["draw_stage"] - 1
+        x = {k.split("_x_", 1)[1]: v for k, v in info.items() if k.startswith(f"stage_{j}_x_") and v > 0.0}
+        p = info[f"stage_{j}_P_Pa"]
+        t_draw = info[f"pa_{pa['name']}_draw_T_K"]
+        assert t_draw == info[f"stage_{j}_T_K"]
+        returned = fresh.flash_pt(x, pa["return_T_K"], p, 1.0)
+        assert [ph.kind for ph in returned.phases] == [PhaseKind.HC_LIQUID]
+        h_draw = fresh.phase_props(x, t_draw, p, PhaseKind.HC_LIQUID).enthalpy
+        duty = pa["flow_mol_s"] * (returned.enthalpy - h_draw)
+        assert info[f"pa_{pa['name']}_duty_W"] == pytest.approx(duty, rel=1e-9)
+
+
+@_PA_GROUP
+def test_pumparound_case_is_deterministic(solved_pa: tuple[Any, dict[str, Any], Any]) -> None:
+    assert _snapshot(_solve_pa(_PUMPAROUNDS)[2]) == _snapshot(solved_pa[2])
+
+
+def test_idle_pumparounds_are_exactly_the_column_without_them(
+    solved: tuple[Any, dict[str, Any], Any],
+) -> None:
+    """Zero-flow loops carry nothing: every number matches the example."""
+    idle = [{**pa, "flow_mol_s": 0.0} for pa in _PUMPAROUNDS]
+    result = _solve_pa(idle)[2]
+    snap = _snapshot(result)
+    snap["info"] = {k: v for k, v in snap["info"].items() if not k.startswith("pa_")}
+    assert snap == _snapshot(solved[2])
+    assert all(result.info[f"pa_{pa['name']}_duty_W"] == 0.0 for pa in idle)
+
+
+def test_refuses_a_pumparound_at_the_flash_zone() -> None:
+    inlets, params, thermo = _example()
+    loop = {"name": "fz", "draw_stage": 10, "return_stage": 9, "flow_mol_s": 10.0, "return_T_K": 500.0}
+    with pytest.raises(RefiningSpecError, match="above the flash zone"):
+        CrudeColumnR2().solve(inlets, {**params, "pumparounds": [loop]}, thermo)
+
+
+def test_refuses_an_overhead_the_flash_zone_cannot_vaporise() -> None:
+    """455 mol/s of overhead needs a negative overflash: at zero overflash
+    the flash-zone envelope leaves 142.16 mol/s of bottoms, so the products
+    above it can take at most 876.84 mol/s (overhead 448.72 at the example
+    side rates), and they ask for 883.12. Refused before the column solve."""
+    inlets, params, thermo = _example()
+    with pytest.raises(RefiningSpecError, match="negative overflash") as err:
+        CrudeColumnR2().solve(inlets, {**params, "distillate_rate_mol_s": 455.0}, thermo)
+    limit = float(str(err.value).split("enough for ")[1].split(" mol/s")[0])
+    assert limit == pytest.approx(876.837, abs=1e-3)

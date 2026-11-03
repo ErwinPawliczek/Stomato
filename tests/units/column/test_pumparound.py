@@ -113,7 +113,9 @@ def test_negative_loop_flow_refused() -> None:
         _parse_only(
             {
                 **_base_params(),
-                "pumparounds": [{"draw_stage": 12, "return_stage": 8, "flow_mol_s": -1.0, "return_T_K": 300.0}],
+                "pumparounds": [
+                    {"draw_stage": 12, "return_stage": 8, "flow_mol_s": -1.0, "return_T_K": 300.0}
+                ],
             }
         )
 

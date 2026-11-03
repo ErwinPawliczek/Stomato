@@ -227,6 +227,12 @@
           pressure_profile:
             description: stage pressures, Pa abs (scalar or per-stage list);
               default crude_in.P
+          pumparounds:
+            type: array
+            description: the column core's fixed pumparound loops, each
+              {name, draw_stage, return_stage, flow_mol_s, return_T_K or
+              duty_W}, drawn above the flash zone and returned at or above the
+              draw; flow 0 is an idle loop
       note: MESH over the stage graph (main column plus three steam side
         strippers as one Newton system), partial condenser, no reboiler,
         stripping steam under the bottom stage and into each stripper, overflash
@@ -234,7 +240,11 @@
         a second liquid on the flash-zone and bottom stages - read the pooled
         liquid's own liquid-liquid split (no flash per stage K); relaxation cold
         start. Example (16-cut slate, 12 stages, 3-stage strippers) converges in
-        ~45 s with a 1 mW closure residual. No pumparounds at this level
+        ~50 s with a 1 mW closure residual. Pumparounds enter the stage energy
+        balances (tested with a top and a diesel loop, 17.2 MW in the loops, condenser
+        69.0 -> 52.0 MW). An overhead past the zero-overflash point is refused before
+        the solve; on the example overflash 31.8 mol/s at 430 mol/s, 14.2 at
+        440, zero at 448.72 mol/s (the former stall at >= 455 mol/s)
       end_state: true
   pid_symbol: T
   references:

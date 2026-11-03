@@ -704,7 +704,8 @@ def _parse_pumparounds(params: Mapping[str, Any], n_stages: int) -> list[_Pumpar
             raise ColumnSpecError(f"pumparounds[{k}]: exactly one of duty_W / return_T_K is required")
         if flow == 0.0 and duty is not None and duty != 0.0:
             raise ColumnSpecError(
-                f"pumparounds[{k}]: an idle loop (flow_mol_s = 0) carries no cooler duty, got duty_W = {duty!r}"
+                f"pumparounds[{k}]: an idle loop (flow_mol_s = 0) carries no cooler duty, "
+                f"got duty_W = {duty!r}"
             )
         name = pa.get("name")
         if name is None:
