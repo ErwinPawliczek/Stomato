@@ -56,6 +56,11 @@ them, fix the call, retry. Do not invent units, components, ports or params. \
 Call recommend_thermo before changing the property package (set_thermo): it ranks \
 the registered methods for the current slate and feed conditions with reasons and warnings.
 - render returns the URL of the requested drawing plus P&ID counts; the UI fetches it.
+- Prefer the catalogue tools for new work: list_catalogue / describe_unit_kind, \
+place_unit (optionally on the canvas hex grid {q, r}), connect, set_cell (values with \
+units such as 'degC', 'bar', 'kmol/h'), read_results (optionally converted to a unit) \
+and explain_value (how a number was computed, with its references). Every edit is an \
+undoable change the user sees live; undo reverts the latest one.
 - Report engineering results with units (K, Pa, mol/s, W). Be concise; let the tool \
 rows carry the detail.
 """
@@ -96,6 +101,8 @@ def run_conversation(
     user_text: str,
     messages: list[dict[str, Any]],
     emit: Emit,
+    *,
+    actor: str = "agent",
 ) -> DoneInfo:
     """One user message through model/tool rounds until the model stops asking.
 
@@ -103,6 +110,9 @@ def run_conversation(
     (the caller owns the session). ``emit`` receives SSE-ready event dicts;
     text deltas stream exactly when the model streams them. Returns the done
     info; the caller appends ``conversation_id`` to the final event.
+    ``actor`` attributes every change a tool commits (the API passes
+    ``agent:<conversation_id>``); a mutating tool's ``tool_result`` event
+    carries that change (seq, summary, structured diff) as ``change``.
     """
     tools = tool_definitions()
     messages.append({"role": "user", "content": user_text})
@@ -154,7 +164,7 @@ def run_conversation(
         result_blocks: list[dict[str, Any]] = []
         changed = False
         for use, tool_input in parsed:
-            outcome = run_tool(use.name, tool_input, store, engine)
+            outcome = run_tool(use.name, tool_input, store, engine, actor=actor)
             if outcome.ok and use.name in TOOLS_BY_NAME and TOOLS_BY_NAME[use.name].mutates:
                 changed = True
             event: dict[str, Any] = {
@@ -163,6 +173,8 @@ def run_conversation(
                 "ok": outcome.ok,
                 "summary": _summarize(outcome),
             }
+            if outcome.change is not None:
+                event["change"] = outcome.change
             if outcome.ok:
                 event["result"] = outcome.result
                 result_content: str | dict[str, Any] = outcome.result or {}

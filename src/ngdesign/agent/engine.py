@@ -163,14 +163,14 @@ def rebuild_flowsheet(
     pydantic contracts — the one construction path every mutating tool and
     address write shares (duplicate tags, unknown unit references, port reuse,
     feed/slate mismatches all fail here, so callers can return them as the
-    tool's ``error``)."""
-    return Flowsheet(
-        name=fs.name,
-        units=fs.units if units is None else units,
-        streams=fs.streams if streams is None else streams,
-        thermo=fs.thermo,
-        components=fs.components,
-    )
+    tool's ``error``). Every other field (thermo, components, design specs,
+    solver options, reactions) is carried over unchanged."""
+    updates: dict[str, object] = {}
+    if units is not None:
+        updates["units"] = units
+    if streams is not None:
+        updates["streams"] = streams
+    return Flowsheet.model_validate({**fs.model_dump(), **updates})
 
 
 @dataclass(frozen=True)
@@ -183,7 +183,8 @@ class Engine:
 
     solve_project: Callable[[Project], SolvedFlowsheet]
     render_view: Callable[[SolvedFlowsheet, dict[str, XY], str], bytes]
+    trace_project: Callable[[Project], tuple[SolvedFlowsheet, TraceGraph]] = trace_project
 
 
 #: The engine the API injects: the real module functions.
-DEFAULT_ENGINE = Engine(solve_project=solve_project, render_view=render_view)
+DEFAULT_ENGINE = Engine(solve_project=solve_project, render_view=render_view, trace_project=trace_project)

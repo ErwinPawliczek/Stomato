@@ -26,10 +26,10 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends
 
 from ngdesign import registry
+from ngdesign.agent.service import thermo_catalogue
 from ngdesign.agent.tools import ProjectStore
 from ngdesign.api.deps import default_project_store
 from ngdesign.thermo import advisor
-from ngdesign.thermo.catalogue import load_catalogue
 
 router = APIRouter()
 
@@ -52,24 +52,4 @@ def thermo_recommend(
 @router.get("/api/thermo/models")
 def thermo_models() -> dict[str, Any]:
     """Every catalogue row with its selectable flag and refusal reason (issue #154)."""
-    models: list[dict[str, Any]] = []
-    rows = load_catalogue()
-    for row_id in sorted(rows):
-        row = rows[row_id]
-        selectable = row.status != "experimental"
-        entry: dict[str, Any] = {
-            "id": row.id,
-            "name": row.name,
-            "family": row.family,
-            "status": row.status,
-            "selectable": selectable,
-        }
-        if not selectable:
-            reason = "status: experimental"
-            if row.l0_note:
-                reason += f" — {row.l0_note}"
-            if row.references:
-                reason += f" — see {row.references[0]}"
-            entry["refusal_reason"] = reason
-        models.append(entry)
-    return {"models": models}
+    return {"models": thermo_catalogue()}

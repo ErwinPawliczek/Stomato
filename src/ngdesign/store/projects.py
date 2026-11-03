@@ -41,8 +41,9 @@ class ProjectExists(Exception):
     """A project with the same (owner, name) already exists."""
 
 
-class ProjectConflict(Exception):
-    """Optimistic version check failed: the row moved since it was read."""
+class ProjectConflict(RuntimeError):
+    """Optimistic version check failed: the row moved since it was read (also:
+    an undo/redo whose starting body was changed outside the change log)."""
 
 
 class ProjectForbidden(Exception):

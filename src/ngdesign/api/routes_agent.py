@@ -154,7 +154,15 @@ def agent_message_core(store: DbProjectStore, req: AgentRequest) -> StreamingRes
 
     def worker() -> None:
         try:
-            done = run_conversation(get_model(), store, DEFAULT_ENGINE, message, messages, events.put)
+            done = run_conversation(
+                get_model(),
+                store,
+                DEFAULT_ENGINE,
+                message,
+                messages,
+                events.put,
+                actor=f"agent:{conversation_id}",
+            )
             events.put(done)
         except ModelSetupError as exc:
             events.put({"type": "error", "message": str(exc)})

@@ -29,7 +29,7 @@ from ngdesign.store.models import ChangeRow, ProjectRow, utcnow
 MAX_HISTORY = 500
 
 
-class NothingToMove(Exception):
+class NothingToMove(LookupError):
     """Undo with no applied edit, or redo with no undone edit."""
 
 
