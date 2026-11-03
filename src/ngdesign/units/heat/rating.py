@@ -31,8 +31,9 @@ Method (double_pipe R1 spec, "Equations"):
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from typing import Any
 
 import fluids
 import ht
@@ -40,7 +41,8 @@ from scipy.optimize import brentq
 
 from ngdesign.contracts import PhaseKind, StreamState
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units._physics.heat_balance import TemperatureCross
+from ngdesign.provenance.recorder import active
+from ngdesign.units._physics.heat_balance import TemperatureCross, trace_enthalpy_target
 
 #: Laminar/turbulent transition for both correlations (no blend between them).
 TURBULENT_RE = 2300.0
@@ -227,6 +229,7 @@ def rate_two_stream(
     P_c_out: float,
     ua_of: Callable[[StreamState, StreamState], float],
     eps_of: Callable[[float, float], float],
+    trace_inputs: Mapping[str, Any] | None = None,
 ) -> RatedTwoStream:
     """Rate a two-stream exchanger by counter-current epsilon-NTU on enthalpies.
 
@@ -242,6 +245,8 @@ def rate_two_stream(
         ua_of: ``UA(W/K)`` at the current outlet pair, from the unit's own
             film-coefficient and area model.
         eps_of: ``effectiveness(NTU, Cr)`` for the unit's flow arrangement.
+        trace_inputs: extra provenance inputs of the converged duty (the unit's
+            geometry); used only while tracing.
 
     Raises:
         RatingError: a side has zero flow ("needs both streams flowing").
@@ -308,6 +313,27 @@ def rate_two_stream(
         raise RatingConvergenceError(
             f"rating did not converge: {exc}; last duty bracket [{Q_lo}, {Q_max}] W, g(Q_max)={g_max} W"
         ) from exc
+    rec = active()
+    if rec is not None:
+        q_ref = rec.results(
+            "effectiveness_ntu",
+            {"Q_rated_W": float(Q), "rating_iterations": float(r.iterations)},
+            {
+                "T_hot_in": (hot, "T"),
+                "T_cold_in": (cold, "T"),
+                "h_hot_in": (hot, "enthalpy"),
+                "h_cold_in": (cold, "enthalpy"),
+                "F_hot": (hot, "molar_flow"),
+                "F_cold": (cold, "molar_flow"),
+                "P_hot_out": P_h_out,
+                "P_cold_out": P_c_out,
+                **(trace_inputs or {}),
+            },
+            iterations=int(r.iterations),
+            note="duty solving Q = eps(NTU, Cr) C_min (T_h,in - T_c,in) with UA at each trial outlet pair",
+        )["Q_rated_W"]
+        trace_enthalpy_target(rec, "h_hot_out", hot.enthalpy - float(Q) / F_h, hot, q_ref, "-")
+        trace_enthalpy_target(rec, "h_cold_out", cold.enthalpy + float(Q) / F_c, cold, q_ref, "+")
     _, hot_out, cold_out, UA, NTU, eps = evaluate(float(Q))
     return RatedTwoStream(hot_out, cold_out, float(Q), UA, NTU, eps, r.iterations)
 

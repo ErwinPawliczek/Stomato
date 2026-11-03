@@ -46,7 +46,15 @@ COLUMNS = [
     "column_extensions/R2",
     "reactive_stages/R2",
 ]
-EXCHANGERS: list[str] = []
+EXCHANGERS = [
+    "shell_tube/R0",
+    "air_cooler/R0",
+    "plate_exchanger/R0",
+    "plate_exchanger/R1",
+    "double_pipe/R0",
+    "double_pipe/R1",
+    "multi_stream/R0",
+]
 INSTRUMENTED = REACTORS + COLUMNS + EXCHANGERS
 
 _TAG = "U-101"

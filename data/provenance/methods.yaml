@@ -574,6 +574,70 @@ min_approach_duty:
   references:
     - source: kemp_2007
       citation: "Kemp, I.C., Pinch Analysis and Process Integration: A User Guide on Process Integration for the Efficient Use of Energy, 2nd ed., Butterworth-Heinemann, 2007 (composite curves and the minimum approach temperature)."
+effectiveness_ntu:
+  name: Effectiveness-NTU rating (counter-current)
+  latex: '\dot Q = \varepsilon(\mathrm{NTU}, C_r)\,C_\mathrm{min}\,(T_{h,\mathrm{in}} - T_{c,\mathrm{in}}),\quad \mathrm{NTU} = UA / C_\mathrm{min}'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, ch. 11 (the effectiveness-NTU method)."
+darcy_weisbach_duct:
+  name: Duct pressure drop (Darcy-Weisbach, Colebrook friction factor)
+  latex: '\Delta P = f_D\,\frac{L}{D_h}\,\frac{\rho v^2}{2},\quad f_D = 64/\mathrm{Re}\ (\mathrm{Re} < 2300),\ \frac{1}{\sqrt{f_D}} = -2\log_{10}\left(\frac{\epsilon/D_h}{3.7} + \frac{2.51}{\mathrm{Re}\sqrt{f_D}}\right)'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, eqs. 8.19 and 8.20 (as cited in ngdesign.units.heat.rating)."
+    - source: colebrook_1939
+      citation: "Colebrook, C.F., Turbulent Flow in Pipes, with Particular Reference to the Transition Region between the Smooth and Rough Pipe Laws, J. Inst. Civ. Eng. 11(4), 1939, 133-156."
+gnielinski_duct_film:
+  name: Duct film coefficient (Gnielinski; laminar Nu = 3.66)
+  latex: '\mathrm{Nu} = \frac{(f_D/8)(\mathrm{Re} - 1000)\mathrm{Pr}}{1 + 12.7\sqrt{f_D/8}\,(\mathrm{Pr}^{2/3} - 1)},\quad h = \mathrm{Nu}\,k / D_h'
+  references:
+    - source: gnielinski_1976
+      citation: "Gnielinski, V., New Equations for Heat and Mass Transfer in Turbulent Pipe and Channel Flow, Int. Chem. Eng. 16(2), 1976, 359-368."
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, eqs. 8.55 and 8.62 (as cited in ngdesign.units.heat.rating)."
+tube_outside_area:
+  name: Tube outside area
+  latex: 'A_o = \pi D_o L'
+  structural: true
+overall_conductance_tube_wall:
+  name: Overall conductance through a tube wall with fouling
+  latex: '\frac{1}{UA} = \frac{1}{h_i A_i} + \frac{R_{f,i}}{A_i} + \frac{\ln(D_o/D_i)}{2\pi k L} + \frac{R_{f,o}}{A_o} + \frac{1}{h_o A_o}'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, ch. 11 (overall heat transfer coefficient, fouling factors)."
+ua_per_area:
+  name: Overall coefficient per area
+  latex: 'U = UA / A'
+  structural: true
+plate_pressure_drop:
+  name: Chevron-plate channel and port pressure drop
+  latex: '\Delta P = f\,\frac{L}{D_h}\,\frac{\rho v^2}{2} + 1.4\,\frac{\rho v_\mathrm{port}^2}{2}'
+  references:
+    - source: martin_1996
+      citation: "Martin, H., A Theoretical Approach to Predict the Performance of Chevron-Type Plate Heat Exchangers, Chem. Eng. Process. 35(4), 1996, 301-310."
+    - source: vdi_heat_atlas_2010
+      citation: "VDI Heat Atlas, 2nd ed., Springer, 2010, section N6 (as cited in ngdesign.units.heat.plate_exchanger_r1)."
+    - source: kakac_heat_exchangers
+      citation: "Kakac, S., Liu, H. and Pramuanjaroenkij, A., Heat Exchangers: Selection, Rating, and Thermal Design, 3rd ed., CRC Press, ch. 10 (port pressure loss; as cited in ngdesign.units.heat.plate_exchanger_r1)."
+plate_film_coefficients:
+  name: Chevron-plate film coefficients (Martin / VDI N6)
+  latex: '\mathrm{Nu} = 0.122\,\mathrm{Pr}^{1/3}\left(\mu/\mu_w\right)^{1/6}\left[f\,\mathrm{Re}^2 \sin 2\varphi\right]^{0.374}'
+  references:
+    - source: martin_1996
+      citation: "Martin, H., A Theoretical Approach to Predict the Performance of Chevron-Type Plate Heat Exchangers, Chem. Eng. Process. 35(4), 1996, 301-310."
+    - source: vdi_heat_atlas_2010
+      citation: "VDI Heat Atlas, 2nd ed., Springer, 2010, section N6 (as cited in ngdesign.units.heat.plate_exchanger_r1)."
+plate_heat_transfer_area:
+  name: Plate heat-transfer area from the plate geometry
+  latex: 'A = A_\mathrm{ht}(N_\mathrm{plates}, W, L, \lambda, \hat a)'
+  structural: true  # fluids.geometry.PlateExchanger.A_heat_transfer from the user's geometry
+overall_conductance_plate:
+  name: Overall conductance through a plate with fouling
+  latex: '\frac{1}{U} = \frac{1}{h_h} + R_{f,h} + \frac{t}{k} + R_{f,c} + \frac{1}{h_c},\quad UA = U A'
+  references:
+    - source: bergman_2011
+      citation: "Bergman, T.L., Lavine, A.S., Incropera, F.P. and DeWitt, D.P., Fundamentals of Heat and Mass Transfer, 7th ed., Wiley, 2011, ch. 11 (overall heat transfer coefficient, fouling factors)."
 single_phase_check:
   name: No phase change along either side (LMTD validity flag)
   latex: '\mathbb{1}\left[\beta(h) = \beta_\mathrm{in}\ \forall\ \text{samples}\right]'
