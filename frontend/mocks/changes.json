@@ -1,0 +1,4 @@
+[
+  {"seq": 1, "kind": "edit", "op": "place_unit", "actor": "agent:c_mock_1", "summary": "Placed C-201 (mdea_absorber)", "state": "applied", "target_seq": null, "version": 2, "created_at": "2026-01-01T00:00:01", "args": {"kind": "mdea_absorber", "tag": "C-201"}, "diff": {"units": {"added": [{"tag": "C-201", "kind": "mdea_absorber", "params": {}}]}}, "lines": ["+ unit C-201 (mdea_absorber)"]},
+  {"seq": 2, "kind": "edit", "op": "set_cell", "actor": "mcp", "summary": "Set K-101.params.P_out = 65 bar", "state": "applied", "target_seq": null, "version": 3, "created_at": "2026-01-01T00:00:02", "args": {"address": "K-101.params.P_out", "value": 65, "unit": "bar"}, "diff": {"units": {"changed": [{"tag": "K-101", "fields": {"params.P_out": {"from": 7000000.0, "to": 6500000.0}}}]}}, "lines": ["~ K-101.params.P_out: 7000000.0 -> 6500000.0"]}
+]

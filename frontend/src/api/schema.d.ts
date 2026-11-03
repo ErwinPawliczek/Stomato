@@ -812,6 +812,902 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Index
+         * @description Entry point: where the schema, docs and tool catalogue live.
+         */
+        get: operations["index_api_v1_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalogue/components": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Catalogue Components
+         * @description The curated component slate (id, name, CAS, molar mass g/mol).
+         */
+        get: operations["catalogue_components_api_v1_catalogue_components_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalogue/thermo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Catalogue Thermo
+         * @description Thermo property packages with status, selectability and registration.
+         */
+        get: operations["catalogue_thermo_api_v1_catalogue_thermo_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalogue/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Catalogue Units
+         * @description Every unit kind in palette order (family, then id) with its ports.
+         */
+        get: operations["catalogue_units_api_v1_catalogue_units_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/catalogue/units/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Catalogue Unit
+         * @description One unit kind: ports, rigour levels with param schemas, references, example params.
+         */
+        get: operations["catalogue_unit_api_v1_catalogue_units__kind__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job
+         * @description One solve job's status and progress records.
+         */
+        get: operations["job_api_v1_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job Events
+         * @description SSE: one ``progress`` frame per tear record, then ``done`` or ``failed``.
+         */
+        get: operations["job_events_api_v1_jobs__job_id__events_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Projects
+         * @description The caller's projects, oldest first.
+         */
+        get: operations["projects_api_v1_projects_get"];
+        put?: never;
+        /**
+         * Create
+         * @description Create a project: blank, from a ``template``, a copy (``from_project``) or an explicit body.
+         */
+        post: operations["create_api_v1_projects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Project
+         * @description One project's identity, version and body.
+         */
+        get: operations["project_api_v1_projects__project_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete
+         * @description Delete a project with its conversations and history.
+         */
+        delete: operations["delete_api_v1_projects__project_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Rename
+         * @description Rename a project (logged as an undoable change).
+         */
+        patch: operations["rename_api_v1_projects__project_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/agent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Agent Conversations
+         * @description The project's stored conversation ids.
+         */
+        get: operations["agent_conversations_api_v1_projects__project_id__agent_get"];
+        put?: never;
+        /**
+         * Agent
+         * @description One in-app agent turn as SSE: ``text_delta``, ``tool_call``, ``tool_result``
+         *     (with ``change`` for edits), ``project_changed``, then ``done`` or ``error``.
+         */
+        post: operations["agent_api_v1_projects__project_id__agent_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/cells": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cells
+         * @description Every writable variable with its value, declared unit and description.
+         */
+        get: operations["cells_api_v1_projects__project_id__cells_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/cells/{address}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cell
+         * @description One writable variable.
+         */
+        get: operations["cell_api_v1_projects__project_id__cells__address__get"];
+        /**
+         * Set Cell
+         * @description Set a variable; ``unit`` converts to the declared unit with a dimension check.
+         */
+        put: operations["set_cell_api_v1_projects__project_id__cells__address__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Changes
+         * @description The change log, oldest first, each with its actor and structured diff.
+         */
+        get: operations["changes_api_v1_projects__project_id__changes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/changes/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Change Stream
+         * @description SSE: one ``change`` frame per new change from any actor (UI, agent, MCP, API).
+         *     Reads the database, so changes made by another process appear too.
+         */
+        get: operations["change_stream_api_v1_projects__project_id__changes_stream_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/components": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Components
+         * @description Set the component slate (feeds must stay within it).
+         */
+        put: operations["set_components_api_v1_projects__project_id__components_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/design-specs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Design Specs
+         * @description The flowsheet's design specs.
+         */
+        get: operations["design_specs_api_v1_projects__project_id__design_specs_get"];
+        put?: never;
+        /**
+         * Add Design Spec
+         * @description Add a design spec (target address driven to value by a manipulated address).
+         */
+        post: operations["add_design_spec_api_v1_projects__project_id__design_specs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/design-specs/{spec_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Design Spec
+         * @description Remove a design spec.
+         */
+        delete: operations["delete_design_spec_api_v1_projects__project_id__design_specs__spec_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/exports/pfd.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Pfd
+         * @description The PFD drawing with the stored placements.
+         */
+        get: operations["export_pfd_api_v1_projects__project_id__exports_pfd_svg_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/exports/pid.svg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Pid
+         * @description The P&ID drawing (builder + every rule at a fixed point).
+         */
+        get: operations["export_pid_api_v1_projects__project_id__exports_pid_svg_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/exports/project.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Project
+         * @description The project document (re-importable via POST /api/v1/projects ``project``).
+         */
+        get: operations["export_project_api_v1_projects__project_id__exports_project_json_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/exports/sheet.{fmt}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export Sheet
+         * @description Stream table and datasheets as CSV or HTML.
+         */
+        get: operations["export_sheet_api_v1_projects__project_id__exports_sheet__fmt__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/flowsheet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Flowsheet
+         * @description The flowsheet: units, streams, thermo, components, design specs.
+         */
+        get: operations["flowsheet_api_v1_projects__project_id__flowsheet_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/redo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Redo
+         * @description Redo the latest undone change.
+         */
+        post: operations["redo_api_v1_projects__project_id__redo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Results
+         * @description Status, diagnostics, design-spec results, per-unit and per-stream summary (SI).
+         */
+        get: operations["results_api_v1_projects__project_id__results_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/results/streams/{stream_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream Result
+         * @description The full solved state of one stream.
+         */
+        get: operations["stream_result_api_v1_projects__project_id__results_streams__stream_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/results/units/{tag}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Unit Result
+         * @description One unit's duty, power, info and outlet states.
+         */
+        get: operations["unit_result_api_v1_projects__project_id__results_units__tag__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/results/values/{address}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Value
+         * @description One solved value by address (``S-003.T``, ``K-101.power_W``, ``S-005.x.H2O``).
+         */
+        get: operations["value_api_v1_projects__project_id__results_values__address__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/solve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Solve
+         * @description Solve synchronously (cached by project hash) and return the results summary.
+         */
+        post: operations["solve_api_v1_projects__project_id__solve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/solve/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Solve Job
+         * @description Queue a solve on the worker; poll ``GET /api/v1/jobs/{job_id}`` or stream its events.
+         */
+        post: operations["solve_job_api_v1_projects__project_id__solve_jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/streams": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Streams
+         * @description Every stream spec (ends, feed, service).
+         */
+        get: operations["streams_api_v1_projects__project_id__streams_get"];
+        put?: never;
+        /**
+         * Add Stream
+         * @description Add a feed, a connection between two ports, or a product stream.
+         */
+        post: operations["add_stream_api_v1_projects__project_id__streams_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/streams/{stream_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream
+         * @description One stream spec.
+         */
+        get: operations["stream_api_v1_projects__project_id__streams__stream_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Stream
+         * @description Delete one stream.
+         */
+        delete: operations["delete_stream_api_v1_projects__project_id__streams__stream_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Stream
+         * @description Change a stream's service and/or feed fields (null fields unchanged).
+         */
+        patch: operations["update_stream_api_v1_projects__project_id__streams__stream_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/thermo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Thermo
+         * @description The selected property package and the component slate.
+         */
+        get: operations["thermo_api_v1_projects__project_id__thermo_get"];
+        /**
+         * Set Thermo
+         * @description Select the property package.
+         */
+        put: operations["set_thermo_api_v1_projects__project_id__thermo_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/thermo/recommend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recommend
+         * @description Ranked property-method recommendations for this flowsheet (spec T-08).
+         */
+        get: operations["recommend_api_v1_projects__project_id__thermo_recommend_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/tools/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run
+         * @description Run one agent tool by name with its JSON input — the same handler the in-app
+         *     agent and the MCP server call. Tool errors answer the v1 envelope (422).
+         */
+        post: operations["run_api_v1_projects__project_id__tools__name__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/trace": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Trace
+         * @description The calculation trace of the solved project, or of one value.
+         */
+        get: operations["trace_api_v1_projects__project_id__trace_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/trace/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Audit
+         * @description Outputs resting on uncited data or unreferenced methods.
+         */
+        get: operations["audit_api_v1_projects__project_id__trace_audit_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/trace/explain": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Explain
+         * @description How a value was computed: methods with references, inputs with sources, a text summary.
+         */
+        get: operations["explain_api_v1_projects__project_id__trace_explain_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Undo
+         * @description Undo the latest change (409 ``nothing_to_undo`` / ``conflict``).
+         */
+        post: operations["undo_api_v1_projects__project_id__undo_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/units": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Units
+         * @description Every unit with params, placements and connected streams.
+         */
+        get: operations["units_api_v1_projects__project_id__units_get"];
+        put?: never;
+        /**
+         * Add Unit
+         * @description Place a unit from the catalogue, optionally at a position or hex-grid cell.
+         */
+        post: operations["add_unit_api_v1_projects__project_id__units_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/units/{tag}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Unit
+         * @description One unit: kind, params, placements, connected streams.
+         */
+        get: operations["unit_api_v1_projects__project_id__units__tag__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Unit
+         * @description Delete a unit with its streams and placements.
+         */
+        delete: operations["delete_unit_api_v1_projects__project_id__units__tag__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Configure Unit
+         * @description Merge (or replace) a unit's params.
+         */
+        patch: operations["configure_unit_api_v1_projects__project_id__units__tag__patch"];
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/units/{tag}/position": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Move Unit
+         * @description Move a unit in the pfd or pid view (position or grid).
+         */
+        put: operations["move_unit_api_v1_projects__project_id__units__tag__position_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/tools": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Tools
+         * @description The agent tool catalogue — the same names and JSON schemas the in-app agent
+         *     and the MCP server expose (one source of truth).
+         */
+        get: operations["tools_api_v1_tools_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/views/iso": {
         parameters: {
             query?: never;
@@ -952,6 +1848,19 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** ApiIndex */
+        ApiIndex: {
+            /** Docs */
+            docs: string;
+            /** Mcp */
+            mcp: string;
+            /** Openapi */
+            openapi: string;
+            /** Tools */
+            tools: string;
+            /** Version */
+            version: string;
+        };
         /**
          * Arrhenius
          * @description Arrhenius factor k0·exp(−Ea/(R·T)) with Ea in J/mol.
@@ -1053,6 +1962,58 @@ export interface components {
             outputs: string[];
         };
         /**
+         * CellSet
+         * @description A value with an optional unit (converted to the cell's declared unit).
+         */
+        CellSet: {
+            /** Unit */
+            unit?: string | null;
+            /** Value */
+            value: number | string | boolean;
+        };
+        /**
+         * Change
+         * @description One recorded project change: who, what, and the structured diff.
+         */
+        Change: {
+            /** Actor */
+            actor: string;
+            /**
+             * Args
+             * @default {}
+             */
+            args: {
+                [key: string]: unknown;
+            };
+            /** Created At */
+            created_at?: string | null;
+            /** Diff */
+            diff: {
+                [key: string]: unknown;
+            };
+            /** Kind */
+            kind?: string | null;
+            /** Lines */
+            lines: string[];
+            /** Op */
+            op: string;
+            /** Seq */
+            seq: number | null;
+            /** State */
+            state?: string | null;
+            /** Summary */
+            summary: string;
+            /** Target Seq */
+            target_seq?: number | null;
+            /** Version */
+            version?: number | null;
+        };
+        /** ChangeList */
+        ChangeList: {
+            /** Changes */
+            changes: components["schemas"]["Change"][];
+        };
+        /**
          * Citation
          * @description Where a number or a method comes from.
          */
@@ -1119,6 +2080,11 @@ export interface components {
          * @enum {string}
          */
         ComponentKind: "pipe" | "elbow_90_lr" | "elbow_90_sr" | "elbow_45_lr" | "tee_equal" | "tee_reducing" | "reducer_concentric" | "reducer_eccentric" | "cap" | "flange_weld_neck" | "flange_blind" | "gasket" | "valve" | "olet" | "strainer";
+        /** ComponentsSet */
+        ComponentsSet: {
+            /** Components */
+            components: string[];
+        };
         /** CutPiece */
         CutPiece: {
             /** Length Mm */
@@ -1183,6 +2149,31 @@ export interface components {
              * @default 0.0001
              */
             tolerance: number;
+            /** Upper */
+            upper: number;
+            /** Value */
+            value: number;
+        };
+        /** DesignSpecIn */
+        DesignSpecIn: {
+            /** Id */
+            id: string;
+            /** Lower */
+            lower: number;
+            /**
+             * Manipulated
+             * @description Writable address, e.g. K-101.params.P_out
+             */
+            manipulated: string;
+            /** Max Iterations */
+            max_iterations?: number | null;
+            /**
+             * Target
+             * @description Readable address, e.g. S-005.x.H2O
+             */
+            target: string;
+            /** Tolerance */
+            tolerance?: number | null;
             /** Upper */
             upper: number;
             /** Value */
@@ -1290,6 +2281,56 @@ export interface components {
             /** Tag */
             tag: string;
         };
+        /** ErrorBody */
+        ErrorBody: {
+            /** Code */
+            code: string;
+            /**
+             * Details
+             * @default {}
+             */
+            details: {
+                [key: string]: unknown;
+            };
+            /** Message */
+            message: string;
+        };
+        /**
+         * ErrorEnvelope
+         * @description Every v1 error response.
+         */
+        ErrorEnvelope: {
+            error: components["schemas"]["ErrorBody"];
+        };
+        /**
+         * FeedIn
+         * @description Boundary feed conditions in SI (K, Pa abs, mol/s, mole fractions).
+         */
+        FeedIn: {
+            /** P */
+            P: number;
+            /** T */
+            T: number;
+            /** Composition */
+            composition: {
+                [key: string]: number;
+            };
+            /** Molar Flow */
+            molar_flow: number;
+        };
+        /** FeedPatch */
+        FeedPatch: {
+            /** P */
+            P?: number | null;
+            /** T */
+            T?: number | null;
+            /** Composition */
+            composition?: {
+                [key: string]: number;
+            } | null;
+            /** Molar Flow */
+            molar_flow?: number | null;
+        };
         /**
          * FeedSpec
          * @description Boundary feed conditions; the solver flashes this into a StreamState.
@@ -1332,6 +2373,16 @@ export interface components {
             thermo: string;
             /** Units */
             units: components["schemas"]["UnitSpec"][];
+        };
+        /**
+         * GridIn
+         * @description An axial cell (q, r) of the flowsheet canvas's flat-top hex lattice.
+         */
+        GridIn: {
+            /** Q */
+            q: number;
+            /** R */
+            r: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1448,6 +2499,18 @@ export interface components {
             };
         };
         /**
+         * Mutation
+         * @description Every mutating v1 call answers with the operation result and the change
+         *     it committed (``null`` when the write changed nothing).
+         */
+        Mutation: {
+            change: components["schemas"]["Change"] | null;
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            };
+        };
+        /**
          * Nozzle
          * @description A connection point on equipment. Position is relative to the equipment origin (mm).
          */
@@ -1554,6 +2617,13 @@ export interface components {
              * @default 6000
              */
             rack_elevation_mm: number;
+        };
+        /** PortIn */
+        PortIn: {
+            /** Port */
+            port: string;
+            /** Unit */
+            unit: string;
         };
         /** PortRef */
         PortRef: {
@@ -1871,6 +2941,32 @@ export interface components {
             wegstein_q_min: number;
         };
         /**
+         * StreamCreate
+         * @description A feed (``source`` omitted: ``target`` + ``feed``), a connection (both
+         *     ends) or a product (``target`` omitted).
+         */
+        StreamCreate: {
+            feed?: components["schemas"]["FeedIn"] | null;
+            /**
+             * Id
+             * @description Stream id; omitted: next free S-NNN
+             */
+            id?: string | null;
+            /**
+             * Service
+             * @description Fluid code: PG, PL, W, GL
+             */
+            service?: string | null;
+            source?: components["schemas"]["PortIn"] | null;
+            target?: components["schemas"]["PortIn"] | null;
+        };
+        /** StreamPatch */
+        StreamPatch: {
+            feed?: components["schemas"]["FeedPatch"] | null;
+            /** Service */
+            service?: string | null;
+        };
+        /**
          * StreamSpec
          * @description A stream between two ports. source=None means a feed; target=None means a product.
          */
@@ -2013,6 +3109,14 @@ export interface components {
             /** Units */
             units: number;
         };
+        /** ThermoSet */
+        ThermoSet: {
+            /**
+             * Package
+             * @description Registered thermo package id (GET /api/v1/catalogue/thermo)
+             */
+            package: string;
+        };
         /** TitleBlock */
         TitleBlock: {
             /** Design Pressure Kpag */
@@ -2035,6 +3139,30 @@ export interface components {
             sheet: string;
             /** Test Pressure Kpag */
             test_pressure_kPag: number;
+        };
+        /** ToolInfo */
+        ToolInfo: {
+            /** Description */
+            description: string;
+            /** Input Schema */
+            input_schema: {
+                [key: string]: unknown;
+            };
+            /** Mutates */
+            mutates: boolean;
+            /** Name */
+            name: string;
+        };
+        /**
+         * ToolRun
+         * @description A tool run's output: the result plus the change of a mutating tool.
+         */
+        ToolRun: {
+            change: components["schemas"]["Change"] | null;
+            /** Result */
+            result: {
+                [key: string]: unknown;
+            };
         };
         /** TraceGraph */
         TraceGraph: {
@@ -2060,6 +3188,36 @@ export interface components {
              * @default []
              */
             values: components["schemas"]["ValueNode"][];
+        };
+        /** UnitCreate */
+        UnitCreate: {
+            /** @description Hex-grid placement (exclusive with position) */
+            grid?: components["schemas"]["GridIn"] | null;
+            /**
+             * Kind
+             * @description Unit kind id from GET /api/v1/catalogue/units
+             */
+            kind: string;
+            /**
+             * Params
+             * @description Unit params (SI, see the kind's param schema)
+             */
+            params?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description Free placement in layout units */
+            position?: components["schemas"]["XYIn"] | null;
+            /**
+             * Tag
+             * @description Tag like V-102; omitted: next free tag from the P&ID symbol
+             */
+            tag?: string | null;
+            /**
+             * View
+             * @default pfd
+             * @enum {string}
+             */
+            view: "pfd" | "pid";
         };
         /**
          * UnitError
@@ -2088,6 +3246,30 @@ export interface components {
              * @default false
              */
             upstream: boolean;
+        };
+        /** UnitPatch */
+        UnitPatch: {
+            /** Params */
+            params: {
+                [key: string]: unknown;
+            };
+            /**
+             * Replace
+             * @description true: replace all params; false: merge
+             * @default false
+             */
+            replace: boolean;
+        };
+        /** UnitPosition */
+        UnitPosition: {
+            grid?: components["schemas"]["GridIn"] | null;
+            position?: components["schemas"]["XYIn"] | null;
+            /**
+             * View
+             * @default pfd
+             * @enum {string}
+             */
+            view: "pfd" | "pid";
         };
         /**
          * UnitResult
@@ -2210,6 +3392,13 @@ export interface components {
             /** Y */
             y: number;
         };
+        /** XYIn */
+        XYIn: {
+            /** X */
+            x: number;
+            /** Y */
+            y: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -2222,7 +3411,9 @@ export interface operations {
     list_conversations_api_agent_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2239,12 +3430,23 @@ export interface operations {
                     };
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     agent_message_api_agent_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2277,7 +3479,9 @@ export interface operations {
     transcript_api_agent__conversation_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 conversation_id: string;
             };
@@ -2310,7 +3514,9 @@ export interface operations {
     delete_conversation_api_agent__conversation_id__delete: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 conversation_id: string;
             };
@@ -2346,7 +3552,9 @@ export interface operations {
                 format: string;
                 scope?: string;
             };
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2481,7 +3689,9 @@ export interface operations {
     get_project_api_project_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2496,12 +3706,23 @@ export interface operations {
                     "application/json": components["schemas"]["Project"];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     put_project_api_project_put: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2534,7 +3755,9 @@ export interface operations {
     place_iso_api_project_layout_iso__key__put: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 key: string;
             };
@@ -2571,7 +3794,9 @@ export interface operations {
     place_plot_api_project_layout_plot__tag__put: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 tag: string;
             };
@@ -2606,7 +3831,9 @@ export interface operations {
     place_api_project_layout__view___tag__put: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 view: "pfd" | "pid";
                 tag: string;
@@ -2642,7 +3869,9 @@ export interface operations {
     reset_project_api_project_reset_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -2655,6 +3884,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Project"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -2717,7 +3955,9 @@ export interface operations {
     get_project_route_api_projects__project_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -2750,7 +3990,9 @@ export interface operations {
             query?: {
                 expected_version?: number | null;
             };
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -2785,7 +4027,9 @@ export interface operations {
     delete_project_route_api_projects__project_id__delete: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -2818,7 +4062,9 @@ export interface operations {
     rename_project_route_api_projects__project_id__patch: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -2853,7 +4099,9 @@ export interface operations {
     agent_conversations_project_api_projects__project_id__agent_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -2886,7 +4134,9 @@ export interface operations {
     agent_message_project_api_projects__project_id__agent_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -2921,7 +4171,9 @@ export interface operations {
     agent_transcript_project_api_projects__project_id__agent__conversation_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 conversation_id: string;
                 project_id: string;
@@ -2955,7 +4207,9 @@ export interface operations {
     agent_delete_project_api_projects__project_id__agent__conversation_id__delete: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 conversation_id: string;
                 project_id: string;
@@ -2992,7 +4246,9 @@ export interface operations {
                 format: string;
                 scope?: string;
             };
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3021,7 +4277,9 @@ export interface operations {
     enqueue_solve_job_api_projects__project_id__jobs_solve_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3052,7 +4310,9 @@ export interface operations {
     place_iso_project_api_projects__project_id__layout_iso__key__put: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 key: string;
                 project_id: string;
@@ -3090,7 +4350,9 @@ export interface operations {
     place_plot_project_api_projects__project_id__layout_plot__tag__put: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 tag: string;
                 project_id: string;
@@ -3126,7 +4388,9 @@ export interface operations {
     place_project_api_projects__project_id__layout__view___tag__put: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 view: "pfd" | "pid";
                 tag: string;
@@ -3163,7 +4427,9 @@ export interface operations {
     open_project_route_api_projects__project_id__open_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3194,7 +4460,9 @@ export interface operations {
     route_project_api_projects__project_id__route_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3225,7 +4493,9 @@ export interface operations {
     solve_project_route_api_projects__project_id__solve_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3263,7 +4533,9 @@ export interface operations {
                 /** @description Property: T, P, molar_flow, enthalpy, duty_W, ... */
                 prop?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3294,7 +4566,9 @@ export interface operations {
     trace_audit_api_projects__project_id__trace_audit_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3325,7 +4599,9 @@ export interface operations {
     iso_lines_project_api_projects__project_id__views_iso_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3356,7 +4632,9 @@ export interface operations {
     iso_sheet_project_api_projects__project_id__views_iso__line_number__json_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 line_number: string;
                 project_id: string;
@@ -3388,7 +4666,9 @@ export interface operations {
     iso_svg_project_api_projects__project_id__views_iso__line_number__svg_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 line_number: string;
                 project_id: string;
@@ -3420,7 +4700,9 @@ export interface operations {
     pfd_svg_project_api_projects__project_id__views_pfd_svg_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3451,7 +4733,9 @@ export interface operations {
     pid_svg_project_api_projects__project_id__views_pid_svg_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3482,7 +4766,9 @@ export interface operations {
     plot_svg_project_api_projects__project_id__views_plot_svg_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -3513,7 +4799,9 @@ export interface operations {
     route_api_route_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3528,12 +4816,23 @@ export interface operations {
                     "application/json": components["schemas"]["PipingNetwork"];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     solve_api_solve_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3548,12 +4847,23 @@ export interface operations {
                     "application/json": components["schemas"]["SolvedFlowsheet"];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     study_case_api_study_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3630,7 +4940,9 @@ export interface operations {
     thermo_recommend_api_thermo_recommend_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3647,9 +4959,18 @@ export interface operations {
                     };
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
-    iso_lines_api_views_iso_get: {
+    index_api_v1_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -3664,7 +4985,2939 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": components["schemas"]["ApiIndex"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    catalogue_components_api_v1_catalogue_components_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: {
+                            [key: string]: unknown;
+                        }[];
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    catalogue_thermo_api_v1_catalogue_thermo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: {
+                            [key: string]: unknown;
+                        }[];
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    catalogue_units_api_v1_catalogue_units_get: {
+        parameters: {
+            query?: {
+                /** @description Only kinds with a registered model */
+                registered?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: {
+                            [key: string]: unknown;
+                        }[];
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    catalogue_unit_api_v1_catalogue_units__kind__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    job_api_v1_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    job_events_api_v1_jobs__job_id__events_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    projects_api_v1_projects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: components["schemas"]["ProjectInfo"][];
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    create_api_v1_projects_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectInfo"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    project_api_v1_projects__project_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectInfo"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    delete_api_v1_projects__project_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: boolean;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    rename_api_v1_projects__project_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectRename"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectInfo"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    agent_conversations_api_v1_projects__project_id__agent_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string[];
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    agent_api_v1_projects__project_id__agent_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    cells_api_v1_projects__project_id__cells_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    cell_api_v1_projects__project_id__cells__address__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                address: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    set_cell_api_v1_projects__project_id__cells__address__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                address: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CellSet"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    changes_api_v1_projects__project_id__changes_get: {
+        parameters: {
+            query?: {
+                /** @description Only changes with seq > after */
+                after?: number;
+                limit?: number;
+                /** @description The latest `limit` changes (still oldest first) */
+                newest?: boolean;
+            };
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChangeList"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    change_stream_api_v1_projects__project_id__changes_stream_get: {
+        parameters: {
+            query?: {
+                /** @description Send changes with seq > after; omitted: only new ones */
+                after?: number | null;
+                /** @description false: send the backlog and close */
+                follow?: boolean;
+                seconds?: number;
+            };
+            header?: {
+                "last-event-id"?: string | null;
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    set_components_api_v1_projects__project_id__components_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ComponentsSet"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    design_specs_api_v1_projects__project_id__design_specs_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    add_design_spec_api_v1_projects__project_id__design_specs_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DesignSpecIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    delete_design_spec_api_v1_projects__project_id__design_specs__spec_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                spec_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    export_pfd_api_v1_projects__project_id__exports_pfd_svg_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": unknown;
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    export_pid_api_v1_projects__project_id__exports_pid_svg_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/svg+xml": unknown;
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    export_project_api_v1_projects__project_id__exports_project_json_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    export_sheet_api_v1_projects__project_id__exports_sheet__fmt__get: {
+        parameters: {
+            query?: {
+                scope?: string;
+            };
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                fmt: "csv" | "html";
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    flowsheet_api_v1_projects__project_id__flowsheet_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    redo_api_v1_projects__project_id__redo_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    results_api_v1_projects__project_id__results_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    stream_result_api_v1_projects__project_id__results_streams__stream_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                stream_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    unit_result_api_v1_projects__project_id__results_units__tag__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                tag: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    value_api_v1_projects__project_id__results_values__address__get: {
+        parameters: {
+            query?: {
+                /** @description Convert to this unit, e.g. degC, bar, kW */
+                unit?: string | null;
+            };
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                address: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    solve_api_v1_projects__project_id__solve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    solve_job_api_v1_projects__project_id__solve_jobs_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobEnqueued"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    streams_api_v1_projects__project_id__streams_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: {
+                            [key: string]: unknown;
+                        }[];
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    add_stream_api_v1_projects__project_id__streams_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StreamCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    stream_api_v1_projects__project_id__streams__stream_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                stream_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    delete_stream_api_v1_projects__project_id__streams__stream_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                stream_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    update_stream_api_v1_projects__project_id__streams__stream_id__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                stream_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StreamPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    thermo_api_v1_projects__project_id__thermo_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    set_thermo_api_v1_projects__project_id__thermo_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ThermoSet"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    recommend_api_v1_projects__project_id__thermo_recommend_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    run_api_v1_projects__project_id__tools__name__post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                name: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ToolRun"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    trace_api_v1_projects__project_id__trace_get: {
+        parameters: {
+            query?: {
+                /** @description Only the upstream graph of this value */
+                address?: string | null;
+            };
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TraceGraph"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    audit_api_v1_projects__project_id__trace_audit_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditReport"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    explain_api_v1_projects__project_id__trace_explain_get: {
+        parameters: {
+            query: {
+                /** @description e.g. S-003.T */
+                address: string;
+            };
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    undo_api_v1_projects__project_id__undo_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    units_api_v1_projects__project_id__units_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: {
+                            [key: string]: unknown;
+                        }[];
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    add_unit_api_v1_projects__project_id__units_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    unit_api_v1_projects__project_id__units__tag__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                tag: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    delete_unit_api_v1_projects__project_id__units__tag__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                tag: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    configure_unit_api_v1_projects__project_id__units__tag__patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                tag: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    move_unit_api_v1_projects__project_id__units__tag__position_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path: {
+                tag: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnitPosition"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Mutation"];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    tools_api_v1_tools_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ToolInfo"][];
+                };
+            };
+            /** @description Unknown project, unit, stream, address, ... */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Conflict: duplicate, stale version, nothing to undo */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+            /** @description Invalid input (code names the rule) */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorEnvelope"];
+                };
+            };
+        };
+    };
+    iso_lines_api_views_iso_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
                     "application/json": string[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -3672,7 +7925,9 @@ export interface operations {
     iso_sheet_api_views_iso__line_number__json_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 line_number: string;
             };
@@ -3703,7 +7958,9 @@ export interface operations {
     iso_svg_api_views_iso__line_number__svg_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path: {
                 line_number: string;
             };
@@ -3734,7 +7991,9 @@ export interface operations {
     pfd_svg_api_views_pfd_svg_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3747,6 +8006,15 @@ export interface operations {
                 };
                 content: {
                     "image/svg+xml": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -3754,7 +8022,9 @@ export interface operations {
     pid_svg_api_views_pid_svg_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3769,12 +8039,23 @@ export interface operations {
                     "image/svg+xml": unknown;
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     plot_svg_api_views_plot_svg_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-stomato-actor"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -3787,6 +8068,15 @@ export interface operations {
                 };
                 content: {
                     "image/svg+xml": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

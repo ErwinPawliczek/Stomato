@@ -294,3 +294,16 @@ article.proj { cursor: default }
 .unitbox text { text-anchor: middle; fill: var(--ink); pointer-events: none }
 .unitbox .utag { font: 600 13px var(--f-mono) }
 .unitbox .ukind { font: 400 11px var(--f-body); fill: var(--muted) }
+
+/* Agent panel: the change a tool call made, and the project history. */
+.call-wrap { display: grid; gap: 2px }
+.diff { padding: 4px 10px 6px; font-family: var(--f-mono); font-size: 12px; border-left: 2px solid var(--line, rgba(127,127,127,.4)) }
+.diff-head { margin-bottom: 2px }
+.diff-lines { list-style: none; margin: 0; padding: 0 }
+.diff-line.add { color: var(--ok) }
+.diff-line.del { color: var(--bad, #c0392b) }
+.diff-line.mod { color: var(--warn, #b7791f) }
+.history { --c: 6px; clip-path: var(--oct); background: var(--surface); padding: 8px 12px; margin-bottom: 12px }
+.history-head { display: flex; align-items: center; gap: 8px }
+.history-head h2 { font-size: 14px; margin: 0 }
+.history-list { margin: 6px 0 0; padding-left: 0; list-style: none; display: grid; gap: 2px }

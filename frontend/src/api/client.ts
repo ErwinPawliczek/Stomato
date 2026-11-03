@@ -7,6 +7,7 @@ import { mockPfdSvg } from "../../mocks/pfdSvg";
 import { mockPidSvg } from "../../mocks/pidSvg";
 import { mockPlotSvg } from "../../mocks/plotSvg";
 import mockAgentEvents from "../../mocks/agent-events.json";
+import mockChanges from "../../mocks/changes.json";
 import { findOutput, upstream, type TraceGraph, type TraceTarget } from "../trace";
 import { UNIT_CATALOGUE } from "../unitCatalogue";
 
@@ -25,6 +26,9 @@ export type AuditReport = components["schemas"]["AuditReport"];
 export type AuditFinding = components["schemas"]["AuditFinding"];
 export type { TraceGraph, TraceTarget, ValueNode, OpNode, TraceEdge } from "../trace";
 export type TemplateInfo = components["schemas"]["TemplateInfo"];
+/** One recorded project change (API v1): who, what, and the structured diff. */
+export type Change = components["schemas"]["Change"];
+export type Mutation = components["schemas"]["Mutation"];
 /** POST /api/projects: a name plus at most one source; none means blank. */
 export type ProjectSource = { template: string } | { from_project: string } | { project: Project } | Record<string, never>;
 
@@ -138,15 +142,20 @@ function mockNameFree(name: string, except?: string): void {
     throw new ApiError(`a project named '${name}' already exists`, 409);
 }
 
+/** This tab's identity in the project change log (X-Stomato-Actor): the live
+ * change stream skips this tab's own edits, everything else refreshes the UI. */
+export const TAB_ACTOR = `ui:${Math.random().toString(36).slice(2, 10)}`;
+const BASE_HEADERS = { "Content-Type": "application/json", "X-Stomato-Actor": TAB_ACTOR };
+
 async function http<T>(path: string, init?: RequestInit): Promise<T> {
-  const r = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
+  const r = await fetch(path, { ...init, headers: { ...BASE_HEADERS, ...(init?.headers ?? {}) } });
   if (!r.ok) throw new ApiError(`${init?.method ?? "GET"} ${path}: ${r.status} ${await r.text()}`, r.status);
   return r.json() as Promise<T>;
 }
 
 /** Like http(), for text endpoints (SVG views) instead of JSON. */
 async function httpText(path: string): Promise<string> {
-  const r = await fetch(path);
+  const r = await fetch(path, { headers: { "X-Stomato-Actor": TAB_ACTOR } });
   if (!r.ok) throw new ApiError(`GET ${path}: ${r.status} ${await r.text()}`, r.status);
   return r.text();
 }
@@ -158,7 +167,7 @@ async function httpText(path: string): Promise<string> {
 export type AgentEvent =
   | { type: "text_delta"; text: string }
   | { type: "tool_call"; id: string; name: string; input: unknown }
-  | { type: "tool_result"; id: string; ok: boolean; summary: string; result?: unknown }
+  | { type: "tool_result"; id: string; ok: boolean; summary: string; result?: unknown; change?: Change }
   | { type: "project_changed" }
   | { type: "done"; conversation_id: string; stop_reason: string; usage?: Record<string, number> }
   | { type: "error"; message: string };
@@ -216,7 +225,7 @@ const agent = {
     const path = scoped("/api/agent", "/agent");
     const r = await fetch(path, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: BASE_HEADERS,
       body: JSON.stringify({ message, conversation_id: conversationId }),
     });
     if (!r.ok || !r.body) throw new ApiError(`POST ${path}: ${r.status} ${await r.text()}`, r.status);
@@ -238,9 +247,98 @@ const agent = {
   },
 };
 
+// --- Change history (API v1: docs/agentic-layer.md section 3) ---
+// Every edit from any actor (UI, in-app agent, MCP, API) is a recorded, undoable
+// change. Every UI request carries X-Stomato-Actor: TAB_ACTOR (see http()).
+
+/** The open project's id, else the backend's default project. */
+async function v1Project(): Promise<string> {
+  return encodeURIComponent(openId ?? (await projectId()));
+}
+
+let mockHistory: Change[] = structuredClone(mockChanges) as Change[];
+
+/** Minimal EventSource surface the subscription uses (tests inject a fake). */
+export type ChangeSource = {
+  onmessage: ((e: { data: string }) => void) | null;
+  close(): void;
+};
+let makeSource: ((url: string) => ChangeSource) | null =
+  typeof EventSource === "undefined" ? null : (url) => new EventSource(url) as unknown as ChangeSource;
+
+const history = {
+  /** The latest `limit` changes of the log (oldest first). */
+  async list(limit = 20): Promise<Change[]> {
+    if (MOCK) return structuredClone(mockHistory.slice(-limit));
+    const id = await v1Project();
+    return (await http<{ changes: Change[] }>(`/api/v1/projects/${id}/changes?newest=true&limit=${limit}`)).changes;
+  },
+  async undo(): Promise<Mutation> {
+    return history.move("undo");
+  },
+  async redo(): Promise<Mutation> {
+    return history.move("redo");
+  },
+  async move(kind: "undo" | "redo"): Promise<Mutation> {
+    if (MOCK) {
+      const seq = mockHistory.reduce((m, c) => Math.max(m, c.seq ?? 0), 0) + 1;
+      const change: Change = {
+        seq,
+        kind,
+        op: kind,
+        actor: TAB_ACTOR,
+        summary: kind === "undo" ? "Undo: last change" : "Redo: last change",
+        args: {},
+        diff: {},
+        lines: [],
+      };
+      mockHistory = [...mockHistory, change];
+      return { result: { [kind]: seq - 1 }, change };
+    }
+    const id = await v1Project();
+    return http<Mutation>(`/api/v1/projects/${id}/${kind}`, { method: "POST" });
+  },
+  /** Follow the live change stream (SSE): `onChange` fires for every new change
+   * from any actor. Returns an unsubscribe function. No EventSource (tests,
+   * mocks without an injected source): a no-op. */
+  subscribe(onChange: (c: Change) => void, after?: number): () => void {
+    let source: ChangeSource | null = null;
+    let closed = false;
+    const open = (url: string) => {
+      if (closed || makeSource === null) return;
+      source = makeSource(url);
+      source.onmessage = (e) => {
+        try {
+          const frame = JSON.parse(e.data) as { type?: string; change?: Change };
+          if (frame.type === "change" && frame.change) onChange(frame.change);
+        } catch {
+          // ignore malformed frames; keep-alives carry no data
+        }
+      };
+    };
+    // No `after`: the server streams only changes newer than connect time.
+    const query = after === undefined ? "" : `?after=${after}`;
+    if (MOCK) open(`mock://changes${query}`);
+    else
+      void v1Project()
+        .then((id) => open(`/api/v1/projects/${id}/changes/stream${query}`))
+        .catch(() => undefined);
+    return () => {
+      closed = true;
+      source?.close();
+    };
+  },
+  /** Test seam: replace the EventSource factory (null disables streaming). */
+  _setSource(factory: ((url: string) => ChangeSource) | null) {
+    makeSource = factory;
+  },
+};
+
 export const api = {
   /** Chat with the engine agent over the B-08 SSE stream. */
   agent,
+  /** The project change log: list, undo, redo, and the live change stream. */
+  history,
   /** Registered plugin names per registry kind — feeds the thermo selector and
    * the add-unit palette. The backend validates any choice at solve time. */
   async getMeta(): Promise<Meta> {
@@ -444,5 +542,6 @@ export const api = {
     mockProjects = freshMockProjects();
     mockSeq = 1;
     openId = null;
+    mockHistory = structuredClone(mockChanges) as Change[];
   },
 };

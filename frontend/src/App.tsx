@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, type Project, type TraceTarget } from "./api/client";
-import { onProjectChanged } from "./api/refresh";
+import { followProjectChanges, onProjectChanged } from "./api/refresh";
 import { Rail, type GlobalPage } from "./components/Rail";
 import { applyPalette, loadPalette, savePalette, type PaletteId } from "./theme/palettes";
 import { AgentView } from "./views/AgentView";
@@ -48,6 +48,11 @@ export default function App() {
   }, [refresh]);
 
   useEffect(() => onProjectChanged(() => setRefresh((k) => k + 1)), []);
+
+  // Live edits: while a project is open, follow its change stream so changes
+  // made elsewhere (MCP clients, scripts, another tab) refresh every tab.
+  const openId = page === "project" && project ? api.openProjectId() : null;
+  useEffect(() => (openId === null ? undefined : followProjectChanges()), [openId]);
 
   useEffect(() => applyPalette(palette), [palette]);
 
