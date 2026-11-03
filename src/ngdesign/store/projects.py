@@ -53,8 +53,9 @@ def list_projects(owner: str) -> list[ProjectRow]:
         return list(rows)
 
 
-def create_project(*, name: str, owner: str, project: Project) -> ProjectRow:
-    """Insert a new project row carrying ``project`` as its body."""
+def create_project(*, name: str, owner: str, project: Project, template: str | None = None) -> ProjectRow:
+    """Insert a new project row carrying ``project`` as its body; ``template``
+    records the catalogue template it started from (None: imported/copied)."""
     row = ProjectRow(
         id=uuid.uuid4().hex,
         name=name,
@@ -63,6 +64,7 @@ def create_project(*, name: str, owner: str, project: Project) -> ProjectRow:
         created_at=utcnow(),
         updated_at=utcnow(),
         version=1,
+        template=template,
     )
     with session() as db:
         if (
@@ -134,6 +136,45 @@ class DbProjectStore:
             db.commit()
             db.refresh(row)
             return project
+
+    def rename(self, name: str) -> ProjectRow:
+        """Rename the project: the row name (unique per owner) and the body's
+        ``Project.name`` move together, so the Home list, the drawings' title
+        blocks and an exported file agree. Bumps ``version`` like ``put``.
+        :class:`ProjectExists` when the owner has another project of that name."""
+        with session() as db:
+            row = db.get(ProjectRow, self._id)
+            if row is None:
+                raise ProjectNotFound(f"unknown project {self._id!r}")
+            clash = db.exec(
+                select(ProjectRow).where(
+                    ProjectRow.owner == row.owner, ProjectRow.name == name, ProjectRow.id != self._id
+                )
+            ).first()
+            if clash is not None:
+                raise ProjectExists(f"a project named {name!r} already exists")
+            body = Project.model_validate_json(row.body_json)
+            row.body_json = body.model_copy(update={"name": name}).model_dump_json()
+            row.name = name
+            row.version += 1
+            row.updated_at = utcnow()
+            db.add(row)
+            db.commit()
+            db.refresh(row)
+            return row
+
+    def mark_opened(self) -> ProjectRow:
+        """Stamp ``opened_at`` (the Home view's recency order). Not an edit:
+        ``version`` and ``updated_at`` stay put."""
+        with session() as db:
+            row = db.get(ProjectRow, self._id)
+            if row is None:
+                raise ProjectNotFound(f"unknown project {self._id!r}")
+            row.opened_at = utcnow()
+            db.add(row)
+            db.commit()
+            db.refresh(row)
+            return row
 
     def delete(self) -> None:
         """Delete the bound project and its conversations (explicit cascade)."""

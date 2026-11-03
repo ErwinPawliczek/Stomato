@@ -39,6 +39,11 @@ class ProjectRow(SQLModel, table=True):
     created_at: NaiveDatetime
     updated_at: NaiveDatetime
     version: int = 1
+    # Schema v2 (multi-project): the catalogue template the project started
+    # from (None: imported, copied, or created before v2), and when it was last
+    # opened (None: never opened since v2) for the Home view's recency order.
+    template: str | None = None
+    opened_at: NaiveDatetime | None = None
 
 
 class ConversationRow(SQLModel, table=True):
@@ -78,4 +83,6 @@ class SchemaVersionRow(SQLModel, table=True):
 
 
 #: Current store schema version, bumped when a spec changes the tables above.
-SCHEMA_VERSION = 1
+#: v1: P3-01 tables. v2: ``projects.template`` and ``projects.opened_at``
+#: (nullable; ``db.init_db`` adds them to a v1 database in place).
+SCHEMA_VERSION = 2
