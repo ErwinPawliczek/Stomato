@@ -474,21 +474,43 @@ def _snapshot_shomate(kept: set[str]) -> list[dict[str, Any]]:
 
 
 _CEA_PHASE_TAG = re.compile(r"^(.*?)(\([^()]*\))?$")
+_CEA_ISOMER_MIXTURE = re.compile(r"mixture of isomers|cis & trans", re.IGNORECASE)
 
 
-def _cea_records(cache: Path) -> dict[tuple[str, str], dict[str, Any]]:
+def _cea_records(cache: Path, page_formulas: dict[str, str]) -> dict[tuple[str, str], dict[str, Any]]:
     """NASA CEA 9-coefficient records mapped to a CAS and a phase.
 
     A record is named by formula, with an isomer name after a comma
     ("C4H10,n-butane"). The isomer name is tried first, then the formula, and the match
     must have the record's formula. An ambiguous formula is skipped, never guessed, and
     so are ions and the "Inert" copies.
+
+    A record whose name does not resolve (CEA writes chlorine and aluminium as ``CL`` and
+    ``AL`` in names, and some names are structural, ``CH2Br-COOH``) is then matched by
+    its own elemental formula (record line 2), but only when that formula is unique on
+    both sides (one neutral species here carries it, no other CEA record of that phase
+    does) and the species' WebBook page states the same formula. The page is the
+    independent check on identity: a PubChem formula here can belong to another
+    substance under that CAS (13596-11-7, AlOCl, is filed as AlClHO, which is the
+    formula of CEA's HOAlCl). Name matches take precedence. A record that describes an equilibrium
+    mixture of isomers (its reference says so: C2F2Cl2, C2HClF2) never stands for one
+    species.
     """
     path = cache / "cea" / "thermo.inp"
     if not path.exists():
         return {}
     mapped: dict[tuple[str, str], dict[str, Any]] = {}
-    for record in parse_thermo_inp(path.read_text(encoding="utf8", errors="replace")):
+    records = parse_thermo_inp(path.read_text(encoding="utf8", errors="replace"))
+    per_formula: Counter[tuple[str, str]] = Counter()
+    for record in records:
+        phase_key = "gas" if record["phase_flag"] == 0 else "condensed"
+        if record["elements"]:
+            try:
+                per_formula[(parse_formula(record["elements"]).hill, phase_key)] += 1
+            except FormulaError:
+                continue
+    by_elements: list[tuple[str, dict[str, Any]]] = []
+    for record in records:
         name = record["name"]
         base, _, alias = name.partition(",")
         match = _CEA_PHASE_TAG.match(base)
@@ -506,10 +528,10 @@ def _cea_records(cache: Path) -> dict[tuple[str, str], dict[str, Any]]:
             if species is None:
                 species = chemdb.find(formula)
             if parse_formula(species.formula).hill != parse_formula(formula).hill:
-                DROPPED["cea_formula_differs"] += 1
+                by_elements.append((phase, record))
                 continue
         except (chemdb.ChemDbError, FormulaError):
-            DROPPED["cea_unmatched"] += 1
+            by_elements.append((phase, record))
             continue
         held = mapped.get((species.cas, phase))
         if held is None:
@@ -517,6 +539,23 @@ def _cea_records(cache: Path) -> dict[tuple[str, str], dict[str, Any]]:
         elif abs(held["pieces"][-1]["Tmax"] - record["pieces"][0]["Tmin"]) < 1e-6:
             # one phase split across records at a transition (iron's lambda point): join them
             held["pieces"] += record["pieces"]
+    for phase, record in by_elements:
+        if _CEA_ISOMER_MIXTURE.search(record["reference"]):
+            DROPPED["cea_isomer_mixture"] += 1
+            continue
+        try:
+            hill = parse_formula(record["elements"] or "").hill
+        except FormulaError:
+            DROPPED["cea_unmatched"] += 1
+            continue
+        neutral = [s for s in chemdb.by_formula(hill) if s.charge == 0]
+        if len(neutral) != 1 or per_formula[(hill, "gas" if phase == "gas" else "condensed")] != 1:
+            DROPPED["cea_unmatched"] += 1
+            continue
+        if (neutral[0].cas, phase) in mapped or page_formulas.get(neutral[0].cas) != hill:
+            DROPPED["cea_unmatched"] += 1
+            continue
+        mapped[(neutral[0].cas, phase)] = {**record, "pieces": list(record["pieces"])}
     return mapped
 
 
@@ -973,7 +1012,7 @@ def _collect_all(cache: Path) -> dict[str, Any]:
     _collect_nist(rows, pages)
     janaf_rows, janaf_identity = _janaf(cache)
     _collect_janaf(rows, janaf_rows)
-    cea = _cea_records(cache)
+    cea = _cea_records(cache, {p.cas: _hill(p.formula) or p.formula for p in pages})
     _collect_cea(rows, cea)
     names = _collect_bundled(rows)
     _collect_coolprop(rows)

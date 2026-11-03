@@ -1289,10 +1289,12 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10025-67-9,Gf_liquid,-39271,J/mol,,,janaf,A,JANAF table Cl-116,1
 10025-67-9,Hf_gas,-16736,J/mol,,,janaf,A,JANAF table Cl-117,1
 10025-67-9,Hf_gas,-16740,J/mol,,,nist_review,A,Chase; 1998,0
+10025-67-9,Hf_gas,-16736,J/mol,,,nasa_cea,B,Chase;1998 p859 6/78.,0
 10025-67-9,Hf_gas,-16740,J/mol,,,nist_snapshot,B,,0
 10025-67-9,Hf_gas,-16740,J/mol,,,yaws,C,,0
 10025-67-9,Hf_liquid,-58158,J/mol,,,janaf,A,JANAF table Cl-116,1
 10025-67-9,Hf_liquid,-58160,J/mol,,,nist_review,A,Chase; 1998,0
+10025-67-9,Hf_liquid,-58158,J/mol,,,nasa_cea,B,Chase;1998 p858.,0
 10025-67-9,Hf_liquid,-59400,J/mol,,,crc_thermo,B,,0
 10025-67-9,Hf_liquid,-58160,J/mol,,,nist_snapshot,B,,0
 10025-67-9,Hvap,41100,J/mol,,321,nist,B,Based on data from 306. to 439. K.; AC,1
@@ -1346,6 +1348,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10025-78-2,Gf_liquid,-482500,J/mol,,,crc_thermo,B,,1
 10025-78-2,Hf_gas,-496222,J/mol,,,janaf,A,JANAF table Cl-138,1
 10025-78-2,Hf_gas,-496220,J/mol,,,nist_review,A,Chase; 1998,0
+10025-78-2,Hf_gas,-496222,J/mol,,,nasa_cea,B,Chase;1998 880.,0
 10025-78-2,Hf_gas,-513000,J/mol,,,crc_thermo,B,,0
 10025-78-2,Hf_gas,-496220,J/mol,,,nist_snapshot,B,,0
 10025-78-2,Hf_gas,-496220,J/mol,,,yaws,C,,0
@@ -1376,7 +1379,8 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10025-78-2,omega,0.1935,1,,,psrk,B,,1
 10025-78-2,omega,0.203,1,,,yaws,C,,0
 10025-78-2,rho_liquid,1331,kg/m3,,,crc_constants,B,,1
-10025-82-8,Hf_gas,-374000,J/mol,,,crc_thermo,B,,1
+10025-82-8,Hf_gas,-369693.227,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p286 pt2 p228.,1
+10025-82-8,Hf_gas,-374000,J/mol,,,crc_thermo,B,,0
 10025-82-8,Hf_gas,-374000,J/mol,,,yaws,C,,0
 10025-82-8,Hf_solid,-537200,J/mol,,,crc_thermo,B,,1
 10025-82-8,Hfus,27000,J/mol,,,crc_hfus,B,,1
@@ -1402,6 +1406,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10025-87-3,Gf_liquid,-520800,J/mol,,,crc_thermo,B,,1
 10025-87-3,Hf_gas,-559819,J/mol,,,janaf,A,JANAF table Cl-140,1
 10025-87-3,Hf_gas,-559820,J/mol,,,nist_review,A,Chase; 1998,0
+10025-87-3,Hf_gas,-568400,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p436 pt2 p287.,0
 10025-87-3,Hf_gas,-558500,J/mol,,,crc_thermo,B,,0
 10025-87-3,Hf_gas,-559820,J/mol,,,nist_snapshot,B,,0
 10025-87-3,Hf_gas,-559820,J/mol,,,yaws,C,,0
@@ -1476,6 +1481,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10026-04-7,Gf_liquid,-619800,J/mol,,,crc_thermo,B,,1
 10026-04-7,Hf_gas,-662746,J/mol,,,janaf,A,JANAF table Cl-160,1
 10026-04-7,Hf_gas,-662750,J/mol,,,nist_review,A,Chase; 1998,0
+10026-04-7,Hf_gas,-662200,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p276 pt2 p246.,0
 10026-04-7,Hf_gas,-657000,J/mol,,,crc_thermo,B,,0
 10026-04-7,Hf_gas,-662750,J/mol,,,nist_snapshot,B,,0
 10026-04-7,Hf_gas,-662750,J/mol,,,yaws,C,,0
@@ -1610,6 +1616,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10026-12-7,Gf_solid,-683200,J/mol,,,crc_thermo,B,,0
 10026-12-7,Hf_gas,-703330,J/mol,,,janaf,A,JANAF table Cl-176,1
 10026-12-7,Hf_gas,-703330,J/mol,,,nist_review,A,Chase; 1998,0
+10026-12-7,Hf_gas,-703330,J/mol,,,nasa_cea,B,Chase;1998 p918.,0
 10026-12-7,Hf_gas,-703700,J/mol,,,crc_thermo,B,,0
 10026-12-7,Hf_gas,-703330,J/mol,,,nist_snapshot,B,,0
 10026-12-7,Hf_gas,-703330,J/mol,,,yaws,C,,0
@@ -1649,6 +1656,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10026-13-8,Gf_gas,-290271,J/mol,,,janaf,A,JANAF table Cl-177,1
 10026-13-8,Gf_gas,-305000,J/mol,,,crc_thermo,B,,0
 10026-13-8,Hf_gas,-360184,J/mol,,,janaf,A,JANAF table Cl-177,1
+10026-13-8,Hf_gas,-376000,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p435 pt2 p286.,0
 10026-13-8,Hf_gas,-374900,J/mol,,,crc_thermo,B,,0
 10026-13-8,Hf_gas,-360180,J/mol,,,yaws,C,,0
 10026-13-8,Hf_solid,-443500,J/mol,,,crc_thermo,B,,1
@@ -2169,7 +2177,8 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10038-98-9,Cp_gas,96.1,J/(mol K),,298.15,crc_thermo,B,,1
 10038-98-9,Gf_gas,-457300,J/mol,,,crc_thermo,B,,1
 10038-98-9,Gf_liquid,-462700,J/mol,,,crc_thermo,B,,1
-10038-98-9,Hf_gas,-495800,J/mol,,,crc_thermo,B,,1
+10038-98-9,Hf_gas,-500000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p332 pt2 p286.,1
+10038-98-9,Hf_gas,-495800,J/mol,,,crc_thermo,B,,0
 10038-98-9,Hf_gas,-495800,J/mol,,,yaws,C,,0
 10038-98-9,Hf_liquid,-531800,J/mol,,,crc_thermo,B,,1
 10038-98-9,Hfus,8520,J/mol,,221.7,nist,B,Devyatykh; Gusev; et al.; 1986,1
@@ -2297,6 +2306,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10043-52-4,Gf_solid,-748800,J/mol,,,crc_thermo,B,,0
 10043-52-4,Hf_gas,-471537,J/mol,,,janaf,A,JANAF table Ca-012,1
 10043-52-4,Hf_gas,-471540,J/mol,,,nist_review,A,Chase; 1998,0
+10043-52-4,Hf_gas,-485243.477,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p470 pt2 p366.,0
 10043-52-4,Hf_gas,-471540,J/mol,,,nist_snapshot,B,,0
 10043-52-4,Hf_gas,-471540,J/mol,,,yaws,C,,0
 10043-52-4,Hf_liquid,-774094,J/mol,,,janaf,A,JANAF table Ca-010,1
@@ -2366,6 +2376,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10049-04-4,Hf_aq,75770.81236,J/mol,,,sander,B,gas + Sander (k 0.996 mol/(kg bar); dlnH/d(1/T) -3467 K),1
 10049-04-4,Hf_gas,104600,J/mol,,,janaf,A,JANAF table Cl-061,1
 10049-04-4,Hf_gas,104600,J/mol,,,nist_review,A,Chase; 1998,0
+10049-04-4,Hf_gas,105000,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p182 pt2 p91.,0
 10049-04-4,Hf_gas,102500,J/mol,,,crc_thermo,B,,0
 10049-04-4,Hf_gas,104600,J/mol,,,nist_snapshot,B,,0
 10049-04-4,Hf_gas,98040,J/mol,,,yaws,C,,0
@@ -2403,10 +2414,12 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10049-06-6,Gf_solid,-464400,J/mol,,,crc_thermo,B,,0
 10049-06-6,Hf_gas,-237233,J/mol,,,janaf,A,JANAF table Cl-124,1
 10049-06-6,Hf_gas,-237230,J/mol,,,nist_review,A,Chase; 1998,0
+10049-06-6,Hf_gas,-237230,J/mol,,,nasa_cea,B,Chase;1998 p866.,0
 10049-06-6,Hf_gas,-237230,J/mol,,,nist_snapshot,B,,0
 10049-06-6,Hf_gas,-237230,J/mol,,,yaws,C,,0
 10049-06-6,Hf_solid,-515469,J/mol,,,janaf,A,JANAF table Cl-123,1
 10049-06-6,Hf_solid,-515470,J/mol,,,nist_review,A,Chase; 1998,0
+10049-06-6,Hf_solid,-515470,J/mol,,,nasa_cea,B,Chase;1998 p865.,0
 10049-06-6,Hf_solid,-513800,J/mol,,,crc_thermo,B,,0
 10049-06-6,Hf_solid,-515470,J/mol,,,nist_snapshot,B,,0
 10049-06-6,Hfus,34300,J/mol,,,crc_hfus,B,,1
@@ -3967,6 +3980,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10294-34-5,Gf_liquid,-387400,J/mol,,,crc_thermo,B,,1
 10294-34-5,Hf_gas,-402961,J/mol,,,janaf,A,JANAF table B-031,1
 10294-34-5,Hf_gas,-402960,J/mol,,,nist_review,A,Chase; 1998,0
+10294-34-5,Hf_gas,-404500,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p76 pt2 p53.,0
 10294-34-5,Hf_gas,-403800,J/mol,,,crc_thermo,B,,0
 10294-34-5,Hf_gas,-402960,J/mol,,,nist_snapshot,B,,0
 10294-34-5,Hf_gas,-402960,J/mol,,,yaws,C,,0
@@ -4645,6 +4659,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10361-37-2,Gf_solid,-806700,J/mol,,,crc_thermo,B,,0
 10361-37-2,Hf_gas,-498733,J/mol,,,janaf,A,JANAF table Ba-016,1
 10361-37-2,Hf_gas,-498730,J/mol,,,nist_review,A,Chase; 1998,0
+10361-37-2,Hf_gas,-499301.387,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p575 pt2 p436.,0
 10361-37-2,Hf_gas,-498730,J/mol,,,nist_snapshot,B,,0
 10361-37-2,Hf_gas,-498730,J/mol,,,yaws,C,,0
 10361-37-2,Hf_liquid,-832467,J/mol,,,janaf,A,JANAF table Ba-014,1
@@ -5311,6 +5326,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10476-85-4,Gf_solid,-781100,J/mol,,,crc_thermo,B,,0
 10476-85-4,Hf_gas,-473210,J/mol,,,janaf,A,JANAF table Cl-122,1
 10476-85-4,Hf_gas,-473210,J/mol,,,nist_review,A,Chase; 1998,0
+10476-85-4,Hf_gas,-484813.902,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p520 pt2 p401.,0
 10476-85-4,Hf_gas,-473210,J/mol,,,nist_snapshot,B,,0
 10476-85-4,Hf_gas,-473210,J/mol,,,yaws,C,,0
 10476-85-4,Hf_liquid,-805351,J/mol,,,janaf,A,JANAF table Cl-120,1
@@ -6260,10 +6276,12 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 10545-99-0,Gf_liquid,-28485,J/mol,,,janaf,A,JANAF table Cl-113,1
 10545-99-0,Hf_gas,-17573,J/mol,,,janaf,A,JANAF table Cl-114,1
 10545-99-0,Hf_gas,-17570,J/mol,,,nist_review,A,Chase; 1998,0
+10545-99-0,Hf_gas,-17573,J/mol,,,nasa_cea,B,Chase;1998 p856.,0
 10545-99-0,Hf_gas,-17570,J/mol,,,nist_snapshot,B,,0
 10545-99-0,Hf_gas,-17570,J/mol,,,yaws,C,,0
 10545-99-0,Hf_liquid,-49790,J/mol,,,janaf,A,JANAF table Cl-113,1
 10545-99-0,Hf_liquid,-49790,J/mol,,,nist_review,A,Chase; 1998,0
+10545-99-0,Hf_liquid,-49790,J/mol,,,nasa_cea,B,Chase;1998 p855.,0
 10545-99-0,Hf_liquid,-50000,J/mol,,,crc_thermo,B,,0
 10545-99-0,Hf_liquid,-49790,J/mol,,,nist_snapshot,B,,0
 10545-99-0,Hvap,43800,J/mol,,280,nist,B,Based on data from 265. to 348. K.; AC,1
@@ -15667,6 +15685,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 11092-32-3,Gf_gas,-91679,J/mol,,,janaf,A,JANAF table Al-077,1
 11092-32-3,Hf_gas,-86190,J/mol,,,janaf,A,JANAF table Al-077,1
 11092-32-3,Hf_gas,-86190,J/mol,,,nist_review,A,Chase; 1998,0
+11092-32-3,Hf_gas,-38657.871,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p126 pt2 p99.,0
 11092-32-3,Hf_gas,-86190,J/mol,,,nist_snapshot,B,,0
 11092-32-3,S0_gas,251.832,J/(mol K),,,janaf,A,JANAF table Al-077,1
 11092-32-3,S0_gas,251.83,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -24311,6 +24330,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12232-29-0,Gf_gas,-724021,J/mol,,,janaf,A,JANAF table Be-056,1
 12232-29-0,Hf_gas,-748936,J/mol,,,janaf,A,JANAF table Be-056,1
 12232-29-0,Hf_gas,-748940,J/mol,,,nist_review,A,Chase; 1998,0
+12232-29-0,Hf_gas,-819604.973,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p374 pt2 p299.,0
 12232-29-0,Hf_gas,-748940,J/mol,,,nist_snapshot,B,,0
 12232-29-0,S0_gas,381.475,J/(mol K),,,janaf,A,JANAF table Be-056,1
 12232-29-0,S0_gas,381.37,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -24332,6 +24352,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12252-63-0,Gf_gas,-400300,J/mol,,,janaf,A,JANAF table Al-094,1
 12252-63-0,Hf_gas,-394551,J/mol,,,janaf,A,JANAF table Al-094,1
 12252-63-0,Hf_gas,-394550,J/mol,,,nist_review,A,Chase; 1998,0
+12252-63-0,Hf_gas,-403095.587,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p131 pt2 p102.,0
 12252-63-0,Hf_gas,-394550,J/mol,,,nist_snapshot,B,,0
 12252-63-0,S0_gas,280.98,J/(mol K),,,janaf,A,JANAF table Al-094,1
 12252-63-0,S0_gas,280.9,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -24358,6 +24379,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12258-95-6,Gf_gas,-656856,J/mol,,,janaf,A,JANAF table Cl-078,1
 12258-95-6,Hf_gas,-659817,J/mol,,,janaf,A,JANAF table Cl-078,1
 12258-95-6,Hf_gas,-659820,J/mol,,,nist_review,A,Chase; 1998,0
+12258-95-6,Hf_gas,-644658.398,J/mol,,,nasa_cea,B,Gurvich;1982 pt1 p487 pt2 p510.,0
 12258-95-6,Hf_gas,-659820,J/mol,,,nist_snapshot,B,,0
 12258-95-6,S0_gas,383.445,J/(mol K),,,janaf,A,JANAF table Cl-078,1
 12258-95-6,S0_gas,383.44,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -24366,6 +24388,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12258-97-8,Gf_gas,-617774,J/mol,,,janaf,A,JANAF table Cl-091,1
 12258-97-8,Hf_gas,-617642,J/mol,,,janaf,A,JANAF table Cl-091,1
 12258-97-8,Hf_gas,-617640,J/mol,,,nist_review,A,Chase; 1998,0
+12258-97-8,Hf_gas,-615393.663,J/mol,,,nasa_cea,B,Gurvich;1982 pt1 p393 pt2 p421.,0
 12258-97-8,Hf_gas,-617640,J/mol,,,nist_snapshot,B,,0
 12258-97-8,S0_gas,352.864,J/(mol K),,,janaf,A,JANAF table Cl-091,1
 12258-97-8,S0_gas,352.86,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -24374,6 +24397,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12258-98-9,Gf_gas,-565929,J/mol,,,janaf,A,JANAF table Cl-098,1
 12258-98-9,Hf_gas,-566095,J/mol,,,janaf,A,JANAF table Cl-098,1
 12258-98-9,Hf_gas,-566100,J/mol,,,nist_review,A,Chase; 1998,0
+12258-98-9,Hf_gas,-564401.783,J/mol,,,nasa_cea,B,Gurvich;1982 pt1 p338 pt2 p376.,0
 12258-98-9,Hf_gas,-566100,J/mol,,,nist_snapshot,B,,0
 12258-98-9,S0_gas,325.432,J/(mol K),,,janaf,A,JANAF table Cl-098,1
 12258-98-9,S0_gas,325.43,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -25579,6 +25603,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 12345-57-2,Gf_gas,-600788,J/mol,,,janaf,A,JANAF table Cl-092,1
 12345-57-2,Hf_gas,-598546,J/mol,,,janaf,A,JANAF table Cl-092,1
 12345-57-2,Hf_gas,-598550,J/mol,,,nist_review,A,Chase; 1998,0
+12345-57-2,Hf_gas,-597538.789,J/mol,,,nasa_cea,B,Gurvich;1982 pt1 p282 pt2 p315.,0
 12345-57-2,Hf_gas,-598550,J/mol,,,nist_snapshot,B,,0
 12345-57-2,S0_gas,288.767,J/(mol K),,,janaf,A,JANAF table Cl-092,1
 12345-57-2,S0_gas,288.74,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -26259,6 +26284,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 124-48-1,Cp_gas,69.2,J/(mol K),,298.15,crc_thermo,B,,1
 124-48-1,Hf_aq,-44572.36364,J/mol,,,sander,B,gas + Sander (k 0.9483 mol/(kg bar); dlnH/d(1/T) -5000 K),1
 124-48-1,Hf_gas,-3000,J/mol,5500,,atct,A,ATcT 1.112,1
+124-48-1,Hf_gas,10000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p173 pt2 p155.,0
 124-48-1,S0_aq,187.8238265,J/(mol K),,,sander,B,gas + Sander (k 0.9483 mol/(kg bar); dlnH/d(1/T) -5000 K),1
 124-48-1,S0_gas,327.7,J/(mol K),,,crc_thermo,B,,1
 124-48-1,Tb,393.15,K,,,crc_constants,B,,1
@@ -26719,6 +26745,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 127-18-4,Hf_gas,-12426,J/mol,,,janaf,A,JANAF table C-117,1
 127-18-4,Hf_gas,-12430,J/mol,,,nist_review,A,Chase; 1998,0
 127-18-4,Hf_gas,-24000,J/mol,4000,,nist_review,A,Manion; 2002,0
+127-18-4,Hf_gas,-24200,J/mol,,,nasa_cea,B,Hf:Manion;2002. Gurvich;1991 pt1 p115 pt2 p88.,0
 127-18-4,Hf_gas,-10900,J/mol,,,crc_thermo,B,,0
 127-18-4,Hf_gas,-15000,J/mol,,,nist,B,Kirkbride; 1956,0
 127-18-4,Hf_gas,-18714.71,J/mol,,,nist_snapshot,B,,0
@@ -29254,6 +29281,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13283-01-7,Gf_solid,-455544,J/mol,,,janaf,A,JANAF table Cl-189,1
 13283-01-7,Hf_gas,-493712,J/mol,,,janaf,A,JANAF table Cl-193,1
 13283-01-7,Hf_gas,-493710,J/mol,,,nist_review,A,Chase; 1998,0
+13283-01-7,Hf_gas,-493712,J/mol,,,nasa_cea,B,Chase;1998 p935.,0
 13283-01-7,Hf_gas,-513800,J/mol,,,crc_thermo,B,,0
 13283-01-7,Hf_gas,-493710,J/mol,,,nist_snapshot,B,,0
 13283-01-7,Hf_gas,-493710,J/mol,,,yaws,C,,0
@@ -29882,6 +29910,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1344-28-1,Gf_liquid,-1532025,J/mol,,,janaf,A,JANAF table Al-100,1
 1344-28-1,Gf_solid,-1582275,J/mol,,,janaf,A,JANAF table Al-096,1
 1344-28-1,Gf_solid,-1582300,J/mol,,,crc_thermo,B,,0
+1344-28-1,Hf_gas,-546890.53,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p137 pt2 p105.,1
 1344-28-1,Hf_liquid,-1620567,J/mol,,,janaf,A,JANAF table Al-100,1
 1344-28-1,Hf_liquid,-1620570,J/mol,,,nist_review,A,Chase; 1998,0
 1344-28-1,Hf_liquid,-1620570,J/mol,,,nist_snapshot,B,,0
@@ -30369,6 +30398,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13463-30-4,Gf_gas,-491873,J/mol,,,janaf,A,JANAF table Cl-159,1
 13463-30-4,Hf_gas,-552403,J/mol,,,janaf,A,JANAF table Cl-159,1
 13463-30-4,Hf_gas,-552410,J/mol,,,nist_review,A,Chase; 1998,0
+13463-30-4,Hf_gas,-327430.362,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p433 pt2 p359.,0
 13463-30-4,Hf_gas,-552410,J/mol,,,nist_snapshot,B,,0
 13463-30-4,Hf_gas,-552400,J/mol,,,yaws,C,,0
 13463-30-4,Hf_liquid,-329300,J/mol,,,crc_thermo,B,,1
@@ -30513,7 +30543,8 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13465-09-3,Hsub_298,147000,J/mol,4000,,nist,B,BRUNETTI; PALCHETTI; et al.; 1997,1
 13465-09-3,Tm,693.15,K,,,crc_constants,B,,1
 13465-09-3,rho_liquid,4740,kg/m3,,,crc_constants,B,,1
-13465-10-6,Hf_gas,-75000,J/mol,,,crc_thermo,B,,1
+13465-10-6,Hf_gas,-72147.883,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p281 pt2 p225,1
+13465-10-6,Hf_gas,-75000,J/mol,,,crc_thermo,B,,0
 13465-10-6,Hf_gas,-75000,J/mol,,,yaws,C,,0
 13465-10-6,Hf_solid,-186200,J/mol,,,crc_thermo,B,,1
 13465-10-6,Hfus,9200,J/mol,,,crc_hfus,B,,1
@@ -30621,6 +30652,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13465-78-6,Gf_gas,-119292,J/mol,,,janaf,A,JANAF table Cl-028,1
 13465-78-6,Hf_gas,-141838,J/mol,,,janaf,A,JANAF table Cl-028,1
 13465-78-6,Hf_gas,-141840,J/mol,,,nist_review,A,Chase; 1998,0
+13465-78-6,Hf_gas,-141838,J/mol,,,nasa_cea,B,Chase;1998 p764.,0
 13465-78-6,Hf_gas,-141840,J/mol,,,nist_snapshot,B,,0
 13465-78-6,Hf_gas,-141840,J/mol,,,yaws,C,,0
 13465-78-6,Hvap,21000,J/mol,,242.75,crc_hvap,B,,1
@@ -31080,6 +31112,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13497-96-6,Gf_gas,-778449,J/mol,,,janaf,A,JANAF table Al-024,1
 13497-96-6,Hf_gas,-790776,J/mol,,,janaf,A,JANAF table Al-024,1
 13497-96-6,Hf_gas,-790780,J/mol,,,nist_review,A,Chase; 1998,0
+13497-96-6,Hf_gas,-791395.404,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p183 pt2 p146.,0
 13497-96-6,Hf_gas,-790780,J/mol,,,nist_snapshot,B,,0
 13497-96-6,S0_gas,311.403,J/(mol K),,,janaf,A,JANAF table Al-024,1
 13497-96-6,S0_gas,311.31,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -31315,10 +31348,12 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13520-76-8,Gf_solid,-702781,J/mol,,,janaf,A,JANAF table Cl-106,1
 13520-76-8,Hf_gas,-671532,J/mol,,,janaf,A,JANAF table Cl-107,1
 13520-76-8,Hf_gas,-671530,J/mol,,,nist_review,A,Chase; 1998,0
+13520-76-8,Hf_gas,-671532,J/mol,,,nasa_cea,B,Chase;1998 p849.,0
 13520-76-8,Hf_gas,-671530,J/mol,,,nist_snapshot,B,,0
 13520-76-8,Hf_gas,-671530,J/mol,,,yaws,C,,0
 13520-76-8,Hf_solid,-780316,J/mol,,,janaf,A,JANAF table Cl-106,1
 13520-76-8,Hf_solid,-780320,J/mol,,,nist_review,A,Chase; 1998,0
+13520-76-8,Hf_solid,-780316,J/mol,,,nasa_cea,B,Chase;1998 p848.,0
 13520-76-8,Hf_solid,-780320,J/mol,,,nist_snapshot,B,,0
 13520-76-8,S0_gas,353.927,J/(mol K),,,janaf,A,JANAF table Cl-107,1
 13520-76-8,S0_gas,353.92,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -31343,6 +31378,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13520-78-0,Gf_solid,-549292,J/mol,,,janaf,A,JANAF table Cl-155,1
 13520-78-0,Hf_gas,-573493,J/mol,,,janaf,A,JANAF table Cl-158,1
 13520-78-0,Hf_gas,-573490,J/mol,,,nist_review,A,Chase; 1998,0
+13520-78-0,Hf_gas,-573493,J/mol,,,nasa_cea,B,Chase;1998 p900.,0
 13520-78-0,Hf_gas,-573490,J/mol,,,nist_snapshot,B,,0
 13520-78-0,Hf_gas,-573490,J/mol,,,yaws,C,,0
 13520-78-0,Hf_liquid,-630573,J/mol,,,janaf,A,JANAF table Cl-156,1
@@ -31653,6 +31689,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13595-81-8,Gf_gas,-74100,J/mol,,,crc_thermo,B,,0
 13595-81-8,Hf_gas,-51463,J/mol,,,janaf,A,JANAF table Al-014,1
 13595-81-8,Hf_gas,-51460,J/mol,,,nist_review,A,Chase; 1998,0
+13595-81-8,Hf_gas,-51007.443,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p168 pt2 p131.,0
 13595-81-8,Hf_gas,-47700,J/mol,,,crc_thermo,B,,0
 13595-81-8,Hf_gas,-51460,J/mol,,,nist_snapshot,B,,0
 13595-81-8,S0_gas,227.957,J/(mol K),,,janaf,A,JANAF table Al-014,1
@@ -31878,6 +31915,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13637-63-3,Gf_gas,-146725,J/mol,,,janaf,A,JANAF table Cl-023,1
 13637-63-3,Hf_gas,-238488,J/mol,,,janaf,A,JANAF table Cl-023,1
 13637-63-3,Hf_gas,-238490,J/mol,,,nist_review,A,Chase; 1998,0
+13637-63-3,Hf_gas,-238000,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p194 pt2 p99.,0
 13637-63-3,Hf_gas,-238490,J/mol,,,nist_snapshot,B,,0
 13637-63-3,Hf_gas,-238490,J/mol,,,yaws,C,,0
 13637-63-3,Pc,5268900,Pa,,,mathews,B,,1
@@ -31924,6 +31962,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13637-84-8,Gf_gas,-512558,J/mol,,,janaf,A,JANAF table Cl-018,1
 13637-84-8,Hf_gas,-556472,J/mol,,,janaf,A,JANAF table Cl-018,1
 13637-84-8,Hf_gas,-556470,J/mol,,,nist_review,A,Chase; 1998,0
+13637-84-8,Hf_gas,-556472,J/mol,,,nasa_cea,B,Chase;1998 p754.,0
 13637-84-8,Hf_gas,-556470,J/mol,,,nist_snapshot,B,,0
 13637-84-8,Hvap,29000,J/mol,,226,nist,B,Based on data from 211. to 300. K.,1
 13637-84-8,S0_gas,302.849,J/(mol K),,,janaf,A,JANAF table Cl-018,1
@@ -32116,6 +32155,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13701-67-2,Gf_liquid,-464800,J/mol,,,crc_thermo,B,,1
 13701-67-2,Hf_gas,-489110,J/mol,,,janaf,A,JANAF table B-086,1
 13701-67-2,Hf_gas,-489110,J/mol,,,nist_review,A,Chase; 1998,0
+13701-67-2,Hf_gas,-490000,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p77 pt2 p54.,0
 13701-67-2,Hf_gas,-490400,J/mol,,,crc_thermo,B,,0
 13701-67-2,Hf_gas,-489110,J/mol,,,nist_snapshot,B,,0
 13701-67-2,Hf_gas,-489110,J/mol,,,yaws,C,,0
@@ -32169,6 +32209,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13703-91-8,Gf_gas,-1549034,J/mol,,,janaf,A,JANAF table B-106,1
 13703-91-8,Hf_gas,-1631760,J/mol,,,janaf,A,JANAF table B-106,1
 13703-91-8,Hf_gas,-1631760,J/mol,,,nist_review,A,Chase; 1998,0
+13703-91-8,Hf_gas,-1635982.041,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p80 pt2 p57.,0
 13703-91-8,Hf_gas,-1631760,J/mol,,,nist_snapshot,B,,0
 13703-91-8,S0_gas,382.378,J/(mol K),,,janaf,A,JANAF table B-106,1
 13703-91-8,S0_gas,382.36,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -32679,6 +32720,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13769-75-0,Gf_gas,-924090,J/mol,,,janaf,A,JANAF table Cl-020,1
 13769-75-0,Hf_gas,-970688,J/mol,,,janaf,A,JANAF table Cl-020,1
 13769-75-0,Hf_gas,-970690,J/mol,,,nist_review,A,Chase; 1998,0
+13769-75-0,Hf_gas,-1022607.04,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p443 pt2 p296.,0
 13769-75-0,Hf_gas,-970690,J/mol,,,nist_snapshot,B,,0
 13769-75-0,S0_gas,301.689,J/(mol K),,,janaf,A,JANAF table Cl-020,1
 13769-75-0,S0_gas,301.68,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -32690,6 +32732,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13769-76-1,Gf_gas,-721622,J/mol,,,janaf,A,JANAF table Cl-080,1
 13769-76-1,Hf_gas,-765672,J/mol,,,janaf,A,JANAF table Cl-080,1
 13769-76-1,Hf_gas,-765670,J/mol,,,nist_review,A,Chase; 1998,0
+13769-76-1,Hf_gas,-793889.312,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p444 pt2 p297.,0
 13769-76-1,Hf_gas,-765670,J/mol,,,nist_snapshot,B,,0
 13769-76-1,S0_gas,320.381,J/(mol K),,,janaf,A,JANAF table Cl-080,1
 13769-76-1,S0_gas,320.38,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -33109,6 +33152,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13814-65-8,Gf_gas,-985793,J/mol,,,janaf,A,JANAF table Al-018,1
 13814-65-8,Hf_gas,-999139,J/mol,,,janaf,A,JANAF table Al-018,1
 13814-65-8,Hf_gas,-999140,J/mol,,,nist_review,A,Chase; 1998,0
+13814-65-8,Hf_gas,-999128.145,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p182 pt2 p145.,0
 13814-65-8,Hf_gas,-999140,J/mol,,,nist_snapshot,B,,0
 13814-65-8,S0_gas,297.839,J/(mol K),,,janaf,A,JANAF table Al-018,1
 13814-65-8,S0_gas,297.7,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -33168,6 +33212,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13821-15-3,Gf_gas,-1827500,J/mol,,,crc_thermo,B,,0
 13821-15-3,Hf_gas,-1840960,J/mol,,,janaf,A,JANAF table Al-047,1
 13821-15-3,Hf_gas,-1840960,J/mol,,,nist_review,A,Chase; 1998,0
+13821-15-3,Hf_gas,-1857841.546,J/mol,,,nasa_cea,B,Gurvich;1982 pt1 p359 pt2 p393.,0
 13821-15-3,Hf_gas,-1869000,J/mol,,,crc_thermo,B,,0
 13821-15-3,Hf_gas,-1840960,J/mol,,,nist_snapshot,B,,0
 13821-15-3,S0_gas,344.896,J/(mol K),,,janaf,A,JANAF table Al-047,1
@@ -33434,6 +33479,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13863-41-7,Hf_gas,14434,J/mol,59,,atct,A,ATcT 1.112,1
 13863-41-7,Hf_gas,14644,J/mol,,,janaf,A,JANAF table Br-005,0
 13863-41-7,Hf_gas,14640,J/mol,,,nist_review,A,Chase; 1998,0
+13863-41-7,Hf_gas,14789.113,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p213 pt2 p112.,0
 13863-41-7,Hf_gas,14600,J/mol,,,crc_thermo,B,,0
 13863-41-7,Hf_gas,14640,J/mol,,,nist_snapshot,B,,0
 13863-41-7,Hf_gas,14640,J/mol,,,yaws,C,,0
@@ -33752,6 +33798,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 13967-22-1,Gf_gas,231200,J/mol,,,crc_thermo,B,,0
 13967-22-1,Hf_gas,259408,J/mol,,,janaf,A,JANAF table Al-056,1
 13967-22-1,Hf_gas,259410,J/mol,,,nist_review,A,Chase; 1998,0
+13967-22-1,Hf_gas,249250.804,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p139 pt2 p106.,0
 13967-22-1,Hf_gas,259200,J/mol,,,crc_thermo,B,,0
 13967-22-1,Hf_gas,259410,J/mol,,,nist_snapshot,B,,0
 13967-22-1,S0_gas,187.864,J/(mol K),,,janaf,A,JANAF table Al-056,1
@@ -36012,6 +36059,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14457-64-8,Gf_gas,65300,J/mol,,,crc_thermo,B,,0
 14457-64-8,Hf_gas,66944,J/mol,,,janaf,A,JANAF table Al-074,1
 14457-64-8,Hf_gas,66940,J/mol,,,nist_review,A,Chase; 1998,0
+14457-64-8,Hf_gas,67319.006,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p122 pt2 p96.,0
 14457-64-8,Hf_gas,91200,J/mol,,,crc_thermo,B,,0
 14457-64-8,Hf_gas,66940,J/mol,,,nist_snapshot,B,,0
 14457-64-8,S0_gas,218.386,J/(mol K),,,janaf,A,JANAF table Al-074,1
@@ -36696,6 +36744,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14720-30-0,Gf_gas,-871818,J/mol,,,janaf,A,JANAF table B-024,1
 14720-30-0,Hf_gas,-885334,J/mol,,,janaf,A,JANAF table B-024,1
 14720-30-0,Hf_gas,-885330,J/mol,,,nist_review,A,Chase; 1998,0
+14720-30-0,Hf_gas,-888000,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p87 pt2 p65.,0
 14720-30-0,Hf_gas,-885330,J/mol,,,nist_snapshot,B,,0
 14720-30-0,S0_gas,274.83,J/(mol K),,,janaf,A,JANAF table B-024,1
 14720-30-0,S0_gas,274.82,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -36704,6 +36753,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 14720-31-1,Gf_gas,-631625,J/mol,,,janaf,A,JANAF table B-029,1
 14720-31-1,Hf_gas,-644336,J/mol,,,janaf,A,JANAF table B-029,1
 14720-31-1,Hf_gas,-644340,J/mol,,,nist_review,A,Chase; 1998,0
+14720-31-1,Hf_gas,-643000,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p88 pt2 p66.,0
 14720-31-1,Hf_gas,-644340,J/mol,,,nist_snapshot,B,,0
 14720-31-1,S0_gas,287.675,J/(mol K),,,janaf,A,JANAF table B-029,1
 14720-31-1,S0_gas,287.67,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -39592,6 +39642,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 1605-72-7,Gf_gas,227598,J/mol,,,janaf,A,JANAF table C-023,1
 1605-72-7,Hf_gas,238488,J/mol,,,janaf,A,JANAF table C-023,1
 1605-72-7,Hf_gas,238490,J/mol,,,nist_review,A,Chase; 1998,0
+1605-72-7,Hf_gas,222940.147,J/mol,,,nasa_cea,B,Hf:Kumaran;1997. Jacox;1994. Shin;1990.,0
 1605-72-7,Hf_gas,238490,J/mol,,,nist_snapshot,B,,0
 1605-72-7,S0_gas,265.346,J/(mol K),,,janaf,A,JANAF table C-023,1
 1605-72-7,S0_gas,265.33,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -40481,6 +40532,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 16480-60-7,Gf_gas,-598641,J/mol,,,janaf,A,JANAF table Cl-186,1
 16480-60-7,Hf_gas,-654378,J/mol,,,janaf,A,JANAF table Cl-186,1
 16480-60-7,Hf_gas,-654380,J/mol,,,nist_review,A,Chase; 1998,0
+16480-60-7,Hf_gas,-654377.6,J/mol,,,nasa_cea,B,Chase;1998 p928.,0
 16480-60-7,Hf_gas,-654380,J/mol,,,nist_snapshot,B,,0
 16480-60-7,S0_gas,536.937,J/(mol K),,,janaf,A,JANAF table Cl-186,1
 16480-60-7,S0_gas,536.93,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -45946,6 +45998,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 20190-06-1,Gf_gas,122513,J/mol,,,janaf,A,JANAF table Cl-070,1
 20190-06-1,Hf_gas,154390,J/mol,,,janaf,A,JANAF table Cl-070,1
 20190-06-1,Hf_gas,154390,J/mol,,,nist_review,A,Chase; 1998,0
+20190-06-1,Hf_gas,150850.926,J/mol,,,nasa_cea,B,Chase;1998 p808.,0
 20190-06-1,Hf_gas,154390,J/mol,,,nist_snapshot,B,,0
 20190-06-1,S0_gas,249.214,J/(mol K),,,janaf,A,JANAF table Cl-070,1
 20190-06-1,S0_gas,249.21,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -48935,6 +48988,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 22395-93-3,Gf_gas,-327480,J/mol,,,janaf,A,JANAF table B-023,1
 22395-93-3,Hf_gas,-313800,J/mol,,,janaf,A,JANAF table B-023,1
 22395-93-3,Hf_gas,-313800,J/mol,,,nist_review,A,Chase; 1998,0
+22395-93-3,Hf_gas,-279184.068,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p86 pt2 p64.,0
 22395-93-3,Hf_gas,-313800,J/mol,,,nist_snapshot,B,,0
 22395-93-3,S0_gas,264.65,J/(mol K),,,janaf,A,JANAF table B-023,1
 22395-93-3,S0_gas,264.64,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -49093,6 +49147,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 22537-15-1,Hf_gas,121302,J/mol,,,janaf,A,JANAF table Cl-001,0
 22537-15-1,Hf_gas,121301,J/mol,8,,nist_review,A,Cox; Wagman; et al.; 1984,0
 22537-15-1,Hf_gas,121300,J/mol,,,nist_review,A,Chase; 1998,0
+22537-15-1,Hf_gas,121301,J/mol,,,nasa_cea,B,Hf:Cox;1989. Moore;1971. Moore;1970a. Gordon;1999.,0
 22537-15-1,Hf_gas,121300,J/mol,,,crc_thermo,B,,0
 22537-15-1,Hf_gas,121300.32,J/mol,,,nist_snapshot,B,,0
 22537-15-1,S0_aq,88.11053652,J/(mol K),,,sander,B,gas + Sander (k 0.01442 mol/(kg bar); dlnH/d(1/T) -1500 K),1
@@ -49698,6 +49753,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 23361-55-9,Gf_gas,-321519,J/mol,,,janaf,A,JANAF table B-025,1
 23361-55-9,Hf_gas,-316310,J/mol,,,janaf,A,JANAF table B-025,1
 23361-55-9,Hf_gas,-316310,J/mol,,,nist_review,A,Chase; 1998,0
+23361-55-9,Hf_gas,-318536.695,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p79 pt2 p55.,0
 23361-55-9,Hf_gas,-314000,J/mol,,,crc_thermo,B,,0
 23361-55-9,Hf_gas,-316310,J/mol,,,nist_snapshot,B,,0
 23361-55-9,S0_gas,237.417,J/(mol K),,,janaf,A,JANAF table B-025,1
@@ -50505,6 +50561,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 24304-00-5,Gf_solid,-287000,J/mol,,,crc_thermo,B,,0
 24304-00-5,Hf_gas,523000,J/mol,,,janaf,A,JANAF table Al-072,1
 24304-00-5,Hf_gas,523000,J/mol,,,nist_review,A,Chase; 1998,0
+24304-00-5,Hf_gas,438829.011,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p204 pt2 p164.,0
 24304-00-5,Hf_gas,523000,J/mol,,,nist_snapshot,B,,0
 24304-00-5,Hf_gas,523000,J/mol,,,yaws,C,,0
 24304-00-5,Hf_solid,-317984,J/mol,,,janaf,A,JANAF table Al-071,1
@@ -52056,6 +52113,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 2602-42-8,Gf_gas,-76508,J/mol,,,janaf,A,JANAF table C-022,1
 2602-42-8,Hf_gas,-62760,J/mol,,,janaf,A,JANAF table C-022,1
 2602-42-8,Hf_gas,-62760,J/mol,,,nist_review,A,Chase; 1998,0
+2602-42-8,Hf_gas,-16000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p118 pt2 p91.,0
 2602-42-8,Hf_gas,-62760,J/mol,,,nist_snapshot,B,,0
 2602-42-8,S0_gas,265.965,J/(mol K),,,janaf,A,JANAF table C-022,1
 2602-42-8,S0_gas,265.97,J/(mol K),,,nist_review,A,Chase; 1998,0
@@ -52768,6 +52826,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 2696-92-6,Hf_gas,52517,J/mol,67,,atct,A,ATcT 1.112,1
 2696-92-6,Hf_gas,51714,J/mol,,,janaf,A,JANAF table Cl-051,0
 2696-92-6,Hf_gas,51710,J/mol,,,nist_review,A,Chase; 1998,0
+2696-92-6,Hf_gas,52698.828,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p389. McBride;1992 METHOD PANDK.,0
 2696-92-6,Hf_gas,51700,J/mol,,,crc_thermo,B,,0
 2696-92-6,Hf_gas,51710,J/mol,,,nist_snapshot,B,,0
 2696-92-6,Hf_gas,51710,J/mol,,,yaws,C,,0
@@ -55279,6 +55338,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 29977-41-1,Gf_gas,19802,J/mol,,,janaf,A,JANAF table Al-063,1
 29977-41-1,Hf_gas,67948,J/mol,,,janaf,A,JANAF table Al-063,1
 29977-41-1,Hf_gas,67950,J/mol,,,nist_review,A,Chase; 1998,0
+29977-41-1,Hf_gas,67395.017,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p191 pt2 p153.,0
 29977-41-1,Hf_gas,65500,J/mol,,,crc_thermo,B,,0
 29977-41-1,Hf_gas,67950,J/mol,,,nist_snapshot,B,,0
 29977-41-1,S0_gas,247.83,J/(mol K),,,janaf,A,JANAF table Al-063,1
@@ -57026,6 +57086,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 32752-94-6,Gf_gas,433300,J/mol,,,crc_thermo,B,,0
 32752-94-6,Hf_gas,487018,J/mol,,,janaf,A,JANAF table Al-080,1
 32752-94-6,Hf_gas,487020,J/mol,,,nist_review,A,Chase; 1998,0
+32752-94-6,Hf_gas,501301.722,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p118 pt2 p95.,0
 32752-94-6,Hf_gas,485900,J/mol,,,crc_thermo,B,,0
 32752-94-6,Hf_gas,487020,J/mol,,,nist_snapshot,B,,0
 32752-94-6,S0_gas,233.531,J/(mol K),,,janaf,A,JANAF table Al-080,1
@@ -58784,6 +58845,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 353-49-1,Gf_gas,-413579,J/mol,,,janaf,A,JANAF table C-019,1
 353-49-1,Hf_gas,-426768,J/mol,,,janaf,A,JANAF table C-019,1
 353-49-1,Hf_gas,-426770,J/mol,,,nist_review,A,Chase; 1998,0
+353-49-1,Hf_gas,-429492.862,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p146 pt2 p120.,0
 353-49-1,Hf_gas,-426770,J/mol,,,nist_snapshot,B,,0
 353-49-1,Hvap,22700,J/mol,,196,nist,B,Stephenson and Malanowski; 1987,1
 353-49-1,Hvap,22000,J/mol,,192,nist,B,Emel«65533»us and Wood; 1948,0
@@ -58834,11 +58896,13 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 353-54-8,Tm,199.55,K,,,crc_constants,B,,1
 353-55-9,Cp_gas,82.4,J/(mol K),,298.15,crc_thermo,B,,1
 353-55-9,Hf_gas,-187400,J/mol,5500,,atct,A,ATcT 1.112,1
+353-55-9,Hf_gas,-175000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p175 pt2 p158.,0
 353-55-9,S0_gas,342.8,J/(mol K),,,crc_thermo,B,,1
 353-55-9,Tb,353.45,K,,,crc_constants,B,,1
 353-55-9,rho_liquid,2317.322,kg/m3,,,crc_constants,B,,1
 353-58-2,Cp_gas,80,J/(mol K),,298.15,crc_thermo,B,,1
 353-58-2,Hf_gas,-240000,J/mol,5500,,atct,A,ATcT 1.112,1
+353-58-2,Hf_gas,-235000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p175 pt2 p157.,0
 353-58-2,Pc,4530000,Pa,,,yaws,C,,1
 353-58-2,S0_gas,330.6,J/(mol K),,,crc_thermo,B,,1
 353-58-2,Tb,325.95,K,,,crc_constants,B,,1
@@ -58851,6 +58915,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 353-59-3,Cp_gas,74.6,J/(mol K),,298.15,crc_thermo,B,,1
 353-59-3,Cp_gas,74.65,J/(mol K),,298.15,poling,B,,0
 353-59-3,Hf_gas,-442200,J/mol,5500,,atct,A,ATcT 1.112,1
+353-59-3,Hf_gas,-435000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p173 pt2 p156.,0
 353-59-3,Hf_gas,-435200,J/mol,,,yaws,C,,0
 353-59-3,Hvap,23000,J/mol,,283,nist,B,Stephenson and Malanowski; 1987,1
 353-59-3,Hvap,23100,J/mol,,272,nist,B,Stephenson and Malanowski; 1987,0
@@ -62684,6 +62749,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 4109-96-0,Gf_gas,-294900,J/mol,,,janaf,A,JANAF table Cl-085,1
 4109-96-0,Hf_gas,-320494,J/mol,,,janaf,A,JANAF table Cl-085,1
 4109-96-0,Hf_gas,-320490,J/mol,,,nist_review,A,Chase; 1998,0
+4109-96-0,Hf_gas,-320494,J/mol,,,nasa_cea,B,Chase;1998 p823.,0
 4109-96-0,Hf_gas,-320490,J/mol,,,nist_snapshot,B,,0
 4109-96-0,Hf_gas,-320490,J/mol,,,yaws,C,,0
 4109-96-0,Hvap,25000,J/mol,,281.45,crc_hvap,B,,1
@@ -68562,6 +68628,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 506-77-4,Hf_gas,135740,J/mol,450,,atct,A,ATcT 1.112,1
 506-77-4,Hf_gas,137946,J/mol,,,janaf,A,JANAF table C-021,0
 506-77-4,Hf_gas,137950,J/mol,,,nist_review,A,Chase; 1998,0
+506-77-4,Hf_gas,134200,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p230 pt2 p218,0
 506-77-4,Hf_gas,138000,J/mol,,,crc_thermo,B,,0
 506-77-4,Hf_gas,137950,J/mol,,,nist_snapshot,B,,0
 506-77-4,Hf_gas,137950,J/mol,,,yaws,C,,0
@@ -75252,6 +75319,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 56-23-5,Hf_aq,-128429.7485,J/mol,,,sander,B,gas + Sander (k 0.03665 mol/(kg bar); dlnH/d(1/T) -3709 K),1
 56-23-5,Hf_gas,-97590,J/mol,750,,atct,A,ATcT 1.112,1
 56-23-5,Hf_gas,-95981,J/mol,,,janaf,A,JANAF table C-028,0
+56-23-5,Hf_gas,-95600,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p111 pt2 p84.,0
 56-23-5,Hf_gas,-95700,J/mol,,,crc_thermo,B,,0
 56-23-5,Hf_gas,-100000,J/mol,20000,,nist,B,AVG,0
 56-23-5,Hf_gas,-100000,J/mol,,,nist_snapshot,B,,0
@@ -81265,6 +81333,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 593-63-5,Hf_gas,213802,J/mol,,,janaf,A,JANAF table C-125,0
 593-63-5,Hf_gas,213800,J/mol,,,nist_review,A,Chase; 1998,0
 593-63-5,Hf_gas,226000,J/mol,10000,,nist_review,A,Manion; 2002,0
+593-63-5,Hf_gas,226400,J/mol,,,nasa_cea,B,Hf:Manion;2002. Gurvich;1991 pt1 p129 pt2 p99.,0
 593-63-5,Hf_gas,220475.44,J/mol,,,nist_snapshot,B,,0
 593-63-5,Hf_liquid,207000,J/mol,10000,,nist_review,A,Manion; 2002,1
 593-63-5,Hf_liquid,207000,J/mol,,,nist_snapshot,B,,0
@@ -81298,6 +81367,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 593-70-4,Hf_gas,-263700,J/mol,1300,,atct,A,ATcT 1.112,1
 593-70-4,Hf_gas,-261918,J/mol,,,janaf,A,JANAF table C-058,0
 593-70-4,Hf_gas,-261920,J/mol,,,nist_review,A,Chase; 1998,0
+593-70-4,Hf_gas,-265700,J/mol,,,nasa_cea,B,Hf:TRC(6/89) w7350. Gurvich;1991 pt1 p147 pt2 p122.,0
 593-70-4,Hf_gas,-261920,J/mol,,,nist_snapshot,B,,0
 593-70-4,Hf_gas,-265700,J/mol,,,yaws,C,,0
 593-70-4,Hvap,23300,J/mol,,249,nist,B,Stephenson and Malanowski; 1987,1
@@ -81443,6 +81513,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 593-96-4,rho_liquid,1667.1,kg/m3,,,crc_constants,B,,1
 593-98-6,Cp_gas,63.2,J/(mol K),,298.15,crc_thermo,B,,1
 593-98-6,Hf_gas,-231800,J/mol,5500,,atct,A,ATcT 1.112,1
+593-98-6,Hf_gas,-230000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p176 pt2 p159.,0
 593-98-6,S0_gas,304.3,J/(mol K),,,crc_thermo,B,,1
 593-98-6,Tb,312.15,K,,,crc_constants,B,,1
 593-98-6,Tm,158.15,K,,,crc_constants,B,,1
@@ -81521,6 +81592,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 594-11-6,omega,0.198,1,,,yaws,C,,1
 594-15-0,Cp_gas,89.4,J/(mol K),,298.15,crc_thermo,B,,1
 594-15-0,Hf_gas,53000,J/mol,1600,,atct,A,ATcT 1.112,1
+594-15-0,Hf_gas,65000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p171 pt2 p152.,0
 594-15-0,S0_gas,357.8,J/(mol K),,,crc_thermo,B,,1
 594-15-0,Tb,431.65,K,,,crc_constants,B,,0
 594-15-0,Tb,377.45,K,,,nist,B,Wouters; 1934,1
@@ -81537,6 +81609,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 594-16-1,rho_liquid,1880.2,kg/m3,,,crc_constants,B,,1
 594-18-3,Cp_gas,87.1,J/(mol K),,298.15,crc_thermo,B,,1
 594-18-3,Hf_gas,3400,J/mol,1500,,atct,A,ATcT 1.112,1
+594-18-3,Hf_gas,10000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p170 pt2 p151.,0
 594-18-3,Hfus,2310,J/mol,,294.4,nist,B,Ohta; Yamamuro; et al.; 1995,1
 594-18-3,S0_gas,347.8,J/(mol K),,,crc_thermo,B,,1
 594-18-3,Tb,423.35,K,,,crc_constants,B,,1
@@ -97817,6 +97890,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 67-66-3,Hf_gas,-103177,J/mol,,,janaf,A,JANAF table C-048,0
 67-66-3,Hf_gas,-103180,J/mol,,,nist_review,A,Chase; 1998,0
 67-66-3,Hf_gas,-102900,J/mol,2500,,nist_review,A,Manion; 2002,0
+67-66-3,Hf_gas,-102700,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p127 pt2 p98.,0
 67-66-3,Hf_gas,-102700,J/mol,,,crc_thermo,B,,0
 67-66-3,Hf_gas,-103026.79,J/mol,,,nist_snapshot,B,,0
 67-66-3,Hf_gas,-102900,J/mol,,,yaws,C,,0
@@ -97981,6 +98055,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 67-72-1,Hf_gas,-134223,J/mol,,,janaf,A,JANAF table C-118,1
 67-72-1,Hf_gas,-134220,J/mol,,,nist_review,A,Chase; 1998,0
 67-72-1,Hf_gas,-148200,J/mol,5700,,nist_review,A,Manion; 2002,0
+67-72-1,Hf_gas,-148200,J/mol,,,nasa_cea,B,Hf:Manion;2002. Gurvich;1991 pt1 p117 pt2 p90.,0
 67-72-1,Hf_gas,-143600,J/mol,,,crc_thermo,B,,0
 67-72-1,Hf_gas,-143500,J/mol,9400,,nist,B,Puyo; Balesdent; et al.; 1963,0
 67-72-1,Hf_gas,-141929.25,J/mol,,,nist_snapshot,B,,0
@@ -102487,6 +102562,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 74-97-5,Cp_gas,52.7,J/(mol K),,298.15,crc_thermo,B,,1
 74-97-5,Hf_aq,-83506.8275,J/mol,,,sander,B,gas + Sander (k 0.7016 mol/(kg bar); dlnH/d(1/T) -4667 K),1
 74-97-5,Hf_gas,-44700,J/mol,5500,,atct,A,ATcT 1.112,1
+74-97-5,Hf_gas,-45000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p171 pt2 p153.,0
 74-97-5,Hf_gas,-20000,J/mol,7000,,nist,B,Skorobogatov; Dymov; et al.; 1996,0
 74-97-5,Hf_gas,-20000,J/mol,,,nist_snapshot,B,,0
 74-97-5,Hf_gas,-44800,J/mol,,,yaws,C,,0
@@ -105298,6 +105374,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7446-70-0,Gf_solid,-628800,J/mol,,,crc_thermo,B,,0
 7446-70-0,Hf_gas,-584588,J/mol,,,janaf,A,JANAF table Al-028,1
 7446-70-0,Hf_gas,-584590,J/mol,,,nist_review,A,Chase; 1998,0
+7446-70-0,Hf_gas,-584678.863,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p173 pt2 p134.,0
 7446-70-0,Hf_gas,-583200,J/mol,,,crc_thermo,B,,0
 7446-70-0,Hf_gas,-584590,J/mol,,,nist_snapshot,B,,0
 7446-70-0,Hf_gas,-584590,J/mol,,,yaws,C,,0
@@ -105366,6 +105443,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7447-40-7,Gf_solid,-408500,J/mol,,,crc_thermo,B,,0
 7447-40-7,Hf_gas,-214681,J/mol,,,janaf,A,JANAF table Cl-039,1
 7447-40-7,Hf_gas,-214680,J/mol,,,nist_review,A,Chase; 1998,0
+7447-40-7,Hf_gas,-214574.881,J/mol,,,nasa_cea,B,Gurvich;1982 pt1 p393 pt2 p420.,0
 7447-40-7,Hf_gas,-214600,J/mol,,,crc_thermo,B,,0
 7447-40-7,Hf_gas,-214680,J/mol,,,nist_snapshot,B,,0
 7447-40-7,Hf_gas,-214680,J/mol,,,yaws,C,,0
@@ -105405,6 +105483,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7447-41-8,Gf_solid,-384400,J/mol,,,crc_thermo,B,,0
 7447-41-8,Hf_gas,-195719,J/mol,,,janaf,A,JANAF table Cl-044,1
 7447-41-8,Hf_gas,-195720,J/mol,,,nist_review,A,Chase; 1998,0
+7447-41-8,Hf_gas,-193779.891,J/mol,,,nasa_cea,B,Gurvich;1982 pt1 p281 pt2 p314.,0
 7447-41-8,Hf_gas,-195720,J/mol,,,nist_snapshot,B,,0
 7447-41-8,Hf_gas,-195720,J/mol,,,yaws,C,,0
 7447-41-8,Hf_liquid,-390755,J/mol,,,janaf,A,JANAF table Cl-042,1
@@ -105727,6 +105806,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-01-4,Hf_aq,-1837.636469,J/mol,,,sander,B,gas + Sander (k 0.04082 mol/(kg bar); dlnH/d(1/T) -2879 K),1
 75-01-4,Hf_gas,22100,J/mol,350,,atct,A,ATcT 1.112,1
 75-01-4,Hf_gas,22000,J/mol,3000,,nist_review,A,Manion; 2002,0
+75-01-4,Hf_gas,22000,J/mol,,,nasa_cea,B,Hf:Manion;2002. Gurvich;1991 pt1 p129 pt2 p100.,0
 75-01-4,Hf_gas,37200,J/mol,,,crc_thermo,B,,0
 75-01-4,Hf_gas,29000,J/mol,,,nist,B,Levanova; Treger; et al.; 1976,0
 75-01-4,Hf_gas,21000,J/mol,,,nist,B,Alfassi; Golden; et al.; 1973,0
@@ -106128,6 +106208,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-09-2,Hf_gas,-95521,J/mol,,,janaf,A,JANAF table C-059,0
 75-09-2,Hf_gas,-95520,J/mol,,,nist_review,A,Chase; 1998,0
 75-09-2,Hf_gas,-95100,J/mol,2500,,nist_review,A,Manion; 2002,0
+75-09-2,Hf_gas,-95000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p125 pt2 p97.,0
 75-09-2,Hf_gas,-95400,J/mol,,,crc_thermo,B,,0
 75-09-2,Hf_gas,-95700,J/mol,1300,,nist,B,Lacher; Amador; et al.; 1967,0
 75-09-2,Hf_gas,-95313.065,J/mol,,,nist_snapshot,B,,0
@@ -106739,6 +106820,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-27-4,Cp_gas,67.4,J/(mol K),,298.15,crc_thermo,B,,1
 75-27-4,Hf_aq,-86792.26755,J/mol,,,sander,B,gas + Sander (k 0.451 mol/(kg bar); dlnH/d(1/T) -4245 K),1
 75-27-4,Hf_gas,-51500,J/mol,5500,,atct,A,ATcT 1.112,1
+75-27-4,Hf_gas,-45000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p172 pt2 p154.,0
 75-27-4,S0_aq,191.4085535,J/(mol K),,,sander,B,gas + Sander (k 0.451 mol/(kg bar); dlnH/d(1/T) -4245 K),1
 75-27-4,S0_gas,316.4,J/(mol K),,,crc_thermo,B,,1
 75-27-4,Tb,363.15,K,,,crc_constants,B,,1
@@ -107254,6 +107336,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-43-4,Hf_gas,-284500,J/mol,1300,,atct,A,ATcT 1.112,1
 75-43-4,Hf_gas,-283257,J/mol,,,janaf,A,JANAF table C-047,0
 75-43-4,Hf_gas,-283260,J/mol,,,nist_review,A,Chase; 1998,0
+75-43-4,Hf_gas,-284900,J/mol,,,nasa_cea,B,Hf:TRC(6/89) w7350. Gurvich;1991 pt1 p149 pt2 p124.,0
 75-43-4,Hf_gas,-283260,J/mol,,,nist_snapshot,B,,0
 75-43-4,Hf_gas,-284900,J/mol,,,yaws,C,,0
 75-43-4,Hvap,25200,J/mol,,282.05,crc_hvap,B,,1
@@ -107304,6 +107387,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-44-5,Hf_gas,-219030,J/mol,280,,atct,A,ATcT 1.112,1
 75-44-5,Hf_gas,-220078,J/mol,,,janaf,A,JANAF table C-025,0
 75-44-5,Hf_gas,-220080,J/mol,,,nist_review,A,Chase; 1998,0
+75-44-5,Hf_gas,-219500,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p119 pt2 p92.,0
 75-44-5,Hf_gas,-219100,J/mol,,,crc_thermo,B,,0
 75-44-5,Hf_gas,-220100,J/mol,960,,nist,B,Davies and Pritchard; 1972,0
 75-44-5,Hf_gas,-219100,J/mol,590,,nist,B,Lord and Pritchard; 1970,0
@@ -107357,6 +107441,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-45-6,Hf_gas,-482800,J/mol,1200,,atct,A,ATcT 1.112,1
 75-45-6,Hf_gas,-481578,J/mol,,,janaf,A,JANAF table C-046,0
 75-45-6,Hf_gas,-481580,J/mol,,,nist_review,A,Chase; 1998,0
+75-45-6,Hf_gas,-482800,J/mol,,,nasa_cea,B,Hf:TRC(6/89) w7350. Gurvich;1991 pt1 p148 pt2 p123.,0
 75-45-6,Hf_gas,-482600,J/mol,,,crc_thermo,B,,0
 75-45-6,Hf_gas,-483000,J/mol,3000,,nist,B,Edwards and Small; 1965,0
 75-45-6,Hf_gas,-481716.19,J/mol,,,nist_snapshot,B,,0
@@ -107726,6 +107811,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-62-7,Cp_gas,85.3,J/(mol K),,298.15,crc_thermo,B,,1
 75-62-7,Cp_liquid,149.4,J/(mol K),,298,nist,B,Bengough and Thomson; 1959,1
 75-62-7,Hf_gas,-43030,J/mol,740,,atct,A,ATcT 1.112,1
+75-62-7,Hf_gas,-43000,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p169 pt2 p150.,0
 75-62-7,Hf_gas,-41100,J/mol,,,crc_thermo,B,,0
 75-62-7,Hf_gas,-42000,J/mol,1000,,nist,B,Mendenhall; Golden; et al.; 1973,0
 75-62-7,Hf_gas,-39000,J/mol,,,nist,B,Sullivan and Davidson; 1951,0
@@ -108039,6 +108125,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-69-4,Hf_gas,-290700,J/mol,1200,,atct,A,ATcT 1.112,1
 75-69-4,Hf_gas,-288696,J/mol,,,janaf,A,JANAF table C-027,0
 75-69-4,Hf_gas,-288700,J/mol,,,nist_review,A,Chase; 1998,0
+75-69-4,Hf_gas,-283700,J/mol,,,nasa_cea,B,Hf:TRC(6/89) w7350. Gurvich;1991 pt1 p140 pt2 p112.,0
 75-69-4,Hf_gas,-268300,J/mol,,,crc_thermo,B,,0
 75-69-4,Hf_gas,-278000,J/mol,8800,,nist,B,Baibuz; 1961,0
 75-69-4,Hf_gas,-268300,J/mol,8400,,nist,B,Wartenberg and Schiefer; 1955,0
@@ -108111,6 +108198,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-71-8,Hf_gas,-495810,J/mol,980,,atct,A,ATcT 1.112,1
 75-71-8,Hf_gas,-491620,J/mol,,,janaf,A,JANAF table C-024,0
 75-71-8,Hf_gas,-491620,J/mol,,,nist_review,A,Chase; 1998,0
+75-71-8,Hf_gas,-490800,J/mol,,,nasa_cea,B,Hf:TRC(6/89) w7350.Gurvich;1991 pt1 p139 pt2 p111.,0
 75-71-8,Hf_gas,-477400,J/mol,,,crc_thermo,B,,0
 75-71-8,Hf_gas,-477600,J/mol,5600,,nist,B,Kolesov; Zenkov; et al.; 1963,0
 75-71-8,Hf_gas,-477000,J/mol,13000,,nist,B,Wartenberg and Schiefer; 1955,0
@@ -108175,6 +108263,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 75-72-9,Hf_aq,-725657.8539,J/mol,,,sander,B,gas + Sander (k 0.0009466 mol/(kg bar); dlnH/d(1/T) -1847 K),1
 75-72-9,Hf_gas,-710300,J/mol,750,,atct,A,ATcT 1.112,1
 75-72-9,Hf_gas,-707933,J/mol,,,janaf,A,JANAF table C-020,0
+75-72-9,Hf_gas,-704200,J/mol,,,nasa_cea,B,Hf:TRC(6/89) w7350. Gurvich;1991 pt1 p137 pt2 p109.,0
 75-72-9,Hf_gas,-706300,J/mol,,,crc_thermo,B,,0
 75-72-9,Hf_gas,-710000,J/mol,30000,,nist,B,AVG,0
 75-72-9,Hf_gas,-710000,J/mol,,,nist_snapshot,B,,0
@@ -109088,10 +109177,12 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7550-45-0,Hf_gas,-763162,J/mol,,,janaf,A,JANAF table Cl-164,1
 7550-45-0,Hf_gas,-763200,J/mol,3000,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7550-45-0,Hf_gas,-763160,J/mol,,,nist_review,A,Chase; 1998,0
+7550-45-0,Hf_gas,-763160,J/mol,,,nasa_cea,B,Chase;1998 p906.,0
 7550-45-0,Hf_gas,-763200,J/mol,,,crc_thermo,B,,0
 7550-45-0,Hf_gas,-763172.63,J/mol,,,nist_snapshot,B,,0
 7550-45-0,Hf_gas,-763160,J/mol,,,yaws,C,,0
 7550-45-0,Hf_liquid,-804160,J/mol,,,nist_review,A,Chase; 1998,1
+7550-45-0,Hf_liquid,-804164.8,J/mol,,,nasa_cea,B,Chase;1998 p904.,0
 7550-45-0,Hf_liquid,-804200,J/mol,,,crc_thermo,B,,0
 7550-45-0,Hf_liquid,-804160,J/mol,,,nist_snapshot,B,,0
 7550-45-0,Hf_solid,-815030,J/mol,,,nist_review,A,Chase; 1998,1
@@ -109249,6 +109340,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7572-29-4,Hf_gas,209618,J/mol,,,janaf,A,JANAF table C-116,0
 7572-29-4,Hf_gas,209620,J/mol,,,nist_review,A,Chase; 1998,0
 7572-29-4,Hf_gas,227000,J/mol,14000,,nist_review,A,Manion; 2002,0
+7572-29-4,Hf_gas,226600,J/mol,,,nasa_cea,B,Hf:Manion;2002. Gurvich;1991 pt1 p114 pt2 p86.,0
 7572-29-4,Hf_gas,219129.77,J/mol,,,nist_snapshot,B,,0
 7572-29-4,Hf_liquid,199000,J/mol,14000,,nist_review,A,Manion; 2002,1
 7572-29-4,Hf_liquid,199000,J/mol,,,nist_snapshot,B,,0
@@ -110075,6 +110167,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7616-94-6,Gf_gas,48200,J/mol,,,crc_thermo,B,,0
 7616-94-6,Hf_gas,-21422,J/mol,,,janaf,A,JANAF table Cl-019,1
 7616-94-6,Hf_gas,-21420,J/mol,,,nist_review,A,Chase; 1998,0
+7616-94-6,Hf_gas,-23800,J/mol,,,nasa_cea,B,Hf:Wagman;1982 p49. Chase;1998 p755.React.,0
 7616-94-6,Hf_gas,-23800,J/mol,,,crc_thermo,B,,0
 7616-94-6,Hf_gas,-21420,J/mol,,,nist_snapshot,B,,0
 7616-94-6,Hf_gas,-21420,J/mol,,,yaws,C,,0
@@ -110313,7 +110406,8 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7632-51-1,Cp_gas,96.2,J/(mol K),,298.15,crc_thermo,B,,1
 7632-51-1,Gf_gas,-492000,J/mol,,,crc_thermo,B,,1
 7632-51-1,Gf_liquid,-503700,J/mol,,,crc_thermo,B,,1
-7632-51-1,Hf_gas,-525500,J/mol,,,crc_thermo,B,,1
+7632-51-1,Hf_gas,-527058.48,J/mol,,,nasa_cea,B,Nagarajan;1963. Creighton;1966. Blankenship;1962.,1
+7632-51-1,Hf_gas,-525500,J/mol,,,crc_thermo,B,,0
 7632-51-1,Hf_gas,-525500,J/mol,,,yaws,C,,0
 7632-51-1,Hf_liquid,-569400,J/mol,,,crc_thermo,B,,1
 7632-51-1,Hfus,2300,J/mol,,,crc_hfus,B,,1
@@ -110638,9 +110732,11 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7646-78-8,Cp_liquid,165.3,J/(mol K),,298.15,crc_thermo,B,,1
 7646-78-8,Gf_gas,-432200,J/mol,,,crc_thermo,B,,1
 7646-78-8,Gf_liquid,-440100,J/mol,,,crc_thermo,B,,1
-7646-78-8,Hf_gas,-471500,J/mol,,,crc_thermo,B,,1
+7646-78-8,Hf_gas,-478465.969,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p376 pt2 p320.,1
+7646-78-8,Hf_gas,-471500,J/mol,,,crc_thermo,B,,0
 7646-78-8,Hf_gas,-471500,J/mol,,,yaws,C,,0
-7646-78-8,Hf_liquid,-511300,J/mol,,,crc_thermo,B,,1
+7646-78-8,Hf_liquid,-517000,J/mol,,,nasa_cea,B,Liquid. Gurvich;1991 pt1 p375 pt2 p319.,1
+7646-78-8,Hf_liquid,-511300,J/mol,,,crc_thermo,B,,0
 7646-78-8,Hfus,9200,J/mol,,,crc_hfus,B,,1
 7646-78-8,Hvap,34900,J/mol,,387.3,crc_hvap,B,,1
 7646-78-8,Pc,3744000,Pa,,,dippr_pina,B,,1
@@ -110728,6 +110824,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7647-01-0,Hf_gas,-92312,J/mol,,,janaf,A,JANAF table Cl-026,0
 7647-01-0,Hf_gas,-92310,J/mol,100,,nist_review,A,Cox; Wagman; et al.; 1984,0
 7647-01-0,Hf_gas,-92310,J/mol,,,nist_review,A,Chase; 1998,0
+7647-01-0,Hf_gas,-92310,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p186 pt2 p93.,0
 7647-01-0,Hf_gas,-92300,J/mol,,,crc_thermo,B,,0
 7647-01-0,Hf_gas,-92310,J/mol,,,nist_snapshot,B,,0
 7647-01-0,Hf_gas,-92300,J/mol,,,yaws,C,,0
@@ -110784,6 +110881,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7647-14-5,Gf_solid,-384100,J/mol,,,crc_thermo,B,,0
 7647-14-5,Hf_gas,-181418,J/mol,,,janaf,A,JANAF table Cl-056,1
 7647-14-5,Hf_gas,-181420,J/mol,,,nist_review,A,Chase; 1998,0
+7647-14-5,Hf_gas,-181544.884,J/mol,,,nasa_cea,B,Gurvich;1982 pt1 p337 pt2 p375.,0
 7647-14-5,Hf_gas,-181420,J/mol,,,nist_snapshot,B,,0
 7647-14-5,Hf_gas,-181420,J/mol,,,yaws,C,,0
 7647-14-5,Hf_liquid,-385923,J/mol,,,janaf,A,JANAF table Cl-054,1
@@ -110866,6 +110964,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7647-17-8,Gf_solid,-414500,J/mol,,,crc_thermo,B,,0
 7647-17-8,Hf_gas,-240162,J/mol,,,janaf,A,JANAF table Cl-008,1
 7647-17-8,Hf_gas,-240160,J/mol,,,nist_review,A,Chase; 1998,0
+7647-17-8,Hf_gas,-242228.878,J/mol,,,nasa_cea,B,Gurvich;1982 pt1 p487 pt2 p509.,0
 7647-17-8,Hf_gas,-240160,J/mol,,,nist_snapshot,B,,0
 7647-17-8,Hf_gas,-240160,J/mol,,,yaws,C,,0
 7647-17-8,Hf_liquid,-434468,J/mol,,,janaf,A,JANAF table Cl-006,1
@@ -111862,6 +111961,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7698-05-7,Gf_gas,-95945,J/mol,,,janaf,A,JANAF table Cl-013,1
 7698-05-7,Hf_gas,-93345,J/mol,,,janaf,A,JANAF table Cl-013,1
 7698-05-7,Hf_gas,-93350,J/mol,,,nist_review,A,Chase; 1998,0
+7698-05-7,Hf_gas,-93547.003,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p188 pt2 p95.,0
 7698-05-7,Hf_gas,-93350,J/mol,,,nist_snapshot,B,,0
 7698-05-7,Hf_gas,-93350,J/mol,,,yaws,C,,0
 7698-05-7,Pc,8020000,Pa,,,nist,B,Henderson; Lewis; et al.; 1986,1
@@ -112218,10 +112318,12 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7705-07-9,Gf_solid,-653500,J/mol,,,crc_thermo,B,,0
 7705-07-9,Hf_gas,-539318,J/mol,,,janaf,A,JANAF table Cl-145,1
 7705-07-9,Hf_gas,-539320,J/mol,,,nist_review,A,Chase; 1998,0
+7705-07-9,Hf_gas,-539320,J/mol,,,nasa_cea,B,Chase;1998 p887.,0
 7705-07-9,Hf_gas,-539320,J/mol,,,nist_snapshot,B,,0
 7705-07-9,Hf_gas,-539320,J/mol,,,yaws,C,,0
 7705-07-9,Hf_solid,-721740,J/mol,,,janaf,A,JANAF table Cl-144,1
 7705-07-9,Hf_solid,-721740,J/mol,,,nist_review,A,Chase; 1998,0
+7705-07-9,Hf_solid,-721740,J/mol,,,nasa_cea,B,Chase;1998 p886.,0
 7705-07-9,Hf_solid,-720900,J/mol,,,crc_thermo,B,,0
 7705-07-9,Hf_solid,-721740,J/mol,,,nist_snapshot,B,,0
 7705-07-9,Hvap,124000,J/mol,,1233.15,crc_hvap,B,,1
@@ -112248,6 +112350,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7705-08-0,Gf_solid,-334000,J/mol,,,crc_thermo,B,,0
 7705-08-0,Hf_gas,-253132,J/mol,,,janaf,A,JANAF table Cl-137,1
 7705-08-0,Hf_gas,-253130,J/mol,,,nist_review,A,Chase; 1998,0
+7705-08-0,Hf_gas,-253130,J/mol,,,nasa_cea,B,Hwang & Rabinowitz 2019,0
 7705-08-0,Hf_gas,-253130,J/mol,,,nist_snapshot,B,,0
 7705-08-0,Hf_gas,-253130,J/mol,,,yaws,C,,0
 7705-08-0,Hf_liquid,-362815,J/mol,,,janaf,A,JANAF table Cl-135,1
@@ -112420,6 +112523,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7718-54-9,Gf_solid,-259000,J/mol,,,crc_thermo,B,,0
 7718-54-9,Hf_gas,-73931,J/mol,,,janaf,A,JANAF table Cl-102,1
 7718-54-9,Hf_gas,-73930,J/mol,,,nist_review,A,Chase; 1998,0
+7718-54-9,Hf_gas,-73931,J/mol,,,nasa_cea,B,Chase;1998 p840.,0
 7718-54-9,Hf_gas,-73930,J/mol,,,nist_snapshot,B,,0
 7718-54-9,Hf_gas,-73930,J/mol,,,yaws,C,,0
 7718-54-9,Hf_liquid,-233517,J/mol,,,janaf,A,JANAF table Cl-100,1
@@ -112475,6 +112579,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7719-12-2,Gf_liquid,-272300,J/mol,,,crc_thermo,B,,1
 7719-12-2,Hf_gas,-288696,J/mol,,,janaf,A,JANAF table Cl-141,1
 7719-12-2,Hf_gas,-288700,J/mol,,,nist_review,A,Chase; 1998,0
+7719-12-2,Hf_gas,-289500,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p433 pt2 p285.,0
 7719-12-2,Hf_gas,-287000,J/mol,,,crc_thermo,B,,0
 7719-12-2,Hf_gas,-288700,J/mol,,,nist_snapshot,B,,0
 7719-12-2,Hf_gas,-287000,J/mol,,,yaws,C,,0
@@ -112638,6 +112743,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7721-01-9,Gf_solid,-746448,J/mol,,,janaf,A,JANAF table Cl-178,1
 7721-01-9,Hf_gas,-764835,J/mol,,,janaf,A,JANAF table Cl-181,1
 7721-01-9,Hf_gas,-764840,J/mol,,,nist_review,A,Chase; 1998,0
+7721-01-9,Hf_gas,-764835,J/mol,,,nasa_cea,B,Chase;1998 p923.,0
 7721-01-9,Hf_gas,-764840,J/mol,,,nist_snapshot,B,,0
 7721-01-9,Hf_gas,-764830,J/mol,,,yaws,C,,0
 7721-01-9,Hf_liquid,-834347,J/mol,,,janaf,A,JANAF table Cl-179,1
@@ -112838,6 +112944,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7727-15-3,Gf_solid,-488515,J/mol,,,janaf,A,JANAF table Al-010,1
 7727-15-3,Hf_gas,-410450,J/mol,,,janaf,A,JANAF table Al-013,1
 7727-15-3,Hf_gas,-410450,J/mol,,,nist_review,A,Chase; 1998,0
+7727-15-3,Hf_gas,-410476.664,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p188 pt2 p151.,0
 7727-15-3,Hf_gas,-425100,J/mol,,,crc_thermo,B,,0
 7727-15-3,Hf_gas,-410450,J/mol,,,nist_snapshot,B,,0
 7727-15-3,Hf_gas,-410450,J/mol,,,yaws,C,,0
@@ -113285,6 +113392,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7758-89-6,Gf_solid,-119900,J/mol,,,crc_thermo,B,,0
 7758-89-6,Hf_gas,91086,J/mol,,,janaf,A,JANAF table Cl-012,1
 7758-89-6,Hf_gas,91090,J/mol,,,nist_review,A,Chase; 1998,0
+7758-89-6,Hf_gas,91090,J/mol,,,nasa_cea,B,Chase;1998 p748.,0
 7758-89-6,Hf_gas,91090,J/mol,,,nist_snapshot,B,,0
 7758-89-6,Hf_gas,91090,J/mol,,,yaws,C,,0
 7758-89-6,Hf_liquid,-131178,J/mol,,,janaf,A,JANAF table Cl-010,1
@@ -113323,6 +113431,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7758-94-3,Gf_solid,-302300,J/mol,,,crc_thermo,B,,0
 7758-94-3,Hf_gas,-141001,J/mol,,,janaf,A,JANAF table Cl-084,1
 7758-94-3,Hf_gas,-141000,J/mol,,,nist_review,A,Chase; 1998,0
+7758-94-3,Hf_gas,-141000.8,J/mol,,,nasa_cea,B,Chase;1998 p822.,0
 7758-94-3,Hf_gas,-141000,J/mol,,,nist_snapshot,B,,0
 7758-94-3,Hf_gas,-141000,J/mol,,,yaws,C,,0
 7758-94-3,Hf_liquid,-311336,J/mol,,,janaf,A,JANAF table Cl-082,1
@@ -113363,6 +113472,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7758-95-4,Gf_solid,-314100,J/mol,,,crc_thermo,B,,0
 7758-95-4,Hf_gas,-174054,J/mol,,,janaf,A,JANAF table Cl-111,1
 7758-95-4,Hf_gas,-174050,J/mol,,,nist_review,A,Chase; 1998,0
+7758-95-4,Hf_gas,-175547.471,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p430 pt2 p357.,0
 7758-95-4,Hf_gas,-174050,J/mol,,,nist_snapshot,B,,0
 7758-95-4,Hf_gas,-174050,J/mol,,,yaws,C,,0
 7758-95-4,Hf_liquid,-344251,J/mol,,,janaf,A,JANAF table Cl-109,1
@@ -113884,6 +113994,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7782-50-5,Hf_aq,-19622.21941,J/mol,,,sander,B,gas + Sander (k 0.101 mol/(kg bar); dlnH/d(1/T) -2360 K),0
 7782-50-5,Hf_gas,0,J/mol,0,,atct,A,ATcT 1.112,1
 7782-50-5,Hf_gas,0,J/mol,,,janaf,A,JANAF table Cl-073,0
+7782-50-5,Hf_gas,0,J/mol,,,nasa_cea,B,Ref-Elm. Gurvich;1989 pt1 p177 pt2 p88.,0
 7782-50-5,Hf_gas,0,J/mol,,,crc_thermo,B,,0
 7782-50-5,Hf_gas,0,J/mol,,,yaws,C,,0
 7782-50-5,Hfus,6400,J/mol,,,crc_hfus,B,,1
@@ -115055,6 +115166,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7784-23-8,Gf_solid,-301018,J/mol,,,janaf,A,JANAF table Al-064,1
 7784-23-8,Hf_gas,-193301,J/mol,,,janaf,A,JANAF table Al-067,1
 7784-23-8,Hf_gas,-193300,J/mol,,,nist_review,A,Chase; 1998,0
+7784-23-8,Hf_gas,-191330.433,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p195 pt2 p156.,0
 7784-23-8,Hf_gas,-289400,J/mol,,,crc_thermo,B,,0
 7784-23-8,Hf_gas,-193300,J/mol,,,nist_snapshot,B,,0
 7784-23-8,Hf_gas,-193300,J/mol,,,yaws,C,,0
@@ -115260,6 +115372,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7786-30-3,Gf_solid,-591800,J/mol,,,crc_thermo,B,,0
 7786-30-3,Hf_gas,-392459,J/mol,,,janaf,A,JANAF table Cl-096,1
 7786-30-3,Hf_gas,-392460,J/mol,,,nist_review,A,Chase; 1998,0
+7786-30-3,Hf_gas,-399169.896,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p416 pt2 p330.,0
 7786-30-3,Hf_gas,-392460,J/mol,,,nist_snapshot,B,,0
 7786-30-3,Hf_gas,-392460,J/mol,,,yaws,C,,0
 7786-30-3,Hf_liquid,-601577,J/mol,,,janaf,A,JANAF table Cl-094,1
@@ -115384,6 +115497,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7787-47-5,Gf_solid,-445600,J/mol,,,crc_thermo,B,,0
 7787-47-5,Hf_gas,-360242,J/mol,,,janaf,A,JANAF table Be-017,1
 7787-47-5,Hf_gas,-360240,J/mol,,,nist_review,A,Chase; 1998,0
+7787-47-5,Hf_gas,-361539.14,J/mol,,,nasa_cea,B,Gurvich;1996a pt1 p373 pt2 p298.,0
 7787-47-5,Hf_gas,-360240,J/mol,,,nist_snapshot,B,,0
 7787-47-5,Hf_gas,-360240,J/mol,,,yaws,C,,0
 7787-47-5,Hf_liquid,-491313,J/mol,,,janaf,A,JANAF table Be-015,1
@@ -116624,6 +116738,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7790-89-8,Hf_gas,-55703,J/mol,62,,atct,A,ATcT 1.112,1
 7790-89-8,Hf_gas,-50292,J/mol,,,janaf,A,JANAF table Cl-015,0
 7790-89-8,Hf_gas,-50290,J/mol,,,nist_review,A,Chase; 1998,0
+7790-89-8,Hf_gas,-55700.993,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p190 pt2 p97.,0
 7790-89-8,Hf_gas,-50300,J/mol,,,crc_thermo,B,,0
 7790-89-8,Hf_gas,-50290,J/mol,,,nist_snapshot,B,,0
 7790-89-8,Hf_gas,-50290,J/mol,,,yaws,C,,0
@@ -116650,6 +116765,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7790-91-2,Gf_gas,-123000,J/mol,,,crc_thermo,B,,0
 7790-91-2,Hf_gas,-158866,J/mol,,,janaf,A,JANAF table Cl-021,1
 7790-91-2,Hf_gas,-158870,J/mol,,,nist_review,A,Chase; 1998,0
+7790-91-2,Hf_gas,-164600,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p193 pt2 p98.,0
 7790-91-2,Hf_gas,-163200,J/mol,,,crc_thermo,B,,0
 7790-91-2,Hf_gas,-158870,J/mol,,,nist_snapshot,B,,0
 7790-91-2,Hf_gas,-158870,J/mol,,,yaws,C,,0
@@ -116810,6 +116926,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7791-21-1,Hf_aq,73394.29391,J/mol,,,sander,B,gas + Sander (k 16.6 mol/(kg bar); dlnH/d(1/T) -1740 K),1
 7791-21-1,Hf_gas,87864,J/mol,,,janaf,A,JANAF table Cl-103,1
 7791-21-1,Hf_gas,87860,J/mol,,,nist_review,A,Chase; 1998,0
+7791-21-1,Hf_gas,79000,J/mol,,,nasa_cea,B,Gurvich;1989 pt1 p184 pt2 p92.,0
 7791-21-1,Hf_gas,80300,J/mol,,,crc_thermo,B,,0
 7791-21-1,Hf_gas,87860,J/mol,,,nist_snapshot,B,,0
 7791-21-1,Hf_gas,81000,J/mol,,,yaws,C,,0
@@ -116841,6 +116958,7 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 7791-25-5,Gf_gas,-320000,J/mol,,,crc_thermo,B,,0
 7791-25-5,Hf_gas,-354803,J/mol,,,janaf,A,JANAF table Cl-105,1
 7791-25-5,Hf_gas,-354800,J/mol,,,nist_review,A,Chase; 1998,0
+7791-25-5,Hf_gas,-354803.2,J/mol,,,nasa_cea,B,Chase;1998 p847.,0
 7791-25-5,Hf_gas,-364000,J/mol,,,crc_thermo,B,,0
 7791-25-5,Hf_gas,-354800,J/mol,,,nist_snapshot,B,,0
 7791-25-5,Hf_gas,-354800,J/mol,,,yaws,C,,0
@@ -118170,7 +118288,8 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 79-08-3,Cp_gas,80.5,J/(mol K),,298.15,crc_thermo,B,,1
 79-08-3,Gf_gas,-338300,J/mol,,,crc_thermo,B,,1
 79-08-3,Hf_aq,-460824.5023,J/mol,,,sander,B,gas + Sander (k 1.495e+05 mol/(kg bar); dlnH/d(1/T) -9300 K),1
-79-08-3,Hf_gas,-383500,J/mol,,,crc_thermo,B,,1
+79-08-3,Hf_gas,-383500,J/mol,,,nasa_cea,B,Bromoacetic Acid. Dorofeeva;2001.,1
+79-08-3,Hf_gas,-383500,J/mol,,,crc_thermo,B,,0
 79-08-3,Hfus,13900,J/mol,,319.2,nist,B,Lagoa; Diogo; et al.; 2001,1
 79-08-3,Hsub_298,83500,J/mol,3000,,nist,B,Lagoa; Diogo; et al.; 2001,1
 79-08-3,Hsub_298,83500,J/mol,,,nist_snapshot,B,,0
@@ -118699,7 +118818,8 @@ cas,property,value,unit,uncertainty,T_K,source,grade,reference,selected
 79-38-9,Cp_gas,83.9,J/(mol K),,298.15,crc_thermo,B,,1
 79-38-9,Gf_gas,-523800,J/mol,,,crc_thermo,B,,1
 79-38-9,Hc_liquid,-816000,J/mol,2800,,nist,B,Erastov and Kolesov; 1982,1
-79-38-9,Hf_gas,-505500,J/mol,,,crc_thermo,B,,1
+79-38-9,Hf_gas,-515200,J/mol,,,nasa_cea,B,Gurvich;1991 pt1 p142 pt2 p114.,1
+79-38-9,Hf_gas,-505500,J/mol,,,crc_thermo,B,,0
 79-38-9,Hf_gas,-505500,J/mol,4700,,nist,B,Erastov and Kolesov; 1982,0
 79-38-9,Hf_gas,-564800,J/mol,5800,,nist,B,Kolesov; Zenkov; et al.; 1963,0
 79-38-9,Hf_gas,-515896.51,J/mol,,,nist_snapshot,B,,0

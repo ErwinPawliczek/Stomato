@@ -131,10 +131,11 @@ Hf_gas 10024-43-8: janaf -49396 vs nasa_cea -24868.7 J/mol
 Tm 10025-67-9: crc_constants 196.15 vs nist_snapshot 248.807 K
 Gf_gas 10025-78-2: janaf -464899 vs crc_thermo -482000 J/mol
 Hf_gas 10025-78-2: janaf -496222 vs crc_thermo -513000 J/mol
+Hf_gas 10025-87-3: janaf -559819 vs nasa_cea -568400 J/mol
 Gf_gas 10026-04-7: janaf -622784 vs crc_thermo -617000 J/mol
 Hf_gas 10026-04-7: janaf -662746 vs crc_thermo -657000 J/mol
 Gf_gas 10026-13-8: janaf -290271 vs crc_thermo -305000 J/mol
-Hf_gas 10026-13-8: janaf -360184 vs crc_thermo -374900 J/mol
+Hf_gas 10026-13-8: janaf -360184 vs nasa_cea -376000 J/mol
 Gf_solid 10026-17-2: janaf -626562 vs crc_thermo -647200 J/mol
 Hf_solid 10026-17-2: janaf -671532 vs crc_thermo -692000 J/mol
 Tb 1003-09-4: crc_constants 414.15 vs nist_snapshot 423.2 K
@@ -143,6 +144,7 @@ Hf_gas 10036-47-2: janaf -8368 vs nasa_cea -22000 J/mol
 Gf_gas 10043-11-5: janaf 443965 vs crc_thermo 614500 J/mol
 Hf_gas 10043-11-5: janaf 476976 vs nasa_cea 574726 J/mol
 Hf_gas 10043-35-3: janaf -992277 vs nasa_cea -1.00436e+06 J/mol
+Hf_gas 10043-52-4: janaf -471537 vs nasa_cea -485243 J/mol
 Hf_gas 10049-14-6: nasa_cea -1.60616e+06 vs crc_thermo -1.5987e+06 J/mol
 Hf_solid 10049-14-6: nasa_cea -1.9205e+06 vs crc_thermo -1.9142e+06 J/mol
 Tm 101-54-2: crc_constants 348.15 vs nist_snapshot 339 K
@@ -186,6 +188,7 @@ Tb 103-84-4: nist_snapshot 577.2 vs crc_constants 565.15 K
 Hf_gas 10377-51-2: janaf -91002 vs nasa_cea -85269.9 J/mol
 Hf_gas 10377-58-9: janaf -160247 vs nasa_cea -171706 J/mol
 Tm 10405-27-3: crc_constants 157.15 vs nist_snapshot 142 K
+Hf_gas 10476-85-4: janaf -473210 vs nasa_cea -484814 J/mol
 Hf_solid 10476-86-5: janaf -561493 vs nasa_cea -568000 J/mol
 Tb 10498-35-8: nist_snapshot 480.1 vs crc_constants 464.15 K
 Tb 105-13-5: crc_constants 527.15 vs nist_snapshot 532.284 K
@@ -374,6 +377,7 @@ Tc 110-85-0: iupac_critical 659 vs dippr_pina 638 K
 Hf_gas 110-96-3: crc_thermo -179200 vs nist -174000 J/mol
 Hf_liquid 110-96-3: crc_thermo -218500 vs nist -225400 J/mol
 Pc 110-96-3: iupac_critical 3.2e+06 vs dippr_pina 2.57e+06 Pa
+Hf_gas 11092-32-3: janaf -86190 vs nasa_cea -38657.9 J/mol
 Tc 111-11-5: psrk 644 vs dippr_pina 650.7 K
 Pc 111-14-8: iupac_critical 3.16e+06 vs psrk 2.87763e+06 Pa
 Pc 111-26-2: crc_critical 3.4e+06 vs dippr_pina 3.18e+06 Pa
@@ -545,7 +549,10 @@ Tb 122-98-5: crc_constants 553.15 vs nist_snapshot 559.2 K
 Tb 122-99-6: crc_constants 519.15 vs nist_snapshot 514.086 K
 Gf_gas 12228-39-6: janaf 189930 vs crc_thermo 288800 J/mol
 Hf_gas 12228-39-6: janaf 243090 vs nasa_cea 273519 J/mol
+Hf_gas 12232-29-0: janaf -748936 vs nasa_cea -819605 J/mol
 Hf_gas 12251-90-0: crc_thermo 200900 vs nist_snapshot 238490 J/mol
+Hf_gas 12252-63-0: janaf -394551 vs nasa_cea -403096 J/mol
+Hf_gas 12258-95-6: janaf -659817 vs nasa_cea -644658 J/mol
 Hf_gas 12265-82-6: janaf -942781 vs nasa_cea -935323 J/mol
 Hf_gas 12281-36-6: janaf 138603 vs nasa_cea 150431 J/mol
 Hf_gas 12285-64-2: janaf -846423 vs nasa_cea -834063 J/mol
@@ -594,6 +601,7 @@ Tc 124-18-5: coolprop 617.699 vs iupac_critical 611.7 K
 Pc 124-19-6: iupac_critical 2.68e+06 vs nist_snapshot 1.68e+06 Pa
 Hf_gas 124-40-3: atct -15890 vs nist -23800 J/mol
 Hf_liquid 124-40-3: atct -41100 vs nist -49800 J/mol
+Hf_gas 124-48-1: atct -3000 vs nasa_cea 10000 J/mol
 Hf_gas 12401-70-6: janaf 71128 vs nasa_cea 64733.3 J/mol
 Hf_gas 12401-86-4: janaf 83680 vs nasa_cea 106505 J/mol
 Hf_gas 12431-56-0: janaf -486348 vs nasa_cea -480848 J/mol
@@ -678,6 +686,7 @@ Hf_solid 13453-69-5: janaf -1.01922e+06 vs crc_thermo -1.0322e+06 J/mol
 Gf_solid 13460-50-9: janaf -486201 vs crc_thermo -723400 J/mol
 Hf_solid 13460-50-9: janaf -802784 vs crc_thermo -794300 J/mol
 Hf_gas 13460-51-0: janaf -2.27191e+06 vs nasa_cea -2.26369e+06 J/mol
+Hf_gas 13463-30-4: janaf -552403 vs nasa_cea -327430 J/mol
 Hf_gas 13463-39-3: janaf -601576 vs nist_review -594800 J/mol
 Gf_liquid 13463-40-6: janaf -696975 vs crc_thermo -705300 J/mol
 Hf_liquid 13463-40-6: janaf -766090 vs crc_thermo -774000 J/mol
@@ -712,13 +721,15 @@ Hf_gas 13765-43-0: janaf 125938 vs nasa_cea 119553 J/mol
 Hf_gas 13766-26-2: janaf 442667 vs nasa_cea 448727 J/mol
 Gf_gas 13768-60-0: janaf -143699 vs crc_thermo -149800 J/mol
 Hf_gas 13768-60-0: janaf -115897 vs nasa_cea -106932 J/mol
+Hf_gas 13769-75-0: janaf -970688 vs nasa_cea -1.02261e+06 J/mol
+Hf_gas 13769-76-1: janaf -765672 vs nasa_cea -793889 J/mol
 Gf_gas 13774-92-0: janaf 370565 vs crc_thermo 345600 J/mol
 Hf_gas 13774-92-0: atct 358790 vs janaf 376560 J/mol
 Hf_gas 13774-94-2: janaf 376662 vs nasa_cea 368636 J/mol
 Hf_solid 13775-06-9: nasa_cea -1.5087e+06 vs crc_thermo -1.5021e+06 J/mol
 Hf_gas 13779-98-1: janaf -224467 vs nasa_cea -41226.5 J/mol
 Gf_gas 13821-15-3: janaf -1.7991e+06 vs crc_thermo -1.8275e+06 J/mol
-Hf_gas 13821-15-3: janaf -1.84096e+06 vs crc_thermo -1.869e+06 J/mol
+Hf_gas 13821-15-3: janaf -1.84096e+06 vs nasa_cea -1.85784e+06 J/mol
 Hf_gas 13840-88-5: crc_thermo -300400 vs nist_snapshot -284510 J/mol
 Hf_gas 13841-19-5: janaf 313629 vs nasa_cea 262953 J/mol
 Hf_gas 13842-48-3: nasa_cea -302922 vs nist_snapshot -201690 J/mol
@@ -741,6 +752,7 @@ Hf_gas 13966-94-4: nasa_cea 26417.1 vs crc_thermo 7500 J/mol
 Hf_solid 13966-94-4: nasa_cea -102500 vs crc_thermo -116300 J/mol
 Hf_gas 13967-06-1: janaf 248948 vs nasa_cea 232990 J/mol
 Hf_gas 13967-14-1: janaf 253550 vs nasa_cea 230752 J/mol
+Hf_gas 13967-22-1: janaf 259408 vs nasa_cea 249251 J/mol
 Hf_solid 13986-26-0: janaf -488691 vs crc_thermo -481600 J/mol
 Pc 140-29-4: psrk 4.00234e+06 vs dippr_pina 3.46e+06 Pa
 Tc 140-29-4: psrk 745 vs dippr_pina 732 K
@@ -830,6 +842,7 @@ Tc 1569-69-3: iupac_critical 684 vs psrk 664.2 K
 Pc 1574-41-0: psrk 3.99e+06 vs dippr_pina 3.74e+06 Pa
 Tc 1574-41-0: psrk 488 vs dippr_pina 499 K
 Hf_gas 15923-87-2: janaf -5045 vs nasa_cea 12183.3 J/mol
+Hf_gas 1605-72-7: janaf 238488 vs nasa_cea 222940 J/mol
 Pc 1613-51-0: crc_critical 6.5e+06 vs psrk 4.54949e+06 Pa
 Tc 1613-51-0: crc_critical 684 vs psrk 654 K
 Hf_gas 16177-46-1: crc_thermo 166500 vs nist 188000 J/mol
@@ -932,6 +945,7 @@ Tc 2207-04-7: iupac_critical 587.7 vs nist 5877.7 K
 Tm 2216-34-4: crc_constants 157.15 vs nist_snapshot 192.679 K
 Gf_gas 22359-97-3: janaf -24422 vs crc_thermo -42000 J/mol
 Hf_gas 22359-97-3: janaf 15899 vs crc_thermo -4000 J/mol
+Hf_gas 22395-93-3: janaf -313800 vs nasa_cea -279184 J/mol
 Hf_gas 22400-26-6: atct 127360 vs janaf 159410 J/mol
 Tb 2244-07-7: crc_constants 538.15 vs nist_snapshot 526.2 K
 Gf_gas 2264-21-3: janaf -456912 vs crc_thermo -464000 J/mol
@@ -944,6 +958,7 @@ Hf_gas 23361-56-0: janaf -602496 vs nasa_cea -592978 J/mol
 Tb 238-84-6: crc_constants 678.15 vs nist_snapshot 686.122 K
 Tb 2384-85-2: nist 448.65 vs nist_snapshot 320.337 K
 Tb 2426-08-6: crc_constants 444.15 vs nist_snapshot 438.2 K
+Hf_gas 24304-00-5: janaf 523000 vs nasa_cea 438829 J/mol
 Tb 24544-04-5: crc_constants 545.15 vs nist_snapshot 530.2 K
 Hf_gas 2465-56-7: atct 391460 vs janaf 386392 J/mol
 Hf_gas 2468-81-7: atct 573500 vs janaf 584505 J/mol
@@ -959,6 +974,7 @@ Hf_solid 25658-42-8: janaf -365263 vs nasa_cea -371238 J/mol
 Tb 2568-33-4: crc_constants 481.15 vs nist_snapshot 474.15 K
 Tm 2586-89-2: crc_constants 142.65 vs nist 170 K
 Hf_gas 2597-43-5: atct -16100 vs nist -9000 J/mol
+Hf_gas 2602-42-8: janaf -62760 vs nasa_cea -16000 J/mol
 Tm 262-12-4: crc_constants 390.65 vs nist_snapshot 395.685 K
 Tb 2621-46-7: nist_snapshot 471.373 vs crc_constants 466.15 K
 Tb 2627-95-4: crc_constants 312.15 vs nist_snapshot 412 K
@@ -1018,6 +1034,7 @@ Tb 3218-02-8: crc_constants 435.15 vs nist_snapshot 427.354 K
 Tb 3228-02-2: nist 511.15 vs nist 519.15 K
 Tb 324-74-3: crc_constants 526.15 vs nist_snapshot 583.1 K
 Tb 32665-23-9: crc_constants 420.15 vs nist_snapshot 141.8 K
+Hf_gas 32752-94-6: janaf 487018 vs nasa_cea 501302 J/mol
 Hf_gas 334-48-5: crc_thermo -594900 vs nist -624200 J/mol
 Tb 334-48-5: crc_constants 543.15 vs nist 530 K
 Hf_gas 334-88-3: nist 206000 vs nist 215000 J/mol
@@ -1031,6 +1048,8 @@ Tb 350-03-8: crc_constants 498.15 vs nist_snapshot 493.122 K
 Tm 350-50-5: crc_constants 238.15 vs nist_snapshot 210.7 K
 Hf_gas 353-50-4: atct -606650 vs janaf -638897 J/mol
 Hf_gas 353-54-8: atct -132300 vs nasa_cea -120000 J/mol
+Hf_gas 353-55-9: atct -187400 vs nasa_cea -175000 J/mol
+Hf_gas 353-59-3: atct -442200 vs nasa_cea -435000 J/mol
 Hf_gas 353-85-5: janaf -495386 vs nist -460000 J/mol
 Hf_gas 354-06-3: crc_thermo -644800 vs nist -654700 J/mol
 Pc 354-23-4: crc_critical 3.77e+06 vs psrk 3.99e+06 Pa
@@ -1295,7 +1314,9 @@ Hf_liquid 593-75-9: crc_thermo 130800 vs nist 112000 J/mol
 Hf_gas 593-95-3: atct -113530 vs crc_thermo -96200 J/mol
 Hf_liquid 593-95-3: atct -144260 vs crc_thermo -127200 J/mol
 Tb 593-96-4: crc_constants 374.15 vs nist_snapshot 356.2 K
+Hf_gas 594-15-0: atct 53000 vs nasa_cea 65000 J/mol
 Tb 594-15-0: nist 377.45 vs crc_constants 431.65 K
+Hf_gas 594-18-3: atct 3400 vs nasa_cea 10000 J/mol
 Hf_liquid 594-34-3: crc_thermo -156600 vs nist -150500 J/mol
 Tb 594-34-3: nist 423.2 vs crc_constants 412.15 K
 Tm 594-34-3: crc_constants 283.65 vs nist 203.05 K
@@ -1545,6 +1566,7 @@ Hf_liquid 75-25-2: atct 1300 vs crc_thermo -22300 J/mol
 Pc 75-25-2: crc_critical 5.8e+06 vs dippr_pina 6.09e+06 Pa
 Tc 75-25-2: crc_critical 682 vs dippr_pina 696 K
 Tc 75-26-3: psrk 525.6 vs dippr_pina 532 K
+Hf_gas 75-27-4: atct -51500 vs nasa_cea -45000 J/mol
 Tm 75-28-5: crc_constants 113.56 vs nist 140 K
 Pc 75-29-6: iupac_critical 4.26e+06 vs psrk 4.72174e+06 Pa
 Tc 75-29-6: iupac_critical 482.4 vs dippr_pina 489 K
@@ -1570,10 +1592,11 @@ Tc 75-61-6: iupac_critical 471 vs dippr_pina 478 K
 Tm 75-61-6: crc_constants 163.05 vs nist 131.61 K
 Pc 75-66-1: psrk 3.79969e+06 vs dippr_pina 4.06e+06 Pa
 Tc 75-66-1: psrk 523 vs dippr_pina 530 K
-Hf_gas 75-69-4: atct -290700 vs crc_thermo -268300 J/mol
+Hf_gas 75-69-4: atct -290700 vs nasa_cea -283700 J/mol
 Gf_gas 75-71-8: janaf -452648 vs crc_thermo -439400 J/mol
-Hf_gas 75-71-8: atct -495810 vs crc_thermo -477400 J/mol
+Hf_gas 75-71-8: atct -495810 vs nasa_cea -490800 J/mol
 Tc 75-71-8: coolprop 385.12 vs nist_snapshot 370 K
+Hf_gas 75-72-9: atct -710300 vs nasa_cea -704200 J/mol
 Hf_gas 75-74-1: nist_review 167600 vs nist_review 136100 J/mol
 Hf_liquid 75-74-1: nist_review 129600 vs nist_review 98100 J/mol
 Gf_gas 75-76-3: janaf -148063 vs crc_thermo -99900 J/mol
@@ -1608,6 +1631,8 @@ Tb 762-49-2: nist_snapshot 345 vs crc_constants 331.15 K
 Tc 762-62-9: crc_critical 516 vs passut_danner 526.483 K
 Tc 7642-09-3: crc_critical 510 vs psrk 517 K
 Hf_gas 7646-69-7: janaf 124265 vs nasa_cea 140835 J/mol
+Hf_gas 7646-78-8: nasa_cea -478466 vs crc_thermo -471500 J/mol
+Hf_liquid 7646-78-8: nasa_cea -517000 vs crc_thermo -511300 J/mol
 Hf_gas 765-85-5: crc_thermo -350200 vs nist -355300 J/mol
 Hf_gas 766-05-2: crc_thermo 4800 vs nist -3600 J/mol
 Hf_liquid 766-05-2: crc_thermo -47200 vs nist -59120 J/mol
@@ -1653,6 +1678,7 @@ Hf_solid 7783-86-0: janaf -104600 vs crc_thermo -113000 J/mol
 Hf_gas 7784-23-8: janaf -193301 vs crc_thermo -289400 J/mol
 Tm 7784-33-0: crc_constants 304.25 vs nist 577.2 K
 Tc 7784-34-1: dippr_pina 629 vs mathews 591 K
+Hf_gas 7786-30-3: janaf -392459 vs nasa_cea -399170 J/mol
 Hf_gas 7787-32-8: janaf -803746 vs nasa_cea -812003 J/mol
 Hf_solid 7787-47-5: janaf -496222 vs crc_thermo -490400 J/mol
 Hf_gas 7787-52-2: janaf 125520 vs nasa_cea 161099 J/mol
@@ -1669,8 +1695,9 @@ Hf_gas 7789-67-5: nasa_cea -324217 vs crc_thermo -314600 J/mol
 Hf_solid 7789-67-5: nasa_cea -388000 vs crc_thermo -377400 J/mol
 Hf_gas 7789-75-5: janaf -784500 vs nasa_cea -790828 J/mol
 Hf_gas 7790-89-8: atct -55703 vs janaf -50292 J/mol
+Hf_gas 7790-91-2: janaf -158866 vs nasa_cea -164600 J/mol
 Gf_gas 7791-21-1: janaf 105065 vs crc_thermo 97900 J/mol
-Hf_gas 7791-21-1: janaf 87864 vs crc_thermo 80300 J/mol
+Hf_gas 7791-21-1: janaf 87864 vs nasa_cea 79000 J/mol
 Gf_gas 7791-25-5: janaf -310323 vs crc_thermo -320000 J/mol
 Hf_gas 7791-25-5: janaf -354803 vs crc_thermo -364000 J/mol
 Tc 78-10-4: iupac_critical 592.2 vs crc_critical 587 K
@@ -1709,7 +1736,7 @@ Hf_gas 79-34-5: crc_thermo -149200 vs nist_snapshot -156676 J/mol
 Hf_liquid 79-34-5: crc_thermo -195000 vs nist_snapshot -202245 J/mol
 Pc 79-34-5: psrk 5.12704e+06 vs dippr_pina 4.09e+06 Pa
 Tc 79-34-5: psrk 650 vs nist_snapshot 644.5 K
-Hf_gas 79-38-9: crc_thermo -505500 vs nist -564800 J/mol
+Hf_gas 79-38-9: nasa_cea -515200 vs crc_thermo -505500 J/mol
 Pc 79-38-9: iupac_critical 4.02e+06 vs nist 2.6e+07 Pa
 Pc 79-41-4: psrk 4.70047e+06 vs nist 4.90521e+06 Pa
 Tb 79-55-0: crc_constants 420.15 vs nist_snapshot 441.026 K

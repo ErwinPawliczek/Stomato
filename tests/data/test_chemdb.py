@@ -642,3 +642,38 @@ def test_a_stated_cp_table_agrees_with_an_independent_298_k_value(
     ]
     assert stated and stated[0].value == pytest.approx(cp298)
     assert species_thermo(query, "gas").cp(298.15) == pytest.approx(cp298, rel=rel)
+
+
+@pytest.mark.parametrize(
+    ("query", "reference", "crc_cp298", "crc_s298"),
+    [
+        ("10038-98-9", "Gurvich", 96.1, 347.7),  # GeCl4: CEA record "GeCL4"
+        ("7646-78-8", "Gurvich", 98.3, 365.8),  # SnCl4: CEA record "SnCL4"
+        ("7632-51-1", "Nagarajan", 96.2, 362.4),  # VCl4: CEA record "VCL4"
+        ("79-08-3", "Dorofeeva", 80.5, 337.0),  # bromoacetic acid: CEA record "CH2Br-COOH"
+    ],
+)
+def test_cea_records_matched_by_elemental_formula_agree_with_the_crc(
+    query: str, reference: str, crc_cp298: float, crc_s298: float
+) -> None:
+    """CEA names write chlorine as ``CL``; these records are matched by their own elemental
+    formula, corroborated by the WebBook page. The CRC Handbook's 298 K Cp° and S° are
+    the independent check (Cp within 0.5 %, S° within 1.2 %)."""
+    from ngdesign.data.species_models import TemperatureRangeError, species_thermo
+
+    model = species_thermo(query, "gas")
+    assert model.curve.name == "nasa9"
+    assert reference in chemdb.nasa9(query)[0]["reference"]
+    assert model.cp(298.15) == pytest.approx(crc_cp298, rel=0.005)
+    assert model.s(298.15) == pytest.approx(crc_s298, rel=0.012)
+    with pytest.raises(TemperatureRangeError):
+        model.cp(model.t_range[1] + 1.0)
+
+
+def test_cea_formula_fallback_refuses_an_identity_the_webbook_contradicts() -> None:
+    """13596-11-7 is AlOCl (WebBook), but its PubChem formula here is AlClHO, the formula
+    of CEA's HOAlCl record. Formula alone would attach HOAlCl to it; the WebBook check
+    refuses, and isomer-mixture records (C2F2Cl2, C2HClF2) never stand for one species."""
+    assert not chemdb.nasa9("13596-11-7")
+    assert not chemdb.nasa9("79-35-6")
+    assert not chemdb.nasa9("359-10-4")
