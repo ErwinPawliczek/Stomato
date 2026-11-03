@@ -3288,6 +3288,91 @@
       - 298.15
       - 100000.0
   l0_excluded: {}
+- id: wilson_tdep_ig
+  name: Wilson T-dependent form + ideal gas vapour
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: wilson_tdep
+    vapour: ideal
+  params:
+    source: data/thermo_params/wilson/tdep_pairs.yaml
+    provenance: ln Lambda_ij = a_ij + b_ij / T from Siimer et al. 2002 (hexan-2-one / o-xylene / nonane) and Kirss et al. 2002 (toluene / p-xylene / 1,2-dichloroethane), Proc. Estonian Acad. Sci. Chem. 51, Table 4 of each, with per-pair provenance and the journal's licence wording in the file (no Creative Commons licence is named); pairs keyed by CAS, any other pair refuses
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 319.0
+    - 424.0
+    P_Pa:
+    - 20000.0
+    - 110000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Wilson, G. M., J. Am. Chem. Soc. 86(2), 127-130, 1964
+  - Siimer, E., Kirss, H., Kuus, M. & Kudryavtseva, L., Proc. Estonian Acad. Sci. Chem. 51(1), 19-28, 2002, doi 10.3176/chem.2002.1.02
+  - Kirss, H., Kuus, M., Siimer, E. & Kudryavtseva, L., Proc. Estonian Acad. Sci. Chem. 51(4), 215-224, 2002, doi 10.3176/chem.2002.4.03
+
+  l0:
+    pure_psat_limit:
+      points:
+      - - toluene
+        - 360.0
+      - - p-xylene
+        - 380.0
+    phase_identification:
+      points:
+      - - toluene
+        - 360.0
+      - - p-xylene
+        - 420.0
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        toluene: 0.5
+        p-xylene: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 420.0
+      - 50000.0
+      z:
+        toluene: 0.5
+        p-xylene: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          toluene: 0.5
+          p-xylene: 0.5
+        T: 360.0
+        P: 100000.0
+        phase: hc_liquid
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        toluene: 0.5
+        p-xylene: 0.5
+    single_liquid_limit:
+      z:
+        toluene: 0.5
+        p-xylene: 0.5
+      state:
+      - 320.0
+      - 100000.0
+  l0_excluded: {}
 - id: nrtl_sac_ig
   name: NRTL-SAC (segment activity)
   family: gamma_phi

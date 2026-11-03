@@ -125,6 +125,11 @@ sources:
     citation: "McBride, B.J., Zehe, M.J. and Gordon, S., NASA Glenn Coefficients for Calculating Thermodynamic Properties of Individual Species, NASA/TP-2002-211556, 2002, as distributed in NASA CEA (data/thermo.inp), Copyright 2025 United States Government as represented by the Administrator of NASA, Apache License 2.0; each row's `reference` keeps the record's own sources."
     url: https://github.com/nasa/cea
     access: thermo.inp fetched from the nasa/cea repository with its LICENSE and NOTICE; 9-coefficient polynomials in nasa9.csv
+  coolprop_ig:
+    grade: B
+    citation: "Ideal-gas parts of the reference equations of state carried by CoolProp 8.0.0 (Bell, I.H., Wronski, J., Quoilin, S. and Lemort, V., Ind. Eng. Chem. Res. 53(6), 2014, 2498-2508; MIT licence): each fluid's Cp0 correlation as published in its own EOS paper, cited per row in `reference` from CoolProp's CoolPropBibTeXLibrary.bib. Some of those papers fit Cp0 to measurements and some to spectroscopic or ab initio values, so the set is graded B, not A."
+    url: https://github.com/CoolProp/CoolProp
+    access: read from the installed CoolProp package at build time (fluid JSON alpha0 terms); each reconstruction is checked against CoolProp's own cp0molar to 1e-9 at up to five temperatures, and one term per row is written to cp0_eos.csv
   poling:
     grade: B
     citation: "Poling, B.E., Prausnitz, J.M. and O'Connell, J.P., The Properties of Gases and Liquids, 5th ed., McGraw-Hill, 2000."

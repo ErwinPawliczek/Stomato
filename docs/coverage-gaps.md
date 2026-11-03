@@ -10,9 +10,9 @@ registry implements. A level or method listed here is listed but not implemented
 |---|---|---|---|
 | Unit rows | 84 | 84 | 0 |
 | Planned rigour levels on implemented units | | | 1 |
-| Property methods in the plan | 168 | 160 | 8 |
+| Property methods in the plan | 168 | 162 | 6 |
 
-Catalogue rows by status: 8 experimental, 142 provisional, 9 validated.
+Catalogue rows by status: 7 experimental, 144 provisional, 9 validated.
 
 ## Unit rows with no implementation
 
@@ -28,9 +28,7 @@ None.
 
 | plan section | method | state |
 |---|---|---|
-| F SAFT / CPA | soft-SAFT | `soft_saft` is a refusal row |
 | H solids / polymers / special | Polymer SRK | no catalogue row |
-| Parameter-form and databank variants | Wilson two-parameter / T-dependent forms | no catalogue row |
 | Parameter-form and databank variants | COSMO-SAC (sigma profiles) | no catalogue row |
 | Parameter-form and databank variants | PR / SRK with API liquid density | no catalogue row |
 | Parameter-form and databank variants | Schwartzentruber-Renon (SR-POLAR) | no catalogue row |

@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / "docs" / "coverage-gaps.md"
 
 #: Rows that register but refuse at first use: listed, not implemented.
-REFUSAL_ROWS = {"soft_saft"}
+REFUSAL_ROWS: set[str] = set()
 
 #: Plan names that are not a normalised form of a row name or id.
 PLAN_TO_ID = {
@@ -60,6 +60,7 @@ PLAN_TO_ID = {
     "Ideal + Henry for dilute gases in water": "henry-sander",
     "NRTL two-parameter / five-parameter (T-dependent) forms": "nrtl_tdep_hoc",
     "UNIQUAC two-parameter / T-dependent forms": "uniquac_tdep_ig",
+    "Wilson two-parameter / T-dependent forms": "wilson_tdep_ig",
     "Wilson liquid-reference (Wilson-LR, Wilson-GLR)": "wilson_lr_ig",
     "UNIFAC with Lyngby / Dortmund T-dependence switch": "unifac_lyngby_ig",
     "PR / SRK with Rackett liquid density": "pr-rackett",

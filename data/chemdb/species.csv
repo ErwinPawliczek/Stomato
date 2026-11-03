@@ -1314,7 +1314,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 111-49-9,hexamethyleneimine,azepane,C6H13N,99.17412,0,ZSIQJIWKELUFRJ-UHFFFAOYSA-N,C1CCCNCC1,8119,pubchem,0
 111-51-3,tetramethylputrescine,"N,N,N',N'-tetramethylbutane-1,4-diamine",C8H20N2,144.2578,0,VEAZEPMQWHPHAG-UHFFFAOYSA-N,CN(C)CCCCN(C)C,66074,pubchem,0
 111-53-5,"1,4-bis(dimethylamino)-2-butyne","N,N,N',N'-tetramethylbut-2-yne-1,4-diamine",C8H16N2,140.22604,0,FFDFQBBNDKGBGI-UHFFFAOYSA-N,CN(C)CC#CCN(C)C,66075,pubchem,0
-111-55-7,glycol diacetate,2-acetyloxyethyl acetate,C6H10O4,146.1412,0,JTXMVXSTHSMVQF-UHFFFAOYSA-N,CC(=O)OCCOC(=O)C,8121,pubchem,0
+111-55-7,glycol diacetate,2-acetyloxyethyl acetate,C6H10O4,146.1412,0,JTXMVXSTHSMVQF-UHFFFAOYSA-N,CC(=O)OCCOC(=O)C,8121,pubchem,1
 111-56-8,2-bromododecanoic acid,2-bromododecanoic acid,C12H23BrO2,279.21382,0,HXKXBCBZXXQPPD-UHFFFAOYSA-N,CCCCCCCCCCC(C(=O)O)Br,66980,pubchem,0
 111-60-4,cremophor a,2-hydroxyethyl octadecanoate,C20H40O3,328.5298,0,RFVNOJDQRGSOEL-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCC(=O)OCCO,24762,pubchem,0
 111-61-5,ethyl stearate,ethyl octadecanoate,C20H40O2,312.5304,0,MVLVMROFTAUDAG-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCC(=O)OCC,8122,pubchem,0
@@ -1484,7 +1484,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 112-64-1,myristoyl chloride,tetradecanoyl chloride,C14H27ClO,246.81658,0,LPWCRLGKYWVLHQ-UHFFFAOYSA-N,CCCCCCCCCCCCCC(=O)Cl,66986,pubchem,0
 112-66-3,dodecyl acetate,dodecyl acetate,C14H28O2,228.37092,0,VZWGRQBCURJOMT-UHFFFAOYSA-N,CCCCCCCCCCCCOC(=O)C,8205,pubchem,0
 112-67-4,palmitoyl chloride,hexadecanoyl chloride,C16H31ClO,274.86974,0,ARBOVOVUTSQWSS-UHFFFAOYSA-N,CCCCCCCCCCCCCCCC(=O)Cl,8206,pubchem,0
-112-69-6,cetyldimethylamine,"N,N-dimethylhexadecan-1-amine",C18H39N,269.50896,0,NHLUVTZJQOJKCC-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCN(C)C,16221,pubchem,0
+112-69-6,cetyldimethylamine,"N,N-dimethylhexadecan-1-amine",C18H39N,269.50896,0,NHLUVTZJQOJKCC-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCN(C)C,16221,pubchem,1
 112-70-9,1-tridecanol,tridecan-1-ol,C13H28O,200.36082,0,XFRVVPUIAFSTFO-UHFFFAOYSA-N,CCCCCCCCCCCCCO,8207,pubchem,1
 112-71-0,1-bromotetradecane,1-bromotetradecane,C14H29Br,277.28406,0,KOFZTCSTGIWCQG-UHFFFAOYSA-N,CCCCCCCCCCCCCCBr,8208,pubchem,0
 112-72-1,1-tetradecanol,tetradecan-1-ol,C14H30O,214.3874,0,HLZKNKRTKFSKGZ-UHFFFAOYSA-N,CCCCCCCCCCCCCCO,8209,pubchem,1
@@ -1504,7 +1504,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 112-92-5,1-octadecanol,octadecan-1-ol,C18H38O,270.49372,0,GLDOVTGHNKAZLK-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCO,8221,pubchem,0
 112-95-8,eicosane,icosane,C20H42,282.54748,0,CBFCDTFDPHXCNY-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCC,8222,pubchem,0
 112-96-9,octadecyl isocyanate,1-isocyanatooctadecane,C19H37NO,295.50318,0,QWDQYHPOSSHSAW-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCN=C=O,66988,pubchem,0
-112-99-2,dioctadecylamine,N-octadecyloctadecan-1-amine,C36H75N,521.9874,0,HKUFIYBZNQSHQS-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCNCCCCCCCCCCCCCCCCCC,66989,pubchem,0
+112-99-2,dioctadecylamine,N-octadecyloctadecan-1-amine,C36H75N,521.9874,0,HKUFIYBZNQSHQS-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCNCCCCCCCCCCCCCCCCCC,66989,pubchem,1
 1120-06-5,2-decanol,decan-2-ol,C10H22O,158.28108,0,ACUZDYFTRHEKOS-UHFFFAOYSA-N,CCCCCCCCC(C)O,14254,pubchem,0
 1120-16-7,dodecanamide,dodecanamide,C12H25NO,199.333,0,ILRSCQWREDREME-UHFFFAOYSA-N,CCCCCCCCCCCC(=O)N,14256,pubchem,0
 1120-21-4,undecane,undecane,C11H24,156.30826,0,RSJKGSCJYJTIGS-UHFFFAOYSA-N,CCCCCCCCCCC,14257,pubchem,1
@@ -1566,7 +1566,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1123-27-9,1-(1-hydroxycyclohexyl)ethanone,1-(1-hydroxycyclohexyl)ethanone,C8H14O2,142.19556,0,JKAKPUWJSRMKFH-UHFFFAOYSA-N,CC(=O)C1(CCCCC1)O,70745,pubchem,0
 1123-34-8,1-allylcyclohexanol,1-prop-2-enylcyclohexan-1-ol,C9H16O,140.22274,0,ZSLKGUQYEQVKQE-UHFFFAOYSA-N,C=CCC1(CCCCC1)O,79145,pubchem,0
 1123-63-3,"4-chloro-2,6-dimethylphenol","4-chloro-2,6-dimethylphenol",C8H9ClO,156.60946,0,VWYKSJIPZHRLNO-UHFFFAOYSA-N,CC1=CC(=CC(=C1O)C)Cl,70747,pubchem,0
-1123-73-5,3-ethyl-2-methylphenol,3-ethyl-2-methylphenol,C9H12O,136.19098,0,IVFJPARIJHUGPZ-UHFFFAOYSA-N,CCC1=C(C(=CC=C1)O)C,34858,pubchem,0
+1123-73-5,3-ethyl-2-methylphenol,3-ethyl-2-methylphenol,C9H12O,136.19098,0,IVFJPARIJHUGPZ-UHFFFAOYSA-N,CCC1=C(C(=CC=C1)O)C,34858,pubchem,1
 1123-84-8,"2,5-dichlorostyrene","1,4-dichloro-2-ethenylbenzene",C8H6Cl2,173.03924,0,IZMZREOTRMMCCB-UHFFFAOYSA-N,C=CC1=C(C=CC(=C1)Cl)Cl,14294,pubchem,0
 1123-85-9,2-phenyl-1-propanol,2-phenylpropan-1-ol,C9H12O,136.19098,0,RNDNSYIPLPAXAZ-UHFFFAOYSA-N,CC(CO)C1=CC=CC=C1,14295,pubchem,0
 1123-86-0,ethyl cyclohexyl ketone,1-cyclohexylpropan-1-one,C9H16O,140.22274,0,AMHOPTNGSNYSBL-UHFFFAOYSA-N,CCC(=O)C1CCCCC1,70748,pubchem,0
@@ -2535,7 +2535,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 123-05-7,2-ethylhexanal,2-ethylhexanal,C8H16O,128.21204,0,LGYNIFWIKSEESD-UHFFFAOYSA-N,CCCCC(CC)C=O,31241,pubchem,0
 123-06-8,ethoxymethylenemalononitrile,2-(ethoxymethylidene)propanedinitrile,C6H6N2O,122.12464,0,OEICGMPRFOJHKO-UHFFFAOYSA-N,CCOC=C(C#N)C#N,67152,pubchem,0
 123-07-9,4-ethylphenol,4-ethylphenol,C8H10O,122.1644,0,HXDOZKJGKXYMEW-UHFFFAOYSA-N,CCC1=CC=C(C=C1)O,31242,pubchem,1
-123-08-0,4-hydroxybenzaldehyde,4-hydroxybenzaldehyde,C7H6O2,122.12134,0,RGHHSNMVTDWUBI-UHFFFAOYSA-N,C1=CC(=CC=C1C=O)O,126,pubchem,0
+123-08-0,4-hydroxybenzaldehyde,4-hydroxybenzaldehyde,C7H6O2,122.12134,0,RGHHSNMVTDWUBI-UHFFFAOYSA-N,C1=CC(=CC=C1C=O)O,126,pubchem,1
 123-11-5,4-methoxybenzaldehyde,4-methoxybenzaldehyde,C8H8O2,136.14792,0,ZRSNZINYAWTAHE-UHFFFAOYSA-N,COC1=CC=C(C=C1)C=O,31244,pubchem,0
 123-15-9,2-methylpentanal,2-methylpentanal,C6H12O,100.15888,0,FTZILAQGHINQQR-UHFFFAOYSA-N,CCCC(C)C=O,31245,pubchem,0
 123-17-1,"2,6,8-trimethyl-4-nonanol","2,6,8-trimethylnonan-4-ol",C12H26O,186.33424,0,LFEHSRSSAGQWNI-UHFFFAOYSA-N,CC(C)CC(C)CC(CC(C)C)O,61056,pubchem,0
@@ -2559,7 +2559,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 123-45-5,sulfonyldiacetic acid,2-(carboxymethylsulfonyl)acetic acid,C4H6O6S,182.15184,0,WDYRPTWUNMHTJL-UHFFFAOYSA-N,C(C(=O)O)S(=O)(=O)CC(=O)O,261524,pubchem,0
 123-48-8,123-48-8,"2,2,4,6,6-pentamethylhept-3-ene",C12H24,168.31896,0,NBUMCEJRJRRLCA-UHFFFAOYSA-N,CC(=CC(C)(C)C)CC(C)(C)C,31259,pubchem,0
 123-51-3,3-methyl-1-butanol,3-methylbutan-1-ol,C5H12O,88.14818,0,PHTQWCKDNZKARW-UHFFFAOYSA-N,CC(C)CCO,31260,pubchem,1
-123-54-6,"2,4-pentanedione","pentane-2,4-dione",C5H8O2,100.11582,0,YRKCREAYFQTBPV-UHFFFAOYSA-N,CC(=O)CC(=O)C,31261,pubchem,0
+123-54-6,"2,4-pentanedione","pentane-2,4-dione",C5H8O2,100.11582,0,YRKCREAYFQTBPV-UHFFFAOYSA-N,CC(=O)CC(=O)C,31261,pubchem,1
 123-56-8,succinimide,"pyrrolidine-2,5-dione",C4H5NO2,99.088,0,KZNICNPSHKQLFF-UHFFFAOYSA-N,C1CC(=O)NC1=O,11439,pubchem,0
 123-61-5,"1,3-phenylene diisocyanate","1,3-diisocyanatobenzene",C8H4N2O2,160.12956,0,VGHSXKTVMPXHNG-UHFFFAOYSA-N,C1=CC(=CC(=C1)N=C=O)N=C=O,31262,pubchem,0
 123-62-6,propionic anhydride,propanoyl propanoate,C6H10O3,130.1418,0,WYVAMUWZEOHJOQ-UHFFFAOYSA-N,CCC(=O)OC(=O)CC,31263,pubchem,0
@@ -2569,7 +2569,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 123-72-8,butyraldehyde,butanal,C4H8O,72.10572,0,ZTQSAGDEMFDKMZ-UHFFFAOYSA-N,CCCC=O,261,pubchem,1
 123-73-9,trans-Crotonaldehyde,(E)-but-2-enal,C4H6O,70.08984,0,MLUCVPSAIODCQM-NSCUHMNNSA-N,CC=CC=O,447466,pubchem,0
 123-75-1,pyrrolidine,pyrrolidine,C4H9N,71.12096,0,RWRDLPDLKQPQOW-UHFFFAOYSA-N,C1CCNC1,31268,pubchem,1
-123-76-2,levulinic acid,4-oxopentanoic acid,C5H8O3,116.11522,0,JOOXCMJARBKPKM-UHFFFAOYSA-N,CC(=O)CCC(=O)O,11579,pubchem,0
+123-76-2,levulinic acid,4-oxopentanoic acid,C5H8O3,116.11522,0,JOOXCMJARBKPKM-UHFFFAOYSA-N,CC(=O)CCC(=O)O,11579,pubchem,1
 123-77-3,azodicarboxamide,(E)-carbamoyliminourea,C2H4N4O2,116.07876,0,XOZUGNYVDXMRKW-AATRIKPKSA-N,C(=O)(N)N=NC(=O)N,5462814,pubchem,0
 123-79-5,dioctyl adipate,dioctyl hexanedioate,C22H42O4,370.56648,0,NEHDRDVHPTWWFG-UHFFFAOYSA-N,CCCCCCCCOC(=O)CCCCC(=O)OCCCCCCCC,31271,pubchem,0
 123-80-8,ethylene propionate,2-propanoyloxyethyl propanoate,C8H14O4,174.19436,0,UMNVUZRZKPVECS-UHFFFAOYSA-N,CCC(=O)OCCOC(=O)CC,135968,pubchem,0
@@ -2668,7 +2668,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 12524-20-8,Barium Iodide,,BaI,,,,,,chemicals_bank,0
 12536-65-1,zinc borate,trizinc diborate,B2O6Zn3,313.7584,0,BIKXLKXABVUSMH-UHFFFAOYSA-N,B([O-])([O-])[O-].B([O-])([O-])[O-].[Zn+2].[Zn+2].[Zn+2],167155,pubchem,0
 125379-19-3,"3,4-diethyl-3,4-dimethoxyhexane","3,4-diethyl-3,4-dimethoxyhexane",C12H26O2,202.33364,0,KGFJBMIBGUJGSB-UHFFFAOYSA-N,CCC(CC)(C(CC)(CC)OC)OC,145571,pubchem,0
-12539-57-0,monocyanogen,azanylidynemethane,CN+,26.0174,1,NKCCODPFBDGPRJ-UHFFFAOYSA-N,[C+]#N,5460614,pubchem,0
+12539-57-0,monocyanogen,azanylidynemethane,CN+,26.0174,1,NKCCODPFBDGPRJ-UHFFFAOYSA-N,[C+]#N,5460614,pubchem,1
 12588-30-6,"aluminum(1+), oxo-",,AlO+,42.980938,,AENDPCOLKHDBIA-UHFFFAOYSA-N,[Al+].[O],-1,chemicals_bank,0
 12595-82-3,"1,2,3,4-pentatetraene","penta-1,2,3,4-tetraene",C5H4,64.08526,0,UNSWNZFTRPSXHQ-UHFFFAOYSA-N,C=C=C=C=C,139338,pubchem,0
 12595-85-6,Calcium,,Ca2,,,,,,chemicals_bank,0
@@ -2718,7 +2718,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 127-07-1,hydroxyurea,hydroxyurea,CH4N2O2,76.05466,0,VSNHCAURESNICA-UHFFFAOYSA-N,C(=O)(N)NO,3657,pubchem,0
 127-08-2,potassium acetate,potassium acetate,C2H3KO2,98.14232,0,SCVFZCLFOSHCOH-UHFFFAOYSA-M,CC(=O)[O-].[K+],517044,pubchem,0
 127-09-3,sodium acetate,sodium acetate,C2H3NaO2,82.033789,0,VMHLLURERBWHNL-UHFFFAOYSA-M,CC(=O)[O-].[Na+],517045,pubchem,0
-127-17-3,pyruvic acid,2-oxopropanoic acid,C3H4O3,88.06206,0,LCTONWCANYUPML-UHFFFAOYSA-N,CC(=O)C(=O)O,1060,pubchem,0
+127-17-3,pyruvic acid,2-oxopropanoic acid,C3H4O3,88.06206,0,LCTONWCANYUPML-UHFFFAOYSA-N,CC(=O)C(=O)O,1060,pubchem,1
 127-18-4,tetrachloroethylene,"1,1,2,2-tetrachloroethene",C2Cl4,165.8334,0,CYTYCFOTNPOANT-UHFFFAOYSA-N,C(=C(Cl)Cl)(Cl)Cl,31373,pubchem,1
 127-19-5,"n,n-dimethylacetamide","N,N-dimethylacetamide",C4H9NO,87.12036,0,FXHOOIRPVKKKFG-UHFFFAOYSA-N,CC(=O)N(C)C,31374,pubchem,0
 127-21-9,"1,3-dichlorotetrafluoroacetone","1,3-dichloro-1,1,3,3-tetrafluoropropan-2-one",C3Cl2F4O,198.931113,0,QRKKTXWUDLJYCV-UHFFFAOYSA-N,C(=O)(C(F)(F)Cl)C(F)(F)Cl,31376,pubchem,0
@@ -3117,7 +3117,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1332-58-7,kaolin,oxo-oxoalumanyloxy-[oxo(oxoalumanyloxy)silyl]oxysilane;dihydrate,Al2H4O9Si2,258.160437,0,NLYAJNPCOHFWQQ-UHFFFAOYSA-N,O.O.O=[Al]O[Si](=O)O[Si](=O)O[Al]=O,56841936,pubchem,0
 1332-77-0,potassium tetraborate,"dipotassium;3,7-dioxido-2,4,6,8,9-pentaoxa-1,3,5,7-tetraborabicyclo[3.3.1]nonane",B4K2O7,233.4364,0,FZQSLXQPHPOTHG-UHFFFAOYSA-N,B1(OB2OB(OB(O1)O2)[O-])[O-].[K+].[K+],9816075,pubchem,1
 1332-81-6,"1,3-dioxodistiboxane 1-oxide",dioxo(oxostibanyloxy)-lambda5-stibane,O4Sb2,307.5176,0,AHBGXHAWSHTPOM-UHFFFAOYSA-N,O=[Sb]O[Sb](=O)=O,74002,pubchem,0
-13320-56-4,"1,1-dibromopentane","1,1-dibromopentane",C5H10Br2,229.9409,0,QBLPUSMNBSNAHZ-UHFFFAOYSA-N,CCCCC(Br)Br,12003646,pubchem,0
+13320-56-4,"1,1-dibromopentane","1,1-dibromopentane",C5H10Br2,229.9409,0,QBLPUSMNBSNAHZ-UHFFFAOYSA-N,CCCCC(Br)Br,12003646,pubchem,1
 13320-71-3,molybdenum(iv) chloride,tetrachloromolybdenum,Cl4Mo,237.772,0,OYMJNIHGVDEDFX-UHFFFAOYSA-J,Cl[Mo](Cl)(Cl)Cl,83340,pubchem,1
 13325-10-5,4-amino-1-butanol,4-aminobutan-1-ol,C4H11NO,89.13624,0,BLFRQYKZFKYQLO-UHFFFAOYSA-N,C(CCO)CN,25868,pubchem,0
 13327-32-7,beryllium hydroxide,beryllium dihydroxide,BeH2O2,43.026862,0,WPJWIROQQFWMMK-UHFFFAOYSA-L,[Be+2].[OH-].[OH-],25879,pubchem,1
@@ -3173,7 +3173,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 13417-08-8,n-methylhexadecylamine,N-methylhexadecan-1-amine,C17H37N,255.48238,0,IHFXMTOFDQKABX-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCNC,83422,pubchem,0
 13417-43-1,ctk0h8827,1-chloro-2-methylbut-2-ene,C5H9Cl,104.57796,0,ZAJKEDQTROWDDD-UHFFFAOYSA-N,CC=C(C)CCl,25964,pubchem,0
 13419-69-7,trans-2-hexenoic acid,(E)-hex-2-enoic acid,C6H10O2,114.1424,0,NIONDZDPPYHYKY-SNAWJCMRSA-N,CCCC=CC(=O)O,5282707,pubchem,0
-13423-15-9,3-methyltetrahydrofuran,3-methyloxolane,C5H10O,86.1323,0,LJPCNSSTRWGCMZ-UHFFFAOYSA-N,CC1CCOC1,98230,pubchem,0
+13423-15-9,3-methyltetrahydrofuran,3-methyloxolane,C5H10O,86.1323,0,LJPCNSSTRWGCMZ-UHFFFAOYSA-N,CC1CCOC1,98230,pubchem,1
 13423-61-5,magnesium chromate,magnesium dioxido(dioxo)chromium,CrMgO4,140.2987,0,CRGGPIWCSGOBDN-UHFFFAOYSA-N,[O-][Cr](=O)(=O)[O-].[Mg+2],61599,pubchem,0
 13424-46-9,lead diazide,diazidolead,N6Pb,291.2402,0,ISEQAARZRCDNJH-UHFFFAOYSA-N,[N-]=[N+]=N[Pb]N=[N+]=[N-],61600,pubchem,0
 13432-25-2,"2,4-dimethyl-3-hexanol","2,4-dimethylhexan-3-ol",C8H18O,130.22792,0,UCRQJBCLZKHOGX-UHFFFAOYSA-N,CCC(C)C(C(C)C)O,98257,pubchem,0
@@ -4148,7 +4148,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 14459-59-7,Molybdenum Fluoride Oxide,,F4MoO,,,,,,chemicals_bank,0
 1446-61-3,(+)-dehydroabietylamine,"[(1R,4aS,10aR)-1,4a-dimethyl-7-propan-2-yl-2,3,4,9,10,10a-hexahydrophenanthren-1-yl]methanamine",C20H31N,285.46684,0,JVVXZOOGOGPDRZ-SLFFLAALSA-N,CC(C)C1=CC2=C(C=C1)C3(CCCC(C3CC2)(C)CN)C,62034,pubchem,0
 14464-46-1,quartz (SiO2),dioxosilane,O2Si,60.0843,0,VYPSYNLAJGMNEJ-UHFFFAOYSA-N,O=[Si]=O,24261,pubchem,0
-14464-47-2,"deuterium, ion (D1+)",deuteron,D+,2.014102,1,GPRLSGONYQIRFK-DYCDLGHISA-N,[H+],5460634,pubchem,0
+14464-47-2,"deuterium, ion (D1+)",deuteron,D+,2.014102,1,GPRLSGONYQIRFK-DYCDLGHISA-N,[H+],5460634,pubchem,1
 1447-26-3,"4-hepten-3-one, 5-methyl-",(E)-5-methylhept-4-en-3-one,C8H14O,126.19616,0,XJEHTASYOBAEDB-VOTSOKGWSA-N,CCC(=CC(=O)CC)C,5364923,pubchem,0
 14473-90-6,3-chlorocinnamic acid,(E)-3-(3-chlorophenyl)prop-2-enoic acid,C9H7ClO2,182.60368,0,FFKGOJWPSXRALK-SNAWJCMRSA-N,C1=CC(=CC(=C1)Cl)C=CC(=O)O,735250,pubchem,0
 14474-33-0,scandium triiodide,scandium(3+) triiodide,I3Sc,425.669322,0,HUIHCQPFSRNMNM-UHFFFAOYSA-K,[Sc+3].[I-].[I-].[I-],84464,pubchem,0
@@ -4341,7 +4341,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1484-80-6,2-ethylpiperidine,2-ethylpiperidine,C7H15N,113.2007,0,QBBKKFZGCDJDQK-UHFFFAOYSA-N,CCC1CCCCN1,94205,pubchem,0
 1484-84-0,2-piperidineethanol,2-piperidin-2-ylethanol,C7H15NO,129.2001,0,PTHDBHDZSMGHKF-UHFFFAOYSA-N,C1CCNC(C1)CCO,15144,pubchem,0
 1484-85-1,homopiperonylamine,"2-(1,3-benzodioxol-5-yl)ethanamine",C9H11NO2,165.18914,0,RRIRDPSOCUCGBV-UHFFFAOYSA-N,C1OC2=C(O1)C=C(C=C2)CCN,73874,pubchem,0
-1484-87-3,"1-hexanol, 3,3,5-trimethyl-","3,3,5-trimethylhexan-1-ol",C9H20O,144.2545,0,HRXNWQMMTLLJJQ-UHFFFAOYSA-N,CC(C)CC(C)(C)CCO,14402330,pubchem,0
+1484-87-3,"1-hexanol, 3,3,5-trimethyl-","3,3,5-trimethylhexan-1-ol",C9H20O,144.2545,0,HRXNWQMMTLLJJQ-UHFFFAOYSA-N,CC(C)CC(C)(C)CCO,14402330,pubchem,1
 14844-07-6,Dithionite ion,,S2O4-2,128.128,-2,,,,crc_aqueous,0
 148462-57-1,"2-Propanol, 1-methoxy-, 2-propanoate",1-methoxypropan-2-yl propanoate,C7H14O3,146.18426,0,DOVZUKKPYKRVIK-UHFFFAOYSA-N,CCC(=O)OC(C)COC,11008049,pubchem,0
 14850-22-7,cis-3-octene,oct-3-ene,C8H16,112.21264,0,YCTDZYMMFQCTEO-UHFFFAOYSA-N,CCCCC=CCC,32935,pubchem,0
@@ -4510,7 +4510,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 15179-32-5,"sulfur fluoride hypofluorite (SF5(FO)), (OC-6-21)-",(pentafluoro-lambda6-sulfanyl) hypofluorite,F6OS,162.054819,0,DGQBNDRZRZYTER-UHFFFAOYSA-N,O(F)S(F)(F)(F)(F)F,14901760,pubchem,0
 1518-16-7,tcnq,"2-[4-(dicyanomethylidene)cyclohexa-2,5-dien-1-ylidene]propanedinitrile",C12H4N4,204.18696,0,PCCVSPMFGIFTHU-UHFFFAOYSA-N,C1=CC(=C(C#N)C#N)C=CC1=C(C#N)C#N,73697,pubchem,0
 1518-72-5,diisobutyl disulfide,2-methyl-1-(2-methylpropyldisulfanyl)propane,C8H18S2,178.35852,0,ONJROLGQWMBXAP-UHFFFAOYSA-N,CC(C)CSSCC(C)C,80284,pubchem,0
-1518-75-8,3-propylthiophene,3-propylthiophene,C7H10S,126.2193,0,QZNFRMXKQCIPQY-UHFFFAOYSA-N,CCCC1=CSC=C1,519073,pubchem,0
+1518-75-8,3-propylthiophene,3-propylthiophene,C7H10S,126.2193,0,QZNFRMXKQCIPQY-UHFFFAOYSA-N,CCCC1=CSC=C1,519073,pubchem,1
 1518-86-1,4-(2-aminopropyl)phenol,4-(2-aminopropyl)phenol,C9H13NO,151.20562,0,GIKNHHRFLCDOEU-UHFFFAOYSA-N,CC(CC1=CC=C(C=C1)O)N,3651,pubchem,0
 15181-11-0,"3,5-di-tert-butyltoluene","1,3-ditert-butyl-5-methylbenzene",C15H24,204.35106,0,WIXDSJRJFDWTNY-UHFFFAOYSA-N,CC1=CC(=CC(=C1)C(C)(C)C)C(C)(C)C,84819,pubchem,0
 15181-46-1,Bisulfite ion,,HSO3-,81.071,-1,,,,crc_aqueous,0
@@ -4755,7 +4755,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1572-99-2,ethyl 2-cyanopropionate,ethyl 2-cyanopropanoate,C6H9NO2,127.14116,0,MIHRVXYXORIINI-UHFFFAOYSA-N,CCOC(=O)C(C)C#N,98018,pubchem,0
 15721-10-5,p-methacryloyloxybenzoic acid,4-(2-methylprop-2-enoyloxy)benzoic acid,C11H10O4,206.1947,0,DNCFPDURLPJGKX-UHFFFAOYSA-N,CC(=C)C(=O)OC1=CC=C(C=C1)C(=O)O,139969,pubchem,0
 15726-15-5,3-methylheptan-4-one,3-methylheptan-4-one,C8H16O,128.21204,0,NHIMSNHOEAVUKE-UHFFFAOYSA-N,CCCC(=O)C(C)CC,27470,pubchem,0
-1573-28-0,"3,6-dimethyl-3-heptanol","3,6-dimethylheptan-3-ol",C9H20O,144.2545,0,HVPGGLNDHUWMLS-UHFFFAOYSA-N,CCC(C)(CCC(C)C)O,15297,pubchem,0
+1573-28-0,"3,6-dimethyl-3-heptanol","3,6-dimethylheptan-3-ol",C9H20O,144.2545,0,HVPGGLNDHUWMLS-UHFFFAOYSA-N,CCC(C)(CCC(C)C)O,15297,pubchem,1
 15733-49-0,"cyclohexane, 1-methyl-2-(1-methylethylidene)-",1-methyl-2-propan-2-ylidenecyclohexane,C10H18,138.24992,0,KCBUPVYPUUJPOK-UHFFFAOYSA-N,CC1CCCCC1=C(C)C,519172,pubchem,0
 1574-32-9,tetranonacontane,tetranonacontane,C94H190,1320.5144,0,YDJDWTABIISOAQ-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC,276120,pubchem,0
 1574-33-0,"3-penten-1-yne, 3-methyl-",3-methylpent-3-en-1-yne,C6H8,80.12772,0,GRGVQLWQXHFRHO-UHFFFAOYSA-N,CC=C(C)C#C,74086,pubchem,0
@@ -4970,7 +4970,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1631-82-9,(Chloromethylsilyl)benzene,chloro-methyl-phenylsilane,C7H9ClSi,156.68486,0,GVPNBWPLCHOFMX-UHFFFAOYSA-N,C[SiH](C1=CC=CC=C1)Cl,102148,pubchem,0
 1631-84-1,phenyldichlorosilane,,C6H5Cl2Si,176.0954,0,XNAFLNBULDHNJS-UHFFFAOYSA-N,C1=CC=C(C=C1)[Si](Cl)Cl,6327324,pubchem,0
 1632-16-2,2-ethyl-1-hexene,3-methylideneheptane,C8H16,112.21264,0,XTVRLCUJHGUXCP-UHFFFAOYSA-N,CCCCC(=C)CC,15404,pubchem,0
-1632-70-8,5-methylundecane,5-methylundecane,C12H26,170.33484,0,QULNVKABFWNUCW-UHFFFAOYSA-N,CCCCCCC(C)CCCC,94213,pubchem,0
+1632-70-8,5-methylundecane,5-methylundecane,C12H26,170.33484,0,QULNVKABFWNUCW-UHFFFAOYSA-N,CCCCCCC(C)CCCC,94213,pubchem,1
 1632-71-9,4-ethyl-5-methylnonane,4-ethyl-5-methylnonane,C12H26,170.33484,0,HKUUNAOHRKAJIY-UHFFFAOYSA-N,CCCCC(C)C(CC)CCC,519249,pubchem,0
 1632-76-4,3-methylpyridazine,3-methylpyridazine,C5H6N2,94.11454,0,MXDRPNGTQDRKQM-UHFFFAOYSA-N,CC1=NN=CC=C1,74208,pubchem,0
 1632-83-3,1-methylbenzimidazole,1-methylbenzimidazole,C8H8N2,132.16252,0,FGYADSCZTQOAFK-UHFFFAOYSA-N,CN1C=NC2=CC=CC=C21,95890,pubchem,0
@@ -5377,7 +5377,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 17302-02-2,"3,3-diethylhexane","3,3-diethylhexane",C10H22,142.28168,0,WWNGLKDLYKNGGT-UHFFFAOYSA-N,CCCC(CC)(CC)CC,517037,pubchem,0
 17302-04-4,4-ethyl-4-methylheptane,4-ethyl-4-methylheptane,C10H22,142.28168,0,MPYQJQDSICRCJJ-UHFFFAOYSA-N,CCCC(C)(CC)CCC,519390,pubchem,0
 17302-11-3,3-ethylnonane,3-ethylnonane,C11H24,156.30826,0,FKJSIWPQZCKMIL-UHFFFAOYSA-N,CCCCCCC(CC)CC,529886,pubchem,0
-17302-12-4,"nonane, 5-ethyl",5-ethylnonane,C11H24,156.30826,0,QPOVZYGNFWRMJE-UHFFFAOYSA-N,CCCCC(CC)CCCC,530112,pubchem,0
+17302-12-4,"nonane, 5-ethyl",5-ethylnonane,C11H24,156.30826,0,QPOVZYGNFWRMJE-UHFFFAOYSA-N,CCCCC(CC)CCCC,530112,pubchem,1
 17302-13-5,"octane, 4-propyl-",4-propyloctane,C11H24,156.30826,0,VFAMBAFLNKONTN-UHFFFAOYSA-N,CCCCC(CCC)CCC,300478,pubchem,0
 17302-14-6,"2,2-dimethylnonane","2,2-dimethylnonane",C11H24,156.30826,0,WDSBVMLUILIJOW-UHFFFAOYSA-N,CCCCCCCC(C)(C)C,176691,pubchem,0
 17302-15-7,"3,3-dimethylnonane","3,3-dimethylnonane",C11H24,156.30826,0,HTRYNYZYFGHKDV-UHFFFAOYSA-N,CCCCCCC(C)(C)CC,529413,pubchem,0
@@ -5411,7 +5411,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 1731-92-6,methyl heptadecanoate,methyl heptadecanoate,C18H36O2,284.47724,0,HUEBIMLTDXKIPR-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCC(=O)OC,15609,pubchem,0
 1731-94-8,methyl nonadecanoate,methyl nonadecanoate,C20H40O2,312.5304,0,BDXAHSJUDUZLDU-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCC(=O)OC,15610,pubchem,0
 17312-39-9,"4,4-dimethyldecane","4,4-dimethyldecane",C12H26,170.33484,0,WZCACTKWHXCWFZ-UHFFFAOYSA-N,CCCCCCC(C)(C)CCC,19931417,pubchem,0
-17312-40-2,4-methyl-4-ethylnonane,4-ethyl-4-methylnonane,C12H26,170.33484,0,LXQCGRFCISXKCQ-UHFFFAOYSA-N,CCCCCC(C)(CC)CCC,53426687,pubchem,0
+17312-40-2,4-methyl-4-ethylnonane,4-ethyl-4-methylnonane,C12H26,170.33484,0,LXQCGRFCISXKCQ-UHFFFAOYSA-N,CCCCCC(C)(CC)CCC,53426687,pubchem,1
 17312-41-3,4-methyl-4-propyloctane,4-methyl-4-propyloctane,C12H26,170.33484,0,RNKCZSBPRRHTOZ-UHFFFAOYSA-N,CCCCC(C)(CCC)CCC,53426691,pubchem,0
 17312-42-4,"4,4-diethyloctane","4,4-diethyloctane",C12H26,170.33484,0,FTEQKVNFZNDQJG-UHFFFAOYSA-N,CCCCC(CC)(CC)CCC,20436255,pubchem,0
 17312-44-6,"2,3-dimethyldecane","2,3-dimethyldecane",C12H26,170.33484,0,ZCTGYLNFWOQVHV-UHFFFAOYSA-N,CCCCCCCC(C)C(C)C,86544,pubchem,0
@@ -5697,7 +5697,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 18282-10-5,stannic oxide,dioxotin,O2Sn,150.7088,0,XOLBLPGZBRYERU-UHFFFAOYSA-N,O=[Sn]=O,29011,pubchem,0
 18282-59-2,"1-bromo-3,4-dichlorobenzene","4-bromo-1,2-dichlorobenzene",C6H3BrCl2,225.89802,0,CFPZDVAZISWERM-UHFFFAOYSA-N,C1=CC(=C(C=C1Br)Cl)Cl,29013,pubchem,0
 18288-22-7,bih3,bismuthane,BiH3,212.00422,0,BPBOBPIKWGUSQG-UHFFFAOYSA-N,[BiH3],9242,pubchem,0
-18295-25-5,2-bromo-3-methylbutane,2-bromo-3-methylbutane,C5H11Br,151.04484,0,BLGVDCMNIAOLHA-UHFFFAOYSA-N,CC(C)C(C)Br,529978,pubchem,0
+18295-25-5,2-bromo-3-methylbutane,2-bromo-3-methylbutane,C5H11Br,151.04484,0,BLGVDCMNIAOLHA-UHFFFAOYSA-N,CC(C)C(C)Br,529978,pubchem,1
 18295-27-7,2-iodo-3-methylbutane,2-iodo-3-methylbutane,C5H11I,198.04531,0,PYXUFKGRYMMOIK-UHFFFAOYSA-N,CC(C)C(C)I,519544,pubchem,0
 18295-59-5,2-propylpentanal,2-propylpentanal,C8H16O,128.21204,0,BAUHZKXBGXCLBO-UHFFFAOYSA-N,CCCC(CCC)C=O,87560,pubchem,0
 1830-54-2,"dimethyl 1,3-acetonedicarboxylate",dimethyl 3-oxopentanedioate,C7H10O5,174.1513,0,RNJOKCPFLQMDEC-UHFFFAOYSA-N,COC(=O)CC(=O)CC(=O)OC,74591,pubchem,0
@@ -6023,7 +6023,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 19540-05-7,1-azabicyclo[1.1.0]butane,1-azabicyclo[1.1.0]butane,C3H5N,55.0785,0,AVORXWIYCOTNFE-UHFFFAOYSA-N,C1C2N1C2,140542,pubchem,0
 19549-70-3,"2,2-dimethyl-3-heptanol","2,2-dimethylheptan-3-ol",C9H20O,144.2545,0,QENWAAAGDINHGE-UHFFFAOYSA-N,CCCCC(C(C)(C)C)O,140543,pubchem,0
 19549-71-4,"2,3-dimethyl-3-heptanol","2,3-dimethylheptan-3-ol",C9H20O,144.2545,0,JIEGVNXCNNWVPH-UHFFFAOYSA-N,CCCCC(C)(C(C)C)O,140544,pubchem,0
-19549-73-6,"2,6-dimethyl-3-heptanol","2,6-dimethylheptan-3-ol",C9H20O,144.2545,0,XZDMJRIWJSNEGC-UHFFFAOYSA-N,CC(C)CCC(C(C)C)O,29653,pubchem,0
+19549-73-6,"2,6-dimethyl-3-heptanol","2,6-dimethylheptan-3-ol",C9H20O,144.2545,0,XZDMJRIWJSNEGC-UHFFFAOYSA-N,CC(C)CCC(C(C)C)O,29653,pubchem,1
 19549-74-7,"3,5-dimethyl-3-heptanol","3,5-dimethylheptan-3-ol",C9H20O,144.2545,0,NOSOEGQGQOMHBF-UHFFFAOYSA-N,CCC(C)CC(C)(CC)O,140546,pubchem,0
 19549-77-0,"2,4-dimethyl-4-heptanol","2,4-dimethylheptan-4-ol",C9H20O,144.2545,0,QKRRAXACNUNGCF-UHFFFAOYSA-N,CCCC(C)(CC(C)C)O,29654,pubchem,0
 19549-79-2,"3,5-dimethyl-4-heptanol","3,5-dimethylheptan-4-ol",C9H20O,144.2545,0,ZKXITRNXHWEQJU-UHFFFAOYSA-N,CCC(C)C(C(C)CC)O,29655,pubchem,0
@@ -6103,7 +6103,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 19781-13-6,"4,7-dimethyl-4-octanol","4,7-dimethyloctan-4-ol",C10H22O,158.28108,0,OTISWHNJCUMBFI-UHFFFAOYSA-N,CCCC(C)(CCC(C)C)O,89224,pubchem,0
 19781-18-1,"2,3-dimethyl-2-octene","2,3-dimethyloct-2-ene",C10H20,140.2658,0,ZFMOZNIUEPVNCV-UHFFFAOYSA-N,CCCCCC(=C(C)C)C,140599,pubchem,0
 19781-24-9,"3,3-dimethyl-2-pentanol","3,3-dimethylpentan-2-ol",C7H16O,116.20134,0,FCUOIGTWJDBTHR-UHFFFAOYSA-N,CCC(C)(C)C(C)O,177084,pubchem,0
-19781-27-2,6-ethyl-3-octanol,6-ethyloctan-3-ol,C10H22O,158.28108,0,JWZFCOOWAQHCBP-UHFFFAOYSA-N,CCC(CC)CCC(CC)O,140601,pubchem,0
+19781-27-2,6-ethyl-3-octanol,6-ethyloctan-3-ol,C10H22O,158.28108,0,JWZFCOOWAQHCBP-UHFFFAOYSA-N,CCC(CC)CCC(CC)O,140601,pubchem,1
 19781-68-1,cis-1-ethyl-2-methylcyclopropane,1-ethyl-2-methylcyclopropane,C6H12,84.15948,0,SAHWBARCQUAFSM-UHFFFAOYSA-N,CCC1CC1C,140607,pubchem,0
 19781-73-8,heptadecylcyclohexane,heptadecylcyclohexane,C23H46,322.61134,0,VLHZQNGNJQYAIZ-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCC1CCCCC1,29777,pubchem,0
 19781-77-2,6-hepten-3-ol,hept-6-en-3-ol,C7H14O,114.18546,0,XFXWEAWJVWCOBF-UHFFFAOYSA-N,CCC(CCC=C)O,140608,pubchem,0
@@ -7042,7 +7042,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 23444-30-6,Iron Chloride,,Cl4Fe2,,,,,,chemicals_bank,0
 23444-65-7,shikonin,"5,8-dihydroxy-2-(1-hydroxy-4-methylpent-3-enyl)naphthalene-1,4-dione",C16H16O5,288.29524,0,NEZONWMXZKDMKF-UHFFFAOYSA-N,CC(=CCC(C1=CC(=O)C2=C(C=CC(=C2C1=O)O)O)O)C,5208,pubchem,0
 2345-26-8,neryl isobutyrate,"3,7-dimethylocta-2,6-dienyl 2-methylpropanoate",C14H24O2,224.33916,0,OGJYXQFXLSCKTP-UHFFFAOYSA-N,CC(C)C(=O)OCC=C(C)CCC=C(C)C,16864,pubchem,0
-2345-27-9,2-tetradecanone,tetradecan-2-one,C14H28O,212.37152,0,POQLVOYRGNFGRM-UHFFFAOYSA-N,CCCCCCCCCCCCC(=O)C,75364,pubchem,0
+2345-27-9,2-tetradecanone,tetradecan-2-one,C14H28O,212.37152,0,POQLVOYRGNFGRM-UHFFFAOYSA-N,CCCCCCCCCCCCC(=O)C,75364,pubchem,1
 2345-28-0,2-pentadecanone,pentadecan-2-one,C15H30O,226.3981,0,CJPNOLIZCWDHJK-UHFFFAOYSA-N,CCCCCCCCCCCCCC(=O)C,61303,pubchem,0
 2345-34-8,4-acetoxybenzoic acid,4-acetyloxybenzoic acid,C9H8O4,180.15742,0,GDBUZIKSJGRBJP-UHFFFAOYSA-N,CC(=O)OC1=CC=C(C=C1)C(=O)O,16865,pubchem,0
 2346-00-1,2-methyl-2-thiazoline,"2-methyl-4,5-dihydro-1,3-thiazole",C4H7NS,101.17008,0,JUIQOABNSLTJSW-UHFFFAOYSA-N,CC1=NCCS1,16867,pubchem,0
@@ -7306,7 +7306,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 24551-95-9,"hexanoic acid, 2-butyl-, methyl ester",methyl 2-butylhexanoate,C11H22O2,186.29118,0,AZTDAGYTELUSHF-UHFFFAOYSA-N,CCCCC(CCCC)C(=O)OC,520137,pubchem,0
 24551-99-3,n-methyl-n-propyl-1-butanamine,N-methyl-N-propylbutan-1-amine,C8H19N,129.24316,0,CUIPDDJPSUECRB-UHFFFAOYSA-N,CCCCN(C)CCC,520138,pubchem,0
 2456-27-1,dinonyl ether,1-nonoxynonane,C18H38O,270.49372,0,DKZRLCHWDNEKRH-UHFFFAOYSA-N,CCCCCCCCCOCCCCCCCCC,75566,pubchem,0
-2456-28-2,decyl ether,1-decoxydecane,C20H42O,298.54688,0,LTSWUFKUZPPYEG-UHFFFAOYSA-N,CCCCCCCCCCOCCCCCCCCCC,17152,pubchem,0
+2456-28-2,decyl ether,1-decoxydecane,C20H42O,298.54688,0,LTSWUFKUZPPYEG-UHFFFAOYSA-N,CCCCCCCCCCOCCCCCCCCCC,17152,pubchem,1
 24567-53-1,chlorophosphane,chlorophosphane,ClH2P,68.442642,0,USJRLGNYCQWLPF-UHFFFAOYSA-N,PCl,161938,pubchem,0
 2459-05-4,monoethyl fumarate,(E)-4-ethoxy-4-oxobut-2-enoic acid,C6H8O4,144.12532,0,XLYMOEINVGRTEX-ONEGZZNKSA-N,CCOC(=O)C=CC(=O)O,5358902,pubchem,0
 2459-07-6,methyl picolinate,methyl pyridine-2-carboxylate,C7H7NO2,137.13598,0,NMMIHXMBOZYNET-UHFFFAOYSA-N,COC(=O)C1=CC=CC=N1,75569,pubchem,0
@@ -7975,7 +7975,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 28122-25-0,2-ethyldiphenylmethane,1-benzyl-2-ethylbenzene,C15H16,196.28754,0,SADTWSHFQKKIAT-UHFFFAOYSA-N,CCC1=CC=CC=C1CC2=CC=CC=C2,119823,pubchem,0
 28122-27-2,"1-benzyl-3,5-dimethylbenzene","1-benzyl-3,5-dimethylbenzene",C15H16,196.28754,0,RZCMUIOJBYCKPG-UHFFFAOYSA-N,CC1=CC(=CC(=C1)CC2=CC=CC=C2)C,119824,pubchem,0
 2814-20-2,2814-20-2,6-methyl-2-propan-2-yl-1H-pyrimidin-4-one,C8H12N2O,152.19368,0,AJPIUNPJBFBUKK-UHFFFAOYSA-N,CC1=CC(=O)N=C(N1)C(C)C,17777,pubchem,0
-28148-04-1,"1,3-dibromo-2-methylpropane","1,3-dibromo-2-methylpropane",C4H8Br2,215.91432,0,SMGXHVWYXQYMNN-UHFFFAOYSA-N,CC(CBr)CBr,141399,pubchem,0
+28148-04-1,"1,3-dibromo-2-methylpropane","1,3-dibromo-2-methylpropane",C4H8Br2,215.91432,0,SMGXHVWYXQYMNN-UHFFFAOYSA-N,CC(CBr)CBr,141399,pubchem,1
 2816-25-3,"endo-1,4a,8,8a-tetrahydro-1,4-ethanonaphthalene-5,8-dione","tricyclo[6.2.2.02,7]dodeca-4,9-diene-3,6-dione",C12H12O2,188.22248,0,RVYRSLQPTCIBMM-UHFFFAOYSA-N,C1CC2C=CC1C3C2C(=O)C=CC3=O,137731,pubchem,0
 2816-39-9,hexaphenyldigermane,,C36H30Ge2,607.9034,0,JQHWEIUKAAZLFP-UHFFFAOYSA-N,C1=CC=C(C=C1)[Ge](C2=CC=CC=C2)C3=CC=CC=C3.C1=CC=C(C=C1)[Ge](C2=CC=CC=C2)C3=CC=CC=C3,6327454,pubchem,0
 2816-57-1,"2,6-dimethylcyclohexanone","2,6-dimethylcyclohexan-1-one",C8H14O,126.19616,0,AILVYPLQKCQNJC-UHFFFAOYSA-N,CC1CCCC(C1=O)C,17780,pubchem,0
@@ -8308,7 +8308,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 3003-84-7,tetrahydrofurfuryl chloride,2-(chloromethyl)oxolane,C5H9ClO,120.57736,0,IVJLGIMHHWKRAN-UHFFFAOYSA-N,C1CC(OC1)CCl,18150,pubchem,0
 3004-93-1,2-methyloctanoic acid,2-methyloctanoic acid,C9H18O2,158.23802,0,YSEQNZOXHCKLOG-UHFFFAOYSA-N,CCCCCCC(C)C(=O)O,94251,pubchem,0
 3006-96-0,4-(Hydroxymethyl)benzoic acid,4-(hydroxymethyl)benzoic acid,C8H8O3,152.14732,0,WWYFPDXEIFBNKE-UHFFFAOYSA-N,C1=CC(=CC=C1CO)C(=O)O,76360,pubchem,0
-3007-31-6,didodecylamine,N-dodecyldodecan-1-amine,C24H51N,353.66844,0,MJCJUDJQDGGKOX-UHFFFAOYSA-N,CCCCCCCCCCCCNCCCCCCCCCCCC,18157,pubchem,0
+3007-31-6,didodecylamine,N-dodecyldodecan-1-amine,C24H51N,353.66844,0,MJCJUDJQDGGKOX-UHFFFAOYSA-N,CCCCCCCCCCCCNCCCCCCCCCCCC,18157,pubchem,1
 3008-13-7,nsc42840,bicyclo[2.2.2]oct-5-ene-2-carbonitrile,C9H11N,133.19034,0,WFLYMJQGWKVLTO-UHFFFAOYSA-N,C1CC2C=CC1CC2C#N,137792,pubchem,0
 3008-14-8,nsc42840,bicyclo[2.2.2]oct-5-ene-2-carbonitrile,C9H11N,133.19034,0,WFLYMJQGWKVLTO-UHFFFAOYSA-N,C1CC2C=CC1CC2C#N,137792,pubchem,0
 3008-39-7,"1,2-cycloheptanedione","cycloheptane-1,2-dione",C7H10O2,126.1531,0,SLOCIJOTBVAMAJ-UHFFFAOYSA-N,C1CCC(=O)C(=O)CC1,76365,pubchem,0
@@ -8581,7 +8581,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 3173-53-3,cyclohexyl isocyanate,isocyanatocyclohexane,C7H11NO,125.16834,0,KQWGXHWJMSMDJJ-UHFFFAOYSA-N,C1CCC(CC1)N=C=O,18502,pubchem,0
 3173-72-6,"1,5-diisocyanatonaphthalene","1,5-diisocyanatonaphthalene",C12H6N2O2,210.18824,0,SBJCUZQNHOLYMD-UHFFFAOYSA-N,C1=CC2=C(C=CC=C2N=C=O)C(=C1)N=C=O,18503,pubchem,0
 3173-79-3,dimethylketene dimer,"3,3-dimethyl-4-propan-2-ylideneoxetan-2-one",C8H12O2,140.17968,0,OKAAPXFKYOTAEN-UHFFFAOYSA-N,CC(=C1C(C(=O)O1)(C)C)C,96433,pubchem,0
-3174-67-2,"1,3-pentanediol","pentane-1,3-diol",C5H12O2,104.14758,0,RUOPINZRYMFPBF-UHFFFAOYSA-N,CCC(CCO)O,151085,pubchem,0
+3174-67-2,"1,3-pentanediol","pentane-1,3-diol",C5H12O2,104.14758,0,RUOPINZRYMFPBF-UHFFFAOYSA-N,CCC(CCO)O,151085,pubchem,1
 3174-74-1,"3,6-dihydro-2h-pyran","3,6-dihydro-2H-pyran",C5H8O,84.11642,0,MUGSKSNNEORSJG-UHFFFAOYSA-N,C1COCC=C1,520540,pubchem,0
 3175-23-3,"1,2,2-trichloropropane","1,2,2-trichloropropane",C3H5Cl3,147.4308,0,DAIIXVPKQATIMF-UHFFFAOYSA-N,CC(CCl)(Cl)Cl,18505,pubchem,0
 3177-74-0,"3,3-dimethylpentanoic acid","3,3-dimethylpentanoic acid",C7H14O2,130.18486,0,UPURPFNAFBQPON-UHFFFAOYSA-N,CCC(C)(C)CC(=O)O,5282645,pubchem,0
@@ -8621,7 +8621,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 3194-15-8,2-propionylfuran,1-(furan-2-yl)propan-1-one,C7H8O2,124.13722,0,HCPORNAVHSWTOJ-UHFFFAOYSA-N,CCC(=O)C1=CC=CO1,76662,pubchem,0
 3194-55-6,"1,2,5,6,9,10-Hexabromocyclododecane","1,2,5,6,9,10-hexabromocyclododecane",C12H18Br6,641.69532,0,DEIGXXQKDWULML-UHFFFAOYSA-N,C1CC(C(CCC(C(CCC(C1Br)Br)Br)Br)Br)Br,18529,pubchem,0
 3195-86-6,2-ethylthiirane,2-ethylthiirane,C4H8S,88.17132,0,ZXKFFOMHVCMTEV-UHFFFAOYSA-N,CCC1CS1,4961818,pubchem,0
-31950-56-8,4-bromo-1-pentene,4-bromopent-1-ene,C5H9Br,149.02896,0,PDBJRGFNXXAAMO-UHFFFAOYSA-N,CC(CC=C)Br,141675,pubchem,0
+31950-56-8,4-bromo-1-pentene,4-bromopent-1-ene,C5H9Br,149.02896,0,PDBJRGFNXXAAMO-UHFFFAOYSA-N,CC(CC=C)Br,141675,pubchem,1
 3196-15-4,methyl 2-bromobutyrate,methyl 2-bromobutanoate,C5H9BrO2,181.02776,0,UFQQDNMQADCHGH-UHFFFAOYSA-N,CCC(C(=O)OC)Br,95577,pubchem,0
 31980-29-7,nicofibrate,pyridin-3-ylmethyl 2-(4-chlorophenoxy)-2-methylpropanoate,C16H16ClNO3,305.75614,0,RARQHAFNGNPQCZ-UHFFFAOYSA-N,CC(C)(C(=O)OCC1=CN=CC=C1)OC2=CC=C(C=C2)Cl,65778,pubchem,0
 320-51-4,5-amino-2-chlorobenzotrifluoride,4-chloro-3-(trifluoromethyl)aniline,C7H5ClF3N,195.56951,0,ASPDJZINBYYZRU-UHFFFAOYSA-N,C1=CC(=C(C=C1N)C(F)(F)F)Cl,67574,pubchem,0
@@ -9327,7 +9327,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 36529-65-4,Lithium Oxynitride,,LiNO,,,,,,chemicals_bank,0
 36555-73-4,"1-pentadecanamine, n,n-diethyl-","N,N-diethylpentadecan-1-amine",C19H41N,283.53554,0,BICPURLNGRQXAV-UHFFFAOYSA-N,CCCCCCCCCCCCCCCN(CC)CC,15365074,pubchem,0
 36556-06-6,"5,6,7,8-tetrahydroisoquinoline","5,6,7,8-tetrahydroisoquinoline",C9H11N,133.19034,0,HTMGQIXFZMZZKD-UHFFFAOYSA-N,C1CCC2=C(C1)C=CN=C2,119010,pubchem,0
-36566-80-0,2-methyl-3-hexyne,2-methylhex-3-yne,C7H12,96.17018,0,POBOUPFSQKXZFZ-UHFFFAOYSA-N,CCC#CC(C)C,520802,pubchem,0
+36566-80-0,2-methyl-3-hexyne,2-methylhex-3-yne,C7H12,96.17018,0,POBOUPFSQKXZFZ-UHFFFAOYSA-N,CCC#CC(C)C,520802,pubchem,1
 3657-07-6,butyl trichloroacetate,"butyl 2,2,2-trichloroacetate",C6H9Cl3O2,219.49346,0,SECVZLDDYUWJAC-UHFFFAOYSA-N,CCCCOC(=O)C(Cl)(Cl)Cl,77219,pubchem,0
 3658-48-8,bis(2-ethylhexyl) phosphonate,bis(2-ethylhexoxy)-oxophosphanium,C16H34O3P+,305.413122,1,ZLMKQJQJURXYLC-UHFFFAOYSA-N,CCCCC(CC)CO[P+](=O)OCC(CC)CCCC,6327514,pubchem,0
 3658-79-5,"1,1-diethoxypentane","1,1-diethoxypentane",C9H20O2,160.2539,0,XCWKYQWOLSOBCC-UHFFFAOYSA-N,CCCCC(OCC)OCC,77223,pubchem,0
@@ -11090,7 +11090,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 504-02-9,"1,3-cyclohexanedione","cyclohexane-1,3-dione",C6H8O2,112.12652,0,HJSLFCCWAKVHIW-UHFFFAOYSA-N,C1CC(=O)CC(=O)C1,10434,pubchem,0
 504-03-0,"2,6-dimethylpiperidine","2,6-dimethylpiperidine",C7H15N,113.2007,0,SDGKUVSVPIIUCF-UHFFFAOYSA-N,CC1CCCC(N1)C,68843,pubchem,0
 504-07-4,dihydrouracil,"1,3-diazinane-2,4-dione",C4H6N2O2,114.10264,0,OIVLITBTBDPEFK-UHFFFAOYSA-N,C1CNC(=O)NC1=O,649,pubchem,0
-504-15-4,orcinol,"5-methylbenzene-1,3-diol",C7H8O2,124.13722,0,OIPPWFOQEKKFEE-UHFFFAOYSA-N,CC1=CC(=CC(=C1)O)O,10436,pubchem,0
+504-15-4,orcinol,"5-methylbenzene-1,3-diol",C7H8O2,124.13722,0,OIPPWFOQEKKFEE-UHFFFAOYSA-N,CC1=CC(=CC(=C1)O)O,10436,pubchem,1
 504-19-8,cyanuric acid,"1,3,5-triazinane-2,4,6-trione",C3H3N3O3,129.07422,0,ZFSLODLOARCGLH-UHFFFAOYSA-N,C1(=O)NC(=O)NC(=O)N1,7956,pubchem,0
 504-20-1,"2,6-dimethyl-2,5-heptadien-4-one","2,6-dimethylhepta-2,5-dien-4-one",C9H14O,138.20686,0,MTZWHHIREPJPTG-UHFFFAOYSA-N,CC(=CC(=O)C=C(C)C)C,10438,pubchem,0
 504-24-5,4-aminopyridine,pyridin-4-amine,C5H6N2,94.11454,0,NUKYPUAOHBNCPY-UHFFFAOYSA-N,C1=CN=CC=C1N,1727,pubchem,0
@@ -11777,7 +11777,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 5343-96-4,"1,2-dimethylpropyl acetate",3-methylbutan-2-yl acetate,C7H14O2,130.18486,0,ZLSXRPTWWRGMTJ-UHFFFAOYSA-N,CC(C)C(C)OC(=O)C,219337,pubchem,0
 5343-98-6,4-oxo-4-phenylbutanenitrile,4-oxo-4-phenylbutanenitrile,C10H9NO,159.18456,0,OSPRTYTUQJCKFF-UHFFFAOYSA-N,C1=CC=C(C=C1)C(=O)CCC#N,138465,pubchem,0
 53434-74-5,1-bromo-1-heptene,1-bromohept-1-ene,C7H13Br,177.08212,0,XNCAEAZUROUZKT-UHFFFAOYSA-N,CCCCCC=CBr,56026,pubchem,0
-5344-20-7,isohexylamine,4-methylpentan-1-amine,C6H15N,101.19,0,QVIAMKXOQGCYCV-UHFFFAOYSA-N,CC(C)CCCN,219608,pubchem,0
+5344-20-7,isohexylamine,4-methylpentan-1-amine,C6H15N,101.19,0,QVIAMKXOQGCYCV-UHFFFAOYSA-N,CC(C)CCCN,219608,pubchem,1
 5344-82-1,n-(2-chlorophenyl)thiourea,(2-chlorophenyl)thiourea,C7H7ClN2S,186.66188,0,YZUKKTCDYSIWKJ-UHFFFAOYSA-N,C1=CC=C(C(=C1)NC(=S)N)Cl,737139,pubchem,0
 5344-90-1,2-aminobenzyl alcohol,(2-aminophenyl)methanol,C7H9NO,123.15246,0,VYFOAVADNIHPTR-UHFFFAOYSA-N,C1=CC=C(C(=C1)CO)N,21439,pubchem,0
 53466-03-8,m-nitrobenzylidene-p-isopropylphenylacetonitrile,(Z)-3-(3-nitrophenyl)-2-(4-propan-2-ylphenyl)prop-2-enenitrile,C18H16N2O2,292.33184,0,PWWZEFHODWBKGO-LICLKQGHSA-N,CC(C)C1=CC=C(C=C1)C(=CC2=CC(=CC=C2)[N+](=O)[O-])C#N,5463283,pubchem,0
@@ -12450,7 +12450,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 56-82-6,glyceraldehyde,"2,3-dihydroxypropanal",C3H6O3,90.07794,0,MNQZXJOMYWMBOU-UHFFFAOYSA-N,C(C(C=O)O)O,751,pubchem,0
 56-84-8,l-aspartic acid,(2S)-2-aminobutanedioic acid,C4H7NO4,133.10268,0,CKLJMWTZIZZHCS-REOHCLBHSA-N,C(C(C(=O)O)N)C(=O)O,5960,pubchem,0
 56-85-9,l-glutamine,"(2S)-2,5-diamino-5-oxopentanoic acid",C5H10N2O3,146.1445,0,ZDXPYRJPNDTMRX-VKHMYHEASA-N,C(CC(=O)N)C(C(=O)O)N,5961,pubchem,0
-56-86-0,l-glutamic acid,(2S)-2-aminopentanedioic acid,C5H9NO4,147.12926,0,WHUUTDBJXJRKMK-VKHMYHEASA-N,C(CC(=O)O)C(C(=O)O)N,33032,pubchem,0
+56-86-0,l-glutamic acid,(2S)-2-aminopentanedioic acid,C5H9NO4,147.12926,0,WHUUTDBJXJRKMK-VKHMYHEASA-N,C(CC(=O)O)C(C(=O)O)N,33032,pubchem,1
 56-87-1,l-lysine,"(2S)-2,6-diaminohexanoic acid",C6H14N2O2,146.18756,0,KDXKERNSBIXSRK-YFKPBYRVSA-N,C(CCN)CC(C(=O)O)N,5962,pubchem,0
 56-89-3,cystine,2-amino-3-[(2-amino-2-carboxyethyl)disulfanyl]propanoic acid,C6H12N2O4S2,240.30048,0,LEVWYRKDKASIDU-UHFFFAOYSA-N,C(C(C(=O)O)N)SSCC(C(=O)O)N,595,pubchem,0
 56-92-8,histamine dihydrochloride,2-(1H-imidazol-5-yl)ethanamine;dihydrochloride,C5H11Cl2N3,184.06694,0,PPZMYIBUHIPZOS-UHFFFAOYSA-N,C1=C(NC=N1)CCN.Cl.Cl,5818,pubchem,0
@@ -13924,7 +13924,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 6169-94-4,"1,8-paracyclophane","tricyclo[13.2.2.23,6]henicosa-1(17),3(21),4,6(20),15,18-hexaene",C21H26,278.43114,0,DMCPGMNUZQZGNM-UHFFFAOYSA-N,C1CCCCC2=CC=C(CC3=CC=C(CCC1)C=C3)C=C2,138681,pubchem,0
 617-05-0,ethyl vanillate,ethyl 4-hydroxy-3-methoxybenzoate,C10H12O4,196.19988,0,MWAYRGBWOVHDDZ-UHFFFAOYSA-N,CCOC(=O)C1=CC(=C(C=C1)O)OC,12038,pubchem,0
 617-12-9,chorismic acid,"(3R,4R)-3-(1-carboxyethenoxy)-4-hydroxycyclohexa-1,5-diene-1-carboxylic acid",C10H10O6,226.1828,0,WTFXTQVDAKGDEY-HTQZYQBOSA-N,C=C(C(=O)O)OC1C=C(C=CC1O)C(=O)O,12039,pubchem,0
-617-29-8,2-methyl-3-hexanol,2-methylhexan-3-ol,C7H16O,116.20134,0,RGRUUTLDBCWYBL-UHFFFAOYSA-N,CCCC(C(C)C)O,12040,pubchem,0
+617-29-8,2-methyl-3-hexanol,2-methylhexan-3-ol,C7H16O,116.20134,0,RGRUUTLDBCWYBL-UHFFFAOYSA-N,CCCC(C(C)C)O,12040,pubchem,1
 617-30-1,"2,3-hexanediol","hexane-2,3-diol",C6H14O2,118.17416,0,QCIYAEYRVFUFAP-UHFFFAOYSA-N,CCCC(C(C)O)O,519963,pubchem,0
 617-31-2,2-hydroxyvaleric acid,2-hydroxypentanoic acid,C5H10O3,118.1311,0,JRHWHSJDIILJAT-UHFFFAOYSA-N,CCCC(C(=O)O)O,98009,pubchem,0
 617-33-4,ethyl dibromoacetate,"ethyl 2,2-dibromoacetate",C4H6Br2O2,245.89724,0,NIJGVVHCUXNSLL-UHFFFAOYSA-N,CCOC(=O)C(Br)Br,69237,pubchem,0
@@ -14006,7 +14006,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 61847-84-5,1-Tetracosyne,tetracos-1-yne,C24H46,334.62204,0,IPHVSVSUHAPLIH-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCC#C,54245539,pubchem,0
 61847-85-6,1-pentacosyne,pentacos-1-yne,C25H48,348.64862,0,PSVIFCMEORUFBZ-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCC#C,54368215,pubchem,0
 61847-86-7,1-hexacosyne,hexacos-1-yne,C26H50,362.6752,0,XJOQNDHCYRZZBQ-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCCC#C,54411553,pubchem,0
-61847-87-8,1-heptacosyne,heptacos-1-yne,C27H52,376.70178,0,WQIIFNZXBFDHKQ-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCCCC#C,54524165,pubchem,0
+61847-87-8,1-heptacosyne,heptacos-1-yne,C27H52,376.70178,0,WQIIFNZXBFDHKQ-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCCCC#C,54524165,pubchem,1
 61847-88-9,1-Octacosyne,octacos-1-yne,C28H54,390.72836,0,UVPJNMYPOKWZEA-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCCCCC#C,54418390,pubchem,0
 61847-89-0,1-Nonacosyne,nonacos-1-yne,C29H56,404.75494,0,MTTVYFPEBLVBTQ-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCCCCCC#C,54075488,pubchem,0
 61847-90-3,1-Triacontyne,triacont-1-yne,C30H58,418.78152,0,PMWXWKDBEBCEDB-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCCCCCCC#C,10960750,pubchem,0
@@ -14104,7 +14104,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 61868-96-0,2-methyl-4-propylheptane,2-methyl-4-propylheptane,C11H24,156.30826,0,AXOUMHTUGUFOKF-UHFFFAOYSA-N,CCCC(CCC)CC(C)C,53424701,pubchem,0
 61868-97-1,3-methyl-4-propylheptane,3-methyl-4-propylheptane,C11H24,156.30826,0,WAMROSASDOIVDE-UHFFFAOYSA-N,CCCC(CCC)C(C)CC,53425838,pubchem,0
 61868-98-2,2-methyl-4-isopropylheptane,2-methyl-4-propan-2-ylheptane,C11H24,156.30826,0,ADLZFTVQXMDTCY-UHFFFAOYSA-N,CCCC(CC(C)C)C(C)C,21201044,pubchem,0
-61868-99-3,3-methyl-4-isopropylheptane,3-methyl-4-propan-2-ylheptane,C11H24,156.30826,0,SRECVVXQFXRBNI-UHFFFAOYSA-N,CCCC(C(C)C)C(C)CC,23385031,pubchem,0
+61868-99-3,3-methyl-4-isopropylheptane,3-methyl-4-propan-2-ylheptane,C11H24,156.30826,0,SRECVVXQFXRBNI-UHFFFAOYSA-N,CCCC(C(C)C)C(C)CC,23385031,pubchem,1
 61869-00-9,4-methyl-4-isopropylheptane,4-methyl-4-propan-2-ylheptane,C11H24,156.30826,0,LSJZMBVEVGYTAG-UHFFFAOYSA-N,CCCC(C)(CCC)C(C)C,23385045,pubchem,0
 61869-01-0,"heptane, 3,4-diethyl","3,4-diethylheptane",C11H24,156.30826,0,UWOPVDFSBGDRJR-UHFFFAOYSA-N,CCCC(CC)C(CC)CC,530002,pubchem,0
 61869-02-1,"3,5-diethylheptane","3,5-diethylheptane",C11H24,156.30826,0,OBHTWTQZINRNAB-UHFFFAOYSA-N,CCC(CC)CC(CC)CC,22089115,pubchem,0
@@ -14112,7 +14112,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 61869-04-3,"dodecane, trimethyl-","2,2-dimethyltridecane",C15H32,212.41458,0,NVEUWWMNWPNXOC-UHFFFAOYSA-N,CCCCCCCCCCCC(C)(C)C,18676411,pubchem,0
 61886-61-1,3-pentadecyne,pentadec-3-yne,C15H28,208.38282,0,RUHQUJVXUGQUNY-UHFFFAOYSA-N,CCCCCCCCCCCC#CCC,22223985,pubchem,0
 61886-62-2,3-hexadecyne,hexadec-3-yne,C16H30,222.4094,0,HRFPRVYNMNOAQO-UHFFFAOYSA-N,CCCCCCCCCCCCC#CCC,548886,pubchem,0
-61886-66-6,3-Eicosyne,icos-3-yne,C20H38,278.51572,0,AQBXRWJMJJJCLI-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCC#CCC,549159,pubchem,0
+61886-66-6,3-Eicosyne,icos-3-yne,C20H38,278.51572,0,AQBXRWJMJJJCLI-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCC#CCC,549159,pubchem,1
 61886-67-7,2-nonylnaphthalene,2-nonylnaphthalene,C19H26,254.40974,0,BVGNMQMWUMKSMK-UHFFFAOYSA-N,CCCCCCCCCC1=CC2=CC=CC=C2C=C1,112771,pubchem,0
 61886-71-3,1-ethyl-8-methylnaphthalene,1-ethyl-8-methylnaphthalene,C13H14,170.25026,0,BWLHVWLTADBTFB-UHFFFAOYSA-N,CCC1=CC=CC2=CC=CC(=C21)C,143853,pubchem,0
 6189-41-9,"trans-2,3-epoxybutane","(2S,3S)-2,3-dimethyloxirane",C4H8O,72.10572,0,PQXKWPLDPFFDJP-IMJSIDKUSA-N,CC1C(O1)C,30664,pubchem,0
@@ -14351,11 +14351,11 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 62127-51-9,"nonadecane, 1-iodo-",1-iodononadecane,C19H39I,394.41743,0,LXFODWIENIOBLX-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCI,21798104,pubchem,0
 62127-52-0,1-Iodoheneicosane,1-iodohenicosane,C21H43I,422.47059,0,DJCDFLOBKASQCV-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCI,15042949,pubchem,0
 62127-53-1,"docosane, 1-iodo-",1-iododocosane,C22H45I,436.49717,0,QQTWESGWRGHHPL-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCI,13257219,pubchem,0
-62127-54-2,1-Iodotricosane,1-iodotricosane,C23H47I,450.52375,0,CXDGAFSHVODUFS-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCI,129773219,pubchem,0
+62127-54-2,1-Iodotricosane,1-iodotricosane,C23H47I,450.52375,0,CXDGAFSHVODUFS-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCI,129773219,pubchem,1
 62127-55-3,1-Iodotetracosane,1-iodotetracosane,C24H49I,464.55033,0,BGKYLPDRHHSYFV-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCCI,11282694,pubchem,0
 62127-56-4,1-Iodopentacosane,1-iodopentacosane,C25H51I,478.57691,0,PPAWPWKRCWUYJY-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCCCI,57209246,pubchem,0
 62127-57-5,1-Iodoheptacosane,1-iodoheptacosane,C27H55I,506.63007,0,VTJHCJZZOLFHLP-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCCCCCCI,87857412,pubchem,0
-62127-58-6,"1,1-dibromo-2-methylbutane","1,1-dibromo-2-methylbutane",C5H10Br2,229.9409,0,ZPSQIOLLINWWPV-UHFFFAOYSA-N,CCC(C)C(Br)Br,53427692,pubchem,0
+62127-58-6,"1,1-dibromo-2-methylbutane","1,1-dibromo-2-methylbutane",C5H10Br2,229.9409,0,ZPSQIOLLINWWPV-UHFFFAOYSA-N,CCC(C)C(Br)Br,53427692,pubchem,1
 62127-59-7,"1,1-dibromo-3-methylbutane","1,1-dibromo-3-methylbutane",C5H10Br2,229.9409,0,JTCFECCZRSBEDW-UHFFFAOYSA-N,CC(C)CC(Br)Br,13863828,pubchem,0
 62127-60-0,"butane, 2,2-dibromo-3-methyl-","2,2-dibromo-3-methylbutane",C5H10Br2,229.9409,0,LWGBKTJXLPHGPA-UHFFFAOYSA-N,CC(C)C(C)(Br)Br,13047634,pubchem,0
 6214-44-4,4-ethoxybenzyl alcohol,(4-ethoxyphenyl)methanol,C9H12O2,152.19038,0,UKFLLQIRBABMKF-UHFFFAOYSA-N,CCOC1=CC=C(C=C1)CO,80345,pubchem,0
@@ -14388,7 +14388,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 62168-29-0,"dodecane, dibromo-","1,1-dibromododecane",C12H24Br2,328.12696,0,LCUQJELQVHGIJS-UHFFFAOYSA-N,CCCCCCCCCCCC(Br)Br,11324906,pubchem,0
 62168-42-7,"1-bromo-2,2-dimethylbutane","1-bromo-2,2-dimethylbutane",C6H13Br,165.07142,0,YEAAJBCWOAEKNF-UHFFFAOYSA-N,CCC(C)(C)CBr,10855838,pubchem,0
 62183-50-0,"2,5-dimethyl-6-ethyloctane","6-ethyl-2,5-dimethyloctane",C12H26,170.33484,0,CYTDZGRTFHXLQS-UHFFFAOYSA-N,CCC(CC)C(C)CCC(C)C,53423792,pubchem,0
-62183-51-1,"2,6-dimethyl-3-ethyloctane","3-ethyl-2,6-dimethyloctane",C12H26,170.33484,0,WAFCPUFGSNTFSP-UHFFFAOYSA-N,CCC(C)CCC(CC)C(C)C,17946459,pubchem,0
+62183-51-1,"2,6-dimethyl-3-ethyloctane","3-ethyl-2,6-dimethyloctane",C12H26,170.33484,0,WAFCPUFGSNTFSP-UHFFFAOYSA-N,CCC(C)CCC(CC)C(C)C,17946459,pubchem,1
 62183-52-2,"2,6-dimethyl-4-ethyloctane","4-ethyl-2,6-dimethyloctane",C12H26,170.33484,0,JIOQMQLJPQDNFA-UHFFFAOYSA-N,CCC(C)CC(CC)CC(C)C,18339171,pubchem,0
 62183-53-3,"2,6-dimethyl-5-ethyloctane","5-ethyl-2,6-dimethyloctane",C12H26,170.33484,0,ZBMWKURVBLDBAH-UHFFFAOYSA-N,CCC(C)C(CC)CCC(C)C,53423895,pubchem,0
 62183-54-4,"2,6-dimethyl-6-ethyloctane","6-ethyl-2,6-dimethyloctane",C12H26,170.33484,0,DGFWFJRTTJTVEQ-UHFFFAOYSA-N,CCC(C)(CC)CCCC(C)C,53423896,pubchem,0
@@ -14426,7 +14426,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 62183-86-2,2-methyl-4-isopropyloctane,2-methyl-4-propan-2-yloctane,C12H26,170.33484,0,NRRICFUUPCDSKW-UHFFFAOYSA-N,CCCCC(CC(C)C)C(C)C,21201037,pubchem,0
 62183-87-3,2-methyl-5-isopropyloctane,2-methyl-5-propan-2-yloctane,C12H26,170.33484,0,OPKVPKXVSDEXOZ-UHFFFAOYSA-N,CCCC(CCC(C)C)C(C)C,53424707,pubchem,0
 62183-88-4,3-methyl-4-isopropyloctane,3-methyl-4-propan-2-yloctane,C12H26,170.33484,0,UXTHXSNAZBLVOD-UHFFFAOYSA-N,CCCCC(C(C)C)C(C)CC,53425834,pubchem,0
-62183-89-5,3-methyl-5-isopropyloctane,3-methyl-5-propan-2-yloctane,C12H26,170.33484,0,VEJPAYNPRZYJNN-UHFFFAOYSA-N,CCCC(CC(C)CC)C(C)C,53425843,pubchem,0
+62183-89-5,3-methyl-5-isopropyloctane,3-methyl-5-propan-2-yloctane,C12H26,170.33484,0,VEJPAYNPRZYJNN-UHFFFAOYSA-N,CCCC(CC(C)CC)C(C)C,53425843,pubchem,1
 62183-90-8,4-methyl-4-isopropyloctane,4-methyl-4-propan-2-yloctane,C12H26,170.33484,0,KCNISWXEVSJYRS-UHFFFAOYSA-N,CCCCC(C)(CCC)C(C)C,53426688,pubchem,0
 62183-91-9,4-methyl-5-isopropyloctane,4-methyl-5-propan-2-yloctane,C12H26,170.33484,0,HEFVKUUZAXCMQX-UHFFFAOYSA-N,CCCC(C)C(CCC)C(C)C,53426709,pubchem,0
 62183-92-0,"3,4-diethyloctane","3,4-diethyloctane",C12H26,170.33484,0,HILZBOWVGZXYGQ-UHFFFAOYSA-N,CCCCC(CC)C(CC)CC,21490602,pubchem,0
@@ -14719,7 +14719,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 6221-95-0,"1-tetradecanol, propanoate",tetradecyl propanoate,C17H34O2,270.45066,0,YRZGMTHQPGNLEK-UHFFFAOYSA-N,CCCCCCCCCCCCCCOC(=O)CC,22589,pubchem,0
 6221-96-1,hexadecyl propionate,hexadecyl propanoate,C19H38O2,298.50382,0,RSRQBSGZMPVCOI-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCOC(=O)CC,80355,pubchem,0
 6221-98-3,ag-690/15438865,"N-(2,5-dimethylphenyl)-2-phenylsulfanylpropanamide",C17H19NOS,285.40386,0,JNIBZUYKQDGFIT-UHFFFAOYSA-N,CC1=CC(=C(C=C1)C)NC(=O)C(C)SC2=CC=CC=C2,2891065,pubchem,0
-6221-99-4,hexadecyl butyrate,hexadecyl butanoate,C20H40O2,312.5304,0,NJVKAQGGBANCKG-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCOC(=O)CCC,522033,pubchem,0
+6221-99-4,hexadecyl butyrate,hexadecyl butanoate,C20H40O2,312.5304,0,NJVKAQGGBANCKG-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCOC(=O)CCC,522033,pubchem,1
 62211-85-2,"4,5,6-trimethylnonane","4,5,6-trimethylnonane",C12H26,170.33484,0,BBEKERHGCOZOIX-UHFFFAOYSA-N,CCCC(C)C(C)C(C)CCC,53425993,pubchem,0
 62212-28-6,"3,4-dimethyl-3-ethyloctane","3-ethyl-3,4-dimethyloctane",C12H26,170.33484,0,AOQVLRSMPNHJPF-UHFFFAOYSA-N,CCCCC(C)C(C)(CC)CC,20329909,pubchem,0
 6222-35-1,cyclohexyl propionate,cyclohexyl propanoate,C9H16O2,156.22214,0,MAMMVUWCKMOLSG-UHFFFAOYSA-N,CCC(=O)OC1CCCCC1,61375,pubchem,0
@@ -14961,7 +14961,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 627-04-3,(ethylthio)acetic acid,2-ethylsulfanylacetic acid,C4H8O2S,120.17012,0,VJIKFWJCVWFZIN-UHFFFAOYSA-N,CCSCC(=O)O,69387,pubchem,0
 627-05-4,1-nitrobutane,1-nitrobutane,C4H9NO2,103.11976,0,NALZTFARIYUCBY-UHFFFAOYSA-N,CCCC[N+](=O)[O-],12302,pubchem,0
 627-06-5,n-propylurea,propylurea,C4H10N2O,102.135,0,ZQZJKHIIQFPZCS-UHFFFAOYSA-N,CCCNC(=O)N,12303,pubchem,0
-627-08-7,"ether, isopropyl propyl",1-propan-2-yloxypropane,C6H14O,102.17476,0,JIEJJGMNDWIGBJ-UHFFFAOYSA-N,CCCOC(C)C,12304,pubchem,0
+627-08-7,"ether, isopropyl propyl",1-propan-2-yloxypropane,C6H14O,102.17476,0,JIEJJGMNDWIGBJ-UHFFFAOYSA-N,CCCOC(C)C,12304,pubchem,1
 627-09-8,propargyl acetate,prop-2-ynyl acetate,C5H6O2,98.09994,0,RIZZXCJMFIGMON-UHFFFAOYSA-N,CC(=O)OCC#C,69388,pubchem,0
 627-11-2,2-chloroethyl chloroformate,2-chloroethyl carbonochloridate,C3H4Cl2O2,142.96866,0,SVDDJQGVOFZBNX-UHFFFAOYSA-N,C(CCl)OC(=O)Cl,12305,pubchem,0
 627-12-3,propyl carbamate,propyl carbamate,C4H9NO2,103.11976,0,YNTOKMNHRPSGFU-UHFFFAOYSA-N,CCCOC(=O)N,12306,pubchem,0
@@ -15569,7 +15569,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 66215-27-8,cyromazine,"2-N-cyclopropyl-1,3,5-triazine-2,4,6-triamine",C6H10N6,166.1838,0,LVQDKIWDGQRHTE-UHFFFAOYSA-N,C1CC1NC2=NC(=NC(=N2)N)N,47866,pubchem,0
 6622-76-0,5953-76-4,methyl 2-methylbut-2-enoate,C6H10O2,114.1424,0,YYJWBYNQJLBIGS-UHFFFAOYSA-N,CC=C(C)C(=O)OC,23104,pubchem,0
 66225-12-5,"3,5-dimethyl-2-hexene","3,5-dimethylhex-2-ene",C8H16,112.21264,0,BQAZYKYBFAMHPG-UHFFFAOYSA-N,CC=C(C)CC(C)C,520669,pubchem,0
-66225-14-7,"4,5-dimethyl-trans-2-hexene","4,5-dimethylhex-2-ene",C8H16,112.21264,0,OAVNNZUEVHDCKP-UHFFFAOYSA-N,CC=CC(C)C(C)C,316569,pubchem,0
+66225-14-7,"4,5-dimethyl-trans-2-hexene","4,5-dimethylhex-2-ene",C8H16,112.21264,0,OAVNNZUEVHDCKP-UHFFFAOYSA-N,CC=CC(C)C(C)C,316569,pubchem,1
 66225-15-8,66225-15-8,3-ethylhex-2-ene,C8H16,112.21264,0,QEMJIDSLEPYRLM-UHFFFAOYSA-N,CCCC(=CC)CC,522004,pubchem,0
 66225-17-0,4-methyl-2-heptene,(E)-4-methylhept-2-ene,C8H16,112.21264,0,SVGLFIBXFVQUQY-GQCTYLIASA-N,CCCC(C)C=CC,5352648,pubchem,0
 66225-18-1,73548-72-8,6-methylhept-2-ene,C8H16,112.21264,0,LXBJRNXXTAWCKU-UHFFFAOYSA-N,CC=CCCC(C)C,522498,pubchem,0
@@ -15591,7 +15591,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 66256-41-5,"2,2,4-trimethyl-3-ethyl-3-pentanol","3-ethyl-2,2,4-trimethylpentan-3-ol",C10H22O,158.28108,0,CHZVHXPAKQDRSE-UHFFFAOYSA-N,CCC(C(C)C)(C(C)(C)C)O,13031503,pubchem,0
 66256-42-6,"2,2,5-trimethyl-4-heptanol","2,2,5-trimethylheptan-4-ol",C10H22O,158.28108,0,JHHGGYCQTXZCTL-UHFFFAOYSA-N,CCC(C)C(CC(C)(C)C)O,53428756,pubchem,0
 66256-43-7,"2,2,6-trimethyl-3-heptanol","2,2,6-trimethylheptan-3-ol",C10H22O,158.28108,0,AXUPPSSNJCYJOX-UHFFFAOYSA-N,CC(C)CCC(C(C)(C)C)O,53428763,pubchem,0
-66256-44-8,"2,2,6-trimethyl-4-heptanol","2,2,6-trimethylheptan-4-ol",C10H22O,158.28108,0,ITTQYDBLGDGLMB-UHFFFAOYSA-N,CC(C)CC(CC(C)(C)C)O,53428765,pubchem,0
+66256-44-8,"2,2,6-trimethyl-4-heptanol","2,2,6-trimethylheptan-4-ol",C10H22O,158.28108,0,ITTQYDBLGDGLMB-UHFFFAOYSA-N,CC(C)CC(CC(C)(C)C)O,53428765,pubchem,1
 66256-46-0,"2,4,5-trimethyl-4-heptanol","2,4,5-trimethylheptan-4-ol",C10H22O,158.28108,0,RCSCLTAIPNDFGC-UHFFFAOYSA-N,CCC(C)C(C)(CC(C)C)O,12757215,pubchem,0
 66256-47-1,"2,4,6-trimethyl-2-heptanol","2,4,6-trimethylheptan-2-ol",C10H22O,158.28108,0,VUZHXHGZVRACMM-UHFFFAOYSA-N,CC(C)CC(C)CC(C)(C)O,53442127,pubchem,0
 66256-48-2,"2,5,6-trimethyl-2-heptanol","2,5,6-trimethylheptan-2-ol",C10H22O,158.28108,0,LQQYOLMGDBGEBC-UHFFFAOYSA-N,CC(C)C(C)CCC(C)(C)O,10176244,pubchem,0
@@ -15624,7 +15624,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 6628-77-9,5-amino-2-methoxypyridine,6-methoxypyridin-3-amine,C6H8N2O,124.14052,0,UUVDJIWRSIJEBS-UHFFFAOYSA-N,COC1=NC=C(C=C1)N,81121,pubchem,0
 66291-45-0,ctk1j4972,1-iodopentadec-1-ene,C15H29I,336.29523,0,XVMZXLFZKSGXNT-UHFFFAOYSA-N,CCCCCCCCCCCCCC=CI,71375132,pubchem,0
 66291-47-2,ctk1j4970,1-chlorodec-1-ene,C10H19Cl,174.71086,0,FBECTVVCBRAZRM-UHFFFAOYSA-N,CCCCCCCCC=CCl,53790015,pubchem,0
-66291-48-3,ctk1j4970,1-chlorodec-1-ene,C10H19Cl,174.71086,0,FBECTVVCBRAZRM-UHFFFAOYSA-N,CCCCCCCCC=CCl,53790015,pubchem,0
+66291-48-3,ctk1j4970,1-chlorodec-1-ene,C10H19Cl,174.71086,0,FBECTVVCBRAZRM-UHFFFAOYSA-N,CCCCCCCCC=CCl,53790015,pubchem,1
 66291-51-8,ctk1j4968,1-iododec-1-ene,C10H19I,266.16233,0,DLUIIUGXYKFZRE-UHFFFAOYSA-N,CCCCCCCCC=CI,537340,pubchem,0
 66291-52-9,ctk1j4968,1-iododec-1-ene,C10H19I,266.16233,0,DLUIIUGXYKFZRE-UHFFFAOYSA-N,CCCCCCCCC=CI,537340,pubchem,0
 66291-72-3,(e)-1-bromodec-1-ene,1-bromodec-1-ene,C10H19Br,219.16186,0,PWJJHLRABLZGCK-UHFFFAOYSA-N,CCCCCCCCC=CBr,54211676,pubchem,0
@@ -15671,7 +15671,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 66576-70-3,"propanoic acid, 1,2-dimethylpropyl ester",3-methylbutan-2-yl propanoate,C8H16O2,144.21144,0,RYYMZRUXQWULCT-UHFFFAOYSA-N,CCC(=O)OC(C)C(C)C,523712,pubchem,0
 66577-17-1,"naphthalene, 7-methyl-1-(1-methylethyl)-",7-methyl-1-propan-2-ylnaphthalene,C14H16,184.27684,0,IALOQWWBBPIKBR-UHFFFAOYSA-N,CC1=CC2=C(C=CC=C2C(C)C)C=C1,21572754,pubchem,0
 66577-20-6,1-methyl-1-silinanyl propionate,"1,2,3,6-tetramethylnaphthalene",C14H16,184.27684,0,UPZLPCWLGUVTJE-UHFFFAOYSA-N,CC1=CC2=C(C=C1)C(=C(C(=C2)C)C)C,6431209,pubchem,0
-66577-21-7,ctk1j4584,"1,2,4,6-tetramethylnaphthalene",C14H16,184.27684,0,YHGKZYWIUOZPMT-UHFFFAOYSA-N,CC1=CC2=C(C=C(C(=C2C=C1)C)C)C,54387778,pubchem,0
+66577-21-7,ctk1j4584,"1,2,4,6-tetramethylnaphthalene",C14H16,184.27684,0,YHGKZYWIUOZPMT-UHFFFAOYSA-N,CC1=CC2=C(C=C(C(=C2C=C1)C)C)C,54387778,pubchem,1
 66577-30-8,ethyl undecyl sulfide,1-ethylsulfanylundecane,C13H28S,216.42642,0,OSWITQLVZPPUIR-UHFFFAOYSA-N,CCCCCCCCCCCSCC,53442128,pubchem,0
 66577-31-9,propyl decyl sulfide,1-propylsulfanyldecane,C13H28S,216.42642,0,HPJCKXDELORROO-UHFFFAOYSA-N,CCCCCCCCCCSCCC,20088826,pubchem,0
 66577-37-5,"naphthalene, 1,7-diethyl-","1,7-diethylnaphthalene",C14H16,184.27684,0,FEDNNRDUJQPTAD-UHFFFAOYSA-N,CCC1=CC2=C(C=CC=C2CC)C=C1,13628867,pubchem,0
@@ -15696,7 +15696,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 66703-04-6,"2-pentene, 1-iodo-",1-iodopent-2-ene,C5H9I,196.02943,0,TUOBXTTXILBNEL-UHFFFAOYSA-N,CCC=CCI,54334594,pubchem,0
 6671-66-5,bicyclo(3.3.1)non-2-ene,bicyclo[3.3.1]non-2-ene,C9H14,122.20746,0,CEVDPSDZXGCLEI-UHFFFAOYSA-N,C1CC2CC=CC(C1)C2,138803,pubchem,0
 66719-30-0,"3,4-dimethyl-4-octanol","3,4-dimethyloctan-4-ol",C10H22O,158.28108,0,JEBZCASOCDXENQ-UHFFFAOYSA-N,CCCCC(C)(C(C)CC)O,53424903,pubchem,0
-66719-31-1,"3,6-dimethyl-4-octanol","3,6-dimethyloctan-4-ol",C10H22O,158.28108,0,XFUFFAQPWAGSDK-UHFFFAOYSA-N,CCC(C)CC(C(C)CC)O,53425376,pubchem,0
+66719-31-1,"3,6-dimethyl-4-octanol","3,6-dimethyloctan-4-ol",C10H22O,158.28108,0,XFUFFAQPWAGSDK-UHFFFAOYSA-N,CCC(C)CC(C(C)CC)O,53425376,pubchem,1
 66719-32-2,"4,5-dimethyloctan-1-ol","4,5-dimethyloctan-1-ol",C10H22O,158.28108,0,UQKHXPAWOMZBLN-UHFFFAOYSA-N,CCCC(C)C(C)CCCO,3017707,pubchem,0
 66719-33-3,"4,6-dimethyloctan-1-ol","4,6-dimethyloctan-1-ol",C10H22O,158.28108,0,JOWDWXPTKVUHBV-UHFFFAOYSA-N,CCC(C)CC(C)CCCO,3017708,pubchem,0
 66719-34-4,"4,7-dimethyloctan-1-ol","4,7-dimethyloctan-1-ol",C10H22O,158.28108,0,UWAGZVFFZJGLJU-UHFFFAOYSA-N,CC(C)CCC(C)CCCO,3017709,pubchem,0
@@ -15721,7 +15721,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 66793-72-4,"2,5,5-trimethyl-3-hexanol","2,5,5-trimethylhexan-3-ol",C9H20O,144.2545,0,NPUIBFBNZSKEAP-UHFFFAOYSA-N,CC(C)C(CC(C)(C)C)O,22969365,pubchem,0
 66793-73-5,"3,4,4-trimethylhexan-1-ol","3,4,4-trimethylhexan-1-ol",C9H20O,144.2545,0,OLRPKAJSAOYYCY-UHFFFAOYSA-N,CCC(C)(C)C(C)CCO,3017713,pubchem,0
 66793-74-6,"3,4,4-trimethyl-3-hexanol","3,4,4-trimethylhexan-3-ol",C9H20O,144.2545,0,QWJDXMFJOMPTCV-UHFFFAOYSA-N,CCC(C)(C)C(C)(CC)O,522225,pubchem,0
-66793-75-7,"4,5,5-trimethyl-1-hexanol","4,5,5-trimethylhexan-1-ol",C9H20O,144.2545,0,IECJUMYEWJOKHM-UHFFFAOYSA-N,CC(CCCO)C(C)(C)C,10419311,pubchem,0
+66793-75-7,"4,5,5-trimethyl-1-hexanol","4,5,5-trimethylhexan-1-ol",C9H20O,144.2545,0,IECJUMYEWJOKHM-UHFFFAOYSA-N,CC(CCCO)C(C)(C)C,10419311,pubchem,1
 66793-76-8,n-ethylheptylamine,N-ethylheptan-1-amine,C9H21N,143.26974,0,IUZZLNVABCISOI-UHFFFAOYSA-N,CCCCCCCNCC,48038,pubchem,0
 66793-80-4,4-methyl-3-octanol,4-methyloctan-3-ol,C9H20O,144.2545,0,XPWBBDBJJRZCPW-UHFFFAOYSA-N,CCCCC(C)C(CC)O,14330801,pubchem,0
 66793-81-5,5-methyl-2-octanol,5-methyloctan-2-ol,C9H20O,144.2545,0,IWFICVXFFNDWOJ-UHFFFAOYSA-N,CCCC(C)CCC(C)O,13352060,pubchem,0
@@ -15735,7 +15735,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 66793-89-3,"2,2,4-trimethyl-3-hexanol","2,2,4-trimethylhexan-3-ol",C9H20O,144.2545,0,YMBVVPXERVAJTB-UHFFFAOYSA-N,CCC(C)C(C(C)(C)C)O,19973858,pubchem,0
 66793-90-6,"2,3,4-trimethyl-3-hexanol","2,3,4-trimethylhexan-3-ol",C9H20O,144.2545,0,LTKHKGAPVGSECA-UHFFFAOYSA-N,CCC(C)C(C)(C(C)C)O,20798443,pubchem,0
 66793-91-7,"2,4,4-trimethyl-2-hexanol","2,4,4-trimethylhexan-2-ol",C9H20O,144.2545,0,QMEHJTXRYVSFES-UHFFFAOYSA-N,CCC(C)(C)CC(C)(C)O,53428971,pubchem,0
-66793-92-8,"2,4,4-trimethyl-3-hexanol","2,4,4-trimethylhexan-3-ol",C9H20O,144.2545,0,PDIVDRVTPZNRDZ-UHFFFAOYSA-N,CCC(C)(C)C(C(C)C)O,522226,pubchem,0
+66793-92-8,"2,4,4-trimethyl-3-hexanol","2,4,4-trimethylhexan-3-ol",C9H20O,144.2545,0,PDIVDRVTPZNRDZ-UHFFFAOYSA-N,CCC(C)(C)C(C(C)C)O,522226,pubchem,1
 66793-93-9,"2,4,5-trimethyl-2-hexanol","2,4,5-trimethylhexan-2-ol",C9H20O,144.2545,0,CIVZBWYMPDUPSQ-UHFFFAOYSA-N,CC(C)C(C)CC(C)(C)O,53428980,pubchem,0
 66793-94-0,"3,3-diethyl-2-pentanol","3,3-diethylpentan-2-ol",C9H20O,144.2545,0,IENXYHLNFHBNRR-UHFFFAOYSA-N,CCC(CC)(CC)C(C)O,53425094,pubchem,0
 66793-95-1,"2,2-dimethyl-3-ethyl-1-pentanol","3-ethyl-2,2-dimethylpentan-1-ol",C9H20O,144.2545,0,HEQYMZTUSVDQBW-UHFFFAOYSA-N,CCC(CC)C(C)(C)CO,53428782,pubchem,0
@@ -15773,7 +15773,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 67-64-1,acetone,propan-2-one,C3H6O,58.07914,0,CSCPPACGZOOCGX-UHFFFAOYSA-N,CC(=O)C,180,pubchem,1
 67-66-3,chloroform,chloroform,CHCl3,119.37764,0,HEDRZPFGACZZDS-UHFFFAOYSA-N,C(Cl)(Cl)Cl,6212,pubchem,1
 67-68-5,dimethyl sulfoxide,methylsulfinylmethane,C2H6OS,78.13344,0,IAZDPXIOMUYVGZ-UHFFFAOYSA-N,CS(=O)C,679,pubchem,1
-67-71-0,dimethyl sulfone,methylsulfonylmethane,C2H6O2S,94.13284,0,HHVIBTZHLRERCL-UHFFFAOYSA-N,CS(=O)(=O)C,6213,pubchem,0
+67-71-0,dimethyl sulfone,methylsulfonylmethane,C2H6O2S,94.13284,0,HHVIBTZHLRERCL-UHFFFAOYSA-N,CS(=O)(=O)C,6213,pubchem,1
 67-72-1,hexachloroethane,"1,1,1,2,2,2-hexachloroethane",C2Cl6,236.7394,0,VHHHONWQHHHLTI-UHFFFAOYSA-N,C(C(Cl)(Cl)Cl)(Cl)(Cl)Cl,6214,pubchem,1
 67-92-5,dicyclomine hydrochloride,2-(diethylamino)ethyl 1-cyclohexylcyclohexane-1-carboxylate;hydrochloride,C19H36ClNO2,345.94764,0,GUBNMFJOJGDCEL-UHFFFAOYSA-N,CCN(CC)CCOC(=O)C1(CCCCC1)C2CCCCC2.Cl,441344,pubchem,0
 67-96-9,dihydrotachysterol,"3-[2-[1-(5,6-dimethylhept-3-en-2-yl)-7a-methyl-2,3,3a,5,6,7-hexahydro-1H-inden-4-ylidene]ethylidene]-4-methylcyclohexan-1-ol",C28H46O,398.66424,0,ILYCWAKSDCYMBB-UHFFFAOYSA-N,CC1CCC(CC1=CC=C2CCCC3(C2CCC3C(C)C=CC(C)C(C)C)C)O,3070,pubchem,0
@@ -15844,7 +15844,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 679-85-6,"3-Chloro-1,1,2,2-tetrafluoropropane","3-chloro-1,1,2,2-tetrafluoropropane",C3H3ClF4,150.502533,0,WMCLYSGSAJGCJY-UHFFFAOYSA-N,C(C(C(F)F)(F)F)Cl,120319,pubchem,0
 679-86-7,"1,1,2,2,3-pentafluoropropane","1,1,2,2,3-pentafluoropropane",C3H3F5,134.047936,0,AWTOFSDLNREIFS-UHFFFAOYSA-N,C(C(C(F)F)(F)F)F,69624,pubchem,0
 6790-27-8,3-dodecyne,dodec-3-yne,C12H22,166.30308,0,ZFAGQZXKTQFQLE-UHFFFAOYSA-N,CCCCCCCCC#CCC,138834,pubchem,0
-6795-87-5,sec-butyl methyl ether,2-methoxybutane,C5H12O,88.14818,0,FVNIMHIOIXPIQT-UHFFFAOYSA-N,CCC(C)OC,23238,pubchem,0
+6795-87-5,sec-butyl methyl ether,2-methoxybutane,C5H12O,88.14818,0,FVNIMHIOIXPIQT-UHFFFAOYSA-N,CCC(C)OC,23238,pubchem,1
 6795-88-6,"pentane, 2-methoxy-",2-methoxypentane,C6H14O,102.17476,0,XSAJCGUYMQTAHL-UHFFFAOYSA-N,CCCC(C)OC,522287,pubchem,0
 67952-57-2,"2-heptanol, 6-methyl-, 2-acetate",6-methylheptan-2-yl acetate,C10H20O2,172.2646,0,JNRDWRMJYGDQQE-UHFFFAOYSA-N,CC(C)CCCC(C)OC(=O)C,50006,pubchem,0
 68-04-2,sodium citrate,"trisodium;2-hydroxypropane-1,2,3-tricarboxylate",C6H5Na3O7,258.069008,0,HRXKRNGNAMMEHJ-UHFFFAOYSA-K,C(C(=O)[O-])C(CC(=O)[O-])(C(=O)[O-])O.[Na+].[Na+].[Na+],6224,pubchem,0
@@ -16000,7 +16000,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 693-61-8,undec-2-ene,undec-2-ene,C11H22,154.29238,0,JOHIXGUTSXXADV-UHFFFAOYSA-N,CCCCCCCCC=CC,34320,pubchem,0
 693-62-9,"4-undecene, (e)-",(E)-undec-4-ene,C11H22,154.29238,0,JABYJIQOLGWMQW-VQHVLOKHSA-N,CCCCCCC=CCCC,5358315,pubchem,0
 693-65-2,pentyl ether,1-pentoxypentane,C10H22O,158.28108,0,AOPDRZXCEAKHHW-UHFFFAOYSA-N,CCCCCOCCCCC,12743,pubchem,0
-693-67-4,1-bromoundecane,1-bromoundecane,C11H23Br,235.20432,0,IKPSIIAXIDAQLG-UHFFFAOYSA-N,CCCCCCCCCCCBr,12744,pubchem,0
+693-67-4,1-bromoundecane,1-bromoundecane,C11H23Br,235.20432,0,IKPSIIAXIDAQLG-UHFFFAOYSA-N,CCCCCCCCCCCBr,12744,pubchem,1
 693-72-1,11-octadecenoic acid,(E)-octadec-11-enoic acid,C18H34O2,282.46136,0,UWHZIFQPPBDJPM-BQYQJAHWSA-N,CCCCCCC=CCCCCCCCCCC(=O)O,5281127,pubchem,0
 693-83-4,decyl sulfide,1-decylsulfanyldecane,C20H42S,314.61248,0,RKYMVQJWYYOIJB-UHFFFAOYSA-N,CCCCCCCCCCSCCCCCCCCCC,69662,pubchem,0
 693-86-7,ethenylcyclopropane,ethenylcyclopropane,C5H8,68.11702,0,YIWFBNMYFYINAD-UHFFFAOYSA-N,C=CC1CC1,136498,pubchem,0
@@ -16012,7 +16012,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 6931-71-1,aethylpinakon,"3,4-diethylhexane-3,4-diol",C10H22O2,174.28048,0,HDXDBVSPBNTNNA-UHFFFAOYSA-N,CCC(CC)(C(CC)(CC)O)O,23358,pubchem,0
 6933-10-4,4-bromo-3-methylaniline,4-bromo-3-methylaniline,C7H8BrN,186.04912,0,MMEGELSFOYDPQW-UHFFFAOYSA-N,CC1=C(C=CC(=C1)N)Br,23359,pubchem,0
 69377-81-7,fluroxypyr,"2-[(4-amino-3,5-dichloro-6-fluoro-2-pyridinyl)oxy]acetic acid",C7H5Cl2FN2O3,255.030603,0,MEFQWPUMEMWTJP-UHFFFAOYSA-N,C(C(=O)O)OC1=NC(=C(C(=C1Cl)N)Cl)F,50465,pubchem,0
-6938-66-5,1-bromodocosane,1-bromodocosane,C22H45Br,389.4967,0,QYOXLKAKUAASNA-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCBr,81355,pubchem,0
+6938-66-5,1-bromodocosane,1-bromodocosane,C22H45Br,389.4967,0,QYOXLKAKUAASNA-UHFFFAOYSA-N,CCCCCCCCCCCCCCCCCCCCCCBr,81355,pubchem,1
 6938-94-9,diisopropyl adipate,dipropan-2-yl hexanedioate,C12H22O4,230.30068,0,ZDQWESQEGGJUCH-UHFFFAOYSA-N,CC(C)OC(=O)CCCCC(=O)OC(C)C,23368,pubchem,0
 694-01-9,bicyclo(3.1.0)hex-2-ene,bicyclo[3.1.0]hex-2-ene,C6H8,80.12772,0,BAOZQZPGQWXJOW-UHFFFAOYSA-N,C1C=CC2C1C2,136501,pubchem,0
 694-05-3,"1,2,3,6-tetrahydropyridine","1,2,3,6-tetrahydropyridine",C5H9N,83.13166,0,FTAHXMZRJCZXDL-UHFFFAOYSA-N,C1CNCC=C1,12750,pubchem,0
@@ -16370,7 +16370,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 7307-02-0,butanoylacetone,"heptane-2,4-dione",C7H12O2,128.16898,0,ILPNRWUGFSPGAA-UHFFFAOYSA-N,CCCC(=O)CC(=O)C,23732,pubchem,0
 7307-03-1,"5-methylhexane-2,4-dione","5-methylhexane-2,4-dione",C7H12O2,128.16898,0,KHZGUWAFFHXZLC-UHFFFAOYSA-N,CC(C)C(=O)CC(=O)C,138984,pubchem,0
 7307-55-3,undecylamine,undecan-1-amine,C11H25N,171.3229,0,QFKMMXYLAPZKIB-UHFFFAOYSA-N,CCCCCCCCCCCN,81742,pubchem,0
-7307-58-6,"n,N-Diethyl-1-tetradecanamine","N,N-diethyltetradecan-1-amine",C18H39N,269.50896,0,YUMFFTKWMWTBBU-UHFFFAOYSA-N,CCCCCCCCCCCCCCN(CC)CC,14389642,pubchem,0
+7307-58-6,"n,N-Diethyl-1-tetradecanamine","N,N-diethyltetradecan-1-amine",C18H39N,269.50896,0,YUMFFTKWMWTBBU-UHFFFAOYSA-N,CCCCCCCCCCCCCCN(CC)CC,14389642,pubchem,1
 7309-43-5,"sulfide, butyl isopropyl",1-propan-2-ylsulfanylbutane,C7H16S,132.26694,0,QIAZGMDOMXLGBB-UHFFFAOYSA-N,CCCCSC(C)C,522478,pubchem,0
 7309-44-6,"sulfide, ethyl hexyl",1-ethylsulfanylhexane,C8H18S,146.29352,0,MGVUJBCOCITTRS-UHFFFAOYSA-N,CCCCCCSCC,522479,pubchem,0
 7311-30-0,n-methyldodecylamine,N-methyldodecan-1-amine,C13H29N,199.37606,0,OMEMQVZNTDHENJ-UHFFFAOYSA-N,CCCCCCCCCCCCNC,81746,pubchem,0
@@ -16493,7 +16493,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 7435-50-9,"naphthalene, 1,3,6,7-tetramethyl","1,3,6,7-tetramethylnaphthalene",C14H16,184.27684,0,WGYHLEAARAGHPX-UHFFFAOYSA-N,CC1=CC(=C2C=C(C(=CC2=C1)C)C)C,6431208,pubchem,0
 7438-05-3,imino-octylimino-azanium,imino(octylimino)azanium,C8H18N3+,156.24862,1,FZTMAMHIBPYQOC-UHFFFAOYSA-N,CCCCCCCCN=[N+]=N,6332335,pubchem,0
 7439-15-8,"benzene, 1-ethyl-4-(2-phenylethyl)-",1-ethyl-4-(2-phenylethyl)benzene,C16H18,210.31412,0,BDEIYMXBPHSOSG-UHFFFAOYSA-N,CCC1=CC=C(C=C1)CCC2=CC=CC=C2,92369,pubchem,0
-7439-88-5,iridium,iridium,Ir,192.217,0,GKOZUEZYRPOHIO-UHFFFAOYSA-N,[Ir],23924,pubchem,0
+7439-88-5,iridium,iridium,Ir,192.217,0,GKOZUEZYRPOHIO-UHFFFAOYSA-N,[Ir],23924,pubchem,1
 7439-89-6,iron,iron,Fe,55.845,0,XEEYBQQBJWHFJM-UHFFFAOYSA-N,[Fe],23925,pubchem,1
 7439-90-9,krypton,krypton,Kr,83.798,0,DNNSSWSSYDEUBZ-UHFFFAOYSA-N,[Kr],5416,pubchem,1
 7439-91-0,lanthanum,lanthanum,La,138.9055,0,FZLIPJUXYLNCLC-UHFFFAOYSA-N,[La],23926,pubchem,0
@@ -16512,7 +16512,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 7440-02-0,nickel,nickel,Ni,58.6934,0,PXHVJJICTQNCMI-UHFFFAOYSA-N,[Ni],935,pubchem,1
 7440-03-1,niobium,niobium,Nb,92.90638,0,GUCVJGMIXFAOAE-UHFFFAOYSA-N,[Nb],23936,pubchem,1
 7440-04-2,osmium,osmium,Os,190.23,0,SYQBFIAQOQZEGI-UHFFFAOYSA-N,[Os],23937,pubchem,0
-7440-05-3,palladium,palladium,Pd,106.42,0,KDLHZDBZIXYQEI-UHFFFAOYSA-N,[Pd],23938,pubchem,0
+7440-05-3,palladium,palladium,Pd,106.42,0,KDLHZDBZIXYQEI-UHFFFAOYSA-N,[Pd],23938,pubchem,1
 7440-06-4,platinum,platinum,Pt,195.078,0,BASFCYQUMIYNBI-UHFFFAOYSA-N,[Pt],23939,pubchem,0
 7440-07-5,plutonium,plutonium,Pu,244.06,0,OYEHPCDNVJXUIW-UHFFFAOYSA-N,[Pu],23940,pubchem,0
 7440-08-6,polonium,polonium,Po,209,0,HZEBHPIOVYHPMT-UHFFFAOYSA-N,[Po],6328143,pubchem,0
@@ -16535,7 +16535,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 7440-25-7,tantalum,tantalum,Ta,180.9479,0,GUVRBAGPIYLISA-UHFFFAOYSA-N,[Ta],23956,pubchem,1
 7440-26-8,technetium,technetium,Tc,98,0,GKLVYJBZJHMRIY-UHFFFAOYSA-N,[Tc],23957,pubchem,0
 7440-27-9,terbium,terbium,Tb,158.92534,0,GZCRRIHWUXGPOV-UHFFFAOYSA-N,[Tb],23958,pubchem,0
-7440-28-0,thallium,thallium,Tl,204.3833,0,BKVIYDNLLOSFOA-UHFFFAOYSA-N,[Tl],5359464,pubchem,0
+7440-28-0,thallium,thallium,Tl,204.3833,0,BKVIYDNLLOSFOA-UHFFFAOYSA-N,[Tl],5359464,pubchem,1
 7440-29-1,thorium,thorium,Th,232.0381,0,ZSLUVFAKFWKJRC-UHFFFAOYSA-N,[Th],23960,pubchem,0
 7440-30-4,thulium,thulium,Tm,168.93421,0,FRNOGLGSGLTDKL-UHFFFAOYSA-N,[Tm],23961,pubchem,0
 7440-31-5,tin,tin,Sn,118.701,0,ATJFFYVFTNAWJD-UHFFFAOYSA-N,[Sn],5352426,pubchem,0
@@ -17889,7 +17889,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 827-15-6,iodopentafluorobenzene,"1,2,3,4,5-pentafluoro-6-iodobenzene",C6F5I,293.960686,0,OPYHNLNYCRZOGY-UHFFFAOYSA-N,C1(=C(C(=C(C(=C1F)F)I)F)F)F,70008,pubchem,0
 827-16-7,trimethyl isocyanurate,"1,3,5-trimethyl-1,3,5-triazinane-2,4,6-trione",C6H9N3O3,171.15396,0,AHWDQDMGFXRVFB-UHFFFAOYSA-N,CN1C(=O)N(C(=O)N(C1=O)C)C,13225,pubchem,0
 827-36-1,827-36-1,2-(dimethylamino)-2-phenylacetonitrile,C10H12N2,160.21568,0,PAGHXXKYFBGJEH-UHFFFAOYSA-N,CN(C)C(C#N)C1=CC=CC=C1,13227,pubchem,0
-827-52-1,cyclohexylbenzene,cyclohexylbenzene,C12H16,160.25544,0,IGARGHRYKHJQSM-UHFFFAOYSA-N,C1CCC(CC1)C2=CC=CC=C2,13229,pubchem,0
+827-52-1,cyclohexylbenzene,cyclohexylbenzene,C12H16,160.25544,0,IGARGHRYKHJQSM-UHFFFAOYSA-N,C1CCC(CC1)C2=CC=CC=C2,13229,pubchem,1
 827-54-3,2-vinylnaphthalene,2-ethenylnaphthalene,C12H10,154.2078,0,KXYAVSFOJVUIHT-UHFFFAOYSA-N,C=CC1=CC2=CC=CC=C2C=C1,13230,pubchem,0
 827-94-1,"2,6-dibromo-4-nitroaniline","2,6-dibromo-4-nitroaniline",C6H4Br2N2O2,295.91616,0,YMZIFDLWYUSZCC-UHFFFAOYSA-N,C1=C(C=C(C(=C1Br)N)Br)[N+](=O)[O-],13231,pubchem,0
 828-00-2,dimethoxane,"(2,6-dimethyl-1,3-dioxan-4-yl) acetate",C8H14O4,174.19436,0,PHMNXPYGVPEQSJ-UHFFFAOYSA-N,CC1CC(OC(O1)C)OC(=O)C,13232,pubchem,0
@@ -18486,7 +18486,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 92-61-5,scopoletin,7-hydroxy-6-methoxychromen-2-one,C10H8O4,192.16812,0,RODXRVNMMDRFIK-UHFFFAOYSA-N,COC1=C(C=C2C(=C1)C=CC(=O)O2)O,5280460,pubchem,0
 92-62-6,proflavine,"acridine-3,6-diamine",C13H11N3,209.24654,0,WDVSHHCDHLJJJR-UHFFFAOYSA-N,C1=CC(=CC2=NC3=C(C=CC(=C3)N)C=C21)N,7099,pubchem,0
 92-66-0,4-bromobiphenyl,1-bromo-4-phenylbenzene,C12H9Br,233.10386,0,PKJBWOWQJHHAHG-UHFFFAOYSA-N,C1=CC=C(C=C1)C2=CC=C(C=C2)Br,7101,pubchem,0
-92-67-1,4-aminobiphenyl,4-phenylaniline,C12H11N,169.22244,0,DMVOXQPQNTYEKQ-UHFFFAOYSA-N,C1=CC=C(C=C1)C2=CC=C(C=C2)N,7102,pubchem,0
+92-67-1,4-aminobiphenyl,4-phenylaniline,C12H11N,169.22244,0,DMVOXQPQNTYEKQ-UHFFFAOYSA-N,C1=CC=C(C=C1)C2=CC=C(C=C2)N,7102,pubchem,1
 92-69-3,4-phenylphenol,4-phenylphenol,C12H10O,170.2072,0,YXVFYQXJAXKLAK-UHFFFAOYSA-N,C1=CC=C(C=C1)C2=CC=C(C=C2)O,7103,pubchem,0
 92-70-6,3-hydroxy-2-naphthoic acid,3-hydroxynaphthalene-2-carboxylic acid,C11H8O3,188.17942,0,ALKYHXVLJMQRLQ-UHFFFAOYSA-N,C1=CC=C2C=C(C(=CC2=C1)C(=O)O)O,7104,pubchem,0
 92-71-7,"2,5-diphenyloxazole","2,5-diphenyl-1,3-oxazole",C15H11NO,221.25394,0,CNRNYORZJGVOSY-UHFFFAOYSA-N,C1=CC=C(C=C1)C2=CN=C(O2)C3=CC=CC=C3,7105,pubchem,0
@@ -18578,7 +18578,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 928-96-1,cis-3-hexen-1-ol,(Z)-hex-3-en-1-ol,C6H12O,100.15888,0,UFLHIIWVXFIJGU-ARJAWSKDSA-N,CCC=CCCO,5281167,pubchem,0
 928-97-2,trans-3-hexen-1-ol,(E)-hex-3-en-1-ol,C6H12O,100.15888,0,UFLHIIWVXFIJGU-ONEGZZNKSA-N,CCC=CCCO,5284503,pubchem,0
 928-98-3,"1,5-pentanedithiol","pentane-1,5-dithiol",C5H12S2,136.27878,0,KMTUBAIXCBHPIZ-UHFFFAOYSA-N,C(CCS)CCS,70236,pubchem,0
-929-06-6,2-(2-aminoethoxy)ethanol,2-(2-aminoethoxy)ethanol,C4H11NO2,105.13564,0,GIAFURWZWWWBQT-UHFFFAOYSA-N,C(COCCO)N,13578,pubchem,0
+929-06-6,2-(2-aminoethoxy)ethanol,2-(2-aminoethoxy)ethanol,C4H11NO2,105.13564,0,GIAFURWZWWWBQT-UHFFFAOYSA-N,C(COCCO)N,13578,pubchem,1
 929-55-5,octanaloxime,N-octylidenehydroxylamine,C8H17NO,143.22668,0,GGZXEEFQIXMFBF-UHFFFAOYSA-N,CCCCCCCC=NO,136720,pubchem,0
 929-56-6,1-methoxyoctane,1-methoxyoctane,C9H20O,144.2545,0,RIAWWRJHTAZJSU-UHFFFAOYSA-N,CCCCCCCCOC,70247,pubchem,0
 929-62-4,1-(vinyloxy)octane,1-ethenoxyoctane,C10H20O,156.2652,0,XXCVIFJHBFNFBO-UHFFFAOYSA-N,CCCCCCCCOC=C,70249,pubchem,0
@@ -18994,7 +18994,7 @@ cas,name,iupac_name,formula,mw,charge,inchikey,smiles,pubchem_cid,identity_sourc
 97-89-2,citronellyl isobutyrate,"3,7-dimethyloct-6-enyl 2-methylpropanoate",C14H26O2,226.35504,0,ZGPPERKMXSGYRK-UHFFFAOYSA-N,CC(C)C(=O)OCCC(C)CCC=C(C)C,60985,pubchem,0
 97-90-5,ethylene dimethacrylate,2-(2-methylprop-2-enoyloxy)ethyl 2-methylprop-2-enoate,C10H14O4,198.21576,0,STVZJERGLQHEKB-UHFFFAOYSA-N,CC(=C)C(=O)OCCOC(=O)C(=C)C,7355,pubchem,0
 97-93-8,triethylaluminum,triethylalumane,C6H15Al,114.164839,0,VOITXYVAKOUIBA-UHFFFAOYSA-N,CC[Al](CC)CC,16682930,pubchem,0
-97-94-9,triethylborane,triethylborane,C6H15B,97.9943,0,LALRXNPLTWZJIJ-UHFFFAOYSA-N,B(CC)(CC)CC,7357,pubchem,0
+97-94-9,triethylborane,triethylborane,C6H15B,97.9943,0,LALRXNPLTWZJIJ-UHFFFAOYSA-N,B(CC)(CC)CC,7357,pubchem,1
 97-95-0,2-ethyl-1-butanol,2-ethylbutan-1-ol,C6H14O,102.17476,0,TZYRSLHNPKPEFV-UHFFFAOYSA-N,CCC(CC)CO,7358,pubchem,0
 97-96-1,2-ethylbutanal,2-ethylbutanal,C6H12O,100.15888,0,UNNGUFMVYQJGTD-UHFFFAOYSA-N,CCC(CC)C=O,7359,pubchem,0
 97-97-2,chloroacetaldehyde dimethyl acetal,"2-chloro-1,1-dimethoxyethane",C4H9ClO2,124.56606,0,CRZJPEIBPQWDGJ-UHFFFAOYSA-N,COC(CCl)OC,60986,pubchem,0

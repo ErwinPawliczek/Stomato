@@ -1,0 +1,61 @@
+# Temperature-dependent Wilson binaries (row wilson_tdep_ig): Lambda_ij = exp(a_ij + b_ij / T),
+# T in K, with Lambda_ij multiplying x_j in component i's sum (ln gamma_i = 1 - ln(sum_j x_j
+# Lambda_ij) - sum_k x_k Lambda_ki / sum_j x_j Lambda_kj; thermo's Wilson with lambda_as = a,
+# lambda_bs = b). Each list is [pair[0] -> pair[1], pair[1] -> pair[0]], i.e. [a_12, a_21]
+# with component (1) = pair[0]. Pairs are keyed by CAS number.
+#
+# Sources (both retrieved 2026-11-03 as PDFs from kirj.ee via their DOIs):
+#   [S] Siimer, E., Kirss, H., Kuus, M. and Kudryavtseva, L., Isobaric vapour-liquid
+#       equilibria of the ternary system hexan-2-one + o-xylene + nonane, Proc. Estonian
+#       Acad. Sci. Chem. 51(1), 2002, 19-28, doi:10.3176/chem.2002.1.02; Table 4.
+#   [K] Kirss, H., Kuus, M., Siimer, E. and Kudryavtseva, L., Isobaric vapour-liquid
+#       equilibria of the ternary system toluene + p-xylene + 1,2-dichloroethane, Proc.
+#       Estonian Acad. Sci. Chem. 51(4), 2002, 215-224, doi:10.3176/chem.2002.4.03; Table 4.
+#   Both papers fit isobaric T-x data at 26.66, 53.33, 79.99 and 101.32 kPa with an ideal
+#   vapour and their own Antoine constants ([S] Table 5, [K] Table 3).
+#
+# Equation form: both papers print Eq. 1 as ln gamma_1 = -ln(x_1 - Lambda_12 x_2) + ...,
+# a misprinted minus sign; the standard Wilson form has (x_1 + Lambda_12 x_2), and with it
+# these coefficients reproduce the papers' own computed activity coefficients, boiling
+# temperatures and pressures ([S] Table 3, [K] Table 7) to the printed digits
+# (tests/thermo/test_gamma_phi_variants.py). The + form is used here.
+#
+# Licence: no Creative Commons licence is named for either article. The journal's article
+# pages are labelled "Open Access Journal"; the 2002 PDFs carry no copyright or licence
+# notice. The Estonian Academy Publishers terms (https://kirj.ee/terms-and-conditions/,
+# retrieved 2026-11-03) say of open-access articles: "please check the license statement for
+# the relevant article(s). No permission is required from the authors or publishers.
+# Appropriate attribution can be provided by citing the original article." Only the
+# fitted coefficients are shipped, with this citation.
+model: wilson
+pairs:
+  hexanone_oxylene:
+    pair: ["591-78-6", "95-47-6"]  # hexan-2-one (1), o-xylene (2)
+    a: [1.10492, -1.22053]
+    b: [-459.039, 436.718]
+    citation: "[S] Table 4, 'Hexan-2-one + o-xylene'; mean |dP| 0.10 % over 359-418 K"
+  hexanone_nonane:
+    pair: ["591-78-6", "111-84-2"]  # hexan-2-one (1), nonane (2)
+    a: [1.70016, -1.03432]
+    b: [-728.735, 155.701]
+    citation: "[S] Table 4, 'Hexan-2-one + nonane'; mean |dP| 0.22 % over 359-424 K"
+  oxylene_nonane:
+    pair: ["95-47-6", "111-84-2"]  # o-xylene (1), nonane (2)
+    a: [0.14382, 0.23169]
+    b: [41.904, -315.517]
+    citation: "[S] Table 4, 'o-Xylene + nonane' (fitted to the authors' earlier data, their ref. 6); mean |dP| 0.09 %"
+  toluene_pxylene:
+    pair: ["108-88-3", "106-42-3"]  # toluene (1), p-xylene (2)
+    a: [-0.35434, 0.43197]
+    b: [118.040, -124.937]
+    citation: "[K] Table 4, 'Toluene + p-xylene'; mean |dP| 0.32 % over 343-411 K"
+  toluene_dce:
+    pair: ["108-88-3", "107-06-2"]  # toluene (1), 1,2-dichloroethane (2)
+    a: [0.04946, 0.17245]
+    b: [-15.449, -67.618]
+    citation: "[K] Table 4, 'Toluene + 1,2-dichloroethane'; mean |dP| 0.63 % over 319-384 K"
+  pxylene_dce:
+    pair: ["106-42-3", "107-06-2"]  # p-xylene (1), 1,2-dichloroethane (2)
+    a: [-0.10223, 0.71791]
+    b: [-44.134, -168.002]
+    citation: "[K] Table 4, 'p-Xylene + 1,2-dichloroethane'; mean |dP| 1.35 % over 319-411 K"

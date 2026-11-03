@@ -1,8 +1,8 @@
 # SAFT / CPA / multi-fluid Helmholtz family (spec T-07). Every row loads without teqp
 # (lazy import); the teqp-backed builds require `uv sync --extra saft` (teqp>=0.22).
-# Registered but non-building row (soft_saft)
-# refuses in _validate_kind with the named reason, so a feed selecting it fails loudly
-# instead of silently dropping the physics it stands for. pc_saft and cpa_srk were
+# soft_saft runs on teqp's SoftSAFT kind with the Pamies (2003) thesis parameters
+# (promoted from a registered refusal on 2026-11-03: teqp 0.23.2 does ship the
+# kind; the earlier "no engine" finding was wrong). pc_saft and cpa_srk were
 # promoted to provisional in T-15c (teqp 0.23.2 confirmed CI-runnable on cp312 wheels);
 # cpa_pr joined them in T-17 (hand-rolled PR physical term + the shared saft_assoc
 # association solver, Sorensen 2018 parameters); every other row stays `experimental`
@@ -1138,57 +1138,115 @@
   l0_note: ''
 
 - id: soft_saft
-  name: soft-SAFT (registered refusal)
+  name: soft-SAFT (teqp)
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:SoftSaftThermo
   params:
-    source: none — the row is not implemented
+    source: teqp 0.23.2 SoftSAFT kind, explicit coefficients (data/thermo_params/saft/pure.yaml)
     provenance: >-
-      Blas & Vega's (1997) soft-SAFT has no engine to run on. Checked:
-      teqp 0.23.2, the family's only optional backend, ships no soft-SAFT
-      kernel (its SAFT factories are the explicit-coefficient PC-SAFT and
-      SAFT-VR-Mie engines). Unlike the three T-17 kernels, which extend the
-      PC-SAFT hard-chain and dispersion terms already in the repo, soft-SAFT
-      needs a different reference fluid: the Johnson, Zollweg & Gubbins (1993)
-      33-constant MBWR Lennard-Jones EOS, plus the soft-SAFT chain and
-      association terms and a curated, citable parameter set. No open,
-      consolidated soft-SAFT parameter table was identified within T-17 (only
-      the teqp factories above were checked). Rechecked 2026-11-01: Clapeyron.jl
-      (MIT) now implements soft-SAFT, so an engine exists to port, but its
-      softSAFT_like.csv has an empty source column and rows that break the
-      n-alkane trend (n-decane), and the primary parameter papers (Llovell's
-      thesis, the RSC supplement) could not be reached. No citable table, so the
-      row stays a registered refusal; implementing it needs a dedicated spec.
+      m, sigma, epsilon/k from J. C. Pamies, "Bulk and interfacial properties of chain
+      fluids: a molecular modelling approach", PhD thesis, Universitat Rovira i Virgili
+      (2003), open access (repositori.urv.cat TDX:304; TDX handle 10803/8522): Table 4.1
+      (PV set, methane to n-octane; Pamies & Vega, Ind. Eng. Chem. Res. 40 (2001) 2532),
+      Table 4.6 (H2, n-C10, n-C16) and Table 4.10 (CO2, non-associating). The engine is
+      teqp's SoftSAFT kind: Johnson, Zollweg & Gubbins (1993) LJ MBWR reference (teqp's
+      x_1..x_32 checked against the paper's Table 10; the EOS reproduces the paper's
+      imposed critical point T* = 1.313, rho* = 0.310) plus the TPT1 chain term with the
+      Johnson, Muller & Gubbins (1994) contact-value fit, the equations of the thesis
+      (eqs 2.2-2.7, A.20-A.26). Unlike pairs use Lorentz-Berthelot with eta = xi = 1
+      (teqp exposes no binary parameter for this kind); no association.
   applicability:
     component_classes:
     - hydrocarbon
     - light_gas
+    - acid_gas
     polar: false
     electrolyte: false
-    T_K: [95.0, 600.0]
+    T_K: [90.0, 800.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
-  status: experimental
+  status: provisional
   validation: []
   references:
   - >-
-    Blas & Vega, "Prediction of binary and multicomponent vapor-liquid equilibria with
-    the soft-SAFT equation of state" (association-free soft-SAFT formulation),
-    Ind. Eng. Chem. Res. 37 (1998) 660-674; vega group soft-SAFT lineage
-  l0: {}
-  l0_excluded:
-    pure_psat_limit: row is not implemented — no soft-SAFT engine exists (measured —
-      teqp 0.23.2 has no soft-SAFT factory or teqp.saft module)
-    phase_identification: row is not implemented — no soft-SAFT engine exists (measured —
-      teqp 0.23.2 has no soft-SAFT factory or teqp.saft module)
-    round_trip: row is not implemented — no soft-SAFT engine exists (measured — teqp
-      0.23.2 has no soft-SAFT factory or teqp.saft module)
-    dhdT_cp: row is not implemented — no soft-SAFT engine exists (measured — teqp 0.23.2
-      has no soft-SAFT factory or teqp.saft module)
-    gibbs_duhem: row is not implemented — no soft-SAFT engine exists (measured — teqp
-      0.23.2 has no soft-SAFT factory or teqp.saft module)
-    single_liquid_limit: row is not implemented — no soft-SAFT engine exists (measured —
-      teqp 0.23.2 has no soft-SAFT factory or teqp.saft module)
-    determinism: row is not implemented — no soft-SAFT engine exists (measured — teqp
-      0.23.2 has no soft-SAFT factory or teqp.saft module)
-  l0_note: ''
+    Blas & Vega, "Thermodynamic behaviour of homonuclear and heteronuclear Lennard-Jones
+    chains with association sites from simulation and theory", Mol. Phys. 92 (1997) 135;
+    Blas & Vega, "Prediction of binary and ternary diagrams using the statistical
+    associating fluid theory (SAFT) equation of state", Ind. Eng. Chem. Res. 37 (1998)
+    660 (citations as listed in the Pamies thesis, refs 19 and 101)
+  - >-
+    J. C. Pamies, PhD thesis, Universitat Rovira i Virgili (2003),
+    https://repositori.urv.cat/repositori/getDocument/TDX%3A304?ds=Memoria&mime=application/pdf
+  - >-
+    Johnson, Zollweg & Gubbins, "The Lennard-Jones equation of state revisited",
+    Mol. Phys. 78 (1993) 591-618, doi:10.1080/00268979300100411
+  - >-
+    Johnson, Muller & Gubbins, "Equation of state for Lennard-Jones chains",
+    J. Phys. Chem. 98 (1994) 6413
+  - teqp 0.23 (Bell et al.), https://github.com/usnistgov/teqp, MIT licence
+  l0:
+    pure_psat_limit:
+      points:
+      - - nC4
+        - 300.0
+      - - nC6
+        - 350.0
+      - - CO2
+        - 250.0
+    phase_identification:
+      points:
+      - - nC4
+        - 300.0
+      - - nC8
+        - 400.0
+    round_trip:
+      z:
+        nC4: 1.0
+      states:
+      - - 300.0
+        - 2.0e+6
+      - - 350.0
+        - 2.0e+5
+    dhdT_cp:
+      state: [350.0, 2.0e+5]
+      phase: vapor
+      z:
+        nC4: 1.0
+    gibbs_duhem:
+      binaries:
+      - z:
+          C1: 0.5
+          nC4: 0.5
+        phase: vapor
+        T: 300.0
+        P: 5.0e+5
+      - z:
+          C3: 0.5
+          nC6: 0.5
+        phase: hc_liquid
+        T: 300.0
+        P: 5.0e+6
+    single_liquid_limit:
+      state: [300.0, 5.0e+6]
+      z:
+        nC6: 1.0
+    determinism:
+      state: [300.0, 3.0e+6]
+      z:
+        C1: 0.5
+        nC4: 0.5
+  l0_excluded: {}
+  l0_note: >-
+    No L1/L2 case is bound: binding a case to this row means a new file under
+    data/validation/, which is locked. The row is checked instead by
+    tests/thermo/test_soft_saft.py against the source's own published soft-SAFT
+    numbers (Pamies 2003 Tables 4.4 and 4.5: critical temperatures and densities of
+    n-C12..n-C48) and against CoolProp saturation, with the measured deviations
+    recorded there: the PV parameters overpredict the vapour pressure of methane,
+    ethane and propane by 5-24 % (Tr 0.6-0.9; liquid density within 1 %), n-butane to
+    n-octane are within 5 % (Psat) and 2.5 % (rho_L), CO2 within 3 % (240-280 K), H2
+    within 5 % (20-30 K); n-C10 (correlation-derived, not fitted) runs 10-20 % low.
+    Critical pressures of Table 4.4 are not reproduced (1-4 % high with the thesis's
+    rounded PVrP correlation; temperatures match to 0.1 K). The bridge PT flash has no
+    stability test: an asymmetric feed whose only density root is liquid-like (e.g.
+    20 % H2 in n-C10 at 400 K, 5 MPa) is returned as one liquid, not split.

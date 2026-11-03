@@ -317,19 +317,51 @@ Budget: ~16 Obvious threads, most 2–6 h of agent time; the data sweeps are the
 - **Performance:** the cache, the VL fast path and the slate-scoped flashers are in the mixin; adapters inherit them. The bench records flash counts and wall time per case per package.
 - **Scope creep:** the catalogue is data; a method without an adapter row and a validation set does not exist in the registry, whatever the marketing list says.
 
-## 6. Methods still open, and what was checked (2026-11-01)
+## 6. Methods still open, and what was checked (2026-11-01, rechecked 2026-11-03)
 
 Each stays open because a parameter or definition could not be sourced openly; no row was
 written around the gap.
 
-- **soft-SAFT**: Clapeyron.jl (MIT) implements it, but `softSAFT_like.csv` has an empty source column and rows that break the n-alkane trend; Llovell's thesis and the RSC supplement were unreachable.
 - **COSMO-SAC**: `profiles/UD` forbids redistribution; `profiles/VT2005` has no stated licence (needs NIST's word); Clapeyron's five profiles have no provenance. LVPP `sigma` is MIT, but holds raw segments for its own CS25 variant, whose equations are not in the fetched text, and no benchmark exists for it.
 - **PR / SRK with API liquid density**: for real components the method is Rackett with ideal mixing (Aspen 10.1, p. 3-92), which `pr-rackett` covers. The pseudo-component branch is a fit to API TDB Figure 6A3.5 that is not published.
-- **SR-POLAR**: equations are in the Aspen documentation, but no citable polar-parameter table was found. Schwartzentruber et al. 1989 is closed; NeqSim's columns are uncited.
-- **Polymer SRK**: no model equations or pure-polymer parameters were obtained; Orbey & Sandler 1994 was not reachable.
-- **Wilson T-dependent forms**: no open Wilson a + b/T table was found. The two-parameter half is `wilson_ig`.
-- **Sulfolane co-absorption**: Jalili et al. 2015 raw data fix CO2 and H2S Henry constants in sulfolane, but no fetched source gives a mixed-solvent rule, and the OSTI Sulfinol report gives conditions without data points.
-- **DEA / DGA / DIPA / AMP speciation sets**: DEA is `amine_ke`, DGA and AMP are `amine_ke_dga_amp`. DIPA has a pKa but no carbamate constant and no tabulated VLE anchor, so the item stays open.
+- **SR-POLAR**: equations are in the Aspen documentation, but no citable polar-parameter table was found. Schwartzentruber et al. 1989 is closed; NeqSim's columns are uncited. Rechecked 2026-11-03:
+  - **Mangold et al. 2019** (J. Supercrit. Fluids 153, 104476, doi:10.1016/j.supflu.2019.02.016, CC BY 4.0) prints an SR-type alpha (eq. 22) and Table 5 polar parameters for H2O, O2, N2 and CO2. They do not close the row. They were fitted in Aspen Plus to enthalpy and Cp, not to vapour pressure. Water carries separate liquid and vapour sets, which cannot drive a VLE flash. The paper validates volume, enthalpy and Cp errors only, with no vapour pressures to check a VLE implementation against.
+  - **The alpha form itself is ambiguous in open print.** Mangold and Alanazi et al. 2022 (Energy Convers. Manage. X 15, 100257, CC BY) write the polar term with (1 - Tr). The Aspen 2006.5 manual (p. 61, eq. 11) writes it with (1 - Tr^0.5). The original paper that would settle it, Ind. Eng. Chem. Res. 28 (1989) 1049, is still closed.
+  - **Young, Pessoa & Ahon 2016** (Ind. Eng. Chem. Res. 55, 6506): only the CC BY-NC supplement is open. Its "SRW" SC1-SC3 values for 56 compounds are Peng-Robinson-based, and the closed main text holds their formula.
+  - **NIST TDE help page:** prints the PR-SRW alpha but no values.
+- **Polymer SRK**: no model equations or pure-polymer parameters were obtained; Orbey & Sandler 1994 was not reachable. Rechecked 2026-11-03:
+  - **Orbey, Bokis & Chen 1998** (Ind. Eng. Chem. Res. 37, 4481) is closed (OpenAlex).
+  - **The only open trace** is a third-party seminar deck (Korea Univ.; pdfs.semanticscholar.org/7970/1dfc...). It scans Table 1: LDPE segment c1 1.0, c2 0, c3 0; ethylene c1 0.656855, c2 -0.362904, c3 0.676711. It retypes the polymer Tc/Pc rules, (Tc - 1300)/(Tc,m - 1300) = D_P^-0.25 and (Pc - 5)/(Pc,m - 5) = 1/D_P. These are secondary and unlicensed. The deck leaves the reference state "m" and the gE model undefined, and omits the separator pressures and chi needed to rerun the paper's Table 2c flash.
+  - **Guerrieri et al. 2012** (IntechOpen, doi:10.5772/48391) covers the method qualitatively only.
+- **Sulfolane co-absorption**: Jalili et al. 2015 raw data fix CO2 and H2S Henry constants in sulfolane, but no fetched source gives a mixed-solvent rule, and the OSTI Sulfinol report gives conditions without data points. Rechecked 2026-11-03:
+  - **MacGregor 1988** (Univ. of Alberta MSc thesis, sulfolane + MDEA + water at 40 and 100 C) is the only open source found with both a mixed-solvent rule and tabulated data. It uses Deshmukh-Mather, with sulfolane + water lumped as one solvent and a mixture dielectric constant scaling the equilibrium constants. Its terms ("solely for non-commercial purposes ... may not otherwise be copied or reproduced") exclude a proprietary repository, so it is refused and nothing from it ships. Roberts 1983 (AMP + sulfolane, same archive) carries the same terms.
+  - **NIST ThermoML files** (NIST open licence, posted with the publishers' permission) give CO2 and H2S solubility in aqueous sulfolane: Shokouhi et al., J. Chem. Thermodyn. 132 (2019) 62 and 106 (2017) 232. They are usable as validation anchors, but they contain no amine. The sulfolane + MDEA + water file (Shirazizadeh & Haghtalab, J. Chem. Thermodyn. 133 (2019) 111) holds no CO2 data in the quaternary.
+  - **Not reachable openly:** the Isaacs/Otto/Mather Sulfinol paper (OSTI abstract only), Qian et al. 1995 (OSTI record only), and Hirohama et al. 2021.
+  - **Net:** there is still no open, redistributable mixed-solvent rule for amine + sulfolane.
+- **DEA / DGA / DIPA / AMP speciation sets**: DEA is `amine_ke`, DGA and AMP are `amine_ke_dga_amp`. DIPA has a pKa but no carbamate constant and no tabulated VLE anchor, so the item stays open. Rechecked 2026-11-03:
+  - **MacGregor 1988** (Univ. of Alberta thesis, ERA) has DIPA and Sulfinol data, but its terms say "solely for non-commercial purposes ... may not otherwise be copied or reproduced". Refused: none of its constants or data ship.
+  - **A DIPA pKa** can be converted from the delta-G and delta-H values cited in the secondary Hamborg report, but the carbamate constant is still missing. No partial DIPA speciation model is built; one without carbamate formation would misstate CO2 loading.
+  - **NIST ThermoML files** ship under the NIST open licence "with permission of the journal publishers". They are acceptable as validation anchors, with the DOI cited, once a full model exists.
+
+Closed 2026-11-03:
+
+- **soft-SAFT** (`soft_saft`, provisional): the earlier "no engine" finding was wrong; teqp
+  0.23.2 ships a `SoftSAFT` kind (Johnson-Zollweg-Gubbins 1993 LJ reference, TPT1 chain with the
+  Johnson-Muller-Gubbins 1994 contact value, vdW-1f mixing, no association). Its JZG constants match
+  the paper's Table 10 and reproduce the paper's imposed critical point (T* 1.313, rho* 0.310).
+  Parameters come from the open-access Pamies thesis (URV 2003, repositori.urv.cat TDX:304), Tables
+  4.1 (PV set, C1-nC8), 4.6 (H2, nC10, nC16) and 4.10 (CO2). Validation (tests/thermo/test_soft_saft.py):
+  the kernel reproduces the thesis's own soft-SAFT critical temperatures (Table 4.4, n-C12 to n-C48,
+  within 0.35 K) and critical densities (Table 4.5, within 1 kg/m3). Measured deviations: Table 4.4
+  Pc is 1-4 % high with the rounded PVrP correlation; C1-C3 Psat is 5-25 % high (density-weighted
+  fit); nC4-nC8 Psat is within 5 % and rho_L within 2.5 %. No L1/L2 case is bound, because binding
+  needs a new file under the locked `data/validation/`. Binary parameters (eta, xi) are not exposed
+  by teqp, so mixtures run Lorentz-Berthelot.
+
+- **Wilson T-dependent form** (`wilson_tdep_ig`, provisional): ln Lambda_ij = a_ij + b_ij/T for six binaries, keyed by CAS, from two Proc. Estonian Acad. Sci. Chem. papers. Siimer et al. 2002, 51(1) 19, doi:10.3176/chem.2002.1.02, covers hexan-2-one / o-xylene / nonane; Kirss et al. 2002, 51(4) 215, doi:10.3176/chem.2002.4.03, covers toluene / p-xylene / 1,2-dichloroethane. Table 4 of each supplies the coefficients.
+  - **Licence:** both papers are gold open access, but no licence is named. The article pages say "Open Access Journal" and the PDFs carry no notice. The publisher's terms are quoted in `data/thermo_params/wilson/tdep_pairs.yaml`.
+  - **Equation form:** both papers misprint Eq. 1 with (x_i - Lambda_ij x_j). The standard + form is used.
+  - **Validation:** the model reproduces the papers' own ternary activity coefficients (Siimer Table 3, Kirss Table 7) to the printed digits. The package bubble point, using databank vapour pressures, lands within 0.3 K of the measured boiling points (tests/thermo/test_gamma_phi_variants.py).
 
 Partial closures: `glycol_pr` is TEG only (MEG's open values carry no primary citation);
 `depg_henry` is 25 C only with tetraglyme as proxy (Xu et al. 1992 was unreachable);

@@ -308,7 +308,7 @@ def _grouped(name: str) -> dict[str, list[dict[str, Any]]]:
     for row in _rows(name):
         parsed: dict[str, Any] = {}
         for key, text in row.items():
-            if key in ("cas", "phase", "phase_298", "source", "reference", "form", "table", "note"):
+            if key in ("cas", "phase", "phase_298", "source", "reference", "form", "table", "note", "term"):
                 parsed[key] = text
             else:
                 parsed[key] = _optional(text)
@@ -350,6 +350,15 @@ def cp_liquid(query: str) -> list[dict[str, Any]]:
 def cp_gas(query: str) -> list[dict[str, Any]]:
     """Ideal-gas Cp fits (``form`` "poling": Cp/R polynomial; "trc": TRC eight-term)."""
     return list(_grouped("cp_gas.csv").get(find(query).cas, []))
+
+
+def cp0_eos(query: str) -> list[dict[str, Any]]:
+    """Ideal-gas Cp0 of a reference equation of state, one row per term (``cp0_eos.csv``).
+
+    cp0/R = sum(const a) + sum(pe: a y^2 e^y/(e^y-1)^2) + sum(cosh: a (y/cosh y)^2)
+    + sum(power: a T^b), with y = b/T; ``R`` is the EOS's own gas constant.
+    """
+    return list(_grouped("cp0_eos.csv").get(find(query).cas, []))
 
 
 def janaf(query: str) -> dict[str, list[dict[str, Any]]]:

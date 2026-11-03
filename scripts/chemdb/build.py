@@ -76,6 +76,7 @@ SOURCE_RANK: dict[str, int] = {
     "omega_definition": 9,
     "sander": 10,
     "nasa_cea": 4,
+    "coolprop_ig": 4,  # ideal-gas Cp0 of reference EOS (cp0_eos.csv; ranks no property row)
 }
 
 GRADES: dict[str, str] = {
@@ -102,6 +103,7 @@ GRADES: dict[str, str] = {
     "omega_definition": "B",
     "sander": "B",
     "nasa_cea": "B",
+    "coolprop_ig": "B",
 }
 
 UNITS = {
@@ -551,6 +553,149 @@ def _collect_coolprop(rows: Rows) -> None:
         omega = float(CP.PropsSI("acentric", fluid))
         if math.isfinite(omega) and abs(omega) < 5.0:
             rows.add(cas, "omega", omega, "coolprop", reference=reference)
+
+
+#: CoolProp's BibTeX library, shipped in the installed package: resolves the EOS keys.
+COOLPROP_BIB = Path(CP.__file__).resolve().parent / "CoolPropBibTeXLibrary.bib"
+_BIB_FIELD = re.compile(r"^\s*(\w+)\s*=\s*\{(.*)\},?\s*$")
+
+
+def _coolprop_bib() -> dict[str, dict[str, str]]:
+    """BibTeX entries of the CoolProp library, key -> lower-case field map."""
+    entries: dict[str, dict[str, str]] = {}
+    key: str | None = None
+    for line in COOLPROP_BIB.read_text(encoding="utf-8", errors="replace").splitlines():
+        head = re.match(r"^@\w+\{([^,]+),", line)
+        if head:
+            key = head.group(1).strip()
+            entries[key] = {}
+            continue
+        field = _BIB_FIELD.match(line)
+        if key is not None and field:
+            entries[key][field.group(1).lower()] = field.group(2).replace("{", "").replace("}", "")
+    return entries
+
+
+def _citation(entry: dict[str, str], key: str) -> str:
+    """One-line citation of a CoolProp BibTeX entry, keeping its key."""
+    venue = entry.get("journal", "") or entry.get("school", "")
+    year = f"({entry['year']})" if "year" in entry else ""
+    tail = " ".join(x for x in (entry.get("volume", ""), year) if x)
+    text = ", ".join(
+        x for x in (entry.get("author", ""), entry.get("title", ""), venue, tail, entry.get("pages", "")) if x
+    )
+    if entry.get("doi"):
+        text += f", doi:{entry['doi']}"
+    return f"{text} [CoolProp key {key}]" if text else f"CoolProp key {key}"
+
+
+def _cp0_terms(alpha0: list[dict[str, Any]], t_red: float) -> list[tuple[str, float, float]] | None:
+    """Ideal-gas Cp0/R terms of one CoolProp alpha0 list, or None for an unhandled term type.
+
+    cp0/R = sum(const a) + sum(pe: a y^2 e^y/(e^y-1)^2, y = b/T)
+            + sum(cosh: a (y/cosh y)^2, y = b/T) + sum(power: a T^b).
+    The ln(delta) term of the ideal-gas Helmholtz energy gives the constant 1;
+    a*ln(tau) gives cv0/R = a.
+    """
+    terms: list[tuple[str, float, float]] = [("const", 1.0, 0.0)]
+    for term in alpha0:
+        kind = term["type"]
+        if kind in ("IdealGasHelmholtzLead", "IdealGasHelmholtzEnthalpyEntropyOffset"):
+            continue
+        if kind == "IdealGasHelmholtzLogTau":
+            terms.append(("const", float(term["a"]), 0.0))
+        elif kind == "IdealGasHelmholtzPlanckEinstein":
+            terms += [("pe", float(n), float(t) * t_red) for n, t in zip(term["n"], term["t"], strict=True)]
+        elif kind == "IdealGasHelmholtzPlanckEinsteinFunctionT":
+            terms += [("pe", float(n), float(v)) for n, v in zip(term["n"], term["v"], strict=True)]
+        elif kind == "IdealGasHelmholtzPower":
+            # n tau^t, tau = Tr/T: cv0/R = -tau^2 d2/dtau2 = -n t (t - 1) Tr^t T^-t
+            for n, t in zip(term["n"], term["t"], strict=True):
+                coeff = -float(n) * float(t) * (float(t) - 1.0) * t_red ** float(t)
+                if coeff != 0.0:
+                    terms.append(("power", coeff, -float(t)))
+        elif kind == "IdealGasHelmholtzCP0Constant":
+            terms.append(("const", float(term["cp_over_R"]), 0.0))
+        elif kind == "IdealGasHelmholtzCP0PolyT":
+            for c, t in zip(term["c"], term["t"], strict=True):
+                terms.append(("const", float(c), 0.0) if float(t) == 0.0 else ("power", float(c), float(t)))
+        elif kind == "IdealGasHelmholtzCP0AlyLee":
+            # Aly & Lee (1981): A + B ((C/T)/sinh(C/T))^2 + D ((E/T)/cosh(E/T))^2; the sinh
+            # term is a Planck-Einstein term of characteristic temperature 2C.
+            a, b, c, d, e = (float(x) for x in term["c"])
+            terms += [("const", a, 0.0), ("pe", b, 2.0 * c), ("cosh", d, e)]
+        else:
+            return None
+    return terms
+
+
+def _cp0_over_r(terms: list[tuple[str, float, float]], T: float) -> float:
+    """cp0/R of a term list at T (the form in :func:`_cp0_terms`)."""
+    total = 0.0
+    for kind, a, b in terms:
+        if kind == "const":
+            total += a
+        elif kind == "pe":
+            y = b / T
+            total += a * y * y * math.exp(-y) / (1.0 - math.exp(-y)) ** 2
+        elif kind == "cosh":
+            y = b / T
+            total += a * (y / math.cosh(y)) ** 2
+        else:
+            total += a * T**b
+    return total
+
+
+def _coolprop_cp0(kept: set[str]) -> list[dict[str, Any]]:
+    """Ideal-gas Cp0(T) of CoolProp's reference equations of state, one row per term.
+
+    Each EOS's ideal-gas part is the Cp0 correlation its paper publishes (cited per
+    row through CoolProp's BibTeX library). Every reconstruction is checked against
+    CoolProp's own Cp0 at up to five temperatures before it is kept.
+    """
+    bib = _coolprop_bib()
+    out: list[dict[str, Any]] = []
+    for fluid in sorted(CP.get_global_param_string("fluids_list").split(",")):
+        cas = CP.get_fluid_param_string(fluid, "CAS")
+        if cas not in kept:
+            continue
+        eos = json.loads(CP.get_fluid_param_string(fluid, "JSON"))[0]["EOS"][0]
+        terms = _cp0_terms(eos["alpha0"], float(eos["STATES"]["reducing"]["T"]))
+        if terms is None:
+            DROPPED["coolprop_cp0_unhandled_term"] += 1
+            continue
+        tmin, tmax = float(eos["Ttriple"]), float(eos["T_max"])
+        gas_constant = float(eos["gas_constant"])
+        ok = True
+        state = CP.AbstractState("HEOS", fluid)
+        for T in (tmin, 298.15, 0.5 * (tmin + tmax), 0.25 * tmin + 0.75 * tmax, tmax):
+            if not tmin <= T <= tmax:
+                continue
+            state.update(CP.DmolarT_INPUTS, 1e-6, T)  # dilute gas: no phase or melting checks
+            ref = float(state.cp0molar())
+            if abs(gas_constant * _cp0_over_r(terms, T) / ref - 1.0) > 1e-9:
+                ok = False
+        if not ok:
+            DROPPED["coolprop_cp0_check_failed"] += 1
+            continue
+        key = eos.get("BibTeX_CP0") or eos.get("BibTeX_EOS")
+        version = CP.get_global_param_string("version")
+        reference = f"CoolProp {version} {fluid}: " + _citation(bib.get(key, {}), key)
+        for kind, a, b in terms:
+            out.append(
+                {
+                    "cas": cas,
+                    "term": kind,
+                    "a": a,
+                    "b": b,
+                    "R": gas_constant,
+                    "Tmin": tmin,
+                    "Tmax": tmax,
+                    "source": "coolprop_ig",
+                    "reference": reference,
+                }
+            )
+    return out
 
 
 def _collect_critical(rows: Rows, names: dict[str, str]) -> None:
@@ -1247,6 +1392,51 @@ def _derive_omega(rows: list[dict[str, Any]], out: Path) -> None:
     _select(rows)
 
 
+#: Relative Cp0 disagreement above which a reference-EOS ideal-gas part is listed in AUDIT.txt.
+CP0_AUDIT_LIMIT = 0.02
+
+
+def _audit_cp0(out: Path) -> tuple[list[str], Counter[str]]:
+    """Reference-EOS Cp0 (cp0_eos.csv) against the gas model's own Cp(T) source.
+
+    Run on the tables just written (like :func:`_derive_omega`). The EOS term set is
+    only the fallback shape, so a disagreement never changes a selection; it is
+    listed so the conflict stays visible. Compared at 300, 400 and 500 K inside both
+    windows; species without a gas model (no stated enthalpy of formation) are skipped.
+    """
+    lines: list[str] = []
+    counts: Counter[str] = Counter()
+    if out.resolve() != (chemdb.DATA_DIR / "chemdb").resolve():
+        return lines, counts
+    for cached in (chemdb._grouped, chemdb._properties, chemdb._species):  # noqa: SLF001
+        cached.cache_clear()
+    from ngdesign.data import species_models  # noqa: PLC0415 - reads the tables just written
+
+    for cas in sorted({r["cas"] for r in chemdb._rows("cp0_eos.csv")}):  # noqa: SLF001
+        terms = chemdb.cp0_eos(cas)
+        eos_curve = species_models._Cp0EosCurve(terms, 0.0)  # noqa: SLF001
+        try:
+            model = species_models.species_thermo(cas, "gas")
+        except chemdb.MissingPropertyError:
+            continue
+        if model.curve.name.startswith("cp0_eos"):
+            continue
+        counts["cp0_compared"] += 1
+        for T in (300.0, 400.0, 500.0):
+            lo = max(model.curve.tmin, eos_curve.tmin)
+            hi = min(model.curve.tmax, eos_curve.tmax)
+            if lo <= T <= hi:
+                ratio = eos_curve.cp(T) / model.curve.cp(T) - 1.0
+                if abs(ratio) > CP0_AUDIT_LIMIT:
+                    counts["conflict_Cp0"] += 1
+                    lines.append(
+                        f"Cp_gas(T) {cas}: {model.curve.name} {model.curve.cp(T):.4g} vs coolprop_ig "
+                        f"{eos_curve.cp(T):.4g} J/(mol K) at {T:g} K ({100.0 * ratio:+.1f} %)"
+                    )
+                    break
+    return lines, counts
+
+
 def tables(cache: Path, out: Path) -> int:
     collected = _collect_all(cache)
     species: dict[str, dict[str, Any]] = collected["species"]
@@ -1356,6 +1546,11 @@ def tables(cache: Path, out: Path) -> int:
         ["cas", "form", "Tmin", "Tmax", "a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7", "source"],
         sorted(correlations["cp_gas"], key=lambda r: (r["cas"], r["form"])),
     )
+    counts["cp0_eos"] = _write_csv(
+        out / "cp0_eos.csv",
+        ["cas", "term", "a", "b", "R", "Tmin", "Tmax", "source", "reference"],
+        _coolprop_cp0(kept),
+    )
     counts["janaf"] = _write_csv(
         out / "janaf.csv",
         ["cas", "phase", "phase_298", "table", "T", "Cp", "S", "H_H298", "Hf", "Gf", "logKf", "note"],
@@ -1367,13 +1562,16 @@ def tables(cache: Path, out: Path) -> int:
     _physical_checks(rows, out)
     counts["properties"] = _write_properties(out, rows)
     audit_lines, audit_counts = _audit(rows, species, pubchem, collected["pages"])
+    cp0_lines, cp0_counts = _audit_cp0(out)
+    audit_lines += cp0_lines
+    audit_counts.update(cp0_counts)
     (out / "AUDIT.txt").write_text(
         "Cross-source disagreements found at build time (grade C sources excluded).\n"
         "A line here is not an error in the database: it names a property where two\n"
         "non-estimated sources differ by more than the audit limit; the selected value\n"
-        "is the first one listed. Limits: 5 kJ/mol (Hf, Gf), 5 K (Tb, Tm, Tc), 2 bar (Pc).\n\n"
-        + "\n".join(OUTVOTED + audit_lines)
-        + "\n"
+        "is the first one listed. Limits: 5 kJ/mol (Hf, Gf), 5 K (Tb, Tm, Tc), 2 bar (Pc),\n"
+        "2 % (reference-EOS ideal-gas Cp0 against the gas model's own Cp source, which\n"
+        "stays the selected shape).\n\n" + "\n".join(OUTVOTED + audit_lines) + "\n"
     )
     selected = Counter(r["property"] for r in rows if r["selected"])
     manifest = {
