@@ -1,0 +1,1196 @@
+{
+"units": [
+{
+"kind": "adjust",
+"name": "Adjust",
+"family": "logical",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "ADJ"
+},
+{
+"kind": "balance",
+"name": "Balance",
+"family": "logical",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "BAL"
+},
+{
+"kind": "component_splitter",
+"name": "Component splitter",
+"family": "logical",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet_1",
+"outlet_2"
+],
+"pid_symbol": "CSP"
+},
+{
+"kind": "mixer",
+"name": "Mixer",
+"family": "logical",
+"registered": true,
+"inlet_ports": [
+"inlet_1",
+"inlet_2",
+"inlet_3"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "MIX"
+},
+{
+"kind": "recycle_block",
+"name": "Recycle block",
+"family": "logical",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "RCY"
+},
+{
+"kind": "splitter",
+"name": "Splitter",
+"family": "logical",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet_1",
+"outlet_2"
+],
+"pid_symbol": "SPL"
+},
+{
+"kind": "stream_calculator",
+"name": "Stream calculator (set)",
+"family": "logical",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "SMC"
+},
+{
+"kind": "stream_duplicator",
+"name": "Stream duplicator / tee",
+"family": "logical",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet_1",
+"outlet_2"
+],
+"pid_symbol": "TEE"
+},
+{
+"kind": "utility_stream",
+"name": "Utility stream source/sink",
+"family": "logical",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "UTL"
+},
+{
+"kind": "compression_train",
+"name": "Compression train",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"gas_in"
+],
+"outlet_ports": [
+"gas_out"
+],
+"pid_symbol": "CT"
+},
+{
+"kind": "compressor",
+"name": "Centrifugal compressor",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "C"
+},
+{
+"kind": "control_valve",
+"name": "Control valve",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "CV"
+},
+{
+"kind": "ejector",
+"name": "Ejector",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"motive_in",
+"suction_in"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "EJ"
+},
+{
+"kind": "expander",
+"name": "Expander / turbine",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"gas_in"
+],
+"outlet_ports": [
+"gas_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "fan",
+"name": "Fan / blower",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "FAN"
+},
+{
+"kind": "jt_valve",
+"name": "JT valve",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "V"
+},
+{
+"kind": "orifice",
+"name": "Orifice / flow element",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "FE"
+},
+{
+"kind": "pipe_segment",
+"name": "Pipe segment",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "PIPE"
+},
+{
+"kind": "pump",
+"name": "Pump",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "P"
+},
+{
+"kind": "reciprocating_compressor",
+"name": "Reciprocating compressor",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "RC"
+},
+{
+"kind": "relief_valve",
+"name": "Relief valve",
+"family": "flow",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "PSV"
+},
+{
+"kind": "air_cooler",
+"name": "Air cooler",
+"family": "heat",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "AC"
+},
+{
+"kind": "cooler",
+"name": "Cooler",
+"family": "heat",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "E"
+},
+{
+"kind": "cooling_tower",
+"name": "Cooling tower",
+"family": "heat",
+"registered": true,
+"inlet_ports": [
+"water_in",
+"air_in"
+],
+"outlet_ports": [
+"water_out",
+"air_out"
+],
+"pid_symbol": "CT"
+},
+{
+"kind": "double_pipe",
+"name": "Double-pipe / hairpin exchanger",
+"family": "heat",
+"registered": true,
+"inlet_ports": [
+"hot_in",
+"cold_in"
+],
+"outlet_ports": [
+"hot_out",
+"cold_out"
+],
+"pid_symbol": "E"
+},
+{
+"kind": "fired_heater",
+"name": "Fired heater",
+"family": "heat",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "FH"
+},
+{
+"kind": "heater",
+"name": "Heater",
+"family": "heat",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "E"
+},
+{
+"kind": "hen_block",
+"name": "Heat exchanger network block (HEN)",
+"family": "heat",
+"registered": true,
+"inlet_ports": [
+"hot_in_1",
+"hot_in_2",
+"cold_in_1",
+"cold_in_2"
+],
+"outlet_ports": [
+"hot_out_1",
+"hot_out_2",
+"cold_out_1",
+"cold_out_2"
+],
+"pid_symbol": "HEN"
+},
+{
+"kind": "multi_stream",
+"name": "Multi-stream exchanger (LNG cold box)",
+"family": "heat",
+"registered": true,
+"inlet_ports": [
+"hot_in_1",
+"hot_in_2",
+"cold_in_1",
+"cold_in_2"
+],
+"outlet_ports": [
+"hot_out_1",
+"hot_out_2",
+"cold_out_1",
+"cold_out_2"
+],
+"pid_symbol": "MS"
+},
+{
+"kind": "plate_exchanger",
+"name": "Plate exchanger",
+"family": "heat",
+"registered": true,
+"inlet_ports": [
+"hot_in",
+"cold_in"
+],
+"outlet_ports": [
+"hot_out",
+"cold_out"
+],
+"pid_symbol": "PHE"
+},
+{
+"kind": "shell_tube",
+"name": "Shell-and-tube exchanger",
+"family": "heat",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "E"
+},
+{
+"kind": "adsorption_bed",
+"name": "Adsorption bed (TSA/PSA)",
+"family": "separation",
+"registered": true,
+"inlet_ports": [
+"feed_in"
+],
+"outlet_ports": [
+"product_out",
+"regen_out"
+],
+"pid_symbol": "X"
+},
+{
+"kind": "decanter",
+"name": "Decanter",
+"family": "separation",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"light_out",
+"heavy_out"
+],
+"pid_symbol": "V"
+},
+{
+"kind": "filter",
+"name": "Filter",
+"family": "separation",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"filtrate",
+"cake"
+],
+"pid_symbol": "FLT"
+},
+{
+"kind": "flash_drum",
+"name": "Flash drum with duty",
+"family": "separation",
+"registered": true,
+"inlet_ports": [
+"inlet",
+"inlet_2"
+],
+"outlet_ports": [
+"gas_out",
+"liquid_out",
+"aqueous_out"
+],
+"pid_symbol": "V"
+},
+{
+"kind": "hydrate_check",
+"name": "Hydrate check / inhibitor injection",
+"family": "separation",
+"registered": true,
+"inlet_ports": [
+"inlet",
+"inhibitor_in"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "HC"
+},
+{
+"kind": "hydrocyclone",
+"name": "Hydrocyclone / cyclone",
+"family": "separation",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"overflow",
+"underflow"
+],
+"pid_symbol": "CYC"
+},
+{
+"kind": "membrane",
+"name": "Membrane (gas)",
+"family": "separation",
+"registered": true,
+"inlet_ports": [
+"feed_in"
+],
+"outlet_ports": [
+"permeate",
+"residue"
+],
+"pid_symbol": "M"
+},
+{
+"kind": "scrubber",
+"name": "2-phase separator / KO drum",
+"family": "separation",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"gas_out",
+"liquid_out"
+],
+"pid_symbol": "V"
+},
+{
+"kind": "separator_3phase",
+"name": "3-phase separator",
+"family": "separation",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"gas_out",
+"hc_out",
+"water_out"
+],
+"pid_symbol": "V"
+},
+{
+"kind": "tank",
+"name": "Tank / surge drum",
+"family": "separation",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "TK"
+},
+{
+"kind": "absorber",
+"name": "Absorber (feed-determined)",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"gas_in",
+"solvent_in"
+],
+"outlet_ports": [
+"gas_out",
+"rich_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "batch_distillation",
+"name": "Batch distillation",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"charge"
+],
+"outlet_ports": [
+"distillate",
+"residue"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "column",
+"name": "Rigorous distillation column",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"feed"
+],
+"outlet_ports": [
+"distillate",
+"bottoms",
+"side_draw"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "column_extensions",
+"name": "Column extensions (draws, pumparounds, multiple feeds)",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"feed",
+"feed_2"
+],
+"outlet_ports": [
+"distillate",
+"bottoms",
+"side_draw"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "column_internals",
+"name": "Column internals (trays/packing)",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "INT"
+},
+{
+"kind": "divided_wall",
+"name": "Divided-wall / Petlyuk column",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"feed"
+],
+"outlet_ports": [
+"distillate",
+"side_product",
+"bottoms"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "liquid_liquid_extractor",
+"name": "Liquid-liquid extractor",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"feed",
+"solvent_in"
+],
+"outlet_ports": [
+"extract",
+"raffinate"
+],
+"pid_symbol": "X"
+},
+{
+"kind": "reactive_stages",
+"name": "Reactive stages (equilibrium / kinetic)",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"feed"
+],
+"outlet_ports": [
+"distillate",
+"bottoms"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "reboiled_stripper",
+"name": "Reboiled stripper",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"feed"
+],
+"outlet_ports": [
+"overhead",
+"bottoms"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "refluxed_absorber",
+"name": "Refluxed absorber / reboiled absorber",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"gas_in",
+"solvent_in"
+],
+"outlet_ports": [
+"gas_out",
+"rich_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "shortcut_distillation",
+"name": "Shortcut distillation (FUG)",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"feed"
+],
+"outlet_ports": [
+"distillate",
+"bottoms"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "three_phase_stages",
+"name": "Three-phase (VLLE) stages",
+"family": "column",
+"registered": true,
+"inlet_ports": [
+"feed"
+],
+"outlet_ports": [
+"distillate",
+"bottoms"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "batch_reactor",
+"name": "Batch / semi-batch reactor",
+"family": "reactors",
+"registered": true,
+"inlet_ports": [
+"charge_in"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "R"
+},
+{
+"kind": "conversion_reactor",
+"name": "Conversion reactor",
+"family": "reactors",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "R"
+},
+{
+"kind": "cstr",
+"name": "Continuous stirred-tank reactor",
+"family": "reactors",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "R"
+},
+{
+"kind": "electrolyser_stack",
+"name": "Electrolyser / fuel cell stack",
+"family": "reactors",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"h2_out",
+"o2_out"
+],
+"pid_symbol": "FC"
+},
+{
+"kind": "equilibrium_reactor",
+"name": "Equilibrium reactor (Keq)",
+"family": "reactors",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "R"
+},
+{
+"kind": "fixed_bed_tubular",
+"name": "Fixed-bed multi-tubular reactor",
+"family": "reactors",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "R"
+},
+{
+"kind": "gibbs_multiphase",
+"name": "Multiphase Gibbs reactor",
+"family": "reactors",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"vapor_out",
+"condensed_out"
+],
+"pid_symbol": "R"
+},
+{
+"kind": "gibbs_reactor",
+"name": "Gibbs reactor",
+"family": "reactors",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "R"
+},
+{
+"kind": "pfr",
+"name": "Plug-flow reactor",
+"family": "reactors",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "R"
+},
+{
+"kind": "yield_reactor",
+"name": "Yield reactor",
+"family": "reactors",
+"registered": true,
+"inlet_ports": [
+"inlet"
+],
+"outlet_ports": [
+"outlet"
+],
+"pid_symbol": "R"
+},
+{
+"kind": "dea_absorber",
+"name": "DEA absorber",
+"family": "treating",
+"registered": true,
+"inlet_ports": [
+"gas_in",
+"lean_amine_in"
+],
+"outlet_ports": [
+"gas_out",
+"rich_amine_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "dea_regenerator",
+"name": "DEA regenerator",
+"family": "treating",
+"registered": true,
+"inlet_ports": [
+"rich_amine_in"
+],
+"outlet_ports": [
+"lean_amine_out",
+"acid_gas_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "mdea_absorber",
+"name": "MDEA absorber",
+"family": "treating",
+"registered": true,
+"inlet_ports": [
+"gas_in",
+"lean_amine_in"
+],
+"outlet_ports": [
+"gas_out",
+"rich_amine_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "mdea_regenerator",
+"name": "MDEA regenerator",
+"family": "treating",
+"registered": true,
+"inlet_ports": [
+"rich_amine_in"
+],
+"outlet_ports": [
+"lean_amine_out",
+"acid_gas_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "mea_absorber",
+"name": "MEA absorber",
+"family": "treating",
+"registered": true,
+"inlet_ports": [
+"gas_in",
+"lean_amine_in"
+],
+"outlet_ports": [
+"gas_out",
+"rich_amine_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "mea_regenerator",
+"name": "MEA regenerator",
+"family": "treating",
+"registered": true,
+"inlet_ports": [
+"rich_amine_in"
+],
+"outlet_ports": [
+"lean_amine_out",
+"acid_gas_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "sulfur_recovery",
+"name": "Claus sulfur recovery",
+"family": "treating",
+"registered": true,
+"inlet_ports": [
+"acid_gas_in"
+],
+"outlet_ports": [
+"tail_gas_out",
+"sulfur_out"
+],
+"pid_symbol": "SRU"
+},
+{
+"kind": "teg_contactor",
+"name": "TEG contactor",
+"family": "treating",
+"registered": true,
+"inlet_ports": [
+"gas_in",
+"lean_teg_in"
+],
+"outlet_ports": [
+"gas_out",
+"rich_teg_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "teg_regen",
+"name": "TEG regenerator + stripping gas",
+"family": "treating",
+"registered": true,
+"inlet_ports": [
+"rich_in",
+"stripping_gas_in"
+],
+"outlet_ports": [
+"water_out",
+"lean_out"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "assay_feeder",
+"name": "Assay feeder",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"assay_in"
+],
+"outlet_ports": [
+"cuts_out"
+],
+"pid_symbol": "ASSAY"
+},
+{
+"kind": "blending",
+"name": "Product blender",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"component_in_1",
+"component_in_2",
+"component_in_3"
+],
+"outlet_ports": [
+"blend_out"
+],
+"pid_symbol": "BL"
+},
+{
+"kind": "coker",
+"name": "Delayed coker / visbreaker",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"feed_in"
+],
+"outlet_ports": [
+"gas_out",
+"naphtha_out",
+"lgo_out",
+"hgo_out",
+"coke_out"
+],
+"pid_symbol": "CK"
+},
+{
+"kind": "crude_column",
+"name": "Atmospheric crude column",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"crude_in",
+"stripping_steam"
+],
+"outlet_ports": [
+"overhead",
+"kero_out",
+"diesel_out",
+"ago_out",
+"bottoms"
+],
+"pid_symbol": "T"
+},
+{
+"kind": "desalter",
+"name": "Desalter",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"crude_in",
+"wash_in"
+],
+"outlet_ports": [
+"crude_out",
+"water_out"
+],
+"pid_symbol": "DS"
+},
+{
+"kind": "fcc",
+"name": "Fluid catalytic cracker",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"feed_in"
+],
+"outlet_ports": [
+"dry_gas_out",
+"lpg_out",
+"gasoline_out",
+"lco_out",
+"slurry_out",
+"coke_out"
+],
+"pid_symbol": "FC"
+},
+{
+"kind": "hcu",
+"name": "Hydrocracker",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"vgo_in",
+"hydrogen_in"
+],
+"outlet_ports": [
+"naphtha_out",
+"diesel_out",
+"unconverted_out",
+"gas_out"
+],
+"pid_symbol": "HC"
+},
+{
+"kind": "naphtha_ht",
+"name": "Naphtha hydrotreater",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"naphtha_in",
+"h2_in"
+],
+"outlet_ports": [
+"treated_out",
+"gas_out"
+],
+"pid_symbol": "HT"
+},
+{
+"kind": "preflash",
+"name": "Preflash / flash column",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"feed_in"
+],
+"outlet_ports": [
+"vapor_out",
+"liquid_out"
+],
+"pid_symbol": "FL"
+},
+{
+"kind": "reformer_cat",
+"name": "Catalytic reformer",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"naphtha_in"
+],
+"outlet_ports": [
+"reformate_out",
+"h2_out"
+],
+"pid_symbol": "RF"
+},
+{
+"kind": "side_strip",
+"name": "Side stripper",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"draw_in",
+"steam_in"
+],
+"outlet_ports": [
+"overhead_out",
+"bottoms_out"
+],
+"pid_symbol": "SS"
+},
+{
+"kind": "vacuum_column",
+"name": "Vacuum distillation column",
+"family": "refining",
+"registered": true,
+"inlet_ports": [
+"feed_in"
+],
+"outlet_ports": [
+"overhead",
+"vgo_out",
+"bottoms"
+],
+"pid_symbol": "T"
+}
+]
+}

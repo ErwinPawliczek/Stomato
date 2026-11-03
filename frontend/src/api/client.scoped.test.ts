@@ -93,3 +93,26 @@ test("deleting the open project closes it", async () => {
   await api.deleteProject("a b");
   expect(api.openProjectId()).toBeNull();
 });
+
+test("trace, audit and agent conversations follow the open project, not the default one", async () => {
+  const api = await load();
+  await api.openProject("a b");
+  calls = [];
+  await api.trace();
+  await api.trace({ stream: "S-1", prop: "T" });
+  await api.traceAudit();
+  await api.agent.conversations();
+  await api.agent.transcript("c 1");
+  const base = "/api/projects/a%20b";
+  expect(calls.map((c) => `${c.method} ${c.url}`)).toEqual([
+    `GET ${base}/trace`,
+    `GET ${base}/trace?stream=S-1&prop=T`,
+    `GET ${base}/trace/audit`,
+    `GET ${base}/agent`,
+    `GET ${base}/agent/c%201`,
+  ]);
+  // An explicit project still wins.
+  calls = [];
+  await api.trace(undefined, "other");
+  expect(calls.map((c) => c.url)).toEqual(["/api/projects/other/trace"]);
+});

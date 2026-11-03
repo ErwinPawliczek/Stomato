@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
-import { ApiError, api } from "../api/client";
-import { IsoView, errorReason } from "./IsoView";
+import { ApiError, api, errorReason } from "../api/client";
+import { IsoView } from "./IsoView";
 
 afterEach(() => vi.restoreAllMocks());
 

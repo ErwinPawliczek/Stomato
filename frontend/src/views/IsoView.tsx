@@ -1,31 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiError, api } from "../api/client";
+import { ApiError, api, errorReason } from "../api/client";
 import { formatNumber } from "../units";
 
 type IsoSheet = Awaited<ReturnType<typeof api.isoSheet>>;
-
-/** Pure: the backend's reason for a failed call. FastAPI answers
- *  `{"detail": "..."}` (legacy and project routes) and the v1 envelope
- *  `{"error": {"message": "..."}}`; ApiError carries the body after the status.
- *  Falls back to the raw message when the body is not JSON. */
-export function errorReason(e: unknown): string {
-  if (!(e instanceof Error)) return String(e);
-  if (e instanceof ApiError) {
-    const at = e.message.indexOf("{");
-    if (at >= 0) {
-      try {
-        const body = JSON.parse(e.message.slice(at)) as { detail?: unknown; error?: { message?: unknown } };
-        if (typeof body.detail === "string") return body.detail;
-        if (Array.isArray(body.detail))
-          return body.detail.map((d: { msg?: string }) => d.msg ?? JSON.stringify(d)).join("; ");
-        if (typeof body.error?.message === "string") return body.error.message;
-      } catch {
-        // not JSON: use the raw message below
-      }
-    }
-  }
-  return e.message;
-}
 
 /** Display a measured value without float noise, to `digits` decimals at most. */
 const num = (v: number, digits = 1) => formatNumber(Number(v.toFixed(digits)));

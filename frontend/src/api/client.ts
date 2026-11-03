@@ -9,6 +9,8 @@ import { mockPlotSvg } from "../../mocks/plotSvg";
 import { MOCK_ISO_SHEETS } from "../../mocks/iso";
 import mockAgentEvents from "../../mocks/agent-events.json";
 import mockChanges from "../../mocks/changes.json";
+import mockThermoModels from "../../mocks/thermo-models.json";
+import mockUnitCatalogue from "../../mocks/unit-catalogue.json";
 import { findOutput, upstream, type TraceGraph, type TraceTarget } from "../trace";
 import { UNIT_CATALOGUE } from "../unitCatalogue";
 
@@ -30,6 +32,33 @@ export type TemplateInfo = components["schemas"]["TemplateInfo"];
 /** One recorded project change (API v1): who, what, and the structured diff. */
 export type Change = components["schemas"]["Change"];
 export type Mutation = components["schemas"]["Mutation"];
+/** One row of GET /api/thermo/models (untyped in openapi.json, typed here). A row
+ * with `selectable: false` is refused at solve time; `refusal_reason` says why. */
+export type ThermoModel = {
+  id: string;
+  name: string;
+  family: string;
+  status: string;
+  selectable: boolean;
+  registered: boolean;
+  refusal_reason?: string;
+};
+/** One row of GET /api/v1/catalogue/units: what a kind is called and which ports it has. */
+export type UnitKindInfo = {
+  kind: string;
+  name: string;
+  family: string;
+  registered: boolean;
+  inlet_ports: string[];
+  outlet_ports: string[];
+  pid_symbol: string;
+};
+/** One stored agent message (GET .../agent/{id}): Anthropic messages format. */
+export type TranscriptBlock =
+  | { type: "text"; text: string }
+  | { type: "tool_use"; id: string; name: string; input: unknown }
+  | { type: "tool_result"; tool_use_id: string; content: unknown; is_error?: boolean };
+export type TranscriptMessage = { role: "user" | "assistant"; content: string | TranscriptBlock[] };
 /** POST /api/projects: a name plus at most one source; none means blank. */
 export type ProjectSource = { template: string } | { from_project: string } | { project: Project } | Record<string, never>;
 
@@ -85,6 +114,28 @@ export class ApiError extends Error {
   }
 }
 
+/** Pure: the backend's reason for a failed call. FastAPI answers
+ *  `{"detail": "..."}` (legacy and project routes) and the v1 envelope
+ *  `{"error": {"message": "..."}}`; ApiError carries the body after the status.
+ *  Falls back to the raw message when the body is not JSON. */
+export function errorReason(e: unknown): string {
+  if (!(e instanceof Error)) return String(e);
+  if (e instanceof ApiError) {
+    const at = e.message.indexOf("{");
+    if (at >= 0) {
+      try {
+        const body = JSON.parse(e.message.slice(at)) as { detail?: unknown; error?: { message?: unknown } };
+        if (typeof body.detail === "string") return body.detail;
+        if (Array.isArray(body.detail))
+          return body.detail.map((d: { msg?: string }) => d.msg ?? JSON.stringify(d)).join("; ");
+        if (typeof body.error?.message === "string") return body.error.message;
+      } catch {
+        // not JSON: use the raw message below
+      }
+    }
+  }
+  return e.message;
+}
 
 let mockState: Project = structuredClone(mockProject) as Project;
 
@@ -210,7 +261,35 @@ async function mockTrace(): Promise<TraceGraph> {
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+let mockConversations: Record<string, TranscriptMessage[]> = {};
+
 const agent = {
+  /** Conversation ids of the open project (else the default project), oldest first. */
+  async conversations(): Promise<string[]> {
+    if (MOCK) return Object.keys(mockConversations);
+    return (await http<{ conversations: string[] }>(scoped("/api/agent", "/agent"))).conversations;
+  },
+  /** The stored messages of one conversation; 404 when it is gone. */
+  async transcript(conversationId: string): Promise<TranscriptMessage[]> {
+    if (MOCK) {
+      const msgs = mockConversations[conversationId];
+      if (!msgs) throw new ApiError(`GET agent/${conversationId}: 404 {"detail":"unknown conversation"}`, 404);
+      return structuredClone(msgs);
+    }
+    const path = scoped("/api/agent", "/agent") + `/${encodeURIComponent(conversationId)}`;
+    return (await http<{ messages: TranscriptMessage[] }>(path)).messages;
+  },
+  async deleteConversation(conversationId: string): Promise<void> {
+    if (MOCK) {
+      delete mockConversations[conversationId];
+      return;
+    }
+    await http<unknown>(scoped("/api/agent", "/agent") + `/${encodeURIComponent(conversationId)}`, { method: "DELETE" });
+  },
+  /** Test seam: seed the mock conversation store. */
+  _setMockConversations(c: Record<string, TranscriptMessage[]>) {
+    mockConversations = structuredClone(c);
+  },
   /** Send one message to POST /api/agent and stream the reply as AgentEvents.
    * `conversationId` continues a session (undefined starts one); the `done`
    * event carries the id to pass back on the next send. */
@@ -345,6 +424,16 @@ export const api = {
   async getMeta(): Promise<Meta> {
     if (MOCK) return structuredClone(MOCK_META);
     return http<Meta>("/api/meta");
+  },
+  /** Every thermo model with whether it may be selected (GET /api/thermo/models). */
+  async thermoModels(): Promise<ThermoModel[]> {
+    if (MOCK) return structuredClone(mockThermoModels.models) as ThermoModel[];
+    return (await http<{ models: ThermoModel[] }>("/api/thermo/models")).models;
+  },
+  /** Every catalogue unit kind with its name and ports (GET /api/v1/catalogue/units). */
+  async unitKinds(): Promise<UnitKindInfo[]> {
+    if (MOCK) return structuredClone(mockUnitCatalogue.units) as UnitKindInfo[];
+    return (await http<{ units: UnitKindInfo[] }>("/api/v1/catalogue/units")).units;
   },
   /** The new-project catalogue (GET /api/templates): blank first. */
   async listTemplates(): Promise<TemplateInfo[]> {
@@ -530,10 +619,10 @@ export const api = {
     if (MOCK) return structuredClone(mockSolved) as SolvedFlowsheet;
     return http<SolvedFlowsheet>(scoped("/api/solve", "/solve"), { method: "POST" });
   },
-  /** Provenance graph of the solved default project (GET /api/projects/{id}/trace); with a
+  /** Provenance graph of a solved project (GET /api/projects/{id}/trace); with a
    * target, only the upstream subgraph of that one value (meta.focus = its node id).
-   * 404 when the value was not traced. */
-  /** ``project`` is a stored project id; omitted = the default (open) project. */
+   * 404 when the value was not traced. `project` is a stored project id; omitted =
+   * the open project (else the backend's default project). */
   async trace(target?: TraceTarget, project?: string): Promise<TraceGraph> {
     if (MOCK) {
       const full = await mockTrace();
@@ -543,7 +632,7 @@ export const api = {
       if (!node) throw new ApiError(`GET trace: 404 no traced value '${target.prop}' for '${of}'`, 404);
       return upstream(full, node.id);
     }
-    const id = encodeURIComponent(project ?? (await projectId()));
+    const id = project === undefined ? await v1Project() : encodeURIComponent(project);
     let query = "";
     if (target) {
       const q = new URLSearchParams("stream" in target ? { stream: target.stream } : { unit: target.unit });
@@ -555,7 +644,7 @@ export const api = {
   /** Outputs that depend on an uncited leaf, an estimate, or an unreferenced method. */
   async traceAudit(project?: string): Promise<AuditReport> {
     if (MOCK) return structuredClone((await import("../../mocks/trace-audit.json")).default) as AuditReport;
-    const id = encodeURIComponent(project ?? (await projectId()));
+    const id = project === undefined ? await v1Project() : encodeURIComponent(project);
     return http<AuditReport>(`/api/projects/${id}/trace/audit`);
   },
   _resetMock() {
@@ -564,5 +653,6 @@ export const api = {
     mockSeq = 1;
     openId = null;
     mockHistory = structuredClone(mockChanges) as Change[];
+    mockConversations = {};
   },
 };

@@ -1,0 +1,1291 @@
+{
+"models": [
+{
+"id": "aga8_dc92",
+"name": "AGA 8 DC92 detail equation of state (gas phase)",
+"family": "helmholtz",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "amine_enrtl",
+"name": "MDEA Kent-Eisenberg + electrolyte-NRTL (fixed loading)",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "amine_ke",
+"name": "MDEA Kent-Eisenberg (fixed loading)",
+"family": "electrolyte",
+"status": "validated",
+"selectable": true,
+"registered": true
+},
+{
+"id": "amine_ke_dga_amp",
+"name": "Kent-Eisenberg DGA and AMP speciation (CO2)",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "amine_mdea_pz",
+"name": "Mixed amines (MDEA+PZ)",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "antoine-ideal-k",
+"name": "Antoine-basis ideal K-values (K_i = Psat_i/P)",
+"family": "kvalue",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "api-srk",
+"name": "API Soave-Redlich-Kwong",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "asme_steam",
+"name": "ASME steam tables (IAPWS-IF97 basis, ASME-labelled)",
+"family": "helmholtz",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "braun-k10",
+"name": "Braun K10 low-pressure limit (ideal-K asymptote of the K10 charts)",
+"family": "kvalue",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "braun-k10-ideal",
+"name": "BK10 with ideal enthalpies",
+"family": "kvalue",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "bwr_ls",
+"name": "BWR-Lee-Starling (BWRS parameter basis, Han-Starling mixing, provisional)",
+"family": "helmholtz",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "bwrs",
+"name": "BWRS (Starling 1973) natural-gas components",
+"family": "helmholtz",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "chao-seader",
+"name": "Chao-Seader K-values (nu0 + regular solution + Redlich-Kwong)",
+"family": "kvalue",
+"status": "validated",
+"selectable": true,
+"registered": true
+},
+{
+"id": "coolprop_heos",
+"name": "CoolProp pure Helmholtz (HEOS) fluids and mixtures",
+"family": "helmholtz",
+"status": "validated",
+"selectable": true,
+"registered": true
+},
+{
+"id": "cpa_pr",
+"name": "CPA-PR (hand-rolled association kernel)",
+"family": "saft",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "cpa_srk",
+"name": "CPA-SRK (hand-rolled association kernel)",
+"family": "saft",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "depg_henry",
+"name": "Physical solvent (DEPG Selexol-type) Henry solubility at 25 C",
+"family": "kvalue",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "enrtl_crystallisation",
+"name": "Electrolyte NRTL with crystallisation (solids)",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "enrtl_hoc",
+"name": "ENRTL with Hayden-O'Connell vapour",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "enrtl_nacl_water",
+"name": "eNRTL NaCl(aq) brine (25 C parameter set)",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "enrtl_rk",
+"name": "ENRTL with Redlich-Kwong vapour",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "eos_cg",
+"name": "EOS-CG combustion-gas mixture model (2016)",
+"family": "helmholtz",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "esso-tabular",
+"name": "Esso tabular K-values (Antoine-basis ideal K stand-in)",
+"family": "kvalue",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "ext_uniquac_nacl_water",
+"name": "Extended UNIQUAC NaCl(aq) brine (Thomsen parameter set)",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "flory_huggins",
+"name": "Flory-Huggins polymer solution",
+"family": "special",
+"status": "experimental",
+"selectable": false,
+"registered": true,
+"refusal_reason": "status: experimental"
+},
+{
+"id": "gerg2008",
+"name": "GERG-2008 natural-gas mixture model (CoolProp multifluid path)",
+"family": "helmholtz",
+"status": "validated",
+"selectable": true,
+"registered": true
+},
+{
+"id": "gerg2008_teqp",
+"name": "GERG-2008 (teqp multi-fluid, exact parameters)",
+"family": "saft",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "glycol_pr",
+"name": "Glycol package (TEG dehydration, tuned PR)",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "grayson-streed",
+"name": "Grayson-Streed K-values (GS nu0 sets, original RK vapour phase)",
+"family": "kvalue",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "grayson-streed-extended",
+"name": "Grayson-Streed K-values, extended range (same adapter and coefficient table)",
+"family": "kvalue",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "henry-sander",
+"name": "Henry's law for the dilute light gases (Sander-compiled pure-water sets) + Raoult",
+"family": "kvalue",
+"status": "validated",
+"selectable": true,
+"registered": true
+},
+{
+"id": "hf_hexamer",
+"name": "HF-hexamerizing gamma-phi (in-house kernel, Jarry & Davis parameters)",
+"family": "special",
+"status": "experimental",
+"selectable": false,
+"registered": true,
+"refusal_reason": "status: experimental"
+},
+{
+"id": "hoc_dimer",
+"name": "Dimerizing-acid gamma-phi (Hayden-O'Connell family, in-house kernel)",
+"family": "special",
+"status": "experimental",
+"selectable": false,
+"registered": true,
+"refusal_reason": "status: experimental"
+},
+{
+"id": "iapws95",
+"name": "IAPWS-95 water and steam",
+"family": "helmholtz",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "iapws_if97",
+"name": "IAPWS-IF97 industrial water and steam",
+"family": "helmholtz",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "ideal-lk",
+"name": "Ideal K-values with the Lee-Kesler departure enthalpy basis",
+"family": "kvalue",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "ideal-raoult",
+"name": "Ideal Raoult-law K-values on the databank vapour-pressure basis",
+"family": "kvalue",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "ideal_solid",
+"name": "Ideal-solubility solid-liquid equilibrium",
+"family": "special",
+"status": "experimental",
+"selectable": false,
+"registered": true,
+"refusal_reason": "status: experimental"
+},
+{
+"id": "kabadi-danner-free-water",
+"name": "Water/hydrocarbon free-water method (Kabadi-Danner + NBS)",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "kabadi-danner-srk",
+"name": "SRK, Kabadi-Danner water-hydrocarbon mixing",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "lcvm",
+"name": "LCVM (PR + linear Vidal/MHV1 combination over original UNIFAC)",
+"family": "mixing",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "lee-kesler-ploecker",
+"name": "Lee-Kesler-Ploecker corresponding states (Ploecker mixing rules, k_ij = 0)",
+"family": "kvalue",
+"status": "validated",
+"selectable": true,
+"registered": true
+},
+{
+"id": "margules_hoc",
+"name": "Margules liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "margules_ig",
+"name": "Margules liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "margules_nothnagel",
+"name": "Margules liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "margules_pr",
+"name": "Margules liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "margules_rk",
+"name": "Margules liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "mbwr",
+"name": "Modified BWR-32 (Younglove-Ely 1987, pure C1/C2/C3)",
+"family": "helmholtz",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "multifluid",
+"name": "Multi-fluid Helmholtz (teqp CoolProp library)",
+"family": "saft",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "multifluid_pure",
+"name": "Multi-fluid Helmholtz, pure fluids (teqp CoolProp library)",
+"family": "saft",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "nrtl",
+"name": "NRTL liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "nrtl_hoc",
+"name": "NRTL liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "nrtl_ig",
+"name": "NRTL liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "nrtl_nothnagel",
+"name": "NRTL liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "nrtl_rk",
+"name": "NRTL liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "nrtl_sac_ig",
+"name": "NRTL-SAC (segment activity)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "nrtl_tdep_hoc",
+"name": "NRTL T-dependent form + Hayden-O'Connell vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pc_saft",
+"name": "PC-SAFT (teqp)",
+"family": "saft",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pc_saft_assoc",
+"name": "PC-SAFT with association (hand-rolled kernel)",
+"family": "saft",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pc_saft_polar",
+"name": "Polar PC-SAFT (hand-rolled kernel)",
+"family": "saft",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pitzer_debye_huckel",
+"name": "Pitzer-Debye-H\u00fcckel",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pitzer_hoc",
+"name": "Pitzer with Hayden-O'Connell vapour",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pitzer_nacl_water",
+"name": "Pitzer NaCl(aq) brine (25 C parameter set)",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "polymer_nrtl",
+"name": "Chen segment-based polymer NRTL",
+"family": "special",
+"status": "experimental",
+"selectable": false,
+"registered": true,
+"refusal_reason": "status: experimental"
+},
+{
+"id": "polymer_pc_saft",
+"name": "Polymer PC-SAFT (teqp bridge)",
+"family": "special",
+"status": "experimental",
+"selectable": false,
+"registered": true,
+"refusal_reason": "status: experimental"
+},
+{
+"id": "pr",
+"name": "Peng-Robinson",
+"family": "cubic",
+"status": "validated",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr-bm",
+"name": "Peng-Robinson-BM (databank variant)",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr-boston-mathias",
+"name": "Peng-Robinson, Boston-Mathias alpha",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr-costald",
+"name": "Peng-Robinson, COSTALD liquid density",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr-free-water",
+"name": "Steam tables selectable per water stream (free-water decant)",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr-lee-kesler-enthalpy",
+"name": "Peng-Robinson, Lee-Kesler enthalpies",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr-mathias-copeman",
+"name": "Peng-Robinson, Mathias-Copeman alpha",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr-peneloux",
+"name": "Peng-Robinson, Peneloux volume translation",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr-rackett",
+"name": "Peng-Robinson, Rackett liquid density",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr78",
+"name": "Peng-Robinson (1978 alpha)",
+"family": "cubic",
+"status": "validated",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr_huron_vidal",
+"name": "Peng-Robinson Huron-Vidal (NRTL)",
+"family": "mixing",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr_mhv1",
+"name": "Peng-Robinson MHV1 (NRTL)",
+"family": "mixing",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr_mhv2",
+"name": "Peng-Robinson MHV2 (NRTL)",
+"family": "mixing",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "pr_wong_sandler",
+"name": "Peng-Robinson Wong-Sandler (NRTL)",
+"family": "mixing",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "prsv",
+"name": "Peng-Robinson-Stryjek-Vera (PRSV)",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "prsv2",
+"name": "Peng-Robinson-Stryjek-Vera 2 (PRSV2)",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "psrk",
+"name": "PSRK (SRK + MHV1 over PSRK-UNIFAC, Mathias-Copeman alpha)",
+"family": "mixing",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "regular_solution_hoc",
+"name": "regular solution liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "regular_solution_ig",
+"name": "regular solution liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "regular_solution_nothnagel",
+"name": "regular solution liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "regular_solution_pr",
+"name": "regular solution liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "regular_solution_rk",
+"name": "regular solution liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "rk",
+"name": "Redlich-Kwong",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "rks-bm",
+"name": "SRK-BM (databank variant)",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "saft_vr_mie",
+"name": "SAFT-VR Mie (teqp)",
+"family": "saft",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "soft_saft",
+"name": "soft-SAFT (teqp)",
+"family": "saft",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "sour-pr",
+"name": "Peng-Robinson, sour-water correction",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "sour-srk",
+"name": "Soave-Redlich-Kwong, sour-water correction",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "sour_water",
+"name": "Sour water (EPA-600/2-80-067 SWEQ, NH3-H2S-H2O)",
+"family": "electrolyte",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "srk",
+"name": "Soave-Redlich-Kwong",
+"family": "cubic",
+"status": "validated",
+"selectable": true,
+"registered": true
+},
+{
+"id": "srk-boston-mathias",
+"name": "Soave-Redlich-Kwong, Boston-Mathias alpha",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "srk-costald",
+"name": "Soave-Redlich-Kwong, COSTALD liquid density",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "srk-lee-kesler-enthalpy",
+"name": "Soave-Redlich-Kwong, Lee-Kesler enthalpies",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "srk-mathias-copeman",
+"name": "Soave-Redlich-Kwong, Mathias-Copeman alpha",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "srk-peneloux",
+"name": "Soave-Redlich-Kwong, Peneloux volume translation",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "srk-rackett",
+"name": "Soave-Redlich-Kwong, Rackett liquid density",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "srk_mhv2",
+"name": "Soave-Redlich-Kwong MHV2 (NRTL)",
+"family": "mixing",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "srk_wong_sandler",
+"name": "Soave-Redlich-Kwong Wong-Sandler (NRTL)",
+"family": "mixing",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "twu-pr",
+"name": "Peng-Robinson, Twu generalised alpha",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "twu-sim-tassone",
+"name": "Twu-Sim-Tassone cubic EOS",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "twu-srk",
+"name": "Soave-Redlich-Kwong, Twu generalised alpha",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_dortmund_hoc",
+"name": "UNIFAC (Dortmund) liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_dortmund_ig",
+"name": "UNIFAC (Dortmund) liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_dortmund_nothnagel",
+"name": "UNIFAC (Dortmund) liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_dortmund_pr",
+"name": "UNIFAC (Dortmund) liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_dortmund_rk",
+"name": "UNIFAC (Dortmund) liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_fv",
+"name": "UNIFAC free-volume (Oishi-Prausnitz)",
+"family": "special",
+"status": "experimental",
+"selectable": false,
+"registered": true,
+"refusal_reason": "status: experimental"
+},
+{
+"id": "unifac_hoc",
+"name": "UNIFAC liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_ig",
+"name": "UNIFAC liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_lle_hoc",
+"name": "UNIFAC-LLE liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_lle_ig",
+"name": "UNIFAC-LLE liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_lle_nothnagel",
+"name": "UNIFAC-LLE liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_lle_pr",
+"name": "UNIFAC-LLE liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_lle_rk",
+"name": "UNIFAC-LLE liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_lyngby_hoc",
+"name": "UNIFAC (Lyngby) liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_lyngby_ig",
+"name": "UNIFAC (Lyngby) liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_lyngby_nothnagel",
+"name": "UNIFAC (Lyngby) liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_lyngby_pr",
+"name": "UNIFAC (Lyngby) liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_lyngby_rk",
+"name": "UNIFAC (Lyngby) liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_nist_hoc",
+"name": "UNIFAC (NIST) liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_nist_ig",
+"name": "UNIFAC (NIST) liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_nist_nothnagel",
+"name": "UNIFAC (NIST) liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_nist_pr",
+"name": "UNIFAC (NIST) liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_nist_rk",
+"name": "UNIFAC (NIST) liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_nothnagel",
+"name": "UNIFAC liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_pr",
+"name": "UNIFAC liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_psrk_hoc",
+"name": "UNIFAC (PSRK) liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_psrk_ig",
+"name": "UNIFAC (PSRK) liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_psrk_nothnagel",
+"name": "UNIFAC (PSRK) liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_psrk_pr",
+"name": "UNIFAC (PSRK) liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_psrk_rk",
+"name": "UNIFAC (PSRK) liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "unifac_rk",
+"name": "UNIFAC liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "uniquac_hoc",
+"name": "UNIQUAC liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "uniquac_ig",
+"name": "UNIQUAC liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "uniquac_nothnagel",
+"name": "UNIQUAC liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "uniquac_pr",
+"name": "UNIQUAC liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "uniquac_rk",
+"name": "UNIQUAC liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "uniquac_tdep_ig",
+"name": "UNIQUAC T-dependent form + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "vanlaar_hoc",
+"name": "van Laar liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "vanlaar_ig",
+"name": "van Laar liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "vanlaar_nothnagel",
+"name": "van Laar liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "vanlaar_pr",
+"name": "van Laar liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "vanlaar_rk",
+"name": "van Laar liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "vdw",
+"name": "van der Waals",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "vtpr",
+"name": "VTPR (Twu-alpha PR host + residual-gE rule over VTPR-UNIFAC)",
+"family": "mixing",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "wilson_glr_ig",
+"name": "Wilson gas-liquid reference (Wilson-GLR)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "wilson_hoc",
+"name": "Wilson liquid + Hayden-O'Connell virial vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "wilson_ig",
+"name": "Wilson liquid + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "wilson_lr_ig",
+"name": "Wilson liquid-reference (Wilson-LR)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "wilson_nothnagel",
+"name": "Wilson liquid + Nothnagel virial vapour \u2014 Tsonopoulos (fallback)",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "wilson_pr",
+"name": "Wilson liquid + Peng-Robinson vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "wilson_rk",
+"name": "Wilson liquid + Redlich-Kwong vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "wilson_tdep_ig",
+"name": "Wilson T-dependent form + ideal gas vapour",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "wohl3_ig",
+"name": "Van Laar / Margules three-suffix forms",
+"family": "gamma_phi",
+"status": "provisional",
+"selectable": true,
+"registered": true
+},
+{
+"id": "zudkevitch-joffe-rk",
+"name": "Redlich-Kwong, Zudkevitch-Joffe alpha",
+"family": "cubic",
+"status": "provisional",
+"selectable": true,
+"registered": true
+}
+]
+}
