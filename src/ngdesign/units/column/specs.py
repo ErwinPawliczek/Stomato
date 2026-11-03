@@ -1220,7 +1220,7 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                 prof = _continuation(col, tb, seed, top, bot)
                 promote(prof)
                 return solved_tears(prof)
-            if top is not None:
+            if top is not None and free_top:
                 # Backtrack toward the seed value of the SAME tear quantity:
                 # the reflux L_0 for a total condenser, the stage-1 vapour V_1
                 # for a partial condenser (its distillate draw is the tear),
@@ -1228,14 +1228,20 @@ def _solve_specs(col: _Column, tb: _ThermoBox, params: _Params) -> _Profile:
                 # hardware has no tear there, so nothing to backtrack (spec B).
                 target = seed.l0 if col.condenser == "total" else seed.V[0]
                 top = top + 0.5 * (target - top)
-            if bot is not None:
+            if bot is not None and free_bot:
                 bot = bot + 0.5 * (seed.V[col.n - 1] - bot)
-        if col.n_tears < 2:
+        if col.n_tears < 2 and (free_top or free_bot):
+            # A pinned tear (a distillate-rate spec on a partial condenser, a
+            # boilup-rate spec on a kettle) is the spec itself: it is never
+            # retreated or backtracked, since the spec residuals skip it and
+            # a profile solved at a moved pinned tear would be reported as
+            # meeting a spec it misses (measured: a 12-stage crude column
+            # pinned at D = 474.64 mol/s "converged" at 0.8 D = 379.71).
             for frac in (0.8, 0.64, 0.512, 0.41, 0.328, 0.262):
                 try:
                     prof = mesh_at(
-                        None if start_top is None else start_top * frac,
-                        None if start_bot is None else start_bot * frac,
+                        None if start_top is None else start_top * (frac if free_top else 1.0),
+                        None if start_bot is None else start_bot * (frac if free_bot else 1.0),
                         probe=True,
                     )
                     return prof
