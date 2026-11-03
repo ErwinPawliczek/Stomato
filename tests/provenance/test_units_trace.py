@@ -27,6 +27,13 @@ from ngdesign.provenance.recorder import recording
 REACTORS = [
     "conversion_reactor/R0",
     "yield_reactor/R0",
+    "equilibrium_reactor/R0",
+    "gibbs_reactor/R0",
+    "cstr/R1",
+    "cstr/R2",
+    "pfr/R1",
+    "pfr/R2",
+    "pfr/R3",
 ]
 COLUMNS: list[str] = []
 EXCHANGERS: list[str] = []

@@ -360,6 +360,48 @@ reaction_equilibrium_extents:
   references:
     - source: svna_2005
       citation: "Smith, J.M., Van Ness, H.C. and Abbott, M.M., Introduction to Chemical Engineering Thermodynamics, 7th ed., McGraw-Hill, 2005, ch. 13 (chemical-reaction equilibria; multireaction equilibria)."
+conversion_from_extent:
+  name: Fractional conversion of the base component
+  latex: 'X = |\nu_\mathrm{base}|\,\xi / n_\mathrm{base,in}'
+  references:
+    - source: felder_rousseau_2005
+      citation: "Felder, R.M. and Rousseau, R.W., Elementary Principles of Chemical Processes, 3rd ed., Wiley, 2005, ch. 4 (fractional conversion and extent of reaction)."
+pfr_packed_bed:
+  name: Packed-bed PFR (mole, energy and Ergun momentum balances)
+  latex: '\frac{dF_i}{dV} = \sum_r \nu_{ir} r_r,\quad \frac{dP}{dz} = -\frac{G}{\rho D_p}\frac{1-\phi}{\phi^3}\left[\frac{150(1-\phi)\mu}{D_p} + 1.75\,G\right]'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006 (packed-bed reactors: mole balance, Ergun pressure drop, heat exchange)."
+    - source: ergun_1952
+      citation: "Ergun, S., Fluid Flow through Packed Columns, Chem. Eng. Prog. 48(2), 1952, 89-94."
+pfr_catalytic_bed:
+  name: Packed-bed PFR with pellet effectiveness and catalyst activity
+  latex: '\frac{dF_i}{dV} = a\sum_r \nu_{ir}\,\eta_r\,r_r,\quad \eta = \frac{\tanh\phi}{\phi}'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006 (packed-bed reactors, internal effectiveness factor, catalyst deactivation)."
+    - source: thiele_1939
+      citation: "Thiele, E.W., Relation between Catalytic Activity and Size of Particle, Ind. Eng. Chem. 31(7), 1939, 916-920."
+    - source: ergun_1952
+      citation: "Ergun, S., Fluid Flow through Packed Columns, Chem. Eng. Prog. 48(2), 1952, 89-94."
+catalyst_decay:
+  name: Catalyst activity (power-law decay)
+  latex: '\frac{da}{dt} = -k_d\,a^m \Rightarrow a = \left[1 + (m-1)k_d t\right]^{1/(1-m)}\ (m \neq 1),\ a = e^{-k_d t}\ (m = 1)'
+  references:
+    - source: fogler_2006
+      citation: "Fogler, H.S., Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall, 2006 (catalyst deactivation, separable kinetics)."
+pressure_difference:
+  name: Pressure difference
+  latex: '\Delta P = P_\mathrm{in} - P_\mathrm{out}'
+  structural: true
+equilibrium_approach:
+  name: Temperature approach to equilibrium
+  latex: 'T_\mathrm{eq} = T_\mathrm{out} - \Delta T_\mathrm{approach}'
+  structural: true
+equilibrium_polynomial:
+  name: User equilibrium-constant polynomial
+  latex: '\ln K = \sum_k a_k\,T^k'
+  structural: true  # the coefficients are the user's reaction-set inputs
 
 # ---------------------------------------------------------------- columns
 column_inside_out:
@@ -471,5 +513,56 @@ design_spec_broyden:
       doi: 10.1090/S0025-5718-1965-0198670-6
 
 # ---------------------------------------------------------------- columns (unit instrumentation)
+column_energy_balance:
+  name: Column overall energy balance (reboiler duty)
+  latex: '\dot Q_R = \sum_\mathrm{out} F h - \sum_\mathrm{in} F h + \dot Q_C - \sum \dot Q_\mathrm{aux}'
+  references:
+    - source: seader_henley_roper_2011
+      citation: "Seader, J.D., Henley, E.J. and Roper, D.K., Separation Process Principles, 3rd ed., Wiley, 2011 (overall column energy balance)."
+column_net_duty:
+  name: Net column duty
+  latex: '\dot Q = \dot Q_R - \dot Q_C + \sum \dot Q_\mathrm{aux}'
+  structural: true
+condenser_duty:
+  name: Condenser duty from condensing the overhead vapour
+  latex: '\dot Q_C = (h_V - h_L)\,V,\quad V = (R + 1)\,D\ \text{(total)},\ R\,D\ \text{(partial)}'
+  references:
+    - source: seader_henley_roper_2011
+      citation: "Seader, J.D., Henley, E.J. and Roper, D.K., Separation Process Principles, 3rd ed., Wiley, 2011 (condenser and reboiler duties)."
+feed_quality:
+  name: Feed thermal condition
+  latex: 'q = 1 - \beta_F'
+  structural: true
+unit_basis:
+  name: Per-mole calculation basis
+  latex: 'F = 1\ \mathrm{mol/s}'
+  structural: true
+spec_code:
+  name: Specification identifier (categorical code)
+  structural: true
+component_recovery:
+  name: Component recovery in a product
+  latex: 'r_i = \frac{F_\mathrm{out}\,z_{i,\mathrm{out}}}{F\,z_i}'
+  structural: true
+relative_residual:
+  name: Relative residual
+  latex: '\epsilon = |r| / \max(|a|, |b|, 1)'
+  structural: true
 
 # ---------------------------------------------------------------- heat exchangers (unit instrumentation)
+composite_curve_approach:
+  name: Minimum internal temperature approach (zoned composite curves)
+  latex: '\Delta T_\mathrm{min} = \min_Q \left[T_\mathrm{hot}(Q) - T_\mathrm{cold}(Q)\right]'
+  references:
+    - source: kemp_2007
+      citation: "Kemp, I.C., Pinch Analysis and Process Integration: A User Guide on Process Integration for the Efficient Use of Energy, 2nd ed., Butterworth-Heinemann, 2007 (composite curves and the minimum approach temperature)."
+min_approach_duty:
+  name: Duty at a specified minimum approach
+  latex: '\dot Q:\ \Delta T_\mathrm{min}(\dot Q) = \Delta T_\mathrm{spec}\ \text{(bisection)}'
+  references:
+    - source: kemp_2007
+      citation: "Kemp, I.C., Pinch Analysis and Process Integration: A User Guide on Process Integration for the Efficient Use of Energy, 2nd ed., Butterworth-Heinemann, 2007 (composite curves and the minimum approach temperature)."
+single_phase_check:
+  name: No phase change along either side (LMTD validity flag)
+  latex: '\mathbb{1}\left[\beta(h) = \beta_\mathrm{in}\ \forall\ \text{samples}\right]'
+  structural: true

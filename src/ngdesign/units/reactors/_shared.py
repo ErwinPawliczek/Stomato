@@ -17,13 +17,14 @@ from typing import Any
 from scipy.optimize import brentq
 
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.contracts.reactions import ReactionSet
+from ngdesign.contracts.reactions import Reaction, ReactionSet
 from ngdesign.contracts.stream import StreamState
 from ngdesign.data import chemdb, component_record
 from ngdesign.data.formation import MissingFormationData, enthalpy_datum, gas_model
+from ngdesign.provenance import catalogue
 from ngdesign.provenance.citations import cite_chemdb, cite_mw, cite_species_model
 from ngdesign.provenance.recorder import Recorder, ValueRef, active
-from ngdesign.units._physics.kinetics import enthalpy_with_formation
+from ngdesign.units._physics.kinetics import R, enthalpy_with_formation
 
 #: JANAF ideal-gas standard-state pressure for equilibrium quotients, Pa.
 P_REF = 1.0e5
@@ -65,6 +66,27 @@ def trace_hf(rec: Recorder, cid: str) -> ValueRef:
     return rec.cited(f"{cid} ΔfH°298", value, "J/mol", citation)
 
 
+def trace_model_hf298(rec: Recorder, cid: str) -> ValueRef:
+    """Cited leaf for the ΔfH°298 the species' ideal-gas model is anchored on (μ° = G°(T)).
+
+    That is the selected chemdb row (as :func:`trace_hf`) unless the model took it from
+    the same JANAF table as its H°(T) shape, in which case the table is cited.
+    """
+    try:
+        model = gas_model(cid)
+    except MissingFormationData:
+        return rec.cited(f"{cid} ΔfH°298 (model)", float("nan"), "J/mol", None)
+    try:
+        stated = enthalpy_datum(cid)
+    except (MissingFormationData, chemdb.ChemDbError):
+        stated = None
+    if stated == model.hf298:
+        return trace_hf(rec, cid)
+    origin = model.provenance.get("hf298", "")
+    citation = cite_species_model(model) if origin.startswith("janaf") else None
+    return rec.cited(f"{cid} ΔfH°298 (model)", model.hf298, "J/mol", citation, note=origin or None)
+
+
 def trace_mw(rec: Recorder, cid: str) -> ValueRef:
     """Cited leaf for a component's molar mass (``component_record(cid)["mw"]``), g/mol.
 
@@ -103,6 +125,63 @@ def trace_species_shape(rec: Recorder, cid: str) -> ValueRef:
                 update={"reference": f"{citation.reference or ''}; S°298: {anchor.citation}".lstrip("; ")}
             )
     return rec.cited(f"{cid} ideal-gas H°(T), S°(T)", model.model, "", citation, note=note)
+
+
+def trace_standard_pressure(rec: Recorder) -> ValueRef:
+    """Cited leaf for the ideal-gas standard-state pressure :data:`P_REF` (JANAF's 1 bar)."""
+    return rec.cited("P° (standard state)", P_REF, "Pa", catalogue.source_citation("janaf"))
+
+
+def trace_ln_keq(rec: Recorder, reaction: Reaction, T: Any, ln_k: float) -> ValueRef:
+    """Record ``lnK_<id> = ln_keq(reaction, T)`` with its data leaves.
+
+    ``from_gibbs``: ΔrG°(T) from each species' cited ΔfH°298 and ideal-gas H°(T), S°(T)
+    model (:func:`ngdesign.units._physics.kinetics.ln_keq`). ``polynomial``: the
+    user's coefficients (reaction-set parameters) in T.
+    """
+    equilibrium = reaction.equilibrium
+    inputs: dict[str, Any] = {"T": T}
+    if equilibrium is not None and equilibrium.form == "polynomial":
+        inputs.update({f"a[{power}]": coeff for power, coeff in equilibrium.polynomial.items()})
+        return rec.equation(f"lnK_{reaction.id}", ln_k, "1", "equilibrium_polynomial", inputs)
+    for cid in reaction.stoichiometry:
+        inputs[f"ΔfH°[{cid}]"] = trace_hf(rec, cid)
+        inputs[f"H°,S°[{cid}]"] = trace_species_shape(rec, cid)
+    inputs["R"] = rec.constant("R", R, "J/(mol K)", "codata2018")
+    return rec.equation(f"lnK_{reaction.id}", ln_k, "1", "equilibrium_constant", inputs)
+
+
+def kinetic_inputs(rec: Recorder, rset: ReactionSet) -> dict[str, Any]:
+    """Inputs of a kinetic reactor solve: each reaction's rate constants (the user's
+    reaction-set parameters, matched by value), R, and, for reversible kinetics, the
+    cited data behind the equilibrium constant."""
+    inputs: dict[str, Any] = {"R": rec.constant("R", R, "J/(mol K)", "codata2018")}
+
+    def numbers(prefix: str, data: Any) -> None:
+        if isinstance(data, bool) or data is None:
+            return
+        if isinstance(data, int | float):
+            inputs[prefix] = float(data)
+        elif isinstance(data, Mapping):
+            for key, value in data.items():
+                numbers(f"{prefix}.{key}", value)
+        elif isinstance(data, list | tuple):
+            for i, value in enumerate(data):
+                numbers(f"{prefix}[{i}]", value)
+
+    for reaction in rset.reactions:
+        if reaction.kinetics is not None:
+            numbers(f"{reaction.id}.kinetics", reaction.kinetics.model_dump())
+        equilibrium = reaction.equilibrium
+        if equilibrium is None:
+            continue
+        if equilibrium.form == "polynomial":
+            numbers(f"{reaction.id}.lnK", {str(p): c for p, c in equilibrium.polynomial.items()})
+            continue
+        for cid in reaction.stoichiometry:
+            inputs[f"ΔfH°[{cid}]"] = trace_hf(rec, cid)
+            inputs[f"H°,S°[{cid}]"] = trace_species_shape(rec, cid)
+    return inputs
 
 
 def trace_formation_enthalpy(rec: Recorder, name: str, value: float, state: StreamState) -> ValueRef:

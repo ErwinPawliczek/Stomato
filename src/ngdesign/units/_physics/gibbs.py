@@ -12,7 +12,12 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 from ngdesign.data.formation import MissingFormationData, formation_enthalpy_298, gas_model
-from ngdesign.units._physics.gibbs_phases import P_STANDARD, EquilibriumError, gibbs_equilibrium
+from ngdesign.units._physics.gibbs_phases import (
+    P_STANDARD,
+    EquilibriumError,
+    EquilibriumResult,
+    gibbs_equilibrium,
+)
 
 #: JANAF ideal-gas standard-state pressure for chemical potentials, Pa.
 P_REF = P_STANDARD
@@ -51,6 +56,18 @@ def gibbs_minimum(
     contribute no atoms and no degrees of freedom. Refuses (:class:`GibbsError`) on an
     empty species set, a feed element no species carries, or non-convergence.
     """
+    result = gibbs_minimum_result(species, inerts, n_in, T, P)
+    return {cid: result.gas.get(cid, 0.0) for cid in species}
+
+
+def gibbs_minimum_result(
+    species: Sequence[str],
+    inerts: Sequence[str],
+    n_in: Mapping[str, float],
+    T: float,
+    P: float,
+) -> EquilibriumResult:
+    """The full solver result behind :func:`gibbs_minimum` (amounts, G, iterations)."""
     if not species:
         raise GibbsError("gibbs minimisation needs a non-empty species set")
     reactive = {cid: float(n) for cid, n in n_in.items() if cid not in inerts}
@@ -61,4 +78,4 @@ def gibbs_minimum(
         result = gibbs_equilibrium(reactive, list(species), T, P, inerts=spectators)
     except (EquilibriumError, MissingFormationData) as exc:
         raise GibbsError(str(exc)) from exc
-    return {cid: result.gas.get(cid, 0.0) for cid in species}
+    return result

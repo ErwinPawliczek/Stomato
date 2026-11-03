@@ -560,10 +560,16 @@ class Recorder:
                 for k, hits in sc.ident.items()
                 if (kept_ident := [h for h in hits if h[2] is None or id(h[2]) in keep_ids])
             }
+        # A result attribute that IS one of the call's arguments (a flash_pt state's T and
+        # P, a memoized result handed out again) was not produced by this call: it is not
+        # registered as an identity holder, so it never shadows the value's real origin.
+        passed = {id(v) for v in args.values()}
         for prop, value in _result_props(result):
             key = _key(value)
             if key is not None:
                 sc.lazy.setdefault(key, []).append((call.seq, call, prop))
+            if id(value) in passed:
+                continue
             if isinstance(value, float | Mapping) and not isinstance(value, bool):
                 sc.ident.setdefault(id(value), []).append((call.seq, None, call, prop, value))
 
@@ -1337,6 +1343,15 @@ def _flatten(params: Mapping[str, Any], prefix: str = "") -> list[tuple[str, Any
             else:
                 out.extend(_flatten(v, f"{path}."))
     return out
+
+
+def param_inputs(params: Mapping[str, Any], *, skip: tuple[str, ...] = ()) -> dict[str, Any]:
+    """A unit's numeric params as equation inputs, by their flattened param paths.
+
+    The values are the ones :meth:`Recorder.unit_inputs` registered as user inputs, so
+    they resolve to those nodes. Top-level keys in ``skip`` are left out.
+    """
+    return dict(_flatten({k: v for k, v in params.items() if k not in skip}))
 
 
 def _looks_like_composition(v: Mapping[str, Any]) -> bool:

@@ -36,8 +36,22 @@ from scipy.optimize import brentq, fsolve
 from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.reactions import Reaction, ReactionSet
+from ngdesign.provenance.recorder import Recorder, ValueRef, active
 from ngdesign.units._physics.kinetics import apply_extents, enthalpy_with_formation, ln_keq
-from ngdesign.units.reactors._shared import _T_MAX, _T_MIN, P_REF, reaction_set_param, z_from
+from ngdesign.units.reactors._shared import (
+    _T_MAX,
+    _T_MIN,
+    P_REF,
+    reaction_set_param,
+    trace_amounts,
+    trace_component_flows,
+    trace_extents_applied,
+    trace_formation_enthalpy,
+    trace_ln_keq,
+    trace_reaction_duty,
+    trace_standard_pressure,
+    z_from,
+)
 
 #: Residual magnitude assigned to a reaction whose reactant side is depleted:
 #: ln Q sits at -inf there, which no root-finder can bracket — the reaction
@@ -127,6 +141,44 @@ def equilibrium_extents(
     return clipped
 
 
+def _trace_equilibrium(
+    rec: Recorder,
+    rset: ReactionSet,
+    params: Mapping[str, Any],
+    approach: float,
+    T_out: float,
+    inlet: StreamState,
+    n_in_ref: ValueRef,
+    extents: list[float],
+    n_out: Mapping[str, float],
+    z: Mapping[str, float],
+    total: float,
+) -> None:
+    """Trace ln K_j(T_eq), the equilibrium extents and the outlet amounts (tracing on only)."""
+    T_eq: Any = T_out
+    if "approach_K" not in params:
+        rec.default("approach_K", approach, "K", "equilibrium evaluated at the outlet temperature")
+    if approach != 0.0 or "approach_K" not in params:
+        T_eq = rec.equation(
+            "T_eq",
+            T_out - approach,
+            "K",
+            "equilibrium_approach",
+            {"T_out": T_out, "ΔT_approach": approach},
+        )
+    ln_ks = {f"lnK[{r.id}]": trace_ln_keq(rec, r, T_eq, ln_keq(r, T_out - approach)) for r in rset.reactions}
+    p_ref = trace_standard_pressure(rec)
+    extent_refs = rec.results(
+        "reaction_equilibrium_extents",
+        {f"extent_{r.id}": xi for r, xi in zip(rset.reactions, extents, strict=True)},
+        {"n_in": n_in_ref, "P": (inlet, "P"), "P°": p_ref, **ln_ks},
+    )
+    trace_extents_applied(
+        rec, n_out, n_in_ref, {f"ξ[{k.removeprefix('extent_')}]": v for k, v in extent_refs.items()}
+    )
+    trace_amounts(rec, n_out, z, total)
+
+
 class EquilibriumReactor:
     """Reactor relieving every reaction to its equilibrium limit (spec U-F, R0)."""
 
@@ -145,22 +197,41 @@ class EquilibriumReactor:
         approach = float(params.get("approach_K", 0.0))
         thermal = params.get("thermal", "isothermal")
         h_in_W = enthalpy_with_formation(inlet)
+        rec = active()
+        h_in_ref: ValueRef | None = None
+        n_in_ref: ValueRef | None = None
+        if rec is not None:
+            n_in_ref = trace_component_flows(rec, inlet, n_in)
+            h_in_ref = trace_formation_enthalpy(rec, "H_in", h_in_W, inlet)
 
-        def state_at(T_out: float) -> tuple[StreamState, list[float]]:
-            """Outlet state + extents with equilibrium evaluated at T_out − approach_K."""
+        def state_at(T_out: float, record: bool = False) -> tuple[StreamState, list[float]]:
+            """Outlet state + extents with equilibrium evaluated at T_out − approach_K.
+
+            ``record`` (the final evaluation only) traces the equilibrium constants,
+            extents and outlet amounts when tracing is on.
+            """
             extents = equilibrium_extents(rset, n_in, T_out - approach, inlet.P)
             n_out = apply_extents(n_in, rset, extents)
-            outlet = thermo.flash_pt(z_from(n_out), T_out, inlet.P, math.fsum(n_out.values()))
+            z, total = z_from(n_out), math.fsum(n_out.values())
+            if record and rec is not None and n_in_ref is not None:
+                _trace_equilibrium(
+                    rec, rset, params, approach, T_out, inlet, n_in_ref, extents, n_out, z, total
+                )
+            outlet = thermo.flash_pt(z, T_out, inlet.P, total)
             return outlet, extents
 
         if isinstance(thermal, Mapping) and set(thermal) == {"T_out"}:
             T_out = float(thermal["T_out"])
-            outlet, extents = state_at(T_out)
+            outlet, extents = state_at(T_out, record=True)
             duty = enthalpy_with_formation(outlet) - h_in_W
+            if rec is not None and h_in_ref is not None:
+                trace_reaction_duty(rec, duty, outlet, h_in_ref)
         elif isinstance(thermal, str) and thermal == "isothermal":
             T_out = inlet.T
-            outlet, extents = state_at(inlet.T)
+            outlet, extents = state_at(inlet.T, record=True)
             duty = enthalpy_with_formation(outlet) - h_in_W
+            if rec is not None and h_in_ref is not None:
+                trace_reaction_duty(rec, duty, outlet, h_in_ref)
         elif (
             isinstance(thermal, str)
             and thermal == "adiabatic"
@@ -220,7 +291,19 @@ class EquilibriumReactor:
                     "rather than extrapolating"
                 )
             T_out = float(brentq(f, lo, hi, xtol=1e-9, maxiter=200))
-            outlet, extents = state_at(T_out)
+            if rec is not None and h_in_ref is not None and n_in_ref is not None:
+                inputs: dict[str, Any] = {"H_in": h_in_ref, "n_in": n_in_ref, "P": (inlet, "P")}
+                if duty != 0.0:
+                    inputs["Q"] = duty
+                rec.equation(
+                    "T_out",
+                    T_out,
+                    "K",
+                    "reactor_outlet_temperature",
+                    inputs,
+                    note="the outlet composition is re-equilibrated at every trial temperature",
+                )
+            outlet, extents = state_at(T_out, record=True)
         else:
             raise ValueError(
                 f"thermal mode {thermal!r} is not one of 'isothermal', 'adiabatic', "

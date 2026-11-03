@@ -37,6 +37,7 @@ from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.reactions import LHHW, Reaction, ReactionSet
 from ngdesign.contracts.stream import PhaseKind
+from ngdesign.provenance.recorder import ValueRef, active
 from ngdesign.units._physics.kinetics import (
     R,
     ReactionExtentError,
@@ -44,7 +45,14 @@ from ngdesign.units._physics.kinetics import (
     enthalpy_with_formation,
     rate,
 )
-from ngdesign.units.reactors._shared import reaction_set_param, thermal_outlet, z_from
+from ngdesign.units.reactors._shared import (
+    kinetic_inputs,
+    reaction_set_param,
+    thermal_outlet,
+    trace_component_flows,
+    trace_extents_applied,
+    z_from,
+)
 
 __all__ = ["CstrConvergenceError", "CstrError", "CstrPhaseError", "CstrR1", "CstrR2"]
 
@@ -446,7 +454,37 @@ class CstrR1:
             phase_resolved=phase_resolved,
             holdup_m3=holdup_m3,
         )
-        n_out = apply_extents(inlet.component_flows(), rset, list(newton.extents))
+        n_in = inlet.component_flows()
+        n_out = apply_extents(n_in, rset, list(newton.extents))
+        rec = active()
+        solved: dict[str, ValueRef] = {}
+        if rec is not None:
+            n_in_ref = trace_component_flows(rec, inlet, n_in)
+            solved = rec.results(
+                "cstr_design",
+                {
+                    **{
+                        f"extent_{r.id}_mol_s": xi
+                        for r, xi in zip(rset.reactions, newton.extents, strict=True)
+                    },
+                    "newton_iterations": float(newton.iterations),
+                    "T_start_K": newton.T_start_K,
+                    "T_newton_K": newton.T_newton_K,
+                },
+                {
+                    "n_in": n_in_ref,
+                    "T_in": (inlet, "T"),
+                    "P": (inlet, "P"),
+                    "V": volume_m3,
+                    **kinetic_inputs(rec, rset),
+                },
+                iterations=newton.iterations,
+                residual=newton.residual_inf,
+                note=f"damped Newton on the outlet-condition rate equations, reacting phase {reacting_phase}",
+            )
+            trace_extents_applied(
+                rec, n_out, n_in_ref, {f"ξ[{r.id}]": solved[f"extent_{r.id}_mol_s"] for r in rset.reactions}
+            )
         outlet, duty = thermal_outlet(inlet, n_out, params.get("thermal", "isothermal"), thermo)
         info: dict[str, float] = {}
         for reaction, xi_j in zip(rset.reactions, newton.extents, strict=True):
@@ -456,10 +494,30 @@ class CstrR1:
             info[f"conversion_{reaction.base_component}_{reaction.id}"] = (
                 nu_base * xi_j / base_flow if base_flow > 0.0 else 0.0
             )
+            if rec is not None:
+                rec.equation(
+                    f"conversion_{reaction.base_component}_{reaction.id}",
+                    info[f"conversion_{reaction.base_component}_{reaction.id}"],
+                    "1",
+                    "conversion_from_extent",
+                    {
+                        "ξ": solved[f"extent_{reaction.id}_mol_s"],
+                        "F": (inlet, "molar_flow"),
+                        "z": (inlet, "composition"),
+                    },
+                )
         info["newton_iterations"] = float(newton.iterations)
         info["T_start_K"] = newton.T_start_K
         info["T_newton_K"] = newton.T_newton_K
         info["T_closure_gap_K"] = outlet.T - newton.T_newton_K
+        if rec is not None:
+            rec.equation(
+                "T_closure_gap_K",
+                info["T_closure_gap_K"],
+                "K",
+                "temperature_difference",
+                {"T_out": (outlet, "T"), "T_newton": solved["T_newton_K"]},
+            )
         return UnitResult(outlets={"outlet": outlet}, duty_W=duty, info=info)
 
     @classmethod
