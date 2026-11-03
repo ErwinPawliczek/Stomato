@@ -22,6 +22,11 @@ from tests.conftest import flash_feed
 #: One worker solves the example once for every test that reads it.
 pytestmark = pytest.mark.xdist_group("crude_column_r2")
 
+#: Any test that may run a solve (the module fixtures' or its own): one
+#: crude-column solve measured 50 s alone, 58-81 s as a fixture setup on a
+#: loaded host, past the 120 s default there.
+_SOLVES = pytest.mark.timeout(600)
+
 #: Closure tolerance (relative to the condenser duty / the feed flow).
 _CLOSE = 1e-6
 #: Re-flash agreement on the converged column (the graph gate is M 1e-6).
@@ -62,6 +67,7 @@ def _assert_closes(inlets: dict[str, Any], result: Any) -> None:
     assert result.duty_W == pytest.approx(coolers - condenser, abs=_CLOSE * abs(condenser))
 
 
+@_SOLVES
 def test_example_closes_components_and_energy_without_a_phantom_duty(
     solved: tuple[Any, dict[str, Any], Any],
 ) -> None:
@@ -69,6 +75,7 @@ def test_example_closes_components_and_energy_without_a_phantom_duty(
     _assert_closes(inlets, result)
 
 
+@_SOLVES
 def test_products_meet_their_specs_and_order_by_volatility(solved: tuple[Any, dict[str, Any], Any]) -> None:
     _, _, result = solved
     _, params = CrudeColumnR2.example_case()
@@ -86,6 +93,7 @@ def test_products_meet_their_specs_and_order_by_volatility(solved: tuple[Any, di
     assert 0.0 < result.info["overflash_frac"] < 0.1
 
 
+@_SOLVES
 def test_every_stage_reflashes_to_its_solved_vapour_and_pooled_liquid(
     solved: tuple[Any, dict[str, Any], Any],
 ) -> None:
@@ -185,6 +193,7 @@ def solved_pa() -> tuple[Any, dict[str, Any], Any]:
 
 
 @_PA_GROUP
+@_SOLVES
 def test_pumparound_case_closes_components_and_energy(solved_pa: tuple[Any, dict[str, Any], Any]) -> None:
     _, inlets, result = solved_pa
     _assert_closes(inlets, result)
@@ -197,6 +206,7 @@ def test_pumparound_case_closes_components_and_energy(solved_pa: tuple[Any, dict
 
 
 @_PA_GROUP
+@_SOLVES
 def test_pumparound_duty_is_the_loop_liquids_enthalpy_change(
     solved_pa: tuple[Any, dict[str, Any], Any],
 ) -> None:
@@ -220,10 +230,12 @@ def test_pumparound_duty_is_the_loop_liquids_enthalpy_change(
 
 
 @_PA_GROUP
+@_SOLVES
 def test_pumparound_case_is_deterministic(solved_pa: tuple[Any, dict[str, Any], Any]) -> None:
     assert _snapshot(_solve_pa(_PUMPAROUNDS)[2]) == _snapshot(solved_pa[2])
 
 
+@_SOLVES
 def test_idle_pumparounds_are_exactly_the_column_without_them(
     solved: tuple[Any, dict[str, Any], Any],
 ) -> None:
