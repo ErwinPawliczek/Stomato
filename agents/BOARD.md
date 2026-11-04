@@ -26,7 +26,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only) | Obvious | accepted (PR #345; CAS check digits + chemdb species.csv match; merge waits for full suite) | obv/T9 | 2026-11-04 1:38 PM |
 | T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T3 P-value fix | Obvious | accepted w/ fix → T10b (PR #346; tolerances unchanged, skips visible, T3 fix in; tests/validation 290 passed/353 skipped/320 xfailed/0 failed on PC) | obv/T10 | 2026-11-04 1:38 PM |
 | T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | dropped (stale; no push or heartbeat) → T11r | obv/T11 | 2026-11-04 1:45 PM |
-| T11r | Re-dispatch of T11: SR-POLAR package, Mangold 2019 params only (H2O/O2/N2/CO2), density-only, supercritical tol = paper's per-point model error + 2 pp; PR into chem-engine (may build on obv/T9 if #345 unmerged); push within 10 min, heartbeats, report test results | Obvious | claimed (dispatched 1:40 PM; must push by 1:50 PM) | obv/T11r | 2026-11-04 1:45 PM |
+| T11r | Re-dispatch of T11: SR-POLAR package, Mangold 2019 params only (H2O/O2/N2/CO2), density-only, supercritical tol = paper's per-point model error + 2 pp; PR into chem-engine (may build on obv/T9 if #345 unmerged); push within 10 min, heartbeats, report test results | Obvious | in progress (branch pushed at obv/T9 head 54790ed, heartbeats 1:42/1:45 on board; no adapter commit yet) | obv/T11r | 2026-11-04 1:54 PM |
 | T10b | Fix-up on PR #346: skipped cases must still pass citation/schema checks; add retrieval dates to the 9 T3 sources (from data.csv) | Obvious | claimed | obv/T10 | 2026-11-04 1:40 PM |
 | T8r | Re-dispatch of T8: reformer_cat (#329) + control_valve (#282) case files → one PR into chem-engine, branch obv/T8r cut from origin/chem-engine | Obvious | CANCELLED — do not push; T8 delivered as #347 (stop thread th_DBdEBZhf sent; no cancel endpoint in API) | obv/T8r | 2026-11-04 1:45 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
@@ -34,6 +34,11 @@ Times are America/Chicago (CST). Newest handoff on top.
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Board sync — Stomato bot — 2026-11-04 1:54 PM
+- Done: T11r → `in progress` (obv/T11r pushed, heartbeats 1:42 and 1:45; no adapter commit yet). T10b: claimed 1:37, no new obv/T10 commit since 1:23 (17 min, not stale). obv/T8r exists (pushed 1:36, before the cancel), left alone per the 1:45 note. No `claude/*` branches. V1 still blocked until the 4:35 PM continue.
+- Outputs: this board update only. No new Obvious job.
+- Next: watch T10b (stale at ~2:22 PM) and T11r. Merges of #344/#345/#346/#347 wait for the full suite after Claude resets.
 
 ### Review + dispatch — Stomato bot — 2026-11-04 1:45 PM
 - Done: PR #347 (T8) ACCEPTED, verdict comment posted. reformer_cat.yaml == #329 head and control_valve.yaml == #282 head (empty git diff); docs/units/flow/control_valve.md +6 lines (V1 result rows); base == chem-engine 6e2eada; no locked files. `uv run pytest tests/validation` in temp worktree: exit 0, 0 failed; worktree removed. Notes on #329/#282: close after #347 merges (not closed).
