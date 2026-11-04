@@ -427,9 +427,15 @@ class BostonMathias_a_alpha:
 
     Subcritical (Tr <= 1) the alpha is the EOS default Soave form built from
     the instance's own ``kappas``; supercritical it is
-    ``exp[Cd (1 - Tr^d)]`` with ``d = 1 + m/2`` and ``Cd = m/d^2`` -- positive,
-    monotonically decreasing, and value-continuous at Tr = 1 where the Soave
-    bracket crosses zero at high Tr.
+    ``exp[c (1 - Tr^d)]`` with ``d = 1 + m/2`` and ``c = m/d`` (equivalently
+    ``[exp(c' (1 - Tr^d))]^2`` with ``c' = 1 - 1/d``) -- positive,
+    monotonically decreasing, and continuous in value and first T-derivative
+    at Tr = 1 (both forms give d(alpha)/dTr = -m there), so H and S stay
+    continuous through Tc. Boston, J. F. & Mathias, P. M., "Phase equilibria
+    in a third-generation process simulator", 2nd Int. Conf. Phase Equilibria
+    and Fluid Properties in the Chemical Process Industries, Berlin, 1980,
+    823-849; form as quoted by pychemqt lib.EoS.Cubic.PR and SigmaMu
+    alpha_extensions docs (read 2026-11-04).
 
     Mixed into thermo EOS mixes (untyped), which provide these attributes.
     """
@@ -455,7 +461,7 @@ class BostonMathias_a_alpha:
                 d2 = a * m * rt * (x0 + m * rt) / (2.0 * T * T)
             else:
                 d = 1.0 + m / 2.0
-                cd = m / (d * d)
+                cd = m / d
                 e = math.exp(cd * (1.0 - (T / Tc) ** d))
                 a_alpha = e * a
                 da = -a * e * cd * d * (T / Tc) ** (d - 1.0) / Tc
@@ -674,14 +680,35 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
         if T is not None and P is not None:
             self.solve()
 
+    def _fast_init_specific(self, other: Any) -> None:
+        """Re-pin TST's delta/epsilon on ``to_TP_zs_fast`` clones.
+
+        thermo's flash clones every phase EOS through ``to_TP_zs_fast``, which
+        skips ``__init__`` and calls PRMIX's ``_fast_init_specific`` -- that
+        sets the PR repulsive term (delta = 2b, epsilon = -b^2). Without this
+        override every flashed TST phase solved PR roots while
+        ``fugacity_coefficients`` used the TST log term (measured 2026-11-04:
+        C1/C3 bubble 3.91 MPa vs 6.895 MPa Reamer 1950, Gibbs-Duhem loop 0.23).
+        """
+        # The clone skips __init__, so the per-instance alpha table must ride
+        # along too (a different-T clone evaluates the alphas from it).
+        self.alpha_coeffs = other.alpha_coeffs
+        super()._fast_init_specific(other)
+        self.delta = 2.5 * self.b
+        self.epsilon = -1.5 * self.b * self.b
+
     def fugacity_coefficients(self, Z: float) -> list[float]:
         """Generic two-parameter-cubic mixture ln phi with TST's delta/epsilon.
 
         thermo's PRMIX method hardcodes the PR log term
         ``ln[(Z + (1+sqrt(2))B) / (Z - (sqrt(2)-1)B)]``; with the TST
         denominator delta = 2.5 b, epsilon = -1.5 b^2 the correct log term is
-        ``ln[(2Z + 2.5B + sqrt(8.5)B) / (2Z + 2.5B - sqrt(8.5)B)]`` (sqrt of
-        delta~^2 - 4 eps~ = sqrt(8.5) B). Everything else matches the PR form:
+        ``ln[(2Z + 2.5B + 3.5B) / (2Z + 2.5B - 3.5B)] = ln[(Z + 3B) / (Z - 0.5B)]``
+        (sqrt of delta~^2 - 4 eps~ = sqrt(6.25 + 6) B = 3.5 B; the denominator
+        factors as (v + 3b)(v - 0.5b)). Until 2026-11-04 this read sqrt(8.5) B,
+        inconsistent with the EOS (liquid ln phi off by 0.05-0.12 for C1/C3 at
+        250 K, 2 MPa; the Gibbs-Duhem L0 loop measured 0.23). Everything else
+        matches the PR form:
         ln phi_i = (B_i/B)(Z-1) - ln(Z-B) + A/sqrt(D) [B_i/B - 2 sum_j y_j a_ij
         / a] ln[...], verified against finite differences in composition,
         temperature and pressure by tests/thermo/test_tst.py.
@@ -693,7 +720,7 @@ class TSTMIX(_AlphaCoeffsInit, TST_a_alpha, PRMIX):  # type: ignore[misc]
         R_inv = 1.0 / 8.31446261815324
         A = self.a_alpha * P_T * R_inv * R_inv * T_inv
         B = b * P_T * R_inv
-        sqrt_d = math.sqrt(8.5) * B
+        sqrt_d = 3.5 * B  # sqrt(delta^2 - 4 epsilon) / b = sqrt(2.5^2 + 4*1.5)
         a = self.a_alpha
         log_term = math.log((2.0 * Z + 2.5 * B + sqrt_d) / (2.0 * Z + 2.5 * B - sqrt_d))
         coeff = A / sqrt_d
@@ -1538,10 +1565,35 @@ class RedlichKwongThermo(OptionCubicEOS):
     eos = RKMIX
 
 
-class VanDerWaalsThermo(OptionCubicEOS):
-    """van der Waals (1873) over `thermo`'s VDWMIX."""
+class VDWMIXKij(VDWMIX):  # type: ignore[misc]
+    """thermo's VDWMIX with k_ij-consistent fugacity coefficients.
 
-    eos = VDWMIX
+    thermo's ``VDWMIX.fugacity_coefficients`` (VDW_lnphis, Walas 1985) uses
+    ``2 sqrt(a a_i)`` for the attraction derivative, exact only when every
+    k_ij = 0, while the mixture ``a`` it sits on does carry the k_ij. The
+    general van der Waals one-fluid result (Walas 1985 eq. 1.149 form;
+    Michelsen & Mollerup 2007 ch. 4) is
+
+        ln phi_i = b_i/(V - b) - ln[Z (1 - b/V)] - 2 sum_j x_j a_ij / (R T V)
+
+    which reduces to thermo's form at k_ij = 0. Measured 2026-11-04 on
+    C1/CO2 (k_ij 0.09) at 250 K, 2 MPa: thermo's ln phi_CO2 -0.1300 vs the
+    consistent -0.1181; the Gibbs-Duhem L0 loop measured 0.24.
+    """
+
+    def fugacity_coefficients(self, Z: float) -> list[float]:
+        T, b = self.T, self.b
+        V = Z * _R * T / self.P
+        rows = self.a_alpha_j_rows
+        common = -math.log(Z * (1.0 - b / V))
+        rtv = _R * T * V
+        return [bi / (V - b) + common - 2.0 * row / rtv for bi, row in zip(self.bs, rows, strict=True)]
+
+
+class VanDerWaalsThermo(OptionCubicEOS):
+    """van der Waals (1873) over :class:`VDWMIXKij` (thermo's VDWMIX, k_ij-consistent ln phi)."""
+
+    eos = VDWMIXKij
 
 
 class PrsvThermo(OptionCubicEOS):

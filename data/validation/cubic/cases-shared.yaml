@@ -1,0 +1,250 @@
+# Shared cubic-option reference cases (val-cubic-mixing, 2026-11-04).
+# `package:` lists: one cited point binds several rows. Pure and C1/C3, C1/CO2 entries are
+# programmatic copies of the root data/validation/cases.yaml cases of the same name (CoolProp 8.0.0
+# machine-generated pure values; Reamer 1950 / Legoix 2017 binary points with their citations),
+# never hand-typed. TEG/water points are parsed from the retrieved NIST ThermoML XML of
+# Mostafazadeh et al. 2009 (published after the Gironi 2007 k12(T) fit the glycol_pr row uses).
+# Tolerances: the fixed TOLERANCE_POLICY of scripts/validate_properties.py.
+pure_cases:
+- id: cubicopt-pure-C1-125K
+  fluid: C1
+  coolprop_fluid: CH4
+  package: &id001
+  - pr-rackett
+  - srk-rackett
+  - pr-costald
+  - srk-costald
+  - pr-free-water
+  - kabadi-danner-free-water
+  - glycol_pr
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+- id: cubicopt-pure-C3-300K
+  fluid: C3
+  coolprop_fluid: Propane
+  package: *id001
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 300.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 997682.6201918732
+    dew_P: 997682.6201918732
+    rho_V: 21.629532018462196
+    rho_L: 489.44737525195876
+    Cp: 120.80473982443137
+- id: cubicopt-pure-nC4-280K
+  fluid: nC4
+  coolprop_fluid: n-Butane
+  package: *id001
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+- id: cubicopt-pure-CO2-265K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package: *id001
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+binary_cases:
+- id: cubicopt-c1c3-294.26K-6.895MPa
+  package: *id001
+  components:
+  - C1
+  - C3
+  z:
+    C1: 0.3707
+    C3: 0.6293
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected:
+    bubble_P: 6895000.0
+    vapor_comp:
+      C1: 0.7497
+- id: cubicopt-c1co2-277.15K-5.97MPa
+  package: *id001
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.0817
+    CO2: 0.9183
+  T: 277.15
+  source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
+  expected:
+    bubble_P: 5970000.0
+- id: teg-h2o-85kPa-xw0.117
+  package:
+  - glycol_pr
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.117
+    TEG: 0.883
+  P: 85000.0
+  source: literature:Mostafazadeh, Rahimpour & Shariati (2009) Vapor-Liquid Equilibria of Water + Triethylene Glycol (TEG) and Water + TEG + Toluene at 85 kPa, J. Chem. Eng. Data 54(3), 876-881, doi:10.1021/je800675u;
+    NIST TRC ThermoML file 10.1021/je800675u.xml, data sets 1 (boiling T vs x_water) and 2 (y_water vs x_water) at 85 kPa; retrieved 2026-11-04
+  expected:
+    bubble_T: 421.25
+    vapor_comp:
+      H2O: 0.9829
+- id: teg-h2o-85kPa-xw0.161
+  package:
+  - glycol_pr
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.161
+    TEG: 0.839
+  P: 85000.0
+  source: literature:Mostafazadeh, Rahimpour & Shariati (2009) Vapor-Liquid Equilibria of Water + Triethylene Glycol (TEG) and Water + TEG + Toluene at 85 kPa, J. Chem. Eng. Data 54(3), 876-881, doi:10.1021/je800675u;
+    NIST TRC ThermoML file 10.1021/je800675u.xml, data sets 1 (boiling T vs x_water) and 2 (y_water vs x_water) at 85 kPa; retrieved 2026-11-04
+  expected:
+    bubble_T: 416.25
+    vapor_comp:
+      H2O: 0.9833
+- id: teg-h2o-85kPa-xw0.242
+  package:
+  - glycol_pr
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.242
+    TEG: 0.758
+  P: 85000.0
+  source: literature:Mostafazadeh, Rahimpour & Shariati (2009) Vapor-Liquid Equilibria of Water + Triethylene Glycol (TEG) and Water + TEG + Toluene at 85 kPa, J. Chem. Eng. Data 54(3), 876-881, doi:10.1021/je800675u;
+    NIST TRC ThermoML file 10.1021/je800675u.xml, data sets 1 (boiling T vs x_water) and 2 (y_water vs x_water) at 85 kPa; retrieved 2026-11-04
+  expected:
+    bubble_T: 413.25
+    vapor_comp:
+      H2O: 0.993
+- id: teg-h2o-85kPa-xw0.325
+  package:
+  - glycol_pr
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.325
+    TEG: 0.675
+  P: 85000.0
+  source: literature:Mostafazadeh, Rahimpour & Shariati (2009) Vapor-Liquid Equilibria of Water + Triethylene Glycol (TEG) and Water + TEG + Toluene at 85 kPa, J. Chem. Eng. Data 54(3), 876-881, doi:10.1021/je800675u;
+    NIST TRC ThermoML file 10.1021/je800675u.xml, data sets 1 (boiling T vs x_water) and 2 (y_water vs x_water) at 85 kPa; retrieved 2026-11-04
+  expected:
+    bubble_T: 403.95
+    vapor_comp:
+      H2O: 0.9965
+- id: teg-h2o-85kPa-xw0.41
+  package:
+  - glycol_pr
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.41
+    TEG: 0.59
+  P: 85000.0
+  source: literature:Mostafazadeh, Rahimpour & Shariati (2009) Vapor-Liquid Equilibria of Water + Triethylene Glycol (TEG) and Water + TEG + Toluene at 85 kPa, J. Chem. Eng. Data 54(3), 876-881, doi:10.1021/je800675u;
+    NIST TRC ThermoML file 10.1021/je800675u.xml, data sets 1 (boiling T vs x_water) and 2 (y_water vs x_water) at 85 kPa; retrieved 2026-11-04
+  expected:
+    bubble_T: 397.95
+    vapor_comp:
+      H2O: 0.998
+- id: teg-h2o-85kPa-xw0.543
+  package:
+  - glycol_pr
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.543
+    TEG: 0.457
+  P: 85000.0
+  source: literature:Mostafazadeh, Rahimpour & Shariati (2009) Vapor-Liquid Equilibria of Water + Triethylene Glycol (TEG) and Water + TEG + Toluene at 85 kPa, J. Chem. Eng. Data 54(3), 876-881, doi:10.1021/je800675u;
+    NIST TRC ThermoML file 10.1021/je800675u.xml, data sets 1 (boiling T vs x_water) and 2 (y_water vs x_water) at 85 kPa; retrieved 2026-11-04
+  expected:
+    bubble_T: 390.45
+    vapor_comp:
+      H2O: 0.9992
+- id: teg-h2o-85kPa-xw0.704
+  package:
+  - glycol_pr
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.704
+    TEG: 0.296
+  P: 85000.0
+  source: literature:Mostafazadeh, Rahimpour & Shariati (2009) Vapor-Liquid Equilibria of Water + Triethylene Glycol (TEG) and Water + TEG + Toluene at 85 kPa, J. Chem. Eng. Data 54(3), 876-881, doi:10.1021/je800675u;
+    NIST TRC ThermoML file 10.1021/je800675u.xml, data sets 1 (boiling T vs x_water) and 2 (y_water vs x_water) at 85 kPa; retrieved 2026-11-04
+  expected:
+    bubble_T: 380.15
+    vapor_comp:
+      H2O: 0.9997
+- id: teg-h2o-85kPa-xw0.826
+  package:
+  - glycol_pr
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.826
+    TEG: 0.174
+  P: 85000.0
+  source: literature:Mostafazadeh, Rahimpour & Shariati (2009) Vapor-Liquid Equilibria of Water + Triethylene Glycol (TEG) and Water + TEG + Toluene at 85 kPa, J. Chem. Eng. Data 54(3), 876-881, doi:10.1021/je800675u;
+    NIST TRC ThermoML file 10.1021/je800675u.xml, data sets 1 (boiling T vs x_water) and 2 (y_water vs x_water) at 85 kPa; retrieved 2026-11-04
+  expected:
+    bubble_T: 374.95
+    vapor_comp:
+      H2O: 0.9998
+- id: teg-h2o-85kPa-xw0.915
+  package:
+  - glycol_pr
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.915
+    TEG: 0.085
+  P: 85000.0
+  source: literature:Mostafazadeh, Rahimpour & Shariati (2009) Vapor-Liquid Equilibria of Water + Triethylene Glycol (TEG) and Water + TEG + Toluene at 85 kPa, J. Chem. Eng. Data 54(3), 876-881, doi:10.1021/je800675u;
+    NIST TRC ThermoML file 10.1021/je800675u.xml, data sets 1 (boiling T vs x_water) and 2 (y_water vs x_water) at 85 kPa; retrieved 2026-11-04
+  expected:
+    bubble_T: 371.55
+    vapor_comp:
+      H2O: 0.9999

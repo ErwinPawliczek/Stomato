@@ -128,6 +128,23 @@ def test_boston_mathias_matches_default_below_tc_and_decays_above() -> None:
         assert a_bm < a_def  # measured 0.446 vs 0.485 at 600 K; 0.180 vs 0.244 at 1000 K
 
 
+def test_boston_mathias_first_derivative_continuous_at_tc() -> None:
+    """BM matches the Soave alpha's value and T-slope at Tc (c = m/d, d = 1 + m/2).
+
+    Regression (2026-11-04): the exponent coefficient read m/d^2, giving a
+    slope kink at Tc (d alpha/dTr = -m/d instead of -m). Form: Boston & Mathias
+    (1980), as quoted by pychemqt lib.EoS.Cubic.PR and the SigmaMu
+    alpha-extension docs, which both state first-derivative continuity.
+    """
+    pr_bm = _pkg("pr-boston-mathias")
+    eos = pr_bm._flasher({"C3": 1.0}).gas.eos_mix
+    tc = eos.Tcs[0]
+    below = eos.a_alpha_and_derivatives(tc * (1.0 - 1e-9))
+    above = eos.a_alpha_and_derivatives(tc * (1.0 + 1e-9))
+    assert above[0] == pytest.approx(below[0], rel=1e-7)
+    assert above[1] == pytest.approx(below[1], rel=1e-6)
+
+
 def test_twu_generalised_matches_thermo_reference() -> None:
     """The in-house generalised Twu fallback reproduces thermo's TwuPR95 exactly."""
     lib: Any = TwuPR95_a_alpha.__new__(TwuPR95_a_alpha)
@@ -198,3 +215,26 @@ def test_sour_speciation_is_not_fully_ionised_regression() -> None:
     """
     xm = cubic._sour_molecular_fractions([0.98, 0.02], 0, ((1, 7.00),))
     assert xm[1] == pytest.approx(0.02, rel=1e-3)  # only ~0.03 % ionised at 298 K
+
+
+def test_vdw_lnphi_consistent_with_kij() -> None:
+    """VDWMIXKij ln phi equals thermo's generic GCEOSMIX form with nonzero k_ij.
+
+    Regression (2026-11-04): thermo's VDWMIX.fugacity_coefficients uses 2 sqrt(a a_i),
+    exact only at k_ij = 0 (C1/CO2 k_ij 0.09: ln phi_CO2 -0.1300 vs -0.1181).
+    """
+    from thermo.eos_mix import GCEOSMIX
+
+    e = cubic.VDWMIXKij(
+        Tcs=[190.564, 304.13],
+        Pcs=[4.599e6, 7.3773e6],
+        omegas=[0.011, 0.225],
+        zs=[0.7, 0.3],
+        kijs=[[0.0, 0.09], [0.09, 0.0]],
+        T=250.0,
+        P=2.0e6,
+    )
+    ours = e.fugacity_coefficients(e.Z_g)
+    generic = GCEOSMIX.fugacity_coefficients(e, e.Z_g)
+    for a, b in zip(ours, generic, strict=True):
+        assert a == pytest.approx(b, rel=1e-10)

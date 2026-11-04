@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import math
 
+from thermo.eos_mix import GCEOSMIX
+
 from ngdesign.thermo.cubic import TSTMIX
 
 T = 300.0
@@ -155,3 +157,43 @@ def test_gibbs_duhem_consistency_of_fugacities() -> None:
         col = [(a1[i] - a0[i]) / (2.0 * h) for i in range(2)]
         residual = sum(zs * d for zs, d in zip(ZS, col, strict=True))
         assert abs(residual) < 1.0e-3, (j, residual, col)
+
+
+def test_liquid_lnphi_matches_generic_cubic_form() -> None:
+    """TST ln phi equals thermo's generic delta/epsilon mixture form on the liquid root.
+
+    Regression (2026-11-04): the log term used sqrt(8.5) B instead of
+    sqrt(delta^2 - 4 epsilon) = 3.5 B, so liquid ln phi was off by 0.05-0.12
+    for C1/C3 at 250 K, 2 MPa (the vapour-root FD test above hid it inside its
+    5e-3 band). The generic GCEOSMIX form reads the overridden derivative
+    properties and the re-pinned delta/epsilon, an independent route.
+    """
+    e = TSTMIX(
+        Tcs=[190.564, 369.83],
+        Pcs=[4.599e6, 4.248e6],
+        omegas=[0.011, 0.152],
+        zs=[0.6, 0.4],
+        alpha_coeffs=[None, None],
+        T=250.0,
+        P=2.0e6,
+    )
+    assert hasattr(e, "Z_l")
+    ours = e.fugacity_coefficients(e.Z_l)
+    generic = GCEOSMIX.fugacity_coefficients(e, e.Z_l)
+    for a, b in zip(ours, generic, strict=True):
+        assert math.isclose(a, b, rel_tol=1e-10, abs_tol=1e-12)
+
+
+def test_fast_clone_keeps_tst_repulsive_term() -> None:
+    """to_TP_zs_fast (thermo's per-phase flash clone) must keep delta=2.5b, epsilon=-1.5b^2.
+
+    Regression (2026-11-04): PRMIX._fast_init_specific reset them to the PR
+    values, so every flashed TST phase solved PR volume roots.
+    """
+    e = _build(ZS)
+    for t in (T, 280.0):  # same-T clones share the alphas; other-T clones re-evaluate them
+        clone = e.to_TP_zs_fast(T=t, P=2.0e6, zs=[0.4, 0.6])
+        assert math.isclose(clone.delta, 2.5 * clone.b, rel_tol=1e-14)
+        assert math.isclose(clone.epsilon, -1.5 * clone.b * clone.b, rel_tol=1e-14)
+        ref = _build([0.4, 0.6], t=t, p=2.0e6)
+        assert math.isclose(clone.a_alpha, ref.a_alpha, rel_tol=1e-12)
