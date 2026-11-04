@@ -523,7 +523,7 @@
   balance: mass_elements
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.refining.reactors_hdt:NaphthaHydrotreater
       params:
         type: object
@@ -584,7 +584,7 @@
   balance: mass_elements
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.refining.reactors_reformer:CatalyticReformer
       params:
         type: object
@@ -825,7 +825,7 @@
   balance: mass_elements
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.refining.reactors_coker:DelayedCoker
       params:
         type: object

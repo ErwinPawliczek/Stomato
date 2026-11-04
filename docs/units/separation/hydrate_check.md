@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `HC`
 
-Rigour ladder: R0 provisional, R1 provisional
+Rigour ladder: R0 validated, R1 provisional
 
 ## Ports
 
@@ -16,7 +16,7 @@ Rigour ladder: R0 provisional, R1 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.separation.hydrate_check:HydrateCheck` | adiabatic PH mix; hydrate_T from hammerschmidt_formation at the mixed P, dose from nielsen_bucklin_suppression at the operating T; the required inhibitor rate covers the aqueous phase only — GPSA's vapour and hydrocarbon-liquid methanol losses are excluded at R0 |
+| R0 | validated | `ngdesign.units.separation.hydrate_check:HydrateCheck` | adiabatic PH mix; hydrate_T from hammerschmidt_formation at the mixed P, dose from nielsen_bucklin_suppression at the operating T; the required inhibitor rate covers the aqueous phase only — GPSA's vapour and hydrocarbon-liquid methanol losses are excluded at R0 |
 | R1 | provisional | `ngdesign.units.separation.hydrate_check_r1:HydrateCheckR1` | selectable hydrate T — Katz gas gravity (Towler-Mokhatab 2005 fit, enforced validity range 0.55 < gamma < 1.0, 1200-40000 kPa) or R0's Hammerschmidt; outlet, duty and dose bisection unchanged from R0; the vdWP route is out of scope because no thermo hydrate model exists |
 
 ### R0 parameters

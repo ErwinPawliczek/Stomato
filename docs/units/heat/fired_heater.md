@@ -2,7 +2,7 @@
 
 Family: **heat** · P&ID symbol: `FH`
 
-Rigour ladder: R0 provisional, R1 provisional
+Rigour ladder: R0 validated, R1 provisional
 
 ## Ports
 
@@ -15,7 +15,7 @@ Rigour ladder: R0 provisional, R1 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.heat.fired_heater:FiredHeater` | process duty from a T_out/duty_W spec; fuel demand from the mixture LHV with water as vapour |
+| R0 | validated | `ngdesign.units.heat.fired_heater:FiredHeater` | process duty from a T_out/duty_W spec; fuel demand from the mixture LHV with water as vapour |
 | R1 | provisional | `ngdesign.units.heat.fired_heater_r1:FiredHeaterR1` | radiant/convective split (Lobo-Evans) with the fuel and flue-gas balance solved; bridgewall, stack and crossover temperatures reported |
 
 ### R0 parameters

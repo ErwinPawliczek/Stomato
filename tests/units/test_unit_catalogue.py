@@ -90,7 +90,9 @@ def test_validated_levels_carry_validation_ids(rows: dict[str, UnitRow]) -> None
                 continue
             assert spec.validation, f"{row.id}/{level}: validated without validation cases"
             for case_id in spec.validation:
-                assert _VALIDATION_ID_RE.fullmatch(case_id), (
+                # U-R2 conventions: case ids match `V\d+-...` (e.g. V1-kremser-absorber-seader53),
+                # the same prefix rule the catalogue loader enforces.
+                assert _VALIDATION_ID_RE.match(case_id), (
                     f"{row.id}/{level}: validation id {case_id!r} is not V-prefixed"
                 )
 

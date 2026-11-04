@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `HT`
 
-Rigour ladder: R0 provisional, R1 provisional
+Rigour ladder: R0 validated, R1 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R1 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.refining.reactors_hdt:NaphthaHydrotreater` | Fahim E12.2 model-compound stoichiometry (thiophene HDS, pyridine HDN, olefin/aromatic saturation) with declared removal fractions; duty sensible-only |
+| R0 | validated | `ngdesign.units.refining.reactors_hdt:NaphthaHydrotreater` | Fahim E12.2 model-compound stoichiometry (thiophene HDS, pyridine HDN, olefin/aromatic saturation) with declared removal fractions; duty sensible-only |
 | R1 | provisional | `ngdesign.units.refining.hdt_kinetic:NaphthaHydrotreaterR1` | model-compound HDS, HDN and saturation kinetics in catalyst beds on the pfr integrator; real model compounds only, the kinetics are required user inputs |
 
 ### R0 parameters

@@ -2,7 +2,7 @@
 
 Family: **column** · P&ID symbol: `T`
 
-Rigour ladder: R0 provisional, R2 provisional, R3 provisional
+Rigour ladder: R0 validated, R2 provisional, R3 provisional
 
 ## Ports
 
@@ -16,7 +16,7 @@ Rigour ladder: R0 provisional, R2 provisional, R3 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.column_shortcut.stripper:ReboiledStripper` | Kremser on the stripping side |
+| R0 | validated | `ngdesign.units.column_shortcut.stripper:ReboiledStripper` | Kremser on the stripping side |
 | R2 | provisional | `ngdesign.units.column_shortcut.reboiled_stripper_r2:ReboiledStripperR2` | one-tear MESH (kettle only) via the column API; specs met to the column's _SPEC_TOL — the loose column-core spec gate (tracked as issue 248; rate-spec convergence there is a core defect; reboiler_duty_W refused — the kettle-only core hits a singular Newton system for it). The nC4/nC5 bench feed is withdrawn per the PR 292 ruling — the kettle-only column core does not converge on it (tracked as issue 248). The component_recovery 0.9 NC4 case on the C1/NC4 anchor feed is infeasible on this core (residual stuck ~7.5e-3, above the spec gate) and is pinned xfail(strict=True) in the test file. |
 | R3 | provisional | `ngdesign.units.column.rate_based_units:ReboiledStripperR3` | rate-based (Krishna-Taylor) packed segments over an equilibrium kettle, solved simultaneously with the kettle spec (reboiler_duty_W included); same transport models as the absorber R3; reduces to R2 as transfer_factor grows (measured 7e-7 relative on the overhead at 1e4 against R2 at R2's achieved boilup). Random packing only (tray coefficients not adopted - constants unconfirmed) |
 

@@ -2,7 +2,7 @@
 
 Family: **column** · P&ID symbol: `T`
 
-Rigour ladder: R0 provisional, R2 provisional, R3 provisional
+Rigour ladder: R0 validated, R2 provisional, R3 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 provisional, R3 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.column_shortcut.absorber:Absorber` | Kremser stage count (the kremser correlation plugin exists in sizing); two-feed split lets lean-solvent components strip |
+| R0 | validated | `ngdesign.units.column_shortcut.absorber:Absorber` | Kremser stage count (the kremser correlation plugin exists in sizing); two-feed split lets lean-solvent components strip |
 | R2 | provisional | `ngdesign.units.column_shortcut.absorber_r2:AbsorberR2` | zero-tear MESH via the column API (inside-out + NS fallback); duty_W = boundary energy residual |
 | R3 | provisional | `ngdesign.units.column.rate_based_units:AbsorberR3` | rate-based (Krishna-Taylor) packed segments - separate vapour/liquid balances, interface equilibrium from the package fugacity coefficients, effective-diffusivity film fluxes with Onda (1968) random-packing kG, kL and wetted area, Chapman-Enskog and Wilke-Chang diffusivities, Chilton-Colburn/penetration heat transfer; reduces to R2 as transfer_factor grows (measured 5.6e-7 max outlet deviation at 1e4); duty_W = boundary energy residual. Random packing only - sieve-tray (AIChE 1958, Chan-Fair 1984) coefficients were not adopted because their constants could not be confirmed from a fetched source |
 

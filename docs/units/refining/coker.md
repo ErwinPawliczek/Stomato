@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `CK`
 
-Rigour ladder: R0 provisional
+Rigour ladder: R0 validated
 
 ## Ports
 
@@ -19,7 +19,7 @@ Rigour ladder: R0 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.refining.reactors_coker:DelayedCoker` | Gary–Handwerk mass yields vs feed CCR (Table 5.5, p. 104); duty sensible-only (flag heat_of_reaction_basis_sensible_only) |
+| R0 | validated | `ngdesign.units.refining.reactors_coker:DelayedCoker` | Gary–Handwerk mass yields vs feed CCR (Table 5.5, p. 104); duty sensible-only (flag heat_of_reaction_basis_sensible_only) |
 
 ### R0 parameters
 

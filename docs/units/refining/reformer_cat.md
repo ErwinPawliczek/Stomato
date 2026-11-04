@@ -2,7 +2,7 @@
 
 Family: **refining** · P&ID symbol: `RF`
 
-Rigour ladder: R0 provisional, R1 provisional
+Rigour ladder: R0 validated, R1 provisional
 
 ## Ports
 
@@ -16,7 +16,7 @@ Rigour ladder: R0 provisional, R1 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.refining.reactors_reformer:CatalyticReformer` | Fahim Table 5.3 lumped yields vs reformate RON; duty sensible-only (flag heat_of_reaction_basis_sensible_only) |
+| R0 | validated | `ngdesign.units.refining.reactors_reformer:CatalyticReformer` | Fahim Table 5.3 lumped yields vs reformate RON; duty sensible-only (flag heat_of_reaction_basis_sensible_only) |
 | R1 | provisional | `ngdesign.units.refining.reformer_kinetic:CatalyticReformerR1` | Smith (1959) four-reaction scheme on representative C7 species in adiabatic beds with interheaters, on the pfr integrator; the constants are required inputs |
 
 ### R0 parameters

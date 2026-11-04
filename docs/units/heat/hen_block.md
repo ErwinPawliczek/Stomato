@@ -2,7 +2,7 @@
 
 Family: **heat** · P&ID symbol: `HEN`
 
-Rigour ladder: R0 provisional
+Rigour ladder: R0 validated
 
 ## Ports
 
@@ -21,7 +21,7 @@ Rigour ladder: R0 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.heat.hen_block:HenBlock` | every active stream reaches its T_out target; the Linnhoff problem table (on package-derived or cp_*-overridden CPs) reports utility targets QH_min/QC_min and the pinch (no utilities are added) |
+| R0 | validated | `ngdesign.units.heat.hen_block:HenBlock` | every active stream reaches its T_out target; the Linnhoff problem table (on package-derived or cp_*-overridden CPs) reports utility targets QH_min/QC_min and the pinch (no utilities are added) |
 
 ### R0 parameters
 

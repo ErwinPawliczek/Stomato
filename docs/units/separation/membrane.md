@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `M`
 
-Rigour ladder: R0 provisional, R1 provisional, R2 provisional
+Rigour ladder: R0 validated, R1 provisional, R2 provisional
 
 ## Ports
 
@@ -16,7 +16,7 @@ Rigour ladder: R0 provisional, R1 provisional, R2 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.separation.membrane:Membrane` | exactly one of permeate_recovery (any components) and stage_cut with perm_ratio (binary Weller-Steiner complete mixing); the permeate leaves at P_permeate, the residue at P_in. Evidence gap — the stage-cut model is validated against Geankoplis Ex. 13.4-2 (air, y_O2 = 0.5068, reject x_O2 = 0.1345); the permeate_recovery path is a spec split with V0 self-consistency only. |
+| R0 | validated | `ngdesign.units.separation.membrane:Membrane` | exactly one of permeate_recovery (any components) and stage_cut with perm_ratio (binary Weller-Steiner complete mixing); the permeate leaves at P_permeate, the residue at P_in. Evidence gap — the stage-cut model is validated against Geankoplis Ex. 13.4-2 (air, y_O2 = 0.5068, reject x_O2 = 0.1345); the permeate_recovery path is a spec split with V0 self-consistency only. |
 | R1 | provisional | `ngdesign.units.separation.membrane_r1:MembraneR1` | solution-diffusion with permeances, cross-flow (Weller-Steiner 1950, Pan 1983) with the local permeate y_i = J_i/ΣJ from a bracketed brentq (closed form at P_l = 0) and the feed side dn_i/da = -J_i integrated DOP853 at rtol 1e-11; stage-cut mode by a terminal event with the A_hard cap; isothermal outlets via split_by_component as in R0. |
 | R2 | provisional | `ngdesign.units.separation.membrane_r2:MembraneR2` | counter-current module, Pan 1983 shooting on the residue flows (scipy root hybr, tol 1e-12) with the permeate plug flow dp_i/da = -J_i toward the feed end, the M2 switch at Sum(p) <= 1e-12 F, and design mode by brentq on theta_R2(A) - theta over [0, A_R1(theta)]; outlets as in R0/R1. |
 

@@ -2,7 +2,7 @@
 
 Family: **column** · P&ID symbol: `X`
 
-Rigour ladder: R0 provisional, R2 provisional
+Rigour ladder: R0 validated, R2 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R2 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.column_shortcut.extractor:LiquidLiquidExtractor` | stage count from Kremser; nonsolutes immiscible at R0 (each stays with its inlet phase) |
+| R0 | validated | `ngdesign.units.column_shortcut.extractor:LiquidLiquidExtractor` | stage count from Kremser; nonsolutes immiscible at R0 (each stays with its inlet phase) |
 | R2 | provisional | `ngdesign.units.column_shortcut.extractor_r2:ExtractorR2` | LLE stages by the isothermal sum-rates method with tie lines from the package flash; isothermal, duty_W holds T |
 
 ### R0 parameters
