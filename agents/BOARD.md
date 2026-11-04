@@ -20,7 +20,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only) | Obvious | accepted (PR #345; CAS check digits + chemdb species.csv match; merge waits for full suite) | obv/T9 | 2026-11-04 1:38 PM |
 | T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T3 P-value fix | Obvious | accepted w/ fix → T10b (PR #346; tolerances unchanged, skips visible, T3 fix in; tests/validation 290 passed/353 skipped/320 xfailed/0 failed on PC) | obv/T10 | 2026-11-04 1:38 PM |
 | T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | claimed — STALE (claimed 12:47, no obv/T11 push or heartbeat in 55 min) | obv/T11 | 2026-11-04 1:42 PM |
-| T10b | Fix-up on PR #346: skipped cases must still pass citation/schema checks; add retrieval dates to the 9 T3 sources (from data.csv) | Obvious | open (dispatched 1:36 PM) | obv/T10 | 2026-11-04 1:38 PM |
+| T10b | Fix-up on PR #346: skipped cases must still pass citation/schema checks; add retrieval dates to the 9 T3 sources (from data.csv) | Obvious | claimed | obv/T10 | 2026-11-04 1:40 PM |
 | T8r | Re-dispatch of T8: reformer_cat (#329) + control_valve (#282) case files → one PR into chem-engine, branch obv/T8r cut from origin/chem-engine | Obvious | open — REDUNDANT with PR #347; needs a cancel decision (no obv/T8r push yet) | obv/T8r | 2026-11-04 1:42 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
 
