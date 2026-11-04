@@ -441,14 +441,14 @@
     "*": >-
       RK's databank-anchored alpha overpredicts the 293.15 K slice dew pressure ~16x versus the modern-EOS band (measured 1.18e7 vs 6.2e5-7.2e5 Pa) - the documented RK crudeness recorded in l0_excluded, an EOS-accuracy difference rather than a catalogue inconsistency.
   assessed:
-    rk-c1c3-294.26K-6.895MPa: "bubble_P -7.6% (6.3692e+06 vs 6.895e+06); vapor_comp -3.3% (0.716679 vs 0.7497) - no attraction tuning (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    rk-ng-dew-morch-243.4K-0.30MPa: "dew_P +251.4% (1.05415e+06 vs 300000) - no attraction tuning (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    rk-ng-dew-morch-254.6K-0.68MPa: "dew_P +1423.5% (1.036e+07 vs 680000) - no attraction tuning (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    rk-ng-dew-morch-260.8K-1.04MPa: "dew_P +948.9% (1.09081e+07 vs 1.04e+06) - no attraction tuning (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    rk-pure-C1-125K: "Cp +52.6% (88.1237 vs 57.7411) - no attraction tuning (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    rk-pure-C3-300K: "Cp +10.0% (132.831 vs 120.805); rho_L -11.1% (435.239 vs 489.447) - no attraction tuning (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    rk-pure-CO2-265K: "Cp +5.7% (108.903 vs 103.056); rho_L -16.3% (814.293 vs 973.254); rho_V -3.9% (72.5521 vs 75.4708) - no attraction tuning (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    rk-pure-nC4-280K: "Cp +9.2% (148.75 vs 136.28); rho_L -9.3% (538.199 vs 593.294) - no attraction tuning (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
+    rk-pure-C1-125K: "Cp +52.6% (88.1237 vs 57.7411) - deliberately crude EOS (Tr^-0.5 alpha, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    rk-pure-C3-300K: "rho_L -11.1% (435.239 vs 489.447); Cp +10.0% (132.831 vs 120.805) - deliberately crude EOS (Tr^-0.5 alpha, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    rk-pure-nC4-280K: "rho_L -9.3% (538.199 vs 593.294); Cp +9.2% (148.75 vs 136.28) - deliberately crude EOS (Tr^-0.5 alpha, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    rk-pure-CO2-265K: "rho_V -3.9% (72.5521 vs 75.4708); rho_L -16.3% (814.293 vs 973.254); Cp +5.7% (108.903 vs 103.056) - deliberately crude EOS (Tr^-0.5 alpha, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    rk-c1c3-294.26K-6.895MPa: "bubble_P -7.6% (6.3692e+06 vs 6.895e+06); vapor_comp -0.033 abs (0.716679 vs 0.7497) - deliberately crude EOS (Tr^-0.5 alpha, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    rk-ng-dew-morch-243.4K-0.30MPa: "dew_P +251.4% (1.05415e+06 vs 300000) - deliberately crude EOS (Tr^-0.5 alpha, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    rk-ng-dew-morch-254.6K-0.68MPa: "dew_P +1423.5% (1.036e+07 vs 680000) - deliberately crude EOS (Tr^-0.5 alpha, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    rk-ng-dew-morch-260.8K-1.04MPa: "dew_P +948.9% (1.09081e+07 vs 1.04e+06) - deliberately crude EOS (Tr^-0.5 alpha, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
 - id: vdw
   name: van der Waals
   family: cubic
@@ -513,14 +513,14 @@
     "*": >-
       van der Waals' constant-alpha overpredicts the 293.15 K slice dew pressure ~14x versus the modern-EOS band (measured 1.02e7 vs 6.2e5-7.2e5 Pa) - the documented vdW crudeness recorded in l0_excluded.
   assessed:
-    vdw-c1c3-294.26K-6.895MPa: "bubble_P -28.3% (4.94511e+06 vs 6.895e+06); vapor_comp -16.1% (0.588384 vs 0.7497) - van der Waals attraction term (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    vdw-ng-dew-morch-243.4K-0.30MPa: "dew_P +2621.5% (8.16458e+06 vs 300000) - van der Waals attraction term (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    vdw-ng-dew-morch-254.6K-0.68MPa: "dew_P +1218.3% (8.96451e+06 vs 680000) - van der Waals attraction term (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    vdw-ng-dew-morch-260.8K-1.04MPa: "dew_P +802.8% (9.38871e+06 vs 1.04e+06) - van der Waals attraction term (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    vdw-pure-C1-125K: "Cp -26.6% (42.3955 vs 57.7411); rho_L -31.7% (274.752 vs 402.111) - van der Waals attraction term (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    vdw-pure-C3-300K: "Cp -19.5% (97.2117 vs 120.805); rho_L -38.0% (303.464 vs 489.447); rho_V -6.3% (20.2625 vs 21.6295) - van der Waals attraction term (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    vdw-pure-CO2-265K: "Cp -19.4% (83.02 vs 103.056); rho_L -41.4% (570.303 vs 973.254); rho_V -9.1% (68.5717 vs 75.4708) - van der Waals attraction term (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
-    vdw-pure-nC4-280K: "Cp -24.2% (103.265 vs 136.28); rho_L -38.1% (367.122 vs 593.294) - van der Waals attraction term (crudest EOS form): VLE and density outside bands by design (measured 2026-10-22, PR #161 table)"
+    vdw-pure-C1-125K: "rho_L -31.7% (274.752 vs 402.111); Cp -26.6% (42.3955 vs 57.7411) - deliberately crude EOS (alpha = 1, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    vdw-pure-C3-300K: "rho_V -6.3% (20.2625 vs 21.6295); rho_L -38.0% (303.464 vs 489.447); Cp -19.5% (97.2117 vs 120.805) - deliberately crude EOS (alpha = 1, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    vdw-pure-nC4-280K: "rho_L -38.1% (367.122 vs 593.294); Cp -24.2% (103.265 vs 136.28) - deliberately crude EOS (alpha = 1, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    vdw-pure-CO2-265K: "rho_V -9.1% (68.5717 vs 75.4708); rho_L -41.4% (570.303 vs 973.254); Cp -19.4% (83.02 vs 103.056) - deliberately crude EOS (alpha = 1, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    vdw-c1c3-294.26K-6.895MPa: "bubble_P -26.6% (5.05969e+06 vs 6.895e+06); vapor_comp -0.164 abs (0.585968 vs 0.7497) - deliberately crude EOS (alpha = 1, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    vdw-ng-dew-morch-243.4K-0.30MPa: "dew_P +2621.5% (8.16458e+06 vs 300000) - deliberately crude EOS (alpha = 1, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    vdw-ng-dew-morch-254.6K-0.68MPa: "dew_P +1218.3% (8.96451e+06 vs 680000) - deliberately crude EOS (alpha = 1, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
+    vdw-ng-dew-morch-260.8K-1.04MPa: "dew_P +802.8% (9.38871e+06 vs 1.04e+06) - deliberately crude EOS (alpha = 1, no acentric factor): density, Cp and VLE outside the bands by design (measured 2026-11-04, val-cubic-mixing)"
 - id: prsv
   name: Peng-Robinson-Stryjek-Vera (PRSV)
   family: cubic
@@ -551,7 +551,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - prsv-pure-C1-125K
   - prsv-pure-C3-300K
@@ -566,11 +566,11 @@
   - 'Stryjek, R.; Vera, J. H. PRSV: An Improved Peng-Robinson Equation of State for Pure Compounds
     and Mixtures. Can. J. Chem. Eng. 1986, 64 (2), 323-333 and 334-340.'
   assessed:
-    prsv-ng-dew-morch-243.4K-0.30MPa: "dew_P +37.0% (411130 vs 300000) - PRSV alpha (improved heavy ends) inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table)"
-    prsv-ng-dew-morch-254.6K-0.68MPa: "dew_P +23.3% (838245 vs 680000) - PRSV alpha (improved heavy ends) inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table)"
-    prsv-ng-dew-morch-260.8K-1.04MPa: "dew_P +20.4% (1.25191e+06 vs 1.04e+06) - PRSV alpha (improved heavy ends) inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table)"
-    prsv-pure-C1-125K: "rho_L +11.9% (449.914 vs 402.111) - PRSV alpha (improved heavy ends) inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table)"
-    prsv-pure-CO2-265K: "Cp +8.0% (111.252 vs 103.056) - PRSV alpha (improved heavy ends) inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table)"
+    prsv-pure-C1-125K: "rho_L +11.9% (449.914 vs 402.111) - host-EOS limit shared with the pr row (pr on this point: rho_L 449.652): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    prsv-pure-CO2-265K: "Cp +8.0% (111.252 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    prsv-ng-dew-morch-243.4K-0.30MPa: "dew_P +37.0% (411130 vs 300000) - host-EOS limit shared with the pr row (pr on this point: dew_P 406518): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    prsv-ng-dew-morch-254.6K-0.68MPa: "dew_P +23.3% (838245 vs 680000) - host-EOS limit shared with the pr row (pr on this point: dew_P 829096): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    prsv-ng-dew-morch-260.8K-1.04MPa: "dew_P +20.4% (1.25191e+06 vs 1.04e+06) - host-EOS limit shared with the pr row (pr on this point: dew_P 1.2378e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: prsv2
   name: Peng-Robinson-Stryjek-Vera 2 (PRSV2)
   family: cubic
@@ -601,7 +601,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - prsv2-pure-C1-125K
   - prsv2-pure-C3-300K
@@ -618,11 +618,11 @@
   - 'Stryjek, R.; Vera, J. H. PRSV: An Improved Peng-Robinson Equation of State for Pure Compounds
     and Mixtures. Can. J. Chem. Eng. 1986, 64 (2), 323-333.'
   assessed:
-    prsv2-ng-dew-morch-243.4K-0.30MPa: "dew_P +37.0% (411130 vs 300000) - PRSV2 alpha inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table)"
-    prsv2-ng-dew-morch-254.6K-0.68MPa: "dew_P +23.3% (838245 vs 680000) - PRSV2 alpha inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table)"
-    prsv2-ng-dew-morch-260.8K-1.04MPa: "dew_P +20.4% (1.25191e+06 vs 1.04e+06) - PRSV2 alpha inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table)"
-    prsv2-pure-C1-125K: "rho_L +11.9% (449.914 vs 402.111) - PRSV2 alpha inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table)"
-    prsv2-pure-CO2-265K: "Cp +8.0% (111.252 vs 103.056) - PRSV2 alpha inherits PR liquid-density and light-alkane Cp limits (measured 2026-10-22, PR #161 table)"
+    prsv2-pure-C1-125K: "rho_L +11.9% (449.914 vs 402.111) - host-EOS limit shared with the pr row (pr on this point: rho_L 449.652): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    prsv2-pure-CO2-265K: "Cp +8.0% (111.252 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    prsv2-ng-dew-morch-243.4K-0.30MPa: "dew_P +37.0% (411130 vs 300000) - host-EOS limit shared with the pr row (pr on this point: dew_P 406518): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    prsv2-ng-dew-morch-254.6K-0.68MPa: "dew_P +23.3% (838245 vs 680000) - host-EOS limit shared with the pr row (pr on this point: dew_P 829096): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    prsv2-ng-dew-morch-260.8K-1.04MPa: "dew_P +20.4% (1.25191e+06 vs 1.04e+06) - host-EOS limit shared with the pr row (pr on this point: dew_P 1.2378e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: twu-pr
   name: Peng-Robinson, Twu generalised alpha
   family: cubic
@@ -654,7 +654,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - twu-pr-pure-C1-125K
   - twu-pr-pure-C3-300K
@@ -688,11 +688,11 @@
     "sour-pr": >-
       Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~17-21% below the generalised-omega pr-family rows (measured 597284 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
   assessed:
-    twu-pr-ng-dew-morch-243.4K-0.30MPa: "dew_P +29.3% (387803 vs 300000) - Twu alpha (generalized omega correlation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    twu-pr-ng-dew-morch-254.6K-0.68MPa: "dew_P +18.0% (802379 vs 680000) - Twu alpha (generalized omega correlation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    twu-pr-ng-dew-morch-260.8K-1.04MPa: "dew_P +15.8% (1.20473e+06 vs 1.04e+06) - Twu alpha (generalized omega correlation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    twu-pr-pure-C1-125K: "rho_L +11.9% (449.803 vs 402.111) - Twu alpha (generalized omega correlation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    twu-pr-pure-CO2-265K: "Cp +8.6% (111.963 vs 103.056) - Twu alpha (generalized omega correlation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
+    twu-pr-pure-C1-125K: "rho_L +11.9% (449.803 vs 402.111) - host-EOS limit shared with the pr row (pr on this point: rho_L 449.652): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    twu-pr-pure-CO2-265K: "Cp +8.6% (111.963 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    twu-pr-ng-dew-morch-243.4K-0.30MPa: "dew_P +29.3% (387803 vs 300000) - host-EOS limit shared with the pr row (pr on this point: dew_P 406518): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    twu-pr-ng-dew-morch-254.6K-0.68MPa: "dew_P +18.0% (802379 vs 680000) - host-EOS limit shared with the pr row (pr on this point: dew_P 829096): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    twu-pr-ng-dew-morch-260.8K-1.04MPa: "dew_P +15.8% (1.20473e+06 vs 1.04e+06) - host-EOS limit shared with the pr row (pr on this point: dew_P 1.2378e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: twu-srk
   name: Soave-Redlich-Kwong, Twu generalised alpha
   family: cubic
@@ -724,7 +724,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - twu-srk-pure-C1-125K
   - twu-srk-pure-C3-300K
@@ -758,11 +758,11 @@
     "sour-pr": >-
       Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~20-21% below the generalised-omega pr-family rows (measured 596571 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
   assessed:
-    twu-srk-ng-dew-morch-243.4K-0.30MPa: "dew_P +28.7% (386167 vs 300000) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    twu-srk-ng-dew-morch-254.6K-0.68MPa: "dew_P +16.7% (793289 vs 680000) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    twu-srk-ng-dew-morch-260.8K-1.04MPa: "dew_P +13.6% (1.18184e+06 vs 1.04e+06) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    twu-srk-pure-C3-300K: "rho_L -8.3% (448.891 vs 489.447) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    twu-srk-pure-CO2-265K: "Cp +8.6% (111.892 vs 103.056); rho_L -11.6% (859.886 vs 973.254) - Twu alpha (generalized omega correlation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
+    twu-srk-pure-C3-300K: "rho_L -8.3% (448.891 vs 489.447) - host-EOS limit shared with the srk row (srk on this point: rho_L 448.204): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    twu-srk-pure-CO2-265K: "rho_L -11.6% (859.886 vs 973.254); Cp +8.6% (111.892 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671, rho_L 857.989): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    twu-srk-ng-dew-morch-243.4K-0.30MPa: "dew_P +28.7% (386167 vs 300000) - host-EOS limit shared with the srk row (srk on this point: dew_P 377792): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    twu-srk-ng-dew-morch-254.6K-0.68MPa: "dew_P +16.7% (793289 vs 680000) - host-EOS limit shared with the srk row (srk on this point: dew_P 774165): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    twu-srk-ng-dew-morch-260.8K-1.04MPa: "dew_P +13.6% (1.18184e+06 vs 1.04e+06) - host-EOS limit shared with the srk row (srk on this point: dew_P 1.15189e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: api-srk
   name: API Soave-Redlich-Kwong
   family: cubic
@@ -793,7 +793,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - api-srk-pure-C1-125K
   - api-srk-pure-C3-300K
@@ -810,13 +810,13 @@
   - Soave, G. Equilibrium Constants from a Modified Redlich-Kwong Equation of State. Chem. Eng. Sci.
     1972, 27 (6), 1197-1203.
   assessed:
-    api-srk-c1co2-277.15K-5.97MPa: "bubble_P -3.2% (5.77937e+06 vs 5.97e+06) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table)"
-    api-srk-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.5% (376555 vs 300000) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table)"
-    api-srk-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.5% (771741 vs 680000) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table)"
-    api-srk-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.4% (1.14824e+06 vs 1.04e+06) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table)"
-    api-srk-pure-C1-125K: "Cp +7.3% (61.9476 vs 57.7411) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table)"
-    api-srk-pure-C3-300K: "Cp +6.8% (129.067 vs 120.805); rho_L -8.4% (448.355 vs 489.447) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table)"
-    api-srk-pure-CO2-265K: "Cp +12.3% (115.742 vs 103.056); rho_L -11.8% (858.135 vs 973.254) - API kappa correlation on SRK: light-component Cp and VLE limits of the SRK form (measured 2026-10-22, PR #161 table)"
+    api-srk-pure-C1-125K: "Cp +7.3% (61.9476 vs 57.7411) - host-EOS limit shared with the srk row (srk on this point: Cp 61.7209): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    api-srk-pure-C3-300K: "rho_L -8.4% (448.355 vs 489.447); Cp +6.8% (129.067 vs 120.805) - host-EOS limit shared with the srk row (srk on this point: Cp 128.942, rho_L 448.204): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    api-srk-pure-CO2-265K: "rho_L -11.8% (858.135 vs 973.254); Cp +12.3% (115.742 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671, rho_L 857.989): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    api-srk-c1co2-277.15K-5.97MPa: "bubble_P -3.2% (5.77937e+06 vs 5.97e+06) - host-EOS limit shared with the srk row (srk on this point: bubble_P 5.77391e+06): bubble pressure (measured 2026-11-04, val-cubic-mixing)"
+    api-srk-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.5% (376555 vs 300000) - host-EOS limit shared with the srk row (srk on this point: dew_P 377792): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    api-srk-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.5% (771741 vs 680000) - host-EOS limit shared with the srk row (srk on this point: dew_P 774165): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    api-srk-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.4% (1.14824e+06 vs 1.04e+06) - host-EOS limit shared with the srk row (srk on this point: dew_P 1.15189e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: pr-boston-mathias
   name: Peng-Robinson, Boston-Mathias alpha
   family: cubic
@@ -848,7 +848,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - pr-boston-mathias-pure-C1-125K
   - pr-boston-mathias-pure-C3-300K
@@ -868,13 +868,11 @@
   - Soave, G. Equilibrium Constants from a Modified Redlich-Kwong Equation of State. Chem. Eng. Sci.
     1972, 27 (6), 1197-1203.
   assessed:
-    pr-boston-mathias-c1c3-294.26K-6.895MPa: "bubble_P -3.2% (6.67541e+06 vs 6.895e+06) - Boston-Mathias alpha (finite supercritical continuation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-boston-mathias-c1co2-277.15K-5.97MPa: "bubble_P -3.7% (5.7503e+06 vs 5.97e+06) - Boston-Mathias alpha (finite supercritical continuation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-boston-mathias-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406384 vs 300000) - Boston-Mathias alpha (finite supercritical continuation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-boston-mathias-ng-dew-morch-254.6K-0.68MPa: "dew_P +21.9% (828676 vs 680000) - Boston-Mathias alpha (finite supercritical continuation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-boston-mathias-ng-dew-morch-260.8K-1.04MPa: "dew_P +18.9% (1.23705e+06 vs 1.04e+06) - Boston-Mathias alpha (finite supercritical continuation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-boston-mathias-pure-C1-125K: "rho_L +11.8% (449.652 vs 402.111) - Boston-Mathias alpha (finite supercritical continuation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-boston-mathias-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - Boston-Mathias alpha (finite supercritical continuation) inherits PR property limits (measured 2026-10-22, PR #161 table)"
+    pr-boston-mathias-pure-C1-125K: "rho_L +11.8% (449.652 vs 402.111) - host-EOS limit shared with the pr row (pr on this point: rho_L 449.652): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    pr-boston-mathias-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    pr-boston-mathias-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406590 vs 300000) - host-EOS limit shared with the pr row (pr on this point: dew_P 406518): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    pr-boston-mathias-ng-dew-morch-254.6K-0.68MPa: "dew_P +22.0% (829378 vs 680000) - host-EOS limit shared with the pr row (pr on this point: dew_P 829096): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    pr-boston-mathias-ng-dew-morch-260.8K-1.04MPa: "dew_P +19.1% (1.23836e+06 vs 1.04e+06) - host-EOS limit shared with the pr row (pr on this point: dew_P 1.2378e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: srk-boston-mathias
   name: Soave-Redlich-Kwong, Boston-Mathias alpha
   family: cubic
@@ -906,7 +904,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - srk-boston-mathias-pure-C1-125K
   - srk-boston-mathias-pure-C3-300K
@@ -926,14 +924,12 @@
   - Soave, G. Equilibrium Constants from a Modified Redlich-Kwong Equation of State. Chem. Eng. Sci.
     1972, 27 (6), 1197-1203.
   assessed:
-    srk-boston-mathias-c1c3-294.26K-6.895MPa: "bubble_P -4.3% (6.59772e+06 vs 6.895e+06) - Boston-Mathias alpha (finite supercritical continuation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-boston-mathias-c1co2-277.15K-5.97MPa: "bubble_P -4.5% (5.70042e+06 vs 5.97e+06) - Boston-Mathias alpha (finite supercritical continuation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-boston-mathias-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377630 vs 300000) - Boston-Mathias alpha (finite supercritical continuation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-boston-mathias-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (773659 vs 680000) - Boston-Mathias alpha (finite supercritical continuation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-boston-mathias-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.7% (1.15101e+06 vs 1.04e+06) - Boston-Mathias alpha (finite supercritical continuation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-boston-mathias-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - Boston-Mathias alpha (finite supercritical continuation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-boston-mathias-pure-C3-300K: "Cp +6.7% (128.942 vs 120.805); rho_L -8.4% (448.204 vs 489.447) - Boston-Mathias alpha (finite supercritical continuation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-boston-mathias-pure-CO2-265K: "Cp +12.2% (115.671 vs 103.056); rho_L -11.8% (857.989 vs 973.254) - Boston-Mathias alpha (finite supercritical continuation) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
+    srk-boston-mathias-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - host-EOS limit shared with the srk row (srk on this point: Cp 61.7209): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    srk-boston-mathias-pure-C3-300K: "rho_L -8.4% (448.204 vs 489.447); Cp +6.7% (128.942 vs 120.805) - host-EOS limit shared with the srk row (srk on this point: Cp 128.942, rho_L 448.204): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    srk-boston-mathias-pure-CO2-265K: "rho_L -11.8% (857.989 vs 973.254); Cp +12.2% (115.671 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671, rho_L 857.989): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    srk-boston-mathias-ng-dew-morch-243.4K-0.30MPa: "dew_P +26.0% (377853 vs 300000) - host-EOS limit shared with the srk row (srk on this point: dew_P 377792): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    srk-boston-mathias-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.9% (774386 vs 680000) - host-EOS limit shared with the srk row (srk on this point: dew_P 774165): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    srk-boston-mathias-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1.15228e+06 vs 1.04e+06) - host-EOS limit shared with the srk row (srk on this point: dew_P 1.15189e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: pr-mathias-copeman
   name: Peng-Robinson, Mathias-Copeman alpha
   family: cubic
@@ -968,7 +964,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - pr-mathias-copeman-pure-C1-125K
   - pr-mathias-copeman-pure-C3-300K
@@ -990,11 +986,11 @@
     "*": >-
       The Mathias-Copeman alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs +22% above the generalised-omega pr-family rows and +41% above the srk family (measured 876389 vs 717386/614969 Pa at 293.15 K) - the deviation the Psat fit exists to produce, declared here rather than loosening the 20% band.
   assessed:
-    pr-mathias-copeman-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406577 vs 300000) - Mathias-Copeman alpha (published constants where fitted) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-mathias-copeman-ng-dew-morch-254.6K-0.68MPa: "dew_P +22.0% (829293 vs 680000) - Mathias-Copeman alpha (published constants where fitted) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-mathias-copeman-ng-dew-morch-260.8K-1.04MPa: "dew_P +19.1% (1.23816e+06 vs 1.04e+06) - Mathias-Copeman alpha (published constants where fitted) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-mathias-copeman-pure-C1-125K: "rho_L +11.9% (449.888 vs 402.111) - Mathias-Copeman alpha (published constants where fitted) inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-mathias-copeman-pure-CO2-265K: "Cp +8.0% (111.333 vs 103.056) - Mathias-Copeman alpha (published constants where fitted) inherits PR property limits (measured 2026-10-22, PR #161 table)"
+    pr-mathias-copeman-pure-C1-125K: "rho_L +11.9% (449.888 vs 402.111) - host-EOS limit shared with the pr row (pr on this point: rho_L 449.652): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    pr-mathias-copeman-pure-CO2-265K: "Cp +8.0% (111.333 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    pr-mathias-copeman-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406577 vs 300000) - host-EOS limit shared with the pr row (pr on this point: dew_P 406518): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    pr-mathias-copeman-ng-dew-morch-254.6K-0.68MPa: "dew_P +22.0% (829293 vs 680000) - host-EOS limit shared with the pr row (pr on this point: dew_P 829096): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    pr-mathias-copeman-ng-dew-morch-260.8K-1.04MPa: "dew_P +19.1% (1.23816e+06 vs 1.04e+06) - host-EOS limit shared with the pr row (pr on this point: dew_P 1.2378e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: srk-mathias-copeman
   name: Soave-Redlich-Kwong, Mathias-Copeman alpha
   family: cubic
@@ -1029,7 +1025,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - srk-mathias-copeman-pure-C1-125K
   - srk-mathias-copeman-pure-C3-300K
@@ -1051,11 +1047,11 @@
     "*": >-
       The Mathias-Copeman alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs +41% above the generalised-omega srk-family rows and +22% above the pr family (measured 869540 vs 614969/717386 Pa at 293.15 K) - the deviation the Psat fit exists to produce, declared here rather than loosening the 20% band.
   assessed:
-    srk-mathias-copeman-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377757 vs 300000) - Mathias-Copeman alpha (published constants where fitted) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-mathias-copeman-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (774020 vs 680000) - Mathias-Copeman alpha (published constants where fitted) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-mathias-copeman-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.7% (1.15151e+06 vs 1.04e+06) - Mathias-Copeman alpha (published constants where fitted) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-mathias-copeman-pure-C3-300K: "rho_L -8.1% (449.628 vs 489.447) - Mathias-Copeman alpha (published constants where fitted) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    srk-mathias-copeman-pure-CO2-265K: "Cp +7.2% (110.429 vs 103.056); rho_L -11.7% (859.249 vs 973.254) - Mathias-Copeman alpha (published constants where fitted) inherits SRK property limits (measured 2026-10-22, PR #161 table)"
+    srk-mathias-copeman-pure-C3-300K: "rho_L -8.1% (449.628 vs 489.447) - host-EOS limit shared with the srk row (srk on this point: rho_L 448.204): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    srk-mathias-copeman-pure-CO2-265K: "rho_L -11.7% (859.249 vs 973.254); Cp +7.2% (110.429 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671, rho_L 857.989): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    srk-mathias-copeman-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377757 vs 300000) - host-EOS limit shared with the srk row (srk on this point: dew_P 377792): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    srk-mathias-copeman-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (774020 vs 680000) - host-EOS limit shared with the srk row (srk on this point: dew_P 774165): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    srk-mathias-copeman-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.7% (1.15151e+06 vs 1.04e+06) - host-EOS limit shared with the srk row (srk on this point: dew_P 1.15189e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: pr-peneloux
   name: Peng-Robinson, Peneloux volume translation
   family: cubic
@@ -1088,7 +1084,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - pr-peneloux-pure-C1-125K
   - pr-peneloux-pure-C3-300K
@@ -1104,10 +1100,10 @@
     Phase Equilib. 1982, 8 (1), 7-23.
   - Rackett, H. G. Equation of State for Saturated Liquids. J. Chem. Eng. Data 1970, 15 (4), 514-517.
   assessed:
-    pr-peneloux-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406518 vs 300000) - Jhaveri-Youngren translation corrects liquid volume only; VLE and Cp deviations inherited from PR (measured 2026-10-22, PR #161 table)"
-    pr-peneloux-ng-dew-morch-254.6K-0.68MPa: "dew_P +21.9% (829096 vs 680000) - Jhaveri-Youngren translation corrects liquid volume only; VLE and Cp deviations inherited from PR (measured 2026-10-22, PR #161 table)"
-    pr-peneloux-ng-dew-morch-260.8K-1.04MPa: "dew_P +19.0% (1.2378e+06 vs 1.04e+06) - Jhaveri-Youngren translation corrects liquid volume only; VLE and Cp deviations inherited from PR (measured 2026-10-22, PR #161 table)"
-    pr-peneloux-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - Jhaveri-Youngren translation corrects liquid volume only; VLE and Cp deviations inherited from PR (measured 2026-10-22, PR #161 table)"
+    pr-peneloux-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    pr-peneloux-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406518 vs 300000) - host-EOS limit shared with the pr row (pr on this point: dew_P 406518): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    pr-peneloux-ng-dew-morch-254.6K-0.68MPa: "dew_P +21.9% (829096 vs 680000) - host-EOS limit shared with the pr row (pr on this point: dew_P 829096): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    pr-peneloux-ng-dew-morch-260.8K-1.04MPa: "dew_P +19.0% (1.2378e+06 vs 1.04e+06) - host-EOS limit shared with the pr row (pr on this point: dew_P 1.2378e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: srk-peneloux
   name: Soave-Redlich-Kwong, Peneloux volume translation
   family: cubic
@@ -1140,7 +1136,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - srk-peneloux-pure-C1-125K
   - srk-peneloux-pure-C3-300K
@@ -1156,13 +1152,13 @@
     Phase Equilib. 1982, 8 (1), 7-23.
   - Rackett, H. G. Equation of State for Saturated Liquids. J. Chem. Eng. Data 1970, 15 (4), 514-517.
   assessed:
-    srk-peneloux-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - Peneloux-Rauzy-Freze translation corrects liquid volume only; VLE and Cp deviations inherited from SRK (measured 2026-10-22, PR #161 table)"
-    srk-peneloux-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377792 vs 300000) - Peneloux-Rauzy-Freze translation corrects liquid volume only; VLE and Cp deviations inherited from SRK (measured 2026-10-22, PR #161 table)"
-    srk-peneloux-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (774165 vs 680000) - Peneloux-Rauzy-Freze translation corrects liquid volume only; VLE and Cp deviations inherited from SRK (measured 2026-10-22, PR #161 table)"
-    srk-peneloux-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1.15189e+06 vs 1.04e+06) - Peneloux-Rauzy-Freze translation corrects liquid volume only; VLE and Cp deviations inherited from SRK (measured 2026-10-22, PR #161 table)"
-    srk-peneloux-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - Peneloux-Rauzy-Freze translation corrects liquid volume only; VLE and Cp deviations inherited from SRK (measured 2026-10-22, PR #161 table)"
-    srk-peneloux-pure-C3-300K: "Cp +6.7% (128.942 vs 120.805) - Peneloux-Rauzy-Freze translation corrects liquid volume only; VLE and Cp deviations inherited from SRK (measured 2026-10-22, PR #161 table)"
-    srk-peneloux-pure-CO2-265K: "Cp +12.2% (115.671 vs 103.056) - Peneloux-Rauzy-Freze translation corrects liquid volume only; VLE and Cp deviations inherited from SRK (measured 2026-10-22, PR #161 table)"
+    srk-peneloux-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - host-EOS limit shared with the srk row (srk on this point: Cp 61.7209): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    srk-peneloux-pure-C3-300K: "Cp +6.7% (128.942 vs 120.805) - host-EOS limit shared with the srk row (srk on this point: Cp 128.942): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    srk-peneloux-pure-CO2-265K: "Cp +12.2% (115.671 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    srk-peneloux-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - host-EOS limit shared with the srk row (srk on this point: bubble_P 5.77391e+06): bubble pressure (measured 2026-11-04, val-cubic-mixing)"
+    srk-peneloux-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377792 vs 300000) - host-EOS limit shared with the srk row (srk on this point: dew_P 377792): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    srk-peneloux-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (774165 vs 680000) - host-EOS limit shared with the srk row (srk on this point: dew_P 774165): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    srk-peneloux-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1.15189e+06 vs 1.04e+06) - host-EOS limit shared with the srk row (srk on this point: dew_P 1.15189e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: sour-pr
   name: Peng-Robinson, sour-water correction
   family: cubic
@@ -1215,11 +1211,11 @@
     Calculations. AIChE 65th National Meeting, Cleveland, 1969, Paper 15C.
   l0_note: Aqueous-only; identical to pr off water-rich roots.
   assessed:
-    sour-pr-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406518 vs 300000) - sour-water term inactive in these H2O-free cases; PR limits inherited (measured 2026-10-22, PR #161 table)"
-    sour-pr-ng-dew-morch-254.6K-0.68MPa: "dew_P +21.9% (829096 vs 680000) - sour-water term inactive in these H2O-free cases; PR limits inherited (measured 2026-10-22, PR #161 table)"
-    sour-pr-ng-dew-morch-260.8K-1.04MPa: "dew_P +19.0% (1.2378e+06 vs 1.04e+06) - sour-water term inactive in these H2O-free cases; PR limits inherited (measured 2026-10-22, PR #161 table)"
-    sour-pr-pure-C1-125K: "rho_L +11.8% (449.652 vs 402.111) - sour-water term inactive in these H2O-free cases; PR limits inherited (measured 2026-10-22, PR #161 table)"
-    sour-pr-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - sour-water term inactive in these H2O-free cases; PR limits inherited (measured 2026-10-22, PR #161 table)"
+    sour-pr-pure-C1-125K: "rho_L +11.8% (449.652 vs 402.111) - host-EOS limit shared with the pr row (pr on this point: rho_L 449.652): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    sour-pr-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    sour-pr-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406518 vs 300000) - host-EOS limit shared with the pr row (pr on this point: dew_P 406518): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    sour-pr-ng-dew-morch-254.6K-0.68MPa: "dew_P +21.9% (829096 vs 680000) - host-EOS limit shared with the pr row (pr on this point: dew_P 829096): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    sour-pr-ng-dew-morch-260.8K-1.04MPa: "dew_P +19.0% (1.2378e+06 vs 1.04e+06) - host-EOS limit shared with the pr row (pr on this point: dew_P 1.2378e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: sour-srk
   name: Soave-Redlich-Kwong, sour-water correction
   family: cubic
@@ -1272,13 +1268,13 @@
     Calculations. AIChE 65th National Meeting, Cleveland, 1969, Paper 15C.
   l0_note: Aqueous-only; identical to srk off water-rich roots.
   assessed:
-    sour-srk-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - sour-water term inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    sour-srk-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377792 vs 300000) - sour-water term inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    sour-srk-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (774165 vs 680000) - sour-water term inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    sour-srk-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1.15189e+06 vs 1.04e+06) - sour-water term inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    sour-srk-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - sour-water term inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    sour-srk-pure-C3-300K: "Cp +6.7% (128.942 vs 120.805); rho_L -8.4% (448.204 vs 489.447) - sour-water term inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    sour-srk-pure-CO2-265K: "Cp +12.2% (115.671 vs 103.056); rho_L -11.8% (857.989 vs 973.254) - sour-water term inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
+    sour-srk-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - host-EOS limit shared with the srk row (srk on this point: Cp 61.7209): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    sour-srk-pure-C3-300K: "rho_L -8.4% (448.204 vs 489.447); Cp +6.7% (128.942 vs 120.805) - host-EOS limit shared with the srk row (srk on this point: Cp 128.942, rho_L 448.204): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    sour-srk-pure-CO2-265K: "rho_L -11.8% (857.989 vs 973.254); Cp +12.2% (115.671 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671, rho_L 857.989): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    sour-srk-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - host-EOS limit shared with the srk row (srk on this point: bubble_P 5.77391e+06): bubble pressure (measured 2026-11-04, val-cubic-mixing)"
+    sour-srk-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377792 vs 300000) - host-EOS limit shared with the srk row (srk on this point: dew_P 377792): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    sour-srk-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (774165 vs 680000) - host-EOS limit shared with the srk row (srk on this point: dew_P 774165): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    sour-srk-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1.15189e+06 vs 1.04e+06) - host-EOS limit shared with the srk row (srk on this point: dew_P 1.15189e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: kabadi-danner-srk
   name: SRK, Kabadi-Danner water-hydrocarbon mixing
   # T-15 solubility-case finding (2026-10-22): the row's water/hydrocarbon strength is
@@ -1346,13 +1342,13 @@
   l0_note: Water-dependent a'' terms; the validation cases contain no water, so the row exercises
     the plain-SRK path there.
   assessed:
-    kabadi-danner-srk-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    kabadi-danner-srk-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377792 vs 300000) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    kabadi-danner-srk-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (774165 vs 680000) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    kabadi-danner-srk-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1.15189e+06 vs 1.04e+06) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    kabadi-danner-srk-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    kabadi-danner-srk-pure-C3-300K: "Cp +6.7% (128.942 vs 120.805); rho_L -8.4% (448.204 vs 489.447) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
-    kabadi-danner-srk-pure-CO2-265K: "Cp +12.2% (115.671 vs 103.056); rho_L -11.8% (857.989 vs 973.254) - Kabadi-Danner water interaction inactive in these H2O-free cases; SRK limits inherited (measured 2026-10-22, PR #161 table)"
+    kabadi-danner-srk-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - host-EOS limit shared with the srk row (srk on this point: Cp 61.7209): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    kabadi-danner-srk-pure-C3-300K: "rho_L -8.4% (448.204 vs 489.447); Cp +6.7% (128.942 vs 120.805) - host-EOS limit shared with the srk row (srk on this point: Cp 128.942, rho_L 448.204): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    kabadi-danner-srk-pure-CO2-265K: "rho_L -11.8% (857.989 vs 973.254); Cp +12.2% (115.671 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671, rho_L 857.989): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    kabadi-danner-srk-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - host-EOS limit shared with the srk row (srk on this point: bubble_P 5.77391e+06): bubble pressure (measured 2026-11-04, val-cubic-mixing)"
+    kabadi-danner-srk-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377792 vs 300000) - host-EOS limit shared with the srk row (srk on this point: dew_P 377792): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    kabadi-danner-srk-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (774165 vs 680000) - host-EOS limit shared with the srk row (srk on this point: dew_P 774165): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    kabadi-danner-srk-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1.15189e+06 vs 1.04e+06) - host-EOS limit shared with the srk row (srk on this point: dew_P 1.15189e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: zudkevitch-joffe-rk
   name: Redlich-Kwong, Zudkevitch-Joffe alpha
   family: cubic
@@ -1388,7 +1384,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - zudkevitch-joffe-rk-pure-C1-125K
   - zudkevitch-joffe-rk-pure-C3-300K
@@ -1428,12 +1424,12 @@
     "twu-srk": >-
       See the srk declaration: measured 872333 vs 596571 Pa (rel 0.316) at 293.15 K.
   assessed:
-    zudkevitch-joffe-rk-c1c3-294.26K-6.895MPa: "bubble_P -5.6% (6.51215e+06 vs 6.895e+06) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table)"
-    zudkevitch-joffe-rk-ng-dew-morch-243.4K-0.30MPa: "dew_P +30.3% (390931 vs 300000) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table)"
-    zudkevitch-joffe-rk-ng-dew-morch-254.6K-0.68MPa: "dew_P +17.5% (798943 vs 680000) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table)"
-    zudkevitch-joffe-rk-ng-dew-morch-260.8K-1.04MPa: "dew_P +14.2% (1.18794e+06 vs 1.04e+06) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table)"
-    zudkevitch-joffe-rk-pure-C3-300K: "rho_L -8.2% (449.204 vs 489.447) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table)"
-    zudkevitch-joffe-rk-pure-CO2-265K: "Cp +8.7% (111.975 vs 103.056); rho_L -11.6% (860.146 vs 973.254) - ZJ fit targets Psat and Rackett volume only; other properties outside bands by design (measured 2026-10-22, PR #161 table)"
+    zudkevitch-joffe-rk-pure-C3-300K: "rho_L -8.2% (449.204 vs 489.447) - host-EOS limit shared with the srk row (srk on this point: rho_L 448.204): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    zudkevitch-joffe-rk-pure-CO2-265K: "rho_L -11.6% (860.146 vs 973.254); Cp +8.7% (111.975 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671, rho_L 857.989): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    zudkevitch-joffe-rk-c1c3-294.26K-6.895MPa: "bubble_P -5.6% (6.51215e+06 vs 6.895e+06) - ZJ Omega_a(T) is fitted to vapour pressure only below Tc; supercritical C1 (Tr 1.54) keeps the RK Tr^-0.5 form with the RK Omega_b, so the C1 attraction at 294 K is the plain-RK one (rk on this point: bubble_P -7.6% before; srk 6.806 MPa passes) (measured 2026-11-04, val-cubic-mixing)"
+    zudkevitch-joffe-rk-ng-dew-morch-243.4K-0.30MPa: "dew_P +30.3% (390931 vs 300000) - host-EOS limit shared with the srk row (srk on this point: dew_P 377792): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    zudkevitch-joffe-rk-ng-dew-morch-254.6K-0.68MPa: "dew_P +17.5% (798943 vs 680000) - host-EOS limit shared with the srk row (srk on this point: dew_P 774165): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    zudkevitch-joffe-rk-ng-dew-morch-260.8K-1.04MPa: "dew_P +14.2% (1.18794e+06 vs 1.04e+06) - host-EOS limit shared with the srk row (srk on this point: dew_P 1.15189e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: twu-sim-tassone
   name: Twu-Sim-Tassone cubic EOS
   family: cubic
@@ -1451,14 +1447,14 @@
       1.5 b^2; alpha coefficients [L, M, N] from the paper's fitted normal-paraffin table (C1-C6),
       generalised Twu form for other components (documented fallback)
     implementation: >-
-      PROVISIONAL — TSTMIX constants corrected: thermo's PRMIX convention requires
-      c1R2_c2R * c2R = c1*R^2, so c1R2_c2R = c1*R/c2; TSTMIX used c1*R^2, leaving the
-      critical attraction at ~0.62 of its stated value and suppressing the liquid root.
-      After the fix the four pure cases measure rho_V +0.13..2.84% and Cp +0.20..3.13%
-      against the references; rho_L evaluates from the TST liquid root (delta=2.5b, epsilon=-1.5b^2) and runs
-      6.7..18.4% high, intrinsic to the untranslated cubic (no volume translation in scope),
-      assessed per case below. Saturation columns short-circuit to the databank
-      vapour-pressure correlation and are not EOS checks.
+      TSTMIX over thermo's PRMIX with the TST constants (c1R2_c2R = c1*R/c2), delta = 2.5b,
+      epsilon = -1.5b^2 re-pinned on __init__ and on thermo's to_TP_zs_fast clones, and the
+      ln phi log term ln[(Z + 3B)/(Z - 0.5B)] (sqrt(delta^2 - 4 eps) = 3.5b). Two bugs fixed
+      2026-11-04 (val-cubic-mixing): the log term used sqrt(8.5)b, and same-T flash clones
+      reverted to PR's delta/epsilon; before the fix the C1/C3 Reamer bubble point was 3.91 MPa
+      (-43%) and the Gibbs-Duhem L0 loop 0.23, after it 6.92 MPa (passes) and 1.9e-7.
+      Saturation columns of pure cases short-circuit to the databank vapour pressure and are
+      not EOS checks.
   applicability:
     component_classes:
     - hydrocarbon
@@ -1489,15 +1485,14 @@
   - twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa
   - twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa
   assessed:
-    twu-sim-tassone-pure-C1-125K: "rho_L +18.4% (476.012 vs 402.111) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table)"
-    twu-sim-tassone-pure-C3-300K: "rho_L +9.9% (538.028 vs 489.447) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table)"
-    twu-sim-tassone-pure-nC4-280K: "rho_L +12.1% (664.97 vs 593.294) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope (measured 2026-10-23, validation sweep table)"
-    twu-sim-tassone-pure-CO2-265K: "rho_L +6.7% (1038.35 vs 973.254) - intrinsic to the untranslated TST cubic (delta=2.5b, epsilon=-1.5b^2; C1 and nC4 cross-checked by an independent root solve within 3%), no volume translation in scope; CO2 uses the generalised Twu alpha (measured 2026-10-23, validation sweep table)"
-    twu-sim-tassone-c1c3-294.26K-6.895MPa: "bubble_P -18.6% (5.61447e+06 vs 6.895e+06); vapor_comp +4.9% (0.798488 vs 0.7497) - binary parameters from the generic ChemSep PR table (TST-fitted BIPs unavailable) and alpha fitted to normal paraffins only: mixture VLE outside bands by design (measured 2026-10-23, validation sweep table)"
-    twu-sim-tassone-c1co2-277.15K-5.97MPa: "bubble_P -15.9% (5.02169e+06 vs 5.97e+06) - binary parameters from the generic ChemSep PR table (TST-fitted BIPs unavailable) and CO2 on the generalised Twu alpha: mixture VLE outside bands by design (measured 2026-10-23, validation sweep table)"
-    twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa: "dew_P -39.1% (182799 vs 300000) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table)"
-    twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa: "dew_P -43.9% (381274 vs 680000) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table)"
-    twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa: "dew_P -45.9% (562506 vs 1.04e+06) - rich-gas dew point outside the fitted scope: ChemSep PR BIPs and generalised alpha for N2/CO2/C3+ (TST-fitted parameters unavailable); dew cases retained to document the limit (measured 2026-10-23, validation sweep table)"
+    twu-sim-tassone-pure-C1-125K: "rho_L +18.4% (476.012 vs 402.111) - untranslated TST cubic: Zc = 0.2963 by construction (Omega_a 0.470507 / Omega_b 0.074074 re-derived from the triple-root condition of v^2 + 2.5bv - 1.5b^2, 2026-11-04), so saturated liquids run denser than PR (pr: rho_L +3.9% C3, +5.4% nC4, +11.8% C1); Cp from the fitted/generalised Twu alpha (measured 2026-11-04, val-cubic-mixing)"
+    twu-sim-tassone-pure-C3-300K: "rho_L +9.9% (538.028 vs 489.447); Cp +5.3% (127.22 vs 120.805) - untranslated TST cubic: Zc = 0.2963 by construction (Omega_a 0.470507 / Omega_b 0.074074 re-derived from the triple-root condition of v^2 + 2.5bv - 1.5b^2, 2026-11-04), so saturated liquids run denser than PR (pr: rho_L +3.9% C3, +5.4% nC4, +11.8% C1); Cp from the fitted/generalised Twu alpha (measured 2026-11-04, val-cubic-mixing)"
+    twu-sim-tassone-pure-nC4-280K: "rho_L +12.1% (664.97 vs 593.294) - untranslated TST cubic: Zc = 0.2963 by construction (Omega_a 0.470507 / Omega_b 0.074074 re-derived from the triple-root condition of v^2 + 2.5bv - 1.5b^2, 2026-11-04), so saturated liquids run denser than PR (pr: rho_L +3.9% C3, +5.4% nC4, +11.8% C1); Cp from the fitted/generalised Twu alpha (measured 2026-11-04, val-cubic-mixing)"
+    twu-sim-tassone-pure-CO2-265K: "Cp +10.1% (113.509 vs 103.056) - untranslated TST cubic: Zc = 0.2963 by construction (Omega_a 0.470507 / Omega_b 0.074074 re-derived from the triple-root condition of v^2 + 2.5bv - 1.5b^2, 2026-11-04), so saturated liquids run denser than PR (pr: rho_L +3.9% C3, +5.4% nC4, +11.8% C1); Cp from the fitted/generalised Twu alpha (measured 2026-11-04, val-cubic-mixing)"
+    twu-sim-tassone-c1co2-277.15K-5.97MPa: "bubble_P -3.5% (5.75828e+06 vs 5.97e+06) - generic ChemSep PR k_ij on the TST cubic (TST-fitted k_ij not available); pr on this point: -3.0%, just inside the band (measured 2026-11-04, val-cubic-mixing)"
+    twu-sim-tassone-ng-dew-morch-243.4K-0.30MPa: "dew_P +5.1% (315218 vs 300000) - C1/C2/nC5 dew points with ChemSep PR k_ij on the TST cubic (pr misses the same points by +19..+36%) (measured 2026-11-04, val-cubic-mixing)"
+    twu-sim-tassone-ng-dew-morch-254.6K-0.68MPa: "dew_P -3.4% (656946 vs 680000) - C1/C2/nC5 dew points with ChemSep PR k_ij on the TST cubic (pr misses the same points by +19..+36%) (measured 2026-11-04, val-cubic-mixing)"
+    twu-sim-tassone-ng-dew-morch-260.8K-1.04MPa: "dew_P -5.4% (983589 vs 1.04e+06) - C1/C2/nC5 dew points with ChemSep PR k_ij on the TST cubic (pr misses the same points by +19..+36%) (measured 2026-11-04, val-cubic-mixing)"
   references:
   - Twu, C. H.; Sim, W. D.; Tassone, V. A versatile liquid activity model for SRK, PR and a new
     cubic equation-of-state TST. Fluid Phase Equilibria 194-197 (2002) 385-399,
@@ -1509,7 +1504,11 @@
   l0_note: Fitted alpha table covers C1-nC6; CO2/N2/H2S in the slate use the generalised Twu alpha.
   l4_excluded:
     "*": >-
-      The TST EOS is fitted to hydrogen/hydrocarbon systems; on the natural-gas slice its dew pressure sits ~19x above the modern-EOS band (measured 1.38e7 vs 6.2e5-7.2e5 Pa) - the same limitation recorded in l0_excluded.
+      After the 2026-11-04 TST fixes the slice dew pressure at 293.15 K is 439518 Pa against
+      597284-717386 Pa for the pr/srk/Twu rows (26-39% below): the TST alpha table covers C1-nC6
+      only and the slice's C6+ pseudo and acid gases run on the generalised Twu alpha with
+      ChemSep PR k_ij (no TST-fitted k_ij exist) - a parameter-coverage gap, declared rather
+      than loosening the band.
 - id: pr-bm
   name: Peng-Robinson-BM (databank variant)
   family: cubic
@@ -1541,7 +1540,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - pr-bm-pure-C1-125K
   - pr-bm-pure-C3-300K
@@ -1562,13 +1561,11 @@
     1972, 27 (6), 1197-1203.
   l0_note: 'Databank-variant row: identical physics to pr-boston-mathias (databanks list both names).'
   assessed:
-    pr-bm-c1c3-294.26K-6.895MPa: "bubble_P -3.2% (6.67541e+06 vs 6.895e+06) - Boston-Mathias alpha on the ChemSep IPDB databank parameters inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-bm-c1co2-277.15K-5.97MPa: "bubble_P -3.7% (5.7503e+06 vs 5.97e+06) - Boston-Mathias alpha on the ChemSep IPDB databank parameters inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-bm-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406384 vs 300000) - Boston-Mathias alpha on the ChemSep IPDB databank parameters inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-bm-ng-dew-morch-254.6K-0.68MPa: "dew_P +21.9% (828676 vs 680000) - Boston-Mathias alpha on the ChemSep IPDB databank parameters inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-bm-ng-dew-morch-260.8K-1.04MPa: "dew_P +18.9% (1.23705e+06 vs 1.04e+06) - Boston-Mathias alpha on the ChemSep IPDB databank parameters inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-bm-pure-C1-125K: "rho_L +11.8% (449.652 vs 402.111) - Boston-Mathias alpha on the ChemSep IPDB databank parameters inherits PR property limits (measured 2026-10-22, PR #161 table)"
-    pr-bm-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - Boston-Mathias alpha on the ChemSep IPDB databank parameters inherits PR property limits (measured 2026-10-22, PR #161 table)"
+    pr-bm-pure-C1-125K: "rho_L +11.8% (449.652 vs 402.111) - host-EOS limit shared with the pr row (pr on this point: rho_L 449.652): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    pr-bm-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    pr-bm-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406590 vs 300000) - host-EOS limit shared with the pr row (pr on this point: dew_P 406518): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    pr-bm-ng-dew-morch-254.6K-0.68MPa: "dew_P +22.0% (829378 vs 680000) - host-EOS limit shared with the pr row (pr on this point: dew_P 829096): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    pr-bm-ng-dew-morch-260.8K-1.04MPa: "dew_P +19.1% (1.23836e+06 vs 1.04e+06) - host-EOS limit shared with the pr row (pr on this point: dew_P 1.2378e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: rks-bm
   name: SRK-BM (databank variant)
   family: cubic
@@ -1600,7 +1597,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - rks-bm-pure-C1-125K
   - rks-bm-pure-C3-300K
@@ -1621,14 +1618,12 @@
     1972, 27 (6), 1197-1203.
   l0_note: 'Databank-variant row: identical physics to srk-boston-mathias (databanks list both names).'
   assessed:
-    rks-bm-c1c3-294.26K-6.895MPa: "bubble_P -4.3% (6.59772e+06 vs 6.895e+06) - Boston-Mathias alpha on RKS inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    rks-bm-c1co2-277.15K-5.97MPa: "bubble_P -4.5% (5.70042e+06 vs 5.97e+06) - Boston-Mathias alpha on RKS inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    rks-bm-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377630 vs 300000) - Boston-Mathias alpha on RKS inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    rks-bm-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (773659 vs 680000) - Boston-Mathias alpha on RKS inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    rks-bm-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.7% (1.15101e+06 vs 1.04e+06) - Boston-Mathias alpha on RKS inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    rks-bm-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - Boston-Mathias alpha on RKS inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    rks-bm-pure-C3-300K: "Cp +6.7% (128.942 vs 120.805); rho_L -8.4% (448.204 vs 489.447) - Boston-Mathias alpha on RKS inherits SRK property limits (measured 2026-10-22, PR #161 table)"
-    rks-bm-pure-CO2-265K: "Cp +12.2% (115.671 vs 103.056); rho_L -11.8% (857.989 vs 973.254) - Boston-Mathias alpha on RKS inherits SRK property limits (measured 2026-10-22, PR #161 table)"
+    rks-bm-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - host-EOS limit shared with the srk row (srk on this point: Cp 61.7209): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    rks-bm-pure-C3-300K: "rho_L -8.4% (448.204 vs 489.447); Cp +6.7% (128.942 vs 120.805) - host-EOS limit shared with the srk row (srk on this point: Cp 128.942, rho_L 448.204): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    rks-bm-pure-CO2-265K: "rho_L -11.8% (857.989 vs 973.254); Cp +12.2% (115.671 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671, rho_L 857.989): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    rks-bm-ng-dew-morch-243.4K-0.30MPa: "dew_P +26.0% (377853 vs 300000) - host-EOS limit shared with the srk row (srk on this point: dew_P 377792): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    rks-bm-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.9% (774386 vs 680000) - host-EOS limit shared with the srk row (srk on this point: dew_P 774165): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    rks-bm-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1.15228e+06 vs 1.04e+06) - host-EOS limit shared with the srk row (srk on this point: dew_P 1.15189e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: pr-lee-kesler-enthalpy
   name: Peng-Robinson, Lee-Kesler enthalpies
   family: cubic
@@ -1662,7 +1657,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - pr-lee-kesler-enthalpy-pure-C1-125K
   - pr-lee-kesler-enthalpy-pure-C3-300K
@@ -1677,11 +1672,11 @@
   - Lee, B. I.; Kesler, M. G. A Generalized Thermodynamic Correlation Based on Three-Parameter Corresponding
     States. AIChE J. 1975, 21 (3), 510-527.
   assessed:
-    pr-lee-kesler-enthalpy-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406518 vs 300000 Pa, 3 % tolerance) - the asymmetric C1/C2/nC5 dew points run 10-35 % above the Morch et al. (2006) cooled-mirror measurements under databank/zero k_ij; VLE and density are the cubic EOS's (the Lee-Kesler path serves enthalpy only) and the same case assesses the shipped packages (issue #130) (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
-    pr-lee-kesler-enthalpy-ng-dew-morch-254.6K-0.68MPa: "dew_P +21.9% (829096 vs 680000 Pa, 3 % tolerance) - the asymmetric C1/C2/nC5 dew points run 10-35 % above the Morch et al. (2006) cooled-mirror measurements under databank/zero k_ij; VLE and density are the cubic EOS's (the Lee-Kesler path serves enthalpy only) and the same case assesses the shipped packages (issue #130) (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
-    pr-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa: "dew_P +19.0% (1237804 vs 1040000 Pa, 3 % tolerance) - the asymmetric C1/C2/nC5 dew points run 10-35 % above the Morch et al. (2006) cooled-mirror measurements under databank/zero k_ij; VLE and density are the cubic EOS's (the Lee-Kesler path serves enthalpy only) and the same case assesses the shipped packages (issue #130) (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
-    pr-lee-kesler-enthalpy-pure-C1-125K: "rho_L +11.8% (449.652 vs 402.111 kg/m3, 8 % tolerance) - PR liquid density at 125 K, the cubic liquid-density weakness (the pr-peneloux row is its volume-translation correction); the Lee-Kesler enthalpy path checks clean on this case: Cp +3.7% (59.896 vs 57.741 J/mol/K), bubble/dew P within 1e-7; the simple-fluid liquid-branch (Cp-Cp0)/R at Tr=0.65/Pr=0.06 measures 3.053 vs the published Lee-Kesler table 3.047-3.051 (Reid-Prausnitz-Sherwood 1977, residual-Cp simple-fluid table, Tr=0.65 row; independent vle_thermo port 3.0535) - within 0.2 %, so the +3.7 % is the correlation's own accuracy, per issue #162 (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
-    pr-lee-kesler-enthalpy-pure-CO2-265K: "Cp -7.2% (95.667 vs 103.056 J/mol/K, 5 % tolerance) - the Lee-Kesler correlation's own CO2 sat-liquid Cp accuracy near its critical region (Tr=0.87); the implementation reproduces the published Lee-Kesler form (max 3.3e-8 deviation from the analytic Helmholtz derivative over a 224-state sweep), so the residual is the correlation's, not a coding error (measured 2026-10-22 after the D-term fix, PR #161 table)"
+    pr-lee-kesler-enthalpy-pure-C1-125K: "rho_L +11.8% (449.652 vs 402.111) - host-EOS limit shared with the pr row (pr on this point: rho_L 449.652): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    pr-lee-kesler-enthalpy-pure-CO2-265K: "Cp -7.2% (95.6672 vs 103.056) - Lee-Kesler (1975) two-reference-fluid departure replaces the EOS one: CO2 liquid Cp now -7.2% where the EOS departure of the host gives +8.1% (pr) / +12.2% (srk); corresponding-states interpolation in omega does not capture quadrupolar CO2 (the C1/C3/nC4 Cp points pass) (measured 2026-11-04, val-cubic-mixing)"
+    pr-lee-kesler-enthalpy-ng-dew-morch-243.4K-0.30MPa: "dew_P +35.5% (406518 vs 300000) - host-EOS limit shared with the pr row (pr on this point: dew_P 406518): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    pr-lee-kesler-enthalpy-ng-dew-morch-254.6K-0.68MPa: "dew_P +21.9% (829096 vs 680000) - host-EOS limit shared with the pr row (pr on this point: dew_P 829096): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    pr-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa: "dew_P +19.0% (1.2378e+06 vs 1.04e+06) - host-EOS limit shared with the pr row (pr on this point: dew_P 1.2378e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: srk-lee-kesler-enthalpy
   name: Soave-Redlich-Kwong, Lee-Kesler enthalpies
   family: cubic
@@ -1715,7 +1710,7 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   validation:
   - srk-lee-kesler-enthalpy-pure-C1-125K
   - srk-lee-kesler-enthalpy-pure-C3-300K
@@ -1731,12 +1726,12 @@
     States. AIChE J. 1975, 21 (3), 510-527.
 
   assessed:
-    srk-lee-kesler-enthalpy-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5773906 vs 5970000 Pa, 3 % tolerance) - k_ij=0 SRK VLE just beyond tolerance near the mixture critical region; VLE and density are the cubic EOS's (the Lee-Kesler path serves enthalpy only) (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
-    srk-lee-kesler-enthalpy-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377792 vs 300000 Pa, 3 % tolerance) - the asymmetric C1/C2/nC5 dew points run 10-35 % above the Morch et al. (2006) cooled-mirror measurements under databank/zero k_ij; VLE and density are the cubic EOS's (the Lee-Kesler path serves enthalpy only) and the same case assesses the shipped packages (issue #130) (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
-    srk-lee-kesler-enthalpy-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (774165 vs 680000 Pa, 3 % tolerance) - the asymmetric C1/C2/nC5 dew points run 10-35 % above the Morch et al. (2006) cooled-mirror measurements under databank/zero k_ij; VLE and density are the cubic EOS's (the Lee-Kesler path serves enthalpy only) and the same case assesses the shipped packages (issue #130) (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
-    srk-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1151892 vs 1040000 Pa, 3 % tolerance) - the asymmetric C1/C2/nC5 dew points run 10-35 % above the Morch et al. (2006) cooled-mirror measurements under databank/zero k_ij; VLE and density are the cubic EOS's (the Lee-Kesler path serves enthalpy only) and the same case assesses the shipped packages (issue #130) (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
-    srk-lee-kesler-enthalpy-pure-C3-300K: "rho_L -8.4% (448.204 vs 489.447 kg/m3, 8 % tolerance, marginal) - SRK liquid density at 300 K, the cubic liquid-density weakness (the srk-peneloux row is its volume-translation correction); the Lee-Kesler enthalpy path checks clean on this case: Cp -1.4% (119.068 vs 120.805 J/mol/K) (measured 2026-10-22 after the Lee-Kesler D-term fix, PR #161 table)"
-    srk-lee-kesler-enthalpy-pure-CO2-265K: "rho_L -11.8% (857.989 vs 973.254 kg/m3, 8 % tolerance) and Cp -7.2% (95.667 vs 103.056 J/mol/K, 5 % tolerance) - SRK liquid density near the CO2 critical region plus the Lee-Kesler correlation's own CO2 sat-liquid Cp accuracy (Tr=0.87); the implementation reproduces the published Lee-Kesler form (max 3.3e-8 deviation from the analytic Helmholtz derivative over a 224-state sweep) and the published tables (simple-fluid liquid-branch (Cp-Cp0)/R at Tr=0.65/Pr=0.06: 3.053 vs Reid-Prausnitz-Sherwood 1977 Table 5-8 3.047-3.051, within 0.2 %, issue #162), so the residual is the correlation's, not a coding error (measured 2026-10-22 after the D-term fix, PR #161 table)"
+    srk-lee-kesler-enthalpy-pure-C3-300K: "rho_L -8.4% (448.204 vs 489.447) - host-EOS limit shared with the srk row (srk on this point: rho_L 448.204): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    srk-lee-kesler-enthalpy-pure-CO2-265K: "rho_L -11.8% (857.989 vs 973.254); Cp -7.2% (95.6672 vs 103.056) - Lee-Kesler (1975) two-reference-fluid departure replaces the EOS one: CO2 liquid Cp now -7.2% where the EOS departure of the host gives +8.1% (pr) / +12.2% (srk); corresponding-states interpolation in omega does not capture quadrupolar CO2 (the C1/C3/nC4 Cp points pass); rho_L: host untranslated-cubic limit (measured 2026-11-04, val-cubic-mixing)"
+    srk-lee-kesler-enthalpy-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - host-EOS limit shared with the srk row (srk on this point: bubble_P 5.77391e+06): bubble pressure (measured 2026-11-04, val-cubic-mixing)"
+    srk-lee-kesler-enthalpy-ng-dew-morch-243.4K-0.30MPa: "dew_P +25.9% (377792 vs 300000) - host-EOS limit shared with the srk row (srk on this point: dew_P 377792): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    srk-lee-kesler-enthalpy-ng-dew-morch-254.6K-0.68MPa: "dew_P +13.8% (774165 vs 680000) - host-EOS limit shared with the srk row (srk on this point: dew_P 774165): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
+    srk-lee-kesler-enthalpy-ng-dew-morch-260.8K-1.04MPa: "dew_P +10.8% (1.15189e+06 vs 1.04e+06) - host-EOS limit shared with the srk row (srk on this point: dew_P 1.15189e+06): C1/C2/nC5 dew temperature predicted 2-5 K low with ChemSep PR k_ij (pr -4.7/-3.1/-2.7 K at the three points) (measured 2026-11-04, val-cubic-mixing)"
 - id: pr-rackett
   name: Peng-Robinson, Rackett liquid density
   family: cubic
@@ -1768,11 +1763,19 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   l4_excluded:
     twu-pr: VLE is the pr row's, so the pair carries the pr / twu-pr slice dew gap declared on the twu-pr row (measured 717386 vs 597284 Pa, rel 0.201)
     twu-srk: VLE is the pr row's, so the pair carries the pr / twu-srk slice dew gap declared on the twu-srk row (measured 717386 vs 596571 Pa, rel 0.203)
-  validation: []
+  validation:
+  - cubicopt-pure-C1-125K
+  - cubicopt-pure-C3-300K
+  - cubicopt-pure-nC4-280K
+  - cubicopt-pure-CO2-265K
+  - cubicopt-c1c3-294.26K-6.895MPa
+  - cubicopt-c1co2-277.15K-5.97MPa
+  assessed:
+    cubicopt-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
   references:
   - Spencer, C. F.; Danner, R. P. J. Chem. Eng. Data 1972, 17, 236; Yamada, T.; Gunn, R. D. J. Chem. Eng. Data 1973, 18, 234; Rackett, H. G. J. Chem. Eng. Data 1970, 15, 514
   l0_note: VLE, enthalpy and entropy are the base row's; only the volume of liquid roots changes, so
@@ -1809,10 +1812,21 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   l4_excluded:
     zudkevitch-joffe-rk: VLE is the srk row's, so the pair carries the srk / zudkevitch-joffe-rk slice dew gap declared on that row (measured 614969 vs 872333 Pa, rel 0.295)
-  validation: []
+  validation:
+  - cubicopt-pure-C1-125K
+  - cubicopt-pure-C3-300K
+  - cubicopt-pure-nC4-280K
+  - cubicopt-pure-CO2-265K
+  - cubicopt-c1c3-294.26K-6.895MPa
+  - cubicopt-c1co2-277.15K-5.97MPa
+  assessed:
+    cubicopt-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - host-EOS limit shared with the srk row (srk on this point: Cp 61.7209): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-pure-C3-300K: "Cp +6.7% (128.942 vs 120.805) - host-EOS limit shared with the srk row (srk on this point: Cp 128.942): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-pure-CO2-265K: "Cp +12.2% (115.671 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - host-EOS limit shared with the srk row (srk on this point: bubble_P 5.77391e+06): bubble pressure (measured 2026-11-04, val-cubic-mixing)"
   references:
   - Spencer, C. F.; Danner, R. P. J. Chem. Eng. Data 1972, 17, 236; Yamada, T.; Gunn, R. D. J. Chem. Eng. Data 1973, 18, 234; Rackett, H. G. J. Chem. Eng. Data 1970, 15, 514
   l0_note: VLE, enthalpy and entropy are the base row's; only the volume of liquid roots changes, so
@@ -1849,11 +1863,19 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   l4_excluded:
     twu-pr: VLE is the pr row's, so the pair carries the pr / twu-pr slice dew gap declared on the twu-pr row (measured 717386 vs 597284 Pa, rel 0.201)
     twu-srk: VLE is the pr row's, so the pair carries the pr / twu-srk slice dew gap declared on the twu-srk row (measured 717386 vs 596571 Pa, rel 0.203)
-  validation: []
+  validation:
+  - cubicopt-pure-C1-125K
+  - cubicopt-pure-C3-300K
+  - cubicopt-pure-nC4-280K
+  - cubicopt-pure-CO2-265K
+  - cubicopt-c1c3-294.26K-6.895MPa
+  - cubicopt-c1co2-277.15K-5.97MPa
+  assessed:
+    cubicopt-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
   references:
   - Hankinson, R. W.; Thomson, G. H. AIChE J. 1979, 25, 653; Thomson, G. H.; Brobst, K. R.; Hankinson, R. W. AIChE J. 1982, 28, 671
   l0_note: VLE, enthalpy and entropy are the base row's; only the volume of liquid roots changes, so
@@ -1890,10 +1912,21 @@
     - V
     - L
     - VLL
-  status: provisional
+  status: validated
   l4_excluded:
     zudkevitch-joffe-rk: VLE is the srk row's, so the pair carries the srk / zudkevitch-joffe-rk slice dew gap declared on that row (measured 614969 vs 872333 Pa, rel 0.295)
-  validation: []
+  validation:
+  - cubicopt-pure-C1-125K
+  - cubicopt-pure-C3-300K
+  - cubicopt-pure-nC4-280K
+  - cubicopt-pure-CO2-265K
+  - cubicopt-c1c3-294.26K-6.895MPa
+  - cubicopt-c1co2-277.15K-5.97MPa
+  assessed:
+    cubicopt-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - host-EOS limit shared with the srk row (srk on this point: Cp 61.7209): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-pure-C3-300K: "Cp +6.7% (128.942 vs 120.805) - host-EOS limit shared with the srk row (srk on this point: Cp 128.942): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-pure-CO2-265K: "Cp +12.2% (115.671 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - host-EOS limit shared with the srk row (srk on this point: bubble_P 5.77391e+06): bubble pressure (measured 2026-11-04, val-cubic-mixing)"
   references:
   - Hankinson, R. W.; Thomson, G. H. AIChE J. 1979, 25, 653; Thomson, G. H.; Brobst, K. R.; Hankinson, R. W. AIChE J. 1982, 28, 671
   l0_note: VLE, enthalpy and entropy are the base row's; only the volume of liquid roots changes, so
@@ -1937,7 +1970,16 @@
       dew lands at 874943 Pa against 615000-724000 Pa for the rows on EOS water, outside the 20 % band by
       construction. Measured on methane + 0.3 % water at 293.15 K, pr gives 709 kPa and pr-free-water
       862 kPa, with an ideal-gas estimate of 780 kPa. The row still carries the EOS vapour phi of water.
-  validation: []
+  validation:
+  - cubicopt-pure-C1-125K
+  - cubicopt-pure-C3-300K
+  - cubicopt-pure-nC4-280K
+  - cubicopt-pure-CO2-265K
+  - cubicopt-c1c3-294.26K-6.895MPa
+  - cubicopt-c1co2-277.15K-5.97MPa
+  assessed:
+    cubicopt-pure-C1-125K: "rho_L +11.8% (449.652 vs 402.111) - host-EOS limit shared with the pr row (pr on this point: rho_L 449.652): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
   references:
   - Wagner, W.; Pruss, A. J. Phys. Chem. Ref. Data 2002, 31, 387
   - Peng, D.-Y.; Robinson, D. B. Ind. Eng. Chem. Fundam. 1976, 15, 59
@@ -1980,7 +2022,18 @@
       dew lands at 933084 Pa against 615000-724000 Pa for the rows on EOS water, outside the 20 % band by
       construction. Measured on methane + 0.3 % water at 293.15 K, pr gives 709 kPa and pr-free-water
       862 kPa, with an ideal-gas estimate of 780 kPa. The row still carries the EOS vapour phi of water.
-  validation: []
+  validation:
+  - cubicopt-pure-C1-125K
+  - cubicopt-pure-C3-300K
+  - cubicopt-pure-nC4-280K
+  - cubicopt-pure-CO2-265K
+  - cubicopt-c1c3-294.26K-6.895MPa
+  - cubicopt-c1co2-277.15K-5.97MPa
+  assessed:
+    cubicopt-pure-C1-125K: "Cp +6.9% (61.7209 vs 57.7411) - host-EOS limit shared with the srk row (srk on this point: Cp 61.7209): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-pure-C3-300K: "rho_L -8.4% (448.204 vs 489.447); Cp +6.7% (128.942 vs 120.805) - host-EOS limit shared with the srk row (srk on this point: Cp 128.942, rho_L 448.204): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-pure-CO2-265K: "rho_L -11.8% (857.989 vs 973.254); Cp +12.2% (115.671 vs 103.056) - host-EOS limit shared with the srk row (srk on this point: Cp 115.671, rho_L 857.989): liquid Cp from the cubic residual (second T-derivative of a*alpha); saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-c1co2-277.15K-5.97MPa: "bubble_P -3.3% (5.77391e+06 vs 5.97e+06) - host-EOS limit shared with the srk row (srk on this point: bubble_P 5.77391e+06): bubble pressure (measured 2026-11-04, val-cubic-mixing)"
   references:
   - Wagner, W.; Pruss, A. J. Phys. Chem. Ref. Data 2002, 31, 387
   - Kabadi, V. N.; Danner, R. P. Ind. Eng. Chem. Process Des. Dev. 1985, 24, 537
@@ -2014,8 +2067,31 @@
     phases:
     - V
     - L
-  status: provisional
-  validation: []
+  status: validated
+  validation:
+  - cubicopt-pure-C1-125K
+  - cubicopt-pure-C3-300K
+  - cubicopt-pure-nC4-280K
+  - cubicopt-pure-CO2-265K
+  - cubicopt-c1c3-294.26K-6.895MPa
+  - cubicopt-c1co2-277.15K-5.97MPa
+  - teg-h2o-85kPa-xw0.117
+  - teg-h2o-85kPa-xw0.161
+  - teg-h2o-85kPa-xw0.242
+  - teg-h2o-85kPa-xw0.325
+  - teg-h2o-85kPa-xw0.41
+  - teg-h2o-85kPa-xw0.543
+  - teg-h2o-85kPa-xw0.704
+  - teg-h2o-85kPa-xw0.826
+  - teg-h2o-85kPa-xw0.915
+  assessed:
+    cubicopt-pure-C1-125K: "rho_L +11.8% (449.652 vs 402.111) - host-EOS limit shared with the pr row (pr on this point: rho_L 449.652): saturated-liquid density of the untranslated two-constant cubic (measured 2026-11-04, val-cubic-mixing)"
+    cubicopt-pure-CO2-265K: "Cp +8.1% (111.409 vs 103.056) - host-EOS limit shared with the pr row (pr on this point: Cp 111.409): liquid Cp from the cubic residual (second T-derivative of a*alpha) (measured 2026-11-04, val-cubic-mixing)"
+    teg-h2o-85kPa-xw0.117: "bubble_T +7.2% (451.474 vs 421.25); vapor_comp -0.026 abs (0.956902 vs 0.9829) - TEG-rich end of the isobar: the single linear Gironi 2007 k12(T) (fitted elsewhere) under-predicts the TEG-water non-ideality at x_w < 0.45 (plain pr is -7..-12% low on every point of this set); note the source isobar is itself non-monotonic at x_w 0.161-0.251 (measured 2026-11-04, val-cubic-mixing)"
+    teg-h2o-85kPa-xw0.161: "bubble_T +5.3% (438.295 vs 416.25) - TEG-rich end of the isobar: the single linear Gironi 2007 k12(T) (fitted elsewhere) under-predicts the TEG-water non-ideality at x_w < 0.45 (plain pr is -7..-12% low on every point of this set); note the source isobar is itself non-monotonic at x_w 0.161-0.251 (measured 2026-11-04, val-cubic-mixing)"
+    teg-h2o-85kPa-xw0.242: "bubble_T +2.1% (422.07 vs 413.25) - TEG-rich end of the isobar: the single linear Gironi 2007 k12(T) (fitted elsewhere) under-predicts the TEG-water non-ideality at x_w < 0.45 (plain pr is -7..-12% low on every point of this set); note the source isobar is itself non-monotonic at x_w 0.161-0.251 (measured 2026-11-04, val-cubic-mixing)"
+    teg-h2o-85kPa-xw0.325: "bubble_T +1.7% (410.69 vs 403.95) - TEG-rich end of the isobar: the single linear Gironi 2007 k12(T) (fitted elsewhere) under-predicts the TEG-water non-ideality at x_w < 0.45 (plain pr is -7..-12% low on every point of this set); note the source isobar is itself non-monotonic at x_w 0.161-0.251 (measured 2026-11-04, val-cubic-mixing)"
+    teg-h2o-85kPa-xw0.41: "bubble_T +1.0% (401.841 vs 397.95) - TEG-rich end of the isobar: the single linear Gironi 2007 k12(T) (fitted elsewhere) under-predicts the TEG-water non-ideality at x_w < 0.45 (plain pr is -7..-12% low on every point of this set); note the source isobar is itself non-monotonic at x_w 0.161-0.251 (measured 2026-11-04, val-cubic-mixing)"
   references:
   - Gironi, F.; Maschietti, M.; Piemonte, V. Modelling triethylene glycol - water system for natural
     gas dehydration. ICheaP-8, 2007

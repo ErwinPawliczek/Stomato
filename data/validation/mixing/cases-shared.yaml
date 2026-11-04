@@ -1,0 +1,199 @@
+# Shared gE-mixing-rule reference cases (val-cubic-mixing, 2026-11-04).
+# Programmatic copies of root data/validation/cases.yaml cases (same expected values and citations),
+# with `package:` lists binding all nine mixing rows: the full Gao et al. 2012 MeOH/H2O 101.325 kPa
+# isobar (8 points, independent of the ChemSep NRTL and UNIFAC parameter sets) and pure-limit
+# CoolProp points (the rules reduce to their host cubic for a pure fluid). The UNIFAC rows refuse
+# C3 (no group assignment), so the C3 point binds only the NRTL-hosted rows.
+pure_cases:
+- id: mix-pure-nC4-280K
+  fluid: nC4
+  coolprop_fluid: n-Butane
+  package: &id001
+  - psrk
+  - vtpr
+  - lcvm
+  - pr_huron_vidal
+  - pr_wong_sandler
+  - srk_wong_sandler
+  - pr_mhv1
+  - pr_mhv2
+  - srk_mhv2
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  T: 280.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 132816.54823974936
+    dew_P: 132816.54823974936
+    rho_V: 3.4895818108256678
+    rho_L: 593.2939677646473
+    Cp: 136.27982819611634
+- id: mix-pure-C3-240K
+  fluid: C3
+  coolprop_fluid: Propane
+  package:
+  - pr_huron_vidal
+  - pr_wong_sandler
+  - srk_wong_sandler
+  - pr_mhv1
+  - pr_mhv2
+  - srk_mhv2
+  components:
+  - C3
+  z:
+    C3: 1.0
+  T: 240.0
+  source: coolprop:Propane
+  expected:
+    bubble_P: 147999.7318177371
+    dew_P: 147999.7318177371
+    rho_V: 3.438295755767666
+    rho_L: 570.393722906484
+    Cp: 100.94294433491739
+binary_cases:
+- id: mix-meohh2o-101.325kPa-366.0K
+  package: *id001
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.0484
+    H2O: 0.9516
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer;
+    y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 366
+    vapor_comp:
+      MeOH: 0.2704
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: mix-meohh2o-101.325kPa-361.35K
+  package: *id001
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.0911
+    H2O: 0.9089
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer;
+    y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 361.35
+    vapor_comp:
+      MeOH: 0.4126
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: mix-meohh2o-101.325kPa-356.95K
+  package: *id001
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.1586
+    H2O: 0.8414
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer;
+    y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 356.95
+    vapor_comp:
+      MeOH: 0.5323
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: mix-meohh2o-101.325kPa-353.25K
+  package: *id001
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.238
+    H2O: 0.762
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer;
+    y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 353.25
+    vapor_comp:
+      MeOH: 0.6237
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: mix-meohh2o-101.325kPa-349.05K
+  package: *id001
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.3442
+    H2O: 0.6558
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer;
+    y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 349.05
+    vapor_comp:
+      MeOH: 0.7197
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: mix-meohh2o-101.325kPa-346.20K
+  package: *id001
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.524
+    H2O: 0.476
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer;
+    y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 346.2
+    vapor_comp:
+      MeOH: 0.786
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: mix-meohh2o-101.325kPa-343.31K
+  package: *id001
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.6899
+    H2O: 0.3101
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer;
+    y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 343.31
+    vapor_comp:
+      MeOH: 0.8633
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: mix-meohh2o-101.325kPa-341.20K
+  package: *id001
+  components:
+  - MeOH
+  - H2O
+  z:
+    MeOH: 0.8213
+    H2O: 0.1787
+  P: 101325.0
+  source: literature:Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer;
+    y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+  expected:
+    bubble_T: 341.2
+    vapor_comp:
+      MeOH: 0.9221
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
