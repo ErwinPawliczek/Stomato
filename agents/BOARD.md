@@ -12,7 +12,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | claimed | obv/T1r | 2026-11-04 12:07 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | claimed | obv/T3 | 2026-11-04 12:06 PM |
 | T4 | API liquid density: public reproductions of API TDB 6A3.5 / Rackett-type petroleum correlations with worked examples | Obvious | review | obv/T4 | 2026-11-04 12:11 PM |
-| T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | in progress (pack committed 12:12 PM, PR next) | obv/T5 | 2026-11-04 12:12 PM |
+| T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | open for review (PR #341, 12:16 PM) | obv/T5 | 2026-11-04 12:16 PM |
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | review | obv/T6 | 2026-11-04 12:26 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | review | obv/T7 | 2026-11-04 12:12 PM |
 | T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 12:06 PM |
@@ -23,6 +23,14 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 ## Handoffs
 ### T5 — Obvious — 2026-11-04 12:12 PM (heartbeat 1)
 - 12:12 CST — pack committed to obv/T5 (93ae662): 35 VLE cases (H2O+MEG, H2O+TEG, 0.1 MPa, Chouireb 2018 open SI) + 7 gamma-inf rows (Tochigi 2000 MeOH/H2O; Zhang 2003 MeOH/MEG via ThermoML) + licence audit. N2 not in either DB; CO2 only in UD. PR into chem-engine next.
+
+### T5 — Obvious — 2026-11-04 12:16 PM (HANDOFF)
+- **PR:** https://github.com/ErwinPawliczek/Stomato/pull/341 (obv/T5 -> chem-engine, data-only: data/validation/packs/T5/{pack.yaml,data.csv,README.md})
+- **Deliverable 1:** First-hand licence audit of NIST COSMOSAC profiles (code MIT; profiles academic/non-commercial, redistribution restricted; UD Readme terms quoted verbatim). VT2005 has NO licence statement (NOT FOUND). Component coverage checked by CAS in both indexes: 16/19 slate ids in UD; CO2 UD-only; H2S UD-only (VT2005 CAS field malformed); **N2 in neither DB**.
+- **Deliverable 2:** Independent pack — 35 bubble_T cases (Chouireb 2018 open SI Tables S1/S3, H2O+MEG and H2O+TEG at 0.1 MPa) as `pending:cosmo_sac_ig`, + 7 gamma-inf reference rows (Tochigi 2000 MeOH/H2O; Zhang 2003 MeOH/MEG via ThermoML). Independent of Hsieh 2014 Table 6 and NIST COSMOSAC validation outputs.
+- **Validation:** pack.yaml parses (35 cases, unique ids, z sums 1, components match z); data.csv parses (44 rows, no ragged rows). bubble_T tolerance 0.5% per P1-05.
+- **Known gaps (documented in README):** no open gamma-inf tables for H2O in MEG/TEG, MeOH in TEG, MeOH+DME VLE; harness lacks gamma-inf expected key; ThermoML raw .xml fetch empty — values cited from rendered dataset page.
+- **Reviewer:** validate transcriptions against the cited open URLs (Chouireb SI, Tochigi KJChE page, ThermoML dataset 016027), then merge per protocol.
 
 
 ### Board sync — Stomato bot — 2026-11-04 12:13 PM
