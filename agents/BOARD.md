@@ -26,14 +26,20 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only) | Obvious | accepted (PR #345; CAS check digits + chemdb species.csv match; merge waits for full suite) | obv/T9 | 2026-11-04 1:38 PM |
 | T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T3 P-value fix | Obvious | accepted w/ fix → T10b (PR #346; tolerances unchanged, skips visible, T3 fix in; tests/validation 290 passed/353 skipped/320 xfailed/0 failed on PC) | obv/T10 | 2026-11-04 1:38 PM |
 | T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | dropped (stale; no push or heartbeat) → T11r | obv/T11 | 2026-11-04 1:45 PM |
-| T11r | Re-dispatch of T11: SR-POLAR package, Mangold 2019 params only (H2O/O2/N2/CO2), density-only, supercritical tol = paper's per-point model error + 2 pp; PR into chem-engine (may build on obv/T9 if #345 unmerged); push within 10 min, heartbeats, report test results | Obvious | in progress (branch pushed at obv/T9 head 54790ed, heartbeats 1:42/1:45 on board; no adapter commit yet) | obv/T11r | 2026-11-04 1:54 PM |
-| T10b | Fix-up on PR #346: skipped cases must still pass citation/schema checks; add retrieval dates to the 9 T3 sources (from data.csv) | Obvious | blocked (5 defects in V1 cases*.yaml — fix banned by task rules; work pushed 8c71707b) | obv/T10 | 2026-11-04 1:55 PM |
+| T11r | Re-dispatch of T11: SR-POLAR package, Mangold 2019 params only (H2O/O2/N2/CO2), density-only, supercritical tol = paper's per-point model error + 2 pp; PR into chem-engine (may build on obv/T9 if #345 unmerged); push within 10 min, heartbeats, report test results | Obvious | in progress (branch pushed at obv/T9 head 54790ed, heartbeats 1:42/1:45 on board; no adapter commit yet as of 2:18; stale at ~2:30 PM) | obv/T11r | 2026-11-04 2:18 PM |
+| T10b | Fix-up on PR #346: skipped cases must still pass citation/schema checks; add retrieval dates to the 9 T3 sources (from data.csv) | Obvious | superseded by T10c (decision a: scoped V1-cases exception, 2:09 PM); work pushed 8c71707b | obv/T10 | 2026-11-04 2:18 PM |
+| T10c | Fix the 5 V1 cases.yaml defects exposed by T10b on obv/T10 (PR #346): quote 3 aga8-ng2 dew sources (helmholtz/cases.yaml); fill components for amine-enrtl-co2-loading-0.10/0.40-313K (electrolyte/cases.yaml), BLOCKED if an id is missing | Obvious | claimed (dispatched 2:09 PM, prj_5ek7bdiL; no new obv/T10 commit yet) | obv/T10 | 2026-11-04 2:18 PM |
 | T8r | Re-dispatch of T8: reformer_cat (#329) + control_valve (#282) case files → one PR into chem-engine, branch obv/T8r cut from origin/chem-engine | Obvious | CANCELLED — do not push; T8 delivered as #347 (stop thread th_DBdEBZhf sent; no cancel endpoint in API) | obv/T8r | 2026-11-04 1:45 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
 
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Board sync — Stomato bot — 2026-11-04 2:18 PM
+- Done: Recorded the 2:09 PM decision (option a): T10b → superseded, T10c row added (`claimed`, prj_5ek7bdiL / exec_29U9S7Kj); obv/T10 still at 8c71707 (2:04 PM), 9 min since dispatch. T11r: obv/T11r still at 54790ed, last heartbeat 1:45 (33 min, stale at ~2:30 PM). No `claude/*` branches. V1 still blocked until the 4:35 PM continue.
+- Outputs: this board update only. No new Obvious job.
+- Next: watch T10c push to obv/T10 and T11r adapter commit/heartbeat. Remember the T10c files may conflict with the V1 continue at 4:35 PM: merge #346 first or rebase V1.
 
 ### Board sync — Stomato bot — 2026-11-04 2:06 PM
 - Done: Pulled T10b handoff (4c745f0): T10b → `blocked`, obv/T10 8c71707 pushed 2:04 PM, PR #346 updated in place. Restored checks expose 5 pre-existing V1 cases.yaml defects (2 amine-enrtl anchors with `components: []`; 3 aga8-ng2 dew sources unquoted so ` #` truncates them). Suite on obv/T10: 289 passed / 353 skipped / 320 xfailed / 1 failed. T11r: obv/T11r still at obv/T9 head 54790ed, last heartbeat 1:45 (21 min, not stale; stale at ~2:30 PM). No `claude/*` branches. V1 still blocked until the 4:35 PM continue.
