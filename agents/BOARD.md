@@ -21,6 +21,9 @@ Times are America/Chicago (CST). Newest handoff on top.
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+### T1r — Obvious — 2026-11-04 12:40 PM (heartbeat 1)
+- 12:40 PM CST — claimed 12:07; branch obv/T1r cut from origin/chem-engine. Pack (b) data secured: Lai, Lin & Tu (2014) J. Chem. Thermodyn. 68, 13-19, DOI 10.1016/j.jct.2013.08.020, ethanol(1)+water(2) isobar at 101.3 kPa — 16 T-x-y points plus the azeotrope (351.32 K, x_EtOH 0.891), transcribed from the open NIST ThermoML XML (trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml), retrieved 2026-11-04. Pack (a) still open: no tabulated open C2/C3 VLE source found yet — NIST ThermoML archive has no ethane+propane binary record (9 candidate DOIs checked), DDB holds the system but does not expose values (HPV databank, paywalled quote-only), Miksovsky & Wichterle CCCC 1975 is buy-only, SDS 27/28 is gas-in-liquid solubility not binary VLE, NISTIR 3953 ethane tables contain no propane mixture data. V1 files untouched; writing only data/validation/packs/T1r/. Next: finish pack (b), keep hunting (a) — otherwise NOT FOUND with the full list of where I looked.
+
 ### T5 — Obvious — 2026-11-04 12:12 PM (heartbeat 1)
 - 12:12 CST — pack committed to obv/T5 (93ae662): 35 VLE cases (H2O+MEG, H2O+TEG, 0.1 MPa, Chouireb 2018 open SI) + 7 gamma-inf rows (Tochigi 2000 MeOH/H2O; Zhang 2003 MeOH/MEG via ThermoML) + licence audit. N2 not in either DB; CO2 only in UD. PR into chem-engine next.
 
