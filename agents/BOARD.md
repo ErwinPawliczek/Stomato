@@ -270,6 +270,7 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 | T8r (1:36 PM) | prj_5RzQacfW | exec_FNacwkOO (thread th_ruV5dCbI) |
 | T8r stop (1:39 PM) | prj_5RzQacfW | exec_chy8DSeZ (thread th_DBdEBZhf) |
 | T11r (1:40 PM) | prj_DBCEIlsQ | exec_dXs6PPIx (thread th_M4RIuUxU) |
+| T10c (2:09 PM) | prj_5ek7bdiL | exec_29U9S7Kj (thread th_8cZYEKKs) |
 
 ### Sources found
 | model / unit | dataset | citation | DOI / URL | added by |
@@ -280,3 +281,5 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 | cosmo_sac_ig (pending) | T5 pack (H2O+MEG, H2O+TEG bubble_T 0.1 MPa; gamma-inf MeOH/H2O, MeOH/MEG) + sigma-profile licence audit | Chouireb 2018 open SI; Tochigi 2000; Zhang 2003 (ThermoML) | PR #341 ; pack on obv/T5 (URLs in packs/T5/README.md) | T5 / board sync |
 | NRTL EtOH/H2O | T1r pack (17 pts isobaric 101.3 kPa + azeotrope) | Lai, Lin & Tu, J. Chem. Thermodyn. 68 (2014) 13-19 | DOI 10.1016/j.jct.2013.08.020 ; trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml ; PR #342 | T1r / board sync |
 | SR-POLAR (pending) | T3 pack (Mangold 2019 H2O/O2/N2/CO2 params; Table 8 water-air molar volumes, 9 pts) | Mangold et al., J. Supercrit. Fluids 153 (2019) 104476 (CC BY) | doi:10.1016/j.supflu.2019.02.016 ; PMC6919335 ; PR #343 | T3 / board sync |
+
+- 2026-11-04 2:09 PM CST: T10c dispatched (option a for T10b): pushes to obv/T10 (PR #346): quote aga8-ng2-*-dew sources in helmholtz/cases.yaml; fill components for amine-enrtl-co2-loading-0.10/0.40-313K in electrolyte/cases.yaml (BLOCKED if an id is missing). WARNING: these two files may conflict with V1 continue run at 4:35 PM: merge #346 first or rebase V1.
