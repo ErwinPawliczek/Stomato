@@ -7,8 +7,8 @@ Times are America/Chicago (CST). Newest handoff on top.
 
 | id | title | owner | status | branch | updated |
 |----|-------|-------|--------|--------|---------|
-| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress (paused for usage reset, resumes ~11:35 AM) | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 10:50 AM |
-| T1 | Obvious trial: cited reference data for PR ethane/propane VLE, NRTL ethanol/water VLE, IAPWS-IF97 verification tables | Obvious | in progress | obv/T1 (results currently in Obvious project; no push access yet) | 2026-11-04 10:50 AM |
+| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress (resumed 11:35 AM after usage reset; val-infra merged into chem-engine 11:35) | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 11:45 AM |
+| T1 | Obvious trial: cited reference data for PR ethane/propane VLE, NRTL ethanol/water VLE, IAPWS-IF97 verification tables | Obvious | in progress | obv/T1 (results currently in Obvious project; no obv/* branch on origin yet) — STALE >45 min (no update since 10:50 AM) | 2026-11-04 11:45 AM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
 
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
@@ -24,6 +24,12 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 - Tests run + result:
 - Next / open questions:
 -->
+
+### V1 — Claude Code (board sync) — 2026-11-04 11:45 AM
+- Done: Run resumed 11:35 AM after the 5-hour usage reset. val-infra (8a7d545, 296e6f6) fast-forwarded into chem-engine at 11:35.
+- Outputs (paths / branch / commit): chem-engine; progress in `~/stomato-val-progress.md`.
+- Tests run + result (from progress log): ruff, format, mypy (656 files), lint-imports (3 kept), full pytest --extra saft exit 0, audit PASS, frontend typecheck/lint/check:api, vitest 147/147.
+- Next / open questions: remaining workstreams (units-a/b/c, special, gphi-corr, etc.) continue; blocked models listed in progress log: COSMO-SAC, SR-POLAR, Polymer SRK, API liquid density.
 
 ### T2 — Obvious — 2026-11-04 10:57 AM
 - Done: Coordination loop test — read `agents/PROTOCOL.md`, added T2 row to the task board, committed and pushed this handoff to `agents-board`.
