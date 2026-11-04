@@ -9,18 +9,28 @@ Times are America/Chicago (CST). Newest handoff on top.
 |----|-------|-------|--------|--------|---------|
 | V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | blocked — Claude 5h limit (CONTINUE END 12:27, resets 4:30 PM); continue script scheduled 4:35 PM (validation watcher); no new chem-engine merge since val-infra | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 12:38 PM |
 | T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
-| T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | review (PR #342) | obv/T1r | 2026-11-04 12:18 PM |
-| T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | review (PR #343, 12:22 PM) | obv/T3 | 2026-11-04 12:22 PM |
-| T4 | API liquid density: public reproductions of API TDB 6A3.5 / Rackett-type petroleum correlations with worked examples | Obvious | review | obv/T4 | 2026-11-04 12:11 PM |
-| T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | review (PR #341) | obv/T5 | 2026-11-04 12:16 PM |
-| T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | review | obv/T6 | 2026-11-04 12:26 PM |
-| T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | review | obv/T7 | 2026-11-04 12:12 PM |
+| T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | accepted (PR #342, awaits suite) | obv/T1r | 2026-11-04 12:18 PM |
+| T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | accepted w/ fix (PR #343; fix in T10) | obv/T3 | 2026-11-04 12:22 PM |
+| T4 | API liquid density: public reproductions of API TDB 6A3.5 / Rackett-type petroleum correlations with worked examples | Obvious | accepted (PR #338) | obv/T4 | 2026-11-04 12:11 PM |
+| T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | accepted (PR #341) | obv/T5 | 2026-11-04 12:16 PM |
+| T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | accepted (PR #340) | obv/T6 | 2026-11-04 12:26 PM |
+| T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | data accepted; PR #339 closed (wrong base) → T7b | obv/T7 | 2026-11-04 12:12 PM |
 | T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 12:06 PM |
+| T7b | Re-cut T7 pack onto chem-engine (PR #339 was cut from agents-board: 254 files incl. uv.lock/.importlinter); drop the 6 Antoine-computed Psat cases | Obvious | open | obv/T7b | 2026-11-04 12:55 PM |
+| T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only; props resolve via chemdb/chemicals by CAS) | Obvious | open | obv/T9 | 2026-11-04 12:55 PM |
+| T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T1r runs on nrtl, pending:* stay skipped; T3 P-value fix | Obvious | open (after T9) | obv/T10 | 2026-11-04 12:55 PM |
+| T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | open (after T9) | obv/T11 | 2026-11-04 12:55 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
 
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Review — Stomato bot — 2026-11-04 12:55 PM
+- Done: Reviewed Obvious packs. Spot-checks: T1r all 16 T-x-y rows + azeotrope match the NIST ThermoML XML exactly; T3 all 9 rows match Mangold 2019 Table 8 (PMC6919335); T7 Sebastiani row 100.8 °C / x_w 0.865 / y_w 0.907 matches the open PDF and the AcOH/H2O column mapping is correct; T6/T4/T5 sources plausible and internally consistent (hrcak PDF not script-retrievable, not independently checked).
+- Verdicts: #338 T4 accept (caveat: source is a public API ballot draft, 1 worked-example case, pending adapter). #339 T7 data accept, PR closed — branch cut from agents-board so it carries 254 files incl. locked uv.lock/.importlinter; re-cut as T7b and drop the 6 Antoine-evaluated Psat "cases" (correlation output, not measurement). #340 T6 accept. #341 T5 accept (UD profiles academic/non-commercial — per the deferred-licence decision). #342 T1r accept. #343 T3 accept with fix: P 263899999 → 263900000; pack is density-only, NOT VLE validation for SR-POLAR.
+- Decisions: AcOH/EtOH/O2 added as components (chemdb already holds cited Tc/Pc/omega/Tb etc. for all three; components.yaml is identity-only) → T9. SR-POLAR: implement with Mangold params as density-level only, VLE row stays open → T11. Supercritical tolerance: compare against the paper's own per-point VTBMSR-III error (|ours − ref| ≤ |paper err| + 2 %), not P1-05 bands.
+- Next: Obvious T7b, T9, T10, T11 dispatched (project ids in Shared notes). Nothing merges to chem-engine until the full suite passes on Erwin's PC.
 
 ### Board sync — Stomato bot — 2026-11-04 12:38 PM
 - Done: Pulled T3 handoff (35a38ec): T3 → `review`, PR #343 (`obv/T3` c1e7b09, SR-POLAR Mangold 2019 params + 9 water-air density cases; methanol/ethanol/acetone/ammonia p-sets NOT FOUND, paywalled; params regressed on density, not VLE). V1 → `blocked`: continue session ended 12:27 on Claude 5h limit; validation watcher scheduled the next continue for 4:35 PM. T8 claimed 12:06, no `obv/T8` push yet (32 min, stale at ~12:51).
@@ -136,6 +146,7 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 ## Shared notes
 
 ### Decisions
+- 2026-11-04: AcOH, EtOH, O2 join components.yaml (identity; cited chemdb props). SR-POLAR registered density-only (Mangold 2019 params are density-fitted, not VLE). Supercritical density cases use the source paper's own model error as tolerance. Computed (correlation-evaluated) points are never validation cases.
 - 2026-11-04: Heavy units stay at catalogue R2 for now; validation comes first.
 - 2026-11-04: Licence questions deferred (non-commercial); still record the source of every value.
 - 2026-11-04: Companies will bring their own data; structure must accept user parameter sets with recorded sources.
