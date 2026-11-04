@@ -277,37 +277,43 @@ def build_flasher(
 
 
 class _DistinctTrialStabilityTester(StabilityTester):  # type: ignore[misc]
-    """thermo's StabilityTester that never hands the same trial composition out twice.
+    """thermo's StabilityTester without the replayed tail of random trial compositions.
 
     thermo 0.6.1's ``incipient_guesses`` ends with N random trial compositions;
     once N*N > 1000 (N >= 32 components) it draws them as
     ``for i in range(N): seed(0); for k in range(N): yield normalize(...)``, so
     the seed(0) inside the outer loop replays the same N compositions N times:
     N*N random trials of which only N are distinct. Every Michelsen stability
-    test that finds the feed stable walks all of them (measured on the
+    test that finds the feed stable walked all of them (measured on the
     side_strip example bottoms, 48 components at 500 K / 3 bar: 2,356 trial
     iterations, 45 s, for 100 distinct trials).
 
     A repeated trial is redundant work, not new information: the stability
-    iteration (Michelsen 1982, Fluid Phase Equilib. 9, 1-19, the tangent-plane
+    iteration (Michelsen 1982, Fluid Phase Equilib. 9, 1-19, tangent-plane
     distance successive substitution) is a pure function of (T, P, the
     assumed-stable phase, the trial composition), so a repeat returns exactly
     the result of its first occurrence, and FlashVL.stability_test_Michelsen
     either already stopped at that first occurrence (an unstable trial) or
-    skipped it (stable, trivial or an existing phase) - with every flasher
-    option this package uses, a repeat can change nothing. All repeats sit
-    after the first N random trials, so the generator index (and the
-    ``incipient_guess_name``) of every trial still handed out is unchanged,
-    and the generator is still run to the end (lazily, as the caller asks), so
-    the global ``random`` state it leaves behind is the one thermo leaves.
+    skipped it (stable, trivial or an existing phase). With the stability
+    options this package's flashers run (no ``all_solutions``, ``handle_iffy``,
+    ``lowest_dG`` or ``highest_comp_diff``) a repeat can change nothing.
+
+    Only a *trailing* run of repeats is dropped: a repeat followed by any new
+    trial (e.g. the aqueous pure-water trial that the pure block hands out
+    again) is still handed out, so the generator index of every trial - and
+    the ``stab_guess_name`` the flash records - is unchanged.
     """
 
     def incipient_guesses(self, *args: Any, **kwargs: Any) -> Iterator[list[float]]:
         seen: set[tuple[float, ...]] = set()
+        held: list[list[float]] = []  # repeats not yet known to be trailing
         for guess in super().incipient_guesses(*args, **kwargs):
             key = tuple(guess)
             if key in seen:
+                held.append(guess)
                 continue
+            yield from held
+            held.clear()
             seen.add(key)
             yield guess
 
