@@ -931,9 +931,43 @@ pure_cases:
     rho_V: 0.5379175992407982
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
+- id: cosmo-sac-ig-pure-MeOH-330K
+  package: cosmo_sac_ig
+  fluid: MeOH
+  coolprop_fluid: Methanol
+  components:
+  - MeOH
+  z:
+    MeOH: 1.0
+  T: 330.0
+  source: coolprop:Methanol
+  expected:
+    bubble_P: 74453.42585625796
+    dew_P: 74453.42585625796
+    rho_V: 0.9112183058078597
+    rho_L: 755.881962161443
+    Cp: 88.50470131431118
+- id: cosmo-sac-ig-pure-H2O-370K
+  package: cosmo_sac_ig
+  fluid: H2O
+  coolprop_fluid: Water
+  components:
+  - H2O
+  z:
+    H2O: 1.0
+  T: 370.0
+  source: coolprop:Water
+  expected:
+    bubble_P: 90535.17075857562
+    dew_P: 90535.17075857562
+    rho_V: 0.5379175992407982
+    rho_L: 960.5870351015669
+    Cp: 75.8833211266792
 binary_cases:
 - id: nrtl-ig-meohh2o-101.325kPa-349.05K
-  package: pending:nrtl_ig
+  package:
+  - pending:nrtl_ig
+  - cosmo_sac_ig
   components:
   - MeOH
   - H2O
@@ -950,7 +984,9 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: nrtl-ig-meohh2o-312.91K-20.705kPa
-  package: pending:nrtl_ig
+  package:
+  - pending:nrtl_ig
+  - cosmo_sac_ig
   components:
   - MeOH
   - H2O
@@ -1001,7 +1037,9 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: nrtl-ig-meohnc4-323.22K-0.3366MPa
-  package: pending:nrtl_ig
+  package:
+  - pending:nrtl_ig
+  - cosmo_sac_ig
   components:
   - MeOH
   - nC4
@@ -1015,7 +1053,9 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: nrtl-ig-etohh2o-azeotrope-101.325kPa
-  package: pending:nrtl_ig
+  package:
+  - pending:nrtl_ig
+  - cosmo_sac_ig
   components:
   - EtOH
   - H2O

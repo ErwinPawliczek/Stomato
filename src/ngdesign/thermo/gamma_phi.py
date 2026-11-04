@@ -27,7 +27,8 @@ The extended liquids: ``wohl3`` (three-suffix Wohl on the Margules pairs),
 ``nrtl_tdep``, ``uniquac_tdep`` and ``wilson_tdep`` (tau_ij or ln Lambda_ij = a_ij + b_ij/T,
 from cited tables in
 data/thermo_params/<model>/tdep_pairs.yaml) and ``nrtl_sac`` (segment activity,
-data/thermo_params/nrtl_sac/segments.yaml). The ``caloric`` option moves the liquid
+data/thermo_params/nrtl_sac/segments.yaml) and ``cosmo_sac`` (COSMO-SAC 2010 on the
+sigma profiles in data/thermo_params/cosmo_sac/profiles.yaml). The ``caloric`` option moves the liquid
 enthalpy route without touching the K-values (:class:`LiquidReferenceLiquid`).
 
 Three liquid phases (VLLE) are wired for the models whose parameterizations
@@ -77,6 +78,7 @@ from thermo.wilson import Wilson
 from ngdesign.data import DATABANK_LOCK
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.thermo import _state, virial
+from ngdesign.thermo.cosmo_sac import CosmoSac, load_profile
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
 from ngdesign.thermo.ge_models import NRTL_SAC_SEGMENTS, Margules, NrtlSac, VanLaar, WohlThreeSuffix
 from ngdesign.thermo.options import GammaPhiCaloric
@@ -108,6 +110,7 @@ _DISPLAY: dict[str, str] = {
     "uniquac_tdep": "T-dependent UNIQUAC",
     "wilson_tdep": "T-dependent Wilson",
     "nrtl_sac": "NRTL-SAC",
+    "cosmo_sac": "COSMO-SAC",
     "regular_solution": "the regular-solution model",
 }
 
@@ -584,6 +587,14 @@ def _ge_model_factory(liquid: str, ids: tuple[str, ...], cas_list: list[str], co
 
     if liquid == "nrtl_sac":
         return _nrtl_sac_factory(ids, cas_list)
+
+    if liquid == "cosmo_sac":
+        profiles = [load_profile(cid, cas) for cid, cas in zip(ids, cas_list, strict=True)]
+
+        def make(xs: list[float]) -> GibbsExcess:
+            return CosmoSac(xs=list(xs), T=298.15, profiles=profiles)
+
+        return make
 
     if liquid == "regular_solution":
         return _regular_solution_factory(ids, cas_list, correlations)

@@ -151,6 +151,7 @@ class GammaPhiLiquid(StrEnum):
     UNIQUAC_TDEP = "uniquac_tdep"
     WILSON_TDEP = "wilson_tdep"
     NRTL_SAC = "nrtl_sac"
+    COSMO_SAC = "cosmo_sac"
     REGULAR_SOLUTION = "regular_solution"
     UNIFAC = "unifac"
     UNIFAC_DORTMUND = "unifac_dortmund"
