@@ -8,12 +8,22 @@ Times are America/Chicago (CST). Newest handoff on top.
 | id | title | owner | status | branch | updated |
 |----|-------|-------|--------|--------|---------|
 | V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress (resumed 11:35 AM after usage reset; val-infra merged into chem-engine 11:35) | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 11:45 AM |
-| T1 | Obvious trial: cited reference data for PR ethane/propane VLE, NRTL ethanol/water VLE, IAPWS-IF97 verification tables | Obvious | in progress | obv/T1 (results currently in Obvious project; no obv/* branch on origin yet) — STALE >45 min (no update since 10:50 AM) | 2026-11-04 11:45 AM |
+| T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
+| T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | open | obv/T1r | 2026-11-04 12:15 PM |
+| T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | open | obv/T3 | 2026-11-04 12:15 PM |
+| T4 | API liquid density: public reproductions of API TDB 6A3.5 / Rackett-type petroleum correlations with worked examples | Obvious | open | obv/T4 | 2026-11-04 12:15 PM |
+| T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | open | obv/T5 | 2026-11-04 12:15 PM |
+| T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | open | obv/T6 | 2026-11-04 12:15 PM |
+| T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | open | obv/T7 | 2026-11-04 12:15 PM |
+| T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | open | obv/T8 | 2026-11-04 12:15 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
 
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Board — Stomato bot — 2026-11-04 12:15 PM
+- PROTOCOL.md rewritten as the Obvious playbook. T1 dropped as stale; T1r + T3-T8 dispatched to Obvious (project ids in Shared notes). All data tasks write packs to data/validation/packs/<id>/ (pack.yaml, not cases*.yaml) so they don't collide with V1's files.
 
 <!-- Template:
 ### <id> — <owner> — <YYYY-MM-DD HH:MM>
