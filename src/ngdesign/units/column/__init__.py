@@ -70,6 +70,7 @@ from .inside_out import (
     _check_pumparounds,
     _close_energy_balance,
     _Column,
+    _condensate_temperature,
     _exact_residuals,
     _Profile,
     _section_duty_total,
@@ -99,19 +100,27 @@ __all__ = [
 
 
 def _condensed_distillate(
-    tb: _ThermoBox, y0: dict[str, float], t_top: float, p_cond: float, d: float
+    tb: _ThermoBox, y0: dict[str, float], t_top: float, p_cond: float, d: float, decant: bool
 ) -> StreamState:
     """Total-condenser product: saturated liquid at the condenser pressure.
 
-    Flashed at the bubble point of the vapour composition so the returned phase
-    list is self-consistent; flashing the two-phase top-stage equilibrium would
-    carry phase fractions that do not sum to one for a pure-liquid product.
+    Flashed at the true bubble point of the condensate composition (Seader,
+    Henley & Roper, Separation Process Principles 3rd ed., §10.3: reflux and
+    distillate leave a total condenser as saturated liquid) - the state the
+    condenser duty ``_total_condenser_duty`` condenses the stage-1 vapour to.
+
+    A decanting condenser keeps its S0-1c step 4 state: the hydrocarbon
+    liquid flashed at the ``bubble_temperature`` crossing of its composition.
     """
     y0_ready = _flash_ready(y0, y0)
-    t_bubble = tb.bubble_temperature(y0_ready, p_cond)
-    if t_bubble is None:
-        t_bubble = t_top  # degenerate edge; flash near the top-stage state
-    return tb.pt(y0_ready, t_bubble, p_cond, max(d, _FLOW_FLOOR))
+    t_cond = (
+        tb.bubble_temperature(y0_ready, p_cond)
+        if decant
+        else _condensate_temperature(tb, y0_ready, t_top, p_cond)
+    )
+    if t_cond is None:
+        t_cond = t_top  # degenerate edge; flash near the top-stage state
+    return tb.pt(y0_ready, t_cond, p_cond, max(d, _FLOW_FLOOR))
 
 
 def _zero_flow_state(comp: dict[str, float], t: float, p: float) -> StreamState:
@@ -244,7 +253,7 @@ def _column_result(
     try:
         if col.condenser == "total":
             distillate = _condensed_distillate(
-                tb, prof.reflux_x or prof.y[0], prof.T[0], col.pressures[0], prof.d
+                tb, prof.reflux_x or prof.y[0], prof.T[0], col.pressures[0], prof.d, col.water_decant
             )
         else:
             distillate = tb.pt(prof.y[0], prof.T[0], col.pressures[0], prof.d)

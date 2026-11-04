@@ -44,7 +44,15 @@ from .graph_ns import (
     _reflux_split,
     _stage_row_ranges,
 )
-from .inside_out import _Column, _l_profile, _pa_reports, _Profile, _StageFeed, _temperature_seed
+from .inside_out import (
+    _Column,
+    _l_profile,
+    _pa_reports,
+    _Profile,
+    _StageFeed,
+    _temperature_seed,
+    _total_condenser_duty,
+)
 from .spec import _FLOW_FLOOR, STEAM_COMPONENT, ColumnConvergenceError, ColumnSpecError
 from .thermo_adapter import _flash_ready, _ThermoBox
 
@@ -283,12 +291,7 @@ def _finalize_graph_duties(col: _Column, tb: _ThermoBox, prof: _Profile) -> None
             0.0,
         )
     elif col.condenser == "total":
-        y0 = _flash_ready(prof.y[0], col.feed_comp)
-        prof.qc = max(
-            prof.V[0]
-            * (tb.h_vapor(y0, prof.T[0], col.pressures[0]) - tb.h_liquid(y0, prof.T[0], col.pressures[0])),
-            0.0,
-        )
+        prof.qc = _total_condenser_duty(tb, prof.V[0], prof.y[0], prof.T[0], col.pressures[0], col.feed_comp)
     elif col.condenser == "partial":
         prof.qc = max(_graph_stage_heat_imbalance(col, tb, prof, 0), 0.0)
     else:

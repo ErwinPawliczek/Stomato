@@ -1893,6 +1893,35 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
 # --------------------------------------------------------------------------------------
 
 
+def _condensate_temperature(tb: _ThermoBox, y0: dict[str, float], t_top: float, p_cond: float) -> float:
+    """Total-condenser outlet temperature: the bubble point of the overhead
+    vapour's composition at the condenser pressure (reflux and distillate leave
+    as saturated liquid; Seader, Henley & Roper, Separation Process Principles
+    3rd ed., §10.3). Falls back to the stage-1 temperature when the package
+    has no bubble point there (super-critical overhead)."""
+    t_bub = tb.saturated_liquid_temperature(y0, p_cond)
+    return t_top if t_bub is None else t_bub
+
+
+def _total_condenser_duty(
+    tb: _ThermoBox,
+    v_top: float,
+    y_top: dict[str, float],
+    t_top: float,
+    p_cond: float,
+    fallback: dict[str, float],
+) -> float:
+    """Total-condenser duty, W: the stage-1 vapour condensed to saturated liquid.
+
+    Q_c = V_1 (h_V(y_1, T_1) - h_L(y_1, T_bub(y_1))) (Seader, Henley & Roper,
+    Separation Process Principles 3rd ed., §10.3 condenser balance with
+    V_1 = L_0 + D at the condensate composition y_1).
+    """
+    y0 = _flash_ready(y_top, fallback)
+    t_cond = _condensate_temperature(tb, y0, t_top, p_cond)
+    return max(v_top * (tb.h_vapor(y0, t_top, p_cond) - tb.h_liquid(y0, t_cond, p_cond)), 0.0)
+
+
 def _finalize_duties(col: _Column, tb: _ThermoBox, prof: _Profile) -> None:
     """Duties from the converged profile.
 
@@ -1913,12 +1942,7 @@ def _finalize_duties(col: _Column, tb: _ThermoBox, prof: _Profile) -> None:
     liquid = _l_profile(col, prof.l0, prof.V)
     prof.d, prof.b = _d_and_b(col, prof.l0, prof.V, liquid)
     if col.condenser == "total":
-        y0 = _flash_ready(prof.y[0], col.feed_comp)
-        prof.qc = max(
-            prof.V[0]
-            * (tb.h_vapor(y0, prof.T[0], col.pressures[0]) - tb.h_liquid(y0, prof.T[0], col.pressures[0])),
-            0.0,
-        )
+        prof.qc = _total_condenser_duty(tb, prof.V[0], prof.y[0], prof.T[0], col.pressures[0], col.feed_comp)
     elif col.condenser == "partial":
         y1 = _flash_ready(prof.y[1], col.feed_comp) if col.n > 1 else col.feed_comp
         h_in = (prof.V[1] * tb.h_vapor(y1, prof.T[1], col.pressures[1]) if col.n > 1 else 0.0) + col.feeds[

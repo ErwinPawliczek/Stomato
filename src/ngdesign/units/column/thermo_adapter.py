@@ -490,8 +490,9 @@ class _ThermoBox:
 
         The former bracket walk converged on the vapour-fraction-0.5 crossing
         between the bubble and the dew — the calibrated seed/anchor estimator
-        the inside-out convergence (and the condensed-distillate state) was
-        tuned against; a true bubble-point seed sits ~25 K lower and drops the
+        the inside-out convergence was tuned against (a seed only: the
+        total-condenser outlet state is ``saturated_liquid_temperature``); a
+        true bubble-point seed sits ~25 K lower and drops the
         top stages into the subcooled CC-estimate region where the sweep
         diverges. Contract v2 reproduces that crossing exactly: bubble and dew
         from the v2 saturation surface, then a 12-step bisection on flash_pt
@@ -528,6 +529,26 @@ class _ThermoBox:
             result = None
         if result is None and len(z) > 1:
             result = self._cc_mixture_estimate(z, P)
+        self._bubble_cache[key] = result
+        return result
+
+    def saturated_liquid_temperature(self, z: dict[str, float], P: float) -> float | None:
+        """True bubble temperature of z at P: the total-condenser outlet state.
+
+        A total condenser returns reflux and distillate as saturated liquid at
+        the condenser pressure (Seader, Henley & Roper, Separation Process
+        Principles 3rd ed., §10.3: Q_c = V_1 (h_V1 - h_L0), L_0 and D at their
+        bubble point). This is the package's ``bubble_point``, NOT
+        ``bubble_temperature`` (the vapour-fraction-0.5 seed crossing). None
+        when the package has no bubble point there (super-critical z).
+        """
+        key = ("sat", tuple(sorted(z.items())), P)
+        if key in self._bubble_cache:
+            return self._bubble_cache[key]
+        try:
+            result: float | None = self._thermo.bubble_point(z, P=P).T
+        except Exception:  # noqa: BLE001 - SaturationError or a component outside the EOS domain
+            result = None
         self._bubble_cache[key] = result
         return result
 
