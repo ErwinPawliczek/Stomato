@@ -83,6 +83,12 @@ TOLERANCE_POLICY: dict[str, float] = {
     "density": 0.03,  # the vapour-density band, applied to the single phase the PT flash returns
     "Z": 0.01,  # compressibility factors are the DC92 check values' home ground
     "cp": 0.05,  # single-phase cp (lowercase: distinct from the saturated-phase `Cp` path)
+    # Solid solubility x_sat(T) of a solute in a solvent: the special-family SLE surface
+    # ``solubility(cid, T)`` (added 2026-11-03). A mole-fraction equilibrium ratio like K,
+    # so it takes the K band. Chosen when the case type was added with the ideal_solid
+    # unit-test misses already known (+2.4..+3.4 % naphthalene, -0.7 % biphenyl, +32 %
+    # anthracene): disclosed, not tuned to them; a case may override it per property.
+    "solubility": 0.05,
 }
 
 #: Properties compared on absolute error (compositions) vs relative error (everything else).
@@ -355,6 +361,15 @@ def evaluate_case(case: Case, pkg: str) -> list[Row]:
     # single-phase states of any package. Expected keys `density`/`Z`/`cp` (lowercase
     # `cp` is distinct from the saturated-phase `Cp` path above) compare against the
     # single phase the PT flash returns; a case `phase` field picks the phase kind.
+    # Solid-liquid solubility (special family): expected {solute: x_sat} at T, read from the
+    # package's solubility(cid, T) surface. A package without that surface yields None (a
+    # failing row, never a silent skip); SLE packages refuse flash-style calls by design.
+    if "solubility" in exp:
+        assert T is not None, f"{case.id}: solubility comparison needs T"
+        solubility = getattr(surf, "solubility", None)
+        for cid, want in exp["solubility"].items():
+            got_x = float(solubility(cid, T)) if callable(solubility) else None
+            rows.append(_row(case, pkg, "solubility", float(want), got_x))
     if {"density", "Z", "cp"} & exp.keys():
         assert T is not None and P is not None, f"{case.id}: single-phase comparisons need T and P"
         state = surf.flash_pt(z, T, P, 1.0)

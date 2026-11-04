@@ -1,13 +1,22 @@
 # Special-chemistry catalogue rows (spec T-10).
 #
 # One row per special property method, registered by ngdesign.thermo.catalogue
-# like every other family. All rows ship `experimental`: the models are
-# implemented and unit-tested against published references, but the parameter
-# base is thin (one polymer pair, dimerization only), so the rows are hidden
-# from the advisor's suggested set and exempt from the L0 audit until their
-# validation cases bind (data/validation/special/cases.yaml carries the pending
-# cases with reasons). Options are deliberately empty - the special adapters
-# read their parameters from data/thermo_params/special/ keyed by component id.
+# like every other family. Status per row, re-decided on evidence 2026-11-03
+# (each row's notes carry the exact reason):
+#   ideal_solid      provisional  - van't Hoff physics complete, tabulated
+#                    fusion properties only (estimates refused), published
+#                    IUPAC-NIST checks in tests/thermo/test_special.py; the
+#                    harness gained a `solubility` case type
+#                    (scripts/validate_properties.py), binding a case needs
+#                    the locked data/validation/ tree.
+#   the other six    experimental - a named reason each: illustrative or
+#                    secondary-sourced parameters (polymer_nrtl, flory_huggins),
+#                    physics gaps in the flash surface (unifac_fv, hoc_dimer,
+#                    hf_hexamer: the association kernels are not wired into the
+#                    flash), or no runnable published reference (polymer_pc_saft).
+# Experimental rows are hidden from the advisor and exempt from the L0 audit.
+# Options are deliberately empty - the special adapters read their parameters
+# from data/thermo_params/special/ keyed by component id.
 
 - id: flory_huggins
   name: Flory-Huggins polymer solution
@@ -38,6 +47,18 @@
       Krigbaum & Geymer (J. Am. Chem. Soc. 81, 1859 (1959)) are paywalled, and
       the shipped chi is itself reduced from the Gunduz & Dincer IGC fit
       point, so binding it would be a round trip. Row stays experimental.
+      Rechecked 2026-11-03, still experimental for three reasons: (1) no
+      published-reference test - every FH assertion is a hand reduction of
+      the implemented closed form, none a measured activity; (2) the POLY_PS
+      segment count r = 962 cites a course note (Penn State MATSE 202), not a
+      primary source, and is the repeat-unit count, not the molar-volume ratio
+      FH defines (~890 at 1.05/0.862 g/cm3); (3) the chi = 0.67 primary
+      (Gunduz & Dincer 1980) is paywalled and was not re-read. Open data
+      searched: Pavlicek, Bogdanic & Wichterle, Chem. Biochem. Eng. Q. 29(1)
+      1-4 (2015), doi:10.15255/CABEQ.2015.2183 (toluene activity vs w1 at
+      363-383 K) - the hrcak.srce.hr PDF sits behind a bot challenge from
+      here and its licence was not verifiable; the Gupta & Prausnitz
+      eScholarship polymer-solvent report returned HTTP 403. Not promoted.
   status: experimental
   validation: []
 
@@ -67,6 +88,10 @@
       Solvent/polymer liquid nonideality with local-composition enthalpy; the
       polymer enters as a flowsheet-owned pseudo-component. Vapour phase ideal.
       The shipped tau/alpha are illustrative, so T_K is structural only.
+      Rechecked 2026-11-03: blocked - the segment tau/alpha are ILLUSTRATIVE
+      placeholders (data/thermo_params/special/polymer.yaml says so), and no
+      open, licensed Chen (1993) segment-parameter table was found; promotion
+      needs real cited parameters, not a better test. Stays experimental.
   status: experimental
   validation: []
 
@@ -96,6 +121,16 @@
       (polymers do not boil); only solvent K-values are meaningful. T-19
       search (2026-10-23): the Oishi & Prausnitz (1978) worked-example tables
       are paywalled with no open transcription found; row stays experimental.
+      Rechecked 2026-11-03 (code read): the physics is incomplete, not only
+      the validation - (1) the UNIFAC residual is evaluated at a fixed
+      298.15 K whatever the flash temperature (_unifac_fv_residual builds
+      UNIFAC.from_subgroups with T=298.15), so the row's T_K window is not
+      honoured; (2) that residual runs on the solvent/REPEAT-UNIT mole
+      fraction as if the polymer were one repeat unit, while x1 is the
+      solvent/polymer-MOLECULE fraction; (3) the toluene rbar 3.87 in
+      unifac_fv.yaml disagrees with its own group sum (3.9228). No open
+      Oishi-Prausnitz reference table to test against (see flory_huggins for
+      the open polystyrene/toluene data searched). Stays experimental.
   status: experimental
   validation: []
 
@@ -105,12 +140,20 @@
   adapter: ngdesign.thermo.special:IdealSolidPackage
   options: {}
   params:
-    source: chemicals databank fusion properties (Tm, Hfus by CAS)
+    source: chemicals databank fusion properties (Tm, Hfus by CAS), tabulated sources only
     provenance: >-
-      van't Hoff ideal solubility ln x = -(dHfus/R)(1/T - 1/Tm), gamma = 1.
-      Fusion properties resolved from the chemicals databank at build time;
-      a component without them refuses. Not a flash package: solubility(cid, T)
-      is the surface, flash-style calls refuse.
+      van't Hoff ideal solubility ln x = -(dHfus/R)(1/T - 1/Tm), gamma = 1
+      (the ideal-solubility equation with the dCp terms neglected; Prausnitz,
+      Lichtenthaler & de Azevedo, Molecular Thermodynamics of Fluid-Phase
+      Equilibria, 3rd ed., solid-liquid equilibria chapter).
+      Fusion properties from the chemicals databank: Tm from the first
+      tabulated source chemicals ranks (Open Notebook melting points, CRC,
+      CAS Common Chemistry, NIST WebBook, Wikidata), Hfus from the CRC
+      Handbook table (chemicals method CRC); since 2026-11-03 the Joback
+      group-contribution estimates are refused, so every number used is a
+      tabulated value (naphthalene 353.35 K / 19010 J/mol, biphenyl 342.575 K /
+      18570 J/mol, anthracene 489.15 K / 29400 J/mol). Not a flash package:
+      solubility(cid, T) is the surface, flash-style calls refuse.
   applicability:
     component_classes: [hydrocarbon, polar_organic]
     polar: true
@@ -128,12 +171,37 @@
       anthracene/benzene x = 0.00713 at 298.15 K, Acree evaluation - sysID
       58_57). Measured van't Hoff misses: +3.4%/+2.4%/+2.9% (naphthalene),
       -0.7% (biphenyl), +32% (anthracene, strongly non-ideal solute -
-      assessed). Row stays experimental: the validation harness
-      (scripts/validate_properties.py, outside this spec's editable files)
-      has no case type for the solubility(cid, T) surface, so no L1/L2 case
-      can be bound; the published checks live in tests/thermo/test_special.py.
-  status: experimental
+      assessed). PROMOTED to provisional 2026-11-03: the physics is complete
+      for its claim (ideal solubility), the parameters are tabulated and
+      cited, and the published checks run in tests/thermo/test_special.py.
+      The structural gap is closed: scripts/validate_properties.py now has a
+      `solubility` case type (expected {solute: x_sat} at T, 5 % band;
+      tests/thermo/test_special_solubility_case.py drives it with the
+      IUPAC-NIST points). No case is bound: data/validation/ is locked, so
+      binding the IUPAC-NIST points as L2 cases is the follow-up that would
+      take the row toward validated. The advisor sinks the row below every
+      VLE flash package (it claims no vapour phase).
+  status: provisional
   validation: []
+  l0: {}
+  l0_excluded:
+    pure_psat_limit: not a VLE package - pure_psat returns None by contract (an SLE row
+      contributes no vapour-pressure correlation); the surface is solubility(cid, T)
+    phase_identification: every flash-style entry point refuses by design (a solid-bearing
+      stream must never be silently flashed as vapour/liquid); the SLE surface has no phase
+      identification to check
+    round_trip: flash_pt/flash_ph refuse by design (SLE surface only)
+    dhdT_cp: phase_props refuses by design (no phase enthalpy or Cp is claimed)
+    gibbs_duhem: gamma = 1 by construction (ideal solubility), so the Gibbs-Duhem identity
+      holds identically; there is no phase_props ln_phi to evaluate it on
+    single_liquid_limit: flash_pt refuses by design (SLE surface only)
+    determinism: flash_pt refuses by design; solubility(cid, T) is a closed form of tabulated
+      constants (two instances agree bit-for-bit, pinned in tests/thermo/test_special.py)
+  l0_note: >-
+    The L0 checks are flash-surface checks and this row refuses every flash by design;
+    its own self-consistency is pinned in tests/thermo/test_special.py instead -
+    x(Tm) == 1 exactly, x rising with T, bit-identical instances, the closed form
+    against a hand reduction, and the IUPAC-NIST published points.
 
 - id: hoc_dimer
   name: Dimerizing-acid gamma-phi (Hayden-O'Connell family, in-house kernel)
@@ -174,7 +242,14 @@
       association-only ideal-liquid K model gives K_w +7% / K_a -15% vs
       measured, while the monomer-only model gives -4% / -16%, so liquid
       non-ideality dominates and no honest harness-evaluable case exists for
-      this row today.
+      this row today. Rechecked 2026-11-03 (code read): the row's physics is
+      STUBBED in its flash surface - HaydenOConnellDimerPackage builds the
+      special flasher with an IdealGas vapour and an ideal liquid; the
+      dimerization kernel is only callable as a function, so every flash of
+      this row is plain Raoult. Promotion needs a chemical-theory vapour phase
+      wired into the flasher (fugacity of the apparent acid = monomer
+      partial pressure, association enthalpy in H), then L0 checks and a
+      published VLE point. Stays experimental.
   status: experimental
   validation: []
 
@@ -209,7 +284,11 @@
       A_PA from a_mmHg independently). The paper's wider association-factor
       table is not retrievable open access (searched 2026-10-23), so no
       new-temperature point can be bound; row stays experimental - the kernel
-      surface is not harness-evaluable.
+      surface is not harness-evaluable. Rechecked 2026-11-03 (code read): as
+      for hoc_dimer, the hexamerization kernel is not wired into the flash -
+      HFHexamerPackage flashes with an IdealGas vapour and an ideal liquid, so
+      the row's named physics is absent from its flash surface. Stays
+      experimental until the association vapour phase is wired in.
   status: experimental
   validation: []
 
@@ -246,6 +325,11 @@
       table an ideal-free k_ij = 0 bridge could be bound against, and the
       kernel refuses at first use without the optional saft extra, so a bound
       case cannot run in the default local environment. Row stays
+      experimental. Rechecked 2026-11-03: unchanged - teqp is still absent
+      locally (the kernel smoke test skips), no published polystyrene/toluene
+      binary table with a verifiable licence was retrieved (see
+      flory_huggins), and k_ij = 0 has no cited value, so no published-
+      reference test exists for the row's solvent activity. Stays
       experimental.
   status: experimental
   validation: []

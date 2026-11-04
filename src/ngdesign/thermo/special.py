@@ -36,11 +36,14 @@ the params file documents the polystyrene characterization used by the
 validation cases. Provenance lives in the params files and the catalogue rows;
 every numerical derivation is cited there.
 
-The special-chemistry rows ship as ``experimental``: the models and equations
-are implemented and unit-tested against published references, but the
-parameter base is thin (one or two polymer pairs, dimerization only), so the
-rows stay out of the advisor's suggested set until validation cases bind
-(data/validation/special/cases.yaml carries the pending cases with reasons).
+Status (re-decided 2026-11-03; the reasons live in each catalogue row's notes):
+``ideal_solid`` is ``provisional`` (complete van't Hoff physics on tabulated
+fusion properties, published IUPAC-NIST checks, a harness ``solubility`` case
+type). The other six stay ``experimental`` and out of the advisor's set:
+illustrative or secondary-sourced polymer parameters, the UNIFAC-FV residual's
+fixed-298.15 K / repeat-unit-fraction gaps, the association kernels not being
+wired into the dimer/hexamer flash (those rows flash with an ideal-gas vapour),
+and no runnable published reference for polymer PC-SAFT.
 
 SI units throughout: K, Pa, J/mol, J/(mol K).
 """
@@ -816,19 +819,35 @@ class IdealSolidPackage:
         # the curated slate.
         cas = data_components().get(cid, {}).get("cas") or cid
         try:
-            with DATABANK_LOCK:
-                return float(Tm(cas)), float(Hfus(cas))
+            return IdealSolidPackage._measured_fusion(cas)
         except Exception as exc:  # noqa: BLE001 - refuse, never approximate
             try:
                 from chemicals.identifiers import CAS_from_any
 
-                alt = CAS_from_any(cid)
-                with DATABANK_LOCK:
-                    return float(Tm(alt)), float(Hfus(alt))
+                return IdealSolidPackage._measured_fusion(CAS_from_any(cid))
             except Exception:
                 raise ValueError(
                     f"ideal_solid could not resolve fusion properties (Tm, Hfus) for {cid!r}: {exc}"
                 ) from exc
+
+    @staticmethod
+    def _measured_fusion(cas: str) -> tuple[float, float]:
+        """(Tm, Hfus) from the chemicals databank's tabulated sources only.
+
+        Tm: the first tabulated source chemicals ranks (Open Notebook melting
+        points, CRC organic constants, CAS Common Chemistry, NIST WebBook,
+        Wikidata); Hfus: the CRC Handbook of Chemistry and Physics table
+        (chemicals method ``CRC``). The Joback group-contribution estimates
+        chemicals also offers are excluded: an estimate is not a published
+        fusion property, so a species without tabulated values refuses.
+        """
+        from chemicals.phase_change import Hfus_methods, Tm_methods
+
+        with DATABANK_LOCK:
+            tm_methods = [m for m in Tm_methods(cas) if m != "JOBACK"]
+            if not tm_methods or "CRC" not in Hfus_methods(cas):
+                raise ValueError(f"no tabulated Tm and CRC Hfus for CAS {cas!r}")
+            return float(Tm(cas, method=tm_methods[0])), float(Hfus(cas, method="CRC"))
 
     def solubility(self, cid: str, T: float) -> float:
         """Ideal mole-fraction solubility of solid ``cid`` at ``T``.

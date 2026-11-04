@@ -90,18 +90,26 @@
   l0_note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the
     single-liquid limit run today
 - id: pitzer_nacl_water
-  name: Pitzer NaCl(aq) brine (25 C parameter set)
+  name: Pitzer single-salt brine (NaCl, KCl, KBr, LiCl, NaBr, MgCl2; 25 C PHRQPITZ sets)
   family: electrolyte
   adapter: ngdesign.amine.electrolyte:ElectrolytePitzerNaCl
   options: {}
   params:
     source: data/thermo_params/electrolyte/pitzer.yaml
     provenance: >-
-      Classic 25 C Pitzer NaCl parameter set (PHRQPITZ convention; beta0 0.0765, beta1 0.2664,
-      Cphi 0.00127, Aphi 0.392) validated against Pitzer, Peiper & Busey (1984), J. Phys. Chem.
-      Ref. Data 13(1): mean activity coefficients (Table A-8, 0.1-6 molal within 0.36 %), osmotic
-      coefficients (Table A-9), and the 298.15 K saturation anchor (6.146 mol/kg at gamma 1.0065;
-      the SLE solve lands 6.155, +0.14 %). Water activity a_w = exp(-2 m phi / 55.5084).
+      Single-salt Pitzer sets at 25 C keyed by salt and ion pair, all from the PHRQPITZ data
+      base as printed in USGS WRI 88-4153 (Plummer, Parkhurst, Fleming & Dunkle 1988,
+      doi:10.3133/wri884153) Attachment C.6, pp. 190-192 (U.S. Government work; per-value
+      primary references in the params file: Harvie, Moller & Weare 1984 for NaCl, KCl, MgCl2;
+      Pitzer & Mayorga 1973 for KBr, LiCl, NaBr). Aphi 0.392, b 1.2, alpha 2.0. NaCl
+      (beta0 0.0765, beta1 0.2664, Cphi 0.00127) validated against Pitzer, Peiper & Busey (1984),
+      J. Phys. Chem. Ref. Data 13(1): mean activity coefficients (Table A-8, 0.1-6 molal within
+      0.36 %), osmotic coefficients (Table A-9), and the 298.15 K saturation anchor (6.146
+      mol/kg at gamma 1.0065; the SLE solve lands 6.155, +0.14 %). KCl/KBr/LiCl/NaBr validated
+      against Hamer & Wu (1972), J. Phys. Chem. Ref. Data 1, 1047 (phi within 0.6 %, gamma
+      within 0.9 % to each salt's cap); MgCl2 against Goldberg & Nuttall (1978), J. Phys.
+      Chem. Ref. Data 7, 263, Table 17 (a_w within 0.2 %, phi within 1.9 %, gamma 1.2-3.2 % low,
+      assessed). Water activity a_w = exp(-nu m phi / 55.5084).
   applicability:
     component_classes:
     - water
@@ -117,15 +125,25 @@
     - V
     - L
     notes: >-
-      NaCl-H2O brines at 20-30 C; the parameter set is the 25 C one and temperature dependence
-      enters only through Psat.  Molality clamped to the verified domain (6.15 mol/kg, the
-      saturation anchor).  Na2SO4 is out of scope: no component record resolves in the open
-      registry (documented, T-09).
+      Water plus ONE salt (NaCl, KCl, KBr, LiCl, NaBr or MgCl2) at 20-30 C; the parameter sets
+      are the 25 C ones and temperature dependence enters only through Psat. The row id keeps
+      its historical NaCl name (ids are stable). Molality clamped per salt to its verified
+      domain (NaCl 6.15 saturation anchor, KCl 4.803 saturation, KBr 5.5, LiCl 6.0, NaBr 6.0,
+      MgCl2 5.84). Two salts together refuse at first use (the theta/psi mixing terms are
+      not shipped). Na2SO4 and CaCl2 are out of scope: no component record resolves in the
+      open registry (CaCl2 and Na2SO4 raise in component_record, checked 2026-11-03); 2:2
+      salts (beta2 form) are not implemented. Generalised from NaCl-only on 2026-11-03 with
+      the NaCl results byte-identical (repr snapshot of functions and flashes, before/after).
   status: provisional
   validation: []
   references:
   - Pitzer, K. S., Peiper, J. C. & Busey, R. H., J. Phys. Chem. Ref. Data 13(1), 1-102, 1984
-  - Plummer, L. N., Parkhurst, D. L. et al., PHRQPITZ, USGS Water-Resources Investigations Report 88-4153
+  - Plummer, L. N., Parkhurst, D. L., Fleming, G. W. & Dunkle, S. A., PHRQPITZ, USGS Water-Resources
+    Investigations Report 88-4153, 1988, doi:10.3133/wri884153 (Attachment C.6)
+  - Harvie, C. E., Moller, N. & Weare, J. H., Geochim. Cosmochim. Acta 48, 723-751, 1984
+  - Pitzer, K. S. & Mayorga, G., J. Phys. Chem. 77, 2300-2308, 1973
+  - Hamer, W. J. & Wu, Y.-C., J. Phys. Chem. Ref. Data 1, 1047-1100, 1972, doi:10.1063/1.3253108
+  - Goldberg, R. N. & Nuttall, R. L., J. Phys. Chem. Ref. Data 7, 263-310, 1978, doi:10.1063/1.555569
   l0:
     single_liquid_limit:
       z:
@@ -167,7 +185,9 @@
     0.36 % (spec points 0.1/1/3 m, tolerance 2 %); osmotic coefficient phi(1 m) = 0.9356
     and water activity a_w(3 m) = 0.8932 match the same tables; the solid-liquid
     saturation solve gives 6.1548 vs 6.146 mol/kg at 298.15 K (+0.14 %, tolerance 3 %).
-    L0 round trips and the single-liquid limit run today
+    The other salts' anchors (Hamer & Wu 1972 Tables 9/17/28/29; Goldberg & Nuttall 1978
+    Table 17) and the per-salt flash surface run in tests/thermo/test_electrolyte_salts.py.
+    L0 round trips and the single-liquid limit run today (on NaCl)
 - id: sour_water
   name: Sour water (EPA-600/2-80-067 SWEQ, NH3-H2S-H2O)
   family: electrolyte
@@ -566,7 +586,8 @@
     - V
     - L
     notes: >-
-      NaCl-H2O at 20-30 C, liquid limits as pitzer_nacl_water.
+      Water plus one salt at 20-30 C (the pitzer_nacl_water salts and caps), liquid limits as
+      pitzer_nacl_water.
   status: provisional
   validation: []
   references:

@@ -231,6 +231,27 @@ class TestIdealSolid:
         high = pkg.solubility("naphthalene", 330.0)
         assert low < high
 
+    def test_melting_point_limit_is_exactly_one(self) -> None:
+        """x(Tm) = exp(0) = 1: the liquidus meets the pure solute at its melting point."""
+        pkg = IdealSolidPackage()
+        assert pkg.solubility("naphthalene", 353.35) == 1.0
+
+    def test_two_instances_bit_identical(self) -> None:
+        """The L0 determinism substitute: a closed form of tabulated constants."""
+        a = IdealSolidPackage().solubility("biphenyl", 301.7)
+        b = IdealSolidPackage().solubility("biphenyl", 301.7)
+        assert a == b
+
+    def test_fusion_properties_are_tabulated_not_estimated(self) -> None:
+        """Tm from a tabulated source, Hfus from the CRC table; Joback estimates refused."""
+        from chemicals.phase_change import Hfus, Tm
+
+        pkg = IdealSolidPackage()
+        tm, hfus = pkg._fusion_props("naphthalene")
+        assert (tm, hfus) == (Tm("91-20-3", method="OPEN_NTBKM"), Hfus("91-20-3", method="CRC"))
+        with pytest.raises(ValueError, match="tabulated"):
+            IdealSolidPackage._measured_fusion("0000-00-0")
+
     def test_unknown_species_refuses(self) -> None:
         pkg = IdealSolidPackage()
         with pytest.raises(ValueError, match="fusion properties"):

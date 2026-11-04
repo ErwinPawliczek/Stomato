@@ -15,6 +15,9 @@ probe-based coverage check drive the score. The payload contract:
 Ranking rules (cited in the reasons rows):
 - Applicability match on component classes (Carlson 1996, Chem. Eng.
   Prog. 92(10): 35) and the feed T/P window against the row's window.
+- Phase coverage: a row claiming no vapour phase (an SLE surface such as
+  ``ideal_solid``) is not a VLE flash package and sinks below every row
+  that is, with a warning (Carlson 1996).
 - Polarity: a strongly polar slate demotes cubic EOS with classical
   mixing rules and lifts gamma-phi models (Carlson 1996).
 - Water with hydrocarbons: warn on free-water (VLL) handling — rows
@@ -152,6 +155,17 @@ def _score_row(row: ModelRow, fs: Flowsheet, profile: Profile) -> tuple[int, lis
         warnings.append(
             f"applicability: slate component classes {outside} sit outside the row's "
             f"claimed classes {sorted(row_classes)} (Carlson 1996)"
+        )
+
+    # Phase coverage (Carlson 1996: the model must cover the phases present). A
+    # row that claims no vapour phase is not a VLE flash package (the special
+    # family's ideal_solid answers solubility(cid, T) and refuses every flash), so
+    # a flowsheet that expects vapour-liquid equilibrium sinks it to the bottom.
+    if "V" in profile.expected_phases and "V" not in row.applicability.phases:
+        score -= 100
+        warnings.append(
+            f"phase coverage: the row claims phases {list(row.applicability.phases)}, no vapour; "
+            "it is not a vapour-liquid flash package and cannot solve this flowsheet (Carlson 1996)"
         )
 
     # Polarity (Carlson 1996). The cubic demotion applies to polar-DOMINANT
