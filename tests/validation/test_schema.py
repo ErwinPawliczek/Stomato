@@ -35,8 +35,6 @@ def test_every_case_has_source_and_feed() -> None:
         assert case.z, f"{case.id}: missing z"
         assert abs(sum(case.z.values()) - 1.0) < 1e-6, f"{case.id}: z does not sum to 1"
         assert case.expected, f"{case.id}: no expected values (run --regen-coolprop)"
-        if case.skip_reason:
-            continue  # pending/experimental: not run; feed completeness checked at bind time
         assert case.components, f"{case.id}: missing components"
 
 
