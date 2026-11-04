@@ -8,7 +8,7 @@ from pathlib import Path
 import yaml
 
 from ngdesign import registry
-from scripts.validate_properties import ABSOLUTE_ERROR_PROPERTIES, TOLERANCE_POLICY, _load_cases
+from scripts.validate_properties import ABSOLUTE_ERROR_PROPERTIES, TOLERANCE_POLICY, _load_cases, packages_for
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CASES_PATH = REPO_ROOT / "data" / "validation" / "cases.yaml"
@@ -84,10 +84,20 @@ def test_composition_tolerances_are_absolute() -> None:
 
 
 def test_all_case_packages_are_registered_names() -> None:
+    available = set(registry.available("thermo"))
     for case in _load_cases():
         if case.package == "all":
             continue
-        assert case.package in registry.available("thermo"), f"{case.id}: unexpected package {case.package}"
+        for pkg in packages_for(case):
+            assert pkg in available, f"{case.id}: unexpected package {pkg}"
+
+
+def test_package_list_expands_and_drops_pending() -> None:
+    """``package: [a, pending:b]`` runs on a only; a single-name list behaves like the scalar."""
+    multi = [c for c in _load_cases() if c.packages]
+    for case in multi:
+        assert all(not p.startswith("pending:") for p in case.packages), case.id
+        assert len(set(case.packages)) == len(case.packages), f"{case.id}: duplicate package names"
 
 
 def test_results_json_row_schema_when_present() -> None:

@@ -137,6 +137,10 @@ class Case:
     phase: str = ""
     # cases.yaml section the case came from (the audit's L1/L2 classification)
     section: str = ""
+    # A case may name a LIST of packages (``package: [a, b, c]``): one cited data point
+    # validates several catalogue rows without copying the point. Empty for the
+    # single-name / ``all`` forms; ``package`` then holds the name (or "all").
+    packages: tuple[str, ...] = ()
 
 
 @dataclasses.dataclass(frozen=True)
@@ -159,7 +163,9 @@ def _package(name: str) -> Thermo:
 
 
 def packages_for(case: Case) -> tuple[str, ...]:
-    """Expand ``package: all`` to the cubic packages; pass explicit names through."""
+    """Expand ``package: all`` to the cubic packages; pass explicit names (or a list) through."""
+    if case.packages:
+        return case.packages
     if case.package == "all":
         return CUBIC_PACKAGES
     return (case.package,)
@@ -261,19 +267,19 @@ def _load_cases() -> list[Case]:
         raw = yaml.safe_load(path.read_text())
         for section in ("pure_cases", "binary_cases", "multicomponent_cases"):
             for entry in raw.get(section) or []:
-                pkg_name = str(entry.get("package", "all"))
-                if pkg_name.startswith("pending:"):
-                    # Catalogue row not registered yet (T-02..T-07 adapter specs): the data
-                    # sweep commits the cases ahead of the model; skip until the id lands.
-                    continue
-                if _row_status(pkg_name) == "experimental":
-                    # An experimental row runs no validation cases: its physics is not
-                    # implemented (the adapter refuses at first use); the cases stay bound
-                    # in the row definition until the row reaches provisional.
+                raw_pkg = entry.get("package", "all")
+                names = [str(n) for n in raw_pkg] if isinstance(raw_pkg, list) else [str(raw_pkg)]
+                # Catalogue rows not registered yet (``pending:<id>``, T-02..T-07 adapter specs)
+                # are skipped until the id lands; an experimental row runs no validation cases
+                # (its physics is not implemented; the cases stay bound in the row definition
+                # until the row reaches provisional).
+                live = [n for n in names if not n.startswith("pending:") and _row_status(n) != "experimental"]
+                if not live:
                     continue
                 case = Case(
                     id=str(entry["id"]),
-                    package=str(entry.get("package", "all")),
+                    package=",".join(live),
+                    packages=tuple(live) if isinstance(raw_pkg, list) else (),
                     components=list(entry.get("components", [])),
                     z={k: float(v) for k, v in entry["z"].items()},
                     source=str(entry["source"]),
@@ -289,6 +295,15 @@ def _load_cases() -> list[Case]:
                 )
                 cases.append(case)
     return cases
+
+
+def _runs_on(cases: list[Case]) -> dict[str, set[str]]:
+    """Row id -> ids of the cases that actually run on it (a bound id must be one of these)."""
+    out: dict[str, set[str]] = {}
+    for c in cases:
+        for pkg in packages_for(c):
+            out.setdefault(pkg, set()).add(c.id)
+    return out
 
 
 def _tolerance(case: Case, prop: str) -> float:
@@ -888,6 +903,7 @@ def audit() -> int:
     case_ids = {c.id for c in cases}
     l1_ids = {c.id for c in cases if c.section == "pure_cases"}
     l2_ids = {c.id for c in cases if c.section == "binary_cases"}
+    runs_on = _runs_on(cases)
     failures: list[str] = []
 
     registered = set(registry.available("thermo"))
@@ -923,8 +939,14 @@ def audit() -> int:
         bad_ids = sorted(set(row.validation) - case_ids)
         if bad_ids:
             failures.append(f"{row.id}: validation names unknown case ids {bad_ids}")
-        n1 = len(set(row.validation) & l1_ids)
-        n2 = len(set(row.validation) & l2_ids)
+        inert = sorted(set(row.validation) & case_ids - runs_on.get(row.id, set()))
+        if inert:
+            # A bound id must run on the row: a case naming only other packages
+            # validates nothing here and would inflate the L1/L2 counts.
+            failures.append(f"{row.id}: validation names case ids that do not run on it {inert}")
+        bound = set(row.validation) & runs_on.get(row.id, set())
+        n1 = len(bound & l1_ids)
+        n2 = len(bound & l2_ids)
         if l0_fail:
             failures.append(f"{row.id}: status {row.status} but L0 failing: {[r.check for r in l0_fail]}")
         if row.status == "validated" and (n1 == 0 or n2 == 0):
@@ -992,11 +1014,13 @@ def _catalogue_section(
     cases = _load_cases()
     l1_ids = {c.id for c in cases if c.section == "pure_cases"}
     l2_ids = {c.id for c in cases if c.section == "binary_cases"}
+    runs_on = _runs_on(cases)
     for row in sorted(cat.values(), key=lambda r: r.id):
         checks = l0.get(row.id, [])
         l0_str = f"{sum(r.passed for r in checks)}/{len(checks)}" if checks else "—"
-        n1 = len(set(row.validation) & l1_ids)
-        n2 = len(set(row.validation) & l2_ids)
+        bound = set(row.validation) & runs_on.get(row.id, set())
+        n1 = len(bound & l1_ids)
+        n2 = len(bound & l2_ids)
         lines.append(
             f"| [{row.id}](validation/{row.id}.md) | {row.family} | {row.status} | {l0_str} | "
             f"L1={n1} L2={n2} | [report](validation/{row.id}.md) |"
@@ -1041,11 +1065,13 @@ def _status_summary(
         "| provisional row | what keeps it from validated |",
         "| --- | --- |",
     ]
+    runs_on = _runs_on(_load_cases())
     for row in sorted(cat.values(), key=lambda r: r.id):
         if row.status != "provisional":
             continue
-        n1 = len(set(row.validation) & l1_ids)
-        n2 = len(set(row.validation) & l2_ids)
+        bound = set(row.validation) & runs_on.get(row.id, set())
+        n1 = len(bound & l1_ids)
+        n2 = len(bound & l2_ids)
         reason = _provisional_reason(row, l0.get(row.id, []), n1, n2)
         lines.append(f"| [{row.id}](validation/{row.id}.md) | {reason} |")
     return lines
@@ -1280,7 +1306,28 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="spec T-01 audit: catalogue statuses vs L0/L1/L2 evidence; exit 1 on any gap",
     )
+    parser.add_argument(
+        "--only",
+        metavar="ROW",
+        action="append",
+        default=[],
+        help="run only the cases bound to these rows (repeatable), print the table, write nothing",
+    )
     args = parser.parse_args(argv)
+    if args.only:
+        wanted = set(args.only)
+        subset = [
+            dataclasses.replace(c, packages=tuple(p for p in packages_for(c) if p in wanted))
+            for c in _load_cases()
+            if wanted & set(packages_for(c))
+        ]
+        sub_rows = run_all(subset)
+        print_report(sub_rows, {(c.id, pkg): c.source for c in subset for pkg in packages_for(c)})
+        for r in sub_rows:
+            status = "ok  " if r.passed else "MISS"
+            exp_got = f"exp {_fmt(r.expected)} got {_fmt(r.got)}"
+            print(f"{status} {r.package:<28} {r.case:<44} {r.property:<12} {exp_got}")
+        return 0
     if args.audit:
         return audit()
     if args.regen_coolprop:
@@ -1289,12 +1336,12 @@ def main(argv: list[str] | None = None) -> int:
     cases = _load_cases()
     rows = run_all(cases)
     write_results(rows)
-    print_report(rows, {(c.id, c.package): c.source for c in cases})
+    print_report(rows, {(c.id, pkg): c.source for c in cases for pkg in packages_for(c)})
     total = len(rows)
     n_pass = sum(r.passed for r in rows)
     print(f"\ntotal: {n_pass}/{total} comparisons pass ({100.0 * n_pass / total:.1f} %)")
     if args.write_doc:
-        write_doc(rows, {(c.id, c.package): c.source for c in cases})
+        write_doc(rows, {(c.id, pkg): c.source for c in cases for pkg in packages_for(c)})
         print(f"wrote {DOC_PATH}")
     return 0
 
