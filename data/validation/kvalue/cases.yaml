@@ -439,6 +439,41 @@ pure_cases:
     bubble_P: 2790916.074974494
   T: 265.0
   P: 2790916.074974494
+# --- 2026-11-04 (helm-kvalue): L1 for the ideal-K rows. Measured normal boiling points at
+# 101.3 kPa (Gupta & Lee 2013, ThermoML 'Vapor or sublimation pressure' datasets, p = 101.3 kPa
+# at the printed T). bubble_T compared at the harness's 0.5 % isobaric tolerance.
+- id: idealk-pure-toluene-101.3kPa
+  package: [ideal-raoult, antoine-ideal-k, esso-tabular, ideal-lk, braun-k10, braun-k10-ideal]
+  components: ['108-88-3']
+  z: {'108-88-3': 1.0}
+  P: 101300.0
+  source: "literature:Gupta, B. S., Lee, M.-J., 'Isobaric vapor-liquid equilibrium for binary systems of toluene + o-xylene, benzene + o-xylene, nonane + benzene and nonane + heptane at 101.3 kPa', Fluid Phase Equilib. 352, 86-92, 2013, doi:10.1016/j.fluid.2013.05.016; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2013.05.016.xml, PureOrMixtureData dataset 11 (toluene vapour pressure 101.3 kPa at T = 383.4 K); retrieved 2026-11-04"
+  expected:
+    bubble_T: 383.4
+- id: idealk-pure-o-xylene-101.3kPa
+  package: [ideal-raoult, antoine-ideal-k, esso-tabular, ideal-lk, braun-k10, braun-k10-ideal]
+  components: ['95-47-6']
+  z: {'95-47-6': 1.0}
+  P: 101300.0
+  source: "literature:Gupta, B. S., Lee, M.-J., 'Isobaric vapor-liquid equilibrium for binary systems of toluene + o-xylene, benzene + o-xylene, nonane + benzene and nonane + heptane at 101.3 kPa', Fluid Phase Equilib. 352, 86-92, 2013, doi:10.1016/j.fluid.2013.05.016; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2013.05.016.xml, PureOrMixtureData dataset 14 (o-xylene vapour pressure 101.3 kPa at T = 417.5 K); retrieved 2026-11-04"
+  expected:
+    bubble_T: 417.5
+- id: idealk-pure-heptane-101.3kPa
+  package: [ideal-raoult, antoine-ideal-k, esso-tabular, ideal-lk, braun-k10, braun-k10-ideal]
+  components: ['142-82-5']
+  z: {'142-82-5': 1.0}
+  P: 101300.0
+  source: "literature:Gupta, B. S., Lee, M.-J., 'Isobaric vapor-liquid equilibrium for binary systems of toluene + o-xylene, benzene + o-xylene, nonane + benzene and nonane + heptane at 101.3 kPa', Fluid Phase Equilib. 352, 86-92, 2013, doi:10.1016/j.fluid.2013.05.016; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2013.05.016.xml, PureOrMixtureData dataset 8 (heptane vapour pressure 101.3 kPa at T = 371.4 K); retrieved 2026-11-04"
+  expected:
+    bubble_T: 371.4
+- id: idealk-pure-nonane-101.3kPa
+  package: [ideal-raoult, antoine-ideal-k, esso-tabular, ideal-lk, braun-k10, braun-k10-ideal]
+  components: ['111-84-2']
+  z: {'111-84-2': 1.0}
+  P: 101300.0
+  source: "literature:Gupta, B. S., Lee, M.-J., 'Isobaric vapor-liquid equilibrium for binary systems of toluene + o-xylene, benzene + o-xylene, nonane + benzene and nonane + heptane at 101.3 kPa', Fluid Phase Equilib. 352, 86-92, 2013, doi:10.1016/j.fluid.2013.05.016; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2013.05.016.xml, PureOrMixtureData dataset 2 (nonane vapour pressure 101.3 kPa at T = 423.8 K); retrieved 2026-11-04"
+  expected:
+    bubble_T: 423.8
 binary_cases:
 - id: chao-seader-c1c3-277.59K-4.826MPa
   package: chao-seader
@@ -495,3 +530,143 @@ binary_cases:
   tolerance: {K: 0.1}
   expected:
     K: {C1: 889.586}
+# --- 2026-11-04 (helm-kvalue): L2 for the ideal-K rows. Near-ideal isobaric VLE at 101.3 kPa
+# (Gupta & Lee 2013, ThermoML: boiling temperature vs liquid mole fraction, and vapour mole
+# fraction vs liquid mole fraction). z = liquid composition; expected bubble_T and y of the
+# first-named component. Toluene + o-xylene (aromatic pair) and nonane + heptane (alkanes).
+- id: idealk-toluene-o-xylene-101.3kPa-x0.693
+  package: [ideal-raoult, antoine-ideal-k, esso-tabular, ideal-lk, braun-k10, braun-k10-ideal]
+  components: ['108-88-3', '95-47-6']
+  z: {'108-88-3': 0.693, '95-47-6': 0.307}
+  P: 101300.0
+  source: "literature:Gupta, B. S., Lee, M.-J., 'Isobaric vapor-liquid equilibrium for binary systems of toluene + o-xylene, benzene + o-xylene, nonane + benzene and nonane + heptane at 101.3 kPa', Fluid Phase Equilib. 352, 86-92, 2013, doi:10.1016/j.fluid.2013.05.016; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2013.05.016.xml, PureOrMixtureData datasets 15/16 (toluene + o-xylene), x_toluene = 0.693, T = 390.5 K, y_toluene = 0.886; retrieved 2026-11-04"
+  expected:
+    bubble_T: 390.5
+    vapor_comp:
+      '108-88-3': 0.886
+- id: idealk-toluene-o-xylene-101.3kPa-x0.5
+  package: [ideal-raoult, antoine-ideal-k, esso-tabular, ideal-lk, braun-k10, braun-k10-ideal]
+  components: ['108-88-3', '95-47-6']
+  z: {'108-88-3': 0.5, '95-47-6': 0.5}
+  P: 101300.0
+  source: "literature:Gupta, B. S., Lee, M.-J., 'Isobaric vapor-liquid equilibrium for binary systems of toluene + o-xylene, benzene + o-xylene, nonane + benzene and nonane + heptane at 101.3 kPa', Fluid Phase Equilib. 352, 86-92, 2013, doi:10.1016/j.fluid.2013.05.016; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2013.05.016.xml, PureOrMixtureData datasets 15/16 (toluene + o-xylene), x_toluene = 0.5, T = 396.3 K, y_toluene = 0.765; retrieved 2026-11-04"
+  expected:
+    bubble_T: 396.3
+    vapor_comp:
+      '108-88-3': 0.765
+- id: idealk-toluene-o-xylene-101.3kPa-x0.23
+  package: [ideal-raoult, antoine-ideal-k, esso-tabular, ideal-lk, braun-k10, braun-k10-ideal]
+  components: ['108-88-3', '95-47-6']
+  z: {'108-88-3': 0.23, '95-47-6': 0.77}
+  P: 101300.0
+  source: "literature:Gupta, B. S., Lee, M.-J., 'Isobaric vapor-liquid equilibrium for binary systems of toluene + o-xylene, benzene + o-xylene, nonane + benzene and nonane + heptane at 101.3 kPa', Fluid Phase Equilib. 352, 86-92, 2013, doi:10.1016/j.fluid.2013.05.016; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2013.05.016.xml, PureOrMixtureData datasets 15/16 (toluene + o-xylene), x_toluene = 0.23, T = 407.0 K, y_toluene = 0.436; retrieved 2026-11-04"
+  expected:
+    bubble_T: 407.0
+    vapor_comp:
+      '108-88-3': 0.436
+- id: idealk-nonane-heptane-101.3kPa-x0.367
+  package: [ideal-raoult, antoine-ideal-k, esso-tabular, ideal-lk, braun-k10, braun-k10-ideal]
+  components: ['111-84-2', '142-82-5']
+  z: {'111-84-2': 0.367, '142-82-5': 0.633}
+  P: 101300.0
+  source: "literature:Gupta, B. S., Lee, M.-J., 'Isobaric vapor-liquid equilibrium for binary systems of toluene + o-xylene, benzene + o-xylene, nonane + benzene and nonane + heptane at 101.3 kPa', Fluid Phase Equilib. 352, 86-92, 2013, doi:10.1016/j.fluid.2013.05.016; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2013.05.016.xml, PureOrMixtureData datasets 21/22 (nonane + heptane), x_nonane = 0.367, T = 382.3 K, y_nonane = 0.084; retrieved 2026-11-04"
+  expected:
+    bubble_T: 382.3
+    vapor_comp:
+      '111-84-2': 0.084
+- id: idealk-nonane-heptane-101.3kPa-x0.641
+  package: [ideal-raoult, antoine-ideal-k, esso-tabular, ideal-lk, braun-k10, braun-k10-ideal]
+  components: ['111-84-2', '142-82-5']
+  z: {'111-84-2': 0.641, '142-82-5': 0.359}
+  P: 101300.0
+  source: "literature:Gupta, B. S., Lee, M.-J., 'Isobaric vapor-liquid equilibrium for binary systems of toluene + o-xylene, benzene + o-xylene, nonane + benzene and nonane + heptane at 101.3 kPa', Fluid Phase Equilib. 352, 86-92, 2013, doi:10.1016/j.fluid.2013.05.016; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2013.05.016.xml, PureOrMixtureData datasets 21/22 (nonane + heptane), x_nonane = 0.641, T = 396.2 K, y_nonane = 0.274; retrieved 2026-11-04"
+  expected:
+    bubble_T: 396.2
+    vapor_comp:
+      '111-84-2': 0.274
+# --- 2026-11-04 (helm-kvalue): Grayson-Streed L2 inside its documented window (255-533 K,
+# <= 13.8 MPa): methane + n-pentane, Sage, Reamer, Olds & Lacey 1942 as compiled in IUPAC SDS
+# vol. 27/28 printed p. 306 (P printed in 1e5 Pa; compiled errors dT 0.03 K, dP 0.1e5 Pa,
+# dx/dy 0.002). z = liquid x; bubble_P and y_C1 compared.
+- id: gs-c1nc5-310.93K-1.379MPa
+  package: [grayson-streed, grayson-streed-extended]
+  components: [C1, nC5]
+  z: {C1: 0.0626, nC5: 0.9374}
+  T: 310.93
+  source: "literature:Sage, B. H., Reamer, H. H., Olds, R. H., Lacey, W. N., Ind. Eng. Chem. 34, 1108-1117, 1942, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 306, 'Experimental values', T = 310.93 K, P = 13.79 x 1e5 Pa, x_CH4 = 0.0626, y_CH4 = 0.894; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04"
+  expected:
+    bubble_P: 1379000.0
+    vapor_comp:
+      C1: 0.894
+- id: gs-c1nc5-310.93K-4.137MPa
+  package: [grayson-streed, grayson-streed-extended]
+  components: [C1, nC5]
+  z: {C1: 0.1911, nC5: 0.8089}
+  T: 310.93
+  source: "literature:Sage, B. H., Reamer, H. H., Olds, R. H., Lacey, W. N., Ind. Eng. Chem. 34, 1108-1117, 1942, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 306, 'Experimental values', T = 310.93 K, P = 41.37 x 1e5 Pa, x_CH4 = 0.1911, y_CH4 = 0.943; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04"
+  expected:
+    bubble_P: 4137000.0
+    vapor_comp:
+      C1: 0.943
+- id: gs-c1nc5-310.93K-6.895MPa
+  package: [grayson-streed, grayson-streed-extended]
+  components: [C1, nC5]
+  z: {C1: 0.3077, nC5: 0.6923}
+  T: 310.93
+  source: "literature:Sage, B. H., Reamer, H. H., Olds, R. H., Lacey, W. N., Ind. Eng. Chem. 34, 1108-1117, 1942, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 306, 'Experimental values', T = 310.93 K, P = 68.95 x 1e5 Pa, x_CH4 = 0.3077, y_CH4 = 0.947; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04"
+  expected:
+    bubble_P: 6895000.0
+    vapor_comp:
+      C1: 0.947
+- id: gs-c1nc5-344.26K-1.379MPa
+  package: [grayson-streed, grayson-streed-extended]
+  components: [C1, nC5]
+  z: {C1: 0.048, nC5: 0.952}
+  T: 344.26
+  source: "literature:Sage, B. H., Reamer, H. H., Olds, R. H., Lacey, W. N., Ind. Eng. Chem. 34, 1108-1117, 1942, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 306, 'Experimental values', T = 344.26 K, P = 13.79 x 1e5 Pa, x_CH4 = 0.048, y_CH4 = 0.7568; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04"
+  expected:
+    bubble_P: 1379000.0
+    vapor_comp:
+      C1: 0.7568
+- id: gs-c1nc5-344.26K-2.758MPa
+  package: [grayson-streed, grayson-streed-extended]
+  components: [C1, nC5]
+  z: {C1: 0.107, nC5: 0.893}
+  T: 344.26
+  source: "literature:Sage, B. H., Reamer, H. H., Olds, R. H., Lacey, W. N., Ind. Eng. Chem. 34, 1108-1117, 1942, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 306, 'Experimental values', T = 344.26 K, P = 27.58 x 1e5 Pa, x_CH4 = 0.107, y_CH4 = 0.8485; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04"
+  expected:
+    bubble_P: 2758000.0
+    vapor_comp:
+      C1: 0.8485
+# --- 2026-11-04 (helm-kvalue): depg_henry L2. Gas solubility in tetraglyme (CAS 143-24-8, the
+# row's DEPG stand-in) at 298.15 K and 101.33 kPa gas partial pressure (de la Iglesia et al.
+# 2003). The solvent vapour pressure (~0.1 Pa) is negligible, so y_gas = 1 and K_gas = 1/x_gas
+# at P = 101.33 kPa. Note that the row's data basis is DEPG (Bucklin & Schendel), so the test
+# also measures the tetraglyme-for-DEPG proxy.
+- id: depg-tetraglyme-C1-298.15K
+  package: depg_henry
+  components: ['143-24-8', C1]
+  z: {'143-24-8': 0.997452, C1: 0.002548}
+  T: 298.15
+  P: 101330.0
+  source: "literature:de la Iglesia, O., Mainar, A. M., Pardo, J. I., Urieta, J. S., 'Solubilities of Nonpolar Gases in Triethylene Glycol Dimethyl Ether, Tetraethylene Glycol Dimethyl Ether, Dimethyl Carbonate, and Diethyl Carbonate at 298.15 K and 101.33 kPa Partial Pressure of Gas', J. Chem. Eng. Data 48, 657-661, 2003, doi:10.1021/je020199q; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1021/je020199q.xml, PureOrMixtureData dataset 19 (methane + 2,5,8,11,14-pentaoxapentadecane), x_methane = 0.002548 at 298.15 K, 101.33 kPa; retrieved 2026-11-04"
+  expected:
+    K: {C1: 392.46}
+- id: depg-tetraglyme-N2-298.15K
+  package: depg_henry
+  components: ['143-24-8', N2]
+  z: {'143-24-8': 0.9994281, N2: 0.0005719}
+  T: 298.15
+  P: 101330.0
+  source: "literature:de la Iglesia, O., Mainar, A. M., Pardo, J. I., Urieta, J. S., 'Solubilities of Nonpolar Gases in Triethylene Glycol Dimethyl Ether, Tetraethylene Glycol Dimethyl Ether, Dimethyl Carbonate, and Diethyl Carbonate at 298.15 K and 101.33 kPa Partial Pressure of Gas', J. Chem. Eng. Data 48, 657-661, 2003, doi:10.1021/je020199q; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1021/je020199q.xml, PureOrMixtureData dataset 18 (nitrogen + 2,5,8,11,14-pentaoxapentadecane), x_nitrogen = 0.0005719 at 298.15 K, 101.33 kPa; retrieved 2026-11-04"
+  expected:
+    K: {N2: 1748.56}
+- id: depg-tetraglyme-H2-298.15K
+  package: depg_henry
+  components: ['143-24-8', H2]
+  z: {'143-24-8': 0.9996274, H2: 0.0003726}
+  T: 298.15
+  P: 101330.0
+  source: "literature:de la Iglesia, O., Mainar, A. M., Pardo, J. I., Urieta, J. S., 'Solubilities of Nonpolar Gases in Triethylene Glycol Dimethyl Ether, Tetraethylene Glycol Dimethyl Ether, Dimethyl Carbonate, and Diethyl Carbonate at 298.15 K and 101.33 kPa Partial Pressure of Gas', J. Chem. Eng. Data 48, 657-661, 2003, doi:10.1021/je020199q; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1021/je020199q.xml, PureOrMixtureData dataset 17 (hydrogen + 2,5,8,11,14-pentaoxapentadecane), x_hydrogen = 0.0003726 at 298.15 K, 101.33 kPa; retrieved 2026-11-04"
+  expected:
+    K: {H2: 2683.84}

@@ -2,9 +2,10 @@
 #
 # Rows are correlations, not equations of state: K_i = nu_i gamma_i / phi_i with published
 # components, sharing the KValuePackage adapter (flash on Rachford-Rice, enthalpies from
-# the Lee-Kesler departures implemented in kvalue.py). Every row is provisional: the
-# binary anchors bind only where the measured deviations are inside the case tolerances
-# (see data/validation/kvalue/cases.yaml for the reconciliation notes).
+# the Lee-Kesler departures implemented in kvalue.py). Each row's status follows the audited rule; misses are bound and assessed
+# per row (see data/validation/kvalue/cases.yaml for the reconciliation notes). The
+# esso-tabular and braun-k10 rows are validated as what they implement (ideal K on the
+# Antoine / databank Psat basis), not as the Esso charts or the Braun K10 nomographs.
 #
 # L0 declarations are inline per row (the schema owns no ``kvalue`` l0_defaults): the
 # databank-Psat rows declare pure_psat_limit; the rows carrying their own vapour-pressure
@@ -108,6 +109,19 @@
   - grayson-streed-pureK-C3-300K
   - grayson-streed-pureK-nC4-280K
   - grayson-streed-pureK-CO2-265K
+  # 2026-11-04: methane + n-pentane VLE inside the GS window (Sage et al. 1942 via IUPAC
+  # SDS 27/28 p. 306); every point misses bubble_P by about -25 % (assessed).
+  - gs-c1nc5-310.93K-1.379MPa
+  - gs-c1nc5-310.93K-4.137MPa
+  - gs-c1nc5-310.93K-6.895MPa
+  - gs-c1nc5-344.26K-1.379MPa
+  - gs-c1nc5-344.26K-2.758MPa
+  assessed:
+    gs-c1nc5-310.93K-1.379MPa: "bubble_P -28.3 % (0.988 vs 1.379 MPa); y_C1 passes (0.8809 vs 0.8940) - both K-values come out low (C1 3.82 vs 4.93, nC5 0.0575 vs 0.0705 at 310.93 K / 4.137 MPa), and chao-seader shows the same pattern (C1 4.15, nC5 0.0630), while lee-kesler-ploecker reproduces the point (+1.2 %). The shared piece of the two correlations is suspect: the acentric nu0_1 term, the RK vapour, or the regular-solution constants, which are flagged pending verification in regular_solution.yaml. The coefficient tables were not checked against the primary Grayson-Streed paper (not retrievable this session), so no bug is confirmed. Measured 2026-11-04."
+    gs-c1nc5-310.93K-4.137MPa: "bubble_P -26.9 % (3.024 vs 4.137 MPa); y_C1 passes (0.9502 vs 0.9430) - both K-values come out low (C1 3.82 vs 4.93, nC5 0.0575 vs 0.0705 at 310.93 K / 4.137 MPa), and chao-seader shows the same pattern (C1 4.15, nC5 0.0630), while lee-kesler-ploecker reproduces the point (+1.2 %). The shared piece of the two correlations is suspect: the acentric nu0_1 term, the RK vapour, or the regular-solution constants, which are flagged pending verification in regular_solution.yaml. The coefficient tables were not checked against the primary Grayson-Streed paper (not retrievable this session), so no bug is confirmed. Measured 2026-11-04."
+    gs-c1nc5-310.93K-6.895MPa: "bubble_P -24.2 % (5.229 vs 6.895 MPa); y_C1 passes (0.9622 vs 0.9470) - both K-values come out low (C1 3.82 vs 4.93, nC5 0.0575 vs 0.0705 at 310.93 K / 4.137 MPa), and chao-seader shows the same pattern (C1 4.15, nC5 0.0630), while lee-kesler-ploecker reproduces the point (+1.2 %). The shared piece of the two correlations is suspect: the acentric nu0_1 term, the RK vapour, or the regular-solution constants, which are flagged pending verification in regular_solution.yaml. The coefficient tables were not checked against the primary Grayson-Streed paper (not retrievable this session), so no bug is confirmed. Measured 2026-11-04."
+    gs-c1nc5-344.26K-1.379MPa: "bubble_P -24.0 % (1.048 vs 1.379 MPa); y_C1 0.7045 vs 0.7568 (abs 0.052) - both K-values come out low (C1 3.82 vs 4.93, nC5 0.0575 vs 0.0705 at 310.93 K / 4.137 MPa), and chao-seader shows the same pattern (C1 4.15, nC5 0.0630), while lee-kesler-ploecker reproduces the point (+1.2 %). The shared piece of the two correlations is suspect: the acentric nu0_1 term, the RK vapour, or the regular-solution constants, which are flagged pending verification in regular_solution.yaml. The coefficient tables were not checked against the primary Grayson-Streed paper (not retrievable this session), so no bug is confirmed. Measured 2026-11-04."
+    gs-c1nc5-344.26K-2.758MPa: "bubble_P -25.6 % (2.053 vs 2.758 MPa); y_C1 passes (0.8329 vs 0.8485) - both K-values come out low (C1 3.82 vs 4.93, nC5 0.0575 vs 0.0705 at 310.93 K / 4.137 MPa), and chao-seader shows the same pattern (C1 4.15, nC5 0.0630), while lee-kesler-ploecker reproduces the point (+1.2 %). The shared piece of the two correlations is suspect: the acentric nu0_1 term, the RK vapour, or the regular-solution constants, which are flagged pending verification in regular_solution.yaml. The coefficient tables were not checked against the primary Grayson-Streed paper (not retrievable this session), so no bug is confirmed. Measured 2026-11-04."
   references:
   - Grayson, H. G. & Streed, C. W., Proc. 6th World Pet. Congr., Sect. III, 233-245, 1963
   - Prausnitz, J. M., Lichtenthaler, R. N. & de Azevedo, E. G., Molecular Thermodynamics of
@@ -179,6 +193,19 @@
   - grayson-streed-extended-pureK-C3-300K
   - grayson-streed-extended-pureK-nC4-280K
   - grayson-streed-extended-pureK-CO2-265K
+  # 2026-11-04: methane + n-pentane VLE inside the GS window (Sage et al. 1942 via IUPAC
+  # SDS 27/28 p. 306); every point misses bubble_P by about -25 % (assessed).
+  - gs-c1nc5-310.93K-1.379MPa
+  - gs-c1nc5-310.93K-4.137MPa
+  - gs-c1nc5-310.93K-6.895MPa
+  - gs-c1nc5-344.26K-1.379MPa
+  - gs-c1nc5-344.26K-2.758MPa
+  assessed:
+    gs-c1nc5-310.93K-1.379MPa: "bubble_P -28.3 % (0.988 vs 1.379 MPa); y_C1 passes (0.8809 vs 0.8940) - both K-values come out low (C1 3.82 vs 4.93, nC5 0.0575 vs 0.0705 at 310.93 K / 4.137 MPa), and chao-seader shows the same pattern (C1 4.15, nC5 0.0630), while lee-kesler-ploecker reproduces the point (+1.2 %). The shared piece of the two correlations is suspect: the acentric nu0_1 term, the RK vapour, or the regular-solution constants, which are flagged pending verification in regular_solution.yaml. The coefficient tables were not checked against the primary Grayson-Streed paper (not retrievable this session), so no bug is confirmed. Measured 2026-11-04."
+    gs-c1nc5-310.93K-4.137MPa: "bubble_P -26.9 % (3.024 vs 4.137 MPa); y_C1 passes (0.9502 vs 0.9430) - both K-values come out low (C1 3.82 vs 4.93, nC5 0.0575 vs 0.0705 at 310.93 K / 4.137 MPa), and chao-seader shows the same pattern (C1 4.15, nC5 0.0630), while lee-kesler-ploecker reproduces the point (+1.2 %). The shared piece of the two correlations is suspect: the acentric nu0_1 term, the RK vapour, or the regular-solution constants, which are flagged pending verification in regular_solution.yaml. The coefficient tables were not checked against the primary Grayson-Streed paper (not retrievable this session), so no bug is confirmed. Measured 2026-11-04."
+    gs-c1nc5-310.93K-6.895MPa: "bubble_P -24.2 % (5.229 vs 6.895 MPa); y_C1 passes (0.9622 vs 0.9470) - both K-values come out low (C1 3.82 vs 4.93, nC5 0.0575 vs 0.0705 at 310.93 K / 4.137 MPa), and chao-seader shows the same pattern (C1 4.15, nC5 0.0630), while lee-kesler-ploecker reproduces the point (+1.2 %). The shared piece of the two correlations is suspect: the acentric nu0_1 term, the RK vapour, or the regular-solution constants, which are flagged pending verification in regular_solution.yaml. The coefficient tables were not checked against the primary Grayson-Streed paper (not retrievable this session), so no bug is confirmed. Measured 2026-11-04."
+    gs-c1nc5-344.26K-1.379MPa: "bubble_P -24.0 % (1.048 vs 1.379 MPa); y_C1 0.7045 vs 0.7568 (abs 0.052) - both K-values come out low (C1 3.82 vs 4.93, nC5 0.0575 vs 0.0705 at 310.93 K / 4.137 MPa), and chao-seader shows the same pattern (C1 4.15, nC5 0.0630), while lee-kesler-ploecker reproduces the point (+1.2 %). The shared piece of the two correlations is suspect: the acentric nu0_1 term, the RK vapour, or the regular-solution constants, which are flagged pending verification in regular_solution.yaml. The coefficient tables were not checked against the primary Grayson-Streed paper (not retrievable this session), so no bug is confirmed. Measured 2026-11-04."
+    gs-c1nc5-344.26K-2.758MPa: "bubble_P -25.6 % (2.053 vs 2.758 MPa); y_C1 passes (0.8329 vs 0.8485) - both K-values come out low (C1 3.82 vs 4.93, nC5 0.0575 vs 0.0705 at 310.93 K / 4.137 MPa), and chao-seader shows the same pattern (C1 4.15, nC5 0.0630), while lee-kesler-ploecker reproduces the point (+1.2 %). The shared piece of the two correlations is suspect: the acentric nu0_1 term, the RK vapour, or the regular-solution constants, which are flagged pending verification in regular_solution.yaml. The coefficient tables were not checked against the primary Grayson-Streed paper (not retrievable this session), so no bug is confirmed. Measured 2026-11-04."
   references:
   - Grayson, H. G. & Streed, C. W., Proc. 6th World Pet. Congr., Sect. III, 233-245, 1963
 
@@ -238,10 +265,25 @@
     T_K: [200.0, 560.0]
     P_Pa: [1000.0, 700000.0]
     phases: [V, L, VLL]
-  status: provisional
+  status: validated
   validation:
   - braun-k10-pureK-C1-125K
   - braun-k10-pureK-nC4-280K
+  # 2026-11-04: measured normal boiling points (L1) and near-ideal toluene + o-xylene and
+  # nonane + heptane VLE at 101.3 kPa (L2), Gupta & Lee 2013 via NIST ThermoML.
+  - idealk-pure-toluene-101.3kPa
+  - idealk-pure-o-xylene-101.3kPa
+  - idealk-pure-heptane-101.3kPa
+  - idealk-pure-nonane-101.3kPa
+  - idealk-toluene-o-xylene-101.3kPa-x0.693
+  - idealk-toluene-o-xylene-101.3kPa-x0.5
+  - idealk-toluene-o-xylene-101.3kPa-x0.23
+  - idealk-nonane-heptane-101.3kPa-x0.367
+  - idealk-nonane-heptane-101.3kPa-x0.641
+  assessed:
+    idealk-toluene-o-xylene-101.3kPa-x0.693: "vapor_comp y_toluene 0.8548 vs 0.886 (abs 3.12e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-toluene-o-xylene-101.3kPa-x0.5: "vapor_comp y_toluene 0.7187 vs 0.765 (abs 4.63e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-nonane-heptane-101.3kPa-x0.367: "vapor_comp y_nonane 0.1099 vs 0.084 (abs 2.59e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
   references:
   - Cajander, B. C., Hipkin, H. G. & Lenoir, J. M., J. Chem. Eng. Data 5(3), 251-259, 1960
   l0:
@@ -369,12 +411,27 @@
     T_K: [150.0, 620.0]
     P_Pa: [1000.0, 3000000.0]
     phases: [V, L, VLL]
-  status: provisional
+  status: validated
   validation:
   - esso-tabular-pureK-C1-125K
   - esso-tabular-pureK-C3-300K
   - esso-tabular-pureK-nC4-280K
   - esso-tabular-pureK-CO2-265K
+  # 2026-11-04: measured normal boiling points (L1) and near-ideal toluene + o-xylene and
+  # nonane + heptane VLE at 101.3 kPa (L2), Gupta & Lee 2013 via NIST ThermoML.
+  - idealk-pure-toluene-101.3kPa
+  - idealk-pure-o-xylene-101.3kPa
+  - idealk-pure-heptane-101.3kPa
+  - idealk-pure-nonane-101.3kPa
+  - idealk-toluene-o-xylene-101.3kPa-x0.693
+  - idealk-toluene-o-xylene-101.3kPa-x0.5
+  - idealk-toluene-o-xylene-101.3kPa-x0.23
+  - idealk-nonane-heptane-101.3kPa-x0.367
+  - idealk-nonane-heptane-101.3kPa-x0.641
+  assessed:
+    idealk-toluene-o-xylene-101.3kPa-x0.693: "vapor_comp y_toluene 0.8550 vs 0.886 (abs 3.10e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-toluene-o-xylene-101.3kPa-x0.5: "vapor_comp y_toluene 0.7190 vs 0.765 (abs 4.60e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-nonane-heptane-101.3kPa-x0.367: "vapor_comp y_nonane 0.1099 vs 0.084 (abs 2.59e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
   references:
   - Carlson, H. C., Chem. Eng. Prog. 92(10), 35, 1996 (applicability window)
   l0:
@@ -432,12 +489,27 @@
     T_K: [150.0, 620.0]
     P_Pa: [1000.0, 3000000.0]
     phases: [V, L, VLL]
-  status: provisional
+  status: validated
   validation:
   - antoine-ideal-k-pureK-C1-125K
   - antoine-ideal-k-pureK-C3-300K
   - antoine-ideal-k-pureK-nC4-280K
   - antoine-ideal-k-pureK-CO2-265K
+  # 2026-11-04: measured normal boiling points (L1) and near-ideal toluene + o-xylene and
+  # nonane + heptane VLE at 101.3 kPa (L2), Gupta & Lee 2013 via NIST ThermoML.
+  - idealk-pure-toluene-101.3kPa
+  - idealk-pure-o-xylene-101.3kPa
+  - idealk-pure-heptane-101.3kPa
+  - idealk-pure-nonane-101.3kPa
+  - idealk-toluene-o-xylene-101.3kPa-x0.693
+  - idealk-toluene-o-xylene-101.3kPa-x0.5
+  - idealk-toluene-o-xylene-101.3kPa-x0.23
+  - idealk-nonane-heptane-101.3kPa-x0.367
+  - idealk-nonane-heptane-101.3kPa-x0.641
+  assessed:
+    idealk-toluene-o-xylene-101.3kPa-x0.693: "vapor_comp y_toluene 0.8550 vs 0.886 (abs 3.10e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-toluene-o-xylene-101.3kPa-x0.5: "vapor_comp y_toluene 0.7190 vs 0.765 (abs 4.60e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-nonane-heptane-101.3kPa-x0.367: "vapor_comp y_nonane 0.1099 vs 0.084 (abs 2.59e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
   references:
   - Carlson, H. C., Chem. Eng. Prog. 92(10), 35, 1996 (applicability window)
   l0:
@@ -496,12 +568,27 @@
     T_K: [90.0, 620.0]
     P_Pa: [1000.0, 3000000.0]
     phases: [V, L, VLL]
-  status: provisional
+  status: validated
   validation:
   - ideal-raoult-pureK-C1-125K
   - ideal-raoult-pureK-C3-300K
   - ideal-raoult-pureK-nC4-280K
   - ideal-raoult-pureK-CO2-265K
+  # 2026-11-04: measured normal boiling points (L1) and near-ideal toluene + o-xylene and
+  # nonane + heptane VLE at 101.3 kPa (L2), Gupta & Lee 2013 via NIST ThermoML.
+  - idealk-pure-toluene-101.3kPa
+  - idealk-pure-o-xylene-101.3kPa
+  - idealk-pure-heptane-101.3kPa
+  - idealk-pure-nonane-101.3kPa
+  - idealk-toluene-o-xylene-101.3kPa-x0.693
+  - idealk-toluene-o-xylene-101.3kPa-x0.5
+  - idealk-toluene-o-xylene-101.3kPa-x0.23
+  - idealk-nonane-heptane-101.3kPa-x0.367
+  - idealk-nonane-heptane-101.3kPa-x0.641
+  assessed:
+    idealk-toluene-o-xylene-101.3kPa-x0.693: "vapor_comp y_toluene 0.8548 vs 0.886 (abs 3.12e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-toluene-o-xylene-101.3kPa-x0.5: "vapor_comp y_toluene 0.7187 vs 0.765 (abs 4.63e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-nonane-heptane-101.3kPa-x0.367: "vapor_comp y_nonane 0.1099 vs 0.084 (abs 2.59e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
   references:
   - Raoult, F.-M., Compt. Rend. 104, 1430-1433, 1887
   - Carlson, H. C., Chem. Eng. Prog. 92(10), 35, 1996 (applicability window)
@@ -644,12 +731,27 @@
     T_K: [90.0, 620.0]
     P_Pa: [1000.0, 3000000.0]
     phases: [V, L, VLL]
-  status: provisional
+  status: validated
   validation:
   - ideal-lk-pureK-C1-125K
   - ideal-lk-pureK-C3-300K
   - ideal-lk-pureK-nC4-280K
   - ideal-lk-pureK-CO2-265K
+  # 2026-11-04: measured normal boiling points (L1) and near-ideal toluene + o-xylene and
+  # nonane + heptane VLE at 101.3 kPa (L2), Gupta & Lee 2013 via NIST ThermoML.
+  - idealk-pure-toluene-101.3kPa
+  - idealk-pure-o-xylene-101.3kPa
+  - idealk-pure-heptane-101.3kPa
+  - idealk-pure-nonane-101.3kPa
+  - idealk-toluene-o-xylene-101.3kPa-x0.693
+  - idealk-toluene-o-xylene-101.3kPa-x0.5
+  - idealk-toluene-o-xylene-101.3kPa-x0.23
+  - idealk-nonane-heptane-101.3kPa-x0.367
+  - idealk-nonane-heptane-101.3kPa-x0.641
+  assessed:
+    idealk-toluene-o-xylene-101.3kPa-x0.693: "vapor_comp y_toluene 0.8548 vs 0.886 (abs 3.12e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-toluene-o-xylene-101.3kPa-x0.5: "vapor_comp y_toluene 0.7187 vs 0.765 (abs 4.63e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-nonane-heptane-101.3kPa-x0.367: "vapor_comp y_nonane 0.1099 vs 0.084 (abs 2.59e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
   references:
   - Raoult, F.-M., Compt. Rend. 104, 1430-1433, 1887
   - Lee, B. I. & Kesler, M. G., AIChE J. 21(3), 510-527, 1975 (departure basis)
@@ -712,8 +814,23 @@
     T_K: [200.0, 560.0]
     P_Pa: [1000.0, 700000.0]
     phases: [V, L, VLL]
-  status: provisional
-  validation: []
+  status: validated
+  validation:
+  # 2026-11-04: measured normal boiling points (L1) and near-ideal toluene + o-xylene and
+  # nonane + heptane VLE at 101.3 kPa (L2), Gupta & Lee 2013 via NIST ThermoML.
+  - idealk-pure-toluene-101.3kPa
+  - idealk-pure-o-xylene-101.3kPa
+  - idealk-pure-heptane-101.3kPa
+  - idealk-pure-nonane-101.3kPa
+  - idealk-toluene-o-xylene-101.3kPa-x0.693
+  - idealk-toluene-o-xylene-101.3kPa-x0.5
+  - idealk-toluene-o-xylene-101.3kPa-x0.23
+  - idealk-nonane-heptane-101.3kPa-x0.367
+  - idealk-nonane-heptane-101.3kPa-x0.641
+  assessed:
+    idealk-toluene-o-xylene-101.3kPa-x0.693: "vapor_comp y_toluene 0.8548 vs 0.886 (abs 3.12e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-toluene-o-xylene-101.3kPa-x0.5: "vapor_comp y_toluene 0.7187 vs 0.765 (abs 4.63e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
+    idealk-nonane-heptane-101.3kPa-x0.367: "vapor_comp y_nonane 0.1099 vs 0.084 (abs 2.59e-2 > 0.02). Bubble T passes at the same point. Ideal K = Psat/P has no liquid non-ideality or vapour correction by construction; the measured vapour is richer in the light component than the vapour-pressure ratio allows. This is a model limitation; no solver fault was found. Measured 2026-11-04."
   references:
   - Cajander, B. C., Hipkin, H. G. & Lenoir, J. M., J. Chem. Eng. Data 5(3), 251-259, 1960
   - Smith, J. M., Van Ness, H. C. & Abbott, M. M., Introduction to Chemical Engineering
@@ -774,7 +891,17 @@
     P_Pa: [10000.0, 10000000.0]
     phases: [V, L]
   status: provisional
-  validation: []
+  validation:
+  # 2026-11-04: L2 gas solubility in tetraglyme at 298.15 K / 101.33 kPa (de la Iglesia et al.
+  # 2003 via NIST ThermoML). C1 passes (-4.0 %); N2 and H2 miss (assessed). No L1 exists for
+  # this row: it refuses gas-free feeds and the solvent Psat (~0.1 Pa) is below its window, so
+  # the row cannot reach validated under the current rule (gap reported to the orchestrator).
+  - depg-tetraglyme-C1-298.15K
+  - depg-tetraglyme-N2-298.15K
+  - depg-tetraglyme-H2-298.15K
+  assessed:
+    depg-tetraglyme-N2-298.15K: "K_N2 1240.8 vs 1748.6 (-29.0 %). N2 and H2 are both 29 % low while C1 is 4 % low, which points to the data basis rather than a code fault. The row's DEPG relative solubilities (Burr & Lyddon / Bucklin & Schendel 1984, read at 1 atm on the 280 g/mol DEPG mole basis) are applied to tetraglyme (222 g/mol) as the stand-in, and the sparingly soluble gases are the most sensitive to that mapping. Model/data-basis limitation; no code fault found. Measured 2026-11-04."
+    depg-tetraglyme-H2-298.15K: "K_H2 1908.3 vs 2683.8 (-28.9 %). N2 and H2 are both 29 % low while C1 is 4 % low, which points to the data basis rather than a code fault. The row's DEPG relative solubilities (Burr & Lyddon / Bucklin & Schendel 1984, read at 1 atm on the 280 g/mol DEPG mole basis) are applied to tetraglyme (222 g/mol) as the stand-in, and the sparingly soluble gases are the most sensitive to that mapping. Model/data-basis limitation; no code fault found. Measured 2026-11-04."
   references:
   - Burr, B. & Lyddon, L., A Comparison of Physical Solvents for Acid Gas Removal, Bryan Research
     & Engineering
