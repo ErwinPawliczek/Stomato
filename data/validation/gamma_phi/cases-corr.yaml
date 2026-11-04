@@ -1,0 +1,438 @@
+# Gamma-phi CORRELATIVE rows: independent L2 binary VLE cases (validation run 2026-11-04,
+# work package gphi-corr). Companion of data/validation/gamma_phi/cases.yaml (same units and
+# tolerance conventions: T [K], P [Pa abs], mole fractions; bubble_T 0.5 % relative,
+# bubble_P 3 % relative, vapour composition 0.02 absolute - scripts/validate_properties.py
+# TOLERANCE_POLICY, fixed before any run).
+#
+# Source: the Dortmund Data Bank Explorer Edition free VLE pages (ddbst.com/en/EED/VLE/...,
+# now offline at the original URL; read from the Internet Archive copies named in each
+# case). Each case cites the ORIGINAL paper as printed on the DDB page, the DDB data-set
+# number and the archived page. Numbers were extracted from the downloaded pages by a parser
+# (no hand typing) and re-checked against the page text.
+#
+# Point selection rule, fixed BEFORE any model was run: in each data set, the three points
+# whose liquid mole fraction of DDB component 1 lies nearest to 0.1, 0.4 and 0.7. Isobaric
+# x-y sets without temperatures (Beebe 1942) compare the vapour composition only.
+#
+# Independence (PR #150 ruling): none of these data sets is a point any shipped binary
+# parameter was fitted to. ChemSep IPDB pairs (nrtl*, uniquac*, wilson*) are databank
+# regressions; the in-house fits in data/thermo_params/{uniquac,wilson,margules,vanlaar}/
+# pairs.yaml used only the MEG/H2O 431.25 K / 1 atm point (Perry's), the MeOH/nC4 Courtial
+# 323.22 K point and the EtOH/H2O 1-atm azeotrope; uniquac_tdep's Guevara Luna (2018)
+# pairs were regressed on that paper's 13.15/19.71/32.86 kPa data, not Beebe's 50.66 kPa
+# isobar; NRTL-SAC and regular solution carry no binary parameters at all.
+#
+# Component ids: curated ids where the slate has them (EtOH and acetone resolve through
+# the chemicals databank by name/CAS - ngdesign.data.component_record step 2; C6+ is the
+# curated n-hexane entry, CAS 110-54-3, so the n-hexane data apply to it exactly).
+# `package:` lists every catalogue row whose parameters cover the binary (a row whose
+# tables refuse the pair is not bound: a refusal is a crash, not a comparison).
+#
+# pure_cases: L1 saturation references for wilson_tdep_ig (whose parameter tables cover
+# only aromatic / ketone / alkane / chloroalkane pairs), machine-generated with CoolProp
+# 8.0.0 PropsSI at Q=0/1 by the same expressions as scripts/validate_properties.py
+# --regen-coolprop (never hand-typed). Temperatures (350/400 K toluene, 380 K p-xylene) were
+# chosen inside the row's 319-424 K window before any run.
+meta:
+  coolprop_version: 8.0.0
+pure_cases:
+- id: pure-toluene-350K-gphi
+  package: [wilson_tdep_ig]
+  fluid: "108-88-3"
+  coolprop_fluid: Toluene
+  components:
+  - "108-88-3"
+  z:
+    "108-88-3": 1.0
+  T: 350.0
+  source: coolprop:Toluene
+  expected:
+    bubble_P: 34821.16076975351
+    dew_P: 34821.16076975351
+    rho_V: 1.12383683583342
+    rho_L: 812.8725534697174
+    Cp: 173.05403653603162
+- id: pure-toluene-400K-gphi
+  package: [wilson_tdep_ig]
+  fluid: "108-88-3"
+  coolprop_fluid: Toluene
+  components:
+  - "108-88-3"
+  z:
+    "108-88-3": 1.0
+  T: 400.0
+  source: coolprop:Toluene
+  expected:
+    bubble_P: 157314.15880653707
+    dew_P: 157314.15880653707
+    rho_V: 4.612455451713828
+    rho_L: 762.1866748636339
+    Cp: 190.31985328547515
+- id: pure-pxylene-380K-gphi
+  package: [wilson_tdep_ig]
+  fluid: "106-42-3"
+  coolprop_fluid: p-Xylene
+  components:
+  - "106-42-3"
+  z:
+    "106-42-3": 1.0
+  T: 380.0
+  source: coolprop:p-Xylene
+  expected:
+    bubble_P: 40213.90932287967
+    dew_P: 40213.90932287967
+    rho_V: 1.3857323169042666
+    rho_L: 783.3851127133064
+    Cp: 212.10425184632558
+binary_cases:
+- id: ddb549-etohh2o-50.66kPa-x0.0855
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr, margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, wohl3_ig, uniquac_tdep_ig, nrtl_sac_ig]
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.0855
+    H2O: 0.9145
+  P: 50660.0
+  source: "literature:Beebe A.H.; Coulter K.E.; Lindsay R.A.; Baker E.M.: Equilibria in Ethanol-Water System at Pressures Less Than Atmospheric. Ind.Eng.Chem. Ind.Ed. 34 (1942) 1501-1504; data via Dortmund Data Bank Explorer Edition free data page 'VLE Ethanol + Water', DDB data set 549 (isobaric 50.66 kPa), data table row x1=0.0855, archived copy https://web.archive.org/web/20210302041122/http://www.ddbst.com/en/EED/VLE/VLE%20Ethanol%3BWater.php; retrieved 2026-11-04"
+  expected:
+    vapor_comp:
+      EtOH: 0.43
+  tolerance:
+    vapor_comp: 0.02
+- id: ddb549-etohh2o-50.66kPa-x0.3495
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr, margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, wohl3_ig, uniquac_tdep_ig, nrtl_sac_ig]
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.3495
+    H2O: 0.6505
+  P: 50660.0
+  source: "literature:Beebe A.H.; Coulter K.E.; Lindsay R.A.; Baker E.M.: Equilibria in Ethanol-Water System at Pressures Less Than Atmospheric. Ind.Eng.Chem. Ind.Ed. 34 (1942) 1501-1504; data via Dortmund Data Bank Explorer Edition free data page 'VLE Ethanol + Water', DDB data set 549 (isobaric 50.66 kPa), data table row x1=0.3495, archived copy https://web.archive.org/web/20210302041122/http://www.ddbst.com/en/EED/VLE/VLE%20Ethanol%3BWater.php; retrieved 2026-11-04"
+  expected:
+    vapor_comp:
+      EtOH: 0.5945
+  tolerance:
+    vapor_comp: 0.02
+- id: ddb549-etohh2o-50.66kPa-x0.7
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr, margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, wohl3_ig, uniquac_tdep_ig, nrtl_sac_ig]
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.7
+    H2O: 0.3
+  P: 50660.0
+  source: "literature:Beebe A.H.; Coulter K.E.; Lindsay R.A.; Baker E.M.: Equilibria in Ethanol-Water System at Pressures Less Than Atmospheric. Ind.Eng.Chem. Ind.Ed. 34 (1942) 1501-1504; data via Dortmund Data Bank Explorer Edition free data page 'VLE Ethanol + Water', DDB data set 549 (isobaric 50.66 kPa), data table row x1=0.7, archived copy https://web.archive.org/web/20210302041122/http://www.ddbst.com/en/EED/VLE/VLE%20Ethanol%3BWater.php; retrieved 2026-11-04"
+  expected:
+    vapor_comp:
+      EtOH: 0.7495
+  tolerance:
+    vapor_comp: 0.02
+- id: ddb4731-h2omeg-3.333kPa-x0.1
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, wohl3_ig, nrtl_sac_ig]
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.1
+    MEG: 0.9
+  P: 3333.0
+  source: "literature:Sokolov N.M.; Tsygankova L.N.; Zhavoronkov N.M.: The Liquid - Vapor Equilibrium in the Water - Ethylene Glycol and Water - 1,2 - Proylene Glycol Systems at Various Pressures. Theor.Found.Chem.Eng. 5 (1971) 817-820; data via Dortmund Data Bank Explorer Edition free data page 'VLE Water + 1,2-Ethanediol', DDB data set 4731 (isobaric 3.333 kPa), data table row x1=0.1, archived copy https://web.archive.org/web/20230324033715/http://www.ddbst.com/en/EED/VLE/VLE%201%2C2-Ethanediol%3BWater.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 347.65
+    vapor_comp:
+      H2O: 0.896
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb4731-h2omeg-3.333kPa-x0.404
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, wohl3_ig, nrtl_sac_ig]
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.404
+    MEG: 0.596
+  P: 3333.0
+  source: "literature:Sokolov N.M.; Tsygankova L.N.; Zhavoronkov N.M.: The Liquid - Vapor Equilibrium in the Water - Ethylene Glycol and Water - 1,2 - Proylene Glycol Systems at Various Pressures. Theor.Found.Chem.Eng. 5 (1971) 817-820; data via Dortmund Data Bank Explorer Edition free data page 'VLE Water + 1,2-Ethanediol', DDB data set 4731 (isobaric 3.333 kPa), data table row x1=0.404, archived copy https://web.archive.org/web/20230324033715/http://www.ddbst.com/en/EED/VLE/VLE%201%2C2-Ethanediol%3BWater.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 315.95
+    vapor_comp:
+      H2O: 0.9905
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb4731-h2omeg-3.333kPa-x0.706
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, wohl3_ig, nrtl_sac_ig]
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.706
+    MEG: 0.294
+  P: 3333.0
+  source: "literature:Sokolov N.M.; Tsygankova L.N.; Zhavoronkov N.M.: The Liquid - Vapor Equilibrium in the Water - Ethylene Glycol and Water - 1,2 - Proylene Glycol Systems at Various Pressures. Theor.Found.Chem.Eng. 5 (1971) 817-820; data via Dortmund Data Bank Explorer Edition free data page 'VLE Water + 1,2-Ethanediol', DDB data set 4731 (isobaric 3.333 kPa), data table row x1=0.706, archived copy https://web.archive.org/web/20230324033715/http://www.ddbst.com/en/EED/VLE/VLE%201%2C2-Ethanediol%3BWater.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 306.15
+    vapor_comp:
+      H2O: 0.9978
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb11-acetoneh2o-101.33kPa-x0.094
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, nrtl_sac_ig]
+  components:
+  - "67-64-1"
+  - H2O
+  z:
+    "67-64-1": 0.094
+    H2O: 0.906
+  P: 101330.0
+  source: "literature:Reinders W.; de Minjer C.H.: VI. The System Water-Acetone-Chloroform. Recl.Trav.Chim.Pays-Bas 66 (1947) 573-604; data via Dortmund Data Bank Explorer Edition free data page 'VLE Acetone + Water', DDB data set 11 (isobaric 101.33 kPa), data table row x1=0.094, archived copy https://web.archive.org/web/20231003205944/http://www.ddbst.com/en/EED/VLE/VLE%20Acetone%3BWater.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 342.65
+    vapor_comp:
+      "67-64-1": 0.719
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb11-acetoneh2o-101.33kPa-x0.42
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - "67-64-1"
+  - H2O
+  z:
+    "67-64-1": 0.42
+    H2O: 0.58
+  P: 101330.0
+  source: "literature:Reinders W.; de Minjer C.H.: VI. The System Water-Acetone-Chloroform. Recl.Trav.Chim.Pays-Bas 66 (1947) 573-604; data via Dortmund Data Bank Explorer Edition free data page 'VLE Acetone + Water', DDB data set 11 (isobaric 101.33 kPa), data table row x1=0.42, archived copy https://web.archive.org/web/20231003205944/http://www.ddbst.com/en/EED/VLE/VLE%20Acetone%3BWater.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 334.15
+    vapor_comp:
+      "67-64-1": 0.839
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb11-acetoneh2o-101.33kPa-x0.736
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - "67-64-1"
+  - H2O
+  z:
+    "67-64-1": 0.736
+    H2O: 0.264
+  P: 101330.0
+  source: "literature:Reinders W.; de Minjer C.H.: VI. The System Water-Acetone-Chloroform. Recl.Trav.Chim.Pays-Bas 66 (1947) 573-604; data via Dortmund Data Bank Explorer Edition free data page 'VLE Acetone + Water', DDB data set 11 (isobaric 101.33 kPa), data table row x1=0.736, archived copy https://web.archive.org/web/20231003205944/http://www.ddbst.com/en/EED/VLE/VLE%20Acetone%3BWater.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 331.35
+    vapor_comp:
+      "67-64-1": 0.909
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb586-acetonemeoh-101.33kPa-x0.081
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - "67-64-1"
+  - MeOH
+  z:
+    "67-64-1": 0.081
+    MeOH: 0.919
+  P: 101330.0
+  source: "literature:Amer H.H.; Paxton R.R.; van Winkle M.: Vapor-liquid equilibria. Ind.Eng.Chem. 48 (1956) 142-146; data via Dortmund Data Bank Explorer Edition free data page 'VLE Acetone + Methanol', DDB data set 586 (isobaric 101.33 kPa), data table row x1=0.081, archived copy https://web.archive.org/web/20231003035858/http://www.ddbst.com/en/EED/VLE/VLE%20Acetone%3BMethanol.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 335.35
+    vapor_comp:
+      "67-64-1": 0.161
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb586-acetonemeoh-101.33kPa-x0.394
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_hoc, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - "67-64-1"
+  - MeOH
+  z:
+    "67-64-1": 0.394
+    MeOH: 0.606
+  P: 101330.0
+  source: "literature:Amer H.H.; Paxton R.R.; van Winkle M.: Vapor-liquid equilibria. Ind.Eng.Chem. 48 (1956) 142-146; data via Dortmund Data Bank Explorer Edition free data page 'VLE Acetone + Methanol', DDB data set 586 (isobaric 101.33 kPa), data table row x1=0.394, archived copy https://web.archive.org/web/20231003035858/http://www.ddbst.com/en/EED/VLE/VLE%20Acetone%3BMethanol.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 330.05
+    vapor_comp:
+      "67-64-1": 0.5
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb586-acetonemeoh-101.33kPa-x0.683
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - "67-64-1"
+  - MeOH
+  z:
+    "67-64-1": 0.683
+    MeOH: 0.317
+  P: 101330.0
+  source: "literature:Amer H.H.; Paxton R.R.; van Winkle M.: Vapor-liquid equilibria. Ind.Eng.Chem. 48 (1956) 142-146; data via Dortmund Data Bank Explorer Edition free data page 'VLE Acetone + Methanol', DDB data set 586 (isobaric 101.33 kPa), data table row x1=0.683, archived copy https://web.archive.org/web/20231003035858/http://www.ddbst.com/en/EED/VLE/VLE%20Acetone%3BMethanol.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 328.95
+    vapor_comp:
+      "67-64-1": 0.705
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb451-meohetoh-101.33kPa-x0.134
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - MeOH
+  - EtOH
+  z:
+    MeOH: 0.134
+    EtOH: 0.866
+  P: 101330.0
+  source: "literature:Amer H.H.; Paxton R.R.; van Winkle M.: Vapor-liquid equilibria. Ind.Eng.Chem. 48 (1956) 142-146; data via Dortmund Data Bank Explorer Edition free data page 'VLE Methanol + Ethanol', DDB data set 451 (isobaric 101.33 kPa), data table row x1=0.134, archived copy https://web.archive.org/web/20221009034640/http://www.ddbst.com/en/EED/VLE/VLE%20Ethanol%3BMethanol.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 349.75
+    vapor_comp:
+      MeOH: 0.183
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb451-meohetoh-101.33kPa-x0.401
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - MeOH
+  - EtOH
+  z:
+    MeOH: 0.401
+    EtOH: 0.599
+  P: 101330.0
+  source: "literature:Amer H.H.; Paxton R.R.; van Winkle M.: Vapor-liquid equilibria. Ind.Eng.Chem. 48 (1956) 142-146; data via Dortmund Data Bank Explorer Edition free data page 'VLE Methanol + Ethanol', DDB data set 451 (isobaric 101.33 kPa), data table row x1=0.401, archived copy https://web.archive.org/web/20221009034640/http://www.ddbst.com/en/EED/VLE/VLE%20Ethanol%3BMethanol.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 345.45
+    vapor_comp:
+      MeOH: 0.529
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb451-meohetoh-101.33kPa-x0.728
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - MeOH
+  - EtOH
+  z:
+    MeOH: 0.728
+    EtOH: 0.272
+  P: 101330.0
+  source: "literature:Amer H.H.; Paxton R.R.; van Winkle M.: Vapor-liquid equilibria. Ind.Eng.Chem. 48 (1956) 142-146; data via Dortmund Data Bank Explorer Edition free data page 'VLE Methanol + Ethanol', DDB data set 451 (isobaric 101.33 kPa), data table row x1=0.728, archived copy https://web.archive.org/web/20221009034640/http://www.ddbst.com/en/EED/VLE/VLE%20Ethanol%3BMethanol.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 340.85
+    vapor_comp:
+      MeOH: 0.813
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb133-meohnc6-333.15K-x0.098
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - MeOH
+  - "C6+"
+  z:
+    MeOH: 0.098
+    "C6+": 0.902
+  T: 333.15
+  source: "literature:Scheller M.; Schuberth H.; Koennecke H.G.: Ergebnisse von Dampfflüssigkeits-Phasengleichgewichtsuntersuchungen am System n-Hexan-Methylcyclohexan-Methanol bei 60°C. J.Prakt.Chem. 311 (1969) 974-982; data via Dortmund Data Bank Explorer Edition free data page 'VLE Methanol + Hexane', DDB data set 133 (isothermal 333.15 K), data table row x1=0.098, archived copy https://web.archive.org/web/20230930054505/http://www.ddbst.com/en/EED/VLE/VLE%20Hexane%3BMethanol.php; retrieved 2026-11-04"
+  expected:
+    bubble_P: 145108.0
+    vapor_comp:
+      MeOH: 0.482
+  tolerance:
+    bubble_P: 0.03
+    vapor_comp: 0.02
+- id: ddb133-meohnc6-333.15K-x0.399
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_nothnagel, regular_solution_pr]
+  components:
+  - MeOH
+  - "C6+"
+  z:
+    MeOH: 0.399
+    "C6+": 0.601
+  T: 333.15
+  source: "literature:Scheller M.; Schuberth H.; Koennecke H.G.: Ergebnisse von Dampfflüssigkeits-Phasengleichgewichtsuntersuchungen am System n-Hexan-Methylcyclohexan-Methanol bei 60°C. J.Prakt.Chem. 311 (1969) 974-982; data via Dortmund Data Bank Explorer Edition free data page 'VLE Methanol + Hexane', DDB data set 133 (isothermal 333.15 K), data table row x1=0.399, archived copy https://web.archive.org/web/20230930054505/http://www.ddbst.com/en/EED/VLE/VLE%20Hexane%3BMethanol.php; retrieved 2026-11-04"
+  expected:
+    bubble_P: 149348.0
+    vapor_comp:
+      MeOH: 0.512
+  tolerance:
+    bubble_P: 0.03
+    vapor_comp: 0.02
+- id: ddb133-meohnc6-333.15K-x0.733
+  package: [wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - MeOH
+  - "C6+"
+  z:
+    MeOH: 0.733
+    "C6+": 0.267
+  T: 333.15
+  source: "literature:Scheller M.; Schuberth H.; Koennecke H.G.: Ergebnisse von Dampfflüssigkeits-Phasengleichgewichtsuntersuchungen am System n-Hexan-Methylcyclohexan-Methanol bei 60°C. J.Prakt.Chem. 311 (1969) 974-982; data via Dortmund Data Bank Explorer Edition free data page 'VLE Methanol + Hexane', DDB data set 133 (isothermal 333.15 K), data table row x1=0.733, archived copy https://web.archive.org/web/20230930054505/http://www.ddbst.com/en/EED/VLE/VLE%20Hexane%3BMethanol.php; retrieved 2026-11-04"
+  expected:
+    bubble_P: 149254.0
+    vapor_comp:
+      MeOH: 0.523
+  tolerance:
+    bubble_P: 0.03
+    vapor_comp: 0.02
+- id: ddb521-nc6etoh-101.33kPa-x0.08
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - "C6+"
+  - EtOH
+  z:
+    "C6+": 0.08
+    EtOH: 0.92
+  P: 101330.0
+  source: "literature:Sinor J.E.; Weber J.H.:; data via Dortmund Data Bank Explorer Edition free data page 'VLE Hexane + Ethanol', DDB data set 521 (isobaric 101.33 kPa), data table row x1=0.08, archived copy https://web.archive.org/web/20231003210219/http://www.ddbst.com/en/EED/VLE/VLE%20Ethanol%3BHexane.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 339.05
+    vapor_comp:
+      "C6+": 0.42
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb521-nc6etoh-101.33kPa-x0.452
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - "C6+"
+  - EtOH
+  z:
+    "C6+": 0.452
+    EtOH: 0.548
+  P: 101330.0
+  source: "literature:Sinor J.E.; Weber J.H.:; data via Dortmund Data Bank Explorer Edition free data page 'VLE Hexane + Ethanol', DDB data set 521 (isobaric 101.33 kPa), data table row x1=0.452, archived copy https://web.archive.org/web/20231003210219/http://www.ddbst.com/en/EED/VLE/VLE%20Ethanol%3BHexane.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 331.5
+    vapor_comp:
+      "C6+": 0.64
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: ddb521-nc6etoh-101.33kPa-x0.725
+  package: [nrtl, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr, nrtl_sac_ig]
+  components:
+  - "C6+"
+  - EtOH
+  z:
+    "C6+": 0.725
+    EtOH: 0.275
+  P: 101330.0
+  source: "literature:Sinor J.E.; Weber J.H.:; data via Dortmund Data Bank Explorer Edition free data page 'VLE Hexane + Ethanol', DDB data set 521 (isobaric 101.33 kPa), data table row x1=0.725, archived copy https://web.archive.org/web/20231003210219/http://www.ddbst.com/en/EED/VLE/VLE%20Ethanol%3BHexane.php; retrieved 2026-11-04"
+  expected:
+    bubble_T: 331.4
+    vapor_comp:
+      "C6+": 0.67
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
