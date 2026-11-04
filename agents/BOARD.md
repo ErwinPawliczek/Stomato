@@ -7,7 +7,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 
 | id | title | owner | status | branch | updated |
 |----|-------|-------|--------|--------|---------|
-| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress (resumed 11:35 AM after usage reset; val-infra merged into chem-engine 11:35) | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 11:45 AM |
+| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress (resumed 11:35; val-infra in chem-engine; val-blocked gate running on val-integ; packages committing) | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 12:13 PM |
 | T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
 | T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | claimed | obv/T1r | 2026-11-04 12:07 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | claimed | obv/T3 | 2026-11-04 12:06 PM |
@@ -15,12 +15,23 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | claimed | obv/T5 | 2026-11-04 12:07 PM |
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | review | obv/T6 | 2026-11-04 12:26 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | review | obv/T7 | 2026-11-04 12:12 PM |
-| T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 1:20 PM |
+| T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 12:06 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
 
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Board sync — Stomato bot — 2026-11-04 12:13 PM
+- Done: Reconciled from git + `~/stomato-val-progress.md` + live processes. V1 continue (pid 736208) alive since 11:35; chem-engine tip still val-infra `296e6f6`; `val-integ` gating val-blocked (`~/stomato-val-gate.sh`, audit running). Package branches advanced (units-a/b/c, gphi-*, helm-kvalue, cubic-mixing, special, electrolyte-amine, blocked). Obvious: T4 `review` PR #338 (`obv/T4` fb4eb4d); T6 `review` PR #340 (`obv/T6` aa4754d); T7 `review` PR #339 (`obv/T7` e6b7a58); T1r/T3/T5/T8 claimed — `obv/T5` tip exists at chem-engine base only (no pack). No active claim >45 min silent. No new Obvious job started (T1r/T3–T8 already dispatched).
+- Outputs: this board update only.
+- Next: watch T1r/T3/T5/T8 for first `obv/*` push / heartbeat; review/merge T4+T6+T7 after V1 gate capacity; do not bind packs into live cases*.yaml until V1 is ready.
+
+### V1 — Claude Code (board sync) — 2026-11-04 12:13 PM
+- Done: Still running after 11:35 resume. Only chem-engine merge so far remains val-infra (`8a7d545`, `296e6f6`). Progress log updated 12:00 CST; worktrees active. Orchestrator currently gating val-blocked/`cosmo_sac_ig` via `~/stomato-val-integ` + `~/stomato-val-gate.sh` (audit in progress as of 12:12).
+- Branch tips observed: val-gphi-unifac `e934fe0`, val-gphi-corr `3469461`, val-units-a `af23f0c`, val-units-b `5b432ca`, val-units-c `0d5b832`, val-cubic-mixing `b489afd`, val-helm-kvalue `9e5d771`, val-special `46103d5`, val-electrolyte-amine `bed50eb`, val-blocked `13aff08`, val-integ `0f09f99`.
+- Tests run + result: prior val-infra gate green (recorded 11:35). No new chem-engine merge yet this sync.
+- Next / open questions: finish val-blocked gate then queue other package merges; blocked open-data gaps now have Obvious packs in review (T4 PR #338, T6 PR #340, T7 PR #339; T3 still claimed).
 
 ### T7 — Obvious — 2026-11-04 12:12 PM
 - Done: Acetic acid/water open VLE pack for `hoc_dimer` assembled from three open sources retrieved this session; PR open into `chem-engine`.
@@ -91,7 +102,8 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 ### Open questions
 - Does the Obvious workspace tied to the API key hold the $20k credits?
 - Obvious GitHub App install on the Stomato repo (needed for Obvious to push `obv/*` branches).
-  - 2026-11-04 11:11 AM (board sync): Obvious pushed commit bea3182 to `agents-board` (T2), so its push access works for this branch; no `obv/*` branch exists on origin yet, so T1 results are still only in the Obvious project.
+  - 2026-11-04 11:11 AM (board sync): Obvious pushed commit bea3182 to `agents-board` (T2), so its push access works for this branch.
+  - 2026-11-04 12:13 PM (board sync): packs on `obv/T4` (fb4eb4d, PR #338), `obv/T6` (aa4754d, PR #340), `obv/T7` (e6b7a58, PR #339); `obv/T5` tip exists at chem-engine base only (no pack). T1r/T3/T8 still lack `obv/*` tips.
 
 ### Obvious projects (dispatched 2026-11-04 12:20 PM CST, workspace wks_IDdvA1UG)
 | task | project | execution |
@@ -107,3 +119,6 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 ### Sources found
 | model / unit | dataset | citation | DOI / URL | added by |
 |---|---|---|---|---|
+| API liquid density (pending) | T4 pack worked example (MeABP 538 °F, API 30.6 → rho 160 °F) | API TDB-6 e-ballot draft Proc. 6A2.3 (= hist. 6A3.5); Ramos-Pallares 2017; IJERT 2024 | https://eballotprodstorage.blob.core.windows.net/eballotscontainer/TDB-6_e1%20draft.pdf ; pack on obv/T4 | T4 / board sync |
+| hoc_dimer AcOH/H2O | T7 pack (Sebastiani 1967 isobaric; Román-Ramírez & Leeke 2016 isothermal p-x; NIST Antoine/TRC) | Sebastiani & Lacquaniti CES 22 (1967); Román-Ramírez & Leeke JCED 61 (2016); NIST SRD 69 / McDonald 1959 | DOI 10.1016/0009-2509(67)80182-9 ; DOI 10.1021/acs.jced.5b01104 ; pack on obv/T7 | T7 / board sync |
+| polymer-solvent VLE | T6 pack (PS/toluene; PS+PMMA binaries) | Pavlicek/Bogdanic/Wichterle CABEQ 2015 & 2014; Tanbonliong/Prausnitz UC 1996 | doi:10.15255/CABEQ.2015.2183 ; doi:10.15255/CABEQ.2014.19388 ; pack on obv/T6 | T6 / board sync |
