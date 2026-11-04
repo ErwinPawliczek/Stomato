@@ -1,0 +1,129 @@
+# pfr V1 cases (validator scripts/validate_units.py).
+#
+# Fogler, Elements of Chemical Reaction Engineering, 4th ed. (Prentice Hall 2006),
+# Example 4-6 "Calculating X in a Reactor with Pressure Drop", pp. 191-195
+# (ethylene oxide by catalytic oxidation of ethylene with air in a packed bed;
+# Ergun data from Example 4-4, pp. 183-184). Retrieved and read 2026-11-04 from
+# the archive.org scan https://archive.org/details/elementsofchemicalreactionengineering4thed .
+#
+# Printed basis (per tube; 1000 tubes, 1 1/2-in. sched. 40):
+#   F_A0 = 3e-4 lbmol/s ethylene, F_B0 = 1.5e-4 lbmol/s O2, F_I = 1.5e-4*0.79/0.21 lbmol/s N2;
+#   260 C, 10 atm, isothermal; rate -r'_A = k P_A^(1/3) P_B^(2/3) lbmol/(lb cat h);
+#   k' = k P_A0 (1/2)^(2/3) = 0.0266 lbmol/(h lb cat) (eq. E4-6.11, the value the
+#   book's Polymath program integrates); catalyst rho_c = 120 lb/ft3, voidage 0.45,
+#   D_p = 0.0208 ft (1/4 in.), A_c = 0.01414 ft2; air at 260 C/10 atm: mu = 0.0673
+#   lbm/(ft h), rho_0 = 0.413 lbm/ft3 (Ex. 4-4); alpha = 0.0166 /lb cat.
+# Printed answers: 60 % conversion with 44.5 lb catalyst per tube with pressure drop
+# (p. 195); 35.3 lb per tube neglecting pressure drop (eq. E4-6.17, p. 195).
+#
+# Inputs, converted (SI): flows x 453.59237 mol/lbmol: C2H4 0.136077711, O2
+# 0.0680388555, N2 0.2559556945 mol/s. Bulk density rho_b = 120*(1-0.45) lb/ft3 =
+# 1057.2186 kg/m3. The rate goes in on the concentration basis, per kg catalyst:
+# k' at the inlet (0.0266 lbmol/(h lb) = 7.38889e-3 mol/(kg s)) divided by
+# c_A0^(1/3) c_B0^(2/3) at the exact inlet (ideal gas, y_A0 = 0.29577, c_A0 = 67.6074
+# mol/m3) gives k0 = 1.734890e-4 (m3/mol)^0 m3/(kg s) — P_A^(1/3) P_B^(2/3) at constant
+# T is proportional to c_A^(1/3) c_B^(2/3), so this is the book's rate law (eq. E4-6.3).
+# Catalyst mass -> reactor volume: V = W/rho_b; tube D from A_c = 0.01414 ft2
+# (0.0408973 m); length for 44.5 lb = 14.533882 m; D_p 0.0208 ft = 6.33984e-3 m;
+# mu 0.0673 lbm/(ft h) = 2.78204e-5 Pa s.
+# thermo ideal-raoult: the book's stoichiometry is ideal gas (eq. E4-6.4).
+#
+# Tolerances, fixed before the run from the printed rounding of W (+-0.05 lb):
+#   R1: dW/dX = (F_A0/k')[(1+eps)/(1-X) - eps] = 92.37 lb at X = 0.6 -> X +-5.4e-4
+#       -> extent +-7.35e-5 mol/s;
+#   R2: dX/dW = 5.956e-3 /lb at X = 0.6 on the book's own ODEs (E4-6.9/10 with the
+#       printed parameters) -> X +-2.98e-4 -> extent +-4.05e-5 mol/s.
+# Expected extent = 0.600 x F_A0 = 0.0816466 mol/s.
+
+- id: V1-FOGLER-EO-PBR-NODP
+  unit: pfr
+  level: R1
+  thermo: ideal-raoult
+  source: >-
+    Fogler, Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall 2006,
+    Example 4-6, p. 195 eq. (E4-6.17): 35.3 lb of catalyst per tube for 60 % conversion
+    neglecting pressure drop (k' = 0.0266 lbmol/(h lb cat), eq. E4-6.11; F_A0 = 1.08
+    lbmol/h per tube); scan read 2026-11-04 at
+    https://archive.org/details/elementsofchemicalreactionengineering4thed
+  feeds:
+    inlet:
+      T: 533.15
+      P: 1013250.0
+      molar_flow: 0.460072261
+      composition: {C2H4: 0.2957746479, O2: 0.1478873239, N2: 0.5563380282}
+  params:
+    reaction_set:
+      id: eo_fogler_4_6
+      components: [C2H4, O2, C2H4O, N2]
+      reactions:
+      - id: eo
+        stoichiometry: {C2H4: -1.0, O2: -0.5, C2H4O: 1.0}
+        base_component: C2H4
+        provenance: Fogler 4th ed. Example 4-6 rate law -r'_A = k P_A^(1/3) P_B^(2/3)
+        kinetics:
+          rate_units: mol/(kg_cat·s)
+          k0: 1.734890e-4
+          Ea: 0.0
+          orders: {C2H4: 0.3333333333333333, O2: 0.6666666666666666}
+          basis: concentration
+    volume_m3: 0.0151452225     # 35.3 lb / rho_b
+    bulk_density_kg_m3: 1057.218583
+    reacting_phase: vapor
+    thermal: isothermal
+  expected:
+  - {quantity: info.extent_eo_mol_s, value: 0.0816466, tol_abs: 7.35e-5}
+
+- id: V1-FOGLER-EO-PBR
+  unit: pfr
+  level: R2
+  thermo: ideal-raoult
+  source: >-
+    Fogler, Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall 2006,
+    Example 4-6, pp. 191-195: '60% conversion is achieved with 44.5-lb catalyst in each
+    tube' (p. 195), with the Ergun parameters of Example 4-4, pp. 183-184 (A_c 0.01414
+    ft2, D_p 0.0208 ft, voidage 0.45, mu 0.0673 lbm/(ft h)); scan read 2026-11-04 at
+    https://archive.org/details/elementsofchemicalreactionengineering4thed
+  feeds:
+    inlet:
+      T: 533.15
+      P: 1013250.0
+      molar_flow: 0.460072261
+      composition: {C2H4: 0.2957746479, O2: 0.1478873239, N2: 0.5563380282}
+  params:
+    reaction_set:
+      id: eo_fogler_4_6
+      components: [C2H4, O2, C2H4O, N2]
+      reactions:
+      - id: eo
+        stoichiometry: {C2H4: -1.0, O2: -0.5, C2H4O: 1.0}
+        base_component: C2H4
+        provenance: Fogler 4th ed. Example 4-6 rate law -r'_A = k P_A^(1/3) P_B^(2/3)
+        kinetics:
+          rate_units: mol/(kg_cat·s)
+          k0: 1.734890e-4
+          Ea: 0.0
+          orders: {C2H4: 0.3333333333333333, O2: 0.6666666666666666}
+          basis: concentration
+    tube_diameter_m: 0.0408973084
+    length_m: 14.533882
+    n_tubes: 1
+    bed: {particle_diameter_m: 0.00633984, voidage: 0.45}
+    viscosity_Pa_s: 2.78204e-5
+    bulk_density_kg_m3: 1057.218583
+    reacting_phase: vapor
+    thermal: isothermal
+  expected:
+  - {quantity: info.extent_eo_mol_s, value: 0.0816466, tol_abs: 4.05e-5}
+  assessed: >-
+    Measured extent 0.0813953 mol/s (X = 0.59815) vs the printed 60 % at 44.5 lb
+    (0.0816466 mol/s, +-4.05e-5): a miss of -2.5e-4 mol/s (X -1.85e-3). Measured outlet
+    P 5.4715 bar (y = 0.540) vs the book's y = 0.550 at that weight. Cause investigated:
+    the book takes the gas as air (rho_0 = 0.413 lbm/ft3, Ex. 4-4) and so fixes
+    alpha = 0.0166 /lb; the model's Ergun term uses the actual feed density, ideal gas
+    at M = 28.615 g/mol: 6.5406 kg/m3 = 0.4083 lbm/ft3, 1.15 % below the book's air
+    value. Both Ergun terms scale with 1/rho_0, so alpha is ~1.15 % larger, the
+    pressure falls faster and the rate (proportional to P) is lower. A stated
+    simplification of the source (air properties), not a model bug: the same
+    kinetics without the bed (V1-FOGLER-EO-PBR-NODP, R1) reproduce the book. Not
+    tuned away (the model has no density override, and adding one only to match
+    would be fitting).

@@ -266,7 +266,7 @@
       description: reactor effluent
   levels:
     R1:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.reactors.pfr:PfrR1
       params:
         type: object
@@ -285,6 +285,8 @@
           bulk_density_kg_m3:
             type: number
             description: catalyst bulk density, kg/m3 — required when a rate is per kg_cat
+      validation:
+      - V1-FOGLER-EO-PBR-NODP
       note: >-
         kinetic extents integrated over V (BDF, depletion and pressure-floor events); the
         RHS never flashes — single-phase properties come from phase_props and the audit flashes
@@ -318,6 +320,8 @@
           reacting_phase: {type: string, enum: [vapor, liquid], description: single phase
               the flow must stay in}
           bulk_density_kg_m3: {type: number, description: catalyst bulk density, kg/m3}
+      validation:
+      - V1-FOGLER-EO-PBR
       note: extents, energy and pressure integrated along the tube with Ergun
         (fluids.packed_bed.Ergun) and wall heat transfer to a fixed coolant temperature; the outlet
         closes on the formation basis at P_out; reduces to R1 with no bed, no coolant and the same
@@ -354,6 +358,10 @@
   references:
   - docs/unit-catalogue-plan.md §2 U-F 6
   notes: >-
+    R1 validated on Fogler 4th ed. Example 4-6 without pressure drop (V1-FOGLER-EO-PBR-NODP,
+    35.3 lb catalyst for X = 0.60, read 2026-11-04). R2 runs the same example with the Ergun
+    bed (V1-FOGLER-EO-PBR) and misses by X -1.85e-3 because the book takes the gas as air
+    (rho_0 1.15 % above the actual feed); recorded, R2 stays provisional.
     R1, R2 and R3 implemented; single phase. R2 and R3 ship provisional on the spec's hand
     calculations (Fogler eq. 4-33 Ergun, wall-exchange exponential, Thiele/activity closed
     form) and the reductions to the lower level; no V1 case was attempted for them. R1 V1 gap — no transcribable

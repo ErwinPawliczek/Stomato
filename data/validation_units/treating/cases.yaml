@@ -84,11 +84,14 @@
     documented not hidden: the R0 unit does not combust the 0.98 mol%
     hydrocarbons, so the 9.4 lb-mol/hr of O2 meant for HC burn passes through
     unreacted and the tail gas carries CH4 + O2 where the book carries CO2 +
-    H2O (~0.8% effect on total moles). Measured stage_0_extent_mol_s 0.0050169
-    (36.1 H2S consumed on the same scale) vs the printed 38.0177: -5.0%, a
-    recorded miss at the printed rounding (the JANAF-based equilibrium behind
-    ngdesign.units._physics.kinetics.ln_keq and ngdesign.data.formation sits ~5% below the GPSA Fig. 22-27 chart read
-    at the converter outlet temperature). Measured sulfur_recovery_fraction
-    0.8827 — no printed value exists to check it against (the example's final
+    H2O (~0.8% effect on total moles). Re-measured 2026-11-04 (val-units-c):
+    stage_0_extent_mol_s 0.00549607 (39.57 H2S consumed on the same scale) vs
+    the printed 38.0177: +4.1%, a recorded miss at the printed rounding. (The
+    earlier note recorded 0.0050169, -5.0%; the formation database behind
+    ngdesign.units._physics.kinetics.ln_keq / ngdesign.data.formation has since
+    moved to the CEA/ATcT-matched chemdb records, which moved the converter
+    equilibrium past the GPSA Fig. 22-27 chart read in the other direction.)
+    Measured sulfur_recovery_fraction 0.9005 — no printed value exists to
+    check it against (the example's final
     recovery step is not accessible); recorded for transparency, on the R0
     basis of one thermal stage + one catalytic converter and no HC combustion.
