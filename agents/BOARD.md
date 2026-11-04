@@ -7,12 +7,12 @@ Times are America/Chicago (CST). Newest handoff on top.
 
 | id | title | owner | status | branch | updated |
 |----|-------|-------|--------|--------|---------|
-| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress (resumed 11:35; val-infra in chem-engine; val-blocked gate running on val-integ; packages committing) | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 12:13 PM |
+| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress — session hit Claude 5h limit ~12:08 (resets 4:30 PM); in-flight gate shells (val-integ, gphi-unifac audit) still running; no new chem-engine merge since val-infra | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 12:21 PM |
 | T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
-| T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | review | obv/T1r | 2026-11-04 1:25 PM |
+| T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | review (PR #342) | obv/T1r | 2026-11-04 12:18 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | claimed | obv/T3 | 2026-11-04 12:06 PM |
 | T4 | API liquid density: public reproductions of API TDB 6A3.5 / Rackett-type petroleum correlations with worked examples | Obvious | review | obv/T4 | 2026-11-04 12:11 PM |
-| T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | open for review (PR #341, 12:16 PM) | obv/T5 | 2026-11-04 12:16 PM |
+| T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | review (PR #341) | obv/T5 | 2026-11-04 12:16 PM |
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | review | obv/T6 | 2026-11-04 12:26 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | review | obv/T7 | 2026-11-04 12:12 PM |
 | T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 12:06 PM |
@@ -21,6 +21,11 @@ Times are America/Chicago (CST). Newest handoff on top.
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Board sync — Stomato bot — 2026-11-04 12:21 PM
+- Done: Pulled 5 Obvious commits. T5 → `review`, PR #341 (`obv/T5` 93ae662, COSMO-SAC licence audit + 35 bubble_T cases + 7 gamma-inf rows). T1r → `review`, PR #342 (`obv/T1r`, EtOH/H2O NRTL pack 15 cases; ethane/propane NOT FOUND, paywalled). T1r handoff/heartbeats are labelled 12:40/1:00/1:25 PM but the git commits are 12:1x PM CST — Obvious clock labels run ahead; board `updated` column uses commit times. V1: `~/stomato-val.log` shows the Claude session hit its 5-hour limit ~12:08 (resets 4:30 PM CST); pid 736208 and in-flight gate shells still alive. T3/T8 claimed 12:06, no `obv/*` push yet (<45 min, not stale).
+- Outputs: this board update only. No new Obvious job (all board tasks already dispatched).
+- Next: review/merge queue now T4 #338, T7 #339, T6 #340, T5 #341, T1r #342; curation decisions pending for AcOH (T7) and EtOH (T1r). Validation watcher owns V1 resume after 4:30 PM. Watch T3/T8 (stale at ~12:51).
 ### T1r — Obvious — 2026-11-04 1:25 PM (HANDOFF — status review)
 - Done: Task T1r executed per the playbook (claimed 12:07 PM CST; branch obv/T1r cut from origin/chem-engine; two heartbeats pushed; V1 files untouched). Pack (b) delivered: ethanol(1)+water(2) isobaric VLE at 101.3 kPa for the registered NRTL package — data.csv (17 points) + pack.yaml (15 cases: 14 interior binary points + azeotrope, schema-identical to data/validation/gamma_phi/cases.yaml, tolerances bubble_T 0.5 % / y 0.02 abs per P1-05). Pack (a) ethane/propane for Peng-Robinson: NOT FOUND — no openly retrievable tabulated source exists; no values written, no cases, per the never-invent rule. Data-only PR; no code touched.
 - Outputs (paths / branch / commit / PR #): data/validation/packs/T1r/{data.csv,pack.yaml,README.md} on branch obv/T1r, commit afe42dc; PR https://github.com/ErwinPawliczek/Stomato/pull/342 (obv/T1r → chem-engine, never main).
@@ -145,3 +150,5 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 | API liquid density (pending) | T4 pack worked example (MeABP 538 °F, API 30.6 → rho 160 °F) | API TDB-6 e-ballot draft Proc. 6A2.3 (= hist. 6A3.5); Ramos-Pallares 2017; IJERT 2024 | https://eballotprodstorage.blob.core.windows.net/eballotscontainer/TDB-6_e1%20draft.pdf ; pack on obv/T4 | T4 / board sync |
 | hoc_dimer AcOH/H2O | T7 pack (Sebastiani 1967 isobaric; Román-Ramírez & Leeke 2016 isothermal p-x; NIST Antoine/TRC) | Sebastiani & Lacquaniti CES 22 (1967); Román-Ramírez & Leeke JCED 61 (2016); NIST SRD 69 / McDonald 1959 | DOI 10.1016/0009-2509(67)80182-9 ; DOI 10.1021/acs.jced.5b01104 ; pack on obv/T7 | T7 / board sync |
 | polymer-solvent VLE | T6 pack (PS/toluene; PS+PMMA binaries) | Pavlicek/Bogdanic/Wichterle CABEQ 2015 & 2014; Tanbonliong/Prausnitz UC 1996 | doi:10.15255/CABEQ.2015.2183 ; doi:10.15255/CABEQ.2014.19388 ; pack on obv/T6 | T6 / board sync |
+| cosmo_sac_ig (pending) | T5 pack (H2O+MEG, H2O+TEG bubble_T 0.1 MPa; gamma-inf MeOH/H2O, MeOH/MEG) + sigma-profile licence audit | Chouireb 2018 open SI; Tochigi 2000; Zhang 2003 (ThermoML) | PR #341 ; pack on obv/T5 (URLs in packs/T5/README.md) | T5 / board sync |
+| NRTL EtOH/H2O | T1r pack (17 pts isobaric 101.3 kPa + azeotrope) | Lai, Lin & Tu, J. Chem. Thermodyn. 68 (2014) 13-19 | DOI 10.1016/j.jct.2013.08.020 ; trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml ; PR #342 | T1r / board sync |
