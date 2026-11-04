@@ -2022,6 +2022,18 @@ def _saturated_liquid_temperature(
     return result
 
 
+def _nearest_decant(col: _Column, y: dict[str, float], p: float) -> float | None:
+    """T* of the most recently solved decanting condensate at P within
+    ``_BUBBLE_WARM_DZ`` of y that drew free water (None: no such state)."""
+    for (items, p_k), state in reversed(col.decant_memo.items()):
+        if p_k != p or state.phi <= 0.0:
+            continue
+        other = dict(items)
+        if max(abs(y.get(c, 0.0) - other.get(c, 0.0)) for c in y.keys() | other.keys()) <= _BUBBLE_WARM_DZ:
+            return state.T
+    return None
+
+
 #: Largest max |z_i - z'_i| over which a solved bubble point warm-starts the
 #: secant for z (``_saturated_liquid_temperature``).
 _BUBBLE_WARM_DZ = 1e-2
@@ -2102,7 +2114,14 @@ def _reflux_state(col: _Column, tb: _ThermoBox, y_top: dict[str, float], t_top: 
     key = (tuple(sorted(y.items())), p)
     hit = col.decant_memo.get(key)
     if hit is None:
-        x, phi, t = saturated_decant(tb, y, t_top, p, lambda z: _saturated_liquid_temperature(col, tb, z, p))
+        x, phi, t = saturated_decant(
+            tb,
+            y,
+            t_top,
+            p,
+            lambda z: _saturated_liquid_temperature(col, tb, z, p),
+            _nearest_decant(col, y, p),
+        )
         h_w = tb.h_liquid({STEAM_COMPONENT: 1.0}, t, p) if phi > 0.0 else 0.0
         hit = _RefluxState(x=x, T=t, h=tb.h_liquid(_flash_ready(x, y), t, p), phi=phi, h_water=h_w)
         col.decant_memo[key] = hit

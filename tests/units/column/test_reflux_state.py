@@ -13,6 +13,7 @@ Independent checks from the reported result and fresh thermo calls only.
 
 from __future__ import annotations
 
+import math
 from typing import Any
 
 import pytest
@@ -20,7 +21,7 @@ import pytest
 from ngdesign import registry
 from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.units.column import Column, _build_column, _parse_params, _seed_profile, solve_column_full
+from ngdesign.units.column import Column, _build_column, _parse_params, _solve_specs, solve_column_full
 from ngdesign.units.column.inside_out import (
     _enthalpy_at,
     _equilibrium_vapour,
@@ -51,6 +52,26 @@ def solved(pr: Thermo) -> Solved:
     return pr, res, inlets
 
 
+def bubble_gap(thermo: Thermo, z: dict[str, float], t: float, p: float) -> float:
+    """ln sum_i z_i phi_i^L(z) / phi_i^V(w) at (T, P), w the incipient vapour
+    by successive substitution: zero at the bubble point (Michelsen &
+    Mollerup, Thermodynamic Models 2nd ed., ch. 10), read with fresh
+    ``phase_props`` calls only."""
+    lphi = thermo.phase_props(z, t, p, PhaseKind.HC_LIQUID).ln_phi
+    w = {c: v * math.exp(lphi[c]) for c, v in z.items()}
+    total = 0.0
+    for _ in range(200):
+        s = sum(w.values())
+        vphi = thermo.phase_props({c: v / s for c, v in w.items()}, t, p, PhaseKind.VAPOR).ln_phi
+        w_new = {c: v * math.exp(lphi[c] - vphi[c]) for c, v in z.items()}
+        total = sum(w_new.values())
+        moved = max(abs(w_new[c] / total - w[c] / s) for c in z)
+        w = w_new
+        if moved < 1e-15:
+            break
+    return math.log(total)
+
+
 def _top(thermo: Thermo, res: UnitResult) -> dict[str, Any]:
     """Stage 1 and 2 states, the reflux (= distillate) state and their enthalpy flows."""
     info = res.info
@@ -71,13 +92,16 @@ def _top(thermo: Thermo, res: UnitResult) -> dict[str, Any]:
 
 def test_reflux_is_the_saturated_condensate(solved: Solved) -> None:
     """The liquid returned is the overhead vapour's composition at its bubble
-    point (the package's), strictly below the stage-1 temperature."""
+    point, strictly below the stage-1 temperature: on the fugacity bubble
+    condition to 1e-12 (the stage-K surface the solver reads) and the
+    package's own bubble point to its 1e-8 relative resolution."""
     thermo, res, _ = solved
     top = _top(thermo, res)
     s0, d = top["s0"], top["d"]
     total = sum(s0["y"].values())
     y0 = {c: v / total for c, v in s0["y"].items()}
-    assert d.T == pytest.approx(thermo.bubble_point(y0, P=s0["P"]).T, rel=1e-12)
+    assert abs(bubble_gap(thermo, dict(d.composition), d.T, d.P)) < 1e-12
+    assert d.T == pytest.approx(thermo.bubble_point(y0, P=s0["P"]).T, rel=1e-8)
     assert d.T < s0["T"] - 1.0  # measured 2.04 K below the dew-point stage
 
 
@@ -131,8 +155,8 @@ def test_overall_closure_and_kettle_duty(solved: Solved) -> None:
 
 def test_inner_model_reads_the_live_reflux_enthalpy(pr: Thermo) -> None:
     """The inside-out condensate line and the live residual (the Newton's and
-    the gate's) evaluate one reflux state: at the profile the line was fitted
-    on, h_cond(T_1 + cond_dt) is ``_reflux_state``'s enthalpy at the live
+    the gate's) evaluate one reflux state: at the solved profile the line is
+    fitted on, h_cond(T_1 + cond_dt) is ``_reflux_state``'s enthalpy at the live
     y_1 = K_1 x_1, at its bubble point."""
     feeds, params = Column.example_case()
     feed = flash_feed(pr, feeds["feed"])
@@ -142,13 +166,14 @@ def test_inner_model_reads_the_live_reflux_enthalpy(pr: Thermo) -> None:
     )
     tb = _ThermoBox(pr, min(parsed.pressures), max(parsed.pressures))
     col = _build_column(parsed, tb)
-    prof = _seed_profile(col, tb, 315.0, 355.0)
+    prof = _solve_specs(col, tb, parsed)
     model = _refresh_model(col, tb, prof, None)
     k_stages, y_eq = _stage_equilibrium(col, tb, prof.l0, prof.x, prof.T, prof.V, list(prof.y))
     assert k_stages[0] is not None
     assert _equilibrium_vapour(col, k_stages[0], prof.x[0]) == y_eq[0]
     state = _reflux_state(col, tb, y_eq[0], prof.T[0])
-    assert state.T == pytest.approx(pr.bubble_point(state.x, P=col.pressures[0]).T, rel=1e-12)
+    assert state.T < prof.T[0]  # the stage-1 cap is not what sets it here
+    assert abs(bubble_gap(pr, state.x, state.T, col.pressures[0])) < 1e-12
     assert model.h_cond is not None
     assert prof.T[0] + model.cond_dt == pytest.approx(state.T, rel=1e-12)
     assert _enthalpy_at(model.h_cond, prof.T[0] + model.cond_dt) == pytest.approx(state.h, rel=1e-12)
