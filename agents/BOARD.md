@@ -14,7 +14,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T4 | API liquid density: public reproductions of API TDB 6A3.5 / Rackett-type petroleum correlations with worked examples | Obvious | claimed | obv/T4 | 2026-11-04 12:08 PM |
 | T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | claimed | obv/T5 | 2026-11-04 12:07 PM |
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | open | obv/T6 | 2026-11-04 12:15 PM |
-| T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | open | obv/T7 | 2026-11-04 12:15 PM |
+| T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | claimed | obv/T7 | 2026-11-04 12:12 PM |
 | T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 1:20 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
 
