@@ -27,7 +27,7 @@ them). SI units throughout: K, Pa, kg/m3, Pa.s, J/mol, J/(mol K).
 from __future__ import annotations
 
 import math
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from functools import cache
 from typing import Any, Literal, cast
 
@@ -47,6 +47,7 @@ from thermo import (
 from thermo.flash.flash_utils import stability_iteration_Michelsen
 from thermo.heat_capacity import HeatCapacityGas
 from thermo.interaction_parameters import IPDB
+from thermo.property_package import StabilityTester
 from thermo.vapor_pressure import VaporPressure
 
 from ngdesign.contracts import Phase, PhaseKind, StreamState
@@ -272,7 +273,62 @@ def build_flasher(
             liquid_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps),
             liquid_cls(eos, eos_kwargs, HeatCapacityGases=heat_caps),
         ]
-        return _FlashVLN(constants, correlations, liquids=liquids, gas=gas)
+        return _with_distinct_trials(_FlashVLN(constants, correlations, liquids=liquids, gas=gas))
+
+
+class _DistinctTrialStabilityTester(StabilityTester):  # type: ignore[misc]
+    """thermo's StabilityTester without the replayed tail of random trial compositions.
+
+    thermo 0.6.1's ``incipient_guesses`` ends with N random trial compositions;
+    once N*N > 1000 (N >= 32 components) it draws them as
+    ``for i in range(N): seed(0); for k in range(N): yield normalize(...)``, so
+    the seed(0) inside the outer loop replays the same N compositions N times:
+    N*N random trials of which only N are distinct. Every Michelsen stability
+    test that finds the feed stable walked all of them (measured on the
+    side_strip example bottoms, 48 components at 500 K / 3 bar: 2,356 trial
+    iterations, 45 s, for 100 distinct trials).
+
+    A repeated trial is redundant work, not new information: the stability
+    iteration (Michelsen 1982, Fluid Phase Equilib. 9, 1-19, tangent-plane
+    distance successive substitution) is a pure function of (T, P, the
+    assumed-stable phase, the trial composition), so a repeat returns exactly
+    the result of its first occurrence, and FlashVL.stability_test_Michelsen
+    either already stopped at that first occurrence (an unstable trial) or
+    skipped it (stable, trivial or an existing phase). With the stability
+    options this package's flashers run (no ``all_solutions``, ``handle_iffy``,
+    ``lowest_dG`` or ``highest_comp_diff``) a repeat can change nothing.
+
+    Only a *trailing* run of repeats is dropped: a repeat followed by any new
+    trial (e.g. the aqueous pure-water trial that the pure block hands out
+    again) is still handed out, so the generator index of every trial - and
+    the ``stab_guess_name`` the flash records - is unchanged.
+    """
+
+    def incipient_guesses(self, *args: Any, **kwargs: Any) -> Iterator[list[float]]:
+        seen: set[tuple[float, ...]] = set()
+        held: list[list[float]] = []  # repeats not yet known to be trailing
+        for guess in super().incipient_guesses(*args, **kwargs):
+            key = tuple(guess)
+            if key in seen:
+                held.append(guess)
+                continue
+            yield from held
+            held.clear()
+            seen.add(key)
+            yield guess
+
+
+def _with_distinct_trials(flasher: Any) -> Any:
+    """Swap the flasher's stability tester for the repeat-free one (same arguments)."""
+    stab = flasher.stab
+    flasher.stab = _DistinctTrialStabilityTester(
+        Tcs=stab.Tcs,
+        Pcs=stab.Pcs,
+        omegas=stab.omegas,
+        aqueous_check=stab.aqueous_check,
+        CASs=stab.CASs,
+    )
+    return flasher
 
 
 class _FlashVLN(FlashVLN):  # type: ignore[misc]
@@ -638,7 +694,7 @@ def build_flasher_vl(
         # N=1 is never flashed through this path: thermo's FlashVL stability guess
         # divides by N-1, so pure feeds short-circuit to the databank Psat curve in
         # _saturation and the full flasher maps their states.
-        return FlashVL(constants, correlations, gas=gas, liquid=liquid)
+        return _with_distinct_trials(FlashVL(constants, correlations, gas=gas, liquid=liquid))
 
 
 def _pt_phase_pairs(flasher: Any, zs: list[float], T: float, P: float) -> list[PhasePair]:
