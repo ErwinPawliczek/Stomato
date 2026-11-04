@@ -1,3 +1,6 @@
+### T11r — Obvious — 1:45PM (heartbeat 2)
+- 1:45PM CST — equations transcribed from T3 pack (alpha (1-Tr) form, c(T) translation, kb(T) b-mixing); fetching the open Mangold 2019 main + SI PDFs to verify eq 22d and the supercritical translation branch before writing the adapter; verifying thermo library b-mixing hooks. No data invented.
+
 ### T11r — Obvious — 1:42PM (heartbeat 1)
 - 1:42PM CST — claimed; skeleton pushed to obv/T11r (c0fff59d, cut from origin/chem-engine, rebased onto obv/T9 54790ede since PR #345 unmerged); reading T3 params pack + Mangold 2019 open paper for the VTBMSR-III model definition; adapter next.
 
