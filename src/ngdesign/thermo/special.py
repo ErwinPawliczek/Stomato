@@ -51,13 +51,14 @@ SI units throughout: K, Pa, J/mol, J/(mol K).
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 from functools import cache
-from typing import Any
+from typing import Any, cast
 
 import yaml
 from chemicals.phase_change import Hfus, Tm
 from thermo import FlashVL, GibbsExcessLiquid, IdealGas
-from thermo.activity import GibbsExcess
+from thermo.activity import GibbsExcess, IdealSolution
 
 from ngdesign.data import DATABANK_LOCK, register_pseudo
 from ngdesign.thermo import _state
@@ -83,18 +84,41 @@ def _shared_cached(self_key: tuple[Any, ...], key: tuple[Any, ...], compute: Any
 # --------------------------------------------------------------------------
 
 
-def _special_flasher(make_ge: Any, ids: tuple[str, ...], pseudos: tuple[Any, ...]) -> Any:
+def _special_flasher(
+    make_ge: Any,
+    ids: tuple[str, ...],
+    pseudos: tuple[Any, ...],
+    association: tuple[int, AssociationLaw] | None = None,
+) -> Any:
     """One two-phase gamma-phi flasher over exactly this sorted component set.
 
     Same shared state layer as every other package: records resolve through the
     open component registry (flowsheet-owned pseudo definitions win), constants
     and correlations come from ``_state._constants_package`` so pseudo-components
-    get the merged package, and the vapour phase is ideal-gas.
+    get the merged package. Without ``association`` the vapour is ideal-gas;
+    with ``(index, law)`` it is the chemical-theory :class:`AssociatingGas` and
+    the liquid takes the PhiSat basis (f_i^L = x_i gamma_i phi_i^sat P_i^sat)
+    with the associating component's saturation fugacity coefficient, so a pure
+    associating feed still boils exactly at its Psat.
     """
     with DATABANK_LOCK:
         records = _state._records(ids, pseudos)
         constants, correlations = _state._constants_package(records)
-        gas = IdealGas(HeatCapacityGases=correlations.HeatCapacityGases)
+        basis: dict[str, Any] = {}
+        if association is None:
+            gas = IdealGas(HeatCapacityGases=correlations.HeatCapacityGases)
+        else:
+            idx, law = association
+            gas = AssociatingGas(
+                law, idx, HeatCapacityGases=correlations.HeatCapacityGases, zs=[1.0 / len(ids)] * len(ids)
+            )
+            sats: list[Any] = [
+                _AssociationSaturation(law, correlations.VaporPressures[i], constants.Tcs[i])
+                if i == idx
+                else _InertSaturation(constants.Tcs[i])
+                for i in range(len(ids))
+            ]
+            basis = {"equilibrium_basis": "PhiSat", "eos_pure_instances": sats}
 
         def ge_liquid() -> Any:
             """One liquid phase; each gets its own gE instance (T/xs state)."""
@@ -106,9 +130,46 @@ def _special_flasher(make_ge: Any, ids: tuple[str, ...], pseudos: tuple[Any, ...
                 EnthalpyVaporizations=correlations.EnthalpyVaporizations,
                 VolumeLiquids=correlations.VolumeLiquids,
                 GibbsExcessModel=model,
+                **basis,
             )
 
+        if association is not None:
+            return _AssociationFlashVL(constants, correlations, gas=gas, liquid=ge_liquid())
         return FlashVL(constants, correlations, gas=gas, liquid=ge_liquid())
+
+
+class _AssociationFlashVL(FlashVL):  # type: ignore[misc]  # thermo ships no stubs
+    """FlashVL whose PT stability test also decides a pure feed (N == 1).
+
+    thermo 0.6.1's Michelsen trial generator (``incipient_guesses``) divides
+    by N - 1, so a pure feed raises ZeroDivisionError inside every PT flash,
+    including the ones its PH/PS secant solver makes (the shared layer
+    recovers only the direct PT call, ``_state._flash_tp_with_stability_fallback``).
+    A pure substance at fixed (T, P) cannot split, so the stable phase is the
+    one with the lower Gibbs energy (departure basis, as thermo itself compares
+    on an ideal-gas basis); mixtures take the library path unchanged.
+    """
+
+    def flash_TP_stability_test(
+        self,
+        T: float,
+        P: float,
+        zs: list[float],
+        liquid: Any,
+        gas: Any,
+        solution: Any = None,
+        LL: bool = False,
+        phases_ready: bool = False,
+    ) -> Any:
+        if self.N != 1:
+            return super().flash_TP_stability_test(
+                T, P, zs, liquid, gas, solution=solution, LL=LL, phases_ready=phases_ready
+            )
+        if not phases_ready:
+            gas, liquid = self.phases_at_TP_binary(T, P, zs, liquid, gas)
+        if liquid.G_dep() <= gas.G_dep():
+            return None, [liquid], [], [1.0], {"iterations": 0, "err": 0.0, "stab_info": None}
+        return gas, [], [], [1.0], {"iterations": 0, "err": 0.0, "stab_info": None}
 
 
 class SpecialGammaPhiPackage(ThermoSurfaceMixin):
@@ -921,8 +982,23 @@ class IdealSolidPackage:
 
 
 # --------------------------------------------------------------------------
-# Dimerization association kernel (Hayden-O'Connell family, in-house)
+# Vapour-phase association: chemical theory (Marek-Standart), in-house
 # --------------------------------------------------------------------------
+#
+# References for every equation in this section:
+# - Marek & Standart, Collect. Czech. Chem. Commun. 19, 1074 (1954): vapour of
+#   an associating substance as an ideal-gas mixture of true species in
+#   chemical equilibrium; apparent fugacity of the associating component =
+#   partial pressure of its monomer.
+# - Prausnitz, Lichtenthaler & de Azevedo, Molecular Thermodynamics of
+#   Fluid-Phase Equilibria, 3rd ed. (1999), sec. 5.8-5.9 (chemical theory of
+#   association, dimerization of carboxylic acids): f_A = y_A0 P (true monomer
+#   fraction times P), Kp = y_D / (y_A0^2 P), Z = n_true / n_apparent; the
+#   same chemical-theory treatment carries over to the n-mer (HF hexamer,
+#   Schotte, Ind. Eng. Chem. Process Des. Dev. 19, 432 (1980)).
+# - Gamma-phi with a saturation fugacity coefficient (the "PhiSat" basis of
+#   thermo's GibbsExcessLiquid): f_i^L = x_i gamma_i phi_i^sat P_i^sat
+#   (Prausnitz et al. 3rd ed., eq. 10-4 with the Poynting factor at unity).
 
 
 @cache
@@ -933,8 +1009,141 @@ def _association_params() -> dict[str, Any]:
         return yaml.safe_load(fh) or {}
 
 
+_LN10 = math.log(10.0)
+
+
+@dataclass(frozen=True)
+class AssociationLaw:
+    """One-species n-mer association n A <=> A_n between ideal-gas true species.
+
+    ln Kp(T) = ln_k_a + ln_k_b / T with Kp = p_(A_n) / p_A^n in Pa^(1-n): the
+    van't Hoff form with a constant association enthalpy
+    dH = -R ln_k_b (J per mole of n-mer formed; d ln Kp / dT = dH / (R T^2)).
+    """
+
+    n: int
+    ln_k_a: float
+    ln_k_b: float
+
+    @property
+    def dH(self) -> float:
+        """Association enthalpy, J per mole of n-mer (negative: exothermic)."""
+        return -R * self.ln_k_b
+
+    def ln_k(self, T: float) -> float:
+        """ln Kp(T), Kp in Pa^(1-n)."""
+        return self.ln_k_a + self.ln_k_b / T
+
+    @classmethod
+    def dimer(cls, dH_assoc: float, K2_ref: float, T_ref: float) -> AssociationLaw:
+        """Dimerization from a reference constant: ln K = ln K2_ref - (dH/R)(1/T - 1/T_ref)."""
+        return cls(2, math.log(K2_ref) + dH_assoc / (R * T_ref), -dH_assoc / R)
+
+    @classmethod
+    def hexamer(cls, log10_k6_a: float, log10_k6_b: float) -> AssociationLaw:
+        """Hexamerization from log10 Kp = a + b/T (Kp in Pa^-5)."""
+        return cls(6, _LN10 * log10_k6_a, _LN10 * log10_k6_b)
+
+
+@dataclass(frozen=True)
+class AssociationState:
+    """Chemical-theory vapour state at fixed (T, P, apparent composition).
+
+    ``ln_w`` is the log apparent fugacity coefficient of the associating
+    component (w = true monomer fraction over its apparent fraction,
+    z_M / y_A); ``e`` is
+    n_apparent / n_true = 1/Z, which is also the apparent fugacity coefficient
+    of every non-associating component (phi_I = z_I / y_I); ``xi`` is the moles
+    of n-mer per apparent mole. The ``d*`` fields are derivatives with respect
+    to ln kappa (kappa = Kp P^(n-1)), the only route by which T and P enter.
+    """
+
+    ln_w: float
+    e: float
+    xi: float
+    dlnw: float
+    dlne: float
+    dxi: float
+
+
+def _softplus(t: float) -> float:
+    """ln(1 + e^t) without overflow."""
+    return t + math.log1p(math.exp(-t)) if t > 0.0 else math.log1p(math.exp(t))
+
+
+def _logistic(t: float) -> float:
+    """1 / (1 + e^-t) without overflow."""
+    if t >= 0.0:
+        return 1.0 / (1.0 + math.exp(-t))
+    et = math.exp(t)
+    return et / (1.0 + et)
+
+
+def _solve_ln_monomer_ratio(ln_alpha: float, n: int) -> float:
+    """v = ln w for the root of w + alpha w^n = 1, solved in log space.
+
+    In v the root equation is f(v) = v + ln(1 + exp(ln_alpha + (n-1) v)) = 0,
+    increasing and convex; Newton from v0 = min(0, -ln_alpha/n), where
+    f(v0) > 0, therefore decreases monotonically onto the root (no overflow
+    for any alpha the flash can reach, e.g. at the far T bounds of thermo's
+    PH/PS secant).
+    """
+    v = min(0.0, -ln_alpha / n)
+    for _ in range(200):
+        t = ln_alpha + (n - 1) * v
+        step = (v + _softplus(t)) / (1.0 + (n - 1) * _logistic(t))
+        v_new = v - step
+        if v_new >= v or abs(step) <= 1e-15 * max(1.0, abs(v)):
+            return min(v, v_new)
+        v = v_new
+    return v
+
+
+def association_state(y_a: float, ln_kappa: float, n: int) -> AssociationState:
+    """Chemical-theory state of a vapour with one n-merizing component.
+
+    True species: monomer M, n-mer A_n, and the non-associating components I,
+    all ideal gases. With apparent fractions y (y_a for the associating
+    component), the material balance and Kp = p_n / p_M^n reduce, for the
+    monomer ratio w = z_M / y_a, to (Marek & Standart 1954; Prausnitz et al.
+    3rd ed. sec. 5.9, generalized from n = 2):
+
+        w + alpha w^n = 1,   alpha = c kappa y_a^(n-1),
+        c = n - (n-1) y_a,   kappa = Kp P^(n-1)
+
+    With r = w / (1 - w) (= 1/q, q = alpha w^(n-1)) the apparent properties
+    are closed forms that stay finite as w -> 0:
+
+        ln phi_a = ln w,   ln phi_I = ln E = -ln Z,   E = w + n (1 - w) / c
+        xi = y_a / (c r + n)            (n-mer moles per apparent mole)
+
+    (Z = 1/E = 1 - (n-1) xi). Derivatives in u = ln kappa (the only route by
+    which T and P enter at fixed y) follow by implicit differentiation of the
+    root equation: d ln w/du = -1/(n + r), d ln q/du = 1 + (n-1) d ln w/du,
+    dE/du = w (1 - n/c) d ln w/du, dxi/du = y_a c r (d ln q/du) / (c r + n)^2.
+    y_a = 0 is the exact infinite-dilution limit (w -> 1, no association).
+    """
+    if y_a <= 0.0:
+        return AssociationState(0.0, 1.0, 0.0, 0.0, 0.0, 0.0)
+    c = n - (n - 1) * y_a
+    v = _solve_ln_monomer_ratio(math.log(c) + ln_kappa + (n - 1) * math.log(y_a), n)
+    w = math.exp(v)
+    one_minus_w = -math.expm1(v)
+    if one_minus_w <= 0.0:  # kappa so small that w rounds to 1: no association
+        return AssociationState(0.0, 1.0, 0.0, 0.0, 0.0, 0.0)
+    r = w / one_minus_w
+    dlnw = -1.0 / (n + r)
+    dlnq = 1.0 + (n - 1) * dlnw
+    e = w + n * one_minus_w / c
+    dlne = w * (1.0 - n / c) * dlnw / e
+    crn = c * r + n
+    xi = y_a / crn
+    dxi = y_a * c * r * dlnq / (crn * crn)
+    return AssociationState(v, e, xi, dlnw, dlne, dxi)
+
+
 def dimer_vapor_compressibility(T: float, P: float, dH_assoc: float, K2_ref: float, T_ref: float) -> float:
-    """Vapour compressibility factor of a dimerizing acid vapour.
+    """Vapour compressibility factor of a dimerizing acid vapour, NOMINAL pressure basis.
 
     Chemical theory with a single dimerization equilibrium (the leading term of
     the Hayden-O'Connell / Marek-Standart treatment): monomer M and dimer D in
@@ -942,11 +1151,13 @@ def dimer_vapor_compressibility(T: float, P: float, dH_assoc: float, K2_ref: flo
 
         Kp(T) = K2_ref exp(-(dH_assoc/R)(1/T - 1/T_ref))   [1/Pa]
 
-    and the material balance P = p_M + 2 p_D (dimer counts one pressure-bearing
-    molecule per two acid molecules). Solving 2 kp p_M^2 + p_M - P = 0 for the
-    equilibrium monomer partial pressure gives the compressibility of the
-    *nominal* acid: Z = (p_M + p_D) / (p_M + 2 p_D), the ratio of equilibrium
-    mixture moles to analytical acid moles.
+    and the material balance P = p_M + 2 p_D, i.e. ``P`` is the NOMINAL
+    pressure (all acid counted as monomer; the flash phase
+    :class:`AssociatingGas` takes the true pressure instead). Solving
+    2 kp p_M^2 + p_M - P = 0 for the equilibrium monomer partial pressure
+    gives the compressibility of the nominal acid: Z = (p_M + p_D) /
+    (p_M + 2 p_D), the ratio of equilibrium-mixture moles to analytical acid
+    moles.
     """
     if T <= 0.0 or P <= 0.0:
         raise ValueError(f"association needs positive T and P, got T={T!r} P={P!r}")
@@ -959,130 +1170,449 @@ def dimer_vapor_compressibility(T: float, P: float, dH_assoc: float, K2_ref: flo
     return (p_m + p_d) / (p_m + 2.0 * p_d)
 
 
-class HaydenOConnellDimerPackage(SpecialGammaPhiPackage):
-    """Gamma-phi package with a dimerizing acid vapour (row ``hoc_dimer``).
-
-    The liquid is ideal on apparent composition; the vapour applies the
-    in-house dimerization kernel above. The kernel is exercised directly
-    (dimer_vapor_compressibility) against the published compressibility point;
-    wiring it through the two-phase flash is the follow-up once the special
-    flasher exposes vapour-phase hooks.
-    """
-
-    ge_name = "hoc_dimer"
-
-    def _make_ge_factory(self, ids: tuple[str, ...], pseudos: tuple[Any, ...]) -> Any:
-        params = _association_params()
-        assoc = params.get("dimerization") or {}
-        for cid in ids:
-            if cid not in assoc:
-                raise ValueError(
-                    f"the hoc_dimer model has no association parameters for {cid!r}; add "
-                    "them to data/thermo_params/special/association.yaml with provenance"
-                )
-
-        def make(xs: list[float]) -> Any:
-            return IdealLiquidGE(298.15, list(xs))
-
-        return make
-
-
-class IdealLiquidGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no stubs for GibbsExcess
-    # 5xx are unclaimed in thermo 0.6.1 (see ngdesign.thermo.ge_models).
-    model_id = 540
-
-    """Explicit ideal liquid (gamma = 1) for association-corrected vapour work."""
-
-    def __init__(self, T: float, xs: list[float]) -> None:
-        self.T = T
-        self.xs = list(xs)
-        self.N = len(xs)
-        self.vectorized = False
-
-    def to_T_xs(self, T: float, xs: list[float]) -> IdealLiquidGE:
-        return IdealLiquidGE(T=T, xs=list(xs))
-
-    def GE(self) -> float:
-        return 0.0
-
-    def dGE_dxs(self) -> list[float]:
-        return [0.0] * len(self.xs)
-
-    def dGE_dT(self) -> float:
-        return 0.0
-
-    def gammas(self) -> list[float]:
-        return [1.0] * len(self.xs)
-
-
-# --------------------------------------------------------------------------
-# HF hexamerization kernel (Jarry & Davis 1953 chemical theory)
-# --------------------------------------------------------------------------
-
-
 def hexamer_vapor_compressibility(T: float, P: float, log10_k6_a: float, log10_k6_b: float) -> float:
-    """Vapour compressibility factor of an HF vapour associating to hexamers.
+    """Vapour compressibility factor of an HF vapour associating to hexamers (TRUE pressure).
 
     Chemical theory with the single hexamerization equilibrium (the oligomer
     association treatment of Schotte 1980; parameters from Jarry & Davis
-    1953): monomers M and hexamers H in ideal gas-phase equilibrium 6 M <=> H
-    with
-
-        Kp(T) = p_H / p_M^6 = 10**(log10_k6_a + log10_k6_b / T)   [1/Pa^5]
-
-    and the material balance P = p_M + p_H (one pressure-bearing molecule per
-    six acid molecules). Substituting p_H = kp p_M^6 gives p_M + kp p_M^6 = P,
-    solved by bisection (the left side is monotone in p_M); the compressibility
-    of the *nominal* acid is
-
-        Z = (p_M + p_H) / (p_M + 6 p_H)
-
-    the ratio of equilibrium-mixture moles to analytical acid moles (same
-    convention as :func:`dimer_vapor_compressibility`).
+    1953): 6 M <=> H with Kp(T) = p_H / p_M^6 = 10**(a + b/T) [1/Pa^5] and
+    the true pressure P = p_M + p_H. Evaluated through
+    :func:`association_state` for the pure vapour (y_a = 1): w = p_M / P
+    solves w + Kp P^5 w^6 = 1 and Z = (p_M + p_H) / (p_M + 6 p_H) = 1/E.
     """
     if T <= 0.0 or P <= 0.0:
         raise ValueError(f"association needs positive T and P, got T={T!r} P={P!r}")
-    kp: float = 10.0 ** (log10_k6_a + log10_k6_b / T)  # 1/Pa^5
-    lo, hi = 0.0, P
-    for _ in range(200):
-        mid = 0.5 * (lo + hi)
-        if mid + kp * mid**6 < P:
-            lo = mid
-        else:
-            hi = mid
-    p_m = 0.5 * (lo + hi)
-    p_h = kp * p_m**6
-    return (p_m + p_h) / (p_m + 6.0 * p_h)
+    law = AssociationLaw.hexamer(log10_k6_a, log10_k6_b)
+    return 1.0 / association_state(1.0, law.ln_k(T) + (law.n - 1) * math.log(P), law.n).e
 
 
-class HFHexamerPackage(SpecialGammaPhiPackage):
+# Second-order and volume-explicit derivatives the association vapour does not
+# implement. IdealGas defines each with its ideal closed form; inheriting those
+# would silently report ideal-gas values for an associating vapour, so each is
+# replaced by an explicit refusal (none is on the flash/property surface used).
+_ASSOCIATING_GAS_UNSUPPORTED = (
+    "d2P_dT2",
+    "d2P_dT2_V",
+    "d2P_dV2",
+    "d2P_dV2_T",
+    "d2P_dTdV",
+    "d2T_dV2",
+    "d2T_dV2_P",
+    "d2V_dT2",
+    "d2V_dT2_P",
+    "d2V_dP2",
+    "d2V_dP2_T",
+    "d2T_dP2",
+    "d2T_dP2_V",
+    "PIP",
+    "dV_dzs",
+    "d2H_dT2",
+    "d2H_dP2",
+    "d2H_dTdP",
+    "dH_dT_V",
+    "dH_dP_V",
+    "dH_dV_T",
+    "dH_dV_P",
+    "dH_dzs",
+    "d2S_dP2",
+    "dS_dT_V",
+    "dS_dP_V",
+    "d2P_dTdP",
+    "d2P_dVdP",
+    "d2P_dVdT_TP",
+    "d2P_dT2_PV",
+    "dS_dzs",
+    "dlnphis_dzs",
+)
+
+
+class AssociatingGas(IdealGas):  # type: ignore[misc]  # thermo ships no stubs
+    """Chemical-theory vapour: one n-merizing component plus non-associating ones.
+
+    The true species (monomer, n-mer, every other component) form an ideal-gas
+    mixture in association equilibrium (Marek & Standart 1954); the phase
+    reports APPARENT-composition properties (per mole of apparent, i.e.
+    nominal, species), which is what the flash balances:
+
+        ln phi_A = ln(z_M / y_A),  ln phi_I = -ln Z (I non-associating)
+        G_dep / RT = sum_i y_i ln phi_i
+        H_dep = xi dH                 (n-mer moles per apparent mole x dH)
+        V = Z R T / P,  Z = n_true / n_apparent = 1 - (n-1) xi
+        S_dep = (H_dep - G_dep) / T
+
+    (Prausnitz et al. 3rd ed. sec. 5.8-5.9; H_dep is -R T^2 d(G_dep/RT)/dT
+    and V_dep is R T d(G_dep/RT)/dP - both identities are checked by finite
+    differences in tests/thermo/test_special.py). Cp, the T/P derivatives of
+    ln phi, V, H and S are analytic through d/d ln kappa. Ideal-gas parts come
+    from the parent (HeatCapacityGases). Cross-association between the
+    associating component and the others is not modelled (no parameters).
+    """
+
+    composition_independent = False  # never let FlashVL take the K-independent shortcut
+
+    def __init__(
+        self,
+        association: AssociationLaw,
+        assoc_index: int,
+        HeatCapacityGases: Any = None,
+        T: float = IdealGas.T_DEFAULT,
+        P: float = IdealGas.P_DEFAULT,
+        zs: list[float] | None = None,
+    ) -> None:
+        super().__init__(HeatCapacityGases=HeatCapacityGases, T=T, P=P, zs=zs)
+        self.association = association
+        self.assoc_index = assoc_index
+
+    def __repr__(self) -> str:
+        return (
+            f"AssociatingGas(n={self.association.n}, assoc_index={self.assoc_index}, "
+            f"T={self.T!r}, P={self.P!r}, zs={self.zs!r})"
+        )
+
+    def to_TP_zs(self, T: float, P: float, zs: list[float]) -> AssociatingGas:
+        new = super().to_TP_zs(T, P, zs)
+        new.association = self.association
+        new.assoc_index = self.assoc_index
+        return cast("AssociatingGas", new)
+
+    def to(
+        self, zs: list[float], T: float | None = None, P: float | None = None, V: float | None = None
+    ) -> AssociatingGas:
+        if V is not None:
+            raise ValueError(
+                "the association vapour is specified by (T, P) only; a volume specification "
+                "would need V = Z(T, P) R T / P inverted, which this phase does not do"
+            )
+        if T is None or P is None:
+            raise ValueError("Two of T, P, or V are needed")
+        return self.to_TP_zs(T, P, zs)
+
+    # -- association state --------------------------------------------------
+
+    def _assoc(self) -> AssociationState:
+        cached: AssociationState | None = self.__dict__.get("_assoc_state")
+        if cached is not None:
+            return cached
+        state = association_state(float(self.zs[self.assoc_index]), self._ln_kappa(), self.association.n)
+        self.__dict__["_assoc_state"] = state
+        return state
+
+    def _ln_kappa(self) -> float:
+        """ln kappa = ln Kp(T) + (n-1) ln P."""
+        law = self.association
+        return float(law.ln_k(self.T) + (law.n - 1) * math.log(self.P))
+
+    def _du_dT(self) -> float:
+        """d ln kappa / dT at fixed P (van't Hoff)."""
+        return float(self.association.dH / (R * self.T * self.T))
+
+    def _du_dP(self) -> float:
+        """d ln kappa / dP at fixed T."""
+        return float((self.association.n - 1) / self.P)
+
+    def _per_component(self, assoc_value: float, inert_value: float) -> list[float]:
+        return [assoc_value if i == self.assoc_index else inert_value for i in range(self.N)]
+
+    # -- fugacity -----------------------------------------------------------
+
+    def lnphis(self) -> list[float]:
+        st = self._assoc()
+        return self._per_component(st.ln_w, math.log(st.e))
+
+    lnphis_G_min = lnphis
+    lnphis_lowest_Gibbs = lnphis
+
+    def phis(self) -> list[float]:
+        return [math.exp(v) for v in self.lnphis()]
+
+    def fugacities(self) -> list[float]:
+        P = self.P
+        return [P * float(z) * phi for z, phi in zip(self.zs, self.phis(), strict=True)]
+
+    def dlnphis_dT(self) -> list[float]:
+        st, du = self._assoc(), self._du_dT()
+        return self._per_component(st.dlnw * du, st.dlne * du)
+
+    def dlnphis_dP(self) -> list[float]:
+        st, du = self._assoc(), self._du_dP()
+        return self._per_component(st.dlnw * du, st.dlne * du)
+
+    def dphis_dT(self) -> list[float]:
+        return [p * d for p, d in zip(self.phis(), self.dlnphis_dT(), strict=True)]
+
+    def dphis_dP(self) -> list[float]:
+        return [p * d for p, d in zip(self.phis(), self.dlnphis_dP(), strict=True)]
+
+    def dlnphis_dns(self) -> list[list[float]]:
+        """d ln phi_i / d n_j at fixed T, P (central difference on mole numbers).
+
+        The closed form needs the derivative of the root w through y_a; the
+        state itself is closed-form, so the partials are numerical (step 1e-6
+        on a one-mole basis, as the polymer gE partials in this module).
+        """
+        h = 1e-6
+        n, ln_kappa = self.association.n, self._ln_kappa()
+        base = [float(z) for z in self.zs]
+        a = self.assoc_index
+
+        def lnphis_at(ns: list[float]) -> list[float]:
+            total = sum(ns)
+            st = association_state(ns[a] / total, ln_kappa, n)
+            return self._per_component(st.ln_w, math.log(st.e))
+
+        cols: list[list[float]] = []
+        for j in range(self.N):
+            up, dn = list(base), list(base)
+            up[j] += h
+            dn[j] -= h
+            hi, lo = lnphis_at(up), lnphis_at(dn)
+            cols.append([(u - d) / (2.0 * h) for u, d in zip(hi, lo, strict=True)])
+        return [[cols[j][i] for j in range(self.N)] for i in range(self.N)]
+
+    # -- volumetric ---------------------------------------------------------
+
+    def V(self) -> float:
+        return float(R * self.T / (self.P * self._assoc().e))
+
+    def dV_dT(self) -> float:
+        st = self._assoc()
+        V = self.V()
+        return float(V / self.T - V * st.dlne * self._du_dT())
+
+    def dV_dP(self) -> float:
+        st = self._assoc()
+        V = self.V()
+        return float(-V / self.P - V * st.dlne * self._du_dP())
+
+    def dP_dT(self) -> float:
+        return float(-self.dV_dT() / self.dV_dP())
+
+    def dP_dV(self) -> float:
+        return float(1.0 / self.dV_dP())
+
+    def dT_dP(self) -> float:
+        return float(1.0 / self.dP_dT())
+
+    def dT_dV(self) -> float:
+        return float(1.0 / self.dV_dT())
+
+    dV_dT_P = dV_dT
+    dV_dP_T = dV_dP
+    dP_dT_V = dP_dT
+    dP_dV_T = dP_dV
+    dT_dP_V = dT_dP
+    dT_dV_P = dT_dV
+
+    # -- caloric ------------------------------------------------------------
+
+    def H_dep(self) -> float:
+        return float(self._assoc().xi * self.association.dH)
+
+    def G_dep(self) -> float:
+        g_rt = sum(float(z) * lnphi for z, lnphi in zip(self.zs, self.lnphis(), strict=True))
+        return float(R * self.T * g_rt)
+
+    def S_dep(self) -> float:
+        return float((self.H_dep() - self.G_dep()) / self.T)
+
+    def U_dep(self) -> float:
+        return float(self.H_dep() - (self.P * self.V() - R * self.T))
+
+    def A_dep(self) -> float:
+        return float(self.U_dep() - self.T * self.S_dep())
+
+    def H(self) -> float:
+        return float(self.H_ideal_gas() + self.H_dep())
+
+    def S(self) -> float:
+        return float(self.S_ideal_gas() + self.S_dep())
+
+    def Cp(self) -> float:
+        st = self._assoc()
+        return float(self.Cp_ideal_gas() + self.association.dH * st.dxi * self._du_dT())
+
+    dH_dT = Cp
+    dH_dT_P = Cp
+
+    def Cp_dep(self) -> float:
+        return float(self.Cp() - self.Cp_ideal_gas())
+
+    def dH_dP(self) -> float:
+        return float(self.association.dH * self._assoc().dxi * self._du_dP())
+
+    dH_dP_T = dH_dP
+
+    def dS_dT(self) -> float:
+        return float(self.Cp() / self.T)
+
+    dS_dT_P = dS_dT
+
+    def dS_dP(self) -> float:
+        return float(-self.dV_dT())  # Maxwell: (dS/dP)_T = -(dV/dT)_P
+
+    dS_dP_T = dS_dP
+
+
+def _refuse_unsupported(name: str) -> Any:
+    def refuse(self: Any, *args: Any, **kwargs: Any) -> Any:
+        raise NotImplementedError(
+            f"AssociatingGas.{name} is not implemented (the IdealGas closed form would be "
+            "wrong for an associating vapour, so it is refused rather than inherited)"
+        )
+
+    refuse.__name__ = name
+    return refuse
+
+
+for _name in _ASSOCIATING_GAS_UNSUPPORTED:
+    setattr(AssociatingGas, _name, _refuse_unsupported(_name))
+
+
+class _AssociationSaturation:
+    """Saturation fugacity coefficient of the pure associating component.
+
+    phi_sat(T) = phi of the pure chemical-theory vapour at (T, Psat(T)), with
+    Psat the liquid's own vapour-pressure correlation, so a pure feed boils
+    exactly at Psat. With kappa_s = Kp(T) Psat(T)^(n-1) and w the pure-vapour
+    root (w + kappa_s w^n = 1): ln phi_sat = ln w and
+
+        d ln phi_sat/dT = L1 s1,  d2 ln phi_sat/dT2 = L2 s1^2 + L1 s2
+        L1 = -1/(n + r),  L2 = dL1/du = L1^2 dr/du,  dr/du = r L1 / (1 - w),
+        r = w / (1 - w)
+        s1 = dH/(R T^2) + (n-1) Psat'/Psat
+        s2 = -2 dH/(R T^3) + (n-1) (Psat''/Psat - (Psat'/Psat)^2)
+
+    Duck-types the pure-EOS interface thermo's GibbsExcessLiquid reads under
+    equilibrium_basis "PhiSat" (phi_sat / dphi_sat_dT / d2phi_sat_dT2, Tc);
+    thermo's liquid H, S and Cp then carry the matching T derivatives.
+    """
+
+    def __init__(self, law: AssociationLaw, vapour_pressure: Any, Tc: float) -> None:
+        self.law = law
+        self.vapour_pressure = vapour_pressure
+        self.Tc = Tc
+
+    def _terms(self, T: float) -> tuple[float, float, float]:
+        """(phi_sat, d ln phi_sat/dT, d2 ln phi_sat/dT2) at T."""
+        law, vp = self.law, self.vapour_pressure
+        n = law.n
+        psat = float(vp.T_dependent_property(T))
+        d1 = float(vp.T_dependent_property_derivative(T, order=1)) / psat
+        d2 = float(vp.T_dependent_property_derivative(T, order=2)) / psat
+        st = association_state(1.0, law.ln_k(T) + (n - 1) * math.log(psat), n)
+        w, l1 = math.exp(st.ln_w), st.dlnw
+        # L2 = d(L1)/du with L1 = -1/(n + r), r = w/(1 - w): dr/du = r L1 / (1 - w)
+        r = w / -math.expm1(st.ln_w) if st.ln_w < 0.0 else math.inf
+        l2 = 0.0 if math.isinf(r) else l1 * l1 * r * l1 / -math.expm1(st.ln_w)
+        s1 = law.dH / (R * T * T) + (n - 1) * d1
+        s2 = -2.0 * law.dH / (R * T**3) + (n - 1) * (d2 - d1 * d1)
+        return w, l1 * s1, l2 * s1 * s1 + l1 * s2
+
+    def phi_sat(self, T: float, polish: bool = True) -> float:
+        return self._terms(T)[0]
+
+    def dphi_sat_dT(self, T: float, polish: bool = True) -> float:
+        phi, dln, _ = self._terms(T)
+        return phi * dln
+
+    def d2phi_sat_dT2(self, T: float, polish: bool = True) -> float:
+        phi, dln, d2ln = self._terms(T)
+        return phi * (dln * dln + d2ln)
+
+
+class _InertSaturation:
+    """phi_sat = 1 for a non-associating component (its pure vapour is ideal here)."""
+
+    def __init__(self, Tc: float) -> None:
+        self.Tc = Tc
+
+    def phi_sat(self, T: float, polish: bool = True) -> float:
+        return 1.0
+
+    def dphi_sat_dT(self, T: float, polish: bool = True) -> float:
+        return 0.0
+
+    def d2phi_sat_dT2(self, T: float, polish: bool = True) -> float:
+        return 0.0
+
+
+class _AssociatingVapourPackage(SpecialGammaPhiPackage):
+    """Gamma-phi package whose vapour is the chemical-theory :class:`AssociatingGas`.
+
+    Exactly one component of the support must carry association parameters in
+    data/thermo_params/special/association.yaml (section ``section``); the
+    others are non-associating true species in the vapour. Two associating
+    components refuse: their cross-association constant is not shipped. The
+    liquid is ideal on apparent composition (gamma = 1) with the PhiSat basis,
+    f_i^L = x_i phi_i^sat P_i^sat.
+    """
+
+    section = ""
+
+    def _law(self, entry: dict[str, Any]) -> AssociationLaw:
+        raise NotImplementedError
+
+    def _association(self, ids: tuple[str, ...]) -> tuple[int, AssociationLaw]:
+        table = _association_params().get(self.section) or {}
+        found = [cid for cid in ids if cid in table]
+        if not found:
+            raise ValueError(
+                f"the {self.ge_name} model needs one component with {self.section} parameters; "
+                f"none of {list(ids)} has any - add them to "
+                "data/thermo_params/special/association.yaml with provenance (missing "
+                "parameters are an error, never an ideal assumption)"
+            )
+        if len(found) > 1:
+            raise ValueError(
+                f"the {self.ge_name} model supports one associating component; {found} all "
+                "associate and their cross-association constants are not shipped"
+            )
+        return ids.index(found[0]), self._law(table[found[0]])
+
+    def _make_ge_factory(self, ids: tuple[str, ...], pseudos: tuple[Any, ...]) -> Any:
+        self._association(ids)
+
+        def make(xs: list[float]) -> Any:
+            return IdealSolution(T=298.15, xs=list(xs))
+
+        return make
+
+    def _build_flasher(self, ids: tuple[str, ...]) -> Any:
+        association = self._association(ids)
+        make_ge = self._make_ge_factory(ids, self._slate_pseudos)
+        return _special_flasher(make_ge, ids, self._slate_pseudos, association=association)
+
+
+class HaydenOConnellDimerPackage(_AssociatingVapourPackage):
+    """Gamma-phi package with a dimerizing acid vapour (row ``hoc_dimer``).
+
+    Vapour: :class:`AssociatingGas` with n = 2 on the per-acid Kp(T)
+    (Ritter & Simons 1945 for acetic acid; association.yaml section
+    ``dimerization``). Liquid: ideal on apparent composition with the
+    saturation fugacity coefficient of the associating acid.
+    """
+
+    ge_name = "hoc_dimer"
+    section = "dimerization"
+
+    def _law(self, entry: dict[str, Any]) -> AssociationLaw:
+        return AssociationLaw.dimer(float(entry["dH_assoc"]), float(entry["K2_ref"]), float(entry["T_ref"]))
+
+
+class HFHexamerPackage(_AssociatingVapourPackage):
     """Gamma-phi package with an HF-hexamerizing vapour (row ``hf_hexamer``).
 
-    Same structure as :class:`HaydenOConnellDimerPackage`: the liquid is ideal
-    on apparent composition; the hexamerization kernel above is the model's
-    vapour-phase content and is exercised directly against the published
-    Jarry & Davis saturated-vapour association factors
-    (tests/thermo/test_special.py). Wiring association kernels through the
-    two-phase flash is shared follow-up work for the special-family vapour
-    rows.
+    Vapour: :class:`AssociatingGas` with n = 6 on the Jarry & Davis (1953)
+    monomer-hexamer Kp(T) (association.yaml section ``hexamerization``).
+    Liquid: ideal on apparent composition with the saturation fugacity
+    coefficient of HF.
     """
 
     ge_name = "hf_hexamer"
+    section = "hexamerization"
 
-    def _make_ge_factory(self, ids: tuple[str, ...], pseudos: tuple[Any, ...]) -> Any:
-        params = _association_params()
-        assoc = params.get("hexamerization") or {}
-        for cid in ids:
-            if cid not in assoc:
-                raise ValueError(
-                    f"the hf_hexamer model has no hexamerization parameters for {cid!r}; add "
-                    "them to data/thermo_params/special/association.yaml with provenance"
-                )
-
-        def make(xs: list[float]) -> Any:
-            return IdealLiquidGE(298.15, list(xs))
-
-        return make
+    def _law(self, entry: dict[str, Any]) -> AssociationLaw:
+        return AssociationLaw.hexamer(float(entry["log10_k6_a"]), float(entry["log10_k6_b"]))
 
 
 class PolymerPCSAFT(TeqpPackage):
