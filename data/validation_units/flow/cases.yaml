@@ -18,9 +18,24 @@
   unit: control_valve
   level: R0
   thermo: coolprop_heos
-  source: "Emerson control-valve sizing example, liquid propane: 800 gpm basis, SG 0.5, dP 25 psi, Fp 0.96, published Cv 117.9 (117.9 x 0.96 = 113.2 is the bare-valve Cv the adapter reports)"
+  source: >-
+    Emerson Automation Solutions, Control Valve Handbook, 6th ed. (2019/2023),
+    Chapter 5, section 5.8.4 "Liquid Sizing Sample Problem", pp. 114-115
+    (https://www.emerson.com/documents/automation/control-valve-handbook-en-3661206.pdf,
+    read 2026-11-04; the equation lines are images, read from the rendered
+    page): liquid propane, q = 800 gpm, P1 = 314.7 psia, P2 = 289.7 psia,
+    dP = 25 psi, T1 = 70 F, rho1/rho0 = 0.50, Pv = 124.3 psia, Pc = 616.3
+    psia; FF = 0.83, dP_choked = 171 psi > 25 psi (not choked); Cv = 800 /
+    (1.0 x 0.9 sqrt(25/0.5)) = 125.7 with the assumed NPS 3 valve's FP =
+    0.90. R0 reports the bare-valve Cv (FP = 1): 800 / sqrt(25/0.5) =
+    113.14 (= 125.7 x 0.90). Feed: 800 gpm at the package's 502.05 kg/m3
+    (25.34 kg/s = 574.66 mol/s) at 70 F and 314.7 psia. Tolerance 0.5%:
+    the printed two-figure rho1/rho0 = 0.50 (+/-0.005 moves Cv by 0.5%).
+    Re-cited 2026-11-04 (units-a) from the earlier uncited "117.9 x 0.96 =
+    113.2" (an older edition's FP), expected value corrected to this
+    edition's arithmetic.
   params:
     mu_liquid: 1.0371e-4   # CoolProp liquid propane at 294.261 K, Pa s
   expected:
-  - {quantity: info.Cv, value: 113.2, tol_rel: 0.005}
+  - {quantity: info.Cv, value: 113.14, tol_rel: 0.005}
   - {quantity: info.choked, value: 0.0, tol_abs: 0.0}

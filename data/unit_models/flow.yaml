@@ -315,7 +315,8 @@
       description: throttled outlet
   levels:
     R0:
-      status: provisional
+      status: validated
+      validation: [V-control-valve-emerson-propane]
       adapter: ngdesign.units.flow.control_valve:ControlValve
       params: {}
       note: Cv / outlet P spec, isenthalpic (the cv_liquid correlation plugin exists)
@@ -379,7 +380,7 @@
           Kv: {type: number, description: 'viscosity correction (liquid), default 1.0'}
           Kw: {type: number, description: 'liquid back-pressure correction (balanced bellows), default 1.0'}
       note: Leung omega two-phase and subcooled sizing (eqs. 1-5), gas delegated to R0; Kd by regime
-      validation: []
+      validation: [V1-relief-valve-diers-rr-case-ia, V1-relief-valve-api520-d2-2-2-propane]
     R2:
       status: provisional
       adapter: ngdesign.units.flow.relief_valve_r2:ReliefValveR2
