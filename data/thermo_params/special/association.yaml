@@ -20,7 +20,9 @@ dimerization:
       PREDICTS, not fits, the Mehling & Kleiber (2020) measured compressibility
       Z = 0.6299 at 399.35 K and 1 bar true pressure - predicted Z = 0.6537,
       a +3.8% miss, assessed. The former K2-reduced-from-Z round trip is
-      removed.
+      removed. Since 2026-11-04 these constants drive the hoc_dimer flash's
+      vapour phase (special.AssociatingGas), and the same Z comes out of
+      phase_props (tests/thermo/test_special_association.py).
 
 hexamerization:
   HF:

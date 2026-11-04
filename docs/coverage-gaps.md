@@ -12,7 +12,7 @@ registry implements. A level or method listed here is listed but not implemented
 | Planned rigour levels on implemented units | | | 0 |
 | Property methods in the plan | 168 | 162 | 6 |
 
-Catalogue rows by status: 6 experimental, 145 provisional, 9 validated.
+Catalogue rows by status: 5 experimental, 146 provisional, 9 validated.
 
 ## Unit rows with no implementation
 
@@ -37,4 +37,4 @@ None.
 
 These rows run but have not met the validation gate; `data/thermo_models/` says why.
 
-`flory_huggins`, `polymer_nrtl`, `unifac_fv`, `hoc_dimer`, `hf_hexamer`, `polymer_pc_saft`
+`flory_huggins`, `polymer_nrtl`, `unifac_fv`, `hf_hexamer`, `polymer_pc_saft`

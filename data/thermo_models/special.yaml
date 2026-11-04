@@ -2,18 +2,23 @@
 #
 # One row per special property method, registered by ngdesign.thermo.catalogue
 # like every other family. Status per row, re-decided on evidence 2026-11-03
-# (each row's notes carry the exact reason):
+# and 2026-11-04 (each row's notes carry the exact reason):
 #   ideal_solid      provisional  - van't Hoff physics complete, tabulated
 #                    fusion properties only (estimates refused), published
 #                    IUPAC-NIST checks in tests/thermo/test_special.py; the
 #                    harness gained a `solubility` case type
 #                    (scripts/validate_properties.py), binding a case needs
 #                    the locked data/validation/ tree.
-#   the other six    experimental - a named reason each: illustrative or
+#   hoc_dimer        provisional (2026-11-04) - the chemical-theory vapour is
+#                    the flash's vapour phase, L0 green, flash surface checked
+#                    against Mehling & Kleiber Z and CRC latent heats;
+#                    applicability narrowed to the checked 290-400 K window.
+#   the other five   experimental - a named reason each: illustrative or
 #                    secondary-sourced parameters (polymer_nrtl, flory_huggins),
-#                    physics gaps in the flash surface (unifac_fv, hoc_dimer,
-#                    hf_hexamer: the association kernels are not wired into the
-#                    flash), or no runnable published reference (polymer_pc_saft).
+#                    no published reference and fixed-T free volumes
+#                    (unifac_fv), a databank vapour pressure that breaks the
+#                    caloric surface (hf_hexamer), or no runnable published
+#                    reference (polymer_pc_saft).
 # Experimental rows are hidden from the advisor and exempt from the L0 audit.
 # Options are deliberately empty - the special adapters read their parameters
 # from data/thermo_params/special/ keyed by component id.
@@ -106,8 +111,12 @@
       Oishi & Prausnitz, Ind. Eng. Chem. Process Des. Dev. 17, 333 (1978):
       UNIFAC solvent activity plus the Flory free-volume term (c1 = 1.1,
       15.17 cm3/mol CH2 reference volume, b = 1.28); polymer activity by
-      Gibbs-Duhem integration. UNIFAC subgroup assignment for toluene carries
-      its own provenance (the curated groups.yaml has no toluene rows).
+      Gibbs-Duhem integration. UNIFAC residual from the original-UNIFAC
+      tables shipped with thermo (UFSG/UFIP; Hansen et al., Ind. Eng. Chem.
+      Res. 30, 2352 (1991)) at the flash temperature, on whole-molecule group
+      fractions; van der Waals volumes r summed from the same UFSG R_k over
+      the subgroup assignments (toluene: the DDBST assignment 5 ACH + ACCH3,
+      r = 3.9228).
   applicability:
     component_classes: [hydrocarbon, polar_organic]
     polar: true
@@ -120,17 +129,30 @@
       generalized vapour-pressure correlation is an operational placeholder
       (polymers do not boil); only solvent K-values are meaningful. T-19
       search (2026-10-23): the Oishi & Prausnitz (1978) worked-example tables
-      are paywalled with no open transcription found; row stays experimental.
-      Rechecked 2026-11-03 (code read): the physics is incomplete, not only
-      the validation - (1) the UNIFAC residual is evaluated at a fixed
-      298.15 K whatever the flash temperature (_unifac_fv_residual builds
-      UNIFAC.from_subgroups with T=298.15), so the row's T_K window is not
-      honoured; (2) that residual runs on the solvent/REPEAT-UNIT mole
-      fraction as if the polymer were one repeat unit, while x1 is the
-      solvent/polymer-MOLECULE fraction; (3) the toluene rbar 3.87 in
-      unifac_fv.yaml disagrees with its own group sum (3.9228). No open
-      Oishi-Prausnitz reference table to test against (see flory_huggins for
-      the open polystyrene/toluene data searched). Stays experimental.
+      are paywalled with no open transcription found. Physics fixes
+      2026-11-04 (each pinned by a test that fails on the old code,
+      tests/thermo/test_special.py): (1) the UNIFAC residual is evaluated at
+      the model's own T (was a fixed 298.15 K), with dGE/dT, d2GE/dT2 and
+      dgamma/dT now central differences of the T-dependent GE (were zero);
+      (2) the residual runs on whole-molecule group fractions - the
+      repeat-unit mole fraction x_ru = N x2/(x1 + N x2) with N = m/m_repeat
+      = 960.1 repeat units, identical to UNIFAC on the full molecule (was the
+      solvent/one-repeat-unit fraction), and the polymer r is N x the
+      repeat-unit group sum; (3) r comes from the UFSG R_k (toluene 3.9228,
+      was a hand-typed 3.87); (4) the toluene and repeat-unit assignments use
+      ACCH3 / ACCH per the DDBST convention (were CH3 + AC and CH + AC, same
+      r and q but the wrong main groups for the residual); (5) the specific
+      volumes, stored in m3/kg, were used as if in cm3/g, giving reduced
+      volumes ~1.5e-3 where the FV term needs ~1.2-1.6 (now 1.40 for toluene,
+      1.23 for POLY_PS), and toluene's v_spec matched neither its stated
+      density nor the databank (now 1/862.24 kg/m3, databank at 298.15 K).
+      STAYS EXPERIMENTAL: (a) no published-reference test - no open
+      polystyrene/toluene solvent-activity table was retrievable (see
+      flory_huggins); (b) the free-volume term uses fixed 298.15 K (toluene)
+      and 20 C (polystyrene) specific volumes, not volumes at the flash T;
+      (c) the combinatorial is the Flory volume-fraction form, and whether
+      Oishi-Prausnitz add the Staverman-Guggenheim surface term could not be
+      checked against the paywalled paper.
   status: experimental
   validation: []
 
@@ -211,47 +233,93 @@
   params:
     source: data/thermo_params/special/association.yaml
     provenance: >-
-      In-house dimerization chemical-theory kernel (Marek-Standart form, the
-      leading association term of Hayden-O'Connell): Kp(T) from a reference
-      dimerization constant and association enthalpy per component. Acetic-acid
-      parameters from Ritter & Simons (1945): log10 K2 = 3164/T - 10.4184
-      (mmHg^-1), dH = -3164 R ln10 = -60.57 kJ/mol (verified via Sebastiani &
-      Lacquaniti, Chem. Eng. Sci. 22, 1155 (1967);
-      data/thermo_params/special/association.yaml). Independent prediction vs
-      Mehling & Kleiber (2020) measured Z = 0.6299 at 399.35 K, 1 bar true:
-      +3.8% miss, assessed in tests/thermo/test_special.py. The curated
-      nrtl_hoc / nrtl_nothnagel rows keep their refusal (their wiring lives in
-      ngdesign.thermo.gamma_phi, outside this spec's file list).
+      In-house chemical-theory vapour (Marek & Standart, Collect. Czech. Chem.
+      Commun. 19, 1074 (1954); Prausnitz, Lichtenthaler & de Azevedo,
+      Molecular Thermodynamics of Fluid-Phase Equilibria, 3rd ed., sec.
+      5.8-5.9): monomer, dimer and every non-associating component form an
+      ideal-gas mixture in dimerization equilibrium Kp = p_D/p_M^2; the
+      apparent fugacity of the acid is its monomer partial pressure, the
+      non-associating components get phi = 1/Z, and H carries xi dH (dimers
+      per apparent mole x association enthalpy). Acetic-acid parameters from
+      Ritter & Simons, J. Am. Chem. Soc. 67, 757 (1945): log10 K2 = 3164/T -
+      10.4184 (mmHg^-1), dH = -3164 R ln10 = -60.57 kJ/mol (verified via
+      Sebastiani & Lacquaniti, Chem. Eng. Sci. 22, 1155 (1967);
+      data/thermo_params/special/association.yaml). Liquid: ideal on apparent
+      composition with the saturation fugacity coefficient of the acid
+      (f_L = x phi_sat Psat, phi_sat the pure chemical-theory vapour at
+      (T, Psat)), so a pure acid boils exactly at its databank Psat and the
+      latent heat obeys Clapeyron with the associated vapour's Z. The curated
+      nrtl_hoc / nrtl_nothnagel rows keep refusing acid-strength slates and
+      point here.
   applicability:
     component_classes: [polar_organic, acid_gas]
     polar: true
     electrolyte: false
-    T_K: [300.0, 500.0]
-    P_Pa: [1000.0, 2000000.0]
+    T_K: [290.0, 400.0]
+    P_Pa: [1000.0, 200000.0]
     phases: [V, L]
     notes: >-
-      Carboxylic-acid vapour association via dimerization equilibrium; liquid
-      phase ideal on apparent composition. The kernel function
-      dimer_vapor_compressibility is exercised against an INDEPENDENT
-      published point (Ritter & Simons parameters predict the Mehling &
-      Kleiber compressibility, +3.8% assessed miss) in
-      tests/thermo/test_special.py. T-19: row stays experimental - the harness
-      has no compressibility case type, and binding the Sebastiani &
-      Lacquaniti (1967) AcOH/water VLE needs the kernel wired into flash
-      K-values AND liquid non-ideality: at their 376.65 K midpoint an
-      association-only ideal-liquid K model gives K_w +7% / K_a -15% vs
-      measured, while the monomer-only model gives -4% / -16%, so liquid
-      non-ideality dominates and no honest harness-evaluable case exists for
-      this row today. Rechecked 2026-11-03 (code read): the row's physics is
-      STUBBED in its flash surface - HaydenOConnellDimerPackage builds the
-      special flasher with an IdealGas vapour and an ideal liquid; the
-      dimerization kernel is only callable as a function, so every flash of
-      this row is plain Raoult. Promotion needs a chemical-theory vapour phase
-      wired into the flasher (fugacity of the apparent acid = monomer
-      partial pressure, association enthalpy in H), then L0 checks and a
-      published VLE point. Stays experimental.
-  status: experimental
+      Carboxylic-acid vapour association via dimerization; exactly one
+      associating component per support (a second one refuses: no
+      cross-association constant is shipped); the other components are
+      non-associating ideal-gas true species (acid-water cross-association
+      and the physical virial of the non-acid species are not modelled).
+      Liquid ideal on apparent composition. PROMOTED to provisional
+      2026-11-04: the association kernel is now the flash's vapour phase
+      (special.AssociatingGas; before, every flash of this row was plain
+      Raoult with an IdealGas vapour), all seven L0 checks pass, and the
+      flash surface is checked against published data in
+      tests/thermo/test_special_association.py - vapour Z at 399.35 K /
+      1 bar 0.6537 vs Mehling & Kleiber (2020) measured 0.6299 (+3.8 %,
+      assessed); latent heat vs the CRC Handbook (95th ed.) table, 23.17 vs
+      23.36 kJ/mol at 298.15 K (-0.8 %) and 24.54 vs 23.70 kJ/mol at the
+      normal boiling point (+3.5 %), where an ideal-gas vapour would give
+      39.1 kJ/mol. Applicability narrowed from 300-500 K / 2 MPa to the
+      checked window: against the VDI Heat Atlas (2nd ed. 2010, D3.1)
+      saturation table the latent-heat miss grows from +7.0 % at 391.15 K to
+      +12.6 % at 420 K and +27 % at 460 K (dimer-only theory with the
+      Ritter & Simons constant under-associates the saturated vapour at
+      elevated pressure). The saturated-liquid Cp is ~20 % below the
+      databank correlation (110 vs 145 J/(mol K) at 391 K): the known
+      gamma-phi vapour-route limitation (no residual liquid Cp) the nrtl_hoc
+      row also carries. Acetic acid/water VLE is not bound: T-19 found
+      liquid non-ideality dominates the K-values at the Sebastiani &
+      Lacquaniti (1967) 376.65 K midpoint (an association-only ideal-liquid
+      K model gave K_w +7 % / K_a -15 % vs measured, monomer-only -4 % /
+      -16 %), and no activity parameters regressed together with this vapour
+      model are shipped. No harness compressibility or latent-heat case type
+      exists, and binding cases needs the locked data/validation/ tree.
+  status: provisional
   validation: []
+  l0:
+    pure_psat_limit:
+      points: [["AcOH", 330.0], ["AcOH", 380.0]]
+    phase_identification:
+      points: [["AcOH", 330.0], ["AcOH", 380.0]]
+    round_trip:
+      z: {AcOH: 0.5, H2O: 0.5}
+      states: [[365.0, 50000.0], [400.0, 100000.0]]
+    dhdT_cp:
+      z: {AcOH: 0.5, H2O: 0.5}
+      state: [400.0, 50000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {AcOH: 0.5, H2O: 0.5}
+        T: 400.0
+        P: 50000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {AcOH: 1.0}
+      state: [330.0, 100000.0]
+    determinism:
+      z: {AcOH: 0.5, H2O: 0.5}
+      state: [390.0, 50000.0]
+  l0_excluded: {}
+  l0_note: >-
+    The liquid is ideal (gamma = 1), so the Gibbs-Duhem check runs on the
+    associated vapour, where the apparent ln phi are not trivial; the
+    liquid's identity holds by construction.
 
 - id: hf_hexamer
   name: HF-hexamerizing gamma-phi (in-house kernel, Jarry & Davis parameters)
@@ -261,11 +329,15 @@
   params:
     source: data/thermo_params/special/association.yaml
     provenance: >-
-      In-house HF monomer-hexamer chemical-theory kernel: log10 Kp = a + b/T
-      regressed from saturated-vapour densities by Jarry & Davis (J. Phys.
-      Chem. 57, 600 (1953)), converted from their mmHg pressure basis to Pa.
-      Schotte (Ind. Eng. Chem. Process Des. Dev. 19, 432 (1980)) is the
-      oligomer-treatment reference for HF vapour association.
+      In-house chemical-theory vapour, the hoc_dimer construction with the
+      monomer-hexamer equilibrium 6 HF <=> (HF)6 (special.AssociatingGas with
+      n = 6): log10 Kp = a + b/T regressed from saturated-vapour densities by
+      Jarry & Davis (J. Phys. Chem. 57, 600 (1953)), converted from their
+      mmHg pressure basis to Pa; association enthalpy -R b ln10 = -165.8 kJ
+      per mole of hexamer. Schotte (Ind. Eng. Chem. Process Des. Dev. 19, 432
+      (1980)) is the oligomer-treatment reference for HF vapour association.
+      Liquid ideal on apparent composition with HF's saturation fugacity
+      coefficient (PhiSat basis).
   applicability:
     component_classes: [polar_organic, acid_gas]
     polar: true
@@ -274,21 +346,31 @@
     P_Pa: [1000.0, 500000.0]
     phases: [V, L]
     notes: >-
-      HF vapour association via the hexamerization equilibrium; liquid phase
-      ideal on apparent composition. The kernel function
-      hexamer_vapor_compressibility is exercised directly against the
-      published saturated-vapour association factors (3.580 at 298.16 K,
-      3.438 at 303.16 K) in tests/thermo/test_special.py. T-19: the
-      mmHg-to-Pa conversion re-verified exactly (a_Pa = -42.38089 - 5
-      log10(101325/760) = -53.0054051, the shipped constant; the tests derive
-      A_PA from a_mmHg independently). The paper's wider association-factor
-      table is not retrievable open access (searched 2026-10-23), so no
-      new-temperature point can be bound; row stays experimental - the kernel
-      surface is not harness-evaluable. Rechecked 2026-11-03 (code read): as
-      for hoc_dimer, the hexamerization kernel is not wired into the flash -
-      HFHexamerPackage flashes with an IdealGas vapour and an ideal liquid, so
-      the row's named physics is absent from its flash surface. Stays
-      experimental until the association vapour phase is wired in.
+      HF vapour association via the hexamerization equilibrium; one
+      associating component per support, the others non-associating ideal
+      gases; liquid ideal on apparent composition. Since 2026-11-04 the
+      kernel IS the flash's vapour phase (before, the row flashed with an
+      IdealGas vapour), the hexamer kernel function is a thin call into the
+      shared chemical-theory state, and through the flash the saturated
+      vapour reproduces the Jarry & Davis association factors at their own
+      Antoine pressure (3.486 vs 3.580 at 298.16 K, -2.6 %; 3.395 vs 3.438 at
+      303.16 K, -1.2 %; tests/thermo/test_special_association.py). L0 by hand on 2026-11-04: pure Psat
+      limit, phase identification, PH/PS round trips, Gibbs-Duhem and the
+      single-liquid limit pass; dhdT_cp passes at its analytic level (Cp
+      matches a 1e-3 K stencil to 1e-9) but the harness's 0.5 K stencil
+      misses by 7e-4 at 300 K / 50 kPa because the hexamer enthalpy is
+      strongly curved there. STAYS EXPERIMENTAL for the caloric surface,
+      outside the association physics: the databank HF vapour-pressure
+      correlation ("Fit 2023", fitted over 293-454 K) has a nearly flat
+      d ln Psat/dT across 300-320 K, so the PhiSat liquid enthalpy
+      H_ig - R T^2 d ln(Psat phi_sat)/dT gives a saturated-liquid Cp of
+      0.1 J/(mol K) at 300 K (-152 J/(mol K) with no association at all);
+      and the latent heat misses the VDI Heat Atlas (2nd ed. 2010, D3.1)
+      table by -14.4 % at 292.69 K and -7.6 % at 305 K (-1.0 % at 325 K,
+      +3.8 to +6.0 % at 345-385 K). Promotion needs an HF vapour pressure
+      consistent with the Jarry & Davis association data (their own Antoine
+      equation is used only in the tests) - a databank change, not a
+      special-family one.
   status: experimental
   validation: []
 

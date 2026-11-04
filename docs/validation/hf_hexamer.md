@@ -12,7 +12,7 @@ family `special` · status **experimental** · adapter `ngdesign.thermo.special:
 ## Parameters
 
 - source: data/thermo_params/special/association.yaml
-- provenance: In-house HF monomer-hexamer chemical-theory kernel: log10 Kp = a + b/T regressed from saturated-vapour densities by Jarry & Davis (J. Phys. Chem. 57, 600 (1953)), converted from their mmHg pressure basis to Pa. Schotte (Ind. Eng. Chem. Process Des. Dev. 19, 432 (1980)) is the oligomer-treatment reference for HF vapour association.
+- provenance: In-house chemical-theory vapour, the hoc_dimer construction with the monomer-hexamer equilibrium 6 HF <=> (HF)6 (special.AssociatingGas with n = 6): log10 Kp = a + b/T regressed from saturated-vapour densities by Jarry & Davis (J. Phys. Chem. 57, 600 (1953)), converted from their mmHg pressure basis to Pa; association enthalpy -R b ln10 = -165.8 kJ per mole of hexamer. Schotte (Ind. Eng. Chem. Process Des. Dev. 19, 432 (1980)) is the oligomer-treatment reference for HF vapour association. Liquid ideal on apparent composition with HF's saturation fugacity coefficient (PhiSat basis).
 
 ## L0 self-consistency
 

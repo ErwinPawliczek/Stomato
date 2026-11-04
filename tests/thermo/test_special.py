@@ -165,6 +165,78 @@ class TestUnifacFv:
         a_hi = hi[1] * 0.8
         assert 0.0 < a_hi < a_lo < 1.0
 
+    # Original-UNIFAC subgroup R_k, Hansen et al., Ind. Eng. Chem. Res. 30, 2352
+    # (1991), typed here independently of the thermo table the package reads:
+    # ACH 0.5313, ACCH3 1.2663, CH2 0.6744, ACCH 0.8121.
+    R_TOLUENE = 5 * 0.5313 + 1.2663  # 3.9228
+    R_PS_REPEAT = 0.6744 + 0.8121 + 5 * 0.5313  # 4.1430
+    N_REPEAT = 100000.0 / 104.152  # Mn / m(C8H8)
+
+    @staticmethod
+    def _factory() -> Any:
+        _ensure_poly_ps_registered_helper()
+        return UnifacFvPackage()._make_ge_factory(("POLY_PS", "toluene"), ())
+
+    def test_volume_parameters_from_group_table(self) -> None:
+        """r is the group sum (toluene 3.9228, not the old hand-typed 3.87) and the
+        polymer's r is the whole molecule's (repeat-unit sum x repeat count)."""
+        model = self._factory()([0.01, 0.99])
+        assert model.rbar1 == pytest.approx(self.R_TOLUENE, rel=1e-12)
+        assert model.rbar2 == pytest.approx(self.N_REPEAT * self.R_PS_REPEAT, rel=1e-12)
+
+    def test_reduced_volumes_are_physical(self) -> None:
+        """v = v_spec M / (15.17 b r) with v_spec in cm3/g lies near 1.2-1.6 (the FV term
+        needs v^(1/3) > 1); the old code fed m3/kg and got ~1.5e-3."""
+        m = self._factory()([0.01, 0.99])
+        v1 = m.v_spec1 * m.m1 / (15.17 * m.B * m.rbar1)
+        v2 = m.v_spec2 * m.m2 / (15.17 * m.B * m.rbar2)
+        assert v1 == pytest.approx(1.1598 * 92.14 / (15.17 * 1.28 * self.R_TOLUENE), rel=1e-9)
+        assert 1.1 < v2 < v1 < 1.6
+
+    def test_residual_runs_on_whole_molecule_group_fractions(self) -> None:
+        """The solvent residual equals UNIFAC on the WHOLE polymer molecule.
+
+        thermo's UNIFAC with the polymer's groups multiplied by the repeat count
+        (non-integer counts are allowed) is the reference; the old code treated
+        the polymer as one repeat unit at the molecule mole fraction.
+        """
+        from thermo.unifac import UNIFAC
+
+        from ngdesign.thermo.gamma_phi import _unifac_variant_tables
+
+        version, interaction, sg, _, _ = _unifac_variant_tables("unifac")
+        n = self.N_REPEAT
+        model = self._factory()([0.05, 0.95])
+        for T, x1 in ((298.15, 0.95), (400.0, 0.999)):
+            ref = UNIFAC.from_subgroups(
+                chemgroups=[{9: 5, 11: 1}, {2: n, 13: n, 9: 5 * n}],
+                T=T,
+                xs=[x1, 1.0 - x1],
+                version=version,
+                interaction_data=interaction,
+                subgroups=sg,
+            ).lngammas_r()[0]
+            assert model._ln_a_unifac_res(T, x1) == pytest.approx(ref, rel=1e-10)
+
+    def test_residual_follows_the_model_temperature(self) -> None:
+        """ln a1(T) - ln a1(298.15) is exactly the residual's change (the combinatorial and
+        FV terms carry no T here); the old code froze the residual at 298.15 K."""
+        make = self._factory()
+        x1 = 0.95
+        cold = make([1.0 - x1, x1])
+        hot = cold.to_T_xs(400.0, [1.0 - x1, x1])
+        d_res = hot._ln_a_unifac_res(400.0, x1) - hot._ln_a_unifac_res(298.15, x1)
+        assert abs(d_res) > 1e-3
+        assert hot._ln_a1(x1) - cold._ln_a1(x1) == pytest.approx(d_res, rel=1e-10)
+
+    def test_temperature_derivative_of_ge(self) -> None:
+        """dGE/dT is no longer zero and matches a wider difference of GE."""
+        model = self._factory()([0.2, 0.8]).to_T_xs(350.0, [0.2, 0.8])
+        h = 0.5
+        fd = (model.to_T_xs(350.0 + h, [0.2, 0.8]).GE() - model.to_T_xs(350.0 - h, [0.2, 0.8]).GE()) / (2 * h)
+        assert model.dGE_dT() != 0.0
+        assert model.dGE_dT() == pytest.approx(fd, rel=1e-4)
+
     def test_ternary_refuses(self) -> None:
         _ensure_poly_ps_registered_helper()
         with pytest.raises(ValueError, match="exactly one solvent and one polymer"):

@@ -317,7 +317,7 @@ Budget: ~16 Obvious threads, most 2–6 h of agent time; the data sweeps are the
 - **Performance:** the cache, the VL fast path and the slate-scoped flashers are in the mixin; adapters inherit them. The bench records flash counts and wall time per case per package.
 - **Scope creep:** the catalogue is data; a method without an adapter row and a validation set does not exist in the registry, whatever the marketing list says.
 
-## 6. Methods still open, and what was checked (2026-11-01, rechecked 2026-11-03)
+## 6. Methods still open, and what was checked (2026-11-01, rechecked 2026-11-03 and 2026-11-04)
 
 Each stays open because a parameter or definition could not be sourced openly; no row was
 written around the gap.
@@ -346,13 +346,37 @@ written around the gap.
   - **NIST ThermoML files** ship under the NIST open licence "with permission of the journal publishers". They are acceptable as validation anchors, with the DOI cited, once a full model exists.
   - **2026-11-03 (third pass):** a search for an openly licensed DIPA carbamate stability constant found Gupta & Svendsen 2020 (Int. J. Greenh. Gas Control, modelled carbamate constants, licence not shown) and Lee et al. 2024 (J. Mol. Liq., DIPA + AMP solubility, no open file). Neither is usable: the first models rather than states the constant, and the second is not open.
 
-- **Special family, six rows still `experimental`** (re-decided 2026-11-03; each row's notes in `data/thermo_models/special.yaml` carry the full reason):
+- **Special family, five rows still `experimental`** (re-decided 2026-11-03, updated 2026-11-04; each row's notes in `data/thermo_models/special.yaml` carry the full reason):
   - `polymer_nrtl`: blocked on parameters. The shipped segment tau/alpha are illustrative; no open, licensed Chen (1993) table was found.
   - `flory_huggins`: no published-reference test (only hand reductions of the closed form). The POLY_PS segment count r = 962 cites a course note and is the repeat-unit count, not the FH molar-volume ratio (about 890). The chi primary (Gunduz & Dincer 1980) is paywalled and was not re-read. Open polystyrene/toluene data searched: Pavlicek, Bogdanic & Wichterle, Chem. Biochem. Eng. Q. 29(1) 1 (2015), doi:10.15255/CABEQ.2015.2183, sits behind a bot challenge on hrcak.srce.hr and its licence could not be verified; the Gupta & Prausnitz eScholarship report returned HTTP 403.
-  - `unifac_fv`: the physics is incomplete, found by reading the code. The UNIFAC residual is evaluated at a fixed 298.15 K whatever the flash T, and on the solvent/repeat-unit mole fraction rather than solvent/polymer molecules. The toluene rbar (3.87) disagrees with its own group sum (3.9228).
-  - `hoc_dimer`, `hf_hexamer`: the association kernels are not wired into the flash. Both packages flash with an `IdealGas` vapour and an ideal liquid, so their named physics is absent from the flash surface. The kernels themselves pass their published points (Mehling & Kleiber Z, +3.8 %; Jarry & Davis factors, within 5 %). Promotion needs a chemical-theory vapour phase in the special flasher (apparent-acid fugacity = monomer partial pressure, association enthalpy in H) plus L0 checks.
+  - `unifac_fv`: the 2026-11-03 physics gaps are fixed (2026-11-04 entry below). It stays experimental because no open polystyrene/toluene solvent-activity table exists to test against, the free-volume term uses fixed reference specific volumes rather than volumes at the flash T, and whether Oishi & Prausnitz include the Staverman-Guggenheim surface term in the combinatorial could not be checked against the paywalled paper.
+  - `hf_hexamer`: the association vapour is now its flash vapour (2026-11-04 entry below). It stays experimental because the databank HF vapour-pressure correlation ("Fit 2023", fitted over 293-454 K) has a nearly flat d ln Psat/dT across 300-320 K. The PhiSat liquid enthalpy therefore gives a saturated-liquid Cp of 0.1 J/(mol K) at 300 K (-152 J/(mol K) with no association), and the latent heat misses the VDI Heat Atlas table by -14.4 % at the boiling point. Fixing that is a databank change.
   - `polymer_pc_saft`: teqp is still absent locally, no licensed polystyrene/toluene binary table was retrieved, and k_ij = 0 is uncited.
 - **General eNRTL and extended UNIQUAC beyond NaCl** (2026-11-03): not extended. Only the Pitzer rows were generalised (below). The eNRTL and extended-UNIQUAC rows stay NaCl-only and refuse any other salt at first use, because no further open, redistributable multi-salt parameter set for them was checked this session.
+
+Closed 2026-11-04:
+
+- **Dimerizing-acid vapour** (`hoc_dimer`, experimental to provisional): the association kernel was only a callable function, and every flash of the row ran plain Raoult with an `IdealGas` vapour (the liquid's gE also lacked `d2GE_dT2`, so even Cp failed).
+  - **Vapour phase:** `special.AssociatingGas`, a thermo `IdealGas` subclass for the chemical theory (Marek & Standart, Collect. Czech. Chem. Commun. 19, 1074 (1954); Prausnitz, Lichtenthaler & de Azevedo, Molecular Thermodynamics of Fluid-Phase Equilibria, 3rd ed., sec. 5.8-5.9). Monomer, n-mer and every non-associating component form an ideal-gas mixture in equilibrium Kp = p_n/p_M^n. The apparent fugacity coefficient of the acid is z_M/y_A, that of every other component is 1/Z, and H_dep = xi dH. V, Cp and the ln phi derivatives are analytic. Every second-order IdealGas closed form the phase does not implement raises instead of being inherited. thermo's `FlashVL` has an ideal-gas shortcut only for composition-independent K-values; the phase declares itself composition-dependent, so the library's general path is used.
+  - **Liquid:** ideal on apparent composition, on thermo's `PhiSat` basis, with the acid's saturation fugacity coefficient (the pure chemical-theory vapour at (T, Psat)). A pure acid therefore still boils at its databank Psat, and the latent heat obeys Clapeyron with the associated vapour's Z.
+  - **Library limitation:** thermo 0.6.1's PT stability test divides by N - 1. A small `FlashVL` subclass decides pure feeds by Gibbs energy, which is also what the PH/PS secant needs.
+  - **Checks** (tests/thermo/test_special_association.py):
+    - the closed form against a true-species reconstruction;
+    - Gibbs-Helmholtz H_dep and V_dep, Cp, d ln phi/dT, d ln phi/dP, Gibbs-Duhem and phi_sat derivatives by finite differences;
+    - Clapeyron at saturation to 1e-9;
+    - all seven L0 checks, which now pass.
+  - **Published data through the flash:**
+    - vapour Z at 399.35 K / 1 bar: 0.6537 vs Mehling & Kleiber's measured 0.6299 (+3.8 %);
+    - latent heat vs the CRC Handbook (95th ed.): 23.17 vs 23.36 kJ/mol at 298.15 K (-0.8 %) and 24.54 vs 23.70 kJ/mol at the normal boiling point (+3.5 %). An ideal-gas vapour would give 39.1 kJ/mol.
+  - **Applicability narrowed to 290-400 K / 0.2 MPa:** against the VDI Heat Atlas table the latent-heat miss grows from +7.0 % at 391 K to +12.6 % at 420 K and +27 % at 460 K. Dimer-only theory on the Ritter & Simons constant under-associates at elevated pressure.
+  - **Not done:** acetic acid/water VLE is not bound. Liquid non-ideality dominates its K-values, and no activity parameters regressed with this vapour model are shipped. Saturated-liquid Cp is ~20 % low, the known gamma-phi vapour-route limitation.
+- **HF hexamer vapour** (`hf_hexamer`, stays experimental): the same `AssociatingGas` with n = 6 on the Jarry & Davis (1953) constants is now the flash vapour. The hexamer kernel function is a thin call into the shared state. Through the flash the saturated vapour gives association factors of 3.486 and 3.395 vs the published 3.580 and 3.438 (-2.6 %, -1.2 %), and the L0 checks pass by hand. The blocking reason is the databank vapour pressure (bullet above).
+- **UNIFAC-FV fixes** (`unifac_fv`, stays experimental). Each fix is pinned by a test that fails on the old code (tests/thermo/test_special.py):
+  - The residual is evaluated at the model's T; dGE/dT, d2GE/dT2 and dgamma/dT are differences of the T-dependent GE.
+  - The residual runs on whole-molecule group fractions: the repeat-unit fraction N x2/(x1 + N x2), with N = Mn/m(C8H8) = 960.1, equals thermo's UNIFAC on the full molecule.
+  - r is summed from the shipped UFSG R_k (Hansen et al. 1991). Toluene is 3.9228 (was a hand-typed 3.87), and the polymer's r is N times the repeat-unit sum.
+  - Toluene and the repeat unit use ACCH3 and ACCH, following the DDBST assignments shipped with thermo (they were CH3 + AC and CH + AC: the same r and q, but the wrong main groups for the residual).
+  - **Further bug found:** the specific volumes, stored in m3/kg, were used as cm3/g, so the reduced volumes were ~1.5e-3 instead of ~1.2-1.6. Toluene's v_spec also matched neither its stated density nor the databank; it is now 1/862.24 kg/m3.
 
 Closed 2026-11-03/04:
 

@@ -48,7 +48,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [grayson-streed-extended](validation/grayson-streed-extended.md) | kvalue | provisional | 5/5 | L1=3 L2=0 | [report](validation/grayson-streed-extended.md) |
 | [henry-sander](validation/henry-sander.md) | kvalue | validated | 6/6 | L1=4 L2=2 | [report](validation/henry-sander.md) |
 | [hf_hexamer](validation/hf_hexamer.md) | special | experimental | — | L1=0 L2=0 | [report](validation/hf_hexamer.md) |
-| [hoc_dimer](validation/hoc_dimer.md) | special | experimental | — | L1=0 L2=0 | [report](validation/hoc_dimer.md) |
+| [hoc_dimer](validation/hoc_dimer.md) | special | provisional | 7/7 | L1=0 L2=0 | [report](validation/hoc_dimer.md) |
 | [iapws95](validation/iapws95.md) | helmholtz | provisional | 6/6 | L1=5 L2=0 | [report](validation/iapws95.md) |
 | [iapws_if97](validation/iapws_if97.md) | helmholtz | provisional | 6/6 | L1=3 L2=0 | [report](validation/iapws_if97.md) |
 | [ideal-lk](validation/ideal-lk.md) | kvalue | provisional | 6/6 | L1=4 L2=0 | [report](validation/ideal-lk.md) |
@@ -165,7 +165,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 ### Status summary
 
-138 rows: 9 validated, 122 provisional, 7 experimental
+138 rows: 9 validated, 123 provisional, 6 experimental
 
 | provisional row | what keeps it from validated |
 | --- | --- |
@@ -185,6 +185,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [gerg2008_teqp](validation/gerg2008_teqp.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=5) |
 | [grayson-streed](validation/grayson-streed.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=3 L2=0) |
 | [grayson-streed-extended](validation/grayson-streed-extended.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=3 L2=0) |
+| [hoc_dimer](validation/hoc_dimer.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [iapws95](validation/iapws95.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=5 L2=0) |
 | [iapws_if97](validation/iapws_if97.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=3 L2=0) |
 | [ideal-lk](validation/ideal-lk.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=4 L2=0) |
