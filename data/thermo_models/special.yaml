@@ -64,6 +64,24 @@
       363-383 K) - the hrcak.srce.hr PDF sits behind a bot challenge from
       here and its licence was not verifiable; the Gupta & Prausnitz
       eScholarship polymer-solvent report returned HTTP 403. Not promoted.
+      Retry 2026-11-04 (licences deferred): open data FOUND - Lieu,
+      Prausnitz & Gauthier, LBNL-43073 (1999), eScholarship qt7ps1r2h0,
+      Table 4 (toluene activity a1 vs w1 for linear PS Mw 5.0e4 at 70 C,
+      w1 0.020-0.404, Psat 204 Torr) and Table 5 (their FH chi 0.318); and
+      Pavlicek et al. 2015 (silverstripe.fkit.hr/cabeq PDF, Table 2, w1
+      0.925-1.0, a1 >= 0.998 - not discriminating). Closed-form FH with the
+      shipped chi 0.67 / r 962 on Mn 1e5 overpredicts the Lieu a1 by +72 %
+      (w1 0.020), +27 % (0.116), +15 % (0.244), +11 % (0.404) - expected,
+      the 0.67 is a 435 K IGC value. Not bound: cases cannot run on an
+      experimental row, and two structural defects found remain unfixed:
+      (i) FloryHugginsGE.dGE_dT returns 0 although its GE = R T g with a
+      T-independent g, so dGE/dT = GE/T (the H^E it implies is wrong);
+      (ii) the POLY_PS pseudo resolves to MW 452.5 g/mol (Riazi-Daubert
+      from Tb 871 / sg 1.05) while this row assumes Mn 1e5, unifac_fv
+      9.999e4 and polymer_pc_saft 4e5 - stream mass and the rows'
+      composition basis disagree, so no shared mole-fraction case is
+      meaningful until the pseudo carries its true Mn (needs a polymer
+      pseudo definition with an mw override, P1-07 scope).
   status: experimental
   validation: []
 
@@ -502,5 +520,13 @@
       flory_huggins), and k_ij = 0 has no cited value, so no published-
       reference test exists for the row's solvent activity. Stays
       experimental.
+      Retry 2026-11-04: teqp now available (saft extra); the kernel runs.
+      Against Lieu, Prausnitz & Gauthier LBNL-43073 (1999) Table 4 (toluene
+      in linear PS Mw 5.0e4, 70 C), on the row's own Mw 4e5 basis, k_ij = 0:
+      toluene Psat +0.36 % vs 204 Torr; a1 -87 % at w1 0.020, +15 % at
+      0.116, +4.4 % at 0.244, +2.8 % at 0.404. Gross & Sadowski (2002)
+      polymer parameters / k_ij were not retrievable open (feos gross2002
+      is the associating paper), and the POLY_PS pseudo MW (452.5) does not
+      match the row's Mw 4e5 (see flory_huggins). Stays experimental.
   status: experimental
   validation: []
