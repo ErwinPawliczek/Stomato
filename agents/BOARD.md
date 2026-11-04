@@ -43,6 +43,7 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 ### Open questions
 - Does the Obvious workspace tied to the API key hold the $20k credits?
 - Obvious GitHub App install on the Stomato repo (needed for Obvious to push `obv/*` branches).
+  - 2026-11-04 11:11 AM (board sync): Obvious pushed commit bea3182 to `agents-board` (T2), so its push access works for this branch; no `obv/*` branch exists on origin yet, so T1 results are still only in the Obvious project.
 
 ### Sources found
 | model / unit | dataset | citation | DOI / URL | added by |
