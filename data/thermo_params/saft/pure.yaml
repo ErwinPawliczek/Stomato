@@ -235,26 +235,30 @@ multifluid_pure:
     CO2: CarbonDioxide
     H2O: Water
 
-# --- GERG-2008 through teqp's multi-fluid machinery (row gerg2008_teqp) ----------
-# The same teqp 0.23.2 bundled library and Kunz-JCED-2012 reducing/departure
-# parameters the T-04 CoolProp `gerg2008` row approximates with its own fitted
-# pure-fluid tables; this row IS the exact-backend cross-check (issue #164).
+# --- GERG-2008 through teqp's exact GERG-2008 kind (row gerg2008_teqp) ----------
+# teqp 0.23.2's `GERG2008resid` model kind: the Kunz & Wagner (2012) GERG-2008
+# formulation itself — its own pure-fluid residual equations plus the binary
+# reducing/departure parameters (J. Chem. Eng. Data 57, 3032-3091). Until
+# 2026-11-04 this row ran teqp's multi-fluid builder over the bundled CoolProp
+# fluid library instead (reference-EOS pure fluids such as Setzmann-Wagner
+# methane, not GERG-2008's), i.e. the `multifluid` row under another name; the
+# aliases below are teqp's GERG-2008 component names. Measured with the exact
+# kind: p(T, rho, z) reproduces the NIST AGA8 distribution's GERG-2008 check
+# values for 50/50 C1/N2 to 1e-6 (953318.1 vs 953319.19 Pa at 134.02 K, 1 mol/l).
 # Slate: the ten GERG-2008 natural-gas components the catalogue already carries
-# ids for. H2O is excluded for the same measured reason as `multifluid` above —
-# teqp's bundled binary-pair file carries no water interaction data, and the
-# GERG-2008 water pairs are the ones the spec's water-sour cases would need.
+# ids for; H2O stays out of the slate (no bound water case).
 gerg2008_teqp:
   aliases:
-    C1: Methane
-    C2: Ethane
-    C3: n-Propane
-    nC4: n-Butane
-    iC4: IsoButane
-    nC5: n-Pentane
-    iC5: Isopentane
-    "C6+": n-Hexane
-    N2: Nitrogen
-    CO2: CarbonDioxide
+    C1: methane
+    C2: ethane
+    C3: propane
+    nC4: n-butane
+    iC4: isobutane
+    nC5: n-pentane
+    iC5: isopentane
+    "C6+": n-hexane
+    N2: nitrogen
+    CO2: carbondioxide
 
 # --- soft-SAFT (row soft_saft) -------------------------------------------------
 # Source: J. C. Pamies, "Bulk and interfacial properties of chain fluids: a

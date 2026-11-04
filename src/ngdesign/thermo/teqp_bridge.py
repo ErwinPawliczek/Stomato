@@ -74,6 +74,27 @@ _ROOT_GRID = 70
 _DRHO_H = 1e-5
 _DPTH_H = 1e-4
 
+#: Evenly spaced dense-range root-scan points for the multi-fluid Helmholtz kernels.
+#: Inside the two-phase dome a reference EOS oscillates wildly (Span-Wagner CO2 at
+#: 265 K swings between -4.6e10 and +1.1e11 Pa over 5000-15000 mol/m3), and the
+#: 40 %-wide cells of the geometric grid hide the liquid branch's crossing in pairs:
+#: the scan returned a spurious 11016 mol/m3 root as "the liquid" and the pure Psat
+#: hunt reported "at/above Tc" at 265 K and 196 kPa (vs 4.71 MPa) at 285 K. Cells of
+#: cap/200 (~210 mol/m3 for CO2) resolve the liquid crossing.
+_MULTIFLUID_DENSE_GRID = 200
+
+#: Incipient-phase successive substitution at one trial pressure (bubble/dew K-sum):
+#: iteration cap and convergence bar on the largest mole-fraction step.
+_SAT_INNER_ITERS = 60
+_SAT_INNER_TOL = 1e-9
+#: Near-critical vapour test of the bubble/dew K-sum: a light root with
+#: _SAT_VAPOUR_Z_MIN < Z <= 0.5 still counts as vapour when the heavy root is more
+#: than _SAT_NEAR_CRIT_SPLIT times denser (see ``_sat_ksum_solve``).
+_SAT_VAPOUR_Z_MIN = 0.3
+#: Largest |ln K| the PT-flash successive substitution accepts (K ~ 1e30).
+_LN_K_MAX = 70.0
+_SAT_NEAR_CRIT_SPLIT = 2.0
+
 #: Cited pure-component parameter file (see data/thermo_params/saft/pure.yaml).
 _PARAMS_PATH = Path(__file__).resolve().parents[3] / "data" / "thermo_params" / "saft" / "pure.yaml"
 
@@ -177,6 +198,10 @@ class _Kernel:
     """
 
     name: str
+    #: Extra evenly spaced root-scan points over the dense range (0.02-0.999 of the
+    #: cap). Zero for the smooth SAFT/CPA kernels; the multi-fluid Helmholtz kernels
+    #: need them (see ``_build_kernel``).
+    dense_grid_points: int = 0
 
     def pressure(self, T: float, rho: float, z: np.ndarray) -> float:
         raise NotImplementedError
@@ -190,6 +215,14 @@ class _Kernel:
     def max_density(self, T: float, z: np.ndarray) -> float:
         raise NotImplementedError
 
+    def pure_saturation_pressure(self, T: float) -> tuple[bool, float | None]:
+        """Pure-fluid Psat from an engine-native VLE solver.
+
+        ``(False, None)``: no native solver, run the bridge's root hunt. ``(True, p)``:
+        the native answer, ``p`` None when no vapour pressure exists (T >= Tc).
+        """
+        return False, None
+
     def roots(self, T: float, P: float, z: np.ndarray) -> list[float]:
         """Density roots of p(rho) = P, lowest first, bisected to ~1e-12 relative.
 
@@ -200,6 +233,8 @@ class _Kernel:
         """
         cap = self.max_density(T, z)
         grid = np.geomspace(cap * 1e-10, cap * 0.999, _ROOT_GRID)
+        if self.dense_grid_points:
+            grid = np.union1d(grid, np.linspace(cap * 0.02, cap * 0.999, self.dense_grid_points))
 
         def bisect(lo: float, hi: float, flo: float) -> float:
             for _ in range(80):
@@ -214,7 +249,7 @@ class _Kernel:
         out: list[float] = []
         prev_r = float(grid[0])
         prev_res = self.pressure(T, prev_r, z) - P
-        for k in range(1, _ROOT_GRID):
+        for k in range(1, grid.size):
             r = float(grid[k])
             res = self.pressure(T, r, z) - P
             if prev_res == 0.0:
@@ -309,6 +344,58 @@ class _TeqpKernel(_Kernel):
             except RuntimeError:
                 pass  # SAFT kinds carry the attribute but raise on call
         return 3.0e4
+
+
+class _MultifluidKernel(_TeqpKernel):
+    """teqp multi-fluid Helmholtz engine (CoolProp fluid library or exact GERG-2008).
+
+    Reference equations of state oscillate wildly inside the two-phase dome, which
+    the root scan must resolve (``dense_grid_points``) and which can make a spurious
+    in-dome root look like the stable liquid to the pure-Psat root hunt (measured,
+    Span-Wagner CO2 at 285 K: near-critical, no liquid root exists below the
+    ~3.5 MPa liquid spinodal and the in-dome root at 10984 mol/m3 has the lower
+    fugacity, so the hunt closed on 196 kPa against 4.71 MPa; GERG-2008 CO2 at
+    300 K closed on 6.50 MPa against 6.71 MPa). The pure Psat is therefore teqp's
+    Newton solve of the pure VLE (``pure_VLE_T``: equal pressure and Gibbs energy of
+    both phases), seeded by teqp's VLE ancillaries of the fluid-library equation
+    (``seed_model``; the model itself when it carries them), and refused at or
+    above the model's own critical temperature (``solve_pure_critical``).
+    """
+
+    dense_grid_points = _MULTIFLUID_DENSE_GRID
+
+    def __init__(self, name: str, model: Any, seed_model: Any = None) -> None:
+        super().__init__(name, model)
+        self._seed_model = seed_model if seed_model is not None else model
+        self._ancillaries: Any = None
+        self._t_crit: float | None = None
+
+    def pure_saturation_pressure(self, T: float) -> tuple[bool, float | None]:
+        build = getattr(self._seed_model, "build_ancillaries", None)
+        if not callable(build):
+            return False, None
+        z = np.array([1.0])
+        if self._ancillaries is None:
+            self._ancillaries = build()
+            t_red = float(self.model.get_reducing_temperature(z))
+            rho_red = float(self.model.get_reducing_density(z))
+            self._t_crit = float(self.model.solve_pure_critical(t_red, rho_red)[0])
+        assert self._t_crit is not None
+        if T >= self._t_crit:
+            return True, None
+        anc = self._ancillaries
+        try:
+            rho_l, rho_v = (float(v) for v in self.model.pure_VLE_T(T, anc.rhoL(T), anc.rhoV(T), 50))
+        except (RuntimeError, ValueError):
+            return False, None
+        if not (math.isfinite(rho_l) and math.isfinite(rho_v) and rho_v > 0.0 and rho_l > 1.001 * rho_v):
+            return False, None  # Newton collapsed onto one density: let the hunt decide
+        p_l, p_v = self.pressure(T, rho_l, z), self.pressure(T, rho_v, z)
+        mu_l = float(self.ln_phi(T, rho_l, z)[0]) + math.log(p_l)
+        mu_v = float(self.ln_phi(T, rho_v, z)[0]) + math.log(p_v)
+        if abs(p_l - p_v) > 1e-8 * p_v or abs(mu_l - mu_v) > 1e-8:
+            return False, None
+        return True, p_v
 
 
 class _SoftSaftKernel(_TeqpKernel):
@@ -705,11 +792,25 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
             }
         )
         return _SoftSaftKernel(kind, model, params)
-    if kind in ("multifluid", "multifluid_pure", "gerg2008_teqp"):
+    if kind == "gerg2008_teqp":
+        # teqp's exact GERG-2008 kind (Kunz & Wagner 2012 pure-fluid and mixture
+        # residual parts), not the multi-fluid builder over the CoolProp fluid
+        # library: GERG-2008's own pure-fluid equations differ from the reference
+        # EOSs that library carries.
+        block = _require_params(kind, cids, subkey="aliases")
+        names = [str(block[cid]) for cid in cids]
+        # Pure-VLE seeds: teqp's ancillaries of the same fluid's library equation
+        # (the multifluid_pure alias table; GERG2008resid carries none).
+        seed = None
+        if len(cids) == 1:
+            library = _require_params("multifluid_pure", cids, subkey="aliases")
+            datapath = _teqp().get_datapath()
+            seed = _teqp().build_multifluid_model([str(library[cids[0]])], datapath)
+        model = _teqp().make_model({"kind": "GERG2008resid", "model": {"names": names}})
+        return _MultifluidKernel(kind, model, seed_model=seed)
+    if kind in ("multifluid", "multifluid_pure"):
         # Kind-keyed: the mixture row excludes H2O (no water interaction data in
-        # teqp's bundled pair library), the pure row keeps it, and the GERG-2008
-        # row restricts support to the GERG-2008 component slate (its own alias
-        # table; H2O is outside it for the same measured water-pair reason).
+        # teqp's bundled pair library); the pure row keeps it.
         block = _require_params(kind, cids, subkey="aliases")
         teqp = _teqp()
         datapath = teqp.get_datapath()
@@ -720,7 +821,7 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
             {},
             datapath + "/dev/mixtures/mixture_departure_functions.json",
         )
-        return _TeqpKernel(kind, model)
+        return _MultifluidKernel(kind, model)
     if kind == "cpa_srk":
         block = _require_params("cpa_srk", cids)
         # Tc from the resolved component records (the same constants every other
@@ -767,6 +868,23 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
         ]
         return _TeqpKernel(kind, _teqp().make_model({"kind": "PCSAFT", "model": {"coeffs": coeffs}}))
     raise NotImplementedError(f"no SAFT kernel for model kind {kind!r}")
+
+
+def _vapour_like(P: float, T: float, rho_light: float, rho_heavy: float) -> bool:
+    """Whether the lightest density root is a vapour that may vote against ``rho_heavy``.
+
+    Z > 0.5 (the pure-psat test), or, near a mixture critical point, Z down to
+    _SAT_VAPOUR_Z_MIN when the pair is clearly split (density ratio above
+    _SAT_NEAR_CRIT_SPLIT). Measured: the SAFT-VR-Mie C1/CO2 incipient bubble vapour at
+    298.142 K, 7.0 MPa is a real vapour at Z ~ 0.49 against a liquid 2.9x denser,
+    while dense supercritical roots (Z 0.3-0.5 against a liquid ~1.2x denser on the
+    GERG-2008 C1/N2 dew walk), unstable middle-branch roots (Z ~ 0.09 on the C1/N2
+    130 K isotherm) and the in-dome artefact roots of the multi-fluid reference
+    equations (GERG-2008 90/10 C1/N2 at 150 K, 3 MPa: Z = 0.236 at 10205 mol/m3,
+    against the 21936 mol/m3 liquid, with the LOWER Gibbs energy) must not.
+    """
+    z_light = P / (rho_light * R_GAS * T)
+    return z_light > 0.5 or (z_light > _SAT_VAPOUR_Z_MIN and rho_heavy / rho_light > _SAT_NEAR_CRIT_SPLIT)
 
 
 class TeqpPackage(ThermoSurfaceMixin):
@@ -1012,6 +1130,9 @@ class TeqpPackage(ThermoSurfaceMixin):
         (Z > 0.5): above the vapour spinodal the lowest root is the unstable
         middle branch, whose fugacity must not vote (the liquid is stable there).
         """
+        native, exact = kernel.pure_saturation_pressure(T)
+        if native:
+            return exact
         z = np.array([1.0])
         cap = kernel.max_density(T, z)
         p_max = kernel.pressure(T, cap * 0.999, z)
@@ -1195,11 +1316,23 @@ class TeqpPackage(ThermoSurfaceMixin):
             kind = PhaseKind.VAPOR if z_factor > 0.5 else self._liquid_kind(ids, feed)
             return self._single_phase_at(kernel, ig, ids, feed, z, T, P, molar_flow, kind)
         rho_v, rho_l = roots[0], roots[-1]
+        if not _vapour_like(P, T, rho_v, rho_l):
+            # The light root is no vapour (an in-dome artefact or a dense
+            # supercritical root): the feed is one dense phase.
+            return self._single_phase_at(
+                kernel, ig, ids, feed, z, T, P, molar_flow, self._liquid_kind(ids, feed)
+            )
         x = feed.copy()
         y = feed.copy()
         beta = 0.5
         for _ in range(400):
-            k = np.exp(kernel.ln_phi(T, rho_l, x) - kernel.ln_phi(T, rho_v, y))
+            ln_k = kernel.ln_phi(T, rho_l, x) - kernel.ln_phi(T, rho_v, y)
+            if not np.all(np.isfinite(ln_k)) or float(np.max(np.abs(ln_k))) > _LN_K_MAX:
+                # Successive substitution walked onto a non-physical root pair (the
+                # overflow/NaN RuntimeWarnings of the multi-fluid L0 sweeps): no
+                # equilibrium K-values exist along this path.
+                raise SaturationError(f"PT flash: non-physical K-values at T={T} K, P={P:.6g} Pa")
+            k = np.exp(ln_k)
             beta = self._rachford_rice(k, feed)
             x_new = feed / (1.0 + beta * (k - 1.0))
             x_new /= x_new.sum()
@@ -1214,6 +1347,8 @@ class TeqpPackage(ThermoSurfaceMixin):
             if not roots_x or not roots_y:
                 raise SaturationError(f"VLE roots vanished during RR at T={T} K, P={P:.6g} Pa")
             rho_l, rho_v = roots_x[-1], roots_y[0]
+            if not _vapour_like(P, T, rho_v, rho_l):
+                raise SaturationError(f"PT flash: vapour root lost during RR at T={T} K, P={P:.6g} Pa")
         # Collapse degenerate splits: a converged beta of 0 or 1 is a single phase
         # (the all-condensed / all-vapour end of the two-phase window), and carrying
         # a zero-fraction phase breaks the single-phase-limit L0 checks.
@@ -1230,7 +1365,10 @@ class TeqpPackage(ThermoSurfaceMixin):
         """Vapour fraction from K and feed z by bisection (monotone on [0, 1])."""
 
         def f(b: float) -> float:
-            return float(np.sum(z * (k - 1.0) / (1.0 + b * (k - 1.0))))
+            # 1 + b(K - 1) written as (1 - b) + bK: at b = 1 with K < 1e-16 the
+            # textbook form cancels to 0 (divide-by-zero RuntimeWarnings, measured on
+            # the multifluid L0 sweep); this form stays K > 0 there.
+            return float(np.sum(z * (k - 1.0) / ((1.0 - b) + b * k)))
 
         if f(0.0) <= 0.0:
             return 0.0
@@ -1472,12 +1610,17 @@ class TeqpPackage(ThermoSurfaceMixin):
         return p, {cid: float(v) for cid, v in zip(ids, x, strict=True)}
 
     def _wilson_k(self, z: dict[str, float], ids: tuple[str, ...], T: float, p: float) -> np.ndarray:
-        """Wilson K_i = (Pc_i/p)·exp(5.373(1+ω)(1−T/Tc)) in the component order of ``ids``."""
+        """Wilson K_i = (Pc_i/p)·exp(5.373(1+ω)(1−Tc_i/T)) in the component order of ``ids``.
+
+        Wilson (1968); the argument is (1 - Tc/T), as in ``_wilson_p``. The reciprocal
+        (1 - T/Tc) flips the exponent sign below Tc and seeded the MeOH/H2O
+        101.325 kPa bubble-T solve at 179.68 K (no two-phase state there), crashing it.
+        """
         constants, _ = _ig_constants(ids)
         out = np.empty(len(ids))
         for i in range(len(ids)):
             omega = float(constants.omegas[i]) if constants.omegas[i] is not None else 0.01
-            a = 5.373 * (1.0 + omega) * (1.0 - T / float(constants.Tcs[i]))
+            a = 5.373 * (1.0 + omega) * (1.0 - float(constants.Tcs[i]) / T)
             out[i] = float(constants.Pcs[i]) * math.exp(a) / p
         return out
 
@@ -1486,16 +1629,23 @@ class TeqpPackage(ThermoSurfaceMixin):
     ) -> tuple[float, np.ndarray]:
         """K-sum saturation solve shared by the bubble and dew directions.
 
-        The K-sum is monotone in p (K_i ~ 1/p on the vapour side), so once the
-        iteration has seen both sides of the solution the pressure bisects on the
-        geometric mean — no divergence, unlike damped successive substitution.
-        The incipient phase starts from the Wilson composition, not the feed: a dew
-        liquid concentrates heavies so strongly that the feed composition has no
-        liquid density root anywhere near the seed pressure. States with missing or
-        coincident density roots (outside the two-phase region) are classified to a
-        bracket side by the compressibility of the single root, the same test the
-        pure-psat hunt uses. The incipient composition updates by damped successive
-        substitution at every evaluation.
+        Bubble: sum_i K_i x_i = 1; dew: sum_i y_i / K_i = 1, with K_i = phi_i^L / phi_i^V
+        (Michelsen & Mollerup, "Thermodynamic Models: Fundamentals & Computational
+        Aspects", 2nd ed. 2007, ch. 12). At every trial pressure the incipient-phase
+        composition is converged first (successive substitution at fixed T, p) and only
+        then does the K-sum classify the pressure: g = +/- ln(sum) is monotone in ln p
+        (K_i ~ 1/p) only for the converged incipient phase. Classifying on a
+        half-converged composition put one bracket end on the wrong side for good
+        (measured: the GERG-2008 50/50 C1/N2 dew at 153.41 K closed on 2.799 MPa where
+        the converged K-sum crosses at 2.658 MPa, the AGA8 check value). Once both
+        bracket ends carry a converged g the pressure moves by Illinois regula falsi in
+        ln p (the pure-psat solver's scheme), else by the geometric midpoint.
+        The incipient phase starts from the feed (bubble) or the condensable part of
+        the feed (dew), not from Wilson K-values: a dew liquid concentrates heavies so
+        strongly that a vapour-like seed has no liquid density root near the seed
+        pressure. States with missing or coincident density roots (outside the
+        two-phase region) are classified to a bracket side by the compressibility of
+        the single root, the same test the pure-psat hunt uses.
         """
         kernel, _, _ = self._kernel({cid: 1.0 for cid in ids})
         feed = self._zvec(z, ids)
@@ -1511,57 +1661,88 @@ class TeqpPackage(ThermoSurfaceMixin):
             if condensable.sum() <= 0.0:
                 raise SaturationError(f"dew point: no condensable component at T={T} K")
             comp = condensable / condensable.sum()
-        lo: float | None = None
-        hi: float | None = None
-        seed = p
-        for _ in range(200):
-            x_liq = feed if bubble else comp
-            y_vap = comp if bubble else feed
-            rho_heavy = kernel.roots(T, p, x_liq)
-            rho_light = kernel.roots(T, p, y_vap)
-            # 1.05: the two roots must be a genuinely distinct liquid/vapour pair. Below
-            # the mixture saturation pressure teqp's root scan also returns two spurious
-            # vapour-like roots (ratio -> 1); a 1e-9 gap let the K-sum converge on the
-            # trivial K -> 1 crossing there (the ideal-gas limit drives tot -> sum(x)
-            # exactly), reporting ~10 kPa for a 6 MPa bubble — the 293.13 K C1/CO2 case.
-            # And above the mixture saturation pressure the scan can still return
-            # several dense roots whose pair ratio passes 1.05 with the lowest on the
-            # unstable middle branch (Z ~ 0.09 on the C1/N2 130 K isotherm), whose
-            # fugacity difference is not a K-value (measured K_C1 = 4e8, walking the
-            # bracket to gigapascals): the lowest root must be genuinely vapour-like
-            # (Z > 0.5, the same test the pure-psat hunt uses) before its fugacity
-            # votes; otherwise the state is single-liquid and the bracket classifies
-            # high.
-            light_vapour_like = bool(rho_light) and p / (rho_light[0] * R_GAS * T) > 0.5
-            if rho_heavy and light_vapour_like and rho_heavy[-1] / rho_light[0] > 1.05:
+
+        def converge(p: float, comp: np.ndarray) -> tuple[float | None, bool | None, np.ndarray]:
+            """(g, None, comp) for a liquid/vapour pair, (None, side, comp) otherwise.
+
+            side True means below the saturation line (bracket ``lo``).
+            """
+            g: float | None = None
+            paired = comp
+            for _ in range(_SAT_INNER_ITERS):
+                x_liq = feed if bubble else comp
+                y_vap = comp if bubble else feed
+                rho_heavy = kernel.roots(T, p, x_liq)
+                rho_light = kernel.roots(T, p, y_vap)
+                # 1.05: the two roots must be a genuinely distinct liquid/vapour pair.
+                # Below the mixture saturation pressure the root scan also returns two
+                # spurious vapour-like roots (ratio -> 1), whose K-sum converges on the
+                # trivial K -> 1 crossing (~10 kPa reported for a 6 MPa bubble, the
+                # 293.13 K C1/CO2 case). Above it the scan can return several dense
+                # roots whose lowest sits on the unstable middle branch (Z ~ 0.09 on
+                # the C1/N2 130 K isotherm), whose fugacity difference is not a K-value
+                # (measured K_C1 = 4e8): the lowest root must be genuinely vapour-like
+                # (``_vapour_like``) before its fugacity votes.
+                split = rho_heavy[-1] / rho_light[0] if (rho_heavy and rho_light) else 0.0
+                light_vapour_like = bool(split) and _vapour_like(p, T, rho_light[0], rho_heavy[-1])
+                if not (rho_heavy and light_vapour_like and split > 1.05):
+                    if g is not None:
+                        # The last update stepped off the two-phase window: the
+                        # previous (paired) composition and its K-sum stand.
+                        return g, None, paired
+                    probe = rho_light[0] if rho_light else (rho_heavy[-1] if rho_heavy else None)
+                    if probe is None:
+                        return None, False, comp  # no density root: above the isotherm ceiling
+                    # vapour-like single root: below the line; liquid-like: above it
+                    return None, p / (probe * R_GAS * T) > 0.5, comp
                 k = np.exp(kernel.ln_phi(T, rho_heavy[-1], x_liq) - kernel.ln_phi(T, rho_light[0], y_vap))
                 tot = float(np.sum(k * x_liq)) if bubble else float(np.sum(y_vap / k))
-                if abs(tot - 1.0) < 1e-10:
-                    return p, comp
+                g = math.log(tot) if bubble else -math.log(tot)
                 fresh = (k * x_liq / tot) if bubble else (y_vap / k / tot)
-                comp = np.sqrt(comp * fresh)  # damped (geometric-mean) update
-                comp /= comp.sum()
-                if (tot > 1.0) if bubble else (tot < 1.0):
-                    lo = p
-                else:
-                    hi = p
-                if lo is not None and hi is not None and hi - lo <= 1e-9 * hi:
-                    # The bracket bounds the root; the damped composition update keeps
-                    # oscillating just above the K-sum tolerance at machine-width.
+                step = float(np.max(np.abs(fresh - comp)))
+                paired, comp = comp, fresh
+                if step < _SAT_INNER_TOL:
+                    break
+            return g, None, comp
+
+        lo: float | None = None
+        hi: float | None = None
+        g_lo: float | None = None
+        g_hi: float | None = None
+        seed = p
+        for _ in range(200):
+            g, below, comp = converge(p, comp)
+            if g is not None:
+                if abs(g) < 1e-10:
                     return p, comp
-            else:
-                probe = rho_light[0] if rho_light else (rho_heavy[-1] if rho_heavy else None)
-                if probe is None:
-                    hi = p  # no density root at all: above the isotherm ceiling
-                elif p / (probe * R_GAS * T) > 0.5:
-                    lo = p  # vapour-like single root: below the saturation line
+                if g > 0.0:
+                    lo, g_lo = p, g
+                    if g_hi is not None:
+                        g_hi *= 0.5  # Illinois inflation of the retained side
                 else:
-                    hi = p  # liquid-like single root: above the saturation line
-            p = (
-                math.sqrt(lo * hi)
-                if lo is not None and hi is not None
-                else p * (5.0 if hi is None else 1.0 / 5.0)
-            )
+                    hi, g_hi = p, g
+                    if g_lo is not None:
+                        g_lo *= 0.5
+            elif below:
+                lo, g_lo = p, None
+            else:
+                hi, g_hi = p, None
+            if lo is not None and hi is not None:
+                if hi - lo <= 1e-9 * hi:
+                    if g is None:
+                        raise SaturationError(
+                            f"{'bubble' if bubble else 'dew'} point: the K-sum bracket closed "
+                            f"on a phase-boundary discontinuity at T={T} K, P={p:.6g} Pa"
+                        )
+                    return p, comp
+                if g_lo is not None and g_hi is not None and g_lo != g_hi:
+                    x_lo, x_hi = math.log(lo), math.log(hi)
+                    x = (g_lo * x_hi - g_hi * x_lo) / (g_lo - g_hi)
+                    p = min(max(math.exp(x), lo * (1.0 + 1e-12)), hi * (1.0 - 1e-12))
+                else:
+                    p = math.sqrt(lo * hi)
+            else:
+                p *= 5.0 if hi is None else 1.0 / 5.0
             if not (seed * 1e-6 <= p <= seed * 1e6):
                 # The solution lives within a few orders of magnitude of the Wilson
                 # seed; a walk this far out is classifying noise, not an approach to
@@ -1645,9 +1826,15 @@ class TeqpPackage(ThermoSurfaceMixin):
                 t = 0.5 * (t + t_good)
                 continue
             tot = float(np.sum(k * x_liq)) if bubble else float(np.sum(y_vap / k))
-            if abs(tot - 1.0) <= 5e-3:
-                return t, {cid: float(v) for cid, v in zip(ids, comp, strict=True)}
             fresh = (k * x_liq / tot) if bubble else (y_vap / k / tot)
+            if abs(tot - 1.0) <= 5e-3:
+                # T is converged; the incipient composition is not yet (one damped
+                # update per T step): returning it reported a half-iterated vapour
+                # (CPA-PR MeOH/H2O at 101.325 kPa, x = 0.238: y_MeOH 0.460 where the
+                # isothermal bubble solve at the same T, P gives 0.532). Converge it
+                # by successive substitution at the final (T, P).
+                comp = self._converge_incipient(kernel, feed, fresh, t, P, bubble=bubble)
+                return t, {cid: float(v) for cid, v in zip(ids, comp, strict=True)}
             comp = np.sqrt(comp * fresh)  # damped (geometric-mean) update
             comp /= comp.sum()
             lt = math.log(tot)
@@ -1665,6 +1852,33 @@ class TeqpPackage(ThermoSurfaceMixin):
             t_good = t
             t = min(max(t_new, t_lo), t_hi)
         raise SaturationError(f"{'bubble' if bubble else 'dew'} point: no convergence at P={P:.6g} Pa")
+
+    @staticmethod
+    def _converge_incipient(
+        kernel: _Kernel, feed: np.ndarray, comp: np.ndarray, T: float, P: float, *, bubble: bool
+    ) -> np.ndarray:
+        """Incipient-phase composition by successive substitution at fixed (T, P).
+
+        Stops at a step below _SAT_INNER_TOL, after _SAT_INNER_ITERS sweeps, or when
+        the pair stops being a liquid/vapour pair (the last paired composition stands).
+        """
+        for _ in range(_SAT_INNER_ITERS):
+            x_liq = feed if bubble else comp
+            y_vap = comp if bubble else feed
+            rho_heavy = kernel.roots(T, P, x_liq)
+            rho_light = kernel.roots(T, P, y_vap)
+            if not (rho_heavy and rho_light and rho_heavy[-1] / rho_light[0] > 1.05):
+                break
+            if not _vapour_like(P, T, rho_light[0], rho_heavy[-1]):
+                break
+            k = np.exp(kernel.ln_phi(T, rho_heavy[-1], x_liq) - kernel.ln_phi(T, rho_light[0], y_vap))
+            fresh = k * x_liq if bubble else y_vap / k
+            fresh = fresh / fresh.sum()
+            step = float(np.max(np.abs(fresh - comp)))
+            comp = fresh
+            if step < _SAT_INNER_TOL:
+                break
+        return comp
 
     # -- K values, pure Psat, derivatives ---------------------------------------------
 
@@ -1790,12 +2004,12 @@ class MultifluidPureThermo(TeqpPackage):
 
 
 class Gerg2008TeqpThermo(TeqpPackage):
-    """GERG-2008 through teqp's multi-fluid machinery (row ``gerg2008_teqp``).
+    """GERG-2008 through teqp's exact ``GERG2008resid`` kind (row ``gerg2008_teqp``).
 
     The exact-backend cross-check the T-04 ``gerg2008`` row (CoolProp's fitted
-    parameters) defers to: Kunz & Wagner (2012) pure-fluid and binary
-    reducing/departure parameters as distributed in teqp 0.23.2's bundled fluid
-    library, restricted to the GERG-2008 component slate
+    parameters) defers to: the Kunz & Wagner (2012) formulation, its own pure-fluid
+    residual equations plus the binary reducing/departure parameters (J. Chem. Eng.
+    Data 57, 3032-3091), restricted to the GERG-2008 component slate
     (data/thermo_params/saft/pure.yaml, ``gerg2008_teqp.aliases``).
     """
 
