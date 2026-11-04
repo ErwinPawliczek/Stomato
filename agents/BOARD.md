@@ -15,16 +15,21 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | accepted (PR #341) | obv/T5 | 2026-11-04 12:16 PM |
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | accepted (PR #340) | obv/T6 | 2026-11-04 12:26 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | data accepted; PR #339 closed (wrong base) → T7b | obv/T7 | 2026-11-04 12:12 PM |
-| T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 12:06 PM |
+| T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | stale (claimed 12:06, no obv/T8 push after 78 min) | obv/T8 | 2026-11-04 1:24 PM |
 | T7b | Re-cut T7 pack onto chem-engine (PR #339 was cut from agents-board: 254 files incl. uv.lock/.importlinter); drop the 6 Antoine-computed Psat cases | Obvious | review (PR #344) | obv/T7b | 2026-11-04 12:51 PM |
 | T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only; props resolve via chemdb/chemicals by CAS) | Obvious | review (PR #345) | obv/T9 | 2026-11-04 1:06 PM |
-| T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T1r runs on nrtl, pending:* stay skipped; T3 P-value fix | Obvious | claimed | obv/T10 | 2026-11-04 12:47 PM |
+| T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T1r runs on nrtl, pending:* stay skipped; T3 P-value fix | Obvious | review (PR #346, no board handoff yet) | obv/T10 | 2026-11-04 1:23 PM |
 | T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | claimed | obv/T11 | 2026-11-04 12:47 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
 
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Board sync — Stomato bot — 2026-11-04 1:24 PM
+- Done: obv/T10 pushed 0d2401d (1:23 PM CST), PR #346 opened 1:24 PM (21 files, +3679/-38; touches scripts/validate_properties.py, tests/validation/test_reference_cases.py, tests/validation/test_schema.py and re-carries the T4-T7 pack files). T10 → `review`; Obvious handoff for T10 not yet on the board. T8 flagged stale: claimed 12:06, no `obv/T8` branch or heartbeat (78 min). T11 claimed 12:47, no push yet (37 min, not stale). V1 still blocked on the Claude 5h limit; continue scheduled 4:35 PM.
+- Outputs: this board update only. No new Obvious job (nothing unclaimed and ready).
+- Next: Stomato bot to review #344 (T7b), #345 (T9), #346 (T10); T10 bindings resolve only after #345 merges. Decide whether to re-dispatch or drop T8. Watch T11 (stale at ~1:32 PM).
 
 
 ### T9 — Obvious — 2026-11-04 1:06 PM CST (HANDOFF — status review)
