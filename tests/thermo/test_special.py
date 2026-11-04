@@ -35,6 +35,35 @@ R = 8.31446261815324
 
 
 class TestFloryHuggins:
+    @pytest.mark.parametrize("T", [300.0, 435.46])
+    def test_temperature_derivatives_match_finite_differences(self, T: float) -> None:
+        """Regression (2026-11-04): dGE_dT returned 0 although GE = R T g(x) with a
+        T-free g, so the implied HE was GE instead of 0. Central differences of GE in T
+        pin dGE/dT = GE/T, d2GE/dT2 = 0, d2GE/dTdx and HE = 0."""
+        r = [1.0, 962.0]
+        chi = 0.67
+        xs = [0.9, 0.1]
+
+        def model(t: float) -> FloryHugginsGE:
+            m = FloryHugginsGE(t, list(xs), r, [[0.0, chi], [chi, 0.0]])
+            m.solvent_idx = 0
+            return m
+
+        h = 1e-2
+        ge_up, ge_mid, ge_dn = model(T + h).GE(), model(T).GE(), model(T - h).GE()
+        m = model(T)
+        assert m.dGE_dT() == pytest.approx((ge_up - ge_dn) / (2 * h), rel=1e-9)
+        assert m.dGE_dT() == pytest.approx(ge_mid / T, rel=1e-12)
+        assert abs(m.d2GE_dT2()) < 1e-9
+        assert abs((ge_up - 2 * ge_mid + ge_dn) / h**2) < 1e-4
+        fd_cross = [
+            (a - b) / (2 * h) for a, b in zip(model(T + h).dGE_dxs(), model(T - h).dGE_dxs(), strict=True)
+        ]
+        # dGE_dxs is itself a 1e-7 central difference, so its T-difference carries ~1e-5 noise
+        for got, want in zip(m.d2GE_dTdxs(), fd_cross, strict=True):
+            assert got == pytest.approx(want, rel=1e-4)
+        assert m.HE() == pytest.approx(0.0, abs=1e-9 * abs(ge_mid))
+
     def test_solvent_activity_closed_form(self) -> None:
         """ln a1 = ln phi1 + (1 - 1/r) phi2 + chi phi2^2, hand-reduced (FH eq. 3.34)."""
         r1, r2, chi = 1.0, 962.0, 0.67

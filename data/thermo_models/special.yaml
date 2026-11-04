@@ -74,7 +74,7 @@
       (w1 0.020), +27 % (0.116), +15 % (0.244), +11 % (0.404) - expected,
       the 0.67 is a 435 K IGC value. Not bound: cases cannot run on an
       experimental row, and two structural defects found remain unfixed:
-      (i) FloryHugginsGE.dGE_dT returns 0 although its GE = R T g with a
+      (i) [FIXED 2026-11-04: dGE_dT = GE/T, d2GE_dT2 = 0, FD test] FloryHugginsGE.dGE_dT returned 0 although its GE = R T g with a
       T-independent g, so dGE/dT = GE/T (the H^E it implies is wrong);
       (ii) the POLY_PS pseudo resolves to MW 452.5 g/mol (Riazi-Daubert
       from Tb 871 / sg 1.05) while this row assumes Mn 1e5, unifac_fv
