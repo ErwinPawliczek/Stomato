@@ -1182,7 +1182,7 @@ class KValuePackage(ThermoSurfaceMixin):
         """Bubble/dew pressure at T by successive substitution on the incipient composition."""
         ids = sup.ids
         zi = [z[cid] for cid in ids]
-        pressure = _estimate_pressure(sup, zi, T)
+        pressure = _estimate_pressure(sup, zi, T, dew)
         try:
             k = self._model_k(sup, zi, zi, T, pressure)
         except ValueError:
@@ -1450,9 +1450,19 @@ def _first_root(func: Any, low: float, high: float, slices: int = 96) -> float:
     raise ValueError("root bracket does not change sign")
 
 
-def _estimate_pressure(sup: _Support, zi: list[float], T: float) -> float:
-    """Initial saturation-pressure estimate: the mole-fraction-weighted max Wilson Psat."""
-    return max(sup.wilson_psat(i, T, ()) for i in range(len(zi))) * 1.2
+def _estimate_pressure(sup: _Support, zi: list[float], T: float, dew: bool) -> float:
+    """Initial saturation-pressure estimate: Raoult's law on the Wilson vapour pressures.
+
+    Bubble P0 = sum z_i Psat_i, dew P0 = 1 / sum (z_i / Psat_i) (Smith, Van Ness &
+    Abbott, 7th ed., eqs. 10.2-10.3). The former estimate, the largest single Wilson
+    Psat (x1.2), started a dilute-supercritical-solute bubble search (C1 in C3) at
+    ~37 MPa, where the bracket caught a spurious high-pressure crossing of the
+    correlation instead of the physical ~2 MPa bubble point.
+    """
+    psat = [sup.wilson_psat(i, T, ()) for i in range(len(zi))]
+    if dew:
+        return 1.0 / sum(z / p for z, p in zip(zi, psat, strict=True) if z > 0.0)
+    return sum(z * p for z, p in zip(zi, psat, strict=True))
 
 
 def _state_cache_key(z: dict[str, float], T: float, P: float) -> tuple[Any, ...]:

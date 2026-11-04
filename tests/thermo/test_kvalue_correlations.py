@@ -91,3 +91,19 @@ def test_henry_sander_methane_in_water() -> None:
     k = pkg.k_values({"C1": 0.001, "H2O": 0.999}, 298.2, 4540000.0)
     assert k is not None
     assert k["C1"] == pytest.approx(999.3, rel=0.10)
+
+
+def test_grayson_streed_bubble_starts_from_raoult_estimate() -> None:
+    """Regression: a dilute supercritical solute no longer sends the bubble search to ~200 MPa.
+
+    The former initial estimate was the largest single Wilson Psat (x1.2, ~37 MPa for C1 at
+    294 K); the bracket then caught a spurious crossing of the correlation at 197 MPa with
+    y_C1 = 0.9995. The physical root sits where sum K x = 1 below the measured 2.068 MPa.
+    """
+    pkg = registry.create("thermo", "grayson-streed")
+    z = {"C1": 0.0749, "C3": 0.9251}
+    sat = pkg.bubble_point(z, T=294.26)
+    assert 1.0e6 < sat.P < 2.068e6
+    k = pkg.k_values(z, 294.26, sat.P)
+    assert k is not None
+    assert abs(sum(z[c] * k[c] for c in z) - 1.0) < 1e-8

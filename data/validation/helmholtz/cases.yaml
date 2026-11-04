@@ -217,7 +217,7 @@ pure_cases:
 - id: bwr_ls-C1-155.0K
   fluid: C1
   coolprop_fluid: CH4
-  package: bwr_ls
+  package: [bwr_ls, bwrs]
   components:
   - C1
   z:
@@ -233,7 +233,7 @@ pure_cases:
 - id: bwr_ls-C2-230.0K
   fluid: C2
   coolprop_fluid: C2H6
-  package: bwr_ls
+  package: [bwr_ls, bwrs]
   components:
   - C2
   z:
@@ -249,7 +249,7 @@ pure_cases:
 - id: bwr_ls-C3-300.0K
   fluid: C3
   coolprop_fluid: C3H8
-  package: bwr_ls
+  package: [bwr_ls, bwrs]
   components:
   - C3
   z:
@@ -420,7 +420,7 @@ pure_cases:
 - id: asme-steam-r1-300K-3MPa
   fluid: H2O
   coolprop_fluid: Water
-  package: asme_steam
+  package: [asme_steam, iapws_if97]
   components:
   - H2O
   z:
@@ -435,7 +435,7 @@ pure_cases:
 - id: asme-steam-psat-300K
   fluid: H2O
   coolprop_fluid: Water
-  package: asme_steam
+  package: [asme_steam, iapws_if97]
   components:
   - H2O
   z:
@@ -727,6 +727,166 @@ pure_cases:
     rho_L: 489.44737525195876
     Cp: 120.80473982443137
 
+# --- 2026-11-04 validation run (helm-kvalue): primary-reference water cases. --------------
+# IAPWS R6-95(2018) verification tables (iapws95 row) and IAPWS R7-97(2012) check tables
+# (iapws_if97 + asme_steam rows, the shared IF97 kernel). Values hand-typed from the PDFs
+# retrieved in session and re-read against the extracted text; specific volume converted to
+# density (rho = 1/v), specific cp to molar cp with M = 18.015268 g/mol. These are the
+# formulations' own published check values, not points the rows were fitted to.
+- id: iapws95-r6-sat-275K
+  package: iapws95
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 275.0
+  source: "literature:IAPWS R6-95(2018), Revised Release on the IAPWS Formulation 1995 for the Thermodynamic Properties of Ordinary Water Substance, Table 8 (two-phase verification values), T = 275 K: p_sigma = 0.698451167e-3 MPa, rho' = 0.999887406e3, rho'' = 0.550664919e-2 kg/m3; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04"
+  expected:
+    bubble_P: 698.451167
+    dew_P: 698.451167
+    rho_L: 999.887406
+    rho_V: 0.00550664919
+- id: iapws95-r6-sat-450K
+  package: iapws95
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 450.0
+  source: "literature:IAPWS R6-95(2018), Table 8 (two-phase verification values), T = 450 K: p_sigma = 0.932203564 MPa, rho' = 0.890341250e3, rho'' = 0.481200360e1 kg/m3; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04"
+  expected:
+    bubble_P: 932203.564
+    dew_P: 932203.564
+    rho_L: 890.341250
+    rho_V: 4.81200360
+- id: iapws95-r6-sat-625K
+  package: iapws95
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 625.0
+  source: "literature:IAPWS R6-95(2018), Table 8 (two-phase verification values), T = 625 K: p_sigma = 0.169082693e2 MPa, rho' = 0.567090385e3, rho'' = 0.118290280e3 kg/m3; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04"
+  expected:
+    bubble_P: 16908269.3
+    dew_P: 16908269.3
+    rho_L: 567.090385
+    rho_V: 118.290280
+- id: iapws95-r6-1phase-300K-20MPa
+  package: iapws95
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 300.0
+  P: 20002251.5
+  source: "literature:IAPWS R6-95(2018), Table 7 (single-phase verification values), T = 300 K, rho = 0.1005308e4 kg/m3, p = 0.200022515e2 MPa; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04"
+  expected:
+    density: 1005.308
+  note: compressed liquid; the (T, rho) table row is read at its printed p
+- id: iapws95-r6-1phase-500K-1MPa
+  package: iapws95
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 500.0
+  P: 999938.125
+  source: "literature:IAPWS R6-95(2018), Table 7 (single-phase verification values), T = 500 K, rho = 0.4532e1 kg/m3, p = 0.999938125 MPa; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04"
+  expected:
+    density: 4.5320
+  note: superheated vapour
+- id: iapws95-r6-1phase-900K-20MPa
+  package: iapws95
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 900.0
+  P: 20000069.0
+  source: "literature:IAPWS R6-95(2018), Table 7 (single-phase verification values), T = 900 K, rho = 0.526150e2 kg/m3, p = 0.200000690e2 MPa; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04"
+  expected:
+    density: 52.6150
+  note: supercritical fluid
+- id: if97-r7-r1-300K-80MPa
+  package: [iapws_if97, asme_steam]
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 300.0
+  P: 80000000.0
+  source: "literature:IAPWS R7-97(2012), Revised Release on the IAPWS Industrial Formulation 1997, Table 5 (Region 1 check values), T = 300 K, p = 80 MPa: v = 0.971180894e-3 m3/kg, cp = 0.401008987e1 kJ/(kg K); https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04"
+  expected:
+    density: 1029.67429
+    cp: 72.24284
+- id: if97-r7-r1-500K-3MPa
+  package: [iapws_if97, asme_steam]
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 500.0
+  P: 3000000.0
+  source: "literature:IAPWS R7-97(2012), Table 5 (Region 1 check values), T = 500 K, p = 3 MPa: v = 0.120241800e-2 m3/kg, cp = 0.465580682e1 kJ/(kg K); https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04"
+  expected:
+    density: 831.65754
+    cp: 83.87561
+- id: if97-r7-r2-300K-3.5kPa
+  package: [iapws_if97, asme_steam]
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 300.0
+  P: 3500.0
+  source: "literature:IAPWS R7-97(2012), Table 15 (Region 2 check values), T = 300 K, p = 0.0035 MPa: v = 0.394913866e2 m3/kg, cp = 0.191300162e1 kJ/(kg K); https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04"
+  expected:
+    density: 0.0253219774
+    cp: 34.46324
+- id: if97-r7-r2-700K-30MPa
+  package: [iapws_if97, asme_steam]
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 700.0
+  P: 30000000.0
+  source: "literature:IAPWS R7-97(2012), Table 15 (Region 2 check values), T = 700 K, p = 30 MPa: v = 0.542946619e-2 m3/kg, cp = 0.103505092e2 kJ/(kg K); https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04"
+  expected:
+    density: 184.180169
+    cp: 186.46720
+- id: if97-r7-psat-500K
+  package: [iapws_if97, asme_steam]
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 500.0
+  source: "literature:IAPWS R7-97(2012), Table 35 (Region 4 saturation pressures), T = 500 K: p_s = 0.263889776e1 MPa; https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04"
+  expected:
+    bubble_P: 2638897.76
+    dew_P: 2638897.76
+- id: if97-r7-psat-600K
+  package: [iapws_if97, asme_steam]
+  components: [H2O]
+  fluid: H2O
+  z: {H2O: 1.0}
+  T: 600.0
+  source: "literature:IAPWS R7-97(2012), Table 35 (Region 4 saturation pressures), T = 600 K: p_s = 0.123443146e2 MPa; https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04"
+  expected:
+    bubble_P: 12344314.6
+    dew_P: 12344314.6
+# --- 2026-11-04 (helm-kvalue): eos_cg L1, measured CO2 vapour pressures (Westman et al.
+# 2016, ThermoML dataset 0, 'Vapor or sublimation pressure, kPa'). The 223.138 K point is
+# outside the row's 250-1000 K window and is not used.
+- id: eoscg-co2-psat-298.174K
+  package: eos_cg
+  components: [CO2]
+  fluid: CO2
+  z: {CO2: 1.0}
+  T: 298.174
+  source: 'literature:Westman, S. F., Stang, H. G. J., Lovseth, S. W., Austegard, A., Snustad, I., Storset, S. O., Ertesvag, I. S., "Vapor-liquid equilibrium data for the carbon dioxide and nitrogen (CO2+N2) system at the temperatures 223, 270, 298 and 303 K and pressures up to 18 MPa", Fluid Phase Equilib. 409, 207-241, 2016, doi:10.1016/j.fluid.2015.09.034; NIST TRC ThermoML archive record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2015.09.034.xml, PureOrMixtureData dataset 0 (pure CO2 vapour pressure), T = 298.174 K, p = 6436.9 kPa; retrieved 2026-11-04'
+  expected:
+    bubble_P: 6436900.0
+- id: eoscg-co2-psat-303.158K
+  package: eos_cg
+  components: [CO2]
+  fluid: CO2
+  z: {CO2: 1.0}
+  T: 303.158
+  source: 'literature:Westman, S. F., Stang, H. G. J., Lovseth, S. W., Austegard, A., Snustad, I., Storset, S. O., Ertesvag, I. S., "Vapor-liquid equilibrium data for the carbon dioxide and nitrogen (CO2+N2) system at the temperatures 223, 270, 298 and 303 K and pressures up to 18 MPa", Fluid Phase Equilib. 409, 207-241, 2016, doi:10.1016/j.fluid.2015.09.034; NIST TRC ThermoML archive record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2015.09.034.xml, PureOrMixtureData dataset 0 (pure CO2 vapour pressure), T = 303.158 K, p = 7210.5 kPa; retrieved 2026-11-04'
+  expected:
+    bubble_P: 7210500.0
 binary_cases:
 - id: c1n2-130.079K-0.614MPa
   package: gerg2008_teqp
@@ -1076,3 +1236,81 @@ binary_cases:
     bubble_P: 6975600.0
     vapor_comp:
       CO2: 0.89863
+# --- 2026-11-04 (helm-kvalue): methane-propane VLE for the BWRS-family rows. Reamer, Sage &
+# Lacey (1950) as compiled in IUPAC SDS vol. 27/28 pp. 270-271 (PDF retrieved and read in
+# session); compiled errors dP 0.05 %, dx/dy 0.002. Points chosen across five isotherms and
+# distinct from the root c1c3-* ids (no copied point). P/1e5 Pa as printed; z = liquid x.
+- id: bwrs-c1c3-277.59K-3.103MPa
+  package: [bwrs, bwr_ls]
+  components: [C1, C3]
+  z: {C1: 0.1695, C3: 0.8305}
+  T: 277.59
+  source: "literature:Reamer, H. H., Sage, B. H., Lacey, W. N., Ind. Eng. Chem. 42, 534-539, 1950, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 270, table 'Experimental values', T = 277.59 K, P = 31.03 x 1e5 Pa, x_CH4 = 0.1695, y_CH4 = 0.7677; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04"
+  expected:
+    bubble_P: 3103000.0
+    vapor_comp:
+      C1: 0.7677
+- id: bwrs-c1c3-294.26K-2.068MPa
+  package: [bwrs, bwr_ls]
+  components: [C1, C3]
+  z: {C1: 0.0749, C3: 0.9251}
+  T: 294.26
+  source: "literature:Reamer, H. H., Sage, B. H., Lacey, W. N., Ind. Eng. Chem. 42, 534-539, 1950, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 270, table 'Experimental values', T = 294.26 K, P = 20.68 x 1e5 Pa, x_CH4 = 0.0749, y_CH4 = 0.5338; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04"
+  expected:
+    bubble_P: 2068000.0
+    vapor_comp:
+      C1: 0.5338
+- id: bwrs-c1c3-310.93K-4.137MPa
+  package: [bwrs, bwr_ls]
+  components: [C1, C3]
+  z: {C1: 0.163, C3: 0.837}
+  T: 310.93
+  source: "literature:Reamer, H. H., Sage, B. H., Lacey, W. N., Ind. Eng. Chem. 42, 534-539, 1950, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 271, table 'Experimental values', T = 310.93 K, P = 41.37 x 1e5 Pa, x_CH4 = 0.163, y_CH4 = 0.5714; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04"
+  expected:
+    bubble_P: 4137000.0
+    vapor_comp:
+      C1: 0.5714
+- id: bwrs-c1c3-327.59K-2.413MPa
+  package: [bwrs, bwr_ls]
+  components: [C1, C3]
+  z: {C1: 0.0289, C3: 0.9711}
+  T: 327.59
+  source: "literature:Reamer, H. H., Sage, B. H., Lacey, W. N., Ind. Eng. Chem. 42, 534-539, 1950, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 271, table 'Experimental values', T = 327.59 K, P = 24.13 x 1e5 Pa, x_CH4 = 0.0289, y_CH4 = 0.1663; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04"
+  expected:
+    bubble_P: 2413000.0
+    vapor_comp:
+      C1: 0.1663
+- id: bwrs-c1c3-344.26K-4.137MPa
+  package: [bwrs, bwr_ls]
+  components: [C1, C3]
+  z: {C1: 0.0813, C3: 0.9187}
+  T: 344.26
+  source: "literature:Reamer, H. H., Sage, B. H., Lacey, W. N., Ind. Eng. Chem. 42, 534-539, 1950, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 271, table 'Experimental values', T = 344.26 K, P = 41.37 x 1e5 Pa, x_CH4 = 0.0813, y_CH4 = 0.2392; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04"
+  expected:
+    bubble_P: 4137000.0
+    vapor_comp:
+      C1: 0.2392
+# --- 2026-11-04 (helm-kvalue): eos_cg L2, measured CO2 + N2 VLE (Westman et al. 2016,
+# ThermoML: dataset 1 = liquid-phase CO2 mole fraction, dataset 2 = gas-phase CO2 mole
+# fraction, each with its own measured T and p). Bubble cases take the liquid row (z = x),
+# dew cases the gas row (z = y). Points at 270 and 298 K inside the row's window. Three
+# further near-critical points (298.161 K/7.1003 MPa and 298.162 K/7.4191 MPa bubble,
+# 269.997 K/9.5571 MPa dew) crash the shared CoolProp-path saturation solver on eos_cg,
+# coolprop_heos and gerg2008 alike; a crash cannot be assessed, so they are not kept here
+# (recorded in the eos_cg row note and the run report).
+- id: eoscg-co2n2-269.996K-9.582MPa-bubble
+  package: eos_cg
+  components: [CO2, N2]
+  z: {CO2: 0.86046, N2: 0.13954}
+  T: 269.996
+  source: 'literature:Westman, S. F., Stang, H. G. J., Lovseth, S. W., Austegard, A., Snustad, I., Storset, S. O., Ertesvag, I. S., "Vapor-liquid equilibrium data for the carbon dioxide and nitrogen (CO2+N2) system at the temperatures 223, 270, 298 and 303 K and pressures up to 18 MPa", Fluid Phase Equilib. 409, 207-241, 2016, doi:10.1016/j.fluid.2015.09.034; NIST TRC ThermoML archive record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2015.09.034.xml, PureOrMixtureData dataset 1 (liquid-phase CO2 mole fraction), T = 269.996 K, p = 9582.4 kPa, CO2 mole fraction 0.86046; retrieved 2026-11-04'
+  expected:
+    bubble_P: 9582400.0
+- id: eoscg-co2n2-298.162K-7.099MPa-dew
+  package: eos_cg
+  components: [CO2, N2]
+  z: {CO2: 0.95952, N2: 0.04048}
+  T: 298.162
+  source: 'literature:Westman, S. F., Stang, H. G. J., Lovseth, S. W., Austegard, A., Snustad, I., Storset, S. O., Ertesvag, I. S., "Vapor-liquid equilibrium data for the carbon dioxide and nitrogen (CO2+N2) system at the temperatures 223, 270, 298 and 303 K and pressures up to 18 MPa", Fluid Phase Equilib. 409, 207-241, 2016, doi:10.1016/j.fluid.2015.09.034; NIST TRC ThermoML archive record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2015.09.034.xml, PureOrMixtureData dataset 2 (gas-phase CO2 mole fraction), T = 298.162 K, p = 7098.8 kPa, CO2 mole fraction 0.95952; retrieved 2026-11-04'
+  expected:
+    dew_P: 7098800.0
