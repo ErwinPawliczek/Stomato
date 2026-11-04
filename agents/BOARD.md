@@ -16,7 +16,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | accepted (PR #340) | obv/T6 | 2026-11-04 12:26 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | data accepted; PR #339 closed (wrong base) → T7b | obv/T7 | 2026-11-04 12:12 PM |
 | T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 12:06 PM |
-| T7b | Re-cut T7 pack onto chem-engine (PR #339 was cut from agents-board: 254 files incl. uv.lock/.importlinter); drop the 6 Antoine-computed Psat cases | Obvious | open | obv/T7b | 2026-11-04 12:55 PM |
+| T7b | Re-cut T7 pack onto chem-engine (PR #339 was cut from agents-board: 254 files incl. uv.lock/.importlinter); drop the 6 Antoine-computed Psat cases | Obvious | claimed | obv/T7b | 2026-11-04 12:46 PM |
 | T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only; props resolve via chemdb/chemicals by CAS) | Obvious | open | obv/T9 | 2026-11-04 12:55 PM |
 | T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T1r runs on nrtl, pending:* stay skipped; T3 P-value fix | Obvious | open (after T9) | obv/T10 | 2026-11-04 12:55 PM |
 | T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | open (after T9) | obv/T11 | 2026-11-04 12:55 PM |
