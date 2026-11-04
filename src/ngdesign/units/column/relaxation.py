@@ -22,8 +22,18 @@ The stage flashes run on frozen local models refreshed once per outer pass
 ln K_i(T_0) + b_i (1/T - 1/T_0) from the package's fugacity coefficients at
 the stage's own liquid and vapour, phi_i^L(x) / phi_i^V(y) (the E equation of
 Naphtali & Sandholm 1971), with the slope b_i from a second evaluation 2 K
-above, and linear per-phase enthalpy lines h(T) = h_0 + c_p (T - T_0). An
-adiabatic stage solves the Rachford-Rice equation (Rachford & Rice 1952,
+above, and per-phase enthalpies split as the inside-out methods split them
+(Boston & Sullivan 1974, Can. J. Chem. Eng. 52, 52; Russell 1983): the
+mixture's ideal-gas enthalpy sum_i c_i h_i^ig(T), exact in the composition c,
+plus a departure line h^R(T) = h^R_0 + c_p^R (T - T_0) frozen at the stage's
+own phase. A composition-blind line h_0 + c_p (T - T_0) fails where a phase's
+composition swings within a pass: on a steam-stripped crude column the
+stripper vapour is near-pure steam one pass (h ~ 7 kJ/mol) and heavy
+hydrocarbon the next (h^ig ~ 100x steam's per mole), so the stage reads
+vaporising the hydrocarbon as nearly free, flashes to the band top, and the
+relaxation locks into a limit cycle (measured on the crude_column R2 example:
+130 K swings on the AGO stripper for all 80 passes, the Newton then starting
+at M ~ 1). An adiabatic stage solves the Rachford-Rice equation (Rachford & Rice 1952,
 J. Pet. Technol. 4(10), 19) inside a bracketed search on the stage enthalpy
 balance; a stage whose vapour flow is a column tear (partial condenser,
 kettle) solves Rachford-Rice at that vapour fraction for its temperature, its
@@ -74,31 +84,98 @@ _FLASH_TOL_T = 1e-8
 _RR_TOL = 1e-13
 #: Largest ln K the model evaluates (overflow guard on far extrapolation).
 _LN_K_CAP = 300.0
+#: Pressure (Pa) of the pure-component vapour builds that stand for the ideal
+#: gas: Z = 1.000 to four figures for the heaviest crude pseudo up to 700 K.
+_IG_P = 1.0
+
+
+@dataclass
+class _IdealGas:
+    """Per-component ideal-gas enthalpies h_i^ig(T) over the column's
+    temperature band: cubic Hermite through each pure component's ideal-gas
+    enthalpy and cp at the band ends (pure vapour builds at ``_IG_P``). All
+    zero when the package refuses a build: the stage enthalpy lines are then
+    the composition-blind ones, departure = the whole phase enthalpy."""
+
+    lo: float
+    width: float
+    h_lo: np.ndarray
+    h_hi: np.ndarray
+    cp_lo: np.ndarray
+    cp_hi: np.ndarray
+
+    def h(self, t: float) -> np.ndarray:
+        s = (t - self.lo) / self.width
+        s2, s3 = s * s, s * s * s
+        out: np.ndarray = (
+            (2.0 * s3 - 3.0 * s2 + 1.0) * self.h_lo
+            + (s3 - 2.0 * s2 + s) * self.width * self.cp_lo
+            + (-2.0 * s3 + 3.0 * s2) * self.h_hi
+            + (s3 - s2) * self.width * self.cp_hi
+        )
+        return out
+
+    def cp(self, t: float) -> np.ndarray:
+        s = (t - self.lo) / self.width
+        s2 = s * s
+        out: np.ndarray = (
+            (6.0 * s2 - 6.0 * s) * (self.h_lo - self.h_hi) / self.width
+            + (3.0 * s2 - 4.0 * s + 1.0) * self.cp_lo
+            + (3.0 * s2 - 2.0 * s) * self.cp_hi
+        )
+        return out
+
+
+def _ideal_gas(col: _Column, tb: _ThermoBox) -> _IdealGas:
+    """The column's per-component ideal-gas enthalpy table (see ``_IdealGas``)."""
+    lo, hi = col.t_band_lo, col.t_band_hi
+    nc = len(col.comps)
+    rows: list[tuple[float, float, float, float]] = []
+    try:
+        for cid in col.comps:
+            a = tb.phase_state({cid: 1.0}, lo, _IG_P, vapor=True)
+            b = tb.phase_state({cid: 1.0}, hi, _IG_P, vapor=True)
+            rows.append((a.enthalpy, b.enthalpy, a.cp, b.cp))
+    except ValueError:
+        zero = np.zeros(nc)
+        return _IdealGas(lo, hi - lo, zero, zero, zero, zero)
+    h_lo, h_hi, cp_lo, cp_hi = (np.array(col_) for col_ in zip(*rows, strict=True))
+    return _IdealGas(lo, hi - lo, h_lo, h_hi, cp_lo, cp_hi)
 
 
 @dataclass
 class _StageModel:
-    """Frozen local thermodynamics of one stage (see module docstring)."""
+    """Frozen local thermodynamics of one stage (see module docstring).
+
+    A phase of composition c at T has the enthalpy ``ig.h(T) . c`` plus its
+    departure line; the departure lines are (h^R_0, c_p^R) at t0."""
 
     t0: float
     ln_k0: np.ndarray
     slope: np.ndarray
-    h_liq: tuple[float, float]  # (h0, cp) of the stage liquid at t0
-    h_vap: tuple[float, float]  # (h0, cp) of the stage vapour at t0
+    ig: _IdealGas
+    h_liq: tuple[float, float]  # departure line of the stage liquid at t0
+    h_vap: tuple[float, float]  # departure line of the stage vapour at t0
     h_cond: tuple[float, float] | None = None  # total-condenser reflux liquid at t0
 
     def k(self, t: float) -> np.ndarray:
         return np.exp(np.minimum(self.ln_k0 + self.slope * (1.0 / t - 1.0 / self.t0), _LN_K_CAP))
 
-    def hl(self, t: float) -> float:
+    def dl(self, t: float) -> float:
         return self.h_liq[0] + self.h_liq[1] * (t - self.t0)
 
-    def hv(self, t: float) -> float:
+    def dv(self, t: float) -> float:
         return self.h_vap[0] + self.h_vap[1] * (t - self.t0)
 
-    def hc(self, t: float) -> float:
+    def hl(self, t: float, x: np.ndarray) -> float:
+        return float(self.ig.h(t) @ x) + self.dl(t)
+
+    def hv(self, t: float, y: np.ndarray) -> float:
+        return float(self.ig.h(t) @ y) + self.dv(t)
+
+    def hc(self, t: float, x: np.ndarray) -> float:
         line = self.h_cond if self.h_cond is not None else self.h_liq
-        return line[0] + line[1] * (t - self.t0)
+        return float(self.ig.h(t) @ x) + line[0] + line[1] * (t - self.t0)
 
 
 def _full(comps: list[str], vec: np.ndarray) -> dict[str, float]:
@@ -120,16 +197,20 @@ def _refresh(
     x: np.ndarray,
     y: np.ndarray,
     old: _StageModel | None,
+    ig: _IdealGas,
     reflux_x: np.ndarray | None = None,
 ) -> _StageModel:
-    """Stage model at (T, x, y): fugacity K and its 1/T slope, both enthalpy lines.
+    """Stage model at (T, x, y): fugacity K and its 1/T slope, both departure lines.
 
-    Stage 1 under a total condenser also carries the reflux's liquid line (at
-    ``reflux_x`` when the condenser decants, else at the stage vapour). A
-    package that refuses a phase build keeps the stage's previous model.
+    Each departure line is the built phase's enthalpy and cp less the ideal-gas
+    mixture's at the same composition. Stage 1 under a total condenser also
+    carries the reflux's liquid line (at ``reflux_x`` when the condenser
+    decants, else at the stage vapour). A package that refuses a phase build
+    keeps the stage's previous model.
     """
     p = col.pressures[s]
     xd, yd = _full(col.comps, x), _full(col.comps, y)
+    cd = yd if reflux_x is None else _full(col.comps, reflux_x)
     try:
         liq = tb.phase_state(xd, t, p, vapor=False)
         vap = tb.phase_state(yd, t, p, vapor=True)
@@ -137,7 +218,7 @@ def _refresh(
         vap2 = tb.phase_state(yd, t + _SLOPE_DT, p, vapor=True)
         cond = None
         if s == 0 and col.condenser == "total":
-            cond = tb.phase_state(yd if reflux_x is None else _full(col.comps, reflux_x), t, p, vapor=False)
+            cond = tb.phase_state(cd, t, p, vapor=False)
     except ValueError:
         if old is not None:
             return old
@@ -145,13 +226,20 @@ def _refresh(
     inv = 1.0 / (t + _SLOPE_DT) - 1.0 / t
     a = np.array([liq.ln_phi[c] - vap.ln_phi[c] for c in col.comps])
     a2 = np.array([liq2.ln_phi[c] - vap2.ln_phi[c] for c in col.comps])
+    h_ig, cp_ig = ig.h(t), ig.cp(t)
+
+    def departure(h: float, cp: float, comp: dict[str, float]) -> tuple[float, float]:
+        c = _vec(col.comps, comp)
+        return h - float(h_ig @ c), cp - float(cp_ig @ c)
+
     return _StageModel(
         t0=t,
         ln_k0=a,
         slope=np.minimum((a2 - a) / inv, _SLOPE_MAX),
-        h_liq=(liq.enthalpy, liq.cp),
-        h_vap=(vap.enthalpy, vap.cp),
-        h_cond=(cond.enthalpy, cond.cp) if cond is not None else None,
+        ig=ig,
+        h_liq=departure(liq.enthalpy, liq.cp, xd),
+        h_vap=departure(vap.enthalpy, vap.cp, yd),
+        h_cond=departure(cond.enthalpy, cond.cp, cd) if cond is not None else None,
     )
 
 
@@ -245,8 +333,10 @@ def _stage_flash(
         return _illinois(residual, lo, hi), beta_t
 
     def energy(t: float) -> float:
+        # beta h_V(y) + (1 - beta) h_L(x): the ideal-gas parts sum to z's
+        # (beta y + (1 - beta) x = z at the Rachford-Rice root).
         beta = _rachford_rice(z, model.k(t))
-        return beta * model.hv(t) + (1.0 - beta) * model.hl(t) - h_in
+        return float(model.ig.h(t) @ z) + beta * model.dv(t) + (1.0 - beta) * model.dl(t) - h_in
 
     t = _illinois(energy, lo, hi)
     return t, _rachford_rice(z, model.k(t))
@@ -292,31 +382,31 @@ def _sweep(graph: _GraphModel, models: list[_StageModel], st: _State, l0: float,
         above = graph.liquid_donor[s]
         if above is not None:
             f = f + st.liq[above] * st.x[above]
-            h += st.liq[above] * models[above].hl(st.t[above])
+            h += st.liq[above] * models[above].hl(st.t[above], st.x[above])
         elif s in graph.link_at_top:
             link = graph.link_at_top[s]
             d = graph.draw_stage_of_link[link]
             f = f + st.draws[link] * st.x[d]
-            h += st.draws[link] * models[d].hl(st.t[d])
+            h += st.draws[link] * models[d].hl(st.t[d], st.x[d])
         below = graph.vapour_donor[s]
         if below is not None:
             f = f + st.v[below] * st.y[below]
-            h += st.v[below] * models[below].hv(st.t[below])
+            h += st.v[below] * models[below].hv(st.t[below], st.y[below])
         for top in graph.vapour_return_at.get(s, ()):
             f = f + st.v[top] * st.y[top]
-            h += st.v[top] * models[top].hv(st.t[top])
+            h += st.v[top] * models[top].hv(st.t[top], st.y[top])
         if s == 0 and col.condenser == "total":
             reflux = st.reflux_x if st.reflux_x is not None else st.y[0]
             f = f + l0 * reflux
-            h += l0 * models[0].hc(st.t[0])
+            h += l0 * models[0].hc(st.t[0], reflux)
         for ret_j, draw_j, flow, pa in returns:
             if ret_j != s:
                 continue
             f = f + flow * st.x[draw_j]
             if pa.return_T_K is not None:
-                h += flow * models[draw_j].hl(pa.return_T_K)
+                h += flow * models[draw_j].hl(pa.return_T_K, st.x[draw_j])
             else:
-                h += flow * models[draw_j].hl(st.t[draw_j]) + (pa.duty_W or 0.0)
+                h += flow * models[draw_j].hl(st.t[draw_j], st.x[draw_j]) + (pa.duty_W or 0.0)
         if col.stage_q and s < col.n:
             h += col.stage_q[s]
         h += graph.section_duty_at.get(s, 0.0)
@@ -375,7 +465,8 @@ def _relaxation_profile(col: _Column, tb: _ThermoBox, prof: _Profile) -> _Profil
         draws=list(prof.draw_flows) or [0.0] * len(graph.section_total_rows),
     )
     st.reflux_x = _reflux_x(col, tb, st)
-    models = [_refresh(col, tb, s, st.t[s], st.x[s], st.y[s], None, st.reflux_x) for s in range(g)]
+    ig = _ideal_gas(col, tb)
+    models = [_refresh(col, tb, s, st.t[s], st.x[s], st.y[s], None, ig, st.reflux_x) for s in range(g)]
     scale = max(col.f_total, 1.0)
     down = list(range(g))
     up = down[::-1]
@@ -401,7 +492,9 @@ def _relaxation_profile(col: _Column, tb: _ThermoBox, prof: _Profile) -> _Profil
         if outer > 0 and moved_t < _OUTER_TOL_T and moved_f < _OUTER_TOL_F * scale:
             break
         st.reflux_x = _reflux_x(col, tb, st)
-        models = [_refresh(col, tb, s, st.t[s], st.x[s], st.y[s], models[s], st.reflux_x) for s in range(g)]
+        models = [
+            _refresh(col, tb, s, st.t[s], st.x[s], st.y[s], models[s], ig, st.reflux_x) for s in range(g)
+        ]
     return _Profile(
         T=list(st.t),
         V=list(st.v),
