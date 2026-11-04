@@ -1,0 +1,69 @@
+# T4 data pack — API liquid density for petroleum pseudo-components.
+#
+# Sources, equations, constants, and full citations: notes.md (same directory).
+# Primary source: public API e-ballot draft "Technical Data Book: Part 6 - Density"
+# (TDB-6_e1 draft.pdf), Procedure 6A2.3 "Density of Liquid Petroleum Fractions at Low
+# Pressures with the Modified Rackett Equation (1992)" — the procedure historically
+# numbered 6A3.5 — with its complete worked example (draft PDF pages 34-36).
+# Every expected value below was re-derived independently in Python before transcription;
+# see notes.md section 3 for the printed vs re-derived comparison table.
+#
+# Units: T in K, P in Pa, densities in kg/m3, mole fractions unitless (per PROTOCOL.md).
+# Single pseudo-component fraction characterized by MeABP and API gravity (draft example):
+#   MeABP = 538 F = 547.594 K (997.7 R); API gravity = 30.6; SG(60F) = 0.87292;
+#   M = 215.1 g/mol; Tpc = 1355.6 R = 753.111 K; Ppc = 273.2 psia = 1883647.7 Pa;
+#   rho(60F) = 0.87206 g/mL = 872.06 kg/m3.
+# Case 1 validates the ZRA back-calculation step (draft step 3); case 2 validates the
+# density prediction at 160 F (draft step 4) using that ZRA. The draft's own experimental
+# check value is 834.3 kg/m3 (printed 0.8343 g/mL, draft ref 7a); the correlation value
+# 835.3 kg/m3 (printed 0.8353 g/mL) is what the procedure produces and what is validated.
+#
+# package "pending:api-liquid-density": the adapter is not registered yet (V1 progress log
+# lists API liquid density as a blocked model). Reconcile the id with the row the adapter
+# spec registers; the harness skips pending:* cases until the row lands.
+meta:
+  task: T4
+  pack_type: worked_example
+  primary_source: "API Technical Data Book, Part 6 - Density, public e-ballot draft (TDB-6_e1 draft.pdf), Procedure 6A2.3 (historical 6A3.5), PDF pages 34-36, retrieved 2026-11-04"
+  primary_source_url: "https://eballotprodstorage.blob.core.windows.net/eballotscontainer/TDB-6_e1%20draft.pdf"
+  notes: data/validation/packs/T4/notes.md
+cases:
+  - id: t4-api-6a2-3-zra
+    package: pending:api-liquid-density
+    components:
+      - pseudo-fraction-MeABP538F-API30.6
+    z:
+      pseudo-fraction-MeABP538F-API30.6: 1.0
+    T: 288.7056
+    P: 101325.0
+    source: "API TDB Part 6 draft, Procedure 6A2.3 worked example, PDF pages 34-36, retrieved 2026-11-04"
+    expected:
+      ZRA: 0.2490
+    notes:
+      MeABP_R: 997.7
+      SG_60F: 0.87292
+      M_g_mol: 215.1
+      Tpc_R: 1355.6
+      Ppc_psia: 273.2
+      rho60F_g_mL: 0.87206
+      ZRA_rederived: 0.249009
+  - id: t4-api-6a2-3-rho160
+    package: pending:api-liquid-density
+    components:
+      - pseudo-fraction-MeABP538F-API30.6
+    z:
+      pseudo-fraction-MeABP538F-API30.6: 1.0
+    T: 344.2611
+    P: 101325.0
+    source: "API TDB Part 6 draft, Procedure 6A2.3 worked example, PDF pages 35-36, retrieved 2026-11-04"
+    expected:
+      rho_L: 835.3
+    notes:
+      MeABP_R: 997.7
+      SG_60F: 0.87292
+      M_g_mol: 215.1
+      Tpc_R: 1355.6
+      Ppc_psia: 273.2
+      ZRA: 0.2490
+      rho_L_rederived_kg_m3: 835.12
+      rho_L_experimental_kg_m3: 834.3
