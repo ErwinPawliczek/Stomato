@@ -77,8 +77,14 @@ type: object
 |---|---|---|---|---|---|---|
 | `V-control-valve-emerson-propane` | R0 | `info.Cv` | 113.2 | 113.419 | rel 0.005 | pass |
 | `V-control-valve-emerson-propane` | R0 | `info.choked` | 0 | 0 | abs 0 | pass |
+| `V1-control-valve-iec60534-annexD-ex1-liquid` | R1 | `info.Kv_m3h_bar05` | 165 | 164.996 | rel 0.005 | pass |
+| `V1-control-valve-iec60534-annexD-ex1-liquid` | R1 | `info.choked` | 0 | 0 | abs 0 | pass |
+| `V1-control-valve-iec60534-annexD-ex2-liquid-choked` | R1 | `info.Kv_m3h_bar05` | 238 | 238.073 | rel 0.005 | pass |
+| `V1-control-valve-iec60534-annexD-ex2-liquid-choked` | R1 | `info.choked` | 1 | 1 | abs 0 | pass |
 
 - `V-control-valve-emerson-propane`: Emerson control-valve sizing example, liquid propane: 800 gpm basis, SG 0.5, dP 25 psi, Fp 0.96, published Cv 117.9 (117.9 x 0.96 = 113.2 is the bare-valve Cv the adapter reports)
+- `V1-control-valve-iec60534-annexD-ex1-liquid`: ISA-75.01.01-2007 (IEC 60534-2-1 Mod) Annex E Example 1 (water, globe valve, non-choked, no fittings), printed inputs: rho1 965.4 kg/m3, P1 680 kPa, P2 220 kPa, Q 360 m3/h, T1 363 K, Pv 70.1 kPa, Pc 22120 kPa, nu 3.26e-7 m2/s (mu 3.1472e-4 Pa s), FL 0.9. Printed result: C = Kv = 165 m3/h.
+- `V1-control-valve-iec60534-annexD-ex2-liquid-choked`: ISA-75.01.01-2007 (IEC 60534-2-1 Mod) Annex E Example 2 (water, ball valve, choked, no fittings), same printed inputs with FL 0.6: rho1 965.4 kg/m3, P1 680 kPa, P2 220 kPa, Q 360 m3/h, T1 363 K, Pv 70.1 kPa, Pc 22120 kPa, nu 3.26e-7 m2/s. Printed result: C = Kv = 238 m3/h (eq. 3).
 
 ## References
 
