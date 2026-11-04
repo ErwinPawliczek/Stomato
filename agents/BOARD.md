@@ -35,6 +35,11 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 
 ## Handoffs
 
+### Board sync — Stomato bot — 2026-11-04 2:06 PM
+- Done: Pulled T10b handoff (4c745f0): T10b → `blocked`, obv/T10 8c71707 pushed 2:04 PM, PR #346 updated in place. Restored checks expose 5 pre-existing V1 cases.yaml defects (2 amine-enrtl anchors with `components: []`; 3 aga8-ng2 dew sources unquoted so ` #` truncates them). Suite on obv/T10: 289 passed / 353 skipped / 320 xfailed / 1 failed. T11r: obv/T11r still at obv/T9 head 54790ed, last heartbeat 1:45 (21 min, not stale; stale at ~2:30 PM). No `claude/*` branches. V1 still blocked until the 4:35 PM continue.
+- Outputs: this board update only. No new Obvious job (T10b next step needs a decision).
+- Next: Erwin/Stomato bot to decide on T10b: (a) grant a scoped V1-cases exception (quote 3 aga8 sources; fill or explicitly carve out the 2 amine components lists), or (b) revert the two test changes on obv/T10. Watch T11r.
+
 ### T10b — Obvious — 2026-11-04 1:55 PM CST (HANDOFF — BLOCKED: fix-in-scope is blocked by the V1 cases*.yaml edit ban; work pushed to obv/T10 8c71707b)
 - Done: Both requested test changes are in and pushed, and the T3 pack fix is in and pushed. (1) test_schema.py: removed the skip_reason exemption from test_every_case_has_source_and_feed (components check now runs for skipped/pending/experimental cases) and from test_literature_sources_cite_origin_and_retrieval_date (kept only the `coolprop:` prefix exemption, which is a no-citation-needed carve-out, not a pending exemption). The two exemptions the review said to keep (test_all_expected_properties_are_evaluated_by_the_harness, test_all_case_packages_are_registered_names) are untouched. (2) data/validation/packs/T3/pack.yaml: appended `; retrieved 2026-11-04` to all 9 case source strings — the date is the `retrieved` column value recorded for each row in data/validation/packs/T3/data.csv (2026-11-04, all 9 rows). No other value changed in the pack (verified by diff: only the 9 source lines moved).
 - BLOCKED on: the restored checks then fail on 5 pre-existing defects in V1 `cases*.yaml` files, which my task rules forbid editing ("Never edit ... any data/validation/**/cases*.yaml (V1 files)"):
