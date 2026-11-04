@@ -346,6 +346,32 @@ written around the gap.
   - **NIST ThermoML files** ship under the NIST open licence "with permission of the journal publishers". They are acceptable as validation anchors, with the DOI cited, once a full model exists.
   - **2026-11-03 (third pass):** a search for an openly licensed DIPA carbamate stability constant found Gupta & Svendsen 2020 (Int. J. Greenh. Gas Control, modelled carbamate constants, licence not shown) and Lee et al. 2024 (J. Mol. Liq., DIPA + AMP solubility, no open file). Neither is usable: the first models rather than states the constant, and the second is not open.
 
+- **Special family, six rows still `experimental`** (re-decided 2026-11-03; each row's notes in `data/thermo_models/special.yaml` carry the full reason):
+  - `polymer_nrtl`: blocked on parameters. The shipped segment tau/alpha are illustrative; no open, licensed Chen (1993) table was found.
+  - `flory_huggins`: no published-reference test (only hand reductions of the closed form). The POLY_PS segment count r = 962 cites a course note and is the repeat-unit count, not the FH molar-volume ratio (about 890). The chi primary (Gunduz & Dincer 1980) is paywalled and was not re-read. Open polystyrene/toluene data searched: Pavlicek, Bogdanic & Wichterle, Chem. Biochem. Eng. Q. 29(1) 1 (2015), doi:10.15255/CABEQ.2015.2183, sits behind a bot challenge on hrcak.srce.hr and its licence could not be verified; the Gupta & Prausnitz eScholarship report returned HTTP 403.
+  - `unifac_fv`: the physics is incomplete, found by reading the code. The UNIFAC residual is evaluated at a fixed 298.15 K whatever the flash T, and on the solvent/repeat-unit mole fraction rather than solvent/polymer molecules. The toluene rbar (3.87) disagrees with its own group sum (3.9228).
+  - `hoc_dimer`, `hf_hexamer`: the association kernels are not wired into the flash. Both packages flash with an `IdealGas` vapour and an ideal liquid, so their named physics is absent from the flash surface. The kernels themselves pass their published points (Mehling & Kleiber Z, +3.8 %; Jarry & Davis factors, within 5 %). Promotion needs a chemical-theory vapour phase in the special flasher (apparent-acid fugacity = monomer partial pressure, association enthalpy in H) plus L0 checks.
+  - `polymer_pc_saft`: teqp is still absent locally, no licensed polystyrene/toluene binary table was retrieved, and k_ij = 0 is uncited.
+- **General eNRTL and extended UNIQUAC beyond NaCl** (2026-11-03): not extended. Only the Pitzer rows were generalised (below). The eNRTL and extended-UNIQUAC rows stay NaCl-only and refuse any other salt at first use, because no further open, redistributable multi-salt parameter set for them was checked this session.
+
+Closed 2026-11-03/04:
+
+- **Pitzer for more salts** (`pitzer_nacl_water`, `pitzer_hoc`, provisional): the adapter was NaCl-only. It is now the general single-salt Pitzer form (Pitzer 1991 ch. 3; |z_M z_X|, nu and the B/C stoichiometric weights per ion pair), with salt parameters as data keyed by salt id and ion pair in `data/thermo_params/electrolyte/pitzer.yaml`.
+  - **Byte-identical:** for 1:1 salts the weights are exactly 1.0, so the NaCl outputs are bit-for-bit unchanged. This was checked with a repr snapshot of the Pitzer functions and of flashes, bubble points, phase properties, K-values and derivatives on all eight NaCl rows, before and after. Only the formerly-refused KCl feeds differ.
+  - **Salts added:** KCl, KBr, LiCl, NaBr and MgCl2, at the PHRQPITZ 25 C values printed in USGS WRI 88-4153 (Plummer, Parkhurst, Fleming & Dunkle 1988, doi:10.3133/wri884153), Attachment C.6, pp. 190-192. The scanned pages were read as images, not OCR. Each value carries the report's own primary reference: Harvie, Moller & Weare 1984 for KCl and MgCl2, Pitzer & Mayorga 1973 for KBr, LiCl and NaBr.
+  - **Licence:** the report is a U.S. Government work. The PHREEQC User Rights Notice (`doc/NOTICE.TXT`, usgs-coupled/phreeqc3) permits use, copy, modification and distribution, commercial included, with acknowledgement; it is acknowledged in the params file.
+  - **Why not the current pitzer.dat:** it refits NaCl, KCl and MgCl2 with T-terms (Appelo 2015, Appl. Geochem. 55, 62, paywalled). That is not the 25 C set the NaCl row was validated on, so the 1988 set is used.
+  - **Validation** (tests/thermo/test_electrolyte_salts.py):
+    - KCl, KBr, LiCl and NaBr against Hamer & Wu (1972), J. Phys. Chem. Ref. Data 1, 1047, Tables 9/17/28/29: phi within 0.6 % and gamma within 0.9 % up to each salt's cap.
+    - MgCl2 against Goldberg & Nuttall (1978), J. Phys. Chem. Ref. Data 7, 263, Table 17: a_w within 0.2 % and phi within 1.9 %. Gamma is 1.2-3.2 % low (assessed); the flash surface is a_w.
+  - **Molality caps per salt** are the verified range: KCl 4.803 (saturation), KBr 5.5, LiCl 6, NaBr 6 (at 9 m phi is 6 % high), MgCl2 5.84. Two salts together refuse, because theta/psi mixing terms are not shipped. CaCl2 and Na2SO4 do not resolve in the open component registry, and 2:2 salts (beta2) are not implemented.
+- **Ideal-solid SLE** (`ideal_solid`, experimental to provisional): the physics is complete for its claim (van't Hoff, gamma = 1).
+  - **Parameters:** fusion properties are now tabulated only. Tm comes from the first non-Joback chemicals source and Hfus from the CRC table; Joback estimates refuse.
+  - **Harness:** `scripts/validate_properties.py` gained a `solubility` case type (expected {solute: x_sat} at T, 5 % band). tests/thermo/test_special_solubility_case.py drives it with the IUPAC-NIST points: naphthalene +3.4 % passes, anthracene +32 % fails visibly.
+  - **L0:** all seven L0 checks are flash-surface checks, and the row refuses every flash by design. They are excluded with reasons, and the equivalent self-consistency (x(Tm) = 1, monotone in T, bit-identical instances) is pinned in tests.
+  - **Advisor:** a row claiming no vapour phase now sinks below every VLE flash package.
+  - **Not done:** binding the IUPAC-NIST points as L2 cases needs the locked `data/validation/` tree.
+
 Closed 2026-11-03:
 
 - **soft-SAFT** (`soft_saft`, provisional): the earlier "no engine" finding was wrong; teqp

@@ -4,11 +4,13 @@ Four literature-anchored aqueous models,
 implemented over the same carrier + K-value flash machinery as the amine
 packages (``ngdesign.amine.package``):
 
-* ``pitzer_nacl_water`` -- Pitzer NaCl(aq) with the classic 25 C parameter
-  set: osmotic coefficient, mean ionic activity coefficient (exact
-  Gibbs-Duhem integration of the osmotic form), water activity, and the
-  solid-liquid saturation anchor (6.146 mol/kg at gamma = 1.0065; Pitzer,
-  Peiper & Busey 1984).  See ``data/thermo_params/electrolyte/pitzer.yaml``.
+* ``pitzer_nacl_water`` -- Pitzer single-salt brines with the PHRQPITZ 25 C
+  parameter sets (USGS WRI 88-4153; NaCl, KCl, KBr, LiCl, NaBr, MgCl2, keyed
+  by salt and ion pair): osmotic coefficient, mean ionic activity coefficient
+  (exact Gibbs-Duhem integration of the osmotic form), water activity, and
+  for NaCl the solid-liquid saturation anchor (6.146 mol/kg at gamma =
+  1.0065; Pitzer, Peiper & Busey 1984).  See
+  ``data/thermo_params/electrolyte/pitzer.yaml``.
 * ``sour_water`` -- EPA-600/2-80-067 SWEQ (Wilson 1980) NH3-H2S-H2O
   speciation and equilibrium partial pressures, constants character-verified
   against the report's printed worked examples and cross-checked against
@@ -31,7 +33,8 @@ packages (``ngdesign.amine.package``):
   the refusal/supersaturated liquid past the solubility limit.
 
 Streams stay molecular (ionic species never leave this module): the brine
-model takes (H2O, NaCl), the sour-water model (H2O, NH3, H2S); anything else
+models take (H2O, NaCl) -- the Pitzer rows (H2O, one salt of pitzer.yaml) --
+the sour-water model (H2O, NH3, H2S); anything else
 refuses with the documented gap.  The CO2/carbonate path of the SWEQ model is
 data-side only this cycle -- CO2 in a sour-water feed refuses with that reason.
 
@@ -80,6 +83,7 @@ __all__ = [
     "ElectrolytePitzerHOC",
     "ElectrolytePitzerNaCl",
     "ElectrolyteSourWater",
+    "PitzerSalt",
     "SWEQConstants",
     "SWHenry",
     "SourWaterSpeciation",
@@ -94,6 +98,8 @@ __all__ = [
     "ext_uniquac_water_activity",
     "pitzer_mean_gamma",
     "pitzer_osmotic",
+    "pitzer_salt",
+    "pitzer_salts",
     "pitzer_saturation_molality",
     "pitzer_water_activity",
     "pdh_mean_gamma",
@@ -160,9 +166,10 @@ _MODEL_WINDOWS: dict[str, tuple[float, float]] = {
     "sour_water": (293.15, 373.15),
 }
 
-#: Molecular support per model (stream keys; ionic species never leave).
+#: Molecular support per model (stream keys; ionic species never leave).  The
+#: Pitzer support is data-driven (water plus every salt in pitzer.yaml), see
+#: :meth:`ElectrolytePackage._supported_ids`.
 _MODEL_SUPPORTS: dict[str, frozenset[str]] = {
-    "pitzer": frozenset({"H2O", "NaCl"}),
     "enrtl": frozenset({"H2O", "NaCl"}),
     "pdh": frozenset({"H2O", "NaCl"}),
     "ext_uniquac": frozenset({"H2O", "NaCl"}),
@@ -188,7 +195,7 @@ class ElectrolyteChemistryError(ValueError):
     """
 
 
-# -- Pitzer NaCl(aq) (classic 25 C parameter set) ---------------------------------
+# -- Pitzer single-salt brines (PHRQPITZ 25 C parameter sets) ----------------------
 
 
 @cache
@@ -199,70 +206,151 @@ def _pitzer() -> dict[str, Any]:
     return cast(dict[str, Any], data)
 
 
-def pitzer_osmotic(molality: float) -> float:
-    """Osmotic coefficient phi of NaCl(aq) at the 25 C parameter set.
+@dataclass(frozen=True)
+class PitzerSalt:
+    """One salt's single-salt Pitzer entry, keyed by its ion pair.
 
-    phi - 1 = -Aphi*sqrt(I)/(1 + b*sqrt(I)) + m*(beta0 + beta1*exp(-alpha*sqrt(I)))
-              + m^2*Cphi, with I = m for the 1:1 electrolyte (molality basis,
-    kg solvent per mol solute).
+    ``zz`` = |z_M z_X|; ``nu`` = nu_M + nu_X; ``f_b`` = 2 nu_M nu_X / nu and
+    ``f_c`` = 2 (nu_M nu_X)^(3/2) / nu are the stoichiometric weights of the
+    B and C terms (Pitzer 1991, ch. 3, eqs. 3.43-3.45); ``charge_sum`` =
+    nu_M z_M^2 + nu_X z_X^2, so I = m * charge_sum / 2.  All four reduce to
+    exactly 1.0 (and I to m) for a 1:1 salt.
     """
-    p = _pitzer()
-    sq = math.sqrt(molality)
-    return (
-        1.0
-        - float(p["aphi"]) * sq / (1.0 + float(p["b"]) * sq)
-        + molality * (float(p["beta0"]) + float(p["beta1"]) * math.exp(-float(p["alpha"]) * sq))
-        + molality * molality * float(p["cphi"])
+
+    salt: str
+    cation: str
+    anion: str
+    zz: float
+    nu: float
+    f_b: float
+    f_c: float
+    charge_sum: float
+    beta0: float
+    beta1: float
+    cphi: float
+    molality_cap: float
+
+
+@cache
+def pitzer_salt(salt: str) -> PitzerSalt:
+    """The single-salt Pitzer entry for ``salt`` (a component id); unknown salts refuse."""
+    table = _pitzer()["salts"]
+    entry = table.get(salt)
+    if entry is None:
+        raise ElectrolyteChemistryError(
+            f"no Pitzer parameters for {salt!r}: data/thermo_params/electrolyte/pitzer.yaml "
+            f"carries {sorted(table)} (single-salt sets with cited sources)"
+        )
+    zc, za = int(entry["z_cation"]), int(entry["z_anion"])
+    nc, na = int(entry["nu_cation"]), int(entry["nu_anion"])
+    if zc >= 2 and za >= 2:
+        # 2:2 salts need beta2 with alpha1 = 1.4, alpha2 = 12 (Pitzer & Mayorga 1974);
+        # no such entry is shipped, so the form is not implemented.
+        raise ElectrolyteChemistryError(f"{salt!r} is a 2:2 salt; the beta2 form is not implemented")
+    nu = nc + na
+    return PitzerSalt(
+        salt=salt,
+        cation=str(entry["cation"]),
+        anion=str(entry["anion"]),
+        zz=float(zc * za),
+        nu=float(nu),
+        f_b=2.0 * nc * na / nu,
+        f_c=2.0 * float(nc * na) ** 1.5 / nu,
+        charge_sum=float(nc * zc * zc + na * za * za),
+        beta0=float(entry["beta0"]),
+        beta1=float(entry["beta1"]),
+        cphi=float(entry["cphi"]),
+        molality_cap=float(entry["molality_cap"]),
     )
 
 
-def pitzer_mean_gamma(molality: float) -> float:
-    """Mean ionic activity coefficient of NaCl(aq) at the 25 C parameter set.
+def pitzer_salts() -> tuple[str, ...]:
+    """Every salt (component id) with a single-salt Pitzer entry, sorted."""
+    return tuple(sorted(_pitzer()["salts"]))
 
-    Exact Gibbs-Duhem integration of the osmotic form above:
 
-    ln gamma = (phi - 1) - Aphi*(2/b)*ln(1 + b*sqrt(I)) + beta0*m
-               + beta1*(2/alpha^2)*(1 - (1 + alpha*sqrt(I))*exp(-alpha*sqrt(I)))
-               + Cphi*m^2/2
+def _pitzer_constants() -> tuple[float, float, float]:
+    """The shared (Aphi, b, alpha) of the parameter file."""
+    p = _pitzer()
+    return float(p["aphi"]), float(p["b"]), float(p["alpha"])
+
+
+def pitzer_osmotic(molality: float, salt: str = "NaCl") -> float:
+    """Osmotic coefficient phi of a single-salt solution at the 25 C parameter set.
+
+    phi - 1 = |z_M z_X| f^phi + m (2 nu_M nu_X / nu) B^phi + m^2 (2 (nu_M nu_X)^1.5 / nu) C^phi,
+    f^phi = -Aphi sqrt(I)/(1 + b sqrt(I)), B^phi = beta0 + beta1 exp(-alpha sqrt(I)),
+    I = m (nu_M z_M^2 + nu_X z_X^2)/2 (Pitzer 1991, Activity Coefficients in
+    Electrolyte Solutions, 2nd ed., ch. 3; the PHRQPITZ form, USGS WRI 88-4153).
+    For a 1:1 salt this is the classic phi - 1 = -Aphi sqrt(m)/(1 + b sqrt(m))
+    + m (beta0 + beta1 e^(-alpha sqrt(m))) + m^2 Cphi; the stoichiometric weights
+    are exactly 1.0 there, so the NaCl values are bit-for-bit the 1:1 form's.
+    """
+    s = pitzer_salt(salt)
+    aphi, b, alpha = _pitzer_constants()
+    sq = math.sqrt(0.5 * molality * s.charge_sum)
+    return (
+        1.0
+        - s.zz * (aphi * sq / (1.0 + b * sq))
+        + molality * s.f_b * (s.beta0 + s.beta1 * math.exp(-alpha * sq))
+        + molality * molality * s.f_c * s.cphi
+    )
+
+
+def pitzer_mean_gamma(molality: float, salt: str = "NaCl") -> float:
+    """Mean ionic activity coefficient of a single-salt solution at the 25 C parameter set.
+
+    Exact Gibbs-Duhem integration of the osmotic form above (Pitzer 1991, ch. 3):
+
+    ln gamma = (phi - 1) - |z_M z_X| Aphi (2/b) ln(1 + b sqrt(I))
+               + (2 nu_M nu_X / nu) beta0 m
+               + (2 nu_M nu_X / nu) beta1 (2/alpha^2)(m/I)(1 - (1 + alpha sqrt(I)) e^(-alpha sqrt(I)))
+               + (2 (nu_M nu_X)^1.5 / nu) Cphi m^2 / 2
 
     (the naive closed forms found in some secondary sources are not the
     integral of this osmotic expression and misestimate by up to ~10 %).
     """
-    p = _pitzer()
-    sq = math.sqrt(molality)
-    aphi, b, alpha = float(p["aphi"]), float(p["b"]), float(p["alpha"])
+    s = pitzer_salt(salt)
+    aphi, b, alpha = _pitzer_constants()
+    ionic = 0.5 * molality * s.charge_sum
+    sq = math.sqrt(ionic)
     phi_minus_1 = (
-        -aphi * sq / (1.0 + b * sq)
-        + molality * (float(p["beta0"]) + float(p["beta1"]) * math.exp(-alpha * sq))
-        + molality * molality * float(p["cphi"])
+        -s.zz * (aphi * sq / (1.0 + b * sq))
+        + molality * s.f_b * (s.beta0 + s.beta1 * math.exp(-alpha * sq))
+        + molality * molality * s.f_c * s.cphi
     )
+    m_over_i = molality / ionic if ionic > 0.0 else 1.0
     ln_gamma = (
         phi_minus_1
-        - aphi * (2.0 / b) * math.log1p(b * sq)
-        + float(p["beta0"]) * molality
-        + float(p["beta1"]) * (2.0 / alpha**2) * (1.0 - (1.0 + alpha * sq) * math.exp(-alpha * sq))
-        + float(p["cphi"]) * molality * molality / 2.0
+        - s.zz * aphi * (2.0 / b) * math.log1p(b * sq)
+        + s.f_b * s.beta0 * molality
+        + s.f_b * s.beta1 * (2.0 / alpha**2) * m_over_i * (1.0 - (1.0 + alpha * sq) * math.exp(-alpha * sq))
+        + s.f_c * s.cphi * molality * molality / 2.0
     )
     return math.exp(ln_gamma)
 
 
-def pitzer_water_activity(molality: float) -> float:
-    """Water activity of NaCl(aq): a_w = exp(-2*m*phi/55.5084)."""
+def pitzer_water_activity(molality: float, salt: str = "NaCl") -> float:
+    """Water activity of a single-salt solution: a_w = exp(-nu m phi / 55.5084)."""
     molar_base = float(_pitzer()["molality_of_water"])
-    return math.exp(-2.0 * molality * pitzer_osmotic(molality) / molar_base)
+    return math.exp(-pitzer_salt(salt).nu * molality * pitzer_osmotic(molality, salt) / molar_base)
 
 
-def pitzer_saturation_molality() -> float:
-    """NaCl solubility (mol/kg) from the solid-liquid equilibrium condition.
+def pitzer_saturation_molality(salt: str = "NaCl") -> float:
+    """Salt solubility (mol/kg) from the solid-liquid equilibrium condition.
 
     The SLE condition gamma_sat(m) == gamma(m) with the saturated-solution
-    mean activity coefficient 1.0065 from the reference (p. 11); solved by
-    bracketed root finding on the rising branch past 4 molal.
+    mean activity coefficient of the reference (NaCl: 1.0065, PPB84 p. 11);
+    solved by bracketed root finding on the rising branch past 4 molal.  Only
+    salts whose entry carries a ``saturation`` anchor have one.
     """
-    gamma_sat = float(_pitzer()["saturation"]["mean_gamma"])
+    entry = _pitzer()["salts"][pitzer_salt(salt).salt]
+    if "saturation" not in entry:
+        raise ElectrolyteChemistryError(f"no saturation anchor for {salt!r} in pitzer.yaml")
+    gamma_sat = float(entry["saturation"]["mean_gamma"])
 
     def residual(m: float) -> float:
-        return pitzer_mean_gamma(m) - gamma_sat
+        return pitzer_mean_gamma(m, salt) - gamma_sat
 
     return brent_root(residual, 4.0, 10.0)
 
@@ -730,11 +818,11 @@ def _mw(cid: str) -> float:
     return float(_record(cid)["mw"])
 
 
-def _molality_nacl(x_nacl: float, x_w: float, cap: float = _MAX_MOLALITY) -> float:
-    """NaCl molality (mol/kg water) from liquid mole fractions, clamped to the fitted domain."""
+def _salt_molality(x_salt: float, x_w: float, cap: float = _MAX_MOLALITY) -> float:
+    """Salt molality (mol/kg water) from liquid mole fractions, clamped to the fitted domain."""
     if x_w <= 0.0:
         raise ElectrolyteChemistryError("the brine liquid carries no water (molality undefined)")
-    m = 1000.0 * x_nacl / (_mw("H2O") * x_w)
+    m = 1000.0 * x_salt / (_mw("H2O") * x_w)
     return min(m, cap)
 
 
@@ -785,8 +873,11 @@ class ElectrolytePackage(TracedThermo, Thermo):
     #: carrier's vapour properties; "rk" and "hoc" put a real water vapour in both.
     vapour_model: str | None = None
 
-    #: Top of the liquid's molality range: the saturated solution for this row.
-    def _molality_cap(self) -> float:
+    #: Top of the liquid's molality range: the saturated solution (or the verified
+    #: range) for this row and salt.
+    def _molality_cap(self, salt: str = "NaCl") -> float:
+        if self._model == "pitzer":
+            return pitzer_salt(salt).molality_cap
         return _MAX_MOLALITY
 
     def __init__(self, model: str | None = None) -> None:
@@ -820,9 +911,27 @@ class ElectrolytePackage(TracedThermo, Thermo):
         """Sorted positive-fraction ids (the _state helpers' support semantics)."""
         return _state.support_ids(z)
 
-    def _water_activity(self, molality: float) -> float:
+    def _water_activity(self, molality: float, salt: str = "NaCl") -> float:
         """This model's water-activity surface a_w(m) (the brine chemistry driver)."""
+        if self._model == "pitzer":
+            return pitzer_water_activity(molality, salt)
         return _WATER_ACTIVITY[self._model](molality)
+
+    def _supported_ids(self) -> frozenset[str]:
+        """Stream ids this model's chemistry covers (water plus its salts or volatiles)."""
+        if self._model == "pitzer":
+            return frozenset({"H2O", *pitzer_salts()})
+        return _MODEL_SUPPORTS[self._model]
+
+    def _salt_id(self, comp: dict[str, float]) -> str:
+        """The brine's salt: the one non-water component present (NaCl when none is).
+
+        With no salt present every salt fraction reads 0.0, so the default only
+        names which (zero) entry is looked up; :meth:`_electrolyte_domain`
+        has already refused a feed with more than one salt.
+        """
+        present = [cid for cid in self._support(comp) if cid != "H2O"]
+        return present[0] if present else "NaCl"
 
     def _water_vapour_ln_phi(self, t_k: float, p: float) -> float:
         """ln phi of pure water vapour on this package's vapour model."""
@@ -864,7 +973,8 @@ class ElectrolytePackage(TracedThermo, Thermo):
         self._refuse_if_needed()
         if z.get("H2O", 0.0) <= 0.0:
             return False
-        unsupported = [cid for cid in self._support(z) if cid not in _MODEL_SUPPORTS[self._model]]
+        supported = self._supported_ids()
+        unsupported = [cid for cid in self._support(z) if cid not in supported]
         if unsupported:
             co2_note = (
                 " (the CO2/carbonate path of EPA-600/2-80-067 is data-side only "
@@ -875,8 +985,14 @@ class ElectrolytePackage(TracedThermo, Thermo):
             )
             raise NotImplementedError(
                 f"electrolyte model {self._model!r} supports "
-                f"{sorted(_MODEL_SUPPORTS[self._model])}; no verified parameters "
+                f"{sorted(supported)}; no verified parameters "
                 f"for {sorted(unsupported)}{co2_note} (first-use refusal, T-07 precedent)"
+            )
+        salts = [cid for cid in self._support(z) if cid != "H2O"]
+        if self._model == "pitzer" and len(salts) > 1:
+            raise NotImplementedError(
+                f"electrolyte model 'pitzer' is single-salt: {sorted(salts)} together need the "
+                "mixing parameters theta/psi, which this row does not ship (first-use refusal)"
             )
         return True
 
@@ -902,9 +1018,10 @@ class ElectrolytePackage(TracedThermo, Thermo):
         window by design; the solved point is what must be inside it (checked
         in :meth:`_boundary`).
         """
-        m = _molality_nacl(x.get("NaCl", 0.0), x.get("H2O", 0.0), self._molality_cap())
+        salt = self._salt_id(x)
+        m = _salt_molality(x.get(salt, 0.0), x.get("H2O", 0.0), self._molality_cap(salt))
         psat = _psat_or_wilson("H2O", t_k) * self._water_fugacity_ratio(t_k, p)
-        k_h2o = self._water_activity(m) * psat / p
+        k_h2o = self._water_activity(m, salt) * psat / p
         return {cid: (k_h2o if cid == "H2O" else _NONVOLATILE_K) for cid in z}
 
     def _k_sour_water(
@@ -984,35 +1101,36 @@ class ElectrolytePackage(TracedThermo, Thermo):
     ) -> tuple[Literal["liquid", "vapor", "two_phase"], float, dict[str, float], dict[str, float]]:
         """Exact split for an involatile-salt brine.
 
-        The salt stays in the liquid (y_NaCl = 0), so two-phase states carry
+        The salt stays in the liquid (y_salt = 0), so two-phase states carry
         pure-water vapour and follow from two balances: the liquid
         concentrates until its bubble pressure a_w(m*)*Psat(T) == P, and the
-        salt balance sets the vapour fraction beta = 1 - z_NaCl/x_NaCl(m*).
+        salt balance sets the vapour fraction beta = 1 - z_salt/x_salt(m*).
         Above the feed's bubble pressure the state is a single liquid at the
         feed molality; below the saturated-solution pressure the salt would
         precipitate, which the model refuses (it carries no solid phase).
         """
         psat = _psat_or_wilson("H2O", t_k)
-        if z.get("NaCl", 0.0) <= 0.0:
+        salt = self._salt_id(z)
+        if z.get(salt, 0.0) <= 0.0:
             if p >= psat:
                 return "liquid", 0.0, dict(z), dict(z)
             return "vapor", 1.0, dict(z), dict(z)
-        cap = self._molality_cap()
-        m_feed = _molality_nacl(z["NaCl"], z.get("H2O", 0.0), cap)
+        cap = self._molality_cap(salt)
+        m_feed = _salt_molality(z[salt], z.get("H2O", 0.0), cap)
         psat *= self._water_fugacity_ratio(t_k, p)
-        if p >= self._water_activity(m_feed) * psat:
+        if p >= self._water_activity(m_feed, salt) * psat:
             return "liquid", 0.0, dict(z), dict(z)
         # Below the feed's bubble pressure the boiling liquid concentrates,
         # shedding pure-water vapour, until it reaches the saturated-solution
         # molality -- the model's two-phase limit.  Below the saturated
-        # solution's own bubble pressure a solid NaCl phase would appear,
+        # solution's own bubble pressure a solid salt phase would appear,
         # which the model does not carry: the split pins the liquid at the
         # saturation molality there (a constant-vf plateau, so saturation
         # scans keep a continuous surface) and the FLASH path refuses the
         # state (_build_state checks the solved liquid's molality).
 
         def excess(m: float) -> float:
-            return self._water_activity(m) * psat - p
+            return self._water_activity(m, salt) * psat - p
 
         # excess starts positive at m_feed (the state is above its bubble)
         # and decreases with m (a_w falls); the root exists inside the
@@ -1023,7 +1141,7 @@ class ElectrolytePackage(TracedThermo, Thermo):
             m_star = cap
         mw_water = _mw("H2O") / 1000.0  # kg/mol, to match the molality basis
         x_salt = m_star * mw_water / (1.0 + m_star * mw_water)
-        beta = min(1.0 - z["NaCl"] / x_salt, 1.0)
+        beta = min(1.0 - z[salt] / x_salt, 1.0)
         x = {cid: (1.0 - x_salt if cid == "H2O" else x_salt) for cid in z}
         y = {cid: (1.0 if cid == "H2O" else 0.0) for cid in z}
         return "two_phase", beta, x, y
@@ -1284,8 +1402,9 @@ class ElectrolytePackage(TracedThermo, Thermo):
         pressures.  Absent components return None.
         """
         if self._model != "sour_water":
-            m = _molality_nacl(x.get("NaCl", 0.0), x.get("H2O", 0.0), self._molality_cap())
-            a_w = self._water_activity(m)
+            salt = self._salt_id(x)
+            m = _salt_molality(x.get(salt, 0.0), x.get("H2O", 0.0), self._molality_cap(salt))
+            a_w = self._water_activity(m, salt)
             return {cid: (a_w * _psat_or_wilson("H2O", T) if cid == "H2O" else None) for cid in x}
         m_nh3, m_h2s = _solution_molalities(x)
         p_nh3, p_h2s = sour_water_partial_pressures(m_nh3, m_h2s, T)
@@ -1329,11 +1448,12 @@ class ElectrolytePackage(TracedThermo, Thermo):
                     f"{_PDH_MAX_MOLALITY} mol/kg cap - use enrtl_nacl_water or pitzer_nacl_water"
                 )
         if state == "two_phase" and self._model in _BRINE_MODELS and x.get("H2O", 0.0) > 0.0:
-            m_liq = 1000.0 * x.get("NaCl", 0.0) / (_mw("H2O") * x["H2O"])
-            if m_liq >= self._molality_cap():
+            salt = self._salt_id(x)
+            m_liq = 1000.0 * x.get(salt, 0.0) / (_mw("H2O") * x["H2O"])
+            if m_liq >= self._molality_cap(salt):
                 raise ElectrolyteChemistryError(
                     f"the brine flash at T={T} K, P={P} Pa needs more than the "
-                    f"saturated-solution molality ({self._molality_cap()} mol/kg): NaCl would "
+                    f"saturated-solution molality ({self._molality_cap(salt)} mol/kg): {salt} would "
                     "precipitate, which the model does not represent"
                 )
         if state == "vapor":
@@ -1378,7 +1498,12 @@ class ElectrolytePackage(TracedThermo, Thermo):
 
 @register("thermo", "pitzer_nacl_water")
 class ElectrolytePitzerNaCl(ElectrolytePackage):
-    """Pitzer NaCl(aq): water activity, osmotic and mean activity coefficients."""
+    """Pitzer single-salt brine: water activity, osmotic and mean activity coefficients.
+
+    The row id keeps its historical name; the salt is whichever single salt of
+    data/thermo_params/electrolyte/pitzer.yaml the feed carries (NaCl, KCl,
+    KBr, LiCl, NaBr, MgCl2 at the PHRQPITZ 25 C sets).
+    """
 
     model = "pitzer"
 
@@ -1423,7 +1548,7 @@ class ElectrolyteENRTLHOC(ElectrolyteENRTLNaCl):
 
 
 class ElectrolytePitzerHOC(ElectrolytePitzerNaCl):
-    """Pitzer NaCl(aq) liquid with a Hayden-O'Connell water vapour."""
+    """Pitzer single-salt brine liquid with a Hayden-O'Connell water vapour."""
 
     vapour_model = "hoc"
 
@@ -1443,7 +1568,7 @@ class ElectrolyteENRTLCrystal(ElectrolyteENRTLNaCl):
     as the base rows carry no heat of solution.
     """
 
-    def _molality_cap(self) -> float:
+    def _molality_cap(self, salt: str = "NaCl") -> float:
         return enrtl_crystallisation_molality()
 
     def _build_state(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:

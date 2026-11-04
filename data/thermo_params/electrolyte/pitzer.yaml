@@ -1,26 +1,145 @@
-# Pitzer NaCl(aq) parameters (spec T-09, model row pitzer_nacl_water).
+# Pitzer single-salt parameters at 25 C (spec T-09, model rows pitzer_nacl_water
+# and pitzer_hoc), keyed by the salt's component id; each entry names its ion
+# pair, charges and stoichiometry, so the same osmotic / mean-activity equations
+# (ngdesign.amine.electrolyte, Pitzer 1991 single-salt form) serve every salt.
 #
-# The classic 25 C NaCl parameter set (the PHRQPITZ convention): the osmotic
-# and mean-activity-coefficient equations in ngdesign.amine.electrolyte with
-# these coefficients reproduce the retrieved reference tables to 0.36 %:
-#   - activity coefficients, Pitzer, Peiper & Busey (1984), J. Phys. Chem.
-#     Ref. Data 13(1), Table A-8 (25 C, 1 bar), NIST reprint
-#     https://srd.nist.gov/jpcrdreprint/1.555709.pdf -- 0.1..6 molal, 10 points
-#   - osmotic coefficients, same source, Table A-9 (25 C, 1 bar), 0.1..6 molal
-#   - saturation: same source p. 11 -- solubility 6.146 mol/kg at 298.15 K,
-#     saturated-solution mean gamma 1.0065 (the SLE test anchor)
-# The parameter values themselves are the classic set as tabulated across the
-# open Pitzer literature (e.g. Plummer et al., PHRQPITZ, USGS Water-Resources
-# Investigations Report 88-4153); the 1984 tables above are the validation
-# anchors, not the source of the coefficients.
+# Source of every coefficient: the PHRQPITZ data base as listed in Plummer,
+# L. N., Parkhurst, D. L., Fleming, G. W. & Dunkle, S. A. (1988), "A computer
+# program incorporating Pitzer's equations for calculation of geochemical
+# reactions in brines", USGS Water-Resources Investigations Report 88-4153,
+# doi:10.3133/wri884153, Attachment C.6 "Sources of data in the file
+# PITZER.DATA", printed pp. -190- (B0, B1 start), -191- (B1, C0 start) and
+# -192- (C0 continued); each value carries the report's own reference number
+# for its primary source (named per entry below, from the report's Attachment
+# C.1). Transcribed 2026-11-03 from the scanned report (the printed pages were
+# read as images, not OCR). The report is a U.S. Government work (USGS), not
+# subject to copyright in the United States (17 U.S.C. 105), and the PHRQPITZ /
+# PHREEQC User Rights Notice (doc/NOTICE.TXT in the usgs-coupled/phreeqc3
+# repository) permits use, copy, modification and distribution, commercial
+# included, with acknowledgement of the authors and the USGS: acknowledged here.
+# Not taken from the CURRENT PHREEQC pitzer.dat: that file refits NaCl, KCl,
+# MgCl2 and others with temperature terms (Appelo 2015, Appl. Geochem. 55, 62,
+# "ref. 3"), which is not the 25 C set the NaCl row was validated with; the
+# KBr / LiCl / NaBr 25 C values are identical in both files.
+#
+# Shared Debye-Hueckel constants (Aphi 0.392 at 25 C, b 1.2, alpha 2.0 for any
+# salt with a univalent ion) are the PHRQPITZ convention (report p. 3: "A-phi
+# is defined to be 0.392 at 25 C and 1 atm"). Validation anchors (the tables are
+# the anchors, not the source of the coefficients; tests/thermo/
+# test_electrolyte_salts.py):
+#   - NaCl: Pitzer, Peiper & Busey (1984), J. Phys. Chem. Ref. Data 13(1),
+#     Table A-8 / A-9, NIST reprint https://srd.nist.gov/jpcrdreprint/1.555709.pdf;
+#     saturation p. 11 (6.146 mol/kg at gamma 1.0065, the SLE anchor).
+#   - KCl, KBr, LiCl, NaBr: Hamer & Wu (1972), J. Phys. Chem. Ref. Data 1, 1047,
+#     doi:10.1063/1.3253108, Tables 28, 29, 9, 17 (NIST reprint
+#     https://srd.nist.gov/jpcrdreprint/1.3253108.pdf).
+#   - MgCl2: Goldberg & Nuttall (1978), J. Phys. Chem. Ref. Data 7, 263,
+#     doi:10.1063/1.555569, Table 17 (read as an image of printed p. 288).
+#
+# molality_cap: top of the molality range verified here against the anchor
+# table (or the saturated solution, whichever is lower); the flash clamps the
+# liquid there and refuses a state that needs more (precipitation is not
+# represented on these rows).
 aphi: 0.392
 b: 1.2
 alpha: 2.0
-beta0: 0.0765
-beta1: 0.2664
-cphi: 0.00127
 # molality of pure water (mol/kg), the a_w conversion base
 molality_of_water: 55.5084
-saturation:
-  solubility_molality: 6.146
-  mean_gamma: 1.0065
+
+salts:
+  NaCl:
+    cation: Na+
+    anion: Cl-
+    z_cation: 1
+    z_anion: 1
+    nu_cation: 1
+    nu_anion: 1
+    beta0: 0.0765
+    beta1: 0.2664
+    cphi: 0.00127
+    molality_cap: 6.15
+    saturation:
+      solubility_molality: 6.146
+      mean_gamma: 1.0065
+    provenance: >-
+      WRI 88-4153 Att. C.6: B0 0.0765 (ref. 48), B1 0.2664 (ref. 49), C0 0.00127
+      (ref. 48). Ref. 48 = Harvie, Moller & Weare (1984), Geochim. Cosmochim.
+      Acta 48, 723-751; ref. 49 = Harvie & Weare (1980), Geochim. Cosmochim. Acta
+      44, 981-997. Cap 6.15 = the 298.15 K saturation anchor (PPB84 p. 11).
+  KCl:
+    cation: K+
+    anion: Cl-
+    z_cation: 1
+    z_anion: 1
+    nu_cation: 1
+    nu_anion: 1
+    beta0: 0.04835
+    beta1: 0.2122
+    cphi: -0.00084
+    molality_cap: 4.803
+    provenance: >-
+      WRI 88-4153 Att. C.6: B0 0.04835, B1 0.2122, C0 -0.00084 (all ref. 48,
+      Harvie, Moller & Weare 1984, Geochim. Cosmochim. Acta 48, 723-751). Cap
+      4.803 mol/kg = the saturated solution of Hamer & Wu (1972) Table 28.
+  KBr:
+    cation: K+
+    anion: Br-
+    z_cation: 1
+    z_anion: 1
+    nu_cation: 1
+    nu_anion: 1
+    beta0: 0.0569
+    beta1: 0.2212
+    cphi: -0.00180
+    molality_cap: 5.5
+    provenance: >-
+      WRI 88-4153 Att. C.6: B0 0.0569, B1 0.2212, C0 -0.00180 (all ref. 89,
+      Pitzer & Mayorga 1973, J. Phys. Chem. 77, 2300-2308). Cap 5.5 mol/kg = the
+      last row of Hamer & Wu (1972) Table 29 verified here.
+  LiCl:
+    cation: Li+
+    anion: Cl-
+    z_cation: 1
+    z_anion: 1
+    nu_cation: 1
+    nu_anion: 1
+    beta0: 0.1494
+    beta1: 0.3074
+    cphi: 0.00359
+    molality_cap: 6.0
+    provenance: >-
+      WRI 88-4153 Att. C.6: B0 0.1494, B1 0.3074, C0 0.00359 (all ref. 89,
+      Pitzer & Mayorga 1973, J. Phys. Chem. 77, 2300-2308). Cap 6.0 mol/kg =
+      the top of the Hamer & Wu (1972) Table 9 range verified here.
+  NaBr:
+    cation: Na+
+    anion: Br-
+    z_cation: 1
+    z_anion: 1
+    nu_cation: 1
+    nu_anion: 1
+    beta0: 0.0973
+    beta1: 0.2791
+    cphi: 0.00116
+    molality_cap: 6.0
+    provenance: >-
+      WRI 88-4153 Att. C.6: B0 0.0973, B1 0.2791, C0 0.00116 (all ref. 89,
+      Pitzer & Mayorga 1973, J. Phys. Chem. 77, 2300-2308). Cap 6.0 mol/kg:
+      verified against Hamer & Wu (1972) Table 17 to 6 m; at 9 m the set
+      overshoots phi by 6 % (measured), so the cap stops at 6.
+  MgCl2:
+    cation: Mg+2
+    anion: Cl-
+    z_cation: 2
+    z_anion: 1
+    nu_cation: 1
+    nu_anion: 2
+    beta0: 0.35235
+    beta1: 1.6815
+    cphi: 0.00519
+    molality_cap: 5.84
+    provenance: >-
+      WRI 88-4153 Att. C.6: B0 0.35235, B1 1.6815, C0 0.00519 (all ref. 48,
+      Harvie, Moller & Weare 1984, Geochim. Cosmochim. Acta 48, 723-751). Cap
+      5.84 mol/kg = the near-saturation row of Goldberg & Nuttall (1978)
+      Table 17 verified here.

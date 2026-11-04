@@ -53,7 +53,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [iapws_if97](validation/iapws_if97.md) | helmholtz | provisional | 6/6 | L1=3 L2=0 | [report](validation/iapws_if97.md) |
 | [ideal-lk](validation/ideal-lk.md) | kvalue | provisional | 6/6 | L1=4 L2=0 | [report](validation/ideal-lk.md) |
 | [ideal-raoult](validation/ideal-raoult.md) | kvalue | provisional | 6/6 | L1=4 L2=0 | [report](validation/ideal-raoult.md) |
-| [ideal_solid](validation/ideal_solid.md) | special | experimental | — | L1=0 L2=0 | [report](validation/ideal_solid.md) |
+| [ideal_solid](validation/ideal_solid.md) | special | provisional | — | L1=0 L2=0 | [report](validation/ideal_solid.md) |
 | [kabadi-danner-srk](validation/kabadi-danner-srk.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/kabadi-danner-srk.md) |
 | [lcvm](validation/lcvm.md) | mixing | provisional | 7/7 | L1=4 L2=2 | [report](validation/lcvm.md) |
 | [lee-kesler-ploecker](validation/lee-kesler-ploecker.md) | kvalue | validated | 6/6 | L1=3 L2=1 | [report](validation/lee-kesler-ploecker.md) |
@@ -165,7 +165,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 ### Status summary
 
-138 rows: 9 validated, 121 provisional, 8 experimental
+138 rows: 9 validated, 122 provisional, 7 experimental
 
 | provisional row | what keeps it from validated |
 | --- | --- |
@@ -189,6 +189,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [iapws_if97](validation/iapws_if97.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=3 L2=0) |
 | [ideal-lk](validation/ideal-lk.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=4 L2=0) |
 | [ideal-raoult](validation/ideal-raoult.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=4 L2=0) |
+| [ideal_solid](validation/ideal_solid.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
 | [kabadi-danner-srk](validation/kabadi-danner-srk.md) | 7 declared case misses (`assessed:` in the row; see its report) |
 | [lcvm](validation/lcvm.md) | 6 declared case misses (`assessed:` in the row; see its report) |
 | [margules_hoc](validation/margules_hoc.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=0) |
