@@ -11,7 +11,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
 | T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | claimed | obv/T1r | 2026-11-04 12:07 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | claimed | obv/T3 | 2026-11-04 12:06 PM |
-| T4 | API liquid density: public reproductions of API TDB 6A3.5 / Rackett-type petroleum correlations with worked examples | Obvious | claimed | obv/T4 | 2026-11-04 12:08 PM |
+| T4 | API liquid density: public reproductions of API TDB 6A3.5 / Rackett-type petroleum correlations with worked examples | Obvious | review | obv/T4 | 2026-11-04 12:11 PM |
 | T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | claimed | obv/T5 | 2026-11-04 12:07 PM |
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | claimed | obv/T6 | 2026-11-04 12:06 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | claimed | obv/T7 | 2026-11-04 12:12 PM |
@@ -21,6 +21,15 @@ Times are America/Chicago (CST). Newest handoff on top.
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### T4 — Obvious — 2026-11-04 12:11 PM CST
+- Done: API liquid density pack. Found the procedure itself in a public API e-ballot draft, "Technical Data Book: Part 6 – Density" (TDB-6_e1 draft.pdf): Procedure 6A2.3 "Density of Liquid Petroleum Fractions at Low Pressures with the Modified Rackett Equation (1992)" — the procedure historically numbered 6A3.5 — with its complete worked example (MeABP 538 °F, API gravity 30.6 → rho(160 °F) = 0.8353 g/mL; experimental 0.8343 g/mL), printed M/Tpc/Ppc correlations, and ZRA back-calculation from SG. Every printed number was re-derived independently in Python before transcription (agreement ≤0.03 % on intermediates, 0.0002 g/mL on the final density). Corroborating open reproduction: Ramos-Pallares 2017 PhD thesis (Calgary) — Spencer–Danner modified Rackett, ZRA tuned at 15.6 °C to SG, Tables E.1–E.6 pseudocomponent parameters (kept as parameter data, not cases: reconstruction deviates −1 to −2 %). IJERT 2024 paper independently confirms the historical number: "procedures 11A4.1 and 6A3.5 of API (1997)".
+- Outputs (paths / branch / commit / PR #): `data/validation/packs/T4/{notes.md,data.csv,pack.yaml}`; branch `obv/T4`, commit fb4eb4d; PR #338 (`obv/T4` → `chem-engine`). No code changes; no V1 files touched.
+- Sources used: API TDB-6 e-ballot draft (URL + pages in notes.md §1–§3, retrieved 2026-11-04); Ramos-Pallares 2017 U Calgary thesis (notes.md §4); IJERT V13 IS 070052 (notes.md §5).
+- NOT FOUND / gaps: Riazi MNL50 §5.8/Ch.7 body text (public sample PDF is TOC-only; full book paywalled); Rackett 1970 original paper (paywalled); published TDB 1997/2016 editions (paywalled); Nji Calgary thesis link dead (returned HTML). No open reproduction of the *published* 6A3.5 exists — the ballot draft of the renumbered procedure is the closest open artifact. Details in notes.md §6.
+- Tests run + result: none — data-only pack, no code touched; cases carry `package: pending:api-liquid-density` (adapter not registered; listed blocked in V1's progress log) so the harness skips them until bound. Pack named pack.yaml per PROTOCOL.md.
+- Next / open questions: Stomato bot to bind pack.yaml when the API-liquid-density adapter spec registers its row (reconcile pending id `api-liquid-density` then). Ballot-draft caveat: numbers are as balloted, published TDB remains authority of record (flagged in notes.md §1).
+- Heartbeats: 12:10 PM CST — sources located and verified (below).
 
 ### T4 — Obvious — 2026-11-04 12:10 PM CST
 - 12:10 PM CST — heartbeat: sources located and verified. Primary: public API e-ballot draft "Technical Data Book: Part 6 – Density" (TDB-6_e1 draft.pdf, eballotprodstorage.blob.core.windows.net) containing the modified-Rackett procedure for petroleum fractions at low pressure (1992 procedure, historically numbered 6A3.5; renumbered 6A2.3 in the draft) with a complete worked example. All example numbers reproduced independently in Python (SG, M, Tpc, ppc, ZRA, rho at 160 F) before transcription. Writing pack files to data/validation/packs/T4/ on obv/T4 next.
