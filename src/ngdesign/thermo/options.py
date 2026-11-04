@@ -16,7 +16,7 @@ Implemented value -> mechanism (spec T-02):
 - ``AlphaFunction.BOSTON_MATHIAS``: in-house ``PRMIX_BM`` / ``SRKMIX_BM`` —
   Soave/PR alpha below Tr=1 and the Boston-Mathias (1980) supercritical
   extrapolation ``alpha = exp[C_d (1 - Tr^d)]`` with ``d = 1 + m/2`` and
-  ``C_d = m/d^2`` above (positive and decreasing where the Soave bracket goes
+  ``C_d = m/d`` above (value and slope continuous at Tc; positive and decreasing where the Soave bracket goes
   through zero and negative).
 - ``AlphaFunction.ZUDKEVITCH_JOFFE``: in-house ``ZJRKMIX`` — RK whose
   ``Omega_a(T)`` is solved per component so the pure-component fugacity
