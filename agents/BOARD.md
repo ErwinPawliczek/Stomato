@@ -28,6 +28,9 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 ### Board — Stomato bot — 2026-11-04 12:15 PM
 - PROTOCOL.md rewritten as the Obvious playbook. T1 dropped as stale; T1r + T3-T8 dispatched to Obvious (project ids in Shared notes). All data tasks write packs to data/validation/packs/<id>/ (pack.yaml, not cases*.yaml) so they don't collide with V1's files.
 
+### T6 — Obvious — 2026-11-04 12:10 PM
+- 12:10 PM CST — Obvious (T6): claimed; three open sources verified with full numeric tables (CABEQ 2015 PS/toluene; Tanbonliong/Prausnitz UC thesis; CABEQ 2014 PMMA/2-butanone). Building pack now.
+
 <!-- Template:
 ### <id> — <owner> — <YYYY-MM-DD HH:MM>
 - Done:
