@@ -3,12 +3,10 @@
 # One row per special property method, registered by ngdesign.thermo.catalogue
 # like every other family. Status per row, re-decided on evidence 2026-11-03
 # and 2026-11-04 (each row's notes carry the exact reason):
-#   ideal_solid      provisional  - van't Hoff physics complete, tabulated
-#                    fusion properties only (estimates refused), published
-#                    IUPAC-NIST checks in tests/thermo/test_special.py; the
-#                    harness gained a `solubility` case type
-#                    (scripts/validate_properties.py), binding a case needs
-#                    the locked data/validation/ tree.
+#   ideal_solid      validated (2026-11-04) - van't Hoff physics complete,
+#                    tabulated fusion properties only; IUPAC-NIST solubility
+#                    points bound as L2 and the NIST melting points as L1
+#                    (data/validation/special/cases.yaml).
 #   hoc_dimer        provisional (2026-11-04) - the chemical-theory vapour is
 #                    the flash's vapour phase, L0 green, flash surface checked
 #                    against Mehling & Kleiber Z and CRC latent heats;
@@ -203,8 +201,40 @@
       binding the IUPAC-NIST points as L2 cases is the follow-up that would
       take the row toward validated. The advisor sinks the row below every
       VLE flash package (it claims no vapour phase).
-  status: provisional
-  validation: []
+      BOUND 2026-11-04 (data/validation/special/cases.yaml, every number
+      re-read from the NIST pages this session): L2 = 13 IUPAC-NIST
+      solubility points in benzene (naphthalene: Chang 1969, Ward 1926 rows
+      1/5/9/13/17, all five McLaughlin & Zainal 1959 rows, -0.8..+3.4 %;
+      biphenyl -0.6 %; anthracene +36.7 % MISS, assessed). L1 = the pure
+      solute's melting point as x_sat = 1 at the NIST WebBook evaluated
+      Tfus (naphthalene 353.2 K -> 0.9973, biphenyl 343 K -> 1.0081,
+      anthracene 490 K -> 1.0126). Caveat on the L1: an SLE row's only
+      pure-component observable is where the liquidus ends (Tm); the 5 %
+      band is about +/- 2.7 K in Tm and the case does not test dHfus (the L2
+      temperature series does). The row has no fitted parameters, so all
+      bound points are independent. VALIDATED on that basis; L0 is green by
+      declared exclusion only (every L0 check is a flash check the row
+      refuses by design).
+  status: validated
+  validation:
+  - sle-pure-naphthalene-tfus-nist
+  - sle-pure-biphenyl-tfus-nist
+  - sle-pure-anthracene-tfus-nist
+  - sle-naphthalene-benzene-298.15K-chang
+  - sle-naphthalene-benzene-273.2K-ward
+  - sle-naphthalene-benzene-282.2K-ward
+  - sle-naphthalene-benzene-303.3K-ward
+  - sle-naphthalene-benzene-321.1K-ward
+  - sle-naphthalene-benzene-343.5K-ward
+  - sle-naphthalene-benzene-308.2K-mclaughlin
+  - sle-naphthalene-benzene-318.2K-mclaughlin
+  - sle-naphthalene-benzene-320.6K-mclaughlin
+  - sle-naphthalene-benzene-336.4K-mclaughlin
+  - sle-naphthalene-benzene-349.0K-mclaughlin
+  - sle-biphenyl-benzene-298.15K-chang
+  - sle-anthracene-benzene-298.15K-acree
+  assessed:
+    sle-anthracene-benzene-298.15K-acree: "solubility +36.7 % (ideal 0.009746 vs IUPAC-NIST evaluated 0.00713 at 298.15 K, Acree 1994 evaluation, sysID 58_57). Model limitation, not a bug: anthracene in benzene is strongly non-ideal (gamma ~ 1.37 at saturation); the ideal-solubility row claims gamma = 1 and carries no activity model, and the fusion constants are the CRC/databank tabulated values (Tm 489.15 K, Hfus 29.4 kJ/mol, consistent with NIST WebBook Tfus 490 K and Goursot et al. 29.37 kJ/mol). Measured 2026-11-04."
   l0: {}
   l0_excluded:
     pure_psat_limit: not a VLE package - pure_psat returns None by contract (an SLE row

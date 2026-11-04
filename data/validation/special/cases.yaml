@@ -1,80 +1,190 @@
-# Family H (special) validation data — spec T-14 (#145).
+# Family H (special) validation cases (spec T-14 #145; bound 2026-11-04, val-special).
 #
-# Status: intentionally empty. Every special-family case is blocked twice over,
-# and both blockers are outside this task's allowed files:
+# History: this file was empty while data/validation/ was locked; the candidate list
+# and why each stayed unbound is in docs/thermo-catalogue-plan.md (special family) and
+# the rows' notes in data/thermo_models/special.yaml.
 #
-# 1. No rows to claim the cases. The special-family rows (solids with a
-#    solubility product, polymer NRTL/PC-SAFT/SRK, carboxylic-acid HOC
-#    dimerization, HF) are not registered in the thermo catalogue yet
-#    (docs/thermo-catalogue-plan.md family H, issue #140; the row sweep is the
-#    T-10 follow-up), so any case written today would have to name
-#    pending:<id> and would validate nothing when it runs.
-# 2. No components in the locked curated slate. Solids (naphthalene and the
-#    like), polymer monomers, acetic/formic acid and HF are all absent from
-#    data/components.yaml (spec P1-02 locked the slate to 18 molecular
-#    components), so no case can even name its species today.
-#
-# The aspirational numeric sources are also not retrievable as open tables:
-# the Prausnitz, Lichtenthaler & de Azevedo solid-solubility worked examples,
-# the Danner & High DIPPR polymer-solution data book, and the GPSA/Perry HOC
-# dimerization examples are print or paywalled (no open numeric source was
-# retrievable this session, 2026-10-21 — the same basis on which the T-12
-# sweep omitted the ethanol-water azeotrope). Cases for this family are
-# authored when the row sweep registers the family H rows AND the component
-# slate curates the species; the wave-3 validation sweep is the natural home.
-#
-# T-10 UPDATE (same day): the row sweep has now landed (five special rows in
-# data/thermo_models/special.yaml, all `experimental`). The cases below are
-# the candidates to bind; each stays pending for the stated reason. Unit-level
-# checks pin the closed forms meanwhile (tests/thermo/test_special.py).
-#
-# - special_fh_toluene_ps_entropy: FH entropy of mixing against the PSU MATSE
-#   202 worked example (x1 = 0.95, r2/r1 = 962 -> dG_mix/RT = -1.463) and the
-#   closed-form solvent activity. Pending: the harness has no gamma-only case
-#   type for polymer surfaces yet, and the PSU example did not reproduce from
-#   any FH normalization (T-10; the test pins the hand reduction instead).
-#
-# - special_fh_toluene_ps_activity_data: chi = 0.67 (Gunduz & Dincer 1980)
-#   against measured toluene activity in polystyrene (Omega_1^inf = 7.90).
-#   T-19 (2026-10-23): the primary papers (Bawn 1950; Krigbaum & Geymer,
-#   J. Am. Chem. Soc. 81, 1859 (1959)) are paywalled; no open digitized
-#   activity table found, and the shipped chi is the Gunduz & Dincer fit
-#   point, so binding it would be a round trip. Stays unbound.
-#
-# - special_sle_naphthalene_benzene: RESOLVED at unit level (T-19): measured
-#   values re-verified on the IUPAC-NIST Solubility Database pages
-#   (naphthalene/benzene 0.292 @ 298.15 K sysID 59_123, 0.372 @ 307.5 K
-#   sysID 59_125, 0.3766 @ 308.2 K sysID 59_124; biphenyl/benzene 0.381 @
-#   298.15 K sysID 58_241; anthracene 0.00713 @ 298.15 K sysID 58_57) and the
-#   van't Hoff misses pinned in tests/thermo/test_special.py (+3.4%/+2.4%/
-#   +2.9%, -0.7%, +32% assessed). The case stays unbound: the harness has no
-#   case type for the solubility(cid, T) surface (scripts/validate_properties.py
-#   is outside the spec's editable files).
-#
-# - special_assoc_acetic_acid_Z: RESOLVED at unit level (T-19): the kernel is
-#   now parameterized INDEPENDENTLY (Ritter & Simons 1945, log10 K2 = 3164/T -
-#   10.4184 mmHg^-1, verified via Sebastiani & Lacquaniti 1967) and PREDICTS
-#   the Mehling & Kleiber (2020) Z = 0.6299 point with a +3.8% assessed miss
-#   (tests/thermo/test_special.py). A harness case stays unbound: the harness
-#   has no compressibility case type, and an AcOH/water VLE bind needs the
-#   kernel in flash K-values plus liquid non-ideality (ideal-liquid misses
-#   measured K's by ~7-15% at the Sebastiani midpoint).
-#
-# - special_chen_polymer_nrtl_parameters: Chen 1993 against a published
-#   polymer-solution dataset with the paper's own parameterization. T-19
-#   (2026-10-23): still no open Chen 1993 parameter transcription found; the
-#   shipped toluene/PS tau/alpha are explicitly illustrative. Stays unbound.
-#
-# - special_hf_hexamer_factors: kernel vs Jarry & Davis smoothed association
-#   factors 3.580 @ 298.16 K and 3.438 @ 303.16 K - pinned in
-#   tests/thermo/test_special.py. T-19 (2026-10-23): the mmHg->Pa conversion
-#   re-verified exactly (-42.38089 - 5 log10(101325/760) = -53.0054051, the
-#   shipped constant); the paper's wider factor table is not retrievable open
-#   access, so no new-temperature point can be bound.
+# ideal_solid (SLE, solubility(cid, T) surface; harness case type `solubility`,
+# TOLERANCE_POLICY 5 %):
+#   L1 (pure_cases): the pure solute's melting point, the one pure-component
+#     observable of an ideal-solubility row: x_sat(T) = 1 at the published Tfus.
+#     Read the band honestly: 5 % in x at Tm is +/- ~2.7 K in Tm for naphthalene
+#     (d ln x/dT = dHfus/(R Tm^2)); it checks the row's tabulated Tm against an
+#     independent evaluated value and does NOT test dHfus (the L2 slope does).
+#   L2 (binary_cases): IUPAC-NIST Solubility Database points for aromatic solids in
+#     benzene. The rows were picked by position before the model was run (all
+#     McLaughlin & Zainal rows; every fourth Ward row; the single-point and
+#     evaluated values), not by result. The row has no fitted parameters (tabulated
+#     Tm / CRC Hfus), so every point is independent evidence.
+#   Component numbering on the NIST pages: the page header lists "(1) Benzene
+#     (2) <solute>" alphabetically, but the tabulated x1 is the SOLUTE mole fraction
+#     (the evaluations state "Ln x1 ... for variation of <solute> solubility"); x1
+#     is entered as the solute fraction here.
 
 meta:
   coolprop_version: 8.0.0
 
-pure_cases: []
-binary_cases: []
+pure_cases:
+- id: sle-pure-naphthalene-tfus-nist
+  package: [ideal_solid]
+  components: [naphthalene]
+  z: {naphthalene: 1.0}
+  T: 353.2
+  expected:
+    solubility: {naphthalene: 1.0}
+  source: >-
+    NIST Chemistry WebBook, NIST Standard Reference Database 69 (Linstrom & Mallard eds.),
+    naphthalene, Phase change data table, T fus = 353.2 +/- 0.7 K (average of 55 of 57 values), AVG;
+    https://webbook.nist.gov/cgi/cbook.cgi?ID=C91203&Mask=4, retrieved 2026-11-04.
+  note: >-
+    Melting point as x_sat = 1 (pure solid in equilibrium with its own melt); checks the
+    row's tabulated Tm only (see header).
+- id: sle-pure-biphenyl-tfus-nist
+  package: [ideal_solid]
+  components: [biphenyl]
+  z: {biphenyl: 1.0}
+  T: 343.0
+  expected:
+    solubility: {biphenyl: 1.0}
+  source: >-
+    NIST Chemistry WebBook, NIST Standard Reference Database 69 (Linstrom & Mallard eds.),
+    biphenyl, Phase change data table, T fus = 343. +/- 1. K (average of 285 of 294 values), AVG;
+    https://webbook.nist.gov/cgi/cbook.cgi?ID=C92524&Mask=4, retrieved 2026-11-04.
+  note: >-
+    Melting point as x_sat = 1 (pure solid in equilibrium with its own melt); checks the
+    row's tabulated Tm only (see header).
+- id: sle-pure-anthracene-tfus-nist
+  package: [ideal_solid]
+  components: [anthracene]
+  z: {anthracene: 1.0}
+  T: 490.0
+  expected:
+    solubility: {anthracene: 1.0}
+  source: >-
+    NIST Chemistry WebBook, NIST Standard Reference Database 69 (Linstrom & Mallard eds.),
+    anthracene, Phase change data table, T fus = 490. +/- 3. K (average of 27 values), AVG;
+    https://webbook.nist.gov/cgi/cbook.cgi?ID=C120127&Mask=4, retrieved 2026-11-04.
+  note: >-
+    Melting point as x_sat = 1 (pure solid in equilibrium with its own melt); checks the
+    row's tabulated Tm only (see header).
+
+binary_cases:
+- id: sle-naphthalene-benzene-298.15K-chang
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.292, benzene: 0.708}
+  T: 298.15
+  expected:
+    solubility: {naphthalene: 0.292}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_123, Naphthalene with Benzene, Experimental Data table (t = 25.0 C, solute mole fraction x1 = 0.292), compiled by W.E. Acree Jr. from Chang, W., Ph.D. Dissertation, North Dakota State University (1969); retrieved 2026-11-04. Estimated error x1 +/- 2 % (compiler).
+- id: sle-naphthalene-benzene-273.2K-ward
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.151, benzene: 0.849}
+  T: 273.2
+  expected:
+    solubility: {naphthalene: 0.151}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_125, Naphthalene with Benzene, Experimental Data table row T/K = 273.2, x1 = 0.151, compiled by W.E. Acree Jr. from Ward, H.L., J. Phys. Chem. 30, 1316-1333 (1926); retrieved 2026-11-04. Every fourth row of the 17-row table (rows 1, 5, 9, 13, 17), chosen by position before the model was run.
+- id: sle-naphthalene-benzene-282.2K-ward
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.19, benzene: 0.81}
+  T: 282.2
+  expected:
+    solubility: {naphthalene: 0.19}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_125, Naphthalene with Benzene, Experimental Data table row T/K = 282.2, x1 = 0.19, compiled by W.E. Acree Jr. from Ward, H.L., J. Phys. Chem. 30, 1316-1333 (1926); retrieved 2026-11-04. Every fourth row of the 17-row table (rows 1, 5, 9, 13, 17), chosen by position before the model was run.
+- id: sle-naphthalene-benzene-303.3K-ward
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.333, benzene: 0.667}
+  T: 303.3
+  expected:
+    solubility: {naphthalene: 0.333}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_125, Naphthalene with Benzene, Experimental Data table row T/K = 303.3, x1 = 0.333, compiled by W.E. Acree Jr. from Ward, H.L., J. Phys. Chem. 30, 1316-1333 (1926); retrieved 2026-11-04. Every fourth row of the 17-row table (rows 1, 5, 9, 13, 17), chosen by position before the model was run.
+- id: sle-naphthalene-benzene-321.1K-ward
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.516, benzene: 0.484}
+  T: 321.1
+  expected:
+    solubility: {naphthalene: 0.516}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_125, Naphthalene with Benzene, Experimental Data table row T/K = 321.1, x1 = 0.516, compiled by W.E. Acree Jr. from Ward, H.L., J. Phys. Chem. 30, 1316-1333 (1926); retrieved 2026-11-04. Every fourth row of the 17-row table (rows 1, 5, 9, 13, 17), chosen by position before the model was run.
+- id: sle-naphthalene-benzene-343.5K-ward
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.833, benzene: 0.167}
+  T: 343.5
+  expected:
+    solubility: {naphthalene: 0.833}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_125, Naphthalene with Benzene, Experimental Data table row T/K = 343.5, x1 = 0.833, compiled by W.E. Acree Jr. from Ward, H.L., J. Phys. Chem. 30, 1316-1333 (1926); retrieved 2026-11-04. Every fourth row of the 17-row table (rows 1, 5, 9, 13, 17), chosen by position before the model was run.
+- id: sle-naphthalene-benzene-308.2K-mclaughlin
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.3766, benzene: 0.6234}
+  T: 308.2
+  expected:
+    solubility: {naphthalene: 0.3766}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_124, Naphthalene with Benzene, Experimental Data table row T/K = 308.2, x1 = 0.3766, compiled by W.E. Acree Jr. from McLaughlin, E.; Zainal, H.A., J. Chem. Soc. 1959, 863-867; retrieved 2026-11-04. All five rows of the table are bound.
+- id: sle-naphthalene-benzene-318.2K-mclaughlin
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.4806, benzene: 0.5194}
+  T: 318.2
+  expected:
+    solubility: {naphthalene: 0.4806}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_124, Naphthalene with Benzene, Experimental Data table row T/K = 318.2, x1 = 0.4806, compiled by W.E. Acree Jr. from McLaughlin, E.; Zainal, H.A., J. Chem. Soc. 1959, 863-867; retrieved 2026-11-04. All five rows of the table are bound.
+- id: sle-naphthalene-benzene-320.6K-mclaughlin
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.5094, benzene: 0.4906}
+  T: 320.6
+  expected:
+    solubility: {naphthalene: 0.5094}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_124, Naphthalene with Benzene, Experimental Data table row T/K = 320.6, x1 = 0.5094, compiled by W.E. Acree Jr. from McLaughlin, E.; Zainal, H.A., J. Chem. Soc. 1959, 863-867; retrieved 2026-11-04. All five rows of the table are bound.
+- id: sle-naphthalene-benzene-336.4K-mclaughlin
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.7119, benzene: 0.2881}
+  T: 336.4
+  expected:
+    solubility: {naphthalene: 0.7119}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_124, Naphthalene with Benzene, Experimental Data table row T/K = 336.4, x1 = 0.7119, compiled by W.E. Acree Jr. from McLaughlin, E.; Zainal, H.A., J. Chem. Soc. 1959, 863-867; retrieved 2026-11-04. All five rows of the table are bound.
+- id: sle-naphthalene-benzene-349.0K-mclaughlin
+  package: [ideal_solid]
+  components: [naphthalene, benzene]
+  z: {naphthalene: 0.918, benzene: 0.082}
+  T: 349.0
+  expected:
+    solubility: {naphthalene: 0.918}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=59_124, Naphthalene with Benzene, Experimental Data table row T/K = 349.0, x1 = 0.918, compiled by W.E. Acree Jr. from McLaughlin, E.; Zainal, H.A., J. Chem. Soc. 1959, 863-867; retrieved 2026-11-04. All five rows of the table are bound.
+- id: sle-biphenyl-benzene-298.15K-chang
+  package: [ideal_solid]
+  components: [biphenyl, benzene]
+  z: {biphenyl: 0.381, benzene: 0.619}
+  T: 298.15
+  expected:
+    solubility: {biphenyl: 0.381}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=58_241, Biphenyl with Benzene, critical evaluation by W.E. Acree Jr. (1994): experimental value x1 = 0.381 at 298 K from Chang, W., Ph.D. Dissertation, North Dakota State University (1969) (Critical Evaluation paragraph, ref. 4; the evaluated regression of the page's Fig. 1, ln x1 = -2233.1/T + 6.5272 back-calculates 0.3819); retrieved 2026-11-04.
+- id: sle-anthracene-benzene-298.15K-acree
+  package: [ideal_solid]
+  components: [anthracene, benzene]
+  z: {anthracene: 0.00713, benzene: 0.99287}
+  T: 298.15
+  expected:
+    solubility: {anthracene: 0.00713}
+  source: >-
+    IUPAC-NIST Solubility Database (NIST Standard Reference Database 106), https://srdata.nist.gov/solubility/sol_detail.aspx?sysID=58_57, Anthracene with Benzene, critical evaluation by W.E. Acree Jr. (1994): evaluated ln x1 = -3200.1/T + 5.7899, back-calculated x1 = 0.00713 at 298 K (experimental 0.00711 Smutek et al. 1967, 0.007418 Acree & Rytting 1983, 0.00740 Mahieu 1936; Critical Evaluation paragraph, regression shown in the page's Fig. 1); retrieved 2026-11-04.
+
 multicomponent_cases: []
