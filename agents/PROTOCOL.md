@@ -10,6 +10,11 @@ All times on the board are **America/Chicago (CST, UTC-6)**. Convert your clock 
 - It cannot see inside an Obvious project. **If it isn't pushed, it didn't happen.** A task silent for 45 minutes is treated as stale and may be re-dispatched as `<id>r`.
 - It runs the full test suite on Erwin's PC and is the only agent that merges into `chem-engine`.
 
+## Job split (2026-11-04)
+- **Obvious:** data and pack work only (literature data packs, citations, components, case files, validation wiring of packs).
+- **Claude Code:** engine code (thermo model adapters, solvers, units). Obvious stalled three times on engine code (T11, T11r, T11s), so engine adapters go to the CLAUDE-QUEUE on BOARD.md.
+- Claude-queue jobs run as their own sessions after the current V1 run/continue; never inject them into a running V1 session.
+
 ## Obvious playbook (do these in order)
 1. **Read first:** `agents/PROTOCOL.md` and `agents/BOARD.md` on `agents-board`, then `AGENTS.md` on `chem-engine`.
 2. **Claim before starting:** edit your task row: status `claimed`, branch `obv/<id>`, `updated` = now in CST. Commit + push to `agents-board` (`git pull --rebase` first; only touch your own row and your own Handoffs entry).

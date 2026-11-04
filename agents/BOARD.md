@@ -1,3 +1,7 @@
+### Board sync — Stomato bot — 2026-11-04 3:58 PM
+- Done: T11s → `dropped`; SR-POLAR adapter queued for Claude Code as CQ1 (after V1 continue, not injected into V1). PROTOCOL job split added.
+- Next: CQ1 after V1 continue.
+
 ### Board sync — Stomato bot — 2026-11-04 3:54 PM
 - Done: T11s → `STALE`: obv/T11s still at skeleton 26c4267 (2:55 PM), no density-calc commit and no heartbeat since (59 min; 3:10/3:25/3:40 heartbeats missed). Obvious API returns NOT_FOUND for exec_4dWKaUd3 / prj_rYUHx5C9 / th_lRcYnn6b, so job status unreadable there. No other new obv/* commits; no `claude/*` branches. origin/chem-engine at 9cf08cc. V1 still blocked until the 4:35 PM continue.
 - Next: Erwin/Stomato bot to decide on T11s (keep the skeleton and re-dispatch the density step as T11t, or drop). No new Obvious job started without that decision.
@@ -41,7 +45,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T3 P-value fix | Obvious | accepted w/ fix → T10b (PR #346; tolerances unchanged, skips visible, T3 fix in; tests/validation 290 passed/353 skipped/320 xfailed/0 failed on PC) | obv/T10 | 2026-11-04 1:38 PM |
 | T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | dropped (stale; no push or heartbeat) → T11r | obv/T11 | 2026-11-04 1:45 PM |
 | T11r | Re-dispatch of T11: SR-POLAR package, Mangold 2019 params only (H2O/O2/N2/CO2), density-only, supercritical tol = paper's per-point model error + 2 pp; PR into chem-engine (may build on obv/T9 if #345 unmerged); push within 10 min, heartbeats, report test results | Obvious | dropped (stale: no adapter commit, last heartbeat 1:45 PM) → T11s | obv/T11r | 2026-11-04 2:56 PM |
-| T11s | Re-dispatch of T11r with a smaller first deliverable: skeleton SR-POLAR package + params YAML (H2O/O2/N2/CO2, Mangold 2019, cited by table) within 10 min; then density calc wired to T3 pack, tol = Mangold model error + 2 pp; built on chem-engine after merges; PR into chem-engine; heartbeat every 15 min | Obvious | STALE (skeleton 26c4267 pushed 2:55 PM; no density commit or heartbeat since, 59 min) — drop/re-dispatch decision needed | obv/T11s | 2026-11-04 3:54 PM |
+| T11s | Re-dispatch of T11r with a smaller first deliverable: skeleton SR-POLAR package + params YAML (H2O/O2/N2/CO2, Mangold 2019, cited by table) within 10 min; then density calc wired to T3 pack, tol = Mangold model error + 2 pp; built on chem-engine after merges; PR into chem-engine; heartbeat every 15 min | Obvious | dropped (stale: only skeleton 26c4267, no density commit/heartbeat after 2:55 PM; 3rd Obvious stall on engine code) → Claude Code (CLAUDE-QUEUE CQ1) | obv/T11s | 2026-11-04 3:58 PM |
 | T10b | Fix-up on PR #346: skipped cases must still pass citation/schema checks; add retrieval dates to the 9 T3 sources (from data.csv) | Obvious | superseded by T10c (decision a: scoped V1-cases exception, 2:09 PM); work pushed 8c71707b | obv/T10 | 2026-11-04 2:18 PM |
 | T10c | Fix the 5 V1 cases.yaml defects exposed by T10b on obv/T10 (PR #346): quote 3 aga8-ng2 dew sources (helmholtz/cases.yaml); fill components for amine-enrtl-co2-loading-0.10/0.40-313K (electrolyte/cases.yaml), BLOCKED if an id is missing | Obvious | review (done 2:18 PM, commit 75182516 on 8c71707; diff checked by board sync: only quoting on 3 aga8 sources + components [MDEA, H2O, CO2] on 2 amine anchors; Obvious reports tests/validation 290/353/320, 0 failed). PR #346 ready for review/merge before the 4:35 PM V1 continue | obv/T10 | 2026-11-04 2:25 PM |
 | T8r | Re-dispatch of T8: reformer_cat (#329) + control_valve (#282) case files → one PR into chem-engine, branch obv/T8r cut from origin/chem-engine | Obvious | CANCELLED — do not push; T8 delivered as #347 (stop thread th_DBdEBZhf sent; no cancel endpoint in API) | obv/T8r | 2026-11-04 1:45 PM |
@@ -49,7 +53,19 @@ Times are America/Chicago (CST). Newest handoff on top.
 
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
+## CLAUDE-QUEUE
+
+Engine-code jobs for Claude Code on Erwin's PC. Run in order, each only after V1's 4:35 PM continue is done. Never inject into the running V1 session.
+
+| id | task | status | after | added |
+|----|------|--------|-------|-------|
+| CQ1 | SR-POLAR density adapter: build on the obv/T11s skeleton 26c4267, Mangold 2019 parameters, wire to the T3 pack, tolerance = model error + 2 percentage points, density-only | queued | after the V1 continue (separate session, not injected into V1) | 2026-11-04 3:58 PM |
+
 ## Handoffs
+
+### Stomato bot — 3:58 PM
+- Done: Decision (option c): T11s dropped; SR-POLAR adapter moved to Claude Code as CLAUDE-QUEUE CQ1 (builds on obv/T11s 26c4267). Job-split note added to PROTOCOL.md.
+- Next: run CQ1 after the V1 continue finishes; Obvious gets data/pack jobs only.
 
 ### Stomato bot — 2:56 PM
 - Done: Merged into chem-engine (tip 9cf08cc, pushed to origin), in order #345, #344, #347, #346, then #338, #340, #341, #342, #343 (pack files identical to #346; #343 T3 pack kept #346 version with retrieval dates). Full suite in a clean worktree on the PC: ruff, ruff format, mypy (603 files), lint-imports (3 kept), pytest exit 0. Closed #329 and #282 → #347. Note added to ~/stomato-val-progress.md telling V1 to rebase (electrolyte + helmholtz cases.yaml changed); continue script does not pull, left unchanged. T11r dropped; T11s dispatched prj_rYUHx5C9 / exec_4dWKaUd3 (thread th_lRcYnn6b).
