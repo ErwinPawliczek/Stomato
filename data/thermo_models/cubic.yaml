@@ -2010,3 +2010,83 @@
     Dry streams flash as pr does.
   l4_excluded:
     '*': the TEG constants replace the databank's only for TEG and the slice feed carries no glycol, so the row's slice point is the pr row's and adds no independent L4 information
+- id: srk-kij0
+  name: Soave-Redlich-Kwong, zero k_ij
+  family: cubic
+  adapter: ngdesign.thermo.cubic:SrkKij0Thermo
+  options:
+    eos: SRKMIX
+    kij_table: none
+    alpha: default
+    translation: none
+    enthalpy: eos
+  params:
+    source: thermo IPDB (ChemSep) pure-component constants; no binary table
+    provenance: Kooijman & Taylor, ChemSep pure-component database for critical constants and acentric
+      factors; every binary interaction parameter k_ij = 0. This is the zero-k_ij variant of the plain
+      cubic EOS that textbook simulator examples ran (e.g. Seader, Henley & Roper, Separation Process
+      Principles 3rd ed., Example 10.9, CHEMCAD SRK - its printed feed bubble point 123.5 F at 100 psia
+      is reproduced with zero k_ij, not with the IPDB table). Use the IPDB-k_ij row for design work.
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Soave, G., 'Equilibrium Constants from a Modified Redlich-Kwong Equation of State', Chem. Eng. Sci. 27(6), 1197-1203, 1972
+  l0: {}
+  l0_excluded: {}
+  l0_note: ''
+- id: pr-kij0
+  name: Peng-Robinson, zero k_ij
+  family: cubic
+  adapter: ngdesign.thermo.cubic:PrKij0Thermo
+  options:
+    eos: PRMIX
+    kij_table: none
+    alpha: default
+    translation: none
+    enthalpy: eos
+  params:
+    source: thermo IPDB (ChemSep) pure-component constants; no binary table
+    provenance: Kooijman & Taylor, ChemSep pure-component database for critical constants and acentric
+      factors; every binary interaction parameter k_ij = 0. This is the zero-k_ij variant of the plain
+      cubic EOS that textbook simulator examples ran (e.g. Seader, Henley & Roper, Separation Process
+      Principles 3rd ed., Example 10.9, CHEMCAD SRK - its printed feed bubble point 123.5 F at 100 psia
+      is reproduced with zero k_ij, not with the IPDB table). Use the IPDB-k_ij row for design work.
+  applicability:
+    component_classes:
+    - hydrocarbon
+    - light_gas
+    - inert
+    polar: false
+    electrolyte: false
+    T_K:
+    - 90.0
+    - 700.0
+    P_Pa:
+    - 1000.0
+    - 200000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation: []
+  references:
+  - Peng, D.-Y. & Robinson, D. B., 'A New Two-Constant Equation of State', Ind. Eng. Chem. Fundam. 15(1), 59-64, 1976
+  l0: {}
+  l0_excluded: {}
+  l0_note: ''

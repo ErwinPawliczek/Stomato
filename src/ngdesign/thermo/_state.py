@@ -210,9 +210,19 @@ def _required_tb(record: Component) -> float:
     return record.Tb
 
 
+#: Catalogue ``kij_table`` value for the plain cubic EOS: every k_ij = 0 (the
+#: textbook simulator examples that ran plain SRK/PR, e.g. Seader-Henley-Roper
+#: 3rd ed. Example 10.9, reproduce only with it).
+KIJ_TABLE_NONE = "none"
+
+
 def _kij_matrix(records: list[Component], kij_table: str) -> list[list[float]]:
     """Symmetric k_ij matrix for the support: fitted pairs from the IPDB table,
-    0.0 to every pseudo (no fitted BIPs exist for pseudos)."""
+    0.0 to every pseudo (no fitted BIPs exist for pseudos); all zero for
+    ``KIJ_TABLE_NONE``."""
+    if kij_table == KIJ_TABLE_NONE:
+        n = len(records)
+        return [[0.0] * n for _ in range(n)]
     if all(r.cas is not None for r in records):
         fitted_databank: list[list[float]] = IPDB.get_ip_symmetric_matrix(
             name=kij_table, CASs=[str(r.cas) for r in records], ip="kij"

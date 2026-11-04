@@ -244,13 +244,19 @@ class CubicEOS(ThermoSurfaceMixin):
 
     #: `thermo`-library mixture EOS class (PRMIX, SRKMIX, PR78MIX).
     eos: Any
-    _trace_kij_table = _CHEMSEP_CUBIC_TABLE
+    #: IPDB k_ij table name, or ``_state.KIJ_TABLE_NONE`` (every k_ij = 0); the
+    #: catalogue row's ``options.kij_table`` must match it.
+    kij_table: str = _CHEMSEP_CUBIC_TABLE
+
+    @property
+    def _trace_kij_table(self) -> str | None:  # type: ignore[override]
+        return self.kij_table
 
     def _build_flasher(self, ids: tuple[str, ...]) -> Any:
-        return _flasher_for(self.eos, _CHEMSEP_CUBIC_TABLE, ids, self._slate_pseudos)
+        return _flasher_for(self.eos, self.kij_table, ids, self._slate_pseudos)
 
     def _build_flasher_vl(self, ids: tuple[str, ...]) -> Any:
-        return _flasher_vl_for(self.eos, _CHEMSEP_CUBIC_TABLE, ids, self._slate_pseudos)
+        return _flasher_vl_for(self.eos, self.kij_table, ids, self._slate_pseudos)
 
     def liquid_split(
         self,
@@ -1525,11 +1531,31 @@ class OptionCubicEOS(CubicEOS):
 
     def _build_flasher(self, ids: tuple[str, ...]) -> Any:
         configure = None if self.options.is_default else _option_configure(self.eos, self.options)
-        return _flasher_for(self.eos, _CHEMSEP_CUBIC_TABLE, ids, self._slate_pseudos, configure)
+        return _flasher_for(self.eos, self.kij_table, ids, self._slate_pseudos, configure)
 
     def _build_flasher_vl(self, ids: tuple[str, ...]) -> Any:
         configure = None if self.options.is_default else _option_configure(self.eos, self.options)
-        return _flasher_vl_for(self.eos, _CHEMSEP_CUBIC_TABLE, ids, self._slate_pseudos, configure)
+        return _flasher_vl_for(self.eos, self.kij_table, ids, self._slate_pseudos, configure)
+
+
+class SrkKij0Thermo(CubicEOS):
+    """SRK (Soave 1972) with every k_ij = 0 - the plain EOS of textbook simulator examples.
+
+    Same constants and flasher path as ``srk``; only the k_ij matrix differs
+    (``_state.KIJ_TABLE_NONE``). Seader-Henley-Roper 3rd ed. Example 10.9
+    (CHEMCAD SRK) prints a feed bubble point of 123.5 F that this variant
+    reproduces (123.49 F) and the IPDB-k_ij ``srk`` does not (119.34 F).
+    """
+
+    eos = SRKMIX
+    kij_table = _state.KIJ_TABLE_NONE
+
+
+class PrKij0Thermo(CubicEOS):
+    """Peng-Robinson (1976) with every k_ij = 0 - the plain-EOS counterpart of ``SrkKij0Thermo``."""
+
+    eos = PRMIX
+    kij_table = _state.KIJ_TABLE_NONE
 
 
 class RedlichKwongThermo(OptionCubicEOS):

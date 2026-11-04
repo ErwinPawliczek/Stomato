@@ -186,6 +186,12 @@ def _validate_options(row: ModelRow, where: str) -> None:
                     f"{where}: options.eos {opts.eos!r} does not match adapter "
                     f"{row.adapter!r} (pins {eos_name!r})"
                 )
+            pinned_kij = getattr(adapter, "kij_table", None)
+            if pinned_kij is not None and pinned_kij != opts.kij_table:
+                raise CatalogueError(
+                    f"{where}: options.kij_table {opts.kij_table!r} does not match adapter "
+                    f"{row.adapter!r} (pins {pinned_kij!r})"
+                )
             if not opts.is_default and not issubclass(adapter, _option_aware_adapter()):
                 raise CatalogueError(
                     f"{where}: adapter {row.adapter!r} declares non-default cubic option "

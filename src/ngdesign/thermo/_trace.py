@@ -17,6 +17,7 @@ from ngdesign.contracts.components import resolve
 from ngdesign.data import DATABANK_LOCK
 from ngdesign.provenance import catalogue, citations
 from ngdesign.provenance.model import Citation
+from ngdesign.thermo._state import KIJ_TABLE_NONE
 
 #: EOS mixture class name -> method catalogue key.
 EOS_METHOD_KEYS: dict[str, str] = {
@@ -170,7 +171,26 @@ def describe_flasher_parameters(
                 prop="Cp_ig",
             )
         )
-    if kij_table is not None and len(ids) > 1:
+    if kij_table == KIJ_TABLE_NONE and len(ids) > 1:
+        leaves.append(
+            _leaf(
+                ("kij", kij_table, ids),
+                "k_ij = 0 (none)",
+                [[0.0] * len(ids) for _ in ids],
+                "1",
+                Citation(
+                    source="model_definition",
+                    citation="Plain cubic EOS: every binary interaction parameter k_ij = 0 "
+                    "(catalogue kij_table: none)",
+                ),
+                "cited",
+                kind="parameter",
+                role="k_ij",
+                prop="kij",
+                note="order: " + ", ".join(ids),
+            )
+        )
+    elif kij_table is not None and len(ids) > 1:
         try:
             kijs = flasher.gas.eos_kwargs.get("kijs")
         except AttributeError:
