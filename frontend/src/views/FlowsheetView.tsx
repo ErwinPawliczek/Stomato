@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { api, errorReason, type Meta, type Project, type ThermoModel, type UnitKindInfo, type XY } from "../api/client";
+import { DesignSpecs } from "../components/DesignSpecs";
 import { FlowsheetCanvas, type CanvasLink, type CanvasUnit } from "../components/FlowsheetCanvas";
 import { UnitPalette } from "../components/UnitPalette";
 import { nearestFreeCell, snapToHex } from "../hexGrid";
@@ -655,6 +656,13 @@ export function FlowsheetView({ project, onSaved }: { project: Project; onSaved?
           </tbody>
         </table>
       </section>
+      <DesignSpecs
+        project={current}
+        onChange={(p) => {
+          setCurrent(p);
+          setAdded("Design specs changed. Save persists them.");
+        }}
+      />
       <section>
         <h2>Streams</h2>
         <table>
