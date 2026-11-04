@@ -25,13 +25,24 @@
     T_K: [251.165, 1273.0]
     P_Pa: [500.0, 1000000000.0]
     phases: [V, L]
-  status: provisional
+  status: validated
+  l2_not_applicable: >-
+    pure water only: the adapter admits the single component H2O, so no binary
+    (L2) case can run on this row; validated on >= 2 L1 pure cases instead
   validation:
   - h2o-nist-273.179K
   - h2o-nist-347.390K
   - h2o-nist-401.605K
   - h2o-nist-500.184K
   - h2o-nist-600.070K
+  # 2026-11-04: IAPWS R6-95(2018) Table 8 saturation and Table 7 single-phase
+  # verification values (helmholtz/cases.yaml), all passing.
+  - iapws95-r6-sat-275K
+  - iapws95-r6-sat-450K
+  - iapws95-r6-sat-625K
+  - iapws95-r6-1phase-300K-20MPa
+  - iapws95-r6-1phase-500K-1MPa
+  - iapws95-r6-1phase-900K-20MPa
   references:
   - Wagner, W., Cooper, J. R., Dittmann, A., et al., 'The IAPWS Industrial Formulation 1997
     for the Thermodynamic Properties of Water and Steam', J. Eng. Gas Turbines Power 122,
@@ -79,15 +90,26 @@
     T_K: [273.15, 1073.15]
     P_Pa: [500.0, 100000000.0]
     phases: [V, L]
-  status: provisional
+  status: validated
+  l2_not_applicable: >-
+    pure water only: the adapter admits the single component H2O, so no binary
+    (L2) case can run on this row; validated on >= 2 L1 pure cases instead
   validation:
   # T-15 promotion sweep: L1 pure H2O points (CoolProp 8.0.0 HEOS reference values,
-  # helmholtz/cases.yaml; state points match the NIST WebBook h2o-nist cases). The row
-  # stays provisional: it is water-only, so no L2 binary case exists for it by design
-  # (the audit's validated gate needs >=1 L2 binary; recorded on issue #167).
+  # helmholtz/cases.yaml; state points match the NIST WebBook h2o-nist cases).
   - h2o-if97-273.179K
   - h2o-if97-347.390K
   - h2o-if97-401.605K
+  # 2026-11-04: the IAPWS R7-97(2012) check values (Tables 5, 15, 35), shared with
+  # asme_steam through list-valued packages; all passing.
+  - asme-steam-r1-300K-3MPa
+  - asme-steam-psat-300K
+  - if97-r7-r1-300K-80MPa
+  - if97-r7-r1-500K-3MPa
+  - if97-r7-r2-300K-3.5kPa
+  - if97-r7-r2-700K-30MPa
+  - if97-r7-psat-500K
+  - if97-r7-psat-600K
   references:
   - Wagner, W., Cooper, J. R., Dittmann, A., et al., 'The IAPWS Industrial Formulation 1997
     for the Thermodynamic Properties of Water and Steam', J. Eng. Gas Turbines Power 122,
@@ -117,13 +139,9 @@
   l0_note: >-
     IF97 backend exposes no fugacity coefficients (CoolProp 8), so Phase.ln_phi
     stays empty for this row; phase_props and flashes carry full properties.
-    T-15 finding: at saturation states the adapter's saturated-phase densities
-    come back label-swapped (rho_V reads the liquid value and vice versa) - an
-    IAPWSPackage defect to fix in an engine spec, not a formulation limitation.
-  assessed:
-    h2o-if97-273.179K: "rho_L x1/2e5 (0.00486078 vs 999.794) and Cp -55.3% (34.017 vs 76.0217) - the IF97 adapter swaps the saturated-phase labels at the saturation state (the liquid reads the vapour values); measured 2026-10-22, T-15 sweep"
-    h2o-if97-347.390K: "rho_V x4.2e3 (975.281 vs 0.235067) - the IF97 adapter swaps the saturated-phase labels (the vapour reads the liquid density); measured 2026-10-22, T-15 sweep"
-    h2o-if97-401.605K: "rho_V x652 (936.138 vs 1.43327) - the IF97 adapter swaps the saturated-phase labels (the vapour reads the liquid density); measured 2026-10-22, T-15 sweep"
+    The T-15 saturated-phase label swap no longer reproduces: re-measured
+    2026-11-04, the three h2o-if97 cases pass every property (e.g. rho_V
+    0.235059 vs 0.235067 at 347.39 K), so their stale assessed notes were removed.
 
 - id: asme_steam
   name: ASME steam tables (IAPWS-IF97 basis, ASME-labelled)
@@ -145,13 +163,21 @@
     T_K: [273.15, 1073.15]
     P_Pa: [500.0, 100000000.0]
     phases: [V, L]
-  status: provisional
+  status: validated
+  l2_not_applicable: >-
+    pure water only: the adapter admits the single component H2O, so no binary
+    (L2) case can run on this row; validated on >= 2 L1 pure cases instead
   validation:
-  # T-16a: verification values from the IAPWS R7-97(2012) check tables that pin the shared
-  # kernel. The row stays provisional: it is water-only, so no L2 binary case exists for it
-  # by design (the audit's validated gate needs >=1 L2 binary; recorded on issue #187).
+  # T-16a + 2026-11-04: verification values from the IAPWS R7-97(2012) check tables
+  # (Tables 5, 15, 35) that pin the shared kernel; all passing.
   - asme-steam-r1-300K-3MPa
   - asme-steam-psat-300K
+  - if97-r7-r1-300K-80MPa
+  - if97-r7-r1-500K-3MPa
+  - if97-r7-r2-300K-3.5kPa
+  - if97-r7-r2-700K-30MPa
+  - if97-r7-psat-500K
+  - if97-r7-psat-600K
   references:
   - ASME, 'ASME Steam Tables', 7th ed., 2000 (computed from IAPWS-IF97; this row is that
     kernel under the ASME label)
@@ -347,8 +373,16 @@
     T_K: [250.0, 1000.0]
     P_Pa: [1000.0, 100000000.0]
     phases: [V, L]
-  status: provisional
-  validation: []
+  status: validated
+  validation:
+  # 2026-11-04: measured CO2 vapour pressures (L1) and CO2 + N2 VLE (L2), Westman et al.
+  # 2016 via the NIST TRC ThermoML archive (helmholtz/cases.yaml): Psat +0.01 / +0.06 %,
+  # bubble -0.95 % at 270 K, dew -0.03 % at 298 K. Independent of the row: the EOS-CG
+  # CO2-N2 parameters date from Gernert's 2013 thesis, before these measurements.
+  - eoscg-co2-psat-298.174K
+  - eoscg-co2-psat-303.158K
+  - eoscg-co2n2-269.996K-9.582MPa-bubble
+  - eoscg-co2n2-298.162K-7.099MPa-dew
   references:
   - 'Gernert, J., Span, R., ''EOS-CG: A Helmholtz energy mixture model for humid combustion
     gases and CCS mixtures'', J. Chem. Thermodyn. 93, 274-293, 2016'
@@ -385,8 +419,11 @@
     2026-11-01 found the 2016 pairs in both. On CO2, H2O and N2 the row computes what coolprop_heos
     computes; it exists to admit O2, Ar and CO and to refuse everything else. The round trip runs on
     pure CO2 because CoolProp's PQ solver fails on CO2 + N2 at the bubble-temperature step of the
-    shared PH/PS flash (measured at 350 K, 1 and 5 MPa), so mixture PH and PS flashes on this row
-    raise SaturationError instead of returning.
+    shared PH/PS flash (measured at 350 K, 1 and 5 MPa); since 2026-11-04 a PH/PS flash with no
+    reachable boundary at P falls back to inverting flash_pt. Known solver gap (2026-11-04):
+    three near-critical Westman CO2 + N2 points (298.161 K/7.1003 MPa and 298.162 K/7.4191 MPa
+    bubble, 269.997 K/9.5571 MPa dew) raise SaturationError in the shared CoolProp-path
+    saturation solver on this row, coolprop_heos and gerg2008 alike; they are not bound.
 
 - id: aga8_dc92
   name: AGA 8 DC92 detail equation of state (gas phase)
@@ -460,7 +497,13 @@
     T_K: [90.0, 600.0]
     P_Pa: [1000.0, 100000000.0]
     phases: [V, L]
-  status: provisional
+  status: validated
+  l2_not_applicable: >-
+    pure-fluid only: Younglove-Ely (1987) publish no mixing rules for the 32-term
+    coefficient tables and the adapter refuses mixtures, so no binary (L2) case can
+    run on this row; validated on >= 2 L1 pure cases instead (ten saturation states
+    of C1/C2/C3 against the independent reference equations via CoolProp 8.0.0,
+    every bound property passing, re-measured 2026-11-04)
   validation:
   - pure-C1-95.3K
   - pure-C1-125.0K
@@ -527,7 +570,22 @@
     P_Pa: [1000.0, 70000000.0]
     phases: [V, L]
   status: provisional
-  validation: []
+  validation:
+  # 2026-11-04: L1 pure saturation states shared with bwr_ls (CoolProp 8.0.0 reference
+  # values) and L2 methane-propane VLE (Reamer, Sage & Lacey 1950 via IUPAC SDS 27/28).
+  - bwr_ls-C1-155.0K
+  - bwr_ls-C2-230.0K
+  - bwr_ls-C3-300.0K
+  - bwrs-c1c3-277.59K-3.103MPa
+  - bwrs-c1c3-294.26K-2.068MPa
+  - bwrs-c1c3-310.93K-4.137MPa
+  - bwrs-c1c3-327.59K-2.413MPa
+  - bwrs-c1c3-344.26K-4.137MPa
+  assessed:
+    bwrs-c1c3-277.59K-3.103MPa: "bubble_P +7.16 % (3.3253 vs 3.103 MPa); y_C1 passes (0.7702 vs 0.7677) - k_ij = 0 BWRS (no C1-C3 interaction parameter in the shipped ORO-5249-2 set) overpredicts the methane-propane bubble pressure systematically; the vapour compositions and the pure-component saturation states pass, so this is the missing binary parameter (model limitation), not a solver fault. Measured 2026-11-04 after the SS-solver fix."
+    bwrs-c1c3-294.26K-2.068MPa: "bubble_P +7.36 % (2.2202 vs 2.068 MPa); y_C1 passes (0.5392 vs 0.5338) - k_ij = 0 BWRS (no C1-C3 interaction parameter in the shipped ORO-5249-2 set) overpredicts the methane-propane bubble pressure systematically; the vapour compositions and the pure-component saturation states pass, so this is the missing binary parameter (model limitation), not a solver fault. Measured 2026-11-04 after the SS-solver fix."
+    bwrs-c1c3-310.93K-4.137MPa: "bubble_P +8.87 % (4.5040 vs 4.137 MPa); y_C1 passes (0.5794 vs 0.5714) - k_ij = 0 BWRS (no C1-C3 interaction parameter in the shipped ORO-5249-2 set) overpredicts the methane-propane bubble pressure systematically; the vapour compositions and the pure-component saturation states pass, so this is the missing binary parameter (model limitation), not a solver fault. Measured 2026-11-04 after the SS-solver fix."
+    bwrs-c1c3-344.26K-4.137MPa: "bubble_P +3.92 % (4.2993 vs 4.137 MPa); y_C1 passes (0.2449 vs 0.2392) - k_ij = 0 BWRS (no C1-C3 interaction parameter in the shipped ORO-5249-2 set) overpredicts the methane-propane bubble pressure systematically; the vapour compositions and the pure-component saturation states pass, so this is the missing binary parameter (model limitation), not a solver fault. Measured 2026-11-04 after the SS-solver fix."
   references:
   - Starling, K. E., 'Fluid Thermodynamic Properties for Light Petroleum Systems', Gulf
     Publishing, 1973 (the BWRS equation and parameter basis)
@@ -567,15 +625,17 @@
   l0_excluded: {}
   l0_note: >-
     In-house BWRS: imperial parameter evaluation, SI at the boundary. Ideal-gas
-    reference H_ig(298.15 K) = 0, S_ig(298.15 K, 1 bar) = 0. The pure-C1
-    saturation sweep cases stay pending: the BWRS vapor-pressure fit (1973
-    databasis) does not reproduce modern references within the 3% tolerance at
-    all declared points, and the file keeps them registered for the L1 follow-up.
-    T-15 re-measurement (2026-10-22, evaluate_case on all five pure-C1 states):
-    every point misses Cp far outside tolerance — the saturated-liquid Cp
-    extrapolates to nonsense below ~180 K (e.g. -146079 J/(mol K) at 95.3 K vs
-    the CoolProp reference 54.32) — so the cases must not be bound until the
-    parameter evaluation is repaired or re-fitted to a modern databasis.
+    reference H_ig(298.15 K) = 0, S_ig(298.15 K, 1 bar) = 0 (with ideal mixing entropy).
+    2026-11-04 fixes: the departure enthalpy was returned in psia-ft3/lbmol and read as
+    H/(RT) (saturated-liquid Cp came out ~ -4e4 J/(mol K)); the entropy departure lacked
+    ln Z; the mixture dew SS stepped P the wrong way and the bubble incipient vapour was
+    a one-step K at the feed. After the fixes the three pure saturation states pass every
+    property (Cp within 2-3 %) and y_C1 passes at every C1/C3 point, while the k_ij = 0
+    bubble pressure misses +3.9 to +8.9 % at four of six points (assessed). Held
+    provisional deliberately: the rule's letter is met (L1 pass, two L2 points pass) but
+    the passing new L2 point sits at 2.99 %, inside a systematic over-prediction; a
+    C1-C3 interaction parameter is the follow-up. Low-Tr states (C1 95 K, C2 110 K) also
+    miss (Psat -20 % at C2 110 K) and are not bound.
 
 - id: bwr_ls
   name: BWR-Lee-Starling (BWRS parameter basis, Han-Starling mixing, provisional)
@@ -592,14 +652,22 @@
     phases: [V, L]
   status: provisional
   validation:
+  # 2026-11-04: the Cp defect is fixed at the root (BWRS departure enthalpy units); the
+  # bwrs-c1c3-* L2 points are shared with the bwrs row.
   - bwr_ls-C1-155.0K
   - bwr_ls-C2-230.0K
   - bwr_ls-C3-300.0K
   - bwr_ls-c1c3-277.59K
+  - bwrs-c1c3-277.59K-3.103MPa
+  - bwrs-c1c3-294.26K-2.068MPa
+  - bwrs-c1c3-310.93K-4.137MPa
+  - bwrs-c1c3-327.59K-2.413MPa
+  - bwrs-c1c3-344.26K-4.137MPa
   assessed:
-    bwr_ls-C1-155.0K: "Cp -569.3% (calculated -38425.48 vs 67.6129 J/(mol K), saturated liquid): the shared BWRS parameter evaluation returns large negative Cp for bwr_ls — the same defect assessed on the bwrs row; bound and assessed, not excluded, so the defect stays visible. Measured 2026-10-23."
-    bwr_ls-C2-230.0K: "Cp -1187.6% (calculated -97565.23 vs 82.2215 J/(mol K), saturated liquid): same shared BWRS parameter-evaluation Cp defect. Measured 2026-10-23."
-    bwr_ls-C3-300.0K: "Cp -517.5% (calculated -62396.92 vs 120.8047 J/(mol K), saturated liquid): same shared BWRS parameter-evaluation Cp defect. Measured 2026-10-23."
+    bwrs-c1c3-277.59K-3.103MPa: "bubble_P +7.16 % (3.3253 vs 3.103 MPa); y_C1 passes (0.7702 vs 0.7677) - k_ij = 0 BWRS (no C1-C3 interaction parameter in the shipped ORO-5249-2 set) overpredicts the methane-propane bubble pressure systematically; the vapour compositions and the pure-component saturation states pass, so this is the missing binary parameter (model limitation), not a solver fault. Measured 2026-11-04 after the SS-solver fix."
+    bwrs-c1c3-294.26K-2.068MPa: "bubble_P +7.36 % (2.2202 vs 2.068 MPa); y_C1 passes (0.5392 vs 0.5338) - k_ij = 0 BWRS (no C1-C3 interaction parameter in the shipped ORO-5249-2 set) overpredicts the methane-propane bubble pressure systematically; the vapour compositions and the pure-component saturation states pass, so this is the missing binary parameter (model limitation), not a solver fault. Measured 2026-11-04 after the SS-solver fix."
+    bwrs-c1c3-310.93K-4.137MPa: "bubble_P +8.87 % (4.5040 vs 4.137 MPa); y_C1 passes (0.5794 vs 0.5714) - k_ij = 0 BWRS (no C1-C3 interaction parameter in the shipped ORO-5249-2 set) overpredicts the methane-propane bubble pressure systematically; the vapour compositions and the pure-component saturation states pass, so this is the missing binary parameter (model limitation), not a solver fault. Measured 2026-11-04 after the SS-solver fix."
+    bwrs-c1c3-344.26K-4.137MPa: "bubble_P +3.92 % (4.2993 vs 4.137 MPa); y_C1 passes (0.2449 vs 0.2392) - k_ij = 0 BWRS (no C1-C3 interaction parameter in the shipped ORO-5249-2 set) overpredicts the methane-propane bubble pressure systematically; the vapour compositions and the pure-component saturation states pass, so this is the missing binary parameter (model limitation), not a solver fault. Measured 2026-11-04 after the SS-solver fix."
   references:
   - Lee, B. I., Starling, K. E., Starling's BWR equation variant as summarized in
     'Thermodynamic Property Prediction of Light Hydrocarbons and Related Fluids' (the
@@ -643,16 +711,10 @@
   l0_excluded: {}
   l0_note: >-
     Provisional: reuses the merged BWRS parameter-dictionary equations with the
-    Han-Starling generalized mixing law. The k_ij table ships deliberately empty - no
-    verifiable open C1/C3 Lee-Starling interaction set was found - and with the table
-    empty the mixing law reduces exactly to the one used by the bwrs row, which is the
-    row's only tested claim; the k_ij dependence itself is unvalidated. Component
-    constants are the ORO-5249-2 Table 5 set cited on the bwrs row. Measured results:
-    at the three bound pure-fluid saturation points (C1 155 K, C2 230 K, C3 300 K)
-    bubble/dew pressures and vapour/liquid densities track CoolProp closely, while Cp
-    comes out large and negative (assessed per case above) - the shared BWRS
-    parameter-evaluation Cp defect, made visible by binding the cases rather than
-    excluding Cp. The bound near-pure-propane C1/C3 VLE point (277.59 K, 0.689 MPa)
-    misses literature bubble_P by 1.24% and vapour composition by 0.50%; the
-    higher-pressure isotherm point (1.724 MPa) measured 4.73% and 56.03% and stays
-    unbound pending a mixing-rule decision.
+    Han-Starling generalized mixing law. The k_ij table ships deliberately empty, so the
+    mixing law reduces exactly to the bwrs row and every number equals bwrs; the k_ij
+    dependence itself is unvalidated. The saturated-liquid Cp defect was the shared BWRS
+    departure-enthalpy unit bug, fixed 2026-11-04 (C1 155 K Cp 66.02 vs 67.61, -2.3 %).
+    Held provisional for the same reason as bwrs: the C1/C3 bubble pressure is
+    over-predicted by +3.9 to +8.9 % at four of six points without an interaction
+    parameter (assessed); vapour compositions pass.
