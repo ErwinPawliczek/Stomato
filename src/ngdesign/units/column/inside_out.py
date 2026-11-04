@@ -15,6 +15,7 @@ from ngdesign.contracts import PhaseKind, StreamState
 from ngdesign.data.formation import formation_enthalpy_298
 from ngdesign.units._physics.kinetics import rate
 
+from .decant import saturated_decant
 from .linalg import _gauss, _thomas
 from .spec import (
     _FLOW_FLOOR,
@@ -139,7 +140,7 @@ class _Interlink:
 
 
 #: Memo key of the condenser decant split: (y_1 items, T_1, P_1).
-_DecantKey = tuple[tuple[tuple[str, float], ...], float, float]
+_DecantKey = tuple[tuple[tuple[str, float], ...], float]
 
 
 @dataclass
@@ -190,8 +191,9 @@ class _Column:
     #: S0-1c step 4: the total condenser decants free water (only when water
     #: is in the component list; False = the plain total condenser exactly).
     water_decant: bool = False
-    #: Per-solve memo of the decant split, keyed on (y_1, T_1, P_1).
-    decant_memo: dict[_DecantKey, tuple[dict[str, float], float]] = field(default_factory=dict)
+    #: Per-solve memo of the decanting condenser's outlet state
+    #: (``_reflux_state``), keyed on (y_1, P_1).
+    decant_memo: dict[_DecantKey, _RefluxState] = field(default_factory=dict)
     #: A dividing wall's prefractionator (None = no wall, today's _Column).
     wall: _WallSection | None = None
     # Two-phase operating window for the inner temperature walk, set from the
@@ -923,6 +925,7 @@ class _InnerModel:
     h_vap: list[tuple[float, float, float]]  # (h0, cp, T_ref) per stage, vapour
     h_liq: list[tuple[float, float, float]]  # per stage, liquid
     h_cond: tuple[float, float, float] | None  # condensate (total-condenser reflux) line
+    cond_dt: float  # reflux temperature less the stage-1 temperature at the fit
     fit_T: list[float]  # temperatures the enthalpy lines were fitted at
     corr_a_s: list[float] = field(default_factory=list)  # per-stage intercepts
     corr_b_s: list[float] = field(default_factory=list)  # per-stage slopes
@@ -1264,11 +1267,18 @@ def _refresh_model_on_surface(
             )
         h_vap.append(pair[0])
         h_liq.append(pair[1])
-    h_cond = (
-        tb.phase_enthalpy_model(_flash_ready(prof.y[0], col.feed_comp), prof.T[0], col.pressures[0], False)
-        if col.condenser == "total"
-        else None
-    )
+    h_cond = None
+    cond_dt = 0.0
+    if col.condenser == "total":
+        # The reflux line anchors at the condenser's own outlet state
+        # (``_reflux_state``: saturated liquid at T_r = T_bub(y_1)); the inner
+        # loop moves it with the stage-1 temperature at the frozen
+        # bubble-dew gap T_r - T_1, so at the outer fixed point it reads
+        # exactly the live residual's reflux enthalpy. It reads the live
+        # y_1 = K_1 x_1 the exact gate reads at this same profile.
+        reflux = _reflux_state(col, tb, _equilibrium_vapour(col, k_stages[0], prof.x[0]), prof.T[0])
+        h_cond = tb.phase_enthalpy_model(reflux.x, reflux.T, col.pressures[0], False)
+        cond_dt = reflux.T - prof.T[0]
     return _InnerModel(
         k_raw=k_stages,
         alpha=alpha,
@@ -1278,6 +1288,7 @@ def _refresh_model_on_surface(
         h_vap=h_vap,
         h_liq=h_liq,
         h_cond=h_cond,
+        cond_dt=cond_dt,
         fit_T=list(prof.T),
         corr_a_s=corr_a_s,
         corr_b_s=corr_b_s,
@@ -1413,7 +1424,7 @@ def _mesh_v(col: _Column, model: _InnerModel, prof: _Profile, t_bot_tear: float 
                 (v[j + 1] * _enthalpy_at(model.h_vap[j + 1], prof.T[j + 1]) if j + 1 < n else 0.0)
                 + (liquid[j - 1] * _enthalpy_at(model.h_liq[j - 1], prof.T[j - 1]) if j > 0 else 0.0)
                 + (
-                    prof.l0 * _enthalpy_at(model.h_cond, prof.T[0])
+                    prof.l0 * _enthalpy_at(model.h_cond, prof.T[0] + model.cond_dt)
                     if j == 0 and model.h_cond is not None
                     else 0.0
                 )
@@ -1580,16 +1591,17 @@ def _stage_equilibrium(
             if k_cache is not None and k is not None:
                 k_cache[key] = k
         k_stages.append(k)
-    y_eq: list[dict[str, float]] = []
-    for j in range(col.n):
-        k = k_stages[j]
-        if k is None:
-            y_eq.append({})
-            continue
-        y_j = {cid: k.get(cid, 1.0) * xs[j].get(cid, 0.0) for cid in col.comps}
-        total = sum(y_j.values())
-        y_eq.append({cid: v / total for cid, v in y_j.items()} if total > _FLOW_FLOOR else y_j)
+    y_eq = [_equilibrium_vapour(col, k, xs[j]) if k is not None else {} for j, k in enumerate(k_stages)]
     return k_stages, y_eq
+
+
+def _equilibrium_vapour(col: _Column, k: dict[str, float], x: dict[str, float]) -> dict[str, float]:
+    """The stage's equilibrium vapour y = K x, normalized (the live residual's
+    reading; the inside-out refresh reads the condenser's inlet vapour here
+    too, so both evaluate the reflux state at one composition)."""
+    y = {cid: k.get(cid, 1.0) * x.get(cid, 0.0) for cid in col.comps}
+    total = sum(y.values())
+    return {cid: v / total for cid, v in y.items()} if total > _FLOW_FLOOR else y
 
 
 def _m_row_flows(
@@ -1794,7 +1806,7 @@ def _live_residual_vector(
             + part.h_flow
         )
         if j == 0 and col.condenser == "total":
-            h_in += l0 * tb.h_liquid(_flash_ready(y_eq[0], col.feed_comp), ts[0], col.pressures[0])
+            h_in += l0 * _reflux_state(col, tb, y_eq[0], ts[0]).h
         h_out = (vs[j] + col.draw_v[j]) * tb.h_vapor(
             _flash_ready(y_eq[j], col.feed_comp), ts[j], col.pressures[j]
         ) + (liquid[j] + col.draw_l[j]) * tb.h_liquid(
@@ -1903,23 +1915,71 @@ def _condensate_temperature(tb: _ThermoBox, y0: dict[str, float], t_top: float, 
     return t_top if t_bub is None else t_bub
 
 
-def _total_condenser_duty(
-    tb: _ThermoBox,
-    v_top: float,
-    y_top: dict[str, float],
-    t_top: float,
-    p_cond: float,
-    fallback: dict[str, float],
-) -> float:
-    """Total-condenser duty, W: the stage-1 vapour condensed to saturated liquid.
+@dataclass(frozen=True)
+class _RefluxState:
+    """The liquid a total condenser returns: reflux L_0 and distillate D.
 
-    Q_c = V_1 (h_V(y_1, T_1) - h_L(y_1, T_bub(y_1))) (Seader, Henley & Roper,
-    Separation Process Principles 3rd ed., §10.3 condenser balance with
-    V_1 = L_0 + D at the condensate composition y_1).
+    ``x`` its composition, ``T`` (K) and ``h`` (J/mol) its state at the
+    condenser pressure, ``phi`` the free-water fraction W / V_1 a decanting
+    condenser draws off (0 otherwise), ``h_water`` that water's enthalpy at T.
     """
-    y0 = _flash_ready(y_top, fallback)
-    t_cond = _condensate_temperature(tb, y0, t_top, p_cond)
-    return max(v_top * (tb.h_vapor(y0, t_top, p_cond) - tb.h_liquid(y0, t_cond, p_cond)), 0.0)
+
+    x: dict[str, float]
+    T: float
+    h: float
+    phi: float = 0.0
+    h_water: float = 0.0
+
+
+def _reflux_state(col: _Column, tb: _ThermoBox, y_top: dict[str, float], t_top: float) -> _RefluxState:
+    """THE total-condenser outlet state, from the stage-1 vapour (y_1, T_1).
+
+    Every solver path reads the reflux entering stage 1 here - the inside-out
+    inner model's condensate line, the dense and graph live residuals (and so
+    the Newton Jacobians and the exact gates), the relaxation cold start - and
+    the duty and the distillate report read the same state, so stage 1 and the
+    condenser balance one liquid.
+
+    Plain total condenser: V_1 condenses completely to saturated liquid at its
+    bubble point, x = y_1, T = T_bub(y_1, P_1) (Seader, Henley & Roper,
+    Separation Process Principles 3rd ed., §10.3: L_0 and D leave at their
+    bubble point, Q_c = V_1 (h_V1 - h_L0)). The stage-1 temperature is the
+    vapour's DEW point, not the liquid's state: T_bub(y_1) < T_1 for any
+    mixture. Decanting condenser (S0-1c step 4): the condensate's
+    heterogeneous bubble point, the hydrocarbon liquid returned and the free
+    water drawn off (``decant.saturated_decant``), memoized per solve on
+    (y_1, P_1) - it is a function of the condensate alone.
+    """
+    p = col.pressures[0]
+    y = _flash_ready(y_top, col.feed_comp)
+    if not col.water_decant:
+        t = _condensate_temperature(tb, y, t_top, p)
+        return _RefluxState(x=y, T=t, h=tb.h_liquid(y, t, p))
+    key = (tuple(sorted(y.items())), p)
+    hit = col.decant_memo.get(key)
+    if hit is None:
+        x, phi, t = saturated_decant(tb, y, t_top, p)
+        h_w = tb.h_liquid({STEAM_COMPONENT: 1.0}, t, p) if phi > 0.0 else 0.0
+        hit = _RefluxState(x=x, T=t, h=tb.h_liquid(_flash_ready(x, y), t, p), phi=phi, h_water=h_w)
+        col.decant_memo[key] = hit
+    return hit
+
+
+def _total_condenser_duty(
+    col: _Column, tb: _ThermoBox, v_top: float, y_top: dict[str, float], t_top: float
+) -> float:
+    """Total-condenser duty, W: the stage-1 vapour condensed to the reflux state.
+
+    Q_c = V_1 h_V(y_1, T_1) - (V_1 - W) h_L(x_r, T_r) - W h_w(T_r) (Seader,
+    Henley & Roper, Separation Process Principles 3rd ed., §10.3 condenser
+    balance, V_1 = L_0 + D + W; W = 0 without a decant), with (x_r, T_r) the
+    ``_reflux_state`` stage 1 receives.
+    """
+    p = col.pressures[0]
+    state = _reflux_state(col, tb, y_top, t_top)
+    w = state.phi * v_top
+    h_v = tb.h_vapor(_flash_ready(y_top, col.feed_comp), t_top, p)
+    return max(v_top * h_v - (v_top - w) * state.h - w * state.h_water, 0.0)
 
 
 def _finalize_duties(col: _Column, tb: _ThermoBox, prof: _Profile) -> None:
@@ -1942,7 +2002,7 @@ def _finalize_duties(col: _Column, tb: _ThermoBox, prof: _Profile) -> None:
     liquid = _l_profile(col, prof.l0, prof.V)
     prof.d, prof.b = _d_and_b(col, prof.l0, prof.V, liquid)
     if col.condenser == "total":
-        prof.qc = _total_condenser_duty(tb, prof.V[0], prof.y[0], prof.T[0], col.pressures[0], col.feed_comp)
+        prof.qc = _total_condenser_duty(col, tb, prof.V[0], prof.y[0], prof.T[0])
     elif col.condenser == "partial":
         y1 = _flash_ready(prof.y[1], col.feed_comp) if col.n > 1 else col.feed_comp
         h_in = (prof.V[1] * tb.h_vapor(y1, prof.T[1], col.pressures[1]) if col.n > 1 else 0.0) + col.feeds[
