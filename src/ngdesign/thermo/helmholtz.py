@@ -585,10 +585,9 @@ class _HelmholtzSurface(TracedThermo):
             t_bub = self._tsat(ids, xs, P, "bubble")
             t_dew = self._tsat(ids, xs, P, "dew")
         except SaturationError:
-            if self._is_pure(ids):
-                raise
-            # No saturation boundary at this pressure (above the cricondenbar, or a
-            # boundary the successive substitution cannot reach): invert flash_pt itself.
+            # No saturation boundary at this pressure (a pure fluid above its critical
+            # pressure, a mixture above the cricondenbar, or a boundary the successive
+            # substitution cannot reach): invert flash_pt itself.
             return self._invert_flash_pt(z, P, target, molar_flow, which)
 
         def quantity(T: float, phase: str) -> float:

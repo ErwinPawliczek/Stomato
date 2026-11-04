@@ -104,3 +104,21 @@ def test_if97_saturated_phase_labels_at_three_states() -> None:
         assert vap.density == pytest.approx(rho_v, rel=3e-2), f"rho_V at {T} K"
         assert liq.density == pytest.approx(rho_l, rel=8e-2), f"rho_L at {T} K"
         assert liq.cp == pytest.approx(cp_l, rel=5e-2), f"Cp at {T} K"
+
+
+@pytest.mark.parametrize("row", ["gerg2008", "coolprop_heos", "bwrs", "mbwr"])
+def test_pure_ph_ps_flash_above_critical_pressure(row: str) -> None:
+    """Regression: a pure-fluid PH/PS flash above Pc has no saturation temperature.
+
+    _flash_H_or_S used to require a bubble/dew temperature and raised SaturationError
+    (methane at 5.17 MPa > Pc 4.60 MPa); it now inverts flash_pt when no boundary exists.
+    """
+    import math
+
+    pkg = registry.create("thermo", row)
+    z = {"C1": 1.0}
+    ref = pkg.flash_pt(z, 250.0, 5.17e6, 1.0)
+    by_h = pkg.flash_ph(z, 5.17e6, ref.enthalpy, 1.0)
+    by_s = pkg.flash_ps(z, 5.17e6, ref.entropy, 1.0)
+    assert math.isclose(by_h.T, 250.0, abs_tol=1e-6)
+    assert math.isclose(by_s.T, 250.0, abs_tol=1e-6)
