@@ -3,22 +3,22 @@
 # One row per special property method, registered by ngdesign.thermo.catalogue
 # like every other family. Status per row, re-decided on evidence 2026-11-03
 # and 2026-11-04 (each row's notes carry the exact reason):
-#   ideal_solid      provisional  - van't Hoff physics complete, tabulated
-#                    fusion properties only (estimates refused), published
-#                    IUPAC-NIST checks in tests/thermo/test_special.py; the
-#                    harness gained a `solubility` case type
-#                    (scripts/validate_properties.py), binding a case needs
-#                    the locked data/validation/ tree.
+#   ideal_solid      validated (2026-11-04) - van't Hoff physics complete,
+#                    tabulated fusion properties only; IUPAC-NIST solubility
+#                    points bound as L2 and the NIST melting points as L1
+#                    (data/validation/special/cases.yaml).
 #   hoc_dimer        provisional (2026-11-04) - the chemical-theory vapour is
 #                    the flash's vapour phase, L0 green, flash surface checked
 #                    against Mehling & Kleiber Z and CRC latent heats;
 #                    applicability narrowed to the checked 290-400 K window.
-#   the other five   experimental - a named reason each: illustrative or
+#   hf_hexamer       provisional (2026-11-04) - the databank HF vapour
+#                    pressure was fixed at the root (psat_methods.yaml), L0
+#                    green, pure-HF L1 cases bound; no L2.
+#   the other four   experimental - a named reason each: illustrative or
 #                    secondary-sourced parameters (polymer_nrtl, flory_huggins),
 #                    no published reference and fixed-T free volumes
-#                    (unifac_fv), a databank vapour pressure that breaks the
-#                    caloric surface (hf_hexamer), or no runnable published
-#                    reference (polymer_pc_saft).
+#                    (unifac_fv), or no runnable published reference
+#                    (polymer_pc_saft).
 # Experimental rows are hidden from the advisor and exempt from the L0 audit.
 # Options are deliberately empty - the special adapters read their parameters
 # from data/thermo_params/special/ keyed by component id.
@@ -64,6 +64,24 @@
       363-383 K) - the hrcak.srce.hr PDF sits behind a bot challenge from
       here and its licence was not verifiable; the Gupta & Prausnitz
       eScholarship polymer-solvent report returned HTTP 403. Not promoted.
+      Retry 2026-11-04 (licences deferred): open data FOUND - Lieu,
+      Prausnitz & Gauthier, LBNL-43073 (1999), eScholarship qt7ps1r2h0,
+      Table 4 (toluene activity a1 vs w1 for linear PS Mw 5.0e4 at 70 C,
+      w1 0.020-0.404, Psat 204 Torr) and Table 5 (their FH chi 0.318); and
+      Pavlicek et al. 2015 (silverstripe.fkit.hr/cabeq PDF, Table 2, w1
+      0.925-1.0, a1 >= 0.998 - not discriminating). Closed-form FH with the
+      shipped chi 0.67 / r 962 on Mn 1e5 overpredicts the Lieu a1 by +72 %
+      (w1 0.020), +27 % (0.116), +15 % (0.244), +11 % (0.404) - expected,
+      the 0.67 is a 435 K IGC value. Not bound: cases cannot run on an
+      experimental row, and two structural defects found remain unfixed:
+      (i) [FIXED 2026-11-04: dGE_dT = GE/T, d2GE_dT2 = 0, FD test] FloryHugginsGE.dGE_dT returned 0 although its GE = R T g with a
+      T-independent g, so dGE/dT = GE/T (the H^E it implies is wrong);
+      (ii) the POLY_PS pseudo resolves to MW 452.5 g/mol (Riazi-Daubert
+      from Tb 871 / sg 1.05) while this row assumes Mn 1e5, unifac_fv
+      9.999e4 and polymer_pc_saft 4e5 - stream mass and the rows'
+      composition basis disagree, so no shared mole-fraction case is
+      meaningful until the pseudo carries its true Mn (needs a polymer
+      pseudo definition with an mw override, P1-07 scope).
   status: experimental
   validation: []
 
@@ -203,8 +221,40 @@
       binding the IUPAC-NIST points as L2 cases is the follow-up that would
       take the row toward validated. The advisor sinks the row below every
       VLE flash package (it claims no vapour phase).
-  status: provisional
-  validation: []
+      BOUND 2026-11-04 (data/validation/special/cases.yaml, every number
+      re-read from the NIST pages this session): L2 = 13 IUPAC-NIST
+      solubility points in benzene (naphthalene: Chang 1969, Ward 1926 rows
+      1/5/9/13/17, all five McLaughlin & Zainal 1959 rows, -0.8..+3.4 %;
+      biphenyl -0.6 %; anthracene +36.7 % MISS, assessed). L1 = the pure
+      solute's melting point as x_sat = 1 at the NIST WebBook evaluated
+      Tfus (naphthalene 353.2 K -> 0.9973, biphenyl 343 K -> 1.0081,
+      anthracene 490 K -> 1.0126). Caveat on the L1: an SLE row's only
+      pure-component observable is where the liquidus ends (Tm); the 5 %
+      band is about +/- 2.7 K in Tm and the case does not test dHfus (the L2
+      temperature series does). The row has no fitted parameters, so all
+      bound points are independent. VALIDATED on that basis; L0 is green by
+      declared exclusion only (every L0 check is a flash check the row
+      refuses by design).
+  status: validated
+  validation:
+  - sle-pure-naphthalene-tfus-nist
+  - sle-pure-biphenyl-tfus-nist
+  - sle-pure-anthracene-tfus-nist
+  - sle-naphthalene-benzene-298.15K-chang
+  - sle-naphthalene-benzene-273.2K-ward
+  - sle-naphthalene-benzene-282.2K-ward
+  - sle-naphthalene-benzene-303.3K-ward
+  - sle-naphthalene-benzene-321.1K-ward
+  - sle-naphthalene-benzene-343.5K-ward
+  - sle-naphthalene-benzene-308.2K-mclaughlin
+  - sle-naphthalene-benzene-318.2K-mclaughlin
+  - sle-naphthalene-benzene-320.6K-mclaughlin
+  - sle-naphthalene-benzene-336.4K-mclaughlin
+  - sle-naphthalene-benzene-349.0K-mclaughlin
+  - sle-biphenyl-benzene-298.15K-chang
+  - sle-anthracene-benzene-298.15K-acree
+  assessed:
+    sle-anthracene-benzene-298.15K-acree: "solubility +36.7 % (ideal 0.009746 vs IUPAC-NIST evaluated 0.00713 at 298.15 K, Acree 1994 evaluation, sysID 58_57). Model limitation, not a bug: anthracene in benzene is strongly non-ideal (gamma ~ 1.37 at saturation); the ideal-solubility row claims gamma = 1 and carries no activity model, and the fusion constants are the CRC/databank tabulated values (Tm 489.15 K, Hfus 29.4 kJ/mol, consistent with NIST WebBook Tfus 490 K and Goursot et al. 29.37 kJ/mol). Measured 2026-11-04."
   l0: {}
   l0_excluded:
     pure_psat_limit: not a VLE package - pure_psat returns None by contract (an SLE row
@@ -289,8 +339,21 @@
       -16 %), and no activity parameters regressed together with this vapour
       model are shipped. No harness compressibility or latent-heat case type
       exists, and binding cases needs the locked data/validation/ tree.
+      2026-11-04: L1 bound - NIST WebBook normal boiling point and the
+      McDonald et al. (1959) Antoine at 320 / 360 K, through the row's
+      own pure-acid bubble point (-0.05 %, -0.55 %, -0.14 %; these test the
+      databank Psat the row runs on, not the association constant). The
+      Mehling & Kleiber Z point stays a unit test (its primary was not
+      retrievable this session, and the harness Z band of 1 % would record
+      it as a +3.8 % miss). No L2: no open acetic acid + water VLE table
+      was retrieved (DDBST free pages 404, MDPI Chemistry 5, 165 (2023)
+      403), and the ideal liquid already misses the Sebastiani &
+      Lacquaniti K-values by 7-15 % (above). Stays provisional.
   status: provisional
-  validation: []
+  validation:
+  - acoh-pure-tboil-nist
+  - acoh-pure-psat-320K-mcdonald
+  - acoh-pure-psat-360K-mcdonald
   l0:
     pure_psat_limit:
       points: [["AcOH", 330.0], ["AcOH", 380.0]]
@@ -358,21 +421,65 @@
       limit, phase identification, PH/PS round trips, Gibbs-Duhem and the
       single-liquid limit pass; dhdT_cp passes at its analytic level (Cp
       matches a 1e-3 K stencil to 1e-9) but the harness's 0.5 K stencil
-      misses by 7e-4 at 300 K / 50 kPa because the hexamer enthalpy is
-      strongly curved there. STAYS EXPERIMENTAL for the caloric surface,
-      outside the association physics: the databank HF vapour-pressure
-      correlation ("Fit 2023", fitted over 293-454 K) has a nearly flat
-      d ln Psat/dT across 300-320 K, so the PhiSat liquid enthalpy
-      H_ig - R T^2 d ln(Psat phi_sat)/dT gives a saturated-liquid Cp of
-      0.1 J/(mol K) at 300 K (-152 J/(mol K) with no association at all);
-      and the latent heat misses the VDI Heat Atlas (2nd ed. 2010, D3.1)
-      table by -14.4 % at 292.69 K and -7.6 % at 305 K (-1.0 % at 325 K,
-      +3.8 to +6.0 % at 345-385 K). Promotion needs an HF vapour pressure
-      consistent with the Jarry & Davis association data (their own Antoine
-      equation is used only in the tests) - a databank change, not a
-      special-family one.
-  status: experimental
-  validation: []
+      missed by 7e-4 at 300 K / 50 kPa because the hexamer enthalpy is
+      strongly curved there. Was experimental for the caloric surface: the
+      databank HF vapour pressure (thermo's default "Fit 2023") gave 109.34
+      kPa at the 292.69 K normal boiling point and a nearly flat
+      d ln Psat/dT across 300-310 K, so the PhiSat liquid Cp collapsed
+      (0.1-1.7 J/(mol K)) and the latent heat missed the VDI Heat Atlas
+      table by -14.4 % at the boiling point. FIXED AT THE ROOT 2026-11-04:
+      data/thermo_params/psat_methods.yaml selects the Perry 8E (DIPPR eq.
+      101, Table 2-8) HF correlation in every constants build
+      (ngdesign.thermo._state.apply_psat_overrides), 101.01 kPa at 292.69 K
+      and agreeing with Jarry & Davis's own Antoine within ~1 %. Measured
+      after the fix (tests/thermo/test_special_association.py): latent heat
+      vs VDI D3.1 +7.1 % (292.69 K), +2.7 % (305 K), -0.9 % (325 K), +1.3 %
+      (345 K), +5.4 % (365 K); saturated-liquid Cp 37-38 J/(mol K) at
+      295-310 K vs the VDI table's 61-62 (the gamma-phi vapour-route
+      limitation with no residual liquid Cp, as on hoc_dimer). PROMOTED to
+      provisional: physics complete for its claim, all seven L0 checks pass
+      (dhdT_cp declared on the vapour at 370 K / 50 kPa, where the 0.5 K
+      stencil resolves the curvature). L1 bound: NIST WebBook normal boiling
+      point (Streng 1971) and the Sheft et al. (1973) Antoine at 278.15 /
+      298.15 K, all passing - they check the Psat the row runs on, not the
+      association constants. No L2: the only liquid model is ideal, and
+      HF/water (azeotropic, strongly non-ideal) is the binary with data;
+      binding it would be a known miss of the liquid model, not a test of
+      the vapour. Not validated.
+  status: provisional
+  validation:
+  - hf-pure-tboil-streng
+  - hf-pure-psat-278.15K-sheft
+  - hf-pure-psat-298.15K-sheft
+  l0:
+    pure_psat_limit:
+      points: [["HF", 280.0], ["HF", 330.0]]
+    phase_identification:
+      points: [["HF", 280.0], ["HF", 330.0]]
+    round_trip:
+      z: {HF: 0.5, H2O: 0.5}
+      states: [[300.0, 20000.0], [360.0, 100000.0]]
+    dhdT_cp:
+      z: {HF: 0.5, H2O: 0.5}
+      state: [370.0, 50000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {HF: 0.5, H2O: 0.5}
+        T: 320.0
+        P: 50000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {HF: 1.0}
+      state: [280.0, 200000.0]
+    determinism:
+      z: {HF: 0.5, H2O: 0.5}
+      state: [330.0, 50000.0]
+  l0_excluded: {}
+  l0_note: >-
+    The liquid is ideal (gamma = 1), so the Gibbs-Duhem check runs on the
+    associated vapour; dhdT_cp runs on the vapour at 370 K / 50 kPa (the
+    liquid also passes at 300 K / 300 kPa: Cp 37.8904 vs dH/dT 37.8903).
 
 - id: polymer_pc_saft
   name: Polymer PC-SAFT (teqp bridge)
@@ -413,5 +520,13 @@
       flory_huggins), and k_ij = 0 has no cited value, so no published-
       reference test exists for the row's solvent activity. Stays
       experimental.
+      Retry 2026-11-04: teqp now available (saft extra); the kernel runs.
+      Against Lieu, Prausnitz & Gauthier LBNL-43073 (1999) Table 4 (toluene
+      in linear PS Mw 5.0e4, 70 C), on the row's own Mw 4e5 basis, k_ij = 0:
+      toluene Psat +0.36 % vs 204 Torr; a1 -87 % at w1 0.020, +15 % at
+      0.116, +4.4 % at 0.244, +2.8 % at 0.404. Gross & Sadowski (2002)
+      polymer parameters / k_ij were not retrievable open (feos gross2002
+      is the associating paper), and the POLY_PS pseudo MW (452.5) does not
+      match the row's Mw 4e5 (see flory_huggins). Stays experimental.
   status: experimental
   validation: []

@@ -1,0 +1,27 @@
+# Per-CAS vapour-pressure method overrides for thermo's VaporPressure ranking.
+#
+# Every package builds its correlations through ChemicalConstantsPackage.from_IDs
+# (thermo 0.6.1, chemicals 1.5.2), which picks thermo's highest-ranked method. An
+# entry here replaces that pick with a named, published correlation thermo already
+# ships; ngdesign.thermo._state applies it at the one place the constants are built
+# (_constants_package, _psat_data) and gamma_phi._constants_for. Only add an entry
+# with a measured reason: the override changes the component's Psat in every
+# package that uses the correlation (gamma-phi, K-value, special rows; cubic and
+# Helmholtz phases do not read it).
+
+"7664-39-3":  # hydrogen fluoride
+  method: DIPPR_PERRY_8E
+  source: >-
+    Green & Perry, Perry's Chemical Engineers' Handbook, 8th ed. (2008), Table 2-8
+    (DIPPR eq. 101, C1 59.544, C2 -4143.8, C3 -6.1764, C4 1.4e-5, C5 2; 189.79-461.15 K),
+    as shipped in chemicals 1.5.2 Psat_data_Perrys2_8, read 2026-11-04.
+  reason: >-
+    thermo's default pick "Fit 2023" (an in-library fit, 293.12-454.15 K) gives
+    109.34 kPa at HF's databank normal boiling point 292.69 K (+7.9 % vs 101.325 kPa)
+    and a nearly flat d ln Psat/dT of 0.0299-0.0300 1/K across 300-310 K, where every
+    other shipped method gives 0.0342-0.0323 (Perry 8E, VDI PPDS, Wagner-McGarry,
+    Poling Antoine, and Jarry & Davis 1953's own Antoine all agree within ~1 %). Through
+    the PhiSat liquid of hf_hexamer that slope error gave a saturated-liquid Cp of
+    1.7 J/(mol K) at 305 K and a -14.4 % latent heat at the boiling point vs the VDI
+    Heat Atlas table. Perry 8E gives 101.01 kPa at 292.69 K and spans triple point to
+    critical; measured 2026-11-04.

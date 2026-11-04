@@ -53,7 +53,7 @@ from collections import OrderedDict
 from collections.abc import Callable
 from functools import cache
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 import yaml
 from thermo import (
@@ -643,7 +643,9 @@ def _constants_for(cas_list: tuple[str, ...]) -> tuple[Any, Any]:
     memo the provenance refusal path re-pays the full property-package build
     every time, because functools.cache does not memoize the raising call.
     """
-    return cast("tuple[Any, Any]", ChemicalConstantsPackage.from_IDs(list(cas_list)))
+    constants, correlations = ChemicalConstantsPackage.from_IDs(list(cas_list))
+    _state.apply_psat_overrides(constants.CASs, correlations.VaporPressures)
+    return constants, correlations
 
 
 #: Aspen's split for WILS-GLR: components boiling below this keep the vapour route.

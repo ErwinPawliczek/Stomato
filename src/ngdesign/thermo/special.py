@@ -261,7 +261,8 @@ class FloryHugginsGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no stub
     fractions phi_i = x_i r_i / sum_j x_j r_j (Flory 1953; the solvent activity
     form ln a1 = ln phi1 + (1 - 1/r) phi2 + chi phi2^2 is eq. 3.34 of the
     reference text and eq. 4 of Lindvig et al. 2002). chi is composition- and
-    temperature-independent (the original FH form; dGE_dT = 0 by construction).
+    temperature-independent (the original FH form), so GE = R T g(x) and
+    dGE/dT = GE/T, d2GE/dT2 = 0 (HE = 0).
     """
 
     def __init__(self, T: float, xs: list[float], rs: list[float], chi: list[list[float]]) -> None:
@@ -319,8 +320,25 @@ class FloryHugginsGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no stub
         return out
 
     def dGE_dT(self) -> float:
-        """chi is temperature-independent in the original FH form."""
+        """dGE/dT = GE/T: chi is temperature-independent in the original FH form.
+
+        gE/RT = g(x) with g free of T, so GE = R T g is linear in T and
+        HE = GE - T dGE/dT = 0 (an athermal-in-HE FH solution; Flory 1953). Until
+        2026-11-04 this returned 0, implying HE = GE.
+        """
+        return float(self.GE() / self.T)
+
+    def d2GE_dT2(self) -> float:
+        """GE is linear in T (constant chi), so the second derivative vanishes."""
         return 0.0
+
+    def d2GE_dTdxs(self) -> list[float]:
+        """d2GE/dT dx_m = (dGE/dx_m)/T for GE linear in T."""
+        return [d / self.T for d in self.dGE_dxs()]
+
+    def dgammas_dT(self) -> list[float]:
+        """gamma depends on composition only (gE/RT is T-free): zero."""
+        return [0.0] * self.N
 
     def gammas(self) -> list[float]:
         """Solvent gamma from the closed form; polymer gamma by Gibbs-Duhem.

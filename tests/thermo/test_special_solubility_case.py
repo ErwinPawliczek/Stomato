@@ -3,8 +3,9 @@
 scripts/validate_properties.py compares expected {solute: x_sat} at T against a
 package's solubility(cid, T) surface (added 2026-11-03 so the special-family SLE
 row is harness-evaluable). The cases here are built in memory from the
-IUPAC-NIST Solubility Database points the row's unit tests already cite; binding
-them under data/validation/ is a locked-tree change this test does not make.
+IUPAC-NIST Solubility Database points the row's unit tests already cite; the
+same points are bound as reference cases in data/validation/special/cases.yaml
+(2026-11-04), which tests/validation runs.
 """
 
 from __future__ import annotations
@@ -79,13 +80,13 @@ def test_tolerance_policy_declares_solubility() -> None:
 
 
 def test_advisor_sinks_the_sle_row_below_every_flash_package() -> None:
-    """ideal_solid now ranks (provisional) but claims no vapour: last, with the warning."""
+    """ideal_solid ranks (validated since 2026-11-04) but claims no vapour: last, with the warning."""
     from ngdesign.flowsheets import slice as slice_fs
     from ngdesign.thermo.advisor import recommend
 
     recs = recommend(slice_fs.build())
     by_id = {rec.id: rec for rec in recs}
     sle = by_id["ideal_solid"]
-    assert sle.status == "provisional"
+    assert sle.status == "validated"
     assert any("not a vapour-liquid flash package" in w for w in sle.warnings)
     assert sle.score < min(rec.score for rec in recs if rec.id != "ideal_solid")
