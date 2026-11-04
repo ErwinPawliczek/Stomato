@@ -182,7 +182,7 @@
       description: reactor effluent (well-mixed)
   levels:
     R1:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.reactors.cstr:CstrR1
       params:
         type: object
@@ -198,6 +198,8 @@
           bulk_density_kg_m3: {type: number, description: catalyst bulk density, kg/m3}
           T_guess_K: {type: number, description: Newton start temperature, K; selects
             the steady-state branch}
+      validation:
+      - V1-FOGLER-HDA-CSTR
       note: kinetics (Arrhenius, LHHW, power-law), single phase
     R2:
       status: provisional
@@ -224,6 +226,12 @@
   references:
   - docs/unit-catalogue-plan.md §2 U-F 5
   notes: >-
+    R1 validated 2026-11-04 on Fogler 4th ed. Example 6-8 (mesitylene hydrodealkylation,
+    two series reactions, Table E6-8.1 NLES solution; V1-FOGLER-HDA-CSTR). That case found
+    and fixed a bug: the rate saw only the positive outlet species and xi = 0 was a
+    depletion corner when an intermediate is not fed (regression test in
+    tests/units/reactors/test_cstr_r1.py). The older V1-gap text below concerns the Ch. 4
+    liquid examples only.
     R2 ships provisional on an independent recomputation of the rate from the outlet's own
     phases and the reduction to R1; no V1 case was attempted. R1 implemented (U-R2): algebraic extents at outlet conditions, damped Newton,
     single phase in the vessel. V1 gap (2026-10-25; CORRECTION same day: an

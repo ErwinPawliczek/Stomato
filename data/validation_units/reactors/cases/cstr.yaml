@@ -1,13 +1,77 @@
 # cstr V1 cases (spec U-01d; validator scripts/validate_units.py).
 #
-# No V1 case yet. CORRECTION (2026-10-25): the earlier header claimed the
-# Fogler components are absent from the open registry — they are not; all four
-# (ethylene oxide, ethylene glycol, propylene oxide, propylene glycol) resolve
-# in ngdesign.data.component_record with formation data. The printed Fogler
-# candidates are still not transcribable at R1, for the reasons recorded on
-# the row's notes in data/unit_models/reactors.yaml (constant-density
-# lbmol/ft3 basis with unprinted water molar flow and pressure; at 313 K the
-# pr flash two-phases the aqueous-EO feed below 10 bar and liquid-liquid-
-# splits it at all-liquid pressures, where the printed V does not converge;
-# the umich companion example is a pure-A liquid at 0.2 mol/dm3). R1 ships
-# provisional on its closed-form tests (R1-A, R1-B, identities, refusals).
+# V1-FOGLER-HDA-CSTR — Fogler, Elements of Chemical Reaction Engineering, 4th ed.
+# (Prentice Hall 2006), Example 6-8 "Hydrodealkylation of Mesitylene in a CSTR",
+# pp. 344-347, on the conditions of Example 6-7, pp. 340-343. Scan read 2026-11-04 at
+# https://archive.org/details/elementsofchemicalreactionengineering4thed .
+# Printed basis: isothermal 1500 R gas, no mole change (v = v0), reactions
+#   (1) M + H2 -> X + CH4, -r1M = k1 C_M C_H^0.5, k1 = 55.20 (ft3/lbmol)^0.5/h
+#   (2) X + H2 -> T + CH4,  r2T = k2 C_X C_H^0.5, k2 = 30.20 (ft3/lbmol)^0.5/h
+# (bulk density folded into k). Table E6-8.1 (Polymath NLES) solves with
+# C_H0 = 0.021, C_M0 = 0.0105 lbmol/ft3 at tau = 0.5 h and prints
+# C_H = 0.0089436, C_M = 0.0029085, C_X = 0.0031266 lbmol/ft3.
+# Inputs, converted: T = 1500 R = 833.333 K. The feed is H2:mesitylene 2:1 at the
+# solver's total concentration C_T0 = 0.021 + 0.0105 = 0.0315 lbmol/ft3 = 504.5816
+# mol/m3 (ideal gas, P = C_T0 R T = 3 496 104 Pa = 34.50 atm; the book states
+# 35 atm and rounds C_T0 = 0.032 -> C_H0 0.021, and its printed solution is on
+# the rounded concentrations, so the case runs on those). k in SI:
+# 55.2 (ft3/lbmol)^0.5/h = 1.2115076e-4 (m3/mol)^0.5/s; 30.2 -> 6.6281758e-5.
+# F_T0 = 1 mol/s, so v0 = 1/504.5816 m3/s and V = tau v0 = 3.5673120 m3.
+# Expected outlet mole fractions = C_i/C_T0 (no mole change, isothermal):
+# H2 0.2839238, mesitylene 0.0923333, m-xylene 0.0992571.
+# Tolerance fixed before the run from the printed 5 significant figures:
+# +-5e-8 lbmol/ft3 / 0.0315 = +-1.6e-6 in mole fraction.
+#
+# Earlier note (2026-10-25): the Fogler Ch. 4 ethylene-glycol CSTR (Example 4-2)
+# is not transcribable at R1 — constant-density liquid lbmol/ft3 basis with
+# unprinted water flow and pressure; pr two-phases or liquid-liquid splits the
+# aqueous EO feed (see the row notes in data/unit_models/reactors.yaml).
+
+- id: V1-FOGLER-HDA-CSTR
+  unit: cstr
+  level: R1
+  thermo: ideal-raoult
+  source: >-
+    Fogler, Elements of Chemical Reaction Engineering, 4th ed., Prentice Hall 2006,
+    Example 6-8, pp. 344-347, Table E6-8.1 (Polymath NLES solution at tau = 0.5 h:
+    C_H 0.0089436, C_M 0.0029085, C_X 0.0031266 lbmol/ft3 from C_H0 0.021, C_M0 0.0105,
+    k1 55.2, k2 30.2 (ft3/lbmol)^0.5/h at 1500 R); scan read 2026-11-04 at
+    https://archive.org/details/elementsofchemicalreactionengineering4thed
+  feeds:
+    inlet:
+      T: 833.3333333333334
+      P: 3496104.0167
+      molar_flow: 1.0
+      composition: {H2: 0.6666666666666666, mesitylene: 0.3333333333333333}
+  params:
+    reaction_set:
+      id: hda_mesitylene_fogler
+      components: [mesitylene, H2, m-xylene, CH4, toluene]
+      reactions:
+      - id: r1
+        stoichiometry: {mesitylene: -1.0, H2: -1.0, m-xylene: 1.0, CH4: 1.0}
+        base_component: mesitylene
+        provenance: Fogler 4th ed. Example 6-7 eq. E6-7.3
+        kinetics:
+          rate_units: mol/(m3·s)
+          k0: 1.2115076e-4
+          Ea: 0.0
+          orders: {mesitylene: 1.0, H2: 0.5}
+          basis: concentration
+      - id: r2
+        stoichiometry: {m-xylene: -1.0, H2: -1.0, toluene: 1.0, CH4: 1.0}
+        base_component: m-xylene
+        provenance: Fogler 4th ed. Example 6-7 eq. E6-7.4
+        kinetics:
+          rate_units: mol/(m3·s)
+          k0: 6.6281758e-5
+          Ea: 0.0
+          orders: {m-xylene: 1.0, H2: 0.5}
+          basis: concentration
+    volume_m3: 3.5673120
+    reacting_phase: vapor
+    thermal: isothermal
+  expected:
+  - {quantity: outlet.outlet.composition.H2, value: 0.2839238, tol_abs: 1.6e-6}
+  - {quantity: outlet.outlet.composition.mesitylene, value: 0.0923333, tol_abs: 1.6e-6}
+  - {quantity: outlet.outlet.composition.m-xylene, value: 0.0992571, tol_abs: 1.6e-6}

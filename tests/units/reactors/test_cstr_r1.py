@@ -384,3 +384,50 @@ def test_r1_example_case_roundtrip(thermo: Thermo) -> None:
         "T_closure_gap_K",
     ):
         assert key in result.info
+
+
+def test_r1_series_intermediate_absent_from_feed(thermo: Thermo) -> None:
+    """Series A -> B -> C with no B fed (regression, val-units-c 2026-11-04).
+
+    Before the fix the rate saw only the positive outlet species (KineticsError:
+    order on a component "outside the mixture") and the Newton start xi = 0 was a
+    depletion corner for the B-consuming extent. Closed form for first-order steps, delta n = 0,
+    isothermal: y_A = 1/(1 + Da1), y_B = Da1/((1 + Da1)(1 + Da2)), Da_j = k_j c_tot V/F.
+    """
+    feed = {"T": 600.0, "P": 1.0e5, "molar_flow": 1.0, "composition": {"m-xylene": 1.0}}
+    inlet = flash_feed(thermo, feed)
+
+    def first_order(rid: str, a: str, b: str, k0: float) -> dict[str, Any]:
+        return {
+            "id": rid,
+            "stoichiometry": {a: -1.0, b: 1.0},
+            "base_component": a,
+            "provenance": "series first-order closed-form regression case",
+            "kinetics": {
+                "rate_units": "mol/(m3·s)",
+                "k0": k0,
+                "Ea": 0.0,
+                "orders": {a: 1.0},
+                "basis": "concentration",
+            },
+        }
+
+    params = {
+        "reaction_set": {
+            "id": "series_case",
+            "components": ["m-xylene", "p-xylene", "o-xylene"],
+            "reactions": [
+                first_order("r1", "m-xylene", "p-xylene", 0.05),
+                first_order("r2", "p-xylene", "o-xylene", 0.02),
+            ],
+        },
+        "volume_m3": 1.0,
+        "thermal": "isothermal",
+    }
+    result = CstrR1().solve({"inlet": inlet}, params, thermo)
+
+    c_tot = 1.0e5 / (float(R) * 600.0)
+    da1, da2 = 0.05 * c_tot, 0.02 * c_tot
+    z = result.outlets["outlet"].composition
+    assert z["m-xylene"] == pytest.approx(1.0 / (1.0 + da1), rel=1e-8)
+    assert z["p-xylene"] == pytest.approx(da1 / ((1.0 + da1) * (1.0 + da2)), rel=1e-8)
