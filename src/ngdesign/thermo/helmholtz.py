@@ -140,6 +140,10 @@ def _import_coolprop() -> object:
         ) from exc
 
 
+class _TrivialSolution(SaturationError):
+    """Successive substitution converged to K = 1 (both phases on one density root)."""
+
+
 # ---------------------------------------------------------------------------
 # Single-phase property container shared by every adapter
 # ---------------------------------------------------------------------------
@@ -338,16 +342,49 @@ class _HelmholtzSurface(TracedThermo):
         return self._ss_boundary(ids, xs, T, "dew")
 
     def _ss_boundary(self, ids: tuple[str, ...], xs: tuple[float, ...], T: float, kind: str) -> float:
-        """Successive substitution on the K values at fixed T toward K-fraction sum 1."""
-        p = self._wilson_pressure(ids, xs, T)
+        """Bubble/dew pressure at T for a mixture (see :meth:`_ss_solve`)."""
+        return self._ss_solve(ids, xs, T, kind)[0]
+
+    def _ss_solve(
+        self, ids: tuple[str, ...], xs: tuple[float, ...], T: float, kind: str
+    ) -> tuple[float, tuple[float, ...]]:
+        """Successive substitution on K at fixed T: (boundary pressure, incipient composition).
+
+        Bubble: the liquid is the feed x, the incipient vapour y = K x / sum(K x) and
+        P <- P sum(K x). Dew: the vapour is the feed y, the incipient liquid
+        x = (y/K) / sum(y/K) and P <- P / sum(y/K) (Michelsen & Mollerup, Thermodynamic
+        Models, 2nd ed., ch. 12 saturation-point successive substitution; K = phi_L/phi_V).
+        A converged K set with every |ln K| < 1e-4 is the trivial solution (both phases
+        on the same density root), not a saturation point: the iteration restarts from
+        half the previous start pressure (the Raoult/Wilson estimate can sit above the
+        two-root region near the mixture critical point) and refuses after six tries.
+        """
+        p0 = self._wilson_pressure(ids, xs, T, kind)
+        trivial: SaturationError | None = None
+        for attempt in range(6):
+            try:
+                return self._ss_from(ids, xs, T, kind, p0 * 0.5**attempt)
+            except _TrivialSolution as exc:
+                trivial = exc
+        raise SaturationError(str(trivial))
+
+    def _ss_from(
+        self, ids: tuple[str, ...], xs: tuple[float, ...], T: float, kind: str, p_start: float
+    ) -> tuple[float, tuple[float, ...]]:
+        """One successive-substitution run of :meth:`_ss_solve` from ``p_start``."""
+        p = min(max(p_start, 1e3), 2e9)
         k = [self._wilson_k(ids[i], T, p) for i in range(len(ids))]
         for _ in range(300):
-            vapor = [min(max(ki * xsi, 1e-14), 1.0) for ki, xsi in zip(k, xs, strict=True)]
-            vapor_sum = sum(vapor)
-            y = [v / vapor_sum for v in vapor]
+            if kind == "bubble":
+                raw = [min(max(ki * xsi, 1e-14), 1.0) for ki, xsi in zip(k, xs, strict=True)]
+            else:
+                raw = [max(xsi / ki, 1e-14) for ki, xsi in zip(k, xs, strict=True)]
+            total = sum(raw)
+            incipient = tuple(v / total for v in raw)
+            liquid, vapor = (xs, incipient) if kind == "bubble" else (incipient, xs)
             try:
-                phi_l = self._single_phase(ids, xs, T, p, "liquid").ln_phi
-                phi_v = self._single_phase(ids, tuple(y), T, p, "vapor").ln_phi
+                phi_l = self._single_phase(ids, liquid, T, p, "liquid").ln_phi
+                phi_v = self._single_phase(ids, vapor, T, p, "vapor").ln_phi
             except (ValueError, ArithmeticError) as exc:
                 raise SaturationError(
                     f"successive substitution left the single-root region for {ids} at T={T} K"
@@ -355,35 +392,38 @@ class _HelmholtzSurface(TracedThermo):
             k_new = [math.exp(phi_l[c] - phi_v[c]) for c in ids]
             if kind == "bubble":
                 step = sum(xsi * ki for xsi, ki in zip(xs, k_new, strict=True))
+                p = min(max(p * step, 1e3), 2e9)
             else:
                 step = sum(xsi / ki for xsi, ki in zip(xs, k_new, strict=True))
-            p = min(max(p * step, 1e3), 2e9)
+                p = min(max(p / step, 1e3), 2e9)
             err = max(abs(a / b - 1.0) for a, b in zip(k_new, k, strict=True))
             k = k_new
             if err < 1e-11 and abs(step - 1.0) < 1e-9:
-                return p
+                if max(abs(math.log(ki)) for ki in k) < 1e-4:
+                    raise _TrivialSolution(
+                        f"successive substitution reached the trivial solution (K = 1) for {ids} at T={T} K"
+                    )
+                if kind == "bubble":
+                    raw = [ki * xsi for ki, xsi in zip(k, xs, strict=True)]
+                else:
+                    raw = [xsi / ki for ki, xsi in zip(k, xs, strict=True)]
+                total = sum(raw)
+                return p, tuple(v / total for v in raw)
         raise SaturationError(f"successive substitution did not converge for {ids} at T={T} K")
 
     def _incipient(
         self, ids: tuple[str, ...], xs: tuple[float, ...], T: float, P: float, kind: str
     ) -> dict[str, float]:
-        """Composition of the appearing phase at a converged saturation point."""
+        """Composition of the appearing phase at a converged saturation point.
+
+        Mixtures take the converged successive-substitution composition at (T, kind);
+        the former one-step K from both phases at the feed composition returned the feed
+        itself whenever the vapour root at the liquid composition did not exist.
+        """
         if self._is_pure(ids):
             return {ids[0]: 1.0}
-        if kind == "bubble":
-            phi_l = self._single_phase(ids, xs, T, P, "liquid").ln_phi
-            phi_v = self._single_phase(ids, xs, T, P, "vapor").ln_phi
-            k = [math.exp(phi_l[c] - phi_v[c]) for c in ids]
-            raw = [xsi * ki for xsi, ki in zip(xs, k, strict=True)]
-        else:
-            phi_l = self._single_phase(ids, xs, T, P, "liquid").ln_phi
-            phi_v = self._single_phase(ids, xs, T, P, "vapor").ln_phi
-            k = [math.exp(phi_l[c] - phi_v[c]) for c in ids]
-            raw = [xsi / ki for xsi, ki in zip(xs, k, strict=True)]
-        total = sum(raw)
-        if total <= 0.0:
-            raise SaturationError(f"incipient composition collapsed for {ids} at T={T} K")
-        return {c: v / total for c, v in zip(ids, raw, strict=True)}
+        _, incipient = self._ss_solve(ids, xs, T, kind)
+        return {c: v for c, v in zip(ids, incipient, strict=True)}
 
     def _wilson_k(self, cid: str, T: float, P: float) -> float:
         """Wilson-correlation K initialiser; needs the component's critical data."""
@@ -394,13 +434,20 @@ class _HelmholtzSurface(TracedThermo):
         tr = T / tc
         return pc / P * math.exp(5.373 * (1.0 + omega) * (1.0 - 1.0 / tr))
 
-    def _wilson_pressure(self, ids: tuple[str, ...], xs: tuple[float, ...], T: float) -> float:
-        p = 0.0
-        for i, cid in enumerate(ids):
+    def _wilson_pressure(
+        self, ids: tuple[str, ...], xs: tuple[float, ...], T: float, kind: str = "bubble"
+    ) -> float:
+        """Raoult estimate on Wilson vapour pressures: sum x Psat (bubble), 1/sum(y/Psat) (dew)."""
+        psat: list[float] = []
+        for cid in ids:
             constants = self._constants(ids=(cid,))
             tc, pc, omega = constants.Tcs[0], constants.Pcs[0], constants.omegas[0]
             tr = T / tc
-            p += xs[i] * pc * math.exp(5.373 * (1.0 + omega) * (1.0 - 1.0 / tr))
+            psat.append(float(pc) * math.exp(5.373 * (1.0 + omega) * (1.0 - 1.0 / tr)))
+        if kind == "bubble":
+            p = sum(x * ps for x, ps in zip(xs, psat, strict=True))
+        else:
+            p = 1.0 / sum(x / ps for x, ps in zip(xs, psat, strict=True))
         return min(max(p, 1e3), 2e9)
 
     def _constants(self, ids: tuple[str, ...]) -> Any:
@@ -534,8 +581,15 @@ class _HelmholtzSurface(TracedThermo):
         self, z: dict[str, float], P: float, target: float, molar_flow: float, which: str
     ) -> StreamState:
         ids, xs = self._support(z)
-        t_bub = self._tsat(ids, xs, P, "bubble")
-        t_dew = self._tsat(ids, xs, P, "dew")
+        try:
+            t_bub = self._tsat(ids, xs, P, "bubble")
+            t_dew = self._tsat(ids, xs, P, "dew")
+        except SaturationError:
+            if self._is_pure(ids):
+                raise
+            # No saturation boundary at this pressure (above the cricondenbar, or a
+            # boundary the successive substitution cannot reach): invert flash_pt itself.
+            return self._invert_flash_pt(z, P, target, molar_flow, which)
 
         def quantity(T: float, phase: str) -> float:
             props = self._single_phase(ids, xs, T, P, phase)
@@ -614,6 +668,43 @@ class _HelmholtzSurface(TracedThermo):
                 break
         t_final = 0.5 * (t_lo + t_hi)
         return self._single_stream(ids, xs, t_final, P, branch, molar_flow)
+
+    def _invert_flash_pt(
+        self, z: dict[str, float], P: float, target: float, molar_flow: float, which: str
+    ) -> StreamState:
+        """T such that flash_pt(z, T, P) carries the target H or S: bracketed bisection.
+
+        H and S of the equilibrium state rise monotonically with T at fixed P, so the
+        PH/PS flash is the inverse of the PT flash; used when no boundary exists at P.
+        """
+
+        def value(T: float) -> float:
+            state = self.flash_pt(z, T, P, 1.0)
+            return state.enthalpy if which == "enthalpy" else state.entropy
+
+        t_lo = t_hi = 300.0
+        f_lo = f_hi = value(t_lo) - target
+        for _ in range(80):
+            if f_lo <= 0.0 <= f_hi:
+                break
+            if f_lo > 0.0:
+                t_lo = max(t_lo / 1.05, 1.0)
+                f_lo = value(t_lo) - target
+            if f_hi < 0.0:
+                t_hi *= 1.05
+                f_hi = value(t_hi) - target
+        else:
+            raise SaturationError(f"no {which} bracket for the PT-flash inversion at P={P:g} Pa")
+        for _ in range(200):
+            mid = 0.5 * (t_lo + t_hi)
+            f_mid = value(mid) - target
+            if f_mid <= 0.0:
+                t_lo = mid
+            else:
+                t_hi = mid
+            if t_hi - t_lo < 1e-10:
+                break
+        return self.flash_pt(z, 0.5 * (t_lo + t_hi), P, molar_flow)
 
     # -- TVF / PVF flashes --------------------------------------------------
 
@@ -1365,15 +1456,23 @@ def _bwrs_a_res(rho: float, T: float, p: dict[str, float]) -> float:
 
 
 def _bwrs_h_dep(rho: float, T: float, p: dict[str, float]) -> float:
-    """Enthalpy departure H^res/(R T) in psia-ft3/lbmol-consistent dimensionless form."""
+    """Dimensionless enthalpy departure H^res/(R T).
+
+    Starling (1973) BWRS departure, in psia-ft3/lbmol:
+    H - H0 = (Bo R T - 2 Ao - 4 Co/T^2 + 5 Do/T^3 - 6 Eo/T^4) rho
+    + (b R T - 3a/2 - 2d/T) rho^2 + alpha (6a/5 + 7d/(5T)) rho^5
+    + c/(gamma T^2) [3 - (3 + gamma rho^2/2 - gamma^2 rho^4) exp(-gamma rho^2)],
+    divided by R T here; equals -T (d a_res/dT)_rho + Z - 1 of :func:`_bwrs_a_res`.
+    """
     bo, ao, co, do_, eo = p["Bo"], p["Ao"], p["Co"], p["Do"], p["Eo"]
     a_, b_, c_, d_, al, ga = p["a"], p["b"], p["c"], p["d"], p["al"], p["ga"]
-    return (
+    h_res = (
         (bo * _BWRS_R * T - 2.0 * ao - 4.0 * co / T**2 + 5.0 * do_ / T**3 - 6.0 * eo / T**4) * rho
         + (b_ * _BWRS_R * T - 1.5 * a_ - 2.0 * d_ / T) * rho**2
         + al * (6.0 / 5.0 * a_ + 7.0 / 5.0 * d_ / T) * rho**5
         + c_ / ga / T**2 * (3.0 - (3.0 + ga / 2.0 * rho**2 - ga**2 * rho**4) * math.exp(-ga * rho**2))
     )
+    return h_res / (_BWRS_R * T)
 
 
 def _bwrs_lnphi(
@@ -1483,7 +1582,9 @@ class BWRSPackage(_HelmholtzSurface):
         a_res = _bwrs_a_res(rho, t_r, p_mix)
         h_dep_j = _bwrs_h_dep_j(rho, t_r, p_mix)
         u_dep_over_rt = _bwrs_h_dep(rho, t_r, p_mix) - (z - 1.0)
-        s_dep_over_r = u_dep_over_rt - 2.0 * a_res
+        # S(T, P) - S_ig(T, P) = R (u_res/(RT) - a_res + ln Z): the residual at (T, rho)
+        # plus the ideal-gas volume change from (T, rho) to (T, P)
+        s_dep_over_r = u_dep_over_rt - a_res + math.log(z)
         cp_ig = self._cp_ig(ids, xs, T)
         h_ig = self._h_ig(ids, xs, T)
         s_ig = self._s_ig(ids, xs, T, P)
@@ -1592,12 +1693,17 @@ class BWRSPackage(_HelmholtzSurface):
         return total
 
     def _s_ig(self, ids: tuple[str, ...], xs: tuple[float, ...], T: float, P: float) -> float:
-        """S_ig(T, P) = int Cp/T dT from 298.15 K minus R ln(P/1e5); S_ig(298.15, 1e5) = 0."""
+        """Ideal-gas mixture entropy, pure-component S_ig(298.15 K, 1 bar) = 0.
+
+        S_ig(T, P, x) = sum x_i int_298.15^T Cp_i/T dT - R ln(P/1e5) - R sum x_i ln x_i
+        (ideal-gas mixing at constant T, P; Smith, Van Ness & Abbott, 7th ed., eq. 11.26).
+        """
         correlations = self._correlations(ids)
         total = 0.0
         for i, correlation in enumerate(correlations.HeatCapacityGases):
             total += xs[i] * float(correlation.T_dependent_property_integral_over_T(298.15, T))
-        return total - R_IDEAL * math.log(P / 1e5)
+        mixing = sum(x * math.log(x) for x in xs if x > 0.0)
+        return total - R_IDEAL * math.log(P / 1e5) - R_IDEAL * mixing
 
     def _correlations(self, ids: tuple[str, ...]) -> Any:
         cache = getattr(self, "_correlations_cache", None)

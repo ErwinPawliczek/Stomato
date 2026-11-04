@@ -390,10 +390,11 @@ class MBWR32Package(BWRSPackage):
         p_mpa, phi, dphi = _ye_state(fluid, rho, T)
         z = p_mpa / (rho * _R_YE * T)
         # departures from the verified a_res/R surface: u_res/(RT) = -T dphi/dT,
-        # s_res/R = u_res/(RT) - a_res/R, h_res/(RT) = u_res/(RT) + Z - 1.
+        # s_res/R = u_res/(RT) - a_res/R, h_res/(RT) = u_res/(RT) + Z - 1; S(T, P) adds
+        # ln Z for the ideal-gas reference taken at (T, P) rather than (T, rho).
         u_dep_over_rt = -T * dphi
         h_dep_j = R_IDEAL * T * (u_dep_over_rt + z - 1.0)
-        s_dep_over_r = u_dep_over_rt - phi
+        s_dep_over_r = u_dep_over_rt - phi + math.log(z)
         cp_ig = self._cp_ig(ids, xs, T)
         h_ig = self._h_ig(ids, xs, T)
         s_ig = self._s_ig(ids, xs, T, P)
@@ -569,7 +570,9 @@ class BWRLeeStarlingPackage(BWRSPackage):
         a_res = _bwrs_a_res(rho, t_r, p_mix)
         h_dep_j = _bwrs_h_dep_j(rho, t_r, p_mix)
         u_dep_over_rt = _bwrs_h_dep(rho, t_r, p_mix) - (z - 1.0)
-        s_dep_over_r = u_dep_over_rt - 2.0 * a_res
+        # S(T, P) - S_ig(T, P) = R (u_res/(RT) - a_res + ln Z): the residual at (T, rho)
+        # plus the ideal-gas volume change from (T, rho) to (T, P)
+        s_dep_over_r = u_dep_over_rt - a_res + math.log(z)
         cp_ig = self._cp_ig(ids, xs, T)
         h_ig = self._h_ig(ids, xs, T)
         s_ig = self._s_ig(ids, xs, T, P)
