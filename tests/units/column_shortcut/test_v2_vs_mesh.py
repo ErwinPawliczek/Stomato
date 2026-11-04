@@ -9,16 +9,19 @@ The spec requires two comparisons, both against the existing column unit:
     Re-measured under P1-13: the former record (D = 77.5137, C3/iC4 keys,
     FUG N = 18.873, -14.21 %) was a false convergence - nine bottom stages sat
     clamped at the 363.09 K band ceiling with bubble points up to 373.8 K.
-    The converged mesh (every stage at its bubble point, M = 6.9e-15) puts
-    D = 94.5439 mol/s with the kettle nearly dry (B = 5.456): C1-C3
-    essentially all overhead, so the split performed is iC4/nC4. Measured:
-    R = L0/D = 1.17406, iC4->D = 0.955372, nC4->B = 0.260834; FUG
-    Nmin = 10.040, Rmin = 0.0420, N = 13.469 vs the MESH's 22 stages =
-    -38.78 %: a recorded miss of the band. The same miss holds at the spec
+    Re-measured 2026-11-04 after the reflux-state fix (the total-condenser
+    reflux enters stage 1 saturated at its bubble point instead of at the
+    stage-1 temperature, 39 K hotter at this column's top): the former record
+    D = 94.5439, B = 5.456 (kettle nearly dry, an iC4/nC4 split) came from that
+    too-hot reflux. The converged mesh (every stage within 1e-6 K of its bubble
+    point) now puts D = 67.3514, B = 32.6486 mol/s: a C3/iC4 split. Measured:
+    R = L0/D = 1.64807, C3->D = 0.987871, iC4->B = 0.861107; FUG
+    Nmin = 8.695, Rmin = 0.8569, N = 14.684 vs the MESH's 22 stages =
+    -33.26 %: a recorded miss of the band. The same miss holds at the spec
     point (R = 3, D = 37, measured by a full spec solve in 149 s, C2/C3
     keys: FUG N = 13.33, -39.4 %). Cause, not closed here: Underwood's
     constant-alpha, constant-molal-overflow Rmin on a sloppy heavy-key split
-    with a 0.54 rectifying L/V is outside Gilliland's correlation basis.
+    with a 0.62 rectifying L/V is outside Gilliland's correlation basis.
 
 (b) the Kremser absorber against the zero-tear MESH on the P1-09 absorber
     case (C3 solute into nC5 lean, the same construction the P1-09 oracle
@@ -94,14 +97,14 @@ def test_v2a_fug_n_vs_deethanizer_bench_mesh(thermo: Thermo) -> None:
     f_comp = {cid: 100.0 * z for cid, z in DEETHANIZER_FEED["composition"].items()}
     worst = max(abs(d_comp[c] + b_comp[c] - f_comp[c]) / f_comp[c] for c in col.comps)
     assert worst <= 1e-8, f"MESH component closure {worst:.2e} too loose"
-    assert prof.d == pytest.approx(94.5439, abs=0.05)
+    assert prof.d == pytest.approx(67.3514, abs=0.05)
 
     r_mesh = 3.0 * 37.0 / prof.d
-    assert r_mesh == pytest.approx(1.17406, abs=1e-3)
-    rec_lk = d_comp["iC4"] / f_comp["iC4"]
-    rec_hk_b = b_comp["nC4"] / f_comp["nC4"]
-    assert rec_lk == pytest.approx(0.955372, abs=1e-5)
-    assert rec_hk_b == pytest.approx(0.260834, abs=1e-5)
+    assert r_mesh == pytest.approx(1.64807, abs=1e-3)
+    rec_lk = d_comp["C3"] / f_comp["C3"]
+    rec_hk_b = b_comp["iC4"] / f_comp["iC4"]
+    assert rec_lk == pytest.approx(0.987871, abs=1e-5)
+    assert rec_hk_b == pytest.approx(0.861107, abs=1e-5)
 
     states = {
         "feed": thermo.flash_pt(
@@ -114,8 +117,8 @@ def test_v2a_fug_n_vs_deethanizer_bench_mesh(thermo: Thermo) -> None:
     fug = registry.create("unit", "shortcut_distillation").solve(
         states,
         {
-            "light_key": "iC4",
-            "heavy_key": "nC4",
+            "light_key": "C3",
+            "heavy_key": "iC4",
             "recovery_LK_D": rec_lk,
             "recovery_HK_B": rec_hk_b,
             "R": r_mesh,
@@ -126,14 +129,14 @@ def test_v2a_fug_n_vs_deethanizer_bench_mesh(thermo: Thermo) -> None:
         thermo,
     )
     n_fug = fug.info["N"]
-    assert n_fug == pytest.approx(13.469, abs=0.05)
+    assert n_fug == pytest.approx(14.684, abs=0.05)
     gap = (n_fug - BENCH_N_STAGES) / BENCH_N_STAGES
     # The spec band, recorded as measured-missed; the band is never moved.
     if abs(gap) > BENCH_GILLILAND_BAND:
         pytest.xfail(
             f"recorded miss: FUG N {n_fug:.3f} vs the MESH's 22 stages, gap {gap:+.2%} outside "
             "Gilliland's +/-20 % band; cause: Underwood's constant-alpha Rmin on a sloppy "
-            "heavy-key split with a 0.54 rectifying L/V (see the module docstring)"
+            "heavy-key split with a 0.62 rectifying L/V (see the module docstring)"
         )
 
 
