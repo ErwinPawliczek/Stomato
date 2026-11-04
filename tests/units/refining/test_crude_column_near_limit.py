@@ -17,6 +17,7 @@ import pytest
 
 from ngdesign import registry
 from ngdesign.units.column import specs
+from ngdesign.units.column.graph_ns import _graph_naphtali_sandholm
 from ngdesign.units.refining.crude_column_r2 import CrudeColumnR2
 from tests.conftest import flash_feed
 
@@ -39,7 +40,7 @@ def solved() -> tuple[dict[str, Any], Any, list[tuple[int, list[str]]]]:
     feeds, params = CrudeColumnR2.example_case()
     inlets = {port: flash_feed(thermo, f) for port, f in feeds.items()}
     newton: list[tuple[int, list[str]]] = []
-    original = specs._graph_naphtali_sandholm
+    original = _graph_naphtali_sandholm
 
     def recorded(*args: Any, **kwargs: Any) -> Any:
         prof = args[2]
