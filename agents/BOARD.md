@@ -15,18 +15,23 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | accepted (PR #341) | obv/T5 | 2026-11-04 12:16 PM |
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | accepted (PR #340) | obv/T6 | 2026-11-04 12:26 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | data accepted; PR #339 closed (wrong base) → T7b | obv/T7 | 2026-11-04 12:12 PM |
-| T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | dropped (stale: claimed 12:06, no obv/T8 push in 90 min) → T8r | obv/T8 | 2026-11-04 1:38 PM |
+| T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | review (PR #347, obv/T8 233fd67 pushed 1:31 PM; handoff 1:32 PM landed before the 1:35 drop, so the drop is void) | obv/T8 | 2026-11-04 1:42 PM |
 | T7b | Re-cut T7 pack onto chem-engine; drop the 6 Antoine-computed Psat cases | Obvious | accepted (PR #344; 69 cases, base 6e2eada, 2 pack files only; merge waits for full suite) | obv/T7b | 2026-11-04 1:38 PM |
 | T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only) | Obvious | accepted (PR #345; CAS check digits + chemdb species.csv match; merge waits for full suite) | obv/T9 | 2026-11-04 1:38 PM |
 | T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T3 P-value fix | Obvious | accepted w/ fix → T10b (PR #346; tolerances unchanged, skips visible, T3 fix in; tests/validation 290 passed/353 skipped/320 xfailed/0 failed on PC) | obv/T10 | 2026-11-04 1:38 PM |
-| T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | claimed | obv/T11 | 2026-11-04 12:47 PM |
+| T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | claimed — STALE (claimed 12:47, no obv/T11 push or heartbeat in 55 min) | obv/T11 | 2026-11-04 1:42 PM |
 | T10b | Fix-up on PR #346: skipped cases must still pass citation/schema checks; add retrieval dates to the 9 T3 sources (from data.csv) | Obvious | open (dispatched 1:36 PM) | obv/T10 | 2026-11-04 1:38 PM |
-| T8r | Re-dispatch of T8: reformer_cat (#329) + control_valve (#282) case files → one PR into chem-engine, branch obv/T8r cut from origin/chem-engine | Obvious | open (dispatched 1:36 PM) | obv/T8r | 2026-11-04 1:38 PM |
+| T8r | Re-dispatch of T8: reformer_cat (#329) + control_valve (#282) case files → one PR into chem-engine, branch obv/T8r cut from origin/chem-engine | Obvious | open — REDUNDANT with PR #347; needs a cancel decision (no obv/T8r push yet) | obv/T8r | 2026-11-04 1:42 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
 
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Board sync — Stomato bot — 2026-11-04 1:42 PM
+- Done: Found a race. Obvious pushed obv/T8 (233fd67, 1:31 PM) and its T8 handoff (c39339e, 1:32 PM) with PR #347 before the 1:35 board commit that dropped T8 as stale and dispatched T8r. T8 → `review` (PR #347). T8r flagged redundant (no obv/T8r push yet). T11 flagged stale: claimed 12:47, no `obv/T11` branch or heartbeat. No `claude/*` branches. V1 still blocked until the 4:35 PM continue.
+- Outputs: this board update only. No new Obvious job.
+- Next: decide whether to cancel T8r (Obvious project prj_5RzQacfW). Review PR #347 against the T8 handoff. Decide on re-dispatching or dropping T11. Watch T10b.
 
 ### Review + dispatch — Stomato bot — 2026-11-04 1:38 PM
 - Done: Reviewed and commented.
