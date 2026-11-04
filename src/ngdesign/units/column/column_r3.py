@@ -215,10 +215,11 @@ class ColumnR3:
     def example_case(cls) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
         """R2's example column (16 stages, C3/iC4 50/50 at 330 K and 1.5 MPa, total
         condenser, feed on stage 8, reflux ratio 2.5, distillate 45 mol/s), the 15
-        stages between condenser and kettle as packed segments of a 1.5 m x 15 m bed.
+        stages between condenser and kettle as packed segments of a 1.8 m x 15 m bed.
         Packing inputs are illustrative, not catalogue data (25 mm rings,
         a_t = 200 m2/m3, sigma_c = 0.061 N/m as the absorber R3); liquid surface
-        tension 0.006 N/m is an illustrative light-hydrocarbon value."""
+        tension 0.006 N/m is an illustrative light-hydrocarbon value. Measured
+        Re_G 1.6e3-1.84e3, Re_L 125-283: inside the Onda data span."""
         from . import Column
 
         feeds, r2 = Column.example_case()
@@ -228,7 +229,7 @@ class ColumnR3:
             "feed_stage": r2["feed_stage"],
             "pressure_profile": r2["pressure_profile"],
             "specs": dict(r2["specs"]),
-            "column_diameter_m": 1.5,
+            "column_diameter_m": 1.8,
             "packed_height_m": 15.0,
             "nominal_size_m": 0.025,
             "specific_area_m2_m3": 200.0,
