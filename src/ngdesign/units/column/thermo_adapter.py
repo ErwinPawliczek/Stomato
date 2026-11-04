@@ -531,6 +531,26 @@ class _ThermoBox:
         self._bubble_cache[key] = result
         return result
 
+    def saturated_liquid_temperature(self, z: dict[str, float], P: float) -> float | None:
+        """True bubble temperature of z at P: the total-condenser outlet state.
+
+        A total condenser returns reflux and distillate as saturated liquid at
+        the condenser pressure (Seader, Henley & Roper, Separation Process
+        Principles 3rd ed., §10.3: Q_c = V_1 (h_V1 - h_L0), L_0 and D at their
+        bubble point). This is the package's ``bubble_point``, NOT
+        ``bubble_temperature`` (the vapour-fraction-0.5 seed crossing). None
+        when the package has no bubble point there (super-critical z).
+        """
+        key = ("sat", tuple(sorted(z.items())), P)
+        if key in self._bubble_cache:
+            return self._bubble_cache[key]
+        try:
+            result: float | None = self._thermo.bubble_point(z, P=P).T
+        except Exception:  # noqa: BLE001 - SaturationError or a component outside the EOS domain
+            result = None
+        self._bubble_cache[key] = result
+        return result
+
     def _cc_mixture_estimate(self, z: dict[str, float], P: float) -> float | None:
         """Mole-weighted mean of the pure-component CC saturation temperatures at P."""
         acc = 0.0
