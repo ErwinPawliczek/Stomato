@@ -13,7 +13,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | claimed | obv/T3 | 2026-11-04 12:06 PM |
 | T4 | API liquid density: public reproductions of API TDB 6A3.5 / Rackett-type petroleum correlations with worked examples | Obvious | review | obv/T4 | 2026-11-04 12:11 PM |
 | T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | claimed | obv/T5 | 2026-11-04 12:07 PM |
-| T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | claimed | obv/T6 | 2026-11-04 12:06 PM |
+| T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | review | obv/T6 | 2026-11-04 12:06 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | review | obv/T7 | 2026-11-04 12:12 PM |
 | T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 1:20 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
@@ -47,6 +47,15 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 
 ### T6 — Obvious — 2026-11-04 12:10 PM
 - 12:10 PM CST — Obvious (T6): claimed; three open sources verified with full numeric tables (CABEQ 2015 PS/toluene; Tanbonliong/Prausnitz UC thesis; CABEQ 2014 PMMA/2-butanone). Building pack now.
+
+### T6 — Obvious — 2026-11-04 12:26 PM
+- Done: Task T6 complete. Three open experimental polymer-solvent VLE sources found, read as open full text, transcribed with full citations, and packed; nothing invented, estimated, or fitted; no V1 file (cases*.yaml) touched. PR #340 open into chem-engine (never main).
+- Outputs (paths / branch / commit / PR #): data/validation/packs/T6/{data.csv (65 rows), pack.yaml (59 cases), README.md}; branch obv/T6, commit aa4754d; PR: https://github.com/ErwinPawliczek/Stomato/pull/340 (obv/T6 -> chem-engine).
+- Sources used: (1) Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2 p. 2, doi:10.15255/CABEQ.2015.2183 (toluene+PS Mw 250k, 363.15/373.15/383.15 K; open: https://hrcak.srce.hr/file/202639). (2) Tanbonliong/Prausnitz, "Vapor-Liquid Equilibria for Some Binary and Ternary Polymer Solutions", eScholarship (UC) 1996, Table 2 p. 18 (chloroform+PS 50k, methyl acetate+PS 50k, acetone+PMMA 125k, methyl acetate+PMMA 125k, 323.15 K; https://escholarship.org/uc/item/8wq3x5wd). (3) Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2 p. 448, doi:10.15255/CABEQ.2014.19388 (2-butanone+PMMA 15k, 333.15/343.15/353.15 K; open: https://hrcak.srce.hr/file/195544). Solvent Mw from NIST WebBook (toluene 92.1384, acetone 58.0791, 2-butanone 72.1057, chloroform 119.378, methyl acetate 74.0785; retrieved 2026-11-04).
+- NOT FOUND / gaps: PIB/pentane and PE/hexane open numeric tables with MW stated — paywalled (doi:10.1002/pol.1982.180200503 PIB sorption isotherms; Wohlfarth/Landolt-Boernstein compilations). No open FH chi for the new pairs (S2/S3 stay pending:flory_huggins, nothing fitted). No PMMA pseudo-component registration in-repo (only POLY_PS of P1-07); pack names the ids a future curation would register. Thesis PS-acetone rows are Bawn & Wajid 1956 (paywalled) and were NOT packed (provenance guard).
+- Tests run + result: no repo test suite run (data-only change, no code paths affected) — stated per protocol rule 6. In-session checks: data.csv (65 rows) and pack.yaml (59 cases) parse; every pack case matches a data.csv row exactly on (T, P); the papers' printed activities reproduce from their own P/P1o columns to 4 decimals (S1 and S3, all three isotherms each).
+- Next / open questions: Stomato bot to review PR #340 and bind the pack when convenient. S1 binds naturally to pending:polymer_pc_saft (parameters exist in-repo, k_ij = 0; note packed PS sample Mw 250k vs shipped POLY_PS Mw 400k, documented in pack.yaml). S2/S3 need FH chi parameter curation first. Board sync may want to record the three sources in the "Sources found" table.
+- Heartbeats: 12:10 PM CST — claimed; three open sources verified with full numeric tables; building pack. 12:26 PM CST — pack pushed to obv/T6 (aa4754d), PR #340 open, status review.
 
 <!-- Template:
 ### <id> — <owner> — <YYYY-MM-DD HH:MM>
