@@ -164,6 +164,19 @@ type: object
 
 Mode map: `distillation` → `R2`, `absorber` → `R2`, `stripper` → `R2`, `rectifier` → `R2`, `reboiled_absorber` → `R2`
 
+## V1 worked cases
+
+| case | level | quantity | expected | measured | tolerance | result |
+|---|---|---|---|---|---|---|
+| `V1-column-seader-10-9` | R2 | `outlet.distillate.T` | 301.856 | 301.325 | abs 0.003 | assessed miss |
+| `V1-column-seader-10-9` | R2 | `outlet.bottoms.T` | 362.278 | 360.547 | abs 0.003 | assessed miss |
+| `V1-column-seader-10-9` | R2 | `outlet.bottoms.composition.C3` | 0.0191 | 0.0171531 | abs 1e-05 | assessed miss |
+| `V1-column-seader-10-9` | R2 | `outlet.bottoms.composition.nC4` | 0.247255 | 0.24894 | abs 1e-05 | assessed miss |
+| `V1-column-seader-10-9` | R2 | `outlet.bottoms.composition.nC5` | 0.733625 | 0.733907 | abs 1e-05 | assessed miss |
+
+- `V1-column-seader-10-9`: Seader, Henley & Roper, "Separation Process Principles", 3rd ed. (Wiley 2011), Example 10.9 "Inside-Out Method", p. 404, with the column of Figure 10.7, p. 384 (archive.org item separation-process-principles-chemical-a, PDF pages 412 and 432, read and retrieved 2026-11-04): total condenser (stage 1), three equilibrium stages, partial reboiler (stage 5), all at 100 psia; 100 lbmol/h saturated-liquid feed to stage 3 (C3 0.30, nC4 0.30, nC5 0.40); reflux ratio L1/U1 = 2.0; bottoms L5 = 50 lbmol/h; SRK equation of state (CHEMCAD TOWR). Converged (outer-loop iteration 3) results printed: T1 = 83.67 F, T5 = 192.43 F; bottoms C3 0.955, nC4 12.363, nC5 36.683 lbmol/h of L5 = 50.001 lbmol/h. The book reports the feed bubble point as 123.5 F.
+  - assessed: Measured miss (catalogue srk): distillate T 301.325 K vs 301.856 K (-0.53 K), bottoms T 360.547 K vs 362.278 K (-1.73 K); bottoms x_C3 0.017153 vs 0.019100, x_nC4 0.248940 vs 0.247255, x_nC5 0.733907 vs 0.733625. Cause investigated: the property package, not the MESH solve. The catalogue srk carries the 'ChemSep PR' IPDB k_ij (C3-nC4 0.0033, C3-nC5 0.0267, nC4-nC5 0.0174) and puts the feed bubble point at 321.672 K (119.34 F); the same SRK with k_ij = 0 (thermo library SRKMIX, identical Tc/Pc/omega) gives 323.979 K (123.49 F), the book's printed 123.5 F, so the book's CHEMCAD SRK ran without these k_ij. With the nonzero k_ij the mixture is more volatile, every stage sits colder and less C3 reaches the bottoms, which is the measured pattern. No catalogue package exposes SRK with zero k_ij, so the case cannot be driven on the book's exact property model; the level stays provisional.
+
 ## References
 
 - Boston & Sullivan 1974, Can. J. Chem. Eng. 52, 52-63

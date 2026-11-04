@@ -463,7 +463,7 @@
         x_O2 = 0.1345); the permeate_recovery path is a spec split with V0
         self-consistency only.
     R1:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.separation.membrane_r1:MembraneR1
       params:
         type: object
@@ -478,6 +478,10 @@
         (closed form at P_l = 0) and the feed side dn_i/da = -J_i integrated
         DOP853 at rtol 1e-11; stage-cut mode by a terminal event with the
         A_hard cap; isothermal outlets via split_by_component as in R0.
+        Validated against Geankoplis Ex. 13.6-1 (cross flow, theta = 0.2;
+        reject x_O2 0.1190, permeate y_O2 0.569; measured 0.11904 / 0.56886).
+      validation:
+      - V1-membrane-geankoplis-13-6-1
     R2:
       status: provisional
       adapter: ngdesign.units.separation.membrane_r2:MembraneR2
@@ -499,9 +503,11 @@
   references:
   - docs/unit-catalogue-plan.md §2 U-D 8
   notes: R0 split and stage-cut specs implemented; Geankoplis Ex. 13.4-2 example.
-      V1 gap — no printed cross-flow or counter-current worked example was found for
-      R1/R2 (searched Geankoplis §13.5 cross-flow worked example, Pan 1983, Baker
-      Ch. 8, and the plan's candidates); the R1/R2 oracle cases CF1–CF4 are
+      R1 cross flow is validated on Geankoplis Ex. 13.6-1 (FOSSEE transcription).
+      R2 V1 gap — no printed counter-current worked example was found (searched
+      Geankoplis Ch. 13, Seader-Henley-Roper 3rd ed. Ch. 14 - Ex. 14.6 is perfect
+      mixing, Ex. 14.12 is plug-flow feed with a mixed permeate, Fig. 14.13 is a
+      plot only; Pan 1983, Baker Ch. 8); the R1/R2 oracle cases CF1–CF4 are
       hand-computed (scratchpad/unit-specs/calc_membrane.py RK4/bisection — no
       printed source), checked by the Rayleigh closed form and the R2 -> R1 -> R0
       identities.
