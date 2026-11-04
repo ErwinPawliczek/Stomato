@@ -2,7 +2,7 @@
 
 Family: **heat** · P&ID symbol: `CT`
 
-Rigour ladder: R0 provisional, R1 provisional
+Rigour ladder: R0 validated, R1 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R1 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.heat.cooling_tower:CoolingTower` | water outlet FIXED at wet bulb + approach_K; the exit air, saturated at the exit-air temperature solved from the overall energy closure, carries the heat and the evaporation; blowdown/makeup from cycles of concentration |
+| R0 | validated | `ngdesign.units.heat.cooling_tower:CoolingTower` | water outlet FIXED at wet bulb + approach_K; the exit air, saturated at the exit-air temperature solved from the overall energy closure, carries the heat and the evaporation; blowdown/makeup from cycles of concentration |
 | R1 | provisional | `ngdesign.units.heat.cooling_tower_r1:CoolingTowerR1` | Merkel number by 4-point Chebyshev (CTI ATC-105) against KaV/L = C (L/G)^-n, water outlet solved by brentq, then the R0 balance at the solved approach; Merkel enthalpies from the ASHRAE Fundamentals Ch. 1 Hyland-Wexler closed form per the orchestrator ruling on PR #284 (the package's water latent heat is ~4% high, #249), the balance stays R0's through the thermo package; approach_K is solved at R1, not a parameter. A characteristic above the attainable Merkel number refuses typed with both numbers. |
 
 ### R0 parameters

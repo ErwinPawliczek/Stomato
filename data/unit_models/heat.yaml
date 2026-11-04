@@ -525,7 +525,7 @@
       description: coil outlet
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.heat.fired_heater:FiredHeater
       params:
         type: object
@@ -602,7 +602,7 @@
         energy balance)
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.heat.cooling_tower:CoolingTower
       params:
         type: object
@@ -675,7 +675,7 @@
       description: positional outlet for cold_in_2
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.heat.hen_block:HenBlock
       params:
         type: object
