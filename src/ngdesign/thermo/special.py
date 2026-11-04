@@ -65,6 +65,7 @@ from thermo.activity import GibbsExcess, IdealSolution
 from ngdesign.data import DATABANK_LOCK, register_pseudo
 from ngdesign.thermo import _state
 from ngdesign.thermo._state import R_IDEAL as R
+from ngdesign.thermo._state import _with_distinct_trials
 from ngdesign.thermo.cubic import ThermoSurfaceMixin
 from ngdesign.thermo.teqp_bridge import TeqpPackage
 
@@ -136,8 +137,10 @@ def _special_flasher(
             )
 
         if association is not None:
-            return _AssociationFlashVL(constants, correlations, gas=gas, liquid=ge_liquid())
-        return FlashVL(constants, correlations, gas=gas, liquid=ge_liquid())
+            return _with_distinct_trials(
+                _AssociationFlashVL(constants, correlations, gas=gas, liquid=ge_liquid())
+            )
+        return _with_distinct_trials(FlashVL(constants, correlations, gas=gas, liquid=ge_liquid()))
 
 
 class _AssociationFlashVL(FlashVL):  # type: ignore[misc]  # thermo ships no stubs
