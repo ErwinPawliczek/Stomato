@@ -22,6 +22,7 @@ citation trail):
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -119,7 +120,7 @@ def test_pitzer_saturation_molality() -> None:
 
 # The three brine rows share the involatile-salt flash plumbing; the water
 # activity surface is the per-model chemistry driver.
-_BRINE_WATER_ACTIVITY = {
+_BRINE_WATER_ACTIVITY: dict[str, Callable[[float], float]] = {
     "pitzer_nacl_water": pitzer_water_activity,
     "enrtl_nacl_water": enrtl_water_activity,
     "ext_uniquac_nacl_water": ext_uniquac_water_activity,

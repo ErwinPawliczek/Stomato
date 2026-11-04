@@ -139,10 +139,11 @@ _CACHE_SIZE = _state.PROPERTY_CACHE_SIZE
 #: Henry constants are psia per gmol/kg solution; the package surfaces Pa.
 _PSIA_TO_PA = 6894.757293168
 
-#: NaCl molality cap: the verified parameter domain ends at the 298.15 K
-#: saturation (6.146 mol/kg); a nominal molality above it is outside the
-#: single-liquid model, and the flash clamps to the saturated anchor (the
-#: amine packages' loading-clamp precedent).
+#: Default molality clamp of :func:`_salt_molality` (the NaCl saturation, 6.146
+#: mol/kg at 298.15 K); the packages always pass their salt's own cap
+#: (``molality_cap`` of its parameter-file entry), and the flash clamps a
+#: nominal molality above it to the saturated anchor (the amine packages'
+#: loading-clamp precedent).
 _MAX_MOLALITY = 6.15
 
 #: The Pitzer-Debye-Hueckel term alone has no short-range physics: it is a dilute-
@@ -166,13 +167,10 @@ _MODEL_WINDOWS: dict[str, tuple[float, float]] = {
     "sour_water": (293.15, 373.15),
 }
 
-#: Molecular support per model (stream keys; ionic species never leave).  The
-#: Pitzer support is data-driven (water plus every salt in pitzer.yaml), see
-#: :meth:`ElectrolytePackage._supported_ids`.
+#: Molecular support of the sour-water model (stream keys; ionic species never
+#: leave).  The brine supports are data-driven (water plus every salt of the
+#: model's parameter file), see :data:`_BRINE_SALTS`.
 _MODEL_SUPPORTS: dict[str, frozenset[str]] = {
-    "enrtl": frozenset({"H2O", "NaCl"}),
-    "pdh": frozenset({"H2O", "NaCl"}),
-    "ext_uniquac": frozenset({"H2O", "NaCl"}),
     "sour_water": frozenset({"H2O", "NH3", "H2S"}),
 }
 
@@ -193,6 +191,86 @@ class ElectrolyteChemistryError(ValueError):
     callers can distinguish a chemistry-window excursion from other flash
     failures; the message names the model, the window and the state.
     """
+
+
+# -- single-salt ion pairs (shared by every brine model's parameter file) ---------
+
+
+@dataclass(frozen=True)
+class SaltIons:
+    """One salt's ion pair and stoichiometry, as every brine parameter file keys it.
+
+    ``cation``/``anion`` are the species keys of the owning file, ``z_*`` the
+    charge magnitudes and ``nu_*`` the stoichiometric numbers of the salt
+    C_nuC A_nuA; ``molality_cap`` (mol/kg) is the top of the verified range.
+    ``zz`` = |z_M z_X|, ``nu`` = nu_M + nu_X and ``charge_sum`` =
+    nu_M z_M^2 + nu_X z_X^2 (so I = m * charge_sum / 2); all read 1, 2 and 2
+    exactly for a 1:1 salt.
+    """
+
+    salt: str
+    cation: str
+    anion: str
+    z_cation: int
+    z_anion: int
+    nu_cation: int
+    nu_anion: int
+    molality_cap: float
+
+    @property
+    def zz(self) -> float:
+        return float(self.z_cation * self.z_anion)
+
+    @property
+    def nu(self) -> float:
+        return float(self.nu_cation + self.nu_anion)
+
+    @property
+    def charge_sum(self) -> float:
+        return float(self.nu_cation * self.z_cation**2 + self.nu_anion * self.z_anion**2)
+
+
+def _salt_entry(table: dict[str, Any], salt: str, model: str, source: str) -> dict[str, Any]:
+    """The ``salts`` entry for ``salt`` of a brine parameter file; unknown salts refuse."""
+    entry = table["salts"].get(salt)
+    if entry is None:
+        raise ElectrolyteChemistryError(
+            f"no {model} parameters for {salt!r}: data/thermo_params/electrolyte/{source} "
+            f"carries {sorted(table['salts'])} (single-salt sets with cited sources)"
+        )
+    return cast(dict[str, Any], entry)
+
+
+def _salt_ions(salt: str, entry: dict[str, Any]) -> SaltIons:
+    """The ion pair and stoichiometry of one ``salts`` entry."""
+    return SaltIons(
+        salt=salt,
+        cation=str(entry["cation"]),
+        anion=str(entry["anion"]),
+        z_cation=int(entry["z_cation"]),
+        z_anion=int(entry["z_anion"]),
+        nu_cation=int(entry["nu_cation"]),
+        nu_anion=int(entry["nu_anion"]),
+        molality_cap=float(entry["molality_cap"]),
+    )
+
+
+def _sle_molality(gamma: Callable[[float], float], entry: dict[str, Any], salt: str, source: str) -> float:
+    """Salt solubility (mol/kg) from the SLE condition gamma(m) == gamma_sat.
+
+    gamma_sat is the saturated-solution mean activity coefficient of the
+    entry's ``saturation`` anchor (NaCl: 1.0065, Pitzer, Peiper & Busey 1984,
+    p. 11); bracketed root finding on the rising branch past 4 molal.  Only
+    salts whose entry carries the anchor have one.
+    """
+    if "saturation" not in entry:
+        raise ElectrolyteChemistryError(f"no saturation anchor for {salt!r} in {source}")
+    gamma_sat = float(entry["saturation"]["mean_gamma"])
+
+    def residual(m: float) -> float:
+        return gamma(m) - gamma_sat
+
+    return brent_root(residual, 4.0, 10.0)
 
 
 # -- Pitzer single-salt brines (PHRQPITZ 25 C parameter sets) ----------------------
@@ -234,33 +312,26 @@ class PitzerSalt:
 @cache
 def pitzer_salt(salt: str) -> PitzerSalt:
     """The single-salt Pitzer entry for ``salt`` (a component id); unknown salts refuse."""
-    table = _pitzer()["salts"]
-    entry = table.get(salt)
-    if entry is None:
-        raise ElectrolyteChemistryError(
-            f"no Pitzer parameters for {salt!r}: data/thermo_params/electrolyte/pitzer.yaml "
-            f"carries {sorted(table)} (single-salt sets with cited sources)"
-        )
-    zc, za = int(entry["z_cation"]), int(entry["z_anion"])
-    nc, na = int(entry["nu_cation"]), int(entry["nu_anion"])
-    if zc >= 2 and za >= 2:
+    entry = _salt_entry(_pitzer(), salt, "Pitzer", "pitzer.yaml")
+    ions = _salt_ions(salt, entry)
+    if ions.z_cation >= 2 and ions.z_anion >= 2:
         # 2:2 salts need beta2 with alpha1 = 1.4, alpha2 = 12 (Pitzer & Mayorga 1974);
         # no such entry is shipped, so the form is not implemented.
         raise ElectrolyteChemistryError(f"{salt!r} is a 2:2 salt; the beta2 form is not implemented")
-    nu = nc + na
+    nc, na = ions.nu_cation, ions.nu_anion
     return PitzerSalt(
         salt=salt,
-        cation=str(entry["cation"]),
-        anion=str(entry["anion"]),
-        zz=float(zc * za),
-        nu=float(nu),
-        f_b=2.0 * nc * na / nu,
-        f_c=2.0 * float(nc * na) ** 1.5 / nu,
-        charge_sum=float(nc * zc * zc + na * za * za),
+        cation=ions.cation,
+        anion=ions.anion,
+        zz=ions.zz,
+        nu=ions.nu,
+        f_b=2.0 * nc * na / ions.nu,
+        f_c=2.0 * float(nc * na) ** 1.5 / ions.nu,
+        charge_sum=ions.charge_sum,
         beta0=float(entry["beta0"]),
         beta1=float(entry["beta1"]),
         cphi=float(entry["cphi"]),
-        molality_cap=float(entry["molality_cap"]),
+        molality_cap=ions.molality_cap,
     )
 
 
@@ -345,17 +416,10 @@ def pitzer_saturation_molality(salt: str = "NaCl") -> float:
     salts whose entry carries a ``saturation`` anchor have one.
     """
     entry = _pitzer()["salts"][pitzer_salt(salt).salt]
-    if "saturation" not in entry:
-        raise ElectrolyteChemistryError(f"no saturation anchor for {salt!r} in pitzer.yaml")
-    gamma_sat = float(entry["saturation"]["mean_gamma"])
-
-    def residual(m: float) -> float:
-        return pitzer_mean_gamma(m, salt) - gamma_sat
-
-    return brent_root(residual, 4.0, 10.0)
+    return _sle_molality(lambda m: pitzer_mean_gamma(m, salt), entry, salt, "pitzer.yaml")
 
 
-# -- eNRTL NaCl(aq) (Chen et al. 1982 PDH + Chen & Evans 1986 local composition) ----
+# -- eNRTL single-salt brines (Chen et al. 1982 PDH + Chen & Evans 1986 local composition)
 
 
 @cache
@@ -366,125 +430,187 @@ def _enrtl() -> dict[str, Any]:
     return cast(dict[str, Any], data)
 
 
-def _pdh_gE_rt(xi: float) -> float:
-    """Pitzer-Debye-Hueckel G^E/RT per total mole, mole-fraction basis, 1:1 salt.
+@dataclass(frozen=True)
+class ENRTLSalt:
+    """One salt's eNRTL entry: its ion pair and the salt-water NRTL binary.
 
-    -(4 A_phi I_x / rho) sqrt(1000/M_w) ln(1 + rho sqrt(I_x)), with A_phi = 0.392 and
-    the closest-approach rho = 14.9 (Pitzer, J. Am. Chem. Soc. 102 (1980) 2902; Chen,
-    Britt, Boston & Evans, AIChE J. 28 (1982) 588); I_x = xi for |z| = 1 ions.
+    ``tau_ca_w`` / ``tau_w_ca`` are the Chen & Evans (1986) salt-molecule and
+    molecule-salt energy parameters and ``alpha`` the nonrandomness factor
+    (0.2 in their single-solvent sets); G = exp(-alpha tau).
+    """
+
+    ions: SaltIons
+    alpha: float
+    tau_ca_w: float
+    tau_w_ca: float
+
+
+@cache
+def enrtl_salt(salt: str) -> ENRTLSalt:
+    """The eNRTL entry for ``salt`` (a component id); unknown salts refuse."""
+    entry = _salt_entry(_enrtl(), salt, "eNRTL", "enrtl.yaml")
+    return ENRTLSalt(
+        ions=_salt_ions(salt, entry),
+        alpha=float(entry["alpha"]),
+        tau_ca_w=float(entry["tau_ca_w"]),
+        tau_w_ca=float(entry["tau_w_ca"]),
+    )
+
+
+def enrtl_salts() -> tuple[str, ...]:
+    """Every salt (component id) with an eNRTL entry, sorted."""
+    return tuple(sorted(_enrtl()["salts"]))
+
+
+def _pdh_gE_rt(xc: float, xa: float, ions: SaltIons) -> float:
+    """Pitzer-Debye-Hueckel G^E/RT per total mole, mole-fraction basis, one salt.
+
+    -(4 A_phi I_x / rho) sqrt(1000/M_w) ln(1 + rho sqrt(I_x)), I_x = (z_c^2 x_c +
+    z_a^2 x_a)/2, with A_phi = 0.392 and the closest-approach rho = 14.9 (Pitzer,
+    J. Am. Chem. Soc. 102 (1980) 2902; Chen, Britt, Boston & Evans, AIChE J. 28
+    (1982) 588, eq. 4; infinite-dilution reference, I_x = 0 in pure water).  I_x
+    reduces exactly to the per-ion fraction for a 1:1 salt.
     """
     p = _enrtl()
     aphi, rho = float(p["aphi"]), float(p["rho"])
-    return -4.0 * aphi / math.sqrt(_MW_WATER_KG) * (xi / rho) * math.log1p(rho * math.sqrt(xi))
+    ix = 0.5 * (ions.z_cation**2 * xc + ions.z_anion**2 * xa)
+    return -4.0 * aphi / math.sqrt(_MW_WATER_KG) * (ix / rho) * math.log1p(rho * math.sqrt(ix))
 
 
-def _enrtl_gE_rt(xw: float, xi: float) -> float:
-    """G^E/RT per total mole on the effective-fraction basis (xw + 2*xi = 1).
+def _enrtl_gE_rt(xw: float, xc: float, xa: float, s: ENRTLSalt) -> float:
+    """G^E/RT per total mole (x_w + x_c + x_a = 1), PDH long range + local composition.
 
-    Long range: :func:`_pdh_gE_rt`.  Short range: the single-salt local-composition
-    reduction of the Chen & Evans 1986 binary (tau_CA,w = -4.5916, tau_w,CA = 9.0234, alpha = 0.2, G =
-    exp(-alpha*tau)): a molecule cell and one ion cell per ion, X_CA = 2*xi,
-    X_i = xi (derived from Kwaterski & Herri eq 25; the salt-side composition
-    derivative of n*G^E returns ln gamma_Na + ln gamma_Cl for the 1:1 salt).
+    Short range: the single-salt, single-solvent local-composition G^E of Chen
+    & Evans (1986), AIChE J. 32, 444, eq. 13 with one salt-water pair
+    (G_cw = G_aw = exp(-alpha tau_ca,w), G_w,ca = exp(-alpha tau_w,ca)) on the
+    effective fractions X_w = x_w, X_c = z_c x_c, X_a = z_a x_a:
+
+        g_lc = X_w (X_c + X_a) G_cw tau_ca,w / (X_w + (X_c + X_a) G_cw)
+             + X_c X_w G_w,ca tau_w,ca / (X_a + X_w G_w,ca)
+             + X_a X_w G_w,ca tau_w,ca / (X_c + X_w G_w,ca)
+
+    (a molecule cell and one cell per ion; for a 1:1 salt X_c = X_a and the two
+    ion cells coincide, the reduction derived from Kwaterski & Herri eq. 25).
+    The salt-side composition derivative of n*G^E returns
+    nu_c ln gamma_c + nu_a ln gamma_a.
     """
-    p = _enrtl()
-    alpha = float(p["alpha"])
-    tau_caw, tau_wca = float(p["tau_ca_w"]), float(p["tau_w_ca"])
-    g_c = math.exp(-alpha * tau_caw)
-    g_w = math.exp(-alpha * tau_wca)
-    x_ca = 2.0 * xi
-    g_lc = xw * x_ca * g_c * tau_caw / (xw + x_ca * g_c) + x_ca * xw * g_w * tau_wca / (xw * g_w + xi)
-    return _pdh_gE_rt(xi) + g_lc
+    ions = s.ions
+    g_c = math.exp(-s.alpha * s.tau_ca_w)
+    g_w = math.exp(-s.alpha * s.tau_w_ca)
+    big_xc, big_xa = ions.z_cation * xc, ions.z_anion * xa
+    x_ion = big_xc + big_xa
+    g_lc = xw * x_ion * g_c * s.tau_ca_w / (xw + x_ion * g_c)
+    if big_xc == big_xa:
+        g_lc += x_ion * xw * g_w * s.tau_w_ca / (xw * g_w + big_xa)
+    else:
+        g_lc += big_xc * xw * g_w * s.tau_w_ca / (xw * g_w + big_xa)
+        g_lc += big_xa * xw * g_w * s.tau_w_ca / (xw * g_w + big_xc)
+    return _pdh_gE_rt(xc, xa, ions) + g_lc
 
 
 def _enrtl_ln_props(
-    molality: float, ge_rt: Callable[[float, float], float] = _enrtl_gE_rt
+    molality: float, salt: str = "NaCl", long_range_only: bool = False
 ) -> tuple[float, float]:
-    """(ln gamma+-(m), ln a_w) of NaCl(aq) at the 25 C parameter set.
+    """(ln gamma+-(m), ln a_w) of a single-salt solution at the 25 C parameter set.
 
     The composition derivatives of n*G^E/RT are numeric central differences
     (the closed local-composition derivatives of the reduced single-salt form
     are not published; the finite-difference form is pinned by the Gibbs-Duhem
-    unit tests): the salt-side derivative returns ln gamma_Na + ln gamma_Cl in
-    the SYMMETRIC rational convention, so the unsymmetric molality-scale mean
-    takes the infinite-dilution difference and the ln x_w conversion
-    (ln gamma+-(m) = ln gamma+-(x) - ln(1 + nu*m*M_w), worth ~22 % at 6 m);
-    the water side is already symmetric-rational, so a_w = gamma_w * x_w.
+    unit tests): the salt-side derivative returns nu_c ln gamma_c + nu_a ln gamma_a
+    in the SYMMETRIC rational convention, so the unsymmetric molality-scale mean
+    takes the infinite-dilution difference over nu and the ln x_w conversion
+    (ln gamma+-(m) = ln gamma+-(x) - ln(1 + nu*m*M_w), worth ~22 % for NaCl at
+    6 m); the water side is already symmetric-rational, so a_w = gamma_w * x_w.
+    ``long_range_only`` drops the local-composition term (the PDH row).  The
+    forward-difference infinite-dilution reference d0 carries an O(|z_c z_a|
+    A_phi sqrt(I(h))) bias in ln gamma+- (1.1e-3 for NaCl at 2 m, ~4e-3 for a
+    2:1 salt; measured against the Gibbs-Duhem integral of phi, see
+    tests/thermo/test_electrolyte_general.py); kept so NaCl stays bit-identical.
     """
+    s = enrtl_salt(salt)
+    ions = s.ions
+    nu = ions.nu
+    nc, na = float(ions.nu_cation), float(ions.nu_anion)
     h = 1e-6 * max(molality, 1e-3)
 
+    def ge_rt(xw: float, xc: float, xa: float) -> float:
+        if long_range_only:
+            return _pdh_gE_rt(xc, xa, ions)
+        return _enrtl_gE_rt(xw, xc, xa, s)
+
     def total(ms: float, mw: float = _NW) -> float:
-        n = mw + 2.0 * ms
-        return n * ge_rt(mw / n, ms / n)
+        n = mw + nu * ms
+        return n * ge_rt(mw / n, nc * ms / n, na * ms / n)
 
     d_salt = (total(molality + h) - total(molality - h)) / (2.0 * h)
     d0 = (total(h) - total(0.0)) / h  # infinite-dilution reference (unsymmetric normalisation)
     dw = 1e-3
     d_w = (total(molality, _NW + dw) - total(molality, _NW - dw)) / (2.0 * dw)
-    xw = _NW / (_NW + 2.0 * molality)
-    ln_gamma_pm = 0.5 * (d_salt - d0) + math.log(xw)
+    xw = _NW / (_NW + nu * molality)
+    ln_gamma_pm = (d_salt - d0) / nu + math.log(xw)
     ln_aw = d_w + math.log(xw)
     return ln_gamma_pm, ln_aw
 
 
-def enrtl_mean_gamma(molality: float) -> float:
-    """Mean ionic activity coefficient of NaCl(aq), eNRTL 25 C parameter set.
+def enrtl_mean_gamma(molality: float, salt: str = "NaCl") -> float:
+    """Mean ionic activity coefficient of a single salt, eNRTL 25 C parameter set.
 
-    Applicability: literature-faithful to ~1-5 % vs the PPB84 anchors (the
-    source model's own fit quality; the high-accuracy NaCl row is Pitzer).
+    Applicability: literature-faithful to ~1-5 % vs the PPB84 anchors for NaCl
+    (the source model's own fit quality; the high-accuracy brine row is Pitzer).
     """
-    return math.exp(_enrtl_ln_props(molality)[0])
+    return math.exp(_enrtl_ln_props(molality, salt)[0])
 
 
-def enrtl_water_activity(molality: float) -> float:
-    """Water activity of NaCl(aq), eNRTL 25 C parameter set (a_w = gamma_w * x_w)."""
-    return math.exp(_enrtl_ln_props(molality)[1])
+def enrtl_water_activity(molality: float, salt: str = "NaCl") -> float:
+    """Water activity of a single-salt solution, eNRTL 25 C set (a_w = gamma_w * x_w)."""
+    return math.exp(_enrtl_ln_props(molality, salt)[1])
 
 
-def enrtl_osmotic(molality: float) -> float:
+def enrtl_osmotic(molality: float, salt: str = "NaCl") -> float:
     """Osmotic coefficient phi = -ln a_w / (nu * m * M_w), eNRTL 25 C parameter set."""
-    return -_enrtl_ln_props(molality)[1] / (2.0 * molality * _MW_WATER_KG)
+    return -_enrtl_ln_props(molality, salt)[1] / (enrtl_salt(salt).ions.nu * molality * _MW_WATER_KG)
 
 
-def pdh_mean_gamma(molality: float) -> float:
-    """Mean ionic activity coefficient of NaCl(aq) from the long-range term alone."""
-    return math.exp(_enrtl_ln_props(molality, lambda _xw, xi: _pdh_gE_rt(xi))[0])
+def pdh_mean_gamma(molality: float, salt: str = "NaCl") -> float:
+    """Mean ionic activity coefficient of a single salt from the long-range term alone."""
+    return math.exp(_enrtl_ln_props(molality, salt, long_range_only=True)[0])
 
 
-def pdh_water_activity(molality: float) -> float:
-    """Water activity of NaCl(aq) from the long-range term alone (a_w = gamma_w * x_w)."""
-    return math.exp(_enrtl_ln_props(molality, lambda _xw, xi: _pdh_gE_rt(xi))[1])
+def pdh_water_activity(molality: float, salt: str = "NaCl") -> float:
+    """Water activity of a single salt from the long-range term alone (a_w = gamma_w * x_w)."""
+    return math.exp(_enrtl_ln_props(molality, salt, long_range_only=True)[1])
 
 
 @cache
-def enrtl_crystallisation_molality() -> float:
-    """NaCl solubility (mol/kg) of the eNRTL liquid against the solid's solubility product.
+def enrtl_crystallisation_molality(salt: str = "NaCl") -> float:
+    """Solubility (mol/kg) of the eNRTL liquid against the anhydrous solid's solubility product.
 
-    SLE for NaCl(s) = Na+ + Cl-: (m gamma+-)^2 = K_sp, a_w absent for the anhydrous
-    solid. K_sp comes from the model-independent anchor (6.146 mol/kg at gamma 1.0065,
-    Pitzer, Peiper & Busey 1984), so the molality this returns is what the eNRTL
-    liquid predicts for that solid, with the liquid model's own error in it.
+    SLE for C_nuc A_nua(s) = nu_c C + nu_a A: (nu_c m)^nu_c (nu_a m)^nu_a gamma+-^nu = K_sp,
+    a_w absent for the anhydrous solid; the stoichiometric factor is the same at the
+    anchor and at the solution, so the condition is m gamma+- = m_sat gamma_sat for any
+    salt.  K_sp comes from the model-independent anchor (NaCl: 6.146 mol/kg at gamma
+    1.0065, Pitzer, Peiper & Busey 1984), so the molality this returns is what the
+    eNRTL liquid predicts for that solid, with the liquid model's own error in it.
     """
-    p = _enrtl()["saturation"]
+    entry = _salt_entry(_enrtl(), salt, "eNRTL", "enrtl.yaml")
+    if "saturation" not in entry:
+        raise ElectrolyteChemistryError(f"no saturation anchor for {salt!r} in enrtl.yaml")
+    p = entry["saturation"]
     product = float(p["solubility_molality"]) * float(p["mean_gamma"])
 
     def residual(m: float) -> float:
-        return m * enrtl_mean_gamma(m) - product
+        return m * enrtl_mean_gamma(m, salt) - product
 
     return brent_root(residual, 4.0, 10.0)
 
 
-def enrtl_saturation_molality() -> float:
-    """NaCl solubility (mol/kg) from the SLE condition gamma(m) == 1.0065 (PPB84 p. 11)."""
-    gamma_sat = float(_enrtl()["saturation"]["mean_gamma"])
-
-    def residual(m: float) -> float:
-        return enrtl_mean_gamma(m) - gamma_sat
-
-    return brent_root(residual, 4.0, 10.0)
+def enrtl_saturation_molality(salt: str = "NaCl") -> float:
+    """Solubility (mol/kg) from the SLE condition gamma(m) == gamma_sat (NaCl: PPB84 p. 11)."""
+    entry = _salt_entry(_enrtl(), salt, "eNRTL", "enrtl.yaml")
+    return _sle_molality(lambda m: enrtl_mean_gamma(m, salt), entry, salt, "enrtl.yaml")
 
 
-# -- extended UNIQUAC NaCl(aq) (Thomsen & Rasmussen 1999; formulation per Leal 2025) --
+# -- extended UNIQUAC single-salt brines (Thomsen & Rasmussen 1999; formulation per Leal 2025)
 
 
 @cache
@@ -495,8 +621,38 @@ def _ext_uniquac() -> dict[str, Any]:
     return cast(dict[str, Any], data)
 
 
-#: Species order of the extended-UNIQUAC parameter tables.
-_EU_SPECIES: tuple[str, str, str] = ("H2O", "Na", "Cl")
+@cache
+def ext_uniquac_salt(salt: str) -> SaltIons:
+    """The ion pair of ``salt`` in ext_uniquac.yaml (species keys of the r/q/u tables).
+
+    A salt whose ions lack an r, q or u0/u1 pair entry refuses here, not mid-solve.
+    """
+    p = _ext_uniquac()
+    ions = _salt_ions(salt, _salt_entry(p, salt, "extended-UNIQUAC", "ext_uniquac.yaml"))
+    species = ("H2O", ions.cation, ions.anion)
+    missing = [k for k in species if k not in p["q"] or k not in p["r"]]
+    missing += [
+        f"{i}-{j}"
+        for i in species
+        for j in species
+        if f"{i}-{j}" not in p["u0"] and f"{j}-{i}" not in p["u0"]
+    ]
+    if missing:
+        raise ElectrolyteChemistryError(
+            f"ext_uniquac.yaml entry {salt!r} lacks species parameters {sorted(set(missing))}"
+        )
+    return ions
+
+
+def ext_uniquac_salts() -> tuple[str, ...]:
+    """Every salt (component id) with an extended-UNIQUAC entry, sorted."""
+    return tuple(sorted(_ext_uniquac()["salts"]))
+
+
+def _eu_species(salt: str) -> tuple[str, str, str]:
+    """Species order of the extended-UNIQUAC tables for one salt: (H2O, cation, anion)."""
+    ions = ext_uniquac_salt(salt)
+    return ("H2O", ions.cation, ions.anion)
 
 
 def _eu_u_ij(p: dict[str, Any], k1: str, k2: str, t_k: float) -> float:
@@ -514,28 +670,30 @@ def _eu_a_dh(t_k: float) -> float:
 
 
 def _eu_state(
-    molality: float, t_k: float
+    molality: float, t_k: float, salt: str = "NaCl"
 ) -> tuple[dict[str, float], dict[str, float], dict[str, float], dict[str, dict[str, float]]]:
-    """(x, phi_, theta, psi[j][i]) over the species order (H2O, Na, Cl).
+    """(x, phi_, theta, psi[j][i]) over the species order (H2O, cation, anion).
 
-    Basis: 1 kg of water.  psi_ji = exp[(u_ii - u_ji)/T] (Leal eq 23; the
-    division is by T, NOT RT -- the /RT reading of the J/mol table is the
-    transcription error that broke the first prototype; cross-checked against
-    Reaktoro ActivityModelExtendedUNIQUAC.cpp L249, used as a verification
-    reference only).
+    Basis: 1 kg of water, x_c = nu_c m / n, x_a = nu_a m / n, n = 1/M_w + nu m.
+    psi_ji = exp[(u_ii - u_ji)/T] (Leal eq 23; the division is by T, NOT RT --
+    the /RT reading of the J/mol table is the transcription error that broke
+    the first prototype; cross-checked against Reaktoro
+    ActivityModelExtendedUNIQUAC.cpp L249, used as a verification reference only).
     """
     p = _ext_uniquac()
-    q: dict[str, float] = {k: float(v) for k, v in p["q"].items()}
-    r: dict[str, float] = {k: float(v) for k, v in p["r"].items()}
-    n = _NW + 2.0 * molality
-    x = {"H2O": _NW / n, "Na": molality / n, "Cl": molality / n}
-    rsum = sum(r[k] * x[k] for k in _EU_SPECIES)
-    qsum = sum(q[k] * x[k] for k in _EU_SPECIES)
-    phi_ = {k: x[k] * r[k] / rsum for k in _EU_SPECIES}
-    theta = {k: x[k] * q[k] / qsum for k in _EU_SPECIES}
+    ions = ext_uniquac_salt(salt)
+    species = _eu_species(salt)
+    q: dict[str, float] = {k: float(p["q"][k]) for k in species}
+    r: dict[str, float] = {k: float(p["r"][k]) for k in species}
+    n = _NW + ions.nu * molality
+    x = {"H2O": _NW / n, ions.cation: ions.nu_cation * molality / n, ions.anion: ions.nu_anion * molality / n}
+    rsum = sum(r[k] * x[k] for k in species)
+    qsum = sum(q[k] * x[k] for k in species)
+    phi_ = {k: x[k] * r[k] / rsum for k in species}
+    theta = {k: x[k] * q[k] / qsum for k in species}
     psi: dict[str, dict[str, float]] = {}
-    for j in _EU_SPECIES:
-        psi[j] = {i: math.exp((_eu_u_ij(p, i, i, t_k) - _eu_u_ij(p, j, i, t_k)) / t_k) for i in _EU_SPECIES}
+    for j in species:
+        psi[j] = {i: math.exp((_eu_u_ij(p, i, i, t_k) - _eu_u_ij(p, j, i, t_k)) / t_k) for i in species}
     return x, phi_, theta, psi
 
 
@@ -544,25 +702,25 @@ def _eu_ln_gamma_u(
 ) -> dict[str, float]:
     """Closed-form UNIQUAC (combinatorial + residual) ln gamma (Leal eq 43).
 
-    The residual denominator S_j = sum_l theta_l * psi_lj -- the SAME
+    The species are the keys of ``x`` (water first, as :func:`_eu_state` builds
+    it).  The residual denominator S_j = sum_l theta_l * psi_lj -- the SAME
     orientation as the G^E; the transposed form fails the finite-difference
     check (verified to 6 decimals in all species and both directions).
     """
     p = _ext_uniquac()
     zc = float(p["zq"])
-    q: dict[str, float] = {k: float(v) for k, v in p["q"].items()}
+    species = tuple(x)
+    q: dict[str, float] = {k: float(p["q"][k]) for k in species}
     out: dict[str, float] = {}
-    for k in _EU_SPECIES:
-        sk = sum(theta[j] * psi[j][k] for j in _EU_SPECIES)
+    for k in species:
+        sk = sum(theta[j] * psi[j][k] for j in species)
         comb = (
             math.log(phi_[k] / x[k])
             + 1.0
             - phi_[k] / x[k]
             - (zc / 2.0) * q[k] * (math.log(phi_[k] / theta[k]) + 1.0 - phi_[k] / theta[k])
         )
-        res_sum = sum(
-            theta[j] * psi[k][j] / sum(theta[sp] * psi[sp][j] for sp in _EU_SPECIES) for j in _EU_SPECIES
-        )
+        res_sum = sum(theta[j] * psi[k][j] / sum(theta[sp] * psi[sp][j] for sp in species) for j in species)
         res = q[k] * (1.0 - math.log(sk) - res_sum)
         out[k] = comb + res
     return out
@@ -589,58 +747,67 @@ def _eu_ln_gamma_inf(k: str, t_k: float) -> float:
     return comb + qk * (1.0 - math.log(psi_wk) - psi_kw)  # psi_ww == 1
 
 
-def _ext_uniquac_ln_props(molality: float, t_k: float) -> tuple[float, float]:
-    """(ln gamma+-(m, T), ln a_w(m, T)) of NaCl(aq), extended-UNIQUAC.
+def _ext_uniquac_ln_props(molality: float, t_k: float, salt: str = "NaCl") -> tuple[float, float]:
+    """(ln gamma+-(m, T), ln a_w(m, T)) of a single-salt solution, extended-UNIQUAC.
 
     Assembly per Leal et al. 2025: ions ln gamma_i = ln gamma_i,DH +
     (ln gamma_i,U - ln gamma_i,U^inf) + ln x_w (eq 45, unsymmetric molality
-    scale); water ln gamma_w = ln gamma_w,DH + ln gamma_w,U with
-    a_w = gamma_w * x_w (eqs 46, 39).  The DH term (eq 40/42) uses
-    b = 1.50 (kg/mol)^0.5 and A(T) in (kg/mol)^0.5.
+    scale), ln gamma_i,DH = -z_i^2 A sqrt(I)/(1 + b sqrt(I)), I = m (nu_c z_c^2 +
+    nu_a z_a^2)/2; water ln gamma_w = ln gamma_w,DH + ln gamma_w,U with
+    a_w = gamma_w * x_w (eqs 46, 39); the mean is (nu_c ln gamma_c +
+    nu_a ln gamma_a)/nu.  The DH term (eq 40/42) uses b = 1.50 (kg/mol)^0.5 and
+    A(T) in (kg/mol)^0.5.
     """
     p = _ext_uniquac()
+    ions = ext_uniquac_salt(salt)
     b_dh = float(p["dh"]["b"])
-    x, _phi_, _theta, psi = _eu_state(molality, t_k)
-    sq = math.sqrt(molality)  # ionic strength == molality for the 1:1 salt
+    x, _phi_, _theta, psi = _eu_state(molality, t_k, salt)
+    sq = math.sqrt(0.5 * molality * ions.charge_sum)  # sqrt(I); I == m for a 1:1 salt
     big = 1.0 + b_dh * sq
     a_dh = _eu_a_dh(t_k)
-    ln_g_dh_ion = -a_dh * sq / big
     ln_g_dh_w = (2.0 * a_dh * _MW_WATER_KG / b_dh**3) * (big - 1.0 / big - 2.0 * math.log(big))
     ln_g_u = _eu_ln_gamma_u(x, _phi_, _theta, psi)
     xw = x["H2O"]
-    ln_g_na = ln_g_dh_ion + ln_g_u["Na"] - _eu_ln_gamma_inf("Na", t_k) + math.log(xw)
-    ln_g_cl = ln_g_dh_ion + ln_g_u["Cl"] - _eu_ln_gamma_inf("Cl", t_k) + math.log(xw)
+    ln_g_c = (
+        -(ions.z_cation**2) * a_dh * sq / big
+        + ln_g_u[ions.cation]
+        - _eu_ln_gamma_inf(ions.cation, t_k)
+        + math.log(xw)
+    )
+    ln_g_a = (
+        -(ions.z_anion**2) * a_dh * sq / big
+        + ln_g_u[ions.anion]
+        - _eu_ln_gamma_inf(ions.anion, t_k)
+        + math.log(xw)
+    )
     ln_g_w = ln_g_dh_w + ln_g_u["H2O"]
-    return 0.5 * (ln_g_na + ln_g_cl), ln_g_w + math.log(xw)
+    return (ions.nu_cation * ln_g_c + ions.nu_anion * ln_g_a) / ions.nu, ln_g_w + math.log(xw)
 
 
-def ext_uniquac_mean_gamma(molality: float, t_k: float = 298.15) -> float:
-    """Mean ionic activity coefficient of NaCl(aq), extended-UNIQUAC (Thomsen params).
+def ext_uniquac_mean_gamma(molality: float, t_k: float = 298.15, salt: str = "NaCl") -> float:
+    """Mean ionic activity coefficient of a single salt, extended-UNIQUAC (Thomsen params).
 
-    Applicability: literature-faithful to a few % vs the PPB84 anchors (the
-    source model's own fit quality; the high-accuracy NaCl row is Pitzer).
+    Applicability: literature-faithful to a few % vs the PPB84 anchors for NaCl
+    (the source model's own fit quality; the high-accuracy brine row is Pitzer).
     """
-    return math.exp(_ext_uniquac_ln_props(molality, t_k)[0])
+    return math.exp(_ext_uniquac_ln_props(molality, t_k, salt)[0])
 
 
-def ext_uniquac_water_activity(molality: float, t_k: float = 298.15) -> float:
-    """Water activity of NaCl(aq), extended-UNIQUAC (a_w = gamma_w * x_w)."""
-    return math.exp(_ext_uniquac_ln_props(molality, t_k)[1])
+def ext_uniquac_water_activity(molality: float, t_k: float = 298.15, salt: str = "NaCl") -> float:
+    """Water activity of a single-salt solution, extended-UNIQUAC (a_w = gamma_w * x_w)."""
+    return math.exp(_ext_uniquac_ln_props(molality, t_k, salt)[1])
 
 
-def ext_uniquac_osmotic(molality: float, t_k: float = 298.15) -> float:
+def ext_uniquac_osmotic(molality: float, t_k: float = 298.15, salt: str = "NaCl") -> float:
     """Osmotic coefficient phi = -ln a_w / (nu * m * M_w), extended-UNIQUAC."""
-    return -_ext_uniquac_ln_props(molality, t_k)[1] / (2.0 * molality * _MW_WATER_KG)
+    nu = ext_uniquac_salt(salt).nu
+    return -_ext_uniquac_ln_props(molality, t_k, salt)[1] / (nu * molality * _MW_WATER_KG)
 
 
-def ext_uniquac_saturation_molality() -> float:
-    """NaCl solubility (mol/kg) from the SLE condition gamma(m) == 1.0065 (PPB84 p. 11)."""
-    gamma_sat = float(_ext_uniquac()["saturation"]["mean_gamma"])
-
-    def residual(m: float) -> float:
-        return ext_uniquac_mean_gamma(m) - gamma_sat
-
-    return brent_root(residual, 4.0, 10.0)
+def ext_uniquac_saturation_molality(salt: str = "NaCl") -> float:
+    """Solubility (mol/kg) from the SLE condition gamma(m) == gamma_sat (NaCl: PPB84 p. 11)."""
+    entry = _salt_entry(_ext_uniquac(), salt, "extended-UNIQUAC", "ext_uniquac.yaml")
+    return _sle_molality(lambda m: ext_uniquac_mean_gamma(m, salt=salt), entry, salt, "ext_uniquac.yaml")
 
 
 # -- EPA-600/2-80-067 SWEQ sour-water chemistry -----------------------------------
@@ -843,13 +1010,30 @@ def _psat_or_wilson(cid: str, t_k: float) -> float:
 # -- the package --------------------------------------------------------------------
 
 
-#: Per-model water-activity surface of the brine models (the K-value and
-#: fugacity driver: K_H2O = a_w(m) * Psat_H2O / P; the salt is involatile).
-_WATER_ACTIVITY: dict[str, Callable[[float], float]] = {
+#: Per-model water-activity surface a_w(m, salt) of the brine models (the K-value
+#: and fugacity driver: K_H2O = a_w(m) * Psat_H2O / P; the salt is involatile).
+_WATER_ACTIVITY: dict[str, Callable[[float, str], float]] = {
     "pitzer": pitzer_water_activity,
     "enrtl": enrtl_water_activity,
     "pdh": pdh_water_activity,
-    "ext_uniquac": ext_uniquac_water_activity,
+    "ext_uniquac": lambda m, salt: ext_uniquac_water_activity(m, salt=salt),
+}
+
+#: Per-model salt tables: (salts with an entry, salt -> its molality cap).  The
+#: PDH row reads the eNRTL file (its A_phi, rho and the salts' charges).
+_BRINE_SALTS: dict[str, tuple[Callable[[], tuple[str, ...]], Callable[[str], float]]] = {
+    "pitzer": (pitzer_salts, lambda salt: pitzer_salt(salt).molality_cap),
+    "enrtl": (enrtl_salts, lambda salt: enrtl_salt(salt).ions.molality_cap),
+    "pdh": (enrtl_salts, lambda salt: enrtl_salt(salt).ions.molality_cap),
+    "ext_uniquac": (ext_uniquac_salts, lambda salt: ext_uniquac_salt(salt).molality_cap),
+}
+
+#: What a multi-salt feed would need on each brine model (the first-use refusal).
+_MIXING_GAP: dict[str, str] = {
+    "pitzer": "the mixing parameters theta/psi",
+    "enrtl": "the salt-salt NRTL pairs",
+    "pdh": "the eNRTL salt-salt NRTL pairs",
+    "ext_uniquac": "the cross-salt ion-ion u_ij pairs",
 }
 
 
@@ -876,9 +1060,7 @@ class ElectrolytePackage(TracedThermo, Thermo):
     #: Top of the liquid's molality range: the saturated solution (or the verified
     #: range) for this row and salt.
     def _molality_cap(self, salt: str = "NaCl") -> float:
-        if self._model == "pitzer":
-            return pitzer_salt(salt).molality_cap
-        return _MAX_MOLALITY
+        return _BRINE_SALTS[self._model][1](salt)
 
     def __init__(self, model: str | None = None) -> None:
         self._model = model or type(self).model
@@ -913,14 +1095,12 @@ class ElectrolytePackage(TracedThermo, Thermo):
 
     def _water_activity(self, molality: float, salt: str = "NaCl") -> float:
         """This model's water-activity surface a_w(m) (the brine chemistry driver)."""
-        if self._model == "pitzer":
-            return pitzer_water_activity(molality, salt)
-        return _WATER_ACTIVITY[self._model](molality)
+        return _WATER_ACTIVITY[self._model](molality, salt)
 
     def _supported_ids(self) -> frozenset[str]:
         """Stream ids this model's chemistry covers (water plus its salts or volatiles)."""
-        if self._model == "pitzer":
-            return frozenset({"H2O", *pitzer_salts()})
+        if self._model in _BRINE_SALTS:
+            return frozenset({"H2O", *_BRINE_SALTS[self._model][0]()})
         return _MODEL_SUPPORTS[self._model]
 
     def _salt_id(self, comp: dict[str, float]) -> str:
@@ -989,10 +1169,10 @@ class ElectrolytePackage(TracedThermo, Thermo):
                 f"for {sorted(unsupported)}{co2_note} (first-use refusal, T-07 precedent)"
             )
         salts = [cid for cid in self._support(z) if cid != "H2O"]
-        if self._model == "pitzer" and len(salts) > 1:
+        if self._model in _BRINE_MODELS and len(salts) > 1:
             raise NotImplementedError(
-                f"electrolyte model 'pitzer' is single-salt: {sorted(salts)} together need the "
-                "mixing parameters theta/psi, which this row does not ship (first-use refusal)"
+                f"electrolyte model {self._model!r} is single-salt: {sorted(salts)} together need "
+                f"{_MIXING_GAP[self._model]}, which this row does not ship (first-use refusal)"
             )
         return True
 
@@ -1440,7 +1620,7 @@ class ElectrolytePackage(TracedThermo, Thermo):
     def _build_state(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         state, beta, x, y = self._equilibrium_internal(z, T, P)
         if self._model == "pdh" and x.get("H2O", 0.0) > 0.0:
-            m_liq = 1000.0 * x.get("NaCl", 0.0) / (_mw("H2O") * x["H2O"])
+            m_liq = 1000.0 * x.get(self._salt_id(x), 0.0) / (_mw("H2O") * x["H2O"])
             if m_liq > _PDH_MAX_MOLALITY:
                 raise ElectrolyteChemistryError(
                     f"the Pitzer-Debye-Hueckel term alone is a dilute-solution model: liquid "
@@ -1569,27 +1749,28 @@ class ElectrolyteENRTLCrystal(ElectrolyteENRTLNaCl):
     """
 
     def _molality_cap(self, salt: str = "NaCl") -> float:
-        return enrtl_crystallisation_molality()
+        return enrtl_crystallisation_molality(salt)
 
     def _build_state(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
-        salt, water = z.get("NaCl", 0.0), z.get("H2O", 0.0)
+        salt_id = self._salt_id(z)
+        salt, water = z.get(salt_id, 0.0), z.get("H2O", 0.0)
         if salt <= 0.0 or water <= 0.0:
             return super()._build_state(z, T, P, molar_flow)
-        m_sat = self._molality_cap()
-        p_star = self._water_activity(m_sat) * _psat_or_wilson("H2O", T)
+        m_sat = self._molality_cap(salt_id)
+        p_star = self._water_activity(m_sat, salt_id) * _psat_or_wilson("H2O", T)
         mw_water = _mw("H2O") / 1000.0  # kg/mol
         if P >= p_star and salt / (water * mw_water) <= m_sat:
             return super()._build_state(z, T, P, molar_flow)
-        solid_pure = {cid: (1.0 if cid == "NaCl" else 0.0) for cid in z}
+        solid_pure = {cid: (1.0 if cid == salt_id else 0.0) for cid in z}
         if P < p_star:
             y = {cid: (1.0 if cid == "H2O" else 0.0) for cid in z}
             fluid = _phase(PhaseKind.VAPOR, water, y, self._vapour.phase_props(y, T, P, PhaseKind.VAPOR))
         else:
             x_salt = m_sat * mw_water / (1.0 + m_sat * mw_water)
-            x = {cid: (x_salt if cid == "NaCl" else 1.0 - x_salt) for cid in z}
+            x = {cid: (x_salt if cid == salt_id else 1.0 - x_salt) for cid in z}
             props = self.phase_props(x, T, P, PhaseKind.AQUEOUS)
             fluid = _phase(PhaseKind.AQUEOUS, water / (1.0 - x_salt), x, props)
-        solid = self._solid_phase(1.0 - fluid.mole_fraction, solid_pure, T, P)
+        solid = self._solid_phase(1.0 - fluid.mole_fraction, solid_pure, T, P, salt_id)
         return StreamState(
             T=T,
             P=P,
@@ -1601,17 +1782,19 @@ class ElectrolyteENRTLCrystal(ElectrolyteENRTLNaCl):
             phases=[fluid, solid],
         )
 
-    def _solid_phase(self, fraction: float, composition: dict[str, float], T: float, P: float) -> Phase:
-        """The NaCl(s) phase; a databank with no solid volume or Cp refuses."""
-        record = _record("NaCl")
+    def _solid_phase(
+        self, fraction: float, composition: dict[str, float], T: float, P: float, salt: str = "NaCl"
+    ) -> Phase:
+        """The anhydrous salt(s) phase; a databank with no solid volume or Cp refuses."""
+        record = _record(salt)
         with DATABANK_LOCK:
             _constants, correlations = _constants_for((str(record["cas"]),))
         volume = correlations.VolumeSolids[0](T)
         cp = correlations.HeatCapacitySolids[0](T)
         if volume is None or cp is None:
-            raise ElectrolyteChemistryError(f"no solid NaCl volume or Cp in the databank at T={T} K")
-        carrier = self._carrier.phase_props({"NaCl": 1.0}, T, P, PhaseKind.HC_LIQUID)
-        mw = _mw("NaCl")
+            raise ElectrolyteChemistryError(f"no solid {salt} volume or Cp in the databank at T={T} K")
+        carrier = self._carrier.phase_props({salt: 1.0}, T, P, PhaseKind.HC_LIQUID)
+        mw = _mw(salt)
         return Phase(
             kind=PhaseKind.SOLID,
             mole_fraction=fraction,

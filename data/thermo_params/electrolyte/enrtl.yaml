@@ -1,4 +1,14 @@
-# eNRTL NaCl(aq) parameters (spec T-09b, model row enrtl_nacl_water).
+# eNRTL single-salt parameters (spec T-09b, model rows enrtl_nacl_water, enrtl_rk,
+# enrtl_hoc, enrtl_crystallisation; pitzer_debye_huckel reads aphi, rho and the
+# salts' charges).  Shared long-range constants at the top; one entry per salt
+# under `salts`, keyed by the salt's component id, naming its ion pair, charges
+# and stoichiometry (the same keys as pitzer.yaml) and its salt-water NRTL
+# binary, so the same G^E (ngdesign.amine.electrolyte, Chen & Evans 1986 eq. 13
+# single-salt form) serves every salt.  molality_cap is the top of the verified
+# range (the flash clamps the liquid there).
+#
+# Only NaCl ships (2026-11-04 search for open, redistributable eNRTL tau pairs
+# of other salts found none; see docs/thermo-catalogue-plan.md section 6).
 #
 # Model: Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., 'Local
 # composition model for excess Gibbs energy of electrolyte systems', part I
@@ -33,12 +43,22 @@
 # through Psat (documented in the row).
 aphi: 0.392
 rho: 14.9
-alpha: 0.2
-tau_ca_w: -4.5916
-tau_w_ca: 9.0234
-# SLE anchor: NaCl solubility 6.146 mol/kg at 298.15 K with saturated-solution
-# mean gamma 1.0065 (Pitzer, Peiper & Busey 1984, p. 11 -- the same anchor the
-# Pitzer row uses).
-saturation:
-  solubility_molality: 6.146
-  mean_gamma: 1.0065
+
+salts:
+  NaCl:
+    cation: Na+
+    anion: Cl-
+    z_cation: 1
+    z_anion: 1
+    nu_cation: 1
+    nu_anion: 1
+    alpha: 0.2
+    tau_ca_w: -4.5916
+    tau_w_ca: 9.0234
+    molality_cap: 6.15
+    # SLE anchor: NaCl solubility 6.146 mol/kg at 298.15 K with saturated-solution
+    # mean gamma 1.0065 (Pitzer, Peiper & Busey 1984, p. 11 -- the same anchor the
+    # Pitzer row uses).
+    saturation:
+      solubility_molality: 6.146
+      mean_gamma: 1.0065

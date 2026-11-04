@@ -1,4 +1,13 @@
-# Extended UNIQUAC NaCl(aq) parameters (spec T-09b, model row ext_uniquac_nacl_water).
+# Extended UNIQUAC parameters (spec T-09b, model row ext_uniquac_nacl_water).
+# Species parameters (r, q per species; u0/u1 per species pair) are keyed by the
+# species ids below, as Thomsen's tables are; each salt under `salts` (keyed by
+# its component id) names its ion pair as those species ids plus its charges and
+# stoichiometry, so the same assembly (ngdesign.amine.electrolyte) serves every
+# salt whose ions carry r, q and every u_ij pair with water and each other.
+# molality_cap is the top of the verified range (the flash clamps there).
+#
+# Only Na+/Cl- ship (2026-11-04 search for an open, redistributable Thomsen-type
+# ion table found none; see docs/thermo-catalogue-plan.md section 6).
 #
 # Model: Thomsen, K. & Rasmussen, P., 'Modeling of vapor-liquid-solid
 # equilibrium in gas-aqueous electrolyte systems', Chem. Eng. Sci. 54(13),
@@ -65,9 +74,19 @@ dh:
     c0: 1.131
     c1: 1.335e-3
     c2: 1.164e-5
-# SLE anchor: NaCl solubility 6.146 mol/kg at 298.15 K with saturated-solution
-# mean gamma 1.0065 (Pitzer, Peiper & Busey 1984, p. 11 -- the same anchor the
-# Pitzer row uses).
-saturation:
-  solubility_molality: 6.146
-  mean_gamma: 1.0065
+
+salts:
+  NaCl:
+    cation: Na
+    anion: Cl
+    z_cation: 1
+    z_anion: 1
+    nu_cation: 1
+    nu_anion: 1
+    molality_cap: 6.15
+    # SLE anchor: NaCl solubility 6.146 mol/kg at 298.15 K with saturated-solution
+    # mean gamma 1.0065 (Pitzer, Peiper & Busey 1984, p. 11 -- the same anchor the
+    # Pitzer row uses).
+    saturation:
+      solubility_molality: 6.146
+      mean_gamma: 1.0065
