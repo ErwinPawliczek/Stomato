@@ -1,0 +1,1074 @@
+# T7 validation pack: acetic acid / water VLE for the hoc_dimer row
+# (Hayden-O'Connell-family dimerizing-acid gamma-phi, data/thermo_models/special.yaml).
+# Generated 2026-11-04 by Obvious (task T7). Units: T [K], P [Pa abs], mole fractions.
+#
+# Contents:
+#  - 23 isobaric binary points at atmospheric pressure, Sebastiani & Lacquaniti,
+#    Chem. Eng. Sci. 22 (1967) 1155-1162, Table 1, p. 1157
+#    (DOI 10.1016/0009-2509(67)80182-9; open PDF). x,y are WATER mole fractions
+#    as printed; z/vapor_comp here are keyed per component.
+#  - 44 isothermal binary bubble-pressure points (no measured vapour composition;
+#    static-analytical p-x), Román-Ramírez & Leeke, J. Chem. Eng. Data 61 (2016)
+#    2078-2082, Table 2 (DOI 10.1021/acs.jced.5b01104; open copy on Cranfield
+#    CERES). Pure-water anchors (x_AcOH = 0) are in data.csv only, not cases.
+#  - 2 pure-acetic-acid measured saturation anchors (NIST TRC T_boil average;
+#    Sebastiani reagent b.p.). NOTE (T7b, 2026-11-04): the original T7 pack also
+#    carried 6 pure-AcOH Psat cases computed from the McDonald, Shrader & Stull
+#    (1959) Antoine parameters as published on the NIST Chemistry WebBook; these
+#    were REMOVED here per the board review decision (correlation output is
+#    computed, not measured - computed points are never validation cases). The
+#    Antoine parameters and their source remain recorded in data.csv.
+#
+# Every value is transcribed from a source retrieved on 2026-11-04; see data.csv
+# for the per-point citation (DOI/URL, table, page, retrieval date). Nothing is
+# fitted, tuned or interpolated. OCR caveats for the 1967 table (open PDF text
+# layer): '0440'->0.440 and '0641'->0.641 leading-zero artefacts; all other digits
+# legible. The 1967 runs state 'atmospheric pressure' without a barometric reading;
+# P = 101325 Pa is the standard-atmosphere convention, flagged per point in data.csv.
+#
+# Binding notes for the Stomato bot:
+#  - package: hoc_dimer is the registered special row (ngdesign.thermo.special:
+#    HaydenOConnellDimerPackage, component key AcOH in
+#    data/thermo_params/special/association.yaml). data/components.yaml has NO
+#    AcOH entry - cases will not resolve until AcOH is curated (NOT FOUND there;
+#    CAS 64-19-7).
+#  - Per the hoc_dimer row notes (T-19), this package's liquid side is ideal on
+#    apparent composition and liquid non-ideality dominates the AcOH/H2O K-values;
+#    binding these binary cases as pass/fail acceptance needs either a regressed
+#    GE pair with this vapour model or widened tolerances - the decision is not
+#    made here. The pack pins the DATA, independent of that decision.
+#  - Tolerances follow the P1-05 conventions: bubble_T 0.5 % relative, y 0.02
+#    absolute, bubble/dew P 3 % relative.
+- id: acohh2o-101.325kPa-373.95K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.135
+    H2O: 0.865
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 373.95
+    vapor_comp:
+      H2O: 0.907
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-374.85K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.245
+    H2O: 0.755
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 374.85
+    vapor_comp:
+      H2O: 0.817
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-375.55K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.325
+    H2O: 0.675
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 375.55
+    vapor_comp:
+      H2O: 0.77
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-376.65K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.4275
+    H2O: 0.5725
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 376.65
+    vapor_comp:
+      H2O: 0.678
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-377.35K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.48
+    H2O: 0.52
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 377.35
+    vapor_comp:
+      H2O: 0.635
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-378.75K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.56
+    H2O: 0.44
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 378.75
+    vapor_comp:
+      H2O: 0.556
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-380.85K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.695
+    H2O: 0.305
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 380.85
+    vapor_comp:
+      H2O: 0.42
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-381.35K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.7175
+    H2O: 0.2825
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 381.35
+    vapor_comp:
+      H2O: 0.384
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-382.05K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.75
+    H2O: 0.25
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 382.05
+    vapor_comp:
+      H2O: 0.365
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-383.75K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.825
+    H2O: 0.175
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 383.75
+    vapor_comp:
+      H2O: 0.282
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-381.75K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.743
+    H2O: 0.257
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 381.75
+    vapor_comp:
+      H2O: 0.375
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-383.35K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.81
+    H2O: 0.19
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 383.35
+    vapor_comp:
+      H2O: 0.302
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-385.45K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.873
+    H2O: 0.127
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 385.45
+    vapor_comp:
+      H2O: 0.208
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-386.35K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.8975
+    H2O: 0.1025
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 386.35
+    vapor_comp:
+      H2O: 0.1725
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-386.85K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.905
+    H2O: 0.095
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 386.85
+    vapor_comp:
+      H2O: 0.15
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-374.15K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.168
+    H2O: 0.832
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 374.15
+    vapor_comp:
+      H2O: 0.887
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-375.95K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.359
+    H2O: 0.641
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 375.95
+    vapor_comp:
+      H2O: 0.75
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-381.35K-hocb
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.725
+    H2O: 0.275
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 381.35
+    vapor_comp:
+      H2O: 0.417
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-379.35K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.605
+    H2O: 0.395
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 379.35
+    vapor_comp:
+      H2O: 0.515
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-376.65K-hocb
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.428
+    H2O: 0.572
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 376.65
+    vapor_comp:
+      H2O: 0.68
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-384.95K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.855
+    H2O: 0.145
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 384.95
+    vapor_comp:
+      H2O: 0.227
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-385.95K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.875
+    H2O: 0.125
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 385.95
+    vapor_comp:
+      H2O: 0.1825
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-101.325kPa-382.45K-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.77
+    H2O: 0.23
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04"
+  expected:
+    bubble_T: 382.45
+    vapor_comp:
+      H2O: 0.355
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: acohh2o-412.6K-196kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.976
+    H2O: 0.024
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 196000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-210kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.951
+    H2O: 0.049
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 210000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-230kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.889
+    H2O: 0.111
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 230000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-266kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.721
+    H2O: 0.279
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 266000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-290kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.579
+    H2O: 0.421
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 290000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-311kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.433
+    H2O: 0.567
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 311000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-326kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.347
+    H2O: 0.653
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 326000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-333kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.282
+    H2O: 0.718
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 333000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-341kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.186
+    H2O: 0.814
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 341000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-348kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.102
+    H2O: 0.898
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 348000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-349kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.085
+    H2O: 0.915
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 349000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-412.6K-353kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.014
+    H2O: 0.986
+  T: 412.6
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 353000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-426kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.983
+    H2O: 0.017
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 426000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-437kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.975
+    H2O: 0.025
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 437000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-461kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.955
+    H2O: 0.045
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 461000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-504kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.903
+    H2O: 0.097
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 504000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-551kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.823
+    H2O: 0.177
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 551000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-605kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.697
+    H2O: 0.303
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 605000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-654kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.568
+    H2O: 0.432
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 654000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-704kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.409
+    H2O: 0.591
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 704000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-731kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.315
+    H2O: 0.685
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 731000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-760kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.195
+    H2O: 0.805
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 760000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-768kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.178
+    H2O: 0.822
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 768000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-774kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.148
+    H2O: 0.852
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 774000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-780kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.133
+    H2O: 0.867
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 780000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-786kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.105
+    H2O: 0.895
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 786000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-443.2K-789kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.055
+    H2O: 0.945
+  T: 443.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 789000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1012kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.977
+    H2O: 0.023
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1012000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1052kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.955
+    H2O: 0.045
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1052000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1150kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.895
+    H2O: 0.105
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1150000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1272kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.822
+    H2O: 0.178
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1272000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1401kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.689
+    H2O: 0.311
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1401000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1515kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.58
+    H2O: 0.42
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1515000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1652kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.444
+    H2O: 0.556
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1652000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1690kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.407
+    H2O: 0.593
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1690000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1750kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.335
+    H2O: 0.665
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1750000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1796kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.275
+    H2O: 0.725
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1796000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1821kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.234
+    H2O: 0.766
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1821000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1855kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.178
+    H2O: 0.822
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1855000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1870kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.153
+    H2O: 0.847
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1870000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1881kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.1
+    H2O: 0.9
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1881000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1890kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.078
+    H2O: 0.922
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1890000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1896kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.048
+    H2O: 0.952
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1896000
+  tolerance:
+    bubble_P: 0.03
+- id: acohh2o-483.2K-1900kPa-hoc
+  package: hoc_dimer
+  components:
+  - AcOH
+  - H2O
+  z:
+    AcOH: 0.034
+    H2O: 0.966
+  T: 483.2
+  source: "literature:Rom\u00e1n-Ram\u00edrez, L. A.; Leeke, G. A., J. Chem. Eng. Data 61 (2016) 2078-2082, DOI 10.1021/acs.jced.5b01104, Table 2, p. 2080; open repository copy: https://dspace.lib.cranfield.ac.uk/server/api/core/bitstreams/7e18d743-9a23-4257-84c3-5d2b707eb676/content; retrieved 2026-11-04"
+  expected:
+    bubble_P: 1900000
+  tolerance:
+    bubble_P: 0.03
+- id: pure-AcOH-391.2K-nist-hoc
+  package: hoc_dimer
+  fluid: AcOH
+  components:
+  - AcOH
+  z:
+    AcOH: 1
+  P: 101325
+  source: "NIST Chemistry WebBook, NIST Standard Reference Database 69, acetic acid (CAS 64-19-7), Phase change data; https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Units=SI&Mask=4; retrieved 2026-11-04"
+  expected:
+    bubble_T: 391.2
+  tolerance:
+    bubble_T: 0.005
+- id: pure-AcOH-391.25K-seb1967-hoc
+  package: hoc_dimer
+  fluid: AcOH
+  components:
+  - AcOH
+  z:
+    AcOH: 1
+  P: 101325
+  source: "literature:Sebastiani, E.; Lacquaniti, L., Chem. Eng. Sci. 22 (1967) 1155-1162, DOI 10.1016/0009-2509(67)80182-9, Table 1 'Experimental runs', p. 1157; open PDF: https://webdelprofesor.ula.ve/ingenieria/marquezronald/wp-content/uploads/Chemical-Engineering-Science-Volume-22-issue-9-1967-E.-Sebastiani-Acetic-acid%E2%80%94water-system-thermodynamical-correlation-of-vapor%E2%80%94liquid-equilibrium-data.pdf; retrieved 2026-11-04 (Experimental results section)"
+  expected:
+    bubble_T: 391.25
+  tolerance:
+    bubble_T: 0.005
