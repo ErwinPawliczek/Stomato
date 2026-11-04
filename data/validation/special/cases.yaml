@@ -68,6 +68,81 @@ pure_cases:
     Melting point as x_sat = 1 (pure solid in equilibrium with its own melt); checks the
     row's tabulated Tm only (see header).
 
+# hoc_dimer / hf_hexamer L1 (pure_cases): pure-acid saturation through the row's own flash
+# (bubble point of the pure associating component; the PhiSat liquid makes it the row's
+# Psat correlation). Antoine values are evaluated from the NIST-printed coefficients at the
+# stated T (log10(P/bar) = A - B/(T/K + C)) - the coefficients are NIST's fit to the cited
+# authors' data, inside its stated range. These test the vapour-pressure correlation the
+# row runs on, not the association constants (no harness case type exists for the
+# associated-vapour Z or the latent heat; see the rows' notes).
+- id: acoh-pure-tboil-nist
+  package: [hoc_dimer]
+  components: [AcOH]
+  z: {AcOH: 1.0}
+  P: 101325.0
+  expected:
+    bubble_T: 391.2
+  source: >-
+    NIST Chemistry WebBook (SRD 69), acetic acid, Phase change data table, T boil = 391.2 +/- 0.6 K
+    (AVG of 80 of 90 values); https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=4, retrieved 2026-11-04.
+- id: acoh-pure-psat-320K-mcdonald
+  package: [hoc_dimer]
+  components: [AcOH]
+  z: {AcOH: 1.0}
+  T: 320.0
+  expected:
+    bubble_P: 6618.9
+  source: >-
+    NIST Chemistry WebBook (SRD 69), acetic acid, Phase change data, Antoine Equation Parameters table
+    (290.26-391.01 K: A 4.68206, B 1642.54, C -39.764; NIST fit to McDonald, Shrader et al. 1959),
+    evaluated at 320.0 K; https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=4, retrieved 2026-11-04.
+- id: acoh-pure-psat-360K-mcdonald
+  package: [hoc_dimer]
+  components: [AcOH]
+  z: {AcOH: 1.0}
+  T: 360.0
+  expected:
+    bubble_P: 35719.5
+  source: >-
+    NIST Chemistry WebBook (SRD 69), acetic acid, Phase change data, Antoine Equation Parameters table
+    (290.26-391.01 K: A 4.68206, B 1642.54, C -39.764; NIST fit to McDonald, Shrader et al. 1959),
+    evaluated at 360.0 K; https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=4, retrieved 2026-11-04.
+- id: hf-pure-tboil-streng
+  package: [hf_hexamer]
+  components: [HF]
+  z: {HF: 1.0}
+  P: 101325.0
+  expected:
+    bubble_T: 292.7
+  source: >-
+    NIST Chemistry WebBook (SRD 69), hydrogen fluoride, Phase change data table, T boil = 292.7 K
+    (Streng, J. Chem. Eng. Data 16, 357 (1971); TRC uncertainty 0.25 K);
+    https://webbook.nist.gov/cgi/cbook.cgi?ID=C7664393&Mask=4, retrieved 2026-11-04.
+- id: hf-pure-psat-278.15K-sheft
+  package: [hf_hexamer]
+  components: [HF]
+  z: {HF: 1.0}
+  T: 278.15
+  expected:
+    bubble_P: 58422.6
+  source: >-
+    NIST Chemistry WebBook (SRD 69), hydrogen fluoride, Phase change data, Antoine Equation Parameters
+    table (273.17-303.09 K: A 4.9148, B 1556.559, C 24.199; NIST fit to Sheft, Perkins & Hyman,
+    J. Inorg. Nucl. Chem. 35, 3677 (1973), doi:10.1016/0022-1902(73)80055-7), evaluated at 278.15 K;
+    https://webbook.nist.gov/cgi/cbook.cgi?ID=C7664393&Mask=4, retrieved 2026-11-04.
+- id: hf-pure-psat-298.15K-sheft
+  package: [hf_hexamer]
+  components: [HF]
+  z: {HF: 1.0}
+  T: 298.15
+  expected:
+    bubble_P: 121898.8
+  source: >-
+    NIST Chemistry WebBook (SRD 69), hydrogen fluoride, Phase change data, Antoine Equation Parameters
+    table (273.17-303.09 K: A 4.9148, B 1556.559, C 24.199; NIST fit to Sheft, Perkins & Hyman,
+    J. Inorg. Nucl. Chem. 35, 3677 (1973), doi:10.1016/0022-1902(73)80055-7), evaluated at 298.15 K;
+    https://webbook.nist.gov/cgi/cbook.cgi?ID=C7664393&Mask=4, retrieved 2026-11-04.
+
 binary_cases:
 - id: sle-naphthalene-benzene-298.15K-chang
   package: [ideal_solid]

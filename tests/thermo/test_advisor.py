@@ -78,9 +78,10 @@ def test_experimental_rows_never_rank() -> None:
     recs = recommend(slice_fs.build())
     assert all(rec.status != "experimental" for rec in recs)
     ids = {rec.id for rec in recs}
-    assert "hf_hexamer" not in ids  # experimental association row
-    # hoc_dimer was promoted to provisional on 2026-11-04 (association vapour
-    # wired into its flash); it ranks like any other provisional row.
+    assert "unifac_fv" not in ids  # experimental special-family row
+    # hoc_dimer and hf_hexamer were promoted to provisional on 2026-11-04
+    # (association vapour wired into the flash; HF's vapour pressure fixed at
+    # the root); they rank like any other provisional row.
     # T-15c: pc_saft was promoted to provisional and ranks like any other
     # provisional row; the experimental-never-rank property above still holds.
     assert "pc_saft" in ids

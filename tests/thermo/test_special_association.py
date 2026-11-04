@@ -14,7 +14,8 @@ of check:
   acetic-acid vapour compressibility, the CRC Handbook (95th ed.) latent
   heats of acetic acid (the table chemicals ships, ``Hvap_data_CRC``), the
   Jarry & Davis (1953) HF association factors, and the VDI Heat Atlas
-  (2nd ed. 2010) HF latent heat that keeps hf_hexamer experimental.
+  (2nd ed. 2010) HF latent heat (with the Perry 8E HF vapour pressure since
+  2026-11-04, data/thermo_params/psat_methods.yaml).
 """
 
 from __future__ import annotations
@@ -308,26 +309,65 @@ class TestHFHexamerFlash:
         assert vap.z_factor is not None
         assert 1.0 / vap.z_factor == pytest.approx(factor, rel=0.05)
 
-    def test_latent_heat_vs_vdi_documents_experimental_status(self) -> None:
-        """The reason hf_hexamer stays experimental, pinned.
+    def test_latent_heat_vs_vdi_heat_atlas(self) -> None:
+        """Latent heat vs the VDI Heat Atlas, 2nd ed. (2010), D3.1 HF saturation table.
 
-        VDI Heat Atlas, 2nd ed. (2010), D3.1 HF saturation table (as shipped
-        in chemicals): 6602.1 J/mol at 292.69 K, 8702.8 J/mol at 325 K. With
-        the databank HF vapour pressure the latent heat misses by -14.4 % at
-        the boiling point and -1.0 % at 325 K, and the PhiSat liquid Cp
-        collapses near 300 K, where that correlation's d ln Psat/dT is
-        nearly flat.
+        The table as shipped in chemicals (lookup_VDI_tabular_data). Since
+        2026-11-04 HF runs on the Perry 8E vapour pressure
+        (data/thermo_params/psat_methods.yaml); measured misses +7.1 % at the
+        292.69 K boiling point, +2.7 % at 305 K, -0.9 % at 325 K, +1.3 % at
+        345 K, +5.4 % at 365 K. With thermo's default "Fit 2023" correlation
+        they were -14.4 / -7.6 / -1.0 / +3.8 / +6.0 %.
         """
         from chemicals.miscdata import lookup_VDI_tabular_data
 
         ts, hs = lookup_VDI_tabular_data("7664-39-3", "Hvap")
         table = dict(zip(ts, hs, strict=True))
         pkg = _hexamer_pkg()
-        misses = []
-        for T in (292.69, 325.0):
+        expected = {292.69: 0.071, 305.0: 0.027, 325.0: -0.009, 345.0: 0.013, 365.0: 0.054}
+        for T, miss in expected.items():
             liq, vap = _saturated(pkg, "HF", T)
-            misses.append((vap.enthalpy - liq.enthalpy) / table[T] - 1.0)
-        assert misses[0] == pytest.approx(-0.144, abs=0.005)
-        assert misses[1] == pytest.approx(-0.010, abs=0.005)
-        liq, _ = _saturated(pkg, "HF", 300.0)
-        assert liq.cp < 5.0  # J/(mol K); liquid HF is ~50 (the databank correlation gives 61)
+            assert (vap.enthalpy - liq.enthalpy) / table[T] - 1.0 == pytest.approx(miss, abs=0.005), T
+
+    @pytest.mark.parametrize("T", [295.0, 300.0, 305.0, 310.0])
+    def test_saturated_liquid_cp_is_physical(self, T: float) -> None:
+        """Regression: the old databank Psat ("Fit 2023") had a nearly flat d ln Psat/dT at
+        300-310 K, so the PhiSat liquid Cp collapsed to 0.1-1.7 J/(mol K). With the Perry 8E
+        correlation it is 37-38 J/(mol K) - still below the VDI table's 61-62 (the gamma-phi
+        vapour-route limitation with no residual liquid Cp, as on hoc_dimer), but positive
+        and smooth.
+        """
+        liq, _ = _saturated(_hexamer_pkg(), "HF", T)
+        assert 30.0 < liq.cp < 45.0
+
+    def test_row_l0_suite_passes(self) -> None:
+        """hf_hexamer is provisional since 2026-11-04: every L0 check runs and passes."""
+        vp = _harness()
+        row = catalogue.load_catalogue()["hf_hexamer"]
+        assert row.status == "provisional"
+        results = vp.run_l0_row(row)
+        assert {r.check for r in results} == set(vp.L0_CHECKS)
+        failed = [(r.check, r.detail) for r in results if not r.passed]
+        assert not failed, failed
+
+    def test_psat_override_touches_only_listed_cas(self) -> None:
+        """The override file changes HF only; water keeps thermo's default ranking."""
+        from thermo import VaporPressure
+
+        from ngdesign.thermo import _state
+
+        constants, correlations = _state._constants_package(_state._records(("H2O", "HF"), ()))
+        by_cas = dict(zip(constants.CASs, correlations.VaporPressures, strict=True))
+        assert by_cas["7664-39-3"].method == "DIPPR_PERRY_8E"
+        assert by_cas["7732-18-5"].method == VaporPressure(CASRN="7732-18-5").method
+
+    def test_hf_vapour_pressure_hits_the_normal_boiling_point(self) -> None:
+        """Root fix: HF's Psat at its databank normal boiling point 292.69 K is 1 atm
+        within 0.5 % (the default "Fit 2023" gave 109.34 kPa, +7.9 %), in pure_psat and in
+        the flasher's PhiSat liquid alike."""
+        pkg = _hexamer_pkg()
+        assert pkg.pure_psat("HF", 292.69) == pytest.approx(101325.0, rel=0.005)
+        flasher = pkg._build_flasher(("HF",))
+        vp = flasher.liquid.VaporPressures[0]
+        assert vp.method == "DIPPR_PERRY_8E"
+        assert vp(292.69) == pytest.approx(101325.0, rel=0.005)

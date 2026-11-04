@@ -58,7 +58,7 @@ from ngdesign.contracts.thermo import (
     SaturationError,
     SaturationPoint,
 )
-from ngdesign.data import DATABANK_LOCK
+from ngdesign.data import DATA_DIR, DATABANK_LOCK
 from ngdesign.data import PseudoDefinition as DataPseudoDefinition
 from ngdesign.provenance.thermo_hook import note_convergence
 from ngdesign.thermo.saturation import _solve_saturation, interior_vf_solve
@@ -129,6 +129,34 @@ def _pseudo_vapor_pressure(record: Component) -> VaporPressure:
     return VaporPressure(Tb=record.Tb, Tc=record.Tc, Pc=record.Pc, omega=record.omega)
 
 
+@cache
+def _psat_method_overrides() -> dict[str, str]:
+    """CAS -> thermo VaporPressure method, from data/thermo_params/psat_methods.yaml.
+
+    Each entry names a published correlation thermo already ships, replacing
+    thermo's default ranking where that pick is measured to be wrong (the file
+    records the source and the measured reason per CAS).
+    """
+    import yaml
+
+    raw = yaml.safe_load((DATA_DIR / "thermo_params" / "psat_methods.yaml").read_text()) or {}
+    return {str(cas): str(entry["method"]) for cas, entry in raw.items()}
+
+
+def apply_psat_overrides(cass: Any, vapor_pressures: Any) -> None:
+    """Set the overridden VaporPressure method in place for every listed CAS.
+
+    Called wherever a constants package is built (``_constants_package``,
+    ``_psat_data``, ``gamma_phi._constants_for``) so a component's Psat is the
+    same correlation in every package and in ``pure_psat``.
+    """
+    overrides = _psat_method_overrides()
+    for cas, vp in zip(cass, vapor_pressures, strict=True):
+        method = overrides.get(str(cas)) if cas is not None else None
+        if method is not None and vp.method != method:
+            vp.method = method
+
+
 def _constants_package(records: list[Component]) -> tuple[ChemicalConstantsPackage, Any]:
     """(constants, correlations) for a flash support, from resolved Component records.
 
@@ -142,6 +170,7 @@ def _constants_package(records: list[Component]) -> tuple[ChemicalConstantsPacka
     """
     if all(r.cas is not None for r in records):
         constants, correlations = ChemicalConstantsPackage.from_IDs([str(r.cas) for r in records])
+        apply_psat_overrides(constants.CASs, correlations.VaporPressures)
         return constants, correlations
     return _merged_constants_package(records)
 
@@ -150,6 +179,7 @@ def _merged_constants_package(records: list[Component]) -> tuple[ChemicalConstan
     """Mixed databank + pseudo constants package, vectors in slate order."""
     databank_idx = [i for i, r in enumerate(records) if r.cas is not None]
     constants, correlations = ChemicalConstantsPackage.from_IDs([str(records[i].cas) for i in databank_idx])
+    apply_psat_overrides(constants.CASs, correlations.VaporPressures)
     by_position = {i: j for j, i in enumerate(databank_idx)}  # slate position -> from_IDs index
 
     def db(i: int, vector: Any) -> Any:
@@ -836,6 +866,7 @@ def _psat_data(cid: str, pseudos: SlatePseudos = ()) -> tuple[Any, float, float,
         if record.cas is None:
             return _pseudo_vapor_pressure(record), record.Tc, record.Pc, record.omega
         constants, correlations = ChemicalConstantsPackage.from_IDs([str(record.cas)])
+        apply_psat_overrides(constants.CASs, correlations.VaporPressures)
         return (
             correlations.VaporPressures[0],
             float(constants.Tcs[0]),

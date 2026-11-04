@@ -11,12 +11,14 @@
 #                    the flash's vapour phase, L0 green, flash surface checked
 #                    against Mehling & Kleiber Z and CRC latent heats;
 #                    applicability narrowed to the checked 290-400 K window.
-#   the other five   experimental - a named reason each: illustrative or
+#   hf_hexamer       provisional (2026-11-04) - the databank HF vapour
+#                    pressure was fixed at the root (psat_methods.yaml), L0
+#                    green, pure-HF L1 cases bound; no L2.
+#   the other four   experimental - a named reason each: illustrative or
 #                    secondary-sourced parameters (polymer_nrtl, flory_huggins),
 #                    no published reference and fixed-T free volumes
-#                    (unifac_fv), a databank vapour pressure that breaks the
-#                    caloric surface (hf_hexamer), or no runnable published
-#                    reference (polymer_pc_saft).
+#                    (unifac_fv), or no runnable published reference
+#                    (polymer_pc_saft).
 # Experimental rows are hidden from the advisor and exempt from the L0 audit.
 # Options are deliberately empty - the special adapters read their parameters
 # from data/thermo_params/special/ keyed by component id.
@@ -319,8 +321,21 @@
       -16 %), and no activity parameters regressed together with this vapour
       model are shipped. No harness compressibility or latent-heat case type
       exists, and binding cases needs the locked data/validation/ tree.
+      2026-11-04: L1 bound - NIST WebBook normal boiling point and the
+      McDonald et al. (1959) Antoine at 320 / 360 K, through the row's
+      own pure-acid bubble point (-0.05 %, -0.55 %, -0.14 %; these test the
+      databank Psat the row runs on, not the association constant). The
+      Mehling & Kleiber Z point stays a unit test (its primary was not
+      retrievable this session, and the harness Z band of 1 % would record
+      it as a +3.8 % miss). No L2: no open acetic acid + water VLE table
+      was retrieved (DDBST free pages 404, MDPI Chemistry 5, 165 (2023)
+      403), and the ideal liquid already misses the Sebastiani &
+      Lacquaniti K-values by 7-15 % (above). Stays provisional.
   status: provisional
-  validation: []
+  validation:
+  - acoh-pure-tboil-nist
+  - acoh-pure-psat-320K-mcdonald
+  - acoh-pure-psat-360K-mcdonald
   l0:
     pure_psat_limit:
       points: [["AcOH", 330.0], ["AcOH", 380.0]]
@@ -388,21 +403,65 @@
       limit, phase identification, PH/PS round trips, Gibbs-Duhem and the
       single-liquid limit pass; dhdT_cp passes at its analytic level (Cp
       matches a 1e-3 K stencil to 1e-9) but the harness's 0.5 K stencil
-      misses by 7e-4 at 300 K / 50 kPa because the hexamer enthalpy is
-      strongly curved there. STAYS EXPERIMENTAL for the caloric surface,
-      outside the association physics: the databank HF vapour-pressure
-      correlation ("Fit 2023", fitted over 293-454 K) has a nearly flat
-      d ln Psat/dT across 300-320 K, so the PhiSat liquid enthalpy
-      H_ig - R T^2 d ln(Psat phi_sat)/dT gives a saturated-liquid Cp of
-      0.1 J/(mol K) at 300 K (-152 J/(mol K) with no association at all);
-      and the latent heat misses the VDI Heat Atlas (2nd ed. 2010, D3.1)
-      table by -14.4 % at 292.69 K and -7.6 % at 305 K (-1.0 % at 325 K,
-      +3.8 to +6.0 % at 345-385 K). Promotion needs an HF vapour pressure
-      consistent with the Jarry & Davis association data (their own Antoine
-      equation is used only in the tests) - a databank change, not a
-      special-family one.
-  status: experimental
-  validation: []
+      missed by 7e-4 at 300 K / 50 kPa because the hexamer enthalpy is
+      strongly curved there. Was experimental for the caloric surface: the
+      databank HF vapour pressure (thermo's default "Fit 2023") gave 109.34
+      kPa at the 292.69 K normal boiling point and a nearly flat
+      d ln Psat/dT across 300-310 K, so the PhiSat liquid Cp collapsed
+      (0.1-1.7 J/(mol K)) and the latent heat missed the VDI Heat Atlas
+      table by -14.4 % at the boiling point. FIXED AT THE ROOT 2026-11-04:
+      data/thermo_params/psat_methods.yaml selects the Perry 8E (DIPPR eq.
+      101, Table 2-8) HF correlation in every constants build
+      (ngdesign.thermo._state.apply_psat_overrides), 101.01 kPa at 292.69 K
+      and agreeing with Jarry & Davis's own Antoine within ~1 %. Measured
+      after the fix (tests/thermo/test_special_association.py): latent heat
+      vs VDI D3.1 +7.1 % (292.69 K), +2.7 % (305 K), -0.9 % (325 K), +1.3 %
+      (345 K), +5.4 % (365 K); saturated-liquid Cp 37-38 J/(mol K) at
+      295-310 K vs the VDI table's 61-62 (the gamma-phi vapour-route
+      limitation with no residual liquid Cp, as on hoc_dimer). PROMOTED to
+      provisional: physics complete for its claim, all seven L0 checks pass
+      (dhdT_cp declared on the vapour at 370 K / 50 kPa, where the 0.5 K
+      stencil resolves the curvature). L1 bound: NIST WebBook normal boiling
+      point (Streng 1971) and the Sheft et al. (1973) Antoine at 278.15 /
+      298.15 K, all passing - they check the Psat the row runs on, not the
+      association constants. No L2: the only liquid model is ideal, and
+      HF/water (azeotropic, strongly non-ideal) is the binary with data;
+      binding it would be a known miss of the liquid model, not a test of
+      the vapour. Not validated.
+  status: provisional
+  validation:
+  - hf-pure-tboil-streng
+  - hf-pure-psat-278.15K-sheft
+  - hf-pure-psat-298.15K-sheft
+  l0:
+    pure_psat_limit:
+      points: [["HF", 280.0], ["HF", 330.0]]
+    phase_identification:
+      points: [["HF", 280.0], ["HF", 330.0]]
+    round_trip:
+      z: {HF: 0.5, H2O: 0.5}
+      states: [[300.0, 20000.0], [360.0, 100000.0]]
+    dhdT_cp:
+      z: {HF: 0.5, H2O: 0.5}
+      state: [370.0, 50000.0]
+      phase: vapor
+    gibbs_duhem:
+      binaries:
+      - z: {HF: 0.5, H2O: 0.5}
+        T: 320.0
+        P: 50000.0
+        phase: vapor
+    single_liquid_limit:
+      z: {HF: 1.0}
+      state: [280.0, 200000.0]
+    determinism:
+      z: {HF: 0.5, H2O: 0.5}
+      state: [330.0, 50000.0]
+  l0_excluded: {}
+  l0_note: >-
+    The liquid is ideal (gamma = 1), so the Gibbs-Duhem check runs on the
+    associated vapour; dhdT_cp runs on the vapour at 370 K / 50 kPa (the
+    liquid also passes at 300 K / 300 kPa: Cp 37.8904 vs dH/dT 37.8903).
 
 - id: polymer_pc_saft
   name: Polymer PC-SAFT (teqp bridge)
