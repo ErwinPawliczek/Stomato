@@ -52,6 +52,7 @@ single-liquid bubble point, so the two agree on when free water exists.
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 
 import scipy.optimize
 
@@ -167,19 +168,24 @@ _T_STAR_MAX = 30
 
 
 def saturated_decant(
-    tb: _ThermoBox, y0: dict[str, float], t_fallback: float, p: float
+    tb: _ThermoBox,
+    y0: dict[str, float],
+    t_fallback: float,
+    p: float,
+    bubble: Callable[[dict[str, float]], float | None],
 ) -> tuple[dict[str, float], float, float]:
     """(hydrocarbon-liquid composition, free-water fraction phi of V_1, T) of a
     decanting total condenser at its saturated (heterogeneous bubble) state.
 
     T solves T = T_bub(x_hc(T), P) (module docstring), where x_hc(T) is the
-    hydrocarbon liquid of ``decant_split`` at T and T_bub the package's bubble
-    point (``_ThermoBox.saturated_liquid_temperature``). No free water at the
+    hydrocarbon liquid of ``decant_split`` at T and T_bub the column's bubble
+    temperature of a liquid at P (``bubble``: the plain condenser's own,
+    ``inside_out._saturated_liquid_temperature``). No free water at the
     single-liquid bubble point T_bub(y_1) returns (y_1, 0, T_bub(y_1)) - the
     plain total condenser. ``t_fallback`` stands in for a bubble point the
     package cannot evaluate (super-critical overhead).
     """
-    t0 = tb.saturated_liquid_temperature(y0, p)
+    t0 = bubble(y0)
     if t0 is None:
         t0 = t_fallback
     x0, phi0 = decant_split(tb, y0, t0, p)
@@ -188,7 +194,7 @@ def saturated_decant(
 
     def g(t: float) -> tuple[float, dict[str, float], float] | None:
         x, phi = decant_split(tb, y0, t, p)
-        t_bub = tb.saturated_liquid_temperature(x, p)
+        t_bub = bubble(x)
         if t_bub is None:
             return None
         return t_bub - t, x, phi

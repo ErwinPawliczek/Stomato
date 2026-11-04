@@ -194,6 +194,10 @@ class _Column:
     #: Per-solve memo of the decanting condenser's outlet state
     #: (``_reflux_state``), keyed on (y_1, P_1).
     decant_memo: dict[_DecantKey, _RefluxState] = field(default_factory=dict)
+    #: Per-solve memo of liquid bubble temperatures, keyed on (z, P)
+    #: (``_saturated_liquid_temperature``); insertion order is the
+    #: warm-start search order.
+    bubble_memo: dict[_DecantKey, float | None] = field(default_factory=dict)
     #: A dividing wall's prefractionator (None = no wall, today's _Column).
     wall: _WallSection | None = None
     # Two-phase operating window for the inner temperature walk, set from the
@@ -1105,10 +1109,16 @@ def _refresh_model(
     prof: _Profile,
     model: _InnerModel | None,
     damp: float = _OUTER_DAMP,
+    reflux_subcooled: bool = True,
 ) -> _InnerModel:
     """One outer sweep: real K-values per stage, alpha against a column-wide reference
     component, the ln Kb = A + B/T correlation (least squares over the stage points),
     and per-stage linear enthalpy models (refitted only when temperatures moved).
+
+    ``reflux_subcooled`` False builds the total condenser's reflux line at
+    the stage-1 temperature instead of at the condenser's outlet state - the
+    zero end of the sweep loop's reflux continuation (``specs``); the live
+    residual and the gate always read the outlet state.
 
     Surface (P1-13): a two-tear sweep reads the K and enthalpies Newton and the
     gate read (``exact_surface``). Measured 22-stage deethanizer at tears
@@ -1123,13 +1133,18 @@ def _refresh_model(
     """
     tb.sweeping = col.n_tears < 2
     try:
-        return _refresh_model_on_surface(col, tb, prof, model, damp)
+        return _refresh_model_on_surface(col, tb, prof, model, damp, reflux_subcooled)
     finally:
         tb.sweeping = False
 
 
 def _refresh_model_on_surface(
-    col: _Column, tb: _ThermoBox, prof: _Profile, model: _InnerModel | None, damp: float
+    col: _Column,
+    tb: _ThermoBox,
+    prof: _Profile,
+    model: _InnerModel | None,
+    damp: float,
+    reflux_subcooled: bool = True,
 ) -> _InnerModel:
     """The body of `_refresh_model`, on the surface it selected."""
     n = col.n
@@ -1276,9 +1291,17 @@ def _refresh_model_on_surface(
         # bubble-dew gap T_r - T_1, so at the outer fixed point it reads
         # exactly the live residual's reflux enthalpy. It reads the live
         # y_1 = K_1 x_1 the exact gate reads at this same profile.
-        reflux = _reflux_state(col, tb, _equilibrium_vapour(col, k_stages[0], prof.x[0]), prof.T[0])
-        h_cond = tb.phase_enthalpy_model(reflux.x, reflux.T, col.pressures[0], False)
-        cond_dt = reflux.T - prof.T[0]
+        if reflux_subcooled:
+            y_live = _equilibrium_vapour(col, k_stages[0], prof.x[0])
+            reflux = _reflux_state(col, tb, y_live, prof.T[0])
+            h_cond = tb.phase_enthalpy_model(reflux.x, reflux.T, col.pressures[0], False)
+            cond_dt = reflux.T - prof.T[0]
+        else:
+            # Continuation start (``specs._REFLUX_SUBCOOL_M``): the profile's
+            # vapour condensed at the stage-1 temperature, no bubble-dew gap.
+            h_cond = tb.phase_enthalpy_model(
+                _flash_ready(prof.y[0], col.feed_comp), prof.T[0], col.pressures[0], False
+            )
     return _InnerModel(
         k_raw=k_stages,
         alpha=alpha,
@@ -1905,14 +1928,135 @@ def _exact_residuals(col: _Column, tb: _ThermoBox, prof: _Profile) -> tuple[floa
 # --------------------------------------------------------------------------------------
 
 
-def _condensate_temperature(tb: _ThermoBox, y0: dict[str, float], t_top: float, p_cond: float) -> float:
+#: Bubble temperature on the stage-K surface (``_bubble_on_k_surface``): secant
+#: iteration cap, convergence on the temperature step (K), and the smallest
+#: max |ln K_i| accepted as a non-trivial vapour (the K = 1 trivial solution
+#: satisfies the bubble condition at every T).
+_BUBBLE_SECANT_MAX = 12
+_BUBBLE_T_TOL = 1e-10
+_BUBBLE_TRIVIAL_LN_K = 1e-4
+
+
+def _bubble_on_k_surface(
+    col: _Column, tb: _ThermoBox, z: dict[str, float], t_start: float, p: float
+) -> float | None:
+    """Bubble temperature of liquid z on the column's own stage-K surface.
+
+    Solves ln sum_i z_i K_i(z, T, P) = 0 with K the stage E equation's
+    fugacity ratio (``_ThermoBox.k_fugacity``: phi^L(z) / phi^V(w), w the
+    incipient vapour at its fixed point) - the condition every stage's
+    summation row sum_i x_ij (1 - K_ij) = 0 imposes (Naphtali & Sandholm
+    1971; Michelsen & Mollerup, Thermodynamic Models 2nd ed., ch. 10
+    saturation points), by secant from ``t_start``, the package's own bubble
+    point. The package's saturation routine is a plateau-bracketed secant on
+    the PT-flash vapour fraction resolved to 1e-8 relative (~3e-6 K, with
+    plateau jitter of the same size): a finite-difference Jacobian column
+    (relative step 1e-7 in x) cannot read dT_bub/dx through it. This root is
+    a smooth function of z to ~1e-12 K and lies within the package's
+    tolerance of it. None when the surface is unavailable here (no per-phase
+    ln phi, the trivial K = 1 vapour, or no convergence); the caller keeps
+    the package's value then.
+    """
+    if not _fugacity_k(col, tb) or sum(1 for v in z.values() if v > 0.0) < 2:
+        return None
+
+    def g(t: float, seed: dict[str, float]) -> tuple[float, dict[str, float]] | None:
+        k = tb.k_fugacity(z, seed, t, p)
+        if k is None or max(abs(math.log(v)) for v in k.values()) < _BUBBLE_TRIVIAL_LN_K:
+            return None
+        kz = {cid: k[cid] * z.get(cid, 0.0) for cid in k}
+        total = sum(kz.values())
+        if not total > 0.0:
+            return None
+        return math.log(total), {cid: v / total for cid, v in kz.items()}
+
+    est = tb.k_estimate(z, t_start, p)
+    seed = {cid: est.get(cid, 1.0) * v for cid, v in z.items()}
+    first = g(t_start, seed)
+    if first is None:
+        return None
+    t0, (g0, seed) = t_start, first
+    t1 = t_start * (1.0 + 1e-6)
+    for _ in range(_BUBBLE_SECANT_MAX):
+        nxt = g(t1, seed)
+        if nxt is None:
+            return None
+        g1, seed = nxt
+        if g1 == g0:
+            return t1 if g1 == 0.0 else None
+        t2 = t1 - g1 * (t1 - t0) / (g1 - g0)
+        if not math.isfinite(t2) or abs(t2 - t_start) > 0.05 * t_start:
+            return None  # left the package bubble point's neighbourhood: not this root
+        t0, g0, t1 = t1, g1, t2
+        if abs(t1 - t0) <= _BUBBLE_T_TOL:
+            return t1
+    return None
+
+
+def _saturated_liquid_temperature(
+    col: _Column, tb: _ThermoBox, z: dict[str, float], p: float
+) -> float | None:
+    """Bubble temperature of liquid z at P on the stage-K surface
+    (``_bubble_on_k_surface``), memoized per solve: started from the nearest
+    bubble point already solved, else from the package's own
+    (``_ThermoBox.saturated_liquid_temperature``), which stands as the value
+    where the surface is unavailable. None when the package has no bubble
+    point (super-critical z)."""
+    key = (tuple(sorted(z.items())), p)
+    if key in col.bubble_memo:
+        return col.bubble_memo[key]
+    result: float | None = None
+    near = _nearest_bubble(col, z, p)
+    if near is not None:
+        # Warm start from the nearest bubble point already solved: Jacobian
+        # columns, line-search trials and sweeps move z by small steps, and
+        # the secant converges from there without the package's bracketing
+        # solve (the root does not depend on the start).
+        result = _bubble_on_k_surface(col, tb, z, near, p)
+    if result is None:
+        t_pkg = tb.saturated_liquid_temperature(z, p)
+        if t_pkg is not None:
+            t_k = _bubble_on_k_surface(col, tb, z, t_pkg, p)
+            result = t_pkg if t_k is None else t_k
+    col.bubble_memo[key] = result
+    return result
+
+
+#: Largest max |z_i - z'_i| over which a solved bubble point warm-starts the
+#: secant for z (``_saturated_liquid_temperature``).
+_BUBBLE_WARM_DZ = 1e-2
+
+
+def _nearest_bubble(col: _Column, z: dict[str, float], p: float) -> float | None:
+    """Temperature of the most recently solved bubble point at P whose
+    composition is within ``_BUBBLE_WARM_DZ`` of z (None: no such point)."""
+    for (items, p_k), t in reversed(col.bubble_memo.items()):
+        if t is None or p_k != p:
+            continue
+        other = dict(items)
+        if max(abs(z.get(c, 0.0) - other.get(c, 0.0)) for c in z.keys() | other.keys()) <= _BUBBLE_WARM_DZ:
+            return t
+    return None
+
+
+def _condensate_temperature(col: _Column, tb: _ThermoBox, y0: dict[str, float], t_top: float) -> float:
     """Total-condenser outlet temperature: the bubble point of the overhead
     vapour's composition at the condenser pressure (reflux and distillate leave
     as saturated liquid; Seader, Henley & Roper, Separation Process Principles
-    3rd ed., §10.3). Falls back to the stage-1 temperature when the package
-    has no bubble point there (super-critical overhead)."""
-    t_bub = tb.saturated_liquid_temperature(y0, p_cond)
-    return t_top if t_bub is None else t_bub
+    3rd ed., §10.3), on the stage-K surface (``_saturated_liquid_temperature``).
+    Falls back to the stage-1 temperature when the package has no bubble point
+    there (super-critical overhead).
+
+    Capped at the stage-1 temperature: a condenser only removes heat, so its
+    liquid never leaves hotter than the vapour enters. At an equilibrium
+    stage 1 the cap is inactive (T_bub(y_1) < T_dew(y_1) = T_1 for any
+    mixture, equal for a pure component); it binds only on off-equilibrium
+    iterates, where y_1 = K_1 x_1 of a stage far from its bubble point can be
+    heavier than the stage temperature condenses (measured: early inside-out
+    sweeps of the 22-stage deethanizer read T_bub(y_1) = T_1 + 43 K).
+    """
+    t_bub = _saturated_liquid_temperature(col, tb, y0, col.pressures[0])
+    return t_top if t_bub is None else min(t_bub, t_top)
 
 
 @dataclass(frozen=True)
@@ -1953,12 +2097,12 @@ def _reflux_state(col: _Column, tb: _ThermoBox, y_top: dict[str, float], t_top: 
     p = col.pressures[0]
     y = _flash_ready(y_top, col.feed_comp)
     if not col.water_decant:
-        t = _condensate_temperature(tb, y, t_top, p)
+        t = _condensate_temperature(col, tb, y, t_top)
         return _RefluxState(x=y, T=t, h=tb.h_liquid(y, t, p))
     key = (tuple(sorted(y.items())), p)
     hit = col.decant_memo.get(key)
     if hit is None:
-        x, phi, t = saturated_decant(tb, y, t_top, p)
+        x, phi, t = saturated_decant(tb, y, t_top, p, lambda z: _saturated_liquid_temperature(col, tb, z, p))
         h_w = tb.h_liquid({STEAM_COMPONENT: 1.0}, t, p) if phi > 0.0 else 0.0
         hit = _RefluxState(x=x, T=t, h=tb.h_liquid(_flash_ready(x, y), t, p), phi=phi, h_water=h_w)
         col.decant_memo[key] = hit
