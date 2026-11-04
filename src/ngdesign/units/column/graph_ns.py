@@ -59,7 +59,6 @@ import scipy.sparse.linalg
 
 from ngdesign.contracts import PhaseKind
 
-from .decant import decant_split
 from .inside_out import (
     _Column,
     _exact_residuals,
@@ -68,6 +67,7 @@ from .inside_out import (
     _pa_return_terms,
     _pa_stage_flows,
     _Profile,
+    _reflux_state,
     _stage_k_values,
     _StageFeed,
     _WallSection,
@@ -379,24 +379,6 @@ def _graph_flows(
     return out, l_wall
 
 
-def _reflux_split(
-    col: _Column, tb: _ThermoBox, y0: dict[str, float], t0: float
-) -> tuple[dict[str, float], float]:
-    """The total condenser's (reflux liquid composition, free-water fraction
-    of V_1) - the decant split (``decant.decant_split``) when the column
-    decants, else (y_1, 0) exactly. Memoized per solve on (y_1, T_1, P_1)."""
-    if not col.water_decant:
-        return y0, 0.0
-    key = (tuple(sorted(y0.items())), t0, col.pressures[0])
-    hit = col.decant_memo.get(key)
-    if hit is None:
-        # The split is taken at the stage-1 temperature, the state the total
-        # condenser returns its reflux at (see ``decant``).
-        hit = decant_split(tb, _flash_ready(y0, col.feed_comp), t0, col.pressures[0])
-        col.decant_memo[key] = hit
-    return hit
-
-
 def _graph_k_args(model: _GraphModel, s: int) -> tuple[_StageFeed, float]:
     """The graph-aware `_stage_k_values` arguments for graph stage s (S0-1c
     step 2): the padded feed part, and the main-column draw total - zero past
@@ -522,14 +504,13 @@ def _graph_residual_vector(
         donor = model.liquid_donor[s]
         vap_donor = model.vapour_donor[s]
         link_in = model.link_at_top.get(s)
-        x_reflux = y_eq[0]
-        if s == 0 and col.condenser == "total" and col.water_decant:
-            # S0-1c step 4: the reflux is the decanted hydrocarbon liquid.
-            x_reflux, _phi = _reflux_split(col, tb, y_eq[0], ts[0])
+        # The reflux entering stage 1: the condenser's outlet liquid (the
+        # decanted hydrocarbon liquid when it decants, S0-1c step 4).
+        reflux = _reflux_state(col, tb, y_eq[0], ts[0]) if s == 0 and col.condenser == "total" else None
         for i, cid in enumerate(col.comps):
             inflow = 0.0
-            if s == 0 and col.condenser == "total":
-                inflow = l0 * x_reflux.get(cid, 0.0)
+            if reflux is not None:
+                inflow = l0 * reflux.x.get(cid, 0.0)
             elif donor is not None:
                 inflow = liquid[donor] * xs[donor].get(cid, 0.0)
             if link_in is not None:
@@ -588,8 +569,8 @@ def _graph_residual_vector(
         if wall is not None:
             h_in += _wall_h_in(model, tb, liquid, l_wall, xs, ts, y_eq, draw_flows, s)
         h_in += part.h_flow
-        if s == 0 and col.condenser == "total":
-            h_in += l0 * tb.h_liquid(_flash_ready(x_reflux, col.feed_comp), ts[0], col.pressures[0])
+        if reflux is not None:
+            h_in += l0 * reflux.h
         h_in += model.section_duty_at.get(s, 0.0)
         if col.pumparounds:
             # The dense residual's pumparound algebra: the return carries the

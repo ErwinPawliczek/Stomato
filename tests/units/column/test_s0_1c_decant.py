@@ -3,16 +3,20 @@
 The case: a 10-stage nC6/nC8/nC10/nC12 column at 2 bar carrying 10 % water
 in its feed (a wet naphtha-gas-oil cut), a 4-stage steam stripper on stage 4
 and a total condenser. The overhead vapour holds more water than the
-hydrocarbon condensate can dissolve at the stage-1 temperature, so the decant
-draws the excess off as free water and the reflux/distillate carry the
-saturated hydrocarbon liquid only - inside the condenser stage balance.
+hydrocarbon condensate can dissolve, so the decant draws the excess off as
+free water and the reflux/distillate carry the saturated hydrocarbon liquid
+only - inside the condenser stage balance. The drum sits at the condensate's
+heterogeneous bubble point (``decant.saturated_decant``), the state the reflux
+enters stage 1 at.
 
 Independent checks, from the reported result and fresh thermo calls only:
 
 - the distillate's water sits exactly at saturation: its water fugacity
-  equals pure liquid water's at the stage-1 state (Michelsen's pure-water
-  tangent plane at zero);
+  equals pure liquid water's at the drum state (Michelsen's pure-water
+  tangent plane at zero), and the water-saturated distillate is at its
+  bubble point there (the heterogeneous bubble point of the condensate);
 - the condenser closes: V_1 y_1 = (L_0 + D) x_D + W per component;
+- stage 1 closes its energy balance with the reflux at the drum state;
 - the whole unit closes in components and energy at 1e-8, with the
   condenser and kettle duties recomputed from their own stage balances.
 
@@ -31,6 +35,7 @@ from ngdesign.contracts import StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.contracts.stream import PhaseKind
 from ngdesign.units.column import ColumnSpecError, solve_column_full
+from tests.units.column.test_reflux_state import bubble_gap
 from tests.units.column.test_s0_1c_strippers import _comps, _h, _stage, fugacity_equilibrium
 
 P = 2.0e5
@@ -86,10 +91,14 @@ def test_decant_draws_the_free_water_and_closes(
         out = (l0 + d) * x_d.get(c, 0.0) + (w if c == "H2O" else 0.0)
         assert abs(s0["V"] * s0["y"][c] - out) <= 1e-8 * s0["V"], c
     # The distillate carries exactly the water the hydrocarbon liquid holds at
-    # saturation at the stage-1 state: water fugacity = pure liquid water's.
-    ln_phi = thermo.phase_props(x_d, s0["T"], s0["P"], PhaseKind.HC_LIQUID).ln_phi
-    pure = thermo.phase_props({"H2O": 1.0}, s0["T"], s0["P"], PhaseKind.AQUEOUS).ln_phi
+    # saturation at the drum state: water fugacity = pure liquid water's, and
+    # that liquid at its bubble point (measured T_D 15.5 K below stage 1).
+    t_d = r.outlets["distillate"].T
+    assert t_d < s0["T"] - 1.0
+    ln_phi = thermo.phase_props(x_d, t_d, s0["P"], PhaseKind.HC_LIQUID).ln_phi
+    pure = thermo.phase_props({"H2O": 1.0}, t_d, s0["P"], PhaseKind.AQUEOUS).ln_phi
     assert abs(math.log(x_d["H2O"]) + ln_phi["H2O"] - pure["H2O"]) < 1e-9
+    assert abs(bubble_gap(thermo, x_d, t_d, s0["P"])) < 1e-9
     # Every stage at equilibrium (fugacity equality), main and section.
     assert fugacity_equilibrium(r, thermo) < 1e-6
 
@@ -101,9 +110,14 @@ def test_decant_draws_the_free_water_and_closes(
     hv = [_h(thermo, s["y"], s["T"], s["P"], PhaseKind.VAPOR) for s in st]
     h_feed = thermo.flash_pt(FEED, 400.0, P, 100.0).enthalpy * 100.0
     h_steam = thermo.flash_pt({"H2O": 1.0}, 450.0, P, 2.0).enthalpy * 2.0
-    h_xd = _h(thermo, x_d, s0["T"], s0["P"], PhaseKind.HC_LIQUID)
-    h_w = thermo.phase_props({"H2O": 1.0}, s0["T"], s0["P"], PhaseKind.HC_LIQUID).enthalpy
+    h_xd = _h(thermo, x_d, t_d, s0["P"], PhaseKind.HC_LIQUID)
+    h_w = thermo.phase_props({"H2O": 1.0}, t_d, s0["P"], PhaseKind.HC_LIQUID).enthalpy
     q_cond = s0["V"] * hv[0] - (l0 + d) * h_xd - w * h_w
+    # Stage 1 receives the reflux at the drum state (no feed, draw or return
+    # there): V_2 H_V2 + L_0 h_D = V_1 H_V1 + L_1 h_L1.
+    h_in1 = st[1]["V"] * hv[1] + l0 * h_xd
+    h_out1 = s0["V"] * hv[0] + s0["L"] * hl[0]
+    assert abs(h_in1 - h_out1) <= 1e-8 * max(abs(h_in1), abs(h_out1), q_cond)
     q_reb = st[n - 1]["V"] * hv[n - 1] + st[n - 1]["L"] * hl[n - 1] - st[n - 2]["L"] * hl[n - 2]
     b = info["bottoms_mol_s"]
     prod = info["stripper_s1_product_mol_s"]
@@ -118,11 +132,11 @@ def test_decant_draws_the_free_water_and_closes(
     m_rel = max(abs(m_in[c] - m_out[c]) for c in comps) / 102.0
     assert m_rel < 1e-8, m_rel
     # The reported condenser duty is its stage balance. The reported reboiler
-    # duty closes the boundary stream table, whose distillate and decant are
-    # reported at the condensate's bubble point (the total condenser's
-    # product state) rather than at the stage-1 state of the condenser
-    # balance: it differs from the kettle's stage balance by exactly that
-    # product-state enthalpy (measured ~3e5 W here), to 1e-8.
+    # duty closes the boundary stream table over the flashed products; the
+    # products sit at the drum state of the condenser balance, so it is the
+    # kettle's stage balance up to the flash-vs-phase enthalpy of the
+    # products (formerly ~3e5 W, when the condenser balance read the stage-1
+    # state and the products the drum's), to 1e-8.
     assert info["condenser_duty_W"] == pytest.approx(q_cond, rel=1e-8)
     dist, dec = r.outlets["distillate"], internal["water_decant"]
     shift = d * dist.enthalpy + w * dec.enthalpy - d * h_xd - w * h_w
@@ -133,10 +147,12 @@ def test_decant_draws_the_free_water_and_closes(
 
 def test_decant_off_with_free_water_refuses(thermo: Thermo) -> None:
     """The same column without the decant must return its condensate water as
-    reflux, which supersaturates the top tray: the typed free-water refusal
-    naming stage 1. It is reached on the graph Newton's best iterate (measured
-    M = 0.29 after the pass budget: the one-liquid column has no solution
-    there), not after convergence - the physical verdict, typed, instead of a
-    convergence error. ~25 s."""
-    with pytest.raises(ColumnSpecError, match="free water on stage 1"):
+    reflux, which supersaturates the top of the column: the typed free-water
+    refusal, naming stage 1 or the condensate itself (at its bubble point, the
+    state the reflux returns at). It is reached on the graph Newton's best
+    iterate (the one-liquid column has no solution there; measured: the
+    condensate's water fugacity 252 % above pure water's at 359.2 K), not
+    after convergence - the physical verdict, typed, instead of a convergence
+    error. ~25 s."""
+    with pytest.raises(ColumnSpecError, match="free water (on stage 1|in the total condenser)"):
         solve_column_full({}, _params(False), thermo)

@@ -23,21 +23,36 @@ plain total condenser bit for bit. Otherwise the free-water fraction of the
 condensate is phi = (y_w - x_w*) / (1 - x_w*), from the water and
 hydrocarbon balances of the split.
 
-The split is taken at the stage-1 temperature: the plain total condenser
-returns its reflux at that state (``inside_out``), so the decanted reflux is
-read on the same convention and decant on with no free water there reduces
-to decant off exactly (the reflux is y_1 itself). A subcooled drum, which
-would decant more water, is not modelled; the free-water refusal of a column
-without the decant (``strippers._check_free_water``) tests the condensate at
-the same temperature, so the two agree on when free water exists. Measured:
-splitting at the condensate's bubble temperature instead cost one
-``bubble_point`` (0.26 s) per Jacobian column touching stage 1 - 22 of the
-26 s of a 14-stage decanting mesh.
+The split is taken at the condensate's saturated state - the decanter
+drum with zero subcooling (``saturated_decant``). A total condenser returns
+its liquid at the bubble point (Seader, Henley & Roper, Separation Process
+Principles 3rd ed., §10.3); for a condensate that separates into a
+hydrocarbon liquid and free water that is the HETEROGENEOUS bubble point, the
+temperature at which both liquids coexist with incipient vapour (Seader,
+Henley & Roper ch. 4, three-phase vapour-liquid-liquid equilibrium of
+hydrocarbon-water systems; the reflux drum of a steam-stripped column is
+such a three-phase separator, Kister, Distillation Design, McGraw-Hill 1992).
+At it the water-saturated hydrocarbon liquid is itself at its bubble point,
+because its water fugacity equals the free water's, so
+
+    T* = T_bub(x_hc(T*), P),
+
+solved by secant from the single-liquid bubble point T_bub(y_1). The
+stage-1 temperature (the vapour's dew point) is not a state the condensate
+can hold as liquid: above its bubble point it would partly boil. A subcooled
+drum (a specified drum temperature, the usual refinery overhead practice;
+Watkins, Petroleum Refinery Distillation 2nd ed. (1979) ch. 2) is not
+modelled. When the condensate holds no free water at T_bub(y_1) it is one
+liquid there and the state is the plain total condenser's exactly. The
+free-water refusal of a column without the decant
+(``strippers._check_free_water``) tests the condensate at that same
+single-liquid bubble point, so the two agree on when free water exists.
 """
 
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 
 import scipy.optimize
 
@@ -144,3 +159,72 @@ def decant_split(tb: _ThermoBox, y0: dict[str, float], t: float, p: float) -> tu
     x = {cid: (1.0 - xw) * hc.get(cid, 0.0) for cid in y0}
     x[STEAM_COMPONENT] = xw
     return x, phi
+
+
+#: Secant tolerance on the heterogeneous bubble temperature (K): T* must be a
+#: smooth function of y_1 at the graph Newton's finite-difference step.
+_T_STAR_TOL = 1e-10
+_T_STAR_MAX = 30
+
+
+def saturated_decant(
+    tb: _ThermoBox,
+    y0: dict[str, float],
+    t_fallback: float,
+    p: float,
+    bubble: Callable[[dict[str, float]], float | None],
+    t_hint: float | None = None,
+) -> tuple[dict[str, float], float, float]:
+    """(hydrocarbon-liquid composition, free-water fraction phi of V_1, T) of a
+    decanting total condenser at its saturated (heterogeneous bubble) state.
+
+    T solves T = T_bub(x_hc(T), P) (module docstring), where x_hc(T) is the
+    hydrocarbon liquid of ``decant_split`` at T and T_bub the column's bubble
+    temperature of a liquid at P (``bubble``: the plain condenser's own,
+    ``inside_out._saturated_liquid_temperature``), by secant from ``t_hint``
+    (a neighbouring condensate's T*) when given, else from T_bub(y_1). No free
+    water at the single-liquid bubble point T_bub(y_1) returns
+    (y_1, 0, T_bub(y_1)) - the plain total condenser. ``t_fallback`` stands in
+    for a bubble point the package cannot evaluate (super-critical overhead).
+    """
+
+    def g(t: float) -> tuple[float, dict[str, float], float] | None:
+        x, phi = decant_split(tb, y0, t, p)
+        if phi <= 0.0:
+            return None
+        t_bub = bubble(x)
+        if t_bub is None:
+            return None
+        return t_bub - t, x, phi
+
+    def solve(t_start: float) -> tuple[dict[str, float], float, float] | None:
+        first = g(t_start)
+        if first is None:
+            return None
+        ta, (ga, _xa, _pa) = t_start, first
+        tb_ = ta + ga  # fixed-point step: T_1 = T_bub(x_hc(T_0))
+        for _ in range(_T_STAR_MAX):
+            nxt = g(tb_)
+            if nxt is None:
+                return None
+            gb, xb, phib = nxt
+            if abs(gb) <= _T_STAR_TOL:
+                return xb, phib, tb_ + gb
+            slope = (gb - ga) / (tb_ - ta) if tb_ != ta else -1.0
+            step = -gb / slope if slope < 0.0 else gb  # secant; fixed point if non-contracting
+            ta, ga = tb_, gb
+            tb_ = tb_ + step
+        return None
+
+    if t_hint is not None:
+        hinted = solve(t_hint)
+        if hinted is not None:
+            return hinted
+    t0 = bubble(y0)
+    if t0 is None:
+        t0 = t_fallback
+    x0, phi0 = decant_split(tb, y0, t0, p)
+    if phi0 <= 0.0:
+        return y0, 0.0, t0
+    solved = solve(t0)
+    return solved if solved is not None else (x0, phi0, t0)

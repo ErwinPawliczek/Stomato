@@ -41,7 +41,6 @@ from .graph_ns import (
     _graph_naphtali_sandholm,
     _graph_residual_vector,
     _graph_state,
-    _reflux_split,
     _stage_row_ranges,
 )
 from .inside_out import (
@@ -49,6 +48,7 @@ from .inside_out import (
     _l_profile,
     _pa_reports,
     _Profile,
+    _reflux_state,
     _StageFeed,
     _temperature_seed,
     _total_condenser_duty,
@@ -220,16 +220,17 @@ def _check_free_water(
                 f"one-liquid stage model cannot carry{where}"
             )
     if col.condenser == "total" and not skip_condenser:
-        # The condensate at the stage-1 temperature: the state the decant
-        # splits it at (``decant``), so "free water here" and "a decant
-        # would draw water" are one test.
-        y0 = _flash_ready(prof.y[0], col.feed_comp)
-        t_cond = prof.T[0]
-        excess = _free_water_excess(tb, y0, t_cond, col.pressures[0])
+        # The condensate at the condenser's outlet state (``_reflux_state``:
+        # its bubble point), the state ``decant.saturated_decant`` first tests
+        # for free water - so "free water here" and "a decant would draw
+        # water" are one test.
+        reflux = _reflux_state(col, tb, prof.y[0], prof.T[0])
+        t_cond = reflux.T
+        excess = _free_water_excess(tb, reflux.x, t_cond, col.pressures[0])
         if excess is not None and excess > _FREE_WATER_MARGIN:
             raise ColumnSpecError(
                 f"free water in the total condenser: the condensate's water fugacity exceeds that of "
-                f"pure liquid water at the stage-1 temperature {t_cond:.2f} K by "
+                f"pure liquid water at its bubble point {t_cond:.2f} K by "
                 f"{100.0 * math.expm1(excess):.3g} % - turn condenser_water_decant on to draw the "
                 f"aqueous phase off, or raise the condenser temperature{where}"
             )
@@ -257,10 +258,10 @@ def _finalize_graph_duties(col: _Column, tb: _ThermoBox, prof: _Profile) -> None
     stripper draws are rebuilt from the graph balances, the distillate is the
     top vapour (less the reflux for a total condenser) and the bottoms the
     main bottom liquid. The condenser duty follows the dense convention
-    (total: the condensation of V_1 at the stage-1 state; partial: the
-    stage-1 balance) and the reboiler duty the kettle stage balance; the
-    reported reboiler duty is then closed exactly over the boundary streams by
-    ``_close_energy_balance``.
+    (total: the condensation of V_1 to the condenser's outlet liquid,
+    ``_total_condenser_duty``; partial: the stage-1 balance) and the
+    reboiler duty the kettle stage balance; the reported reboiler duty is
+    then closed exactly over the boundary streams by ``_close_energy_balance``.
     """
     for s in range(col.n_graph):
         for comp in (prof.x[s], prof.y[s]):
@@ -274,24 +275,16 @@ def _finalize_graph_duties(col: _Column, tb: _ThermoBox, prof: _Profile) -> None
     prof.d = prof.V[0] - prof.l0 if col.condenser == "total" else prof.V[0]
     prof.b = prof.L[col.n - 1]
     prof.reflux_x, prof.decant = {}, 0.0
-    if col.condenser == "total" and col.water_decant:
-        # S0-1c step 4: V_1 condenses into the decanted hydrocarbon liquid
-        # (reflux + distillate) and the free water; the condenser duty is the
-        # enthalpy V_1 gives up to leave as those liquids at the stage-1 state.
-        x_ref, phi = _reflux_split(col, tb, prof.y[0], prof.T[0])
-        prof.decant = phi * prof.V[0]
-        prof.reflux_x = dict(x_ref)
-        prof.d = prof.V[0] - prof.l0 - prof.decant
-        y0 = _flash_ready(prof.y[0], col.feed_comp)
-        t0, p0 = prof.T[0], col.pressures[0]
-        h_hc = tb.h_liquid(_flash_ready(x_ref, col.feed_comp), t0, p0)
-        h_w = tb.h_liquid({STEAM_COMPONENT: 1.0}, t0, p0) if prof.decant > 0.0 else 0.0
-        prof.qc = max(
-            prof.V[0] * tb.h_vapor(y0, t0, p0) - (prof.V[0] - prof.decant) * h_hc - prof.decant * h_w,
-            0.0,
-        )
-    elif col.condenser == "total":
-        prof.qc = _total_condenser_duty(tb, prof.V[0], prof.y[0], prof.T[0], col.pressures[0], col.feed_comp)
+    if col.condenser == "total":
+        # The condenser's outlet liquid (``_reflux_state``): with the decant
+        # (S0-1c step 4) V_1 condenses into the hydrocarbon liquid (reflux +
+        # distillate) and the free water drawn off.
+        if col.water_decant:
+            state = _reflux_state(col, tb, prof.y[0], prof.T[0])
+            prof.decant = state.phi * prof.V[0]
+            prof.reflux_x = dict(state.x)
+            prof.d = prof.V[0] - prof.l0 - prof.decant
+        prof.qc = _total_condenser_duty(col, tb, prof.V[0], prof.y[0], prof.T[0])
     elif col.condenser == "partial":
         prof.qc = max(_graph_stage_heat_imbalance(col, tb, prof, 0), 0.0)
     else:

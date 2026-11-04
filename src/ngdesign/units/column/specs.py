@@ -130,6 +130,10 @@ _CONTINUATION_SCALES: tuple[float, ...] = (0.0, 0.25, 0.5, 0.75, 1.0)
 #: Smallest heat-scale step a failed rung is bisected to before the mesh error
 #: stands (a step doubles back toward the rung spacing after each success).
 _HEAT_MIN_STEP = 1.0 / 512.0
+#: Gate M below which the inside-out sweeps carry the total condenser's
+#: subcooled (bubble-point) reflux; above it the reflux line sits at the
+#: stage-1 temperature (the continuation in ``_solve_mesh_at_heat``).
+_REFLUX_SUBCOOL_M = 1e-2
 
 
 def _solve_mesh(
@@ -392,9 +396,25 @@ def _solve_mesh_at_heat(
     damp = _OUTER_DAMP
     m_last = float("inf")
     settled = 0
+    # Reflux continuation: a total condenser returns its reflux at its bubble
+    # point, colder than stage 1 by the condensate's bubble-dew gap (39 K on
+    # the 22-stage deethanizer's top composition). From a cold seed the
+    # sweeps with that gap in the inner model wander off (measured: the
+    # deethanizer's top went to pure nC4 by sweep 2 and the NS fallback
+    # started from M = 1); with the reflux line at the stage-1 temperature
+    # they settle (M 6.5e-1 -> 4.6e-3 in 13 sweeps), and from such a state
+    # the full model closes (measured: 2 NS passes). So the sweeps start on
+    # the stage-1-temperature reflux line and switch to the outlet state once
+    # the gate's M (which carries no enthalpy) is below _REFLUX_SUBCOOL_M - a
+    # homotopy in the reflux enthalpy (Wayburn & Seader, Comput. Chem. Eng.
+    # 11 (1987) 7-25). The gate always reads the outlet state, so only the
+    # path changes, never the accepted solution.
+    subcooled = col.condenser != "total" or (
+        (best_m if zero_one else _exact_residuals(col, tb, prof)[0]) < _REFLUX_SUBCOOL_M
+    )
     for outer in range(1, 1 if (ns_direct or ns_floor) else _OUTER_MAX + 1):
         t_prev, v_prev = list(prof.T), list(prof.V)
-        model = _refresh_model(col, tb, prof, model, damp)
+        model = _refresh_model(col, tb, prof, model, damp, reflux_subcooled=subcooled)
         prof.outer = outer
         _inner_solve(col, model, prof, t_bot)  # accumulates prof.inner itself
         if col.n_tears >= 2:
@@ -418,6 +438,9 @@ def _solve_mesh_at_heat(
             _reject_band_limit(col, prof)
             _finalize_duties(col, tb, prof)
             return prof
+        if not subcooled and m_res < _REFLUX_SUBCOOL_M:
+            subcooled = True
+            model = None  # the reflux line changes model: refit, no blend
         # P1-13 change 1: the one damping decision (see spec.py).
         if m_res > m_last:
             damp, settled = _OUTER_DAMP, 0

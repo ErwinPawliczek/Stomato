@@ -52,8 +52,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .graph_ns import _graph_model, _GraphModel, _reflux_split
-from .inside_out import _Column, _live_pumparounds, _Profile, _vapour_tear_stages
+from .graph_ns import _graph_model, _GraphModel
+from .inside_out import _Column, _live_pumparounds, _Profile, _reflux_state, _RefluxState, _vapour_tear_stages
 from .spec import _FLOW_FLOOR
 from .thermo_adapter import _ThermoBox
 
@@ -156,7 +156,8 @@ class _StageModel:
     ig: _IdealGas
     h_liq: tuple[float, float]  # departure line of the stage liquid at t0
     h_vap: tuple[float, float]  # departure line of the stage vapour at t0
-    h_cond: tuple[float, float] | None = None  # total-condenser reflux liquid at t0
+    h_cond: tuple[float, float] | None = None  # total-condenser reflux liquid at t0 + cond_dt
+    cond_dt: float = 0.0  # reflux temperature less t0 (the condenser's bubble-dew gap)
 
     def k(self, t: float) -> np.ndarray:
         return np.exp(np.minimum(self.ln_k0 + self.slope * (1.0 / t - 1.0 / self.t0), _LN_K_CAP))
@@ -174,8 +175,11 @@ class _StageModel:
         return float(self.ig.h(t) @ y) + self.dv(t)
 
     def hc(self, t: float, x: np.ndarray) -> float:
-        line = self.h_cond if self.h_cond is not None else self.h_liq
-        return float(self.ig.h(t) @ x) + line[0] + line[1] * (t - self.t0)
+        """The reflux liquid's enthalpy when stage 1 sits at t: the condenser
+        returns it at t + cond_dt (its bubble point, ``_reflux_state``)."""
+        if self.h_cond is None:
+            return self.hl(t, x)
+        return float(self.ig.h(t + self.cond_dt) @ x) + self.h_cond[0] + self.h_cond[1] * (t - self.t0)
 
 
 def _full(comps: list[str], vec: np.ndarray) -> dict[str, float]:
@@ -198,19 +202,21 @@ def _refresh(
     y: np.ndarray,
     old: _StageModel | None,
     ig: _IdealGas,
-    reflux_x: np.ndarray | None = None,
+    reflux: _RefluxState | None = None,
 ) -> _StageModel:
     """Stage model at (T, x, y): fugacity K and its 1/T slope, both departure lines.
 
     Each departure line is the built phase's enthalpy and cp less the ideal-gas
     mixture's at the same composition. Stage 1 under a total condenser also
-    carries the reflux's liquid line (at ``reflux_x`` when the condenser
-    decants, else at the stage vapour). A package that refuses a phase build
-    keeps the stage's previous model.
+    carries the reflux's liquid departure line at the condenser's outlet
+    state (``reflux``: composition and bubble-point temperature, from
+    ``_reflux_state``). A package that refuses a phase build keeps the
+    stage's previous model.
     """
     p = col.pressures[s]
     xd, yd = _full(col.comps, x), _full(col.comps, y)
-    cd = yd if reflux_x is None else _full(col.comps, reflux_x)
+    cd = _full(col.comps, _vec(col.comps, reflux.x)) if reflux is not None else yd
+    t_cond = reflux.T if reflux is not None else t
     try:
         liq = tb.phase_state(xd, t, p, vapor=False)
         vap = tb.phase_state(yd, t, p, vapor=True)
@@ -218,7 +224,7 @@ def _refresh(
         vap2 = tb.phase_state(yd, t + _SLOPE_DT, p, vapor=True)
         cond = None
         if s == 0 and col.condenser == "total":
-            cond = tb.phase_state(cd, t, p, vapor=False)
+            cond = tb.phase_state(cd, t_cond, p, vapor=False)
     except ValueError:
         if old is not None:
             return old
@@ -228,9 +234,11 @@ def _refresh(
     a2 = np.array([liq2.ln_phi[c] - vap2.ln_phi[c] for c in col.comps])
     h_ig, cp_ig = ig.h(t), ig.cp(t)
 
-    def departure(h: float, cp: float, comp: dict[str, float]) -> tuple[float, float]:
+    def departure(
+        h: float, cp: float, comp: dict[str, float], h_at: np.ndarray = h_ig, cp_at: np.ndarray = cp_ig
+    ) -> tuple[float, float]:
         c = _vec(col.comps, comp)
-        return h - float(h_ig @ c), cp - float(cp_ig @ c)
+        return h - float(h_at @ c), cp - float(cp_at @ c)
 
     return _StageModel(
         t0=t,
@@ -239,7 +247,10 @@ def _refresh(
         ig=ig,
         h_liq=departure(liq.enthalpy, liq.cp, xd),
         h_vap=departure(vap.enthalpy, vap.cp, yd),
-        h_cond=departure(cond.enthalpy, cond.cp, cd) if cond is not None else None,
+        h_cond=(
+            departure(cond.enthalpy, cond.cp, cd, ig.h(t_cond), ig.cp(t_cond)) if cond is not None else None
+        ),
+        cond_dt=t_cond - t,
     )
 
 
@@ -346,7 +357,7 @@ def _stage_flash(
 class _State:
     """Relaxation state over the stage graph: per stage T, the vapour and
     liquid leaving to the cascade, x, y; the stripper draw flows; the total
-    condenser's reflux composition (None: the stage-1 vapour, condensed)."""
+    condenser's outlet state (None: no total condenser)."""
 
     t: list[float]
     v: list[float]
@@ -354,7 +365,7 @@ class _State:
     x: list[np.ndarray]
     y: list[np.ndarray]
     draws: list[float]
-    reflux_x: np.ndarray | None = None
+    reflux: _RefluxState | None = None
 
 
 def _sweep(graph: _GraphModel, models: list[_StageModel], st: _State, l0: float, order: list[int]) -> None:
@@ -396,7 +407,9 @@ def _sweep(graph: _GraphModel, models: list[_StageModel], st: _State, l0: float,
             f = f + st.v[top] * st.y[top]
             h += st.v[top] * models[top].hv(st.t[top], st.y[top])
         if s == 0 and col.condenser == "total":
-            reflux = st.reflux_x if st.reflux_x is not None else st.y[0]
+            # The decanted liquid is frozen per pass with its state; a plain
+            # condenser returns the current stage-1 vapour, condensed.
+            reflux = _vec(comps, st.reflux.x) if (st.reflux is not None and col.water_decant) else st.y[0]
             f = f + l0 * reflux
             h += l0 * models[0].hc(st.t[0], reflux)
         for ret_j, draw_j, flow, pa in returns:
@@ -428,14 +441,12 @@ def _sweep(graph: _GraphModel, models: list[_StageModel], st: _State, l0: float,
         st.t[s], st.x[s], st.y[s] = t, x, y
 
 
-def _reflux_x(col: _Column, tb: _ThermoBox, st: _State) -> np.ndarray | None:
-    """The total condenser's reflux composition when the condenser decants:
-    the hydrocarbon liquid of the decant split (``_reflux_split``); None
-    otherwise (the reflux is the stage-1 vapour, condensed)."""
-    if col.condenser != "total" or not col.water_decant:
+def _reflux(col: _Column, tb: _ThermoBox, st: _State) -> _RefluxState | None:
+    """The total condenser's outlet state at the current stage-1 vapour
+    (``_reflux_state``); None without a total condenser."""
+    if col.condenser != "total":
         return None
-    x_hc, _w = _reflux_split(col, tb, _full(col.comps, st.y[0]), st.t[0])
-    return _vec(col.comps, x_hc)
+    return _reflux_state(col, tb, _full(col.comps, st.y[0]), st.t[0])
 
 
 def _relaxation_profile(col: _Column, tb: _ThermoBox, prof: _Profile) -> _Profile:
@@ -464,9 +475,9 @@ def _relaxation_profile(col: _Column, tb: _ThermoBox, prof: _Profile) -> _Profil
         y=[_vec(comps, prof.y[s]) for s in range(g)],
         draws=list(prof.draw_flows) or [0.0] * len(graph.section_total_rows),
     )
-    st.reflux_x = _reflux_x(col, tb, st)
+    st.reflux = _reflux(col, tb, st)
     ig = _ideal_gas(col, tb)
-    models = [_refresh(col, tb, s, st.t[s], st.x[s], st.y[s], None, ig, st.reflux_x) for s in range(g)]
+    models = [_refresh(col, tb, s, st.t[s], st.x[s], st.y[s], None, ig, st.reflux) for s in range(g)]
     scale = max(col.f_total, 1.0)
     down = list(range(g))
     up = down[::-1]
@@ -491,10 +502,8 @@ def _relaxation_profile(col: _Column, tb: _ThermoBox, prof: _Profile) -> _Profil
         )
         if outer > 0 and moved_t < _OUTER_TOL_T and moved_f < _OUTER_TOL_F * scale:
             break
-        st.reflux_x = _reflux_x(col, tb, st)
-        models = [
-            _refresh(col, tb, s, st.t[s], st.x[s], st.y[s], models[s], ig, st.reflux_x) for s in range(g)
-        ]
+        st.reflux = _reflux(col, tb, st)
+        models = [_refresh(col, tb, s, st.t[s], st.x[s], st.y[s], models[s], ig, st.reflux) for s in range(g)]
     return _Profile(
         T=list(st.t),
         V=list(st.v),

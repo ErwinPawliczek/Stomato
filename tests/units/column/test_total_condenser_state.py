@@ -16,6 +16,7 @@ from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units.column import Column, solve_column_full
 from tests.conftest import flash_feed
+from tests.units.column.test_reflux_state import bubble_gap
 
 Solved = tuple[Thermo, UnitResult, dict[str, StreamState]]
 
@@ -40,8 +41,12 @@ def thermo_module() -> Thermo:
 def test_distillate_is_saturated_liquid_at_its_bubble_point(solved: Solved) -> None:
     thermo, res, _ = solved
     d = res.outlets["distillate"]
+    # The bubble point on the solver's stage-K surface (``_reflux_state``):
+    # the fugacity bubble condition to 1e-12, and the package's own bubble
+    # point (a plateau-bracketed secant resolved to 1e-8 relative) to 1e-8.
+    assert abs(bubble_gap(thermo, dict(d.composition), d.T, d.P)) < 1e-12
     t_bub = thermo.bubble_point(dict(d.composition), P=d.P).T
-    assert d.T == pytest.approx(t_bub, rel=1e-12)
+    assert d.T == pytest.approx(t_bub, rel=1e-8)
     assert d.vapor_fraction <= 1e-9
     # Below the stage-1 (dew) temperature of the overhead vapour.
     assert d.T < res.info["stage_0_T_K"]
@@ -59,7 +64,7 @@ def test_condenser_duty_condenses_stage1_vapour_to_saturated_liquid(solved: Solv
         assert d.composition[cid] == pytest.approx(frac, rel=1e-10, abs=1e-14)
     p = d.P
     h_v = thermo.phase_props(y0, info["stage_0_T_K"], p, PhaseKind.VAPOR).enthalpy
-    h_l = thermo.phase_props(y0, thermo.bubble_point(y0, P=p).T, p, PhaseKind.HC_LIQUID).enthalpy
+    h_l = thermo.phase_props(y0, d.T, p, PhaseKind.HC_LIQUID).enthalpy
     expected = info["stage_0_V_mol_s"] * (h_v - h_l)
     assert info["condenser_duty_W"] == pytest.approx(expected, rel=1e-8)
     # The saturated-liquid enthalpy is the distillate's own.
