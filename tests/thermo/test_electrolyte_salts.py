@@ -104,7 +104,9 @@ def test_one_one_salts_against_hamer_wu(salt: str, molality: float, phi_ref: flo
 
 
 @pytest.mark.parametrize(("molality", "gamma_ref", "phi_ref", "aw_ref"), _GN78_MGCL2)
-def test_mgcl2_against_goldberg_nuttall(molality: float, gamma_ref: float, phi_ref: float, aw_ref: float) -> None:
+def test_mgcl2_against_goldberg_nuttall(
+    molality: float, gamma_ref: float, phi_ref: float, aw_ref: float
+) -> None:
     """2:1 salt: a_w within 0.5 %, phi within 2 %, gamma inside its assessed 3.5 % band."""
     assert pitzer_water_activity(molality, "MgCl2") == pytest.approx(aw_ref, rel=0.005)
     assert pitzer_osmotic(molality, "MgCl2") == pytest.approx(phi_ref, rel=0.02)
@@ -131,7 +133,9 @@ def test_mean_gamma_is_the_gibbs_duhem_integral_of_phi() -> None:
         # m' = u^2 removes the sqrt(m') singularity: int 2 (phi - 1)/u du.
         n = 4000
         h = math.sqrt(m) / n
-        integral = sum(2.0 * (pitzer_osmotic((h * (k + 0.5)) ** 2, salt) - 1.0) / (h * (k + 0.5)) * h for k in range(n))
+        integral = sum(
+            2.0 * (pitzer_osmotic((h * (k + 0.5)) ** 2, salt) - 1.0) / (h * (k + 0.5)) * h for k in range(n)
+        )
         ln_g = (pitzer_osmotic(m, salt) - 1.0) + integral
         assert math.log(pitzer_mean_gamma(m, salt)) == pytest.approx(ln_g, abs=1e-6)
 
@@ -213,4 +217,7 @@ def test_other_brine_rows_stay_nacl_only() -> None:
 def test_pitzer_hoc_inherits_the_salts() -> None:
     """The real-vapour Pitzer row runs the same salt surfaces."""
     pkg = _pkg("pitzer_hoc")
-    assert pkg.bubble_point(_z("NaBr", 1.0), T=T).P < _pkg("pitzer_nacl_water").bubble_point(_z("NaBr", 1.0), T=T).P
+    assert (
+        pkg.bubble_point(_z("NaBr", 1.0), T=T).P
+        < _pkg("pitzer_nacl_water").bubble_point(_z("NaBr", 1.0), T=T).P
+    )
