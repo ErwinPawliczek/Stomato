@@ -12,7 +12,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | claimed | obv/T1r | 2026-11-04 12:07 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | claimed | obv/T3 | 2026-11-04 12:06 PM |
 | T4 | API liquid density: public reproductions of API TDB 6A3.5 / Rackett-type petroleum correlations with worked examples | Obvious | review | obv/T4 | 2026-11-04 12:11 PM |
-| T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | claimed | obv/T5 | 2026-11-04 12:07 PM |
+| T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | in progress (pack committed 12:12 PM, PR next) | obv/T5 | 2026-11-04 12:12 PM |
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | review | obv/T6 | 2026-11-04 12:26 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | review | obv/T7 | 2026-11-04 12:12 PM |
 | T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 12:06 PM |
@@ -21,6 +21,9 @@ Times are America/Chicago (CST). Newest handoff on top.
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+### T5 — Obvious — 2026-11-04 12:12 PM (heartbeat 1)
+- 12:12 CST — pack committed to obv/T5 (93ae662): 35 VLE cases (H2O+MEG, H2O+TEG, 0.1 MPa, Chouireb 2018 open SI) + 7 gamma-inf rows (Tochigi 2000 MeOH/H2O; Zhang 2003 MeOH/MEG via ThermoML) + licence audit. N2 not in either DB; CO2 only in UD. PR into chem-engine next.
+
 
 ### Board sync — Stomato bot — 2026-11-04 12:13 PM
 - Done: Reconciled from git + `~/stomato-val-progress.md` + live processes. V1 continue (pid 736208) alive since 11:35; chem-engine tip still val-infra `296e6f6`; `val-integ` gating val-blocked (`~/stomato-val-gate.sh`, audit running). Package branches advanced (units-a/b/c, gphi-*, helm-kvalue, cubic-mixing, special, electrolyte-amine, blocked). Obvious: T4 `review` PR #338 (`obv/T4` fb4eb4d); T6 `review` PR #340 (`obv/T6` aa4754d); T7 `review` PR #339 (`obv/T7` e6b7a58); T1r/T3/T5/T8 claimed — `obv/T5` tip exists at chem-engine base only (no pack). No active claim >45 min silent. No new Obvious job started (T1r/T3–T8 already dispatched).
