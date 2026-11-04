@@ -1,3 +1,7 @@
+### Board sync — Stomato bot — 2026-11-04 4:53 PM
+- Done: V1 → `STOPPED`: claude -p exited ~4:40 PM with no END marker and nothing running (no claude, no gate). Batch 2 not gated/merged; origin/chem-engine still 9cf08cc. No new obv/* commits; no `claude/*` branches.
+- Next: Erwin to decide: relaunch V1 continue (batch 2 gate + 6 open agents), and/or start CQ1 now that V1 is idle. No job started by board sync.
+
 ### Board sync — Stomato bot — 2026-11-04 3:58 PM
 - Done: T11s → `dropped`; SR-POLAR adapter queued for Claude Code as CQ1 (after V1 continue, not injected into V1). PROTOCOL job split added.
 - Next: CQ1 after V1 continue.
@@ -31,7 +35,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 
 | id | title | owner | status | branch | updated |
 |----|-------|-------|--------|--------|---------|
-| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress — continue resumed 4:35 PM after 5h-limit reset (claude -p alive); merge PR #346 / rebase on origin/chem-engine before cases.yaml edits | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 4:39 PM |
+| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | STOPPED — continue started 4:35 PM, claude -p (pid 852754) exited ~4:40 PM without a CONTINUE END marker; last log line says batch 2 (special, electrolyte, helm-kvalue, cubic-mixing) entering full gate, but no gate/claude process is running. Last commits: stomato-val-integ 7c20cfc 4:36, helm-kvalue af87e1b 4:38. Needs relaunch decision | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 4:53 PM |
 | T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
 | T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | accepted (PR #342, awaits suite) | obv/T1r | 2026-11-04 12:18 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | accepted w/ fix (PR #343; fix in T10) | obv/T3 | 2026-11-04 12:22 PM |
