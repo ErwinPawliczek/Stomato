@@ -1,0 +1,106 @@
+# SR-POLAR (Schwartzentruber-Renon / VTBMSR-III) parameters for H2O, O2, N2, CO2.
+#
+# Every value below is transcribed from Mangold, F.; Pilz, St.; Bjelic, S.; Vogel, F.,
+# "Equation of state and thermodynamic properties for mixtures of H2O, O2, N2, and CO2
+# from ambient up to 1000 K and 280 MPa", J. Supercrit. Fluids 153 (2019) 104476
+# (doi:10.1016/j.supflu.2019.02.016, open CC BY 4.0). The `source` field on every
+# parameter names the table it came from (main-article Tables 2/5/7 and SI Tables
+# S1.1-S1.6; SI PDF: ars.els-cdn.com/content/image/1-s2.0-S0896844618307903-mmc1.pdf).
+# Nothing fitted, tuned or interpolated. Values retrieved 2026-11-04 (task T3 pack,
+# data/validation/packs/T3, which cross-checked main text against the SI).
+#
+# Critical constants (Tc, pc) and acentric factors (omega) are the paper's Table 2
+# pure-component inputs. Volume translation (c0, c1, c2): Table 5 / SI Table S1.1.
+# Polar alpha parameters (p0, p1, p2): Table 5 / SI Table S1.2. Binary k_b
+# (kb0, kb1, kb2): Table 7 / SI Tables S1.3-S1.6 (k_a and l are not used by the
+# paper; pairs without a row below are zero by the paper's choice).
+#
+# Set selection (each compound carries several published sets; the set used here):
+# - H2O: the paper's own rule is Tr <= 1 (liquid set) vs Tr > 1 (vapour/sc set),
+#   eq. 22. The pack records BOTH water sets; `sets` below selects the
+#   vapour/supercritical set for the density-only supercritical T3 cases, and the
+#   liquid set for subcritical use. The binder picks per-phase at build time.
+# - O2: the paper's main set is `1 (ci) / x1 (pi)` (Table 5 main); sets x2-x5 are
+#   SI-only alternates, not used here.
+# - N2: main set (Table 5 main); set 2 is an SI alternate, not used here.
+# - CO2: main set (Table 5 main); SI set 1 is an alternate, not used here.
+
+components:
+  H2O_liquid:
+    tc: 647.096      # K, Mangold 2019 Table 2
+    pc: 22064000.0   # Pa, Mangold 2019 Table 2
+    omega: 0.344     # Mangold 2019 Table 2
+    c0: 2.8126e-7    # m3/mol, Mangold 2019 Table 5 / SI Table S1.1 (SI prints c2 = 0.405429)
+    c1: 5.25308e-6   # m3/mol, Mangold 2019 Table 5 / SI Table S1.1
+    c2: 0.4054292    # -,   Mangold 2019 Table 5 / SI Table S1.1
+    p0: 0.20914198   # -,   Mangold 2019 Table 5 / SI Table S1.2 (set 2, regressed on liquid enthalpy)
+    p1: -0.01398072  # -,   Mangold 2019 Table 5 / SI Table S1.2 (set 2)
+    p2: 0.07999497   # -,   Mangold 2019 Table 5 / SI Table S1.2 (set 2)
+    set: "liquid (Tr <= 1)"
+  H2O_vapour:
+    tc: 647.096      # K, Mangold 2019 Table 2
+    pc: 22064000.0   # Pa, Mangold 2019 Table 2
+    omega: 0.344     # Mangold 2019 Table 2
+    c0: 0.0          # m3/mol, no translation regressed for the vapour/sc water set (Table 5 lists c0/c1/c2 only for H2O(l))
+    c1: 0.0          # m3/mol
+    c2: 0.0          # -
+    p0: -1.92140347  # -,   Mangold 2019 Table 5 / SI Table S1.2 (set 3, regressed on vapour/sc enthalpy)
+    p1: -1.1392853   # -,   Mangold 2019 Table 5 / SI Table S1.2 (set 3)
+    p2: 0.22028766   # -,   Mangold 2019 Table 5 / SI Table S1.2 (set 3)
+    set: "vapour/supercritical (Tr > 1)"
+  O2:
+    tc: 154.581      # K, Mangold 2019 Table 2
+    pc: 5043000.0    # Pa, Mangold 2019 Table 2
+    omega: 0.022     # Mangold 2019 Table 2
+    c0: 4.366e-6     # m3/mol, Mangold 2019 Table 5 / SI Table S1.1
+    c1: 1.29553e-5   # m3/mol, Mangold 2019 Table 5 / SI Table S1.1
+    c2: 0.5043492    # -,   Mangold 2019 Table 5 / SI Table S1.1
+    p0: 0.36176998   # -,   Mangold 2019 Table 5 / SI Table S1.2
+    p1: 0.0          # -,   Mangold 2019 Table 5 / SI Table S1.2
+    p2: 0.0          # -,   Mangold 2019 Table 5 / SI Table S1.2
+    set: "main (Table 5)"
+  N2:
+    tc: 126.2        # K, Mangold 2019 Table 2
+    pc: 3398000.0    # Pa, Mangold 2019 Table 2
+    omega: 0.037     # Mangold 2019 Table 2
+    c0: 2.496e-6     # m3/mol, Mangold 2019 Table 5 / SI Table S1.1
+    c1: 1.08797e-5   # m3/mol, Mangold 2019 Table 5 / SI Table S1.1
+    c2: 0.4065962    # -,   Mangold 2019 Table 5 / SI Table S1.1
+    p0: 0.22550713   # -,   Mangold 2019 Table 5 / SI Table S1.2
+    p1: 0.0          # -,   Mangold 2019 Table 5 / SI Table S1.2
+    p2: 0.0          # -,   Mangold 2019 Table 5 / SI Table S1.2
+    set: "main (Table 5)"
+  CO2:
+    tc: 304.1282     # K, Mangold 2019 Table 2
+    pc: 7377300.0    # Pa, Mangold 2019 Table 2
+    omega: 0.22394   # Mangold 2019 Table 2
+    c0: 2.198e-6     # m3/mol, Mangold 2019 Table 5 / SI Table S1.1
+    c1: 1.30139e-5   # m3/mol, Mangold 2019 Table 5 / SI Table S1.1
+    c2: 0.3959696    # -,   Mangold 2019 Table 5 / SI Table S1.1
+    p0: 0.32958878   # -,   Mangold 2019 Table 5 / SI Table S1.2
+    p1: 0.0          # -,   Mangold 2019 Table 5 / SI Table S1.2
+    p2: 0.0          # -,   Mangold 2019 Table 5 / SI Table S1.2
+    set: "main (Table 5)"
+
+binaries:
+  - i: H2O
+    j: N2
+    kb0: 0.48244229   # Mangold 2019 Table 7 / SI Table S1.3 (H2O/N2 pair)
+    kb1: 0.0          # Mangold 2019 Table 7 / SI Table S1.3
+    kb2: -350.0       # K,  Mangold 2019 Table 7 / SI Table S1.3
+    source: "Mangold 2019 Table 7 / SI Table S1.3"
+  - i: H2O
+    j: O2
+    kb0: 0.53922395   # Mangold 2019 Table 7 / SI Table S1.4 (H2O/O2 pair)
+    kb1: 0.0          # Mangold 2019 Table 7 / SI Table S1.4
+    kb2: -392.0       # K,  Mangold 2019 Table 7 / SI Table S1.4
+    source: "Mangold 2019 Table 7 / SI Table S1.4"
+  - i: H2O
+    j: CO2
+    kb0: 0.24010132   # Mangold 2019 Table 7 / SI Table S1.5 (H2O/CO2 pair)
+    kb1: 0.0          # Mangold 2019 Table 7 / SI Table S1.5
+    kb2: -160.0       # K,  Mangold 2019 Table 7 / SI Table S1.5
+    source: "Mangold 2019 Table 7 / SI Table S1.5"
+  # CO2/O2 and O2/N2: zero by the paper's choice (Mangold 2019 Table 7 note:
+  # "CO2/O2 and O2/N2 are zero"). CO2/N2 has no regressed pair either (checked
+  # against SI S1.3-S1.6, 2026-11-04): absent = 0 in eq. 26.
