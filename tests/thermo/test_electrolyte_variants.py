@@ -112,6 +112,14 @@ def test_pdh_refuses_above_its_cap() -> None:
     assert _pkg("pitzer_debye_huckel").flash_pt(_z(0.1), T, 1e5, 1.0).phases[0].kind == PhaseKind.AQUEOUS
 
 
+def test_pdh_bubble_point_refuses_above_its_cap() -> None:
+    """The bubble-point liquid is the feed: the flash's 0.2 mol/kg cap applies to it too."""
+    pkg = _pkg("pitzer_debye_huckel")
+    with pytest.raises(ElectrolyteChemistryError, match="dilute-solution model"):
+        pkg.bubble_point(_z(1.0), T=T)
+    assert pkg.bubble_point(_z(0.1), T=T).P > 0.0
+
+
 def test_crystallisation_solubility_is_a_prediction_near_the_anchor() -> None:
     assert enrtl_crystallisation_molality() == pytest.approx(6.146, rel=0.05)
 

@@ -1470,6 +1470,8 @@ class ElectrolytePackage(TracedThermo, Thermo):
         """Bubble point of an electrolyte feed: exactly one of T (K) and P (Pa)."""
         if not self._electrolyte_domain(z):
             return self._carrier.bubble_point(z, T=T, P=P)
+        # The bubble-point liquid is the feed itself.
+        self._refuse_beyond_pdh_cap(z, "its bubble point")
         return self._boundary(z, "bubble", T=T, P=P)
 
     def dew_point(
@@ -1619,16 +1621,20 @@ class ElectrolytePackage(TracedThermo, Thermo):
 
     # -- state construction ---------------------------------------------------
 
-    def _build_state(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
-        state, beta, x, y = self._equilibrium_internal(z, T, P)
+    def _refuse_beyond_pdh_cap(self, x: dict[str, float], where: str) -> None:
+        """Refuse a PDH liquid above its dilute-solution molality cap (other models: no-op)."""
         if self._model == "pdh" and x.get("H2O", 0.0) > 0.0:
             m_liq = 1000.0 * x.get(self._salt_id(x), 0.0) / (_mw("H2O") * x["H2O"])
             if m_liq > _PDH_MAX_MOLALITY:
                 raise ElectrolyteChemistryError(
                     f"the Pitzer-Debye-Hueckel term alone is a dilute-solution model: liquid "
-                    f"molality {m_liq:.3g} mol/kg at T={T} K, P={P} Pa is above its "
+                    f"molality {m_liq:.3g} mol/kg at {where} is above its "
                     f"{_PDH_MAX_MOLALITY} mol/kg cap - use enrtl_nacl_water or pitzer_nacl_water"
                 )
+
+    def _build_state(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
+        state, beta, x, y = self._equilibrium_internal(z, T, P)
+        self._refuse_beyond_pdh_cap(x, f"T={T} K, P={P} Pa")
         if state == "two_phase" and self._model in _BRINE_MODELS and x.get("H2O", 0.0) > 0.0:
             salt = self._salt_id(x)
             m_liq = 1000.0 * x.get(salt, 0.0) / (_mw("H2O") * x["H2O"])
