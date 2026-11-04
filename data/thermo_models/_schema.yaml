@@ -41,6 +41,11 @@
 #                 audit and report).
 #   l0_note       measured caveat shown with the L0 results (e.g. a component
 #                 deliberately not used as a check point, and why).
+#   l2_not_applicable  declared reason (non-empty) a pure-fluid-only row cannot
+#                 carry an L2 binary case (one-component models: IAPWS-95,
+#                 IF97, MBWR pure fluids ...). The validated bar is then
+#                 L0 green AND >= 2 L1 pure cases; a row that also binds an
+#                 L2 case fails the audit (the declaration would be false).
 #   l4_excluded   partner row id or '*' -> declared reason (non-empty) for
 #                 skipping that L4 cross-model pair; printed in every audit and
 #                 report. Rows whose alpha is vapour-pressure-fitted or whose

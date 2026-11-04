@@ -414,3 +414,14 @@ def _load_planted(tmp_path: Path) -> dict[str, ModelRow]:
 
     with mock.patch.dict(os.environ, {"STOMATO_THERMO_MODELS_DIR": str(tmp_path)}):
         return catalogue.load_catalogue()
+
+
+def test_l2_not_applicable_is_a_declared_reason() -> None:
+    """Pure-fluid-only rows declare why no L2 binary case can exist (validation run 2026-11-04)."""
+    from ngdesign.thermo.catalogue import ModelRow
+
+    fields = ModelRow.model_fields
+    assert "l2_not_applicable" in fields
+    assert fields["l2_not_applicable"].default == ""
+    for row in catalogue.load_catalogue().values():
+        assert row.l2_not_applicable == row.l2_not_applicable.strip()

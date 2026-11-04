@@ -138,6 +138,9 @@ class ModelRow(BaseModel):
     l0_note: str = ""
     l4_excluded: dict[str, str] = Field(default_factory=dict)
     assessed: dict[str, str] = Field(default_factory=dict)
+    # Declared reason a pure-fluid-only row cannot carry an L2 binary case (e.g. IAPWS-95 is
+    # water only). The audit's validated bar then asks for >= 2 L1 pure cases instead.
+    l2_not_applicable: str = ""
     source_file: str = ""
     source_row: int = 0
 

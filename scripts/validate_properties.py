@@ -949,7 +949,14 @@ def audit() -> int:
         n2 = len(bound & l2_ids)
         if l0_fail:
             failures.append(f"{row.id}: status {row.status} but L0 failing: {[r.check for r in l0_fail]}")
-        if row.status == "validated" and (n1 == 0 or n2 == 0):
+        if row.l2_not_applicable and n2:
+            failures.append(f"{row.id}: declares l2_not_applicable but binds {n2} L2 binary case(s)")
+        if row.l2_not_applicable:
+            if row.status == "validated" and n1 < 2:
+                failures.append(
+                    f"{row.id}: status validated (pure-fluid-only row) needs >=2 L1 pure cases; has L1={n1}"
+                )
+        elif row.status == "validated" and (n1 == 0 or n2 == 0):
             failures.append(
                 f"{row.id}: status validated needs >=1 L1 pure and >=1 L2 binary case id; has L1={n1} L2={n2}"
             )
@@ -1041,7 +1048,10 @@ def _provisional_reason(row: ModelRow, checks: list[L0Result], n1: int, n2: int)
     failing = [r.check for r in checks if not r.passed]
     if failing:
         return f"L0 failing: {', '.join(failing)}"
-    if n1 == 0 or n2 == 0:
+    if row.l2_not_applicable:
+        if n1 < 2:
+            return f"pure-fluid-only row: needs >=2 L1 pure cases (has L1={n1})"
+    elif n1 == 0 or n2 == 0:
         return f"needs >=1 L1 pure and >=1 L2 binary case (has L1={n1} L2={n2})"
     if row.assessed:
         return f"{len(row.assessed)} declared case misses (`assessed:` in the row; see its report)"
