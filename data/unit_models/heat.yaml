@@ -161,6 +161,7 @@
       note: zone analysis with phase change (Nusselt bank on the shell, Shah and Liu-Winterton in the
         tubes), one F from the terminal temperatures for multi-pass, F_min refusal naming the shells
         required; shell-side boiling is refused; reduces to R1 in one single-phase zone
+      end_state: true
   sizer: shell_tube
   pid_symbol: E
   references:
@@ -693,6 +694,7 @@
       note: every active stream reaches its T_out target; the Linnhoff problem table
         (on package-derived or cp_*-overridden CPs) reports utility targets
         QH_min/QC_min and the pinch (no utilities are added)
+      end_state: true
   pid_symbol: HEN
   references:
   - docs/unit-catalogue-plan.md §2 U-C 10
