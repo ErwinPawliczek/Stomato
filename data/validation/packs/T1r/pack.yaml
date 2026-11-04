@@ -1,0 +1,289 @@
+# T1r validation pack: ethanol(1) + water(2) isobaric VLE at 101.3 kPa for the
+# registered NRTL package (task T1r, agents/BOARD.md branch agents-board).
+# Generated 2026-11-04 by Obvious. Units: T [K], P [Pa abs], mole fractions.
+#
+# Source (all points): Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., "Isobaric (vapor + liquid)
+# equilibria for the ternary system of (ethanol + water + 1,3-propanediol) and three
+# constituent binary systems at P = 101.3 kPa", J. Chem. Thermodyn. 68 (2014) 13-19,
+# DOI 10.1016/j.jct.2013.08.020. Transcribed 1:1 from the open NIST ThermoML XML
+# (https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml), retrieved 2026-11-04:
+#   dataset 9  - boiling temperature vs liquid mole fraction (16 points);
+#   dataset 10 - vapour mole fraction vs liquid mole fraction (16 points);
+#   dataset 11 - azeotropic temperature 351.32 K at 101.3 kPa;
+#   dataset 12 - azeotropic composition x_EtOH = 0.891 at 101.3 kPa.
+# The ThermoML record's ethanol basis was verified against the pure-component anchors
+# (x=1: 351.45 K = ethanol n.b.p.; x=0: 373.15 K = water n.b.p.) and the azeotrope
+# composition (0.891, consistent with the known ~0.895 ethanol azeotrope).
+#
+# The source pressure is 101.3 kPa as printed (title and ThermoML constraint 101.3);
+# it is recorded as 101300 Pa. It is NOT silently upgraded to 101.325 kPa.
+#
+# Cases: 14 interior binary points + the azeotrope = 15. The two pure anchors
+# (x = 0 and 1) are in data.csv only, not cases (pure vapour-pressure checks are
+# covered by other packs).
+#
+# Binding notes for the Stomato bot:
+#  - package: nrtl is the registered NRTL package (these cases RUN when bound).
+#  - EtOH is NOT in the curated data/components.yaml slate (locked) - the cases will
+#    not resolve until EtOH is curated (CAS 64-17-5). This mirrors the existing
+#    gamma-phi case nrtl-ig-etohh2o-azeotrope-101.325kPa, which uses the same id.
+#  - Tolerances follow the P1-05 conventions (docs/validation.md): bubble_T 0.5 %
+#    relative, y 0.02 absolute.
+#  - Pack (a) of task T1r (ethane/propane binary VLE for Peng-Robinson) is NOT FOUND -
+#    see README.md in this directory for the full retrieval trail.
+
+- id: t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.015
+    H2O: 0.9850
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 369.27
+    vapor_comp:
+      EtOH: 0.139
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.035
+    H2O: 0.9650
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 365.61
+    vapor_comp:
+      EtOH: 0.261
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.100
+    H2O: 0.9000
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 359.79
+    vapor_comp:
+      EtOH: 0.436
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.183
+    H2O: 0.8170
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 356.66
+    vapor_comp:
+      EtOH: 0.525
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-354.88K-x0.292
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.292
+    H2O: 0.7080
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 354.88
+    vapor_comp:
+      EtOH: 0.585
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.394
+    H2O: 0.6060
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 353.89
+    vapor_comp:
+      EtOH: 0.611
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.501
+    H2O: 0.4990
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 353.06
+    vapor_comp:
+      EtOH: 0.648
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.543
+    H2O: 0.4570
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 352.73
+    vapor_comp:
+      EtOH: 0.669
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-352.04K-x0.631
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.631
+    H2O: 0.3690
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 352.04
+    vapor_comp:
+      EtOH: 0.714
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-351.67K-x0.749
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.749
+    H2O: 0.2510
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 351.67
+    vapor_comp:
+      EtOH: 0.781
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-351.64K-x0.794
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.794
+    H2O: 0.2060
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 351.64
+    vapor_comp:
+      EtOH: 0.814
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-351.40K-x0.848
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.848
+    H2O: 0.1520
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 351.40
+    vapor_comp:
+      EtOH: 0.855
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-351.33K-x0.899
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.899
+    H2O: 0.1010
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 351.33
+    vapor_comp:
+      EtOH: 0.898
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-351.37K-x0.949
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.949
+    H2O: 0.0510
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 9+10; retrieved 2026-11-04"
+  expected:
+    bubble_T: 351.37
+    vapor_comp:
+      EtOH: 0.946
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
+- id: t1r-nrtl-etohh2o-101.3kPa-azeotrope
+  package: nrtl
+  components:
+  - EtOH
+  - H2O
+  z:
+    EtOH: 0.891
+    H2O: 0.109
+  P: 101300.0
+  source: "literature:Lai, H.-S.; Lin, Y.-F.; Tu, C.-H., J. Chem. Thermodyn. 68 (2014) 13-19, DOI 10.1016/j.jct.2013.08.020, binary ethanol(1)+water(2) isobaric VLE at 101.3 kPa (constituent-binary subset of the ternary study), via open NIST ThermoML XML https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml, ThermoML datasets 11+12 (azeotropic temperature and composition); retrieved 2026-11-04"
+  expected:
+    bubble_T: 351.32
+    vapor_comp:
+      EtOH: 0.891
+  tolerance:
+    bubble_T: 0.005
+    vapor_comp: 0.02
