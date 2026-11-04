@@ -34,6 +34,8 @@ Rules worth knowing:
 - A space, hyphen or `·` binds tighter than `/`, so `Btu/lb-degF` and `J/kg·K` read as an
   engineer means them. `*` after a `/` is refused: code and print disagree on it.
 - `degC` and `psig` are shifted scales alone and intervals inside a compound (`degC/min`).
+- A pressure unit takes a gauge or absolute mark: `kPa(g)`, `bar (g)`, `kgf/cm2(g)` are gauge
+  (one standard atmosphere above absolute, like `barg`); `kPa(a)`, `bar(abs)` are absolute.
 - `F`, `C` and `R` are refused as ambiguous: write `degF` or `farad`, and so on.
 - `Nm3`, `Sm3` and `scf` are ideal-gas amounts at their stated reference states, so
   `MMSCFD` is a molar flow.

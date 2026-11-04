@@ -31,7 +31,7 @@ from ngdesign.contracts import (
 )
 from ngdesign.contracts.plugins import Solver, Thermo
 from ngdesign.flowsheets.slice import build as build_slice
-from ngdesign.solver.sequential_modular import SequentialModular
+from ngdesign.solver.sequential_modular import SequentialModular, _wegstein_q
 
 #: Fake heat capacity for the fake heater, J/(mol.K).
 CP_FAKE = 30.0
@@ -107,7 +107,7 @@ class _FakeSplitter:
 
 
 class _FakeHeater:
-    """Raises stream temperature by dT (K) at constant pressure and composition."""
+    """Raises stream temperature by dT (K) and lowers pressure by dP (Pa, default 0)."""
 
     inlet_ports = ("inlet",)
     outlet_ports = ("outlet",)
@@ -117,7 +117,7 @@ class _FakeHeater:
         d_t = float(params.get("dT", 0.0))
         out = StreamState(
             T=state.T + d_t,
-            P=state.P,
+            P=state.P - float(params.get("dP", 0.0)),
             molar_flow=state.molar_flow,
             composition=dict(state.composition),
             vapor_fraction=state.vapor_fraction,
@@ -303,3 +303,42 @@ def test_slice_converges_once_slice_units_exist(thermo: Thermo) -> None:
     assert solved.converged
     assert set(solved.streams) == {s.id for s in solved.flowsheet.streams}
     assert set(solved.units) == {u.tag for u in solved.flowsheet.units}
+
+
+def test_wegstein_unit_slope_is_direct_substitution() -> None:
+    """A pure offset y = x + c has secant slope exactly 1: s / (s - 1) is singular.
+
+    Regression: _wegstein_q raised ZeroDivisionError there. It is degenerate now
+    (direct substitution), like a zero step.
+    """
+    assert _wegstein_q(1.9e6, 1.88e6, 2.0e6, 1.98e6, -5.0) is None
+    assert _wegstein_q(2.0, 1.0, 1.0, 0.5, -5.0) == pytest.approx(-1.0)  # slope 0.5, unchanged
+
+
+def test_recycled_pressure_with_constant_drop_does_not_raise(thermo: Thermo) -> None:
+    """Recycle whose torn pressure follows P_out = P_in - dP (mixer at min inlet P).
+
+    Nothing in the loop sets the pressure, so the torn P falls by dP every pass
+    and the loop has no fixed point. Regression: bounded Wegstein divided by zero
+    on the unit secant slope; now the solve returns converged=False after the
+    iteration limit, with the drift visible on the recycle pressure.
+    """
+    fs = Flowsheet(
+        name="recycle-dp",
+        units=[
+            UnitSpec(tag="MIX-101", kind="fake_mixer"),
+            UnitSpec(tag="HTR-101", kind="fake_heater", params={"dT": 5.0, "dP": 1000.0}),
+            UnitSpec(tag="SPL-101", kind="fake_splitter", params={"f": 0.4}),
+        ],
+        streams=[
+            StreamSpec(id="S-001", target=_port("MIX-101", "in_a"), feed=_feed(100.0)),
+            StreamSpec(id="S-002", source=_port("SPL-101", "out_a"), target=_port("MIX-101", "in_b")),
+            StreamSpec(id="S-003", source=_port("MIX-101", "out"), target=_port("HTR-101", "inlet")),
+            StreamSpec(id="S-004", source=_port("HTR-101", "outlet"), target=_port("SPL-101", "inlet")),
+            StreamSpec(id="S-005", source=_port("SPL-101", "out_b")),
+        ],
+    )
+    solved = SequentialModular().solve(fs, thermo)
+    assert solved.converged is False
+    assert solved.iterations == 100
+    assert solved.streams["S-002"].P < 1.0e6 - 50 * 1000.0  # drifted, never closed
