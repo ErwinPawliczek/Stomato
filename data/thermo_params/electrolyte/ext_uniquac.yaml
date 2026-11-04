@@ -16,9 +16,11 @@
 # Na+, Cl- and H2O, with the extended Debye-Hueckel term).
 #
 # Where each number was read (2026-10-22, T-09b research thread):
-#   - q, r, u0_ij, u1_ij (= uT_ij): verified against Leal, A. M. K. et al.,
-#     'A general and extensible ... electrolyte ... framework',
-#     Applied Geochemistry 180, 106274, 2025 (open access) -- the paper's
+#   - q, r, u0_ij, u1_ij (= uT_ij): verified against Leal, A. M. M. et al.,
+#     'Using Reaktoro for mineral and gas solubility calculations with the
+#     Extended UNIQUAC model', Applied Geochemistry 180, 106274, 2025,
+#     doi:10.1016/j.apgeochem.2024.106274 (CC BY 4.0 per Crossref; the ChemRxiv
+#     preprint is CC BY-NC-ND and is not a source here) -- the paper's
 #     Tables 1-2 carry the Thomsen Na+-Cl--H2O set verbatim; every value was
 #     character-verified from the RENDERED PDF (the text layer drops minus
 #     signs and subscript order).

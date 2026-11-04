@@ -33,8 +33,10 @@ packages (``ngdesign.amine.package``):
   the refusal/supersaturated liquid past the solubility limit.
 
 Streams stay molecular (ionic species never leave this module): the brine
-models take (H2O, NaCl) -- the Pitzer rows (H2O, one salt of pitzer.yaml) --
-the sour-water model (H2O, NH3, H2S); anything else
+models take water plus one salt of their parameter file (pitzer.yaml: NaCl,
+KCl, KBr, LiCl, NaBr, MgCl2; enrtl.yaml and ext_uniquac.yaml: NaCl -- all
+three are single-salt forms with the salt keyed by ion pair, charges and
+stoichiometry as data), the sour-water model (H2O, NH3, H2S); anything else
 refuses with the documented gap.  The CO2/carbonate path of the SWEQ model is
 data-side only this cycle -- CO2 in a sour-water feed refuses with that reason.
 
