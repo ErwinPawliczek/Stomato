@@ -87,6 +87,7 @@
       note: approach / duty with LMTD-F specification
     R1:
       status: provisional
+      validation: [V1-shell-tube-kern-ex7-4]
       adapter: ngdesign.units.heat.shell_tube_r1:ShellTubeR1
       params:
         type: object

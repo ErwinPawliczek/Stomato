@@ -316,7 +316,7 @@
   levels:
     R0:
       status: validated
-      validation: [V-control-valve-emerson-propane]
+      validation: [V1-control-valve-emerson-propane]
       adapter: ngdesign.units.flow.control_valve:ControlValve
       params: {}
       note: Cv / outlet P spec, isenthalpic (the cv_liquid correlation plugin exists)
