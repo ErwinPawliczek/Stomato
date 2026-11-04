@@ -134,8 +134,10 @@
       open registry (CaCl2 and Na2SO4 raise in component_record, checked 2026-11-03); 2:2
       salts (beta2 form) are not implemented. Generalised from NaCl-only on 2026-11-03 with
       the NaCl results byte-identical (repr snapshot of functions and flashes, before/after).
-  status: provisional
-  validation: []
+  # Validated 2026-11-04 on NaCl only (cases-nacl.yaml, Clarke & Glew 1985 Table 21 A brine
+  # vapour pressures, 0.1-6 m, 20-30 C, worst +0.16 %); the other salts keep their unit-test anchors.
+  status: validated
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, nacl-cg85-vp-298.15K-0.1m, nacl-cg85-vp-298.15K-0.2m, nacl-cg85-vp-298.15K-1.0m, nacl-cg85-vp-298.15K-2.0m, nacl-cg85-vp-298.15K-4.0m, nacl-cg85-vp-298.15K-6.0m, nacl-cg85-vp-293.15K-4.0m, nacl-cg85-vp-293.15K-6.0m, nacl-cg85-vp-303.15K-4.0m, nacl-cg85-vp-303.15K-6.0m]
   references:
   - Pitzer, K. S., Peiper, J. C. & Busey, R. H., J. Phys. Chem. Ref. Data 13(1), 1-102, 1984
   - Plummer, L. N., Parkhurst, D. L., Fleming, G. W. & Dunkle, S. A., PHRQPITZ, USGS Water-Resources
@@ -311,8 +313,8 @@
       from, so that licence basis needs review; Chen & Evans 1986 paywalled; IDAES BSD examples
       carry KCl/NaBr pairs without a primary citation).  Other salts refuse at first use.  See
       docs/thermo-catalogue-plan.md section 6.
-  status: provisional
-  validation: []
+  status: validated
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, nacl-cg85-vp-298.15K-0.1m, nacl-cg85-vp-298.15K-0.2m, nacl-cg85-vp-298.15K-1.0m, nacl-cg85-vp-298.15K-2.0m, nacl-cg85-vp-298.15K-4.0m, nacl-cg85-vp-298.15K-6.0m, nacl-cg85-vp-293.15K-4.0m, nacl-cg85-vp-293.15K-6.0m, nacl-cg85-vp-303.15K-4.0m, nacl-cg85-vp-303.15K-6.0m]
   references:
   - Chen, C.-C. & Evans, L. B., AIChE J. 32(3), 444-454, 1986
   - Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., AIChE J. 28(4), 588-596, 1982
@@ -397,8 +399,8 @@
       ChemRxiv preprint is CC BY-NC-ND; Thomsen 1997 thesis all rights reserved; CERE database
       members-only; Reaktoro LGPL-2.1).  Other salts refuse at first use.  See
       docs/thermo-catalogue-plan.md section 6.
-  status: provisional
-  validation: []
+  status: validated
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, nacl-cg85-vp-298.15K-0.1m, nacl-cg85-vp-298.15K-0.2m, nacl-cg85-vp-298.15K-1.0m, nacl-cg85-vp-298.15K-2.0m, nacl-cg85-vp-298.15K-4.0m, nacl-cg85-vp-298.15K-6.0m, nacl-cg85-vp-293.15K-4.0m, nacl-cg85-vp-293.15K-6.0m, nacl-cg85-vp-303.15K-4.0m, nacl-cg85-vp-303.15K-6.0m]
   references:
   - Thomsen, K. & Rasmussen, P., Chem. Eng. Sci. 54(13), 1787-1802, 1999
   - Thomsen, K., Rasmussen, P. & Gani, R., Chem. Eng. Sci. 51(16), 3675-3683, 1996
@@ -469,8 +471,8 @@
     - L
     notes: >-
       NaCl-H2O at 20-30 C, liquid limits as enrtl_nacl_water.
-  status: provisional
-  validation: []
+  status: validated
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, nacl-cg85-vp-298.15K-0.1m, nacl-cg85-vp-298.15K-0.2m, nacl-cg85-vp-298.15K-1.0m, nacl-cg85-vp-298.15K-2.0m, nacl-cg85-vp-298.15K-4.0m, nacl-cg85-vp-298.15K-6.0m, nacl-cg85-vp-293.15K-4.0m, nacl-cg85-vp-293.15K-6.0m, nacl-cg85-vp-303.15K-4.0m, nacl-cg85-vp-303.15K-6.0m]
   references:
   - Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., AIChE J. 28(4), 588-596, 1982
   - Chen, C.-C. & Evans, L. B., AIChE J. 32(3), 444-454, 1986
@@ -534,8 +536,8 @@
     - L
     notes: >-
       NaCl-H2O at 20-30 C, liquid limits as enrtl_nacl_water.
-  status: provisional
-  validation: []
+  status: validated
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, nacl-cg85-vp-298.15K-0.1m, nacl-cg85-vp-298.15K-0.2m, nacl-cg85-vp-298.15K-1.0m, nacl-cg85-vp-298.15K-2.0m, nacl-cg85-vp-298.15K-4.0m, nacl-cg85-vp-298.15K-6.0m, nacl-cg85-vp-293.15K-4.0m, nacl-cg85-vp-293.15K-6.0m, nacl-cg85-vp-303.15K-4.0m, nacl-cg85-vp-303.15K-6.0m]
   references:
   - Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., AIChE J. 28(4), 588-596, 1982
   - Chen, C.-C. & Evans, L. B., AIChE J. 32(3), 444-454, 1986
@@ -600,8 +602,9 @@
     notes: >-
       Water plus one salt at 20-30 C (the pitzer_nacl_water salts and caps), liquid limits as
       pitzer_nacl_water.
-  status: provisional
-  validation: []
+  # Validated 2026-11-04 on NaCl only (cases-nacl.yaml, Clarke & Glew 1985 Table 21 A).
+  status: validated
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, nacl-cg85-vp-298.15K-0.1m, nacl-cg85-vp-298.15K-0.2m, nacl-cg85-vp-298.15K-1.0m, nacl-cg85-vp-298.15K-2.0m, nacl-cg85-vp-298.15K-4.0m, nacl-cg85-vp-298.15K-6.0m, nacl-cg85-vp-293.15K-4.0m, nacl-cg85-vp-293.15K-6.0m, nacl-cg85-vp-303.15K-4.0m, nacl-cg85-vp-303.15K-6.0m]
   references:
   - Pitzer, K. S., Peiper, J. C. & Busey, R. H., J. Phys. Chem. Ref. Data 13(1), 1-102, 1984
   - Hayden, J. G. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 209-216, 1975
@@ -664,8 +667,12 @@
     - L
     notes: >-
       Dilute NaCl-H2O only: the flash refuses a liquid above 0.2 mol/kg, where gamma+- is 3.5 % below Pitzer, Peiper & Busey Table A-8.
+  # Stays provisional (2026-11-04): the bound brine points inside the 0.2 mol/kg cap pass
+  # (+0.04/+0.05 %) but cannot discriminate at the fixed 3 % bubble_P tolerance (an ideal
+  # Raoult solution is within 0.05 % there too), so they are not evidence for the PDH term.
+  # Needs an audit rule that scores the vapour-pressure LOWERING (1 - P/P0) for dilute points.
   status: provisional
-  validation: []
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, nacl-cg85-vp-298.15K-0.1m, nacl-cg85-vp-298.15K-0.2m]
   references:
   - Pitzer, K. S., J. Am. Chem. Soc. 102(9), 2902-2906, 1980
   - Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., AIChE J. 28(4), 588-596, 1982
@@ -729,8 +736,8 @@
     - L
     notes: >-
       NaCl-H2O at 20-30 C with a solid NaCl phase past the solubility limit; the solubility has no temperature dependence across the window (the 25 C parameter set).
-  status: provisional
-  validation: []
+  status: validated
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, nacl-cg85-vp-298.15K-0.1m, nacl-cg85-vp-298.15K-0.2m, nacl-cg85-vp-298.15K-1.0m, nacl-cg85-vp-298.15K-2.0m, nacl-cg85-vp-298.15K-4.0m, nacl-cg85-vp-298.15K-6.0m, nacl-cg85-vp-293.15K-4.0m, nacl-cg85-vp-293.15K-6.0m, nacl-cg85-vp-303.15K-4.0m, nacl-cg85-vp-303.15K-6.0m, nacl-cg85-solubility-293.15K, nacl-cg85-solubility-303.15K]
   references:
   - Chen, C.-C., Britt, H. I., Boston, J. F. & Evans, L. B., AIChE J. 28(4), 588-596, 1982
   - Chen, C.-C. & Evans, L. B., AIChE J. 32(3), 444-454, 1986

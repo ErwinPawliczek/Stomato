@@ -1753,6 +1753,29 @@ class ElectrolyteENRTLCrystal(ElectrolyteENRTLNaCl):
     def _molality_cap(self, salt: str = "NaCl") -> float:
         return enrtl_crystallisation_molality(salt)
 
+    def solubility(self, cid: str, T: float) -> float:
+        """Mole fraction of salt ``cid`` in its saturated solution at ``T`` (K).
+
+        x_sat = m_sat M_w / (1 + m_sat M_w), the salt counted as one undissociated
+        species on the package's stream basis (the saturated liquid's composition in
+        :meth:`_build_state`), m_sat from :func:`enrtl_crystallisation_molality`
+        (mol/kg) and M_w water's molar mass (kg/mol). The 25 C parameter set has no
+        temperature dependence, so T only gates the row's window.
+        """
+        if cid == "H2O" or cid not in self._supported_ids():
+            raise ElectrolyteChemistryError(f"no solubility for {cid!r}: not a salt of this row")
+        lo, hi = _MODEL_WINDOWS[self._model]
+        if not lo <= T <= hi:
+            raise ElectrolyteChemistryError(
+                f"solubility at T={T} K is outside the {self._model!r} window [{lo}, {hi}] K"
+            )
+        return self._saturated_salt_fraction(cid)
+
+    def _saturated_salt_fraction(self, salt: str) -> float:
+        """Salt mole fraction of the saturated liquid (the stream basis, salt undissociated)."""
+        m_mw = self._molality_cap(salt) * (_mw("H2O") / 1000.0)
+        return m_mw / (1.0 + m_mw)
+
     def _build_state(self, z: dict[str, float], T: float, P: float, molar_flow: float) -> StreamState:
         salt_id = self._salt_id(z)
         salt, water = z.get(salt_id, 0.0), z.get("H2O", 0.0)
@@ -1768,7 +1791,7 @@ class ElectrolyteENRTLCrystal(ElectrolyteENRTLNaCl):
             y = {cid: (1.0 if cid == "H2O" else 0.0) for cid in z}
             fluid = _phase(PhaseKind.VAPOR, water, y, self._vapour.phase_props(y, T, P, PhaseKind.VAPOR))
         else:
-            x_salt = m_sat * mw_water / (1.0 + m_sat * mw_water)
+            x_salt = self._saturated_salt_fraction(salt_id)
             x = {cid: (x_salt if cid == salt_id else 1.0 - x_salt) for cid in z}
             props = self.phase_props(x, T, P, PhaseKind.AQUEOUS)
             fluid = _phase(PhaseKind.AQUEOUS, water / (1.0 - x_salt), x, props)
