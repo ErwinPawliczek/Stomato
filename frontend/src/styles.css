@@ -202,7 +202,9 @@ article.proj { cursor: default }
 .tr-legend .tr-q { display: inline-flex; align-items: center; gap: 5px }
 .tr-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); gap: 16px; align-items: start }
 @media (max-width: 1100px) { .tr-grid { grid-template-columns: minmax(0, 1fr) } }
-.tr-canvas { --c: 10px; clip-path: var(--oct); overflow: auto; max-height: calc(100dvh - 260px); min-height: 320px; background: var(--paper) }
+.tr-canvas { --c: 10px; clip-path: var(--oct); position: relative; overflow: hidden; height: calc(100dvh - 260px); min-height: 320px; background: var(--paper); cursor: grab; touch-action: none; user-select: none }
+.tr-canvas.panning { cursor: grabbing }
+.tr-stage { position: absolute; left: 0; top: 0; transform-origin: 0 0 }
 .tr-svg { display: block; font-family: var(--f-body) }
 .tr-edge path { fill: none; stroke: var(--inLine); stroke-width: 1.2; opacity: .75 }
 .tr-edge text { fill: var(--muted); font-size: 9.5px; font-family: var(--f-mono); paint-order: stroke; stroke: var(--paper); stroke-width: 3px }

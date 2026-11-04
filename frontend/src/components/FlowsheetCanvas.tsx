@@ -11,8 +11,8 @@ export type View = { x: number; y: number; k: number };
 
 const BOX_W = 132;
 const BOX_H = 44;
-const MIN_K = 0.2;
-const MAX_K = 5;
+export const MIN_K = 0.2;
+export const MAX_K = 5;
 const FALLBACK_SIZE = { w: 800, h: 480 };
 const NUDGE = 10; // keyboard step with snapping off, world units
 

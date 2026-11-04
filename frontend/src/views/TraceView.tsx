@@ -1,9 +1,10 @@
 import katex from "katex";
 import "katex/dist/katex.min.css";
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent, type RefObject } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type RefObject } from "react";
 import { api, type AuditFinding, type AuditReport, type Citation, type OpNode, type TraceGraph, type TraceTarget, type ValueNode } from "../api/client";
 import { layoutTrace, limitDepth, makeTarget, sourceKey, targetOf, traceSources, OP_LABEL_CHARS, VALUE_LABEL_CHARS, VALUE_R, type LaidEdge, type LaidNode } from "../trace";
 import { formatNumber, toDegC, toKmolH, toKPaG, toKw } from "../units";
+import { MAX_K, MIN_K, zoomAt, type View } from "../components/FlowsheetCanvas";
 
 const QUALITIES = ["cited", "user", "estimated", "derived", "uncited"] as const;
 const NO_IDS: ReadonlySet<string> = new Set();
@@ -342,10 +343,40 @@ function bezierAt([p0, p1, p2, p3]: [Pt, Pt, Pt, Pt], t: number): Pt {
   return [f(0), f(1)];
 }
 
+// --- Map-like navigation (pan / zoom) -----------------------------------------------
+
+type Size = { w: number; h: number };
+const FALLBACK_SIZE: Size = { w: 800, h: 480 };
+const FIT_PAD = 24; // canvas px kept free around a fitted drawing
+const DRAG_PX = 4; // pointer travel that turns a press into a drag (not a click)
+const BUTTON_STEP = 1.25;
+/** Below this fitted zoom labels are unreadable: open at 100% on the focus instead. */
+const READABLE_K = 0.6;
+
+const clampK = (k: number) => Math.min(MAX_K, Math.max(MIN_K, k));
+
+/** View that frames a w x h drawing in a canvas of `size`, centred, never above 100%. */
+export function fitTrace(w: number, h: number, size: Size): View {
+  const k = clampK(Math.min((size.w - 2 * FIT_PAD) / w, (size.h - 2 * FIT_PAD) / h, 1));
+  return centreOn(w / 2, h / 2, k, size);
+}
+
+/** View at zoom k with drawing point (x, y) in the middle of the canvas. */
+export function centreOn(x: number, y: number, k: number, size: Size): View {
+  return { x: x - size.w / 2 / k, y: y - size.h / 2 / k, k };
+}
+
+/** Zoom factor of one wheel event: exponential in the delta so steps compose smoothly;
+ * ctrl+wheel (trackpad pinch) sends small deltas and gets a stronger gain. */
+export function wheelFactor(e: Pick<WheelEvent, "deltaY" | "deltaMode" | "ctrlKey">): number {
+  const px = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? 400 : 1);
+  return Math.exp(-px * (e.ctrlKey ? 0.01 : 0.0015));
+}
+
 interface GraphProps {
   graph: TraceGraph;
+  lay: ReturnType<typeof layoutTrace>;
   svgRef: RefObject<SVGSVGElement>;
-  zoom: number;
   selected: string | null;
   culprits: ReadonlySet<string>;
   truncated: ReadonlySet<string>;
@@ -353,8 +384,7 @@ interface GraphProps {
   onHover: (id: string | null) => void;
 }
 
-function TraceSvg({ graph, svgRef, zoom, selected, culprits, truncated, onSelect, onHover }: GraphProps) {
-  const lay = useMemo(() => layoutTrace(graph, 4, graph.meta.focus ? "sink" : "sources"), [graph]);
+function TraceSvg({ graph, lay, svgRef, selected, culprits, truncated, onSelect, onHover }: GraphProps) {
   const values = useMemo(() => new Map(graph.values.map((v) => [v.id, v])), [graph]);
   const ops = useMemo(() => new Map(graph.ops.map((o) => [o.id, o])), [graph]);
   const focus = graph.meta.focus;
@@ -391,8 +421,8 @@ function TraceSvg({ graph, svgRef, zoom, selected, culprits, truncated, onSelect
     <svg
       ref={svgRef}
       className="tr-svg"
-      width={Math.round(lay.width * zoom)}
-      height={Math.round(lay.height * zoom)}
+      width={lay.width}
+      height={lay.height}
       viewBox={`0 0 ${lay.width} ${lay.height}`}
       role="group"
       aria-label="Trace graph"
@@ -501,7 +531,9 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [finding, setFinding] = useState<AuditFinding | null>(null);
-  const [zoom, setZoom] = useState(1);
+  const [view, setView] = useState<View>({ x: 0, y: 0, k: 1 });
+  const [size, setSize] = useState<Size>(FALLBACK_SIZE);
+  const [panning, setPanning] = useState(false);
   // Review in steps: show `depth` operations upstream of the focus; expand branches on demand.
   const [depth, setDepth] = useState(4);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
@@ -510,6 +542,12 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
   const [project, setProject] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const sizeRef = useRef(size);
+  sizeRef.current = size;
+  const gesture = useRef<{ id: number; sx: number; sy: number; view: View; pan: boolean; moved: boolean } | null>(null);
+  // The last press became a drag: swallow the click it ends with.
+  const dragged = useRef(false);
 
   useEffect(() => {
     let live = true;
@@ -576,13 +614,99 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
   const shownGraph = limited?.graph ?? null;
   const truncated = limited?.truncated ?? NO_IDS;
 
-  // Bring the focused value into view whenever a new trace is drawn.
-  useEffect(() => {
-    const focus = graph?.meta.focus;
-    if (!focus) return;
-    const el = svgRef.current?.querySelector(`[data-node="${focus}"]`);
-    el?.scrollIntoView?.({ block: "center", inline: "center" });
+  const shownOrFull = shownGraph ?? graph;
+  const lay = useMemo(
+    () => (shownOrFull ? layoutTrace(shownOrFull, 4, shownOrFull.meta.focus ? "sink" : "sources") : null),
+    [shownOrFull],
+  );
+  const layRef = useRef(lay);
+  layRef.current = lay;
+
+  // Track the canvas size (zoom buttons and fit work about its centre).
+  useLayoutEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const measure = (w: number, h: number) => w > 0 && h > 0 && setSize({ w, h });
+    const r = el.getBoundingClientRect();
+    measure(r.width, r.height);
+    if (typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([e]) => measure(e.contentRect.width, e.contentRect.height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const fit = useCallback(() => {
+    const l = layRef.current;
+    if (l) setView(fitTrace(l.width, l.height, sizeRef.current));
+  }, []);
+
+  // A new trace opens fitted; if that is too small to read, at 100% on the focused value.
+  useLayoutEffect(() => {
+    const l = layRef.current;
+    if (!graph || !l) return;
+    const fitted = fitTrace(l.width, l.height, sizeRef.current);
+    const focus = l.nodes.find((n) => n.id === graph.meta.focus);
+    setView(fitted.k >= READABLE_K || !focus ? fitted : centreOn(focus.x, focus.y, 1, sizeRef.current));
   }, [graph]);
+
+  // Pan just enough to bring a node into view (keyboard focus, links in the detail panel).
+  const reveal = useCallback((id: string | null) => {
+    const n = id ? layRef.current?.nodes.find((m) => m.id === id) : undefined;
+    if (!n) return;
+    setView((v) => {
+      const { w, h } = sizeRef.current;
+      const sx = (n.x - v.x) * v.k;
+      const sy = (n.y - v.y) * v.k;
+      const m = 20;
+      return sx < m || sx > w - m || sy < m || sy > h - m ? centreOn(n.x, n.y, v.k, sizeRef.current) : v;
+    });
+  }, []);
+  useEffect(() => reveal(selected), [selected, lay, reveal]);
+
+  // Wheel zoom about the cursor. Native listener: React's wheel handler is passive.
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const r = el.getBoundingClientRect();
+      setView((v) => zoomAt(v, wheelFactor(e), e.clientX - r.left, e.clientY - r.top));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  const zoomCentre = (f: number) => setView((v) => zoomAt(v, f, size.w / 2, size.h / 2));
+
+  // Drag empty space to pan; a press on a node that moves is a drag, not a click.
+  const onPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    dragged.current = false;
+    if (e.button !== 0) return;
+    const pan = !(e.target as Element).closest("[data-node]");
+    gesture.current = { id: e.pointerId, sx: e.clientX, sy: e.clientY, view, pan, moved: false };
+  };
+  const onPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    if (!g || g.id !== e.pointerId) return;
+    const dx = e.clientX - g.sx;
+    const dy = e.clientY - g.sy;
+    if (!g.moved) {
+      if (Math.hypot(dx, dy) < DRAG_PX) return;
+      g.moved = true;
+      if (g.pan) {
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+        setPanning(true);
+      }
+    }
+    if (g.pan) setView({ ...g.view, x: g.view.x - dx / g.view.k, y: g.view.y - dy / g.view.k });
+  };
+  const onPointerEnd = (e: PointerEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    if (!g || g.id !== e.pointerId) return;
+    dragged.current = g.moved;
+    gesture.current = null;
+    setPanning(false);
+  };
 
   const sources = useMemo(() => (full ? traceSources(full) : []), [full]);
   const source = target ? sources.find((s) => s.key === sourceKey(target)) : undefined;
@@ -686,14 +810,17 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
           </select>
         </label>
         <span className="grow" />
-        <button type="button" className="btn ob" aria-label="Zoom out" onClick={() => setZoom((z) => Math.max(0.25, z / 1.25))}>
+        <button type="button" className="btn ob" aria-label="Zoom out" onClick={() => zoomCentre(1 / BUTTON_STEP)}>
           −
         </button>
-        <button type="button" className="btn ob" aria-label="Reset zoom" onClick={() => setZoom(1)}>
-          {Math.round(zoom * 100)}%
+        <button type="button" className="btn ob" aria-label="Reset zoom" onClick={() => zoomCentre(1 / view.k)}>
+          {Math.round(view.k * 100)}%
         </button>
-        <button type="button" className="btn ob" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(4, z * 1.25))}>
+        <button type="button" className="btn ob" aria-label="Zoom in" onClick={() => zoomCentre(BUTTON_STEP)}>
           +
+        </button>
+        <button type="button" className="btn ob" aria-label="Fit to view" title="Fit the whole graph in view" disabled={!graph} onClick={fit}>
+          Fit
         </button>
         <button
           type="button"
@@ -729,18 +856,44 @@ export function TraceView({ target: requested = null }: { target?: TraceTarget |
         </p>
       )}
       <div className="tr-grid">
-        <div className="tr-canvas">
-          {graph ? (
-            <TraceSvg
-              graph={shownGraph ?? graph}
-              svgRef={svgRef}
-              zoom={zoom}
-              selected={selected}
-              culprits={culprits}
-              truncated={truncated}
-              onSelect={setSelected}
-              onHover={setHovered}
-            />
+        <div
+          ref={canvasRef}
+          className={`tr-canvas${panning ? " panning" : ""}`}
+          data-zoom={view.k}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerEnd}
+          onPointerCancel={onPointerEnd}
+          onClickCapture={(e) => {
+            if (!dragged.current) return;
+            dragged.current = false;
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onFocus={(e) => reveal((e.target as Element).getAttribute?.("data-node") ?? null)}
+          onScroll={(e) => {
+            // Navigation is by transform only; undo the browser scrolling a focused node into view.
+            e.currentTarget.scrollTop = 0;
+            e.currentTarget.scrollLeft = 0;
+          }}
+        >
+          {graph && shownOrFull && lay ? (
+            <div
+              className="tr-stage"
+              data-testid="trace-stage"
+              style={{ transform: `translate(${-view.x * view.k}px, ${-view.y * view.k}px) scale(${view.k})` }}
+            >
+              <TraceSvg
+                graph={shownOrFull}
+                lay={lay}
+                svgRef={svgRef}
+                selected={selected}
+                culprits={culprits}
+                truncated={truncated}
+                onSelect={setSelected}
+                onHover={setHovered}
+              />
+            </div>
           ) : (
             !error && <p className="placeholder">Loading trace…</p>
           )}

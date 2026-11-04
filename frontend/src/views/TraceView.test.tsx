@@ -5,7 +5,10 @@ import mockTrace from "../../mocks/trace.json";
 import { findOutput, upstream, type TraceGraph } from "../trace";
 import mockAudit from "../../mocks/trace-audit.json";
 import { ResultsView } from "./ResultsView";
-import { TraceView } from "./TraceView";
+import { fitTrace, TraceView, wheelFactor } from "./TraceView";
+
+// jsdom has no PointerEvent; MouseEvent carries the clientX/Y the canvas reads.
+if (!("PointerEvent" in window)) (window as unknown as { PointerEvent: unknown }).PointerEvent = MouseEvent;
 
 // jsdom's Blob has no .text(); read it through FileReader instead.
 const readBlob = (b: Blob) =>
@@ -231,4 +234,108 @@ test("an operation's detail lists its inputs; following one selects that value",
   const detail = screen.getByLabelText("Value detail");
   expect(detail.textContent).toContain("enthalpy");
   expect(within(detail).getByRole("list", { name: "Used by" })).toBeTruthy();
+});
+
+// --- Map-like navigation -------------------------------------------------------------
+
+const canvas = () => document.querySelector(".tr-canvas") as HTMLElement;
+/** Current pan/zoom from the stage transform: translate(tx, ty) scale(k). */
+const stageView = () => {
+  const m = screen.getByTestId("trace-stage").style.transform.match(/translate\((-?[\d.e-]+)px, (-?[\d.e-]+)px\) scale\(([\d.e-]+)\)/)!;
+  return { tx: Number(m[1]), ty: Number(m[2]), k: Number(m[3]) };
+};
+const zoomLabel = () => screen.getByRole("button", { name: "Reset zoom" }).textContent;
+
+test("the canvas navigates by transform, not scrollbars", async () => {
+  render(<TraceView target={{ stream: "S-001", prop: "T" }} />);
+  await graph();
+  expect(screen.getByTestId("trace-stage").style.transform).toMatch(/^translate\(.*\) scale\(.*\)$/);
+  expect(stageView().k).toBeLessThanOrEqual(1);
+  // A browser scroll (e.g. focusing a node) is undone: only the transform moves the drawing.
+  canvas().scrollTop = 50;
+  fireEvent.scroll(canvas());
+  expect(canvas().scrollTop).toBe(0);
+});
+
+test("the mouse wheel zooms about the cursor, within bounds", async () => {
+  render(<TraceView target={{ stream: "S-001", prop: "T" }} />);
+  await graph();
+  const before = stageView();
+  const cx = 300;
+  const cy = 200;
+  fireEvent.wheel(canvas(), { deltaY: -200, clientX: cx, clientY: cy });
+  const after = stageView();
+  expect(after.k).toBeGreaterThan(before.k);
+  // The drawing point under the cursor stays under the cursor.
+  expect((cx - after.tx) / after.k).toBeCloseTo((cx - before.tx) / before.k, 6);
+  expect((cy - after.ty) / after.k).toBeCloseTo((cy - before.ty) / before.k, 6);
+  for (let i = 0; i < 40; i++) fireEvent.wheel(canvas(), { deltaY: 500, clientX: cx, clientY: cy });
+  expect(zoomLabel()).toBe("20%");
+  for (let i = 0; i < 40; i++) fireEvent.wheel(canvas(), { deltaY: -500, clientX: cx, clientY: cy });
+  expect(zoomLabel()).toBe("500%");
+});
+
+test("ctrl+wheel (trackpad pinch) zooms harder per delta than a plain wheel", () => {
+  expect(wheelFactor({ deltaY: -10, deltaMode: 0, ctrlKey: true })).toBeGreaterThan(wheelFactor({ deltaY: -10, deltaMode: 0, ctrlKey: false }));
+  expect(wheelFactor({ deltaY: 10, deltaMode: 0, ctrlKey: false })).toBeLessThan(1);
+});
+
+test("dragging empty space pans with a grabbing cursor; a drag over a node is not a click", async () => {
+  render(<TraceView target={{ stream: "S-001", prop: "T" }} />);
+  const svg = await graph();
+  const before = stageView();
+  fireEvent.pointerDown(svg, { pointerId: 1, button: 0, clientX: 100, clientY: 100 });
+  fireEvent.pointerMove(canvas(), { pointerId: 1, clientX: 150, clientY: 130 });
+  expect(canvas().classList.contains("panning")).toBe(true);
+  fireEvent.pointerUp(canvas(), { pointerId: 1, clientX: 150, clientY: 130 });
+  expect(canvas().classList.contains("panning")).toBe(false);
+  const after = stageView();
+  expect(after.tx - before.tx).toBeCloseTo(50, 6);
+  expect(after.ty - before.ty).toBeCloseTo(30, 6);
+  expect(after.k).toBe(before.k);
+
+  // Press on a node, move, release on it: the click that follows does not select it.
+  const c1 = within(svg).getByRole("button", { name: "C1 Tc (constant, cited)" });
+  fireEvent.pointerDown(c1, { pointerId: 2, button: 0, clientX: 10, clientY: 10 });
+  fireEvent.pointerMove(c1, { pointerId: 2, clientX: 40, clientY: 10 });
+  fireEvent.pointerUp(c1, { pointerId: 2, clientX: 40, clientY: 10 });
+  fireEvent.click(c1);
+  expect(c1.getAttribute("aria-pressed")).toBe("false");
+  expect(screen.getByLabelText("Value detail").textContent).not.toContain("Huber");
+
+  // A plain press-and-release still selects and opens the detail.
+  fireEvent.pointerDown(c1, { pointerId: 3, button: 0, clientX: 10, clientY: 10 });
+  fireEvent.pointerMove(c1, { pointerId: 3, clientX: 11, clientY: 11 });
+  fireEvent.pointerUp(c1, { pointerId: 3, clientX: 11, clientY: 11 });
+  fireEvent.click(c1);
+  expect(c1.getAttribute("aria-pressed")).toBe("true");
+  expect(screen.getByLabelText("Value detail").textContent).toContain("Huber");
+});
+
+test("zoom buttons step about the centre, 100% resets and Fit frames the whole graph", async () => {
+  render(<TraceView target={{ stream: "S-001", prop: "T" }} />);
+  const svg = await graph();
+  fireEvent.click(screen.getByRole("button", { name: "Reset zoom" }));
+  expect(zoomLabel()).toBe("100%");
+  fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
+  expect(zoomLabel()).toBe("125%");
+  fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
+  fireEvent.click(screen.getByRole("button", { name: "Zoom out" }));
+  expect(zoomLabel()).toBe("80%");
+  fireEvent.click(screen.getByRole("button", { name: "Fit to view" }));
+  const w = Number(svg.getAttribute("width"));
+  const h = Number(svg.getAttribute("height"));
+  const v = stageView();
+  expect(v.k).toBeCloseTo(fitTrace(w, h, { w: 800, h: 480 }).k, 6);
+  expect(v.k).toBeLessThan(1);
+  // jsdom lays nothing out, so the canvas is the 800 x 480 fallback: the graph sits centred in it.
+  expect(v.tx + (w * v.k) / 2).toBeCloseTo(400, 6);
+  expect(v.ty + (h * v.k) / 2).toBeCloseTo(240, 6);
+});
+
+test("fitTrace frames a drawing centred, never above 100%", () => {
+  const big = fitTrace(2000, 1000, { w: 800, h: 480 });
+  expect(big.k).toBeCloseTo((800 - 48) / 2000, 9);
+  expect(big.x + 400 / big.k).toBeCloseTo(1000, 9);
+  expect(fitTrace(100, 50, { w: 800, h: 480 }).k).toBe(1);
 });
