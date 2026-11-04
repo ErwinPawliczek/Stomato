@@ -25,7 +25,8 @@
 # row-level `assessed` entry with the measured numbers in saft.yaml. Three of the 19
 # MeOH cases went back to `pending:cpa_srk` the same day: they crash
 # (SaturationError: no two-phase state at the Wilson seed T=179.68 K on the 101.325 kPa
-# isobar) and crashes are not declarable — the same policy as the four former
+# isobar) and crashes are not declarable (they bind again since 2026-11-04, val-saft: the
+# Wilson-K root cause is fixed) — the same policy as the four former
 # pending:teqp-gerg2008 cases in data/validation/helmholtz/cases.yaml. The other
 # saft.yaml rows (pc_saft_polar, saft_vr_mie, cpa_pr, multifluid) inherit this family's
 # coverage through their `validation:` lists in data/thermo_models/saft.yaml and the
@@ -963,7 +964,7 @@ binary_cases:
     vapor_comp:
       CO2: 0.93180
 - id: c1co2-303.145K-7.306MPa
-  package: pc_saft
+  package: [pc_saft, saft_vr_mie]
   components:
   - C1
   - CO2
@@ -979,7 +980,7 @@ binary_cases:
     vapor_comp:
       CO2: 0.99438
 - id: c1co2-303.144K-7.361MPa
-  package: pc_saft
+  package: [pc_saft, saft_vr_mie]
   components:
   - C1
   - CO2
@@ -1003,11 +1004,11 @@ binary_cases:
 # Three points of the published table; the root nrtl file carries the same source at all
 # eight published x points, so this set deliberately overlaps it to give the CPA row binary
 # coverage.
-# pending:cpa_srk — crashes on the bridge's Wilson seed (SaturationError: no two-phase
-# state at T=179.68 K, P=101325 Pa; measured T-15c 2026-10-22). Binds back when the
-# saturation seed follows the regression (crashes are not declarable).
+# Bound 2026-11-04 (val-saft) to cpa_srk and cpa_pr: the T-15c crash (SaturationError at the
+# Wilson seed T=179.68 K) was the bridge's inverted Wilson K argument (1 - T/Tc), fixed at the
+# root in teqp_bridge._wilson_k; the isobaric solve now converges.
 - id: meohh2o-101.325kPa-353.25K
-  package: pending:cpa_srk
+  package: [cpa_srk, cpa_pr]
   components:
   - MeOH
   - H2O
@@ -1023,9 +1024,8 @@ binary_cases:
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
-# pending:cpa_srk — same Wilson-seed SaturationError as the 353.25 K isobar (measured T-15c).
 - id: meohh2o-101.325kPa-349.05K
-  package: pending:cpa_srk
+  package: [cpa_srk, cpa_pr]
   components:
   - MeOH
   - H2O
@@ -1041,9 +1041,8 @@ binary_cases:
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
-# pending:cpa_srk — same Wilson-seed SaturationError as the 353.25 K isobar (measured T-15c).
 - id: meohh2o-101.325kPa-346.20K
-  package: pending:cpa_srk
+  package: [cpa_srk, cpa_pr]
   components:
   - MeOH
   - H2O
@@ -1332,12 +1331,10 @@ binary_cases:
     vapor_comp:
       MeOH: 0.9736
 
-# pending:pc_saft_assoc — crashes on the bridge's Wilson seed (SaturationError: no
-# two-phase state at T=179.68 K, P=101325 Pa; measured T-17 step B 2026-10-23). Same
-# crash mode as the cpa_srk isobar above; binds back when the saturation seed follows
-# the regression (crashes are not declarable).
+# Bound 2026-11-04 (val-saft): the T-17 crash (SaturationError at the Wilson seed
+# T=179.68 K) was the bridge's inverted Wilson K argument, fixed in teqp_bridge._wilson_k.
 - id: meohh2o-101.325kPa-353.25K-ps
-  package: pending:pc_saft_assoc
+  package: pc_saft_assoc
   components:
   - MeOH
   - H2O
@@ -1352,7 +1349,7 @@ binary_cases:
       MeOH: 0.6237
 
 - id: meohh2o-101.325kPa-349.05K-ps
-  package: pending:pc_saft_assoc
+  package: pc_saft_assoc
   components:
   - MeOH
   - H2O
@@ -1367,7 +1364,7 @@ binary_cases:
       MeOH: 0.7197
 
 - id: meohh2o-101.325kPa-346.20K-ps
-  package: pending:pc_saft_assoc
+  package: pc_saft_assoc
   components:
   - MeOH
   - H2O

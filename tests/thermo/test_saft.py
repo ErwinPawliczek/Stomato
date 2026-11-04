@@ -53,27 +53,25 @@ def test_saft_rows_register_with_status() -> None:
     way (bindings in data/validation/saft/cases-teqp.yaml, every miss assessed);
     T-17 promoted cpa_pr (Sorensen 2018 parameters), pc_saft_assoc (G&S 2002
     Table 1 two-site parameters), and pc_saft_polar (Gross–Vrabec 2006, T-17e)
-    the same way; the remaining rows stay
-    experimental (T-07)."""
+    the same way. val-saft (2026-11-04) promoted every row but pc_saft_polar to
+    validated (passing, independent L1 and L2 evidence; every miss assessed);
+    pc_saft_polar has no bound binary case yet."""
     rows = catalogue.load_catalogue()
-    provisional = (
+    validated = (
         "pc_saft",
         "cpa_srk",
         "cpa_pr",
         "pc_saft_assoc",
-        "pc_saft_polar",
         "saft_vr_mie",
         "multifluid",
         "multifluid_pure",
         "gerg2008_teqp",
         "soft_saft",
     )
-    for rid in provisional:
-        assert rows[rid].status == "provisional", f"{rid}: row must stay provisional"
-    for rid in SAFT_IDS:
-        if rid in provisional:
-            continue
-        assert rows[rid].status == "experimental", f"{rid}: row must stay experimental"
+    for rid in validated:
+        assert rows[rid].status == "validated", f"{rid}: row must be validated"
+    assert rows["pc_saft_polar"].status == "provisional"
+    assert set(validated) | {"pc_saft_polar"} == set(SAFT_IDS)
 
 
 def test_saft_packages_require_the_extra_at_first_use(monkeypatch: pytest.MonkeyPatch) -> None:

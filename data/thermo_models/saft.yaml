@@ -1,4 +1,6 @@
-# SAFT / CPA / multi-fluid Helmholtz family (spec T-07). Every row loads without teqp
+# SAFT / CPA / multi-fluid Helmholtz family (spec T-07).
+# 2026-11-04 (val-saft): every row except pc_saft_polar promoted to validated (evidence
+# comment above each row's status); cases in data/validation/saft/cases*.yaml. Every row loads without teqp
 # (lazy import); the teqp-backed builds require `uv sync --extra saft` (teqp>=0.22).
 # soft_saft runs on teqp's SoftSAFT kind with the Pamies (2003) thesis parameters
 # (promoted from a registered refusal on 2026-11-03: teqp 0.23.2 does ship the
@@ -39,7 +41,13 @@
     T_K: [95.0, 600.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
-  status: provisional
+  # Promotion evidence:
+  #   Promoted 2026-11-04 (val-saft). L1: pure-C1-125.0K and pure-C1-155.0K pass all five
+  #   comparisons (CoolProp CH4 reference); G&S (2001) fitted Psat and rho_L, so the
+  #   independent part is rho_V and Cp, never fitted. L2: Petropoulou (2018) C1/CO2
+  #   bubble points c1co2-293.130K-6.135MPa, -298.142K-6.976MPa, -303.145K-7.306MPa,
+  #   -303.144K-7.361MPa pass at k_ij = 0 (no binary parameter fitted at all).
+  status: validated
   validation: &pc_saft_cases
   - pure-C1-95.3K
   - pure-C1-125.0K
@@ -145,12 +153,23 @@
       validation points is forbidden) underpredicts the cross-dispersion attraction —
       the opposite-sign twin of the k_ij = 0 limitation the NG-dew cubic cases carry
       (measured 2026-10-22, PR table)"
-    c1co2-298.142K-7.508MPa: "bubble_P -7.5 % (7507900 vs 6946323) — same k_ij = 0
-      limitation (measured 2026-10-22, PR table)"
-    c1co2-303.144K-7.361MPa: "bubble_P -6.0 % (7361100 vs 6921345) — same k_ij = 0
-      limitation (measured 2026-10-22, PR table)"
-    c1co2-303.145K-7.306MPa: "bubble_P -5.7 % (7306400 vs 6889862) — same k_ij = 0
-      limitation (measured 2026-10-22, PR table)"
+    c1co2-298.142K-7.508MPa: "bubble_P -5.8 % (7507900 vs 7074300) — same k_ij = 0
+      limitation; re-measured 2026-11-04, val-saft after the bubble K-sum fix (the earlier -7.5 %
+      came from a half-converged incipient vapour; 303.145/303.144 K now pass at
+      -3.9/-4.0 %)"
+    pure-CO2-216.7K: "bubble_P/dew_P +9.5 % (520401 vs 569698); Cp -13.1 % (85.971 vs
+      74.698) — PC-SAFT without a quadrupole term overpredicts CO2 Psat near the triple
+      point (G&S 2001 parameters verified; teqp pure_VLE_T gives the same pressures) plus
+      the no-residual-Cp limitation (measured 2026-11-04, val-saft)"
+    pure-CO2-240.0K: "bubble_P/dew_P +4.0 % (1282480 vs 1334240); Cp -10.0 % (90.263 vs
+      81.257) — same no-quadrupole and Cp limitations (measured 2026-11-04, val-saft)"
+    pure-CO2-265.0K: "Cp -6.0 % (103.056 vs 96.876) — no-residual-Cp limitation (measured
+      2026-11-04, val-saft)"
+    pure-CO2-285.0K: "rho_V -3.8 % (143.923 vs 138.435); Cp -5.5 % (137.895 vs 130.322) —
+      classical-EOS vapour density on the critical approach (Tc 304.1 K) and the Cp
+      limitation (measured 2026-11-04, val-saft)"
+    pure-CO2-288.9K: "rho_V -4.2 % (165.146 vs 158.280); Cp -7.7 % (155.189 vs 143.265) —
+      same (measured 2026-11-04, val-saft)"
 
 - id: pc_saft_assoc
   name: PC-SAFT with association (hand-rolled kernel)
@@ -178,7 +197,14 @@
     T_K: [250.0, 600.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
-  status: provisional
+  # Promotion evidence:
+  #   Promoted 2026-11-04 (val-saft). L1: pure-EtOH-300.0K-ps and pure-EtOH-351.45K-ps pass
+  #   all five comparisons (CoolProp ethanol); G&S (2002) fitted Psat and rho_L, so rho_V
+  #   and Cp are the independent part. L2: meohh2o-322.91K-52.142kPa-ps (Bayer 1927)
+  #   passes with k_ij = 0 (no binary parameter fitted). Weak L2: the passing point is
+  #   the methanol-rich end (x_MeOH 0.95); every other MeOH/H2O point is an assessed
+  #   k_ij = 0 miss.
+  status: validated
   validation:
   - pure-H2O-323.5K-ps
   - pure-H2O-420.0K-ps
@@ -200,6 +226,9 @@
   - meohh2o-322.91K-40.850kPa-ps
   - meohh2o-322.91K-46.450kPa-ps
   - meohh2o-322.91K-52.142kPa-ps
+  - meohh2o-101.325kPa-353.25K-ps
+  - meohh2o-101.325kPa-349.05K-ps
+  - meohh2o-101.325kPa-346.20K-ps
   references:
   - Gross & Sadowski, "Application of the Perturbed-Chain SAFT Equation of State
     to Associating Systems", Ind. Eng. Chem. Res. 41 (2002) 5510-5515
@@ -270,6 +299,14 @@
     mixtures.
 
   assessed:
+    meohh2o-101.325kPa-353.25K-ps: "bubble_T -1.67 % (353.25 vs 347.348 K); vapor_comp
+      +0.055 abs (0.6237 vs 0.6787) — k_ij = 0 over-strengthens cross-association at the
+      methanol-lean end, as on the 322.91 K isotherm (Gao 2012 isobar; bound 2026-11-04, val-saft after
+      the Wilson-K fix)"
+    meohh2o-101.325kPa-349.05K-ps: "bubble_T -1.00 % (349.05 vs 345.554 K); vapor_comp
+      passes — same k_ij = 0 limitation (measured 2026-11-04, val-saft)"
+    meohh2o-101.325kPa-346.20K-ps: "bubble_T -0.84 % (346.2 vs 343.29 K); vapor_comp
+      -0.020 abs (0.786 vs 0.7657) — same k_ij = 0 limitation (measured 2026-11-04, val-saft)"
     pure-H2O-323.5K-ps: "rho_L -8.1 % (907.353 vs 987.838); Cp -22.8 % (58.134 vs
       75.334) — the G&S (2002) Table 1 water set underpredicts saturated-liquid
       density away from its fitting window and the derivative-based Cp carries no
@@ -451,7 +488,14 @@
     T_K: [90.0, 420.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
-  status: provisional
+  # Promotion evidence:
+  #   Promoted 2026-11-04 (val-saft). L1: pure-C1-95.3K and pure-C1-125.0K pass all five
+  #   comparisons (CoolProp CH4); Lafitte (2013) fitted Psat, rho_L and speed of sound, so
+  #   rho_V and Cp are the independent part. L2: five Petropoulou (2018) C1/CO2 bubble
+  #   points pass at k_ij = 0 (293.13-303.14 K; the 303.14 K pair binds since the
+  #   2026-11-04 bridge fixes; 298.142K-7.508MPa still raises near the mixture critical
+  #   point and stays unbound).
+  status: validated
   validation:
   - pure-C1-95.3K
   - pure-C1-125.0K
@@ -466,6 +510,8 @@
   - c1co2-293.130K-6.135MPa
   - c1co2-293.130K-6.976MPa
   - c1co2-298.142K-6.976MPa
+  - c1co2-303.145K-7.306MPa
+  - c1co2-303.144K-7.361MPa
   assessed:
     pure-C1-155.0K: "rho_V -4.4% (19.526 vs 20.419 mol/l) — SAFT-VR-Mie vapour densities
       fall below the CoolProp reference as T rises toward methane's critical region"
@@ -554,7 +600,13 @@
     T_K: [250.0, 620.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: provisional
+  # Promotion evidence:
+  #   Promoted 2026-11-04 (val-saft). L1: pure-H2O-420.0K and pure-H2O-520.0K pass all
+  #   five comparisons (CoolProp water); Kontogeorgis (1996) fitted Psat and rho_L, so
+  #   rho_V and Cp are the independent part. L2: meohh2o-101.325kPa-346.20K (Gao 2012,
+  #   bubble_T and y) and meohh2o-322.91K-52.142kPa (Bayer 1927) pass with k_ij = 0 (no
+  #   binary parameter fitted).
+  status: validated
   validation: &cpa_srk_cases
   - pure-H2O-323.5K
   - pure-H2O-420.0K
@@ -572,6 +624,9 @@
   - meohh2o-322.91K-40.850kPa
   - meohh2o-322.91K-46.450kPa
   - meohh2o-322.91K-52.142kPa
+  - meohh2o-101.325kPa-353.25K
+  - meohh2o-101.325kPa-349.05K
+  - meohh2o-101.325kPa-346.20K
   references:
   - Kontogeorgis, Voutsas, Yakoumis & Tassios, "An Equation of State for Associating
     Fluids", Ind. Eng. Chem. Res. 35 (1996) 4631-4642
@@ -648,10 +703,15 @@
     with the measured values — saturated-liquid Cp 5-21 % low (no residual-Cp term in
     the cubic + association EOS), saturated-vapour density at the 8 % vapour-tolerance
     edge, and MeOH/H2O bubble_P up to +22.5 % with k_ij = 0. The three 101.325 kPa
-    cases stay pending: they crash on the Wilson seed (SaturationError) and crashes
-    are not declarable.
+    cases crashed on the Wilson seed until 2026-11-04: the bridge's Wilson K used
+    (1 - T/Tc); fixed at the root (val-saft) and the cases are bound.
 
   assessed:
+    meohh2o-101.325kPa-353.25K: "bubble_T -0.60 % (353.25 vs 351.125 K) — k_ij = 0
+      cross-association at the methanol-lean end (Gao 2012 isobar; bound 2026-11-04, val-saft after the
+      Wilson-K fix)"
+    meohh2o-101.325kPa-349.05K: "vapor_comp -0.023 abs (0.7197 vs 0.6972); bubble_T
+      passes (-0.21 %) — same k_ij = 0 limitation (measured 2026-11-04, val-saft)"
     pure-H2O-323.5K: "Cp -8.9 % (75.333 vs 68.614) — CPA-SRK with published Kontogeorgis
       (1996) parameters has no residual liquid-Cp contribution, the same class of
       limitation the amine and gamma-phi rows assessed (parameters verified T-07)
@@ -718,7 +778,16 @@
     T_K: [250.0, 620.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: provisional
+  # Promotion evidence:
+  #   Promoted 2026-11-04 (val-saft). L1: pure-H2O-420.0K-pr, -520.0K-pr and
+  #   pure-MeOH-307.6K-pr, -358.8K-pr, -410.1K-pr pass all five comparisons (CoolProp);
+  #   Sorensen (2018) fitted Psat, rho_L and mutual solubilities, so rho_V and Cp are
+  #   the independent part. L2: meohh2o-322.91K-46.450kPa-pr and -52.142kPa-pr (Bayer
+  #   1927) pass; independent of the fit — the paper's Table 7 MeOH/H2O k_ij was
+  #   fitted to methane hydrate-inhibition data (refs 42, 140, 141: Robinson & Chen
+  #   1986; Ng, Chen & Robinson 1987; Ng & Robinson 1985), read in the open-access copy
+  #   https://d-nb.info/136523830X/34 (p. 7 text and Table 7), retrieved 2026-11-04.
+  status: validated
   validation:
   - pure-H2O-323.5K-pr
   - pure-H2O-420.0K-pr
@@ -736,6 +805,9 @@
   - meohh2o-322.91K-40.850kPa-pr
   - meohh2o-322.91K-46.450kPa-pr
   - meohh2o-322.91K-52.142kPa-pr
+  - meohh2o-101.325kPa-353.25K
+  - meohh2o-101.325kPa-349.05K
+  - meohh2o-101.325kPa-346.20K
   references:
   - Sorensen, Boesen, Leekumjorn & Herslund, "Peng-Robinson Equation of State
     Extended to Handle Aqueous Components Using CPA Concept", J. Nat. Gas Eng. 6
@@ -838,9 +910,18 @@
     meohh2o-322.91K-31.544kPa-pr: "bubble_P -17.6 % (31544 vs 26003.5); vapor_comp
       0.069 abs below the 0.02 band (0.7580 vs 0.6890) — same Table 7 k_ij
       limitation (measured 2026-10-23, PR table)"
-    meohh2o-322.91K-40.850kPa-pr: "bubble_P -5.3 % (40850 vs 38698.6) — same Table 7
+    meohh2o-322.91K-40.850kPa-pr: "bubble_P -5.1 % (40850 vs 38764) — same Table 7
       k_ij limitation, decaying toward the methanol-rich end (vapor_comp passes)
-      (measured 2026-10-23, PR table)"
+      (re-measured 2026-11-04, val-saft)"
+    meohh2o-101.325kPa-353.25K: "bubble_T +2.01 % (353.25 vs 360.339 K); vapor_comp
+      -0.092 abs (0.6237 vs 0.5317) — the Table 7 k_ij was fitted to methane hydrate
+      inhibition data (Sorensen 2018 refs 42, 140, 141), not MeOH/H2O VLE, and
+      over-strengthens the cross-interaction at the methanol-lean end (Gao 2012 isobar;
+      bound 2026-11-04, val-saft)"
+    meohh2o-101.325kPa-349.05K: "bubble_T +1.87 % (349.05 vs 355.572 K); vapor_comp
+      -0.054 abs (0.7197 vs 0.6652) — same k_ij limitation (measured 2026-11-04, val-saft)"
+    meohh2o-101.325kPa-346.20K: "bubble_T +0.88 % (346.2 vs 349.241 K); vapor_comp
+      +0.023 abs (0.786 vs 0.8087) — same k_ij limitation (measured 2026-11-04, val-saft)"
 
 - id: multifluid
   name: Multi-fluid Helmholtz (teqp CoolProp library)
@@ -869,18 +950,27 @@
     T_K: [60.0, 800.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: provisional
+  # Promotion evidence:
+  #   Promoted 2026-11-04 (val-saft). L1: cpv-C1-125/155 K, cpv-CO2-240/265 K,
+  #   cpv-nC4-300 K, cpv-nC6-350 K pass (CoolProp reference values of the same fluid
+  #   library: an implementation check of the bridge's saturation solver, the accepted
+  #   L1 class for reference-EOS rows). L2: Petropoulou (2018) C1/CO2 and Janisch (2007)
+  #   C1/N2 measured bubble points pass, and the three AGA8 GERG-2008 C1/N2 dew points
+  #   pass since the bridge's dew K-sum fix (the earlier +5.3 % at 153.41 K was the
+  #   solver, not the parameters: 2658640 vs 2658444 Pa now).
+  status: validated
   validation:
+  - cpv-C1-125.0K
+  - cpv-C1-155.0K
+  - cpv-CO2-240.0K
+  - cpv-CO2-265.0K
+  - cpv-nC4-300.0K
+  - cpv-nC6-350.0K
   - c1co2-293.130K-6.135MPa
   - c1n2-149.989K-2.908MPa
   - aga8-c1n2-134.02K-dew
   - aga8-c1n2-146.37K-dew
   - aga8-c1n2-153.41K-dew
-  assessed:
-    aga8-c1n2-153.41K-dew: "dew_P +5.3% (2799037 vs 2658444 Pa) — teqp's Kunz-Wagner
-      (2012) binary pair set vs the NGPSA-backed AGA8 check value; the same dew point
-      through the CoolProp HEOS path gives the same 2799037 Pa, so the miss is the
-      parameter source, not the flash path"
   references:
   - teqp 0.23 (Thol & Bell), https://teqp.readthedocs.io, MIT licence
   - Huber, Lemmon, Diky, Smith & Brunner, "ThermoData Engine (TDE103b)", J. Chem. Eng.
@@ -969,7 +1059,16 @@
     T_K: [60.0, 800.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: provisional
+  l2_not_applicable: pure-fluid-only row — binary feeds are refused by design
+    (MultifluidPureThermo); the family's mixture coverage runs on the multifluid row
+  # Promotion evidence:
+  #   Promoted 2026-11-04 (val-saft). Pure-fluid-only (l2_not_applicable): 13 L1 cases
+  #   pass every comparison — NIST WebBook water saturation (h2o-nist-*), CoolProp CH4
+  #   and CO2 up to 288.9 K. The CO2 265-288.9 K points bind since the 2026-11-04
+  #   root-scan / pure-VLE fix (the scan returned 196 kPa for 4.71 MPa at 285 K). Same
+  #   fluid library as the references: implementation evidence, not an independent
+  #   equation.
+  status: validated
   validation:
   - pure-C1-95.3K
   - pure-C1-125.0K
@@ -978,6 +1077,9 @@
   - pure-C1-181.0K
   - pure-CO2-216.7K
   - pure-CO2-240.0K
+  - cpv-CO2-265.0K
+  - cpv-CO2-285.0K
+  - cpv-CO2-288.9K
   - h2o-nist-273.179K
   - h2o-nist-347.390K
   - h2o-nist-401.605K
@@ -1036,13 +1138,15 @@
   family: saft
   adapter: ngdesign.thermo.teqp_bridge:Gerg2008TeqpThermo
   params:
-    source: teqp multifluid over teqp's bundled fluid library with the Kunz & Wagner
-      (2012) GERG-2008 reducing/departure parameters (data/thermo_params/saft/pure.yaml
-      gerg2008_teqp alias table)
-    provenance: same teqp 0.23.2 bundled fluid library as the multifluid row; the
-      natural-gas binary pairs and departure functions carry Kunz-JCED-2012 citations
-      in teqp's mixture files. This row is the exact-backend cross-check the T-04
-      `gerg2008` row (CoolProp's fitted pure-fluid tables) defers to (issue #164)
+    source: teqp 0.23.2 `GERG2008resid` model kind — the Kunz & Wagner (2012) GERG-2008
+      formulation (data/thermo_params/saft/pure.yaml gerg2008_teqp alias table)
+    provenance: GERG-2008's own pure-fluid residual equations plus its binary reducing
+      and departure parameters, as implemented in teqp (verified 2026-11-04 to
+      reproduce the NIST AGA8 GERG-2008 check value p(134.02 K, 1 mol/l, 50/50
+      C1/N2) = 953319.19 Pa to 1e-6). Until 2026-11-04 the row ran teqp's multi-fluid
+      builder over the CoolProp fluid library (reference-EOS pure fluids), i.e. not
+      GERG-2008. This row is the exact-backend cross-check the T-04 `gerg2008` row
+      (CoolProp's fitted pure-fluid tables) defers to (issue #164)
   applicability:
     component_classes:
     - hydrocarbon
@@ -1054,22 +1158,36 @@
     T_K: [60.0, 800.0]
     P_Pa: [100.0, 1.0e+8]
     phases: [V, L]
-  status: provisional
+  # Promotion evidence:
+  #   Promoted 2026-11-04 (val-saft). L1: eight CoolProp reference-EOS saturation cases
+  #   (CH4, CO2 to 288.9 K, n-butane, n-hexane) pass every comparison — independent
+  #   equations from GERG-2008's own pure-fluid equations. L2: Janisch, Raabe & Kohler
+  #   (2007) C1/N2 149.989 K measured bubble point and the three AGA8 GERG-2008 C1/N2
+  #   dew points pass (the dew points are model check values: implementation evidence).
+  #   Not verified: whether Janisch (2007) entered the GERG-2008 binary fit (Kunz &
+  #   Wagner 2012 data tables not retrieved this session).
+  status: validated
   validation: &gerg2008_teqp_cases
+  - cpv-C1-125.0K
+  - cpv-C1-155.0K
+  - cpv-CO2-240.0K
+  - cpv-CO2-265.0K
+  - cpv-CO2-285.0K
+  - cpv-CO2-288.9K
+  - cpv-nC4-300.0K
+  - cpv-nC6-350.0K
   - c1n2-130.079K-0.614MPa
   - c1n2-149.989K-2.908MPa
   - aga8-c1n2-134.02K-dew
   - aga8-c1n2-146.37K-dew
   - aga8-c1n2-153.41K-dew
   assessed:
-    c1n2-130.079K-0.614MPa: "bubble_P -5.77% (578280 vs 613700) - teqp's Kunz-Wagner
+    c1n2-130.079K-0.614MPa: "bubble_P -5.78% (578201 vs 613700; exact GERG2008resid
+      kind since 2026-11-04, was 578280 on the CoolProp-library build) - Kunz-Wagner
       (2012) mixture parameters vs the NGPSA data at the binary's dense-phase end (the
       CoolProp HEOS cross-check gives the same 578.3 kPa, so the miss is the parameter
       set, not the flash); vapour_comp passes (+0.0057 abs, tolerance 0.02) (measured
       2026-10-22, PR table)"
-    aga8-c1n2-153.41K-dew: "dew_P +5.3% (2799037 vs 2658444 Pa) — same deviation as the
-      multifluid row: identical teqp Kunz-Wagner (2012) pair set and flash path (measured
-      2026-10-23, T-18)"
   references:
   - >-
     Kunz & Wagner, "The GERG-2008 Wide-Range Equation of State for Natural Gases and
@@ -1152,6 +1270,7 @@
       Johnson, Muller & Gubbins (1994) contact-value fit, the equations of the thesis
       (eqs 2.2-2.7, A.20-A.26). Unlike pairs use Lorentz-Berthelot with eta = xi = 1
       (teqp exposes no binary parameter for this kind); no association.
+      Licences deferred (orchestrator, 2026-11-04); recorded anyway —
       LICENCE NOT VERIFIED (orchestrator, 2026-11-03): the thesis PDF carries no rights
       statement and tdx.cat refused automated access (HTTP 403), so the TDX terms of use
       were not read; TDX theses are commonly limited to private research and teaching
@@ -1167,8 +1286,49 @@
     T_K: [90.0, 800.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
-  status: provisional
-  validation: []
+  # Promotion evidence:
+  #   Promoted 2026-11-04 (val-saft). L1: cpv-nC4-300.0K and cpv-nC6-350.0K-ss pass all
+  #   five comparisons (CoolProp); the PV set was fitted to n-butane (NIST Webbook) and
+  #   n-hexane (Smith & Srivastava) saturation densities and pressures (thesis Table 4.1
+  #   caption), so rho_V and Cp are the independent part. L2: ss-c1c3-294.26K-6.895MPa
+  #   (Reamer 1950) and ss-c1co2-293.130K-6.135MPa / -303.145K-7.306MPa (Petropoulou
+  #   2018) pass with Lorentz-Berthelot (no binary parameter fitted).
+  status: validated
+  validation:
+  - cpv-C1-125.0K
+  - cpv-C1-155.0K
+  - cpv-CO2-240.0K
+  - cpv-CO2-265.0K
+  - cpv-nC4-300.0K
+  - cpv-nC6-350.0K-ss
+  - cpv-nC10-400.0K
+  - ss-c1c3-277.59K-1.724MPa
+  - ss-c1c3-294.26K-6.895MPa
+  - ss-c1c3-310.93K-2.068MPa
+  - ss-c1co2-293.130K-6.135MPa
+  - ss-c1co2-303.145K-7.306MPa
+  assessed:
+    cpv-C1-125.0K: "bubble_P/dew_P +11.8 % (268758 vs 300428) — the PV parameter set
+      was fitted to saturated densities more accurately than to vapour pressures
+      (Pamies 2003 thesis p. 33-34, Table 4.1 text, read 2026-11-04); the light-alkane
+      Psat excess is the one tests/thermo/test_soft_saft.py records (measured
+      2026-11-04, val-saft)"
+    cpv-C1-155.0K: "bubble_P/dew_P +7.0 % (1295003 vs 1385690); rho_V -3.7 % (20.419 vs
+      19.657) — same PV-set Psat bias plus classical-EOS vapour density on the
+      critical approach (measured 2026-11-04)"
+    cpv-CO2-240.0K: "rho_V -3.3 % (33.295 vs 32.212) — classical (non-crossover)
+      vapour density; Psat, rho_L, Cp pass (measured 2026-11-04)"
+    cpv-CO2-265.0K: "rho_V -6.9 % (75.471 vs 70.293) — same, steeper toward Tc
+      (measured 2026-11-04)"
+    cpv-nC10-400.0K: "bubble_P/dew_P -16.2 % (25513.5 vs 21386.3) — n-C10 parameters
+      come from the PV correlation (thesis Table 4.6), not a fit; rho_L, rho_V, Cp
+      pass (measured 2026-11-04)"
+    ss-c1c3-277.59K-1.724MPa: "bubble_P -3.4 % (1724000 vs 1666100); vapor_comp -0.055
+      abs (0.6382 vs 0.5836) — Lorentz-Berthelot with eta = xi = 1 (teqp's SoftSAFT
+      kind exposes no binary parameter) plus the PV-set methane Psat bias (Reamer 1950;
+      measured 2026-11-04)"
+    ss-c1c3-310.93K-2.068MPa: "bubble_P +6.3 % (2068000 vs 2199100); vapor_comp -0.040
+      abs (0.3255 vs 0.2856) — same (measured 2026-11-04)"
   references:
   - >-
     Blas & Vega, "Thermodynamic behaviour of homonuclear and heteronuclear Lennard-Jones
@@ -1239,8 +1399,8 @@
         nC4: 0.5
   l0_excluded: {}
   l0_note: >-
-    No L1/L2 case is bound: binding a case to this row means a new file under
-    data/validation/, which is locked. The row is checked instead by
+    L1/L2 cases bound 2026-11-04 (val-saft, data/validation/saft/cases-val.yaml) once
+    data/validation/ was opened. The row is also checked by
     tests/thermo/test_soft_saft.py against the source's own published soft-SAFT
     numbers (Pamies 2003 Tables 4.4 and 4.5: critical temperatures and densities of
     n-C12..n-C48) and against CoolProp saturation, with the measured deviations

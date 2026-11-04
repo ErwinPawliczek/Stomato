@@ -47,9 +47,9 @@ def test_multifluid_c1co2_bubble_293k() -> None:
 def test_multifluid_pure_co2_psat_216k() -> None:
     """teqp multifluid pure-fluid surface on CO2 at 216.7 K.
 
-    The bridge's saturation scan loses the CO2 loop above ~250 K on this surface
-    (measured in T-18; the 265/285/288.9 K cases are therefore unbound), so the pin
-    sits at the coldest point where the scan is sound.
+    T-18 found the bridge's saturation scan losing the CO2 loop above ~250 K on this
+    surface; fixed 2026-11-04 (val-saft, tests/thermo/test_teqp_bridge.py), and the
+    265-288.9 K points are bound. This pin keeps the coldest point.
     """
     pytest.importorskip("teqp")
     pkg = catalogue.build(catalogue.load_catalogue()["multifluid_pure"])

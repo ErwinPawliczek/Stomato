@@ -12,10 +12,9 @@
 #   SaturationError (bubble point: no convergence) on the near-critical Petropoulou points
 # - multifluid c1co2 at the same five near-critical points — same SaturationError
 # - multifluid_pure pure-CO2-265.0K/285.0K/288.9K — the bridge's pure-fluid saturation
-#   scan loses the CO2 loop above ~250 K on the multi-fluid surface (returns a wrong
-#   root, e.g. 196479 Pa at 285 K where the reference is 4712303 Pa, or refuses with
-#   "at/above Tc" at 265 K); the model itself is exact where the scan works (250 K:
-#   1785034 Pa measured, reference 1785000 Pa class)
+#   scan lost the CO2 loop above ~250 K on the multi-fluid surface (196479 Pa at 285 K
+#   where the reference is 4712303 Pa). Fixed 2026-11-04 (val-saft: dense-range root
+#   scan + teqp pure_VLE_T); the same states bind as cpv-CO2-* in cases-val.yaml.
 # - gerg2008_teqp aga8-ng2-165.933K/169.184K-dew — with the AGA8 trace hexane
 #   (C6+ = 2e-5) teqp's dew collapses to a spurious low-pressure root (81.97 kPa vs
 #   1.17898 MPa and 0.610 vs 2.0497 MPa; without the trace C6+ the same feed converges
