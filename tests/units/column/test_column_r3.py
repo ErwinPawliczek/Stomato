@@ -55,7 +55,9 @@ def _outlet_dev(a: UnitResult, b: UnitResult) -> tuple[float, float]:
 def _r2_partial(thermo: Thermo, inlets: dict[str, StreamState]) -> tuple[UnitResult, dict[str, float]]:
     _, r2_params = Column.example_case()
     r2 = Column().solve(
-        inlets, {**r2_params, "condenser": "partial", "specs": {"distillate_rate": 45.0, "boilup_ratio": 3.0}}, thermo
+        inlets,
+        {**r2_params, "condenser": "partial", "specs": {"distillate_rate": 45.0, "boilup_ratio": 3.0}},
+        thermo,
     )
     # R2 meets specs only to its spec gate (5e-3); compare the same physical column.
     return r2, {"distillate_rate": r2.info["distillate_mol_s"], "boilup_ratio": r2.info["boilup_ratio"]}
@@ -130,7 +132,9 @@ def test_total_condenser_closed_form(thermo: Thermo) -> None:
     condensate at its bubble point T_0 = T_bub(x_D, P), and
     Q_c = V_1 h_V(y_1, T_1) - (L_0 + D) h_L(x_D, T_0) with the package enthalpies."""
     inlets = _feed(thermo)
-    res = ColumnR3().solve(inlets, _murphree_params(specs={"reflux_ratio": 2.5, "distillate_rate": 45.0}), thermo)
+    res = ColumnR3().solve(
+        inlets, _murphree_params(specs={"reflux_ratio": 2.5, "distillate_rate": 45.0}), thermo
+    )
     info = res.info
     P = 1.5e6
     assert info["stage_0_L_mol_s"] == pytest.approx(112.5, rel=1e-9)
@@ -151,7 +155,9 @@ def test_total_condenser_closed_form(thermo: Thermo) -> None:
     assert d.T == pytest.approx(t0, abs=1e-4)
 
 
-@pytest.mark.parametrize("eff", [0.6, [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.6, 0.7, 0.8, 0.9]])
+@pytest.mark.parametrize(
+    "eff", [0.6, [0.5, 0.6, 0.7, 0.8, 0.9, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.6, 0.7, 0.8, 0.9]]
+)
 def test_murphree_row_closed_form(thermo: Thermo, eff: float | list[float]) -> None:
     """Murphree (1925): y_n = y_in + E (y*_n - y_in). Binary C3/iC4, total condenser:
     tray n (blocks 1..15) receives vapour from block n+1 (no vapour feed: the feed is
@@ -179,7 +185,9 @@ def test_murphree_row_closed_form(thermo: Thermo, eff: float | list[float]) -> N
 def test_spec_pairs_round_trip(thermo: Thermo) -> None:
     """Duty and bottoms-rate specs reproduce the ratio specs' column (same equations)."""
     inlets = _feed(thermo)
-    base = ColumnR3().solve(inlets, _murphree_params(specs={"reflux_ratio": 2.5, "distillate_rate": 45.0}), thermo)
+    base = ColumnR3().solve(
+        inlets, _murphree_params(specs={"reflux_ratio": 2.5, "distillate_rate": 45.0}), thermo
+    )
     qc, qr, vb = base.info["condenser_duty_W"], base.info["reboiler_duty_W"], base.info["boilup_ratio"]
     pairs: list[dict[str, float]] = [
         {"condenser_duty_W": qc, "boilup_ratio": vb},

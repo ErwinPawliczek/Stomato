@@ -644,7 +644,21 @@ def _residual(
             out[r + 1] = (h_v_out + h_l_out - h_v_in - h_l_in - feeds.hfv[j] - feeds.hfl[j]) / es
             out[r + 2] = (e_v - e_l) / max(es, m.hav + m.hal)
         elif lay.kinds[j] != "kettle":
-            _eq_block_residual(spec, lay.kinds[j], feeds, m, j, X[o + 2 * c], v, liq, v_in, l_in, h_v_in, h_l_in, out[o : o + 2 * c + 1])
+            _eq_block_residual(
+                spec,
+                lay.kinds[j],
+                feeds,
+                m,
+                j,
+                X[o + 2 * c],
+                v,
+                liq,
+                v_in,
+                l_in,
+                h_v_in,
+                h_l_in,
+                out[o : o + 2 * c + 1],
+            )
         else:
             t = X[o + 2 * c]
             vt, lt = float(np.sum(v)), float(np.sum(liq))
@@ -994,7 +1008,9 @@ def _models(
                 )
             )
         else:
-            out.append(_eq_model(thermo, spec.cids, lay.kinds[j], v, liq, float(X[o + 2 * c]), spec.pressures[j]))
+            out.append(
+                _eq_model(thermo, spec.cids, lay.kinds[j], v, liq, float(X[o + 2 * c]), spec.pressures[j])
+            )
     return out
 
 
@@ -1015,7 +1031,8 @@ def solve_rate_based(thermo: Thermo, spec: RateColumnSpec, feed_T: list[float]) 
         or not spec.kettle
     ):
         raise ValueError(
-            f"a condenser ({list(CONDENSER_KINDS)}) needs a kettle and one top spec from {list(CONDENSER_SPECS)}"
+            f"a condenser ({list(CONDENSER_KINDS)}) needs a kettle and one top spec "
+            f"from {list(CONDENSER_SPECS)}"
         )
     if spec.murphree is not None and len(spec.murphree) != spec.n_rate:
         raise ValueError(f"Murphree trays need {spec.n_rate} efficiencies, got {len(spec.murphree)}")

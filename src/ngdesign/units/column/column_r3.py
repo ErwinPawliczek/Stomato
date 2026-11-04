@@ -59,7 +59,6 @@ from .rate_based_units import (
     _geometry,
     _info,
     _n_stages,
-    _positive,
     _pressures,
     _state,
 )
@@ -85,7 +84,9 @@ def _place_specs(raw: Any, feed_flow: float) -> tuple[tuple[str, float], tuple[s
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not float(value) > 0.0:
             raise RateBasedSpecError(f"column R3 specs.{name} must be a positive number, got {value!r}")
         if name in _EITHER and float(value) >= feed_flow:
-            raise RateBasedSpecError(f"column R3 specs.{name}={value} must be below the feed flow {feed_flow}")
+            raise RateBasedSpecError(
+                f"column R3 specs.{name}={value} must be below the feed flow {feed_flow}"
+            )
     (a, va), (b, vb) = ((k, float(v)) for k, v in raw.items())
     if {a, b} <= _EITHER:
         raise RateBasedSpecError(
