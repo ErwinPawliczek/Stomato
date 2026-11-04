@@ -128,6 +128,23 @@ def test_boston_mathias_matches_default_below_tc_and_decays_above() -> None:
         assert a_bm < a_def  # measured 0.446 vs 0.485 at 600 K; 0.180 vs 0.244 at 1000 K
 
 
+def test_boston_mathias_first_derivative_continuous_at_tc() -> None:
+    """BM matches the Soave alpha's value and T-slope at Tc (c = m/d, d = 1 + m/2).
+
+    Regression (2026-11-04): the exponent coefficient read m/d^2, giving a
+    slope kink at Tc (d alpha/dTr = -m/d instead of -m). Form: Boston & Mathias
+    (1980), as quoted by pychemqt lib.EoS.Cubic.PR and the SigmaMu
+    alpha-extension docs, which both state first-derivative continuity.
+    """
+    pr_bm = _pkg("pr-boston-mathias")
+    eos = pr_bm._flasher({"C3": 1.0}).gas.eos_mix
+    tc = eos.Tcs[0]
+    below = eos.a_alpha_and_derivatives(tc * (1.0 - 1e-9))
+    above = eos.a_alpha_and_derivatives(tc * (1.0 + 1e-9))
+    assert above[0] == pytest.approx(below[0], rel=1e-7)
+    assert above[1] == pytest.approx(below[1], rel=1e-6)
+
+
 def test_twu_generalised_matches_thermo_reference() -> None:
     """The in-house generalised Twu fallback reproduces thermo's TwuPR95 exactly."""
     lib: Any = TwuPR95_a_alpha.__new__(TwuPR95_a_alpha)
