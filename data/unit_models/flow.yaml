@@ -18,7 +18,7 @@
       description: pressurised liquid (PS flash)
   levels:
     R0:
-      status: provisional
+      status: validated
       validation: [V1-pump-gpsa-12-1, V1-pump-svna-ex7-10]
       adapter: ngdesign.units.pump:Pump
       params:
@@ -286,7 +286,7 @@
       description: isenthalpic (flash_ph) outlet
   levels:
     R0:
-      status: provisional
+      status: validated
       validation: [V1-jt-valve-purdue-me200-steam, V1-jt-valve-svna-sec7-1-steam]
       adapter: ngdesign.units.jt_valve:JTValve
       params:
@@ -367,7 +367,7 @@
       params: {}
       note: set pressure, orifice from API 520 (the psv_api520_gas correlation plugin exists)
     R1:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.flow.relief_valve_r1:ReliefValveR1
       params:
         type: object

@@ -410,11 +410,16 @@ def run_v1(rows: dict[str, UnitRow]) -> tuple[list[CaseResult], list[Finding]]:
 
     A finding is an evidence gap that fails the run: a case without a source
     or expected values, an unassessed failing case, a level validation id with
-    no case, or a ``validated`` level whose case fails (assessed or not).
+    no case, or a ``validated`` level whose case fails, unless the miss is
+    assessed and the same level also has a passing case (orchestrator ruling,
+    validation run 2026-11-04: a miss demonstrated to be the source's
+    approximate property data does not block a level that passes cleanly
+    elsewhere; the miss stays recorded with its note).
     """
     results: list[CaseResult] = []
     findings: list[Finding] = []
     seen: dict[str, str] = {}
+    deferred: list[tuple[str, str, str, str]] = []
     for case in _load_cases():
         case_id = str(case.get("id", "?"))
         unit_id = str(case.get("unit", ""))
@@ -457,9 +462,18 @@ def run_v1(rows: dict[str, UnitRow]) -> tuple[list[CaseResult], list[Finding]]:
                 if not c.ok
             )
             if row.levels[level].status == "validated":
-                findings.append(Finding(case_id, unit_id, f"validated level fails its case: {detail}"))
+                if assessed:
+                    deferred.append((case_id, unit_id, level, detail))
+                else:
+                    findings.append(Finding(case_id, unit_id, f"validated level fails its case: {detail}"))
             elif not assessed:
                 findings.append(Finding(case_id, unit_id, f"unassessed miss: {detail}"))
+    passing = {(r.unit, r.level) for r in results if r.passed}
+    for case_id, unit_id, level, detail in deferred:
+        if (unit_id, level) not in passing:
+            findings.append(
+                Finding(case_id, unit_id, f"validated level fails its case and has no passing case: {detail}")
+            )
     for row in rows.values():
         for key, spec in row.levels.items():
             for case_id in spec.validation:

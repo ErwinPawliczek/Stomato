@@ -8,7 +8,7 @@ import pytest
 
 from ngdesign.contracts.plugins import Thermo
 from ngdesign.units._physics.heat_balance import TemperatureCross
-from ngdesign.units.heat.rating import RatingConvergenceError, RatingError
+from ngdesign.units.heat.rating import RatingConvergenceError, RatingError, u_outside_tube
 from ngdesign.units.heat.shell_tube_r1 import ShellTubeR1
 from ngdesign.units.heat.shell_tube_r2 import (
     PhaseRegimeNotRated,
@@ -99,6 +99,39 @@ def test_condenser_closes_area_and_changes_phase(thermo: Thermo) -> None:
     assert res.info["zone_U_max_W_m2K"] > res.info["zone_U_min_W_m2K"]
     assert res.duty_W == pytest.approx(-res.info["Q_W"], rel=1e-9)
     assert res.info["F_LMTD"] >= 0.75
+
+
+def test_zone_films_are_reported_and_close_each_zone_u(thermo: Thermo) -> None:
+    """Regression (validation run 2026-11-04): the zone film coefficients are in info.
+
+    Reporting only, no behaviour change: each zone's U recomputes from its own
+    reported (tube, shell) films through the same series-resistance formula,
+    the zone_U extremes are those of the recomputed set, and the means are the
+    equal-duty zone means.
+    """
+    inlets, params = _r2_inlet(thermo)
+    params = {**params, "k_wall_W_mK": 45.0, "R_f_tube_m2K_W": 1.0e-4, "R_f_shell_m2K_W": 2.0e-4}
+    res = ShellTubeR2().solve(inlets, params, thermo)
+    info = res.info
+    n = int(info["n_zones"])
+    h_t = [info[f"zone_{k:02d}_h_tube_W_m2K"] for k in range(n)]
+    h_s = [info[f"zone_{k:02d}_h_shell_W_m2K"] for k in range(n)]
+    us = [
+        u_outside_tube(
+            h_i=t,
+            h_o=s,
+            Do=params["tube_OD_m"],
+            Di=params["tube_ID_m"],
+            k_wall=45.0,
+            R_fi=1.0e-4,
+            R_fo=2.0e-4,
+        )
+        for t, s in zip(h_t, h_s, strict=True)
+    ]
+    assert min(us) == pytest.approx(info["zone_U_min_W_m2K"], rel=1e-12)
+    assert max(us) == pytest.approx(info["zone_U_max_W_m2K"], rel=1e-12)
+    assert info["h_shell_mean_W_m2K"] == pytest.approx(sum(h_s) / n, rel=1e-12)
+    assert info["h_tube_mean_W_m2K"] == pytest.approx(sum(h_t) / n, rel=1e-12)
 
 
 def test_tube_side_condensation_uses_shah(thermo: Thermo) -> None:

@@ -12,7 +12,8 @@
     6070 kg/m2s (std. dev. 90), eta_c = 0.866 (std. dev. 0.008); the
     omega_0.9 (JL) row prints 6160 / 0.863. Tolerance: the printed
     participant standard deviation (the benchmark's own stated spread),
-    fixed before the run. The inlet is saturated cyclohexane at 10 bar on
+    fixed before the run; this tolerance basis for a round-robin mean was
+    accepted by the orchestrator ruling of 2026-11-04. The inlet is saturated cyclohexane at 10 bar on
     the package's own saturation line (PR bubble point 455.132 K = 181.98 C
     against the printed 182.3 C), fed 0.002 K below it so the PT flash
     returns the liquid; the back pressure (1 bar) is far below eta_c P0 so
@@ -75,5 +76,6 @@
     lb/ft3 (FluidFlow reports 31.64), which alone gives -0.13% on G; the
     remainder is the API's vapour pressure. A property-data difference in
     the example's chart inputs, not a defect in the omega-method branch;
-    kept as a measured miss, so R1 stays provisional despite the passing
-    DIERS benchmark case.
+    kept as a measured miss. Per the orchestrator ruling of 2026-11-04 a miss
+    demonstrated to be the source's chart property data does not block R1,
+    which passes the DIERS benchmark case cleanly.

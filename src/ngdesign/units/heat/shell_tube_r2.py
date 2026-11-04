@@ -238,7 +238,13 @@ class ShellTubeR2:
             "min_zone_dT_K": zones.min_dt,
             "zone_U_min_W_m2K": zones.u_min,
             "zone_U_max_W_m2K": zones.u_max,
+            # Zones carry equal duty, so the plain mean is the duty-weighted mean film.
+            "h_tube_mean_W_m2K": sum(zones.h_tube) / len(zones.h_tube),
+            "h_shell_mean_W_m2K": sum(zones.h_shell) / len(zones.h_shell),
         }
+        for k, (h_t, h_s) in enumerate(zip(zones.h_tube, zones.h_shell, strict=True)):
+            info[f"zone_{k:02d}_h_tube_W_m2K"] = h_t
+            info[f"zone_{k:02d}_h_shell_W_m2K"] = h_s
         duty = process.molar_flow * (process_out.enthalpy - process.enthalpy)
         return UnitResult(outlets={"outlet": process_out}, duty_W=duty, power_W=0.0, info=info)
 
@@ -356,6 +362,10 @@ class _Zones:
     min_dt: float
     u_min: float
     u_max: float
+    #: Per-zone film coefficients (W/m2/K), zone 0 at the hot inlet: tube side
+    #: on the inside-area basis, shell side on the outside-area basis.
+    h_tube: tuple[float, ...] = ()
+    h_shell: tuple[float, ...] = ()
 
 
 class _Rater:
@@ -419,19 +429,25 @@ class _Rater:
         q_over_lmtd_u = 0.0
         min_dt = math.inf
         u_min, u_max = math.inf, 0.0
+        h_tube: list[float] = []
+        h_shell: list[float] = []
         for k in range(self.n):
             hot_a, hot_b = hot_states[k], hot_states[k + 1]
             cold_a, cold_b = cold_states[k], cold_states[k + 1]
             dt1, dt2 = hot_a.T - cold_a.T, hot_b.T - cold_b.T
             if dt1 <= 0.0 or dt2 <= 0.0:
                 raise _Infeasible
-            u = self._zone_u(hot_a, hot_b, cold_a, cold_b)
+            u, h_t, h_s = self._zone_u(hot_a, hot_b, cold_a, cold_b)
+            h_tube.append(h_t)
+            h_shell.append(h_s)
             lmtd = lmtd_counter(hot_a.T, hot_b.T, cold_b.T, cold_a.T)
             area += (q / self.n) / (u * lmtd)
             q_over_lmtd_u += (q / self.n) / lmtd
             min_dt = min(min_dt, dt1, dt2)
             u_min, u_max = min(u_min, u), max(u_max, u)
-        zones = _Zones(hot_out, cold_out, f, q_over_lmtd_u, min_dt, u_min, u_max)
+        zones = _Zones(
+            hot_out, cold_out, f, q_over_lmtd_u, min_dt, u_min, u_max, tuple(h_tube), tuple(h_shell)
+        )
         return area / f, zones
 
     def _mean_state(self, a: StreamState, b: StreamState, side: _Side) -> StreamState:
@@ -528,8 +544,13 @@ class _Rater:
 
     def _zone_u(
         self, hot_a: StreamState, hot_b: StreamState, cold_a: StreamState, cold_b: StreamState
-    ) -> float:
+    ) -> tuple[float, float, float]:
+        """Zone U with its (tube, shell) film coefficients."""
         g = self.geom
+
+        def films(h_hot: float, h_cold: float) -> tuple[float, float, float]:
+            h_t, h_s = (h_hot, h_cold) if self.hot.is_tube else (h_cold, h_hot)
+            return overall(h_hot, h_cold), h_t, h_s
 
         def overall(h_hot: float, h_cold: float) -> float:
             h_t, h_s = (h_hot, h_cold) if self.hot.is_tube else (h_cold, h_hot)
@@ -559,7 +580,7 @@ class _Rater:
         h_hot, hot_mean = single(self.hot, hot_a, hot_b)
         h_cold, cold_mean = single(self.cold, cold_a, cold_b)
         if h_hot is not None and h_cold is not None:
-            return overall(h_hot, h_cold)
+            return films(h_hot, h_cold)
         if h_hot is None and h_cold is None:
             raise PhaseRegimeNotRated("both sides change phase in one zone: not rated at R2")
         if h_cold is not None:
@@ -567,9 +588,9 @@ class _Rater:
             known_cold = h_cold
             t_cold = 0.5 * (cold_a.T + cold_b.T)
             hot_two = self._two_phase_h(self.hot, hot_mean, lambda h: overall(h, known_cold), t_cold)
-            return overall(hot_two, known_cold)
+            return films(hot_two, known_cold)
         assert h_hot is not None and cold_mean is not None
         known_hot = h_hot
         t_hot = 0.5 * (hot_a.T + hot_b.T)
         cold_two = self._two_phase_h(self.cold, cold_mean, lambda h: overall(known_hot, h), t_hot)
-        return overall(known_hot, cold_two)
+        return films(known_hot, cold_two)

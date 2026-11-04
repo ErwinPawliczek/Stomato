@@ -119,6 +119,40 @@ def test_v1_assessed_miss_is_recorded_not_a_finding(
     assert "assessed miss" in page and "measured +1 K; explained" in page
 
 
+def _validated_mixer(rows: dict[str, UnitRow]) -> dict[str, UnitRow]:
+    mixer = rows["mixer"]
+    level = mixer.levels["R0"].model_copy(update={"status": "validated"})
+    return {**rows, "mixer": mixer.model_copy(update={"levels": {**mixer.levels, "R0": level}})}
+
+
+def test_validated_level_assessed_miss_with_a_passing_case_is_not_a_finding(
+    vu: ModuleType, rows: dict[str, UnitRow], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    T = _measured_mixer_T(vu, rows)
+    cases = [_case(T), _case(T + 1.0, id="V-mixer-synthetic-miss", assessed="source table; explained")]
+    results, findings = _run(vu, _validated_mixer(rows), tmp_path, monkeypatch, cases)
+    assert findings == []
+    assert [r.passed for r in results] == [True, False]
+
+
+def test_validated_level_with_only_assessed_misses_is_a_finding(
+    vu: ModuleType, rows: dict[str, UnitRow], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    T = _measured_mixer_T(vu, rows)
+    cases = [_case(T + 1.0, assessed="explained")]
+    _, findings = _run(vu, _validated_mixer(rows), tmp_path, monkeypatch, cases)
+    assert len(findings) == 1 and "no passing case" in findings[0].detail
+
+
+def test_validated_level_unassessed_miss_is_a_finding_even_with_a_pass(
+    vu: ModuleType, rows: dict[str, UnitRow], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    T = _measured_mixer_T(vu, rows)
+    cases = [_case(T), _case(T + 1.0, id="V-mixer-synthetic-miss")]
+    _, findings = _run(vu, _validated_mixer(rows), tmp_path, monkeypatch, cases)
+    assert len(findings) == 1 and "validated level fails its case" in findings[0].detail
+
+
 def test_v1_case_without_source_or_expected_is_a_finding(
     vu: ModuleType, rows: dict[str, UnitRow], tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
