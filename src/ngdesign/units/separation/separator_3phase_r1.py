@@ -188,7 +188,9 @@ def _droplet_pair(params: dict[str, Any], fraction_key: str, diameter_key: str) 
     return None if E is None or d is None else (E, d)
 
 
-def _mix(kept: StreamState, kept_frac: float, received: StreamState, recv_frac: float) -> tuple[dict[str, float], float]:
+def _mix(
+    kept: StreamState, kept_frac: float, received: StreamState, recv_frac: float
+) -> tuple[dict[str, float], float]:
     n_k = kept_frac * kept.molar_flow
     n_r = recv_frac * received.molar_flow
     n = n_k + n_r
@@ -229,7 +231,9 @@ class Separator3PhaseR1:
         """Rate the R0 split at the given geometry (spec algorithm, steps 1-6)."""
         orientation = params.get("orientation", "horizontal")
         if orientation not in _ORIENTATIONS:
-            raise Separator3PhaseR1SpecError(f"orientation must be one of {_ORIENTATIONS}, got {orientation!r}")
+            raise Separator3PhaseR1SpecError(
+                f"orientation must be one of {_ORIENTATIONS}, got {orientation!r}"
+            )
         geometry = {k: _number(params, k) for k in _GEOMETRY_KEYS}
         overrides = {k: _number(params, k) for k in _OVERRIDE_KEYS}
         water_drops = _droplet_pair(params, "water_in_oil_fraction", "water_droplet_diameter_m")
@@ -372,5 +376,6 @@ class Separator3PhaseR1:
     def _stokes_check(Re: float, name: str) -> None:
         if Re >= 1.0:
             raise Separator3PhaseR1SpecError(
-                f"Stokes validity exceeded: Re = {Re:.4g} >= 1 for {name}; R1 does not extrapolate Stokes' law"
+                f"Stokes validity exceeded: Re = {Re:.4g} >= 1 for {name}; "
+                "R1 does not extrapolate Stokes' law"
             )
