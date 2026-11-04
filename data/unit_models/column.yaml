@@ -3,8 +3,8 @@
 # The registered `column` row is the rigorous MESH unit: plan U-E 2 (rigorous
 # distillation) and the R2 of U-E 3/4 (feed-determined absorber via the
 # zero-tear configuration, reboiled stripper via the one-tear configuration)
-# are its configurations. Rate-based stages are a later round, not this row's
-# declared ladder. Sour-water stripping (plan U-G 9) is a reboiled-stripper
+# are its configurations. Its R3 (rate-based packed segments or Murphree trays,
+# ngdesign.units.column.column_r3) is the row's end state. Sour-water stripping (plan U-G 9) is a reboiled-stripper
 # configuration on an electrolyte package (T-09) — no separate row.
 
 - id: shortcut_distillation
