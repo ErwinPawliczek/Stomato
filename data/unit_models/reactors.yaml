@@ -372,7 +372,12 @@
     (rho_0 1.15 % above the actual feed); recorded, R2 stays provisional.
     R1, R2 and R3 implemented; single phase. R2 and R3 ship provisional on the spec's hand
     calculations (Fogler eq. 4-33 Ergun, wall-exchange exponential, Thiele/activity closed
-    form) and the reductions to the lower level; no V1 case was attempted for them. R1 V1 gap — no transcribable
+    form) and the reductions to the lower level; R3 V1 search 2026-11-04: Fogler 4th ed.
+    Ex. 12-3 gives only Thiele moduli (no k or De) and Ex. 12-4 needs the overall
+    effectiveness with external mass transfer (Thoenes-Kramers), which R3 does not model; note
+    R3's shape-normalized tanh(phi/3)/(phi/3) gives 0.910 at the sphere modulus 1.65 where the
+    exact sphere 3(phi coth phi - 1)/phi^2 gives 0.856 (at 16.5: 0.182 vs exact 0.171, the
+    book printing 0.182 from the large-phi limit 3/phi); no V1 case was attempted for them. R1 V1 gap — no transcribable
     printed validation case: searches 'Fogler Elements of Chemical Reaction Engineering PFR
     example first order irreversible gas phase numerical conversion worked example printed
     values' and 'Example 4- Fogler PFR gas phase 500 K volume final conversion table printed'
@@ -419,7 +424,11 @@
   - docs/unit-catalogue-plan.md §2 U-F 7
   notes: A batch cycle over kinetics.rate, not dynamic mode (plan §0 decision 4 still holds for
     flowsheet dynamics). Provisional on closed-form tests (first-order and second-order with a
-    mole change) and the equivalence to the isobaric PFR; no V1 case was attempted. The semi-batch
+    mole change) and the equivalence to the isobaric PFR. V1 search 2026-11-04 (Fogler 4th ed.
+    scan, archive.org): the batch examples are Ex. 4-1 (k fitted to a concentration-time table,
+    so a check against it would test the fit), Ex. 9-1 and 9-2 (adiabatic/upset batches on
+    constant mean Cp, which the formation-basis enthalpies do not reproduce by construction) and
+    Ex. 7-4 (urea/urease, not in the registry); no transcribable isothermal printed answer. The semi-batch
     half of the row name is not implemented.
 
 - id: fixed_bed_tubular
@@ -465,6 +474,9 @@
   notes: The coolant is described by params; the row has no coolant ports. V1 gap - the spec's
     candidate (Froment, Bischoff & De Wilde 3rd ed. ch. 11, o-xylene to phthalic anhydride) prints
     its profiles mainly as figures, and figure readings are not valid V1; no copy was consulted.
+    Fogler 4th ed. Ex. 8-5 case 3 (acetone cracking, co-current air heating medium, read
+    2026-11-04 on the archive.org scan) prints its answers only as Figure E8-5.4 profiles and
+    runs on constant mean Cp (163/83/71 J/mol K), so it is not a V1 case either.
     Provisional on the epsilon-NTU closed forms and the reduction to pfr R2.
 
 - id: electrolyser_stack
