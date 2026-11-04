@@ -16,7 +16,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | accepted (PR #340) | obv/T6 | 2026-11-04 12:26 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | data accepted; PR #339 closed (wrong base) → T7b | obv/T7 | 2026-11-04 12:12 PM |
 | T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | claimed | obv/T8 | 2026-11-04 12:06 PM |
-| T7b | Re-cut T7 pack onto chem-engine (PR #339 was cut from agents-board: 254 files incl. uv.lock/.importlinter); drop the 6 Antoine-computed Psat cases | Obvious | claimed | obv/T7b | 2026-11-04 12:46 PM |
+| T7b | Re-cut T7 pack onto chem-engine (PR #339 was cut from agents-board: 254 files incl. uv.lock/.importlinter); drop the 6 Antoine-computed Psat cases | Obvious | review (PR #344) | obv/T7b | 2026-11-04 12:51 PM |
 | T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only; props resolve via chemdb/chemicals by CAS) | Obvious | claimed | obv/T9 | 2026-11-04 12:46 PM |
 | T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T1r runs on nrtl, pending:* stay skipped; T3 P-value fix | Obvious | claimed | obv/T10 | 2026-11-04 12:47 PM |
 | T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | claimed | obv/T11 | 2026-11-04 12:47 PM |
@@ -25,6 +25,15 @@ Times are America/Chicago (CST). Newest handoff on top.
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### T7b — Obvious — 2026-11-04 12:51 PM (HANDOFF — status review)
+- Done: T7 pack re-cut onto chem-engine per the 12:55 PM review. Took ONLY data/validation/packs/T7/{data.csv,pack.yaml} from obv/T7 (e6b7a58) onto a fresh branch cut from origin/chem-engine; PR diff = those 2 files, nothing else (1154 insertions, no uv.lock/.importlinter/agents-board files). Removed the 6 pure-AcOH Psat cases that were Antoine-equation evaluations (pure-AcOH-{300,320,340,360,380,391}K-hoc, computed from McDonald/Shrader/Stull 1959 params per NIST WebBook) — verified each removed block contained 'computed from Antoine equation'. Kept the 2 measured anchors (pure-AcOH-391.2K-nist-hoc NIST TRC T_boil; pure-AcOH-391.25K-seb1967-hoc Sebastiani reagent b.p.) and all 67 binary cases (23 Sebastiani 1967 + 44 Román-Ramírez 2016) — all 69 kept cases programmatically verified YAML-equal to their e6b7a58 counterparts (no value/source/tolerance/id changed); data.csv byte-identical to e6b7a58. Pack header updated to record the removal and that the Antoine params remain in data.csv.
+- Outputs (paths / branch / commit / PR #): data/validation/packs/T7/{data.csv,pack.yaml}; branch obv/T7b, commit 79c5a092; PR #344 (obv/T7b → chem-engine, never main): https://github.com/ErwinPawliczek/Stomato/pull/344
+- Sources used: unchanged from T7 handoff (12:12 PM): Sebastiani & Lacquaniti CES 22 (1967) Table 1 p. 1157; Román-Ramírez & Leeke JCED 61 (2016) Table 2 p. 2080; NIST WebBook SRD 69 AcOH page (Antoine params + TRC T_boil). No values were touched in this re-cut; all citation strings carried over verbatim.
+- NOT FOUND / gaps: none new. Carried from T7: data/components.yaml has NO AcOH entry (CAS 64-19-7) — cases will not resolve until curated (T9); hoc_dimer pass/fail binding needs the regressed-GE-pair or widened-tolerance decision (T-19). One caveat: pure-water anchors (x_AcOH=0) remain data.csv-only, not cases, per the original pack design.
+- Tests run + result (sandbox, uv available): `uv run pytest tests/validation/ -rs` → 274 passed, 49 skipped (optional teqp backend not installed), 320 xfailed — 0 failures. `uv run lint-imports` → Contracts: 3 kept, 0 broken. Pack structural checks: YAML parses (69 cases, top-level list), ids unique, all z sum to 1, every case has a source string. Full `uv run pytest -rs` suite NOT run in sandbox (touched area covered above; bot runs the full suite on Erwin's PC per protocol).
+- Next / open questions: Stomato bot to review PR #344 and bind after T9 curates AcOH + the GE-pair decision. T7b supersedes #339 entirely — obv/T7 branch can be dropped after review.
+- Heartbeats: 12:46 PM CST (claim), 12:51 PM CST (this handoff) — single-session run, sub-20-min, no interim heartbeat needed.
 
 ### Review — Stomato bot — 2026-11-04 12:55 PM
 - Done: Reviewed Obvious packs. Spot-checks: T1r all 16 T-x-y rows + azeotrope match the NIST ThermoML XML exactly; T3 all 9 rows match Mangold 2019 Table 8 (PMC6919335); T7 Sebastiani row 100.8 °C / x_w 0.865 / y_w 0.907 matches the open PDF and the AcOH/H2O column mapping is correct; T6/T4/T5 sources plausible and internally consistent (hrcak PDF not script-retrievable, not independently checked).
