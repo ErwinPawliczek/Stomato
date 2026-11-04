@@ -42,6 +42,28 @@ rate-based literature (condensers and reboilers stay equilibrium stages): ``v_i 
 - l_i,in - f_i = 0``, ``y_i = K_i(T) x_i`` and one spec equation (boilup ratio, bottoms
 or distillate rate, or reboiler duty through its energy balance).
 
+A condenser (distillation, the ``column`` R3) is the mirror end above the top stage:
+
+* **partial** - an equilibrium stage: ``v_i + l_i - v_i,in - f_i = 0``,
+  ``y_i = K_i(T) x_i``, one top spec; ``v`` is the vapour distillate, ``l`` the reflux.
+* **total** - the whole top vapour condenses to saturated liquid: unknowns the
+  distillate ``d`` and reflux ``l`` (liquid, c each) and ``T``; ``d_i + l_i - v_i,in =
+  0``, equal compositions ``l_i/L - d_i/D = 0`` (i < c), the bubble condition
+  ``sum_i K_i(T) x_i - 1 = 0`` (``K`` at the incipient vapour), one top spec.
+
+Top specs (:data:`CONDENSER_SPECS`): reflux ratio ``L/D``, distillate rate ``D``, or
+condenser duty (heat removed) ``H_in - H_D - H_L``.
+
+The middle stages may instead be equilibrium-stage trays with a Murphree vapour
+efficiency (``RateColumnSpec.murphree``; Murphree, E. V., "Rectifying column
+calculations", Ind. Eng. Chem. 17 (1925) 747-750): ``v_i + l_i - v_i,in - l_i,in - f_i
+= 0``, ``y_i = y_i,in + E (y*_i - y_i,in)`` with ``y* = K(T) x`` and ``K`` anchored at
+(``x``, ``y*``) - a fixed point on ``y* = norm(K x)`` - and the adiabatic tray energy
+balance. ``y_in`` is the vapour entering the tray (from below, plus any vapour feed to
+the tray), the convention :func:`murphree_vapour` reports. Summing the c Murphree rows
+gives ``E (sum K x - 1) = 0``: each tray sits at its liquid's bubble point and both
+phases leave at the tray ``T``. At ``E = 1`` the tray is the R2 MESH stage.
+
 Solution: inside-out on the property models. The **outer** loop anchors, at the
 current state, per-stage frozen models - ``ln K_i(T) = ln K_i0 + (dlnK_i/dT)(T - T0)``
 at the interface compositions; per-phase partial molar enthalpies
@@ -111,6 +133,11 @@ _DT_MAX = 15.0
 _H_EPS = 1e-5
 
 KETTLE_SPECS = ("boilup_ratio", "bottoms_rate", "distillate_rate", "reboiler_duty_W")
+CONDENSER_SPECS = ("reflux_ratio", "distillate_rate", "condenser_duty_W")
+CONDENSER_KINDS = ("total", "partial")
+#: Incipient-vapour fixed point (K anchored at y* = norm(K x)): tolerance and budget.
+_YSTAR_TOL = 1e-13
+_YSTAR_MAX = 60
 
 
 class RateBasedConvergenceError(RuntimeError):
@@ -130,17 +157,32 @@ class StageFeed:
 
 @dataclass(frozen=True)
 class RateColumnSpec:
-    """Everything the rate-based solve needs."""
+    """Everything the rate-based solve needs.
+
+    Stages top to bottom: the condenser (when ``condenser`` is set), ``n_rate`` middle
+    stages (packed segments, or Murphree trays when ``murphree`` is set, one efficiency
+    per tray), the kettle (when ``kettle``). ``geometry`` may be None for Murphree trays.
+    """
 
     cids: tuple[str, ...]
-    pressures: tuple[float, ...]  # one per stage, kettle included
-    n_rate: int  # packed segments (stages 0..n_rate-1)
-    kettle: bool  # an equilibrium kettle reboiler is stage n_rate
+    pressures: tuple[float, ...]  # one per stage, condenser and kettle included
+    n_rate: int  # middle stages
+    kettle: bool  # an equilibrium kettle reboiler is the last stage
     feeds: tuple[StageFeed, ...]
-    geometry: PackingGeometry
+    geometry: PackingGeometry | None
     surface_tension_N_m: float
     transfer_factor: float = 1.0
     kettle_spec: tuple[str, float] | None = None
+    condenser: str | None = None  # "total" | "partial": stage 0
+    condenser_spec: tuple[str, float] | None = None
+    murphree: tuple[float, ...] | None = None
+
+
+def stage_kinds(spec: RateColumnSpec) -> tuple[str, ...]:
+    """Block kind per stage, top to bottom: ``total``/``partial``, ``rate``/``tray``, ``kettle``."""
+    top = (spec.condenser,) if spec.condenser is not None else ()
+    middle = ("tray" if spec.murphree is not None else "rate",) * spec.n_rate
+    return (*top, *middle, *(("kettle",) if spec.kettle else ()))
 
 
 @dataclass
@@ -165,6 +207,10 @@ class _RateModel:
 
 @dataclass
 class _KettleModel:
+    """Frozen equilibrium-stage model (kettle, condenser, Murphree tray). For a total
+    condenser the "vapour" slot carries the liquid distillate, so ``hv0``/``cpv`` are
+    the liquid's (``_hv`` then returns the distillate's enthalpy flow)."""
+
     lnk0: Vec
     dlnk: Vec
     t0: float
@@ -195,6 +241,8 @@ class RateProfile:
     inner_iterations: int
     max_residual: float
     diagnostics: list[dict[str, float]]
+    condenser_duty_W: float = 0.0  # heat removed by the condenser (0 without one)
+    kinds: tuple[str, ...] = ()  # block kind per stage (see stage_kinds)
 
 
 # --------------------------------------------------------------------------------------
@@ -205,29 +253,28 @@ class RateProfile:
 @dataclass(frozen=True)
 class _Layout:
     c: int
-    n_rate: int
-    kettle: bool
+    kinds: tuple[str, ...]
     offsets: tuple[int, ...]
     size: int
 
     @staticmethod
-    def build(c: int, n_rate: int, kettle: bool) -> _Layout:
+    def build(c: int, kinds: tuple[str, ...]) -> _Layout:
         offs: list[int] = []
         o = 0
-        for _ in range(n_rate):
+        for kind in kinds:
             offs.append(o)
-            o += 5 * c + 3
-        if kettle:
-            offs.append(o)
-            o += 2 * c + 1
-        return _Layout(c, n_rate, kettle, tuple(offs), o)
+            o += 5 * c + 3 if kind == "rate" else 2 * c + 1
+        return _Layout(c, kinds, tuple(offs), o)
 
     @property
     def n_stages(self) -> int:
-        return self.n_rate + (1 if self.kettle else 0)
+        return len(self.kinds)
+
+    def is_rate(self, j: int) -> bool:
+        return self.kinds[j] == "rate"
 
     def block(self, j: int) -> int:
-        return 5 * self.c + 3 if j < self.n_rate else 2 * self.c + 1
+        return 5 * self.c + 3 if self.is_rate(j) else 2 * self.c + 1
 
 
 def _norm(z: Vec) -> Vec:
@@ -303,6 +350,8 @@ def _rate_model(
     y = _norm(np.maximum(v, 0.0))
     x = _norm(np.maximum(liq, 0.0))
     geom = spec.geometry
+    if geom is None:
+        raise ValueError("rate-based segments need the packing geometry")
     area = geom.cross_section_m2
     mw_v, mw_l = pv.molecular_weight, pl.molecular_weight  # type: ignore[attr-defined]
     rho_v, rho_l = pv.density, pl.density  # type: ignore[attr-defined]
@@ -375,6 +424,41 @@ def _kettle_model(
     return _KettleModel(lnk0=lnk, dlnk=dlnk, t0=T, hv0=hv0, cpv=cpv, hl0=hl0, cpl=cpl)
 
 
+def _k_model_incipient(
+    thermo: Thermo, cids: tuple[str, ...], x: Vec, y_seed: Vec, T: float, P: float
+) -> tuple[Vec, Vec]:
+    """``ln K`` and its T-derivative at (x, y*), y* the vapour in equilibrium with x:
+    the fixed point ``y* = norm(K(x, y*, T) x)`` (successive substitution from
+    ``y_seed``). A Murphree tray's or a total condenser's vapour is not ``K x``, so
+    anchoring at the actual vapour would put phi_V at the wrong composition."""
+    xn = _norm(np.maximum(x, 0.0))
+    ys = _norm(np.maximum(y_seed, 0.0))
+    for _ in range(_YSTAR_MAX):
+        lnk, dlnk = _k_model(thermo, cids, xn, ys, T, P)
+        y_new = _norm(np.exp(lnk) * xn)
+        if float(np.max(np.abs(y_new - ys))) < _YSTAR_TOL:
+            return lnk, dlnk
+        ys = y_new
+    raise RateBasedConvergenceError(
+        f"incipient-vapour fixed point y* = norm(K x) did not converge in {_YSTAR_MAX} passes "
+        f"at T = {T:.3f} K, P = {P:.0f} Pa"
+    )
+
+
+def _eq_model(
+    thermo: Thermo, cids: tuple[str, ...], kind: str, v: Vec, liq: Vec, T: float, P: float
+) -> _KettleModel:
+    """Frozen model of an equilibrium-stage block (kettle, partial/total condenser, tray)."""
+    if kind in ("kettle", "partial"):
+        return _kettle_model(thermo, cids, v, liq, T, P)
+    lnk, dlnk = _k_model_incipient(thermo, cids, liq, v, T, P)
+    hl0, cpl, _ = _partial_molar(thermo, cids, liq, T, P, PhaseKind.HC_LIQUID)
+    if kind == "total":  # the "vapour" slot is the liquid distillate (same composition)
+        return _KettleModel(lnk0=lnk, dlnk=dlnk, t0=T, hv0=hl0.copy(), cpv=cpl, hl0=hl0, cpl=cpl)
+    hv0, cpv, _ = _partial_molar(thermo, cids, v, T, P, PhaseKind.VAPOR)
+    return _KettleModel(lnk0=lnk, dlnk=dlnk, t0=T, hv0=hv0, cpv=cpv, hl0=hl0, cpl=cpl)
+
+
 # --------------------------------------------------------------------------------------
 # Residuals (frozen models; pure numpy)
 # --------------------------------------------------------------------------------------
@@ -398,7 +482,7 @@ def _unpack(lay: _Layout, X: Vec) -> _Unpacked:
         o = lay.offsets[j]
         v.append(X[o : o + c])
         liq.append(X[o + c : o + 2 * c])
-        if j < lay.n_rate:
+        if lay.is_rate(j):
             tv.append(float(X[o + 5 * c]))
             tl.append(float(X[o + 5 * c + 1]))
         else:
@@ -441,6 +525,59 @@ def _hl(m: _RateModel | _KettleModel, liq: Vec, T: float) -> float:
     if isinstance(m, _RateModel):
         return float(np.dot(liq, m.hl0 + m.cpl * (T - m.tl0)))
     return float(np.dot(liq, m.hl0 + m.cpl * (T - m.t0)))
+
+
+def _eq_block_residual(
+    spec: RateColumnSpec,
+    kind: str,
+    feeds: _FeedTable,
+    m: _KettleModel,
+    j: int,
+    t: float,
+    v: Vec,
+    liq: Vec,
+    v_in: Vec,
+    l_in: Vec,
+    h_v_in: float,
+    h_l_in: float,
+    out: Vec,
+) -> None:
+    """Rows of a condenser (``total``/``partial``) or Murphree ``tray`` block, in place.
+
+    ``v`` is the vapour leaving (for a total condenser: the liquid distillate). The row
+    order matches the block's unknowns: c balances, c equilibrium/Murphree rows (a
+    total condenser: c-1 composition equalities and the bubble condition), then the
+    top spec (condensers) or the adiabatic energy balance (tray).
+    """
+    c = len(spec.cids)
+    fs = feeds.total
+    es = fs * _E_SCALE
+    vt, lt = float(np.sum(v)), float(np.sum(liq))
+    k = np.exp(m.lnk0 + m.dlnk * (t - m.t0))
+    x = liq / lt
+    h_f = feeds.hfv[j] + feeds.hfl[j]
+    h_v, h_l = _hv(m, v, t), _hl(m, liq, t)
+    out[:c] = (v + liq - v_in - l_in - feeds.fv[j] - feeds.fl[j]) / fs
+    if kind == "tray":
+        assert spec.murphree is not None
+        eff = spec.murphree[j - (1 if spec.condenser is not None else 0)]
+        y_in = _norm(v_in + feeds.fv[j])
+        out[c : 2 * c] = v / vt - y_in - eff * (k * x - y_in)
+        out[2 * c] = (h_v + h_l - h_v_in - h_l_in - h_f) / es
+        return
+    if kind == "partial":
+        out[c : 2 * c] = v / vt - k * x
+    else:  # total: the condensate's composition is shared; it sits at its bubble point
+        out[c : 2 * c - 1] = x[: c - 1] - v[: c - 1] / vt
+        out[2 * c - 1] = float(np.dot(k, x)) - 1.0
+    assert spec.condenser_spec is not None
+    name, value = spec.condenser_spec
+    if name == "reflux_ratio":
+        out[2 * c] = (lt - value * vt) / fs
+    elif name == "distillate_rate":
+        out[2 * c] = (vt - value) / fs
+    else:  # condenser_duty_W, heat removed
+        out[2 * c] = (h_v_in + h_f - h_v - h_l - value) / es
 
 
 def _residual(
@@ -506,6 +643,8 @@ def _residual(
             out[r] = (h_v_out - h_v_in - feeds.hfv[j] + e_v) / max(es, m.hav)
             out[r + 1] = (h_v_out + h_l_out - h_v_in - h_l_in - feeds.hfv[j] - feeds.hfl[j]) / es
             out[r + 2] = (e_v - e_l) / max(es, m.hav + m.hal)
+        elif lay.kinds[j] != "kettle":
+            _eq_block_residual(spec, lay.kinds[j], feeds, m, j, X[o + 2 * c], v, liq, v_in, l_in, h_v_in, h_l_in, out[o : o + 2 * c + 1])
         else:
             t = X[o + 2 * c]
             vt, lt = float(np.sum(v)), float(np.sum(liq))
@@ -552,7 +691,7 @@ def _var_meta(lay: _Layout, fs: float) -> _Meta:
         local[o : o + b] = np.arange(b)
         floor[o : o + 2 * c] = 1e-6 * fs
         pos[o : o + 2 * c] = True
-        if j < lay.n_rate:
+        if lay.is_rate(j):
             floor[o + 2 * c : o + 4 * c] = 1e-6
             pos[o + 2 * c : o + 4 * c] = True
             floor[o + 4 * c : o + 5 * c] = 1e-6 * fs
@@ -675,6 +814,83 @@ def _interface_seed(
     return x, _norm(np.exp(lnk) * x)
 
 
+def _bubble_T(thermo: Thermo, cids: tuple[str, ...], z: Vec, P: float, fallback: float) -> float:
+    try:
+        return float(thermo.bubble_point(_as_comp(cids, z), P=P).T)
+    except Exception:  # noqa: BLE001 - a super-critical mixture has no bubble point; seed only
+        return fallback
+
+
+def _distillation_seed(
+    thermo: Thermo, spec: RateColumnSpec, feeds: _FeedTable, feed_T: list[float]
+) -> tuple[list[Vec], list[Vec], list[float]]:
+    """Seed of a condenser + kettle column: product rates from the two specs (D from a
+    rate spec, from ``V = (R+1) D = VB (F - D)`` when reflux and boilup ratios are
+    given, else F/2), a sharp split by volatility at the feed, compositions and bubble
+    temperatures interpolated linearly between the products, constant molar overflow
+    traffic ``V`` with ``L = V - D`` above the first feed stage and ``V + B`` below."""
+    c = len(spec.cids)
+    n = len(spec.pressures)
+    z_tot = sum((feeds.fv[k] + feeds.fl[k] for k in range(n)), np.zeros(c))
+    f_tot = float(np.sum(z_tot))
+    top = spec.condenser_spec if spec.condenser_spec is not None else ("", 0.0)
+    bot = spec.kettle_spec if spec.kettle_spec is not None else ("", 0.0)
+    d0: float | None = None
+    if top[0] == "distillate_rate" or bot[0] == "distillate_rate":
+        d0 = top[1] if top[0] == "distillate_rate" else bot[1]
+    elif bot[0] == "bottoms_rate":
+        d0 = f_tot - bot[1]
+    r = top[1] if top[0] == "reflux_ratio" else None
+    vb = bot[1] if bot[0] == "boilup_ratio" else None
+    if d0 is None and r is not None and vb is not None:
+        d0 = vb * f_tot / (r + 1.0 + vb)
+    d0 = min(max(d0 if d0 is not None else 0.5 * f_tot, 0.02 * f_tot), 0.98 * f_tot)
+    b0 = f_tot - d0
+    if r is not None:
+        v0 = (r + 1.0) * d0
+    elif vb is not None:
+        v0 = vb * b0
+    else:
+        v0 = 2.0 * d0
+    v0 = max(v0, 1.2 * d0)
+    t_feed = float(np.mean(feed_T))
+    p_mid = 0.5 * (spec.pressures[0] + spec.pressures[-1])
+    z = z_tot / f_tot
+    try:
+        lnk, _ = _k_model(thermo, spec.cids, z, z, t_feed, p_mid)
+        order = list(np.argsort(-lnk))
+    except RateBasedConvergenceError:
+        order = list(range(c))
+    d = np.zeros(c)
+    room = d0
+    for i in order:
+        take = min(float(z_tot[i]), room)
+        d[i] = take
+        room -= take
+    xd = _norm(d + 1e-3 * z_tot)
+    xb = _norm(np.maximum(z_tot - d, 0.0) + 1e-3 * z_tot)
+    t_top = _bubble_T(thermo, spec.cids, xd, spec.pressures[0], t_feed)
+    t_bot = _bubble_T(thermo, spec.cids, xb, spec.pressures[-1], t_feed)
+    j_feed = min(f.stage for f in spec.feeds)
+    v_prof: list[Vec] = []
+    l_prof: list[Vec] = []
+    t_prof: list[float] = []
+    for j in range(n):
+        s = j / (n - 1)
+        comp = _norm((1.0 - s) * xd + s * xb)
+        if j == 0:
+            v_prof.append(d0 * xd)
+            l_prof.append((v0 - d0) * xd)
+        elif j == n - 1:
+            v_prof.append(v0 * xb)
+            l_prof.append(b0 * xb)
+        else:
+            v_prof.append(v0 * comp)
+            l_prof.append((v0 - d0 if j < j_feed else v0 + b0) * comp)
+        t_prof.append((1.0 - s) * t_top + s * t_bot)
+    return v_prof, l_prof, t_prof
+
+
 def _initial_state(
     thermo: Thermo, spec: RateColumnSpec, lay: _Layout, feeds: _FeedTable, feed_T: list[float]
 ) -> Vec:
@@ -686,7 +902,10 @@ def _initial_state(
     v_prof: list[Vec] = []
     l_prof: list[Vec] = []
     t_prof: list[float] = []
-    if not spec.kettle:
+    if spec.condenser is not None:
+        v_prof, l_prof, tv_prof = _distillation_seed(thermo, spec, feeds, feed_T)
+        tl_prof = tv_prof
+    elif not spec.kettle:
         t_v = float(np.mean(feed_T))
         vfeed_t = [t for f, t in zip(spec.feeds, feed_T, strict=True) if sum(f.vap) > 0]
         lfeed_t = [t for f, t in zip(spec.feeds, feed_T, strict=True) if sum(f.liq) > 0]
@@ -731,7 +950,7 @@ def _initial_state(
         o = lay.offsets[j]
         X[o : o + c] = v_prof[j]
         X[o + c : o + 2 * c] = l_prof[j]
-        if j < lay.n_rate:
+        if lay.is_rate(j):
             t_i = 0.5 * (tv_prof[j] + tl_prof[j])
             xi, yi = _interface_seed(thermo, spec, v_prof[j], l_prof[j], t_i, spec.pressures[j])
             X[o + 2 * c : o + 3 * c] = yi
@@ -758,7 +977,7 @@ def _models(
     for j in range(lay.n_stages):
         o = lay.offsets[j]
         v, liq = X[o : o + c], X[o + c : o + 2 * c]
-        if j < lay.n_rate:
+        if lay.is_rate(j):
             out.append(
                 _rate_model(
                     thermo,
@@ -775,7 +994,7 @@ def _models(
                 )
             )
         else:
-            out.append(_kettle_model(thermo, spec.cids, v, liq, float(X[o + 2 * c]), spec.pressures[j]))
+            out.append(_eq_model(thermo, spec.cids, lay.kinds[j], v, liq, float(X[o + 2 * c]), spec.pressures[j]))
     return out
 
 
@@ -784,12 +1003,23 @@ def solve_rate_based(thermo: Thermo, spec: RateColumnSpec, feed_T: list[float]) 
     c = len(spec.cids)
     if c < 2:
         raise ValueError("rate-based column needs at least two components")
-    lay = _Layout.build(c, spec.n_rate, spec.kettle)
+    lay = _Layout.build(c, stage_kinds(spec))
     if len(spec.pressures) != lay.n_stages:
         raise ValueError(f"rate-based column needs {lay.n_stages} stage pressures, got {len(spec.pressures)}")
     if spec.kettle and spec.kettle_spec is None:
         raise ValueError("a kettle reboiler needs one kettle spec")
-    comps = [component_transport(cid) for cid in spec.cids]
+    if spec.condenser is not None and (
+        spec.condenser not in CONDENSER_KINDS
+        or spec.condenser_spec is None
+        or spec.condenser_spec[0] not in CONDENSER_SPECS
+        or not spec.kettle
+    ):
+        raise ValueError(
+            f"a condenser ({list(CONDENSER_KINDS)}) needs a kettle and one top spec from {list(CONDENSER_SPECS)}"
+        )
+    if spec.murphree is not None and len(spec.murphree) != spec.n_rate:
+        raise ValueError(f"Murphree trays need {spec.n_rate} efficiencies, got {len(spec.murphree)}")
+    comps = [component_transport(cid) for cid in spec.cids] if "rate" in lay.kinds else []
     feeds = _feed_table(spec, lay.n_stages)
     X = _initial_state(thermo, spec, lay, feeds, feed_T)
     inner_total = 0
@@ -852,6 +1082,9 @@ def _profile(
     if spec.kettle:
         k = lay.n_stages - 1
         q_reb = h_v[k] + h_l[k] - h_l[k - 1] - feeds.hfv[k] - feeds.hfl[k]
+    q_cond = 0.0
+    if spec.condenser is not None:  # heat removed; h_v[0] is the distillate (liquid if total)
+        q_cond = h_v[1] + feeds.hfv[0] + feeds.hfl[0] - h_v[0] - h_l[0]
     return RateProfile(
         cids=spec.cids,
         v=[a.copy() for a in up.v],
@@ -870,6 +1103,8 @@ def _profile(
         inner_iterations=inner,
         max_residual=max_res,
         diagnostics=diags,
+        condenser_duty_W=q_cond,
+        kinds=lay.kinds,
     )
 
 
@@ -904,7 +1139,8 @@ def split_feed(stage: int, cids: tuple[str, ...], state: StreamState) -> StageFe
 
 
 def murphree_vapour(thermo: Thermo, prof: RateProfile, spec: RateColumnSpec) -> list[dict[str, float]]:
-    """Component Murphree vapour efficiencies per packed segment.
+    """Component Murphree vapour efficiencies per middle stage (packed segment or tray),
+    top to bottom, the condenser and kettle excluded.
 
     ``E_MV,ij = (y_ij - y_i,in) / (y*_ij - y_i,in)`` (Murphree 1925): ``y_in`` the
     vapour entering the segment (from the stage below plus any vapour feed to the
@@ -918,7 +1154,8 @@ def murphree_vapour(thermo: Thermo, prof: RateProfile, spec: RateColumnSpec) -> 
     c = len(cids)
     feeds = _feed_table(spec, len(prof.v))
     out: list[dict[str, float]] = []
-    for j in range(spec.n_rate):
+    top = 1 if spec.condenser is not None else 0
+    for j in range(top, top + spec.n_rate):
         v_in = (prof.v[j + 1] if j + 1 < len(prof.v) else np.zeros(c)) + feeds.fv[j]
         if float(np.sum(v_in)) <= 0.0:
             out.append({})
