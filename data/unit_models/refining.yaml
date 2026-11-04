@@ -240,13 +240,17 @@
         a second liquid on the flash-zone and bottom stages - read the pooled
         liquid's own liquid-liquid split (no flash per stage K); relaxation cold
         start. Example (16-cut slate, 12 stages, 3-stage strippers) converges in
-        ~30 s (relaxation-started graph, no main-only pre-solve) with a 1 mW
-        closure residual. Pumparounds enter the stage energy
+        ~25 s (relaxation-started graph, no main-only pre-solve; the graph
+        Newton opens at M ~ 1e-2 and closes in 3 passes) with a 40 mW closure
+        residual. Pumparounds enter the stage energy
         balances (tested with a top and a diesel loop, 17.2 MW in the loops, condenser
         69.0 -> 52.0 MW). An overhead past the zero-overflash point is refused before
         the solve; on the example overflash 31.8 mol/s at 430 mol/s, 14.2 at
-        440, 5.93 at 445 (converges, slowly near the limit), zero at 448.72
-        mol/s (the former stall at >= 455 mol/s)
+        440, 5.93 at 445, 1.13 at 448, zero at 448.72 mol/s (the former stall at
+        >= 455 mol/s), each converging in 3 Newton passes. The former slow
+        solves (5-8 passes from M ~ 1, not worse near the limit) were a
+        relaxation limit cycle on the AGO stripper, fixed by composition-exact
+        ideal-gas stage enthalpies in the relaxation
       end_state: true
   pid_symbol: T
   references:
