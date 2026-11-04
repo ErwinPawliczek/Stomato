@@ -490,8 +490,9 @@ class _ThermoBox:
 
         The former bracket walk converged on the vapour-fraction-0.5 crossing
         between the bubble and the dew — the calibrated seed/anchor estimator
-        the inside-out convergence (and the condensed-distillate state) was
-        tuned against; a true bubble-point seed sits ~25 K lower and drops the
+        the inside-out convergence was tuned against (a seed only: the
+        total-condenser outlet state is ``saturated_liquid_temperature``); a
+        true bubble-point seed sits ~25 K lower and drops the
         top stages into the subcooled CC-estimate region where the sweep
         diverges. Contract v2 reproduces that crossing exactly: bubble and dew
         from the v2 saturation surface, then a 12-step bisection on flash_pt
