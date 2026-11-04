@@ -23,7 +23,8 @@
       description: adiabatic mixed stream
   levels:
     R0:
-      status: provisional
+      status: validated
+      validation: [V1-mixer-purdue-me200-steam-water]
       adapter: ngdesign.units.mixer:Mixer
       params:
         type: object

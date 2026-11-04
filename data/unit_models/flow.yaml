@@ -19,6 +19,7 @@
   levels:
     R0:
       status: provisional
+      validation: [V1-pump-gpsa-12-1, V1-pump-svna-ex7-10]
       adapter: ngdesign.units.pump:Pump
       params:
         type: object
@@ -72,6 +73,7 @@
   levels:
     R0:
       status: provisional
+      validation: [V1-compressor-svna-ex7-8]
       adapter: ngdesign.units.compressor:Compressor
       params:
         type: object
@@ -225,6 +227,7 @@
   levels:
     R0:
       status: provisional
+      validation: [V1-expander-svna-ex7-6, V1-expander-perry-ex4-6]
       adapter: ngdesign.units.expander:Expander
       params:
         type: object
@@ -284,6 +287,7 @@
   levels:
     R0:
       status: provisional
+      validation: [V1-jt-valve-purdue-me200-steam, V1-jt-valve-svna-sec7-1-steam]
       adapter: ngdesign.units.jt_valve:JTValve
       params:
         type: object
@@ -447,6 +451,7 @@
       note: fixed ΔP spec; in dP mode an elevation rise subtracts rho*g*z from the outlet pressure, in P_out mode it is reported only
     R1:
       status: provisional
+      validation: [V1-pipe-segment-gpsa-17-1]
       adapter: ngdesign.units.flow.pipe_segment_r1:PipeSegmentR1
       params:
         type: object
