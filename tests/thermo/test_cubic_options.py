@@ -215,3 +215,26 @@ def test_sour_speciation_is_not_fully_ionised_regression() -> None:
     """
     xm = cubic._sour_molecular_fractions([0.98, 0.02], 0, ((1, 7.00),))
     assert xm[1] == pytest.approx(0.02, rel=1e-3)  # only ~0.03 % ionised at 298 K
+
+
+def test_vdw_lnphi_consistent_with_kij() -> None:
+    """VDWMIXKij ln phi equals thermo's generic GCEOSMIX form with nonzero k_ij.
+
+    Regression (2026-11-04): thermo's VDWMIX.fugacity_coefficients uses 2 sqrt(a a_i),
+    exact only at k_ij = 0 (C1/CO2 k_ij 0.09: ln phi_CO2 -0.1300 vs -0.1181).
+    """
+    from thermo.eos_mix import GCEOSMIX
+
+    e = cubic.VDWMIXKij(
+        Tcs=[190.564, 304.13],
+        Pcs=[4.599e6, 7.3773e6],
+        omegas=[0.011, 0.225],
+        zs=[0.7, 0.3],
+        kijs=[[0.0, 0.09], [0.09, 0.0]],
+        T=250.0,
+        P=2.0e6,
+    )
+    ours = e.fugacity_coefficients(e.Z_g)
+    generic = GCEOSMIX.fugacity_coefficients(e, e.Z_g)
+    for a, b in zip(ours, generic, strict=True):
+        assert a == pytest.approx(b, rel=1e-10)

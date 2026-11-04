@@ -1565,10 +1565,35 @@ class RedlichKwongThermo(OptionCubicEOS):
     eos = RKMIX
 
 
-class VanDerWaalsThermo(OptionCubicEOS):
-    """van der Waals (1873) over `thermo`'s VDWMIX."""
+class VDWMIXKij(VDWMIX):  # type: ignore[misc]
+    """thermo's VDWMIX with k_ij-consistent fugacity coefficients.
 
-    eos = VDWMIX
+    thermo's ``VDWMIX.fugacity_coefficients`` (VDW_lnphis, Walas 1985) uses
+    ``2 sqrt(a a_i)`` for the attraction derivative, exact only when every
+    k_ij = 0, while the mixture ``a`` it sits on does carry the k_ij. The
+    general van der Waals one-fluid result (Walas 1985 eq. 1.149 form;
+    Michelsen & Mollerup 2007 ch. 4) is
+
+        ln phi_i = b_i/(V - b) - ln[Z (1 - b/V)] - 2 sum_j x_j a_ij / (R T V)
+
+    which reduces to thermo's form at k_ij = 0. Measured 2026-11-04 on
+    C1/CO2 (k_ij 0.09) at 250 K, 2 MPa: thermo's ln phi_CO2 -0.1300 vs the
+    consistent -0.1181; the Gibbs-Duhem L0 loop measured 0.24.
+    """
+
+    def fugacity_coefficients(self, Z: float) -> list[float]:
+        T, b = self.T, self.b
+        V = Z * _R * T / self.P
+        rows = self.a_alpha_j_rows
+        common = -math.log(Z * (1.0 - b / V))
+        rtv = _R * T * V
+        return [bi / (V - b) + common - 2.0 * row / rtv for bi, row in zip(self.bs, rows, strict=True)]
+
+
+class VanDerWaalsThermo(OptionCubicEOS):
+    """van der Waals (1873) over :class:`VDWMIXKij` (thermo's VDWMIX, k_ij-consistent ln phi)."""
+
+    eos = VDWMIXKij
 
 
 class PrsvThermo(OptionCubicEOS):
