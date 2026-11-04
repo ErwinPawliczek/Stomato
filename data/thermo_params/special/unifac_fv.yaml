@@ -1,56 +1,68 @@
 # UNIFAC-FV parameters (spec T-10). Every entry carries provenance.
+#
+# The van der Waals volumes r are NOT stored here: the package sums
+# r = sum_k nu_k R_k over the subgroup assignments below with the original-
+# UNIFAC subgroup R_k shipped with thermo (UFSG; Hansen, Rasmussen,
+# Fredenslund, Schiller & Gmehling, Ind. Eng. Chem. Res. 30, 2352 (1991),
+# doi:10.1021/ie00058a017), and multiplies a polymer's repeat-unit r by its
+# repeat count m / m_repeat. (Until 2026-11-04 this file carried hand-typed
+# rbar values; the toluene one, 3.87, disagreed with its own group sum
+# 3.9228.) Specific volumes are SI (m3/kg); the package converts to the
+# cm3/g the Oishi-Prausnitz reduced volume is defined on.
 
 solvents:
   toluene:
     m: 92.14
-    rbar: 3.87
-    qbar: 2.98
-    v_spec: 1.207e-3
+    v_spec: 1.1598e-3
     provenance: >-
-      Toluene: m = molar mass (g/mol) for weight-fraction bookkeeping; rbar/qbar
-      = UNIFAC van der Waals volume/surface parameters summing the assignment
-      below (5 ACH R=0.5313 Q=0.400, 1 AC R=0.3652 Q=0.228, 1 CH3 R=0.9011
-      Q=0.848: rbar = 5x0.5313+0.3652+0.9011 = 3.9228 ~ 3.87, qbar ~ 2.98;
-      rounded values per the original UNIFAC tables, Hansen-Beckhaus
-      compilation); v_spec = liquid specific volume at 298.15 K (m3/kg,
-      rho = 862 kg/m3).
+      Toluene: m = molar mass (g/mol) for weight-fraction bookkeeping;
+      v_spec = liquid specific volume at 298.15 K, 1/862.24 kg/m3 - the
+      databank's toluene liquid density (thermo/chemicals VolumeLiquid
+      HEOS_FIT, a fit to the CoolProp toluene reference equation of state).
+      Until 2026-11-04 this field held 1.207e-3, which matched neither the
+      862 kg/m3 its own provenance stated nor the databank.
 
 polymers:
   POLY_PS:
     m: 100000.0
-    rbar: 3977.9
+    m_repeat: 104.152
     v_spec: 9.52e-4
     provenance: >-
       Polystyrene pseudo-component: m = number-average molar mass 100,000 g/mol
-      (the characterization used across the FH parameters); rbar = WHOLE-MOLECULE
-      original-UNIFAC R: repeat-unit R = CH2 0.6744 + CH 0.4469 + 5xACH 0.5313 +
-      AC 0.3652 = 4.1430, times 100000/104.15 repeats = 3977.9 (subgroup R from
-      the original UNIFAC tables, Hansen-Beckhaus compilation; the repeat-unit
-      assignment below carries the same numbers); v_spec = 1/1.05 cm3/g
-      amorphous density at 20 C. POLY_PS is the registered pseudo-component
-      documented in polymer.yaml.
+      (the characterization used across the FH parameters); m_repeat = molar
+      mass of the -CH2-CH(C6H5)- repeat unit C8H8 from the IUPAC standard
+      atomic weights (C 12.011, H 1.008; Meija et al., Pure Appl. Chem. 88,
+      265 (2016)): 8 x 12.011 + 8 x 1.008 = 104.152 g/mol, so the molecule
+      carries m / m_repeat = 960.1 repeat units; v_spec = 1/1.05 cm3/g
+      amorphous density at 20 C, in m3/kg. POLY_PS is the registered
+      pseudo-component documented in polymer.yaml.
 
 unifac_groups:
   toluene:
     groups:
-      - [1, 1]
       - [9, 5]
-      - [10, 1]
+      - [11, 1]
     provenance: >-
-      Original UNIFAC subgroups: 1 CH3, 5 ACH (aromatic CH), 1 AC (substituted
-      aromatic carbon). The curated data/thermo_params/unifac/groups.yaml has no
-      toluene assignment (the curated slate has no toluene rows), so this file
-      carries its own; same convention as the curated file.
+      Original UNIFAC subgroups 5 ACH (subgroup 9) + 1 ACCH3 (subgroup 11):
+      the DDBST UNIFAC group assignment for toluene (CAS 108-88-3) shipped
+      with thermo (thermo.unifac.UNIFAC_group_assignment_DDBST). r = 5 x
+      0.5313 + 1.2663 = 3.9228, q = 5 x 0.400 + 0.968 = 2.968 (UFSG). The
+      file previously split ACCH3 into CH3 + AC, which has the same r and q
+      but puts the methyl in main group 1 instead of main group 4 (ACCH2) and
+      so changes the residual. The curated data/thermo_params/unifac/groups.yaml
+      has no toluene assignment, so this file carries its own.
 
   POLY_PS:
     groups:
       - [2, 1]
-      - [3, 1]
+      - [13, 1]
       - [9, 5]
-      - [10, 1]
     provenance: >-
-      Polystyrene repeat unit -CH2-CH(C6H5)- as one original-UNIFAC molecule:
-      1 CH2 (subgroup 2), 1 CH (subgroup 3), 5 ACH (subgroup 9), 1 AC
-      (subgroup 10). The polymer enters UNIFAC as its repeat unit (the FV term
-      carries the true size asymmetry via rbar); pending independent
-      validation.
+      Polystyrene repeat unit -CH2-CH(C6H5)-: 1 CH2 (subgroup 2), 1 ACCH
+      (subgroup 13, the ring-attached CH), 5 ACH (subgroup 9). The ring-
+      attached CH is ACCH by the same fragmentation rule the DDBST assignments
+      shipped with thermo apply to the analogous isopropylbenzene (CAS
+      98-82-8: 2 CH3 + 1 ACCH + 5 ACH). r = 0.6744 + 0.8121 + 5 x 0.5313 =
+      4.1430 per repeat unit (UFSG). The package scales the repeat unit to the
+      whole molecule (r and the residual's group fractions); pending
+      independent validation.

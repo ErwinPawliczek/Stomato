@@ -614,9 +614,14 @@ class UnifacFvGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no stubs fo
 
     with reduced volumes v = v_spec x M / (15.17 b rbar) (molar volume over the
     vdW segment volume, b = 1.28; rbar is the whole-molecule UNIFAC R and v_spec
-    the liquid specific volume in cm3/g). The polymer activity follows by
-    Gibbs-Duhem integration of ln a1 over composition (a2 = 1 at pure polymer).
-    gammas are the primary output; GE is reported consistently with them.
+    the liquid specific volume in cm3/g - the params file stores SI m3/kg, so
+    the constructor takes cm3/g and the package converts). The UNIFAC residual
+    is evaluated at the model's own T (``ln_a_unifac_res(T, x1)``), so GE and
+    the activities carry the residual's temperature dependence; dGE_dT and
+    d2GE_dT2 are central differences of GE in T. The polymer activity follows
+    by Gibbs-Duhem integration of ln a1 over composition (a2 = 1 at pure
+    polymer). gammas are the primary output; GE is reported consistently with
+    them.
     """
 
     C1 = 1.1
@@ -647,7 +652,7 @@ class UnifacFvGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no stubs fo
         self.m2 = m2
         self.rbar2 = rbar2
         self.v_spec2 = v_spec2
-        self._ln_a_unifac_res = ln_a_unifac_res  # callable(x1) -> ln a1^UNIFAC
+        self._ln_a_unifac_res = ln_a_unifac_res  # callable(T, x1) -> ln gamma1^R
         self.vectorized = False
 
     def to_T_xs(self, T: float, xs: list[float]) -> UnifacFvGE:
@@ -669,15 +674,15 @@ class UnifacFvGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no stubs fo
         """Solvent activity: Flory combinatorial + UNIFAC residual + FV term.
 
         The Oishi-Prausnitz split: the combinatorial comes from the segment
-        (rbar-weighted) volume fraction, the residual from the UNIFAC engine
-        over the curated subgroup assignment, and the size asymmetry from the
-        FV term. Taking UNIFAC's mole-fraction combinatorial too would
-        misstate the polymer size (it sees only the repeat unit).
+        (rbar-weighted, whole-molecule) volume fraction, the residual from the
+        UNIFAC engine over the curated subgroup assignment at the whole-molecule
+        group fractions and the model's T, and the free-volume term from the
+        reduced volumes.
         """
         x2 = 1.0 - x1
         phi1 = x1 * self.rbar1 / (x1 * self.rbar1 + x2 * self.rbar2)
         ln_comb = math.log(phi1 / x1) + 1.0 - phi1 / x1
-        ln_unifac = self._ln_a_unifac_res(x1)
+        ln_unifac = self._ln_a_unifac_res(self.T, x1)
         # reduced volumes: v_i = v_spec_i * M_i / (15.17 b rbar_i); the mixture
         # volume per R-unit uses weight-fraction-averaged specific volumes over
         # weight-fraction-averaged R-per-gram (Oishi-Prausnitz 1978).
@@ -742,9 +747,26 @@ class UnifacFvGE(GibbsExcess):  # type: ignore[misc]  # thermo ships no stubs fo
             out.append((up - dn) / (2.0 * h))
         return out
 
+    #: Central-difference step in T for the GE temperature derivatives, K.
+    DT = 0.01
+
+    def _ge_at(self, T: float) -> float:
+        return float(self.to_T_xs(T, list(self.xs)).GE())
+
     def dGE_dT(self) -> float:
-        """T-dependence enters only through the UNIFAC terms (neglected here)."""
-        return 0.0
+        """dGE/dT by central difference (the T-dependence is the UNIFAC residual's)."""
+        return (self._ge_at(self.T + self.DT) - self._ge_at(self.T - self.DT)) / (2.0 * self.DT)
+
+    def d2GE_dT2(self) -> float:
+        """d2GE/dT2 by central difference, consistent with dGE_dT."""
+        h = self.DT
+        return (self._ge_at(self.T + h) - 2.0 * self.GE() + self._ge_at(self.T - h)) / (h * h)
+
+    def dgammas_dT(self) -> list[float]:
+        """d gamma_i/dT by central difference of the closed-form gammas."""
+        hi = self.to_T_xs(self.T + self.DT, list(self.xs)).gammas()
+        lo = self.to_T_xs(self.T - self.DT, list(self.xs)).gammas()
+        return [(a - b) / (2.0 * self.DT) for a, b in zip(hi, lo, strict=True)]
 
 
 def slope_mid(x: float, ln_a1: Any, h: float) -> float:
@@ -777,34 +799,66 @@ class UnifacFvPackage(SpecialGammaPhiPackage):
                 f"{ids} has no entry in data/thermo_params/special/unifac_fv.yaml"
             )
         _state._records(ids, pseudos)  # registry check before the first flash
-        ln_res = _unifac_fv_residual(solvent, polymer)
+        poly = polymers[polymer]
+        solv = solvents[solvent]
+        r_solvent = _fv_group_r(solvent)
+        r_repeat = _fv_group_r(polymer)
+        n_repeat = float(poly["m"]) / float(poly["m_repeat"])  # repeat units per molecule
+        ln_res = _unifac_fv_residual(solvent, polymer, n_repeat)
+        # params store specific volumes in m3/kg; the FV term takes cm3/g
+        v_spec1 = float(solv["v_spec"]) * 1000.0
+        v_spec2 = float(poly["v_spec"]) * 1000.0
 
         def make(xs: list[float]) -> UnifacFvGE:
-            poly = polymers[polymer]
-            solv = solvents[solvent]
             return UnifacFvGE(
                 298.15,
                 list(xs),
                 ids.index(solvent),
                 ids.index(polymer),
                 m1=float(solv["m"]),
-                rbar1=float(solv["rbar"]),
-                v_spec1=float(solv["v_spec"]),
+                rbar1=r_solvent,
+                v_spec1=v_spec1,
                 m2=float(poly["m"]),
-                rbar2=float(poly["rbar"]),
-                v_spec2=float(poly["v_spec"]),
+                rbar2=n_repeat * r_repeat,
+                v_spec2=v_spec2,
                 ln_a_unifac_res=ln_res,
             )
 
         return make
 
 
-def _unifac_fv_residual(solvent: str, polymer: str) -> Any:
-    """ln a1^UNIFAC (combinatorial + residual) for the solvent, from the thermo engine.
+def _fv_subgroups() -> Any:
+    """The original-UNIFAC subgroup table the repo ships (thermo UFSG)."""
+    from ngdesign.thermo.gamma_phi import _unifac_variant_tables
 
-    A binary UNIFAC instance over [solvent, polymer-repeat-unit] is rebuilt per
-    call with the solvent mole fraction (the UNIFAC class caches xs-dependent
-    terms); its gamma gives the activity term ln(gamma_1 x_1).
+    return _unifac_variant_tables("unifac")[2]
+
+
+def _fv_group_r(cid: str) -> float:
+    """van der Waals volume r = sum_k nu_k R_k over the curated subgroup assignment.
+
+    R_k from the original-UNIFAC subgroup table shipped with thermo (UFSG:
+    Hansen, Rasmussen, Fredenslund, Schiller & Gmehling, Ind. Eng. Chem. Res.
+    30, 2352 (1991), doi:10.1021/ie00058a017). For a polymer the assignment is
+    the repeat unit; the package multiplies by the repeat count.
+    """
+    sg = _fv_subgroups()
+    return float(sum(n * sg[g].R for g, n in _fv_groups(cid)))
+
+
+def _unifac_fv_residual(solvent: str, polymer: str, n_repeat: float) -> Any:
+    """ln gamma_1^R (the UNIFAC residual) for the solvent, at any T, from the thermo engine.
+
+    The residual depends on the mixture only through the group fractions
+    X_m = sum_j nu_m^(j) x_j / sum_j sum_n nu_n^(j) x_j (Fredenslund, Jones &
+    Prausnitz, AIChE J. 21, 1086 (1975)). A polymer molecule of n_repeat
+    repeat units carries n_repeat times the repeat-unit groups, so its group
+    fractions are those of a solvent/repeat-unit mixture with the repeat-unit
+    mole fraction x_ru = n_repeat x2 / (x1 + n_repeat x2): the solvent
+    residual is evaluated there, which is exact for the whole molecule and
+    keeps the engine on the repeat unit's group counts. A binary UNIFAC
+    instance is rebuilt per call at (T, x) (the class caches T- and
+    xs-dependent terms); its residual ln gamma is the term.
     """
     from thermo.unifac import UNIFAC
 
@@ -814,18 +868,19 @@ def _unifac_fv_residual(solvent: str, polymer: str) -> Any:
     solv_groups = {int(g): int(n) for g, n in _fv_groups(solvent)}
     poly_groups = {int(g): int(n) for g, n in _fv_groups(polymer)}
 
-    def ln_a_unifac(x1: float) -> float:
+    def ln_gamma_res(T: float, x1: float) -> float:
+        x_solvent = x1 / (x1 + n_repeat * (1.0 - x1))
         model = UNIFAC.from_subgroups(
             chemgroups=[solv_groups, poly_groups],
-            T=298.15,
-            xs=[x1, 1.0 - x1],
+            T=T,
+            xs=[x_solvent, 1.0 - x_solvent],
             version=version,
             interaction_data=interaction,
             subgroups=sg,
         )
         return float(model.lngammas_r()[0])
 
-    return ln_a_unifac
+    return ln_gamma_res
 
 
 def _fv_groups(solvent: str) -> list[tuple[int, int]]:
