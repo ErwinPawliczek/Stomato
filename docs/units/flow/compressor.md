@@ -84,6 +84,16 @@ required:
 type: object
 ```
 
+## V1 worked cases
+
+| case | level | quantity | expected | measured | tolerance | result |
+|---|---|---|---|---|---|---|
+| `V1-compressor-svna-ex7-8` | R0 | `power_W` | 284500 | 283805 | abs 50 | assessed miss |
+| `V1-compressor-svna-ex7-8` | R0 | `outlet.outlet.T` | 519.25 | 518.722 | abs 0.05 | assessed miss |
+
+- `V1-compressor-svna-ex7-8`: Smith, Van Ness, Abbott, Swihart, Introduction to Chemical Engineering Thermodynamics, 9th ed., McGraw Hill 2022 (archive.org item text-book-introduction-to-chemical-engineering-thermodynamics-9e-by-j-m-smith, full text read 2026-11-04), Example 7.8, p. 292-293: saturated-vapour steam at 100 kPa (tsat 99.63 C) compressed adiabatically to 300 kPa at compressor efficiency 0.75; steam tables H1 = 2675.4, (dH)S = 213.4, dH = Ws = 284.5 kJ/kg, H2 = 2959.9 kJ/kg, T2 = 246.1 C, S2 = 7.5019 kJ/kg K. 1 kg/s basis (55.50843 mol/s); the feed sits 0.03 K above the printed tsat so the flash returns the saturated vapour. Tolerances: the printed 0.1 kJ/kg and 0.1 C, fixed before the run.
+  - assessed: Measured power 283,805 W (283.80 kJ/kg, -0.24% on the printed 284.5) and outlet 518.722 K (245.57 C, -0.53 K on 246.1 C). The unit reproduces the IAPWS-95 reference: CoolProp 8.0.0 (IAPWS-95) gives h1 = 2674.95 kJ/kg (book 2675.4), (dH)S = 212.82 kJ/kg (book 213.4), dH = 283.76 kJ/kg and T2 = 245.49 C on the same path; the 0.05 K of superheat on the feed accounts for the rest. The miss is the book's older steam-table values and linear interpolation, not the compressor calculation; recorded, level stays provisional.
+
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-B 2

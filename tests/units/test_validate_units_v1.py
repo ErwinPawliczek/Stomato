@@ -37,9 +37,23 @@ def vu() -> ModuleType:
 @pytest.fixture(scope="module")
 def rows() -> dict[str, UnitRow]:
     # These pins run the harness on synthetic cases in a tmp case directory, so
-    # rows that declare real validation ids (round-1 families) would report
-    # their cases missing; the pins use only rows without validation ids.
-    return {k: r for k, r in load_rows().items() if not any(spec.validation for spec in r.levels.values())}
+    # rows that declare real validation ids would report their cases missing.
+    # The pins therefore see every row with its real cases unbound: validation
+    # ids stripped and a validated level read as provisional (a validated level
+    # failing a synthetic case would otherwise be a finding of its own).
+    def unbound(row: UnitRow) -> UnitRow:
+        levels = {
+            key: spec.model_copy(
+                update={
+                    "validation": (),
+                    "status": "provisional" if spec.status == "validated" else spec.status,
+                }
+            )
+            for key, spec in row.levels.items()
+        }
+        return row.model_copy(update={"levels": levels})
+
+    return {k: unbound(r) for k, r in load_rows().items()}
 
 
 def _measured_mixer_T(vu: ModuleType, rows: dict[str, UnitRow]) -> float:

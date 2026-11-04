@@ -2,7 +2,7 @@
 
 Family: **flow** · P&ID symbol: `CV`
 
-Rigour ladder: R0 provisional, R1 provisional
+Rigour ladder: R0 validated, R1 provisional
 
 ## Ports
 
@@ -15,7 +15,7 @@ Rigour ladder: R0 provisional, R1 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.flow.control_valve:ControlValve` | Cv / outlet P spec, isenthalpic (the cv_liquid correlation plugin exists) |
+| R0 | validated | `ngdesign.units.flow.control_valve:ControlValve` | Cv / outlet P spec, isenthalpic (the cv_liquid correlation plugin exists) |
 | R1 | provisional | `ngdesign.units.flow.control_valve_r1:ControlValveR1` | IEC 60534-2-1 sizing/rating through fluids.control_valve, choked flow, inherent characteristic |
 
 ### R1 parameters
@@ -75,10 +75,10 @@ type: object
 
 | case | level | quantity | expected | measured | tolerance | result |
 |---|---|---|---|---|---|---|
-| `V-control-valve-emerson-propane` | R0 | `info.Cv` | 113.2 | 113.419 | rel 0.005 | pass |
-| `V-control-valve-emerson-propane` | R0 | `info.choked` | 0 | 0 | abs 0 | pass |
+| `V1-control-valve-emerson-propane` | R0 | `info.Cv` | 113.14 | 113.419 | rel 0.005 | pass |
+| `V1-control-valve-emerson-propane` | R0 | `info.choked` | 0 | 0 | abs 0 | pass |
 
-- `V-control-valve-emerson-propane`: Emerson control-valve sizing example, liquid propane: 800 gpm basis, SG 0.5, dP 25 psi, Fp 0.96, published Cv 117.9 (117.9 x 0.96 = 113.2 is the bare-valve Cv the adapter reports)
+- `V1-control-valve-emerson-propane`: Emerson Automation Solutions, Control Valve Handbook, 6th ed. (2019/2023), Chapter 5, section 5.8.4 "Liquid Sizing Sample Problem", pp. 114-115 (https://www.emerson.com/documents/automation/control-valve-handbook-en-3661206.pdf, read 2026-11-04; the equation lines are images, read from the rendered page): liquid propane, q = 800 gpm, P1 = 314.7 psia, P2 = 289.7 psia, dP = 25 psi, T1 = 70 F, rho1/rho0 = 0.50, Pv = 124.3 psia, Pc = 616.3 psia; FF = 0.83, dP_choked = 171 psi > 25 psi (not choked); Cv = 800 / (1.0 x 0.9 sqrt(25/0.5)) = 125.7 with the assumed NPS 3 valve's FP = 0.90. R0 reports the bare-valve Cv (FP = 1): 800 / sqrt(25/0.5) = 113.14 (= 125.7 x 0.90). Feed: 800 gpm at the package's 502.05 kg/m3 (25.34 kg/s = 574.66 mol/s) at 70 F and 314.7 psia. Tolerance 0.5%: the printed two-figure rho1/rho0 = 0.50 (+/-0.005 moves Cv by 0.5%). Re-cited 2026-11-04 (units-a) from the earlier uncited "117.9 x 0.96 = 113.2" (an older edition's FP), expected value corrected to this edition's arithmetic.
 
 ## References
 
