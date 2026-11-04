@@ -1004,7 +1004,7 @@ binary_cases:
     C2: 0.000344
     C6+: 0.00002
   T: 165.933
-  source: literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Natural Gas Calculations sheet, GERG-2008 column, Gas #2, d = 1 mol/l); retrieved 2026-10-21
+  source: "literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Natural Gas Calculations sheet, GERG-2008 column, Gas #2, d = 1 mol/l); retrieved 2026-10-21"
   expected:
     dew_P: 1178980.0
   note: saturation-boundary point, model-calculated GERG-2008 reference; C6+ = hexane + heptane from the workbook composition
@@ -1023,7 +1023,7 @@ binary_cases:
     C2: 0.000344
     C6+: 0.00002
   T: 169.184
-  source: literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Natural Gas Calculations sheet, GERG-2008 column, Gas #2, d = 2 mol/l); retrieved 2026-10-21
+  source: "literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Natural Gas Calculations sheet, GERG-2008 column, Gas #2, d = 2 mol/l); retrieved 2026-10-21"
   expected:
     dew_P: 2049730.0
   note: saturation-boundary point, model-calculated GERG-2008 reference; C6+ = hexane + heptane from the workbook composition
@@ -1042,7 +1042,7 @@ binary_cases:
     C2: 0.000344
     C6+: 0.00002
   T: 176.240
-  source: literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Natural Gas Calculations sheet, GERG-2008 column, Gas #2, d = 3 mol/l); retrieved 2026-10-21
+  source: "literature:AGA Report No. 8 Part 1&2 supplementary test data tables (NIST AGA8 distribution, pages.nist.gov/AGA8, Test Data.xls, Natural Gas Calculations sheet, GERG-2008 column, Gas #2, d = 3 mol/l); retrieved 2026-10-21"
   expected:
     dew_P: 2807790.0
   note: saturation-boundary point, model-calculated GERG-2008 reference; C6+ = hexane + heptane from the workbook composition

@@ -40,8 +40,8 @@ def test_every_case_has_source_and_feed() -> None:
 
 def test_literature_sources_cite_origin_and_retrieval_date() -> None:
     for case in _load_cases():
-        if case.source.startswith("coolprop:"):
-            continue
+        if case.source.startswith("coolprop:") or case.skip_reason:
+            continue  # pending/experimental: citations verified at pack review (task T10)
         lowered = case.source.lower()
         assert "retrieved" in lowered or "read" in lowered, (
             f"{case.id}: source lacks a retrieval date: {case.source}"
@@ -66,6 +66,8 @@ def test_literature_sources_cite_origin_and_retrieval_date() -> None:
 
 def test_all_expected_properties_are_evaluated_by_the_harness() -> None:
     for case in _load_cases():
+        if case.skip_reason:
+            continue  # pending/experimental: bound ahead of the model, skipped visibly
         unevaluated = set(case.expected) - set(TOLERANCE_POLICY)
         assert not unevaluated, (
             f"{case.id}: expected properties the harness cannot evaluate: {sorted(unevaluated)}"
@@ -85,9 +87,28 @@ def test_composition_tolerances_are_absolute() -> None:
 
 def test_all_case_packages_are_registered_names() -> None:
     for case in _load_cases():
-        if case.package == "all":
-            continue
+        if case.package == "all" or case.skip_reason:
+            continue  # pending:<id>/experimental rows are unregistered by design (skipped visibly)
         assert case.package in registry.available("thermo"), f"{case.id}: unexpected package {case.package}"
+
+
+def test_skips_are_visible_and_reasoned() -> None:
+    """A pending/experimental case is skipped only with a reason naming it (task T10).
+
+    Guards both directions: no silently dropped case, and no skip on a case that
+    should run.
+    """
+    from scripts.validate_properties import _row_status
+
+    for case in _load_cases():
+        if case.package.startswith("pending:"):
+            assert case.skip_reason, f"{case.id}: pending package skipped without a reason"
+            assert case.package in case.skip_reason, f"{case.id}: skip reason does not name the package"
+        elif _row_status(case.package) == "experimental":
+            assert case.skip_reason, f"{case.id}: experimental row skipped without a reason"
+            assert case.package in case.skip_reason, f"{case.id}: skip reason does not name the package"
+        else:
+            assert not case.skip_reason, f"{case.id}: unexpected skip: {case.skip_reason}"
 
 
 def test_results_json_row_schema_when_present() -> None:
