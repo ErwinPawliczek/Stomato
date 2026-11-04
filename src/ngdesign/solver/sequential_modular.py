@@ -487,13 +487,20 @@ def _wegstein_q(xc: float, yc: float, xp: float, yp: float, q_min: float) -> flo
 
         s = (y - y_prev) / (x - x_prev); q = s / (s - 1), clamped to [q_min, 0]
 
-    ``None`` when the secant is degenerate (direct substitution, q = 0). The one
-    owner of the formula: the step and the history record both read it here.
+    ``None`` when the secant is degenerate (direct substitution, q = 0): a zero
+    step, or a unit slope. A unit slope is what a pure offset y = x + c gives -
+    a recycled pressure with P_out = P_in - dP and nothing in the loop setting
+    it - where s / (s - 1) is singular (its one-sided limits are q_min and 0);
+    direct substitution is the bounded choice and the offset then shows as a
+    tear residual that never closes. The one owner of the formula: the step and
+    the history record both read it here.
     """
     dx = xc - xp
     if abs(dx) <= 1e-12 * max(abs(xc), 1.0):
         return None
     slope = (yc - yp) / dx
+    if abs(slope - 1.0) <= 1e-12:
+        return None
     return min(max(slope / (slope - 1.0), q_min), 0.0)
 
 

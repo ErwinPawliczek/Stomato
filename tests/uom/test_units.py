@@ -167,3 +167,28 @@ def test_a_bare_number_inside_a_unit_is_refused() -> None:
 
 def test_parenthesised_offset_unit_stays_a_scale() -> None:
     assert convert(25.0, "(degC)", "K") == pytest.approx(298.15)
+
+
+@pytest.mark.parametrize(
+    ("text", "si"),
+    [
+        ("kPa(g)", 100e3 + 101325.0),
+        ("kPa (g)", 100e3 + 101325.0),
+        ("bar(g)", 100e5 + 101325.0),
+        ("MPa(G)", 100e6 + 101325.0),
+        ("psi(g)", convert(100, "psig", "Pa")),
+        ("kgf/cm2(g)", 100 * 98066.5 + 101325.0),
+        ("kPa(a)", 100e3),
+        ("bar(abs)", 100e5),
+    ],
+)
+def test_gauge_and_absolute_marks_on_pressure_units(text: str, si: float) -> None:
+    """Regression: ``kPa(g)`` parsed as kilopascal x gram (M^2 L^-1 T^-2) and refused."""
+    assert convert(100, text, "Pa") == pytest.approx(si, rel=1e-12)
+    assert Q(f"100 {text}").magnitude("Pa") == pytest.approx(si, rel=1e-12)
+
+
+@pytest.mark.parametrize("text", ["kg(g)", "psig(g)", "degC(a)", "m3/h(g)"])
+def test_gauge_mark_needs_an_absolute_pressure_unit(text: str) -> None:
+    with pytest.raises(UnknownUnitError, match=r"\(g\)/\(a\) mark"):
+        parse_unit(text)

@@ -24,6 +24,8 @@ so ``J/(mol K)``, ``J/mol/K``, ``kg·m/s²``, ``m3/h``, ``mol L-1 s-1`` and
   shifted scale only when they stand alone. Inside a compound they mean an
   interval, which is the only meaning a compound can have: ``Btu/lb-degF`` is a
   heat capacity and ``degC/min`` a ramp rate.
+- **Gauge marks.** ``kPa(g)``, ``bar (g)`` are gauge, ``kPa(a)``/``bar(abs)`` absolute,
+  on any absolute pressure unit (see :func:`_marked_pressure`).
 - **Ambiguous bare symbols are refused.** ``F`` (farad or Fahrenheit) and ``C``
   (coulomb or Celsius) raise and name the spellings to use.
 - **Standard gas volumes are amounts.** ``Nm3``, ``Sm3`` and ``scf`` are ideal-gas
@@ -437,6 +439,28 @@ def _enclosing(text: str) -> bool:
     return False
 
 
+#: A pressure unit with a gauge/absolute mark in parentheses: ``kPa(g)``,
+#: ``bar (a)``, ``psi(abs)``. Without this rule the grammar reads ``kPa(g)`` as
+#: kilopascal times gram (a juxtaposed product), a wrong dimension.
+_GAUGE_MARK = re.compile(r"([^()\s]+)\s*\(\s*(g|a|abs|gauge)\s*\)", re.IGNORECASE)
+
+
+def _marked_pressure(name: str, mark: str, text: str) -> Unit:
+    """``<pressure unit>(g)`` is gauge (offset one standard atmosphere, like ``barg``);
+    ``(a)``/``(abs)`` is absolute. Only a plain absolute pressure unit takes a mark."""
+    try:
+        base: Unit | None = parse_unit(name)
+    except UnknownUnitError:
+        base = None
+    if base is None or base.dimension != _PRESSURE or base.offset != 0.0:
+        raise UnknownUnitError(
+            f"unit {text!r}: a (g)/(a) mark needs an absolute pressure unit before it, "
+            f"such as kPa(g) or bar(a); {name!r} is not one"
+        )
+    offset = sc.atm if mark in ("g", "gauge") else 0.0
+    return Unit(base.factor, base.dimension, offset, text)
+
+
 @lru_cache(maxsize=2048)
 def parse_unit(expression: str) -> Unit:
     """Parse a unit expression into a :class:`Unit`.
@@ -448,6 +472,9 @@ def parse_unit(expression: str) -> Unit:
     text = expression.strip()
     while text.startswith("(") and text.endswith(")") and _enclosing(text):
         text = text[1:-1].strip()
+    marked = _GAUGE_MARK.fullmatch(text)
+    if marked is not None:
+        return _marked_pressure(marked.group(1), marked.group(2).lower(), text)
     if not text:
         return Unit(1.0, DIMENSIONLESS, symbol="1")
     named = _lookup(text)
