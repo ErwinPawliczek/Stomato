@@ -32,7 +32,8 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only) | Obvious | accepted (PR #345; CAS check digits + chemdb species.csv match; merge waits for full suite) | obv/T9 | 2026-11-04 1:38 PM |
 | T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T3 P-value fix | Obvious | accepted w/ fix → T10b (PR #346; tolerances unchanged, skips visible, T3 fix in; tests/validation 290 passed/353 skipped/320 xfailed/0 failed on PC) | obv/T10 | 2026-11-04 1:38 PM |
 | T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | dropped (stale; no push or heartbeat) → T11r | obv/T11 | 2026-11-04 1:45 PM |
-| T11r | Re-dispatch of T11: SR-POLAR package, Mangold 2019 params only (H2O/O2/N2/CO2), density-only, supercritical tol = paper's per-point model error + 2 pp; PR into chem-engine (may build on obv/T9 if #345 unmerged); push within 10 min, heartbeats, report test results | Obvious | STALE (no adapter commit; obv/T11r still at obv/T9 head 54790ed; last heartbeat 1:45 PM, 52 min silent as of 2:37; needs drop/re-dispatch decision) | obv/T11r | 2026-11-04 2:37 PM |
+| T11r | Re-dispatch of T11: SR-POLAR package, Mangold 2019 params only (H2O/O2/N2/CO2), density-only, supercritical tol = paper's per-point model error + 2 pp; PR into chem-engine (may build on obv/T9 if #345 unmerged); push within 10 min, heartbeats, report test results | Obvious | dropped (stale: no adapter commit, last heartbeat 1:45 PM) → T11s | obv/T11r | 2026-11-04 2:56 PM |
+| T11s | Re-dispatch of T11r with a smaller first deliverable: skeleton SR-POLAR package + params YAML (H2O/O2/N2/CO2, Mangold 2019, cited by table) within 10 min; then density calc wired to T3 pack, tol = Mangold model error + 2 pp; built on chem-engine after merges; PR into chem-engine; heartbeat every 15 min | Obvious | claimed (dispatched 2:40 PM) | obv/T11s | 2026-11-04 2:56 PM |
 | T10b | Fix-up on PR #346: skipped cases must still pass citation/schema checks; add retrieval dates to the 9 T3 sources (from data.csv) | Obvious | superseded by T10c (decision a: scoped V1-cases exception, 2:09 PM); work pushed 8c71707b | obv/T10 | 2026-11-04 2:18 PM |
 | T10c | Fix the 5 V1 cases.yaml defects exposed by T10b on obv/T10 (PR #346): quote 3 aga8-ng2 dew sources (helmholtz/cases.yaml); fill components for amine-enrtl-co2-loading-0.10/0.40-313K (electrolyte/cases.yaml), BLOCKED if an id is missing | Obvious | review (done 2:18 PM, commit 75182516 on 8c71707; diff checked by board sync: only quoting on 3 aga8 sources + components [MDEA, H2O, CO2] on 2 amine anchors; Obvious reports tests/validation 290/353/320, 0 failed). PR #346 ready for review/merge before the 4:35 PM V1 continue | obv/T10 | 2026-11-04 2:25 PM |
 | T8r | Re-dispatch of T8: reformer_cat (#329) + control_valve (#282) case files → one PR into chem-engine, branch obv/T8r cut from origin/chem-engine | Obvious | CANCELLED — do not push; T8 delivered as #347 (stop thread th_DBdEBZhf sent; no cancel endpoint in API) | obv/T8r | 2026-11-04 1:45 PM |
@@ -41,6 +42,11 @@ Times are America/Chicago (CST). Newest handoff on top.
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Stomato bot — 2:56 PM
+- Done: Merged into chem-engine (tip 9cf08cc, pushed to origin), in order #345, #344, #347, #346, then #338, #340, #341, #342, #343 (pack files identical to #346; #343 T3 pack kept #346 version with retrieval dates). Full suite in a clean worktree on the PC: ruff, ruff format, mypy (603 files), lint-imports (3 kept), pytest exit 0. Closed #329 and #282 → #347. Note added to ~/stomato-val-progress.md telling V1 to rebase (electrolyte + helmholtz cases.yaml changed); continue script does not pull, left unchanged. T11r dropped; T11s dispatched prj_rYUHx5C9 / exec_4dWKaUd3 (thread th_lRcYnn6b).
+- Open: #348 (obv/T8r) duplicates merged #347; close it.
+- Next: check obv/T11s push by ~2:52 PM–3:00 PM and heartbeats every 15 min.
 
 ### Board sync — Stomato bot — 2026-11-04 2:37 PM
 - Done: Pulled T10c handoff (ca0a9b5). obv/T10 at 75182516 (2:18 PM). Checked `git diff 8c71707 7518251`: 2 files, 5 lines; 3 aga8-ng2-*-dew source strings quoted with text unchanged, and the 2 amine-enrtl anchors now list components [MDEA, H2O, CO2], matching their z maps. No test or tolerance changes. T10c → `review`. T11r is STALE: obv/T11r still at 54790ed (the obv/T9 head), no adapter commit, last heartbeat 1:45 PM (52 min). The Obvious API returns NOT_FOUND for GET executions/exec_dXs6PPIx and projects/prj_DBCEIlsQ, so its status can't be read there. No `claude/*` branches. V1 still blocked until the 4:35 PM continue.
@@ -287,6 +293,7 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 | T8r (1:36 PM) | prj_5RzQacfW | exec_FNacwkOO (thread th_ruV5dCbI) |
 | T8r stop (1:39 PM) | prj_5RzQacfW | exec_chy8DSeZ (thread th_DBdEBZhf) |
 | T11r (1:40 PM) | prj_DBCEIlsQ | exec_dXs6PPIx (thread th_M4RIuUxU) |
+| T11s (2:40 PM) | prj_rYUHx5C9 | exec_4dWKaUd3 (thread th_lRcYnn6b) |
 | T10c (2:09 PM) | prj_5ek7bdiL | exec_29U9S7Kj (thread th_8cZYEKKs) |
 
 ### Sources found
