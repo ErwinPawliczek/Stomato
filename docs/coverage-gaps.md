@@ -10,9 +10,9 @@ registry implements. A level or method listed here is listed but not implemented
 |---|---|---|---|
 | Unit rows | 84 | 84 | 0 |
 | Planned rigour levels on implemented units | | | 0 |
-| Property methods in the plan | 168 | 162 | 6 |
+| Property methods in the plan | 168 | 163 | 5 |
 
-Catalogue rows by status: 5 experimental, 146 provisional, 9 validated.
+Catalogue rows by status: 5 experimental, 147 provisional, 9 validated.
 
 ## Unit rows with no implementation
 
@@ -27,7 +27,6 @@ None.
 | plan section | method | state |
 |---|---|---|
 | H solids / polymers / special | Polymer SRK | no catalogue row |
-| Parameter-form and databank variants | COSMO-SAC (sigma profiles) | no catalogue row |
 | Parameter-form and databank variants | PR / SRK with API liquid density | no catalogue row |
 | Parameter-form and databank variants | Schwartzentruber-Renon (SR-POLAR) | no catalogue row |
 | Parameter-form and databank variants | Amine package with physical-solvent co-absorption (Sulfolane) | no catalogue row |

@@ -3633,3 +3633,102 @@
       - 298.15
       - 100000.0
   l0_excluded: {}
+- id: cosmo_sac_ig
+  name: COSMO-SAC (sigma profiles)
+  family: gamma_phi
+  adapter: ngdesign.thermo.gamma_phi:GammaPhiPackage
+  options:
+    liquid: cosmo_sac
+    vapour: ideal
+  params:
+    source: data/thermo_params/cosmo_sac/profiles.yaml
+    provenance: COSMO-SAC 2010 (Hsieh, Sandler & Lin 2010) with the constants of Bell et al. 2020 Table 2; three-profile (NHB/OH/OT) sigma profiles of the UD database copied unmodified from usnistgov/COSMOSAC profiles/UD/sigma3 (commit 1b82456b, retrieved 2026-11-04; academic/non-profit licence, shipped under the 2026-11-04 deferred-licence decision). No fitted binary parameters - a predictive model; the Hsieh 2014 dispersion term is not included. Only the shipped components resolve; any other refuses
+  applicability:
+    component_classes:
+    - alcohol
+    - water
+    - hydrocarbon
+    - polar_organic
+    polar: true
+    electrolyte: false
+    T_K:
+    - 273.15
+    - 450.0
+    P_Pa:
+    - 1000.0
+    - 1000000.0
+    phases:
+    - V
+    - L
+  status: provisional
+  validation:
+  - cosmo-sac-ig-pure-MeOH-330K
+  - cosmo-sac-ig-pure-H2O-370K
+  - nrtl-ig-meohh2o-101.325kPa-349.05K
+  - nrtl-ig-meohh2o-312.91K-20.705kPa
+  - nrtl-ig-meohnc4-323.22K-0.3366MPa
+  - nrtl-ig-etohh2o-azeotrope-101.325kPa
+  assessed:
+    cosmo-sac-ig-pure-MeOH-330K: "Psat and rho_L pass (74453.2 vs 74453.4 Pa, 755.904 vs 755.882 kg/m3); Cp -17.3% (73.1651 vs 88.5047) and rho_V -4.6% (0.869469 vs 0.911218) miss. Neither involves COSMO-SAC (gE = 0 for a pure liquid): the ideal-gas vapour ignores methanol's vapour non-ideality, and the vapour-route liquid enthalpy carries no residual liquid Cp - the gamma-phi limitation already assessed on the NRTL rows (measured 2026-11-04)"
+    cosmo-sac-ig-pure-H2O-370K: "Psat, rho_V and rho_L pass; Cp -12.2% (66.6483 vs 75.8833), the same value as the NRTL row's pure-H2O-370K-nrtl: the vapour-route liquid-Cp limitation, not COSMO-SAC (measured 2026-11-04)"
+    nrtl-ig-meohh2o-101.325kPa-349.05K: "bubble_T passes (350.406 vs 349.05 K, +0.39%); y_MeOH 0.6870 vs 0.7197 (-0.033 abs vs 0.02) misses. Predictive model with no fitted binary parameter: COSMO-SAC 2010 without the dispersion term under-predicts methanol's activity in water here; no bug found (the model reproduces the Bell et al. 2020 benchmark ln gamma to 1e-6, tests/thermo/test_cosmo_sac.py) (measured 2026-11-04)"
+    nrtl-ig-meohh2o-312.91K-20.705kPa: "bubble_P passes (20423.3 vs 20705 Pa, -1.4%); y_MeOH 0.7420 vs 0.8053 (-0.063 abs) misses: the same under-predicted methanol activity in water as the Gao 101.325 kPa point (measured 2026-11-04)"
+    nrtl-ig-meohnc4-323.22K-0.3366MPa: "bubble_P -21.9% (262745 vs 336600 Pa), y_MeOH 0.1999 vs 0.1591: COSMO-SAC 2010 under-predicts the alcohol/alkane non-ideality (the Hsieh 2014 dispersion correction for this class is not included) and the ideal-gas vapour at 0.34 MPa adds to it (measured 2026-11-04)"
+    nrtl-ig-etohh2o-azeotrope-101.325kPa: "bubble_T passes (352.054 vs 351.35 K, +0.20%); y_EtOH 0.9147 vs 0.8947 (+0.020 abs, just past the 0.02 band): the model's azeotrope sits at higher ethanol than measured - predictive-model deviation, no fitted parameter (measured 2026-11-04)"
+  references:
+  - Hsieh, C.-M., Sandler, S. I. & Lin, S.-T., Fluid Phase Equilib. 297, 90-97, 2010
+  - Bell, I. H., Mickoleit, E., Hsieh, C.-M., Lin, S.-T., Vrabec, J., Breitkopf, C. & Jaeger, A., J. Chem. Theory Comput. 16(4), 2635-2646, 2020, doi:10.1021/acs.jctc.9b01016
+  - Hsieh, C.-M., Lin, S.-T. & Vrabec, J., Fluid Phase Equilib. 367, 109-116, 2014 (Table 6 benchmark ln gamma infinite-dilution values, as transcribed in usnistgov/COSMOSAC tests/catch_tests.cpp)
+  l0:
+    pure_psat_limit:
+      points:
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 350.0
+    phase_identification:
+      points:
+      - - MeOH
+        - 350.0
+      - - H2O
+        - 400.0
+    determinism:
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    dhdT_cp:
+      phase: vapor
+      state:
+      - 380.0
+      - 50000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    gibbs_duhem:
+      binaries:
+      - z:
+          MeOH: 0.5
+          H2O: 0.5
+        T: 350.0
+        P: 100000.0
+        phase: aqueous
+    round_trip:
+      states:
+      - - 380.0
+        - 50000.0
+      - - 400.0
+        - 100000.0
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+    single_liquid_limit:
+      z:
+        MeOH: 0.5
+        H2O: 0.5
+      state:
+      - 298.15
+      - 100000.0
+  l0_excluded: {}

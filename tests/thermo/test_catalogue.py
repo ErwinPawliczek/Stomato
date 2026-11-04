@@ -196,6 +196,7 @@ def test_rows_load_and_build() -> None:
         "uniquac_tdep_ig",
         "wilson_tdep_ig",
         "nrtl_sac_ig",
+        "cosmo_sac_ig",
         "wilson_lr_ig",
         "wilson_glr_ig",
         "pr-free-water",
@@ -224,7 +225,7 @@ def test_rows_load_and_build() -> None:
         + mixing_ids
         + catalogue_gap_ids
     )
-    assert len(expected) == 160
+    assert len(expected) == 161
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
