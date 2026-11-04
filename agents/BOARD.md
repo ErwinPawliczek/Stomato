@@ -7,7 +7,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 
 | id | title | owner | status | branch | updated |
 |----|-------|-------|--------|--------|---------|
-| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress — session hit Claude 5h limit ~12:08 (resets 4:30 PM); in-flight gate shells (val-integ, gphi-unifac audit) still running; no new chem-engine merge since val-infra | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 12:21 PM |
+| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | blocked — Claude 5h limit (CONTINUE END 12:27, resets 4:30 PM); continue script scheduled 4:35 PM (validation watcher); no new chem-engine merge since val-infra | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 12:38 PM |
 | T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
 | T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | review (PR #342) | obv/T1r | 2026-11-04 12:18 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | review (PR #343, 12:22 PM) | obv/T3 | 2026-11-04 12:22 PM |
@@ -21,6 +21,11 @@ Times are America/Chicago (CST). Newest handoff on top.
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Board sync — Stomato bot — 2026-11-04 12:38 PM
+- Done: Pulled T3 handoff (35a38ec): T3 → `review`, PR #343 (`obv/T3` c1e7b09, SR-POLAR Mangold 2019 params + 9 water-air density cases; methanol/ethanol/acetone/ammonia p-sets NOT FOUND, paywalled; params regressed on density, not VLE). V1 → `blocked`: continue session ended 12:27 on Claude 5h limit; validation watcher scheduled the next continue for 4:35 PM. T8 claimed 12:06, no `obv/T8` push yet (32 min, stale at ~12:51).
+- Outputs: this board update only. No new Obvious job (no unclaimed approved task).
+- Next: review/merge queue T4 #338, T7 #339, T6 #340, T5 #341, T1r #342, T3 #343; curation decisions pending for AcOH (T7), EtOH (T1r), O2 + SR-POLAR row + supercritical tolerance (T3). Watch T8.
 ### T3 — Obvious — 2026-11-04 12:22 PM (HANDOFF)
 - Done: SR-POLAR open parameter pack + worked example. Located and fully retrieved the only open source with published Schwartzentruber-Renon polar parameters + temperature-dependent volume translation: Mangold et al. 2019 (J. Supercrit. Fluids 153, 104476, doi:10.1016/j.supflu.2019.02.016, open CC BY, PMC6919335; SI PDF via the Elsevier CDN after PMC's endpoint proved bot-gated). Transcribed main Tables 2/5/7 + SI Tables S1.1-S1.6 (78 param rows: c_i, p_i, k_b_ij for H2O/O2/N2/CO2 incl. SI-only alternate sets), cross-checked main vs SI (agree; one rounding-level digit on water c2). Worked example = the paper's Table 8 ternary water-air molar volumes (9 points, 620.5-657 K, 27-263.9 MPa), packed as single-phase density cases; worked numbers computed from the printed parameters (omega=0.344 -> m=1.000461; alpha(620.5K)=1.059912, c=1.2044e-05 m3/mol).
 - Outputs (paths / branch / commit / PR #): data/validation/packs/T3/{params.csv,data.csv,pack.yaml,notes.md}; branch obv/T3, commit c1e7b09; PR #343 (obv/T3 -> chem-engine): https://github.com/ErwinPawliczek/Stomato/pull/343. Also published in the Obvious workspace: research-notes artifact (art_etSX4JnI).
@@ -160,3 +165,4 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 | polymer-solvent VLE | T6 pack (PS/toluene; PS+PMMA binaries) | Pavlicek/Bogdanic/Wichterle CABEQ 2015 & 2014; Tanbonliong/Prausnitz UC 1996 | doi:10.15255/CABEQ.2015.2183 ; doi:10.15255/CABEQ.2014.19388 ; pack on obv/T6 | T6 / board sync |
 | cosmo_sac_ig (pending) | T5 pack (H2O+MEG, H2O+TEG bubble_T 0.1 MPa; gamma-inf MeOH/H2O, MeOH/MEG) + sigma-profile licence audit | Chouireb 2018 open SI; Tochigi 2000; Zhang 2003 (ThermoML) | PR #341 ; pack on obv/T5 (URLs in packs/T5/README.md) | T5 / board sync |
 | NRTL EtOH/H2O | T1r pack (17 pts isobaric 101.3 kPa + azeotrope) | Lai, Lin & Tu, J. Chem. Thermodyn. 68 (2014) 13-19 | DOI 10.1016/j.jct.2013.08.020 ; trc.nist.gov/ThermoML/10.1016/j.jct.2013.08.020.xml ; PR #342 | T1r / board sync |
+| SR-POLAR (pending) | T3 pack (Mangold 2019 H2O/O2/N2/CO2 params; Table 8 water-air molar volumes, 9 pts) | Mangold et al., J. Supercrit. Fluids 153 (2019) 104476 (CC BY) | doi:10.1016/j.supflu.2019.02.016 ; PMC6919335 ; PR #343 | T3 / board sync |
