@@ -128,7 +128,7 @@
       description: rich solvent
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.column_shortcut.absorber:Absorber
       params:
         type: object
@@ -211,7 +211,7 @@
       description: lean bottoms
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.column_shortcut.stripper:ReboiledStripper
       params:
         type: object
@@ -522,7 +522,7 @@
       description: raffinate phase
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.column_shortcut.extractor:LiquidLiquidExtractor
       params:
         type: object

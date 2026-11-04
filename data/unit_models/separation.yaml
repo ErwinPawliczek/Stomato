@@ -441,7 +441,7 @@
       description: residue stream
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.separation.membrane:Membrane
       params:
         type: object
@@ -618,7 +618,7 @@
       description: gas with hydrate margin and inhibitor dose reported
   levels:
     R0:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.separation.hydrate_check:HydrateCheck
       params:
         type: object
