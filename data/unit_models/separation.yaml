@@ -95,12 +95,33 @@
         type: object
         properties: {}
       note: VLLE flash; gas, hydrocarbon and water leave at their phase states
+    R1:
+      status: provisional
+      adapter: ngdesign.units.separation.separator_3phase_r1:Separator3PhaseR1
+      params:
+        type: object
+        properties:
+          dP: {type: number, minimum: 0, description: 'pressure drop, Pa; default 0 (R0)'}
+          orientation: {type: string, enum: [horizontal, vertical], description: 'vessel orientation; default horizontal'}
+          diameter_m: {type: number, exclusiveMinimum: 0, description: 'vessel inside diameter, m; enables the rating'}
+          length_m: {type: number, exclusiveMinimum: 0, description: 'effective (seam-to-seam) length, m; vertical: height above the bottom seam'}
+          liquid_level_m: {type: number, exclusiveMinimum: 0, description: 'normal liquid level (NLL; oil weir crest), m above the bottom'}
+          interface_level_m: {type: number, exclusiveMinimum: 0, description: 'normal interface level (NIL), m above the bottom'}
+          K_m_s: {type: number, exclusiveMinimum: 0, description: 'Souders-Brown K, m/s; default York demister fit (x1.25 horizontal)'}
+          gas_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'gas viscosity, Pa s; used only when the package gives none'}
+          oil_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'oil viscosity, Pa s; used only when the package gives none'}
+          water_viscosity_Pa_s: {type: number, exclusiveMinimum: 0, description: 'water viscosity, Pa s; used only when the package gives none'}
+          water_in_oil_fraction: {type: number, minimum: 0, maximum: 1, description: 'fraction of the water entering the oil pad as droplets'}
+          water_droplet_diameter_m: {type: number, exclusiveMinimum: 0, description: 'water droplet diameter in the oil pad, m'}
+          oil_in_water_fraction: {type: number, minimum: 0, maximum: 1, description: 'fraction of the oil entering the water layer as droplets'}
+          oil_droplet_diameter_m: {type: number, exclusiveMinimum: 0, description: 'oil droplet diameter in the water layer, m'}
+      note: rating at a given geometry (D, L, orientation, NLL/NIL) - Souders-Brown gas capacity and gas-section cut size (report only), oil/water residence times, Stokes cut sizes and liquid-liquid carry-over of given droplets; reduces to R0 without geometry, droplets or entrainment
       end_state: true
   sizer: separator_3phase
   pid_symbol: V
   references:
   - docs/unit-catalogue-plan.md §2 U-D 2
-  notes: roadmap R1 lands with the S1 slice (plan §2b).
+  notes: 'R1 V1 gap: no printed worked example with printed inputs and results could be verified. Searched Arnold & Stewart, Surface Production Operations Vol. 1 (horizontal three-phase example; no accessible copy), PetroWiki "Separator sizing" (now redirects to a OnePetro landing page), GPSA Engineering Data Book Sect. 7 (no accessible copy), and the web for a horizontal three-phase worked example (only unattributed slide/Scribd copies). Those examples print SG and viscosity in field units, which R1 takes from the thermo package, so a V1 case also needs a feed reproducing the printed SGs.'
 
 - id: flash_drum
   name: Flash drum with duty

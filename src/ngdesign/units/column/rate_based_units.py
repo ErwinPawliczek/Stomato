@@ -147,6 +147,9 @@ def _info(prof: RateProfile, spec: RateColumnSpec, thermo: Thermo) -> dict[str, 
     }
     effs = murphree_vapour(thermo, prof, spec)
     in_range = 1.0
+    kinds = prof.kinds
+    top = 1 if spec.condenser is not None else 0
+    r = 0  # index into the rate-stage lists (yi, xi, flux, energy_flux_W, diagnostics)
     for j in range(len(prof.v)):
         v, liq = prof.v[j], prof.liq[j]
         info[f"stage_{j}_V_mol_s"] = float(np.sum(v))
@@ -157,20 +160,23 @@ def _info(prof: RateProfile, spec: RateColumnSpec, thermo: Thermo) -> dict[str, 
         for i, cid in enumerate(prof.cids):
             info[f"stage_{j}_y_{cid}"] = float(v[i] / np.sum(v))
             info[f"stage_{j}_x_{cid}"] = float(liq[i] / np.sum(liq))
-        if j < spec.n_rate:
-            info[f"stage_{j}_TI_K"] = prof.ti[j]
-            info[f"stage_{j}_energy_flux_W"] = prof.energy_flux_W[j]
-            for i, cid in enumerate(prof.cids):
-                info[f"stage_{j}_N_{cid}_mol_s"] = float(prof.flux[j][i])
-                info[f"stage_{j}_yI_{cid}"] = float(prof.yi[j][i])
-                info[f"stage_{j}_xI_{cid}"] = float(prof.xi[j][i])
-            for cid, e in effs[j].items():
+        if kinds[j] in ("rate", "tray"):
+            for cid, e in effs[j - top].items():
                 info[f"stage_{j}_EMV_{cid}"] = e
-            d = prof.diagnostics[j]
+        if kinds[j] == "rate":
+            info[f"stage_{j}_TI_K"] = prof.ti[j]
+            info[f"stage_{j}_energy_flux_W"] = prof.energy_flux_W[r]
+            for i, cid in enumerate(prof.cids):
+                info[f"stage_{j}_N_{cid}_mol_s"] = float(prof.flux[r][i])
+                info[f"stage_{j}_yI_{cid}"] = float(prof.yi[r][i])
+                info[f"stage_{j}_xI_{cid}"] = float(prof.xi[r][i])
+            d = prof.diagnostics[r]
             for key in ("a_w_m2_m3", "Re_L", "Re_G", "h_V_W_m2K", "h_L_W_m2K"):
                 info[f"stage_{j}_{key}"] = d[key]
             in_range = min(in_range, d["onda_in_range"])
-    info["onda_in_range"] = in_range
+            r += 1
+    if r:
+        info["onda_in_range"] = in_range
     return info
 
 

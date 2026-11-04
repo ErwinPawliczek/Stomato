@@ -89,7 +89,13 @@ def test_products_meet_their_specs_and_order_by_volatility(solved: tuple[Any, di
     assert temps == sorted(temps)
     assert out["overhead"].vapor_fraction == 1.0
     # The reduced crude leaves as the pooled liquid: two liquids on the PR package.
-    assert len([p for p in out["bottoms"].phases if p.kind != PhaseKind.VAPOR]) == 2
+    # It is a saturated liquid, so its re-flash sits on the bubble boundary and
+    # may also report the incipient steam-rich phase at ~1e-10 (measured: the
+    # same converged state shows it at T + 1e-6 K and not at T - 1e-6 K); that
+    # trace phase is not a liquid split.
+    liquids = [p for p in out["bottoms"].phases if p.kind != PhaseKind.VAPOR]
+    assert len([p for p in liquids if p.mole_fraction > 1e-6]) == 2
+    assert sum(p.mole_fraction for p in liquids if p.mole_fraction <= 1e-6) < 1e-9
     assert 0.0 < result.info["overflash_frac"] < 0.1
 
 
