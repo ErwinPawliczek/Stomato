@@ -204,7 +204,9 @@
   #   passes with k_ij = 0 (no binary parameter fitted). Weak L2: the passing point is
   #   the methanol-rich end (x_MeOH 0.95); every other MeOH/H2O point is an assessed
   #   k_ij = 0 miss.
-  status: validated
+  # Validation run 2026-11-04 (orchestrator): held provisional — bound L2 comparisons 4 pass / 14 miss;
+  # validated needs a majority of bound L2 comparisons passing, not one passing point.
+  status: provisional
   validation:
   - pure-H2O-323.5K-ps
   - pure-H2O-420.0K-ps
@@ -606,7 +608,9 @@
   #   rho_V and Cp are the independent part. L2: meohh2o-101.325kPa-346.20K (Gao 2012,
   #   bubble_T and y) and meohh2o-322.91K-52.142kPa (Bayer 1927) pass with k_ij = 0 (no
   #   binary parameter fitted).
-  status: validated
+  # Validation run 2026-11-04 (orchestrator): held provisional — bound L2 comparisons 6 pass / 12 miss;
+  # validated needs a majority of bound L2 comparisons passing, not one passing point.
+  status: provisional
   validation: &cpa_srk_cases
   - pure-H2O-323.5K
   - pure-H2O-420.0K
@@ -787,7 +791,9 @@
   #   fitted to methane hydrate-inhibition data (refs 42, 140, 141: Robinson & Chen
   #   1986; Ng, Chen & Robinson 1987; Ng & Robinson 1985), read in the open-access copy
   #   https://d-nb.info/136523830X/34 (p. 7 text and Table 7), retrieved 2026-11-04.
-  status: validated
+  # Validation run 2026-11-04 (orchestrator): held provisional — bound L2 comparisons 5 pass / 13 miss;
+  # validated needs a majority of bound L2 comparisons passing, not one passing point.
+  status: provisional
   validation:
   - pure-H2O-323.5K-pr
   - pure-H2O-420.0K-pr
