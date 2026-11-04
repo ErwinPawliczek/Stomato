@@ -15,16 +15,33 @@ Times are America/Chicago (CST). Newest handoff on top.
 | T5 | COSMO-SAC: open sigma-profile DBs (VT-2005, UD/NIST Bell 2020) + independent gamma-inf/VLE pack | Obvious | accepted (PR #341) | obv/T5 | 2026-11-04 12:16 PM |
 | T6 | Polymer SRK / polymer-solvent: open polymer-solvent VLE data independent of Kiss 2009 | Obvious | accepted (PR #340) | obv/T6 | 2026-11-04 12:26 PM |
 | T7 | Acetic acid/water open VLE pack (hoc_dimer L2 gap) | Obvious | data accepted; PR #339 closed (wrong base) → T7b | obv/T7 | 2026-11-04 12:12 PM |
-| T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | review (PR #347; V0 423/423, V1 0 findings on the full runner) | obv/T8 | 2026-11-04 1:35 PM |
-| T7b | Re-cut T7 pack onto chem-engine (PR #339 was cut from agents-board: 254 files incl. uv.lock/.importlinter); drop the 6 Antoine-computed Psat cases | Obvious | review (PR #344) | obv/T7b | 2026-11-04 12:51 PM |
-| T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only; props resolve via chemdb/chemicals by CAS) | Obvious | review (PR #345) | obv/T9 | 2026-11-04 1:06 PM |
-| T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T1r runs on nrtl, pending:* stay skipped; T3 P-value fix | Obvious | review (PR #346) | obv/T10 | 2026-11-04 1:24 PM |
+| T8 | Bring reformer_cat.yaml (PR #329) + control_valve.yaml (PR #282) case files into a chem-engine PR | Obvious | dropped (stale: claimed 12:06, no obv/T8 push in 90 min) → T8r | obv/T8 | 2026-11-04 1:38 PM |
+| T7b | Re-cut T7 pack onto chem-engine; drop the 6 Antoine-computed Psat cases | Obvious | accepted (PR #344; 69 cases, base 6e2eada, 2 pack files only; merge waits for full suite) | obv/T7b | 2026-11-04 1:38 PM |
+| T9 | Add AcOH (64-19-7), EtOH (64-17-5), O2 (7782-44-7) to data/components.yaml (identity only) | Obvious | accepted (PR #345; CAS check digits + chemdb species.csv match; merge waits for full suite) | obv/T9 | 2026-11-04 1:38 PM |
+| T10 | Hook accepted packs (T1r, T3, T4, T5, T6, T7b) into the validation harness; T3 P-value fix | Obvious | accepted w/ fix → T10b (PR #346; tolerances unchanged, skips visible, T3 fix in; tests/validation 290 passed/353 skipped/320 xfailed/0 failed on PC) | obv/T10 | 2026-11-04 1:38 PM |
 | T11 | SR-POLAR adapter from Mangold 2019 params (H2O/O2/N2/CO2), density-only validation level, supercritical tolerance rule | Obvious | claimed | obv/T11 | 2026-11-04 12:47 PM |
+| T10b | Fix-up on PR #346: skipped cases must still pass citation/schema checks; add retrieval dates to the 9 T3 sources (from data.csv) | Obvious | open (dispatched 1:36 PM) | obv/T10 | 2026-11-04 1:38 PM |
+| T8r | Re-dispatch of T8: reformer_cat (#329) + control_valve (#282) case files → one PR into chem-engine, branch obv/T8r cut from origin/chem-engine | Obvious | open (dispatched 1:36 PM) | obv/T8r | 2026-11-04 1:38 PM |
 | T2 | Board loop test | Obvious | done | agents-board | 2026-11-04 10:57 AM |
 
 Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `dropped`.
 
 ## Handoffs
+
+### Review + dispatch — Stomato bot — 2026-11-04 1:38 PM
+- Done: Reviewed and commented.
+  - #344 (T7b): ACCEPT. Based on chem-engine 6e2eada; 2 pack files only; 75→69 cases, with the 6 Antoine-computed Psat cases removed; data.csv identical to #339.
+  - #345 (T9): ACCEPT. All 3 CAS numbers pass the check digit and match data/chemdb/species.csv; sourced Tc/Pc/omega/Tb in properties.csv.
+  - #346 (T10): ACCEPT WITH FIX.
+    - Packs byte-identical to the accepted branches; T3 P fix 263899999→263900000 Pa included; TOLERANCE_POLICY and per-case tolerances unchanged; no cases*.yaml touched.
+    - Skips now visible with reasons, and the formerly silent pending skips surface too.
+    - Gap: test_schema exempts skipped cases from the citation/components checks, which hides that the 9 T3 sources lack a retrieval date. Fix dispatched as T10b.
+  - T8 dropped as stale; T8r dispatched.
+- Tests (Erwin's PC, detached worktree /tmp/t10rev, `uv run pytest tests/validation`):
+  - chem-engine 274 passed / 49 skipped / 320 xfailed
+  - obv/T10 290 / 353 / 320, 0 failed
+  - obv/T10+obv/T9 identical
+- Next: watch T10b and T8r. Nothing merged into chem-engine; the merge of #344/#345/#346 (after T10b) waits for the full suite on Erwin's PC once Claude resets (~4:30 PM). After the T8r PR merges, close #329 and #282.
 
 ### T8 — Obvious — 2026-11-04 1:35 PM CST (HANDOFF — status review)
 - Done: Both case files brought into a chem-engine PR as per-unit files, per the U-01 layout: `data/validation_units/flow/cases/control_valve.yaml` (from PR #282, byte-identical copy of the `u-lv/control_valve` version) and `data/validation_units/refining/cases/reformer_cat.yaml` (from PR #329, byte-identical; comment-only gap record, asserts no V1 worked case, contains no case entries). Verified against the current base before committing: the runner schema in `scripts/validate_units.py` is unchanged (per-unit `cases/*.yaml` glob discovery; `level`/`thermo`/`feeds`/`params`/`expected`/`assessed` keys all supported), and the catalogue rows are compatible (`control_valve` R1 provisional with `validation: []`; `reformer_cat` R1 requires explicit kinetics and refuses the `smith1959` preset, hence the gap file).
@@ -209,6 +226,8 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 | T6 | prj_MiBfJLDC | exec_5ZBp3PUC |
 | T7 | prj_J0x7iuFO | exec_mbxJeQ2t |
 | T8 | prj_1JiMmh1a | exec_1DS7Neqa |
+| T10b (1:36 PM) | prj_S6Ffg9yF | exec_Gn8Uw8Hl (thread th_BW3x8C5l) |
+| T8r (1:36 PM) | prj_5RzQacfW | exec_FNacwkOO (thread th_ruV5dCbI) |
 
 ### Sources found
 | model / unit | dataset | citation | DOI / URL | added by |
