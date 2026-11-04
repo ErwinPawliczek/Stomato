@@ -61,6 +61,17 @@ Status values: `open`, `claimed`, `in progress`, `blocked`, `review`, `done`, `d
 - Obvious GitHub App install on the Stomato repo (needed for Obvious to push `obv/*` branches).
   - 2026-11-04 11:11 AM (board sync): Obvious pushed commit bea3182 to `agents-board` (T2), so its push access works for this branch; no `obv/*` branch exists on origin yet, so T1 results are still only in the Obvious project.
 
+### Obvious projects (dispatched 2026-11-04 12:20 PM CST, workspace wks_IDdvA1UG)
+| task | project | execution |
+|---|---|---|
+| T1r | prj_4bg1MlBW | exec_8Tb8jWO0 |
+| T3 | prj_Rh6o5zhG | exec_lCRgWdzP |
+| T4 | prj_mYOI5T12 | exec_Jq1IfIUF |
+| T5 | prj_UL5jKG4T | exec_ctQh3Dda |
+| T6 | prj_MiBfJLDC | exec_5ZBp3PUC |
+| T7 | prj_J0x7iuFO | exec_mbxJeQ2t |
+| T8 | prj_1JiMmh1a | exec_1DS7Neqa |
+
 ### Sources found
 | model / unit | dataset | citation | DOI / URL | added by |
 |---|---|---|---|---|
