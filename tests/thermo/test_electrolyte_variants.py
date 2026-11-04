@@ -116,6 +116,20 @@ def test_crystallisation_solubility_is_a_prediction_near_the_anchor() -> None:
     assert enrtl_crystallisation_molality() == pytest.approx(6.146, rel=0.05)
 
 
+def test_solubility_surface_is_the_saturated_liquid_composition() -> None:
+    """solubility(salt, T) is the salt fraction of the liquid a supersaturated flash leaves."""
+    pkg = _pkg("enrtl_crystallisation")
+    x_sat = pkg.solubility("NaCl", T)
+    s = enrtl_crystallisation_molality() * MW_WATER_KG
+    assert x_sat == pytest.approx(s / (1.0 + s), rel=1e-6)
+    liquid, _solid = pkg.flash_pt(_z(8.0), T, 1e5, 1.0).phases
+    assert liquid.composition["NaCl"] == x_sat
+    with pytest.raises(ElectrolyteChemistryError, match="window"):
+        pkg.solubility("NaCl", 320.0)
+    with pytest.raises(ElectrolyteChemistryError, match="not a salt"):
+        pkg.solubility("H2O", T)
+
+
 def test_supersaturated_feed_splits_into_saturated_liquid_and_solid() -> None:
     m_sat = enrtl_crystallisation_molality()
     z = _z(8.0)
