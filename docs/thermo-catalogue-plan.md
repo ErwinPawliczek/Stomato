@@ -228,6 +228,65 @@ Same adapter as their family; they differ in parameter form, reference state or 
 decision that defers licensing; the profiles shipped are recorded with that licence text. See the
 "Closed 2026-11-04" entry in section 6.
 
+## 2. Architecture that makes the catalogue cheap
+
+- **One `Thermo` protocol, eight adapters.** Every package is a plugin behind the existing `Thermo` protocol (`contracts/plugins.py`) built on `ThermoSurfaceMixin` (`thermo/cubic.py`): the cache, saturation solver, TVF/PVF flows, derivatives and the slate context come for free. An adapter implements only `_build_flasher` / `_build_flasher_vl` and, where the library has no driver, `flash_pt` itself. Adapters, one module each under `ngdesign/thermo/`: `cubic.py` (exists), `gamma_phi.py`, `mixing_rules.py`, `helmholtz.py`, `kvalue.py`, `teqp_bridge.py`, `electrolyte.py`, `special.py`.
+- **Property methods are data.** `data/thermo_models/<family>.yaml` lists every row above: `id`, `family`, `adapter`, `options` (alpha, translation, vapour model, k_ij table, enthalpy method), `params` (source + file), `applicability` (component classes, T/P window, phases, polar/electrolyte flags), `status` (`validated` | `provisional` | `experimental`), `validation` (case ids). `ngdesign.thermo.catalogue` builds and registers packages from these files at import; `registry.available("thermo")` is the catalogue. One YAML per family means parallel agents never edit the same file.
+- **Composable vapour and liquid halves.** Family B is a product: liquid model × vapour model. The adapter takes both as objects; the catalogue row names them. The same virial and cubic vapour objects serve families C, E and G.
+- **Parameter databanks as provenance-graded records**, the P1-02 pattern: ChemSep (bundled with `thermo`), `chemicals` constants, published tables shipped under `data/thermo_params/<model>/` with a citation per row, user tables carried on the flowsheet (the P1-07 pattern for pseudo-components, extended to binary parameters). Missing pair parameters are an error with a name, never a silent ideal assumption (the NRTL package already does this).
+- **Enthalpy and density methods are options, not packages.** Lee-Kesler departures, Rackett/COSTALD/API liquid densities and the Boston-Mathias extrapolation are option objects on the cubic adapter; a catalogue row selects them.
+
+## 3. Validation layers (the gate for `validated`)
+
+| Layer | What | Oracle | Who writes it |
+|---|---|---|---|
+| **L0 self-consistency** | Gibbs-Duhem on γ, pure-component limits (γ→1, K→Psat/P), dH/dT = Cp, dG/dP = V, flash round-trips (PT→PH→PT), phase identification above/below Psat (the #124 lesson), determinism | mathematics; no data | shared harness, written once (spec T-01) |
+| **L1 pure components** | Psat, liquid density, Hvap, Cp over the model's claimed T window, for every curated component the model applies to | NIST WebBook, DIPPR-derived values already in `chemicals`, IAPWS tables for water | per adapter |
+| **L2 binary VLE / LLE** | at least two literature binaries per model, chosen for its applicability (e.g. methanol/water for NRTL, CO2/methane for PR, ethanol/water azeotrope for UNIFAC-Dortmund, water/toluene LLE for UNIFAC-LLE) | published isothermal/isobaric data with citation (DECHEMA-style sets in the open literature, NIST TDE references, Gmehling papers) | per package row |
+| **L3 canonical case** | one engineering case per family where the method is the standard: natural-gas dew point and density (cubics, GERG), steam tables (IAPWS), refinery flash and K10 charts (Chao-Seader/BK10), amine loading isotherms and the two loops (G), Kremser-grade absorber (column), azeotropic distillation (B) | textbook/handbook numbers (GPSA, Perry, Kohl & Nielsen, Reid-Prausnitz-Poling, Smith-Van Ness) | per family |
+| **L4 cross-model consistency** | the same stream on PR vs SRK vs GERG; NRTL vs UNIQUAC vs UNIFAC on the same binary; bounds on disagreement documented | internal | shared harness |
+| **L5 flowsheet regression** | bench cases and goldens unchanged for existing packages; every new package solves the slice with the agent's `recommend_thermo` output recorded | existing bench/golden machinery | CI |
+
+Rules: every case carries a citation and the measured number; a row ships `provisional` when L0+L1 pass but L2/L3 lack data, `validated` only with L0–L3 green; `experimental` is allowed for F/H while parameters are scarce and is hidden from the advisor by default. The harness output (`scripts/validate_properties.py`) becomes a per-model report in `docs/validation/<model>.md`, regenerated in CI.
+
+## 4. Orchestration: many agents, no collisions
+
+The partition is by **file ownership**, so threads can run simultaneously:
+
+| Thread owns | Package / files |
+|---|---|
+| T-01 registry + harness L0/L4 | `ngdesign/thermo/catalogue.py`, `data/thermo_models/_schema.yaml`, `scripts/validate_properties.py` (L0/L4 sections), `tests/thermo/test_catalogue.py` |
+| T-02 cubic options | `thermo/cubic.py` (options only), `data/thermo_models/cubic.yaml`, `data/validation/cubic/` |
+| T-03 gamma-phi | `thermo/gamma_phi.py`, `thermo/virial.py`, `data/thermo_models/gamma_phi.yaml`, `data/thermo_params/{nrtl,uniquac,wilson,unifac}/`, `data/validation/gamma_phi/` |
+| T-04 Helmholtz | `thermo/helmholtz.py`, `data/thermo_models/helmholtz.yaml`, `data/validation/helmholtz/`, `pyproject` extra `coolprop` |
+| T-05 K-value correlations | `thermo/kvalue.py`, `data/thermo_models/kvalue.yaml`, `data/validation/kvalue/` |
+| T-06 predictive mixing rules | `thermo/mixing_rules.py`, `data/thermo_models/mixing.yaml` (after T-02, T-03) |
+| T-07 teqp bridge | `thermo/teqp_bridge.py`, `data/thermo_models/saft.yaml`, extra `saft` |
+| T-08 advisor + agent tool + UI picker | `thermo/advisor.py`, `agent/tools.py` (one tool), `frontend/` picker (separate PR, frontend-only) |
+| T-09 general electrolytes | `thermo/electrolyte.py`, `data/thermo_models/electrolyte.yaml` (after T-03) |
+| T-10 solids / polymers / special | `thermo/special.py`, `data/thermo_models/special.yaml` (after T-03, T-07) |
+| T-11..T-14 validation data sweeps | per family, data-only PRs: `data/validation/<family>/cases.yaml` with citations; these run in parallel with the adapter threads and merge independently |
+
+Waves (each wave = one dispatch burst; a wave starts when its dependencies are on main):
+
+1. **Wave 0 (serial, 1 thread):** T-01. Registry-as-data, status rules, L0/L4 harness, migration of the 6 existing packages into `data/thermo_models/`. Everything else keys on its schema.
+2. **Wave 1 (parallel, 8 threads):** T-02, T-03, T-04, T-05, T-07 adapters, plus T-11/T-12/T-13 data sweeps (cubic, gamma-phi, Helmholtz literature cases). Disjoint files; each PR is reviewed and merged independently.
+3. **Wave 2 (parallel, 4 threads):** T-06 mixing rules, T-08 advisor, T-09 electrolytes, T-14 data sweep for K-values and electrolytes.
+4. **Wave 3 (parallel, 2 threads):** T-10 special models; a sweep that promotes `provisional` rows to `validated` as data lands.
+5. **Wave 4 (serial):** catalogue freeze: every row's status audited against its harness report; `docs/validation/` regenerated; the advisor's rules reviewed against the final statuses.
+
+Orchestrator duties per PR (unchanged from tonight): worktree, every gate, the harness report for the rows the PR adds, bench counts byte-identical for existing packages, a probe of the L3 case, then approve and auto-merge. The thermo wave does not start until P1-09 and P1-06 are merged, so column work and thermo work never touch the same files.
+
+Budget: ~16 Obvious threads, most 2–6 h of agent time; the data sweeps are the long tail. Elapsed: Wave 1 is bounded by the gamma-phi adapter (the largest), roughly a day; the whole catalogue with validation lands in about a week of wall time if reviews keep pace.
+
+## 5. Risks and how the plan answers them
+
+- **Parameter availability** is the binding constraint, not code: binary parameters exist where someone measured them. The registry's `status` and the advisor's "no parameters for this pair" refusal keep this visible; data sweeps are their own PRs so missing data never blocks an adapter.
+- **Licensing:** `thermo`, `chemicals`, CoolProp and `teqp` are MIT; DIPPR and DECHEMA tables are not redistributable — only open literature values ship, each with a citation. Aspen/HYSYS parameter sets are never copied.
+- **Numerical robustness across models** (tonight's pure-phase bug): L0 round-trip and phase-identification tests run on every adapter, not just cubics; the column, saturation solver and tear loops consume only the `Thermo` protocol, so a new package needs no solver change.
+- **Performance:** the cache, the VL fast path and the slate-scoped flashers are in the mixin; adapters inherit them. The bench records flash counts and wall time per case per package.
+- **Scope creep:** the catalogue is data; a method without an adapter row and a validation set does not exist in the registry, whatever the marketing list says.
+
 ## 6. Methods still open, and what was checked (2026-11-01, rechecked 2026-11-03 and 2026-11-04)
 
 Each stays open because a parameter or definition could not be sourced openly; no row was
