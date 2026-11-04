@@ -766,8 +766,10 @@ def _build_flasher_inner(
             )
 
         if three_phase:
-            return FlashVLN(constants, correlations, gas=gas, liquids=[ge_liquid(), ge_liquid()])
-        return FlashVL(constants, correlations, gas=gas, liquid=ge_liquid())
+            return _state._with_distinct_trials(
+                FlashVLN(constants, correlations, gas=gas, liquids=[ge_liquid(), ge_liquid()])
+            )
+        return _state._with_distinct_trials(FlashVL(constants, correlations, gas=gas, liquid=ge_liquid()))
 
 
 @cache

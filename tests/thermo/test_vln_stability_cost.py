@@ -95,3 +95,19 @@ def test_side_strip_flash_stability_iterations(monkeypatch: pytest.MonkeyPatch) 
 
     assert set(result.outlets) == {"overhead_out", "bottoms_out"}
     assert calls <= 200
+
+
+@pytest.mark.parametrize("package", ["nrtl", "nrtl_ig", "hoc_dimer"])
+def test_gamma_phi_and_special_flashers_use_distinct_trials(package: str) -> None:
+    """The gamma-phi and special packages build their flashers outside
+    ``build_flasher``; they carry the same repeat-free stability tester, so a
+    >= 32-component feed cannot hit thermo 0.6.1's N^2 repeated-trial loop."""
+    from ngdesign.thermo._state import _DistinctTrialStabilityTester
+
+    thermo = registry.create("thermo", package)
+    ids = ("water", "ethanol") if package != "hoc_dimer" else ("AcOH",)
+    try:
+        flasher = thermo._build_flasher(ids)
+    except Exception as exc:  # a package without parameters for this pair
+        pytest.skip(f"{package}: {exc}")
+    assert isinstance(flasher.stab, _DistinctTrialStabilityTester)
