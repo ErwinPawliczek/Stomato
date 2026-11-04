@@ -21,9 +21,9 @@ total condenser, N-2 for a partial one) are
 
 Both are solved by the one simultaneous Newton in ``solve_rate_based``; its module
 docstring carries every equation. A total condenser returns saturated (bubble-point)
-reflux and distillate. R2 returns the reflux at the stage-1 temperature (its
-``h_cond`` model); that convention difference is the only one between ``murphree``
-at ``E = 1`` and R2 for a total condenser, and none exists for a partial condenser.
+reflux and distillate, as R2 does (``inside_out._reflux_state``); ``murphree`` at
+``E = 1`` and R2 agree to 9.2e-5 in product mole fraction for a total condenser
+(R2's bubble point is refined on its own K surface) and to round-off for a partial one.
 
 Specs (exactly two, R2's names): top ``reflux_ratio``, ``condenser_duty_W`` (heat
 removed, W); bottom ``boilup_ratio``, ``reboiler_duty_W``; either end

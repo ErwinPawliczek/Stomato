@@ -127,9 +127,8 @@
         segments (Onda 1968 coefficients), reduces to R2 as transfer_factor grows (measured
         1.9e-6 max product mole-fraction deviation at 1e4, partial condenser); murphree -
         MESH trays with y_n = y_in + E (y*_n - y_in) (Murphree 1925), E = 1 reproduces R2
-        (measured 1.2e-9, partial condenser). Total condenser returns bubble-point reflux
-        (R2 returns it at the stage-1 temperature; measured 3.3e-3 product mole-fraction
-        difference). Holland vaporisation efficiency not implemented (equation not verified
+        (measured 1.2e-9, partial condenser). Total condenser returns bubble-point reflux,
+        as R2 does (measured 9.2e-5 product mole-fraction difference). Holland vaporisation efficiency not implemented (equation not verified
         from an accessible source)
       validation: []
       end_state: true

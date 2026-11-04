@@ -104,10 +104,9 @@ def test_rate_based_reduces_to_r2_as_transfer_grows(thermo: Thermo) -> None:
 
 def test_total_condenser_rate_limit_equals_murphree_and_tracks_r2(thermo: Thermo) -> None:
     """Total condenser: R3's own equilibrium limit (rate-based at factor 1e4 vs Murphree
-    E = 1, the same equations) agrees to the transfer limit. Against R2 the profiles
-    differ by R2's convention of returning the reflux at the stage-1 temperature (R3:
-    saturated, bubble-point reflux) - measured 3.3e-3 in product mole fractions and
-    0.2 K on stage temperatures."""
+    E = 1, the same equations) agrees to the transfer limit. Against R2 (which also
+    returns saturated, bubble-point reflux since the reflux-state fix) the profiles
+    agree to measured 2.6e-3 K on stage temperatures and 6.1e-5 in stage x_C3."""
     inlets = _feed(thermo)
     _, params = ColumnR3.example_case()
     rate = ColumnR3().solve(inlets, {**params, "transfer_factor": 1e4}, thermo)
@@ -117,8 +116,8 @@ def test_total_condenser_rate_limit_equals_murphree_and_tracks_r2(thermo: Thermo
     assert dt < 1e-3
     r2 = Column().solve(inlets, Column.example_case()[1], thermo)
     for j in range(1, 17):  # R3 block j = R2 stage j-1 under a total condenser
-        assert abs(tray.info[f"stage_{j}_TV_K"] - r2.info[f"stage_{j - 1}_T_K"]) < 0.5
-        assert abs(tray.info[f"stage_{j}_x_C3"] - r2.info[f"stage_{j - 1}_x_C3"]) < 1e-2
+        assert abs(tray.info[f"stage_{j}_TV_K"] - r2.info[f"stage_{j - 1}_T_K"]) < 1e-2
+        assert abs(tray.info[f"stage_{j}_x_C3"] - r2.info[f"stage_{j - 1}_x_C3"]) < 1e-3
 
 
 # --------------------------------------------------------------------------------------
