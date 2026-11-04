@@ -12,7 +12,7 @@ family `special` · status **experimental** · adapter `ngdesign.thermo.special:
 ## Parameters
 
 - source: data/thermo_params/special/unifac_fv.yaml
-- provenance: Oishi & Prausnitz, Ind. Eng. Chem. Process Des. Dev. 17, 333 (1978): UNIFAC solvent activity plus the Flory free-volume term (c1 = 1.1, 15.17 cm3/mol CH2 reference volume, b = 1.28); polymer activity by Gibbs-Duhem integration. UNIFAC subgroup assignment for toluene carries its own provenance (the curated groups.yaml has no toluene rows).
+- provenance: Oishi & Prausnitz, Ind. Eng. Chem. Process Des. Dev. 17, 333 (1978): UNIFAC solvent activity plus the Flory free-volume term (c1 = 1.1, 15.17 cm3/mol CH2 reference volume, b = 1.28); polymer activity by Gibbs-Duhem integration. UNIFAC residual from the original-UNIFAC tables shipped with thermo (UFSG/UFIP; Hansen et al., Ind. Eng. Chem. Res. 30, 2352 (1991)) at the flash temperature, on whole-molecule group fractions; van der Waals volumes r summed from the same UFSG R_k over the subgroup assignments (toluene: the DDBST assignment 5 ACH + ACCH3, r = 3.9228).
 
 ## L0 self-consistency
 
