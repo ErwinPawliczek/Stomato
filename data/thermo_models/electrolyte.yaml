@@ -304,7 +304,13 @@
       only through Psat.  Molality clamped to the verified domain (6.15 mol/kg, the saturation
       anchor).  Literature-faithful accuracy ~1-5 % vs experimental gamma+/phi (the source model's
       own fit quality); Pitzer NaCl is the high-accuracy row (0.36 %).  Na2SO4 out of scope
-      (documented, T-09).
+      (documented, T-09).  General single-salt form since 2026-11-04 (salts keyed by ion pair in
+      the params file, NaCl bit-identical); NaCl is still the only salt: no open, redistributable,
+      primary-cited tau pair for another salt was found (checked: Kwaterski & Herri HAL deposits,
+      licence hal-authorisation-v1, copyright reserved -- also the copy the NaCl pair was read
+      from, so that licence basis needs review; Chen & Evans 1986 paywalled; IDAES BSD examples
+      carry KCl/NaBr pairs without a primary citation).  Other salts refuse at first use.  See
+      docs/thermo-catalogue-plan.md section 6.
   status: provisional
   validation: []
   references:
@@ -384,13 +390,19 @@
       temperature dependence enters through Psat.  Molality clamped to the verified domain
       (6.15 mol/kg, the saturation anchor).  Literature-faithful accuracy a few % vs experimental
       gamma+/phi; Pitzer NaCl is the high-accuracy row (0.36 %).  Na2SO4 out of scope
-      (documented, T-09).
+      (documented, T-09).  General single-salt form since 2026-11-04 (salts keyed by ion pair,
+      ion r/q/u_ij keyed by species in the params file; NaCl bit-identical); Na+/Cl- are still
+      the only ions: no open, redistributable Thomsen-type ion table was found (checked: Leal et
+      al. 2025 is CC BY 4.0 but its tables could not be read beyond Na+/Cl- (HTTP 403), its
+      ChemRxiv preprint is CC BY-NC-ND; Thomsen 1997 thesis all rights reserved; CERE database
+      members-only; Reaktoro LGPL-2.1).  Other salts refuse at first use.  See
+      docs/thermo-catalogue-plan.md section 6.
   status: provisional
   validation: []
   references:
   - Thomsen, K. & Rasmussen, P., Chem. Eng. Sci. 54(13), 1787-1802, 1999
   - Thomsen, K., Rasmussen, P. & Gani, R., Chem. Eng. Sci. 51(16), 3675-3683, 1996
-  - Leal, A. M. K. et al., Applied Geochemistry 180, 106274, 2025 (open-access formulation and parameter verification)
+  - Leal, A. M. M., Tambach, T. J., Volpatto, D., Liang, X., Fosbol, P. L. & Thomsen, K., Applied Geochemistry 180, 106274, 2025, doi:10.1016/j.apgeochem.2024.106274, CC BY 4.0 (open-access formulation and parameter verification)
   l0:
     single_liquid_limit:
       z:

@@ -352,7 +352,29 @@ written around the gap.
   - `unifac_fv`: the 2026-11-03 physics gaps are fixed (2026-11-04 entry below). It stays experimental because no open polystyrene/toluene solvent-activity table exists to test against, the free-volume term uses fixed reference specific volumes rather than volumes at the flash T, and whether Oishi & Prausnitz include the Staverman-Guggenheim surface term in the combinatorial could not be checked against the paywalled paper.
   - `hf_hexamer`: the association vapour is now its flash vapour (2026-11-04 entry below). It stays experimental because the databank HF vapour-pressure correlation ("Fit 2023", fitted over 293-454 K) has a nearly flat d ln Psat/dT across 300-320 K. The PhiSat liquid enthalpy therefore gives a saturated-liquid Cp of 0.1 J/(mol K) at 300 K (-152 J/(mol K) with no association), and the latent heat misses the VDI Heat Atlas table by -14.4 % at the boiling point. Fixing that is a databank change.
   - `polymer_pc_saft`: teqp is still absent locally, no licensed polystyrene/toluene binary table was retrieved, and k_ij = 0 is uncited.
-- **General eNRTL and extended UNIQUAC beyond NaCl** (2026-11-03): not extended. Only the Pitzer rows were generalised (below). The eNRTL and extended-UNIQUAC rows stay NaCl-only and refuse any other salt at first use, because no further open, redistributable multi-salt parameter set for them was checked this session.
+- **General eNRTL and extended UNIQUAC beyond NaCl** (2026-11-04): the adapters are generalised, but no salt was added, because no open, redistributable, primary-cited parameter set was found.
+  - **Generalised** (`ngdesign.amine.electrolyte`):
+    - Both models are now single-salt forms with the salt parameters as data, keyed by salt id and ion pair. They use the same `salts` keys as `pitzer.yaml`: cation, anion, z, nu and molality_cap.
+    - **eNRTL:** the PDH term runs on I_x = (z_c^2 x_c + z_a^2 x_a)/2, and the Chen & Evans 1986 single-salt local-composition G^E runs on X_i = z_i x_i.
+    - **Extended UNIQUAC:** species order is (H2O, cation, anion), with Debye-Hueckel on I, z_i^2 ion terms and a nu-weighted mean. A salt whose ions lack r, q or a u_ij pair refuses.
+    - **Shared with Pitzer:** the ion-pair parsing, the unknown-salt refusal and the SLE solve now come from one owner (`SaltIons`, `_salt_entry`, `_sle_molality`).
+    - **Package wiring:** supports, caps, the a_w dispatch and the multi-salt refusal are data-driven per model. The crystallisation row takes its salt from the feed.
+    - **NaCl bit-identical:** a 1125-line repr snapshot was diffed before and after. It covers the activity, osmotic and saturation functions, PT/PH/PS/TVF/PVF flashes, bubble and dew points, K-values, phase props, derivatives and refusal messages on all eight NaCl rows.
+    - **Tests:** the charge and stoichiometry branches are exercised in tests/thermo/test_electrolyte_general.py, with a synthetic test-only 2:1 entry that is never shipped. They check the limiting law with |z_c z_a|, Gibbs-Duhem with nu = 3, and the flash running on the salt's own a_w.
+    - **Measured limit:** the eNRTL numeric-derivative infinite-dilution reference biases ln gamma by about 2|z_c z_a| A_phi sqrt(I(h)). That is 1.1e-3 for NaCl at 2 m and 3.8e-3 for a 2:1 salt. It is kept so NaCl stays bit-identical.
+  - **What was checked for parameters and refused:**
+    - **Kwaterski & Herri on HAL:** hal-00978703 (Fluid Phase Equilib. 371, 2014, doi:10.1016/j.fluid.2014.02.032), hal-00617438 and hal-00617434. The HAL API `licence_s` of all three is `hal-authorisation-v1`: copyright reserved, and reproduction or adaptation needs the rights holder's permission. Its KCl/CaCl2 tau are therefore not usable. **This is also the copy the shipped NaCl tau pair was read from**, so the NaCl row's licence basis needs review; the values are Chen & Evans 1986's published numbers.
+    - **Chen & Evans 1986 / Chen et al. 1982** (AIChE J.): paywalled, and no openly licensed transcription was found.
+    - **IDAES** (`idaes-pse`, BSD-3): its examples carry eNRTL tau for KCl (8.1354 / -4.1341) and NaBr (9.527 / -4.790, a Song & Chen 2009 mixed-solvent fit). These are secondary code copies whose primary table is not cited; a web search for the KCl pair found no primary. Refused as not primary-cited.
+    - **Leal et al., Applied Geochemistry 180, 106274 (2025)**, doi:10.1016/j.apgeochem.2024.106274: CC BY 4.0 per Crossref. The ChemRxiv preprint is CC BY-NC-ND and must not be used. Whether its tables carry ions beyond Na+/Cl- could not be read: ScienceDirect and ChemRxiv returned HTTP 403 to this session.
+    - **Thomsen thesis 1997** (doi:10.11581/dtu:00000074, DTU Orbit): "all rights reserved".
+    - **CERE DTU extended-UNIQUAC database:** members only. **phasediagram.dk:** no tables, (c) notice.
+    - **Reaktoro `ExtendedUNIQUAC.v2023.yaml`:** LGPL-2.1, verification only.
+    - **Hashemi et al., J. Chem. Petrol. Eng. 54 (2020)** (CC BY): prints no r/q/u values.
+    - **Arrad, Thomsen et al., FPE 580 (2024) 114037** (CC BY): Cs+ only.
+    - **Frontiers in Chemistry 2019/2020** salt papers (CC BY): a different (Xu) model, not Chen eNRTL.
+    - **Not read:** CC BY extended-UNIQUAC papers whose full text was bot-blocked: Fosbøl, Stenby & Thomsen, FPE 584 (2024) 114126; Neerup et al., CES 285 (2024) 119605 and 270 (2023) 118549. These are leads if the Leal tables do not carry the ions.
+  - **Next step if a set is found:** add a `salts` entry (and, for extended UNIQUAC, the ions' r, q and u0/u1 pairs). Validate it against the Hamer & Wu 1972 / Goldberg & Nuttall 1978 anchors already transcribed in tests/thermo/test_electrolyte_salts.py.
 
 Closed 2026-11-04:
 
