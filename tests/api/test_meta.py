@@ -81,7 +81,8 @@ def test_thermo_models_marks_experimental_unselectable() -> None:
     # pc_saft left the list in T-15c: promoted to provisional, it selects and ranks
     # like any other provisional row (assessed misses per docs/validation.md).
     # soft_saft left it on 2026-11-03 the same way (teqp SoftSAFT kind, provisional).
-    for rid in ("hoc_dimer",):
+    # hoc_dimer left it on 2026-11-04 (association vapour wired into its flash).
+    for rid in ("hf_hexamer",):
         assert models[rid]["selectable"] is False, rid
         assert "experimental" in models[rid]["refusal_reason"]
     assert models["soft_saft"]["selectable"] is True

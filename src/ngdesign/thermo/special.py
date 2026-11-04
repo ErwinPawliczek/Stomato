@@ -19,13 +19,14 @@ data/thermo_models/special.yaml:
   (van't Hoff from the fusion properties, activity coefficient 1). Not a flash
   package: it computes solubility directly and refuses VLE-style flashing.
 * :class:`HaydenOConnellDimerPackage` - a gamma-phi flasher whose vapour phase is
-  corrected by an in-house dimerization chemical-theory kernel (carboxylic-acid
-  association). The curated ``nrtl_hoc``/``nrtl_nothnagel`` rows keep refusing
-  (their wiring lives in ngdesign.thermo.gamma_phi, outside this spec's file
-  list); this module ships the working kernel behind its own special-family row.
-* :class:`HFHexamerPackage` - same structure, HF vapour associating to hexamers:
-  the in-house hexamerization kernel on Jarry & Davis (1953) parameters, with
-  Schotte (1980) as the oligomer-treatment reference.
+  the chemical-theory :class:`AssociatingGas` (Marek-Standart: monomer, dimer
+  and non-associating species as ideal gases in dimerization equilibrium) on
+  per-acid Kp(T); the liquid is ideal with the acid's saturation fugacity
+  coefficient. The curated ``nrtl_hoc``/``nrtl_nothnagel`` rows refuse acid
+  slates and point here.
+* :class:`HFHexamerPackage` - same structure, HF vapour associating to hexamers
+  on Jarry & Davis (1953) parameters, with Schotte (1980) as the
+  oligomer-treatment reference.
 * :class:`PolymerPCSAFT` - polymer PC-SAFT for solvent/polymer supports, built
   through the T-07 teqp bridge (ngdesign.thermo.teqp_bridge); segment
   parameters for POLY_PS and toluene carry citations, unsupported components
@@ -36,14 +37,15 @@ the params file documents the polystyrene characterization used by the
 validation cases. Provenance lives in the params files and the catalogue rows;
 every numerical derivation is cited there.
 
-Status (re-decided 2026-11-03; the reasons live in each catalogue row's notes):
-``ideal_solid`` is ``provisional`` (complete van't Hoff physics on tabulated
-fusion properties, published IUPAC-NIST checks, a harness ``solubility`` case
-type). The other six stay ``experimental`` and out of the advisor's set:
-illustrative or secondary-sourced polymer parameters, the UNIFAC-FV residual's
-fixed-298.15 K / repeat-unit-fraction gaps, the association kernels not being
-wired into the dimer/hexamer flash (those rows flash with an ideal-gas vapour),
-and no runnable published reference for polymer PC-SAFT.
+Status (re-decided 2026-11-03 and 2026-11-04; the reasons live in each
+catalogue row's notes): ``ideal_solid`` and ``hoc_dimer`` are ``provisional``
+(complete physics for their claims on cited parameters, published-reference
+tests; hoc_dimer's association vapour is the flash's vapour phase since
+2026-11-04). The other five stay ``experimental`` and out of the advisor's
+set: illustrative or secondary-sourced polymer parameters, UNIFAC-FV's missing
+published reference and fixed-T free volumes, the HF row's databank vapour
+pressure breaking its caloric surface, and no runnable published reference
+for polymer PC-SAFT.
 
 SI units throughout: K, Pa, J/mol, J/(mol K).
 """

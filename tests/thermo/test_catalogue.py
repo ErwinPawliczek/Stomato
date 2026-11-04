@@ -155,7 +155,8 @@ def test_rows_load_and_build() -> None:
         "zudkevitch-joffe-rk",
     ]
     non_gamma = ["amine_enrtl", "amine_ke", "pr", "pr78", "srk"] + cubic_t02
-    # special family (T-10): experimental rows, hidden from the advisor
+    # special family (T-10): mostly experimental rows, hidden from the advisor
+    # (ideal_solid and hoc_dimer are provisional)
     special_ids = [
         "flory_huggins",
         "hf_hexamer",
