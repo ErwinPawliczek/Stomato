@@ -1,0 +1,282 @@
+# val-saft (2026-11-04) bindings for the saft.yaml rows.
+#
+# pure_cases: machine-generated with the harness's CoolProp formula (PropsSI at Q=0/1,
+# the regen_coolprop recipe in scripts/validate_properties.py, CoolProp 8.0.0) — never
+# hand-typed. For gerg2008_teqp and soft_saft the CoolProp reference EOS is an
+# independent equation; for multifluid / multifluid_pure (the same CoolProp fluid
+# library inside teqp) these are implementation checks of the bridge's saturation
+# solver, the accepted L1 reference class for reference-EOS rows.
+# binary_cases: copies of cited cases already in the repo (ids prefixed ss-), values and
+# sources unchanged, bound to soft_saft (Lorentz-Berthelot, no binary parameter).
+meta:
+  coolprop_version: 8.0.0
+pure_cases:
+- id: cpv-C1-125.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package:
+  - multifluid
+  - gerg2008_teqp
+  - soft_saft
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 125.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 268757.80384445406
+    dew_P: 268757.80384445406
+    rho_V: 4.466913910567139
+    rho_L: 402.1105827307507
+    Cp: 57.7411469743096
+- id: cpv-C1-155.0K
+  fluid: C1
+  coolprop_fluid: CH4
+  package:
+  - multifluid
+  - gerg2008_teqp
+  - soft_saft
+  components:
+  - C1
+  z:
+    C1: 1.0
+  T: 155.0
+  source: coolprop:CH4
+  expected:
+    bubble_P: 1295003.4509910743
+    dew_P: 1295003.4509910743
+    rho_V: 20.418904925344048
+    rho_L: 347.5068280431007
+    Cp: 67.6128793208551
+- id: cpv-CO2-240.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package:
+  - multifluid
+  - gerg2008_teqp
+  - soft_saft
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 240.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 1282483.4984006712
+    dew_P: 1282483.4984006712
+    rho_V: 33.29513808635024
+    rho_L: 1088.8692401220028
+    Cp: 90.2633373679705
+- id: cpv-CO2-265.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package:
+  - multifluid
+  - multifluid_pure
+  - gerg2008_teqp
+  - soft_saft
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 265.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 2790916.074974494
+    dew_P: 2790916.074974494
+    rho_V: 75.47077353408034
+    rho_L: 973.2544843551278
+    Cp: 103.05559698734537
+- id: cpv-CO2-285.0K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package:
+  - multifluid_pure
+  - gerg2008_teqp
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 285.0
+  source: coolprop:CO2
+  expected:
+    bubble_P: 4712303.46473758
+    dew_P: 4712303.46473758
+    rho_V: 143.92260865325676
+    rho_L: 847.0463756053841
+    Cp: 137.89526869642648
+- id: cpv-CO2-288.9K
+  fluid: CO2
+  coolprop_fluid: CO2
+  package:
+  - multifluid_pure
+  - gerg2008_teqp
+  components:
+  - CO2
+  z:
+    CO2: 1.0
+  T: 288.9
+  source: coolprop:CO2
+  expected:
+    bubble_P: 5179673.129875787
+    dew_P: 5179673.129875787
+    rho_V: 165.14581022973502
+    rho_L: 814.6391777699876
+    Cp: 155.1893706579236
+- id: cpv-nC4-300.0K
+  fluid: nC4
+  coolprop_fluid: n-Butane
+  package:
+  - multifluid
+  - gerg2008_teqp
+  - soft_saft
+  components:
+  - nC4
+  z:
+    nC4: 1.0
+  T: 300.0
+  source: coolprop:n-Butane
+  expected:
+    bubble_P: 257596.1341639972
+    dew_P: 257596.1341639972
+    rho_V: 6.516384099093
+    rho_L: 570.6793764145076
+    Cp: 142.47024991789993
+- id: cpv-nC6-350.0K
+  fluid: C6+
+  coolprop_fluid: n-Hexane
+  package:
+  - multifluid
+  - gerg2008_teqp
+  components:
+  - C6+
+  z:
+    C6+: 1.0
+  T: 350.0
+  source: coolprop:n-Hexane
+  expected:
+    bubble_P: 129925.503272207
+    dew_P: 129925.503272207
+    rho_V: 4.08464431928374
+    rho_L: 605.2129367754497
+    Cp: 216.49380905141015
+- id: cpv-nC6-350.0K-ss
+  fluid: nC6
+  coolprop_fluid: n-Hexane
+  package:
+  - soft_saft
+  components:
+  - nC6
+  z:
+    nC6: 1.0
+  T: 350.0
+  source: coolprop:n-Hexane
+  expected:
+    bubble_P: 129925.503272207
+    dew_P: 129925.503272207
+    rho_V: 4.08464431928374
+    rho_L: 605.2129367754497
+    Cp: 216.49380905141015
+- id: cpv-nC10-400.0K
+  fluid: nC10
+  coolprop_fluid: n-Decane
+  package:
+  - soft_saft
+  components:
+  - nC10
+  z:
+    nC10: 1.0
+  T: 400.0
+  source: coolprop:n-Decane
+  expected:
+    bubble_P: 25513.50292171991
+    dew_P: 25513.50292171991
+    rho_V: 1.118324146994078
+    rho_L: 645.2611854386718
+    Cp: 370.8959868361287
+binary_cases:
+- id: ss-c1c3-277.59K-1.724MPa
+  package:
+  - soft_saft
+  components:
+  - C1
+  - C3
+  z:
+    C1: 0.0779
+    C3: 0.9221
+  T: 277.59
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20
+  expected:
+    bubble_P: 1724000.0
+    vapor_comp:
+      C1: 0.6382
+  note: copy of the root case c1c3-277.59K-1.724MPa (same cited source and values), bound to soft_saft
+- id: ss-c1c3-294.26K-6.895MPa
+  package:
+  - soft_saft
+  components:
+  - C1
+  - C3
+  z:
+    C1: 0.3707
+    C3: 0.6293
+  T: 294.26
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 294.26 K isotherm; retrieved 2026-10-20
+  expected:
+    bubble_P: 6895000.0
+    vapor_comp:
+      C1: 0.7497
+  note: copy of the root case c1c3-294.26K-6.895MPa (same cited source and values), bound to soft_saft
+- id: ss-c1c3-310.93K-2.068MPa
+  package:
+  - soft_saft
+  components:
+  - C1
+  - C3
+  z:
+    C1: 0.046
+    C3: 0.954
+  T: 310.93
+  source: literature:Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 271, 310.93 K isotherm; retrieved 2026-10-20
+  expected:
+    bubble_P: 2068000.0
+    vapor_comp:
+      C1: 0.3255
+  note: copy of the root case c1c3-310.93K-2.068MPa (same cited source and values), bound to soft_saft
+- id: ss-c1co2-293.130K-6.135MPa
+  package:
+  - soft_saft
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.01528
+    CO2: 0.98472
+  T: 293.13
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 293.13 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
+  expected:
+    bubble_P: 6134800.0
+    vapor_comp:
+      CO2: 0.9603
+  note: copy of c1co2-293.130K-6.135MPa in this directory (same cited source, values and 5 % bubble_P band), bound to soft_saft
+- id: ss-c1co2-303.145K-7.306MPa
+  package:
+  - soft_saft
+  components:
+  - C1
+  - CO2
+  z:
+    C1: 0.004
+    CO2: 0.996
+  T: 303.145
+  source: literature:Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 303.14 K isotherm; retrieved 2026-10-21
+  tolerance:
+    bubble_P: 0.05
+  expected:
+    bubble_P: 7306400.0
+    vapor_comp:
+      CO2: 0.99438
+  note: copy of c1co2-303.145K-7.306MPa in this directory (same cited source, values and 5 % bubble_P band), bound to soft_saft
