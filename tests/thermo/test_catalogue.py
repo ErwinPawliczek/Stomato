@@ -43,6 +43,7 @@ from ngdesign.thermo.nrtl import NrtlThermo
 from ngdesign.thermo.pr import PengRobinsonThermo
 from ngdesign.thermo.pr78 import PengRobinson78Thermo
 from ngdesign.thermo.special import HFHexamerPackage, PolymerPCSAFT
+from ngdesign.thermo.sr_polar import SRPolarPackage
 from ngdesign.thermo.srk import SoaveRedlichKwongThermo
 from ngdesign.thermo.teqp_bridge import (
     CpaPrThermo,
@@ -155,7 +156,11 @@ def test_rows_load_and_build() -> None:
         "zudkevitch-joffe-rk",
     ]
     non_gamma = ["amine_enrtl", "amine_ke", "pr", "pr78", "srk"] + cubic_t02
-    # special family (T-10): experimental rows, hidden from the advisor
+    # special family (T-10): experimental rows, hidden from the advisor, plus the
+    # T11 sr-polar density-only kernel (provisional — standalone EOS kernel, not a
+    # gE-mixing host: family cubic's typed options cannot express the SR polar
+    # alpha + temperature-dependent volume translation, and a `mixing` row is a
+    # gE host on a thermo cubic, which SR-POLAR is not)
     special_ids = [
         "flory_huggins",
         "hf_hexamer",
@@ -163,6 +168,7 @@ def test_rows_load_and_build() -> None:
         "ideal_solid",
         "polymer_nrtl",
         "polymer_pc_saft",
+        "sr-polar",
         "unifac_fv",
     ]
     # electrolyte family (T-09/T-09b): four literature-anchored aqueous models
@@ -223,7 +229,7 @@ def test_rows_load_and_build() -> None:
         + mixing_ids
         + catalogue_gap_ids
     )
-    assert len(expected) == 160
+    assert len(expected) == 161
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
@@ -271,6 +277,8 @@ def test_rows_load_and_build() -> None:
         "sour_water": ElectrolyteSourWater,
         "enrtl_nacl_water": ElectrolyteENRTLNaCl,
         "ext_uniquac_nacl_water": ElectrolyteExtUNIQUAC,
+        # T11 density-only kernel
+        "sr-polar": SRPolarPackage,
     }
     for model_id, cls in expected_types.items():
         assert type(registry.create("thermo", model_id)) is cls

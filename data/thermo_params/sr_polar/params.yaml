@@ -1,0 +1,105 @@
+# SR-POLAR (VTBMSR-III) pure-component and binary parameters.
+#
+# Transcribed 1:1 from Mangold, F.; Pilz, St.; Bjelic, S.; Vogel, F., "Equation
+# of state and thermodynamic properties for mixtures of H2O, O2, N2, and CO2
+# from ambient up to 1000 K and 280 MPa", J. Supercritical Fluids 153 (2019)
+# 104476, doi:10.1016/j.supflu.2019.02.016 (open CC BY 4.0, PMC6919335):
+# Table 2 (criticals, Refprop 10 as cited there), Table 5 / SI Tables S1.1-S1.2
+# (volume-translation and polar alpha parameters), Table 7 / SI S1.3-S1.6
+# (binary k_b set 2, density-regressed). Nothing fitted, tuned or interpolated;
+# retrieved 2026-11-04.
+#
+# The applicable sets (the paper's density-validated water-air worked example,
+# plus CO2's set for the catalogue's parameter completeness):
+#   H2O: vapour/supercritical p-set 3, volume-translation set 2
+#   O2:  translation set 1 / polar set x1
+#   N2:  set 1 (no volume translation: c0 = c1 = c2 = 0)
+#   CO2: set 1
+# Alternate p-sets (H2O liquid set 1, O2 x2-x5, N2 2, CO2 SI-only) are NOT
+# shipped: they are calibrated to caloric data only and do not enter the
+# density-validated worked example.
+#
+# Criticals are the paper's Table 2 values, not the databank's: they are part
+# of the published fit (using the databank's last-digit-different Tc/Pc would
+# break reproduction of the published errors).
+pure:
+  H2O:
+    tc_K: 647.14
+    pc_Pa: 2.2064e7
+    omega: 0.344
+    p0: -1.92140347
+    p1: -1.1392853
+    p2: 0.22028766
+    c0: 2.8126e-7
+    c1: 5.25308e-6
+    c2: 0.4054292
+    source: Mangold 2019 Table 5 (p/c) and Table 2 (criticals)
+  O2:
+    tc_K: 154.58
+    pc_Pa: 5.043e6
+    omega: 0.0222
+    p0: 0.07834762
+    p1: -0.10036104
+    p2: -0.10036213
+    c0: 4.366e-6
+    c1: 0.0
+    c2: 0.0
+    source: Mangold 2019 Table 5 / SI S1.1-S1.2 (set 1 ci / x1 pi) and Table 2 (criticals)
+  N2:
+    tc_K: 126.20
+    pc_Pa: 3.398e6
+    omega: 0.037
+    p0: 0.067873
+    p1: -0.015334
+    p2: -0.015334
+    c0: 0.0
+    c1: 0.0
+    c2: 0.0
+    source: Mangold 2019 Table 5 / SI S1.1-S1.2 (set 1, no volume translation) and Table 2 (criticals)
+  CO2:
+    tc_K: 304.12
+    pc_Pa: 7.374e6
+    omega: 0.225
+    p0: -1.55305545
+    p1: -1.52675479
+    p2: -0.51240405
+    c0: 5.47e-6
+    c1: 0.0
+    c2: 0.0
+    source: Mangold 2019 Table 5 / SI S1.1-S1.2 (set 1/2) and Table 2 (criticals)
+
+# Binary k_b parameters, the paper's set 2 (density-regressed, Table 7 /
+# SI Tables S1.3-S1.6), kb(T) = kb0 + kb1*T + kb2/T. The paper sets k_b = 0
+# for the non-regressed pairs O2/N2 and CO2/O2; absent pairs refuse rather
+# than default to zero (missing parameters are an error, never an ideal assumption).
+binary:
+  H2O/O2:
+    kb0: 1.6786319
+    kb1: -0.00190476
+    kb2: -437.386995
+    source: Mangold 2019 Table 7 / SI Table S1.3 (density data, xO2 = 0.05, Japas & Franck)
+  H2O/N2:
+    kb0: 26.7175346
+    kb1: -0.02120245
+    kb2: -8387.43857
+    source: Mangold 2019 Table 7 / SI Table S1.4 (density data, xN2 = 0.05, Japas & Franck; Gallagher et al.)
+  H2O/CO2:
+    kb0: 24.5882553
+    kb1: -0.0189643037
+    kb2: -7926.93286
+    source: Mangold 2019 Table 7 / SI Table S1.5 (density data, xCO2 = 0.05, Gallagher et al.)
+  CO2/N2:
+    kb0: 11.3800299
+    kb1: -0.0162626
+    kb2: -2008.99224
+    source: Mangold 2019 Table 7 / SI Table S1.6 (density data, xN2 = 0.16-0.71, Johns et al.)
+  O2/N2:
+    kb0: 0.0
+    kb1: 0.0
+    kb2: 0.0
+    source: Mangold 2019 Table 7 (set to zero by the paper's choice)
+  CO2/O2:
+    kb0: 0.0
+    kb1: 0.0
+    kb2: 0.0
+    source: Mangold 2019 Table 7 (set to zero by the paper's choice)

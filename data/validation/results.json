@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-10-24T08:03:57+00:00",
+    "generated": "2026-11-05T07:51:19+00:00",
     "python": "3.13.14",
     "platform": "Linux-6.1.158+-x86_64-with-glibc2.41",
-    "git_rev": "3c74863",
+    "git_rev": "8307de34",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 2543,
-    "n_pass": 1928
+    "n_comparisons": 2582,
+    "n_pass": 1967
   },
   "rows": [
     {
@@ -13813,8 +13813,8 @@
       "package": "amine_ke",
       "property": "K",
       "expected": 1.28491,
-      "got": 1.2227060342745155,
-      "rel_err": 0.048411146092321236,
+      "got": 1.2227060342300746,
+      "rel_err": 0.048411146126908014,
       "pass": true
     },
     {
@@ -22896,6 +22896,357 @@
       "expected": 0.9736,
       "got": 0.9632270180196211,
       "rel_err": 0.010372981980378948,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 369.27,
+      "got": 369.2156150939285,
+      "rel_err": 0.00014727680578304413,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.139,
+      "got": 0.1363689548669104,
+      "rel_err": 0.002631045133089621,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 365.61,
+      "got": 365.6286071991294,
+      "rel_err": 5.089357273982022e-05,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.261,
+      "got": 0.2569703168250183,
+      "rel_err": 0.004029683174981702,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 359.79,
+      "got": 359.3215840024844,
+      "rel_err": 0.0013019149990705471,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.436,
+      "got": 0.4433396543138396,
+      "rel_err": 0.007339654313839594,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 356.66,
+      "got": 356.0615144621819,
+      "rel_err": 0.0016780282000172014,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.525,
+      "got": 0.5324509867355747,
+      "rel_err": 0.0074509867355746495,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-354.88K-x0.292",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 354.88,
+      "got": 354.20094573042456,
+      "rel_err": 0.0019134757370813547,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-354.88K-x0.292",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.585,
+      "got": 0.5870154677759056,
+      "rel_err": 0.002015467775905666,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 353.89,
+      "got": 353.1886559816894,
+      "rel_err": 0.0019818136096260946,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.611,
+      "got": 0.6230419660548938,
+      "rel_err": 0.012041966054893827,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 353.06,
+      "got": 352.36949108251963,
+      "rel_err": 0.0019557834857541834,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.648,
+      "got": 0.6612479091984715,
+      "rel_err": 0.01324790919847152,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 352.73,
+      "got": 352.0876741256485,
+      "rel_err": 0.0018210128833711717,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.669,
+      "got": 0.6779034006940645,
+      "rel_err": 0.008903400694064478,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-352.04K-x0.631",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 352.04,
+      "got": 351.56731461178833,
+      "rel_err": 0.0013427036365517755,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-352.04K-x0.631",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.714,
+      "got": 0.7175037303392808,
+      "rel_err": 0.003503730339280864,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-351.67K-x0.749",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 351.67,
+      "got": 351.0517948246344,
+      "rel_err": 0.001757912745942591,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-351.67K-x0.749",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.781,
+      "got": 0.7837057002186989,
+      "rel_err": 0.00270570021869887,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-351.64K-x0.794",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 351.64,
+      "got": 350.92443428864516,
+      "rel_err": 0.0020349383214504245,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-351.64K-x0.794",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.814,
+      "got": 0.8138831918112889,
+      "rel_err": 0.00011680818871107057,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-351.40K-x0.848",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 351.4,
+      "got": 350.83656526411266,
+      "rel_err": 0.001603399931381084,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-351.40K-x0.848",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.855,
+      "got": 0.8498624588281655,
+      "rel_err": 0.005137541171834514,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-351.33K-x0.899",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 351.33,
+      "got": 350.8146152927177,
+      "rel_err": 0.001466953312504751,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-351.33K-x0.899",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.898,
+      "got": 0.899,
+      "rel_err": 0.0010000000000000009,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-351.37K-x0.949",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 351.37,
+      "got": 350.8695182060193,
+      "rel_err": 0.0014243725815542743,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-351.37K-x0.949",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.946,
+      "got": 0.9451916339028549,
+      "rel_err": 0.0008083660971450746,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-azeotrope",
+      "package": "nrtl",
+      "property": "bubble_T",
+      "expected": 351.32,
+      "got": 350.8124588158521,
+      "rel_err": 0.001444669202288218,
+      "pass": true
+    },
+    {
+      "case": "t1r-nrtl-etohh2o-101.3kPa-azeotrope",
+      "package": "nrtl",
+      "property": "vapor_comp",
+      "expected": 0.891,
+      "got": 0.891,
+      "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-620.5K-27MPa",
+      "package": "sr-polar",
+      "property": "density",
+      "expected": 167.810369,
+      "got": 167.88080578061468,
+      "rel_err": 0.00041974033568015467,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-638.5K-44MPa",
+      "package": "sr-polar",
+      "property": "density",
+      "expected": 294.873351,
+      "got": 297.29404265380924,
+      "rel_err": 0.00820925880755236,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-640K-68.3MPa",
+      "package": "sr-polar",
+      "property": "density",
+      "expected": 432.69211,
+      "got": 453.58123374214256,
+      "rel_err": 0.048277108039114794,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-642K-102MPa",
+      "package": "sr-polar",
+      "property": "density",
+      "expected": 541.735162,
+      "got": 583.9437597412104,
+      "rel_err": 0.07791371264398471,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-645.5K-152.9MPa",
+      "package": "sr-polar",
+      "property": "density",
+      "expected": 635.092024,
+      "got": 710.7706223099073,
+      "rel_err": 0.11916162611090705,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-650K-195.3MPa",
+      "package": "sr-polar",
+      "property": "density",
+      "expected": 684.607673,
+      "got": 785.7587762346142,
+      "rel_err": 0.1477504667620256,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-652K-214.8MPa",
+      "package": "sr-polar",
+      "property": "density",
+      "expected": 703.690814,
+      "got": 815.3220519826474,
+      "rel_err": 0.158636770243028,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-653.5K-231.5MPa",
+      "package": "sr-polar",
+      "property": "density",
+      "expected": 718.716241,
+      "got": 838.908011854146,
+      "rel_err": 0.16723118805123266,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-657K-263.9MPa",
+      "package": "sr-polar",
+      "property": "density",
+      "expected": 742.497293,
+      "got": 880.039727904481,
+      "rel_err": 0.18524301192904274,
       "pass": true
     }
   ]
