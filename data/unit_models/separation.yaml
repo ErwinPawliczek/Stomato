@@ -552,7 +552,7 @@
         worked example of a split-spec adsorption bed with its printed outlet
         state was found; the row is checked by closed-form tests only
     R1:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.separation.adsorption_bed_r1:AdsorptionBedR1
       params:
         type: object
@@ -577,7 +577,13 @@
           regen_P: {type: number, description: 'desorbate outlet pressure, Pa abs; default feed P'}
           product_T: {type: number, description: 'product outlet temperature, K; default feed T'}
           regen_T: {type: number, description: 'desorbate outlet temperature, K; default feed T'}
+      validation:
+      - V1-adsorption-seader-15-5
       note: >-
+        Validated (equilibrium loadings) on Seader-Henley-Roper 3rd ed.
+        Ex. 15.5 (extended Langmuir, CH4/CO on activated carbon - q 89.72 /
+        16.87 vs printed 89.7 / 16.9 cm3(STP)/g); breakthrough time remains
+        without a printed case (below).
         R0 outlets and duty unchanged; cycle_time_s from extended-Langmuir
         equilibrium loading (feed-basis partial pressures, Langmuir 1918 /
         Markham-Benton 1931), optional van 't Hoff affinity rescale (Ruthven

@@ -78,8 +78,13 @@ def combined_liquid(phases: list[Phase]) -> Phase | None:
 
 
 def stream_molar_mass(composition: dict[str, float]) -> float:
-    """Mean molar mass of a composition, g/mol, from the component database."""
-    from ngdesign.data import components
+    """Mean molar mass of a composition, g/mol, from the component registry.
 
-    db = components()
-    return sum(x * float(db[cid]["mw"]) for cid, x in composition.items())
+    Resolves through ``contracts.components.resolve`` (every registered id,
+    pseudos included) rather than the 19-row legacy ``data.components()``
+    table, which refused registered ids such as CO (same mw on every id the
+    legacy table carries).
+    """
+    from ngdesign.contracts.components import resolve
+
+    return sum(x * float(resolve(cid).mw) for cid, x in composition.items())

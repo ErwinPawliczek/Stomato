@@ -318,3 +318,15 @@ def test_refuse_T_ref_without_dH(thermo: Thermo) -> None:
     inlets = example_inlets(thermo)
     with pytest.raises(AdsorptionBedR1SpecError, match="T_ref_K"):
         AdsorptionBedR1().solve(inlets, r1_params(T_ref_K=322.15), thermo)
+
+
+def test_molar_mass_resolves_registry_ids_beyond_legacy_table() -> None:
+    """Regression (validation run 2026-11-04): CO is a registered component but not in
+    the 19-row legacy table; stream_molar_mass refused it with KeyError, so an
+    adsorption bed adsorbing CO (Seader-Henley-Roper Ex. 15.5) could not solve."""
+    from ngdesign.contracts.components import resolve
+
+    assert stream_molar_mass({"CO": 1.0}) == pytest.approx(resolve("CO").mw, rel=1e-15)
+    assert stream_molar_mass({"C1": 0.5, "CO": 0.5}) == pytest.approx(
+        0.5 * resolve("C1").mw + 0.5 * resolve("CO").mw, rel=1e-15
+    )

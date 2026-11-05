@@ -1,0 +1,37 @@
+# V1 worked case for adsorption_bed R1 (per-unit case file; units-b validation run).
+- id: V1-adsorption-seader-15-5
+  unit: adsorption_bed
+  level: R1
+  source: >-
+    Seader, Henley & Roper, "Separation Process Principles", 3rd ed. (Wiley
+    2011), Example 15.5 "Extended-Langmuir Isotherm", pp. 582-583
+    (archive.org item separation-process-principles-chemical-a, read and
+    retrieved 2026-11-04): Ritter and Yang's pure-gas Langmuir constants on
+    activated carbon at 294 K, CH4 q_m = 133.4 cm3(STP)/g, K = 0.01370 1/psi;
+    CO q_m = 126.1 cm3(STP)/g, K = 0.00624 1/psi; vapour of 69.6 mol% CH4 /
+    30.4 mol% CO at 364.3 psia; extended-Langmuir predictions printed
+    q_CH4 = 89.7 and q_CO = 16.9 cm3(STP)/g.
+  notes: >-
+    Unit conversion only (no fitting): cm3(STP)/g / 22.414 = mol/kg (the same
+    factor on the inputs q_m and the expected loadings, so the comparison is
+    independent of the STP molar-volume convention), K/6894.757 = b in 1/Pa,
+    364.3 psia = 2511760 Pa. removal_fraction and bed_mass_kg only set the
+    cycle time and do not enter the loadings. Tolerance: the book's
+    one-decimal print, +/-0.05 cm3(STP)/g = +/-0.00223 mol/kg, fixed before
+    the run.
+  thermo: pr
+  feeds:
+    feed_in:
+      T: 294.0
+      P: 2511760.0
+      molar_flow: 1.0
+      composition: {C1: 0.696, CO: 0.304}
+  params:
+    removal_fraction: {C1: 0.5, CO: 0.5}
+    langmuir:
+      C1: {q_max_mol_kg: 5.951637, b_1_Pa: 1.987017e-6}
+      CO: {q_max_mol_kg: 5.625948, b_1_Pa: 9.050355e-7}
+    bed_mass_kg: 100.0
+  expected:
+  - {quantity: info.q_eq_mol_kg_C1, value: 4.001963, tol_abs: 0.00223}
+  - {quantity: info.q_eq_mol_kg_CO, value: 0.753993, tol_abs: 0.00223}
