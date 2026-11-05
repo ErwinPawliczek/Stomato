@@ -1,0 +1,66 @@
+# V1 worked case for column R2 (per-unit case file; units-b validation run).
+- id: V1-column-seader-10-9
+  unit: column
+  level: R2
+  thermo: srk-kij0
+  source: >-
+    Seader, Henley & Roper, "Separation Process Principles", 3rd ed. (Wiley
+    2011), Example 10.9 "Inside-Out Method", p. 404, with the column of
+    Figure 10.7, p. 384 (archive.org item
+    separation-process-principles-chemical-a, PDF pages 412 and 432, read and
+    retrieved 2026-11-04): total condenser (stage 1), three equilibrium
+    stages, partial reboiler (stage 5), all at 100 psia; 100 lbmol/h
+    saturated-liquid feed to stage 3 (C3 0.30, nC4 0.30, nC5 0.40); reflux
+    ratio L1/U1 = 2.0; bottoms L5 = 50 lbmol/h; SRK equation of state
+    (CHEMCAD TOWR). Converged (outer-loop iteration 3) results printed:
+    T1 = 83.67 F, T5 = 192.43 F; bottoms C3 0.955, nC4 12.363, nC5 36.683
+    lbmol/h of L5 = 50.001 lbmol/h. The book reports the feed bubble point
+    as 123.5 F.
+  notes: >-
+    Unit mapping: the column's total condenser is hardware above stage 1, so
+    the book's stages 2-4 are column stages 1-3 and the reboiler is stage 4
+    (n_stages 4, feed_stage 2). Flows converted lbmol/h x 0.45359237/3600 to
+    mol/s, 100 psia = 689475.729 Pa. Property package: srk-kij0 (SRK with
+    every k_ij = 0). Evidence that the book ran SRK without k_ij: its printed
+    feed bubble point at 100 psia, 123.5 F, is reproduced by srk-kij0
+    (323.979 K = 123.49 F), while the IPDB-k_ij srk row (C3-nC4 0.0033, C3-nC5
+    0.0267, nC4-nC5 0.0174) gives 321.672 K = 119.34 F. The feed T is the
+    srk-kij0 bubble point (323.978 K) so the feed enters saturated liquid, as
+    the book specifies. Expected bottoms mole fractions are the printed flows
+    over 50.001. Tolerances are the printed rounding, fixed before the first
+    run (on srk) and kept unchanged for srk-kij0: 0.005 F (0.003 K) on
+    temperatures and 0.0005 lbmol/h on flows (1e-5 in mole fraction).
+  feeds:
+    feed:
+      T: 323.978
+      P: 689475.729
+      molar_flow: 0.012599788
+      composition: {C3: 0.30, nC4: 0.30, nC5: 0.40}
+  params:
+    n_stages: 4
+    condenser: total
+    reboiler: kettle
+    feed_stage: 2
+    pressure_profile: 689475.729
+    specs: {reflux_ratio: 2.0, bottoms_rate: 0.006299894}
+  expected:
+  - {quantity: outlet.distillate.T, value: 301.856, tol_abs: 0.003}
+  - {quantity: outlet.bottoms.T, value: 362.278, tol_abs: 0.003}
+  - {quantity: outlet.bottoms.composition.C3, value: 0.019100, tol_abs: 0.00001}
+  - {quantity: outlet.bottoms.composition.nC4, value: 0.247255, tol_abs: 0.00001}
+  - {quantity: outlet.bottoms.composition.nC5, value: 0.733625, tol_abs: 0.00001}
+  assessed: >-
+    Measured miss on srk-kij0 (just outside the printed rounding): distillate
+    T 301.861 vs 301.856 K (+0.005 K = +0.009 F), bottoms T 362.311 vs
+    362.278 K (+0.033 K = +0.06 F); bottoms x_C3 0.019117 vs 0.019100
+    (0.9559 vs 0.955 lbmol/h), x_nC4 0.247198 vs 0.247255, x_nC5 0.733685 vs
+    0.733625. With the k_ij effect removed (the srk row missed by 0.5-1.7 K
+    and x_C3 0.017153) the remaining gap is below the book's own convergence
+    spread: between its outer-loop iterations 2 and 3 the printed T5 moved
+    0.10 F and bottoms C3 0.008 lbmol/h, so the printed iteration-3 values
+    are not converged to their last digit. Smaller contributors: CHEMCAD's
+    pure-component constants and ideal-gas Cp (energy balance) are not the
+    ChemSep/thermo values, and the column meets its specs to the core's
+    _SPEC_TOL (reflux ratio 2.000245, bottoms 0.0063007 mol/s = 50.006
+    lbmol/h; issue 248). Not a MESH defect; the level stays provisional
+    because the printed-rounding tolerance is not met.

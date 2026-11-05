@@ -212,6 +212,9 @@ def test_rows_load_and_build() -> None:
         "srk-rackett",
         "pr-costald",
         "srk-costald",
+        # zero-k_ij plain cubic EOS of textbook simulator examples (validation run 2026-11-04)
+        "srk-kij0",
+        "pr-kij0",
     ]
     expected = sorted(
         gamma_phi_ids
@@ -225,7 +228,7 @@ def test_rows_load_and_build() -> None:
         + mixing_ids
         + catalogue_gap_ids
     )
-    assert len(expected) == 161
+    assert len(expected) == 163
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {

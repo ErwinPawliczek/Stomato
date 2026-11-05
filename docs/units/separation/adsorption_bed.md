@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `X`
 
-Rigour ladder: R0 provisional, R1 provisional
+Rigour ladder: R0 provisional, R1 validated
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 provisional, R1 provisional
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | provisional | `ngdesign.units.separation.adsorption_bed:AdsorptionBed` | adsorbate split spec to regen_out; product and desorbate flashed at their own T (product_T / regen_T, default feed T) and their own P; info cycle_time_s = capacity * bed_mass / adsorbate mass rate. The default capacity 0.10 kg/kg is the ~10 wt% design water loading GPSA quotes for molecular sieves (Sect. 20, dehydration). V1 gap -- no printed worked example of a split-spec adsorption bed with its printed outlet state was found; the row is checked by closed-form tests only |
-| R1 | provisional | `ngdesign.units.separation.adsorption_bed_r1:AdsorptionBedR1` | R0 outlets and duty unchanged; cycle_time_s from extended-Langmuir equilibrium loading (feed-basis partial pressures, Langmuir 1918 / Markham-Benton 1931), optional van 't Hoff affinity rescale (Ruthven 1984 Ch. 2), stoichiometric time on the removed rate and LUB breakthrough (Collins 1967; McCabe-Smith-Harriott 7th ed. Ch. 25; Geankoplis 4th ed. §12.3) — t_b = t_s·(1 − LUB/L), cycle = min over adsorbates. capacity_kg_per_kg is refused at R1. The R0 equivalence (capacity = q*·MW/1000 reproduces the same cycle time) holds to 1e-12. Spec issue recorded on PR no. 295 — the spec's printed CF3/CF4 times (57726.765 s / 50510.9194 s) are 1000× the A4 result for its own stated inputs (the division by the 1000 mol/s adsorbate rate was dropped); A4 is implemented as written. V1 gap — no printed worked example with a verifiable breakthrough time was transcribed: the verified FOSSEE transcription of Geankoplis Ch. 12 (tbc-python.fossee.in) contains only Ex. 12.3-1 (alcohol-in-air scale-up), whose printed outputs are used/unused bed lengths (10.23 / 3.77 cm) and a saturation capacity (0.124 g/g carbon); the book's comparable time appears only as the Part B design input (break point 6.0 hr), never as a printed result for a specified bed, and no isotherm is stated to transcribe. The McCabe-Smith-Harriott Ch. 25 candidate has no verified open transcription. The row is checked by closed-form tests only |
+| R1 | validated | `ngdesign.units.separation.adsorption_bed_r1:AdsorptionBedR1` | Validated (equilibrium loadings) on Seader-Henley-Roper 3rd ed. Ex. 15.5 (extended Langmuir, CH4/CO on activated carbon - q 89.72 / 16.87 vs printed 89.7 / 16.9 cm3(STP)/g); breakthrough time remains without a printed case (below). R0 outlets and duty unchanged; cycle_time_s from extended-Langmuir equilibrium loading (feed-basis partial pressures, Langmuir 1918 / Markham-Benton 1931), optional van 't Hoff affinity rescale (Ruthven 1984 Ch. 2), stoichiometric time on the removed rate and LUB breakthrough (Collins 1967; McCabe-Smith-Harriott 7th ed. Ch. 25; Geankoplis 4th ed. §12.3) — t_b = t_s·(1 − LUB/L), cycle = min over adsorbates. capacity_kg_per_kg is refused at R1. The R0 equivalence (capacity = q*·MW/1000 reproduces the same cycle time) holds to 1e-12. Spec issue recorded on PR no. 295 — the spec's printed CF3/CF4 times (57726.765 s / 50510.9194 s) are 1000× the A4 result for its own stated inputs (the division by the 1000 mol/s adsorbate rate was dropped); A4 is implemented as written. V1 gap — no printed worked example with a verifiable breakthrough time was transcribed: the verified FOSSEE transcription of Geankoplis Ch. 12 (tbc-python.fossee.in) contains only Ex. 12.3-1 (alcohol-in-air scale-up), whose printed outputs are used/unused bed lengths (10.23 / 3.77 cm) and a saturation capacity (0.124 g/g carbon); the book's comparable time appears only as the Part B design input (break point 6.0 hr), never as a printed result for a specified bed, and no isotherm is stated to transcribe. The McCabe-Smith-Harriott Ch. 25 candidate has no verified open transcription. The row is checked by closed-form tests only |
 
 ### R0 parameters
 
@@ -107,6 +107,15 @@ required:
 - langmuir
 type: object
 ```
+
+## V1 worked cases
+
+| case | level | quantity | expected | measured | tolerance | result |
+|---|---|---|---|---|---|---|
+| `V1-adsorption-seader-15-5` | R1 | `info.q_eq_mol_kg_C1` | 4.00196 | 4.00292 | abs 0.00223 | pass |
+| `V1-adsorption-seader-15-5` | R1 | `info.q_eq_mol_kg_CO` | 0.753993 | 0.752775 | abs 0.00223 | pass |
+
+- `V1-adsorption-seader-15-5`: Seader, Henley & Roper, "Separation Process Principles", 3rd ed. (Wiley 2011), Example 15.5 "Extended-Langmuir Isotherm", pp. 582-583 (archive.org item separation-process-principles-chemical-a, read and retrieved 2026-11-04): Ritter and Yang's pure-gas Langmuir constants on activated carbon at 294 K, CH4 q_m = 133.4 cm3(STP)/g, K = 0.01370 1/psi; CO q_m = 126.1 cm3(STP)/g, K = 0.00624 1/psi; vapour of 69.6 mol% CH4 / 30.4 mol% CO at 364.3 psia; extended-Langmuir predictions printed q_CH4 = 89.7 and q_CO = 16.9 cm3(STP)/g.
 
 ## References
 

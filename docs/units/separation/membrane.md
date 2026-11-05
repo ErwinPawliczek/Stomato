@@ -2,7 +2,7 @@
 
 Family: **separation** · P&ID symbol: `M`
 
-Rigour ladder: R0 validated, R1 provisional, R2 provisional
+Rigour ladder: R0 validated, R1 validated, R2 provisional
 
 ## Ports
 
@@ -17,7 +17,7 @@ Rigour ladder: R0 validated, R1 provisional, R2 provisional
 | level | status | adapter | basis |
 |---|---|---|---|
 | R0 | validated | `ngdesign.units.separation.membrane:Membrane` | exactly one of permeate_recovery (any components) and stage_cut with perm_ratio (binary Weller-Steiner complete mixing); the permeate leaves at P_permeate, the residue at P_in. Evidence gap — the stage-cut model is validated against Geankoplis Ex. 13.4-2 (air, y_O2 = 0.5068, reject x_O2 = 0.1345); the permeate_recovery path is a spec split with V0 self-consistency only. |
-| R1 | provisional | `ngdesign.units.separation.membrane_r1:MembraneR1` | solution-diffusion with permeances, cross-flow (Weller-Steiner 1950, Pan 1983) with the local permeate y_i = J_i/ΣJ from a bracketed brentq (closed form at P_l = 0) and the feed side dn_i/da = -J_i integrated DOP853 at rtol 1e-11; stage-cut mode by a terminal event with the A_hard cap; isothermal outlets via split_by_component as in R0. |
+| R1 | validated | `ngdesign.units.separation.membrane_r1:MembraneR1` | solution-diffusion with permeances, cross-flow (Weller-Steiner 1950, Pan 1983) with the local permeate y_i = J_i/ΣJ from a bracketed brentq (closed form at P_l = 0) and the feed side dn_i/da = -J_i integrated DOP853 at rtol 1e-11; stage-cut mode by a terminal event with the A_hard cap; isothermal outlets via split_by_component as in R0. Validated against Geankoplis Ex. 13.6-1 (cross flow, theta = 0.2; reject x_O2 0.1190, permeate y_O2 0.569; measured 0.11904 / 0.56886). |
 | R2 | provisional | `ngdesign.units.separation.membrane_r2:MembraneR2` | counter-current module, Pan 1983 shooting on the residue flows (scipy root hybr, tol 1e-12) with the permeate plug flow dp_i/da = -J_i toward the feed end, the M2 switch at Sum(p) <= 1e-12 F, and design mode by brentq on theta_R2(A) - theta over [0, A_R1(theta)]; outlets as in R0/R1. |
 
 ### R0 parameters
@@ -103,11 +103,14 @@ type: object
 |---|---|---|---|---|---|---|
 | `V1-membrane-geankoplis-13-4-2` | R0 | `outlet.permeate.composition.O2` | 0.5068 | 0.506809 | abs 0.0001 | pass |
 | `V1-membrane-geankoplis-13-4-2` | R0 | `outlet.residue.composition.O2` | 0.1345 | 0.134548 | abs 0.0001 | pass |
+| `V1-membrane-geankoplis-13-6-1` | R1 | `outlet.residue.composition.O2` | 0.119 | 0.119036 | abs 5e-05 | pass |
+| `V1-membrane-geankoplis-13-6-1` | R1 | `outlet.permeate.composition.O2` | 0.569 | 0.568857 | abs 0.0005 | pass |
 
 - `V1-membrane-geankoplis-13-4-2`: Geankoplis, "Transport Processes and Separation Process Principles", 4th ed., Example 13.4-2 "Membrane Design for Separation of Air" (p. 767): an air feed (z_O2 = 0.209) at 190 cmHg with the permeate side at 19 cmHg (pressure ratio 10), alpha = 10 (O2 permeability / N2 permeability) and stage cut theta = 0.2 give a permeate y_O2 = 0.5068 and a reject x_O2 = 0.1345 by the Weller-Steiner complete-mixing model. Numbers read from the FOSSEE open transcription of Geankoplis Ch. 13 (tbc-python.fossee.in, GeankoplisChapter13, Example 13.4-2). The compositions come from the complete-mixing algebra alone (thermo only sets the outlet states), so no equation-of-state gap applies; the tolerances are the book's four-decimal rounding.
+- `V1-membrane-geankoplis-13-6-1`: Geankoplis, "Transport Processes and Separation Process Principles", 4th ed., Example 13.6-1 "Design of Membrane Unit Using Cross Flow" (p. 775): the air feed of Example 13.4-2 (x_F,O2 = 0.209, feed side 190 cmHg, permeate side 19 cmHg, alpha* = P'_O2/P'_N2 = 10) at stage cut theta = 0.2 in the Weller-Steiner cross-flow model; the book's trial-and-error table gives the reject x_o = 0.1190 at theta = 0.2 (computed theta 0.20008 at x_o = 0.1190) and the mixed exit permeate y_p = 0.569. Numbers read from the FOSSEE open transcription of Geankoplis Ch. 13 (tbc-python.fossee.in, TRANSPORT_PROCESSES_AND_UNIT_OPERATIONS, GeankoplisChapter13.ipynb, Example 13.6-1 inputs and printed output table), retrieved 2026-11-04.
 
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-D 8
 
-> R0 split and stage-cut specs implemented; Geankoplis Ex. 13.4-2 example. V1 gap — no printed cross-flow or counter-current worked example was found for R1/R2 (searched Geankoplis §13.5 cross-flow worked example, Pan 1983, Baker Ch. 8, and the plan's candidates); the R1/R2 oracle cases CF1–CF4 are hand-computed (scratchpad/unit-specs/calc_membrane.py RK4/bisection — no printed source), checked by the Rayleigh closed form and the R2 -> R1 -> R0 identities.
+> R0 split and stage-cut specs implemented; Geankoplis Ex. 13.4-2 example. R1 cross flow is validated on Geankoplis Ex. 13.6-1 (FOSSEE transcription). R2 V1 gap — no printed counter-current worked example was found (searched Geankoplis Ch. 13, Seader-Henley-Roper 3rd ed. Ch. 14 - Ex. 14.6 is perfect mixing, Ex. 14.12 is plug-flow feed with a mixed permeate, Fig. 14.13 is a plot only; Pan 1983, Baker Ch. 8); the R1/R2 oracle cases CF1–CF4 are hand-computed (scratchpad/unit-specs/calc_membrane.py RK4/bisection — no printed source), checked by the Rayleigh closed form and the R2 -> R1 -> R0 identities.

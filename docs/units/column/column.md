@@ -164,6 +164,19 @@ type: object
 
 Mode map: `distillation` → `R2`, `absorber` → `R2`, `stripper` → `R2`, `rectifier` → `R2`, `reboiled_absorber` → `R2`
 
+## V1 worked cases
+
+| case | level | quantity | expected | measured | tolerance | result |
+|---|---|---|---|---|---|---|
+| `V1-column-seader-10-9` | R2 | `outlet.distillate.T` | 301.856 | 301.861 | abs 0.003 | assessed miss |
+| `V1-column-seader-10-9` | R2 | `outlet.bottoms.T` | 362.278 | 362.311 | abs 0.003 | assessed miss |
+| `V1-column-seader-10-9` | R2 | `outlet.bottoms.composition.C3` | 0.0191 | 0.0191174 | abs 1e-05 | assessed miss |
+| `V1-column-seader-10-9` | R2 | `outlet.bottoms.composition.nC4` | 0.247255 | 0.247198 | abs 1e-05 | assessed miss |
+| `V1-column-seader-10-9` | R2 | `outlet.bottoms.composition.nC5` | 0.733625 | 0.733685 | abs 1e-05 | assessed miss |
+
+- `V1-column-seader-10-9`: Seader, Henley & Roper, "Separation Process Principles", 3rd ed. (Wiley 2011), Example 10.9 "Inside-Out Method", p. 404, with the column of Figure 10.7, p. 384 (archive.org item separation-process-principles-chemical-a, PDF pages 412 and 432, read and retrieved 2026-11-04): total condenser (stage 1), three equilibrium stages, partial reboiler (stage 5), all at 100 psia; 100 lbmol/h saturated-liquid feed to stage 3 (C3 0.30, nC4 0.30, nC5 0.40); reflux ratio L1/U1 = 2.0; bottoms L5 = 50 lbmol/h; SRK equation of state (CHEMCAD TOWR). Converged (outer-loop iteration 3) results printed: T1 = 83.67 F, T5 = 192.43 F; bottoms C3 0.955, nC4 12.363, nC5 36.683 lbmol/h of L5 = 50.001 lbmol/h. The book reports the feed bubble point as 123.5 F.
+  - assessed: Measured miss on srk-kij0 (just outside the printed rounding): distillate T 301.861 vs 301.856 K (+0.005 K = +0.009 F), bottoms T 362.311 vs 362.278 K (+0.033 K = +0.06 F); bottoms x_C3 0.019117 vs 0.019100 (0.9559 vs 0.955 lbmol/h), x_nC4 0.247198 vs 0.247255, x_nC5 0.733685 vs 0.733625. With the k_ij effect removed (the srk row missed by 0.5-1.7 K and x_C3 0.017153) the remaining gap is below the book's own convergence spread: between its outer-loop iterations 2 and 3 the printed T5 moved 0.10 F and bottoms C3 0.008 lbmol/h, so the printed iteration-3 values are not converged to their last digit. Smaller contributors: CHEMCAD's pure-component constants and ideal-gas Cp (energy balance) are not the ChemSep/thermo values, and the column meets its specs to the core's _SPEC_TOL (reflux ratio 2.000245, bottoms 0.0063007 mol/s = 50.006 lbmol/h; issue 248). Not a MESH defect; the level stays provisional because the printed-rounding tolerance is not met.
+
 ## References
 
 - Boston & Sullivan 1974, Can. J. Chem. Eng. 52, 52-63

@@ -1,0 +1,41 @@
+# V1 worked case for membrane R1 (per-unit case file; units-b validation run).
+- id: V1-membrane-geankoplis-13-6-1
+  unit: membrane
+  level: R1
+  source: >-
+    Geankoplis, "Transport Processes and Separation Process Principles", 4th
+    ed., Example 13.6-1 "Design of Membrane Unit Using Cross Flow" (p. 775):
+    the air feed of Example 13.4-2 (x_F,O2 = 0.209, feed side 190 cmHg,
+    permeate side 19 cmHg, alpha* = P'_O2/P'_N2 = 10) at stage cut
+    theta = 0.2 in the Weller-Steiner cross-flow model; the book's
+    trial-and-error table gives the reject x_o = 0.1190 at theta = 0.2
+    (computed theta 0.20008 at x_o = 0.1190) and the mixed exit permeate
+    y_p = 0.569. Numbers read from the FOSSEE open transcription of
+    Geankoplis Ch. 13 (tbc-python.fossee.in, TRANSPORT_PROCESSES_AND_UNIT_OPERATIONS,
+    GeankoplisChapter13.ipynb, Example 13.6-1 inputs and printed output table),
+    retrieved 2026-11-04.
+  notes: >-
+    The compositions depend only on alpha*, the pressure ratio and theta, so
+    the absolute permeance is free: O2 6.587e-12 mol/(m2 s Pa) (500e-10
+    cm3(STP) cm/(s cm2 cmHg) over 2.54e-3 cm) with N2 a tenth of it, and the
+    feed is the book's 1e6 cm3(STP)/s = 44.615 mol/s. The book's area is not
+    anchored (the transcription's area integral is a coarse 5-point
+    quadrature, not a printed book value). The unit integrates the cross-flow
+    balance numerically (DOP853, rtol 1e-11) while the book uses the
+    Weller-Steiner closed form, so the agreement is an independent check.
+    Tolerances: the book's four-decimal x_o and three-decimal y_p, fixed
+    before the run.
+  feeds:
+    feed_in:
+      T: 298.15
+      P: 2.533125e+5
+      molar_flow: 44.615
+      composition: {O2: 0.209, N2: 0.791}
+  params:
+    permeances_mol_m2_s_Pa: {O2: 6.587e-12, N2: 6.587e-13}
+    P_permeate: 2.533125e+4
+    stage_cut: 0.2
+    area_m2: null
+  expected:
+  - {quantity: outlet.residue.composition.O2, value: 0.1190, tol_abs: 0.00005}
+  - {quantity: outlet.permeate.composition.O2, value: 0.569, tol_abs: 0.0005}
