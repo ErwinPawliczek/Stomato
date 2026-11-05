@@ -182,7 +182,7 @@
       description: reactor effluent (well-mixed)
   levels:
     R1:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.reactors.cstr:CstrR1
       params:
         type: object
@@ -198,6 +198,8 @@
           bulk_density_kg_m3: {type: number, description: catalyst bulk density, kg/m3}
           T_guess_K: {type: number, description: Newton start temperature, K; selects
             the steady-state branch}
+      validation:
+      - V1-FOGLER-HDA-CSTR
       note: kinetics (Arrhenius, LHHW, power-law), single phase
     R2:
       status: provisional
@@ -224,6 +226,12 @@
   references:
   - docs/unit-catalogue-plan.md §2 U-F 5
   notes: >-
+    R1 validated 2026-11-04 on Fogler 4th ed. Example 6-8 (mesitylene hydrodealkylation,
+    two series reactions, Table E6-8.1 NLES solution; V1-FOGLER-HDA-CSTR). That case found
+    and fixed a bug: the rate saw only the positive outlet species and xi = 0 was a
+    depletion corner when an intermediate is not fed (regression test in
+    tests/units/reactors/test_cstr_r1.py). The older V1-gap text below concerns the Ch. 4
+    liquid examples only.
     R2 ships provisional on an independent recomputation of the rate from the outlet's own
     phases and the reduction to R1; no V1 case was attempted. R1 implemented (U-R2): algebraic extents at outlet conditions, damped Newton,
     single phase in the vessel. V1 gap (2026-10-25; CORRECTION same day: an
@@ -266,7 +274,7 @@
       description: reactor effluent
   levels:
     R1:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.reactors.pfr:PfrR1
       params:
         type: object
@@ -285,6 +293,8 @@
           bulk_density_kg_m3:
             type: number
             description: catalyst bulk density, kg/m3 — required when a rate is per kg_cat
+      validation:
+      - V1-FOGLER-EO-PBR-NODP
       note: >-
         kinetic extents integrated over V (BDF, depletion and pressure-floor events); the
         RHS never flashes — single-phase properties come from phase_props and the audit flashes
@@ -318,6 +328,8 @@
           reacting_phase: {type: string, enum: [vapor, liquid], description: single phase
               the flow must stay in}
           bulk_density_kg_m3: {type: number, description: catalyst bulk density, kg/m3}
+      validation:
+      - V1-FOGLER-EO-PBR
       note: extents, energy and pressure integrated along the tube with Ergun
         (fluids.packed_bed.Ergun) and wall heat transfer to a fixed coolant temperature; the outlet
         closes on the formation basis at P_out; reduces to R1 with no bed, no coolant and the same
@@ -346,17 +358,26 @@
               the Thiele modulus"}
           deactivation: {type: object, description: "{order, k_d_per_s, time_on_stream_s};
               power-law decay frozen at the time on stream"}
-      note: R2 with the rate multiplied by a*eta; generalized Thiele modulus eta = tanh(phi)/phi on
-        a shape-normalized sphere and separable power-law activity decay, uniform along the bed
+      note: R2 with the rate multiplied by a*eta; spherical-pellet effectiveness
+        eta = (3/phi^2)(phi coth phi - 1) on the sphere Thiele modulus (Fogler 4th ed. eq. 12-32,
+        exact at first order) and separable power-law activity decay, uniform along the bed
       end_state: true
   balance: mass_elements
   pid_symbol: R
   references:
   - docs/unit-catalogue-plan.md §2 U-F 6
   notes: >-
+    R1 validated on Fogler 4th ed. Example 4-6 without pressure drop (V1-FOGLER-EO-PBR-NODP,
+    35.3 lb catalyst for X = 0.60, read 2026-11-04). R2 runs the same example with the Ergun
+    bed (V1-FOGLER-EO-PBR) and misses by X -1.85e-3 because the book takes the gas as air
+    (rho_0 1.15 % above the actual feed); recorded, R2 stays provisional.
     R1, R2 and R3 implemented; single phase. R2 and R3 ship provisional on the spec's hand
     calculations (Fogler eq. 4-33 Ergun, wall-exchange exponential, Thiele/activity closed
-    form) and the reductions to the lower level; no V1 case was attempted for them. R1 V1 gap — no transcribable
+    form) and the reductions to the lower level; R3 V1 search 2026-11-04: Fogler 4th ed.
+    Ex. 12-3 gives only Thiele moduli (no k or De) and Ex. 12-4 needs the overall
+    effectiveness with external mass transfer (Thoenes-Kramers), which R3 does not model. R3
+    used the shape-normalized tanh(phi/3)/(phi/3) until 2026-11-04 (0.910 at sphere modulus 1.65
+    where the exact sphere gives the book's 0.856); it now uses the exact eq. 12-32; no V1 case was attempted for them. R1 V1 gap — no transcribable
     printed validation case: searches 'Fogler Elements of Chemical Reaction Engineering PFR
     example first order irreversible gas phase numerical conversion worked example printed
     values' and 'Example 4- Fogler PFR gas phase 500 K volume final conversion table printed'
@@ -403,7 +424,11 @@
   - docs/unit-catalogue-plan.md §2 U-F 7
   notes: A batch cycle over kinetics.rate, not dynamic mode (plan §0 decision 4 still holds for
     flowsheet dynamics). Provisional on closed-form tests (first-order and second-order with a
-    mole change) and the equivalence to the isobaric PFR; no V1 case was attempted. The semi-batch
+    mole change) and the equivalence to the isobaric PFR. V1 search 2026-11-04 (Fogler 4th ed.
+    scan, archive.org) - the batch examples are Ex. 4-1 (k fitted to a concentration-time table,
+    so a check against it would test the fit), Ex. 9-1 and 9-2 (adiabatic/upset batches on
+    constant mean Cp, which the formation-basis enthalpies do not reproduce by construction) and
+    Ex. 7-4 (urea/urease, not in the registry); no transcribable isothermal printed answer. The semi-batch
     half of the row name is not implemented.
 
 - id: fixed_bed_tubular
@@ -449,6 +474,9 @@
   notes: The coolant is described by params; the row has no coolant ports. V1 gap - the spec's
     candidate (Froment, Bischoff & De Wilde 3rd ed. ch. 11, o-xylene to phthalic anhydride) prints
     its profiles mainly as figures, and figure readings are not valid V1; no copy was consulted.
+    Fogler 4th ed. Ex. 8-5 case 3 (acetone cracking, co-current air heating medium, read
+    2026-11-04 on the archive.org scan) prints its answers only as Figure E8-5.4 profiles and
+    runs on constant mean Cp (163/83/71 J/mol K), so it is not a V1 case either.
     Provisional on the epsilon-NTU closed forms and the reduction to pfr R2.
 
 - id: electrolyser_stack

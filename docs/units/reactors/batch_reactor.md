@@ -54,4 +54,4 @@ type: object
 
 - docs/unit-catalogue-plan.md §2 U-F 7
 
-> A batch cycle over kinetics.rate, not dynamic mode (plan §0 decision 4 still holds for flowsheet dynamics). Provisional on closed-form tests (first-order and second-order with a mole change) and the equivalence to the isobaric PFR; no V1 case was attempted. The semi-batch half of the row name is not implemented.
+> A batch cycle over kinetics.rate, not dynamic mode (plan §0 decision 4 still holds for flowsheet dynamics). Provisional on closed-form tests (first-order and second-order with a mole change) and the equivalence to the isobaric PFR. V1 search 2026-11-04 (Fogler 4th ed. scan, archive.org) - the batch examples are Ex. 4-1 (k fitted to a concentration-time table, so a check against it would test the fit), Ex. 9-1 and 9-2 (adiabatic/upset batches on constant mean Cp, which the formation-basis enthalpies do not reproduce by construction) and Ex. 7-4 (urea/urease, not in the registry); no transcribable isothermal printed answer. The semi-batch half of the row name is not implemented.

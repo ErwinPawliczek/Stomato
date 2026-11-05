@@ -7,12 +7,13 @@ transfer to a fixed coolant temperature, q_V = U*a_w*(T_c - T) with
 a_w = 4/D_t (Fogler, *Elements of CRE*, ch. 11).  ``PfrR3`` adds the
 generalized Thiele effectiveness and power-law catalyst decay.
 
-R3 equations (Aris shape-normalized form; Fogler ch. 15; Froment, Bischoff &
-De Wilde ch. 3).  For a power law of order n in the base component,
-phi_j = L_p*sqrt(((n+1)/2)*r_p,j/(D_e*C_s,j)) with L_p = R_p/3 for a sphere,
-r_p,j = s_j*r_j/(1 - eps_b) the rate per pellet volume and C_s,j the bulk
-base-component concentration; eta_j = tanh(phi_j)/phi_j, and 1 - phi_j**2/3
-below phi_j = 1e-4.  Activity is separable and uniform along the bed
+R3 equations (spherical pellet; Fogler, *Elements of CRE*, 4th ed., Sec. 12.2,
+eq. 12-32, p. 829).  For a power law of order n in the base component,
+phi_j = R_p*sqrt(((n+1)/2)*r_p,j/(D_e*C_s,j)), r_p,j = s_j*r_j/(1 - eps_b) the
+rate per pellet volume and C_s,j the bulk base-component concentration;
+eta_j = (3/phi_j**2)*(phi_j*coth(phi_j) - 1), exact for n = 1 (the (n+1)/2
+normalization makes it an approximation for other orders), with its Taylor
+series below phi_j = 0.1.  Activity is separable and uniform along the bed
 (Fogler ch. 10): da/dt = -k_d*a**m gives a = [1 + (m-1)*k_d*t]**(1/(1-m))
 for m != 1 and a = exp(-k_d*t) for m = 1, frozen at the time on stream.
 
@@ -477,9 +478,26 @@ def activity(params: Mapping[str, Any]) -> float:
     return float(base ** (1.0 / (1.0 - m)))
 
 
+#: Below this sphere modulus eta takes its Taylor series: phi*coth(phi) - 1 ~ phi**2/3
+#: cancels to ~eps/phi**2 relative, while the series' first omitted term is
+#: ~3e-5*phi**8 (< 1e-12 here).
+_THIELE_SERIES_PHI = 0.1
+
+
 def thiele_effectiveness(phi: float) -> float:
-    """eta = tanh(phi)/phi, with the series 1 - phi**2/3 below 1e-4 (spec equation 9)."""
-    return 1.0 - phi**2 / 3.0 if phi < 1.0e-4 else math.tanh(phi) / phi
+    """Internal effectiveness factor of a spherical pellet, exact for a first-order reaction.
+
+    eta = (3/phi**2)*(phi*coth(phi) - 1), with the sphere Thiele modulus
+    phi = R*sqrt(k/D_e) (Fogler, Elements of Chemical Reaction Engineering, 4th ed.,
+    Sec. 12.2, eq. 12-32, p. 829, read 2026-11-04). Below
+    phi = 0.1 the series 1 - phi**2/15 + 2*phi**4/315 - phi**6/1575 (from
+    x*coth(x) = 1 + x**2/3 - x**4/45 + 2*x**6/945 - ...) avoids the cancellation.
+    Large phi tends to 3/phi (eq. 12-33).
+    """
+    if phi < _THIELE_SERIES_PHI:
+        p2 = phi * phi
+        return 1.0 - p2 / 15.0 + 2.0 * p2 * p2 / 315.0 - p2 * p2 * p2 / 1575.0
+    return 3.0 / (phi * phi) * (phi / math.tanh(phi) - 1.0)
 
 
 def _base_order(reaction: Reaction) -> float | None:
@@ -552,7 +570,10 @@ class PfrR3(PfrR2):
             if c_s <= 0.0 or r_j <= 0.0:
                 return a
             r_p = scales[j] * r_j / (1.0 - voidage)
-            phi = (radius / 3.0) * math.sqrt((order + 1.0) / 2.0 * r_p / (diffusivity * c_s))
+            # Sphere modulus R*sqrt(k/D_e), exact at first order; the (n+1)/2 factor is the
+            # generalized-modulus normalization for order n (Bischoff 1965), an approximation
+            # away from n = 1.
+            phi = radius * math.sqrt((order + 1.0) / 2.0 * r_p / (diffusivity * c_s))
             return a * thiele_effectiveness(phi)
 
         return multiplier, {"activity": a}

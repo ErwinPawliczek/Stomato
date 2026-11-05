@@ -54,12 +54,11 @@ Index `i` runs over components and `j` over reactions. V is reactor volume (m³)
    - G = ṁ/(n_t·A_c) is the superficial mass flux, constant along the tube.
    - ρ and μ come from the flash at (z, T, P); μ can be overridden by the param `viscosity_Pa_s`.
    - Without a `bed` param, dP/dV = 0 (an empty tube carries no pressure drop at R2).
-9. **R3 generalized Thiele modulus and effectiveness.** Aris's shape-normalized form (Fogler ch. 15; Froment, Bischoff & De Wilde ch. 3), for a power-law reaction of order n in its base component:
-   - φ_j = L_p · sqrt( ((n+1)/2) · r_p,j / (D_e · C_s,j) );
-   - L_p = R_p/3 for a sphere;
+9. **R3 Thiele modulus and effectiveness, spherical pellet** (Fogler, *Elements of CRE*, 4th ed., Sec. 12.2, eq. 12-32, p. 829), for a power-law reaction of order n in its base component:
+   - φ_j = R_p · sqrt( ((n+1)/2) · r_p,j / (D_e · C_s,j) ) (exact sphere modulus R·sqrt(k/D_e) at n = 1; the (n+1)/2 normalization is an approximation for other orders);
    - r_p,j = s_j·r_j/(1−ε_b) is the rate per pellet volume;
    - C_s,j is the base-component bulk concentration: y_base·P_eff/(R·T), or for a liquid x·c_tot;
-   - η_j = tanh(φ_j)/φ_j, and η_j = 1 − φ_j²/3 when φ_j < 1e-4.
+   - η_j = (3/φ_j²)(φ_j·coth φ_j − 1), and its series 1 − φ²/15 + 2φ⁴/315 − φ⁶/1575 when φ_j < 0.1. (Changed 2026-11-04 from the shape-normalized tanh(φ/3)/(φ/3), which read 0.910 where the exact sphere gives 0.856 at φ = 1.65.)
 10. **R3 activity**, a power-law decay da/dt = −k_d·a^m evaluated at time on stream t (separable, uniform along the bed; Fogler ch. 10):
     a = [1 + (m−1)·k_d·t]^{1/(1−m)} for m ≠ 1, and a = exp(−k_d·t) for m = 1. The steady-state equivalent is the bed frozen at activity a(t).
 
@@ -246,5 +245,5 @@ params:
 - No equilibrium-without-reverse refusal (#245 fixed `kinetics.rate` to forward·(1 − Q/K)); a test reaches Q/K → 1 at the outlet; LHHW + equilibrium is refused.
 - The `HeatModel` and `rate_multiplier` hooks are public and documented, so fixed_bed, naphtha_ht and reformer need not edit `plug_flow.py`.
 - Ergun in SI with no g_c; a_w = 4/D_t; G is per tube.
-- R3's η uses tanh(φ)/φ with L_p = R_p/3, and the order-m activity formula.
+- R3's η is the exact first-order sphere form (eq. 12-32), and the order-m activity formula.
 - Identity tests are at 1e-10 / 1e-12, and every refusal is reached.

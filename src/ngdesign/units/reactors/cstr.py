@@ -261,13 +261,18 @@ def _solve_cstr(
             return None
         z = z_from(n_out)
         total = math.fsum(n_out.values())
+        # The rate sees every reacting species, one still at zero included (an
+        # intermediate absent from the feed at the Newton start): its order then
+        # gives a zero rate, not a species outside the mixture — as in plug_flow.
+        z_rate = {cid: n / total for cid, n in n_out.items()}
         stream = thermo.flash_pt(z, T, inlet.P, total)
         vf = stream.vapor_fraction
         if phase_resolved:
-            basis = _phase_basis(stream, reacting_phase, T, inlet.P, volume_m3, holdup_m3, z)
+            basis = _phase_basis(stream, reacting_phase, T, inlet.P, volume_m3, holdup_m3, z_rate)
             g = [nu_b * xi_j / total_in for nu_b, xi_j in zip(nu_base, xi, strict=True)]
             if basis is not None:
                 v_k, p_k, x_k = basis
+                x_k = {**dict.fromkeys(n_out, 0.0), **x_k}
                 for j, reaction in enumerate(rset.reactions):
                     g[j] -= scales[j] * v_k * rate(reaction, T, p_k, x_k) / total_in
             if duty_W is not None:
@@ -287,7 +292,7 @@ def _solve_cstr(
                 )
         p_eff = _effective_pressure(stream, T, inlet.P)
         g = [
-            (nu_b * xi_j - s_j * volume_m3 * rate(reaction, T, p_eff, z)) / total_in
+            (nu_b * xi_j - s_j * volume_m3 * rate(reaction, T, p_eff, z_rate)) / total_in
             for reaction, s_j, nu_b, xi_j in zip(rset.reactions, scales, nu_base, xi, strict=True)
         ]
         if duty_W is not None:
@@ -324,6 +329,22 @@ def _solve_cstr(
     first = evaluate(u)
     if first is None:  # unreachable at xi = 0, guarded for typing
         raise CstrConvergenceError("cstr: the inlet amounts are already negative")
+    if any(
+        nu < 0.0 and n_in.get(cid, 0.0) <= 0.0
+        for reaction in rset.reactions
+        for cid, nu in reaction.stoichiometry.items()
+    ):
+        # A species the feed lacks puts xi = 0 on a depletion corner (series
+        # M -> X -> T with no X fed: the X-consuming extent can move neither way,
+        # so the forward-difference Jacobian is undefined there). Start instead
+        # from a small interior point: each reaction advanced by a step that
+        # halves in declaration order, so every intermediate stays positive.
+        step = _START_STEP * total_in
+        interior = [step * 0.5**j for j in range(m)]
+        trial = evaluate(interior if T_fixed is not None else [*interior, T_start])
+        if trial is not None and all(n > 0.0 for n in apply_extents(n_in, rset, interior).values()):
+            u = interior if T_fixed is not None else [*interior, T_start]
+            first = trial
     g, _stream = first
     applied_step = 0.0
     iterations = 0
@@ -368,6 +389,10 @@ def _solve_cstr(
         iterations=iterations,
         residual_inf=_norm_inf(g),
     )
+
+
+#: Interior Newton start, fraction of the total feed (see _newton).
+_START_STEP = 1e-6
 
 
 def _positive(params: Mapping[str, Any], key: str) -> float:
