@@ -16,9 +16,13 @@
 # cases (bubble_P at the measured T; for an isobar the measured boiling T at the fixed P).
 # Tolerances: the fixed TOLERANCE_POLICY (bubble_T 0.5 % rel, bubble_P 3 % rel, y 0.02 abs).
 #
-# Model-side fix made with these cases (2026-11-04): data/thermo_params/unifac/groups.yaml now
-# assigns methanol the whole-molecule CH3OH subgroup and ethylene glycol the DOH subgroup where
-# the variant's table carries them (they were split into CH3/CH2 + OH); see that file's header.
+# Model-side fixes made with these cases (2026-11-04, val-gphi-unifac):
+# - data/thermo_params/unifac/groups.yaml assigns methanol the whole-molecule CH3OH subgroup and
+#   ethylene glycol the DOH subgroup where the variant's table carries them (they were split into
+#   CH3/CH2 + OH); see that file's header.
+# - src/ngdesign/thermo/gamma_phi.py: real-vapour pairings (rk, pr, hoc, nothnagel) now put the
+#   liquid on thermo's PhiSat basis with the pairing's own pure-vapour phi_sat (before: plain Psat
+#   basis, so near-pure n-butane at 333.2 K bubbled 16 % above its Psat on the RK pairing).
 #
 # Binding: `package:` lists every UNIFAC row whose curated group map
 # (data/thermo_params/unifac/groups.yaml) covers both components. unifac_lle_* covers only
@@ -30,14 +34,16 @@
 #   unifac-etohnc4-333.2K-xnC40.4551: unifac_dortmund_hoc, unifac_dortmund_nothnagel, unifac_hoc, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_nist_hoc, unifac_nist_nothnagel, unifac_nothnagel, unifac_psrk_hoc, unifac_psrk_nothnagel -> virial P_max
 #   unifac-etohnc4-333.2K-xnC40.7548: unifac_dortmund_hoc, unifac_dortmund_nothnagel, unifac_hoc, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_nist_hoc, unifac_nist_nothnagel, unifac_nothnagel, unifac_psrk_hoc, unifac_psrk_nothnagel -> virial P_max
 #   unifac-meohnc4-364.5K-xnC40.2239: unifac_dortmund_hoc, unifac_dortmund_nothnagel, unifac_hoc, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_nist_hoc, unifac_nist_nothnagel, unifac_nothnagel, unifac_psrk_hoc, unifac_psrk_nothnagel -> virial P_max
-#   unifac-meohnc4-364.5K-xnC40.4969: unifac_rk -> UnconvergedError
+#   unifac-meohnc4-364.5K-xnC40.4969: unifac_pr -> UnconvergedError
 #   unifac-meohnc4-364.5K-xnC40.4969: unifac_dortmund_hoc, unifac_dortmund_nothnagel, unifac_hoc, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_nist_hoc, unifac_nist_nothnagel, unifac_nothnagel, unifac_psrk_hoc, unifac_psrk_nothnagel -> virial P_max
+#   unifac-meohnc4-364.5K-xnC40.745: unifac_psrk_rk -> OscillationError
 #   unifac-meohnc4-364.5K-xnC40.745: unifac_dortmund_hoc, unifac_dortmund_nothnagel, unifac_hoc, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_nist_hoc, unifac_nist_nothnagel, unifac_nothnagel, unifac_psrk_hoc, unifac_psrk_nothnagel -> virial P_max
 #   'virial P_max': thermo's density-form truncated virial has no vapour root above
 #   P_max = -RT/(4B); the bubble-P bracket (3 x the largest Wilson Psat) evaluates the vapour
 #   there and raises (a robustness limit of the hoc/nothnagel rows at >~0.4 MPa, reported).
-#   UnconvergedError: thermo's FlashVL successive substitution fails next to the spurious
-#   original-UNIFAC MeOH/n-butane liquid split (x_MeOH 0.31-0.56 unstable at 364.5 K).
+#   UnconvergedError/OscillationError: thermo's FlashVL successive substitution fails next to
+#   the spurious original-UNIFAC/PSRK MeOH/n-butane liquid split (x_MeOH 0.31-0.56 resp.
+#   0.14-0.60 unstable at 364.5 K).
 #
 pure_cases:
 - id: unifac-pure-EtOH-meohetoh-93.32kPa
@@ -513,7 +519,7 @@ binary_cases:
   expected:
     bubble_P: 1273800.0
 - id: unifac-meohnc4-364.5K-xnC40.4969
-  package: [unifac_ig, unifac_pr, unifac_dortmund_ig, unifac_dortmund_rk, unifac_dortmund_pr, unifac_psrk_ig, unifac_psrk_rk,
+  package: [unifac_ig, unifac_rk, unifac_dortmund_ig, unifac_dortmund_rk, unifac_dortmund_pr, unifac_psrk_ig, unifac_psrk_rk,
     unifac_psrk_pr, unifac_nist_ig, unifac_nist_rk, unifac_nist_pr, unifac_lyngby_ig, unifac_lyngby_rk, unifac_lyngby_pr]
   components:
   - nC4
@@ -531,8 +537,7 @@ binary_cases:
     bubble_P: 1401100.0
 - id: unifac-meohnc4-364.5K-xnC40.745
   package: [unifac_ig, unifac_rk, unifac_pr, unifac_dortmund_ig, unifac_dortmund_rk, unifac_dortmund_pr, unifac_psrk_ig,
-    unifac_psrk_rk, unifac_psrk_pr, unifac_nist_ig, unifac_nist_rk, unifac_nist_pr, unifac_lyngby_ig, unifac_lyngby_rk,
-    unifac_lyngby_pr]
+    unifac_psrk_pr, unifac_nist_ig, unifac_nist_rk, unifac_nist_pr, unifac_lyngby_ig, unifac_lyngby_rk, unifac_lyngby_pr]
   components:
   - nC4
   - MeOH
