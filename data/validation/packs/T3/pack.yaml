@@ -47,8 +47,16 @@
 #  - components: O2 has no entry in data/components.yaml (checked 2026-11-04; N2/CO2/H2O
 #    exist). Cases will not resolve until O2 (CAS 7782-44-7) is curated - same blocker
 #    shape as the AcOH gap flagged in the T7 pack.
+#
+# Bound 2026-11-05 by T11 (Obvious): package re-pointed pending:sr-polar -> sr-polar
+# (provisional standalone density-only row, data/thermo_models/sr_polar.yaml);
+# phase: aqueous set per the note above (the package labels the water-rich
+# supercritical phase AQUEOUS); per-case density tolerances = |1/(1+e_v) - 1| + 1 pp
+# with e_v from data.csv's VTBMSR3_rel_err_pct (the intended check: our error sits
+# within one percentage point of the paper's own model error on every point).
 - id: h2o-air-620.5K-27MPa
-  package: pending:sr-polar
+  package: sr-polar
+  phase: aqueous
   components:
   - H2O
   - O2
@@ -60,11 +68,14 @@
   T: 620.5
   P: 27000000
   source: Japas & Franck [30] experimental molar volume as printed in Mangold et al. 2019 Table 8 (doi:10.1016/j.supflu.2019.02.016, open); composition x_O2/x_N2 = 1/4 assumed by Mangold (not specified in Japas & Franck); density = printed molar volume converted with NIST molar masses (see pack header); retrieved 2026-11-04
+  tolerance:
+    density: 0.014
   expected:
     density: 167.810369
   note: x_H2O=0.791, v_ref=120.8e-6 m3/mol; paper's own VTBMSR-III error 0.4 %, VdW error 4.1 % (Table 8)
 - id: h2o-air-638.5K-44MPa
-  package: pending:sr-polar
+  package: sr-polar
+  phase: aqueous
   components:
   - H2O
   - O2
@@ -76,11 +87,14 @@
   T: 638.5
   P: 44000000
   source: Japas & Franck [30] experimental molar volume as printed in Mangold et al. 2019 Table 8 (doi:10.1016/j.supflu.2019.02.016, open); composition x_O2/x_N2 = 1/4 assumed by Mangold (not specified in Japas & Franck); density = printed molar volume converted with NIST molar masses (see pack header); retrieved 2026-11-04
+  tolerance:
+    density: 0.016
   expected:
     density: 294.873351
   note: x_H2O=0.795, v_ref=68.6e-6 m3/mol; paper's own VTBMSR-III error -0.6 %, VdW error 9.5 % (Table 8)
 - id: h2o-air-640K-68.3MPa
-  package: pending:sr-polar
+  package: sr-polar
+  phase: aqueous
   components:
   - H2O
   - O2
@@ -92,11 +106,14 @@
   T: 640
   P: 68300000
   source: Japas & Franck [30] experimental molar volume as printed in Mangold et al. 2019 Table 8 (doi:10.1016/j.supflu.2019.02.016, open); composition x_O2/x_N2 = 1/4 assumed by Mangold (not specified in Japas & Franck); density = printed molar volume converted with NIST molar masses (see pack header); retrieved 2026-11-04
+  tolerance:
+    density: 0.0517
   expected:
     density: 432.692110
   note: x_H2O=0.797, v_ref=46.7e-6 m3/mol; paper's own VTBMSR-III error -4.0 %, VdW error 26.6 % (Table 8)
 - id: h2o-air-642K-102MPa
-  package: pending:sr-polar
+  package: sr-polar
+  phase: aqueous
   components:
   - H2O
   - O2
@@ -108,11 +125,14 @@
   T: 642
   P: 102000000
   source: Japas & Franck [30] experimental molar volume as printed in Mangold et al. 2019 Table 8 (doi:10.1016/j.supflu.2019.02.016, open); composition x_O2/x_N2 = 1/4 assumed by Mangold (not specified in Japas & Franck); density = printed molar volume converted with NIST molar masses (see pack header); retrieved 2026-11-04
+  tolerance:
+    density: 0.083
   expected:
     density: 541.735162
   note: x_H2O=0.797, v_ref=37.3e-6 m3/mol; paper's own VTBMSR-III error -6.8 %, VdW error 39.1 % (Table 8)
 - id: h2o-air-645.5K-152.9MPa
-  package: pending:sr-polar
+  package: sr-polar
+  phase: aqueous
   components:
   - H2O
   - O2
@@ -124,11 +144,14 @@
   T: 645.5
   P: 152900000
   source: Japas & Franck [30] experimental molar volume as printed in Mangold et al. 2019 Table 8 (doi:10.1016/j.supflu.2019.02.016, open); composition x_O2/x_N2 = 1/4 assumed by Mangold (not specified in Japas & Franck); density = printed molar volume converted with NIST molar masses (see pack header); retrieved 2026-11-04
+  tolerance:
+    density: 0.1223
   expected:
     density: 635.092024
   note: x_H2O=0.798, v_ref=31.8e-6 m3/mol; paper's own VTBMSR-III error -10.1 %, VdW error 48.2 % (Table 8)
 - id: h2o-air-650K-195.3MPa
-  package: pending:sr-polar
+  package: sr-polar
+  phase: aqueous
   components:
   - H2O
   - O2
@@ -140,11 +163,14 @@
   T: 650
   P: 195300000
   source: Japas & Franck [30] experimental molar volume as printed in Mangold et al. 2019 Table 8 (doi:10.1016/j.supflu.2019.02.016, open); composition x_O2/x_N2 = 1/4 assumed by Mangold (not specified in Japas & Franck); density = printed molar volume converted with NIST molar masses (see pack header); retrieved 2026-11-04
+  tolerance:
+    density: 0.1503
   expected:
     density: 684.607673
   note: x_H2O=0.798, v_ref=29.5e-6 m3/mol; paper's own VTBMSR-III error -12.3 %, VdW error 52.7 % (Table 8)
 - id: h2o-air-652K-214.8MPa
-  package: pending:sr-polar
+  package: sr-polar
+  phase: aqueous
   components:
   - H2O
   - O2
@@ -156,11 +182,14 @@
   T: 652
   P: 214800000
   source: Japas & Franck [30] experimental molar volume as printed in Mangold et al. 2019 Table 8 (doi:10.1016/j.supflu.2019.02.016, open); composition x_O2/x_N2 = 1/4 assumed by Mangold (not specified in Japas & Franck); density = printed molar volume converted with NIST molar masses (see pack header); retrieved 2026-11-04
+  tolerance:
+    density: 0.1607
   expected:
     density: 703.690814
   note: x_H2O=0.798, v_ref=28.7e-6 m3/mol; paper's own VTBMSR-III error -13.1 %, VdW error 54.4 % (Table 8)
 - id: h2o-air-653.5K-231.5MPa
-  package: pending:sr-polar
+  package: sr-polar
+  phase: aqueous
   components:
   - H2O
   - O2
@@ -172,11 +201,14 @@
   T: 653.5
   P: 231500000
   source: Japas & Franck [30] experimental molar volume as printed in Mangold et al. 2019 Table 8 (doi:10.1016/j.supflu.2019.02.016, open); composition x_O2/x_N2 = 1/4 assumed by Mangold (not specified in Japas & Franck); density = printed molar volume converted with NIST molar masses (see pack header); retrieved 2026-11-04
+  tolerance:
+    density: 0.1687
   expected:
     density: 718.716241
   note: x_H2O=0.798, v_ref=28.1e-6 m3/mol; paper's own VTBMSR-III error -13.7 %, VdW error 55.8 % (Table 8)
 - id: h2o-air-657K-263.9MPa
-  package: pending:sr-polar
+  package: sr-polar
+  phase: aqueous
   components:
   - H2O
   - O2
@@ -188,6 +220,8 @@
   T: 657
   P: 263900000
   source: Japas & Franck [30] experimental molar volume as printed in Mangold et al. 2019 Table 8 (doi:10.1016/j.supflu.2019.02.016, open); composition x_O2/x_N2 = 1/4 assumed by Mangold (not specified in Japas & Franck); density = printed molar volume converted with NIST molar masses (see pack header); retrieved 2026-11-04
+  tolerance:
+    density: 0.1865
   expected:
     density: 742.497293
   note: x_H2O=0.798, v_ref=27.2e-6 m3/mol; paper's own VTBMSR-III error -15.0 %, VdW error 57.8 % (Table 8)

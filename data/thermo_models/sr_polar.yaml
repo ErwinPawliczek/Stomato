@@ -99,7 +99,7 @@
     classification and bit-identical instances); every excluded check exercises an
     operation the density-only model structurally cannot provide, each refused with
     the typed SRPolarError. Density accuracy is measured by the nine bound
-    h2o-air-* cases (data/validation/sr_polar/cases.yaml), whose per-point
-    tolerance is the paper's own VTBMSR-III error at that point plus 1 percentage
-    point — the reproduction band for a correct implementation of the same model,
-    not a raw accuracy claim.
+    h2o-air-* cases (data/validation/packs/T3/pack.yaml, the pack's own bind-time
+    flow), whose per-point tolerance is the paper's own VTBMSR-III error at that
+    point plus 1 percentage point — the reproduction band for a correct
+    implementation of the same model, not a raw accuracy claim.
