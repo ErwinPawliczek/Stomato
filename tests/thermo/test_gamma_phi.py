@@ -51,3 +51,36 @@ def test_missing_parameters_error_names_the_pair() -> None:
     pair_pattern = r"MeOH \(67-56-1\) / H2O \(7732-18-5\)|H2O \(7732-18-5\) / MeOH \(67-56-1\)"
     with pytest.raises(ValueError, match=pair_pattern):
         pkg.bubble_point({"MeOH": 0.5, "H2O": 0.5}, P=101325.0)
+
+
+# Regression (val-gphi-unifac, 2026-11-04): with a real vapour the liquid must carry the
+# pure-component saturation fugacity coefficient (PhiSat basis), otherwise a near-pure feed
+# bubbles far from the pure feed's Psat short-circuit (measured before the fix: n-butane with
+# 1e-4 EtOH at 333.2 K on unifac_rk bubbled at 742 kPa vs Psat 639 kPa, +16 %).
+REAL_VAPOUR_ROWS = ["unifac_rk", "unifac_pr", "nrtl_rk", "unifac_hoc", "unifac_nothnagel"]
+
+
+@pytest.mark.parametrize("model_id", REAL_VAPOUR_ROWS)
+def test_near_pure_bubble_matches_pure_psat(model_id: str) -> None:
+    """A trace of a second component moves the bubble pressure continuously off the pure Psat."""
+    pkg = registry.create("thermo", model_id)
+    # The virial pairings stay at low pressure (their density-form vapour has no root above
+    # -RT/(4B), which a near-pure n-butane bubble bracket would probe).
+    low_p = model_id.startswith("nrtl") or model_id.endswith(("_hoc", "_nothnagel"))
+    heavy, light, T = ("H2O", "MeOH", 330.0) if low_p else ("EtOH", "nC4", 300.0)
+    p_pure = float(pkg.bubble_point({light: 1.0}, T=T).P)
+    p_trace = float(pkg.bubble_point({light: 1.0 - 1e-6, heavy: 1e-6}, T=T).P)
+    assert p_trace == pytest.approx(p_pure, rel=1e-3)
+
+
+@pytest.mark.parametrize("model_id", ["unifac_rk", "unifac_pr"])
+def test_real_vapour_bubble_close_to_ideal_pairing_at_moderate_pressure(model_id: str) -> None:
+    """At 0.6 MPa the cubic-vapour pairing stays within a few % of the ideal-gas one.
+
+    phi_V and phi_sat largely cancel for a nearly ideal vapour mixture; without
+    phi_sat the RK/PR pairing sat 16 % above the ideal-gas pairing here.
+    """
+    z = {"EtOH": 0.2452, "nC4": 0.7548}
+    p_ig = float(registry.create("thermo", "unifac_ig").bubble_point(z, T=333.2).P)
+    p_real = float(registry.create("thermo", model_id).bubble_point(z, T=333.2).P)
+    assert p_real == pytest.approx(p_ig, rel=0.03)

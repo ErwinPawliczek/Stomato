@@ -6,7 +6,7 @@ import math
 from typing import Any
 
 import pytest
-from thermo import PRMIX, CEOSGas, ChemicalConstantsPackage, FlashVL, GibbsExcessLiquid
+from thermo import PR, PRMIX, CEOSGas, ChemicalConstantsPackage, FlashVL, GibbsExcessLiquid
 from thermo.interaction_parameters import IPDB
 from thermo.nrtl import NRTL
 
@@ -38,6 +38,25 @@ def thermo() -> Thermo:
     return impl
 
 
+class _PureSat:
+    """phi_sat(T) of the pure PR vapour at the vapour-pressure correlation's Psat(T)."""
+
+    def __init__(self, Tc: float, Pc: float, omega: float, vapour_pressure: Any) -> None:
+        self.Tc, self.Pc, self.omega, self.vp = Tc, Pc, omega, vapour_pressure
+
+    def phi_sat(self, T: float, polish: bool = True) -> float:
+        psat = float(self.vp.T_dependent_property(T))
+        return float(PR(Tc=self.Tc, Pc=self.Pc, omega=self.omega, T=T, P=psat).phi_g)
+
+    def dphi_sat_dT(self, T: float, polish: bool = True) -> float:
+        h = 0.01
+        return (self.phi_sat(T + h) - self.phi_sat(T - h)) / (2.0 * h)
+
+    def d2phi_sat_dT2(self, T: float, polish: bool = True) -> float:
+        h = 0.01
+        return (self.phi_sat(T + h) - 2.0 * self.phi_sat(T) + self.phi_sat(T - h)) / (h * h)
+
+
 def _reference_flasher() -> Any:
     """Independently built FlashVL over the same databank parameters.
 
@@ -52,6 +71,13 @@ def _reference_flasher() -> Any:
     alpha_cs = IPDB.get_ip_asymmetric_matrix(name="ChemSep NRTL", CASs=cas_list, ip="alphaij")
     heat_caps = correlations.HeatCapacityGases
     model = NRTL(xs=[1.0 / len(_IDS)] * len(_IDS), T=_T, tau_bs=tau_bs, alpha_cs=alpha_cs)
+    # Real-vapour gamma-phi carries the pure-component saturation fugacity coefficient
+    # (f_i^L = x_i gamma_i phi_i^sat P_i^sat), phi_i^sat of the pure PR vapour at the
+    # liquid's own Psat correlation - built here from the pure PR EOS, not the plugin.
+    sats = [
+        _PureSat(constants.Tcs[i], constants.Pcs[i], constants.omegas[i], correlations.VaporPressures[i])
+        for i in range(len(_IDS))
+    ]
     liquid = GibbsExcessLiquid(
         VaporPressures=correlations.VaporPressures,
         HeatCapacityGases=heat_caps,
@@ -59,6 +85,9 @@ def _reference_flasher() -> Any:
         EnthalpyVaporizations=correlations.EnthalpyVaporizations,
         VolumeLiquids=correlations.VolumeLiquids,
         GibbsExcessModel=model,
+        equilibrium_basis="PhiSat",
+        caloric_basis="Psat",
+        eos_pure_instances=sats,
     )
     gas = CEOSGas(
         PRMIX,

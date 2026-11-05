@@ -2648,9 +2648,38 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
   validation:
   - unifac-ig-etohh2o-azeotrope-101.325kPa
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Fredenslund, A., Jones, R. L. & Prausnitz, J. M., AIChE J. 21(6), 1086-1099, 1975
   - Skjold-Jorgensen, S., Fredenslund, A. & Rasmussen, P., AIChE J. 25(2), 337-339, 1979 (group conventions)
@@ -2667,6 +2696,12 @@
         P: 100000.0
         phase: aqueous
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 391.241 vs 384.1 (err 0.0186, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 370.429 vs 366.65 (err 0.0103, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.745: "bubble_P 1.37969e+06 vs 1.4336e+06 (err 0.0376, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 466781 vs 492000 (err 0.0513, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). (measured 2026-11-04)"
 
 - id: unifac_rk
   name: UNIFAC liquid + Redlich-Kwong vapour
@@ -2696,12 +2731,50 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Fredenslund, A., Jones, R. L. & Prausnitz, J. M., AIChE J. 21(6), 1086-1099, 1975
   - Skjold-Jorgensen, S., Fredenslund, A. & Rasmussen, P., AIChE J. 25(2), 337-339, 1979 (group conventions)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.54528 vs 0.567 (err 0.0217, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 392.601 vs 384.1 (err 0.0221, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 370.948 vs 366.65 (err 0.0117, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.2239: "bubble_P 1.35689e+06 vs 1.2738e+06 (err 0.0652, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0215. Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.4969: "bubble_P 1.4761e+06 vs 1.4011e+06 (err 0.0535, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0086. Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 454781 vs 492000 (err 0.0756, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0513. (measured 2026-11-04)"
 
 - id: unifac_hoc
   name: UNIFAC liquid + Hayden-O'Connell virial vapour
@@ -2735,7 +2808,31 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   references:
   - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
     (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
@@ -2745,6 +2842,11 @@
     (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.54382 vs 0.567 (err 0.0232, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 392.884 vs 384.1 (err 0.0229, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 371.116 vs 366.65 (err 0.0122, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
 
 - id: unifac_nothnagel
   name: UNIFAC liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
@@ -2776,7 +2878,31 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   references:
   - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
     25-35, 1973 (b/K parameter table not available from open sources)
@@ -2784,6 +2910,11 @@
     fallback)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.544337 vs 0.567 (err 0.0227, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 392.767 vs 384.1 (err 0.0226, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 371.043 vs 366.65 (err 0.0120, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
 
 - id: unifac_pr
   name: UNIFAC liquid + Peng-Robinson vapour
@@ -2813,12 +2944,48 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Fredenslund, A., Jones, R. L. & Prausnitz, J. M., AIChE J. 21(6), 1086-1099, 1975
   - Skjold-Jorgensen, S., Fredenslund, A. & Rasmussen, P., AIChE J. 25(2), 337-339, 1979 (group conventions)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.545226 vs 0.567 (err 0.0218, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 392.668 vs 384.1 (err 0.0223, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 370.969 vs 366.65 (err 0.0118, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.2239: "bubble_P 1.36006e+06 vs 1.2738e+06 (err 0.0677, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0215. Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 453878 vs 492000 (err 0.0775, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0513. (measured 2026-11-04)"
 
 - id: unifac_dortmund_ig
   name: UNIFAC (Dortmund) liquid + ideal gas vapour
@@ -2848,10 +3015,39 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
   validation:
   - unifac-dortmund-ig-meohnc4-323.22K-0.3366MPa
   - unifac-dortmund-ig-etohh2o-azeotrope-101.325kPa
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Gmehling, J., Li, J. & Schiller, M., Ind. Eng. Chem. Res. 32(1), 178-193, 1993
   # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
@@ -2867,6 +3063,12 @@
         P: 100000.0
         phase: aqueous
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 390.049 vs 384.1 (err 0.0155, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 369.419 vs 366.65 (err 0.0076, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 540697 vs 492000 (err 0.0990, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.4551: "bubble_P 619735 vs 591000 (err 0.0486, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). (measured 2026-11-04)"
 
 - id: unifac_dortmund_rk
   name: UNIFAC (Dortmund) liquid + Redlich-Kwong vapour
@@ -2896,11 +3098,50 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Gmehling, J., Li, J. & Schiller, M., Ind. Eng. Chem. Res. 32(1), 178-193, 1993
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 391.433 vs 384.1 (err 0.0191, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 369.918 vs 366.65 (err 0.0089, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.2239: "bubble_P 1.3238e+06 vs 1.2738e+06 (err 0.0393, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0014. (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.4969: "bubble_P 1.46827e+06 vs 1.4011e+06 (err 0.0479, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0125. (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.745: "bubble_P 1.49346e+06 vs 1.4336e+06 (err 0.0418, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0215. (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 535097 vs 492000 (err 0.0876, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0990. (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.4551: "bubble_P 623734 vs 591000 (err 0.0554, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0486. (measured 2026-11-04)"
 
 - id: unifac_dortmund_hoc
   name: UNIFAC (Dortmund) liquid + Hayden-O'Connell virial vapour
@@ -2934,7 +3175,31 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   references:
   - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
     (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
@@ -2944,6 +3209,10 @@
     (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 391.73 vs 384.1 (err 0.0199, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 370.082 vs 366.65 (err 0.0094, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
 
 - id: unifac_dortmund_nothnagel
   name: UNIFAC (Dortmund) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
@@ -2975,7 +3244,31 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   references:
   - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
     25-35, 1973 (b/K parameter table not available from open sources)
@@ -2983,6 +3276,10 @@
     fallback)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 391.607 vs 384.1 (err 0.0195, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 370.011 vs 366.65 (err 0.0092, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
 
 - id: unifac_dortmund_pr
   name: UNIFAC (Dortmund) liquid + Peng-Robinson vapour
@@ -3012,11 +3309,50 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Gmehling, J., Li, J. & Schiller, M., Ind. Eng. Chem. Res. 32(1), 178-193, 1993
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 391.501 vs 384.1 (err 0.0193, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 369.938 vs 366.65 (err 0.0090, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.2239: "bubble_P 1.32636e+06 vs 1.2738e+06 (err 0.0413, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0014. (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.4969: "bubble_P 1.47394e+06 vs 1.4011e+06 (err 0.0520, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0125. (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.745: "bubble_P 1.49973e+06 vs 1.4336e+06 (err 0.0461, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0215. (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 534556 vs 492000 (err 0.0865, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0990. (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.4551: "bubble_P 623798 vs 591000 (err 0.0555, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0486. (measured 2026-11-04)"
 
 - id: unifac_psrk_ig
   name: UNIFAC (PSRK) liquid + ideal gas vapour
@@ -3046,10 +3382,39 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
   validation:
   - unifac-psrk-ig-meohnc4-323.22K-0.3366MPa
   - unifac-psrk-ig-etohh2o-azeotrope-101.325kPa
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Holderbaum, T. & Gmehling, J., Fluid Phase Equilib. 70(2-3), 251-265, 1991
   # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
@@ -3065,6 +3430,14 @@
         P: 100000.0
         phase: aqueous
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 391.241 vs 384.1 (err 0.0186, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 370.429 vs 366.65 (err 0.0103, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.2239: "bubble_P 1.45898e+06 vs 1.2738e+06 (err 0.1454, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.4969: "bubble_P 1.54712e+06 vs 1.4011e+06 (err 0.1042, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.745: "bubble_P 1.49365e+06 vs 1.4336e+06 (err 0.0419, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 466781 vs 492000 (err 0.0513, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). (measured 2026-11-04)"
 
 - id: unifac_psrk_rk
   name: UNIFAC (PSRK) liquid + Redlich-Kwong vapour
@@ -3094,11 +3467,48 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Holderbaum, T. & Gmehling, J., Fluid Phase Equilib. 70(2-3), 251-265, 1991
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.54528 vs 0.567 (err 0.0217, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 392.601 vs 384.1 (err 0.0221, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 370.948 vs 366.65 (err 0.0117, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.2239: "bubble_P 1.57996e+06 vs 1.2738e+06 (err 0.2404, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.1454. Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.4969: "bubble_P 1.71759e+06 vs 1.4011e+06 (err 0.2259, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.1042. Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 454781 vs 492000 (err 0.0756, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0513. (measured 2026-11-04)"
 
 - id: unifac_psrk_hoc
   name: UNIFAC (PSRK) liquid + Hayden-O'Connell virial vapour
@@ -3132,7 +3542,31 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   references:
   - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
     (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
@@ -3142,6 +3576,11 @@
     (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.54382 vs 0.567 (err 0.0232, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 392.884 vs 384.1 (err 0.0229, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 371.116 vs 366.65 (err 0.0122, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
 
 - id: unifac_psrk_nothnagel
   name: UNIFAC (PSRK) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
@@ -3173,7 +3612,31 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   references:
   - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
     25-35, 1973 (b/K parameter table not available from open sources)
@@ -3181,6 +3644,11 @@
     fallback)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.544337 vs 0.567 (err 0.0227, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 392.767 vs 384.1 (err 0.0226, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 371.043 vs 366.65 (err 0.0120, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
 
 - id: unifac_psrk_pr
   name: UNIFAC (PSRK) liquid + Peng-Robinson vapour
@@ -3210,11 +3678,50 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Holderbaum, T. & Gmehling, J., Fluid Phase Equilib. 70(2-3), 251-265, 1991
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.545226 vs 0.567 (err 0.0218, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 392.668 vs 384.1 (err 0.0223, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 370.969 vs 366.65 (err 0.0118, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.2239: "bubble_P 1.58888e+06 vs 1.2738e+06 (err 0.2474, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.1454. Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.4969: "bubble_P 1.73158e+06 vs 1.4011e+06 (err 0.2359, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.1042. Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.745: "bubble_P 1.64931e+06 vs 1.4336e+06 (err 0.1505, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0419. Original UNIFAC and PSRK (CH3OH/CH2 parameters) predict a spurious liquid split here (local instability of the liquid for x_MeOH 0.31-0.56 resp. 0.14-0.60 at 364.5 K). (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 453878 vs 492000 (err 0.0775, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0513. (measured 2026-11-04)"
 
 - id: unifac_nist_ig
   name: UNIFAC (NIST) liquid + ideal gas vapour
@@ -3244,7 +3751,37 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Kang, J. W., Diky, V., Chirico, R. D., Magee, J. W., Muzny, C. D., Abdulagatov, I., Kazakov, A. F. &
       Frenkel, M., Fluid Phase Equilib. 309(1), 68-75, 2011
@@ -3261,6 +3798,14 @@
         P: 100000.0
         phase: aqueous
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 386.418 vs 384.1 (err 0.0060, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.2239: "bubble_P 1.15233e+06 vs 1.2738e+06 (err 0.0954, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.4969: "bubble_P 1.33829e+06 vs 1.4011e+06 (err 0.0448, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.745: "bubble_P 1.37811e+06 vs 1.4336e+06 (err 0.0387, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 537333 vs 492000 (err 0.0921, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.4551: "bubble_P 616624 vs 591000 (err 0.0434, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). (measured 2026-11-04)"
 
 - id: unifac_nist_rk
   name: UNIFAC (NIST) liquid + Redlich-Kwong vapour
@@ -3290,12 +3835,49 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Kang, J. W., Diky, V., Chirico, R. D., Magee, J. W., Muzny, C. D., Abdulagatov, I., Kazakov, A. F. &
       Frenkel, M., Fluid Phase Equilib. 309(1), 68-75, 2011
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 387.686 vs 384.1 (err 0.0093, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 368.697 vs 366.65 (err 0.0056, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.2239: "bubble_P 1.16653e+06 vs 1.2738e+06 (err 0.0842, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0954. (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 531382 vs 492000 (err 0.0800, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0921. (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.4551: "bubble_P 620144 vs 591000 (err 0.0493, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0434. (measured 2026-11-04)"
 
 - id: unifac_nist_hoc
   name: UNIFAC (NIST) liquid + Hayden-O'Connell virial vapour
@@ -3329,7 +3911,31 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   references:
   - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
     (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
@@ -3339,6 +3945,11 @@
     (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-meohetoh-93.32kPa-xMeOH0.503: "bubble_T 343.596 vs 341.86 (err 0.0051, tol 0.005) - marginal model miss on the near-ideal MeOH/EtOH isobar (bubble T just beyond the 0.5 % band; the vapour correction moves it by <0.2 %; ig pairing errs 0.0047) (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 387.984 vs 384.1 (err 0.0101, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 368.854 vs 366.65 (err 0.0060, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
 
 - id: unifac_nist_nothnagel
   name: UNIFAC (NIST) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
@@ -3370,7 +3981,31 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   references:
   - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
     25-35, 1973 (b/K parameter table not available from open sources)
@@ -3378,6 +4013,10 @@
     fallback)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 387.859 vs 384.1 (err 0.0098, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 368.784 vs 366.65 (err 0.0058, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
 
 - id: unifac_nist_pr
   name: UNIFAC (NIST) liquid + Peng-Robinson vapour
@@ -3407,12 +4046,49 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Kang, J. W., Diky, V., Chirico, R. D., Magee, J. W., Muzny, C. D., Abdulagatov, I., Kazakov, A. F. &
       Frenkel, M., Fluid Phase Equilib. 309(1), 68-75, 2011
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 387.747 vs 384.1 (err 0.0095, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 368.716 vs 366.65 (err 0.0056, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.2239: "bubble_P 1.16654e+06 vs 1.2738e+06 (err 0.0842, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0954. (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 530820 vs 492000 (err 0.0789, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0921. (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.4551: "bubble_P 620177 vs 591000 (err 0.0494, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0434. (measured 2026-11-04)"
 
 - id: unifac_lle_ig
   name: UNIFAC-LLE liquid + ideal gas vapour
@@ -3443,7 +4119,16 @@
     - V
     - L
     - VLL
+  # L2 gap (2026-11-04, val-gphi-unifac): the curated LLE group map covers H2O and nC4 only
+  # (data/thermo_params/unifac/groups.yaml) and no open H2O + n-butane LLE/VLE record exists in
+  # the NIST ThermoML archive (v2020-09-30); the harness liquid_comp check reads only the
+  # water-rich liquid, whose n-butane fraction (~1e-4) is not discriminating at 0.02 abs.
+  # Only the two L1 pure cases (H2O, nC4) are bound; the row stays provisional.
   status: provisional
+  validation:
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-nC4-etohnc4-333.2K
   references:
   - Magnussen, T., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Process Des. Dev. 20(2), 331-339, 1981
   # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
@@ -3531,7 +4216,16 @@
     - V
     - L
     - VLL
+  # L2 gap (2026-11-04, val-gphi-unifac): the curated LLE group map covers H2O and nC4 only
+  # (data/thermo_params/unifac/groups.yaml) and no open H2O + n-butane LLE/VLE record exists in
+  # the NIST ThermoML archive (v2020-09-30); the harness liquid_comp check reads only the
+  # water-rich liquid, whose n-butane fraction (~1e-4) is not discriminating at 0.02 abs.
+  # Only the two L1 pure cases (H2O, nC4) are bound; the row stays provisional.
   status: provisional
+  validation:
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-nC4-etohnc4-333.2K
   references:
   - Magnussen, T., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Process Des. Dev. 20(2), 331-339, 1981
   l0:
@@ -3626,7 +4320,16 @@
     - V
     - L
     - VLL
+  # L2 gap (2026-11-04, val-gphi-unifac): the curated LLE group map covers H2O and nC4 only
+  # (data/thermo_params/unifac/groups.yaml) and no open H2O + n-butane LLE/VLE record exists in
+  # the NIST ThermoML archive (v2020-09-30); the harness liquid_comp check reads only the
+  # water-rich liquid, whose n-butane fraction (~1e-4) is not discriminating at 0.02 abs.
+  # Only the two L1 pure cases (H2O, nC4) are bound; the row stays provisional.
   status: provisional
+  validation:
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-nC4-etohnc4-333.2K
   references:
   - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
     (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
@@ -3718,7 +4421,16 @@
     - V
     - L
     - VLL
+  # L2 gap (2026-11-04, val-gphi-unifac): the curated LLE group map covers H2O and nC4 only
+  # (data/thermo_params/unifac/groups.yaml) and no open H2O + n-butane LLE/VLE record exists in
+  # the NIST ThermoML archive (v2020-09-30); the harness liquid_comp check reads only the
+  # water-rich liquid, whose n-butane fraction (~1e-4) is not discriminating at 0.02 abs.
+  # Only the two L1 pure cases (H2O, nC4) are bound; the row stays provisional.
   status: provisional
+  validation:
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-nC4-etohnc4-333.2K
   references:
   - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
     25-35, 1973 (b/K parameter table not available from open sources)
@@ -3806,7 +4518,16 @@
     - V
     - L
     - VLL
+  # L2 gap (2026-11-04, val-gphi-unifac): the curated LLE group map covers H2O and nC4 only
+  # (data/thermo_params/unifac/groups.yaml) and no open H2O + n-butane LLE/VLE record exists in
+  # the NIST ThermoML archive (v2020-09-30); the harness liquid_comp check reads only the
+  # water-rich liquid, whose n-butane fraction (~1e-4) is not discriminating at 0.02 abs.
+  # Only the two L1 pure cases (H2O, nC4) are bound; the row stays provisional.
   status: provisional
+  validation:
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-nC4-etohnc4-333.2K
   references:
   - Magnussen, T., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Process Des. Dev. 20(2), 331-339, 1981
   l0:
@@ -3896,7 +4617,37 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Larsen, B. L., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Res. 26(11), 2274-2286, 1987
   # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
@@ -3912,6 +4663,15 @@
         P: 100000.0
         phase: aqueous
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.546629 vs 0.567 (err 0.0204, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.25: "bubble_T 408.145 vs 415.27 (err 0.0172, tol 0.005); vapor_comp 0.918122 vs 0.892 (err 0.0261, tol 0.02 abs) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.501: "bubble_T 387.947 vs 393.53 (err 0.0142, tol 0.005) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.747: "bubble_T 378.685 vs 381.51 (err 0.0074, tol 0.005) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 391.475 vs 384.1 (err 0.0192, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 369.259 vs 366.65 (err 0.0071, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 471361 vs 492000 (err 0.0419, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system (ideal-gas vapour, so the error is the gE model). (measured 2026-11-04)"
 
 - id: unifac_lyngby_rk
   name: UNIFAC (Lyngby) liquid + Redlich-Kwong vapour
@@ -3941,11 +4701,52 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Larsen, B. L., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Res. 26(11), 2274-2286, 1987
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.54464 vs 0.567 (err 0.0224, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.25: "bubble_T 408.581 vs 415.27 (err 0.0161, tol 0.005); vapor_comp 0.915308 vs 0.892 (err 0.0233, tol 0.02 abs) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.501: "bubble_T 388.089 vs 393.53 (err 0.0138, tol 0.005) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.747: "bubble_T 378.73 vs 381.51 (err 0.0073, tol 0.005) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 392.997 vs 384.1 (err 0.0232, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 369.758 vs 366.65 (err 0.0085, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.4969: "bubble_P 1.4647e+06 vs 1.4011e+06 (err 0.0454, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0137. (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.745: "bubble_P 1.49331e+06 vs 1.4336e+06 (err 0.0416, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0209. (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 459690 vs 492000 (err 0.0657, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0419. (measured 2026-11-04)"
 
 - id: unifac_lyngby_hoc
   name: UNIFAC (Lyngby) liquid + Hayden-O'Connell virial vapour
@@ -3979,7 +4780,31 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   references:
   - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
     (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
@@ -3989,6 +4814,14 @@
     (BIJS2 Fortran; eta table via ChemSep Lite 8.50 HAYDENO.IPD)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.543188 vs 0.567 (err 0.0238, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.25: "bubble_T 408.74 vs 415.27 (err 0.0157, tol 0.005); vapor_comp 0.914783 vs 0.892 (err 0.0228, tol 0.02 abs) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.501: "bubble_T 388.17 vs 393.53 (err 0.0136, tol 0.005) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.747: "bubble_T 378.761 vs 381.51 (err 0.0072, tol 0.005) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 393.312 vs 384.1 (err 0.0240, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 369.923 vs 366.65 (err 0.0089, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
 
 - id: unifac_lyngby_nothnagel
   name: UNIFAC (Lyngby) liquid + Nothnagel virial vapour — Tsonopoulos (fallback)
@@ -4020,7 +4853,31 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   references:
   - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
     25-35, 1973 (b/K parameter table not available from open sources)
@@ -4028,6 +4885,14 @@
     fallback)
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.543717 vs 0.567 (err 0.0233, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.25: "bubble_T 408.693 vs 415.27 (err 0.0158, tol 0.005); vapor_comp 0.914019 vs 0.892 (err 0.0220, tol 0.02 abs) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.501: "bubble_T 388.137 vs 393.53 (err 0.0137, tol 0.005) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.747: "bubble_T 378.746 vs 381.51 (err 0.0072, tol 0.005) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 393.182 vs 384.1 (err 0.0236, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 369.851 vs 366.65 (err 0.0087, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
 
 - id: unifac_lyngby_pr
   name: UNIFAC (Lyngby) liquid + Peng-Robinson vapour
@@ -4057,11 +4922,52 @@
     phases:
     - V
     - L
-  status: provisional
+  status: validated
+  validation:
+  - unifac-pure-EtOH-meohetoh-93.32kPa
+  - unifac-pure-MeOH-meohetoh-93.32kPa
+  - unifac-pure-H2O-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohh2o-66.52kPa
+  - unifac-pure-MeOH-meohnc4-364.5K
+  - unifac-pure-nC4-meohnc4-364.5K
+  - unifac-pure-EtOH-etohnc4-333.2K
+  - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-meohetoh-93.32kPa-xMeOH0.245
+  - unifac-meohetoh-93.32kPa-xMeOH0.503
+  - unifac-meohetoh-93.32kPa-xMeOH0.751
+  - unifac-etohh2o-101.3kPa-xEtOH0.244
+  - unifac-etohh2o-101.3kPa-xEtOH0.488
+  - unifac-etohh2o-101.3kPa-xEtOH0.711
+  - unifac-megh2o-101.3kPa-xH2O0.25
+  - unifac-megh2o-101.3kPa-xH2O0.501
+  - unifac-megh2o-101.3kPa-xH2O0.747
+  - unifac-etohmeg-101.3kPa-xEtOH0.219
+  - unifac-etohmeg-101.3kPa-xEtOH0.482
+  - unifac-etohmeg-101.3kPa-xEtOH0.734
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
+  - unifac-meohnc4-364.5K-xnC40.2239
+  - unifac-meohnc4-364.5K-xnC40.4969
+  - unifac-meohnc4-364.5K-xnC40.745
+  - unifac-etohnc4-333.2K-xnC40.2524
+  - unifac-etohnc4-333.2K-xnC40.4551
+  - unifac-etohnc4-333.2K-xnC40.7548
   references:
   - Larsen, B. L., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Res. 26(11), 2274-2286, 1987
   l0: {}
   l0_excluded: {}
+  assessed:
+    unifac-pure-EtOH-etohnc4-333.2K: "bubble_P 46838.7 vs 50000 (err 0.0632, tol 0.03) - data limitation, not the model: Machida et al. (2014) list the pure-ethanol endpoint at 50 kPa (integer kPa); CoolProp 8.0.0 Ethanol gives 46.84 kPa at 333.2 K, equal to this row's Psat, and the independent Fukano et al. (2006) pure-EtOH point (349.45 K, 93.32 kPa) passes at 0.2 % (measured 2026-11-04)"
+    unifac-etohh2o-101.3kPa-xEtOH0.244: "vapor_comp 0.544585 vs 0.567 (err 0.0224, tol 0.02 abs) - marginal model miss of the variant's alcohol/H2O group parameters (just beyond 0.02 abs); bubble T passes (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.25: "bubble_T 408.597 vs 415.27 (err 0.0161, tol 0.005); vapor_comp 0.915222 vs 0.892 (err 0.0232, tol 0.02 abs) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.501: "bubble_T 388.093 vs 393.53 (err 0.0138, tol 0.005) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-megh2o-101.3kPa-xH2O0.747: "bubble_T 378.732 vs 381.51 (err 0.0073, tol 0.005) - model limitation: the Lyngby table has no DOH (ethylene glycol) group, so MEG is built from 2 CH2 + 2 OH and the diol proximity effect is missing (the four variants with a DOH group pass all three MEG/H2O points) (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.219: "bubble_T 393.073 vs 384.1 (err 0.0234, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-etohmeg-101.3kPa-xEtOH0.482: "bubble_T 369.778 vs 366.65 (err 0.0085, tol 0.005) - model limitation: EtOH/MEG bubble temperatures at x_EtOH <= 0.48 are over-predicted by the variant's OH/DOH (or OH/CH2) group interactions, on the ideal-gas pairing as well; the x_EtOH 0.734 point and every vapour composition pass (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.4969: "bubble_P 1.47025e+06 vs 1.4011e+06 (err 0.0494, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0137. (measured 2026-11-04)"
+    unifac-meohnc4-364.5K-xnC40.745: "bubble_P 1.49954e+06 vs 1.4336e+06 (err 0.0460, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0209. (measured 2026-11-04)"
+    unifac-etohnc4-333.2K-xnC40.2524: "bubble_P 458804 vs 492000 (err 0.0675, tol 0.03) - model limitation: UNIFAC group-contribution prediction of this strongly non-ideal alcohol/n-butane system with the pairing's real vapour on the PhiSat basis; the same variant's ideal-gas pairing errs 0.0419. (measured 2026-11-04)"
 - id: wohl3_ig
   name: Van Laar / Margules three-suffix forms
   family: gamma_phi
