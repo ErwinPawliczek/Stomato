@@ -1,3 +1,7 @@
+### Board sync — Stomato bot — 2026-11-04 9:49 PM
+- Done: V1 → `in progress`: scheduled resume fired; `claude -p --continue` pid 987330 started 9:35 PM, re-running the integ4 suite before merging into chem-engine. No new `obv/*` commits (tips unchanged); no `claude/*` branches.
+- Next: CQ1 stays queued until V1 finishes. No Obvious job started (no unclaimed Erwin-approved Obvious task).
+
 ### Board sync — Stomato bot — 2026-11-04 7:54 PM
 - Done: V1 still `paused`: no `claude -p`; CONTINUE END 7:17 PM (5h limit, resets 9:30 PM). Resume scheduler relaunched 7:39 PM as `/tmp/stomato-val-sched.sh` pid 941428 (prior 928932 died; orphan sleep replaced) → continue ~9:36 PM. No new `obv/*` commits (tips unchanged); no `claude/*` branches. Local chem-engine still 0f09f99; origin/chem-engine 9cf08cc; integ4/batch merges not landed. CQ1 still queued after V1.
 - Next: CQ1 stays queued until V1 finishes. No Obvious job started (no unclaimed Erwin-approved Obvious task; CQ1 is Claude Code).
@@ -47,7 +51,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 
 | id | title | owner | status | branch | updated |
 |----|-------|-------|--------|--------|---------|
-| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | paused — hit Claude 5-hour limit during integ4 gate; CONTINUE END 7:17 PM; limit resets 9:30 PM. Scheduled resume /tmp/stomato-val-sched.sh (pid 941428, relaunched 7:39 PM) runs continue ~9:36 PM. Batch 3/integ4 gate/merge pending; local chem-engine 0f09f99; origin/chem-engine 9cf08cc | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 7:54 PM |
+| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress — resumed 9:35 PM after 5h limit reset (claude -p --continue pid 987330); re-running full suite on fixed integ4 commit, then merge into chem-engine; units-b and electrolyte-amine sub-agents active. origin/chem-engine 9cf08cc | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 9:49 PM |
 | T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
 | T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | accepted (PR #342, awaits suite) | obv/T1r | 2026-11-04 12:18 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | accepted w/ fix (PR #343; fix in T10) | obv/T3 | 2026-11-04 12:22 PM |
