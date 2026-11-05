@@ -110,3 +110,13 @@ def test_enrtl_agrees_with_ke_within_a_factor_band(amine: str) -> None:
     enrtl_p = enrtl.equilibrium_partial_pressures(_T, molarity, _LOADING, 0.0, amine)[0]
     ke_p = ke_pressures(_T, molarity, _LOADING, 0.0, amine)[0]
     assert 0.5 < enrtl_p / ke_p < 2.0, f"{amine}: enrtl={enrtl_p} ke={ke_p}"
+
+
+def test_a_phi_is_cached_per_temperature() -> None:
+    """A_phi is pure in T; the databank Chemical build runs once per T (speciation-cost fix)."""
+    from ngdesign.amine.enrtl import _a_phi
+
+    first = _a_phi(313.15)
+    hits = _a_phi.cache_info().hits
+    assert _a_phi(313.15) == first
+    assert _a_phi.cache_info().hits == hits + 1

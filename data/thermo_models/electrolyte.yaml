@@ -78,9 +78,10 @@
     phases:
     - V
     - L
+  # 2026-11-04: Xiao 2018 MDEA 313 K, 0 of 5 bound L2 points pass (p_CO2 24-50 % low); stays provisional.
+  # bubble_point does not converge on loaded MDEA here (bracketed-loading edge bug, see report).
   status: provisional
-  validation: [pure-H2O-323.5K-amine-enrtl, pure-H2O-420K-amine-enrtl, pure-H2O-520K-amine-enrtl,
-    pure-H2O-600K-amine-enrtl]
+  validation: [mdea-xiao2018-313.15K-p8.1kPa, mdea-xiao2018-313.15K-p15kPa, mdea-xiao2018-313.15K-p20.3kPa, mdea-xiao2018-313.15K-p30.4kPa, mdea-xiao2018-313.15K-p60.8kPa, pure-H2O-323.5K-amine-enrtl, pure-H2O-420K-amine-enrtl, pure-H2O-520K-amine-enrtl, pure-H2O-600K-amine-enrtl]
   references:
   - Kent, R. L. & Eisenberg, B., Hydrocarbon Process. 55(2), 87-90, 1976
   - Jou, F.-Y. et al., 'Equilibrium Partial Pressures of CO2 and H2S in Aqueous MDEA Solutions', Can.
@@ -89,6 +90,12 @@
   l0_excluded: *id001
   l0_note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the
     single-liquid limit run today
+  assessed:
+    mdea-xiao2018-313.15K-p8.1kPa: "K 29.627 vs 39.1305 (-24.3 %) - eNRTL CO2-MDEA chemistry without the Zhang & Chen 2011 tau tables under-predicts p_CO2 at 313 K by 24-50 % (the factor-2 band of tests/units/test_enrtl.py; same sign as the pending NeqSim-anchor clones, -25/-58 %); model limitation, measured 2026-11-04"
+    mdea-xiao2018-313.15K-p15kPa: "K 30.454 vs 47.7454 (-36.2 %) - eNRTL CO2-MDEA chemistry without the Zhang & Chen 2011 tau tables under-predicts p_CO2 at 313 K by 24-50 % (the factor-2 band of tests/units/test_enrtl.py; same sign as the pending NeqSim-anchor clones, -25/-58 %); model limitation, measured 2026-11-04"
+    mdea-xiao2018-313.15K-p20.3kPa: "K 30.4242 vs 48.3359 (-37.1 %) - eNRTL CO2-MDEA chemistry without the Zhang & Chen 2011 tau tables under-predicts p_CO2 at 313 K by 24-50 % (the factor-2 band of tests/units/test_enrtl.py; same sign as the pending NeqSim-anchor clones, -25/-58 %); model limitation, measured 2026-11-04"
+    mdea-xiao2018-313.15K-p30.4kPa: "K 29.7046 vs 45.3285 (-34.5 %) - eNRTL CO2-MDEA chemistry without the Zhang & Chen 2011 tau tables under-predicts p_CO2 at 313 K by 24-50 % (the factor-2 band of tests/units/test_enrtl.py; same sign as the pending NeqSim-anchor clones, -25/-58 %); model limitation, measured 2026-11-04"
+    mdea-xiao2018-313.15K-p60.8kPa: "K 28.548 vs 56.6201 (-49.6 %) - eNRTL CO2-MDEA chemistry without the Zhang & Chen 2011 tau tables under-predicts p_CO2 at 313 K by 24-50 % (the factor-2 band of tests/units/test_enrtl.py; same sign as the pending NeqSim-anchor clones, -25/-58 %); model limitation, measured 2026-11-04"
 - id: pitzer_nacl_water
   name: Pitzer single-salt brine (NaCl, KCl, KBr, LiCl, NaBr, MgCl2; 25 C PHRQPITZ sets)
   family: electrolyte
@@ -226,8 +233,10 @@
       use (no verified carbonate anchor; documented, T-09).  The report's own Table 19
       reproduction scatters on dilute/high-strength rows -- a known applicability limit
       (docs/validation.md).
+  # Stays provisional (2026-11-04): 5 of 26 bound NH3-H2O points pass (60-80 C); the model
+  # over-predicts NH3 volatility below ~55 C (both data sets). Majority rule not met.
   status: provisional
-  validation: []
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, pure-H2O-353.15K-electrolyte, nh3h2o-liu2011-293.65K-x0.1083, nh3h2o-liu2011-294.75K-x0.027, nh3h2o-liu2011-295.65K-x0.0556, nh3h2o-liu2011-295.65K-x0.1571, nh3h2o-liu2011-303.65K-x0.027, nh3h2o-liu2011-303.85K-x0.055, nh3h2o-liu2011-304.35K-x0.108, nh3h2o-liu2011-304.35K-x0.1583, nh3h2o-liu2011-313.15K-x0.027, nh3h2o-liu2011-313.15K-x0.0538, nh3h2o-liu2011-313.15K-x0.104, nh3h2o-liu2011-313.75K-x0.1532, nh3h2o-salavera2005-293.15K-w0.09997, nh3h2o-salavera2005-293.15K-w0.20024, nh3h2o-salavera2005-303.15K-w0.09996, nh3h2o-salavera2005-303.15K-w0.2001, nh3h2o-salavera2005-313.15K-w0.09994, nh3h2o-salavera2005-313.15K-w0.19993, nh3h2o-salavera2005-323.15K-w0.09992, nh3h2o-salavera2005-323.15K-w0.19972, nh3h2o-salavera2005-333.15K-w0.09989, nh3h2o-salavera2005-333.15K-w0.19946, nh3h2o-salavera2005-343.15K-w0.09987, nh3h2o-salavera2005-343.15K-w0.19921, nh3h2o-salavera2005-353.15K-w0.09982, nh3h2o-salavera2005-353.15K-w0.19869]
   references:
   - Wilson, G. M., 'Sour Water Equilibria', EPA-600/2-80-067, 1980
   - Shih, T. S. et al., H2S solubility in buffered aqueous solutions (as tabulated in
@@ -273,6 +282,28 @@
     (-90 %), so the scatter is a declared limit of this implementation — rely on 40-100 C
     (the anchors below 40 C are the weak ones). L0 round trips and the single-liquid
     limit run today
+  assessed:
+    nh3h2o-liu2011-293.65K-x0.1083: "K 7.95503 vs 6.23727 (+27.5 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-294.75K-x0.027: "K 18.1267 vs 16.9725 (+6.8 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-295.65K-x0.0556: "K 12.5109 vs 10.5356 (+18.7 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-295.65K-x0.1571: "K 5.8566 vs 4.39476 (+33.3 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-303.65K-x0.027: "K 16.9364 vs 16.101 (+5.2 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-303.85K-x0.055: "K 12.0814 vs 10.8824 (+11.0 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-304.35K-x0.108: "K 7.73949 vs 6.21462 (+24.5 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-304.35K-x0.1583: "K 5.73033 vs 4.66017 (+23.0 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-313.15K-x0.027: "K 15.7581 vs 14.8325 (+6.2 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-313.15K-x0.0538: "K 11.6481 vs 10.9333 (+6.5 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-313.15K-x0.104: "K 7.74383 vs 6.93123 (+11.7 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-liu2011-313.75K-x0.1532: "K 5.77585 vs 5.31785 (+8.6 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-salavera2005-293.15K-w0.09997: "bubble_P 14539.6 vs 12100 (+20.2 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-salavera2005-293.15K-w0.20024: "bubble_P 41982.5 vs 30700 (+36.8 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-salavera2005-303.15K-w0.09996: "bubble_P 22639.9 vs 19800 (+14.3 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-salavera2005-303.15K-w0.2001: "bubble_P 61174.9 vs 50500 (+21.1 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-salavera2005-313.15K-w0.09994: "bubble_P 34251.8 vs 31900 (+7.4 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-salavera2005-313.15K-w0.19993: "bubble_P 86830.5 vs 76600 (+13.4 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-salavera2005-323.15K-w0.09992: "bubble_P 50526.1 vs 48300 (+4.6 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-salavera2005-323.15K-w0.19972: "bubble_P 120463 vs 112200 (+7.4 %) - SWEQ NH3 volatility over-predicted below ~55 C, growing with NH3 concentration; both independent data sets (Liu 2011, Salavera 2005) show it; NH3 Henry coefficients match DWSIM's transcription digit for digit (EPA report not retrievable), so recorded as a model limitation, measured 2026-11-04"
+    nh3h2o-salavera2005-353.15K-w0.19869: "bubble_P 288031 vs 309000 (-6.8 %) - the one miss above 55 C: at 20 wt% NH3 and 80 C the model falls 6.8 % low while 10 wt% at 80 C passes (-0.8 %); the concentrated-NH3 limit of the SWEQ correlation, recorded as a model limitation, measured 2026-11-04"
 - id: enrtl_nacl_water
   name: eNRTL NaCl(aq) brine (25 C parameter set)
   family: electrolyte
@@ -804,8 +835,13 @@
     phases:
     - V
     - L
+  # Stays provisional (2026-11-04): Dash 2011 AMP 318 K / 3.4 M, 2 of 7 bound points pass (5 %
+  # K band); majority rule not met. No independent open DGA CO2 data was found (Al-Juaied & Rochelle
+  # 2006 is the fit source). The bubble point raises 'loading fixed point did not converge' at the
+  # 0.938-loading Dash point (and 36 of 166 Dash points overall): bracketed-loading outer basis loop
+  # stalls near the bubble edge (drift fixed at ~3.6e-9 for 60 passes); open bug, see the report.
   status: provisional
-  validation: []
+  validation: [amp-dash2011-318K-3.4M-a0.52, amp-dash2011-318K-3.4M-a0.548, amp-dash2011-318K-3.4M-a0.616, amp-dash2011-318K-3.4M-a0.697, amp-dash2011-318K-3.4M-a0.817, amp-dash2011-318K-3.4M-a0.882, amp-dash2011-318K-3.4M-a0.897, pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, pure-H2O-353.15K-electrolyte]
   references:
   - Kent, R. L. & Eisenberg, B., Hydrocarbon Process. 55(2), 87-90, 1976
   - Khalili, F., Henni, A. & East, A. L. L., J. Chem. Eng. Data 54, 2914-2917, 2009
@@ -836,6 +872,12 @@
       surface here — flash consistency is pinned by the P1-04 tests instead
   l0_note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the
     single-liquid limit run today
+  assessed:
+    amp-dash2011-318K-3.4M-a0.52: "K 11.2437 vs 7.83498 (+43.5 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
+    amp-dash2011-318K-3.4M-a0.548: "K 11.6428 vs 10.6473 (+9.3 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
+    amp-dash2011-318K-3.4M-a0.817: "K 13.1159 vs 15.9849 (-17.9 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
+    amp-dash2011-318K-3.4M-a0.882: "K 12.9938 vs 14.54 (-10.6 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
+    amp-dash2011-318K-3.4M-a0.897: "K 12.9474 vs 18.0106 (-28.1 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
 - id: amine_mdea_pz
   name: Mixed amines (MDEA+PZ)
   family: electrolyte
@@ -866,7 +908,7 @@
     - V
     - L
   status: provisional
-  validation: []
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, pure-H2O-353.15K-electrolyte]
   references:
   - Bishnoi, S., PhD dissertation, University of Texas at Austin, 2000
   - Bishnoi, S. & Rochelle, G. T., AIChE J. 48(12), 2788-2799, 2002
