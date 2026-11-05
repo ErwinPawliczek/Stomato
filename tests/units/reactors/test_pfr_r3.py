@@ -31,10 +31,11 @@ def _inlet(thermo: Thermo, feeds: dict[str, dict[str, Any]]) -> Any:
 
 
 def test_closed_form(thermo: Thermo) -> None:
-    """k_p = 9.6/(1-0.4) = 16 1/s; phi = (1.5e-3/3)*sqrt(1*16/1e-6) = 2;
-    eta = tanh(2)/2 = 0.48201379; a = 1/(1 + 1e-6*2.592e5) = 0.794155019;
-    Da0 = 9.6*c*V/F = 0.461845843 with c = P/(R*T); X = 1 - exp(-a*eta*Da0) =
-    0.162045659, against 0.36988053 with eta = a = 1.
+    """k_p = 9.6/(1-0.4) = 16 1/s; sphere phi = 1.5e-3*sqrt(1*16/1e-6) = 6;
+    eta = (3/36)*(6*coth(6) - 1) = 0.416672811 (Fogler eq. 12-32);
+    a = 1/(1 + 1e-6*2.592e5) = 0.794155019; Da0 = 9.6*c*V/F = 0.461845843 with
+    c = P/(R*T); X = 1 - exp(-a*eta*Da0) = 0.141721023, against 0.36988053 with
+    eta = a = 1.
     """
     feeds, params = _case()
     params.update(
@@ -45,12 +46,21 @@ def test_closed_form(thermo: Thermo) -> None:
     )
     res = PfrR3().solve({"inlet": _inlet(thermo, feeds)}, params, thermo)
     assert res.info["activity"] == pytest.approx(0.794155019, rel=1e-8)
-    assert res.info["extent_isom_mol_s"] == pytest.approx(0.162045659, rel=1e-7)
+    assert res.info["extent_isom_mol_s"] == pytest.approx(0.141721023, rel=1e-7)
 
 
 def test_eta_and_activity_forms() -> None:
-    assert thiele_effectiveness(2.0) == pytest.approx(0.48201379, rel=1e-8)
-    assert thiele_effectiveness(1e-6) == pytest.approx(1.0 - 1e-12 / 3.0, rel=1e-14)
+    # Exact first-order sphere, eta = (3/phi^2)(phi coth phi - 1) (Fogler 4th ed. eq. 12-32,
+    # p. 829). Example 12-3 (pp. 840-841) prints eta = 0.856 at phi = 1.65; at phi = 16.5
+    # the exact form gives 0.1708 (the book prints 0.182 from the large-phi limit 3/phi).
+    # Regression: the earlier shape-normalized tanh(phi/3)/(phi/3) gave 0.910 at 1.65.
+    assert thiele_effectiveness(1.65) == pytest.approx(0.856, abs=5e-4)
+    assert thiele_effectiveness(16.5) == pytest.approx(0.170798898, rel=1e-8)
+    assert thiele_effectiveness(2.0) == pytest.approx(0.805972081, rel=1e-8)
+    # Series branch (phi < 0.1): continuous with the closed form and free of cancellation.
+    assert thiele_effectiveness(0.1) == pytest.approx(3.0 / 0.01 * (0.1 / math.tanh(0.1) - 1.0), rel=1e-12)
+    assert thiele_effectiveness(1e-6) == pytest.approx(1.0 - 1e-12 / 15.0, rel=1e-15)
+    assert thiele_effectiveness(300.0) == pytest.approx(3.0 / 300.0 * (1.0 - 1.0 / 300.0), rel=1e-12)
     a1 = activity({"deactivation": {"order": 1.0, "k_d_per_s": 2.0, "time_on_stream_s": 0.5}})
     assert a1 == pytest.approx(math.exp(-1.0), rel=1e-14)
     a2 = activity({"deactivation": {"order": 0.0, "k_d_per_s": 2.0, "time_on_stream_s": 0.25}})

@@ -358,8 +358,9 @@
               the Thiele modulus"}
           deactivation: {type: object, description: "{order, k_d_per_s, time_on_stream_s};
               power-law decay frozen at the time on stream"}
-      note: R2 with the rate multiplied by a*eta; generalized Thiele modulus eta = tanh(phi)/phi on
-        a shape-normalized sphere and separable power-law activity decay, uniform along the bed
+      note: R2 with the rate multiplied by a*eta; spherical-pellet effectiveness
+        eta = (3/phi^2)(phi coth phi - 1) on the sphere Thiele modulus (Fogler 4th ed. eq. 12-32,
+        exact at first order) and separable power-law activity decay, uniform along the bed
       end_state: true
   balance: mass_elements
   pid_symbol: R
@@ -374,10 +375,9 @@
     calculations (Fogler eq. 4-33 Ergun, wall-exchange exponential, Thiele/activity closed
     form) and the reductions to the lower level; R3 V1 search 2026-11-04: Fogler 4th ed.
     Ex. 12-3 gives only Thiele moduli (no k or De) and Ex. 12-4 needs the overall
-    effectiveness with external mass transfer (Thoenes-Kramers), which R3 does not model; note
-    R3's shape-normalized tanh(phi/3)/(phi/3) gives 0.910 at the sphere modulus 1.65 where the
-    exact sphere 3(phi coth phi - 1)/phi^2 gives 0.856 (at 16.5: 0.182 vs exact 0.171, the
-    book printing 0.182 from the large-phi limit 3/phi); no V1 case was attempted for them. R1 V1 gap — no transcribable
+    effectiveness with external mass transfer (Thoenes-Kramers), which R3 does not model. R3
+    used the shape-normalized tanh(phi/3)/(phi/3) until 2026-11-04 (0.910 at sphere modulus 1.65
+    where the exact sphere gives the book's 0.856); it now uses the exact eq. 12-32; no V1 case was attempted for them. R1 V1 gap — no transcribable
     printed validation case: searches 'Fogler Elements of Chemical Reaction Engineering PFR
     example first order irreversible gas phase numerical conversion worked example printed
     values' and 'Example 4- Fogler PFR gas phase 500 K volume final conversion table printed'
