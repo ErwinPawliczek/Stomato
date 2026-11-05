@@ -250,7 +250,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: ddb586-acetonemeoh-101.33kPa-x0.394
-  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_hoc, regular_solution_pr, nrtl_sac_ig]
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig, regular_solution_hoc, nrtl_sac_ig]
   components:
   - "67-64-1"
   - MeOH

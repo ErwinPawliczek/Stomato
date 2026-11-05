@@ -19,4 +19,6 @@ pairs:
       sets as '1' and '2' without stating which pair direction each is, and marks the
       selection preliminary. Orientation chosen by test: this one lands on the Gao
       (2012) 101.325 kPa data (tests/thermo/test_gamma_phi_variants.py), the reverse
-      does not. Regression source of the parameters is not stated.
+      does not. Regression source of the parameters is not stated. After the phi_sat fix
+      (7c5aca9) the shipped orientation still lands nearer the 8 Gao points than the reverse
+      (mean abs dT 0.49 vs 1.41 K, mean abs dy 0.012 vs 0.025; measured 2026-11-04).
