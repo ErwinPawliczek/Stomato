@@ -1,0 +1,239 @@
+# Sour-water (sour_water row) validation cases: NH3 + H2O VLE from two independent open data sets,
+# read programmatically from NIST ThermoML files (no hand transcription), 2026-11-04.
+#
+# Conventions, fixed before the cases ran:
+#   - Liu et al. 2011 give the NH3 PARTIAL pressure over the liquid. Compared as K_NH3 at
+#     P = 0.999 x the package bubble pressure of the case liquid (the family convention of
+#     cases.yaml: at a vanishing vapour fraction y_NH3 P == p_NH3,eq, so the expected
+#     K = p_lit / (x_NH3 P) isolates the partial pressure). Tolerance: the policy K band, 5 %.
+#   - Salavera et al. 2005 give the TOTAL vapour pressure: bubble_P at the policy 3 %.
+#     Every NH3 + H2O point inside the row's window (20-100 C) with w_NH3 <= 0.2 is bound.
+#     Feed z from mass fraction with the databank molar masses.
+#   - The row's coefficients were checked against DWSIM's independent transcription
+#     (DanWBR/dwsim PropertyPackages/SourWater.vb, CalcHenryConstants): the NH3 Henry
+#     constants agree digit for digit. The EPA report itself could not be retrieved.
+#   - pure_cases for this row live in cases-nacl.yaml (pure-H2O-*-electrolyte).
+pure_cases: []
+
+binary_cases:
+  - id: nh3h2o-liu2011-293.65K-x0.1083
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8917, NH3: 0.1083}
+    T: 293.65
+    P: 15425.7
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 10.42 kPa, T 293.65 K, x_NH3 0.1083), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 6.237268}
+  - id: nh3h2o-liu2011-294.75K-x0.027
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.973, NH3: 0.027}
+    T: 294.75
+    P: 4909.9
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 2.25 kPa, T 294.75 K, x_NH3 0.027), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 16.972511}
+  - id: nh3h2o-liu2011-295.65K-x0.0556
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.9444, NH3: 0.0556}
+    T: 295.65
+    P: 8433.2
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 4.94 kPa, T 295.65 K, x_NH3 0.0556), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 10.535612}
+  - id: nh3h2o-liu2011-295.65K-x0.1571
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8429, NH3: 0.1571}
+    T: 295.65
+    P: 28403.1
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 19.61 kPa, T 295.65 K, x_NH3 0.1571), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 4.394765}
+  - id: nh3h2o-liu2011-303.65K-x0.027
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.973, NH3: 0.027}
+    T: 303.65
+    P: 7821.0
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 3.4 kPa, T 303.65 K, x_NH3 0.027), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 16.101001}
+  - id: nh3h2o-liu2011-303.85K-x0.055
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.945, NH3: 0.055}
+    T: 303.85
+    P: 12413.7
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 7.43 kPa, T 303.85 K, x_NH3 0.055), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 10.882405}
+  - id: nh3h2o-liu2011-304.35K-x0.108
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.892, NH3: 0.108}
+    T: 304.35
+    P: 24568.7
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 16.49 kPa, T 304.35 K, x_NH3 0.108), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 6.214622}
+  - id: nh3h2o-liu2011-304.35K-x0.1583
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8417, NH3: 0.1583}
+    T: 304.35
+    P: 40775.1
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 30.08 kPa, T 304.35 K, x_NH3 0.1583), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 4.660171}
+  - id: nh3h2o-liu2011-313.15K-x0.027
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.973, NH3: 0.027}
+    T: 313.15
+    P: 12485.1
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 5 kPa, T 313.15 K, x_NH3 0.027), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 14.832495}
+  - id: nh3h2o-liu2011-313.15K-x0.0538
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.9462, NH3: 0.0538}
+    T: 313.15
+    P: 18666.8
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 10.98 kPa, T 313.15 K, x_NH3 0.0538), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 10.933273}
+  - id: nh3h2o-liu2011-313.15K-x0.104
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.896, NH3: 0.104}
+    T: 313.15
+    P: 33821.3
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 24.38 kPa, T 313.15 K, x_NH3 0.104), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 6.931226}
+  - id: nh3h2o-liu2011-313.75K-x0.1532
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8468, NH3: 0.1532}
+    T: 313.75
+    P: 55591.4
+    source: 'literature:Liu, J., Wang, S., Hartono, A., Svendsen, H. F., Kim, I. & Chen, C., ''Vapor-liquid equilibria of NH3 in (NH3 + H2O) and (NH3 + PZ + H2O) system'', Fluid Phase Equilib. 311, 30-35, 2011, doi:10.1016/j.fluid.2011.08.017, NH3 partial pressure at x_PZ = 0 (NH3 + H2O rows), read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2011.08.017.xml (dataset 1, parsed by script: p_NH3 45.29 kPa, T 313.75 K, x_NH3 0.1532), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {NH3: 5.317848}
+  - id: nh3h2o-salavera2005-293.15K-w0.09997
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8948572, NH3: 0.1051428}
+    T: 293.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 12.1 kPa, T 293.15 K, w_NH3 0.09997), retrieved 2026-11-04'
+    expected: {bubble_P: 12100.0}
+  - id: nh3h2o-salavera2005-293.15K-w0.20024
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.7906059, NH3: 0.2093941}
+    T: 293.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 30.7 kPa, T 293.15 K, w_NH3 0.20024), retrieved 2026-11-04'
+    expected: {bubble_P: 30700.0}
+  - id: nh3h2o-salavera2005-303.15K-w0.09996
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8948677, NH3: 0.1051323}
+    T: 303.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 19.8 kPa, T 303.15 K, w_NH3 0.09996), retrieved 2026-11-04'
+    expected: {bubble_P: 19800.0}
+  - id: nh3h2o-salavera2005-303.15K-w0.2001
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.7907507, NH3: 0.2092493}
+    T: 303.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 50.5 kPa, T 303.15 K, w_NH3 0.2001), retrieved 2026-11-04'
+    expected: {bubble_P: 50500.0}
+  - id: nh3h2o-salavera2005-313.15K-w0.09994
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8948886, NH3: 0.1051114}
+    T: 313.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 31.9 kPa, T 313.15 K, w_NH3 0.09994), retrieved 2026-11-04'
+    expected: {bubble_P: 31900.0}
+  - id: nh3h2o-salavera2005-313.15K-w0.19993
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.7909264, NH3: 0.2090736}
+    T: 313.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 76.6 kPa, T 313.15 K, w_NH3 0.19993), retrieved 2026-11-04'
+    expected: {bubble_P: 76600.0}
+  - id: nh3h2o-salavera2005-323.15K-w0.09992
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8949095, NH3: 0.1050905}
+    T: 323.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 48.3 kPa, T 323.15 K, w_NH3 0.09992), retrieved 2026-11-04'
+    expected: {bubble_P: 48300.0}
+  - id: nh3h2o-salavera2005-323.15K-w0.19972
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.7911435, NH3: 0.2088565}
+    T: 323.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 112.2 kPa, T 323.15 K, w_NH3 0.19972), retrieved 2026-11-04'
+    expected: {bubble_P: 112200.0}
+  - id: nh3h2o-salavera2005-333.15K-w0.09989
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8949409, NH3: 0.1050591}
+    T: 333.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 72.6 kPa, T 333.15 K, w_NH3 0.09989), retrieved 2026-11-04'
+    expected: {bubble_P: 72600.0}
+  - id: nh3h2o-salavera2005-333.15K-w0.19946
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.7914123, NH3: 0.2085877}
+    T: 333.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 160.2 kPa, T 333.15 K, w_NH3 0.19946), retrieved 2026-11-04'
+    expected: {bubble_P: 160200.0}
+  - id: nh3h2o-salavera2005-343.15K-w0.09987
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8949618, NH3: 0.1050382}
+    T: 343.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 101.6 kPa, T 343.15 K, w_NH3 0.09987), retrieved 2026-11-04'
+    expected: {bubble_P: 101600.0}
+  - id: nh3h2o-salavera2005-343.15K-w0.19921
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.7916708, NH3: 0.2083292}
+    T: 343.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 223.7 kPa, T 343.15 K, w_NH3 0.19921), retrieved 2026-11-04'
+    expected: {bubble_P: 223700.0}
+  - id: nh3h2o-salavera2005-353.15K-w0.09982
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.8950141, NH3: 0.1049859}
+    T: 353.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 144.2 kPa, T 353.15 K, w_NH3 0.09982), retrieved 2026-11-04'
+    expected: {bubble_P: 144200.0}
+  - id: nh3h2o-salavera2005-353.15K-w0.19869
+    package: sour_water
+    components: [H2O, NH3]
+    z: {H2O: 0.7922084, NH3: 0.2077916}
+    T: 353.15
+    source: 'literature:Salavera, D., Chaudhari, S. K., Esteve, X. & Coronas, A., ''Vapor-Liquid Equilibria of Ammonia + Water + Potassium Hydroxide and Ammonia + Water + Sodium Hydroxide Solutions at Temperatures from (293.15 to 353.15) K'', J. Chem. Eng. Data 50, 2005, doi:10.1021/je049708+, NH3 + H2O total vapour pressure, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1021/je049708%2B.xml (dataset 1, parsed by script: P 309 kPa, T 353.15 K, w_NH3 0.19869), retrieved 2026-11-04'
+    expected: {bubble_P: 309000.0}
+
+
+multicomponent_cases: []
