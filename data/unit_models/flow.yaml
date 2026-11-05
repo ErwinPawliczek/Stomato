@@ -18,7 +18,8 @@
       description: pressurised liquid (PS flash)
   levels:
     R0:
-      status: provisional
+      status: validated
+      validation: [V1-pump-gpsa-12-1, V1-pump-svna-ex7-10]
       adapter: ngdesign.units.pump:Pump
       params:
         type: object
@@ -72,6 +73,7 @@
   levels:
     R0:
       status: provisional
+      validation: [V1-compressor-svna-ex7-8]
       adapter: ngdesign.units.compressor:Compressor
       params:
         type: object
@@ -225,6 +227,7 @@
   levels:
     R0:
       status: provisional
+      validation: [V1-expander-svna-ex7-6, V1-expander-perry-ex4-6]
       adapter: ngdesign.units.expander:Expander
       params:
         type: object
@@ -283,7 +286,8 @@
       description: isenthalpic (flash_ph) outlet
   levels:
     R0:
-      status: provisional
+      status: validated
+      validation: [V1-jt-valve-purdue-me200-steam, V1-jt-valve-svna-sec7-1-steam]
       adapter: ngdesign.units.jt_valve:JTValve
       params:
         type: object
@@ -311,7 +315,8 @@
       description: throttled outlet
   levels:
     R0:
-      status: provisional
+      status: validated
+      validation: [V1-control-valve-emerson-propane]
       adapter: ngdesign.units.flow.control_valve:ControlValve
       params: {}
       note: Cv / outlet P spec, isenthalpic (the cv_liquid correlation plugin exists)
@@ -362,7 +367,7 @@
       params: {}
       note: set pressure, orifice from API 520 (the psv_api520_gas correlation plugin exists)
     R1:
-      status: provisional
+      status: validated
       adapter: ngdesign.units.flow.relief_valve_r1:ReliefValveR1
       params:
         type: object
@@ -375,7 +380,7 @@
           Kv: {type: number, description: 'viscosity correction (liquid), default 1.0'}
           Kw: {type: number, description: 'liquid back-pressure correction (balanced bellows), default 1.0'}
       note: Leung omega two-phase and subcooled sizing (eqs. 1-5), gas delegated to R0; Kd by regime
-      validation: []
+      validation: [V1-relief-valve-diers-rr-case-ia, V1-relief-valve-api520-d2-2-2-propane]
     R2:
       status: provisional
       adapter: ngdesign.units.flow.relief_valve_r2:ReliefValveR2
@@ -447,6 +452,7 @@
       note: fixed ΔP spec; in dP mode an elevation rise subtracts rho*g*z from the outlet pressure, in P_out mode it is reported only
     R1:
       status: provisional
+      validation: [V1-pipe-segment-gpsa-17-1]
       adapter: ngdesign.units.flow.pipe_segment_r1:PipeSegmentR1
       params:
         type: object

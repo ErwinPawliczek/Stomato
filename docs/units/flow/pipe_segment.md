@@ -84,6 +84,15 @@ required:
 type: object
 ```
 
+## V1 worked cases
+
+| case | level | quantity | expected | measured | tolerance | result |
+|---|---|---|---|---|---|---|
+| `V1-pipe-segment-gpsa-17-1` | R1 | `info.dP_total_Pa` | 2909.6 | 2868.91 | rel 0.0012 | assessed miss |
+
+- `V1-pipe-segment-gpsa-17-1`: GPSA Engineering Data Book, 13th ed. (FPS), Section 17 Fluid Flow and Piping, Example 17-1, transcribed from the publisher's official calculation workbook (https://www.gpamidstream.org/wp-content/uploads/2025/08/DBCalculations-13thEdition-Section17.xlsx, sheet "Example 17-1", retrieved 2026-11-04): pressure drop in a 10-in. Schedule 40 pipe for 150,000 lb/hr of methane at 60 degF and 750 psia, Z = 0.905 (Fig. 23-5), clean steel pipe; rho = 2.38 lb/ft3; C1 = 22.5 (Fig. 17-8), C2 = 0.0447 (Fig. 17-9); Eq. 17-31 dP100 = C1 C2 / rho = 0.422 psi/100 ft (cell display 0.000). Encoded as 100 ft (30.48 m) of horizontal pipe at the ASME B36.10 10 in. Sch 40 ID 254.46 mm (data/pipe_schedules_b3610.csv) with the unit's default commercial-steel roughness; 150,000 lb/hr = 18.8997 kg/s = 1178.06 mol/s methane; the density and viscosity come from the PR package (the HEOS and GERG packages report no phase viscosity), not the chart Z. 0.422 psi = 2909.6 Pa.
+  - assessed: Measured dP_total 2868.9 Pa = 0.4161 psi/100 ft, -1.40% on the printed 0.422 (tolerance: the 3-decimal print, 0.12%). Two causes, both outside the Darcy-Colebrook march: (1) the PR package's methane density at the inlet is 39.103 kg/m3, +2.2% on the GERG-2008/CoolProp reference 38.264 kg/m3 (the book's Z = 0.905 gives 38.17 kg/m3), and dP scales as 1/rho; rescaled to the reference density the unit's drop would be 2931.8 Pa, +0.76%. (2) The residual is the friction basis: GPSA's C2 size factor (Fig. 17-9) bakes in a chart friction factor for clean steel, while R1 computes Colebrook at Re 8.78e6 with eps 4.57e-5 m (f = 0.01357). The reference-density packages (gerg2008, coolprop_heos) cannot run this case: their PH flash raises SaturationError for pure methane above its critical pressure (ngdesign.thermo.helmholtz._flash_H_or_S calls _tsat unconditionally) - a thermo bug reported to the orchestrator, outside this unit's scope. Level stays provisional.
+
 ## References
 
 - docs/unit-catalogue-plan.md §2 U-B 8
