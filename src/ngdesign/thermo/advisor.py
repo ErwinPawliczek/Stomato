@@ -188,6 +188,19 @@ def _score_row(row: ModelRow, fs: Flowsheet, profile: Profile) -> tuple[int, lis
             "shape for the polar VLE — lifted (Carlson 1996)"
         )
 
+    # Carlson (1996) decision tree for polar non-electrolytes: a correlative activity
+    # model (NRTL / Wilson / UNIQUAC ...) where its binary parameters exist; a
+    # predictive one (group contribution, COSMO, regular solution, segment
+    # NRTL-SAC) only where they are missing. A correlative row whose pairs are
+    # missing already sinks by 50 in the coverage probe below, so the predictive
+    # row still wins exactly when the parameters are absent.
+    if profile.polar_dominant and row.family == "gamma_phi" and _predictive_liquid(row):
+        score -= 5
+        reasons.append(
+            "predictive liquid model (no fitted binary parameters): ranked below a "
+            "correlative model whose fitted pairs cover the slate (Carlson 1996)"
+        )
+
     # Natural-gas processing: GPSA favours PR/SRK for natural-gas systems
     # (GPSA Engineering Data Book, 13th ed., sec. 25).
     if not profile.polar_dominant and row.id in ("pr", "srk"):
@@ -243,6 +256,18 @@ def _score_row(row: ModelRow, fs: Flowsheet, profile: Profile) -> tuple[int, lis
     elif row.status == "validated":
         reasons.append("status: validated (L0 plus L1/L2 validation cases green)")
     return score, reasons, warnings
+
+
+#: Liquid options of the gamma-phi family that predict rather than correlate: no fitted
+#: binary parameters (group contribution, COSMO-SAC sigma profiles, solubility
+#: parameters, NRTL-SAC segment parameters).
+_PREDICTIVE_LIQUIDS = frozenset({"cosmo_sac", "nrtl_sac", "regular_solution"})
+
+
+def _predictive_liquid(row: ModelRow) -> bool:
+    """Whether a gamma-phi row's liquid model is predictive (see ``_PREDICTIVE_LIQUIDS``)."""
+    liquid = str(row.options.get("liquid", ""))
+    return liquid.startswith("unifac") or liquid in _PREDICTIVE_LIQUIDS
 
 
 def _probe_refusal(row: ModelRow, fs: Flowsheet) -> str | None:

@@ -100,3 +100,12 @@ def test_virial_vapour_rows_rank_as_provisional() -> None:
 def test_recommendation_is_deterministic() -> None:
     fs = slice_fs.build()
     assert recommend(fs) == recommend(fs)
+
+
+def test_predictive_gamma_phi_ranks_below_a_covering_correlative_row() -> None:
+    """Carlson (1996): correlative NRTL with fitted MeOH/H2O pairs outranks COSMO-SAC/UNIFAC."""
+    recs = recommend(_column({"MeOH": 0.6, "H2O": 0.4}))
+    by_id = {rec.id: rec for rec in recs}
+    assert by_id["nrtl"].score > by_id["cosmo_sac_ig"].score
+    assert by_id["nrtl"].score > by_id["unifac_ig"].score
+    assert any("predictive" in reason for reason in by_id["cosmo_sac_ig"].reasons)

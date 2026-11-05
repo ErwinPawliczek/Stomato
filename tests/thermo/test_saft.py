@@ -70,8 +70,10 @@ def test_saft_rows_register_with_status() -> None:
     )
     for rid in validated:
         assert rows[rid].status == "validated", f"{rid}: row must be validated"
-    assert rows["pc_saft_polar"].status == "provisional"
-    assert set(validated) | {"pc_saft_polar"} == set(SAFT_IDS)
+    held = ("pc_saft_polar", "cpa_srk", "cpa_pr", "pc_saft_assoc")
+    for rid in held:
+        assert rows[rid].status == "provisional", f"{rid}: row must stay provisional"
+    assert set(validated) | set(held) == set(SAFT_IDS)
 
 
 def test_saft_packages_require_the_extra_at_first_use(monkeypatch: pytest.MonkeyPatch) -> None:
