@@ -12,7 +12,7 @@ registry implements. A level or method listed here is listed but not implemented
 | Planned rigour levels on implemented units | | | 0 |
 | Property methods in the plan | 168 | 163 | 5 |
 
-Catalogue rows by status: 4 experimental, 53 provisional, 104 validated.
+Catalogue rows by status: 4 experimental, 55 provisional, 104 validated.
 
 ## Unit rows with no implementation
 
