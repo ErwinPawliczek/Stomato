@@ -1,3 +1,7 @@
+### Board sync — Stomato bot — 2026-11-04 10:05 PM
+- Done: V1 still `in progress` (claude -p --continue pid 987330 alive since 9:35 PM). Progress evidence (~10:05 PM): batches 2–4 fast-forwarded into local chem-engine at 2646478 (special, electrolyte bed50eb, helm-kvalue/csgs, cubic-mixing, saft, units-a/c, gphi-corr/unifac, advisor rule; full gate green). Batch 5 (val-electrolyte-amine a1ac12a, val-units-b 0ea2c50) gating as integ5 on val-integ bdbaccb (pytest running). Round-2 agents started from 6064435: amine2, saft2, aqueous, gphi2. No new `obv/*` commits (tips unchanged: T10 7518251, T11s 26c4267); no `claude/*` branches. origin/chem-engine still 9cf08cc.
+- Next: CQ1 stays queued until V1 finishes. No Obvious job started (no unclaimed Erwin-approved Obvious task; CQ1 is Claude Code).
+
 ### Board sync — Stomato bot — 2026-11-04 9:49 PM
 - Done: V1 → `in progress`: scheduled resume fired; `claude -p --continue` pid 987330 started 9:35 PM, re-running the integ4 suite before merging into chem-engine. No new `obv/*` commits (tips unchanged); no `claude/*` branches.
 - Next: CQ1 stays queued until V1 finishes. No Obvious job started (no unclaimed Erwin-approved Obvious task).
@@ -51,7 +55,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 
 | id | title | owner | status | branch | updated |
 |----|-------|-------|--------|--------|---------|
-| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress — resumed 9:35 PM after 5h limit reset (claude -p --continue pid 987330); re-running full suite on fixed integ4 commit, then merge into chem-engine; units-b and electrolyte-amine sub-agents active. origin/chem-engine 9cf08cc | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 9:49 PM |
+| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress — batches 2–4 merged into local chem-engine 2646478 (~10:05 PM); batch 5 (electrolyte-amine a1ac12a + units-b 0ea2c50) gating as integ5 on val-integ bdbaccb; round-2 agents amine2/saft2/aqueous/gphi2 active; claude -p --continue pid 987330 alive. origin/chem-engine still 9cf08cc (local ahead, unpushed) | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 10:05 PM |
 | T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
 | T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | accepted (PR #342, awaits suite) | obv/T1r | 2026-11-04 12:18 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | accepted w/ fix (PR #343; fix in T10) | obv/T3 | 2026-11-04 12:22 PM |
