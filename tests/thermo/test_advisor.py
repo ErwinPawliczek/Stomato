@@ -14,6 +14,7 @@ from __future__ import annotations
 from ngdesign.contracts import FeedSpec, Flowsheet, PortRef, StreamSpec, UnitSpec
 from ngdesign.flowsheets import amine_loop
 from ngdesign.flowsheets import slice as slice_fs
+from ngdesign.thermo import catalogue
 from ngdesign.thermo.advisor import recommend
 
 
@@ -90,11 +91,14 @@ def test_experimental_rows_never_rank() -> None:
 def test_virial_vapour_rows_rank_as_provisional() -> None:
     # T-03b: the HOC/Nothnagel virial-vapour rows left experimental status and
     # rank like any other provisional row (promotion to validated is T-15's
-    # call once the #100 MeOH/H2O series is re-transcribed).
+    # call once the #100 MeOH/H2O series is re-transcribed). The 2026-11-04 validation
+    # run promoted both to validated; the advisor reports the catalogue status as is.
     recs = recommend(slice_fs.build())
     by_id = {rec.id: rec for rec in recs}
-    assert by_id["nrtl_hoc"].status == "provisional"
-    assert by_id["wilson_nothnagel"].status == "provisional"
+    rows = catalogue.load_catalogue()
+    for rid in ("nrtl_hoc", "wilson_nothnagel"):
+        assert by_id[rid].status == rows[rid].status
+        assert by_id[rid].status != "experimental"
 
 
 def test_recommendation_is_deterministic() -> None:
