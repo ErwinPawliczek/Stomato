@@ -1,3 +1,7 @@
+### Board sync — Stomato bot — 2026-11-04 6:06 PM
+- Done: V1 → `in progress`: continue relaunched 5:46 PM (claude -p pid 874677 alive; sub-agents running units-a/units-b/gphi-unifac/electrolyte-amine checks and a val-integ gate; progress file updated 6:06 PM). No new obv/* commits; no `claude/*` branches; origin/chem-engine 9cf08cc.
+- Next: CQ1 stays queued until V1 finishes. No Obvious job started.
+
 ### Board sync — Stomato bot — 2026-11-04 4:53 PM
 - Done: V1 → `STOPPED`: claude -p exited ~4:40 PM with no END marker and nothing running (no claude, no gate). Batch 2 not gated/merged; origin/chem-engine still 9cf08cc. No new obv/* commits; no `claude/*` branches.
 - Next: Erwin to decide: relaunch V1 continue (batch 2 gate + 6 open agents), and/or start CQ1 now that V1 is idle. No job started by board sync.
@@ -35,7 +39,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 
 | id | title | owner | status | branch | updated |
 |----|-------|-------|--------|--------|---------|
-| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | STOPPED — continue started 4:35 PM, claude -p (pid 852754) exited ~4:40 PM without a CONTINUE END marker; last log line says batch 2 (special, electrolyte, helm-kvalue, cubic-mixing) entering full gate, but no gate/claude process is running. Last commits: stomato-val-integ 7c20cfc 4:36, helm-kvalue af87e1b 4:38. Needs relaunch decision | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 4:53 PM |
+| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress — continue relaunched 5:46 PM (claude -p pid 874677 alive); earlier 4:35 continue had stopped ~4:40 without END marker. Batch 2 gate/merge pending; origin/chem-engine 9cf08cc | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 6:06 PM |
 | T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
 | T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | accepted (PR #342, awaits suite) | obv/T1r | 2026-11-04 12:18 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | accepted w/ fix (PR #343; fix in T10) | obv/T3 | 2026-11-04 12:22 PM |
