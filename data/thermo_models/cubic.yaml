@@ -2050,6 +2050,11 @@
   l0: {}
   l0_excluded: {}
   l0_note: ''
+  l4_excluded:
+    zudkevitch-joffe-rk: >-
+      The same slice dew gap the srk row declares against zudkevitch-joffe-rk (the
+      Zudkevitch-Joffe alpha), unchanged by the zero k_ij: measured 614952 vs 872333 Pa
+      (rel 0.295) at 293.15 K, srk itself 614969 Pa.
 - id: pr-kij0
   name: Peng-Robinson, zero k_ij
   family: cubic
@@ -2090,3 +2095,11 @@
   l0: {}
   l0_excluded: {}
   l0_note: ''
+  l4_excluded:
+    twu-pr: >-
+      The generalised-omega PR slice dew the twu rows already declare against pr (Twu alpha anchored to
+      vapour pressure), unchanged by the zero k_ij: measured 717355 vs 597284 Pa (rel 0.201) at 293.15 K,
+      pr itself 717386 Pa.
+    twu-srk: >-
+      As for twu-pr: measured 717355 vs 596571 Pa (rel 0.202) at 293.15 K, pr itself 717386 Pa (declared on
+      the twu-srk row against pr).
