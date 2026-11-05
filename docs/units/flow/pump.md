@@ -2,7 +2,7 @@
 
 Family: **flow** · P&ID symbol: `P`
 
-Rigour ladder: R0 provisional, R1 provisional
+Rigour ladder: R0 validated, R1 provisional
 
 ## Ports
 
@@ -15,7 +15,7 @@ Rigour ladder: R0 provisional, R1 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.pump:Pump` | ΔP/outlet P with efficiency; PS flash on the outlet |
+| R0 | validated | `ngdesign.units.pump:Pump` | ΔP/outlet P with efficiency; PS flash on the outlet |
 | R1 | provisional | `ngdesign.units.flow.pump_r1:PumpR1` | curve (head/efficiency vs flow, PCHIP, affinity laws) and NPSHa check; delegates the outlet to R0 |
 
 Sizer plugin: `pump`

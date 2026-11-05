@@ -2,7 +2,7 @@
 
 Family: **flow** · P&ID symbol: `V`
 
-Rigour ladder: R0 provisional
+Rigour ladder: R0 validated
 
 ## Ports
 
@@ -15,7 +15,7 @@ Rigour ladder: R0 provisional
 
 | level | status | adapter | basis |
 |---|---|---|---|
-| R0 | provisional | `ngdesign.units.jt_valve:JTValve` | isenthalpic flash to the outlet pressure |
+| R0 | validated | `ngdesign.units.jt_valve:JTValve` | isenthalpic flash to the outlet pressure |
 
 ### R0 parameters
 

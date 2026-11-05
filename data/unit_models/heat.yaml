@@ -129,6 +129,7 @@
         4Ntp return heads, e-NTU S&T, F reported
     R2:
       status: provisional
+      validation: [V1-shell-tube-kern-ex12-1]
       adapter: ngdesign.units.heat.shell_tube_r2:ShellTubeR2
       params:
         type: object

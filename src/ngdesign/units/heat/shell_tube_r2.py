@@ -33,7 +33,7 @@ from scipy.optimize import brentq
 
 from ngdesign.contracts import PhaseKind, StreamState, UnitResult
 from ngdesign.contracts.plugins import Thermo
-from ngdesign.data import components
+from ngdesign.data import component_record
 from ngdesign.sizing.lmtd import lmtd_counter
 from ngdesign.units._physics.heat_balance import TemperatureCross
 from ngdesign.units.heat.rating import (
@@ -225,7 +225,10 @@ class ShellTubeR2:
             "Q_W": q_star,
             "A_m2": area,
             "A_required_m2": needed,
-            "U_W_m2K": q_star / (f_value * zones.sum_q_over_lmtd_u_inverse),
+            # Zone-weighted overall U: Q = U * A * F * dT_m with dT_m = Q / sum(Q_k/LMTD_k)
+            # and A = sum(Q_k/(U_k*LMTD_k))/F, so U = sum(Q_k/LMTD_k) / sum(Q_k/(U_k*LMTD_k)).
+            # (The earlier Q/(F*sum(Q_k/LMTD_k)) was a temperature, not a U.)
+            "U_W_m2K": zones.sum_q_over_lmtd / (needed * f_value),
             "F_LMTD": f_value,
             "LMTD_K": lmtd_counter(hot_state.T, hot_out.T, cold_state.T, cold_out.T),
             "dP_tube_Pa": dp_tube,
@@ -358,7 +361,7 @@ class _Zones:
     hot_out: StreamState
     cold_out: StreamState
     f: float
-    sum_q_over_lmtd_u_inverse: float
+    sum_q_over_lmtd: float
     min_dt: float
     u_min: float
     u_max: float
@@ -391,7 +394,9 @@ class _Rater:
         self.a_s = shell_flow_area(geom.shell_ID_m, geom.pitch_m, geom.tube_OD_m, geom.baffle_spacing_m)
         self.de = equiv_diameter(geom.pitch_m, geom.tube_OD_m, geom.layout)
         ids = list(cold.inlet.composition) + list(hot.inlet.composition)
-        self.db = {cid: components()[cid] for cid in ids}
+        # component_record resolves curated ids, databank names/CAS and pseudos (spec
+        # P1-02), the same keys the thermo packages accept; components() is curated-only.
+        self.pc = {cid: float(component_record(cid)["Pc"]) for cid in ids}
 
     def _outlet(self, side: _Side, q: float) -> StreamState:
         flow = float(side.inlet.molar_flow)
@@ -426,7 +431,7 @@ class _Rater:
         hot_states = self._boundaries(self.hot, q)
         cold_states = self._boundaries(self.cold, q)[::-1]  # counter-current pairing
         area = 0.0
-        q_over_lmtd_u = 0.0
+        q_over_lmtd = 0.0
         min_dt = math.inf
         u_min, u_max = math.inf, 0.0
         h_tube: list[float] = []
@@ -442,12 +447,10 @@ class _Rater:
             h_shell.append(h_s)
             lmtd = lmtd_counter(hot_a.T, hot_b.T, cold_b.T, cold_a.T)
             area += (q / self.n) / (u * lmtd)
-            q_over_lmtd_u += (q / self.n) / lmtd
+            q_over_lmtd += (q / self.n) / lmtd
             min_dt = min(min_dt, dt1, dt2)
             u_min, u_max = min(u_min, u), max(u_max, u)
-        zones = _Zones(
-            hot_out, cold_out, f, q_over_lmtd_u, min_dt, u_min, u_max, tuple(h_tube), tuple(h_shell)
-        )
+        zones = _Zones(hot_out, cold_out, f, q_over_lmtd, min_dt, u_min, u_max, tuple(h_tube), tuple(h_shell))
         return area / f, zones
 
     def _mean_state(self, a: StreamState, b: StreamState, side: _Side) -> StreamState:
@@ -473,7 +476,7 @@ class _Rater:
         return latent_heat_J_kg(self.thermo, dict(side.inlet.composition), p)
 
     def _pc(self, state: StreamState) -> float:
-        return math.fsum(x * float(self.db[cid]["pc_Pa"]) for cid, x in state.composition.items())
+        return math.fsum(x * self.pc[cid] for cid, x in state.composition.items())
 
     def _two_phase_h(self, side: _Side, mean: StreamState, u_of: Any, t_other: float) -> float:
         g = self.geom

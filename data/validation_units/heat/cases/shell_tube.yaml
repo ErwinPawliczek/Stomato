@@ -68,3 +68,82 @@
     3.9e4. A correlation-choice difference (Kern's chart vs the
     Gnielinski tube side the level declares), not a coding error; R1 stays
     provisional.
+
+- id: V1-shell-tube-kern-ex12-1
+  unit: shell_tube
+  level: R2
+  source: >-
+    Kern, D.Q., Process Heat Transfer, McGraw-Hill 1950, Example 12.1
+    "Calculation of a Horizontal n-Propanol Condenser", pp. 274-277
+    (archive.org OCR text
+    https://archive.org/download/KERNProcessHeatTransfer/KERN%20-%20Process%20Heat%20Transfer_djvu.txt,
+    read 2026-11-04): 60,000 lb/hr of substantially pure n-propanol
+    condensed at 15 psig (boils at 244 F) in the shell of a horizontal 1-4
+    condenser, 488,000 lb/hr water 85 -> 120 F in the tubes, dirt factor
+    0.003; 766 tubes 3/4 in. OD 16 BWG (a't = 0.302 in2, D = 0.62 in.), 8'0",
+    15/16 in. triangular pitch, 31 in. ID shell, 4 passes, baffle space 31
+    in. (2 baffles, 3 crosses); loading G'' = 89.3 lb/hr lin ft, tw = 125 F,
+    tf = 184.5 F, condensing film ho = 172 Btu/hr ft2 F (Fig. 12.9 / Eq.
+    12.42) = 976.7 W/m2K. Encoded: 7.55987 kg/s = 125.799 mol/s n-propanol
+    fed as saturated vapour at 29.7 psia = 204,775 Pa, 0.32 K above the
+    package dew point 390.18 K = 242.6 F (book 244 F; the PR PT flash
+    still returns a liquid root up to 390.3 K); water 61.4876 kg/s =
+    3413.05 mol/s at 85 F, 3 bar (not printed); D_o 0.01905 m, D_i 0.015748
+    m, 2.4384 m, pitch 0.0238125 m; Rd 0.003 hr ft2 F/Btu = 5.2833e-4
+    m2K/W, all on the shell (Kern's outside basis). tube_rows_vertical = 38,
+    the centre-column count 31 in. / (15/16 in. x cos 30) = 38.2, is the
+    unit's Nusselt-bank input; Kern's Eq. 12.42 has no row count (it loads
+    on Nt^(2/3)), so this is a modelling choice stated before the run. The
+    compared quantity is the condensing shell film (mean over the
+    equal-duty zones), which depends on the water side only through the
+    wall temperature (quarter power), not on Kern's chart water coefficient.
+    Tolerance: the printed integer ho (+/-0.5 Btu = +/-2.84 W/m2K), fixed
+    before the run.
+  thermo: pr
+  feeds:
+    inlet:
+      T: 390.5
+      P: 204775.0
+      molar_flow: 125.799
+      composition: {1-PROPANOL: 1.0}
+  params:
+    process_side: shell
+    shell_ID_m: 0.7874
+    n_tubes: 766
+    tube_OD_m: 0.01905
+    tube_ID_m: 0.015748
+    tube_length_m: 2.4384
+    pitch_m: 0.0238125
+    layout: triangular30
+    baffle_spacing_m: 0.7874
+    n_baffles: 2
+    tube_passes: 4
+    n_shells: 1
+    utility_composition: {H2O: 1.0}
+    utility_T_K: 302.594
+    utility_P_Pa: 3.0e+5
+    utility_molar_flow: 3413.05
+    R_f_tube_m2K_W: 0.0
+    R_f_shell_m2K_W: 5.2833e-4
+    tube_rows_vertical: 38
+    n_zones: 8
+  expected:
+  - {quantity: info.h_shell_mean_W_m2K, value: 976.7, tol_abs: 2.84}
+  assessed: >-
+    Measured mean condensing film 650.5 W/m2K (zones 660.8 -> 640.6) against
+    Kern's ho = 172 Btu/hr ft2 F = 976.7 W/m2K, -33.4%; rated duty 3.975 MW
+    with 18.4 mol% vapour left at the outlet (Kern: 17.1e6 Btu/hr = 5.01 MW,
+    total condensation), zone-weighted U 450.5 W/m2K (Kern U_D = 101 Btu =
+    573.5 W/m2K). The main cause is the bank model, not a coding error: the
+    unit applies Nusselt with the Incropera eq. 10.47 row factor N_r^(-1/4)
+    at the stated centre-column count N_r = 38 (factor 0.403), while Kern's
+    Eq. 12.42 loads the film on Nt^(2/3) tubes (equivalent to a far milder
+    row penalty); at N_r = Nt^(1/3) = 9.15 the same unit film would be ~1.43x
+    higher (~930 W/m2K). Kern also takes k_f, s_f, mu_f from his tables at the
+    184.5 F film temperature (0.094, 0.80, 0.62 cp) and the wall at 125 F from
+    his chart water coefficient; the unit's films come from the PR package
+    and its own wall balance. No N_r is printed, so the row count stays a
+    stated modelling choice and the level stays provisional. Found while
+    encoding this case and fixed (regression test in
+    tests/units/heat/test_shell_tube_r2.py): R2's info U_W_m2K was
+    Q/(F*sum(Q_k/LMTD_k)), a temperature; it now reports the zone-weighted U.

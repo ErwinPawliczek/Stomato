@@ -71,6 +71,9 @@ def test_one_zone_reduces_to_r1(thermo: Thermo, passes: int) -> None:
     assert r2.info["Q_W"] == pytest.approx(r1.info["Q_W"], rel=1e-7)
     assert r2.outlets["outlet"].T == pytest.approx(r1.outlets["outlet"].T, rel=1e-7)
     assert r2.outlets["outlet"].P == pytest.approx(r1.outlets["outlet"].P, rel=1e-12)
+    # Regression (validation run 2026-11-04): R2 reported Q/(F*sum(Q_k/LMTD_k)), a
+    # temperature, as U_W_m2K; one zone must read R1's U.
+    assert r2.info["U_W_m2K"] == pytest.approx(r1.info["U_W_m2K"], rel=1e-6)
 
 
 def test_zones_refine_a_single_phase_duty_only_slightly(thermo: Thermo) -> None:
