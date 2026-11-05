@@ -40,3 +40,92 @@ multicomponent_cases:
     Z: 1.173801364147326
     cp: 58.54617672380667
   note: DC92 reproduces every printed check value in tests/thermo/test_aga8.py; density = molar density x molar mass
+pure_cases:
+# 2026-11-04 (helm-kvalue): aga8_dc92 L1 - measured pure-nitrogen gas densities (Chamorro et
+# al. 2006, ThermoML dataset 0, single-sinker densimeter). Independent of the DC92 fit (1992).
+# The NIST check-gas case above is the reference code's own check value: it verifies the port,
+# it is not independent evidence for the model.
+- id: aga8-n2-density-249.959K-5.024MPa
+  package: aga8_dc92
+  components: [N2]
+  z: {N2: 1.0}
+  T: 249.959
+  P: 5024180.0
+  source: "literature:Chamorro, C. R., Segovia, J. J., Martin, M. C., Villamanan, M. A., Estela-Uribe, J. F., Trusler, J. P. M., 'Measurement of the (pressure, density, temperature) relation of two (methane + nitrogen) gas mixtures at temperatures between 240 and 400 K and pressures up to 20 MPa using an accurate single-sinker densimeter', J. Chem. Thermodyn. 38, 916-922, 2006, doi:10.1016/j.jct.2005.10.004; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.jct.2005.10.004.xml, PureOrMixtureData dataset 0 (nitrogen mass density), T = 249.959 K, p = 5024.18 kPa, rho = 69.90185 kg/m3; retrieved 2026-11-04"
+  expected:
+    density: 69.90185
+- id: aga8-n2-density-299.972K-10.974MPa
+  package: aga8_dc92
+  components: [N2]
+  z: {N2: 1.0}
+  T: 299.972
+  P: 10974400.0
+  source: "literature:Chamorro, C. R., Segovia, J. J., Martin, M. C., Villamanan, M. A., Estela-Uribe, J. F., Trusler, J. P. M., 'Measurement of the (pressure, density, temperature) relation of two (methane + nitrogen) gas mixtures at temperatures between 240 and 400 K and pressures up to 20 MPa using an accurate single-sinker densimeter', J. Chem. Thermodyn. 38, 916-922, 2006, doi:10.1016/j.jct.2005.10.004; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.jct.2005.10.004.xml, PureOrMixtureData dataset 0 (nitrogen mass density), T = 299.972 K, p = 10974.4 kPa, rho = 122.2529 kg/m3; retrieved 2026-11-04"
+  expected:
+    density: 122.2529
+- id: aga8-n2-density-399.99K-17.250MPa
+  package: aga8_dc92
+  components: [N2]
+  z: {N2: 1.0}
+  T: 399.99
+  P: 17249600.0
+  source: "literature:Chamorro, C. R., Segovia, J. J., Martin, M. C., Villamanan, M. A., Estela-Uribe, J. F., Trusler, J. P. M., 'Measurement of the (pressure, density, temperature) relation of two (methane + nitrogen) gas mixtures at temperatures between 240 and 400 K and pressures up to 20 MPa using an accurate single-sinker densimeter', J. Chem. Thermodyn. 38, 916-922, 2006, doi:10.1016/j.jct.2005.10.004; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.jct.2005.10.004.xml, PureOrMixtureData dataset 0 (nitrogen mass density), T = 399.99 K, p = 17249.6 kPa, rho = 135.0429 kg/m3; retrieved 2026-11-04"
+  expected:
+    density: 135.0429
+binary_cases:
+# 2026-11-04 (helm-kvalue): aga8_dc92 L2 - measured (methane + nitrogen) gas densities, the
+# two gravimetric mixtures x_CH4 = 0.79998 and 0.89984 (Chamorro et al. 2006, ThermoML dataset 1).
+- id: aga8-c1n2-x0.79998-249.914K-5.016MPa
+  package: aga8_dc92
+  components: [C1, N2]
+  z: {C1: 0.79998, N2: 0.20002}
+  T: 249.914
+  P: 5015830.0
+  source: "literature:Chamorro, C. R., Segovia, J. J., Martin, M. C., Villamanan, M. A., Estela-Uribe, J. F., Trusler, J. P. M., 'Measurement of the (pressure, density, temperature) relation of two (methane + nitrogen) gas mixtures at temperatures between 240 and 400 K and pressures up to 20 MPa using an accurate single-sinker densimeter', J. Chem. Thermodyn. 38, 916-922, 2006, doi:10.1016/j.jct.2005.10.004; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.jct.2005.10.004.xml, PureOrMixtureData dataset 1 (mass density), x_CH4 = 0.79998, T = 249.914 K, p = 5015.83 kPa, rho = 51.0598 kg/m3; retrieved 2026-11-04"
+  expected:
+    density: 51.0598
+- id: aga8-c1n2-x0.79998-299.909K-10.001MPa
+  package: aga8_dc92
+  components: [C1, N2]
+  z: {C1: 0.79998, N2: 0.20002}
+  T: 299.909
+  P: 10001400.0
+  source: "literature:Chamorro, C. R., Segovia, J. J., Martin, M. C., Villamanan, M. A., Estela-Uribe, J. F., Trusler, J. P. M., 'Measurement of the (pressure, density, temperature) relation of two (methane + nitrogen) gas mixtures at temperatures between 240 and 400 K and pressures up to 20 MPa using an accurate single-sinker densimeter', J. Chem. Thermodyn. 38, 916-922, 2006, doi:10.1016/j.jct.2005.10.004; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.jct.2005.10.004.xml, PureOrMixtureData dataset 1 (mass density), x_CH4 = 0.79998, T = 299.909 K, p = 10001.4 kPa, rho = 82.4925 kg/m3; retrieved 2026-11-04"
+  expected:
+    density: 82.4925
+- id: aga8-c1n2-x0.89984-240.008K-10.029MPa
+  package: aga8_dc92
+  components: [C1, N2]
+  z: {C1: 0.89984, N2: 0.10016}
+  T: 240.008
+  P: 10028600.0
+  source: "literature:Chamorro, C. R., Segovia, J. J., Martin, M. C., Villamanan, M. A., Estela-Uribe, J. F., Trusler, J. P. M., 'Measurement of the (pressure, density, temperature) relation of two (methane + nitrogen) gas mixtures at temperatures between 240 and 400 K and pressures up to 20 MPa using an accurate single-sinker densimeter', J. Chem. Thermodyn. 38, 916-922, 2006, doi:10.1016/j.jct.2005.10.004; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.jct.2005.10.004.xml, PureOrMixtureData dataset 1 (mass density), x_CH4 = 0.89984, T = 240.008 K, p = 10028.6 kPa, rho = 127.633 kg/m3; retrieved 2026-11-04"
+  expected:
+    density: 127.633
+- id: aga8-c1n2-x0.89984-299.999K-10.050MPa
+  package: aga8_dc92
+  components: [C1, N2]
+  z: {C1: 0.89984, N2: 0.10016}
+  T: 299.999
+  P: 10050000.0
+  source: "literature:Chamorro, C. R., Segovia, J. J., Martin, M. C., Villamanan, M. A., Estela-Uribe, J. F., Trusler, J. P. M., 'Measurement of the (pressure, density, temperature) relation of two (methane + nitrogen) gas mixtures at temperatures between 240 and 400 K and pressures up to 20 MPa using an accurate single-sinker densimeter', J. Chem. Thermodyn. 38, 916-922, 2006, doi:10.1016/j.jct.2005.10.004; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.jct.2005.10.004.xml, PureOrMixtureData dataset 1 (mass density), x_CH4 = 0.89984, T = 299.999 K, p = 10050.0 kPa, rho = 79.2704 kg/m3; retrieved 2026-11-04"
+  expected:
+    density: 79.2704
+- id: aga8-c1n2-x0.89984-350.001K-19.983MPa
+  package: aga8_dc92
+  components: [C1, N2]
+  z: {C1: 0.89984, N2: 0.10016}
+  T: 350.001
+  P: 19983200.0
+  source: "literature:Chamorro, C. R., Segovia, J. J., Martin, M. C., Villamanan, M. A., Estela-Uribe, J. F., Trusler, J. P. M., 'Measurement of the (pressure, density, temperature) relation of two (methane + nitrogen) gas mixtures at temperatures between 240 and 400 K and pressures up to 20 MPa using an accurate single-sinker densimeter', J. Chem. Thermodyn. 38, 916-922, 2006, doi:10.1016/j.jct.2005.10.004; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.jct.2005.10.004.xml, PureOrMixtureData dataset 1 (mass density), x_CH4 = 0.89984, T = 350.001 K, p = 19983.2 kPa, rho = 125.244 kg/m3; retrieved 2026-11-04"
+  expected:
+    density: 125.244
+- id: aga8-c1n2-x0.89984-400.005K-19.369MPa
+  package: aga8_dc92
+  components: [C1, N2]
+  z: {C1: 0.89984, N2: 0.10016}
+  T: 400.005
+  P: 19369000.0
+  source: "literature:Chamorro, C. R., Segovia, J. J., Martin, M. C., Villamanan, M. A., Estela-Uribe, J. F., Trusler, J. P. M., 'Measurement of the (pressure, density, temperature) relation of two (methane + nitrogen) gas mixtures at temperatures between 240 and 400 K and pressures up to 20 MPa using an accurate single-sinker densimeter', J. Chem. Thermodyn. 38, 916-922, 2006, doi:10.1016/j.jct.2005.10.004; NIST TRC ThermoML record https://trc.nist.gov/ThermoML/10.1016/j.jct.2005.10.004.xml, PureOrMixtureData dataset 1 (mass density), x_CH4 = 0.89984, T = 400.005 K, p = 19369.0 kPa, rho = 101.162 kg/m3; retrieved 2026-11-04"
+  expected:
+    density: 101.162

@@ -50,11 +50,18 @@ def test_braun_k10_propane_at_1bar() -> None:
 
 
 def test_chao_seader_reamer_sage_277_59k() -> None:
-    """Chao-Seader on the Reamer-Sage-Lacey C1/C3 state at 277.59 K, 4.826 MPa."""
+    """Chao-Seader on the Reamer-Sage-Lacey C1/C3 state at 277.59 K, 4.826 MPa.
+
+    Only K_C3 is a data anchor here. K_C1 used to pass (2.889 vs 2.870) only because
+    methane carried omega_cs = 0.011; the published correlation (methane omega = 0,
+    reproduced against Saxena 1966 in test_kvalue_cs_gs_methane.py) gives 3.063, +6.7 %.
+    The state lies outside the correlation's recommended range (molal-average Tr 0.95 >
+    0.93 with methane present; Henley & Seader 1981 p. 189, restriction (d)), and the miss
+    is recorded on the row (assessed: chao-seader-c1c3-277.59K-4.826MPa).
+    """
     pkg = _pkg("chao-seader")
     k = pkg.k_values({"C1": 0.2834, "C3": 0.7166}, 277.59, 4826000.0)
     assert k is not None
-    assert k["C1"] == pytest.approx(2.87036, rel=0.05)
     assert k["C3"] == pytest.approx(0.2602, rel=0.05)
 
 

@@ -666,6 +666,24 @@ class KValuePackage(ThermoSurfaceMixin):
             k.append(psat / P)
         return k
 
+    def _incipient_k(self, sup: _Support, zi: list[float], T: float, P: float, dew: bool) -> list[float]:
+        """Model K-values with the feed as one phase and its incipient partner as the other.
+
+        Bubble side: x = z, y = normalised(z_i K_i^0); dew side: y = z, x = normalised(z_i / K_i^0),
+        with K^0 the Psat/Wilson estimate of ``_initial_k`` (Michelsen & Mollerup,
+        Thermodynamic Models, 2nd ed., ch. 10: the bubble/dew test of a feed uses the
+        incipient-phase composition, not the feed, for the other phase). Evaluating the
+        vapour fugacity at the feed composition instead puts a liquid-like composition on
+        the vapour side: the gamma-phi rows' Redlich-Kwong cubic then has only its liquid
+        root, and the "vapour" fugacity comes from a liquid density (Z ~ 0.1), which made a
+        subcooled-looking K set for two-phase feeds and a spurious bubble point.
+        Raises ValueError where the row's EOS has no root for one of the two phases.
+        """
+        k0 = self._initial_k(sup, zi, T, P)
+        if dew:
+            return self._model_k(sup, _normalized([zi[i] / k0[i] for i in range(len(zi))]), zi, T, P)
+        return self._model_k(sup, zi, _normalized([zi[i] * k0[i] for i in range(len(zi))]), T, P)
+
     def _henry_k(self, sup: _Support, i: int, x: list[float], T: float, P: float) -> float | None:
         """Henry-law K for a component with a cited water Henry constant, else None."""
         entry = sup.henry[i]
@@ -1078,15 +1096,30 @@ class KValuePackage(ThermoSurfaceMixin):
         ids = support_ids(z)
         sup = self._support(ids)
         zi = [z[cid] for cid in ids]
+        # Bubble and dew tests on the incipient partner phase (see _incipient_k).
+        k_bubble: list[float] | None = None
+        k_dew: list[float] | None = None
         try:
-            k = self._model_k(sup, zi, zi, T, P)
+            k_bubble = self._incipient_k(sup, zi, T, P, dew=False)
         except ValueError:
-            # Lee-Kesler: the EOS has a single root at this state, so the stream
-            # is single-phase; classify by whichever root does exist.
-            vapor_exists = sup.lk_mixture_z(zi, T, P, gas=True) is not None
-            return self._single_phase_state(sup, z, T, P, molar_flow, vapor=vapor_exists)
+            pass
+        try:
+            k_dew = self._incipient_k(sup, zi, T, P, dew=True)
+        except ValueError:
+            pass
+        if k_bubble is None and k_dew is None:
+            try:
+                k_bubble = k_dew = self._model_k(sup, zi, zi, T, P)
+            except ValueError:
+                # Lee-Kesler: the EOS has a single root at this state, so the stream
+                # is single-phase; classify by whichever root does exist.
+                vapor_exists = sup.lk_mixture_z(zi, T, P, gas=True) is not None
+                return self._single_phase_state(sup, z, T, P, molar_flow, vapor=vapor_exists)
+        k = k_bubble if k_bubble is not None else k_dew
+        assert k is not None
+        k_dew_test = k_dew if k_dew is not None else k
         sum_k = sum(zi[i] * k[i] for i in range(len(zi)))
-        sum_k_inv = sum(zi[i] / k[i] for i in range(len(zi)))
+        sum_k_inv = sum(zi[i] / k_dew_test[i] for i in range(len(zi)))
         if sum_k <= 1.0:
             return self._single_phase_state(sup, z, T, P, molar_flow, vapor=False)
         if sum_k_inv <= 1.0:
@@ -1184,7 +1217,7 @@ class KValuePackage(ThermoSurfaceMixin):
         zi = [z[cid] for cid in ids]
         pressure = _estimate_pressure(sup, zi, T, dew)
         try:
-            k = self._model_k(sup, zi, zi, T, pressure)
+            k = self._incipient_k(sup, zi, T, pressure, dew)
         except ValueError:
             # The Wilson estimate can sit where the LKP EOS has a single root;
             # seed the loop from the databank/Wilson K-values instead.
@@ -1250,7 +1283,7 @@ class KValuePackage(ThermoSurfaceMixin):
         zi = [z[cid] for cid in ids]
         temperature = sum(zi[i] * sup.tcs[i] * 0.6 for i in range(len(zi)))
         try:
-            k = self._model_k(sup, zi, zi, temperature, P)
+            k = self._incipient_k(sup, zi, temperature, P, dew)
         except ValueError:
             k = self._initial_k(sup, zi, temperature, P)
         for _ in range(100):

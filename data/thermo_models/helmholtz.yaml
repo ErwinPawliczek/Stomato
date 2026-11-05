@@ -448,13 +448,24 @@
     T_K: [143.15, 676.48]
     P_Pa: [100000.0, 280000000.0]
     phases: [V]
-  status: provisional
+  status: validated
   validation:
-  # T-16a: the NIST reference's printed check-gas values, bound through the harness's
-  # single-phase (T, P) comparison path (density/Z/cp). The row stays provisional: the
-  # audit's validated gate needs >=1 L2 binary case and no published DC92 binary-mixture
-  # density/Z reference point has been bound yet (issue #187).
+  # T-16a: the NIST reference's printed check-gas values (density/Z/cp). These verify the
+  # port against the reference code; they are not independent evidence for the model.
   - aga8-dc92-nist-check-gas-400K-50MPa
+  # 2026-11-04: measured densities, Chamorro et al. 2006 (J. Chem. Thermodyn. 38, 916; NIST
+  # ThermoML), single-sinker densimeter, after the 1992 DC92 fit. L1: pure N2 at 250, 300 and
+  # 400 K (max |dev| 0.07 %). L2: CH4 + N2 at x_CH4 0.79998 and 0.89984, 240-400 K, 5-20 MPa
+  # (max |dev| 0.14 %). All pass at the 3 % density tolerance (aga8/cases.yaml).
+  - aga8-n2-density-249.959K-5.024MPa
+  - aga8-n2-density-299.972K-10.974MPa
+  - aga8-n2-density-399.99K-17.250MPa
+  - aga8-c1n2-x0.79998-249.914K-5.016MPa
+  - aga8-c1n2-x0.79998-299.909K-10.001MPa
+  - aga8-c1n2-x0.89984-240.008K-10.029MPa
+  - aga8-c1n2-x0.89984-299.999K-10.050MPa
+  - aga8-c1n2-x0.89984-350.001K-19.983MPa
+  - aga8-c1n2-x0.89984-400.005K-19.369MPa
   references:
   - Starling, K. E., Savidge, J. L., 'Compressibility Factors of Natural Gas and Other
     Related Hydrocarbon Gases', AGA Transmission Measurement Committee Report No. 8, 2nd
