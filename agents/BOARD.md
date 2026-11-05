@@ -1,3 +1,7 @@
+### Board sync — Stomato bot — 2026-11-04 7:01 PM
+- Done: V1 → `paused`: Claude 5-hour limit hit during integ4 gate (~6:50 PM, resets 9:30 PM); resume scheduled ~9:36 PM via /tmp/stomato-val-sched.sh (pid 928932). No new obv/* commits; no `claude/*` branches; origin/chem-engine 9cf08cc.
+- Next: CQ1 stays queued until V1 finishes. No Obvious job started.
+
 ### Board sync — Stomato bot — 2026-11-04 6:06 PM
 - Done: V1 → `in progress`: continue relaunched 5:46 PM (claude -p pid 874677 alive; sub-agents running units-a/units-b/gphi-unifac/electrolyte-amine checks and a val-integ gate; progress file updated 6:06 PM). No new obv/* commits; no `claude/*` branches; origin/chem-engine 9cf08cc.
 - Next: CQ1 stays queued until V1 finishes. No Obvious job started.
@@ -39,7 +43,7 @@ Times are America/Chicago (CST). Newest handoff on top.
 
 | id | title | owner | status | branch | updated |
 |----|-------|-------|--------|--------|---------|
-| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | in progress — continue relaunched 5:46 PM (claude -p pid 874677 alive); earlier 4:35 continue had stopped ~4:40 without END marker. Batch 2 gate/merge pending; origin/chem-engine 9cf08cc | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 6:06 PM |
+| V1 | Validation run: cite reference cases for provisional thermo models, then R2 units | Claude Code | paused — hit Claude 5-hour limit during integ4 gate (~6:50 PM); limit resets 9:30 PM. Scheduled resume /tmp/stomato-val-sched.sh (pid 928932) runs continue ~9:36 PM. Batch 3 gate/merge pending; origin/chem-engine 9cf08cc | chem-engine (local run, log `~/stomato-val.log`) | 2026-11-04 7:01 PM |
 | T1 | Obvious trial (superseded by T1r) | Obvious | dropped (stale since 10:50 AM, nothing pushed) | — | 2026-11-04 12:15 PM |
 | T1r | Retry T1 with push rules: data pack PR ethane/propane VLE + NRTL ethanol/water VLE (IF97 dropped: V1 validated it) | Obvious | accepted (PR #342, awaits suite) | obv/T1r | 2026-11-04 12:18 PM |
 | T3 | SR-POLAR: find open published RKUPP p1-p3 parameters + c_i(T) translation and a worked example | Obvious | accepted w/ fix (PR #343; fix in T10) | obv/T3 | 2026-11-04 12:22 PM |
