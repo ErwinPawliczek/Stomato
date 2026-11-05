@@ -32,11 +32,22 @@ def _sac(cids: tuple[str, str], x1: float, T: float = 298.15) -> NrtlSac:
     return model.to_T_xs(T, xs)
 
 
-def test_nrtl_tdep_lands_on_the_gao_data_and_differs_from_the_two_parameter_row() -> None:
+def test_nrtl_tdep_near_the_gao_data_and_differs_from_the_two_parameter_row() -> None:
+    """Regression pin of the measured point, not an agreement claim.
+
+    Before the phi_sat fix (7c5aca9) this point gave 349.22 K / y 0.7049, inside the
+    original 1.0 K / 0.015 bands; that agreement leaned on the missing liquid phi_sat.
+    The IUPAC source labels the parameters "NRTL/HOC" (HOC vapour, with the HOC pure
+    fugacity), so the phi_sat-carrying pairing is the one they belong to. With it the
+    point is 350.249 K / y 0.6947 against Gao's 349.05 K / 0.7197: bubble T inside the
+    0.5 % validation band, y 0.025 outside 0.02 (assessed in the row). The shipped
+    orientation still lands nearer the Gao isobar than the reversed one (8 points: mean
+    |dT| 0.49 vs 1.41 K, mean |dy| 0.012 vs 0.025, measured 2026-11-04).
+    """
     z = {"MeOH": 0.3442, "H2O": 0.6558}
     point = _pkg("nrtl_tdep_hoc").bubble_point(z, P=101325.0)
-    assert point.T == pytest.approx(349.05, abs=1.0)
-    assert point.incipient_composition["MeOH"] == pytest.approx(0.7197, abs=0.015)
+    assert point.T == pytest.approx(350.249, abs=0.01)
+    assert point.incipient_composition["MeOH"] == pytest.approx(0.6947, abs=0.001)
     assert _pkg("nrtl_hoc").bubble_point(z, P=101325.0).T != pytest.approx(point.T, abs=1e-3)
 
 

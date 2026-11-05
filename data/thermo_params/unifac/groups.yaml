@@ -3,13 +3,22 @@
 # Names resolve against the thermo 0.6.1 subgroup tables listed per variant at
 # load time; an unknown name is an error (never silently ignored). Assignments
 # follow the per-variant published tables:
-# - Dortmund splits the alcohol OH as "OH(P)" (primary alcohol);
-# - NIST uses its own "OH prim" subgroup;
-# - original UNIFAC, PSRK and UNIQUAC use the combined CH3OH subgroup for
-#   methanol (UFSG 15, main group 6);
-# - Lyngby has its own OH subgroup (12) and no aromatic CH subgroup, so
-#   toluene has no Lyngby assignment (the curated slate has no toluene rows
-#   for the Lyngby variant; the test suite exercises the refusal directly).
+# - methanol is the whole-molecule CH3OH subgroup (15; main group CH3OH) in
+#   every variant whose table carries it (UNIFAC, Dortmund, PSRK, NIST, Lyngby
+#   subgroup 13); thermo's subgroup records give it atoms C1H4O1, i.e. methanol;
+# - ethylene glycol is the whole-molecule DOH subgroup (62; main group 31 DOH)
+#   where the table carries it (thermo's record: atoms C2H6O2, SMARTS
+#   HO-CH2-CH2-OH; NIST names it "CH2(OH)-CH2(OH)"); the DDBST published
+#   UNIFAC and modified-UNIFAC (Dortmund) parameter pages list subgroup 62 DOH
+#   in main group 31 (https://www.ddbst.com/published-parameters-unifac.html,
+#   https://www.ddbst.com/PublishedParametersUNIFACDO.html, read 2026-11-04).
+#   Lyngby has no DOH group, so MEG keeps 2 CH2 + 2 OH there;
+# - other alcohols: Dortmund "OH(P)" (primary), NIST "OH prim", Lyngby OH (12);
+# - Lyngby has no aromatic CH subgroup, so toluene has no Lyngby assignment.
+# Fix 2026-11-04 (val-gphi-unifac): MeOH (Dortmund, NIST, Lyngby) and MEG
+# (UNIFAC, Dortmund, PSRK, NIST) were split into CH3/CH2 + OH groups; measured
+# effect on the Kamihama (2012) MEG/H2O 101.3 kPa isobar, x_H2O 0.25, ideal-gas
+# vapour: bubble_T error 2.1-6.2 % -> 0.0-0.3 %.
 #
 # The Magnussen LLE variant is parameterized for water/organic liquid-liquid
 # systems only: alcohol and glycol components have NO assignment and the
@@ -24,7 +33,7 @@ variants:
     components:
       MeOH: {CH3OH: 1}
       EtOH: {CH3: 1, CH2: 1, OH: 1}
-      MEG: {CH2: 2, OH: 2}
+      MEG: {DOH: 1}
       H2O: {H2O: 1}
       nC4: {CH3: 2, CH2: 2}
   unifac_dortmund:
@@ -32,9 +41,9 @@ variants:
     interaction: DOUFIP2016
     subgroups: DOUFSG
     components:
-      MeOH: {CH3: 1, OH(P): 1}
+      MeOH: {CH3OH: 1}
       EtOH: {CH3: 1, CH2: 1, OH(P): 1}
-      MEG: {CH2: 2, OH(P): 2}
+      MEG: {DOH: 1}
       H2O: {H2O: 1}
       nC4: {CH3: 2, CH2: 2}
   unifac_psrk:
@@ -44,7 +53,7 @@ variants:
     components:
       MeOH: {CH3OH: 1}
       EtOH: {CH3: 1, CH2: 1, OH: 1}
-      MEG: {CH2: 2, OH: 2}
+      MEG: {DOH: 1}
       H2O: {H2O: 1}
       nC4: {CH3: 2, CH2: 2}
       C1: {CH4: 1}
@@ -62,9 +71,9 @@ variants:
     interaction: NISTUFIP
     subgroups: NISTUFSG
     components:
-      MeOH: {CH3: 1, OH prim: 1}
+      MeOH: {CH3OH: 1}
       EtOH: {CH3: 1, CH2: 1, OH prim: 1}
-      MEG: {CH2: 2, OH prim: 2}
+      MEG: {CH2(OH)-CH2(OH): 1}
       H2O: {H2O: 1}
       nC4: {CH3: 2, CH2: 2}
   unifac_lle:
@@ -79,7 +88,7 @@ variants:
     interaction: LUFIP
     subgroups: LUFSG
     components:
-      MeOH: {CH3: 1, OH: 1}
+      MeOH: {CH3OH: 1}
       EtOH: {CH3: 1, CH2: 1, OH: 1}
       MEG: {CH2: 2, OH: 2}
       H2O: {H2O: 1}

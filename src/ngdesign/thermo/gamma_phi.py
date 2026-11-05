@@ -634,6 +634,116 @@ def _gas_phase(vapour: str, cas_list: list[str], constants: Any, correlations: A
     raise ValueError(f"unknown gamma-phi vapour model {vapour!r}")
 
 
+class _VapourSaturation:
+    """Saturation fugacity coefficient of pure i in the row's own vapour model.
+
+    The gamma-phi equilibrium relation with a non-ideal vapour is
+
+        y_i phi_i^V(T, P, y) P = x_i gamma_i phi_i^sat P_i^sat
+
+    (Smith, Van Ness & Abbott, Introduction to Chemical Engineering
+    Thermodynamics, 7th ed., eq. 14.1 with the Poynting factor at unity;
+    Prausnitz, Lichtenthaler & de Azevedo, 3rd ed., eq. 10-4), with
+    phi_i^sat = phi_i^V(T, P_i^sat, pure i) taken from the SAME vapour phase
+    object at the liquid's own vapour-pressure correlation, so a pure feed
+    boils exactly at its Psat on every vapour pairing (no discontinuity
+    between the pure and near-pure limits). The T derivatives thermo reads for
+    the caloric basis are central finite differences of ln phi_sat.
+
+    Duck-types the pure-EOS interface thermo's GibbsExcessLiquid reads under
+    equilibrium_basis "PhiSat" (phi_sat / dphi_sat_dT / d2phi_sat_dT2, Tc), the
+    same interface ngdesign.thermo.special's saturation objects implement.
+    """
+
+    #: central-difference step for the T derivatives of ln phi_sat [K]
+    dT = 0.01
+
+    def __init__(self, gas: Any, index: int, vapour_pressure: Any, Tc: float) -> None:
+        self.gas = gas
+        self.index = index
+        self.vapour_pressure = vapour_pressure
+        self.Tc = Tc
+        self._memo: OrderedDict[float, float] = OrderedDict()
+
+    def _ln_phi(self, T: float) -> float:
+        hit = self._memo.get(T)
+        if hit is not None:
+            return hit
+        psat = float(self.vapour_pressure.T_dependent_property(T))
+        zs = [0.0] * len(self.gas.zs)
+        zs[self.index] = 1.0
+        value = float(self.gas.to(T=T, P=psat, zs=zs).lnphis()[self.index])
+        self._memo[T] = value
+        if len(self._memo) > 256:
+            self._memo.popitem(last=False)
+        return value
+
+    def phi_sat(self, T: float, polish: bool = True) -> float:
+        return math.exp(self._ln_phi(T))
+
+    def _dln(self, T: float) -> tuple[float, float, float]:
+        h = self.dT
+        lo, mid, hi = self._ln_phi(T - h), self._ln_phi(T), self._ln_phi(T + h)
+        return mid, (hi - lo) / (2.0 * h), (hi - 2.0 * mid + lo) / (h * h)
+
+    def dphi_sat_dT(self, T: float, polish: bool = True) -> float:
+        ln, d1, _ = self._dln(T)
+        return math.exp(ln) * d1
+
+    def d2phi_sat_dT2(self, T: float, polish: bool = True) -> float:
+        ln, d1, d2 = self._dln(T)
+        return math.exp(ln) * (d1 * d1 + d2)
+
+
+class _VirialSaturation(_VapourSaturation):
+    """phi_i^sat of the truncated second-virial vapours (hoc, nothnagel).
+
+        ln phi_i^sat = B_ii(T) P_i^sat / (R T)
+
+    (pressure-explicit truncated virial; Smith, Van Ness & Abbott, 7th ed.,
+    eqs. 3.38 and 11.36; Prausnitz, Lichtenthaler & de Azevedo, 3rd ed.,
+    eq. 5-36), with B_ii from the row's own virial model. thermo's VirialGas
+    is density-explicit and has no vapour root above P_max = -RT/(4B); the
+    pure saturated vapour of an associating component leaves that range at
+    the saturation solvers' upper temperature brackets, so the pressure form
+    is used here: it agrees with the density form to second order in
+    B P/(R T) at every state where both exist.
+    """
+
+    def _ln_phi(self, T: float) -> float:
+        hit = self._memo.get(T)
+        if hit is not None:
+            return hit
+        psat = float(self.vapour_pressure.T_dependent_property(T))
+        b_ii = float(self.gas.model.to(T=T).B_pures()[self.index])
+        value = b_ii * psat / (_R * T)
+        self._memo[T] = value
+        if len(self._memo) > 256:
+            self._memo.popitem(last=False)
+        return value
+
+
+_R = 8.31446261815324
+
+
+def _saturation_basis(vapour: str, gas: Any, constants: Any, correlations: Any) -> dict[str, Any]:
+    """GibbsExcessLiquid basis kwargs: PhiSat on the pairing's own pure-vapour phi_sat.
+
+    Every real-vapour pairing (rk, pr, hoc, nothnagel) takes thermo's PhiSat
+    basis, f_i^L = x_i gamma_i phi_i^sat P_i^sat, so a pure feed boils at its
+    Psat and the near-pure limit is continuous with it. The ideal-gas pairing
+    keeps the plain Psat basis (phi_sat == 1 identically).
+    """
+    if vapour == "ideal":
+        return {}
+    kind = _VirialSaturation if vapour in virial.VIRIAL_VAPOURS else _VapourSaturation
+    sats = [
+        kind(gas, i, correlations.VaporPressures[i], float(constants.Tcs[i]))
+        for i in range(len(constants.Tcs))
+    ]
+    return {"equilibrium_basis": "PhiSat", "eos_pure_instances": sats}
+
+
 @cache
 def _constants_for(cas_list: tuple[str, ...]) -> tuple[Any, Any]:
     """(constants, correlations) per CAS slate.
@@ -765,6 +875,7 @@ def _build_flasher_inner(
         make_ge = _ge_model_factory(liquid, ids, cas_list, correlations)
         gas = _gas_phase(vapour, cas_list, constants, correlations)
         liquid_class = _liquid_phase_class(caloric, records)
+        basis = _saturation_basis(vapour, gas, constants, correlations)
 
         def ge_liquid() -> Any:
             """One liquid phase; each gets its own gE instance (the model carries T/xs state)."""
@@ -776,6 +887,7 @@ def _build_flasher_inner(
                 EnthalpyVaporizations=correlations.EnthalpyVaporizations,
                 VolumeLiquids=correlations.VolumeLiquids,
                 GibbsExcessModel=model,
+                **basis,
             )
 
         if three_phase:

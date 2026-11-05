@@ -164,7 +164,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: nrtl-ig-pure-MeOH-305K
-  package: pending:nrtl_ig
+  package: [nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, nrtl_tdep_hoc, nrtl_sac_ig]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -180,7 +180,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: nrtl-ig-pure-MeOH-330K
-  package: pending:nrtl_ig
+  package: [nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, nrtl_tdep_hoc, nrtl_sac_ig]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -196,7 +196,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: nrtl-ig-pure-H2O-340K
-  package: pending:nrtl_ig
+  package: [nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, nrtl_tdep_hoc, nrtl_sac_ig]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -212,7 +212,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: nrtl-ig-pure-H2O-370K
-  package: pending:nrtl_ig
+  package: [nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, nrtl_tdep_hoc, nrtl_sac_ig]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -228,7 +228,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: uniquac-ig-pure-MeOH-305K
-  package: pending:uniquac_ig
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -244,7 +244,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: uniquac-ig-pure-MeOH-330K
-  package: pending:uniquac_ig
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -260,7 +260,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: uniquac-ig-pure-H2O-340K
-  package: pending:uniquac_ig
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, uniquac_tdep_ig]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -276,7 +276,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: uniquac-ig-pure-H2O-370K
-  package: pending:uniquac_ig
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, uniquac_tdep_ig]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -292,7 +292,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: wilson-ig-pure-MeOH-305K
-  package: pending:wilson_ig
+  package: [wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -308,7 +308,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: wilson-ig-pure-MeOH-330K
-  package: pending:wilson_ig
+  package: [wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -324,7 +324,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: wilson-ig-pure-H2O-340K
-  package: pending:wilson_ig
+  package: [wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -340,7 +340,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: wilson-ig-pure-H2O-370K
-  package: pending:wilson_ig
+  package: [wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -356,7 +356,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: vanlaar-ig-pure-MeOH-305K
-  package: pending:vanlaar_ig
+  package: [vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -372,7 +372,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: vanlaar-ig-pure-MeOH-330K
-  package: pending:vanlaar_ig
+  package: [vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -388,7 +388,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: vanlaar-ig-pure-H2O-340K
-  package: pending:vanlaar_ig
+  package: [vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -404,7 +404,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: vanlaar-ig-pure-H2O-370K
-  package: pending:vanlaar_ig
+  package: [vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -420,7 +420,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: margules-ig-pure-MeOH-305K
-  package: pending:margules_ig
+  package: [margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, wohl3_ig]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -436,7 +436,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: margules-ig-pure-MeOH-330K
-  package: pending:margules_ig
+  package: [margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, wohl3_ig]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -452,7 +452,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: margules-ig-pure-H2O-340K
-  package: pending:margules_ig
+  package: [margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, wohl3_ig]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -468,7 +468,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: margules-ig-pure-H2O-370K
-  package: pending:margules_ig
+  package: [margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, wohl3_ig]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -484,7 +484,7 @@ pure_cases:
     rho_L: 960.5870351015669
     Cp: 75.8833211266792
 - id: regular-solution-ig-pure-MeOH-305K
-  package: pending:regular_solution_ig
+  package: [regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -500,7 +500,7 @@ pure_cases:
     rho_L: 779.8052758222088
     Cp: 82.61348725710509
 - id: regular-solution-ig-pure-MeOH-330K
-  package: pending:regular_solution_ig
+  package: [regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr]
   fluid: MeOH
   coolprop_fluid: Methanol
   components:
@@ -516,7 +516,7 @@ pure_cases:
     rho_L: 755.881962161443
     Cp: 88.50470131431118
 - id: regular-solution-ig-pure-H2O-340K
-  package: pending:regular_solution_ig
+  package: [regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -532,7 +532,7 @@ pure_cases:
     rho_L: 979.503448491746
     Cp: 75.45615262276523
 - id: regular-solution-ig-pure-H2O-370K
-  package: pending:regular_solution_ig
+  package: [regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr]
   fluid: H2O
   coolprop_fluid: Water
   components:
@@ -965,9 +965,7 @@ pure_cases:
     Cp: 75.8833211266792
 binary_cases:
 - id: nrtl-ig-meohh2o-101.325kPa-349.05K
-  package:
-  - pending:nrtl_ig
-  - cosmo_sac_ig
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, nrtl_tdep_hoc, nrtl_sac_ig, cosmo_sac_ig]
   components:
   - MeOH
   - H2O
@@ -984,9 +982,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: nrtl-ig-meohh2o-312.91K-20.705kPa
-  package:
-  - pending:nrtl_ig
-  - cosmo_sac_ig
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, nrtl_tdep_hoc, nrtl_sac_ig, cosmo_sac_ig]
   components:
   - MeOH
   - H2O
@@ -1037,9 +1033,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: nrtl-ig-meohnc4-323.22K-0.3366MPa
-  package:
-  - pending:nrtl_ig
-  - cosmo_sac_ig
+  package: [nrtl, nrtl_ig, nrtl_rk, cosmo_sac_ig]
   components:
   - MeOH
   - nC4
@@ -1053,9 +1047,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: nrtl-ig-etohh2o-azeotrope-101.325kPa
-  package:
-  - pending:nrtl_ig
-  - cosmo_sac_ig
+  package: [nrtl, nrtl_ig, nrtl_rk, nrtl_hoc, nrtl_nothnagel, nrtl_sac_ig, cosmo_sac_ig]
   components:
   - EtOH
   - H2O
@@ -1072,7 +1064,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: uniquac-ig-meohh2o-101.325kPa-349.05K
-  package: pending:uniquac_ig
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr]
   # Dormant (pending: row not yet registered). Case re-anchored to the Gao (2012)
   # 101.325 kPa series on 2026-10-22 (issue #100 resolution); the retired Bennett
   # (1929)/DDB set 466 point disagreed with three independent modern parameterisations
@@ -1093,7 +1085,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: uniquac-ig-meohh2o-312.91K-20.705kPa
-  package: pending:uniquac_ig
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr]
   components:
   - MeOH
   - H2O
@@ -1110,7 +1102,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: uniquac-ig-megh2o-383.15K-101.325kPa
-  package: uniquac_ig
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, nrtl_sac_ig]
   components:
   - MEG
   - H2O
@@ -1127,7 +1119,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: uniquac-ig-megh2o-431.25K-101.325kPa
-  package: uniquac_ig
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr, nrtl_sac_ig]
   components:
   - MEG
   - H2O
@@ -1144,7 +1136,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: uniquac-ig-meohnc4-323.22K-0.3366MPa
-  package: uniquac_ig
+  package: [uniquac_ig, uniquac_rk, uniquac_pr]
   components:
   - MeOH
   - nC4
@@ -1158,7 +1150,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: uniquac-ig-etohh2o-azeotrope-101.325kPa
-  package: uniquac_ig
+  package: [uniquac_ig, uniquac_rk, uniquac_hoc, uniquac_nothnagel, uniquac_pr]
   components:
   - EtOH
   - H2O
@@ -1175,7 +1167,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: wilson-ig-meohh2o-101.325kPa-349.05K
-  package: pending:wilson_ig
+  package: [wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig]
   components:
   - MeOH
   - H2O
@@ -1192,7 +1184,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: wilson-ig-meohh2o-312.91K-20.705kPa
-  package: pending:wilson_ig
+  package: [wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig]
   components:
   - MeOH
   - H2O
@@ -1209,7 +1201,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: wilson-ig-megh2o-383.15K-101.325kPa
-  package: wilson_ig
+  package: [wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig]
   components:
   - MEG
   - H2O
@@ -1226,7 +1218,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: wilson-ig-megh2o-431.25K-101.325kPa
-  package: wilson_ig
+  package: [wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig]
   components:
   - MEG
   - H2O
@@ -1243,7 +1235,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: wilson-ig-meohnc4-323.22K-0.3366MPa
-  package: wilson_ig
+  package: [wilson_ig, wilson_rk, wilson_pr, wilson_lr_ig, wilson_glr_ig]
   components:
   - MeOH
   - nC4
@@ -1257,7 +1249,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: wilson-ig-etohh2o-azeotrope-101.325kPa
-  package: wilson_ig
+  package: [wilson_ig, wilson_rk, wilson_hoc, wilson_nothnagel, wilson_pr, wilson_lr_ig, wilson_glr_ig]
   components:
   - EtOH
   - H2O
@@ -1342,7 +1334,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: vanlaar-ig-meohnc4-323.22K-0.3366MPa
-  package: vanlaar_ig
+  package: [vanlaar_ig, vanlaar_rk, vanlaar_pr]
   components:
   - MeOH
   - nC4
@@ -1356,7 +1348,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: vanlaar-ig-etohh2o-azeotrope-101.325kPa
-  package: vanlaar_ig
+  package: [vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -1407,7 +1399,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: margules-ig-megh2o-383.15K-101.325kPa
-  package: margules_ig
+  package: [margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, wohl3_ig]
   components:
   - MEG
   - H2O
@@ -1424,7 +1416,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: margules-ig-megh2o-431.25K-101.325kPa
-  package: margules_ig
+  package: [margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, wohl3_ig]
   components:
   - MEG
   - H2O
@@ -1441,7 +1433,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: margules-ig-meohnc4-323.22K-0.3366MPa
-  package: margules_ig
+  package: [margules_ig, margules_rk, margules_pr]
   components:
   - MeOH
   - nC4
@@ -1455,7 +1447,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: margules-ig-etohh2o-azeotrope-101.325kPa
-  package: margules_ig
+  package: [margules_ig, margules_rk, margules_hoc, margules_nothnagel, margules_pr, wohl3_ig]
   components:
   - EtOH
   - H2O
@@ -1472,7 +1464,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: regular-solution-ig-meohh2o-101.325kPa-349.05K
-  package: pending:regular_solution_ig
+  package: [regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr]
   components:
   - MeOH
   - H2O
@@ -1489,7 +1481,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: regular-solution-ig-meohh2o-312.91K-20.705kPa
-  package: pending:regular_solution_ig
+  package: [regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr]
   components:
   - MeOH
   - H2O
@@ -1506,7 +1498,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: regular-solution-ig-megh2o-383.15K-101.325kPa
-  package: pending:regular_solution_ig
+  package: [regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr]
   components:
   - MEG
   - H2O
@@ -1523,7 +1515,7 @@ binary_cases:
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: regular-solution-ig-megh2o-431.25K-101.325kPa
-  package: pending:regular_solution_ig
+  package: [regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr]
   components:
   - MEG
   - H2O
@@ -1554,7 +1546,7 @@ binary_cases:
     vapor_comp:
       MeOH: 0.1591
 - id: regular-solution-ig-etohh2o-azeotrope-101.325kPa
-  package: pending:regular_solution_ig
+  package: [regular_solution_ig, regular_solution_rk, regular_solution_hoc, regular_solution_nothnagel, regular_solution_pr]
   components:
   - EtOH
   - H2O
