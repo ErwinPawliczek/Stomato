@@ -828,8 +828,13 @@
     phases:
     - V
     - L
+  # Stays provisional (2026-11-04): Dash 2011 AMP 318 K / 3.4 M, 2 of 7 bound points pass (5 %
+  # K band); majority rule not met. No independent open DGA CO2 data was found (Al-Juaied & Rochelle
+  # 2006 is the fit source). The bubble point raises 'loading fixed point did not converge' at the
+  # 0.938-loading Dash point (and 36 of 166 Dash points overall): bracketed-loading outer basis loop
+  # stalls near the bubble edge (drift fixed at ~3.6e-9 for 60 passes); open bug, see the report.
   status: provisional
-  validation: []
+  validation: [amp-dash2011-318K-3.4M-a0.52, amp-dash2011-318K-3.4M-a0.548, amp-dash2011-318K-3.4M-a0.616, amp-dash2011-318K-3.4M-a0.697, amp-dash2011-318K-3.4M-a0.817, amp-dash2011-318K-3.4M-a0.882, amp-dash2011-318K-3.4M-a0.897, pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, pure-H2O-353.15K-electrolyte]
   references:
   - Kent, R. L. & Eisenberg, B., Hydrocarbon Process. 55(2), 87-90, 1976
   - Khalili, F., Henni, A. & East, A. L. L., J. Chem. Eng. Data 54, 2914-2917, 2009
@@ -860,6 +865,12 @@
       surface here — flash consistency is pinned by the P1-04 tests instead
   l0_note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the
     single-liquid limit run today
+  assessed:
+    amp-dash2011-318K-3.4M-a0.52: "K 11.2437 vs 7.83498 (+43.5 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
+    amp-dash2011-318K-3.4M-a0.548: "K 11.6428 vs 10.6473 (+9.3 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
+    amp-dash2011-318K-3.4M-a0.817: "K 13.1159 vs 15.9849 (-17.9 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
+    amp-dash2011-318K-3.4M-a0.882: "K 12.9938 vs 14.54 (-10.6 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
+    amp-dash2011-318K-3.4M-a0.897: "K 12.9474 vs 18.0106 (-28.1 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
 - id: amine_mdea_pz
   name: Mixed amines (MDEA+PZ)
   family: electrolyte
@@ -890,7 +901,7 @@
     - V
     - L
   status: provisional
-  validation: []
+  validation: [pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, pure-H2O-353.15K-electrolyte]
   references:
   - Bishnoi, S., PhD dissertation, University of Texas at Austin, 2000
   - Bishnoi, S. & Rochelle, G. T., AIChE J. 48(12), 2788-2799, 2002

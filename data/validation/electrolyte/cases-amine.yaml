@@ -1,0 +1,91 @@
+# Amine-row validation cases (CO2 partial pressure over loaded aqueous amines), read
+# programmatically from NIST ThermoML files (no hand transcription), 2026-11-04.
+#
+# Conventions, fixed before the cases ran:
+#   - The family convention of cases.yaml: compared as K_CO2 at P = 0.999 x the package bubble
+#     pressure of the case liquid, so y_CO2 P == p_CO2,eq at a vanishing vapour fraction and the
+#     expected K = p_lit / (z_CO2 P) isolates the equilibrium partial pressure. K band 5 %.
+#   - Feeds: molarity data are converted on the package's own molarity convention
+#     (AminePackage._amine_molarity, as cases.yaml does); molality and mass-fraction data
+#     are converted exactly with databank molar masses.
+#   - Selection rules, fixed before any model value was seen:
+#       AMP (amine_ke_dga_amp): Dash et al. 2011, every point at 318 K and 3.4 mol/dm3 with
+#       1 <= p_CO2 <= 300 kPa. Dash 2011 is independent of the row's fit (Kundu 2003).
+#       The 0.938-loading point (212.3 kPa) is not bound: the package bubble point raises
+#       "loading fixed point did not converge" there (recorded on the row).
+pure_cases: []
+
+binary_cases:
+  - id: amp-dash2011-318K-3.4M-a0.52
+    package: amine_ke_dga_amp
+    components: [124-68-5, H2O, CO2]
+    z: {124-68-5: 0.0823076, H2O: 0.8748925, CO2: 0.0427999}
+    T: 318.0
+    P: 16091.3
+    source: 'literature:Dash, S. K., Samanta, A. N. & Bandyopadhyay, S. S., ''(Vapour + liquid) equilibria (VLE) of CO2 in aqueous solutions of 2-amino-2-methyl-1-propanol: New data and modelling using eNRTL-equation'', J. Chem. Thermodyn. 43, 1278-1285, 2011, doi:10.1016/j.jct.2011.03.016, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2011.03.016.xml (dataset 1, parsed by script: T 318 K, AMP 3.4 mol/dm3, loading 0.52 mol CO2/mol AMP, p_CO2 5.396 kPa), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 7.834983}
+  - id: amp-dash2011-318K-3.4M-a0.548
+    package: amine_ke_dga_amp
+    components: [124-68-5, H2O, CO2]
+    z: {124-68-5: 0.0821183, H2O: 0.8728809, CO2: 0.0450008}
+    T: 318.0
+    P: 17494.0
+    source: 'literature:Dash, S. K., Samanta, A. N. & Bandyopadhyay, S. S., ''(Vapour + liquid) equilibria (VLE) of CO2 in aqueous solutions of 2-amino-2-methyl-1-propanol: New data and modelling using eNRTL-equation'', J. Chem. Thermodyn. 43, 1278-1285, 2011, doi:10.1016/j.jct.2011.03.016, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2011.03.016.xml (dataset 1, parsed by script: T 318 K, AMP 3.4 mol/dm3, loading 0.548 mol CO2/mol AMP, p_CO2 8.382 kPa), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 10.647271}
+  - id: amp-dash2011-318K-3.4M-a0.616
+    package: amine_ke_dga_amp
+    components: [124-68-5, H2O, CO2]
+    z: {124-68-5: 0.0816623, H2O: 0.8680337, CO2: 0.050304}
+    T: 318.0
+    P: 22004.5
+    source: 'literature:Dash, S. K., Samanta, A. N. & Bandyopadhyay, S. S., ''(Vapour + liquid) equilibria (VLE) of CO2 in aqueous solutions of 2-amino-2-methyl-1-propanol: New data and modelling using eNRTL-equation'', J. Chem. Thermodyn. 43, 1278-1285, 2011, doi:10.1016/j.jct.2011.03.016, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2011.03.016.xml (dataset 1, parsed by script: T 318 K, AMP 3.4 mol/dm3, loading 0.616 mol CO2/mol AMP, p_CO2 13.57 kPa), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 12.259304}
+  - id: amp-dash2011-318K-3.4M-a0.697
+    package: amine_ke_dga_amp
+    components: [124-68-5, H2O, CO2]
+    z: {124-68-5: 0.0811257, H2O: 0.8623297, CO2: 0.0565446}
+    T: 318.0
+    P: 30579.1
+    source: 'literature:Dash, S. K., Samanta, A. N. & Bandyopadhyay, S. S., ''(Vapour + liquid) equilibria (VLE) of CO2 in aqueous solutions of 2-amino-2-methyl-1-propanol: New data and modelling using eNRTL-equation'', J. Chem. Thermodyn. 43, 1278-1285, 2011, doi:10.1016/j.jct.2011.03.016, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2011.03.016.xml (dataset 1, parsed by script: T 318 K, AMP 3.4 mol/dm3, loading 0.697 mol CO2/mol AMP, p_CO2 22.62 kPa), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 13.082079}
+  - id: amp-dash2011-318K-3.4M-a0.817
+    package: amine_ke_dga_amp
+    components: [124-68-5, H2O, CO2]
+    z: {124-68-5: 0.0803435, H2O: 0.8540158, CO2: 0.0656407}
+    T: 318.0
+    P: 58564.9
+    source: 'literature:Dash, S. K., Samanta, A. N. & Bandyopadhyay, S. S., ''(Vapour + liquid) equilibria (VLE) of CO2 in aqueous solutions of 2-amino-2-methyl-1-propanol: New data and modelling using eNRTL-equation'', J. Chem. Thermodyn. 43, 1278-1285, 2011, doi:10.1016/j.jct.2011.03.016, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2011.03.016.xml (dataset 1, parsed by script: T 318 K, AMP 3.4 mol/dm3, loading 0.817 mol CO2/mol AMP, p_CO2 61.45 kPa), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 15.98495}
+  - id: amp-dash2011-318K-3.4M-a0.882
+    package: amine_ke_dga_amp
+    components: [124-68-5, H2O, CO2]
+    z: {124-68-5: 0.0799261, H2O: 0.849579, CO2: 0.0704949}
+    T: 318.0
+    P: 96429.5
+    source: 'literature:Dash, S. K., Samanta, A. N. & Bandyopadhyay, S. S., ''(Vapour + liquid) equilibria (VLE) of CO2 in aqueous solutions of 2-amino-2-methyl-1-propanol: New data and modelling using eNRTL-equation'', J. Chem. Thermodyn. 43, 1278-1285, 2011, doi:10.1016/j.jct.2011.03.016, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2011.03.016.xml (dataset 1, parsed by script: T 318 K, AMP 3.4 mol/dm3, loading 0.882 mol CO2/mol AMP, p_CO2 98.84 kPa), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 14.540024}
+  - id: amp-dash2011-318K-3.4M-a0.897
+    package: amine_ke_dga_amp
+    components: [124-68-5, H2O, CO2]
+    z: {124-68-5: 0.0798304, H2O: 0.8485617, CO2: 0.0716079}
+    T: 318.0
+    P: 111033.5
+    source: 'literature:Dash, S. K., Samanta, A. N. & Bandyopadhyay, S. S., ''(Vapour + liquid) equilibria (VLE) of CO2 in aqueous solutions of 2-amino-2-methyl-1-propanol: New data and modelling using eNRTL-equation'', J. Chem. Thermodyn. 43, 1278-1285, 2011, doi:10.1016/j.jct.2011.03.016, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2011.03.016.xml (dataset 1, parsed by script: T 318 K, AMP 3.4 mol/dm3, loading 0.897 mol CO2/mol AMP, p_CO2 143.2 kPa), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 18.010595}
+
+
+multicomponent_cases: []
