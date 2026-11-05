@@ -23,7 +23,13 @@
 # methane set); it never reproduced the published correlations and was replaced.
 # Sanity anchors for the corrected sets, cross-checked by evaluation:
 #   nu0(C3, 300 K, 997.7 kPa) ~ 0.90 (f_L/P at the C3 saturation point);
-#   nu0_0(CH4, 125 K, 2.69 bar) ~ 1.07 with the CS methane set, omega_cs = 0.011.
+#   nu0_0(CH4, 125 K, 2.69 bar) ~ 1.07 with the CS methane set (methane takes omega_cs = 0,
+#   see regular_solution.yaml).
+# 2026-11-04 check against Henley & Seader, Equilibrium-Stage Separation Operations in
+# Chemical Engineering, Wiley 1981, p. 188 (eq. 5-12/5-13 and the Grayson-Streed table),
+# archive.org scan retrieved 2026-11-04: the nu1 constants and the GS methane and hydrogen
+# sets match; the GS simple-fluid A1 is -2.10899 (printed twice, in the table and in
+# Example 5.2); it had been transcribed as -2.10889 here (corrected).
 # Constants are not copyrightable; no code was copied.
 
 sets:
@@ -34,7 +40,7 @@ sets:
   grayson_streed:
     hydrogen: [1.50709, 2.74283, -0.0211, 0.00011, 0.0, 0.008585, 0.0, 0.0, 0.0, 0.0]
     methane: [1.36822, -1.54831, 0.0, 0.02889, -0.01076, 0.10486, -0.02529, 0.0, 0.0, 0.0]
-    simple: [2.05135, -2.10889, 0.0, -0.19396, 0.02282, 0.08852, 0.0, -0.00872, -0.00353, 0.00203]
+    simple: [2.05135, -2.10899, 0.0, -0.19396, 0.02282, 0.08852, 0.0, -0.00872, -0.00353, 0.00203]
 
 # Shared acentric (Pitzer nu0_1) correction, both models.
 nu1: [-4.23893, 8.65808, -1.22060, -3.15224, -0.025]

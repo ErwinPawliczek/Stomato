@@ -589,7 +589,7 @@ binary_cases:
 # vol. 27/28 printed p. 306 (P printed in 1e5 Pa; compiled errors dT 0.03 K, dP 0.1e5 Pa,
 # dx/dy 0.002). z = liquid x; bubble_P and y_C1 compared.
 - id: gs-c1nc5-310.93K-1.379MPa
-  package: [grayson-streed, grayson-streed-extended]
+  package: [grayson-streed, grayson-streed-extended, chao-seader]
   components: [C1, nC5]
   z: {C1: 0.0626, nC5: 0.9374}
   T: 310.93
@@ -599,7 +599,7 @@ binary_cases:
     vapor_comp:
       C1: 0.894
 - id: gs-c1nc5-310.93K-4.137MPa
-  package: [grayson-streed, grayson-streed-extended]
+  package: [grayson-streed, grayson-streed-extended, chao-seader]
   components: [C1, nC5]
   z: {C1: 0.1911, nC5: 0.8089}
   T: 310.93
@@ -609,7 +609,7 @@ binary_cases:
     vapor_comp:
       C1: 0.943
 - id: gs-c1nc5-310.93K-6.895MPa
-  package: [grayson-streed, grayson-streed-extended]
+  package: [grayson-streed, grayson-streed-extended, chao-seader]
   components: [C1, nC5]
   z: {C1: 0.3077, nC5: 0.6923}
   T: 310.93
@@ -619,7 +619,7 @@ binary_cases:
     vapor_comp:
       C1: 0.947
 - id: gs-c1nc5-344.26K-1.379MPa
-  package: [grayson-streed, grayson-streed-extended]
+  package: [grayson-streed, grayson-streed-extended, chao-seader]
   components: [C1, nC5]
   z: {C1: 0.048, nC5: 0.952}
   T: 344.26
@@ -629,7 +629,7 @@ binary_cases:
     vapor_comp:
       C1: 0.7568
 - id: gs-c1nc5-344.26K-2.758MPa
-  package: [grayson-streed, grayson-streed-extended]
+  package: [grayson-streed, grayson-streed-extended, chao-seader]
   components: [C1, nC5]
   z: {C1: 0.107, nC5: 0.893}
   T: 344.26

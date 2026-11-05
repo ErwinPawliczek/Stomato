@@ -9,15 +9,34 @@
 # Provenance: Chao & Seader, AIChE J. 7(4):598-605 (1961), Table 1 and the API
 # Technical Data Book chapter 8 tables as reproduced in Reid, Prausnitz & Poling,
 # "The Properties of Gases and Liquids". Cross-checked against the DWSIM
-# ChaoSeader.vb ported fixtures for CH4 (V=52, delta=5.68, omega=0.011), nC5
+# ChaoSeader.vb ported fixtures for CH4 (V=52, delta=5.68; its omega 0.011 is superseded, see below), nC5
 # (116, 7.02, 0.251) and nC10 (196, 7.72, 0.490), retrieved 2026-10-21. The H2,
 # N2, CO2 and H2S entries are the Grayson-Streed extended-set table values
 # (DWSIM GraysonStreed.vb) and are PENDING VERIFICATION against a primary
 # source; pseudo-components (C6+) have no regular-solution constants and are
 # refused by the correlation rows that need them.
+#
+# Methane omega_cs = 0 (corrected 2026-11-04; was 0.011, the true Pitzer value taken
+# from the DWSIM fixture). The methane nu0 sets of both correlations are fitted with
+# omega = 0, so the acentric (nu0_1) term must vanish for methane - that term is a
+# Tr 0.5-1.3 fit and is far outside its range at methane's Tr (1.6 at 311 K, where
+# omega = 0.011 alone cut K_C1 by 11 %). Sources, retrieved 2026-11-04:
+#  - Henley & Seader, Equilibrium-Stage Separation Operations in Chemical Engineering,
+#    Wiley 1981, Appendix I Part A p. 715 (the FLOWTRAN constants used with its
+#    Chao-Seader K-values): methane omega 0.0, delta 5.680 (cal/cm3)^0.5, v_L (52.0)
+#    cm3/mol hypothetical liquid at 25 C (v_L and delta agree with the entries here);
+#    n-pentane delta 7.020, v_L 116.1 (p. 717). archive.org scan.
+#  - Saxena, A. C., Hydrocarbon vapor-liquid equilibria in the presence of hydrogen
+#    sulphide and carbon dioxide, thesis 1966 (archive.org 'Saxena1966'), Table 5,
+#    printed pp. 126 and 129: an independent 1966 implementation of the two
+#    correlations. Its predictions are reproduced only with methane omega = 0:
+#    C1/nC5 at 100 F (Chao-Seader constants), K_C1 5.49 at 500 psia and 3.04 at
+#    1000 psia (here 5.47 / 3.03 with omega 0, 4.88 / 2.70 with 0.011); C1/nC4 at
+#    100 F, 400 psia (Grayson-Streed constants), K_C1 5.74, K_nC4 0.193 (here 5.73 /
+#    0.193 with omega 0, 5.11 with 0.011). tests/thermo/test_kvalue_cs_gs_methane.py.
 
 components:
-  C1:  {v_liq: 5.2e-05,   delta: 11618.3, omega_cs: 0.011}
+  C1:  {v_liq: 5.2e-05,   delta: 11618.3, omega_cs: 0.0}
   C2:  {v_liq: 6.8e-05,   delta: 12375.2, omega_cs: 0.105}
   C3:  {v_liq: 9.1e-05,   delta: 13091.1, omega_cs: 0.153}
   iC4: {v_liq: 1.05e-04,  delta: 13766.1, omega_cs: 0.182}
