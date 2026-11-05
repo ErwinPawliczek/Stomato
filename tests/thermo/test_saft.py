@@ -53,15 +53,13 @@ def test_saft_rows_register_with_status() -> None:
     way (bindings in data/validation/saft/cases-teqp.yaml, every miss assessed);
     T-17 promoted cpa_pr (Sorensen 2018 parameters), pc_saft_assoc (G&S 2002
     Table 1 two-site parameters), and pc_saft_polar (Gross–Vrabec 2006, T-17e)
-    the same way. val-saft (2026-11-04) promoted every row but pc_saft_polar to
-    validated (passing, independent L1 and L2 evidence; every miss assessed);
-    pc_saft_polar has no bound binary case yet."""
+    the same way. val-saft (2026-11-04) promoted six rows to validated (passing,
+    independent L1 and L2 evidence; every miss assessed); the orchestrator held
+    cpa_srk, cpa_pr and pc_saft_assoc provisional (a minority of their bound L2
+    comparisons pass); pc_saft_polar has no bound binary case yet."""
     rows = catalogue.load_catalogue()
     validated = (
         "pc_saft",
-        "cpa_srk",
-        "cpa_pr",
-        "pc_saft_assoc",
         "saft_vr_mie",
         "multifluid",
         "multifluid_pure",
