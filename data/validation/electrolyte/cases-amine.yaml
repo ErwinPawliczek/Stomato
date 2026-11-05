@@ -13,6 +13,11 @@
 #       1 <= p_CO2 <= 300 kPa. Dash 2011 is independent of the row's fit (Kundu 2003).
 #       The 0.938-loading point (212.3 kPa) is not bound: the package bubble point raises
 #       "loading fixed point did not converge" there (recorded on the row).
+#       MDEA (amine_enrtl): Xiao et al. 2018, every point at 313.15 K (MDEA 2.58 mol/kg water).
+#       The case P is the package bubble pressure (bisected on k_values, since amine_enrtl's
+#       bubble_point scan does not converge here) times 0.999. Leontiadis et al. 2019
+#       (j.fluid.2019.112254) is not used: its ThermoML "mole fraction of CO2" column runs
+#       0.26-1.08, i.e. it holds loadings, and the mislabel cannot be resolved without the paper.
 pure_cases: []
 
 binary_cases:
@@ -87,5 +92,55 @@ binary_cases:
     expected:
       K: {CO2: 18.010595}
 
+  - id: mdea-xiao2018-313.15K-p8.1kPa
+    package: amine_enrtl
+    components: [MDEA, H2O, CO2]
+    z: {MDEA: 0.0437117, H2O: 0.9404537, CO2: 0.0158345}
+    T: 313.15
+    P: 13072.7
+    source: 'literature:Xiao, M., Liu, H., Gao, H. & Liang, Z., ''CO2 absorption with aqueous tertiary amine solutions: Equilibrium solubility and thermodynamic modeling'', J. Chem. Thermodyn. 122, 170-182, 2018, doi:10.1016/j.jct.2018.03.020, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2018.03.020.xml (dataset 1, MDEA 2.58 mol/kg water; parsed by script: T 313.15 K, p_CO2 8.1 kPa, CO2 mass fraction of the liquid 0.0305), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 39.130498}
+  - id: mdea-xiao2018-313.15K-p15kPa
+    package: amine_enrtl
+    components: [MDEA, H2O, CO2]
+    z: {MDEA: 0.0435685, H2O: 0.9373724, CO2: 0.0190591}
+    T: 313.15
+    P: 16483.8
+    source: 'literature:Xiao, M., Liu, H., Gao, H. & Liang, Z., ''CO2 absorption with aqueous tertiary amine solutions: Equilibrium solubility and thermodynamic modeling'', J. Chem. Thermodyn. 122, 170-182, 2018, doi:10.1016/j.jct.2018.03.020, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2018.03.020.xml (dataset 1, MDEA 2.58 mol/kg water; parsed by script: T 313.15 K, p_CO2 15 kPa, CO2 mass fraction of the liquid 0.0366), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 47.7454}
+  - id: mdea-xiao2018-313.15K-p20.3kPa
+    package: amine_enrtl
+    components: [MDEA, H2O, CO2]
+    z: {MDEA: 0.043467, H2O: 0.935189, CO2: 0.0213439}
+    T: 313.15
+    P: 19676.7
+    source: 'literature:Xiao, M., Liu, H., Gao, H. & Liang, Z., ''CO2 absorption with aqueous tertiary amine solutions: Equilibrium solubility and thermodynamic modeling'', J. Chem. Thermodyn. 122, 170-182, 2018, doi:10.1016/j.jct.2018.03.020, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2018.03.020.xml (dataset 1, MDEA 2.58 mol/kg water; parsed by script: T 313.15 K, p_CO2 20.3 kPa, CO2 mass fraction of the liquid 0.0409), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 48.335921}
+  - id: mdea-xiao2018-313.15K-p30.4kPa
+    package: amine_enrtl
+    components: [MDEA, H2O, CO2]
+    z: {MDEA: 0.0433033, H2O: 0.9316659, CO2: 0.0250309}
+    T: 313.15
+    P: 26793.3
+    source: 'literature:Xiao, M., Liu, H., Gao, H. & Liang, Z., ''CO2 absorption with aqueous tertiary amine solutions: Equilibrium solubility and thermodynamic modeling'', J. Chem. Thermodyn. 122, 170-182, 2018, doi:10.1016/j.jct.2018.03.020, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2018.03.020.xml (dataset 1, MDEA 2.58 mol/kg water; parsed by script: T 313.15 K, p_CO2 30.4 kPa, CO2 mass fraction of the liquid 0.0478), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 45.328454}
+  - id: mdea-xiao2018-313.15K-p60.8kPa
+    package: amine_enrtl
+    components: [MDEA, H2O, CO2]
+    z: {MDEA: 0.0431432, H2O: 0.9282215, CO2: 0.0286353}
+    T: 313.15
+    P: 37500.0
+    source: 'literature:Xiao, M., Liu, H., Gao, H. & Liang, Z., ''CO2 absorption with aqueous tertiary amine solutions: Equilibrium solubility and thermodynamic modeling'', J. Chem. Thermodyn. 122, 170-182, 2018, doi:10.1016/j.jct.2018.03.020, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2018.03.020.xml (dataset 1, MDEA 2.58 mol/kg water; parsed by script: T 313.15 K, p_CO2 60.8 kPa, CO2 mass fraction of the liquid 0.0545), retrieved 2026-11-04'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 56.620092}
 
 multicomponent_cases: []

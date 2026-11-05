@@ -78,9 +78,10 @@
     phases:
     - V
     - L
+  # 2026-11-04: Xiao 2018 MDEA 313 K, 0 of 5 bound L2 points pass (p_CO2 24-50 % low); stays provisional.
+  # bubble_point does not converge on loaded MDEA here (bracketed-loading edge bug, see report).
   status: provisional
-  validation: [pure-H2O-323.5K-amine-enrtl, pure-H2O-420K-amine-enrtl, pure-H2O-520K-amine-enrtl,
-    pure-H2O-600K-amine-enrtl]
+  validation: [mdea-xiao2018-313.15K-p8.1kPa, mdea-xiao2018-313.15K-p15kPa, mdea-xiao2018-313.15K-p20.3kPa, mdea-xiao2018-313.15K-p30.4kPa, mdea-xiao2018-313.15K-p60.8kPa, pure-H2O-323.5K-amine-enrtl, pure-H2O-420K-amine-enrtl, pure-H2O-520K-amine-enrtl, pure-H2O-600K-amine-enrtl]
   references:
   - Kent, R. L. & Eisenberg, B., Hydrocarbon Process. 55(2), 87-90, 1976
   - Jou, F.-Y. et al., 'Equilibrium Partial Pressures of CO2 and H2S in Aqueous MDEA Solutions', Can.
@@ -89,6 +90,12 @@
   l0_excluded: *id001
   l0_note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the
     single-liquid limit run today
+  assessed:
+    mdea-xiao2018-313.15K-p8.1kPa: "K 29.627 vs 39.1305 (-24.3 %) - eNRTL CO2-MDEA chemistry without the Zhang & Chen 2011 tau tables under-predicts p_CO2 at 313 K by 24-50 % (the factor-2 band of tests/units/test_enrtl.py; same sign as the pending NeqSim-anchor clones, -25/-58 %); model limitation, measured 2026-11-04"
+    mdea-xiao2018-313.15K-p15kPa: "K 30.454 vs 47.7454 (-36.2 %) - eNRTL CO2-MDEA chemistry without the Zhang & Chen 2011 tau tables under-predicts p_CO2 at 313 K by 24-50 % (the factor-2 band of tests/units/test_enrtl.py; same sign as the pending NeqSim-anchor clones, -25/-58 %); model limitation, measured 2026-11-04"
+    mdea-xiao2018-313.15K-p20.3kPa: "K 30.4242 vs 48.3359 (-37.1 %) - eNRTL CO2-MDEA chemistry without the Zhang & Chen 2011 tau tables under-predicts p_CO2 at 313 K by 24-50 % (the factor-2 band of tests/units/test_enrtl.py; same sign as the pending NeqSim-anchor clones, -25/-58 %); model limitation, measured 2026-11-04"
+    mdea-xiao2018-313.15K-p30.4kPa: "K 29.7046 vs 45.3285 (-34.5 %) - eNRTL CO2-MDEA chemistry without the Zhang & Chen 2011 tau tables under-predicts p_CO2 at 313 K by 24-50 % (the factor-2 band of tests/units/test_enrtl.py; same sign as the pending NeqSim-anchor clones, -25/-58 %); model limitation, measured 2026-11-04"
+    mdea-xiao2018-313.15K-p60.8kPa: "K 28.548 vs 56.6201 (-49.6 %) - eNRTL CO2-MDEA chemistry without the Zhang & Chen 2011 tau tables under-predicts p_CO2 at 313 K by 24-50 % (the factor-2 band of tests/units/test_enrtl.py; same sign as the pending NeqSim-anchor clones, -25/-58 %); model limitation, measured 2026-11-04"
 - id: pitzer_nacl_water
   name: Pitzer single-salt brine (NaCl, KCl, KBr, LiCl, NaBr, MgCl2; 25 C PHRQPITZ sets)
   family: electrolyte

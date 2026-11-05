@@ -156,7 +156,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 from dataclasses import dataclass
-from functools import partial
+from functools import cache, partial
 
 from ngdesign.amine.roots import brent_root
 
@@ -332,8 +332,13 @@ def _henry_co2(T: float) -> float:
 # --- Water data for A_phi (thermo databank; pure functions at the API edge) ---
 
 
+@cache
 def _a_phi(T: float) -> float:
     """Pitzer-Debye-Hueckel A_phi for water at T, from its definition.
+
+    Cached per T: a pure function of T whose databank ``Chemical`` build dominated
+    the speciation cost (measured 2026-11-04: a loaded-MDEA k_values call near its
+    bubble pressure at 313 K ran for minutes in this constructor).
 
     Published form (reference eq. 30, cgs): A_phi = (1/3) (2 pi N0 d_w /
     1000)^(1/2) (e^2/(D_w k T))^(3/2) with d_w in g/cm3 and e in esu. SI
