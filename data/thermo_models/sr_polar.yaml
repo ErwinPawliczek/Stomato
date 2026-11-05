@@ -1,0 +1,105 @@
+# SR-POLAR (Schwartzentruber-Renon VTBMSR-III) density-only catalogue row (T11).
+#
+# Family: the row is a standalone EOS kernel — RKS + Schwartzentruber-Renon polar
+# alpha + temperature-dependent volume translation + SR non-quadratic mixing rules —
+# not a gE-mixing host on a thermo cubic (family mixing, T-06) and not a helmholtz
+# formulation. `special` is the schema's home for bespoke in-house kernels outside
+# the cubic/gE machinery (the T-10 rows); options are deliberately empty, the
+# adapter reads its parameters from data/thermo_params/sr_polar/params.yaml.
+#
+# Status stays provisional: the parameters were regressed to density and caloric
+# data, never to vapour pressure (docs/thermo-catalogue-plan.md section 6,
+# Mangold 2019 note), so no L1/L2 VLE case can bind — the bound validation cases
+# are single-phase density points from the paper's own worked example.
+
+- id: sr-polar
+  name: SR-POLAR (Schwartzentruber-Renon VTBMSR-III), density-only
+  family: special
+  adapter: ngdesign.thermo.sr_polar:SRPolarPackage
+  options: {}
+  params:
+    source: data/thermo_params/sr_polar/params.yaml
+    provenance: >-
+      Mangold, F.; Pilz, St.; Bjelic, S.; Vogel, F., 'Equation of state and
+      thermodynamic properties for mixtures of H2O, O2, N2, and CO2 from ambient
+      up to 1000 K and 280 MPa', J. Supercritical Fluids 153 (2019) 104476,
+      doi:10.1016/j.supflu.2019.02.016 (open CC BY 4.0, PMC6919335): Table 2
+      criticals, Table 5 / SI Tables S1.1-S1.2 volume-translation and polar alpha
+      parameters, Table 7 / SI Tables S1.3-S1.6 binary k_b set 2
+      (density-regressed). Retrieved 2026-11-04; typed in 1:1, nothing fitted,
+      tuned or interpolated. The paper's water split (separate liquid and
+      vapour/supercritical p-sets) is honoured by shipping only the
+      vapour/supercritical water set that the density-validated worked example uses.
+  applicability:
+    component_classes: [water, light_gas, acid_gas]
+    polar: true
+    electrolyte: false
+    T_K: [620.0, 660.0]
+    P_Pa: [27000000.0, 280000000.0]
+    phases: [L]
+    notes: >-
+      Single-phase density only, over the paper's own validated water-air window
+      (Table 8 grid T 620.5-657 K, 27.0-263.9 MPa; the EOS itself claims up to
+      280 MPa, Mangold et al. 2019). Exactly the four components with published
+      parameters (H2O, O2, N2, CO2) are supported; anything else refuses at
+      first use. The fit was regressed to density and caloric data, never to
+      vapour pressure, so the row does no VLE: saturation, two-phase and H/S
+      flashes, fugacity derivatives and K-values refuse with SRPolarError, and
+      the returned phase is a single dense root labelled by composition
+      (aqueous when water-dominant, per the T3 pack binder note). The caloric
+      fields on its states are contract defaults meaning NOT COMPUTE-able —
+      never use this row for energy balances.
+  status: provisional
+  validation:
+  - h2o-air-620.5K-27MPa
+  - h2o-air-638.5K-44MPa
+  - h2o-air-640K-68.3MPa
+  - h2o-air-642K-102MPa
+  - h2o-air-645.5K-152.9MPa
+  - h2o-air-650K-195.3MPa
+  - h2o-air-652K-214.8MPa
+  - h2o-air-653.5K-231.5MPa
+  - h2o-air-657K-263.9MPa
+  references:
+  - "Mangold, F.; Pilz, St.; Bjelic, S.; Vogel, F., 'Equation of state and thermodynamic
+    properties for mixtures of H2O, O2, N2, and CO2 from ambient up to 1000 K and 280 MPa',
+    J. Supercritical Fluids 153 (2019) 104476, doi:10.1016/j.supflu.2019.02.016 (open CC BY 4.0,
+    PMC6919335); parameters Tables 2/5/7 and SI Tables S1.1-S1.6, worked example Table 8"
+  l0:
+    single_liquid_limit:
+      z: {H2O: 0.791, O2: 0.0418, N2: 0.1672}
+      state: [620.5, 27000000.0]
+    determinism:
+      z: {H2O: 0.791, O2: 0.0418, N2: 0.1672}
+      state: [620.5, 27000000.0]
+  l0_excluded:
+    pure_psat_limit: >-
+      no vapour-pressure model was regressed (the published parameters are
+      density/caloric-fitted; pure_psat returns None), so the databank-Psat
+      equality has no observable
+    phase_identification: >-
+      the check's bracket anchors on the package's own bubble pressure, which a
+      row without a vapour-pressure model cannot produce
+    round_trip: >-
+      the check iterates flash_ph/flash_ps, which the density-only adapter
+      refuses by design (no caloric surface exists to invert)
+    dhdT_cp: >-
+      the row computes density only: its enthalpy/entropy fields are contract
+      defaults (not computed), so dH/dT and Cp are not observables
+    gibbs_duhem: >-
+      no fugacity coefficients exist on the density-only surface (no
+      vapour-pressure regression), so the ln-phi path integral has no input
+  l4_excluded:
+    "*": >-
+      density-only row: the L4 band compares dew pressures and vapour densities,
+      which a row without a VLE surface cannot produce; it refuses the slice feed
+      (C1 et al. have no published SR-POLAR parameters)
+  l0_note: >-
+    The declared checks exercise the surface the adapter offers (single-phase PT
+    classification and bit-identical instances); every excluded check exercises an
+    operation the density-only model structurally cannot provide, each refused with
+    the typed SRPolarError. Density accuracy is measured by the nine bound
+    h2o-air-* cases (data/validation/sr_polar/cases.yaml), whose per-point
+    tolerance is the paper's own VTBMSR-III error at that point plus 1 percentage
+    point — the reproduction band for a correct implementation of the same model,
+    not a raw accuracy claim.
