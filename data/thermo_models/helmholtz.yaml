@@ -222,6 +222,8 @@
     phases: [V, L, VLL, VLLE]
   status: validated
   validation:
+  - helm-co2n2-298.161K-7.100MPa-bubble
+  - helm-co2n2-298.162K-7.419MPa-bubble
   # T-15 promotion sweep: L1 pure points (CoolProp 8.0.0 machine values, helmholtz/cases.yaml)
   - heos-pure-C1-125K
   - heos-pure-nC4-280K
@@ -299,6 +301,8 @@
   - c1n2-149.989K-2.908MPa
   - c1n2-159.972K-1.789MPa
   - c1n2-179.976K-5.062MPa
+  - helm-co2n2-298.161K-7.100MPa-bubble
+  - helm-co2n2-298.162K-7.419MPa-bubble
   # c1n2-130.079K now runs against the teqp GERG-2008 backend (gerg2008_teqp, saft
   # family) - the T-07 follow-up cross-check (issue #164); the other four points
   # (c1n2-149.928K/170.009K, c1co2-303.144K/303.145K) stay pending:teqp-gerg2008:
@@ -375,6 +379,8 @@
     phases: [V, L]
   status: validated
   validation:
+  - helm-co2n2-298.161K-7.100MPa-bubble
+  - helm-co2n2-298.162K-7.419MPa-bubble
   # 2026-11-04: measured CO2 vapour pressures (L1) and CO2 + N2 VLE (L2), Westman et al.
   # 2016 via the NIST TRC ThermoML archive (helmholtz/cases.yaml): Psat +0.01 / +0.06 %,
   # bubble -0.95 % at 270 K, dew -0.03 % at 298 K. Independent of the row: the EOS-CG
@@ -420,10 +426,11 @@
     computes; it exists to admit O2, Ar and CO and to refuse everything else. The round trip runs on
     pure CO2 because CoolProp's PQ solver fails on CO2 + N2 at the bubble-temperature step of the
     shared PH/PS flash (measured at 350 K, 1 and 5 MPa); since 2026-11-04 a PH/PS flash with no
-    reachable boundary at P falls back to inverting flash_pt. Known solver gap (2026-11-04):
-    three near-critical Westman CO2 + N2 points (298.161 K/7.1003 MPa and 298.162 K/7.4191 MPa
-    bubble, 269.997 K/9.5571 MPa dew) raise SaturationError in the shared CoolProp-path
-    saturation solver on this row, coolprop_heos and gerg2008 alike; they are not bound.
+    reachable boundary at P falls back to inverting flash_pt. The near-critical Westman
+    CO2 + N2 bubble points (298.161 K/7.1003 MPa, 298.162 K/7.4191 MPa) that raised SaturationError
+    solve since 2026-11-09 (composition continuation) and pass at +0.01 / -0.03 %
+    (helm-co2n2-*-bubble); the 269.997 K/9.5571 MPa dew point (y_CO2 0.58169) lies below the
+    model's lowest dew-curve CO2 fraction at that T (about 0.5822), so it has no dew point here.
 
 - id: aga8_dc92
   name: AGA 8 DC92 detail equation of state (gas phase)

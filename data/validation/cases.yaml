@@ -1497,6 +1497,9 @@ binary_cases:
   source: literature:Legoix, Ruffine, Donval & Haeckel (2017) Energies 10(12), 2034, Table 4, doi:10.3390/en10122034; retrieved 2026-10-20
   expected:
     bubble_P: 7630000.0
+# 2026-11-04 (aqueous): per-case liquid_comp tolerance = 10 % of the measured x_C1 (absolute band),
+# declared before re-running (the 0.02 absolute policy band is 5-60x the measured value and carried
+# no evidence). Tightening only; fixed relative band, not from the data's stated uncertainty.
 - id: c1h2o-310.9K-2.28MPa
   package: all
   components:
@@ -1511,6 +1514,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00044
+  tolerance:
+    liquid_comp: 4.4e-05
 - id: c1h2o-310.9K-6.55MPa
   package: all
   components:
@@ -1525,6 +1530,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.001123
+  tolerance:
+    liquid_comp: 0.0001123
 - id: c1h2o-310.9K-13.10MPa
   package: all
   components:
@@ -1539,6 +1546,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00189
+  tolerance:
+    liquid_comp: 0.000189
 - id: c1h2o-310.9K-24.37MPa
   package: all
   components:
@@ -1553,6 +1562,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00276
+  tolerance:
+    liquid_comp: 0.000276
 - id: c1h2o-310.9K-44.99MPa
   package: all
   components:
@@ -1567,6 +1578,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
+  tolerance:
+    liquid_comp: 0.000391
 - id: c1h2o-310.9K-68.22MPa
   package: all
   components:
@@ -1581,6 +1594,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00465
+  tolerance:
+    liquid_comp: 0.000465
 - id: c1h2o-344.3K-2.28MPa
   package: all
   components:
@@ -1595,6 +1610,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00034
+  tolerance:
+    liquid_comp: 3.4e-05
 - id: c1h2o-344.3K-6.50MPa
   package: all
   components:
@@ -1609,6 +1626,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.000909
+  tolerance:
+    liquid_comp: 9.09e-05
 - id: c1h2o-344.3K-12.96MPa
   package: all
   components:
@@ -1623,6 +1642,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.0015
+  tolerance:
+    liquid_comp: 0.00015
 - id: c1h2o-344.3K-24.37MPa
   package: all
   components:
@@ -1637,6 +1658,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.002385
+  tolerance:
+    liquid_comp: 0.0002385
 - id: c1h2o-344.3K-44.99MPa
   package: all
   components:
@@ -1651,6 +1674,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00342
+  tolerance:
+    liquid_comp: 0.000342
 - id: c1h2o-344.3K-68.02MPa
   package: all
   components:
@@ -1665,6 +1690,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00424
+  tolerance:
+    liquid_comp: 0.000424
 - id: c1h2o-410.9K-2.32MPa
   package: all
   components:
@@ -1679,6 +1706,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.000326
+  tolerance:
+    liquid_comp: 3.26e-05
 - id: c1h2o-410.9K-6.49MPa
   package: all
   components:
@@ -1693,6 +1722,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.000938
+  tolerance:
+    liquid_comp: 9.38e-05
 - id: c1h2o-410.9K-13.10MPa
   package: all
   components:
@@ -1707,6 +1738,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.001857
+  tolerance:
+    liquid_comp: 0.0001857
 - id: c1h2o-410.9K-24.51MPa
   package: all
   components:
@@ -1721,6 +1754,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.003015
+  tolerance:
+    liquid_comp: 0.0003015
 - id: c1h2o-410.9K-44.99MPa
   package: all
   components:
@@ -1735,6 +1770,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00449
+  tolerance:
+    liquid_comp: 0.000449
 - id: c1h2o-410.9K-67.81MPa
   package: all
   components:
@@ -1749,6 +1786,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00574
+  tolerance:
+    liquid_comp: 0.000574
 - id: meohh2o-101.325kPa-366.0K
   package: nrtl
   components:

@@ -614,6 +614,9 @@ binary_cases:
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
+# 2026-11-04 (aqueous): per-case liquid_comp tolerance = 10 % of the measured x_C1 (absolute band),
+# declared before re-running (the 0.02 absolute policy band is 5-60x the measured value and carried
+# no evidence). Tightening only; fixed relative band, not from the data's stated uncertainty.
 - id: psrk-c1h2o-310.9K-13.10MPa
   package: psrk
   components:
@@ -628,6 +631,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00189
+  tolerance:
+    liquid_comp: 0.000189
 - id: psrk-c1h2o-310.9K-44.99MPa
   package: psrk
   components:
@@ -642,6 +647,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
+  tolerance:
+    liquid_comp: 0.000391
 - id: vtpr-meohh2o-312.91K-20.705kPa
   package: vtpr
   components:
@@ -673,6 +680,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00189
+  tolerance:
+    liquid_comp: 0.000189
 - id: vtpr-c1h2o-310.9K-44.99MPa
   package: vtpr
   components:
@@ -687,6 +696,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
+  tolerance:
+    liquid_comp: 0.000391
 - id: pr-mhv1-meohh2o-312.91K-20.705kPa
   package: pr_mhv1
   components:
@@ -718,6 +729,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00189
+  tolerance:
+    liquid_comp: 0.000189
 - id: pr-mhv1-c1h2o-310.9K-44.99MPa
   package: pending:pr_mhv1
   components:
@@ -732,6 +745,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
+  tolerance:
+    liquid_comp: 0.000391
 - id: pr-mhv2-meohh2o-312.91K-20.705kPa
   package: pr_mhv2
   components:
@@ -763,6 +778,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00189
+  tolerance:
+    liquid_comp: 0.000189
 - id: pr-mhv2-c1h2o-310.9K-44.99MPa
   package: pending:pr_mhv2
   components:
@@ -777,6 +794,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
+  tolerance:
+    liquid_comp: 0.000391
 - id: srk-mhv2-meohh2o-312.91K-20.705kPa
   package: srk_mhv2
   components:
@@ -808,6 +827,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00189
+  tolerance:
+    liquid_comp: 0.000189
 - id: srk-mhv2-c1h2o-310.9K-44.99MPa
   package: pending:srk_mhv2
   components:
@@ -822,6 +843,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
+  tolerance:
+    liquid_comp: 0.000391
 - id: pr-wong-sandler-meohh2o-312.91K-20.705kPa
   package: pr_wong_sandler
   components:
@@ -854,6 +877,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00189
+  tolerance:
+    liquid_comp: 0.000189
 - id: pr-wong-sandler-c1h2o-310.9K-44.99MPa
   note: unbound (T-06a, 2026-10-22) - the row refuses this feed because the ChemSep NRTL databank has no C1/H2O pair (a crash is never an assessed miss); rebind when a gE source with that pair exists
   package: pending:pr_wong_sandler
@@ -869,6 +894,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
+  tolerance:
+    liquid_comp: 0.000391
 - id: srk-wong-sandler-meohh2o-312.91K-20.705kPa
   package: srk_wong_sandler
   components:
@@ -901,6 +928,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00189
+  tolerance:
+    liquid_comp: 0.000189
 - id: srk-wong-sandler-c1h2o-310.9K-44.99MPa
   note: unbound (T-06a, 2026-10-22) - the row refuses this feed because the ChemSep NRTL databank has no C1/H2O pair (a crash is never an assessed miss); rebind when a gE source with that pair exists
   package: pending:srk_wong_sandler
@@ -916,6 +945,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
+  tolerance:
+    liquid_comp: 0.000391
 - id: pr-huron-vidal-meohh2o-312.91K-20.705kPa
   package: pr_huron_vidal
   components:
@@ -948,6 +979,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00189
+  tolerance:
+    liquid_comp: 0.000189
 - id: pr-huron-vidal-c1h2o-310.9K-44.99MPa
   package: pending:pr_huron_vidal
   note: unbound (T-06 review, 2026-10-22) - the row refuses this feed because the ChemSep NRTL databank has no C1/H2O pair (a crash is never an assessed miss); rebind when a gE source with that pair exists
@@ -963,6 +996,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
+  tolerance:
+    liquid_comp: 0.000391
 - id: lcvm-meohh2o-312.91K-20.705kPa
   package: lcvm
   components:
@@ -995,6 +1030,8 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00189
+  tolerance:
+    liquid_comp: 0.000189
 - id: lcvm-c1h2o-310.9K-44.99MPa
   package: pending:lcvm
   note: unbound (T-06c review, 2026-10-22) - the row refuses this feed because the original-UNIFAC curated map has no C1 (methane) assignment (a crash is never an assessed miss); rebind when a gE source with that pair exists
@@ -1010,3 +1047,5 @@ binary_cases:
   expected:
     liquid_comp:
       C1: 0.00391
+  tolerance:
+    liquid_comp: 0.000391

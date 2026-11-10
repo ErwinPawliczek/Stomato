@@ -1295,9 +1295,9 @@ binary_cases:
 # fraction, each with its own measured T and p). Bubble cases take the liquid row (z = x),
 # dew cases the gas row (z = y). Points at 270 and 298 K inside the row's window. Three
 # further near-critical points (298.161 K/7.1003 MPa and 298.162 K/7.4191 MPa bubble,
-# 269.997 K/9.5571 MPa dew) crash the shared CoolProp-path saturation solver on eos_cg,
-# coolprop_heos and gerg2008 alike; a crash cannot be assessed, so they are not kept here
-# (recorded in the eos_cg row note and the run report).
+# 269.997 K/9.5571 MPa dew) crashed the shared CoolProp-path saturation solver; since
+# 2026-11-09 (val-aqueous) the two bubble points solve and are bound in cases-nearcrit.yaml;
+# the dew point has no dew point in the model (see that file).
 - id: eoscg-co2n2-269.996K-9.582MPa-bubble
   package: eos_cg
   components: [CO2, N2]
