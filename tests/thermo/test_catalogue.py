@@ -165,6 +165,8 @@ def test_rows_load_and_build() -> None:
         "polymer_nrtl",
         "polymer_pc_saft",
         "unifac_fv",
+        # VTBMSR-III (Mangold 2019) density-only row, board job CQ1
+        "vtbmsr3",
     ]
     # electrolyte family (T-09/T-09b): four literature-anchored aqueous models
     # (the T-09b rows replaced their first-use refusal predecessors)
@@ -229,7 +231,7 @@ def test_rows_load_and_build() -> None:
         + mixing_ids
         + catalogue_gap_ids
     )
-    assert len(expected) == 164
+    assert len(expected) == 165
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {

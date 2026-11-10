@@ -88,3 +88,24 @@ sets (H2O liquid set 1, O2 sets x2-x5, N2 set 2, CO2 set 1) that the main articl
 number only; params.csv marks the source table of every row. Binary kb values: Table 7
 (main) and SI S1.3-S1.6 agree exactly on the four regressed pairs; CO2/O2 and O2/N2 are
 zero by the paper's choice.
+
+## Corrections and binding (2026-11-09, board job CQ1)
+
+Checked against the article's own MathML in the Europe PMC full-text XML
+(www.ebi.ac.uk/europepmc/webservices/rest/PMC6919335/fullTextXML, retrieved 2026-11-09).
+The parameter values in params.csv all agree with Tables 2, 5 and 7. Three readings above are wrong:
+
+- **eq 22d** is `d = 1 + 0.5 m - p0 (1 + p1 + p2)`, a product, not `p0/(1+p1+p2)`. With
+  the quotient, pure supercritical water is off by 15-30 % in molar volume.
+- **eq 15** is `a_c = R^2 Tc^2 / (9 (2^(1/3) - 1) pc)` (Omega_a = 0.42748, Table 1).
+  The flattened text reads like a product.
+- **Water set selection** follows the phase of water (Table 5 caption: "(l) and (v/sc)
+  indicate the liquid or vapor/supercritical phase of water"), not Tr <= 1 vs Tr > 1. The
+  H2O(v/sc) set (set 3) reproduces every VTBMSR-III error in Table 8 to within 0.7
+  percentage points, all 18 points including the 620.5-645.5 K ones below Tc,H2O. The
+  H2O(l) set misses the low-pressure points by up to 3 points.
+- For **Tr > 1 with c1 != 0** (water above 647.14 K) the translation is eq 20, not c = c0.
+  It is continuous with eq 17 at Tr = 1.
+
+The cases are bound to catalogue row `vtbmsr3`; see the pack.yaml binding notes for the
+per-case density tolerance (paper error converted to density + 2 percentage points).

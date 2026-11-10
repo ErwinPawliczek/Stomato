@@ -1,0 +1,109 @@
+# VTBMSR-III parameters for H2O, O2, N2, CO2 (catalogue row `vtbmsr3`, density only).
+#
+# Source: Mangold, F.; Pilz, St.; Bjelic, S.; Vogel, F. "Equation of state and
+# thermodynamic properties for mixtures of H2O, O2, N2, and CO2 from ambient up to
+# 1000 K and 280 MPa", J. Supercrit. Fluids 153 (2019) 104476,
+# doi:10.1016/j.supflu.2019.02.016, open access CC BY 4.0 (PMC6919335). Every value
+# below was read from the article's own tables in the Europe PMC full-text XML
+# (www.ebi.ac.uk/europepmc/webservices/rest/PMC6919335/fullTextXML), retrieved
+# 2026-11-09, and agrees with the T3 data pack (data/validation/packs/T3/params.csv).
+# Nothing here is fitted, tuned, interpolated or taken from a databank.
+#
+# Critical constants and acentric factors are the paper's Table 2 inputs (Refprop 10),
+# NOT the repo databank's values: the volume-translation, polar and binary parameters
+# were regressed against these constants, so the model is only defined with them.
+#
+# Water: Table 5 carries two water columns, H2O(l) (set 2) and H2O(v/sc) (set 3),
+# "the liquid or vapor/supercritical phase of water" (Table 5 caption). This
+# density-only adapter answers single-phase supercritical states only, so it uses the
+# H2O(v/sc) column. Evidence that this is the set behind the paper's ternary results:
+# with it, the adapter reproduces every VTBMSR-III error of Table 8 (18 points, incl.
+# 620.5-657 K with T < Tc,H2O) within 0.7 percentage points; the H2O(l) column misses
+# the low-pressure points by up to 3 points (checked 2026-11-09).
+#
+# Binary k_b,ij (eq. 26): Table 7, all four regressed pairs are set 2 ("Reg. to rho").
+# CO2/O2 and O2/N2 are 0 in Table 7. Table 7 footnote: "k_a,ij(z) and l_ij(z) are not
+# used", so a_mix takes no binary correction at all.
+
+source: >-
+  Mangold, Pilz, Bjelic & Vogel, J. Supercrit. Fluids 153 (2019) 104476,
+  doi:10.1016/j.supflu.2019.02.016 (CC BY 4.0), retrieved 2026-11-09
+
+components:
+  H2O:
+    Tc: 647.14        # K,  Table 2
+    Pc: 22064000.0    # Pa, Table 2 (22.064 MPa)
+    omega: 0.344      # -,  Table 2
+    c0: 2.8126e-7     # m3/mol, Table 5, H2O(v/sc) set 3
+    c1: 5.25308e-6    # m3/mol, Table 5, H2O(v/sc) set 3
+    c2: 0.4054292     # -,      Table 5, H2O(v/sc) set 3
+    p0: -1.92140347   # -,      Table 5, H2O(v/sc) set 3
+    p1: -1.1392853    # -,      Table 5, H2O(v/sc) set 3
+    p2: 0.22028766    # -,      Table 5, H2O(v/sc) set 3
+    source: Mangold 2019 Table 2 (Tc, pc, omega); Table 5 column H2O(v/sc), set 3
+  O2:
+    Tc: 154.58        # K,  Table 2
+    Pc: 5043000.0     # Pa, Table 2 (5.043 MPa)
+    omega: 0.0222     # -,  Table 2
+    c0: 4.366e-6      # m3/mol, Table 5, set 21
+    c1: 0.0           # m3/mol, Table 5, set 21
+    c2: 0.0           # -,      Table 5, set 21
+    p0: 0.07834762    # -,      Table 5, set 21
+    p1: -0.10036104   # -,      Table 5, set 21
+    p2: -0.10036213   # -,      Table 5, set 21
+    source: Mangold 2019 Table 2 (Tc, pc, omega); Table 5 column O2, set 21
+  N2:
+    Tc: 126.20        # K,  Table 2
+    Pc: 3398000.0     # Pa, Table 2 (3.398 MPa)
+    omega: 0.037      # -,  Table 2
+    c0: 0.0           # m3/mol, Table 5, set 1
+    c1: 0.0           # m3/mol, Table 5, set 1
+    c2: 0.0           # -,      Table 5, set 1
+    p0: 0.067873      # -,      Table 5, set 1
+    p1: -0.015334     # -,      Table 5, set 1
+    p2: -0.015334     # -,      Table 5, set 1
+    source: Mangold 2019 Table 2 (Tc, pc, omega); Table 5 column N2, set 1
+  CO2:
+    Tc: 304.12        # K,  Table 2
+    Pc: 7374000.0     # Pa, Table 2 (7.374 MPa)
+    omega: 0.225      # -,  Table 2
+    c0: 5.47e-6       # m3/mol, Table 5, set 2
+    c1: 0.0           # m3/mol, Table 5, set 2
+    c2: 0.0           # -,      Table 5, set 2
+    p0: -1.55305545   # -,      Table 5, set 2
+    p1: -1.52675479   # -,      Table 5, set 2
+    p2: -0.51240405   # -,      Table 5, set 2
+    source: Mangold 2019 Table 2 (Tc, pc, omega); Table 5 column CO2, set 2
+
+# k_b,ij = kb0 + kb1*T + kb2/T (eq. 26); kb1 in 1/K, kb2 in K. Symmetric (k_b,ij = k_b,ji).
+binaries:
+  - pair: [H2O, O2]
+    kb0: 1.6786319
+    kb1: -0.00190476
+    kb2: -437.386995
+    source: Mangold 2019 Table 7, H2O/O2, set 2 (regressed to density)
+  - pair: [H2O, N2]
+    kb0: 26.7175346
+    kb1: -0.02120245
+    kb2: -8387.43857
+    source: Mangold 2019 Table 7, H2O/N2, set 2 (regressed to density)
+  - pair: [H2O, CO2]
+    kb0: 24.5882553
+    kb1: -0.0189643037
+    kb2: -7926.93286
+    source: Mangold 2019 Table 7, H2O/CO2, set 2 (regressed to density)
+  - pair: [CO2, N2]
+    kb0: 11.3800299
+    kb1: -0.0162626
+    kb2: -2008.99224
+    source: Mangold 2019 Table 7, CO2/N2, set 2 (regressed to density)
+  - pair: [CO2, O2]
+    kb0: 0.0
+    kb1: 0.0
+    kb2: 0.0
+    source: Mangold 2019 Table 7, CO2/O2 printed as 0
+  - pair: [O2, N2]
+    kb0: 0.0
+    kb1: 0.0
+    kb2: 0.0
+    source: Mangold 2019 Table 7, O2/N2 printed as 0

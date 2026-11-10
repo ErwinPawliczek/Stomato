@@ -1,0 +1,76 @@
+# VTBMSR-III (Mangold et al. 2019) density-only row (board job CQ1).
+#
+# Family `special`: a standalone adapter with its own parameter table, like the other
+# special rows. The cubic family's typed options (thermo.options) have no value for
+# this alpha (Schwartzentruber-Renon-Watanasiri (1 - Tr) polar form + Tr > 1 exponent
+# d), the Mangold c(T) translation, or k_b on the co-volume; adding those is a cubic
+# option-vocabulary change (T-02/T-06), not this row.
+#
+# Not SR-POLAR: Aspen's SR-POLAR (RKUPP) alpha carries (1 - Tr^0.5) in the polar term,
+# so this row does not close catalogue-plan row 14 (docs/thermo-catalogue-plan.md).
+- id: vtbmsr3
+  name: VTBMSR-III RKS with polar alpha and T-dependent translation (Mangold 2019), density only
+  family: special
+  adapter: ngdesign.thermo.vtbmsr:VtbmsrPackage
+  options: {}
+  params:
+    source: data/thermo_params/vtbmsr/mangold2019.yaml
+    provenance: >-
+      Mangold, Pilz, Bjelic & Vogel, J. Supercrit. Fluids 153 (2019) 104476: Table 2
+      (Tc, pc, omega), Table 5 (c0-c2, p0-p2; water column H2O(v/sc) set 3), Table 7
+      (k_b,ij sets 2; k_a and l unused). Read from the open full text 2026-11-09.
+    scope: >-
+      Density (and Z) of single-phase supercritical H2O/O2/N2/CO2 mixtures only.
+      flash_pt refuses unless T exceeds the Kay pseudo-critical temperature and the
+      cubic has one physical root; enthalpy, entropy, cp and gibbs are NaN; saturation,
+      VF/H/S flashes and derivatives refuse. The paper prints no vapour-pressure or VLE
+      validation, so no phase-equilibrium surface is offered.
+  applicability:
+    component_classes: [water, light_gas, inert, acid_gas]
+    polar: true
+    electrolyte: false
+    # The bound evidence: Mangold 2019 Table 8 water-air points (T3 pack).
+    T_K: [620.5, 657.0]
+    P_Pa: [27000000.0, 263900000.0]
+    phases: [V]
+  status: provisional
+  validation:
+  # T3 pack (data/validation/packs/T3): Japas & Franck water-air molar volumes as printed
+  # in Mangold 2019 Table 8. Tolerance per case = the paper's own VTBMSR-III error,
+  # converted from molar volume to density, + 2 percentage points (board job CQ1).
+  - h2o-air-620.5K-27MPa
+  - h2o-air-638.5K-44MPa
+  - h2o-air-640K-68.3MPa
+  - h2o-air-642K-102MPa
+  - h2o-air-645.5K-152.9MPa
+  - h2o-air-650K-195.3MPa
+  - h2o-air-652K-214.8MPa
+  - h2o-air-653.5K-231.5MPa
+  - h2o-air-657K-263.9MPa
+  references:
+  - 'Mangold, F., Pilz, St., Bjelic, S., Vogel, F., ''Equation of state and thermodynamic
+    properties for mixtures of H2O, O2, N2, and CO2 from ambient up to 1000 K and 280 MPa'',
+    J. Supercrit. Fluids 153 (2019) 104476, doi:10.1016/j.supflu.2019.02.016 (CC BY 4.0)'
+  - 'Kay, W. B., ''Density of hydrocarbon gases and vapors at high temperature and pressure'',
+    Ind. Eng. Chem. 28 (1936) 1014 (pseudo-critical temperature scope guard)'
+  l0:
+    determinism:
+      z: {H2O: 0.797, O2: 0.0406, N2: 0.1624}
+      state: [642.0, 102000000.0]
+  l0_excluded:
+    pure_psat_limit: density-only adapter - pure_psat returns None (no vapour-pressure model is validated)
+    phase_identification: >-
+      the check anchors on the package's own bubble pressure, which the density-only
+      adapter refuses (no validated phase equilibrium)
+    round_trip: >-
+      the check iterates flash_ph/flash_ps, which the density-only adapter refuses
+      (enthalpy and entropy are not computed)
+    dhdT_cp: density-only adapter - enthalpy and cp are not computed (NaN)
+    gibbs_duhem: no fugacity coefficients - ln phi is not part of the density-only surface
+    single_liquid_limit: >-
+      the adapter answers single-phase supercritical states only and refuses
+      liquid-phase requests
+  l0_note: >-
+    The declared check exercises the one surface the adapter offers (PT flash
+    determinism on a bound T3 state); every excluded check needs a surface the
+    density-only scope does not provide, each refused with the typed VtbmsrError.
