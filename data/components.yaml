@@ -66,3 +66,12 @@ components:
   DME:
     name: dimethyl ether
     cas: 115-10-6
+  AcOH:
+    name: acetic acid
+    cas: 64-19-7
+  EtOH:
+    name: ethanol
+    cas: 64-17-5
+  O2:
+    name: oxygen
+    cas: 7782-44-7

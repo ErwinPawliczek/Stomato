@@ -58,13 +58,19 @@ DOC_PATH = REPO_ROOT / "docs" / "validation.md"
 
 
 def _case_files() -> list[Path]:
-    """Every reference-case file: the root ``cases.yaml`` plus per-family ``cases*.yaml``.
+    """Every reference-case file: the root ``cases.yaml``, per-family ``cases*.yaml``,
+    and the accepted data packs ``data/validation/packs/<id>/pack.yaml`` (task T10).
 
     Data sweeps (spec T-11) add ``data/validation/<family>/cases.yaml``; entries whose
-    ``package`` is ``pending:<id>`` name a catalogue row that is not registered yet and are
-    skipped by :func:`_load_cases` until the row lands.
+    ``package`` is ``pending:<id>`` name a catalogue row that is not registered yet and
+    are skipped by :func:`_load_cases` until the row lands. Pack files follow the
+    PROTOCOL.md data-pack rule (pack.yaml, never cases*.yaml, so the Stomato bot binds
+    them explicitly); they are loaded only after the pack's review verdict lands the
+    files on this branch.
     """
-    return sorted((REPO_ROOT / "data" / "validation").glob("**/cases*.yaml"))
+    return sorted((REPO_ROOT / "data" / "validation").glob("**/cases*.yaml")) + sorted(
+        (REPO_ROOT / "data" / "validation" / "packs").glob("*/pack.yaml")
+    )
 
 
 #: Package expansion of ``package: all`` — the three cubic packages. NRTL runs only where the
@@ -145,10 +151,31 @@ class Case:
     # validates several catalogue rows without copying the point. Empty for the
     # single-name / ``all`` forms; ``package`` then holds the name (or "all").
     packages: tuple[str, ...] = ()
+    # Non-empty when the case is NOT loaded for evaluation: a visible skip reason
+    # ("pending:<id>: catalogue row not registered", "experimental row: ..."). Skips
+    # are never silent — the test suite skips with this reason per case (task T10).
+    skip_reason: str = ""
+    # List-valued package entries whose OTHER members are pending/experimental: the case
+    # runs on the live members and names the dropped ones here (reported by run_all).
+    skipped_packages: tuple[str, ...] = ()
     # `liquid_comp` reads the liquid phase richest in this component id (LLE tie-lines:
     # name the organic solute to compare the organic-rich liquid). Default H2O: the
     # water-rich liquid, as before.
     liquid_rich_in: str = "H2O"
+
+
+@dataclasses.dataclass(frozen=True)
+class SkippedCase:
+    """A case file entry that is not loaded, with the reason it is skipped (task T10).
+
+    Recorded so neither the script nor the test suite can drop a case silently: the
+    pending/experimental skip set is reported in ``run_all``'s stdout and asserted
+    visible by ``tests/validation``.
+    """
+
+    id: str
+    package: str
+    reason: str
 
 
 @dataclasses.dataclass(frozen=True)
@@ -273,43 +300,79 @@ def _load_cases() -> list[Case]:
     cases: list[Case] = []
     for path in _case_files():
         raw = yaml.safe_load(path.read_text())
-        for section in ("pure_cases", "binary_cases", "multicomponent_cases"):
-            for entry in raw.get(section) or []:
-                raw_pkg = entry.get("package", "all")
-                names = [str(n) for n in raw_pkg] if isinstance(raw_pkg, list) else [str(raw_pkg)]
-                # Catalogue rows not registered yet (``pending:<id>``, T-02..T-07 adapter specs)
-                # are skipped until the id lands; an experimental row runs no validation cases
-                # (its physics is not implemented; the cases stay bound in the row definition
-                # until the row reaches provisional).
-                live = [n for n in names if not n.startswith("pending:") and _row_status(n) != "experimental"]
-                if not live:
-                    continue
-                case = Case(
-                    id=str(entry["id"]),
-                    package=",".join(live),
-                    packages=tuple(live) if isinstance(raw_pkg, list) else (),
-                    components=list(entry.get("components", [])),
-                    z={k: float(v) for k, v in entry["z"].items()},
-                    source=str(entry["source"]),
-                    expected=dict(entry.get("expected") or {}),
-                    T=float(entry["T"]) if entry.get("T") is not None else None,
-                    P=float(entry["P"]) if entry.get("P") is not None else None,
-                    tolerance={k: float(v) for k, v in (entry.get("tolerance") or {}).items()},
-                    note=str(entry.get("note", "")),
-                    fluid=str(entry.get("fluid", "")),
-                    coolprop_fluid=str(entry.get("coolprop_fluid", "")),
-                    phase=str(entry.get("phase", "")),
-                    section=section,
-                    liquid_rich_in=str(entry.get("liquid_rich_in", "H2O")),
-                )
-                cases.append(case)
+        is_pack = "packs" in path.parts  # data/validation/packs/<id>/pack.yaml (task T10)
+        entries: list[tuple[str, dict[str, Any]]] = []
+        if isinstance(raw, list):
+            # A pack may be a bare YAML list of cases (same per-case schema).
+            entries.extend(("cases", entry) for entry in raw)
+        else:
+            for section in ("pure_cases", "binary_cases", "multicomponent_cases"):
+                entries.extend((section, entry) for entry in raw.get(section) or [])
+            # A data pack may instead carry a single ``cases:`` list with the same
+            # per-case schema (this shape exists among the accepted packs too).
+            pack_list = raw.get("cases")
+            if isinstance(pack_list, list):
+                entries.extend(("cases", entry) for entry in pack_list)
+        for section, entry in entries:
+            raw_pkg = entry.get("package", "all")
+            # ``package`` may be a LIST: one cited point validates several rows.
+            names = [str(n) for n in raw_pkg] if isinstance(raw_pkg, list) else [str(raw_pkg)]
+            reasons = {n: _skip_reason(n) for n in names}
+            live = [n for n in names if not reasons[n]]
+            dropped = tuple(n for n in names if reasons[n])
+            # Skips are never silent (task T10): a case with no live package carries the
+            # reasons; a list case with some dropped members names them.
+            skip = "; ".join(reasons[n] for n in dropped) if not live else ""
+            case = Case(
+                id=str(entry["id"]),
+                package=",".join(live or names),
+                packages=tuple(live) if isinstance(raw_pkg, list) and live else (),
+                components=list(entry.get("components", [])),
+                z={k: float(v) for k, v in entry["z"].items()},
+                source=str(entry["source"]),
+                expected=dict(entry.get("expected") or {}),
+                T=float(entry["T"]) if entry.get("T") is not None else None,
+                P=float(entry["P"]) if entry.get("P") is not None else None,
+                tolerance={k: float(v) for k, v in (entry.get("tolerance") or {}).items()},
+                note=str(entry.get("note", "")),
+                fluid=str(entry.get("fluid", "")),
+                coolprop_fluid=str(entry.get("coolprop_fluid", "")),
+                phase=str(entry.get("phase", "")),
+                section="packs" if is_pack else section,
+                skip_reason=skip,
+                skipped_packages=dropped if live else (),
+                liquid_rich_in=str(entry.get("liquid_rich_in", "H2O")),
+            )
+            cases.append(case)
     return cases
+
+
+def _skip_reason(pkg_name: str) -> str:
+    """Why ``pkg_name`` runs no case today, or "" when it is live (task T10: never silent)."""
+    if pkg_name.startswith("pending:"):
+        # Catalogue row not registered yet (T-02..T-07 adapter specs): the data
+        # sweep commits the cases ahead of the model.
+        return (
+            f"{pkg_name}: catalogue row not registered — pack bound ahead of the"
+            " model, skipped until the id lands"
+        )
+    if _row_status(pkg_name) == "experimental":
+        # An experimental row runs no validation cases: its physics is not
+        # implemented (the adapter refuses at first use); the cases stay bound
+        # in the row definition until the row reaches provisional.
+        return (
+            f"{pkg_name}: catalogue row is experimental (physics not implemented)"
+            " — skipped until it reaches provisional"
+        )
+    return ""
 
 
 def _runs_on(cases: list[Case]) -> dict[str, set[str]]:
     """Row id -> ids of the cases that actually run on it (a bound id must be one of these)."""
     out: dict[str, set[str]] = {}
     for c in cases:
+        if c.skip_reason:
+            continue  # pending/experimental: runs on nothing today
         for pkg in packages_for(c):
             out.setdefault(pkg, set()).add(c.id)
     return out
@@ -453,9 +516,19 @@ def evaluate_case(case: Case, pkg: str) -> list[Row]:
 
 
 def run_all(cases: list[Case]) -> list[Row]:
-    """Evaluate every case against every named package; a package crash becomes failed rows."""
+    """Evaluate every case against every named package; a package crash becomes failed rows.
+
+    Cases carrying a ``skip_reason`` (pending/experimental packages, task T10) are
+    reported to stdout once per case, then excluded from the rows: a skip is a visible
+    finding, never a silent drop.
+    """
     rows: list[Row] = []
     for case in cases:
+        if case.skip_reason:
+            print(f"SKIP: {case.id} ({case.skip_reason})")
+            continue
+        for dropped in case.skipped_packages:
+            print(f"SKIP: {case.id} on {dropped} ({_skip_reason(dropped)})")
         if case.expected == {}:
             raise SystemExit(f"case {case.id} has no expected values — run --regen-coolprop first")
         for pkg in packages_for(case):
@@ -489,7 +562,9 @@ def regen_coolprop() -> None:
     """Fill the ``pure_cases`` expected values from CoolProp, rewriting each case file.
 
     Every file matched by :func:`_case_files` is rewritten in place; each file's header
-    comment block (everything before its ``meta:`` key) is preserved.
+    comment block (everything before its ``meta:`` key) is preserved. Data packs
+    (``data/validation/packs/*/pack.yaml``) are excluded: their expected values are
+    hand-typed literature points, never regenerated.
     """
     import CoolProp
     import yaml
@@ -498,6 +573,8 @@ def regen_coolprop() -> None:
     version = ""
     n_pure = 0
     for path in _case_files():
+        if path.name == "pack.yaml":  # data pack: literature expected, never regenerated
+            continue
         text = path.read_text()
         raw = yaml.safe_load(text)
         for case in raw.get("pure_cases") or []:

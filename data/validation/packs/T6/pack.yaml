@@ -1,0 +1,490 @@
+# T6 data pack — polymer-solvent VLE (solvent activity / total pressure) from open
+# sources INDEPENDENT of Kiss et al. (2009) and of Lieu/Prausnitz/Gauthier LBNL-43073.
+#
+# Contents: three systems, 59 binary cases (pure-solvent anchors live only in data.csv).
+#   S1  toluene (1) + polystyrene (2) at 363.15 / 373.15 / 383.15 K
+#       Pavlicek, Bogdanic & Wichterle, Chem. Biochem. Eng. Q. 29 (2015) 1-4, Table 2, p. 2,
+#       doi:10.15255/CABEQ.2015.2183 — open full text https://hrcak.srce.hr/file/202639.
+#       Ebulliometric total pressure; polymer Mw = 250,000 g/mol (Mw/Mn = 1.2), Table 1, p. 2.
+#       Paper prints a1 = P1/P1o; a1 reproduces from the printed P columns to 4 decimals
+#       (spot-checked all three isotherms, retrieval 2026-11-04).
+#   S2  four binaries at 323.15 K (50 C): chloroform+PS, acetone+PMMA,
+#       methyl acetate+PS, methyl acetate+PMMA.
+#       Tanbonliong, J. O.; Prausnitz, J. M., "Vapor-Liquid Equilibria for Some Binary and
+#       Ternary Polymer Solutions", eScholarship (University of California) 1996,
+#       https://escholarship.org/uc/item/8wq3x5wd — Table 2 "Vapor-Liquid Equilibrium Data for
+#       Binary Polymer+Solvent Systems at 50 C", p. 18; pure-solvent vapour pressures from
+#       Table 1 ("Polymer Characteristics and Solvent Vapor Pressures at 50 C"), p. 18.
+#       Gravimetric-sorption method; polymer Mw: PS 50,000 / PMMA 125,000 g/mol (Table 1).
+#       Only rows the thesis reports as new measurements of THIS work are packed here.
+#   S3  2-butanone (1) + poly(methyl methacrylate) (2) at 333.15 / 343.15 / 353.15 K
+#       Pavlicek, Bogdanic & Wichterle, Chem. Biochem. Eng. Q. 28 (2014) 447-450, Table 2,
+#       p. 448, doi:10.15255/CABEQ.2014.19388 — open full text https://hrcak.srce.hr/file/195544.
+#       Ebulliometric total pressure; polymer Mw = 15,000 g/mol (Mw/Mn = 1.18), Table 1, p. 448.
+#
+# Units: T [K], P [Pa abs], compositions [mole fraction] (weight fractions are in data.csv,
+# one row per point, with the same citations). All temperatures are exactly the published
+# isotherms; pressures are the published kPa values x 1000.
+#
+# Mole fractions: computed from the published weight fractions with polymer Mw as stated
+# above and solvent Mw from NIST WebBook (retrieval 2026-11-04): toluene 92.1384
+# (CAS 108-88-3), acetone 58.0791 (CAS 67-64-1), 2-butanone 72.1057 (CAS 78-93-3),
+# chloroform 119.378 (CAS 67-66-3), methyl acetate 74.0785 (CAS 79-20-9).
+# The solvent and polymer pseudo-component z below are mole fractions of the
+# solvent molecule and the polymer CHAIN (one polymer molecule per chain).
+#
+# Package bindings (intentionally pending, per the pack policy):
+#   S1 -> pending:polymer_pc_saft  : PC-SAFT parameters for toluene + POLY_PS exist
+#        (data/thermo_params/special/polymer.yaml, Gross & Sadowski 2001 toluene /
+#        AlHammadi & Abutaqiya 2020 PS Mw = 400,000) with k_ij = 0; the bridge runs blind.
+#        NOTE: the packed PS sample is Mw = 250,000 while the shipped POLY_PS
+#        pseudo-component is Mw = 400,000; the polymer-MW sensitivity of an ideal-mixing
+#        k_ij = 0 flash is what binding would test. No k_ij value is shipped (tuning is
+#        forbidden).
+#   S2/S3 -> pending:flory_huggins : NO FH chi (or any) parameters exist in
+#        data/thermo_params/special/polymer.yaml for chloroform/PS, acetone/PMMA,
+#        methyl acetate/PS, methyl acetate/PMMA or 2-butanone/PMMA — NOT FOUND this session
+#        (no open published parameter transcription located); no pair was fitted.
+#        Binding awaits parameter curation by the Stomato bot.
+#
+# NOT FOUND this session (searched 2026-11-04, open-web + NIST ThermoML/TRC + eScholarship):
+# - polyisobutylene/pentane and polyethylene/hexane open numeric tables with polymer MW
+#   stated: the classic PIB sources (e.g. Flory-type vapour-sorption isotherms, J. Polym.
+#   Sci. Polym. Phys. Ed. 20 (1982) — doi:10.1002/pol.1982.180200503, PIB Mw = 4.7e6) are
+#   paywalled; NOT FOUND (paywalled: https://doi.org/10.1002/pol.1982.180200503 and the
+#   Wohlfarth/Landolt-Boernstein compilations, doi:10.1007/978-3-540-88057-8_264 et seq.).
+# - Pseudo-component registrations for PMMA (any Mw): NOT FOUND in this repo (only POLY_PS
+#   of P1-07 exists). S2/S3 cases name POLY_PMMA_125K / POLY_PMMA_15K as the pseudo-component
+#   ids a future curation would register; they are construction-refused until then, which is
+#   the intended fail-loud behaviour.
+#
+# Retrieval date for every value below: 2026-11-04. Sources were read as open full text
+# (HrCak PDFs, eScholarship essay page); nothing was machine-fetched into the expected values.
+
+meta:
+  pack: T6
+  family: special
+  basis: weight-fraction solvent/polymer data converted to mole fractions as noted above
+  retrieved: '2026-11-04'
+  independent_of: [Kiss et al. 2009, Lieu/Prausnitz/Gauthier LBNL-43073]
+
+cases:
+# ---- S1: toluene + polystyrene, Mw 250,000 (CABEQ 2015, Table 2) ----
+- id: T6-S1-toluene-PS250k-363.15K-w0.9910
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99998413, POLY_PS: 1.587e-05}
+  T: 363.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9910, P=54.374 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 54374.0}
+- id: T6-S1-toluene-PS250k-363.15K-w0.9742
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99994365, POLY_PS: 5.635e-05}
+  T: 363.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9742, P=54.358 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 54358.0}
+- id: T6-S1-toluene-PS250k-363.15K-w0.9620
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99991148, POLY_PS: 8.852e-05}
+  T: 363.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9620, P=54.344 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 54344.0}
+- id: T6-S1-toluene-PS250k-363.15K-w0.9465
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99986912, POLY_PS: 0.00013088}
+  T: 363.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9465, P=54.324 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 54324.0}
+- id: T6-S1-toluene-PS250k-363.15K-w0.9371
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99984333, POLY_PS: 0.00015667}
+  T: 363.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9371, P=54.311 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 54311.0}
+- id: T6-S1-toluene-PS250k-363.15K-w0.9252
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99980934, POLY_PS: 0.00019066}
+  T: 363.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9252, P=54.295 kPa; printed a1=0.9984), retrieved 2026-11-04'
+  expected: {bubble_P: 54295.0}
+- id: T6-S1-toluene-PS250k-373.15K-w0.9910
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99998413, POLY_PS: 1.587e-05}
+  T: 373.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9910, P=74.301 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 74301.0}
+- id: T6-S1-toluene-PS250k-373.15K-w0.9742
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99994365, POLY_PS: 5.635e-05}
+  T: 373.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9742, P=74.274 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 74274.0}
+- id: T6-S1-toluene-PS250k-373.15K-w0.9620
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99991148, POLY_PS: 8.852e-05}
+  T: 373.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9620, P=74.254 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 74254.0}
+- id: T6-S1-toluene-PS250k-373.15K-w0.9465
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99986912, POLY_PS: 0.00013088}
+  T: 373.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9465, P=74.223 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 74223.0}
+- id: T6-S1-toluene-PS250k-373.15K-w0.9371
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99984333, POLY_PS: 0.00015667}
+  T: 373.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9371, P=74.206 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 74206.0}
+- id: T6-S1-toluene-PS250k-373.15K-w0.9252
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99980934, POLY_PS: 0.00019066}
+  T: 373.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9252, P=74.183 kPa; printed a1=0.9982), retrieved 2026-11-04'
+  expected: {bubble_P: 74183.0}
+- id: T6-S1-toluene-PS250k-383.15K-w0.9910
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99998413, POLY_PS: 1.587e-05}
+  T: 383.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9910, P=99.726 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 99726.0}
+- id: T6-S1-toluene-PS250k-383.15K-w0.9742
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99994365, POLY_PS: 5.635e-05}
+  T: 383.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9742, P=99.681 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 99681.0}
+- id: T6-S1-toluene-PS250k-383.15K-w0.9620
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99991148, POLY_PS: 8.852e-05}
+  T: 383.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9620, P=99.652 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 99652.0}
+- id: T6-S1-toluene-PS250k-383.15K-w0.9465
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99986912, POLY_PS: 0.00013088}
+  T: 383.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9465, P=99.609 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 99609.0}
+- id: T6-S1-toluene-PS250k-383.15K-w0.9371
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99984333, POLY_PS: 0.00015667}
+  T: 383.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9371, P=99.584 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 99584.0}
+- id: T6-S1-toluene-PS250k-383.15K-w0.9252
+  package: pending:polymer_pc_saft
+  components: [toluene, POLY_PS]
+  z: {toluene: 0.99980934, POLY_PS: 0.00019066}
+  T: 383.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 29 (2015) 1-4, Table 2, p. 2, doi:10.15255/CABEQ.2015.2183, https://hrcak.srce.hr/file/202639 (w1=0.9252, P=99.552 kPa; printed a1=0.9980), retrieved 2026-11-04'
+  expected: {bubble_P: 99552.0}
+# ---- S2: chloroform + polystyrene Mw 50,000, 323.15 K (Tanbonliong/Prausnitz 1996, Table 2) ----
+- id: T6-S2-chloroform-PS50k-323.15K-w0.203
+  package: pending:flory_huggins
+  components: [chloroform, POLY_PS]
+  z: {chloroform: 0.99575635, POLY_PS: 0.00424365}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.203, P=28.47 kPa; PS Mw=50,000, Table 1), retrieved 2026-11-04'
+  expected: {bubble_P: 28470.0}
+- id: T6-S2-chloroform-PS50k-323.15K-w0.295
+  package: pending:flory_huggins
+  components: [chloroform, POLY_PS]
+  z: {chloroform: 0.99361319, POLY_PS: 0.00638681}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.295, P=38.94 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 38940.0}
+- id: T6-S2-chloroform-PS50k-323.15K-w0.361
+  package: pending:flory_huggins
+  components: [chloroform, POLY_PS]
+  z: {chloroform: 0.99199269, POLY_PS: 0.00800731}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.361, P=45.71 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 45710.0}
+- id: T6-S2-chloroform-PS50k-323.15K-w0.432
+  package: pending:flory_huggins
+  components: [chloroform, POLY_PS]
+  z: {chloroform: 0.99020972, POLY_PS: 0.00979028}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.432, P=52.41 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 52410.0}
+- id: T6-S2-chloroform-PS50k-323.15K-w0.546
+  package: pending:flory_huggins
+  components: [chloroform, POLY_PS]
+  z: {chloroform: 0.98723729, POLY_PS: 0.01276271}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.546, P=60.37 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 60370.0}
+- id: T6-S2-chloroform-PS50k-323.15K-w0.644
+  package: pending:flory_huggins
+  components: [chloroform, POLY_PS]
+  z: {chloroform: 0.98459114, POLY_PS: 0.01540886}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.644, P=65.19 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 65190.0}
+- id: T6-S2-chloroform-PS50k-323.15K-w0.707
+  package: pending:flory_huggins
+  components: [chloroform, POLY_PS]
+  z: {chloroform: 0.98277926, POLY_PS: 0.01722074}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.707, P=67.07 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 67070.0}
+# ---- S2: acetone + PMMA Mw 125,000, 323.15 K (Tanbonliong/Prausnitz 1996, Table 2) ----
+- id: T6-S2-acetone-PMMA125k-323.15K-w0.074
+  package: pending:flory_huggins
+  components: [acetone, POLY_PMMA_125K]
+  z: {acetone: 0.99137860, POLY_PMMA_125K: 0.00862140}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.074, P=35.32 kPa; PMMA Mw=125,000, Table 1), retrieved 2026-11-04'
+  expected: {bubble_P: 35320.0}
+- id: T6-S2-acetone-PMMA125k-323.15K-w0.099
+  package: pending:flory_huggins
+  components: [acetone, POLY_PMMA_125K]
+  z: {acetone: 0.98832556, POLY_PMMA_125K: 0.01167444}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.099, P=46.57 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 46570.0}
+- id: T6-S2-acetone-PMMA125k-323.15K-w0.135
+  package: pending:flory_huggins
+  components: [acetone, POLY_PMMA_125K]
+  z: {acetone: 0.98389414, POLY_PMMA_125K: 0.01610586}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.135, P=56.21 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 56210.0}
+- id: T6-S2-acetone-PMMA125k-323.15K-w0.195
+  package: pending:flory_huggins
+  components: [acetone, POLY_PMMA_125K]
+  z: {acetone: 0.97645811, POLY_PMMA_125K: 0.02354189}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.195, P=64.99 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 64990.0}
+- id: T6-S2-acetone-PMMA125k-323.15K-w0.267
+  package: pending:flory_huggins
+  components: [acetone, POLY_PMMA_125K]
+  z: {acetone: 0.96682048, POLY_PMMA_125K: 0.03317952}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.267, P=72.02 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 72020.0}
+- id: T6-S2-acetone-PMMA125k-323.15K-w0.356
+  package: pending:flory_huggins
+  components: [acetone, POLY_PMMA_125K]
+  z: {acetone: 0.95424320, POLY_PMMA_125K: 0.04575680}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.356, P=77.71 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 77710.0}
+# ---- S2: methyl acetate + polystyrene Mw 50,000, 323.15 K (Tanbonliong/Prausnitz 1996, Table 2) ----
+- id: T6-S2-methylacetate-PS50k-323.15K-w0.062
+  package: pending:flory_huggins
+  components: [methyl_acetate, POLY_PS]
+  z: {methyl_acetate: 0.99264997, POLY_PS: 0.00735003}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.062, P=29.17 kPa; PS Mw=50,000, Table 1), retrieved 2026-11-04'
+  expected: {bubble_P: 29170.0}
+- id: T6-S2-methylacetate-PS50k-323.15K-w0.103
+  package: pending:flory_huggins
+  components: [methyl_acetate, POLY_PS]
+  z: {methyl_acetate: 0.98763788, POLY_PS: 0.01236212}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.103, P=43.06 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 43060.0}
+- id: T6-S2-methylacetate-PS50k-323.15K-w0.159
+  package: pending:flory_huggins
+  components: [methyl_acetate, POLY_PS]
+  z: {methyl_acetate: 0.98076606, POLY_PS: 0.01923394}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.159, P=56.38 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 56380.0}
+- id: T6-S2-methylacetate-PS50k-323.15K-w0.244
+  package: pending:flory_huggins
+  components: [methyl_acetate, POLY_PS]
+  z: {methyl_acetate: 0.96999134, POLY_PS: 0.03000866}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.244, P=68.25 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 68250.0}
+- id: T6-S2-methylacetate-PS50k-323.15K-w0.351
+  package: pending:flory_huggins
+  components: [methyl_acetate, POLY_PS]
+  z: {methyl_acetate: 0.95613941, POLY_PS: 0.04386059}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.351, P=76.05 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 76050.0}
+# ---- S2: methyl acetate + PMMA Mw 125,000, 323.15 K (Tanbonliong/Prausnitz 1996, Table 2) ----
+- id: T6-S2-methylacetate-PMMA125k-323.15K-w0.094
+  package: pending:flory_huggins
+  components: [methyl_acetate, POLY_PMMA_125K]
+  z: {methyl_acetate: 0.98881801, POLY_PMMA_125K: 0.01118199}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.094, P=29.17 kPa; PMMA Mw=125,000, Table 1), retrieved 2026-11-04'
+  expected: {bubble_P: 29170.0}
+- id: T6-S2-methylacetate-PMMA125k-323.15K-w0.133
+  package: pending:flory_huggins
+  components: [methyl_acetate, POLY_PMMA_125K]
+  z: {methyl_acetate: 0.98409255, POLY_PMMA_125K: 0.01590745}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.133, P=43.06 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 43060.0}
+- id: T6-S2-methylacetate-PMMA125k-323.15K-w0.204
+  package: pending:flory_huggins
+  components: [methyl_acetate, POLY_PMMA_125K]
+  z: {methyl_acetate: 0.97523005, POLY_PMMA_125K: 0.02476995}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.204, P=56.38 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 56380.0}
+- id: T6-S2-methylacetate-PMMA125k-323.15K-w0.311
+  package: pending:flory_huggins
+  components: [methyl_acetate, POLY_PMMA_125K]
+  z: {methyl_acetate: 0.96192474, POLY_PMMA_125K: 0.03807526}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.311, P=68.25 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 68250.0}
+- id: T6-S2-methylacetate-PMMA125k-323.15K-w0.442
+  package: pending:flory_huggins
+  components: [methyl_acetate, POLY_PMMA_125K]
+  z: {methyl_acetate: 0.94528598, POLY_PMMA_125K: 0.05471402}
+  T: 323.15
+  source: 'Tanbonliong/Prausnitz, eScholarship 1996, https://escholarship.org/uc/item/8wq3x5wd, Table 2, p. 18 (w1=0.442, P=76.05 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 76050.0}
+# ---- S3: 2-butanone + PMMA Mw 15,000, three isotherms (CABEQ 2014, Table 2) ----
+- id: T6-S3-2butanone-PMMA15k-333.15K-w0.9524
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.99665963, POLY_PMMA_15K: 0.00334037}
+  T: 333.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.9524, P=52.050 kPa; PMMA Mw=15,000, Table 1, p. 448), retrieved 2026-11-04'
+  expected: {bubble_P: 52050.0}
+- id: T6-S3-2butanone-PMMA15k-333.15K-w0.8998
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.99337779, POLY_PMMA_15K: 0.00662221}
+  T: 333.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.8998, P=51.997 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 51997.0}
+- id: T6-S3-2butanone-PMMA15k-333.15K-w0.8471
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.99013222, POLY_PMMA_15K: 0.00986778}
+  T: 333.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.8471, P=51.920 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 51920.0}
+- id: T6-S3-2butanone-PMMA15k-333.15K-w0.7995
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.98692558, POLY_PMMA_15K: 0.01307442}
+  T: 333.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.7995, P=51.840 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 51840.0}
+- id: T6-S3-2butanone-PMMA15k-333.15K-w0.7497
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.98374742, POLY_PMMA_15K: 0.01625258}
+  T: 333.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.7497, P=51.706 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 51706.0}
+- id: T6-S3-2butanone-PMMA15k-333.15K-w0.6993
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.98059743, POLY_PMMA_15K: 0.01940257}
+  T: 333.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.6993, P=51.500 kPa; printed a1=0.9891), retrieved 2026-11-04'
+  expected: {bubble_P: 51500.0}
+- id: T6-S3-2butanone-PMMA15k-343.15K-w0.9524
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.99665963, POLY_PMMA_15K: 0.00334037}
+  T: 343.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.9524, P=74.042 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 74042.0}
+- id: T6-S3-2butanone-PMMA15k-343.15K-w0.8998
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.99337779, POLY_PMMA_15K: 0.00662221}
+  T: 343.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.8998, P=73.953 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 73953.0}
+- id: T6-S3-2butanone-PMMA15k-343.15K-w0.8471
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.99013222, POLY_PMMA_15K: 0.00986778}
+  T: 343.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.8471, P=73.842 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 73842.0}
+- id: T6-S3-2butanone-PMMA15k-343.15K-w0.7995
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.98692558, POLY_PMMA_15K: 0.01307442}
+  T: 343.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.7995, P=73.716 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 73716.0}
+- id: T6-S3-2butanone-PMMA15k-343.15K-w0.7497
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.98374742, POLY_PMMA_15K: 0.01625258}
+  T: 343.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.7497, P=73.509 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 73509.0}
+- id: T6-S3-2butanone-PMMA15k-343.15K-w0.6993
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.98059743, POLY_PMMA_15K: 0.01940257}
+  T: 343.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.6993, P=73.190 kPa; printed a1=0.9879), retrieved 2026-11-04'
+  expected: {bubble_P: 73190.0}
+- id: T6-S3-2butanone-PMMA15k-353.15K-w0.9524
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.99665963, POLY_PMMA_15K: 0.00334037}
+  T: 353.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.9524, P=102.895 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 102895.0}
+- id: T6-S3-2butanone-PMMA15k-353.15K-w0.8998
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.99337779, POLY_PMMA_15K: 0.00662221}
+  T: 353.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.8998, P=102.750 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 102750.0}
+- id: T6-S3-2butanone-PMMA15k-353.15K-w0.8471
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.99013222, POLY_PMMA_15K: 0.00986778}
+  T: 353.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.8471, P=102.586 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 102586.0}
+- id: T6-S3-2butanone-PMMA15k-353.15K-w0.7995
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.98692558, POLY_PMMA_15K: 0.01307442}
+  T: 353.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.7995, P=102.380 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 102380.0}
+- id: T6-S3-2butanone-PMMA15k-353.15K-w0.7497
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.98374742, POLY_PMMA_15K: 0.01625258}
+  T: 353.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.7497, P=102.081 kPa), retrieved 2026-11-04'
+  expected: {bubble_P: 102081.0}
+- id: T6-S3-2butanone-PMMA15k-353.15K-w0.6993
+  package: pending:flory_huggins
+  components: [2-butanone, POLY_PMMA_15K]
+  z: {2-butanone: 0.98059743, POLY_PMMA_15K: 0.01940257}
+  T: 353.15
+  source: 'Pavlicek/Bogdanic/Wichterle, CABEQ 28 (2014) 447-450, Table 2, p. 448, doi:10.15255/CABEQ.2014.19388, https://hrcak.srce.hr/file/195544 (w1=0.6993, P=101.618 kPa; printed a1=0.9869), retrieved 2026-11-04'
+  expected: {bubble_P: 101618.0}

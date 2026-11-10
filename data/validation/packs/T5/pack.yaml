@@ -1,0 +1,518 @@
+# T5 pack — COSMO-SAC independent validation (VLE cases).
+#
+# Task T5 (agents/BOARD.md, branch agents-board). Independent of Hsieh et al. (2014)
+# Table 6 and of the NIST COSMOSAC repository's own validation outputs (both already
+# used elsewhere): the sources below are open experimental measurements, retrieved and
+# transcribed 2026-11-04 (see README.md for full citations and retrieval trail).
+#
+# Cases are named `pending:cosmo_sac_ig` — the planned catalogue row for COSMO-SAC with
+# ideal-gas vapour phase (docs/thermo-catalogue-plan.md family B, row 6, currently unbuilt
+# pending sigma-profile licensing). The harness skips these until the row registers;
+# this pack is bound by the Stomato bot (data packs use pack.yaml, not cases*.yaml).
+#
+# Systems: water(1) + ethylene glycol(2) and water(1) + triethylene glycol(2), isobaric
+# ebulliometric T-x at nominal 0.1 MPa. No vapour compositions are tabulated in the open
+# source (only gamma_H2O derived from boiling temperatures), so `expected` carries
+# bubble_T only.
+#
+# Source (both systems): Chouireb, Crespo, Pereira, Tafat-Igoudjilene, Vega, Coutinho &
+# Carvalho, "Measurement and Modeling of Isobaric Vapor-Liquid Equilibrium of Water +
+# Glycols", J. Chem. Eng. Data 2018, 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945,
+# Supporting Information Tables S1 (H2O + EG) and S3 (H2O + TriEG), 0.1 MPa columns.
+# SI URL (open access):
+# https://pubs.acs.org/jceaax/article-supplement/1567794/pdf/je7b00945_si_001/
+# Retrieved 2026-11-04. Reported uncertainties: u(x) = 0.001, u(T) = 1 K, ur(p) = 0.005.
+# Units: T [K], P [Pa abs], mole fractions. 0.1 MPa transcribed as 100000 Pa.
+#
+# Tolerances: bubble_T 0.5 % relative (P1-05 convention, docs/validation.md). The 1 K
+# measurement uncertainty is <= 0.5 % at these temperatures, so it fits the default.
+- id: t5-cosmo-h2o-meg-372.60K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.999
+    MEG: 0.001
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 372.60
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-373.35K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.983
+    MEG: 0.017
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 373.35
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-374.11K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.966
+    MEG: 0.034
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 374.11
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-374.67K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.958
+    MEG: 0.042
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 374.67
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-375.61K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.923
+    MEG: 0.077
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 375.61
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-377.15K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.880
+    MEG: 0.120
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 377.15
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-378.61K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.829
+    MEG: 0.171
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 378.61
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-380.45K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.791
+    MEG: 0.209
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 380.45
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-380.97K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.765
+    MEG: 0.235
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 380.97
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-382.75K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.722
+    MEG: 0.278
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 382.75
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-383.75K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.693
+    MEG: 0.307
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 383.75
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-386.20K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.654
+    MEG: 0.346
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 386.20
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-389.60K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.570
+    MEG: 0.430
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 389.60
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-395.15K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.494
+    MEG: 0.506
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 395.15
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-398.72K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.455
+    MEG: 0.545
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 398.72
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-402.25K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.413
+    MEG: 0.587
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 402.25
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-meg-410.95K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - MEG
+  z:
+    H2O: 0.317
+    MEG: 0.683
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S1, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 410.95
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-373.62K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.984
+    TEG: 0.016
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 373.62
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-373.90K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.969
+    TEG: 0.031
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 373.90
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-374.47K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.965
+    TEG: 0.035
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 374.47
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-375.25K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.940
+    TEG: 0.060
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 375.25
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-375.70K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.924
+    TEG: 0.076
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 375.7
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-375.88K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.921
+    TEG: 0.079
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 375.88
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-377.91K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.871
+    TEG: 0.129
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 377.91
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-378.31K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.849
+    TEG: 0.151
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 378.31
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-379.18K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.826
+    TEG: 0.174
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 379.18
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-381.73K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.777
+    TEG: 0.223
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 381.73
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-383.25K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.746
+    TEG: 0.254
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 383.25
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-386.87K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.692
+    TEG: 0.308
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 386.87
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-390.44K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.621
+    TEG: 0.379
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 390.44
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-392.66K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.600
+    TEG: 0.400
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 392.66
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-396.85K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.550
+    TEG: 0.450
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 396.85
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-401.01K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.491
+    TEG: 0.509
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 401.01
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-411.58K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.405
+    TEG: 0.595
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 411.58
+  tolerance:
+    bubble_T: 0.005
+- id: t5-cosmo-h2o-teg-420.64K-0.1MPa
+  package: pending:cosmo_sac_ig
+  components:
+  - H2O
+  - TEG
+  z:
+    H2O: 0.354
+    TEG: 0.646
+  P: 100000.0
+  source: "literature:Chouireb et al. (2018) J. Chem. Eng. Data 63(7), 2394 ff., DOI 10.1021/acs.jced.7b00945, SI Table S3, 0.1 MPa column; retrieved 2026-11-04"
+  expected:
+    bubble_T: 420.64
+  tolerance:
+    bubble_T: 0.005
