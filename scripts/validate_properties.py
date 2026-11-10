@@ -8,6 +8,10 @@ against the committed expected values with the tolerances fixed by the spec, wri
 pass}`` plus environment metadata) and prints a per-package table: n cases, pass rate, worst
 5 misses with their sources.
 
+``liquid_comp`` reads the water-rich liquid of the PT flash unless the case names
+``liquid_rich_in: <component id>``; it then reads the liquid richest in that component (the
+organic-rich side of an LLE tie-line). See the header of ``data/validation/cases.yaml``.
+
 CoolProp-derived pure-fluid expected values are regenerated, not hand-typed::
 
     uv run python scripts/validate_properties.py --regen-coolprop
@@ -141,6 +145,10 @@ class Case:
     # validates several catalogue rows without copying the point. Empty for the
     # single-name / ``all`` forms; ``package`` then holds the name (or "all").
     packages: tuple[str, ...] = ()
+    # `liquid_comp` reads the liquid phase richest in this component id (LLE tie-lines:
+    # name the organic solute to compare the organic-rich liquid). Default H2O: the
+    # water-rich liquid, as before.
+    liquid_rich_in: str = "H2O"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -292,6 +300,7 @@ def _load_cases() -> list[Case]:
                     coolprop_fluid=str(entry.get("coolprop_fluid", "")),
                     phase=str(entry.get("phase", "")),
                     section=section,
+                    liquid_rich_in=str(entry.get("liquid_rich_in", "H2O")),
                 )
                 cases.append(case)
     return cases
@@ -319,18 +328,23 @@ def _row(case: Case, pkg: str, prop: str, expected: float, got: float | None) ->
     return Row(case.id, pkg, prop, expected, got, err, err <= tol)
 
 
-def _water_rich_liquid(state: Any) -> dict[str, float] | None:
-    """Composition of the water-rich liquid phase of a flash, if one exists.
+def _liquid_rich_in(state: Any, cid: str = "H2O") -> dict[str, float] | None:
+    """Composition of the liquid phase of a flash richest in ``cid``, if a liquid exists.
 
-    Prefers the aqueous phase label; falls back to the non-vapour phase with the largest
-    H2O mole fraction (cubic packages label all liquids hc_liquid today).
+    The case field ``liquid_rich_in`` names ``cid`` (default H2O). For H2O the aqueous
+    phase label is preferred and the non-vapour phase with the largest H2O mole fraction
+    is the fallback (cubic packages label all liquids hc_liquid today). For any other
+    component the label is ignored (activity-coefficient packages may label both liquids of
+    a water/organic split aqueous): the non-vapour phase with the largest ``cid`` fraction
+    is read, i.e. the organic-rich liquid of an LLE tie-line when ``cid`` is the solute.
     """
     liquids = [p for p in state.phases if p.kind != PhaseKind.VAPOR]
     if not liquids:
         return None
-    aqueous = [p for p in liquids if p.kind == PhaseKind.AQUEOUS]
-    pool = aqueous or liquids
-    composition = max(pool, key=lambda p: p.composition.get("H2O", 0.0)).composition
+    pool = liquids
+    if cid == "H2O":
+        pool = [p for p in liquids if p.kind == PhaseKind.AQUEOUS] or liquids
+    composition = max(pool, key=lambda p: p.composition.get(cid, 0.0)).composition
     return {str(k): float(v) for k, v in composition.items()}
 
 
@@ -362,7 +376,7 @@ def evaluate_case(case: Case, pkg: str) -> list[Row]:
     if "liquid_comp" in exp:
         assert T is not None and P is not None, f"{case.id}: liquid_comp comparison needs T and P"
         state = surf.flash_pt(z, T, P, molar_flow=1.0)
-        liq = _water_rich_liquid(state)
+        liq = _liquid_rich_in(state, case.liquid_rich_in)
         for cid, want in exp["liquid_comp"].items():
             got = liq.get(cid) if liq else None
             rows.append(_row(case, pkg, "liquid_comp", float(want), float(got) if got is not None else None))

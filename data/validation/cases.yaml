@@ -15,6 +15,12 @@
 #   NRTL MeOH/H2O bubble 2 %, y 0.02 abs. Isobaric bubble-temperature tolerance 0.5 % relative
 #   (the isobaric analogue of the 3 % bubble-P tolerance; see docs/validation.md). Composition
 #   comparisons are absolute, 0.02. A case may override a tolerance per property via `tolerance`.
+#
+# `liquid_comp` (PT flash at the case's T, P) reads ONE liquid phase: by default the water-rich
+#   liquid (aqueous label preferred, else the liquid with the largest H2O fraction). An LLE
+#   tie-line case may add `liquid_rich_in: <component id>` to read instead the liquid richest
+#   in that component (e.g. the organic-rich liquid of a water/1-butanol split); bind one case
+#   per phase of the tie-line.
 meta:
   coolprop_version: 8.0.0
 pure_cases:

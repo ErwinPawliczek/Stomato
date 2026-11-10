@@ -83,6 +83,9 @@ variants:
     components:
       H2O: {H2O: 1}
       nC4: {CH3: 2, CH2: 2}
+      1-butanol: {CH3: 1, CH2: 3, OH: 1}
+      1-pentanol: {CH3: 1, CH2: 4, OH: 1}
+      ethyl acetate: {CH3: 1, CH2: 1, CH3COO: 1}
   unifac_lyngby:
     version: 4
     interaction: LUFIP
