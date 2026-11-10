@@ -1,0 +1,204 @@
+# Sulfinol-M type solvent (MDEA + sulfolane + water) validation cases, row amine_sulfinol_m.
+#
+# Source: MacGregor 1988 (Univ. of Alberta MSc thesis), Table 5.6 (p. 48): CO2 and H2S solubility
+# measured TOGETHER in the 2.0 M mixed solvent at 40 C. The row's constants (thesis Table 6.4)
+# were regressed on the single-gas Tables 5.3-5.5 only, so these mixed-gas points are held out.
+# Caveat recorded on the row: the 40 C H2S Henry constant was raised by hand by the author to fit
+# the high-loading single-gas H2S data (p. 66), so the H2S side at high loading carries that tuning.
+#
+# Conventions, fixed before any model value was compared:
+#   - The family K convention (cases-amine.yaml): P = 0.999 x the package bubble pressure of the
+#     case liquid, expected K_i = p_i,lit / (z_i P), so y_i P == p_i,eq isolates the equilibrium
+#     partial pressures. K band 5 % (policy).
+#   - Feed: Table 1.1 (p. 4) solvent, 0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per
+#     100 g solution; CO2 and H2S = loading x 0.1754 mol; normalised.
+#   - Selection: every Table 5.6 row whose loadings are both <= 1.5 mol/mol (the shared amine
+#     flash's loading window, _MAX_LOADING). Rows 19 (H2S 1.543) and 20 (H2S 1.769) are outside it.
+#   - Table 5.7 (100 C) is not bound: the 373.15 K isotherm refuses (no cited sulfolane
+#     permittivity at 373.15 K); its 24 rows are transcribed in the progress notes, ready to bind.
+#   - Table 6.5 (constants refitted on these very mixed data at 40 C) is not used by the row.
+pure_cases: []
+
+binary_cases:
+  - id: sulfinol-macgregor1988-t5.6-r01
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05466069359, 126-33-0: 0.07909283941, H2O: 0.8406652624, CO2: 0.01967784969, H2S: 0.005903354908}
+    T: 313.15
+    P: 66234.228
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 1: loading CO2 0.36 mol/mol MDEA, P_CO2 25.8 kPa, loading H2S 0.108 mol/mol MDEA, P_H2S 5.29 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 19.795186, H2S: 13.529268}
+  - id: sulfinol-macgregor1988-t5.6-r02
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05547948126, 126-33-0: 0.08027760743, H2O: 0.853257974, CO2: 0.004937673832, H2S: 0.006047263457}
+    T: 313.15
+    P: 16637.492
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 2: loading CO2 0.089 mol/mol MDEA, P_CO2 3.56 kPa, loading H2S 0.109 mol/mol MDEA, P_H2S 2.5 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 43.335094, H2S: 24.848104}
+  - id: sulfinol-macgregor1988-t5.6-r03
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05419853895, 126-33-0: 0.07842411166, H2O: 0.8335574611, CO2: 0.02205880535, H2S: 0.01176108295}
+    T: 313.15
+    P: 120265.87
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 3: loading CO2 0.407 mol/mol MDEA, P_CO2 43.8 kPa, loading H2S 0.217 mol/mol MDEA, P_H2S 23.8 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 16.510101, H2S: 16.826246}
+  - id: sulfinol-macgregor1988-t5.6-r04
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05513991738, 126-33-0: 0.07978626586, H2O: 0.8480355823, CO2: 0.003804654299, H2S: 0.01323358017}
+    T: 313.15
+    P: 25157.879
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 4: loading CO2 0.069 mol/mol MDEA, P_CO2 3.97 kPa, loading H2S 0.24 mol/mol MDEA, P_H2S 9.12 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 41.476422, H2S: 27.393244}
+  - id: sulfinol-macgregor1988-t5.6-r05
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.0531076418, 126-33-0: 0.07684560712, H2O: 0.8167797863, CO2: 0.03584765822, H2S: 0.01741930651}
+    T: 313.15
+    P: 552238.09
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 5: loading CO2 0.675 mol/mol MDEA, P_CO2 193.0 kPa, loading H2S 0.328 mol/mol MDEA, P_H2S 52.7 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 9.7492265, H2S: 5.4783957}
+  - id: sulfinol-macgregor1988-t5.6-r06
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05451765489, 126-33-0: 0.07888586552, H2O: 0.8384653697, CO2: 0.009104448367, H2S: 0.01902666156}
+    T: 313.15
+    P: 62172.687
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 6: loading CO2 0.167 mol/mol MDEA, P_CO2 12.5 kPa, loading H2S 0.349 mol/mol MDEA, P_H2S 17.4 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 22.082932, H2S: 14.709131}
+  - id: sulfinol-macgregor1988-t5.6-r07
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.0517392622, 126-33-0: 0.07486559149, H2O: 0.7957345138, CO2: 0.05220491556, H2S: 0.025455717}
+    T: 313.15
+    P: 2233095.0
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 7: loading CO2 1.009 mol/mol MDEA, P_CO2 1910.0 kPa, loading H2S 0.492 mol/mol MDEA, P_H2S 449.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 16.383805, H2S: 7.8986671}
+  - id: sulfinol-macgregor1988-t5.6-r08
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.0535283711, 126-33-0: 0.07745439331, H2O: 0.8232504783, CO2: 0.01905610011, H2S: 0.02671065718}
+    T: 313.15
+    P: 236945.84
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 8: loading CO2 0.356 mol/mol MDEA, P_CO2 58.1 kPa, loading H2S 0.499 mol/mol MDEA, P_H2S 56.4 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 12.867466, H2S: 8.9113898}
+  - id: sulfinol-macgregor1988-t5.6-r09
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05219020945, 126-33-0: 0.07551810239, H2O: 0.8026699488, CO2: 0.04076055358, H2S: 0.02886118583}
+    T: 313.15
+    P: 1293476.0
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 9: loading CO2 0.781 mol/mol MDEA, P_CO2 940.0 kPa, loading H2S 0.553 mol/mol MDEA, P_H2S 334.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 17.829099, H2S: 8.9469276}
+  - id: sulfinol-macgregor1988-t5.6-r10
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05250258322, 126-33-0: 0.07597010047, H2O: 0.8074741648, CO2: 0.03234159127, H2S: 0.03171156027}
+    T: 313.15
+    P: 837111.86
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 10: loading CO2 0.616 mol/mol MDEA, P_CO2 628.0 kPa, loading H2S 0.604 mol/mol MDEA, P_H2S 303.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 23.196089, H2S: 11.414096}
+  - id: sulfinol-macgregor1988-t5.6-r11
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05257158683, 126-33-0: 0.07606994719, H2O: 0.8085354197, CO2: 0.02823094213, H2S: 0.03459210413}
+    T: 313.15
+    P: 713174.42
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 11: loading CO2 0.537 mol/mol MDEA, P_CO2 438.0 kPa, loading H2S 0.658 mol/mol MDEA, P_H2S 272.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 21.754694, H2S: 11.025446}
+  - id: sulfinol-macgregor1988-t5.6-r12
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05277690468, 126-33-0: 0.07636703768, H2O: 0.8116931475, CO2: 0.02406626854, H2S: 0.03509664161}
+    T: 313.15
+    P: 544649.1
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 12: loading CO2 0.456 mol/mol MDEA, P_CO2 312.0 kPa, loading H2S 0.665 mol/mol MDEA, P_H2S 230.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 23.802855, H2S: 12.032212}
+  - id: sulfinol-macgregor1988-t5.6-r13
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05280198521, 126-33-0: 0.07640332866, H2O: 0.8120788786, CO2: 0.02207122982, H2S: 0.03664457774}
+    T: 313.15
+    P: 506749.24
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 13: loading CO2 0.418 mol/mol MDEA, P_CO2 277.0 kPa, loading H2S 0.694 mol/mol MDEA, P_H2S 238.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 24.766243, H2S: 12.816638}
+  - id: sulfinol-macgregor1988-t5.6-r14
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05294736296, 126-33-0: 0.0766136871, H2O: 0.8143147452, CO2: 0.01805505077, H2S: 0.03806915397}
+    T: 313.15
+    P: 404402.75
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 14: loading CO2 0.341 mol/mol MDEA, P_CO2 178.0 kPa, loading H2S 0.719 mol/mol MDEA, P_H2S 207.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 24.378512, H2S: 13.445688}
+  - id: sulfinol-macgregor1988-t5.6-r15
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05220383209, 126-33-0: 0.07553781406, H2O: 0.802879461, CO2: 0.01988966003, H2S: 0.04948923283}
+    T: 313.15
+    P: 738059.5
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 15: loading CO2 0.381 mol/mol MDEA, P_CO2 355.0 kPa, loading H2S 0.948 mol/mol MDEA, P_H2S 460.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 24.182969, H2S: 12.593769}
+  - id: sulfinol-macgregor1988-t5.6-r16
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05221473533, 126-33-0: 0.0755535908, H2O: 0.8030471495, CO2: 0.01174831545, H2S: 0.05743620886}
+    T: 313.15
+    P: 595066.85
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 16: loading CO2 0.225 mol/mol MDEA, P_CO2 301.0 kPa, loading H2S 1.1 mol/mol MDEA, P_H2S 564.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 43.055153, H2S: 16.501658}
+  - id: sulfinol-macgregor1988-t5.6-r17
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05228298389, 126-33-0: 0.07565234498, H2O: 0.8040967921, CO2: 0.007737881615, H2S: 0.06022999744}
+    T: 313.15
+    P: 513729.96
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 17: loading CO2 0.148 mol/mol MDEA, P_CO2 148.0 kPa, loading H2S 1.152 mol/mol MDEA, P_H2S 550.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 37.231003, H2S: 17.775219}
+  - id: sulfinol-macgregor1988-t5.6-r18
+    package: amine_sulfinol_m
+    components: [MDEA, 126-33-0, H2O, CO2, H2S]
+    z: {MDEA: 0.05183581228, 126-33-0: 0.07500529736, H2O: 0.7972194254, CO2: 0.0122332517, H2S: 0.06370621329}
+    T: 313.15
+    P: 754229.83
+    source: "literature:MacGregor, R. J., 'Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed solvent', MSc thesis, University of Alberta, 1988, https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download, Table 5.6 p. 48 (40 C, 2.0 M mixed solvent; row 18: loading CO2 0.236 mol/mol MDEA, P_CO2 359.0 kPa, loading H2S 1.229 mol/mol MDEA, P_H2S 770.0 kPa), solvent Table 1.1 p. 4 (0.1754 mol MDEA, 0.2538 mol sulfolane, 2.6976 mol water per 100 g), read from the page images, retrieved 2026-11-09"
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 38.908889, H2S: 16.025265}
+
+multicomponent_cases: []

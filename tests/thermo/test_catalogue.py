@@ -189,6 +189,7 @@ def test_rows_load_and_build() -> None:
     # coverage-gap rows: density, enthalpy, free-water and vapour pairings of existing families
     catalogue_gap_ids: list[str] = [
         "amine_mdea_pz",
+        "amine_sulfinol_m",
         "amine_ke_dga_amp",
         "glycol_pr",
         "depg_henry",
@@ -228,7 +229,7 @@ def test_rows_load_and_build() -> None:
         + mixing_ids
         + catalogue_gap_ids
     )
-    assert len(expected) == 163
+    assert len(expected) == 164
     assert sorted(rows) == expected
     assert registry.available("thermo") == sorted(rows)
     expected_types = {
@@ -429,3 +430,11 @@ def test_l2_not_applicable_is_a_declared_reason() -> None:
     assert fields["l2_not_applicable"].default == ""
     for row in catalogue.load_catalogue().values():
         assert row.l2_not_applicable == row.l2_not_applicable.strip()
+
+
+def test_row_exclusion_drops_the_family_l0_default() -> None:
+    """amine_sulfinol_m excludes round_trip (single isotherms): the electrolyte default must not run."""
+    row = catalogue.load_catalogue()["amine_sulfinol_m"]
+    assert "round_trip" in row.l0_excluded
+    assert "round_trip" not in row.l0
+    assert {"single_liquid_limit", "determinism"} <= set(row.l0)

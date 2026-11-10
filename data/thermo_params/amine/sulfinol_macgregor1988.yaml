@@ -1,0 +1,125 @@
+# MDEA + sulfolane + water (Sulfinol-M type) CO2/H2S chemistry (row amine_sulfinol_m).
+#
+# MacGregor, R. J., "Equilibrium solubility of hydrogen sulphide and carbon dioxide in a mixed
+# solvent", MSc thesis, University of Alberta, Department of Chemical Engineering, Spring 1988. ERA scan,
+# https://ualberta.scholaris.ca/bitstreams/e0ed1618-5ea3-4b93-9815-2329619e41bb/download,
+# retrieved 2026-11-09; read from the page images (no text layer; PDF page = printed page + 12 up
+# to p. 71; printed pp. 72-85 are absent from the scan). Licence deferred (validation brief).
+#
+# Modified Deshmukh-Mather model, sulfolane + water lumped as the solvent (pp. 52-53):
+#   ln gamma_i = -A z_i^2 sqrt(I) / (1 + sqrt(I)) + sum_k beta_ik m_k        (eq. 6.2, p. 57)
+#   f_i = gamma_i m_i H_i (molality per kg water + sulfolane; Poynting neglected, p. 56)
+# The constants below exist at 40 and 100 C only; the module never interpolates between them.
+
+# Table 1.1 (p. 4): the one solvent the constants were regressed for.
+solvent:
+  wt_percent: {MDEA: 20.9, sulfolane: 30.5, water: 48.6}
+  mol_per_100g: {MDEA: 0.1754, sulfolane: 0.2538, water: 2.6976}
+  mdea_molality_mol_kg: 2.217  # mol MDEA / 1000 g (water + sulfolane)
+
+# Table 6.4 (p. 66), "Mixed solvent equilibrium and Henry's constants from single acid gas data".
+# K on the molality scale; H in MPa kg/mol. The 40 C H(H2S) was raised by hand by the author to fit
+# the high-loading H2S data (p. 66: "The Henry's constant for H2S was subsequently increased to yield
+# better predictions at high loadings").
+#   k_mdea: MDEAH+ = MDEA + H+ (6.5); k_h2s: H2S = H+ + HS- (6.6);
+#   k_co2: CO2 + H2O = HCO3- + H+ (6.7); k_hco3: HCO3- = CO3-- + H+ (6.8).
+# Table 6.5 (p. 68) refits H(CO2) = 3.136 and K(CO2 diss.) = 3.059e-7 at 40 C on the MIXED acid gas
+# data (Tables 5.6/5.7); it is not used so that those tables stay held-out validation.
+isotherms:
+  313.15:
+    k_mdea: 1.387e-6
+    k_h2s: 5.354e-8
+    k_co2: 2.660e-7
+    k_hco3: 2.384e-11
+    h_co2_mpa_kg_mol: 3.689
+    h_h2s_mpa_kg_mol: 0.5035
+    # Pure sulfolane relative permittivity for eq. 6.3: Vahidi, M. & Moshtari, B., Thermochim. Acta
+    # (2013), doi:10.1016/j.tca.2012.10.004, NIST ThermoML file
+    # https://trc.nist.gov/ThermoML/10.1016/j.tca.2012.10.004.xml, dataset 2 (pure sulfolane,
+    # relative permittivity at zero frequency), T 313.15 K: 42.2; retrieved 2026-11-09.
+    eps_sulfolane: 42.2
+  373.15:
+    k_mdea: 1.520e-6
+    k_h2s: 9.275e-8
+    k_co2: 1.003e-7
+    k_hco3: 7.536e-11
+    h_co2_mpa_kg_mol: 4.686
+    h_h2s_mpa_kg_mol: 1.080
+    # No retrievable sulfolane permittivity at 373.15 K (searched 2026-11-09: the ThermoML set above
+    # ends at 328.15 K; IUPAC PAC 49 (1977) gives 30 C only and was 403; extrapolating would invent
+    # a constant). The 100 C isotherm therefore refuses until a cited value is added here.
+    eps_sulfolane: null
+
+# Table 6.2 (p. 59), Chakravarty (1985) column: the set the model uses for both gases (p. 61,
+# "the beta's suggested by Chakravarty (1985) for the CO2 system were used ... the Chakravarty
+# beta's for the H2S system were adopted as well"). Pairs not listed are zero (p. 59).
+beta:
+  - [H2S, MDEAH+, -0.0934]
+  - [HS-, MDEA, 0.0]
+  - [HS-, MDEAH+, -0.01156]
+  - [CO2, MDEAH+, -0.08868]
+  - [HCO3-, MDEA, -0.01379]
+  - [HCO3-, MDEAH+, -0.01406]
+
+# Eq. 6.3 (p. 58), fitted to Covington & Dickinson (1973) 25 C sulfolane-water data, excess taken
+# T-independent 25-100 C: eps_excess = c1 x_w + c2 x_w^2 + c3 x_w^3 (x on the water + sulfolane basis).
+dielectric_excess: [-4.341, -70.940, 74.683]
+
+# The single-gas data Table 6.4 was regressed on (40 C), read from the page images: regression
+# pins for the implementation (tests), never validation. [loading mol/mol MDEA, p kPa].
+# Table 5.3 (p. 36), CO2 in the 2.0 M mixed solvent at 40 C; the three points marked "two liquid
+# phases observed" (loadings 1.255, 1.381, 1.567) are omitted.
+fitted_co2_40C:
+- [0.048, 0.43]
+- [0.061, 0.94]
+- [0.102, 2.00]
+- [0.148, 3.47]
+- [0.181, 4.84]
+- [0.230, 7.19]
+- [0.231, 7.36]
+- [0.279, 9.92]
+- [0.307, 12.2]
+- [0.319, 14.9]
+- [0.435, 23.7]
+- [0.491, 38.3]
+- [0.492, 38.0]
+- [0.529, 42.0]
+- [0.573, 55.3]
+- [0.573, 55.4]
+- [0.678, 84.3]
+- [0.764, 138.]
+- [0.785, 122.]
+- [0.806, 136.]
+- [0.898, 367.]
+- [0.922, 566.]
+- [0.924, 356.]
+- [0.935, 446.]
+- [0.944, 474.]
+- [0.966, 446.]
+- [1.004, 694.]
+- [1.010, 850.]
+- [1.093, 1190.]
+- [1.167, 1870.]
+# Table 5.5 (p. 40), H2S at 40 C; loadings above the package's 1.5 window (1.697, 2.073) omitted.
+fitted_h2s_40C:
+- [0.098, 1.30]
+- [0.129, 2.50]
+- [0.190, 4.22]
+- [0.245, 7.39]
+- [0.251, 7.39]
+- [0.336, 11.5]
+- [0.412, 17.0]
+- [0.424, 18.2]
+- [0.480, 30.6]
+- [0.524, 30.6]
+- [0.581, 38.1]
+- [0.584, 30.6]
+- [0.673, 55.0]
+- [0.719, 68.9]
+- [0.827, 107.]
+- [0.917, 154.]
+- [1.042, 258.]
+- [1.131, 373.]
+- [1.135, 373.]
+- [1.232, 512.]
+- [1.360, 678.]

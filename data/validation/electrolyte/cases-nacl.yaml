@@ -27,7 +27,7 @@ meta: {coolprop_version: 8.0.0}
 
 pure_cases:
 - id: pure-H2O-293.15K-electrolyte
-  package: [pitzer_nacl_water, enrtl_nacl_water, ext_uniquac_nacl_water, enrtl_rk, enrtl_hoc, pitzer_hoc, enrtl_crystallisation, pitzer_debye_huckel, sour_water, amine_ke_dga_amp, amine_mdea_pz]
+  package: [pitzer_nacl_water, enrtl_nacl_water, ext_uniquac_nacl_water, enrtl_rk, enrtl_hoc, pitzer_hoc, enrtl_crystallisation, pitzer_debye_huckel, sour_water, amine_ke_dga_amp, amine_mdea_pz, amine_sulfinol_m]
   components: [H2O]
   fluid: H2O
   coolprop_fluid: Water
@@ -36,7 +36,7 @@ pure_cases:
   T: 293.15
   expected: {bubble_P: 2339.32, dew_P: 2339.32}
 - id: pure-H2O-298.15K-electrolyte
-  package: [pitzer_nacl_water, enrtl_nacl_water, ext_uniquac_nacl_water, enrtl_rk, enrtl_hoc, pitzer_hoc, enrtl_crystallisation, pitzer_debye_huckel, sour_water, amine_ke_dga_amp, amine_mdea_pz]
+  package: [pitzer_nacl_water, enrtl_nacl_water, ext_uniquac_nacl_water, enrtl_rk, enrtl_hoc, pitzer_hoc, enrtl_crystallisation, pitzer_debye_huckel, sour_water, amine_ke_dga_amp, amine_mdea_pz, amine_sulfinol_m]
   components: [H2O]
   fluid: H2O
   coolprop_fluid: Water
@@ -45,7 +45,7 @@ pure_cases:
   T: 298.15
   expected: {bubble_P: 3169.93, dew_P: 3169.93}
 - id: pure-H2O-303.15K-electrolyte
-  package: [pitzer_nacl_water, enrtl_nacl_water, ext_uniquac_nacl_water, enrtl_rk, enrtl_hoc, pitzer_hoc, enrtl_crystallisation, pitzer_debye_huckel, sour_water, amine_ke_dga_amp, amine_mdea_pz]
+  package: [pitzer_nacl_water, enrtl_nacl_water, ext_uniquac_nacl_water, enrtl_rk, enrtl_hoc, pitzer_hoc, enrtl_crystallisation, pitzer_debye_huckel, sour_water, amine_ke_dga_amp, amine_mdea_pz, amine_sulfinol_m]
   components: [H2O]
   fluid: H2O
   coolprop_fluid: Water
@@ -54,7 +54,7 @@ pure_cases:
   T: 303.15
   expected: {bubble_P: 4246.97, dew_P: 4246.97}
 - id: pure-H2O-353.15K-electrolyte
-  package: [sour_water, amine_ke_dga_amp, amine_mdea_pz]
+  package: [sour_water, amine_ke_dga_amp, amine_mdea_pz, amine_sulfinol_m]
   components: [H2O]
   fluid: H2O
   coolprop_fluid: Water
