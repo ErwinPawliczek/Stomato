@@ -168,3 +168,13 @@ def test_liquid_comp_reads_the_liquid_richest_in_the_named_component() -> None:
     )
     assert _liquid_rich_in(labelled) == {"BuOH": 0.1, "H2O": 0.9}
     assert _liquid_rich_in(SimpleNamespace(phases=[phase(PhaseKind.VAPOR, H2O=1.0)]), "BuOH") is None
+
+
+def test_pack_cases_are_classified_by_content() -> None:
+    """Pack cases count as L1 (one component) or L2 (mixtures) like any other case (ruling 2026-11-09)."""
+    from scripts.validate_properties import _pack_section
+
+    for case in _load_cases():
+        assert case.section in ("pure_cases", "binary_cases", "multicomponent_cases"), case.id
+    assert _pack_section({"components": ["H2O"]}) == "pure_cases"
+    assert _pack_section({"components": ["EtOH", "H2O"]}) == "binary_cases"

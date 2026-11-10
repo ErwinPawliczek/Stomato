@@ -338,13 +338,23 @@ def _load_cases() -> list[Case]:
                 fluid=str(entry.get("fluid", "")),
                 coolprop_fluid=str(entry.get("coolprop_fluid", "")),
                 phase=str(entry.get("phase", "")),
-                section="packs" if is_pack else section,
+                section=_pack_section(entry) if is_pack else section,
                 skip_reason=skip,
                 skipped_packages=dropped if live else (),
                 liquid_rich_in=str(entry.get("liquid_rich_in", "H2O")),
             )
             cases.append(case)
     return cases
+
+
+def _pack_section(entry: dict[str, Any]) -> str:
+    """L1/L2 classification of a data-pack case by its content (validation-run ruling 2026-11-09).
+
+    Pack cases are cited measurements like any other case; where they live on disk does not
+    change what they evidence. One component -> ``pure_cases`` (L1); two or more ->
+    ``binary_cases`` (L2, the audit's mixture layer).
+    """
+    return "pure_cases" if len(entry.get("components") or entry.get("z") or {}) <= 1 else "binary_cases"
 
 
 def _skip_reason(pkg_name: str) -> str:
