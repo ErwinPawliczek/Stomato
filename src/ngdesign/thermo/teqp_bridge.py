@@ -87,6 +87,10 @@ _MULTIFLUID_DENSE_GRID = 200
 #: iteration cap and convergence bar on the largest mole-fraction step.
 _SAT_INNER_ITERS = 60
 _SAT_INNER_TOL = 1e-9
+#: Saturation-pressure continuation (``_sat_ksum_solve.march``): 0.5 % pressure steps,
+#: at most 100 of them (+65 % above the classification edge the bracket closed on).
+_SAT_MARCH_FACTOR = 1.005
+_SAT_MARCH_STEPS = 100
 #: Near-critical vapour test of the bubble/dew K-sum: a light root with
 #: _SAT_VAPOUR_Z_MIN < Z <= 0.5 still counts as vapour when the heavy root is more
 #: than _SAT_NEAR_CRIT_SPLIT times denser (see ``_sat_ksum_solve``).
@@ -842,8 +846,17 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
         params = [block[cid] | {"name": cid} for cid in cids]
         return _PCSaftAssocKernel(kind, params)
     if kind == "pc_saft_polar":
-        block = _require_params("pc_saft_polar", cids)
-        params = [block[cid] | {"name": cid} for cid in cids]
+        # Polar components carry the Gross & Vrabec (2006) set (m, sigma, eps/k, mu);
+        # non-polar partners take the row pc_saft's Gross & Sadowski (2001) Table 1
+        # set — the same PC-SAFT physical term, with mu = 0 the dipolar term drops
+        # out for them exactly (G&V 2006 eqs. 8-14 sum only over dipolar pairs).
+        polar = _saft_params().get("pc_saft_polar") or {}
+        nonpolar_ids = tuple(cid for cid in cids if cid not in polar)
+        nonpolar = _require_params("pc_saft", nonpolar_ids) if nonpolar_ids else {}
+        params = [
+            (polar[cid] if cid in polar else nonpolar[cid] | {"mu_debye": 0.0}) | {"name": cid}
+            for cid in cids
+        ]
         return _PCSaftPolarKernel(kind, params)
     if kind == "polymer_pc_saft":
         # Polymer PC-SAFT (spec T-10): same PCSAFT engine as "pc_saft", but the
@@ -1705,6 +1718,55 @@ class TeqpPackage(ThermoSurfaceMixin):
                     break
             return g, None, comp
 
+        def march(p: float, comp: np.ndarray) -> tuple[float, np.ndarray] | None:
+            """Pressure continuation from a bracket that closed on a classification edge.
+
+            Near a mixture critical point every pressure the bracket visits can carry a
+            single density root, so the walk never pairs a liquid with a vapour and the
+            single-root Z test splits a continuum instead of the saturation line
+            (measured: the multi-fluid CO2/C1 95/5 feed at 293.13 K closed at 6.286 MPa,
+            Z = 0.5 of its only root; the feed's liquid branch only starts at 6.47 MPa).
+            The incipient composition is carried in 0.5 % steps up from the edge: once a
+            converged pair exists, carrying its composition keeps the light-enriched
+            vapour root alive where a feed-composition vapour has none, and the converged
+            K-sum (g > 0 below, g < 0 above the line) is followed to its sign change,
+            then refined by Illinois regula falsi in ln p. The first paired state must
+            lie below the line (g > 0) and the pair must persist to the crossing;
+            anything else returns None (the caller raises).
+            """
+            prev: tuple[float, float, np.ndarray] | None = None
+            for _ in range(_SAT_MARCH_STEPS):
+                p *= _SAT_MARCH_FACTOR
+                g, _side, fresh = converge(p, comp)
+                if g is None:
+                    if prev is not None:
+                        return None  # the pair was lost before the K-sum changed sign
+                    continue
+                comp = fresh
+                if g > 0.0:
+                    prev = (p, g, comp)
+                    continue
+                if prev is None:
+                    return None  # first pair already above the line: no bracket
+                lo_p, g_l, lo_c = prev
+                hi_p, g_h = p, g
+                for _ in range(100):
+                    x = (g_l * math.log(hi_p) - g_h * math.log(lo_p)) / (g_l - g_h)
+                    pm = min(max(math.exp(x), lo_p * (1.0 + 1e-12)), hi_p * (1.0 - 1e-12))
+                    gm, _side, cm = converge(pm, lo_c)
+                    if gm is None:
+                        return None
+                    if abs(gm) < 1e-10 or hi_p - lo_p <= 1e-9 * hi_p:
+                        return pm, cm
+                    if gm > 0.0:
+                        lo_p, g_l, lo_c = pm, gm, cm
+                        g_h *= 0.5
+                    else:
+                        hi_p, g_h = pm, gm
+                        g_l *= 0.5
+                return None
+            return None
+
         lo: float | None = None
         hi: float | None = None
         g_lo: float | None = None
@@ -1730,6 +1792,9 @@ class TeqpPackage(ThermoSurfaceMixin):
             if lo is not None and hi is not None:
                 if hi - lo <= 1e-9 * hi:
                     if g is None:
+                        marched = march(p, comp)
+                        if marched is not None:
+                            return marched
                         raise SaturationError(
                             f"{'bubble' if bubble else 'dew'} point: the K-sum bracket closed "
                             f"on a phase-boundary discontinuity at T={T} K, P={p:.6g} Pa"
