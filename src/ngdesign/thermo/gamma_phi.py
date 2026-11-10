@@ -304,8 +304,8 @@ def _resolve_groups(
         raise ValueError(
             f"no UNIFAC group assignment for {cid} ({cas}) in {file_hint}; refusing to "
             "predict - the curated maps cover the component support of this variant's "
-            "catalogue rows (the Magnussen LLE set, for example, is not parameterized "
-            "for alcohol/glycol systems)"
+            "catalogue rows (the Magnussen LLE table, for example, has no methanol "
+            "subgroup)"
         )
     resolved: dict[int, float] = {}
     for name, count in counts.items():

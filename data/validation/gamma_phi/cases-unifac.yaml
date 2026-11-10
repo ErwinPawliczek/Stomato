@@ -25,9 +25,15 @@
 #   basis, so near-pure n-butane at 333.2 K bubbled 16 % above its Psat on the RK pairing).
 #
 # Binding: `package:` lists every UNIFAC row whose curated group map
-# (data/thermo_params/unifac/groups.yaml) covers both components. unifac_lle_* covers only
-# H2O and nC4, so it carries only the H2O and nC4 pure cases (no open H2O+nC4 LLE record was
-# found in the ThermoML archive; see the row notes).
+# (data/thermo_params/unifac/groups.yaml) covers both components. unifac_lle_* covers H2O, nC4,
+# 1-butanol, 1-pentanol and ethyl acetate: it carries the H2O and nC4 pure cases plus the
+# `unifac-lle-*-organic` LLE tie-line cases at the end of binary_cases (added 2026-11-09,
+# val-gphi2). Those are extracted by script from the ThermoML XML re-retrieved 2026-11-09 from
+# trc.nist.gov (byte-identical to the archive copy). Point rule, fixed before the run: per
+# series the lowest T, the T nearest the mid-point of the T range (ties to the lower) and the
+# highest T. Only the organic-rich liquid is compared (`liquid_rich_in: <organic>`): the
+# water-rich liquid holds < 0.02 of the organic in all three systems, so a 0.02-abs check
+# there would not discriminate. Feed z = mid-point of the measured tie-line.
 #
 # Bound only where the case runs. Excluded (row, case) combinations, measured 2026-11-04:
 #   unifac-etohnc4-333.2K-xnC40.2524: unifac_dortmund_hoc, unifac_dortmund_nothnagel, unifac_hoc, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_nist_hoc, unifac_nist_nothnagel, unifac_nothnagel, unifac_psrk_hoc, unifac_psrk_nothnagel -> virial P_max
@@ -612,3 +618,147 @@ binary_cases:
     bubble_P: 630000.0
     vapor_comp:
       nC4: 0.9513
+- id: unifac-lle-buh2o-101.3kPa-323.15K-organic
+  package: [unifac_lle_ig, unifac_lle_rk, unifac_lle_hoc, unifac_lle_nothnagel, unifac_lle_pr]
+  components:
+  - 1-butanol
+  - H2O
+  z:
+    1-butanol: 0.23705
+    H2O: 0.76295
+  T: 323.15
+  P: 101300.0
+  liquid_rich_in: 1-butanol
+  source: >-
+    literature:Lladosa, Monton, Burguet & Munoz (2008) "Phase Equilibrium for the Esterification Reaction of Acetic Acid + Butan-1-ol at 101.3 kPa", J. Chem. Eng. Data 53, 108-115, doi:10.1021/je700411p; binary butan-1-ol + water LLE tie-lines at 101.3 kPa; organic-rich liquid (Liquid mixture 1) at 323.15 K: ThermoML PureOrMixtureData set 14 (mole fraction of butan-1-ol = 0.4574); feed z = mid-point of the tie-line with the water-rich liquid (set 15, butan-1-ol = 0.0167); NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1021/je700411p.xml; retrieved 2026-11-04 (re-retrieved 2026-11-09)
+  expected:
+    liquid_comp:
+      1-butanol: 0.4574
+- id: unifac-lle-buh2o-101.3kPa-343.15K-organic
+  package: [unifac_lle_ig, unifac_lle_rk, unifac_lle_hoc, unifac_lle_nothnagel, unifac_lle_pr]
+  components:
+  - 1-butanol
+  - H2O
+  z:
+    1-butanol: 0.21805
+    H2O: 0.78195
+  T: 343.15
+  P: 101300.0
+  liquid_rich_in: 1-butanol
+  source: >-
+    literature:Lladosa, Monton, Burguet & Munoz (2008) "Phase Equilibrium for the Esterification Reaction of Acetic Acid + Butan-1-ol at 101.3 kPa", J. Chem. Eng. Data 53, 108-115, doi:10.1021/je700411p; binary butan-1-ol + water LLE tie-lines at 101.3 kPa; organic-rich liquid (Liquid mixture 1) at 343.15 K: ThermoML PureOrMixtureData set 14 (mole fraction of butan-1-ol = 0.4189); feed z = mid-point of the tie-line with the water-rich liquid (set 15, butan-1-ol = 0.0172); NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1021/je700411p.xml; retrieved 2026-11-04 (re-retrieved 2026-11-09)
+  expected:
+    liquid_comp:
+      1-butanol: 0.4189
+- id: unifac-lle-buh2o-101.3kPa-362.45K-organic
+  package: [unifac_lle_ig, unifac_lle_rk, unifac_lle_hoc, unifac_lle_nothnagel, unifac_lle_pr]
+  components:
+  - 1-butanol
+  - H2O
+  z:
+    1-butanol: 0.193
+    H2O: 0.807
+  T: 362.45
+  P: 101300.0
+  liquid_rich_in: 1-butanol
+  source: >-
+    literature:Lladosa, Monton, Burguet & Munoz (2008) "Phase Equilibrium for the Esterification Reaction of Acetic Acid + Butan-1-ol at 101.3 kPa", J. Chem. Eng. Data 53, 108-115, doi:10.1021/je700411p; binary butan-1-ol + water LLE tie-lines at 101.3 kPa; organic-rich liquid (Liquid mixture 1) at 362.45 K: ThermoML PureOrMixtureData set 14 (mole fraction of butan-1-ol = 0.3673); feed z = mid-point of the tie-line with the water-rich liquid (set 15, butan-1-ol = 0.0187); NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1021/je700411p.xml; retrieved 2026-11-04 (re-retrieved 2026-11-09)
+  expected:
+    liquid_comp:
+      1-butanol: 0.3673
+- id: unifac-lle-eah2o-101.3kPa-298.15K-organic
+  package: [unifac_lle_ig, unifac_lle_rk, unifac_lle_hoc, unifac_lle_nothnagel, unifac_lle_pr]
+  components:
+  - ethyl acetate
+  - H2O
+  z:
+    ethyl acetate: 0.4215
+    H2O: 0.5785
+  T: 298.15
+  P: 101300.0
+  liquid_rich_in: ethyl acetate
+  source: >-
+    literature:Grande & Marschoff (2005) "Liquid-Liquid Equilibria for Water + Benzonitrile + Ethyl Acetate or + Butyl Acetate", J. Chem. Eng. Data 50, 1324-1327, doi:10.1021/je050051h; binary water + ethyl acetate mutual solubilities at 101.3 kPa; organic-rich liquid (Liquid mixture 2) at 298.15 K: ThermoML PureOrMixtureData set 2 (mole fraction of water = 0.1733); feed z = mid-point of the tie-line with the water-rich liquid (set 1, water = 0.9837); NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1021/je050051h.xml; retrieved 2026-11-04 (re-retrieved 2026-11-09)
+  expected:
+    liquid_comp:
+      H2O: 0.1733
+- id: unifac-lle-eah2o-101.3kPa-313.15K-organic
+  package: [unifac_lle_ig, unifac_lle_rk, unifac_lle_hoc, unifac_lle_nothnagel, unifac_lle_pr]
+  components:
+  - ethyl acetate
+  - H2O
+  z:
+    ethyl acetate: 0.40165
+    H2O: 0.59835
+  T: 313.15
+  P: 101300.0
+  liquid_rich_in: ethyl acetate
+  source: >-
+    literature:Grande & Marschoff (2005) "Liquid-Liquid Equilibria for Water + Benzonitrile + Ethyl Acetate or + Butyl Acetate", J. Chem. Eng. Data 50, 1324-1327, doi:10.1021/je050051h; binary water + ethyl acetate mutual solubilities at 101.3 kPa; organic-rich liquid (Liquid mixture 2) at 313.15 K: ThermoML PureOrMixtureData set 2 (mole fraction of water = 0.2111); feed z = mid-point of the tie-line with the water-rich liquid (set 1, water = 0.9856); NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1021/je050051h.xml; retrieved 2026-11-04 (re-retrieved 2026-11-09)
+  expected:
+    liquid_comp:
+      H2O: 0.2111
+- id: unifac-lle-eah2o-101.3kPa-333.15K-organic
+  package: [unifac_lle_ig, unifac_lle_rk, unifac_lle_hoc, unifac_lle_nothnagel, unifac_lle_pr]
+  components:
+  - ethyl acetate
+  - H2O
+  z:
+    ethyl acetate: 0.38595
+    H2O: 0.61405
+  T: 333.15
+  P: 101300.0
+  liquid_rich_in: ethyl acetate
+  source: >-
+    literature:Grande & Marschoff (2005) "Liquid-Liquid Equilibria for Water + Benzonitrile + Ethyl Acetate or + Butyl Acetate", J. Chem. Eng. Data 50, 1324-1327, doi:10.1021/je050051h; binary water + ethyl acetate mutual solubilities at 101.3 kPa; organic-rich liquid (Liquid mixture 2) at 333.15 K: ThermoML PureOrMixtureData set 2 (mole fraction of water = 0.2414); feed z = mid-point of the tie-line with the water-rich liquid (set 1, water = 0.9867); NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1021/je050051h.xml; retrieved 2026-11-04 (re-retrieved 2026-11-09)
+  expected:
+    liquid_comp:
+      H2O: 0.2414
+- id: unifac-lle-peh2o-101.33kPa-293.15K-organic
+  package: [unifac_lle_ig, unifac_lle_rk, unifac_lle_hoc, unifac_lle_nothnagel, unifac_lle_pr]
+  components:
+  - 1-pentanol
+  - H2O
+  z:
+    1-pentanol: 0.33055
+    H2O: 0.66945
+  T: 293.15
+  P: 101330.0
+  liquid_rich_in: 1-pentanol
+  source: >-
+    literature:Huang, Chen, Wang & Wang (2011) "Liquid-Liquid Equilibria of Water + Pentan-1-ol + 2,6,6-Trimethylbicyclo[3.1.1]hep-2-ene or 6,6-Dimethyl-2-methylenebicyclo[3.1.1]heptane at (293.15, 303.15, 313.15, and 323.15) K", J. Chem. Eng. Data 56, 1249-1254, doi:10.1021/je101119p; binary water + pentan-1-ol tie-lines at 101.33 kPa; organic-rich liquid (Liquid mixture 1) at 293.15 K: ThermoML PureOrMixtureData set 2 (mole fraction of pentan-1-ol = 0.6562); feed z = mid-point of the tie-line with the water-rich liquid (set 1, pentan-1-ol = 0.0049); NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1021/je101119p.xml; retrieved 2026-11-04 (re-retrieved 2026-11-09)
+  expected:
+    liquid_comp:
+      1-pentanol: 0.6562
+- id: unifac-lle-peh2o-101.33kPa-303.15K-organic
+  package: [unifac_lle_ig, unifac_lle_rk, unifac_lle_hoc, unifac_lle_nothnagel, unifac_lle_pr]
+  components:
+  - 1-pentanol
+  - H2O
+  z:
+    1-pentanol: 0.32655
+    H2O: 0.67345
+  T: 303.15
+  P: 101330.0
+  liquid_rich_in: 1-pentanol
+  source: >-
+    literature:Huang, Chen, Wang & Wang (2011) "Liquid-Liquid Equilibria of Water + Pentan-1-ol + 2,6,6-Trimethylbicyclo[3.1.1]hep-2-ene or 6,6-Dimethyl-2-methylenebicyclo[3.1.1]heptane at (293.15, 303.15, 313.15, and 323.15) K", J. Chem. Eng. Data 56, 1249-1254, doi:10.1021/je101119p; binary water + pentan-1-ol tie-lines at 101.33 kPa; organic-rich liquid (Liquid mixture 1) at 303.15 K: ThermoML PureOrMixtureData set 2 (mole fraction of pentan-1-ol = 0.6484); feed z = mid-point of the tie-line with the water-rich liquid (set 1, pentan-1-ol = 0.0047); NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1021/je101119p.xml; retrieved 2026-11-04 (re-retrieved 2026-11-09)
+  expected:
+    liquid_comp:
+      1-pentanol: 0.6484
+- id: unifac-lle-peh2o-101.33kPa-323.15K-organic
+  package: [unifac_lle_ig, unifac_lle_rk, unifac_lle_hoc, unifac_lle_nothnagel, unifac_lle_pr]
+  components:
+  - 1-pentanol
+  - H2O
+  z:
+    1-pentanol: 0.31435
+    H2O: 0.68565
+  T: 323.15
+  P: 101330.0
+  liquid_rich_in: 1-pentanol
+  source: >-
+    literature:Huang, Chen, Wang & Wang (2011) "Liquid-Liquid Equilibria of Water + Pentan-1-ol + 2,6,6-Trimethylbicyclo[3.1.1]hep-2-ene or 6,6-Dimethyl-2-methylenebicyclo[3.1.1]heptane at (293.15, 303.15, 313.15, and 323.15) K", J. Chem. Eng. Data 56, 1249-1254, doi:10.1021/je101119p; binary water + pentan-1-ol tie-lines at 101.33 kPa; organic-rich liquid (Liquid mixture 1) at 323.15 K: ThermoML PureOrMixtureData set 2 (mole fraction of pentan-1-ol = 0.6245); feed z = mid-point of the tie-line with the water-rich liquid (set 1, pentan-1-ol = 0.0042); NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1021/je101119p.xml; retrieved 2026-11-04 (re-retrieved 2026-11-09)
+  expected:
+    liquid_comp:
+      1-pentanol: 0.6245

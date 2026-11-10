@@ -20,10 +20,20 @@
 # effect on the Kamihama (2012) MEG/H2O 101.3 kPa isobar, x_H2O 0.25, ideal-gas
 # vapour: bubble_T error 2.1-6.2 % -> 0.0-0.3 %.
 #
-# The Magnussen LLE variant is parameterized for water/organic liquid-liquid
-# systems only: alcohol and glycol components have NO assignment and the
-# adapter refuses them by name (the corresponding unifac-lle-* cases stay
-# dormant in data/validation/gamma_phi/cases.yaml).
+# The Magnussen LLE variant (Magnussen, Rasmussen & Fredenslund, Ind. Eng. Chem.
+# Process Des. Dev. 20 (1981) 331-339, machine-readable
+# copy: thermo 0.6.1 LLEUFSG/LLEUFIP, read 2026-11-09) covers water/organic
+# liquid-liquid systems. Its subgroup table has no methanol (CH3OH) subgroup
+# (the short alcohols it names are the whole-molecule P1 1-propanol / P2
+# 2-propanol groups), so MeOH keeps NO assignment and the adapter refuses it by
+# name; EtOH and MEG (the table has a DOH group, main group 25) are left
+# unassigned because no liquid-liquid case needs them (both are fully miscible
+# with water). Added
+# 2026-11-09 (val-gphi2) for LLE validation, from the table's standard
+# decomposition: 1-butanol CH3 + 3 CH2 + OH (subgroups 1, 2, 14; main groups
+# CH2, OH), 1-pentanol CH3 + 4 CH2 + OH, ethyl acetate CH3 + CH2 + CH3COO
+# (subgroup 25, main group 14 CCOO); every main-group pair used (1-5, 1-8,
+# 5-8, 1-14, 14-8) has an LLEUFIP entry.
 model: unifac
 variants:
   unifac:

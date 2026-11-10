@@ -4022,16 +4022,33 @@
     - V
     - L
     - VLL
-  # L2 gap (2026-11-04, val-gphi-unifac): the curated LLE group map covers H2O and nC4 only
-  # (data/thermo_params/unifac/groups.yaml) and no open H2O + n-butane LLE/VLE record exists in
-  # the NIST ThermoML archive (v2020-09-30); the harness liquid_comp check reads only the
-  # water-rich liquid, whose n-butane fraction (~1e-4) is not discriminating at 0.02 abs.
-  # Only the two L1 pure cases (H2O, nC4) are bound; the row stays provisional.
+  # L2 (2026-11-09, val-gphi2): the Magnussen LLE group map now also covers 1-butanol,
+  # 1-pentanol and ethyl acetate; 9 organic-rich-liquid tie-line points (ThermoML: Lladosa 2008,
+  # Grande & Marschoff 2005, Huang 2011; harness `liquid_rich_in`) are bound. 1 passes, 8 miss
+  # (assessed below): the L2 majority rule fails, so the row stays provisional.
   status: provisional
   validation:
   - unifac-pure-H2O-meohh2o-66.52kPa
   - unifac-pure-nC4-meohnc4-364.5K
   - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-lle-buh2o-101.3kPa-323.15K-organic
+  - unifac-lle-buh2o-101.3kPa-343.15K-organic
+  - unifac-lle-buh2o-101.3kPa-362.45K-organic
+  - unifac-lle-eah2o-101.3kPa-298.15K-organic
+  - unifac-lle-eah2o-101.3kPa-313.15K-organic
+  - unifac-lle-eah2o-101.3kPa-333.15K-organic
+  - unifac-lle-peh2o-101.33kPa-293.15K-organic
+  - unifac-lle-peh2o-101.33kPa-303.15K-organic
+  - unifac-lle-peh2o-101.33kPa-323.15K-organic
+  assessed:
+    unifac-lle-buh2o-101.3kPa-343.15K-organic: "liquid_comp x_1-butanol 0.4464 vs 0.4189 (abs 0.0275, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-buh2o-101.3kPa-362.45K-organic: "liquid_comp x_1-butanol 0.4376 vs 0.3673 (abs 0.0703, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-298.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1222 vs 0.1733 (abs 0.0511, band 0.02); water solubility in ethyl acetate under-predicted at every T - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-313.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1365 vs 0.2111 (abs 0.0746, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-333.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1558 vs 0.2414 (abs 0.0856, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-293.15K-organic: "liquid_comp x_1-pentanol 0.5790 vs 0.6562 (abs 0.0772, band 0.02); water in the 1-pentanol-rich liquid over-predicted - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-303.15K-organic: "liquid_comp x_1-pentanol 0.5778 vs 0.6484 (abs 0.0706, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-323.15K-organic: "liquid_comp x_1-pentanol 0.5751 vs 0.6245 (abs 0.0494, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
   references:
   - Magnussen, T., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Process Des. Dev. 20(2), 331-339, 1981
   # Vapour-phase Gibbs-Duhem loop omitted: with an ideal vapour, ln phi == 0 identically,
@@ -4119,16 +4136,33 @@
     - V
     - L
     - VLL
-  # L2 gap (2026-11-04, val-gphi-unifac): the curated LLE group map covers H2O and nC4 only
-  # (data/thermo_params/unifac/groups.yaml) and no open H2O + n-butane LLE/VLE record exists in
-  # the NIST ThermoML archive (v2020-09-30); the harness liquid_comp check reads only the
-  # water-rich liquid, whose n-butane fraction (~1e-4) is not discriminating at 0.02 abs.
-  # Only the two L1 pure cases (H2O, nC4) are bound; the row stays provisional.
+  # L2 (2026-11-09, val-gphi2): the Magnussen LLE group map now also covers 1-butanol,
+  # 1-pentanol and ethyl acetate; 9 organic-rich-liquid tie-line points (ThermoML: Lladosa 2008,
+  # Grande & Marschoff 2005, Huang 2011; harness `liquid_rich_in`) are bound. 1 passes, 8 miss
+  # (assessed below): the L2 majority rule fails, so the row stays provisional.
   status: provisional
   validation:
   - unifac-pure-H2O-meohh2o-66.52kPa
   - unifac-pure-nC4-meohnc4-364.5K
   - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-lle-buh2o-101.3kPa-323.15K-organic
+  - unifac-lle-buh2o-101.3kPa-343.15K-organic
+  - unifac-lle-buh2o-101.3kPa-362.45K-organic
+  - unifac-lle-eah2o-101.3kPa-298.15K-organic
+  - unifac-lle-eah2o-101.3kPa-313.15K-organic
+  - unifac-lle-eah2o-101.3kPa-333.15K-organic
+  - unifac-lle-peh2o-101.33kPa-293.15K-organic
+  - unifac-lle-peh2o-101.33kPa-303.15K-organic
+  - unifac-lle-peh2o-101.33kPa-323.15K-organic
+  assessed:
+    unifac-lle-buh2o-101.3kPa-343.15K-organic: "liquid_comp x_1-butanol 0.4464 vs 0.4189 (abs 0.0275, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-buh2o-101.3kPa-362.45K-organic: "liquid_comp x_1-butanol 0.4376 vs 0.3673 (abs 0.0703, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-298.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1222 vs 0.1733 (abs 0.0511, band 0.02); water solubility in ethyl acetate under-predicted at every T - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-313.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1365 vs 0.2111 (abs 0.0746, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-333.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1558 vs 0.2414 (abs 0.0856, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-293.15K-organic: "liquid_comp x_1-pentanol 0.5790 vs 0.6562 (abs 0.0772, band 0.02); water in the 1-pentanol-rich liquid over-predicted - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-303.15K-organic: "liquid_comp x_1-pentanol 0.5778 vs 0.6484 (abs 0.0706, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-323.15K-organic: "liquid_comp x_1-pentanol 0.5751 vs 0.6245 (abs 0.0494, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
   references:
   - Magnussen, T., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Process Des. Dev. 20(2), 331-339, 1981
   l0:
@@ -4223,16 +4257,33 @@
     - V
     - L
     - VLL
-  # L2 gap (2026-11-04, val-gphi-unifac): the curated LLE group map covers H2O and nC4 only
-  # (data/thermo_params/unifac/groups.yaml) and no open H2O + n-butane LLE/VLE record exists in
-  # the NIST ThermoML archive (v2020-09-30); the harness liquid_comp check reads only the
-  # water-rich liquid, whose n-butane fraction (~1e-4) is not discriminating at 0.02 abs.
-  # Only the two L1 pure cases (H2O, nC4) are bound; the row stays provisional.
+  # L2 (2026-11-09, val-gphi2): the Magnussen LLE group map now also covers 1-butanol,
+  # 1-pentanol and ethyl acetate; 9 organic-rich-liquid tie-line points (ThermoML: Lladosa 2008,
+  # Grande & Marschoff 2005, Huang 2011; harness `liquid_rich_in`) are bound. 1 passes, 8 miss
+  # (assessed below): the L2 majority rule fails, so the row stays provisional.
   status: provisional
   validation:
   - unifac-pure-H2O-meohh2o-66.52kPa
   - unifac-pure-nC4-meohnc4-364.5K
   - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-lle-buh2o-101.3kPa-323.15K-organic
+  - unifac-lle-buh2o-101.3kPa-343.15K-organic
+  - unifac-lle-buh2o-101.3kPa-362.45K-organic
+  - unifac-lle-eah2o-101.3kPa-298.15K-organic
+  - unifac-lle-eah2o-101.3kPa-313.15K-organic
+  - unifac-lle-eah2o-101.3kPa-333.15K-organic
+  - unifac-lle-peh2o-101.33kPa-293.15K-organic
+  - unifac-lle-peh2o-101.33kPa-303.15K-organic
+  - unifac-lle-peh2o-101.33kPa-323.15K-organic
+  assessed:
+    unifac-lle-buh2o-101.3kPa-343.15K-organic: "liquid_comp x_1-butanol 0.4464 vs 0.4189 (abs 0.0275, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-buh2o-101.3kPa-362.45K-organic: "liquid_comp x_1-butanol 0.4376 vs 0.3673 (abs 0.0703, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-298.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1222 vs 0.1733 (abs 0.0511, band 0.02); water solubility in ethyl acetate under-predicted at every T - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-313.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1365 vs 0.2111 (abs 0.0746, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-333.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1558 vs 0.2414 (abs 0.0856, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-293.15K-organic: "liquid_comp x_1-pentanol 0.5790 vs 0.6562 (abs 0.0772, band 0.02); water in the 1-pentanol-rich liquid over-predicted - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-303.15K-organic: "liquid_comp x_1-pentanol 0.5778 vs 0.6484 (abs 0.0706, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-323.15K-organic: "liquid_comp x_1-pentanol 0.5751 vs 0.6245 (abs 0.0494, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
   references:
   - Hayden, R. S. & O'Connell, J. P., Ind. Eng. Chem. Process Des. Dev. 14(3), 221-239, 1975
     (equations; open transcriptions Lehigh 1986 MSc thesis Appendix A, COBEQ-2014, Maiorella LBL
@@ -4324,16 +4375,33 @@
     - V
     - L
     - VLL
-  # L2 gap (2026-11-04, val-gphi-unifac): the curated LLE group map covers H2O and nC4 only
-  # (data/thermo_params/unifac/groups.yaml) and no open H2O + n-butane LLE/VLE record exists in
-  # the NIST ThermoML archive (v2020-09-30); the harness liquid_comp check reads only the
-  # water-rich liquid, whose n-butane fraction (~1e-4) is not discriminating at 0.02 abs.
-  # Only the two L1 pure cases (H2O, nC4) are bound; the row stays provisional.
+  # L2 (2026-11-09, val-gphi2): the Magnussen LLE group map now also covers 1-butanol,
+  # 1-pentanol and ethyl acetate; 9 organic-rich-liquid tie-line points (ThermoML: Lladosa 2008,
+  # Grande & Marschoff 2005, Huang 2011; harness `liquid_rich_in`) are bound. 1 passes, 8 miss
+  # (assessed below): the L2 majority rule fails, so the row stays provisional.
   status: provisional
   validation:
   - unifac-pure-H2O-meohh2o-66.52kPa
   - unifac-pure-nC4-meohnc4-364.5K
   - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-lle-buh2o-101.3kPa-323.15K-organic
+  - unifac-lle-buh2o-101.3kPa-343.15K-organic
+  - unifac-lle-buh2o-101.3kPa-362.45K-organic
+  - unifac-lle-eah2o-101.3kPa-298.15K-organic
+  - unifac-lle-eah2o-101.3kPa-313.15K-organic
+  - unifac-lle-eah2o-101.3kPa-333.15K-organic
+  - unifac-lle-peh2o-101.33kPa-293.15K-organic
+  - unifac-lle-peh2o-101.33kPa-303.15K-organic
+  - unifac-lle-peh2o-101.33kPa-323.15K-organic
+  assessed:
+    unifac-lle-buh2o-101.3kPa-343.15K-organic: "liquid_comp x_1-butanol 0.4464 vs 0.4189 (abs 0.0275, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-buh2o-101.3kPa-362.45K-organic: "liquid_comp x_1-butanol 0.4376 vs 0.3673 (abs 0.0703, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-298.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1222 vs 0.1733 (abs 0.0511, band 0.02); water solubility in ethyl acetate under-predicted at every T - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-313.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1365 vs 0.2111 (abs 0.0746, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-333.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1558 vs 0.2414 (abs 0.0856, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-293.15K-organic: "liquid_comp x_1-pentanol 0.5790 vs 0.6562 (abs 0.0772, band 0.02); water in the 1-pentanol-rich liquid over-predicted - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-303.15K-organic: "liquid_comp x_1-pentanol 0.5778 vs 0.6484 (abs 0.0706, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-323.15K-organic: "liquid_comp x_1-pentanol 0.5751 vs 0.6245 (abs 0.0494, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
   references:
   - Nothnagel, K.-H., Abrams, D. S. & Prausnitz, J. M., Ind. Eng. Chem. Process Des. Dev. 12(1),
     25-35, 1973 (b/K parameter table not available from open sources)
@@ -4421,16 +4489,33 @@
     - V
     - L
     - VLL
-  # L2 gap (2026-11-04, val-gphi-unifac): the curated LLE group map covers H2O and nC4 only
-  # (data/thermo_params/unifac/groups.yaml) and no open H2O + n-butane LLE/VLE record exists in
-  # the NIST ThermoML archive (v2020-09-30); the harness liquid_comp check reads only the
-  # water-rich liquid, whose n-butane fraction (~1e-4) is not discriminating at 0.02 abs.
-  # Only the two L1 pure cases (H2O, nC4) are bound; the row stays provisional.
+  # L2 (2026-11-09, val-gphi2): the Magnussen LLE group map now also covers 1-butanol,
+  # 1-pentanol and ethyl acetate; 9 organic-rich-liquid tie-line points (ThermoML: Lladosa 2008,
+  # Grande & Marschoff 2005, Huang 2011; harness `liquid_rich_in`) are bound. 1 passes, 8 miss
+  # (assessed below): the L2 majority rule fails, so the row stays provisional.
   status: provisional
   validation:
   - unifac-pure-H2O-meohh2o-66.52kPa
   - unifac-pure-nC4-meohnc4-364.5K
   - unifac-pure-nC4-etohnc4-333.2K
+  - unifac-lle-buh2o-101.3kPa-323.15K-organic
+  - unifac-lle-buh2o-101.3kPa-343.15K-organic
+  - unifac-lle-buh2o-101.3kPa-362.45K-organic
+  - unifac-lle-eah2o-101.3kPa-298.15K-organic
+  - unifac-lle-eah2o-101.3kPa-313.15K-organic
+  - unifac-lle-eah2o-101.3kPa-333.15K-organic
+  - unifac-lle-peh2o-101.33kPa-293.15K-organic
+  - unifac-lle-peh2o-101.33kPa-303.15K-organic
+  - unifac-lle-peh2o-101.33kPa-323.15K-organic
+  assessed:
+    unifac-lle-buh2o-101.3kPa-343.15K-organic: "liquid_comp x_1-butanol 0.4464 vs 0.4189 (abs 0.0275, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-buh2o-101.3kPa-362.45K-organic: "liquid_comp x_1-butanol 0.4376 vs 0.3673 (abs 0.0703, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-298.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1222 vs 0.1733 (abs 0.0511, band 0.02); water solubility in ethyl acetate under-predicted at every T - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-313.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1365 vs 0.2111 (abs 0.0746, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-eah2o-101.3kPa-333.15K-organic: "liquid_comp x_H2O (organic liquid) 0.1558 vs 0.2414 (abs 0.0856, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-293.15K-organic: "liquid_comp x_1-pentanol 0.5790 vs 0.6562 (abs 0.0772, band 0.02); water in the 1-pentanol-rich liquid over-predicted - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-303.15K-organic: "liquid_comp x_1-pentanol 0.5778 vs 0.6484 (abs 0.0706, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
+    unifac-lle-peh2o-101.33kPa-323.15K-organic: "liquid_comp x_1-pentanol 0.5751 vs 0.6245 (abs 0.0494, band 0.02) - model limitation, not a bug: the Magnussen (1981) LLE table is a temperature-independent group-contribution fit (organic-liquid errors 0.05-0.09 already at 293-298 K for ethyl acetate and 1-pentanol, i.e. table accuracy for these systems), and the predicted organic-phase composition barely moves with T (1-butanol 0.455 -> 0.438 over 323-362 K vs measured 0.457 -> 0.367); the same predictions on all five vapour pairings (the vapour does not enter a PT LLE split); 1-butanol at 323.15 K passes (0.4554 vs 0.4574) (measured 2026-11-09)"
   references:
   - Magnussen, T., Rasmussen, P. & Fredenslund, A., Ind. Eng. Chem. Process Des. Dev. 20(2), 331-339, 1981
   l0:

@@ -140,3 +140,31 @@ def test_results_json_row_schema_when_present() -> None:
         assert set(row) == {"case", "package", "property", "expected", "got", "rel_err", "pass"}, (
             f"results.json row schema drifted: {sorted(row)}"
         )
+
+
+def test_liquid_comp_reads_the_liquid_richest_in_the_named_component() -> None:
+    """`liquid_rich_in` picks the organic-rich liquid of an LLE split; the default stays water-rich."""
+    from types import SimpleNamespace
+
+    from ngdesign.contracts.stream import PhaseKind
+    from scripts.validate_properties import _liquid_rich_in
+
+    def phase(kind: PhaseKind, **x: float) -> SimpleNamespace:
+        return SimpleNamespace(kind=kind, composition=x)
+
+    # Activity-coefficient packages may label both liquids of a water/organic split aqueous.
+    state = SimpleNamespace(
+        phases=[
+            phase(PhaseKind.VAPOR, BuOH=0.9, H2O=0.1),
+            phase(PhaseKind.AQUEOUS, BuOH=0.02, H2O=0.98),
+            phase(PhaseKind.AQUEOUS, BuOH=0.45, H2O=0.55),
+        ]
+    )
+    assert _liquid_rich_in(state) == {"BuOH": 0.02, "H2O": 0.98}
+    assert _liquid_rich_in(state, "BuOH") == {"BuOH": 0.45, "H2O": 0.55}
+    # The vapour is never read, and H2O keeps preferring the aqueous label.
+    labelled = SimpleNamespace(
+        phases=[phase(PhaseKind.HC_LIQUID, BuOH=0.0, H2O=0.99), phase(PhaseKind.AQUEOUS, BuOH=0.1, H2O=0.9)]
+    )
+    assert _liquid_rich_in(labelled) == {"BuOH": 0.1, "H2O": 0.9}
+    assert _liquid_rich_in(SimpleNamespace(phases=[phase(PhaseKind.VAPOR, H2O=1.0)]), "BuOH") is None
