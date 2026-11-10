@@ -186,3 +186,24 @@ def test_gas_beyond_loading_window_is_not_a_liquid(ke: AmineReactivePackage) -> 
         # Enthalpy rises with T at a rate bounded by a modest heat capacity plus
         # the condensing liquid's latent share: no 11 kJ/mol phase jump.
         assert 0.0 < (b.enthalpy - a.enthalpy) / (t_b - t_a) < 200.0
+
+
+def test_bubble_point_of_rounded_feed_converges() -> None:
+    """A feed whose fractions sum to 1 - 1e-7 (7-digit rounding) solves like its normalised twin.
+
+    Regression: Dash et al. 2011 (J. Chem. Thermodyn. 43, 1278, doi:10.1016/j.jct.2011.03.016)
+    AMP point at 298 K, 3.4 mol/dm3, loading 0.426, written as a 7-digit feed. The bubble scan
+    raised "amine loading fixed point did not converge" at P = 3696.08 Pa: the liquid-edge test
+    and the Rachford-Rice end disagree by sum(z) - 1 when z is not normalised, so the loading map
+    had no fixed point in that band (36/166 Dash points failed this way).
+    """
+    pkg = registry.create("thermo", "amine_ke_dga_amp")
+    z = {"124-68-5": 0.0829493, "H2O": 0.881714, "CO2": 0.0353364}
+    assert sum(z.values()) != 1.0
+    total = sum(z.values())
+    z_norm = {cid: v / total for cid, v in z.items()}
+    p_raw = pkg.bubble_point(z, T=298.0).P
+    p_norm = pkg.bubble_point(z_norm, T=298.0).P
+    assert p_raw == pytest.approx(p_norm, rel=1e-9)
+    state = pkg.flash_pt(z, 298.0, p_raw, 1.0)
+    assert state.vapor_fraction == pytest.approx(0.0, abs=1e-6)

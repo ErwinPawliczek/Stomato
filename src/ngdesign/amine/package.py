@@ -118,6 +118,11 @@ _DERIV_D_T = 0.5
 _LOADING_TOL = 1e-12
 _LOADING_MAX_ITER = 50
 
+#: Feed mole-fraction sums farther than this from 1 are normalised before the
+#: phase split (_equilibrium_internal).  Equal to the loading tolerance: a
+#: narrower edge band than that cannot be resolved by the walk anyway.
+_Z_SUM_TOL = _LOADING_TOL
+
 #: Relative tolerance on the saturation unknown (also the brent_root xtol base
 #: for the interior TVF/PVF root).
 _SATURATION_REL_TOL = 1e-8
@@ -536,6 +541,21 @@ class AmineReactivePackage(TracedThermo, Thermo):
         amine_id = self._amine_id(self._support(z))
         if amine_id is None:  # pragma: no cover - callers gate on amine presence
             raise ValueError("the reactive flash requires an amine in the feed")
+        # The split is posed on mole fractions: the liquid edge sum_i z_i K_i <= 1
+        # and the Rachford-Rice end rr(0) = sum_i z_i K_i - sum_i z_i agree only
+        # when sum_i z_i == 1, and the iterates x, y are normalised.  A feed off
+        # by rounding (measured: a 7-digit z summing to 1 - 1e-7, Dash 2011 AMP
+        # 298 K / 3.4 M / loading 0.426) opens a band of that width at the bubble
+        # edge where the walk reads "liquid" at the normalised iterate while
+        # _edge_holds reads two-phase at z: the loading map has no fixed point
+        # there and every bubble scan landing in it raised "did not converge"
+        # (36/166 Dash points).  A sum within _Z_SUM_TOL of 1 is left as given:
+        # the band is then narrower than the walk resolves, and re-dividing a
+        # round-off sum only reshuffles last bits (measured: it moved the
+        # amine_enrtl H_T finite-difference walk of test_amine_k_smoothness).
+        z_sum = sum(z.values())
+        if abs(z_sum - 1.0) > _Z_SUM_TOL:
+            z = {cid: v / z_sum for cid, v in z.items()}
         # Seed the liquid from the SOLVENT basis: a stage's mixed overall is
         # gas-dominated (the spec's solvent-lean case) and seeding x at z makes
         # the first K set a hydrocarbon-as-liquid fantasy whose fixed point the
