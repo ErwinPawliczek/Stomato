@@ -1,6 +1,6 @@
 # Kent-Eisenberg speciation sets beyond MDEA/MEA/DEA (row amine_ke_dga_amp).
-# Keyed by CAS, the components' ids in the open registry. CO2 only: no open H2S data
-# was found for either amine, so the row refuses H2S.
+# Keyed by CAS, the components' ids in the open registry. CO2 only: no open H2S constant
+# was found for any of these amines, so the row refuses H2S.
 #
 # Kam = exp(kam_a - kam_b / T), mol/L; Kc = exp(a + b / T), mol/L, for
 # AmineCOO- + H2O <=> Amine + HCO3-, the forms of ngdesign.amine.kent_eisenberg.
@@ -56,3 +56,23 @@ amines:
       - [303.0, 2.0, 90100.0, 0.966]
       - [323.0, 2.8, 4620.0, 0.43]
       - [323.0, 2.8, 91100.0, 0.841]
+  110-97-4:
+    name: DIPA
+    # Thermodynamic protonation constant, no fit: Hamborg & Versteeg, Energy Procedia 1
+    # (2009) 1213, doi:10.1016/j.egypro.2009.01.159, Table 2: DIPA pKa 8.84 at 298.15 K,
+    # dissociation enthalpy 39.2 kJ/mol (EMF, 293-353 K; Table 1 runs). kam_b = 39200/8.314;
+    # kam_a = -8.84 ln 10 + kam_b/298.15. Read 2026-11-09 (pure.rug.nl publisher PDF).
+    kam_a: -4.541
+    kam_b: 4714.9
+    # Blauwhoff, Kamphuis, van Swaaij & Westerterp, Chem. Eng. Process. 19 (1985) 1-25,
+    # doi:10.1016/0255-2701(85)80001-5, Table A (p. 4), from Blauwhoff's 1982 Twente thesis:
+    # R1R2NCOO- + H2O <=> R1R2NH + HCO3-, K = 1.01e4 exp(-3173.9/T). Units are not printed in
+    # Table A; taken as mol/L because the rate constants of the same table are on the
+    # l/mol s basis (MDEA k = 1.02e8 exp(-4808/T) = 10 at 298 K, against 4.8 l/mole sec
+    # in Blauwhoff, Versteeg & van Swaaij, Chem. Eng. Sci. 39 (1984) 207, p. 215), not on
+    # the paper's mol/m3 nomenclature (which would give 1e4 l/mol s). ln 1.01e4 = 9.2203.
+    # Read 2026-11-09 (ris.utwente.nl publisher PDF, page image of Table A checked).
+    carbamate: [9.2203, -3173.9]
+    citation: >-
+      No VLE fit: both constants are literature values. Validation data in
+      data/validation/electrolyte/cases-amine.yaml (Dell'Era et al. 2010; Haghtalab et al. 2014).

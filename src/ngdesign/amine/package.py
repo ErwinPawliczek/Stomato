@@ -118,9 +118,19 @@ _DERIV_D_T = 0.5
 _LOADING_TOL = 1e-12
 _LOADING_MAX_ITER = 50
 
+#: Feed mole-fraction sums farther than this from 1 are normalised before the
+#: phase split (_equilibrium_internal).  Equal to the loading tolerance: a
+#: narrower edge band than that cannot be resolved by the walk anyway.
+_Z_SUM_TOL = _LOADING_TOL
+
 #: Relative tolerance on the saturation unknown (also the brent_root xtol base
 #: for the interior TVF/PVF root).
 _SATURATION_REL_TOL = 1e-8
+
+#: Rachford-Rice roots below this are Newton-polished (brent_root's absolute xtol
+#: of 1e-12 is no precision there), at most _RR_EDGE_NEWTON steps.
+_RR_EDGE_BETA = 1e-9
+_RR_EDGE_NEWTON = 8
 
 #: Interior vapour-fraction targets within this of 0/1 solve as bubble/dew.
 _VF_EDGE = 1e-9
@@ -536,6 +546,21 @@ class AmineReactivePackage(TracedThermo, Thermo):
         amine_id = self._amine_id(self._support(z))
         if amine_id is None:  # pragma: no cover - callers gate on amine presence
             raise ValueError("the reactive flash requires an amine in the feed")
+        # The split is posed on mole fractions: the liquid edge sum_i z_i K_i <= 1
+        # and the Rachford-Rice end rr(0) = sum_i z_i K_i - sum_i z_i agree only
+        # when sum_i z_i == 1, and the iterates x, y are normalised.  A feed off
+        # by rounding (measured: a 7-digit z summing to 1 - 1e-7, Dash 2011 AMP
+        # 298 K / 3.4 M / loading 0.426) opens a band of that width at the bubble
+        # edge where the walk reads "liquid" at the normalised iterate while
+        # _edge_holds reads two-phase at z: the loading map has no fixed point
+        # there and every bubble scan landing in it raised "did not converge"
+        # (36/166 Dash points).  A sum within _Z_SUM_TOL of 1 is left as given:
+        # the band is then narrower than the walk resolves, and re-dividing a
+        # round-off sum only reshuffles last bits (measured: it moved the
+        # amine_enrtl H_T finite-difference walk of test_amine_k_smoothness).
+        z_sum = sum(z.values())
+        if abs(z_sum - 1.0) > _Z_SUM_TOL:
+            z = {cid: v / z_sum for cid, v in z.items()}
         # Seed the liquid from the SOLVENT basis: a stage's mixed overall is
         # gas-dominated (the spec's solvent-lean case) and seeding x at z makes
         # the first K set a hydrocarbon-as-liquid fantasy whose fixed point the
@@ -669,6 +694,24 @@ class AmineReactivePackage(TracedThermo, Thermo):
         if rr(1.0) >= 0.0:
             return "vapor", 1.0, dict(z), dict(z)
         beta = brent_root(rr, 0.0, 1.0)
+        if beta < _RR_EDGE_BETA:
+            # brent_root's absolute xtol (1e-12) is the whole answer at the bubble
+            # edge: measured beta 5e-13 / 1.000000000001e-12 returned for true roots
+            # below 1e-12, and the RR liquid's loading read at that beta left the
+            # bracketed loading residual at 1.3-1.6e-11 against the 1e-11 gate
+            # (DIPA, 298-300 K).  Newton on rr (monotone decreasing, convex in
+            # beta near 0) from the Brent iterate restores relative precision;
+            # roots above the threshold are untouched.
+            for _ in range(_RR_EDGE_NEWTON):
+                d_rr = -sum(
+                    f * (k[cid] - 1.0) ** 2 / ((1.0 - beta) + beta * k[cid]) ** 2 for cid, f in z.items()
+                )
+                if d_rr == 0.0:
+                    break
+                step = rr(beta) / d_rr
+                beta = max(beta - step, 0.0)
+                if abs(step) <= 1e-15 * max(beta, 1e-300):
+                    break
         y_raw: dict[str, float] = {}
         x_new: dict[str, float] = {}
         for cid, f in z.items():
@@ -1321,11 +1364,11 @@ class AmineKEPackage(AmineReactivePackage):
 
 
 class AmineKEExtendedPackage(AmineKEPackage):
-    """Kent-Eisenberg on DGA (929-06-6) and AMP (124-68-5), CO2 only.
+    """Kent-Eisenberg on DGA (929-06-6), AMP (124-68-5) and DIPA (110-97-4), CO2 only.
 
     Same chemistry and flash as amine_ke with the sets of
     data/thermo_params/amine/ke_speciation.yaml. H2S refuses: no open data backs a
-    lumped H2S constant for either amine.
+    lumped H2S constant for any of them.
     """
 
     supported_amines = frozenset(extended_amines())
@@ -1333,7 +1376,7 @@ class AmineKEExtendedPackage(AmineKEPackage):
     def _reactive_domain(self, z: dict[str, float]) -> str | None:
         if z.get("H2S", 0.0) > 0.0 and any(cid in self.supported_amines for cid in z):
             raise AmineChemistryError(
-                "no open H2S constant for DGA or AMP: amine_ke_dga_amp carries CO2 only"
+                "no open H2S constant for DGA, AMP or DIPA: amine_ke_dga_amp carries CO2 only"
             )
         return super()._reactive_domain(z)
 

@@ -11,11 +11,21 @@
 #   - Selection rules, fixed before any model value was seen:
 #       AMP (amine_ke_dga_amp): Dash et al. 2011, every point at 318 K and 3.4 mol/dm3 with
 #       1 <= p_CO2 <= 300 kPa. Dash 2011 is independent of the row's fit (Kundu 2003).
-#       The 0.938-loading point (212.3 kPa) is not bound: the package bubble point raises
-#       "loading fixed point did not converge" there (recorded on the row).
+#       The 0.938-loading point (212.3 kPa) was first left unbound (the bubble point of a
+#       7-digit, off-sum feed raised "loading fixed point did not converge"); bound 2026-11-09
+#       after the off-sum feed fix in AmineReactivePackage._equilibrium_internal.
+#       DIPA (amine_ke_dga_amp, 2026-11-09): every CO2-loaded point of Dell'Era et al. 2010
+#       dataset 3 (total pressure, compared as bubble_P at the fixed 3 % policy band; the
+#       CO2-free rows are pure-solvent vapour pressures and are skipped) and every Haghtalab et
+#       al. 2014 dataset 2 point inside the row's T window 296-333 K (313.15 and 328.15 K, CO2
+#       partial pressure, K convention above). The 343.15 K points are outside the window.
+#       Rule fixed by the row's applicability, all points bound. Feeds: Dell'Era's mass
+#       fraction is on the CO2-free solvent; z = (solvent mole fractions) x (1 - x_CO2).
+#       The DIPA constants are literature values with no VLE fit, so all points are independent.
 #       MDEA (amine_enrtl): Xiao et al. 2018, every point at 313.15 K (MDEA 2.58 mol/kg water).
 #       The case P is the package bubble pressure (bisected on k_values, since amine_enrtl's
-#       bubble_point scan does not converge here) times 0.999. Leontiadis et al. 2019
+#       bubble_point scan did not converge on these off-sum feeds before 2026-11-09; it now
+#       agrees with the bisection to <= 3e-6) times 0.999. Leontiadis et al. 2019
 #       (j.fluid.2019.112254) is not used: its ThermoML "mole fraction of CO2" column runs
 #       0.26-1.08, i.e. it holds loadings, and the mislabel cannot be resolved without the paper.
 pure_cases: []
@@ -92,6 +102,16 @@ binary_cases:
     expected:
       K: {CO2: 18.010595}
 
+  - id: amp-dash2011-318K-3.4M-a0.938
+    package: amine_ke_dga_amp
+    components: [124-68-5, H2O, CO2]
+    z: {124-68-5: 0.07957, H2O: 0.8457933, CO2: 0.0746367}
+    T: 318.0
+    P: 176309.9
+    source: 'literature:Dash, S. K., Samanta, A. N. & Bandyopadhyay, S. S., ''(Vapour + liquid) equilibria (VLE) of CO2 in aqueous solutions of 2-amino-2-methyl-1-propanol: New data and modelling using eNRTL-equation'', J. Chem. Thermodyn. 43, 1278-1285, 2011, doi:10.1016/j.jct.2011.03.016, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2011.03.016.xml (dataset 1, parsed by script: T 318 K, AMP 3.4 mol/dm3, loading 0.938 mol CO2/mol AMP, p_CO2 212.3 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 16.133213}
   - id: mdea-xiao2018-313.15K-p8.1kPa
     package: amine_enrtl
     components: [MDEA, H2O, CO2]
@@ -142,5 +162,482 @@ binary_cases:
     tolerance: {K: 0.05}
     expected:
       K: {CO2: 56.620092}
+  - id: dipa-dellera2010-297.84K-w0.101-x0.0159
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0147307, H2O: 0.9693693, CO2: 0.0159}
+    T: 297.84
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 297.84 K, DIPA mass fraction 0.101 on the CO2-free solvent, CO2 mole fraction 0.0159, total pressure 207.1 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 207100.0
+  - id: dipa-dellera2010-297.96K-w0.101-x0.0119
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0147906, H2O: 0.9733094, CO2: 0.0119}
+    T: 297.96
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 297.96 K, DIPA mass fraction 0.101 on the CO2-free solvent, CO2 mole fraction 0.0119, total pressure 34.4 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 34400.0
+  - id: dipa-dellera2010-299.17K-w0.101-x0.0139
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0147607, H2O: 0.9713393, CO2: 0.0139}
+    T: 299.17
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 299.17 K, DIPA mass fraction 0.101 on the CO2-free solvent, CO2 mole fraction 0.0139, total pressure 78.4 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 78400.0
+  - id: dipa-dellera2010-299.2K-w0.101-x0.0153
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0147397, H2O: 0.9699603, CO2: 0.0153}
+    T: 299.2
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 299.2 K, DIPA mass fraction 0.101 on the CO2-free solvent, CO2 mole fraction 0.0153, total pressure 164.4 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 164400.0
+  - id: dipa-dellera2010-299.69K-w0.101-x0.0128
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0147771, H2O: 0.9724229, CO2: 0.0128}
+    T: 299.69
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 299.69 K, DIPA mass fraction 0.101 on the CO2-free solvent, CO2 mole fraction 0.0128, total pressure 50.2 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 50200.0
+  - id: dipa-dellera2010-299.82K-w0.101-x0.0107
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0148086, H2O: 0.9744914, CO2: 0.0107}
+    T: 299.82
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 299.82 K, DIPA mass fraction 0.101 on the CO2-free solvent, CO2 mole fraction 0.0107, total pressure 26.3 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 26300.0
+  - id: dipa-dellera2010-300.15K-w0.101-x0.0146
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0147502, H2O: 0.9706498, CO2: 0.0146}
+    T: 300.15
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 300.15 K, DIPA mass fraction 0.101 on the CO2-free solvent, CO2 mole fraction 0.0146, total pressure 117.1 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 117100.0
+  - id: dipa-dellera2010-300.41K-w0.101-x0.0113
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0147996, H2O: 0.9739004, CO2: 0.0113}
+    T: 300.41
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 300.41 K, DIPA mass fraction 0.101 on the CO2-free solvent, CO2 mole fraction 0.0113, total pressure 31 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 31000.0
+  - id: dipa-dellera2010-298.15K-w0.11-x0.019
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161304, H2O: 0.9648696, CO2: 0.019}
+    T: 298.15
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.15 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.019, total pressure 496 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 496000.0
+  - id: dipa-dellera2010-298.15K-w0.11-x0.0204
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161074, H2O: 0.9634926, CO2: 0.0204}
+    T: 298.15
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.15 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0204, total pressure 808 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 808000.0
+  - id: dipa-dellera2010-298.16K-w0.11-x0.021
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0160975, H2O: 0.9629025, CO2: 0.021}
+    T: 298.16
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.16 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.021, total pressure 955.6 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 955600.0
+  - id: dipa-dellera2010-298.17K-w0.11-x0.0181
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161452, H2O: 0.9657548, CO2: 0.0181}
+    T: 298.17
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.17 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0181, total pressure 341.8 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 341800.0
+  - id: dipa-dellera2010-298.19K-w0.11-x0.0202
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161106, H2O: 0.9636894, CO2: 0.0202}
+    T: 298.19
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.19 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0202, total pressure 768.1 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 768100.0
+  - id: dipa-dellera2010-298.21K-w0.11-x0.0194
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161238, H2O: 0.9644762, CO2: 0.0194}
+    T: 298.21
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.21 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0194, total pressure 600.1 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 600100.0
+  - id: dipa-dellera2010-298.22K-w0.11-x0.0189
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.016132, H2O: 0.964968, CO2: 0.0189}
+    T: 298.22
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.22 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0189, total pressure 479.8 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 479800.0
+  - id: dipa-dellera2010-298.22K-w0.11-x0.0208
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161008, H2O: 0.9630992, CO2: 0.0208}
+    T: 298.22
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.22 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0208, total pressure 911.5 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 911500.0
+  - id: dipa-dellera2010-298.24K-w0.11-x0.0168
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161666, H2O: 0.9670334, CO2: 0.0168}
+    T: 298.24
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.24 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0168, total pressure 183.1 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 183100.0
+  - id: dipa-dellera2010-298.24K-w0.11-x0.0198
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161172, H2O: 0.9640828, CO2: 0.0198}
+    T: 298.24
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.24 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0198, total pressure 680.7 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 680700.0
+  - id: dipa-dellera2010-298.27K-w0.11-x0.0177
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161518, H2O: 0.9661482, CO2: 0.0177}
+    T: 298.27
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.27 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0177, total pressure 288.5 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 288500.0
+  - id: dipa-dellera2010-298.3K-w0.11-x0.0184
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161402, H2O: 0.9654598, CO2: 0.0184}
+    T: 298.3
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.3 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0184, total pressure 390.4 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 390400.0
+  - id: dipa-dellera2010-298.32K-w0.11-x0.0196
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0161205, H2O: 0.9642795, CO2: 0.0196}
+    T: 298.32
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.32 K, DIPA mass fraction 0.11 on the CO2-free solvent, CO2 mole fraction 0.0196, total pressure 647.5 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 647500.0
+  - id: dipa-dellera2010-298.15K-w0.339-x0.0592
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0610296, H2O: 0.8797704, CO2: 0.0592}
+    T: 298.15
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.15 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0592, total pressure 788.8 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 788800.0
+  - id: dipa-dellera2010-298.18K-w0.339-x0.0599
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0609842, H2O: 0.8791158, CO2: 0.0599}
+    T: 298.18
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.18 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0599, total pressure 887.5 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 887500.0
+  - id: dipa-dellera2010-298.19K-w0.339-x0.0458
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0618989, H2O: 0.8923011, CO2: 0.0458}
+    T: 298.19
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.19 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0458, total pressure 124.7 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 124700.0
+  - id: dipa-dellera2010-298.21K-w0.339-x0.0385
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0623725, H2O: 0.8991275, CO2: 0.0385}
+    T: 298.21
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.21 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0385, total pressure 50.5 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 50500.0
+  - id: dipa-dellera2010-298.23K-w0.339-x0.0337
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0626838, H2O: 0.9036162, CO2: 0.0337}
+    T: 298.23
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.23 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0337, total pressure 30.8 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 30800.0
+  - id: dipa-dellera2010-298.24K-w0.339-x0.0423
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.062126, H2O: 0.895574, CO2: 0.0423}
+    T: 298.24
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.24 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0423, total pressure 83.6 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 83600.0
+  - id: dipa-dellera2010-298.24K-w0.339-x0.0547
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0613216, H2O: 0.8839784, CO2: 0.0547}
+    T: 298.24
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.24 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0547, total pressure 443.8 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 443800.0
+  - id: dipa-dellera2010-298.25K-w0.339-x0.0506
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0615875, H2O: 0.8878125, CO2: 0.0506}
+    T: 298.25
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.25 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0506, total pressure 252.6 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 252600.0
+  - id: dipa-dellera2010-298.25K-w0.339-x0.0562
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0612243, H2O: 0.8825757, CO2: 0.0562}
+    T: 298.25
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.25 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0562, total pressure 543.7 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 543700.0
+  - id: dipa-dellera2010-298.27K-w0.339-x0.0577
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.061127, H2O: 0.881173, CO2: 0.0577}
+    T: 298.27
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.27 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0577, total pressure 663.4 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 663400.0
+  - id: dipa-dellera2010-298.27K-w0.339-x0.0605
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0609453, H2O: 0.8785547, CO2: 0.0605}
+    T: 298.27
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.27 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0605, total pressure 944 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 944000.0
+  - id: dipa-dellera2010-298.29K-w0.339-x0.0529
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.0614383, H2O: 0.8856617, CO2: 0.0529}
+    T: 298.29
+    source: 'literature:Dell''Era, C., Uusi-Kyyny, P., Pokki, J.-P., Pakkanen, M. & Alopaeus, V., ''Solubility of carbon dioxide in aqueous solutions of diisopropanolamine and methyldiethanolamine'', Fluid Phase Equilib. 293, 101-109, 2010, doi:10.1016/j.fluid.2010.02.035, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2010.02.035.xml (dataset 3, parsed by script: T 298.29 K, DIPA mass fraction 0.339 on the CO2-free solvent, CO2 mole fraction 0.0529, total pressure 335.7 kPa), retrieved 2026-11-09'
+    tolerance: {bubble_P: 0.03}
+    expected:
+      bubble_P: 335700.0
+  - id: dipa-haghtalab2014-313.15K-p107kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09425, H2O: 0.85165, CO2: 0.0541}
+    T: 313.15
+    P: 100896.6
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 313.15 K, DIPA mole fraction 0.09425, CO2 mole fraction 0.0541, CO2 partial pressure 107 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 19.602433}
+  - id: dipa-haghtalab2014-313.15K-p310kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09317, H2O: 0.84189, CO2: 0.06494}
+    T: 313.15
+    P: 328593.9
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 313.15 K, DIPA mole fraction 0.09317, CO2 mole fraction 0.06494, CO2 partial pressure 310 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 14.527468}
+  - id: dipa-haghtalab2014-313.15K-p679kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09234, H2O: 0.83443, CO2: 0.07323}
+    T: 313.15
+    P: 695960.6
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 313.15 K, DIPA mole fraction 0.09234, CO2 mole fraction 0.07323, CO2 partial pressure 679 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 13.322818}
+  - id: dipa-haghtalab2014-313.15K-p1246kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09165, H2O: 0.82816, CO2: 0.08019}
+    T: 313.15
+    P: 1168615.0
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 313.15 K, DIPA mole fraction 0.09165, CO2 mole fraction 0.08019, CO2 partial pressure 1246 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 13.296164}
+  - id: dipa-haghtalab2014-313.15K-p1845kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09117, H2O: 0.82386, CO2: 0.08497}
+    T: 313.15
+    P: 1581511.1
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 313.15 K, DIPA mole fraction 0.09117, CO2 mole fraction 0.08497, CO2 partial pressure 1845 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 13.72962}
+  - id: dipa-haghtalab2014-313.15K-p2327kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09088, H2O: 0.82115, CO2: 0.08797}
+    T: 313.15
+    P: 1873903.6
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 313.15 K, DIPA mole fraction 0.09088, CO2 mole fraction 0.08797, CO2 partial pressure 2327 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 14.116094}
+  - id: dipa-haghtalab2014-313.15K-p3023kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09062, H2O: 0.81885, CO2: 0.09053}
+    T: 313.15
+    P: 2143434.5
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 313.15 K, DIPA mole fraction 0.09062, CO2 mole fraction 0.09053, CO2 partial pressure 3023 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 15.578851}
+  - id: dipa-haghtalab2014-313.15K-p3459kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09038, H2O: 0.81671, CO2: 0.09291}
+    T: 313.15
+    P: 2408578.1
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 313.15 K, DIPA mole fraction 0.09038, CO2 mole fraction 0.09291, CO2 partial pressure 3459 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 15.457077}
+  - id: dipa-haghtalab2014-313.15K-p4064kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09019, H2O: 0.81493, CO2: 0.09488}
+    T: 313.15
+    P: 2637230.0
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 313.15 K, DIPA mole fraction 0.09019, CO2 mole fraction 0.09488, CO2 partial pressure 4064 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 16.241682}
+  - id: dipa-haghtalab2014-328.15K-p208kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09437, H2O: 0.85269, CO2: 0.05294}
+    T: 328.15
+    P: 197769.9
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 328.15 K, DIPA mole fraction 0.09437, CO2 mole fraction 0.05294, CO2 partial pressure 208 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 19.866401}
+  - id: dipa-haghtalab2014-328.15K-p432kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09369, H2O: 0.84654, CO2: 0.05977}
+    T: 328.15
+    P: 382819.8
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 328.15 K, DIPA mole fraction 0.09369, CO2 mole fraction 0.05977, CO2 partial pressure 432 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 18.880179}
+  - id: dipa-haghtalab2014-328.15K-p721kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09317, H2O: 0.84189, CO2: 0.06494}
+    T: 328.15
+    P: 608516.7
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 328.15 K, DIPA mole fraction 0.09317, CO2 mole fraction 0.06494, CO2 partial pressure 721 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 18.245278}
+  - id: dipa-haghtalab2014-328.15K-p1020kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09276, H2O: 0.83822, CO2: 0.06902}
+    T: 328.15
+    P: 851660.6
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 328.15 K, DIPA mole fraction 0.09276, CO2 mole fraction 0.06902, CO2 partial pressure 1020 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 17.352364}
+  - id: dipa-haghtalab2014-328.15K-p1635kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09221, H2O: 0.83319, CO2: 0.0746}
+    T: 328.15
+    P: 1287697.6
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 328.15 K, DIPA mole fraction 0.09221, CO2 mole fraction 0.0746, CO2 partial pressure 1635 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 17.020215}
+  - id: dipa-haghtalab2014-328.15K-p2171kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09183, H2O: 0.82975, CO2: 0.07842}
+    T: 328.15
+    P: 1658037.6
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 328.15 K, DIPA mole fraction 0.09183, CO2 mole fraction 0.07842, CO2 partial pressure 2171 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 16.697006}
+  - id: dipa-haghtalab2014-328.15K-p2842kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09146, H2O: 0.82641, CO2: 0.08213}
+    T: 328.15
+    P: 2072498.1
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 328.15 K, DIPA mole fraction 0.09146, CO2 mole fraction 0.08213, CO2 partial pressure 2842 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 16.696603}
+  - id: dipa-haghtalab2014-328.15K-p3423kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09122, H2O: 0.82422, CO2: 0.08456}
+    T: 328.15
+    P: 2371698.4
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 328.15 K, DIPA mole fraction 0.09122, CO2 mole fraction 0.08456, CO2 partial pressure 3423 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 17.067993}
+  - id: dipa-haghtalab2014-328.15K-p4025kPa
+    package: amine_ke_dga_amp
+    components: [110-97-4, H2O, CO2]
+    z: {110-97-4: 0.09085, H2O: 0.82093, CO2: 0.08822}
+    T: 328.15
+    P: 2862266.4
+    source: 'literature:Haghtalab, A., Eghbali, H. & Shojaeian, A., ''Experiment and modeling solubility of CO2 in aqueous solutions of Diisopropanolamine + 2-amino-2-methyl-1-propanol + Piperazine at high pressures'', J. Chem. Thermodyn. 71, 71-83, 2014, doi:10.1016/j.jct.2013.11.025, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2013.11.025.xml (dataset 2, parsed by script: T 328.15 K, DIPA mole fraction 0.09085, CO2 mole fraction 0.08822, CO2 partial pressure 4025 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 15.940017}
 
 multicomponent_cases: []
