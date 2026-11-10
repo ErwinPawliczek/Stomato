@@ -77,8 +77,14 @@ type: object
 |---|---|---|---|---|---|---|
 | `V1-control-valve-emerson-propane` | R0 | `info.Cv` | 113.14 | 113.419 | rel 0.005 | pass |
 | `V1-control-valve-emerson-propane` | R0 | `info.choked` | 0 | 0 | abs 0 | pass |
+| `V1-control-valve-iec60534-annexD-ex1-liquid` | R1 | `info.Kv_m3h_bar05` | 165 | 164.996 | rel 0.005 | pass |
+| `V1-control-valve-iec60534-annexD-ex1-liquid` | R1 | `info.choked` | 0 | 0 | abs 0 | pass |
+| `V1-control-valve-iec60534-annexD-ex2-liquid-choked` | R1 | `info.Kv_m3h_bar05` | 238 | 238.073 | rel 0.005 | pass |
+| `V1-control-valve-iec60534-annexD-ex2-liquid-choked` | R1 | `info.choked` | 1 | 1 | abs 0 | pass |
 
 - `V1-control-valve-emerson-propane`: Emerson Automation Solutions, Control Valve Handbook, 6th ed. (2019/2023), Chapter 5, section 5.8.4 "Liquid Sizing Sample Problem", pp. 114-115 (https://www.emerson.com/documents/automation/control-valve-handbook-en-3661206.pdf, read 2026-11-04; the equation lines are images, read from the rendered page): liquid propane, q = 800 gpm, P1 = 314.7 psia, P2 = 289.7 psia, dP = 25 psi, T1 = 70 F, rho1/rho0 = 0.50, Pv = 124.3 psia, Pc = 616.3 psia; FF = 0.83, dP_choked = 171 psi > 25 psi (not choked); Cv = 800 / (1.0 x 0.9 sqrt(25/0.5)) = 125.7 with the assumed NPS 3 valve's FP = 0.90. R0 reports the bare-valve Cv (FP = 1): 800 / sqrt(25/0.5) = 113.14 (= 125.7 x 0.90). Feed: 800 gpm at the package's 502.05 kg/m3 (25.34 kg/s = 574.66 mol/s) at 70 F and 314.7 psia. Tolerance 0.5%: the printed two-figure rho1/rho0 = 0.50 (+/-0.005 moves Cv by 0.5%). Re-cited 2026-11-04 (units-a) from the earlier uncited "117.9 x 0.96 = 113.2" (an older edition's FP), expected value corrected to this edition's arithmetic.
+- `V1-control-valve-iec60534-annexD-ex1-liquid`: ISA-75.01.01-2007 (IEC 60534-2-1 Mod) Annex E Example 1 (water, globe valve, non-choked, no fittings), printed inputs: rho1 965.4 kg/m3, P1 680 kPa, P2 220 kPa, Q 360 m3/h, T1 363 K, Pv 70.1 kPa, Pc 22120 kPa, nu 3.26e-7 m2/s (mu 3.1472e-4 Pa s), FL 0.9. Printed result: C = Kv = 165 m3/h.
+- `V1-control-valve-iec60534-annexD-ex2-liquid-choked`: ISA-75.01.01-2007 (IEC 60534-2-1 Mod) Annex E Example 2 (water, ball valve, choked, no fittings), same printed inputs with FL 0.6: rho1 965.4 kg/m3, P1 680 kPa, P2 220 kPa, Q 360 m3/h, T1 363 K, Pv 70.1 kPa, Pc 22120 kPa, nu 3.26e-7 m2/s. Printed result: C = Kv = 238 m3/h (eq. 3).
 
 ## References
 

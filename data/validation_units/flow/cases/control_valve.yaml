@@ -1,0 +1,55 @@
+# V1 worked cases for the control_valve unit (R1), per-unit file (U-01d).
+# Expected values are transcribed from the standard's PRINTED results:
+# ISA-75.01.01-2007 (IEC 60534-2-1 Mod) Annex E Examples 1 and 2 print
+# "C = Kv = 165 m3/h" and "C = Kv = 238 m3/h" (three significant figures,
+# which the 0.5 percent tolerance reflects). The ISA Annex is the standard's
+# own text (IEC 60534-2-1 Mod), so these are printed source values.
+#
+# Gas gap (Annex E Example 3, CO2 433 K): the printed no-fittings value
+# 62.7 m3/h is an intermediate first pass with FP = 1 assumed, and the final
+# printed 72.1 m3/h embeds the FP/xTP fittings iteration; the adapter takes
+# MW/Z/gamma/viscosity from the thermo and cannot be pinned to the printed
+# nu = 1.743e-5 m2/s and Z = 0.988, so no gas case is asserted here.
+# Search places: IEC 60534-2-1:2011 Annex D, the ISA-75.01.01-2007 Annex
+# (both read; the printed values above come from it), and the Emerson
+# Control Valve Handbook 5th ed. ch. 5.
+
+- id: V1-control-valve-iec60534-annexD-ex1-liquid
+  unit: control_valve
+  level: R1
+  thermo: iapws_if97
+  source: "ISA-75.01.01-2007 (IEC 60534-2-1 Mod) Annex E Example 1 (water, globe valve, non-choked, no fittings), printed inputs: rho1 965.4 kg/m3, P1 680 kPa, P2 220 kPa, Q 360 m3/h, T1 363 K, Pv 70.1 kPa, Pc 22120 kPa, nu 3.26e-7 m2/s (mu 3.1472e-4 Pa s), FL 0.9. Printed result: C = Kv = 165 m3/h."
+  feeds:
+    inlet:
+      T: 363.15
+      P: 680000.0
+      molar_flow: 5359.3   # Q = 360 m3/h = 0.1 m3/s at rho1 965.4 -> 96.54 kg/s water
+      composition: {H2O: 1.0}
+  params:
+    P_out: 220000.0
+    Cv_rated: null   # strips the example-case default: the case stays in sizing mode
+    FL: 0.9
+    mu_liquid: 3.1472e-4
+  expected:
+  - {quantity: info.Kv_m3h_bar05, value: 165.0, tol_rel: 0.005}
+  - {quantity: info.choked, value: 0.0, tol_abs: 0.0}
+
+- id: V1-control-valve-iec60534-annexD-ex2-liquid-choked
+  unit: control_valve
+  level: R1
+  thermo: iapws_if97
+  source: "ISA-75.01.01-2007 (IEC 60534-2-1 Mod) Annex E Example 2 (water, ball valve, choked, no fittings), same printed inputs with FL 0.6: rho1 965.4 kg/m3, P1 680 kPa, P2 220 kPa, Q 360 m3/h, T1 363 K, Pv 70.1 kPa, Pc 22120 kPa, nu 3.26e-7 m2/s. Printed result: C = Kv = 238 m3/h (eq. 3)."
+  feeds:
+    inlet:
+      T: 363.15
+      P: 680000.0
+      molar_flow: 5359.3
+      composition: {H2O: 1.0}
+  params:
+    P_out: 220000.0
+    Cv_rated: null   # strips the example-case default: the case stays in sizing mode
+    FL: 0.6
+    mu_liquid: 3.1472e-4
+  expected:
+  - {quantity: info.Kv_m3h_bar05, value: 238.0, tol_rel: 0.005}
+  - {quantity: info.choked, value: 1.0, tol_abs: 0.0}

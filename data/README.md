@@ -39,5 +39,7 @@ named above, with `user` for the supplied `Tb`/`sg`. Downstream consumers
 ## Legacy shape
 
 `ngdesign.data.components()` keeps its old contract for existing callers: the
-18 curated ids keyed to `name/cas/mw/tc_K/pc_Pa/omega` (+ additive `tb_K`,
-`sg`, `kind`, `provenance`), with values now resolved from the databank.
+curated ids keyed to `name/cas/mw/tc_K/pc_Pa/omega` (+ additive `tb_K`,
+`sg`, `kind`, `provenance`), with values now resolved from the databank. The
+slate grows by appending (`N2` … `DME` through P1-02; `AcOH`, `EtOH`, `O2`
+added 2026-11-04 for the T1r/T3/T7 validation packs).
