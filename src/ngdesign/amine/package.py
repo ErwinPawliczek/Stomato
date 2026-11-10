@@ -1364,11 +1364,11 @@ class AmineKEPackage(AmineReactivePackage):
 
 
 class AmineKEExtendedPackage(AmineKEPackage):
-    """Kent-Eisenberg on DGA (929-06-6) and AMP (124-68-5), CO2 only.
+    """Kent-Eisenberg on DGA (929-06-6), AMP (124-68-5) and DIPA (110-97-4), CO2 only.
 
     Same chemistry and flash as amine_ke with the sets of
     data/thermo_params/amine/ke_speciation.yaml. H2S refuses: no open data backs a
-    lumped H2S constant for either amine.
+    lumped H2S constant for any of them.
     """
 
     supported_amines = frozenset(extended_amines())
@@ -1376,7 +1376,7 @@ class AmineKEExtendedPackage(AmineKEPackage):
     def _reactive_domain(self, z: dict[str, float]) -> str | None:
         if z.get("H2S", 0.0) > 0.0 and any(cid in self.supported_amines for cid in z):
             raise AmineChemistryError(
-                "no open H2S constant for DGA or AMP: amine_ke_dga_amp carries CO2 only"
+                "no open H2S constant for DGA, AMP or DIPA: amine_ke_dga_amp carries CO2 only"
             )
         return super()._reactive_domain(z)
 

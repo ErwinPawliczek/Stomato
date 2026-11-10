@@ -1,6 +1,6 @@
 # Kent-Eisenberg speciation sets beyond MDEA/MEA/DEA (row amine_ke_dga_amp).
-# Keyed by CAS, the components' ids in the open registry. CO2 only: no open H2S data
-# was found for either amine, so the row refuses H2S.
+# Keyed by CAS, the components' ids in the open registry. CO2 only: no open H2S constant
+# was found for any of these amines, so the row refuses H2S.
 #
 # Kam = exp(kam_a - kam_b / T), mol/L; Kc = exp(a + b / T), mol/L, for
 # AmineCOO- + H2O <=> Amine + HCO3-, the forms of ngdesign.amine.kent_eisenberg.
