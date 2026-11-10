@@ -436,3 +436,45 @@ binary_cases:
   tolerance:
     bubble_T: 0.005
     vapor_comp: 0.02
+- id: hasdemir2007-dcetol-101.3kPa-x0.27
+  package: [wilson_tdep_ig]
+  components:
+  - "107-06-2"
+  - "108-88-3"
+  z:
+    "107-06-2": 0.27
+    "108-88-3": 0.73
+  P: 101300.0
+  source: "literature:Hasdemir, M.; Uslu, H., Isobaric (vapour + liquid) equilibria data for the binary systems {1,2-dichloroethane (1) + toluene (2)} and {1,2-dichloroethane (1) + acetic acid (2)} at atmospheric pressure, J. Chem. Thermodyn. 39 (2007) 1189-1195, doi:10.1016/j.jct.2006.12.003; 101.3 kPa T-x-y, NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2006.12.003.xml PureOrMixtureData sets 7 (T) and 8 (y) at x_DCE=0.27; point rule x nearest 0.25/0.50/0.75 fixed before the run; retrieved 2026-11-09"
+  expected:
+    bubble_T: 374.85
+    vapor_comp:
+      "107-06-2": 0.48
+- id: hasdemir2007-dcetol-101.3kPa-x0.502
+  package: [wilson_tdep_ig]
+  components:
+  - "107-06-2"
+  - "108-88-3"
+  z:
+    "107-06-2": 0.502
+    "108-88-3": 0.498
+  P: 101300.0
+  source: "literature:Hasdemir, M.; Uslu, H., Isobaric (vapour + liquid) equilibria data for the binary systems {1,2-dichloroethane (1) + toluene (2)} and {1,2-dichloroethane (1) + acetic acid (2)} at atmospheric pressure, J. Chem. Thermodyn. 39 (2007) 1189-1195, doi:10.1016/j.jct.2006.12.003; 101.3 kPa T-x-y, NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2006.12.003.xml PureOrMixtureData sets 7 (T) and 8 (y) at x_DCE=0.502; point rule x nearest 0.25/0.50/0.75 fixed before the run; retrieved 2026-11-09"
+  expected:
+    bubble_T: 370.55
+    vapor_comp:
+      "107-06-2": 0.715
+- id: hasdemir2007-dcetol-101.3kPa-x0.745
+  package: [wilson_tdep_ig]
+  components:
+  - "107-06-2"
+  - "108-88-3"
+  z:
+    "107-06-2": 0.745
+    "108-88-3": 0.255
+  P: 101300.0
+  source: "literature:Hasdemir, M.; Uslu, H., Isobaric (vapour + liquid) equilibria data for the binary systems {1,2-dichloroethane (1) + toluene (2)} and {1,2-dichloroethane (1) + acetic acid (2)} at atmospheric pressure, J. Chem. Thermodyn. 39 (2007) 1189-1195, doi:10.1016/j.jct.2006.12.003; 101.3 kPa T-x-y, NIST TRC ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2006.12.003.xml PureOrMixtureData sets 7 (T) and 8 (y) at x_DCE=0.745; point rule x nearest 0.25/0.50/0.75 fixed before the run; retrieved 2026-11-09"
+  expected:
+    bubble_T: 365.65
+    vapor_comp:
+      "107-06-2": 0.84
