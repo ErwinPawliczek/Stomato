@@ -222,6 +222,8 @@
     phases: [V, L, VLL, VLLE]
   status: validated
   validation:
+  - helm-co2n2-298.161K-7.100MPa-bubble
+  - helm-co2n2-298.162K-7.419MPa-bubble
   # T-15 promotion sweep: L1 pure points (CoolProp 8.0.0 machine values, helmholtz/cases.yaml)
   - heos-pure-C1-125K
   - heos-pure-nC4-280K
@@ -299,6 +301,8 @@
   - c1n2-149.989K-2.908MPa
   - c1n2-159.972K-1.789MPa
   - c1n2-179.976K-5.062MPa
+  - helm-co2n2-298.161K-7.100MPa-bubble
+  - helm-co2n2-298.162K-7.419MPa-bubble
   # c1n2-130.079K now runs against the teqp GERG-2008 backend (gerg2008_teqp, saft
   # family) - the T-07 follow-up cross-check (issue #164); the other four points
   # (c1n2-149.928K/170.009K, c1co2-303.144K/303.145K) stay pending:teqp-gerg2008:
@@ -375,6 +379,8 @@
     phases: [V, L]
   status: validated
   validation:
+  - helm-co2n2-298.161K-7.100MPa-bubble
+  - helm-co2n2-298.162K-7.419MPa-bubble
   # 2026-11-04: measured CO2 vapour pressures (L1) and CO2 + N2 VLE (L2), Westman et al.
   # 2016 via the NIST TRC ThermoML archive (helmholtz/cases.yaml): Psat +0.01 / +0.06 %,
   # bubble -0.95 % at 270 K, dew -0.03 % at 298 K. Independent of the row: the EOS-CG

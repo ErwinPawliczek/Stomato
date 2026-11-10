@@ -192,6 +192,12 @@ class _HelmholtzSurface(TracedThermo):
 
     # -- primitives ---------------------------------------------------------
 
+    #: Composition-continuation fallback for mixture saturation points the Wilson-started SS
+    #: cannot reach (near-critical). Off by default: the in-house BWR surfaces scan T with the
+    #: SS solver in _tsat, where a failed solve means "end of the curve" and continuation would
+    #: only add cost; the CoolProp rows (fast states, PQ-based _tsat) switch it on.
+    SS_CONTINUATION: ClassVar[bool] = False
+
     def _single_phase(
         self, ids: tuple[str, ...], xs: tuple[float, ...], T: float, P: float, phase: str
     ) -> _SinglePhase:
@@ -361,19 +367,90 @@ class _HelmholtzSurface(TracedThermo):
         """
         p0 = self._wilson_pressure(ids, xs, T, kind)
         trivial: SaturationError | None = None
-        for attempt in range(6):
+        try:
+            for attempt in range(6):
+                try:
+                    return self._ss_from(ids, xs, T, kind, p0 * 0.5**attempt)
+                except _TrivialSolution as exc:
+                    trivial = exc
+            raise SaturationError(str(trivial))
+        except SaturationError as direct:
+            if not self.SS_CONTINUATION:
+                raise
+            # Near the mixture critical point the Wilson start leaves the two-root region;
+            # reach the point by composition continuation instead (only where the direct
+            # start failed, so every point it already solved is unchanged).
             try:
-                return self._ss_from(ids, xs, T, kind, p0 * 0.5**attempt)
-            except _TrivialSolution as exc:
-                trivial = exc
-        raise SaturationError(str(trivial))
+                return self._ss_continuation(ids, xs, T, kind)
+            except SaturationError:
+                raise direct from None
+
+    def _ss_continuation(
+        self, ids: tuple[str, ...], xs: tuple[float, ...], T: float, kind: str
+    ) -> tuple[float, tuple[float, ...]]:
+        """Saturation point by continuation in feed composition from the least volatile component.
+
+        Feed path ``z(lam) = (1 - lam) e_h + lam z``, ``e_h`` the pure component with the lowest
+        Wilson vapour pressure at T (subcritical there). At small ``lam`` the Wilson start
+        converges (nearly pure fluid, P near its Psat); each further step starts successive
+        substitution from the previous converged (P, K), with step halving on failure. This is
+        the standard phase-envelope continuation idea (Michelsen & Mollerup, Thermodynamic
+        Models, 2nd ed., ch. 12) applied along composition at fixed T.
+        """
+        n = len(ids)
+        psat_w = [self._wilson_pressure((ids[i],), (1.0,), T, kind) for i in range(n)]
+        h = min(range(n), key=lambda i: psat_w[i])
+        if self._psat(ids[h], T) is None:
+            raise SaturationError(f"continuation anchor {ids[h]} is supercritical at T={T} K")
+
+        def feed(lam: float) -> tuple[float, ...]:
+            return tuple((1.0 - lam) * (1.0 if i == h else 0.0) + lam * xs[i] for i in range(n))
+
+        lam = 0.05
+        while True:
+            try:
+                p, inc = self._ss_from(
+                    ids, feed(lam), T, kind, self._wilson_pressure(ids, feed(lam), T, kind)
+                )
+                break
+            except SaturationError:
+                lam *= 0.5
+                if lam < 1e-4:
+                    raise SaturationError(f"continuation could not start for {ids} at T={T} K") from None
+        dl = 0.05
+        while lam < 1.0:
+            nxt = min(1.0, lam + dl)
+            z_prev, z_next = feed(lam), feed(nxt)
+            k0 = (
+                [inc[i] / z_prev[i] for i in range(n)]
+                if kind == "bubble"
+                else [z_prev[i] / inc[i] for i in range(n)]
+            )
+            try:
+                p_new, inc_new = self._ss_from(ids, z_next, T, kind, p, k0)
+            except SaturationError:
+                dl *= 0.5
+                if dl < 1e-4:
+                    raise SaturationError(
+                        f"composition continuation stalled at lam={lam:.4f} for {ids} at T={T} K"
+                    ) from None
+                continue
+            lam, p, inc = nxt, p_new, inc_new
+            dl = min(dl * 1.5, 0.2)
+        return p, inc
 
     def _ss_from(
-        self, ids: tuple[str, ...], xs: tuple[float, ...], T: float, kind: str, p_start: float
+        self,
+        ids: tuple[str, ...],
+        xs: tuple[float, ...],
+        T: float,
+        kind: str,
+        p_start: float,
+        k_start: list[float] | None = None,
     ) -> tuple[float, tuple[float, ...]]:
-        """One successive-substitution run of :meth:`_ss_solve` from ``p_start``."""
+        """One successive-substitution run of :meth:`_ss_solve` from ``p_start`` (and K)."""
         p = min(max(p_start, 1e3), 2e9)
-        k = [self._wilson_k(ids[i], T, p) for i in range(len(ids))]
+        k = list(k_start) if k_start is not None else [self._wilson_k(ids[i], T, p) for i in range(len(ids))]
         for _ in range(300):
             if kind == "bubble":
                 raw = [min(max(ki * xsi, 1e-14), 1.0) for ki, xsi in zip(k, xs, strict=True)]
@@ -1075,6 +1152,7 @@ class CoolPropPackage(_HelmholtzSurface):
     """CoolProp ``HEOS`` pure fluids and mixtures over the mapped component set."""
 
     SUPPORTED: ClassVar[frozenset[str]] = frozenset(_COOLPROP_NAMES)
+    SS_CONTINUATION: ClassVar[bool] = True
     #: Per-instance HEOS state cache: AbstractState construction dominates the
     #: evaluation cost (~0.5 s for a 2-fluid mixture), so states are reused across
     #: calls and recomposed (set_mole_fractions) before every update by callers.
@@ -1168,7 +1246,6 @@ class CoolPropPackage(_HelmholtzSurface):
         self, ids: tuple[str, ...], xs: tuple[float, ...], T: float, P: float, kind: str
     ) -> dict[str, float]:
         """Exact incipient compositions from CoolProp's QT equilibrium."""
-        del P
         if self._is_pure(ids):
             return {ids[0]: 1.0}
         _require_coolprop()
@@ -1182,8 +1259,10 @@ class CoolPropPackage(_HelmholtzSurface):
             phase_fractions = (
                 state.mole_fractions_vapor() if kind == "bubble" else state.mole_fractions_liquid()
             )
-        except Exception as exc:
-            raise SaturationError(f"no {kind} incipient composition for {ids} at T={T} K: {exc}") from exc
+        except Exception:
+            # QT stalls near the mixture critical point: the shared SS solver (with its
+            # composition continuation) gives the incipient phase at the same boundary.
+            return super()._incipient(ids, xs, T, P, kind)
         return {c: float(v) for c, v in zip(ids, phase_fractions, strict=True)}
 
     def _tsat(self, ids: tuple[str, ...], xs: tuple[float, ...], P: float, kind: str) -> float:

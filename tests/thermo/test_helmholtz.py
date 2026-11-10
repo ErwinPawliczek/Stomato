@@ -122,3 +122,21 @@ def test_pure_ph_ps_flash_above_critical_pressure(row: str) -> None:
     by_s = pkg.flash_ps(z, 5.17e6, ref.entropy, 1.0)
     assert math.isclose(by_h.T, 250.0, abs_tol=1e-6)
     assert math.isclose(by_s.T, 250.0, abs_tol=1e-6)
+
+
+@pytest.mark.parametrize("row", ["eos_cg", "gerg2008"])
+def test_near_critical_bubble_point_by_composition_continuation(row: str) -> None:
+    """CO2 + N2 at 298.161 K, x_CO2 0.98384 (Westman et al. 2016, 7100.3 kPa measured).
+
+    Regression: CoolProp's QT and the Wilson-started successive substitution both fail this
+    close to the mixture critical point (SaturationError); the shared solver now reaches it by
+    continuation in composition from nearly pure CO2. The result must be a true two-phase
+    point (incipient vapour differs from the liquid) and consistent with a PT flash just above.
+    """
+    pkg = registry.create("thermo", row)
+    z = {"CO2": 0.98384, "N2": 0.01616}
+    sat = pkg.bubble_point(z, T=298.161)
+    assert sat.P == pytest.approx(7100300.0, rel=0.01)
+    assert sat.incipient_composition["N2"] > 2.0 * z["N2"]
+    above = pkg.flash_pt(z, 298.161, sat.P * 1.002, 1.0)
+    assert [p.kind for p in above.phases] != [PhaseKind.VAPOR]
