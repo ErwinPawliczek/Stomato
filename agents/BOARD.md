@@ -1,3 +1,6 @@
+- Done: V1 -> `DONE`: claude -p exited 0 at 10:24 PM CST with final summary table in ~/stomato-val-progress.md; local chem-engine a565d7a8 (233 ahead of origin 9cf08cc, not pushed). No new obv/* commits; no claude/* branches.
+- Next: Erwin to review/push chem-engine; CQ1 can start now that V1 is idle (needs Erwin's go). No job started by board sync.
+
 ### Board sync — Stomato bot — 2026-11-04 10:05 PM
 - Done: V1 still `in progress` (claude -p --continue pid 987330 alive since 9:35 PM). Progress evidence (~10:05 PM): batches 2–4 fast-forwarded into local chem-engine at 2646478 (special, electrolyte bed50eb, helm-kvalue/csgs, cubic-mixing, saft, units-a/c, gphi-corr/unifac, advisor rule; full gate green). Batch 5 (val-electrolyte-amine a1ac12a, val-units-b 0ea2c50) gating as integ5 on val-integ bdbaccb (pytest running). Round-2 agents started from 6064435: amine2, saft2, aqueous, gphi2. No new `obv/*` commits (tips unchanged: T10 7518251, T11s 26c4267); no `claude/*` branches. origin/chem-engine still 9cf08cc.
 - Next: CQ1 stays queued until V1 finishes. No Obvious job started (no unclaimed Erwin-approved Obvious task; CQ1 is Claude Code).
