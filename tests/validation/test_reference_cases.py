@@ -28,6 +28,10 @@ def _format_row(row: Row, source: str) -> str:
 @pytest.mark.parametrize("case", _load_cases(), ids=lambda c: c.id)
 def test_reference_case(case: Case) -> None:
     """Every comparison of one case passes on every package the case names."""
+    if case.skip_reason:
+        # Pending/experimental package (task T10): a visible, reasoned skip — never a
+        # silent drop and never a model outcome.
+        pytest.skip(case.skip_reason)
     failures: list[Row] = []
     crashes: list[str] = []
     dep_skips: list[str] = []

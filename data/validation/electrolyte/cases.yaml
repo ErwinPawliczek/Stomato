@@ -185,7 +185,7 @@ binary_cases:
   # asserted only within a factor of 2 of the anchors (tests/units/test_enrtl.py).
   - id: amine-enrtl-co2-loading-0.10-313K
     package: pending:amine_enrtl
-    components: []
+    components: [MDEA, H2O, CO2]
     z: {MDEA: 0.134491, H2O: 0.852060, CO2: 0.013449}
     T: 313.15
     P: 7188.4
@@ -202,7 +202,7 @@ binary_cases:
       K: {CO2: 9.61968}
   - id: amine-enrtl-co2-loading-0.40-313K
     package: pending:amine_enrtl
-    components: []
+    components: [MDEA, H2O, CO2]
     z: {MDEA: 0.129275, H2O: 0.819015, CO2: 0.051710}
     T: 313.15
     P: 29246.0
