@@ -86,7 +86,7 @@ Engine-code jobs for Claude Code on Erwin's PC. Run in order, each only after V1
 
 | id | task | status | after | added |
 |----|------|--------|-------|-------|
-| CQ1 | SR-POLAR density adapter: build on the obv/T11s skeleton 26c4267, Mangold 2019 parameters, wire to the T3 pack, tolerance = model error + 2 percentage points, density-only | running (claude/CQ1, ~/stomato-cq1, log ~/stomato-cq.log, started 2026-11-09 10:55 PM) | after the V1 continue (separate session, not injected into V1) | 2026-11-04 3:58 PM |
+| CQ1 | SR-POLAR density adapter: build on the obv/T11s skeleton 26c4267, Mangold 2019 parameters, wire to the T3 pack, tolerance = model error + 2 percentage points, density-only | review (done 2026-11-10 12:05 AM; PR #350 into chem-engine, commit 45635ab8) | after the V1 continue (separate session, not injected into V1) | 2026-11-04 3:58 PM |
 
 ## Handoffs
 
