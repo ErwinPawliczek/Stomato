@@ -24,6 +24,9 @@
 #
 # Binding notes for the Stomato bot:
 #  - package: nrtl is the registered NRTL package (these cases RUN when bound).
+#  - 2026-11-09 (val-gphi2): the same points are also bound to the van Laar rows
+#    (vanlaar_ig/rk/hoc/nothnagel/pr; list-valued package), whose EtOH/H2O pair was fitted
+#    to a different measurement (the Bayer 1927 azeotrope), so these are independent L2 for them.
 #  - EtOH is NOT in the curated data/components.yaml slate (locked) - the cases will
 #    not resolve until EtOH is curated (CAS 64-17-5). This mirrors the existing
 #    gamma-phi case nrtl-ig-etohh2o-azeotrope-101.325kPa, which uses the same id.
@@ -33,7 +36,7 @@
 #    see README.md in this directory for the full retrieval trail.
 
 - id: t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -50,7 +53,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -67,7 +70,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -84,7 +87,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -101,7 +104,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-354.88K-x0.292
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -118,7 +121,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -135,7 +138,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -152,7 +155,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -169,7 +172,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-352.04K-x0.631
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -186,7 +189,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-351.67K-x0.749
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -203,7 +206,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-351.64K-x0.794
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -220,7 +223,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-351.40K-x0.848
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -237,7 +240,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-351.33K-x0.899
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -254,7 +257,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-351.37K-x0.949
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O
@@ -271,7 +274,7 @@
     bubble_T: 0.005
     vapor_comp: 0.02
 - id: t1r-nrtl-etohh2o-101.3kPa-azeotrope
-  package: nrtl
+  package: [nrtl, vanlaar_ig, vanlaar_rk, vanlaar_hoc, vanlaar_nothnagel, vanlaar_pr]
   components:
   - EtOH
   - H2O

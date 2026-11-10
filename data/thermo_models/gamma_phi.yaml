@@ -1223,7 +1223,28 @@
   - vanlaar-ig-pure-H2O-370K
   - vanlaar-ig-pure-MeOH-305K
   - vanlaar-ig-pure-MeOH-330K
+  - t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015
+  - t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035
+  - t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100
+  - t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183
+  - t1r-nrtl-etohh2o-101.3kPa-354.88K-x0.292
+  - t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394
+  - t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501
+  - t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543
+  - t1r-nrtl-etohh2o-101.3kPa-352.04K-x0.631
+  - t1r-nrtl-etohh2o-101.3kPa-351.67K-x0.749
+  - t1r-nrtl-etohh2o-101.3kPa-351.64K-x0.794
+  - t1r-nrtl-etohh2o-101.3kPa-351.40K-x0.848
+  - t1r-nrtl-etohh2o-101.3kPa-351.33K-x0.899
+  - t1r-nrtl-etohh2o-101.3kPa-351.37K-x0.949
+  - t1r-nrtl-etohh2o-101.3kPa-azeotrope
   assessed:
+    t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015: "y_EtOH 0.0998 vs 0.139 (abs 0.0392, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035: "bubble_T 367.88 vs 365.61 K (+0.62 %, band 0.5 %); y_EtOH 0.2005 vs 0.261 (abs 0.0605, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100: "bubble_T 362.10 vs 359.79 K (+0.64 %, band 0.5 %); y_EtOH 0.3914 vs 0.436 (abs 0.0446, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394: "y_EtOH 0.6352 vs 0.611 (abs 0.0242, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501: "y_EtOH 0.6782 vs 0.648 (abs 0.0302, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543: "y_EtOH 0.6951 vs 0.669 (abs 0.0261, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
     ddb549-etohh2o-50.66kPa-x0.0855: "y 0.3784 vs 0.4300 (abs 0.052 > 0.02) - the in-house pair was fitted to the 1-atm azeotrope alone (T-independent energy form); its composition dependence away from the azeotrope at 50.66 kPa misses Beebe et al. (1942) (measured 2026-11-04)"
     ddb549-etohh2o-50.66kPa-x0.3495: "y 0.6249 vs 0.5945 (abs 0.030 > 0.02) - the in-house pair was fitted to the 1-atm azeotrope alone (T-independent energy form); its composition dependence away from the azeotrope at 50.66 kPa misses Beebe et al. (1942) (measured 2026-11-04)"
     vanlaar-ig-pure-H2O-340K: "Cp 70.2529 vs 75.4562 (-6.90%, band 5.0%) - model limitation, not a bug: the vapour-route caloric (thermo GibbsExcessLiquid default) builds liquid H as H_ig - RT^2 dlnPsat/dT (ideal-gas Clausius-Clapeyron: no vapour non-ideality, no Poynting), so Cp_L = Cp_ig - d/dT(RT^2 dlnPsat/dT); the same number follows from CoolProp's own Psat (H2O 340 K: 70.24 vs 75.46 J/mol/K), and the error grows with T. The liquid_reference caloric (wilson_lr_ig) meets these points (measured 2026-11-04)"
@@ -1298,7 +1319,11 @@
     phases:
     - V
     - L
-  status: provisional
+  # Promoted 2026-11-09 (val-gphi2): L0 7/7; L1 pure cases pass (every L1 miss assessed);
+  # independent L2 = Lai et al. 2014 EtOH/H2O 101.3 kPa (pack T1r, ThermoML) 21 ok / 9 miss
+  # + Beebe 1942 (ddb549) 1 ok / 2 miss = 22 ok / 11 miss (majority). The fitted pins
+  # (azeotrope, MeOH/nC4 Courtial point) are not counted.
+  status: validated
   validation:
   - ddb549-etohh2o-50.66kPa-x0.0855
   - ddb549-etohh2o-50.66kPa-x0.3495
@@ -1309,7 +1334,29 @@
   - vanlaar-ig-pure-H2O-370K
   - vanlaar-ig-pure-MeOH-305K
   - vanlaar-ig-pure-MeOH-330K
+  - t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015
+  - t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035
+  - t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100
+  - t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183
+  - t1r-nrtl-etohh2o-101.3kPa-354.88K-x0.292
+  - t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394
+  - t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501
+  - t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543
+  - t1r-nrtl-etohh2o-101.3kPa-352.04K-x0.631
+  - t1r-nrtl-etohh2o-101.3kPa-351.67K-x0.749
+  - t1r-nrtl-etohh2o-101.3kPa-351.64K-x0.794
+  - t1r-nrtl-etohh2o-101.3kPa-351.40K-x0.848
+  - t1r-nrtl-etohh2o-101.3kPa-351.33K-x0.899
+  - t1r-nrtl-etohh2o-101.3kPa-351.37K-x0.949
+  - t1r-nrtl-etohh2o-101.3kPa-azeotrope
   assessed:
+    t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015: "y_EtOH 0.0979 vs 0.139 (abs 0.0411, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035: "bubble_T 367.94 vs 365.61 K (+0.64 %, band 0.5 %); y_EtOH 0.1975 vs 0.261 (abs 0.0635, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100: "bubble_T 362.17 vs 359.79 K (+0.66 %, band 0.5 %); y_EtOH 0.3882 vs 0.436 (abs 0.0478, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183: "y_EtOH 0.5049 vs 0.525 (abs 0.0201, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394: "y_EtOH 0.6337 vs 0.611 (abs 0.0227, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501: "y_EtOH 0.6770 vs 0.648 (abs 0.0290, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543: "y_EtOH 0.6939 vs 0.669 (abs 0.0249, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
     ddb549-etohh2o-50.66kPa-x0.0855: "y 0.3764 vs 0.4300 (abs 0.054 > 0.02) - the in-house pair was fitted to the 1-atm azeotrope alone (T-independent energy form); its composition dependence away from the azeotrope at 50.66 kPa misses Beebe et al. (1942) (measured 2026-11-04)"
     ddb549-etohh2o-50.66kPa-x0.3495: "y 0.6240 vs 0.5945 (abs 0.029 > 0.02) - the in-house pair was fitted to the 1-atm azeotrope alone (T-independent energy form); its composition dependence away from the azeotrope at 50.66 kPa misses Beebe et al. (1942) (measured 2026-11-04)"
     vanlaar-ig-pure-MeOH-330K: "rho_V 0.881659 vs 0.911218 (-3.24%, band 3.0%) - rho_V: the rk vapour has no association term and cannot carry saturated-vapour non-ideality at this point (CoolProp Z < 1); the HOC and Nothnagel virial pairings meet the MeOH 330 K point (measured 2026-11-04)"
@@ -1389,7 +1436,11 @@
     phases:
     - V
     - L
-  status: provisional
+  # Promoted 2026-11-09 (val-gphi2): L0 7/7; L1 pure cases pass (every L1 miss assessed);
+  # independent L2 = Lai et al. 2014 EtOH/H2O 101.3 kPa (pack T1r, ThermoML) 21 ok / 9 miss
+  # + Beebe 1942 (ddb549) 1 ok / 2 miss = 22 ok / 11 miss (majority). The fitted pins
+  # (azeotrope, MeOH/nC4 Courtial point) are not counted.
+  status: validated
   validation:
   - ddb549-etohh2o-50.66kPa-x0.0855
   - ddb549-etohh2o-50.66kPa-x0.3495
@@ -1399,7 +1450,29 @@
   - vanlaar-ig-pure-H2O-370K
   - vanlaar-ig-pure-MeOH-305K
   - vanlaar-ig-pure-MeOH-330K
+  - t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015
+  - t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035
+  - t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100
+  - t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183
+  - t1r-nrtl-etohh2o-101.3kPa-354.88K-x0.292
+  - t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394
+  - t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501
+  - t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543
+  - t1r-nrtl-etohh2o-101.3kPa-352.04K-x0.631
+  - t1r-nrtl-etohh2o-101.3kPa-351.67K-x0.749
+  - t1r-nrtl-etohh2o-101.3kPa-351.64K-x0.794
+  - t1r-nrtl-etohh2o-101.3kPa-351.40K-x0.848
+  - t1r-nrtl-etohh2o-101.3kPa-351.33K-x0.899
+  - t1r-nrtl-etohh2o-101.3kPa-351.37K-x0.949
+  - t1r-nrtl-etohh2o-101.3kPa-azeotrope
   assessed:
+    t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015: "y_EtOH 0.0972 vs 0.139 (abs 0.0418, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035: "bubble_T 367.95 vs 365.61 K (+0.64 %, band 0.5 %); y_EtOH 0.1963 vs 0.261 (abs 0.0647, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100: "bubble_T 362.17 vs 359.79 K (+0.66 %, band 0.5 %); y_EtOH 0.3865 vs 0.436 (abs 0.0495, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183: "y_EtOH 0.5033 vs 0.525 (abs 0.0217, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394: "y_EtOH 0.6324 vs 0.611 (abs 0.0214, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501: "y_EtOH 0.6759 vs 0.648 (abs 0.0279, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543: "y_EtOH 0.6929 vs 0.669 (abs 0.0239, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
     ddb549-etohh2o-50.66kPa-x0.0855: "y 0.3750 vs 0.4300 (abs 0.055 > 0.02) - the in-house pair was fitted to the 1-atm azeotrope alone (T-independent energy form); its composition dependence away from the azeotrope at 50.66 kPa misses Beebe et al. (1942) (measured 2026-11-04)"
     ddb549-etohh2o-50.66kPa-x0.3495: "y 0.6229 vs 0.5945 (abs 0.028 > 0.02) - the in-house pair was fitted to the 1-atm azeotrope alone (T-independent energy form); its composition dependence away from the azeotrope at 50.66 kPa misses Beebe et al. (1942) (measured 2026-11-04)"
   references:
@@ -1474,7 +1547,11 @@
     phases:
     - V
     - L
-  status: provisional
+  # Promoted 2026-11-09 (val-gphi2): L0 7/7; L1 pure cases pass (every L1 miss assessed);
+  # independent L2 = Lai et al. 2014 EtOH/H2O 101.3 kPa (pack T1r, ThermoML) 21 ok / 9 miss
+  # + Beebe 1942 (ddb549) 1 ok / 2 miss = 22 ok / 11 miss (majority). The fitted pins
+  # (azeotrope, MeOH/nC4 Courtial point) are not counted.
+  status: validated
   validation:
   - ddb549-etohh2o-50.66kPa-x0.0855
   - ddb549-etohh2o-50.66kPa-x0.3495
@@ -1484,7 +1561,29 @@
   - vanlaar-ig-pure-H2O-370K
   - vanlaar-ig-pure-MeOH-305K
   - vanlaar-ig-pure-MeOH-330K
+  - t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015
+  - t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035
+  - t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100
+  - t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183
+  - t1r-nrtl-etohh2o-101.3kPa-354.88K-x0.292
+  - t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394
+  - t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501
+  - t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543
+  - t1r-nrtl-etohh2o-101.3kPa-352.04K-x0.631
+  - t1r-nrtl-etohh2o-101.3kPa-351.67K-x0.749
+  - t1r-nrtl-etohh2o-101.3kPa-351.64K-x0.794
+  - t1r-nrtl-etohh2o-101.3kPa-351.40K-x0.848
+  - t1r-nrtl-etohh2o-101.3kPa-351.33K-x0.899
+  - t1r-nrtl-etohh2o-101.3kPa-351.37K-x0.949
+  - t1r-nrtl-etohh2o-101.3kPa-azeotrope
   assessed:
+    t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015: "y_EtOH 0.0978 vs 0.139 (abs 0.0412, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035: "bubble_T 367.92 vs 365.61 K (+0.63 %, band 0.5 %); y_EtOH 0.1972 vs 0.261 (abs 0.0638, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100: "bubble_T 362.13 vs 359.79 K (+0.65 %, band 0.5 %); y_EtOH 0.3875 vs 0.436 (abs 0.0485, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183: "y_EtOH 0.5040 vs 0.525 (abs 0.0210, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394: "y_EtOH 0.6327 vs 0.611 (abs 0.0217, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501: "y_EtOH 0.6760 vs 0.648 (abs 0.0280, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543: "y_EtOH 0.6929 vs 0.669 (abs 0.0239, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
     ddb549-etohh2o-50.66kPa-x0.0855: "y 0.3758 vs 0.4300 (abs 0.054 > 0.02) - the in-house pair was fitted to the 1-atm azeotrope alone (T-independent energy form); its composition dependence away from the azeotrope at 50.66 kPa misses Beebe et al. (1942) (measured 2026-11-04)"
     ddb549-etohh2o-50.66kPa-x0.3495: "y 0.6232 vs 0.5945 (abs 0.029 > 0.02) - the in-house pair was fitted to the 1-atm azeotrope alone (T-independent energy form); its composition dependence away from the azeotrope at 50.66 kPa misses Beebe et al. (1942) (measured 2026-11-04)"
   references:
@@ -1554,7 +1653,11 @@
     phases:
     - V
     - L
-  status: provisional
+  # Promoted 2026-11-09 (val-gphi2): L0 7/7; L1 pure cases pass (every L1 miss assessed);
+  # independent L2 = Lai et al. 2014 EtOH/H2O 101.3 kPa (pack T1r, ThermoML) 21 ok / 9 miss
+  # + Beebe 1942 (ddb549) 1 ok / 2 miss = 22 ok / 11 miss (majority). The fitted pins
+  # (azeotrope, MeOH/nC4 Courtial point) are not counted.
+  status: validated
   validation:
   - ddb549-etohh2o-50.66kPa-x0.0855
   - ddb549-etohh2o-50.66kPa-x0.3495
@@ -1565,7 +1668,29 @@
   - vanlaar-ig-pure-H2O-370K
   - vanlaar-ig-pure-MeOH-305K
   - vanlaar-ig-pure-MeOH-330K
+  - t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015
+  - t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035
+  - t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100
+  - t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183
+  - t1r-nrtl-etohh2o-101.3kPa-354.88K-x0.292
+  - t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394
+  - t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501
+  - t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543
+  - t1r-nrtl-etohh2o-101.3kPa-352.04K-x0.631
+  - t1r-nrtl-etohh2o-101.3kPa-351.67K-x0.749
+  - t1r-nrtl-etohh2o-101.3kPa-351.64K-x0.794
+  - t1r-nrtl-etohh2o-101.3kPa-351.40K-x0.848
+  - t1r-nrtl-etohh2o-101.3kPa-351.33K-x0.899
+  - t1r-nrtl-etohh2o-101.3kPa-351.37K-x0.949
+  - t1r-nrtl-etohh2o-101.3kPa-azeotrope
   assessed:
+    t1r-nrtl-etohh2o-101.3kPa-369.27K-x0.015: "y_EtOH 0.0979 vs 0.139 (abs 0.0411, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-365.61K-x0.035: "bubble_T 367.94 vs 365.61 K (+0.64 %, band 0.5 %); y_EtOH 0.1974 vs 0.261 (abs 0.0636, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-359.79K-x0.100: "bubble_T 362.17 vs 359.79 K (+0.66 %, band 0.5 %); y_EtOH 0.3881 vs 0.436 (abs 0.0479, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-356.66K-x0.183: "y_EtOH 0.5048 vs 0.525 (abs 0.0202, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-353.89K-x0.394: "y_EtOH 0.6336 vs 0.611 (abs 0.0226, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-353.06K-x0.501: "y_EtOH 0.6770 vs 0.648 (abs 0.0290, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
+    t1r-nrtl-etohh2o-101.3kPa-352.73K-x0.543: "y_EtOH 0.6939 vs 0.669 (abs 0.0249, band 0.02) - model limitation, not a bug: the two-parameter, T-independent van Laar pair (data/thermo_params/vanlaar/pairs.yaml etohh2o) is fitted to the single 1-atm azeotrope point only, so it does not carry the dilute-ethanol non-ideality (y_EtOH low by 0.04-0.06 and bubble_T high by about 0.6 % at x_EtOH <= 0.1) and overshoots y by 0.02-0.03 at x_EtOH 0.39-0.54; the NRTL rows meet these points (Lai 2014 via ThermoML, measured 2026-11-09)"
     ddb549-etohh2o-50.66kPa-x0.0855: "y 0.3764 vs 0.4300 (abs 0.054 > 0.02) - the in-house pair was fitted to the 1-atm azeotrope alone (T-independent energy form); its composition dependence away from the azeotrope at 50.66 kPa misses Beebe et al. (1942) (measured 2026-11-04)"
     ddb549-etohh2o-50.66kPa-x0.3495: "y 0.6240 vs 0.5945 (abs 0.029 > 0.02) - the in-house pair was fitted to the 1-atm azeotrope alone (T-independent energy form); its composition dependence away from the azeotrope at 50.66 kPa misses Beebe et al. (1942) (measured 2026-11-04)"
     vanlaar-ig-pure-MeOH-330K: "rho_V 0.882017 vs 0.911218 (-3.20%, band 3.0%) - rho_V: the pr vapour has no association term and cannot carry saturated-vapour non-ideality at this point (CoolProp Z < 1); the HOC and Nothnagel virial pairings meet the MeOH 330 K point (measured 2026-11-04)"
