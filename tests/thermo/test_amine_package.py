@@ -207,3 +207,17 @@ def test_bubble_point_of_rounded_feed_converges() -> None:
     assert p_raw == pytest.approx(p_norm, rel=1e-9)
     state = pkg.flash_pt(z, 298.0, p_raw, 1.0)
     assert state.vapor_fraction == pytest.approx(0.0, abs=1e-6)
+
+
+def test_flash_on_the_bubble_edge_resolves_a_sub_xtol_vapour_fraction() -> None:
+    """A Rachford-Rice root below brent_root's 1e-12 xtol is Newton-polished, not stuck.
+
+    Regression: 10.1 wt% DIPA (CO2 mole fraction 0.0146, Dell'Era et al. 2010 feed) at
+    300.15 K on its bubble edge. Brent returned beta 5e-13 for a root near 7.4e-13, the RR
+    liquid read at it left the bracketed loading residual at 1.6e-11 against the 1e-11
+    gate, and the flash raised "loading fixed point did not converge".
+    """
+    pkg = registry.create("thermo", "amine_ke_dga_amp")
+    z = {"110-97-4": 0.014750188386260589, "H2O": 0.9706498116137395, "CO2": 0.0146}
+    state = pkg.flash_pt(z, 300.15, 215880.71866091, 1.0)
+    assert 0.0 < state.vapor_fraction < 1e-12

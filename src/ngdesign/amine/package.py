@@ -127,6 +127,11 @@ _Z_SUM_TOL = _LOADING_TOL
 #: for the interior TVF/PVF root).
 _SATURATION_REL_TOL = 1e-8
 
+#: Rachford-Rice roots below this are Newton-polished (brent_root's absolute xtol
+#: of 1e-12 is no precision there), at most _RR_EDGE_NEWTON steps.
+_RR_EDGE_BETA = 1e-9
+_RR_EDGE_NEWTON = 8
+
 #: Interior vapour-fraction targets within this of 0/1 solve as bubble/dew.
 _VF_EDGE = 1e-9
 
@@ -689,6 +694,24 @@ class AmineReactivePackage(TracedThermo, Thermo):
         if rr(1.0) >= 0.0:
             return "vapor", 1.0, dict(z), dict(z)
         beta = brent_root(rr, 0.0, 1.0)
+        if beta < _RR_EDGE_BETA:
+            # brent_root's absolute xtol (1e-12) is the whole answer at the bubble
+            # edge: measured beta 5e-13 / 1.000000000001e-12 returned for true roots
+            # below 1e-12, and the RR liquid's loading read at that beta left the
+            # bracketed loading residual at 1.3-1.6e-11 against the 1e-11 gate
+            # (DIPA, 298-300 K).  Newton on rr (monotone decreasing, convex in
+            # beta near 0) from the Brent iterate restores relative precision;
+            # roots above the threshold are untouched.
+            for _ in range(_RR_EDGE_NEWTON):
+                d_rr = -sum(
+                    f * (k[cid] - 1.0) ** 2 / ((1.0 - beta) + beta * k[cid]) ** 2 for cid, f in z.items()
+                )
+                if d_rr == 0.0:
+                    break
+                step = rr(beta) / d_rr
+                beta = max(beta - step, 0.0)
+                if abs(step) <= 1e-15 * max(beta, 1e-300):
+                    break
         y_raw: dict[str, float] = {}
         x_new: dict[str, float] = {}
         for cid, f in z.items():
