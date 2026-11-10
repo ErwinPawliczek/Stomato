@@ -57,6 +57,7 @@ from typing import Any, Literal, cast
 from chemicals.solubility import Henry_pressure
 from thermo.interaction_parameters import source_path
 
+from ngdesign.amine import deshmukh_mather
 from ngdesign.amine.enrtl import (
     equilibrium_loadings as _enrtl_loadings,
 )
@@ -96,7 +97,11 @@ __all__ = [
     "AmineMdeaPzPackage",
     "AmineKEPackage",
     "AmineReactivePackage",
+    "AmineSulfinolPackage",
 ]
+
+#: Sulfolane's component id (its CAS, in the open registry).
+_SULFOLANE_ID = "126-33-0"
 
 #: Piperazine's component id (its CAS, in the open registry).
 _PIPERAZINE_ID = "110-85-0"
@@ -351,6 +356,10 @@ class AmineReactivePackage(TracedThermo, Thermo):
     #: Component ids this package treats as its solvent amine.
     supported_amines: frozenset[str] = frozenset(AMINES)
 
+    #: Non-amine solvent components carried in the liquid seed alongside water (a physical
+    #: co-solvent such as sulfolane); empty for the aqueous-amine packages.
+    cosolvent_ids: tuple[str, ...] = ()
+
     #: Duck-typing marker the amine units probe (plain cubic packages lack it).
     is_amine_reactive_package = True
 
@@ -567,9 +576,12 @@ class AmineReactivePackage(TracedThermo, Thermo):
         # iteration never escapes (measured P1-09: the loadings two-cycled
         # 0.63-0.80 from the raw seed; from the solvent basis the same state
         # splits at a real beta ~0.74).
-        solvent_total = z.get(amine_id, 0.0) + z.get("H2O", 0.0)
+        solvent_total = (
+            z.get(amine_id, 0.0) + z.get("H2O", 0.0) + sum(z.get(c, 0.0) for c in self.cosolvent_ids)
+        )
         if solvent_total > 0.0:
-            x = {cid: f / solvent_total for cid, f in z.items() if cid in (amine_id, "H2O", "CO2", "H2S")}
+            seed_ids = (amine_id, "H2O", "CO2", "H2S", *self.cosolvent_ids)
+            x = {cid: f / solvent_total for cid, f in z.items() if cid in seed_ids}
             sx = sum(x.values())
             x = {cid: v / sx for cid, v in x.items()}
         else:  # pragma: no cover - callers gate on amine presence
@@ -1413,6 +1425,180 @@ class AmineMdeaPzPackage(AmineKEPackage):
                 f"MDEA + PZ speciation left its chemistry window at T={T} K ({exc})"
             ) from exc
         return amine_id, self._amine_molarity(x, amine_id), co2 / x[amine_id], 0.0, p_co2, 0.0
+
+
+class AmineSulfinolPackage(AmineKEPackage):
+    """MDEA + sulfolane + water (Sulfinol-M type), CO2 + H2S (``ngdesign.amine.deshmukh_mather``).
+
+    MacGregor's (1988) modified Deshmukh-Mather model on amine_ke's flash, with sulfolane
+    seeded as a co-solvent. The constants were regressed for one solvent (Table 1.1: 20.9 wt%
+    MDEA, 30.5 wt% sulfolane, 48.6 wt% water; 2.217 mol MDEA per kg water + sulfolane) at two
+    isotherms, so the feed must hold that solvent (sulfolane:water mass ratio and MDEA
+    molality each within :data:`SOLVENT_REL_TOL` of the thesis values) at T = 313.15 K
+    (100 C refuses until a cited sulfolane permittivity at 373.15 K exists); anything else
+    raises :class:`AmineChemistryError`.
+
+    The model gives fugacities f_i = gamma_i m_i H_i; the equilibrium partial pressure is
+    p_i = f_i / phi_i^V(p_i) with phi from the carrier (Peng-Robinson, as the thesis computed
+    vapour fugacities, p. 56) for the pure gas at its own partial pressure -- the package's
+    zero-BIP vapour convention (:meth:`_phase_props`).
+
+    With constants at single isotherms the model has no temperature dependence: the heat of
+    absorption is not available (the liquid enthalpy is the carrier's, no absorption term),
+    ``derivatives`` and the unit-facing ``equilibrium_loadings`` refuse, and PH/PS flashes
+    cannot move T off the isotherm.
+    """
+
+    supported_amines = frozenset({"MDEA"})
+    cosolvent_ids = (_SULFOLANE_ID,)
+
+    #: Relative band on the solvent composition (sulfolane:water mass ratio, MDEA molality)
+    #: inside which the thesis solvent's constants are applied; it absorbs the solvent shift
+    #: of a flash (water to the vapour) and feed rounding, not a different blend.
+    SOLVENT_REL_TOL = 0.05
+
+    #: Liquid MDEA molality, as a multiple of the thesis's 2.217 mol/kg, above which the liquid
+    #: counts as stripped of its solvent (see :meth:`_liquid_chemistry`). Twice the solvent
+    #: strength is half its water + sulfolane boiled off -- far outside every thesis table.
+    STRIPPED_MOLALITY_FACTOR = 2.0
+
+    def _reactive_domain(self, z: dict[str, float]) -> str | None:
+        """The amine id when z holds the thesis solvent; other MDEA feeds raise.
+
+        The solvent window is checked on the FEED: inside a flash the liquid's solvent shifts
+        as water vaporizes (a bubble-pressure scan probes vapour fractions near one), and the
+        model's composition terms (molality, eq. 6.3 permittivity, water activity) follow it.
+        """
+        amine_id = super()._reactive_domain(z)
+        if amine_id is not None:
+            if z.get(_SULFOLANE_ID, 0.0) <= 0.0:
+                raise AmineChemistryError(
+                    "amine_sulfinol_m holds the MDEA + sulfolane + water solvent: no sulfolane in the feed"
+                )
+            self._solvent_state(z, check=True)
+        return amine_id
+
+    def _solvent_state(self, x: dict[str, float], check: bool = False) -> tuple[float, float, float]:
+        """(MDEA molality mol/kg water+sulfolane, x_water on the water+sulfolane basis, x_water).
+
+        ``check`` raises when the solvent lies outside :data:`SOLVENT_REL_TOL` of the thesis's.
+        """
+        x_w, x_s, x_a = x.get(_WATER_ID, 0.0), x.get(_SULFOLANE_ID, 0.0), x.get("MDEA", 0.0)
+        mass_w, mass_s = x_w * _mw(_WATER_ID), x_s * _mw(_SULFOLANE_ID)
+        if mass_w <= 0.0 or mass_s <= 0.0:
+            raise AmineChemistryError("amine_sulfinol_m needs both water and sulfolane in the liquid")
+        molality = x_a / (mass_w + mass_s) * 1000.0
+        solvent = deshmukh_mather.thesis_solvent()
+        ratio = mass_s / mass_w
+        for name, got, want in (
+            ("sulfolane:water mass ratio", ratio, solvent["sulfolane_water_mass_ratio"]),
+            ("MDEA molality (mol/kg water + sulfolane)", molality, solvent["mdea_molality_mol_kg"]),
+        ):
+            if check and abs(got - want) > self.SOLVENT_REL_TOL * want:
+                raise AmineChemistryError(
+                    f"{name} {got:.4g} is outside +/-{self.SOLVENT_REL_TOL:.0%} of the MacGregor 1988 "
+                    f"solvent ({want:.4g}); the constants hold for that solvent only"
+                )
+        return molality, x_w / (x_w + x_s), x_w
+
+    def _partial_pressure(self, cid: str, f: float, T: float) -> float:
+        """p with p * phi^V(pure cid, T, p) == f (carrier phi, fixed point)."""
+        if f <= 0.0:
+            return 0.0
+        p = f
+        for _ in range(100):
+            ln_phi = self._carrier.phase_props({cid: 1.0}, T, p, PhaseKind.VAPOR).ln_phi[cid]
+            p_new = f / math.exp(ln_phi)
+            if abs(p_new - p) <= 1e-13 * p:
+                return p_new
+            p = p_new
+        raise AmineChemistryError(
+            f"vapour fugacity inversion for {cid} did not converge at T={T} K, f={f} Pa"
+        )
+
+    def _chemistry_at(
+        self, x: dict[str, float], T: float, a_co2: float, a_h2s: float
+    ) -> tuple[float, float, float]:
+        """(MDEA molality, p_CO2, p_H2S) at the liquid's solvent and the given loadings."""
+        molality, x_w_solvent, x_w = self._solvent_state(x)
+        try:
+            spec = deshmukh_mather.fugacities(T, molality, a_co2, a_h2s, x_w_solvent, x_w)
+        except ValueError as exc:
+            raise AmineChemistryError(
+                f"Sulfinol (MacGregor 1988) chemistry refused at T={T} K: {exc}"
+            ) from exc
+        return (
+            molality,
+            self._partial_pressure("CO2", spec.f_co2, T),
+            self._partial_pressure("H2S", spec.f_h2s, T),
+        )
+
+    def _liquid_chemistry(
+        self, x: dict[str, float], T: float, P: float
+    ) -> tuple[str, float, float, float, float, float]:
+        """As the base, with c_amine the MDEA molality (mol/kg water + sulfolane)."""
+        amine_id = self._amine_id(self._support(x))
+        if amine_id is None:  # pragma: no cover - callers gate on amine presence
+            raise ValueError("no amine in the liquid composition")
+        x_a = x[amine_id]
+        a_co2 = min(max(x.get("CO2", 0.0) / x_a, 0.0), _MAX_LOADING)
+        a_h2s = min(max(x.get("H2S", 0.0) / x_a, 0.0), _MAX_LOADING)
+        molality, _xs, _xw = self._solvent_state(x)
+        if (
+            molality
+            > self.STRIPPED_MOLALITY_FACTOR * deshmukh_mather.thesis_solvent()["mdea_molality_mol_kg"]
+        ):
+            # A liquid stripped of its solvent (a flash far below the bubble pressure, where
+            # the saturation scan probes) is no longer the thesis solvent: the acid gases are
+            # put all-vapour (K = _ALL_VAPOR_K, the base's convention for a liquid that holds
+            # none) instead of evaluating eq. 6.2 at molalities it was never fitted near.
+            return (
+                amine_id,
+                molality,
+                a_co2,
+                a_h2s,
+                _ALL_VAPOR_K * P * x.get("CO2", 0.0),
+                _ALL_VAPOR_K * P * x.get("H2S", 0.0),
+            )
+        molality, p_co2, p_h2s = self._chemistry_at(x, T, a_co2, a_h2s)
+        return amine_id, molality, a_co2, a_h2s, p_co2, p_h2s
+
+    def _pressures(
+        self, T: float, c_a: float, a_co2: float, a_h2s: float, amine_id: str
+    ) -> tuple[float, float]:
+        raise AmineChemistryError(
+            "amine_sulfinol_m has no molarity-basis speciation: its chemistry is read at a liquid composition"
+        )
+
+    def _absorption_enthalpies(
+        self, amine_id: str, T: float, c_a: float, a_co2: float, a_h2s: float
+    ) -> dict[str, float]:
+        """No heat of absorption: the constants are single isotherms (class docstring)."""
+        return dict.fromkeys(_ACID_GAS_IDS, 0.0)
+
+    def derivatives(
+        self, composition: dict[str, float], T: float, P: float, kind: Any
+    ) -> PropertyDerivatives:
+        if kind == PhaseKind.AQUEOUS and self._amine_id(self._support(composition)) is not None:
+            raise AmineChemistryError(
+                "amine_sulfinol_m has no temperature derivative: MacGregor 1988 gives single isotherms"
+            )
+        return super().derivatives(composition, T, P, kind)
+
+    def equilibrium_pressures(
+        self, x_liquid: dict[str, float], T: float, co2_loading: float, h2s_loading: float
+    ) -> dict[str, float]:
+        a_co2 = min(max(co2_loading, 0.0), _MAX_LOADING)
+        a_h2s = min(max(h2s_loading, 0.0), _MAX_LOADING)
+        _m, p_co2, p_h2s = self._chemistry_at(x_liquid, T, a_co2, a_h2s)
+        return {"CO2": p_co2, "H2S": p_h2s}
+
+    def equilibrium_loadings(
+        self, x_liquid: dict[str, float], T: float, p_co2: float, p_h2s: float
+    ) -> tuple[float, float]:
+        raise AmineChemistryError(
+            "amine_sulfinol_m provides no loading inverse; flash a liquid composition instead"
+        )
 
 
 @register("thermo", "amine_enrtl")

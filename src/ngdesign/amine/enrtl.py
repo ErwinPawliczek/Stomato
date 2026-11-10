@@ -349,13 +349,33 @@ def _a_phi(T: float) -> float:
     permittivity) come from the thermo library databank, the repo's banked
     reference data.
     """
+    d_w_g_cm3, eps_w = water_density_permittivity(T)
+    return debye_huckel_a_phi(T, d_w_g_cm3, eps_w)
+
+
+@cache
+def water_density_permittivity(T: float) -> tuple[float, float]:
+    """(density g/cm3, relative permittivity) of liquid water at T and 1 atm.
+
+    Thermo library databank (``Chemical("water")``; permittivity from the IAPWS
+    formulation). Valid below the normal boiling point, where the 1 atm state is liquid.
+    """
     from thermo import Chemical  # late import: databank access at the edge
 
     water = Chemical("water", T=T, P=101325.0)
-    d_w_g_cm3 = float(water.rho) / 1000.0  # kg/m3 -> g/cm3
-    eps_w = float(water.permittivity)  # relative dielectric constant (IAPWS)
-    l_b_cm = (_E_CHARGE**2) / (4.0 * math.pi * _EPS_0 * eps_w * _K_BOLTZMANN * T) * 100.0
-    return float((1.0 / 3.0) * math.sqrt(2.0 * math.pi * _N_AVOGADRO * d_w_g_cm3 / 1000.0) * l_b_cm**1.5)
+    return float(water.rho) / 1000.0, float(water.permittivity)
+
+
+def debye_huckel_a_phi(T: float, d_g_cm3: float, eps_r: float) -> float:
+    """Pitzer-Debye-Hueckel A_phi (molality base, natural log) from its definition.
+
+    A_phi = (1/3) (2 pi N0 d / 1000)^(1/2) (e^2/(D k T))^(3/2) (reference eq. 30, cgs),
+    with the solvent density ``d_g_cm3`` and relative permittivity ``eps_r`` given;
+    see :func:`_a_phi` for the SI translation (Bjerrum length in cm). The ln-gamma
+    Debye-Hueckel slope is A_gamma = 3 A_phi (1.176 kg^0.5 mol^-0.5 for water at 298.15 K).
+    """
+    l_b_cm = (_E_CHARGE**2) / (4.0 * math.pi * _EPS_0 * eps_r * _K_BOLTZMANN * T) * 100.0
+    return float((1.0 / 3.0) * math.sqrt(2.0 * math.pi * _N_AVOGADRO * d_g_cm3 / 1000.0) * l_b_cm**1.5)
 
 
 # --- Species layout ---

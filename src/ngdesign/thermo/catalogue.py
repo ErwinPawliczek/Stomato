@@ -277,7 +277,13 @@ def _load_dir(dir_path: str) -> dict[str, ModelRow]:
             # L0 parameters are owned per FAMILY (``l0_defaults`` in _schema.yaml); a row
             # lists only what differs. Merging here means every consumer (the harness,
             # describe()) sees the full check set without 25 cubic rows repeating it.
-            family_l0 = dict(schema.get("l0_defaults", {}).get(row.family, {}))
+            # A check the row excludes (``l0_excluded``, with its reason) drops the family
+            # default, so a declared exclusion is never run anyway.
+            family_l0 = {
+                check: params
+                for check, params in schema.get("l0_defaults", {}).get(row.family, {}).items()
+                if check not in row.l0_excluded
+            }
             row = row.model_copy(update={"l0": {**family_l0, **row.l0}})
             _validate_vocab(row, where, schema)
             _validate_options(row, where)
