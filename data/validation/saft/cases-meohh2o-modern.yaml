@@ -1,0 +1,158 @@
+# Modern independent methanol/water isotherm for the associating rows (val-saft2, 2026-11-09).
+#
+# Bernatova, Aim & Wichterle (2006) Fluid Phase Equilib. 247, 96-101: methanol + water at 323.15 K,
+# total pressure (circulation still) and measured vapour composition (GC), the binary subsystem of their
+# quaternary study. Values transcribed by script from the NIST TRC ThermoML XML of the paper (retrieved
+# 2026-11-09), i.e. no hand typing: P kPa -> Pa (x1000), x/y water -> MeOH = 1 - water (exact decimal
+# complement). Pure end points (x_water = 0, 1) are pure-fluid Psat and are not binary cases.
+# Bound in parallel with the 1927 Bayer 322.91 K isotherm (data/validation/saft/cases.yaml), whose
+# vapour compositions differ by up to ~0.05 from both this set and Freitag et al. (2015) J. Chem.
+# Thermodyn. 80, 92-101 (ThermoML 10.1016/j.jct.2014.08.024, 322.9 K); the bubble pressures agree.
+# None of the cpa_srk / cpa_pr / pc_saft_assoc parameters were fitted to these points (pure parameters
+# from Psat/rho_L; cpa_pr k_ij from hydrate-inhibition data, Sorensen 2018 Table 7 refs 42/140/141).
+# Tolerances: the fixed P1-05 policy (bubble_P 3 %, vapour composition 0.02 abs).
+binary_cases:
+- id: meohh2o-323.15K-x0.9785-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.9785
+    H2O: 0.0215
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 54780.0
+    vapor_comp:
+      MeOH: 0.9922
+- id: meohh2o-323.15K-x0.9340-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.934
+    H2O: 0.066
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 53130.0
+    vapor_comp:
+      MeOH: 0.9764
+- id: meohh2o-323.15K-x0.8674-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.8674
+    H2O: 0.1326
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 50580.0
+    vapor_comp:
+      MeOH: 0.9517
+- id: meohh2o-323.15K-x0.7484-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.7484
+    H2O: 0.2516
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 46480.0
+    vapor_comp:
+      MeOH: 0.9052
+- id: meohh2o-323.15K-x0.6408-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.6408
+    H2O: 0.3592
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 43040.0
+    vapor_comp:
+      MeOH: 0.8647
+- id: meohh2o-323.15K-x0.5564-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.5564
+    H2O: 0.4436
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 40260.0
+    vapor_comp:
+      MeOH: 0.8309
+- id: meohh2o-323.15K-x0.4482-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.4482
+    H2O: 0.5518
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 36610.0
+    vapor_comp:
+      MeOH: 0.7802
+- id: meohh2o-323.15K-x0.3274-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.3274
+    H2O: 0.6726
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 32640.0
+    vapor_comp:
+      MeOH: 0.7152
+- id: meohh2o-323.15K-x0.2589-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.2589
+    H2O: 0.7411
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 29360.0
+    vapor_comp:
+      MeOH: 0.654
+- id: meohh2o-323.15K-x0.1788-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.1788
+    H2O: 0.8212
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 24910.0
+    vapor_comp:
+      MeOH: 0.554
+- id: meohh2o-323.15K-x0.1123-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.1123
+    H2O: 0.8877
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 20960.0
+    vapor_comp:
+      MeOH: 0.446
+- id: meohh2o-323.15K-x0.0621-bern
+  package: [cpa_srk, cpa_pr, pc_saft_assoc]
+  components: [MeOH, H2O]
+  z:
+    MeOH: 0.0621
+    H2O: 0.9379
+  T: 323.15
+  source: "literature:Bernatova, Aim & Wichterle (2006) Isothermal vapour-liquid equilibrium with chemical reaction in the quaternary water + methanol + acetic acid + methyl acetate system, and in five binary subsystems, Fluid Phase Equilib. 247, 96-101, DOI 10.1016/j.fluid.2006.06.005; binary methanol + water at 323.15 K (circulation ebulliometer P, GC vapour analysis), NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1016/j.fluid.2006.06.005.xml data sets 5 (P) and 6 (y_water); x/y printed as WATER mole fractions, keyed here per component (MeOH = 1 - water); retrieved 2026-11-09"
+  expected:
+    bubble_P: 17440.0
+    vapor_comp:
+      MeOH: 0.2961

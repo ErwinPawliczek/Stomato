@@ -206,6 +206,12 @@
   #   k_ij = 0 miss.
   # Validation run 2026-11-04 (orchestrator): held provisional — bound L2 comparisons 4 pass / 14 miss;
   # validated needs a majority of bound L2 comparisons passing, not one passing point.
+  # val-saft2 2026-11-09: no kernel bug. CoolProp 8.0.0's independent PCSAFT backend with
+  # the same G&S 2002 Table 1 parameters and k_ij = 0 gives the same 322.91 K bubble
+  # pressures to <= 0.2 % (24659 vs 24613 Pa at x_MeOH 0.0486); the residual is CoolProp's
+  # Wolbach-Sandler sigma factor on kappa_ij (not applied here; G&S 2002 eq. 3 could not
+  # be retrieved to confirm). Misses repeat on the modern Bernatova (2006) 323.15 K
+  # isotherm (5 pass / 19 miss). Bound L2 now 9 pass / 33 miss: stays provisional.
   status: provisional
   validation:
   - pure-H2O-323.5K-ps
@@ -231,6 +237,18 @@
   - meohh2o-101.325kPa-353.25K-ps
   - meohh2o-101.325kPa-349.05K-ps
   - meohh2o-101.325kPa-346.20K-ps
+  - meohh2o-323.15K-x0.9785-bern
+  - meohh2o-323.15K-x0.9340-bern
+  - meohh2o-323.15K-x0.8674-bern
+  - meohh2o-323.15K-x0.7484-bern
+  - meohh2o-323.15K-x0.6408-bern
+  - meohh2o-323.15K-x0.5564-bern
+  - meohh2o-323.15K-x0.4482-bern
+  - meohh2o-323.15K-x0.3274-bern
+  - meohh2o-323.15K-x0.2589-bern
+  - meohh2o-323.15K-x0.1788-bern
+  - meohh2o-323.15K-x0.1123-bern
+  - meohh2o-323.15K-x0.0621-bern
   references:
   - Gross & Sadowski, "Application of the Perturbed-Chain SAFT Equation of State
     to Associating Systems", Ind. Eng. Chem. Res. 41 (2002) 5510-5515
@@ -361,6 +379,83 @@
     meohh2o-322.91K-46.450kPa-ps: "bubble_P +6.4 % (49414.6 vs 46450); vapor_comp
       -0.058 abs (0.8829 vs 0.9406) — same k_ij = 0 limitation (measured
       2026-10-23, PR table)"
+    meohh2o-323.15K-x0.9340-bern: "bubble_P -1.2 % (53130 vs 52472.3 Pa) passes;
+      vapor_comp -0.021 abs (0.9764 vs 0.9555) — k_ij = 0 with the G&S 2002 combining rules
+      (the paper fits no associating-associating k_ij) leaves the cross attraction too weak,
+      so the excess is too positive, worst at the methanol-lean end; the kernel reproduces
+      CoolProp 8.0.0's independent PCSAFT backend with the same Table 1 parameters to within
+      0.2 % in bubble_P, so this is the model with these parameters, not a bug (Bernatova,
+      Aim & Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.8674-bern: "bubble_P +1.2 % (50580 vs 51201.7 Pa) passes;
+      vapor_comp -0.036 abs (0.9517 vs 0.9160) — k_ij = 0 with the G&S 2002 combining rules
+      (the paper fits no associating-associating k_ij) leaves the cross attraction too weak,
+      so the excess is too positive, worst at the methanol-lean end; the kernel reproduces
+      CoolProp 8.0.0's independent PCSAFT backend with the same Table 1 parameters to within
+      0.2 % in bubble_P, so this is the model with these parameters, not a bug (Bernatova,
+      Aim & Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.7484-bern: "bubble_P +5.0 % (46480 vs 48817.3 Pa); vapor_comp
+      -0.048 abs (0.9052 vs 0.8574) — k_ij = 0 with the G&S 2002 combining rules (the paper
+      fits no associating-associating k_ij) leaves the cross attraction too weak, so the
+      excess is too positive, worst at the methanol-lean end; the kernel reproduces CoolProp
+      8.0.0's independent PCSAFT backend with the same Table 1 parameters to within 0.2 % in
+      bubble_P, so this is the model with these parameters, not a bug (Bernatova, Aim &
+      Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.6408-bern: "bubble_P +8.4 % (43040 vs 46665.9 Pa); vapor_comp
+      -0.049 abs (0.8647 vs 0.8159) — k_ij = 0 with the G&S 2002 combining rules (the paper
+      fits no associating-associating k_ij) leaves the cross attraction too weak, so the
+      excess is too positive, worst at the methanol-lean end; the kernel reproduces CoolProp
+      8.0.0's independent PCSAFT backend with the same Table 1 parameters to within 0.2 % in
+      bubble_P, so this is the model with these parameters, not a bug (Bernatova, Aim &
+      Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.5564-bern: "bubble_P +11.9 % (40260 vs 45058.4 Pa); vapor_comp
+      -0.041 abs (0.8309 vs 0.7900) — k_ij = 0 with the G&S 2002 combining rules (the paper
+      fits no associating-associating k_ij) leaves the cross attraction too weak, so the
+      excess is too positive, worst at the methanol-lean end; the kernel reproduces CoolProp
+      8.0.0's independent PCSAFT backend with the same Table 1 parameters to within 0.2 % in
+      bubble_P, so this is the model with these parameters, not a bug (Bernatova, Aim &
+      Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.4482-bern: "bubble_P +17.9 % (36610 vs 43151.1 Pa); vapor_comp
+      -0.017 abs (0.7802 vs 0.7636) passes — k_ij = 0 with the G&S 2002 combining rules (the
+      paper fits no associating-associating k_ij) leaves the cross attraction too weak, so
+      the excess is too positive, worst at the methanol-lean end; the kernel reproduces
+      CoolProp 8.0.0's independent PCSAFT backend with the same Table 1 parameters to within
+      0.2 % in bubble_P, so this is the model with these parameters, not a bug (Bernatova,
+      Aim & Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.3274-bern: "bubble_P +26.0 % (32640 vs 41112.0 Pa); vapor_comp
+      +0.024 abs (0.7152 vs 0.7394) — k_ij = 0 with the G&S 2002 combining rules (the paper
+      fits no associating-associating k_ij) leaves the cross attraction too weak, so the
+      excess is too positive, worst at the methanol-lean end; the kernel reproduces CoolProp
+      8.0.0's independent PCSAFT backend with the same Table 1 parameters to within 0.2 % in
+      bubble_P, so this is the model with these parameters, not a bug (Bernatova, Aim &
+      Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.2589-bern: "bubble_P +35.3 % (29360 vs 39738.0 Pa); vapor_comp
+      +0.071 abs (0.654 vs 0.7246) — k_ij = 0 with the G&S 2002 combining rules (the paper
+      fits no associating-associating k_ij) leaves the cross attraction too weak, so the
+      excess is too positive, worst at the methanol-lean end; the kernel reproduces CoolProp
+      8.0.0's independent PCSAFT backend with the same Table 1 parameters to within 0.2 % in
+      bubble_P, so this is the model with these parameters, not a bug (Bernatova, Aim &
+      Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.1788-bern: "bubble_P +49.4 % (24910 vs 37221.1 Pa); vapor_comp
+      +0.144 abs (0.554 vs 0.6980) — k_ij = 0 with the G&S 2002 combining rules (the paper
+      fits no associating-associating k_ij) leaves the cross attraction too weak, so the
+      excess is too positive, worst at the methanol-lean end; the kernel reproduces CoolProp
+      8.0.0's independent PCSAFT backend with the same Table 1 parameters to within 0.2 % in
+      bubble_P, so this is the model with these parameters, not a bug (Bernatova, Aim &
+      Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.1123-bern: "bubble_P +57.9 % (20960 vs 33105.0 Pa); vapor_comp
+      +0.204 abs (0.446 vs 0.6504) — k_ij = 0 with the G&S 2002 combining rules (the paper
+      fits no associating-associating k_ij) leaves the cross attraction too weak, so the
+      excess is too positive, worst at the methanol-lean end; the kernel reproduces CoolProp
+      8.0.0's independent PCSAFT backend with the same Table 1 parameters to within 0.2 % in
+      bubble_P, so this is the model with these parameters, not a bug (Bernatova, Aim &
+      Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.0621-bern: "bubble_P +55.8 % (17440 vs 27169.9 Pa); vapor_comp
+      +0.265 abs (0.2961 vs 0.5610) — k_ij = 0 with the G&S 2002 combining rules (the paper
+      fits no associating-associating k_ij) leaves the cross attraction too weak, so the
+      excess is too positive, worst at the methanol-lean end; the kernel reproduces CoolProp
+      8.0.0's independent PCSAFT backend with the same Table 1 parameters to within 0.2 % in
+      bubble_P, so this is the model with these parameters, not a bug (Bernatova, Aim &
+      Wichterle 2006 isotherm; measured 2026-11-09, val-saft2)"
 
 - id: pc_saft_polar
   name: Polar PC-SAFT (hand-rolled kernel)
@@ -610,6 +705,13 @@
   #   binary parameter fitted).
   # Validation run 2026-11-04 (orchestrator): held provisional — bound L2 comparisons 6 pass / 12 miss;
   # validated needs a majority of bound L2 comparisons passing, not one passing point.
+  # val-saft2 2026-11-09: no kernel bug. alpha_r matches teqp 0.23.2's independent CPA
+  # (SRK, KG RDF, CR-1) to <= 7e-11 abs (tests/thermo/test_saft.py::TestCpaKernelsMatchTeqpCpa).
+  # The 1927 Bayer pressures agree with the modern Bernatova, Aim & Wichterle (2006) 323.15 K
+  # isotherm (12 points bound, *-bern); the misses repeat there (9 pass / 15 miss), so the
+  # cause is k_ij = 0, not the old data. No published CPA-SRK water-methanol k_ij could be
+  # retrieved (Kontogeorgis 1999 FPE closed; Folas 2005 IECR / 2006 thesis on DTU Orbit
+  # behind a bot wall). Bound L2 now 15 pass / 27 miss: stays provisional.
   status: provisional
   validation: &cpa_srk_cases
   - pure-H2O-323.5K
@@ -631,6 +733,18 @@
   - meohh2o-101.325kPa-353.25K
   - meohh2o-101.325kPa-349.05K
   - meohh2o-101.325kPa-346.20K
+  - meohh2o-323.15K-x0.9785-bern
+  - meohh2o-323.15K-x0.9340-bern
+  - meohh2o-323.15K-x0.8674-bern
+  - meohh2o-323.15K-x0.7484-bern
+  - meohh2o-323.15K-x0.6408-bern
+  - meohh2o-323.15K-x0.5564-bern
+  - meohh2o-323.15K-x0.4482-bern
+  - meohh2o-323.15K-x0.3274-bern
+  - meohh2o-323.15K-x0.2589-bern
+  - meohh2o-323.15K-x0.1788-bern
+  - meohh2o-323.15K-x0.1123-bern
+  - meohh2o-323.15K-x0.0621-bern
   references:
   - Kontogeorgis, Voutsas, Yakoumis & Tassios, "An Equation of State for Associating
     Fluids", Ind. Eng. Chem. Res. 35 (1996) 4631-4642
@@ -742,7 +856,7 @@
       abs above the 0.02 band (0.2741 vs 0.4029) — k_ij = 0: no verifiable open citation
       for the water-methanol CPA k_ij and tuning against the validation points is
       forbidden, so the cross-association is mispredicted and the methanol-lean end
-      suffers worst (Gao 2012 isotherm; measured 2026-10-22, PR table)"
+      suffers worst (Bayer 1927 322.91 K isotherm; measured 2026-10-22, PR table)"
     meohh2o-322.91K-26.131kPa: "bubble_P +20.5 % (26131 vs 31474); vapor_comp 0.038 abs
       above the 0.02 band (0.6294 vs 0.6672) — same k_ij = 0 limitation (measured
       2026-10-22, PR table)"
@@ -755,6 +869,78 @@
     meohh2o-322.91K-46.450kPa: "bubble_P +4.8 % (46450 vs 48675); vapor_comp 0.032 abs
       above the 0.02 band (0.9406 vs 0.9083) — same k_ij = 0 limitation (measured
       2026-10-22, PR table)"
+    meohh2o-323.15K-x0.7484-bern: "bubble_P +2.4 % (46480 vs 47590.3 Pa) passes;
+      vapor_comp -0.021 abs (0.9052 vs 0.8845) — k_ij = 0 (no published water-methanol CPA-
+      SRK k_ij could be retrieved: Kontogeorgis 1999 FPE closed, Folas 2005/2006 DTU copies
+      behind a bot wall) leaves the MeOH-H2O cross attraction too weak, so the excess is too
+      positive, worst at the methanol-lean end; the kernel itself reproduces teqp 0.23.2's
+      independent CPA (SRK, KG RDF, CR1) alpha_r to <= 7e-11 abs at 323.15 K, so this is the
+      parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm; measured
+      2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.6408-bern: "bubble_P +3.6 % (43040 vs 44573.6 Pa); vapor_comp
+      -0.024 abs (0.8647 vs 0.8412) — k_ij = 0 (no published water-methanol CPA-SRK k_ij
+      could be retrieved: Kontogeorgis 1999 FPE closed, Folas 2005/2006 DTU copies behind a
+      bot wall) leaves the MeOH-H2O cross attraction too weak, so the excess is too
+      positive, worst at the methanol-lean end; the kernel itself reproduces teqp 0.23.2's
+      independent CPA (SRK, KG RDF, CR1) alpha_r to <= 7e-11 abs at 323.15 K, so this is the
+      parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm; measured
+      2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.5564-bern: "bubble_P +5.0 % (40260 vs 42286.0 Pa); vapor_comp
+      -0.021 abs (0.8309 vs 0.8095) — k_ij = 0 (no published water-methanol CPA-SRK k_ij
+      could be retrieved: Kontogeorgis 1999 FPE closed, Folas 2005/2006 DTU copies behind a
+      bot wall) leaves the MeOH-H2O cross attraction too weak, so the excess is too
+      positive, worst at the methanol-lean end; the kernel itself reproduces teqp 0.23.2's
+      independent CPA (SRK, KG RDF, CR1) alpha_r to <= 7e-11 abs at 323.15 K, so this is the
+      parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm; measured
+      2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.4482-bern: "bubble_P +7.6 % (36610 vs 39388.1 Pa); vapor_comp
+      -0.010 abs (0.7802 vs 0.7706) passes — k_ij = 0 (no published water-methanol CPA-SRK
+      k_ij could be retrieved: Kontogeorgis 1999 FPE closed, Folas 2005/2006 DTU copies
+      behind a bot wall) leaves the MeOH-H2O cross attraction too weak, so the excess is too
+      positive, worst at the methanol-lean end; the kernel itself reproduces teqp 0.23.2's
+      independent CPA (SRK, KG RDF, CR1) alpha_r to <= 7e-11 abs at 323.15 K, so this is the
+      parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm; measured
+      2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.3274-bern: "bubble_P +10.1 % (32640 vs 35948.4 Pa); vapor_comp
+      +0.010 abs (0.7152 vs 0.7249) passes — k_ij = 0 (no published water-methanol CPA-SRK
+      k_ij could be retrieved: Kontogeorgis 1999 FPE closed, Folas 2005/2006 DTU copies
+      behind a bot wall) leaves the MeOH-H2O cross attraction too weak, so the excess is too
+      positive, worst at the methanol-lean end; the kernel itself reproduces teqp 0.23.2's
+      independent CPA (SRK, KG RDF, CR1) alpha_r to <= 7e-11 abs at 323.15 K, so this is the
+      parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm; measured
+      2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.2589-bern: "bubble_P +14.6 % (29360 vs 33650.3 Pa); vapor_comp
+      +0.039 abs (0.654 vs 0.6934) — k_ij = 0 (no published water-methanol CPA-SRK k_ij
+      could be retrieved: Kontogeorgis 1999 FPE closed, Folas 2005/2006 DTU copies behind a
+      bot wall) leaves the MeOH-H2O cross attraction too weak, so the excess is too
+      positive, worst at the methanol-lean end; the kernel itself reproduces teqp 0.23.2's
+      independent CPA (SRK, KG RDF, CR1) alpha_r to <= 7e-11 abs at 323.15 K, so this is the
+      parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm; measured
+      2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.1788-bern: "bubble_P +21.1 % (24910 vs 30172.5 Pa); vapor_comp
+      +0.088 abs (0.554 vs 0.6415) — k_ij = 0 (no published water-methanol CPA-SRK k_ij
+      could be retrieved: Kontogeorgis 1999 FPE closed, Folas 2005/2006 DTU copies behind a
+      bot wall) leaves the MeOH-H2O cross attraction too weak, so the excess is too
+      positive, worst at the methanol-lean end; the kernel itself reproduces teqp 0.23.2's
+      independent CPA (SRK, KG RDF, CR1) alpha_r to <= 7e-11 abs at 323.15 K, so this is the
+      parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm; measured
+      2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.1123-bern: "bubble_P +23.9 % (20960 vs 25974.0 Pa); vapor_comp
+      +0.120 abs (0.446 vs 0.5660) — k_ij = 0 (no published water-methanol CPA-SRK k_ij
+      could be retrieved: Kontogeorgis 1999 FPE closed, Folas 2005/2006 DTU copies behind a
+      bot wall) leaves the MeOH-H2O cross attraction too weak, so the excess is too
+      positive, worst at the methanol-lean end; the kernel itself reproduces teqp 0.23.2's
+      independent CPA (SRK, KG RDF, CR1) alpha_r to <= 7e-11 abs at 323.15 K, so this is the
+      parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm; measured
+      2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.0621-bern: "bubble_P +22.2 % (17440 vs 21312.2 Pa); vapor_comp
+      +0.156 abs (0.2961 vs 0.4524) — k_ij = 0 (no published water-methanol CPA-SRK k_ij
+      could be retrieved: Kontogeorgis 1999 FPE closed, Folas 2005/2006 DTU copies behind a
+      bot wall) leaves the MeOH-H2O cross attraction too weak, so the excess is too
+      positive, worst at the methanol-lean end; the kernel itself reproduces teqp 0.23.2's
+      independent CPA (SRK, KG RDF, CR1) alpha_r to <= 7e-11 abs at 323.15 K, so this is the
+      parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm; measured
+      2026-11-09, val-saft2)"
 
 - id: cpa_pr
   name: CPA-PR (hand-rolled association kernel)
@@ -793,6 +979,12 @@
   #   https://d-nb.info/136523830X/34 (p. 7 text and Table 7), retrieved 2026-11-04.
   # Validation run 2026-11-04 (orchestrator): held provisional — bound L2 comparisons 5 pass / 13 miss;
   # validated needs a majority of bound L2 comparisons passing, not one passing point.
+  # val-saft2 2026-11-09: no kernel bug. alpha_r at k_ij = 0 matches teqp 0.23.2's
+  # independent CPA (PR, KG RDF, CR-1) to <= 7e-11 abs; mixing rule (A7), CR-1 (A15-A16)
+  # and Table 7 k_ij re-read against Sorensen 2018 Appendix A. The Table 7 k_ij was fitted to
+  # hydrate-inhibition data and over-strengthens the MeOH/H2O cross attraction at VLE
+  # conditions; the misses repeat on the modern Bernatova (2006) 323.15 K isotherm
+  # (8 pass / 16 miss). Bound L2 now 13 pass / 29 miss: stays provisional.
   status: provisional
   validation:
   - pure-H2O-323.5K-pr
@@ -814,6 +1006,18 @@
   - meohh2o-101.325kPa-353.25K
   - meohh2o-101.325kPa-349.05K
   - meohh2o-101.325kPa-346.20K
+  - meohh2o-323.15K-x0.9785-bern
+  - meohh2o-323.15K-x0.9340-bern
+  - meohh2o-323.15K-x0.8674-bern
+  - meohh2o-323.15K-x0.7484-bern
+  - meohh2o-323.15K-x0.6408-bern
+  - meohh2o-323.15K-x0.5564-bern
+  - meohh2o-323.15K-x0.4482-bern
+  - meohh2o-323.15K-x0.3274-bern
+  - meohh2o-323.15K-x0.2589-bern
+  - meohh2o-323.15K-x0.1788-bern
+  - meohh2o-323.15K-x0.1123-bern
+  - meohh2o-323.15K-x0.0621-bern
   references:
   - Sorensen, Boesen, Leekumjorn & Herslund, "Peng-Robinson Equation of State
     Extended to Handle Aqueous Components Using CPA Concept", J. Nat. Gas Eng. 6
@@ -909,7 +1113,7 @@
       0.105 abs below the 0.02 band (0.2741 vs 0.1688) — the paper's Table 7 k_ij
       (fitted -0.14146 at 288.15 K) over-strengthens the cross-association at the
       methanol-lean end for this isotherm; tuning against the validation points is
-      forbidden (Gao 2012 isotherm; measured 2026-10-23, PR table)"
+      forbidden (Bayer 1927 322.91 K isotherm; measured 2026-10-23, PR table)"
     meohh2o-322.91K-26.131kPa-pr: "bubble_P -19.8 % (26131 vs 20969.9); vapor_comp
       0.079 abs below the 0.02 band (0.6294 vs 0.5502) — same Table 7 k_ij
       limitation, worst at the methanol-lean end (measured 2026-10-23, PR table)"
@@ -928,6 +1132,69 @@
       -0.054 abs (0.7197 vs 0.6652) — same k_ij limitation (measured 2026-11-04, val-saft)"
     meohh2o-101.325kPa-346.20K: "bubble_T +0.88 % (346.2 vs 349.241 K); vapor_comp
       +0.023 abs (0.786 vs 0.8087) — same k_ij limitation (measured 2026-11-04, val-saft)"
+    meohh2o-323.15K-x0.7484-bern: "bubble_P -5.0 % (46480 vs 44148.5 Pa); vapor_comp
+      +0.021 abs (0.9052 vs 0.9260) — the Sorensen 2018 Table 7 k_ij (-0.156 at 323 K,
+      fitted to methane-hydrate inhibition data, not to MeOH/H2O VLE) makes the cross
+      attraction too strong, so the bubble pressure is low, worst at the methanol-lean end;
+      the kernel reproduces teqp 0.23.2's independent CPA (PR, KG RDF, CR1, k_ij = 0)
+      alpha_r to <= 7e-11 abs, so this is the parameter set, not a bug (Bernatova, Aim & Wichterle
+      2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.6408-bern: "bubble_P -7.7 % (43040 vs 39709.5 Pa); vapor_comp
+      +0.021 abs (0.8647 vs 0.8854) — the Sorensen 2018 Table 7 k_ij (-0.156 at 323 K,
+      fitted to methane-hydrate inhibition data, not to MeOH/H2O VLE) makes the cross
+      attraction too strong, so the bubble pressure is low, worst at the methanol-lean end;
+      the kernel reproduces teqp 0.23.2's independent CPA (PR, KG RDF, CR1, k_ij = 0)
+      alpha_r to <= 7e-11 abs, so this is the parameter set, not a bug (Bernatova, Aim & Wichterle
+      2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.5564-bern: "bubble_P -10.0 % (40260 vs 36229.8 Pa); vapor_comp
+      +0.017 abs (0.8309 vs 0.8475) passes — the Sorensen 2018 Table 7 k_ij (-0.156 at 323
+      K, fitted to methane-hydrate inhibition data, not to MeOH/H2O VLE) makes the cross
+      attraction too strong, so the bubble pressure is low, worst at the methanol-lean end;
+      the kernel reproduces teqp 0.23.2's independent CPA (PR, KG RDF, CR1, k_ij = 0)
+      alpha_r to <= 7e-11 abs, so this is the parameter set, not a bug (Bernatova, Aim & Wichterle
+      2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.4482-bern: "bubble_P -13.4 % (36610 vs 31691.4 Pa); vapor_comp
+      +0.007 abs (0.7802 vs 0.7867) passes — the Sorensen 2018 Table 7 k_ij (-0.156 at 323
+      K, fitted to methane-hydrate inhibition data, not to MeOH/H2O VLE) makes the cross
+      attraction too strong, so the bubble pressure is low, worst at the methanol-lean end;
+      the kernel reproduces teqp 0.23.2's independent CPA (PR, KG RDF, CR1, k_ij = 0)
+      alpha_r to <= 7e-11 abs, so this is the parameter set, not a bug (Bernatova, Aim & Wichterle
+      2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.3274-bern: "bubble_P -19.1 % (32640 vs 26421.7 Pa); vapor_comp
+      -0.024 abs (0.7152 vs 0.6913) — the Sorensen 2018 Table 7 k_ij (-0.156 at 323 K,
+      fitted to methane-hydrate inhibition data, not to MeOH/H2O VLE) makes the cross
+      attraction too strong, so the bubble pressure is low, worst at the methanol-lean end;
+      the kernel reproduces teqp 0.23.2's independent CPA (PR, KG RDF, CR1, k_ij = 0)
+      alpha_r to <= 7e-11 abs, so this is the parameter set, not a bug (Bernatova, Aim & Wichterle
+      2006 isotherm; measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.2589-bern: "bubble_P -20.6 % (29360 vs 23324.8 Pa); vapor_comp
+      -0.039 abs (0.654 vs 0.6150) — the Sorensen 2018 Table 7 k_ij (-0.156 at 323 K, fitted
+      to methane-hydrate inhibition data, not to MeOH/H2O VLE) makes the cross attraction
+      too strong, so the bubble pressure is low, worst at the methanol-lean end; the kernel
+      reproduces teqp 0.23.2's independent CPA (PR, KG RDF, CR1, k_ij = 0) alpha_r to <= 7e-11 abs,
+      so this is the parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm;
+      measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.1788-bern: "bubble_P -21.1 % (24910 vs 19654.2 Pa); vapor_comp
+      -0.061 abs (0.554 vs 0.4925) — the Sorensen 2018 Table 7 k_ij (-0.156 at 323 K, fitted
+      to methane-hydrate inhibition data, not to MeOH/H2O VLE) makes the cross attraction
+      too strong, so the bubble pressure is low, worst at the methanol-lean end; the kernel
+      reproduces teqp 0.23.2's independent CPA (PR, KG RDF, CR1, k_ij = 0) alpha_r to <= 7e-11 abs,
+      so this is the parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm;
+      measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.1123-bern: "bubble_P -20.5 % (20960 vs 16667.0 Pa); vapor_comp
+      -0.095 abs (0.446 vs 0.3506) — the Sorensen 2018 Table 7 k_ij (-0.156 at 323 K, fitted
+      to methane-hydrate inhibition data, not to MeOH/H2O VLE) makes the cross attraction
+      too strong, so the bubble pressure is low, worst at the methanol-lean end; the kernel
+      reproduces teqp 0.23.2's independent CPA (PR, KG RDF, CR1, k_ij = 0) alpha_r to <= 7e-11 abs,
+      so this is the parameter set, not a bug (Bernatova, Aim & Wichterle 2006 isotherm;
+      measured 2026-11-09, val-saft2)"
+    meohh2o-323.15K-x0.0621-bern: "bubble_P -16.6 % (17440 vs 14546.5 Pa); vapor_comp
+      -0.085 abs (0.2961 vs 0.2115) — the Sorensen 2018 Table 7 k_ij (-0.156 at 323 K,
+      fitted to methane-hydrate inhibition data, not to MeOH/H2O VLE) makes the cross
+      attraction too strong, so the bubble pressure is low, worst at the methanol-lean end;
+      the kernel reproduces teqp 0.23.2's independent CPA (PR, KG RDF, CR1, k_ij = 0)
+      alpha_r to <= 7e-11 abs, so this is the parameter set, not a bug (Bernatova, Aim & Wichterle
+      2006 isotherm; measured 2026-11-09, val-saft2)"
 
 - id: multifluid
   name: Multi-fluid Helmholtz (teqp CoolProp library)

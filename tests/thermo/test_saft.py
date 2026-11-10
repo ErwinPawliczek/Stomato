@@ -8,7 +8,7 @@ HEOS in-process (the same NIST-aligned reference the validation cases use).
 from __future__ import annotations
 
 import sys
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -372,3 +372,52 @@ class TestPcSaftPolar:
         pkg = catalogue.build(catalogue.load_catalogue()["pc_saft_polar"])
         sp = pkg.bubble_point({"DME": 1.0}, T=248.0)
         assert sp.P == pytest.approx(99_713.0, rel=0.02)
+
+
+class TestCpaKernelsMatchTeqpCpa:
+    """The hand-rolled CPA kernels against teqp's independent CPA implementation.
+
+    val-saft2 (2026-11-09): the MeOH/H2O VLE misses of cpa_srk / cpa_pr were checked
+    for kernel bugs (association sum, CR-1 cross rule, RDF, site scheme). teqp 0.23.2's
+    ``CPA`` kind (SRK or PR cubic, Kontogeorgis "KG" RDF g = 1/(1 - 1.9 eta), CR-1 cross
+    association, donor "e" / acceptor "H" sites) with the same pure parameters and k_ij = 0
+    reproduces alpha_r to <= 3e-9 relative (the site-fraction tolerance), so the misses are
+    the parameter sets, not the kernel.
+    """
+
+    @staticmethod
+    def _teqp_cpa(cubic: str, kernel: Any) -> Any:
+        import teqp
+
+        pures = [
+            {
+                "a0i / Pa m^6/mol^2": p["a0"],
+                "bi / m^3/mol": p["b"],
+                "c1": p["c1"],
+                "Tc / K": tc,
+                "epsABi / J/mol": p["epsilon_AB"],
+                "betaABi": p["beta_AB"],
+                "sites": ["e" if s == "a" else "H" for s in p["sites"]],
+            }
+            for p, tc in zip(kernel.params, kernel.tcs, strict=True)
+        ]
+        spec = {"cubic": cubic, "pures": pures, "R_gas / J/mol/K": 8.31446261815324, "radial_dist": "KG"}
+        return teqp.make_model({"kind": "CPA", "validate": False, "model": spec}, False)
+
+    @pytest.mark.parametrize(("row", "cubic"), [("cpa_srk", "SRK"), ("cpa_pr", "PR")])
+    def test_meoh_h2o_alpha_r_matches_teqp(self, row: str, cubic: str) -> None:
+        pytest.importorskip("teqp")
+        import numpy as np
+
+        from ngdesign.thermo.teqp_bridge import _build_kernel
+
+        kernel = _build_kernel(row, ("MeOH", "H2O"))
+        if row == "cpa_pr":
+            kernel._kij_table = {}  # teqp's CPA carries no k_ij: compare at k_ij = 0
+        ref = self._teqp_cpa(cubic, kernel)
+        for x in (0.0621, 0.5):
+            z = np.array([x, 1.0 - x])
+            for rho in (10.0, 30000.0):
+                got = kernel._alpha_r(323.15, rho, z)
+                # site fractions converge to 1e-10, hence the 1e-8 relative band
+                assert got == pytest.approx(ref.get_Ar00(323.15, rho, z), rel=1e-8)
