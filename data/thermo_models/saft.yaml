@@ -749,8 +749,8 @@
   #   comparisons (CoolProp CH4); Lafitte (2013) fitted Psat, rho_L and speed of sound, so
   #   rho_V and Cp are the independent part. L2: five Petropoulou (2018) C1/CO2 bubble
   #   points pass at k_ij = 0 (293.13-303.14 K; the 303.14 K pair binds since the
-  #   2026-11-04 bridge fixes; 298.142K-7.508MPa still raises near the mixture critical
-  #   point and stays unbound).
+  #   2026-11-04 bridge fixes). val-saft2 (2026-11-09): 298.142K-7.508MPa binds since the
+  #   K-sum continuation fix and passes (+1.73 % bubble_P, y_CO2 -0.019).
   status: validated
   validation:
   - pure-C1-95.3K
@@ -768,6 +768,7 @@
   - c1co2-298.142K-6.976MPa
   - c1co2-303.145K-7.306MPa
   - c1co2-303.144K-7.361MPa
+  - c1co2-298.142K-7.508MPa
   assessed:
     pure-C1-155.0K: "rho_V -4.4% (19.526 vs 20.419 mol/l) — SAFT-VR-Mie vapour densities
       fall below the CoolProp reference as T rises toward methane's critical region"
@@ -1390,6 +1391,10 @@
   #   C1/N2 measured bubble points pass, and the three AGA8 GERG-2008 C1/N2 dew points
   #   pass since the bridge's dew K-sum fix (the earlier +5.3 % at 153.41 K was the
   #   solver, not the parameters: 2658640 vs 2658444 Pa now).
+  #   val-saft2 (2026-11-09): Petropoulou (2018) c1co2-293.130K-6.976MPa and
+  #   -298.142K-6.976MPa bind since the K-sum continuation fix and pass (bubble_P -0.44 % /
+  #   -0.20 %); 298.142K-7.508MPa (strictly monotone feed isotherm: no bubble point in the
+  #   model) and the 303.14 K pair (2.6 kPa loop, roots < 1.5x apart) stay unbound.
   status: validated
   validation:
   - cpv-C1-125.0K
@@ -1403,6 +1408,8 @@
   - aga8-c1n2-134.02K-dew
   - aga8-c1n2-146.37K-dew
   - aga8-c1n2-153.41K-dew
+  - c1co2-293.130K-6.976MPa
+  - c1co2-298.142K-6.976MPa
   references:
   - teqp 0.23 (Thol & Bell), https://teqp.readthedocs.io, MIT licence
   - Huber, Lemmon, Diky, Smith & Brunner, "ThermoData Engine (TDE103b)", J. Chem. Eng.
@@ -1598,6 +1605,13 @@
   #   dew points pass (the dew points are model check values: implementation evidence).
   #   Not verified: whether Janisch (2007) entered the GERG-2008 binary fit (Kunz &
   #   Wagner 2012 data tables not retrieved this session).
+  #   val-saft2 (2026-11-09): Petropoulou (2018) c1co2-293.130K-6.976MPa and
+  #   -298.142K-6.976MPa bind since the K-sum continuation fix (they crashed before) and pass
+  #   (bubble_P -0.45 % / -0.22 %, y within 0.0003). 298.142K-7.508MPa and the 303.14 K pair
+  #   stay unbound: the 298.142 K feed isotherm (x_C1 0.0464) is strictly monotone in
+  #   GERG-2008 (no bubble point exists: the model's critical locus lies below the
+  #   measured one) and the 303.14 K feeds (x_C1 0.004) carry a 2.6 kPa loop whose
+  #   vapour/liquid roots differ by < 1.5x, below the solver's vapour-root test.
   status: validated
   validation: &gerg2008_teqp_cases
   - cpv-C1-125.0K
@@ -1613,6 +1627,8 @@
   - aga8-c1n2-134.02K-dew
   - aga8-c1n2-146.37K-dew
   - aga8-c1n2-153.41K-dew
+  - c1co2-293.130K-6.976MPa
+  - c1co2-298.142K-6.976MPa
   assessed:
     c1n2-130.079K-0.614MPa: "bubble_P -5.78% (578201 vs 613700; exact GERG2008resid
       kind since 2026-11-04, was 578280 on the CoolProp-library build) - Kunz-Wagner

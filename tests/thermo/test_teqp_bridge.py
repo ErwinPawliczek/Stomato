@@ -115,3 +115,32 @@ def test_near_critical_incipient_vapour_votes() -> None:
     """
     sp = _pkg("saft_vr_mie").bubble_point({"C1": 0.02145, "CO2": 0.97855}, T=298.142)  # type: ignore[attr-defined]
     assert sp.P == pytest.approx(7.0008e6, rel=1e-3)
+
+
+@pytest.mark.parametrize(
+    ("row", "x_c1", "T", "ref"),
+    [
+        # multi-fluid CO2/C1 95/5 at 293.13 K (Petropoulou 2018: 6.9756 MPa)
+        ("multifluid", 0.04982, 293.13, 6.944756e6),
+        ("gerg2008_teqp", 0.02145, 298.142, 6.960412e6),
+        # SAFT-VR-Mie at 298.142 K (Petropoulou 2018: 7.5079 MPa)
+        ("saft_vr_mie", 0.04641, 298.142, 7.637620e6),
+    ],
+)
+def test_near_critical_bubble_marches_past_the_single_root_edge(
+    row: str, x_c1: float, T: float, ref: float
+) -> None:
+    """Near a mixture critical point every pressure the K-sum bracket visited carried a
+    single density root, so the bracket closed on the Z = 0.5 edge of that root (6.286
+    MPa for the first case) with no K-sum ever evaluated, and raised. The pressure
+    continuation from that edge carries the incipient vapour composition up to the
+    converged K-sum's sign change (val-saft2, 2026-11-09; measured values below)."""
+    sp = _pkg(row).bubble_point({"C1": x_c1, "CO2": 1.0 - x_c1}, T=T)  # type: ignore[attr-defined]
+    assert sp.P == pytest.approx(ref, rel=1e-4)
+
+
+def test_bubble_with_no_two_phase_feed_still_refuses() -> None:
+    """GERG-2008's 298.142 K isotherm of the 4.6 % C1 feed is strictly monotone: no
+    bubble point exists in the model, and the continuation must not invent one."""
+    with pytest.raises(SaturationError):
+        _pkg("gerg2008_teqp").bubble_point({"C1": 0.04641, "CO2": 0.95359}, T=298.142)  # type: ignore[attr-defined]

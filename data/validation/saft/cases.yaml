@@ -916,7 +916,9 @@ binary_cases:
     vapor_comp:
       CO2: 0.96030
 - id: c1co2-293.130K-6.976MPa
-  package: pc_saft
+  # val-saft2 (2026-11-09): also bound to the rows whose bubble solve crashed here before the
+  # K-sum continuation fix (teqp_bridge._sat_ksum_solve.march).
+  package: [pc_saft, multifluid, gerg2008_teqp]
   components:
   - C1
   - CO2
@@ -932,7 +934,9 @@ binary_cases:
     vapor_comp:
       CO2: 0.89863
 - id: c1co2-298.142K-6.976MPa
-  package: pc_saft
+  # val-saft2 (2026-11-09): also bound to the rows whose bubble solve crashed here before the
+  # K-sum continuation fix (teqp_bridge._sat_ksum_solve.march).
+  package: [pc_saft, multifluid, gerg2008_teqp]
   components:
   - C1
   - CO2
@@ -948,7 +952,9 @@ binary_cases:
     vapor_comp:
       CO2: 0.95917
 - id: c1co2-298.142K-7.508MPa
-  package: pc_saft
+  # val-saft2 (2026-11-09): also bound to the rows whose bubble solve crashed here before the
+  # K-sum continuation fix (teqp_bridge._sat_ksum_solve.march).
+  package: [pc_saft, saft_vr_mie]
   components:
   - C1
   - CO2
