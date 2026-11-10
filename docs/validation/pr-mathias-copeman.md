@@ -1,6 +1,6 @@
 # pr-mathias-copeman — Peng-Robinson, Mathias-Copeman alpha
 
-family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:PrMathiasCopemanThermo`.
+family `cubic` · status **validated** · adapter `ngdesign.thermo.cubic:PrMathiasCopemanThermo`.
 
 ## Applicability (Carlson 1996)
 

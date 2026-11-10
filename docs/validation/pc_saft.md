@@ -1,6 +1,6 @@
 # pc_saft — PC-SAFT (teqp)
 
-family `saft` · status **provisional** · adapter `ngdesign.thermo.teqp_bridge:PCSaftThermo`.
+family `saft` · status **validated** · adapter `ngdesign.thermo.teqp_bridge:PCSaftThermo`.
 
 ## Applicability (Carlson 1996)
 
@@ -34,7 +34,7 @@ Note: T-15 disposition: teqp 0.23.2 ships cp312 wheels and CI runs Python 3.12, 
 
 ## L1/L2 reference-case outcomes
 
-44/62 comparisons pass. Failing comparisons are assessed in the
+46/62 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:

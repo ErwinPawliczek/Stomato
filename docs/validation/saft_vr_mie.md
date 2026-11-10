@@ -1,6 +1,6 @@
 # saft_vr_mie — SAFT-VR Mie (teqp)
 
-family `saft` · status **provisional** · adapter `ngdesign.thermo.teqp_bridge:SaftVrMieThermo`.
+family `saft` · status **validated** · adapter `ngdesign.thermo.teqp_bridge:SaftVrMieThermo`.
 
 ## Applicability (Carlson 1996)
 
@@ -32,7 +32,7 @@ family `saft` · status **provisional** · adapter `ngdesign.thermo.teqp_bridge:
 
 ## L1/L2 reference-case outcomes
 
-47/56 comparisons pass. Failing comparisons are assessed in the
+53/62 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
@@ -50,6 +50,9 @@ Declared case ids:
 - `c1co2-293.130K-6.135MPa` — Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 293.13 K isotherm; retrieved 2026-10-21
 - `c1co2-293.130K-6.976MPa` — Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 293.13 K isotherm; retrieved 2026-10-21
 - `c1co2-298.142K-6.976MPa` — Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 298.14 K isotherm; retrieved 2026-10-21
+- `c1co2-303.145K-7.306MPa` — Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 303.14 K isotherm; retrieved 2026-10-21
+- `c1co2-303.144K-7.361MPa` — Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 303.14 K isotherm; retrieved 2026-10-21
+- `c1co2-298.142K-7.508MPa` — Petropoulou, Voutsas, Westman, Austegard, Lovseth & Stang (2018) Fluid Phase Equilib. 462, 44-58, via NIST ThermoML, doi 10.1016/j.fluid.2018.01.011, 298.14 K isotherm; retrieved 2026-10-21
 
 ## References
 

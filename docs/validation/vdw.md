@@ -19,17 +19,14 @@ family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:VanDe
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 | pure_psat_limit | ok | 0 | C1@160K bubble 0 dew 0; C3@300K bubble 0 dew 0; nC4@300K bubble 0 dew 0; H2O@400K bubble 0 dew 0 |
-| phase_identification | FAIL | 1 | nC4@300K MISLABELED; C3@300K ok; H2O@300K MISLABELED |
+| phase_identification | ok | 0 | nC4@400K ok; C3@300K ok; H2O@600K ok |
 | round_trip | ok | 4.9e-16 | 350K/3.447e+06Pa T_ph 0 H 0 T_ps 4.9e-16 |
 | dhdT_cp | ok | 3.4e-07 | 350K/3.447e+06Pa vapor cp 46.3863 dH/dT 46.3863 |
-| gibbs_duhem | FAIL | 0.24 | ['C1', 'C3']@250K/2e+06Pa hc_liquid 0.0091; ['C1', 'CO2']@250K/2e+06Pa vapor 0.24 |
+| gibbs_duhem | ok | 1.1e-08 | ['C1', 'C3']@250K/2e+06Pa hc_liquid 1.1e-08; ['C1', 'CO2']@250K/2e+06Pa vapor 1.6e-09 |
 | single_liquid_limit | ok | 0 | 250K/2e+06Pa kinds=['hc_liquid'] vf=0.0 |
 | determinism | ok | 0 | two instances bit-identical at 350K/3.447e+06Pa |
 
-Declared exclusions (not silent skips):
-
-- `gibbs_duhem` — The C1/C3 hc_liquid probe at 250 K sits where the vdW liquid root is mechanically unstable for methane-rich compositions, so the path integral crosses a root switch; the vapour probe passes.
-- `phase_identification` — vdW's alpha = 1 misplaces the internal vapour-pressure correlation far above the databank value below Tc (nC4 and water at 300 K), so the databank-anchored 0.5x/2x classification bracket cannot straddle the offset; the C3 point passes.
+Note: phase_identification probes nC4 at 400 K and water at 600 K instead of 300 K (measured 2026-11-04): the check brackets the databank Psat by 0.5x/2x, and the vdW EOS's own vapour pressure at 300 K is 3.08x (nC4) and 102x (water) the databank value, so at 2x databank Psat the EOS-stable phase is correctly vapour. At nC4 400 K / water 600 K the ratios are 1.19 / 1.31 (C3 300 K: 1.74), so the bracket is a real classification test. The gibbs_duhem default probes pass (1.1e-8 / 1.6e-9) since VDWMIXKij replaced thermo's k_ij-blind vdW ln phi (was 0.24).
 
 ### L4 cross-model pairs
 

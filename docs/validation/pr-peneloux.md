@@ -1,6 +1,6 @@
 # pr-peneloux — Peng-Robinson, Peneloux volume translation
 
-family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:PrPenelouxThermo`.
+family `cubic` · status **validated** · adapter `ngdesign.thermo.cubic:PrPenelouxThermo`.
 
 ## Applicability (Carlson 1996)
 

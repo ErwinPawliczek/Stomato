@@ -19,7 +19,7 @@ family `electrolyte` · status **provisional** · adapter `ngdesign.amine.packag
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 | single_liquid_limit | ok | 0 | 313.15K/5e+06Pa kinds=['aqueous'] vf=0.0 |
-| round_trip | ok | 0 | 313.15K/5e+06Pa T_ph 0 H 0 T_ps 0 |
+| round_trip | ok | 2.7e-11 | 313.15K/5e+06Pa T_ph 2.7e-11 H 5e-12 T_ps 4e-13 |
 | determinism | ok | 0 | two instances bit-identical at 313.15K/5e+06Pa |
 
 Note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the single-liquid limit run today
@@ -33,11 +33,16 @@ Declared exclusions (not silent skips):
 
 ## L1/L2 reference-case outcomes
 
-8/8 comparisons pass. Failing comparisons are assessed in the
+8/13 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
 
+- `mdea-xiao2018-313.15K-p8.1kPa` — Xiao, M., Liu, H., Gao, H. & Liang, Z., 'CO2 absorption with aqueous tertiary amine solutions: Equilibrium solubility and thermodynamic modeling', J. Chem. Thermodyn. 122, 170-182, 2018, doi:10.1016/j.jct.2018.03.020, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2018.03.020.xml (dataset 1, MDEA 2.58 mol/kg water; parsed by script: T 313.15 K, p_CO2 8.1 kPa, CO2 mass fraction of the liquid 0.0305), retrieved 2026-11-04
+- `mdea-xiao2018-313.15K-p15kPa` — Xiao, M., Liu, H., Gao, H. & Liang, Z., 'CO2 absorption with aqueous tertiary amine solutions: Equilibrium solubility and thermodynamic modeling', J. Chem. Thermodyn. 122, 170-182, 2018, doi:10.1016/j.jct.2018.03.020, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2018.03.020.xml (dataset 1, MDEA 2.58 mol/kg water; parsed by script: T 313.15 K, p_CO2 15 kPa, CO2 mass fraction of the liquid 0.0366), retrieved 2026-11-04
+- `mdea-xiao2018-313.15K-p20.3kPa` — Xiao, M., Liu, H., Gao, H. & Liang, Z., 'CO2 absorption with aqueous tertiary amine solutions: Equilibrium solubility and thermodynamic modeling', J. Chem. Thermodyn. 122, 170-182, 2018, doi:10.1016/j.jct.2018.03.020, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2018.03.020.xml (dataset 1, MDEA 2.58 mol/kg water; parsed by script: T 313.15 K, p_CO2 20.3 kPa, CO2 mass fraction of the liquid 0.0409), retrieved 2026-11-04
+- `mdea-xiao2018-313.15K-p30.4kPa` — Xiao, M., Liu, H., Gao, H. & Liang, Z., 'CO2 absorption with aqueous tertiary amine solutions: Equilibrium solubility and thermodynamic modeling', J. Chem. Thermodyn. 122, 170-182, 2018, doi:10.1016/j.jct.2018.03.020, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2018.03.020.xml (dataset 1, MDEA 2.58 mol/kg water; parsed by script: T 313.15 K, p_CO2 30.4 kPa, CO2 mass fraction of the liquid 0.0478), retrieved 2026-11-04
+- `mdea-xiao2018-313.15K-p60.8kPa` — Xiao, M., Liu, H., Gao, H. & Liang, Z., 'CO2 absorption with aqueous tertiary amine solutions: Equilibrium solubility and thermodynamic modeling', J. Chem. Thermodyn. 122, 170-182, 2018, doi:10.1016/j.jct.2018.03.020, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2018.03.020.xml (dataset 1, MDEA 2.58 mol/kg water; parsed by script: T 313.15 K, p_CO2 60.8 kPa, CO2 mass fraction of the liquid 0.0545), retrieved 2026-11-04
 - `pure-H2O-323.5K-amine-enrtl` — coolprop:H2O
 - `pure-H2O-420K-amine-enrtl` — coolprop:H2O
 - `pure-H2O-520K-amine-enrtl` — coolprop:H2O

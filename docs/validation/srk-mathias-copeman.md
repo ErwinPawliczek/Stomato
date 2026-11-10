@@ -1,6 +1,6 @@
 # srk-mathias-copeman — Soave-Redlich-Kwong, Mathias-Copeman alpha
 
-family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:SrkMathiasCopemanThermo`.
+family `cubic` · status **validated** · adapter `ngdesign.thermo.cubic:SrkMathiasCopemanThermo`.
 
 ## Applicability (Carlson 1996)
 

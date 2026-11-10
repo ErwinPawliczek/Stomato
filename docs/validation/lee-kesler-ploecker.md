@@ -19,7 +19,7 @@ family `kvalue` · status **validated** · adapter `ngdesign.thermo.kvalue:LeeKe
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 | phase_identification | ok | 0 | C1@125K ok; C3@300K ok |
-| round_trip | ok | 0 | 300K/100000Pa T_ph 0 H 0 T_ps 0 |
+| round_trip | ok | 2.2e-12 | 300K/100000Pa T_ph 6.4e-15 H 2.2e-12 T_ps 1.9e-16 |
 | dhdT_cp | ok | 1.7e-07 | 300K/100000Pa vapor cp 55.0789 dH/dT 55.0789 |
 | gibbs_duhem | ok | 4.1e-08 | ['C1', 'C3']@300K/4e+06Pa hc_liquid 4.1e-08 |
 | single_liquid_limit | ok | 0 | 300K/2e+06Pa kinds=['hc_liquid'] vf=0.0 |

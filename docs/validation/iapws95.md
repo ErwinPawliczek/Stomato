@@ -1,6 +1,6 @@
 # iapws95 — IAPWS-95 water and steam
 
-family `helmholtz` · status **provisional** · adapter `ngdesign.thermo.helmholtz:IAPWSPackage`.
+family `helmholtz` · status **validated** · adapter `ngdesign.thermo.helmholtz:IAPWSPackage`.
 
 ## Applicability (Carlson 1996)
 
@@ -33,7 +33,7 @@ Declared exclusions (not silent skips):
 
 ## L1/L2 reference-case outcomes
 
-25/25 comparisons pass. Failing comparisons are assessed in the
+40/40 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
@@ -43,6 +43,12 @@ Declared case ids:
 - `h2o-nist-401.605K` — NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
 - `h2o-nist-500.184K` — NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
 - `h2o-nist-600.070K` — NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
+- `iapws95-r6-sat-275K` — IAPWS R6-95(2018), Revised Release on the IAPWS Formulation 1995 for the Thermodynamic Properties of Ordinary Water Substance, Table 8 (two-phase verification values), T = 275 K: p_sigma = 0.698451167e-3 MPa, rho' = 0.999887406e3, rho'' = 0.550664919e-2 kg/m3; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04
+- `iapws95-r6-sat-450K` — IAPWS R6-95(2018), Table 8 (two-phase verification values), T = 450 K: p_sigma = 0.932203564 MPa, rho' = 0.890341250e3, rho'' = 0.481200360e1 kg/m3; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04
+- `iapws95-r6-sat-625K` — IAPWS R6-95(2018), Table 8 (two-phase verification values), T = 625 K: p_sigma = 0.169082693e2 MPa, rho' = 0.567090385e3, rho'' = 0.118290280e3 kg/m3; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04
+- `iapws95-r6-1phase-300K-20MPa` — IAPWS R6-95(2018), Table 7 (single-phase verification values), T = 300 K, rho = 0.1005308e4 kg/m3, p = 0.200022515e2 MPa; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04
+- `iapws95-r6-1phase-500K-1MPa` — IAPWS R6-95(2018), Table 7 (single-phase verification values), T = 500 K, rho = 0.4532e1 kg/m3, p = 0.999938125 MPa; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04
+- `iapws95-r6-1phase-900K-20MPa` — IAPWS R6-95(2018), Table 7 (single-phase verification values), T = 900 K, rho = 0.526150e2 kg/m3, p = 0.200000690e2 MPa; https://iapws.org/technical-guidance/release/IAPWS-95.download, retrieved 2026-11-04
 
 ## References
 

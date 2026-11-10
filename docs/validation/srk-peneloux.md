@@ -1,6 +1,6 @@
 # srk-peneloux — Soave-Redlich-Kwong, Peneloux volume translation
 
-family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:SrkPenelouxThermo`.
+family `cubic` · status **validated** · adapter `ngdesign.thermo.cubic:SrkPenelouxThermo`.
 
 ## Applicability (Carlson 1996)
 

@@ -20,13 +20,13 @@ family `helmholtz` · status **provisional** · adapter `ngdesign.thermo.bwr:BWR
 | --- | --- | --- | --- |
 | pure_psat_limit | ok | 0 | C1@160K bubble 0 dew 0; N2@110K bubble 0 dew 0 |
 | phase_identification | ok | 0 | C1@160K ok; N2@110K ok |
-| round_trip | ok | 4e-16 | 300K/5e+06Pa T_ph 1.9e-16 H 4e-16 T_ps 1.9e-16 |
-| dhdT_cp | ok | 4.7e-09 | 300K/1e+06Pa vapor cp 2434.77 dH/dT 2434.77 |
+| round_trip | ok | 0 | 300K/5e+06Pa T_ph 0 H 0 T_ps 0 |
+| dhdT_cp | ok | 3.1e-07 | 300K/1e+06Pa vapor cp 36.707 dH/dT 36.707 |
 | gibbs_duhem | ok | 6.9e-09 | ['C1', 'N2']@300K/5e+06Pa vapor 5.6e-09; ['C1', 'CO2']@220K/5e+06Pa hc_liquid 6.9e-09 |
 | single_liquid_limit | ok | 0 | 250K/2e+06Pa kinds=['hc_liquid'] vf=0.0 |
 | determinism | ok | 0 | two instances bit-identical at 300K/5e+06Pa |
 
-Note: Provisional: reuses the merged BWRS parameter-dictionary equations with the Han-Starling generalized mixing law. The k_ij table ships deliberately empty - no verifiable open C1/C3 Lee-Starling interaction set was found - and with the table empty the mixing law reduces exactly to the one used by the bwrs row, which is the row's only tested claim; the k_ij dependence itself is unvalidated. Component constants are the ORO-5249-2 Table 5 set cited on the bwrs row. Measured results: at the three bound pure-fluid saturation points (C1 155 K, C2 230 K, C3 300 K) bubble/dew pressures and vapour/liquid densities track CoolProp closely, while Cp comes out large and negative (assessed per case above) - the shared BWRS parameter-evaluation Cp defect, made visible by binding the cases rather than excluding Cp. The bound near-pure-propane C1/C3 VLE point (277.59 K, 0.689 MPa) misses literature bubble_P by 1.24% and vapour composition by 0.50%; the higher-pressure isotherm point (1.724 MPa) measured 4.73% and 56.03% and stays unbound pending a mixing-rule decision.
+Note: Provisional: reuses the merged BWRS parameter-dictionary equations with the Han-Starling generalized mixing law. The k_ij table ships deliberately empty, so the mixing law reduces exactly to the bwrs row and every number equals bwrs; the k_ij dependence itself is unvalidated. The saturated-liquid Cp defect was the shared BWRS departure-enthalpy unit bug, fixed 2026-11-04 (C1 155 K Cp 66.02 vs 67.61, -2.3 %). Held provisional for the same reason as bwrs: the C1/C3 bubble pressure is over-predicted by +3.9 to +8.9 % at four of six points without an interaction parameter (assessed); vapour compositions pass.
 
 ### L4 cross-model pairs
 
@@ -34,7 +34,7 @@ Note: Provisional: reuses the merged BWRS parameter-dictionary equations with th
 
 ## L1/L2 reference-case outcomes
 
-14/17 comparisons pass. Failing comparisons are assessed in the
+23/27 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
@@ -43,6 +43,11 @@ Declared case ids:
 - `bwr_ls-C2-230.0K` — coolprop:C2H6
 - `bwr_ls-C3-300.0K` — coolprop:C3H8
 - `bwr_ls-c1c3-277.59K` — Reamer, Sage & Lacey (1950) Ind. Eng. Chem. 42, 534-539; IUPAC SDS 27/28 printed p. 270, 277.59 K isotherm; retrieved 2026-10-20
+- `bwrs-c1c3-277.59K-3.103MPa` — Reamer, H. H., Sage, B. H., Lacey, W. N., Ind. Eng. Chem. 42, 534-539, 1950, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 270, table 'Experimental values', T = 277.59 K, P = 31.03 x 1e5 Pa, x_CH4 = 0.1695, y_CH4 = 0.7677; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04
+- `bwrs-c1c3-294.26K-2.068MPa` — Reamer, H. H., Sage, B. H., Lacey, W. N., Ind. Eng. Chem. 42, 534-539, 1950, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 270, table 'Experimental values', T = 294.26 K, P = 20.68 x 1e5 Pa, x_CH4 = 0.0749, y_CH4 = 0.5338; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04
+- `bwrs-c1c3-310.93K-4.137MPa` — Reamer, H. H., Sage, B. H., Lacey, W. N., Ind. Eng. Chem. 42, 534-539, 1950, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 271, table 'Experimental values', T = 310.93 K, P = 41.37 x 1e5 Pa, x_CH4 = 0.163, y_CH4 = 0.5714; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04
+- `bwrs-c1c3-327.59K-2.413MPa` — Reamer, H. H., Sage, B. H., Lacey, W. N., Ind. Eng. Chem. 42, 534-539, 1950, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 271, table 'Experimental values', T = 327.59 K, P = 24.13 x 1e5 Pa, x_CH4 = 0.0289, y_CH4 = 0.1663; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04
+- `bwrs-c1c3-344.26K-4.137MPa` — Reamer, H. H., Sage, B. H., Lacey, W. N., Ind. Eng. Chem. 42, 534-539, 1950, as compiled in IUPAC Solubility Data Series vol. 27/28 (Methane), printed p. 271, table 'Experimental values', T = 344.26 K, P = 41.37 x 1e5 Pa, x_CH4 = 0.0813, y_CH4 = 0.2392; https://iupac.github.io/SolubilityDataSeries/volumes/SDS-27-28.pdf, retrieved 2026-11-04
 
 ## References
 

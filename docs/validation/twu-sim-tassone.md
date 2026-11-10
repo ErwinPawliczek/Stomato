@@ -22,20 +22,15 @@ family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:TwuSi
 | phase_identification | ok | 0 | nC4@300K ok; C3@300K ok; H2O@300K ok |
 | round_trip | ok | 3.2e-16 | 350K/3.447e+06Pa T_ph 0 H 0 T_ps 3.2e-16 |
 | dhdT_cp | ok | 4.8e-07 | 350K/3.447e+06Pa vapor cp 47.6306 dH/dT 47.6307 |
-| gibbs_duhem | FAIL | 0.23 | ['C1', 'C3']@250K/2e+06Pa hc_liquid 0.23; ['C1', 'CO2']@250K/2e+06Pa vapor 0.00021 |
+| gibbs_duhem | ok | 1.9e-07 | ['C1', 'C3']@250K/2e+06Pa hc_liquid 1.9e-07; ['C1', 'CO2']@250K/2e+06Pa vapor 2.8e-09 |
 | single_liquid_limit | ok | 0 | 250K/2e+06Pa kinds=['hc_liquid'] vf=0.0 |
 | determinism | ok | 0 | two instances bit-identical at 350K/3.447e+06Pa |
 
 Note: Fitted alpha table covers C1-nC6; CO2/N2/H2S in the slate use the generalised Twu alpha.
 
-Declared exclusions (not silent skips):
-
-- `gibbs_duhem` — The C1/C3 hc_liquid probe at 250 K sits above the TST internal methane pseudo-critical line, so the liquid root switches along the composition path; the vapour probe passes.
-- `phase_identification` — The TST alpha is fitted to hydrogen/hydrocarbon systems; for the probe components at 300 K the internal vapour-pressure correlation deviates beyond the databank-anchored 0.5x/2x bracket.
-
 ## L1/L2 reference-case outcomes
 
-15/26 comparisons pass. Failing comparisons are assessed in the
+17/26 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:

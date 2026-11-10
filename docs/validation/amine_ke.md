@@ -19,7 +19,7 @@ family `electrolyte` · status **validated** · adapter `ngdesign.amine.package:
 | check | result | worst | measured |
 | --- | --- | --- | --- |
 | single_liquid_limit | ok | 0 | 313.15K/5e+06Pa kinds=['aqueous'] vf=0.0 |
-| round_trip | ok | 0 | 313.15K/5e+06Pa T_ph 0 H 0 T_ps 0 |
+| round_trip | ok | 1.9e-11 | 313.15K/5e+06Pa T_ph 1.9e-11 H 1.3e-11 T_ps 4e-13 |
 | determinism | ok | 0 | two instances bit-identical at 313.15K/5e+06Pa |
 
 Note: validation case ids arrive with T-11..T-13 (loading-isotherm data); L0 round trips and the single-liquid limit run today

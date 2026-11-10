@@ -30,15 +30,17 @@ Note: The slice feed minus the C6+ pseudo-component and water, renormalized: a l
 
 ### L4 cross-model pairs
 
-- n/a — refuses the slice feed: ComponentNotSupported: CoolPropPackage has no parameters for component(s) ['C6+']; supported: ['C1', 'C2', 'C3', 'CO2', 'H2O', 'H2S', 'N2', 'iC4', 'iC5', 'nC4', 'nC5']
+- n/a — refuses the slice feed: ComponentNotSupported: CoolPropPackage has no parameters for component(s) ['C6+']; supported: ['Ar', 'C1', 'C2', 'C3', 'CO', 'CO2', 'H2O', 'H2S', 'N2', 'O2', 'iC4', 'iC5', 'nC4', 'nC5']
 
 ## L1/L2 reference-case outcomes
 
-19/19 comparisons pass. Failing comparisons are assessed in the
+21/21 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
 
+- `helm-co2n2-298.161K-7.100MPa-bubble` — Westman, S. F., Stang, H. G. J., Lovseth, S. W., Austegard, A., Snustad, I., Storset, S. O., Ertesvag, I. S., "Vapor-liquid equilibrium data for the carbon dioxide and nitrogen (CO2+N2) system at the temperatures 223, 270, 298 and 303 K and pressures up to 18 MPa", Fluid Phase Equilib. 409, 207-241, 2016, doi:10.1016/j.fluid.2015.09.034; NIST TRC ThermoML archive record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2015.09.034.xml, PureOrMixtureData dataset 2 (liquid-phase CO2 mole fraction), T = 298.161 K, p = 7100.3 kPa, CO2 mole fraction 0.98384 (U 0.00056); retrieved 2026-11-09
+- `helm-co2n2-298.162K-7.419MPa-bubble` — Westman, S. F., Stang, H. G. J., Lovseth, S. W., Austegard, A., Snustad, I., Storset, S. O., Ertesvag, I. S., "Vapor-liquid equilibrium data for the carbon dioxide and nitrogen (CO2+N2) system at the temperatures 223, 270, 298 and 303 K and pressures up to 18 MPa", Fluid Phase Equilib. 409, 207-241, 2016, doi:10.1016/j.fluid.2015.09.034; NIST TRC ThermoML archive record https://trc.nist.gov/ThermoML/10.1016/j.fluid.2015.09.034.xml, PureOrMixtureData dataset 2 (liquid-phase CO2 mole fraction), T = 298.162 K, p = 7419.1 kPa, CO2 mole fraction 0.97525 (U 0.00057); retrieved 2026-11-09
 - `heos-pure-C1-125K` — coolprop:CH4
 - `heos-pure-nC4-280K` — coolprop:n-Butane
 - `heos-pure-CO2-265K` — coolprop:CO2

@@ -1,6 +1,6 @@
 # multifluid_pure — Multi-fluid Helmholtz, pure fluids (teqp CoolProp library)
 
-family `saft` · status **provisional** · adapter `ngdesign.thermo.teqp_bridge:MultifluidPureThermo`.
+family `saft` · status **validated** · adapter `ngdesign.thermo.teqp_bridge:MultifluidPureThermo`.
 
 ## Applicability (Carlson 1996)
 
@@ -35,7 +35,7 @@ Declared exclusions (not silent skips):
 
 ## L1/L2 reference-case outcomes
 
-50/50 comparisons pass. Failing comparisons are assessed in the
+65/65 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
@@ -47,6 +47,9 @@ Declared case ids:
 - `pure-C1-181.0K` — coolprop:CH4
 - `pure-CO2-216.7K` — coolprop:CO2
 - `pure-CO2-240.0K` — coolprop:CO2
+- `cpv-CO2-265.0K` — coolprop:CO2
+- `cpv-CO2-285.0K` — coolprop:CO2
+- `cpv-CO2-288.9K` — coolprop:CO2
 - `h2o-nist-273.179K` — NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
 - `h2o-nist-347.390K` — NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21
 - `h2o-nist-401.605K` — NIST Chemistry WebBook, NIST Standard Reference Database 69, water (C7732185) saturation table (IAPWS-95 based fluid data), webbook.nist.gov; retrieved 2026-10-21

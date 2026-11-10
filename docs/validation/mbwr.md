@@ -1,6 +1,6 @@
 # mbwr — Modified BWR-32 (Younglove-Ely 1987, pure C1/C2/C3)
 
-family `helmholtz` · status **provisional** · adapter `ngdesign.thermo.bwr:MBWR32Package`.
+family `helmholtz` · status **validated** · adapter `ngdesign.thermo.bwr:MBWR32Package`.
 
 ## Applicability (Carlson 1996)
 

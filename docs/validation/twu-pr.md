@@ -1,6 +1,6 @@
 # twu-pr — Peng-Robinson, Twu generalised alpha
 
-family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:TwuPengRobinsonThermo`.
+family `cubic` · status **validated** · adapter `ngdesign.thermo.cubic:TwuPengRobinsonThermo`.
 
 ## Applicability (Carlson 1996)
 

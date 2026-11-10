@@ -1,6 +1,6 @@
 # asme_steam — ASME steam tables (IAPWS-IF97 basis, ASME-labelled)
 
-family `helmholtz` · status **provisional** · adapter `ngdesign.thermo.helmholtz:ASMESteamPackage`.
+family `helmholtz` · status **validated** · adapter `ngdesign.thermo.helmholtz:ASMESteamPackage`.
 
 ## Applicability (Carlson 1996)
 
@@ -33,13 +33,19 @@ Declared exclusions (not silent skips):
 
 ## L1/L2 reference-case outcomes
 
-4/4 comparisons pass. Failing comparisons are assessed in the
+16/16 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
 
 - `asme-steam-r1-300K-3MPa` — IAPWS R7-97(2012), Table 5 (Region 1 check values): T=300 K, p=3 MPa, v=0.100215168e-2 m3/kg, cp=0.417301218e1 kJ/(kg K); retrieved 2026-10-23 (density cross-checked against the shared kernel in-session before binding)
 - `asme-steam-psat-300K` — IAPWS R7-97(2012), Table 35 (Region 4 saturation line): Psat(300 K) = 0.353658941e-2 MPa; retrieved 2026-10-23
+- `if97-r7-r1-300K-80MPa` — IAPWS R7-97(2012), Revised Release on the IAPWS Industrial Formulation 1997, Table 5 (Region 1 check values), T = 300 K, p = 80 MPa: v = 0.971180894e-3 m3/kg, cp = 0.401008987e1 kJ/(kg K); https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04
+- `if97-r7-r1-500K-3MPa` — IAPWS R7-97(2012), Table 5 (Region 1 check values), T = 500 K, p = 3 MPa: v = 0.120241800e-2 m3/kg, cp = 0.465580682e1 kJ/(kg K); https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04
+- `if97-r7-r2-300K-3.5kPa` — IAPWS R7-97(2012), Table 15 (Region 2 check values), T = 300 K, p = 0.0035 MPa: v = 0.394913866e2 m3/kg, cp = 0.191300162e1 kJ/(kg K); https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04
+- `if97-r7-r2-700K-30MPa` — IAPWS R7-97(2012), Table 15 (Region 2 check values), T = 700 K, p = 30 MPa: v = 0.542946619e-2 m3/kg, cp = 0.103505092e2 kJ/(kg K); https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04
+- `if97-r7-psat-500K` — IAPWS R7-97(2012), Table 35 (Region 4 saturation pressures), T = 500 K: p_s = 0.263889776e1 MPa; https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04
+- `if97-r7-psat-600K` — IAPWS R7-97(2012), Table 35 (Region 4 saturation pressures), T = 600 K: p_s = 0.123443146e2 MPa; https://iapws.org/technical-guidance/release/IF97-Rev.download, retrieved 2026-11-04
 
 ## References
 

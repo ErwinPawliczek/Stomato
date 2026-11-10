@@ -18,9 +18,9 @@ family `kvalue` · status **validated** · adapter `ngdesign.thermo.kvalue:Henry
 
 | check | result | worst | measured |
 | --- | --- | --- | --- |
-| pure_psat_limit | ok | 2.2e-16 | C1@125K bubble 0 dew 0; C3@300K bubble 0 dew 1.2e-16; nC4@280K bubble 2.2e-16 dew 0; CO2@265K bubble 0 dew 0 |
+| pure_psat_limit | ok | 2.2e-16 | C1@125K bubble 0 dew 0; C3@300K bubble 0 dew 0; nC4@280K bubble 2.2e-16 dew 0; CO2@265K bubble 0 dew 0 |
 | phase_identification | ok | 0 | C1@125K ok; H2O@300K ok |
-| round_trip | ok | 0 | 300K/10000Pa T_ph 0 H 0 T_ps 0 |
+| round_trip | ok | 1.5e-15 | 300K/10000Pa T_ph 1.5e-15 H 7.8e-16 T_ps 0 |
 | dhdT_cp | ok | 7.7e-08 | 300K/10000Pa vapor cp 33.7702 dH/dT 33.7702 |
 | single_liquid_limit | ok | 0 | 300K/5e+06Pa kinds=['aqueous'] vf=0.0 |
 | determinism | ok | 0 | two instances bit-identical at 300K/100000Pa |

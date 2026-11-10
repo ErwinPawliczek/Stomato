@@ -1,6 +1,6 @@
 # zudkevitch-joffe-rk — Redlich-Kwong, Zudkevitch-Joffe alpha
 
-family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:ZudkevitchJoffeRkThermo`.
+family `cubic` · status **validated** · adapter `ngdesign.thermo.cubic:ZudkevitchJoffeRkThermo`.
 
 ## Applicability (Carlson 1996)
 
@@ -20,16 +20,11 @@ family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:Zudke
 | --- | --- | --- | --- |
 | pure_psat_limit | ok | 0 | C1@160K bubble 0 dew 0; C3@300K bubble 0 dew 0; nC4@300K bubble 0 dew 0; H2O@400K bubble 0 dew 0 |
 | phase_identification | ok | 0 | nC4@300K ok; C3@300K ok; H2O@300K ok |
-| round_trip | ok | 2e-12 | 350K/3.447e+06Pa T_ph 8.7e-13 H 0 T_ps 2e-12 |
+| round_trip | ok | 2e-12 | 350K/3.447e+06Pa T_ph 8.7e-13 H 2.7e-13 T_ps 2e-12 |
 | dhdT_cp | ok | 3.7e-05 | 350K/3.447e+06Pa vapor cp 47.4339 dH/dT 47.4357 |
 | gibbs_duhem | ok | 1.8e-07 | ['C1', 'C3']@250K/2e+06Pa hc_liquid 1.8e-07; ['C1', 'CO2']@250K/2e+06Pa vapor 2.7e-09 |
 | single_liquid_limit | ok | 0 | 250K/2e+06Pa kinds=['hc_liquid'] vf=0.0 |
 | determinism | ok | 0 | two instances bit-identical at 350K/3.447e+06Pa |
-
-Declared exclusions (not silent skips):
-
-- `gibbs_duhem` — Same RK liquid-root limitation as the rk row at the C1/C3 250 K hc_liquid probe; the vapour probe passes.
-- `phase_identification` — The Zudkevitch-Joffe alpha fits each component's vapour pressure at its normal boiling point; at 300 K the internal correlation deviates beyond the databank-anchored 0.5x/2x bracket for C3, nC4 and water.
 
 ## L1/L2 reference-case outcomes
 

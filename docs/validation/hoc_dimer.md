@@ -30,4 +30,11 @@ Note: The liquid is ideal (gamma = 1), so the Gibbs-Duhem check runs on the asso
 
 ## L1/L2 reference-case outcomes
 
-None yet — validation case ids arrive with the data tasks (T-11..T-13).
+13/95 comparisons pass. Failing comparisons are assessed in the
+main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
+
+Declared case ids:
+
+- `acoh-pure-tboil-nist` — NIST Chemistry WebBook (SRD 69), acetic acid, Phase change data table, T boil = 391.2 +/- 0.6 K (AVG of 80 of 90 values); https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=4, retrieved 2026-11-04.
+- `acoh-pure-psat-320K-mcdonald` — NIST Chemistry WebBook (SRD 69), acetic acid, Phase change data, Antoine Equation Parameters table (290.26-391.01 K: A 4.68206, B 1642.54, C -39.764; NIST fit to McDonald, Shrader et al. 1959), evaluated at 320.0 K; https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=4, retrieved 2026-11-04.
+- `acoh-pure-psat-360K-mcdonald` — NIST Chemistry WebBook (SRD 69), acetic acid, Phase change data, Antoine Equation Parameters table (290.26-391.01 K: A 4.68206, B 1642.54, C -39.764; NIST fit to McDonald, Shrader et al. 1959), evaluated at 360.0 K; https://webbook.nist.gov/cgi/cbook.cgi?ID=C64197&Mask=4, retrieved 2026-11-04.

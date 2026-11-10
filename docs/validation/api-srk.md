@@ -1,6 +1,6 @@
 # api-srk — API Soave-Redlich-Kwong
 
-family `cubic` · status **provisional** · adapter `ngdesign.thermo.cubic:ApiSrkThermo`.
+family `cubic` · status **validated** · adapter `ngdesign.thermo.cubic:ApiSrkThermo`.
 
 ## Applicability (Carlson 1996)
 

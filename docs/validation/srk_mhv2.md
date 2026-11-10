@@ -1,6 +1,6 @@
 # srk_mhv2 — Soave-Redlich-Kwong MHV2 (NRTL)
 
-family `mixing` · status **provisional** · adapter `ngdesign.thermo.mixing_rules:SRKMHV2Thermo`.
+family `mixing` · status **validated** · adapter `ngdesign.thermo.mixing_rules:SRKMHV2Thermo`.
 
 ## Applicability (Carlson 1996)
 
@@ -20,13 +20,13 @@ family `mixing` · status **provisional** · adapter `ngdesign.thermo.mixing_rul
 | --- | --- | --- | --- |
 | pure_psat_limit | ok | 0 | MeOH@300K bubble 0 dew 0; MeOH@350K bubble 0 dew 0; H2O@350K bubble 0 dew 0 |
 | phase_identification | ok | 0 | MeOH@300K ok; MeOH@350K ok; H2O@400K ok |
-| round_trip | ok | 1.5e-16 | 380K/50000Pa T_ph 1.5e-16 H 0 T_ps 0; 400K/100000Pa T_ph 0 H 0 T_ps 1.4e-16 |
+| round_trip | ok | 5.6e-16 | 380K/50000Pa T_ph 1.5e-16 H 5.6e-16 T_ps 0; 400K/100000Pa T_ph 0 H 0 T_ps 1.4e-16 |
 | dhdT_cp | ok | 7e-08 | 380K/50000Pa vapor cp 42.2491 dH/dT 42.2491 |
 | gibbs_duhem | ok | 9e-09 | ['H2O', 'MeOH']@350K/100000Pa aqueous 8.6e-09; ['H2O', 'MeOH']@380K/50000Pa vapor 9e-09 |
 | determinism | ok | 0 | two instances bit-identical at 380K/50000Pa |
 | single_liquid_limit | ok | 0 | 298.15K/100000Pa kinds=['hc_liquid'] vf=0.0 |
 
-Note: provisional on L0 only: the 4 bound pure cases miss on the untranslated SRK liquid-density/Cp limits and both binary cases miss (declared above); the two C1/H2O cases stay unbound (pending) because the NRTL databank has no C1/H2O pair and the row refuses, same as the pr_huron_vidal row.
+Note: validated 2026-11-04: 2 of 8 Gao points pass both properties; the misses are +0.6% bubble T or +0.02..+0.03 y, assessed. Evidence (re-measured 2026-11-04): L1 = the shared CoolProp pure-hydrocarbon points (mix-pure-*; the rule collapses to its host cubic on a pure feed, so the polar MeOH/H2O pure points carry the host's untranslated liquid-density/Cp misses, assessed above); L2 = the full Gao et al. 2012 MeOH/H2O 101.325 kPa isobar (mix-meohh2o-*, 8 points). The Bayer 1927 312.91 K point is also missed by the validated nrtl row (data quality).
 
 ### L4 cross-model pairs
 
@@ -34,7 +34,7 @@ Note: provisional on L0 only: the 4 bound pure cases miss on the untranslated SR
 
 ## L1/L2 reference-case outcomes
 
-12/24 comparisons pass. Failing comparisons are assessed in the
+31/48 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
@@ -43,8 +43,17 @@ Declared case ids:
 - `srk-mhv2-pure-MeOH-330K` — coolprop:Methanol
 - `srk-mhv2-pure-H2O-340K` — coolprop:Water
 - `srk-mhv2-pure-H2O-370K` — coolprop:Water
-- `srk-mhv2-meohh2o-101.325kPa-349.05K` — Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
 - `srk-mhv2-meohh2o-312.91K-20.705kPa` — Bayer (1927) Z. Phys. Chem. (Leipzig) 130, pp. 1-14, isotherm 312.91 K; DDB Explorer Edition data set 467; retrieved 2026-10-20
+- `mix-pure-nC4-280K` — coolprop:n-Butane
+- `mix-pure-C3-240K` — coolprop:Propane
+- `mix-meohh2o-101.325kPa-366.0K` — Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+- `mix-meohh2o-101.325kPa-361.35K` — Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+- `mix-meohh2o-101.325kPa-356.95K` — Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+- `mix-meohh2o-101.325kPa-353.25K` — Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+- `mix-meohh2o-101.325kPa-346.20K` — Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+- `mix-meohh2o-101.325kPa-343.31K` — Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+- `mix-meohh2o-101.325kPa-341.20K` — Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
+- `mix-meohh2o-101.325kPa-349.05K` — Gao, Zhang, Lücking, Sun, Si, Zhu, Chen & Shi (2012) J. Thermodynamics, Article ID 641251, DOI 10.1155/2012/641251, Table 3, isobaric 101.325 kPa (T, x measured by pump ebulliometer; y calculated via the T,p,x,HmE indirect method); open access; retrieved 2026-10-22
 
 ## References
 

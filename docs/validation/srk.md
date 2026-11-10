@@ -29,134 +29,230 @@ family `cubic` · status **validated** · adapter `ngdesign.thermo.srk:SoaveRedl
 ### L4 cross-model pairs
 
 - vs `mathias`: ok — n/a — l4_excluded: The Mathias-Copeman alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs +41% above the generalised-omega srk-family rows and +22% above the pr family (measured 869540 vs 614969/717386 Pa at 293.15 K) - the deviation the Psat fit exists to produce, declared here rather than loosening the 20% band.
-- vs `api`: ok — dew P 615893 vs 643917 (rel 0.0435); rhoV 5.18815 vs 5.42979 (rel 0.0445); band 20%
+- vs `api`: ok — dew P 615893 vs 584321 (rel 0.054); rhoV 5.18815 vs 4.91707 (rel 0.0551); band 20%
 - vs `api`: ok — dew P 615893 vs 717386 (rel 0.141); rhoV 5.18815 vs 6.08846 (rel 0.148); band 20%
-- vs `api`: ok — dew P 615893 vs 717633 (rel 0.142); rhoV 5.18815 vs 6.09273 (rel 0.148); band 20%
-- vs `api`: ok — dew P 615893 vs 717633 (rel 0.142); rhoV 5.18815 vs 6.09273 (rel 0.148); band 20%
+- vs `api`: ok — dew P 615893 vs 716949 (rel 0.141); rhoV 5.18815 vs 6.08095 (rel 0.147); band 20%
+- vs `api`: ok — dew P 615893 vs 716949 (rel 0.141); rhoV 5.18815 vs 6.08095 (rel 0.147); band 20%
+- vs `api`: ok — dew P 615893 vs 717386 (rel 0.141); rhoV 5.18815 vs 6.08846 (rel 0.148); band 20%
+- vs `api`: ok — dew P 615893 vs 717355 (rel 0.141); rhoV 5.18815 vs 6.08993 (rel 0.148); band 20%
 - vs `api`: ok — dew P 615893 vs 717386 (rel 0.141); rhoV 5.18815 vs 6.08846 (rel 0.148); band 20%
 - vs `api`: ok — dew P 615893 vs 717386 (rel 0.141); rhoV 5.18815 vs 6.07898 (rel 0.147); band 20%
 - vs `api`: ok — dew P 615893 vs 717386 (rel 0.141); rhoV 5.18815 vs 6.08846 (rel 0.148); band 20%
+- vs `api`: ok — dew P 615893 vs 717386 (rel 0.141); rhoV 5.18815 vs 6.08846 (rel 0.148); band 20%
 - vs `api`: ok — dew P 615893 vs 724017 (rel 0.149); rhoV 5.18815 vs 6.14587 (rel 0.156); band 20%
 - vs `api`: ok — dew P 615893 vs 724017 (rel 0.149); rhoV 5.18815 vs 6.14587 (rel 0.156); band 20%
-- vs `api`: ok — dew P 615893 vs 615330 (rel 0.000915); rhoV 5.18815 vs 5.18646 (rel 0.000327); band 20%
+- vs `api`: ok — dew P 615893 vs 614582 (rel 0.00213); rhoV 5.18815 vs 5.17416 (rel 0.0027); band 20%
 - vs `api`: ok — dew P 615893 vs 717386 (rel 0.141); rhoV 5.18815 vs 6.08845 (rel 0.148); band 20%
 - vs `api`: ok — dew P 615893 vs 614968 (rel 0.0015); rhoV 5.18815 vs 5.18049 (rel 0.00148); band 20%
 - vs `api`: ok — dew P 615893 vs 614969 (rel 0.0015); rhoV 5.18815 vs 5.18049 (rel 0.00148); band 20%
-- vs `api`: ok — dew P 615893 vs 615330 (rel 0.000915); rhoV 5.18815 vs 5.18646 (rel 0.000327); band 20%
+- vs `api`: ok — dew P 615893 vs 614582 (rel 0.00213); rhoV 5.18815 vs 5.17416 (rel 0.0027); band 20%
+- vs `api`: ok — dew P 615893 vs 614969 (rel 0.0015); rhoV 5.18815 vs 5.18049 (rel 0.00148); band 20%
+- vs `api`: ok — dew P 615893 vs 614952 (rel 0.00153); rhoV 5.18815 vs 5.18151 (rel 0.00128); band 20%
 - vs `api`: ok — dew P 615893 vs 614969 (rel 0.0015); rhoV 5.18815 vs 5.18049 (rel 0.00148); band 20%
 - vs `api`: ok — dew P 615893 vs 614969 (rel 0.0015); rhoV 5.18815 vs 5.18231 (rel 0.00113); band 20%
+- vs `api`: ok — dew P 615893 vs 614969 (rel 0.0015); rhoV 5.18815 vs 5.18049 (rel 0.00148); band 20%
 - vs `api`: ok — dew P 615893 vs 597284 (rel 0.0312); rhoV 5.18815 vs 5.0462 (rel 0.0281); band 20%
 - vs `api`: ok — dew P 615893 vs 596571 (rel 0.0324); rhoV 5.18815 vs 5.0194 (rel 0.0336); band 20%
 - vs `api`: ok — n/a — l4_excluded: See the srk declaration: measured 872333 vs 615893 Pa (rel 0.294) at 293.15 K.
-- vs `kabadi`: ok — dew P 643917 vs 717386 (rel 0.102); rhoV 5.42979 vs 6.08846 (rel 0.108); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 717633 (rel 0.103); rhoV 5.42979 vs 6.09273 (rel 0.109); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 717633 (rel 0.103); rhoV 5.42979 vs 6.09273 (rel 0.109); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 717386 (rel 0.102); rhoV 5.42979 vs 6.08846 (rel 0.108); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 717386 (rel 0.102); rhoV 5.42979 vs 6.07898 (rel 0.107); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 717386 (rel 0.102); rhoV 5.42979 vs 6.08846 (rel 0.108); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 724017 (rel 0.111); rhoV 5.42979 vs 6.14587 (rel 0.117); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 724017 (rel 0.111); rhoV 5.42979 vs 6.14587 (rel 0.117); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 615330 (rel 0.0465); rhoV 5.42979 vs 5.18646 (rel 0.0469); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 717386 (rel 0.102); rhoV 5.42979 vs 6.08845 (rel 0.108); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 614968 (rel 0.0471); rhoV 5.42979 vs 5.18049 (rel 0.0481); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 614969 (rel 0.0471); rhoV 5.42979 vs 5.18049 (rel 0.0481); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 615330 (rel 0.0465); rhoV 5.42979 vs 5.18646 (rel 0.0469); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 614969 (rel 0.0471); rhoV 5.42979 vs 5.18049 (rel 0.0481); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 614969 (rel 0.0471); rhoV 5.42979 vs 5.18231 (rel 0.0478); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 597284 (rel 0.0781); rhoV 5.42979 vs 5.0462 (rel 0.076); band 20%
-- vs `kabadi`: ok — dew P 643917 vs 596571 (rel 0.0794); rhoV 5.42979 vs 5.0194 (rel 0.0818); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 717386 (rel 0.185); rhoV 4.91707 vs 6.08846 (rel 0.192); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 716949 (rel 0.185); rhoV 4.91707 vs 6.08095 (rel 0.191); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 716949 (rel 0.185); rhoV 4.91707 vs 6.08095 (rel 0.191); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 717386 (rel 0.185); rhoV 4.91707 vs 6.08846 (rel 0.192); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 717355 (rel 0.185); rhoV 4.91707 vs 6.08993 (rel 0.193); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 717386 (rel 0.185); rhoV 4.91707 vs 6.08846 (rel 0.192); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 717386 (rel 0.185); rhoV 4.91707 vs 6.07898 (rel 0.191); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 717386 (rel 0.185); rhoV 4.91707 vs 6.08846 (rel 0.192); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 717386 (rel 0.185); rhoV 4.91707 vs 6.08846 (rel 0.192); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 724017 (rel 0.193); rhoV 4.91707 vs 6.14587 (rel 0.2); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 724017 (rel 0.193); rhoV 4.91707 vs 6.14587 (rel 0.2); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 614582 (rel 0.0492); rhoV 4.91707 vs 5.17416 (rel 0.0497); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 717386 (rel 0.185); rhoV 4.91707 vs 6.08845 (rel 0.192); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 614968 (rel 0.0498); rhoV 4.91707 vs 5.18049 (rel 0.0508); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 614969 (rel 0.0498); rhoV 4.91707 vs 5.18049 (rel 0.0508); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 614582 (rel 0.0492); rhoV 4.91707 vs 5.17416 (rel 0.0497); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 614969 (rel 0.0498); rhoV 4.91707 vs 5.18049 (rel 0.0508); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 614952 (rel 0.0498); rhoV 4.91707 vs 5.18151 (rel 0.051); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 614969 (rel 0.0498); rhoV 4.91707 vs 5.18049 (rel 0.0508); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 614969 (rel 0.0498); rhoV 4.91707 vs 5.18231 (rel 0.0512); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 614969 (rel 0.0498); rhoV 4.91707 vs 5.18049 (rel 0.0508); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 597284 (rel 0.0217); rhoV 4.91707 vs 5.0462 (rel 0.0256); band 20%
+- vs `kabadi`: ok — dew P 584321 vs 596571 (rel 0.0205); rhoV 4.91707 vs 5.0194 (rel 0.0204); band 20%
 - vs `kabadi`: ok — n/a — l4_excluded: See the srk declaration: measured 872333 vs 643917 Pa (rel 0.262) at 293.15 K.
 - vs `pr`: ok — dew P 717386 vs 614968 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 - vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
-- vs `pr`: ok — dew P 717386 vs 615330 (rel 0.166); rhoV 6.08846 vs 5.18646 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 717386 vs 614582 (rel 0.167); rhoV 6.08846 vs 5.17416 (rel 0.177); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614952 (rel 0.167); rhoV 6.08846 vs 5.18151 (rel 0.175); band 20%
 - vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 - vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18231 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 - vs `pr`: ok — n/a — l4_excluded: Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~20-21% below the generalised-omega pr-family rows (measured 596571 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
-- vs `pr`: ok — dew P 717633 vs 614968 (rel 0.167); rhoV 6.09273 vs 5.18049 (rel 0.176); band 20%
-- vs `pr`: ok — dew P 717633 vs 614969 (rel 0.167); rhoV 6.09273 vs 5.18049 (rel 0.176); band 20%
-- vs `pr`: ok — dew P 717633 vs 615330 (rel 0.166); rhoV 6.09273 vs 5.18646 (rel 0.175); band 20%
-- vs `pr`: ok — dew P 717633 vs 614969 (rel 0.167); rhoV 6.09273 vs 5.18049 (rel 0.176); band 20%
-- vs `pr`: ok — dew P 717633 vs 614969 (rel 0.167); rhoV 6.09273 vs 5.18231 (rel 0.176); band 20%
+- vs `pr`: ok — dew P 716949 vs 614968 (rel 0.166); rhoV 6.08095 vs 5.18049 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 716949 vs 614969 (rel 0.166); rhoV 6.08095 vs 5.18049 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 716949 vs 614582 (rel 0.167); rhoV 6.08095 vs 5.17416 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 716949 vs 614969 (rel 0.166); rhoV 6.08095 vs 5.18049 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 716949 vs 614952 (rel 0.166); rhoV 6.08095 vs 5.18151 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 716949 vs 614969 (rel 0.166); rhoV 6.08095 vs 5.18049 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 716949 vs 614969 (rel 0.166); rhoV 6.08095 vs 5.18231 (rel 0.173); band 20%
+- vs `pr`: ok — dew P 716949 vs 614969 (rel 0.166); rhoV 6.08095 vs 5.18049 (rel 0.174); band 20%
 - vs `pr`: ok — n/a — l4_excluded: Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~20-21% below the generalised-omega pr-family rows (measured 596571 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
-- vs `pr`: ok — dew P 717633 vs 614968 (rel 0.167); rhoV 6.09273 vs 5.18049 (rel 0.176); band 20%
-- vs `pr`: ok — dew P 717633 vs 614969 (rel 0.167); rhoV 6.09273 vs 5.18049 (rel 0.176); band 20%
-- vs `pr`: ok — dew P 717633 vs 615330 (rel 0.166); rhoV 6.09273 vs 5.18646 (rel 0.175); band 20%
-- vs `pr`: ok — dew P 717633 vs 614969 (rel 0.167); rhoV 6.09273 vs 5.18049 (rel 0.176); band 20%
-- vs `pr`: ok — dew P 717633 vs 614969 (rel 0.167); rhoV 6.09273 vs 5.18231 (rel 0.176); band 20%
+- vs `pr`: ok — dew P 716949 vs 614968 (rel 0.166); rhoV 6.08095 vs 5.18049 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 716949 vs 614969 (rel 0.166); rhoV 6.08095 vs 5.18049 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 716949 vs 614582 (rel 0.167); rhoV 6.08095 vs 5.17416 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 716949 vs 614969 (rel 0.166); rhoV 6.08095 vs 5.18049 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 716949 vs 614952 (rel 0.166); rhoV 6.08095 vs 5.18151 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 716949 vs 614969 (rel 0.166); rhoV 6.08095 vs 5.18049 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 716949 vs 614969 (rel 0.166); rhoV 6.08095 vs 5.18231 (rel 0.173); band 20%
+- vs `pr`: ok — dew P 716949 vs 614969 (rel 0.166); rhoV 6.08095 vs 5.18049 (rel 0.174); band 20%
 - vs `pr`: ok — n/a — l4_excluded: Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~20-21% below the generalised-omega pr-family rows (measured 596571 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
 - vs `pr`: ok — dew P 717386 vs 614968 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 - vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
-- vs `pr`: ok — dew P 717386 vs 615330 (rel 0.166); rhoV 6.08846 vs 5.18646 (rel 0.174); band 20%
+- vs `pr`: ok — dew P 717386 vs 614582 (rel 0.167); rhoV 6.08846 vs 5.17416 (rel 0.177); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614952 (rel 0.167); rhoV 6.08846 vs 5.18151 (rel 0.175); band 20%
 - vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 - vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18231 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — n/a — l4_excluded: VLE is the pr row's, so the pair carries the pr / twu-srk slice dew gap declared on the twu-srk row (measured 717386 vs 596571 Pa, rel 0.203)
+- vs `pr`: ok — dew P 717355 vs 614968 (rel 0.166); rhoV 6.08993 vs 5.18049 (rel 0.176); band 20%
+- vs `pr`: ok — dew P 717355 vs 614969 (rel 0.166); rhoV 6.08993 vs 5.18049 (rel 0.176); band 20%
+- vs `pr`: ok — dew P 717355 vs 614582 (rel 0.167); rhoV 6.08993 vs 5.17416 (rel 0.177); band 20%
+- vs `pr`: ok — dew P 717355 vs 614969 (rel 0.166); rhoV 6.08993 vs 5.18049 (rel 0.176); band 20%
+- vs `pr`: ok — dew P 717355 vs 614952 (rel 0.167); rhoV 6.08993 vs 5.18151 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717355 vs 614969 (rel 0.166); rhoV 6.08993 vs 5.18049 (rel 0.176); band 20%
+- vs `pr`: ok — dew P 717355 vs 614969 (rel 0.166); rhoV 6.08993 vs 5.18231 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717355 vs 614969 (rel 0.166); rhoV 6.08993 vs 5.18049 (rel 0.176); band 20%
+- vs `pr`: ok — n/a — l4_excluded: As for twu-pr: measured 717355 vs 596571 Pa (rel 0.202) at 293.15 K, pr itself 717386 Pa (declared on the twu-srk row against pr).
+- vs `pr`: ok — dew P 717386 vs 614968 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614582 (rel 0.167); rhoV 6.08846 vs 5.17416 (rel 0.177); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614952 (rel 0.167); rhoV 6.08846 vs 5.18151 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18231 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 - vs `pr`: ok — n/a — l4_excluded: Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~20-21% below the generalised-omega pr-family rows (measured 596571 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
 - vs `pr`: ok — dew P 717386 vs 614968 (rel 0.167); rhoV 6.07898 vs 5.18049 (rel 0.173); band 20%
 - vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.07898 vs 5.18049 (rel 0.173); band 20%
-- vs `pr`: ok — dew P 717386 vs 615330 (rel 0.166); rhoV 6.07898 vs 5.18646 (rel 0.172); band 20%
+- vs `pr`: ok — dew P 717386 vs 614582 (rel 0.167); rhoV 6.07898 vs 5.17416 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.07898 vs 5.18049 (rel 0.173); band 20%
+- vs `pr`: ok — dew P 717386 vs 614952 (rel 0.167); rhoV 6.07898 vs 5.18151 (rel 0.173); band 20%
 - vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.07898 vs 5.18049 (rel 0.173); band 20%
 - vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.07898 vs 5.18231 (rel 0.173); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.07898 vs 5.18049 (rel 0.173); band 20%
 - vs `pr`: ok — n/a — l4_excluded: Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~20-21% below the generalised-omega pr-family rows (measured 596571 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
+- vs `pr`: ok — dew P 717386 vs 614968 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614582 (rel 0.167); rhoV 6.08846 vs 5.17416 (rel 0.177); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614952 (rel 0.167); rhoV 6.08846 vs 5.18151 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18231 (rel 0.175); band 20%
+- vs `pr`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr`: ok — n/a — l4_excluded: VLE is the pr row's, so the pair carries the pr / twu-srk slice dew gap declared on the twu-srk row (measured 717386 vs 596571 Pa, rel 0.203)
 - vs `pr78`: ok — dew P 717386 vs 614968 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 - vs `pr78`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
-- vs `pr78`: ok — dew P 717386 vs 615330 (rel 0.166); rhoV 6.08846 vs 5.18646 (rel 0.174); band 20%
+- vs `pr78`: ok — dew P 717386 vs 614582 (rel 0.167); rhoV 6.08846 vs 5.17416 (rel 0.177); band 20%
+- vs `pr78`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
+- vs `pr78`: ok — dew P 717386 vs 614952 (rel 0.167); rhoV 6.08846 vs 5.18151 (rel 0.175); band 20%
 - vs `pr78`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 - vs `pr78`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18231 (rel 0.175); band 20%
+- vs `pr78`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08846 vs 5.18049 (rel 0.175); band 20%
 - vs `pr78`: ok — n/a — l4_excluded: Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~20-21% below the generalised-omega pr-family rows (measured 596571 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
 - vs `prsv`: ok — dew P 724017 vs 614968 (rel 0.177); rhoV 6.14587 vs 5.18049 (rel 0.186); band 20%
 - vs `prsv`: ok — dew P 724017 vs 614969 (rel 0.177); rhoV 6.14587 vs 5.18049 (rel 0.186); band 20%
-- vs `prsv`: ok — dew P 724017 vs 615330 (rel 0.177); rhoV 6.14587 vs 5.18646 (rel 0.185); band 20%
+- vs `prsv`: ok — dew P 724017 vs 614582 (rel 0.178); rhoV 6.14587 vs 5.17416 (rel 0.188); band 20%
+- vs `prsv`: ok — dew P 724017 vs 614969 (rel 0.177); rhoV 6.14587 vs 5.18049 (rel 0.186); band 20%
+- vs `prsv`: ok — dew P 724017 vs 614952 (rel 0.177); rhoV 6.14587 vs 5.18151 (rel 0.186); band 20%
 - vs `prsv`: ok — dew P 724017 vs 614969 (rel 0.177); rhoV 6.14587 vs 5.18049 (rel 0.186); band 20%
 - vs `prsv`: ok — dew P 724017 vs 614969 (rel 0.177); rhoV 6.14587 vs 5.18231 (rel 0.186); band 20%
+- vs `prsv`: ok — dew P 724017 vs 614969 (rel 0.177); rhoV 6.14587 vs 5.18049 (rel 0.186); band 20%
 - vs `prsv`: ok — n/a — l4_excluded: Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~20-21% below the generalised-omega pr-family rows (measured 596571 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
 - vs `prsv2`: ok — dew P 724017 vs 614968 (rel 0.177); rhoV 6.14587 vs 5.18049 (rel 0.186); band 20%
 - vs `prsv2`: ok — dew P 724017 vs 614969 (rel 0.177); rhoV 6.14587 vs 5.18049 (rel 0.186); band 20%
-- vs `prsv2`: ok — dew P 724017 vs 615330 (rel 0.177); rhoV 6.14587 vs 5.18646 (rel 0.185); band 20%
+- vs `prsv2`: ok — dew P 724017 vs 614582 (rel 0.178); rhoV 6.14587 vs 5.17416 (rel 0.188); band 20%
+- vs `prsv2`: ok — dew P 724017 vs 614969 (rel 0.177); rhoV 6.14587 vs 5.18049 (rel 0.186); band 20%
+- vs `prsv2`: ok — dew P 724017 vs 614952 (rel 0.177); rhoV 6.14587 vs 5.18151 (rel 0.186); band 20%
 - vs `prsv2`: ok — dew P 724017 vs 614969 (rel 0.177); rhoV 6.14587 vs 5.18049 (rel 0.186); band 20%
 - vs `prsv2`: ok — dew P 724017 vs 614969 (rel 0.177); rhoV 6.14587 vs 5.18231 (rel 0.186); band 20%
+- vs `prsv2`: ok — dew P 724017 vs 614969 (rel 0.177); rhoV 6.14587 vs 5.18049 (rel 0.186); band 20%
 - vs `prsv2`: ok — n/a — l4_excluded: Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~20-21% below the generalised-omega pr-family rows (measured 596571 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
-- vs `rks`: ok — dew P 615330 vs 614968 (rel 0.000587); rhoV 5.18646 vs 5.18049 (rel 0.00115); band 20%
-- vs `rks`: ok — dew P 615330 vs 614969 (rel 0.000587); rhoV 5.18646 vs 5.18049 (rel 0.00115); band 20%
-- vs `rks`: ok — dew P 615330 vs 615330 (rel 0); rhoV 5.18646 vs 5.18646 (rel 0); band 20%
-- vs `rks`: ok — dew P 615330 vs 614969 (rel 0.000587); rhoV 5.18646 vs 5.18049 (rel 0.00115); band 20%
-- vs `rks`: ok — dew P 615330 vs 614969 (rel 0.000587); rhoV 5.18646 vs 5.18231 (rel 0.0008); band 20%
-- vs `rks`: ok — dew P 615330 vs 596571 (rel 0.0314); rhoV 5.18646 vs 5.0194 (rel 0.0333); band 20%
+- vs `rks`: ok — dew P 614582 vs 614968 (rel 0.000629); rhoV 5.17416 vs 5.18049 (rel 0.00122); band 20%
+- vs `rks`: ok — dew P 614582 vs 614969 (rel 0.000629); rhoV 5.17416 vs 5.18049 (rel 0.00122); band 20%
+- vs `rks`: ok — dew P 614582 vs 614582 (rel 0); rhoV 5.17416 vs 5.17416 (rel 0); band 20%
+- vs `rks`: ok — dew P 614582 vs 614969 (rel 0.000629); rhoV 5.17416 vs 5.18049 (rel 0.00122); band 20%
+- vs `rks`: ok — dew P 614582 vs 614952 (rel 0.000602); rhoV 5.17416 vs 5.18151 (rel 0.00142); band 20%
+- vs `rks`: ok — dew P 614582 vs 614969 (rel 0.000629); rhoV 5.17416 vs 5.18049 (rel 0.00122); band 20%
+- vs `rks`: ok — dew P 614582 vs 614969 (rel 0.000629); rhoV 5.17416 vs 5.18231 (rel 0.00157); band 20%
+- vs `rks`: ok — dew P 614582 vs 614969 (rel 0.000629); rhoV 5.17416 vs 5.18049 (rel 0.00122); band 20%
+- vs `rks`: ok — dew P 614582 vs 596571 (rel 0.0302); rhoV 5.17416 vs 5.0194 (rel 0.0308); band 20%
 - vs `sour`: ok — dew P 717386 vs 614968 (rel 0.167); rhoV 6.08845 vs 5.18049 (rel 0.175); band 20%
 - vs `sour`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08845 vs 5.18049 (rel 0.175); band 20%
-- vs `sour`: ok — dew P 717386 vs 615330 (rel 0.166); rhoV 6.08845 vs 5.18646 (rel 0.174); band 20%
+- vs `sour`: ok — dew P 717386 vs 614582 (rel 0.167); rhoV 6.08845 vs 5.17416 (rel 0.177); band 20%
+- vs `sour`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08845 vs 5.18049 (rel 0.175); band 20%
+- vs `sour`: ok — dew P 717386 vs 614952 (rel 0.167); rhoV 6.08845 vs 5.18151 (rel 0.175); band 20%
 - vs `sour`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08845 vs 5.18049 (rel 0.175); band 20%
 - vs `sour`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08845 vs 5.18231 (rel 0.175); band 20%
+- vs `sour`: ok — dew P 717386 vs 614969 (rel 0.167); rhoV 6.08845 vs 5.18049 (rel 0.175); band 20%
 - vs `sour`: ok — n/a — l4_excluded: Twu (1995) alpha is anchored to each component's vapour pressure; on the multi-component slice dew it runs ~20-21% below the generalised-omega pr-family rows (measured 596571 vs 717386-724017 Pa at 293.15 K) - an expected alpha-accuracy difference, declared here rather than loosening the 20% band.
 - vs `sour`: ok — dew P 614968 vs 614969 (rel 1.09e-07); rhoV 5.18049 vs 5.18049 (rel 1.11e-07); band 20%
-- vs `sour`: ok — dew P 614968 vs 615330 (rel 0.000587); rhoV 5.18049 vs 5.18646 (rel 0.00115); band 20%
+- vs `sour`: ok — dew P 614968 vs 614582 (rel 0.000629); rhoV 5.18049 vs 5.17416 (rel 0.00122); band 20%
+- vs `sour`: ok — dew P 614968 vs 614969 (rel 1.09e-07); rhoV 5.18049 vs 5.18049 (rel 1.11e-07); band 20%
+- vs `sour`: ok — dew P 614968 vs 614952 (rel 2.68e-05); rhoV 5.18049 vs 5.18151 (rel 0.000197); band 20%
 - vs `sour`: ok — dew P 614968 vs 614969 (rel 1.09e-07); rhoV 5.18049 vs 5.18049 (rel 1.11e-07); band 20%
 - vs `sour`: ok — dew P 614968 vs 614969 (rel 1.09e-07); rhoV 5.18049 vs 5.18231 (rel 0.000352); band 20%
+- vs `sour`: ok — dew P 614968 vs 614969 (rel 1.09e-07); rhoV 5.18049 vs 5.18049 (rel 1.11e-07); band 20%
 - vs `sour`: ok — dew P 614968 vs 597284 (rel 0.0296); rhoV 5.18049 vs 5.0462 (rel 0.0266); band 20%
 - vs `sour`: ok — dew P 614968 vs 596571 (rel 0.0308); rhoV 5.18049 vs 5.0194 (rel 0.0321); band 20%
 - vs `sour`: ok — n/a — l4_excluded: See the srk declaration: measured 872333 vs 614968 Pa (rel 0.295) at 293.15 K.
-- vs `srk`: ok — dew P 614969 vs 615330 (rel 0.000587); rhoV 5.18049 vs 5.18646 (rel 0.00115); band 20%
+- vs `srk`: ok — dew P 614969 vs 614582 (rel 0.000629); rhoV 5.18049 vs 5.17416 (rel 0.00122); band 20%
+- vs `srk`: ok — dew P 614969 vs 614969 (rel 0); rhoV 5.18049 vs 5.18049 (rel 0); band 20%
+- vs `srk`: ok — dew P 614969 vs 614952 (rel 2.69e-05); rhoV 5.18049 vs 5.18151 (rel 0.000197); band 20%
 - vs `srk`: ok — dew P 614969 vs 614969 (rel 0); rhoV 5.18049 vs 5.18049 (rel 0); band 20%
 - vs `srk`: ok — dew P 614969 vs 614969 (rel 0); rhoV 5.18049 vs 5.18231 (rel 0.000352); band 20%
+- vs `srk`: ok — dew P 614969 vs 614969 (rel 0); rhoV 5.18049 vs 5.18049 (rel 0); band 20%
 - vs `twu`: ok — dew P 614969 vs 597284 (rel 0.0296); rhoV 5.18049 vs 5.0462 (rel 0.0266); band 20%
 - vs `twu`: ok — dew P 614969 vs 596571 (rel 0.0308); rhoV 5.18049 vs 5.0194 (rel 0.0321); band 20%
 - vs `zudkevitch`: ok — n/a — l4_excluded: The Zudkevitch-Joffe Psat-fitted alpha with Omega_b held at the RK constant (documented deviation in params.alpha_parameters) runs +26-32% above the generalised-omega srk-family rows on the multi-component slice dew (measured 872333 vs 614968-643917 Pa at 293.15 K) while the pr-family rows sit within the 20% band (rel 0.17-0.18) - an alpha-accuracy difference, declared here rather than loosening the band.
-- vs `boston`: ok — dew P 615330 vs 614969 (rel 0.000587); rhoV 5.18646 vs 5.18049 (rel 0.00115); band 20%
-- vs `boston`: ok — dew P 615330 vs 614969 (rel 0.000587); rhoV 5.18646 vs 5.18231 (rel 0.0008); band 20%
-- vs `boston`: ok — dew P 615330 vs 597284 (rel 0.0302); rhoV 5.18646 vs 5.0462 (rel 0.0278); band 20%
-- vs `boston`: ok — dew P 615330 vs 596571 (rel 0.0314); rhoV 5.18646 vs 5.0194 (rel 0.0333); band 20%
+- vs `boston`: ok — dew P 614582 vs 614969 (rel 0.000629); rhoV 5.17416 vs 5.18049 (rel 0.00122); band 20%
+- vs `boston`: ok — dew P 614582 vs 614952 (rel 0.000602); rhoV 5.17416 vs 5.18151 (rel 0.00142); band 20%
+- vs `boston`: ok — dew P 614582 vs 614969 (rel 0.000629); rhoV 5.17416 vs 5.18049 (rel 0.00122); band 20%
+- vs `boston`: ok — dew P 614582 vs 614969 (rel 0.000629); rhoV 5.17416 vs 5.18231 (rel 0.00157); band 20%
+- vs `boston`: ok — dew P 614582 vs 614969 (rel 0.000629); rhoV 5.17416 vs 5.18049 (rel 0.00122); band 20%
+- vs `boston`: ok — dew P 614582 vs 597284 (rel 0.029); rhoV 5.17416 vs 5.0462 (rel 0.0254); band 20%
+- vs `boston`: ok — dew P 614582 vs 596571 (rel 0.0302); rhoV 5.17416 vs 5.0194 (rel 0.0308); band 20%
 - vs `boston`: ok — n/a — l4_excluded: See the srk declaration: measured 872333 vs 615330 Pa (rel 0.295) at 293.15 K.
+- vs `costald`: ok — dew P 614969 vs 614952 (rel 2.69e-05); rhoV 5.18049 vs 5.18151 (rel 0.000197); band 20%
+- vs `costald`: ok — dew P 614969 vs 614969 (rel 0); rhoV 5.18049 vs 5.18049 (rel 0); band 20%
+- vs `costald`: ok — dew P 614969 vs 614969 (rel 0); rhoV 5.18049 vs 5.18231 (rel 0.000352); band 20%
+- vs `costald`: ok — dew P 614969 vs 614969 (rel 0); rhoV 5.18049 vs 5.18049 (rel 0); band 20%
+- vs `costald`: ok — dew P 614969 vs 597284 (rel 0.0296); rhoV 5.18049 vs 5.0462 (rel 0.0266); band 20%
+- vs `costald`: ok — dew P 614969 vs 596571 (rel 0.0308); rhoV 5.18049 vs 5.0194 (rel 0.0321); band 20%
+- vs `costald`: ok — n/a — l4_excluded: VLE is the srk row's, so the pair carries the srk / zudkevitch-joffe-rk slice dew gap declared on that row (measured 614969 vs 872333 Pa, rel 0.295)
+- vs `kij0`: ok — dew P 614952 vs 614969 (rel 2.69e-05); rhoV 5.18151 vs 5.18049 (rel 0.000197); band 20%
+- vs `kij0`: ok — dew P 614952 vs 614969 (rel 2.69e-05); rhoV 5.18151 vs 5.18231 (rel 0.000154); band 20%
+- vs `kij0`: ok — dew P 614952 vs 614969 (rel 2.69e-05); rhoV 5.18151 vs 5.18049 (rel 0.000197); band 20%
+- vs `kij0`: ok — dew P 614952 vs 597284 (rel 0.0296); rhoV 5.18151 vs 5.0462 (rel 0.0268); band 20%
+- vs `kij0`: ok — dew P 614952 vs 596571 (rel 0.0308); rhoV 5.18151 vs 5.0194 (rel 0.0323); band 20%
+- vs `kij0`: ok — n/a — l4_excluded: The same slice dew gap the srk row declares against zudkevitch-joffe-rk (the Zudkevitch-Joffe alpha), unchanged by the zero k_ij: measured 614952 vs 872333 Pa (rel 0.295) at 293.15 K, srk itself 614969 Pa.
 - vs `lee`: ok — dew P 614969 vs 614969 (rel 0); rhoV 5.18049 vs 5.18231 (rel 0.000352); band 20%
+- vs `lee`: ok — dew P 614969 vs 614969 (rel 0); rhoV 5.18049 vs 5.18049 (rel 0); band 20%
 - vs `lee`: ok — dew P 614969 vs 597284 (rel 0.0296); rhoV 5.18049 vs 5.0462 (rel 0.0266); band 20%
 - vs `lee`: ok — dew P 614969 vs 596571 (rel 0.0308); rhoV 5.18049 vs 5.0194 (rel 0.0321); band 20%
 - vs `lee`: ok — n/a — l4_excluded: See the srk declaration: measured 872333 vs 614969 Pa (rel 0.295) at 293.15 K.
+- vs `peneloux`: ok — dew P 614969 vs 614969 (rel 0); rhoV 5.18231 vs 5.18049 (rel 0.000352); band 20%
 - vs `peneloux`: ok — dew P 614969 vs 597284 (rel 0.0296); rhoV 5.18231 vs 5.0462 (rel 0.027); band 20%
 - vs `peneloux`: ok — dew P 614969 vs 596571 (rel 0.0308); rhoV 5.18231 vs 5.0194 (rel 0.0325); band 20%
 - vs `peneloux`: ok — n/a — l4_excluded: See the srk declaration: measured 872333 vs 614969 Pa (rel 0.295) at 293.15 K.
+- vs `rackett`: ok — dew P 614969 vs 597284 (rel 0.0296); rhoV 5.18049 vs 5.0462 (rel 0.0266); band 20%
+- vs `rackett`: ok — dew P 614969 vs 596571 (rel 0.0308); rhoV 5.18049 vs 5.0194 (rel 0.0321); band 20%
+- vs `rackett`: ok — n/a — l4_excluded: VLE is the srk row's, so the pair carries the srk / zudkevitch-joffe-rk slice dew gap declared on that row (measured 614969 vs 872333 Pa, rel 0.295)
 - vs `twu`: ok — dew P 597284 vs 596571 (rel 0.0012); rhoV 5.0462 vs 5.0194 (rel 0.00534); band 20%
 - vs `twu`: ok — n/a — l4_excluded: See the srk declaration: measured 872333 vs 596571 Pa (rel 0.316) at 293.15 K.
 
 ## L1/L2 reference-case outcomes
 
-201/278 comparisons pass. Failing comparisons are assessed in the
+183/278 comparisons pass. Failing comparisons are assessed in the
 main [validation report](../validation.md); the raw rows are in `data/validation/results.json`.
 
 Declared case ids:
