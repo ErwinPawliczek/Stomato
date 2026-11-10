@@ -426,10 +426,11 @@
     computes; it exists to admit O2, Ar and CO and to refuse everything else. The round trip runs on
     pure CO2 because CoolProp's PQ solver fails on CO2 + N2 at the bubble-temperature step of the
     shared PH/PS flash (measured at 350 K, 1 and 5 MPa); since 2026-11-04 a PH/PS flash with no
-    reachable boundary at P falls back to inverting flash_pt. Known solver gap (2026-11-04):
-    three near-critical Westman CO2 + N2 points (298.161 K/7.1003 MPa and 298.162 K/7.4191 MPa
-    bubble, 269.997 K/9.5571 MPa dew) raise SaturationError in the shared CoolProp-path
-    saturation solver on this row, coolprop_heos and gerg2008 alike; they are not bound.
+    reachable boundary at P falls back to inverting flash_pt. The near-critical Westman
+    CO2 + N2 bubble points (298.161 K/7.1003 MPa, 298.162 K/7.4191 MPa) that raised SaturationError
+    solve since 2026-11-09 (composition continuation) and pass at +0.01 / -0.03 %
+    (helm-co2n2-*-bubble); the 269.997 K/9.5571 MPa dew point (y_CO2 0.58169) lies below the
+    model's lowest dew-curve CO2 fraction at that T (about 0.5822), so it has no dew point here.
 
 - id: aga8_dc92
   name: AGA 8 DC92 detail equation of state (gas phase)
