@@ -56,7 +56,9 @@ def test_saft_rows_register_with_status() -> None:
     the same way. val-saft (2026-11-04) promoted six rows to validated (passing,
     independent L1 and L2 evidence; every miss assessed); the orchestrator held
     cpa_srk, cpa_pr and pc_saft_assoc provisional (a minority of their bound L2
-    comparisons pass); pc_saft_polar has no bound binary case yet."""
+    comparisons pass). val-saft2 (2026-11-09) bound the modern Bernatova (2006)
+    MeOH/H2O isotherm to those three and propane/DME (Horstmann 2004) to
+    pc_saft_polar: all four keep a minority of passing L2 comparisons."""
     rows = catalogue.load_catalogue()
     validated = (
         "pc_saft",
@@ -409,11 +411,14 @@ class TestCpaKernelsMatchTeqpCpa:
         pytest.importorskip("teqp")
         import numpy as np
 
-        from ngdesign.thermo.teqp_bridge import _build_kernel
+        from ngdesign.thermo.teqp_bridge import _build_kernel, _CpaKernel, _CpaPrKernel
 
         kernel = _build_kernel(row, ("MeOH", "H2O"))
-        if row == "cpa_pr":
-            kernel._kij_table = {}  # teqp's CPA carries no k_ij: compare at k_ij = 0
+        assert isinstance(kernel, _CpaKernel)
+        if isinstance(kernel, _CpaPrKernel):
+            # teqp's CPA carries no k_ij: compare a fresh k_ij = 0 copy (the built
+            # kernel is lru-cached, so it must not be mutated)
+            kernel = _CpaPrKernel(row, kernel.params, kernel.tcs, {})
         ref = self._teqp_cpa(cubic, kernel)
         for x in (0.0621, 0.5):
             z = np.array([x, 1.0 - x])
@@ -421,3 +426,35 @@ class TestCpaKernelsMatchTeqpCpa:
                 got = kernel._alpha_r(323.15, rho, z)
                 # site fractions converge to 1e-10, hence the 1e-8 relative band
                 assert got == pytest.approx(ref.get_Ar00(323.15, rho, z), rel=1e-8)
+
+
+class TestPcSaftPolarNonpolarPartner:
+    """pc_saft_polar with a non-polar partner (val-saft2, 2026-11-09).
+
+    Non-polar components take the pc_saft row's Gross & Sadowski (2001) set with
+    mu = 0. Reference: CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+    parameters (PROPANE G&S 2001, DIMETHYL ETHER Kleiner/G&V 2006 incl. 1.3 D), k_ij = 0,
+    gives 1128.43 kPa at x_C3 = 0.4324, 313.19 K (measured 2026-11-09).
+    """
+
+    def test_propane_takes_the_pc_saft_set_with_zero_dipole(self) -> None:
+        pytest.importorskip("teqp")
+        from ngdesign.thermo.teqp_bridge import _build_kernel, _PCSaftPolarKernel, _require_params
+
+        kernel = _build_kernel("pc_saft_polar", ("C3", "DME"))
+        assert isinstance(kernel, _PCSaftPolarKernel)
+        c3 = kernel.params[0]
+        ref = _require_params("pc_saft", ("C3",))["C3"]
+        assert (c3["m"], c3["sigma_Angstrom"], c3["epsilon_over_k"]) == (
+            ref["m"],
+            ref["sigma_Angstrom"],
+            ref["epsilon_over_k"],
+        )
+        assert c3["mu_debye"] == 0.0
+        assert float(kernel.params[1]["mu_debye"]) == pytest.approx(1.3)
+
+    def test_propane_dme_bubble_matches_coolprop_pcsaft(self) -> None:
+        pytest.importorskip("teqp")
+        pkg = catalogue.build(catalogue.load_catalogue()["pc_saft_polar"])
+        sp = pkg.bubble_point({"C3": 0.4324, "DME": 0.5676}, T=313.19)
+        assert sp.P == pytest.approx(1_128_434.9, rel=1e-3)

@@ -1,0 +1,212 @@
+# Propane + dimethyl ether isothermal VLE for the pc_saft_polar row (val-saft2, 2026-11-09).
+#
+# Horstmann, Birke & Fischer (2004) J. Chem. Eng. Data 49, 38-42: total pressure over the liquid
+# composition at 313.19 K by the static (closed-cell) method. Values transcribed by script from the
+# NIST TRC ThermoML XML of the paper (retrieved 2026-11-09): P kPa -> Pa (x1000), x as printed
+# (propane), DME = 1 - x_propane. Every interior point of the isotherm is bound (no selection); the
+# pure end points are pure Psat, not binary cases. The paper's vapour compositions are not used:
+# a static synthetic P-x measurement does not sample the vapour, so y is a derived quantity.
+# Model inputs: DME from the Gross & Vrabec (2006) polar set, propane from Gross & Sadowski (2001)
+# Table 1 (the pc_saft block), k_ij = 0 — nothing fitted to these points. Tolerance: the fixed P1-05
+# bubble_P policy (3 %).
+binary_cases:
+- id: c3dme-313.19K-x0.0201
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.0201
+    DME: 0.9799
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 926100.0
+- id: c3dme-313.19K-x0.0384
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.0384
+    DME: 0.9616
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 946300.0
+- id: c3dme-313.19K-x0.0689
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.0689
+    DME: 0.9311
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 977700.0
+- id: c3dme-313.19K-x0.1303
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.1303
+    DME: 0.8697
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1037000.0
+- id: c3dme-313.19K-x0.2013
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.2013
+    DME: 0.7987
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1098600.0
+- id: c3dme-313.19K-x0.2909
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.2909
+    DME: 0.7091
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1164800.0
+- id: c3dme-313.19K-x0.4324
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.4324
+    DME: 0.5676
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1252400.0
+- id: c3dme-313.19K-x0.4945
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.4945
+    DME: 0.5055
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1280800.0
+- id: c3dme-313.19K-x0.5509
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.5509
+    DME: 0.4491
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1304600.0
+- id: c3dme-313.19K-x0.6061
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.6061
+    DME: 0.3939
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1324400.0
+- id: c3dme-313.19K-x0.667
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.667
+    DME: 0.333
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1344000.0
+- id: c3dme-313.19K-x0.7319
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.7319
+    DME: 0.2681
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1361600.0
+- id: c3dme-313.19K-x0.7762
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.7762
+    DME: 0.2238
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1370900.0
+- id: c3dme-313.19K-x0.8216
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.8216
+    DME: 0.1784
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1378800.0
+- id: c3dme-313.19K-x0.8623
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.8623
+    DME: 0.1377
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1383700.0
+- id: c3dme-313.19K-x0.9075
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.9075
+    DME: 0.0925
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1386600.0
+- id: c3dme-313.19K-x0.9616
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.9616
+    DME: 0.0384
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1386800.0
+- id: c3dme-313.19K-x0.9775
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.9775
+    DME: 0.0225
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1386400.0
+- id: c3dme-313.19K-x0.9812
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.9812
+    DME: 0.0188
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1385700.0
+- id: c3dme-313.19K-x0.9862
+  package: pc_saft_polar
+  components: [C3, DME]
+  z:
+    C3: 0.9862
+    DME: 0.0138
+  T: 313.19
+  source: "literature:Horstmann, Birke & Fischer (2004) Vapor-Liquid Equilibrium and Excess Enthalpy Data for the Binary Systems Propane + Dimethyl Ether and Propene + Dimethyl Ether at Temperatures from (298 to 323) K, J. Chem. Eng. Data 49, 38-42, DOI 10.1021/je0301242; propane + DME isotherm 313.19 K, static method P-x (NIST TRC ThermoML archive file https://trc.nist.gov/ThermoML/10.1021/je0301242.xml data set 2); retrieved 2026-11-09"
+  expected:
+    bubble_P: 1385200.0

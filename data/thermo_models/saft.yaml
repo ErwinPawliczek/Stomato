@@ -320,7 +320,7 @@
 
   assessed:
     meohh2o-101.325kPa-353.25K-ps: "bubble_T -1.67 % (353.25 vs 347.348 K); vapor_comp
-      +0.055 abs (0.6237 vs 0.6787) — k_ij = 0 over-strengthens cross-association at the
+      +0.055 abs (0.6237 vs 0.6787) — k_ij = 0 leaves the cross attraction too weak (bubble T low = excess too positive) at the
       methanol-lean end, as on the 322.91 K isotherm (Gao 2012 isobar; bound 2026-11-04, val-saft after
       the Wilson-K fix)"
     meohh2o-101.325kPa-349.05K-ps: "bubble_T -1.00 % (349.05 vs 345.554 K); vapor_comp
@@ -364,9 +364,8 @@
       the warm approach to the critical point (measured 2026-10-23, PR table)"
     meohh2o-322.91K-15.932kPa-ps: "bubble_P +54.5 % (24612.8 vs 15932); vapor_comp
       +0.242 abs (0.5165 vs 0.2741) — k_ij = 0 (the G&S 2002 paper introduces no
-      binary interaction parameter for associating-associating mixtures and its own
-      MeOH/H2O figures show the combining rules miss this isotherm badly; tuning
-      against the validation points is forbidden) overstrengthens cross-association
+      binary interaction parameter for associating-associating mixtures; tuning
+      against the validation points is forbidden) leaves the cross attraction too weak (too-positive excess)
       at the methanol-lean end (Bayer 1927 isotherm; measured 2026-10-23, PR table)"
     meohh2o-322.91K-26.131kPa-ps: "bubble_P +45.8 % (38106.9 vs 26131); vapor_comp
       +0.083 abs (0.7120 vs 0.6294) — same k_ij = 0 limitation (measured
@@ -477,15 +476,22 @@
       both non-associating, one dipolar segment each); quadrupolar fluids (CO2, Gross
       2005) stay unbound pending resolution of an open-source sign discrepancy in the
       J_QQQ,3ijk c0[0] constant; k_ij = 0 (the paper introduces no binary interaction
-      parameter for the bound slate)
+      parameter for the bound slate). Non-polar partners (val-saft2, 2026-11-09) take
+      the pc_saft row's Gross & Sadowski (2001) Table 1 set with mu = 0 (no quadrupole
+      for CO2, exactly as the pc_saft row), so the dipolar term acts on the polar
+      species only
   applicability:
     component_classes:
     - polar_organic
+    - hydrocarbon
     polar: true
     electrolyte: false
     T_K: [230.0, 520.0]
     P_Pa: [1000.0, 1.0e+8]
     phases: [V, L]
+  # val-saft2 2026-11-09: first binary bound — propane + DME at 313.19 K (Horstmann, Birke &
+  # Fischer 2004, 20 static P-x points, c3dme-*): 5 pass / 15 miss at k_ij = 0 (bubble_P low by up
+  # to 9.9 %, no azeotrope). Kernel = CoolProp 8.0.0 PCP-SAFT to <= 0.03 %. Stays provisional.
   status: provisional
   validation:
   - pure-ACETONE-296.0K-ps
@@ -496,6 +502,26 @@
   - pure-DME-280.0K-ps
   - pure-DME-320.0K-ps
   - pure-DME-360.0K-ps
+  - c3dme-313.19K-x0.0201
+  - c3dme-313.19K-x0.0384
+  - c3dme-313.19K-x0.0689
+  - c3dme-313.19K-x0.1303
+  - c3dme-313.19K-x0.2013
+  - c3dme-313.19K-x0.2909
+  - c3dme-313.19K-x0.4324
+  - c3dme-313.19K-x0.4945
+  - c3dme-313.19K-x0.5509
+  - c3dme-313.19K-x0.6061
+  - c3dme-313.19K-x0.667
+  - c3dme-313.19K-x0.7319
+  - c3dme-313.19K-x0.7762
+  - c3dme-313.19K-x0.8216
+  - c3dme-313.19K-x0.8623
+  - c3dme-313.19K-x0.9075
+  - c3dme-313.19K-x0.9616
+  - c3dme-313.19K-x0.9775
+  - c3dme-313.19K-x0.9812
+  - c3dme-313.19K-x0.9862
   assessed:
     pure-ACETONE-350.0K-ps: "rho_V -3.3% (4.109 vs 4.249 kg/m3) — the published G&V 2006
       parameterization under-predicts saturated vapour density as T rises toward Tc"
@@ -507,6 +533,139 @@
       moves rho_V to about -2/+3% only at the cost of Psat -40 to -51%); the G&V 2006 fit
       targets Psat and saturated liquid density"
     pure-DME-360.0K-ps: "rho_V -5.1% (55.286 vs 58.253 kg/m3) — same acetone trend"
+    c3dme-313.19K-x0.0384: "bubble_P -3.3 % (946300 vs 915312.7 Pa) — k_ij = 0 (DME from
+      the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set; nothing
+      fitted to the binary): the predicted isotherm lies below the data and misses the
+      measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone does
+      not reproduce the positive deviation of this pair; the kernel gives the same bubble
+      pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same parameters
+      to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a bug
+      (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-saft2)"
+    c3dme-313.19K-x0.0689: "bubble_P -4.5 % (977700 vs 933662.0 Pa) — k_ij = 0 (DME from
+      the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set; nothing
+      fitted to the binary): the predicted isotherm lies below the data and misses the
+      measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone does
+      not reproduce the positive deviation of this pair; the kernel gives the same bubble
+      pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same parameters
+      to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a bug
+      (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-saft2)"
+    c3dme-313.19K-x0.1303: "bubble_P -6.5 % (1.037e+06 vs 969549.4 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.2013: "bubble_P -8.1 % (1.0986e+06 vs 1009410.1 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.2909: "bubble_P -9.2 % (1.1648e+06 vs 1057428.2 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.4324: "bubble_P -9.9 % (1.2524e+06 vs 1128679.7 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.4945: "bubble_P -9.6 % (1.2808e+06 vs 1158380.5 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.5509: "bubble_P -9.2 % (1.3046e+06 vs 1184607.3 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.6061: "bubble_P -8.7 % (1.3244e+06 vs 1209630.2 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.667: "bubble_P -8.0 % (1.344e+06 vs 1236538.6 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.7319: "bubble_P -7.1 % (1.3616e+06 vs 1264452.7 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.7762: "bubble_P -6.4 % (1.3709e+06 vs 1283075.8 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.8216: "bubble_P -5.6 % (1.3788e+06 vs 1301811.5 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.8623: "bubble_P -4.7 % (1.3837e+06 vs 1318313.7 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
+    c3dme-313.19K-x0.9075: "bubble_P -3.6 % (1.3866e+06 vs 1336320.7 Pa) — k_ij = 0 (DME
+      from the Gross & Vrabec 2006 polar set, propane from the Gross & Sadowski 2001 set;
+      nothing fitted to the binary): the predicted isotherm lies below the data and misses
+      the measured maximum-pressure azeotrope near x_C3 0.96, i.e. the dipolar term alone
+      does not reproduce the positive deviation of this pair; the kernel gives the same
+      bubble pressures as CoolProp 8.0.0's independent PC(P)-SAFT backend with the same
+      parameters to <= 0.03 % at all six compared x, so this is the model at k_ij = 0, not a
+      bug (Horstmann, Birke & Fischer 2004 313.19 K isotherm; measured 2026-11-09, val-
+      saft2)"
   references:
   - >-
     Gross & Vrabec, "An equation of state contribution for polar components: Dipolar

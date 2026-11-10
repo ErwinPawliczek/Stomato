@@ -842,8 +842,17 @@ def _build_kernel(kind: str, cids: tuple[str, ...]) -> _Kernel:
         params = [block[cid] | {"name": cid} for cid in cids]
         return _PCSaftAssocKernel(kind, params)
     if kind == "pc_saft_polar":
-        block = _require_params("pc_saft_polar", cids)
-        params = [block[cid] | {"name": cid} for cid in cids]
+        # Polar components carry the Gross & Vrabec (2006) set (m, sigma, eps/k, mu);
+        # non-polar partners take the row pc_saft's Gross & Sadowski (2001) Table 1
+        # set — the same PC-SAFT physical term, with mu = 0 the dipolar term drops
+        # out for them exactly (G&V 2006 eqs. 8-14 sum only over dipolar pairs).
+        polar = _saft_params().get("pc_saft_polar") or {}
+        nonpolar_ids = tuple(cid for cid in cids if cid not in polar)
+        nonpolar = _require_params("pc_saft", nonpolar_ids) if nonpolar_ids else {}
+        params = [
+            (polar[cid] if cid in polar else nonpolar[cid] | {"mu_debye": 0.0}) | {"name": cid}
+            for cid in cids
+        ]
         return _PCSaftPolarKernel(kind, params)
     if kind == "polymer_pc_saft":
         # Polymer PC-SAFT (spec T-10): same PCSAFT engine as "pc_saft", but the
