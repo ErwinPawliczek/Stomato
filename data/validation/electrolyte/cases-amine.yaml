@@ -11,11 +11,13 @@
 #   - Selection rules, fixed before any model value was seen:
 #       AMP (amine_ke_dga_amp): Dash et al. 2011, every point at 318 K and 3.4 mol/dm3 with
 #       1 <= p_CO2 <= 300 kPa. Dash 2011 is independent of the row's fit (Kundu 2003).
-#       The 0.938-loading point (212.3 kPa) is not bound: the package bubble point raises
-#       "loading fixed point did not converge" there (recorded on the row).
+#       The 0.938-loading point (212.3 kPa) was first left unbound (the bubble point of a
+#       7-digit, off-sum feed raised "loading fixed point did not converge"); bound 2026-11-09
+#       after the off-sum feed fix in AmineReactivePackage._equilibrium_internal.
 #       MDEA (amine_enrtl): Xiao et al. 2018, every point at 313.15 K (MDEA 2.58 mol/kg water).
 #       The case P is the package bubble pressure (bisected on k_values, since amine_enrtl's
-#       bubble_point scan does not converge here) times 0.999. Leontiadis et al. 2019
+#       bubble_point scan did not converge on these off-sum feeds before 2026-11-09; it now
+#       agrees with the bisection to <= 3e-6) times 0.999. Leontiadis et al. 2019
 #       (j.fluid.2019.112254) is not used: its ThermoML "mole fraction of CO2" column runs
 #       0.26-1.08, i.e. it holds loadings, and the mislabel cannot be resolved without the paper.
 pure_cases: []
@@ -92,6 +94,16 @@ binary_cases:
     expected:
       K: {CO2: 18.010595}
 
+  - id: amp-dash2011-318K-3.4M-a0.938
+    package: amine_ke_dga_amp
+    components: [124-68-5, H2O, CO2]
+    z: {124-68-5: 0.07957, H2O: 0.8457933, CO2: 0.0746367}
+    T: 318.0
+    P: 176309.9
+    source: 'literature:Dash, S. K., Samanta, A. N. & Bandyopadhyay, S. S., ''(Vapour + liquid) equilibria (VLE) of CO2 in aqueous solutions of 2-amino-2-methyl-1-propanol: New data and modelling using eNRTL-equation'', J. Chem. Thermodyn. 43, 1278-1285, 2011, doi:10.1016/j.jct.2011.03.016, read from the NIST ThermoML file https://trc.nist.gov/ThermoML/10.1016/j.jct.2011.03.016.xml (dataset 1, parsed by script: T 318 K, AMP 3.4 mol/dm3, loading 0.938 mol CO2/mol AMP, p_CO2 212.3 kPa), retrieved 2026-11-09'
+    tolerance: {K: 0.05}
+    expected:
+      K: {CO2: 16.133213}
   - id: mdea-xiao2018-313.15K-p8.1kPa
     package: amine_enrtl
     components: [MDEA, H2O, CO2]

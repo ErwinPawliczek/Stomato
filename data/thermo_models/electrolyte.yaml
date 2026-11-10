@@ -79,7 +79,8 @@
     - V
     - L
   # 2026-11-04: Xiao 2018 MDEA 313 K, 0 of 5 bound L2 points pass (p_CO2 24-50 % low); stays provisional.
-  # bubble_point does not converge on loaded MDEA here (bracketed-loading edge bug, see report).
+  # 2026-11-09: bubble_point now converges on all 5 case feeds (off-sum feed fix) and agrees with the
+  # bisected case pressures to <= 3e-6 relative.
   status: provisional
   validation: [mdea-xiao2018-313.15K-p8.1kPa, mdea-xiao2018-313.15K-p15kPa, mdea-xiao2018-313.15K-p20.3kPa, mdea-xiao2018-313.15K-p30.4kPa, mdea-xiao2018-313.15K-p60.8kPa, pure-H2O-323.5K-amine-enrtl, pure-H2O-420K-amine-enrtl, pure-H2O-520K-amine-enrtl, pure-H2O-600K-amine-enrtl]
   references:
@@ -835,13 +836,13 @@
     phases:
     - V
     - L
-  # Stays provisional (2026-11-04): Dash 2011 AMP 318 K / 3.4 M, 2 of 7 bound points pass (5 %
+  # Stays provisional (2026-11-09): Dash 2011 AMP 318 K / 3.4 M, 2 of 8 bound points pass (5 %
   # K band); majority rule not met. No independent open DGA CO2 data was found (Al-Juaied & Rochelle
-  # 2006 is the fit source). The bubble point raises 'loading fixed point did not converge' at the
-  # 0.938-loading Dash point (and 36 of 166 Dash points overall): bracketed-loading outer basis loop
-  # stalls near the bubble edge (drift fixed at ~3.6e-9 for 60 passes); open bug, see the report.
+  # 2006 is the fit source). The 'loading fixed point did not converge' failures (36 of 166 Dash
+  # points) came from 7-digit feeds summing to 1 -/+ 1e-7; fixed at the root (off-sum feeds are
+  # normalised before the split), all 166 now solve and the 0.938-loading point is bound.
   status: provisional
-  validation: [amp-dash2011-318K-3.4M-a0.52, amp-dash2011-318K-3.4M-a0.548, amp-dash2011-318K-3.4M-a0.616, amp-dash2011-318K-3.4M-a0.697, amp-dash2011-318K-3.4M-a0.817, amp-dash2011-318K-3.4M-a0.882, amp-dash2011-318K-3.4M-a0.897, pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, pure-H2O-353.15K-electrolyte]
+  validation: [amp-dash2011-318K-3.4M-a0.52, amp-dash2011-318K-3.4M-a0.548, amp-dash2011-318K-3.4M-a0.616, amp-dash2011-318K-3.4M-a0.697, amp-dash2011-318K-3.4M-a0.817, amp-dash2011-318K-3.4M-a0.882, amp-dash2011-318K-3.4M-a0.897, amp-dash2011-318K-3.4M-a0.938, pure-H2O-293.15K-electrolyte, pure-H2O-298.15K-electrolyte, pure-H2O-303.15K-electrolyte, pure-H2O-353.15K-electrolyte]
   references:
   - Kent, R. L. & Eisenberg, B., Hydrocarbon Process. 55(2), 87-90, 1976
   - Khalili, F., Henni, A. & East, A. L. L., J. Chem. Eng. Data 54, 2914-2917, 2009
@@ -878,6 +879,7 @@
     amp-dash2011-318K-3.4M-a0.817: "K 13.1159 vs 15.9849 (-17.9 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
     amp-dash2011-318K-3.4M-a0.882: "K 12.9938 vs 14.54 (-10.6 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
     amp-dash2011-318K-3.4M-a0.897: "K 12.9474 vs 18.0106 (-28.1 %) - Kent-Eisenberg apparent-constant model with one fitted kam_a (Kundu 2003, 313 K): p_CO2 too high at low loading and too low above ~0.8, the composition slope a unit-activity model cannot carry (row's own held-out rms ln p 0.34); model limitation, measured 2026-11-04"
+    amp-dash2011-318K-3.4M-a0.938: "K 12.7856 vs 16.1332 (-20.7 %) - same Kent-Eisenberg apparent-constant limitation as the other high-loading Dash points (p_CO2 low above ~0.8 loading); model limitation, measured 2026-11-09"
 - id: amine_mdea_pz
   name: Mixed amines (MDEA+PZ)
   family: electrolyte
