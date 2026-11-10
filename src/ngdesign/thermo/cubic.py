@@ -27,6 +27,7 @@ from itertools import pairwise
 from typing import Any, cast
 
 import yaml
+from scipy.constants import atm as _ATM_PA
 from thermo.eos_mix import (
     APISRKMIX,
     GCEOSMIX,
@@ -401,14 +402,22 @@ _TST_LMN: dict[str, tuple[float, float, float]] = {
 
 #: Kabadi-Danner group contributions (g_CH4, g_CH3, g_CH2) and the group
 #: makeup of each published paraffin; G_i = sum of group contributions.
+#: Keyed by CAS number: the databank carries several ids per species (nC4 / NC4 / C4,
+#: nC6 / NC6 / C6), and an id-keyed table silently dropped the a'' term for the aliases.
 _KD_G: dict[str, float] = {
-    "C1": 1.3580,
-    "C2": 1.9644,
-    "C3": 3.0424,
-    "NC4": 4.1204,  # g_CH4 + g_CH3 + 2 g_CH2 - 1 (paraffin group sum)
-    "NC5": 5.1984,
-    "NC6": 6.2764,
+    "74-82-8": 1.3580,  # methane
+    "74-84-0": 1.9644,  # ethane
+    "74-98-6": 3.0424,  # propane
+    "106-97-8": 4.1204,  # n-butane: g_CH4 + g_CH3 + 2 g_CH2 - 1 (paraffin group sum)
+    "109-66-0": 5.1984,  # n-pentane
+    "110-54-3": 6.2764,  # n-hexane
 }
+_WATER_CAS = "7732-18-5"
+#: g_l are tabulated in units of 1e-5 atm m^6/mol^2 (Aspen manual column "g_l, atm m6 x 10^5");
+#: 1 atm = 101325 Pa (scipy.constants.atm) -> Pa m^6/mol^2.
+_KD_G_UNIT = 1e-5 * _ATM_PA
+#: Kabadi-Danner best-fit water-alkane k_wj (same source, "Alkanes 0.500").
+_KD_KWJ_ALKANE = 0.500
 
 
 def _mc_coeffs(cid: str, table: dict[str, tuple[float, float, float]], omega: float) -> list[float]:
@@ -826,93 +835,65 @@ def _tst_coeffs(cid: str, omega: float) -> list[float] | None:
 class SRKMIXKD(SRKMIX):  # type: ignore[misc]
     """SRK with the Kabadi-Danner (1985) water-hydrocarbon mixing rule.
 
-    Adds ``x_w x_j^2 a''_j(T)`` to the mixed a_alpha,
-    ``a''_j = G_j a_w (T) [1 - (T/Tcw)^0.8]`` with ``a_w`` the RK-SRK pure
-    attractive term of water. Components outside the published paraffinic
-    groups have no a'' term. ``fugacity_coefficients`` gains the a''-term's
-    composition derivative so ln phi_i stays thermodynamically consistent
-    with the modified mixing rule.
+    ``a = a0 + a_KD`` with ``a0`` the quadratic rule (water-alkane ``k_wj = 0.500``) and
+    ``a_KD = sum_i a''_wi x_w^2 x_i``, ``a''_wi = G_i [1 - (T/Tcw)^0.8]``, ``G_i`` the sum
+    of the hydrocarbon's group contributions ``g_l`` (Kabadi & Danner, Ind. Eng. Chem.
+    Process Des. Dev. 24 (1985) 537, as documented in Aspen Physical Property Methods and
+    Models, SRK-Kabadi-Danner, pp. 47-48). ``fugacity_coefficients`` adds the a_KD
+    composition derivative so ln phi stays consistent with the mixing rule.
     """
 
-    _water_i: int = -1
-    _a_prime: dict[int, float] = {}  # component index -> G_j (0 = no term)
-
-    def __init__(
-        self,
-        Tcs: list[float],
-        Pcs: list[float],
-        omegas: list[float],
-        zs: list[float],
-        kd_water_index: int = -1,
-        kd_groups: dict[int, float] | None = None,
-        kijs: list[list[float]] | None = None,
-        T: float | None = None,
-        P: float | None = None,
-        V: float | None = None,
-        **kw: Any,
-    ) -> None:
-        self._water_i = kd_water_index
-        self._a_prime = kd_groups if kd_groups is not None else {}
-        super().__init__(Tcs=Tcs, Pcs=Pcs, omegas=omegas, zs=zs, kijs=kijs, T=T, P=P, V=V, **kw)
-
     def _a_prime_values(self, T: float) -> list[float]:
-        cids = _cids_from_criticals(self)
-        iw = cids.index("H2O") if "H2O" in cids else -1
-        Tcw = self.Tcs[iw]
-        aw = self.ais[iw] * math.sqrt(Tcw / T)  # SRK pure a_alpha of water
-        out = []
-        for cid in cids:
-            g = _KD_G.get(cid, 0.0)
-            out.append(g * aw * (1.0 - (T / Tcw) ** 0.8) if g else 0.0)
-        return out
+        """a''_wi(T) per component [Pa m^6/mol^2]; zero for water and non-paraffins."""
+        cas = _cas_from_criticals(self)
+        iw = cas.index(_WATER_CAS) if _WATER_CAS in cas else -1
+        factor = 1.0 - (T / self.Tcs[iw]) ** 0.8
+        return [_KD_G.get(c, 0.0) * _KD_G_UNIT * factor for c in cas]
 
     def a_alpha_and_derivatives(
         self, T: float, full: bool = True, quick: bool = True, pure_a_alphas: bool = True
     ) -> Any:
         vals = super().a_alpha_and_derivatives(T, full=full, quick=quick, pure_a_alphas=pure_a_alphas)
-        cids = _cids_from_criticals(self)
-        iw = cids.index("H2O") if "H2O" in cids else -1
+        cas = _cas_from_criticals(self)
+        iw = cas.index(_WATER_CAS) if _WATER_CAS in cas else -1
         xw = self.zs[iw] if 0 <= iw < self.N else 0.0
         if xw <= 0.0:
             return vals
-        aps = self._a_prime_values(T)
-        # a_KD = xw * sum_j x_j^2 a''_j; T derivatives from the same factors.
-        a_kd = xw * sum(x * x * ap for x, ap in zip(self.zs, aps, strict=True))
-        h = 1e-4
-        a_kd_p = xw * sum(x * x * p for x, p in zip(self.zs, self._a_prime_values(T + h), strict=True))
-        a_kd_m = xw * sum(x * x * p for x, p in zip(self.zs, self._a_prime_values(T - h), strict=True))
-        da_kd = (a_kd_p - a_kd_m) / (2.0 * h)
-        d2a_kd = (a_kd_p - 2.0 * a_kd + a_kd_m) / (h * h)
+        # a_KD = xw^2 sum_i x_i a''_i(T); a'' is linear in (1 - (T/Tcw)^0.8), so the
+        # T derivatives are analytic: d/dT (T/Tcw)^0.8 = 0.8 (T/Tcw)^0.8 / T.
+        g_sum = xw * xw * sum(x * _KD_G.get(c, 0.0) for x, c in zip(self.zs, cas, strict=True)) * _KD_G_UNIT
+        tr08 = (T / self.Tcs[iw]) ** 0.8
+        a_kd = g_sum * (1.0 - tr08)
+        da_kd = -g_sum * 0.8 * tr08 / T
+        d2a_kd = -g_sum * 0.8 * (0.8 - 1.0) * tr08 / (T * T)
+        if not full:  # thermo's solve_T path: a_alpha only
+            return vals + a_kd
         a_mix, da_mix, d2a_mix = vals
         return (a_mix + a_kd, da_mix + da_kd, d2a_mix + d2a_kd)
 
     def fugacity_coefficients(self, Z: float) -> Any:
         """SRK lnphis with the Kabadi-Danner mixing-rule correction applied.
 
-        ``solve`` ran with the corrected ``a_alpha`` (base rows plus
-        ``x_w sum_j x_j^2 a''_j``), so the base formula's attractive
-        denominator and ``A`` are already the KD values; the only missing
-        piece is the a''-term's composition derivative ``d(n a'')/dn_i / n``
-        inside the bracket, which the standard SRK rule does not have.
+        ``solve`` ran with the corrected ``a_alpha`` (a0 + a_KD), so ``A`` already carries
+        the KD value; the missing piece is a_KD's partial ``(1/n) d(n^2 a_KD)/dn_i`` inside
+        the attractive bracket: ``x_w^2 (a''_i - S)`` for i != w and ``(2 x_w - x_w^2) S``
+        for water, with ``S = sum_j x_j a''_j``.
         """
         lnphis = super().fugacity_coefficients(Z)
-        cids = _cids_from_criticals(self)
-        iw = cids.index("H2O") if "H2O" in cids else -1
+        cas = _cas_from_criticals(self)
+        iw = cas.index(_WATER_CAS) if _WATER_CAS in cas else -1
         zs = self.zs
         if not (0 <= iw < self.N) or zs[iw] <= 0.0:
             return lnphis
         xw = zs[iw]
         aps = self._a_prime_values(self.T)
-        S = sum(x * x * ap for x, ap in zip(zs, aps, strict=True))
-        # A/B = a_alpha/(R T b); A tracks the KD-corrected a_alpha, so a_alpha
-        # cancels and the correction collapses to -ln(1 + B/Z)/(R T b).
+        S = sum(x * ap for x, ap in zip(zs, aps, strict=True))
+        # A/B = a_alpha/(R T b); a_alpha cancels and the correction collapses to
+        # -ln(1 + B/Z)/(R T b) times the partial above (SRK ln phi, Soave 1972).
         big_b = self.b * self.P / (_R * self.T)
         corr = -math.log(1.0 + big_b / Z) / (_R * self.T * self.b)
         for i in range(self.N):
-            if i == iw:
-                kd_i = (1.0 - xw) * S + 2.0 * xw * xw * aps[i]
-            else:
-                kd_i = xw * (2.0 * zs[i] * aps[i] - S)
+            kd_i = (2.0 * xw - xw * xw) * S if i == iw else xw * xw * (aps[i] - S)
             lnphis[i] += corr * kd_i
         return lnphis
 
@@ -1059,6 +1040,18 @@ def _cids_from_criticals(eos: Any) -> list[str]:
     """Per-component ids of an option EOS instance, recovered from (Tc, Pc)."""
     try:
         return [_CID_BY_CRITICALS[(tc, pc)] for tc, pc in zip(eos.Tcs, eos.Pcs, strict=True)]
+    except KeyError as exc:  # a slate component configure never registered
+        raise KeyError(f"option EOS component with (Tc, Pc)={exc.args[0]} is not registered") from exc
+
+
+#: (Tc, Pc) -> CAS of every Kabadi-Danner slate component (aliases share both).
+_CAS_BY_CRITICALS: dict[tuple[float, float], str] = {}
+
+
+def _cas_from_criticals(eos: Any) -> list[str]:
+    """Per-component CAS numbers of a Kabadi-Danner EOS instance, recovered from (Tc, Pc)."""
+    try:
+        return [_CAS_BY_CRITICALS[(tc, pc)] for tc, pc in zip(eos.Tcs, eos.Pcs, strict=True)]
     except KeyError as exc:  # a slate component configure never registered
         raise KeyError(f"option EOS component with (Tc, Pc)={exc.args[0]} is not registered") from exc
 
@@ -1438,11 +1431,18 @@ def configure_options(
             ]
 
     if options.mixing == MixingRule.KABADI_DANNER:
-        for cid, tc, pc in zip(ids, constants.Tcs, constants.Pcs, strict=True):
-            _CID_BY_CRITICALS[(tc, pc)] = cid
-        groups = {i: _KD_G[cid] for i, cid in enumerate(ids) if cid in _KD_G}
-        eos_kwargs["kd_water_index"] = ids.index("H2O") if "H2O" in ids else -1
-        eos_kwargs["kd_groups"] = groups
+        cas_ids = [r.cas for r in records]
+        for c, tc, pc in zip(cas_ids, constants.Tcs, constants.Pcs, strict=True):
+            _CAS_BY_CRITICALS[(tc, pc)] = c
+        groups = {i: _KD_G[c] for i, c in enumerate(cas_ids) if c in _KD_G}
+        if _WATER_CAS in cas_ids:
+            # Kabadi-Danner's water-alkane k_wj replaces the table value for the paraffins
+            # that carry a group sum (the a0 quadratic term of the rule).
+            iw = cas_ids.index(_WATER_CAS)
+            kd_kijs = [list(row) for row in kijs]
+            for j in groups:
+                kd_kijs[iw][j] = kd_kijs[j][iw] = _KD_KWJ_ALKANE
+            eos_kwargs["kijs"] = kd_kijs
 
     if options.mixing == MixingRule.GLYCOL_TUNED:
         teg = _glycol_table()["teg"]
