@@ -24,6 +24,9 @@
 #   liquid on thermo's PhiSat basis with the pairing's own pure-vapour phi_sat (before: plain Psat
 #   basis, so near-pure n-butane at 333.2 K bubbled 16 % above its Psat on the RK pairing).
 #
+# Non-UNIFAC binding (2026-11-09, val-gphi2): the three Yang (2012) MeOH/H2O 66.52 kPa points
+# are also bound to nrtl_tdep_hoc (independent L2 for its IUPAC MeOH/H2O pair).
+#
 # Binding: `package:` lists every UNIFAC row whose curated group map
 # (data/thermo_params/unifac/groups.yaml) covers both components. unifac_lle_* covers H2O, nC4,
 # 1-butanol, 1-pentanol and ethyl acetate: it carries the H2O and nC4 pure cases plus the
@@ -447,7 +450,7 @@ binary_cases:
   package: [unifac_ig, unifac_rk, unifac_hoc, unifac_nothnagel, unifac_pr, unifac_dortmund_ig, unifac_dortmund_rk,
     unifac_dortmund_hoc, unifac_dortmund_nothnagel, unifac_dortmund_pr, unifac_psrk_ig, unifac_psrk_rk, unifac_psrk_hoc,
     unifac_psrk_nothnagel, unifac_psrk_pr, unifac_nist_ig, unifac_nist_rk, unifac_nist_hoc, unifac_nist_nothnagel,
-    unifac_nist_pr, unifac_lyngby_ig, unifac_lyngby_rk, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_lyngby_pr]
+    unifac_nist_pr, unifac_lyngby_ig, unifac_lyngby_rk, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_lyngby_pr, nrtl_tdep_hoc]
   components:
   - MeOH
   - H2O
@@ -468,7 +471,7 @@ binary_cases:
   package: [unifac_ig, unifac_rk, unifac_hoc, unifac_nothnagel, unifac_pr, unifac_dortmund_ig, unifac_dortmund_rk,
     unifac_dortmund_hoc, unifac_dortmund_nothnagel, unifac_dortmund_pr, unifac_psrk_ig, unifac_psrk_rk, unifac_psrk_hoc,
     unifac_psrk_nothnagel, unifac_psrk_pr, unifac_nist_ig, unifac_nist_rk, unifac_nist_hoc, unifac_nist_nothnagel,
-    unifac_nist_pr, unifac_lyngby_ig, unifac_lyngby_rk, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_lyngby_pr]
+    unifac_nist_pr, unifac_lyngby_ig, unifac_lyngby_rk, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_lyngby_pr, nrtl_tdep_hoc]
   components:
   - MeOH
   - H2O
@@ -489,7 +492,7 @@ binary_cases:
   package: [unifac_ig, unifac_rk, unifac_hoc, unifac_nothnagel, unifac_pr, unifac_dortmund_ig, unifac_dortmund_rk,
     unifac_dortmund_hoc, unifac_dortmund_nothnagel, unifac_dortmund_pr, unifac_psrk_ig, unifac_psrk_rk, unifac_psrk_hoc,
     unifac_psrk_nothnagel, unifac_psrk_pr, unifac_nist_ig, unifac_nist_rk, unifac_nist_hoc, unifac_nist_nothnagel,
-    unifac_nist_pr, unifac_lyngby_ig, unifac_lyngby_rk, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_lyngby_pr]
+    unifac_nist_pr, unifac_lyngby_ig, unifac_lyngby_rk, unifac_lyngby_hoc, unifac_lyngby_nothnagel, unifac_lyngby_pr, nrtl_tdep_hoc]
   components:
   - MeOH
   - H2O

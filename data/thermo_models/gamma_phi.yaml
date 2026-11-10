@@ -5201,7 +5201,12 @@
     phases:
     - V
     - L
-  status: provisional
+  # Promoted 2026-11-09 (val-gphi2): L0 7/7; L1 4 pure cases pass (H2O 340/370 K, MeOH 305/330 K);
+  # independent L2 = Yang et al. 2012 MeOH/H2O 66.52 kPa (ThermoML je300613v) 6/6 comparisons ok
+  # (bubble_T within 0.17 K, y within 0.010), + Bredig & Bayer 1927 1 ok / 1 miss. Gao 2012 is not
+  # counted (used to choose the parameter orientation). Caveat: the IUPAC SI does not state its
+  # regression data, so overlap with Yang 2012 cannot be excluded from the source.
+  status: validated
   validation:
   - nrtl-ig-meohh2o-101.325kPa-349.05K
   - nrtl-ig-meohh2o-312.91K-20.705kPa
@@ -5209,6 +5214,9 @@
   - nrtl-ig-pure-H2O-370K
   - nrtl-ig-pure-MeOH-305K
   - nrtl-ig-pure-MeOH-330K
+  - unifac-meohh2o-66.52kPa-xMeOH0.246
+  - unifac-meohh2o-66.52kPa-xMeOH0.535
+  - unifac-meohh2o-66.52kPa-xMeOH0.705
   assessed:
     nrtl-ig-meohh2o-101.325kPa-349.05K: "y 0.6947 vs 0.7197 (abs 0.025 > 0.02) - IUPAC 2011-037-2-100 NRTL/HOC parameters (labelled HOC-vapour by the source, so the phi_sat-carrying pairing is theirs); bubble T 350.25 K is inside the 0.5 % band, y misses; the parameter orientation was chosen on this Gao isobar, so it is not independent evidence; Gao's y is calculated, not measured (measured 2026-11-04)"
     nrtl-ig-meohh2o-312.91K-20.705kPa: "y 0.7580 vs 0.8053 (abs 0.047 > 0.02) - data quality suspected: nearly every correlative row misses this Bredig & Bayer (1927) 312.91 K isotherm (bubble P high by 3-10 %, y low by 0.04-0.05) while the Gao (2012) 1-atm isobar passes; a Bredig et al. MeOH/H2O set is rated thermodynamically inconsistent (gamma-offset 6.7 %, Fredenslund 4.67 %) in 'A New Method for Testing Thermodynamic Consistency of Vapor-Liquid Equilibrium Data', ACS Omega 2025, PMC12529394, Tables 1-2 (measured 2026-11-04)"
