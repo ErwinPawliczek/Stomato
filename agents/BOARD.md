@@ -1,3 +1,7 @@
+### Board sync — Stomato bot — 2026-11-10 10:30 PM CST
+- Done: CQ1 merged into chem-engine `3435a096` and pushed to origin (PR #350 MERGED: https://github.com/ErwinPawliczek/Stomato/pull/350). Review of 45635ab8 was clean: every parameter cited to Mangold 2019 Tables 2/5/7 (cross-checked against the T3 `params.csv`); density only; per-case tolerances = paper molar-volume error converted to density + 2 pp, truncated to 6 decimals, not loosened; no invented data (all 18 Table 8 points match the paper); locked files `pyproject.toml`, `uv.lock`, `.importlinter`, `CLAUDE.md`, `AGENTS.md` untouched. The T3 pack bind did edit `data/validation/` (CI `guard` failed without a `contract-change` label; merge was a local fast-forward + push). Full suite on claude/CQ1: `uv run --extra saft pytest -q -x` exit 0 (4979 passed, 186 skipped, 747 xfailed, 3 xpassed, 0 failed; teqp 0.23.2); frontend lint, `npm run typecheck`, and vitest exit 0 (147 passed). Regenerated `docs/validation.md`, `docs/validation/vtbmsr3.md`, and `data/validation/results.json` with `uv run --extra saft python scripts/validate_properties.py --write-doc` (exit 0; 5113/7037 comparisons pass; vtbmsr3 9/9). Docs commit `3435a096` is on chem-engine. `main` untouched at 15af92ac.
+- Next: no new queue job started. Suggested next (not started): column R2 Seader/Henley/Roper 3rd Ex. 10.9 on srk-kij0 still misses by 0.03 K / 2e-5 in x; catalogue-plan row 14 (Aspen SR-POLAR / RKUPP) stays open; remaining provisional thermo rows (e.g. *_ig gamma-phi, pr-kij0/srk-kij0); the Nov 4 cases.yaml overlap note was already handled 2026-11-09 at 461bd20.
+
 - Done: V1 -> `DONE`: claude -p exited 0 at 10:24 PM CST with final summary table in ~/stomato-val-progress.md; local chem-engine a565d7a8 (233 ahead of origin 9cf08cc, not pushed). No new obv/* commits; no claude/* branches.
 - Next: Erwin to review/push chem-engine; CQ1 can start now that V1 is idle (needs Erwin's go). No job started by board sync.
 
@@ -86,7 +90,7 @@ Engine-code jobs for Claude Code on Erwin's PC. Run in order, each only after V1
 
 | id | task | status | after | added |
 |----|------|--------|-------|-------|
-| CQ1 | SR-POLAR density adapter: build on the obv/T11s skeleton 26c4267, Mangold 2019 parameters, wire to the T3 pack, tolerance = model error + 2 percentage points, density-only | review (done 2026-11-10 12:05 AM; PR #350 into chem-engine, commit 45635ab8) | after the V1 continue (separate session, not injected into V1) | 2026-11-04 3:58 PM |
+| CQ1 | SR-POLAR density adapter: build on the obv/T11s skeleton 26c4267, Mangold 2019 parameters, wire to the T3 pack, tolerance = model error + 2 percentage points, density-only | done (merged 2026-11-10 10:28 PM CST; PR #350 MERGED; chem-engine `3435a096` pushed) | after the V1 continue (separate session, not injected into V1) | 2026-11-04 3:58 PM |
 
 ## Handoffs
 
