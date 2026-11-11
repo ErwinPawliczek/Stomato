@@ -1,14 +1,14 @@
 {
   "environment": {
-    "generated": "2026-11-10T03:10:35+00:00",
+    "generated": "2026-11-11T03:41:48+00:00",
     "python": "3.14.7",
     "platform": "Linux-7.0.0-38-generic-x86_64-with-glibc2.43",
-    "git_rev": "1c4e31a1",
+    "git_rev": "45635ab8",
     "coolprop_version": "8.0.0"
   },
   "summary": {
-    "n_comparisons": 7028,
-    "n_pass": 5104
+    "n_comparisons": 7037,
+    "n_pass": 5113
   },
   "rows": [
     {
@@ -62433,6 +62433,87 @@
       "expected": 0.891,
       "got": 0.891,
       "rel_err": 0.0,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-620.5K-27MPa",
+      "package": "vtbmsr3",
+      "property": "density",
+      "expected": 167.810369,
+      "got": 167.88080578061462,
+      "rel_err": 0.0004197403356798159,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-638.5K-44MPa",
+      "package": "vtbmsr3",
+      "property": "density",
+      "expected": 294.873351,
+      "got": 297.2940426538092,
+      "rel_err": 0.008209258807552168,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-640K-68.3MPa",
+      "package": "vtbmsr3",
+      "property": "density",
+      "expected": 432.69211,
+      "got": 453.5812337421423,
+      "rel_err": 0.04827710803911414,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-642K-102MPa",
+      "package": "vtbmsr3",
+      "property": "density",
+      "expected": 541.735162,
+      "got": 583.9437597412104,
+      "rel_err": 0.07791371264398471,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-645.5K-152.9MPa",
+      "package": "vtbmsr3",
+      "property": "density",
+      "expected": 635.092024,
+      "got": 710.7706223099071,
+      "rel_err": 0.11916162611090687,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-650K-195.3MPa",
+      "package": "vtbmsr3",
+      "property": "density",
+      "expected": 684.607673,
+      "got": 785.7587762346149,
+      "rel_err": 0.1477504667620266,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-652K-214.8MPa",
+      "package": "vtbmsr3",
+      "property": "density",
+      "expected": 703.690814,
+      "got": 815.3220519826474,
+      "rel_err": 0.158636770243028,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-653.5K-231.5MPa",
+      "package": "vtbmsr3",
+      "property": "density",
+      "expected": 718.716241,
+      "got": 838.908011854146,
+      "rel_err": 0.16723118805123266,
+      "pass": true
+    },
+    {
+      "case": "h2o-air-657K-263.9MPa",
+      "package": "vtbmsr3",
+      "property": "density",
+      "expected": 742.497293,
+      "got": 880.0397279044812,
+      "rel_err": 0.18524301192904305,
       "pass": true
     },
     {

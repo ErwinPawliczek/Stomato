@@ -1,6 +1,6 @@
 # Thermo property validation report (spec P1-05)
 
-Generated 2026-11-10T03:28:10+00:00 from `data/validation/results.json` (git 1c4e31a1, CoolProp 8.0.0).
+Generated 2026-11-11T03:59:11+00:00 from `data/validation/results.json` (git 45635ab8, CoolProp 8.0.0).
 Regenerate with `uv run python scripts/validate_properties.py` and `--write-doc`.
 
 ## Tolerance policy (fixed before any result was seen)
@@ -177,6 +177,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [vanlaar_pr](validation/vanlaar_pr.md) | gamma_phi | validated | 7/7 | L1=4 L2=20 | [report](validation/vanlaar_pr.md) |
 | [vanlaar_rk](validation/vanlaar_rk.md) | gamma_phi | validated | 7/7 | L1=4 L2=20 | [report](validation/vanlaar_rk.md) |
 | [vdw](validation/vdw.md) | cubic | provisional | 7/7 | L1=4 L2=2 | [report](validation/vdw.md) |
+| [vtbmsr3](validation/vtbmsr3.md) | special | provisional | 1/1 | L1=0 L2=9 | [report](validation/vtbmsr3.md) |
 | [vtpr](validation/vtpr.md) | mixing | validated | 7/7 | L1=5 L2=11 | [report](validation/vtpr.md) |
 | [wilson_glr_ig](validation/wilson_glr_ig.md) | gamma_phi | validated | 7/7 | L1=4 L2=27 | [report](validation/wilson_glr_ig.md) |
 | [wilson_hoc](validation/wilson_hoc.md) | gamma_phi | validated | 7/7 | L1=4 L2=26 | [report](validation/wilson_hoc.md) |
@@ -191,7 +192,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 
 ### Status summary
 
-164 rows: 109 validated, 51 provisional, 4 experimental
+165 rows: 109 validated, 52 provisional, 4 experimental
 
 | provisional row | what keeps it from validated |
 | --- | --- |
@@ -243,6 +244,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | [uniquac_tdep_ig](validation/uniquac_tdep_ig.md) | 2 declared case misses (`assessed:` in the row; see its report) |
 | [vanlaar_ig](validation/vanlaar_ig.md) | 12 declared case misses (`assessed:` in the row; see its report) |
 | [vdw](validation/vdw.md) | 8 declared case misses (`assessed:` in the row; see its report) |
+| [vtbmsr3](validation/vtbmsr3.md) | needs >=1 L1 pure and >=1 L2 binary case (has L1=0 L2=9) |
 | [wilson_ig](validation/wilson_ig.md) | 11 declared case misses (`assessed:` in the row; see its report) |
 | [wilson_tdep_ig](validation/wilson_tdep_ig.md) | 6 declared case misses (`assessed:` in the row; see its report) |
 | [wohl3_ig](validation/wohl3_ig.md) | 9 declared case misses (`assessed:` in the row; see its report) |
@@ -341,6 +343,7 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 - `vanlaar_nothnagel`: ok — n/a — refuses the slice feed: ValueError: van Laar binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `vanlaar_pr`: ok — n/a — refuses the slice feed: ValueError: van Laar binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
 - `vanlaar_rk`: ok — n/a — refuses the slice feed: ValueError: van Laar binary parameters for pair C1 (74-82-8) / C2 (74-84-0) are not available in data/thermo_params/vanlaar/pairs.yaml; refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose parameter tables cover this component support
+- `vtbmsr3`: ok — n/a — refuses the slice feed: VtbmsrError: VTBMSR-III adapter has no validated phase equilibrium: no dew point
 - `vtpr`: ok — n/a — refuses the slice feed: ValueError: no UNIFAC group assignment for C2 (74-84-0) in data/thermo_params/unifac/groups.yaml; refusing to predict - the curated maps cover the component support of this variant's catalogue rows (the Magnussen LLE table, for example, has no methanol subgroup)
 - `wilson_glr_ig`: ok — n/a — refuses the slice feed: ValueError: ChemSep Wilson databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
 - `wilson_hoc`: ok — n/a — refuses the slice feed: ValueError: ChemSep Wilson databank has no fitted binary parameters for pair C1 (74-82-8) / C2 (74-84-0); refusing to flash a zero-filled (ideal) pair matrix - select a thermo model whose databank covers this component support
@@ -2151,6 +2154,12 @@ Property methods are data in `data/thermo_models/*.yaml`; each row's report live
 | rho_L | 4 | 0 | 0.0 % |
 | rho_V | 4 | 2 | 50.0 % |
 | vapor_comp | 1 | 0 | 0.0 % |
+
+### package `vtbmsr3` — 9/9 pass (100.0 %)
+
+| property | n | pass | rate |
+| --- | --- | --- | --- |
+| density | 9 | 9 | 100.0 % |
 
 ### package `vtpr` — 30/45 pass (66.7 %)
 
